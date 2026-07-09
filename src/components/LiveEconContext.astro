@@ -1,0 +1,270 @@
+---
+/**
+ * LiveEconContext — línea compacta de "contexto económico vivo" sobre el form
+ * de las calcs de plata argentinas. Nuestra ventaja: el pipeline de datos
+ * BCRA/INDEC/Consejo del Salario ya patchea estos valores a diario en build-time.
+ *
+ * Muestra: 💵 Dólar oficial $X · blue $Y · Inflación interanual Z% · SMVM $W
+ * con link a /valores-bcra. Los valores crudos quedan en data-* attrs para que
+ * el runtime client-side (abajo) muestre el resultado primario también en USD.
+ *
+ * MISMO mecanismo que LiveData.astro: importa los JSON del pipeline
+ * (src/data/live/*.json) + la fuente única del SMVM. Build-time, cero fetch en
+ * cliente. Si falta cualquier dato crítico → NO renderiza nada (degrada).
+ *
+ * Se monta SOLO para audience AR + categorías de plata (ver CalcLayoutV2).
+ */
+import dolarData from '../data/live/dolar.json';
+import inflacionData from '../data/live/inflacion.json';
+import { SMVM_MENSUAL } from '../lib/data/smvm-ar-2026';
+
+interface Props {
+  /** slug del calc (para eventos GA4 y denylist). */
+  slug?: string;
+  /** Idioma de UI: 'es' | 'en' | 'pt'. Default 'es' (calcs AR). */
+  lang?: 'es' | 'en' | 'pt';
+  /** Si mostrar el equivalente en USD (blue) bajo el resultado primario. */
+  enableUsd?: boolean;
+}
+const { slug = '', lang = 'es', enableUsd = true } = Astro.props as Props;
+
+// ── Datos del pipeline (build-time) ────────────────────────────────────────
+const oficial: number | null = (dolarData as any)?.quotes?.oficial?.venta ?? null;
+const blue: number | null = (dolarData as any)?.quotes?.blue?.venta ?? null;
+const inflacion12m: number | null = (inflacionData as any)?.acumulado_12m_pct ?? null;
+const smvm: number | null = typeof SMVM_MENSUAL === 'number' ? SMVM_MENSUAL : null;
+
+// Degradar: si falta cualquier valor crítico, no renderizar.
+const nums = [oficial, blue, inflacion12m, smvm];
+const hasData = nums.every((v) => typeof v === 'number' && isFinite(v as number) && (v as number) > 0);
+
+const fetchedAt: string = (dolarData as any)?._meta?.fetchedAt || '';
+
+// Formateo AR
+const fmtArs = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+const fmtPct = (n: number) =>
+  n.toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+
+// ── i18n (strings visibles siempre en el objeto del componente) ─────────────
+const I18N = {
+  es: {
+    oficial: 'Dólar oficial', blue: 'blue', inflacion: 'Inflación interanual', smvm: 'SMVM',
+    link: 'Valores BCRA →', aria: 'Contexto económico argentino en vivo',
+    // template del equivalente USD ({x} = monto)
+    usd: '≈ USD {x} (dólar blue)',
+  },
+  en: {
+    oficial: 'Official USD', blue: 'blue', inflacion: 'Year-over-year inflation', smvm: 'Min. wage',
+    link: 'BCRA values →', aria: 'Live Argentine economic context',
+    usd: '≈ USD {x} (blue rate)',
+  },
+  pt: {
+    oficial: 'Dólar oficial', blue: 'blue', inflacion: 'Inflação interanual', smvm: 'Salário mínimo',
+    link: 'Valores BCRA →', aria: 'Contexto econômico argentino ao vivo',
+    usd: '≈ USD {x} (dólar blue)',
+  },
+} as const;
+const T = I18N[lang] || I18N.es;
+---
+
+{
+  hasData && (
+    <div
+      id="live-econ-context"
+      class="live-econ"
+      aria-label={T.aria}
+      data-oficial={String(oficial)}
+      data-blue={String(blue)}
+      data-inflacion-12m={String(inflacion12m)}
+      data-smvm={String(smvm)}
+      data-slug={slug}
+      data-updated={fetchedAt}
+    >
+      <span class="le-icon" aria-hidden="true">💵</span>
+      <span class="le-item">
+        <span class="le-lbl">{T.oficial}</span> <b>{fmtArs(oficial as number)}</b>
+      </span>
+      <span class="le-sep" aria-hidden="true">·</span>
+      <span class="le-item">
+        <span class="le-lbl">{T.blue}</span> <b>{fmtArs(blue as number)}</b>
+      </span>
+      <span class="le-sep" aria-hidden="true">·</span>
+      <span class="le-item">
+        <span class="le-lbl">{T.inflacion}</span> <b>{fmtPct(inflacion12m as number)}</b>
+      </span>
+      <span class="le-sep" aria-hidden="true">·</span>
+      <span class="le-item">
+        <span class="le-lbl">{T.smvm}</span> <b>{fmtArs(smvm as number)}</b>
+      </span>
+      <a class="le-link" href="/valores-bcra" data-live-econ-link>{T.link}</a>
+    </div>
+  )
+}
+
+{
+  hasData && (
+    <script
+      is:inline
+      define:vars={{ blue, enableUsd, slug, usdTpl: T.usd }}
+    >
+      (function () {
+        // ── GA4: click al hub de valores (guard typeof gtag) ─────────────
+        var link = document.querySelector('#live-econ-context [data-live-econ-link]');
+        if (link) {
+          link.addEventListener('click', function () {
+            if (typeof gtag === 'function') {
+              try { gtag('event', 'live_econ_click', { calc_slug: slug }); } catch (e) {}
+            }
+          });
+        }
+
+        // ── Resultado en USD (blue) bajo el resultado primario en ARS ────
+        if (!enableUsd || !(typeof blue === 'number' && blue > 0)) return;
+        var USD_FLOOR = 100; // pesos: por debajo el equivalente USD es ruido
+        var shown = false;
+
+        function parseArs(txt) {
+          // Formato es-AR currency (sin decimales): "$166.669". Signo opcional.
+          if (/us\$|usd|u\$s|u\.?s\.?d/i.test(txt)) return NaN; // ya está en USD
+          var neg = /^\s*-|-\s*\$|^\s*\(/.test(txt);
+          var digits = txt.replace(/[^\d]/g, '');
+          if (!digits) return NaN;
+          var n = Number(digits);
+          return neg ? -n : n;
+        }
+
+        function fmtUsd(n) {
+          return n >= 100
+            ? Math.round(n).toLocaleString('es-AR')
+            : n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function wire() {
+          var wrap = document.querySelector('.calc-results');
+          if (!wrap) return false; // todavía no está en el DOM → reintentar
+          var primary = wrap.querySelector('.result[data-primary="true"]') ||
+                        wrap.querySelector('.result.primary');
+          if (!primary) return true; // sin output primary → nada que hacer
+          var fmt = (primary.getAttribute('data-format') || '').toLowerCase();
+          if (fmt !== 'currency' && fmt !== 'money') return true; // no es plata
+          var valueEl = primary.querySelector('[data-value]');
+          if (!valueEl) return true;
+
+          var equiv = null;
+          function render() {
+            var txt = (valueEl.textContent || '').trim();
+            var num = parseArs(txt);
+            if (!isFinite(num) || Math.abs(num) < USD_FLOOR) {
+              if (equiv) { equiv.remove(); equiv = null; }
+              return;
+            }
+            var usd = num / blue;
+            var label = usdTpl.replace('{x}', fmtUsd(usd));
+            if (!equiv) {
+              equiv = document.createElement('div');
+              equiv.className = 'hc-usd-equiv';
+              equiv.setAttribute('data-nosnippet', '');
+              valueEl.insertAdjacentElement('afterend', equiv);
+            }
+            equiv.textContent = label;
+            // El evento solo cuenta cuando el resultado es visible (no en el
+            // baseline SSG que viene con .calc-results oculto al cargar).
+            if (!shown && !wrap.hasAttribute('hidden')) {
+              shown = true;
+              if (typeof gtag === 'function') {
+                try { gtag('event', 'live_econ_usd_shown', { calc_slug: slug }); } catch (e) {}
+              }
+            }
+          }
+
+          var mo = new MutationObserver(render);
+          mo.observe(valueEl, { childList: true, characterData: true, subtree: true });
+          render();
+          return true;
+        }
+
+        function boot() {
+          var tries = 0;
+          (function attempt() {
+            if (wire()) return;
+            if (++tries > 30) return; // ~1s de reintentos, después desisto
+            requestAnimationFrame(attempt);
+          })();
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', boot, { once: true });
+        } else {
+          boot();
+        }
+      })();
+    </script>
+  )
+}
+
+<style>
+  .live-econ {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    margin: 0 0 14px;
+    padding: 9px 13px;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--v2-muted, #64748b);
+    background: var(--v2-accent-bg, #f5f8ff);
+    border: 1px solid var(--v2-line, #e2e8f0);
+    border-radius: 11px;
+  }
+  .le-icon {
+    font-size: 14px;
+  }
+  .le-item {
+    white-space: nowrap;
+  }
+  .le-lbl {
+    color: var(--v2-muted, #64748b);
+  }
+  .le-item b {
+    color: var(--v2-ink, #0f172a);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .le-sep {
+    color: var(--v2-line, #cbd5e1);
+  }
+  .le-link {
+    margin-left: auto;
+    color: var(--v2-accent, #2c5cdc);
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .le-link:hover {
+    text-decoration: underline;
+  }
+  @media (max-width: 520px) {
+    .live-econ {
+      font-size: 12.5px;
+      padding: 8px 11px;
+    }
+    .le-link {
+      margin-left: 0;
+      flex-basis: 100%;
+    }
+  }
+</style>
+
+<!-- Estilo del equivalente USD inyectado bajo el resultado primario.
+     No-scoped (:global) porque el nodo se crea client-side dentro del Calculator. -->
+<style is:global>
+  .calc-results .hc-usd-equiv {
+    margin-top: 4px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--v2-accent, #2c5cdc);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+</style>

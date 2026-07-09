@@ -86,3 +86,58 @@ export function creditoUva(i: Inputs): Outputs {
     _insight,
   };
 }
+
+/**
+ * Cronograma año a año del crédito UVA. La amortización se calcula en UVA
+ * (pesos constantes) por sistema francés a la tasa real, y cada valor se
+ * pasa a pesos NOMINALES aplicando la inflación esperada mes a mes — así se
+ * ve cómo la cuota trepa con la inflación. Contrato A4 (Calculator.astro).
+ * Números formateados es-AR. Devuelve null si los inputs no son válidos.
+ */
+export function schedule(
+  i: Inputs & { __lang?: string }
+): { headers: string[]; rows: (string | number)[][] } | null {
+  const monto = Number(i.monto);
+  const anos = Number(i.plazoAnos);
+  const uva = Number(i.tasaUVA) / 100;
+  const inf = Number(i.inflacionEsperada) / 100 || 0;
+  if (!monto || monto <= 0 || !anos || anos <= 0) return null;
+
+  const meses = anos * 12;
+  const iMes = uva / 12;
+  const cuotaReal =
+    iMes === 0 ? monto / meses : (monto * (iMes * Math.pow(1 + iMes, meses))) / (Math.pow(1 + iMes, meses) - 1);
+  const infMensual = Math.pow(1 + inf, 1 / 12) - 1;
+
+  const lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
+  const headers =
+    lang === 'en' ? ['Year', 'Monthly payment', 'Yearly interest', 'Yearly principal', 'Balance'] :
+    lang === 'pt' ? ['Ano', 'Parcela mensal', 'Juros do ano', 'Capital do ano', 'Saldo'] :
+    ['Año', 'Cuota mensual', 'Interés del año', 'Capital del año', 'Saldo'];
+
+  const f = (x: number) => Math.round(x).toLocaleString('es-AR');
+  const rows: (string | number)[][] = [];
+  const years = Math.min(Math.round(anos), 40);
+  let saldoReal = monto;
+  for (let y = 1; y <= years; y++) {
+    let interesAnioNom = 0;
+    let capitalAnioNom = 0;
+    let cuotaMesNom = 0;
+    let lastGlobalMonth = (y - 1) * 12 + 1;
+    for (let mm = 1; mm <= 12; mm++) {
+      const globalMonth = (y - 1) * 12 + mm;
+      if (globalMonth > meses) break;
+      lastGlobalMonth = globalMonth;
+      const factor = Math.pow(1 + infMensual, globalMonth - 1);
+      const interesReal = saldoReal * iMes;
+      const capitalReal = cuotaReal - interesReal;
+      if (mm === 1) cuotaMesNom = cuotaReal * factor;
+      interesAnioNom += interesReal * factor;
+      capitalAnioNom += capitalReal * factor;
+      saldoReal = Math.max(0, saldoReal - capitalReal);
+    }
+    const saldoNom = saldoReal * Math.pow(1 + infMensual, lastGlobalMonth - 1);
+    rows.push([y, f(cuotaMesNom), f(interesAnioNom), f(capitalAnioNom), f(saldoNom)]);
+  }
+  return { headers, rows };
+}

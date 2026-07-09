@@ -28,6 +28,7 @@ import PostResultTracking from './PostResultTracking.astro';
 import CategoryIcon from './CategoryIcon.astro';
 import FavoriteStar from './FavoriteStar.astro';
 import LiveData from './LiveData.astro';
+import LiveEconContext from './LiveEconContext.astro';
 import CategoryHub from './CategoryHub.astro';
 import SponsoredOffer from './SponsoredOffer.astro';
 import CalendarioFeriados from './CalendarioFeriados.astro';
@@ -40,6 +41,7 @@ import PediatricBmiChart from './PediatricBmiChart.astro';
 import HealthHub from './HealthHub.astro';
 import DateRangePresetsTable from './DateRangePresetsTable.astro';
 import IclVsIpcVsUvaTable from './IclVsIpcVsUvaTable.astro';
+import PlazoFijoBancosTable from './PlazoFijoBancosTable.astro';
 import { md, mdInline } from '../lib/markdown';
 import { findClusterForSlug } from '../lib/clusters';
 import { findHubForSlug } from '../lib/category-hubs';
@@ -101,6 +103,7 @@ const TRANSLATIONS = {
     methodology: 'Metodología y confianza', editorial: 'Editorial', updateLbl: 'Actualización',
     changelog: 'Historial de actualizaciones', changelogNote: 'Registro de cambios de datos, fórmula y contenido de esta calculadora.',
     privacy: 'Privacidad', limits: 'Limitaciones', howCite: '📌 Cómo citar esta calculadora',
+    citeApa: 'Formato APA', citeBibtex: 'BibTeX', citeCopy: 'Copiar', citeCopied: '¡Copiado!',
     alsoSee: 'También te puede interesar', guideEyebrow: '📘 ¿Querés entender más a fondo?',
     guideRead: 'Leé la guía:', guideOpen: 'Abrir guía →', compareEyebrow: '¿Dudás entre opciones?',
     compareLbl: 'Compará:', compareOpen: 'Ver comparación →', downloads: '⬇️ Llevate esto contigo',
@@ -129,6 +132,7 @@ const TRANSLATIONS = {
     methodology: 'Methodology & trust', editorial: 'Editorial', updateLbl: 'Updates',
     changelog: 'Update history', changelogNote: 'Log of data, formula and content changes for this calculator.',
     privacy: 'Privacy', limits: 'Limitations', howCite: '📌 How to cite this calculator',
+    citeApa: 'APA format', citeBibtex: 'BibTeX', citeCopy: 'Copy', citeCopied: 'Copied!',
     alsoSee: 'You might also like', guideEyebrow: '📘 Want to go deeper?',
     guideRead: 'Read the guide:', guideOpen: 'Open guide →', compareEyebrow: 'Torn between options?',
     compareLbl: 'Compare:', compareOpen: 'See comparison →', downloads: '⬇️ Take this with you',
@@ -157,6 +161,7 @@ const TRANSLATIONS = {
     methodology: 'Metodologia e confiança', editorial: 'Editorial', updateLbl: 'Atualização',
     changelog: 'Histórico de atualizações', changelogNote: 'Registro de mudanças de dados, fórmula e conteúdo desta calculadora.',
     privacy: 'Privacidade', limits: 'Limitações', howCite: '📌 Como citar esta calculadora',
+    citeApa: 'Formato APA', citeBibtex: 'BibTeX', citeCopy: 'Copiar', citeCopied: 'Copiado!',
     alsoSee: 'Você também pode gostar', guideEyebrow: '📘 Quer se aprofundar?',
     guideRead: 'Leia o guia:', guideOpen: 'Abrir guia →', compareEyebrow: 'Em dúvida entre opções?',
     compareLbl: 'Compare:', compareOpen: 'Ver comparação →', downloads: '⬇️ Leve isto com você',
@@ -297,6 +302,17 @@ const bandAlertable: boolean = isAlertEligible(calc.slug);
 const ECON_BAND_CATS = new Set(['finanzas', 'impuestos', 'negocios']);
 const bandEconomic: boolean = bandAlertable || ECON_BAND_CATS.has(calc.category);
 
+// ── Contexto económico vivo (B1) ────────────────────────────────────────────
+// Línea compacta (dólar oficial/blue + inflación interanual + SMVM) sobre el
+// form, solo en calcs de plata argentinas (AR root, categorías de plata).
+// Nuestra ventaja: el pipeline BCRA/INDEC ya patchea esos valores a diario.
+const MONEY_CATS = new Set(['finanzas', 'impuestos', 'negocios']);
+const showLiveEcon: boolean = !lang && audience === 'AR' && MONEY_CATS.has(calc.category);
+// El equivalente en USD (blue) bajo el resultado sería circular en conversores de
+// moneda/dólar/cripto → se desactiva ahí (la línea de contexto igual se muestra).
+const _usdDenylist = /d[oó]lar|dolar|\busd\b|u\$s|blue\b|\bmep\b|\bccl\b|cripto|bitcoin|\bbtc\b|euro|conversor-moneda|cambio-divisa|peso-a-|-a-dolar|-a-usd/i;
+const enableUsdEquiv: boolean = showLiveEcon && !_usdDenylist.test(calc.slug);
+
 const relatedSlugs: string[] = calc.relatedSlugs || [];
 const journeySlugs = getJourneySteps(calc.slug, relatedSlugs, 6);
 const _clusterSlugs = new Set((cluster?.items || []).map((it: any) => it.slug));
@@ -344,6 +360,22 @@ const showYmyl = isYMYL && !_hasDisc && !!_disc;
 const hasComoFunciona = !!(calc.explanation || (example && example.steps) || solvedExamples.length || calc.infographic?.src);
 const yearNow = updated ? updated.slice(-4) : '2026';
 const calcUrl = `https://hacecuentas.com${linkPrefix}/${calc.slug}`;
+
+// ── "Citar esta calculadora" enriquecido (B5) ───────────────────────────────
+// APA + BibTeX + copiar, colapsable, solo en categorías académicas/científicas
+// y páginas-dato (las que mapean a una /datos-* canónica). El resto conserva la
+// cita APA simple de siempre (sin regresión).
+const ACADEMIC_CATS = new Set(['matematica', 'ciencia', 'educacion']);
+const showCiteRich: boolean = ACADEMIC_CATS.has(calc.category) || !!datosSource;
+const apaCitation = `Rodríguez, M. (${yearNow}). ${calc.h1}. Hacé Cuentas. ${calcUrl}`;
+const bibtexKey = `hacecuentas_${String(calc.slug).replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '')}_${yearNow}`;
+const bibtexCitation = `@misc{${bibtexKey},
+  author       = {Rodríguez, Martín},
+  title        = {{${calc.h1}}},
+  year         = {${yearNow}},
+  howpublished = {\\url{${calcUrl}}},
+  note         = {Hacé Cuentas}
+}`;
 const reportSubject = encodeURIComponent(
   uiLang === 'en' ? `Error in ${linkPrefix}/${calc.slug}`
   : uiLang === 'pt' ? `Erro em ${linkPrefix}/${calc.slug}`
@@ -414,6 +446,13 @@ const editorialHtml = uiLang === 'en'
     </div>
   </div>
 
+  {/* Contexto económico vivo (B1): dólar oficial/blue + inflación interanual +
+      SMVM sobre el form, con equivalente USD (blue) bajo el resultado primario.
+      Solo calcs de plata AR; degrada solo si faltan datos del pipeline. */}
+  {showLiveEcon && !calcIsRestricted && (
+    <LiveEconContext slug={calc.slug} lang={uiLang} enableUsd={enableUsdEquiv} />
+  )}
+
   <!-- Calculadora (widget real). NADA arriba del calc salvo el hero — como el prototipo. -->
   <section id="calculadora">
     {calcIsRestricted ? (
@@ -458,6 +497,7 @@ const editorialHtml = uiLang === 'en'
   {calc.slug === 'calculadora-imc' && (<><ImcResultCta /><InteractiveBmiTable /><ImcUnitsHook /><HealthHub /></>)}
   {calc.slug === 'dias-entre-dos-fechas' && <DateRangePresetsTable />}
   {calc.slug === 'calculadora-actualizacion-alquiler-icl' && <IclVsIpcVsUvaTable />}
+  {calc.slug === 'calculadora-plazo-fijo' && <PlazoFijoBancosTable lang={calcWidgetLang} />}
 
   {/* "Seguí calculando" ahora vive DENTRO del widget (slot next-steps del
       Calculator): cae en el hueco de la columna izquierda y se revela
@@ -680,11 +720,34 @@ const editorialHtml = uiLang === 'en'
         </div>
       </div>
 
-      <div class="v2-cite">
-        <span class="ct">{L.howCite}</span>
-        <p class="ref">Rodríguez, M. ({yearNow}). {calc.h1}. Hacé Cuentas. {calcUrl}</p>
-        <p style="margin:0;">{L.licensePre} <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> {L.licensePost} <a href="/">Hacé Cuentas</a>.</p>
-      </div>
+      {showCiteRich ? (
+        <details class="v2-cite v2-cite-rich">
+          <summary class="ct">{L.howCite}</summary>
+          <div class="v2-cite-body">
+            <div class="v2-cite-row">
+              <div class="v2-cite-head">
+                <span class="v2-cite-fmt">{L.citeApa}</span>
+                <button type="button" class="v2-cite-copy" data-cite-copy="#cite-apa" data-cite-format="apa" data-copied-label={L.citeCopied}>{L.citeCopy}</button>
+              </div>
+              <p class="ref" id="cite-apa">{apaCitation}</p>
+            </div>
+            <div class="v2-cite-row">
+              <div class="v2-cite-head">
+                <span class="v2-cite-fmt">{L.citeBibtex}</span>
+                <button type="button" class="v2-cite-copy" data-cite-copy="#cite-bibtex" data-cite-format="bibtex" data-copied-label={L.citeCopied}>{L.citeCopy}</button>
+              </div>
+              <pre class="v2-cite-bibtex" id="cite-bibtex">{bibtexCitation}</pre>
+            </div>
+            <p style="margin:0;">{L.licensePre} <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> {L.licensePost} <a href="/">Hacé Cuentas</a>.</p>
+          </div>
+        </details>
+      ) : (
+        <div class="v2-cite">
+          <span class="ct">{L.howCite}</span>
+          <p class="ref">Rodríguez, M. ({yearNow}). {calc.h1}. Hacé Cuentas. {calcUrl}</p>
+          <p style="margin:0;">{L.licensePre} <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> {L.licensePost} <a href="/">Hacé Cuentas</a>.</p>
+        </div>
+      )}
 
       <p class="v2-tbl-note" style="margin-top:14px;"><a href={`mailto:errores@hacecuentas.com?subject=${reportSubject}&body=${reportBody}`}>{L.reportErr}</a></p>
     </section>
@@ -800,4 +863,73 @@ document.querySelectorAll('.calc-v2 [data-goto-tab]').forEach((link) => {
     }
   });
 });
+
+// "Citar esta calculadora" (B5): copiar cita APA / BibTeX al portapapeles.
+document.querySelectorAll('.calc-v2 .v2-cite-copy').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const sel = btn.getAttribute('data-cite-copy');
+    const target = sel ? document.querySelector(sel) : null;
+    const text = target ? (target.textContent || '').trim() : '';
+    if (!text) return;
+    const done = () => {
+      const orig = btn.getAttribute('data-copy-orig') || btn.textContent;
+      if (!btn.getAttribute('data-copy-orig')) btn.setAttribute('data-copy-orig', btn.textContent);
+      btn.textContent = btn.getAttribute('data-copied-label') || btn.textContent;
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = btn.getAttribute('data-copy-orig') || orig;
+        btn.classList.remove('copied');
+      }, 1600);
+      if (typeof gtag === 'function') {
+        try { gtag('event', 'cite_copy', { cite_format: btn.getAttribute('data-cite-format') || '' }); } catch (e) {}
+      }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(() => {});
+    } else {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'absolute'; ta.style.left = '-9999px';
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+        done();
+      } catch (e) {}
+    }
+  });
+});
 </script>
+
+<style>
+  /* "Citar esta calculadora" enriquecido (B5). Hereda fondo/borde de .v2-cite. */
+  .calc-v2 .v2-cite-rich { padding: 0; }
+  .calc-v2 .v2-cite-rich > summary {
+    list-style: none; cursor: pointer; padding: 14px 18px; margin: 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .calc-v2 .v2-cite-rich > summary::-webkit-details-marker { display: none; }
+  .calc-v2 .v2-cite-rich > summary::after {
+    content: '⌄'; font-size: 16px; color: var(--v2-muted); transition: transform .15s ease;
+  }
+  .calc-v2 .v2-cite-rich[open] > summary::after { transform: rotate(180deg); }
+  .calc-v2 .v2-cite-body { padding: 0 18px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .calc-v2 .v2-cite-row { display: flex; flex-direction: column; gap: 5px; }
+  .calc-v2 .v2-cite-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .calc-v2 .v2-cite-fmt {
+    font-weight: 700; color: var(--v2-ink); font-size: 12px;
+    text-transform: uppercase; letter-spacing: .03em;
+  }
+  .calc-v2 .v2-cite-copy {
+    border: 1px solid var(--v2-line); background: var(--v2-card); color: var(--v2-accent-ink);
+    border-radius: 7px; padding: 4px 11px; font-size: 12px; font-weight: 600; cursor: pointer;
+    white-space: nowrap; transition: background .12s ease, border-color .12s ease;
+  }
+  .calc-v2 .v2-cite-copy:hover { border-color: var(--v2-accent); background: var(--v2-accent-soft); }
+  .calc-v2 .v2-cite-copy.copied { color: #15803d; border-color: #bbf7d0; background: #f0fdf4; }
+  .calc-v2 .v2-cite-bibtex {
+    font-family: var(--v2-mono); font-size: 12px; color: var(--v2-body);
+    background: #fff; border: 1px solid var(--v2-line); border-radius: 8px;
+    padding: 10px 12px; margin: 0; overflow-x: auto; white-space: pre; line-height: 1.5;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .calc-v2 .v2-cite-rich > summary::after { transition: none; }
+  }
+</style>

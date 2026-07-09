@@ -41,7 +41,7 @@ const AFF = {
 };
 
 export type OfferVertical =
-  | 'bebe' | 'mascotas' | 'cripto' | 'fiscal' | 'legal' | 'inmobiliario' | 'retail';
+  | 'bebe' | 'mascotas' | 'cripto' | 'fiscal' | 'legal' | 'inmobiliario' | 'retail' | 'finanzas';
 
 export interface Offer {
   id: string;            // id estable para tracking
@@ -125,6 +125,51 @@ const OFFERS: Record<string, Offer> = {
   // ── Inmobiliario / alquiler ───────────────────────────────────────────────
   // SIN oferta por decisión de Martin (2026-06-09): NO mezclar Argenprop con
   // los proyectos personales. No volver a proponer cross-promo Argenprop acá.
+
+  // ── Finanzas / plazo fijo — SLOT DE INTENCIÓN, destino PROPIO (interno) ────
+  // Tesis: monetizar la INTENCIÓN, no el display. Quien acaba de calcular su
+  // plazo fijo tiene la pregunta caliente "¿qué banco me paga más?". El destino
+  // es NUESTRO comparador en vivo (/valores-bcra + /comparador-plazo-fijo), no
+  // un anunciante externo → no necesita partner y es honesto hoy.
+  // INACTIVO igual (enabled:false): no sumamos ningún bloque durante la revisión
+  // de AdSense. Al activar (enabled:true post-aprobación) OJO: SponsoredOffer
+  // hard-codea rel="sponsored nofollow" + tag "Publicidad" + target="_blank",
+  // que NO corresponde a un link de primera parte. Antes de encender esta oferta
+  // hay que darle a SponsoredOffer un modo "interno" (sin nofollow, sin
+  // "Publicidad", same-tab) o el crawler ve un nofollow hacia nuestra propia URL.
+  'calculadora-plazo-fijo': {
+    id: 'finanzas-comparador-pf', vertical: 'finanzas', enabled: false,
+    label: '¿Qué banco te paga más?',
+    body: 'Compará la TNA de plazo fijo de todos los bancos, en vivo y ordenada de mayor a menor.',
+    bodyDynamic: 'Tu plazo fijo rinde {value}. Fijate si otro banco te paga más: comparamos la TNA en vivo de todos los bancos.',
+    cta: 'Ver tasas por banco hoy',
+    href: '/valores-bcra',
+    note: 'Oferta INTERNA (destino propio) → no requiere partner. enabled:false a propósito por la revisión de AdSense. Al encender, ver caveat de SponsoredOffer (nofollow/Publicidad no van en link interno).',
+  },
+
+  // ── Fiscal / contador — CTA de asesoría (ESPERANDO PARTNER) ───────────────
+  // "Consultá con un contador" post-cálculo de monotributo/ganancias. Alto
+  // intento fiscal (recategorización, categoría, retención de sueldo). enabled:
+  // false hasta cerrar un estudio contable / red de contadores que compre el
+  // lead. Al activar: definir kind — 'link' (URL del partner) o 'lead' (mini-
+  // form → /api/lead, pero /api/lead hoy rutea a legal_leads con copy "estudio
+  // laboral"; para fiscal hay que agregar routing + consent copy de contador).
+  'calculadora-monotributo-2026': {
+    id: 'fiscal-contador-monotributo', vertical: 'fiscal', enabled: false,
+    label: '¿Dudas con tu categoría?',
+    body: 'Consultá con un contador matriculado antes de recategorizar o pasar al régimen general.',
+    cta: 'Consultá con un contador',
+    href: '#',
+    note: 'ACTIVAR (enabled:true) post-aprobación AdSense cuando haya partner (estudio contable). Definir kind link/lead al cerrar. Alto intento: monotributo es de los baldes fiscales con más tráfico.',
+  },
+  'calculadora-impuesto-ganancias-sueldo': {
+    id: 'fiscal-contador-ganancias', vertical: 'fiscal', enabled: false,
+    label: '¿Te retienen de más?',
+    body: 'Un contador puede revisar tus deducciones (SiRADIG) y el cálculo de la retención de Ganancias.',
+    cta: 'Consultá con un contador',
+    href: '#',
+    note: 'Mismo partner-slot que fiscal-contador-monotributo. ACTIVAR post-aprobación AdSense cuando haya partner contable. Definir kind link/lead al cerrar.',
+  },
 
   // ── ESPERANDO PARTNER (no renderizan hasta tener comprador del lead) ──────
   'calculadora-indemnizacion-despido': {

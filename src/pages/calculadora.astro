@@ -1,0 +1,690 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import HeroSearch from '../components/HeroSearch.astro';
+import Newsletter from '../components/Newsletter.astro';
+import { canDistributeCalc } from '../lib/content-policy';
+import { CATEGORY_COLORS, BRAND_DEFAULT } from '../lib/category-colors';
+import { TOTAL_DISPLAY, TOTAL_PLAIN } from '../lib/calc-counts';
+
+const siteUrl = 'https://hacecuentas.com';
+const title = 'Calculadora online gratis — Hacé Cuentas';
+const description =
+  `Calculadora online gratis: escribí cualquier operación y obtené el resultado al instante, o elegí entre ${TOTAL_PLAIN} calculadoras de sueldo, porcentajes, IMC, préstamos, fechas y más. Sin registro, sin descargas, en el celular o la compu.`;
+
+// ── Catálogo → top 20 más usadas ────────────────────────────────────────────
+// Misma señal que /populares e index.astro: GSC (popular-curated.json si existe)
+// → curada histórica → dedup contra catálogo vivo. Tomamos las primeras 20.
+const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+const calcs = Object.values(calcModules)
+  .map((m: any) => m.default ?? m)
+  .filter((c: any) => c && c.slug && c.h1 && canDistributeCalc(c));
+const bySlug = new Map(calcs.map((c: any) => [c.slug, c]));
+
+const popularCuratedModules = import.meta.glob<any>('../lib/popular-curated.json', { eager: true });
+const curatedJson: { slugs?: string[] } | null =
+  (Object.values(popularCuratedModules)[0] as any)?.default ??
+  (Object.values(popularCuratedModules)[0] as any) ??
+  null;
+
+const CURATED_FALLBACK = [
+  'sueldo-en-mano-argentina',
+  'calculadora-aguinaldo-sac',
+  'calculadora-porcentajes',
+  'calculadora-imc',
+  'calculadora-monotributo-2026',
+  'calculadora-interes-compuesto',
+  'calculadora-cuota-prestamo',
+  'calculadora-plazo-fijo',
+  'calculadora-impuesto-ganancias-sueldo',
+  'calculadora-indemnizacion-despido',
+  'calculadora-regla-de-tres-simple',
+  'dias-entre-dos-fechas',
+  'calculadora-edad-exacta',
+  'calculadora-calorias-diarias-tdee',
+  'calculadora-iva-agregar-discriminar',
+  'calculadora-dividir-cuenta-propina-amigos',
+  'calculadora-embarazo',
+  'calculadora-sueldo-por-hora',
+  'calculadora-split-gastos-grupo-amigos',
+  'calculadora-descuento-porcentaje-precio',
+];
+
+const ranked: any[] = [];
+const seen = new Set<string>();
+for (const slug of [...(curatedJson?.slugs ?? []), ...CURATED_FALLBACK]) {
+  if (seen.has(slug)) continue;
+  const c = bySlug.get(slug);
+  if (!c) continue;
+  seen.add(slug);
+  ranked.push(c);
+  if (ranked.length >= 20) break;
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  finanzas: 'Finanzas', salud: 'Salud', negocios: 'Negocios', marketing: 'Marketing',
+  vida: 'Vida cotidiana', deportes: 'Deportes', viajes: 'Viajes', construccion: 'Construcción',
+  cocina: 'Cocina', mascotas: 'Mascotas', matematica: 'Matemática', educacion: 'Educación',
+  automotor: 'Automotor', tecnologia: 'Tecnología', 'medio-ambiente': 'Medio Ambiente',
+  electronica: 'Electrónica', entretenimiento: 'Entretenimiento', ciencia: 'Ciencia',
+  jardineria: 'Jardinería', familia: 'Familia', idiomas: 'Idiomas', impuestos: 'Impuestos',
+  hogar: 'Hogar', clima: 'Clima', juegos: 'Juegos', astronomia: 'Astronomía',
+};
+
+const faqs = [
+  {
+    q: '¿La calculadora online es gratis?',
+    a: 'Sí, 100% gratis y sin límites. No hay que registrarse, descargar nada ni pagar. Escribís la operación, tocás "Calcular" y listo.',
+  },
+  {
+    q: '¿Qué operaciones puedo escribir?',
+    a: 'Sumas, restas, multiplicaciones (× o *), divisiones (÷ o /), paréntesis, potencias (^) y porcentajes (por ejemplo 200*10% = 20). Podés usar coma o punto para los decimales.',
+  },
+  {
+    q: '¿Funciona en el celular?',
+    a: 'Sí. Es mobile-first: se ve y se usa igual de bien en el teléfono, la tablet o la computadora, y no ocupa espacio porque corre en el navegador.',
+  },
+  {
+    q: '¿Mis cálculos se guardan o se envían a algún lado?',
+    a: 'No. Todo el cálculo ocurre en tu navegador. No enviamos lo que escribís a ningún servidor ni lo guardamos.',
+  },
+  {
+    q: '¿Necesito una calculadora más específica?',
+    a: `Usá el buscador de arriba o mirá las calculadoras destacadas: tenemos más de ${TOTAL_PLAIN} para sueldo, impuestos, salud, cocina, construcción, fechas y mucho más.`,
+  },
+  {
+    q: '¿Sirve para el colegio o la facultad?',
+    a: 'Para cuentas del día a día, sí. Para trigonometría, logaritmos, factoriales o notación científica, entrá a la calculadora científica, que tiene teclado completo.',
+  },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'Calculadora online gratis',
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: 'Web',
+  url: `${siteUrl}/calculadora`,
+  description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  publisher: { '@type': 'Organization', name: 'Hacé Cuentas', url: siteUrl },
+};
+
+const schemaFaq = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+
+const schemaBreadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${siteUrl}/` },
+    { '@type': 'ListItem', position: 2, name: 'Calculadora online', item: `${siteUrl}/calculadora` },
+  ],
+};
+---
+
+<Layout title={title} description={description} schema={schema}>
+  <Header slot="header" />
+
+  <article class="calc-landing">
+
+    <nav class="breadcrumbs" aria-label="Migas de pan">
+      <a href="/">Inicio</a>
+      <span aria-hidden="true">›</span>
+      <span aria-current="page">Calculadora online</span>
+    </nav>
+
+    <!-- HERO + BUSCADOR -->
+    <header class="hero">
+      <h1>Calculadora online gratis</h1>
+      <p class="hero__sub">
+        Escribí una operación y obtené el resultado al instante, o buscá entre {TOTAL_DISPLAY}
+        calculadoras listas para usar. Sin registro, sin descargas, en el celular o la compu.
+      </p>
+      <div class="hero__search">
+        <HeroSearch totalDisplay={TOTAL_DISPLAY} />
+      </div>
+    </header>
+
+    <!-- CALCULADORA LIBRE -->
+    <section class="free-calc" aria-labelledby="free-calc-heading">
+      <h2 id="free-calc-heading">Calculadora rápida</h2>
+      <p class="free-calc__hint">
+        Escribí tu cuenta (por ejemplo <code>1250 * 1.21</code> o <code>(100 + 50) / 3</code>)
+        y tocá <strong>Calcular</strong>. Acepta <code>+ − × ÷</code>, paréntesis,
+        potencias <code>^</code> y porcentajes <code>%</code>.
+      </p>
+
+      <form class="fc" id="fc-form" novalidate>
+        <label class="sr-only" for="fc-input">Operación a calcular</label>
+        <input
+          id="fc-input"
+          class="fc__input"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          placeholder="Ej: 1250 * 1.21"
+          aria-describedby="fc-result"
+        />
+        <button type="submit" class="fc__btn" id="fc-btn">Calcular</button>
+      </form>
+
+      <div class="fc__result" id="fc-result" role="status" aria-live="polite" hidden>
+        <span class="fc__result-eq" id="fc-eq"></span>
+        <span class="fc__result-value" id="fc-value"></span>
+      </div>
+
+      <div class="fc__examples" aria-label="Ejemplos">
+        <span class="fc__examples-label">Probá:</span>
+        <button type="button" class="fc__chip" data-expr="15% de 200 → 200*15%">200 * 15%</button>
+        <button type="button" class="fc__chip" data-expr="1500/12">1500 / 12</button>
+        <button type="button" class="fc__chip" data-expr="(3+5)*2^3">(3 + 5) * 2^3</button>
+        <button type="button" class="fc__chip" data-expr="99900*1.21">99900 * 1.21</button>
+      </div>
+    </section>
+
+    <!-- TOP 20 -->
+    <section class="top-section" aria-labelledby="top-heading">
+      <h2 id="top-heading">Las {ranked.length} calculadoras más usadas</h2>
+      <p class="top-intro">
+        ¿Buscás algo más específico que una cuenta suelta? Estas son las que más usa la gente.
+      </p>
+      <ol class="top-grid">
+        {ranked.map((c: any, i: number) => {
+          const color = CATEGORY_COLORS[c.category] || BRAND_DEFAULT;
+          const label = CATEGORY_LABELS[c.category] || c.category;
+          return (
+            <li>
+              <a class="top-card" href={`/${c.slug}`} style={`--cat: ${color}`}>
+                <span class="top-card__num" aria-hidden="true">{i + 1}</span>
+                <span class="top-card__ico" aria-hidden="true">{c.icon || '🧮'}</span>
+                <span class="top-card__body">
+                  <span class="top-card__name">{c.h1}</span>
+                  <span class="top-card__cat">{label}</span>
+                </span>
+              </a>
+            </li>
+          );
+        })}
+      </ol>
+      <p class="top-more">
+        Es una muestra: mirá el <a href="/calculadoras">índice completo de {TOTAL_DISPLAY} calculadoras</a>
+        o las <a href="/populares">más usadas</a>.
+      </p>
+    </section>
+
+    <!-- CONTENIDO ÚNICO -->
+    <section class="prose" aria-labelledby="prose-heading">
+      <h2 id="prose-heading">Qué podés calcular acá</h2>
+      <p>
+        <strong>Hacé Cuentas</strong> es una calculadora online gratis pensada para resolver
+        cuentas reales, no solo sumar y restar. Arriba tenés dos caminos: la
+        <em>calculadora rápida</em>, para cuando querés tirar una operación al vuelo —una
+        multiplicación, un porcentaje, una división con decimales—, y el <em>buscador</em>, para
+        cuando la cuenta tiene nombre propio y merece su propia herramienta con explicación paso a paso.
+      </p>
+      <p>
+        En el terreno del dinero podés calcular tu <a href="/sueldo-en-mano-argentina">sueldo en mano</a>,
+        el <a href="/calculadora-aguinaldo-sac">aguinaldo</a>, una
+        <a href="/calculadora-indemnizacion-despido">indemnización por despido</a>, la
+        <a href="/calculadora-cuota-prestamo">cuota de un préstamo</a>, el rendimiento de un
+        <a href="/calculadora-plazo-fijo">plazo fijo</a> o el
+        <a href="/calculadora-interes-compuesto">interés compuesto</a> de una inversión a lo largo
+        del tiempo. Si sos monotributista o trabajás por tu cuenta, tenés la
+        <a href="/calculadora-monotributo-2026">categoría de monotributo</a> y el
+        <a href="/calculadora-impuesto-ganancias-sueldo">impuesto a las Ganancias</a> con las escalas
+        del año, que actualizamos nosotros para que vos no tengas que estar mirando la letra chica.
+      </p>
+      <p>
+        Pero una calculadora es mucho más que finanzas. Podés sacar
+        <a href="/calculadora-porcentajes">porcentajes</a> y descuentos, resolver una
+        <a href="/calculadora-regla-de-tres-simple">regla de tres</a>, contar los
+        <a href="/dias-entre-dos-fechas">días entre dos fechas</a> o tu
+        <a href="/calculadora-edad-exacta">edad exacta</a>, dividir
+        <a href="/calculadora-split-gastos-grupo-amigos">los gastos de una salida entre amigos</a>,
+        estimar tus <a href="/calculadora-calorias-diarias-tdee">calorías diarias</a> o tu
+        <a href="/calculadora-imc">índice de masa corporal</a>, convertir
+        <a href="/conversor-tazas-gramos-cocina-recetas">tazas a gramos</a> en una receta o calcular
+        cuánta <a href="/calculadora-pintura-por-m2-litros-latas">pintura necesitás por metro cuadrado</a>.
+        Y si lo tuyo es el estudio, la <a href="/calculadora-cientifica">calculadora científica</a> trae
+        teclado completo con senos, cosenos, logaritmos, raíces y factoriales.
+      </p>
+      <p>
+        Todo funciona en el navegador, sin instalar aplicaciones ni crear una cuenta: entrás, hacés la
+        cuenta y seguís con tu día. Las herramientas están optimizadas para el celular, así que sirven
+        tanto en el escritorio como cuando estás en la calle con el teléfono en la mano. Los cálculos
+        ocurren en tu propio dispositivo, no viajan a ningún servidor, y las calculadoras que dependen de
+        datos que cambian —cotización del dólar, inflación, escalas impositivas— se mantienen al día para
+        que el resultado sea el correcto hoy, no el del año pasado.
+      </p>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq-section" aria-labelledby="faq-heading">
+      <h2 id="faq-heading">Preguntas frecuentes</h2>
+      <dl class="faq-list">
+        {faqs.map((item) => (
+          <details class="faq-item">
+            <summary class="faq-q">
+              <span>{item.q}</span>
+              <span class="faq-chevron" aria-hidden="true">›</span>
+            </summary>
+            <dd class="faq-a"><p>{item.a}</p></dd>
+          </details>
+        ))}
+      </dl>
+    </section>
+
+    <Newsletter />
+
+  </article>
+
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)}></script>
+
+  <Footer slot="footer" />
+</Layout>
+
+<script>
+  // ── Calculadora libre: evaluador seguro (shunting-yard, sin eval) ──────────
+  // Respeta la regla del repo: calcula al click en "Calcular" (submit del form),
+  // no de forma reactiva por tecla. Única excepción: si la URL trae ?q=<expr>,
+  // se pre-carga y auto-calcula UNA vez al cargar (deep-link, data-auto-calculate).
+  (function () {
+    const OPS: Record<string, { p: number; r?: boolean }> = {
+      '+': { p: 1 }, '-': { p: 1 }, '*': { p: 2 }, '/': { p: 2 }, '^': { p: 3, r: true },
+    };
+
+    function evalExpr(raw: string): { ok: boolean; value?: number; err?: string } {
+      let s = String(raw)
+        .replace(/×/g, '*').replace(/÷/g, '/')
+        .replace(/,/g, '.')
+        .replace(/\s+/g, '');
+      // porcentaje: "10%" → "(10/100)"  (200*10% = 20)
+      s = s.replace(/(\d+(?:\.\d+)?)%/g, '($1/100)');
+      if (!s) return { ok: false };
+      if (!/^[0-9.+\-*/()^]+$/.test(s)) return { ok: false, err: 'chars' };
+      const tokens = s.match(/(\d+(?:\.\d+)?|[+\-*/()^])/g);
+      if (!tokens) return { ok: false };
+
+      const out: Array<number | string> = [];
+      const ops: string[] = [];
+      let prev: string | null = null;
+      for (const t of tokens) {
+        if (/^\d/.test(t)) { out.push(parseFloat(t)); prev = 'num'; }
+        else if (t === '(') { ops.push(t); prev = '('; }
+        else if (t === ')') {
+          while (ops.length && ops[ops.length - 1] !== '(') out.push(ops.pop() as string);
+          if (!ops.length) return { ok: false };
+          ops.pop();
+          prev = ')';
+        } else {
+          // menos/más unario → 0 - x
+          if ((t === '-' || t === '+') && (prev === null || prev === 'op' || prev === '(')) out.push(0);
+          while (ops.length) {
+            const top = ops[ops.length - 1];
+            if (top === '(') break;
+            const a = OPS[top], b = OPS[t];
+            if (a.p > b.p || (a.p === b.p && !b.r)) out.push(ops.pop() as string);
+            else break;
+          }
+          ops.push(t);
+          prev = 'op';
+        }
+      }
+      while (ops.length) { const o = ops.pop() as string; if (o === '(') return { ok: false }; out.push(o); }
+
+      const st: number[] = [];
+      for (const t of out) {
+        if (typeof t === 'number') { st.push(t); continue; }
+        const b = st.pop(), a = st.pop();
+        if (a === undefined || b === undefined) return { ok: false };
+        let r: number;
+        if (t === '+') r = a + b;
+        else if (t === '-') r = a - b;
+        else if (t === '*') r = a * b;
+        else if (t === '/') { if (b === 0) return { ok: false, err: 'div0' }; r = a / b; }
+        else if (t === '^') r = Math.pow(a, b);
+        else return { ok: false };
+        st.push(r);
+      }
+      if (st.length !== 1 || !isFinite(st[0])) return { ok: false };
+      return { ok: true, value: st[0] };
+    }
+
+    const fmt = (n: number) =>
+      Number.isInteger(n)
+        ? n.toLocaleString('es-AR')
+        : n.toLocaleString('es-AR', { maximumFractionDigits: 6 });
+
+    function init() {
+      const form = document.getElementById('fc-form') as HTMLFormElement | null;
+      const input = document.getElementById('fc-input') as HTMLInputElement | null;
+      const result = document.getElementById('fc-result');
+      const eqEl = document.getElementById('fc-eq');
+      const valEl = document.getElementById('fc-value');
+      if (!form || !input || !result || !eqEl || !valEl || form.dataset.init) return;
+      form.dataset.init = '1';
+
+      function compute() {
+        const raw = (input!.value || '').trim();
+        if (!raw) { result!.hidden = true; return; }
+        const res = evalExpr(raw);
+        result!.hidden = false;
+        if (res.ok && typeof res.value === 'number') {
+          eqEl!.textContent = raw + ' =';
+          valEl!.textContent = fmt(res.value);
+          result!.classList.remove('is-error');
+        } else {
+          eqEl!.textContent = '';
+          valEl!.textContent = res.err === 'div0'
+            ? 'No se puede dividir por cero'
+            : 'Revisá la operación (solo números y + − × ÷ ( ) ^ %)';
+          result!.classList.add('is-error');
+        }
+        try {
+          if (typeof (window as any).gtag === 'function') {
+            (window as any).gtag('event', 'calculadora_libre_calcular', { ok: !!res.ok });
+          }
+        } catch {}
+      }
+
+      form.addEventListener('submit', (e) => { e.preventDefault(); compute(); });
+
+      document.querySelectorAll<HTMLButtonElement>('.fc__chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          // El data-expr puede traer "descripción → expresión"; tomamos lo de después de →.
+          const raw = chip.dataset.expr || chip.textContent || '';
+          const expr = raw.includes('→') ? raw.split('→').pop()!.trim() : raw.trim();
+          input.value = expr;
+          input.focus();
+          compute();
+        });
+      });
+
+      // Deep-link: ?q=<expr> pre-carga y auto-calcula una vez.
+      try {
+        const q = new URLSearchParams(location.search).get('q');
+        if (q) { input.value = q; compute(); }
+      } catch {}
+    }
+
+    init();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>
+
+<style>
+  .calc-landing {
+    max-width: 880px;
+    margin: 1rem auto 2rem;
+    padding: 0 1rem;
+  }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  .breadcrumbs {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 0.875rem; color: var(--text-subtle); margin-bottom: 1.25rem;
+  }
+  .breadcrumbs a { color: var(--text-muted); text-decoration: none; }
+  .breadcrumbs a:hover { color: var(--accent); }
+
+  section { margin-bottom: 3.5rem; }
+  section h2 {
+    font-size: clamp(1.375rem, 3vw, 1.75rem);
+    margin-bottom: 1rem;
+    color: var(--text);
+  }
+
+  /* HERO */
+  .hero {
+    text-align: center;
+    padding: 2rem 0 2.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3rem;
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.15;
+    margin-bottom: 0.875rem;
+  }
+  .hero__sub {
+    font-size: 1.0625rem;
+    color: var(--text-muted);
+    max-width: 620px;
+    margin: 0 auto 1.75rem;
+    line-height: 1.6;
+  }
+  .hero__search {
+    display: flex;
+    justify-content: center;
+  }
+
+  /* CALCULADORA LIBRE */
+  .free-calc__hint {
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+  }
+  .free-calc__hint code {
+    font-size: 0.85em;
+    background: var(--bg-muted);
+    padding: 0.1em 0.4em;
+    border-radius: 4px;
+  }
+  .fc {
+    display: flex;
+    gap: 0.625rem;
+    flex-wrap: wrap;
+  }
+  .fc__input {
+    flex: 1;
+    min-width: 0;
+    font-family: inherit;
+    font-size: 1.125rem;
+    color: var(--text);
+    background: var(--bg-card);
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-lg, var(--radius));
+    padding: 0.75rem 1rem;
+    transition: border-color 0.18s, box-shadow 0.18s;
+  }
+  .fc__input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .fc__btn {
+    flex-shrink: 0;
+    background: var(--accent);
+    color: #fff;
+    font-family: inherit;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius-lg, var(--radius));
+    padding: 0.75rem 1.75rem;
+    cursor: pointer;
+    transition: filter 0.15s, transform 0.15s;
+  }
+  .fc__btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+
+  .fc__result {
+    margin-top: 1rem;
+    padding: 1rem 1.25rem;
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .fc__result.is-error {
+    background: var(--bg-muted);
+    border-color: var(--border);
+  }
+  .fc__result-eq {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-family: 'Fira Code', 'Consolas', monospace;
+    word-break: break-word;
+  }
+  .fc__result-value {
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.2;
+    word-break: break-word;
+  }
+  .fc__result.is-error .fc__result-value {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+
+  .fc__examples {
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .fc__examples-label {
+    font-size: 0.8125rem;
+    color: var(--text-subtle);
+    font-weight: 600;
+  }
+  .fc__chip {
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.3125rem 0.75rem;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .fc__chip:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* TOP 20 */
+  .top-intro {
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    margin-bottom: 1.25rem;
+  }
+  .top-grid {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.625rem;
+  }
+  .top-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.875rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cat, var(--accent));
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  }
+  .top-card:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm, 0 2px 8px rgba(0,0,0,0.06));
+  }
+  .top-card__num {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--text-subtle);
+    width: 1.25rem;
+    text-align: center;
+  }
+  .top-card__ico { flex-shrink: 0; font-size: 1.25rem; }
+  .top-card__body { min-width: 0; }
+  .top-card__name {
+    display: block;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text);
+  }
+  .top-card__cat {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.125rem;
+  }
+  .top-more {
+    margin-top: 1.25rem;
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+  }
+  .top-more a { color: var(--accent); }
+
+  /* PROSE */
+  .prose p {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--text-muted);
+    margin-bottom: 1.125rem;
+  }
+  .prose a { color: var(--accent); text-decoration: none; }
+  .prose a:hover { text-decoration: underline; }
+  .prose strong { color: var(--text); }
+
+  /* FAQ */
+  .faq-list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .faq-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .faq-item[open] { border-color: var(--accent); }
+  .faq-q {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text);
+    list-style: none;
+    user-select: none;
+  }
+  .faq-q::-webkit-details-marker { display: none; }
+  .faq-item[open] .faq-q { color: var(--accent); }
+  .faq-chevron { font-size: 1.125rem; color: var(--text-subtle); transition: transform 0.2s; flex-shrink: 0; }
+  .faq-item[open] .faq-chevron { transform: rotate(90deg); color: var(--accent); }
+  .faq-a { padding: 0 1.25rem 1.125rem; margin: 0; }
+  .faq-a p { font-size: 0.9375rem; color: var(--text-muted); line-height: 1.65; margin: 0; }
+
+  @media (max-width: 640px) {
+    .top-grid { grid-template-columns: 1fr; }
+    .fc__btn { flex: 1; }
+  }
+</style>

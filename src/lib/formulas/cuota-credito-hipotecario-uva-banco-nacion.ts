@@ -40,3 +40,49 @@ export function cuotaCreditoHipotecarioUvaBancoNacion(i: Inputs): Outputs {
 
   return out;
 }
+
+/**
+ * Cronograma año a año (sistema francés a la tasa real, en UVA / pesos
+ * constantes). Muestra cuota, interés y capital amortizado por año más el
+ * saldo de capital restante. Contrato A4 (Calculator.astro).
+ * Números formateados es-AR. Devuelve null si los inputs no son válidos.
+ */
+export function schedule(
+  i: Inputs
+): { headers: string[]; rows: (string | number)[][] } | null {
+  const monto = Number(i.monto) || 0;
+  const p = Number(i.plazoAnios) || 0;
+  const tna = (Number(i.tnaReal) || 0) / 100;
+  if (monto <= 0 || p <= 0 || tna <= 0) return null;
+
+  const n = p * 12;
+  const iMes = tna / 12;
+  const cuota =
+    iMes === 0 ? monto / n : (monto * iMes * Math.pow(1 + iMes, n)) / (Math.pow(1 + iMes, n) - 1);
+
+  const lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
+  const headers =
+    lang === 'en' ? ['Year', 'Monthly payment', 'Yearly interest', 'Yearly principal', 'Balance'] :
+    lang === 'pt' ? ['Ano', 'Parcela mensal', 'Juros do ano', 'Capital do ano', 'Saldo'] :
+    ['Año', 'Cuota mensual', 'Interés del año', 'Capital del año', 'Saldo'];
+
+  const f = (x: number) => Math.round(x).toLocaleString('es-AR');
+  const rows: (string | number)[][] = [];
+  const years = Math.min(Math.round(p), 40);
+  let saldo = monto;
+  for (let y = 1; y <= years; y++) {
+    let interesAnio = 0;
+    let capitalAnio = 0;
+    for (let mm = 1; mm <= 12; mm++) {
+      const gm = (y - 1) * 12 + mm;
+      if (gm > n) break;
+      const interes = saldo * iMes;
+      const capital = cuota - interes;
+      interesAnio += interes;
+      capitalAnio += capital;
+      saldo = Math.max(0, saldo - capital);
+    }
+    rows.push([y, f(cuota), f(interesAnio), f(capitalAnio), f(saldo)]);
+  }
+  return { headers, rows };
+}

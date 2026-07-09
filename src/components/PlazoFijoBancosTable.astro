@@ -1,0 +1,291 @@
+---
+/**
+ * PlazoFijoBancosTable — "Tasas TNA por banco (hoy)" para la calc de plazo fijo.
+ *
+ * DATO VIVO: getPlazoFijoTop() (BCRA vía api.argentinadatos.com, la MISMA fuente
+ * que /comparador-plazo-fijo y /valores-bcra). Se renderiza SOLO en
+ * /calculadora-plazo-fijo (guard en CalcLayoutV2), así el fetch de build NO corre
+ * en las ~2500 calcs restantes.
+ *
+ * Si la API no responde en build → cae a un set de referencia de 6 bancos grandes
+ * marcado "orientativo" (sin inventar precisión, con fecha del dato). Cada fila
+ * lleva la TEM a 30 días y el interés simple por $1.000.000 a 30 días, para dar
+ * contexto sin exigir que el usuario calcule.
+ *
+ * Regla del repo: NO reactivo/auto-cálculo — esto es una tabla de referencia
+ * estática (server-rendered), no toca el botón Calcular de la calc.
+ */
+import { getPlazoFijoTop, bancoColor } from '../lib/plazo-fijo';
+
+interface Props {
+  lang?: 'es' | 'en' | 'pt';
+}
+const { lang = 'es' } = Astro.props as Props;
+
+const I18N = {
+  es: {
+    title: 'Tasas TNA por banco (hoy)',
+    caption:
+      'TNA de plazo fijo tradicional a 30 días que las entidades reportan al BCRA, ordenada de mayor a menor. Poné la TNA de tu banco en la calculadora de arriba para ver tu rendimiento exacto.',
+    hBank: 'Banco',
+    hTna: 'TNA',
+    hTem: 'TEM (30 días)',
+    hInt: 'Interés por $1.000.000 a 30 días',
+    liveNote:
+      'Datos en vivo (BCRA vía ArgentinaDatos), actualizados al {date}. Las tasas cambian día a día: verificá con tu banco antes de constituir el plazo fijo. Interés estimado con interés simple.',
+    refNote:
+      'Valores de referencia orientativos: la fuente en vivo no respondió en la última actualización ({date}). Verificá la TNA vigente en tu banco antes de invertir — no tomes estos números como la tasa exacta de hoy.',
+    seeAll: 'Ver comparador completo de plazo fijo',
+  },
+  en: {
+    title: 'TNA rate by bank (today)',
+    caption:
+      '30-day traditional fixed-term TNA that banks report to the BCRA, sorted high to low. Enter your bank’s TNA in the calculator above to see your exact return.',
+    hBank: 'Bank',
+    hTna: 'TNA',
+    hTem: 'Monthly (30 days)',
+    hInt: 'Interest on $1,000,000 over 30 days',
+    liveNote:
+      'Live data (BCRA via ArgentinaDatos), updated {date}. Rates change daily: confirm with your bank before opening the deposit. Interest estimated with simple interest.',
+    refNote:
+      'Indicative reference values: the live source did not respond on the last update ({date}). Confirm the current TNA with your bank before investing — do not treat these as today’s exact rate.',
+    seeAll: 'See the full fixed-term comparator',
+  },
+  pt: {
+    title: 'Taxa TNA por banco (hoje)',
+    caption:
+      'TNA de prazo fixo tradicional a 30 dias que as instituições reportam ao BCRA, ordenada da maior para a menor. Coloque a TNA do seu banco na calculadora acima para ver o seu rendimento exato.',
+    hBank: 'Banco',
+    hTna: 'TNA',
+    hTem: 'Mensal (30 dias)',
+    hInt: 'Juros por $1.000.000 em 30 dias',
+    liveNote:
+      'Dados ao vivo (BCRA via ArgentinaDatos), atualizados em {date}. As taxas mudam dia a dia: confirme com o seu banco antes de constituir o depósito. Juros estimados com juros simples.',
+    refNote:
+      'Valores de referência orientativos: a fonte ao vivo não respondeu na última atualização ({date}). Confirme a TNA vigente no seu banco antes de investir — não tome estes números como a taxa exata de hoje.',
+    seeAll: 'Ver o comparador completo de prazo fixo',
+  },
+} as const;
+const L = I18N[lang] || I18N.es;
+
+// Set de referencia (orientativo) — solo se usa si la API no responde en build.
+// Bancos grandes reconocibles; valores de referencia, NO la tasa exacta de hoy.
+const FALLBACK = [
+  { banco: 'Macro', tna: 21.5 },
+  { banco: 'Provincia BA', tna: 21.5 },
+  { banco: 'BBVA', tna: 20.5 },
+  { banco: 'Nación', tna: 19.0 },
+  { banco: 'Galicia', tna: 18.25 },
+  { banco: 'Santander', tna: 16.5 },
+];
+
+const live = await getPlazoFijoTop(12);
+const usingLive = live.length > 0;
+const bancos = usingLive ? live : FALLBACK;
+
+const CAP = 1_000_000;
+const DIAS = 30;
+const rows = bancos
+  .map((b) => {
+    const tem = (b.tna * DIAS) / 365; // TEM aproximada a 30 días
+    const interes = CAP * (b.tna / 100) * (DIAS / 365);
+    return { nombre: b.banco, tna: b.tna, tem, interes, color: bancoColor(b.banco) };
+  })
+  .sort((a, b) => b.tna - a.tna);
+
+const locale = lang === 'en' ? 'en-US' : lang === 'pt' ? 'pt-BR' : 'es-AR';
+const pct = (n: number, d = 2) => n.toFixed(d).replace('.', locale === 'en-US' ? '.' : ',');
+const fmtArs = (n: number) =>
+  new Intl.NumberFormat(locale, { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Math.round(n));
+const dateStr = new Date().toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' });
+const note = (usingLive ? L.liveNote : L.refNote).replace('{date}', dateStr);
+---
+
+<section class="pf-banks" aria-labelledby="pf-banks-h">
+  <div class="pf-banks-head">
+    <h2 id="pf-banks-h">
+      {usingLive && <span class="pf-live-dot" aria-hidden="true"></span>}
+      {L.title}
+    </h2>
+  </div>
+  <p class="pf-banks-caption">{L.caption}</p>
+
+  <div class="pf-banks-tbl" role="table" aria-label={L.title}>
+    <div class="pf-tr pf-head" role="row">
+      <div role="columnheader">{L.hBank}</div>
+      <div role="columnheader" class="num">{L.hTna}</div>
+      <div role="columnheader" class="num">{L.hTem}</div>
+      <div role="columnheader" class="num">{L.hInt}</div>
+    </div>
+    {rows.map((r) => (
+      <div class="pf-tr pf-body" role="row">
+        <div role="cell" class="pf-bank">
+          <span class="pf-dot" style={`background:${r.color}`}></span>{r.nombre}
+        </div>
+        <div role="cell" class="num pf-tna" data-label={L.hTna}>{pct(r.tna)}%</div>
+        <div role="cell" class="num" data-label={L.hTem}>{pct(r.tem)}%</div>
+        <div role="cell" class="num" data-label={L.hInt}>{fmtArs(r.interes)}</div>
+      </div>
+    ))}
+  </div>
+
+  <p class="pf-banks-note">{note}</p>
+  <p class="pf-banks-cta">
+    <a href="/comparador-plazo-fijo" data-pf-comparador>{L.seeAll} →</a>
+  </p>
+</section>
+
+<script is:inline>
+  // Señal de intención: click al comparador desde la tabla de la calc.
+  // Guard obligatorio (typeof gtag): NO tocamos el setup de gtag, solo emitimos.
+  (function () {
+    var a = document.querySelector('[data-pf-comparador]');
+    if (!a) return;
+    a.addEventListener('click', function () {
+      if (typeof gtag === 'function') {
+        gtag('event', 'pf_bancos_comparador_click', {
+          calc_slug: 'calculadora-plazo-fijo',
+          source: 'plazo_fijo_bancos_table',
+        });
+      }
+    });
+  })();
+</script>
+
+<style>
+  .pf-banks {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    margin: 1.5rem 0;
+    box-shadow: var(--shadow-sm);
+  }
+  .pf-banks-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .pf-banks-head h2 {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text);
+  }
+  .pf-live-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--success);
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    animation: pf-pulse 2s ease-in-out infinite;
+  }
+  @keyframes pf-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 var(--success-soft); }
+    50% { box-shadow: 0 0 0 6px transparent; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pf-live-dot { animation: none; }
+  }
+  .pf-banks-caption {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: 0 0 1rem;
+  }
+
+  .pf-banks-tbl {
+    display: grid;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--bg-soft);
+  }
+  .pf-tr {
+    display: grid;
+    grid-template-columns: 1.4fr 0.7fr 1fr 1.3fr;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.9rem;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+  }
+  .pf-tr:last-child { border-bottom: none; }
+  .pf-head {
+    background: var(--bg-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .pf-body { background: var(--bg-card); }
+  .pf-tr .num { text-align: right; }
+  .pf-bank { display: flex; align-items: center; gap: 0.5rem; font-weight: 500; }
+  .pf-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .pf-tna { font-weight: 700; color: var(--accent-strong); }
+
+  .pf-banks-note {
+    font-size: 0.75rem;
+    color: var(--text-subtle);
+    line-height: 1.5;
+    margin: 0.875rem 0 0;
+  }
+  .pf-banks-cta { margin: 0.5rem 0 0; }
+  .pf-banks-cta a {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .pf-banks-cta a:hover { text-decoration: underline; }
+
+  /* ── Mobile: la tabla de 4 columnas pasa a tarjetas apiladas ── */
+  @media (max-width: 560px) {
+    .pf-banks { padding: 1rem; }
+    .pf-banks-tbl {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      border: none;
+      background: transparent;
+      border-radius: 0;
+      overflow: visible;
+    }
+    .pf-head { display: none; }
+    .pf-body {
+      display: block;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.8rem 0.9rem;
+    }
+    .pf-bank {
+      font-size: 1rem;
+      font-weight: 700;
+      padding-bottom: 0.5rem;
+      margin-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .pf-body .num {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      text-align: right;
+      padding: 0.25rem 0;
+    }
+    .pf-body .num::before {
+      content: attr(data-label);
+      color: var(--text-muted);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+  }
+</style>

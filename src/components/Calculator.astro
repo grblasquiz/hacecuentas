@@ -41,6 +41,14 @@ export interface Field {
    * claves válidas viven en src/lib/profile/schema.ts (PROFILE_KEYS).
    */
   profileKey?: string;
+  /**
+   * Visibilidad condicional (opt-in). El campo se muestra sólo cuando otro
+   * campo `field` tiene un valor incluido en `in`. Cuando está oculto, su input
+   * se `disabled` → no entra al FormData ni a la validación. Sin `showWhen` el
+   * comportamiento es el de siempre (campo siempre visible). El campo
+   * controlador debe ser un select del mismo formulario.
+   */
+  showWhen?: { field: string; in: string[] };
 }
 
 export interface Preset {
@@ -98,6 +106,13 @@ export interface CalcConfig {
     format: 'currency' | 'number' | 'percentage' | 'date' | 'text' | 'duration';
     primary?: boolean;
     suffix?: string;
+    /**
+     * Opt-in: oculta la fila del resultado cuando la fórmula devuelve
+     * undefined/null para este output (en vez de mostrar "—"). Útil para
+     * outputs que sólo aplican a un modo del calc (ej. "bruto necesario" sólo
+     * en modo inverso). Sin la flag, el comportamiento es el de siempre.
+     */
+    hideWhenEmpty?: boolean;
     /** Result Hero opcional: chip de contexto que aparece arriba del label en el output primary. */
     contextChip?: string;
     /** Result Hero opcional: barra comparativa visual debajo del valor (vs. mínimo/promedio/meta). */
@@ -271,6 +286,8 @@ const translations = {
     changelogTitle: 'What changed', changelogShow: 'See change history',
     editorialPolicy: 'editorial policy',
     fbUp: 'What worked best? (optional)', fbDown: 'What was missing or wrong? (optional)',
+    solvedQ: 'Did this solve your problem?', solvedThanks: 'Thanks!',
+    saveCalcLabel: 'Save calculation', saveCalcTitle: 'Save this calculation with a name to reopen it later',
   },
   pt: {
     calculator: 'Calculadora', badge: 'Grátis · Privado', calculate: 'Calcular',
@@ -302,6 +319,8 @@ const translations = {
     changelogTitle: 'O que mudou', changelogShow: 'Ver histórico de mudanças',
     editorialPolicy: 'política editorial',
     fbUp: 'O que foi melhor? (opcional)', fbDown: 'O que faltou ou deu errado? (opcional)',
+    solvedQ: 'Resolveu sua conta?', solvedThanks: 'Obrigado!',
+    saveCalcLabel: 'Salvar cálculo', saveCalcTitle: 'Salve este cálculo com um nome para reabri-lo depois',
   },
   es: {
     calculator: 'Calculadora', badge: 'Gratis · Privada', calculate: 'Calcular',
@@ -333,6 +352,8 @@ const translations = {
     changelogTitle: 'Qué cambió', changelogShow: 'Ver historial de cambios',
     editorialPolicy: 'política editorial',
     fbUp: '¿Qué fue lo mejor? (opcional)', fbDown: '¿Qué te faltó o estuvo mal? (opcional)',
+    solvedQ: '¿Te resolvió la cuenta?', solvedThanks: '¡Gracias!',
+    saveCalcLabel: 'Guardar cálculo', saveCalcTitle: 'Guardá este cálculo con un nombre para reabrirlo después',
   },
 };
 const t = translations[lang as keyof typeof translations] || translations.es;
@@ -420,6 +441,22 @@ const disclaimer = (() => {
 
 const basicFields = config.fields.filter((f) => !f.advanced);
 const advancedFields = config.fields.filter((f) => f.advanced);
+
+// Visibilidad condicional (showWhen) en SSR: renderizamos el estado inicial
+// correcto (según el `default` del campo controlador) para evitar flash/CLS —
+// el JS de initCalculator luego lo mantiene en sync. Un campo con showWhen
+// arranca oculto sólo si el default de su controlador NO está en `in`.
+const _fieldDefaults = new Map<string, string>(
+  config.fields.map((f) => [f.id, f.default !== undefined && f.default !== null ? String(f.default) : ''])
+);
+const _initHiddenIds = new Set<string>();
+for (const f of config.fields) {
+  const sw = (f as any).showWhen as { field?: string; in?: string[] } | undefined;
+  if (sw && sw.field && Array.isArray(sw.in) && sw.in.length) {
+    const ctrlDefault = _fieldDefaults.get(sw.field) ?? '';
+    if (sw.in.indexOf(ctrlDefault) === -1) _initHiddenIds.add(f.id);
+  }
+}
 
 // Alerta por dato (opcional): si el calc declara config.alertableFields
 // (array de strings), ofrecemos suscripción a "avisame cuando cambie X".
@@ -644,18 +681,18 @@ const formatFreshnessDate = (iso: string): string => {
               <span>{g.name}</span>
             </legend>
             <div class="fields-grid">
-              {g.fields.map((field) => <FieldRow field={field} lang={lang} />)}
+              {g.fields.map((field) => <FieldRow field={field} lang={lang} initHidden={_initHiddenIds.has(field.id)} />)}
             </div>
           </fieldset>
         ) : (
           <div class="fields-grid">
-            {g.fields.map((field) => <FieldRow field={field} lang={lang} />)}
+            {g.fields.map((field) => <FieldRow field={field} lang={lang} initHidden={_initHiddenIds.has(field.id)} />)}
           </div>
         )
       ))
     ) : (
       <div class="fields-grid">
-        {basicFields.map((field) => <FieldRow field={field} lang={lang} />)}
+        {basicFields.map((field) => <FieldRow field={field} lang={lang} initHidden={_initHiddenIds.has(field.id)} />)}
       </div>
     )}
 
@@ -675,18 +712,18 @@ const formatFreshnessDate = (iso: string): string => {
                   <span>{g.name}</span>
                 </legend>
                 <div class="fields-grid advanced-grid">
-                  {g.fields.map((field) => <FieldRow field={field} lang={lang} />)}
+                  {g.fields.map((field) => <FieldRow field={field} lang={lang} initHidden={_initHiddenIds.has(field.id)} />)}
                 </div>
               </fieldset>
             ) : (
               <div class="fields-grid advanced-grid">
-                {g.fields.map((field) => <FieldRow field={field} lang={lang} />)}
+                {g.fields.map((field) => <FieldRow field={field} lang={lang} initHidden={_initHiddenIds.has(field.id)} />)}
               </div>
             )
           ))
         ) : (
           <div class="fields-grid advanced-grid">
-            {advancedFields.map((field) => <FieldRow field={field} lang={lang} />)}
+            {advancedFields.map((field) => <FieldRow field={field} lang={lang} initHidden={_initHiddenIds.has(field.id)} />)}
           </div>
         )}
       </details>
@@ -777,7 +814,7 @@ const formatFreshnessDate = (iso: string): string => {
     </div>
     <div class="results-grid">
       {config.outputs.map((out) => (
-        <div class={`result ${out.primary ? 'primary' : ''}`} data-output={out.id} data-format={out.format} data-suffix={out.suffix || ''} data-primary={out.primary ? 'true' : 'false'}>
+        <div class={`result ${out.primary ? 'primary' : ''}`} data-output={out.id} data-format={out.format} data-suffix={out.suffix || ''} data-primary={out.primary ? 'true' : 'false'} data-hide-empty={out.hideWhenEmpty ? 'true' : undefined} hidden={out.hideWhenEmpty ? true : undefined}>
           {out.primary && out.contextChip && (
             <span class="result-context-chip">{out.contextChip}</span>
           )}
@@ -841,6 +878,16 @@ const formatFreshnessDate = (iso: string): string => {
     <details class="result-steps" data-steps hidden>
       <summary class="result-steps-summary">{lang === 'en' ? 'See step-by-step calculation' : lang === 'pt' ? 'Ver cálculo passo a passo' : 'Ver cálculo paso a paso'}</summary>
       <ol class="result-steps-list" data-steps-list></ol>
+    </details>
+
+    {/* A4 · Paso a paso COMPUTADO. Si el módulo de la fórmula exporta
+        steps(inputs, outputs): string[], el cliente lo renderiza acá (markdown
+        inline **negrita** y `código`; los valores ya vienen sustituidos).
+        Distinto de data-steps (output._steps con {label,value}). Retrocompat:
+        si el módulo no exporta steps, queda oculto. */}
+    <details class="result-steps result-computed-steps" data-computed-steps hidden>
+      <summary class="result-steps-summary">{lang === 'en' ? 'See this calculation step by step' : lang === 'pt' ? 'Ver o passo a passo desta conta' : 'Ver el paso a paso de esta cuenta'}</summary>
+      <ol class="result-steps-list" data-computed-steps-list></ol>
     </details>
 
     {/* Slot del gráfico dinámico de fallback (auto-donut): el motor lo puebla
@@ -919,6 +966,24 @@ const formatFreshnessDate = (iso: string): string => {
         devuelve output._table y el cliente la renderiza acá. Colapsable si es larga. */}
     <div class="result-table-wrap" data-table-wrap hidden></div>
 
+    {/* A4 · Análisis de sensibilidad ("¿Y si...?"). Solo se renderiza si el JSON
+        del calc define sensitivity: { field: "<idInput>", label? }. El cliente
+        re-ejecuta la fórmula con ese input a −20/−10/valor/+10/+20% y muestra el
+        output primario de cada variante. Sin config → el elemento no existe. */}
+    {(config as any).sensitivity && (config as any).sensitivity.field && (
+      <div class="sensitivity" data-sensitivity-wrap data-sensitivity={JSON.stringify((config as any).sensitivity)} hidden></div>
+    )}
+
+    {/* A4 · Cronograma período a período. Si el módulo exporta
+        schedule(inputs, outputs): { headers, rows }, el cliente arma la tabla
+        scrolleable + botón "Descargar CSV". Retrocompat: si el módulo no lo
+        exporta, queda oculto. */}
+    <details class="result-steps schedule-detail" data-schedule hidden>
+      <summary class="result-steps-summary">{lang === 'en' ? 'See period-by-period detail' : lang === 'pt' ? 'Ver detalhe período a período' : 'Ver detalle período a período'}</summary>
+      <div class="schedule-body" data-schedule-body></div>
+      <button type="button" class="schedule-csv-btn" data-schedule-csv>{lang === 'en' ? 'Download CSV' : lang === 'pt' ? 'Baixar CSV' : 'Descargar CSV'}</button>
+    </details>
+
     {config.interactive && config.interactive.sliders && config.interactive.sliders.length > 0 && (
       <div class="what-if" data-what-if hidden>
         <div class="what-if-head">
@@ -954,6 +1019,19 @@ const formatFreshnessDate = (iso: string): string => {
       </div>
     )}
 
+    {/* A2: feedback binario mínimo — "¿te resolvió la cuenta?" 👍/👎 (inspirado
+        en Omni "Did we solve your problem today?"). Es una reacción de 1 clic,
+        DISTINTA del bloque .feedback de abajo (que tiene textarea + POST a
+        /api/feedback). Acá NO hay texto ni backend: solo un gtag('hc_calc_feedback')
+        y se suprime por calc con localStorage hc:fb:<slug>. Va dentro de
+        .calc-results, así que sólo aparece post-cálculo. Sin card ni borde. */}
+    <div class="quick-fb" data-quick-fb data-slug={config.slug}>
+      <span class="quick-fb-q">{t.solvedQ}</span>
+      <button type="button" class="quick-fb-btn" data-quick-fb-vote="up" aria-label={t.yes}>👍</button>
+      <button type="button" class="quick-fb-btn" data-quick-fb-vote="down" aria-label={t.no}>👎</button>
+      <span class="quick-fb-thanks" data-quick-fb-thanks hidden>{t.solvedThanks}</span>
+    </div>
+
     <!-- Acciones post-resultado: SÓLO 3 visibles (Guardar / Compartir / Más opciones).
          El resto (copiar número/detalle, PDF, imagen, agendar, embeber, modificar,
          reiniciar) vive colapsado en "Más opciones" para no rodear el resultado de
@@ -965,6 +1043,13 @@ const formatFreshnessDate = (iso: string): string => {
         title={lang === 'en' ? 'Save this result to your history' : lang === 'pt' ? 'Salvar este resultado no seu histórico' : 'Guardá este resultado en tu historial'}>
         <svg class="ic-save" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
         <span data-save-label>{lang === 'en' ? 'Save result' : lang === 'pt' ? 'Salvar resultado' : 'Guardar resultado'}</span>
+      </button>
+
+      <!-- 1b. A3: Guardar cálculo con nombre → hc:saved-calcs (se ve en /mi).
+           Distinto del snapshot de arriba: guardado nombrado y reabrible por ?d=. -->
+      <button type="button" class="btn-share" data-action="save-calc" title={t.saveCalcTitle}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        <span data-save-calc-label>{t.saveCalcLabel}</span>
       </button>
 
       <!-- 2. Compartir — share nativo del SO si existe; si no, menú con WhatsApp + Copiar link -->
@@ -3010,6 +3095,39 @@ const formatFreshnessDate = (iso: string): string => {
     color: var(--accent-strong);
   }
 
+  /* A2: feedback binario mínimo — una sola línea, sin card ni borde llamativo */
+  .quick-fb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.875rem;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+  .quick-fb-q { line-height: 1.3; }
+  .quick-fb-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    padding: 0.2rem 0.45rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 0.12s, background-color 0.12s, border-color 0.12s;
+  }
+  .quick-fb-btn:hover { background: var(--bg-muted); border-color: var(--border-strong); }
+  .quick-fb-btn:active { transform: scale(0.92); }
+  /* Tap target ≥44px en touch (Apple HIG / WCAG 2.5.5) */
+  @media (pointer: coarse) {
+    .quick-fb-btn { min-height: 44px; min-width: 44px; }
+  }
+  .quick-fb-thanks { color: var(--success-text); font-weight: 600; }
+
   /* Feedback inline */
   .feedback {
     margin-top: 1rem;
@@ -3414,6 +3532,61 @@ const formatFreshnessDate = (iso: string): string => {
   }
   .result-step-value { font-weight: 700; color: var(--text); }
 
+  /* ── A4 · Contenido computado (steps / sensitivity / schedule) ── */
+  /* code inline en el paso a paso computado (markdown `código`). */
+  .result-steps-list :global(code) {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.75rem;
+    background: var(--bg-muted);
+    padding: 0.05em 0.35em;
+    border-radius: 4px;
+  }
+  /* Sensibilidad: reusa table.result-table (:global); solo la envoltura. */
+  .sensitivity {
+    margin: 0 1.75rem 1.25rem;
+  }
+  .sensitivity[hidden] { display: none; }
+  .sens-head {
+    margin-bottom: 0.5rem;
+  }
+  .sens-title {
+    font-weight: 700;
+    font-size: 0.9375rem;
+    color: var(--text);
+  }
+  .sens-hint {
+    display: block;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+  }
+  .sens-tag {
+    font-size: 0.6875rem;
+    color: var(--text-subtle);
+    font-variant-numeric: tabular-nums;
+  }
+  :global(tr.sens-row-current td) {
+    background: var(--accent-soft) !important;
+    font-weight: 700;
+  }
+  /* Cronograma período a período. */
+  .schedule-detail[hidden] { display: none; }
+  .schedule-body { padding: 0 1rem 0.25rem; }
+  .schedule-csv-btn {
+    margin: 0 1rem 0.875rem;
+    padding: 0.5rem 0.875rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--accent);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .schedule-csv-btn[hidden] { display: none; }
+  .schedule-csv-btn:hover { background: var(--bg-soft); }
+
   /* ── #27 Tap-to-copy hint + pulse ────────────────────────────── */
   .result-tap-hint {
     display: none;
@@ -3543,6 +3716,11 @@ const formatFreshnessDate = (iso: string): string => {
   // el usuario completa el form; loadFormula() recién lo espera al usarlo.
   const _loaderMapPromise = import('../lib/formula-loader-map');
   const formulaCache = new Map<string, Function>();
+  // A4: hooks opcionales que exporta el MÓDULO de la fórmula (no la función de
+  // cómputo). Se cachean por formulaId junto con la función. Ver contrato A4
+  // más abajo (renderComputedSteps / renderSchedule). Retrocompat: si el módulo
+  // no los exporta, el registro queda {} y no se renderiza nada.
+  const formulaExtras = new Map<string, { steps?: Function; schedule?: Function }>();
 
   // Session ID para correlacionar funnel en GA4 (calculator_used → share → …).
   // GA4 ya tiene su session_id interno, pero no es accesible desde el cliente
@@ -3577,9 +3755,19 @@ const formatFreshnessDate = (iso: string): string => {
     const loader = formulaLoaders[`./formulas/${formulaId}.ts`];
     if (!loader) return null;
     const mod: any = await loader();
-    // Encontrar la función exportada (cualquier export de tipo function)
-    const fnKey = Object.keys(mod).find((k) => typeof mod[k] === 'function');
+    // Encontrar la función de cómputo. `steps` y `schedule` son nombres
+    // RESERVADOS para los hooks A4 (contenido computado), así que se excluyen
+    // de la detección — si no, en un módulo cuya función de cómputo ordene
+    // alfabéticamente después de "schedule"/"steps" (Object.keys de un módulo
+    // ES devuelve las claves ordenadas), se elegiría el hook por error.
+    const A4_RESERVED = new Set(['steps', 'schedule']);
+    const fnKey = Object.keys(mod).find((k) => !A4_RESERVED.has(k) && typeof mod[k] === 'function');
     if (!fnKey) return null;
+    // Capturar los hooks A4 opcionales del módulo (si existen).
+    const extras: { steps?: Function; schedule?: Function } = {};
+    if (typeof mod.steps === 'function') extras.steps = mod.steps;
+    if (typeof mod.schedule === 'function') extras.schedule = mod.schedule;
+    formulaExtras.set(formulaId, extras);
     formulaCache.set(formulaId, mod[fnKey]);
     return mod[fnKey];
   }
@@ -4170,6 +4358,32 @@ const formatFreshnessDate = (iso: string): string => {
   // Leído una sola vez para evitar múltiples querys al DOM.
   const _rawLang = (document.querySelector('.calc-container') as HTMLElement | null)?.dataset?.lang;
   const CALC_LANG: 'es' | 'en' | 'pt' = _rawLang === 'en' ? 'en' : _rawLang === 'pt' ? 'pt' : 'es';
+  // i18n runtime para el mensaje enriquecido de compartir (WhatsApp). El objeto
+  // `t` del frontmatter no está en scope del <script> cliente; replicamos acá el
+  // patrón i18n es/en/pt (igual que _vmsgAll para validación).
+  const _shareI18nAll: Record<'es' | 'en' | 'pt', { waData: string; waRecalc: string; waVia: string }> = {
+    es: { waData: 'Datos:', waRecalc: 'Recalculá tu caso:', waVia: '— vía Hacé Cuentas' },
+    en: { waData: 'Inputs:', waRecalc: 'Recalculate your case:', waVia: '— via Hacé Cuentas' },
+    pt: { waData: 'Dados:', waRecalc: 'Refaça o seu cálculo:', waVia: '— via Hacé Cuentas' },
+  };
+  const SHARE_T = _shareI18nAll[CALC_LANG] || _shareI18nAll.es;
+  // A3: i18n runtime de "Guardar cálculo" (mismo patrón que _shareI18nAll,
+  // porque el objeto `t` del frontmatter no está en scope del <script> cliente).
+  const _a3I18nAll: Record<'es' | 'en' | 'pt', { namePrompt: string; saved: string; empty: string }> = {
+    es: { namePrompt: 'Ponele un nombre a este cálculo:', saved: 'Guardado ✓', empty: 'Cálculo' },
+    en: { namePrompt: 'Name this calculation:', saved: 'Saved ✓', empty: 'Calculation' },
+    pt: { namePrompt: 'Dê um nome a este cálculo:', saved: 'Salvo ✓', empty: 'Cálculo' },
+  };
+  const A3_T = _a3I18nAll[CALC_LANG] || _a3I18nAll.es;
+  // A4: i18n runtime de los hooks de contenido computado (sensibilidad + CSV).
+  // Los títulos de <details> y el botón CSV se emiten en SSR (ternario por lang);
+  // acá van solo los strings que arma el cliente dinámicamente.
+  const _a4I18nAll: Record<'es' | 'en' | 'pt', { sensTitle: string; sensHint: (f: string) => string; sensCurrent: string }> = {
+    es: { sensTitle: '¿Y si...?', sensHint: (f) => `Cómo cambia el resultado si ${f} sube o baja`, sensCurrent: 'tu valor' },
+    en: { sensTitle: 'What if...?', sensHint: (f) => `How the result changes if ${f} goes up or down`, sensCurrent: 'your value' },
+    pt: { sensTitle: 'E se...?', sensHint: (f) => `Como o resultado muda se ${f} sobe ou desce`, sensCurrent: 'seu valor' },
+  };
+  const A4_T = _a4I18nAll[CALC_LANG] || _a4I18nAll.es;
   // Locale + currency derivados del path para distinguir es-ES (€), es-MX ($MXN), etc.
   const _path = (typeof location !== 'undefined' ? location.pathname : '') as string;
   const NUM_LOCALE: string =
@@ -4436,6 +4650,76 @@ const formatFreshnessDate = (iso: string): string => {
     return (neg ? '-' : '') + nf('thouAR', () => new Intl.NumberFormat('es-AR')).format(Number(clean));
   }
 
+  // ── A1: permalinks con estado (?d=<base64url>) ──────────────────────
+  // Serializa/deserializa los inputs NO-default del form a un token
+  // compacto para deep-links que precargan y recalculan sin recargar. El
+  // canonical apunta siempre a la URL limpia → cero riesgo SEO.
+  function _b64urlEncode(str: string): string {
+    try {
+      const bytes = new TextEncoder().encode(str);
+      let bin = '';
+      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    } catch { return ''; }
+  }
+  function _b64urlDecode(token: string): string {
+    let s = token.replace(/-/g, '+').replace(/_/g, '/');
+    while (s.length % 4) s += '=';
+    const bin = atob(s);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+  // {name: valorLimpio} de los campos cuyo valor difiere del default del DOM.
+  // Los thousands se guardan sin formato para round-trip estable.
+  function collectStateInputs(form: HTMLFormElement): Record<string, string> {
+    const state: Record<string, string> = {};
+    form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[name]').forEach((el) => {
+      const ie = el as HTMLInputElement;
+      if (ie.type === 'hidden' || ie.type === 'submit' || ie.type === 'button') return;
+      const raw = (el.value ?? '').trim();
+      if (raw === '') return;
+      let isDefault = false;
+      if (el.tagName === 'SELECT') {
+        const opt = (el as HTMLSelectElement).options[(el as HTMLSelectElement).selectedIndex];
+        isDefault = !!opt && opt.defaultSelected;
+      } else {
+        isDefault = ie.value === ie.defaultValue;
+      }
+      if (isDefault) return;
+      state[el.name] = ie.dataset && ie.dataset.format === 'thousands' ? String(parseThousands(raw)) : raw;
+    });
+    return state;
+  }
+  // URL absoluta y limpia (origin+pathname) + ?d= si hay inputs no-default.
+  function buildStateUrl(form: HTMLFormElement): string {
+    const base = window.location.origin + window.location.pathname;
+    try {
+      const state = collectStateInputs(form);
+      if (Object.keys(state).length === 0) return base;
+      const token = _b64urlEncode(JSON.stringify(state));
+      return token ? base + '?d=' + token : base;
+    } catch { return base; }
+  }
+  // Refleja el estado en la barra de direcciones sin recargar ni empujar
+  // historial. Silencioso si algo falla (nunca romper el cálculo por la URL).
+  function syncUrlState(form: HTMLFormElement): void {
+    if (typeof history === 'undefined' || !history.replaceState) return;
+    try {
+      const state = collectStateInputs(form);
+      const keys = Object.keys(state);
+      const path = window.location.pathname;
+      let target = path;
+      if (keys.length > 0) {
+        const token = _b64urlEncode(JSON.stringify(state));
+        if (token) target = path + '?d=' + token;
+      }
+      if (path + window.location.search !== target) {
+        history.replaceState(history.state, '', target + window.location.hash);
+      }
+    } catch { /* noop */ }
+  }
+
   // Copia robusta reutilizable: Clipboard API → fallback textarea+execCommand
   // (webviews in-app / doc sin foco donde navigator.clipboard falla en
   // silencio). Devuelve si pudo copiar; el caller decide el último recurso.
@@ -4478,6 +4762,53 @@ const formatFreshnessDate = (iso: string): string => {
     const srAnnounce = container.querySelector<HTMLElement>('[data-sr-announce]');
     const errorBox = container.querySelector<HTMLElement>('.calc-error')!;
     const submitBtn = form.querySelector<HTMLButtonElement>('.btn-primary')!;
+
+    // ── Campos con visibilidad condicional (showWhen) ────────────────────
+    // Un campo con data-show-when-field="X" data-show-when-in='["a","b"]' se
+    // muestra sólo cuando el select X tiene un valor ∈ [a,b]. Al ocultarse, sus
+    // controles se `disabled` → no entran al FormData ni a la validación (la
+    // fórmula no ve valores de un modo que el usuario no eligió). Es aditivo:
+    // sin showWhen, nada cambia. NO dispara el cálculo (respeta "botón Calcular").
+    const _condFields = Array.from(
+      form.querySelectorAll<HTMLElement>('.field[data-show-when-field]')
+    );
+    if (_condFields.length) {
+      const applyConditional = () => {
+        for (const fieldEl of _condFields) {
+          const ctrlName = fieldEl.dataset.showWhenField!;
+          let allowed: string[] = [];
+          try { allowed = JSON.parse(fieldEl.dataset.showWhenIn || '[]'); } catch { allowed = []; }
+          const ctrl = form.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${ctrlName}"]`);
+          const visible = !!ctrl && allowed.indexOf(String(ctrl.value)) !== -1;
+          fieldEl.hidden = !visible;
+          fieldEl.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+            'input, select, textarea'
+          ).forEach((el) => { el.disabled = !visible; });
+        }
+      };
+      // Escuchar cambios de los campos controladores (dedupe por nombre).
+      const _ctrlNames = new Set(_condFields.map((f) => f.dataset.showWhenField!));
+      _ctrlNames.forEach((name) => {
+        const ctrl = form.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"]`);
+        if (!ctrl) return;
+        ctrl.addEventListener('change', () => {
+          applyConditional();
+          // Analítica opt-in del uso de los modos nuevos (no toca el setup GA4;
+          // sólo agrega un evento con guard). No dispara el cálculo.
+          try {
+            if (typeof (window as any).gtag === 'function') {
+              (window as any).gtag('event', 'hc_calc_mode', {
+                calc_slug: slug,
+                mode_field: name,
+                mode_value: String(ctrl.value),
+              });
+            }
+          } catch {}
+        });
+      });
+      applyConditional(); // estado inicial (antes de cualquier auto-cálculo)
+    }
+
     // Pre-cargar fórmula en background (chunk separado, no bloquea render)
     let formulaRef: Function | null = null;
     const formulaReady = loadFormula(formulaId).then((f) => {
@@ -4625,6 +4956,173 @@ const formatFreshnessDate = (iso: string): string => {
       stepsListEl.innerHTML = html;
       stepsEl.hidden = false;
     }
+
+    // ════════════════════════════════════════════════════════════
+    // A4 · Hooks de contenido computado (steps / sensitivity / schedule)
+    // ════════════════════════════════════════════════════════════
+    // Los tres son OPCIONALES y retrocompatibles: si la fórmula/JSON no los
+    // define, no se renderiza nada.
+    //  1. steps(inputs, outputs): string[]  — export del MÓDULO de la fórmula.
+    //     Cada string es una línea del paso a paso, con los valores del usuario
+    //     ya sustituidos. Admite markdown inline: **negrita** y `código`.
+    //  2. sensitivity: { field, label? }    — en el JSON del calc. Re-ejecuta la
+    //     fórmula con `field` a ±10/±20% y muestra el output primario de cada
+    //     variante (fila del valor actual resaltada).
+    //  3. schedule(inputs, outputs): { headers, rows } — export del MÓDULO.
+    //     Tabla período a período, scrolleable, con descarga CSV client-side.
+    // (mdInlineA4 escapa HTML y luego aplica `código` y **negrita**.)
+    function mdInlineA4(s: any): string {
+      return escapeCell(String(s ?? ''))
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    }
+
+    const computedStepsEl = container.querySelector<HTMLDetailsElement>('[data-computed-steps]');
+    const computedStepsListEl = container.querySelector<HTMLElement>('[data-computed-steps-list]');
+    function renderComputedSteps(fn: any, inputs: Record<string, any>, output: any) {
+      if (!computedStepsEl || !computedStepsListEl) return;
+      let lines: string[] = [];
+      if (typeof fn === 'function') {
+        try {
+          const r = fn(inputs, output);
+          if (Array.isArray(r)) lines = r.filter((x) => x != null && String(x).trim() !== '').map((x) => String(x));
+        } catch { lines = []; }
+      }
+      if (lines.length === 0) {
+        computedStepsEl.hidden = true;
+        computedStepsEl.open = false;
+        computedStepsListEl.innerHTML = '';
+        return;
+      }
+      computedStepsListEl.innerHTML = lines.map((l) => '<li>' + mdInlineA4(l) + '</li>').join('');
+      computedStepsEl.hidden = false;
+    }
+
+    // Formatea el valor de un input para la tabla de sensibilidad, respetando
+    // el prefijo/sufijo y el formato (miles) que ya muestra ese campo en el form.
+    function fmtSensFieldValue(n: number, field: string): string {
+      const inp = form.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${field}"]`);
+      const wrap = inp?.closest('.input-wrap');
+      const pre = wrap?.querySelector('.prefix')?.textContent?.trim() || '';
+      const suf = wrap?.querySelector('.suffix')?.textContent?.trim() || '';
+      let body: string;
+      if ((inp as HTMLInputElement | undefined)?.dataset?.format === 'thousands') {
+        body = Math.round(n).toLocaleString(NUM_LOCALE);
+      } else {
+        body = (Math.round(n * 100) / 100).toLocaleString(NUM_LOCALE, { maximumFractionDigits: 2 });
+      }
+      return (pre ? pre : '') + body + (suf ? ' ' + suf : '');
+    }
+
+    const sensitivityEl = container.querySelector<HTMLElement>('[data-sensitivity-wrap]');
+    function renderSensitivity(formula: any, inputs: Record<string, any>, output: any) {
+      if (!sensitivityEl || typeof formula !== 'function') return;
+      let cfg: any = null;
+      try { cfg = JSON.parse(sensitivityEl.dataset.sensitivity || 'null'); } catch { cfg = null; }
+      if (!cfg || !cfg.field) { sensitivityEl.hidden = true; return; }
+      const field = String(cfg.field);
+      const base = Number(inputs[field]);
+      if (!isFinite(base) || base === 0) { sensitivityEl.hidden = true; return; }
+      // Metadatos del output primario (id/format/suffix + label) desde el DOM.
+      let primaryId: string | null = null, primaryFormat = 'currency', primarySuffix = '';
+      container.querySelectorAll<HTMLElement>('[data-output][data-primary="true"]').forEach((el) => {
+        primaryId = el.dataset.output || primaryId;
+        primaryFormat = el.dataset.format || primaryFormat;
+        primarySuffix = el.dataset.suffix || primarySuffix;
+      });
+      if (!primaryId) { sensitivityEl.hidden = true; return; }
+      const primaryLabel = container.querySelector<HTMLElement>('.result.primary .result-label')?.textContent?.trim() || '';
+      const fieldLabel = cfg.label
+        || form.querySelector<HTMLElement>(`label[for="${field}"]`)?.textContent?.trim()
+        || field;
+      const pcts = [-20, -10, 0, 10, 20];
+      let rows = '';
+      for (const p of pcts) {
+        const isCurrent = p === 0;
+        const variantInput = isCurrent ? base : base * (1 + p / 100);
+        let primaryVal: any;
+        if (isCurrent) {
+          primaryVal = output[primaryId];
+        } else {
+          try {
+            const alt = formula({ ...inputs, [field]: variantInput, __lang: CALC_LANG });
+            primaryVal = alt[primaryId];
+          } catch { continue; }
+        }
+        const tag = isCurrent ? A4_T.sensCurrent : (p > 0 ? '+' + p + '%' : p + '%');
+        rows += '<tr' + (isCurrent ? ' class="sens-row-current"' : '') + '>'
+          + '<td>' + escapeCell(fmtSensFieldValue(variantInput, field)) + ' <span class="sens-tag">' + escapeCell(tag) + '</span></td>'
+          + '<td style="text-align:right">' + escapeCell(formatValue(primaryVal, primaryFormat, primarySuffix)) + '</td>'
+          + '</tr>';
+      }
+      sensitivityEl.innerHTML =
+        '<div class="sens-head"><span class="sens-title">' + escapeCell(A4_T.sensTitle) + '</span>'
+        + '<span class="sens-hint">' + escapeCell(A4_T.sensHint(fieldLabel)) + '</span></div>'
+        + '<div class="result-table-scroll"><table class="result-table sens-table"><thead><tr>'
+        + '<th scope="col">' + escapeCell(fieldLabel) + '</th>'
+        + '<th scope="col" style="text-align:right">' + escapeCell(primaryLabel) + '</th>'
+        + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+      sensitivityEl.hidden = false;
+      if (typeof (window as any).gtag === 'function') {
+        (window as any).gtag('event', 'sensitivity_view', { calc_slug: slug, field });
+      }
+    }
+
+    const scheduleEl = container.querySelector<HTMLDetailsElement>('[data-schedule]');
+    const scheduleBodyEl = container.querySelector<HTMLElement>('[data-schedule-body]');
+    const scheduleCsvBtn = container.querySelector<HTMLButtonElement>('[data-schedule-csv]');
+    let _scheduleSpec: { headers: any[]; rows: any[][] } | null = null;
+    function renderSchedule(fn: any, inputs: Record<string, any>, output: any) {
+      if (!scheduleEl || !scheduleBodyEl) return;
+      let spec: any = null;
+      if (typeof fn === 'function') {
+        try { spec = fn(inputs, output); } catch { spec = null; }
+      }
+      if (!spec || !Array.isArray(spec.headers) || !Array.isArray(spec.rows) || spec.rows.length === 0) {
+        scheduleEl.hidden = true;
+        scheduleEl.open = false;
+        scheduleBodyEl.innerHTML = '';
+        _scheduleSpec = null;
+        if (scheduleCsvBtn) scheduleCsvBtn.hidden = true;
+        return;
+      }
+      _scheduleSpec = { headers: spec.headers, rows: spec.rows };
+      let html = '<div class="result-table-scroll"><table class="result-table"><thead><tr>';
+      spec.headers.forEach((h: any) => { html += '<th scope="col">' + escapeCell(h) + '</th>'; });
+      html += '</tr></thead><tbody>';
+      spec.rows.forEach((r: any) => {
+        html += '<tr>';
+        (Array.isArray(r) ? r : []).forEach((c: any) => { html += '<td>' + escapeCell(c) + '</td>'; });
+        html += '</tr>';
+      });
+      html += '</tbody></table></div>';
+      scheduleBodyEl.innerHTML = html;
+      if (scheduleCsvBtn) scheduleCsvBtn.hidden = false;
+      scheduleEl.hidden = false;
+    }
+    // Descarga CSV client-side (Blob). Se cablea una vez por init.
+    scheduleCsvBtn?.addEventListener('click', () => {
+      if (!_scheduleSpec) return;
+      const esc = (c: any) => {
+        const s = String(c ?? '');
+        return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      };
+      const lines = [_scheduleSpec.headers.map(esc).join(',')]
+        .concat(_scheduleSpec.rows.map((r) => (Array.isArray(r) ? r : []).map(esc).join(',')));
+      // BOM (﻿) para que Excel abra UTF-8 con acentos correctos.
+      const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = slug + '-cronograma.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      if (typeof (window as any).gtag === 'function') {
+        (window as any).gtag('event', 'schedule_csv', { calc_slug: slug });
+      }
+    });
 
     // ── Multi-chart con tabs (output._charts) ───────────────────
     // Si la fórmula devuelve output._charts (array de specs, cada uno con
@@ -4871,6 +5369,29 @@ const formatFreshnessDate = (iso: string): string => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.size > 0) {
       let filled = 0;
+      // A1: token de estado compacto ?d=<base64url({name:value})>. Si está
+      // corrupto, se ignora en silencio (cae a los params crudos / sin precarga).
+      const stateToken = urlParams.get('d');
+      if (stateToken) {
+        try {
+          const decoded = JSON.parse(_b64urlDecode(stateToken));
+          if (decoded && typeof decoded === 'object' && !Array.isArray(decoded)) {
+            Object.keys(decoded).forEach((name) => {
+              let el: HTMLInputElement | HTMLSelectElement | null = null;
+              try { el = form.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"]`); } catch { el = null; }
+              if (!el) return;
+              const val = String((decoded as Record<string, unknown>)[name]);
+              if ((el as HTMLInputElement).dataset?.format === 'thousands') {
+                el.value = formatThousands(val);
+              } else {
+                el.value = val;
+              }
+              filled++;
+            });
+          }
+        } catch { /* token corrupto → ignorar */ }
+      }
+      // Compat: links viejos con ?campo=valor crudo (uno por input).
       form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[name]').forEach((el) => {
         const val = urlParams.get(el.name);
         if (val === null) return;
@@ -4883,7 +5404,7 @@ const formatFreshnessDate = (iso: string): string => {
       });
       // Auto-calcular si precargamos y todos los campos required están llenos
       // (no usamos checkValidity porque step=0.1 puede rechazar valores enteros)
-      const requiredEls = Array.from(form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[required]'));
+      const requiredEls = Array.from(form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[required]:not(:disabled)'));
       const allRequiredFilled = requiredEls.every((el) => el.value.trim() !== '');
       if (filled > 0 && allRequiredFilled) {
         setTimeout(() => form.requestSubmit(), 120);
@@ -4894,7 +5415,7 @@ const formatFreshnessDate = (iso: string): string => {
     // required tienen default o placeholder válido. Útil para calcs-dashboard
     // como "Feriados 2026" donde queremos mostrar resultado inmediato.
     if (container.dataset.autoCalculate === 'true') {
-      const reqs = Array.from(form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[required]'));
+      const reqs = Array.from(form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[required]:not(:disabled)'));
       const allOk = reqs.every((el) => el.value.trim() !== '');
       if (allOk && urlParams.size === 0) {
         // Esperar a que la fórmula cargue
@@ -4951,7 +5472,7 @@ const formatFreshnessDate = (iso: string): string => {
     }
     function validateForm(): boolean {
       let firstInvalid: any = null;
-      const els = Array.from(form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[required]'));
+      const els = Array.from(form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[required]:not(:disabled)'));
       els.forEach((el: any) => {
         clearFieldError(el);
         const raw = (el.value || '').trim();
@@ -4970,7 +5491,7 @@ const formatFreshnessDate = (iso: string): string => {
       });
       // Campos OPCIONALES numéricos con valor: validar num/min/max igual (vacío
       // se omite). Antes pasaban basura/out-of-range directo a la fórmula.
-      const optEls = Array.from(form.querySelectorAll<HTMLInputElement>('input:not([required])'));
+      const optEls = Array.from(form.querySelectorAll<HTMLInputElement>('input:not([required]):not(:disabled)'));
       optEls.forEach((el: any) => {
         if (!(el.dataset.type === 'number' || el.type === 'number')) return;
         clearFieldError(el);
@@ -5096,6 +5617,11 @@ const formatFreshnessDate = (iso: string): string => {
             const val = output[outId];
             const valueEl = el.querySelector<HTMLElement>('[data-value]')!;
             const isPrimary = el.dataset.primary === 'true';
+            // Outputs opt-in "hideWhenEmpty": ocultar la fila si la fórmula no
+            // devolvió valor para este modo (undefined/null); mostrarla si sí.
+            if (el.dataset.hideEmpty === 'true') {
+              el.hidden = (val === undefined || val === null);
+            }
             if (isPrimary) {
               // Texto FINAL del primary (post-formato): es lo que termina mostrando
               // animateValue al concluir, sin esperar la animación de ~600ms.
@@ -5296,6 +5822,13 @@ const formatFreshnessDate = (iso: string): string => {
           // #22 Cálculo paso a paso opcional — solo si la fórmula devolvió _steps
           renderSteps(output._steps);
 
+          // A4 · Hooks de contenido computado (paso a paso / sensibilidad /
+          // cronograma). Cada uno se auto-oculta si la fórmula/JSON no lo define.
+          const _a4Extras = formulaExtras.get(formulaId) || {};
+          renderComputedSteps(_a4Extras.steps, inputs, output);
+          renderSensitivity(formula, inputs, output);
+          renderSchedule(_a4Extras.schedule, inputs, output);
+
           // #27 Pulse en el resultado primary la PRIMERA vez (hint de tap-to-copy)
           if (!_tapPulseDone) {
             _tapPulseDone = true;
@@ -5371,6 +5904,10 @@ const formatFreshnessDate = (iso: string): string => {
               }
             }
           } catch {}
+
+          // A1: reflejar el estado en la URL (permalink) sin recargar. El
+          // canonical apunta a la URL limpia → sin riesgo SEO. Silencioso.
+          syncUrlState(form);
 
           // Captura de email UNIFICADA (no pedir el correo dos veces):
           // si el calc es alertEligible, la alerta es el módulo único (su submit
@@ -5493,6 +6030,8 @@ const formatFreshnessDate = (iso: string): string => {
       if (comparePrevEl) comparePrevEl.hidden = true;
       _prevPrimary = null;
       _lastInputs = null;
+      // A1: limpiar el ?d= de la URL (el form volvió a los defaults).
+      syncUrlState(form);
       // Foco al primer campo para seguir cargando.
       const first = form.querySelector<HTMLInputElement | HTMLSelectElement>('input:not([type=hidden]), select');
       try { first?.focus(); } catch {}
@@ -5529,7 +6068,8 @@ const formatFreshnessDate = (iso: string): string => {
     container.querySelectorAll<HTMLButtonElement>('.btn-share').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const action = btn.dataset.action;
-        const url = window.location.href;
+        // A1: URL con estado (?d=) si hay datos cargados; si no, base limpia.
+        const url = buildStateUrl(form);
         const text = `Mirá esta calculadora en Hacé Cuentas: ${document.title}`;
 
         if (action === 'whatsapp') {
@@ -5563,7 +6103,7 @@ const formatFreshnessDate = (iso: string): string => {
           parts.push(`🧮 *${calcTitle}*`);
           parts.push('');
           if (inputLines.length > 0) {
-            parts.push('📋 Datos:');
+            parts.push('📋 ' + SHARE_T.waData);
             parts.push(...inputLines);
             parts.push('');
           }
@@ -5571,9 +6111,9 @@ const formatFreshnessDate = (iso: string): string => {
             parts.push(`✅ *${primaryLabel.textContent?.trim()}:* ${primary.textContent?.trim()}`);
             parts.push('');
           }
-          parts.push(`🔗 Recalculá tu caso: ${url}`);
+          parts.push(`🔗 ${SHARE_T.waRecalc} ${url}`);
           parts.push('');
-          parts.push('— vía Hacé Cuentas');
+          parts.push(SHARE_T.waVia);
 
           const msg = parts.join('\n');
           if (typeof (window as any).gtag === 'function') {
@@ -5635,6 +6175,48 @@ const formatFreshnessDate = (iso: string): string => {
             }
             if (typeof (window as any).gtag === 'function') (window as any).gtag('event', 'save_result', { calc_slug: slug });
           } catch { /* localStorage lleno/bloqueado: no romper la página */ }
+        } else if (action === 'save-calc') {
+          // A3 — Guardado ACTIVO con nombre → localStorage 'hc:saved-calcs' (lo lee /mi).
+          // A diferencia de save-result (snapshot en la home), éste es un guardado
+          // nombrado y reabrible: la url lleva ?d= (A1) para precargar y recalcular al
+          // abrir. Cap 50, FIFO (al pasarse cae el más viejo del final).
+          try {
+            const calcTitle = (document.querySelector('h1')?.textContent || document.title).trim();
+            const stateUrl = buildStateUrl(form); // absoluta: origin + pathname (+ ?d=)
+            const relUrl = stateUrl.replace(window.location.origin, '') || (window.location.pathname + window.location.search);
+            const primaryEl = container.querySelector<HTMLElement>('.result.primary [data-value]') || container.querySelector<HTMLElement>('[data-value]');
+            const primaryLabel = container.querySelector<HTMLElement>('.result.primary .result-label');
+            let dateStr = '';
+            try { dateStr = new Date().toLocaleDateString(NUM_LOCALE); } catch { dateStr = new Date().toLocaleDateString(); }
+            const defaultName = ((calcTitle || A3_T.empty) + ' — ' + dateStr).slice(0, 120);
+            const name = window.prompt(A3_T.namePrompt, defaultName);
+            if (name === null) return; // el usuario canceló
+            const finalName = (name.trim() || defaultName).slice(0, 120);
+            const entry = {
+              nombre: finalName,
+              slug,
+              url: relUrl,
+              resultLabel: primaryLabel?.textContent?.trim() || '',
+              resultado: primaryEl?.textContent?.trim() || '',
+              ts: Date.now(),
+            };
+            let list: any[] = [];
+            try { const raw = JSON.parse(localStorage.getItem('hc:saved-calcs') || '[]'); list = Array.isArray(raw) ? raw : []; } catch { list = []; }
+            // Dedup por slug+url (mismos inputs) → refresca en vez de duplicar.
+            list = list.filter((s) => !(s && s.slug === entry.slug && s.url === entry.url));
+            list.unshift(entry);
+            if (list.length > 50) list = list.slice(0, 50);
+            localStorage.setItem('hc:saved-calcs', JSON.stringify(list));
+            try { window.dispatchEvent(new CustomEvent('hc:calc-saved', { detail: entry })); } catch {}
+            const lbl = btn.querySelector<HTMLElement>('[data-save-calc-label]');
+            if (lbl) {
+              const orig = lbl.textContent;
+              lbl.textContent = A3_T.saved;
+              btn.classList.add('copied');
+              setTimeout(() => { lbl.textContent = orig; btn.classList.remove('copied'); }, 1600);
+            }
+            if (typeof (window as any).gtag === 'function') (window as any).gtag('event', 'save_calc', { calc_slug: slug });
+          } catch { /* localStorage lleno/bloqueado: no romper la página */ }
         } else if (action === 'embed-reveal') {
           const embed = (container.querySelector<HTMLElement>('.embed-cta') || document.querySelector<HTMLElement>('.embed-cta'));
           if (embed) {
@@ -5664,7 +6246,7 @@ const formatFreshnessDate = (iso: string): string => {
             const v = r.querySelector<HTMLElement>('[data-value]')?.textContent?.trim() || '';
             if (v) lines.push(`${l ? l + ': ' : ''}${v}`);
           });
-          lines.push('', window.location.href);
+          lines.push('', url); // A1: link con estado (?d=) si hay datos
           const detail = lines.join('\n');
           const ok = await copyTextRobust(detail);
           const label = btn.querySelector<HTMLElement>('[data-copy-detail-label]');
@@ -5692,19 +6274,10 @@ const formatFreshnessDate = (iso: string): string => {
             try { window.prompt(CALC_LANG === 'en' ? 'Copy:' : 'Copiá:', value); } catch {}
           }
         } else if (action === 'copy-link') {
-          // Armar link con fields actuales como querystring (viralización)
-          const data = new FormData(form);
-          const params = new URLSearchParams();
-          data.forEach((v, k) => {
-            if (!v) return;
-            const el = form.querySelector<HTMLInputElement>(`[name="${k}"]`);
-            if (el?.dataset.format === 'thousands') {
-              params.set(k, String(parseThousands(v as string)));
-            } else {
-              params.set(k, String(v));
-            }
-          });
-          const shareUrl = `${window.location.origin}${window.location.pathname}${params.size > 0 ? '?' + params.toString() : ''}`;
+          // A1: copiar el link CON estado compacto (?d=) si hay datos cargados;
+          // si no, la URL base limpia. buildStateUrl serializa los inputs
+          // no-default al mismo token que precarga+recalcula al abrirlo.
+          const shareUrl = url;
           const ok = await copyTextRobust(shareUrl);
           const label = btn.querySelector<HTMLElement>('[data-copy-link-label]')!;
           const original = label.textContent;
@@ -6132,6 +6705,35 @@ const formatFreshnessDate = (iso: string): string => {
         followupEl.hidden = true;
         thanksEl.hidden = false;
       });
+    }
+
+    // ── A2: feedback binario mínimo (evento hc_calc_feedback) ──
+    // Reacción de 1 clic "¿te resolvió la cuenta?". Distinto del bloque
+    // .feedback de arriba (textarea + POST /api/feedback): acá NO hay texto ni
+    // backend, sólo GA4. Se suprime por calc con localStorage hc:fb:<slug>.
+    const qfbEl = container.querySelector<HTMLElement>('[data-quick-fb]');
+    if (qfbEl) {
+      let alreadyVoted = false;
+      try { alreadyVoted = !!localStorage.getItem(`hc:fb:${slug}`); } catch {}
+      if (alreadyVoted) {
+        qfbEl.hidden = true;
+      } else {
+        const qfbQ = qfbEl.querySelector<HTMLElement>('.quick-fb-q');
+        const qfbThanks = qfbEl.querySelector<HTMLElement>('[data-quick-fb-thanks]');
+        qfbEl.querySelectorAll<HTMLButtonElement>('[data-quick-fb-vote]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const vote: 'up' | 'down' = btn.dataset.quickFbVote === 'down' ? 'down' : 'up';
+            if (typeof (window as any).gtag === 'function') {
+              (window as any).gtag('event', 'hc_calc_feedback', { calc_slug: slug, vote });
+            }
+            try { localStorage.setItem(`hc:fb:${slug}`, String(Date.now())); } catch {}
+            // Reemplazar la línea por "¡Gracias!"
+            if (qfbQ) qfbQ.hidden = true;
+            qfbEl.querySelectorAll<HTMLElement>('[data-quick-fb-vote]').forEach((b) => { b.hidden = true; });
+            if (qfbThanks) qfbThanks.hidden = false;
+          });
+        });
+      }
     }
 
     // ── Email capture: POST real a /api/email-result ──────────

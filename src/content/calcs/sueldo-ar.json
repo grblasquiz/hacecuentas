@@ -19,7 +19,7 @@
     "aportes jubilatorios",
     "ganancias sueldo"
   ],
-  "intro": "**Del sueldo bruto al neto en Argentina se descuenta el 17%** (jubilación 11% + obra social 3% + PAMI 3%), más Impuesto a las Ganancias de 4ta categoría si superás el mínimo no imponible. Calculá tu sueldo en mano exacto abajo. Pasar de [sueldo bruto](/calculadora-sueldo-bruto-desde-neto) a [sueldo en mano](/sueldo-en-mano-argentina) en Argentina no es restar un porcentaje fijo: entran en juego los aportes jubilatorios (11%), obra social (3%), PAMI (3%) y el Impuesto a las Ganancias de 4ta categoría para los sueldos que superan el mínimo no imponible. Esta calculadora de sueldo neto toma tu bruto mensual, cruza las escalas oficiales enero–junio 2026 de ARCA (ex AFIP) y te devuelve exactamente cuánto cobrás en la cuenta, cuánto te descuentan y qué porcentaje representa. Funciona para empleados en relación de dependencia bajo Ley de Contrato de Trabajo (LCT) 20.744, diferencia cónyuge de hijos a cargo según los valores oficiales y se actualiza cada vez que ARCA sube MNI y escala (enero y julio).",
+  "intro": "**Del sueldo bruto al neto en Argentina se descuenta el 17%** (jubilación 11% + obra social 3% + PAMI 3%), más Impuesto a las Ganancias de 4ta categoría si superás el mínimo no imponible. Calculá tu sueldo en mano exacto abajo. Pasar de [sueldo bruto](/calculadora-sueldo-bruto-desde-neto) a [sueldo en mano](/sueldo-en-mano-argentina) en Argentina no es restar un porcentaje fijo: entran en juego los aportes jubilatorios (11%), obra social (3%), PAMI (3%) y el Impuesto a las Ganancias de 4ta categoría para los sueldos que superan el mínimo no imponible. Esta calculadora de sueldo neto toma tu bruto mensual, cruza las escalas oficiales enero–junio 2026 de ARCA (ex AFIP) y te devuelve exactamente cuánto cobrás en la cuenta, cuánto te descuentan y qué porcentaje representa. Funciona para empleados en relación de dependencia bajo Ley de Contrato de Trabajo (LCT) 20.744, diferencia cónyuge de hijos a cargo según los valores oficiales y se actualiza cada vez que ARCA sube MNI y escala (enero y julio). **Nuevo:** además del cálculo bruto→neto, ahora podés invertirlo (\"¿cuánto bruto necesito para cobrar X en mano?\", resuelto por aproximación con precisión de $100) y comparar tu aumento contra la **inflación INDEC acumulada** desde un mes que elijas, para ver si ganaste o perdiste poder adquisitivo real.",
   "keyTakeaway": "Un empleado en relación de dependencia en Argentina paga **17% de aportes** (jubilación + obra social + PAMI), pero sobre una base con **tope de $4.414.652/mes** (junio 2026, Ley 24.241): arriba de ese bruto los aportes se congelan y el descuento efectivo baja del 17%. Si tu bruto mensual supera ~**$3.000.000** (soltero sin cargas) le sumás **Ganancias 4ta categoría** según la escala oficial ARCA (5% → 35%). Cada cónyuge declarado baja el MNI ~$404.000/mes; cada hijo ~$204.000/mes.",
   "useCases": [
     "Te ofrecen un trabajo y querés saber cuánto vas a cobrar real antes de decir que sí.",
@@ -30,6 +30,23 @@
   ],
   "fields": [
     {
+      "id": "modo",
+      "label": "¿Qué querés calcular?",
+      "type": "select",
+      "default": "bruto-a-neto",
+      "help": "Elegí el sentido del cálculo: del bruto al neto en mano, o al revés (cuánto bruto necesitás para un neto objetivo).",
+      "options": [
+        {
+          "value": "bruto-a-neto",
+          "label": "Tengo el bruto → cuánto cobro en mano"
+        },
+        {
+          "value": "neto-a-bruto",
+          "label": "Quiero cobrar X en mano → cuánto bruto necesito"
+        }
+      ]
+    },
+    {
       "id": "bruto",
       "profileKey": "trabajo.sueldoBruto",
       "label": "Sueldo bruto mensual",
@@ -39,7 +56,32 @@
       "min": 0,
       "step": 1000,
       "required": true,
-      "format": "thousands"
+      "format": "thousands",
+      "help": "Lo que figura arriba del recibo, antes de descuentos.",
+      "showWhen": {
+        "field": "modo",
+        "in": [
+          "bruto-a-neto"
+        ]
+      }
+    },
+    {
+      "id": "netoObjetivo",
+      "label": "Neto en mano que querés cobrar",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "1200000",
+      "min": 0,
+      "step": 1000,
+      "required": true,
+      "format": "thousands",
+      "help": "El sueldo de bolsillo objetivo. Buscamos por aproximación el bruto que lo produce (precisión $100).",
+      "showWhen": {
+        "field": "modo",
+        "in": [
+          "neto-a-bruto"
+        ]
+      }
     },
     {
       "id": "conyuge",
@@ -91,6 +133,153 @@
           "label": "5 o más"
         }
       ]
+    },
+    {
+      "id": "compararAnterior",
+      "label": "¿Comparar con tu sueldo anterior?",
+      "type": "select",
+      "default": "no",
+      "help": "Activalo para ver si tu aumento le ganó o le perdió a la inflación INDEC acumulada.",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí, comparar con mi sueldo anterior"
+        }
+      ]
+    },
+    {
+      "id": "sueldoAnterior",
+      "label": "Sueldo anterior",
+      "type": "number",
+      "prefix": "$",
+      "placeholder": "900000",
+      "min": 0,
+      "step": 1000,
+      "required": true,
+      "format": "thousands",
+      "help": "Poné el sueldo de ese mes en la misma medida que arriba (bruto si calculás bruto→neto; en mano si calculás neto→bruto).",
+      "showWhen": {
+        "field": "compararAnterior",
+        "in": [
+          "si"
+        ]
+      }
+    },
+    {
+      "id": "mesAnterior",
+      "label": "Mes de ese sueldo",
+      "type": "select",
+      "default": "2025-12",
+      "required": true,
+      "help": "Desde ese mes calculamos la inflación acumulada. La serie mensual del INDEC cubre ~12 meses; para meses más viejos el tramo faltante se estima al promedio mensual.",
+      "options": [
+        {
+          "value": "2026-05",
+          "label": "mayo 2026"
+        },
+        {
+          "value": "2026-04",
+          "label": "abril 2026"
+        },
+        {
+          "value": "2026-03",
+          "label": "marzo 2026"
+        },
+        {
+          "value": "2026-02",
+          "label": "febrero 2026"
+        },
+        {
+          "value": "2026-01",
+          "label": "enero 2026"
+        },
+        {
+          "value": "2025-12",
+          "label": "diciembre 2025"
+        },
+        {
+          "value": "2025-11",
+          "label": "noviembre 2025"
+        },
+        {
+          "value": "2025-10",
+          "label": "octubre 2025"
+        },
+        {
+          "value": "2025-09",
+          "label": "septiembre 2025"
+        },
+        {
+          "value": "2025-08",
+          "label": "agosto 2025"
+        },
+        {
+          "value": "2025-07",
+          "label": "julio 2025"
+        },
+        {
+          "value": "2025-06",
+          "label": "junio 2025"
+        },
+        {
+          "value": "2025-05",
+          "label": "mayo 2025"
+        },
+        {
+          "value": "2025-04",
+          "label": "abril 2025"
+        },
+        {
+          "value": "2025-03",
+          "label": "marzo 2025"
+        },
+        {
+          "value": "2025-02",
+          "label": "febrero 2025"
+        },
+        {
+          "value": "2025-01",
+          "label": "enero 2025"
+        },
+        {
+          "value": "2024-12",
+          "label": "diciembre 2024"
+        },
+        {
+          "value": "2024-11",
+          "label": "noviembre 2024"
+        },
+        {
+          "value": "2024-10",
+          "label": "octubre 2024"
+        },
+        {
+          "value": "2024-09",
+          "label": "septiembre 2024"
+        },
+        {
+          "value": "2024-08",
+          "label": "agosto 2024"
+        },
+        {
+          "value": "2024-07",
+          "label": "julio 2024"
+        },
+        {
+          "value": "2024-06",
+          "label": "junio 2024"
+        }
+      ],
+      "showWhen": {
+        "field": "compararAnterior",
+        "in": [
+          "si"
+        ]
+      }
     }
   ],
   "dataUpdate": {
@@ -107,6 +296,12 @@
       "label": "Sueldo en mano (neto)",
       "format": "currency",
       "primary": true
+    },
+    {
+      "id": "brutoNecesario",
+      "label": "Sueldo bruto necesario",
+      "format": "currency",
+      "hideWhenEmpty": true
     },
     {
       "id": "descuentoTotal",
@@ -127,6 +322,12 @@
       "id": "porcentajeDescuento",
       "label": "% descontado",
       "format": "percentage"
+    },
+    {
+      "id": "poderAdquisitivoReal",
+      "label": "Poder adquisitivo real vs. inflación",
+      "format": "percentage",
+      "hideWhenEmpty": true
     }
   ],
   "dynamicScenarios": [
@@ -249,6 +450,18 @@
     {
       "q": "¿Qué cambió en 2026 respecto de 2025 para el sueldo en mano?",
       "a": "Las alícuotas no cambiaron (siguen los 17% de aportes), pero el tope salarial sobre el que se calculan subió de $3.335.458 (junio 2025) a $4.414.652 (junio 2026), así que el descuento máximo pasó de ≈$567.028 a ≈$750.491. Además, las deducciones de Ganancias subieron 31,5%, por lo que el impuesto recién aparece en sueldos nominales más altos que en 2025."
+    },
+    {
+      "q": "¿Cuánto bruto necesito para cobrar X en mano?",
+      "a": "Cambiá el selector **\"¿Qué querés calcular?\"** a la opción **\"Quiero cobrar X en mano → cuánto bruto necesito\"**, ingresá el neto objetivo y la calculadora busca por aproximación el sueldo bruto que produce ese neto (precisión de $100), teniendo en cuenta el 17% de aportes con su tope y el Impuesto a las Ganancias según tu situación familiar. Es el cálculo inverso del bruto→neto: útil para negociar un sueldo pedido \"en mano\" y saber qué bruto ponerle al contrato."
+    },
+    {
+      "q": "¿Mi aumento le ganó a la inflación?",
+      "a": "Activá **\"¿Comparar con tu sueldo anterior?\"**, cargá cuánto cobrabas antes y desde qué mes. La calculadora toma la **inflación acumulada del IPC INDEC** desde ese mes hasta el último dato disponible y la compara con tu aumento nominal: te dice si **ganaste o perdiste poder adquisitivo real** y en qué porcentaje. Ejemplo: si tu sueldo subió 20% pero la inflación acumulada fue 33%, perdiste alrededor de 10% de poder de compra."
+    },
+    {
+      "q": "¿De dónde sale la inflación que usa el comparador?",
+      "a": "De la serie mensual del IPC que publica el **INDEC**, incorporada al sitio desde el pipeline de datos y actualizada cada mes. La serie mensual exacta cubre aproximadamente los últimos 12 meses; si elegís un mes más antiguo, el tramo que queda fuera de la serie se **estima** con el promedio mensual del período conocido y la calculadora lo aclara en el resultado. Es una referencia orientativa, no un cálculo oficial de haberes."
     }
   ],
   "sources": [
@@ -309,7 +522,7 @@
       "text": "Revisá los resultados que aparecen debajo del formulario. Podés modificar cualquier dato y volver a calcular."
     }
   ],
-  "lastReviewed": "2026-07-05",
+  "lastReviewed": "2026-07-08",
   "referenceTables": [
     {
       "title": "Sueldo en mano según bruto (Argentina 2026, soltero sin cargas)",
@@ -378,6 +591,10 @@
     "inflacion:acumulado_12m"
   ],
   "changelog": [
+    {
+      "date": "2026-07-08",
+      "change": "Nuevos modos: cálculo inverso neto→bruto (\"¿cuánto bruto necesito para cobrar X en mano?\", por aproximación con precisión $100) y comparador de aumento vs. inflación INDEC acumulada (poder adquisitivo real desde el mes elegido). +3 FAQ."
+    },
     {
       "date": "2026-07-05",
       "change": "El resultado ahora incluye escenarios en vivo (\"si me aumentan 10%/25%\", con cónyuge/hijos) que recalculan tu neto al instante, y una interpretación de decisión que enlaza a la sala \"¿Me conviene aceptar esta oferta laboral?\"."

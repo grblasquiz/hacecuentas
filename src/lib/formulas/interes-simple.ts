@@ -84,3 +84,73 @@ export function interesSimple(i: Inputs): Outputs {
     _insight: insight,
   };
 }
+
+// ── A4 · Hooks opcionales de contenido computado (fórmula de PRUEBA) ──
+// Contrato (ver Calculator.astro):
+//   steps(inputs, outputs): string[]              → paso a paso (markdown inline)
+//   schedule(inputs, outputs): { headers, rows }  → cronograma período a período
+// Los valores ya vienen sustituidos; el runtime solo formatea/escapa.
+
+/** Deriva capital, tasa (decimal) y tiempo-en-años desde los inputs crudos. */
+function _parseInteresSimple(i: Inputs): { C: number; tasaPct: number; tasa: number; t: number; unidad: string; tYears: number } {
+  const C = Number(i.capital);
+  const tasaPct = Number(i.tasa);
+  const tasa = tasaPct / 100;
+  const t = Number(i.tiempo);
+  const unidad = String(i.unidad || 'anos');
+  const tYears = unidad === 'meses' ? t / 12 : unidad === 'dias' ? t / 365 : t;
+  return { C, tasaPct, tasa, t, unidad, tYears };
+}
+
+export function steps(i: Inputs, o: Outputs): string[] {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const { C, tasaPct, tasa, t, unidad, tYears } = _parseInteresSimple(i);
+  const loc = __lang === 'en' ? 'en-US' : 'es-AR';
+  const m = (x: number) => '$' + Math.round(x).toLocaleString(loc);
+  // Resultados desde el output ya calculado (no recalcular).
+  const interes = Number(o.interes);
+  const monto = Number(o.montoFinal);
+  if (__lang === 'en') {
+    const unitName = unidad === 'meses' ? 'months' : unidad === 'dias' ? 'days' : 'years';
+    return [
+      '**Formula:** `I = C × i × t`',
+      `**Principal (C):** ${m(C)}`,
+      `**Annual rate (i):** ${tasaPct}% = \`${tasa.toFixed(4)}\``,
+      `**Time (t):** ${t} ${unitName} = \`${tYears.toFixed(4)}\` years`,
+      `**Interest:** \`${Math.round(C)} × ${tasa.toFixed(4)} × ${tYears.toFixed(4)}\` = **${m(interes)}**`,
+      `**Final amount:** \`${m(C)} + ${m(interes)}\` = **${m(monto)}**`,
+    ];
+  }
+  const unitName = unidad === 'meses' ? 'meses' : unidad === 'dias' ? 'días' : 'años';
+  return [
+    '**Fórmula:** `I = C × i × t`',
+    `**Capital (C):** ${m(C)}`,
+    `**Tasa anual (i):** ${tasaPct}% = \`${tasa.toFixed(4)}\``,
+    `**Tiempo (t):** ${t} ${unitName} = \`${tYears.toFixed(4)}\` años`,
+    `**Interés:** \`${Math.round(C)} × ${tasa.toFixed(4)} × ${tYears.toFixed(4)}\` = **${m(interes)}**`,
+    `**Monto final:** \`${m(C)} + ${m(interes)}\` = **${m(monto)}**`,
+  ];
+}
+
+export function schedule(i: Inputs, _o: Outputs): { headers: string[]; rows: (string | number)[][] } {
+  const __lang = i.__lang === 'en' ? 'en' : 'es';
+  const { C, tasa, tYears } = _parseInteresSimple(i);
+  const loc = __lang === 'en' ? 'en-US' : 'es-AR';
+  const m = (x: number) => '$' + Math.round(x).toLocaleString(loc);
+  const headers = __lang === 'en'
+    ? ['Year', 'Interest this period', 'Accrued interest', 'Balance']
+    : ['Año', 'Interés del período', 'Interés acumulado', 'Saldo'];
+  const rows: (string | number)[][] = [];
+  // Interés simple: cada año acumula C × i (lineal). El último año prorratea la
+  // fracción restante para plazos no enteros.
+  const totalYears = Math.max(1, Math.ceil(tYears));
+  let accrued = 0;
+  for (let y = 1; y <= totalYears; y++) {
+    const frac = Math.min(1, tYears - (y - 1));
+    if (frac <= 0) break;
+    const periodInt = C * tasa * frac;
+    accrued += periodInt;
+    rows.push([y, m(periodInt), m(accrued), m(C + accrued)]);
+  }
+  return { headers, rows };
+}

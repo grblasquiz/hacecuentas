@@ -20,6 +20,8 @@ describe('catálogo de eventos', () => {
       'hc_post_result_scroll', 'hc_post_result_interaction',
       'hc_email_band_view', 'hc_email_band_focus', 'hc_email_band_signup',
       'hc_feedback_positive', 'hc_feedback_negative', 'hc_recent_calculator_opened',
+      'hc_push_view', 'hc_push_subscribe', 'hc_push_dismiss', 'hc_push_denied',
+      'hc_push_unsubscribe',
     ];
     expect([...HC_EVENTS].sort()).toEqual([...spec].sort());
   });

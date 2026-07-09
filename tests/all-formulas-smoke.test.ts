@@ -65,12 +65,26 @@ interface CalcJson {
 // ---------------------------------------------------------------------------
 // Builder de inputs típicos a partir de los `fields[]` del JSON.
 // ---------------------------------------------------------------------------
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+// Para campos `date`/`datetime-local` sin placeholder usamos una fecha ~60 días
+// EN EL PASADO en vez de "hoy". Motivo: muchos calcs (nacimiento, edad,
+// aniversario, FUM/embarazo, parto) validan legítimamente que la fecha sea
+// *anterior a hoy* o *no futura*; alimentarlos con la fecha de hoy dispara un
+// validation-error que NO es un bug de la fórmula. 60 días atrás cae dentro de
+// todas las ventanas válidas: es "anterior a hoy" para nacimiento/edad y, a la
+// vez, está dentro del rango de una FUM plausible (<300 días / <45 semanas).
+// Los calcs de cuenta-regresiva toleran fechas pasadas sin lanzar excepción.
+const PAST_INPUT_OFFSET_DAYS = 60;
+
+function recentPastDate(): Date {
+  return new Date(Date.now() - PAST_INPUT_OFFSET_DAYS * 24 * 60 * 60 * 1000);
 }
 
-function todayIsoDateTime(): string {
-  return new Date().toISOString().slice(0, 16);
+function pastIso(): string {
+  return recentPastDate().toISOString().slice(0, 10);
+}
+
+function pastIsoDateTime(): string {
+  return recentPastDate().toISOString().slice(0, 16);
 }
 
 function buildInputs(fields: CalcField[] | undefined): Record<string, any> {
@@ -128,11 +142,11 @@ function buildInputs(fields: CalcField[] | undefined): Record<string, any> {
     } else if (t === 'date') {
       inputs[f.id] = typeof f.placeholder === 'string' && f.placeholder
         ? f.placeholder
-        : todayIso();
+        : pastIso();
     } else if (t === 'datetime-local') {
       inputs[f.id] = typeof f.placeholder === 'string' && f.placeholder
         ? f.placeholder
-        : todayIsoDateTime();
+        : pastIsoDateTime();
     } else {
       // text / textarea / cualquier otro. Los placeholders suelen ser ejemplos
       // decorados ("Ej: 255", "2026  o  MMXXVI") — extraer el ejemplo usable:

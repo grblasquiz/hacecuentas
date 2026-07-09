@@ -53,11 +53,107 @@ const schema = {
       ))}
     </div>
 
+    <!-- A3: Guardado activo + favoritas. Ambas secciones se pueblan del lado del
+         cliente desde localStorage (guardados = hc:saved-calcs; favoritas = hc_favs,
+         el contrato existente de FavoriteStar) y quedan ocultas si no hay nada.
+         Cero backend, todo local. -->
+    <section class="mi-saved" data-mi-saved hidden>
+      <h2 class="mi-saved-h">Mis cálculos guardados</h2>
+      <p class="mi-saved-sub">Los que guardaste con nombre. Abrilos y vuelven con tus datos precargados.</p>
+      <ul class="mi-saved-list" data-saved-list></ul>
+    </section>
+
+    <section class="mi-favs" data-mi-favs hidden>
+      <h2 class="mi-saved-h">Favoritas</h2>
+      <p class="mi-saved-sub">Las calculadoras que marcaste con la estrella ⭐ en cada página.</p>
+      <ul class="mi-favs-list" data-favs-list></ul>
+    </section>
+
     <p class="mi-hub-foot">
       ¿Querés que precarguen tus datos? <a href="/mi-hacecuentas">Creá tu cuenta gratis</a>.
       El resto de las <a href="/calculadoras">calculadoras</a> sigue disponible sin cuenta.
     </p>
   </div>
+
+  <script is:inline>
+    // A3 — Mis cálculos guardados + Favoritas (localStorage, client-side).
+    // is:inline (como FavoriteStar): script autocontenido sin imports, se ejecuta
+    // en cada carga de página sin depender del bundling de módulos.
+    (function () {
+      var SAVED_KEY = 'hc:saved-calcs';
+      // Favoritas reusa el contrato existente de FavoriteStar.astro: localStorage
+      // 'hc_favs' = array de { s: slug, t: título, l: prefijo de idioma, d: ISO }.
+      // La URL se reconstruye como (l ? '/'+l : '') + '/' + s. NO cambiar el contrato.
+      var FAV_KEY = 'hc_favs';
+      function read(key) {
+        try { var a = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+      }
+      function write(key, arr) { try { localStorage.setItem(key, JSON.stringify(arr)); } catch (e) {} }
+      function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+      function fmtDate(ts) {
+        if (!ts) return '';
+        try { return new Date(ts).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' }); } catch (e) { return ''; }
+      }
+
+      function renderSaved() {
+        var sec = document.querySelector('[data-mi-saved]');
+        var list = document.querySelector('[data-saved-list]');
+        if (!sec || !list) return;
+        var items = read(SAVED_KEY);
+        if (!items.length) { sec.hidden = true; return; }
+        sec.hidden = false;
+        list.innerHTML = '';
+        items.forEach(function (it, i) {
+          var li = document.createElement('li');
+          li.className = 'mi-saved-item';
+          var res = it && it.resultado
+            ? '<span class="mi-saved-res">' + (it.resultLabel ? esc(it.resultLabel) + ': ' : '') + esc(it.resultado) + '</span>'
+            : '';
+          li.innerHTML =
+            '<a class="mi-saved-link" href="' + esc((it && it.url) || '/') + '">' +
+              '<span class="mi-saved-name">' + esc((it && it.nombre) || 'Cálculo guardado') + '</span>' +
+              res +
+              '<span class="mi-saved-date">' + esc(fmtDate(it && it.ts)) + '</span>' +
+            '</a>' +
+            '<button type="button" class="mi-saved-del" data-del="' + i + '" aria-label="Borrar este cálculo guardado" title="Borrar">✕</button>';
+          list.appendChild(li);
+        });
+      }
+
+      function renderFavs() {
+        var sec = document.querySelector('[data-mi-favs]');
+        var list = document.querySelector('[data-favs-list]');
+        if (!sec || !list) return;
+        var items = read(FAV_KEY).filter(function (it) { return it && it.s; });
+        if (!items.length) { sec.hidden = true; return; }
+        sec.hidden = false;
+        list.innerHTML = '';
+        items.forEach(function (it) {
+          var li = document.createElement('li');
+          li.className = 'mi-fav-item';
+          var href = (it.l ? '/' + it.l : '') + '/' + it.s;
+          li.innerHTML = '<a class="mi-fav-link" href="' + esc(href) + '">⭐ ' + esc(it.t || it.s) + '</a>';
+          list.appendChild(li);
+        });
+      }
+
+      // Borrado individual de guardados (delegación de eventos).
+      var savedList = document.querySelector('[data-saved-list]');
+      if (savedList) {
+        savedList.addEventListener('click', function (e) {
+          var btn = e.target && e.target.closest ? e.target.closest('[data-del]') : null;
+          if (!btn) return;
+          e.preventDefault();
+          var idx = parseInt(btn.getAttribute('data-del'), 10);
+          var items = read(SAVED_KEY);
+          if (idx >= 0 && idx < items.length) { items.splice(idx, 1); write(SAVED_KEY, items); renderSaved(); }
+        });
+      }
+
+      renderSaved();
+      renderFavs();
+    })();
+  </script>
 
   <Footer slot="footer" />
 </Layout>
@@ -84,4 +180,44 @@ const schema = {
 
   .mi-hub-foot { text-align: center; margin-top: 2.5rem; color: var(--text-muted); font-size: 0.9375rem; }
   .mi-hub-foot a { color: var(--accent); font-weight: 600; }
+
+  /* A3: Mis cálculos guardados + Favoritas.
+     Los <li>/<a>/<button> de las listas se crean por JS (innerHTML), así que NO
+     llevan el atributo de scope de Astro → sus reglas van con :global(). Los
+     contenedores (secciones, títulos, <ul>) sí son server-rendered → scoped. */
+  .mi-saved, .mi-favs { margin-top: 2.5rem; }
+  .mi-saved-h { font-size: 1.15rem; margin: 0 0 0.25rem; }
+  .mi-saved-sub { color: var(--text-muted); font-size: 0.875rem; margin: 0 0 0.875rem; }
+  .mi-saved-list, .mi-favs-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .mi-saved-list :global(.mi-saved-item) { display: flex; align-items: stretch; gap: 0.5rem; }
+  .mi-saved-list :global(.mi-saved-link) {
+    flex: 1 1 auto; min-width: 0;
+    display: flex; flex-direction: column; gap: 0.15rem;
+    padding: 0.75rem 1rem; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    text-decoration: none; color: var(--text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .mi-saved-list :global(.mi-saved-link:hover) { border-color: var(--accent); box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 14%, transparent); }
+  .mi-saved-list :global(.mi-saved-name) { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mi-saved-list :global(.mi-saved-res) { color: var(--accent); font-weight: 600; font-size: 0.9375rem; }
+  .mi-saved-list :global(.mi-saved-date) { color: var(--text-muted); font-size: 0.8125rem; }
+  .mi-saved-list :global(.mi-saved-del) {
+    flex: 0 0 auto; width: 44px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); color: var(--text-muted);
+    cursor: pointer; font-size: 1rem; line-height: 1;
+    transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+  }
+  .mi-saved-list :global(.mi-saved-del:hover) { color: #dc2626; border-color: #dc2626; background: #dc262610; }
+
+  .mi-favs-list :global(.mi-fav-link) {
+    display: block; padding: 0.625rem 1rem;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); text-decoration: none; color: var(--text);
+    font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .mi-favs-list :global(.mi-fav-link:hover) { border-color: var(--accent); color: var(--accent); }
 </style>

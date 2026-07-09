@@ -12,8 +12,14 @@ import type { Field } from "./Calculator.astro";
 interface Props {
   field: Field;
   lang?: "es" | "en" | "pt";
+  /**
+   * Estado inicial de visibilidad para campos con `showWhen` (lo calcula
+   * Calculator según el `default` del campo controlador). Si no se pasa, se
+   * usa "oculto por defecto" cuando hay showWhen. El JS luego lo mantiene en sync.
+   */
+  initHidden?: boolean;
 }
-const { field, lang = "es" } = Astro.props;
+const { field, lang = "es", initHidden } = Astro.props;
 const isWide = field.type === "select" || field.type === "date";
 
 // Strings i18n del fragmento (aria-labels) — antes hardcodeados en español
@@ -30,6 +36,18 @@ const FT = ({
 //  - units:        array de unidades (["kg","lb"]) → selector chico en el suffix.
 const isRequired = (field as any).required === true;
 const showRecommended = !isRequired && (field as any).recommended === true;
+
+// Visibilidad condicional (opt-in): `showWhen: { field, in: [...] }`. Emitimos
+// los data-attrs y arrancamos el campo oculto+disabled si tiene condición; el JS
+// de Calculator lo prende/apaga según el valor del campo controlador. Sin
+// showWhen, el campo se comporta como siempre (visible).
+const showWhen = (field as any).showWhen as { field?: string; in?: string[] } | undefined;
+const hasShowWhen = !!(showWhen && showWhen.field && Array.isArray(showWhen.in) && showWhen.in.length);
+const showWhenField = hasShowWhen ? showWhen!.field : undefined;
+const showWhenIn = hasShowWhen ? JSON.stringify(showWhen!.in) : undefined;
+// Oculto inicial: usa el cálculo de Calculator (initHidden) si vino; si no,
+// cae a "oculto cuando hay showWhen" (comportamiento conservador).
+const startHidden = hasShowWhen && (initHidden ?? true);
 const units: string[] | undefined = Array.isArray((field as any).units)
   ? (field as any).units.filter((u: unknown) => typeof u === "string" && u.length > 0)
   : undefined;
@@ -122,7 +140,7 @@ const inputMode = field.type !== "number"
       : "decimal";
 ---
 
-<div class={`field ${isWide ? "field-wide" : ""}`}>
+<div class={`field ${isWide ? "field-wide" : ""}`} data-show-when-field={showWhenField} data-show-when-in={showWhenIn} hidden={startHidden ? true : undefined}>
   <label for={field.id}>
     <span class="label-text">{field.label}{isRequired && <span class="req" aria-label={FT.required}>*</span>}</span>
     {field.help && (
@@ -236,6 +254,9 @@ const inputMode = field.type !== "number"
     flex-direction: column;
     gap: 0.4375rem;
   }
+  /* Campo con visibilidad condicional (showWhen) oculto: el display:flex de
+     .field es más específico que el [hidden] de UA, así que lo forzamos acá. */
+  .field[hidden] { display: none; }
   .field-wide {
     grid-column: 1 / -1;
   }

@@ -155,3 +155,42 @@ export function prestamoCuota(inputs: PrestamoInputs): PrestamoOutputs {
     _insight: insight,
   };
 }
+
+/**
+ * Cronograma de amortización cuota a cuota (sistema francés), mes a mes.
+ * Contrato A4: export leído por Calculator.astro → tabla colapsable + CSV.
+ * Números formateados es-AR. Devuelve null si los inputs no son válidos.
+ */
+export function schedule(
+  inputs: PrestamoInputs
+): { headers: string[]; rows: (string | number)[][] } | null {
+  const capital = Number(inputs.capital);
+  const tasaAnual = Number(inputs.tasaAnual);
+  const plazoMeses = Math.round(Number(inputs.plazoMeses));
+  if (!capital || capital <= 0 || !tasaAnual || tasaAnual <= 0 || !plazoMeses || plazoMeses <= 0)
+    return null;
+
+  const iMes = tasaAnual / 100 / 12;
+  const cuota =
+    iMes === 0
+      ? capital / plazoMeses
+      : (capital * (iMes * Math.pow(1 + iMes, plazoMeses))) / (Math.pow(1 + iMes, plazoMeses) - 1);
+
+  const lang = inputs.__lang === 'en' ? 'en' : inputs.__lang === 'pt' ? 'pt' : 'es';
+  const headers =
+    lang === 'en' ? ['Month', 'Payment', 'Interest', 'Principal', 'Balance'] :
+    lang === 'pt' ? ['Mês', 'Parcela', 'Juros', 'Capital', 'Saldo'] :
+    ['Mes', 'Cuota', 'Interés', 'Capital', 'Saldo'];
+
+  const f = (x: number) => Math.round(x).toLocaleString('es-AR');
+  const rows: (string | number)[][] = [];
+  let saldo = capital;
+  const rowN = Math.min(plazoMeses, 360);
+  for (let mes = 1; mes <= rowN; mes++) {
+    const interesMes = saldo * iMes;
+    const capitalMes = cuota - interesMes;
+    saldo = Math.max(0, saldo - capitalMes);
+    rows.push([mes, f(cuota), f(interesMes), f(capitalMes), f(saldo)]);
+  }
+  return { headers, rows };
+}

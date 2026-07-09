@@ -199,3 +199,37 @@ export function compute(i: Inputs): Outputs {
     _insight
   };
 }
+
+/**
+ * Cronograma de amortización cuota a cuota (sistema francés), mes a mes.
+ * Contrato A4: export leído por Calculator.astro → tabla colapsable + CSV.
+ * Devuelve la cuota BASE (sin seguro ni IVA, coincide con monthly_payment).
+ * Números formateados es-AR. Devuelve null si los inputs no son válidos.
+ */
+export function schedule(
+  i: Inputs & { __lang?: string }
+): { headers: string[]; rows: (string | number)[][] } | null {
+  const principal = Number(i.amount) || 0;
+  const n = parseInt(i.term_months, 10) || 24;
+  const tna = Number(i.tna) || 0;
+  if (principal <= 0 || tna < 0 || n <= 0 || n > 360) return null;
+
+  const tem = tna / 100 / 12;
+  const base = calcMonthlyPayment(principal, tem, n);
+  const lang = i.__lang === 'en' ? 'en' : i.__lang === 'pt' ? 'pt' : 'es';
+  const headers =
+    lang === 'en' ? ['Month', 'Payment', 'Interest', 'Principal', 'Balance'] :
+    lang === 'pt' ? ['Mês', 'Parcela', 'Juros', 'Capital', 'Saldo'] :
+    ['Mes', 'Cuota', 'Interés', 'Capital', 'Saldo'];
+
+  const f = (x: number) => Math.round(x).toLocaleString('es-AR');
+  const rows: (string | number)[][] = [];
+  let balance = principal;
+  for (let m = 1; m <= n; m++) {
+    const interest = balance * tem;
+    const amort = base - interest;
+    balance = Math.max(0, balance - amort);
+    rows.push([m, f(base), f(interest), f(amort), f(balance)]);
+  }
+  return { headers, rows };
+}

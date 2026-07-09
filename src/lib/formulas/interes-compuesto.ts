@@ -269,3 +269,47 @@ export function interesCompuesto(inputs: InteresInputs): InteresOutputs {
     _table: table,
   };
 }
+
+/**
+ * Cronograma año a año: aportes del año, interés generado en el año y saldo
+ * al cierre. Complementa el _table (que muestra acumulados) con los deltas
+ * período a período + descarga CSV. Contrato A4 (Calculator.astro).
+ * Números formateados es-AR. Devuelve null si los inputs no son válidos.
+ */
+export function schedule(
+  inputs: InteresInputs
+): { headers: string[]; rows: (string | number)[][] } | null {
+  const capital = Number(inputs.capitalInicial) || 0;
+  const aporte = Number(inputs.aporteMensual) || 0;
+  const tasaAnual = Number(inputs.tasaAnual);
+  const anios = Number(inputs.plazoAnios);
+  if (capital < 0 || (capital === 0 && aporte === 0) || !tasaAnual || tasaAnual <= 0 || !anios || anios <= 0)
+    return null;
+
+  const freqRaw = inputs.frecuenciaCapitalizacion;
+  const freq = freqRaw === '' || freqRaw === null || freqRaw === undefined ? 'mensual' : String(freqRaw);
+  const m = PERIODOS_POR_ANIO[freq] ?? 12;
+  const r = tasaAnual / 100;
+  const iMes = Math.pow(1 + r / m, m / 12) - 1;
+
+  const lang = inputs.__lang === 'en' ? 'en' : inputs.__lang === 'pt' ? 'pt' : 'es';
+  const headers =
+    lang === 'en' ? ['Year', 'Yearly contributions', 'Yearly interest', 'Balance'] :
+    lang === 'pt' ? ['Ano', 'Aportes do ano', 'Juros do ano', 'Saldo'] :
+    ['Año', 'Aportes del año', 'Interés del año', 'Saldo'];
+
+  const f = (x: number) => Math.round(x).toLocaleString('es-AR');
+  const rows: (string | number)[][] = [];
+  const years = Math.min(Math.round(anios), 60);
+  const aporteAnual = aporte * 12;
+  let prevVf = capital;
+  for (let k = 1; k <= years; k++) {
+    const nK = k * 12;
+    const factorK = Math.pow(1 + iMes, nK);
+    const vfK = capital * factorK + (iMes === 0 ? aporte * nK : aporte * ((factorK - 1) / iMes));
+    const interesAnio = vfK - prevVf - aporteAnual;
+    rows.push([k, f(aporteAnual), f(Math.max(0, interesAnio)), f(vfK)]);
+    prevVf = vfK;
+  }
+  return { headers, rows };
+}

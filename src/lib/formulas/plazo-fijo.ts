@@ -81,3 +81,38 @@ export function plazoFijo(inputs: PlazoFijoInputs): PlazoFijoOutputs {
     _chart,
   };
 }
+
+/**
+ * Cronograma de renovaciones: reinvirtiendo capital + interés en cada
+ * vencimiento (interés simple por período, capitalización al renovar).
+ * Cubre ~1 año de renovaciones (mín. 6, máx. 24 filas). Contrato A4.
+ * Números formateados es-AR. Devuelve null si los inputs no son válidos.
+ */
+export function schedule(
+  inputs: PlazoFijoInputs & { __lang?: string }
+): { headers: string[]; rows: (string | number)[][] } | null {
+  const capital = Number(inputs.capital);
+  const tna = Number(inputs.tna);
+  const dias = Number(inputs.dias);
+  if (!capital || capital <= 0 || !tna || tna <= 0 || !dias || dias < 1) return null;
+
+  const rate = tna / 100;
+  const periods = Math.min(24, Math.max(6, Math.round(365 / dias)));
+
+  const lang = inputs.__lang === 'en' ? 'en' : inputs.__lang === 'pt' ? 'pt' : 'es';
+  const headers =
+    lang === 'en' ? ['Rollover', 'Starting capital', 'Interest', 'Balance'] :
+    lang === 'pt' ? ['Renovação', 'Capital inicial', 'Juros', 'Saldo'] :
+    ['Renovación', 'Capital inicial', 'Interés', 'Saldo'];
+
+  const f = (x: number) => Math.round(x).toLocaleString('es-AR');
+  const rows: (string | number)[][] = [];
+  let saldo = capital;
+  for (let p = 1; p <= periods; p++) {
+    const interes = saldo * rate * (dias / 365);
+    const nuevo = saldo + interes;
+    rows.push([p, f(saldo), f(interes), f(nuevo)]);
+    saldo = nuevo;
+  }
+  return { headers, rows };
+}
