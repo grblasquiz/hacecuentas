@@ -35,7 +35,9 @@ _spec.loader.exec_module(_fbl)
 _IDX = _fbl.build_index()
 
 CALC_COLLECTIONS = _IDX["calc_collections"]
-LOCALE_PREFIXES = ("en", "pt", "mx", "es", "co", "cl", "ec", "pe")
+# "pt-pt" primero: en la alternación regex debe intentarse antes que "pt".
+LOCALE_PREFIXES = ("pt-pt", "en", "pt", "mx", "es", "co", "cl", "ec", "pe",
+                   "ve", "py", "uy", "do")
 
 STOP = set("de la el los las un una y o en para por con del al a the of to and "
            "calculadora calculator calc com vs por su tu mi how cuanto cuánto "
@@ -195,6 +197,9 @@ def resolve(target: str, sc: str, anchor: str = "", expected_colls=None) -> tupl
 # --- re-extraer referencias CON anchor + raw (para arreglo dirigido) -------
 MD_LINK = re.compile(r"\[([^\]\n]*)\]\((/[^)\s]+)\)")
 HREF = re.compile(r"""href\s*=\s*["'](/[^"'\s]+)["']""")
+# href dentro de HTML embebido en un string JSON: las comillas van escapadas
+# (href=\"/x\"). Sin esto no podemos REPARAR links en blog.content / faq html.
+ESC_HREF = re.compile(r'href\s*=\s*\\"(/[^"\\\s]+)\\"')
 
 plan = {"precise": [], "confident": [], "unlink": [], "remove": [], "manual": []}
 
@@ -228,8 +233,9 @@ def classify_inline(target, sc, anchor, source, kind, raw=None):
 
 
 def classify_lookup(raw_slug, sc, source, kind, field, expected_colls):
-    """Sólo repunta refs de lookup vía transform exacto; si no, las deja como están
-    (política conservadora — no son links 404 visibles)."""
+    """Repunta la ref de lookup vía transform exacto; si no hay match, la ELIMINA
+    (el slug no existe en su locale → RelatedCalcs la descarta en runtime y la
+    reemplaza por auto-fill; dejarla es peso muerto en la curación)."""
     rec = {"source": source, "kind": kind, "old": "/" + raw_slug, "anchor": "",
            "field": field, "raw": raw_slug}
     r = resolve("/" + raw_slug, sc, expected_colls=expected_colls)
@@ -238,19 +244,20 @@ def classify_lookup(raw_slug, sc, source, kind, field, expected_colls):
         if ns and ns != raw_slug:
             rec["new"] = norm(r[0]); rec["new_slug"] = ns; rec["method"] = r[2]
             plan["precise"].append(rec)
+            return
+    plan["remove"].append(rec)
 
 
 # sets de validez para refs de lookup (según cómo resuelve cada ruta en runtime)
 SECTIONS_VALID = slugs_by_coll["calcs"] | slugs_by_coll["calcs-pe"] | slugs_by_coll["calcs-ec"]
 SECTIONS_COLLS = ["calcs", "calcs-pe", "calcs-ec"]
-SAME_LOCALE = {"calcs", "calcs-en", "calcs-pt", "calcs-es"}  # RelatedCalcs maneja estos
 
 
 def relatedslugs_valid_and_colls(coll):
-    if coll in SAME_LOCALE:
-        return slugs_by_coll[coll], [coll]
-    # mx/co/cl/ec/pe: RelatedCalcs cae a esModules(AR) → válido en coll propia o AR
-    return slugs_by_coll[coll] | slugs_by_coll["calcs"], [coll, "calcs"]
+    # RelatedCalcs resuelve manualSlugs contra la colección del MISMO locale
+    # (bySlug = calcModules[lang], sin fallback a AR — ver RelatedCalcs.astro).
+    # Un relatedSlug ausente de su propia colección no renderiza card → same-locale.
+    return slugs_by_coll[coll], [coll]
 
 
 # 3a. inline en JSONs (md + href html)
@@ -262,6 +269,8 @@ def scan_json(coll_name, files):
             classify_inline(m.group(2), coll_name, m.group(1), src, "md", raw=m.group(0))
         for m in HREF.finditer(txt):
             classify_inline(m.group(1), coll_name, "", src, "href_html", raw=m.group(0))
+        for m in ESC_HREF.finditer(txt):
+            classify_inline(m.group(1), coll_name, "", src, "href_esc", raw=m.group(0))
 
 
 for coll, files in calc_jsons.items():
@@ -388,20 +397,30 @@ def apply_plan():
                     new_raw = HREF_PATH_RE.sub(lambda m: m.group(1) + x["new"] + m.group(3), raw)
                     if raw in text:
                         text = text.replace(raw, new_raw)
+            elif kind == "href_esc":
+                # raw = href=\"/old\"  (html embebido en JSON) → sólo repoint
+                if act == "repoint":
+                    new_raw = re.sub(r'/[^"\\\s]+', x["new"], raw, count=1)
+                    if raw in text:
+                        text = text.replace(raw, new_raw)
             elif kind in LOOKUP_KINDS:
                 old_slug = raw
+                esc = re.escape(old_slug)
                 if act == "repoint":
                     text = text.replace('"%s"' % old_slug, '"%s"' % x["new_slug"])
-                else:  # remove: sacar el elemento del array
-                    pat_mid = re.compile(r'\n[ \t]*"%s",' % re.escape(old_slug))
-                    pat_last = re.compile(r',\n[ \t]*"%s"' % re.escape(old_slug))
-                    if pat_mid.search(text):
-                        text = pat_mid.sub("", text, count=1)
-                    elif pat_last.search(text):
-                        text = pat_last.sub("", text, count=1)
-                    else:
-                        text = text.replace('"%s"' % old_slug, '""')
+                else:
+                    # remove: sacar TODAS las apariciones del elemento del array,
+                    # sin dejar coma colgante ni "" (que re-dispararía el detector).
+                    # Cubre primera / media (coma detrás), última (coma delante) y
+                    # elemento único ([] resultante). Anclado por comillas → exacto.
+                    for pat in (r'"%s"\s*,\s*' % esc,
+                                r'\s*,\s*"%s"' % esc,
+                                r'"%s"' % esc):
+                        text = re.sub(pat, "", text)
             edits += 1
+        # Colapsar arrays que quedaron vacíos tras remover su único elemento
+        # ("relatedSlugs": [\n  \n] → []) para no dejar líneas en blanco.
+        text = re.sub(r"\[\s*\]", "[]", text)
         if text != orig:
             path.write_text(text, encoding="utf-8")
             files_changed += 1

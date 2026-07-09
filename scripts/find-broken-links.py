@@ -30,6 +30,9 @@ CALC_COLLECTIONS = {
     "calcs": "/", "calcs-en": "/en/", "calcs-pt": "/pt/", "calcs-mx": "/mx/",
     "calcs-es": "/es/", "calcs-co": "/co/", "calcs-cl": "/cl/",
     "calcs-ec": "/ec/", "calcs-pe": "/pe/",
+    # verticales país servidas por src/pages/<pais>/[...slug].astro
+    "calcs-ve": "/ve/", "calcs-py": "/py/", "calcs-uy": "/uy/",
+    "calcs-do": "/do/", "calcs-pt-pt": "/pt-pt/",
 }
 CATEGORY_LABELS = {
     "finanzas", "impuestos", "familia", "negocios", "negocio", "salud",
@@ -99,6 +102,47 @@ def _public_routes() -> set[str]:
     return out
 
 
+def _dynamic_routes() -> set[str]:
+    """URLs generadas por getStaticPaths de rutas [param] que _static_routes()
+    saltea (tiene '[' en el path). Enumeramos los params desde su fuente para no
+    marcar como rotos links hardcodeados válidos (datos/, plazo-fijo-*, etc.)."""
+    out: set[str] = set()
+
+    def _read(rel: str) -> str:
+        p = ROOT / rel
+        return p.read_text(encoding="utf-8") if p.exists() else ""
+
+    # /datos/<slug>.json|.csv ← keys de EXPORTS en src/lib/datos-export.ts
+    dx = _read("src/lib/datos-export.ts")
+    dx = dx[dx.find("export const EXPORTS"):] if "export const EXPORTS" in dx else dx
+    for k in re.findall(r"""^\s*['"]([a-z0-9-]+)['"]\s*:""", dx, re.M):
+        out.add(f"/datos/{k}.json")
+        out.add(f"/datos/{k}.csv")
+
+    # /plazo-fijo-<banco>
+    pf = _read("src/pages/plazo-fijo-[banco].astro")
+    for b in re.findall(r"""banco:\s*['"]([a-z0-9-]+)['"]""", pf):
+        out.add(f"/plazo-fijo-{b}")
+
+    # /cuando-juega-<equipo>-mundial-2026
+    cj = _read("src/pages/cuando-juega-[equipo]-mundial-2026.astro")
+    for e in re.findall(r"""slug:\s*['"]([a-z0-9-]+)['"]""", cj):
+        out.add(f"/cuando-juega-{e}-mundial-2026")
+
+    # /decidir/<slug> ← "slug" de nivel superior (4 espacios) en DECISION_MANIFEST
+    dm = _read("src/lib/decisions/manifest.ts")
+    for s in re.findall(r"""^    ["']slug["']\s*:\s*["']([a-z0-9-]+)["']""", dm, re.M):
+        out.add(f"/decidir/{s}")
+
+    # /mi/<producto> ← slugs de nivel producto (4 espacios) en PRODUCTS
+    mp = _read("src/lib/products/manifest.ts")
+    mp = mp[mp.find("export const PRODUCTS"):] if "export const PRODUCTS" in mp else mp
+    for s in re.findall(r"""^    slug:\s*['"]([a-z0-9-]+)['"]""", mp, re.M):
+        out.add(f"/mi/{s}")
+
+    return out
+
+
 def build_index() -> dict:
     valid: set[str] = set()
     valid.update(["/", "/en", "/es", "/pt", "/mx", "/cl", "/co", "/ec", "/pe",
@@ -147,6 +191,7 @@ def build_index() -> dict:
     valid.update("/categoria/" + c for c in cats)
 
     valid.update(_static_routes())
+    valid.update(_dynamic_routes())
     valid.update(_public_routes())
     valid.update(["/feed.json", "/search-index.json", "/rss.xml",
                   "/oembed.json", "/embed.js", "/sitemap.xml",
@@ -236,11 +281,12 @@ def detect(idx: dict) -> dict:
     for extra in ("glosario", "comparaciones", "tablas"):
         scan_inline(_load(extra))
 
-    # relatedSlugs (RelatedCalcs maneja es/en/pt/es-ES; mx/co/cl/ec/pe caen a AR)
-    same_locale = {"calcs", "calcs-en", "calcs-pt", "calcs-es"}
-    ar = slugs_by_coll["calcs"]
+    # relatedSlugs: RelatedCalcs resuelve manualSlugs contra la colección del MISMO
+    # locale (bySlug se arma sólo con calcModules[lang], sin fallback a AR — ver
+    # src/components/RelatedCalcs.astro). Un relatedSlug que no existe en su propia
+    # colección no renderiza card → entrada muerta. Validación: same-locale para todos.
     for coll, prefix in CC.items():
-        sset = slugs_by_coll[coll] if coll in same_locale else (slugs_by_coll[coll] | ar)
+        sset = slugs_by_coll[coll]
         for c in idx["all_calcs"][coll]:
             for rs in c.get("relatedSlugs") or []:
                 if rs not in sset:
@@ -248,7 +294,8 @@ def detect(idx: dict) -> dict:
                     broken_lookup.append({"path": tgt, "ref": rs,
                                           "source": c["__file"], "field": "relatedSlugs"})
     # sections.calcs resuelve contra calcs ∪ calcs-pe ∪ calcs-ec
-    sections_valid = ar | slugs_by_coll["calcs-pe"] | slugs_by_coll["calcs-ec"]
+    sections_valid = (slugs_by_coll["calcs"] | slugs_by_coll["calcs-pe"]
+                      | slugs_by_coll["calcs-ec"])
     for g in idx["guias"]:
         for sec in g.get("sections") or []:
             for cs in sec.get("calcs") or []:
@@ -257,7 +304,7 @@ def detect(idx: dict) -> dict:
                                           "source": g["__file"], "field": "sections.calcs"})
     for b in idx["blog"]:
         for cs in b.get("relatedCalcs") or []:
-            if cs not in ar:
+            if cs not in slugs_by_coll["calcs"]:
                 broken_lookup.append({"path": "/" + cs, "ref": cs,
                                       "source": b["__file"], "field": "relatedCalcs"})
         for rp in b.get("relatedPosts") or []:
