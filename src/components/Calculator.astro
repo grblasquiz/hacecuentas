@@ -560,7 +560,7 @@ const formatFreshnessDate = (iso: string): string => {
 };
 ---
 
-<div class="calc-container" data-slug={config.slug} data-name={config.h1} data-formula={config.formulaId} data-auto-calculate={(config as any).autoCalculate ? 'true' : 'false'} data-lang={lang} data-translations={JSON.stringify(outputTranslations)}>
+<div class="calc-container" data-slug={config.slug} data-name={config.h1} data-category={config.category} data-formula={config.formulaId} data-auto-calculate={(config as any).autoCalculate ? 'true' : 'false'} data-lang={lang} data-translations={JSON.stringify(outputTranslations)}>
   <div class="calc-card-header" data-nosnippet>
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <rect x="4" y="2" width="16" height="20" rx="2"/>
@@ -4803,12 +4803,42 @@ const formatFreshnessDate = (iso: string): string => {
     container.dataset.calcInited = '1';
 
     const slug = container.dataset.slug!;
+    const category = container.dataset.category || '';
     const formulaId = container.dataset.formula!;
     const form = container.querySelector<HTMLFormElement>('.calc-form')!;
     const results = container.querySelector<HTMLElement>('.calc-results')!;
     const srAnnounce = container.querySelector<HTMLElement>('[data-sr-announce]');
     const errorBox = container.querySelector<HTMLElement>('.calc-error')!;
     const submitBtn = form.querySelector<HTMLButtonElement>('.btn-primary')!;
+
+    // Funnel de producto centralizado. Es aditivo: conserva los eventos legacy
+    // (`calculator_used`, `share_link`, etc.) y suma la taxonomía hc_* sin PII.
+    const productTrack = (event: string, extra: Record<string, unknown> = {}) => {
+      try {
+        const track = (window as any).hcTrack;
+        if (typeof track === 'function') track(event, {
+          calculator_slug: slug,
+          calculator_category: category,
+          country: CALC_COUNTRY,
+          source_page: location.pathname,
+          ...extra,
+        });
+      } catch {}
+    };
+    let funnelInputStarted = false;
+    let funnelSuccess = false;
+    let funnelAbandonSent = false;
+    productTrack('hc_calculator_view');
+    form.addEventListener('input', () => {
+      if (funnelInputStarted) return;
+      funnelInputStarted = true;
+      productTrack('hc_calculator_input_started');
+    }, { capture: true });
+    window.addEventListener('pagehide', () => {
+      if (!funnelInputStarted || funnelSuccess || funnelAbandonSent) return;
+      funnelAbandonSent = true;
+      productTrack('hc_calculator_abandoned', { interaction_type: 'started_no_success' });
+    }, { once: true });
 
     // ── Campos con visibilidad condicional (showWhen) ────────────────────
     // Un campo con data-show-when-field="X" data-show-when-in='["a","b"]' se
@@ -5605,10 +5635,18 @@ const formatFreshnessDate = (iso: string): string => {
       e.preventDefault();
       errorBox.hidden = true;
       errorBox.textContent = '';
+      productTrack('hc_calculator_submit');
 
       // Validación inline: si algo falla, marcamos el campo y NO seguimos
       // (no mostramos spinner ni corremos la fórmula).
-      if (!validateForm()) return;
+      if (!validateForm()) {
+        const invalid = form.querySelector<HTMLElement>('[aria-invalid="true"]');
+        productTrack('hc_calculator_validation_error', {
+          error_field: invalid?.getAttribute('name') || 'unknown',
+          error_type: 'invalid_or_missing',
+        });
+        return;
+      }
 
       const data = new FormData(form);
       const inputs: Record<string, string | number> = {};
@@ -5648,6 +5686,7 @@ const formatFreshnessDate = (iso: string): string => {
               : 'No pudimos cargar la calculadora. Revisá tu conexión y reintentá.';
             hideSkeleton();
             showError({ message: _msg, retry: true });
+            productTrack('hc_calculator_runtime_error', { error_type: 'formula_load' });
             return;
           }
           _formulaLoaded = true;
@@ -5716,6 +5755,8 @@ const formatFreshnessDate = (iso: string): string => {
           if (_newPrimary) _prevPrimary = _newPrimary;
 
           results.hidden = false;
+          funnelSuccess = true;
+          productTrack('hc_calculator_success');
           // Anunciar el resultado a lectores de pantalla UNA sola vez (texto
           // final, ya formateado — no los pasos intermedios de animateValue).
           if (srAnnounce && _primaryText) {
@@ -5997,6 +6038,9 @@ const formatFreshnessDate = (iso: string): string => {
           //  (b) excepción de la fórmula → mensaje genérico + botón Reintentar.
           hideSkeleton();
           const isInputErr = err && (err.name === 'InputError' || err.code === 'INPUT' || /\b(input|inválid|invalid|dato|valor)\b/i.test(String(err.message || '')));
+          productTrack(isInputErr ? 'hc_calculator_validation_error' : 'hc_calculator_runtime_error', {
+            error_type: isInputErr ? 'formula_input' : (_formulaLoaded ? 'formula_runtime' : 'formula_load'),
+          });
           if (isInputErr) {
             const _msg = err.message || (CALC_LANG === 'en' ? 'Check the entered data and try again.'
               : CALC_LANG === 'pt' ? 'Revise os dados informados e tente de novo.'
@@ -6166,6 +6210,7 @@ const formatFreshnessDate = (iso: string): string => {
           if (typeof (window as any).gtag === 'function') {
             (window as any).gtag('event', 'share_whatsapp', { calc_slug: slug });
           }
+          productTrack('hc_result_share', { input_mode: 'whatsapp' });
           window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
         } else if (action === 'save-result') {
           // Guardar resultado → snapshot {slug,title,inputs,resultado,fecha} en
@@ -6221,6 +6266,7 @@ const formatFreshnessDate = (iso: string): string => {
               shareBlock.appendChild(goto);
             }
             if (typeof (window as any).gtag === 'function') (window as any).gtag('event', 'save_result', { calc_slug: slug });
+            productTrack('hc_result_save', { input_mode: 'local_snapshot' });
           } catch { /* localStorage lleno/bloqueado: no romper la página */ }
         } else if (action === 'save-calc') {
           // A3 — Guardado ACTIVO con nombre → localStorage 'hc:saved-calcs' (lo lee /mi).
@@ -6310,6 +6356,7 @@ const formatFreshnessDate = (iso: string): string => {
           const label = btn.querySelector<HTMLElement>('[data-copy-number-label], [data-copy-result-label]');
           const original = label?.textContent;
           if (ok && label) {
+            productTrack('hc_result_copy', { input_mode: action });
             label.textContent = CALC_LANG === 'en' ? 'Copied!' : CALC_LANG === 'pt' ? 'Copiado!' : '¡Copiado!';
             btn.classList.add('copied');
             setTimeout(() => {
@@ -6334,6 +6381,7 @@ const formatFreshnessDate = (iso: string): string => {
             if (typeof (window as any).gtag === 'function') {
               (window as any).gtag('event', 'share_link', { calc_slug: slug });
             }
+            productTrack('hc_result_share', { input_mode: 'copy_link' });
             setTimeout(() => {
               label.textContent = original;
               btn.classList.remove('copied');
@@ -6369,6 +6417,7 @@ const formatFreshnessDate = (iso: string): string => {
               if (typeof (window as any).gtag === 'function') {
                 (window as any).gtag('event', 'share_native', { calc_slug: slug });
               }
+              productTrack('hc_result_share', { input_mode: 'native' });
             } catch { /* el usuario canceló la hoja nativa: no hacer nada */ }
           } else {
             const wrap = btn.closest('[data-share-wrap]');

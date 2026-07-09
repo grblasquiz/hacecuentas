@@ -15,6 +15,54 @@ import { CLUSTERS } from './clusters';
 import relatedAuto from './related-auto.json';
 const RELATED_AUTO = relatedAuto as Record<string, string[]>;
 
+// Recorridos explícitos para las landings que concentran el tráfico. Tienen
+// prioridad sobre clusters/TF-IDF porque representan el próximo problema real
+// del usuario, no sólo proximidad semántica. Mantener corto: la UI muestra 4.
+const CURATED_JOURNEYS: Record<string, string[]> = {
+  'calculadora-imc': [
+    'calculadora-peso-ideal',
+    'calculadora-calorias-diarias-tdee',
+    'calculadora-porcentaje-grasa-corporal',
+    'calculadora-indice-cintura-altura-whtr-riesgo',
+  ],
+  'calculadora-indemnizacion-despido': [
+    'calculadora-liquidacion-final-renuncia',
+    'calculadora-antiguedad-laboral',
+    'sueldo-en-mano-argentina',
+    'calculadora-vacaciones-no-tomadas-indemnizacion-formula',
+  ],
+  'calculadora-actualizacion-alquiler-icl': [
+    'calculadora-aumento-alquiler-trimestral-cuatrimestral-semestral',
+    'calculadora-actualizacion-inflacion-ipc',
+    'calculadora-alquiler-vs-comprar',
+    'calculadora-comision-inmobiliaria-alquiler-caba-pba',
+  ],
+  'calculadora-aguinaldo-sac': [
+    'calculadora-ganancias-aguinaldo-sac-retencion',
+    'sueldo-en-mano-argentina',
+    'calculadora-cuanto-falta-aguinaldo-junio-diciembre',
+    'calculadora-aguinaldo-empleada-casa-particular-medio-tiempo-categoria',
+  ],
+  'calculadora-actualizacion-inflacion-ipc': [
+    'calculadora-inflacion-perdida-poder-adquisitivo',
+    'calculadora-poder-adquisitivo-sueldo-real',
+    'calculadora-actualizacion-alquiler-icl',
+    'calculadora-cuotas-sin-interes-costo-real-inflacion',
+  ],
+  'calculadora-impuesto-ganancias-sueldo': [
+    'sueldo-en-mano-argentina',
+    'calculadora-ganancias-aguinaldo-sac-retencion',
+    'calculadora-sueldo-neto-a-bruto',
+    'calculadora-valor-hora-trabajo',
+  ],
+  'calculadora-monotributo-categoria-2026-recategorizacion-julio': [
+    'calculadora-monotributo-cuota-2026-todas-categorias',
+    'calculadora-monotributo-categoria-ingresos-tope',
+    'simulador-monotributo-neto',
+    'calculadora-monotributo-vs-responsable-inscripto',
+  ],
+};
+
 // Secciones de guías: cada sección agrupa calcs que son un recorrido real.
 const guideModules = import.meta.glob<any>('../content/guias/*.json', { eager: true });
 const GUIDES = Object.values(guideModules).map((m: any) => m.default || m);
@@ -59,6 +107,7 @@ export function getJourneySteps(slug: string, manualRelated: string[] = [], max 
       out.push(s);
     }
   };
+  (CURATED_JOURNEYS[slug] || []).forEach(push);
   (clusterSiblings.get(slug) || []).forEach(push);
   (guideSectionSiblings.get(slug) || []).forEach(push);
   manualRelated.forEach(push);

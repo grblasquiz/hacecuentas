@@ -13,7 +13,7 @@ describe('catálogo de eventos', () => {
       'hc_home_search_focus', 'hc_search_started', 'hc_search_submitted',
       'hc_search_result_clicked', 'hc_search_no_results', 'hc_category_filter_used',
       'hc_calculator_view', 'hc_calculator_input_started', 'hc_calculator_submit',
-      'hc_calculator_success', 'hc_calculator_validation_error', 'hc_calculator_runtime_error',
+      'hc_calculator_success', 'hc_calculator_abandoned', 'hc_calculator_validation_error', 'hc_calculator_runtime_error',
       'hc_result_copy', 'hc_result_share', 'hc_result_save', 'hc_result_email_open',
       'hc_result_email_sent', 'hc_formula_expanded', 'hc_related_calculator_clicked',
       'hc_scenario_viewed', 'hc_next_step_clicked', 'hc_decision_room_clicked',
@@ -79,7 +79,7 @@ describe('sanitizeAnalyticsParams — garantía anti-PII', () => {
     expect([...HC_ALLOWED_PARAMS]).toEqual([
       'calculator_slug', 'calculator_category', 'country', 'input_mode', 'search_term',
       'result_position', 'error_field', 'error_type', 'device_type', 'logged_in', 'source_page',
-      'interaction_type',
+      'target_slug', 'interaction_type',
     ]);
   });
 

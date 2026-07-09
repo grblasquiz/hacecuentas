@@ -25,6 +25,12 @@ const FERIADOS_DATA: [string, string][] = FERIADOS_AR_2026.map((f) => [f.fecha, 
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const calcs = Object.values(calcModules).map((m: any) => m.default || m).filter((c: any) => canDistributeCalc(c));
 
+// Ventanas estacionales evaluadas al build. El refresh diario del sitio vuelve
+// a generar la home, así que los bloques se apagan sin intervención manual.
+const buildDay = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }).format(new Date());
+const showMundialSeasonal = buildDay <= '2026-07-19';
+const showMonotributoSeasonal = buildDay <= '2026-08-05';
+
 // Salas de decisión destacadas en la home (super calculadoras). Slugs de alto
 // interés; si alguno no existe en el manifest, se completa con las primeras.
 const FEATURED_SALA_SLUGS = [
@@ -165,7 +171,7 @@ function getTopCalcs(cat: string): any[] {
 }
 
 // Populares (rail) — si existe popular-curated.json (alimentado por
-// scripts/refresh-home-popular.py desde GSC clicks 28d), usar esa lista.
+// scripts/refresh-home-popular.py desde GA4 pageviews), usar esa lista.
 // Si no, fallback a la curada manual histórica.
 // El script se corre manualmente; mientras el JSON no esté commiteado
 // la home sigue con la lista hardcoded.
@@ -550,33 +556,40 @@ const schema = {
     </div>
   </section>
 
-  {/* Cuatro caminos = las cuatro INTENCIONES (no 3 tiles arbitrarios). Estilos
-      distintos por camino, no 4 cards iguales. */}
-  <section class="caminos" aria-label="Por dónde empezar">
+  {/* Cuatro puertas por intención. Es el único bloque rediseñado de la home:
+      el resto conserva la estructura y jerarquía vigentes. */}
+  <section class="caminos" aria-labelledby="caminos-h">
+    <div class="caminos-head">
+      <div>
+        <span class="caminos-eyebrow">Elegí cómo querés empezar</span>
+        <h2 id="caminos-h">Una puerta para cada necesidad</h2>
+      </div>
+      <a href="/calculadoras" class="caminos-all">Ver todo →</a>
+    </div>
     <div class="caminos-grid">
-      <a href="/calculadoras" class="camino" style="--c-ac:#4f46e5;--c-bg:#eef2ff;--c-bd:#c7d2fe">
+      <a href="/calculadoras" class="camino camino-primary" style="--c-ac:#baf24b">
         <span class="camino-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="12" y1="10" x2="14" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="12" y1="14" x2="16" y2="18"/></svg></span>
         <span class="camino-t">Hacer una cuenta</span>
-        <span class="camino-d">Sueldo, IMC, interés, conversores y muchas más.</span>
-        <span class="camino-go">Ver calculadoras →</span>
+        <span class="camino-d">Sueldo, cuotas, porcentajes, salud y cientos de cálculos más.</span>
+        <span class="camino-go">Buscar calculadora →</span>
       </a>
-      <a href="/decidir" class="camino" style="--c-ac:#7c3aed;--c-bg:#f5f3ff;--c-bd:#ddd6fe">
+      <a href="/decidir" class="camino" style="--c-ac:#4f5ee9">
         <span class="camino-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 7l-2 5h6l-2-5"/><path d="M19 7l-2 5h6l-2-5"/><path d="M5 7l7-2 7 2"/></svg></span>
         <span class="camino-t">Tomar una decisión</span>
-        <span class="camino-d">Salas que comparan opciones y te dan un veredicto.</span>
+        <span class="camino-d">Compará escenarios y recibí una conclusión clara para avanzar.</span>
         <span class="camino-go">Abrir salas →</span>
       </a>
-      <a href="/valores-bcra" class="camino" style="--c-ac:#059669;--c-bg:#ecfdf5;--c-bd:#a7f3d0">
+      <a href="/valores-bcra" class="camino" style="--c-ac:#4f5ee9">
         <span class="camino-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 7-7"/><path d="M21 8v5h-5"/></svg></span>
         <span class="camino-t">Seguir un dato</span>
-        <span class="camino-d">Dólar, inflación, UVA y tasas, actualizados al cierre.</span>
+        <span class="camino-d">Dólar, inflación, UVA y tasas con fuente y hora de actualización.</span>
         <span class="camino-go">Ver economía →</span>
       </a>
-      <a href="/mi/plata" class="camino" style="--c-ac:#d97706;--c-bg:#fffbeb;--c-bd:#fde68a">
+      <a href="/mi/plata" class="camino" style="--c-ac:#4f5ee9">
         <span class="camino-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></span>
-        <span class="camino-t">Planificar una meta</span>
-        <span class="camino-d">Presupuesto, ahorro y deudas, guardados mes a mes.</span>
-        <span class="camino-go">Empezar →</span>
+        <span class="camino-t">Ordenar mi plata</span>
+        <span class="camino-d">Presupuesto, ahorro y deudas, todo guardado mes a mes.</span>
+        <span class="camino-go">Empezar mi plan →</span>
       </a>
     </div>
   </section>
@@ -614,7 +627,7 @@ const schema = {
 
   {/* Bloque estacional Mundial 2026 (11 jun – 19 jul 2026) — surfacea el cluster
       en la página de más autoridad mientras dura el torneo. */}
-  <section class="seasonal-mundial" aria-labelledby="mundial-seasonal-h">
+  <section class="seasonal-mundial" aria-labelledby="mundial-seasonal-h" hidden={!showMundialSeasonal}>
     <div class="sm-inner">
       <div class="sm-head">
         <span class="sm-badge">⚽ Mundial 2026 · En vivo</span>
@@ -632,6 +645,27 @@ const schema = {
         <a href="/mundial-2026" class="sm-cta">🏆 Todas las calculadoras</a>
         <a href="/calculadora-mundial-2026-predictor-campeon-ranking" class="sm-cta">🔮 Predictor de campeón</a>
         <a href="/calculadora-mundial-2026-quiniela-pool-probabilidad" class="sm-cta">🎯 Prode con amigos</a>
+      </div>
+    </div>
+  </section>
+
+  {/* Recategorización julio 2026: ventana 15-jul → 5-ago. No crea otra URL;
+      concentra el tráfico en la calculadora, guía y tabla ya canónicas. */}
+  <section class="seasonal-mundial seasonal-monotributo" aria-labelledby="monotributo-seasonal-h" hidden={!showMonotributoSeasonal}>
+    <div class="sm-inner">
+      <div class="sm-head">
+        <span class="sm-badge">🧾 Recategorización · hasta el 5 de agosto</span>
+        <h2 id="monotributo-seasonal-h">Calculá hoy si tenés que cambiar de categoría</h2>
+        <p>
+          Sumá la facturación de julio 2025 a junio 2026 y compará tu categoría actual
+          con la que te corresponde. La nueva cuota rige desde agosto.
+        </p>
+      </div>
+      <div class="sm-links">
+        <a href="/calculadora-monotributo-categoria-2026-recategorizacion-julio" class="sm-cta sm-cta-primary" data-growth-link="monotributo_calc">🧮 Calcular mi categoría</a>
+        <a href="/recategorizacion-monotributo-julio-2026" class="sm-cta" data-growth-link="monotributo_guia">📅 Fechas y paso a paso</a>
+        <a href="/tabla/tabla-categorias-monotributo-2026" class="sm-cta" data-growth-link="monotributo_tabla">📊 Ver topes y cuotas</a>
+        <a href="/datos-monotributo-2026" class="sm-cta" data-growth-link="monotributo_datos">🔎 Datos oficiales</a>
       </div>
     </div>
   </section>
@@ -1390,6 +1424,16 @@ const schema = {
           var openBtn = document.getElementById('open-search');
           if (openBtn) openBtn.click();
         }
+        var growthLink = e.target && e.target.closest && e.target.closest('[data-growth-link]');
+        if (growthLink) {
+          var target = growthLink.getAttribute('data-growth-link') || '';
+          try {
+            if (typeof window.gtag === 'function') window.gtag('event', 'home_growth_click', { target: target });
+            if (typeof window.hcTrack === 'function') window.hcTrack('hc_related_calculator_clicked', {
+              source_page: '/', target_slug: target, calculator_slug: 'home'
+            });
+          } catch (e) {}
+        }
       });
     }
 
@@ -1624,26 +1668,43 @@ const schema = {
     .hoy-panel { text-align: left; max-width: 460px; margin: 0 auto; width: 100%; }
   }
 
-  /* Caminos principales (4) — intenciones, no inventario. Estilos distintos. */
-  .caminos { max-width: 1080px; margin: 0 auto 2.5rem; }
+  /* Caminos principales (4) — una puerta clara por intención. */
+  .caminos { max-width: 1080px; margin: 0 auto 3.25rem; }
+  .caminos-head {
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .caminos-eyebrow {
+    display: block; margin-bottom: 0.35rem; color: var(--accent-strong);
+    font-size: 0.7rem; font-weight: 850; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .caminos-head h2 { margin: 0; font-size: clamp(1.5rem, 3vw, 2rem); letter-spacing: -0.045em; }
+  .caminos-all { color: var(--accent); font-size: 0.8rem; font-weight: 800; text-decoration: none; white-space: nowrap; }
+  .caminos-all:hover { text-decoration: underline; }
   .caminos-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.9rem; }
   .camino {
-    display: flex; flex-direction: column; gap: 0.3rem;
-    padding: 1.15rem 1.2rem 1.1rem; border-radius: 16px; text-decoration: none; color: var(--text);
-    border: 1px solid var(--c-bd, var(--border));
-    background: linear-gradient(165deg, var(--c-bg, var(--bg-soft)), var(--bg-card) 80%);
+    display: flex; flex-direction: column; gap: 0.35rem; min-height: 182px;
+    padding: 1.25rem; border-radius: 18px; text-decoration: none; color: var(--text);
+    border: 1px solid var(--border); background: var(--bg-card);
+    box-shadow: 0 8px 25px color-mix(in srgb, var(--text) 5%, transparent);
     transition: transform 0.16s, box-shadow 0.16s, border-color 0.16s;
   }
   .camino:hover { transform: translateY(-3px); border-color: var(--c-ac); box-shadow: 0 10px 26px -8px color-mix(in srgb, var(--c-ac) 30%, transparent); }
-  .camino-ic { width: 42px; height: 42px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--c-ac) 16%, var(--bg-card)); color: var(--c-ac); margin-bottom: 0.45rem; }
+  .camino-ic { width: 42px; height: 42px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--c-ac) 10%, var(--bg-card)); color: var(--c-ac); margin-bottom: 0.55rem; }
   .camino-t { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.02em; }
   .camino-d { font-size: 0.8125rem; color: var(--text-muted); line-height: 1.4; }
-  .camino-go { margin-top: 0.4rem; font-size: 0.8rem; font-weight: 700; color: var(--c-ac); }
+  .camino-go { margin-top: auto; padding-top: 0.75rem; font-size: 0.8rem; font-weight: 800; color: var(--c-ac); }
+  .camino-primary { color: #fff; border-color: transparent; background: #101a36; box-shadow: 0 14px 34px rgba(16,26,54,0.17); }
+  .camino-primary .camino-ic { color: #101a36; background: var(--c-ac); }
+  .camino-primary .camino-d { color: rgba(255,255,255,0.64); }
+  .camino-primary .camino-go { color: var(--c-ac); }
   @media (max-width: 760px) { .caminos-grid { grid-template-columns: 1fr 1fr; } }
 
   /* Mobile (#5): los destacados pasan a CARRUSEL horizontal con snap, no a una
      pila infinita. Aplica a caminos, productos y "lo nuevo" (feature cards). */
   @media (max-width: 640px) {
+    .caminos-head { align-items: flex-start; }
+    .caminos-all { margin-top: 1.3rem; }
     .caminos-grid, .destacados-grid {
       display: grid; grid-auto-flow: column; grid-template-columns: none;
       grid-auto-columns: 78%; gap: 0.75rem;
@@ -3370,6 +3431,10 @@ const schema = {
   .sm-cta:hover { transform: translateY(-1px); text-decoration: none; }
   .sm-cta-primary { background: var(--accent, #2c5cdc); color: #fff; }
   .sm-cta-primary:hover { filter: brightness(1.07); }
+  .seasonal-monotributo .sm-inner { background: linear-gradient(135deg, #ecfdf5, var(--bg, #fff)); border-color: #059669; }
+  .seasonal-monotributo .sm-badge { background: #047857; }
+  .seasonal-monotributo .sm-cta { border-color: #059669; color: #047857; }
+  .seasonal-monotributo .sm-cta-primary { background: #047857; color: #fff; }
   @media (max-width: 560px) { .sm-inner { padding: 1.25rem; } .sm-cta { flex: 1 1 calc(50% - 0.3rem); justify-content: center; } }
   /* Modo finde: mismo layout que seasonal-mundial con acento cálido */
   .fm-inner { background: linear-gradient(135deg, #fff4ec, var(--bg, #fff)); border-color: #ea580c; }

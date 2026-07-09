@@ -81,8 +81,8 @@ const autoSlugs: string[] = relatedAuto[calc.slug] || [];
 
 // Orden de prioridad de candidatos.
 let candidates: string[];
-if (cluster?.items?.length) candidates = cluster.items.map((it: any) => it.slug);
-else if (journeySlugs.length) candidates = journeySlugs;
+if (journeySlugs.length) candidates = journeySlugs;
+else if (cluster?.items?.length) candidates = cluster.items.map((it: any) => it.slug);
 else candidates = [...relatedSlugs, ...autoSlugs];
 
 // Descripción para la tarjeta: saca emoji/símbolos iniciales (redundantes con el
@@ -145,10 +145,19 @@ const headerTitle = title || (lang === 'en' ? '🧮 Keep calculating' : lang ===
   document.querySelectorAll('[data-next-calcs] a[data-next-slug]').forEach(function (a) {
     a.addEventListener('click', function () {
       try {
+        var targetSlug = a.getAttribute('data-next-slug') || '';
+        var sourceSlug = location.pathname.replace(/^\//, '');
+        var position = Number(a.getAttribute('data-next-pos'));
         if (typeof window.gtag === 'function') window.gtag('event', 'next_calc_click', {
-          link_slug: a.getAttribute('data-next-slug'),
-          source_slug: location.pathname.replace(/^\//, ''),
-          position: Number(a.getAttribute('data-next-pos')),
+          link_slug: targetSlug,
+          source_slug: sourceSlug,
+          position: position,
+        });
+        if (typeof window.hcTrack === 'function') window.hcTrack('hc_related_calculator_clicked', {
+          calculator_slug: sourceSlug,
+          target_slug: targetSlug,
+          result_position: position,
+          source_page: location.pathname,
         });
       } catch (e) {}
     }, { passive: true });

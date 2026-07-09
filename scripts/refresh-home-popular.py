@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Refresca src/lib/popular-curated.json con el top de calcs AR root por clicks
-de los últimos N días desde GSC Search Analytics.
+Refresca src/lib/popular-curated.json con el top de calcs AR root por pageviews
+de los últimos N días desde GA4.
 
 Se usa para alimentar el rail "Las más buscadas en Argentina" de la home —
 en vez de una lista hardcoded estática (que se desactualiza), refleja las
@@ -11,7 +11,7 @@ Output:
   {
     "slugs": ["sueldo-en-mano-argentina", ...],
     "updatedAt": "2026-05-26",
-    "source": "gsc-28d",
+    "source": "ga4-screenPageViews",
     "windowDays": 28
   }
 
@@ -24,45 +24,49 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from urllib.parse import urlparse, unquote
+from urllib.parse import unquote
 
 try:
     from google.oauth2 import service_account
-    from googleapiclient.discovery import build
+    from google.analytics.data_v1beta import BetaAnalyticsDataClient
+    from google.analytics.data_v1beta.types import DateRange, Dimension, Metric, OrderBy, RunReportRequest
 except ImportError:
-    sys.stderr.write("pip install google-auth google-api-python-client\n")
+    sys.stderr.write("pip install google-auth google-analytics-data\n")
     sys.exit(1)
 
 ROOT = Path(__file__).resolve().parent.parent
 CREDS = os.path.expanduser(os.environ.get("GOOGLE_INDEXING_CREDS", "~/.config/gcp/hacecuentas-indexing.json"))
-SITE = "sc-domain:hacecuentas.com"
-SCOPES = ["https://www.googleapis.com/auth/webmasters.readonly"]
+PROPERTY = "532962136"
+SCOPES = ["https://www.googleapis.com/auth/analytics.readonly"]
 OUT = ROOT / "src" / "lib" / "popular-curated.json"
 CALCS_DIR = ROOT / "src" / "content" / "calcs"
 
 
-def svc():
+def svc() -> BetaAnalyticsDataClient:
     c = service_account.Credentials.from_service_account_file(CREDS, scopes=SCOPES)
-    return build("searchconsole", "v1", credentials=c, cache_discovery=False)
+    return BetaAnalyticsDataClient(credentials=c)
 
 
-def query_top_pages(s, start: str, end: str, row_limit: int = 1000) -> list:
-    body = {
-        "startDate": start, "endDate": end,
-        "dimensions": ["page"],
-        "rowLimit": row_limit,
-        "dataState": "all",
-    }
-    resp = s.searchanalytics().query(siteUrl=SITE, body=body).execute()
-    return resp.get("rows", [])
+def query_top_pages(s: BetaAnalyticsDataClient, start: str, end: str, row_limit: int = 1000) -> list[dict]:
+    resp = s.run_report(RunReportRequest(
+        property=f"properties/{PROPERTY}",
+        dimensions=[Dimension(name="pagePath")],
+        metrics=[Metric(name="screenPageViews")],
+        date_ranges=[DateRange(start_date=start, end_date=end)],
+        order_bys=[OrderBy(metric=OrderBy.MetricOrderBy(metric_name="screenPageViews"), desc=True)],
+        limit=row_limit,
+    ))
+    return [
+        {"path": row.dimension_values[0].value, "views": int(row.metric_values[0].value or 0)}
+        for row in resp.rows
+    ]
 
 
-def slug_from_url(url: str) -> str | None:
-    """Extrae el slug de una URL root /<slug>. Descarta locales y subdirs."""
-    p = urlparse(url)
-    path = unquote(p.path).strip("/")
+def slug_from_path(raw_path: str) -> str | None:
+    """Extrae el slug de un pagePath root /<slug>. Descarta locales y subdirs."""
+    path = unquote(raw_path.split("?", 1)[0]).strip("/")
     if "/" in path:
         return None  # /en/foo, /argentina/x/y, etc — no es root
     if not path:
@@ -91,28 +95,24 @@ def main():
     ap.add_argument("--dry-run", action="store_true", help="no escribe el JSON")
     args = ap.parse_args()
 
-    today = datetime.utcnow().date()
-    end = today - timedelta(days=3)  # latencia GSC ~3d
+    today = datetime.now(timezone.utc).date()
+    end = today - timedelta(days=1)  # evitar el parcial del día en curso
     start = end - timedelta(days=args.days - 1)
 
-    print(f"[gsc] queryng top pages {start} → {end}", file=sys.stderr)
+    print(f"[ga4] querying top pages {start} → {end}", file=sys.stderr)
     s = svc()
     rows = query_top_pages(s, start.isoformat(), end.isoformat(), row_limit=1000)
-    print(f"[gsc] {len(rows)} rows", file=sys.stderr)
+    print(f"[ga4] {len(rows)} rows", file=sys.stderr)
 
     valid = existing_ar_slugs()
-    print(f"[gsc] {len(valid)} calcs AR válidos en content/calcs/", file=sys.stderr)
+    print(f"[ga4] {len(valid)} calcs AR válidos en content/calcs/", file=sys.stderr)
 
-    # Sort por clicks descendente (GSC ya viene ordenado pero forzamos)
-    rows.sort(key=lambda r: r.get("clicks", 0), reverse=True)
+    rows.sort(key=lambda r: r.get("views", 0), reverse=True)
 
     picked: list[str] = []
     seen = set()
     for row in rows:
-        keys = row.get("keys") or []
-        if not keys:
-            continue
-        slug = slug_from_url(keys[0])
+        slug = slug_from_path(row.get("path", ""))
         if not slug or slug in seen:
             continue
         if slug not in valid:
@@ -129,7 +129,7 @@ def main():
     payload = {
         "slugs": picked,
         "updatedAt": today.isoformat(),
-        "source": "gsc",
+        "source": "ga4-screenPageViews",
         "windowDays": args.days,
     }
 
@@ -139,7 +139,7 @@ def main():
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(payload, indent=2) + "\n")
-    print(f"[gsc] escribí {OUT.relative_to(ROOT)} con {len(picked)} slugs", file=sys.stderr)
+    print(f"[ga4] escribí {OUT.relative_to(ROOT)} con {len(picked)} slugs", file=sys.stderr)
 
 
 if __name__ == "__main__":

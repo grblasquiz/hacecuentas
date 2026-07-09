@@ -32,6 +32,7 @@ export const HC_EVENTS = [
   'hc_calculator_input_started',
   'hc_calculator_submit',
   'hc_calculator_success',
+  'hc_calculator_abandoned',
   'hc_calculator_validation_error',
   'hc_calculator_runtime_error',
   // Resultado / acciones
@@ -85,6 +86,7 @@ export const HC_ALLOWED_PARAMS = [
   'device_type',
   'logged_in',
   'source_page',
+  'target_slug',
   // Tipo de la primera acción post-resultado (scroll|next_step|decision_room|save).
   // Categórico, no identificatorio.
   'interaction_type',
