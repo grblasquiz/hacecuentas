@@ -13,7 +13,7 @@ import { BASE_IMPONIBLE_MAXIMA_APORTES } from '../lib/formulas/sueldo-ar';
 // Patrón espejado de /datos-monotributo-2026: tabla server-rendered + schema Dataset +
 // CC-BY 4.0 + bloque "Cómo citar".
 
-const ULTIMA_REVISION = '2026-06-10';
+const ULTIMA_REVISION = '2026-07-09';
 
 const TOPE_SAC = BASE_IMPONIBLE_MAXIMA_APORTES / 2; // base máxima de aportes del SAC (media base)
 
@@ -33,6 +33,19 @@ const proporcional = [1, 2, 3, 4, 5, 6].map((m) => {
   const r = aguinaldo({ mejorSueldo: SUELDO_PROP, mesesTrabajados: m });
   return { meses: m, bruto: r.aguinaldoBruto, neto: r.aguinaldoNeto };
 });
+
+// Ejemplo paso a paso — usa la MISMA función de la calculadora, así los números
+// coinciden con la fila correspondiente de la tabla bruto → neto (cero divergencia).
+const PASO_SUELDO = 1_000_000;
+const pasoCalc = aguinaldo({ mejorSueldo: PASO_SUELDO, mesesTrabajados: 6 });
+const pasoBruto = pasoCalc.aguinaldoBruto;
+const pasoBase = Math.min(pasoBruto, TOPE_SAC); // base sobre la que se aplica el 17%
+const pasoAporte = pasoCalc.descuentos;
+const pasoNeto = pasoCalc.aguinaldoNeto;
+const pasoTopeTexto =
+  pasoBruto > TOPE_SAC
+    ? `la base topea en ${fmtARS(TOPE_SAC, 2)}, así que el excedente del bruto no aporta`
+    : `queda por debajo del tope de ${fmtARS(TOPE_SAC, 2)}, así que aporta todo el bruto`;
 
 const title =
   'Datos aguinaldo (SAC) 2026: fechas de pago, fórmula, tope y ejemplos | Hacé Cuentas';
@@ -229,6 +242,52 @@ const schema = {
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section>
+        <h2>Cómo se calcula el aguinaldo paso a paso (ejemplo)</h2>
+        <p>
+          Tomamos un caso de ejemplo — mejor remuneración del semestre de
+          {' '}<strong>{fmtARS(PASO_SUELDO)}</strong>, con el semestre completo trabajado
+          (6/6 meses) — y aplicamos la fórmula del art. 121 LCT paso por paso. Los valores
+          marcados como ejemplo salen de la misma función que la calculadora, así que coinciden
+          con la fila de {fmtARS(PASO_SUELDO)} de la tabla de abajo.
+        </p>
+        <ol class="pasos">
+          <li>
+            <strong>Identificá la mejor remuneración del semestre.</strong> No es la del último
+            mes ni el promedio: es la <em>mayor</em> remuneración mensual devengada del semestre,
+            sumando todo concepto remunerativo (básico + horas extra + comisiones + presentismo).
+            En el ejemplo: {fmtARS(PASO_SUELDO)}.
+          </li>
+          <li>
+            <strong>Dividí por 2 para obtener el SAC bruto.</strong> El aguinaldo es el 50% de esa
+            mejor remuneración: {fmtARS(PASO_SUELDO)} ÷ 2 = <strong>{fmtARS(pasoBruto)}</strong> de
+            aguinaldo bruto.
+          </li>
+          <li>
+            <strong>Aplicá los aportes (17%).</strong> Se descuentan los mismos aportes que del
+            sueldo (11% jubilación + 3% obra social + 3% PAMI) sobre {fmtARS(pasoBase)} ({pasoTopeTexto}):
+            {' '}17% de {fmtARS(pasoBase)} = <strong>{fmtARS(pasoAporte)}</strong>.
+          </li>
+          <li>
+            <strong>Restá los aportes del bruto.</strong> {fmtARS(pasoBruto)} − {fmtARS(pasoAporte)} =
+            {' '}<strong>{fmtARS(pasoNeto)}</strong> de aguinaldo neto, lo que cobrás en mano.
+          </li>
+          <li>
+            <strong>Sumá Ganancias si corresponde.</strong> Este neto todavía no descuenta la
+            retención de Impuesto a las Ganancias: si tu remuneración supera el mínimo no
+            imponible, el SAC integra la base gravada y la retención se prorratea mes a mes durante
+            el año (RG 4003). Para ese paso usá la
+            {' '}<a href="/calculadora-ganancias-aguinaldo-sac-retencion">calculadora de Ganancias
+            sobre el aguinaldo</a>.
+          </li>
+        </ol>
+        <p class="note">
+          ¿Trabajaste sólo parte del semestre? Multiplicá el resultado del paso 2 por
+          (meses trabajados ÷ 6) antes de aplicar los aportes: con 3 de 6 meses, el SAC bruto del
+          ejemplo sería la mitad ({fmtARS(pasoBruto / 2)}).
+        </p>
       </section>
 
       <section>
@@ -443,6 +502,9 @@ LCT arts. 121-123 · Ley 27.073 · Licencia CC-BY 4.0</code></pre>
     color: var(--text-muted, #666);
     margin-top: 0.5rem;
   }
+  .pasos { margin-left: 1.25rem; }
+  .pasos li { line-height: 1.65; margin-bottom: 0.8rem; }
+  .pasos a { color: var(--accent, #2563eb); }
   .calc-links li, .fuentes li { line-height: 1.7; margin-bottom: 0.5rem; }
   .calc-links, .fuentes ul { margin-left: 1.25rem; }
   .calc-links a, .fuentes a { color: var(--accent, #2563eb); }

@@ -67,10 +67,24 @@ const schemaBreadcrumb = {
     { '@type': 'ListItem', position: 2, name: pillar.h1, item: `${siteUrl}/${pillar.slug}` },
   ],
 };
+
+const faqs = pillar.faqs ?? [];
+const schemaFaq = faqs.length
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    }
+  : null;
 ---
 
 <script type="application/ld+json" set:html={JSON.stringify(schema)} />
 <script type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)} />
+{schemaFaq && <script type="application/ld+json" set:html={JSON.stringify(schemaFaq)} />}
 
 <div class="pillar" style={`--pilar: ${pillar.color}`}>
   <nav class="breadcrumbs" aria-label="Ruta de navegación">
@@ -133,6 +147,20 @@ const schemaBreadcrumb = {
             <span class="room-icon" aria-hidden="true">{r.icon}</span>
             <span class="room-title">{r.h1}</span>
           </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {faqs.length > 0 && (
+    <section aria-labelledby="pillar-faq-h" class="pillar-faq">
+      <h2 id="pillar-faq-h">Preguntas frecuentes</h2>
+      <div class="faq-list">
+        {faqs.map((f: { q: string; a: string }) => (
+          <details class="faq-item">
+            <summary>{f.q}</summary>
+            <div class="faq-answer" set:html={f.a} />
+          </details>
         ))}
       </div>
     </section>
@@ -262,6 +290,43 @@ const schemaBreadcrumb = {
   .room-card:hover { border-color: var(--pilar); box-shadow: var(--shadow-lg); text-decoration: none; }
   .room-icon { font-size: 1.25rem; flex-shrink: 0; }
   .room-title { font-size: 0.9375rem; font-weight: 600; color: var(--text); line-height: 1.35; }
+
+  .faq-list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .faq-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-card);
+    overflow: hidden;
+  }
+  .faq-item summary {
+    cursor: pointer;
+    padding: 0.875rem 1rem;
+    font-weight: 600;
+    font-size: 0.9688rem;
+    color: var(--text);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::before {
+    content: '+';
+    flex-shrink: 0;
+    font-weight: 700;
+    color: var(--pilar);
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+  .faq-item[open] summary::before { content: '\2212'; }
+  .faq-item[open] summary { border-bottom: 1px solid var(--border); }
+  .faq-answer {
+    padding: 0.75rem 1rem 1rem 2rem;
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+  }
+  .faq-answer :global(a) { color: var(--pilar); font-weight: 500; }
 
   .pillar-links { display: flex; flex-wrap: wrap; gap: 0.5rem; }
   .pl-chip {

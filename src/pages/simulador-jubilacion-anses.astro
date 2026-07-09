@@ -9,7 +9,7 @@ import Footer from '../components/Footer.astro';
 const title = 'Simulador de Jubilación ANSES 2026 — Tu Haber';
 const description = 'Simulador de jubilación ANSES: ingresá edad, años de aportes y sueldo actual → obtené tu haber jubilatorio proyectado, si cumplís requisitos y años que te faltan. Gratis.';
 
-const lastReviewed = '2026-07-06';
+const lastReviewed = '2026-07-09';
 
 const schemaApp = {
   '@type': 'WebApplication',
@@ -194,6 +194,35 @@ const schema = {
       <p>Por eso el resultado es <strong>orientativo</strong>: sirve para ubicarte en un rango y comparar escenarios, no para conocer tu haber exacto. El cálculo oficial lo hace ANSES con tu historia laboral real (podés consultarla en <a href="https://www.anses.gob.ar/" rel="noopener">Mi ANSES</a>).</p>
     </section>
 
+    <section class="sj-ejemplos">
+      <h2>Ejemplos resueltos paso a paso</h2>
+      <p class="sj-ejemplos-intro">Dos casos calculados con la fórmula simplificada de este simulador (1,5% × años de aportes × sueldo actualizado, con los topes 2026). Los valores son <strong>de ejemplo</strong>, no montos oficiales: sirven para ver cómo se arma el número.</p>
+
+      <div class="sj-ejemplo">
+        <h3>Ejemplo 1 — Carrera completa, sueldo medio</h3>
+        <p class="sj-ej-input">Datos de ejemplo: 30 años de aportes · sueldo actualizado al momento de jubilarse $1.500.000.</p>
+        <ol>
+          <li><strong>Porcentaje acumulado:</strong> 1,5% × 30 años = <strong>45%</strong> del sueldo.</li>
+          <li><strong>Haber base:</strong> 45% × $1.500.000 = <strong>$675.000</strong>.</li>
+          <li><strong>Topes 2026:</strong> queda por encima del mínimo (~$360.000) y por debajo del máximo (~$1.950.000), así que no se ajusta.</li>
+        </ol>
+        <p class="sj-ej-result">Haber estimado ≈ $675.000 — una tasa de reemplazo del 45% del sueldo.</p>
+      </div>
+
+      <div class="sj-ejemplo">
+        <h3>Ejemplo 2 — Sueldo alto que toca el tope máximo</h3>
+        <p class="sj-ej-input">Datos de ejemplo: 35 años de aportes · sueldo actualizado $5.000.000.</p>
+        <ol>
+          <li><strong>Porcentaje acumulado:</strong> 1,5% × 35 años = <strong>52,5%</strong> del sueldo.</li>
+          <li><strong>Haber base:</strong> 52,5% × $5.000.000 = <strong>$2.625.000</strong>.</li>
+          <li><strong>Topes 2026:</strong> $2.625.000 supera el máximo (~$1.950.000), así que el haber se recorta al tope.</li>
+        </ol>
+        <p class="sj-ej-result">Haber estimado = $1.950.000 (el tope), no el 52,5% del sueldo. Por eso los sueldos muy altos tienen "techo" jubilatorio y su tasa de reemplazo baja.</p>
+      </div>
+
+      <p class="sj-ejemplos-nota">Recordá que ANSES no usa tu sueldo actual, sino el promedio de las mejores 120 remuneraciones actualizadas por RIPTE, y suma PBU + PC + PAP por separado. Estos ejemplos son una aproximación para entender la mecánica, no tu haber exacto.</p>
+    </section>
+
     <section class="sj-escenarios">
       <h2>Escenarios de referencia 2026</h2>
       <p>Cinco situaciones típicas, calculadas con la fórmula simplificada de este simulador y los valores de referencia 2026, para ubicarte rápido:</p>
@@ -244,7 +273,7 @@ const schema = {
         <li>Movilidad jubilatoria mensual por IPC (DNU 274/2024) — los valores de referencia de esta página se revisan con cada actualización.</li>
       </ul>
       <p class="sj-review-line">
-        Última revisión editorial: <time datetime={lastReviewed}>6 de julio de 2026</time> · Editor responsable: <a href="/autores/martin-rodriguez">Martín Rodríguez</a>.
+        Última revisión editorial: <time datetime={lastReviewed}>9 de julio de 2026</time> · Editor responsable: <a href="/autores/martin-rodriguez">Martín Rodríguez</a>.
         Metodología: fórmula simplificada (1,5% × años de aportes × sueldo proyectado, con topes mínimo/máximo 2026) documentada arriba.
       </p>
     </section>
@@ -265,7 +294,7 @@ const schema = {
       <h2>Calcs relacionadas</h2>
       <ul>
         <li><a href="/calculadora-jubilacion-anses-monto-minimo-maxima-2026">Jubilación mínima y máxima 2026</a></li>
-        <li><a href="/calculadora-jubilacion-pua-prestacion-universal-adulto-mayor">PUAM: Pensión Universal Adulto Mayor</a></li>
+        <li><a href="/calculadora-puam-pension-universal-adulto-mayor-anses-2026">PUAM: Pensión Universal Adulto Mayor</a></li>
         <li><a href="/calculadora-pension-viudez-porcentaje-conyuge">Pensión por viudez</a></li>
         <li><a href="/calculadora-pami-prestaciones-monto-copago-2026">PAMI: prestaciones y copago</a></li>
         <li><a href="/calculadora-jubilacion-cuanto-necesito">Cuánto necesito para jubilarme</a></li>
@@ -605,7 +634,17 @@ const schema = {
   .sj-timeline h3 { font-size: 1rem; margin: 0 0 .75rem; color: var(--text); font-weight: 700; }
   .sj-timeline canvas { width: 100%; max-width: 600px; height: auto; background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius-sm); }
 
-  .sj-explanation, .sj-faq, .sj-related, .sj-escenarios, .sj-fuentes { margin: 2.5rem 0; }
+  .sj-explanation, .sj-faq, .sj-related, .sj-escenarios, .sj-fuentes, .sj-ejemplos { margin: 2.5rem 0; }
+  .sj-ejemplos h2 { font-size: 1.3rem; margin: 0 0 1rem; color: var(--text); font-weight: 700; }
+  .sj-ejemplos-intro, .sj-ejemplos-nota { color: var(--text-muted); line-height: 1.65; font-size: .92rem; }
+  .sj-ejemplos-nota { margin-top: .5rem; font-size: .88rem; }
+  .sj-ejemplo { padding: 1.25rem 1.5rem; background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 1rem; }
+  .sj-ejemplo h3 { font-size: 1.05rem; margin: 0 0 .6rem; color: var(--text); font-weight: 700; }
+  .sj-ejemplo .sj-ej-input { font-size: .85rem; color: var(--text-subtle); font-style: italic; margin: 0 0 .5rem; }
+  .sj-ejemplo ol { margin: .5rem 0 .5rem 1.2rem; padding: 0; color: var(--text-muted); line-height: 1.65; font-size: .93rem; }
+  .sj-ejemplo ol li { margin: .3rem 0; }
+  .sj-ejemplo ol li strong { color: var(--text); }
+  .sj-ejemplo .sj-ej-result { margin: .6rem 0 0; padding-top: .6rem; border-top: 1px solid var(--border); color: var(--text); font-weight: 600; font-size: .95rem; }
   .sj-explanation h2, .sj-faq h2, .sj-related h2, .sj-escenarios h2, .sj-fuentes h2 { font-size: 1.3rem; margin: 0 0 1rem; color: var(--text); font-weight: 700; }
   .sj-explanation h3 { font-size: 1.05rem; margin: 1.25rem 0 .5rem; color: var(--text); font-weight: 700; }
   .sj-escenarios p, .sj-fuentes li { color: var(--text-muted); line-height: 1.65; }
