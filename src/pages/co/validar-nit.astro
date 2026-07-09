@@ -43,6 +43,26 @@ const faqs = [
     a: 'En general sí: para personas naturales inscritas en el RUT, el NIT es <strong>el número de la cédula de ciudadanía + el dígito de verificación</strong>. Por eso puedes escribir una cédula aquí y obtener su DV.',
   },
   {
+    q: '¿Cómo saber el dígito de verificación de un NIT?',
+    a: 'Tienes tres caminos: <strong>(1) calcularlo</strong> aquí escribiendo el número <em>sin</em> el guion —la herramienta te devuelve el DV al instante—; <strong>(2) leerlo</strong> en tu RUT, donde aparece impreso junto al número; o <strong>(3) verificarlo</strong> en el <a href="https://muisca.dian.gov.co/WebRutMuisca/DefConsultaEstadoRUT.faces" rel="nofollow noopener" target="_blank">portal de la DIAN</a>. El DV siempre es <strong>un solo dígito (0 a 9)</strong> que sale del algoritmo de módulo 11.',
+  },
+  {
+    q: '¿Cuál es la diferencia entre NIT, cédula y RUT?',
+    a: 'La <strong>cédula</strong> te identifica como ciudadano (la emite la Registraduría); el <strong>NIT</strong> te identifica ante la DIAN para temas tributarios; y el <strong>RUT</strong> es el registro donde queda asignado ese NIT. Dicho corto: la cédula es tu identidad civil, el NIT tu identidad fiscal y el RUT el documento que los vincula.',
+  },
+  {
+    q: '¿Cuántos dígitos tiene un NIT en Colombia?',
+    a: 'El número base suele tener <strong>entre 9 y 10 dígitos</strong>, más <strong>1 dígito de verificación</strong> separado por un guion (ej: 900.123.456-7). Las empresas normalmente empiezan por 8 o 9; las personas naturales usan su cédula como base.',
+  },
+  {
+    q: '¿El NIT sirve para la factura electrónica?',
+    a: 'Sí. En la <strong>factura electrónica</strong> el NIT con su DV identifica tanto al emisor como al adquiriente. Si el número o el DV están mal, la DIAN <strong>rechaza el documento</strong>; por eso conviene validar el dígito antes de cargar clientes y proveedores en tu software de facturación.',
+  },
+  {
+    q: '¿Puedo tener NIT sin ser empresa?',
+    a: 'Sí. Cualquier persona natural que se inscribe en el <strong>RUT</strong> (para facturar como independiente, ser responsable de IVA o firmar contratos) recibe un NIT, que normalmente es su <strong>cédula + el dígito de verificación</strong>. No hace falta constituir una empresa.',
+  },
+  {
     q: '¿La herramienta guarda o envía el NIT?',
     a: 'No. La validación es <strong>100% en tu navegador</strong>, en JavaScript. El número no sale de tu dispositivo y la página funciona incluso sin conexión una vez cargada.',
   },
@@ -59,6 +79,9 @@ const howToSteps = [
 ];
 
 const related = [
+  { href: '/co/calculadora-curp-colombia-cedula-ciudadania-extranjeria-validez', t: 'Validez de cédula y documentos Colombia', i: '🪪' },
+  { href: '/co/calculadora-obligado-declarar-renta-2026', t: '¿Estoy obligado a declarar renta 2026?', i: '📄' },
+  { href: '/co/calculadora-iva-colombia-19-porciento-tarifa-general', t: 'Calcular IVA Colombia (19%)', i: '🧾' },
   { href: '/co/calculadora-liquidacion-laboral-colombia-completa-cesantias', t: 'Liquidación laboral Colombia', i: '💵' },
   { href: '/validar-cuit', t: 'Validar CUIT (Argentina)', i: '🇦🇷' },
   { href: '/cl/validar-rut', t: 'Validar RUT (Chile)', i: '🇨🇱' },
@@ -75,6 +98,7 @@ const schema = {
   operatingSystem: 'Web',
   inLanguage: 'es-CO',
   isAccessibleForFree: true,
+  dateModified: '2026-07-09',
   offers: freeOfferSchema({ priceCurrency: 'COP' }),
   featureList: ['Calcular y validar el dígito de verificación del NIT (algoritmo DIAN)', 'Sirve también para cédulas (NIT de persona natural)', 'Procesamiento 100% en el navegador'],
 };
@@ -115,6 +139,7 @@ const schemaHowTo = {
       oficial de la <strong>DIAN</strong>. Todo <strong>en tu navegador</strong>. Para el estado del RUT y la razón social,
       te llevamos a la consulta oficial.
     </p>
+    <p class="idv-updated">Última revisión: 9 de julio de 2026 · Algoritmo oficial de la DIAN (módulo 11, serie de primos).</p>
 
     <div class="idv-answer">
       <p>
@@ -148,6 +173,68 @@ const schemaHowTo = {
         <li>Se calcula el residuo de la suma módulo 11: si es <strong>0 o 1</strong>, ese es el DV; si es mayor, el DV es <strong>11 − residuo</strong>.</li>
         <li>El resultado debe coincidir con el dígito después del guion.</li>
       </ul>
+    </section>
+
+    <section class="idv-sec">
+      <h2>Ejemplo: calcular el dígito de verificación paso a paso</h2>
+      <p>Tomemos el NIT <strong>890.903.938</strong> (sin DV) y calculemos su dígito con el algoritmo de la DIAN.</p>
+      <ol>
+        <li><strong>Asigna los pesos de derecha a izquierda.</strong> El dígito más a la derecha se multiplica por 3, el siguiente por 7, luego 13, 17, 19, 23, 29, 37, 41… (la serie de primos de la DIAN).</li>
+      </ol>
+      <div class="idv-tablewrap">
+        <table class="idv-table">
+          <thead><tr><th>Dígito</th><td>8</td><td>9</td><td>0</td><td>9</td><td>0</td><td>3</td><td>9</td><td>3</td><td>8</td></tr></thead>
+          <tbody>
+            <tr><th>Peso</th><td>41</td><td>37</td><td>29</td><td>23</td><td>19</td><td>17</td><td>13</td><td>7</td><td>3</td></tr>
+            <tr><th>Producto</th><td>328</td><td>333</td><td>0</td><td>207</td><td>0</td><td>51</td><td>117</td><td>21</td><td>24</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ol start="2">
+        <li><strong>Suma los productos:</strong> 328 + 333 + 0 + 207 + 0 + 51 + 117 + 21 + 24 = <strong>1081</strong>.</li>
+        <li><strong>Saca el residuo módulo 11:</strong> 1081 ÷ 11 deja residuo <strong>3</strong> (porque 11 × 98 = 1078).</li>
+        <li><strong>Aplica la regla:</strong> como el residuo (3) es <strong>mayor que 1</strong>, el DV es <strong>11 − 3 = 8</strong>. Si el residuo hubiera sido 0 o 1, ese mismo número sería el DV.</li>
+      </ol>
+      <p>Resultado: el NIT completo es <strong>890.903.938-8</strong>. Es exactamente lo que hace la calculadora de arriba, al instante.</p>
+    </section>
+
+    <section class="idv-sec">
+      <h2>¿Qué es el NIT y para qué sirve?</h2>
+      <p>El <strong>NIT</strong> (Número de Identificación Tributaria) es el número con el que la <strong>DIAN</strong> identifica a cada contribuyente —persona natural o jurídica— en Colombia. Se asigna al inscribirse en el <strong>RUT</strong> y acompaña casi todos los trámites fiscales del país.</p>
+      <p>Lo necesitas para, entre otras cosas:</p>
+      <ul>
+        <li><strong>Facturar</strong> (electrónica o en papel) como empresa o independiente.</li>
+        <li>Declarar y pagar <strong>impuestos</strong>: renta, IVA, retención en la fuente.</li>
+        <li>Firmar <strong>contratos</strong>, abrir cuentas empresariales y registrarte como proveedor.</li>
+        <li>Presentarte en <strong>licitaciones</strong> y trámites ante entidades públicas.</li>
+      </ul>
+      <p>El último dígito, después del guion, es el <strong>dígito de verificación</strong>: no es un dato inventado, sino un número calculado a partir del resto para detectar errores de digitación.</p>
+    </section>
+
+    <section class="idv-sec">
+      <h2>NIT, cédula y RUT: en qué se diferencian</h2>
+      <div class="idv-tablewrap">
+        <table class="idv-table idv-table-comp">
+          <thead><tr><th>Concepto</th><th>Qué identifica</th><th>Quién lo emite</th></tr></thead>
+          <tbody>
+            <tr><th>Cédula</th><td>Tu identidad como ciudadano</td><td>Registraduría</td></tr>
+            <tr><th>NIT</th><td>Tu identidad tributaria (número + DV)</td><td>DIAN</td></tr>
+            <tr><th>RUT</th><td>El registro que asigna y contiene el NIT</td><td>DIAN</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>En la práctica: la <strong>cédula</strong> es tu identidad civil, el <strong>NIT</strong> tu identidad fiscal y el <strong>RUT</strong> el documento donde queda registrado ese NIT. Para personas naturales, el NIT suele ser la cédula más su dígito de verificación; por eso puedes escribir tu cédula en la calculadora y obtener el DV.</p>
+    </section>
+
+    <section class="idv-sec">
+      <h2>¿Cuándo conviene validar el NIT?</h2>
+      <ul>
+        <li><strong>Antes de emitir una factura electrónica:</strong> un DV mal escrito hace que la DIAN rechace el documento.</li>
+        <li><strong>Al cargar clientes o proveedores</strong> en tu software contable, para evitar errores difíciles de corregir después.</li>
+        <li><strong>Al firmar contratos</strong> o registrarte como proveedor del Estado, donde el NIT debe coincidir con el RUT.</li>
+        <li><strong>Cuando copias un NIT de un correo o PDF</strong> y quieres confirmar que no se coló un dígito de más o de menos.</li>
+      </ul>
+      <p class="idv-note">Ojo: validar el DV confirma que el número está <strong>bien formado</strong>, no que la empresa exista o esté activa. Ese estado solo lo entrega la <a href="https://muisca.dian.gov.co/WebRutMuisca/DefConsultaEstadoRUT.faces" rel="nofollow noopener" target="_blank">consulta del RUT en la DIAN</a>.</p>
     </section>
 
     <section class="idv-faq">
@@ -196,8 +283,15 @@ const schemaHowTo = {
   #idv .idv-gen { margin-top: 18px; border-top: 1px dashed var(--border, #e2e8f0); padding-top: 16px; }
   #idv .idv-btn-ghost { display: inline-block; background: transparent; color: var(--accent, #2563eb); border: 1px solid var(--accent, #2563eb); border-radius: 10px; padding: 10px 16px; font-weight: 600; cursor: pointer; text-decoration: none; }
   #idv .idv-note { font-size: .82rem; color: var(--text-2, #64748b); margin: 10px 0 0; }
+  .idv-updated { font-size: .82rem; color: var(--text-2, #64748b); margin: 6px 0 0; }
   .idv-sec { margin-top: 32px; } .idv-sec h2, .idv-faq h2, .idv-related h2 { font-size: 1.25rem; margin: 0 0 12px; }
-  .idv-sec ul { line-height: 1.7; padding-left: 20px; } .idv-sec li { margin-bottom: 6px; }
+  .idv-sec ul, .idv-sec ol { line-height: 1.7; padding-left: 20px; } .idv-sec li { margin-bottom: 6px; }
+  .idv-tablewrap { overflow-x: auto; margin: 12px 0 4px; }
+  .idv-table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  .idv-table th, .idv-table td { border: 1px solid var(--border, #e2e8f0); padding: 7px 10px; text-align: center; }
+  .idv-table thead th { background: var(--surface-2, #f1f5f9); }
+  .idv-table tbody th { background: var(--surface-2, #f8fafc); text-align: left; font-weight: 600; white-space: nowrap; }
+  .idv-table-comp th, .idv-table-comp td { text-align: left; }
   .idv-faq { margin-top: 30px; } .idv-related { margin-top: 30px; }
   .idv-faq details { border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: var(--surface, #fff); }
   .idv-faq summary { font-weight: 600; cursor: pointer; }

@@ -9,7 +9,7 @@ import Footer from '../../components/Footer.astro';
 // CC-BY + "Cómo citar" → backlink editorial. Datos: src/lib/data/colombia-2026.ts
 // (SMLMV $1.750.905, auxilio $249.095, UVT $52.374) + CST/leyes citadas.
 
-const ULTIMA_REVISION = '2026-07-01';
+const ULTIMA_REVISION = '2026-07-09';
 const PAGE_URL = 'https://hacecuentas.com/co/datos-salario-minimo-colombia-2026';
 
 const valores = [
@@ -19,6 +19,18 @@ const valores = [
   { c: 'SMLMV + auxilio de transporte', v: '$2.000.000', n: 'el "mínimo" que se suele citar' },
   { c: 'UVT 2026', v: '$52.374', n: 'DIAN Resolución 000238/2025' },
   { c: 'Jornada laboral', v: '42 horas/semana', n: 'desde 15-jul-2026 (antes 44 h, Ley 2101/2021)' },
+];
+
+// Valores derivados del SMLMV mensual ($1.750.905) ya presente arriba. No son
+// montos oficiales nuevos: son el mismo mínimo repartido por período, con la
+// fórmula visible para que el lector lo verifique. Base de días = 30 (igual que
+// el "salario mínimo diario" oficial); hora ordinaria = SMLMV ÷ 240 (30 d × 8 h).
+const derivados = [
+  { c: 'Por mes (SMLMV)', v: '$1.750.905', n: 'base de todos los cálculos' },
+  { c: 'Por quincena', v: '$875.452,50', n: 'SMLMV ÷ 2' },
+  { c: 'Por semana', v: '$408.544,50', n: 'SMLMV ÷ 30 × 7 días' },
+  { c: 'Por día', v: '$58.363,50', n: 'SMLMV ÷ 30' },
+  { c: 'Por hora ordinaria', v: '$7.295,44', n: 'SMLMV ÷ 240 (30 días × 8 h)' },
 ];
 
 const recargos = [
@@ -37,7 +49,12 @@ const description = 'Salario mínimo Colombia 2026: $1.750.905 al mes; con el au
 
 const faq = [
   { q: '¿Cuál es el salario mínimo en Colombia 2026?', a: 'El salario mínimo legal mensual vigente (SMLMV) en 2026 es de $1.750.905 (Decreto 1469/2025), vigente desde el 1 de enero de 2026. Sumado al auxilio de transporte de $249.095, el ingreso mínimo llega a $2.000.000.' },
+  { q: '¿Cuánto es el salario mínimo por hora en Colombia 2026?', a: 'La hora ordinaria del salario mínimo 2026 vale $7.295,44. Sale de dividir el SMLMV de $1.750.905 entre 240 horas al mes (30 días × 8 horas). Es la base sobre la que se calculan las horas extra y los recargos nocturno, dominical y festivo.' },
+  { q: '¿Cuánto es el salario mínimo por día en Colombia 2026?', a: 'El salario mínimo diario 2026 es de $58.363,50, que resulta de dividir el SMLMV mensual de $1.750.905 entre 30 días. Es el valor antes de sumar el auxilio de transporte; con el auxilio proporcional, el día mínimo ronda los $66.666,67.' },
+  { q: '¿Cuánto es el salario mínimo por quincena en 2026?', a: 'La quincena mínima 2026 es de $875.452,50, es decir la mitad del SMLMV mensual ($1.750.905 ÷ 2). Si además te corresponde el auxilio de transporte, se suma la mitad ($124.547,50) y la quincena llega a $1.000.000.' },
   { q: '¿A quién le corresponde el auxilio de transporte?', a: 'El auxilio de transporte ($249.095 en 2026) lo recibe quien gana hasta 2 SMLMV (es decir, hasta $3.501.810). No se recibe si el empleador pone el transporte.' },
+  { q: '¿El auxilio de transporte se suma al salario mínimo?', a: 'Sí, pero se paga por fuera del salario. El auxilio de $249.095 se suma al SMLMV de $1.750.905 para dar un ingreso mínimo de $2.000.000, siempre que ganes hasta 2 SMLMV. Cuenta como base para liquidar la prima de servicios y las cesantías, pero no para los aportes a salud y pensión, y no se paga si la empresa suministra el transporte.' },
+  { q: '¿El salario mínimo aplica para trabajo de medio tiempo o por días?', a: 'Sí, de forma proporcional al tiempo trabajado. La hora ordinaria mínima es de $7.295,44 y el día de $58.363,50, así que una media jornada no puede pagar menos que la mitad proporcional del mínimo mensual. El auxilio de transporte también se reconoce en proporción a lo laborado.' },
   { q: '¿Cuánto vale la UVT en 2026?', a: 'La UVT (Unidad de Valor Tributario) 2026 es de $52.374, según la Resolución DIAN 000238 de 2025. Se usa para topes de retención, sanciones y declaración de renta.' },
   { q: '¿Cuántas horas es la jornada laboral en 2026?', a: 'Desde el 15 de julio de 2026 la jornada máxima legal baja a 42 horas semanales (era 44 h antes), según el último escalón de la Ley 2101 de 2021. La hora ordinaria "sube" porque el sueldo se divide entre menos horas.' },
   { q: '¿Cuánto se paga de recargo nocturno y dominical?', a: 'El recargo nocturno es del 35% sobre la hora ordinaria. La hora extra diurna es +25% y la nocturna +75%. El recargo por dominical o festivo sube al 90% desde el 1 de julio de 2026 (Ley 2466/2025).' },
@@ -103,6 +120,26 @@ const schema = {
       </section>
 
       <section>
+        <h2>Salario mínimo por día, hora, semana y quincena 2026</h2>
+        <p>Todos estos valores salen del mismo salario mínimo mensual de <strong>$1.750.905</strong>: es el mínimo repartido por período. Al lado de cada uno va la fórmula para que puedas verificarlo.</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Período</th><th>Valor 2026</th></tr></thead>
+          <tbody>{derivados.map((r) => (<tr><td data-label="Período"><strong>{r.c}</strong>{r.n ? <span class="sub"> · {r.n}</span> : null}</td><td data-label="Valor">{r.v}</td></tr>))}</tbody>
+        </table></div>
+        <p class="sub">La <strong>hora ordinaria</strong> ($7.295,44) es la base sobre la que se calculan las horas extra y los recargos. Al bajar la jornada a 42 horas semanales (desde el 15-jul-2026) el salario mensual no baja, así que cada hora trabajada pasa a valer relativamente más.</p>
+      </section>
+
+      <section>
+        <h2>Cómo se suma el auxilio de transporte</h2>
+        <p>El <strong>auxilio de transporte</strong> 2026 es de <strong>$249.095</strong> y se paga <em>por fuera</em> del salario a quien gana hasta 2 SMLMV ($3.501.810). Sumado al mínimo, el ingreso mensual queda en <strong>$1.750.905 + $249.095 = $2.000.000</strong>. Por día equivale a $8.303,17 más ($249.095 ÷ 30), de modo que el día mínimo con auxilio ronda los $66.666,67.</p>
+        <ul class="calc-links">
+          <li>No se paga si el empleador suministra el transporte.</li>
+          <li>Se incluye en la base para liquidar la <strong>prima de servicios</strong> y las <strong>cesantías</strong>, pero no para los aportes a salud y pensión.</li>
+          <li>En medio tiempo o trabajo por días se reconoce de forma <strong>proporcional</strong> al tiempo laborado.</li>
+        </ul>
+      </section>
+
+      <section>
         <h2>Recargos, horas extra y prestaciones</h2>
         <div class="table-wrap"><table>
           <thead><tr><th>Concepto</th><th>2026</th></tr></thead>
@@ -114,7 +151,12 @@ const schema = {
         <h2>Calculá tu caso</h2>
         <ul class="calc-links">
           <li><a href="/co/calculadora-salario-minimo-colombia-2026-auxilio-transporte">Salario mínimo y prestaciones</a></li>
+          <li><a href="/co/calculadora-salario-por-hora-colombia">Salario por hora</a></li>
+          <li><a href="/co/calculadora-auxilio-transporte-colombia-2026">Auxilio de transporte</a></li>
           <li><a href="/co/calculadora-horas-extras-colombia-2026">Horas extra y recargos</a></li>
+          <li><a href="/co/calculadora-recargo-nocturno-colombia-2026">Recargo nocturno</a></li>
+          <li><a href="/co/calculadora-recargo-dominical-festivo-colombia-2026">Recargo dominical y festivo</a></li>
+          <li><a href="/co/calculadora-vacaciones-colombia-15-dias-habiles-laborales">Vacaciones (15 días hábiles)</a></li>
           <li><a href="/co/calculadora-liquidacion-laboral-colombia-completa-cesantias">Liquidación laboral (cesantías, prima)</a></li>
           <li><a href="/co/calculadoras">Todas las calculadoras de Colombia →</a></li>
         </ul>
