@@ -36,6 +36,11 @@ import time
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
+PY313 = '/Library/Frameworks/Python.framework/Versions/3.13/bin/python3'
+if sys.version_info < (3, 13) and os.path.exists(PY313) and not os.environ.get('HC_INDEXING_REEXEC'):
+    os.environ['HC_INDEXING_REEXEC'] = '1'
+    os.execv(PY313, [PY313, *sys.argv])
+
 try:
     import google.auth
     from google.oauth2 import service_account
