@@ -6,7 +6,7 @@ Investigado: 2026-07-01. Patrón Omni Calculator: ofrecer el widget gratis a sit
 `Powered by <a href="https://hacecuentas.com">Hacé Cuentas</a> — <a href=".../<slug>">nombre calc</a>`
 en la página anfitriona (no dentro del iframe) → backlink real de home + deep-link a la calc. Sin `rel="nofollow"`. Solo se oculta con `no-attribution` + partner autorizado en `/partners/<id>.json`. **No hay gap de atribución.**
 
-⚠️ **Bug encontrado (arreglar ANTES de enviar el primer email):** la demo de `/partners` usa `calculator="calculadora-sueldo-en-mano-argentina"`, slug que NO existe (`/embed/calculadora-sueldo-en-mano-argentina` → 404 en prod; el real es `sueldo-en-mano-argentina`). Un editor que entre a la demo la va a ver rota. Aparece 4 veces en `src/pages/partners/index.astro` (líneas ~45, 112, 120, 261).
+✅ **Demo verificada:** `/partners` usa el slug canónico `sueldo-en-mano-argentina`; el preview y el snippet cargan correctamente el widget. Validar el HTTP 200 del preview después de cada deploy.
 
 🔑 Gotcha slugs: el atributo `calculator` lleva el **slug** del JSON (el de la URL), NO el filename. Todos los slugs de este documento están verificados contra prod (`/embed/<slug>` → 200).
 
@@ -60,7 +60,7 @@ Bonus institucional (linkers de autoridad, pitch distinto — "recurso para matr
 | 26 | **Reporte Inmobiliario** | reporteinmobiliario.com | Medio de referencia del sector, notas de crédito/mercado sin herramientas embebidas (verificar nota puntual antes de enviar) | s/verificar | `calculadora-credito-uva-vs-tasa-fija` + `calculadora-cuota-credito-hipotecario-uva-banco-nacion` | info@ del sitio |
 | 27 | **Cámara Inmobiliaria Argentina (CIA)** / colegios de corredores provinciales | cia.org.ar | Newsletters y notas para matriculados; pitch "herramienta para la web de cada inmobiliaria socia" (multiplica: 1 acuerdo = N dominios) | NO | `calculadora-credito-uva-vs-tasa-fija` + `calculadora-hipoteca-uva-santander-argentina` | institucional |
 
-## Grupo D — Medios tech en español (pitch: "2.900+ calculadoras gratis en español")
+## Grupo D — Medios tech en español (pitch: "4.100+ calculadoras gratis en español")
 
 | # | Medio | URL | Ángulo | Contacto REAL (verificado) |
 |---|-------|-----|--------|----------------------------|

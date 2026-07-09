@@ -84,11 +84,11 @@ Martin — hacecuentas.com
 
 ## Template D — Medios tech ES (pitch de producto)
 
-**Asunto:** 2.900+ calculadoras gratis en español (y embebibles)
+**Asunto:** 4.100+ calculadoras gratis en español (y embebibles)
 
 Hola,
 
-Soy Martin, creador de hacecuentas.com: más de 2.900 calculadoras gratuitas en español — sueldo, impuestos, préstamos, finanzas, matemática, salud, conversores — sin registro y sin paywall, con versiones para Argentina, España, México, Chile, Colombia y más países.
+Soy Martin, creador de hacecuentas.com: más de 4.100 calculadoras gratuitas en español — sueldo, impuestos, préstamos, finanzas, matemática, salud, conversores — sin registro y sin paywall, con versiones para Argentina, España, México, Chile, Colombia y más países.
 
 Lo distinto: cualquier sitio puede embeber cualquier calculadora como widget propio (web component, 2 líneas de código, tema personalizable, datos que se actualizan solos). Es el camino que hizo Omni Calculator, pero nativo en español.
 
@@ -105,7 +105,7 @@ Martin
 
 Hi,
 
-I'm Martin, founder of hacecuentas.com — 2,900+ free calculators in Spanish (salary, taxes, loans, math, converters), localized for Argentina, Spain, Mexico, Chile, Colombia and more. No signup, no paywall.
+I'm Martin, founder of hacecuentas.com — 4,100+ free calculators in Spanish (salary, taxes, loans, math, converters), localized for Argentina, Spain, Mexico, Chile, Colombia and more. No signup, no paywall.
 
 What's different: any site can embed any calculator as its own widget — a web component, two lines of code, custom branding, and the underlying data (tax brackets, rates, indexes) updates automatically. Think Omni Calculator, but built natively for the Spanish-speaking world, where no comparable tool exists.
 
