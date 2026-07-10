@@ -116,7 +116,7 @@ export const RESTRICTED_DOSE_NOTICE =
  *   - 'baby'   → alimentación de bebés (C)
  * Determina el aviso y la lista de "qué evalúa un profesional".
  */
-export type RestrictedMode = 'dose' | 'injury' | 'baby';
+export type RestrictedMode = 'dose' | 'injury' | 'baby' | 'clinical';
 
 export const RESTRICTED_NOTICES: Record<RestrictedMode, string> = {
   dose: RESTRICTED_DOSE_NOTICE,
@@ -130,6 +130,12 @@ export const RESTRICTED_NOTICES: Record<RestrictedMode, string> = {
     'bebé depende de signos de preparación, el control pediátrico y la evolución ' +
     'individual. La introducción de alimentos suele iniciarse alrededor de los 6 ' +
     'meses; consultá con tu pediatra antes de cualquier cambio.',
+  clinical:
+    'Esta herramienta está temporalmente limitada porque interpretar un ' +
+    'resultado de salud, un valor de laboratorio o una señal clínica depende ' +
+    'de tu historia médica, síntomas y otros estudios. Consultá con un ' +
+    'profesional de la salud matriculado; no uses este resultado para ' +
+    'autodiagnosticarte ni para decidir un tratamiento.',
 };
 
 /** Factores generales que evalúa un profesional (sin números ni dosis). */
@@ -155,12 +161,19 @@ export const RESTRICTED_PRO_FACTORS: Record<RestrictedMode, string[]> = {
     'Antecedentes alérgicos familiares',
     'Lactancia y necesidades individuales',
   ],
+  clinical: [
+    'Historia clínica y síntomas actuales',
+    'Otros estudios y valores de contexto',
+    'Medicación y antecedentes personales',
+    'Edad, sexo y factores de riesgo',
+    'Seguimiento profesional individual',
+  ],
 };
 
 /** Subgrupo de restricción declarado por la calc (default 'dose'). */
 export function restrictedMode(calc: CalcPolicyInput | null | undefined): RestrictedMode {
   const m = calc?.restrictedMode;
-  return m === 'injury' || m === 'baby' ? m : 'dose';
+  return m === 'injury' || m === 'baby' || m === 'clinical' ? m : 'dose';
 }
 
 // ---- Helpers de normalización ----

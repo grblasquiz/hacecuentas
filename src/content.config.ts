@@ -141,7 +141,7 @@ const makeCalcSchema = (strictDataUpdate: boolean) => z.object({
   ymylRisk: ymylRiskEnum.optional(),          // default conceptual: 'low'
   reviewType: reviewTypeEnum.optional(),      // default conceptual: 'editorial'
   distribution: distributionEnum.optional(),  // 'restricted' fuerza restricción manual
-  restrictedMode: z.enum(['dose', 'injury', 'baby']).optional(),  // subgrupo del aviso
+  restrictedMode: z.enum(['dose', 'injury', 'baby', 'clinical']).optional(),  // subgrupo del aviso
   noindex: z.boolean().optional(),
   professionalReviewer: professionalReviewer.optional(),
 }).passthrough().superRefine((val, ctx) => {
