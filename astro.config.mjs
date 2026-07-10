@@ -117,10 +117,13 @@ export default defineConfig({
             if (id.includes('formula-loader-map')) {
               return 'formula-map';
             }
-            // Código compartido de src/lib/* (NO formulas/, esas son por-calc)
-            if (id.includes('/src/lib/') && !id.includes('/src/lib/formulas/')) {
-              return 'lib-shared';
-            }
+            // src/lib/* → chunking automático de Vite por el grafo real de cada
+            // entry (Batch B 2026-07-10). Antes una regla catch-all forzaba TODO
+            // /src/lib a un único 'lib-shared' (~1.4MB sin comprimir) que incluía
+            // módulos build-time-only (pruning-redirects, clusters, category-hubs)
+            // y se precargaba en cada página hidratada. Sin la regla, una calc solo
+            // baja los módulos de lib que su código client realmente importa; Vite
+            // igual crea chunks compartidos para lo que usan 2+ entries.
             // Componentes compartidos (Calculator, Layout, Header, etc.)
             if (id.includes('/src/components/') || id.includes('/src/layouts/')) {
               return 'components-shared';

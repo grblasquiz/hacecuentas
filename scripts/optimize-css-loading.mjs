@@ -181,7 +181,7 @@ const files = walk(DIST);
 for (const f of files) {
   const html = readFileSync(f, 'utf8');
   const { modified, deferred, inlined } = replaceInHtml(html);
-  const withPreload = injectModulePreload(modified);
+  const withPreload = modified; // modulepreload(lib-shared) global retirado (Batch B): se partió el chunk
   if (deferred > 0 || inlined > 0 || withPreload !== modified) {
     writeFileSync(f, withPreload);
     filesProcessed++;
@@ -189,7 +189,7 @@ for (const f of files) {
     linksInlined += inlined;
   }
 }
-console.log(`  modulepreload(lib-shared) injected: ${preloadsInjected}${LIB_SHARED_HREF ? ' → ' + LIB_SHARED_HREF : ' (chunk no encontrado)'}`);
+console.log(`  modulepreload(lib-shared): retirado (Batch B) — chunk partido por grafo real`);
 
 console.log(`✓ CSS loading optimized:`);
 console.log(`  Files processed: ${filesProcessed}`);
