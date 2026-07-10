@@ -281,6 +281,48 @@ function resolveHelperFormulaSlugs(
   return out;
 }
 
+// Scripts que el build REALMENTE corre (tasks de prebuild.ts + los .mjs del
+// script "build" de package.json). SOLO estos, si cambian, deben forzar full.
+// El resto de scripts/ son tooling one-off (migraciones, audits, bots,
+// submissions, monitores, wrappers de launchd): su ARCHIVO no entra al build.
+// Lo que sí afecta al sitio son los content/*.json que esos scripts modifican,
+// y detect los clasifica aparte → ignorar el script evita que un deploy de
+// contenido puro caiga a full sólo porque un cron/otra sesión dejó un script
+// sucio en el árbol (contaminación real vista 2026-07-10 con apply-ymyl-batch).
+// Se deriva dinámicamente para no driftear: si mañana se suma un script al
+// prebuild, entra solo. Si la derivación falla, `reliable=false` → full defensivo.
+let _buildScripts: Set<string> | null = null;
+let _buildScriptsReliable = false;
+function buildPipelineScripts(): Set<string> {
+  if (_buildScripts) return _buildScripts;
+  const set = new Set<string>(['prebuild']);
+  let ok = true;
+  try {
+    const pre = readFileSync('scripts/prebuild.ts', 'utf8');
+    for (const m of pre.matchAll(/(?:task|mjsTask|pyTask)\(\s*'[^']*'\s*,\s*'([^']+)'/g)) {
+      set.add(m[1]);
+    }
+  } catch {
+    ok = false;
+  }
+  try {
+    const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as {
+      scripts?: Record<string, string>;
+    };
+    const build = pkg.scripts?.build ?? '';
+    for (const m of build.matchAll(/scripts\/([A-Za-z0-9._-]+)\.(?:mjs|ts|js|py)/g)) {
+      set.add(m[1]);
+    }
+  } catch {
+    ok = false;
+  }
+  // Sanity: el pipeline real tiene >20 scripts; si salió una lista chica algo
+  // se rompió → no confiar (full defensivo para todo script).
+  _buildScriptsReliable = ok && set.size > 10;
+  _buildScripts = set;
+  return set;
+}
+
 function fullResult(reason: string, filesAnalyzed: number = 0): DetectResult {
   return { mode: 'full', reason, filesAnalyzed };
 }
@@ -459,6 +501,22 @@ function detect(baseSha: string): DetectResult {
     if (IIBB_RE.test(file)) {
       iibb = true;
       continue;
+    }
+
+    // Scripts: sólo los del pipeline de build fuerzan full. El resto (tooling)
+    // no afecta el output — su efecto son cambios en content, cacheados aparte.
+    const scriptM = file.match(/^scripts\/(?:.*\/)?([^/]+)\.(?:ts|mjs|js|py|sh)$/);
+    if (scriptM) {
+      const bs = buildPipelineScripts();
+      if (!_buildScriptsReliable || bs.has(scriptM[1])) {
+        return fullResult(
+          _buildScriptsReliable
+            ? `build-pipeline script: ${file}`
+            : `script (allowlist no derivable → full defensivo): ${file}`,
+          files.length,
+        );
+      }
+      continue; // tooling script → no afecta el build de prod
     }
 
     // Shared
