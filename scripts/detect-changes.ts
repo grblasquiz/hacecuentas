@@ -41,7 +41,7 @@
  */
 
 import { execSync } from 'node:child_process';
-import { appendFileSync, readFileSync, existsSync } from 'node:fs';
+import { appendFileSync, readFileSync, readdirSync, existsSync } from 'node:fs';
 
 const LAST_SHA = process.env.LAST_DEPLOY_SHA || '';
 
@@ -99,7 +99,29 @@ const IGNORE_PATTERNS: RegExp[] = [
   /^public\/search-index\.json$/,
   /^public\/sw\.js$/,
   /^src\/lib\/og-manifest\.json$/,
-  /^src\/lib\/related-auto\.(json|hash)$/,
+  // ── Artefactos generados por el propio build/prebuild ──────────────────
+  // TODOS se regeneran en CADA build (incremental incluido) y se commitean
+  // post-deploy (auto-commit "artefactos build"). Si NO estuvieran acá, el
+  // diff del deploy SIGUIENTE los vería y caería a `defensive full`/`shared`
+  // SIEMPRE — el "artifact trap": cada deploy arrastra los artefactos del
+  // anterior y nunca va incremental. Ninguno afecta el HTML de OTRAS páginas:
+  // o son índices/estado que el prebuild reescribe y copia a dist, o assets
+  // estáticos derivados del contenido. Su frescura la garantiza el prebuild,
+  // no el diff. (Ver scripts/prebuild.ts para el mapeo script→archivo.)
+  /^db\/sitemap-state\.json$/,               // generate-sitemap (estado interno)
+  /^public\/sitemap[^/]*\.xml$/,             // generate-sitemap (todos los sitemaps)
+  /^public\/api\//,                          // generate-calc-api-index (catálogo LLM)
+  /^public\/llms(-full)?\.txt$/,             // sync-calc-counts / generate-llms-full
+  /^public\/ai\.txt$/,                       // sync-calc-counts
+  /^public\/openapi\.json$/,                 // sync-calc-counts
+  /^public\/\.well-known\//,                 // sync-calc-counts (ai-plugin, openapi.yaml)
+  /^public\/google-page-feed\.csv$/,         // generate-page-feed
+  /^src\/lib\/calc-compute-index\.json$/,    // generate-compute-index
+  /^src\/lib\/hreflang-index\.json$/,        // generate-hreflang-index
+  /^src\/lib\/profile\/usage-auto\.json$/,   // generate-profile-usage
+  // related-auto de TODOS los locales (-co, -mx, -py, -en, -cl, ...), no solo
+  // el AR. compute-related los reescribe; su hash controla el skip incremental.
+  /^src\/lib\/related-auto[^/]*\.(json|hash)$/,
   // Auto-regenerado por scripts/regenerate-formula-index.ts en cada prebuild.
   // Solo agrega entries para slugs nuevos — no afecta lógica de calcs viejas,
   // solo permite que las nuevas resuelvan su formula. Tratamos como artifact.
@@ -215,6 +237,50 @@ function readSlugsFromFormulaId(formulaId: string): { slug: string; locale: stri
   return out;
 }
 
+// Fórmulas que importan `./<helperId>` (helper compartido tipo `_ocio-costos.ts`,
+// que no tiene calc directo pero lo usan N fórmulas). Lee los .ts de formulas/
+// una sola vez y devuelve los formulaId importadores.
+function formulaImporters(helperId: string): string[] {
+  let files: string[];
+  try {
+    files = readdirSync('src/lib/formulas').filter((f) => f.endsWith('.ts'));
+  } catch {
+    return [];
+  }
+  const needles = [`./${helperId}'`, `./${helperId}"`];
+  const out: string[] = [];
+  for (const f of files) {
+    const id = f.slice(0, -3);
+    if (id === helperId) continue;
+    try {
+      const src = readFileSync(`src/lib/formulas/${f}`, 'utf8');
+      if (needles.some((n) => src.includes(n))) out.push(id);
+    } catch {
+      // archivo ilegible → skip
+    }
+  }
+  return out;
+}
+
+// Resuelve un helper compartido a los slugs de las calcs afectadas, recursando
+// hasta 2 niveles (helper de helper es raro). Si nada resuelve → [] → el caller
+// cae a full defensivo. Nunca peor que el comportamiento anterior.
+function resolveHelperFormulaSlugs(
+  helperId: string,
+  depth = 0,
+  seen: Set<string> = new Set(),
+): { slug: string; locale: string }[] {
+  if (depth > 2 || seen.has(helperId)) return [];
+  seen.add(helperId);
+  const out: { slug: string; locale: string }[] = [];
+  for (const impId of formulaImporters(helperId)) {
+    let s = readSlugsFromFormulaId(impId);
+    if (s.length === 0) s = resolveHelperFormulaSlugs(impId, depth + 1, seen);
+    out.push(...s);
+  }
+  return out;
+}
+
 function fullResult(reason: string, filesAnalyzed: number = 0): DetectResult {
   return { mode: 'full', reason, filesAnalyzed };
 }
@@ -312,7 +378,16 @@ function detect(baseSha: string): DetectResult {
     // Formula TS — afecta múltiples slugs/locales
     const formM = file.match(FORMULA_TS_RE);
     if (formM) {
-      const matched = readSlugsFromFormulaId(formM[1]);
+      let matched = readSlugsFromFormulaId(formM[1]);
+      // Helper compartido (ej: `_ocio-costos.ts`): sin calc directo, pero lo
+      // importan otras fórmulas. Resolvemos los slugs de esas importadoras para
+      // que el cambio propague incremental en vez de forzar full.
+      if (matched.length === 0) {
+        matched = resolveHelperFormulaSlugs(formM[1]);
+        if (matched.length > 0) {
+          console.log(`[detect-changes] ${formM[1]}.ts = helper → ${matched.length} calc(s) afectadas`);
+        }
+      }
       if (matched.length === 0) {
         return fullResult(`formula ${formM[1]}.ts sin calcs asociados`, files.length);
       }
