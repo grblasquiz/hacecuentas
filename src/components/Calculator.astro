@@ -459,7 +459,7 @@ const advancedFields = config.fields.filter((f) => f.advanced);
 // el JS de initCalculator luego lo mantiene en sync. Un campo con showWhen
 // arranca oculto sólo si el default de su controlador NO está en `in`.
 const _fieldDefaults = new Map<string, string>(
-  config.fields.map((f) => [f.id, f.default !== undefined && f.default !== null ? String(f.default) : ''])
+  (config.fields || []).map((f) => [f.id, f.default !== undefined && f.default !== null ? String(f.default) : ''])
 );
 const _initHiddenIds = new Set<string>();
 for (const f of config.fields) {
@@ -838,7 +838,7 @@ const formatFreshnessDate = (iso: string): string => {
       <span class="results-badge">{t.resultBadge}</span>
     </div>
     <div class="results-grid">
-      {config.outputs.map((out) => (
+      {(config.outputs || []).map((out) => (
         <div class={`result ${out.primary ? 'primary' : ''}`} data-output={out.id} data-format={out.format} data-suffix={out.suffix || ''} data-primary={out.primary ? 'true' : 'false'} data-hide-empty={out.hideWhenEmpty ? 'true' : undefined} hidden={out.hideWhenEmpty ? true : undefined}>
           {out.primary && out.contextChip && (
             <span class="result-context-chip">{out.contextChip}</span>
