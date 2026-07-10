@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       Hacé Cuentas — Calculadoras
  * Plugin URI:        https://hacecuentas.com/wordpress
- * Description:       Insertá calculadoras interactivas de Hacé Cuentas (sueldo, monotributo, aguinaldo, IMC, préstamos, IVA y +2700 más) en tus posts y páginas con un bloque o un shortcode. Gratis, sin registro, los cálculos corren en el navegador del visitante.
- * Version:           1.0.0
+ * Description:       Embed interactive Hacé Cuentas calculators (salary, taxes, BMI, loans, VAT and 2700+ more) into your posts and pages with a block or a shortcode. Free, no signup, calculations run in the visitor's browser.
+ * Version:           1.0.1
  * Requires at least: 6.5
  * Requires PHP:      7.2
  * Author:            Hacé Cuentas
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'HACECUENTAS_ORIGIN', 'https://hacecuentas.com' );
-define( 'HACECUENTAS_VERSION', '1.0.0' );
+define( 'HACECUENTAS_VERSION', '1.0.1' );
 
 /**
  * Devuelve el título de una calc a partir de su slug.

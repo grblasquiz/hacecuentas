@@ -1,110 +1,131 @@
 === Hacé Cuentas — Calculadoras ===
 Contributors: Rambiss
-Tags: calculadora, calculator, embed, finanzas, shortcode
+Tags: calculator, embed, shortcode, finance, block
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 7.2
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Insertá calculadoras interactivas (sueldo, monotributo, aguinaldo, IMC, préstamos, IVA y +2700 más) en tus posts y páginas con un bloque o un shortcode.
+Embed interactive calculators (salary, taxes, BMI, loans, VAT and 2700+ more) into your posts and pages with a block or a shortcode.
 
 == Description ==
 
-**Hacé Cuentas — Calculadoras** te deja embeber cualquiera de las más de 2700 calculadoras de [hacecuentas.com](https://hacecuentas.com) directamente en tu sitio de WordPress, sin tocar código.
+**Hacé Cuentas — Calculadoras** lets you embed any of the 2700+ calculators from [hacecuentas.com](https://hacecuentas.com) directly into your WordPress site, without touching code. The calculators are aimed at a Spanish-speaking (mainly Argentine) audience and cover finance, taxes, payroll, health and everyday math.
 
-Ideal para estudios contables, blogs de finanzas personales, consultoras de RRHH, inmobiliarias, sitios de salud/fitness y medios: agregás una herramienta interactiva que tus lectores usan **sin salir de tu página**.
+It is ideal for accounting firms, personal-finance blogs, HR consultancies, real-estate sites, health/fitness sites and media outlets: you add an interactive tool your readers use **without leaving your page**.
 
-= Características =
+= Features =
 
-* **Bloque de Gutenberg** con botones de las calculadoras más usadas (un clic para insertarlas), buscador de las más de 2700 y vista previa en vivo en el editor.
-* **Shortcode** `[hacecuentas slug="calculadora-monotributo-2026"]` para el editor clásico o widgets.
-* **Auto-embed por URL**: pegás el link de una calculadora en el editor de bloques y aparece sola (vía oEmbed).
-* **Responsive**: el embed se adapta al ancho de tu contenido y ajusta su alto automáticamente.
-* **Enlace a la fuente opcional**: si querés, activás un crédito a Hacé Cuentas debajo de la calculadora. Apagado por defecto — vos decidís.
-* **Privado y liviano**: los cálculos corren en el navegador del visitante. No se envían datos a ningún servidor y no carga librerías pesadas en tu sitio.
-* **Gratis y sin registro.**
+* **Gutenberg block** with one-click buttons for the most-used calculators, a search box across all 2700+, and a live preview inside the editor.
+* **Shortcode** `[hacecuentas slug="calculadora-monotributo-2026"]` for the classic editor or widgets.
+* **Auto-embed by URL**: paste a calculator link in the block editor and it turns into an embed automatically (via oEmbed).
+* **Responsive**: the embed adapts to your content width and adjusts its height automatically.
+* **Optional source link**: if you want, you can enable a credit link back to Hacé Cuentas below the calculator. Off by default — you decide.
+* **Private and lightweight**: calculations run in the visitor's browser. No visitor data is sent to any server and it does not load heavy libraries on your site.
+* **Free and no signup.**
 
-= Algunas calculadoras populares =
+= Some popular calculators =
 
-* Sueldo en mano (Argentina)
+* Take-home salary (Argentina)
 * Monotributo 2026
-* Aguinaldo (SAC)
-* Indemnización por despido
-* Préstamos y cuota
-* Interés compuesto y plazo fijo
-* IMC, calorías (TDEE), embarazo
-* IVA, porcentajes, regla de tres
-* Conversores de unidades y monedas
+* Aguinaldo (SAC / 13th salary)
+* Severance pay
+* Loans and installments
+* Compound interest and fixed-term deposits
+* BMI, calories (TDEE), pregnancy
+* VAT, percentages, rule of three
+* Unit and currency converters
+
+== External services ==
+
+This plugin connects to **hacecuentas.com**, a service operated by the plugin author, to display the calculators. It relies on it in two ways:
+
+1. **Calculator catalog API** — `https://hacecuentas.com/api/calcs-slim.json`
+   The plugin requests this public JSON (server-side, from your WordPress install) to map a calculator slug to its human-readable title, so the block picker and the optional credit link show the real calculator name. The request is made the first time a calculator is rendered and the result is cached for 12 hours. **No user or visitor data is sent** — it is a plain read of the public catalog.
+
+2. **Calculator embed** — `https://hacecuentas.com/embed/<slug>`
+   When a calculator is shown on the front end, it is loaded inside an iframe from hacecuentas.com. The visitor's browser loads the calculator from hacecuentas.com and all calculations run client-side inside that iframe. Whatever the visitor types into the calculator stays in their own browser; the plugin does not collect or transmit it.
+
+By using this plugin you rely on the hacecuentas.com service. Please review its terms and privacy policy:
+
+* Terms of use: https://hacecuentas.com/terminos
+* Privacy policy: https://hacecuentas.com/privacidad
 
 == Installation ==
 
-1. En tu panel de WordPress, andá a **Plugins → Añadir nuevo** y buscá "Hacé Cuentas".
-2. Instalá y activá el plugin.
-3. En cualquier post o página, agregá el bloque **"Calculadora Hacé Cuentas"** y elegí la calculadora que querés mostrar.
+1. In your WordPress dashboard, go to **Plugins → Add New** and search for "Hacé Cuentas".
+2. Install and activate the plugin.
+3. In any post or page, add the **"Calculadora Hacé Cuentas"** block and choose the calculator you want to show.
 
-= Con shortcode =
+= With a shortcode =
 
-Pegá esto en el contenido (editor clásico, widgets de texto, etc.):
+Paste this into your content (classic editor, text widgets, etc.):
 
 `[hacecuentas slug="calculadora-monotributo-2026"]`
 
-Podés ajustar el alto inicial:
+You can set the initial height:
 
 `[hacecuentas slug="calculadora-imc" height="700"]`
 
-El `slug` es la última parte de la URL de la calculadora. Por ejemplo, para `https://hacecuentas.com/calculadora-imc` el slug es `calculadora-imc`.
+The `slug` is the last part of the calculator URL. For example, for `https://hacecuentas.com/calculadora-imc` the slug is `calculadora-imc`.
 
-= Auto-embed pegando la URL =
+= Auto-embed by pasting the URL =
 
-En el editor de bloques, pegá la URL completa de una calculadora (por ejemplo `https://hacecuentas.com/sueldo-en-mano-argentina`) en una línea sola y WordPress la convierte en un embed automáticamente.
+In the block editor, paste the full URL of a calculator (for example `https://hacecuentas.com/sueldo-en-mano-argentina`) on its own line and WordPress turns it into an embed automatically.
 
 == Frequently Asked Questions ==
 
-= ¿Es gratis? =
+= Is it free? =
 
-Sí. El plugin y las calculadoras son 100% gratuitas y no requieren registro.
+Yes. The plugin and the calculators are 100% free and require no signup.
 
-= ¿Carga scripts pesados en mi sitio? =
+= Does it load heavy scripts on my site? =
 
-No. La calculadora se muestra dentro de un iframe liviano y los cálculos corren en el navegador del visitante. El único script que el plugin agrega a tu página es un ajuste de altura mínimo (unos pocos KB).
+No. The calculator is shown inside a lightweight iframe and the calculations run in the visitor's browser. The only script the plugin adds to your page is a small height-adjustment helper (a few KB).
 
-= ¿Se envían datos de mis visitantes a algún lado? =
+= Is any visitor data sent anywhere? =
 
-No. Los cálculos se hacen del lado del cliente. El visitante ingresa sus datos y el resultado se computa en su propio navegador.
+No. Calculations happen client-side. The visitor enters their data and the result is computed in their own browser. See the "External services" section for details on the catalog request and the embed iframe.
 
-= ¿El plugin agrega enlaces a mi sitio sin permiso? =
+= Does the plugin add links to my site without permission? =
 
-No. Por defecto sólo se muestra la calculadora. Si querés, podés activar un enlace de crédito a Hacé Cuentas debajo de la calculadora (opción "Enlazar a la fuente" en el bloque, o `credit="yes"` en el shortcode). Está apagado por defecto.
+No. By default only the calculator is shown. If you want, you can enable a credit link back to Hacé Cuentas below the calculator (the "Link to source" option in the block, or `credit="yes"` in the shortcode). It is off by default.
 
-= ¿Cómo encuentro el slug de una calculadora? =
+= How do I find a calculator's slug? =
 
-Es la última parte de la URL. En `https://hacecuentas.com/calculadora-aguinaldo-sac`, el slug es `calculadora-aguinaldo-sac`. El bloque de Gutenberg además trae un buscador con todas.
+It is the last part of the URL. In `https://hacecuentas.com/calculadora-aguinaldo-sac`, the slug is `calculadora-aguinaldo-sac`. The Gutenberg block also includes a search box with all of them.
 
-= ¿El embed es responsive? =
+= Is the embed responsive? =
 
-Sí. Se adapta al ancho de tu contenido (hasta 720px) y ajusta su alto automáticamente según la calculadora.
+Yes. It adapts to your content width (up to 720px) and adjusts its height automatically depending on the calculator.
 
-= ¿Funciona con el editor clásico? =
+= Does it work with the classic editor? =
 
-Sí, con el shortcode `[hacecuentas slug="..."]`.
+Yes, with the `[hacecuentas slug="..."]` shortcode.
 
-= ¿Qué pasa si desinstalo el plugin? =
+= What happens if I uninstall the plugin? =
 
-Se limpia la caché temporal que crea el plugin. No deja datos residuales.
+It clears the temporary cache the plugin creates. No residual data is left behind.
 
 == Screenshots ==
 
-1. El bloque "Calculadora Hacé Cuentas": botones de las calculadoras más usadas (un clic) y buscador de las más de 2700, en el editor.
-2. Una calculadora embebida, lista para que el lector la use — con el crédito enlazado a Hacé Cuentas.
+1. The "Calculadora Hacé Cuentas" block: one-click buttons for the most-used calculators and a search box across all 2700+, inside the editor.
+2. An embedded calculator, ready for the reader to use — with the optional credit linked back to Hacé Cuentas.
 
 == Changelog ==
 
+= 1.0.1 =
+* Readme translated to English and documented the external service (hacecuentas.com) with terms and privacy links.
+
 = 1.0.0 =
-* Versión inicial: bloque de Gutenberg, shortcode y auto-embed por oEmbed.
+* Initial release: Gutenberg block, shortcode and oEmbed auto-embed.
 
 == Upgrade Notice ==
 
+= 1.0.1 =
+Readme and external-service documentation updated for the WordPress.org directory.
+
 = 1.0.0 =
-Versión inicial.
+Initial release.
