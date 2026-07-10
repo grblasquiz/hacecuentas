@@ -211,6 +211,13 @@ const globalSchema = {
       // Knowledge Graph usa estos edges para construir entity relationships.
       founder: { '@id': `${siteUrl}/autores/martin-rodriguez#person` },
       employee: { '@id': `${siteUrl}/autores/martin-rodriguez#person` },
+      foundingDate: '2024',
+      contactPoint: {
+        '@type': 'ContactPoint',
+        contactType: 'customer service',
+        email: 'contacto@hacecuentas.com',
+        availableLanguage: ['Spanish', 'English', 'Portuguese'],
+      },
     },
     {
       // Person global (Martín Rodríguez) — referenciable por @id desde Article,
@@ -687,8 +694,9 @@ const globalSchema = {
     </script>
   </head>
   <body data-domain={domain} data-page-type={pageType}>
-    <!-- Skip-link (WCAG 2.4.1): primer elemento focuseable, salta al contenido. -->
-    <a href="#main" class="skip-link">Saltar al contenido</a>
+    <!-- Skip-link (WCAG 2.4.1): primer elemento focuseable. Solo si la página NO trae
+         su propio Header (que ya incluye un skip-link i18n) → evita el duplicado. -->
+    {!Astro.slots.has('header') && <a href="#main" class="skip-link">Saltar al contenido</a>}
     <!-- Emisor central de eventos `hc_*` (src/lib/analytics.ts). Define
          window.hcTrack con la MISMA whitelist de parámetros que el módulo TS
          (inyectada acá para no duplicarla). Sanea anti-PII y reusa el gtag/

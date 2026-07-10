@@ -137,7 +137,7 @@ const goneUrls = new Set<string>();
 // ---- Resolución de una ruta interna -----------------------------------------
 
 // Prefijos dinámicos que no enumeramos (data anidada / superficies chicas)
-const SKIP_PREFIXES = ['/api/', '/og/', '/img/', '/informes/', '/iibb/', '/argentina/', '/mi/', '/historias/', '/datasets/'];
+const SKIP_PREFIXES = ['/api/', '/og/', '/img/', '/informes/', '/iibb/', '/argentina/', '/mi/', '/historias/', '/datasets/', '/.well-known/', '/mcp'];
 
 function resolves(path: string): boolean {
   if (staticRoutes.has(path)) return true;
@@ -197,6 +197,20 @@ function extractHrefs(file: string): void {
   while ((m = re.exec(src)) !== null) checkPath(m[1], file);
 }
 
+// Links absolutos a hacecuentas.com en prosa/markdown (p.ej. public/llms.txt, que
+// los LLMs citan textualmente). Convierte cada URL a path y la valida contra el
+// universo de rutas vivas → un slug renombrado/borrado rompe el build en vez de
+// driftear en silencio a un 404 que una IA repite.
+function extractAbsoluteLinks(file: string): void {
+  const src = readFileSync(join(ROOT, file), 'utf8');
+  const re = /https?:\/\/hacecuentas\.com(\/[^\s)'"`{}]*)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(src)) !== null) {
+    const p = m[1].replace(/[.,;:]+$/, ''); // sacar puntuación de fin de frase
+    if (p.length > 1) checkPath(p, file);
+  }
+}
+
 function extractQuotedList(block: string): string[] {
   const out: string[] = [];
   const re = /['"]([^'"]+)['"]/g;
@@ -208,6 +222,8 @@ function extractQuotedList(block: string): string[] {
 for (const f of ['src/components/Header.astro', 'src/components/Footer.astro', 'src/pages/index.astro', 'src/lib/pillars.ts']) {
   extractHrefs(f);
 }
+// llms.txt: superficie que los LLMs citan textualmente — sus links deben resolver.
+extractAbsoluteLinks('public/llms.txt');
 
 // index.astro: FEATURED_SALA_SLUGS + topPerCategory
 {
