@@ -197,7 +197,7 @@ const js = `(function(){
         var credit = document.createElement('p');
         credit.setAttribute('data-hc-credit', '1');
         credit.style.cssText = 'font-size:13px;text-align:center;margin:8px auto 0;max-width:720px;font-family:system-ui,-apple-system,sans-serif;color:#475569';
-        credit.innerHTML = 'Powered by <a href="' + ORIGIN + '" target="_blank" rel="noopener">Hacé Cuentas</a> — <a href="' + ORIGIN + '/' + slug + '" target="_blank" rel="noopener" data-hc-deep>' + slug.replace(/-/g, ' ') + '</a>';
+        credit.innerHTML = 'Powered by <a href="' + ORIGIN + '" target="_blank" rel="noopener sponsored">Hacé Cuentas</a> — <a href="' + ORIGIN + '/' + slug + '" target="_blank" rel="noopener sponsored" data-hc-deep>' + slug.replace(/-/g, ' ') + '</a>';
         host.appendChild(credit);
       }
 
@@ -274,7 +274,7 @@ const js = `(function(){
       mount._hcSlug = slug;
       var credit = document.createElement('p');
       credit.style.cssText = 'font-size:13px;text-align:center;margin:8px auto 0;max-width:720px;font-family:system-ui,-apple-system,sans-serif;color:#475569';
-      credit.innerHTML = 'Powered by <a href="' + ORIGIN + '" target="_blank" rel="noopener">Hacé Cuentas</a> — <a href="' + ORIGIN + '/' + slug + '" target="_blank" rel="noopener" data-hc-deep>' + slug.replace(/-/g,' ') + '</a>';
+      credit.innerHTML = 'Powered by <a href="' + ORIGIN + '" target="_blank" rel="noopener sponsored">Hacé Cuentas</a> — <a href="' + ORIGIN + '/' + slug + '" target="_blank" rel="noopener sponsored" data-hc-deep>' + slug.replace(/-/g,' ') + '</a>';
       mount.appendChild(credit);
     }
   }
