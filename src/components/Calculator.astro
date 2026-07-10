@@ -270,7 +270,9 @@ const translations = {
     tryExample: 'Try an example', orFillBelow: 'Or fill in your data above',
     resultBadge: 'Result', chartAriaLabel: 'Result chart', downloadPng: 'Download chart as PNG',
     whatIfBadge: '🎚️ What if...?', whatIfHint: 'Move and see how everything changes',
-    emailHeading: 'Want this result in your inbox?', emailPlaceholder: 'you@email.com',
+    emailHeading: 'Save this result', emailPlaceholder: 'you@email.com',
+    emailSub: 'We\'ll email it so you have it handy and never recalculate.',
+    emailCta: 'Email it to me',
     emailNote: 'Free. No spam. Just your result.',
     emailSuccess: 'Sent! Check your inbox (and spam the first time).',
     emailSaved: 'Done! We saved your result and will email it as soon as sending goes live.',
@@ -305,7 +307,9 @@ const translations = {
     tryExample: 'Tente um exemplo', orFillBelow: 'Ou preencha seus dados acima',
     resultBadge: 'Resultado', chartAriaLabel: 'Gráfico do resultado', downloadPng: 'Baixar gráfico como PNG',
     whatIfBadge: '🎚️ E se...?', whatIfHint: 'Mova e veja como tudo muda',
-    emailHeading: 'Quer este resultado no seu e-mail?', emailPlaceholder: 'voce@email.com',
+    emailHeading: 'Salve este resultado', emailPlaceholder: 'voce@email.com',
+    emailSub: 'Enviamos por e-mail para você ter à mão e não calcular de novo.',
+    emailCta: 'Enviar para mim',
     emailNote: 'Grátis. Sem spam. Apenas seu resultado.',
     emailSuccess: 'Enviado! Confira sua caixa de entrada (e o spam na primeira vez).',
     emailSaved: 'Pronto! Salvamos seu resultado e enviaremos assim que os envios forem ativados.',
@@ -340,7 +344,9 @@ const translations = {
     tryExample: 'Probá con un ejemplo', orFillBelow: 'O completá tus datos arriba',
     resultBadge: 'Resultado', chartAriaLabel: 'Gráfico del resultado', downloadPng: 'Descargar gráfico como imagen',
     whatIfBadge: '🎚️ ¿Qué pasa si...?', whatIfHint: 'Movelo y mirá cómo cambia todo',
-    emailHeading: '¿Querés este resultado en tu email?', emailPlaceholder: 'tu@email.com',
+    emailHeading: 'Guardá este resultado', emailPlaceholder: 'tu@email.com',
+    emailSub: 'Te lo mandamos por email así lo tenés a mano y no lo volvés a calcular.',
+    emailCta: 'Enviármelo',
     emailNote: 'Gratis. Sin spam. Solo tu resultado.',
     emailSuccess: '¡Enviado! Revisá tu casilla (y spam la primera vez).',
     emailSaved: '¡Listo! Guardamos tu resultado y te lo enviamos en cuanto activemos los envíos.',
@@ -1160,11 +1166,12 @@ const formatFreshnessDate = (iso: string): string => {
     </div>
 
     <!-- Email capture CTA -->
-    <div class="email-capture" data-email-capture style="display:none">
-      <p class="email-heading"><strong>{t.emailHeading}</strong></p>
+    <div class="email-capture" data-email-capture data-nosnippet style="display:none">
+      <p class="email-heading"><strong><svg class="email-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> {t.emailHeading}</strong></p>
+      {t.emailSub && <p class="email-sub">{t.emailSub}</p>}
       <form class="email-form" data-email-form>
         <input type="email" placeholder={t.emailPlaceholder} required data-email-input>
-        <button type="submit" data-label-sending={t.sending}>{t.send}</button>
+        <button type="submit" data-label-sending={t.sending}>{t.emailCta || t.send}</button>
       </form>
       {/* Opt-in de alerta por dato FUSIONADO acá (antes era un módulo aparte
           .data-alert con su propio input de email — dos pedidos de correo en
@@ -3275,9 +3282,20 @@ const formatFreshnessDate = (iso: string): string => {
     border-radius: var(--radius-sm);
   }
   .email-heading {
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
     color: var(--text);
+    margin: 0 0 0.25rem;
+  }
+  .email-ico {
+    vertical-align: -2px;
+    margin-right: 0.25rem;
+    color: var(--accent);
+  }
+  .email-sub {
+    font-size: 0.8125rem;
+    color: var(--text-muted, var(--text));
     margin: 0 0 0.625rem;
+    line-height: 1.4;
   }
   .email-form {
     display: flex;

@@ -21,8 +21,6 @@ import RelatedCalcs from './RelatedCalcs.astro';
 import CalendarGrid from './CalendarGrid.astro';
 import { FERIADOS_AR_2026 } from '../lib/data/feriados-ar-2026';
 import NextCalcs from './NextCalcs.astro';
-import CalcEmailBand from './CalcEmailBand.astro';
-import { isAlertEligible } from '../lib/alerts/eligible';
 import PostResultDecisionBlock from './PostResultDecisionBlock.astro';
 import PostResultTracking from './PostResultTracking.astro';
 import CategoryIcon from './CategoryIcon.astro';
@@ -292,15 +290,6 @@ const audienceRedirect = calc.audienceRedirect || null;
 
 const allCalcsModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const allCalcs = Object.values(allCalcsModules).map((m: any) => m.default || m);
-// Banda de captura de email en cada calc. "alertable" = mismo criterio que la
-// alerta per-resultado (calcs económicas data-driven) → copy "te avisamos cuando
-// cambie". El resto usa copy neutral de newsletter. Honesto y consistente.
-const bandAlertable: boolean = isAlertEligible(calc.slug);
-// El copy "dato económico" del newsletter solo tiene sentido en calcs económicas;
-// en el resto (mascotas, salud, cocina…) la banda usa copy neutral. AdSense
-// re-audit flaggeó el CTA económico como boilerplate en calcs no relacionadas.
-const ECON_BAND_CATS = new Set(['finanzas', 'impuestos', 'negocios']);
-const bandEconomic: boolean = bandAlertable || ECON_BAND_CATS.has(calc.category);
 
 // ── Contexto económico vivo (B1) ────────────────────────────────────────────
 // Línea compacta (dólar oficial/blue + inflación interanual + SMVM) sobre el
@@ -537,9 +526,9 @@ const editorialHtml = uiLang === 'en'
     </aside>
   )}
 
-  {/* Banda de captura de email — acá (entre la calc y las tabs) la ve todo el
-      que scrollea; en su posición original al pie de la página dio 0 altas. */}
-  {!calcIsRestricted && <CalcEmailBand lang={lang} alertable={bandAlertable} economic={bandEconomic} slug={calc.slug} />}
+  {/* Banda de newsletter genérica retirada: en ~6 meses capturó 0 altas (todo
+      el volumen viene del canje post-resultado, no de un CTA de newsletter
+      pre-valor). Menos ruido de plantilla y un fingerprint menos para AdSense. */}
 
   <div style="margin-bottom:30px;"></div>
 
