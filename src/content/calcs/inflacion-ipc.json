@@ -1,8 +1,8 @@
 {
   "slug": "calculadora-actualizacion-inflacion-ipc",
-  "title": "IPC INDEC 2026 Argentina: Calculadora de Actualización por Inflación | Hacé Cuentas",
+  "title": "IPC INDEC 2026: actualizá un monto por inflación mes a mes",
   "h1": "Calculadora de actualización por inflación (IPC)",
-  "description": "Consultá el IPC INDEC mes a mes y actualizá cualquier monto por inflación acumulada al instante. Ideal para sueldos, alquileres, contratos y deudas. Datos 2026 actualizados.",
+  "description": "Actualizá un monto por IPC INDEC 2026 eligiendo mes de origen y mes de destino, o ingresando una inflación acumulada manual. Tabla mes a mes y poder adquisitivo.",
   "category": "finanzas",
   "icon": "📈",
   "formulaId": "inflacion-ipc",
@@ -27,7 +27,8 @@
     "Actualizás una **deuda en juicio** con tasa pasiva + IPC según jurisprudencia CSJN 2024.",
     "Liquidás una **indemnización laboral** por despido con actualización por CER hasta la fecha efectiva de pago.",
     "Sos abogado y necesitás **actualizar honorarios** por UMA o IPC entre la regulación y el cobro.",
-    "Calculás cuánto valen hoy **$100 de hace 5 años** para reclamos retroactivos, restituciones o convenios de pago."
+    "Calculás cuánto valen hoy **$100 de hace 5 años** para reclamos retroactivos, restituciones o convenios de pago.",
+    "Actualizar una cuota de alquiler, deuda o préstamo familiar eligiendo enero-mayo 2026 sin buscar el porcentaje acumulado afuera."
   ],
   "fields": [
     {
@@ -42,15 +43,75 @@
       "required": true
     },
     {
+      "id": "mesDesde",
+      "label": "Mes inicial IPC",
+      "type": "select",
+      "default": "2026-01",
+      "options": [
+        {
+          "value": "2026-01",
+          "label": "Enero 2026 (+2,9%)"
+        },
+        {
+          "value": "2026-02",
+          "label": "Febrero 2026 (+2,9%)"
+        },
+        {
+          "value": "2026-03",
+          "label": "Marzo 2026 (+3,4%)"
+        },
+        {
+          "value": "2026-04",
+          "label": "Abril 2026 (+2,6%)"
+        },
+        {
+          "value": "2026-05",
+          "label": "Mayo 2026 (+2,1%)"
+        }
+      ],
+      "required": false,
+      "help": "Usamos el IPC mensual publicado por INDEC. Si preferís otro período, ingresá la inflación manual abajo."
+    },
+    {
+      "id": "mesHasta",
+      "label": "Mes final IPC",
+      "type": "select",
+      "default": "2026-05",
+      "options": [
+        {
+          "value": "2026-01",
+          "label": "Enero 2026 (+2,9%)"
+        },
+        {
+          "value": "2026-02",
+          "label": "Febrero 2026 (+2,9%)"
+        },
+        {
+          "value": "2026-03",
+          "label": "Marzo 2026 (+3,4%)"
+        },
+        {
+          "value": "2026-04",
+          "label": "Abril 2026 (+2,6%)"
+        },
+        {
+          "value": "2026-05",
+          "label": "Mayo 2026 (+2,1%)"
+        }
+      ],
+      "required": false,
+      "help": "Último dato publicado en esta página: mayo 2026. Junio se publica a mediados de julio."
+    },
+    {
       "id": "inflacionAcumulada",
-      "label": "Inflación acumulada del período (%)",
+      "label": "Inflación manual del período (%)",
       "type": "number",
       "suffix": "%",
-      "placeholder": "140",
+      "placeholder": "14.7",
       "min": 0,
       "step": 0.1,
-      "required": true,
-      "help": "Consultá el IPC acumulado en indec.gob.ar o en bcra.gob.ar."
+      "required": false,
+      "help": "Opcional. Si elegís meses arriba, se calcula solo; usá este campo para períodos anteriores o estimaciones."
     }
   ],
   "dataUpdate": {
@@ -158,6 +219,10 @@
     {
       "q": "¿Cómo paso de IPC mensual a IPC acumulado?",
       "a": "**Multiplicás los factores (1 + IPC%/100) de cada mes y restás 1 al final**. **Fórmula**: `IPC_acumulado% = ((1 + ipc_mes_1/100) × (1 + ipc_mes_2/100) × ... × (1 + ipc_mes_n/100) − 1) × 100`. **Ejemplo trimestral**: enero 2026 +2.5%, febrero +2.0%, marzo +1.8% → factor compuesto = `1.025 × 1.020 × 1.018` = `1.0644`. IPC acumulado trimestre = **6.44%** (NO es 2.5+2+1.8=6.3%). **Por qué no se suman**: la inflación es **multiplicativa** (cada mes se aplica sobre el precio ya inflado del mes anterior), no aditiva. El error de sumar mensuales se vuelve **muy grande** en períodos largos (12 meses sumados pueden subestimar el real en 10-15 puntos)."
+    },
+    {
+      "q": "¿Puedo actualizar un monto eligiendo mes de origen y mes de destino?",
+      "a": "Sí. Elegí el mes inicial y el mes final con datos INDEC 2026 y la calculadora compone los IPC mensuales. Si necesitás un período anterior o todavía no publicado, podés ingresar la inflación acumulada manual."
     }
   ],
   "solvedExamples": [
@@ -203,12 +268,20 @@
   "dynamicScenarios": [
     {
       "label": "Inflación 3 puntos mayor",
-      "overrides": { "inflacionAcumulada": { "add": 3 } },
+      "overrides": {
+        "inflacionAcumulada": {
+          "add": 3
+        }
+      },
       "detail": "Escenario de sensibilidad para comparar el valor actualizado si el período acumulara 3 puntos porcentuales más."
     },
     {
       "label": "Inflación 3 puntos menor",
-      "overrides": { "inflacionAcumulada": { "add": -3 } },
+      "overrides": {
+        "inflacionAcumulada": {
+          "add": -3
+        }
+      },
       "detail": "Escenario comparativo; para cálculos oficiales usá siempre el IPC publicado por INDEC."
     }
   ],
@@ -231,7 +304,7 @@
       "text": "Revisá los resultados que aparecen debajo del formulario. Podés modificar cualquier dato y volver a calcular."
     }
   ],
-  "lastReviewed": "2026-07-09",
+  "lastReviewed": "2026-07-10",
   "changelog": [
     {
       "date": "2026-07-02",

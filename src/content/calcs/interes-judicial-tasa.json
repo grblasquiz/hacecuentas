@@ -1,8 +1,8 @@
 {
   "slug": "calculadora-interes-judicial-tasa",
-  "title": "Calculadora de Interés Judicial (Tasa Activa BNA) 2026",
+  "title": "Interés Judicial 2026: tasa activa BNA, pasiva o manual",
   "h1": "Calculadora de Interés Judicial (Tasa Activa BNA)",
-  "description": "Calculá cuánto crece tu deuda judicial en días. Tasa activa BNA 2026: 33% interés simple. Fórmula exacta + tablas mes a mes.",
+  "description": "Calculá intereses judiciales por fecha con presets de tasa activa BNA, tasa pasiva de referencia, resarcitoria ARCA o una tasa manual.",
   "category": "finanzas",
   "icon": "🏛️",
   "formulaId": "interes-judicial-tasa",
@@ -43,16 +43,45 @@
       "help": "Monto inicial del que partís. Ej: $100.000 de ahorro."
     },
     {
+      "id": "tasaPreset",
+      "label": "Tasa a usar",
+      "type": "select",
+      "default": "activa_bna_33",
+      "options": [
+        {
+          "value": "activa_bna_33",
+          "label": "Activa BNA referencia 2026 (33% TNA)"
+        },
+        {
+          "value": "activa_bna_38",
+          "label": "Activa BNA enero 2026 (38% TNA)"
+        },
+        {
+          "value": "pasiva_referencia_30",
+          "label": "Pasiva de referencia (30% TNA)"
+        },
+        {
+          "value": "resarcitoria_arca_72",
+          "label": "Resarcitoria ARCA referencia (72% TNA)"
+        },
+        {
+          "value": "manual",
+          "label": "Ingresar tasa manual"
+        }
+      ],
+      "help": "La sentencia o juzgado puede ordenar otra tasa. Si elegís manual, completá el campo de abajo."
+    },
+    {
       "id": "tasaAnual",
-      "label": "Tasa nominal anual (%)",
+      "label": "Tasa manual anual (%)",
       "type": "number",
       "suffix": "%",
       "placeholder": "75",
       "min": 0,
       "max": 500,
       "step": 0.1,
-      "required": true,
-      "help": "Consultá la tasa activa BNA vigente en bna.com.ar"
+      "required": false,
+      "help": "Solo se usa si elegís “Ingresar tasa manual”."
     },
     {
       "id": "fechaDesde",
@@ -161,6 +190,10 @@
     {
       "q": "¿Qué tasa aplica cada fuero (CNAT, CNCiv, CNCom)?",
       "a": "**Cada fuero tiene jurisprudencia propia sobre qué tasa aplicar** y la elección impacta significativamente en el monto final. Resumen 2026:\n\n**FUERO LABORAL (CNAT - Cámara Nacional de Apelaciones del Trabajo)**:\n- **Tasa**: **Activa BNA** desde la fecha de devengamiento del crédito.\n- **Capitalización**: anual (simple en algunos casos, según el rubro).\n- **Plenario base**: \"Samudio de Martínez, Ladislaa c/ Transportes Doscientos Setenta SA\" (CNAT, Plenario 339, 09/12/2009).\n- **Variantes**: Acta 2601 CSJN (2014) actualizó parámetros. En despidos, la tasa corre desde el distracto. En diferencias salariales, desde el devengamiento de cada concepto.\n- **Tasa específica 2026**: ~33-38% anual (TNA activa BNA).\n\n**FUERO CIVIL (CNCiv - Cámara Nacional de Apelaciones Civil)**:\n- **Tasa**: **Activa BNA** desde la mora.\n- **Capitalización**: simple (no compuesta), salvo notificación de demanda (art. 770 CCyCN).\n- **Plenarios**: \"Samudio\" (CNCiv, Plenario 27/03/2009) y \"Vázquez c/ Bilbao\" (CNCiv, 14/03/2012).\n- **Variantes**: en deudas con cláusula CER/UVA, hay debate jurisprudencial. En algunos casos se aplica tasa pasiva BNA + CER.\n- **Tasa específica 2026**: ~33-38% anual + variaciones (juez puede morigerar).\n\n**FUERO COMERCIAL (CNCom - Cámara Nacional de Apelaciones Comercial)**:\n- **Tasa**: **Activa BNA** desde la mora (interés moratorio).\n- **Capitalización**: simple en general; compuesta si hay convenio expreso entre partes (art. 770 CCyCN).\n- **Variantes**: en cheques rechazados, factura impaga, mutuo dinerario, sigue activa BNA. En contratos con cláusula expresa de tasa, prevalece la del contrato.\n- **Tasa específica 2026**: ~33-38% anual.\n\n**FUERO PREVISIONAL (Cámara Federal de la Seguridad Social - CFASS)**:\n- **Tasa**: **Pasiva BNA Promedio** (no activa) según Ley 26.198 y Resolución ANSeS 56/2018.\n- **Capitalización**: simple.\n- **Para retroactivos jubilatorios y reajustes**: tasa pasiva. Para honorarios de abogados previsionales: tasa activa.\n- **Tasa específica 2026**: ~19-22% anual (TNA pasiva).\n\n**FUERO PENAL (caso responsabilidad civil derivada del delito - art. 29 CP)**:\n- **Tasa**: criterio análogo a CNCiv → **Activa BNA** desde la fecha del hecho ilícito hasta el pago.\n- **Indemnización** (daño moral, daño emergente, lucro cesante): se actualiza con CER + interés puro 6-8% anual en algunos fallos.\n\n**FUERO CONTENCIOSO ADMINISTRATIVO FEDERAL (deudas contra el Estado)**:\n- **Tasa**: **Pasiva BNA** (tasa promedio mensual ANSeS).\n- **Variantes**: en deudas con tasa especial CER (caso BONOS DE CONSOLIDACIÓN), se usa la del bono.\n- **Tasa específica 2026**: ~19-22% anual.\n\n**FUERO TRIBUTARIO (deudas con AFIP/ARCA)**:\n- **Tasa**: tasa específica establecida por **Resolución MEy F** (Ministerio de Economía y Finanzas). Distinta a tasa BNA.\n- **2026**: tasa AFIP/ARCA es ~6% mensual = **72% anual** (¡muy superior a tasa BNA!).\n- **Resarcitorios**: art. 37 Ley 11.683 → tasa especial. **Punitorios**: art. 52 → tasa especial (más alta).\n\n**Tabla rápida comparativa 2026**:\n\n| Fuero | Tasa típica | Capitalización | Magnitud anual aproximada |\n|---|---|---|---|\n| **CNAT (Laboral)** | Activa BNA | Anual o simple | 35-38% |\n| **CNCiv (Civil)** | Activa BNA | Simple | 35-38% |\n| **CNCom (Comercial)** | Activa BNA | Simple o por contrato | 35-38% |\n| **CFASS (Previsional)** | Pasiva BNA | Simple | 19-22% |\n| **Contencioso Admin Federal** | Pasiva BNA | Simple | 19-22% |\n| **Tributario (AFIP/ARCA)** | Especial MEyF | Simple | **72% (mucho mayor)** |\n| **Penal (resp civil)** | Activa BNA | Simple | 35-38% |\n\n**Consejos prácticos**: 1) **Confirmá la tasa exacta** con tu abogado especialista en el fuero. La jurisprudencia cambia (especialmente CSJN y plenarios). 2) **Verificá si tu juicio inició antes/después de algún plenario relevante** (puede aplicar tasa antigua). 3) Para deudas con AFIP/ARCA, los intereses son **mucho más altos**: pagá lo antes posible o adheríte a planes de facilidades.4) **Acumulación**: en fueros donde corresponde interés punitorio (Comercial, Tributario), puede superar la tasa activa BNA + ~30 puntos."
+    },
+    {
+      "q": "¿Qué tasa judicial conviene elegir?",
+      "a": "Depende del fuero, jurisdicción y sentencia. La calculadora ofrece presets frecuentes para comparar, pero si tu expediente ordena una tasa específica elegí “manual” e ingresá ese porcentaje."
     }
   ],
   "sources": [
@@ -184,7 +217,7 @@
     "calculadora-actualizacion-inflacion-ipc"
   ],
   "audience": "global",
-  "lastReviewed": "2026-07-09",
+  "lastReviewed": "2026-07-10",
   "changelog": [
     {
       "date": "2026-07-09",

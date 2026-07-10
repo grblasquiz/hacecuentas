@@ -5,7 +5,8 @@
 
 export interface InteresJudicialInputs {
   capital: number;
-  tasaAnual: number;
+  tasaAnual?: number;
+  tasaPreset?: string;
   fechaDesde: string;
   fechaHasta?: string;
 }
@@ -19,9 +20,17 @@ export interface InteresJudicialOutputs {
   _insight?: any;
 }
 
+const TASAS_PRESET: Record<string, { tasa: number; label: string }> = {
+  activa_bna_33: { tasa: 33, label: 'tasa activa BNA de referencia 2026 (33% TNA)' },
+  activa_bna_38: { tasa: 38, label: 'tasa activa BNA enero 2026 (38% TNA)' },
+  resarcitoria_arca_72: { tasa: 72, label: 'tasa resarcitoria ARCA de referencia (72% TNA)' },
+  pasiva_referencia_30: { tasa: 30, label: 'tasa pasiva de referencia (30% TNA)' },
+};
+
 export function interesJudicialTasa(inputs: InteresJudicialInputs): InteresJudicialOutputs {
   const capital = Number(inputs.capital);
-  const tasaAnual = Number(inputs.tasaAnual);
+  const preset = TASAS_PRESET[String(inputs.tasaPreset || '')];
+  const tasaAnual = preset ? preset.tasa : Number(inputs.tasaAnual);
   const partsD = String(inputs.fechaDesde || '').split('-').map(Number);
   if (partsD.length !== 3 || partsD.some(isNaN)) throw new Error('Ingresá una fecha desde válida');
   const [yD, mD, dD] = partsD;
@@ -72,7 +81,7 @@ export function interesJudicialTasa(inputs: InteresJudicialInputs): InteresJudic
   else insightTone = 'good';
   const insight = {
     title: 'Cuánto pesan los intereses',
-    text: `Sobre un capital de **$${Math.round(capital).toLocaleString('es-AR')}**, en **${diasTranscurridos.toLocaleString('es-AR')} días** (${anios.toFixed(1)} años) se acumulan **$${Math.round(interesesGenerados).toLocaleString('es-AR')}** de intereses, un **${porcentajeTotal}%** del capital. El total reclamable asciende a **$${Math.round(totalConIntereses).toLocaleString('es-AR')}**.`,
+    text: `Sobre un capital de **$${Math.round(capital).toLocaleString('es-AR')}**, en **${diasTranscurridos.toLocaleString('es-AR')} días** (${anios.toFixed(1)} años) se acumulan **$${Math.round(interesesGenerados).toLocaleString('es-AR')}** de intereses, un **${porcentajeTotal}%** del capital. ${preset ? `Usé la **${preset.label}**.` : 'Usé la tasa manual que ingresaste.'} El total reclamable asciende a **$${Math.round(totalConIntereses).toLocaleString('es-AR')}**.`,
     tone: insightTone,
     icon: '⚖️',
   };

@@ -6,7 +6,9 @@ import { COLOMBIA_2026, fmtCOP } from '../data/colombia-2026.ts';
 
 export interface Inputs {
   impuestoACargo: number;
-  mesesRetraso: number;
+  mesesRetraso?: number;
+  fechaVencimiento?: string;
+  fechaPresentacion?: string;
   emplazamiento?: string; // 'si' | 'no'
 }
 export interface Outputs { [k: string]: any; _insight?: any; _chart?: any; }
@@ -19,9 +21,30 @@ const num = (v: unknown, d = 0): number =>
 // estatutario fijo desde la Ley 1111/2006, no se indexa por año.
 const FACTOR_TOPE_CON_EMPLAZAMIENTO = 2;
 
+function parseLocalDate(value?: string): Date | null {
+  if (!value) return null;
+  const parts = String(value).split('-').map(Number);
+  if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+  const [y, m, d] = parts;
+  return new Date(y, m - 1, d);
+}
+
+function mesesOMesFraccion(fechaVencimiento?: string, fechaPresentacion?: string): number | null {
+  const vencimiento = parseLocalDate(fechaVencimiento);
+  if (!vencimiento) return null;
+  const presentacion = parseLocalDate(fechaPresentacion) || new Date();
+  presentacion.setHours(0, 0, 0, 0);
+  vencimiento.setHours(0, 0, 0, 0);
+  if (presentacion <= vencimiento) throw new Error('La fecha de presentación debe ser posterior al vencimiento');
+  const diffMs = presentacion.getTime() - vencimiento.getTime();
+  const dias = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+  return Math.max(1, Math.ceil(dias / 30));
+}
+
 export function compute(i: Inputs): Outputs {
   const impuesto = Math.max(0, num(i.impuestoACargo));
-  const mesesIngresados = num(i.mesesRetraso);
+  const mesesPorFechas = mesesOMesFraccion(i.fechaVencimiento, i.fechaPresentacion);
+  const mesesIngresados = mesesPorFechas ?? num(i.mesesRetraso);
   const conEmplazamiento = String(i.emplazamiento ?? 'no') === 'si';
   if (mesesIngresados <= 0) throw new Error('Ingresá los meses de retraso (una fracción de mes cuenta como mes completo)');
 

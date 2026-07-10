@@ -3,6 +3,7 @@ import { COLOMBIA_2026 } from '../data/colombia-2026';
 export interface Inputs {
   salario_mensual: number;
   clase_riesgo: string; // 'I' | 'II' | 'III' | 'IV' | 'V'
+  actividad_riesgo?: string;
   numero_trabajadores?: number;
 }
 
@@ -29,8 +30,20 @@ export function compute(i: Inputs): Outputs {
     IV: 'Clase IV - Riesgo Alto (4,350%). Manufactura pesada, metalmecánica, química',
     V: 'Clase V - Riesgo Máximo (6,960%). Minería, explosivos, trabajo en alturas',
   };
+  const actividadAClase: Record<string, string> = {
+    oficina_servicios: 'I',
+    comercio_restaurante: 'II',
+    transporte_pasajeros: 'II',
+    salud_asistencial: 'III',
+    construccion_liviana: 'III',
+    manufactura_metalmecanica: 'IV',
+    trabajo_alturas: 'V',
+    mineria_explosivos: 'V',
+  };
 
-  const clase = (arl as Record<string, number>)[i.clase_riesgo] !== undefined ? i.clase_riesgo : 'I';
+  const claseSugerida = actividadAClase[String(i.actividad_riesgo || '')];
+  const claseBase = claseSugerida || i.clase_riesgo;
+  const clase = (arl as Record<string, number>)[claseBase] !== undefined ? claseBase : 'I';
   const tarifa = (arl as Record<string, number>)[clase];
   const tarifaPorcentaje = Math.round(tarifa * 100000) / 1000; // ej. 0.522
   const numTrabajadores = i.numero_trabajadores === undefined || i.numero_trabajadores === null || (i.numero_trabajadores as any) === ''
@@ -55,7 +68,7 @@ export function compute(i: Inputs): Outputs {
   const claseAlta = ['IV', 'V'].includes(clase);
   const _insight = {
     title: `Costo ARL — Clase de riesgo ${clase}`,
-    text: `Con una tarifa de **${tarifaPorcentaje}%** sobre un salario de **${fmtCOP(salario)}**, el aporte a la ARL es **${fmtCOP(totalMensualR)}/mes**, pagado **100% por el empleador** (al trabajador no se le descuenta nada). Para ${numTrabajadores} trabajador${numTrabajadores === 1 ? '' : 'es'}, el costo anual de la empresa llega a **${fmtCOP(costoAnualR)}**.${claseAlta ? ' Es una **clase de riesgo alta**: la tarifa pesa fuerte en la nómina.' : ''}`,
+    text: `Con una tarifa de **${tarifaPorcentaje}%** sobre un salario de **${fmtCOP(salario)}**, el aporte a la ARL es **${fmtCOP(totalMensualR)}/mes**, pagado **100% por el empleador** (al trabajador no se le descuenta nada). ${claseSugerida ? `La actividad elegida sugiere **Clase ${clase}**; confirmala contra el CIIU y tu ARL.` : 'Si conocés la actividad, usá el selector para sugerir la clase de riesgo.'} Para ${numTrabajadores} trabajador${numTrabajadores === 1 ? '' : 'es'}, el costo anual de la empresa llega a **${fmtCOP(costoAnualR)}**.${claseAlta ? ' Es una **clase de riesgo alta**: la tarifa pesa fuerte en la nómina.' : ''}`,
     tone: claseAlta ? 'warn' : 'neutral',
     icon: '🦺',
   };
