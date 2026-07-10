@@ -25,6 +25,8 @@ export interface Props {
   canonical?: string;
   schema?: object;
   image?: string;
+  imageWidth?: number;   // og:image:width — default 1200 (social). Discover prefiere 16:9 → 1280.
+  imageHeight?: number;  // og:image:height — default 630 (social). Discover prefiere 16:9 → 720.
   audience?: 'AR' | 'MX' | 'CL' | 'CO' | 'ES' | 'BO' | 'PE' | 'EC' | 'VE' | 'PY' | 'UY' | 'DO' | 'BR' | 'PT' | 'US' | 'GB' | 'CA' | 'AU' | 'global'; // país-específica o 'global'
   lang?: 'es' | 'en' | 'pt';
   hreflang?: Array<{lang: string, href: string}>;
@@ -54,6 +56,8 @@ const {
   canonical,
   schema,
   image = '/og-default.png',
+  imageWidth = 1200,
+  imageHeight = 630,
   audience = 'global',
   lang,
   hreflang,
@@ -458,8 +462,8 @@ const globalSchema = {
     <meta property="og:title" content={socialTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={fullImage} />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    <meta property="og:image:width" content={String(imageWidth)} />
+    <meta property="og:image:height" content={String(imageHeight)} />
     <meta property="og:image:alt" content={title} />
     <meta property="og:locale" content={ogLocale} />
 
@@ -504,8 +508,8 @@ const globalSchema = {
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={fullImage} />
     <meta name="twitter:image:alt" content={title} />
-    <meta name="twitter:image:width" content="1200" />
-    <meta name="twitter:image:height" content="630" />
+    <meta name="twitter:image:width" content={String(imageWidth)} />
+    <meta name="twitter:image:height" content={String(imageHeight)} />
     <meta name="twitter:site" content="@hacecuentas" />
     {articleAuthor && <meta name="twitter:creator" content={articleAuthor.startsWith('@') ? articleAuthor : '@hacecuentas'} />}
     <meta name="twitter:domain" content="hacecuentas.com" />

@@ -531,6 +531,96 @@ async function processBlog(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Data / actualidad pages OG images (Discover)
+// ---------------------------------------------------------------------------
+// Las páginas de dato/actualidad (dolar-hoy, inflacion-argentina, valores-bcra…)
+// son .astro standalone, NO calcs → nunca pasaban por este pipeline y caían a
+// /og-default.png (logo genérico), justo lo que Google Discover penaliza.
+// Discover es el canal correcto para ESTAS páginas: contenido "del momento".
+// (Las calcs son formularios y Discover no recomienda formularios.)
+//
+// Generamos una card 16:9 REAL (1200×675, ≥1200px de ancho = requisito Discover)
+// por página → public/og/data-<slug>.jpg. JPG porque Discover pondera fuerte la
+// imagen y prefiere JPG/WebP sobre PNG.
+//
+// A PROPÓSITO sin números volátiles ("Dólar $1.480"): el og:image se cachea de
+// forma agresiva en social/CDN con filename estable → un valor viejo quedaría
+// congelado en la tarjeta hasta bustear cache. Un número stale es PEOR que
+// ninguno. La card comunica frescura con la copia ("en vivo", "actualizado"),
+// no con un dígito que se pudre. Editar esta lista = editar la card (regen).
+interface DataPage {
+  slug: string;
+  title: string;        // título de la card (SIN "| Hacé Cuentas")
+  description: string;  // subtítulo
+  category?: string;    // tema de color (ver CATEGORY_THEMES)
+  tag?: string;         // pill del footer (default 'hacecuentas.com')
+}
+
+const DATA_PAGES: DataPage[] = [
+  // — Argentina · finanzas / actualidad en vivo —
+  { slug: 'dolar-hoy', title: 'Dólar hoy en Argentina', description: 'Cotización en vivo: blue, oficial, MEP, CCL y cripto.', category: 'finanzas', tag: 'En vivo' },
+  { slug: 'cambio-de-monedas', title: 'Cambio de monedas hoy', description: 'Dólar, euro y real en vivo, con conversor al instante.', category: 'finanzas', tag: 'En vivo' },
+  { slug: 'cotizacion-cripto', title: 'Cotización cripto en vivo', description: 'Bitcoin, Ethereum, USDT y más, convertido a pesos.', category: 'finanzas', tag: 'En vivo' },
+  { slug: 'valores-bcra', title: 'Valores BCRA hoy', description: 'Dólar, inflación, UVA, ICL y tasas oficiales del día.', category: 'finanzas', tag: 'Actualizado a diario' },
+  { slug: 'inflacion-argentina', title: 'Inflación en Argentina hoy', description: 'Mensual, interanual y UVA, con serie histórica.', category: 'finanzas', tag: 'Actualizado a diario' },
+  { slug: 'precio-nafta-hoy', title: 'Precio de la nafta hoy', description: 'Súper, premium y gasoil por provincia, actualizado.', category: 'automotor', tag: 'Actualizado a diario' },
+  { slug: 'comparador-plazo-fijo', title: 'Comparador de plazo fijo', description: 'Tasas de todos los bancos de Argentina, hoy.', category: 'finanzas', tag: 'Actualizado a diario' },
+  { slug: 'plazo-fijo-vs-billeteras', title: 'Plazo fijo vs billeteras virtuales', description: '¿Dónde conviene poner la plata hoy? Comparativa en vivo.', category: 'finanzas', tag: 'En vivo' },
+  { slug: 'valores-vigentes', title: 'Valores vigentes en Argentina 2026', description: 'Salario mínimo, Ganancias, monotributo y más, en un lugar.', category: 'finanzas', tag: 'Datos oficiales' },
+  // — Argentina · impuestos / topes 2026 —
+  { slug: 'datos-ganancias-2026', title: 'Impuesto a las Ganancias 2026', description: 'Mínimo no imponible, escala y deducciones actualizadas.', category: 'finanzas', tag: 'Datos oficiales 2026' },
+  { slug: 'datos-bienes-personales-2026', title: 'Bienes Personales 2026', description: 'Mínimo no imponible, escala y casa-habitación.', category: 'finanzas', tag: 'Datos oficiales 2026' },
+  { slug: 'datos-monotributo-2026', title: 'Monotributo 2026', description: 'Categorías, topes y cuotas actualizadas.', category: 'finanzas', tag: 'Datos oficiales 2026' },
+  { slug: 'datos-topes-sipa-2026', title: 'Topes SIPA 2026', description: 'Bases mínima y máxima de aportes y contribuciones.', category: 'finanzas', tag: 'Datos oficiales 2026' },
+  { slug: 'datos-aguinaldo-2026', title: 'Aguinaldo 2026 (SAC)', description: 'Cómo se calcula, topes vigentes y fechas de pago.', category: 'finanzas', tag: 'Datos oficiales 2026' },
+  // — España —
+  { slug: 'datos-cuota-autonomos-2026', title: 'Cuota de autónomos 2026 (España)', description: 'Tabla por tramos de rendimiento neto (RETA).', category: 'finanzas', tag: 'Datos oficiales 2026' },
+  // — LATAM · salarios mínimos por país —
+  { slug: 'datos-salario-minimo-colombia-2026', title: 'Salario mínimo Colombia 2026', description: 'Con auxilio de transporte y aportes de ley.', category: 'negocios', tag: 'Datos oficiales 2026' },
+  { slug: 'datos-salario-minimo-mexico-2026', title: 'Salario mínimo México 2026', description: 'Diario, mensual y valor de la UMA.', category: 'negocios', tag: 'Datos oficiales 2026' },
+  { slug: 'datos-sueldo-minimo-peru-2026', title: 'Sueldo mínimo Perú 2026', description: 'RMV, UIT y descuentos de ley (tabla).', category: 'negocios', tag: 'Datos oficiales 2026' },
+  { slug: 'datos-salario-minimo-latam-2026', title: 'Salario mínimo en LATAM 2026', description: 'Comparativa país por país, actualizada.', category: 'negocios', tag: 'Datos oficiales 2026' },
+  { slug: 'datos-salario-basico-ecuador-2026', title: 'Salario básico Ecuador 2026', description: 'SBU, décimos y aportes al IESS.', category: 'negocios', tag: 'Datos oficiales 2026' },
+  { slug: 'datos-sueldo-chile-2026', title: 'Descuentos del sueldo en Chile 2026', description: 'AFP, salud, cesantía, topes e impuesto único.', category: 'negocios', tag: 'Datos oficiales 2026' },
+  // — Brasil (PT) —
+  { slug: 'dados-salario-minimo-brasil-2026', title: 'Salário mínimo 2026 no Brasil', description: 'Valor mensal, diário e por hora, atualizado.', category: 'negocios', tag: 'Dados oficiais 2026' },
+  { slug: 'dados-inss-irrf-2026', title: 'INSS e IRRF 2026 (Brasil)', description: 'Tabelas de descontos e alíquotas vigentes.', category: 'finanzas', tag: 'Dados oficiais 2026' },
+  { slug: 'dados-ipca-brasil-historico', title: 'IPCA Brasil: série histórica', description: 'Inflação mensal e acumulada, atualizada.', category: 'finanzas', tag: 'Atualizado' },
+];
+
+async function processDataPages(
+  fonts: Awaited<ReturnType<typeof loadFonts>>,
+  result: GenResult,
+  only?: Set<string>,
+): Promise<void> {
+  for (const p of DATA_PAGES) {
+    if (only && !only.has(p.slug)) continue;
+    // Mapeamos la página de dato a la shape Calc del template. hideIcon=true:
+    // satori no tiene fuente de emoji → un icono saldría "NO GLYPH".
+    const asCalc: Calc = {
+      slug: p.slug,
+      h1: p.title,
+      description: p.description,
+      category: p.category,
+    };
+    const outPath = join(OUT_DIR, `data-${p.slug}.jpg`);
+    try {
+      // 16:9 real: 1200×675 (heightPx 675). Discover exige ≥1200px de ancho.
+      const png = await renderOne(asCalc, fonts, {
+        footerTag: p.tag ?? 'hacecuentas.com',
+        heightPx: 675,
+        hideIcon: true,
+      });
+      const jpg = await sharp(png).jpeg({ quality: 82, progressive: true }).toBuffer();
+      writeFileSync(outPath, jpg);
+      result.generated++;
+    } catch (err) {
+      result.failed.push({ slug: `data-${p.slug}`, error: (err as Error).message });
+    }
+  }
+}
+
 async function processDir(
   dir: string,
   fonts: Awaited<ReturnType<typeof loadFonts>>,
@@ -594,6 +684,25 @@ async function main(): Promise<void> {
 
   mkdirSync(OUT_DIR, { recursive: true });
 
+  // Modo `--data-only [slug1,slug2]`: regenera SOLO las cards de páginas de dato
+  // (Discover), saltando las 9477 calcs. Útil para iterar el diseño sin esperar
+  // el statSync de todo public/og. Sin lista → genera las 24.
+  const argv = process.argv.slice(2);
+  const dataOnlyIdx = argv.indexOf('--data-only');
+  if (dataOnlyIdx !== -1) {
+    const listArg = argv[dataOnlyIdx + 1];
+    const only = listArg && !listArg.startsWith('--')
+      ? new Set(listArg.split(',').map((s) => s.trim()).filter(Boolean))
+      : undefined;
+    const fonts = await loadFonts();
+    const result: GenResult = { generated: 0, cached: 0, failed: [] };
+    await processDataPages(fonts, result, only);
+    const elapsed = ((Date.now() - started) / 1000).toFixed(2);
+    console.log(`[og] data-only done in ${elapsed}s — generated: ${result.generated}, failed: ${result.failed.length}`);
+    for (const f of result.failed) console.warn(`[og] FAILED ${f.slug}: ${f.error}`);
+    return;
+  }
+
   const arFiles = readdirSync(CALCS_DIR).filter((f) => f.endsWith('.json'));
   if (arFiles.length === 0) {
     console.warn(`[og] no calcs found in ${CALCS_DIR}`);
@@ -618,6 +727,13 @@ async function main(): Promise<void> {
     await processBlog(fonts, result, BLOG_PT_DIR, 'blog-pt-');
   } catch (err) {
     console.warn(`[og] blog pass falló (no crítico): ${(err as Error).message}`);
+  }
+
+  // Data / actualidad pages (Discover) — aislado en try/catch como el blog.
+  try {
+    await processDataPages(fonts, result);
+  } catch (err) {
+    console.warn(`[og] data pages pass falló (no crítico): ${(err as Error).message}`);
   }
 
   const elapsed = ((Date.now() - started) / 1000).toFixed(2);
