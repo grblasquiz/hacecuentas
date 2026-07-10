@@ -47,6 +47,7 @@
 
 // Vite inline-ea este placeholder via `define` en astro.config.mjs.
 declare const __INCREMENTAL_CHANGES__: string;
+declare const __WORKER_BUILD__: string;
 
 export type ContentType =
   | 'calcs'
@@ -103,6 +104,10 @@ if (RAW) {
 }
 
 export const isIncrementalBuild = CHANGES !== null;
+// BUILD_SPLIT=worker: no regenera páginas (ya son estáticas del build Node).
+const WORKER_BUILD = Boolean(
+  (typeof __WORKER_BUILD__ !== 'undefined' ? __WORKER_BUILD__ : (process.env.BUILD_SPLIT === 'worker' ? '1' : '')) || '',
+);
 
 if (isIncrementalBuild) {
   // eslint-disable-next-line no-console
@@ -127,6 +132,7 @@ export function filterByIncremental<T extends { slug: string }>(
   contentType: ContentType,
   locale: string = 'ar',
 ): T[] {
+  if (WORKER_BUILD) return [];
   if (CHANGES === null) return items;
 
   // Para calcs no-AR, leer el bucket por locale (`calcs_en`, `calcs_pt`, etc.)

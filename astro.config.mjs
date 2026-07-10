@@ -17,6 +17,12 @@ const IS_PROD_BUILD = process.env.NODE_ENV !== 'development' && Boolean(SENTRY_A
 // emptyOutDir:false evita que Vite borre el dist cacheado. En full build
 // (sin env var) limpia normal.
 const IS_INCREMENTAL = Boolean(process.env.INCREMENTAL_CHANGES);
+// BUILD_SPLIT: arquitectura de 2 builds para prerender rápido en Node (~4x).
+//   'static' → prerenderea en Node (sin adapter CF → sin workerd). outDir=dist-static.
+//   'worker' → adapter+output:server pero calc routes NO prerenderean (__WORKER_BUILD__).
+//   '' → build normal (intacto). Ver scripts/build-split.sh.
+const BUILD_SPLIT = process.env.BUILD_SPLIT || '';
+const IS_STATIC_SPLIT = BUILD_SPLIT === 'static';
 // NOTE: Partytown removido 2026-04-22. Bloqueaba events de conversión de
 // Google Ads (gtag no generaba network requests al collect endpoint).
 // Volvemos a async scripts — más CPU main thread pero tracking 100% funcional.
@@ -35,7 +41,8 @@ export default defineConfig({
   // Nota: si tocás esto, asegurate que TODAS las pages estáticas tengan
   // `export const prerender = true` o un getStaticPaths. Sin eso se renderean
   // dinámicamente cada request, ahorrando cache.
-  output: 'server',
+  output: IS_STATIC_SPLIT ? 'static' : 'server',
+  outDir: IS_STATIC_SPLIT ? 'dist-static' : 'dist',
   trailingSlash: 'never',
 
   build: {
@@ -80,7 +87,7 @@ export default defineConfig({
     defaultStrategy: 'hover',
   },
 
-  adapter: cloudflare(),
+  ...(IS_STATIC_SPLIT ? {} : { adapter: cloudflare() }),
 
   vite: {
     build: {
@@ -139,6 +146,7 @@ export default defineConfig({
     // usa para prerendear, así que define las hace literales en el bundle.
     define: {
       __INCREMENTAL_CHANGES__: JSON.stringify(process.env.INCREMENTAL_CHANGES || ''),
+      __WORKER_BUILD__: JSON.stringify(process.env.BUILD_SPLIT === 'worker' ? '1' : ''),
     },
   },
 });

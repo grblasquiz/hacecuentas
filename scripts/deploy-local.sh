@@ -148,7 +148,15 @@ fi
 
 # ─── 3. Build ──────────────────────────────────────────────────────────────
 T_BUILD_START=$(date +%s)
-if [ "$MODE" = "assets" ]; then
+SPLIT_BUILD=false
+if [ "${BUILD_SPLIT_DEPLOY:-}" = "1" ]; then
+  # Arquitectura 2-builds: STATIC en Node (~92s, 4x) + WORKER cacheado (solo
+  # rebuild si cambió código, no contenido). Regenera todo el static → purge full.
+  SPLIT_BUILD=true; MODE=full
+  log "build SPLIT (Node static + worker cacheado)..."
+  bash scripts/build-split.sh 2>&1 | grep -E "\[split\]|FALLÓ|✗ " | tail -16
+fi
+if [ "$SPLIT_BUILD" = false ] && [ "$MODE" = "assets" ]; then
   log "deploy ASSETS (sin Astro build)..."
   if [ ! -f dist/server/wrapper.mjs ] || [ ! -f dist/server/wrangler.json ] || [ ! -d dist/client ]; then
     warn "dist cache incompleto → fallback FULL build"
@@ -176,7 +184,7 @@ NODE
   fi
 fi
 
-if [ "$MODE" = "assets" ]; then
+if [ "$SPLIT_BUILD" = true ] || [ "$MODE" = "assets" ]; then
   :
 elif [ "$MODE" = "incremental" ]; then
   log "build INCREMENTAL (estimado ~60-90s)..."
@@ -267,10 +275,12 @@ ok "wrangler deploy completado en ${T_DEPLOY}s"
 # a la versión previa y abortamos SIN purgar cache → una versión rota nunca
 # queda viva ni se cachea. Incidente 2026-06-01 (deploy con prerender vacío).
 if [ "$SMOKE" = true ]; then
-  log "smoke test (pre-purge, 6 URLs)..."
+  log "smoke test (pre-purge)..."
   sleep 5
   FAIL=0
-  for url in / /calculadora-imc /calculadora-aguinaldo-sac /en/bmi-calculator /es /sitemap.xml; do
+  # Cubre estático (calc/home/locale), embed (asset), ruta SSR (dolar-hoy → valida
+  # que el worker sirve SSR) y sitemap. Un break del split-build cae acá → rollback.
+  for url in / /calculadora-imc /calculadora-aguinaldo-sac /en/bmi-calculator /es /sitemap.xml /embed/calculadora-imc /dolar-hoy-mexico; do
     STATUS=$(curl -sS -o /dev/null -w "%{http_code}" -A "HC-LocalDeploy/1.0" "https://hacecuentas.com$url" || echo "ERR")
     if [ "$STATUS" = "200" ]; then
       echo "  ✓ $url"
