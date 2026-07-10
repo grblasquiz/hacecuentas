@@ -38,6 +38,28 @@ const BATCH: Array<[string, string, 'dose' | 'injury' | 'baby' | 'clinical']> = 
   ['calcs-en', 'burnout-mbi-assessment', 'clinical'],
   ['calcs-en', 'postpartum-depression-screening', 'clinical'],
   ['calcs-en', 'stages-of-grief-family-loss', 'clinical'],
+
+  // === Segunda tanda 07-10: triage de las 71 high-indexable-sin-revisor ===
+  // dose — dosis micronutriente/electrolitos con UL y daño por exceso
+  ['calcs-en', 'agua-diaria-deportista', 'dose'],
+  ['calcs', 'calcio-diario-edad-lactancia-menopausia', 'dose'],
+  ['calcs', 'hidratacion-corredor', 'dose'],
+  ['calcs-en', 'magnesio-dosis-deficiencia-sintomas', 'dose'],
+  ['calcs-en', 'magnesium-daily-requirement', 'dose'],
+  ['calcs-en', 'sports-hydration-electrolytes-exercise', 'dose'],
+  ['calcs-en', 'suplementos-deportivos-stack-principiante', 'dose'],
+  ['calcs-en', 'vitamin-d-dosage-daily-sun-exposure-age', 'dose'],
+  // clinical — labs/screening/protocolo de salud individualizado
+  ['calcs-en', 'blood-alcohol-bac-widmark', 'clinical'],
+  ['calcs-en', 'blood-pressure-who-classification', 'clinical'],
+  ['calcs', 'imc-infantil-percentil', 'clinical'],
+  ['calcs', 'calculadora-oxalatos-calculos-renales', 'clinical'],
+  ['calcs', 'riesgo-embarazo-edad', 'clinical'],
+  ['calcs', 'vacuna-calendario-nacional-anses', 'clinical'],
+  ['calcs', 'calculadora-vacunas-bebe-calendario-2026-argentina-edad', 'clinical'],
+  ['calcs-en', 'fsh-lh-menopause-perimenopause-age', 'clinical'],
+  ['calcs-en', 'spermiogram-reference-values-who-2021', 'clinical'],
+  ['calcs-en', 'testosterone-normal-levels-by-age-men', 'clinical'],
 ];
 
 let changed = 0, skipped = 0, missing = 0;
