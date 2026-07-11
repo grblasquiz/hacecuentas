@@ -7,6 +7,7 @@ export interface InteresJudicialInputs {
   capital: number;
   tasaAnual?: number;
   tasaPreset?: string;
+  jurisdiccion?: string;
   fechaDesde: string;
   fechaHasta?: string;
 }
@@ -16,6 +17,7 @@ export interface InteresJudicialOutputs {
   interesesGenerados: number;
   diasTranscurridos: number;
   porcentajeTotal: string;
+  tasaAplicada: string;
   _chart?: any;
   _insight?: any;
 }
@@ -27,10 +29,36 @@ const TASAS_PRESET: Record<string, { tasa: number; label: string }> = {
   pasiva_referencia_30: { tasa: 30, label: 'tasa pasiva de referencia (30% TNA)' },
 };
 
+// Doctrina vigente por jurisdicción. La tasa numérica es la de REFERENCIA 2026
+// de esta calculadora (activa BNA 33% / pasiva 30%): cada banco publica la suya
+// y varía mes a mes, así que el selector PREselecciona la tasa que ordena la
+// doctrina del fuero, no reemplaza la liquidación oficial del juzgado.
+const JURISDICCIONES: Record<string, { tasa: number; label: string; doctrina: string }> = {
+  nacion: {
+    tasa: 33,
+    label: 'tasa activa BNA (referencia 2026: 33% TNA)',
+    doctrina:
+      'Fueros nacionales (civil/comercial/laboral): **tasa activa BNA** según plenario CNCiv **"Samudio de Martínez"** (20/04/2009). En laboral, la CSJN en **"Oliva c/ Coma"** (29/02/2024) invalidó la capitalización periódica del Acta CNAT 2764, por eso acá se aplica interés simple.',
+  },
+  pba: {
+    tasa: 33,
+    label: 'tasa activa (referencia 2026: 33% TNA, aprox. de la activa Banco Provincia)',
+    doctrina:
+      'Provincia de Buenos Aires: la SCBA en **"Barrios c/ Lascano"** (C 124.096, 17/04/2024) cambió la doctrina de la pasiva BIP ("Cabrera", 2017) por un esquema en dos tramos: interés puro del 6% anual sobre capital actualizado hasta la sentencia y **tasa activa del Banco Provincia** (operaciones de descuento) desde la sentencia hasta el pago. Esta calculadora aplica una única tasa activa de referencia como aproximación.',
+  },
+  caba: {
+    tasa: 31.5,
+    label: 'promedio activa BNA + pasiva BCRA (referencia 2026: 31,5% TNA)',
+    doctrina:
+      'CABA (fuero Contencioso Administrativo y Tributario): plenario **"Eiben c/ GCBA"** (31/05/2013) ordena el **promedio entre la tasa activa cartera general BNA a 30 días y la pasiva promedio del BCRA** (com. 14.290), desde la mora hasta el pago. Acá se usa el promedio de las tasas de referencia de esta calculadora.',
+  },
+};
+
 export function interesJudicialTasa(inputs: InteresJudicialInputs): InteresJudicialOutputs {
   const capital = Number(inputs.capital);
-  const preset = TASAS_PRESET[String(inputs.tasaPreset || '')];
-  const tasaAnual = preset ? preset.tasa : Number(inputs.tasaAnual);
+  const juris = JURISDICCIONES[String(inputs.jurisdiccion || '')];
+  const preset = juris ? undefined : TASAS_PRESET[String(inputs.tasaPreset || '')];
+  const tasaAnual = juris ? juris.tasa : preset ? preset.tasa : Number(inputs.tasaAnual);
   const partsD = String(inputs.fechaDesde || '').split('-').map(Number);
   if (partsD.length !== 3 || partsD.some(isNaN)) throw new Error('Ingresá una fecha desde válida');
   const [yD, mD, dD] = partsD;
@@ -79,18 +107,31 @@ export function interesJudicialTasa(inputs: InteresJudicialInputs): InteresJudic
   if (pctNum >= 100) insightTone = 'warn';
   else if (pctNum >= 30) insightTone = 'neutral';
   else insightTone = 'good';
+  const fuenteTasa = juris
+    ? `Usé la **${juris.label}** según la doctrina del fuero elegido. ${juris.doctrina} ⚠️ La tasa real varía mes a mes y cada juzgado puede ordenar otra: **verificá la tasa que aplica tu juzgado** antes de liquidar.`
+    : preset
+      ? `Usé la **${preset.label}**.`
+      : 'Usé la tasa manual que ingresaste.';
+
   const insight = {
     title: 'Cuánto pesan los intereses',
-    text: `Sobre un capital de **$${Math.round(capital).toLocaleString('es-AR')}**, en **${diasTranscurridos.toLocaleString('es-AR')} días** (${anios.toFixed(1)} años) se acumulan **$${Math.round(interesesGenerados).toLocaleString('es-AR')}** de intereses, un **${porcentajeTotal}%** del capital. ${preset ? `Usé la **${preset.label}**.` : 'Usé la tasa manual que ingresaste.'} El total reclamable asciende a **$${Math.round(totalConIntereses).toLocaleString('es-AR')}**.`,
+    text: `Sobre un capital de **$${Math.round(capital).toLocaleString('es-AR')}**, en **${diasTranscurridos.toLocaleString('es-AR')} días** (${anios.toFixed(1)} años) se acumulan **$${Math.round(interesesGenerados).toLocaleString('es-AR')}** de intereses, un **${porcentajeTotal}%** del capital. ${fuenteTasa} El total reclamable asciende a **$${Math.round(totalConIntereses).toLocaleString('es-AR')}**.`,
     tone: insightTone,
     icon: '⚖️',
   };
+
+  const tasaAplicada = juris
+    ? `${String(tasaAnual).replace('.', ',')}% TNA — ${juris.label}`
+    : preset
+      ? `${String(tasaAnual).replace('.', ',')}% TNA — ${preset.label}`
+      : `${String(tasaAnual).replace('.', ',')}% TNA — tasa manual`;
 
   return {
     totalConIntereses: Math.round(totalConIntereses),
     interesesGenerados: Math.round(interesesGenerados),
     diasTranscurridos,
     porcentajeTotal: `${porcentajeTotal}% sobre el capital`,
+    tasaAplicada,
     _chart: chart,
     _insight: insight,
   };

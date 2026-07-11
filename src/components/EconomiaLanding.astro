@@ -108,7 +108,8 @@ const liveConfig = {
 <script type="application/json" id="live-cfg" set:html={JSON.stringify(liveConfig)} />
 <script>
   (function () {
-    const cfg = JSON.parse(document.getElementById('live-cfg')?.textContent || '{}');
+    let cfg: any = {};
+    try { cfg = JSON.parse(document.getElementById('live-cfg')?.textContent || '{}'); } catch { return; }
     if (!cfg.url || !cfg.cards) return;
     const fmt = (v, dec, prefix, suffix) =>
       v == null || isNaN(v) ? null : prefix + Number(v).toLocaleString(cfg.locale, { minimumFractionDigits: dec, maximumFractionDigits: dec }) + suffix;

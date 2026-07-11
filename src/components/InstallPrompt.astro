@@ -19,11 +19,13 @@
 ---
 
 <div id="hc-install" class="hc-install" data-nosnippet hidden>
+  {/* Nombre accesible descriptivo (a11y): el aria-label gana sobre el texto
+      visible "Instalar app" y describe qué se instala y como qué. */}
   <button
     type="button"
     id="hc-install-btn"
     class="hc-install-btn"
-    aria-label="Instalar la app de Hacé Cuentas"
+    aria-label="Instalar Hacé Cuentas como aplicación"
   >
     <svg class="hc-install-ico" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M12 3v11m0 0 4-4m-4 4-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -196,6 +198,17 @@
     function shownThisSession() {
       try { return sessionStorage.getItem(SS) === '1'; } catch (e) { return false; }
     }
+    // Contador global de visitas al sitio (localStorage 'hc_visits', {c: días
+    // distintos, d: última fecha} — dedupe por día). Idempotente y compartido
+    // con PushOptIn: el primero que corre en el día incrementa, el resto lee.
+    function dailyVisits() {
+      try {
+        var today = new Date().toISOString().slice(0, 10);
+        var v = JSON.parse(localStorage.getItem('hc_visits') || '{}') || {};
+        if (v.d !== today) { v.d = today; v.c = (v.c || 0) + 1; localStorage.setItem('hc_visits', JSON.stringify(v)); }
+        return v.c || 0;
+      } catch (e) { return 0; }
+    }
     function setDismissed() {
       var s = readState(); s.d = 1; writeState(s);
     }
@@ -220,6 +233,11 @@
         habitVisits = v[path] || 0;
       } catch (e) { habitVisits = 0; }
     }
+
+    // Gate global de recurrencia (2026-07-11): el chip recién se ofrece en la
+    // 2ª-3ª visita al sitio (días distintos). Se computa ANTES de los returns
+    // para que el contador acumule en cada página vista.
+    var returning = dailyVisits() >= 2;
 
     var state = readState();
     var views = state.v || 0;
@@ -248,6 +266,7 @@
       root.hidden = false;
       try { sessionStorage.setItem(SS, '1'); } catch (e) {}
       var s = readState(); s.v = (s.v || 0) + 1; writeState(s);
+      if (window.gtag) gtag('event', 'install_prompt_shown');
     }
 
     closeBtn.addEventListener('click', function () {
@@ -255,10 +274,11 @@
       root.hidden = true;
     });
 
-    // beforeinstallprompt: Android siempre; desktop sólo en páginas hábito con
-    // 2+ visitas (en el resto se deja intacto el ícono nativo del browser).
+    // beforeinstallprompt: Android a partir de la 2ª visita al sitio (gate
+    // 'hc_visits', días distintos — antes era en la 1ª); desktop sólo en
+    // páginas hábito con 2+ visitas (resto: ícono nativo del browser intacto).
     window.addEventListener('beforeinstallprompt', function (e) {
-      if (!isAndroid && !habitReady) return;
+      if (!((isAndroid && returning) || habitReady)) return;
       e.preventDefault();
       deferred = e;
       reveal();
@@ -277,6 +297,7 @@
       deferred.userChoice.then(function (choice) {
         if (window.gtag) {
           gtag('event', 'pwa_install_prompt', { outcome: choice.outcome });
+          if (choice.outcome === 'accepted') gtag('event', 'install_prompt_accepted');
         }
         if (choice.outcome === 'accepted') stopForever();
         else { setDismissed(); root.hidden = true; }

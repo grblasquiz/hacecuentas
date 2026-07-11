@@ -43,6 +43,31 @@
       "help": "Monto inicial del que partís. Ej: $100.000 de ahorro."
     },
     {
+      "id": "jurisdiccion",
+      "label": "Jurisdicción (preselecciona la tasa del fuero)",
+      "type": "select",
+      "default": "ninguna",
+      "options": [
+        {
+          "value": "ninguna",
+          "label": "Elegir la tasa manualmente (abajo)"
+        },
+        {
+          "value": "nacion",
+          "label": "Nación — civil/comercial/laboral (activa BNA, plenario \"Samudio\")"
+        },
+        {
+          "value": "pba",
+          "label": "Prov. de Buenos Aires — SCBA \"Barrios\" 2024 (activa Banco Provincia)"
+        },
+        {
+          "value": "caba",
+          "label": "CABA — plenario \"Eiben\" (promedio activa BNA y pasiva BCRA)"
+        }
+      ],
+      "help": "Preselecciona la tasa según la doctrina vigente de cada fuero (Samudio / Barrios / Eiben). Es una referencia orientativa: la tasa real varía mes a mes y cada juzgado puede ordenar otra — verificá la tasa que aplica tu juzgado."
+    },
+    {
       "id": "tasaPreset",
       "label": "Tasa a usar",
       "type": "select",
@@ -69,7 +94,13 @@
           "label": "Ingresar tasa manual"
         }
       ],
-      "help": "La sentencia o juzgado puede ordenar otra tasa. Si elegís manual, completá el campo de abajo."
+      "help": "La sentencia o juzgado puede ordenar otra tasa. Si elegís manual, completá el campo de abajo.",
+      "showWhen": {
+        "field": "jurisdiccion",
+        "in": [
+          "ninguna"
+        ]
+      }
     },
     {
       "id": "tasaAnual",
@@ -81,7 +112,13 @@
       "max": 500,
       "step": 0.1,
       "required": false,
-      "help": "Solo se usa si elegís “Ingresar tasa manual”."
+      "help": "Solo se usa si elegís “Ingresar tasa manual”.",
+      "showWhen": {
+        "field": "jurisdiccion",
+        "in": [
+          "ninguna"
+        ]
+      }
     },
     {
       "id": "fechaDesde",
@@ -126,6 +163,11 @@
     {
       "id": "porcentajeTotal",
       "label": "Interés total acumulado",
+      "format": "text"
+    },
+    {
+      "id": "tasaAplicada",
+      "label": "Tasa aplicada",
       "format": "text"
     }
   ],
@@ -206,6 +248,23 @@
       "name": "CCyCN - Arts. 767-771 (Intereses)",
       "url": "http://www.saij.gob.ar/nuevo-codigo-civil-y-comercial-de-la-nacion",
       "publisher": "SAIJ"
+    },
+    {
+      "name": "SCBA — fallo \"Barrios c/ Lascano\" (C 124.096, 17/04/2024): inconstitucionalidad de la prohibición de indexar y nueva doctrina de intereses (6% puro + activa Banco Provincia)",
+      "url": "https://www.scba.gov.ar/institucional/nota.asp?id=54323&veradjuntos=no",
+      "publisher": "Suprema Corte de Justicia de la Provincia de Buenos Aires",
+      "date": "2024-04"
+    },
+    {
+      "name": "Consejo de la Magistratura CABA — Cálculo de interés (plenario \"Eiben c/ GCBA\", 31/05/2013: promedio activa BNA y pasiva BCRA)",
+      "url": "https://consejo.jusbaires.gob.ar/servicios/calculo-de-interes/",
+      "publisher": "Consejo de la Magistratura de la Ciudad de Buenos Aires"
+    },
+    {
+      "name": "CSJN — \"Oliva, Fabio Omar c/ COMA S.A.\" (29/02/2024): límite a la capitalización periódica del Acta CNAT 2764",
+      "url": "https://aldiaargentina.microjuris.com/2024/03/01/fallos-juicios-laborales-la-csjn-establece-que-la-capitalizacion-periodica-y-sucesiva-de-intereses-del-acta-cnat-2764-deriva-en-un-resultado-economico-desproporcionado-y-carente-de-respaldo/",
+      "publisher": "Microjuris (reseña del fallo CSJN)",
+      "date": "2024-03"
     }
   ],
   "relatedSlugs": [
@@ -217,8 +276,12 @@
     "calculadora-actualizacion-inflacion-ipc"
   ],
   "audience": "global",
-  "lastReviewed": "2026-07-10",
+  "lastReviewed": "2026-07-11",
   "changelog": [
+    {
+      "date": "2026-07-11",
+      "change": "Selector de jurisdicción (Nación / PBA / CABA) que preselecciona la tasa según la doctrina vigente (Samudio, Barrios 2024, Eiben) + output con la tasa aplicada."
+    },
     {
       "date": "2026-07-09",
       "change": "Se agregaron calculadoras relacionadas y se amplió la explicación con los tipos de interés, la fecha de mora, el cómputo de días y la diferencia entre estimación y liquidación."

@@ -44,6 +44,13 @@ const TARGETS: Target[] = [
     replacement: `${display}+ calculadoras`,
   },
   {
+    // Sección Brasil de llms.txt: conteo PT-BR (distinto del total de línea 3,
+    // que matchea el target de arriba por ser el PRIMER match del patrón).
+    file: 'public/llms.txt',
+    pattern: /## Brasil \(Português\) — \d[\d.,]*\+ calculadoras/,
+    replacement: `## Brasil (Português) — ${ptDisplay}+ calculadoras`,
+  },
+  {
     file: 'public/ai.txt',
     pattern: /\d[\d.,]*\+ calcs/,
     replacement: `${display}+ calcs`,

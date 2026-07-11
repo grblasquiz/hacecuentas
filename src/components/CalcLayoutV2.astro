@@ -52,6 +52,7 @@ import { getRoomsForCalc } from '../lib/decisions/calc-backlinks';
 import converterTables from '../lib/converter-tables.json';
 import { hasValidProfessionalReviewer, isRestrictedCalc } from '../lib/content-policy';
 import RestrictedNotice from './RestrictedNotice.astro';
+import DataAlertCta from './DataAlertCta.astro';
 import '../styles/calc-redesign.css';
 
 interface Props {
@@ -286,6 +287,17 @@ const themeHub = lang ? null
   : null;
 // Restringidas: sin ofertas comerciales/afiliados (spec Fase 8).
 const contextualOffer = calcIsRestricted ? null : getOfferForCalc(calc.slug);
+
+// ── 🔔 Alerta contextual de dato (DataAlertCta) ─────────────────────────────
+// Sucesora de la banda genérica de newsletter (retirada, ver comentario junto
+// a las tabs): se muestra SOLO en calcs data-driven — dataUpdate con frecuencia
+// real (no 'never') o slug de familia de dato vivo (IPC/ICL/monotributo/…).
+// Solo UI español (AR + verticales hispanos); restringidas quedan afuera.
+const DATA_ALERT_SLUG_RE = /(ipc|inflacion|icl|actualizacion-alquiler|alquiler-actualizacion|monotributo|ganancias|salario-minimo|smvm|paritaria|plazo-fijo|tasa|feriado)/;
+const showDataAlert: boolean = !calcIsRestricted && uiLang === 'es' && (
+  (calc.dataUpdate && calc.dataUpdate.frequency && calc.dataUpdate.frequency !== 'never') ||
+  DATA_ALERT_SLUG_RE.test(calc.slug)
+);
 const converterTable = (converterTables as Record<string, any>)[calc.slug] || null;
 const audienceRedirect = calc.audienceRedirect || null;
 
@@ -497,6 +509,12 @@ const editorialHtml = uiLang === 'en'
   <!-- Datos en vivo (si la calc los declara) -->
   {Array.isArray(calc.dataSource) && calc.dataSource.length > 0 && <LiveData dataSource={calc.dataSource} />}
 
+  {/* 🔔 "Avisame cuando cambie este dato" — captura contextual SOLO en calcs
+      data-driven (reemplaza a la banda genérica retirada). Se auto-oculta si el
+      usuario ya dejó su mail o cuando aparece la alerta personalizada del
+      widget (alert-capture post-resultado). */}
+  {showDataAlert && <DataAlertCta slug={calc.slug} dataUpdate={calc.dataUpdate} />}
+
   <!-- Oferta contextual (se revela post-resultado) -->
   {contextualOffer && <SponsoredOffer offer={contextualOffer} slug={calc.slug} />}
 
@@ -529,7 +547,9 @@ const editorialHtml = uiLang === 'en'
 
   {/* Banda de newsletter genérica retirada: en ~6 meses capturó 0 altas (todo
       el volumen viene del canje post-resultado, no de un CTA de newsletter
-      pre-valor). Menos ruido de plantilla y un fingerprint menos para AdSense. */}
+      pre-valor). Menos ruido de plantilla y un fingerprint menos para AdSense.
+      Su reemplazo contextual es <DataAlertCta/> (solo calcs data-driven, copy
+      con el dato concreto), renderizado arriba junto a LiveData. */}
 
   <div style="margin-bottom:30px;"></div>
 

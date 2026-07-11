@@ -301,7 +301,7 @@ const translations = {
     newCalc: 'Novo cálculo', helpful: 'Este cálculo foi útil?',
     yes: 'Sim', no: 'Não', feedback: 'Conte para nós (opcional, 500 caracteres)', send: 'Enviar',
     disclaimer: '', dataUpdated: 'Dados atualizados', dataAsOf: 'Dados de',
-    recentCalcs: 'Seus últimos cálculos', clear: 'Limpar', clearHistory: 'Apagar histórico',
+    recentCalcs: 'Seus últimos cálculos', clear: 'Limpar', clearHistory: 'Limpar histórico',
     sourceLabel: 'Fonte', advancedOptions: 'Opções avançadas', calculating: 'Calculando...',
     emptyText: 'Seu resultado vai aparecer aqui', emptySub: 'Preencha os campos e toque em',
     tryExample: 'Tente um exemplo', orFillBelow: 'Ou preencha seus dados acima',
@@ -338,7 +338,7 @@ const translations = {
     newCalc: 'Nuevo cálculo', helpful: '¿Te sirvió este cálculo?',
     yes: 'Sí', no: 'No', feedback: 'Contanos (opcional, 500 chars)', send: 'Enviar',
     disclaimer: '', dataUpdated: 'Datos actualizados', dataAsOf: 'Dato al',
-    recentCalcs: 'Tus últimos cálculos', clear: 'Limpiar', clearHistory: 'Borrar historial',
+    recentCalcs: 'Tus últimos cálculos', clear: 'Limpiar', clearHistory: 'Limpiar historial',
     sourceLabel: 'Fuente', advancedOptions: 'Opciones avanzadas', calculating: 'Calculando...',
     emptyText: 'Tu resultado va a aparecer acá', emptySub: 'Completá los datos y tocá',
     tryExample: 'Probá con un ejemplo', orFillBelow: 'O completá tus datos arriba',
@@ -960,17 +960,20 @@ const formatFreshnessDate = (iso: string): string => {
       </section>
     )}
 
+    {/* Sin aria-label: el accessible name sale del texto visible (WCAG 2.5.3
+        Label in Name — antes decía "Volver al formulario" y el texto visible
+        "Modificar datos"). Texto localizado igual que el botón de la action bar.
+        `?.` en el onclick: sin guard tiraba TypeError si no hay [data-calc-input]. */}
     <button
       type="button"
       class="back-to-input"
       data-back-to-input
-      aria-label={lang === 'en' ? 'Back to form' : lang === 'pt' ? 'Voltar ao formulário' : 'Volver al formulario'}
-      onclick={`document.querySelector('[data-calc-input]').scrollIntoView({behavior:'smooth',block:'start'})`}
+      onclick={`document.querySelector('[data-calc-input]')?.scrollIntoView({behavior:'smooth',block:'start'})`}
     >
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <polyline points="15 18 9 12 15 6"/>
       </svg>
-      <span>Modificar datos</span>
+      <span>{lang === 'en' ? 'Edit data' : lang === 'pt' ? 'Editar dados' : 'Modificar datos'}</span>
     </button>
 
     <div class="chart-wrap" data-chart-wrap hidden>

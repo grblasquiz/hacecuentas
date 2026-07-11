@@ -1,0 +1,178 @@
+---
+/**
+ * DataAlertCta — "🔔 Avisame cuando cambie este dato" (captura contextual).
+ *
+ * Reemplaza a la banda genérica de newsletter (CalcEmailBand, retirada de
+ * CalcLayoutV2 por capturar 0 altas en ~6 meses): en vez de pedir el mail
+ * "porque sí" en 1.700 páginas, se ofrece SOLO en calcs data-driven
+ * (dataUpdate con frecuencia real o slug de familia de dato vivo) y el copy
+ * dice QUÉ dato te avisamos ("cuando el INDEC publique el nuevo IPC").
+ *
+ * Reutiliza el MISMO backend que la banda vieja: POST /api/newsletter con
+ * source='data-alert:<slug>' (el slug queda en la fila para segmentar envíos).
+ * La alerta PERSONALIZADA por resultado ya existe aparte (alert-capture dentro
+ * del widget Calculator → /api/alerts/subscribe, que necesita los inputs del
+ * cálculo): cuando esa aparece (calc elegible + usuario calculó), esta card se
+ * oculta sola para no pedir el mail dos veces en la misma página.
+ *
+ * Solo UI en español: el gate (uiLang === 'es' + data-driven) vive en
+ * CalcLayoutV2. Se auto-oculta si el usuario ya dejó su mail en cualquier
+ * captura del sitio (localStorage 'hc-nl-done' / evento 'hc:subscribed' —
+ * mismo contrato que usaba CalcEmailBand).
+ */
+interface Props {
+  slug: string;
+  /** dataUpdate del JSON del calc (source, frequency, …) — solo para el copy. */
+  dataUpdate?: { source?: string; frequency?: string } | null;
+}
+const { slug, dataUpdate = null } = Astro.props as Props;
+
+// Qué dato es y quién lo publica, por patrón de slug (las familias de datos
+// vivos del sitio). Fallback: la fuente declarada en dataUpdate.source.
+// Orden importa: plazo-fijo antes que el genérico "tasa".
+const TOPICS: Array<{ re: RegExp; what: string; who: string }> = [
+  { re: /ipc|inflacion/, what: 'el nuevo IPC (inflación)', who: 'el INDEC' },
+  { re: /icl|actualizacion-alquiler|alquiler-actualizacion/, what: 'el nuevo índice ICL para actualizar alquileres', who: 'el BCRA' },
+  { re: /monotributo/, what: 'nuevas escalas o cuotas del monotributo', who: 'ARCA' },
+  { re: /ganancias/, what: 'cambios en las escalas de Ganancias', who: 'ARCA' },
+  { re: /salario-minimo|smvm/, what: 'el nuevo salario mínimo (SMVM)', who: 'el Consejo del Salario' },
+  { re: /paritaria/, what: 'una nueva paritaria del convenio', who: 'el gremio' },
+  { re: /plazo-fijo/, what: 'un cambio en las tasas de plazo fijo', who: 'el BCRA' },
+  { re: /tasa/, what: 'un cambio en esta tasa', who: 'la fuente oficial' },
+  { re: /feriado/, what: 'cambios en el calendario de feriados', who: 'el Boletín Oficial' },
+];
+const hit = TOPICS.find((t) => t.re.test(slug));
+const who = hit?.who || dataUpdate?.source || 'la fuente oficial';
+const what = hit?.what || 'el dato nuevo que usa esta calculadora';
+const lead = `Te mandamos un solo mail cuando ${who} publique ${what}. Nada más.`;
+---
+
+<section class="dac" data-nosnippet data-slug={slug} aria-labelledby="dac-h">
+  <div class="dac-txt">
+    <p class="dac-h" id="dac-h"><span aria-hidden="true">🔔</span> <strong>Avisame cuando cambie este dato</strong></p>
+    <p class="dac-lead">{lead}</p>
+  </div>
+  <form class="dac-form" data-dac-form novalidate>
+    <label class="dac-vh" for="dac-email">Email</label>
+    <input type="email" id="dac-email" name="email" placeholder="tu@email.com" required autocomplete="email" inputmode="email" enterkeyhint="send" data-dac-input />
+    <button type="submit" class="dac-btn" data-dac-btn>Avisame</button>
+    <p class="dac-msg" data-dac-msg role="status" aria-live="polite" hidden></p>
+  </form>
+  <p class="dac-note">Gratis · Sin spam · Salís con un click</p>
+</section>
+
+<style>
+  .dac {
+    margin: 1.5rem auto 0;
+    max-width: 780px;
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 14px;
+    padding: 16px 18px;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent, #2563eb) 6%, var(--surface, #fff)), var(--surface, #fff));
+  }
+  .dac[hidden] { display: none; }
+  .dac-h { margin: 0 0 2px; font-size: 1.02rem; line-height: 1.35; }
+  .dac-lead { margin: 0 0 10px; font-size: .9rem; line-height: 1.5; color: var(--text-2, #475569); }
+  .dac-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .dac-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .dac-form input {
+    flex: 1 1 180px; min-width: 0; padding: 10px 13px; font-size: .98rem;
+    border: 1px solid var(--border, #cbd5e1); border-radius: 10px;
+    background: var(--surface, #fff); color: var(--text, #0f172a);
+  }
+  .dac-form input:focus { outline: 2px solid var(--accent, #2563eb); outline-offset: 1px; }
+  .dac-btn {
+    background: var(--accent, #2563eb); color: #fff; font-weight: 700; border: none;
+    border-radius: 10px; padding: 10px 18px; font-size: .98rem; cursor: pointer; white-space: nowrap;
+  }
+  .dac-btn:hover { filter: brightness(1.08); }
+  .dac-btn:disabled { opacity: .6; cursor: default; }
+  .dac-msg { flex: 1 1 100%; margin: 2px 0 0; font-size: .85rem; }
+  .dac-msg.ok { color: #15803d; }
+  .dac-msg.err { color: #b91c1c; }
+  .dac-note { margin: 8px 0 0; font-size: .78rem; color: var(--text-muted, #64748b); }
+</style>
+
+<script is:inline>
+  (window.requestIdleCallback || function (fn) { return setTimeout(fn, 1); })(function () {
+    // Mismo contrato de deduplicación que usaba CalcEmailBand: si el usuario ya
+    // dejó su mail en CUALQUIER captura (email-result, alerta del widget, esta
+    // card), no volvemos a pedirlo.
+    var LS_KEY = 'hc-nl-done';
+    function alreadySubscribed() { try { return localStorage.getItem(LS_KEY) === '1'; } catch (e) { return false; } }
+    function markSubscribed() { try { localStorage.setItem(LS_KEY, '1'); } catch (e) { /* private mode */ } }
+
+    document.querySelectorAll('.dac').forEach(function (card) {
+      var form = card.querySelector('[data-dac-form]');
+      if (!form || form.dataset.dacReady === '1') return;
+      form.dataset.dacReady = '1';
+      var slug = card.dataset.slug || '';
+      var subscribedHere = false;
+
+      // hcTrack = shim global (Layout) con whitelist. Reusamos los eventos de la
+      // banda vieja (hc_email_band_*) para continuidad del funnel en GA4.
+      function track(ev) { if (typeof window.hcTrack === 'function') window.hcTrack(ev, { calculator_slug: slug }); }
+
+      if (alreadySubscribed()) { card.hidden = true; return; }
+      document.addEventListener('hc:subscribed', function () { if (!subscribedHere) card.hidden = true; });
+
+      // Dedupe con la alerta personalizada del widget: si el calc es elegible y
+      // el usuario calcula, aparece alert-capture ("Guardá este resultado", que
+      // guarda inputs + resultado vía /api/alerts/subscribe) — superficie
+      // superior a esta. Ocultamos esta card para no pedir el mail dos veces.
+      document.querySelectorAll('.calc-container').forEach(function (c) {
+        c.addEventListener('hc-calc-result', function () {
+          if (document.querySelector('[data-alert-capture]')) card.hidden = true;
+        });
+      });
+
+      // Impresión real (≥40% visible, una vez): mide viewability vs conversión.
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) { track('hc_email_band_view'); io.disconnect(); break; }
+          }
+        }, { threshold: 0.4 });
+        io.observe(card);
+      }
+
+      var input = form.querySelector('[data-dac-input]');
+      var btn = form.querySelector('[data-dac-btn]');
+      var msg = form.querySelector('[data-dac-msg]');
+      if (input) input.addEventListener('focus', function () { track('hc_email_band_focus'); }, { once: true });
+      function show(text, cls) { msg.hidden = false; msg.textContent = text; msg.className = 'dac-msg' + (cls ? ' ' + cls : ''); }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var email = input ? input.value.trim() : '';
+        if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) { show('Ingresá un email válido.', 'err'); return; }
+        if (btn) btn.disabled = true;
+        show('Guardando…', '');
+        try {
+          // Mismo endpoint que la banda vieja; source lleva el slug para saber
+          // QUÉ dato le importa a cada suscriptor (máx 40 chars server-side).
+          var res = await fetch('/api/newsletter', {
+            method: 'POST', headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ email: email, source: ('data-alert:' + slug).slice(0, 40) }),
+          });
+          if (res.ok) {
+            subscribedHere = true;
+            show('¡Listo! Te avisamos apenas se publique el dato nuevo.', 'ok');
+            if (input) input.value = '';
+            if (btn) btn.hidden = true;
+            markSubscribed();
+            track('hc_email_band_signup');
+            document.dispatchEvent(new CustomEvent('hc:subscribed'));
+            // Evento pedido por producto; mismo patrón gtag directo que ya usa
+            // Calculator.astro para 'alert_subscribe' (no toca el loader).
+            if (typeof window.gtag === 'function') window.gtag('event', 'data_alert_subscribe', { calc_slug: slug });
+          } else {
+            var j = await res.json().catch(function () { return {}; });
+            show((j && j.error) || 'No se pudo guardar, probá en un rato.', 'err');
+          }
+        } catch (err) { show('Error de red. Revisá tu conexión.', 'err'); }
+        finally { if (btn && !btn.hidden) btn.disabled = false; }
+      });
+    });
+  });
+</script>

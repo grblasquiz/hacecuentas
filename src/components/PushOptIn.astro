@@ -119,6 +119,17 @@ const body = Astro.props.body
       for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
       return out;
     }
+    // Contador global de visitas al sitio (localStorage 'hc_visits', dedupe por
+    // día). Idempotente: InstallPrompt usa la misma clave/estructura {c, d};
+    // el primero que corre en el día incrementa, el resto solo lee.
+    function dailyVisits() {
+      try {
+        var today = new Date().toISOString().slice(0, 10);
+        var v = JSON.parse(localStorage.getItem('hc_visits') || '{}') || {};
+        if (v.d !== today) { v.d = today; v.c = (v.c || 0) + 1; localStorage.setItem('hc_visits', JSON.stringify(v)); }
+        return v.c || 0;
+      } catch (e) { return 0; }
+    }
 
     var cards = document.querySelectorAll('[data-push-topic]');
     if (!cards.length) return;
@@ -142,22 +153,39 @@ const body = Astro.props.body
       }
 
       var st = readState();
-      render((st.topics || []).indexOf(topic) !== -1);
-      card.hidden = false;
+      var isSubscribed = (st.topics || []).indexOf(topic) !== -1;
+      render(isSubscribed);
 
-      // Viewability (una vez por carga): mide cuánta gente VE la oferta.
-      if ('IntersectionObserver' in window) {
-        var seen = false;
-        var io = new IntersectionObserver(function (entries) {
-          entries.forEach(function (en) {
-            if (!seen && en.isIntersecting && en.intersectionRatio >= 0.4) {
-              seen = true;
-              track('hc_push_view');
-              io.disconnect();
-            }
-          });
-        }, { threshold: 0.4 });
-        io.observe(card);
+      // Revela la card + arma viewability (una vez por carga).
+      function reveal() {
+        if (!card.hidden) return;
+        card.hidden = false;
+        if ('IntersectionObserver' in window) {
+          var seen = false;
+          var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (en) {
+              if (!seen && en.isIntersecting && en.intersectionRatio >= 0.4) {
+                seen = true;
+                track('hc_push_view');
+                io.disconnect();
+              }
+            });
+          }, { threshold: 0.4 });
+          io.observe(card);
+        }
+      }
+
+      // Gate anti-molestia (2026-07-11): pedir push recién cuando hay señal de
+      // interés — ya suscripto (mostramos su estado, no romper el flujo de
+      // desactivar), visitante recurrente (≥2 días distintos, 'hc_visits') o
+      // acaba de calcular en esta página (evento hc-calc-result del widget;
+      // NO burbujea → listener directo en cada .calc-container).
+      if (isSubscribed || dailyVisits() >= 2) {
+        reveal();
+      } else {
+        document.querySelectorAll('.calc-container').forEach(function (c) {
+          c.addEventListener('hc-calc-result', reveal, { once: true });
+        });
       }
 
       btnOn.addEventListener('click', function () {

@@ -46,19 +46,55 @@
       "options": [
         {
           "value": "simple",
-          "label": "Contrato o texto legal (simple)"
+          "label": "Número suelto en letras (sin moneda)"
         },
         {
           "value": "moneda",
-          "label": "Factura o recibo (moneda con centavos)"
+          "label": "Factura o recibo (moneda con centavos + IVA opcional)"
         },
         {
           "value": "cheque",
           "label": "Cheque bancario (MAYÚSCULAS, NN/100)"
+        },
+        {
+          "value": "contrato",
+          "label": "Contrato formal (MONEDA + importe en letras + cifra)"
         }
       ],
       "default": "moneda",
       "required": true
+    },
+    {
+      "id": "ivaPct",
+      "label": "IVA a desglosar (factura)",
+      "type": "select",
+      "default": "0",
+      "options": [
+        {
+          "value": "0",
+          "label": "Sin IVA (solo el importe)"
+        },
+        {
+          "value": "21",
+          "label": "IVA 21% (alícuota general)"
+        },
+        {
+          "value": "10.5",
+          "label": "IVA 10,5% (alícuota reducida)"
+        },
+        {
+          "value": "27",
+          "label": "IVA 27% (servicios públicos)"
+        }
+      ],
+      "required": false,
+      "help": "Solo para el preset factura/recibo: toma el monto como neto gravado y escribe Neto, IVA y Total en letras. Alícuotas vigentes según la Ley de IVA (ARCA).",
+      "showWhen": {
+        "field": "formato",
+        "in": [
+          "moneda"
+        ]
+      }
     },
     {
       "id": "moneda",
@@ -128,6 +164,18 @@
       "primary": false,
       "format": "integer",
       "suffix": "/100"
+    },
+    {
+      "id": "ivaMonto",
+      "label": "IVA en pesos",
+      "format": "currency",
+      "hideWhenEmpty": true
+    },
+    {
+      "id": "totalConIva",
+      "label": "Total con IVA",
+      "format": "currency",
+      "hideWhenEmpty": true
     }
   ],
   "explanation": "## Cómo escribir un número en letras (reglas de la RAE)\n\nEl conversor sigue la *Ortografía de la lengua española* (RAE/ASALE). Estas son las reglas que aplica:\n\n### Del 0 al 29: una sola palabra\n\nEl cero es **cero**. Del 16 al 29 se escriben en una sola palabra: **dieciséis, diecisiete, dieciocho, diecinueve, veinte, veintiuno, veintidós, veintitrés, veinticuatro, veinticinco, veintiséis, veintisiete, veintiocho, veintinueve**. (Las grafías separadas \"diez y seis\" o \"veinte y uno\" son anticuadas).\n\n### Desde el 30: con la conjunción \"y\"\n\nA partir de 31 las decenas y unidades se unen con **y**: treinta y uno, cuarenta y dos, noventa y nueve. La \"y\" va **sólo** entre decenas y unidades, nunca entre centenas y el resto: es \"ciento cinco\", no \"ciento y cinco\".\n\n### Centenas: cien vs. ciento e irregulares\n\n- **100 exacto** = **cien**.\n- **101 a 199** = **ciento …** (ciento uno, ciento cinco, ciento noventa y nueve).\n- Irregulares: **doscientos, trescientos, quinientos, setecientos, novecientos** (cuidado: no \"cincocientos\" ni \"setecientos\" mal armados).\n- Regulares: cuatrocientos, seiscientos, ochocientos.\n\n### Miles y millones\n\n- **1000** = **mil** (no \"un mil\"). **2000** = **dos mil**, **21.000** = **veintiún mil**.\n- **1.000.000** = **un millón**; **2.000.000** = **dos millones**.\n- Cuando la cifra termina en *millón/millones* y le sigue un sustantivo, se intercala **de**: \"un millón **de** pesos\". Si después del millón hay más cifras, no se usa \"de\": \"un millón doscientos mil pesos\".\n\n### Apócope: \"uno\" → \"un\"\n\nDelante de un sustantivo masculino, **uno** se apocopa a **un** y **veintiuno** a **veintiún**: *un peso*, *veintiún pesos*, *treinta y un pesos*, *veintiún mil*. Por eso, en formato moneda o cheque, el conversor escribe \"un peso\" (no \"uno peso\"). En formato simple, en cambio, el número va suelto y se mantiene \"veintiuno\".\n\n### Escala larga: billón ≠ billion\n\nEl español usa **escala larga**:\n\n```\n10^6  = un millón\n10^9  = mil millones   (NO \"un billón\")\n10^12 = un billón\n10^18 = un trillón\n```\n\nEl inglés americano usa escala corta, donde *billion* = 10^9. Por eso un \"billón\" en español (un millón de millones) es mil veces más grande que un *billion* en inglés. Es un error de traducción frecuente en finanzas y periodismo.\n\n## Los tres formatos del conversor\n\n| Formato | Qué devuelve | Ejemplo con 1.250,50 |\n|---|---|---|\n| **Simple** | Sólo la parte entera en letras | Mil doscientos cincuenta |\n| **Moneda** | Pesos con centavos | Mil doscientos cincuenta pesos con 50 centavos |\n| **Cheque** | MAYÚSCULAS y centavos NN/100 | MIL DOSCIENTOS CINCUENTA PESOS CON 50/100 |\n\nEn **cheque**, los centavos se expresan como fracción de cien (NN/100), que es la convención bancaria: \"...CON 50/100\". Si no hay centavos, se escribe \"...CON 00/100\".\n\n## Por qué los documentos llevan la cantidad en letras\n\nEn cheques, pagarés y facturas la cifra va dos veces: en números y en letras. Si difieren, la mayoría de las legislaciones disponen que **prevalece lo escrito en letras**, porque es más difícil de adulterar que un número (no se puede agregar un cero a \"mil\"). Por eso escribir bien la cantidad en palabras no es un detalle estético: define cuánto se paga.",
@@ -222,6 +270,11 @@
       "url": "https://www.rae.es/dpd/uno",
       "publisher": "Real Academia Española (RAE)",
       "date": "2024"
+    },
+    {
+      "name": "ARCA — Impuesto al Valor Agregado: alícuotas vigentes (21% general, 10,5% reducida, 27% servicios públicos)",
+      "url": "https://www.arca.gob.ar/iva/",
+      "publisher": "ARCA (ex AFIP)"
     }
   ],
   "dataUpdate": {
@@ -232,7 +285,7 @@
     "source": "Real Academia Española (RAE)",
     "sourceUrl": "https://www.rae.es/dpd/n%C3%BAmeros"
   },
-  "lastReviewed": "2026-07-10",
+  "lastReviewed": "2026-07-11",
   "relatedSlugs": [
     "conversor-letras-a-numero",
     "conversor-numero-a-ordinal",
@@ -403,5 +456,11 @@
       "**Formato moneda**: arma el texto listo para factura, recibo o cheque."
     ],
     "result": "1.250,50 en letras es **Mil doscientos cincuenta pesos con 50 centavos**."
-  }
+  },
+  "changelog": [
+    {
+      "date": "2026-07-11",
+      "change": "Preset de contrato formal (MONEDA + importe en letras + cifra entre paréntesis) y desglose de IVA en letras (21% / 10,5% / 27%) para el preset factura."
+    }
+  ]
 }

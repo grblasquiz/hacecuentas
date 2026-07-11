@@ -2,11 +2,16 @@ export interface Inputs {
   numero: number;
   formato: string;
   moneda?: string;
+  /** Alícuota de IVA opcional (solo formato factura/recibo): 0, 10.5, 21 o 27. */
+  ivaPct?: number | string;
 }
 
 export interface Outputs {
   entero: number;
   decimal: number;
+  /** Solo formato factura/recibo con IVA > 0. */
+  ivaMonto?: number;
+  totalConIva?: number;
   _insight?: any;
 }
 
@@ -156,6 +161,26 @@ function capitalizar(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+// Importe completo en letras estilo factura: "mil doscientos pesos ... con 50 centavos".
+// Reutilizado para el desglose Neto / IVA / Total del preset factura+IVA.
+function importeEnLetras(entero: number, centavos: number, moneda: (typeof MONEDAS)[string]): string {
+  const letras = enteroALetras(entero, true);
+  const terminaEnEscala = /\b(mill(?:ón|ones)|bill(?:ón|ones)|trill(?:ón|ones))$/.test(letras);
+  const conector = terminaEnEscala ? 'de ' : '';
+  const unidad = entero === 1 ? moneda.singular : moneda.plural;
+  const centWord = centavos === 1 ? moneda.centSingular : moneda.centPlural;
+  return `${letras} ${conector}${unidad} con ${centavos} ${centWord}`;
+}
+
+// Redondeo a centavos y split entero/centavos (con carry si redondea a 100).
+function splitImporte(valor: number): { entero: number; centavos: number } {
+  const abs = Math.abs(valor);
+  let entero = Math.floor(abs);
+  let centavos = Math.round((abs - entero) * 100);
+  if (centavos === 100) { entero += 1; centavos = 0; }
+  return { entero, centavos };
+}
+
 // ---------- compute ----------
 
 export function compute(i: Inputs): Outputs {
@@ -218,6 +243,8 @@ export function compute(i: Inputs): Outputs {
 
   let textoFinal = '';
   let nota = '';
+  let ivaMonto: number | undefined;
+  let totalConIva: number | undefined;
 
   if (formato === 'moneda') {
     const unidad = enteroFinal === 1 ? moneda.singular : moneda.plural;
@@ -225,6 +252,37 @@ export function compute(i: Inputs): Outputs {
     const centWord = centavosFinal === 1 ? moneda.centSingular : moneda.centPlural;
     textoFinal = `${capitalizar(letrasEntero)} ${conector}${unidad} con ${centavosFinal} ${centWord}`;
     nota = `Importe formateado para factura o recibo: incluye los ${centTxt} centavos en letras.`;
+
+    // Preset factura con IVA: desglose Neto / IVA / Total, cada uno en letras.
+    // Alícuotas vigentes en Argentina (Ley de IVA, ARCA): 21% general,
+    // 10,5% reducida, 27% servicios públicos.
+    const ivaPct = Number(i.ivaPct || 0);
+    if (!negativo && ivaPct > 0 && ivaPct <= 100) {
+      const neto = enteroFinal + centavosFinal / 100;
+      const iva = neto * (ivaPct / 100);
+      const total = neto + iva;
+      const sIva = splitImporte(iva);
+      const sTot = splitImporte(total);
+      ivaMonto = Math.round(iva * 100) / 100;
+      totalConIva = Math.round(total * 100) / 100;
+      const fmt = (n: number) => n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const pctTxt = String(ivaPct).replace('.', ',');
+      textoFinal =
+        `Neto: ${capitalizar(importeEnLetras(enteroFinal, centavosFinal, moneda))} (${moneda.simbolo}${fmt(neto)})\n\n` +
+        `IVA ${pctTxt}%: ${capitalizar(importeEnLetras(sIva.entero, sIva.centavos, moneda))} (${moneda.simbolo}${fmt(iva)})\n\n` +
+        `Total: ${capitalizar(importeEnLetras(sTot.entero, sTot.centavos, moneda))} (${moneda.simbolo}${fmt(total)})`;
+      nota = `Desglose para factura: neto + IVA ${pctTxt}% = total, cada importe en letras. El IVA se calculó sobre el monto ingresado como neto gravado.`;
+    }
+  } else if (formato === 'contrato') {
+    // Contrato formal: moneda primero, importe en letras y cifra entre paréntesis,
+    // convención de escribanías y contratos ("PESOS ARGENTINOS CIEN MIL ...").
+    const letrasSinApocope = negativo ? 'menos ' + enteroALetras(enteroFinal, false) : enteroALetras(enteroFinal, false);
+    const centTxt = centavosFinal > 0
+      ? ` con ${enteroALetras(centavosFinal, false)} ${centavosFinal === 1 ? moneda.centSingular : moneda.centPlural}`
+      : '';
+    const cifra = `${moneda.simbolo}${(enteroFinal + centavosFinal / 100).toLocaleString('es-AR', { minimumFractionDigits: centavosFinal > 0 ? 2 : 0, maximumFractionDigits: 2 })}`;
+    textoFinal = `${moneda.plural.toUpperCase()} ${letrasSinApocope.toUpperCase()}${centTxt.toUpperCase()} (${cifra})`;
+    nota = 'Formato contrato: la moneda primero, el importe en letras (los centavos también en letras) y la cifra entre paréntesis, como se usa en contratos y escrituras. Si difieren, prevalece lo escrito en letras.';
   } else if (formato === 'cheque') {
     // Cheque: TODO en mayúsculas, centavos como "NN/100".
     const unidad = enteroFinal === 1 ? moneda.singular : moneda.plural;
@@ -244,6 +302,7 @@ export function compute(i: Inputs): Outputs {
   return {
     entero: enteroFinal,
     decimal: centavosFinal,
+    ...(ivaMonto !== undefined ? { ivaMonto, totalConIva } : {}),
     _insight: {
       title: 'El número en letras',
       text: `${ejemploCifra}\n\n## ${textoFinal}\n\n${nota}`,
