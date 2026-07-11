@@ -1,4 +1,5 @@
 import { COLOMBIA_2026 } from '../data/colombia-2026';
+import arlActividades from '../../data/arl-actividades-co.json';
 
 export interface Inputs {
   salario_mensual: number;
@@ -30,7 +31,8 @@ export function compute(i: Inputs): Outputs {
     IV: 'Clase IV - Riesgo Alto (4,350%). Manufactura pesada, metalmecánica, química',
     V: 'Clase V - Riesgo Máximo (6,960%). Minería, explosivos, trabajo en alturas',
   };
-  const actividadAClase: Record<string, string> = {
+  // Mapa legacy (opciones genéricas históricas del select) — fallback si falta el dataset.
+  const actividadAClaseLegacy: Record<string, string> = {
     oficina_servicios: 'I',
     comercio_restaurante: 'II',
     transporte_pasajeros: 'II',
@@ -40,6 +42,19 @@ export function compute(i: Inputs): Outputs {
     trabajo_alturas: 'V',
     mineria_explosivos: 'V',
   };
+
+  // Mapa data-driven desde el dataset (Decreto 1607/2002). Defensivo ante dataset ausente/parcial.
+  const actividadAClase: Record<string, string> = { ...actividadAClaseLegacy };
+  try {
+    const lista = (arlActividades as any)?.actividades;
+    if (Array.isArray(lista)) {
+      for (const a of lista) {
+        const id = a && typeof a.id === 'string' ? a.id : '';
+        const cl = a && typeof a.claseRiesgo === 'string' ? a.claseRiesgo : '';
+        if (id && (arl as Record<string, number>)[cl] !== undefined) actividadAClase[id] = cl;
+      }
+    }
+  } catch { /* dataset ausente o corrupto: se usa el mapa legacy */ }
 
   const claseSugerida = actividadAClase[String(i.actividad_riesgo || '')];
   const claseBase = claseSugerida || i.clase_riesgo;

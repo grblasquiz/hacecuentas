@@ -9,7 +9,17 @@ import { MEXICO_2026 } from '../data/mexico-2026.ts';
 export interface Inputs {
   salarioDiario: number;
   aniosAntiguedad: number;
-  motivo?: 'jubilacion' | 'despido' | 'renuncia-15' | 'defuncion' | 'renuncia-menos15';
+  // Motivos vigentes + retro-compat (jubilacion, despido, renuncia-15, renuncia-menos15)
+  motivo?:
+    | 'despido-injustificado'
+    | 'despido-justificado'
+    | 'renuncia'
+    | 'incapacidad'
+    | 'defuncion'
+    | 'jubilacion'
+    | 'despido'
+    | 'renuncia-15'
+    | 'renuncia-menos15';
   smgDiario?: number;
   // retro-compat
   sueldoDiario?: number;

@@ -1,3 +1,5 @@
+import icaTarifas from '../../data/ica-tarifas-co.json';
+
 export interface Inputs {
   ingresos_brutos: number;
   municipio: string;
@@ -13,6 +15,7 @@ export interface Outputs {
   ica_anual_estimado: number;
   retencion_ica: number;
   mensaje_obligaciones: string;
+  fuente_tarifa: string;
   _insight?: any;
 }
 
@@ -543,13 +546,28 @@ const MENSAJE_CONTRIBUYENTE_ORDINARIO = `**Eres contribuyente ordinario:**
 - Revisión ordinaria según planes de auditoría`;
 
 export function compute(i: Inputs): Outputs {
-  // Obtener tarifa aplicable
-  const tarifasDelMunicipio = TARIFAS_ICA[i.municipio] || {};
-  let tarifa_aplicada = tarifasDelMunicipio[i.actividad_economica] ?? 3.5; // Tarifa promedio por defecto
+  // 1) Tarifa VERIFICADA en norma oficial (dataset). Defensivo ante dataset ausente/parcial.
+  //    Hoy solo Bogotá está verificada (Acuerdo 65/2002). El resto cae a valores orientativos.
+  let tarifa_aplicada: number | undefined;
+  let fuente_tarifa = '';
+  let notaVigencia = '';
+  try {
+    const muni = (icaTarifas as any)?.municipios?.[i.municipio];
+    const grupo = muni?.grupos?.[i.actividad_economica];
+    if (muni?.verificado && grupo && typeof grupo.tarifaPorMil === 'number') {
+      tarifa_aplicada = grupo.tarifaPorMil;
+      fuente_tarifa = `Tarifa oficial verificada — ${muni.fuente || 'Acuerdo municipal'}`;
+      notaVigencia = typeof muni.notaVigencia === 'string' ? muni.notaVigencia : '';
+    }
+  } catch { /* dataset ausente o corrupto: se usa la tabla orientativa */ }
 
-  // Si no hay datos para el municipio, usar tarifa promedio nacional
-  if (!TARIFAS_ICA[i.municipio]) {
-    tarifa_aplicada = 3.5;
+  // 2) Fallback orientativo (tabla histórica, no verificada en norma oficial).
+  if (tarifa_aplicada === undefined) {
+    const tarifasDelMunicipio = TARIFAS_ICA[i.municipio] || {};
+    tarifa_aplicada = TARIFAS_ICA[i.municipio]
+      ? (tarifasDelMunicipio[i.actividad_economica] ?? 3.5)
+      : 3.5;
+    fuente_tarifa = 'Tarifa orientativa (no verificada en norma oficial): confirmá el valor exacto con la Secretaría de Hacienda de tu municipio.';
   }
 
   // Cálculo ICA mensual básico
@@ -593,10 +611,14 @@ export function compute(i: Inputs): Outputs {
       icon: '🏪',
     };
   } else {
+    const esOficial = /oficial/i.test(fuente_tarifa);
+    const sufijoFuente = esOficial
+      ? ` Tarifa **oficial verificada** (Acuerdo 65/2002, base).${notaVigencia ? ' ' + notaVigencia : ''}`
+      : ` ⚠️ Tarifa **orientativa** (no verificada en norma oficial): confirmala con la Secretaría de Hacienda de ${munLabel}.`;
     _insight = {
       title: `Tu ICA por ${periodoLabel}`,
-      text: `Con tarifa de **${tarifa_aplicada}‰** en ${munLabel}, pagás **${fmtCO(ica_total_periodo)}** por ${periodoLabel} (~**${fmtCO(ica_anual_estimado)}** al año).${retencion_ica > 0 ? ` Como gran contribuyente, además retenés **${fmtCO(retencion_ica)}** de ICA a tus proveedores.` : ''}`,
-      tone: 'neutral',
+      text: `Con tarifa de **${tarifa_aplicada}‰** en ${munLabel}, pagás **${fmtCO(ica_total_periodo)}** por ${periodoLabel} (~**${fmtCO(ica_anual_estimado)}** al año).${retencion_ica > 0 ? ` Como gran contribuyente, además retenés **${fmtCO(retencion_ica)}** de ICA a tus proveedores.` : ''}${sufijoFuente}`,
+      tone: esOficial ? 'neutral' : 'warn',
       icon: '🏪',
     };
   }
@@ -608,6 +630,7 @@ export function compute(i: Inputs): Outputs {
     ica_anual_estimado,
     retencion_ica,
     mensaje_obligaciones,
+    fuente_tarifa: notaVigencia ? `${fuente_tarifa} ${notaVigencia}` : fuente_tarifa,
     _insight,
   };
 }

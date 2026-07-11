@@ -184,7 +184,7 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
 
     <div class={`dr-verdict dr-tone-${initialResult.verdict.tone}`} data-dr-verdict>
       <span class="dr-badge" data-dr-badge>{initialResult.verdict.badge || STATUS_BADGE[initialResult.status]}</span>
-      <h3 data-dr-title>{initialResult.verdict.title}</h3>
+      <h2 data-dr-title>{initialResult.verdict.title}</h2>
       <p data-dr-detail set:html={mdInline(initialResult.verdict.detail)} />
     </div>
 
@@ -198,7 +198,7 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
 
     {initialResult.scenarios.length > 0 && (
       <div class="dr-scenarios" data-dr-scenarios-wrap>
-        <h4>Tres escenarios</h4>
+        <h3>Tres escenarios</h3>
         <div class="dr-scenario-grid" data-dr-scenarios>
           {initialResult.scenarios.map((s) => (
             <div class="dr-scenario">
@@ -213,7 +213,7 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
 
     {initialResult.comparison && (
       <div class="dr-comparison-wrap" data-dr-comparison-wrap>
-        <h4>El desglose, número por número</h4>
+        <h3>El desglose, número por número</h3>
         <table class="dr-comparison" data-dr-comparison>
           <thead>
             <tr>
@@ -240,7 +240,7 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
 
     {!initialResult.comparison && initialResult.breakdown && initialResult.breakdown.length > 0 && (
       <div class="dr-comparison-wrap" data-dr-comparison-wrap>
-        <h4>El desglose</h4>
+        <h3>El desglose</h3>
         <table class="dr-comparison" data-dr-comparison>
           <tbody>
             {initialResult.breakdown.map((r) => (
@@ -258,7 +258,7 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
     )}
 
     <div class="dr-actions" data-dr-actions-wrap>
-      <h4>Próximos pasos</h4>
+      <h3>Próximos pasos</h3>
       <ul data-dr-actions>
         {initialResult.nextActions.map((a) => (
           <li set:html={mdInline(a)} />
@@ -443,7 +443,7 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
       const flag = opts?.flagHtml || '';
 
       const scenarios = (r.scenarios && r.scenarios.length)
-        ? `<div class="dr-scenarios"><h4>Tres escenarios</h4>
+        ? `<div class="dr-scenarios"><h3>Tres escenarios</h3>
             <div class="dr-scenario-grid">${r.scenarios
               .map(
                 (s: any) =>
@@ -453,7 +453,7 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
         : '';
 
       const comparison = r.comparison
-        ? `<div class="dr-comparison-wrap"><h4>El desglose, número por número</h4>
+        ? `<div class="dr-comparison-wrap"><h3>El desglose, número por número</h3>
             <table class="dr-comparison"><thead><tr><th>Concepto</th><th>${esc(r.comparison.columns[0])}</th><th>${esc(r.comparison.columns[1])}</th></tr></thead>
             <tbody>${r.comparison.rows
               .map(
@@ -464,7 +464,7 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
         : '';
 
       const breakdown = (!r.comparison && r.breakdown && r.breakdown.length)
-        ? `<div class="dr-comparison-wrap"><h4>El desglose</h4><table class="dr-comparison"><tbody>${r.breakdown
+        ? `<div class="dr-comparison-wrap"><h3>El desglose</h3><table class="dr-comparison"><tbody>${r.breakdown
             .map(
               (b: any) =>
                 `<tr><th scope="row">${esc(b.label)}${b.hint ? `<span class="dr-hint">${esc(b.hint)}</span>` : ''}</th><td>${esc(b.value)}</td></tr>`,
@@ -472,7 +472,7 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
             .join('')}</tbody></table></div>`
         : '';
 
-      const actions = `<div class="dr-actions"><h4>Próximos pasos</h4><ul>${r.nextActions
+      const actions = `<div class="dr-actions"><h3>Próximos pasos</h3><ul>${r.nextActions
         .map((a: string) => `<li>${mdInline(a)}</li>`)
         .join('')}</ul></div>`;
 
@@ -487,7 +487,7 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
       resultEl.innerHTML = `${flag}
         <div class="dr-verdict dr-tone-${tone}">
           <span class="dr-badge">${esc(r.verdict.badge || STATUS_BADGE[r.status] || '')}</span>
-          <h3>${esc(r.verdict.title)}</h3>
+          <h2>${esc(r.verdict.title)}</h2>
           <p>${mdInline(r.verdict.detail)}</p>
         </div>
         <div class="dr-decisive">
