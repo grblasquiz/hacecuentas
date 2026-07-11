@@ -48,6 +48,34 @@ export interface DecisionField {
 /** Tono del veredicto — gobierna el color del bloque de conclusión. */
 export type DecisionTone = 'good' | 'warn' | 'bad' | 'neutral';
 
+/**
+ * Paso del formulario (opt-in, progressive disclosure). El paso 1 lleva SOLO
+ * los datos mínimos para un resultado preliminar; los siguientes lo afinan.
+ * Cualquier campo de la sala que no figure en ningún paso se anexa al último
+ * (defensivo: nada desaparece del form).
+ */
+export interface DecisionStep {
+  /** Título visible del paso ("Los dos sueldos"). */
+  title: string;
+  /** Subtítulo corto ("Con esto ya te damos un primer número"). */
+  hint?: string;
+  /** Ids de los campos (room.fields) que viven en este paso, en orden. */
+  fieldIds: string[];
+}
+
+/**
+ * Preset realista (opt-in): un click carga un escenario típico completo y
+ * calcula al instante. `values` debe cubrir los campos requeridos.
+ */
+export interface DecisionPreset {
+  id: string;
+  label: string;
+  /** Descripción corta del escenario (se muestra bajo el label). */
+  hint?: string;
+  icon?: string;
+  values: Record<string, string | number>;
+}
+
 /** Resultado integrado de una sala. Lo produce `room.compute(inputs)`. */
 export interface DecisionResult {
   /**
@@ -109,6 +137,14 @@ export interface DecisionRoom {
   lastReviewed: string;
   /** Campos del formulario. */
   fields: DecisionField[];
+  /**
+   * Pasos del form (opt-in). Si falta, el form se renderiza completo de una
+   * (comportamiento clásico). Con pasos: paso 1 = datos mínimos → resultado
+   * preliminar; los pasos siguientes lo afinan recalculando.
+   */
+  steps?: DecisionStep[];
+  /** Presets realistas (opt-in): un click carga un escenario típico y calcula. */
+  presets?: DecisionPreset[];
   /** Inputs de ejemplo para el baseline SSR (lo que el bot ve sin ejecutar JS). */
   example: Record<string, number | string>;
   /** Orquestador: corre las fórmulas y devuelve el resultado integrado. */
