@@ -55,7 +55,27 @@ body = body.replace(/<script[\s\S]*?<\/script>/i, '');
       width: min(1600px, calc(100% - 96px)) !important;
     }
   }
-  /* Buscador real del hero: reemplaza el placeholder estático del mockup. */
+  /* Buscador predictivo real reubicado en el box .ask del mockup: se neutraliza
+     el recuadro del mockup para no duplicar borde/sombra con el form del HeroSearch. */
+  .approved-home-v6 .ask.ask-real {
+    background: transparent;
+    box-shadow: none;
+    border: 0;
+    padding: 0;
+  }
+  .approved-home-v6 .ask.ask-real .askHint { margin-top: 12px; }
+  #hsx-slot[hidden] { display: none; }
+  /* FAQ: respuesta que se despliega debajo de la pregunta. */
+  .approved-home-v6 .questions .q { flex-wrap: wrap; cursor: pointer; }
+  .approved-home-v6 .questions .q .qa {
+    flex-basis: 100%;
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.55;
+    color: #61708c;
+  }
+  /* Fallback: input simple si HeroSearch no está disponible. */
   .approved-home-v6 .askLine .askInput {
     flex: 1;
     min-width: 0;
@@ -116,10 +136,14 @@ body = body.replace(/<script[\s\S]*?<\/script>/i, '');
       footGrid.insertAdjacentHTML('beforeend', '<div class="footCol"><b>Seguinos</b><div class="socialRow"><a href="https://x.com/Hacecuentas" title="X">𝕏</a><a href="https://www.instagram.com/hacecuentas" title="Instagram">◎</a><a href="https://www.linkedin.com/company/122324467/" title="LinkedIn">in</a><a href="https://www.facebook.com/profile.php?id=61590473465354" title="Facebook">f</a><a href="https://www.youtube.com/@HaceCuentas" title="YouTube">▶</a><a href="https://www.tiktok.com/@hace.cuentas" title="TikTok">♪</a></div></div>');
     }
 
-    /* ---------- 2) Mapa etiqueta → URL real ---------- */
+    /* ---------- 2) Mapas etiqueta → URL real (todos verificados contra el
+       índice real de calcs y las rutas reales; NADA cae a búsqueda) ---------- */
     const norm = (s) => (s || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/→/g, '').trim();
     const stripEmoji = (s) => norm((s || '').replace(/^[^\p{L}\d]+/u, ''));
-    const EXACT = {
+    const search = (label) => '/buscar?q=' + encodeURIComponent((label || '').trim());
+
+    // Calculadoras (slug real del campo `slug`, no del filename).
+    const CALCS = {
       'sueldo neto en mano': '/sueldo-en-mano-argentina',
       'sueldo en mano': '/sueldo-en-mano-argentina',
       'actualización de alquiler por icl': '/calculadora-actualizacion-alquiler-icl',
@@ -127,28 +151,79 @@ body = body.replace(/<script[\s\S]*?<\/script>/i, '');
       'aguinaldo (sac)': '/calculadora-aguinaldo-sac',
       'calculadora de aguinaldo (sac)': '/calculadora-aguinaldo-sac',
       'aguinaldo': '/calculadora-aguinaldo-sac',
-      'monotributo 2026': '/calculadora-monotributo-categoria-2026-recategorizacion-julio',
-      'calculadora de monotributo 2026': '/calculadora-monotributo-categoria-2026-recategorizacion-julio',
+      'actualización por inflación': '/calculadora-actualizacion-inflacion-ipc',
+      'actualización por inflación (ipc)': '/calculadora-actualizacion-inflacion-ipc',
+      'monotributo 2026': '/calculadora-monotributo-2026',
+      'calculadora de monotributo 2026': '/calculadora-monotributo-2026',
       'costo de impresión 3d': '/calculadora-costo-impresion-3d-pieza',
-      'interés compuesto': '/interes-compuesto',
-      'calculadora de interés compuesto': '/interes-compuesto',
-      'días entre dos fechas': '/dias-entre-fechas',
+      'indemnización por despido': '/calculadora-indemnizacion-despido',
+      'indemnización': '/calculadora-indemnizacion-despido',
+      'interés compuesto': '/calculadora-interes-compuesto',
+      'calculadora de interés compuesto': '/calculadora-interes-compuesto',
+      'días entre dos fechas': '/dias-entre-dos-fechas',
+      'días entre fechas': '/dias-entre-dos-fechas',
       'calculadora de imc': '/calculadora-imc',
       'imc': '/calculadora-imc',
-      'calculadora de edad exacta': '/edad-exacta-anos-meses-dias-segundos',
-      'edad exacta': '/edad-exacta-anos-meses-dias-segundos',
-      'liquidación final por renuncia': '/liquidacion-final-renuncia',
-      'plazo fijo': '/plazo-fijo',
-      'calculadora de plazo fijo': '/plazo-fijo',
-      'margen de ganancia': '/margen-ganancia',
-      'calculadora de margen de ganancia': '/margen-ganancia',
-      'punto de equilibrio': '/punto-equilibrio-opciones',
-      'calculadora de punto de equilibrio': '/punto-equilibrio-opciones',
-      'cuota de préstamo': '/cuota-prestamo-auto-frances-argentino',
+      'impuesto a las ganancias — sueldo': '/calculadora-impuesto-ganancias-sueldo',
+      'sexo del bebé — tabla china': '/calculadora-sexo-bebe-tabla-china',
+      'calculadora de edad exacta': '/calculadora-edad-exacta',
+      'edad exacta': '/calculadora-edad-exacta',
+      'liquidación final por renuncia': '/calculadora-liquidacion-final-renuncia',
+      'cuota de préstamo': '/calculadora-cuota-prestamo',
+      'plazo fijo': '/calculadora-plazo-fijo',
+      'ganancias 2026': '/calculadora-ganancias-empleados-4ta-categoria-2026',
+      'vacaciones': '/calculadora-dias-vacaciones-ley',
+      'margen de ganancia': '/calculadora-margen-ganancia-markup',
+      'calculadora de margen de ganancia': '/calculadora-margen-ganancia-markup',
+      'punto de equilibrio': '/calculadora-punto-equilibrio-break-even',
+      'calculadora de punto de equilibrio': '/calculadora-punto-equilibrio-break-even',
+      'precio con iva': '/calculadora-iva-agregar-discriminar',
+      'calculadora de iva: agregar o discriminar': '/calculadora-iva-agregar-discriminar',
+      'cac / ltv': '/calculadora-cac-ltv-costo-adquisicion-cliente',
+      'calorías (tdee)': '/calculadora-calorias-diarias-tdee',
+      'semanas de embarazo': '/calculadora-semanas-embarazo',
+      'ritmo de carrera': '/calculadora-pace-ritmo-running',
+      '1rm fuerza': '/calculadora-1rm-peso-maximo-levantamiento',
+      'combustible viaje': '/calculadora-combustible-viaje-auto',
+      'dividir gastos': '/calculadora-split-gastos-grupo-amigos',
+      'edad de tu perro': '/calculadora-edad-perro-anos-humanos',
+      'alimento diario': '/calculadora-alimento-diario-perro',
+      'alimento diario perro': '/calculadora-alimento-diario-perro',
+      'tazas a gramos': '/conversor-tazas-gramos-cocina-recetas',
+      'ladrillos x m²': '/calculadora-cantidad-ladrillos-metro-cuadrado-pared',
+      'pintura x m²': '/calculadora-conversor-litros-pintura-por-metro-cuadrado',
+      'porcentajes': '/calculadora-porcentajes',
       'valores bcra hoy': '/valores-bcra',
       'dólar': '/valores-bcra',
       'deudas': '/decidir/cancelar-deuda-o-invertir',
     };
+    // Conversores (label del card → conversor real).
+    const CONVERTERS = {
+      'monedas': '/cambio-de-monedas',
+      'longitud': '/calculadora-conversor-pies-a-metros',
+      'temperatura': '/conversor-celsius-fahrenheit-temperatura',
+      'peso': '/conversor-kilogramos-libras-onzas',
+      'cocina': '/conversor-tazas-gramos-cocina-recetas',
+      'tiempo': '/calculadora-conversor-semanas-a-dias',
+    };
+    // Categorías (nube de categorías → /categoria/<key>).
+    const CATEGORIES = {
+      'finanzas': 'finanzas', 'vida cotidiana': 'vida', 'salud': 'salud', 'deportes': 'deportes',
+      'matemática': 'matematica', 'cocina': 'cocina', 'construcción': 'construccion', 'viajes': 'viajes',
+      'educación': 'educacion', 'negocios': 'negocios', 'tecnología': 'tecnologia', 'mascotas': 'mascotas',
+      'impuestos': 'impuestos', 'marketing': 'marketing', 'automotor': 'automotor', 'ciencia': 'ciencia',
+      'entretenimiento': 'entretenimiento', 'familia': 'familia', 'jardinería': 'jardineria',
+      'electrónica': 'electronica', 'hogar': 'hogar', 'medio ambiente': 'medio-ambiente',
+      'idiomas': 'idiomas', 'astronomía': 'astronomia', 'clima': 'clima', 'juegos': 'juegos',
+    };
+    const catUrl = (label) => { const k = CATEGORIES[stripEmoji(label)]; return k ? '/categoria/' + k : null; };
+    // Filtros de la biblioteca (chips) → hub/categoría.
+    const FILTERS = {
+      'para vos': '/', 'sueldos': '/sueldos-y-trabajo', 'impuestos': '/impuestos-argentina',
+      'finanzas': '/finanzas-personales', 'vida cotidiana': '/categoria/vida',
+      'negocios': '/negocios-e-independientes', 'salud': '/categoria/salud',
+    };
+    // Salas de decisión (por el <h3> de la card).
     const SALAS = {
       '¿me conviene aceptar esta oferta laboral?': '/decidir/aceptar-oferta-laboral',
       '¿me conviene alquilar o comprar?': '/decidir/alquilar-o-comprar',
@@ -157,32 +232,66 @@ body = body.replace(/<script[\s\S]*?<\/script>/i, '');
       'me despidieron: ¿cuánto deberían pagarme?': '/decidir/me-despidieron',
       '¿puedo afrontar un crédito uva?': '/decidir/puedo-afrontar-un-credito-uva',
     };
+    // Momentos ("empezá por tu momento") → hub/tablero.
+    const MOMENTS = {
+      'armá un plan que puedas sostener.': '/mi-hacecuentas',
+      'cobré o cambié de trabajo': '/sueldos-y-trabajo',
+      'estoy por mudarme': '/decidir/alquilar-o-comprar',
+      'tengo un negocio': '/negocios-e-independientes',
+      'quiero invertir': '/finanzas-personales',
+    };
+    // Guías/historias por tema → hub o categoría.
+    const GUIDES = {
+      'finanzas personales': '/finanzas-personales',
+      'sueldos argentina 2026': '/sueldos-y-trabajo',
+      'impuestos argentina 2026': '/impuestos-argentina',
+      'subsidios anses 2026': '/simulador-jubilacion-anses',
+      'salud, nutrición y fitness': '/categoria/salud',
+      'embarazo y bebé': '/calculadora-semanas-embarazo',
+      'productividad y aprendizaje': '/categoria/educacion',
+      'matemáticas y ciencias': '/categoria/matematica',
+      'construcción y hogar': '/categoria/construccion',
+      'cocina, medidas y recetas': '/categoria/cocina',
+      'mascotas': '/categoria/mascotas',
+      'viajes y auto': '/categoria/viajes',
+      // storyMain / storyMini
+      'cómo ordenar tus finanzas sin vivir mirando una planilla': '/finanzas-personales',
+      'de bruto a neto, sin sorpresas': '/sueldos-y-trabajo',
+      'qué cambia y cómo te afecta': '/impuestos-argentina',
+    };
     const COUNTRIES = {
       'argentina': '/', 'global': '/global', 'españa': '/es', 'méxico': '/mx',
       'colombia': '/co', 'chile': '/cl', 'perú': '/pe', 'ecuador': '/ec',
       'brasil': '/pt', 'english': '/en',
+      'uruguay': '/uy', 'paraguay': '/py', 'rep. dominicana': '/do',
     };
+    // Nav header + footer (explorar / comunidad / legal / empezá por acá).
     const NAV = {
-      'resolver': '/', 'decidir': '/decidir', 'planificar': '/decidir', 'aprender': '/blog',
-      'blog': '/blog', 'calculadoras': '/', 'guías': '/blog', 'historias': '/blog',
+      'resolver': '/calculadoras', 'decidir': '/decidir', 'planificar': '/planificador-de-objetivos',
+      'aprender': '/guias', 'blog': '/blog', 'calculadoras': '/calculadoras', 'guías': '/guias',
+      'historias': '/historias', 'glosario': '/glosario', 'contacto': '/contacto',
+      'aviso legal': '/aviso-legal', 'términos': '/terminos', 'privacidad': '/privacidad',
+      'cookies': '/cookies', 'enlazanos': '/enlazanos', 'sugerir una calc': '/sugerir',
+      'votar sugerencias': '/sugerencias', 'simulador de jubilación': '/simulador-jubilacion-anses',
+      'salas de decisión': '/decidir', 'sueldos y trabajo': '/sueldos-y-trabajo',
+      'finanzas': '/finanzas-personales', 'negocios': '/negocios-e-independientes',
     };
-    const search = (label) => '/buscar?q=' + encodeURIComponent((label || '').trim());
-    function resolve(label) {
-      const k = norm(label);
-      if (SALAS[k]) return SALAS[k];
-      if (EXACT[k]) return EXACT[k];
-      if (COUNTRIES[k]) return COUNTRIES[k];
-      if (NAV[k]) return NAV[k];
-      const k2 = stripEmoji(label);
-      if (EXACT[k2]) return EXACT[k2];
-      if (COUNTRIES[k2]) return COUNTRIES[k2];
-      if (NAV[k2]) return NAV[k2];
-      return search(label);
-    }
+    // Respuestas reales de las FAQ (acordeón funcional).
+    const FAQ = {
+      '¿es gratis? ¿tengo que registrarme?': 'Sí, todas las calculadoras son 100% gratis y no necesitás registrarte ni dejar tus datos para usarlas.',
+      '¿qué pasa con mis datos?': 'Las cuentas corren en tu navegador: no guardamos ni enviamos lo que ingresás. Lo que calculás queda en tu dispositivo.',
+      '¿las fórmulas son confiables?': 'Cada fórmula usa fuentes oficiales (BCRA, ARCA/AFIP, ANSES, INDEC) y te mostramos de dónde sale el resultado y cuándo se actualizó.',
+      '¿cada cuánto se actualizan los datos?': 'Los datos que cambian —dólar, inflación, UVA, topes, salario mínimo— se actualizan a diario de forma automática.',
+      '¿puedo sugerir una calculadora?': 'Sí. Podés proponer una calculadora nueva desde la página de sugerencias y la sumamos si hay demanda.',
+      '¿las calculadoras reemplazan a un profesional?': 'No. Son una guía para orientarte; para decisiones importantes consultá siempre con un profesional matriculado.',
+      '¿qué hago si encuentro un error?': 'Escribinos desde Contacto y lo corregimos lo antes posible. Cada calculadora tiene además su fuente y metodología a la vista.',
+    };
+
+    const pick = (map, label) => map[norm(label)] || map[stripEmoji(label)] || null;
     function setHref(el, url) {
       if (!el || !url) return;
       el.dataset.href = url;
-      if (el.tagName === 'A' && !el.getAttribute('href')) el.setAttribute('href', url);
+      if (el.tagName === 'A') el.setAttribute('href', url);
     }
     const labelOf = (el) => {
       // Preferir <b> sobre <strong>: en .rankCard el <strong> es el número de
@@ -191,69 +300,141 @@ body = body.replace(/<script[\s\S]*?<\/script>/i, '');
       return (b ? b.textContent : el.textContent) || '';
     };
 
-    /* ---------- 3) Buscador real del hero ---------- */
-    const askLine = root.querySelector('.ask .askLine');
-    if (askLine) {
-      askLine.innerHTML = '<b>⌕</b><input class="askInput" type="search" placeholder="Buscá tu calculadora..." aria-label="Buscar calculadora"><button class="send" type="button">Buscar →</button>';
-      const input = askLine.querySelector('.askInput');
-      const go = () => {
-        const v = input.value.trim();
-        window.location.href = v ? search(v) : '/buscar';
-      };
-      askLine.querySelector('.send').addEventListener('click', go);
-      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
+    /* ---------- 3) Buscador PREDICTIVO real en el hero ---------- */
+    // El mockup traía un placeholder estático. Reubicamos el HeroSearch real
+    // (motor con índice /search-index.json, fuzzy + dropdown) que index.astro
+    // renderiza oculto en #hsx-slot. Mover el nodo conserva sus listeners; su
+    // propio <script> ([data-hsx]) lo inicializa igual, en su ubicación final.
+    const ask = root.querySelector('.ask');
+    const hsx = document.querySelector('#hsx-slot [data-hsx]') || document.querySelector('[data-hsx]');
+    if (ask && hsx) {
+      ask.querySelector('.askLine')?.remove();
+      ask.classList.add('ask-real');
+      ask.insertBefore(hsx, ask.firstChild);
+      hsx.hidden = false;
+    } else {
+      // Fallback (si HeroSearch no está): input simple que va a /buscar.
+      const askLine = root.querySelector('.ask .askLine');
+      if (askLine) {
+        askLine.innerHTML = '<b>⌕</b><input class="askInput" type="search" placeholder="Buscá tu calculadora..." aria-label="Buscar calculadora"><button class="send" type="button">Buscar →</button>';
+        const input = askLine.querySelector('.askInput');
+        const go = () => { const v = input.value.trim(); window.location.href = v ? search(v) : '/buscar'; };
+        askLine.querySelector('.send').addEventListener('click', go);
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
+      }
     }
 
-    /* ---------- 4) Cablear el resto de la navegación ---------- */
+    /* ---------- 4) Cablear cada sección a su URL real ---------- */
+    // Header
     setHref(root.querySelector('.top .brand'), '/');
-    root.querySelectorAll('.navlinks a').forEach((a) => setHref(a, resolve(a.textContent)));
+    root.querySelectorAll('.navlinks a').forEach((a) => setHref(a, NAV[norm(a.textContent)] || '/calculadoras'));
     root.querySelectorAll('.navtools .miniBtn').forEach((b) => {
       const t = b.textContent.toLowerCase();
-      setHref(b, /buscar/.test(t) ? '/buscar' : /tablero/.test(t) ? '/mi' : '/');
+      setHref(b, /buscar/.test(t) ? '/buscar' : /tablero/.test(t) ? '/mi-hacecuentas' : '/');
     });
-    root.querySelectorAll('.tool, .rankCard, .simpleCalc, .converterCard, .newCard, .guideFull')
-      .forEach((el) => setHref(el, resolve(labelOf(el))));
-    root.querySelectorAll('.moment, .case')
-      .forEach((el) => setHref(el, resolve((el.querySelector('h3') || {}).textContent || '')));
-    root.querySelectorAll('.dir a, .pillarFull a')
-      .forEach((a) => setHref(a, resolve(a.textContent)));
-    root.querySelectorAll('.askBottom .chip, .categoryCloud span, .countryRail span, .hero .countryRail span')
-      .forEach((el) => setHref(el, resolve(el.textContent)));
-    root.querySelectorAll('.filters .chip').forEach((el) => {
-      const t = norm(el.textContent);
-      setHref(el, t === 'para vos' ? '/' : search(el.textContent));
+    // Calculadoras: tools, top-10, simpleCalc (por su <b>/<h3>).
+    root.querySelectorAll('.tool, .rankCard, .simpleCalc').forEach((el) => {
+      const u = pick(CALCS, labelOf(el)); if (u) setHref(el, u);
     });
+    // Directorio de la biblioteca + "Todos los temas" (calc o categoría).
+    root.querySelectorAll('.dir a, .pillarFull a').forEach((a) => {
+      const t = a.textContent;
+      const u = pick(CALCS, t) || catUrl(t) || (norm(t) === 'vivienda' ? '/decidir/alquilar-o-comprar' : null);
+      if (u) setHref(a, u);
+    });
+    // Conversores
+    root.querySelectorAll('.converterCard').forEach((el) => {
+      const u = pick(CONVERTERS, labelOf(el)); if (u) setHref(el, u);
+    });
+    // Momentos + salas de decisión (por el <h3>)
+    root.querySelectorAll('.moment').forEach((el) => {
+      const u = pick(MOMENTS, (el.querySelector('h3') || {}).textContent); if (u) setHref(el, u);
+    });
+    root.querySelectorAll('.case').forEach((el) => {
+      const u = pick(SALAS, (el.querySelector('h3') || {}).textContent); if (u) setHref(el, u);
+    });
+    // Guías + historias por tema
+    root.querySelectorAll('.guideFull, .storyMain, .storyMini').forEach((el) => {
+      const u = pick(GUIDES, labelOf(el)); if (u) setHref(el, u);
+    });
+    // Blog → índice del blog
     root.querySelectorAll('.blogFull').forEach((el) => setHref(el, '/blog'));
-    // Links "ver todo" y CTAs secundarias.
+    // Chips del hero (Sueldo/Aguinaldo/Alquiler/Deudas)
+    root.querySelectorAll('.askBottom .chip').forEach((el) => {
+      const u = pick(CALCS, el.textContent); if (u) setHref(el, u);
+    });
+    // Filtros de la biblioteca → hub/categoría
+    root.querySelectorAll('.filters .chip').forEach((el) => {
+      const u = FILTERS[norm(el.textContent)]; if (u) setHref(el, u);
+    });
+    // Nube de categorías → /categoria/<key>
+    root.querySelectorAll('.categoryCloud span').forEach((el) => {
+      const u = catUrl(el.textContent); if (u) setHref(el, u);
+    });
+    // Rieles de país
+    root.querySelectorAll('.countryRail span').forEach((el) => {
+      const u = pick(COUNTRIES, el.textContent); if (u) setHref(el, u);
+    });
+    // "Lo nuevo" (newCard, por su <h3>)
+    const NEWCARD = {
+      'valores bcra hoy': '/valores-bcra',
+      'comparador de plazo fijo': '/comparador-plazo-fijo',
+      '100 conversores nuevos': '/categoria/matematica',
+      'calculadora científica': '/calculadora-cientifica',
+    };
+    root.querySelectorAll('.newCard').forEach((el) => {
+      const u = pick(NEWCARD, (el.querySelector('h3') || {}).textContent); if (u) setHref(el, u);
+    });
+    // Cards de la sección "temas vivos"
+    root.querySelectorAll('.live .world').forEach((el) => setHref(el, '/mundial-2026'));
+    root.querySelectorAll('.live .tax').forEach((el) => setHref(el, '/recategorizacion-monotributo-julio-2026'));
+    // Links "ver todo" y CTAs secundarias (por texto)
     root.querySelectorAll('.link, .converterMore, .action').forEach((el) => {
       const t = el.textContent.toLowerCase();
-      let u = '/buscar';
-      if (/populares/.test(t)) u = '/';
+      let u = null;
+      if (/populares/.test(t)) u = '/populares';
       else if (/dashboard/.test(t)) u = '/valores-bcra';
-      else if (/bancos/.test(t)) u = '/plazo-fijo';
-      else if (/categoría|categoria|mi categoría/.test(t)) u = '/calculadora-monotributo-categoria-2026-recategorizacion-julio';
-      else if (/conversor/.test(t)) u = search('conversor');
-      else if (/guías|guias|especiales|notas/.test(t)) u = '/blog';
-      else if (/palabras/.test(t)) u = '/buscar';
-      setHref(el, u);
+      else if (/bancos/.test(t)) u = '/comparador-plazo-fijo';
+      else if (/categoría|categoria/.test(t)) u = '/recategorizacion-monotributo-julio-2026';
+      else if (/abrir calculadora/.test(t)) u = '/calculadora-cientifica';
+      else if (/conversor/.test(t)) u = '/categoria/matematica';
+      else if (/especiales/.test(t)) u = '/calculadoras-evento';
+      else if (/guías|guias/.test(t)) u = '/guias';
+      else if (/notas/.test(t)) u = '/blog';
+      else if (/palabras/.test(t)) u = '/asistente';
+      if (u) setHref(el, u);
     });
-    // Finder de la biblioteca y hints del hero → página de búsqueda.
+    // Finder de la biblioteca → buscador; "contámelo con tus palabras" → asistente
     setHref(root.querySelector('.finder'), '/buscar');
-    root.querySelectorAll('.askHint a, .askHint b').forEach((el) => setHref(el, '/buscar'));
-    // Footer: cablear sólo etiquetas de calc/país que resuelven a URL conocida;
-    // el resto (legal, etc.) queda sin tocar para no mandarlo a búsqueda.
+    root.querySelectorAll('.askHint a, .askHint b').forEach((el) => setHref(el, '/asistente'));
+    // Newsletter "Suscribirme" → alertas por email
+    root.querySelectorAll('.emailMock b').forEach((el) => setHref(el, '/alertas'));
+    // Footer: cada columna a su destino (los enlaces con href ya puesto —Sitios
+    // amigos / redes— no se tocan).
     root.querySelectorAll('.footCol a').forEach((a) => {
       if (a.getAttribute('href')) return;
-      const u = resolve(a.textContent);
-      if (u && u.indexOf('/buscar') !== 0) setHref(a, u);
+      const t = a.textContent;
+      const u = NAV[norm(t)] || FILTERS[norm(t)] || pick(CALCS, t) || pick(COUNTRIES, t) || catUrl(t);
+      if (u) setHref(a, u);
     });
 
-    /* ---------- 5) FAQ acordeón (marca visual) ---------- */
+    /* ---------- 5) FAQ: acordeón funcional con respuestas reales ---------- */
     root.querySelectorAll('.questions .q').forEach((q) => {
+      const span = q.querySelector('span');
+      const ans = FAQ[norm(span ? span.textContent : q.textContent)];
+      if (ans && !q.querySelector('.qa')) {
+        const qa = document.createElement('div');
+        qa.className = 'qa';
+        qa.hidden = true;
+        qa.textContent = ans;
+        q.appendChild(qa);
+      }
       q.style.cursor = 'pointer';
       q.addEventListener('click', () => {
         const b = q.querySelector('b');
         const open = q.classList.toggle('open');
+        const qa = q.querySelector('.qa');
+        if (qa) qa.hidden = !open;
         if (b) b.textContent = open ? '－' : '＋';
       });
     });
