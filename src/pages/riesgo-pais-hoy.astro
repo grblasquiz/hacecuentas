@@ -1,0 +1,340 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import DatosHoyNav from '../components/DatosHoyNav.astro';
+import PushOptIn from '../components/PushOptIn.astro';
+import { fetchJSON } from '../lib/fetch-timeout';
+
+// ── Datos: EMBI Argentina (argentinadatos, mismo proveedor que valores-bcra).
+// Snapshot en build (fetchJSON con fallback) + refresh client-side del /ultimo.
+type Punto = { valor: number; fecha: string };
+const SERIE_URL = 'https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais';
+const ULTIMO_URL = 'https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais/ultimo';
+
+// Fallback hardcodeado (últimos 45 días hábiles al 2026-07-10) por si la API
+// no responde en build — mismo criterio que los fallbacks de valores-bcra.
+const FALLBACK_SERIE: Punto[] = [
+  { valor: 496, fecha: '2026-05-11' }, { valor: 511, fecha: '2026-05-12' }, { valor: 523, fecha: '2026-05-13' },
+  { valor: 525, fecha: '2026-05-14' }, { valor: 538, fecha: '2026-05-15' }, { valor: 543, fecha: '2026-05-18' },
+  { valor: 547, fecha: '2026-05-19' }, { valor: 524, fecha: '2026-05-20' }, { valor: 516, fecha: '2026-05-21' },
+  { valor: 514, fecha: '2026-05-22' }, { valor: 514, fecha: '2026-05-25' }, { valor: 508, fecha: '2026-05-26' },
+  { valor: 500, fecha: '2026-05-27' }, { valor: 494, fecha: '2026-05-28' }, { valor: 493, fecha: '2026-05-29' },
+  { valor: 490, fecha: '2026-06-01' }, { valor: 488, fecha: '2026-06-02' }, { valor: 492, fecha: '2026-06-03' },
+  { valor: 486, fecha: '2026-06-04' }, { valor: 499, fecha: '2026-06-05' }, { valor: 494, fecha: '2026-06-08' },
+  { valor: 498, fecha: '2026-06-09' }, { valor: 503, fecha: '2026-06-10' }, { valor: 443, fecha: '2026-06-11' },
+  { valor: 437, fecha: '2026-06-12' }, { valor: 425, fecha: '2026-06-15' }, { valor: 430, fecha: '2026-06-16' },
+  { valor: 435, fecha: '2026-06-17' }, { valor: 429, fecha: '2026-06-18' }, { valor: 429, fecha: '2026-06-19' },
+  { valor: 421, fecha: '2026-06-22' }, { valor: 433, fecha: '2026-06-23' }, { valor: 437, fecha: '2026-06-24' },
+  { valor: 437, fecha: '2026-06-25' }, { valor: 437, fecha: '2026-06-26' }, { valor: 431, fecha: '2026-06-29' },
+  { valor: 426, fecha: '2026-06-30' }, { valor: 421, fecha: '2026-07-01' }, { valor: 415, fecha: '2026-07-02' },
+  { valor: 415, fecha: '2026-07-03' }, { valor: 408, fecha: '2026-07-06' }, { valor: 405, fecha: '2026-07-07' },
+  { valor: 408, fecha: '2026-07-08' }, { valor: 404, fecha: '2026-07-09' }, { valor: 402, fecha: '2026-07-10' },
+];
+
+let serie = await fetchJSON<Punto[]>(SERIE_URL, [], { headers: { 'User-Agent': 'hacecuentas.com/1.0' } });
+if (!Array.isArray(serie) || serie.length < 2) serie = FALLBACK_SERIE;
+serie = serie.filter((p) => p && typeof p.valor === 'number' && p.fecha);
+
+// ── Cálculos server-side (crawleables)
+const ultimo = serie[serie.length - 1];
+const prev = serie[serie.length - 2];
+
+// Punto más cercano N días hacia atrás (la serie es de días hábiles).
+function haceDias(n: number): Punto | null {
+  const limite = new Date(ultimo.fecha + 'T00:00:00');
+  limite.setDate(limite.getDate() - n);
+  const lim = limite.toISOString().slice(0, 10);
+  for (let i = serie.length - 1; i >= 0; i--) {
+    if (serie[i].fecha <= lim) return serie[i];
+  }
+  return null;
+}
+const semana = haceDias(7);
+const mes = haceDias(30);
+const anio = haceDias(365);
+
+function delta(base: Punto | null): { pb: number; pct: string } | null {
+  if (!base || !base.valor) return null;
+  const pb = ultimo.valor - base.valor;
+  const pct = ((ultimo.valor / base.valor - 1) * 100).toFixed(1).replace('.', ',');
+  return { pb, pct: (pb >= 0 ? '+' : '') + pct + '%' };
+}
+const dAyer = delta(prev);
+const dSemana = delta(semana);
+const dMes = delta(mes);
+const dAnio = delta(anio);
+
+// Extremos últimos 12 meses (dinámicos, de la serie real)
+const corte12m = (() => { const d = new Date(ultimo.fecha + 'T00:00:00'); d.setFullYear(d.getFullYear() - 1); return d.toISOString().slice(0, 10); })();
+const ultimos12m = serie.filter((p) => p.fecha >= corte12m);
+const min12m = ultimos12m.reduce((a, b) => (b.valor < a.valor ? b : a), ultimos12m[0]);
+const max12m = ultimos12m.reduce((a, b) => (b.valor > a.valor ? b : a), ultimos12m[0]);
+
+// Tabla crawleable: últimos 30 días hábiles, del más nuevo al más viejo.
+const tabla = serie.slice(-30).reverse();
+
+// Gráfico: polyline SVG con la mini-serie de 30 días (patrón sparkline de valores-bcra).
+const chartPts = serie.slice(-30).map((p) => p.valor);
+function polyline(values: number[], w = 600, h = 150, pad = 6): string | null {
+  const v = values.filter((n) => typeof n === 'number' && isFinite(n));
+  if (v.length < 2) return null;
+  const min = Math.min(...v);
+  const max = Math.max(...v);
+  const span = max - min || 1;
+  const step = (w - pad * 2) / (v.length - 1);
+  return v
+    .map((n, i) => `${(pad + i * step).toFixed(1)},${(h - pad - ((n - min) / span) * (h - pad * 2)).toFixed(1)}`)
+    .join(' ');
+}
+const chartLine = polyline(chartPts);
+const chartMin = Math.min(...chartPts);
+const chartMax = Math.max(...chartPts);
+const chartDown = chartPts[chartPts.length - 1] <= chartPts[0]; // bajar = bueno
+
+const fmtDate = (s: string) => {
+  try { return new Date(s + 'T00:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
+  catch { return s; }
+};
+const fmtDateCorta = (s: string) => {
+  try { return new Date(s + 'T00:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: 'short' }); }
+  catch { return s; }
+};
+
+const SITE = 'https://hacecuentas.com';
+const URL = `${SITE}/riesgo-pais-hoy`;
+const title = `Riesgo país hoy: ${ultimo.valor} puntos — EMBI Argentina en vivo | Hacé Cuentas`;
+const description = `El riesgo país de Argentina hoy está en ${ultimo.valor} puntos básicos (EMBI, al ${fmtDate(ultimo.fecha)})${dAyer ? `, ${dAyer.pb >= 0 ? '+' : ''}${dAyer.pb} pb vs la rueda anterior` : ''}. Serie de los últimos 30 días, variación semanal y mensual, qué es y por qué te afecta.`;
+
+const faq = [
+  { q: '¿Cuál es el riesgo país de Argentina hoy?', a: `El riesgo país de Argentina está hoy en ${ultimo.valor} puntos básicos (dato EMBI al ${fmtDate(ultimo.fecha)}). ${dAyer ? `Respecto de la rueda anterior ${dAyer.pb >= 0 ? 'subió' : 'bajó'} ${Math.abs(dAyer.pb)} pb.` : ''} En los últimos 12 meses se movió entre ${min12m.valor} (${fmtDate(min12m.fecha)}) y ${max12m.valor} puntos (${fmtDate(max12m.fecha)}).` },
+  { q: '¿Qué es el riesgo país y quién lo mide?', a: 'Es el índice EMBI (Emerging Markets Bond Index) que elabora JP Morgan. Mide la sobretasa que pagan los bonos soberanos argentinos en dólares frente a los bonos del Tesoro de Estados Unidos, considerados libres de riesgo. Se expresa en puntos básicos: 100 puntos = 1% de sobretasa anual.' },
+  { q: '¿Por qué importa el riesgo país si yo no compro bonos?', a: 'Porque define el costo del crédito de toda la economía: si el Estado paga caro para financiarse, las empresas y los bancos también, y eso se traslada a préstamos, hipotecas y tasas locales. Un riesgo país alto suele venir acompañado de presión sobre el dólar y menos inversión; uno bajo abarata el financiamiento y suele anticipar más crédito hipotecario y productivo.' },
+  { q: '¿Qué nivel de riesgo país necesita Argentina para volver a los mercados?', a: 'Como regla general del mercado, con un riesgo país por debajo de ~500 puntos básicos un país emergente puede emitir deuda a tasas de un dígito, que es lo que se considera "acceso normal" a los mercados internacionales. Por encima de 1.000 puntos el financiamiento voluntario es prácticamente inviable.' },
+  { q: '¿Cuándo estuvo más alto el riesgo país argentino?', a: 'El récord histórico fue en agosto de 2002, tras el default de diciembre de 2001, cuando superó los 7.200 puntos básicos. Otros picos: el salto post-PASO de agosto de 2019 (de ~860 a más de 2.500 puntos en semanas) y el pico de la pandemia en marzo de 2020 (más de 4.300 puntos).' },
+  { q: '¿Y cuándo estuvo más bajo?', a: `El mínimo histórico de la serie fue de 184 puntos en enero de 2007. En el ciclo reciente, tras superar los 2.000 puntos a comienzos de 2024, bajó a ~750 a fines de 2024 y siguió comprimiendo: el mínimo de los últimos 12 meses es ${min12m.valor} puntos (${fmtDate(min12m.fecha)}).` },
+  { q: '¿Cómo se relaciona el riesgo país con el dólar y las tasas?', a: 'Suelen moverse juntos: cuando el riesgo país sube, los inversores se cubren y presionan las cotizaciones paralelas del dólar (blue, MEP, CCL) y las tasas en pesos. Cuando baja, suele haber más calma cambiaria. Podés seguir el dólar en vivo en nuestra página de dólar hoy y las tasas en valores BCRA.' },
+  { q: '¿De dónde salen estos datos y cada cuánto se actualizan?', a: 'De la serie EMBI Argentina publicada vía argentinadatos.com (la misma fuente que usamos en el dashboard de valores BCRA). El índice se actualiza una vez por día hábil, al cierre de la rueda; al abrir esta página se consulta el último valor disponible.' },
+];
+
+const schema = { '@context': 'https://schema.org', '@graph': [
+  { '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${SITE}/` },
+    { '@type': 'ListItem', position: 2, name: 'Riesgo país hoy', item: URL } ] },
+  { '@type': 'Dataset', '@id': `${URL}#dataset`,
+    name: 'Riesgo país Argentina (EMBI) — serie diaria',
+    description: 'Valor diario del riesgo país argentino (índice EMBI, en puntos básicos), con variaciones diaria, semanal y mensual.',
+    url: URL, isAccessibleForFree: true, inLanguage: 'es-AR',
+    license: 'https://hacecuentas.com/terminos',
+    creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: SITE },
+    dateModified: ultimo.fecha,
+    distribution: [{ '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: SERIE_URL }],
+    variableMeasured: [{ '@type': 'PropertyValue', name: 'Riesgo país (EMBI Argentina)', value: ultimo.valor, unitText: 'basis point' }] },
+  { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+] };
+
+const liveConfig = { url: ULTIMO_URL };
+---
+
+<Layout title={title} description={description} canonical="/riesgo-pais-hoy" schema={schema} audience="AR" domain="data">
+  <Header slot="header" />
+  <main class="wrap">
+    <nav class="crumbs"><a href="/">Inicio</a> › <span>Riesgo país hoy</span></nav>
+    <h1>Riesgo país de Argentina hoy 📉</h1>
+    <p class="lede">Índice <strong>EMBI Argentina</strong> en puntos básicos: valor de hoy, variación diaria, semanal y mensual, y la serie de los últimos 30 días.</p>
+    <p class="updated">Último dato: <span data-live-fecha>{fmtDate(ultimo.fecha)}</span> · Fuente: EMBI (JP Morgan) vía <a href="https://argentinadatos.com" rel="noopener" target="_blank">ArgentinaDatos</a> · se actualiza al cierre de cada rueda</p>
+
+    <section class="hero-card">
+      <div class="hero-main">
+        <span class="hero-label">Riesgo país hoy</span>
+        <span class="hero-value"><span data-live-valor>{ultimo.valor}</span> <small>pb</small></span>
+        {dAyer && (
+          <span class={`hero-delta ${dAyer.pb <= 0 ? 'pos' : 'neg'}`} data-live-delta>
+            {dAyer.pb >= 0 ? '+' : ''}{dAyer.pb} pb vs rueda anterior
+          </span>
+        )}
+      </div>
+      <div class="hero-vars">
+        {dSemana && <div class="var"><span class="var-lbl">vs hace 1 semana</span><span class={`var-val ${ultimo.valor <= (semana?.valor ?? 0) ? 'pos' : 'neg'}`}>{dSemana.pb >= 0 ? '+' : ''}{dSemana.pb} pb ({dSemana.pct})</span></div>}
+        {dMes && <div class="var"><span class="var-lbl">vs hace 1 mes</span><span class={`var-val ${ultimo.valor <= (mes?.valor ?? 0) ? 'pos' : 'neg'}`}>{dMes.pb >= 0 ? '+' : ''}{dMes.pb} pb ({dMes.pct})</span></div>}
+        {dAnio && <div class="var"><span class="var-lbl">vs hace 1 año</span><span class={`var-val ${ultimo.valor <= (anio?.valor ?? 0) ? 'pos' : 'neg'}`}>{dAnio.pb >= 0 ? '+' : ''}{dAnio.pb} pb ({dAnio.pct})</span></div>}
+        <div class="var"><span class="var-lbl">Mín / máx 12 meses</span><span class="var-val">{min12m.valor} · {max12m.valor} pb</span></div>
+      </div>
+    </section>
+
+    <DatosHoyNav current="/riesgo-pais-hoy" />
+
+    {chartLine && (
+      <section class="chart-sec">
+        <h2>Últimos 30 días hábiles</h2>
+        <div class="chart-box">
+          <span class="chart-max">{chartMax} pb</span>
+          <svg class={`chart ${chartDown ? 'down' : 'up'}`} viewBox="0 0 600 150" preserveAspectRatio="none" role="img" aria-label={`Evolución del riesgo país en los últimos 30 días hábiles: de ${chartPts[0]} a ${ultimo.valor} puntos básicos`}>
+            <polyline points={chartLine} fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span class="chart-min">{chartMin} pb</span>
+          <div class="chart-range"><span>{fmtDateCorta(serie[Math.max(0, serie.length - 30)].fecha)}</span><span>{fmtDateCorta(ultimo.fecha)}</span></div>
+        </div>
+      </section>
+    )}
+
+    <section>
+      <h2>Riesgo país día por día</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="l">Fecha</th><th>EMBI (pb)</th><th>Variación</th></tr></thead>
+          <tbody>
+            {tabla.map((p, i) => {
+              const anterior = tabla[i + 1];
+              const d = anterior ? p.valor - anterior.valor : null;
+              return (
+                <tr>
+                  <td class="l">{fmtDate(p.fecha)}</td>
+                  <td>{p.valor}</td>
+                  <td class={d == null ? '' : d <= 0 ? 'pos' : 'neg'}>{d == null ? '—' : (d >= 0 ? '+' : '') + d}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Serie de días hábiles (el EMBI no se publica fines de semana ni feriados de EE.UU.).</p>
+    </section>
+
+    <section class="context">
+      <h2>Qué es el riesgo país y por qué importa</h2>
+      <p>El <strong>riesgo país</strong> es el índice <strong>EMBI</strong> (Emerging Markets Bond Index) de JP Morgan: mide cuánta sobretasa pagan los bonos argentinos en dólares frente a los bonos del Tesoro de EE.UU. Se expresa en <strong>puntos básicos</strong> (100 pb = 1% anual). Si el riesgo país está en {ultimo.valor} pb, la deuda argentina rinde ~{(ultimo.valor / 100).toFixed(1).replace('.', ',')} puntos porcentuales más que un bono americano al mismo plazo.</p>
+      <p>No es un número abstracto: define el <strong>costo de financiamiento</strong> del Estado, de las provincias y de las empresas. Cuando baja, se abaratan el crédito y las tasas locales, y suele anticipar más hipotecas y más inversión. Cuando sube, presiona el dólar y las tasas en pesos.</p>
+      <h3>Hitos históricos del riesgo país argentino</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th class="l">Momento</th><th>Nivel</th><th class="l">Contexto</th></tr></thead>
+          <tbody>
+            <tr><td class="l">Ago 2002</td><td>7.222 pb</td><td class="l">Récord histórico, tras el default de diciembre de 2001</td></tr>
+            <tr><td class="l">Ene 2007</td><td>184 pb</td><td class="l">Mínimo histórico de la serie, post canje 2005</td></tr>
+            <tr><td class="l">Ago 2019</td><td>860 → 2.500+ pb</td><td class="l">Salto tras las PASO; reperfilamiento de deuda</td></tr>
+            <tr><td class="l">Mar 2020</td><td>4.300+ pb</td><td class="l">Pico de la pandemia, previo a la reestructuración</td></tr>
+            <tr><td class="l">Ene 2024</td><td>~2.000 pb</td><td class="l">Arranque del programa de ajuste fiscal</td></tr>
+            <tr><td class="l">Dic 2024</td><td>~750 pb</td><td class="l">Compresión por superávit fiscal sostenido</td></tr>
+            <tr><td class="l">{fmtDateCorta(min12m.fecha)} {min12m.fecha.slice(0, 4)}</td><td>{min12m.valor} pb</td><td class="l">Mínimo de los últimos 12 meses</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <PushOptIn topic="valores" />
+
+    <section class="links">
+      <h2>Calculá con estos datos</h2>
+      <ul>
+        <li><a href="/dolar-hoy">💵 Dólar hoy: blue, oficial, MEP y CCL en vivo</a></li>
+        <li><a href="/calculadora-plazo-fijo">💰 Plazo fijo — ¿cuánto rinde tu plata?</a></li>
+        <li><a href="/calculadora-dolar-blue-vs-oficial-brecha">📊 Brecha dólar blue vs oficial</a></li>
+        <li><a href="/calculadora-actualizacion-inflacion-ipc">📈 Actualizar un monto por inflación</a></li>
+        <li><a href="/valores-bcra">🏦 Dólar, UVA, BADLAR y tasas del BCRA</a></li>
+        <li><a href="/comparador-plazo-fijo">🔍 Comparador de plazos fijos por banco</a></li>
+      </ul>
+    </section>
+
+    <section class="faq">
+      <h2>Preguntas frecuentes</h2>
+      {faq.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}
+    </section>
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<script type="application/json" id="live-cfg" set:html={JSON.stringify(liveConfig)} />
+<script>
+  // Refresh client-side: el HTML llega con el snapshot del build (crawleable);
+  // al abrir la página se consulta el último dato del EMBI (CORS-open).
+  (function () {
+    const cfg = JSON.parse(document.getElementById('live-cfg')?.textContent || '{}');
+    if (!cfg.url) return;
+    const valorEl = document.querySelector('[data-live-valor]');
+    const fechaEl = document.querySelector('[data-live-fecha]');
+    const base = valorEl ? parseInt(valorEl.textContent || '0', 10) : 0;
+    async function refresh() {
+      try {
+        const res = await fetch(cfg.url, { cache: 'no-store' });
+        if (!res.ok) return;
+        const d = await res.json();
+        if (!d || typeof d.valor !== 'number') return;
+        if (valorEl) valorEl.textContent = String(Math.round(d.valor));
+        if (fechaEl && d.fecha) {
+          fechaEl.textContent = new Date(d.fecha + 'T00:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+        const deltaEl = document.querySelector('[data-live-delta]');
+        if (deltaEl && base && Math.round(d.valor) !== base) {
+          const diff = Math.round(d.valor) - base;
+          deltaEl.textContent = (diff >= 0 ? '+' : '') + diff + ' pb vs rueda anterior';
+          deltaEl.className = 'hero-delta ' + (diff <= 0 ? 'pos' : 'neg');
+        }
+      } catch {}
+    }
+    refresh();
+    setInterval(refresh, 300000); // el EMBI cambia 1 vez por día hábil: 5 min alcanza
+  })();
+</script>
+
+<style>
+  .wrap { max-width: 820px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  .crumbs { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+  .crumbs a { color: var(--accent); text-decoration: none; }
+  h1 { font-size: clamp(1.6rem, 4.5vw, 2.1rem); font-weight: 800; margin: 0 0 0.5rem; }
+  .lede { font-size: 1.05rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 0.4rem; }
+  .updated { font-size: 0.8rem; color: var(--text-subtle); margin: 0 0 1.5rem; }
+  .updated a { color: var(--accent); }
+
+  .hero-card { display: grid; grid-template-columns: auto 1fr; gap: 1.5rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.5rem; align-items: center; }
+  .hero-main { display: flex; flex-direction: column; gap: 0.2rem; }
+  .hero-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-subtle); font-weight: 700; }
+  .hero-value { font-size: 3rem; font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; }
+  .hero-value small { font-size: 1.1rem; font-weight: 700; color: var(--text-subtle); }
+  .hero-delta { font-size: 0.85rem; font-weight: 700; }
+  .hero-vars { display: grid; gap: 0.4rem; }
+  .var { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.85rem; border-bottom: 1px dashed var(--border); padding-bottom: 0.35rem; }
+  .var-lbl { color: var(--text-muted); }
+  .var-val { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pos { color: #059669; }
+  .neg { color: #dc2626; }
+  html[data-theme="dark"] .pos { color: #6ee7b7; }
+  html[data-theme="dark"] .neg { color: #fca5a5; }
+  @media (max-width: 560px) { .hero-card { grid-template-columns: 1fr; gap: 1rem; } }
+
+  h2 { font-size: 1.25rem; font-weight: 700; margin: 2rem 0 0.75rem; }
+  h3 { font-size: 1.05rem; font-weight: 700; margin: 1.5rem 0 0.5rem; }
+
+  .chart-box { position: relative; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem 1rem 0.5rem; }
+  .chart { width: 100%; height: 150px; display: block; }
+  .chart.down { color: #059669; }
+  .chart.up { color: #dc2626; }
+  html[data-theme="dark"] .chart.down { color: #6ee7b7; }
+  html[data-theme="dark"] .chart.up { color: #fca5a5; }
+  .chart-max, .chart-min { position: absolute; right: 0.75rem; font-size: 0.7rem; color: var(--text-subtle); font-variant-numeric: tabular-nums; }
+  .chart-max { top: 0.4rem; }
+  .chart-min { bottom: 2rem; }
+  .chart-range { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-subtle); padding: 0.35rem 0.25rem 0.4rem; }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  th, td { padding: 0.45rem 0.55rem; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  th.l, td.l { text-align: left; }
+  th { font-size: 0.72rem; text-transform: uppercase; color: var(--text-subtle); font-weight: 700; }
+  tbody tr:nth-child(odd) td { background: var(--bg-card); }
+  .note { font-size: 0.8rem; color: var(--text-subtle); margin-top: 0.5rem; }
+
+  .context p { color: var(--text-muted); line-height: 1.65; margin: 0 0 0.9rem; }
+  .context strong { color: var(--text); }
+
+  .links, .faq { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .links h2, .faq h2 { font-size: 1.2rem; margin-top: 0; }
+  .links ul { list-style: none; padding: 0; display: grid; gap: 0.5rem; grid-template-columns: 1fr; }
+  @media (min-width: 600px) { .links ul { grid-template-columns: 1fr 1fr; } }
+  .links a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .faq details { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
+  .faq summary { font-weight: 600; cursor: pointer; }
+  .faq details p { margin-top: 0.5rem; color: var(--text-muted); line-height: 1.6; }
+</style>

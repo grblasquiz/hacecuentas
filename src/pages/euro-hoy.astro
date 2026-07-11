@@ -1,0 +1,278 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import DatosHoyNav from '../components/DatosHoyNav.astro';
+import PushOptIn from '../components/PushOptIn.astro';
+import { fetchJSON } from '../lib/fetch-timeout';
+
+// ── Datos: euro oficial de DolarAPI (misma fuente que /dolar-hoy) + euro blue
+// de Bluelytics (única API pública CORS-open con euro paralelo). Snapshot en
+// build con fallback hardcodeado + refresh client-side de ambos feeds.
+type EurOficial = { moneda: string; casa: string; compra: number; venta: number; fechaActualizacion: string };
+type Bluelytics = {
+  oficial_euro?: { value_buy: number; value_sell: number };
+  blue_euro?: { value_buy: number; value_sell: number };
+  oficial?: { value_buy: number; value_sell: number };
+  blue?: { value_buy: number; value_sell: number };
+  last_update?: string;
+};
+const EUR_URL = 'https://dolarapi.com/v1/cotizaciones/eur';
+const BLUE_URL = 'https://api.bluelytics.com.ar/v2/latest';
+
+// Fallbacks (curl 2026-07-10/11) por si alguna API no responde en build.
+const FALLBACK_EUR: EurOficial = { moneda: 'EUR', casa: 'oficial', compra: 1688.43, venta: 1702.42, fechaActualizacion: '2026-07-08T16:59:00.000Z' };
+const FALLBACK_BLUE: Bluelytics = {
+  oficial_euro: { value_buy: 1589, value_sell: 1645 },
+  blue_euro: { value_buy: 1611, value_sell: 1647 },
+  last_update: '2026-07-10T19:45:51-03:00',
+};
+
+let eurOficial = await fetchJSON<EurOficial>(EUR_URL, FALLBACK_EUR, { headers: { 'User-Agent': 'hacecuentas.com/1.0' } });
+if (!eurOficial || typeof eurOficial.venta !== 'number') eurOficial = FALLBACK_EUR;
+let blue = await fetchJSON<Bluelytics>(BLUE_URL, FALLBACK_BLUE, { headers: { 'User-Agent': 'hacecuentas.com/1.0' } });
+if (!blue || !blue.blue_euro) blue = FALLBACK_BLUE;
+
+const fmt = (n: number | null | undefined) => (n == null ? '—' : '$' + Math.round(n).toLocaleString('es-AR'));
+
+// Percepción Ganancias 30% sobre servicios turísticos pagados con tarjeta en
+// pesos (Impuesto PAIS derogado dic-2024) — mismo criterio que el dólar tarjeta.
+const RECARGO_TARJETA = 1.3;
+const eurBlue = blue.blue_euro!;
+const eurTarjeta = eurOficial.venta * RECARGO_TARJETA;
+
+// Brecha blue vs oficial usando el PAR CONSISTENTE de Bluelytics (mezclar
+// fuentes distorsiona el %: DolarAPI toma el BNA, Bluelytics promedia bancos).
+const brechaBlue = blue.oficial_euro?.value_sell
+  ? Math.round((eurBlue.value_sell / blue.oficial_euro.value_sell - 1) * 1000) / 10
+  : null;
+
+const cards = [
+  { key: 'oficial', label: 'Euro oficial', compra: eurOficial.compra, venta: eurOficial.venta, hint: 'Banco Nación · vía DolarAPI', brecha: null as number | null },
+  { key: 'blue', label: 'Euro blue', compra: eurBlue.value_buy, venta: eurBlue.value_sell, hint: 'Paralelo informal · vía Bluelytics', brecha: brechaBlue },
+  { key: 'tarjeta', label: 'Euro tarjeta', compra: null as number | null, venta: eurTarjeta, hint: 'Oficial + 30% percepción Ganancias (turismo)', brecha: null as number | null },
+];
+
+const SITE = 'https://hacecuentas.com';
+const URL = `${SITE}/euro-hoy`;
+const fetchedAt = eurOficial.fechaActualizacion || blue.last_update || new Date().toISOString();
+const updated = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(fetchedAt));
+const title = 'Euro hoy en Argentina EN VIVO: oficial, blue y tarjeta | Hacé Cuentas';
+const description = `Cotización del euro hoy en Argentina, en vivo: oficial ${fmt(eurOficial.venta)}, blue ${fmt(eurBlue.value_sell)} y tarjeta ${fmt(eurTarjeta)}. Con conversor euro ⇄ pesos y brecha. Se actualiza solo.`;
+
+const faq = [
+  { q: '¿A cuánto está el euro hoy en Argentina?', a: `El euro oficial cotiza hoy a ${fmt(eurOficial.compra)} para la compra y ${fmt(eurOficial.venta)} para la venta (Banco Nación). El euro blue se consigue alrededor de ${fmt(eurBlue.value_sell)}. La cotización se actualiza automáticamente al abrir esta página.` },
+  { q: '¿Existe el "euro blue"?', a: `Sí: igual que con el dólar, hay un mercado paralelo informal donde se compran y venden euros en efectivo. Hoy el euro blue ronda ${fmt(eurBlue.value_buy)} / ${fmt(eurBlue.value_sell)}. Tiene menos liquidez que el dólar blue — en muchas cuevas el spread es mayor y no siempre hay billetes disponibles.` },
+  { q: '¿Qué es el euro tarjeta y cómo se calcula?', a: `Es lo que pagás por consumos de servicios turísticos y de transporte al exterior abonados en pesos con tarjeta: cotización oficial más la percepción a cuenta de Ganancias del 30% (el Impuesto PAÍS se derogó en diciembre de 2024). Hoy equivale a ~${fmt(eurTarjeta)} por euro. La percepción es recuperable si presentás la declaración correspondiente.` },
+  { q: '¿Conviene llevar euros o dólares a un viaje por Europa?', a: 'Para gastar en la eurozona conviene llevar euros: te evitás una doble conversión (peso → dólar → euro) con comisión en cada paso. Compará el precio final por euro entre el oficial (con los límites de tu banco), el blue y pagar con tarjeta al tipo de cambio del día; el resultado depende de la brecha vigente al momento del viaje.' },
+  { q: '¿Cuánto vale el euro frente al dólar hoy?', a: `De las cotizaciones locales surge una relación implícita euro/dólar: dividiendo el euro oficial por el dólar oficial obtenés cuántos dólares vale un euro en el mercado argentino. Podés compararla con la paridad internacional en nuestro conversor de monedas.` },
+  { q: '¿Por qué el euro oficial de los bancos difiere del que veo acá?', a: 'Cada banco fija su propia pizarra para el euro y los spreads son mayores que con el dólar. Acá mostramos la referencia del Banco Nación (vía DolarAPI) y el promedio de bancos que releva Bluelytics para el paralelo; tu banco puede cotizar unos pesos arriba o abajo.' },
+  { q: '¿De dónde salen estos datos y cada cuánto se actualizan?', a: 'El euro oficial sale de DolarAPI (la misma fuente de nuestra página de dólar hoy) y el euro blue de Bluelytics, que releva el mercado paralelo. Al abrir la página se consultan ambos feeds en tiempo real y el sitio guarda un valor de respaldo que se refresca varias veces al día.' },
+];
+
+const schema = { '@context': 'https://schema.org', '@graph': [
+  { '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${SITE}/` },
+    { '@type': 'ListItem', position: 2, name: 'Euro hoy', item: URL } ] },
+  { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+] };
+
+const liveConfig = { eur: EUR_URL, blue: BLUE_URL, recargo: RECARGO_TARJETA };
+---
+
+<Layout title={title} description={description} canonical="/euro-hoy" schema={schema} audience="AR" domain="data">
+  <Header slot="header" />
+  <main class="wrap">
+    <nav class="crumbs"><a href="/">Inicio</a> › <span>Euro hoy</span></nav>
+    <h1>Euro hoy en Argentina — en vivo 💶</h1>
+    <p class="lede">Cotización del euro <strong>oficial, blue y tarjeta</strong>, actualizada en tiempo real. Con conversor euro ⇄ pesos.</p>
+    <p class="updated">Última actualización: <span data-live-updated>{updated}</span> · Fuentes: <a href="https://dolarapi.com" rel="noopener" target="_blank">DolarAPI</a> y <a href="https://bluelytics.com.ar" rel="noopener" target="_blank">Bluelytics</a></p>
+
+    <div class="cards" data-cards>
+      {cards.map((c) => (
+        <div class="card" data-casa={c.key}>
+          <div class="card-label">{c.label}</div>
+          <div class="card-venta" data-venta>{fmt(c.venta)}</div>
+          <div class="card-meta">
+            {c.compra != null ? <span>compra <span data-compra>{fmt(c.compra)}</span></span> : <span>{' '}</span>}
+            {c.brecha != null && <span class="brecha" data-brecha>{c.brecha >= 0 ? '+' : ''}{c.brecha}% vs oficial</span>}
+          </div>
+          <div class="card-hint">{c.hint}</div>
+        </div>
+      ))}
+    </div>
+
+    <DatosHoyNav current="/euro-hoy" />
+
+    <section class="conv">
+      <h2>Conversor euro ⇄ pesos</h2>
+      <div class="conv-grid">
+        <label class="conv-field">
+          <span class="conv-lbl">Euros (€)</span>
+          <input id="convEur" type="text" inputmode="decimal" value="100" autocomplete="off" />
+        </label>
+        <span class="conv-eq" aria-hidden="true">⇄</span>
+        <label class="conv-field">
+          <span class="conv-lbl">Pesos (AR$)</span>
+          <input id="convArs" type="text" inputmode="decimal" autocomplete="off" />
+        </label>
+        <label class="conv-field conv-tipo">
+          <span class="conv-lbl">Cotización</span>
+          <select id="convTipo">
+            <option value="oficial">Oficial ({fmt(eurOficial.venta)})</option>
+            <option value="blue">Blue ({fmt(eurBlue.value_sell)})</option>
+            <option value="tarjeta">Tarjeta ({fmt(eurTarjeta)})</option>
+          </select>
+        </label>
+      </div>
+      <p class="conv-note">Usa el valor <strong>venta</strong> de la cotización elegida. Para cambios entre más monedas, andá al <a href="/cambio-de-monedas">conversor de monedas</a>.</p>
+    </section>
+
+    <PushOptIn topic="valores" />
+
+    <section class="links">
+      <h2>Calculá con el euro</h2>
+      <ul>
+        <li><a href="/conversor-dolar-euro-pesos-argentinos">💱 Conversor dólar / euro / pesos</a></li>
+        <li><a href="/cambio-de-monedas">🌍 Cambio de monedas (todas las divisas)</a></li>
+        <li><a href="/calculadora-presupuesto-viaje-madrid">🇪🇸 Presupuesto de viaje a Madrid</a></li>
+        <li><a href="/calculadora-visa-schengen-europa-requisitos">🛂 Visa Schengen: requisitos y fondos</a></li>
+        <li><a href="/calculadora-presupuesto-viaje-vacaciones">🏖️ Presupuesto de vacaciones</a></li>
+        <li><a href="/dolar-hoy">💵 Dólar hoy: blue, oficial, MEP y CCL</a></li>
+      </ul>
+    </section>
+
+    <section class="faq">
+      <h2>Preguntas frecuentes</h2>
+      {faq.map((f) => (<details><summary>{f.q}</summary><p>{f.a}</p></details>))}
+    </section>
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<script type="application/json" id="live-cfg" set:html={JSON.stringify(liveConfig)} />
+<script>
+  // Refresh híbrido (patrón /dolar-hoy): HTML con snapshot del build; al cargar
+  // se consultan DolarAPI (oficial) y Bluelytics (blue) y se recalcula tarjeta.
+  (function () {
+    const cfg = JSON.parse(document.getElementById('live-cfg')?.textContent || '{}');
+    if (!cfg.eur || !cfg.blue) return;
+    const fmt = (n) => (n == null ? '—' : '$' + Math.round(n).toLocaleString('es-AR'));
+    const state = { oficial: null, blue: null, oficialBluelytics: null };
+
+    function setCard(casa, venta, compra) {
+      const el = document.querySelector('.card[data-casa="' + casa + '"]');
+      if (!el || venta == null) return;
+      const v = el.querySelector('[data-venta]'); if (v) v.textContent = fmt(venta);
+      const c = el.querySelector('[data-compra]'); if (c && compra != null) c.textContent = fmt(compra);
+    }
+    function paint() {
+      if (state.oficial) {
+        setCard('oficial', state.oficial.venta, state.oficial.compra);
+        setCard('tarjeta', state.oficial.venta * (cfg.recargo || 1.3), null);
+      }
+      if (state.blue) setCard('blue', state.blue.venta, state.blue.compra);
+      if (state.blue && state.oficialBluelytics) {
+        const br = document.querySelector('.card[data-casa="blue"] [data-brecha]');
+        if (br) {
+          const p = Math.round((state.blue.venta / state.oficialBluelytics - 1) * 1000) / 10;
+          br.textContent = (p >= 0 ? '+' : '') + p + '% vs oficial';
+        }
+      }
+      const u = document.querySelector('[data-live-updated]');
+      if (u) u.textContent = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
+      syncConversor();
+    }
+    async function refresh() {
+      try {
+        const [rEur, rBlue] = await Promise.allSettled([
+          fetch(cfg.eur, { cache: 'no-store' }),
+          fetch(cfg.blue, { cache: 'no-store' }),
+        ]);
+        if (rEur.status === 'fulfilled' && rEur.value.ok) {
+          const d = await rEur.value.json();
+          if (d && typeof d.venta === 'number') state.oficial = { compra: d.compra, venta: d.venta };
+        }
+        if (rBlue.status === 'fulfilled' && rBlue.value.ok) {
+          const d = await rBlue.value.json();
+          if (d && d.blue_euro) state.blue = { compra: d.blue_euro.value_buy, venta: d.blue_euro.value_sell };
+          if (d && d.oficial_euro) state.oficialBluelytics = d.oficial_euro.value_sell;
+        }
+        if (state.oficial || state.blue) paint();
+      } catch {}
+    }
+
+    // ── Conversor EUR ⇄ ARS (client-side, usa el valor VENTA visible en cards)
+    const eurInput = document.getElementById('convEur');
+    const arsInput = document.getElementById('convArs');
+    const tipoSel = document.getElementById('convTipo');
+    const parseNum = (v) => {
+      const n = parseFloat(String(v).replace(/\./g, '').replace(',', '.'));
+      return isFinite(n) ? n : 0;
+    };
+    const fmtNum = (n) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(n);
+    function rate() {
+      const casa = tipoSel ? tipoSel.value : 'oficial';
+      const el = document.querySelector('.card[data-casa="' + casa + '"] [data-venta]');
+      const raw = el ? (el.textContent || '').replace(/[^0-9.,]/g, '').replace(/\./g, '').replace(',', '.') : '';
+      const n = parseFloat(raw);
+      return isFinite(n) && n > 0 ? n : 0;
+    }
+    let lastEdited = 'eur';
+    function syncConversor() {
+      const r = rate();
+      if (!r || !eurInput || !arsInput) return;
+      if (lastEdited === 'eur') arsInput.value = fmtNum(parseNum(eurInput.value) * r);
+      else eurInput.value = fmtNum(parseNum(arsInput.value) / r);
+    }
+    if (eurInput) eurInput.addEventListener('input', () => { lastEdited = 'eur'; syncConversor(); });
+    if (arsInput) arsInput.addEventListener('input', () => { lastEdited = 'ars'; syncConversor(); });
+    if (tipoSel) tipoSel.addEventListener('change', syncConversor);
+    syncConversor();
+
+    refresh();
+    setInterval(refresh, 120000);
+  })();
+</script>
+
+<style>
+  .wrap { max-width: 820px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  .crumbs { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+  .crumbs a { color: var(--accent); text-decoration: none; }
+  h1 { font-size: clamp(1.6rem, 4.5vw, 2.1rem); font-weight: 800; margin: 0 0 0.5rem; }
+  .lede { font-size: 1.05rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 0.4rem; }
+  .updated { font-size: 0.8rem; color: var(--text-subtle); margin: 0 0 1.5rem; }
+  .updated a { color: var(--accent); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; }
+  .card-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-subtle); font-weight: 700; }
+  .card-venta { font-size: 1.6rem; font-weight: 800; color: var(--text); margin: 0.25rem 0; font-variant-numeric: tabular-nums; }
+  .card-meta { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.25rem; font-size: 0.78rem; color: var(--text-muted); }
+  .brecha { color: var(--accent); font-weight: 600; }
+  .card-hint { font-size: 0.72rem; color: var(--text-subtle); margin-top: 0.35rem; }
+
+  h2 { font-size: 1.25rem; font-weight: 700; margin: 0 0 0.75rem; }
+  .conv { margin-top: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+  .conv-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.75rem; align-items: end; }
+  .conv-field { display: flex; flex-direction: column; gap: 0.3rem; }
+  .conv-lbl { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-subtle); font-weight: 700; }
+  .conv-field input, .conv-field select { width: 100%; padding: 0.55rem 0.7rem; font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); }
+  .conv-field input:focus, .conv-field select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .conv-field select { font-size: 0.95rem; font-weight: 600; }
+  .conv-eq { font-size: 1.3rem; color: var(--text-subtle); padding-bottom: 0.55rem; }
+  .conv-tipo { grid-column: 1 / -1; }
+  @media (min-width: 600px) { .conv-grid { grid-template-columns: 1fr auto 1fr 1fr; } .conv-tipo { grid-column: auto; } }
+  .conv-note { font-size: 0.8rem; color: var(--text-subtle); margin: 0.75rem 0 0; }
+  .conv-note a { color: var(--accent); }
+
+  .links, .faq { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .links h2, .faq h2 { font-size: 1.2rem; }
+  .links ul { list-style: none; padding: 0; display: grid; gap: 0.5rem; grid-template-columns: 1fr; }
+  @media (min-width: 600px) { .links ul { grid-template-columns: 1fr 1fr; } }
+  .links a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .faq details { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
+  .faq summary { font-weight: 600; cursor: pointer; }
+  .faq details p { margin-top: 0.5rem; color: var(--text-muted); line-height: 1.6; }
+</style>

@@ -1,0 +1,90 @@
+---
+// Nav compacta del cluster "datos de hoy": interlinking entre las superficies
+// de datos vivos de Argentina (dólar, euro, riesgo país, inflación, nafta,
+// cripto, tasas BCRA). Se monta en TODAS las páginas del cluster — además
+// des-huerfaniza /precio-nafta-hoy, que no tenía links internos entrantes.
+//
+// `current` = path de la página que la monta: se pinta como texto (sin link a
+// sí misma, con aria-current) para no generar self-links.
+interface Props {
+  current?: string;
+}
+const { current = '' } = Astro.props;
+
+const items = [
+  { href: '/dolar-hoy', label: '💵 Dólar' },
+  { href: '/euro-hoy', label: '💶 Euro' },
+  { href: '/riesgo-pais-hoy', label: '📉 Riesgo país' },
+  { href: '/inflacion-argentina', label: '📊 Inflación' },
+  { href: '/precio-nafta-hoy', label: '⛽ Nafta' },
+  { href: '/cotizacion-cripto', label: '🪙 Cripto' },
+  { href: '/valores-bcra', label: '🏦 Tasas BCRA' },
+];
+---
+<nav class="dhn" aria-label="Más datos de hoy">
+  <span class="dhn-label">Más datos de hoy:</span>
+  <ul class="dhn-list">
+    {items.map((it) => (
+      <li>
+        {it.href === current ? (
+          <span class="dhn-item dhn-current" aria-current="page">{it.label}</span>
+        ) : (
+          <a class="dhn-item" href={it.href}>{it.label}</a>
+        )}
+      </li>
+    ))}
+  </ul>
+</nav>
+
+<style>
+  .dhn {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem 0.6rem;
+    margin: 1.25rem 0;
+    padding: 0.6rem 0.75rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 0.82rem;
+  }
+  .dhn-label {
+    color: var(--text-subtle);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.7rem;
+    white-space: nowrap;
+  }
+  .dhn-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .dhn-item {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg-card);
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: border-color 0.15s, background-color 0.15s;
+  }
+  a.dhn-item:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .dhn-current {
+    color: var(--text-muted);
+    background: transparent;
+    border-style: dashed;
+    font-weight: 700;
+  }
+</style>
