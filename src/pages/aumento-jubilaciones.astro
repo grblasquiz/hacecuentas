@@ -1,0 +1,465 @@
+---
+// Superficie EVERGREEN de movilidad previsional. Reemplaza a /aumento-jubilaciones-junio-2026
+// (301 en public/_redirects). La movilidad ajusta TODOS los meses por el IPC de dos meses
+// atrás (DNU 274/2024): aumento del mes M = IPC del mes M-2. El dato vive en
+// src/data/live/inflacion.json (cron diario) y la página es prerender con deploy diario,
+// así que el "mes corriente" se recalcula solo. NUNCA proyectamos IPC no publicado.
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Newsletter from '../components/Newsletter.astro';
+import ActionCard from '../components/ui/ActionCard.astro';
+import inflacion from '../data/live/inflacion.json';
+
+const siteUrl = 'https://hacecuentas.com';
+const URL_PAGE = `${siteUrl}/aumento-jubilaciones`;
+
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const fmtAr = (n: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
+const fmtPct = (n: number) => n.toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+
+// ---- Serie IPC (INDEC vía cron diario) ----
+// Map 'YYYY-MM' → variación mensual %. Sólo datos publicados: nada de proyecciones.
+const serieIpc = new Map<string, number>(
+  (inflacion.last_12_months || []).map((r: { fecha: string; valor: number }) => [r.fecha.slice(0, 7), r.valor])
+);
+
+type Ym = { y: number; m0: number }; // m0 = 0-based
+const ymShift = ({ y, m0 }: Ym, delta: number): Ym => {
+  const t = y * 12 + m0 + delta;
+  return { y: Math.floor(t / 12), m0: ((t % 12) + 12) % 12 };
+};
+const ymKey = ({ y, m0 }: Ym) => `${y}-${String(m0 + 1).padStart(2, '0')}`;
+const ymLabel = ({ y, m0 }: Ym) => `${MESES[m0]} ${y}`;
+const ymLabelCap = (ym: Ym) => ymLabel(ym).charAt(0).toUpperCase() + ymLabel(ym).slice(1);
+
+// Hoy en Argentina (el build corre a diario).
+const hoyAR = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
+const mesActual: Ym = { y: hoyAR.getFullYear(), m0: hoyAR.getMonth() };
+
+// Aumento del mes M = IPC(M-2). null si INDEC todavía no publicó ese IPC.
+const aumentoDe = (ym: Ym): number | null => serieIpc.get(ymKey(ymShift(ym, -2))) ?? null;
+
+// Mes mostrado: el corriente; si el cron quedó rezagado, retrocedemos hasta encontrar dato real.
+let mesMostrado: Ym = mesActual;
+let aumentoMes = aumentoDe(mesMostrado);
+for (let back = 1; aumentoMes === null && back <= 3; back++) {
+  mesMostrado = ymShift(mesActual, -back);
+  aumentoMes = aumentoDe(mesMostrado);
+}
+const esMesCorriente = ymKey(mesMostrado) === ymKey(mesActual);
+const ipcBaseMes = ymShift(mesMostrado, -2); // el mes de IPC que define el aumento mostrado
+
+// Próximo mes: SOLO si el IPC que lo define ya está publicado (dato real).
+const mesProximo = ymShift(mesMostrado, 1);
+const aumentoProximo = aumentoDe(mesProximo);
+
+// Próxima publicación de INDEC: el mes siguiente al último de la serie,
+// que sale a mediados del mes subsiguiente y define el aumento de +2.
+const ultimoIpcYm: Ym = (() => {
+  const f = (inflacion.last_12_months || []).at(-1)?.fecha ?? inflacion.last_month.fecha;
+  return { y: Number(f.slice(0, 4)), m0: Number(f.slice(5, 7)) - 1 };
+})();
+const proximoIpcMes = ymShift(ultimoIpcYm, 1);       // dato que falta publicar
+const proximoIpcPublicacion = ymShift(proximoIpcMes, 1); // INDEC lo publica a mediados de este mes
+const aumentoQueDefine = ymShift(proximoIpcMes, 2);   // y define el aumento de este mes
+
+// Tabla: últimos 6 meses de aumentos (sólo con IPC publicado).
+const historial = Array.from({ length: 6 }, (_, i) => ymShift(mesMostrado, -(5 - i)))
+  .map((ym) => ({ ym, pct: aumentoDe(ym), ipcDe: ymShift(ym, -2) }))
+  .filter((h) => h.pct !== null) as { ym: Ym; pct: number; ipcDe: Ym }[];
+
+// ---- Haber mínimo ----
+// Ancla oficial: junio 2026 = $403.317,99 (ANSES; misma fuente que
+// src/lib/formulas/jubilacion-minima.ts). Encadenamos hacia adelante SOLO con IPC ya
+// publicado: haber(M) = haber(M-1) × (1 + IPC(M-2)/100).
+const ANCLA_HABER_MIN: { ym: Ym; valor: number } = { ym: { y: 2026, m0: 5 }, valor: 403318 };
+const BONO_MINIMA = 70000; // bono por decreto para haberes hasta la mínima (se renueva mes a mes)
+
+let haberMinMes: Ym = ANCLA_HABER_MIN.ym;
+let haberMin = ANCLA_HABER_MIN.valor;
+while (ymKey(haberMinMes) < ymKey(mesMostrado)) {
+  const sig = ymShift(haberMinMes, 1);
+  const pct = aumentoDe(sig);
+  if (pct === null) break; // sin dato real no proyectamos
+  haberMin = haberMin * (1 + pct / 100);
+  haberMinMes = sig;
+}
+haberMin = Math.round(haberMin);
+const haberMinEsDelMes = ymKey(haberMinMes) === ymKey(mesMostrado);
+
+const faqItems = [
+  {
+    q: '¿Cuánto aumentan las jubilaciones este mes?',
+    a: `El aumento de ${ymLabel(mesMostrado)} es del ${fmtPct(aumentoMes ?? 0)}, igual a la inflación (IPC) de ${ymLabel(ipcBaseMes)} publicada por INDEC. Desde el DNU 274/2024 la movilidad es mensual y automática: cada mes los haberes suben según el IPC de dos meses atrás.`
+  },
+  {
+    q: '¿Cómo se calcula el aumento de las jubilaciones en Argentina?',
+    a: 'Desde abril de 2024 (DNU 274/2024) los haberes previsionales se actualizan todos los meses por el Índice de Precios al Consumidor (IPC) que publica INDEC, con un rezago de dos meses: el aumento de un mes es igual a la inflación de dos meses antes. Esta fórmula reemplazó a la movilidad trimestral de la Ley 27.609, que combinaba salarios (RIPTE) y recaudación.'
+  },
+  {
+    q: '¿Cuándo se anuncia el próximo aumento?',
+    a: `El próximo dato que falta es el IPC de ${ymLabel(proximoIpcMes)}, que INDEC publica a mediados de ${ymLabel(proximoIpcPublicacion)}. Ese número define automáticamente el aumento de ${ymLabel(aumentoQueDefine)}. No hay anuncio discrecional: la fórmula es automática, sólo falta conocer el dato de inflación.`
+  },
+  {
+    q: '¿Cuál es el haber mínimo jubilatorio hoy?',
+    a: `El haber mínimo de ${ymLabel(haberMinMes)} es de aproximadamente ${fmtAr(haberMin)} brutos. Con el bono de ${fmtAr(BONO_MINIMA)} que se viene renovando por decreto para quienes cobran hasta la mínima, el ingreso llega a unos ${fmtAr(haberMin + BONO_MINIMA)}. El valor exacto lo confirma ANSES en cada liquidación; sobre el haber se descuenta la obra social (3% a 6%).`
+  },
+  {
+    q: '¿El bono para las jubilaciones mínimas sigue vigente?',
+    a: `El bono previsional (${fmtAr(BONO_MINIMA)} de referencia) no forma parte de la movilidad: se renueva mes a mes por decreto para los haberes más bajos y es decreciente hasta desaparecer cerca de la mínima más el bono. Además, el bono no genera aguinaldo, porque no integra el haber. Conviene verificar cada mes en ANSES si fue renovado y por qué monto.`
+  },
+  {
+    q: '¿Las pensiones, la PUAM y las no contributivas también aumentan?',
+    a: 'Sí. La movilidad mensual por IPC se aplica a todos los beneficios del sistema: jubilaciones ordinarias y con moratoria, pensiones por fallecimiento e invalidez, PBU, PUAM (equivale al 80% del haber mínimo) y pensiones no contributivas. También arrastra a los valores que se actualizan por movilidad, como las escalas del monotributo.'
+  },
+  {
+    q: '¿Cada cuánto aumentan las jubilaciones?',
+    a: 'Todos los meses. Hasta marzo de 2024 la movilidad era trimestral (marzo, junio, septiembre y diciembre, Ley 27.609); desde abril de 2024 el DNU 274/2024 estableció la actualización mensual por inflación con dos meses de rezago.'
+  },
+  {
+    q: '¿Por qué el aumento usa la inflación de dos meses atrás?',
+    a: 'Porque INDEC publica el IPC de cada mes a mediados del mes siguiente, y ANSES necesita ese dato con anticipación para liquidar los haberes. Por eso el aumento de cada mes replica la inflación de dos meses antes: es el último dato disponible al momento de liquidar.'
+  },
+  {
+    q: '¿Qué hago si mi jubilación no refleja el aumento?',
+    a: 'Verificá primero el detalle de tu liquidación en mi.anses.gob.ar (sección "Mis cobros"). Si el aumento no está aplicado, podés reclamar en la UDAI más cercana con turno previo o llamar al 130, la línea gratuita de ANSES.'
+  }
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': URL_PAGE,
+      url: URL_PAGE,
+      name: 'Aumento de jubilaciones: cuánto suben los haberes este mes (movilidad por IPC)',
+      description: `Aumento de jubilaciones de ${ymLabel(mesMostrado)}: ${fmtPct(aumentoMes ?? 0)} por movilidad mensual (IPC de ${ymLabel(ipcBaseMes)}, DNU 274/2024). Haber mínimo, bono y próximos aumentos.`,
+      isPartOf: { '@id': `${siteUrl}/#website` },
+      inLanguage: 'es-AR',
+      datePublished: '2026-04-16',
+      dateModified: (inflacion as any)._meta?.fetchedAt?.slice(0, 10) ?? '2026-07-11',
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: siteUrl },
+        { '@type': 'ListItem', position: 2, name: 'Finanzas', item: `${siteUrl}/categoria/finanzas` },
+        { '@type': 'ListItem', position: 3, name: 'Aumento de jubilaciones' },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map((item) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    },
+  ],
+};
+
+const title = `Aumento jubilaciones ${ymLabel(mesMostrado)}: ${fmtPct(aumentoMes ?? 0)} — haber mínimo y movilidad | Hacé Cuentas`;
+const description = `Las jubilaciones aumentan ${fmtPct(aumentoMes ?? 0)} en ${ymLabel(mesMostrado)} (IPC de ${ymLabel(ipcBaseMes)}, movilidad mensual DNU 274/2024). Haber mínimo actualizado, bono, tabla de últimos aumentos y cuándo se define el próximo.`;
+---
+<Layout title={title} description={description} canonical="/aumento-jubilaciones" schema={schema} audience="AR">
+  <Header slot="header" />
+
+  <article class="landing">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/categoria/finanzas">Finanzas</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Aumento de jubilaciones</span>
+    </nav>
+
+    <!-- HERO -->
+    <header class="hero">
+      <h1>Aumento de jubilaciones: cuánto suben los haberes este mes</h1>
+      <p class="lead">
+        Las jubilaciones y pensiones se actualizan <strong>todos los meses</strong> por la inflación de dos meses atrás (movilidad por IPC, DNU 274/2024).
+        En <strong>{ymLabel(mesMostrado)}</strong> el aumento es del <strong>{fmtPct(aumentoMes ?? 0)}</strong>, el IPC de {ymLabel(ipcBaseMes)} publicado por INDEC.
+        Esta página se actualiza sola con cada dato nuevo de inflación.
+      </p>
+      <div class="hero-meta">
+        <span>Actualizado: {hoyAR.getDate()} de {MESES[hoyAR.getMonth()]} {hoyAR.getFullYear()}</span>
+        <span>Fuente: INDEC / ANSES / DNU 274/2024</span>
+      </div>
+    </header>
+
+    <!-- DATO DESTACADO -->
+    <section class="section">
+      <div class="highlight-box">
+        <div class="highlight-main">
+          <div class="highlight-label">Aumento de {ymLabel(mesMostrado)}</div>
+          <div class="highlight-value">{fmtPct(aumentoMes ?? 0)}</div>
+          <div class="highlight-sub">= IPC de {ymLabel(ipcBaseMes)} (movilidad mensual, DNU 274/2024)</div>
+        </div>
+        <div class="highlight-side">
+          <div class="highlight-item">
+            <span class="hl-label">Haber mínimo {haberMinEsDelMes ? ymLabel(haberMinMes) : `(último dato: ${ymLabel(haberMinMes)})`}</span>
+            <span class="hl-value">{fmtAr(haberMin)}</span>
+          </div>
+          <div class="highlight-item">
+            <span class="hl-label">Mínima + bono de {fmtAr(BONO_MINIMA)}</span>
+            <span class="hl-value">{fmtAr(haberMin + BONO_MINIMA)}</span>
+          </div>
+        </div>
+      </div>
+      <p class="table-note">
+        Valores brutos estimados aplicando la movilidad sobre el haber mínimo oficial de junio 2026 ($403.318, ANSES).
+        El monto exacto lo confirma ANSES en cada liquidación; el bono se renueva mes a mes por decreto.
+      </p>
+    </section>
+
+    <!-- PRÓXIMO AUMENTO -->
+    <section class="section">
+      <h2>Próximo aumento: cuándo se define</h2>
+      {aumentoProximo !== null ? (
+        <div class="next-box confirmed">
+          <p>
+            <strong>El aumento de {ymLabel(mesProximo)} ya está definido: {fmtPct(aumentoProximo)}</strong> — es el IPC de {ymLabel(ymShift(mesProximo, -2))} que INDEC ya publicó. Se aplica automáticamente en los haberes de {ymLabel(mesProximo)}.
+          </p>
+        </div>
+      ) : (
+        <div class="next-box">
+          <p>
+            El aumento de <strong>{ymLabel(mesProximo)}</strong> todavía <strong>no está definido</strong>: depende del IPC de {ymLabel(ymShift(mesProximo, -2))}, que INDEC publica a mediados de {ymLabel(ymShift(mesProximo, -1))}. Cuando salga el dato, esta página se actualiza automáticamente. No publicamos proyecciones: sólo datos oficiales.
+          </p>
+        </div>
+      )}
+      <p>
+        No hay anuncios discrecionales: la fórmula es automática. El único dato que falta cada mes es el IPC de INDEC
+        (se publica a mediados del mes siguiente al medido) y con ese número queda fijado el aumento de dos meses después.
+      </p>
+    </section>
+
+    <!-- CÓMO SE CALCULA -->
+    <section class="section">
+      <h2>Cómo se calcula la movilidad jubilatoria</h2>
+      <p>
+        Desde abril de 2024 (DNU 274/2024) los haberes previsionales se ajustan <strong>mensualmente por el IPC con dos meses de rezago</strong>:
+      </p>
+      <div class="formula-note">
+        <p><strong>Aumento del mes M = inflación (IPC) del mes M − 2</strong></p>
+        <p>
+          Ejemplo: el aumento de {ymLabel(mesMostrado)} ({fmtPct(aumentoMes ?? 0)}) replica el IPC de {ymLabel(ipcBaseMes)}.
+          El rezago existe porque INDEC publica el IPC a mediados del mes siguiente y ANSES necesita el dato para liquidar.
+        </p>
+      </div>
+      <p>
+        Esta fórmula reemplazó a la movilidad trimestral de la Ley 27.609 (que combinaba salarios y recaudación y se aplicaba en marzo, junio, septiembre y diciembre). El cambio busca que los haberes no pierdan contra la inflación en períodos de precios volátiles.
+      </p>
+    </section>
+
+    <!-- TABLA ÚLTIMOS 6 MESES -->
+    <section class="section">
+      <h2>Últimos aumentos, mes por mes</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Mes del aumento</th>
+              <th>IPC tomado (2 meses antes)</th>
+              <th>Aumento</th>
+            </tr>
+          </thead>
+          <tbody>
+            {historial.map((h) => (
+              <tr class={ymKey(h.ym) === ymKey(mesMostrado) ? 'current-row' : ''}>
+                <td class="concepto">{ymLabelCap(h.ym)}</td>
+                <td>IPC {ymLabel(h.ipcDe)}</td>
+                <td class="highlight">+{fmtPct(h.pct)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">
+        Fuente: serie de IPC mensual de INDEC. La inflación acumulada de los últimos 12 meses es del {inflacion.acumulado_12m_pct?.toLocaleString('es-AR')}%.
+      </p>
+    </section>
+
+    <!-- CTA -->
+    <div class="cta-box">
+      <h3>Simulá tu jubilación</h3>
+      <p>Estimá cuánto vas a cobrar según tus aportes, tu sueldo y tu edad.</p>
+      <div class="cta-links">
+        <a href="/simulador-jubilacion-anses" class="cta-btn">Simulador de jubilación ANSES</a>
+        <a href="/calculadora-jubilacion-minima-anses" class="cta-btn secondary">Jubilación mínima + bono</a>
+      </div>
+    </div>
+
+    <!-- A QUIÉN APLICA -->
+    <section class="section">
+      <h2>A quién aplica el aumento</h2>
+      <p>La movilidad mensual se aplica a todos los beneficios del sistema previsional argentino:</p>
+      <ul class="benefit-list">
+        <li><strong>Jubilaciones ordinarias</strong> (con 30 o más años de aportes)</li>
+        <li><strong>Jubilaciones con moratoria</strong></li>
+        <li><strong>Pensiones por fallecimiento</strong> del titular</li>
+        <li><strong>Pensiones por invalidez</strong></li>
+        <li><strong>PUAM</strong> (Pensión Universal para el Adulto Mayor, 80% del haber mínimo)</li>
+        <li><strong>PBU</strong> (Prestación Básica Universal)</li>
+        <li><strong>Pensiones no contributivas</strong> (madres de 7 o más hijos, invalidez, vejez)</li>
+        <li><strong>Retiros y pensiones</strong> de fuerzas armadas y de seguridad</li>
+      </ul>
+    </section>
+
+    <!-- LINKS RELACIONADOS -->
+    <section class="section">
+      <h2>Calculadoras y herramientas relacionadas</h2>
+      <div class="link-grid">
+        <ActionCard href="/simulador-jubilacion-anses" title="Simulador de Jubilación" desc="Cuánto vas a cobrar según tus aportes" icon='<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>' />
+        <ActionCard href="/calculadora-jubilacion-minima-anses" title="Jubilación Mínima + Bono" desc="Haber mínimo actualizado con y sin bono" icon='<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>' />
+        <ActionCard href="/calculadora-edad-jubilacion-anos-aporte" title="Edad de Jubilación" desc="Cuántos años te faltan para jubilarte" icon='<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>' />
+        <ActionCard href="/calculadora-actualizacion-inflacion-ipc" title="Actualización por Inflación" desc="Actualizá un monto del pasado a hoy con IPC" icon='<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>' />
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section faq-section">
+      <h2>Preguntas frecuentes sobre el aumento de jubilaciones</h2>
+      <div class="faq-list">
+        {faqItems.map((item) => (
+          <details class="faq-item">
+            <summary>{item.q}</summary>
+            <p>{item.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <Newsletter />
+  </article>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .landing { max-width: 860px; margin: 0 auto; padding: 0 0 3rem; }
+  .breadcrumbs { font-size: 0.875rem; color: var(--text-subtle); margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .breadcrumbs a { color: var(--text-muted); }
+  .breadcrumbs .current { color: var(--text); font-weight: 500; }
+  .breadcrumbs .sep { color: var(--border-strong); }
+
+  .hero { margin-bottom: 2.5rem; }
+  .hero h1 { margin-bottom: 1rem; }
+  .lead { font-size: 1.0625rem; color: var(--text-muted); margin-bottom: 1rem; max-width: 760px; line-height: 1.65; }
+  .hero-meta { display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.8125rem; color: var(--text-subtle); }
+
+  .section { margin-bottom: 2.5rem; }
+  .section h2 { margin-bottom: 0.75rem; }
+  .section p { margin-bottom: 0.75rem; color: var(--text-muted); line-height: 1.65; }
+
+  /* Highlight box */
+  .highlight-box {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+    background: linear-gradient(135deg, var(--accent-soft) 0%, #e0f2fe 100%);
+    border: 1px solid var(--accent); border-radius: var(--radius-lg);
+    padding: 2rem; margin-top: 1rem;
+  }
+  html[data-theme="dark"] .highlight-box {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.12) 0%, rgba(96, 165, 250, 0.15) 100%);
+    border-color: rgba(147, 197, 253, 0.45);
+  }
+  .highlight-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent-strong); margin-bottom: 0.25rem; }
+  .highlight-value { font-size: 3rem; font-weight: 800; color: var(--accent-strong); line-height: 1; margin-bottom: 0.25rem; letter-spacing: -0.02em; }
+  .highlight-sub { font-size: 0.8125rem; color: var(--text-muted); }
+  .highlight-side { display: flex; flex-direction: column; justify-content: center; gap: 1rem; }
+  .highlight-item { display: flex; flex-direction: column; gap: 0.125rem; }
+  .hl-label { font-size: 0.75rem; color: var(--text-subtle); font-weight: 500; }
+  .hl-value { font-size: 1.375rem; font-weight: 700; color: var(--text); font-feature-settings: 'tnum'; }
+
+  /* Próximo aumento */
+  .next-box {
+    padding: 1rem 1.25rem; background: var(--bg-soft); border-left: 3px solid var(--warning, #d97706);
+    border-radius: var(--radius-sm); margin: 0.75rem 0 1rem;
+  }
+  .next-box.confirmed { border-left-color: var(--success, #059669); }
+  .next-box p { margin: 0; font-size: 0.9375rem; }
+
+  .formula-note {
+    padding: 1rem 1.25rem; background: var(--bg-soft); border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm); margin: 0.75rem 0;
+  }
+  .formula-note p { font-size: 0.9375rem; margin-bottom: 0.5rem; }
+  .formula-note p:last-child { margin-bottom: 0; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; margin: 1rem 0; border-radius: var(--radius-lg); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; font-feature-settings: 'tnum'; }
+  thead { background: var(--bg-soft); }
+  th {
+    padding: 0.75rem 1rem; text-align: left; font-size: 0.8125rem; font-weight: 600;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); color: var(--text-muted); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg-soft); }
+  tr.current-row td { background: var(--accent-soft); }
+  .concepto { font-weight: 500; color: var(--text); text-transform: capitalize; }
+  .highlight { font-weight: 700; color: var(--success); }
+  .table-note { font-size: 0.8125rem; color: var(--text-subtle); margin-top: 0.5rem; }
+
+  /* CTA */
+  .cta-box {
+    text-align: center; padding: 2rem 1.5rem; margin: 2rem 0;
+    background: linear-gradient(135deg, var(--accent-soft) 0%, var(--bg-soft) 100%);
+    border: 1px solid var(--accent); border-radius: var(--radius-lg);
+  }
+  .cta-box h3 { color: var(--accent-strong); margin-bottom: 0.5rem; }
+  .cta-box p { margin-bottom: 1rem; }
+  .cta-links { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+  .cta-btn {
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    padding: 0.75rem 1.5rem; background: var(--accent); color: #fff;
+    border-radius: var(--radius-sm); font-weight: 600; font-size: 0.9375rem;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .cta-btn:hover { background: var(--accent-strong); transform: translateY(-1px); color: #fff; }
+  .cta-btn.secondary { background: var(--bg-card); color: var(--accent); border: 1px solid var(--accent); }
+  .cta-btn.secondary:hover { background: var(--accent-soft); color: var(--accent-strong); }
+
+  /* Benefit list */
+  .benefit-list {
+    list-style: none; padding: 0; margin: 0.75rem 0;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.375rem;
+  }
+  .benefit-list li {
+    padding: 0.625rem 0.875rem; background: var(--bg-soft); border-radius: var(--radius-sm);
+    font-size: 0.9375rem; color: var(--text-muted);
+  }
+
+  /* Link grid */
+  .link-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 1rem; }
+
+  /* FAQ */
+  .faq-section { padding-top: 1rem; border-top: 1px solid var(--border); }
+  .faq-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; }
+  .faq-item {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; transition: border-color 0.15s;
+  }
+  .faq-item[open] { border-color: var(--accent); }
+  .faq-item summary {
+    padding: 1rem 1.25rem; font-weight: 600; font-size: 0.9375rem;
+    cursor: pointer; list-style: none; display: flex; align-items: center; gap: 0.75rem;
+    color: var(--text);
+  }
+  .faq-item summary::before { content: '+'; font-size: 1.25rem; font-weight: 700; color: var(--accent); flex-shrink: 0; width: 1.25rem; text-align: center; }
+  .faq-item[open] summary::before { content: '\2212'; }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item p { padding: 0 1.25rem 1rem; font-size: 0.9375rem; color: var(--text-muted); line-height: 1.65; }
+
+  @media (max-width: 640px) {
+    .highlight-box { grid-template-columns: 1fr; padding: 1.5rem; }
+    .highlight-value { font-size: 2.25rem; }
+    th, td { padding: 0.5rem 0.625rem; font-size: 0.8125rem; }
+  }
+</style>

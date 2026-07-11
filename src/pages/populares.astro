@@ -10,18 +10,17 @@ import { canDistributeCalc } from '../lib/content-policy';
 
 // "Las más usadas" — ranking de popularidad.
 //
-// SEÑAL REAL: src/lib/popular-curated.json (lo alimenta
-// scripts/refresh-home-popular.py desde GSC clicks 28d; mismo origen que la
-// home). Si ese JSON está commiteado, usamos su orden tal cual.
+// SEÑAL REAL: src/lib/popular-curated.json (commiteado; lo refresca
+// scripts/refresh-home-popular.py con GA4 screenPageViews 28d — mismo origen
+// que la home). Su orden manda; se usa tal cual.
 //
-// FALLBACK (hoy el JSON no está commiteado): partimos de la lista curada
-// histórica que ya usa index.astro y la completamos con los slugs FEATURED de
-// cada categoría (category-layout.ts) para que la página tenga cuerpo aunque no
-// haya analytics. Deduplicamos preservando el orden de prioridad.
+// FALLBACK (si el JSON faltara o viniera vacío): lista curada histórica que ya
+// usa index.astro, completada con los slugs FEATURED de cada categoría
+// (category-layout.ts) para que la página tenga cuerpo aunque no haya
+// analytics. Deduplicamos preservando el orden de prioridad.
 //
-// TODO: alimentar desde GSC/analytics — correr scripts/refresh-home-popular.py
-// y commitear src/lib/popular-curated.json para que este ranking salga de datos
-// reales en vez del fallback curado.
+// Para refrescar el ranking: correr scripts/refresh-home-popular.py (requiere
+// credenciales GA4) y commitear el JSON regenerado.
 
 const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 const calcs = Object.values(calcModules)

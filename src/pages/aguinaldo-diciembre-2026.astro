@@ -1,4 +1,6 @@
 ---
+// Segunda cuota del SAC 2026. Reemplaza a /aguinaldo-junio-2026 (301 en public/_redirects).
+// Deadline legal: 18-dic-2026 (Ley 27.073) + 4 días hábiles de tolerancia → 24-dic-2026.
 export const prerender = true;
 
 import Layout from '../layouts/Layout.astro';
@@ -7,8 +9,8 @@ import Footer from '../components/Footer.astro';
 import Newsletter from '../components/Newsletter.astro';
 import ActionCard from '../components/ui/ActionCard.astro';
 
-const title = 'Aguinaldo Junio 2026: Cuándo cobro, cómo calcularlo y montos | Hacé Cuentas';
-const description = 'Todo sobre el aguinaldo de junio 2026 en Argentina: fecha límite de pago (30/06), fórmula del SAC, tabla con ejemplos por sueldo, descuentos y qué hacer si no te pagan.';
+const title = 'Aguinaldo Diciembre 2026: cuándo cobro, cómo calcularlo y montos | Hacé Cuentas';
+const description = 'Todo sobre el aguinaldo de diciembre 2026 en Argentina: fecha límite de pago (18/12), fórmula del SAC, tabla con ejemplos por sueldo, descuentos y qué hacer si no te pagan.';
 
 const siteUrl = 'https://hacecuentas.com';
 
@@ -23,14 +25,26 @@ const ejemplos = [
 
 const fmtAr = (n: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 
+// Countdown al 18-dic-2026 calculado en build (deploy diario → queda fresco en el HTML
+// estático) + re-cálculo client-side como enhancement.
+const DEADLINE_ISO = '2026-12-18';
+const hoyAR = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
+hoyAR.setHours(0, 0, 0, 0);
+const deadline = new Date(2026, 11, 18);
+const diasFaltan = Math.max(0, Math.round((deadline.getTime() - hoyAR.getTime()) / 86400000));
+
 const faqItems = [
   {
-    q: '¿Cuándo se cobra el aguinaldo de junio 2026?',
-    a: 'La fecha límite legal es el 30 de junio de 2026. El empleador tiene hasta 4 días hábiles posteriores para acreditarlo, es decir, hasta el 6 de julio de 2026. Si no lo depositó para esa fecha, está incumpliendo la ley.'
+    q: '¿Cuándo se cobra el aguinaldo de diciembre 2026?',
+    a: 'La fecha límite legal es el 18 de diciembre de 2026 (Ley 27.073). El empleador tiene hasta 4 días hábiles posteriores para acreditarlo, es decir, hasta el 24 de diciembre de 2026. Si para esa fecha no lo depositó, está incumpliendo la ley.'
   },
   {
-    q: '¿Cómo se calcula el aguinaldo de junio 2026?',
-    a: 'Se toma la mejor remuneración bruta mensual del primer semestre (enero a junio 2026), se divide por 2, y si no trabajaste los 6 meses completos, se multiplica por los meses trabajados dividido 6. La fórmula es: Aguinaldo = (Mejor sueldo del semestre / 2) x (meses trabajados / 6).'
+    q: '¿Cómo se calcula el aguinaldo de diciembre 2026?',
+    a: 'Se toma la mejor remuneración bruta mensual del segundo semestre (julio a diciembre 2026), se divide por 2, y si no trabajaste los 6 meses completos, se multiplica por los meses trabajados dividido 6. La fórmula es: Aguinaldo = (Mejor sueldo del semestre / 2) x (meses trabajados / 6).'
+  },
+  {
+    q: '¿El aguinaldo de junio cuenta para calcular el de diciembre?',
+    a: 'No. El SAC no se computa a sí mismo: para el aguinaldo de diciembre se compara la remuneración mensual habitual de julio a diciembre (sueldo, horas extra, comisiones), sin sumar el aguinaldo cobrado en junio ni conceptos no remunerativos.'
   },
   {
     q: '¿El aguinaldo incluye horas extra y comisiones?',
@@ -41,24 +55,24 @@ const faqItems = [
     a: 'Al aguinaldo se le aplican los mismos descuentos que al sueldo: 11% de jubilación (SIPA), 3% de obra social, 3% de PAMI (Ley 19.032) y el aporte sindical si corresponde. En total, aproximadamente un 17-19% de descuentos. Además, puede estar alcanzado por el Impuesto a las Ganancias si tu remuneración supera el mínimo no imponible.'
   },
   {
-    q: '¿Me corresponde aguinaldo si empecé a trabajar en abril 2026?',
-    a: 'Sí, te corresponde un aguinaldo proporcional. Si empezaste en abril y trabajaste hasta junio (3 meses), tu aguinaldo será: (Mejor sueldo / 2) x (3/6) = un cuarto de tu mejor sueldo bruto del período. El derecho al aguinaldo nace desde el primer día de trabajo.'
+    q: '¿Me corresponde aguinaldo si empecé a trabajar en octubre 2026?',
+    a: 'Sí, te corresponde un aguinaldo proporcional. Si empezaste en octubre y trabajaste hasta diciembre (3 meses), tu aguinaldo será: (Mejor sueldo / 2) x (3/6) = un cuarto de tu mejor sueldo bruto del período. El derecho al aguinaldo nace desde el primer día de trabajo.'
   },
   {
     q: '¿El aguinaldo paga Impuesto a las Ganancias?',
-    a: 'Sí. El SAC está alcanzado por el Impuesto a las Ganancias de cuarta categoría. En el mes de junio, al sumarse el aguinaldo a la remuneración habitual, la retención puede ser significativamente mayor. Algunos empleadores distribuyen el impacto a lo largo del año para evitar un golpe concentrado en junio y diciembre.'
+    a: 'Sí. El SAC está alcanzado por el Impuesto a las Ganancias de cuarta categoría. En diciembre, al sumarse el aguinaldo a la remuneración habitual, la retención puede ser significativamente mayor. Algunos empleadores distribuyen el impacto a lo largo del año para evitar un golpe concentrado en junio y diciembre.'
   },
   {
     q: '¿Qué pasa si mi empleador no me paga el aguinaldo a tiempo?',
-    a: 'Si tu empleador no paga el aguinaldo dentro de los plazos legales (30 de junio + 4 días hábiles), podés intimar por escrito (carta documento o telegrama laboral gratuito) exigiendo el pago con intereses. Si no responde, podés hacer una denuncia en el Ministerio de Trabajo o iniciar acciones legales con un abogado laboralista. Los intereses se calculan desde la fecha en que debió pagarse.'
+    a: 'Si tu empleador no paga el aguinaldo dentro de los plazos legales (18 de diciembre + 4 días hábiles), podés intimar por escrito (carta documento o telegrama laboral gratuito) exigiendo el pago con intereses. Si no responde, podés hacer una denuncia en el Ministerio de Trabajo o iniciar acciones legales con un abogado laboralista. Los intereses se calculan desde la fecha en que debió pagarse.'
   },
   {
     q: '¿Me corresponde aguinaldo si estoy en período de prueba?',
-    a: 'Sí. El período de prueba (primeros 3 meses de relación laboral) no exime al empleador de ninguna obligación salarial. Te corresponde aguinaldo proporcional a los días trabajados. Si te despiden durante la prueba, el SAC proporcional debe incluirse en la liquidación final.'
+    a: 'Sí. El período de prueba no exime al empleador de ninguna obligación salarial. Te corresponde aguinaldo proporcional a los días trabajados. Si te despiden durante la prueba, el SAC proporcional debe incluirse en la liquidación final.'
   },
   {
     q: '¿Cómo verifico que mi aguinaldo está bien calculado?',
-    a: 'Revisá tus recibos de sueldo de enero a junio 2026, identificá el mes con mayor remuneración bruta (incluyendo horas extra y comisiones), dividilo por 2, y si no trabajaste los 6 meses, multiplicá por la proporción de meses. Compará ese resultado con el concepto "SAC" en tu recibo de junio. Si hay diferencia, reclamá por escrito a RRHH.'
+    a: 'Revisá tus recibos de sueldo de julio a diciembre 2026, identificá el mes con mayor remuneración bruta (incluyendo horas extra y comisiones), dividilo por 2, y si no trabajaste los 6 meses, multiplicá por la proporción de meses. Compará ese resultado con el concepto "SAC" en tu recibo de diciembre. Si hay diferencia, reclamá por escrito a RRHH.'
   },
   {
     q: '¿El aguinaldo se calcula sobre el sueldo bruto o el neto?',
@@ -71,21 +85,21 @@ const schema = {
   '@graph': [
     {
       '@type': 'WebPage',
-      '@id': `${siteUrl}/aguinaldo-junio-2026`,
-      url: `${siteUrl}/aguinaldo-junio-2026`,
+      '@id': `${siteUrl}/aguinaldo-diciembre-2026`,
+      url: `${siteUrl}/aguinaldo-diciembre-2026`,
       name: title,
       description: description,
       isPartOf: { '@id': `${siteUrl}/#website` },
       inLanguage: 'es-AR',
-      datePublished: '2026-04-16',
-      dateModified: '2026-04-16',
+      datePublished: '2026-07-11',
+      dateModified: '2026-07-11',
     },
     {
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Inicio', item: siteUrl },
         { '@type': 'ListItem', position: 2, name: 'Finanzas', item: `${siteUrl}/categoria/finanzas` },
-        { '@type': 'ListItem', position: 3, name: 'Aguinaldo Junio 2026' },
+        { '@type': 'ListItem', position: 3, name: 'Aguinaldo Diciembre 2026' },
       ],
     },
     {
@@ -111,42 +125,50 @@ const schema = {
       <span class="sep" aria-hidden="true">/</span>
       <a href="/categoria/finanzas">Finanzas</a>
       <span class="sep" aria-hidden="true">/</span>
-      <span class="current">Aguinaldo Junio 2026</span>
+      <span class="current">Aguinaldo Diciembre 2026</span>
     </nav>
 
     <!-- HERO -->
     <header class="hero">
-      <h1>Aguinaldo Junio 2026: cuándo se cobra, cómo calcularlo y tabla de montos</h1>
+      <h1>Aguinaldo Diciembre 2026: cuándo se cobra, cómo calcularlo y tabla de montos</h1>
       <p class="lead">
-        El primer aguinaldo del año (SAC - Sueldo Anual Complementario) tiene como <strong>fecha límite de pago el 30 de junio de 2026</strong>.
+        El segundo aguinaldo del año (SAC - Sueldo Anual Complementario) tiene como <strong>fecha límite de pago el 18 de diciembre de 2026</strong> (Ley 27.073), con una tolerancia máxima de 4 días hábiles.
         Acá te explicamos la fórmula, los descuentos que se aplican, ejemplos con distintos sueldos y qué hacer si tu empleador se atrasa.
       </p>
       <div class="hero-meta">
-        <span>Actualizado: abril 2026</span>
+        <span>Actualizado: julio 2026</span>
         <span>Aplica a: trabajadores en relación de dependencia en Argentina</span>
       </div>
+      {diasFaltan > 0 && (
+        <p class="countdown" data-countdown data-deadline={DEADLINE_ISO}>
+          ⏳ Faltan <strong data-countdown-days>{diasFaltan}</strong> días para el 18 de diciembre de 2026.
+        </p>
+      )}
     </header>
 
     <!-- FECHAS CLAVE -->
     <section class="section">
-      <h2>Fechas clave del aguinaldo junio 2026</h2>
+      <h2>Fechas clave del aguinaldo diciembre 2026</h2>
       <div class="dates-grid">
         <div class="date-card">
           <div class="date-label">Período que cubre</div>
-          <div class="date-value">Enero - Junio 2026</div>
-          <div class="date-hint">Primer semestre del año</div>
+          <div class="date-value">Julio - Diciembre 2026</div>
+          <div class="date-hint">Segundo semestre del año</div>
         </div>
         <div class="date-card accent">
           <div class="date-label">Fecha límite de pago</div>
-          <div class="date-value">30 de junio 2026</div>
+          <div class="date-value">18 de diciembre 2026</div>
           <div class="date-hint">+ 4 días hábiles de tolerancia</div>
         </div>
         <div class="date-card">
           <div class="date-label">Tolerancia máxima</div>
-          <div class="date-value">6 de julio 2026</div>
+          <div class="date-value">24 de diciembre 2026</div>
           <div class="date-hint">Después de esa fecha es incumplimiento</div>
         </div>
       </div>
+      <p class="section-note">
+        A diferencia de la primera cuota (que vence el 30 de junio), la segunda cuota del SAC vence el <strong>18 de diciembre</strong> por la Ley 27.073, para que el pago llegue antes de las fiestas.
+      </p>
     </section>
 
     <!-- FÓRMULA -->
@@ -157,7 +179,7 @@ const schema = {
           <code>Aguinaldo = (Mejor sueldo bruto del semestre / 2) &times; (meses trabajados / 6)</code>
         </div>
         <p class="formula-note">
-          Se toma la <strong>mayor remuneración mensual devengada</strong> del semestre enero-junio 2026. Incluye sueldo básico, horas extra, comisiones, presentismo y todo concepto remunerativo. Si trabajaste los 6 meses completos, el factor (meses/6) es 1 y no afecta el cálculo.
+          Se toma la <strong>mayor remuneración mensual devengada</strong> del semestre julio-diciembre 2026. Incluye sueldo básico, horas extra, comisiones, presentismo y todo concepto remunerativo (el aguinaldo de junio NO se computa). Si trabajaste los 6 meses completos, el factor (meses/6) es 1 y no afecta el cálculo.
         </p>
       </div>
 
@@ -183,9 +205,9 @@ const schema = {
 
     <!-- TABLA DE EJEMPLOS -->
     <section class="section">
-      <h2>Tabla: aguinaldo junio 2026 según tu sueldo</h2>
+      <h2>Tabla: aguinaldo diciembre 2026 según tu sueldo</h2>
       <p>
-        Ejemplos para trabajadores que cumplieron el semestre completo (enero a junio 2026).
+        Ejemplos para trabajadores que cumplieron el semestre completo (julio a diciembre 2026).
         Los descuentos incluyen jubilación (11%), obra social (3%) y PAMI (3%) = 17% total.
       </p>
       <div class="table-wrap">
@@ -242,7 +264,7 @@ const schema = {
         <div class="descuento-card warning">
           <div class="descuento-pct">Variable</div>
           <div class="descuento-name">Impuesto a las Ganancias</div>
-          <div class="descuento-detail">Aplica si tu remuneración bruta supera el mínimo no imponible. En junio, al sumarse el aguinaldo, la retención puede ser mayor. Usá la <a href="/calculadora-ganancias-empleados-4ta-categoria-2026">calculadora de Ganancias</a> para estimar el impacto.</div>
+          <div class="descuento-detail">Aplica si tu remuneración bruta supera el mínimo no imponible. En diciembre, al sumarse el aguinaldo, la retención puede ser mayor. Usá la <a href="/calculadora-ganancias-empleados-4ta-categoria-2026">calculadora de Ganancias</a> para estimar el impacto.</div>
         </div>
       </div>
     </section>
@@ -251,7 +273,7 @@ const schema = {
     <section class="section">
       <h2>Si tu empleador no paga el aguinaldo a tiempo</h2>
       <p>
-        La Ley de Contrato de Trabajo establece que el aguinaldo debe pagarse antes del 30 de junio (con un máximo de 4 días hábiles de tolerancia). Si tu empleador no cumple, tenés varias opciones:
+        La ley establece que la segunda cuota del aguinaldo debe pagarse antes del 18 de diciembre (con un máximo de 4 días hábiles de tolerancia). Si tu empleador no cumple, tenés varias opciones:
       </p>
       <div class="steps-list">
         <div class="step">
@@ -286,6 +308,7 @@ const schema = {
       <h2>Calculadoras relacionadas</h2>
       <div class="link-grid">
         <ActionCard href="/calculadora-aguinaldo-sac" title="Calculadora de Aguinaldo (SAC)" desc="Calculá tu aguinaldo bruto y neto con descuentos" icon='<rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/>' />
+        <ActionCard href="/calculadora-cuanto-falta-aguinaldo-junio-diciembre" title="¿Cuánto falta para el aguinaldo?" desc="Cuenta regresiva al 18 de diciembre" icon='<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>' />
         <ActionCard href="/sueldo-en-mano-argentina" title="Sueldo en Mano" desc="De bruto a neto con todos los descuentos" icon='<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>' />
         <ActionCard href="/calculadora-ganancias-empleados-4ta-categoria-2026" title="Impuesto a las Ganancias" desc="Estimá la retención de 4ta categoría sobre tu sueldo" icon='<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>' />
         <ActionCard href="/calculadora-indemnizacion-despido" title="Indemnización por Despido" desc="Incluye SAC proporcional en la liquidación final" icon='<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>' />
@@ -295,7 +318,7 @@ const schema = {
 
     <!-- FAQ -->
     <section class="section faq-section">
-      <h2>Preguntas frecuentes sobre el aguinaldo junio 2026</h2>
+      <h2>Preguntas frecuentes sobre el aguinaldo diciembre 2026</h2>
       <div class="faq-list">
         {faqItems.map((item) => (
           <details class="faq-item">
@@ -312,6 +335,29 @@ const schema = {
   <Footer slot="footer" />
 </Layout>
 
+<script>
+  // Enhancement: recalcular el countdown del lado del cliente (el valor de build
+  // ya viene en el HTML estático; esto sólo lo afina si el HTML quedó cacheado).
+  (function () {
+    const el = document.querySelector('[data-countdown]') as HTMLElement | null;
+    if (!el) return;
+    const daysEl = el.querySelector('[data-countdown-days]');
+    const iso = el.dataset.deadline;
+    if (!daysEl || !iso) return;
+    const [y, m, d] = iso.split('-').map(Number);
+    const deadline = new Date(y, m - 1, d);
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    const dias = Math.round((deadline.getTime() - hoy.getTime()) / 86400000);
+    if (dias > 0) {
+      daysEl.textContent = String(dias);
+    } else if (dias === 0) {
+      el.innerHTML = '📅 <strong>Hoy, 18 de diciembre, es la fecha límite legal de pago del aguinaldo.</strong>';
+    } else {
+      el.innerHTML = '📅 La fecha límite legal (18 de diciembre) ya pasó. Tu empleador tenía hasta 4 días hábiles de tolerancia (24 de diciembre): si no lo cobraste, mirá abajo cómo reclamar.';
+    }
+  })();
+</script>
+
 <style>
   .landing { max-width: 860px; margin: 0 auto; padding: 0 0 3rem; }
   .breadcrumbs { font-size: 0.875rem; color: var(--text-subtle); margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
@@ -323,11 +369,16 @@ const schema = {
   .hero h1 { margin-bottom: 1rem; }
   .lead { font-size: 1.0625rem; color: var(--text-muted); margin-bottom: 1rem; max-width: 760px; line-height: 1.65; }
   .hero-meta { display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.8125rem; color: var(--text-subtle); }
+  .countdown {
+    font-size: 0.9375rem; font-weight: 500; background: var(--bg-soft); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 0.625rem 0.875rem; margin-top: 1rem; color: var(--text-muted); max-width: 760px;
+  }
 
   .section { margin-bottom: 2.5rem; }
   .section h2 { margin-bottom: 0.75rem; }
   .section h3 { margin: 1.25rem 0 0.5rem; font-size: 1.125rem; }
   .section p { margin-bottom: 0.75rem; color: var(--text-muted); line-height: 1.65; }
+  .section-note { font-size: 0.875rem; color: var(--text-subtle); margin-top: 0.75rem; }
 
   /* Dates grid */
   .dates-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.875rem; margin-top: 1rem; }
