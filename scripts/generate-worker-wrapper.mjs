@@ -50,6 +50,23 @@ for (const rawLine of redirectsTxt.split('\n')) {
   redirectEntries.push([src, dst, status]);
 }
 
+// ---- Parse PRUNING_REDIRECTS (src/lib/pruning-redirects.ts) -----------------
+// Estas entries viven SOLO acá (NO caben en _redirects: límite 2000 reglas CF).
+// El middleware de Astro también las chequea, pero tras el build split NO corre
+// para rutas sin asset (la request muere en el 404 prerendered antes de llegar
+// al middleware) → si el wrapper no las inlinea, son 404 en prod. Regresión
+// detectada 2026-07-11: ~840 URLs podadas devolvían 404 en vez de 301.
+const pruningTs = readFileSync(
+  join(REPO_ROOT, 'src', 'lib', 'pruning-redirects.ts'),
+  'utf8',
+);
+const pruningRe = /'(\/[^']+)':\s*'([^']+)'/g;
+const pruningEntries = []; // [src, dst, 301]
+let pm;
+while ((pm = pruningRe.exec(pruningTs)) !== null) {
+  pruningEntries.push([pm[1], pm[2], 301]);
+}
+
 // ---- Parse GONE_410_URLS ---------------------------------------------------
 const goneTs = readFileSync(
   join(REPO_ROOT, 'src', 'lib', 'gone-410.ts'),
@@ -62,7 +79,7 @@ while ((gm = goneRe.exec(goneTs)) !== null) {
   goneEntries.push(gm[1]);
 }
 
-if (redirectEntries.length === 0 || goneEntries.length === 0) {
+if (redirectEntries.length === 0 || goneEntries.length === 0 || pruningEntries.length === 0) {
   console.error('[wrap-worker] No entries parsed — aborting.');
   process.exit(1);
 }
@@ -83,8 +100,10 @@ if (!mainCsp.startsWith("default-src 'self'")) {
 
 // ---- Build REDIRECT_MAP: path → { dst, status } ----------------------------
 // Mantenemos status por entry (mayoria 301, pero algunos pueden ser 302/308).
+// Pruning primero, _redirects después: ante overlap gana _redirects (más
+// específico/actual que el batch de poda).
 const redirectMap = {};
-for (const [src, dst, status] of redirectEntries) {
+for (const [src, dst, status] of [...pruningEntries, ...redirectEntries]) {
   redirectMap[src] = { d: dst, s: status };
 }
 
@@ -190,6 +209,7 @@ writeFileSync(wranglerPath, JSON.stringify(wrangler));
 
 console.log(
   `[wrap-worker] Wrote dist/server/wrapper.mjs ` +
-    `(${redirectEntries.length} redirects + ${goneEntries.length} gone-410 inlined). ` +
+    `(${redirectEntries.length} _redirects + ${pruningEntries.length} pruning + ${goneEntries.length} gone-410 inlined, ` +
+    `${Object.keys(redirectMap).length} redirects únicos). ` +
     `wrangler.json main: ${prevMain} → wrapper.mjs`,
 );

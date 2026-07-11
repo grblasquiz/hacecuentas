@@ -23,6 +23,8 @@ import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { isRestrictedCalc } from '../src/lib/content-policy.ts';
+import { GONE_410_URLS } from '../src/lib/gone-410.ts';
+import { PRUNING_REDIRECTS } from '../src/lib/pruning-redirects.ts';
 
 const ROOT = process.cwd();
 // Vecinos guardados por calc. Debe superar RENDER_CAP (6) para que el coverage
@@ -161,7 +163,7 @@ function cosineSimilarity(
 // Versión del algoritmo: bumpearla invalida el cache aunque los JSONs no
 // cambien (el hash solo mira inputs — sin esto, editar este script no
 // regenera los mapas ya cacheados).
-const ALGO_VERSION = 'v4.3-min-inbound-3-window-insert';
+const ALGO_VERSION = 'v4.4-exclude-pruned-410';
 
 // Cuántas cards renderiza RelatedCalcs (limit de CalcLayoutV2) y el mínimo de
 // inlinks contextuales que garantizamos por calc DENTRO de esa ventana. El
@@ -174,6 +176,9 @@ function hashCalcsInputs(dir: string, files: string[]): string {
   // Hash basado en el contenido raw de todos los JSONs + path (si cambia el nombre de un slug, invalida cache).
   const hash = createHash('sha1');
   hash.update(ALGO_VERSION);
+  // Las listas de poda entran al hash: agregar URLs a gone-410/pruning debe
+  // invalidar el cache para que dejen de recomendarse como relacionadas.
+  hash.update(`${GONE_410_URLS.size}:${Object.keys(PRUNING_REDIRECTS).length}`);
   for (const f of files.sort()) {
     hash.update(f);
     hash.update(readFileSync(join(dir, f), 'utf8'));
@@ -230,6 +235,15 @@ function computeRelated(opts: {
   // (EN/PT), preservando el comportamiento AR para las noindex "comunes".
   calcs = calcs.filter((c) => !isRestrictedCalc(c as any));
   if (excludeNoindex) calcs = calcs.filter((c) => !c.noindex);
+  // Podadas (410 o 301) NUNCA como relacionadas: el link llevaría al usuario a
+  // una página muerta y desperdicia el slot de internal linking. El prefijo de
+  // URL sale del dir (no del label: 'es' es a la vez root y vertical España).
+  const dirBase = dir.split('/').pop() || '';
+  const urlPrefix = dirBase === 'calcs' ? '' : `/${dirBase.replace(/^calcs-/, '')}`;
+  calcs = calcs.filter((c) => {
+    const path = `${urlPrefix}/${c.slug}`;
+    return !GONE_410_URLS.has(path) && !(path in PRUNING_REDIRECTS);
+  });
 
   // Tokenizar cada una
   const tokensBySlug = new Map<string, string[]>();
