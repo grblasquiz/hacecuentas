@@ -10,6 +10,14 @@
  * El cómputo corre en el CLIENTE (room.compute, que compone las fórmulas). El
  * server pre-renderiza un baseline de ejemplo (initialResult) para que el bot
  * vea contenido sin ejecutar JS y no haya layout shift.
+ *
+ * Modo WIZARD (opt-in vía room.steps): el form se divide en pasos — el paso 1
+ * pide solo los datos mínimos y entrega un RESULTADO PRELIMINAR; los pasos
+ * siguientes lo afinan recalculando. Sin JS, todos los pasos quedan visibles
+ * (progressive enhancement: el colapso lo activa el cliente). Con room.presets,
+ * un click carga un escenario realista completo y calcula al instante. También
+ * acepta datos precargados por querystring (?campo=valor&from=<calc-slug>)
+ * desde las calculadoras relacionadas.
  */
 import FieldRow from './FieldRow.astro';
 import ProfilePrefill from './ProfilePrefill.astro';
@@ -22,7 +30,25 @@ interface Props {
 }
 const { room, initialResult } = Astro.props;
 
-// Agrupar campos por `group` preservando el orden de aparición.
+// — Modo wizard: resolver pasos → campos. Los campos que no figuran en ningún
+//   paso se anexan al último (defensivo: nada desaparece del form). —
+const hasWizard = !!(room.steps && room.steps.length > 0);
+const stepDefs: { title: string; hint?: string; fields: DecisionField[] }[] = hasWizard
+  ? room.steps!.map((s) => ({
+      title: s.title,
+      hint: s.hint,
+      fields: s.fieldIds
+        .map((id) => room.fields.find((f) => f.id === id))
+        .filter(Boolean) as DecisionField[],
+    }))
+  : [];
+if (hasWizard) {
+  const placed = new Set(stepDefs.flatMap((s) => s.fields.map((f) => f.id)));
+  const leftover = room.fields.filter((f) => !placed.has(f.id));
+  if (leftover.length) stepDefs[stepDefs.length - 1].fields.push(...leftover);
+}
+
+// Agrupar campos por `group` preservando el orden de aparición (modo clásico).
 const groups: { name: string; icon?: string; fields: DecisionField[] }[] = [];
 for (const f of room.fields) {
   const key = f.group || '';
@@ -34,7 +60,6 @@ for (const f of room.fields) {
   if (!g.icon && f.groupIcon) g.icon = f.groupIcon;
   g.fields.push(f);
 }
-const hasAdvanced = room.fields.some((f) => f.advanced);
 
 // Markdown inline mínimo (**negrita**) → HTML, con escape defensivo.
 function esc(s: string): string {
@@ -54,43 +79,108 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
 <section class="dr" data-decision-room={room.slug}>
   <p class="dr-intro" data-speakable>{room.intro}</p>
 
-  <form class="dr-form" id="dr-form" novalidate>
-    {groups.map((g) => (
-      <fieldset class="dr-group">
-        {g.name && (
-          <legend>
-            {g.icon && <span class="dr-group-icon" aria-hidden="true">{g.icon}</span>}
-            {g.name}
-          </legend>
-        )}
-        <div class="dr-fields">
-          {g.fields.filter((f) => !f.advanced).map((f) => (
-            <FieldRow field={f as any} />
-          ))}
-        </div>
-        {g.fields.some((f) => f.advanced) && (
-          <details class="dr-advanced">
-            <summary>Opciones avanzadas</summary>
-            <div class="dr-fields">
-              {g.fields.filter((f) => f.advanced).map((f) => (
-                <FieldRow field={f as any} />
-              ))}
-            </div>
-          </details>
-        )}
-      </fieldset>
-    ))}
+  {room.presets && room.presets.length > 0 && (
+    <div class="dr-presets" data-dr-presets>
+      <span class="dr-presets-title">¿Sin números a mano? Arrancá con un escenario típico:</span>
+      <div class="dr-presets-list" role="group" aria-label="Escenarios de ejemplo">
+        {room.presets.map((p) => (
+          <button
+            type="button"
+            class="dr-preset"
+            data-dr-preset
+            data-dr-preset-id={p.id}
+            data-dr-preset-label={p.label}
+            data-dr-preset-values={JSON.stringify(p.values)}
+            aria-pressed="false"
+          >
+            {p.icon && <span class="dr-preset-icon" aria-hidden="true">{p.icon}</span>}
+            <span class="dr-preset-body">
+              <span class="dr-preset-label">{p.label}</span>
+              {p.hint && <span class="dr-preset-hint">{p.hint}</span>}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )}
 
-    <button type="submit" class="dr-submit" id="dr-analyze">
-      Analizar mi decisión
-    </button>
-  </form>
+  {hasWizard ? (
+    <form class="dr-form" id="dr-form" novalidate data-wizard={String(stepDefs.length)}>
+      <ol class="dr-steps">
+        {stepDefs.map((s, i) => (
+          <li class="dr-steppanel" data-dr-step={i} data-active={i === 0 ? 'true' : 'false'}>
+            <button type="button" class="dr-steppanel-head" data-dr-step-toggle aria-expanded="true">
+              <span class="dr-step-num" aria-hidden="true">{i + 1}</span>
+              <span class="dr-steppanel-heading">
+                <span class="dr-steppanel-title">{s.title}</span>
+                {s.hint && <span class="dr-steppanel-hint">{s.hint}</span>}
+              </span>
+              <span class="dr-step-state" data-dr-step-state aria-hidden="true"></span>
+            </button>
+            <div class="dr-steppanel-body">
+              <div class="dr-fields">
+                {s.fields.map((f) => (
+                  <FieldRow field={f as any} />
+                ))}
+              </div>
+              <div class="dr-step-nav">
+                {i === 0 ? (
+                  <button type="submit" class="dr-submit" data-dr-cta="preliminary">
+                    Ver resultado preliminar
+                  </button>
+                ) : (
+                  <button type="submit" class="dr-submit" data-dr-cta="refine">
+                    {i === stepDefs.length - 1 ? 'Analizar mi decisión' : 'Afinar resultado'}
+                  </button>
+                )}
+                {i === 0 && stepDefs.length > 1 && (
+                  <span class="dr-step-note">Con esto ya te damos un primer número; después lo afinás.</span>
+                )}
+              </div>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </form>
+  ) : (
+    <form class="dr-form" id="dr-form" novalidate>
+      {groups.map((g) => (
+        <fieldset class="dr-group">
+          {g.name && (
+            <legend>
+              {g.icon && <span class="dr-group-icon" aria-hidden="true">{g.icon}</span>}
+              {g.name}
+            </legend>
+          )}
+          <div class="dr-fields">
+            {g.fields.filter((f) => !f.advanced).map((f) => (
+              <FieldRow field={f as any} />
+            ))}
+          </div>
+          {g.fields.some((f) => f.advanced) && (
+            <details class="dr-advanced">
+              <summary>Opciones avanzadas</summary>
+              <div class="dr-fields">
+                {g.fields.filter((f) => f.advanced).map((f) => (
+                  <FieldRow field={f as any} />
+                ))}
+              </div>
+            </details>
+          )}
+        </fieldset>
+      ))}
+
+      <button type="submit" class="dr-submit" id="dr-analyze">
+        Analizar mi decisión
+      </button>
+    </form>
+  )}
 
   <ProfilePrefill slug={`decidir/${room.slug}`} />
 
   <!-- Resultado integrado (baseline SSR; el cliente lo reescribe al analizar) -->
   <div class="dr-result" id="dr-result" data-example="true">
-    <p class="dr-result-flag" data-dr-flag>Ejemplo orientativo — cargá tus datos y tocá <strong>Analizar mi decisión</strong>.</p>
+    <p class="dr-result-flag" data-dr-flag>Ejemplo orientativo — cargá tus datos y tocá <strong>{hasWizard ? 'Ver resultado preliminar' : 'Analizar mi decisión'}</strong>.</p>
 
     <div class={`dr-verdict dr-tone-${initialResult.verdict.tone}`} data-dr-verdict>
       <span class="dr-badge" data-dr-badge>{initialResult.verdict.badge || STATUS_BADGE[initialResult.status]}</span>
@@ -192,7 +282,7 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
 <script>
   import { DECISION_ROOMS } from '../lib/decisions/index';
 
-  const root = document.querySelector('[data-decision-room]');
+  const root = document.querySelector('[data-decision-room]') as HTMLElement | null;
   if (root) {
     const slug = root.getAttribute('data-decision-room') || '';
     const room = DECISION_ROOMS[slug];
@@ -209,6 +299,31 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
     const esc = (s: string) =>
       String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c] || c));
     const mdInline = (s: string) => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+    // — Analytics (sin montos: solo metadata de comportamiento) —
+    function track(name: string, params?: Record<string, unknown>) {
+      try {
+        if (typeof (window as any).gtag === 'function') {
+          (window as any).gtag('event', name, Object.assign({ decision_slug: slug }, params || {}));
+        }
+      } catch {}
+    }
+
+    // — Estado del funnel —
+    const isWizard = !!form?.hasAttribute('data-wizard');
+    const panels = form ? (Array.from(form.querySelectorAll('[data-dr-step]')) as HTMLElement[]) : [];
+    let current = 0;
+    let started = false;
+    let computedOnce = false;
+    let activePreset = '';
+    let prefilled = false;
+    let abandonSent = false;
+
+    function markStart() {
+      if (started) return;
+      started = true;
+      track('decision_start', { wizard: isWizard ? 1 : 0 });
+    }
 
     // Separador de miles en vivo (es-AR) en los campos de plata. El formateador
     // de Calculator.astro no vive acá, así que lo replicamos mínimo: al tipear,
@@ -246,14 +361,86 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
       return out;
     }
 
-    function render(result: any, isExample: boolean) {
+    // — Wizard: mostrar/colapsar pasos —
+    function syncStepStates() {
+      panels.forEach((p, i) => {
+        const stateEl = p.querySelector('[data-dr-step-state]');
+        if (!stateEl) return;
+        const filled = (Array.from(p.querySelectorAll('input, select')) as (HTMLInputElement | HTMLSelectElement)[])
+          .some((el) => String(el.value || '').trim() !== '');
+        stateEl.textContent = i < current && filled ? '✓' : '';
+      });
+    }
+    function showStep(i: number, opts?: { track?: boolean }) {
+      if (!panels.length) return;
+      const idx = Math.max(0, Math.min(panels.length - 1, i));
+      current = idx;
+      panels.forEach((p, j) => {
+        p.dataset.active = j === idx ? 'true' : 'false';
+        const head = p.querySelector('[data-dr-step-toggle]');
+        if (head) head.setAttribute('aria-expanded', j === idx ? 'true' : 'false');
+      });
+      syncStepStates();
+      if (opts?.track) {
+        const title = panels[idx].querySelector('.dr-steppanel-title')?.textContent?.trim() || '';
+        track('decision_step', { step: idx + 1, step_title: title });
+      }
+    }
+    if (isWizard && panels.length) {
+      root.classList.add('dr-wizard'); // sin JS este class no existe → todos los pasos visibles
+      panels.forEach((p, i) => {
+        p.querySelector('[data-dr-step-toggle]')?.addEventListener('click', () => {
+          markStart();
+          showStep(i, { track: true });
+        });
+      });
+      showStep(0);
+    }
+
+    // — Validación de requeridos (solo modo wizard; el modo clásico conserva el
+    //   veredicto 'insufficient' de compute como feedback) —
+    function setFieldError(el: HTMLElement, msg: string) {
+      const err = document.getElementById('err-' + el.id);
+      if (err) {
+        err.textContent = msg;
+        (err as HTMLElement).hidden = !msg;
+      }
+      if (msg) el.setAttribute('aria-invalid', 'true');
+      else el.removeAttribute('aria-invalid');
+    }
+    function validateRequired(scope: HTMLElement): HTMLElement[] {
+      const els = Array.from(scope.querySelectorAll('input[required], select[required]')) as (
+        | HTMLInputElement
+        | HTMLSelectElement
+      )[];
+      const missing: HTMLElement[] = [];
+      els.forEach((el) => {
+        const empty = String(el.value || '').trim() === '';
+        setFieldError(el, empty ? 'Completá este campo para ver el resultado.' : '');
+        if (empty) missing.push(el);
+      });
+      if (missing.length) {
+        track('decision_validation_error', {
+          step: current + 1,
+          fields: missing.map((e) => e.id).join(',').slice(0, 95),
+          missing_count: missing.length,
+        });
+      }
+      return missing;
+    }
+    // limpiar el error al corregir
+    form?.addEventListener('input', (e) => {
+      markStart();
+      const t = e.target as HTMLElement | null;
+      if (t && t.id && String((t as HTMLInputElement).value || '').trim() !== '') setFieldError(t, '');
+    });
+    form?.addEventListener('change', markStart);
+
+    function render(result: any, opts?: { flagHtml?: string }) {
       if (!resultEl) return;
       const r = result;
       const tone = r.verdict.tone || 'neutral';
-
-      const flag = isExample
-        ? '<p class="dr-result-flag" data-dr-flag>Ejemplo orientativo — cargá tus datos y tocá <strong>Analizar mi decisión</strong>.</p>'
-        : '';
+      const flag = opts?.flagHtml || '';
 
       const scenarios = (r.scenarios && r.scenarios.length)
         ? `<div class="dr-scenarios"><h4>Tres escenarios</h4>
@@ -296,7 +483,7 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
         : '';
 
       resultEl.className = 'dr-result';
-      resultEl.dataset.example = isExample ? 'true' : 'false';
+      resultEl.dataset.example = 'false';
       resultEl.innerHTML = `${flag}
         <div class="dr-verdict dr-tone-${tone}">
           <span class="dr-badge">${esc(r.verdict.badge || STATUS_BADGE[r.status] || '')}</span>
@@ -311,21 +498,163 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
         ${scenarios}${comparison}${breakdown}${actions}${notes}`;
     }
 
-    form?.addEventListener('submit', (e) => {
-      e.preventDefault();
+    // Flags contextuales del resultado según cómo se llegó a él.
+    function flagFor(kind: string): string {
+      if (kind === 'preliminary')
+        return '<p class="dr-result-flag dr-flag-preliminary">⚡ <strong>Resultado preliminar</strong> con los datos mínimos — completá el paso siguiente para afinarlo.</p>';
+      if (kind === 'preset')
+        return `<p class="dr-result-flag dr-flag-preliminary">📋 <strong>Escenario de ejemplo</strong>${activePresetLabel ? ' (' + esc(activePresetLabel) + ')' : ''} — ajustá los números a tu caso real.</p>`;
+      if (kind === 'prefill')
+        return '<p class="dr-result-flag dr-flag-preliminary">🔗 Calculamos con <strong>los datos que trajiste</strong> — revisalos y afiná el resultado.</p>';
+      return '';
+    }
+    let activePresetLabel = '';
+
+    function doCompute(kind: 'preliminary' | 'refined' | 'preset' | 'prefill') {
       try {
         const result = room.compute(collect());
-        render(result, false);
+        render(result, { flagHtml: flagFor(kind) });
+        computedOnce = true;
         resultEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        if (typeof (window as any).gtag === 'function') {
-          (window as any).gtag('event', 'decision_compute', {
-            decision_slug: slug,
-            decision_status: result.status, // sin montos: solo metadata
-          });
+        // Modo clásico: 'insufficient' equivale a un error de validación (no
+        // bloqueamos el submit, pero lo medimos para ver dónde se traba la gente).
+        if (!isWizard && result.status === 'insufficient') {
+          track('decision_validation_error', { step: 1, fields: 'insufficient', missing_count: 0 });
         }
+        track('decision_compute', {
+          decision_status: result.status, // sin montos: solo metadata
+          phase: kind,
+          preset_id: activePreset || undefined,
+          prefilled: prefilled ? 1 : 0,
+          step: isWizard ? current + 1 : undefined,
+        });
+        return result;
       } catch (err) {
         console.error('[decision-room] compute error', err);
+        return null;
       }
+    }
+
+    // — Aplicar valores (presets / querystring) sin disparar el writeback de
+    //   perfil (solo 'input', nunca 'change': ProfilePrefill guarda en change) —
+    function applyValues(values: Record<string, unknown>) {
+      for (const [id, v] of Object.entries(values)) {
+        const el = form?.querySelector('#' + (window.CSS && CSS.escape ? CSS.escape(id) : id)) as
+          | HTMLInputElement
+          | HTMLSelectElement
+          | null;
+        if (!el) continue;
+        const sv = String(v);
+        el.value = sv;
+        // Selects: si el valor no existe como opción (ej. la calc manda
+        // 'true'/'false' y la sala usa 'si'/'no'), probar el alias booleano.
+        if (el.tagName === 'SELECT' && el.value !== sv) {
+          const alias = sv === 'true' ? 'si' : sv === 'false' ? 'no' : '';
+          if (alias) el.value = alias;
+        }
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+
+    // — Presets realistas —
+    const presetBtns = Array.from(root.querySelectorAll('[data-dr-preset]')) as HTMLButtonElement[];
+    presetBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        let values: Record<string, unknown> | null = null;
+        try {
+          values = JSON.parse(btn.getAttribute('data-dr-preset-values') || 'null');
+        } catch {}
+        if (!values) return;
+        markStart();
+        activePreset = btn.getAttribute('data-dr-preset-id') || '';
+        activePresetLabel = btn.getAttribute('data-dr-preset-label') || '';
+        presetBtns.forEach((b) => {
+          b.classList.toggle('active', b === btn);
+          b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+        });
+        applyValues(values);
+        track('decision_preset', { preset_id: activePreset });
+        doCompute('preset');
+        // Dejar el wizard en el paso de afinado: el escenario ya cargó todo.
+        if (isWizard && panels.length > 1) showStep(1);
+      });
+    });
+
+    // — Prefill por querystring (?campo=valor&from=<calc-slug>) desde las
+    //   calculadoras relacionadas. Solo ids de campos conocidos de la sala. —
+    try {
+      const params = new URLSearchParams(location.search);
+      if (params.size > 0) {
+        const values: Record<string, string> = {};
+        for (const f of room.fields) {
+          const v = params.get(f.id);
+          if (v !== null && v.trim() !== '') values[f.id] = v;
+        }
+        if (Object.keys(values).length > 0) {
+          applyValues(values);
+          prefilled = true;
+          started = true; // llegó con intención: no cuenta como start orgánico del form
+          track('decision_prefill', {
+            from_calc: params.get('from') || '',
+            fields_prefilled: Object.keys(values).length,
+          });
+          const reqs = Array.from(form!.querySelectorAll('input[required], select[required]')) as (
+            | HTMLInputElement
+            | HTMLSelectElement
+          )[];
+          const allReq = reqs.every((el) => String(el.value || '').trim() !== '');
+          if (allReq) {
+            setTimeout(() => {
+              doCompute('prefill');
+              if (isWizard && panels.length > 1) showStep(1);
+            }, 120);
+          }
+        }
+      }
+    } catch {}
+
+    // — Submit: paso 1 → preliminar; pasos siguientes → afinado —
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      markStart();
+      if (isWizard && panels.length) {
+        const scope = current === 0 ? panels[0] : form;
+        const missing = validateRequired(scope);
+        if (missing.length) {
+          const p = missing[0].closest('[data-dr-step]') as HTMLElement | null;
+          if (p) showStep(panels.indexOf(p));
+          (missing[0] as HTMLInputElement).focus();
+          return;
+        }
+        if (current === 0) {
+          doCompute('preliminary');
+          if (panels.length > 1) showStep(1);
+        } else {
+          doCompute('refined');
+          if (current < panels.length - 1) showStep(current + 1);
+        }
+      } else {
+        doCompute('refined');
+      }
+    });
+
+    // — Abandono: empezó a cargar datos pero se va sin ver ningún resultado —
+    function sendAbandon() {
+      if (abandonSent || !started || computedOnce) return;
+      abandonSent = true;
+      const filled = (Array.from(form?.querySelectorAll('input, select') || []) as (
+        | HTMLInputElement
+        | HTMLSelectElement
+      )[]).filter((el) => String(el.value || '').trim() !== '').length;
+      track('decision_abandon', {
+        step: isWizard ? current + 1 : 1,
+        fields_filled: filled,
+        transport_type: 'beacon',
+      });
+    }
+    window.addEventListener('pagehide', sendAbandon);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') sendAbandon();
     });
   }
 </script>

@@ -346,6 +346,70 @@ export const room: DecisionRoom = {
       group: 'Comunes',
     },
   ],
+  // — Wizard: propiedad + alquiler (preliminar con plazo/horizonte default) →
+  //   afinar horizonte, plazo, ajuste y expensas. —
+  steps: [
+    {
+      title: 'La propiedad y el alquiler',
+      hint: 'Valor de venta, anticipo, tasa del crédito y alquiler equivalente.',
+      fieldIds: ['valorPropiedad', 'anticipo', 'tnaCredito', 'alquilerMensual'],
+    },
+    {
+      title: 'Tu horizonte y los detalles',
+      hint: 'Cuántos años te quedás (la clave), plazo del crédito, ajuste y expensas.',
+      fieldIds: ['aniosPermanencia', 'plazoAniosCredito', 'ajusteAlquilerAnual', 'expensas'],
+    },
+  ],
+  presets: [
+    {
+      id: 'depto-caba-uva',
+      label: 'Depto 2 amb. con crédito UVA',
+      hint: 'Depto de USD ~100 mil, 30% de anticipo, UVA al 9%, te quedás 10 años.',
+      icon: '🏢',
+      values: {
+        valorPropiedad: 120000000,
+        anticipo: 36000000,
+        tnaCredito: 9,
+        plazoAniosCredito: 20,
+        alquilerMensual: 550000,
+        ajusteAlquilerAnual: 40,
+        expensas: 90000,
+        aniosPermanencia: 10,
+      },
+    },
+    {
+      id: 'casa-gba-mitad-anticipo',
+      label: 'Casa en GBA, mitad de anticipo',
+      hint: 'Casa sin expensas, 50% de anticipo y crédito corto a 15 años.',
+      icon: '🏡',
+      values: {
+        valorPropiedad: 180000000,
+        anticipo: 90000000,
+        tnaCredito: 8,
+        plazoAniosCredito: 15,
+        alquilerMensual: 700000,
+        ajusteAlquilerAnual: 35,
+        expensas: 0,
+        aniosPermanencia: 15,
+      },
+    },
+    {
+      id: 'me-quedo-pocos-anos',
+      label: 'Me quedo pocos años',
+      hint: 'El mismo depto, pero con horizonte de 4 años: mirá cómo cambia.',
+      icon: '🧳',
+      values: {
+        valorPropiedad: 120000000,
+        anticipo: 36000000,
+        tnaCredito: 9,
+        plazoAniosCredito: 20,
+        alquilerMensual: 550000,
+        ajusteAlquilerAnual: 40,
+        expensas: 90000,
+        aniosPermanencia: 4,
+      },
+    },
+  ],
   compute,
   componentCalcs: [
     { slug: 'calculadora-alquiler-vs-comprar', label: 'Alquilar vs comprar' },

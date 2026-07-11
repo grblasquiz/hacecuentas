@@ -239,6 +239,63 @@ export const room: DecisionRoom = {
       group: 'Tu plata',
     },
   ],
+  // — Wizard: las dos tasas y los dos montos (preliminar) → afinar liquidez. —
+  steps: [
+    {
+      title: 'Tu deuda y tu plata',
+      hint: 'Saldo y tasa de la deuda, plata disponible y rendimiento esperado.',
+      fieldIds: ['saldoDeuda', 'tnaDeuda', 'montoDisponible', 'tnaInversion'],
+    },
+    {
+      title: 'Afiná el escenario',
+      hint: 'Fondo de emergencia e inflación para interpretar mejor el resultado.',
+      fieldIds: ['liquidezNecesaria', 'inflacionAnual'],
+    },
+  ],
+  presets: [
+    {
+      id: 'tarjeta-vs-plazo-fijo',
+      label: 'Tarjeta cara vs plazo fijo',
+      hint: 'Refinanciás la tarjeta al 145% de CFT y el plazo fijo rinde 38%.',
+      icon: '💳',
+      values: {
+        saldoDeuda: 1200000,
+        tnaDeuda: 145,
+        montoDisponible: 1500000,
+        tnaInversion: 38,
+        liquidezNecesaria: 300000,
+        inflacionAnual: 0,
+      },
+    },
+    {
+      id: 'prestamo-vs-money-market',
+      label: 'Préstamo personal vs money market',
+      hint: 'Préstamo al 75% de TNA contra un fondo que rinde 32%.',
+      icon: '🏦',
+      values: {
+        saldoDeuda: 3000000,
+        tnaDeuda: 75,
+        montoDisponible: 2000000,
+        tnaInversion: 32,
+        liquidezNecesaria: 500000,
+        inflacionAnual: 0,
+      },
+    },
+    {
+      id: 'deuda-barata-cuota-fija',
+      label: 'Deuda barata con cuota fija',
+      hint: 'Crédito subsidiado al 25% mientras la inversión rinde 38%.',
+      icon: '🪙',
+      values: {
+        saldoDeuda: 2500000,
+        tnaDeuda: 25,
+        montoDisponible: 2500000,
+        tnaInversion: 38,
+        liquidezNecesaria: 400000,
+        inflacionAnual: 25,
+      },
+    },
+  ],
   compute,
   componentCalcs: [
     { slug: 'calculadora-plazo-fijo', label: 'Plazo fijo' },

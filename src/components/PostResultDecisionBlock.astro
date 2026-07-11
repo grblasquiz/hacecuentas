@@ -20,6 +20,13 @@ export interface PostResultRoom {
   hook?: string;
   /** Label del CTA (ej. "Abrí la sala: ¿Me conviene aceptar esta oferta?"). */
   label?: string;
+  /**
+   * Mapeo campo-de-la-sala → input-de-la-calc para entrar a la sala con los
+   * datos ya cargados (ej. { brutoActual: 'bruto' }). Al calcular, el CTA
+   * suma `?<campoSala>=<valor>&from=<calc-slug>` y la sala precarga y
+   * auto-calcula el preliminar.
+   */
+  prefill?: Record<string, string>;
 }
 interface Props {
   /** Slug de la calc (para analytics). */
@@ -65,9 +72,10 @@ const hasBlock = Boolean(meaning || room);
     {room && (
       <a
         class="prd-room"
-        href={`/decidir/${room.slug}`}
+        href={`/decidir/${room.slug}${room.prefill ? `?from=${slug}` : ''}`}
         data-decision-room
         data-room-slug={room.slug}
+        data-room-prefill={room.prefill ? JSON.stringify(room.prefill) : undefined}
       >
         <span class="prd-room-body">
           <span class="prd-room-hook">{room.hook || T.hookDefault}</span>
@@ -83,12 +91,34 @@ const hasBlock = Boolean(meaning || room);
       var host = document.querySelector('[data-prd]');
       if (!host) return;
       var valueEl = host.querySelector('[data-prd-value]');
+      var roomLink = host.querySelector('[data-decision-room]');
+      var prefillMap = null;
+      var baseHref = '';
+      if (roomLink && roomLink.getAttribute('data-room-prefill')) {
+        try { prefillMap = JSON.parse(roomLink.getAttribute('data-room-prefill')); } catch (e) {}
+        baseHref = roomLink.href.split('?')[0];
+      }
       var containers = document.querySelectorAll('.calc-container');
       if (!containers.length) return;
       function onResult(ev) {
         var detail = ev && ev.detail ? ev.detail : null;
         if (!detail || !detail.output) return;
         if (valueEl && detail.primary) valueEl.textContent = detail.primary;
+        // Entrar a la sala con los datos ya cargados: mapea inputs de la calc a
+        // campos de la sala y arma el querystring del CTA.
+        if (prefillMap && roomLink && detail.inputs) {
+          try {
+            var qs = new URLSearchParams();
+            Object.keys(prefillMap).forEach(function (roomField) {
+              var v = detail.inputs[prefillMap[roomField]];
+              if (v === undefined || v === null || v === '') return;
+              if (typeof v === 'boolean') v = v ? 'si' : 'no';
+              qs.set(roomField, String(v));
+            });
+            qs.set('from', host.getAttribute('data-prd-slug') || '');
+            roomLink.href = baseHref + '?' + qs.toString();
+          } catch (e) {}
+        }
         host.hidden = false;
       }
       containers.forEach(function (c) {
