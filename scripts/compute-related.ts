@@ -25,7 +25,10 @@ import { createHash } from 'node:crypto';
 import { isRestrictedCalc } from '../src/lib/content-policy.ts';
 
 const ROOT = process.cwd();
-const TOP_K = 6;
+// Vecinos guardados por calc. Debe superar RENDER_CAP (6) para que el coverage
+// pass tenga reserva fuera de la ventana renderizada (promote) y candidatos de
+// desalojo sin vaciar el bloque. Antes era 6 (== cap) y AR no tenía reserva.
+const TOP_K = 10;
 
 // Stopwords españolas + términos genéricos del dominio (no discriminan entre calcs)
 const STOPWORDS_ES = new Set([
@@ -80,6 +83,7 @@ interface Calc {
   seoKeywords?: string[];
   relatedSlugs?: string[];
   noindex?: boolean;
+  canonicalSlug?: string;
 }
 
 function tokenize(text: string, stopwords: Set<string>): string[] {
@@ -157,7 +161,14 @@ function cosineSimilarity(
 // Versión del algoritmo: bumpearla invalida el cache aunque los JSONs no
 // cambien (el hash solo mira inputs — sin esto, editar este script no
 // regenera los mapas ya cacheados).
-const ALGO_VERSION = 'v3-country-denoise';
+const ALGO_VERSION = 'v4.3-min-inbound-3-window-insert';
+
+// Cuántas cards renderiza RelatedCalcs (limit de CalcLayoutV2) y el mínimo de
+// inlinks contextuales que garantizamos por calc DENTRO de esa ventana. El
+// renderer pone primero los relatedSlugs manuales → la ventana efectiva de una
+// source es RENDER_CAP - (manuales válidos).
+const RENDER_CAP = 6;
+const MIN_INBOUND = 3;
 
 function hashCalcsInputs(dir: string, files: string[]): string {
   // Hash basado en el contenido raw de todos los JSONs + path (si cambia el nombre de un slug, invalida cache).
@@ -275,48 +286,151 @@ function computeRelated(opts: {
     related[c.slug] = scores.slice(0, topK).map((s) => s.slug);
   }
 
-  // Coverage pass: toda calc tiene que recibir ≥1 link ENTRANTE del grafo
-  // (contando también los relatedSlugs manuales). Sin esto ~64 calcs solo
-  // apuntaban hacia afuera y nunca recibían — cero equity interno del bloque
-  // related. A cada huérfana se la inserta en la lista de su vecino más
-  // similar (cosine es simétrico: su top-1 es también quien más se le parece),
-  // desplazando al entrante más débil que tenga otros links entrantes.
+  // Coverage pass v2: toda calc tiene que recibir ≥MIN_INBOUND links ENTRANTES
+  // *que realmente se rendericen*. El renderer (RelatedCalcs) muestra primero
+  // los relatedSlugs manuales de la source y completa con este mapa hasta
+  // RENDER_CAP: una aparición en la lista NO garantiza render si cae fuera de
+  // la ventana. Por eso acá modelamos la ventana efectiva por source y
+  // garantizamos el mínimo con dos tácticas: PROMOTE (subir a ventana una
+  // aparición que ya existía más abajo) e INSERT (meter al target en la lista
+  // de sus vecinos más similares — cosine es simétrico). Nunca degradamos a
+  // otra calc por debajo del mínimo al desalojar.
+  const bySlugSet = new Set(calcs.map((c) => c.slug));
+  // Solo las páginas INDEXABLES pasan equity: los links desde noindex o desde
+  // alias canónicos (canonicalSlug ≠ slug) no cuentan como inbound, y solo las
+  // indexables necesitan la garantía de mínimo (relevante en AR, donde el pool
+  // conserva noindex; en EN/PT/verticales ya se filtran antes).
+  const indexable = new Set(
+    calcs
+      .filter((c) => !c.noindex && !(c.canonicalSlug && c.canonicalSlug !== c.slug))
+      .map((c) => c.slug),
+  );
+  // El renderer (RelatedCalcs) arma su pool solo con INDEXABLES: los manuales o
+  // autos que apunten a noindex/alias se saltean SIN gastar ventana. Modelamos
+  // igual: manualOf/renderedAuto solo consideran targets indexables.
+  const manualOf = new Map<string, Set<string>>();
+  for (const c of calcs) {
+    manualOf.set(
+      c.slug,
+      new Set((c.relatedSlugs || []).filter((s) => bySlugSet.has(s) && indexable.has(s) && s !== c.slug)),
+    );
+  }
+  const windowOf = (source: string): number =>
+    Math.max(0, RENDER_CAP - Math.min(RENDER_CAP, manualOf.get(source)?.size || 0));
+  // Entradas auto que renderizan para una source: las primeras `window`
+  // indexables que no estén ya en sus manuales (el renderer dedupea manual→auto).
+  const renderedAuto = (source: string): string[] => {
+    const man = manualOf.get(source)!;
+    const win = windowOf(source);
+    const out: string[] = [];
+    if (win <= 0) return out;
+    for (const s of related[source] || []) {
+      if (man.has(s) || !indexable.has(s)) continue;
+      out.push(s);
+      if (out.length >= win) break;
+    }
+    return out;
+  };
+
   const incoming = new Map<string, number>();
   for (const c of calcs) incoming.set(c.slug, 0);
   for (const c of calcs) {
-    for (const s of c.relatedSlugs || []) {
-      if (incoming.has(s)) incoming.set(s, (incoming.get(s) || 0) + 1);
+    if (!indexable.has(c.slug)) continue; // noindex/alias no pasa equity
+    // Manuales: solo los primeros RENDER_CAP renderizan (el renderer corta ahí);
+    // un slug manual en la posición 7+ no es un inlink real.
+    let m = 0;
+    for (const s of manualOf.get(c.slug)!) {
+      if (m >= RENDER_CAP) break;
+      incoming.set(s, (incoming.get(s) || 0) + 1);
+      m++;
     }
+    for (const s of renderedAuto(c.slug)) incoming.set(s, (incoming.get(s) || 0) + 1);
   }
-  for (const list of Object.values(related)) {
-    for (const s of list) incoming.set(s, (incoming.get(s) || 0) + 1);
-  }
-  const orphans = calcs.filter((c) => (incoming.get(c.slug) || 0) === 0);
-  let placedCount = 0;
-  for (const o of orphans) {
-    let placed = false;
-    for (const host of related[o.slug] || []) {
+
+  // ¿La entrada idx de la lista de `source` está dentro de la ventana renderizada?
+  const inWindow = (source: string, idx: number): boolean => {
+    const man = manualOf.get(source)!;
+    const win = windowOf(source);
+    let rendered = 0;
+    const list = related[source] || [];
+    for (let i = 0; i < list.length; i++) {
+      if (man.has(list[i]) || !indexable.has(list[i])) continue;
+      rendered++;
+      if (i === idx) return rendered <= win;
+      if (rendered >= win) return false;
+    }
+    return false;
+  };
+
+  const weak = calcs
+    .map((c) => c.slug)
+    .filter((s) => indexable.has(s) && (incoming.get(s) || 0) < MIN_INBOUND)
+    .sort((a, b) => (incoming.get(a) || 0) - (incoming.get(b) || 0));
+  let promoted = 0;
+  let inserted = 0;
+  let unresolved = 0;
+
+  for (const target of weak) {
+    let need = MIN_INBOUND - (incoming.get(target) || 0);
+    if (need <= 0) continue;
+
+    // Táctica 1 — PROMOTE: sources que ya tienen al target fuera de ventana.
+    for (const source of Object.keys(related)) {
+      if (need <= 0) break;
+      if (source === target || !indexable.has(source)) continue;
+      const list = related[source];
+      const idx = list.indexOf(target);
+      if (idx < 0 || inWindow(source, idx) || manualOf.get(source)!.has(target)) continue;
+      const win = windowOf(source);
+      if (win <= 0) continue;
+      // Desalojar la última entrada renderizada si pierde de más; si la lista
+      // renderizada tiene hueco (menos entradas que ventana) no hay víctima.
+      const rendered = renderedAuto(source);
+      const victim = rendered.length >= win ? rendered[rendered.length - 1] : null;
+      if (victim && (incoming.get(victim) || 0) <= MIN_INBOUND) continue;
+      list.splice(idx, 1);
+      // Con ventana chica (host con varios manuales), idx 2 caería FUERA de la
+      // ventana renderizada y el link no existiría: insertar al frente.
+      const insertAt = win > 2 ? Math.min(2, list.length) : 0;
+      list.splice(insertAt, 0, target);
+      if (victim) incoming.set(victim, (incoming.get(victim) || 1) - 1);
+      incoming.set(target, (incoming.get(target) || 0) + 1);
+      need--;
+      promoted++;
+    }
+
+    // Táctica 2 — INSERT: meter al target en la lista de sus vecinos más
+    // similares (su propia lista related[target], simetría del cosine).
+    for (const host of related[target] || []) {
+      if (need <= 0) break;
+      if (!indexable.has(host)) continue;
       const hostList = related[host];
-      if (!hostList || hostList.includes(o.slug)) continue;
-      for (let i = hostList.length - 1; i >= 0; i--) {
-        const victim = hostList[i];
-        if ((incoming.get(victim) || 0) > 1) {
-          hostList.splice(i, 1);
-          incoming.set(victim, (incoming.get(victim) || 1) - 1);
-          // Insertar arriba (idx 2) para caer dentro de las 4 cards renderizadas.
-          hostList.splice(Math.min(2, hostList.length), 0, o.slug);
-          incoming.set(o.slug, 1);
-          placed = true;
-          placedCount++;
-          break;
-        }
+      if (!hostList || hostList.includes(target) || manualOf.get(host)?.has(target)) continue;
+      const win = windowOf(host);
+      if (win <= 0) continue;
+      const rendered = renderedAuto(host);
+      const victim = rendered.length >= win ? rendered[rendered.length - 1] : null;
+      if (victim && (incoming.get(victim) || 0) <= MIN_INBOUND) continue;
+      if (victim) {
+        const vIdx = hostList.indexOf(victim);
+        if (vIdx >= 0) hostList.splice(vIdx, 1);
+        incoming.set(victim, (incoming.get(victim) || 1) - 1);
       }
-      if (placed) break;
+      hostList.splice(win > 2 ? Math.min(2, hostList.length) : 0, 0, target);
+      incoming.set(target, (incoming.get(target) || 0) + 1);
+      need--;
+      inserted++;
     }
-    if (!placed) console.warn(`[related-auto:${label}] huérfana sin host viable: ${o.slug}`);
+
+    if (need > 0) unresolved++;
   }
-  if (orphans.length > 0) {
-    console.log(`[related-auto:${label}] coverage pass: ${placedCount}/${orphans.length} huérfanas enlazadas`);
+
+  const stillOrphan = calcs.filter((c) => indexable.has(c.slug) && (incoming.get(c.slug) || 0) === 0);
+  for (const o of stillOrphan) console.warn(`[related-auto:${label}] huérfana sin host viable: ${o.slug}`);
+  if (weak.length > 0) {
+    console.log(
+      `[related-auto:${label}] coverage v2: ${weak.length} calcs con <${MIN_INBOUND} inlinks → ${promoted} promotes + ${inserted} inserts, ${unresolved} sin resolver del todo, ${stillOrphan.length} huérfanas`,
+    );
   }
 
   writeFileSync(outputFile, JSON.stringify(related, null, 2));
