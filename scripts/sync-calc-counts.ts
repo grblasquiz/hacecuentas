@@ -64,6 +64,12 @@ const TARGETS: Target[] = [
     replacement: `más de ${display} calculadoras`,
   },
   {
+    // humans.txt es un archivo en inglés: número sin separador de miles.
+    file: 'public/humans.txt',
+    pattern: /\d[\d.,]*\+ calculators/,
+    replacement: `${floored}+ calculators`,
+  },
+  {
     file: 'README.md',
     pattern: /Calculadoras Online Gratuitas \(\d[\d.,]*\+\)/,
     replacement: `Calculadoras Online Gratuitas (${display}+)`,

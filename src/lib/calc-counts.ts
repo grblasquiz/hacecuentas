@@ -103,3 +103,9 @@ export const AR_DISPLAY = `${formatES(floorTo100(AR_INDEXABLE))}+`;
 export const PT_DISPLAY = `${formatES(floorTo100(CALC_COUNTS.pt))}+`;
 // Sin sufijo "+", para frases tipo "Más de {TOTAL_PLAIN} calculadoras".
 export const TOTAL_PLAIN = formatES(floorTo100(PUBLIC_TOTAL));
+
+// Total del catálogo en ESPAÑOL (excluye EN/PT-BR/PT-PT), indexable, formateado
+// en-US — para textos en inglés que refieren al catálogo hispano
+// ("Visit our full site in Spanish with N+ calculators").
+const ES_PUBLIC_TOTAL = PUBLIC_TOTAL - CALC_COUNTS.en - CALC_COUNTS.pt - CALC_COUNTS.ptPt;
+export const ES_TOTAL_DISPLAY_EN = `${floorTo100(ES_PUBLIC_TOTAL).toLocaleString('en-US')}+`;
