@@ -238,7 +238,8 @@ export const room: DecisionRoom = {
   icon: '💼',
   category: 'finanzas',
   audience: 'AR',
-  lastReviewed: '2026-06-29',
+  answer: 'Conviene aceptar cuando la oferta te deja al menos un **20% más en el bolsillo real** —ya descontados Ganancias, aportes, traslado, comida y el tiempo de viaje no pago—, no cuando el sueldo bruto es más alto. Un aumento nominal del 22% puede achicarse a menos del 8% real si además pasás de trabajo remoto a presencial. Mirá el ingreso neto ajustado, no el número que te dicen en la entrevista.',
+  lastReviewed: '2026-07-11',
   example: {
     brutoActual: 1500000,
     brutoOferta: 1950000,

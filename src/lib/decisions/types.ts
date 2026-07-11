@@ -92,6 +92,13 @@ export interface DecisionRoom {
   description: string;
   /** Párrafo de intro (qué resuelve la sala y cómo). */
   intro: string;
+  /**
+   * "La respuesta corta" — 2-3 frases que responden DIRECTAMENTE la pregunta del
+   * h1, con la regla de decisión concreta (el criterio, no un número exacto que
+   * dependa de los inputs). Se renderiza como callout arriba de la herramienta y
+   * alimenta `speakable` → target de featured snippet / AI Overview. Opcional:
+   * si falta, no se renderiza (nunca thin-content por relleno genérico). */
+  answer?: string;
   icon: string;
   /** Categoría para breadcrumb / theming (reusa la taxonomía de calcs). */
   category: string;

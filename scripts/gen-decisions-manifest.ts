@@ -16,7 +16,7 @@ import { pathToFileURL } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIR = join(__dirname, '..', 'src', 'lib', 'decisions');
-const SKIP = new Set(['types.ts', 'index.ts', 'manifest.ts', 'manifest-locales.ts', 'locales.ts', 'locales-registry.ts', 'hubs.ts', 'calc-backlinks.ts']);
+const SKIP = new Set(['types.ts', 'index.ts', 'manifest.ts', 'manifest-locales.ts', 'locales.ts', 'locales-registry.ts', 'hubs.ts', 'calc-backlinks.ts', 'related.ts']);
 const LOCALE_DIRS = ['co', 'mx', 'cl', 'pe'] as const;
 
 interface Meta {

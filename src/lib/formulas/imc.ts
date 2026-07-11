@@ -162,6 +162,8 @@ export interface IMCOutputs {
   diferenciaPesoIdeal: string;
   whtr: string;
   riesgoCardiometabolico: string;
+  bmiPrime: number;
+  ponderal: number;
   interpretacion: string;
   _chart?: any;
   _insight?: any;
@@ -189,6 +191,13 @@ export function imc(inputs: IMCInputs): IMCOutputs {
 
   const alturaM = alturaCm / 100;
   const imcValue = peso / (alturaM * alturaM);
+
+  // IMC Prime: ratio entre el IMC y el límite superior saludable (25). 1,00 = justo
+  // en el borde del sobrepeso; <1 dentro del rango, >1 por encima. Lo usa calculator.net.
+  const bmiPrime = imcValue / 25;
+  // Índice ponderal (Rohrer): peso / altura³. Más estable que el IMC en personas muy
+  // altas o muy bajas, donde el IMC tiende a sobre/subestimar. Rango normal ~11–15 kg/m³.
+  const ponderal = peso / (alturaM * alturaM * alturaM);
 
   // Adulto mayor: OMS sugiere rango 23–28 para >=65 años (protege frente a sarcopenia).
   const edad = inputs.edad ? Number(inputs.edad) : 0;
@@ -324,6 +333,8 @@ export function imc(inputs: IMCInputs): IMCOutputs {
     diferenciaPesoIdeal: diferencia,
     whtr,
     riesgoCardiometabolico,
+    bmiPrime: Number(bmiPrime.toFixed(2)),
+    ponderal: Number(ponderal.toFixed(1)),
     interpretacion,
     _chart: chart,
     _insight: insight,

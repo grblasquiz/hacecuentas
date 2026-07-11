@@ -9,6 +9,7 @@ import { freeOfferSchema } from '../../lib/offer-schema';
 import { md } from '../../lib/markdown';
 import { DECISION_LIST, getRoom } from '../../lib/decisions/index';
 import { primaryHubOf } from '../../lib/decisions/hubs';
+import { relatedRooms } from '../../lib/decisions/related';
 import { equivalentsByEsSlug } from '../../lib/decisions/locales';
 import { buildHreflangCluster } from '../../lib/hreflang';
 
@@ -60,6 +61,15 @@ const siblings = hub
       .filter(Boolean)
       .slice(0, 6)
   : [];
+
+// Decisiones relacionadas (cross-linking temático). Complementa a los siblings
+// del hub: excluye los ya mostrados para no repetir enlaces. Para las salas SIN
+// hub, este bloque es su ÚNICA fuente de links sala→sala.
+const related = relatedRooms(
+  room.slug,
+  4,
+  siblings.map((s) => s!.slug),
+);
 
 // HowTo steps desde el howItWorks numerado ("1. **Título.** texto").
 const howToSteps = [...room.howItWorks.matchAll(/^\d+\.\s+\*\*(.+?)\*\*\s*(.*)$/gm)].map((m) => ({
@@ -115,7 +125,7 @@ const schemaGraph: any[] = [
     // Speakable: intro (respuesta a la pregunta del h1) + número decisivo.
     speakable: {
       '@type': 'SpeakableSpecification',
-      cssSelector: ['.dr-intro', '.dr-decisive-value', '.dr-decisive-label'],
+      cssSelector: ['.dr-answer-text', '.dr-intro', '.dr-decisive-value', '.dr-decisive-label'],
     },
   },
 ];
@@ -192,6 +202,13 @@ const howItWorksHtml = md(room.howItWorks);
       <p class="dr-updated">Revisado: {lastReviewedLabel}</p>
     </header>
 
+    {room.answer && (
+      <aside class="dr-answer" aria-label="La respuesta corta">
+        <span class="dr-answer-label">La respuesta corta</span>
+        <p class="dr-answer-text" set:html={md(room.answer).replace(/^<p>|<\/p>\s*$/g, '')} />
+      </aside>
+    )}
+
     <DecisionRoom room={room} initialResult={initialResult} />
 
     <section class="dr-section" id="como-funciona">
@@ -223,6 +240,26 @@ const howItWorksHtml = md(room.howItWorks);
           <li>
             <a href={`/decidir/${hub.slug}`}><strong>{hub.icon} Ver todas →</strong></a>
           </li>
+        </ul>
+      </section>
+    )}
+
+    {related.length > 0 && (
+      <section class="dr-section dr-related">
+        <h2>Decisiones relacionadas</h2>
+        <p>Si estás mirando esta decisión, estas otras salas suelen ir de la mano:</p>
+        <ul class="dr-related-grid">
+          {related.map((r) => (
+            <li>
+              <a href={`/decidir/${r.slug}`} class="dr-related-card">
+                <span class="dr-related-icon" aria-hidden="true">{r.icon}</span>
+                <span class="dr-related-body">
+                  <span class="dr-related-title">{r.h1}</span>
+                  <span class="dr-related-desc">{r.description}</span>
+                </span>
+              </a>
+            </li>
+          ))}
         </ul>
       </section>
     )}
@@ -376,5 +413,78 @@ const howItWorksHtml = md(room.howItWorks);
   }
   .dr-sources a {
     color: var(--accent-strong, #0369a1);
+  }
+
+  /* "La respuesta corta" — callout snippet-friendly arriba de la herramienta. */
+  .dr-answer {
+    border-left: 3px solid var(--accent, #0284c7);
+    background: var(--accent-soft, #e0f2fe);
+    border-radius: var(--radius-sm, 0.5rem);
+    padding: 0.875rem 1.125rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  .dr-answer-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent-strong, #0369a1);
+  }
+  .dr-answer-text {
+    margin: 0;
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    color: var(--text);
+  }
+
+  /* Decisiones relacionadas — cross-linking sala→sala. */
+  .dr-related-grid {
+    list-style: none;
+    padding: 0;
+    margin: 0.75rem 0 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0.75rem;
+  }
+  .dr-related-card {
+    display: flex;
+    gap: 0.625rem;
+    height: 100%;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md, 0.75rem);
+    background: var(--bg);
+    text-decoration: none;
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .dr-related-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .dr-related-icon {
+    font-size: 1.375rem;
+    line-height: 1.3;
+  }
+  .dr-related-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  .dr-related-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.25;
+  }
+  .dr-related-desc {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 </style>

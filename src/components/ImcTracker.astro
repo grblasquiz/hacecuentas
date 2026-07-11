@@ -1,0 +1,329 @@
+---
+/**
+ * ImcTracker — seguimiento de IMC en el tiempo, 100% client-side (localStorage).
+ *
+ * Es el diferencial de producto que ninguna calc de IMC de la SERP tiene: el usuario
+ * guarda su resultado y ve su evolución (curva + banda saludable + lista con delta).
+ * Genera visitas recurrentes (señal de engagement que alimenta ranking) sin pedir registro.
+ *
+ * Patrón idéntico a ImcResultCta: escucha `hc-calc-result` en `.calc-container` y guarda
+ * en slug='calculadora-imc'. El guardado es EXPLÍCITO (botón), no automático, para no
+ * ensuciar el historial con cada recálculo. Dedupe por día (una medición por fecha).
+ *
+ * Privacidad: los datos NUNCA salen del dispositivo (localStorage, sin red, anti-PII).
+ */
+---
+
+<section class="imc-track" data-imc-tracker hidden aria-labelledby="imc-track-heading">
+  <header class="imc-track-head">
+    <span class="imc-track-icon" aria-hidden="true">📈</span>
+    <div>
+      <strong id="imc-track-heading">Seguí tu IMC en el tiempo</strong>
+      <p>Guardá tus mediciones y mirá tu evolución. Se almacena <b>solo en este dispositivo</b>, sin registro.</p>
+    </div>
+  </header>
+
+  <!-- Snapshot del último cálculo + botón guardar (se revela post-resultado) -->
+  <div class="imc-track-save" data-imc-save hidden>
+    <span data-imc-save-label>Tu último resultado</span>
+    <button type="button" class="imc-track-btn" data-imc-save-btn>Guardar este resultado</button>
+  </div>
+
+  <!-- Gráfico de evolución -->
+  <figure class="imc-track-figure" data-imc-figure hidden>
+    <div class="imc-track-chart" data-imc-chart role="img" aria-label="Evolución de tu IMC"></div>
+    <figcaption class="imc-track-legend">
+      <span class="imc-track-band-key" aria-hidden="true"></span> Zona saludable OMS (18,5–24,9)
+    </figcaption>
+  </figure>
+
+  <!-- Lista de mediciones -->
+  <ul class="imc-track-list" data-imc-list></ul>
+
+  <div class="imc-track-empty" data-imc-empty hidden>
+    Todavía no guardaste mediciones. Calculá tu IMC arriba y tocá <b>“Guardar este resultado”</b> para empezar a seguir tu progreso.
+  </div>
+
+  <footer class="imc-track-foot" data-imc-foot hidden>
+    <button type="button" class="imc-track-clear" data-imc-clear>Borrar todo el historial</button>
+  </footer>
+</section>
+
+<style>
+  .imc-track {
+    margin: 1rem 0 0;
+    padding: 1.125rem 1.125rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .imc-track[hidden] { display: none; }
+  .imc-track-head { display: flex; gap: 0.875rem; align-items: flex-start; margin-bottom: 0.875rem; }
+  .imc-track-icon { flex-shrink: 0; font-size: 1.5rem; line-height: 1.2; }
+  .imc-track-head strong { display: block; color: var(--text); font-weight: 700; font-size: 1rem; margin-bottom: 0.125rem; }
+  .imc-track-head p { margin: 0; color: var(--text-muted); font-size: 0.8125rem; line-height: 1.5; }
+  .imc-track-head b { color: var(--text); font-weight: 600; }
+
+  .imc-track-save {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;
+    margin-bottom: 0.875rem; padding: 0.625rem 0.75rem;
+    background: color-mix(in srgb, var(--accent) 8%, var(--bg-card));
+    border: 1px dashed color-mix(in srgb, var(--accent) 35%, var(--border));
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem; color: var(--text);
+  }
+  .imc-track-save[hidden] { display: none; }
+  .imc-track-save b { font-weight: 700; }
+  .imc-track-btn {
+    flex-shrink: 0; cursor: pointer; border: none; border-radius: var(--radius-sm);
+    background: var(--accent); color: var(--accent-contrast, #fff);
+    font-weight: 600; font-size: 0.8125rem; padding: 0.5rem 0.875rem;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+  }
+  .imc-track-btn:hover { opacity: 0.9; }
+  .imc-track-btn:active { transform: translateY(1px); }
+  .imc-track-btn[disabled] { opacity: 0.6; cursor: default; }
+
+  .imc-track-figure { margin: 0 0 0.875rem; }
+  .imc-track-figure[hidden] { display: none; }
+  .imc-track-chart { width: 100%; }
+  .imc-track-chart svg { width: 100%; height: auto; display: block; }
+  .imc-track-legend { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.375rem; font-size: 0.75rem; color: var(--text-muted); }
+  .imc-track-band-key { display: inline-block; width: 1.5rem; height: 0.7rem; border-radius: 2px; background: rgba(34,197,94,0.28); }
+
+  .imc-track-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.375rem; }
+  .imc-track-row {
+    display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 0.625rem;
+    padding: 0.5rem 0.625rem; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 0.8125rem; color: var(--text);
+  }
+  .imc-track-row .t-date { color: var(--text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .imc-track-row .t-imc { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .imc-track-cat { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; white-space: nowrap; }
+  .imc-track-dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; flex-shrink: 0; }
+  .imc-track-delta { font-variant-numeric: tabular-nums; font-size: 0.75rem; white-space: nowrap; }
+  .imc-track-delta.up { color: #dc2626; }
+  .imc-track-delta.down { color: #16a34a; }
+  .imc-track-delta.flat { color: var(--text-muted); }
+  .imc-track-del {
+    grid-column: 1 / -1; justify-self: end; margin-top: -0.15rem;
+    background: none; border: none; cursor: pointer; color: var(--text-muted);
+    font-size: 0.7rem; padding: 0; text-decoration: underline;
+  }
+  .imc-track-del:hover { color: #dc2626; }
+
+  .imc-track-empty { font-size: 0.8125rem; color: var(--text-muted); line-height: 1.5; }
+  .imc-track-empty[hidden] { display: none; }
+  .imc-track-empty b { color: var(--text); font-weight: 600; }
+
+  .imc-track-foot { margin-top: 0.75rem; text-align: right; }
+  .imc-track-foot[hidden] { display: none; }
+  .imc-track-clear { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 0.75rem; text-decoration: underline; }
+  .imc-track-clear:hover { color: #dc2626; }
+
+  @media (max-width: 480px) {
+    .imc-track-row { grid-template-columns: auto 1fr auto; }
+    .imc-track-row .t-cat-full { display: none; }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var KEY = 'hc-imc-history-v1';
+    var SLUG = 'calculadora-imc';
+    var MAX = 60; // tope de mediciones guardadas
+
+    var root = document.querySelector('[data-imc-tracker]');
+    if (!root) return;
+
+    var elSave = root.querySelector('[data-imc-save]');
+    var elSaveLabel = root.querySelector('[data-imc-save-label]');
+    var elSaveBtn = root.querySelector('[data-imc-save-btn]');
+    var elFigure = root.querySelector('[data-imc-figure]');
+    var elChart = root.querySelector('[data-imc-chart]');
+    var elList = root.querySelector('[data-imc-list]');
+    var elEmpty = root.querySelector('[data-imc-empty]');
+    var elFoot = root.querySelector('[data-imc-foot]');
+
+    var track = (typeof window.hcTrack === 'function') ? window.hcTrack : function () {};
+    var pending = null; // último resultado calculado (a la espera de "Guardar")
+
+    // ---- clasificación por valor (idioma-agnóstica) ----
+    function catOf(imc) {
+      if (imc < 18.5) return { label: 'Bajo peso', color: '#d97706' };
+      if (imc < 25) return { label: 'Peso normal', color: '#16a34a' };
+      if (imc < 30) return { label: 'Sobrepeso', color: '#ea580c' };
+      if (imc < 35) return { label: 'Obesidad I', color: '#dc2626' };
+      if (imc < 40) return { label: 'Obesidad II', color: '#b91c1c' };
+      return { label: 'Obesidad III', color: '#991b1b' };
+    }
+
+    function load() {
+      try {
+        var raw = localStorage.getItem(KEY);
+        if (!raw) return [];
+        var arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr : [];
+      } catch (e) { return []; }
+    }
+    function save(arr) {
+      try { localStorage.setItem(KEY, JSON.stringify(arr.slice(-MAX))); } catch (e) {}
+    }
+
+    function todayISO() {
+      var d = new Date();
+      var m = String(d.getMonth() + 1).padStart(2, '0');
+      var day = String(d.getDate()).padStart(2, '0');
+      return d.getFullYear() + '-' + m + '-' + day;
+    }
+    function fmtDate(iso) {
+      try {
+        var p = iso.split('-');
+        var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+        return d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
+      } catch (e) { return iso; }
+    }
+    function fmtImc(n) { return Number(n).toFixed(1).replace('.', ','); }
+
+    // ---- sparkline SVG (banda saludable + línea + puntos) ----
+    function renderChart(items) {
+      if (items.length < 1) { elFigure.hidden = true; return; }
+      elFigure.hidden = false;
+      var W = 300, H = 96, padX = 8, padTop = 8, padBot = 18;
+      var vals = items.map(function (i) { return i.imc; });
+      var dataMin = Math.min.apply(null, vals);
+      var dataMax = Math.max.apply(null, vals);
+      var yMin = Math.min(17, dataMin - 1);
+      var yMax = Math.max(28, dataMax + 1);
+      var span = (yMax - yMin) || 1;
+      function y(v) { return padTop + (yMax - v) / span * (H - padTop - padBot); }
+      function x(i) {
+        if (items.length === 1) return W / 2;
+        return padX + i / (items.length - 1) * (W - padX * 2);
+      }
+      // banda saludable 18,5–24,9
+      var bandTop = y(24.9), bandBot = y(18.5);
+      var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">';
+      svg += '<rect x="0" y="' + bandTop.toFixed(1) + '" width="' + W + '" height="' + Math.max(0, bandBot - bandTop).toFixed(1) + '" fill="rgba(34,197,94,0.18)"/>';
+      // línea
+      if (items.length > 1) {
+        var d = '';
+        items.forEach(function (it, i) { d += (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(it.imc).toFixed(1) + ' '; });
+        svg += '<path d="' + d + '" fill="none" stroke="var(--accent, #2563eb)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+      }
+      // puntos
+      items.forEach(function (it, i) {
+        var last = i === items.length - 1;
+        svg += '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(it.imc).toFixed(1) + '" r="' + (last ? 4 : 3) + '" fill="' + catOf(it.imc).color + '" stroke="var(--bg-card, #fff)" stroke-width="1.5"/>';
+      });
+      svg += '</svg>';
+      elChart.innerHTML = svg;
+    }
+
+    function renderList(items) {
+      elList.innerHTML = '';
+      // más reciente primero
+      var ordered = items.slice().reverse();
+      ordered.forEach(function (it, idxRev) {
+        var realIdx = items.length - 1 - idxRev; // índice en el array cronológico
+        var c = catOf(it.imc);
+        var li = document.createElement('li');
+        li.className = 'imc-track-row';
+        var deltaHtml = '';
+        if (realIdx > 0) {
+          var diff = it.imc - items[realIdx - 1].imc;
+          var cls = Math.abs(diff) < 0.05 ? 'flat' : (diff > 0 ? 'up' : 'down');
+          var arrow = cls === 'flat' ? '±' : (diff > 0 ? '▲' : '▼');
+          deltaHtml = '<span class="imc-track-delta ' + cls + '">' + arrow + ' ' + fmtImc(Math.abs(diff)) + '</span>';
+        } else {
+          deltaHtml = '<span class="imc-track-delta flat">—</span>';
+        }
+        li.innerHTML =
+          '<span class="t-date">' + fmtDate(it.t) + '</span>' +
+          '<span class="imc-track-cat"><span class="imc-track-dot" style="background:' + c.color + '"></span><span class="t-cat-full">' + c.label + '</span></span>' +
+          '<span class="t-imc">' + fmtImc(it.imc) + '</span>' +
+          deltaHtml +
+          '<button type="button" class="imc-track-del" data-del="' + it.t + '">borrar</button>';
+        elList.appendChild(li);
+      });
+    }
+
+    function renderAll() {
+      var items = load();
+      renderChart(items);
+      renderList(items);
+      elEmpty.hidden = items.length > 0;
+      elFoot.hidden = items.length === 0;
+      // el bloque entero se muestra si hay historial o hay un resultado pendiente
+      if (items.length > 0 || pending) root.hidden = false;
+    }
+
+    function upsertToday(snap) {
+      var items = load();
+      var iso = todayISO();
+      var existing = null;
+      for (var i = 0; i < items.length; i++) { if (items[i].t === iso) { existing = items[i]; break; } }
+      if (existing) {
+        existing.imc = snap.imc; existing.peso = snap.peso; existing.unidad = snap.unidad;
+      } else {
+        items.push({ t: iso, imc: snap.imc, peso: snap.peso, unidad: snap.unidad });
+      }
+      save(items);
+      renderAll();
+    }
+
+    // ---- eventos ----
+    elSaveBtn.addEventListener('click', function () {
+      if (!pending) return;
+      upsertToday(pending);
+      track('hc_imc_tracker_save', { calculator_slug: SLUG });
+      elSaveBtn.textContent = 'Guardado ✓';
+      elSaveBtn.disabled = true;
+      setTimeout(function () { elSaveBtn.textContent = 'Actualizar el de hoy'; elSaveBtn.disabled = false; }, 1400);
+    });
+
+    elList.addEventListener('click', function (ev) {
+      var btn = ev.target.closest ? ev.target.closest('[data-del]') : null;
+      if (!btn) return;
+      var t = btn.getAttribute('data-del');
+      var items = load().filter(function (it) { return it.t !== t; });
+      save(items);
+      renderAll();
+    });
+
+    root.querySelector('[data-imc-clear]').addEventListener('click', function () {
+      if (!confirm('¿Borrar todo tu historial de IMC? Esta acción no se puede deshacer.')) return;
+      try { localStorage.removeItem(KEY); } catch (e) {}
+      pending = null;
+      elSave.hidden = true;
+      renderAll();
+      if (load().length === 0) root.hidden = true;
+    });
+
+    function onResult(ev) {
+      var detail = ev && ev.detail ? ev.detail : null;
+      if (!detail || !detail.output) return;
+      if (detail.slug && detail.slug !== SLUG) return;
+      var imc = Number(detail.output.imc);
+      if (!imc || !isFinite(imc)) return;
+      var inputs = detail.inputs || {};
+      var unidad = inputs.sistema === 'imperial' ? 'lb' : 'kg';
+      pending = { imc: imc, peso: inputs.peso != null ? Number(inputs.peso) : null, unidad: unidad };
+      elSaveLabel.innerHTML = 'Tu IMC: <b>' + fmtImc(imc) + '</b> · ' + catOf(imc).label;
+      elSaveBtn.textContent = 'Guardar este resultado';
+      elSaveBtn.disabled = false;
+      elSave.hidden = false;
+      root.hidden = false;
+    }
+
+    function init() {
+      var containers = document.querySelectorAll('.calc-container');
+      containers.forEach(function (c) { c.addEventListener('hc-calc-result', onResult); });
+      renderAll(); // muestra historial existente al cargar (usuario que vuelve)
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else { init(); }
+  })();
+</script>
