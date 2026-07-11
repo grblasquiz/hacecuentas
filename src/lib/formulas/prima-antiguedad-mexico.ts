@@ -46,7 +46,7 @@ export function primaAntiguedadMexico(i: Inputs): Outputs {
   const smgDiario = (smgRaw === undefined || smgRaw === null || (smgRaw as unknown) === '' || !Number.isFinite(smgNum) || smgNum <= 0)
     ? MEXICO_2026.salarioMinimo.generalDiario
     : smgNum;
-  const motivo = i.motivo ?? 'despido';
+  const motivo = i.motivo ?? 'despido-injustificado';
 
   if (!sueldo || sueldo <= 0) throw new Error('Ingresá el salario diario');
   if (!anios || anios <= 0) throw new Error('Ingresá los años de antigüedad');
@@ -55,22 +55,44 @@ export function primaAntiguedadMexico(i: Inputs): Outputs {
   const salarioAplicable = Math.min(sueldo, tope);
   const diasPrima = 12 * anios;
 
-  // Solo aplica en: jubilación, despido, defunción, renuncia con 15+ años
-  const aplicaFinal = motivo !== 'renuncia-menos15';
+  // Elegibilidad LFT Art. 162:
+  //  - Por SEPARACIÓN (despido justificado o injustificado, incapacidad, muerte, jubilación): SIEMPRE aplica.
+  //  - Por RENUNCIA voluntaria: SOLO si la antigüedad es de 15 años o más.
+  // La renuncia se evalúa con los AÑOS ingresados (no con una opción manual), así el resultado es correcto
+  // aunque el usuario no sepa cuál "renuncia" elegir. Los valores legacy renuncia-15 / renuncia-menos15
+  // se tratan también como renuncia y se recalculan por antigüedad.
+  const esRenuncia = motivo === 'renuncia' || motivo === 'renuncia-15' || motivo === 'renuncia-menos15';
+  const esDespidoInjustificado = motivo === 'despido-injustificado';
+  const aplicaFinal = esRenuncia ? anios >= 15 : true;
   const primaAntiguedad = aplicaFinal ? diasPrima * salarioAplicable : 0;
+
+  const razonMotivo: Record<string, string> = {
+    'despido-injustificado': 'despido injustificado',
+    'despido-justificado': 'despido justificado',
+    'despido': 'despido',
+    'incapacidad': 'terminación por incapacidad o invalidez',
+    'defuncion': 'muerte del trabajador',
+    'jubilacion': 'jubilación',
+  };
+  const motivoTxt = esRenuncia ? 'renuncia voluntaria' : (razonMotivo[motivo] || 'separación');
 
   const mxn = (n: number) => '$' + Math.round(n).toLocaleString('es-MX');
   const topeAplicado = aplicaFinal && sueldo > tope;
+  const notaExtra = esRenuncia
+    ? ' (aplica porque tenés 15 años o más de antigüedad; LFT art. 162).'
+    : esDespidoInjustificado
+      ? ' Además, en un despido injustificado te corresponden — por separado — la indemnización de 3 meses y 20 días por año.'
+      : ` (aplica por ${motivoTxt}, sin importar la antigüedad; LFT art. 162).`;
   const _insight = aplicaFinal
     ? {
         title: 'Tu prima de antigüedad',
-        text: `Por **${anios} año${anios === 1 ? '' : 's'}** de servicio te corresponden **${diasPrima} días** a razón de **${mxn(salarioAplicable)}/día**, lo que da una prima de **${mxn(primaAntiguedad)}**.${topeAplicado ? ` Tu salario supera el tope de 2 SMG (${mxn(tope)}/día), así que la prima se liquida sobre ese límite (LFT art. 162).` : ''}`,
+        text: `Por **${anios} año${anios === 1 ? '' : 's'}** de servicio te corresponden **${diasPrima} días** a razón de **${mxn(salarioAplicable)}/día**, lo que da una prima de **${mxn(primaAntiguedad)}**.${topeAplicado ? ` Tu salario supera el tope de 2 SMG (${mxn(tope)}/día), así que la prima se liquida sobre ese límite.` : ''}${notaExtra}`,
         tone: 'neutral' as const,
         icon: '⚖️',
       }
     : {
         title: 'No te corresponde prima',
-        text: `Por **renuncia voluntaria con menos de 15 años** no aplica la prima de antigüedad (LFT art. 162). Solo se paga en jubilación, despido, defunción o renuncia con **15+ años**.`,
+        text: `Por **renuncia voluntaria con menos de 15 años** (${anios} año${anios === 1 ? '' : 's'}) no aplica la prima de antigüedad (LFT art. 162). Solo se paga por renuncia con **15+ años**, o por despido (justificado/injustificado), incapacidad, muerte o jubilación.`,
         tone: 'warn' as const,
         icon: '⚖️',
       };
@@ -79,11 +101,13 @@ export function primaAntiguedadMexico(i: Inputs): Outputs {
     primaAntiguedad: Number(primaAntiguedad.toFixed(2)),
     salarioAplicable: Number(salarioAplicable.toFixed(2)),
     diasPrima,
-    aplica: aplicaFinal ? 'Sí aplica' : 'No aplica (renuncia con menos de 15 años)',
+    aplica: aplicaFinal
+      ? `Sí aplica (${motivoTxt})`
+      : 'No aplica (renuncia voluntaria con menos de 15 años)',
     salarioTope: Number(tope.toFixed(2)),
     mensaje: aplicaFinal
-      ? `Por ${anios} años te corresponden ${diasPrima} días × $${salarioAplicable.toFixed(2)} = $${primaAntiguedad.toFixed(2)} de prima de antigüedad.`
-      : `No aplica prima de antigüedad por renuncia con menos de 15 años (LFT Art. 162).`,
+      ? `Por ${motivoTxt} y ${anios} años te corresponden ${diasPrima} días × $${salarioAplicable.toFixed(2)} = $${primaAntiguedad.toFixed(2)} de prima de antigüedad (LFT Art. 162).`
+      : `No aplica prima de antigüedad: la renuncia voluntaria solo la genera con 15 años o más de antigüedad (LFT Art. 162).`,
     _insight,
   };
 }
