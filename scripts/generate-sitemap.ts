@@ -930,6 +930,8 @@ sitemaps.push({
     core('/datos-ganancias-2026',                '0.7',  'monthly'),
     core('/datos-topes-sipa-2026',               '0.7',  'monthly'),
     core('/datos-aguinaldo-2026',                '0.7',  'monthly'),
+    core('/aumento-jubilaciones',                '0.9',  'daily',   true),
+    core('/aguinaldo-diciembre-2026',            '0.85', 'weekly'),
     core('/datos-salario-minimo-latam-2026',     '0.7',  'monthly'),
     core('/pt/dados-inss-irrf-2026',             '0.7',  'monthly'),
     core('/pt/validar-cnpj',                     '0.8',  'monthly'),
