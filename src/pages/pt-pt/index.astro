@@ -6,6 +6,7 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
+import { PORTUGAL_2026, fmtEUR, DATA_AS_OF } from '../../lib/data/portugal-2026';
 
 const localeModules = import.meta.glob<any>('../../content/calcs-pt-pt/*.json', { eager: true });
 const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
@@ -64,6 +65,86 @@ const popularSlugs = [
 ];
 const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(Boolean);
 
+// ── Dados oficiais 2026 — tudo computado a partir de src/lib/data/portugal-2026.ts (fonte única, nunca desatualizado) ──
+const P = PORTUGAL_2026;
+const fmtPct = (n: number) => new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(n);
+const irsPrimeiraTaxa = fmtPct(P.irs.escaloes[0].taxa * 100);                          // 12,5
+const irsUltimaTaxa = fmtPct(P.irs.escaloes[P.irs.escaloes.length - 1].taxa * 100);    // 48
+const ssTrabPct = fmtPct(P.segSocial.trabalhador * 100);                               // 11
+const ssEmpPct = fmtPct(P.segSocial.empregador * 100);                                 // 23,75
+const ssIndepPct = fmtPct(P.segSocial.independente.taxaGeral * 100);                   // 21,4
+const dataVerificacao = new Date(DATA_AS_OF + 'T00:00:00Z').toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+const dadosOficiais = [
+  { k: 'Salário mínimo nacional (RMMG)', v: `${fmtEUR(P.rmmg.mensal)} /mês × ${P.rmmg.meses} meses = ${fmtEUR(P.rmmg.anual)} /ano`, src: 'Decreto-Lei n.º 139/2025' },
+  { k: 'Salário mínimo à hora (40 h/semana)', v: `${fmtEUR(P.rmmg.horaPara40h)}`, src: 'Art. 271.º Código do Trabalho' },
+  { k: 'IAS — Indexante dos Apoios Sociais', v: `${fmtEUR(P.ias)}`, src: 'Portaria n.º 480-A/2025/1' },
+  { k: 'IRS — escalões 2026 (continente)', v: `${P.irs.escaloes.length} escalões: ${irsPrimeiraTaxa}% → ${irsUltimaTaxa}% (taxas marginais)`, src: 'Lei n.º 73-A/2025 (OE 2026)' },
+  { k: 'IRS — dedução específica (Cat. A)', v: `${fmtEUR(P.irs.deducaoEspecificaTrabalho)} (${fmtPct(P.irs.deducaoEspecificaFatorIas)} × IAS)`, src: 'CIRS' },
+  { k: 'IRS — mínimo de existência', v: `${fmtEUR(P.irs.minimoExistenciaAnual)} /ano (abaixo disto não paga IRS)`, src: 'Art. 70.º CIRS' },
+  { k: 'IRS Jovem', v: `isenção até ${fmtEUR(P.irsJovem.limiteIsencaoAnual)} /ano (${P.irsJovem.limiteIsencaoFatorIas} × IAS), máx. ${P.irsJovem.anosMaximos} anos, até aos ${P.irsJovem.idadeMaxima} anos`, src: 'Lei n.º 73-A/2025' },
+  { k: 'Segurança Social (conta de outrem)', v: `${ssTrabPct}% trabalhador + ${ssEmpPct}% entidade empregadora`, src: 'Código Contributivo' },
+  { k: 'Segurança Social — independentes', v: `${ssIndepPct}% sobre ${fmtPct(P.segSocial.independente.percRendimentoRelevanteServicos * 100)}% do faturado (base máx. ${fmtEUR(P.segSocial.independente.baseMaximaMensal)} /mês)`, src: 'Código Contributivo' },
+  { k: 'Subsídio de refeição isento', v: `${fmtEUR(P.subsidios.refeicao.isentoDinheiroDia)} /dia em dinheiro · ${fmtEUR(P.subsidios.refeicao.isentoCartaoDia)} /dia em cartão`, src: 'OE 2026' },
+  { k: 'Subsídio de desemprego', v: `${fmtPct(P.desemprego.percRemuneracaoReferencia * 100)}% da RR, máx. ${fmtEUR(P.desemprego.topeSuperiorMensal)} (2,5 × IAS)`, src: 'Segurança Social' },
+  { k: 'Compensação por despedimento', v: `${P.cessacao.diasPorAno} dias de retribuição base por ano de antiguidade`, src: 'Art. 366.º Código do Trabalho' },
+  { k: 'IVA (continente)', v: `${fmtPct(P.iva.normal * 100)}% normal · ${fmtPct(P.iva.intermedia * 100)}% intermédia · ${fmtPct(P.iva.reduzida * 100)}% reduzida`, src: 'Art. 18.º CIVA' },
+  { k: 'IMI', v: `${fmtPct(P.imi.urbanoMin * 100)}%–${fmtPct(P.imi.urbanoMax * 100)}% urbano · ${fmtPct(P.imi.rustico * 100)}% rústico`, src: 'Código do IMI' },
+  { k: 'IMT Jovem (isenção HPP)', v: `até ${fmtEUR(P.imt.isencaoJovemAte)} (compradores até aos ${P.imt.isencaoJovemIdadeMax} anos)`, src: 'Ofício Circulado AT n.º 40129/2026' },
+];
+
+// ── FAQ específica de Portugal: respostas com valores computados da fonte única ──
+const faq = [
+  {
+    q: 'Qual é o salário mínimo em Portugal em 2026?',
+    a: `O salário mínimo nacional (RMMG) é de ${fmtEUR(P.rmmg.mensal)} por mês desde 1 de janeiro de 2026 (Decreto-Lei n.º 139/2025), pago ${P.rmmg.meses} vezes por ano (12 meses + subsídio de férias + subsídio de Natal), o que dá ${fmtEUR(P.rmmg.anual)} anuais. É um aumento de ${fmtPct(P.rmmg.aumentoVs2025Pct * 100)}% face aos 870 € de 2025. Nos Açores o valor regional é ${fmtEUR(P.rmmg.acores)} e na Madeira ${fmtEUR(P.rmmg.madeira)}. Com um horário de 40 h/semana, o valor à hora é de ${fmtEUR(P.rmmg.horaPara40h)}.`,
+  },
+  {
+    q: 'O que é o IAS e qual é o valor em 2026?',
+    a: `O IAS (Indexante dos Apoios Sociais) é o valor de referência usado para calcular prestações sociais, limites do IRS Jovem, o teto do subsídio de desemprego e a base contributiva dos independentes. Em 2026 vale ${fmtEUR(P.ias)} (Portaria n.º 480-A/2025/1), uma subida de 2,8% face aos 522,50 € de 2025.`,
+  },
+  {
+    q: 'Como se calcula o salário líquido em Portugal?',
+    a: `Ao salário bruto descontam-se ${ssTrabPct}% para a Segurança Social e a retenção mensal de IRS segundo as tabelas em vigor. Líquido = bruto − SS − IRS. Quem ganha o salário mínimo (${fmtEUR(P.rmmg.mensal)} × ${P.rmmg.meses} = ${fmtEUR(P.rmmg.anual)} /ano) não paga IRS, porque fica dentro do mínimo de existência de ${fmtEUR(P.irs.minimoExistenciaAnual)}. A nossa calculadora de salário líquido faz as contas com os escalões de 2026.`,
+  },
+  {
+    q: 'Quais são os escalões do IRS em 2026?',
+    a: `O IRS de 2026 (continente) tem ${P.irs.escaloes.length} escalões com taxas marginais de ${irsPrimeiraTaxa}% (rendimento coletável até ${fmtEUR(P.irs.escaloes[0].ateEuros)}) a ${irsUltimaTaxa}% (acima de ${fmtEUR(P.irs.escaloes[P.irs.escaloes.length - 2].ateEuros)}), atualizados pela Lei n.º 73-A/2025 (OE 2026). As taxas aplicam-se ao rendimento coletável — o bruto menos a dedução específica de ${fmtEUR(P.irs.deducaoEspecificaTrabalho)} (ou as contribuições para a SS, se forem superiores) — e não diretamente ao salário bruto.`,
+  },
+  {
+    q: 'Como funciona o IRS Jovem em 2026?',
+    a: `O IRS Jovem isenta parte do rendimento do trabalho (Cat. A e B) de quem tem até ${P.irsJovem.idadeMaxima} anos, durante um máximo de ${P.irsJovem.anosMaximos} anos: 100% de isenção no 1.º ano, 75% do 2.º ao 4.º, 50% do 5.º ao 7.º e 25% do 8.º ao 10.º. A parte isenta tem um limite anual de ${P.irsJovem.limiteIsencaoFatorIas} × IAS = ${fmtEUR(P.irsJovem.limiteIsencaoAnual)}.`,
+  },
+  {
+    q: 'Quanto desconto para a Segurança Social?',
+    a: `Um trabalhador por conta de outrem desconta ${ssTrabPct}% do salário bruto; a entidade empregadora paga mais ${ssEmpPct}% (que não sai do recibo), num total de ${fmtPct(P.segSocial.totalTco * 100)}%. Os trabalhadores independentes (recibos verdes) pagam ${ssIndepPct}% sobre 70% do que faturam em serviços (base mensal máxima de ${fmtEUR(P.segSocial.independente.baseMaximaMensal)} = 12 × IAS), com isenção nos primeiros 12 meses de atividade.`,
+  },
+  {
+    q: 'Quantos salários se recebem por ano em Portugal?',
+    a: `Catorze: 12 meses de ordenado mais o subsídio de férias (1 mês) e o subsídio de Natal (1 mês). Cada subsídio corresponde a um mês de retribuição base. É por isso que o salário anual em Portugal se calcula multiplicando o mensal por ${P.subsidios.totalMesesAno} — e que as nossas calculadoras de férias, Natal e salário anual usam ${P.subsidios.totalMesesAno} meses por defeito.`,
+  },
+  {
+    q: 'Qual é o valor do subsídio de refeição isento de impostos em 2026?',
+    a: `O subsídio de refeição está isento de IRS e de Segurança Social até ${fmtEUR(P.subsidios.refeicao.isentoDinheiroDia)} por dia se for pago em dinheiro, ou até ${fmtEUR(P.subsidios.refeicao.isentoCartaoDia)} por dia se for pago em cartão ou vale refeição. Só o excedente acima destes limites é tributado.`,
+  },
+  {
+    q: 'Como se calcula o subsídio de desemprego?',
+    a: `O subsídio de desemprego é ${fmtPct(P.desemprego.percRemuneracaoReferencia * 100)}% da remuneração de referência (a média dos salários de 12 dos últimos 14 meses, incluindo férias e Natal), com um teto de ${fmtEUR(P.desemprego.topeSuperiorMensal)} por mês (2,5 × IAS) e um piso de ${fmtEUR(P.desemprego.minimoComRmmg)} (1,15 × IAS) quando a remuneração de referência é igual ou superior ao salário mínimo. A duração depende da idade e do tempo de descontos.`,
+  },
+  {
+    q: 'Quanto se recebe de compensação por despedimento?',
+    a: `No regime atual, a compensação por cessação do contrato é de ${P.cessacao.diasPorAno} dias de retribuição base e diuturnidades por cada ano completo de antiguidade (fração proporcional). Há dois tetos legais: a retribuição mensal considerada não pode exceder ${P.cessacao.topeRetribuicaoMensalFatorRmmg} × RMMG (${fmtEUR(P.cessacao.topeRetribuicaoMensal)}) e a compensação total não pode passar de ${P.cessacao.topeCompensacaoFatorRmmg} × RMMG (${fmtEUR(P.cessacao.topeCompensacaoTotal)}). Para antiguidade anterior a outubro de 2013 aplicam-se regras transitórias mais generosas.`,
+  },
+  {
+    q: 'Quais são as taxas de IVA em Portugal?',
+    a: `No continente, o IVA tem três taxas: ${fmtPct(P.iva.normal * 100)}% (normal, a maioria dos bens e serviços), ${fmtPct(P.iva.intermedia * 100)}% (intermédia, restauração e alguns alimentos) e ${fmtPct(P.iva.reduzida * 100)}% (reduzida, bens essenciais como pão, leite, medicamentos e livros). Os Açores aplicam 16%/9%/4% e a Madeira 22%/12%/5%.`,
+  },
+  {
+    q: 'Quanto se paga de IMT ao comprar casa em 2026?',
+    a: `O IMT calcula-se por escalões sobre o maior valor entre o preço e o VPT. Para habitação própria e permanente, está isento até ${fmtEUR(P.imt.hpp[0].ateEuros)}; acima disso aplicam-se taxas marginais de 2% a 8% com parcela a abater (Ofício Circulado AT n.º 40129/2026). Os jovens até aos ${P.imt.isencaoJovemIdadeMax} anos têm isenção total de IMT na compra da primeira habitação própria até ${fmtEUR(P.imt.isencaoJovemAte)}.`,
+  },
+];
+
 const schema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -84,6 +165,34 @@ const schema = {
         { '@type': 'ListItem', position: 1, name: 'Hacé Cuentas', item: 'https://hacecuentas.com/' },
         { '@type': 'ListItem', position: 2, name: 'Portugal', item: 'https://hacecuentas.com/pt-pt' },
       ],
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': 'https://hacecuentas.com/pt-pt#faq',
+      mainEntity: faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'Dataset',
+      '@id': 'https://hacecuentas.com/pt-pt#dados-2026',
+      name: 'Dados fiscais e laborais de Portugal 2026',
+      description: `Valores oficiais em vigor em Portugal (continente) em 2026: salário mínimo nacional (${fmtEUR(P.rmmg.mensal)} × ${P.rmmg.meses} meses), IAS (${fmtEUR(P.ias)}), escalões do IRS (${irsPrimeiraTaxa}%–${irsUltimaTaxa}%), IRS Jovem, descontos para a Segurança Social (${ssTrabPct}% + ${ssEmpPct}%; independentes ${ssIndepPct}%), subsídios de férias, Natal e refeição, subsídio de desemprego, compensação por despedimento, IVA ${fmtPct(P.iva.normal * 100)}%/${fmtPct(P.iva.intermedia * 100)}%/${fmtPct(P.iva.reduzida * 100)}%, IMI e IMT.`,
+      url: 'https://hacecuentas.com/pt-pt',
+      license: 'https://creativecommons.org/licenses/by/4.0/',
+      isAccessibleForFree: true,
+      inLanguage: 'pt-PT',
+      temporalCoverage: '2026',
+      spatialCoverage: { '@type': 'Place', name: 'Portugal' },
+      creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+      sourceOrganization: [
+        { '@type': 'GovernmentOrganization', name: 'Segurança Social', url: 'https://www.seg-social.pt' },
+        { '@type': 'GovernmentOrganization', name: 'Autoridade Tributária e Aduaneira (AT)', url: 'https://www.portaldasfinancas.gov.pt' },
+        { '@type': 'GovernmentOrganization', name: 'Diário da República Eletrónico', url: 'https://diariodarepublica.pt' },
+      ],
+      keywords: ['salário mínimo Portugal 2026', 'IAS 2026', 'escalões IRS 2026', 'salário líquido Portugal', 'IRS Jovem', 'descontos Segurança Social', 'subsídio de desemprego', 'subsídio de refeição 2026', 'IVA Portugal', 'IMT 2026', 'IMI'],
     },
   ],
 };
@@ -116,6 +225,7 @@ const hreflangTags = HOME_HREFLANG;
           <span class="stat-sep" aria-hidden="true">·</span>
           <span class="stat">100% grátis</span>
         </div>
+        <span class="hero-live hero-live-static"><span class="dot-live" aria-hidden="true"></span>Salário mínimo 2026: {fmtEUR(P.rmmg.mensal)} × {P.rmmg.meses} · IAS: {fmtEUR(P.ias)} · IRS: {irsPrimeiraTaxa}%–{irsUltimaTaxa}%</span>
       </div>
     </section>
 
@@ -138,6 +248,24 @@ const hreflangTags = HOME_HREFLANG;
         </div>
       </section>
     )}
+
+    <section class="datos-clave" aria-labelledby="dados-oficiais-title">
+      <h2 id="dados-oficiais-title">Dados oficiais de Portugal 2026</h2>
+      <p class="section-sub">Os valores em vigor que todas as nossas calculadoras portuguesas usam. Utilização livre com atribuição (CC-BY 4.0).</p>
+      <div class="dc-wrap">
+        <table class="dc-table">
+          <thead>
+            <tr><th>Conceito</th><th>Valor 2026</th><th>Fonte</th></tr>
+          </thead>
+          <tbody>
+            {dadosOficiais.map((d) => (
+              <tr><td>{d.k}</td><td>{d.v}</td><td class="dc-src">{d.src}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="dc-note">Última verificação: {dataVerificacao}. Fontes: Diário da República, Autoridade Tributária e Segurança Social. Os valores referem-se a Portugal continental — os Açores e a Madeira têm salário mínimo e IVA próprios.</p>
+    </section>
 
     <p class="hub-link-wrap">
       <a href="/pt-pt/calculadoras" class="hub-link">Ver o catálogo completo de calculadoras de Portugal →</a>
@@ -174,6 +302,18 @@ const hreflangTags = HOME_HREFLANG;
         })}
       </div>
     )}
+
+    <section class="faq-hub" aria-labelledby="faq-title">
+      <h2 id="faq-title">Perguntas frequentes sobre salários e impostos em Portugal 2026</h2>
+      <div class="faq-list">
+        {faq.map((f) => (
+          <details>
+            <summary><span>{f.q}</span></summary>
+            <p class="faq-a">{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
 
     <aside class="cta-footer" aria-label="Outras versões">
       <p class="cta-text">Procura calculadoras de outro país?</p>
@@ -265,4 +405,35 @@ const hreflangTags = HOME_HREFLANG;
     text-decoration: none; transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s;
   }
   .cta-pill:hover { border-color: var(--accent); color: var(--accent); }
+
+  .datos-clave, .faq-hub { padding: 0 1rem 2.5rem; }
+  .datos-clave h2, .faq-hub h2 { font-size: 1.375rem; margin: 0 0 0.25rem; }
+  .section-sub { color: var(--text-muted); font-size: 0.9375rem; margin: 0 0 1rem; }
+
+  .dc-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .dc-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; background: var(--bg-card); }
+  .dc-table th, .dc-table td { padding: 0.625rem 0.875rem; text-align: left; border-bottom: 1px solid var(--border); }
+  .dc-table tr:last-child td { border-bottom: none; }
+  .dc-table th { background: var(--bg-muted); font-weight: 600; }
+  .dc-table td:nth-child(2) { font-weight: 600; }
+  .dc-table .dc-src { color: var(--text-muted); font-size: 0.8125rem; }
+  .dc-note { color: var(--text-muted); font-size: 0.8125rem; margin: 0.625rem 0 0; }
+
+  .faq-hub h2 { margin-bottom: 1rem; }
+  .faq-list { display: grid; gap: 0.625rem; }
+  .faq-list details { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .faq-list summary {
+    cursor: pointer; padding: 0.875rem 1rem; font-weight: 600; font-size: 0.9375rem;
+    list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem;
+  }
+  .faq-list summary::-webkit-details-marker { display: none; }
+  .faq-list summary::after { content: '+'; color: var(--text-muted); font-weight: 700; }
+  .faq-list details[open] summary { border-bottom: 1px solid var(--border); }
+  .faq-list details[open] summary::after { content: '−'; }
+  .faq-list .faq-a { padding: 0.875rem 1rem; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; margin: 0; }
+
+  .hero-live { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.875rem; font-size: 0.9rem; font-weight: 600; }
+  .hero-live-static { color: var(--text-muted); cursor: default; }
+  .hero-live .dot-live { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 0 0 rgba(22,163,74,0.5); animation: pulse-live 2s infinite; flex-shrink: 0; }
+  @keyframes pulse-live { 0% { box-shadow: 0 0 0 0 rgba(22,163,74,0.5); } 70% { box-shadow: 0 0 0 6px rgba(22,163,74,0); } 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); } }
 </style>
