@@ -86,6 +86,34 @@ done
 CURRENT_SHA=$(git rev-parse HEAD)
 ok "validación OK | branch=$BRANCH | commit=${CURRENT_SHA:0:8}"
 
+# ─── 1a. Guards pre-build (fail-fast en 1s vs fallar tras un build de 5min) ──
+# LECCIÓN 2026-07-11: dos cosas rompieron el deploy DESPUÉS de un build full:
+#   1) Un prune batch grande metió public/_redirects >2000 reglas → wrangler
+#      falla con error 100324 (límite duro de Cloudflare Pages = 2000). Los
+#      pruning redirects van por el WORKER (pruning-redirects.ts inlined en
+#      wrapper.mjs), NO por _redirects → el archivo NO debe pasar de 2000.
+#   2) Una sesión concurrente dejó src/middleware.ts corrupto (volcado de
+#      git-log de 6MB) + un stray src/pages/middleware.ts con imports rotos.
+# Ambos son detectables ACÁ en 1s, antes de gastar el build.
+REDIR_RULES=$(grep -cE '^/' public/_redirects 2>/dev/null || echo 0)
+if [ "$REDIR_RULES" -ge 1990 ]; then
+  err "public/_redirects tiene $REDIR_RULES reglas — límite duro de Cloudflare = 2000."
+  err "Los pruning redirects van por el worker (pruning-redirects.ts), NO por _redirects."
+  err "Sacá el batch grande de public/_redirects; el worker igual los sirve (301/410)."
+  exit 1
+fi
+if head -c 32 src/middleware.ts 2>/dev/null | grep -q '^commit '; then
+  err "src/middleware.ts está corrupto (arranca con 'commit ' = volcado de git-log)."
+  err "Restaurá: git show <último-commit-sano>:src/middleware.ts > src/middleware.ts"
+  exit 1
+fi
+if [ -f src/pages/middleware.ts ]; then
+  err "src/pages/middleware.ts existe (stray, imports rotos). El middleware real es"
+  err "src/middleware.ts. Borralo: rm src/pages/middleware.ts"
+  exit 1
+fi
+ok "guards pre-build OK | _redirects=$REDIR_RULES reglas (<2000), middleware sano"
+
 # ─── 1b. Auto-commit PRE-build ─────────────────────────────────────────────
 # detect-changes (abajo) diffea last-deploy-sha...HEAD → SOLO commits, no el
 # working tree. Si el laburo queda sin commitear, HEAD==last-deploy-sha → fuerza
