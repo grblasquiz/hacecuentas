@@ -48,13 +48,58 @@ if [ "$code" = "1" ]; then
 fi
 [ "$code" = "2" ] && log "SANITY WARN (no bloqueante)"
 
+# 2b) Fetchers periódicos (biannual/monthly/yearly) del pipeline update-data.
+#     Viven acá porque sus workflows de GitHub Actions corren sobre origin/main
+#     (forkeado, ≈1000 commits divergido) y sus PRs NO llegan al repo que
+#     deploya. Gate por período con marker en ~/.hacecuentas-update-state:
+#       · biannual (monotributo/ganancias/smvm): 15-ene / 15-jul en adelante
+#       · monthly  (ipc/bcra/jubilacion-anses/ripte): día 16 en adelante
+#       · yearly   (bienes-personales/costo-laboral/…): febrero
+#     Son auto-llm (ANTHROPIC_API_KEY de .env) e idempotentes. Si un fetcher
+#     falla, el marker NO se escribe → reintenta al día siguiente. Si algo
+#     cambió, fuerza el deploy aunque los valores live no se hayan movido
+#     (parchean src/lib/formulas/*, que el paso 3 no mira).
+FORCE_DEPLOY=0
+STATE_DIR="$HOME/.hacecuentas-update-state"
+mkdir -p "$STATE_DIR"
+if [ -z "${ANTHROPIC_API_KEY:-}" ] && [ -f "$REPO/.env" ]; then
+  ANTHROPIC_API_KEY=$(grep -E '^ANTHROPIC_API_KEY=' "$REPO/.env" | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")
+  export ANTHROPIC_API_KEY
+fi
+run_periodic() {
+  freq="$1"; period="$2"; marker="$STATE_DIR/$freq"
+  [ "$(cat "$marker" 2>/dev/null)" = "$period" ] && return 0
+  log "update-data $freq (período $period)…"
+  out=$(node --experimental-strip-types scripts/update-data/index.ts --frequency="$freq" 2>&1)
+  echo "$out" >> "$LOG"
+  summary=$(echo "$out" | grep -o 'SUMMARY::.*' | sed 's/SUMMARY:://')
+  changed=$(echo "$summary" | grep -o '"changed":[0-9]*' | grep -o '[0-9]*$')
+  errors=$(echo "$summary" | grep -o '"errors":[0-9]*' | grep -o '[0-9]*$')
+  if [ -n "$summary" ] && [ "${errors:-1}" = "0" ]; then
+    echo "$period" > "$marker"
+    log "update-data $freq OK · changed=${changed:-0}"
+  else
+    log "update-data $freq con errores (errors=${errors:-?}) — reintenta mañana"
+  fi
+  if [ "${changed:-0}" -gt 0 ]; then FORCE_DEPLOY=1; fi
+}
+MES=$(date +%m); DIA=$(date +%d); ANIO=$(date +%Y)
+if { [ "$MES" = "01" ] || [ "$MES" = "07" ]; } && [ "$DIA" -ge 15 ]; then
+  if [ "$MES" = "01" ]; then H="H1"; else H="H2"; fi
+  run_periodic biannual "$ANIO-$H"
+fi
+if [ "$DIA" -ge 16 ]; then run_periodic monthly "$ANIO-$MES"; fi
+if [ "$MES" = "02" ]; then run_periodic yearly "$ANIO"; fi
+
 # 3) ¿Cambió algún valor real? Se ignoran timestamps/metadatos (fetchedAt, fecha,
 #    vigencia, source…) para no deployar cuando solo se movió un sello de hora.
+#    FORCE_DEPLOY=1 (paso 2b) saltea este gate: los fetchers periódicos tocan
+#    fórmulas/calcs que este diff no cubre.
 REAL=$(git diff -- src/data/live/ public/datasets/ \
   | grep -E '^[+-]' \
   | grep -vE 'fetchedAt|lastUpdateApi|"fecha"|vigencia|"source"|sourceUrl|dateModified|"generatedAt"|@@|^\+\+\+|^---' \
   | grep -E '[0-9]')
-if [ -z "$REAL" ]; then
+if [ -z "$REAL" ] && [ "$FORCE_DEPLOY" = "0" ]; then
   log "sin cambios de valor real → no deploy (descarto timestamps)"
   git checkout -- src/data/live/ public/datasets/ 2>/dev/null
   exit 0

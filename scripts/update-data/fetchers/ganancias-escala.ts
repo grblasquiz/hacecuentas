@@ -11,6 +11,7 @@
  */
 
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { askClaudeStructured } from '../utils/ask-claude.ts';
 import {
   replaceArrayLiteral,
@@ -147,6 +148,27 @@ export async function fetchGananciasEscala({ dry = false }: { dry?: boolean }): 
   });
 
   if (!result) return false;
+
+  // Guard monotónico: las deducciones nominales NUNCA bajan en Argentina
+  // (se actualizan por RIPTE/IPC). Un valor menor al vigente = el LLM derivó
+  // mal la fórmula (ya pasó: computó GNI×4,5/12 en vez de (GNI+4,8×GNI)/12
+  // y propuso bajar MNI_MENSUAL_BASE de 2.490.038 a 1.931.926, jul-2026).
+  const src = readFileSync(FILE, 'utf8');
+  const currentOf = (name: string): number | null => {
+    const m = src.match(new RegExp(`${name}\\s*=\\s*([\\d_.]+)`));
+    return m ? Number(m[1].replace(/_/g, '')) : null;
+  };
+  for (const [name, nuevo] of [
+    ['MNI_MENSUAL_BASE', result.mniMensual],
+    ['INCREMENTO_CONYUGE_MENSUAL', result.incrementoConyugeMensual],
+    ['INCREMENTO_HIJO_MENSUAL', result.incrementoHijoMensual],
+  ] as const) {
+    const actual = currentOf(name);
+    if (actual !== null && nuevo < actual * 0.999) {
+      log.error(`${name}: propuesto ${nuevo} < vigente ${actual} — rechazado (deducciones no bajan)`);
+      return false;
+    }
+  }
 
   log.info(`vigencia ${result.fechaVigencia} (RG ${result.resolucion || '?'})`);
   log.info(`fuente: ${result.fuenteUrl}`);

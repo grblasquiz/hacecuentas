@@ -194,6 +194,17 @@ export async function fetchGananciasRG830({ dry = false }: { dry?: boolean }): P
 
   if (!result) return false;
 
+  // Guard de vigencia: el Anexo VIII vigente es el de RG 5423/2023 (01/10/2023)
+  // y ARCA no lo actualizó. Solo aceptamos un patch si hay una resolución MÁS
+  // NUEVA; re-parsear la misma norma solo genera churn (y ya produjo una
+  // reescritura que reemplazó la escala progresiva de honorarios por una
+  // alícuota plana "promedio", jul-2026).
+  const VIGENCIA_ACTUAL = '2023-10-01';
+  if (result.fechaVigencia <= VIGENCIA_ACTUAL) {
+    log.skip(`sin novedad normativa (vigencia ${result.fechaVigencia} ≤ ${VIGENCIA_ACTUAL}, RG 5423/2023 sigue vigente)`);
+    return false;
+  }
+
   log.info(`vigencia ${result.fechaVigencia} · fuente: ${result.fuenteUrl}`);
   log.info(`conceptos: ${Object.keys(result.conceptos).length} · escala: ${result.escalaProfesionales.length} tramos`);
   log.info(

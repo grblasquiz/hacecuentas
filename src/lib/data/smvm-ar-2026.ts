@@ -19,9 +19,9 @@
  */
 
 // Valores oficiales junio 2026 — Res 9/2025 CNEPySMVyM (Boletín Oficial 03-12-2025).
-export const SMVM_MENSUAL = 367_800;
-export const SMVM_HORA = 1_839;
-export const SMVM_FECHA = 'junio 2026 (Res 9/2025)';
+export const SMVM_MENSUAL = 372_400;
+export const SMVM_HORA = 1_862;
+export const SMVM_FECHA = 'julio 2026';
 export const SMVM_RESOLUCION = 'Resolución 9/2025 CNEPySMVyM';
 
 /**
