@@ -184,7 +184,8 @@ export const room: DecisionRoom = {
   icon: '⚖️',
   category: 'finanzas',
   audience: 'AR',
-  lastReviewed: '2026-06-29',
+  answer: 'Monotributo conviene mientras **tu facturación entre en la categoría y tus gastos con IVA sean bajos**: pagás una cuota fija y la contabilidad es simple. Responsable Inscripto conviene cuando superás los topes, tus clientes son empresas que descuentan tu IVA, o tenés muchos gastos con crédito fiscal para computar. El quiebre no es solo cuánto facturás: pesa quién es tu cliente y cuánto IVA podés descargar.',
+  lastReviewed: '2026-07-11',
   example: {
     facturacionMensual: 4_500_000,
     comprasConIVA: 1_800_000,

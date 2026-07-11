@@ -180,7 +180,8 @@ export const room: DecisionRoom = {
   icon: '💵',
   category: 'finanzas',
   audience: 'AR',
-  lastReviewed: '2026-06-29',
+  answer: 'Financiar conviene cuando **la tasa del crédito prendario es menor que la inflación o que lo que rinde tu dinero invertido**: la cuota fija se licúa y conservás liquidez. Contado conviene si hay descuento por pago único o si la tasa efectiva (CFT, con gastos y seguros) es alta. Nunca mires la cuota sola: sumá el CFT total y compará contra dejar esa plata rindiendo.',
+  lastReviewed: '2026-07-11',
   example: {
     precio: 25000000,
     anticipo: 10000000,

@@ -237,7 +237,8 @@ export const room: DecisionRoom = {
   icon: '🪜',
   category: 'finanzas',
   audience: 'AR',
-  lastReviewed: '2026-06-29',
+  answer: 'Hay dos métodos que funcionan: **avalancha** (pagás primero la deuda de mayor tasa, es el que menos intereses te cuesta) y **bola de nieve** (pagás primero la más chica, para ganar impulso). Matemáticamente gana avalancha; si necesitás ver progreso para no abandonar, elegí bola de nieve. En ambos pagás el mínimo de todas las deudas y volcás cada peso extra a UNA sola por vez.',
+  lastReviewed: '2026-07-11',
   example: {
     deuda1Monto: 800000,
     deuda1Tna: 110,

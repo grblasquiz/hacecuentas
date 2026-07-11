@@ -145,7 +145,8 @@ export const room: DecisionRoom = {
   icon: '📈',
   category: 'finanzas',
   audience: 'AR',
-  lastReviewed: '2026-06-29',
+  answer: 'Para no perder poder adquisitivo tenés que pedir, como piso, **la inflación acumulada desde tu último aumento**; para recuperar terreno, ese número más un extra por lo ya perdido o por mayor responsabilidad. Pedir "un poco más" sin la cuenta te deja siempre corriendo detrás de la inflación. Llevá el porcentaje acumulado calculado y un rango, no un número suelto.',
+  lastReviewed: '2026-07-11',
   example: {
     sueldoBrutoActual: 1500000,
     mesesDesdeUltimoAumento: 6,

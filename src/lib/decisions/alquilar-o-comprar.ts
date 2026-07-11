@@ -238,7 +238,8 @@ export const room: DecisionRoom = {
   icon: '🏠',
   category: 'finanzas',
   audience: 'AR',
-  lastReviewed: '2026-06-29',
+  answer: 'Comprar conviene cuando pensás quedarte **más años que el punto de equilibrio**: el momento en que el costo acumulado de comprar (cuota, expensas, escritura y mantenimiento) baja del de alquilar (alquiler que crece + lo que rinde tu anticipo invertido). Por debajo de ese horizonte, alquilar e invertir la diferencia suele ganar. La pregunta clave no es si "alquilar tira plata", sino cuántos años te vas a quedar.',
+  lastReviewed: '2026-07-11',
   example: {
     valorPropiedad: 120000000,
     anticipo: 36000000,

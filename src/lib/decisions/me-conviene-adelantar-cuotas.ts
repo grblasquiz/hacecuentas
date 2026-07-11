@@ -137,7 +137,8 @@ export const room: DecisionRoom = {
   icon: '⚖️',
   category: 'finanzas',
   audience: 'AR',
-  lastReviewed: '2026-06-29',
+  answer: 'Adelantar cuotas conviene cuando **la tasa del préstamo es mayor que lo que podés ganar invirtiendo ese dinero con seguridad**. Si tu crédito es a tasa fija y la inflación lo está licuando (la cuota real baja mes a mes), casi nunca conviene adelantar: esa plata rinde más invertida. Compará la tasa efectiva del préstamo contra tu rendimiento neto de impuestos antes de decidir.',
+  lastReviewed: '2026-07-11',
   example: {
     saldoPendiente: 4000000,
     tasaTNA: 80,

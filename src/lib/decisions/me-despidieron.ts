@@ -163,7 +163,8 @@ export const room: DecisionRoom = {
   icon: '📄',
   category: 'finanzas',
   audience: 'AR',
-  lastReviewed: '2026-06-29',
+  answer: 'Si el despido es sin causa, te corresponde la **indemnización por antigüedad (un sueldo por año trabajado), el preaviso, las vacaciones no gozadas y el aguinaldo proporcional**. Con esa cifra en mano, la regla sana es estirar el finiquito para cubrir entre 3 y 6 meses de tus gastos mientras buscás trabajo. Revisá la liquidación número por número antes de firmar y cobrá todo por transferencia.',
+  lastReviewed: '2026-07-11',
   example: {
     sueldoBruto: 1500000,
     antiguedadAnios: 6,

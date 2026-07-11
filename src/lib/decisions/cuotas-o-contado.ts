@@ -143,7 +143,8 @@ export const room: DecisionRoom = {
   icon: '💳',
   category: 'finanzas',
   audience: 'AR',
-  lastReviewed: '2026-06-29',
+  answer: 'Las cuotas convienen cuando **son sin interés y podés poner el dinero del contado a rendir** (plazo fijo o inversión): en contexto inflacionario, pagar en cuotas fijas licúa el costo real. Contado conviene si hay descuento por pago único o si las cuotas tienen un CFT mayor a lo que rinde tu plata. Compará el precio de contado contra el valor presente de las cuotas, no contra el total nominal.',
+  lastReviewed: '2026-07-11',
   example: {
     precioContado: 1200000,
     descuentoContado: 5,

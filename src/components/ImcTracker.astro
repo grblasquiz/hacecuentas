@@ -183,7 +183,8 @@
         return d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
       } catch (e) { return iso; }
     }
-    function fmtImc(n) { return Number(n).toFixed(1).replace('.', ','); }
+    function fmtImc(n) { return Number(n).toFixed(2).replace('.', ','); }
+    function fmtDelta(n) { return Number(n).toFixed(1).replace('.', ','); }
 
     // ---- sparkline SVG (banda saludable + línea + puntos) ----
     function renderChart(items) {
@@ -234,7 +235,7 @@
           var diff = it.imc - items[realIdx - 1].imc;
           var cls = Math.abs(diff) < 0.05 ? 'flat' : (diff > 0 ? 'up' : 'down');
           var arrow = cls === 'flat' ? '±' : (diff > 0 ? '▲' : '▼');
-          deltaHtml = '<span class="imc-track-delta ' + cls + '">' + arrow + ' ' + fmtImc(Math.abs(diff)) + '</span>';
+          deltaHtml = '<span class="imc-track-delta ' + cls + '">' + arrow + ' ' + fmtDelta(Math.abs(diff)) + '</span>';
         } else {
           deltaHtml = '<span class="imc-track-delta flat">—</span>';
         }

@@ -173,7 +173,8 @@ export const room: DecisionRoom = {
   icon: '⚡',
   category: 'finanzas',
   audience: 'AR',
-  lastReviewed: '2026-06-29',
+  answer: 'La respuesta depende de **cuántos kilómetros hacés por año**: cuantos más, antes se paga el sobreprecio del híbrido o el eléctrico con el ahorro en combustible y mantenimiento. Para uso urbano intenso, el híbrido o eléctrico suele ganar en costo total a 5 años; para poco kilometraje, el menor precio de compra del naftero manda. Compará el costo total de propiedad (compra + energía + mantenimiento + reventa), no solo el precio de lista.',
+  lastReviewed: '2026-07-11',
   example: {
     precioNafta: 25000000,
     precioHibrido: 32000000,

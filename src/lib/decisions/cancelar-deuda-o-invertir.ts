@@ -158,7 +158,8 @@ export const room: DecisionRoom = {
   icon: '⚖️',
   category: 'finanzas',
   audience: 'AR',
-  lastReviewed: '2026-06-29',
+  answer: 'La regla es directa: **si la tasa de tu deuda supera lo que rinde tu inversión, cancelá la deuda primero**. Ahorrarte un interés alto y seguro casi siempre gana contra un rendimiento incierto: pagar una deuda al 100% anual equivale a una inversión libre de riesgo del 100%. La única excepción es la deuda barata (tasa subsidiada o cuota fija que la inflación licúa): ahí conviene invertir y no adelantar.',
+  lastReviewed: '2026-07-11',
   example: {
     saldoDeuda: 1200000,
     tnaDeuda: 95,

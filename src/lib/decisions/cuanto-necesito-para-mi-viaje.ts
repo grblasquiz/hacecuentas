@@ -214,7 +214,8 @@ export const room: DecisionRoom = {
   icon: '🧳',
   category: 'finanzas',
   audience: 'AR',
-  lastReviewed: '2026-07-02',
+  answer: 'El presupuesto real de un viaje es **pasajes + alojamiento + (gasto diario en comida y transporte × cantidad de días) + un colchón del 15 al 20% para imprevistos y tipo de cambio**. La cuenta que casi todos subestiman es la del día a día en destino: multiplicá un gasto diario honesto por los días que vas a estar. Con el total y tu fecha de salida, dividí por los meses que faltan y sabés cuánto ahorrar por mes.',
+  lastReviewed: '2026-07-11',
   example: {
     viajeros: 2,
     dias: 10,

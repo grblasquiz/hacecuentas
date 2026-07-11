@@ -17,7 +17,7 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
     "intro": "No alcanza con mirar el sueldo bruto. Esta sala compara tu trabajo actual contra la oferta corriendo por dentro el sueldo neto, Ganancias, los costos de traslado y comida, el valor real de tu hora y el punto de indiferencia. El resultado no es \"ganás $X más\", sino cuánto mejora REALMENTE tu ingreso y cuál es el mínimo que deberías pedir para que convenga.",
     "icon": "💼",
     "category": "finanzas",
-    "lastReviewed": "2026-06-29",
+    "lastReviewed": "2026-07-11",
     "componentCalcs": [
       {
         "slug": "sueldo-en-mano-argentina",
@@ -45,7 +45,7 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
     "intro": "Alquilar tira plata, dicen. Pero comprar inmoviliza el anticipo, paga escritura y te ata. La respuesta real es comparar el costo acumulado de cada camino a lo largo del tiempo. Esta sala calcula cuánto gastás alquilando (alquiler que crece + lo que rinde tu anticipo invertido) contra cuánto gastás comprando (cuota + expensas + escritura + mantenimiento), encuentra el punto de equilibrio en años y te dice cuál conviene según cuánto pensás quedarte.",
     "icon": "🏠",
     "category": "finanzas",
-    "lastReviewed": "2026-06-29",
+    "lastReviewed": "2026-07-11",
     "componentCalcs": [
       {
         "slug": "calculadora-alquiler-vs-comprar",
@@ -129,7 +129,7 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
     "intro": "Tenés plata y una deuda: ¿la cancelás o la invertís? La respuesta no es intuición, es comparar la tasa efectiva de tu deuda contra el rendimiento de la inversión sobre el mismo capital. Cancelar una deuda cara es un rendimiento garantizado. Esta sala te dice cuál gana, por cuánto, y cuánto fondo de emergencia conviene dejar intacto.",
     "icon": "⚖️",
     "category": "finanzas",
-    "lastReviewed": "2026-06-29",
+    "lastReviewed": "2026-07-11",
     "componentCalcs": [
       {
         "slug": "calculadora-plazo-fijo",
@@ -181,7 +181,7 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
     "intro": "Tenés varias deudas y no sabés por cuál empezar. Esta sala simula tu salida con los dos métodos probados: avalancha (pagás primero la de mayor tasa, minimiza intereses) y bola de nieve (la más chica primero, da victorias rápidas). Te dice en cuántos meses te librás, cuánto pagás de intereses y en qué orden conviene atacar cada deuda.",
     "icon": "🪜",
     "category": "finanzas",
-    "lastReviewed": "2026-06-29",
+    "lastReviewed": "2026-07-11",
     "componentCalcs": [
       {
         "slug": "calculadora-cuota-prestamo",
@@ -429,7 +429,7 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
     "intro": "Pedir aumento \"a ojo\" te deja atrasado o pidiendo de menos. Esta sala calcula tres números concretos: cuánto necesitás solo para empatar la inflación desde tu último aumento, cuánto es razonable pedir sumando tus nuevas responsabilidades, y cuál es el techo ideal si además querés mejorar tu poder de compra. Entrás a la charla con datos, no con una sensación.",
     "icon": "📈",
     "category": "finanzas",
-    "lastReviewed": "2026-06-29",
+    "lastReviewed": "2026-07-11",
     "componentCalcs": [
       {
         "slug": "calculadora-inflacion-acumulada-periodo",
@@ -729,7 +729,7 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
     "intro": "Un viaje no es solo el pasaje: es el alojamiento por noche, la comida de cada persona cada día, los traslados, las excursiones, el seguro, el recargo por pagar en moneda extranjera y los imprevistos que siempre aparecen. Esta sala arma el presupuesto completo rubro por rubro — total, por persona y por día — y lo cruza con tu plan de ahorro: cuánto tenés hoy, cuánto apartás por mes y cuántos meses faltan. El resultado no es solo el costo: es si llegás a la fecha del viaje, y si no, exactamente cuánto tenés que ahorrar por mes para llegar.",
     "icon": "🧳",
     "category": "finanzas",
-    "lastReviewed": "2026-07-02",
+    "lastReviewed": "2026-07-11",
     "componentCalcs": [
       {
         "slug": "calculadora-presupuesto-viaje-vacaciones",
@@ -869,7 +869,7 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
     "intro": "Pagar en cuotas no es \"más caro\" automáticamente: con inflación, una cuota que pagás dentro de 10 meses vale mucho menos que hoy. Esta sala compara el contado con descuento contra el valor presente real de las cuotas, descontando inflación y el rendimiento que podrías sacarle a ese dinero, y te dice cuál sale más barato en pesos de hoy.",
     "icon": "💳",
     "category": "finanzas",
-    "lastReviewed": "2026-06-29",
+    "lastReviewed": "2026-07-11",
     "componentCalcs": [
       {
         "slug": "calculadora-inflacion-acumulada-periodo",
@@ -925,7 +925,7 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
     "intro": "La cuenta no es solo \"cuánto pago de intereses\". Pagar de contado tiene un costo oculto: esa plata deja de rendir. Y financiar tiene un beneficio oculto: las cuotas fijas se licúan con la inflación. Esta sala compara los dos caminos en valor de hoy —descuento por contado, costo de oportunidad e inflación incluidos— y te dice cuál te deja mejor parado.",
     "icon": "💵",
     "category": "finanzas",
-    "lastReviewed": "2026-06-29",
+    "lastReviewed": "2026-07-11",
     "componentCalcs": [
       {
         "slug": "calculadora-cuota-prestamo",
@@ -1005,7 +1005,7 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
     "intro": "Tenés un préstamo y un dinero extra: ¿adelantás cuotas o lo invertís? Adelantar capital es un \"rendimiento garantizado\" igual a la tasa efectiva de tu préstamo. Esta sala compara esa tasa contra el rendimiento que le sacarías invirtiendo el mismo dinero y te dice cuál gana y por cuánto al año, sin perder de vista la liquidez.",
     "icon": "⚖️",
     "category": "finanzas",
-    "lastReviewed": "2026-06-29",
+    "lastReviewed": "2026-07-11",
     "componentCalcs": [
       {
         "slug": "calculadora-cuota-prestamo",
@@ -1145,7 +1145,7 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
     "intro": "El día que te echan necesitás dos números: cuánta plata te tienen que pagar y cuánto tiempo te da. Esta sala calcula tu liquidación completa (antigüedad, preaviso, integración del mes, aguinaldo y vacaciones) y la cruza con tus gastos, ahorros y deudas para decirte cuántos meses de aire tenés y qué hacer primero.",
     "icon": "📄",
     "category": "finanzas",
-    "lastReviewed": "2026-06-29",
+    "lastReviewed": "2026-07-11",
     "componentCalcs": [
       {
         "slug": "calculadora-indemnizacion-despido",
@@ -1201,7 +1201,7 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
     "intro": "La elección entre monotributo y Responsable Inscripto cambia mucho según cuánto factures, cuánto compres con IVA y a quién le vendas. El monotributo es una cuota fija simple pero te hace perder el IVA de tus compras; Responsable Inscripto te deja computar ese IVA pero suma Ganancias, IIBB y contador. Esta sala estima la carga de cada uno y te dice cuál te deja más en el bolsillo.",
     "icon": "⚖️",
     "category": "finanzas",
-    "lastReviewed": "2026-06-29",
+    "lastReviewed": "2026-07-11",
     "componentCalcs": [
       {
         "slug": "calculadora-monotributo-vs-responsable-inscripto",
@@ -1229,7 +1229,7 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
     "intro": "El eléctrico cuesta más al comprar pero gasta una fracción en energía y casi nada en mantenimiento; el nafta es barato de entrada pero caro de usar; el híbrido queda en el medio. Lo que decide es el costo total a los años que lo vas a tener, según tus kilómetros. Esta sala lo calcula para los tres y te dice cuál gana y a partir de cuántos años el eléctrico se amortiza.",
     "icon": "⚡",
     "category": "finanzas",
-    "lastReviewed": "2026-06-29",
+    "lastReviewed": "2026-07-11",
     "componentCalcs": [
       {
         "slug": "calculadora-combustible-viaje-auto",
