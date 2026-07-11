@@ -1,0 +1,69 @@
+---
+export const prerender = false;
+import EconomiaLanding from '../components/EconomiaLanding.astro';
+import fallback from '../data/live/paraguay.json';
+import { readFxLive } from '../lib/fx-live';
+
+// Snapshot en vivo desde D1 (lo refresca a diario el cron Worker hacecuentas-fx-cron);
+// si D1 no responde (o el cron todavía no cargó "paraguay"), cae al JSON de build.
+// La página igual se refresca client-side desde open.er-api.com.
+const d = (await readFxLive('paraguay')) ?? (fallback as any);
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=86400');
+const usdpyg = d.usdpyg?.valor ?? null;
+const brlpyg = d.brlpyg?.valor ?? null;
+const arspyg1000 = d.arspyg1000?.valor ?? null;
+const fmtPYG = (n: number) => 'Gs. ' + Math.round(n).toLocaleString('es-PY');
+
+const indicadores = [
+  { key: 'usd', liveKey: 'PYG', label: 'Dólar hoy', valor: usdpyg, decimals: 0, prefix: 'Gs. ', sub: 'USD → PYG (mercado)' },
+  { key: 'real', liveKey: '__none__', label: 'Real brasileño', valor: brlpyg, decimals: 0, prefix: 'Gs. ', sub: 'BRL → PYG' },
+  { key: 'ars', liveKey: '__none__', label: 'Peso argentino', valor: arspyg1000, decimals: 0, prefix: 'Gs. ', sub: 'por 1.000 pesos argentinos' },
+];
+
+const tabla = usdpyg ? {
+  title: 'Dólar a guaraníes hoy',
+  note: 'Tipo de cambio de mercado, cercano al referencial diario del BCP. En casas de cambio la compra es más baja y la venta más alta.',
+  headers: ['Dólares (USD)', 'Guaraníes (PYG)'],
+  rows: [1, 5, 10, 20, 50, 100, 500].map((u) => ['US$ ' + u, fmtPYG(u * usdpyg)]),
+} : undefined;
+
+const faq = [
+  { q: '¿A cuánto está el dólar hoy en Paraguay?', a: usdpyg ? `El dólar está hoy en ${fmtPYG(usdpyg)} (guaraníes por dólar), tipo de cambio de mercado. El recuadro se actualiza solo.` : 'El tipo de cambio del dólar varía durante el día según el mercado.' },
+  { q: '¿Es la misma cotización que la del BCP?', a: 'Es prácticamente la misma. El Banco Central del Paraguay (BCP) publica cada día hábil un tipo de cambio referencial que se usa para contratos y referencias oficiales. El valor de esta página es el de mercado, que se mueve durante el día y suele estar muy cerca del referencial del BCP.' },
+  { q: '¿Cuánto son 100 dólares en guaraníes hoy?', a: usdpyg ? `Hoy 100 dólares equivalen a aproximadamente ${fmtPYG(100 * usdpyg)}. En la tabla de arriba ves otros montos.` : 'Multiplicá los dólares por el tipo de cambio del día.' },
+  { q: '¿A cuánto está el real brasileño en guaraníes?', a: brlpyg ? `Hoy 1 real brasileño equivale a aproximadamente ${fmtPYG(brlpyg)}. Es la referencia clave para el comercio de frontera en Ciudad del Este, Salto del Guairá y Pedro Juan Caballero. Este valor se actualiza una vez por día.` : 'El real brasileño cotiza según el mercado; es la referencia del comercio de frontera con Brasil.' },
+  { q: '¿Cuál es la diferencia entre tipo de cambio compra y venta?', a: 'El de compra es a cuánto te compran tus dólares (más bajo) y el de venta a cuánto te los venden (más alto). La diferencia es la ganancia de la casa de cambio o banco. Esta página muestra una referencia de mercado entre ambos.' },
+  { q: '¿Por qué sube o baja el dólar en Paraguay?', a: 'El guaraní flota con intervenciones puntuales del BCP. El dólar se mueve por la oferta y demanda de divisas, las exportaciones de soja y carne, la cosecha, las tasas de interés locales, el real brasileño (Brasil es el principal socio comercial) y factores externos como las decisiones de la Reserva Federal de Estados Unidos.' },
+  { q: '¿De dónde sale este valor?', a: 'De open.er-api.com, un servicio gratuito de tipos de cambio de mercado. Al abrir la página se trae la cotización más reciente disponible.' },
+  { q: '¿Cada cuánto se actualiza?', a: 'Al cargar la página se consulta la cotización del momento y se refresca de forma automática cada pocos minutos. El real y el peso argentino se actualizan una vez por día.' },
+];
+
+const related = [
+  { href: '/py/dolar-hoy-paraguay', label: '🔄 Conversor dólar ⇄ guaraní' },
+  { href: '/py/calculadora-salario-neto-paraguay', label: '💼 Calculadora de salario neto (IPS)' },
+  { href: '/py/calculadora-iva-paraguay', label: '🧾 Calculadora de IVA (10% / 5%)' },
+  { href: '/py/calculadora-aguinaldo-paraguay', label: '🎁 Calculadora de aguinaldo' },
+  { href: '/py/cuanto-es-en-guaranies-real-brasileno', label: '🇧🇷 Reales a guaraníes' },
+  { href: '/py', label: '🇵🇾 Más calculadoras para Paraguay' },
+];
+
+const title = 'Dólar hoy en Paraguay: cotización a guaraníes EN VIVO | Hacé Cuentas';
+const description = `Dólar hoy en Paraguay: ${usdpyg ? fmtPYG(usdpyg) : ''} guaraníes por dólar (tipo de cambio de mercado), más real brasileño y peso argentino. Tabla de conversión de dólares a guaraníes. Se actualiza solo.`;
+---
+<EconomiaLanding
+  pais="Paraguay"
+  audience="PY"
+  slug="dolar-hoy-paraguay"
+  locale="es-PY"
+  h1="Dólar hoy en Paraguay 🇵🇾"
+  lede="La <strong>cotización del dólar a guaraníes</strong> en vivo, con real brasileño, peso argentino y tabla de conversión."
+  title={title}
+  description={description}
+  fuente={{ nombre: 'open.er-api.com (mercado USD/PYG)', url: 'https://open.er-api.com' }}
+  updatedISO={d._meta?.fetchedAt ?? null}
+  indicadores={indicadores}
+  live={{ type: 'erapi', url: 'https://open.er-api.com/v6/latest/USD' }}
+  tabla={tabla}
+  faq={faq}
+  related={related}
+/>

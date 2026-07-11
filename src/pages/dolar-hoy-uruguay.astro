@@ -1,0 +1,69 @@
+---
+export const prerender = false;
+import EconomiaLanding from '../components/EconomiaLanding.astro';
+import fallback from '../data/live/uruguay.json';
+import { readFxLive } from '../lib/fx-live';
+
+// Snapshot en vivo desde D1 (lo refresca a diario el cron Worker hacecuentas-fx-cron);
+// si D1 no responde (o el cron todavía no cargó "uruguay"), cae al JSON de build.
+// La página igual se refresca client-side desde open.er-api.com.
+const d = (await readFxLive('uruguay')) ?? (fallback as any);
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=86400');
+const usduyu = d.usduyu?.valor ?? null;
+const eurouyu = d.eurouyu?.valor ?? null;
+const brluyu = d.brluyu?.valor ?? null;
+const fmtUYU = (n: number, dec = 2) => '$U ' + n.toLocaleString('es-UY', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+
+const indicadores = [
+  { key: 'usd', liveKey: 'UYU', label: 'Dólar hoy', valor: usduyu, decimals: 2, prefix: '$U ', sub: 'USD → UYU (mercado)' },
+  { key: 'euro', liveKey: '__none__', label: 'Euro hoy', valor: eurouyu, decimals: 2, prefix: '$U ', sub: 'EUR → UYU' },
+  { key: 'real', liveKey: '__none__', label: 'Real brasileño', valor: brluyu, decimals: 2, prefix: '$U ', sub: 'BRL → UYU' },
+];
+
+const tabla = usduyu ? {
+  title: 'Dólar a pesos uruguayos hoy',
+  note: 'Tipo de cambio de mercado (interbancario). En la pizarra del BROU o de las casas de cambio la compra es más baja y la venta más alta.',
+  headers: ['Dólares (USD)', 'Pesos uruguayos (UYU)'],
+  rows: [1, 5, 10, 20, 50, 100, 500, 1000].map((u) => ['US$ ' + u, fmtUYU(Math.round(u * usduyu * 100) / 100)]),
+} : undefined;
+
+const faq = [
+  { q: '¿A cuánto está el dólar hoy en Uruguay?', a: usduyu ? `El dólar está hoy en ${fmtUYU(usduyu)} (pesos uruguayos por dólar), tipo de cambio de mercado. El recuadro se actualiza solo.` : 'El tipo de cambio del dólar varía durante el día según el mercado.' },
+  { q: '¿Es el mismo valor que el dólar del BCU?', a: 'Es prácticamente el mismo. El Banco Central del Uruguay (BCU) publica la cotización interbancaria (fondo) al cierre de cada día hábil, que se usa como referencia contable y para contratos. El valor de esta página es el de mercado, que se mueve durante el día y suele coincidir con el del BCU con diferencias mínimas.' },
+  { q: '¿Cuánto son 100 dólares en pesos uruguayos hoy?', a: usduyu ? `Hoy 100 dólares equivalen a aproximadamente ${fmtUYU(Math.round(100 * usduyu * 100) / 100)}. En la tabla de arriba ves otros montos.` : 'Multiplicá los dólares por el tipo de cambio del día.' },
+  { q: '¿Por qué la pizarra del BROU muestra otro valor?', a: 'La pizarra del BROU (y la de cualquier banco o casa de cambio) muestra dos precios: compra (a cuánto te compran tus dólares, más bajo) y venta (a cuánto te los venden, más alto). La diferencia es el margen del banco. El valor interbancario de esta página queda en el medio de esos dos precios.' },
+  { q: '¿Por qué sube o baja el dólar en Uruguay?', a: 'El peso uruguayo flota: el dólar se mueve por la oferta y demanda de divisas, los precios de exportación (carne, soja, celulosa), la tasa de interés que fija el BCU, el ingreso de capitales y factores externos como las decisiones de la Reserva Federal de Estados Unidos y el tipo de cambio en Brasil y Argentina.' },
+  { q: '¿Qué es la Unidad Indexada (UI) y en qué se diferencia del dólar?', a: 'La Unidad Indexada es una unidad de cuenta uruguaya que se ajusta todos los días por la inflación (IPC del INE), no por el dólar. Se usa para alquileres, créditos hipotecarios y ahorro indexado. Si tu contrato está en UI, lo que importa es la inflación local, no el tipo de cambio. Tenemos una calculadora para convertir UI a pesos.' },
+  { q: '¿De dónde sale este valor?', a: 'De open.er-api.com, un servicio gratuito de tipos de cambio de mercado. Al abrir la página se trae la cotización más reciente disponible.' },
+  { q: '¿Cada cuánto se actualiza?', a: 'Al cargar la página se consulta la cotización del momento y se refresca de forma automática cada pocos minutos. El euro y el real se actualizan una vez por día.' },
+];
+
+const related = [
+  { href: '/uy/dolar-hoy-uruguay', label: '🔄 Conversor dólar ⇄ peso uruguayo' },
+  { href: '/uy/salario-liquido-uruguay', label: '💼 Calculadora de sueldo líquido' },
+  { href: '/uy/calculadora-iva-uruguay', label: '🧾 Calculadora de IVA (22% / 10%)' },
+  { href: '/uy/aguinaldo-uruguay', label: '🎁 Calculadora de aguinaldo' },
+  { href: '/uy/unidad-indexada-a-pesos-uruguay', label: '📊 Unidad Indexada (UI) a pesos' },
+  { href: '/uy', label: '🇺🇾 Más calculadoras para Uruguay' },
+];
+
+const title = 'Dólar hoy en Uruguay: cotización a pesos EN VIVO | Hacé Cuentas';
+const description = `Dólar hoy en Uruguay: ${usduyu ? fmtUYU(usduyu) : ''} pesos por dólar (tipo de cambio de mercado), más euro y real brasileño. Tabla de conversión de dólares a pesos uruguayos. Se actualiza solo.`;
+---
+<EconomiaLanding
+  pais="Uruguay"
+  audience="UY"
+  slug="dolar-hoy-uruguay"
+  locale="es-UY"
+  h1="Dólar hoy en Uruguay 🇺🇾"
+  lede="La <strong>cotización del dólar a pesos uruguayos</strong> en vivo, con euro, real brasileño y tabla de conversión."
+  title={title}
+  description={description}
+  fuente={{ nombre: 'open.er-api.com (mercado USD/UYU)', url: 'https://open.er-api.com' }}
+  updatedISO={d._meta?.fetchedAt ?? null}
+  indicadores={indicadores}
+  live={{ type: 'erapi', url: 'https://open.er-api.com/v6/latest/USD' }}
+  tabla={tabla}
+  faq={faq}
+  related={related}
+/>

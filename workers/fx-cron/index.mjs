@@ -3,7 +3,8 @@
  *
  * Una vez al día (cron) baja datos FX/indicadores de fuentes públicas y los
  * guarda en la tabla D1 `fx_live` (DB = hacecuentas-forms, la misma del sitio).
- * Las landings SSR /dolar-hoy-{chile,colombia,mexico,peru} leen esa tabla.
+ * Las landings SSR /dolar-hoy-{chile,colombia,mexico,peru,uruguay,paraguay,venezuela}
+ * leen esa tabla.
  *
  * No depende del build de Astro ni del repo local → corre 100% en Cloudflare,
  * sin procesos en la máquina de nadie. Sortea la divergencia origin↔local
@@ -17,6 +18,7 @@
 const MINDICADOR = 'https://mindicador.cl/api';
 const SOCRATA = 'https://www.datos.gov.co/resource/32sa-8pi3.json?$order=vigenciadesde%20DESC&$limit=1';
 const ERAPI = 'https://open.er-api.com/v6/latest/USD';
+const VE_DOLARAPI = 'https://ve.dolarapi.com/v1/dolares';
 const UA = { 'User-Agent': 'hacecuentas-fx-cron/1.0' };
 
 // Token simple para el run manual (no es dato sensible: solo dispara un refetch).
@@ -29,6 +31,9 @@ const BOUNDS = {
   'colombia.trm': [1500, 9000],
   'mexico.usdmxn': [8, 40],
   'peru.usdpen': [2, 7],
+  'uruguay.usduyu': [20, 100],
+  'paraguay.usdpyg': [3000, 15000],
+  'venezuela.bcv': [100, 20000],
 };
 const ok = (key, v) => {
   const b = BOUNDS[key];
@@ -71,17 +76,57 @@ async function buildSnapshots(now) {
     }
   } catch (e) { console.error('[colombia]', e.message); }
 
-  // México + Perú — open.er-api.com (una sola llamada USD→{MXN,PEN})
+  // México + Perú + Uruguay + Paraguay — open.er-api.com (una sola llamada USD→{MXN,PEN,UYU,PYG,...})
   try {
     const d = await fetchJson(ERAPI);
-    const mxn = d?.rates?.MXN, pen = d?.rates?.PEN;
+    const mxn = d?.rates?.MXN, pen = d?.rates?.PEN, uyu = d?.rates?.UYU, pyg = d?.rates?.PYG;
+    const eur = d?.rates?.EUR, brl = d?.rates?.BRL, ars = d?.rates?.ARS;
+    const r4 = (n) => Math.round(n * 10000) / 10000;
+    const r2 = (n) => Math.round(n * 100) / 100;
     if (ok('mexico.usdmxn', mxn)) {
-      out.mexico = { usdmxn: { valor: Math.round(mxn * 10000) / 10000 }, _meta: { source: 'open.er-api.com (mercado USD/MXN)', fetchedAt: now } };
+      out.mexico = { usdmxn: { valor: r4(mxn) }, _meta: { source: 'open.er-api.com (mercado USD/MXN)', fetchedAt: now } };
     }
     if (ok('peru.usdpen', pen)) {
-      out.peru = { usdpen: { valor: Math.round(pen * 10000) / 10000 }, _meta: { source: 'open.er-api.com (mercado USD/PEN)', fetchedAt: now } };
+      out.peru = { usdpen: { valor: r4(pen) }, _meta: { source: 'open.er-api.com (mercado USD/PEN)', fetchedAt: now } };
     }
-  } catch (e) { console.error('[mx/pe]', e.message); }
+    if (ok('uruguay.usduyu', uyu)) {
+      // Misma forma que scripts/data-sources/fetch-uruguay.mjs (cross-rates desde base USD)
+      out.uruguay = {
+        usduyu: { valor: r4(uyu) },
+        eurouyu: { valor: eur ? r4(uyu / eur) : null },
+        brluyu: { valor: brl ? r4(uyu / brl) : null },
+        _meta: { source: 'open.er-api.com (mercado USD/UYU)', fetchedAt: now },
+      };
+    }
+    if (ok('paraguay.usdpyg', pyg)) {
+      // Misma forma que scripts/data-sources/fetch-paraguay.mjs
+      out.paraguay = {
+        usdpyg: { valor: r2(pyg) },
+        brlpyg: { valor: brl ? r2(pyg / brl) : null },
+        arspyg1000: { valor: ars ? r2((pyg / ars) * 1000) : null },
+        _meta: { source: 'open.er-api.com (mercado USD/PYG)', fetchedAt: now },
+      };
+    }
+  } catch (e) { console.error('[mx/pe/uy/py]', e.message); }
+
+  // Venezuela — ve.dolarapi.com (BCV oficial + paralelo). Misma forma que
+  // scripts/data-sources/fetch-venezuela.mjs → la landing /dolar-hoy-venezuela
+  // lee bcv/paralelo tanto de D1 como del snapshot de build.
+  try {
+    const rows = await fetchJson(VE_DOLARAPI);
+    const pick = (fuente) => (Array.isArray(rows) ? rows.find((r) => r?.fuente === fuente) : null);
+    const oficial = pick('oficial');
+    const paralelo = pick('paralelo');
+    const bcv = Number(oficial?.promedio) || null;
+    const par = Number(paralelo?.promedio) || null;
+    if (ok('venezuela.bcv', bcv)) {
+      out.venezuela = {
+        bcv: { valor: bcv, fecha: oficial?.fechaActualizacion?.slice(0, 10) ?? null },
+        paralelo: { valor: par, fecha: paralelo?.fechaActualizacion?.slice(0, 10) ?? null },
+        _meta: { source: 'BCV (oficial) + Monitor Dólar (paralelo) vía ve.dolarapi.com', fetchedAt: now },
+      };
+    }
+  } catch (e) { console.error('[venezuela]', e.message); }
 
   return out;
 }

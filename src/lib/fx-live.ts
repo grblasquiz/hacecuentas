@@ -1,7 +1,7 @@
 /**
  * Lectura del snapshot FX en vivo desde D1 (tabla `fx_live`), escrito por el
  * cron Worker `hacecuentas-fx-cron`. Lo usan las landings SSR
- * /dolar-hoy-{chile,colombia,mexico,peru}.
+ * /dolar-hoy-{chile,colombia,mexico,peru,uruguay,paraguay,venezuela}.
  *
  * Devuelve el JSON guardado (misma forma que src/data/live/<pais>.json) con
  * `_meta.fetchedAt` seteado al updated_at de D1, o `null` si no hay dato /

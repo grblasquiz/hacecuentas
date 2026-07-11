@@ -4,8 +4,9 @@ import EconomiaLanding from '../components/EconomiaLanding.astro';
 import fallback from '../data/live/venezuela.json';
 import { readFxLive } from '../lib/fx-live';
 
-// VE no está en el cron de D1 (readFxLive devuelve null) → cae al snapshot de build;
-// el refresh client-side desde ve.dolarapi.com lo mantiene vivo en el navegador.
+// VE está en el cron D1 (hacecuentas-fx-cron); si D1 no responde o el cron aún no
+// corrió, cae al snapshot de build. El refresh client-side desde ve.dolarapi.com
+// lo mantiene vivo en el navegador.
 const d = (await readFxLive('venezuela')) ?? (fallback as any);
 Astro.response.headers.set('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=86400');
 const fmtVes = (n: number) => 'Bs. ' + n.toLocaleString('es-VE', { maximumFractionDigits: 2 });
