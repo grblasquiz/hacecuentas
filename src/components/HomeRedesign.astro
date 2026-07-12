@@ -18,6 +18,14 @@ body = body
 // —junto con el cableado de búsqueda y links— en el <script> real de más abajo,
 // que Astro sí bundlea y ejecuta.
 body = body.replace(/<script[\s\S]*?<\/script>/i, '');
+// El header y el footer del mockup los provee ahora el Header.astro / Footer.astro
+// COMPARTIDOS (los mismos que TODO el sitio, vía los slots del Layout) → los
+// quitamos del body inyectado para que la home use exactamente los mismos
+// componentes que el resto de las páginas. El CSS del mockup para .top/.footer
+// queda sin uso (inofensivo).
+body = body
+  .replace(/<header class="top">[\s\S]*?<\/header>/i, '')
+  .replace(/<footer class="footer">[\s\S]*?<\/footer>/i, '');
 ---
 
 <div class="approved-home-v7" set:html={body}></div>
