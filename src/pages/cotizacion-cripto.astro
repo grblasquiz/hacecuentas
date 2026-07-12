@@ -21,6 +21,7 @@ interface CoinGeckoCoin {
   current_price: number;
   market_cap: number;
   price_change_percentage_24h: number;
+  sparkline_in_7d?: { price: number[] };
 }
 interface SimplePrice { [coinId: string]: { usd: number; eur: number; ars: number; brl: number; mxn: number; }; }
 
@@ -29,13 +30,13 @@ let simplePricesBuild: SimplePrice = {};
 let buildTs = 0;
 
 try {
-  // Top 30 cryptos por market cap
+  // Top 30 cryptos por market cap (con sparkline 7d para los mini-gráficos)
   topCoinsBuild = await fetchJSON<CoinGeckoCoin[]>(
-    'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=30&page=1&price_change_percentage=24h',
+    'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=30&page=1&price_change_percentage=24h&sparkline=true',
     []
   );
 
-  // Precios en múltiples fiat para el conversor (solo top 10 para no saturar)
+  // Precios en múltiples fiat para el conversor (solo top 30 para no saturar)
   const ids = topCoinsBuild.slice(0, 30).map(c => c.id).join(',');
   if (ids) {
     simplePricesBuild = await fetchJSON<SimplePrice>(
@@ -48,6 +49,59 @@ try {
   console.warn('[cotizacion-cripto] CoinGecko fetch failed at build time:', e);
 }
 
+// ── Helpers de formato (mismos que el cliente) para render SSR crawleable ──
+function fUsd(n: number): string {
+  if (n == null || !isFinite(n)) return '—';
+  const abs = Math.abs(n);
+  const dec = abs >= 10000 ? 0 : abs >= 1 ? 2 : abs >= 0.01 ? 4 : 6;
+  return new Intl.NumberFormat('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(n);
+}
+function fUsd2(n: number): string {
+  if (n == null || !isFinite(n)) return '—';
+  const abs = Math.abs(n);
+  const dec = abs >= 1 ? 2 : abs >= 0.01 ? 4 : 6;
+  return '$' + new Intl.NumberFormat('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(n);
+}
+function fArs(n: number): string {
+  if (n == null || !isFinite(n)) return '—';
+  return new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(n);
+}
+function fPct(n: number): string {
+  const v = n ?? 0;
+  return (v >= 0 ? '+' : '') + v.toFixed(2).replace('.', ',') + '%';
+}
+// Sparkline: muestrea ~24 puntos de la serie 7d y arma el polyline (88x26).
+function spark(prices?: number[]): { pts: string; up: boolean } | null {
+  const v = (prices || []).filter((x) => typeof x === 'number' && isFinite(x));
+  if (v.length < 2) return null;
+  const N = 24;
+  const stepIn = Math.max(1, Math.floor(v.length / N));
+  const s: number[] = [];
+  for (let i = 0; i < v.length; i += stepIn) s.push(v[i]);
+  if (s[s.length - 1] !== v[v.length - 1]) s.push(v[v.length - 1]);
+  const min = Math.min(...s), max = Math.max(...s), span = max - min || 1;
+  const w = 88, h = 26, pad = 3, step = w / (s.length - 1);
+  const pts = s.map((n, i) => `${(i * step).toFixed(1)},${(h - pad - ((n - min) / span) * (h - pad * 2)).toFixed(1)}`).join(' ');
+  return { pts, up: v[v.length - 1] >= v[0] };
+}
+
+const byId = Object.fromEntries(topCoinsBuild.map((c) => [c.id, c]));
+// Activos "más consultados" para Movimiento 24h (curado) + featured Principales.
+const featuredIds = ['bitcoin', 'ethereum', 'tether', 'solana'];
+const movIds = ['bitcoin', 'ethereum', 'solana', 'tether'];
+const featured = featuredIds.map((id) => byId[id]).filter(Boolean) as CoinGeckoCoin[];
+const mov = movIds.map((id) => byId[id]).filter(Boolean) as CoinGeckoCoin[];
+const rankRows = topCoinsBuild.slice(0, 30);
+
+const buildClock = buildTs
+  ? new Date(buildTs).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+  : '—';
+
+// Cotización de referencia BTC→USD/ARS para el conversor por defecto (1 BTC).
+const btc = byId['bitcoin'];
+const btcUsd = btc?.current_price ?? simplePricesBuild['bitcoin']?.usd ?? null;
+const btcArs = simplePricesBuild['bitcoin']?.ars ?? null;
+
 const schema = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
@@ -58,34 +112,35 @@ const schema = {
   offers: freeOfferSchema(),
 };
 
+// FAQ — las 4 primeras coinciden con el mockup; el resto amplía cobertura AEO.
 const faq = [
   {
-    q: '¿Cada cuánto se actualizan los precios?',
-    a: 'Cada <strong>30 segundos</strong> automáticamente, usando la API pública de <a href="https://www.coingecko.com" rel="noopener">CoinGecko</a>. Si dejás la pestaña abierta, los precios se refrescan solos. Si la cerrás y volvés después, se actualiza al entrar.',
-  },
-  {
-    q: '¿Qué criptomonedas soporta?',
-    a: 'Las <strong>100 cryptos más grandes por market cap</strong>: Bitcoin (BTC), Ethereum (ETH), Solana (SOL), Tether (USDT), USDC, BNB, XRP, Cardano, Avalanche, Dogecoin, Polkadot, Chainlink, Polygon, Litecoin, Shiba Inu, y muchas más.',
+    q: '¿Por qué difiere de mi exchange?',
+    a: 'El valor que ves acá es el <strong>precio de mercado global</strong> que calcula CoinGecko promediando 800+ exchanges. Tu exchange local (Binance, Ripio, Lemon, Belo) suma un <strong>spread del 0,5% al 3%</strong> más comisiones, así que su precio de compra siempre es un poco más alto y el de venta un poco más bajo.',
   },
   {
     q: '¿Qué monedas fiat puedo usar?',
     a: 'Principales: <strong>USD</strong>, <strong>EUR</strong>, <strong>ARS</strong> (peso argentino), <strong>BRL</strong> (real), <strong>MXN</strong> (peso mexicano), <strong>GBP</strong>, <strong>JPY</strong>, <strong>CLP</strong> y <strong>UYU</strong>. CoinGecko convierte directamente — no depende del dólar intermedio.',
   },
   {
+    q: '¿Qué significa la variación 24h?',
+    a: 'El porcentaje que subió o bajó el precio en las <strong>últimas 24 horas</strong>, comparando el valor actual contra el de exactamente un día atrás. Verde = subió, rojo = bajó. Es una métrica orientativa de tendencia a corto plazo.',
+  },
+  {
+    q: '¿Cada cuánto se actualiza?',
+    a: 'Cada <strong>30 segundos</strong> automáticamente mientras la pestaña esté activa, usando la API pública de <a href="https://www.coingecko.com" rel="noopener">CoinGecko</a>. Si la cerrás y volvés después, se refresca al entrar. Si la fuente se demora, se conserva el último dato válido con su horario.',
+  },
+  {
+    q: '¿Qué criptomonedas soporta?',
+    a: 'Las <strong>criptos más grandes por market cap</strong>: Bitcoin (BTC), Ethereum (ETH), Solana (SOL), Tether (USDT), USDC, BNB, XRP, Cardano, Avalanche, Dogecoin, Polkadot, Chainlink, Litecoin, TRON y muchas más.',
+  },
+  {
     q: '¿De dónde saca el precio CoinGecko?',
     a: 'Agrega datos de <strong>800+ exchanges</strong> (Binance, Coinbase, Kraken, Bitstamp, etc.) y calcula un precio promedio ponderado por volumen. Es el estándar de la industria para precios unificados.',
   },
   {
-    q: '¿Diferencia entre precio CoinGecko y mi exchange?',
-    a: 'Tu exchange local (ej. Binance Argentina, Ripio, Lemon) puede tener un <strong>spread del 0.5-3%</strong> sobre el precio de mercado. El valor de CoinGecko es el "fair price" global; tu exchange suma comisión.',
-  },
-  {
-    q: '¿Qué significa variación 24h?',
-    a: 'El porcentaje que subió o bajó el precio en las <strong>últimas 24 horas</strong>. Verde = subió, rojo = bajó. Es una métrica orientativa de tendencia a corto plazo.',
-  },
-  {
     q: '¿Qué es el market cap?',
-    a: '<strong>Capitalización de mercado</strong>: precio × cantidad de monedas en circulación. Sirve para comparar el tamaño de una crypto: Bitcoin tiene el mayor market cap (~$1 trillón), Ethereum ~$400B, etc.',
+    a: '<strong>Capitalización de mercado</strong>: precio × cantidad de monedas en circulación. Sirve para comparar el tamaño de una crypto: Bitcoin tiene el mayor market cap, Ethereum lo sigue, etc. El ranking de esta página está ordenado por market cap.',
   },
   {
     q: '¿Es precio de compra o de venta?',
@@ -102,12 +157,32 @@ const schemaFaq = {
     acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') },
   })),
 };
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+    { '@type': 'ListItem', position: 2, name: 'Finanzas', item: 'https://hacecuentas.com/categoria/finanzas' },
+    { '@type': 'ListItem', position: 3, name: 'Cotización cripto', item: 'https://hacecuentas.com/cotizacion-cripto' },
+  ],
+};
+
+// Calculadoras cripto (targets vivos verificados; slugs viejos 301 → canónico).
+const calcCards = [
+  { icon: '↗', title: 'Ganancia de Bitcoin', desc: 'Resultado de compra y venta, incluyendo precio inicial y final.', href: '/calculadora-ganancia-perdida-criptomonedas', cta: 'Abrir calculadora' },
+  { icon: '%', title: 'Staking y APY', desc: 'Proyectá rendimiento compuesto por días, meses o años.', href: '/calculadora-cagr-rendimiento-anualizado-compuesto', cta: 'Calcular rendimiento' },
+  { icon: '≈', title: 'Fees de exchange', desc: 'Cuánto impactan las comisiones en una operación.', href: '/calculadora-usdt-vs-usdc-comision-exchange', cta: 'Calcular fees' },
+  { icon: 'DCA', title: 'Compra periódica', desc: 'Simulá una estrategia de aportes periódicos.', href: '/calculadora-interes-compuesto', cta: 'Simular DCA' },
+  { icon: 'AR', title: 'Bienes Personales', desc: 'Estimación informativa para tenencias cripto en Argentina.', href: '/calculadora-bienes-personales-2026', cta: 'Estimar impuesto' },
+  { icon: '$', title: 'Cambio de monedas', desc: 'Compara dólar oficial, blue, MEP, CCL y cripto.', href: '/cambio-de-monedas', cta: 'Comparar dólares' },
+];
 ---
-<Layout image="/og/data-cotizacion-cripto.jpg" imageWidth={1200} imageHeight={675} title={title} description={description} schema={schema} domain="data">
+<Layout image="/og/data-cotizacion-cripto.jpg" imageWidth={1200} imageHeight={675} title={title} description={description} schema={schema} domain="data" pageType="dashboard">
   <Header slot="header" />
 
-  <article class="cx-page">
-    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+  <article class="cx">
+    <nav class="cx-crumb" aria-label="Ruta de navegación">
       <a href="/">Inicio</a>
       <span class="sep" aria-hidden="true">/</span>
       <a href="/categoria/finanzas">Finanzas</a>
@@ -115,574 +190,603 @@ const schemaFaq = {
       <span class="current">Cotización cripto</span>
     </nav>
 
-    <header class="cx-header">
-      <h1>Cotización cripto en vivo 🪙</h1>
-      <p class="lead">
-        Precio de <strong>Bitcoin, Ethereum, Solana, USDT</strong> y 100+ criptomonedas en tiempo real. Convertí entre cualquier crypto y fiat (USD, EUR, ARS, BRL, etc.).
-      </p>
+    <!-- HERO -->
+    <header class="cx-hero">
+      <div class="cx-hero-copy">
+        <span class="cx-kicker">Mercado cripto global</span>
+        <h1>Cotización cripto</h1>
+        <p class="cx-lead">Consultá Bitcoin, Ethereum, Solana, USDT y más de 100 criptomonedas. Convertí precios globales a dólares o pesos argentinos.</p>
+        <div class="cx-pills">
+          <span class="cx-pill cx-pill-live"><span class="cx-dot" id="cx-live-dot" aria-hidden="true"></span><span id="cx-updated">Actualizado recién</span></span>
+          <span class="cx-pill">Fuente: CoinGecko</span>
+          <span class="cx-pill">Precios de referencia</span>
+        </div>
+      </div>
+      <aside class="cx-status" aria-label="Estado de los precios">
+        <div class="cx-status-top">
+          <span class="cx-status-kicker">Estado de los precios</span>
+          <span class="cx-status-badge" id="cx-status-badge">Actualizando</span>
+        </div>
+        <dl class="cx-status-rows">
+          <div><dt>Última consulta</dt><dd id="cx-last-query">{buildClock}</dd></div>
+          <div><dt>Próxima actualización</dt><dd><span id="cx-next">30</span> s</dd></div>
+          <div><dt>Mercado de referencia</dt><dd>Global</dd></div>
+        </dl>
+      </aside>
     </header>
 
-    <DatosHoyNav current="/cotizacion-cripto" />
+    <!-- TABS -->
+    <nav class="cx-tabs" aria-label="Secciones">
+      <a href="#conversor" class="is-active">Conversor</a>
+      <a href="#principales">Principales</a>
+      <a href="#ranking">Ranking</a>
+      <a href="#calculadoras">Calculadoras</a>
+      <a href="#como-funciona">Cómo funciona</a>
+    </nav>
 
-    <section class="converter">
-      <h2>Conversor</h2>
-      <div class="conv-grid">
-        <div class="conv-side">
-          <label for="cx-from-amount">Monto</label>
-          <input id="cx-from-amount" type="text" inputmode="decimal" value="1" autocomplete="off" aria-label="Monto a convertir" />
-          <span class="edit-hint">Tocá para editar</span>
-          <div class="coin-picker" data-picker="cx-from">
-            <button class="picker-btn" id="cx-from-currency-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
-              <span class="picker-label">₿ Bitcoin (BTC)</span>
-              <span class="picker-chev">▾</span>
-            </button>
-            <div class="picker-panel" hidden>
-              <input type="text" class="picker-search" placeholder="Buscar: bitcoin, ETH, solana..." autocomplete="off" />
-              <div class="picker-list" role="listbox"></div>
+    <!-- CONVERSOR + MOVIMIENTO 24H -->
+    <section class="cx-two" id="conversor">
+      <!-- Conversor -->
+      <div class="cx-card cx-conv">
+        <div class="cx-card-head">
+          <div>
+            <h2>Conversor cripto</h2>
+            <p class="cx-card-sub">Elegí cualquier combinación cripto o moneda fiat.</p>
+          </div>
+          <span class="cx-badge">Precio global</span>
+        </div>
+
+        <div class="cx-conv-box">
+          <div class="cx-conv-field">
+            <span class="cx-conv-label">Convertís</span>
+            <div class="cx-conv-row">
+              <input id="cx-from-amount" class="cx-conv-amount" type="text" inputmode="decimal" value="1" autocomplete="off" aria-label="Monto a convertir" />
+              <div class="cx-picker" data-picker="cx-from">
+                <button class="cx-picker-btn" id="cx-from-currency-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+                  <span class="cx-picker-label">₿ Bitcoin (BTC)</span>
+                  <span class="cx-picker-chev" aria-hidden="true">▾</span>
+                </button>
+                <div class="cx-picker-panel" hidden>
+                  <input type="text" class="cx-picker-search" placeholder="Buscar: bitcoin, ETH, solana…" autocomplete="off" />
+                  <div class="cx-picker-list" role="listbox"></div>
+                </div>
+              </div>
+              <input type="hidden" id="cx-from-currency" value="bitcoin" />
             </div>
           </div>
-          <input type="hidden" id="cx-from-currency" value="bitcoin" />
-        </div>
 
-        <button id="cx-swap" class="swap-btn" aria-label="Invertir monedas">⇄</button>
+          <button id="cx-swap" class="cx-swap" type="button" aria-label="Invertir monedas">⇄</button>
 
-        <div class="conv-side">
-          <label for="cx-to-amount">Equivale a</label>
-          <input id="cx-to-amount" type="text" inputmode="decimal" readonly />
-          <div class="coin-picker" data-picker="cx-to">
-            <button class="picker-btn" id="cx-to-currency-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
-              <span class="picker-label">🇺🇸 USD (Dólar)</span>
-              <span class="picker-chev">▾</span>
-            </button>
-            <div class="picker-panel" hidden>
-              <input type="text" class="picker-search" placeholder="Buscar: USD, ARS, euro..." autocomplete="off" />
-              <div class="picker-list" role="listbox"></div>
+          <div class="cx-conv-field cx-conv-out">
+            <span class="cx-conv-label">Recibís aproximadamente</span>
+            <div class="cx-conv-row">
+              <div id="cx-to-amount" class="cx-conv-result">{btcUsd ? fUsd2(btcUsd).replace('$', '') : '—'}</div>
+              <div class="cx-picker" data-picker="cx-to">
+                <button class="cx-picker-btn" id="cx-to-currency-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
+                  <span class="cx-picker-label">🇺🇸 Dólar (USD)</span>
+                  <span class="cx-picker-chev" aria-hidden="true">▾</span>
+                </button>
+                <div class="cx-picker-panel" hidden>
+                  <input type="text" class="cx-picker-search" placeholder="Buscar: USD, ARS, euro…" autocomplete="off" />
+                  <div class="cx-picker-list" role="listbox"></div>
+                </div>
+              </div>
+              <input type="hidden" id="cx-to-currency" value="USD" />
             </div>
           </div>
-          <input type="hidden" id="cx-to-currency" value="USD" />
         </div>
+
+        <div class="cx-rate" id="cx-rate-line">
+          <span id="cx-rate-main">{btcUsd ? `1 BTC = USD ${fUsd2(btcUsd).replace('$', '')}` : '—'}</span>
+          <span id="cx-rate-ars">{btcArs ? `= ARS ${fArs(btcArs)}` : ''}</span>
+        </div>
+
+        <div class="cx-chips">
+          <button type="button" class="cx-chip" data-amt="0,01">0,01 BTC</button>
+          <button type="button" class="cx-chip" data-amt="0,1">0,1 BTC</button>
+          <button type="button" class="cx-chip" data-amt="1">1 BTC</button>
+          <button type="button" class="cx-chip" data-amt="10">10 BTC</button>
+        </div>
+        <p class="cx-note">Valor indicativo. No incluye spread, comisiones ni impuestos de tu exchange.</p>
       </div>
-      <p class="rate-line" id="cx-rate-line">—</p>
+
+      <!-- Movimiento 24h -->
+      <div class="cx-card cx-mov">
+        <div class="cx-card-head">
+          <div>
+            <h2>Movimiento 24 horas</h2>
+            <p class="cx-card-sub">Activos más consultados.</p>
+          </div>
+          <span class="cx-badge cx-badge-plain">USD</span>
+        </div>
+        <ul class="cx-mov-list" id="cx-mov-list">
+          {mov.map((c) => {
+            const ch = c.price_change_percentage_24h ?? 0;
+            return (
+              <li class="cx-mov-row">
+                <img class="cx-mov-img" src={c.image} alt={c.symbol} loading="lazy" width="30" height="30" />
+                <span class="cx-mov-name"><b>{c.name}</b><small>{c.symbol.toUpperCase()}</small></span>
+                <span class="cx-mov-price">USD {fUsd(c.current_price)}</span>
+                <span class={`cx-chg ${ch >= 0 ? 'up' : 'down'}`}>{fPct(ch)}</span>
+              </li>
+            );
+          })}
+        </ul>
+        <p class="cx-mov-note">Los precios locales pueden sumar un spread de 0,5% a 3% según exchange y medio de pago.</p>
+      </div>
     </section>
 
-    <section class="top-cryptos">
-      <h2>🏆 Top criptomonedas por market cap</h2>
-      <p class="section-sub">Precio en <strong>USD y ARS</strong>, variación 24h. <input type="text" id="cx-search" placeholder="Buscar crypto..." class="search-crypto" /></p>
-      <div class="rates-table">
-        <div class="rate-head">
-          <div>#</div>
-          <div>Crypto</div>
-          <div>Precio USD</div>
-          <div>24h</div>
+    <!-- PRINCIPALES -->
+    <section class="cx-section" id="principales">
+      <div class="cx-head">
+        <div>
+          <h2>Principales criptomonedas</h2>
+          <p class="cx-sub">Precio global y equivalencia estimada en pesos.</p>
         </div>
-        <div id="cx-top-table">
-          <div class="hc-skeleton-rows" role="status" aria-label="Cargando precios en vivo…">
-            <div class="hc-skeleton hc-skeleton-row"></div>
-            <div class="hc-skeleton hc-skeleton-row"></div>
-            <div class="hc-skeleton hc-skeleton-row"></div>
-            <div class="hc-skeleton hc-skeleton-row"></div>
-            <div class="hc-skeleton hc-skeleton-row"></div>
-            <div class="hc-skeleton hc-skeleton-row"></div>
+        <a class="cx-see" href="#ranking">Ver las 30 →</a>
+      </div>
+      <div class="cx-princ-grid">
+        {featured.map((c) => {
+          const ch = c.price_change_percentage_24h ?? 0;
+          const ars = simplePricesBuild[c.id]?.ars;
+          const sp = spark(c.sparkline_in_7d?.price);
+          const rank = topCoinsBuild.indexOf(c) + 1;
+          return (
+            <div class="cx-princ">
+              <div class="cx-princ-top">
+                <img class="cx-princ-img" src={c.image} alt={c.symbol} loading="lazy" width="30" height="30" />
+                <span class="cx-princ-name"><b>{c.name}</b><small>{c.symbol.toUpperCase()}</small></span>
+                <span class={`cx-chg ${ch >= 0 ? 'up' : 'down'}`}>{fPct(ch)}</span>
+              </div>
+              <div class="cx-princ-usd">USD {fUsd(c.current_price)}</div>
+              <div class="cx-princ-ars">ARS {ars ? fArs(ars) : '—'}</div>
+              <div class="cx-princ-foot">
+                <span class="cx-rank-badge">#{rank}</span>
+                {sp && (
+                  <svg class={`cx-spark ${sp.up ? 'up' : 'down'}`} viewBox="0 0 88 26" width="88" height="26" preserveAspectRatio="none" aria-hidden="true">
+                    <polyline points={sp.pts} fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+
+    <!-- RANKING -->
+    <section class="cx-section" id="ranking">
+      <div class="cx-head">
+        <div>
+          <h2>Ranking por capitalización</h2>
+          <p class="cx-sub">Buscá y compará precios, equivalencia y variación en 24 horas.</p>
+        </div>
+      </div>
+      <div class="cx-card cx-rank-card" data-cur="usd">
+        <div class="cx-rank-tools">
+          <label class="cx-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="search" id="cx-rank-search" placeholder="Buscar cripto…" autocomplete="off" aria-label="Buscar criptomoneda" />
+          </label>
+          <div class="cx-filters" role="tablist" aria-label="Filtrar ranking">
+            <button type="button" class="cx-filter is-active" data-filter="top">Top</button>
+            <button type="button" class="cx-filter" data-filter="gainers">Ganadoras</button>
+            <button type="button" class="cx-filter" data-filter="losers">Perdedoras</button>
+            <button type="button" class="cx-filter" data-filter="stable">Stablecoins</button>
+          </div>
+          <div class="cx-cur" role="group" aria-label="Moneda">
+            <button type="button" class="cx-cur-btn is-active" data-cur="usd">USD</button>
+            <button type="button" class="cx-cur-btn" data-cur="ars">ARS</button>
           </div>
         </div>
+        <div class="cx-rank-scroll">
+          <div class="cx-rank-head" aria-hidden="true">
+            <span>#</span><span>Crypto</span><span class="ta-r">Precio USD</span><span class="ta-r">Equiv. ARS</span><span class="ta-r">24 h</span><span class="ta-c">Tendencia</span><span></span>
+          </div>
+          <div id="cx-rank-body">
+            {rankRows.map((c, i) => {
+              const ch = c.price_change_percentage_24h ?? 0;
+              const ars = simplePricesBuild[c.id]?.ars;
+              const sp = spark(c.sparkline_in_7d?.price);
+              return (
+                <div class={`cx-rank-row${i >= 8 ? ' is-more' : ''}`} data-sym={c.symbol.toLowerCase()} data-name={c.name.toLowerCase()} data-chg={ch}>
+                  <span class="cx-rank-n">{i + 1}</span>
+                  <span class="cx-rank-coin">
+                    <img src={c.image} alt={c.symbol} loading="lazy" width="26" height="26" />
+                    <span class="cx-rank-coin-name"><b>{c.name}</b><small>{c.symbol.toUpperCase()}</small></span>
+                  </span>
+                  <span class="cx-rank-usd ta-r">{fUsd2(c.current_price)}</span>
+                  <span class="cx-rank-ars ta-r">{ars ? '$' + fArs(ars) : '—'}<small>estimado</small></span>
+                  <span class={`cx-rank-chg ta-r cx-chg ${ch >= 0 ? 'up' : 'down'}`}>{fPct(ch)}</span>
+                  <span class="cx-rank-spark ta-c">
+                    {sp && (
+                      <svg class={`cx-spark ${sp.up ? 'up' : 'down'}`} viewBox="0 0 88 26" width="72" height="24" preserveAspectRatio="none" aria-hidden="true">
+                        <polyline points={sp.pts} fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    )}
+                  </span>
+                  <button type="button" class="cx-star" data-star={c.id} aria-label={`Marcar ${c.name} como favorita`}>☆</button>
+                </div>
+              );
+            })}
+          </div>
+          <p class="cx-rank-empty" id="cx-rank-empty" hidden>Sin resultados.</p>
+        </div>
+        <div class="cx-rank-foot">
+          <span id="cx-rank-count">{rankRows.length} activos · última actualización {buildClock}</span>
+          <button type="button" class="cx-more" id="cx-rank-more">Mostrar más</button>
+        </div>
       </div>
     </section>
 
-    <section class="related">
-      <h2>Relacionadas</h2>
-      <ul class="rel-grid">
-        <li><a href="/cambio-de-monedas">💱 Cambio de monedas (dólar blue, euro, real)</a></li>
-        <li><a href="/calculadora-ganancia-bitcoin-compra-venta">Ganancia bitcoin: compra / venta</a></li>
-        <li><a href="/calculadora-staking-apy-crypto-rendimiento">Staking APY rendimiento</a></li>
-        <li><a href="/calculadora-fees-comision-exchange-crypto">Fees exchange crypto</a></li>
-        <li><a href="/calculadora-dca-dollar-cost-average-crypto">DCA (Dollar-Cost Averaging)</a></li>
-        <li><a href="/calculadora-impuesto-bienes-personales-crypto">Bienes Personales sobre crypto (AR)</a></li>
-      </ul>
+    <!-- QUÉ MIRAR -->
+    <section class="cx-section">
+      <div class="cx-head">
+        <div>
+          <h2>Qué mirar antes de convertir</h2>
+          <p class="cx-sub">El precio global no siempre coincide con el valor final de compra o venta.</p>
+        </div>
+      </div>
+      <div class="cx-watch-grid">
+        <div class="cx-watch">
+          <span class="cx-watch-ico" aria-hidden="true">⇄</span>
+          <h3>Precio versus cotización del exchange</h3>
+          <p>Cada plataforma suma spread, comisiones y liquidez propia.</p>
+          <a href="/calculadora-usdt-vs-usdc-comision-exchange">Calcular fees →</a>
+        </div>
+        <div class="cx-watch">
+          <span class="cx-watch-ico" aria-hidden="true">$</span>
+          <h3>Equivalencia en pesos</h3>
+          <p>Es una referencia de mercado, no necesariamente el precio cripto local.</p>
+          <a href="/cambio-de-monedas">Comparar con dólar cripto →</a>
+        </div>
+        <div class="cx-watch">
+          <span class="cx-watch-ico" aria-hidden="true">24h</span>
+          <h3>Variación de 24 horas</h3>
+          <p>Compara el precio actual con el de exactamente 24 horas atrás.</p>
+          <a href="#como-funciona">Cómo se calcula →</a>
+        </div>
+      </div>
     </section>
 
-    <section class="faq">
-      <h2>Preguntas frecuentes</h2>
-      <div class="faq-list">
-        {faq.map((f) => (
-          <details>
-            <summary>{f.q}</summary>
-            <div class="faq-answer" set:html={f.a}></div>
-          </details>
+    <!-- CALCULADORAS -->
+    <section class="cx-section" id="calculadoras">
+      <div class="cx-head">
+        <div>
+          <h2>Calculadoras cripto</h2>
+          <p class="cx-sub">Pasá de mirar el precio a hacer una cuenta concreta.</p>
+        </div>
+      </div>
+      <div class="cx-calc-grid">
+        {calcCards.map((c) => (
+          <a class="cx-calc" href={c.href}>
+            <span class="cx-calc-ico" aria-hidden="true">{c.icon}</span>
+            <h3>{c.title}</h3>
+            <p>{c.desc}</p>
+            <span class="cx-calc-cta">{c.cta} →</span>
+          </a>
         ))}
       </div>
     </section>
 
-    <section class="method">
-      <h2>Cómo funciona</h2>
-      <p>Esta página consulta la API pública de <strong>CoinGecko</strong> (<a href="https://api.coingecko.com" rel="noopener">api.coingecko.com</a>) cada 30 segundos para traer precios actualizados de las top 30 criptomonedas en múltiples monedas fiat.</p>
-      <ul>
-        <li><strong>Top 30 cryptos</strong>: traídas por <code>market_cap_desc</code>.</li>
-        <li><strong>Precios en fiat</strong>: USD, EUR, ARS, BRL, MXN, GBP, JPY, CLP, UYU.</li>
-        <li><strong>Polling 30 seg</strong>: mientras la pestaña esté activa.</li>
-        <li><strong>Pausado en segundo plano</strong>: si minimizás el navegador, el polling pausa para no saturar.</li>
-      </ul>
-      <p class="disclaimer">⚠️ <strong>Aviso:</strong> los precios son indicativos del mercado global. Tu exchange local puede tener spread del 0.5-3% encima. Verificá siempre antes de operar.</p>
+    <!-- CÓMO FUNCIONA + FAQ -->
+    <section class="cx-two cx-bottom">
+      <div class="cx-card cx-method" id="como-funciona">
+        <h2>Cómo funcionan los precios</h2>
+        <p>La página consulta CoinGecko cada 30 segundos mientras esté esta pestaña activa. Si la fuente se demora, conserva el último dato válido y muestra su horario.</p>
+        <span class="cx-src-chip"><span class="cx-dot cx-dot-static" aria-hidden="true"></span>CoinGecko — mercado global</span>
+      </div>
+      <div class="cx-card cx-faq">
+        <h2>Preguntas frecuentes</h2>
+        <div class="cx-faq-list">
+          {faq.map((f) => (
+            <details class="cx-faq-item">
+              <summary>{f.q}</summary>
+              <div class="cx-faq-a" set:html={f.a}></div>
+            </details>
+          ))}
+        </div>
+      </div>
     </section>
+
+    <DatosHoyNav current="/cotizacion-cripto" />
   </article>
 
   <script is:inline type="application/ld+json" set:html={JSON.stringify(schemaFaq)}></script>
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)}></script>
   <script id="cx-build-data" type="application/json" set:html={JSON.stringify({ topCoins: topCoinsBuild, simplePrices: simplePricesBuild, ts: buildTs })}></script>
   <Footer slot="footer" />
 </Layout>
 
 <style is:global>
-  /* Shared styles (converter, faq, related, method, picker) */
-  .cx-page .breadcrumbs { font-size: .875rem; color: var(--text-muted); margin-bottom: 1.5rem; }
-  .cx-page .breadcrumbs a { color: var(--accent); text-decoration: none; }
-  .cx-page .breadcrumbs a:hover { text-decoration: underline; }
-  .cx-page .breadcrumbs .sep { margin: 0 .5rem; color: var(--text-subtle); }
-  .cx-page .lead { color: var(--text-muted); font-size: 1.1rem; margin: 0 0 1.5rem; line-height: 1.6; max-width: 780px; }
-  .cx-page .lead strong { color: var(--text); font-weight: 700; }
+  /* ===== Cotización cripto — dashboard esmeralda (mockup aprobado 2026-07-12) ===== */
+  :global(body[data-page-type="dashboard"]) { background: #eef2f6; }
+  :global(html[data-theme="dark"] body[data-page-type="dashboard"]) { background: #0b1220; }
 
-  /* Converter */
-  .cx-page .converter {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 2rem;
-    margin: 0 0 2.5rem;
-    box-shadow: var(--shadow-md);
-  }
-  .cx-page .converter h2 {
-    margin: 0 0 1.5rem 0;
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: .6rem;
-  }
-  .cx-page .conv-grid {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 1rem;
-    align-items: stretch;
-  }
-  .cx-page .conv-side {
-    background: var(--bg-soft);
-    padding: 1.1rem 1.2rem;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    gap: .7rem;
-    transition: border-color .15s, box-shadow .15s;
-  }
-  .cx-page .conv-side:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .cx-page .conv-side label {
-    font-size: .72rem;
-    color: var(--text-subtle);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-  }
-  .cx-page .conv-side input {
-    font-size: 2rem;
-    padding: .4rem .65rem;
-    border: 2px dashed var(--border-strong);
-    border-radius: 6px;
-    background: var(--bg);
-    font-weight: 800;
-    color: var(--text);
-    font-variant-numeric: tabular-nums;
-    font-family: var(--font-mono), system-ui;
-    width: 100%;
-    cursor: text;
-    transition: transform .15s, box-shadow .15s, border-color .15s, background-color .15s, color .15s;
-  }
-  .cx-page .conv-side input:hover { border-color: var(--accent); background: var(--accent-soft); }
-  .cx-page .conv-side input:focus {
-    outline: none;
-    border-style: solid;
-    border-color: var(--accent);
-    background: var(--bg);
-    box-shadow: 0 0 0 3px var(--accent-soft);
-  }
-  .cx-page .conv-side input[readonly] {
-    color: var(--accent);
-    border-style: dotted;
-    border-color: var(--border);
-    background: transparent;
-    cursor: default;
-  }
-  .cx-page .conv-side input[readonly]:hover { background: transparent; border-color: var(--border); }
-  .cx-page .edit-hint {
-    font-size: .68rem;
-    color: var(--text-subtle);
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: .25rem;
-    margin-top: -.3rem;
-  }
-  .cx-page .edit-hint::before { content: '✏️'; font-size: .85rem; }
-  .cx-page .swap-btn {
-    background: var(--bg-card);
-    border: 2px solid var(--border);
-    border-radius: 50%;
-    width: 48px; height: 48px;
-    font-size: 1.3rem;
-    cursor: pointer;
-    color: var(--text-muted);
-    align-self: center;
-    transition: transform .2s, box-shadow .2s, border-color .2s, background-color .2s, color .2s;
-  }
-  .cx-page .swap-btn:hover {
-    background: #f97316;
-    color: #fff;
-    border-color: #f97316;
-    transform: rotate(180deg) scale(1.1);
-    box-shadow: 0 4px 14px rgba(249, 115, 22, .25);
-  }
-  .cx-page .rate-line {
-    margin: 1.2rem 0 0;
-    padding: .85rem 1rem;
-    background: var(--bg-soft);
-    border: 1px dashed var(--border);
-    border-radius: var(--radius-sm);
-    font-size: .88rem;
-    color: var(--text-muted);
-    text-align: center;
-    font-variant-numeric: tabular-nums;
-  }
+  .cx { max-width: 1120px; margin: 0 auto; padding: 0 0 3rem; color: var(--text); }
+  .cx-crumb { font-size: 0.8125rem; color: var(--text-subtle); margin: 0 0 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+  .cx-crumb a { color: var(--text-muted); text-decoration: none; }
+  .cx-crumb a:hover { color: var(--accent-strong); text-decoration: underline; }
+  .cx-crumb .current { color: var(--text); font-weight: 500; }
+  .cx-crumb .sep { color: var(--border-strong); }
 
-  @media (max-width: 680px) {
-    .cx-page .conv-grid { grid-template-columns: 1fr; gap: .65rem; }
-    .cx-page .swap-btn { justify-self: center; transform: rotate(90deg); }
-    .cx-page .swap-btn:hover { transform: rotate(270deg) scale(1.1); }
-    .cx-page .converter { padding: 1.5rem 1.2rem; }
-  }
-
-  /* Coin picker */
-  .cx-page .coin-picker { position: relative; }
-  .cx-page .picker-btn {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: .5rem;
-    width: 100%;
-    padding: .6rem .75rem;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-sm);
-    background: var(--bg-card);
-    color: var(--text);
-    font-size: .92rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: transform .15s, box-shadow .15s, border-color .15s, background-color .15s, color .15s;
-  }
-  .cx-page .picker-btn:hover { border-color: #f97316; }
-  .cx-page .picker-btn[aria-expanded="true"] { border-color: #f97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, .15); }
-  .cx-page .picker-label { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .cx-page .picker-chev { color: var(--text-subtle); font-size: .75rem; transition: transform .15s; }
-  .cx-page .picker-btn[aria-expanded="true"] .picker-chev { transform: rotate(180deg); }
-  .cx-page .picker-panel {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    right: 0;
-    z-index: 50;
-    background: var(--bg-card);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-lg);
-    overflow: hidden;
-    animation: cxPickerFade .12s ease-out;
-  }
-  .cx-page .picker-search {
-    width: 100%;
-    padding: .7rem 1rem .7rem 2.5rem;
-    border: 0;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat .85rem center;
-    font-size: .9rem;
-    color: var(--text);
-  }
-  .cx-page .picker-search:focus { outline: none; background-color: var(--bg); }
-  .cx-page .picker-list { max-height: 280px; overflow-y: auto; padding: .3rem 0; scrollbar-width: thin; }
-  .cx-page .picker-group {
-    padding: .45rem .8rem .2rem;
-    font-size: .68rem;
-    color: var(--text-subtle);
-    text-transform: uppercase;
-    letter-spacing: .08em;
-    font-weight: 700;
-    position: sticky;
-    top: 0;
-    background: var(--bg-card);
-    z-index: 1;
-  }
-  .cx-page .picker-item {
-    display: flex;
-    align-items: center;
-    gap: .65rem;
-    padding: .55rem .85rem;
-    cursor: pointer;
-    font-size: .9rem;
-    color: var(--text);
-    border-left: 3px solid transparent;
-    transition: background .1s;
-  }
-  .cx-page .picker-item:hover,
-  .cx-page .picker-item.active { background: rgba(249, 115, 22, .1); border-left-color: #f97316; }
-  .cx-page .picker-item.selected { background: rgba(249, 115, 22, .15); color: #c2410c; font-weight: 600; }
-  .cx-page .picker-item .code { margin-left: auto; font-size: .75rem; color: var(--text-subtle); font-family: var(--font-mono); }
-  .cx-page .picker-empty { padding: 1.5rem; text-align: center; color: var(--text-subtle); font-size: .85rem; }
-  @keyframes cxPickerFade {
-    from { opacity: 0; transform: translateY(-4px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Top cryptos section */
-  .cx-page .top-cryptos { margin: 2.5rem 0; }
-  .cx-page .top-cryptos h2 {
-    font-size: 1.3rem;
-    margin: 0 0 .5rem;
-    font-weight: 700;
-    color: var(--text);
-  }
-  .cx-page .section-sub {
-    color: var(--text-muted);
-    font-size: .92rem;
-    margin: 0 0 1.25rem;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: .5rem;
-  }
-  .cx-page .section-sub strong { color: var(--text); font-weight: 600; }
-  .cx-page .rates-table {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-  }
-  .cx-page .loading { padding: 2.5rem; text-align: center; color: var(--text-subtle); font-size: .95rem; }
-
-  /* Related */
-  .cx-page .related { margin: 3rem 0; }
-  .cx-page .related h2 { font-size: 1.3rem; margin: 0 0 1rem; color: var(--text); font-weight: 700; }
-  .cx-page .rel-grid {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: .75rem;
-  }
-  .cx-page .rel-grid li a {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    padding: .9rem 1.1rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--accent);
-    text-decoration: none;
-    font-weight: 500;
-    font-size: .92rem;
-    transition: transform .15s, box-shadow .15s, border-color .15s, background-color .15s, color .15s;
-  }
-  .cx-page .rel-grid li a::before { content: '→'; color: var(--text-subtle); transition: transform .15s; }
-  .cx-page .rel-grid li a:hover { background: var(--accent-soft); border-color: var(--accent); }
-  .cx-page .rel-grid li a:hover::before { transform: translateX(4px); color: var(--accent); }
-
-  /* FAQ */
-  .cx-page .faq { margin: 3rem 0; }
-  .cx-page .faq h2 { font-size: 1.4rem; margin: 0 0 1.25rem; color: var(--text); font-weight: 700; }
-  .cx-page .faq-list details {
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    margin-bottom: .5rem;
-    overflow: hidden;
-    background: var(--bg-card);
-    transition: box-shadow .15s;
-  }
-  .cx-page .faq-list details[open] { box-shadow: var(--shadow-sm); }
-  .cx-page .faq-list summary {
-    padding: 1.1rem 1.25rem;
-    cursor: pointer;
-    font-weight: 600;
-    color: var(--text);
-    list-style: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-  }
-  .cx-page .faq-list summary::after {
-    content: '';
-    width: 10px; height: 10px;
-    border: 2px solid var(--text-muted);
-    border-top: 0;
-    border-left: 0;
-    transform: rotate(45deg);
-    transition: transform .2s;
-    flex-shrink: 0;
-  }
-  .cx-page .faq-list details[open] summary::after { transform: rotate(-135deg); }
-  .cx-page .faq-list summary:hover { color: #f97316; }
-  .cx-page .faq-answer { padding: 0 1.25rem 1.2rem; color: var(--text-muted); line-height: 1.65; font-size: .95rem; }
-  .cx-page .faq-answer a { color: var(--accent); }
-
-  /* Method */
-  .cx-page .method {
-    margin: 3rem 0;
-    padding: 1.75rem 2rem;
-    background: var(--bg-soft);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    line-height: 1.65;
-    color: var(--text-muted);
-  }
-  .cx-page .method h2 { margin: 0 0 1rem; color: var(--text); font-size: 1.25rem; font-weight: 700; }
-  .cx-page .method ul { padding-left: 1.25rem; margin: 0 0 1rem; }
-  .cx-page .method li { margin: .6rem 0; }
-  .cx-page .method strong { color: var(--text); font-weight: 600; }
-  .cx-page .disclaimer {
-    margin-top: 1.2rem;
-    font-size: .88rem;
-    padding: .9rem 1.1rem;
-    background: var(--danger-soft);
-    border-left: 3px solid var(--danger);
-    color: var(--text);
-    border-radius: var(--radius-sm);
-  }
-  .cx-page .disclaimer strong { color: var(--danger); }
-  .cx-page .method code { font-family: var(--font-mono); background: var(--bg-muted); padding: 1px 5px; border-radius: 3px; font-size: .85em; }
-
-  @media (max-width: 680px) {
-    .cx-page { padding: .5rem .8rem 4rem; }
-    .cx-page .cx-header { padding: 1.5rem 1.25rem; }
-    .cx-page .method { padding: 1.25rem; }
-  }
-
-  /* Base crypto page */
-  .cx-page {
-    max-width: 1080px;
-    margin: 0 auto;
-    padding: 1rem 1.25rem 5rem;
-    color: var(--text);
-  }
-  .cx-header {
-    padding: 2rem 2rem 1.75rem;
-    border-radius: var(--radius-lg);
+  /* HERO */
+  .cx-hero {
+    position: relative; overflow: hidden;
+    display: grid; grid-template-columns: 1.55fr 1fr; gap: 2rem; align-items: stretch;
+    padding: 2rem 2.25rem; border-radius: 20px;
     background:
-      radial-gradient(1200px 400px at 10% -40%, rgba(249, 115, 22, .18), transparent 60%),
-      radial-gradient(900px 400px at 95% -30%, rgba(234, 179, 8, .15), transparent 65%),
-      linear-gradient(135deg, var(--bg-card), var(--bg-soft));
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow-sm);
-    margin-bottom: 2rem;
+      radial-gradient(120% 130% at 88% 8%, rgba(52, 211, 153, 0.20), transparent 55%),
+      radial-gradient(90% 120% at 5% 100%, rgba(13, 148, 136, 0.18), transparent 60%),
+      linear-gradient(135deg, #072a20 0%, #0b3b2c 52%, #0e4835 100%);
+    color: #eaf6f0;
+    box-shadow: 0 18px 40px -22px rgba(6, 40, 30, 0.6);
   }
-  .cx-header h1 {
-    font-size: clamp(2rem, 4.5vw, 2.75rem);
-    margin: 0 0 .75rem;
-    font-weight: 800;
-    letter-spacing: -.02em;
-    line-height: 1.1;
-    color: var(--text);
+  .cx-kicker { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #7fe8c0; }
+  .cx-hero h1 { font-size: clamp(2rem, 4vw, 2.9rem); line-height: 1.05; letter-spacing: -0.02em; margin: 0.55rem 0 0.7rem; font-weight: 850; color: #fff; }
+  .cx-lead { font-size: 1.02rem; line-height: 1.55; color: #c8e6da; max-width: 46ch; margin: 0 0 1.35rem; }
+  .cx-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .cx-pill {
+    display: inline-flex; align-items: center; gap: 0.45rem;
+    padding: 0.4rem 0.8rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
+    background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16); color: #e6f2ed;
+    backdrop-filter: blur(4px);
   }
+  .cx-dot { width: 8px; height: 8px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.22); animation: cxPulse 2.2s ease-in-out infinite; }
+  .cx-dot-static { animation: none; box-shadow: none; }
+  @keyframes cxPulse { 0%, 100% { box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.25); } 50% { box-shadow: 0 0 0 6px rgba(52, 211, 153, 0.05); } }
+
   .cx-status {
-    display: inline-flex;
-    align-items: center;
-    gap: .6rem;
-    padding: .5rem .9rem .5rem .75rem;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    font-size: .85rem;
-    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.055); border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 16px; padding: 1.15rem 1.25rem; display: flex; flex-direction: column; gap: 0.85rem;
+    backdrop-filter: blur(6px);
   }
-  .cx-status .dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: #f59e0b;
-    transition: background .3s, box-shadow .3s;
+  .cx-status-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+  .cx-status-kicker { font-size: 0.66rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #a9d9c8; }
+  .cx-status-badge {
+    font-size: 0.62rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+    color: #6ee7b7; background: rgba(52, 211, 153, 0.14); border: 1px solid rgba(52, 211, 153, 0.32);
+    padding: 0.2rem 0.55rem; border-radius: 999px;
   }
-  .cx-status .dot.ok {
-    background: #22c55e;
-    box-shadow: 0 0 0 4px rgba(34,197,94,.2);
-    animation: pulseLive 2s ease-in-out infinite;
+  .cx-status-rows { margin: 0; display: flex; flex-direction: column; }
+  .cx-status-rows > div {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 0.6rem 0; border-top: 1px solid rgba(255, 255, 255, 0.09);
   }
-  .cx-status .dot.err { background: var(--danger); box-shadow: 0 0 0 4px var(--danger-soft); }
-  @keyframes pulseLive {
-    0%, 100% { box-shadow: 0 0 0 3px rgba(34, 197, 94, .25); }
-    50% { box-shadow: 0 0 0 8px rgba(34, 197, 94, .05); }
-  }
-  .cx-page .auto-note { color: var(--text-subtle); font-size: .78rem; font-style: italic; }
+  .cx-status-rows > div:first-child { border-top: 0; }
+  .cx-status-rows dt { font-size: 0.82rem; color: #b7d6ca; margin: 0; }
+  .cx-status-rows dd { margin: 0; font-size: 0.92rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; font-family: var(--font-num); }
 
-  .search-crypto {
-    margin-left: .5rem;
-    padding: .45rem .8rem .45rem 2.1rem;
-    border: 1px solid var(--border-strong);
-    border-radius: 999px;
-    background: var(--bg-card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat .8rem center;
-    font-size: .85rem;
-    min-width: 200px;
+  /* TABS */
+  .cx-tabs {
+    display: flex; gap: 0.25rem; flex-wrap: wrap; margin: 1rem 0 1.75rem; padding: 0.35rem;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow-sm);
+    position: sticky; top: 0.5rem; z-index: 5;
   }
+  .cx-tabs a {
+    font-size: 0.86rem; font-weight: 650; color: var(--text-muted); text-decoration: none;
+    padding: 0.5rem 1rem; border-radius: 10px; white-space: nowrap; transition: background-color 0.15s, color 0.15s;
+  }
+  .cx-tabs a:hover { background: var(--bg-soft); color: var(--text); }
+  .cx-tabs a.is-active { background: var(--accent-soft); color: var(--accent-strong); font-weight: 750; }
 
-  /* Rate rows específicas de crypto */
-  .cx-page .rate-head {
-    display: grid;
-    grid-template-columns: 50px minmax(200px, 2fr) minmax(120px, 1fr) minmax(100px, .8fr);
-    gap: .75rem 1rem;
-    padding: .7rem 1.25rem;
-    background: var(--bg-soft);
-    border-bottom: 1px solid var(--border);
-    font-size: .7rem;
-    color: var(--text-subtle);
-    text-transform: uppercase;
-    letter-spacing: .08em;
-    font-weight: 700;
-  }
-  .cx-page .rate-row {
-    display: grid;
-    grid-template-columns: 50px minmax(200px, 2fr) minmax(120px, 1fr) minmax(100px, .8fr);
-    gap: .75rem 1rem;
-    padding: .85rem 1.25rem;
-    border-bottom: 1px solid var(--border);
-    align-items: center;
-    font-size: .95rem;
-    transition: background .15s;
-  }
-  .cx-page .rate-row:hover { background: var(--bg-soft); }
-  .cx-page .rate-row:last-child { border-bottom: 0; }
-  .cx-page .rank { color: var(--text-subtle); font-weight: 600; font-size: .85rem; }
-  .cx-page .coin-info { display: flex; align-items: center; gap: .7rem; min-width: 0; }
-  .cx-page .coin-img { width: 28px; height: 28px; border-radius: 50%; }
-  .cx-page .coin-name-wrap { display: flex; flex-direction: column; min-width: 0; }
-  .cx-page .coin-name { font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; }
-  .cx-page .coin-sym { font-size: .75rem; color: var(--text-subtle); text-transform: uppercase; font-family: var(--font-mono); }
-  .cx-page .price { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 1rem; color: var(--text); text-align: right; font-family: var(--font-mono); }
-  .cx-page .price .ars { display: block; font-size: .78rem; color: var(--text-subtle); font-weight: 400; }
-  .cx-page .change-24h {
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-    font-weight: 600;
-    font-size: .9rem;
-  }
-  .cx-page .change-24h.up { color: #059669; }
-  .cx-page .change-24h.down { color: #dc2626; }
-  html[data-theme="dark"] .cx-page .change-24h.up { color: #6ee7b7; }
-  html[data-theme="dark"] .cx-page .change-24h.down { color: #fca5a5; }
+  /* Layout de 2 columnas */
+  .cx-two { display: grid; grid-template-columns: 1.35fr 1fr; gap: 1.25rem; margin-bottom: 2rem; }
+  .cx-bottom { align-items: start; }
 
+  .cx-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 1.5rem; box-shadow: var(--shadow-sm);
+  }
+  .cx-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.1rem; }
+  .cx-card-head h2 { font-size: 1.15rem; font-weight: 800; margin: 0; letter-spacing: -0.01em; }
+  .cx-card-sub { font-size: 0.85rem; color: var(--text-muted); margin: 0.25rem 0 0; }
+  .cx-badge {
+    font-size: 0.64rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--accent-strong); background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+    padding: 0.28rem 0.6rem; border-radius: 999px; white-space: nowrap; flex: none;
+  }
+  .cx-badge-plain { color: var(--text-muted); background: var(--bg-muted); border-color: var(--border); }
+
+  /* CONVERSOR */
+  .cx-conv-box {
+    border: 1px solid var(--border); border-radius: 14px; background: var(--bg-soft);
+    padding: 1.1rem 1.15rem; display: flex; flex-direction: column; gap: 0.35rem; position: relative;
+  }
+  .cx-conv-field { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.35rem 0; }
+  .cx-conv-label { font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); }
+  .cx-conv-row { display: flex; align-items: center; gap: 0.75rem; }
+  .cx-conv-amount {
+    flex: 1; min-width: 0; font-size: 2rem; font-weight: 800; color: var(--text);
+    background: transparent; border: 0; outline: none; padding: 0; font-family: var(--font-num); font-variant-numeric: tabular-nums;
+  }
+  .cx-conv-result {
+    flex: 1; min-width: 0; font-size: 2rem; font-weight: 800; color: var(--accent-strong);
+    font-family: var(--font-num); font-variant-numeric: tabular-nums; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .cx-swap {
+    align-self: center; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border-strong);
+    background: var(--bg-card); color: var(--text-muted); font-size: 1.1rem; cursor: pointer; margin: 0.1rem 0;
+    display: grid; place-items: center; transition: transform 0.2s, color 0.2s, border-color 0.2s, background-color 0.2s;
+  }
+  .cx-swap:hover { color: var(--accent-strong); border-color: var(--accent); background: var(--accent-soft); transform: rotate(180deg); }
+
+  .cx-rate {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    margin-top: 0.9rem; padding: 0.7rem 0.9rem; background: var(--bg-soft); border: 1px solid var(--border);
+    border-radius: 10px; font-size: 0.86rem; color: var(--text-muted); font-variant-numeric: tabular-nums; font-family: var(--font-num);
+  }
+  .cx-rate #cx-rate-ars { color: var(--text); font-weight: 700; }
+  .cx-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.9rem; }
+  .cx-chip {
+    font-size: 0.8rem; font-weight: 650; padding: 0.4rem 0.75rem; border-radius: 999px;
+    border: 1px solid var(--border-strong); background: var(--bg-card); color: var(--text-muted); cursor: pointer;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .cx-chip:hover, .cx-chip.is-active { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); }
+  .cx-note { font-size: 0.74rem; color: var(--text-subtle); margin: 0.85rem 0 0; }
+
+  /* PICKER */
+  .cx-picker { position: relative; flex: none; }
+  .cx-picker-btn {
+    display: flex; align-items: center; gap: 0.4rem; padding: 0.5rem 0.7rem; border-radius: 10px;
+    border: 1px solid var(--border-strong); background: var(--bg-card); color: var(--text); font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    max-width: 190px; transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .cx-picker-btn:hover, .cx-picker-btn[aria-expanded="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .cx-picker-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cx-picker-chev { color: var(--text-subtle); font-size: 0.7rem; transition: transform 0.15s; }
+  .cx-picker-btn[aria-expanded="true"] .cx-picker-chev { transform: rotate(180deg); }
+  .cx-picker-panel {
+    position: absolute; top: calc(100% + 6px); right: 0; z-index: 60; width: 280px; max-width: 78vw;
+    background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: 12px; box-shadow: var(--shadow-lg); overflow: hidden;
+  }
+  .cx-picker-search { width: 100%; padding: 0.65rem 0.85rem; border: 0; border-bottom: 1px solid var(--border); background: var(--bg-soft); font-size: 0.88rem; color: var(--text); }
+  .cx-picker-search:focus { outline: none; background: var(--bg); }
+  .cx-picker-list { max-height: 260px; overflow-y: auto; padding: 0.25rem 0; }
+  .cx-picker-group { padding: 0.4rem 0.8rem 0.2rem; font-size: 0.64rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-subtle); position: sticky; top: 0; background: var(--bg-card); }
+  .cx-picker-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.8rem; cursor: pointer; font-size: 0.87rem; color: var(--text); border-left: 3px solid transparent; }
+  .cx-picker-item:hover, .cx-picker-item.active { background: var(--accent-soft); border-left-color: var(--accent); }
+  .cx-picker-item.selected { color: var(--accent-strong); font-weight: 700; }
+  .cx-picker-item .code { margin-left: auto; font-size: 0.72rem; color: var(--text-subtle); font-family: var(--font-mono); }
+  .cx-picker-empty { padding: 1.2rem; text-align: center; color: var(--text-subtle); font-size: 0.82rem; }
+
+  /* MOVIMIENTO 24H */
+  .cx-mov-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .cx-mov-row { display: grid; grid-template-columns: 30px 1fr auto auto; align-items: center; gap: 0.75rem; padding: 0.7rem 0; border-top: 1px solid var(--border); }
+  .cx-mov-row:first-child { border-top: 0; }
+  .cx-mov-img { width: 30px; height: 30px; border-radius: 50%; }
+  .cx-mov-name { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+  .cx-mov-name b { font-size: 0.9rem; font-weight: 700; }
+  .cx-mov-name small { font-size: 0.72rem; color: var(--text-subtle); font-family: var(--font-mono); }
+  .cx-mov-price { font-size: 0.9rem; font-weight: 700; font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+  .cx-mov-note { margin: 0.9rem 0 0; font-size: 0.76rem; line-height: 1.5; color: var(--warning-text); background: var(--warning-soft); border: 1px solid color-mix(in srgb, var(--warning) 22%, transparent); border-radius: 10px; padding: 0.6rem 0.75rem; }
+
+  .cx-chg { font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums; font-family: var(--font-num); white-space: nowrap; }
+  .cx-chg.up { color: var(--success-text); }
+  .cx-chg.down { color: var(--danger); }
+  html[data-theme="dark"] .cx-chg.up { color: #6ee7b7; }
+  html[data-theme="dark"] .cx-chg.down { color: #fca5a5; }
+
+  /* SECCIONES */
+  .cx-section { margin-bottom: 2.25rem; }
+  .cx-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 1.1rem; }
+  .cx-head h2 { font-size: 1.4rem; font-weight: 820; letter-spacing: -0.02em; margin: 0; }
+  .cx-sub { font-size: 0.92rem; color: var(--text-muted); margin: 0.3rem 0 0; }
+  .cx-see { font-size: 0.86rem; font-weight: 700; color: var(--accent-strong); white-space: nowrap; text-decoration: none; }
+  .cx-see:hover { text-decoration: underline; }
+
+  /* PRINCIPALES */
+  .cx-princ-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  .cx-princ { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.15rem 1.2rem; box-shadow: var(--shadow-sm); transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s; }
+  .cx-princ:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--border-strong); }
+  .cx-princ-top { display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 0.6rem; margin-bottom: 0.9rem; }
+  .cx-princ-img { width: 30px; height: 30px; border-radius: 50%; }
+  .cx-princ-name { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+  .cx-princ-name b { font-size: 0.9rem; font-weight: 700; }
+  .cx-princ-name small { font-size: 0.7rem; color: var(--text-subtle); font-family: var(--font-mono); }
+  .cx-princ-usd { font-size: 1.4rem; font-weight: 820; font-family: var(--font-num); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .cx-princ-ars { font-size: 0.8rem; color: var(--text-subtle); font-family: var(--font-num); margin-top: 0.15rem; }
+  .cx-princ-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.9rem; }
+  .cx-rank-badge { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); background: var(--bg-muted); border-radius: 6px; padding: 0.15rem 0.45rem; }
+  .cx-spark { display: block; overflow: visible; }
+  .cx-spark.up { color: var(--success-text); }
+  .cx-spark.down { color: var(--danger); }
+  html[data-theme="dark"] .cx-spark.up { color: #34d399; }
+  html[data-theme="dark"] .cx-spark.down { color: #fca5a5; }
+
+  /* RANKING */
+  .cx-rank-card { padding: 1rem 1.1rem; }
+  .cx-rank-tools { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
+  .cx-search { display: flex; align-items: center; gap: 0.5rem; height: 40px; min-width: 200px; flex: 1; padding: 0 0.85rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-soft); color: var(--text-subtle); }
+  .cx-search input { border: 0; outline: 0; background: transparent; font: inherit; font-size: 0.88rem; color: var(--text); width: 100%; }
+  .cx-filters { display: flex; gap: 0.25rem; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 10px; padding: 0.2rem; }
+  .cx-filter { font-size: 0.8rem; font-weight: 650; padding: 0.4rem 0.7rem; border-radius: 8px; border: 0; background: transparent; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+  .cx-filter:hover { color: var(--text); }
+  .cx-filter.is-active { background: var(--bg-card); color: var(--accent-strong); box-shadow: var(--shadow-sm); font-weight: 750; }
+  .cx-cur { display: flex; gap: 0.15rem; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 10px; padding: 0.2rem; }
+  .cx-cur-btn { font-size: 0.78rem; font-weight: 700; padding: 0.4rem 0.65rem; border-radius: 8px; border: 0; background: transparent; color: var(--text-muted); cursor: pointer; }
+  .cx-cur-btn.is-active { background: var(--accent); color: var(--on-accent); }
+  .cx-rank-scroll { overflow-x: auto; }
+  .cx-rank-head, .cx-rank-row { display: grid; grid-template-columns: 34px minmax(150px, 2fr) minmax(96px, 1fr) minmax(110px, 1.1fr) minmax(78px, 0.8fr) 84px 34px; gap: 0.5rem 0.75rem; align-items: center; }
+  .cx-rank-head { padding: 0.6rem 0.5rem; border-bottom: 1px solid var(--border); font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-subtle); }
+  .ta-r { text-align: right; } .ta-c { text-align: center; }
+  .cx-rank-row { padding: 0.7rem 0.5rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+  .cx-rank-row:last-child { border-bottom: 0; }
+  .cx-rank-row.is-more { display: none; }
+  .cx-rank-card.is-expanded .cx-rank-row.is-more { display: grid; }
+  .cx-rank-row:hover { background: var(--bg-soft); }
+  .cx-rank-n { color: var(--text-subtle); font-weight: 700; font-size: 0.82rem; text-align: center; }
+  .cx-rank-coin { display: flex; align-items: center; gap: 0.55rem; min-width: 0; }
+  .cx-rank-coin img { width: 26px; height: 26px; border-radius: 50%; flex: none; }
+  .cx-rank-coin-name { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+  .cx-rank-coin-name b { font-size: 0.88rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
+  .cx-rank-coin-name small { font-size: 0.7rem; color: var(--text-subtle); font-family: var(--font-mono); }
+  .cx-rank-usd { font-weight: 700; font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+  .cx-rank-ars { font-family: var(--font-num); font-variant-numeric: tabular-nums; color: var(--text); display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
+  .cx-rank-ars small { font-size: 0.64rem; color: var(--text-subtle); font-family: var(--font-body); }
+  .cx-rank-chg { justify-self: end; }
+  .cx-rank-spark { display: flex; justify-content: center; }
+  .cx-star { border: 0; background: transparent; color: var(--text-subtle); font-size: 1.05rem; cursor: pointer; line-height: 1; padding: 0.2rem; }
+  .cx-star.is-on { color: #f59e0b; }
+  .cx-rank-card[data-cur="ars"] .cx-rank-usd { color: var(--text-subtle); font-weight: 600; }
+  .cx-rank-card[data-cur="ars"] .cx-rank-ars { font-weight: 700; }
+  .cx-rank-card[data-cur="ars"] .cx-rank-ars small { display: none; }
+  .cx-rank-foot { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-top: 0.85rem; margin-top: 0.35rem; border-top: 1px solid var(--border); font-size: 0.78rem; color: var(--text-subtle); }
+  .cx-more { font-size: 0.82rem; font-weight: 700; padding: 0.45rem 1rem; border-radius: 999px; border: 1px solid var(--border-strong); background: var(--bg-card); color: var(--text-muted); cursor: pointer; }
+  .cx-more:hover { border-color: var(--accent); color: var(--accent-strong); }
+  .cx-rank-empty { padding: 2rem; text-align: center; color: var(--text-subtle); }
+
+  /* QUÉ MIRAR */
+  .cx-watch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .cx-watch { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.35rem 1.4rem; box-shadow: var(--shadow-sm); }
+  .cx-watch-ico { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 11px; background: var(--accent-soft); color: var(--accent-strong); font-size: 1rem; font-weight: 800; margin-bottom: 0.85rem; }
+  .cx-watch h3 { font-size: 1rem; font-weight: 750; margin: 0 0 0.4rem; }
+  .cx-watch p { font-size: 0.86rem; color: var(--text-muted); line-height: 1.5; margin: 0 0 0.9rem; }
+  .cx-watch a { font-size: 0.84rem; font-weight: 700; color: var(--accent-strong); text-decoration: none; }
+  .cx-watch a:hover { text-decoration: underline; }
+
+  /* CALCULADORAS */
+  .cx-calc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .cx-calc { display: flex; flex-direction: column; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.35rem 1.4rem; box-shadow: var(--shadow-sm); text-decoration: none; color: var(--text); transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s; }
+  .cx-calc:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--accent); }
+  .cx-calc-ico { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 11px; background: var(--accent-soft); color: var(--accent-strong); font-size: 0.9rem; font-weight: 800; margin-bottom: 0.85rem; }
+  .cx-calc h3 { font-size: 1rem; font-weight: 750; margin: 0 0 0.35rem; }
+  .cx-calc p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin: 0 0 0.9rem; flex: 1; }
+  .cx-calc-cta { font-size: 0.84rem; font-weight: 700; color: var(--accent-strong); }
+
+  /* CÓMO FUNCIONA + FAQ */
+  .cx-method h2, .cx-faq h2 { font-size: 1.15rem; font-weight: 800; margin: 0 0 0.85rem; }
+  .cx-method p { font-size: 0.92rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 1.1rem; }
+  .cx-src-chip { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; font-weight: 650; color: var(--text-muted); background: var(--bg-soft); border: 1px solid var(--border); border-radius: 999px; padding: 0.4rem 0.85rem; }
+  .cx-faq-list { display: flex; flex-direction: column; gap: 0.4rem; }
+  .cx-faq-item { border: 1px solid var(--border); border-radius: 10px; background: var(--bg-soft); overflow: hidden; }
+  .cx-faq-item summary { cursor: pointer; font-weight: 650; font-size: 0.9rem; color: var(--text); list-style: none; padding: 0.85rem 1rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .cx-faq-item summary::-webkit-details-marker { display: none; }
+  .cx-faq-item summary::after { content: '+'; color: var(--text-subtle); font-size: 1.2rem; font-weight: 400; line-height: 1; flex: none; }
+  .cx-faq-item[open] summary { color: var(--accent-strong); }
+  .cx-faq-item[open] summary::after { content: '−'; }
+  .cx-faq-a { font-size: 0.87rem; color: var(--text-muted); line-height: 1.6; padding: 0 1rem 1rem; }
+  .cx-faq-a a { color: var(--accent-strong); font-weight: 600; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .cx-hero { grid-template-columns: 1fr; gap: 1.35rem; padding: 1.6rem; }
+    .cx-two, .cx-bottom { grid-template-columns: 1fr; }
+    .cx-princ-grid { grid-template-columns: repeat(2, 1fr); }
+    .cx-watch-grid, .cx-calc-grid { grid-template-columns: 1fr 1fr; }
+  }
   @media (max-width: 680px) {
-    .cx-page .rate-head { display: none; }
-    .cx-page .rate-row {
-      grid-template-columns: auto 1fr auto;
-      padding: .9rem 1rem;
-    }
-    .cx-page .rank { grid-column: 1 / 2; grid-row: 1 / 3; }
-    .cx-page .coin-info { grid-column: 2 / 3; grid-row: 1 / 2; }
-    .cx-page .price { grid-column: 3 / 4; grid-row: 1 / 2; font-size: .95rem; }
-    .cx-page .change-24h { grid-column: 2 / 4; grid-row: 2 / 3; text-align: right; font-size: .82rem; }
+    .cx-hero h1 { font-size: 1.9rem; }
+    .cx-princ-grid, .cx-watch-grid, .cx-calc-grid { grid-template-columns: 1fr; }
+    .cx-rank-tools { flex-direction: column; align-items: stretch; }
+    .cx-search { min-width: 0; }
+    .cx-filters { overflow-x: auto; }
+    /* Ranking: colapsa columnas ARS/tendencia/estrella en mobile */
+    .cx-rank-head, .cx-rank-row { grid-template-columns: 26px minmax(120px, 1.6fr) minmax(90px, 1fr) minmax(64px, 0.7fr); }
+    .cx-rank-head > :nth-child(4), .cx-rank-head > :nth-child(6), .cx-rank-head > :nth-child(7),
+    .cx-rank-ars, .cx-rank-spark, .cx-star { display: none; }
+    .cx-tabs { overflow-x: auto; }
   }
 </style>
 
@@ -690,26 +794,28 @@ const schemaFaq = {
   interface CoinGeckoCoin {
     id: string; symbol: string; name: string; image: string;
     current_price: number; market_cap: number;
-    price_change_percentage_24h: number;
+    price_change_percentage_24h: number; sparkline_in_7d?: { price: number[] };
   }
   interface SimplePrice { [coinId: string]: { [fiat: string]: number } }
 
   const FIAT_LABELS: Record<string, string> = {
-    USD: '🇺🇸 USD (Dólar)', EUR: '🇪🇺 EUR (Euro)', ARS: '🇦🇷 ARS (Peso argentino)',
-    BRL: '🇧🇷 BRL (Real)', MXN: '🇲🇽 MXN (Peso mexicano)', GBP: '🇬🇧 GBP (Libra)',
-    JPY: '🇯🇵 JPY (Yen)', CLP: '🇨🇱 CLP (Peso chileno)', UYU: '🇺🇾 UYU (Peso uruguayo)',
+    USD: '🇺🇸 Dólar (USD)', EUR: '🇪🇺 Euro (EUR)', ARS: '🇦🇷 Peso argentino (ARS)',
+    BRL: '🇧🇷 Real (BRL)', MXN: '🇲🇽 Peso mexicano (MXN)', GBP: '🇬🇧 Libra (GBP)',
+    JPY: '🇯🇵 Yen (JPY)', CLP: '🇨🇱 Peso chileno (CLP)', UYU: '🇺🇾 Peso uruguayo (UYU)',
   };
 
-  interface CxState {
-    topCoins: CoinGeckoCoin[];
-    simplePrices: SimplePrice;
-    updatedAt: number;
-  }
-
+  interface CxState { topCoins: CoinGeckoCoin[]; simplePrices: SimplePrice; updatedAt: number; }
   let STATE: CxState = { topCoins: [], simplePrices: {}, updatedAt: 0 };
   let REFRESH_TIMER: number | null = null;
+  let TICK_TIMER: number | null = null;
+  let nextIn = 30;
 
-  // Cargar datos embebidos en build-time primero (primer pintado rápido)
+  // ── Favoritos (localStorage) ──
+  const FAV_KEY = 'hc_cx_favs_v1';
+  function loadFavs(): Set<string> { try { return new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); } catch { return new Set(); } }
+  function saveFavs(s: Set<string>) { try { localStorage.setItem(FAV_KEY, JSON.stringify([...s])); } catch {} }
+  let FAVS = loadFavs();
+
   function loadBuildData() {
     const el = document.getElementById('cx-build-data');
     if (!el?.textContent) return;
@@ -721,335 +827,327 @@ const schemaFaq = {
     } catch {}
   }
 
-  async function fetchLive() {
-    setStatus('loading', 'Actualizando precios…');
-    try {
-      const r1 = await fetch(
-        'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=30&page=1&price_change_percentage=24h'
-      );
-      if (r1.ok) STATE.topCoins = await r1.json();
+  // ── Formato ──
+  function fUsd(n: number): string {
+    if (n == null || !isFinite(n)) return '—';
+    const abs = Math.abs(n);
+    const dec = abs >= 10000 ? 0 : abs >= 1 ? 2 : abs >= 0.01 ? 4 : 6;
+    return new Intl.NumberFormat('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(n);
+  }
+  function fUsd2(n: number): string {
+    if (n == null || !isFinite(n)) return '—';
+    const abs = Math.abs(n);
+    const dec = abs >= 1 ? 2 : abs >= 0.01 ? 4 : 6;
+    return '$' + new Intl.NumberFormat('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(n);
+  }
+  function fArs(n: number): string { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(n); }
+  function fPct(n: number): string { const v = n ?? 0; return (v >= 0 ? '+' : '') + v.toFixed(2).replace('.', ',') + '%'; }
+  function fmtNum(n: number, max = 8): string { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: max }).format(n); }
+  function parseAmount(v: string): number { return Number(v.replace(/\./g, '').replace(/,/g, '.')) || 0; }
+  function sparkPts(prices?: number[]): { pts: string; up: boolean } | null {
+    const v = (prices || []).filter((x) => typeof x === 'number' && isFinite(x));
+    if (v.length < 2) return null;
+    const N = 24, stepIn = Math.max(1, Math.floor(v.length / N)); const s: number[] = [];
+    for (let i = 0; i < v.length; i += stepIn) s.push(v[i]);
+    if (s[s.length - 1] !== v[v.length - 1]) s.push(v[v.length - 1]);
+    const min = Math.min(...s), max = Math.max(...s), span = max - min || 1;
+    const w = 88, h = 26, pad = 3, step = w / (s.length - 1);
+    const pts = s.map((n, i) => `${(i * step).toFixed(1)},${(h - pad - ((n - min) / span) * (h - pad * 2)).toFixed(1)}`).join(' ');
+    return { pts, up: v[v.length - 1] >= v[0] };
+  }
+  function coinById(id: string) { return STATE.topCoins.find((c) => c.id === id); }
 
-      const ids = STATE.topCoins.map(c => c.id).join(',');
+  // ── Fetch en vivo ──
+  async function fetchLive() {
+    try {
+      const r1 = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=30&page=1&price_change_percentage=24h&sparkline=true');
+      if (r1.ok) STATE.topCoins = await r1.json();
+      const ids = STATE.topCoins.map((c) => c.id).join(',');
       if (ids) {
-        const r2 = await fetch(
-          `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,eur,ars,brl,mxn,gbp,jpy,clp,uyu`
-        );
+        const r2 = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,eur,ars,brl,mxn,gbp,jpy,clp,uyu`);
         if (r2.ok) STATE.simplePrices = await r2.json();
       }
       STATE.updatedAt = Date.now();
       renderAll();
-      setStatus('ok', '✅ Live · última actualización: ahora');
-    } catch (e) {
-      console.error('[cx] fetch failed', e);
-      setStatus('err', '⚠️ Error al actualizar. Reintentando…');
-    }
+      markUpdated(true);
+    } catch (e) { console.error('[cx] fetch failed', e); }
+    nextIn = 30;
   }
 
-  function setStatus(_kind: 'loading' | 'ok' | 'err', _text: string) {
-    // Status UI eliminado — fetch y retry silenciosos en background
+  function markUpdated(ok: boolean) {
+    const now = new Date();
+    const lq = document.getElementById('cx-last-query'); if (lq) lq.textContent = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    const badge = document.getElementById('cx-status-badge'); if (badge && ok) badge.textContent = 'En vivo';
+    updateAgo();
+  }
+  function updateAgo() {
+    const el = document.getElementById('cx-updated'); if (!el || !STATE.updatedAt) return;
+    const s = Math.max(0, Math.round((Date.now() - STATE.updatedAt) / 1000));
+    el.textContent = s < 5 ? 'Actualizado recién' : `Actualizado hace ${s} segundos`;
   }
 
-  function fmtUSD(n: number): string {
-    if (n >= 1) return '$' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
-    if (n >= 0.01) return '$' + n.toFixed(4);
-    return '$' + n.toPrecision(3);
-  }
-  function fmtARS(n: number): string {
-    return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(n);
-  }
-  function fmtNum(n: number, max = 6): string {
-    return new Intl.NumberFormat('es-AR', { maximumFractionDigits: max }).format(n);
-  }
-  function parseAmount(v: string): number {
-    return Number(v.replace(/\./g, '').replace(/,/g, '.')) || 0;
-  }
-
-  // =======================
-  //  TOP CRYPTOS TABLE
-  // =======================
-  let CX_SEARCH = '';
-  function renderTopTable() {
-    const container = document.getElementById('cx-top-table')!;
-    const q = CX_SEARCH.trim().toLowerCase();
-    const visible = q
-      ? STATE.topCoins.filter(c => (c.name + ' ' + c.symbol + ' ' + c.id).toLowerCase().includes(q))
-      : STATE.topCoins;
-    if (visible.length === 0) {
-      container.innerHTML = '<div class="loading">Sin resultados</div>';
-      return;
-    }
-    const rows = visible.map((c) => {
-      const change = c.price_change_percentage_24h ?? 0;
-      const changeClass = change >= 0 ? 'up' : 'down';
-      const changeSign = change >= 0 ? '+' : '';
-      const arsPrice = STATE.simplePrices[c.id]?.ars;
-      return `
-        <div class="rate-row">
-          <div class="rank">#${STATE.topCoins.indexOf(c) + 1}</div>
-          <div class="coin-info">
-            <img class="coin-img" src="${c.image}" alt="${c.symbol}" loading="lazy" />
-            <div class="coin-name-wrap">
-              <span class="coin-name">${c.name}</span>
-              <span class="coin-sym">${c.symbol}</span>
-            </div>
-          </div>
-          <div class="price">
-            ${fmtUSD(c.current_price)}
-            ${arsPrice ? `<span class="ars">${fmtARS(arsPrice)}</span>` : ''}
-          </div>
-          <div class="change-24h ${changeClass}">
-            ${changeSign}${change.toFixed(2)}%
-          </div>
-        </div>
-      `;
+  // ── Movimiento 24h ──
+  const MOV_IDS = ['bitcoin', 'ethereum', 'solana', 'tether'];
+  function renderMov() {
+    const box = document.getElementById('cx-mov-list'); if (!box) return;
+    const coins = MOV_IDS.map(coinById).filter(Boolean) as CoinGeckoCoin[];
+    if (!coins.length) return;
+    box.innerHTML = coins.map((c) => {
+      const ch = c.price_change_percentage_24h ?? 0;
+      return `<li class="cx-mov-row"><img class="cx-mov-img" src="${c.image}" alt="${c.symbol}" width="30" height="30" loading="lazy"/>` +
+        `<span class="cx-mov-name"><b>${c.name}</b><small>${c.symbol.toUpperCase()}</small></span>` +
+        `<span class="cx-mov-price">USD ${fUsd(c.current_price)}</span>` +
+        `<span class="cx-chg ${ch >= 0 ? 'up' : 'down'}">${fPct(ch)}</span></li>`;
     }).join('');
-    container.innerHTML = rows;
   }
 
-  // =======================
-  //  PICKER OPTIONS (crypto + fiat)
-  // =======================
+  // ── Principales ──
+  const FEAT_IDS = ['bitcoin', 'ethereum', 'tether', 'solana'];
+  function renderPrincipales() {
+    const box = document.getElementById('principales')?.querySelector('.cx-princ-grid') as HTMLElement | null;
+    if (!box) return;
+    const coins = FEAT_IDS.map(coinById).filter(Boolean) as CoinGeckoCoin[];
+    if (!coins.length) return;
+    box.innerHTML = coins.map((c) => {
+      const ch = c.price_change_percentage_24h ?? 0;
+      const ars = STATE.simplePrices[c.id]?.ars;
+      const sp = sparkPts(c.sparkline_in_7d?.price);
+      const rank = STATE.topCoins.indexOf(c) + 1;
+      return `<div class="cx-princ"><div class="cx-princ-top">` +
+        `<img class="cx-princ-img" src="${c.image}" alt="${c.symbol}" width="30" height="30" loading="lazy"/>` +
+        `<span class="cx-princ-name"><b>${c.name}</b><small>${c.symbol.toUpperCase()}</small></span>` +
+        `<span class="cx-chg ${ch >= 0 ? 'up' : 'down'}">${fPct(ch)}</span></div>` +
+        `<div class="cx-princ-usd">USD ${fUsd(c.current_price)}</div>` +
+        `<div class="cx-princ-ars">ARS ${ars ? fArs(ars) : '—'}</div>` +
+        `<div class="cx-princ-foot"><span class="cx-rank-badge">#${rank}</span>` +
+        (sp ? `<svg class="cx-spark ${sp.up ? 'up' : 'down'}" viewBox="0 0 88 26" width="88" height="26" preserveAspectRatio="none" aria-hidden="true"><polyline points="${sp.pts}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>` : '') +
+        `</div></div>`;
+    }).join('');
+  }
+
+  // ── Ranking ──
+  let RANK_FILTER = 'top';
+  let RANK_SEARCH = '';
+  const STABLES = new Set(['usdt', 'usdc', 'dai', 'usde', 'fdusd', 'tusd', 'usds', 'pyusd', 'busd']);
+  function renderRanking() {
+    const body = document.getElementById('cx-rank-body'); if (!body) return;
+    let coins = STATE.topCoins.slice();
+    const q = RANK_SEARCH.trim().toLowerCase();
+    if (q) coins = coins.filter((c) => (c.name + ' ' + c.symbol + ' ' + c.id).toLowerCase().includes(q));
+    if (RANK_FILTER === 'gainers') coins = coins.filter((c) => (c.price_change_percentage_24h ?? 0) > 0).sort((a, b) => (b.price_change_percentage_24h ?? 0) - (a.price_change_percentage_24h ?? 0));
+    else if (RANK_FILTER === 'losers') coins = coins.filter((c) => (c.price_change_percentage_24h ?? 0) < 0).sort((a, b) => (a.price_change_percentage_24h ?? 0) - (b.price_change_percentage_24h ?? 0));
+    else if (RANK_FILTER === 'stable') coins = coins.filter((c) => STABLES.has(c.symbol.toLowerCase()));
+    const empty = document.getElementById('cx-rank-empty');
+    if (empty) empty.hidden = coins.length > 0;
+    const showMore = RANK_FILTER === 'top' && !q;
+    body.innerHTML = coins.map((c) => {
+      const idx = STATE.topCoins.indexOf(c);
+      const ch = c.price_change_percentage_24h ?? 0;
+      const ars = STATE.simplePrices[c.id]?.ars;
+      const sp = sparkPts(c.sparkline_in_7d?.price);
+      const hidden = showMore && idx >= 8 ? ' is-more' : '';
+      const on = FAVS.has(c.id) ? ' is-on' : '';
+      return `<div class="cx-rank-row${hidden}" data-sym="${c.symbol.toLowerCase()}" data-name="${c.name.toLowerCase()}">` +
+        `<span class="cx-rank-n">${idx + 1}</span>` +
+        `<span class="cx-rank-coin"><img src="${c.image}" alt="${c.symbol}" width="26" height="26" loading="lazy"/><span class="cx-rank-coin-name"><b>${c.name}</b><small>${c.symbol.toUpperCase()}</small></span></span>` +
+        `<span class="cx-rank-usd ta-r">${fUsd2(c.current_price)}</span>` +
+        `<span class="cx-rank-ars ta-r">${ars ? '$' + fArs(ars) : '—'}<small>estimado</small></span>` +
+        `<span class="cx-rank-chg ta-r cx-chg ${ch >= 0 ? 'up' : 'down'}">${fPct(ch)}</span>` +
+        `<span class="cx-rank-spark ta-c">${sp ? `<svg class="cx-spark ${sp.up ? 'up' : 'down'}" viewBox="0 0 88 26" width="72" height="24" preserveAspectRatio="none" aria-hidden="true"><polyline points="${sp.pts}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ''}</span>` +
+        `<button type="button" class="cx-star${on}" data-star="${c.id}" aria-label="Favorita">${FAVS.has(c.id) ? '★' : '☆'}</button>` +
+        `</div>`;
+    }).join('');
+    const count = document.getElementById('cx-rank-count');
+    if (count) count.textContent = `${STATE.topCoins.length} activos · última actualización ${new Date(STATE.updatedAt || Date.now()).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}`;
+    const more = document.getElementById('cx-rank-more') as HTMLButtonElement | null;
+    if (more) more.style.display = showMore && coins.length > 8 ? '' : 'none';
+  }
+
+  // ── Picker (cripto + fiat) ──
   interface CoinOption { value: string; label: string; code: string; group: string; searchText: string; }
   let CX_OPTIONS: CoinOption[] = [];
-
   function buildCoinOptions() {
     CX_OPTIONS = [];
-    // Cryptos
     for (const c of STATE.topCoins) {
-      CX_OPTIONS.push({
-        value: c.id,
-        label: `${c.name}`,
-        code: c.symbol.toUpperCase(),
-        group: '🪙 Criptomonedas',
-        searchText: `${c.name} ${c.symbol} ${c.id}`.toLowerCase(),
-      });
+      CX_OPTIONS.push({ value: c.id, label: c.name, code: c.symbol.toUpperCase(), group: '🪙 Criptomonedas', searchText: `${c.name} ${c.symbol} ${c.id}`.toLowerCase() });
     }
-    // Fiat
     for (const [code, label] of Object.entries(FIAT_LABELS)) {
-      CX_OPTIONS.push({
-        value: code,
-        label,
-        code,
-        group: '💵 Monedas fiat',
-        searchText: `${label} ${code}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
-      });
+      CX_OPTIONS.push({ value: code, label, code, group: '💵 Monedas fiat', searchText: `${label} ${code}`.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') });
     }
   }
-
-  function findOption(value: string): CoinOption | undefined {
-    return CX_OPTIONS.find(o => o.value === value);
-  }
-
+  function findOption(value: string): CoinOption | undefined { return CX_OPTIONS.find((o) => o.value === value); }
   function updatePickerLabel(which: 'cx-from' | 'cx-to') {
     const hidden = document.getElementById(`${which}-currency`) as HTMLInputElement;
-    const labelEl = document.querySelector(`[data-picker="${which}"] .picker-label`)!;
+    const labelEl = document.querySelector(`[data-picker="${which}"] .cx-picker-label`);
+    if (!hidden || !labelEl) return;
     const opt = findOption(hidden.value);
-    labelEl.textContent = opt ? `${opt.label}${opt.code && opt.code !== opt.label ? ' (' + opt.code + ')' : ''}` : hidden.value;
+    if (opt && opt.group.includes('fiat')) labelEl.textContent = opt.label;
+    else labelEl.textContent = opt ? `${opt.label} (${opt.code})` : hidden.value;
   }
-
   function renderPickerList(which: 'cx-from' | 'cx-to', query = '') {
-    const listEl = document.querySelector(`[data-picker="${which}"] .picker-list`)!;
+    const listEl = document.querySelector(`[data-picker="${which}"] .cx-picker-list`);
     const hidden = document.getElementById(`${which}-currency`) as HTMLInputElement;
-    const q = query.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const filtered = q ? CX_OPTIONS.filter(o => o.searchText.includes(q) || o.code.toLowerCase().includes(q)) : CX_OPTIONS;
-    if (filtered.length === 0) {
-      listEl.innerHTML = `<div class="picker-empty">Sin resultados para "${query}"</div>`;
-      return;
-    }
-    const html: string[] = [];
-    let currentGroup = '';
+    if (!listEl || !hidden) return;
+    const q = query.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const filtered = q ? CX_OPTIONS.filter((o) => o.searchText.includes(q) || o.code.toLowerCase().includes(q)) : CX_OPTIONS;
+    if (!filtered.length) { listEl.innerHTML = `<div class="cx-picker-empty">Sin resultados para "${query}"</div>`; return; }
+    const html: string[] = []; let currentGroup = '';
     for (const opt of filtered) {
-      if (opt.group !== currentGroup) {
-        currentGroup = opt.group;
-        html.push(`<div class="picker-group">${currentGroup}</div>`);
-      }
-      const isSelected = opt.value === hidden.value;
-      html.push(`
-        <div class="picker-item ${isSelected ? 'selected' : ''}" data-value="${opt.value}" role="option" aria-selected="${isSelected}">
-          <span>${opt.label}</span>
-          <span class="code">${opt.code}</span>
-        </div>
-      `);
+      if (opt.group !== currentGroup) { currentGroup = opt.group; html.push(`<div class="cx-picker-group">${currentGroup}</div>`); }
+      const isSel = opt.value === hidden.value;
+      html.push(`<div class="cx-picker-item ${isSel ? 'selected' : ''}" data-value="${opt.value}" role="option" aria-selected="${isSel}"><span>${opt.label}</span><span class="code">${opt.code}</span></div>`);
     }
     listEl.innerHTML = html.join('');
   }
-
   function openPicker(which: 'cx-from' | 'cx-to') {
-    const other = which === 'cx-from' ? 'cx-to' : 'cx-from';
-    closePicker(other);
-    const btn = document.getElementById(`${which}-currency-btn`)!;
-    const panel = document.querySelector(`[data-picker="${which}"] .picker-panel`) as HTMLElement;
-    const search = panel.querySelector('.picker-search') as HTMLInputElement;
-    btn.setAttribute('aria-expanded', 'true');
-    panel.hidden = false;
-    search.value = '';
-    renderPickerList(which, '');
-    setTimeout(() => search.focus(), 30);
+    const other = which === 'cx-from' ? 'cx-to' : 'cx-from'; closePicker(other);
+    const btn = document.getElementById(`${which}-currency-btn`);
+    const panel = document.querySelector(`[data-picker="${which}"] .cx-picker-panel`) as HTMLElement;
+    const search = panel?.querySelector('.cx-picker-search') as HTMLInputElement;
+    if (!btn || !panel) return;
+    btn.setAttribute('aria-expanded', 'true'); panel.hidden = false;
+    if (search) { search.value = ''; renderPickerList(which, ''); setTimeout(() => search.focus(), 30); }
   }
   function closePicker(which: 'cx-from' | 'cx-to') {
     const btn = document.getElementById(`${which}-currency-btn`);
-    const panel = document.querySelector(`[data-picker="${which}"] .picker-panel`) as HTMLElement | null;
+    const panel = document.querySelector(`[data-picker="${which}"] .cx-picker-panel`) as HTMLElement | null;
     if (btn && panel) { btn.setAttribute('aria-expanded', 'false'); panel.hidden = true; }
   }
   function setPickerValue(which: 'cx-from' | 'cx-to', value: string) {
     const hidden = document.getElementById(`${which}-currency`) as HTMLInputElement;
-    hidden.value = value;
-    updatePickerLabel(which);
-    closePicker(which);
-    renderConverter();
+    hidden.value = value; updatePickerLabel(which); closePicker(which); renderConverter();
   }
   function populatePickers() {
     buildCoinOptions();
-    (['cx-from','cx-to'] as const).forEach((which) => {
+    (['cx-from', 'cx-to'] as const).forEach((which) => {
       const hidden = document.getElementById(`${which}-currency`) as HTMLInputElement;
-      if (!findOption(hidden.value)) {
-        hidden.value = which === 'cx-from' ? 'bitcoin' : 'USD';
-      }
+      if (!hidden) return;
+      if (!findOption(hidden.value)) hidden.value = which === 'cx-from' ? 'bitcoin' : 'USD';
       updatePickerLabel(which);
     });
   }
 
-  // =======================
-  //  CONVERTER
-  // =======================
+  // ── Conversor ──
   function convert(amount: number, from: string, to: string): number | null {
     if (!amount || from === to) return amount;
-    const isFromFiat = from in FIAT_LABELS;
-    const isToFiat = to in FIAT_LABELS;
-
+    const isFromFiat = from in FIAT_LABELS, isToFiat = to in FIAT_LABELS;
     if (!isFromFiat && !isToFiat) {
-      // crypto → crypto (via USD)
-      const fromUsd = STATE.simplePrices[from]?.usd;
-      const toUsd = STATE.simplePrices[to]?.usd;
-      if (!fromUsd || !toUsd) return null;
-      return (amount * fromUsd) / toUsd;
+      const fu = STATE.simplePrices[from]?.usd, tu = STATE.simplePrices[to]?.usd;
+      if (!fu || !tu) return null; return (amount * fu) / tu;
     }
-    if (!isFromFiat && isToFiat) {
-      // crypto → fiat
-      const rate = STATE.simplePrices[from]?.[to.toLowerCase()];
-      return rate ? amount * rate : null;
-    }
-    if (isFromFiat && !isToFiat) {
-      // fiat → crypto
-      const rate = STATE.simplePrices[to]?.[from.toLowerCase()];
-      return rate ? amount / rate : null;
-    }
-    // fiat → fiat (via USD de cualquier crypto como proxy, preferimos bitcoin)
-    const btcFiat = STATE.simplePrices['bitcoin'];
-    if (!btcFiat) return null;
-    const fromRateVsBtc = btcFiat[from.toLowerCase()];
-    const toRateVsBtc = btcFiat[to.toLowerCase()];
-    if (!fromRateVsBtc || !toRateVsBtc) return null;
-    return amount * (toRateVsBtc / fromRateVsBtc);
+    if (!isFromFiat && isToFiat) { const r = STATE.simplePrices[from]?.[to.toLowerCase()]; return r ? amount * r : null; }
+    if (isFromFiat && !isToFiat) { const r = STATE.simplePrices[to]?.[from.toLowerCase()]; return r ? amount / r : null; }
+    const btc = STATE.simplePrices['bitcoin']; if (!btc) return null;
+    const fr = btc[from.toLowerCase()], tr = btc[to.toLowerCase()];
+    if (!fr || !tr) return null; return amount * (tr / fr);
   }
-
   function renderConverter() {
     const fromAmtEl = document.getElementById('cx-from-amount') as HTMLInputElement;
-    const toAmtEl = document.getElementById('cx-to-amount') as HTMLInputElement;
+    const toAmtEl = document.getElementById('cx-to-amount');
     const fromEl = document.getElementById('cx-from-currency') as HTMLInputElement;
     const toEl = document.getElementById('cx-to-currency') as HTMLInputElement;
-    const rateLine = document.getElementById('cx-rate-line')!;
-
+    const rateMain = document.getElementById('cx-rate-main');
+    const rateArs = document.getElementById('cx-rate-ars');
+    if (!fromAmtEl || !toAmtEl || !fromEl || !toEl) return;
     const amount = parseAmount(fromAmtEl.value);
     const result = convert(amount, fromEl.value, toEl.value);
-    if (result === null) {
-      toAmtEl.value = '—';
-      rateLine.textContent = 'Sin cotización disponible';
-      return;
-    }
-    toAmtEl.value = fmtNum(result, 8);
+    if (result === null) { toAmtEl.textContent = '—'; if (rateMain) rateMain.textContent = 'Sin cotización disponible'; if (rateArs) rateArs.textContent = ''; return; }
+    toAmtEl.textContent = fmtNum(result, 8);
+    const fromOpt = findOption(fromEl.value), toOpt = findOption(toEl.value);
     const unit = convert(1, fromEl.value, toEl.value);
-    const fromOpt = findOption(fromEl.value);
-    const toOpt = findOption(toEl.value);
-    if (unit !== null && fromOpt && toOpt) {
-      rateLine.textContent = `1 ${fromOpt.code} = ${fmtNum(unit, 8)} ${toOpt.code}`;
+    if (rateMain && unit !== null && fromOpt && toOpt) rateMain.textContent = `1 ${fromOpt.code} = ${toOpt.code} ${fmtNum(unit, 8)}`;
+    if (rateArs) {
+      const arsVal = convert(amount, fromEl.value, 'ARS');
+      rateArs.textContent = (toEl.value !== 'ARS' && arsVal !== null) ? `= ARS ${fArs(arsVal)}` : '';
     }
   }
 
-  function renderAll() {
-    renderTopTable();
-    populatePickers();
-    renderConverter();
-  }
+  function renderAll() { renderMov(); renderPrincipales(); renderRanking(); populatePickers(); renderConverter(); }
 
-  // =======================
-  //  AUTO-REFRESH (30s)
-  // =======================
+  // ── Auto-refresh 30s + tick ──
   function startAutoRefresh() {
     if (REFRESH_TIMER) clearInterval(REFRESH_TIMER);
-    REFRESH_TIMER = window.setInterval(() => {
-      if (!document.hidden) fetchLive();
-    }, 30_000);
+    REFRESH_TIMER = window.setInterval(() => { if (!document.hidden) fetchLive(); }, 30_000);
+    if (TICK_TIMER) clearInterval(TICK_TIMER);
+    TICK_TIMER = window.setInterval(() => {
+      const nx = document.getElementById('cx-next');
+      nextIn = Math.max(0, nextIn - 1);
+      if (nx) nx.textContent = String(nextIn);
+      updateAgo();
+    }, 1000);
   }
-  function stopAutoRefresh() {
-    if (REFRESH_TIMER) { clearInterval(REFRESH_TIMER); REFRESH_TIMER = null; }
+  function stopAutoRefresh() { if (REFRESH_TIMER) { clearInterval(REFRESH_TIMER); REFRESH_TIMER = null; } if (TICK_TIMER) { clearInterval(TICK_TIMER); TICK_TIMER = null; } }
+
+  // ── Eventos ──
+  function wire() {
+    document.getElementById('cx-from-amount')?.addEventListener('input', renderConverter);
+    document.getElementById('cx-swap')?.addEventListener('click', () => {
+      const fromEl = document.getElementById('cx-from-currency') as HTMLInputElement;
+      const toEl = document.getElementById('cx-to-currency') as HTMLInputElement;
+      [fromEl.value, toEl.value] = [toEl.value, fromEl.value];
+      updatePickerLabel('cx-from'); updatePickerLabel('cx-to'); renderConverter();
+    });
+    document.querySelectorAll<HTMLButtonElement>('.cx-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const amt = chip.getAttribute('data-amt') || '1';
+        const input = document.getElementById('cx-from-amount') as HTMLInputElement;
+        const fromEl = document.getElementById('cx-from-currency') as HTMLInputElement;
+        if (findOption('bitcoin')) { fromEl.value = 'bitcoin'; updatePickerLabel('cx-from'); }
+        input.value = amt;
+        document.querySelectorAll('.cx-chip').forEach((c) => c.classList.toggle('is-active', c === chip));
+        renderConverter();
+      });
+    });
+    document.getElementById('cx-rank-search')?.addEventListener('input', (e) => { RANK_SEARCH = (e.target as HTMLInputElement).value; renderRanking(); });
+    document.querySelectorAll<HTMLButtonElement>('.cx-filter').forEach((b) => b.addEventListener('click', () => {
+      document.querySelectorAll('.cx-filter').forEach((x) => x.classList.toggle('is-active', x === b));
+      RANK_FILTER = b.getAttribute('data-filter') || 'top';
+      document.querySelector('.cx-rank-card')?.classList.remove('is-expanded');
+      renderRanking();
+    }));
+    document.querySelectorAll<HTMLButtonElement>('.cx-cur-btn').forEach((b) => b.addEventListener('click', () => {
+      document.querySelectorAll('.cx-cur-btn').forEach((x) => x.classList.toggle('is-active', x === b));
+      document.querySelector('.cx-rank-card')?.setAttribute('data-cur', b.getAttribute('data-cur') || 'usd');
+    }));
+    document.getElementById('cx-rank-more')?.addEventListener('click', () => {
+      document.querySelector('.cx-rank-card')?.classList.add('is-expanded');
+      (document.getElementById('cx-rank-more') as HTMLElement).style.display = 'none';
+    });
+    document.getElementById('cx-rank-body')?.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest('[data-star]') as HTMLElement | null;
+      if (!btn) return;
+      const id = btn.getAttribute('data-star')!;
+      if (FAVS.has(id)) FAVS.delete(id); else FAVS.add(id);
+      saveFavs(FAVS);
+      btn.classList.toggle('is-on', FAVS.has(id));
+      btn.textContent = FAVS.has(id) ? '★' : '☆';
+    });
+    (['cx-from', 'cx-to'] as const).forEach((which) => {
+      const btn = document.getElementById(`${which}-currency-btn`);
+      const panel = document.querySelector(`[data-picker="${which}"] .cx-picker-panel`) as HTMLElement;
+      const search = panel?.querySelector('.cx-picker-search') as HTMLInputElement;
+      const list = panel?.querySelector('.cx-picker-list') as HTMLElement;
+      if (!btn || !panel) return;
+      btn.addEventListener('click', () => { btn.getAttribute('aria-expanded') === 'true' ? closePicker(which) : openPicker(which); });
+      search?.addEventListener('input', () => renderPickerList(which, search.value));
+      search?.addEventListener('keydown', (e) => {
+        const items = Array.from(list.querySelectorAll<HTMLElement>('.cx-picker-item'));
+        let idx = items.findIndex((i) => i.classList.contains('active'));
+        if (e.key === 'ArrowDown') { e.preventDefault(); idx = Math.min(idx + 1, items.length - 1); items.forEach((it, i) => it.classList.toggle('active', i === idx)); items[idx]?.scrollIntoView({ block: 'nearest' }); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); idx = Math.max(idx - 1, 0); items.forEach((it, i) => it.classList.toggle('active', i === idx)); items[idx]?.scrollIntoView({ block: 'nearest' }); }
+        else if (e.key === 'Enter') { e.preventDefault(); const t = idx >= 0 ? items[idx] : items[0]; if (t) setPickerValue(which, t.dataset.value!); }
+        else if (e.key === 'Escape') { e.preventDefault(); closePicker(which); (btn as HTMLElement).focus(); }
+      });
+      list?.addEventListener('click', (e) => { const item = (e.target as HTMLElement).closest('.cx-picker-item') as HTMLElement | null; if (item?.dataset.value) setPickerValue(which, item.dataset.value); });
+    });
+    document.addEventListener('click', (e) => { if (!(e.target as HTMLElement).closest('.cx-picker')) { closePicker('cx-from'); closePicker('cx-to'); } });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) stopAutoRefresh(); else { fetchLive(); startAutoRefresh(); } });
   }
 
-  // =======================
-  //  EVENTS
-  // =======================
-  document.getElementById('cx-from-amount')!.addEventListener('input', renderConverter);
-  document.getElementById('cx-swap')!.addEventListener('click', () => {
-    const fromEl = document.getElementById('cx-from-currency') as HTMLInputElement;
-    const toEl = document.getElementById('cx-to-currency') as HTMLInputElement;
-    [fromEl.value, toEl.value] = [toEl.value, fromEl.value];
-    updatePickerLabel('cx-from');
-    updatePickerLabel('cx-to');
-    renderConverter();
-  });
-  document.getElementById('cx-search')!.addEventListener('input', (e) => {
-    CX_SEARCH = (e.target as HTMLInputElement).value;
-    renderTopTable();
-  });
-
-  (['cx-from','cx-to'] as const).forEach((which) => {
-    const btn = document.getElementById(`${which}-currency-btn`)!;
-    const panel = document.querySelector(`[data-picker="${which}"] .picker-panel`) as HTMLElement;
-    const search = panel.querySelector('.picker-search') as HTMLInputElement;
-    const list = panel.querySelector('.picker-list') as HTMLElement;
-
-    btn.addEventListener('click', () => {
-      const isOpen = btn.getAttribute('aria-expanded') === 'true';
-      if (isOpen) closePicker(which); else openPicker(which);
-    });
-    search.addEventListener('input', () => renderPickerList(which, search.value));
-    search.addEventListener('keydown', (e) => {
-      const items = Array.from(list.querySelectorAll<HTMLElement>('.picker-item'));
-      let activeIdx = items.findIndex((i) => i.classList.contains('active'));
-      if (e.key === 'ArrowDown') { e.preventDefault(); activeIdx = Math.min(activeIdx + 1, items.length - 1); items.forEach((it, i) => it.classList.toggle('active', i === activeIdx)); items[activeIdx]?.scrollIntoView({ block: 'nearest' }); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); items.forEach((it, i) => it.classList.toggle('active', i === activeIdx)); items[activeIdx]?.scrollIntoView({ block: 'nearest' }); }
-      else if (e.key === 'Enter') { e.preventDefault(); const target = activeIdx >= 0 ? items[activeIdx] : items[0]; if (target) setPickerValue(which, target.dataset.value!); }
-      else if (e.key === 'Escape') { e.preventDefault(); closePicker(which); btn.focus(); }
-    });
-    list.addEventListener('click', (e) => {
-      const item = (e.target as HTMLElement).closest('.picker-item') as HTMLElement | null;
-      if (item?.dataset.value) setPickerValue(which, item.dataset.value);
-    });
-  });
-
-  document.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement;
-    if (!target.closest('.coin-picker')) {
-      closePicker('cx-from');
-      closePicker('cx-to');
-    }
-  });
-
-  // Pausar auto-refresh cuando la pestaña no está visible (ahorro de rate limit)
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      stopAutoRefresh();
-    } else {
-      fetchLive();
-      startAutoRefresh();
-    }
-  });
-
-  // =======================
-  //  INIT
-  // =======================
+  // ── Init ──
   loadBuildData();
   renderAll();
+  wire();
   fetchLive();
   startAutoRefresh();
 </script>

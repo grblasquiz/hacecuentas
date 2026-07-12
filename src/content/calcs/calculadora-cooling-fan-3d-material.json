@@ -58,12 +58,30 @@
       "label": "Material / filamento",
       "type": "select",
       "options": [
-        { "value": "1", "label": "PLA" },
-        { "value": "2", "label": "PETG" },
-        { "value": "3", "label": "ABS" },
-        { "value": "4", "label": "TPU (flexible)" },
-        { "value": "5", "label": "ASA" },
-        { "value": "6", "label": "Nylon (PA)" }
+        {
+          "value": "1",
+          "label": "PLA"
+        },
+        {
+          "value": "2",
+          "label": "PETG"
+        },
+        {
+          "value": "3",
+          "label": "ABS"
+        },
+        {
+          "value": "4",
+          "label": "TPU (flexible)"
+        },
+        {
+          "value": "5",
+          "label": "ASA"
+        },
+        {
+          "value": "6",
+          "label": "Nylon (PA)"
+        }
       ],
       "default": "1",
       "required": true,
@@ -74,8 +92,14 @@
       "label": "¿Tenés enclosure (cámara cerrada)?",
       "type": "select",
       "options": [
-        { "value": "0", "label": "No" },
-        { "value": "1", "label": "Sí" }
+        {
+          "value": "0",
+          "label": "No"
+        },
+        {
+          "value": "1",
+          "label": "Sí"
+        }
       ],
       "default": "0",
       "required": true,
@@ -86,8 +110,14 @@
       "label": "¿Tiene detalles finos (pared < 3 mm)?",
       "type": "select",
       "options": [
-        { "value": "0", "label": "No" },
-        { "value": "1", "label": "Sí (miniaturas, puntas, paredes finas)" }
+        {
+          "value": "0",
+          "label": "No"
+        },
+        {
+          "value": "1",
+          "label": "Sí (miniaturas, puntas, paredes finas)"
+        }
       ],
       "default": "0",
       "required": true,
@@ -136,7 +166,7 @@
     ],
     "result": "**Fan 50%** desde layer 3, bridge 100%. Layer time mínimo 8 s para evitar calor acumulado."
   },
-  "explanation": "## Fan por material\n\n| Material | Fan normal | Layer time min | Notas |\n|---|---|---|---|\n| PLA | 100% ✅ | 5 s | Desde layer 3 |\n| PLA Silk | 80-90% | 5 s | Bajar para brillo |\n| PETG | 40-60% | 8-10 s | Demasiado = frágil |\n| ABS | 0-20% | 10-15 s | Enclosure **requerido** |\n| ASA | 10-30% | 10-15 s | Enclosure recomendado |\n| TPU 95A | 20-40% | 8-10 s | Fan bajo, flow lento |\n| Nylon | 0-20% | 10-20 s | Secar antes, fan off |\n| PC | 0-10% | 15-20 s | Enclosure **requerido** |\n\n## Bridge cooling\n\nSiempre **100% fan en bridges** independiente del material, porque el puente sin soporte necesita solidificar rápido:\n\n| Material | Bridge fan |\n|---|---|\n| PLA | 100% |\n| PETG | 100% |\n| ABS | 50-70% (con enclosure) |\n| TPU | 60-80% |\n\n## Layer time mínimo\n\nSi la capa es pequeña (<10 seg de impresión real), el slicer **baja la velocidad** para darle tiempo a enfriar. Fórmula:\n\n```\nVelocidad_ajustada = Velocidad_nominal × (Tiempo_real / Layer_min)\n```\n\nSin layer time mínimo, puntas de figuras y detalles quedan blobby.\n\n## Casos específicos\n\n- **Miniaturas PLA** (Warhammer, D&D): fan 100%, layer time 8 s, velocidad 30 mm/s.\n- **Figura grande ABS**: fan 10%, enclosure 40-50 °C, layer time 12 s.\n- **TPU flexible**: flow 95%, fan 25%, velocidad 25 mm/s.\n\n## Errores comunes\n\n1. **PLA con fan 50%**: pierde detalle en overhangs, queda mate desigual.\n2. **PETG con fan 100%**: capas mal fusionadas, pieza frágil al doblar.\n3. **ABS con fan**: warping y delaminación 90% de los casos sin enclosure.\n4. **Fan desde layer 1**: mala adherencia de primera capa. Activar desde layer 3.\n\n## Duct y fan real\n\nEl porcentaje del slicer es teórico. Un fan 4010 en ducto original Ender genera muy poco flujo vs un ducto Satsana con fan 5015. Si tu PLA blobby no mejora con 100%, el problema es el hardware.\n\nCombiná con [primer layer](/calculadora-primer-layer-adherencia-bed), [retracción](/calculadora-retraccion-3d-bowden-direct) y [tiempo](/calculadora-tiempo-impresion-3d-layer).",
+  "explanation": "## Fan por material\n\n| Material | Fan normal | Layer time min | Notas |\n|---|---|---|---|\n| PLA | 100% ✅ | 5 s | Desde layer 3 |\n| PLA Silk | 80-90% | 5 s | Bajar para brillo |\n| PETG | 40-60% | 8-10 s | Demasiado = frágil |\n| ABS | 0-20% | 10-15 s | Enclosure **requerido** |\n| ASA | 10-30% | 10-15 s | Enclosure recomendado |\n| TPU 95A | 20-40% | 8-10 s | Fan bajo, flow lento |\n| Nylon | 0-20% | 10-20 s | Secar antes, fan off |\n| PC | 0-10% | 15-20 s | Enclosure **requerido** |\n\n## Bridge cooling\n\nSiempre **100% fan en bridges** independiente del material, porque el puente sin soporte necesita solidificar rápido:\n\n| Material | Bridge fan |\n|---|---|\n| PLA | 100% |\n| PETG | 100% |\n| ABS | 50-70% (con enclosure) |\n| TPU | 60-80% |\n\n## Layer time mínimo\n\nSi la capa es pequeña (<10 seg de impresión real), el slicer **baja la velocidad** para darle tiempo a enfriar. Fórmula:\n\n```\nVelocidad_ajustada = Velocidad_nominal × (Tiempo_real / Layer_min)\n```\n\nSin layer time mínimo, puntas de figuras y detalles quedan blobby.\n\n## Casos específicos\n\n- **Miniaturas PLA** (Warhammer, D&D): fan 100%, layer time 8 s, velocidad 30 mm/s.\n- **Figura grande ABS**: fan 10%, enclosure 40-50 °C, layer time 12 s.\n- **TPU flexible**: flow 95%, fan 25%, velocidad 25 mm/s.\n\n## Errores comunes\n\n1. **PLA con fan 50%**: pierde detalle en overhangs, queda mate desigual.\n2. **PETG con fan 100%**: capas mal fusionadas, pieza frágil al doblar.\n3. **ABS con fan**: warping y delaminación 90% de los casos sin enclosure.\n4. **Fan desde layer 1**: mala adherencia de primera capa. Activar desde layer 3.\n\n## Duct y fan real\n\nEl porcentaje del slicer es teórico. Un fan 4010 en ducto original Ender genera muy poco flujo vs un ducto Satsana con fan 5015. Si tu PLA blobby no mejora con 100%, el problema es el hardware.\n\nCombiná con [primer layer](/categoria/tecnologia), [retracción](/categoria/tecnologia) y [tiempo](/calculadora-tiempo-impresion-3d-layer).",
   "faq": [
     {
       "q": "¿Por qué el PLA necesita fan al 100% y el ABS casi nada?",
@@ -218,16 +248,79 @@
   "referenceTables": [
     {
       "title": "Parámetros de cooling fan por material FDM",
-      "headers": ["Material", "Fan normal (%)", "Bridge fan (%)", "Layer time mín. (s)", "Enclosure", "Nota clave"],
+      "headers": [
+        "Material",
+        "Fan normal (%)",
+        "Bridge fan (%)",
+        "Layer time mín. (s)",
+        "Enclosure",
+        "Nota clave"
+      ],
       "rows": [
-        ["PLA", "100", "100", "5–10", "No requerido", "Activar desde capa 3; más fan = mejor overhang"],
-        ["PLA Silk", "80–90", "100", "5–10", "No requerido", "Menos fan preserva brillo y efecto metálico"],
-        ["PETG", "40–60", "100", "8–12", "Opcional", "Fan > 70% fragiliza la unión intercapa"],
-        ["ABS", "0–20", "50–70", "10–15", "Requerido", "Sin enclosure: warping y layer splitting casi seguros"],
-        ["ASA", "10–30", "50–70", "10–15", "Recomendado", "Mayor warping que ABS sin enclosure"],
-        ["TPU 95A (flexible)", "20–40", "60–80", "8–12", "No requerido", "Fan alto = superficie rugosa y opaca"],
-        ["Nylon (PA12/PA6)", "0–20", "50–70", "12–20", "Requerido", "Secar 80 °C / 12 h antes de imprimir"],
-        ["PC (policarbonato)", "0–10", "50–60", "15–20", "Requerido", "Temp. cámara > 60 °C para evitar delaminación"]
+        [
+          "PLA",
+          "100",
+          "100",
+          "5–10",
+          "No requerido",
+          "Activar desde capa 3; más fan = mejor overhang"
+        ],
+        [
+          "PLA Silk",
+          "80–90",
+          "100",
+          "5–10",
+          "No requerido",
+          "Menos fan preserva brillo y efecto metálico"
+        ],
+        [
+          "PETG",
+          "40–60",
+          "100",
+          "8–12",
+          "Opcional",
+          "Fan > 70% fragiliza la unión intercapa"
+        ],
+        [
+          "ABS",
+          "0–20",
+          "50–70",
+          "10–15",
+          "Requerido",
+          "Sin enclosure: warping y layer splitting casi seguros"
+        ],
+        [
+          "ASA",
+          "10–30",
+          "50–70",
+          "10–15",
+          "Recomendado",
+          "Mayor warping que ABS sin enclosure"
+        ],
+        [
+          "TPU 95A (flexible)",
+          "20–40",
+          "60–80",
+          "8–12",
+          "No requerido",
+          "Fan alto = superficie rugosa y opaca"
+        ],
+        [
+          "Nylon (PA12/PA6)",
+          "0–20",
+          "50–70",
+          "12–20",
+          "Requerido",
+          "Secar 80 °C / 12 h antes de imprimir"
+        ],
+        [
+          "PC (policarbonato)",
+          "0–10",
+          "50–60",
+          "15–20",
+          "Requerido",
+          "Temp. cámara > 60 °C para evitar delaminación"
+        ]
       ],
       "note": "Fuente: Prusa Research – Cooling Guide; All3DP – FDM Filament Cooling (2026)"
     }

@@ -4,8 +4,6 @@ export const prerender = true;
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import TrustStrip from '../components/ui/TrustStrip.astro';
-import PushOptIn from '../components/PushOptIn.astro';
 import DatosHoyNav from '../components/DatosHoyNav.astro';
 import bcraIndicesRaw from '../lib/bcra-indices.json';
 import { getPlazoFijoTop } from '../lib/plazo-fijo';
@@ -32,13 +30,8 @@ const inflacionInteranual = await safeFetch<InflacionPoint[]>(
   []
 );
 
-// ── Tasas e índices del BCRA (API oficial v4.0) — la página rankea por "badlar
-// hoy" / "tasa de referencia bcra" / "cer hoy" pero NO los mostraba. Sirve esas
-// queries directo. Node acepta el cert BCRA sin flags. Fallback seguro a null.
 // Tasas/índices BCRA (BADLAR, TAMAR, CER) + riesgo país: pre-fetcheados en build
-// por scripts/fetch-bcra-indices.mjs. NO se fetchean acá porque el WAF del BCRA
-// bloquea el SSR de Astro/Vite ("internal error; reference=…"); desde Node plano
-// (el script de prebuild) responde 200. Ver el script.
+// por scripts/fetch-bcra-indices.mjs (el WAF del BCRA bloquea el SSR de Astro).
 type Punto = { valor: number; fecha: string; prev?: number | null; spark?: number[] } | null;
 type DolarPunto = { venta: number; fecha: string; prev?: number | null; spark?: number[] } | null;
 const bcraIndices = bcraIndicesRaw as {
@@ -51,8 +44,7 @@ const cer = bcraIndices.cer;
 const riesgoPais = bcraIndices.riesgoPais;
 const dolarHist = bcraIndices.dolar || {};
 
-// Fecha de hoy (build) para detectar valores PUBLICADOS POR ADELANTADO: el BCRA
-// publica el CER con ~10 días de anticipación, así que su "fecha" puede ser futura.
+// Fecha de hoy (build) para detectar valores PUBLICADOS POR ADELANTADO (CER).
 const todayStr = new Date().toISOString().slice(0, 10);
 const isFutureDate = (s?: string) => !!s && s.slice(0, 10) > todayStr;
 
@@ -67,22 +59,30 @@ const fmtAr = (n: number) => new Intl.NumberFormat('es-AR', { maximumFractionDig
 const fmtDate = (s: string) => {
   if (!s) return '—';
   try {
-    // Fechas 'YYYY-MM-DD' (sin hora) se parsean como UTC y, al pasarlas a hora
-    // AR (UTC-3), retroceden un día (ej. CER 2026-07-15 mostraba 14/07). Forzamos
-    // medianoche local para que el día quede exacto. Las ISO con hora van tal cual.
     const d = /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + 'T00:00:00') : new Date(s);
     return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   } catch {
     return s;
   }
 };
+// Fecha corta "08 jul" (para las celdas de actualización de la tabla).
+const fmtShort = (s: string) => {
+  if (!s) return '—';
+  try {
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + 'T00:00:00') : new Date(s);
+    return d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' }).replace('.', '');
+  } catch { return s; }
+};
+const fmtClock = (s: string) => {
+  if (!s) return '';
+  try { return new Date(s).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false }); }
+  catch { return ''; }
+};
 
 const buildDate = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
+const buildClock = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
 
 // Tarjetas dólar en orden deseado.
-// Nota sobre dólar tarjeta: el Impuesto PAIS (30%) se dejó vencer el 22/12/2024.
-// Desde entonces el recargo es sólo la percepción Ganancias/Bienes Personales del 30%.
-// Antes de tocar este hint verificar última normativa AFIP vigente.
 const dolarCards: { key: string; label: string; hint: string; isTaxed?: boolean; href: string; cta: string }[] = [
   { key: 'oficial', label: 'Dólar Oficial', hint: 'Cotización mayorista del BCRA', href: '/conversor-dolar-argentina', cta: 'Convertir →' },
   { key: 'blue', label: 'Dólar Blue', hint: 'Paralelo informal (Parque Lezama, arbolitos)', href: '/conversor-dolar-argentina', cta: 'Convertir →' },
@@ -99,7 +99,7 @@ function ultimoPorMes<T extends { fecha: string; valor: number }>(points: T[], n
   const byMonth: Record<string, T> = {};
   for (const p of points) {
     if (!p?.fecha) continue;
-    byMonth[p.fecha.slice(0, 7)] = p; // pisa: queda el último del mes
+    byMonth[p.fecha.slice(0, 7)] = p;
   }
   return Object.values(byMonth).slice(-n).reverse();
 }
@@ -107,139 +107,132 @@ const mesLargo = (s: string) => {
   try { return new Date(s).toLocaleDateString('es-AR', { month: 'long', year: 'numeric' }); }
   catch { return s; }
 };
-const uvaHist = ultimoPorMes(uva, 12);     // UVA es serie diaria → tomamos fin de mes
-const ipcHist = inflacion.slice(-6).reverse(); // inflación INDEC ya es mensual
+const uvaHist = ultimoPorMes(uva, 12);
+const ipcHist = inflacion.slice(-6).reverse();
 
-// ── Sparklines SVG (polyline) a partir de series REALES ya en scope. No se
-// inventan datos: si no hay ≥2 puntos, sparkline() devuelve null y no se pinta.
-// Se toman los últimos ~30 puntos de la serie diaria de UVA y los últimos 12
-// meses de inflación mensual (INDEC no publica diario).
-function sparkline(values: number[], w = 88, h = 26): string | null {
-  const v = values.filter((n) => typeof n === 'number' && isFinite(n));
-  if (v.length < 2) return null;
-  const min = Math.min(...v);
-  const max = Math.max(...v);
-  const span = max - min || 1;
-  const step = w / (v.length - 1);
-  const pad = 2; // margen vertical para que no se corte el trazo
-  const pts = v
-    .map((n, i) => {
-      const x = (i * step).toFixed(1);
-      const y = (h - pad - ((n - min) / span) * (h - pad * 2)).toFixed(1);
-      return `${x},${y}`;
-    })
-    .join(' ');
-  return pts;
-}
-const uvaSpark = sparkline(uva.slice(-30).map((p) => p.valor));
-const uvaSparkUp = uva.length >= 2 ? uva[uva.length - 1].valor >= uva[uva.length - 30 >= 0 ? uva.length - 30 : 0].valor : true;
-const ipcSpark = sparkline(inflacion.slice(-12).map((p) => p.valor));
-const ipcSparkUp = inflacion.length >= 2 ? inflacion[inflacion.length - 1].valor >= inflacion[0].valor : false;
+const pct = (n: number) => `${n.toFixed(2).replace('.', ',')}%`;
+const pct1 = (n: number) => `${n.toFixed(1).replace('.', ',')}%`;
 
-// ── Variación mes a mes (delta) para UVA e inflación — dato REAL de las series.
-// La UVA sube ~siempre (indexada), así que su delta suele ser 'pos' visual pero
-// aquí lo dejamos neutral: subir la UVA no es "bueno". La inflación SÍ es
-// semántica: baja = verde (pos), sube = rojo (neg).
-function pctDelta(cur?: number, prev?: number): string | null {
-  if (cur == null || prev == null || prev === 0) return null;
-  const d = ((cur / prev - 1) * 100);
-  const s = d.toFixed(1).replace('.', ',');
-  return (d >= 0 ? '+' : '') + s + '%';
-}
-const uvaPrevMes = uvaHist.length >= 2 ? uvaHist[1]?.valor : undefined; // uvaHist va del más nuevo al más viejo
-const uvaDeltaMes = pctDelta(ultimaUva?.valor, uvaPrevMes);
+// ── Datos "Hoy, de un vistazo" (dólar blue, CCL, inflación, UVA) ──
+const oficialVenta = dolarMap.oficial?.venta ?? null;
+const blueVenta = dolarMap.blue?.venta ?? null;
+const cclVenta = dolarMap.contadoconliqui?.venta ?? null;
+const blueBrecha = blueVenta && oficialVenta ? ((blueVenta / oficialVenta - 1) * 100) : null;
+const cclBrecha = cclVenta && oficialVenta ? ((cclVenta / oficialVenta - 1) * 100) : null;
+
 const ipcPrev = inflacion.length >= 2 ? inflacion[inflacion.length - 2]?.valor : undefined;
 const ipcDeltaPts = (ultimoIpc?.valor != null && ipcPrev != null)
-  ? (() => { const d = ultimoIpc.valor - ipcPrev; return (d >= 0 ? '+' : '') + d.toFixed(1).replace('.', ',') + ' pts'; })()
+  ? (() => { const d = ultimoIpc.valor - ipcPrev; return (d >= 0 ? '+' : '') + d.toFixed(1).replace('.', ',') + ' puntos'; })()
   : null;
-// Tono de la inflación: si el IPC del mes es menor que el previo → desaceleró (pos/verde).
 const ipcDeltaTone: 'pos' | 'neg' | 'neutral' =
   (ultimoIpc?.valor != null && ipcPrev != null)
     ? (ultimoIpc.valor < ipcPrev ? 'pos' : ultimoIpc.valor > ipcPrev ? 'neg' : 'neutral')
     : 'neutral';
 
-// Plazo fijo: top tasas de bancos RECONOCIBLES (helper compartido, mismo filtro
-// que /comparador-plazo-fijo — sin compañías financieras chicas).
+// UVA: variación en ~30 días (mockup: "+0,6% en 30 días").
+function uvaChangeDays(days: number): number | null {
+  if (uva.length < 2) return null;
+  const last = uva[uva.length - 1].valor;
+  const idx = Math.max(0, uva.length - 1 - days);
+  const prev = uva[idx]?.valor;
+  return prev ? (last / prev - 1) * 100 : null;
+}
+const uva30d = uvaChangeDays(30);
+const uva6m = uvaChangeDays(182);
+
+// ── Plazo fijo: top tasas de bancos reconocibles ──
 const plazoFijoRows = await getPlazoFijoTop(14);
 const pfMax = plazoFijoRows.length ? plazoFijoRows[0].tna : null;
 
 const uvaHoy = ultimaUva ? `$${fmtAr(ultimaUva.valor)}` : 'el valor del día';
-const ipcMensualTxt = ultimoIpc ? `${ultimoIpc.valor.toFixed(1)}%` : 'el último dato del INDEC';
-const ipcAnualTxt = ultimaIpcAnual ? `${ultimaIpcAnual.valor.toFixed(1)}%` : 'el último interanual';
+const ipcMensualTxt = ultimoIpc ? `${ultimoIpc.valor.toFixed(1).replace('.', ',')}%` : 'el último dato del INDEC';
+const ipcAnualTxt = ultimaIpcAnual ? `${ultimaIpcAnual.valor.toFixed(1).replace('.', ',')}%` : 'el último interanual';
 
-// ICL (Índice de Contratos de Locación) — ajuste de alquileres. Data oficial BCRA
-// (serie diaria en _bcra-icl.ts). La exponemos acá para servir "ICL hoy / valor ICL".
 const iclHoy = ICL_VALORES.at(-1) ?? null;
 const iclFmt = iclHoy != null ? iclHoy.toLocaleString('es-AR', { minimumFractionDigits: 4, maximumFractionDigits: 4 }) : null;
-
-const pct = (n: number) => `${n.toFixed(2).replace('.', ',')}%`;
-
-// ── Enriquecido por tarjeta (D): sparkline + variación + acción. Helpers reales
-// sobre las series ya en scope; si no hay ≥2 puntos, el sparkline no se pinta.
-function sparkFrom(spark?: number[] | null): { pts: string | null; up: boolean } {
-  if (!spark || spark.length < 2) return { pts: null, up: true };
-  return { pts: sparkline(spark), up: spark[spark.length - 1] >= spark[0] };
-}
-// Variación firmada: pct → porcentaje; digits/suffix configurables (pts, pb…).
-function deltaSigned(cur?: number | null, prev?: number | null, opts: { pct?: boolean; digits?: number; suffix?: string } = {}): string | null {
-  if (cur == null || prev == null || prev === 0) return null;
-  const raw = opts.pct ? (cur / prev - 1) * 100 : cur - prev;
-  const digits = opts.digits ?? (opts.pct ? 1 : 2);
-  const s = raw.toFixed(digits).replace('.', ',');
-  return (raw >= 0 ? '+' : '') + s + (opts.pct ? '%' : (opts.suffix ? ' ' + opts.suffix : ''));
-}
-
-const iclSparkArr = ICL_VALORES.slice(-30) as number[];
 const iclPrev = ICL_VALORES.length >= 2 ? ICL_VALORES.at(-2)! : null;
+const iclDelta = (iclHoy != null && iclPrev) ? ((iclHoy / iclPrev - 1) * 100) : null;
 
-// Cards de tasas/índices BCRA (server-rendered, crawleables) — ahora con
-// sparkline, variación, fuente, acción y aviso de valor anticipado (CER).
-type TasaView = {
-  label: string; value: string; sub: string; fecha: string;
-  spark: number[] | null; prev: number | null; deltaKind: 'pct' | 'pts' | 'pb';
-  href?: string; cta?: string; riskTone?: boolean;
+// ── Tabla "Cotizaciones del dólar" (código, nombre, subtítulo, compra/venta) ──
+const dolarTableMeta: Record<string, { code: string; short: string; subtitle: string }> = {
+  oficial: { code: 'OF', short: 'Oficial', subtitle: 'Banco Nación' },
+  blue: { code: 'BL', short: 'Blue', subtitle: 'Mercado informal' },
+  bolsa: { code: 'ME', short: 'MEP', subtitle: 'Mercado de bonos' },
+  contadoconliqui: { code: 'CC', short: 'CCL', subtitle: 'Contado con liquidación' },
+  tarjeta: { code: 'TA', short: 'Tarjeta', subtitle: 'Oficial + percepción vigente' },
+  cripto: { code: 'CR', short: 'Cripto', subtitle: 'USDT promedio' },
 };
-const tasasBcra: TasaView[] = [
-  badlar && { label: 'BADLAR', value: pct(badlar.valor), sub: 'Plazo fijo mayorista (>$1M), bancos privados', fecha: badlar.fecha, spark: badlar.spark ?? null, prev: badlar.prev ?? null, deltaKind: 'pts', href: '/calculadora-plazo-fijo', cta: 'Calcular plazo fijo →' },
-  tamar && { label: 'TAMAR', value: pct(tamar.valor), sub: 'Tasa mayorista de referencia del BCRA', fecha: tamar.fecha, spark: tamar.spark ?? null, prev: tamar.prev ?? null, deltaKind: 'pts', href: '/calculadora-plazo-fijo', cta: 'Calcular plazo fijo →' },
-  cer && { label: 'CER', value: fmtAr(cer.valor), sub: 'Coef. de Estabilización de Referencia (indexa la UVA)', fecha: cer.fecha, spark: cer.spark ?? null, prev: cer.prev ?? null, deltaKind: 'pct', href: '/calculadora-actualizacion-inflacion-ipc', cta: 'Actualizar por inflación →' },
-  iclHoy != null && { label: 'ICL', value: iclFmt ?? '', sub: 'Índice de Contratos de Locación — ajuste de alquileres', fecha: ICL_LAST_UPDATED, spark: iclSparkArr, prev: iclPrev, deltaKind: 'pct', href: '/calculadora-actualizacion-alquiler-icl', cta: 'Actualizar alquiler →' },
-  riesgoPais && { label: 'Riesgo país', value: `${Math.round(riesgoPais.valor)} pb`, sub: 'EMBI+ Argentina (puntos básicos)', fecha: riesgoPais.fecha, spark: riesgoPais.spark ?? null, prev: riesgoPais.prev ?? null, deltaKind: 'pb', riskTone: true },
-].filter(Boolean) as TasaView[];
-
-// Frase-resumen crawleable (AEO / featured snippet para "valores bcra hoy").
-const resumenParts: string[] = [];
-if (dolarMap.blue?.venta) resumenParts.push(`el dólar blue cotiza a $${fmtAr(dolarMap.blue.venta)}`);
-if (dolarMap.oficial?.venta) resumenParts.push(`el oficial a $${fmtAr(dolarMap.oficial.venta)}`);
-if (ultimaUva) resumenParts.push(`la UVA vale $${fmtAr(ultimaUva.valor)}`);
-if (iclHoy != null) resumenParts.push(`el ICL para alquileres está en ${iclFmt}`);
-if (ultimoIpc) resumenParts.push(`la inflación mensual fue ${ultimoIpc.valor.toFixed(1).replace('.', ',')}%`);
-if (badlar) resumenParts.push(`la tasa BADLAR rinde ${pct(badlar.valor)} anual`);
-if (riesgoPais) resumenParts.push(`y el riesgo país está en ${Math.round(riesgoPais.valor)} puntos`);
-const resumen = resumenParts.length
-  ? `Hoy en Argentina ${resumenParts.join(', ')}, según datos oficiales del BCRA e INDEC actualizados al ${buildDate}.`
-  : '';
-
-// ── Enriquecido del dólar por tarjeta (D): sparkline + variación diaria + fecha.
-// venta live (dolarapi) para el número; spark/prev del histórico de build.
-const dolarView: Record<string, { spark: number[] | null; delta: string | null; fecha: string }> = {};
-for (const c of dolarCards) {
-  const h = dolarHist[c.key];
-  const venta = dolarMap[c.key]?.venta ?? h?.venta ?? null;
-  dolarView[c.key] = {
-    spark: h?.spark ?? null,
-    delta: deltaSigned(venta, h?.prev, { pct: true }),
-    fecha: dolarMap[c.key]?.fechaActualizacion || h?.fecha || '',
+const dolarTable = dolarCards.map((c) => {
+  const d = dolarMap[c.key];
+  const meta = dolarTableMeta[c.key];
+  const brechaNum = d?.venta && oficialVenta ? ((d.venta / oficialVenta - 1) * 100) : null;
+  const isBase = c.key === 'oficial';
+  const clock = fmtClock(d?.fechaActualizacion);
+  const updated = isBase
+    ? fmtShort(d?.fechaActualizacion || todayStr).toUpperCase()
+    : c.isTaxed
+      ? `Dato base · ${fmtShort(d?.fechaActualizacion || todayStr)}`
+      : clock ? `Hoy · ${clock}` : `Al ${fmtShort(d?.fechaActualizacion || todayStr)}`;
+  return {
+    key: c.key, code: meta.code, short: meta.short, subtitle: meta.subtitle,
+    compra: d?.compra ?? null, venta: d?.venta ?? null,
+    brechaNum, isBase, isTaxed: !!c.isTaxed, updated, href: c.href,
   };
-}
+});
 
-// ── LECTURA EJECUTIVA (B): "qué mirar hoy". Insights computados de la data real,
-// cada uno con a-quién-afecta y qué calculadora usar. Sin recomendación financiera.
+// ── Estado de las fuentes (hero panel) ──
+const fuentes = [
+  { label: 'BCRA', fresh: badlar ? `al ${fmtShort(badlar.fecha)}` : 'operativa' },
+  { label: 'INDEC', fresh: ultimoIpc ? fmtDate(ultimoIpc.fecha) : 'operativa' },
+  { label: 'DólarAPI', fresh: dolarMap.blue?.fechaActualizacion ? fmtClock(dolarMap.blue.fechaActualizacion) || 'hoy' : 'operativa' },
+];
+
+// ── Gráfico de área: Evolución UVA ──
+function shortMonth(s: string): string {
+  try {
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + 'T00:00:00') : new Date(s);
+    const m = d.toLocaleDateString('es-AR', { month: 'short' }).replace('.', '');
+    return m.charAt(0).toUpperCase() + m.slice(1);
+  } catch { return s; }
+}
+function buildArea(series: UvaPoint[]) {
+  const pts = series.filter((p) => p && isFinite(p.valor));
+  if (pts.length < 2) return null;
+  const w = 580, h = 200, padL = 6, padR = 6, padT = 16, padB = 26;
+  const vals = pts.map((p) => p.valor);
+  const min = Math.min(...vals), max = Math.max(...vals), span = (max - min) || 1;
+  const innerW = w - padL - padR, innerH = h - padT - padB;
+  const X = (i: number) => padL + (i / (pts.length - 1)) * innerW;
+  const Y = (v: number) => padT + (1 - (v - min) / span) * innerH;
+  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(p.valor).toFixed(1)}`).join(' ');
+  const baseY = (padT + innerH).toFixed(1);
+  const area = `${line} L${X(pts.length - 1).toFixed(1)} ${baseY} L${X(0).toFixed(1)} ${baseY} Z`;
+  const nLab = 6; const labels: { x: number; text: string }[] = [];
+  for (let k = 0; k < nLab; k++) {
+    const i = Math.round((k * (pts.length - 1)) / (nLab - 1));
+    labels.push({ x: X(i), text: shortMonth(pts[i].fecha) });
+  }
+  return { w, h, line, area, labels, baseY };
+}
+// 6 meses por defecto (~182 días). Downsample para no saturar el SVG.
+function downsample<T>(arr: T[], max: number): T[] {
+  if (arr.length <= max) return arr;
+  const out: T[] = []; const step = arr.length / max;
+  for (let i = 0; i < max; i++) out.push(arr[Math.floor(i * step)]);
+  if (out[out.length - 1] !== arr[arr.length - 1]) out.push(arr[arr.length - 1]);
+  return out;
+}
+const uva6mSeries = downsample(uva.slice(-182), 60);
+const uvaChart = buildArea(uva6mSeries);
+// Serie embebida (downsampled) para el toggle 6m / 1año / Todo en el cliente.
+const uvaEmbed = downsample(uva, 300).map((p) => ({ f: p.fecha, v: p.valor }));
+
+// ── Lectura ejecutiva "Qué cambió hoy" (insights de la data real) ──
 const mercadoKeys = ['blue', 'bolsa', 'contadoconliqui', 'cripto'];
 let topBrecha: { label: string; pct: number } | null = null;
 for (const k of mercadoKeys) {
   const v = dolarMap[k]?.venta;
-  const of = dolarMap.oficial?.venta;
+  const of = oficialVenta;
   if (v && of) {
     const p = (v / of - 1) * 100;
     if (!topBrecha || p > topBrecha.pct) {
@@ -250,34 +243,53 @@ for (const k of mercadoKeys) {
 const execItems: { icon: string; html: string; href: string; cta: string }[] = [];
 if (topBrecha) {
   execItems.push({
-    icon: '💸',
-    html: `El <strong>dólar ${topBrecha.label}</strong> marca la mayor brecha frente al oficial: <strong>+${topBrecha.pct.toFixed(1).replace('.', ',')}%</strong>. Es el número que miran quienes ahorran o giran divisas.`,
-    href: '/conversor-dolar-argentina', cta: 'Convertir a mi cotización →',
+    icon: '↗',
+    html: `El <strong>${topBrecha.label}</strong> marca la mayor brecha frente al oficial: cotiza <strong>${pct1(topBrecha.pct)}</strong> por encima del oficial vendedor.`,
+    href: '/conversor-dolar-argentina', cta: 'Comparar dólares →',
   });
 }
 if (badlar && ultimaIpcAnual) {
   const gana = badlar.valor >= ultimaIpcAnual.valor;
   execItems.push({
-    icon: gana ? '📈' : '📉',
-    html: `La <strong>BADLAR</strong> mayorista rinde <strong>${pct(badlar.valor)}</strong> anual, ${gana ? 'por encima' : 'por debajo'} de la inflación interanual (<strong>${ipcAnualTxt}</strong>): un plazo fijo tradicional ${gana ? 'le gana' : 'pierde contra'} la inflación en términos nominales.`,
-    href: '/calculadora-plazo-fijo', cta: 'Calcular mi plazo fijo →',
+    icon: '%',
+    html: gana
+      ? `Las tasas le ganan a la inflación: la <strong>BADLAR</strong> anual rinde <strong>${pct(badlar.valor)}</strong> frente a ${ipcAnualTxt} interanual.`
+      : `Las tasas siguen debajo de la inflación: la <strong>BADLAR</strong> anual es <strong>${pct(badlar.valor)}</strong> frente a ${ipcAnualTxt} de inflación interanual.`,
+    href: '/calculadora-plazo-fijo', cta: 'Simular plazo fijo →',
   });
 }
 if (ultimoIpc && ipcPrev != null && ipcDeltaPts) {
   const desac = ultimoIpc.valor < ipcPrev;
+  const mesIpc = ultimoIpc.fecha ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(ultimoIpc.fecha) ? ultimoIpc.fecha + 'T00:00:00' : ultimoIpc.fecha).toLocaleDateString('es-AR', { month: 'long' }) : 'el último mes';
   execItems.push({
-    icon: desac ? '🟢' : '🔴',
-    html: `La <strong>inflación mensual</strong> del INDEC fue <strong>${ipcMensualTxt}</strong>, ${desac ? 'una desaceleración' : 'una aceleración'} frente al mes previo (${ipcDeltaPts}). Impacta alquileres, salarios y ahorros en pesos.`,
+    icon: desac ? '↩' : '↪',
+    html: `La <strong>inflación mensual ${desac ? 'desaceleró' : 'aceleró'}</strong>: fue ${ipcMensualTxt} en ${mesIpc}, ${ipcDeltaPts} ${desac ? 'menos' : 'más'} que el mes anterior.`,
     href: '/calculadora-actualizacion-inflacion-ipc', cta: 'Actualizar un monto →',
   });
 }
-if (isFutureDate(cer?.fecha) && cer) {
-  execItems.push({
-    icon: '🗓️',
-    html: `El <strong>CER</strong> ya tiene valor publicado por el BCRA para el <strong>${fmtDate(cer.fecha)}</strong> (${fmtAr(cer.valor)}): la UVA de esos días está anticipada. Útil si tenés un crédito o alquiler que ajusta por UVA/CER.`,
-    href: '/calculadora-credito-uva-vs-tasa-fija', cta: 'Ver cuota UVA →',
-  });
-}
+
+// ── Indicadores principales (BCRA / INDEC) ──
+type Indicador = { label: string; value: string; sub: string; future?: boolean };
+const indicadores: Indicador[] = [
+  ultimaIpcAnual && { label: 'Inflación interanual', value: `${ultimaIpcAnual.valor.toFixed(1).replace('.', ',')}%`, sub: `IPC nacional · ${mesLargo(ultimaIpcAnual.fecha)}`, anual: true },
+  badlar && { label: 'BADLAR', value: pct1(badlar.valor), sub: `TNA · ${fmtDate(badlar.fecha)}` },
+  tamar && { label: 'TAMAR', value: pct(tamar.valor), sub: `TNA · ${fmtDate(tamar.fecha)}` },
+  iclHoy != null && { label: 'ICL', value: iclFmt ?? '', sub: iclDelta != null ? `${(iclDelta >= 0 ? '+' : '') + iclDelta.toFixed(2).replace('.', ',')}% diario` : `al ${fmtDate(ICL_LAST_UPDATED)}`, icl: true },
+].filter(Boolean) as any;
+const cerCard = cer ? { label: isFutureDate(cer.fecha) ? 'CER publicada a futuro' : 'CER', value: fmtAr(cer.valor), sub: isFutureDate(cer.fecha) ? `Vigente para el ${fmtDate(cer.fecha)} — no confundir con el valor de hoy` : `al ${fmtDate(cer.fecha)}`, future: isFutureDate(cer.fecha) } : null;
+
+// Frase-resumen crawleable (AEO).
+const resumenParts: string[] = [];
+if (blueVenta) resumenParts.push(`el dólar blue cotiza a $${fmtAr(blueVenta)}`);
+if (oficialVenta) resumenParts.push(`el oficial a $${fmtAr(oficialVenta)}`);
+if (ultimaUva) resumenParts.push(`la UVA vale $${fmtAr(ultimaUva.valor)}`);
+if (iclHoy != null) resumenParts.push(`el ICL para alquileres está en ${iclFmt}`);
+if (ultimoIpc) resumenParts.push(`la inflación mensual fue ${ultimoIpc.valor.toFixed(1).replace('.', ',')}%`);
+if (badlar) resumenParts.push(`la tasa BADLAR rinde ${pct(badlar.valor)} anual`);
+if (riesgoPais) resumenParts.push(`y el riesgo país está en ${Math.round(riesgoPais.valor)} puntos`);
+const resumen = resumenParts.length
+  ? `Hoy en Argentina ${resumenParts.join(', ')}, según datos oficiales del BCRA e INDEC actualizados al ${buildDate}.`
+  : '';
 
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
@@ -295,7 +307,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: '¿Cuánto vale la UVA hoy?',
-    a: `La UVA (Unidad de Valor Adquisitivo) está en <strong>${uvaHoy}</strong>${ultimaUva ? ` al ${fmtDate(ultimaUva.fecha)}` : ''}, según el BCRA. La UVA se ajusta diariamente por el CER (que sigue a la inflación) con un rezago de unos 45 días, así que su valor sube prácticamente todos los días. La tabla de arriba muestra su evolución mes a mes.`,
+    a: `La UVA (Unidad de Valor Adquisitivo) está en <strong>${uvaHoy}</strong>${ultimaUva ? ` al ${fmtDate(ultimaUva.fecha)}` : ''}, según el BCRA. La UVA se ajusta diariamente por el CER (que sigue a la inflación) con un rezago de unos 45 días, así que su valor sube prácticamente todos los días. El gráfico de arriba muestra su evolución.`,
   },
   {
     q: '¿Qué es la UVA y para qué se usa?',
@@ -303,7 +315,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: '¿Cuál es la inflación de Argentina hoy?',
-    a: `La última inflación mensual del INDEC (IPC Nacional) fue de <strong>${ipcMensualTxt}</strong> y la interanual (últimos 12 meses) de <strong>${ipcAnualTxt}</strong>. El INDEC publica el IPC alrededor del día 14 de cada mes con el dato del mes anterior. Arriba podés ver la serie de los últimos meses.`,
+    a: `La última inflación mensual del INDEC (IPC Nacional) fue de <strong>${ipcMensualTxt}</strong> y la interanual (últimos 12 meses) de <strong>${ipcAnualTxt}</strong>. El INDEC publica el IPC alrededor del día 14 de cada mes con el dato del mes anterior.`,
   },
   {
     q: '¿Qué diferencia hay entre dólar oficial, blue, MEP y CCL?',
@@ -315,15 +327,15 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: '¿Cuánto rinde un plazo fijo hoy?',
-    a: `Las tasas (TNA) de plazo fijo tradicional a 30 días van desde ~16% hasta <strong>${pfMax ? String(pfMax).replace('.', ',') + '%' : '~23%'}</strong> anual según el banco, como se ve en la tabla de arriba (ordenada de mayor a menor). Para saber cuánto cobrás en pesos por un monto y plazo concretos, usá la <a href="/calculadora-plazo-fijo">calculadora de plazo fijo</a> o compará bancos en el <a href="/comparador-plazo-fijo">comparador</a>.`,
+    a: `Las tasas (TNA) de plazo fijo tradicional a 30 días van desde ~16% hasta <strong>${pfMax ? String(pfMax).replace('.', ',') + '%' : '~23%'}</strong> anual según el banco, como se ve en el ranking de arriba (ordenado de mayor a menor). Para saber cuánto cobrás en pesos por un monto y plazo concretos, usá la <a href="/calculadora-plazo-fijo">calculadora de plazo fijo</a> o compará bancos en el <a href="/comparador-plazo-fijo">comparador</a>.`,
   },
   {
     q: '¿Qué es la tasa BADLAR y cuánto está hoy?',
-    a: `La <strong>BADLAR</strong> (Buenos Aires Deposits of Large Amount Rate) es la tasa promedio que pagan los bancos privados por plazos fijos mayoristas de más de un millón de pesos a 30-35 días. El BCRA la publica a diario y se usa como referencia para préstamos, UVA y contratos. Hoy la BADLAR de bancos privados está en <strong>${badlar ? pct(badlar.valor) : 'el último dato del BCRA'}</strong>${badlar ? ` (al ${fmtDate(badlar.fecha)})` : ''}. La <strong>TAMAR</strong>${tamar ? ` (${pct(tamar.valor)})` : ''} es la versión mayorista que el BCRA adoptó como tasa de referencia.`,
+    a: `La <strong>BADLAR</strong> (Buenos Aires Deposits of Large Amount Rate) es la tasa promedio que pagan los bancos privados por plazos fijos mayoristas de más de un millón de pesos a 30-35 días. El BCRA la publica a diario. Hoy la BADLAR de bancos privados está en <strong>${badlar ? pct(badlar.valor) : 'el último dato del BCRA'}</strong>${badlar ? ` (al ${fmtDate(badlar.fecha)})` : ''}. La <strong>TAMAR</strong>${tamar ? ` (${pct(tamar.valor)})` : ''} es la versión mayorista que el BCRA adoptó como tasa de referencia.`,
   },
   {
     q: '¿Cuál es el riesgo país de Argentina hoy?',
-    a: `El <strong>riesgo país</strong> (índice EMBI+ de JP Morgan) mide la sobretasa que paga la deuda argentina frente a los bonos del Tesoro de EE.UU., en puntos básicos (100 pb = 1%). Hoy está en <strong>${riesgoPais ? Math.round(riesgoPais.valor) + ' puntos' : 'el último dato disponible'}</strong>${riesgoPais ? ` (al ${fmtDate(riesgoPais.fecha)})` : ''}. Cuanto más bajo, más confianza del mercado en que el país pagará su deuda y más cerca está de volver a financiarse en los mercados internacionales.`,
+    a: `El <strong>riesgo país</strong> (índice EMBI+ de JP Morgan) mide la sobretasa que paga la deuda argentina frente a los bonos del Tesoro de EE.UU., en puntos básicos (100 pb = 1%). Hoy está en <strong>${riesgoPais ? Math.round(riesgoPais.valor) + ' puntos' : 'el último dato disponible'}</strong>${riesgoPais ? ` (al ${fmtDate(riesgoPais.fecha)})` : ''}. Cuanto más bajo, más confianza del mercado en que el país pagará su deuda.`,
   },
   {
     q: '¿Cada cuánto se actualizan estos valores?',
@@ -347,8 +359,8 @@ const schema = {
     { '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: 'https://api.argentinadatos.com/v1/finanzas/indices/uva' },
   ],
   variableMeasured: [
-    dolarMap.blue?.venta && { '@type': 'PropertyValue', name: 'Dólar blue (venta)', value: dolarMap.blue.venta, unitText: 'ARS' },
-    dolarMap.oficial?.venta && { '@type': 'PropertyValue', name: 'Dólar oficial (venta)', value: dolarMap.oficial.venta, unitText: 'ARS' },
+    blueVenta && { '@type': 'PropertyValue', name: 'Dólar blue (venta)', value: blueVenta, unitText: 'ARS' },
+    oficialVenta && { '@type': 'PropertyValue', name: 'Dólar oficial (venta)', value: oficialVenta, unitText: 'ARS' },
     ultimaUva && { '@type': 'PropertyValue', name: 'UVA', value: ultimaUva.valor, unitText: 'ARS' },
     ultimoIpc && { '@type': 'PropertyValue', name: 'Inflación mensual IPC (INDEC)', value: ultimoIpc.valor, unitText: 'P1' },
     badlar && { '@type': 'PropertyValue', name: 'Tasa BADLAR bancos privados', value: badlar.valor, unitText: 'P1' },
@@ -365,300 +377,282 @@ const faqSchema = {
     acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') },
   })),
 };
+
+const usaCards = [
+  { icon: '$', title: 'Conversor de dólares', desc: 'Oficial, blue, MEP, CCL, tarjeta y cripto.', href: '/conversor-dolar-argentina', cta: 'Abrir calculadora' },
+  { icon: '%', title: 'Plazo fijo', desc: 'Calculá el rendimiento con tasas actuales.', href: '/calculadora-plazo-fijo', cta: 'Simular inversión' },
+  { icon: '↗', title: 'Actualizar por inflación', desc: 'Llevá un monto histórico a valores de hoy.', href: '/calculadora-actualizacion-inflacion-ipc', cta: 'Actualizar monto' },
+  { icon: '⌂', title: 'Alquiler por ICL', desc: 'Estimá el próximo ajuste de tu contrato.', href: '/calculadora-actualizacion-alquiler-icl', cta: 'Calcular ajuste' },
+];
 ---
 <Layout image="/og/data-valores-bcra.jpg" imageWidth={1200} imageHeight={675} title={title} description={description} schema={schema} domain="data" pageType="dashboard">
   <Header slot="header" />
 
-  <article class="dashboard">
-    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+  <article class="vb">
+    <nav class="vb-crumb" aria-label="Ruta de navegación">
       <a href="/">Inicio</a>
       <span class="sep" aria-hidden="true">/</span>
-      <span class="current">Valores BCRA hoy</span>
+      <span class="current">Valores BCRA e INDEC</span>
     </nav>
 
-    <header class="dash-head">
-      <h1>Valores BCRA y INDEC hoy</h1>
-      <p class="lead">Dólar oficial, blue, MEP y CCL, inflación INDEC, UVA y tasas de plazo fijo de Argentina, en un solo lugar.</p>
-    </header>
-
-    <!-- BARRA SUPERIOR DE DASHBOARD: estado en vivo + fuente + metodología -->
-    <TrustStrip class="dash-bar">
-      <span class="ui-trust__item dash-bar__live">
-        <span class="live-dot" aria-hidden="true"></span>
-        Cotizaciones en vivo · <time data-updated datetime={builtAtISO}>actualizado {buildDate}</time>
-      </span>
-      <span class="ui-trust__item">Fuente: BCRA · INDEC · dolarapi</span>
-      <a class="ui-trust__item dash-bar__method" href="#fuentes">Ver metodología →</a>
-    </TrustStrip>
-
-    {resumen && <p class="vb-resumen">{resumen}</p>}
-
-    <!-- LECTURA EJECUTIVA (B): qué mirar hoy — insights computados de la data,
-         con a-quién-afecta y qué calculadora usar. Sin recomendación financiera. -->
-    {execItems.length > 0 && (
-      <section class="exec" aria-label="Qué mirar hoy">
-        <div class="exec-head">
-          <span class="exec-kicker">Lectura del día</span>
-          <h2 class="exec-title">Qué mirar hoy · {buildDate}</h2>
+    <!-- HERO -->
+    <header class="vb-hero">
+      <div class="vb-hero-copy">
+        <span class="vb-kicker">Datos económicos de Argentina</span>
+        <h1>Valores BCRA e INDEC</h1>
+        <p class="vb-lead">Dólar, inflación, UVA y tasas en un solo tablero. Compará valores, entendé qué cambió y usalos directamente en tus cuentas.</p>
+        <div class="vb-pills">
+          <span class="vb-pill vb-pill-live"><span class="vb-dot" aria-hidden="true"></span><time data-updated datetime={builtAtISO}>Actualizado hoy, {buildClock}</time></span>
+          <span class="vb-pill">4 fuentes oficiales y de mercado</span>
+          <span class="vb-pill">Zona horaria: Argentina</span>
         </div>
-        <ul class="exec-list">
-          {execItems.map((it) => (
-            <li class="exec-item">
-              <span class="exec-icon" aria-hidden="true">{it.icon}</span>
-              <span class="exec-body">
-                <span class="exec-text" set:html={it.html}></span>
-                <a class="exec-cta" href={it.href}>{it.cta}</a>
-              </span>
-            </li>
+      </div>
+      <aside class="vb-status" aria-label="Estado de las fuentes">
+        <div class="vb-status-top">
+          <span class="vb-status-kicker">Estado de las fuentes</span>
+          <span class="vb-status-badge">Operativas</span>
+        </div>
+        <ul class="vb-status-rows">
+          {fuentes.map((f) => (
+            <li><span class="vb-src-name"><span class="vb-dot vb-dot-static" aria-hidden="true"></span>{f.label}</span><span class="vb-src-fresh">{f.fresh}</span></li>
           ))}
         </ul>
-        <p class="exec-note">Lectura informativa de datos oficiales, no es recomendación de inversión.</p>
-      </section>
-    )}
+        <button type="button" class="vb-refresh" id="vb-refresh">↻ Actualizar valores</button>
+      </aside>
+    </header>
 
-    <!-- ÍNDICE DE ANCLAS (sticky) — navegación entre secciones sin ocultar
-         contenido: TODO sigue en el HTML (crawleable), sólo hace scroll. -->
-    <nav class="dash-tabs" aria-label="Secciones del dashboard">
+    <!-- TABS -->
+    <nav class="vb-tabs" aria-label="Secciones del tablero">
+      <a href="#resumen" class="is-active">Resumen</a>
       <a href="#dolar">Dólar</a>
-      <a href="#inflacion">Inflación</a>
-      <a href="#tasas">Tasas BCRA</a>
-      <a href="#historico">UVA e IPC</a>
-      <a href="#plazo-fijo">Plazo fijo</a>
+      <a href="#inflacion">Inflación e índices</a>
+      <a href="#tasas">Tasas</a>
       <a href="#alertas">Alertas</a>
+      <a href="#calculadoras">Calculadoras</a>
+      <a href="#fuentes">Fuentes</a>
     </nav>
 
-    <DatosHoyNav current="/valores-bcra" />
+    {resumen && <p class="vb-resumen sr-only">{resumen}</p>}
 
-    <!-- SECCIÓN DÓLAR -->
-    <section class="dash-section" id="dolar">
-      <h2>💵 Cotización del dólar</h2>
-      <div class="card-grid">
-        {dolarCards.map((c) => {
-          const d = dolarMap[c.key];
-          const venta = d?.venta;
-          const brecha = venta && dolarMap.oficial?.venta ? ((venta / dolarMap.oficial.venta - 1) * 100).toFixed(1) : null;
-          // Brecha cambiaria sólo tiene sentido para dólares de mercado (blue/MEP/CCL/cripto),
-          // no para el tarjeta — ese "+30%" es el impuesto, no una brecha.
-          const showBrecha = brecha && c.key !== 'oficial' && !c.isTaxed;
-          const showTaxBadge = c.isTaxed && brecha;
-          const view = dolarView[c.key];
-          const sparkPts = view?.spark ? sparkline(view.spark) : null;
-          const sparkUp = view?.spark && view.spark.length >= 2 ? view.spark[view.spark.length - 1] >= view.spark[0] : true;
-          return (
-            <div class="card">
-              <div class="card-head">
-                <span class="card-label">{c.label}</span>
-                {showTaxBadge ? (
-                  <span class="badge badge-tax" title="Recargo por percepción Ganancias, no brecha cambiaria">+{brecha}% impuesto</span>
-                ) : view?.delta && (
-                  <span class="delta delta-neutral" title="Variación vs el día anterior">{view.delta}</span>
-                )}
-              </div>
-              <div class="card-value" data-dolar-key={c.key}>
-                {venta ? `$${fmtAr(venta)}` : '—'}
-              </div>
-              {sparkPts && (
-                <svg class={`spark spark-${sparkUp ? 'up' : 'down'}`} viewBox="0 0 88 26" width="88" height="26" preserveAspectRatio="none" aria-hidden="true" role="img">
-                  <polyline points={sparkPts} fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-              )}
-              <div class="card-sub">
-                {d?.compra ? `Compra: $${fmtAr(d.compra)}` : c.hint}
-              </div>
-              {showBrecha ? (
-                <div class="card-meta">
-                  <span class="meta-label">Brecha vs oficial</span>
-                  <span class="meta-val" data-brecha-key={c.key}>+{brecha}%</span>
-                </div>
-              ) : (
-                <div class="card-hint">{c.hint}</div>
-              )}
-              <div class="card-foot">
-                <span class="card-src">{view?.fecha ? `Al ${fmtDate(view.fecha)} · dolarapi` : 'Fuente: dolarapi'}</span>
-                <a class="card-act" href={c.href}>{c.cta}</a>
-              </div>
-            </div>
-          );
-        })}
+    <!-- HOY, DE UN VISTAZO -->
+    <section class="vb-section" id="resumen">
+      <div class="vb-head">
+        <div>
+          <h2>Hoy, de un vistazo</h2>
+          <p class="vb-sub">Los cuatro datos que más se consultan.</p>
+        </div>
+        <a class="vb-see" href="#dolar">Ver todos los valores →</a>
       </div>
-    </section>
-
-    <!-- SECCIÓN INFLACIÓN -->
-    <section class="dash-section" id="inflacion">
-      <h2>📈 Inflación (INDEC)</h2>
-      <div class="card-grid">
-        <div class="card hi">
-          <div class="card-head">
-            <span class="card-label">Inflación mensual</span>
-            {ipcDeltaPts && (
-              <span class={`delta delta-${ipcDeltaTone}`} title="Variación vs el mes anterior (puntos porcentuales)">{ipcDeltaPts}</span>
-            )}
-          </div>
-          <div class="card-value" data-ipc-mensual>
-            {ultimoIpc ? `${ultimoIpc.valor.toFixed(1)}%` : '—'}
-          </div>
-          {ipcSpark && (
-            <svg class={`spark spark-${ipcSparkUp ? 'up' : 'down'}`} viewBox="0 0 88 26" width="88" height="26" preserveAspectRatio="none" aria-hidden="true" role="img">
-              <polyline points={ipcSpark} fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          )}
-          <div class="card-sub">IPC Nacional · últimos 12 meses</div>
-          <div class="card-hint">Último dato: {ultimoIpc ? fmtDate(ultimoIpc.fecha) : '—'}</div>
+      <div class="vb-glance">
+        <div class="vb-gcard">
+          <div class="vb-gcard-top"><span class="vb-gcard-label">Dólar blue</span><span class="vb-tag">Actual</span></div>
+          <div class="vb-gcard-val" data-dolar-key="blue">{blueVenta ? `$${fmtAr(blueVenta)}` : '—'}</div>
+          <div class="vb-gcard-note"><span data-brecha-key="blue">{blueBrecha != null ? pct1(blueBrecha) : '—'}</span> brecha con el oficial</div>
+          <div class="vb-gcard-foot">Venta · DólarAPI · {fmtClock(dolarMap.blue?.fechaActualizacion) || 'hoy'}</div>
         </div>
-        <div class="card hi">
-          <div class="card-head">
-            <span class="card-label">Inflación anual</span>
-          </div>
-          <div class="card-value" data-ipc-anual>
-            {ultimaIpcAnual ? `${ultimaIpcAnual.valor.toFixed(1)}%` : '—'}
-          </div>
-          <div class="card-sub">Interanual (últimos 12m)</div>
-          <div class="card-hint">Último dato: {ultimaIpcAnual ? fmtDate(ultimaIpcAnual.fecha) : '—'}</div>
+        <div class="vb-gcard is-featured">
+          <div class="vb-gcard-top"><span class="vb-gcard-label">Dólar CCL</span><span class="vb-tag">Actual</span></div>
+          <div class="vb-gcard-val" data-dolar-key="contadoconliqui">{cclVenta ? `$${fmtAr(cclVenta)}` : '—'}</div>
+          <div class="vb-gcard-note vb-note-pos"><span data-brecha-key="contadoconliqui">{cclBrecha != null ? '+' + pct1(cclBrecha) : '—'}</span> brecha · la mayor hoy</div>
+          <div class="vb-gcard-foot">Venta · Mercado · {fmtClock(dolarMap.contadoconliqui?.fechaActualizacion) || 'hoy'}</div>
         </div>
-        <div class="card hi">
-          <div class="card-head">
-            <span class="card-label">UVA</span>
-            {uvaDeltaMes && (
-              <span class="delta delta-neutral" title="Variación vs el mes anterior">{uvaDeltaMes}</span>
-            )}
-          </div>
-          <div class="card-value" data-uva>
-            {ultimaUva ? `$${fmtAr(ultimaUva.valor)}` : '—'}
-          </div>
-          {uvaSpark && (
-            <svg class={`spark spark-${uvaSparkUp ? 'up' : 'down'}`} viewBox="0 0 88 26" width="88" height="26" preserveAspectRatio="none" aria-hidden="true" role="img">
-              <polyline points={uvaSpark} fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          )}
-          <div class="card-sub">Unidad de Valor Adquisitivo · últimos 30 días</div>
-          <div class="card-hint">Al {ultimaUva ? fmtDate(ultimaUva.fecha) : '—'}</div>
+        <div class="vb-gcard">
+          <div class="vb-gcard-top"><span class="vb-gcard-label">Inflación mensual</span><span class="vb-tag">{ultimoIpc ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(ultimoIpc.fecha) ? ultimoIpc.fecha + 'T00:00:00' : ultimoIpc.fecha).toLocaleDateString('es-AR', { month: 'short' }).replace('.', '').toUpperCase() : '—'}</span></div>
+          <div class="vb-gcard-val" data-ipc-mensual>{ultimoIpc ? `${ultimoIpc.valor.toFixed(1).replace('.', ',')}%` : '—'}</div>
+          <div class={`vb-gcard-note vb-note-${ipcDeltaTone}`}>{ipcDeltaPts ? `${ipcDeltaPts} vs. mes anterior` : 'IPC nacional'}</div>
+          <div class="vb-gcard-foot">IPC nacional · INDEC · {ultimoIpc ? fmtShort(ultimoIpc.fecha) : '—'}</div>
+        </div>
+        <div class="vb-gcard">
+          <div class="vb-gcard-top"><span class="vb-gcard-label">UVA</span><span class="vb-tag">Actual</span></div>
+          <div class="vb-gcard-val" data-uva>{ultimaUva ? `$${fmtAr(ultimaUva.valor)}` : '—'}</div>
+          <div class="vb-gcard-note">{uva30d != null ? `${(uva30d >= 0 ? '+' : '') + uva30d.toFixed(1).replace('.', ',')}% en 30 días` : 'Unidad de Valor Adquisitivo'}</div>
+          <div class="vb-gcard-foot">Unidad · BCRA · {ultimaUva ? fmtShort(ultimaUva.fecha) : '—'}</div>
         </div>
       </div>
     </section>
 
-    <!-- SECCIÓN TASAS E ÍNDICES BCRA -->
-    {tasasBcra.length > 0 && (
-      <section class="dash-section" id="tasas">
-        <h2>🏛️ Tasas e índices del BCRA</h2>
-        <div class="card-grid">
-          {tasasBcra.map((t) => {
-            const s = sparkFrom(t.spark);
-            const cur = t.spark && t.spark.length ? t.spark[t.spark.length - 1] : null;
-            const delta = t.deltaKind === 'pct'
-              ? deltaSigned(cur, t.prev, { pct: true, digits: 2 })
-              : t.deltaKind === 'pb'
-                ? deltaSigned(cur, t.prev, { digits: 0, suffix: 'pb' })
-                : deltaSigned(cur, t.prev, { digits: 2, suffix: 'pts' });
-            // Riesgo país: bajar es "bueno" (verde); subir "malo" (rojo). El resto, neutral.
-            const tone = t.riskTone && cur != null && t.prev != null
-              ? (cur < t.prev ? 'pos' : cur > t.prev ? 'neg' : 'neutral')
-              : 'neutral';
-            const futuro = isFutureDate(t.fecha);
-            return (
-              <div class="card">
-                <div class="card-head">
-                  <span class="card-label">{t.label}</span>
-                  {delta && (
-                    <span class={`delta delta-${tone}`} title="Variación vs el dato anterior">{delta}</span>
-                  )}
-                </div>
-                <div class="card-value" data-tasa={t.label === 'ICL' ? 'icl' : undefined}>{t.value}</div>
-                {s.pts && (
-                  <svg class={`spark spark-${s.up ? 'up' : 'down'}`} viewBox="0 0 88 26" width="88" height="26" preserveAspectRatio="none" aria-hidden="true" role="img">
-                    <polyline points={s.pts} fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
-                )}
-                <div class="card-sub">{t.sub}</div>
-                {futuro ? (
-                  <div class="card-hint card-hint-future" title="El BCRA publica el CER con días de anticipación">📅 Valor publicado por el BCRA para el {fmtDate(t.fecha)}</div>
-                ) : (
-                  <div class="card-hint">Al {fmtDate(t.fecha)} · BCRA</div>
-                )}
-                {t.href && t.cta && (
-                  <div class="card-foot">
-                    <span class="card-src">Fuente: BCRA</span>
-                    <a class="card-act" href={t.href}>{t.cta}</a>
-                  </div>
-                )}
+    <!-- QUÉ CAMBIÓ HOY -->
+    {execItems.length > 0 && (
+      <section class="vb-section">
+        <div class="vb-head">
+          <div>
+            <h2>Qué cambió hoy</h2>
+            <p class="vb-sub">Contexto corto para saber dónde mirar.</p>
+          </div>
+        </div>
+        <div class="vb-change-grid">
+          {execItems.map((it) => (
+            <div class="vb-change">
+              <span class="vb-change-ico" aria-hidden="true">{it.icon}</span>
+              <div class="vb-change-body">
+                <p class="vb-change-text" set:html={it.html}></p>
+                <a class="vb-change-cta" href={it.href}>{it.cta}</a>
               </div>
-            );
-          })}
-        </div>
-      </section>
-    )}
-
-    <!-- SECCIÓN HISTÓRICO UVA + INFLACIÓN -->
-    <section class="dash-section" id="historico">
-      <h2>📅 Evolución reciente: UVA e inflación mes a mes</h2>
-      <div class="hist-grid">
-        <div class="hist-block">
-          <h3>Valor de la UVA por mes (BCRA)</h3>
-          {uvaHist.length ? (
-            <table class="hist-table">
-              <thead><tr><th>Mes</th><th>UVA</th></tr></thead>
-              <tbody>
-                {uvaHist.map((p) => (
-                  <tr><td>{mesLargo(p.fecha)}</td><td>{'$' + fmtAr(p.valor)}</td></tr>
-                ))}
-              </tbody>
-            </table>
-          ) : <p class="hist-empty">Datos no disponibles en este momento.</p>}
-        </div>
-        <div class="hist-block">
-          <h3>Inflación mensual (IPC INDEC)</h3>
-          {ipcHist.length ? (
-            <table class="hist-table">
-              <thead><tr><th>Mes</th><th>IPC</th></tr></thead>
-              <tbody>
-                {ipcHist.map((p) => (
-                  <tr><td>{mesLargo(p.fecha)}</td><td>{p.valor.toFixed(1) + '%'}</td></tr>
-                ))}
-              </tbody>
-            </table>
-          ) : <p class="hist-empty">Datos no disponibles en este momento.</p>}
-        </div>
-      </div>
-    </section>
-
-    <!-- SECCIÓN PLAZO FIJO / TASAS -->
-    <section class="dash-section" id="plazo-fijo">
-      <h2>🏦 Plazo fijo: mejores TNA por banco{pfMax ? ` (hasta ${String(pfMax).replace('.', ',')}%)` : ''}</h2>
-      {plazoFijoRows.length ? (
-        <div class="tna-bars">
-          {plazoFijoRows.map((x, i) => (
-            <div class={`tna-row${i === 0 ? ' tna-row-top' : ''}`}>
-              <span class="tna-bank">{x.banco}</span>
-              <span class="tna-track" aria-hidden="true"><span class="tna-fill" style={`width:${Math.max(8, Math.round((x.tna / (pfMax || x.tna)) * 100))}%`}></span></span>
-              <span class="tna-val" data-pf-top={i === 0 ? '' : undefined}>{String(x.tna).replace('.', ',')}%</span>
             </div>
           ))}
         </div>
-      ) : (
-        <p class="hist-empty">Las tasas no están disponibles en este momento — miralas en el comparador.</p>
-      )}
-      <p class="tna-note">TNA para plazo fijo tradicional a 30 días, ordenadas de mayor a menor. Fuente: BCRA (vía argentinadatos), actualizado al {buildDate}. La tasa puede cambiar; confirmá la vigente en tu banco.</p>
-      <p class="sec-cta">
-        <a href="/comparador-plazo-fijo" class="cta-link">Ver comparador interactivo →</a>
-        <a href="/plazo-fijo-vs-billeteras" class="cta-link">¿Y contra las billeteras? →</a>
-        <a href="/calculadora-plazo-fijo" class="cta-link">Calculadora individual →</a>
-      </p>
+      </section>
+    )}
+
+    <!-- COTIZACIONES DEL DÓLAR -->
+    <section class="vb-section" id="dolar">
+      <div class="vb-head">
+        <div>
+          <h2>Cotizaciones del dólar</h2>
+          <p class="vb-sub">Compará compra, venta, brecha y fecha de cada mercado.</p>
+        </div>
+        <a class="vb-see" href="/conversor-dolar-argentina">Abrir conversor →</a>
+      </div>
+      <div class="vb-card vb-dolar-card" data-cv="venta">
+        <div class="vb-card-bar">
+          <span class="vb-card-title">Comparación de cotizaciones</span>
+          <div class="vb-cv" role="group" aria-label="Compra o venta">
+            <button type="button" class="vb-cv-btn is-active" data-cv="venta">Venta</button>
+            <button type="button" class="vb-cv-btn" data-cv="compra">Compra</button>
+          </div>
+        </div>
+        <div class="vb-dolar-scroll">
+          <div class="vb-dolar-head" aria-hidden="true">
+            <span>Cotización</span><span class="ta-r">Compra</span><span class="ta-r">Venta</span><span class="ta-r">Brecha</span><span>Actualización</span><span></span>
+          </div>
+          {dolarTable.map((r) => (
+            <a class="vb-dolar-row" href={r.href}>
+              <span class="vb-dolar-coin">
+                <span class="vb-dolar-code">{r.code}</span>
+                <span class="vb-dolar-name"><b>{r.short}</b><small>{r.subtitle}</small></span>
+              </span>
+              <span class="vb-dolar-compra ta-r">{r.compra != null ? `$${fmtAr(r.compra)}` : '—'}</span>
+              <span class="vb-dolar-venta ta-r" data-dolar-key={r.key}>{r.venta != null ? `$${fmtAr(r.venta)}` : '—'}</span>
+              <span class="ta-r">
+                {r.isBase ? (
+                  <span class="vb-brecha-base">Base</span>
+                ) : r.isTaxed ? (
+                  <span class="vb-brecha vb-brecha-tax">+30%</span>
+                ) : (
+                  <span class={`vb-brecha ${r.brechaNum && r.brechaNum > 0.05 ? 'vb-brecha-up' : ''}`} data-brecha-key={r.key}>{r.brechaNum != null ? (r.brechaNum > 0.05 ? '+' : '') + pct1(r.brechaNum) : '—'}</span>
+                )}
+              </span>
+              <span class="vb-dolar-upd">{r.isBase ? <span class="vb-upd-badge">{r.updated}</span> : r.updated}</span>
+              <span class="vb-dolar-chev" aria-hidden="true">›</span>
+            </a>
+          ))}
+        </div>
+        <p class="vb-dolar-note">ⓘ El dólar oficial muestra su fecha de observación porque no todas las fuentes actualizan con la misma frecuencia. Cada dato conserva su propia fuente y horario.</p>
+      </div>
     </section>
 
-    <!-- SECCIÓN ALERTAS (C): avisos en el navegador (localStorage + Notification).
-         Sin backend: se guardan en el dispositivo y se chequean al abrir la página.
-         Para avisos por email, se derivan a las calcs con motor de alertas real. -->
-    <section class="dash-section" id="alertas">
-      <h2>🔔 Alertas de valores</h2>
-      <PushOptIn topic="valores" title="Avisos aunque tengas la página cerrada" body="Una notificación cuando el dólar oficial o el blue se mueven de verdad. Sin spam, te la mandamos nosotros." />
-      <p class="alert-lead">
-        Poné un aviso y te avisamos <strong>en este navegador</strong> —con notificación del sistema si la permitís— cuando se cumpla.
-        Se guarda sólo en tu dispositivo y se chequea cada vez que abrís esta página.
-      </p>
-      <form class="alert-form" id="hcAlertForm" novalidate>
-        <div class="alert-row">
-          <label class="alert-field">
-            <span class="alert-lbl">Métrica</span>
-            <select id="hcAlertMetric" class="alert-input">
+    <!-- INFLACIÓN E ÍNDICES -->
+    <section class="vb-section" id="inflacion">
+      <div class="vb-head">
+        <div>
+          <h2>Inflación e índices</h2>
+          <p class="vb-sub">Valores publicados por INDEC y BCRA, con su período exacto.</p>
+        </div>
+        <a class="vb-see" href="#historico">Ver series completas →</a>
+      </div>
+      <div class="vb-infl-grid">
+        <div class="vb-card vb-ind-card">
+          <div class="vb-card-bar"><span class="vb-card-title">Indicadores principales</span><span class="vb-badge-src">BCRA / INDEC</span></div>
+          <div class="vb-ind-grid">
+            {indicadores.map((ind: any) => (
+              <div class="vb-ind">
+                <span class="vb-ind-label">{ind.label}</span>
+                <span class="vb-ind-val" data-ipc-anual={ind.anual ? '' : undefined} data-tasa={ind.icl ? 'icl' : undefined}>{ind.value}</span>
+                <span class="vb-ind-sub">{ind.sub}</span>
+              </div>
+            ))}
+          </div>
+          {cerCard && (
+            <div class={`vb-cer ${cerCard.future ? 'is-future' : ''}`}>
+              <span class="vb-ind-label">{cerCard.label}</span>
+              <span class="vb-ind-val">{cerCard.value}</span>
+              <span class="vb-ind-sub">{cerCard.sub}</span>
+            </div>
+          )}
+        </div>
+        <div class="vb-card vb-uva-card">
+          <div class="vb-card-bar">
+            <span class="vb-card-title">Evolución UVA</span>
+            <div class="vb-range" role="group" aria-label="Rango del gráfico">
+              <button type="button" class="vb-range-btn is-active" data-range="6m">6 meses</button>
+              <button type="button" class="vb-range-btn" data-range="1a">1 año</button>
+              <button type="button" class="vb-range-btn" data-range="all">Todo</button>
+            </div>
+          </div>
+          <div class="vb-uva-top">
+            <div>
+              <div class="vb-uva-big" id="vb-uva-big">{ultimaUva ? `$${fmtAr(ultimaUva.valor)}` : '—'}</div>
+              <div class="vb-uva-delta" id="vb-uva-delta">{uva6m != null ? `${(uva6m >= 0 ? '+' : '') + uva6m.toFixed(1).replace('.', ',')}% en 6 meses` : ''}</div>
+            </div>
+            <span class="vb-uva-date" id="vb-uva-date">{ultimaUva ? fmtDate(ultimaUva.fecha) : ''}</span>
+          </div>
+          <div class="vb-chart-wrap">
+            {uvaChart ? (
+              <svg id="vb-uva-chart" class="vb-chart" viewBox={`0 0 ${uvaChart.w} ${uvaChart.h}`} preserveAspectRatio="none" role="img" aria-label="Evolución de la UVA">
+                <defs>
+                  <linearGradient id="uvaFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.28" />
+                    <stop offset="100%" stop-color="var(--accent)" stop-opacity="0" />
+                  </linearGradient>
+                </defs>
+                <path id="vb-uva-area" d={uvaChart.area} fill="url(#uvaFill)" />
+                <path id="vb-uva-line" d={uvaChart.line} fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+                <g id="vb-uva-labels" class="vb-chart-x">
+                  {uvaChart.labels.map((l) => (
+                    <text x={l.x} y={uvaChart.h - 6} text-anchor="middle">{l.text}</text>
+                  ))}
+                </g>
+              </svg>
+            ) : <p class="vb-empty">Datos de la UVA no disponibles en este momento.</p>}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TASAS DE PLAZO FIJO -->
+    <section class="vb-section" id="tasas">
+      <div class="vb-head">
+        <div>
+          <h2>Tasas de plazo fijo</h2>
+          <p class="vb-sub">Ranking orientativo para depósitos a 30 días.</p>
+        </div>
+        <a class="vb-see" href="/comparador-plazo-fijo">Comparar todos los bancos →</a>
+      </div>
+      <div class="vb-card vb-pf-card">
+        <div class="vb-card-bar"><span class="vb-card-title">Mejores tasas publicadas</span><span class="vb-badge-src">TNA</span></div>
+        {plazoFijoRows.length ? (
+          <div class="vb-pf-bars">
+            {plazoFijoRows.slice(0, 5).map((x, i) => (
+              <div class={`vb-pf-row${i === 0 ? ' is-top' : ''}`}>
+                <span class="vb-pf-bank">{x.banco}</span>
+                <span class="vb-pf-track" aria-hidden="true"><span class="vb-pf-fill" style={`width:${Math.max(10, Math.round((x.tna / (pfMax || x.tna)) * 100))}%`}></span></span>
+                <span class="vb-pf-val" data-pf-top={i === 0 ? '' : undefined}>{String(x.tna).replace('.', ',')}%</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p class="vb-empty">Las tasas no están disponibles en este momento — miralas en el comparador.</p>
+        )}
+        <div class="vb-pf-foot">
+          <span>Última consulta: hoy, {buildClock}</span>
+          <a href="/calculadora-plazo-fijo" class="vb-see">Simular rendimiento →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ALERTAS -->
+    <section class="vb-section" id="alertas">
+      <div class="vb-alert-banner">
+        <div class="vb-alert-copy">
+          <span class="vb-alert-kicker">Alertas personalizadas</span>
+          <h2>Te avisamos cuando cambie</h2>
+          <p>Elegí un valor y la condición. La alerta se guarda en tu navegador.</p>
+          <p class="vb-alert-fine">Sin pedir teléfono ni compartir tus datos.</p>
+        </div>
+        <form class="vb-alert-form" id="hcAlertForm" novalidate>
+          <label class="vb-alert-field">
+            <span class="vb-alert-lbl">Indicador</span>
+            <select id="hcAlertMetric" class="vb-alert-input">
               <option value="blue">Dólar blue</option>
               <option value="oficial">Dólar oficial</option>
               <option value="bolsa">Dólar MEP</option>
@@ -669,124 +663,378 @@ const faqSchema = {
               <option value="pfmax">Plazo fijo · TNA máxima</option>
             </select>
           </label>
-          <label class="alert-field" id="hcAlertOpField">
-            <span class="alert-lbl">Condición</span>
-            <select id="hcAlertOp" class="alert-input">
-              <option value="gte">Supere</option>
-              <option value="lte">Baje de</option>
+          <label class="vb-alert-field" id="hcAlertOpField">
+            <span class="vb-alert-lbl">Condición</span>
+            <select id="hcAlertOp" class="vb-alert-input">
+              <option value="gte">Supera</option>
+              <option value="lte">Baja de</option>
             </select>
           </label>
-          <label class="alert-field" id="hcAlertValField">
-            <span class="alert-lbl">Valor</span>
-            <input id="hcAlertVal" class="alert-input" type="number" inputmode="decimal" step="any" placeholder="Ej. 1600" />
+          <label class="vb-alert-field" id="hcAlertValField">
+            <span class="vb-alert-lbl">Valor</span>
+            <input id="hcAlertVal" class="vb-alert-input" type="number" inputmode="decimal" step="any" placeholder="$ 1.550" />
           </label>
-          <button type="submit" class="alert-btn">Activar aviso</button>
-        </div>
-        <p class="alert-hint" id="hcAlertChangeHint" hidden>Te avisamos cuando este valor <strong>cambie</strong> respecto del que ves ahora.</p>
-        <p class="alert-msg" id="hcAlertMsg" role="status" aria-live="polite"></p>
-      </form>
-      <ul class="alert-list" id="hcAlertList" aria-label="Alertas activas"></ul>
-      <p class="alert-fallback">
-        ¿Preferís aviso por <strong>email</strong> cuando cambie un valor por normativa? Activalo dentro de la
-        <a href="/calculadora-actualizacion-alquiler-icl">calculadora de alquiler ICL</a> o la
-        <a href="/calculadora-plazo-fijo">de plazo fijo</a> — usan nuestro motor de alertas con recálculo.
-      </p>
+          <button type="submit" class="vb-alert-btn">Crear alerta</button>
+        </form>
+      </div>
+      <p class="vb-alert-hint" id="hcAlertChangeHint" hidden>Te avisamos cuando este valor <strong>cambie</strong> respecto del que ves ahora.</p>
+      <p class="vb-alert-msg" id="hcAlertMsg" role="status" aria-live="polite"></p>
+      <ul class="vb-alert-list" id="hcAlertList" aria-label="Alertas activas"></ul>
     </section>
 
-    <!-- LINKS A CALCS -->
-    <section class="dash-section">
-      <h2>🔗 Calculadoras con estos valores</h2>
-      <div class="link-grid">
-        <a href="/cuanto-perdio-tu-sueldo" class="link-card">
-          <span class="link-title">¿Cuánto perdió tu sueldo?</span>
-          <span class="link-desc">Tu poder de compra en cosas reales, hoy vs hace un año</span>
-        </a>
-        <a href="/reloj-inflacion-argentina" class="link-card">
-          <span class="link-title">Reloj de la inflación</span>
-          <span class="link-desc">A qué ritmo corre y cuánto costará dentro de un año</span>
-        </a>
-        <a href="/conversor-dolar-argentina" class="link-card">
-          <span class="link-title">Dólar tarjeta</span>
-          <span class="link-desc">Calcular qué te cobran con PAIS + Ganancias</span>
-        </a>
-        <a href="/calculadora-actualizacion-inflacion-ipc" class="link-card">
-          <span class="link-title">Inflación IPC</span>
-          <span class="link-desc">Actualizar un monto del pasado a hoy</span>
-        </a>
-        <a href="/calculadora-credito-uva-vs-tasa-fija" class="link-card">
-          <span class="link-title">Crédito UVA</span>
-          <span class="link-desc">Cuota hipotecaria ajustada por UVA</span>
-        </a>
-        <a href="/calculadora-actualizacion-alquiler-icl" class="link-card">
-          <span class="link-title">Alquiler ICL</span>
-          <span class="link-desc">Ajuste anual por índice BCRA</span>
-        </a>
-        <a href="/calculadora-plazo-fijo" class="link-card">
-          <span class="link-title">Plazo fijo</span>
-          <span class="link-desc">Rendimiento en $ con TNA actual</span>
-        </a>
-        <a href="/calculadora-cuota-prestamo" class="link-card">
-          <span class="link-title">Préstamo personal</span>
-          <span class="link-desc">Cuota con tasa promedio bancos</span>
-        </a>
+    <!-- USÁ ESTOS VALORES -->
+    <section class="vb-section" id="calculadoras">
+      <div class="vb-head">
+        <div>
+          <h2>Usá estos valores en una cuenta</h2>
+          <p class="vb-sub">Calculadoras precargadas con el último dato disponible.</p>
+        </div>
+      </div>
+      <div class="vb-usa-grid">
+        {usaCards.map((c) => (
+          <a class="vb-usa" href={c.href}>
+            <span class="vb-usa-ico" aria-hidden="true">{c.icon}</span>
+            <h3>{c.title}</h3>
+            <p>{c.desc}</p>
+            <span class="vb-usa-cta">{c.cta} →</span>
+          </a>
+        ))}
       </div>
     </section>
 
-    <section class="dash-section">
-      <h2>📊 Tablas de datos 2026 (citables, CC-BY)</h2>
-      <div class="link-grid">
-        <a href="/datos-ganancias-2026" class="link-card">
-          <span class="link-title">Ganancias 2026</span>
-          <span class="link-desc">Escala del impuesto y deducciones art. 30</span>
-        </a>
-        <a href="/datos-topes-sipa-2026" class="link-card">
-          <span class="link-title">Topes SIPA 2026</span>
-          <span class="link-desc">Base imponible máxima de aportes</span>
-        </a>
-        <a href="/datos-aguinaldo-2026" class="link-card">
-          <span class="link-title">Aguinaldo (SAC) 2026</span>
-          <span class="link-desc">Fechas legales, fórmula y ejemplos</span>
-        </a>
-        <a href="/datos-monotributo-2026" class="link-card">
-          <span class="link-title">Monotributo 2026</span>
-          <span class="link-desc">Categorías, topes y cuotas A-K</span>
-        </a>
-        <a href="/datos-salario-minimo-latam-2026" class="link-card">
-          <span class="link-title">Salario mínimo LATAM</span>
-          <span class="link-desc">AR, BR, PE y EC comparados con fuentes</span>
-        </a>
+    <!-- FUENTES Y METODOLOGÍA -->
+    <section class="vb-section" id="fuentes">
+      <div class="vb-card vb-sources">
+        <h2>Fuentes y metodología</h2>
+        <p>Cada indicador muestra fuente, fecha de observación y frecuencia propias. Los valores son informativos y pueden diferir de la cotización final de una entidad.</p>
+        <div class="vb-source-badges">
+          <a class="vb-source-badge" href="https://www.bcra.gob.ar" target="_blank" rel="noopener">BCRA</a>
+          <a class="vb-source-badge" href="https://www.indec.gob.ar" target="_blank" rel="noopener">INDEC</a>
+          <a class="vb-source-badge" href="https://dolarapi.com" target="_blank" rel="noopener">DólarAPI</a>
+          <span class="vb-source-badge">Entidades financieras</span>
+          <a class="vb-source-badge vb-source-more" href="#historico">Ver metodología →</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTÓRICO (crawleable, long-tail) -->
+    <section class="vb-section vb-secondary" id="historico">
+      <div class="vb-head"><div><h2>Evolución mes a mes: UVA e inflación</h2></div></div>
+      <div class="vb-hist-grid">
+        <div class="vb-card">
+          <h3 class="vb-hist-h3">Valor de la UVA por mes (BCRA)</h3>
+          {uvaHist.length ? (
+            <table class="vb-hist-table">
+              <thead><tr><th>Mes</th><th>UVA</th></tr></thead>
+              <tbody>{uvaHist.map((p) => (<tr><td>{mesLargo(p.fecha)}</td><td>{'$' + fmtAr(p.valor)}</td></tr>))}</tbody>
+            </table>
+          ) : <p class="vb-empty">Datos no disponibles en este momento.</p>}
+        </div>
+        <div class="vb-card">
+          <h3 class="vb-hist-h3">Inflación mensual (IPC INDEC)</h3>
+          {ipcHist.length ? (
+            <table class="vb-hist-table">
+              <thead><tr><th>Mes</th><th>IPC</th></tr></thead>
+              <tbody>{ipcHist.map((p) => (<tr><td>{mesLargo(p.fecha)}</td><td>{p.valor.toFixed(1) + '%'}</td></tr>))}</tbody>
+            </table>
+          ) : <p class="vb-empty">Datos no disponibles en este momento.</p>}
+        </div>
+      </div>
+    </section>
+
+    <!-- MÁS CALCULADORAS Y TABLAS (interlinking) -->
+    <section class="vb-section vb-secondary">
+      <div class="vb-head"><div><h2>Más calculadoras y tablas de datos</h2></div></div>
+      <div class="vb-link-grid">
+        <a href="/cuanto-perdio-tu-sueldo" class="vb-link"><span class="vb-link-title">¿Cuánto perdió tu sueldo?</span><span class="vb-link-desc">Tu poder de compra, hoy vs hace un año</span></a>
+        <a href="/reloj-inflacion-argentina" class="vb-link"><span class="vb-link-title">Reloj de la inflación</span><span class="vb-link-desc">A qué ritmo corre y cuánto costará en un año</span></a>
+        <a href="/calculadora-credito-uva-vs-tasa-fija" class="vb-link"><span class="vb-link-title">Crédito UVA</span><span class="vb-link-desc">Cuota hipotecaria ajustada por UVA</span></a>
+        <a href="/calculadora-cuota-prestamo" class="vb-link"><span class="vb-link-title">Préstamo personal</span><span class="vb-link-desc">Cuota con tasa promedio de bancos</span></a>
+        <a href="/datos-ganancias-2026" class="vb-link"><span class="vb-link-title">Ganancias 2026</span><span class="vb-link-desc">Escala del impuesto y deducciones</span></a>
+        <a href="/datos-monotributo-2026" class="vb-link"><span class="vb-link-title">Monotributo 2026</span><span class="vb-link-desc">Categorías, topes y cuotas A-K</span></a>
+        <a href="/datos-aguinaldo-2026" class="vb-link"><span class="vb-link-title">Aguinaldo (SAC) 2026</span><span class="vb-link-desc">Fechas legales, fórmula y ejemplos</span></a>
+        <a href="/datos-salario-minimo-latam-2026" class="vb-link"><span class="vb-link-title">Salario mínimo LATAM</span><span class="vb-link-desc">AR, BR, PE y EC comparados</span></a>
       </div>
     </section>
 
     <!-- FAQ -->
-    <section class="dash-section faq-section">
-      <h2>❓ Preguntas frecuentes</h2>
-      <div class="faq-list">
+    <section class="vb-section vb-secondary">
+      <div class="vb-head"><div><h2>Preguntas frecuentes</h2></div></div>
+      <div class="vb-faq-list">
         {faqs.map((f) => (
-          <details class="faq-item">
+          <details class="vb-faq-item">
             <summary>{f.q}</summary>
-            <div class="faq-answer" set:html={f.a}></div>
+            <div class="vb-faq-a" set:html={f.a}></div>
           </details>
         ))}
       </div>
-      <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} is:inline />
-      <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} is:inline />
     </section>
 
-    <section class="dash-section sources" id="fuentes">
-      <h3>Fuentes y metodología</h3>
-      <ul class="sources-list">
-        <li><a href="https://www.bcra.gob.ar" target="_blank" rel="noopener">BCRA — Banco Central de la República Argentina</a> (cotización oficial, UVA)</li>
-        <li><a href="https://www.indec.gob.ar" target="_blank" rel="noopener">INDEC</a> (IPC Nacional)</li>
-        <li><a href="https://dolarapi.com" target="_blank" rel="noopener">dolarapi.com</a> (consolida cotizaciones)</li>
-        <li><a href="https://argentinadatos.com" target="_blank" rel="noopener">argentinadatos.com</a> (inflación, UVA)</li>
-      </ul>
-      <p class="disclaimer">Los valores son informativos y pueden tener desfase de unas horas. Para operaciones grandes consultá siempre con tu banco o la fuente oficial.</p>
-    </section>
+    <DatosHoyNav current="/valores-bcra" />
   </article>
+
+  <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} is:inline />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} is:inline />
+  <script id="vb-uva-data" type="application/json" set:html={JSON.stringify(uvaEmbed)}></script>
 
   <Footer slot="footer" />
 </Layout>
+
+<style is:global>
+  /* ===== Valores BCRA e INDEC — tablero esmeralda (mockup aprobado 2026-07-12) ===== */
+  :global(body[data-page-type="dashboard"]) { background: #eef2f6; }
+  :global(html[data-theme="dark"] body[data-page-type="dashboard"]) { background: #0b1220; }
+
+  .vb { max-width: 1120px; margin: 0 auto; padding: 0 0 3rem; color: var(--text); }
+  .vb-crumb { font-size: 0.8125rem; color: var(--text-subtle); margin: 0 0 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+  .vb-crumb a { color: var(--text-muted); text-decoration: none; }
+  .vb-crumb a:hover { color: var(--accent-strong); text-decoration: underline; }
+  .vb-crumb .current { color: var(--text); font-weight: 500; }
+  .vb-crumb .sep { color: var(--border-strong); }
+
+  /* HERO */
+  .vb-hero {
+    position: relative; overflow: hidden;
+    display: grid; grid-template-columns: 1.55fr 1fr; gap: 2rem; align-items: stretch;
+    padding: 2rem 2.25rem; border-radius: 20px;
+    background:
+      radial-gradient(120% 130% at 88% 8%, rgba(52, 211, 153, 0.20), transparent 55%),
+      radial-gradient(90% 120% at 5% 100%, rgba(13, 148, 136, 0.18), transparent 60%),
+      linear-gradient(135deg, #072a20 0%, #0b3b2c 52%, #0e4835 100%);
+    color: #eaf6f0;
+    box-shadow: 0 18px 40px -22px rgba(6, 40, 30, 0.6);
+  }
+  .vb-kicker { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: #7fe8c0; }
+  .vb-hero h1 { font-size: clamp(2rem, 4vw, 2.9rem); line-height: 1.05; letter-spacing: -0.02em; margin: 0.55rem 0 0.7rem; font-weight: 850; color: #fff; }
+  .vb-lead { font-size: 1.02rem; line-height: 1.55; color: #c8e6da; max-width: 48ch; margin: 0 0 1.35rem; }
+  .vb-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .vb-pill {
+    display: inline-flex; align-items: center; gap: 0.45rem;
+    padding: 0.4rem 0.8rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
+    background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16); color: #e6f2ed;
+  }
+  .vb-dot { width: 8px; height: 8px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.22); animation: vbPulse 2.2s ease-in-out infinite; flex: none; }
+  .vb-dot-static { animation: none; box-shadow: none; }
+  @keyframes vbPulse { 0%, 100% { box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.25); } 50% { box-shadow: 0 0 0 6px rgba(52, 211, 153, 0.05); } }
+
+  .vb-status {
+    background: rgba(255, 255, 255, 0.055); border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 16px; padding: 1.15rem 1.25rem; display: flex; flex-direction: column; gap: 0.7rem;
+  }
+  .vb-status-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+  .vb-status-kicker { font-size: 0.66rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #a9d9c8; }
+  .vb-status-badge { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #6ee7b7; background: rgba(52, 211, 153, 0.14); border: 1px solid rgba(52, 211, 153, 0.32); padding: 0.2rem 0.55rem; border-radius: 999px; }
+  .vb-status-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .vb-status-rows li { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.55rem 0; border-top: 1px solid rgba(255, 255, 255, 0.09); }
+  .vb-status-rows li:first-child { border-top: 0; }
+  .vb-src-name { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.86rem; font-weight: 600; color: #eaf6f0; }
+  .vb-src-fresh { font-size: 0.8rem; color: #b7d6ca; font-variant-numeric: tabular-nums; }
+  .vb-refresh {
+    margin-top: 0.35rem; width: 100%; padding: 0.6rem; border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff;
+    font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: background-color 0.15s;
+  }
+  .vb-refresh:hover { background: rgba(255, 255, 255, 0.18); }
+
+  /* TABS */
+  .vb-tabs {
+    display: flex; gap: 0.25rem; flex-wrap: wrap; margin: 1rem 0 1.75rem; padding: 0.35rem;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow-sm);
+    position: sticky; top: 0.5rem; z-index: 5;
+  }
+  .vb-tabs a { font-size: 0.86rem; font-weight: 650; color: var(--text-muted); text-decoration: none; padding: 0.5rem 0.95rem; border-radius: 10px; white-space: nowrap; transition: background-color 0.15s, color 0.15s; }
+  .vb-tabs a:hover { background: var(--bg-soft); color: var(--text); }
+  .vb-tabs a.is-active { background: var(--accent-soft); color: var(--accent-strong); font-weight: 750; }
+
+  .vb-section { margin-bottom: 2.25rem; scroll-margin-top: 4rem; }
+  .vb-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 1.1rem; }
+  .vb-head h2 { font-size: 1.4rem; font-weight: 820; letter-spacing: -0.02em; margin: 0; }
+  .vb-sub { font-size: 0.92rem; color: var(--text-muted); margin: 0.3rem 0 0; }
+  .vb-see { font-size: 0.86rem; font-weight: 700; color: var(--accent-strong); white-space: nowrap; text-decoration: none; }
+  .vb-see:hover { text-decoration: underline; }
+
+  .vb-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.4rem; box-shadow: var(--shadow-sm); }
+  .vb-card-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.1rem; }
+  .vb-card-title { font-size: 1rem; font-weight: 800; }
+  .vb-badge-src { font-size: 0.64rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); background: var(--bg-muted); border: 1px solid var(--border); padding: 0.24rem 0.55rem; border-radius: 999px; }
+
+  /* HOY DE UN VISTAZO */
+  .vb-glance { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  .vb-gcard { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.2rem 1.25rem; box-shadow: var(--shadow-sm); }
+  .vb-gcard.is-featured { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--shadow-sm); background: linear-gradient(180deg, var(--accent-soft), var(--bg-card) 60%); }
+  html[data-theme="dark"] .vb-gcard.is-featured { background: var(--bg-card); }
+  .vb-gcard-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.65rem; }
+  .vb-gcard-label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+  .vb-tag { font-size: 0.58rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); background: var(--bg-muted); border-radius: 999px; padding: 0.2rem 0.5rem; }
+  .vb-gcard-val { font-size: 1.85rem; font-weight: 820; font-family: var(--font-num); font-variant-numeric: tabular-nums; letter-spacing: -0.015em; line-height: 1.05; }
+  .vb-gcard-note { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-top: 0.4rem; }
+  .vb-gcard-note.vb-note-pos { color: var(--success-text); }
+  .vb-gcard-note.vb-note-neg { color: var(--danger); }
+  .vb-gcard-foot { font-size: 0.72rem; color: var(--text-subtle); margin-top: 0.55rem; padding-top: 0.55rem; border-top: 1px solid var(--border); }
+
+  /* QUÉ CAMBIÓ */
+  .vb-change-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .vb-change { display: flex; gap: 0.85rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.2rem 1.3rem; box-shadow: var(--shadow-sm); }
+  .vb-change-ico { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--accent-soft); color: var(--accent-strong); font-size: 1rem; font-weight: 800; flex: none; }
+  .vb-change-body { display: flex; flex-direction: column; gap: 0.5rem; }
+  .vb-change-text { font-size: 0.9rem; line-height: 1.5; color: var(--text); margin: 0; }
+  .vb-change-cta { font-size: 0.82rem; font-weight: 700; color: var(--accent-strong); text-decoration: none; }
+  .vb-change-cta:hover { text-decoration: underline; }
+
+  /* DÓLAR TABLE */
+  .vb-dolar-card { padding: 1.1rem 1.2rem; }
+  .vb-cv, .vb-range { display: flex; gap: 0.15rem; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 10px; padding: 0.2rem; }
+  .vb-cv-btn, .vb-range-btn { font-size: 0.78rem; font-weight: 700; padding: 0.35rem 0.7rem; border-radius: 7px; border: 0; background: transparent; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+  .vb-cv-btn.is-active, .vb-range-btn.is-active { background: var(--bg-card); color: var(--accent-strong); box-shadow: var(--shadow-sm); }
+  .vb-dolar-scroll { overflow-x: auto; }
+  .vb-dolar-head, .vb-dolar-row { display: grid; grid-template-columns: minmax(160px, 2fr) minmax(90px, 1fr) minmax(90px, 1fr) minmax(72px, 0.8fr) minmax(110px, 1.1fr) 20px; gap: 0.5rem 0.85rem; align-items: center; }
+  .vb-dolar-head { padding: 0.55rem 0.4rem; border-bottom: 1px solid var(--border); font-size: 0.64rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-subtle); }
+  .ta-r { text-align: right; }
+  .vb-dolar-row { padding: 0.7rem 0.4rem; border-bottom: 1px solid var(--border); text-decoration: none; color: var(--text); font-size: 0.92rem; transition: background-color 0.12s; }
+  .vb-dolar-row:last-child { border-bottom: 0; }
+  .vb-dolar-row:hover { background: var(--bg-soft); }
+  .vb-dolar-coin { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
+  .vb-dolar-code { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 8px; background: var(--accent-soft); color: var(--accent-strong); font-size: 0.68rem; font-weight: 800; flex: none; }
+  .vb-dolar-name { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+  .vb-dolar-name b { font-size: 0.9rem; font-weight: 700; }
+  .vb-dolar-name small { font-size: 0.72rem; color: var(--text-subtle); }
+  .vb-dolar-compra, .vb-dolar-venta { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-weight: 700; }
+  .vb-dolar-card[data-cv="venta"] .vb-dolar-compra { color: var(--text-subtle); font-weight: 500; }
+  .vb-dolar-card[data-cv="compra"] .vb-dolar-venta { color: var(--text-subtle); font-weight: 500; }
+  .vb-brecha { font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-muted); }
+  .vb-brecha-up { color: var(--danger); }
+  html[data-theme="dark"] .vb-brecha-up { color: #fca5a5; }
+  .vb-brecha-tax { color: var(--warning-text); }
+  .vb-brecha-base { font-size: 0.78rem; font-weight: 700; color: var(--success-text); }
+  .vb-dolar-upd { font-size: 0.76rem; color: var(--text-subtle); }
+  .vb-upd-badge { font-size: 0.62rem; font-weight: 800; letter-spacing: 0.04em; color: var(--warning-text); background: var(--warning-soft); border: 1px solid color-mix(in srgb, var(--warning) 25%, transparent); border-radius: 6px; padding: 0.15rem 0.4rem; }
+  .vb-dolar-chev { color: var(--text-subtle); font-size: 1.1rem; text-align: center; }
+  .vb-dolar-note { margin: 0.9rem 0 0; padding: 0.7rem 0.85rem; font-size: 0.76rem; line-height: 1.5; color: var(--warning-text); background: var(--warning-soft); border: 1px solid color-mix(in srgb, var(--warning) 20%, transparent); border-radius: 10px; }
+
+  /* INFLACIÓN E ÍNDICES */
+  .vb-infl-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.25rem; align-items: start; }
+  .vb-ind-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .vb-ind { background: var(--bg-soft); border: 1px solid var(--border); border-radius: 12px; padding: 0.85rem 0.9rem; display: flex; flex-direction: column; gap: 0.15rem; }
+  .vb-ind-label { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; }
+  .vb-ind-val { font-size: 1.5rem; font-weight: 820; font-family: var(--font-num); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; line-height: 1.1; }
+  .vb-ind-sub { font-size: 0.72rem; color: var(--text-subtle); }
+  .vb-cer { margin-top: 0.75rem; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 12px; padding: 0.85rem 0.9rem; display: flex; flex-direction: column; gap: 0.15rem; }
+  .vb-cer.is-future { background: var(--warning-soft); border-color: color-mix(in srgb, var(--warning) 25%, transparent); }
+  .vb-cer.is-future .vb-ind-sub { color: var(--warning-text); }
+
+  .vb-uva-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem; }
+  .vb-uva-big { font-size: 1.85rem; font-weight: 820; font-family: var(--font-num); font-variant-numeric: tabular-nums; letter-spacing: -0.015em; }
+  .vb-uva-delta { font-size: 0.82rem; font-weight: 600; color: var(--success-text); margin-top: 0.15rem; }
+  .vb-uva-date { font-size: 0.76rem; color: var(--text-subtle); white-space: nowrap; }
+  .vb-chart-wrap { width: 100%; }
+  .vb-chart { width: 100%; height: auto; display: block; }
+  .vb-chart-x text { font-size: 11px; fill: var(--text-subtle); font-family: var(--font-body); }
+
+  /* PLAZO FIJO */
+  .vb-pf-bars { display: flex; flex-direction: column; }
+  .vb-pf-row { display: grid; grid-template-columns: 150px 1fr 64px; align-items: center; gap: 14px; padding: 0.6rem 0; border-bottom: 1px solid var(--border); }
+  .vb-pf-row:last-child { border-bottom: 0; }
+  .vb-pf-bank { font-size: 0.86rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .vb-pf-track { height: 9px; background: var(--bg-muted); border-radius: 999px; overflow: hidden; }
+  .vb-pf-fill { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+  .vb-pf-val { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.92rem; text-align: right; color: var(--accent-strong); }
+  .vb-pf-row.is-top .vb-pf-val { color: var(--success-text); }
+  .vb-pf-foot { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 0.9rem; padding-top: 0.85rem; border-top: 1px solid var(--border); font-size: 0.78rem; color: var(--text-subtle); }
+  @media (max-width: 520px) { .vb-pf-row { grid-template-columns: 92px 1fr 52px; gap: 9px; } }
+
+  /* ALERTAS */
+  .vb-alert-banner {
+    display: grid; grid-template-columns: 1fr 1.15fr; gap: 1.75rem; align-items: center;
+    padding: 1.75rem 2rem; border-radius: 20px;
+    background:
+      radial-gradient(120% 130% at 92% 10%, rgba(52, 211, 153, 0.18), transparent 55%),
+      linear-gradient(135deg, #072a20 0%, #0b3b2c 60%, #0e4835 100%);
+    color: #eaf6f0;
+  }
+  .vb-alert-kicker { font-size: 0.66rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #7fe8c0; }
+  .vb-alert-banner h2 { font-size: 1.5rem; font-weight: 820; color: #fff; margin: 0.35rem 0 0.5rem; }
+  .vb-alert-banner p { font-size: 0.92rem; color: #c8e6da; margin: 0; line-height: 1.5; }
+  .vb-alert-fine { font-size: 0.78rem !important; color: #9fc7b7 !important; margin-top: 0.4rem !important; }
+  .vb-alert-form { display: grid; grid-template-columns: 1.1fr 1fr 1fr auto; gap: 0.75rem; align-items: end; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 14px; padding: 1rem; }
+  .vb-alert-field { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+  .vb-alert-lbl { font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #a9d9c8; }
+  .vb-alert-input { font-size: 0.86rem; padding: 0.5rem 0.6rem; border-radius: 9px; border: 1px solid rgba(255, 255, 255, 0.22); background: rgba(255, 255, 255, 0.95); color: #0f172a; min-width: 0; width: 100%; }
+  .vb-alert-btn { font-size: 0.86rem; font-weight: 800; padding: 0.6rem 1.1rem; border-radius: 9px; border: 0; background: var(--accent); color: #fff; cursor: pointer; white-space: nowrap; transition: background-color 0.15s, transform 0.1s; }
+  .vb-alert-btn:hover { background: var(--accent-hover); }
+  .vb-alert-btn:active { transform: translateY(1px); }
+  .vb-alert-hint { margin: 0.7rem 0 0; font-size: 0.8rem; color: var(--text-muted); }
+  .vb-alert-msg { margin: 0.6rem 0 0; font-size: 0.85rem; min-height: 1em; font-weight: 600; }
+  .vb-alert-msg.alert-msg-ok { color: var(--success-text); }
+  .vb-alert-msg.alert-msg-err { color: var(--danger); }
+  .vb-alert-list { list-style: none; margin: 0.9rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .vb-alert-list .alert-chip { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; padding: 0.3rem 0.4rem 0.3rem 0.7rem; border-radius: 999px; background: var(--accent-soft); border: 1px solid var(--border); color: var(--text); }
+  .vb-alert-list .alert-chip-fired { background: var(--success-soft); border-color: var(--success-text); }
+  .vb-alert-list .alert-chip-x { border: none; background: transparent; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; line-height: 1; padding: 0.15rem 0.3rem; border-radius: 999px; }
+  .vb-alert-list .alert-chip-x:hover { background: var(--danger-soft); color: var(--danger); }
+
+  /* USÁ ESTOS VALORES */
+  .vb-usa-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  .vb-usa { display: flex; flex-direction: column; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.3rem; box-shadow: var(--shadow-sm); text-decoration: none; color: var(--text); transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s; }
+  .vb-usa:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--accent); }
+  .vb-usa-ico { display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; background: var(--accent-soft); color: var(--accent-strong); font-size: 1rem; font-weight: 800; margin-bottom: 0.8rem; }
+  .vb-usa h3 { font-size: 0.98rem; font-weight: 750; margin: 0 0 0.3rem; }
+  .vb-usa p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.45; margin: 0 0 0.85rem; flex: 1; }
+  .vb-usa-cta { font-size: 0.82rem; font-weight: 700; color: var(--accent-strong); }
+
+  /* FUENTES */
+  .vb-sources h2 { font-size: 1.1rem; font-weight: 800; margin: 0 0 0.6rem; }
+  .vb-sources p { font-size: 0.88rem; color: var(--text-muted); line-height: 1.55; margin: 0 0 1rem; max-width: 70ch; }
+  .vb-source-badges { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .vb-source-badge { font-size: 0.8rem; font-weight: 650; color: var(--text-muted); background: var(--bg-soft); border: 1px solid var(--border); border-radius: 999px; padding: 0.4rem 0.85rem; text-decoration: none; }
+  .vb-source-badge:hover { border-color: var(--accent); color: var(--accent-strong); }
+  .vb-source-more { color: var(--accent-strong); }
+
+  /* SECUNDARIO (histórico / links / faq) */
+  .vb-secondary .vb-head h2 { font-size: 1.15rem; }
+  .vb-hist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  .vb-hist-h3 { font-size: 0.92rem; font-weight: 700; margin: 0 0 0.7rem; }
+  .vb-hist-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .vb-hist-table th, .vb-hist-table td { padding: 0.5rem 0.4rem; text-align: left; }
+  .vb-hist-table thead th { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-subtle); border-bottom: 1px solid var(--border); }
+  .vb-hist-table tbody tr { border-bottom: 1px solid var(--border); }
+  .vb-hist-table tbody td:first-child { text-transform: capitalize; color: var(--text-muted); }
+  .vb-hist-table tbody td:last-child { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  .vb-link-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+  .vb-link { display: flex; flex-direction: column; gap: 0.2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 0.85rem 1rem; text-decoration: none; color: var(--text); transition: border-color 0.15s, background-color 0.15s; }
+  .vb-link:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .vb-link-title { font-size: 0.88rem; font-weight: 700; }
+  .vb-link-desc { font-size: 0.76rem; color: var(--text-muted); }
+
+  .vb-faq-list { display: flex; flex-direction: column; gap: 0.4rem; }
+  .vb-faq-item { border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card); overflow: hidden; }
+  .vb-faq-item summary { cursor: pointer; font-weight: 650; font-size: 0.92rem; color: var(--text); list-style: none; padding: 0.9rem 1.1rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .vb-faq-item summary::-webkit-details-marker { display: none; }
+  .vb-faq-item summary::after { content: '+'; color: var(--text-subtle); font-size: 1.2rem; line-height: 1; flex: none; }
+  .vb-faq-item[open] summary { color: var(--accent-strong); }
+  .vb-faq-item[open] summary::after { content: '−'; }
+  .vb-faq-a { font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; padding: 0 1.1rem 1.1rem; max-width: 74ch; }
+  .vb-faq-a a { color: var(--accent-strong); font-weight: 600; }
+
+  .vb-empty { font-size: 0.85rem; color: var(--text-subtle); }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .vb-hero, .vb-alert-banner { grid-template-columns: 1fr; gap: 1.35rem; padding: 1.6rem; }
+    .vb-glance, .vb-usa-grid, .vb-link-grid { grid-template-columns: repeat(2, 1fr); }
+    .vb-change-grid { grid-template-columns: 1fr; }
+    .vb-infl-grid, .vb-hist-grid { grid-template-columns: 1fr; }
+    .vb-alert-form { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 680px) {
+    .vb-hero h1 { font-size: 1.9rem; }
+    .vb-glance, .vb-usa-grid, .vb-link-grid { grid-template-columns: 1fr; }
+    .vb-alert-form { grid-template-columns: 1fr; }
+    .vb-tabs { overflow-x: auto; }
+    .vb-dolar-head, .vb-dolar-row { grid-template-columns: minmax(120px, 1.6fr) minmax(80px, 1fr) minmax(64px, 0.7fr) 16px; }
+    .vb-dolar-head > :nth-child(2), .vb-dolar-head > :nth-child(5), .vb-dolar-compra, .vb-dolar-upd { display: none; }
+  }
+</style>
 
 <script>
   // Refresh híbrido: el HTML llega con los valores del último build (crawleables);
@@ -795,7 +1043,7 @@ const faqSchema = {
     const fmt = (n: number) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(n);
     const J = async (u: string) => { const r = await fetch(u); if (!r.ok) throw new Error('http'); return r.json(); };
     async function refresh() {
-      if (!document.querySelector('.dashboard [data-uva], .dashboard [data-dolar-key]')) return;
+      if (!document.querySelector('.vb [data-uva], .vb [data-dolar-key]')) return;
       const [dol, uva, ipc, ipcA] = await Promise.allSettled([
         J('https://dolarapi.com/v1/dolares'),
         J('https://api.argentinadatos.com/v1/finanzas/indices/uva'),
@@ -814,27 +1062,24 @@ const faqSchema = {
         });
         if (oficial) document.querySelectorAll('[data-brecha-key]').forEach((el) => {
           const d = map[el.getAttribute('data-brecha-key') || ''];
-          if (d && d.venta) el.textContent = '+' + ((d.venta / (oficial as number) - 1) * 100).toFixed(1) + '%';
+          if (d && d.venta) el.textContent = '+' + ((d.venta / (oficial as number) - 1) * 100).toFixed(1).replace('.', ',') + '%';
         });
       }
       const last = (s: PromiseSettledResult<any>) =>
         (s.status === 'fulfilled' && Array.isArray(s.value) && s.value.length) ? s.value[s.value.length - 1] : null;
       const u = last(uva); if (u) { const el = document.querySelector('[data-uva]'); if (el) el.textContent = '$' + fmt(u.valor); }
-      const m = last(ipc); if (m) { const el = document.querySelector('[data-ipc-mensual]'); if (el) el.textContent = m.valor.toFixed(1) + '%'; }
-      const a = last(ipcA); if (a) { const el = document.querySelector('[data-ipc-anual]'); if (el) el.textContent = a.valor.toFixed(1) + '%'; }
+      const m = last(ipc); if (m) { const el = document.querySelector('[data-ipc-mensual]'); if (el) el.textContent = m.valor.toFixed(1).replace('.', ',') + '%'; }
+      const a = last(ipcA); if (a) { const el = document.querySelector('[data-ipc-anual]'); if (el) el.textContent = a.valor.toFixed(1).replace('.', ',') + '%'; }
       const t = document.querySelector('[data-updated]');
       if (t && okDol) {
         const now = new Date();
-        t.textContent = 'hoy ' + now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+        t.textContent = 'Actualizado hoy, ' + now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
         t.setAttribute('datetime', now.toISOString());
       }
       try { checkAlerts(); } catch (e) { /* noop */ }
     }
 
-    // ── ALERTAS EN EL NAVEGADOR (C) ─────────────────────────────────────────
-    // Sin backend: se guardan en localStorage y se chequean contra el valor que
-    // se ve en pantalla (ya actualizado por refresh()). Notificación del sistema
-    // si el usuario la permite; si no, banner en la lista.
+    // ── ALERTAS EN EL NAVEGADOR (localStorage + Notification) ──────────────
     const LS_KEY = 'hc_bcra_alerts_v1';
     const METRIC_META: Record<string, { label: string; sel: string; unit: string; type: 'threshold' | 'change' }> = {
       blue: { label: 'Dólar blue', sel: '[data-dolar-key="blue"]', unit: '$', type: 'threshold' },
@@ -853,9 +1098,7 @@ const faqSchema = {
       const n = parseFloat(raw);
       return isFinite(n) ? n : null;
     }
-    function loadAlerts(): any[] {
-      try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch { return []; }
-    }
+    function loadAlerts(): any[] { try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch { return []; } }
     function saveAlerts(a: any[]) { localStorage.setItem(LS_KEY, JSON.stringify(a)); }
     function fmtNum(n: number, unit: string): string {
       const s = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(n);
@@ -863,14 +1106,10 @@ const faqSchema = {
     }
     function notify(title: string, body: string) {
       try {
-        if ('Notification' in window && Notification.permission === 'granted') {
-          new Notification(title, { body, icon: '/favicon.svg' });
-          return;
-        }
+        if ('Notification' in window && Notification.permission === 'granted') { new Notification(title, { body, icon: '/favicon.svg' }); return; }
       } catch { /* noop */ }
-      // Fallback visible: marcar la fila y avisar en el status.
       const msg = document.getElementById('hcAlertMsg');
-      if (msg) { msg.textContent = '🔔 ' + title + ' — ' + body; msg.className = 'alert-msg alert-msg-ok'; }
+      if (msg) { msg.textContent = '🔔 ' + title + ' — ' + body; msg.className = 'vb-alert-msg alert-msg-ok'; }
     }
     function checkAlerts() {
       const alerts = loadAlerts();
@@ -883,27 +1122,17 @@ const faqSchema = {
         if (cur == null) continue;
         if (meta.type === 'threshold') {
           const hit = al.op === 'lte' ? cur <= al.val : cur >= al.val;
-          if (hit && !al.fired) {
-            al.fired = true; changed = true;
-            notify('Alerta: ' + meta.label, meta.label + ' ' + (al.op === 'lte' ? 'bajó a' : 'superó') + ' ' + fmtNum(cur, meta.unit) + ' (umbral ' + fmtNum(al.val, meta.unit) + ')');
-          } else if (!hit && al.fired) {
-            al.fired = false; changed = true; // rearma cuando vuelve del otro lado
-          }
-        } else { // change
+          if (hit && !al.fired) { al.fired = true; changed = true; notify('Alerta: ' + meta.label, meta.label + ' ' + (al.op === 'lte' ? 'bajó a' : 'superó') + ' ' + fmtNum(cur, meta.unit) + ' (umbral ' + fmtNum(al.val, meta.unit) + ')'); }
+          else if (!hit && al.fired) { al.fired = false; changed = true; }
+        } else {
           if (al.base == null) { al.base = cur; changed = true; }
-          else if (Math.abs(cur - al.base) > 1e-6) {
-            notify('Alerta: ' + meta.label, meta.label + ' cambió de ' + fmtNum(al.base, meta.unit) + ' a ' + fmtNum(cur, meta.unit));
-            al.base = cur; changed = true;
-          }
+          else if (Math.abs(cur - al.base) > 1e-6) { notify('Alerta: ' + meta.label, meta.label + ' cambió de ' + fmtNum(al.base, meta.unit) + ' a ' + fmtNum(cur, meta.unit)); al.base = cur; changed = true; }
         }
       }
       if (changed) saveAlerts(alerts);
       renderAlerts();
     }
-    function removeAlert(id: string) {
-      saveAlerts(loadAlerts().filter((a: any) => a.id !== id));
-      renderAlerts();
-    }
+    function removeAlert(id: string) { saveAlerts(loadAlerts().filter((a: any) => a.id !== id)); renderAlerts(); }
     function renderAlerts() {
       const list = document.getElementById('hcAlertList');
       if (!list) return;
@@ -954,7 +1183,7 @@ const faqSchema = {
         const id = metric + '-' + Date.now().toString(36);
         if (meta.type === 'threshold') {
           const val = parseFloat(valInput.value);
-          if (!isFinite(val)) { msg.textContent = 'Poné un valor numérico.'; msg.className = 'alert-msg alert-msg-err'; return; }
+          if (!isFinite(val)) { msg.textContent = 'Poné un valor numérico.'; msg.className = 'vb-alert-msg alert-msg-err'; return; }
           const op = (document.getElementById('hcAlertOp') as HTMLSelectElement).value;
           alerts.push({ id, metric, op, val, fired: false });
           msg.textContent = 'Listo: te avisamos si ' + meta.label + ' ' + (op === 'lte' ? 'baja a ' : 'supera ') + fmtNum(val, meta.unit) + '.';
@@ -963,7 +1192,7 @@ const faqSchema = {
           alerts.push({ id, metric, base: cur, type: 'change' });
           msg.textContent = 'Listo: te avisamos cuando ' + meta.label + ' cambie' + (cur != null ? ' (ahora ' + fmtNum(cur, meta.unit) + ')' : '') + '.';
         }
-        msg.className = 'alert-msg alert-msg-ok';
+        msg.className = 'vb-alert-msg alert-msg-ok';
         saveAlerts(alerts);
         valInput.value = '';
         if ('Notification' in window && Notification.permission === 'default') {
@@ -974,401 +1203,97 @@ const faqSchema = {
       renderAlerts();
     }
 
+    // ── Botón "Actualizar valores" del hero ──
+    function initRefreshBtn() {
+      const btn = document.getElementById('vb-refresh');
+      if (!btn || (btn as any).dataset.wired) return;
+      (btn as any).dataset.wired = '1';
+      btn.addEventListener('click', () => { btn.textContent = '↻ Actualizando…'; refresh().finally(() => { btn.textContent = '↻ Actualizar valores'; }); });
+    }
+
     refresh();
     initAlertForm();
-    document.addEventListener('astro:page-load', function () { refresh(); initAlertForm(); });
+    initRefreshBtn();
+    document.addEventListener('astro:page-load', function () { refresh(); initAlertForm(); initRefreshBtn(); });
   })();
 </script>
 
-<style>
-  .dashboard { max-width: 1060px; margin: 0 auto; padding: 0 0 3rem; }
-  .breadcrumbs { font-size: 0.875rem; color: var(--text-subtle); margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
-  .breadcrumbs a { color: var(--text-muted); }
-  .breadcrumbs .current { color: var(--text); font-weight: 500; }
-  .breadcrumbs .sep { color: var(--border-strong); }
+<script>
+  // ── Gráfico UVA: toggle de rango (6 meses / 1 año / Todo) ──
+  (function () {
+    interface P { f: string; v: number; }
+    const el = document.getElementById('vb-uva-data');
+    if (!el?.textContent) return;
+    let series: P[] = [];
+    try { series = JSON.parse(el.textContent); } catch { return; }
+    if (series.length < 2) return;
 
-  .dash-head { margin-bottom: 2rem; }
-  .dash-head h1 { margin-bottom: 0.5rem; }
-  .lead { color: var(--text-muted); font-size: 1.0625rem; max-width: 680px; }
-  .vb-resumen {
-    margin: 1.25rem 0 0;
-    padding: 0.9rem 1.1rem;
-    background: var(--accent-soft);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent);
-    border-radius: var(--radius-sm, 8px);
-    font-size: 1rem;
-    line-height: 1.6;
-    color: var(--text);
-    max-width: 760px;
-  }
-
-  /* Barra superior de dashboard (TrustStrip + estado en vivo) */
-  .dash-bar { margin: 0 0 1.5rem; }
-  .dash-bar__live { font-weight: 600; color: var(--text); }
-  .dash-bar__method { color: var(--accent-strong); font-weight: 600; text-decoration: none; }
-  .dash-bar__method:hover { text-decoration: underline; }
-  .dash-bar .live-dot { margin-right: 2px; }
-
-  /* Índice de anclas sticky entre secciones (no oculta contenido). */
-  .dash-tabs {
-    position: sticky; top: 0; z-index: 3;
-    display: flex; gap: 0.375rem; flex-wrap: wrap;
-    padding: 0.5rem 0; margin-bottom: 1.5rem;
-    background: color-mix(in srgb, var(--bg-card) 82%, transparent);
-    backdrop-filter: saturate(1.4) blur(6px);
-    border-bottom: 1px solid var(--border);
-  }
-  .dash-tabs a {
-    font-size: 0.8125rem; font-weight: 600; color: var(--text-muted);
-    padding: 0.3rem 0.7rem; border-radius: 999px;
-    border: 1px solid var(--border); background: var(--bg-card);
-    text-decoration: none; white-space: nowrap;
-    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
-  }
-  .dash-tabs a:hover { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); }
-  /* que la barra sticky no tape el título al saltar por ancla */
-  .dash-section[id] { scroll-margin-top: 3.25rem; }
-
-  .dash-section { margin-bottom: 2.5rem; }
-  .dash-section h2 {
-    font-size: 1.25rem;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .card-grid {
-    display: grid;
-    gap: 0.875rem;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  }
-
-  .card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 1.125rem 1.25rem;
-    box-shadow: var(--shadow-sm);
-    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s, background-color 0.2s, color 0.2s;
-  }
-  .card:hover { box-shadow: var(--shadow); border-color: var(--border-strong); }
-  .card.hi {
-    background: linear-gradient(135deg, var(--accent-soft) 0%, #e0f2fe 100%);
-    border-color: #bfdbfe;
-  }
-  html[data-theme="dark"] .card.hi {
-    background: linear-gradient(135deg, rgba(37, 99, 235, 0.12) 0%, rgba(96, 165, 250, 0.15) 100%);
-    border-color: rgba(147, 197, 253, 0.25);
-  }
-
-  .card-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-  }
-  .card-label {
-    font-size: 0.8125rem;
-    color: var(--text-muted);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-  }
-  .card.hi .card-label { color: var(--accent-strong); }
-
-  .badge {
-    background: var(--danger-soft);
-    color: var(--danger);
-    font-size: 0.6875rem;
-    font-weight: 700;
-    padding: 0.125rem 0.5rem;
-    border-radius: 999px;
-  }
-  /* Impuesto (tarjeta) vs brecha cambiaria (blue/mep/ccl): colores distintos
-     para que el usuario no confunda el recargo fiscal con una brecha de mercado. */
-  .badge-tax {
-    background: var(--warning-soft, rgba(245, 158, 11, 0.14));
-    color: var(--warning, #b45309);
-    cursor: help;
-  }
-
-  /* Delta de variación (mes a mes) — coloreado por tono semántico.
-     Es la VARIACIÓN (sube/baja), distinta de la brecha (sub-dato aparte). */
-  .delta {
-    font-family: var(--font-num, var(--font-mono));
-    font-variant-numeric: tabular-nums;
-    font-size: 0.72rem; font-weight: 700;
-    padding: 0.1rem 0.4rem; border-radius: 999px;
-    background: var(--bg-muted, rgba(100, 116, 139, 0.12));
-    color: var(--text-muted); white-space: nowrap;
-  }
-  .delta-pos { background: var(--success-soft, rgba(22, 163, 74, 0.14)); color: var(--success-text, #15803d); }
-  .delta-neg { background: var(--danger-soft, rgba(220, 38, 38, 0.12)); color: var(--danger, #dc2626); }
-  .delta-neutral { background: var(--bg-muted, rgba(100, 116, 139, 0.12)); color: var(--text-muted); }
-
-  /* Sparkline SVG (30d / 12m) — hereda color por dirección de la serie. */
-  .spark { display: block; width: 88px; height: 26px; margin: 0.35rem 0 0.15rem; overflow: visible; }
-  .spark-up { color: var(--accent-strong); }
-  .spark-down { color: var(--danger, #dc2626); }
-
-  /* Brecha como sub-dato ETIQUETADO (no un badge ambiguo de variación). */
-  .card-meta {
-    display: flex; align-items: baseline; justify-content: space-between;
-    gap: 0.5rem; margin-top: 0.1rem;
-  }
-  .meta-label { font-size: 0.72rem; color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.03em; }
-  .meta-val {
-    font-family: var(--font-num, var(--font-mono)); font-variant-numeric: tabular-nums;
-    font-size: 0.8125rem; font-weight: 700; color: var(--text-muted);
-  }
-
-  .card-value {
-    font-family: var(--font-num, var(--font-mono));
-    font-size: 1.85rem;
-    font-weight: 700;
-    color: var(--text);
-    letter-spacing: -0.01em;
-    font-variant-numeric: tabular-nums;
-    margin-bottom: 0.25rem;
-    line-height: 1.1;
-  }
-  .card.hi .card-value { color: var(--accent-strong); }
-
-  /* === Terminal financiero (#14): canvas gris-azulado + tarjetas-monitor ===
-     El fondo levemente azulado y las métricas en mono dan el "look terminal",
-     no una sucesión de bloques editoriales. */
-  :global(body[data-page-type="dashboard"]) { background: #eef2f8; }
-  :global(html[data-theme="dark"] body[data-page-type="dashboard"]) { background: #0b1220; }
-  .card { background: var(--bg-card); }
-
-  /* Tabla de bancos con BARRAS horizontales (plazo fijo). */
-  .tna-bars {
-    display: flex; flex-direction: column;
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 4px 12px; margin-bottom: 1rem;
-  }
-  .tna-row {
-    display: grid; grid-template-columns: 150px 1fr 64px; align-items: center; gap: 14px;
-    padding: 8px 2px; border-bottom: 1px solid var(--border);
-  }
-  .tna-row:last-child { border-bottom: 0; }
-  .tna-bank { font-size: 0.85rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .tna-track { height: 8px; background: var(--bg-muted); border-radius: 999px; overflow: hidden; }
-  .tna-fill {
-    display: block; height: 100%; border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 55%, var(--accent-2, #0d9488)));
-  }
-  .tna-val {
-    font-family: var(--font-num, var(--font-mono)); font-variant-numeric: tabular-nums;
-    font-weight: 700; font-size: 0.92rem; text-align: right; color: var(--accent-strong);
-  }
-  .tna-row-top .tna-val { color: var(--success-text, #15803d); }
-  @media (max-width: 520px) { .tna-row { grid-template-columns: 92px 1fr 50px; gap: 9px; } }
-
-  .card-sub {
-    font-size: 0.8125rem;
-    color: var(--text-muted);
-    margin-bottom: 0.25rem;
-  }
-  .card-hint {
-    font-size: 0.75rem;
-    color: var(--text-subtle);
-  }
-
-  /* TNA grid */
-  .tna-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: 0.625rem;
-    margin-bottom: 1rem;
-  }
-  .tna-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 0.75rem 0.875rem;
-    text-align: center;
-  }
-  .tna-bank { font-size: 0.8125rem; color: var(--text-muted); font-weight: 500; }
-  .tna-val { font-size: 1.375rem; font-weight: 700; color: var(--accent-strong); margin-top: 0.25rem; }
-
-  .sec-cta { display: flex; gap: 1.5rem; flex-wrap: wrap; }
-  .cta-link { font-weight: 600; font-size: 0.9375rem; }
-
-  /* Link grid */
-  .link-grid {
-    display: grid;
-    gap: 0.75rem;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  }
-  .link-card {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 0.875rem 1.125rem;
-    color: var(--text);
-    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s;
-  }
-  .link-card:hover {
-    background: var(--accent-soft);
-    border-color: var(--accent);
-    color: var(--accent-strong);
-    transform: translateY(-1px);
-  }
-  .link-title { font-weight: 600; font-size: 0.9375rem; }
-  .link-desc { font-size: 0.8125rem; color: var(--text-muted); }
-  .link-card:hover .link-desc { color: var(--accent); }
-
-  .sources { padding-top: 1rem; border-top: 1px solid var(--border); }
-  .sources h3 { font-size: 0.9375rem; margin-bottom: 0.625rem; color: var(--text); }
-  .sources-list {
-    list-style: disc;
-    padding-left: 1.25rem;
-    color: var(--text-muted);
-    font-size: 0.875rem;
-    line-height: 1.7;
-  }
-  .disclaimer {
-    margin-top: 1rem;
-    font-size: 0.8125rem;
-    color: var(--text-subtle);
-    font-style: italic;
-  }
-
-  /* Fila "en vivo" */
-  .updated-row {
-    display: flex; align-items: center; gap: 0.4rem;
-    font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.5rem;
-  }
-  .live-dot {
-    width: 8px; height: 8px; border-radius: 50%; flex: none;
-    background: #16a34a; box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
-    animation: pulseDot 2s infinite;
-  }
-  @keyframes pulseDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-
-  /* Histórico UVA + inflación */
-  .hist-grid {
-    display: grid; gap: 1.25rem;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  }
-  .hist-block h3 { font-size: 0.95rem; margin-bottom: 0.625rem; color: var(--text); }
-  .hist-table {
-    width: 100%; border-collapse: collapse; font-size: 0.875rem;
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--radius); overflow: hidden;
-  }
-  .hist-table th, .hist-table td { padding: 0.5rem 0.75rem; text-align: left; }
-  .hist-table thead th {
-    background: var(--accent-soft); color: var(--text-muted);
-    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em;
-  }
-  .hist-table tbody tr { border-top: 1px solid var(--border); }
-  .hist-table tbody td:first-child { text-transform: capitalize; color: var(--text-muted); }
-  .hist-table tbody td:last-child {
-    text-align: right; font-weight: 700; color: var(--text);
-    font-feature-settings: 'tnum';
-  }
-  .hist-empty { font-size: 0.875rem; color: var(--text-subtle); }
-
-  .tna-note { font-size: 0.8125rem; color: var(--text-subtle); margin-bottom: 0.75rem; }
-
-  /* FAQ */
-  .faq-list { display: flex; flex-direction: column; gap: 0.5rem; }
-  .faq-item {
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 0 1rem;
-  }
-  .faq-item summary {
-    cursor: pointer; font-weight: 600; font-size: 0.95rem;
-    padding: 0.875rem 0; list-style: none; color: var(--text);
-  }
-  .faq-item summary::-webkit-details-marker { display: none; }
-  .faq-item[open] summary { color: var(--accent-strong); }
-  .faq-answer {
-    font-size: 0.9rem; color: var(--text-muted); line-height: 1.65;
-    padding: 0 0 1rem; max-width: 70ch;
-  }
-  .faq-answer a { color: var(--accent-strong); font-weight: 600; }
-
-  /* ── LECTURA EJECUTIVA (B) ─────────────────────────────────────────────── */
-  .exec {
-    margin: 1.5rem 0 0;
-    padding: 1.1rem 1.25rem 0.9rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent);
-    border-radius: var(--radius-lg, 12px);
-    box-shadow: var(--shadow-sm);
-  }
-  .exec-head { margin-bottom: 0.6rem; }
-  .exec-kicker {
-    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-    color: var(--accent-strong);
-  }
-  .exec-title { font-size: 1.1rem; margin: 0.15rem 0 0; }
-  .exec-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
-  .exec-item { display: flex; gap: 0.6rem; align-items: flex-start; }
-  .exec-icon { font-size: 1.05rem; line-height: 1.5; flex: none; }
-  .exec-body { display: flex; flex-direction: column; gap: 0.15rem; }
-  .exec-text { font-size: 0.95rem; line-height: 1.55; color: var(--text); }
-  .exec-text strong { font-weight: 700; }
-  .exec-cta { align-self: flex-start; font-size: 0.84rem; font-weight: 600; color: var(--accent-strong); }
-  .exec-cta:hover { text-decoration: underline; }
-  .exec-note { margin: 0.85rem 0 0; font-size: 0.75rem; color: var(--text-subtle); font-style: italic; }
-
-  /* Pie de tarjeta: fuente + acción (D). */
-  .card-foot {
-    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
-    margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px solid var(--border);
-  }
-  .card-src { font-size: 0.68rem; color: var(--text-subtle); }
-  .card-act { font-size: 0.75rem; font-weight: 600; color: var(--accent-strong); white-space: nowrap; }
-  .card-act:hover { text-decoration: underline; }
-  .card-hint-future { color: var(--warning, #b45309); font-weight: 600; cursor: help; }
-
-  /* ── ALERTAS (C) ───────────────────────────────────────────────────────── */
-  .alert-lead { font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 1rem; max-width: 720px; }
-  .alert-form { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg, 12px); padding: 1rem 1.1rem; }
-  .alert-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; }
-  .alert-field { display: flex; flex-direction: column; gap: 0.25rem; }
-  .alert-lbl { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); }
-  .alert-input {
-    font-size: 0.9rem; padding: 0.5rem 0.65rem; border-radius: var(--radius, 8px);
-    border: 1px solid var(--border-strong, var(--border)); background: var(--bg); color: var(--text); min-width: 130px;
-  }
-  .alert-btn {
-    font-size: 0.9rem; font-weight: 600; padding: 0.55rem 1.1rem; border-radius: var(--radius, 8px);
-    border: 1px solid var(--accent); background: var(--accent); color: #fff; cursor: pointer; white-space: nowrap;
-    transition: background-color 0.15s, transform 0.1s;
-  }
-  .alert-btn:hover { background: var(--accent-strong); }
-  .alert-btn:active { transform: translateY(1px); }
-  .alert-hint { margin: 0.7rem 0 0; font-size: 0.8rem; color: var(--text-muted); }
-  .alert-msg { margin: 0.6rem 0 0; font-size: 0.85rem; min-height: 1em; }
-  .alert-msg-ok { color: var(--success-text, #15803d); }
-  .alert-msg-err { color: var(--danger, #dc2626); }
-  .alert-list { list-style: none; margin: 0.9rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
-  .alert-chip {
-    display: inline-flex; align-items: center; gap: 0.4rem;
-    font-size: 0.82rem; padding: 0.3rem 0.4rem 0.3rem 0.7rem; border-radius: 999px;
-    background: var(--accent-soft); border: 1px solid var(--border); color: var(--text);
-  }
-  .alert-chip-fired { background: var(--success-soft, rgba(22, 163, 74, 0.14)); border-color: var(--success-text, #15803d); }
-  .alert-chip-x {
-    border: none; background: transparent; color: var(--text-muted); cursor: pointer;
-    font-size: 0.8rem; line-height: 1; padding: 0.15rem 0.3rem; border-radius: 999px;
-  }
-  .alert-chip-x:hover { background: var(--danger-soft, rgba(220, 38, 38, 0.12)); color: var(--danger, #dc2626); }
-  .alert-fallback { margin: 1rem 0 0; font-size: 0.82rem; color: var(--text-subtle); line-height: 1.6; max-width: 720px; }
-  .alert-fallback a { color: var(--accent-strong); font-weight: 600; }
-  @media (max-width: 520px) {
-    .alert-row { flex-direction: column; align-items: stretch; }
-    .alert-input, .alert-btn { width: 100%; }
-  }
-</style>
+    const W = 580, H = 200, padL = 6, padR = 6, padT = 16, padB = 26;
+    const fmtAr = (n: number) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(n);
+    function shortMonth(s: string): string {
+      try {
+        const d = /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + 'T00:00:00') : new Date(s);
+        const m = d.toLocaleDateString('es-AR', { month: 'short' }).replace('.', '');
+        return m.charAt(0).toUpperCase() + m.slice(1);
+      } catch { return s; }
+    }
+    function fmtDate(s: string): string {
+      try { const d = /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + 'T00:00:00') : new Date(s); return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }); } catch { return s; }
+    }
+    function sample(arr: P[], max: number): P[] {
+      if (arr.length <= max) return arr;
+      const out: P[] = []; const step = arr.length / max;
+      for (let i = 0; i < max; i++) out.push(arr[Math.floor(i * step)]);
+      if (out[out.length - 1] !== arr[arr.length - 1]) out.push(arr[arr.length - 1]);
+      return out;
+    }
+    function draw(range: '6m' | '1a' | 'all') {
+      const days = range === '6m' ? 182 : range === '1a' ? 365 : series.length;
+      let pts = series.slice(Math.max(0, series.length - days));
+      pts = sample(pts, 60);
+      if (pts.length < 2) return;
+      const vals = pts.map((p) => p.v);
+      const min = Math.min(...vals), max = Math.max(...vals), span = (max - min) || 1;
+      const innerW = W - padL - padR, innerH = H - padT - padB;
+      const X = (i: number) => padL + (i / (pts.length - 1)) * innerW;
+      const Y = (v: number) => padT + (1 - (v - min) / span) * innerH;
+      const line = pts.map((p, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)} ${Y(p.v).toFixed(1)}`).join(' ');
+      const baseY = (padT + innerH).toFixed(1);
+      const area = `${line} L${X(pts.length - 1).toFixed(1)} ${baseY} L${X(0).toFixed(1)} ${baseY} Z`;
+      const lineEl = document.getElementById('vb-uva-line'); const areaEl = document.getElementById('vb-uva-area');
+      if (lineEl) lineEl.setAttribute('d', line);
+      if (areaEl) areaEl.setAttribute('d', area);
+      const g = document.getElementById('vb-uva-labels');
+      if (g) {
+        g.innerHTML = '';
+        for (let k = 0; k < 6; k++) {
+          const i = Math.round((k * (pts.length - 1)) / 5);
+          const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          t.setAttribute('x', String(X(i))); t.setAttribute('y', String(H - 6)); t.setAttribute('text-anchor', 'middle');
+          t.textContent = shortMonth(pts[i].f);
+          g.appendChild(t);
+        }
+      }
+      // Actualizar delta + fecha
+      const first = pts[0].v, lastP = pts[pts.length - 1];
+      const chg = first ? (lastP.v / first - 1) * 100 : 0;
+      const lbl = range === '6m' ? 'en 6 meses' : range === '1a' ? 'en 1 año' : 'histórico';
+      const deltaEl = document.getElementById('vb-uva-delta');
+      if (deltaEl) deltaEl.textContent = `${chg >= 0 ? '+' : ''}${chg.toFixed(1).replace('.', ',')}% ${lbl}`;
+      const bigEl = document.getElementById('vb-uva-big'); if (bigEl) bigEl.textContent = '$' + fmtAr(lastP.v);
+      const dateEl = document.getElementById('vb-uva-date'); if (dateEl) dateEl.textContent = fmtDate(lastP.f);
+    }
+    function wire() {
+      document.querySelectorAll<HTMLButtonElement>('.vb-range-btn').forEach((b) => {
+        if ((b as any).dataset.wired) return;
+        (b as any).dataset.wired = '1';
+        b.addEventListener('click', () => {
+          document.querySelectorAll('.vb-range-btn').forEach((x) => x.classList.toggle('is-active', x === b));
+          draw((b.getAttribute('data-range') as any) || '6m');
+        });
+      });
+    }
+    wire();
+    document.addEventListener('astro:page-load', wire);
+  })();
+</script>

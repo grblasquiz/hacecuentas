@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-07-10
+// Generated: 2026-07-12
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { rmPesoMaximo } from './1rm-peso-maximo';
@@ -2347,6 +2347,7 @@ import { propina } from './propina';
 import { propinaDividirCuenta } from './propina-dividir-cuenta';
 import { propinaRestaurante } from './propina-restaurante';
 import { propinaViaje } from './propina-viaje';
+import { propinasCompleta } from './propinas-completa';
 import { protectorSolarSpf } from './protector-solar-spf';
 import { proteinaDiaria } from './proteina-diaria';
 import { proteinaDiariaFisicoculturismoGanarMusculo } from './proteina-diaria-fisicoculturismo-ganar-musculo';
@@ -5374,6 +5375,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'propina-dividir-cuenta': propinaDividirCuenta,
   'propina-restaurante': propinaRestaurante,
   'propina-viaje': propinaViaje,
+  'propinas-completa': propinasCompleta,
   'protector-solar-spf': protectorSolarSpf,
   'proteina-diaria': proteinaDiaria,
   'proteina-diaria-fisicoculturismo-ganar-musculo': proteinaDiariaFisicoculturismoGanarMusculo,
