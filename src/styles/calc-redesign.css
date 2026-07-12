@@ -677,3 +677,61 @@ html[data-theme="dark"] .calc-v2 .calc-container[data-slug="calculadora-actualiz
 .calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] .ipc-comp-vl{
   font-family:var(--v2-mono); font-weight:600; font-size:13px; color:var(--v2-ink); white-space:nowrap;
 }
+
+/* ── Fila de acciones (mockup): 5 botones planos a ancho completo bajo el
+   form/resultado. IpcCompositionBar.astro mueve la `.share` real acá (hijo directo
+   del container → grid-column 1/-1) y la aplana; el resto queda oculto. ── */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .ipc-actions{
+  grid-column:1 / -1 !important;
+  display:flex; flex-wrap:wrap; gap:8px; align-items:stretch;
+  margin:0 !important; padding:16px 24px 20px !important;
+  border-top:1px solid var(--v2-line);
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .ipc-actions[hidden]{ display:none !important; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .ipc-actions > .btn-share,
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .ipc-actions > .share-compartir{
+  flex:1 1 140px; min-height:44px; margin:0;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .ipc-actions .btn-share{
+  justify-content:center; border:1px solid var(--v2-line); border-radius:11px;
+  background:#fff; color:var(--v2-body); font-weight:600; box-shadow:none;
+}
+/* En el mockup los 5 se ven secundarios/outlined (ninguno relleno). */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .ipc-actions .btn-share--primary{
+  background:#fff; color:var(--v2-body); border-color:var(--v2-line);
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .ipc-actions .btn-share:hover{
+  border-color:var(--v2-accent); color:var(--v2-accent); background:var(--v2-accent-soft);
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .ipc-actions .share-compartir{ display:flex; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .ipc-actions .share-compartir > .btn-share{ width:100%; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .ipc-actions .share-more{ display:none !important; }
+
+/* ── "Tus últimos cálculos": trigger en el header + panel como dropdown. ──
+   El header ya es position:relative (base) y a la derecha vive el changelog
+   absolute; ubicamos este trigger a su izquierda. */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-card-header{ padding-right:355px; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-card-header > .ipc-history-trigger{
+  position:absolute; top:11px; right:195px; z-index:6;
+  display:inline-flex; align-items:center; gap:5px;
+  background:none; border:0; padding:0; cursor:pointer; font-family:inherit;
+  font-size:13px; font-weight:600; color:var(--v2-muted); line-height:1.25; white-space:nowrap;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-card-header > .ipc-history-trigger:hover{ color:var(--v2-accent); }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-card-header > .ipc-history-trigger svg{ opacity:.85; }
+/* El panel de historial: oculto salvo cuando el trigger lo abre (dropdown). Pisa
+   el [hidden] del motor y el layout inline. */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-history.ipc-history-panel{ display:none !important; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-history.ipc-history-panel.ipc-open{
+  display:block !important; position:absolute; top:44px; right:22px; z-index:30;
+  width:min(340px,82vw); margin:0; padding:14px 16px;
+  background:#fff; border:1px solid var(--v2-line); border-radius:14px; box-shadow:var(--v2-shadow);
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] .ipc-history-empty{
+  font-size:13px; color:var(--v2-muted); line-height:1.45;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] .history-list:not(:empty) ~ .ipc-history-empty{ display:none; }
+@media (max-width:520px){
+  .calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-card-header{ padding-right:150px; }
+  .calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-card-header > .ipc-history-trigger{ display:none; }
+}

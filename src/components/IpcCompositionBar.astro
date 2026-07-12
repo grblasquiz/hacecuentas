@@ -1,18 +1,24 @@
 ---
 /**
- * IpcCompositionBar — script-only, sin UI propia (patrón ImcUnitsHook).
+ * IpcCompositionBar — capa de fidelidad al mockup para la calc de actualización
+ * por inflación (IPC). Script-only, sin UI propia (patrón ImcUnitsHook). Único en
+ * esta calc (gateado por slug en CalcLayoutV2). NO toca el widget compartido ni la
+ * fórmula: sólo reordena/reestiliza nodos YA renderizados por Calculator.astro.
  *
- * Reemplaza el donut de "composición del resultado" por la BARRA APILADA
- * horizontal del mockup ("Monto original $X · 87%" / "Ajuste por inflación $Y ·
- * 13%"). Único en la calc de actualización por inflación (IPC).
+ * Hace tres cosas, todas manteniendo los nodos DENTRO de `.calc-container` para
+ * que los listeners que el motor bindea con `container.querySelectorAll('.btn-share')`
+ * sigan válidos sin importar el orden de init:
  *
- * Fuente de datos = la leyenda que ya arma el motor al renderizar el `_chart`
- * doughnut de inflacion-ipc.ts (renderV2Donut → `.v2-donut-legend`). Leemos de
- * ahí (valores finales, no animados, y con las MISMAS etiquetas que emite la
- * fórmula, así queda coherente en cualquier locale) y dibujamos la barra
- * proporcional. El donut queda oculto por CSS (calc-redesign.css, scopeado al
- * slug); esta barra lo sustituye visualmente. Si el motor no corrió (no hay
- * resultado) la barra no aparece.
+ *  1) COMPOSICIÓN: reemplaza el donut (`_chart` doughnut → `.v2-donut`) por la
+ *     BARRA APILADA horizontal del mockup, leyendo los valores finales de la
+ *     leyenda del donut. El donut queda oculto por CSS.
+ *  2) ACCIONES: mueve la barra `.share` a un pie full-width bajo el form/resultado
+ *     y la aplana a los 5 botones del mockup (Guardar resultado · Guardar cálculo ·
+ *     Compartir · PNG · Descargar CSV); el resto queda oculto. Se revela sólo con
+ *     resultado.
+ *  3) HISTORIAL: agrega el trigger "Tus últimos cálculos" en el header y abre el
+ *     panel de historial (`.calc-history`) como dropdown. El motor lo puebla desde
+ *     localStorage; si no hay cálculos guardados muestra un placeholder.
  */
 ---
 
@@ -20,12 +26,16 @@
   (function () {
     var SLUG = "calculadora-actualizacion-inflacion-ipc";
 
+    function cont() {
+      return document.querySelector('.calc-container[data-slug="' + SLUG + '"]');
+    }
+
+    // ── 1) Barra de composición (reemplaza el donut) ──────────────────────────
     function readNum(s) {
       var n = Number(String(s || "").replace(/[^\d]/g, ""));
       return isFinite(n) ? n : 0;
     }
-
-    function build(wrap, mo) {
+    function buildComp(wrap, mo) {
       var rows = wrap.querySelectorAll(".v2-donut-legend .v2-donut-lg");
       if (rows.length < 2) return;
       var data = Array.prototype.map.call(rows, function (r) {
@@ -45,7 +55,6 @@
         return a + d.num;
       }, 0);
       if (total <= 0) return;
-
       var segs = data
         .map(function (d) {
           return (
@@ -75,7 +84,6 @@
           );
         })
         .join("");
-
       var host = wrap.querySelector(".ipc-comp");
       if (!host) {
         host = document.createElement("div");
@@ -92,7 +100,6 @@
             })
             .join(", ")
       );
-      // Desconectamos mientras mutamos para no auto-dispararnos.
       if (mo) mo.disconnect();
       host.innerHTML =
         '<div class="ipc-comp-bar">' +
@@ -102,19 +109,101 @@
         "</div>";
       if (mo) mo.observe(wrap, { childList: true, subtree: true });
     }
-
-    function boot() {
-      var cont = document.querySelector(
-        '.calc-container[data-slug="' + SLUG + '"]'
-      );
-      if (!cont) return;
-      var wrap = cont.querySelector("[data-chart-wrap]");
+    function initComp(c) {
+      var wrap = c.querySelector("[data-chart-wrap]");
       if (!wrap) return;
       var mo = new MutationObserver(function () {
-        build(wrap, mo);
+        buildComp(wrap, mo);
       });
       mo.observe(wrap, { childList: true, subtree: true });
-      build(wrap, mo);
+      buildComp(wrap, mo);
+    }
+
+    // ── 2) Fila de acciones: mover `.share` abajo + aplanar a 5 botones ────────
+    function initActions(c) {
+      var share = c.querySelector(".share");
+      if (!share || share.classList.contains("ipc-actions")) return;
+      var shareWrap = share.querySelector(".share-compartir");
+      var imgBtn = share.querySelector('[data-action="share-image"]');
+      var csvBtn = share.querySelector('[data-action="download-csv"]');
+      // Re-etiquetar para que coincida con el mockup: "Imagen" → "PNG", "CSV" →
+      // "Descargar CSV". Sólo tocamos el nodo de texto (conservamos el ícono SVG).
+      function relabel(btn, txt) {
+        if (!btn) return;
+        Array.prototype.slice.call(btn.childNodes).forEach(function (n) {
+          if (n.nodeType === 3) n.parentNode.removeChild(n);
+        });
+        btn.appendChild(document.createTextNode(txt));
+      }
+      relabel(imgBtn, "PNG");
+      relabel(csvBtn, "Descargar CSV");
+      // Subir PNG y CSV del dropdown a la fila principal, después de "Compartir".
+      if (shareWrap && imgBtn) shareWrap.insertAdjacentElement("afterend", imgBtn);
+      if (imgBtn && csvBtn) imgBtn.insertAdjacentElement("afterend", csvBtn);
+      else if (shareWrap && csvBtn) shareWrap.insertAdjacentElement("afterend", csvBtn);
+      // Mover la barra a pie full-width (hijo directo del container → grid 1/-1),
+      // manteniéndola DENTRO del container (listeners siguen válidos).
+      c.appendChild(share);
+      share.classList.add("ipc-actions");
+      // Revelar sólo cuando hay resultado (antes se ocultaba por vivir dentro de
+      // .calc-results[hidden]; ahora la sincronizamos a mano).
+      var results = c.querySelector(".calc-results");
+      if (results) {
+        var sync = function () {
+          share.hidden = results.hasAttribute("hidden");
+        };
+        new MutationObserver(sync).observe(results, {
+          attributes: true,
+          attributeFilter: ["hidden"],
+        });
+        sync();
+      }
+    }
+
+    // ── 3) "Tus últimos cálculos" en el header (dropdown del historial) ────────
+    function initHistory(c) {
+      var header = c.querySelector(".calc-card-header");
+      var hist = c.querySelector("[data-history-widget]");
+      if (!header || !hist || header.querySelector(".ipc-history-trigger")) return;
+      var trg = document.createElement("button");
+      trg.type = "button";
+      trg.className = "ipc-history-trigger";
+      trg.setAttribute("aria-expanded", "false");
+      trg.innerHTML =
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg><span>Tus últimos cálculos</span>';
+      header.appendChild(trg);
+      // Placeholder para cuando todavía no hay cálculos guardados.
+      var list = hist.querySelector("[data-history-list]");
+      if (list && !hist.querySelector(".ipc-history-empty")) {
+        var empty = document.createElement("div");
+        empty.className = "ipc-history-empty";
+        empty.textContent =
+          "Todavía no guardaste cálculos. Tocá “Guardar cálculo” en un resultado para verlos acá.";
+        list.insertAdjacentElement("afterend", empty);
+      }
+      hist.classList.add("ipc-history-panel");
+      var open = false;
+      function set(o) {
+        open = o;
+        hist.classList.toggle("ipc-open", open);
+        trg.setAttribute("aria-expanded", open ? "true" : "false");
+      }
+      trg.addEventListener("click", function (e) {
+        e.stopPropagation();
+        set(!open);
+      });
+      document.addEventListener("click", function (e) {
+        if (open && !hist.contains(e.target) && e.target !== trg && !trg.contains(e.target))
+          set(false);
+      });
+    }
+
+    function boot() {
+      var c = cont();
+      if (!c) return;
+      initComp(c);
+      initActions(c);
+      initHistory(c);
     }
 
     if (document.readyState === "loading") {
