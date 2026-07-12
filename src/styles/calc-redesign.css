@@ -1008,11 +1008,17 @@ html[data-theme="dark"] .calc-v2 .calc-container[data-slug="calculadora-actualiz
   .calc-v3 .calc-container > .v3-colhead--input{ grid-column:1 !important; }
   .calc-v3 .calc-container > .v3-colhead--result{ grid-column:2 !important; }
 }
+/* El header de resultado mobile (--result-m) sólo aplica <861px; en desktop lo
+   oculta (el de grid col2, --result, hace el trabajo). display:none lo saca del
+   grid → no afecta la maqueta de 2 columnas. */
+.calc-v3 .v3-colhead--result-m{ display:none; }
 @media (max-width:860px){
-  /* En mobile el container es block (orden DOM): el header de resultado quedaría
-     sobre el form → se oculta; el de input queda bien arriba del form. El panel
-     de resultado conserva su badge "Resultado" propio. */
+  /* En mobile el container es block (orden DOM): el header --result (antes del
+     form) quedaría mal posicionado → se oculta y en su lugar aparece --result-m,
+     que va en el DOM justo arriba del área de resultado. El de input queda bien
+     arriba del form. */
   .calc-v3 .v3-colhead--result{ display:none; }
+  .calc-v3 .v3-colhead--result-m{ display:flex; padding:20px 20px 0; }
   .calc-v3 .v3-colhead--input{ padding:16px 20px 0; }
 }
 
@@ -1065,9 +1071,31 @@ html[data-theme="dark"] .calc-v2 .calc-container[data-slug="calculadora-actualiz
 .calc-v3 .v3-quick-dark-body strong{ color:#fff; font-family:var(--v2-mono); font-weight:600; background:rgba(148,180,247,.14); padding:1px 5px; border-radius:5px; }
 .calc-v3 .v3-quick-dark-body a{ color:#93b4f7; }
 
-/* ── Tabs: fila de pills izquierda + panel-card (afina el v2 al look mockup) ── */
+/* ── Tabs: pills en fila + (desktop) Resumen a la izquierda + FAQ permanente a
+   la derecha, como el mockup ── */
 .calc-v3 .v2-tabs{ max-width:none; }
 .calc-v3 .v2-tabnav{ display:flex; flex-wrap:wrap; gap:8px; }
 .calc-v3 .v2-tab{ flex:0 0 auto; }
 .calc-v3 .v2-tab[aria-selected="true"]{ background:var(--v2-accent-bg); color:var(--v2-accent-ink); border-color:var(--v2-accent-bg); }
 .calc-v3 .v2-tab:hover:not([aria-selected="true"]){ border-color:var(--v2-accent); }
+
+@media (min-width:861px){
+  /* 2 columnas: nav + panel activo (Resumen/Cómo/Fuentes) a la izquierda; FAQ
+     SIEMPRE visible a la derecha. La pestaña "Preguntas" se oculta en desktop
+     (su contenido ya vive permanente a la derecha). En mobile vuelve el
+     comportamiento normal de 4 tabs con paneles alternados. */
+  .calc-v3 .v2-tabs{ display:grid; grid-template-columns:1fr .82fr; grid-template-rows:auto minmax(0,1fr); column-gap:26px; row-gap:16px; align-items:start; }
+  .calc-v3 .v2-tabnav{ grid-column:1; grid-row:1; margin-bottom:0; }
+  .calc-v3 .v2-panel{ grid-column:1; grid-row:2; }
+  .calc-v3 .v2-tab[data-panel="v2-faq"]{ display:none; }
+  .calc-v3 #v2-faq{ grid-column:2; grid-row:1 / 3; display:block; align-self:start; }
+  .calc-v3 #v2-faq .v2-block{ margin-bottom:0; }
+  .calc-v3 #v2-faq h2{ font-size:13px; text-transform:uppercase; letter-spacing:.05em; color:var(--v2-muted); font-weight:700; margin:0 0 12px; }
+}
+
+/* FAQ acordeón look mockup: marcador +/− (oculta el chevron heredado) */
+.calc-v3 .v2-faq summary{ list-style:none; }
+.calc-v3 .v2-faq summary::-webkit-details-marker{ display:none; }
+.calc-v3 .v2-faq summary .chev{ display:none; }
+.calc-v3 .v2-faq summary::after{ content:'+'; margin-left:auto; font-size:20px; font-weight:400; line-height:1; color:var(--v2-muted); transition:transform .15s ease; }
+.calc-v3 .v2-faq details[open] summary::after{ content:'−'; color:var(--v2-accent); }
