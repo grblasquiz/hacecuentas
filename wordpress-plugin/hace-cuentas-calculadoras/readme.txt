@@ -1,5 +1,5 @@
 === Hacé Cuentas — Calculadoras ===
-Contributors: Rambiss
+Contributors: rambiss
 Tags: calculator, embed, shortcode, finance, block
 Requires at least: 6.5
 Tested up to: 7.0
