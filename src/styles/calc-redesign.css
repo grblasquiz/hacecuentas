@@ -405,10 +405,275 @@ html[data-theme="dark"] .calc-v2 .calc-container[data-slug="calculadora-imc"] > 
 /* Guard: cuando hay resultado, el empty se oculta (gana en especificidad al flex de arriba). */
 .calc-v2 .calc-container[data-slug="calculadora-imc"]:has(.calc-results:not([hidden])) > .empty-preview{ display:none !important; }
 
-/* Métricas del resultado en grilla compacta de 2 columnas (como el mockup). La
-   columna derecha mide ~340px → minmax(200px) del v2 daba 1 sola columna y el
-   resultado quedaba muy alto. minmax(148px) entra en 2 col acá y cae con gracia
-   a 1 col en desktops angostos (≈861px). El primario "TU IMC" sigue full width. */
+/* ===== Resultado estilo mockup: banner (TU IMC + Categoría) + escala de pills
+   + métricas en 3 columnas + box "Qué significa tu IMC". Grid de 6 columnas: el
+   banner ocupa 3+3 (50/50), la escala inyectada 1/-1, cada métrica 2 col (=3 por
+   fila). No se mueve ningún output → los hooks de compartir/CSV (data-value)
+   quedan intactos. ============================================================ */
 .calc-v2 .calc-container[data-slug="calculadora-imc"] .calc-results .results-grid{
+  display:grid !important;
+  grid-template-columns:repeat(6, minmax(0,1fr)) !important;
+  gap:9px 10px !important;
+  align-items:stretch !important;
+}
+/* Banner: TU IMC a la izquierda, Categoría a la derecha, ambos sobre blush. */
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .calc-results .result.primary{
+  grid-column:1 / 4 !important;
+  background:var(--imc-blush,#fff1f4) !important;
+  border:1px solid #f6d3db !important;
+  padding:13px 16px !important;
+  animation:none !important;
+  overflow:visible !important;
+}
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .calc-results .result.primary::before,
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .calc-results .result.primary::after{ display:none !important; }
+html[data-theme="dark"] .calc-v2 .calc-container[data-slug="calculadora-imc"] .calc-results .result.primary{
+  background:color-mix(in srgb, var(--v2-accent) 12%, #fff) !important;
+}
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .calc-results .result[data-output="categoria"]{
+  grid-column:4 / 7 !important;
+  background:#fbfcfe !important; border:1px solid var(--v2-line) !important;
+}
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .calc-results .result[data-output="categoria"] .result-value{
+  font-size:19px !important; font-weight:700 !important; color:var(--v2-ink) !important; font-family:inherit !important;
+}
+/* Escala de pills: fila completa, después del banner. */
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .calc-results .results-grid > .imc-scale{
+  grid-column:1 / -1 !important;
+}
+/* Métricas restantes: cada una 2 de 6 columnas → 3 por fila, como el mockup. */
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .calc-results .result:not(.primary):not([data-output="categoria"]){
+  grid-column:span 2 !important;
+  background:#fff !important; border:1px solid var(--v2-line-soft) !important;
+  padding:10px 12px !important;
+}
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .calc-results .result:not(.primary) .result-label{
+  font-size:10px !important; letter-spacing:.04em !important; color:var(--v2-muted) !important; margin-bottom:4px !important;
+}
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .calc-results .result:not(.primary) .result-value{
+  font-size:16px !important; font-weight:700 !important; color:var(--v2-ink) !important; font-family:inherit !important;
+}
+/* Sin la barrita de acento a la izquierda de cada métrica (el mockup usa celdas
+   limpias) y sin hover que las levante. */
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .calc-results .result::before{ display:none !important; }
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .calc-results .result:hover{ transform:none !important; box-shadow:none !important; border-color:var(--v2-line) !important; }
+/* Ocultar el gráfico Chart.js (lo reemplaza la escala de pills). */
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .calc-results .chart-wrap{ display:none !important; }
+/* Box "Qué significa tu IMC" — estilo callout celeste del mockup. */
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .calc-results .result-insight{
+  background:#f0f7ff !important; border:1px solid #d6e6fb !important; border-radius:12px !important;
+  padding:13px 15px !important; margin-top:12px !important; font-size:13.5px !important; color:var(--v2-body) !important;
+}
+
+/* Barra de acciones estilo mockup: fila de 5 botones (Guardar resultado ·
+   Guardar cálculo · Compartir · PNG · Descargar CSV). Se revelan CSV e Imagen
+   (que el widget guarda en "Más opciones") aplanando el <details> con
+   display:contents; los handlers son delegados (data-action) → siguen andando.
+   Los demás secundarios (copiar, editar, PDF, embeber, reiniciar) quedan ocultos. */
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .share{ display:flex !important; flex-wrap:wrap !important; gap:8px !important; align-items:stretch !important; }
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .share > *{ margin:0 !important; }
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .share .share-more{ display:contents !important; }
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .share .share-more > summary{ display:none !important; }
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .share .share-more-panel{ display:contents !important; }
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .share .share-more-panel > .btn-share{ display:none !important; }
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .share .share-more-panel > [data-action="share-image"]{ display:inline-flex !important; order:4 !important; }
+.calc-v2 .calc-container[data-slug="calculadora-imc"] .share .share-more-panel > [data-action="download-csv"]{ display:inline-flex !important; order:5 !important; }
+
+/* ===== Escala de pills OMS (componente ImcScaleBar) ===== */
+.calc-v2 .imc-scale{ margin:2px 0 4px; }
+.calc-v2 .imc-scale-cats{ display:flex; margin-bottom:5px; }
+.calc-v2 .imc-scale-cats > span{ flex:1 1 0; min-width:0; text-align:center; font-size:9.5px; font-weight:600; color:var(--v2-muted); line-height:1.15; letter-spacing:.01em; overflow-wrap:normal; word-break:normal; hyphens:none; padding:0 1px; }
+.calc-v2 .imc-scale-track{ position:relative; display:flex; height:12px; border-radius:7px; overflow:visible; box-shadow:inset 0 0 0 1px rgba(15,23,42,.04); }
+.calc-v2 .imc-scale-seg{ flex:1 1 0; min-width:0; }
+.calc-v2 .imc-scale-seg:first-child{ border-radius:7px 0 0 7px; }
+.calc-v2 .imc-scale-seg:last-child{ border-radius:0 7px 7px 0; }
+.calc-v2 .imc-scale-marker{ position:absolute; top:50%; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; pointer-events:none; z-index:2; }
+.calc-v2 .imc-scale-marker[hidden]{ display:none; }
+.calc-v2 .imc-scale-marker-dot{ width:16px; height:16px; border-radius:50%; background:var(--mk,#37b24d); border:3px solid #fff; box-shadow:0 1px 4px rgba(15,23,42,.28); }
+.calc-v2 .imc-scale-marker-val{ position:absolute; top:16px; font-family:var(--v2-mono); font-size:12px; font-weight:700; color:var(--v2-ink); background:#fff; border:1px solid var(--v2-line); border-radius:6px; padding:1px 6px; white-space:nowrap; box-shadow:var(--v2-shadow); }
+.calc-v2 .imc-scale-ticks{ display:flex; margin-top:38px; }
+.calc-v2 .imc-scale-ticks > span{ flex:1 1 0; min-width:0; text-align:right; font-size:9.5px; color:var(--v2-muted); font-family:var(--v2-mono); }
+/* Mobile: labels de categoría más chicas + métricas a 2 columnas (como el
+   mockup mobile). El banner (TU IMC + Categoría) sigue lado a lado. */
+@media (max-width:560px){
+  .calc-v2 .imc-scale-cats > span{ font-size:8px; }
+  .calc-v2 .imc-scale-ticks > span{ font-size:8.5px; }
+  .calc-v2 .calc-container[data-slug="calculadora-imc"] .calc-results .result:not(.primary):not([data-output="categoria"]){
+    grid-column:span 3 !important;
+  }
+}
+
+/* ============================================================================
+   IPC — Actualización por inflación (calculadora-actualizacion-inflacion-ipc)
+   Rediseño visual del widget para acercarlo a los mockups aprobados (handoff
+   2026-07-12). TODO scopeado por [data-slug="calculadora-actualizacion-inflacion-ipc"]
+   → NO afecta ninguna otra calc. Solo presentación: el DOM, la lógica, la fórmula,
+   la serie IPC, los datos vivos (dólar/inflación/SMVM/USD), los analytics y el SEO
+   quedan intactos. La grilla 2-col, la card, el accent indigo (money domain =
+   #4338ca), el sticky del resultado, la línea de contexto (LiveEconContext) y el
+   equivalente USD YA existen; acá solo cerramos la brecha con el mockup.
+   Alias: IPC = .calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"]
+   ============================================================================ */
+
+/* ── Barra de contexto económico (LiveEconContext, sibling del widget) ───────
+   Sobre el form. En el mockup lleva el encabezado "Contexto económico argentino
+   en vivo" antes de los chips; el aria-label del componente ya lo tiene, acá lo
+   hacemos visible con un ::before. La barra solo se monta en AR root (audience
+   AR + !lang) → el texto en español es seguro. Ocultamos el 💵 y los "·". */
+.calc-v2 .live-econ[data-slug="calculadora-actualizacion-inflacion-ipc"]{ gap:6px 14px; }
+.calc-v2 .live-econ[data-slug="calculadora-actualizacion-inflacion-ipc"]::before{
+  content:"📊 Contexto económico argentino en vivo";
+  font-weight:700; color:var(--v2-ink); font-size:13px; white-space:nowrap;
+}
+.calc-v2 .live-econ[data-slug="calculadora-actualizacion-inflacion-ipc"] .le-icon{ display:none; }
+.calc-v2 .live-econ[data-slug="calculadora-actualizacion-inflacion-ipc"] .le-sep{ display:none; }
+
+/* Mobile: en vez de un bloque alto, chips scrolleables en horizontal (mockup).
+   Cada .le-item pasa a chip bordeado con el label arriba y el valor abajo. El
+   encabezado ::before se oculta (redundante con el aria-label) para no comerse el
+   ancho. Toda la barra es un carril de scroll horizontal (nowrap + overflow-x). */
+@media (max-width:560px){
+  .calc-v2 .live-econ[data-slug="calculadora-actualizacion-inflacion-ipc"]{
+    flex-wrap:nowrap; overflow-x:auto; gap:8px; scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .calc-v2 .live-econ[data-slug="calculadora-actualizacion-inflacion-ipc"]::-webkit-scrollbar{ display:none; }
+  .calc-v2 .live-econ[data-slug="calculadora-actualizacion-inflacion-ipc"]::before{ display:none; }
+  .calc-v2 .live-econ[data-slug="calculadora-actualizacion-inflacion-ipc"] .le-item{
+    flex:0 0 auto; display:inline-flex; flex-direction:column; align-items:flex-start;
+    gap:1px; background:#fff; border:1px solid var(--v2-line); border-radius:10px;
+    padding:6px 11px; white-space:nowrap;
+  }
+  .calc-v2 .live-econ[data-slug="calculadora-actualizacion-inflacion-ipc"] .le-link{
+    flex:0 0 auto; margin-left:0; align-self:center;
+  }
+}
+
+/* ── Card: quitar la franja indigo superior (::before). El mockup usa una card
+   limpia sin stripe (igual criterio que IMC). ── */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"]::before{ display:none !important; }
+
+/* Header nítido: fondo blanco, texto en tinta legible, ícono al acento (mockup).
+   padding-right reserva el lugar del "Ver historial de cambios" reubicado. */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-card-header{
+  background:#fff; color:var(--v2-body); font-weight:600; padding-right:200px;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-card-header > svg{ color:var(--v2-accent); opacity:1; }
+
+/* "Ver historial de cambios" → a la derecha del header (absolute), dropdown que
+   cae DENTRO de la card. Mismo patrón que IMC: sale del flujo del grid → el form
+   sube pegado bajo el header. */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-changelog{
+  position:absolute; top:12px; right:22px; z-index:6;
+  margin:0 !important; padding:0 !important; font-size:13px; max-width:200px;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-changelog > summary{
+  list-style:none; cursor:pointer; color:var(--v2-muted) !important; font-weight:600;
+  display:inline-flex; align-items:center; gap:5px; line-height:1.25; text-align:right;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-changelog > summary::-webkit-details-marker{ display:none; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-changelog > summary::after{
+  content:'›'; font-size:16px; line-height:1; color:var(--v2-muted);
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-changelog > summary:hover{ color:var(--v2-accent) !important; text-decoration:none; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-changelog[open] > summary{ color:var(--v2-accent) !important; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-changelog > ul{
+  position:absolute; top:26px; right:0; margin:0; padding:12px 15px;
+  width:min(340px,80vw); background:#fff; border:1px solid var(--v2-line);
+  border-radius:12px; box-shadow:var(--v2-shadow); list-style:disc; text-align:left;
+  font-size:12.5px; color:var(--v2-body);
+}
+@media (max-width:520px){
+  .calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-card-header{ padding-right:140px; }
+  .calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-changelog{ max-width:130px; }
+}
+
+/* Panel de "resultado vacío": del recuadro punteado a un panel lleno y centrado
+   que ocupa el alto de la columna (= alto del form), con el ícono en un badge
+   circular (mockup). El hide-cuando-hay-resultado se re-declara con más
+   especificidad para que no lo pise el display:flex (misma trampa que IMC). */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .empty-preview{
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:4px; text-align:center; min-height:230px; align-self:stretch !important;
+  position:static !important; margin:0 !important;
+  border:1px solid var(--v2-line) !important; border-radius:16px !important;
+  background:#f8f9f7 !important;
+}
+html[data-theme="dark"] .calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .empty-preview{
+  background:color-mix(in srgb, var(--v2-ink) 4%, transparent) !important;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .empty-preview .empty-icon{
+  width:60px; height:60px; border-radius:50%; background:#eef1f6;
+  display:grid; place-items:center; font-size:26px; margin-bottom:10px; line-height:1;
+}
+html[data-theme="dark"] .calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .empty-preview .empty-icon{
+  background:color-mix(in srgb, var(--v2-ink) 8%, transparent);
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"]:has(.calc-results:not([hidden])) > .empty-preview{ display:none !important; }
+
+/* Métricas del resultado en grilla compacta de 2 columnas (mockup): el primario
+   "MONTO ACTUALIZADO HOY" ya es full-width (base .result.primary), Incremento y
+   Factor caen 2-up, y "Pérdida de poder adquisitivo" (4º output) vuelve a ancho
+   completo. minmax(148px) entra en 2 col en la columna derecha (~340px) y degrada
+   con gracia a 1 col en desktops angostos. */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] .calc-results .results-grid{
   grid-template-columns:repeat(auto-fit, minmax(148px, 1fr)) !important; gap:10px !important;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] .calc-results .results-grid > .result[data-output="perdidaPoderAdquisitivo"]{
+  grid-column:1 / -1 !important;
+}
+
+/* Caja de insight narrativa ("IPC acumulado: … / Para igualar el poder de compra
+   …") a tono con el mockup: fondo lavanda suave y radio de card. NO tocamos
+   border-color (el shorthand pisaría el border-left) para conservar el acento por
+   tono neutral/warn/good que el motor asigna según la pérdida (períodos largos =
+   warn ámbar). */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] .result-insight{
+  background:var(--v2-accent-soft);
+  border-radius:14px; padding:14px 16px;
+}
+
+/* Composición del resultado = BARRA APILADA horizontal (mockup), no donut. El
+   motor sigue emitiendo el `_chart` doughnut y lo renderiza en `.v2-donut`
+   (leyenda incluida); IpcCompositionBar.astro lee esa leyenda y dibuja `.ipc-comp`
+   dentro del mismo `[data-chart-wrap]`. Acá ocultamos el donut (SVG + su leyenda +
+   botón PNG del gráfico) y dejamos la barra. El chart-wrap pasa a ser la cajita de
+   composición del mockup. */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] [data-chart-wrap] .v2-donut-svg,
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] [data-chart-wrap] .v2-donut-legend,
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] [data-chart-wrap] [data-chart-download]{
+  display:none !important;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] [data-chart-wrap] .v2-donut{
+  display:block; gap:0; padding:0;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] [data-chart-wrap]{
+  background:var(--v2-accent-soft); border:1px solid #dbe6f9; border-radius:14px; padding:14px 16px;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] .ipc-comp{
+  display:flex; flex-direction:column; gap:9px;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] .ipc-comp-bar{
+  display:flex; height:16px; border-radius:8px; overflow:hidden; background:var(--v2-line-soft);
+  box-shadow:inset 0 0 0 1px rgba(15,23,42,.04);
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] .ipc-comp-seg{ height:100%; min-width:2px; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] .ipc-comp-legend{
+  display:flex; justify-content:space-between; gap:14px;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] .ipc-comp-item{
+  display:flex; flex-direction:column; gap:2px; min-width:0;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] .ipc-comp-item--right{
+  text-align:right; align-items:flex-end;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] .ipc-comp-nm{
+  display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--v2-body);
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] .ipc-comp-item--right .ipc-comp-nm{ flex-direction:row-reverse; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] .ipc-comp-dot{
+  width:9px; height:9px; border-radius:3px; flex-shrink:0;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] .ipc-comp-vl{
+  font-family:var(--v2-mono); font-weight:600; font-size:13px; color:var(--v2-ink); white-space:nowrap;
 }

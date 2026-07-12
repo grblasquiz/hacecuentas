@@ -1,0 +1,126 @@
+---
+/**
+ * IpcCompositionBar — script-only, sin UI propia (patrón ImcUnitsHook).
+ *
+ * Reemplaza el donut de "composición del resultado" por la BARRA APILADA
+ * horizontal del mockup ("Monto original $X · 87%" / "Ajuste por inflación $Y ·
+ * 13%"). Único en la calc de actualización por inflación (IPC).
+ *
+ * Fuente de datos = la leyenda que ya arma el motor al renderizar el `_chart`
+ * doughnut de inflacion-ipc.ts (renderV2Donut → `.v2-donut-legend`). Leemos de
+ * ahí (valores finales, no animados, y con las MISMAS etiquetas que emite la
+ * fórmula, así queda coherente en cualquier locale) y dibujamos la barra
+ * proporcional. El donut queda oculto por CSS (calc-redesign.css, scopeado al
+ * slug); esta barra lo sustituye visualmente. Si el motor no corrió (no hay
+ * resultado) la barra no aparece.
+ */
+---
+
+<script is:inline>
+  (function () {
+    var SLUG = "calculadora-actualizacion-inflacion-ipc";
+
+    function readNum(s) {
+      var n = Number(String(s || "").replace(/[^\d]/g, ""));
+      return isFinite(n) ? n : 0;
+    }
+
+    function build(wrap, mo) {
+      var rows = wrap.querySelectorAll(".v2-donut-legend .v2-donut-lg");
+      if (rows.length < 2) return;
+      var data = Array.prototype.map.call(rows, function (r) {
+        var nmEl = r.querySelector(".nm"),
+          vlEl = r.querySelector(".vl"),
+          swEl = r.querySelector(".sw");
+        var vl = vlEl ? vlEl.textContent : "";
+        var valTxt = (vl.split("·")[0] || "").trim();
+        return {
+          nm: nmEl ? nmEl.textContent : "",
+          valTxt: valTxt,
+          num: readNum(valTxt),
+          color: swEl ? swEl.style.background : "",
+        };
+      });
+      var total = data.reduce(function (a, d) {
+        return a + d.num;
+      }, 0);
+      if (total <= 0) return;
+
+      var segs = data
+        .map(function (d) {
+          return (
+            '<span class="ipc-comp-seg" style="width:' +
+            ((d.num / total) * 100).toFixed(3) +
+            "%;background:" +
+            d.color +
+            '"></span>'
+          );
+        })
+        .join("");
+      var items = data
+        .map(function (d, i) {
+          var p = Math.round((d.num / total) * 100);
+          return (
+            '<div class="ipc-comp-item' +
+            (i === data.length - 1 ? " ipc-comp-item--right" : "") +
+            '"><span class="ipc-comp-nm"><span class="ipc-comp-dot" style="background:' +
+            d.color +
+            '"></span>' +
+            d.nm +
+            '</span><span class="ipc-comp-vl">' +
+            d.valTxt +
+            " · " +
+            p +
+            "%</span></div>"
+          );
+        })
+        .join("");
+
+      var host = wrap.querySelector(".ipc-comp");
+      if (!host) {
+        host = document.createElement("div");
+        host.className = "ipc-comp";
+        host.setAttribute("role", "img");
+        wrap.appendChild(host);
+      }
+      host.setAttribute(
+        "aria-label",
+        "Composición del monto actualizado: " +
+          data
+            .map(function (d) {
+              return d.nm + " " + Math.round((d.num / total) * 100) + "%";
+            })
+            .join(", ")
+      );
+      // Desconectamos mientras mutamos para no auto-dispararnos.
+      if (mo) mo.disconnect();
+      host.innerHTML =
+        '<div class="ipc-comp-bar">' +
+        segs +
+        '</div><div class="ipc-comp-legend">' +
+        items +
+        "</div>";
+      if (mo) mo.observe(wrap, { childList: true, subtree: true });
+    }
+
+    function boot() {
+      var cont = document.querySelector(
+        '.calc-container[data-slug="' + SLUG + '"]'
+      );
+      if (!cont) return;
+      var wrap = cont.querySelector("[data-chart-wrap]");
+      if (!wrap) return;
+      var mo = new MutationObserver(function () {
+        build(wrap, mo);
+      });
+      mo.observe(wrap, { childList: true, subtree: true });
+      build(wrap, mo);
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", boot, { once: true });
+    } else {
+      boot();
+    }
+  })();
+</script>

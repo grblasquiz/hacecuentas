@@ -1,0 +1,133 @@
+---
+/**
+ * ImcScaleBar — Escala OMS de IMC como barra de "pills" (mockup 2026-07-11).
+ *
+ * Reemplaza VISUALMENTE al gráfico Chart.js `type:'scale'` (que se oculta por
+ * CSS en /calculadora-imc). Se inyecta como hijo de `.results-grid` justo
+ * después del banner (TU IMC + Categoría) y se posiciona el marcador leyendo el
+ * IMC del evento `hc-calc-result` (mismo evento que ImcResultCta). NO toca el
+ * cálculo ni ningún output: solo es una lectura visual del número ya calculado.
+ *
+ * Scopeado a slug='calculadora-imc'. Additivo: si el script no corre, el layout
+ * cae de pie (el gráfico Chart.js queda oculto pero las métricas siguen).
+ */
+---
+
+<script is:inline>
+  (function () {
+    // Cortes OMS estándar (adultos). El texto de categoría ya contempla el
+    // ajuste 23–28 de adulto mayor; la barra usa siempre la escala canónica.
+    var SEGS = [
+      { label: 'Bajo peso',     lo: 12,   hi: 18.5, tick: '18,5', color: '#4dabf7' },
+      { label: 'Peso normal',   lo: 18.5, hi: 25,   tick: '24,9', color: '#37b24d' },
+      { label: 'Sobrepeso',     lo: 25,   hi: 30,   tick: '29,9', color: '#f59f00' },
+      { label: 'Obesidad I',    lo: 30,   hi: 35,   tick: '34,9', color: '#f76707' },
+      { label: 'Obesidad II',   lo: 35,   hi: 40,   tick: '39,9', color: '#e8590c' },
+      { label: 'Obesidad III',  lo: 40,   hi: 55,   tick: '≥40',  color: '#c92a2a' }
+    ];
+    var SEG_W = 100 / SEGS.length; // ancho de cada segmento en %
+
+    function fmt(n) {
+      if (typeof n !== 'number' || !isFinite(n)) return '';
+      var s = Math.round(n * 100) / 100;
+      return String(s).replace('.', ',');
+    }
+
+    function markerPos(v) {
+      for (var i = 0; i < SEGS.length; i++) {
+        var s = SEGS[i];
+        if (v < s.hi || i === SEGS.length - 1) {
+          var frac = (v - s.lo) / (s.hi - s.lo);
+          if (frac < 0) frac = 0; if (frac > 1) frac = 1;
+          return { pct: (i + frac) * SEG_W, idx: i };
+        }
+      }
+      return { pct: 0, idx: 0 };
+    }
+
+    function build() {
+      var wrap = document.createElement('div');
+      wrap.className = 'imc-scale';
+      wrap.setAttribute('data-imc-scale', '');
+      var labels = '', segs = '', ticks = '';
+      SEGS.forEach(function (s) {
+        labels += '<span>' + s.label + '</span>';
+        segs += '<span class="imc-scale-seg" style="background:' + s.color + '"></span>';
+        ticks += '<span>' + s.tick + '</span>';
+      });
+      wrap.innerHTML =
+        '<div class="imc-scale-cats">' + labels + '</div>' +
+        '<div class="imc-scale-track">' + segs +
+          '<span class="imc-scale-marker" data-imc-marker hidden>' +
+            '<span class="imc-scale-marker-dot"></span>' +
+            '<span class="imc-scale-marker-val" data-imc-marker-val></span>' +
+          '</span>' +
+        '</div>' +
+        '<div class="imc-scale-ticks">' + ticks + '</div>';
+      return wrap;
+    }
+
+    function place(container, v, categoria) {
+      var grid = container.querySelector('.results-grid');
+      if (!grid) return;
+      var scale = grid.querySelector('[data-imc-scale]');
+      if (!scale) {
+        scale = build();
+        // Insertar tras el banner (imc + categoria = 2 primeras cells).
+        var ref = grid.children.length > 2 ? grid.children[2] : null;
+        grid.insertBefore(scale, ref);
+      }
+      var pos = markerPos(v);
+      var marker = scale.querySelector('[data-imc-marker]');
+      var valEl = scale.querySelector('[data-imc-marker-val]');
+      if (marker && valEl) {
+        marker.style.left = pos.pct.toFixed(2) + '%';
+        marker.style.setProperty('--mk', SEGS[pos.idx].color);
+        valEl.textContent = fmt(v);
+        marker.hidden = false;
+      }
+    }
+
+    // Renombra los botones revelados para calzar con el mockup (el widget los
+    // rotula "CSV" / "Imagen"; el mockup dice "Descargar CSV" / "PNG"). Solo
+    // cambia el texto visible; el data-action y el tracking quedan intactos.
+    function relabel(container) {
+      var map = [
+        ['[data-action="download-csv"]', 'Descargar CSV'],
+        ['[data-action="share-image"]', 'PNG']
+      ];
+      map.forEach(function (m) {
+        var btn = container.querySelector('.share ' + m[0]);
+        if (!btn) return;
+        for (var i = btn.childNodes.length - 1; i >= 0; i--) {
+          var n = btn.childNodes[i];
+          if (n.nodeType === 1 && n.tagName === 'SPAN') { n.textContent = m[1]; return; }
+          if (n.nodeType === 3 && n.nodeValue.trim()) { n.nodeValue = ' ' + m[1]; return; }
+        }
+        btn.appendChild(document.createTextNode(' ' + m[1]));
+      });
+    }
+
+    function init() {
+      var containers = document.querySelectorAll('.calc-container[data-slug="calculadora-imc"]');
+      if (!containers.length) return;
+      containers.forEach(function (container) {
+        relabel(container);
+        container.addEventListener('hc-calc-result', function (ev) {
+          var d = ev && ev.detail ? ev.detail : null;
+          if (!d || !d.output) return;
+          if (d.slug && d.slug !== 'calculadora-imc') return;
+          var v = Number(d.output.imc);
+          if (!isFinite(v)) return;
+          place(container, v, d.output.categoria || '');
+        });
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+</script>
