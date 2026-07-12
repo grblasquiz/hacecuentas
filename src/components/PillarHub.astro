@@ -1,282 +1,501 @@
 ---
 /**
- * Hub de PILAR — página curada que concentra la autoridad interna de uno de
- * los 4 pilares (src/lib/pillars.ts). Implementa el flujo:
- *   Guía → calculadora principal → salas de decisión → contenido relacionado.
+ * PillarHub / CalculatorHub — plantilla del hub agrupador (mockup aprobado
+ * 2026-07-12). Config-driven: la usan tanto los 4 pilares como las 26
+ * categorías vía un `HubConfig` normalizado (src/lib/hub-config.ts). No hay
+ * markup duplicado por ruta.
  *
- * Los slugs curados se validan contra el catálogo real: un slug inexistente
- * se filtra (no rompe build ni genera 404), pero conviene mantener la lista
- * limpia en pillars.ts.
+ * Uso:
+ *   <PillarHub pillar={pillar} />        (pilares — arma el config solo)
+ *   <PillarHub config={hubConfig} />     (categorías — config ya armado)
+ *
+ * Estructura: Hero + acceso rápido → ¿Qué necesitás resolver? → Calculadoras
+ * destacadas (buscador/filtro local en pilares) → Salas de decisión (navy) →
+ * Guía + datos. Emite schema (CollectionPage + BreadcrumbList) sólo cuando el
+ * config lo trae (pilares); en categorías el schema lo emite el Layout.
  */
 import type { PillarDef } from '../lib/pillars';
-import { DECISION_MANIFEST } from '../lib/decisions/manifest';
+import { buildPillarConfig, type HubConfig } from '../lib/hub-config';
 
 export interface Props {
-  pillar: PillarDef;
+  pillar?: PillarDef;
+  config?: HubConfig;
 }
-const { pillar } = Astro.props;
+const { pillar, config: cfgProp } = Astro.props;
 
-const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
-const bySlug = new Map<string, any>();
-for (const m of Object.values(calcModules)) {
-  const c = (m as any).default || m;
-  if (c?.slug && c.h1 && !c.noindex) bySlug.set(c.slug, c);
+let config = cfgProp;
+if (!config && pillar) {
+  const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+  const calcBySlug = new Map<string, any>();
+  for (const m of Object.values(calcModules)) {
+    const calc = (m as any).default || m;
+    if (calc?.slug && calc.h1 && !calc.noindex) calcBySlug.set(calc.slug, calc);
+  }
+  const guiaModules = import.meta.glob<any>('../content/guias/*.json', { eager: true });
+  const guiaBySlug = new Map<string, any>();
+  for (const m of Object.values(guiaModules)) {
+    const g = (m as any).default || m;
+    if (g?.slug) guiaBySlug.set(g.slug, g);
+  }
+  config = buildPillarConfig(pillar, { calcBySlug, guiaBySlug });
 }
-
-const mainCalc = bySlug.get(pillar.mainCalc);
-const calcs = pillar.calcs.map((s) => bySlug.get(s)).filter(Boolean);
-
-const roomsBySlug = new Map(DECISION_MANIFEST.map((r) => [r.slug, r]));
-const rooms = pillar.rooms.map((s) => roomsBySlug.get(s)).filter(Boolean);
-
-const guiaModules = import.meta.glob<any>('../content/guias/*.json', { eager: true });
-const guia = Object.values(guiaModules)
-  .map((m: any) => m.default || m)
-  .find((g: any) => g?.slug === pillar.guide);
-
-const CATEGORY_LABELS: Record<string, string> = {
-  finanzas: 'Finanzas',
-  impuestos: 'Impuestos',
-  negocios: 'Negocios',
-  marketing: 'Marketing',
-};
-
-const siteUrl = 'https://hacecuentas.com';
-const schema = {
-  '@context': 'https://schema.org',
-  '@type': 'CollectionPage',
-  name: pillar.h1,
-  description: pillar.description,
-  url: `${siteUrl}/${pillar.slug}`,
-  mainEntity: {
-    '@type': 'ItemList',
-    numberOfItems: 1 + calcs.length,
-    itemListElement: [mainCalc, ...calcs].filter(Boolean).map((c: any, i: number) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      name: c.h1,
-      url: `${siteUrl}/${c.slug}`,
-    })),
-  },
-};
-const schemaBreadcrumb = {
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${siteUrl}/` },
-    { '@type': 'ListItem', position: 2, name: pillar.h1, item: `${siteUrl}/${pillar.slug}` },
-  ],
-};
+const cfg = config!;
+const q = cfg.quick;
 ---
 
-<script type="application/ld+json" set:html={JSON.stringify(schema)} />
-<script type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)} />
+{cfg.schema && <script type="application/ld+json" set:html={JSON.stringify(cfg.schema)} />}
+{cfg.schemaBreadcrumb && <script type="application/ld+json" set:html={JSON.stringify(cfg.schemaBreadcrumb)} />}
 
-<div class="pillar" style={`--pilar: ${pillar.color}`}>
-  <nav class="breadcrumbs" aria-label="Ruta de navegación">
-    <a href="/">Inicio</a>
-    <span class="sep" aria-hidden="true">/</span>
-    <span class="current">{pillar.h1}</span>
-  </nav>
-
-  <header class="pillar-hero">
-    <span class="pillar-icon" aria-hidden="true">{pillar.icon}</span>
-    <h1>{pillar.h1}</h1>
-    <p class="pillar-intro">{pillar.intro}</p>
-  </header>
-
-  {guia && (
-    <a href={`/guia/${guia.slug}`} class="pillar-guide">
-      <span class="pg-eyebrow">📖 Empezá por la guía</span>
-      <span class="pg-title">{guia.h1}</span>
-      <span class="pg-desc">{guia.description}</span>
-      <span class="pg-cta">Leer la guía completa →</span>
-    </a>
-  )}
-
-  {mainCalc && (
-    <a href={`/${mainCalc.slug}`} class="pillar-main">
-      <span class="pm-icon" aria-hidden="true">{mainCalc.icon || '🧮'}</span>
-      <span class="pm-body">
-        <span class="pm-eyebrow">La calculadora principal</span>
-        <span class="pm-title">{mainCalc.h1}</span>
-        {mainCalc.description && <span class="pm-desc">{mainCalc.description}</span>}
-      </span>
-      <span class="pm-cta">Calcular →</span>
-    </a>
-  )}
-
-  <section aria-labelledby="pillar-calcs-h">
-    <h2 id="pillar-calcs-h">Calculadoras destacadas</h2>
-    <ul class="pillar-calcs">
-      {calcs.map((c: any) => (
-        <li>
-          <a href={`/${c.slug}`}>
-            <span class="pc-icon" aria-hidden="true">{c.icon || '🧮'}</span>
-            <span class="pc-name">{c.h1}</span>
-          </a>
-        </li>
-      ))}
-    </ul>
+<div class="calc-hub" data-hub style={`--accent:${cfg.color}`}>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <nav class="crumb" aria-label="Ruta de navegación">
+        {cfg.breadcrumb.map((b, i) => (
+          <>
+            {i > 0 && <span class="crumb-sep">&nbsp;/&nbsp;</span>}
+            {b.href ? <a href={b.href}>{b.label}</a> : <span>{b.label}</span>}
+          </>
+        ))}
+      </nav>
+      <div class:list={['hero-grid', { 'no-quick': !q }]}>
+        <div class="hero-copy">
+          <span class="eyebrow">{cfg.eyebrow}</span>
+          <h1>
+            {cfg.titleLines.map((line, i) => (
+              <>
+                {i === cfg.titleLines.length - 1 ? <span class="accent">{line}</span> : line}
+                {i < cfg.titleLines.length - 1 && <br />}
+              </>
+            ))}
+            {cfg.seoTail && <span class="sr-only"> — {cfg.seoTail}</span>}
+          </h1>
+          <p class="lead">{cfg.lead}</p>
+          <div class="trust">
+            {cfg.trust.map((t) => (
+              <span><b class="check">✓</b> {t}</span>
+            ))}
+          </div>
+        </div>
+        {q && (
+          <aside class="quick" data-quick-href={q.href}>
+            <div class="qtag">{q.tag}</div>
+            <h2>{q.title}</h2>
+            <p>{q.desc}</p>
+            {q.variant === 'input' ? (
+              <form class="inputrow" data-quick-form>
+                <div class="money"><span class="cur">$</span><input class="money-input" inputmode="numeric" autocomplete="off" placeholder={q.placeholder} aria-label={q.title} /></div>
+                <button type="submit" class="go">{q.cta}</button>
+              </form>
+            ) : (
+              <a class="go go-full" href={q.href}>{q.cta}</a>
+            )}
+            {q.micro && <p class="micro" set:html={q.micro}></p>}
+          </aside>
+        )}
+      </div>
+    </div>
   </section>
 
-  {rooms.length > 0 && (
-    <section aria-labelledby="pillar-rooms-h">
-      <h2 id="pillar-rooms-h">¿Estás por decidir? Entrá a una sala</h2>
-      <p class="section-sub">
-        Las salas de decisión combinan varias calculadoras y te devuelven una
-        recomendación con números, no un resultado suelto.
-      </p>
-      <div class="pillar-rooms">
-        {rooms.map((r: any) => (
-          <a href={`/decidir/${r.slug}`} class="room-card">
-            <span class="room-icon" aria-hidden="true">{r.icon}</span>
-            <span class="room-title">{r.h1}</span>
-          </a>
-        ))}
+  <!-- NECESIDADES -->
+  {cfg.needs.length > 0 && (
+    <section class="s-needs">
+      <div class="wrap">
+        <div class="headrow">
+          <div>
+            <div class="kicker">{cfg.needsKicker}</div>
+            <h2 class="title">{cfg.needsTitle}</h2>
+            <p class="sub">{cfg.needsSub}</p>
+          </div>
+        </div>
+        <div class="needs">
+          {cfg.needs.map((n) => (
+            <a class="need" href={n.href}>
+              <span class={`ico ${n.tone}`} aria-hidden="true">{n.icon}</span>
+              <span><b>{n.title}</b>{n.desc && <small>{n.desc}</small>}</span>
+              <span class="arrow" aria-hidden="true">→</span>
+            </a>
+          ))}
+        </div>
       </div>
     </section>
   )}
 
-  <section aria-labelledby="pillar-more-h" class="pillar-more">
-    <h2 id="pillar-more-h">Seguí explorando</h2>
-    <div class="pillar-links">
-      {pillar.dataPages.map((d) => (
-        <a href={d.href} class="pl-chip">📈 {d.label}</a>
-      ))}
-      {pillar.categories.map((cat) => (
-        <a href={`/categoria/${cat}`} class="pl-chip">
-          Categoría {CATEGORY_LABELS[cat] || cat}
-        </a>
-      ))}
-      <a href="/decidir" class="pl-chip">Todas las salas de decisión</a>
-      <a href="/calculadoras" class="pl-chip">Todas las calculadoras</a>
-    </div>
-  </section>
+  <!-- CALCULADORAS DESTACADAS -->
+  {(cfg.primary || cfg.cards.length > 0) && (
+    <section class="s-featured">
+      <div class="wrap">
+        <div class="headrow">
+          <div>
+            <div class="kicker">{cfg.featuredKicker}</div>
+            <h2 class="title">{cfg.featuredTitle}</h2>
+            <p class="sub">{cfg.featuredSub}</p>
+          </div>
+          {cfg.showFeaturedSearch && (
+            <div class="toolrow">
+              <label class="search">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="search" class="hub-search" placeholder={`Buscar en ${cfg.nav.toLowerCase()}…`} autocomplete="off" aria-label="Buscar calculadora" />
+              </label>
+              {cfg.filterBadges.length > 0 && (
+                <select class="filter" aria-label="Filtrar por tipo">
+                  <option value="">Todos</option>
+                  {cfg.filterBadges.map((b) => <option value={b}>{b}</option>)}
+                </select>
+              )}
+            </div>
+          )}
+        </div>
+        <div class="cards">
+          {cfg.primary && (
+            <a class="card primary" href={cfg.primary.href} data-search={`${cfg.primary.title} ${cfg.primary.blurb} ${cfg.primary.badge}`.toLowerCase()} data-badge={cfg.primary.badge}>
+              <div class="primary-body">
+                <span class="badge">{cfg.primary.badge}</span>
+                <h3>{cfg.primary.title}</h3>
+                <p>{cfg.primary.blurb}</p>
+                <div class="meta"><span>{cfg.primary.meta}</span><strong>{cfg.primary.cta}</strong></div>
+              </div>
+              <div class="visual" aria-hidden="true">
+                {cfg.primary.receipt ? (
+                  <div class="receipt">
+                    <small>{cfg.primary.receipt.label}</small>
+                    <div class="big">{cfg.primary.receipt.big}</div>
+                    <div class="rline"></div>
+                    {cfg.primary.receipt.rows.map((r) => (
+                      <div class="rrow"><span>{r[0]}</span><b>{r[1]}</b></div>
+                    ))}
+                  </div>
+                ) : (
+                  <div class="medallion">{cfg.primary.icon}</div>
+                )}
+              </div>
+            </a>
+          )}
+          {cfg.cards.map((k) => (
+            <a class="card" href={k.href} data-search={`${k.title} ${k.blurb} ${k.badge}`.toLowerCase()} data-badge={k.badge}>
+              <span class="badge">{k.badge}</span>
+              <h3>{k.title}</h3>
+              <p>{k.blurb}</p>
+              <div class="meta"><span>{k.meta}</span><strong>{k.cta}</strong></div>
+            </a>
+          ))}
+        </div>
+        {cfg.showFeaturedSearch && <p class="no-results" hidden>No hay calculadoras que coincidan con tu búsqueda.</p>}
+        {cfg.allNote && <p class="all-note">{cfg.allNote}</p>}
+      </div>
+    </section>
+  )}
+
+  <!-- SALAS DE DECISIÓN -->
+  {cfg.rooms.length > 0 && (
+    <section class="decision">
+      <div class="wrap">
+        <div class="headrow">
+          <div>
+            <div class="kicker">{cfg.roomsKicker}</div>
+            <h2 class="title">{cfg.roomsTitle}</h2>
+            <p class="sub">{cfg.roomsSub}</p>
+          </div>
+          <a class="see" href="/decidir">Ver todas las salas →</a>
+        </div>
+        <div class="rooms">
+          {cfg.rooms.map((r) => (
+            <a class="room" href={r.href}>
+              <span class="num">Sala {r.num}{r.tag ? ` · ${r.tag}` : ''}</span>
+              <h3>{r.h1}</h3>
+              <span class="room-cta">Entrar a la sala →</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- APRENDER + DATOS -->
+  {(cfg.guide || cfg.facts.length > 0) && (
+    <section class="learn">
+      <div class="wrap">
+        <div class="headrow">
+          <div>
+            <div class="kicker">Aprendé antes de calcular</div>
+            <h2 class="title">Entender también es hacer cuentas</h2>
+          </div>
+        </div>
+        <div class:list={['learn-grid', { 'only-facts': !cfg.guide }]}>
+          {cfg.guide && (
+            <a class="guide" href={cfg.guide.href}>
+              <div class="guide-body">
+                <span class="badge">{cfg.guide.badge}</span>
+                <h3>{cfg.guide.h1}</h3>
+                <p>{cfg.guide.description}</p>
+                <span class="see">Leer la guía completa →</span>
+              </div>
+              <div class="book" aria-hidden="true">📖</div>
+            </a>
+          )}
+          {cfg.facts.length > 0 && (
+            <aside class="facts">
+              <h3>{cfg.factsTitle}</h3>
+              {cfg.facts.map((f) => (
+                <a class="fact" href={f.href}>
+                  <span class="facticon" aria-hidden="true">{f.icon}</span>
+                  <span class="fact-txt"><b>{f.title}</b>{f.desc && <span>{f.desc}</span>}</span>
+                </a>
+              ))}
+            </aside>
+          )}
+        </div>
+      </div>
+    </section>
+  )}
 </div>
 
-<style>
-  .pillar { max-width: 880px; margin: 0 auto; }
-
-  .breadcrumbs {
-    display: flex;
-    gap: 0.5rem;
-    font-size: 0.8125rem;
-    color: var(--text-subtle);
-    margin-bottom: 1.25rem;
+<style is:global>
+  /* Hub full-bleed: rompe el ancho centrado del <main> del Layout (como la home). */
+  body[data-page-type='hub'] > main#main {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: clip;
   }
-  .breadcrumbs a { color: var(--text-muted); text-decoration: none; }
-  .breadcrumbs a:hover { color: var(--accent); }
-  .breadcrumbs .sep { color: var(--border-strong); }
-  .breadcrumbs .current { color: var(--text); font-weight: 500; }
-
-  .pillar-hero { margin-bottom: 1.75rem; }
-  .pillar-icon { font-size: 2rem; display: inline-block; margin-bottom: 0.25rem; }
-  .pillar-hero h1 { font-size: clamp(1.75rem, 4vw, 2.375rem); margin: 0 0 0.5rem; }
-  .pillar-intro { color: var(--text-muted); max-width: 640px; margin: 0; font-size: 1.0625rem; line-height: 1.55; }
-
-  /* Guía-pilar: el punto de entrada del flujo de autoridad */
-  .pillar-guide {
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-    padding: 1.125rem 1.25rem;
-    border: 1.5px solid color-mix(in srgb, var(--pilar) 35%, transparent);
-    border-left: 4px solid var(--pilar);
-    border-radius: var(--radius);
-    background: color-mix(in srgb, var(--pilar) 5%, var(--bg-card));
-    text-decoration: none;
-    margin-bottom: 1rem;
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
-  .pillar-guide:hover { border-color: var(--pilar); box-shadow: var(--shadow-lg); text-decoration: none; }
-  .pg-eyebrow { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--pilar); }
-  .pg-title { font-size: 1.125rem; font-weight: 700; color: var(--text); }
-  .pg-desc { font-size: 0.9rem; color: var(--text-muted); line-height: 1.45; }
-  .pg-cta { font-size: 0.875rem; font-weight: 600; color: var(--pilar); }
-
-  /* Calculadora principal */
-  .pillar-main {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.125rem 1.25rem;
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--bg-card);
-    text-decoration: none;
-    margin-bottom: 2.25rem;
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
-  .pillar-main:hover { border-color: var(--pilar); box-shadow: var(--shadow-lg); text-decoration: none; }
-  .pm-icon { font-size: 1.75rem; flex-shrink: 0; }
-  .pm-body { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
-  .pm-eyebrow { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-subtle); }
-  .pm-title { font-size: 1.0625rem; font-weight: 700; color: var(--text); }
-  .pm-desc { font-size: 0.875rem; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .pm-cta { margin-left: auto; flex-shrink: 0; font-weight: 700; color: #fff; background: var(--pilar); border-radius: 999px; padding: 0.5rem 1rem; font-size: 0.875rem; white-space: nowrap; }
-
-  section { margin-bottom: 2.25rem; }
-  h2 { font-size: 1.375rem; margin-bottom: 0.75rem; }
-  .section-sub { color: var(--text-muted); font-size: 0.9375rem; margin: -0.25rem 0 1rem; max-width: 560px; }
-
-  .pillar-calcs {
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 0.25rem 1.25rem;
-    margin: 0;
-    padding: 0;
-  }
-  .pillar-calcs a {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5625rem 0.625rem;
-    border-radius: var(--radius-sm);
-    color: var(--text-muted);
-    text-decoration: none;
-    font-size: 0.9375rem;
-    line-height: 1.35;
-    transition: background 0.12s, color 0.12s;
-  }
-  .pillar-calcs a:hover { background: color-mix(in srgb, var(--pilar) 10%, transparent); color: var(--pilar); }
-  .pc-icon { flex-shrink: 0; }
-
-  .pillar-rooms {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 0.625rem;
-  }
-  .room-card {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.625rem;
-    padding: 0.875rem 1rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--bg-card);
-    text-decoration: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
-  .room-card:hover { border-color: var(--pilar); box-shadow: var(--shadow-lg); text-decoration: none; }
-  .room-icon { font-size: 1.25rem; flex-shrink: 0; }
-  .room-title { font-size: 0.9375rem; font-weight: 600; color: var(--text); line-height: 1.35; }
-
-  .pillar-links { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-  .pl-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.4375rem 0.875rem;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    background: var(--bg-card);
-    color: var(--text-muted);
-    font-size: 0.8438rem;
-    font-weight: 500;
-    text-decoration: none;
-    transition: border-color 0.15s, color 0.15s;
-  }
-  .pl-chip:hover { border-color: var(--pilar); color: var(--pilar); text-decoration: none; }
 </style>
+
+<style>
+  .calc-hub {
+    --ink: #131729;
+    --muted: #63697b;
+    --line: #e5e7ef;
+    --paper: #fff;
+    --wash: #f7f7fb;
+    --purple: #6853e7;
+    --blue: #2f6fed;
+    --navy: #14182d;
+    --shadow: 0 18px 50px rgba(24, 26, 55, 0.1);
+    color: var(--ink);
+    background: var(--paper);
+    font-family: 'Inter Variable', Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  .calc-hub a { text-decoration: none; color: inherit; }
+  .calc-hub .wrap { width: min(1180px, calc(100% - 40px)); margin: auto; }
+  .calc-hub h1, .calc-hub h2, .calc-hub h3 { color: var(--ink); letter-spacing: -0.02em; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  /* HERO */
+  .calc-hub .hero {
+    background: radial-gradient(circle at 82% 15%, rgba(126, 101, 244, 0.22), transparent 27%), linear-gradient(180deg, #f5f3ff 0%, #fff 85%);
+    padding: 54px 0 52px;
+    border-bottom: 1px solid #ecebfa;
+  }
+  .calc-hub .crumb { font-size: 13px; color: #74788b; margin-bottom: 26px; }
+  .calc-hub .crumb a:hover { color: var(--purple); }
+  .calc-hub .hero-grid { display: grid; grid-template-columns: 1.18fr 0.82fr; gap: 64px; align-items: center; }
+  .calc-hub .hero-grid.no-quick { grid-template-columns: 1fr; }
+  .calc-hub .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px; border: 1px solid #dcd6ff;
+    background: #fff; color: #5c48cb; padding: 7px 11px; border-radius: 999px;
+    font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px;
+  }
+  .calc-hub .hero h1 { font-size: clamp(38px, 5.2vw, 53px); line-height: 1.02; letter-spacing: -0.045em; margin: 17px 0 16px; max-width: 690px; font-weight: 850; }
+  .calc-hub .hero h1 .accent { color: var(--purple); }
+  .calc-hub .lead { font-size: 18px; line-height: 1.6; color: #555b6f; max-width: 650px; margin: 0; }
+  .calc-hub .trust { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 24px; color: #565c6e; font-size: 13px; font-weight: 650; }
+  .calc-hub .trust span { display: flex; align-items: center; gap: 7px; }
+  .calc-hub .trust .check { color: #0b9466; }
+
+  .calc-hub .quick {
+    background: #fff; border: 1px solid #ddd9f5; border-radius: 22px; padding: 24px;
+    box-shadow: var(--shadow); position: relative; overflow: hidden;
+  }
+  .calc-hub .quick:before { content: ''; position: absolute; right: -50px; top: -50px; width: 150px; height: 150px; background: #efeaff; border-radius: 50%; }
+  .calc-hub .qtag { position: relative; font-size: 12px; color: var(--purple); font-weight: 800; text-transform: uppercase; letter-spacing: 0.7px; }
+  .calc-hub .quick h2 { position: relative; font-size: 22px; letter-spacing: -0.4px; margin: 8px 0 7px; font-weight: 800; }
+  .calc-hub .quick p { position: relative; color: var(--muted); font-size: 14px; line-height: 1.45; margin: 0 0 18px; }
+  .calc-hub .inputrow { display: grid; grid-template-columns: 1fr auto; gap: 9px; position: relative; }
+  .calc-hub .money { min-width: 0; height: 50px; border: 1.5px solid #d8d9e4; border-radius: 12px; display: flex; align-items: center; padding: 0 14px; gap: 6px; background: #fff; }
+  .calc-hub .money .cur { font-size: 16px; font-weight: 750; color: #303548; }
+  .calc-hub .money-input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; font-size: 17px; font-weight: 750; color: #303548; }
+  .calc-hub .money:focus-within { border-color: var(--purple); }
+  .calc-hub .go {
+    border: 0; background: linear-gradient(135deg, var(--purple), var(--blue)); color: #fff;
+    font-weight: 800; border-radius: 12px; padding: 0 18px; cursor: pointer; font-size: 14px;
+    box-shadow: 0 8px 20px rgba(83, 81, 225, 0.22);
+  }
+  .calc-hub .go-full { position: relative; display: inline-flex; align-items: center; justify-content: center; height: 50px; padding: 0 22px; width: 100%; }
+  .calc-hub .micro { margin-top: 12px; font-size: 12px; color: #7b8091; }
+  .calc-hub .micro :global(b) { color: #33394e; }
+
+  /* SECCIONES */
+  .calc-hub section { padding: 62px 0; }
+  .calc-hub .headrow { display: flex; align-items: flex-end; justify-content: space-between; gap: 30px; margin-bottom: 26px; }
+  .calc-hub .kicker { font-size: 12px; color: var(--purple); font-weight: 850; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+  .calc-hub .title { font-size: clamp(26px, 3.4vw, 34px); letter-spacing: -0.03em; margin: 0; font-weight: 820; }
+  .calc-hub .sub { font-size: 16px; color: var(--muted); margin: 8px 0 0; }
+  .calc-hub .see { color: var(--purple); font-size: 14px; font-weight: 750; white-space: nowrap; }
+  .calc-hub .see:hover { text-decoration: underline; }
+
+  /* NECESIDADES */
+  .calc-hub .needs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .calc-hub .need {
+    padding: 20px; border: 1px solid var(--line); border-radius: 16px; background: #fff;
+    display: grid; grid-template-columns: 44px 1fr auto; gap: 14px; align-items: center; transition: 0.18s;
+  }
+  .calc-hub .need:hover { transform: translateY(-3px); border-color: #cfc8ff; box-shadow: 0 14px 35px rgba(33, 32, 70, 0.08); }
+  .calc-hub .ico { width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; font-size: 20px; }
+  .calc-hub .i1 { background: #edf3ff; } .calc-hub .i2 { background: #fff0eb; } .calc-hub .i3 { background: #ebfaf4; }
+  .calc-hub .i4 { background: #f3efff; } .calc-hub .i5 { background: #fff6df; } .calc-hub .i6 { background: #eaf7fb; }
+  .calc-hub .need b { display: block; font-size: 15px; margin-bottom: 4px; font-weight: 750; }
+  .calc-hub .need small { color: var(--muted); font-size: 12px; }
+  .calc-hub .need .arrow { color: #9da1af; font-size: 18px; }
+
+  /* DESTACADAS */
+  .calc-hub .s-featured { background: var(--wash); }
+  .calc-hub .toolrow { display: flex; gap: 10px; align-items: center; }
+  .calc-hub .search { height: 42px; min-width: 260px; background: #fff; border: 1px solid var(--line); border-radius: 11px; padding: 0 14px; display: flex; align-items: center; gap: 8px; color: #898e9d; }
+  .calc-hub .search svg { flex: none; }
+  .calc-hub .hub-search { border: 0; outline: 0; background: transparent; font: inherit; font-size: 14px; color: var(--ink); flex: 1; min-width: 0; }
+  .calc-hub .filter { height: 42px; border: 1px solid var(--line); background: #fff; border-radius: 11px; padding: 0 13px; color: #545a6b; font: inherit; font-weight: 650; cursor: pointer; }
+  .calc-hub .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 17px; }
+  .calc-hub .card {
+    background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 21px;
+    min-height: 210px; display: flex; flex-direction: column; position: relative; transition: 0.18s;
+  }
+  .calc-hub .card:hover { transform: translateY(-3px); border-color: #cfc8ff; box-shadow: 0 16px 38px rgba(33, 32, 70, 0.1); }
+  .calc-hub .card.primary {
+    grid-column: span 2; display: grid; grid-template-columns: 1fr 225px; gap: 22px; padding: 28px;
+    background: linear-gradient(135deg, #171a32, #252654); color: #fff; border: 0; min-height: 250px; overflow: hidden;
+  }
+  .calc-hub .card.primary:hover { transform: translateY(-3px); box-shadow: 0 22px 50px rgba(24, 26, 55, 0.28); }
+  .calc-hub .card.primary:after {
+    content: ''; position: absolute; width: 260px; height: 260px; border-radius: 50%; right: -60px; bottom: -100px;
+    background: linear-gradient(135deg, #765cf0, #3979ef); opacity: 0.7;
+  }
+  .calc-hub .primary-body { position: relative; z-index: 2; display: flex; flex-direction: column; }
+  .calc-hub .badge {
+    width: max-content; padding: 5px 8px; border-radius: 7px; background: #f1efff; color: #5f49d6;
+    font-size: 10px; font-weight: 850; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .calc-hub .primary .badge { background: rgba(255, 255, 255, 0.13); color: #dcd8ff; }
+  .calc-hub .card h3 { font-size: 18px; line-height: 1.25; letter-spacing: -0.01em; margin: 15px 0 8px; font-weight: 780; }
+  .calc-hub .primary h3 { font-size: clamp(22px, 2.6vw, 27px); margin-top: 16px; max-width: 500px; color: #fff; }
+  .calc-hub .card p { font-size: 13px; line-height: 1.5; color: #6b7080; margin: 0; }
+  .calc-hub .primary p { color: #c7c9d8; font-size: 14px; max-width: 530px; }
+  .calc-hub .meta { margin-top: auto; padding-top: 18px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #858a99; gap: 10px; }
+  .calc-hub .meta strong { color: var(--purple); font-size: 13px; }
+  .calc-hub .primary .meta { color: #cfd1dd; }
+  .calc-hub .primary .meta strong { color: #fff; }
+  .calc-hub .visual { position: relative; z-index: 2; display: grid; place-items: center; }
+  .calc-hub .receipt { width: 185px; background: #fff; color: #1d2134; border-radius: 14px; padding: 16px; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22); transform: rotate(3deg); }
+  .calc-hub .receipt small { color: #757a8a; font-size: 11px; }
+  .calc-hub .receipt .big { font-size: 22px; font-weight: 850; margin: 6px 0; }
+  .calc-hub .rline { height: 1px; background: #e9eaf0; margin: 11px 0; }
+  .calc-hub .rrow { display: flex; justify-content: space-between; font-size: 11px; margin: 7px 0; color: #555b6c; }
+  .calc-hub .rrow b { color: #1d2134; }
+  .calc-hub .medallion { width: 118px; height: 118px; border-radius: 26px; display: grid; place-items: center; font-size: 54px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.16); }
+  .calc-hub .no-results { text-align: center; margin: 24px 0 0; color: #777c8c; font-size: 14px; }
+  .calc-hub .all-note { text-align: center; margin: 26px 0 0; color: #777c8c; font-size: 13px; }
+
+  /* SALAS (navy) */
+  .calc-hub .decision { background: var(--navy); color: #fff; position: relative; overflow: hidden; }
+  .calc-hub .decision:before {
+    content: ''; position: absolute; width: 540px; height: 540px; border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 50%; right: -170px; top: -260px; box-shadow: 0 0 0 90px rgba(255, 255, 255, 0.025), 0 0 0 180px rgba(255, 255, 255, 0.02);
+  }
+  .calc-hub .decision .title { color: #fff; }
+  .calc-hub .decision .sub { color: #aeb3c8; }
+  .calc-hub .decision .kicker { color: #a99bff; }
+  .calc-hub .rooms { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+  .calc-hub .room { background: rgba(255, 255, 255, 0.075); border: 1px solid rgba(255, 255, 255, 0.11); border-radius: 17px; padding: 20px; min-height: 150px; display: flex; flex-direction: column; transition: 0.18s; }
+  .calc-hub .room:hover { background: rgba(255, 255, 255, 0.11); transform: translateY(-3px); }
+  .calc-hub .room .num { font-size: 11px; text-transform: uppercase; color: #aeb3c8; font-weight: 800; letter-spacing: 0.5px; }
+  .calc-hub .room h3 { font-size: 17px; line-height: 1.35; margin: 16px 0; color: #fff; font-weight: 720; }
+  .calc-hub .room-cta { margin-top: auto; color: #bcb2ff; font-size: 13px; font-weight: 750; }
+
+  /* APRENDER */
+  .calc-hub .learn-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 22px; }
+  .calc-hub .learn-grid.only-facts { grid-template-columns: 1fr; }
+  .calc-hub .guide { border: 1px solid var(--line); border-radius: 20px; padding: 28px; background: linear-gradient(135deg, #fff, #f6f4ff); display: grid; grid-template-columns: 1fr 150px; gap: 20px; transition: 0.18s; }
+  .calc-hub .guide:hover { border-color: #cfc8ff; box-shadow: 0 16px 38px rgba(33, 32, 70, 0.08); }
+  .calc-hub .guide h3 { font-size: 22px; letter-spacing: -0.02em; margin: 10px 0; font-weight: 800; }
+  .calc-hub .guide p { font-size: 14px; line-height: 1.55; color: var(--muted); margin: 0 0 12px; }
+  .calc-hub .book { align-self: center; height: 150px; border-radius: 14px; background: linear-gradient(145deg, #7257eb, #345fdb); box-shadow: 12px 14px 0 #e5e1ff; display: grid; place-items: center; color: #fff; font-size: 45px; }
+  .calc-hub .facts { border: 1px solid var(--line); border-radius: 20px; padding: 22px 25px; }
+  .calc-hub .facts > h3 { margin: 0 0 8px; font-size: 18px; font-weight: 800; }
+  .calc-hub .fact { display: flex; gap: 13px; padding: 14px 0; border-top: 1px solid var(--line); align-items: center; }
+  .calc-hub .facts > h3 + .fact { border-top: 0; }
+  .calc-hub .fact:hover .fact-txt b { color: var(--purple); }
+  .calc-hub .facticon { width: 34px; height: 34px; border-radius: 10px; background: #eff4ff; display: grid; place-items: center; flex: none; }
+  .calc-hub .fact-txt { display: flex; flex-direction: column; }
+  .calc-hub .fact-txt b { font-size: 14px; margin-bottom: 3px; font-weight: 750; }
+  .calc-hub .fact-txt span { font-size: 12px; color: var(--muted); line-height: 1.4; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .calc-hub .hero-grid, .calc-hub .learn-grid { grid-template-columns: 1fr; gap: 34px; }
+    .calc-hub .needs, .calc-hub .cards, .calc-hub .rooms { grid-template-columns: 1fr 1fr; }
+    .calc-hub .card.primary { grid-column: span 2; }
+  }
+  @media (max-width: 620px) {
+    .calc-hub section { padding: 44px 0; }
+    .calc-hub .hero { padding: 32px 0 40px; }
+    .calc-hub .needs, .calc-hub .cards, .calc-hub .rooms { grid-template-columns: 1fr; }
+    .calc-hub .card.primary { grid-column: auto; grid-template-columns: 1fr; }
+    .calc-hub .visual { display: none; }
+    .calc-hub .headrow { flex-direction: column; align-items: flex-start; }
+    .calc-hub .toolrow { width: 100%; }
+    .calc-hub .search { min-width: 0; flex: 1; }
+    .calc-hub .guide { grid-template-columns: 1fr; }
+    .calc-hub .book { height: 110px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .calc-hub * { transition: none !important; }
+  }
+</style>
+
+<script>
+  function wireHub() {
+    document.querySelectorAll('.calc-hub[data-hub]').forEach((root) => {
+      if ((root as HTMLElement).dataset.wired) return;
+      (root as HTMLElement).dataset.wired = '1';
+
+      // Acceso rápido (variante input): el input/botón abren la calculadora principal.
+      const quick = root.querySelector('.quick') as HTMLElement | null;
+      const form = root.querySelector('[data-quick-form]') as HTMLFormElement | null;
+      if (quick && form) {
+        const href = quick.dataset.quickHref;
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          if (href) window.location.href = href;
+        });
+      }
+
+      // Buscador + filtro local sobre las cards destacadas (sin navegar).
+      const search = root.querySelector('.hub-search') as HTMLInputElement | null;
+      const filter = root.querySelector('.filter') as HTMLSelectElement | null;
+      const cards = Array.from(root.querySelectorAll('.cards .card')) as HTMLElement[];
+      const noRes = root.querySelector('.no-results') as HTMLElement | null;
+      if (!search && !filter) return;
+      const apply = () => {
+        const term = (search?.value || '').trim().toLowerCase();
+        const b = filter?.value || '';
+        let shown = 0;
+        cards.forEach((card) => {
+          const hay = card.dataset.search || '';
+          const okQ = !term || hay.includes(term);
+          const okB = !b || card.dataset.badge === b;
+          const show = okQ && okB;
+          card.hidden = !show;
+          if (show) shown++;
+        });
+        if (noRes) noRes.hidden = shown !== 0;
+      };
+      search?.addEventListener('input', apply);
+      filter?.addEventListener('change', apply);
+    });
+  }
+  wireHub();
+  document.addEventListener('astro:page-load', wireHub);
+</script>

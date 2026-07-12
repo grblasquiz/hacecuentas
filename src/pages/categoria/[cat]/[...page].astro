@@ -10,6 +10,8 @@ import { groupCalcs, featuredCalcs, cleanDesc } from '../../../lib/category-layo
 import CategoryIcon from '../../../components/CategoryIcon.astro';
 import { categoryColor, categoryDomain } from '../../../lib/category-colors';
 import { canDistributeCalc } from '../../../lib/content-policy';
+import PillarHub from '../../../components/PillarHub.astro';
+import { buildCategoryConfig } from '../../../lib/hub-config';
 
 const PAGE_SIZE = 60;
 
@@ -1431,6 +1433,32 @@ const showCountryFilter = arCount > 0 && arCount < calcs.length;
 // Interlinking: guía pilar del tema + categorías hermanas
 const pillarSlug = CATEGORY_TO_GUIDE[cat];
 const pillarTitle = pillarSlug ? GUIDE_TITLES[pillarSlug] : null;
+
+// Hub agrupador (mockup 2026-07-12): sólo en la página 1. Reusa el mismo
+// componente que los pilares vía un HubConfig auto-derivado de la categoría.
+const guiaModulesHub = import.meta.glob<any>('../../../content/guias/*.json', { eager: true });
+let guiaHub: any = null;
+if (pillarSlug) {
+  for (const gm of Object.values(guiaModulesHub)) {
+    const g = (gm as any).default || gm;
+    if (g?.slug === pillarSlug) { guiaHub = g; break; }
+  }
+}
+const hubConfig = isFirstPage
+  ? buildCategoryConfig({
+      cat,
+      label: m.label,
+      color: m.color,
+      icon: m.icon,
+      intro: m.intro,
+      featured,
+      renderGroups,
+      totalCalcs,
+      pillarSlug,
+      guia: guiaHub,
+    })
+  : null;
+
 const siblings = (SIBLING_CATEGORIES[cat] || []).filter(
   (sc: string) => typeof sc === 'string' && CATEGORY_TITLES[sc]
 );
@@ -1554,76 +1582,47 @@ function md(text: string): string {
 }
 ---
 
-<Layout title={pageTitle} description={pageDesc} canonical={pagePath} image={`/og/categoria-${cat}.png`} schema={schema} domain={categoryDomain(cat)}>
+<Layout title={pageTitle} description={pageDesc} canonical={pagePath} image={`/og/categoria-${cat}.png`} schema={schema} domain={categoryDomain(cat)} pageType={isFirstPage ? 'hub' : 'category'}>
   <Header slot="header" />
 
-  <nav class="breadcrumbs" aria-label="Ruta de navegación">
-    <a href="/">Inicio</a>
-    <span class="sep" aria-hidden="true">/</span>
-    {isFirstPage ? (
-      <span class="current">{m.label}</span>
-    ) : (
-      <>
-        <a href={`/categoria/${cat}`}>{m.label}</a>
-        <span class="sep" aria-hidden="true">/</span>
-        <span class="current">Página {currentPage}</span>
-      </>
-    )}
-    {pillarSlug && pillarTitle && (
-      <a class="bc-guide" href={`/guia/${pillarSlug}`}>
-        <span aria-hidden="true">📘</span> Guía completa: {pillarTitle} →
-      </a>
-    )}
-  </nav>
+  {isFirstPage && hubConfig && <PillarHub config={hubConfig} />}
 
-  <header class="cat-header" style={`--cat-color: ${m.color}`}>
-    <div class="icon-wrap" aria-hidden="true"><CategoryIcon cat={cat} fallback={m.icon} size={30} /></div>
-    <div class="cat-head-text">
-      <div class="eyebrow">Categoría{isFirstPage ? '' : ` · Página ${currentPage} de ${totalPages}`}</div>
-      <h1>{m.label}</h1>
-      {isFirstPage && <p class="intro">{m.intro}</p>}
-      <div class="quick-stats">
-        {isFirstPage && featured.length > 0 && (
-          <>
-            <span class="qs-item"><strong class="qs-num">{featured.length}</strong> destacadas</span>
-            <span class="qs-dot" aria-hidden="true">·</span>
-          </>
-        )}
-        <span class="qs-item"><strong class="qs-num">{totalCalcs}</strong> calculadoras en total</span>
-        <span class="qs-dot" aria-hidden="true">·</span>
-        <span class="qs-item">Actualizadas a <strong>2026</strong></span>
-        <span class="qs-dot" aria-hidden="true">·</span>
-        <span class="qs-item"><strong>100%</strong> gratis</span>
-        <span class="qs-dot" aria-hidden="true">·</span>
-        <span class="qs-item">Sin registro</span>
-      </div>
-    </div>
-    <img class="cat-banner" src={`/cat-img/${cat}.webp`} alt="" aria-hidden="true" loading="eager" decoding="async" width="240" height="160" onerror="this.style.display='none'" />
-  </header>
-
-  {isFirstPage && pillarSlug && pillarTitle && (
-    <aside class="pillar-cta">
-      <div class="pillar-cta-icon" aria-hidden="true">📘</div>
-      <div class="pillar-cta-body">
-        <span class="pillar-cta-eyebrow">Guía completa</span>
-        <strong>{pillarTitle}</strong>
-        <span class="pillar-cta-desc">Contexto, conceptos clave y cómo usar las calculadoras de {m.label.toLowerCase()}.</span>
-      </div>
-      <a class="pillar-cta-btn" href={`/guia/${pillarSlug}`}>Leer guía →</a>
-    </aside>
+  {!isFirstPage && (
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href={`/categoria/${cat}`}>{m.label}</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Página {currentPage}</span>
+      {pillarSlug && pillarTitle && (
+        <a class="bc-guide" href={`/guia/${pillarSlug}`}>
+          <span aria-hidden="true">📘</span> Guía completa: {pillarTitle} →
+        </a>
+      )}
+    </nav>
   )}
 
-  {isFirstPage && ['cocina', 'viajes', 'salud', 'mascotas', 'automotor', 'entretenimiento'].includes(cat) && (
-    <aside class="pillar-cta">
-      <div class="pillar-cta-icon" aria-hidden="true">🗓️</div>
-      <div class="pillar-cta-body">
-        <span class="pillar-cta-eyebrow">Hub temático</span>
-        <strong>Calculadoras para el fin de semana</strong>
-        <span class="pillar-cta-desc">Asado, recetas, escapadas, fitness y mascotas: todo lo que calculás el finde, en un solo lugar.</span>
+  {!isFirstPage && (
+    <header class="cat-header" style={`--cat-color: ${m.color}`}>
+      <div class="icon-wrap" aria-hidden="true"><CategoryIcon cat={cat} fallback={m.icon} size={30} /></div>
+      <div class="cat-head-text">
+        <div class="eyebrow">Categoría · Página {currentPage} de {totalPages}</div>
+        <h1>{m.label}</h1>
+        <div class="quick-stats">
+          <span class="qs-item"><strong class="qs-num">{totalCalcs}</strong> calculadoras en total</span>
+          <span class="qs-dot" aria-hidden="true">·</span>
+          <span class="qs-item">Actualizadas a <strong>2026</strong></span>
+          <span class="qs-dot" aria-hidden="true">·</span>
+          <span class="qs-item"><strong>100%</strong> gratis</span>
+          <span class="qs-dot" aria-hidden="true">·</span>
+          <span class="qs-item">Sin registro</span>
+        </div>
       </div>
-      <a class="pillar-cta-btn" href="/calculadoras-fin-de-semana">Ver el hub →</a>
-    </aside>
+      <img class="cat-banner" src={`/cat-img/${cat}.webp`} alt="" aria-hidden="true" loading="eager" decoding="async" width="240" height="160" onerror="this.style.display='none'" />
+    </header>
   )}
+
+  <div class:list={['cat-listing', { 'hub-listing': isFirstPage }]}>
 
   <div class="cat-toolbar">
     <label class="search-wrap" for={`cat-filter-${cat}`}>
@@ -1672,23 +1671,7 @@ function md(text: string): string {
     </p>
   )}
 
-  {isFirstPage && featured.length > 0 && (
-    <section class="featured" style={`--cat-color: ${m.color}`} aria-labelledby="featured-h">
-      <h2 class="featured-h" id="featured-h"><span class="featured-star" aria-hidden="true">⭐</span> Más usadas</h2>
-      <div class="featured-grid">
-        {featured.map((c: any) => (
-          <a href={`/${c.slug}`} class="feat-card">
-            <span class="feat-icon" aria-hidden="true">{c.icon}</span>
-            <span class="feat-body">
-              <span class="feat-title">{c.h1}</span>
-              <span class="feat-desc">{cleanDesc(c.description)}</span>
-            </span>
-            <span class="feat-arrow" aria-hidden="true"><svg width="16" height="16"><use href="#cat-arrow"/></svg></span>
-          </a>
-        ))}
-      </div>
-    </section>
-  )}
+  {/* "Más usadas" ahora vive en el hub (PillarHub) arriba, en la página 1. */}
 
   {groups && (
     <nav class="chips" aria-label="Saltar a un sub-tema">
@@ -2051,10 +2034,18 @@ function md(text: string): string {
     <a href="/guias" class="btn-ghost-alt">📘 Ver todas las guías</a>
   </aside>
 
+  </div>{/* /.cat-listing */}
+
   <Footer slot="footer" />
 </Layout>
 
 <style>
+  /* Página 1: el hub (PillarHub) va full-bleed (pageType="hub" → main sin ancho
+     máximo); este contenedor re-centra el listado/SEO/FAQ debajo del hub. */
+  .cat-listing.hub-listing {
+    width: min(1180px, calc(100% - 40px));
+    margin: 2.25rem auto 0;
+  }
   .breadcrumbs {
     display: flex;
     gap: 0.5rem;
