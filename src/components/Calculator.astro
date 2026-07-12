@@ -211,9 +211,20 @@ export interface Props {
    *  trust-strip la usa en vez de dataUpdate.lastUpdated para no contradecir
    *  al badge del header (YYYY-MM-DD). */
   dataAsOf?: string;
+  /** Rollout genérico del mockup v3 (headers de columna INGRESÁ/RESULTADO +
+   *  pills de estado). Lo pasa CalcLayoutV2 para las calcs no-flagship. */
+  redesign?: boolean;
 }
 
-const { config, lang = 'es', dataAsOf: dataAsOfProp } = Astro.props;
+const { config, lang = 'es', dataAsOf: dataAsOfProp, redesign = false } = Astro.props;
+// Copy de los headers de columna del mockup v3 (i18n).
+const v3Head = {
+  input: lang === 'en' ? 'Enter your data' : lang === 'pt' ? 'Informe os dados' : 'Ingresá tus datos',
+  result: lang === 'en' ? 'Your result' : lang === 'pt' ? 'Seu resultado' : 'Tu resultado',
+  ready: lang === 'en' ? 'Ready' : lang === 'pt' ? 'Pronto' : 'Listo',
+  idle: lang === 'en' ? 'Not calculated' : lang === 'pt' ? 'Sem cálculo' : 'Sin calcular',
+  done: lang === 'en' ? 'Calculated' : lang === 'pt' ? 'Calculado' : 'Calculado',
+};
 
 // Alerta "avisame cuando este resultado cambie": solo en calcs AR fiscales
 // elegibles (data-driven) y nunca en embeds. La UI se rellena con JS.
@@ -685,6 +696,24 @@ const formatFreshnessDate = (iso: string): string => {
           </button>
         ))}
       </div>
+    </div>
+  )}
+
+  {/* v3: headers de columna del mockup (INGRESÁ / TU RESULTADO + pill de estado).
+      Decorativos (aria-hidden): los labels reales están en los campos y el
+      resultado. En desktop el grid los ubica sobre cada columna; el pill de
+      resultado alterna Sin calcular → Calculado vía :has(). */}
+  {redesign && (
+    <div class="v3-colhead v3-colhead--input" data-nosnippet aria-hidden="true">
+      <span class="lbl">{v3Head.input}</span>
+      <span class="v3-pill v3-pill--ready"><i></i>{v3Head.ready}</span>
+    </div>
+  )}
+  {redesign && (
+    <div class="v3-colhead v3-colhead--result" data-nosnippet aria-hidden="true">
+      <span class="lbl">{v3Head.result}</span>
+      <span class="v3-pill v3-pill--idle"><i></i>{v3Head.idle}</span>
+      <span class="v3-pill v3-pill--done"><i></i>{v3Head.done}</span>
     </div>
   )}
 

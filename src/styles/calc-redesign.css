@@ -972,3 +972,102 @@ html[data-theme="dark"] .calc-v2 .calc-container[data-slug="calculadora-actualiz
   .calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .calc-card-header{ padding-right:150px; }
   .calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .calc-card-header > .icl-history-trigger{ display:none; }
 }
+
+/* ============================================================================
+   v3 — Rollout genérico del mockup (2026-07-12)
+   ----------------------------------------------------------------------------
+   Capa sobre .calc-v2, activada por la clase `.calc-v3` en el <article> (todas
+   las calcs menos las flagship-bespoke, ver src/lib/redesign-exclude.ts). Calca
+   el mockup aprobado: headers de columna INGRESÁ/RESULTADO con pill de estado,
+   tarjetas info bajo la calculadora, sección "Cómo usar / Paso a paso /
+   Respuesta rápida" (card oscura), y pulido de resultado/tabs. Light-only;
+   respeta --v2-accent por dominio (body[data-domain]).
+   ========================================================================== */
+.calc-v3{ --v3-navy:#0f172a; --v3-band:#f5f8fc; }
+
+/* ── Card del widget: fuera la barra "Calculadora" y el gradiente superior ── */
+.calc-v3 .calc-card-header{ display:none !important; }
+.calc-v3 .calc-container{ border:1px solid var(--v2-line); }
+.calc-v3 .calc-container::before{ display:none; }
+
+/* ── Headers de columna (INGRESÁ TUS DATOS / TU RESULTADO + pill de estado) ── */
+.calc-v3 .v3-colhead{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:20px 24px 0; }
+.calc-v3 .v3-colhead .lbl{ font-size:12px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--v2-muted); }
+.calc-v3 .v3-pill{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--v2-body); background:var(--v2-accent-soft); border:1px solid var(--v2-line); border-radius:999px; padding:3px 10px; line-height:1.4; }
+.calc-v3 .v3-pill i{ width:7px; height:7px; border-radius:50%; background:currentColor; opacity:.55; flex:0 0 auto; }
+.calc-v3 .v3-pill--ready{ color:var(--v2-accent-ink); }
+.calc-v3 .v3-pill--ready i{ background:var(--v2-accent); opacity:1; }
+.calc-v3 .v3-pill--idle{ color:var(--v2-muted); }
+.calc-v3 .v3-pill--done{ display:none; color:var(--v2-ok); background:var(--v2-ok-bg); border-color:#c9ead9; }
+.calc-v3 .v3-pill--done i{ background:var(--v2-ok); opacity:1; }
+/* estado calculado: el pill de resultado pasa Sin calcular → Calculado */
+.calc-v3 .calc-container:has(.calc-results:not([hidden])) .v3-pill--idle{ display:none; }
+.calc-v3 .calc-container:has(.calc-results:not([hidden])) .v3-pill--done{ display:inline-flex; }
+
+@media (min-width:861px){
+  .calc-v3 .calc-container > .v3-colhead--input{ grid-column:1 !important; }
+  .calc-v3 .calc-container > .v3-colhead--result{ grid-column:2 !important; }
+}
+@media (max-width:860px){
+  /* En mobile el container es block (orden DOM): el header de resultado quedaría
+     sobre el form → se oculta; el de input queda bien arriba del form. El panel
+     de resultado conserva su badge "Resultado" propio. */
+  .calc-v3 .v3-colhead--result{ display:none; }
+  .calc-v3 .v3-colhead--input{ padding:16px 20px 0; }
+}
+
+/* ── Botón Calcular: gradiente del mockup ── */
+.calc-v3 .calc-form .btn-primary{ background:linear-gradient(135deg, var(--v2-accent), color-mix(in srgb, var(--v2-accent) 62%, #7c3aed)); }
+.calc-v3 .calc-form .btn-primary:hover:not(:disabled){ background:linear-gradient(135deg, var(--v2-accent-ink), color-mix(in srgb, var(--v2-accent) 55%, #6d28d9)); }
+
+/* ── Resultado: primario grande + secundarios en cards (afina el look v2) ── */
+.calc-v3 .calc-results .result{ background:#fafbfd !important; border:1px solid var(--v2-line) !important; }
+.calc-v3 .calc-results .result .result-label{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--v2-muted); font-weight:700; }
+.calc-v3 .calc-results .result.primary .result-label{ color:var(--v2-accent-ink); }
+.calc-v3 .calc-results .result.primary{ padding:16px 18px !important; }
+
+/* ── 3 tarjetas info bajo la calculadora ── */
+.calc-v3 .v3-infocards{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:0 0 30px; max-width:none; }
+.calc-v3 .v3-infocard{ display:flex; gap:12px; align-items:flex-start; text-align:left; background:#fff; border:1px solid var(--v2-line); border-radius:14px; padding:14px 16px; width:100%; }
+.calc-v3 .v3-infocard .ic{ flex:0 0 auto; width:34px; height:34px; border-radius:9px; background:var(--v2-accent-bg); color:var(--v2-accent-ink); display:grid; place-items:center; }
+.calc-v3 .v3-infocard .ic svg{ width:17px; height:17px; }
+.calc-v3 .v3-infocard strong{ display:block; font-size:14px; color:var(--v2-ink); font-weight:700; }
+.calc-v3 .v3-infocard span{ display:block; font-size:13px; color:var(--v2-body); margin-top:2px; line-height:1.4; }
+.calc-v3 .v3-infocard--btn{ cursor:pointer; font-family:inherit; transition:border-color .15s, box-shadow .15s; }
+.calc-v3 .v3-infocard--btn:hover{ border-color:var(--v2-accent); box-shadow:var(--v2-shadow); }
+@media (max-width:720px){ .calc-v3 .v3-infocards{ grid-template-columns:1fr; } }
+
+/* ── Respuesta rápida standalone: en v3 no se renderiza (va en la card oscura) ── */
+.calc-v3 .v2-quick{ display:none; }
+
+/* ── Sección "Cómo usar" (banda) — Paso a paso + card oscura ── */
+.calc-v3 .v3-howto-band{ background:var(--v3-band); border:1px solid var(--v2-line-soft); border-radius:20px; padding:32px; margin:0 0 30px; max-width:none; }
+.calc-v3 .v3-howto-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:24px; flex-wrap:wrap; margin-bottom:22px; }
+.calc-v3 .v3-howeyebrow{ font-size:12px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--v2-accent); }
+.calc-v3 .v3-howto-head h2{ font-size:clamp(22px,3.2vw,27px); font-weight:800; margin:6px 0 0; }
+.calc-v3 .v3-howlede{ font-size:14.5px; color:var(--v2-body); max-width:360px; margin:0; }
+.calc-v3 .v3-howgrid{ display:grid; grid-template-columns:1.15fr .85fr; gap:16px; align-items:stretch; }
+@media (max-width:760px){ .calc-v3 .v3-howgrid{ grid-template-columns:1fr; } .calc-v3 .v3-howto-band{ padding:22px; } }
+
+.calc-v3 .v3-steps-card{ background:#fff; border:1px solid var(--v2-line); border-radius:16px; padding:22px 24px; }
+.calc-v3 .v3-steps-title{ font-size:13px; font-weight:700; color:var(--v2-ink); margin-bottom:16px; letter-spacing:.01em; }
+.calc-v3 .v3-steps{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+@media (max-width:560px){ .calc-v3 .v3-steps{ grid-template-columns:1fr; gap:14px; } }
+.calc-v3 .v3-step .n{ font-size:12px; font-weight:800; color:var(--v2-accent); letter-spacing:.06em; }
+.calc-v3 .v3-step strong{ display:block; font-size:14px; color:var(--v2-ink); font-weight:700; margin-top:6px; }
+.calc-v3 .v3-step span{ display:block; font-size:12.5px; color:var(--v2-body); margin-top:4px; line-height:1.45; }
+
+.calc-v3 .v3-quick-dark{ background:var(--v3-navy); border-radius:16px; padding:22px 24px; color:#cbd5e1; display:flex; flex-direction:column; }
+.calc-v3 .v3-quick-eyebrow{ font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#93b4f7; display:block; margin-bottom:12px; }
+.calc-v3 .v3-quick-dark-body{ font-size:14px; line-height:1.6; color:#e2e8f0; }
+.calc-v3 .v3-quick-dark-body p{ margin:0 0 9px; }
+.calc-v3 .v3-quick-dark-body p:last-child{ margin:0; }
+.calc-v3 .v3-quick-dark-body strong{ color:#fff; font-family:var(--v2-mono); font-weight:600; background:rgba(148,180,247,.14); padding:1px 5px; border-radius:5px; }
+.calc-v3 .v3-quick-dark-body a{ color:#93b4f7; }
+
+/* ── Tabs: fila de pills izquierda + panel-card (afina el v2 al look mockup) ── */
+.calc-v3 .v2-tabs{ max-width:none; }
+.calc-v3 .v2-tabnav{ display:flex; flex-wrap:wrap; gap:8px; }
+.calc-v3 .v2-tab{ flex:0 0 auto; }
+.calc-v3 .v2-tab[aria-selected="true"]{ background:var(--v2-accent-bg); color:var(--v2-accent-ink); border-color:var(--v2-accent-bg); }
+.calc-v3 .v2-tab:hover:not([aria-selected="true"]){ border-color:var(--v2-accent); }

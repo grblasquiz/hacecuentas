@@ -54,6 +54,7 @@ import { getJourneySteps } from '../lib/journeys';
 import { getRoomsForCalc } from '../lib/decisions/calc-backlinks';
 import converterTables from '../lib/converter-tables.json';
 import { hasValidProfessionalReviewer, isRestrictedCalc } from '../lib/content-policy';
+import { isBespokeTop } from '../lib/redesign-exclude';
 import RestrictedNotice from './RestrictedNotice.astro';
 import DataAlertCta from './DataAlertCta.astro';
 import '../styles/calc-redesign.css';
@@ -65,6 +66,12 @@ interface Props {
   lang?: string;
 }
 const { calc, dataAsOf, lang = '' } = Astro.props as Props;
+// ── Rollout genérico del mockup v3 ──────────────────────────────────────────
+// Todas las calcs reciben el rediseño v3 (chrome del mockup: headers de columna,
+// sección "Cómo usar / Respuesta rápida", tarjetas info, bandas) EXCEPTO las
+// flagship-top que se harán bespoke a mano (ver redesign-exclude.ts). El widget
+// y el CSS se activan con la clase `.calc-v3` en el <article> + el prop redesign.
+const redesign = !isBespokeTop(calc.slug);
 // Prefijo para TODOS los links internos (AR='' → '/', locales → '/es', '/pt', ...).
 const linkPrefix = lang ? `/${lang}` : '';
 const P = (slug: string) => `${linkPrefix}/${slug}`;
@@ -187,6 +194,49 @@ const TRANSLATIONS = {
 } as const;
 const L = TRANSLATIONS[uiLang];
 
+// ── Copy + datos del rediseño v3 (mockup) ───────────────────────────────────
+// Sección "Cómo usar" (Paso a paso + card oscura de respuesta rápida) y las 3
+// tarjetas info bajo la calculadora. Todo data-driven: los pasos salen de
+// calc.howToSteps (fallback genérico) y la card oscura del keyTakeaway/answerSnippet.
+const V3_COPY = {
+  es: {
+    howEyebrow: 'Rápida y transparente', howTitle: 'Cómo usar esta calculadora',
+    howLede: 'El cálculo principal primero. La explicación necesaria, inmediatamente después.',
+    stepsTitle: 'Paso a paso', quickTitle: 'Respuesta rápida',
+    infoChange: ['¿Querés cambiar algo?', 'Editá cualquier dato y volvé a calcular.'],
+    infoInstant: ['Resultado al instante', 'Se recalcula en tu navegador, sin recargar la página.'],
+    infoMethod: ['Metodología', 'Mirá las fuentes y la fórmula en la pestaña de abajo.'],
+    fallbackSteps: ['Ingresá los datos', 'Tocá el botón Calcular', 'Revisá el resultado'],
+  },
+  en: {
+    howEyebrow: 'Fast and transparent', howTitle: 'How to use this calculator',
+    howLede: 'The main result first. The explanation you need, right after.',
+    stepsTitle: 'Step by step', quickTitle: 'Quick answer',
+    infoChange: ['Want to change something?', 'Edit any field and calculate again.'],
+    infoInstant: ['Instant result', 'It recalculates in your browser, no page reload.'],
+    infoMethod: ['Methodology', 'See the sources and formula in the tab below.'],
+    fallbackSteps: ['Enter your data', 'Tap the Calculate button', 'Check the result'],
+  },
+  pt: {
+    howEyebrow: 'Rápida e transparente', howTitle: 'Como usar esta calculadora',
+    howLede: 'O resultado principal primeiro. A explicação necessária, logo depois.',
+    stepsTitle: 'Passo a passo', quickTitle: 'Resposta rápida',
+    infoChange: ['Quer mudar algo?', 'Edite qualquer dado e calcule de novo.'],
+    infoInstant: ['Resultado na hora', 'Recalcula no seu navegador, sem recarregar a página.'],
+    infoMethod: ['Metodologia', 'Veja as fontes e a fórmula na aba abaixo.'],
+    fallbackSteps: ['Informe os dados', 'Toque no botão Calcular', 'Confira o resultado'],
+  },
+} as const;
+const V3 = V3_COPY[uiLang];
+// Pasos: máx 3, desde howToSteps ({name,text} o string). Si no hay, genéricos.
+const v3RawSteps = (Array.isArray(calc.howToSteps) ? calc.howToSteps : [])
+  .map((s: any) => (typeof s === 'string' ? { name: s } : s))
+  .filter((s: any) => s && s.name);
+const v3Steps: Array<{ name: string; text?: string }> = v3RawSteps.length
+  ? v3RawSteps.slice(0, 3)
+  : V3.fallbackSteps.map((n) => ({ name: n }));
+// v3QuickHtml (card oscura) se computa más abajo, junto a keyTakeaway/answerSnippet.
+
 // Labels de categoría por idioma de UI (breadcrumb + eyebrow). Antes solo ES →
 // las páginas EN/PT mostraban "Finanzas"/"Matemática" en el chrome.
 const CATEGORY_LABELS: Record<'es' | 'en' | 'pt', Record<string, string>> = {
@@ -264,6 +314,10 @@ const fmtChangelogDate = (d: string) =>
   new Date(d + 'T00:00:00Z').toLocaleDateString(dateLocale, { day:'2-digit', month:'short', year:'numeric', timeZone:'UTC' });
 const keyTakeaway: string = calc.keyTakeaway || '';
 const answerSnippet: string = calc.answerSnippet || '';
+// Card oscura del rediseño v3 = respuesta rápida (misma fuente que .v2-quick, que
+// en v3 se oculta). Va acá, DESPUÉS de keyTakeaway/answerSnippet, para no caer en
+// la temporal dead zone de esos const (rompía el render SSR de todas las calcs).
+const v3QuickHtml = calcIsRestricted ? '' : (keyTakeaway || answerSnippet || '');
 const downloads: Array<{label:string;href:string;description?:string}> = calc.downloads || [];
 const referenceTables = Array.isArray(calc.referenceTables) ? calc.referenceTables : [];
 
@@ -420,7 +474,7 @@ const editorialHtml = uiLang === 'en'
   : `Calculadora de ${catLabel.toLowerCase()} revisada por el equipo editorial de Hacé Cuentas${_firstSourceName ? `, contrastada con ${_firstSourceName}` : ''}, según nuestra ${_polLink} y ${_metLink}.`;
 ---
 
-<article class="calc-page calc-v2">
+<article class:list={['calc-page', 'calc-v2', redesign && 'calc-v3']}>
   <!-- Breadcrumb -->
   <nav class="v2-breadcrumb" aria-label={L.ariaBreadcrumb} style="font-size:13px;color:var(--v2-muted);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
     <a href={linkPrefix || "/"} style="color:inherit;">{L.home}</a><span aria-hidden="true" style="color:#cbd5e1;">/</span>
@@ -483,7 +537,7 @@ const editorialHtml = uiLang === 'en'
     {calcIsRestricted ? (
       <RestrictedNotice calc={calc} lang={lang} />
     ) : (
-      <Calculator config={calc} dataAsOf={dataAsOf ?? undefined} lang={calcWidgetLang}>
+      <Calculator config={calc} dataAsOf={dataAsOf ?? undefined} lang={calcWidgetLang} redesign={redesign}>
         {/* Bloque de decisión post-resultado (opt-in vía calc.postResult): el
             número se vuelve el principio de una segunda acción. Va PRIMERO en el
             slot para quedar arriba del "seguí calculando". */}
@@ -508,6 +562,58 @@ const editorialHtml = uiLang === 'en'
       </Calculator>
     )}
   </section>
+
+  {/* ── v3: 3 tarjetas info bajo la calculadora (mockup) ── */}
+  {redesign && (
+    <div class="v3-infocards" data-nosnippet>
+      <div class="v3-infocard">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+        <div><strong>{V3.infoChange[0]}</strong><span>{V3.infoChange[1]}</span></div>
+      </div>
+      <div class="v3-infocard">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg></span>
+        <div><strong>{V3.infoInstant[0]}</strong><span>{V3.infoInstant[1]}</span></div>
+      </div>
+      <button type="button" class="v3-infocard v3-infocard--btn" data-goto-tab="v2-fuentes">
+        <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+        <div><strong>{V3.infoMethod[0]}</strong><span>{V3.infoMethod[1]}</span></div>
+      </button>
+    </div>
+  )}
+
+  {/* ── v3: sección "Cómo usar" — Paso a paso + card oscura de respuesta rápida ── */}
+  {redesign && (
+    <section class="v3-howto-band">
+      <div class="v3-howto">
+        <div class="v3-howto-head">
+          <div>
+            <span class="v3-howeyebrow">{V3.howEyebrow}</span>
+            <h2>{V3.howTitle}</h2>
+          </div>
+          <p class="v3-howlede">{V3.howLede}</p>
+        </div>
+        <div class="v3-howgrid">
+          <div class="v3-steps-card">
+            <div class="v3-steps-title">{V3.stepsTitle}</div>
+            <div class="v3-steps">
+              {v3Steps.map((s, i) => (
+                <div class="v3-step">
+                  <span class="n">{String(i + 1).padStart(2, '0')}</span>
+                  <div><strong>{s.name}</strong>{s.text && <span set:html={mdInline(s.text)}></span>}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {v3QuickHtml && (
+            <aside class="v3-quick-dark" data-speakable="true" aria-label={V3.quickTitle}>
+              <span class="v3-quick-eyebrow">⚡ {V3.quickTitle}</span>
+              <div class="v3-quick-dark-body" set:html={md(v3QuickHtml)}></div>
+            </aside>
+          )}
+        </div>
+      </div>
+    </section>
+  )}
 
   <!-- Datos en vivo (si la calc los declara) -->
   {Array.isArray(calc.dataSource) && calc.dataSource.length > 0 && <LiveData dataSource={calc.dataSource} />}
@@ -537,13 +643,13 @@ const editorialHtml = uiLang === 'en'
       post-resultado. La malla SEO del pie la sigue cubriendo RelatedCalcs. */}
 
   <!-- Respuesta rápida (keyTakeaway / AEO) — visible, fuera de tabs -->
-  {!calcIsRestricted && keyTakeaway && (
+  {!redesign && !calcIsRestricted && keyTakeaway && (
     <aside id="respuesta-rapida" class="v2-quick" data-speakable="true" aria-label={L.ariaQuick}>
       <div class="v2-quick-h">{L.quickAnswer}</div>
       <div set:html={md(keyTakeaway)}></div>
     </aside>
   )}
-  {!calcIsRestricted && !keyTakeaway && answerSnippet && (
+  {!redesign && !calcIsRestricted && !keyTakeaway && answerSnippet && (
     <aside class="v2-quick" data-speakable="true" aria-label={L.ariaDirect}>
       <div class="v2-quick-h">{L.quickAnswer}</div>
       <p set:html={mdInline(answerSnippet)}></p>
