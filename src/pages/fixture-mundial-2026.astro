@@ -5,6 +5,10 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import PushOptIn from '../components/PushOptIn.astro';
+import '../styles/fixture-mundial.css';
+// El script se inlinea verbatim (?raw): en este proyecto `astro dev` no sirve
+// /public y los assets bundleados-hoisted 404ean; inline funciona en dev y prod.
+import fxScript from '../scripts/fixture-mundial.js?raw';
 import {
   fixture,
   LIVE_FIXTURE_URL,
@@ -93,14 +97,24 @@ const nextOverall = sorted.find((m) => !(m.score && m.score.ft));
 const fIdx = Math.max(0, days.findIndex((d) => d.key === featuredDay.key));
 const chipDays = days.slice(fIdx, fIdx + 6);
 
+// Tira de fechas del calendario (todas las jornadas, scroll horizontal)
+const AR_ZONE = 'America/Argentina/Buenos_Aires';
+const calChips = days.map((d) => {
+  const k = kickoffUTC(d.matches[0].date, d.matches[0].time)!;
+  const wd = new Intl.DateTimeFormat('es-AR', { timeZone: AR_ZONE, weekday: 'short' }).format(k).replace('.', '');
+  const dm = new Intl.DateTimeFormat('es-AR', { timeZone: AR_ZONE, day: '2-digit', month: 'short' }).format(k).replace('.', '');
+  return { key: d.key, label: `${wd} ${dm}`.toUpperCase(), isToday: d.key === todayKey };
+});
+
 // Meses presentes (para el filtro del calendario)
-const monthLabelFmt = (key: string) => {
-  const d = kickoffUTC(key + 'T12:00', '12:00 UTC-3');
-  const l = d ? new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', month: 'long', year: 'numeric' }).format(d) : key;
+const monthLabelFmt = (ym: string) => {
+  const [y, mo] = ym.split('-').map(Number);
+  const d = new Date(Date.UTC(y, (mo || 1) - 1, 15, 15, 0, 0));
+  const l = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', month: 'long', year: 'numeric' }).format(d);
   return l.charAt(0).toUpperCase() + l.slice(1);
 };
 const monthKeys = [...new Set(days.map((d) => d.key.slice(0, 7)))];
-const months = monthKeys.map((k) => ({ key: k, label: monthLabelFmt(k + '-15') }));
+const months = monthKeys.map((k) => ({ key: k, label: monthLabelFmt(k) }));
 
 // Selecciones presentes (nombres resueltos) para el filtro
 const teamsPresent = [...new Set(sorted.flatMap((m) => [m.team1, m.team2]).filter((t): t is string => !!t && t in TEAMS))]
@@ -173,6 +187,22 @@ function groundShort(g: string | null): string {
   // "Miami (Miami Gardens)" → "Miami Gardens" ; "New York/New Jersey (East Rutherford)" → "East Rutherford"
   const m = g.match(/\(([^)]+)\)/);
   return m ? m[1] : g;
+}
+// ¿El partido se juega hoy (en hora argentina)?
+function argDayIsToday(m: any): boolean {
+  return artDayKey(m.date, m.time) === todayKey;
+}
+// Resultado con marcador DECISIVO (alargue si lo hubo) + detalle corto.
+// El mockup muestra "1 – 2 · Tras alargue" (no el 1-1 del tiempo reglamentario).
+function sc(m: any): { a: number; b: number; detail: string; winner: 0 | 1 | 2 } | null {
+  if (!m.score || !m.score.ft) return null;
+  const base = m.score.et || m.score.ft;
+  const a = base[0], b = base[1];
+  let detail = '';
+  let winner: 0 | 1 | 2 = a > b ? 1 : b > a ? 2 : 0;
+  if (m.score.et) detail = 'Tras alargue';
+  if (m.score.p) { detail = `Penales ${m.score.p[0]}-${m.score.p[1]}`; winner = m.score.p[0] > m.score.p[1] ? 1 : 2; }
+  return { a, b, detail, winner };
 }
 
 // "Actualizado" en hora argentina
@@ -347,7 +377,7 @@ const liveConfig = {
               {featuredDay.matches.map((m) => {
                 const t1 = teamLabel(m.team1);
                 const t2 = teamLabel(m.team2);
-                const r = result(m);
+                const r = sc(m);
                 const isNext = nextOverall && m.num === nextOverall.num;
                 const st = statusOf(m);
                 return (
@@ -390,7 +420,6 @@ const liveConfig = {
               </div>
             </div>
 
-            <div class="fx-ad" aria-hidden="true"><span>PUBLICIDAD</span></div>
 
             <div class="fx-road">
               <h3 class="fx-h3">Camino a la final</h3>
@@ -414,7 +443,7 @@ const liveConfig = {
             {argNext && (
               <div class="fx-scard fx-scard-arg">
                 <h3 class="fx-scard-h">Próximo partido de Argentina</h3>
-                <div class="fx-arg-when">{argNext.date === (todayDay?.matches[0]?.date) || argDayIsToday(argNext) ? 'Hoy' : artDayLabel(argNext.date, argNext.time).split(' ').slice(0, 2).join(' ')} · <strong data-time data-utc={argNextUtc}>{artTime(argNext.date, argNext.time)}</strong></div>
+                <div class="fx-arg-when">{argDayIsToday(argNext) ? 'Hoy' : artDayLabel(argNext.date, argNext.time).split(' ').slice(0, 2).join(' ')} · <strong data-time data-utc={argNextUtc}>{artTime(argNext.date, argNext.time)}</strong></div>
                 <div class="fx-arg-teams" data-match data-num={argNext.num} data-team1={argNext.team1} data-team2={argNext.team2}>
                   <span class="fx-arg-t" data-side="1"><span class="flag">{teamLabel(argNext.team1).flag}</span><span class="name">{teamLabel(argNext.team1).es}</span></span>
                   <span class="fx-arg-vs" data-score>vs</span>
@@ -479,6 +508,17 @@ const liveConfig = {
               </div>
             </div>
 
+            <div class="fx-caldatebar">
+              <div class="fx-chips fx-chips-cal" role="group" aria-label="Ir a una fecha">
+                {calChips.map((c) => (
+                  <button class={`fx-chip${c.isToday ? ' is-active' : ''}`} data-calchip={c.key}>
+                    {c.isToday && <span class="fx-chip-hoy">HOY</span>}
+                    <span class="fx-chip-d">{c.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div class="fx-cal" id="fx-cal">
               {days.map((d) => (
                 <div class="fx-cal-day" data-day={d.key} data-month={d.key.slice(0, 7)}>
@@ -490,7 +530,7 @@ const liveConfig = {
                     {d.matches.map((m) => {
                       const t1 = teamLabel(m.team1);
                       const t2 = teamLabel(m.team2);
-                      const r = result(m);
+                      const r = sc(m);
                       const isNext = nextOverall && m.num === nextOverall.num;
                       const st = statusOf(m);
                       const phaseKey = (PHASE_DEFS.find((p) => p.is(m)) || {}).key || '';
@@ -524,7 +564,6 @@ const liveConfig = {
               <p class="fx-cal-empty" hidden>No hay partidos que coincidan con los filtros. <button class="fx-linkbtn" data-clear-filters>Limpiar filtros</button></p>
             </div>
 
-            <div class="fx-ad" aria-hidden="true"><span>PUBLICIDAD</span></div>
           </div>
 
           <aside class="fx-side-col">
@@ -591,7 +630,7 @@ const liveConfig = {
               {argMatches.map((m) => {
                 const isArg1 = m.team1 === 'Argentina';
                 const opp = teamLabel(isArg1 ? m.team2 : m.team1);
-                const r = result(m);
+                const r = sc(m);
                 const done = !!r;
                 const isNext = argNext && m.num === argNext.num;
                 return (
@@ -628,7 +667,7 @@ const liveConfig = {
             <div class="fx-scard">
               <h3 class="fx-scard-h">Situación de Argentina</h3>
               <ol class="fx-stepper">
-                {argPhaseView.filter((p) => p.state !== 'future' || ['sf', 'final'].includes(p.key) || argPhaseView.some((x) => x.key === p.key && x.matches.length)).map((p, i) => {
+                {argPhaseView.map((p) => {
                   const st = p.state === 'done' ? 'done' : p.state === 'current' ? 'current' : 'future';
                   return (
                     <li class={`fx-step ${st}`}>
@@ -686,7 +725,7 @@ const liveConfig = {
                     <div class="fx-bracket-pair">
                       {g.qfs.map((m: any) => {
                         const t1 = teamLabel(m.team1), t2 = teamLabel(m.team2);
-                        const r = result(m);
+                        const r = sc(m);
                         const isNext = nextOverall && m.num === nextOverall.num;
                         return (
                           <article class={`fx-bcell${isNext ? ' is-next' : ''}`} data-match data-num={m.num} data-team1={m.team1} data-team2={m.team2}>
@@ -746,7 +785,7 @@ const liveConfig = {
                     <div class="fx-cards">
                       {p.matches.slice().sort((a: any, b: any) => a.num - b.num).map((m: any) => {
                         const t1 = teamLabel(m.team1), t2 = teamLabel(m.team2);
-                        const r = result(m);
+                        const r = sc(m);
                         return (
                           <article class={`fx-mcard fx-mcard-sm${r ? ' is-played' : ''}`} data-match data-num={m.num} data-team1={m.team1} data-team2={m.team2}>
                             <div class="fx-mcard-body">
@@ -797,7 +836,7 @@ const liveConfig = {
             <div class="fx-scard">
               <h3 class="fx-scard-h">Argentina en el cuadro</h3>
               <ol class="fx-stepper">
-                {argPhaseView.filter((p) => ['qf', 'sf', 'final'].includes(p.key) || (p.state !== 'future' && ['r16'].includes(p.key))).slice(-3).map((p) => {
+                {argPhaseView.filter((p) => ['qf', 'sf', 'final'].includes(p.key)).map((p) => {
                   const st = p.state === 'done' ? 'done' : p.state === 'current' ? 'current' : 'future';
                   const m = p.matches[0];
                   return (
@@ -905,12 +944,7 @@ const liveConfig = {
     </article>
   </main>
   <Footer />
+
+  <script type="application/json" id="fx-live-config" set:html={JSON.stringify(liveConfig)} is:inline></script>
+  <script is:inline set:html={fxScript}></script>
 </Layout>
-
-<script type="application/json" id="fx-live-config" set:html={JSON.stringify(liveConfig)}></script>
-
-<script src="/scripts/fixture-mundial.js" is:inline></script>
-
-<style is:global>
-  @import '/styles/fixture-mundial.css';
-</style>
