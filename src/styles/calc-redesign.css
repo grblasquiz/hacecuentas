@@ -39,10 +39,17 @@ body[data-domain="life"] .calc-v2      { --v2-accent:#0e7490; --v2-accent-ink:#1
 /* El relleno de marca (botón Calcular) es el acento profundo → texto blanco. */
 body[data-domain] .calc-v2 .calc-form .btn-primary { color:#fff; }
 
-/* La marca .calc-v2 va en el <article>. Es el contenedor de página:
-   max-width + centrado + padding horizontal (en el template real lo daba el CSS
-   del [...slug], que acá no cargamos). Sin esto el h1 desborda en mobile. */
-.calc-v2{ color:var(--v2-body); max-width:760px; margin:0 auto; padding:24px 20px 96px; overflow-wrap:break-word; }
+/* La marca .calc-v2 va en el <article>. Es el contenedor de página: se ajusta al
+   ancho del <main> del sitio (max-width:1120px) igual que la home, en vez de
+   quedar fijo y angosto con márgenes gigantes en pantallas grandes. El máximo se
+   alinea con el contenido de la home (~1080px). En el contexto aislado (preview/
+   mockup) donde no hay <main>, este max-width evita que el h1 desborde. */
+.calc-v2{ color:var(--v2-body); max-width:1080px; margin:0 auto; padding:24px 20px 96px; overflow-wrap:break-word; }
+/* Medida de lectura: aunque el contenedor sea ancho como la home, la prosa larga
+   (respuesta rápida + paneles de contenido) se limita a un ancho legible y se
+   alinea a la izquierda; la card, el contexto y las tablas usan todo el ancho. */
+.calc-v2 .v2-quick,
+.calc-v2 .v2-tabs{ max-width:860px; }
 .calc-v2 *{ box-sizing:border-box; }
 .calc-v2 :where(h1,h2,h3){ color:var(--v2-ink); letter-spacing:-.02em; }
 .calc-v2 strong{ color:var(--v2-ink); font-weight:600; }
@@ -112,8 +119,12 @@ body[data-domain] .calc-v2 .calc-form .btn-primary { color:#fff; }
 .calc-v2 .v2-block p{ margin:0 0 13px; font-size:15.5px; }
 .calc-v2 .v2-block a{ color:var(--v2-accent); font-weight:600; }
 .calc-v2 .v2-block a:hover{ text-decoration:underline; }
-.calc-v2 .v2-checks{ list-style:none; padding:0; margin:0; display:grid; gap:11px; }
-.calc-v2 .v2-checks li{ display:flex; gap:11px; font-size:15.5px; background:#fff; border:1px solid var(--v2-line); border-radius:12px; padding:13px 15px; }
+/* grid-template-columns:minmax(0,1fr): sin esto, el track "auto" del grid crecía
+   al contenido del <li> flex (texto largo) y desbordaba el ancho en mobile
+   (scroll horizontal). minmax(0,…) + min-width:0 dejan que el li se achique y
+   el texto envuelva dentro de la pantalla. */
+.calc-v2 .v2-checks{ list-style:none; padding:0; margin:0; display:grid; grid-template-columns:minmax(0,1fr); gap:11px; }
+.calc-v2 .v2-checks li{ display:flex; gap:11px; min-width:0; font-size:15.5px; background:#fff; border:1px solid var(--v2-line); border-radius:12px; padding:13px 15px; }
 .calc-v2 .v2-checks li::before{ content:"✓"; color:var(--v2-accent); font-weight:800; flex-shrink:0; }
 .calc-v2 .v2-code{ background:#0f172a; color:#cfe0fb; font-family:var(--v2-mono); font-size:14px; border-radius:12px; padding:14px 16px; margin:0 0 14px; overflow-x:auto; }
 
