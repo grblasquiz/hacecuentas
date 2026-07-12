@@ -2,6 +2,15 @@
 
 Calculadoras en Astro, desplegadas en Cloudflare Pages. ~2500 URLs indexadas. SEO es el canal principal, así que las reglas de abajo no son negociables.
 
+## 0. Multi-sesión: commiteá LO TUYO antes de deployar
+
+Corren **varias sesiones a la vez sobre el mismo working tree**. Reglas (el deploy ya las hace cumplir):
+
+- **`npm run deploy` NO barre trabajo sin commitear.** Solo deploya lo **commiteado o stageado por vos**. Regla: *commiteado = listo para deploy; sin commitear = WIP, no se toca*. Antes de deployar, commiteá tus archivos (`git add <tus-archivos> && git commit -m "..."`) — o al menos stageálos, el deploy los commitea. Lo que dejes sin commitear NO va a prod y el deploy te lo lista como "NO deployado" (nunca falla en silencio).
+- **Nunca `git add -A`** en una sesión: barrés el WIP a-medio-hacer de otras sesiones. Stageá solo lo que tocaste vos.
+- **Escape hatch `--all`** (`npm run deploy -- --all`) = el viejo `git add -A`. Usalo SOLO si sos la única sesión (o crons de datos). No lo uses si hay otras sesiones laburando.
+- **Build + deploy están serializados por un lock** (`.deploy.lock`): podés tirar `npm run deploy` / `npm run build` desde N sesiones a la vez; una corre y las otras esperan turno. No se pisan `dist/`, no cuelga wrangler (timeout 420s), no hay más "dice OK pero no deployó". Si matás un deploy colgado, el lock se reclama solo. Ver [[deploy-concurrencia-multi-sesion-hazard]].
+
 ## 1. Nunca borrar un slug sin un 301
 
 Cada URL indexada tiene autoridad acumulada. Borrar el archivo de un calc sin agregar un redirect manda a Google a 404 y perdés el link equity.

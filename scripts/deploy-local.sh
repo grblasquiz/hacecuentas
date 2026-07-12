@@ -70,11 +70,13 @@ run_with_timeout() {   # $1=segundos · resto=comando…
 PURGE=true
 SMOKE=true
 FORCE_FULL=false
+COMMIT_ALL=false
 for arg in "$@"; do
   case "$arg" in
     --no-purge)   PURGE=false ;;
     --no-smoke)   SMOKE=false ;;
     --force-full) FORCE_FULL=true ;;
+    --all)        COMMIT_ALL=true ;;
   esac
 done
 
@@ -147,14 +149,44 @@ ok "guards pre-build OK | _redirects=$REDIR_RULES reglas (<2000), middleware san
 # FULL build siempre (lento + OOM) y la pila de "cambios sin commitear" se
 # acumula y reaparece en cada deploy. Commiteando ANTES del detect, el trabajo
 # entra como diff → incremental funciona y el árbol no acumula nada.
-if [ -n "$(git status --porcelain)" ]; then
-  log "auto-commit pre-build de cambios sin commitear..."
-  git add -A
-  if git commit -q --no-verify -m "chore(deploy): cambios pre-build [auto]"; then
-    CURRENT_SHA=$(git rev-parse HEAD)
-    ok "commiteado pre-build (auto) → ${CURRENT_SHA:0:8} | detect puede ir incremental"
-  else
-    warn "auto-commit pre-build no hizo nada"
+# REGLA multi-sesión: "commiteado = listo para deploy; sin commitear = WIP, no se
+# toca". ANTES `git add -A` barría el trabajo a-medio-hacer de OTRAS sesiones
+# (todas comparten este working tree) → deploys prematuros + commits ajenos.
+# AHORA commiteamos SOLO lo que VOS stageaste; lo no-commiteado se lista pero NO
+# se deploya. Escape hatch `--all` = viejo git add -A (SOLO si sos la única
+# sesión: crons de datos, o Martin a mano sabiendo que no hay otras sesiones).
+if [ "$COMMIT_ALL" = true ]; then
+  if [ -n "$(git status --porcelain)" ]; then
+    log "commit pre-build (--all): incluyo TODO el working tree..."
+    git add -A
+    if git commit -q --no-verify -m "chore(deploy): cambios pre-build [auto]"; then
+      CURRENT_SHA=$(git rev-parse HEAD)
+      ok "commiteado TODO pre-build → ${CURRENT_SHA:0:8}"
+    else
+      warn "commit pre-build (--all) no hizo nada"
+    fi
+  fi
+else
+  STAGED_FILES=$(git diff --cached --name-only)
+  if [ -n "$STAGED_FILES" ]; then
+    N_STAGED=$(printf '%s\n' "$STAGED_FILES" | grep -c .)
+    log "commit pre-build de TUS $N_STAGED archivo(s) stageado(s)..."
+    if git commit -q --no-verify -m "chore(deploy): cambios pre-build [auto]"; then
+      CURRENT_SHA=$(git rev-parse HEAD)
+      ok "commiteado (stageado) → ${CURRENT_SHA:0:8}"
+    else
+      warn "commit pre-build no hizo nada"
+    fi
+  fi
+  # Lo que quede sin commitear NO se deploya. Lo avisamos FUERTE — nunca silencioso
+  # (para que no pase "creí que deployó y no deployó").
+  UNCOMMITTED=$( { git diff --name-only; git ls-files --others --exclude-standard; } | sort -u )
+  if [ -n "$UNCOMMITTED" ]; then
+    N_UNC=$(printf '%s\n' "$UNCOMMITTED" | grep -c .)
+    warn "$N_UNC archivo(s) SIN commitear — NO se deployan (WIP tuyo o de otra sesión):"
+    printf '%s\n' "$UNCOMMITTED" | head -10 | sed 's/^/      · /'
+    [ "$N_UNC" -gt 10 ] && echo "      … y $((N_UNC - 10)) más"
+    warn "Si son TUYOS y están listos:  git add <archivos>  y redeployá   ·   o forzá todo: npm run deploy -- --all"
   fi
 fi
 
@@ -432,10 +464,15 @@ fi
 # commiteamos para que el working tree quede SIEMPRE limpio post-deploy: nunca
 # más se acumula la pila de "cambios sin commitear". Solo corre si el deploy
 # fue sano (si el smoke falla, el script ya salió arriba → no commiteamos roto).
-if [ -n "$(git status --porcelain)" ]; then
-  git add -A
+# SOLO los artefactos (no `git add -A` → no barrer WIP de otras sesiones). El WIP
+# sin commitear queda intacto en el working tree.
+ART_PATTERN='sitemap|search-index|sw\.js|og-manifest|related-auto|db/sitemap-state|calcs-index'
+{ git diff --name-only; git ls-files --others --exclude-standard; } \
+  | grep -E "$ART_PATTERN" \
+  | while IFS= read -r f; do [ -n "$f" ] && git add -- "$f"; done
+if [ -n "$(git diff --cached --name-only)" ]; then
   if git commit -q --no-verify -m "chore(deploy): artefactos build [auto]"; then
-    ok "artefactos commiteados (auto) — working tree limpio"
+    ok "artefactos build commiteados (auto)"
   else
     warn "auto-commit post-build no hizo nada"
   fi

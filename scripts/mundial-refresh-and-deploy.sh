@@ -62,7 +62,7 @@ fi
 
 # 4) Cambió el fixture → deploy (force-full; auto-commitea el JSON).
 log "fixture cambió ($PREV → $SIG) → deployando…"
-npm run deploy -- --force-full >> "$LOG" 2>&1
+npm run deploy -- --force-full --all >> "$LOG" 2>&1
 rc=$?
 if [ "$rc" != "0" ]; then
   log "deploy rc=$rc (FALLÓ) — la firma NO se guarda, se reintenta al próximo tick"

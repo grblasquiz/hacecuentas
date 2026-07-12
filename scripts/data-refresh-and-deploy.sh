@@ -125,7 +125,7 @@ fi
 # 4) Deploy (force-full; auto-commitea los JSON). Incremental rompe root-routes.
 log "valores cambiaron → deployando…"
 log "$(echo "$REAL" | grep -E '^[+]' | head -8 | tr '\n' ' ')"
-npm run deploy -- --force-full >> "$LOG" 2>&1
+npm run deploy -- --force-full --all >> "$LOG" 2>&1
 rc=$?
 if [ "$rc" != "0" ]; then
   log "deploy rc=$rc (FALLÓ) — revisar log"; exit "$rc"

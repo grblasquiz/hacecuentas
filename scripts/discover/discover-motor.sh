@@ -103,7 +103,7 @@ fi
 echo "campo libre → deploy full"
 notify "Publicando nota Discover…"
 rm -rf dist .wrangler/deploy 2>/dev/null
-if npm run deploy -- --force-full; then
+if npm run deploy -- --force-full --all; then
   echo "✅ deploy OK"; notify "Nota Discover publicada ✅"
   # ping de indexación fresh (best-effort, no rompe si falla)
   python3 scripts/indexnow-push.py 2>/dev/null || true
