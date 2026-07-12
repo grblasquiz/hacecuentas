@@ -8,6 +8,10 @@ import { salarioMinimo } from '../lib/formulas/salario-minimo';
 import { SALARIO_MINIMO as SM_BR } from '../lib/data/brasil-2026';
 import { PERU_2026 } from '../lib/data/peru-2026';
 import { ECUADOR_2026 } from '../lib/data/ecuador-2026';
+import { COLOMBIA_2026 } from '../lib/data/colombia-2026';
+import { MEXICO_2026 } from '../lib/data/mexico-2026';
+import { PARAGUAY_2026 } from '../lib/data/paraguay-2026';
+import { URUGUAY_2026 } from '../lib/data/uruguay-2026';
 
 // Página-dato enlazable: salario mínimo comparado en LATAM 2026.
 // Cada valor sale de la fuente única verificada de su país en este repo
@@ -17,7 +21,7 @@ import { ECUADOR_2026 } from '../lib/data/ecuador-2026';
 // Patrón espejado de /datos-monotributo-2026: tabla server-rendered + schema
 // Dataset + CC-BY 4.0 + bloque "Cómo citar".
 
-const ULTIMA_REVISION = '2026-06-10';
+const ULTIMA_REVISION = '2026-07-12';
 
 // AR — el SMVM vive en la fórmula oficial (el fetcher de CNEPySMVyM la patchea).
 const ar = salarioMinimo({ horasSemana: 48 });
@@ -62,12 +66,48 @@ const PAISES = [
     vigencia: 'enero 2026',
     nota: `Economía dolarizada · décimo cuarto sueldo = 1 SBU (US$ ${fmtNum(ECUADOR_2026.decimoCuarto, 'es-EC')})`,
   },
+  {
+    pais: 'México',
+    bandera: '🇲🇽',
+    instrumento: 'Salario Mínimo General (CONASAMI)',
+    valor: `$ ${fmtNum(MEXICO_2026.salarioMinimo.generalDiario, 'es-MX', 2)} MXN/día`,
+    norma: 'Resolución CONASAMI 2026',
+    vigencia: 'enero 2026',
+    nota: `≈ $ ${fmtNum(MEXICO_2026.salarioMinimo.generalMensual, 'es-MX')} mensual · Zona Libre Frontera Norte: $ ${fmtNum(MEXICO_2026.salarioMinimo.zlfnDiario, 'es-MX', 2)}/día`,
+  },
+  {
+    pais: 'Colombia',
+    bandera: '🇨🇴',
+    instrumento: 'Salario Mínimo Legal Mensual (SMLMV)',
+    valor: `$ ${fmtNum(COLOMBIA_2026.smlmv, 'es-CO')} COP`,
+    norma: 'Decreto 1469 de 2025',
+    vigencia: 'enero 2026',
+    nota: `+ auxilio de transporte $ ${fmtNum(COLOMBIA_2026.auxilioTransporte, 'es-CO')} (Dto 1470/2025) = $ 2.000.000`,
+  },
+  {
+    pais: 'Paraguay',
+    bandera: '🇵🇾',
+    instrumento: 'Salario Mínimo (SMVM)',
+    valor: `Gs. ${fmtNum(PARAGUAY_2026.salarioMinimo, 'es-PY')} PYG`,
+    norma: 'MTESS (Paraguay)',
+    vigencia: 'desde julio 2026',
+    nota: `Jornal mínimo diario: Gs. ${fmtNum(PARAGUAY_2026.jornalMinimo, 'es-PY')}`,
+  },
+  {
+    pais: 'Uruguay',
+    bandera: '🇺🇾',
+    instrumento: 'Salario Mínimo Nacional (SMN)',
+    valor: `$ ${fmtNum(URUGUAY_2026.smn.mensualJulio, 'es-UY')} UYU`,
+    norma: 'Decreto N° 319/025',
+    vigencia: 'desde julio 2026',
+    nota: `$ ${fmtNum(URUGUAY_2026.smn.mensualEnero, 'es-UY')} de enero a junio · jornal $ ${fmtNum(URUGUAY_2026.smn.jornalJulio, 'es-UY')}`,
+  },
 ];
 
 const title =
-  'Salario mínimo en LATAM 2026: Argentina, Brasil, Perú y Ecuador (tabla con fuentes) | Hacé Cuentas';
+  'Salario Mínimo 2026 por país: tabla LATAM (Argentina, México, Colombia, Brasil, Perú, Uruguay…) | Hacé Cuentas';
 const description =
-  `Tabla comparativa del salario mínimo 2026 en América Latina con norma legal y vigencia: SMVM Argentina ($ ${fmtNum(ar.smvmMensual)}), salário mínimo Brasil (R$ ${fmtNum(SM_BR, 'pt-BR', 0)}), RMV Perú (S/ ${fmtNum(PERU_2026.rmv, 'es-PE')}) y SBU Ecuador (US$ ${fmtNum(ECUADOR_2026.sbu)}). Fuentes oficiales por país. Uso libre con atribución (CC-BY 4.0).`;
+  `Salario mínimo 2026 en América Latina, país por país, con norma legal y vigencia: Argentina $ ${fmtNum(ar.smvmMensual)} ARS · México $ ${fmtNum(MEXICO_2026.salarioMinimo.generalDiario, 'es-MX', 2)}/día · Colombia $ ${fmtNum(COLOMBIA_2026.smlmv, 'es-CO')} COP · Brasil R$ ${fmtNum(SM_BR, 'pt-BR', 0)} · Perú S/ ${fmtNum(PERU_2026.rmv, 'es-PE')} · Paraguay Gs. ${fmtNum(PARAGUAY_2026.salarioMinimo, 'es-PY')} · Uruguay $ ${fmtNum(URUGUAY_2026.smn.mensualJulio, 'es-UY')} · Ecuador US$ ${fmtNum(ECUADOR_2026.sbu)}. Fuentes oficiales. Uso libre (CC-BY 4.0).`;
 
 const PAGE_URL = 'https://hacecuentas.com/datos-salario-minimo-latam-2026';
 
@@ -81,6 +121,10 @@ const chartPaises = [
   { pais: 'Brasil', bandera: '🇧🇷', moneda: 'BRL', simbolo: 'R$', valor: SM_BR, locale: 'pt-BR' },
   { pais: 'Perú', bandera: '🇵🇪', moneda: 'PEN', simbolo: 'S/', valor: PERU_2026.rmv, locale: 'es-PE' },
   { pais: 'Ecuador', bandera: '🇪🇨', moneda: 'USD', simbolo: 'US$', valor: ECUADOR_2026.sbu, locale: 'es-EC' },
+  { pais: 'México', bandera: '🇲🇽', moneda: 'MXN', simbolo: '$', valor: MEXICO_2026.salarioMinimo.generalMensual, locale: 'es-MX' },
+  { pais: 'Colombia', bandera: '🇨🇴', moneda: 'COP', simbolo: '$', valor: COLOMBIA_2026.smlmv, locale: 'es-CO' },
+  { pais: 'Paraguay', bandera: '🇵🇾', moneda: 'PYG', simbolo: 'Gs.', valor: PARAGUAY_2026.salarioMinimo, locale: 'es-PY' },
+  { pais: 'Uruguay', bandera: '🇺🇾', moneda: 'UYU', simbolo: '$', valor: URUGUAY_2026.smn.mensualJulio, locale: 'es-UY' },
 ];
 // Geometría del SVG (barras horizontales: una fila por país).
 const VB_W = 760;
@@ -101,7 +145,7 @@ const chartRows = chartPaises.map((p, i) => {
   };
 });
 // Snippet de cita listo para copiar (atribución + dato clave + backlink canónico).
-const citeSnippet = `<p>Salario mínimo 2026 en LATAM: Argentina $ ${fmtNum(ar.smvmMensual)} ARS · Brasil R$ ${fmtNum(SM_BR, 'pt-BR')} BRL · Perú S/ ${fmtNum(PERU_2026.rmv, 'es-PE')} PEN · Ecuador US$ ${fmtNum(ECUADOR_2026.sbu)} USD. <a href="${PAGE_URL}">Fuente: Hacé Cuentas — Salario mínimo LATAM 2026</a></p>`;
+const citeSnippet = `<p>Salario mínimo 2026 en LATAM: Argentina $ ${fmtNum(ar.smvmMensual)} ARS · México $ ${fmtNum(MEXICO_2026.salarioMinimo.generalDiario, 'es-MX', 2)} MXN/día · Colombia $ ${fmtNum(COLOMBIA_2026.smlmv, 'es-CO')} COP · Brasil R$ ${fmtNum(SM_BR, 'pt-BR')} BRL · Perú S/ ${fmtNum(PERU_2026.rmv, 'es-PE')} PEN · Paraguay Gs. ${fmtNum(PARAGUAY_2026.salarioMinimo, 'es-PY')} PYG · Uruguay $ ${fmtNum(URUGUAY_2026.smn.mensualJulio, 'es-UY')} UYU · Ecuador US$ ${fmtNum(ECUADOR_2026.sbu)} USD. <a href="${PAGE_URL}">Fuente: Hacé Cuentas — Salario mínimo LATAM 2026</a></p>`;
 
 const faq = [
   {
@@ -122,15 +166,15 @@ const faq = [
   },
   {
     q: '¿Qué país de la tabla tiene el salario mínimo más alto?',
-    a: 'No se puede responder comparando los números directamente: están en monedas distintas (peso argentino, real, sol y dólar) con poderes de compra distintos. Para compararlos hay que convertirlos a una moneda común al tipo de cambio del día — podés hacerlo con nuestro conversor de monedas — y aun así la comparación omite el costo de vida local.',
+    a: 'No se puede responder comparando los números directamente: cada país está en su moneda (peso argentino, peso mexicano, peso colombiano, real, sol, guaraní, peso uruguayo y dólar) con poderes de compra distintos. Para compararlos hay que convertirlos a una moneda común al tipo de cambio del día — podés hacerlo con nuestro conversor de monedas — y aun así la comparación omite el costo de vida local.',
   },
   {
     q: '¿Por qué no está la tabla en dólares?',
     a: 'Porque el tipo de cambio cambia todos los días (y en Argentina, según el dólar que uses). Publicar una conversión fija dejaría la tabla desactualizada en una semana. Los valores en moneda local con su norma legal son el dato estable y citable; la conversión la hacés al día con el conversor.',
   },
   {
-    q: '¿Por qué no aparecen Chile, Colombia y México?',
-    a: 'Porque todavía no consolidamos para esos países una fuente única verificada con el mismo estándar que usamos para Argentina, Brasil, Perú y Ecuador. Preferimos una tabla más corta y exacta antes que una completa con valores sin verificar. Los sumaremos cuando la fuente esté consolidada.',
+    q: '¿Por qué no aparece Chile (u otros países)?',
+    a: 'La tabla incluye los países para los que consolidamos una fuente única verificada (norma y valor oficial): Argentina, México, Colombia, Brasil, Perú, Paraguay, Uruguay y Ecuador. Chile y el resto los sumamos a medida que verificamos su fuente oficial con el mismo estándar; preferimos una tabla exacta antes que completa con valores sin verificar.',
   },
   {
     q: '¿Cada cuánto cambian estos valores?',
@@ -145,9 +189,9 @@ const faq = [
 const datasetSchema = {
   '@type': 'Dataset',
   '@id': `${PAGE_URL}#dataset`,
-  name: 'Salario mínimo en América Latina 2026 — Argentina, Brasil, Perú y Ecuador',
+  name: 'Salario mínimo en América Latina 2026 — Argentina, México, Colombia, Brasil, Perú, Paraguay, Uruguay y Ecuador',
   description:
-    'Tabla comparativa del salario mínimo legal 2026 en moneda local, con instrumento legal, norma y vigencia por país: SMVM (Argentina), salário mínimo (Brasil), RMV (Perú) y SBU (Ecuador). Fuentes oficiales de cada país.',
+    'Tabla comparativa del salario mínimo legal 2026 en moneda local, con instrumento legal, norma y vigencia por país: SMVM (Argentina), Salario Mínimo General (México), SMLMV (Colombia), salário mínimo (Brasil), RMV (Perú), SMVM (Paraguay), SMN (Uruguay) y SBU (Ecuador). Fuentes oficiales de cada país.',
   url: PAGE_URL,
   license: 'https://creativecommons.org/licenses/by/4.0/',
   isAccessibleForFree: true,
@@ -224,12 +268,12 @@ const schema = {
         <nav class="crumbs" aria-label="Migas de pan">
           <a href="/">Inicio</a> <span>›</span> <span>Salario mínimo LATAM 2026</span>
         </nav>
-        <h1>Salario mínimo en LATAM 2026: tabla comparativa con fuentes</h1>
+        <h1>Salario mínimo 2026 por país: tabla comparativa de LATAM con fuentes</h1>
         <p class="lede">
-          El salario mínimo legal vigente en 2026 en <strong>Argentina, Brasil, Perú y
-          Ecuador</strong>, en moneda local y con la norma que lo fija. Cada valor sale de la
-          fuente oficial de su país y es el mismo que usan las calculadoras de sueldo de este
-          sitio.
+          El salario mínimo legal vigente en 2026 en <strong>Argentina, México, Colombia,
+          Brasil, Perú, Paraguay, Uruguay y Ecuador</strong>, en moneda local y con la norma que
+          lo fija. Cada valor sale de la fuente oficial de su país y es el mismo que usan las
+          calculadoras de sueldo de este sitio.
         </p>
         <p class="updated">
           Última revisión: <time datetime={ULTIMA_REVISION}>{new Date(ULTIMA_REVISION).toLocaleDateString('es-AR')}</time> ·
@@ -395,7 +439,7 @@ Fuentes oficiales por país · Licencia CC-BY 4.0</code></pre>
           <summary><h2>Insertá / citá este dato en tu web</h2></summary>
           <p>
             Copiá este bloque HTML y pegalo en tu nota, blog o web. Muestra el salario mínimo
-            2026 de los cuatro países e incluye la atribución con enlace a la fuente:
+            2026 de los países de la tabla e incluye la atribución con enlace a la fuente:
           </p>
           <textarea class="embed-code" readonly rows="5" aria-label="Código HTML para citar este dato">{citeSnippet}</textarea>
           <button type="button" class="btn-copy" data-code={citeSnippet} aria-label="Copiar código HTML">
