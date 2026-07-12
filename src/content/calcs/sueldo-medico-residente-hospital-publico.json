@@ -16,12 +16,12 @@
   "icon": "🩺",
   "formulaId": "sueldo-medico-residente-hospital-publico",
   "intro": "Los **médicos residentes** de hospitales públicos en Argentina reciben una **beca-contrato** (no es sueldo tradicional, lo que impacta en el tratamiento impositivo) cuyo monto depende del año de residencia (R1, R2, R3, R4 y jefes de residentes), la jurisdicción (Nación, provincias, CABA) y la especialidad (las llamadas 'críticas' como terapia intensiva, emergentología, pediatría y anestesia tienen adicionales). Esta calculadora aplica la resolución del Ministerio de Salud vigente para 2026 con actualización trimestral, suma guardias activas (pagas aparte) y descuentos (monotributo en algunos casos, aportes jubilatorios en otros según jurisdicción), devolviendo el ingreso real en mano. Útil para médicos concursando residencia, egresados comparando hospitales y coordinadores diseñando beneficios.",
-  "keyTakeaway": "Ingresá año de residencia y jurisdicción y obtené básico (beca) al instante, con fórmula estándar del tema y referencias al pie. Resultado orientativo — para decisiones importantes consultá con un profesional.",
+  "keyTakeaway": "El residente no cobra un sueldo tradicional sino una beca-contrato, que escala por año (R1 a R5) y jurisdicción (CABA, PBA, Nacional, Interior). Como referencia 2026, un R1 en CABA ronda $983.970 en mano y un R2 $1.110.120; CABA encabeza la escala, seguida por Nacional, PBA e Interior. Las guardias se pagan aparte y suman alrededor del 45% del básico.",
   "useCases": [
-    "Resolver rápido una duda sobre sueldo médico residente 2026 (público) sin papel y lápiz.",
-    "Comparar escenarios o alternativas con números concretos.",
-    "Usar el resultado como referencia en una conversación o decisión.",
-    "Verificar si un valor que te dieron cuadra con el cálculo estándar."
+    "Un médico recién recibido que rindió el Examen Único y está por empezar como R1 en CABA quiere estimar su beca mensual en mano: la calc la calcula según año y jurisdicción.",
+    "Un residente R2 que compara sedes en CABA, PBA y una provincia del interior antes de elegir programa: la calc pone la beca de cada jurisdicción lado a lado.",
+    "Un residente que hace 6 guardias al mes quiere dimensionar cuánto pesan sobre su ingreso total: la calc separa el básico-beca del adicional por guardias (alrededor del 45% del básico).",
+    "Un R4 que va a ser jefe de residentes quiere ver el salto de beca en el último tramo: la calc muestra el estipendio por cada año de residencia."
   ],
   "fields": [
     {
@@ -109,36 +109,36 @@
   "explanation": "El residente médico es un médico recién recibido que, durante 3 a 5 años, hace una formación intensiva en una especialidad clínica o quirúrgica dentro de un hospital. Pero a diferencia de cualquier otro trabajador con título, **el residente no cobra un sueldo en el sentido tradicional sino una beca-contrato**: un estipendio mensual contraprestación de su formación, con tratamiento impositivo y previsional particular que difiere según la jurisdicción y el programa.\n\nLa **Ley 22.127** estableció el **Sistema Nacional de Residencias del Equipo de Salud**. El reglamento general vigente es la **Resolución 542/2026 del Ministerio de Salud** (abril de 2026), que reemplazó a la Resolución 2109/2025 y fijó la **Beca Nacional de Residencia** como única modalidad de contratación a nivel nacional, mientras que el **Decreto 527/2025** homologó la remuneración de los residentes nacionales; ambas reafirman el carácter de **estipendio formativo (beca)** del ingreso. A esto se sumó la **Ley 27.796 (2025)** —emergencia sanitaria de la salud pediátrica y de las residencias nacionales— que ordena una recomposición salarial para los residentes, aunque su aplicación quedó **suspendida hasta que el Congreso le asigne partida presupuestaria**. Sin embargo, cada **jurisdicción** mantiene su programa propio: el Ministerio de Salud de la Nación corre las residencias \"nacionales\" en hospitales bajo su órbita; CABA opera el sistema de residencias del GCBA; Provincia de Buenos Aires gestiona el de Salud bonaerense y los hospitales provinciales; y las provincias del interior tienen sus propios programas.\n\nLa estructura del ingreso del residente combina un **básico (estipendio o beca) por año de residencia (R1 a R5)** que escala con el año cursado; el **adicional por guardias activas** (cada residente cumple entre 4 y 8 guardias mensuales de 12 o 24 horas, que se pagan por separado y pueden representar entre el 30% y el 60% del ingreso total); el **plus por especialidades críticas** declaradas por el Ministerio de Salud (terapia intensiva, emergentología, pediatría, neonatología, anestesiología); y eventualmente bonos por permanencia en sedes desfavorables.\n\nEsta calculadora toma el año de residencia (R1 a R5) y la jurisdicción y devuelve el básico-beca mensual, el adicional típico por guardias y el neto orientativo.\n\n## Cómo se calcula\n\n```\nbasico = tabla_beca[jurisdiccion][anio_residencia]\nguardias = guardias_mes × valor_guardia[anio][jurisdiccion]\nadicional_especialidad_critica = basico × bonus_critica_si_aplica\nbruto = basico + guardias + adicional_critica\n\naportes = bruto × alicuota_aportes_jurisdiccion   # variable según provincia\nganancias = aplicar_escala_art94(bruto - aportes) si supera MNI\nneto = bruto - aportes - ganancias\n```\n\nLa cuota fija de monotributo aplica cuando la jurisdicción liquida la beca por factura, modalidad que a nivel nacional quedó acotada desde que la Resolución 542/2026 estableció la Beca Nacional de Residencia como única modalidad de contratación.\n\n## Comparativa por jurisdicción y año\n\n| Año / Jurisdicción | CABA | PBA | Nacional | Interior |\n|---|---|---|---|---|\n| R1 | Estipendio base | Estipendio base PBA | Estipendio base nacional | Variable según provincia |\n| R2 | Incremento por año | Incremento por año | Incremento por año | Variable |\n| R3 | Mayor estipendio | Mayor estipendio | Mayor estipendio | Variable |\n| R4 | Jefe de residentes potencial | Jefe potencial | Jefe potencial | Variable |\n| R5 | Especialidades largas (cirugía) | Especialidades largas | Especialidades largas | Especialidades largas |\n\nLas guardias se pagan adicional y representan un componente sustancial. Especialidades críticas (terapia intensiva, neonato, anestesia) suelen tener un plus específico declarado por resolución.\n\n## Marco normativo\n\n- **Ley 22.127** — Sistema Nacional de Residencias del Equipo de Salud.\n- **Resolución 542/2026 (Min. de Salud)** — Reglamento General vigente del Sistema Nacional de Residencias de la Salud (abril 2026); fija la Beca Nacional de Residencia como única modalidad y reemplazó a la Resolución 2109/2025.\n- **Decreto 527/2025** — homologación de la remuneración de los residentes nacionales.\n- **Ley 27.796 (2025)** — emergencia sanitaria de la salud pediátrica y de las residencias nacionales; dispone recomposición salarial para residentes, con aplicación suspendida hasta su asignación presupuestaria.\n- **Ley 17.132** — Régimen del ejercicio profesional de la medicina y profesiones afines.\n- **Resoluciones del Ministerio de Salud de la Nación** y normas provinciales — programas de residencias y montos de estipendios.\n- **Resolución conjunta Ministerio de Salud / Ministerio de Capital Humano** sobre paritarias específicas del sector residencias.\n- **Régimen previsional** — variable: algunos residentes aportan al SIPA, otros a las cajas de previsión médicas provinciales (Caja de Médicos PBA, etc.).\n\n## Características del sistema\n\n- **Ingreso por concurso** — Examen Único Nacional o exámenes jurisdiccionales con cupos por especialidad y sede.\n- **Régimen full-time** — exclusividad en muchas jurisdicciones; en otras se permite \"libre ejercicio\" controlado.\n- **Jornada extensa** — promedio 60-80 horas semanales incluyendo guardias, motivo de demandas históricas de mejora.\n- **Tutoría** — cada residente tiene jefe de residentes (R4/R5) e instructor académico que supervisan formación.\n- **Examen anual** — promoción al año siguiente sujeta a evaluación académica y de desempeño.\n\n## Cuándo NO se aplica esta calculadora\n\n- Residencias en sanatorios privados: tienen estipendios privados que no se rigen por el régimen público.\n- Becas de investigación (CONICET, etc.) que se confunden con residencias clínicas — son programas distintos con financiamiento propio.\n- Concurrencias ad-honorem (médicos que rotan sin remuneración) — el ingreso es cero por definición.\n- Especialidades semi-presenciales o de carrera corta (post-básicas tras la residencia base) — escalas distintas.\n",
   "faq": [
     {
-      "q": "¿Residencia médica?",
-      "a": "Programa de especialización post-título de grado. Duración 3-5 años."
+      "q": "¿El residente cobra un sueldo o una beca?",
+      "a": "Cobra una beca-contrato, no un sueldo tradicional: es un estipendio formativo mensual, con un tratamiento impositivo y previsional particular que difiere según la jurisdicción y el programa."
     },
     {
-      "q": "¿Es beca o sueldo?",
-      "a": "Técnicamente 'beca'. Pero se cobra como sueldo + aportes en la mayoría de jurisdicciones."
+      "q": "¿Cuánto gana un residente en 2026?",
+      "a": "Como referencia 2026, la beca en mano de un R1 va de unos $836.375 (interior) a $983.970 (CABA) y escala cada año hasta R5. Las guardias se pagan por separado."
     },
     {
-      "q": "¿Guardias residente?",
-      "a": "Adicional por cada guardia (12-24hs). Parte importante del ingreso."
+      "q": "¿Cómo se paga cada año de residencia (R1 a R5)?",
+      "a": "El básico-beca escala con el año cursado: R1 (primer año) es el más bajo y sube hasta R5. La duración depende de la especialidad (las clínicas suelen ser de 3 años y las quirúrgicas de 5 o más)."
     },
     {
-      "q": "¿Diferencia CABA vs PBA?",
-      "a": "CABA suele pagar más que PBA (hospital municipal)."
+      "q": "¿Cuánto suman las guardias al ingreso?",
+      "a": "Cada residente cumple entre 4 y 8 guardias mensuales de 12 o 24 horas, que se pagan aparte y pueden representar entre el 30% y el 60% del ingreso total."
     },
     {
-      "q": "¿Residencia privada?",
-      "a": "Sanatorios privados también tienen residencias. Suelen ser mejor pagas pero con más carga."
+      "q": "¿Por qué CABA paga más que PBA?",
+      "a": "Cada jurisdicción fija su propio estipendio. Según los valores de referencia 2026, CABA encabeza la escala, seguida por las residencias nacionales, PBA e Interior, que tienen becas más bajas para el mismo año."
     },
     {
-      "q": "¿Ingreso como tomás?",
-      "a": "Concurso anual con examen único nacional. Muy competitivo para especialidades top."
+      "q": "¿Cómo se ingresa a la residencia?",
+      "a": "Por concurso: el Examen Único Nacional o exámenes jurisdiccionales, con cupos por especialidad y sede. El ingreso es muy competitivo para las especialidades más buscadas."
     },
     {
-      "q": "¿R1 a R5?",
-      "a": "R1 (primer año) a R5 (quinto año) según la especialidad (clínica 3, cirugía 5+, etc)."
+      "q": "¿Las especialidades críticas pagan más?",
+      "a": "Sí. Terapia intensiva, emergentología, pediatría, neonatología y anestesiología están declaradas críticas por el Ministerio de Salud y suelen tener un plus específico."
     },
     {
-      "q": "¿Especialidades mejor pagas?",
-      "a": "Anestesia, cardiología intervencionista, cirugía plástica. Pero la residencia no paga más — el ingreso viene después."
+      "q": "¿Qué normas regulan la beca del residente?",
+      "a": "La Ley 22.127 creó el Sistema Nacional de Residencias; la Resolución 542/2026 fijó la Beca Nacional de Residencia como única modalidad nacional y el Decreto 527/2025 homologó la remuneración. La Ley 27.796 dispuso una recomposición, con aplicación suspendida hasta que se le asigne partida presupuestaria."
     }
   ],
   "sources": [

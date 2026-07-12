@@ -109,13 +109,13 @@
   "icon": "🍽️",
   "formulaId": "sueldo-gastronomico-uthgra-mozo-cocinero",
   "intro": "El **convenio colectivo 389/04** de gastronomía (UTHGRA) fija la escala salarial para mozos, cocineros, maître, bodegueros y personal de cocina en Argentina. Las paritarias 2026 mantienen aumentos trimestrales indexados a la inflación, con categorías (\"Puntos\") que van desde el lavacopas o peón general (Punto 1) hasta el jefe de brigada o maître principal (Punto 7). Esta calculadora suma básico + antigüedad (1% por año trabajado, con tope 20 años) + adicional nocturno (40% cuando se trabaja entre 21:00 y 06:00) + feriados (100% recargo) + presentismo, y te devuelve bruto y neto tras los aportes del 17% (jubilación 11% + obra social OSUTHGRA 3% + PAMI 3%). Útil para empleados que quieren verificar su recibo y empleadores que calculan liquidaciones.",
-  "keyTakeaway": "Ingresá puesto, años y horas semanales y obtené básico al instante, con fórmula estándar del tema y referencias al pie. Resultado orientativo — para decisiones importantes consultá con un profesional.",
+  "keyTakeaway": "El básico depende del Punto (la categoría del CCT 389/04): en la escala FEHGRA Categoría B de junio 2026 va de $1.038.120 (Punto 1, lavacopas) a $1.538.297 (Punto 7, jefe de brigada), y un cocinero o mozo de salón (Punto 6) parte de $1.384.689. Sumás antigüedad (1% por año), adicional nocturno (40%) y feriados (100%), y restás el 17% de aportes. La propina no es remunerativa: no entra en el cálculo.",
   "answerSnippet": "El sueldo gastronómico UTHGRA 2026 se calcula sumando el básico por categoría del CCT 389/04 (mozo, cocinero, bachero, ayudante o encargado), antigüedad de 1% por año trabajado con tope de 20 años, adicional nocturno del 40% entre 21 y 6 horas, recargo del 100% en feriados y presentismo. Se descuentan aportes del 17% (jubilación 11%, OSUTHGRA 3% y PAMI 3%). Con la escala FEHGRA Categoría B de junio 2026, el básico de jornada completa (48 h) va de $1.038.120 (Punto 1, lavacopas) a $1.538.297 (Punto 7, jefe de brigada): un cocinero o mozo de salón (Punto 6) parte de $1.384.689 de básico y cobra cerca de $1.184.000 netos con 3 años de antigüedad, mientras que un mozo de mostrador (Punto 2) ronda los $942.000.",
   "useCases": [
-    "Resolver rápido una duda sobre sueldo gastronómico UTHGRA 2026 sin papel y lápiz.",
-    "Comparar escenarios o alternativas con números concretos.",
-    "Usar el resultado como referencia en una conversación o decisión.",
-    "Verificar si un valor que te dieron cuadra con el cálculo estándar."
+    "Un mozo de salón (Punto 6) con 3 años de antigüedad que quiere chequear si su recibo cuadra: la calc parte del básico de convenio, suma el 1% por año y descuenta el 17% de aportes para mostrar el neto.",
+    "Un bachero o lavacopas (Punto 1) que arranca en un bar y quiere saber su básico de jornada completa: la calc muestra el piso del convenio para su categoría.",
+    "Un cocinero que trabaja turnos nocturnos y feriados quiere estimar cuánto suman esos recargos: la calc aplica el 40% nocturno y el 100% de feriado sobre las horas correspondientes.",
+    "Un dueño de restaurante que calcula el costo laboral de sumar un mozo a la planta: la calc devuelve básico, bruto con adicionales y neto."
   ],
   "fields": [
     {
@@ -197,36 +197,36 @@
   "explanation": "El sueldo del trabajador gastronómico en Argentina se rige por el **Convenio Colectivo de Trabajo 389/04** firmado por **UTHGRA (Unión de Trabajadores del Turismo, Hoteleros y Gastronómicos de la República Argentina)** y las cámaras empresariales del sector (FEHGRA, AHRCC). El convenio cubre a mozos, cocineros, ayudantes de cocina, bacheros/lavacopas, encargados, maitre, sommelier, recepcionistas y personal hotelero en general, con escalas separadas por categoría y por tipo de establecimiento (hotel, restaurante, bar, pizzería, parrilla, etc.).\n\nLa estructura del recibo combina varios elementos. El **básico** depende de la categoría del CCT 389/04, que va desde peón de cocina (categoría más baja) hasta encargado o chef ejecutivo. Sobre eso se suman: **antigüedad de 1% por año** trabajado (con tope típico de 20 años); **adicional nocturno** del 40% para horas trabajadas entre las 21:00 y las 06:00; **recargo del 100% en feriados** trabajados (por ley); **presentismo** que puede alcanzar el 8,33% del básico cuando no hay ausencias injustificadas; y horas extra al 50% en días hábiles después de la octava hora y al 100% sábados después de las 13:00, domingos y feriados.\n\nUn componente sensible del oficio es la **propina**: por ley no integra el salario (no es remunerativa) y pertenece al empleado; el empleador no puede retenerla. Sin embargo, en muchos establecimientos representa una porción significativa del ingreso real del mozo, y desde 2023 algunos restaurantes incorporan propinas sugeridas del 10% al ticket, siempre voluntarias para el cliente.\n\nLos aportes obligatorios del 17% (jubilación 11% + obra social OSUTHGRA 3% + PAMI 3%) se descuentan sobre el bruto remunerativo.\n\nEsta calculadora toma puesto, años de antigüedad y horas semanales y devuelve el básico, el bruto con adicionales típicos y el neto después de descuentos.\n\n## Cómo se calcula\n\n```\nbasico = tabla_basico_CCT_389_04[puesto] × proporcion_horas\nantiguedad = basico × min(anios, 20) × 0.01\nadicional_nocturno = basico × horas_nocturnas × 0.40\nadicional_feriado = basico × horas_feriado × 1.00\npresentismo = basico × hasta_0.0833\nbruto = basico + antiguedad + adicionales + horas_extra\n\naportes = bruto × 0.17   # jubilación 11% + OSUTHGRA 3% + PAMI 3%\nganancias = aplicar_escala_art94(bruto - aportes)\nneto = bruto - aportes - ganancias\n```\n\n## Categorías habituales del CCT 389/04\n\n| Puesto | Tarea típica | Posición relativa |\n|---|---|---|\n| Encargado / Maitre | Coordinación de salón y personal | Categoría alta |\n| Cocinero | Cocción y preparación principal | Categoría alta |\n| Mozo | Atención al cliente, salón y barra | Categoría media |\n| Bachero / Lavacopas | Lavado de vajilla y limpieza | Categoría base |\n| Ayudante de cocina | Soporte al cocinero | Categoría base-media |\n| Bodeguero / Sommelier | Manejo de bodega y carta de vinos | Categoría especializada |\n| Cajero / Recepcionista | Caja y atención al ingreso | Categoría administrativa |\n\n## Marco normativo\n\n- **Ley de Contrato de Trabajo 20.744 (LCT)** — régimen laboral supletorio.\n- **CCT 389/04** — convenio gastronómico y hotelero UTHGRA-FEHGRA.\n- **Ley 24.557 (Riesgos del Trabajo)** — cobertura ART, especialmente relevante por cortes, quemaduras y ergonomía.\n- **Ley 27.073** y modificatorias — Régimen de Trabajo Decente en establecimientos gastronómicos.\n- **Ley 11.544** — Jornada de Trabajo, define máximas y descansos.\n- **Resoluciones del Ministerio de Capital Humano** — homologación de paritarias trimestrales/cuatrimestrales.\n\n## Propina: no es salario\n\nLa propina recibida por el mozo o el personal de salón **no integra el salario** (no es remunerativa) y por lo tanto no genera aportes, no impacta en aguinaldo ni en indemnización por despido. Esto fue ratificado por la jurisprudencia laboral. Sin embargo, en establecimientos donde la propina sugerida del 10% se cobra por TPV/POS junto con el consumo, el reparto entre el personal debe ser transparente y la empresa no puede retenerla. Algunas paritarias provinciales avanzaron en regulaciones específicas sobre el pool de propinas en hoteles y grandes establecimientos.\n\n## Cuándo NO se aplica esta calculadora\n\n- Cocineros con factura propia (chef consultor, food trucks autónomos, monotributistas): no perciben sueldo bajo CCT.\n- Personal de catering eventual con relación de servicios — pueden encuadrar en CCT distinto o no encuadrar.\n- Casinos y hoteles con CCT específico distinto al 389/04.\n- Personal de gastronomía en aerolíneas o cruceros — régimen especial diferenciado.\n- Operadores de delivery (Rappi, PedidosYa) — la jurisprudencia oscila sobre su encuadre.\n",
   "faq": [
     {
-      "q": "¿UTHGRA?",
-      "a": "Unión de Trabajadores del Turismo, Hoteleros y Gastronómicos de la República Argentina."
+      "q": "¿Qué es el convenio UTHGRA y a quién cubre?",
+      "a": "Es el CCT 389/04 de gastronomía y hotelería, firmado por UTHGRA (Unión de Trabajadores del Turismo, Hoteleros y Gastronómicos) y las cámaras del sector (FEHGRA, AHRCC). Cubre a mozos, cocineros, ayudantes de cocina, bacheros, encargados, maître y personal hotelero."
     },
     {
-      "q": "¿Categorías?",
-      "a": "Mozo/Moza, Cocinero, Ayudante de cocina, Bachero, Recepcionista, Mucama, Encargado."
+      "q": "¿Cuánto gana un mozo o cocinero en 2026?",
+      "a": "Con la escala FEHGRA Categoría B de junio 2026, el básico de jornada completa (48 h) va de $1.038.120 (Punto 1) a $1.538.297 (Punto 7). Un cocinero o mozo de salón (Punto 6) parte de $1.384.689 de básico."
     },
     {
-      "q": "¿Propinas?",
-      "a": "No son salario, son beneficio del empleado. Empresa no puede quedarse con ellas."
+      "q": "¿La propina cuenta como parte del sueldo?",
+      "a": "No. Por ley la propina no es remunerativa: pertenece al empleado, no genera aportes y no impacta en el aguinaldo ni en la indemnización. El empleador no puede retenerla."
     },
     {
-      "q": "¿10% obligatorio?",
-      "a": "Desde ley 2024: algunas mesas incluyen propina sugerida 10%. Sigue siendo voluntario."
+      "q": "¿Es obligatoria la propina del 10%?",
+      "a": "No. Algunos establecimientos incorporan una propina sugerida del 10% al ticket, pero sigue siendo voluntaria para el cliente."
     },
     {
-      "q": "¿Doble sueldo diciembre?",
-      "a": "SAC: medio sueldo en junio y medio en diciembre (aguinaldo) como cualquier empleado."
+      "q": "¿Cuánto se descuenta de aportes?",
+      "a": "El 17% del bruto remunerativo: jubilación 11%, obra social OSUTHGRA 3% y PAMI 3%."
     },
     {
-      "q": "¿Turnos fraccionados?",
-      "a": "Gastronomía suele tener turno doble (mediodía + noche) con descanso en el medio."
+      "q": "¿Cuánto suma la antigüedad?",
+      "a": "Un 1% del básico por cada año trabajado, con un tope típico de 20 años."
     },
     {
-      "q": "¿Adicional hotelero?",
-      "a": "Hoteles: puede haber adicional por categoría (5 estrellas vs 3)."
+      "q": "¿Cómo se paga el turno noche y los feriados?",
+      "a": "Las horas trabajadas entre las 21:00 y las 06:00 tienen un adicional nocturno del 40%, y los feriados trabajados se pagan con un recargo del 100% por ley."
     },
     {
-      "q": "¿Feriado gastronómico?",
-      "a": "Abiertos en feriados, con pago doble por ley."
+      "q": "¿El personal gastronómico cobra aguinaldo?",
+      "a": "Sí, el SAC (aguinaldo) como cualquier empleado en relación de dependencia: medio sueldo en junio y medio en diciembre."
     }
   ],
   "sources": [

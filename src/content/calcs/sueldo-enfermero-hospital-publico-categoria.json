@@ -16,12 +16,12 @@
   "icon": "⚕️",
   "formulaId": "sueldo-enfermero-hospital-publico-categoria",
   "intro": "Los enfermeros en Argentina están divididos entre **hospital público** (rigen escalas por ley provincial y convenios SUTECBA/ATE/UPCN para nación y CABA) y **sector privado** (convenio 122/75 y sanatorio privado). Las categorías van desde auxiliar (sin título), enfermero profesional (título de 3 años) a licenciado en enfermería (5 años). Esta calculadora es un **estimador**: usa básicos de referencia por sector y categoría —porque cada jurisdicción y cada CCT fija su propia escala por paritaria— y suma el adicional por guardias para devolver bruto y neto orientativos. Los conceptos que pueden engrosar el recibo real (antigüedad ~1-2%/año, área crítica +30-50%, nocturnidad +25-35%, título de licenciatura +15-25%) se explican abajo. **Verificá siempre la escala vigente de tu paritaria** (Ley 10.471 PBA, escalafón CABA, CCT 122/75 privado). Útil para enfermeros en relación de dependencia, estudiantes evaluando carrera y casas de salud planificando planta.",
-  "keyTakeaway": "Ingresá sector, categoría y guardias/mes y obtené básico al instante, con fórmula estándar del tema y referencias al pie. Resultado orientativo — para decisiones importantes consultá con un profesional.",
+  "keyTakeaway": "No hay un básico único nacional: cada provincia, CABA, Nación y el sector privado fijan su escala por paritaria. Como referencia 2026, en el público un auxiliar ronda $800.000 de básico, un enfermero profesional $900.000 y un licenciado $1.100.000; en el privado suman entre $100.000 y $150.000 más, y cada guardia agrega de $70.000 a $90.000 al bruto. El neto sale de restar el 17% de aportes.",
   "useCases": [
-    "Resolver rápido una duda sobre sueldo enfermero 2026 (público y privado) sin papel y lápiz.",
-    "Comparar escenarios o alternativas con números concretos.",
-    "Usar el resultado como referencia en una conversación o decisión.",
-    "Verificar si un valor que te dieron cuadra con el cálculo estándar."
+    "Un enfermero profesional de un hospital provincial que hace 4 guardias al mes quiere saber cuánto pesan esas guardias en su ingreso: la calc separa el básico de categoría del adicional por guardias mensuales.",
+    "Una auxiliar que está por recibirse de licenciada quiere ver el salto de sueldo entre categorías: la calc compara auxiliar, profesional y licenciado/a dentro del mismo sector.",
+    "Un enfermero que evalúa pasar del hospital público a un sanatorio privado (CCT 122/75) quiere comparar el básico de los dos sectores para su categoría: la calc pone público, privado y domiciliario lado a lado.",
+    "Una empresa de enfermería domiciliaria que planifica una contratación necesita un orden de magnitud del neto por categoría: la calc devuelve básico, guardias y neto orientativos."
   ],
   "fields": [
     {
@@ -105,36 +105,36 @@
   "explanation": "El sueldo de enfermería en Argentina depende fuertemente del **sector** donde se ejerce: el hospital público (provincial o municipal) se rige por la **Ley 24.004 del Ejercicio Profesional de la Enfermería** combinada con los **escalafones del personal sanitario** de cada jurisdicción (Ley 10.471 PBA, escalafón hospitalario CABA, normas equivalentes en el resto), mientras que el sector privado y los sanatorios se rigen por el **CCT 122/75 de Sanidad** y otros convenios complementarios negociados por **FATSA (Federación Argentina de Trabajadores de Sanidad Argentina)** y **ATSA (Asociación de Trabajadores de la Sanidad Argentina)**.\n\nLas categorías profesionales se construyen sobre la formación: **auxiliar de enfermería** (curso de un año), **enfermero/a profesional** (tecnicatura de 3 años) y **licenciado/a en enfermería** (carrera universitaria de 5 años). Sobre el básico de cada categoría se acumulan adicionales que pueden duplicar el sueldo nominal: **antigüedad** (típicamente 1-2% por año), **adicional por área crítica** (terapia intensiva, neonatología, shock-room, hemodiálisis: +30-50%), **guardias activas** con recargo del 100% sobre la hora normal, **nocturnidad** (+25-35% en turno nocturno habitual), **adicional por título universitario** para licenciados (+15-25%) y **plus por zona desfavorable** en algunos hospitales.\n\nLa enfermería está reconocida como **actividad insalubre** por su exposición a riesgo biológico, estrés psicofísico y carga horaria. Esto activa un régimen previsional diferenciado con edad jubilatoria reducida y menos años de servicio requeridos respecto del SIPA estándar.\n\nEsta calculadora toma el sector, la categoría profesional y la cantidad de guardias mensuales y devuelve el básico estimado, el adicional por guardias y el neto orientativo después de aportes.\n\n> **Importante — valores de referencia.** No existe un básico único nacional para enfermería: cada provincia, CABA, Nación y el sector privado fijan su escala por paritaria. Los básicos de esta calculadora son **valores de referencia 2026** para dar un orden de magnitud; tu recibo real depende de la escala vigente de tu jurisdicción o CCT. Consultá la escala oficial (Ley 10.471 PBA, escalafón hospitalario CABA, CCT 122/75 de Sanidad para privados) antes de tomar decisiones.\n\n## Cómo se calcula\n\n```\nbasico = tabla_basico[sector][categoria]\nantiguedad = basico × anios × 0.015\nadicional_area_critica = basico × bonus_area_si_aplica\nadicional_titulo = basico × 0.20 si es licenciado\nadicional_nocturnidad = basico × 0.30 si trabaja noche habitual\nvalor_guardia = (basico / horas_mes) × horas_guardia × 2   # 100% recargo\nguardias_total = valor_guardia × guardias_mes\n\nbruto = basico + antiguedad + adicionales + guardias_total + presentismo\naportes = bruto × 0.17\nganancias = aplicar_escala_art94(bruto - aportes)\nneto = bruto - aportes - ganancias\n```\n\n## Componentes según sector\n\n| Sector | Norma principal | Particularidades |\n|---|---|---|\n| Hospital público provincial | Ley 24.004 + escalafones provinciales | Régimen escalafonario, carrera pública, estabilidad |\n| Hospital público nacional / CABA | Convenios sectoriales (SUTECBA, ATE, UPCN) | Categorías administrativas más adicional asistencial |\n| Sanatorio privado / clínica | CCT 122/75 Sanidad | Adicionales más sensibles al rendimiento de la empresa |\n| Prepaga (OSDE, Galeno, Swiss Medical) | CCT 122/75 + acuerdos | Posibles bonos privados |\n| Enfermería domiciliaria | Contrato profesional / CCT 122/75 si depende de empresa | Pago por hora o por jornada |\n\n## Marco normativo\n\n- **Ley 24.004** — Ejercicio Profesional de la Enfermería; define categorías, atribuciones y matrícula.\n- **Ley 17.132** — Régimen general del ejercicio de la medicina y profesiones afines, parcialmente aplicable.\n- **Ley 10.471 (PBA)** y normas equivalentes provinciales — escalafones del personal sanitario.\n- **CCT 122/75 (Sanidad)** y acuerdos paritarios FATSA/ATSA — sector privado.\n- **Ley 24.241 (SIPA)** + jurisprudencia y normas sobre insalubridad — régimen previsional especial.\n- **Ley 24.557 (Riesgos del Trabajo)** — cobertura ART específica para riesgo biológico.\n- **Resoluciones del Ministerio de Salud y Capital Humano** — paritarias periódicas.\n\n## Adicionales típicos\n\n- **Área crítica**: terapia intensiva, neonatología, shock-room, hemodiálisis, quirófano (+30-50%).\n- **Guardia activa**: turno extra de 12 o 24 horas con recargo del 100% sobre la hora base.\n- **Nocturnidad habitual**: +25-35% para personal en rol nocturno permanente.\n- **Insalubridad**: reducción de jornada legal (6 horas) o adicional remunerativo según norma jurisdiccional.\n- **Título universitario**: licenciados +15-25% sobre el básico de enfermero profesional.\n- **Zona desfavorable / hospital de complejidad III**: bonus regional.\n- **Pago especial pandemia / contingencias sanitarias**: bonos extraordinarios cuando se declaran.\n\n## Cuándo NO se aplica esta calculadora\n\n- Enfermeros monotributistas con consultorios o servicios independientes — facturan, no perciben sueldo.\n- Personal directivo del área enfermería (jefe de departamento, supervisor general) con cargo jerárquico de mayor adicional, fuera del rango típico.\n- Enfermeros militares o de fuerzas de seguridad — régimen escalafonario propio.\n- Contratos por programa (becarios, residentes de enfermería) — tienen modalidades diferenciadas.\n",
   "faq": [
     {
-      "q": "¿Categorías enfermería?",
-      "a": "Auxiliar (curso corto), Enfermero Profesional (3 años), Licenciado (5 años universitarios)."
+      "q": "¿Cuánto gana un enfermero en el hospital público en 2026?",
+      "a": "Como referencia 2026, el básico bruto ronda $800.000 para un auxiliar, $900.000 para un enfermero profesional y $1.100.000 para un licenciado; el neto es cerca del 83% tras el 17% de aportes. No hay una escala única nacional: cada jurisdicción la fija por paritaria."
     },
     {
-      "q": "¿FATSA / ATSA?",
-      "a": "Gremios de sanidad (Federación Argentina de Trabajadores de Sanidad Argentina). Cubre privados."
+      "q": "¿Cuánto más paga el sector privado que el público?",
+      "a": "Para la misma categoría, un sanatorio o prepaga (CCT 122/75) suele pagar entre $100.000 y $150.000 más de básico que el hospital público. La enfermería domiciliaria, en cambio, suele quedar por debajo del público."
     },
     {
-      "q": "¿Guardias?",
-      "a": "Turnos de 12 o 24 horas adicionales al sueldo base. Se pagan aparte."
+      "q": "¿Cuáles son las categorías de enfermería y qué formación exigen?",
+      "a": "Auxiliar de enfermería (curso de un año), enfermero/a profesional (tecnicatura de 3 años) y licenciado/a en enfermería (carrera universitaria de 5 años). Cada escalón parte de un básico más alto."
     },
     {
-      "q": "¿Insalubridad?",
-      "a": "Enfermería es trabajo insalubre: jubilación con 25 años de servicio y edad reducida."
+      "q": "¿Cuánto se cobra por una guardia?",
+      "a": "Las guardias activas se pagan aparte del básico, con un recargo del 100% sobre la hora normal. Como referencia, cada guardia suma entre $70.000 (público o domiciliario) y $90.000 (privado) al bruto."
     },
     {
-      "q": "¿Público vs privado?",
-      "a": "Privado suele pagar más pero con más trabajo. Público estabilidad y mejores beneficios."
+      "q": "¿Cuánto suma trabajar en área crítica?",
+      "a": "Terapia intensiva, neonatología, shock-room, hemodiálisis y quirófano tienen un adicional por área crítica de entre 30% y 50% sobre el básico, por el mayor riesgo y complejidad."
     },
     {
-      "q": "¿Obra social?",
-      "a": "FATSA: OSPERYH. Público: IOMA, PAMI o la del empleador."
+      "q": "¿El licenciado en enfermería cobra más que el profesional?",
+      "a": "Sí. Además de partir de una categoría más alta, el título universitario suma un adicional de entre 15% y 25% sobre el básico del enfermero profesional."
     },
     {
-      "q": "¿Adicional título?",
-      "a": "Licenciados cobran más que profesionales. Universitarios +15-25%."
+      "q": "¿Los enfermeros tienen jubilación anticipada?",
+      "a": "La enfermería está reconocida como actividad insalubre por la exposición a riesgo biológico y la carga horaria, lo que activa un régimen previsional con edad jubilatoria reducida y menos años de servicio que el SIPA estándar."
     },
     {
-      "q": "¿Turnos noche?",
-      "a": "Adicional nocturno del 25-35%."
+      "q": "¿Qué leyes y convenios fijan el sueldo del enfermero?",
+      "a": "En el público rige la Ley 24.004 del Ejercicio Profesional de la Enfermería más los escalafones de cada jurisdicción (Ley 10.471 en PBA, escalafón hospitalario en CABA); en el privado, el CCT 122/75 de Sanidad negociado por FATSA y ATSA."
     }
   ],
   "sources": [
