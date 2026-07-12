@@ -49,6 +49,9 @@ export const TAB_ICON: Record<ProductId, string> = {
   familia: 'heart',
 };
 
+/** Orden fijo de los tabs (como el mockup: Casa · Plata · Trabajo · Familia). */
+export const TAB_ORDER: ProductId[] = ['casa', 'plata', 'trabajo', 'familia'];
+
 /** Metadata visual de cada herramienta (por slug canónico). desc corta + ícono. */
 export const TOOL_META: Record<string, { desc: string; icon: string }> = {
   // — Mi Casa —

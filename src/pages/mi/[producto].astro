@@ -7,6 +7,7 @@ import Footer from '../../components/Footer.astro';
 import { PRODUCTS, getProduct } from '../../lib/products/manifest';
 import { PROFILE_FIELDS } from '../../lib/profile/schema';
 import { DECISION_MANIFEST } from '../../lib/decisions/manifest';
+import { DASH, TOOL_META, SALA_EYEBROW, TAB_ICON, TAB_ORDER, ICONS } from '../../lib/products/dashboard';
 
 export function getStaticPaths() {
   return PRODUCTS.map((p) => ({ params: { producto: p.slug } }));
@@ -14,6 +15,7 @@ export function getStaticPaths() {
 
 const { producto } = Astro.params;
 const product = getProduct(producto!)!;
+const dash = DASH[product.id];
 
 // Familia visual del vertical (money es default → sólo mapeamos los que difieren).
 const productDomain = ({ casa: 'home', familia: 'health' } as const)[producto as string];
@@ -21,7 +23,7 @@ const productDomain = ({ casa: 'home', familia: 'health' } as const)[producto as
 const fieldByKey = new Map(PROFILE_FIELDS.map((f) => [f.key, f]));
 const salaBySlug = new Map(DECISION_MANIFEST.map((r) => [r.slug, r]));
 
-// Campos del perfil de este vertical (Estado persistente).
+// Campos del perfil de este vertical (sidebar "Datos de…" + precarga de herramientas).
 const estadoFields = product.profileKeys
   .map((k) => fieldByKey.get(k))
   .filter(Boolean)
@@ -37,13 +39,27 @@ const estadoFields = product.profileKeys
 const keyMetricFields = product.keyMetrics
   .map((k) => fieldByKey.get(k))
   .filter(Boolean)
-  .map((f) => ({ key: f!.key, label: f!.label, unit: f!.unit || '', type: f!.type }));
+  .map((f) => ({ key: f!.key, label: f!.label, unit: f!.unit || '', type: f!.type, options: f!.options || null }));
 
-// Salas (Recomendaciones) resueltas a metadata real.
-const salas = product.salas.map((s) => salaBySlug.get(s)).filter(Boolean) as typeof DECISION_MANIFEST;
+// Herramientas con metadata visual (ícono + descripción). El grid muestra hasta 6.
+const toolsAll = product.tools.map((t) => ({
+  ...t,
+  desc: TOOL_META[t.slug]?.desc || '',
+  icon: TOOL_META[t.slug]?.icon || 'list',
+}));
+const toolsShown = toolsAll.slice(0, 6);
 
-// Otros productos (cross-nav).
-const otros = PRODUCTS.filter((p) => p.id !== product.id);
+// Salas resueltas a metadata real; el grid muestra hasta 4 (2×2 como el mockup).
+const salas = product.salas
+  .map((s) => salaBySlug.get(s))
+  .filter(Boolean)
+  .slice(0, 4) as typeof DECISION_MANIFEST;
+
+const canonical = `/mi/${product.slug}`;
+const editHref = `/mi-hacecuentas?next=${encodeURIComponent(canonical)}`;
+
+// Tabs en orden fijo (Casa · Plata · Trabajo · Familia), no el del manifest.
+const tabProducts = TAB_ORDER.map((id) => PRODUCTS.find((p) => p.id === id)!).filter(Boolean);
 
 // Config que consume el script inline del cliente.
 const clientConfig = JSON.stringify({
@@ -53,11 +69,13 @@ const clientConfig = JSON.stringify({
   profileKeys: estadoFields,
   keyMetrics: keyMetricFields,
   tools: product.tools,
+  toolsCount: product.tools.length,
   alertSlugs: product.alertSlugs,
   milestones: product.milestones,
+  stats: dash.stats.map((s) => ({ kind: s.kind, metricKey: s.metricKey || null })),
+  situation: { primaryKey: dash.situation.primaryKey || null, primaryFallback: dash.situation.primaryFallback },
 });
 
-const canonical = `/mi/${product.slug}`;
 const schema = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
@@ -78,139 +96,239 @@ const schema = {
   canonical={canonical}
   schema={schema}
   domain={productDomain}
+  pageType="hub"
 >
-  <Header slot="header" />
-
-  <div class="product-page" data-product={product.id} style={`--p-accent:${product.accent}`}>
-    <!-- ───────── Panel / Hero ───────── -->
-    <header class="product-hero">
-      <nav class="product-crumbs" aria-label="Migas">
-        <a href="/mi">Mis productos</a> <span aria-hidden="true">/</span> <span>{product.name}</span>
-      </nav>
-      <div class="product-hero-head">
-        <span class="product-hero-icon" aria-hidden="true">{product.icon}</span>
-        <div>
-          <h1>{product.name}</h1>
-          <p class="product-tagline">{product.tagline}</p>
-        </div>
-        <img class="mi-hero-banner" src={`/mi-img/${producto}.webp`} alt="" aria-hidden="true" loading="eager" decoding="async" width="220" height="147" onerror="this.style.display='none'" />
+  <Fragment slot="header">
+    <!-- Barra de estado (encima del header, como el mockup) -->
+    <div class="mi-topbar" data-product={product.id}>
+      <div class="mi-wrap mi-topbar-in">
+        <span class="mi-tb-left"><span class="mi-tb-dot" aria-hidden="true"></span><strong>{dash.topbarLeft}</strong><span class="mi-tb-sub"> · {dash.topbarLeftSub}</span></span>
+        <span class="mi-tb-right">{dash.topbarRight}</span>
       </div>
-      <p class="product-intro">{product.intro}</p>
+    </div>
+    <Header />
+  </Fragment>
 
-      <!-- Números destacados (se rellenan con tu perfil) -->
-      {keyMetricFields.length > 0 && (
-        <div class="product-metrics" data-metrics hidden>
-          {keyMetricFields.map((m) => (
-            <div class="metric-tile" data-metric-key={m.key}>
-              <span class="metric-value" data-metric-value>—</span>
-              <span class="metric-label">{m.label}</span>
-            </div>
-          ))}
-        </div>
-      )}
-      <p class="product-signedout" data-signedout hidden>
-        <a href={`/mi-hacecuentas?next=${canonical}`}>Iniciá sesión</a> para ver tus números y que precarguen todas las herramientas.
-      </p>
-    </header>
-
-    <!-- ───────── Próximos hitos / Timeline ───────── -->
-    <section class="product-block" aria-labelledby="hitos-h">
-      <h2 id="hitos-h">📅 Próximos hitos</h2>
-      <p class="block-lede">Las fechas que importan en este producto, ordenadas por la más cercana.</p>
-      <ol class="timeline" data-timeline></ol>
-    </section>
-
-    <!-- ───────── Estado persistente ───────── -->
-    <section class="product-block" aria-labelledby="estado-h">
-      <h2 id="estado-h">🗂️ Tus datos</h2>
-      <p class="block-lede">
-        Lo que cargás acá precarga todas las herramientas del producto.
-        <span data-estado-progress></span>
-      </p>
-      <ul class="estado-list" data-estado-list>
-        {estadoFields.map((f) => (
-          <li class="estado-row" data-estado-key={f.key}>
-            <span class="estado-label">{f.label}</span>
-            <span class="estado-value" data-estado-value>—</span>
-          </li>
-        ))}
-      </ul>
-      <a class="block-cta" href={`/mi-hacecuentas?next=${canonical}`}>Completar o editar mi perfil →</a>
-    </section>
-
-    <!-- ───────── Alertas ───────── -->
-    {product.alertSlugs.length > 0 && (
-      <section class="product-block" aria-labelledby="alertas-h">
-        <h2 id="alertas-h">🔔 Tus alertas</h2>
-        <p class="block-lede">Te avisamos por mail si una norma (paritaria, Ganancias, ICL…) cambia un resultado que guardaste.</p>
-        <div data-alerts-authed hidden>
-          <ul class="alerts-list" data-alerts-list></ul>
-          <p class="alerts-empty" data-alerts-empty hidden>Todavía no tenés alertas en este producto. Activá una desde cualquier calculadora de abajo, después de calcular.</p>
-        </div>
-        <p class="alerts-signedout" data-alerts-signedout hidden>
-          <a href={`/mi-hacecuentas?next=${canonical}`}>Iniciá sesión</a> para guardar y ver tus alertas en todos tus dispositivos.
-        </p>
-      </section>
-    )}
-
-    <!-- ───────── Herramientas (categoría como producto) ───────── -->
-    <section class="product-block" aria-labelledby="tools-h">
-      <h2 id="tools-h">🧰 Herramientas</h2>
-      <div class="tool-grid">
-        {product.tools.map((t) => (
-          <a class="tool-card" href={`/${t.slug}`}>
-            <span class="tool-label">{t.label}</span>
-            <span class="tool-arrow" aria-hidden="true">→</span>
-          </a>
-        ))}
-      </div>
-    </section>
-
-    <!-- ───────── Recomendaciones / Salas de decisión ───────── -->
-    {salas.length > 0 && (
-      <section class="product-block" aria-labelledby="salas-h">
-        <h2 id="salas-h">🧭 Decisiones</h2>
-        <p class="block-lede">Cuando no es una cuenta sino una decisión, estas salas corren todos los números por vos.</p>
-        <div class="sala-grid">
-          {salas.map((r) => (
-            <a class="sala-card" href={`/decidir/${r.slug}`}>
-              <span class="sala-icon" aria-hidden="true">{r.icon}</span>
-              <span class="sala-title">{r.h1}</span>
+  <div
+    class="mi-dash"
+    data-product={product.id}
+    style={`--p-accent:${product.accent}; --p-hero:${dash.hero}; --p-glow:${dash.glow};`}
+  >
+    <!-- ───────── Tabs: Mis productos ───────── -->
+    <nav class="mi-tabs" aria-label="Mis productos">
+      <div class="mi-wrap mi-tabs-in">
+        <span class="mi-tabs-label">Mis productos</span>
+        <div class="mi-tabs-list">
+          {tabProducts.map((p) => (
+            <a
+              class="mi-tab"
+              href={`/mi/${p.slug}`}
+              aria-current={p.id === product.id ? 'page' : undefined}
+              style={`--t-accent:${p.accent}`}
+            >
+              <span class="mi-tab-ic" aria-hidden="true" set:html={ICONS[TAB_ICON[p.id]]} />
+              <span>{p.name}</span>
             </a>
           ))}
         </div>
-      </section>
-    )}
-
-    <!-- ───────── Historial ───────── -->
-    <section class="product-block" aria-labelledby="hist-h" data-history-block hidden>
-      <h2 id="hist-h">📊 Tu historial</h2>
-      <p class="block-lede">Los últimos resultados que calculaste en este producto, en este dispositivo.</p>
-      <ul class="hist-list" data-history-list></ul>
-    </section>
-
-    <!-- ───────── Exportación ───────── -->
-    <section class="product-block product-export" aria-labelledby="export-h">
-      <h2 id="export-h">⬇️ Exportar</h2>
-      <p class="block-lede">Descargá tus datos de este producto o imprimí esta página como resumen.</p>
-      <div class="export-actions">
-        <button type="button" class="export-btn" data-export-json>Descargar mis datos (JSON)</button>
-        <button type="button" class="export-btn export-btn--ghost" data-export-print>Imprimir / PDF</button>
-      </div>
-    </section>
-
-    <!-- ───────── Cross-nav a otros productos ───────── -->
-    <nav class="product-otros" aria-label="Otros productos">
-      <span class="otros-label">Seguí con</span>
-      <div class="otros-grid">
-        {otros.map((p) => (
-          <a class="otros-card" href={`/mi/${p.slug}`} style={`--o-accent:${p.accent}`}>
-            <span class="otros-icon" aria-hidden="true">{p.icon}</span>
-            <span class="otros-name">{p.name}</span>
-          </a>
-        ))}
       </div>
     </nav>
+
+    <div class="mi-wrap mi-body">
+      <nav class="mi-crumb" aria-label="Migas">
+        <a href="/mi">Mis productos</a> <span aria-hidden="true">/</span> <span>{product.name}</span>
+      </nav>
+
+      <!-- ───────── Hero ───────── -->
+      <header class="mi-hero">
+        <div class="mi-hero-main">
+          <span class="mi-hero-eyebrow">{dash.eyebrow}</span>
+          <h1>{product.name}</h1>
+          <p class="mi-hero-desc">{dash.heroDesc}</p>
+          <div class="mi-hero-pills">
+            <span class="mi-hpill" data-pill-perfil><span class="mi-hpill-dot" aria-hidden="true"></span><span data-pill-perfil-txt>Perfil completo</span></span>
+            <span class="mi-hpill" data-pill-alertas>✓ Alertas activas</span>
+            <span class="mi-hpill">↻ Actualizado hoy</span>
+          </div>
+        </div>
+        <aside class="mi-hero-card">
+          <span class="mi-hc-label">{dash.situation.label}</span>
+          <div class="mi-hc-row">
+            <span class="mi-hc-ic" aria-hidden="true" set:html={ICONS[dash.situation.icon]} />
+            <span class="mi-hc-txt">
+              <strong data-sit-primary>{dash.situation.primaryFallback}</strong>
+              <small>{dash.situation.secondary}</small>
+            </span>
+          </div>
+          {dash.situation.bar && (
+            <div class="mi-hc-bar">
+              <div class="mi-hc-bar-track">
+                {dash.situation.bar.map((seg) => (
+                  <span style={`width:${seg.pct}%; background:${seg.color}`}></span>
+                ))}
+              </div>
+              <div class="mi-hc-bar-legend">
+                {dash.situation.bar.map((seg) => (
+                  <span><i style={`background:${seg.color}`} aria-hidden="true"></i>{seg.label}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </aside>
+      </header>
+
+      <!-- ───────── Números destacados ───────── -->
+      <div class="mi-stats">
+        {dash.stats.map((s, i) => (
+          <div class="mi-stat" data-stat-idx={i} data-stat-kind={s.kind} data-stat-key={s.metricKey || ''}>
+            <div class="mi-stat-top">
+              <span class="mi-stat-label">{s.label}</span>
+              <a class="mi-stat-act" data-stat-act href={s.kind === 'tools' ? '#mi-tools' : editHref}>{s.action}</a>
+            </div>
+            <span class="mi-stat-val" data-stat-val>{s.kind === 'tools' ? product.tools.length : '—'}</span>
+            <span class="mi-stat-sub" data-stat-sub>{s.sub}</span>
+          </div>
+        ))}
+      </div>
+
+      <!-- ───────── Grid 2 columnas ───────── -->
+      <div class="mi-grid">
+        <div class="mi-col-main">
+          <!-- Próximo hito -->
+          <section class="mi-card mi-next">
+            <div class="mi-card-head">
+              <div><h2>Próximo hito</h2><p class="mi-card-sub">{dash.nextSub}</p></div>
+              <a class="mi-see" href="/mi">Ver calendario →</a>
+            </div>
+            <div class="mi-next-box" data-next-box hidden>
+              <span class="mi-next-date"><b data-next-mon>—</b><b data-next-day>—</b></span>
+              <div class="mi-next-body">
+                <b data-next-title>—</b>
+                <p data-next-detail>—</p>
+              </div>
+              <a class="mi-next-cta" data-next-cta href="#">Calcular →</a>
+            </div>
+            <p class="mi-empty" data-next-empty hidden>No hay hitos próximos en este producto.</p>
+          </section>
+
+          <!-- Herramientas -->
+          <section class="mi-card" id="mi-tools">
+            <div class="mi-card-head">
+              <div><h2>{dash.toolsTitle}</h2><p class="mi-card-sub">{dash.toolsSub}</p></div>
+              <a class="mi-see" href="/calculadoras">Ver todas →</a>
+            </div>
+            <div class="mi-tools">
+              {toolsShown.map((t) => (
+                <a class="mi-tool" href={`/${t.slug}`}>
+                  <span class="mi-tool-ic" aria-hidden="true" set:html={ICONS[t.icon]} />
+                  <b>{t.label}</b>
+                  {t.desc && <small>{t.desc}</small>}
+                  <span class="mi-tool-cta">Calcular →</span>
+                </a>
+              ))}
+            </div>
+          </section>
+
+          <!-- Decisiones (superficie oscura) -->
+          {salas.length > 0 && (
+            <section class="mi-card mi-decisions">
+              <div class="mi-card-head">
+                <div><h2>{dash.decisionsTitle}</h2><p class="mi-card-sub">{dash.decisionsSub}</p></div>
+                <a class="mi-see" href="/decidir">Ver todas →</a>
+              </div>
+              <div class="mi-dec-grid">
+                {salas.map((r) => (
+                  <a class="mi-dec" href={`/decidir/${r.slug}`}>
+                    <span class="mi-dec-eyebrow">{SALA_EYEBROW[r.slug] || r.category}</span>
+                    <b>{r.h1}</b>
+                    <span class="mi-dec-cta">Entrar a la sala →</span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <!-- Actividad reciente -->
+          <section class="mi-card mi-activity">
+            <div class="mi-card-head">
+              <div><h2>Actividad reciente</h2><p class="mi-card-sub">Resultados guardados en este producto.</p></div>
+              <a class="mi-see" href="/mi">Ver historial →</a>
+            </div>
+            <ul class="mi-act-list" data-history-list hidden></ul>
+            <p class="mi-empty" data-history-empty>Todavía no calculaste nada en este producto. Abrí una herramienta y tu resultado va a aparecer acá.</p>
+            <div class="mi-act-foot">
+              <span>Exportá tus datos o llevate un resumen.</span>
+              <div class="mi-act-btns">
+                <button type="button" class="mi-btn" data-export-json>Descargar JSON</button>
+                <button type="button" class="mi-btn" data-export-print>Imprimir / PDF</button>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <aside class="mi-col-side">
+          <!-- Datos / perfil -->
+          <section class="mi-card mi-profile">
+            <div class="mi-side-head">
+              <div>
+                <h2>{dash.profileTitle}</h2>
+                <span class="mi-side-sub" data-estado-progress>0 de {estadoFields.length} completos</span>
+              </div>
+              <span class="mi-ring" data-ring aria-hidden="true">
+                <svg viewBox="0 0 44 44">
+                  <circle class="mi-ring-bg" cx="22" cy="22" r="19" />
+                  <circle class="mi-ring-fg" cx="22" cy="22" r="19" data-ring-fg />
+                </svg>
+                <b data-ring-pct>0%</b>
+              </span>
+            </div>
+            <ul class="mi-fields" data-estado-list>
+              {estadoFields.map((f) => (
+                <li class="mi-field" data-estado-key={f.key}>
+                  <span class="mi-field-label">{f.label}</span>
+                  <a class="mi-field-edit" href={editHref}>Editar</a>
+                  <span class="mi-field-val" data-estado-value>—</span>
+                </li>
+              ))}
+            </ul>
+            <a class="mi-side-cta" href={editHref}>Editar perfil de {product.name} →</a>
+          </section>
+
+          <!-- Alertas -->
+          <section class="mi-card mi-alerts">
+            <div class="mi-side-head">
+              <h2>Tus alertas</h2>
+              <a class="mi-see" href="/alertas">Configurar</a>
+            </div>
+            <p class="mi-side-sub2">Avisos que realmente importan.</p>
+            <div class="mi-alert-authed" data-alerts-authed hidden>
+              <ul class="mi-alert-list" data-alerts-list></ul>
+              <p class="mi-empty" data-alerts-empty hidden>Todavía no tenés alertas acá. Activá una desde cualquier herramienta, después de calcular.</p>
+            </div>
+            <div class="mi-alert-preview" data-alerts-preview>
+              <span class="mi-alert-ic" aria-hidden="true" set:html={ICONS[dash.alertPreview.icon]} />
+              <span class="mi-alert-txt"><strong>{dash.alertPreview.title}</strong><small>{dash.alertPreview.sub}</small></span>
+            </div>
+            <label class="mi-toggle">
+              <span>Recibir por email</span>
+              <input type="checkbox" data-email-toggle checked />
+              <span class="mi-toggle-track" aria-hidden="true"></span>
+            </label>
+          </section>
+
+          <!-- Privacidad -->
+          <section class="mi-card mi-privacy">
+            <h2>Privacidad</h2>
+            <p class="mi-side-sub2">{dash.privacyNote}</p>
+            <div class="mi-priv-rows">
+              <div class="mi-priv-row"><span>Sincronización</span><b>Cuenta + dispositivo</b></div>
+              <div class="mi-priv-row"><span>Montos en analytics</span><b>No se envían</b></div>
+            </div>
+            <a class="mi-side-cta" href={editHref}>Administrar mis datos →</a>
+          </section>
+        </aside>
+      </div>
+    </div>
   </div>
 
   <script type="application/json" data-product-config set:html={clientConfig}></script>
@@ -221,19 +339,22 @@ const schema = {
     if (!cfgEl) return;
     var CFG;
     try { CFG = JSON.parse(cfgEl.textContent || '{}'); } catch (e) { return; }
-    var root = document.querySelector('.product-page');
+    var root = document.querySelector('.mi-dash');
     if (!root) return;
 
     var MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    var MONTHS_ABBR = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
 
     function isAuthed() { return /(^|;)\s*hc_authed=1(;|$)/.test(document.cookie); }
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function cssEsc(s) { return String(s).replace(/[^a-zA-Z0-9_.-]/g, '\\$&'); }
 
     function fmtNumber(v) {
       var n = typeof v === 'number' ? v : Number(String(v).replace(/\./g, '').replace(',', '.'));
       if (!isNaN(n) && String(v).trim() !== '') return n.toLocaleString('es-AR');
       return String(v);
     }
-    function fmtValue(f, raw) {
+    function fmtField(f, raw) {
       if (raw === undefined || raw === null || raw === '') return null;
       if (f.options) {
         for (var i = 0; i < f.options.length; i++) if (String(f.options[i].value) === String(raw)) return f.options[i].label;
@@ -245,8 +366,15 @@ const schema = {
     function profileGet(key) {
       try { return window.HCProfile ? window.HCProfile.get(key) : undefined; } catch (e) { return undefined; }
     }
+    function metricByKey(key) {
+      var arr = CFG.keyMetrics || [];
+      for (var i = 0; i < arr.length; i++) if (arr[i].key === key) return arr[i];
+      return null;
+    }
 
-    // ── Timeline / Próximos hitos ────────────────────────────
+    // ── Próximos hitos ───────────────────────────────────────
+    function stripTime(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+    function daysUntil(d, now) { return Math.round((stripTime(d) - stripTime(now)) / 86400000); }
     function nextOccurrence(rule, now) {
       var y = now.getFullYear();
       function mk(yy, mm, dd) { return new Date(yy, mm, dd); }
@@ -274,99 +402,128 @@ const schema = {
       }
       return now;
     }
-    function stripTime(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
-    function daysUntil(d, now) { return Math.round((stripTime(d) - stripTime(now)) / 86400000); }
-
-    function renderTimeline() {
-      var ol = root.querySelector('[data-timeline]');
-      if (!ol) return;
+    function nearestMilestone() {
       var now = new Date();
       var items = (CFG.milestones || []).map(function (m) {
         var d = nextOccurrence(m.rule, now);
         return { m: m, d: d, days: daysUntil(d, now) };
       }).sort(function (a, b) { return a.d - b.d; });
-      ol.innerHTML = '';
-      items.forEach(function (it) {
-        var li = document.createElement('li');
-        li.className = 'timeline-item';
-        var dateStr = it.d.getDate() + ' de ' + MONTHS[it.d.getMonth()];
-        var countdown = it.days === 0 ? 'hoy' : it.days === 1 ? 'mañana' : 'en ' + it.days + ' días';
-        var tool = it.m.toolSlug ? '<a class="timeline-cta" href="/' + it.m.toolSlug + '">Calcular →</a>' : '';
-        li.innerHTML =
-          '<span class="timeline-emoji" aria-hidden="true">' + it.m.emoji + '</span>' +
-          '<div class="timeline-body"><div class="timeline-top"><span class="timeline-label">' + esc(it.m.label) + '</span>' +
-          '<span class="timeline-when">' + dateStr + ' · ' + countdown + '</span></div>' +
-          '<p class="timeline-detail">' + esc(it.m.detail) + '</p>' + tool + '</div>';
-        ol.appendChild(li);
-      });
+      return items.length ? items[0] : null;
+    }
+    function renderNext() {
+      var box = root.querySelector('[data-next-box]');
+      var empty = root.querySelector('[data-next-empty]');
+      var it = nearestMilestone();
+      if (!it) { if (box) box.hidden = true; if (empty) empty.hidden = false; return; }
+      if (empty) empty.hidden = true;
+      if (!box) return;
+      box.hidden = false;
+      root.querySelector('[data-next-mon]').textContent = MONTHS_ABBR[it.d.getMonth()];
+      root.querySelector('[data-next-day]').textContent = String(it.d.getDate()).padStart(2, '0');
+      root.querySelector('[data-next-title]').textContent = it.m.label;
+      var countdown = it.days === 0 ? 'Es hoy.' : it.days === 1 ? 'Falta 1 día.' : 'Faltan ' + it.days + ' días.';
+      root.querySelector('[data-next-detail]').textContent = countdown + ' ' + it.m.detail;
+      var cta = root.querySelector('[data-next-cta]');
+      if (cta) { if (it.m.toolSlug) { cta.href = '/' + it.m.toolSlug; cta.hidden = false; } else { cta.hidden = true; } }
+      return it;
     }
 
-    // ── Estado persistente + números destacados ──────────────
+    // ── Stat cards + hero situación ──────────────────────────
+    function renderStats(nearest) {
+      var cards = root.querySelectorAll('.mi-stat');
+      (CFG.stats || []).forEach(function (s, i) {
+        var card = cards[i];
+        if (!card) return;
+        var valEl = card.querySelector('[data-stat-val]');
+        var actEl = card.querySelector('[data-stat-act]');
+        if (s.kind === 'metric') {
+          var m = metricByKey(s.metricKey);
+          var raw = profileGet(s.metricKey);
+          if (m && raw !== undefined && raw !== null && raw !== '') {
+            valEl.textContent = fmtField({ type: m.type, unit: m.unit, options: m.options }, raw);
+            valEl.classList.add('is-set');
+          } else { valEl.textContent = '—'; valEl.classList.remove('is-set'); }
+        } else if (s.kind === 'milestone') {
+          if (nearest) {
+            valEl.textContent = String(nearest.d.getDate()) + ' ' + MONTHS_ABBR[nearest.d.getMonth()].toLowerCase();
+            valEl.classList.add('is-set');
+            var sub = card.querySelector('[data-stat-sub]');
+            if (sub) sub.textContent = nearest.m.label;
+            if (actEl && nearest.m.toolSlug) actEl.href = '/' + nearest.m.toolSlug;
+          } else { valEl.textContent = '—'; }
+        }
+        // 'tools' ya viene renderizado server-side (count fijo).
+      });
+    }
+    function renderSituation() {
+      var el = root.querySelector('[data-sit-primary]');
+      if (!el || !CFG.situation || !CFG.situation.primaryKey) return;
+      var f = null, ks = CFG.profileKeys || [];
+      for (var i = 0; i < ks.length; i++) if (ks[i].key === CFG.situation.primaryKey) { f = ks[i]; break; }
+      var raw = profileGet(CFG.situation.primaryKey);
+      var disp = f ? fmtField(f, raw) : (raw != null ? String(raw) : null);
+      if (disp) el.textContent = disp;
+    }
+
+    // ── Sidebar: perfil (rows + ring) ────────────────────────
     function renderEstado() {
       var loaded = 0, total = (CFG.profileKeys || []).length;
       (CFG.profileKeys || []).forEach(function (f) {
         var raw = profileGet(f.key);
-        var disp = fmtValue(f, raw);
+        var disp = fmtField(f, raw);
         var row = root.querySelector('[data-estado-key="' + cssEsc(f.key) + '"] [data-estado-value]');
         if (row) {
           if (disp !== null) { row.textContent = disp; row.classList.add('is-set'); loaded++; }
-          else { row.textContent = '—'; row.classList.remove('is-set'); }
+          else { row.textContent = 'Sin cargar'; row.classList.remove('is-set'); }
         }
       });
       var prog = root.querySelector('[data-estado-progress]');
-      if (prog) prog.textContent = total ? ' ' + loaded + ' de ' + total + ' datos cargados.' : '';
-    }
-    function renderMetrics() {
-      var box = root.querySelector('[data-metrics]');
-      if (!box) return;
-      var any = false;
-      (CFG.keyMetrics || []).forEach(function (m) {
-        var raw = profileGet(m.key);
-        var el = root.querySelector('[data-metric-key="' + cssEsc(m.key) + '"] [data-metric-value]');
-        if (!el) return;
-        if (raw !== undefined && raw !== null && raw !== '') {
-          el.textContent = (m.unit === '$' ? '$ ' : '') + fmtNumber(raw) + (m.unit && m.unit !== '$' ? ' ' + m.unit : '');
-          any = true;
-        } else { el.textContent = '—'; }
-      });
-      box.hidden = !any;
-      var so = root.querySelector('[data-signedout]');
-      if (so) so.hidden = any || isAuthed();
+      if (prog) prog.textContent = loaded + ' de ' + total + ' completos';
+      var pct = total ? Math.round((loaded / total) * 100) : 0;
+      var ringPct = root.querySelector('[data-ring-pct]');
+      if (ringPct) ringPct.textContent = pct + '%';
+      var fg = root.querySelector('[data-ring-fg]');
+      if (fg) { var C = 2 * Math.PI * 19; fg.style.strokeDasharray = C.toFixed(1); fg.style.strokeDashoffset = (C * (1 - pct / 100)).toFixed(1); }
+      // Pill "Perfil completo/incompleto"
+      var pill = root.querySelector('[data-pill-perfil-txt]');
+      if (pill) pill.textContent = (pct >= 100 ? 'Perfil completo' : pct > 0 ? 'Perfil ' + pct + '%' : 'Perfil por completar');
     }
 
     // ── Alertas ──────────────────────────────────────────────
     async function loadAlerts() {
       var authedBox = root.querySelector('[data-alerts-authed]');
-      var signedout = root.querySelector('[data-alerts-signedout]');
-      if (!authedBox) return;
-      if (!isAuthed()) { if (signedout) signedout.hidden = false; return; }
+      var preview = root.querySelector('[data-alerts-preview]');
+      var pillAl = root.querySelector('[data-pill-alertas]');
+      if (!isAuthed()) return; // desloguéado: se muestra la preview estática
       try {
         var res = await fetch('/api/alerts/mine', { credentials: 'same-origin' });
-        if (!res.ok) { if (signedout) signedout.hidden = false; return; }
+        if (!res.ok) return;
         var data = await res.json();
         var setSlugs = {};
         (CFG.alertSlugs || []).forEach(function (s) { setSlugs[s] = 1; });
         var mine = (data.alerts || []).filter(function (a) { return setSlugs[a.slug]; });
-        authedBox.hidden = false;
+        if (mine.length === 0) return; // sin alertas propias: dejamos la preview
+        if (authedBox) authedBox.hidden = false;
+        if (preview) preview.hidden = true;
         var list = root.querySelector('[data-alerts-list]');
         var empty = root.querySelector('[data-alerts-empty]');
-        if (list) list.innerHTML = '';
-        if (mine.length === 0) { if (empty) empty.hidden = false; return; }
         if (empty) empty.hidden = true;
+        if (list) list.innerHTML = '';
         mine.forEach(function (a) {
           var li = document.createElement('li');
-          li.className = 'alert-row';
-          var changed = a.last_changed_at ? 'cambió' : 'sin cambios';
+          li.className = 'mi-alert-item';
+          var changed = a.last_changed_at ? 'changed' : 'stable';
           li.innerHTML =
-            '<a class="alert-link" href="/' + esc(a.slug) + '">' + esc(a.headline_label || 'Resultado') + '</a>' +
-            '<span class="alert-headline">' + esc(a.last_headline || '') + '</span>' +
-            '<span class="alert-state alert-state--' + (a.last_changed_at ? 'changed' : 'stable') + '">' + changed + '</span>';
+            '<span class="mi-alert-txt"><a class="mi-alert-link" href="/' + esc(a.slug) + '">' + esc(a.headline_label || 'Resultado') + '</a>' +
+            '<small>' + esc(a.last_headline || '') + '</small></span>' +
+            '<span class="mi-alert-state mi-alert-state--' + changed + '">' + (a.last_changed_at ? 'cambió' : 'sin cambios') + '</span>';
           if (list) list.appendChild(li);
         });
-      } catch (e) { if (signedout) signedout.hidden = false; }
+        if (pillAl) pillAl.hidden = false;
+      } catch (e) { /* dejamos la preview */ }
     }
 
-    // ── Historial (localStorage hc-history-<slug>) ───────────
+    // ── Actividad reciente (localStorage hc-history-<slug>) ──
     function relTime(ts) {
       var s = Math.floor((Date.now() - ts) / 1000);
       if (s < 60) return 'recién';
@@ -376,11 +533,9 @@ const schema = {
       return 'hace tiempo';
     }
     function renderHistory() {
-      var block = root.querySelector('[data-history-block]');
       var list = root.querySelector('[data-history-list]');
-      if (!block || !list) return;
-      var labelBySlug = {};
-      (CFG.tools || []).forEach(function (t) { labelBySlug[t.slug] = t.label; });
+      var empty = root.querySelector('[data-history-empty]');
+      if (!list) return;
       var all = [];
       (CFG.tools || []).forEach(function (t) {
         var arr = [];
@@ -388,17 +543,19 @@ const schema = {
         arr.forEach(function (e2) { all.push({ slug: t.slug, label: t.label, primary: e2.primary, sub: e2.label, ts: e2.ts }); });
       });
       all.sort(function (a, b) { return b.ts - a.ts; });
-      all = all.slice(0, 12);
-      if (all.length === 0) { block.hidden = true; return; }
-      block.hidden = false;
+      all = all.slice(0, 6);
+      if (all.length === 0) { list.hidden = true; if (empty) empty.hidden = false; return; }
+      if (empty) empty.hidden = true;
+      list.hidden = false;
       list.innerHTML = '';
       all.forEach(function (e2) {
         var li = document.createElement('li');
-        li.className = 'hist-row';
+        li.className = 'mi-act-item';
         li.innerHTML =
-          '<a class="hist-tool" href="/' + esc(e2.slug) + '">' + esc(e2.label) + '</a>' +
-          '<span class="hist-val">' + esc(e2.primary) + '</span>' +
-          '<time class="hist-time">' + relTime(e2.ts) + '</time>';
+          '<span class="mi-act-ic" aria-hidden="true">↗</span>' +
+          '<span class="mi-act-body"><a class="mi-act-tool" href="/' + esc(e2.slug) + '">' + esc(e2.label) + '</a>' +
+          '<small>' + relTime(e2.ts) + (e2.sub ? ' · ' + esc(e2.sub) : '') + '</small></span>' +
+          '<span class="mi-act-val">' + esc(e2.primary) + '</span>';
         list.appendChild(li);
       });
     }
@@ -427,18 +584,28 @@ const schema = {
       if (pb) pb.addEventListener('click', function () { window.print(); });
     }
 
-    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-    function cssEsc(s) { return String(s).replace(/[^a-zA-Z0-9_.-]/g, '\\$&'); }
+    // ── Toggle "Recibir por email" (preferencia local) ───────
+    function wireToggle() {
+      var t = root.querySelector('[data-email-toggle]');
+      if (!t) return;
+      var KEY = 'hc-alert-email-' + CFG.slug;
+      try { var saved = localStorage.getItem(KEY); if (saved !== null) t.checked = saved === '1'; } catch (e) {}
+      t.addEventListener('change', function () { try { localStorage.setItem(KEY, t.checked ? '1' : '0'); } catch (e) {} });
+    }
 
-    function renderProfileBits() { renderEstado(); renderMetrics(); }
+    function renderProfileBits() {
+      renderEstado();
+      var nearest = renderNext();
+      renderStats(nearest);
+      renderSituation();
+    }
 
     function init() {
-      renderTimeline();
       renderProfileBits();
       renderHistory();
       wireExport();
+      wireToggle();
       loadAlerts();
-      // Si hay sesión, refrescá el perfil desde el server por si el cache local está vacío.
       if (isAuthed()) {
         fetch('/api/profile', { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (data) {
           if (data && data.profile && window.HCProfile) {
@@ -447,7 +614,6 @@ const schema = {
           }
         }).catch(function () {});
       }
-      // Reaccioná a cambios del perfil hechos en otra pestaña/herramienta.
       window.addEventListener('hc-profile-change', renderProfileBits);
     }
 
@@ -460,117 +626,234 @@ const schema = {
 </Layout>
 
 <style>
-  .product-page {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 1.5rem 1rem 4rem;
+  /* ═══════════ Layout base ═══════════ */
+  .mi-wrap { max-width: 1200px; margin: 0 auto; padding: 0 1.25rem; }
+  .mi-dash { background: var(--bg); padding-bottom: 4rem; }
+
+  /* ═══════════ Barra superior (encima del header) ═══════════ */
+  .mi-topbar { background: #0f172a; color: #cbd5e1; font-size: 0.8125rem; }
+  .mi-topbar-in { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 34px; padding-top: 0.375rem; padding-bottom: 0.375rem; }
+  .mi-tb-left { display: inline-flex; align-items: center; gap: 0.4rem; min-width: 0; }
+  .mi-tb-left strong { color: #f1f5f9; font-weight: 600; }
+  .mi-tb-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.22); flex-shrink: 0; }
+  .mi-tb-sub { color: #94a3b8; }
+  .mi-tb-right { color: #94a3b8; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (max-width: 640px) { .mi-tb-sub { display: none; } .mi-tb-right { display: none; } }
+
+  /* ═══════════ Tabs "Mis productos" ═══════════ */
+  .mi-tabs { background: var(--bg-card); border-bottom: 1px solid var(--border); }
+  .mi-tabs-in { display: flex; align-items: center; gap: 1.25rem; overflow-x: auto; scrollbar-width: none; }
+  .mi-tabs-in::-webkit-scrollbar { display: none; }
+  .mi-tabs-label { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); white-space: nowrap; flex-shrink: 0; }
+  .mi-tabs-list { display: flex; gap: 0.375rem; }
+  .mi-tab {
+    display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.75rem 0.9rem;
+    font-size: 0.9375rem; font-weight: 600; color: var(--text-muted); text-decoration: none;
+    border-radius: 10px; white-space: nowrap; transition: background-color 0.15s, color 0.15s;
   }
-
-  /* Hero / Panel */
-  .product-crumbs { font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1rem; }
-  .product-crumbs a { color: var(--text-muted); text-decoration: none; }
-  .product-crumbs a:hover { color: var(--p-accent); }
-  .product-hero-head { display: flex; align-items: center; gap: 0.875rem; margin-bottom: 0.75rem; }
-  .mi-hero-banner { margin-left: auto; width: clamp(150px, 20vw, 220px); height: auto; border-radius: var(--radius, 12px); flex-shrink: 0; }
-  @media (max-width: 760px) { .mi-hero-banner { display: none; } }
-  .product-hero-icon { font-size: 2.75rem; line-height: 1; }
-  .product-hero h1 { margin: 0; font-size: 1.875rem; }
-  .product-tagline { margin: 0.125rem 0 0; color: var(--p-accent); font-weight: 600; font-size: 1rem; }
-  .product-intro { color: var(--text-muted); line-height: 1.6; margin: 0 0 1.25rem; }
-
-  .product-metrics { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0; }
-  .metric-tile {
-    flex: 1 1 140px; display: flex; flex-direction: column; gap: 0.25rem;
-    padding: 0.875rem 1rem; background: color-mix(in srgb, var(--p-accent) 7%, var(--bg-card));
-    border: 1.5px solid color-mix(in srgb, var(--p-accent) 26%, var(--border)); border-radius: var(--radius-sm);
+  .mi-tab .mi-tab-ic { width: 17px; height: 17px; display: inline-flex; opacity: 0.85; }
+  .mi-tab .mi-tab-ic :global(svg) { width: 100%; height: 100%; }
+  .mi-tab:hover { color: var(--text); background: var(--bg-muted); }
+  .mi-tab[aria-current="page"] {
+    color: var(--t-accent); background: color-mix(in srgb, var(--t-accent) 13%, var(--bg-card));
   }
-  .metric-value { font-size: 1.375rem; font-weight: 700; color: var(--text); }
-  .metric-label { font-size: 0.75rem; color: var(--text-muted); }
-  .product-signedout { font-size: 0.875rem; color: var(--text-muted); margin: 0.5rem 0 0; }
-  .product-signedout a, .alerts-signedout a { color: var(--p-accent); font-weight: 600; }
+  .mi-tab[aria-current="page"] .mi-tab-ic { opacity: 1; }
 
-  /* Bloques */
-  .product-block { margin-top: 2.25rem; }
-  .product-block h2 { font-size: 1.25rem; margin: 0 0 0.375rem; }
-  .block-lede { color: var(--text-muted); font-size: 0.9375rem; line-height: 1.55; margin: 0 0 1rem; }
-  .block-cta { display: inline-block; margin-top: 0.875rem; color: var(--p-accent); font-weight: 600; font-size: 0.9375rem; text-decoration: none; }
-  .block-cta:hover { text-decoration: underline; }
+  /* ═══════════ Migas ═══════════ */
+  .mi-body { padding-top: 1.5rem; }
+  .mi-crumb { font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1rem; }
+  .mi-crumb a { color: var(--text-muted); text-decoration: none; }
+  .mi-crumb a:hover { color: var(--p-accent); }
+  .mi-crumb span[aria-hidden] { margin: 0 0.35rem; color: var(--text-subtle); }
 
-  /* Timeline */
-  .timeline { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.625rem; }
-  .timeline-item { display: flex; gap: 0.75rem; padding: 0.875rem 1rem; background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--p-accent); border-radius: var(--radius-sm); }
-  .timeline-emoji { font-size: 1.375rem; line-height: 1.4; }
-  .timeline-body { flex: 1; min-width: 0; }
-  .timeline-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.25rem 0.75rem; align-items: baseline; }
-  .timeline-label { font-weight: 600; color: var(--text); }
-  .timeline-when { font-size: 0.8125rem; color: var(--p-accent); font-weight: 600; white-space: nowrap; }
-  .timeline-detail { margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--text-muted); line-height: 1.5; }
-  .timeline-cta { display: inline-block; margin-top: 0.5rem; font-size: 0.8125rem; font-weight: 600; color: var(--p-accent); text-decoration: none; }
-  .timeline-cta:hover { text-decoration: underline; }
+  /* ═══════════ Hero ═══════════ */
+  .mi-hero {
+    position: relative; overflow: hidden;
+    display: grid; grid-template-columns: 1fr auto; gap: 1.5rem; align-items: center;
+    background: var(--p-hero); border-radius: 20px; padding: 2.25rem 2.25rem;
+    color: #e2e8f0;
+  }
+  .mi-hero::after {
+    content: ''; position: absolute; top: -40%; right: -10%; width: 460px; height: 460px;
+    background: radial-gradient(circle, var(--p-glow) 0%, transparent 62%); pointer-events: none;
+  }
+  .mi-hero-main { position: relative; z-index: 1; min-width: 0; }
+  .mi-hero-eyebrow {
+    display: inline-block; font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.11em;
+    text-transform: uppercase; color: var(--p-accent); margin-bottom: 0.5rem;
+  }
+  .mi-hero h1 { margin: 0; font-size: clamp(1.85rem, 3.5vw, 2.6rem); color: #fff; font-weight: 800; letter-spacing: -0.02em; }
+  .mi-hero-desc { margin: 0.55rem 0 0; color: #cbd5e1; line-height: 1.55; max-width: 46ch; font-size: 0.9375rem; }
+  .mi-hero-pills { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; margin-top: 1.1rem; }
+  .mi-hpill { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8125rem; color: #cbd5e1; }
+  .mi-hpill-dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; }
 
-  /* Estado */
-  .estado-list { list-style: none; padding: 0; margin: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
-  .estado-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.625rem 1rem; background: var(--bg-card); border-bottom: 1px solid var(--border); }
-  .estado-row:last-child { border-bottom: none; }
-  .estado-label { color: var(--text-muted); font-size: 0.9375rem; }
-  .estado-value { font-weight: 600; color: var(--text-subtle); }
-  .estado-value.is-set { color: var(--text); }
+  .mi-hero-card {
+    position: relative; z-index: 1; align-self: stretch;
+    min-width: 260px; max-width: 320px;
+    background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 16px; padding: 1.25rem; backdrop-filter: blur(4px);
+    display: flex; flex-direction: column; gap: 0.9rem;
+  }
+  .mi-hc-label { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: #94a3b8; }
+  .mi-hc-row { display: flex; align-items: center; gap: 0.75rem; }
+  .mi-hc-ic {
+    width: 44px; height: 44px; flex-shrink: 0; border-radius: 12px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--p-accent); color: #fff;
+  }
+  .mi-hc-ic :global(svg) { width: 22px; height: 22px; }
+  .mi-hc-txt { display: flex; flex-direction: column; min-width: 0; }
+  .mi-hc-txt strong { color: #fff; font-size: 1.0625rem; font-weight: 700; }
+  .mi-hc-txt small { color: #94a3b8; font-size: 0.8125rem; }
+  .mi-hc-bar { display: flex; flex-direction: column; gap: 0.5rem; }
+  .mi-hc-bar-track { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: rgba(255, 255, 255, 0.1); }
+  .mi-hc-bar-track span { display: block; height: 100%; }
+  .mi-hc-bar-legend { display: flex; justify-content: space-between; gap: 0.5rem; }
+  .mi-hc-bar-legend span { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.6875rem; color: #94a3b8; }
+  .mi-hc-bar-legend i { width: 8px; height: 8px; border-radius: 2px; }
 
-  /* Alertas */
-  .alerts-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
-  .alert-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; padding: 0.75rem 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); }
-  .alert-link { font-weight: 600; color: var(--text); text-decoration: none; }
-  .alert-link:hover { color: var(--p-accent); }
-  .alert-headline { color: var(--text-muted); font-size: 0.875rem; margin-left: auto; }
-  .alert-state { font-size: 0.75rem; font-weight: 600; padding: 0.125rem 0.5rem; border-radius: 999px; }
-  .alert-state--stable { background: color-mix(in srgb, var(--text-muted) 14%, transparent); color: var(--text-muted); }
-  .alert-state--changed { background: color-mix(in srgb, var(--p-accent) 18%, transparent); color: var(--p-accent); }
-  .alerts-empty, .alerts-signedout { font-size: 0.875rem; color: var(--text-muted); margin: 0; }
+  /* ═══════════ Stat cards ═══════════ */
+  .mi-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1rem; }
+  .mi-stat { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 1.1rem 1.25rem; }
+  .mi-stat-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+  .mi-stat-label { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-subtle); }
+  .mi-stat-act { font-size: 0.8125rem; font-weight: 600; color: var(--p-accent); text-decoration: none; }
+  .mi-stat-act:hover { text-decoration: underline; }
+  .mi-stat-val { display: block; margin: 0.35rem 0 0.15rem; font-family: var(--font-num); font-size: 1.75rem; font-weight: 700; color: var(--text-subtle); letter-spacing: -0.01em; }
+  .mi-stat-val.is-set { color: var(--text); }
+  .mi-stat-sub { font-size: 0.8125rem; color: var(--text-muted); }
+
+  /* ═══════════ Grid 2 columnas ═══════════ */
+  .mi-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 1.25rem; margin-top: 1.25rem; align-items: start; }
+  .mi-col-main, .mi-col-side { display: flex; flex-direction: column; gap: 1.25rem; }
+
+  .mi-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.4rem 1.5rem; }
+  .mi-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+  .mi-card-head h2 { margin: 0; font-size: 1.1875rem; }
+  .mi-card-sub { margin: 0.2rem 0 0; font-size: 0.875rem; color: var(--text-muted); line-height: 1.5; }
+  .mi-see { flex-shrink: 0; font-size: 0.8125rem; font-weight: 600; color: var(--p-accent); text-decoration: none; white-space: nowrap; }
+  .mi-see:hover { text-decoration: underline; }
+  .mi-empty { margin: 0; font-size: 0.875rem; color: var(--text-muted); line-height: 1.55; }
+
+  /* Próximo hito */
+  .mi-next-box { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.1rem; border-radius: 12px; background: color-mix(in srgb, var(--p-accent) 8%, var(--bg-card)); border: 1px solid color-mix(in srgb, var(--p-accent) 22%, var(--border)); }
+  .mi-next-date { flex-shrink: 0; width: 52px; height: 56px; border-radius: 10px; background: var(--bg-card); border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+  .mi-next-date b:first-child { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.04em; color: var(--p-accent); }
+  .mi-next-date b:last-child { font-family: var(--font-num); font-size: 1.35rem; font-weight: 700; color: var(--text); }
+  .mi-next-body { flex: 1; min-width: 0; }
+  .mi-next-body b { display: block; font-size: 1rem; color: var(--text); }
+  .mi-next-body p { margin: 0.2rem 0 0; font-size: 0.8438rem; color: var(--text-muted); line-height: 1.45; }
+  .mi-next-cta { flex-shrink: 0; padding: 0.6rem 1.05rem; border-radius: 10px; background: var(--p-accent); color: #fff; font-size: 0.875rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+  .mi-next-cta:hover { filter: brightness(0.96); }
 
   /* Herramientas */
-  .tool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.625rem; }
-  .tool-card { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.875rem 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); text-decoration: none; color: var(--text); font-weight: 500; transition: border-color 0.15s, transform 0.15s; }
-  .tool-card:hover { border-color: var(--p-accent); transform: translateY(-1px); }
-  .tool-arrow { color: var(--p-accent); }
+  .mi-tools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+  .mi-tool { display: flex; flex-direction: column; gap: 0.15rem; padding: 1rem; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-card); text-decoration: none; color: var(--text); transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s; }
+  .mi-tool:hover { border-color: color-mix(in srgb, var(--p-accent) 45%, var(--border)); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .mi-tool-ic { width: 34px; height: 34px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--p-accent) 12%, var(--bg-card)); color: var(--p-accent); margin-bottom: 0.4rem; }
+  .mi-tool-ic :global(svg) { width: 18px; height: 18px; }
+  .mi-tool b { font-size: 0.9375rem; font-weight: 600; }
+  .mi-tool small { font-size: 0.8125rem; color: var(--text-muted); line-height: 1.4; }
+  .mi-tool-cta { margin-top: 0.5rem; font-size: 0.8125rem; font-weight: 600; color: var(--p-accent); }
 
-  /* Salas */
-  .sala-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.625rem; }
-  .sala-card { display: flex; align-items: center; gap: 0.625rem; padding: 0.875rem 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); text-decoration: none; color: var(--text); transition: border-color 0.15s; }
-  .sala-card:hover { border-color: var(--p-accent); }
-  .sala-icon { font-size: 1.375rem; }
-  .sala-title { font-size: 0.9375rem; font-weight: 500; line-height: 1.35; }
+  /* Decisiones (superficie oscura del producto) */
+  .mi-decisions { background: var(--p-hero); border: none; color: #e2e8f0; }
+  .mi-decisions h2 { color: #fff; }
+  .mi-decisions .mi-card-sub { color: #94a3b8; }
+  .mi-decisions .mi-see { color: color-mix(in srgb, var(--p-accent) 55%, #fff); }
+  .mi-dec-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+  .mi-dec { display: flex; flex-direction: column; gap: 0.35rem; padding: 1.1rem 1.15rem; border-radius: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.09); text-decoration: none; transition: background-color 0.15s, border-color 0.15s; }
+  .mi-dec:hover { background: rgba(255, 255, 255, 0.09); border-color: color-mix(in srgb, var(--p-accent) 45%, transparent); }
+  .mi-dec-eyebrow { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: color-mix(in srgb, var(--p-accent) 60%, #fff); }
+  .mi-dec b { font-size: 0.9375rem; font-weight: 600; color: #f1f5f9; line-height: 1.35; }
+  .mi-dec-cta { margin-top: 0.15rem; font-size: 0.8125rem; font-weight: 600; color: #cbd5e1; }
 
-  /* Historial */
-  .hist-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.375rem; }
-  .hist-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); }
-  .hist-tool { font-weight: 600; color: var(--text); text-decoration: none; }
-  .hist-tool:hover { color: var(--p-accent); }
-  .hist-val { margin-left: auto; font-weight: 700; color: var(--p-accent); }
-  .hist-time { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+  /* Actividad reciente */
+  .mi-act-list { list-style: none; margin: 0 0 0.5rem; padding: 0; display: flex; flex-direction: column; }
+  .mi-act-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.85rem 0; border-bottom: 1px solid var(--border); }
+  .mi-act-item:first-child { padding-top: 0; }
+  .mi-act-ic { width: 34px; height: 34px; flex-shrink: 0; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; background: var(--bg-muted); color: var(--p-accent); font-size: 1rem; }
+  .mi-act-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .mi-act-tool { font-weight: 600; color: var(--text); text-decoration: none; }
+  .mi-act-tool:hover { color: var(--p-accent); }
+  .mi-act-body small { font-size: 0.8125rem; color: var(--text-muted); }
+  .mi-act-val { font-family: var(--font-num); font-weight: 700; color: var(--text); white-space: nowrap; }
+  .mi-act-foot { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.8438rem; color: var(--text-muted); }
+  .mi-act-btns { display: flex; gap: 0.5rem; }
+  .mi-btn { padding: 0.5rem 0.9rem; border-radius: 9px; border: 1px solid var(--border-strong); background: var(--bg-card); color: var(--text); font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
+  .mi-btn:hover { border-color: var(--p-accent); color: var(--p-accent); }
 
-  /* Export */
-  .export-actions { display: flex; flex-wrap: wrap; gap: 0.625rem; }
-  .export-btn { padding: 0.625rem 1.1rem; background: var(--p-accent); color: #fff; border: none; border-radius: var(--radius-sm); font-size: 0.9375rem; font-weight: 600; cursor: pointer; }
-  .export-btn:hover { filter: brightness(0.95); }
-  .export-btn--ghost { background: transparent; color: var(--p-accent); border: 1.5px solid var(--p-accent); }
+  /* ═══════════ Sidebar ═══════════ */
+  .mi-side-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+  .mi-side-head h2 { margin: 0; font-size: 1.0625rem; }
+  .mi-side-sub { font-size: 0.8125rem; color: var(--text-muted); }
+  .mi-side-sub2 { margin: -0.6rem 0 1rem; font-size: 0.8438rem; color: var(--text-muted); }
 
-  /* Otros productos */
-  .product-otros { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
-  .otros-label { display: block; font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 0.625rem; text-transform: uppercase; letter-spacing: 0.03em; }
-  .otros-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.625rem; }
-  .otros-card { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 0.875rem; background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--o-accent); border-radius: var(--radius-sm); text-decoration: none; color: var(--text); font-weight: 600; font-size: 0.9375rem; }
-  .otros-card:hover { border-color: var(--o-accent); }
-  .otros-icon { font-size: 1.25rem; }
+  .mi-ring { position: relative; width: 46px; height: 46px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
+  .mi-ring svg { width: 46px; height: 46px; transform: rotate(-90deg); }
+  .mi-ring-bg { fill: none; stroke: var(--border); stroke-width: 4; }
+  .mi-ring-fg { fill: none; stroke: var(--p-accent); stroke-width: 4; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
+  .mi-ring b { position: absolute; font-size: 0.625rem; font-weight: 700; color: var(--text); }
 
-  @media (max-width: 540px) {
-    .product-hero h1 { font-size: 1.5rem; }
-    .product-hero-icon { font-size: 2.25rem; }
+  .mi-fields { list-style: none; margin: 0 0 1rem; padding: 0; }
+  .mi-field { display: grid; grid-template-columns: 1fr auto; gap: 0.1rem 0.5rem; padding: 0.7rem 0; border-bottom: 1px solid var(--border); }
+  .mi-field:first-child { padding-top: 0; }
+  .mi-field-label { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-subtle); }
+  .mi-field-edit { font-size: 0.75rem; font-weight: 600; color: var(--p-accent); text-decoration: none; text-align: right; }
+  .mi-field-edit:hover { text-decoration: underline; }
+  .mi-field-val { grid-column: 1 / -1; font-size: 0.9375rem; font-weight: 600; color: var(--text-subtle); }
+  .mi-field-val.is-set { color: var(--text); }
+  .mi-side-cta { display: inline-block; font-size: 0.875rem; font-weight: 600; color: var(--p-accent); text-decoration: none; }
+  .mi-side-cta:hover { text-decoration: underline; }
+
+  /* Alertas */
+  .mi-alert-preview, .mi-alert-item { display: flex; align-items: flex-start; gap: 0.7rem; padding: 0.85rem; border-radius: 11px; background: color-mix(in srgb, var(--success) 9%, var(--bg-card)); border: 1px solid color-mix(in srgb, var(--success) 22%, var(--border)); }
+  .mi-alert-ic { width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--success) 16%, var(--bg-card)); color: var(--success-text); }
+  .mi-alert-ic :global(svg) { width: 17px; height: 17px; }
+  .mi-alert-txt { display: flex; flex-direction: column; min-width: 0; gap: 0.1rem; }
+  .mi-alert-txt strong, .mi-alert-link { font-size: 0.875rem; font-weight: 600; color: var(--text); text-decoration: none; }
+  .mi-alert-txt small { font-size: 0.8125rem; color: var(--text-muted); line-height: 1.4; }
+  .mi-alert-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+  .mi-alert-state { margin-left: auto; align-self: center; font-size: 0.6875rem; font-weight: 600; padding: 0.1rem 0.45rem; border-radius: 999px; }
+  .mi-alert-state--stable { background: var(--bg-muted); color: var(--text-muted); }
+  .mi-alert-state--changed { background: color-mix(in srgb, var(--p-accent) 18%, transparent); color: var(--p-accent); }
+
+  .mi-toggle { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1rem; font-size: 0.875rem; color: var(--text); cursor: pointer; }
+  .mi-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .mi-toggle-track { position: relative; width: 42px; height: 24px; border-radius: 999px; background: var(--border-strong); transition: background-color 0.18s; flex-shrink: 0; }
+  .mi-toggle-track::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform 0.18s; box-shadow: var(--shadow-sm); }
+  .mi-toggle input:checked + .mi-toggle-track { background: var(--success); }
+  .mi-toggle input:checked + .mi-toggle-track::after { transform: translateX(18px); }
+  .mi-toggle input:focus-visible + .mi-toggle-track { box-shadow: var(--ring); }
+
+  /* Privacidad */
+  .mi-priv-rows { display: flex; flex-direction: column; gap: 0.9rem; margin-bottom: 1rem; }
+  .mi-priv-row { display: flex; flex-direction: column; gap: 0.15rem; }
+  .mi-priv-row span { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-subtle); }
+  .mi-priv-row b { font-size: 0.9375rem; color: var(--text); }
+
+  /* ═══════════ Responsive ═══════════ */
+  @media (max-width: 900px) {
+    .mi-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 720px) {
+    .mi-wrap { padding: 0 1rem; }
+    .mi-hero { grid-template-columns: 1fr; padding: 1.75rem 1.5rem; }
+    .mi-hero-card { max-width: none; min-width: 0; }
+    .mi-stats { grid-template-columns: 1fr; }
+    .mi-tools { grid-template-columns: 1fr; }
+    .mi-dec-grid { grid-template-columns: 1fr; }
+    .mi-next-box { flex-wrap: wrap; }
+    .mi-next-cta { width: 100%; text-align: center; }
   }
 
-  /* Impresión: resumen limpio */
+  /* ═══════════ Impresión ═══════════ */
   @media print {
-    :global(header), :global(footer), .product-otros, .product-export, .block-cta, .timeline-cta { display: none !important; }
-    .product-page { max-width: 100%; }
-    .product-block { break-inside: avoid; }
+    :global(header), :global(footer), .mi-topbar, .mi-tabs, .mi-see, .mi-act-btns, .mi-next-cta, .mi-side-cta, .mi-field-edit, .mi-stat-act { display: none !important; }
+    .mi-dash { background: #fff; }
+    .mi-hero, .mi-decisions { background: #fff !important; color: #000; border: 1px solid #ccc; }
+    .mi-hero h1, .mi-hero-desc, .mi-decisions h2, .mi-dec b { color: #000 !important; }
+    .mi-card { break-inside: avoid; }
   }
 </style>
