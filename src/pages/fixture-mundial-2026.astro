@@ -151,6 +151,15 @@ let bracketGroups = sfMatches.map((sf, i) => ({ sf, qfs: [qfMatches[2 * i], qfMa
 const hasArg = (g: any) => g.qfs.some((m: any) => m.team1 === 'Argentina' || m.team2 === 'Argentina');
 bracketGroups = [...bracketGroups].sort((a, b) => (hasArg(b) ? 1 : 0) - (hasArg(a) ? 1 : 0));
 
+// Vista Lista: fases (más reciente primero) con el tercer puesto justo tras la final.
+const listPhases: any[] = [];
+for (const p of [...phaseView].reverse()) {
+  listPhases.push(p);
+  if (p.key === 'final' && thirdMatch) {
+    listPhases.push({ key: 'third', label: 'Tercer puesto', short: 'Tercer puesto', total: 1, matches: [thirdMatch] });
+  }
+}
+
 // ── Argentina ─────────────────────────────────────────────────────────────────
 const argMatches = sorted.filter((m) => m.team1 === 'Argentina' || m.team2 === 'Argentina');
 const argNext = argMatches.find((m) => !(m.score && m.score.ft)) || argMatches[argMatches.length - 1];
@@ -653,12 +662,12 @@ const liveConfig = {
               <div class="fx-advance-card">
                 <span class="fx-advance-ic">🏆</span>
                 <span class="fx-advance-name">Semifinal</span>
-                <span class="fx-advance-meta">{sfMatches.length ? (artDayLabel(sfMatches[sfMatches.length - 1].date, sfMatches[sfMatches.length - 1].time).split(' ').slice(0, 3).join(' ')) : 'Por definir'}</span>
+                <span class="fx-advance-meta">{sfMatches.length ? (artDayLabel(sfMatches[sfMatches.length - 1].date, sfMatches[sfMatches.length - 1].time).split(' ').slice(1, 4).join(' ')) : 'Por definir'}</span>
               </div>
               <div class="fx-advance-card">
                 <span class="fx-advance-ic">🏆</span>
                 <span class="fx-advance-name">Final</span>
-                <span class="fx-advance-meta">{finalMatch ? artDayLabel(finalMatch.date, finalMatch.time).split(' ').slice(0, 3).join(' ') : '19 de julio'}</span>
+                <span class="fx-advance-meta">{finalMatch ? artDayLabel(finalMatch.date, finalMatch.time).split(' ').slice(1, 4).join(' ') : '19 de julio'}</span>
               </div>
             </div>
           </div>
@@ -757,7 +766,7 @@ const liveConfig = {
                         <div class="fx-bcell-title">Semifinal</div>
                         <div class="fx-bcell-row" data-side="1"><span class="flag">{t1.flag}</span><span class="name">{t1.es}</span></div>
                         <div class="fx-bcell-row" data-side="2"><span class="flag">{t2.flag}</span><span class="name">{t2.es}</span></div>
-                        <div class="fx-bcell-foot"><span class="fx-bcell-when" data-time data-utc={kickoffUTC(m.date, m.time)?.toISOString()}>{artDayLabel(m.date, m.time).split(' ').slice(0, 3).join(' ')}</span></div>
+                        <div class="fx-bcell-foot"><span class="fx-bcell-when" data-time data-utc={kickoffUTC(m.date, m.time)?.toISOString()}>{artDayLabel(m.date, m.time).split(' ').slice(1, 4).join(' ')}</span></div>
                       </article>
                     );
                   })}
@@ -769,7 +778,15 @@ const liveConfig = {
                       <div class="fx-bcell-title">Final</div>
                       <div class="fx-bcell-row" data-side="1"><span class="flag">{teamLabel(finalMatch.team1).flag}</span><span class="name">{teamLabel(finalMatch.team1).es}</span></div>
                       <div class="fx-bcell-row" data-side="2"><span class="flag">{teamLabel(finalMatch.team2).flag}</span><span class="name">{teamLabel(finalMatch.team2).es}</span></div>
-                      <div class="fx-bcell-foot"><span class="fx-bcell-when">{artDayLabel(finalMatch.date, finalMatch.time).split(' ').slice(0, 3).join(' ')}</span></div>
+                      <div class="fx-bcell-foot"><span class="fx-bcell-when">{artDayLabel(finalMatch.date, finalMatch.time).split(' ').slice(1, 4).join(' ')}</span></div>
+                    </article>
+                  )}
+                  {thirdMatch && (
+                    <article class="fx-bcell fx-bcell-third" data-match data-num={thirdMatch.num} data-team1={thirdMatch.team1} data-team2={thirdMatch.team2}>
+                      <div class="fx-bcell-title">Tercer puesto</div>
+                      <div class="fx-bcell-row" data-side="1"><span class="flag">{teamLabel(thirdMatch.team1).flag}</span><span class="name">{teamLabel(thirdMatch.team1).es}</span><span class="fx-bcell-sc" data-score-a>{sc(thirdMatch)?.a ?? ''}</span></div>
+                      <div class="fx-bcell-row" data-side="2"><span class="flag">{teamLabel(thirdMatch.team2).flag}</span><span class="name">{teamLabel(thirdMatch.team2).es}</span><span class="fx-bcell-sc" data-score-b>{sc(thirdMatch)?.b ?? ''}</span></div>
+                      <div class="fx-bcell-foot"><span class="fx-bcell-when">{artDayLabel(thirdMatch.date, thirdMatch.time).split(' ').slice(1, 4).join(' ')}</span></div>
                     </article>
                   )}
                 </div>
@@ -778,7 +795,7 @@ const liveConfig = {
 
             <!-- Vista Lista -->
             <div class="fx-listview" data-viewpanel="lista" hidden>
-              {phaseView.slice().reverse().map((p) => (
+              {listPhases.map((p) => (
                 p.matches.length > 0 && (
                   <div class="fx-listphase">
                     <h3 class="fx-h3">{p.label}</h3>
@@ -828,6 +845,12 @@ const liveConfig = {
                 <svg viewBox="0 0 24 24" class="fx-i" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg>
                 <div><strong>Semifinales</strong><span>{sfMatches.length >= 2 ? `${artDayLabel(sfMatches[0].date, sfMatches[0].time).split(' ')[1]} y ${artDayLabel(sfMatches[1].date, sfMatches[1].time).split(' ').slice(1, 4).join(' ')}` : '14 y 15 de julio'}</span></div>
               </div>
+              {thirdMatch && (
+                <div class="fx-nextphase">
+                  <span class="fx-i" style="font-size:1.05rem">🥉</span>
+                  <div><strong>Tercer puesto</strong><span>{artDayLabel(thirdMatch.date, thirdMatch.time).split(' ').slice(1, 4).join(' ')}</span></div>
+                </div>
+              )}
               <div class="fx-nextphase">
                 <span class="fx-i" style="font-size:1.1rem">🏆</span>
                 <div><strong>Final</strong><span>{finalMatch ? artDayLabel(finalMatch.date, finalMatch.time).split(' ').slice(1, 4).join(' ') : '19 de julio'}</span></div>
@@ -842,7 +865,7 @@ const liveConfig = {
                   return (
                     <li class={`fx-step ${st}`}>
                       <span class="fx-step-node" aria-hidden="true">{st === 'done' ? '✓' : ''}</span>
-                      <span class="fx-step-label">{p.label}<small>{m ? (argDayIsToday(m) ? `Hoy · ${artTime(m.date, m.time)} vs ${teamLabel(m.team1 === 'Argentina' ? m.team2 : m.team1).es}` : artDayLabel(m.date, m.time).split(' ').slice(0, 2).join(' ')) : p.key === 'final' && finalMatch ? artDayLabel(finalMatch.date, finalMatch.time).split(' ').slice(0, 3).join(' ') : 'Por definir'}</small></span>
+                      <span class="fx-step-label">{p.label}<small>{m ? (argDayIsToday(m) ? `Hoy · ${artTime(m.date, m.time)} vs ${teamLabel(m.team1 === 'Argentina' ? m.team2 : m.team1).es}` : artDayLabel(m.date, m.time).split(' ').slice(1, 4).join(' ')) : p.key === 'final' && finalMatch ? artDayLabel(finalMatch.date, finalMatch.time).split(' ').slice(1, 4).join(' ') : 'Por definir'}</small></span>
                     </li>
                   );
                 })}
