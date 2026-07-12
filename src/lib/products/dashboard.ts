@@ -263,7 +263,6 @@ export const DASH: Record<ProductId, DashProduct> = {
     situation: {
       label: 'Tu familia',
       icon: 'baby',
-      primaryKey: 'familia.dependientes',
       primaryFallback: 'En familia',
       secondary: 'Personas a cargo cargadas',
     },
