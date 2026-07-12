@@ -746,3 +746,229 @@ html[data-theme="dark"] .calc-v2 .calc-container[data-slug="calculadora-actualiz
   .calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-card-header{ padding-right:150px; }
   .calc-v2 .calc-container[data-slug="calculadora-actualizacion-inflacion-ipc"] > .calc-card-header > .ipc-history-trigger{ display:none; }
 }
+
+/* ============================================================================
+   ICL — Actualización de alquiler por ICL (calculadora-actualizacion-alquiler-icl)
+   Rediseño visual del widget para acercarlo a los mockups aprobados (handoff
+   2026-07-12). TODO scopeado por [data-slug="calculadora-actualizacion-alquiler-icl"]
+   → NO afecta ninguna otra calc. Mismo patrón exacto que IPC (categoría finanzas =
+   money domain, accent indigo): grilla 2-col, card, sticky del resultado, línea de
+   contexto (LiveEconContext) y equivalente USD YA existen; acá cerramos la brecha
+   con el mockup y ordenamos el resultado (3 métricas + insight + composición).
+   El fix P0 del coeficiente manual va en el JSON (sin default oculto), no acá.
+   Alias: ICL = .calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"]
+   ============================================================================ */
+
+/* ── Barra de contexto económico (LiveEconContext, sibling del widget) ─────── */
+.calc-v2 .live-econ[data-slug="calculadora-actualizacion-alquiler-icl"]{ gap:6px 14px; }
+.calc-v2 .live-econ[data-slug="calculadora-actualizacion-alquiler-icl"]::before{
+  content:"📊 Contexto económico argentino en vivo";
+  font-weight:700; color:var(--v2-ink); font-size:13px; white-space:nowrap;
+}
+.calc-v2 .live-econ[data-slug="calculadora-actualizacion-alquiler-icl"] .le-icon{ display:none; }
+.calc-v2 .live-econ[data-slug="calculadora-actualizacion-alquiler-icl"] .le-sep{ display:none; }
+@media (max-width:560px){
+  .calc-v2 .live-econ[data-slug="calculadora-actualizacion-alquiler-icl"]{
+    flex-wrap:nowrap; overflow-x:auto; gap:8px; scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .calc-v2 .live-econ[data-slug="calculadora-actualizacion-alquiler-icl"]::-webkit-scrollbar{ display:none; }
+  .calc-v2 .live-econ[data-slug="calculadora-actualizacion-alquiler-icl"]::before{ display:none; }
+  .calc-v2 .live-econ[data-slug="calculadora-actualizacion-alquiler-icl"] .le-item{
+    flex:0 0 auto; display:inline-flex; flex-direction:column; align-items:flex-start;
+    gap:1px; background:#fff; border:1px solid var(--v2-line); border-radius:10px;
+    padding:6px 11px; white-space:nowrap;
+  }
+  .calc-v2 .live-econ[data-slug="calculadora-actualizacion-alquiler-icl"] .le-link{
+    flex:0 0 auto; margin-left:0; align-self:center;
+  }
+}
+
+/* ── Card: quitar la franja indigo superior. Header blanco nítido. ── */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"]::before{ display:none !important; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .calc-card-header{
+  background:#fff; color:var(--v2-body); font-weight:600; padding-right:355px;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .calc-card-header > svg{ color:var(--v2-accent); opacity:1; }
+
+/* ── "Ver historial de cambios" → a la derecha del header (absolute) ── */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .calc-changelog{
+  position:absolute; top:12px; right:22px; z-index:6;
+  margin:0 !important; padding:0 !important; font-size:13px; max-width:200px;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .calc-changelog > summary{
+  list-style:none; cursor:pointer; color:var(--v2-muted) !important; font-weight:600;
+  display:inline-flex; align-items:center; gap:5px; line-height:1.25; text-align:right;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .calc-changelog > summary::-webkit-details-marker{ display:none; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .calc-changelog > summary::after{
+  content:'›'; font-size:16px; line-height:1; color:var(--v2-muted);
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .calc-changelog > summary:hover{ color:var(--v2-accent) !important; text-decoration:none; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .calc-changelog[open] > summary{ color:var(--v2-accent) !important; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .calc-changelog > ul{
+  position:absolute; top:26px; right:0; margin:0; padding:12px 15px;
+  width:min(340px,80vw); background:#fff; border:1px solid var(--v2-line);
+  border-radius:12px; box-shadow:var(--v2-shadow); list-style:disc; text-align:left;
+  font-size:12.5px; color:var(--v2-body);
+}
+
+/* ── Panel de "resultado vacío": del recuadro punteado a un panel lleno ── */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .empty-preview{
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:4px; text-align:center; min-height:230px; align-self:stretch !important;
+  position:static !important; margin:0 !important;
+  border:1px solid var(--v2-line) !important; border-radius:16px !important;
+  background:#f8f9f7 !important;
+}
+html[data-theme="dark"] .calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .empty-preview{
+  background:color-mix(in srgb, var(--v2-ink) 4%, transparent) !important;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .empty-preview .empty-icon{
+  width:60px; height:60px; border-radius:50%; background:#eef1f6;
+  display:grid; place-items:center; font-size:26px; margin-bottom:10px; line-height:1;
+}
+html[data-theme="dark"] .calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .empty-preview .empty-icon{
+  background:color-mix(in srgb, var(--v2-ink) 8%, transparent);
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"]:has(.calc-results:not([hidden])) > .empty-preview{ display:none !important; }
+
+/* ── Métricas del resultado: 3 tarjetas en una fila (Cuánto aumenta · Aumento ·
+   Coeficiente ICL), como el mockup. El primario "NUEVO ALQUILER" ya es full-width
+   (base .result.primary). Los outputs secundarios (ICL al inicio/ajuste y el
+   detalle textual) quedan en el DOM para el CSV/datos pero ocultos en la grilla. ── */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .calc-results .results-grid{
+  grid-template-columns:repeat(3, minmax(0,1fr)) !important; gap:10px !important;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .calc-results .results-grid > .result[data-output="iclInicio"],
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .calc-results .results-grid > .result[data-output="iclActualizacion"],
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .calc-results .results-grid > .result[data-output="detalle"]{
+  display:none !important;
+}
+@media (max-width:560px){
+  .calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .calc-results .result:not(.primary){ padding:10px 9px !important; }
+  .calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .calc-results .result:not(.primary) .result-label{ font-size:9.5px; }
+  .calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .calc-results .result:not(.primary) .result-value{ font-size:15px; }
+}
+
+/* ── Presets en móvil: carril horizontal scrolleable (no apilados en vertical),
+   como el mockup. El base usa flex-wrap:wrap → en 390px las 3 pills largas se
+   apilan; acá las forzamos a una fila con scroll-x. Scoped a ICL. ── */
+@media (max-width:560px){
+  .calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .presets-list{
+    flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch;
+    margin-left:-2px; margin-right:-2px; padding:2px;
+  }
+  .calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .presets-list::-webkit-scrollbar{ display:none; }
+  .calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .presets-list > .preset-btn{ flex:0 0 auto; white-space:nowrap; }
+}
+
+/* ── Caja de insight ("Tu alquiler pasa de … a …") a tono lavanda del mockup. ── */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .result-insight{
+  background:var(--v2-accent-soft);
+  border-radius:14px; padding:14px 16px;
+}
+
+/* ── Composición del nuevo alquiler = BARRA APILADA horizontal (no donut). El
+   motor sigue emitiendo el `_chart` doughnut → `.v2-donut`; IclCompositionBar.astro
+   lee su leyenda y dibuja `.icl-comp` dentro del mismo `[data-chart-wrap]`. ── */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] [data-chart-wrap] .v2-donut-svg,
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] [data-chart-wrap] .v2-donut-legend,
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] [data-chart-wrap] [data-chart-download]{
+  display:none !important;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] [data-chart-wrap] .v2-donut{
+  display:block; gap:0; padding:0;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] [data-chart-wrap]{
+  background:var(--v2-accent-soft); border:1px solid #dbe6f9; border-radius:14px; padding:14px 16px;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .icl-comp{
+  display:flex; flex-direction:column; gap:9px;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .icl-comp-bar{
+  display:flex; height:16px; border-radius:8px; overflow:hidden; background:var(--v2-line-soft);
+  box-shadow:inset 0 0 0 1px rgba(15,23,42,.04);
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .icl-comp-seg{ height:100%; min-width:2px; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .icl-comp-legend{
+  display:flex; justify-content:space-between; gap:14px;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .icl-comp-item{
+  display:flex; flex-direction:column; gap:2px; min-width:0;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .icl-comp-item--right{
+  text-align:right; align-items:flex-end;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .icl-comp-nm{
+  display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--v2-body);
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .icl-comp-item--right .icl-comp-nm{ flex-direction:row-reverse; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .icl-comp-dot{
+  width:9px; height:9px; border-radius:3px; flex-shrink:0;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .icl-comp-vl{
+  font-family:var(--v2-mono); font-weight:600; font-size:13px; color:var(--v2-ink); white-space:nowrap;
+}
+
+/* ── "Modificar datos": el mockup lo muestra en desktop, al pie del resultado
+   (bajo la composición — IclCompositionBar lo reordena). El base lo ocultaba en
+   desktop (sólo mobile); acá lo mostramos y le damos el estilo pill del mockup. ── */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .calc-results .back-to-input{
+  display:inline-flex !important; align-self:flex-start; margin:2px 0 0;
+  border-radius:10px; border-color:var(--v2-line); color:var(--v2-body); background:#fff;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .calc-results .back-to-input:hover{
+  border-color:var(--v2-accent); color:var(--v2-accent); background:var(--v2-accent-soft);
+}
+
+/* ── Fila de acciones (mockup): 5 botones planos a ancho completo bajo el
+   form/resultado. IclCompositionBar mueve la `.share` acá y la aplana. ── */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .icl-actions{
+  grid-column:1 / -1 !important;
+  display:flex; flex-wrap:wrap; gap:8px; align-items:stretch;
+  margin:0 !important; padding:16px 24px 20px !important;
+  border-top:1px solid var(--v2-line);
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .icl-actions[hidden]{ display:none !important; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .icl-actions > .btn-share,
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .icl-actions > .share-compartir{
+  flex:1 1 140px; min-height:44px; margin:0;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .icl-actions .btn-share{
+  justify-content:center; border:1px solid var(--v2-line); border-radius:11px;
+  background:#fff; color:var(--v2-body); font-weight:600; box-shadow:none;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .icl-actions .btn-share--primary{
+  background:#fff; color:var(--v2-body); border-color:var(--v2-line);
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .icl-actions .btn-share:hover{
+  border-color:var(--v2-accent); color:var(--v2-accent); background:var(--v2-accent-soft);
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .icl-actions .share-compartir{ display:flex; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .icl-actions .share-compartir > .btn-share{ width:100%; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .icl-actions .share-more{ display:none !important; }
+
+/* ── "Tus últimos cálculos": trigger en el header + panel como dropdown. ── */
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .calc-card-header > .icl-history-trigger{
+  position:absolute; top:11px; right:195px; z-index:6;
+  display:inline-flex; align-items:center; gap:5px;
+  background:none; border:0; padding:0; cursor:pointer; font-family:inherit;
+  font-size:13px; font-weight:600; color:var(--v2-muted); line-height:1.25; white-space:nowrap;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .calc-card-header > .icl-history-trigger:hover{ color:var(--v2-accent); }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .calc-card-header > .icl-history-trigger svg{ opacity:.85; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .calc-history.icl-history-panel{ display:none !important; }
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .calc-history.icl-history-panel.icl-open{
+  display:block !important; position:absolute; top:44px; right:22px; z-index:30;
+  width:min(340px,82vw); margin:0; padding:14px 16px;
+  background:#fff; border:1px solid var(--v2-line); border-radius:14px; box-shadow:var(--v2-shadow);
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .icl-history-empty{
+  font-size:13px; color:var(--v2-muted); line-height:1.45;
+}
+.calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] .history-list:not(:empty) ~ .icl-history-empty{ display:none; }
+@media (max-width:520px){
+  .calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .calc-card-header{ padding-right:150px; }
+  .calc-v2 .calc-container[data-slug="calculadora-actualizacion-alquiler-icl"] > .calc-card-header > .icl-history-trigger{ display:none; }
+}

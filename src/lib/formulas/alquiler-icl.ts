@@ -26,6 +26,9 @@ export interface Outputs {
   incremento: number;
   aumentoPorcentual: number;
   coeficienteUsado: number;
+  /** Coeficiente ya formateado a 4 decimales (ej. "1,3389") para mostrarlo como
+   *  métrica sin que el formateador del widget lo recorte a 2 decimales. */
+  coeficienteFmt: string;
   iclInicio: number;
   iclActualizacion: number;
   fechaInicioUsada: string;
@@ -250,6 +253,7 @@ export function alquilerIcl(i: Inputs): Outputs {
     incremento,
     aumentoPorcentual: Number(porcentaje.toFixed(2)),
     coeficienteUsado: Number(coefUsado.toFixed(4)),
+    coeficienteFmt: coefStr,
     iclInicio: Number(iclInicio.toFixed(4)),
     iclActualizacion: Number(iclActualizacion.toFixed(4)),
     fechaInicioUsada,
