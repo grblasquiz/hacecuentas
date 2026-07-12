@@ -5,6 +5,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
+import PillarHub from '../../components/PillarHub.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
 import { PARAGUAY_2026, TIPO_CAMBIO_PY, fmtPYG } from '../../lib/data/paraguay-2026';
 
@@ -190,6 +191,23 @@ const schema = {
 // Set hreflang único y simétrico para todas las homes (es + en + pt +
 // 6 verticales + global), x-default → home raíz. Ver src/lib/hreflang.ts.
 const hreflangTags = HOME_HREFLANG;
+
+// Identidad de hub (mockup): hero vía PillarHub full-bleed; el contenido del país
+// (populares, categorías, datos, FAQ) se preserva debajo dentro de .cc-index.
+const hubConfig = {
+  color: '#2563eb',
+  nav: 'Paraguay',
+  h1: 'Calculadoras para Paraguay',
+  breadcrumb: [{ label: 'Hacé Cuentas', href: '/' }, { label: 'Paraguay' }],
+  eyebrow: '🇵🇾 Paraguay · 2026',
+  titleLines: ['Calculadoras', 'para Paraguay'],
+  lead: 'Salario neto, aguinaldo, aportes IPS, IRP, IVA, indemnización por despido. Datos oficiales MTESS, IPS, SET/DNIT y BCP. Gratis.',
+  trust: [`${totalCalcs} calculadoras`, 'Datos oficiales 2026', 'Gratis y sin registro'],
+  quick: { tag: 'Dato en vivo', title: 'Dólar hoy en Paraguay', desc: 'Cotización de mercado, actualizada a diario.', cta: 'Ver dólar hoy →', href: '/dolar-hoy-paraguay', variant: 'cta' as const },
+  needsKicker: '', needsTitle: '', needsSub: '', needs: [] as any[],
+  featuredKicker: '', featuredTitle: '', featuredSub: '', showFeaturedSearch: false, filterBadges: [] as string[], cards: [] as any[],
+  roomsKicker: '', roomsTitle: '', roomsSub: '', rooms: [] as any[], factsTitle: '', facts: [] as any[],
+};
 ---
 
 <Layout
@@ -199,31 +217,13 @@ const hreflangTags = HOME_HREFLANG;
   audience="PY"
   hreflang={hreflangTags}
   schema={schema}
+  pageType="hub"
 >
   <Header slot="header" />
 
-  <div class="cc-index">
-    <section class="hero">
-      <div class="hero-inner">
-        <div class="hero-badge">🇵🇾 Paraguay · 2026</div>
-        <h1>Calculadoras para Paraguay</h1>
-        <p class="hero-sub">Salario neto, aguinaldo, aportes IPS, IRP, IVA, indemnización por despido. Datos oficiales MTESS, IPS, SET/DNIT y BCP. Gratis.</p>
-        <div class="hero-stats">
-          <span class="stat"><strong>{totalCalcs}</strong> calculadoras</span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat"><strong>{activeCategories.length}</strong> categorías</span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat">100% gratis</span>
-        </div>
-        <span class="hero-live hero-live-static"><span class="dot-live" aria-hidden="true"></span>Moneda oficial: guaraní (Gs., PYG)</span>
-      </div>
-    </section>
+  <PillarHub config={hubConfig} />
 
-    <nav class="breadcrumbs" aria-label="Breadcrumb">
-      <a href="/">Hacé Cuentas</a>
-      <span class="sep" aria-hidden="true">/</span>
-      <span class="current">Paraguay</span>
-    </nav>
+  <div class="cc-index">
 
     {popular.length > 0 && (
       <section class="popular-section" aria-label="Más usadas">

@@ -5,6 +5,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
+import PillarHub from '../../components/PillarHub.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
 import { REPUBLICA_DOMINICANA_2026, fmtDOP } from '../../lib/data/republica-dominicana-2026';
 
@@ -196,6 +197,22 @@ const schema = {
 // Set hreflang único y simétrico para todas las homes (es + en + pt +
 // 6 verticales + global), x-default → home raíz. Ver src/lib/hreflang.ts.
 const hreflangTags = HOME_HREFLANG;
+
+// Identidad de hub (mockup): hero vía PillarHub full-bleed; el contenido del país
+// (populares, categorías, datos, FAQ) se preserva debajo dentro de .cc-index.
+const hubConfig = {
+  color: '#2563eb',
+  nav: 'República Dominicana',
+  h1: 'Calculadoras para República Dominicana',
+  breadcrumb: [{ label: 'Hacé Cuentas', href: '/' }, { label: 'República Dominicana' }],
+  eyebrow: '🇩🇴 República Dominicana · 2026',
+  titleLines: ['Calculadoras', 'para República Dominicana'],
+  lead: 'Salario neto, liquidación, auxilio de cesantía, regalía pascual, ISR e ITBIS. Datos oficiales de la DGII, la TSS y el Ministerio de Trabajo (Código de Trabajo, Ley 16-92). Gratis.',
+  trust: [`${totalCalcs} calculadoras`, 'Datos oficiales 2026', 'Gratis y sin registro'],
+  needsKicker: '', needsTitle: '', needsSub: '', needs: [] as any[],
+  featuredKicker: '', featuredTitle: '', featuredSub: '', showFeaturedSearch: false, filterBadges: [] as string[], cards: [] as any[],
+  roomsKicker: '', roomsTitle: '', roomsSub: '', rooms: [] as any[], factsTitle: '', facts: [] as any[],
+};
 ---
 
 <Layout
@@ -205,31 +222,13 @@ const hreflangTags = HOME_HREFLANG;
   audience="DO"
   hreflang={hreflangTags}
   schema={schema}
+  pageType="hub"
 >
   <Header slot="header" />
 
-  <div class="cc-index">
-    <section class="hero">
-      <div class="hero-inner">
-        <div class="hero-badge">🇩🇴 República Dominicana · 2026</div>
-        <h1>Calculadoras para República Dominicana</h1>
-        <p class="hero-sub">Salario neto, liquidación, auxilio de cesantía, regalía pascual, ISR e ITBIS. Datos oficiales de la DGII, la TSS y el Ministerio de Trabajo (Código de Trabajo, Ley 16-92). Gratis.</p>
-        <div class="hero-stats">
-          <span class="stat"><strong>{totalCalcs}</strong> calculadoras</span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat"><strong>{activeCategories.length}</strong> categorías</span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat">100% gratis</span>
-        </div>
-        <span class="hero-live hero-live-static"><span class="dot-live" aria-hidden="true"></span>Divisor de nómina: {new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2 }).format(D.divisorDiario)} días/mes · TSS empleado {fmtPct(D.tss.totalEmpleado * 100)}% · ITBIS {fmtPct(D.itbis * 100)}%</span>
-      </div>
-    </section>
+  <PillarHub config={hubConfig} />
 
-    <nav class="breadcrumbs" aria-label="Breadcrumb">
-      <a href="/">Hacé Cuentas</a>
-      <span class="sep" aria-hidden="true">/</span>
-      <span class="current">República Dominicana</span>
-    </nav>
+  <div class="cc-index">
 
     {popular.length > 0 && (
       <section class="popular-section" aria-label="Más usadas">

@@ -5,6 +5,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
+import PillarHub from '../../components/PillarHub.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
 
 // calcs-es/ + calcs/ con audience=ES
@@ -107,6 +108,23 @@ const schema = {
 // Set hreflang único y simétrico para todas las homes (es + en + pt +
 // 6 verticales + global), x-default → home raíz. Ver src/lib/hreflang.ts.
 const hreflangTags = HOME_HREFLANG;
+
+// Identidad de hub (mockup): hero vía PillarHub full-bleed; el contenido de España
+// (populares, categorías, FAQ) se preserva debajo dentro de .es-index.
+const hubConfig = {
+  color: '#2563eb',
+  nav: 'España',
+  h1: 'Calculadoras para España',
+  breadcrumb: [{ label: 'Hacé Cuentas', href: '/' }, { label: 'España' }],
+  eyebrow: '🇪🇸 España · 2026',
+  titleLines: ['Calculadoras', 'para España'],
+  lead: 'IRPF, hipoteca, autónomos, IBI, finiquito y jubilación. Datos oficiales AEAT, Seguridad Social y Banco de España. Gratis y sin registro.',
+  trust: [`${totalCalcs} calculadoras`, 'Datos oficiales 2026', 'Gratis y sin registro'],
+  quick: { tag: 'Catálogo', title: 'Todas las calculadoras', desc: 'El catálogo completo adaptado a España.', cta: 'Ver catálogo →', href: '/es/calculadoras', variant: 'cta' as const },
+  needsKicker: '', needsTitle: '', needsSub: '', needs: [] as any[],
+  featuredKicker: '', featuredTitle: '', featuredSub: '', showFeaturedSearch: false, filterBadges: [] as string[], cards: [] as any[],
+  roomsKicker: '', roomsTitle: '', roomsSub: '', rooms: [] as any[], factsTitle: '', facts: [] as any[],
+};
 ---
 
 <Layout
@@ -116,32 +134,13 @@ const hreflangTags = HOME_HREFLANG;
   audience="ES"
   hreflang={hreflangTags}
   schema={schema}
+  pageType="hub"
 >
   <Header slot="header" />
 
-  <div class="es-index">
-    <section class="hero">
-      <div class="hero-inner">
-        <div class="hero-badge">🇪🇸 España · 2026</div>
-        <h1>Calculadoras para España</h1>
-        <p class="hero-sub">IRPF, hipoteca, autónomos, IBI, finiquito, jubilación. Datos oficiales AEAT, Seguridad Social y Banco de España. Gratis y sin registro.</p>
-        <div class="hero-stats">
-          <span class="stat"><strong>{totalCalcs}</strong> calculadoras</span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat"><strong>{activeCategories.length}</strong> categorías</span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat">100% gratis</span>
-        </div>
-        <a href="/es/calculadoras" style="display:inline-block;margin-top:1.1rem;font-weight:600;color:var(--accent);text-decoration:none">Ver el catálogo completo de {totalCalcs} calculadoras →</a>
-        <a href="/es/datos-cuota-autonomos-2026" style="display:inline-block;margin-top:0.5rem;font-size:0.9rem;color:var(--text-muted);text-decoration:none">📊 Datos: tabla de cuotas de autónomos 2026 (RETA)</a>
-      </div>
-    </section>
+  <PillarHub config={hubConfig} />
 
-    <nav class="breadcrumbs" aria-label="Breadcrumb">
-      <a href="/">Hacé Cuentas</a>
-      <span class="sep" aria-hidden="true">/</span>
-      <span class="current">España</span>
-    </nav>
+  <div class="es-index">
 
     {popular.length > 0 && (
       <section class="popular-section" aria-label="Más usadas">

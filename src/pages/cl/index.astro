@@ -5,6 +5,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
+import PillarHub from '../../components/PillarHub.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
 import { CHILE_2026, fmtCLP } from '../../lib/data/chile-2026';
 import clLive from '../../data/live/chile.json';
@@ -191,6 +192,23 @@ const schema = {
 // Set hreflang único y simétrico para todas las homes (es + en + pt +
 // 6 verticales + global), x-default → home raíz. Ver src/lib/hreflang.ts.
 const hreflangTags = HOME_HREFLANG;
+
+// Identidad de hub (mockup): hero vía PillarHub full-bleed; el contenido del país
+// (populares, categorías, datos, FAQ) se preserva debajo dentro de .cc-index.
+const hubConfig = {
+  color: '#2563eb',
+  nav: 'Chile',
+  h1: 'Calculadoras para Chile',
+  breadcrumb: [{ label: 'Hacé Cuentas', href: '/' }, { label: 'Chile' }],
+  eyebrow: '🇨🇱 Chile · 2026',
+  titleLines: ['Calculadoras', 'para Chile'],
+  lead: 'Impuesto a la renta SII, AFP, isapre, finiquito, gratificación legal, sueldo líquido. Datos oficiales SII, Suseso y Banco Central. Gratis.',
+  trust: [`${totalCalcs} calculadoras`, 'Datos oficiales 2026', 'Gratis y sin registro'],
+  quick: { tag: 'Dato en vivo', title: 'Dólar hoy en Chile', desc: 'Cotización de mercado, actualizada a diario.', cta: 'Ver dólar hoy →', href: '/dolar-hoy-chile', variant: 'cta' as const },
+  needsKicker: '', needsTitle: '', needsSub: '', needs: [] as any[],
+  featuredKicker: '', featuredTitle: '', featuredSub: '', showFeaturedSearch: false, filterBadges: [] as string[], cards: [] as any[],
+  roomsKicker: '', roomsTitle: '', roomsSub: '', rooms: [] as any[], factsTitle: '', facts: [] as any[],
+};
 ---
 
 <Layout
@@ -200,35 +218,13 @@ const hreflangTags = HOME_HREFLANG;
   audience="CL"
   hreflang={hreflangTags}
   schema={schema}
+  pageType="hub"
 >
   <Header slot="header" />
 
-  <div class="cc-index">
-    <section class="hero">
-      <div class="hero-inner">
-        <div class="hero-badge">🇨🇱 Chile · 2026</div>
-        <h1>Calculadoras para Chile</h1>
-        <p class="hero-sub">Impuesto a la renta SII, AFP, isapre, finiquito, gratificación legal, sueldo líquido. Datos oficiales SII, Suseso y Banco Central. Gratis.</p>
-        <div class="hero-stats">
-          <span class="stat"><strong>{totalCalcs}</strong> calculadoras</span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat"><strong>{activeCategories.length}</strong> categorías</span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat">100% gratis</span>
-        </div>
-        <a href="/dolar-hoy-chile" class="hero-live"><span class="dot-live" aria-hidden="true"></span>Dólar hoy en Chile: {fmtCLP(dolarCl)}</a>
-        <div style="margin-top:0.9rem">
-          <a href="/cl/calculadoras" style="display:inline-block;font-weight:600;color:var(--accent);text-decoration:none">Ver el catálogo completo de {totalCalcs} calculadoras →</a>
-          <a href="/cl/datos-sueldo-chile-2026" style="display:block;margin-top:0.5rem;font-size:0.9rem;color:var(--text-muted);text-decoration:none">📊 Datos: descuentos del sueldo en Chile 2026</a>
-        </div>
-      </div>
-    </section>
+  <PillarHub config={hubConfig} />
 
-    <nav class="breadcrumbs" aria-label="Breadcrumb">
-      <a href="/">Hacé Cuentas</a>
-      <span class="sep" aria-hidden="true">/</span>
-      <span class="current">Chile</span>
-    </nav>
+  <div class="cc-index">
 
     {popular.length > 0 && (
       <section class="popular-section" aria-label="Más usadas">

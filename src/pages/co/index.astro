@@ -5,6 +5,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
+import PillarHub from '../../components/PillarHub.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
 import { COLOMBIA_2026, fmtCOP } from '../../lib/data/colombia-2026';
 import coLive from '../../data/live/colombia.json';
@@ -194,6 +195,23 @@ const schema = {
 // Set hreflang único y simétrico para todas las homes (es + en + pt +
 // 6 verticales + global), x-default → home raíz. Ver src/lib/hreflang.ts.
 const hreflangTags = HOME_HREFLANG;
+
+// Identidad de hub (mockup): hero vía PillarHub full-bleed; el contenido del país
+// (populares, categorías, datos, FAQ) se preserva debajo dentro de .cc-index.
+const hubConfig = {
+  color: '#2563eb',
+  nav: 'Colombia',
+  h1: 'Calculadoras para Colombia',
+  breadcrumb: [{ label: 'Hacé Cuentas', href: '/' }, { label: 'Colombia' }],
+  eyebrow: '🇨🇴 Colombia · 2026',
+  titleLines: ['Calculadoras', 'para Colombia'],
+  lead: 'Retefuente DIAN, prima legal, cesantías, EPS, salario mínimo, ICA. Datos oficiales DIAN, MinTrabajo y Banco de la República. Gratis.',
+  trust: [`${totalCalcs} calculadoras`, 'Datos oficiales 2026', 'Gratis y sin registro'],
+  quick: { tag: 'Dato en vivo', title: 'Dólar hoy en Colombia', desc: 'Cotización de mercado (TRM), actualizada a diario.', cta: 'Ver dólar hoy →', href: '/dolar-hoy-colombia', variant: 'cta' as const },
+  needsKicker: '', needsTitle: '', needsSub: '', needs: [] as any[],
+  featuredKicker: '', featuredTitle: '', featuredSub: '', showFeaturedSearch: false, filterBadges: [] as string[], cards: [] as any[],
+  roomsKicker: '', roomsTitle: '', roomsSub: '', rooms: [] as any[], factsTitle: '', facts: [] as any[],
+};
 ---
 
 <Layout
@@ -203,31 +221,13 @@ const hreflangTags = HOME_HREFLANG;
   audience="CO"
   hreflang={hreflangTags}
   schema={schema}
+  pageType="hub"
 >
   <Header slot="header" />
 
-  <div class="cc-index">
-    <section class="hero">
-      <div class="hero-inner">
-        <div class="hero-badge">🇨🇴 Colombia · 2026</div>
-        <h1>Calculadoras para Colombia</h1>
-        <p class="hero-sub">Retefuente DIAN, prima legal, cesantías, EPS, salario mínimo, ICA. Datos oficiales DIAN, MinTrabajo y Banco de la República. Gratis.</p>
-        <div class="hero-stats">
-          <span class="stat"><strong>{totalCalcs}</strong> calculadoras</span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat"><strong>{activeCategories.length}</strong> categorías</span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat">100% gratis</span>
-        </div>
-        <a href="/dolar-hoy-colombia" class="hero-live"><span class="dot-live" aria-hidden="true"></span>Dólar hoy en Colombia (TRM): {trmStr}</a>
-      </div>
-    </section>
+  <PillarHub config={hubConfig} />
 
-    <nav class="breadcrumbs" aria-label="Breadcrumb">
-      <a href="/">Hacé Cuentas</a>
-      <span class="sep" aria-hidden="true">/</span>
-      <span class="current">Colombia</span>
-    </nav>
+  <div class="cc-index">
 
     {popular.length > 0 && (
       <section class="popular-section" aria-label="Más usadas">

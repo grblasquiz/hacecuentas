@@ -5,6 +5,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
+import PillarHub from '../../components/PillarHub.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
 import { VENEZUELA_2026, usdToVes, fmtVES } from '../../lib/data/venezuela-2026';
 
@@ -192,6 +193,23 @@ const schema = {
 // Set hreflang único y simétrico para todas las homes (es + en + pt +
 // 6 verticales + global), x-default → home raíz. Ver src/lib/hreflang.ts.
 const hreflangTags = HOME_HREFLANG;
+
+// Identidad de hub (mockup): hero vía PillarHub full-bleed; el contenido del país
+// (populares, categorías, datos, FAQ) se preserva debajo dentro de .cc-index.
+const hubConfig = {
+  color: '#2563eb',
+  nav: 'Venezuela',
+  h1: 'Calculadoras para Venezuela',
+  breadcrumb: [{ label: 'Hacé Cuentas', href: '/' }, { label: 'Venezuela' }],
+  eyebrow: '🇻🇪 Venezuela · 2026',
+  titleLines: ['Calculadoras', 'para Venezuela'],
+  lead: 'Prestaciones sociales, utilidades, vacaciones, ISLR, IVA, IGTF y el dólar BCV frente al paralelo. Datos oficiales del BCV, SENIAT y la LOTTT. Gratis.',
+  trust: [`${totalCalcs} calculadoras`, 'Datos oficiales 2026', 'Gratis y sin registro'],
+  quick: { tag: 'Dato en vivo', title: 'Dólar hoy en Venezuela', desc: 'BCV y paralelo, actualizados a diario.', cta: 'Ver dólar hoy →', href: '/dolar-hoy-venezuela', variant: 'cta' as const },
+  needsKicker: '', needsTitle: '', needsSub: '', needs: [] as any[],
+  featuredKicker: '', featuredTitle: '', featuredSub: '', showFeaturedSearch: false, filterBadges: [] as string[], cards: [] as any[],
+  roomsKicker: '', roomsTitle: '', roomsSub: '', rooms: [] as any[], factsTitle: '', facts: [] as any[],
+};
 ---
 
 <Layout
@@ -201,31 +219,13 @@ const hreflangTags = HOME_HREFLANG;
   audience="VE"
   hreflang={hreflangTags}
   schema={schema}
+  pageType="hub"
 >
   <Header slot="header" />
 
-  <div class="cc-index">
-    <section class="hero">
-      <div class="hero-inner">
-        <div class="hero-badge">🇻🇪 Venezuela · 2026</div>
-        <h1>Calculadoras para Venezuela</h1>
-        <p class="hero-sub">Prestaciones sociales, utilidades, vacaciones, ISLR, IVA, IGTF y el dólar BCV frente al paralelo. Datos oficiales del BCV, SENIAT y la LOTTT. Gratis.</p>
-        <div class="hero-stats">
-          <span class="stat"><strong>{totalCalcs}</strong> calculadoras</span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat"><strong>{activeCategories.length}</strong> categorías</span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat">100% gratis</span>
-        </div>
-        <span class="hero-live hero-live-static"><span class="dot-live" aria-hidden="true"></span>Dólar BCV: {fmtVES(V.fx.bcv)} · Paralelo: {fmtVES(V.fx.paralelo)} ({fmtPct(brechaPct)}% de brecha)</span>
-      </div>
-    </section>
+  <PillarHub config={hubConfig} />
 
-    <nav class="breadcrumbs" aria-label="Breadcrumb">
-      <a href="/">Hacé Cuentas</a>
-      <span class="sep" aria-hidden="true">/</span>
-      <span class="current">Venezuela</span>
-    </nav>
+  <div class="cc-index">
 
     {popular.length > 0 && (
       <section class="popular-section" aria-label="Más usadas">

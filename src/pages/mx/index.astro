@@ -5,6 +5,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
+import PillarHub from '../../components/PillarHub.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
 import { MEXICO_2026, fmtMXN, isrMensual2026, cuotaImssObreroMensual } from '../../lib/data/mexico-2026';
 import mxLive from '../../data/live/mexico.json';
@@ -203,6 +204,23 @@ const schema = {
 // Set hreflang único y simétrico para todas las homes (es + en + pt +
 // 6 verticales + global), x-default → home raíz. Ver src/lib/hreflang.ts.
 const hreflangTags = HOME_HREFLANG;
+
+// Identidad de hub (mockup): hero vía PillarHub full-bleed; el contenido del país
+// (populares, categorías, datos, FAQ) se preserva debajo dentro de .cc-index.
+const hubConfig = {
+  color: '#2563eb',
+  nav: 'México',
+  h1: 'Calculadoras para México',
+  breadcrumb: [{ label: 'Hacé Cuentas', href: '/' }, { label: 'México' }],
+  eyebrow: '🇲🇽 México · 2026',
+  titleLines: ['Calculadoras', 'para México'],
+  lead: 'ISR, IMSS, RFC, finiquito, INFONAVIT, aguinaldo y prima vacacional. Datos oficiales SAT, IMSS y CONDUSEF. Gratis y sin registro.',
+  trust: [`${totalCalcs} calculadoras`, 'Datos oficiales 2026', 'Gratis y sin registro'],
+  quick: { tag: 'Dato en vivo', title: 'Dólar hoy en México', desc: 'Cotización de mercado, actualizada a diario.', cta: `Ver dólar · ${usdmxnStr} →`, href: '/dolar-hoy-mexico', variant: 'cta' as const },
+  needsKicker: '', needsTitle: '', needsSub: '', needs: [] as any[],
+  featuredKicker: '', featuredTitle: '', featuredSub: '', showFeaturedSearch: false, filterBadges: [] as string[], cards: [] as any[],
+  roomsKicker: '', roomsTitle: '', roomsSub: '', rooms: [] as any[], factsTitle: '', facts: [] as any[],
+};
 ---
 
 <Layout
@@ -212,31 +230,13 @@ const hreflangTags = HOME_HREFLANG;
   audience="MX"
   hreflang={hreflangTags}
   schema={schema}
+  pageType="hub"
 >
   <Header slot="header" />
 
-  <div class="cc-index">
-    <section class="hero">
-      <div class="hero-inner">
-        <div class="hero-badge">🇲🇽 México · 2026</div>
-        <h1>Calculadoras para México</h1>
-        <p class="hero-sub">ISR, IMSS, RFC, finiquito, INFONAVIT, aguinaldo, prima vacacional. Datos oficiales SAT, IMSS y CONDUSEF. Gratis y sin registro.</p>
-        <div class="hero-stats">
-          <span class="stat"><strong>{totalCalcs}</strong> calculadoras</span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat"><strong>{activeCategories.length}</strong> categorías</span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat">100% gratis</span>
-        </div>
-        <a href="/dolar-hoy-mexico" class="hero-live"><span class="dot-live" aria-hidden="true"></span>Dólar hoy en México: {usdmxnStr}</a>
-      </div>
-    </section>
+  <PillarHub config={hubConfig} />
 
-    <nav class="breadcrumbs" aria-label="Breadcrumb">
-      <a href="/">Hacé Cuentas</a>
-      <span class="sep" aria-hidden="true">/</span>
-      <span class="current">México</span>
-    </nav>
+  <div class="cc-index">
 
     {popular.length > 0 && (
       <section class="popular-section" aria-label="Más usadas">

@@ -5,6 +5,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
+import PillarHub from '../../components/PillarHub.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
 import { ES_TOTAL_DISPLAY_EN } from '../../lib/calc-counts';
 
@@ -136,6 +137,22 @@ const schema = {
 // Set hreflang único y simétrico para todas las homes (es + en + pt +
 // 6 verticales + global), x-default → home raíz. Ver src/lib/hreflang.ts.
 const hreflangTags = HOME_HREFLANG;
+
+// Hub identity (mockup): hero via PillarHub full-bleed; the English content
+// (featured, categories) is preserved below inside .en-index.
+const hubConfig = {
+  color: '#2563eb',
+  nav: 'Calculators',
+  h1: 'Free Online Calculators',
+  breadcrumb: [{ label: 'Hacé Cuentas', href: '/' }, { label: 'English Calculators' }],
+  eyebrow: '🌎 English Calculators',
+  titleLines: ['Free Online', 'Calculators'],
+  lead: 'Accurate, private, and easy to use. Finance, health, math, business and everyday life. No registration required.',
+  trust: [`${totalCalcs} calculators`, 'Updated 2026', 'Free & private'],
+  needsKicker: '', needsTitle: '', needsSub: '', needs: [] as any[],
+  featuredKicker: '', featuredTitle: '', featuredSub: '', showFeaturedSearch: false, filterBadges: [] as string[], cards: [] as any[],
+  roomsKicker: '', roomsTitle: '', roomsSub: '', rooms: [] as any[], factsTitle: '', facts: [] as any[],
+};
 ---
 
 <Layout
@@ -144,39 +161,13 @@ const hreflangTags = HOME_HREFLANG;
   lang="en"
   hreflang={hreflangTags}
   schema={schema}
+  pageType="hub"
 >
   <Header slot="header" lang="en" />
 
+  <PillarHub config={hubConfig} />
+
   <div class="en-index">
-
-    <!-- Hero -->
-    <section class="hero">
-      <div class="hero-inner">
-        <div class="hero-badge">English Calculators</div>
-        <h1>Free Online Calculators</h1>
-        <p class="hero-sub">Accurate, private, and easy to use. No registration required.</p>
-        <div class="hero-stats">
-          <span class="stat">
-            <strong>{totalCalcs}</strong> calculators
-          </span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat">
-            <strong>{activeCategories.length}</strong> categories
-          </span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat">
-            <strong>100%</strong> free &amp; private
-          </span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Breadcrumb -->
-    <nav class="breadcrumbs" aria-label="Breadcrumb">
-      <a href="/">Hacé Cuentas</a>
-      <span class="sep" aria-hidden="true">/</span>
-      <span class="current">English Calculators</span>
-    </nav>
 
     <!-- Featured niche calculators -->
     {featured.length > 0 && (

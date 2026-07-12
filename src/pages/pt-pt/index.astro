@@ -5,6 +5,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
+import PillarHub from '../../components/PillarHub.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
 import { PORTUGAL_2026, fmtEUR, DATA_AS_OF } from '../../lib/data/portugal-2026';
 
@@ -200,6 +201,22 @@ const schema = {
 // Set hreflang único y simétrico para todas las homes (es + en + pt + pt-pt +
 // verticales + global), x-default → home raíz. Ver src/lib/hreflang.ts.
 const hreflangTags = HOME_HREFLANG;
+
+// Identidad de hub (mockup): hero vía PillarHub full-bleed; el contenido del país
+// (populares, categorías, datos, FAQ) se preserva debajo dentro de .cc-index.
+const hubConfig = {
+  color: '#2563eb',
+  nav: 'Portugal',
+  h1: 'Calculadoras para Portugal',
+  breadcrumb: [{ label: 'Hacé Cuentas', href: '/' }, { label: 'Portugal' }],
+  eyebrow: '🇵🇹 Portugal · 2026',
+  titleLines: ['Calculadoras', 'para Portugal'],
+  lead: 'Salário líquido, IRS, subsídios de férias e de Natal, descontos para a Segurança Social, IVA e indemnização por despedimento. Adaptadas a Portugal. Grátis.',
+  trust: [`${totalCalcs} calculadoras`, 'Dados oficiais 2026', 'Grátis e sem registo'],
+  needsKicker: '', needsTitle: '', needsSub: '', needs: [] as any[],
+  featuredKicker: '', featuredTitle: '', featuredSub: '', showFeaturedSearch: false, filterBadges: [] as string[], cards: [] as any[],
+  roomsKicker: '', roomsTitle: '', roomsSub: '', rooms: [] as any[], factsTitle: '', facts: [] as any[],
+};
 ---
 
 <Layout
@@ -209,31 +226,13 @@ const hreflangTags = HOME_HREFLANG;
   audience="PT"
   hreflang={hreflangTags}
   schema={schema}
+  pageType="hub"
 >
   <Header slot="header" lang="es" />
 
-  <div class="cc-index">
-    <section class="hero">
-      <div class="hero-inner">
-        <div class="hero-badge">🇵🇹 Portugal · 2026</div>
-        <h1>Calculadoras para Portugal</h1>
-        <p class="hero-sub">Salário líquido, IRS, subsídios de férias e de Natal, descontos para a Segurança Social, IVA e indemnização por despedimento. Adaptadas a Portugal. Grátis.</p>
-        <div class="hero-stats">
-          <span class="stat"><strong>{totalCalcs}</strong> calculadoras</span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat"><strong>{activeCategories.length}</strong> categorias</span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat">100% grátis</span>
-        </div>
-        <span class="hero-live hero-live-static"><span class="dot-live" aria-hidden="true"></span>Salário mínimo 2026: {fmtEUR(P.rmmg.mensal)} × {P.rmmg.meses} · IAS: {fmtEUR(P.ias)} · IRS: {irsPrimeiraTaxa}%–{irsUltimaTaxa}%</span>
-      </div>
-    </section>
+  <PillarHub config={hubConfig} />
 
-    <nav class="breadcrumbs" aria-label="Caminho de navegação">
-      <a href="/">Hacé Cuentas</a>
-      <span class="sep" aria-hidden="true">/</span>
-      <span class="current">Portugal</span>
-    </nav>
+  <div class="cc-index">
 
     {popular.length > 0 && (
       <section class="popular-section" aria-label="Mais usadas">

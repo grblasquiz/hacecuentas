@@ -5,6 +5,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
+import PillarHub from '../../components/PillarHub.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
 import { TOTAL_DISPLAY } from '../../lib/calc-counts';
 
@@ -92,6 +93,22 @@ const schema = {
 // Set hreflang único y simétrico para todas las homes (es + en + pt +
 // 6 verticales + global), x-default → home raíz. Ver src/lib/hreflang.ts.
 const hreflangTags = HOME_HREFLANG;
+
+// Identidade de hub (mockup): hero via PillarHub full-bleed; o conteúdo em
+// português (categorias) é preservado abaixo dentro de .en-index.
+const hubConfig = {
+  color: '#2563eb',
+  nav: 'Calculadoras',
+  h1: 'Calculadoras Online Grátis',
+  breadcrumb: [{ label: 'Hacé Cuentas', href: '/' }, { label: 'Calculadoras em Português' }],
+  eyebrow: '🌎 Calculadoras em Português',
+  titleLines: ['Calculadoras', 'Online Grátis'],
+  lead: 'Precisas, privadas e fáceis de usar. Finanças, saúde, matemática, negócios e dia a dia. Sem cadastro necessário.',
+  trust: [`${totalCalcs} calculadoras`, 'Atualizado 2026', 'Grátis e privado'],
+  needsKicker: '', needsTitle: '', needsSub: '', needs: [] as any[],
+  featuredKicker: '', featuredTitle: '', featuredSub: '', showFeaturedSearch: false, filterBadges: [] as string[], cards: [] as any[],
+  roomsKicker: '', roomsTitle: '', roomsSub: '', rooms: [] as any[], factsTitle: '', facts: [] as any[],
+};
 ---
 
 <Layout
@@ -100,39 +117,13 @@ const hreflangTags = HOME_HREFLANG;
   lang="pt"
   hreflang={hreflangTags}
   schema={schema}
+  pageType="hub"
 >
   <Header slot="header" lang="pt" />
 
+  <PillarHub config={hubConfig} />
+
   <div class="en-index">
-
-    <!-- Hero -->
-    <section class="hero">
-      <div class="hero-inner">
-        <div class="hero-badge">Calculadoras em Português</div>
-        <h1>Calculadoras Online Grátis</h1>
-        <p class="hero-sub">Precisas, privadas e fáceis de usar. Sem cadastro necessário.</p>
-        <div class="hero-stats">
-          <span class="stat">
-            <strong>{totalCalcs}</strong> calculadoras
-          </span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat">
-            <strong>{activeCategories.length}</strong> categorias
-          </span>
-          <span class="stat-sep" aria-hidden="true">·</span>
-          <span class="stat">
-            <strong>100%</strong> grátis e privado
-          </span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Breadcrumb -->
-    <nav class="breadcrumbs" aria-label="Breadcrumb">
-      <a href="/">Hacé Cuentas</a>
-      <span class="sep" aria-hidden="true">/</span>
-      <span class="current">Calculadoras em Português</span>
-    </nav>
 
     <!-- Calculator grid grouped by category -->
     <div class="categories">
