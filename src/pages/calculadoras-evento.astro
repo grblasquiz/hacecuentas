@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import PillarHub from '../components/PillarHub.astro';
 
 export const prerender = true;
 
@@ -102,31 +103,35 @@ const collectionSchema = {
   isPartOf: { '@type': 'WebSite', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
 };
 const schema = { '@context': 'https://schema.org', '@graph': [itemListSchema, collectionSchema] };
+
+// Identidad de hub (mockup): hero + "necesidades" (los grupos del tema) vía
+// PillarHub, full-bleed; las listas por grupo se preservan debajo.
+const HUB_TONES = ['i1', 'i2', 'i3', 'i4', 'i5', 'i6'];
+const anchorOf = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+const hubConfig = {
+  color: '#c2410c',
+  nav: 'asado, fiesta y evento',
+  h1: 'Calculadoras para tu asado, fiesta o evento',
+  breadcrumb: [{ label: 'Inicio', href: '/' }, { label: 'Asado, fiesta y evento' }],
+  eyebrow: '🎉 Hub temático',
+  titleLines: ['Calculadoras para tu', 'asado, fiesta o evento'],
+  lead: `Más de ${totalItems} calculadoras para organizar tu asado, cumpleaños, juntada o casamiento sin que falte ni sobre: cantidades por invitado. Cargás la gente y listo.`,
+  trust: ['Cantidades por invitado', 'Gratis y sin registro', 'Cálculo privado'],
+  quick: { tag: 'Para tu evento', title: 'Calculadoras de cocina', desc: 'Todo lo que se cocina y se sirve, por persona.', cta: 'Ver cocina →', href: '/categoria/cocina', variant: 'cta' as const },
+  needsKicker: 'Elegí por necesidad',
+  needsTitle: '¿Qué estás organizando?',
+  needsSub: 'Entrá directo al tipo de cálculo que necesitás.',
+  needs: resolvedGroups.map((g, i) => ({ icon: g.icon, tone: HUB_TONES[i % 6], title: g.title, desc: '', href: `#${anchorOf(g.title)}` })),
+  featuredKicker: '', featuredTitle: '', featuredSub: '', showFeaturedSearch: false, filterBadges: [] as string[], cards: [] as any[],
+  roomsKicker: '', roomsTitle: '', roomsSub: '', rooms: [] as any[], factsTitle: '', facts: [] as any[],
+};
 ---
 
-<Layout title={title} description={description} canonical={canonical} audience="global" schema={schema}>
+<Layout title={title} description={description} canonical={canonical} audience="global" schema={schema} pageType="hub">
   <Header />
+  <PillarHub config={hubConfig} />
   <main class="article-main">
     <article class="hub-page">
-      <header class="hub-header">
-        <div class="hub-eyebrow">🎉 Hub temático</div>
-        <h1>Calculadoras para tu asado, fiesta o evento</h1>
-        <p class="lede">
-          Más de <strong>{totalItems} calculadoras</strong> para organizar tu <strong>asado, cumpleaños, juntada o casamiento</strong>
-          sin que falte ni sobre: cuántos kilos de carne, cuánta cerveza, empanadas, pizza, hielo, sillas, meseros y presupuesto
-          <strong>por invitado</strong>. Cargás la cantidad de gente y listo.
-        </p>
-      </header>
-
-      <nav class="hub-toc" aria-label="Índice del hub">
-        <strong>Saltar a:</strong>
-        <ul>
-          {resolvedGroups.map((g) => (
-            <li><a href={`#${g.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>{g.icon} {g.title}</a></li>
-          ))}
-        </ul>
-      </nav>
-
       {resolvedGroups.map((g) => {
         const id = g.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         return (

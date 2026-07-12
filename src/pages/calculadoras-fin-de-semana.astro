@@ -4,6 +4,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 import WeekendRecommendations from '../components/WeekendRecommendations.astro';
+import PillarHub from '../components/PillarHub.astro';
 import { WEEKEND_CLUSTERS } from '../lib/weekend-clusters';
 
 export const prerender = true;
@@ -125,24 +126,38 @@ const faqSchema = {
   mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '') } })),
 };
 const schema = { '@context': 'https://schema.org', '@graph': [itemListSchema, collectionSchema, breadcrumbSchema, faqSchema] };
+
+// Identidad de hub (mockup): hero + "necesidades" (los sub-hubs del finde) vía
+// PillarHub, full-bleed; el contenido (top-3, grupos) se preserva debajo.
+const hubConfig = {
+  color: '#0e7490',
+  nav: 'fin de semana',
+  h1: 'Calculadoras para el fin de semana',
+  breadcrumb: [{ label: 'Inicio', href: '/' }, { label: 'Fin de semana' }],
+  eyebrow: '🗓️ Hub temático',
+  titleLines: ['Calculadoras para', 'el fin de semana'],
+  lead: 'Las cuentas que de verdad hacés el sábado y domingo: el asado y la juntada, la fiesta, la escapada en auto, los proyectos del hogar y todo lo de tu mascota.',
+  trust: ['Para el finde real', 'Gratis y sin registro', 'Cálculo privado'],
+  quick: { tag: 'Lo más usado', title: 'Planificá tu asado', desc: 'Kilos de carne y cortes por persona, sin que falte ni sobre.', cta: 'Calcular el asado →', href: '/calculadora-asado-kg-por-persona-cortes-tira-vacio-pollo', variant: 'cta' as const },
+  needsKicker: 'Elegí tu plan',
+  needsTitle: '¿Qué vas a hacer este finde?',
+  needsSub: 'Entrá directo al plan y sus calculadoras.',
+  needs: [
+    { icon: '🍽️', tone: 'i1', title: 'Comida y juntadas', desc: '', href: '/fin-de-semana/comida-y-juntadas' },
+    { icon: '🎉', tone: 'i2', title: 'Fiestas y reuniones', desc: '', href: '/fin-de-semana/fiestas-y-reuniones' },
+    { icon: '🚗', tone: 'i3', title: 'Escapadas', desc: '', href: '/fin-de-semana/escapadas' },
+    { icon: '🔨', tone: 'i4', title: 'Proyectos en casa', desc: '', href: '/fin-de-semana/proyectos-en-casa' },
+  ],
+  featuredKicker: '', featuredTitle: '', featuredSub: '', showFeaturedSearch: false, filterBadges: [] as string[], cards: [] as any[],
+  roomsKicker: '', roomsTitle: '', roomsSub: '', rooms: [] as any[], factsTitle: '', facts: [] as any[],
+};
 ---
 
-<Layout title={title} description={description} canonical={canonical} audience="global" schema={schema}>
+<Layout title={title} description={description} canonical={canonical} audience="global" schema={schema} pageType="hub">
   <Header />
+  <PillarHub config={hubConfig} />
   <main class="article-main">
     <article class="hub-page">
-      <Breadcrumbs items={breadcrumbItems} />
-      <header class="hub-header">
-        <div class="hub-eyebrow">🗓️ Hub temático</div>
-        <h1>Calculadoras para el fin de semana</h1>
-        <p class="lede">
-          Las cuentas que de verdad hacés el <strong>sábado y domingo</strong>: el <strong>asado</strong> y la juntada,
-          la <strong>fiesta</strong>, las <strong>medidas de cocina</strong>, la <strong>escapada en auto</strong>,
-          los <strong>proyectos del hogar</strong>, el <strong>plan de sillón</strong> y todo lo de tu <strong>mascota</strong>.
-          Todas gratis y sin registro.
-        </p>
-      </header>
-
       <WeekendRecommendations
         title="Las 3 cuentas que más se usan el finde"
         description="Arrancá por acá — el asado, la juntada y la escapada en auto."
@@ -153,22 +168,6 @@ const schema = { '@context': 'https://schema.org', '@graph': [itemListSchema, co
           { href: '/calculadora-costo-viaje-combustible-kilometros', label: 'Costo del viaje en auto', icon: '🚗' },
         ]}
       />
-
-      <nav class="hub-subhubs" aria-label="Planes del fin de semana">
-        <a href="/fin-de-semana/comida-y-juntadas">🍽️ Comida y juntadas</a>
-        <a href="/fin-de-semana/fiestas-y-reuniones">🎉 Fiestas y reuniones</a>
-        <a href="/fin-de-semana/escapadas">🚗 Escapadas</a>
-        <a href="/fin-de-semana/proyectos-en-casa">🔨 Proyectos en casa</a>
-      </nav>
-      <style>
-        .hub-subhubs { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 0 0 1.25rem; }
-        .hub-subhubs a {
-          display: inline-block; padding: 0.55rem 0.95rem; border: 1px solid var(--border);
-          border-radius: 999px; background: var(--bg); color: var(--text);
-          text-decoration: none; font-size: 0.9rem; font-weight: 600;
-        }
-        .hub-subhubs a:hover { border-color: var(--accent); background: var(--accent-soft, #e0f2fe); }
-      </style>
 
       <nav class="hub-toc" aria-label="Índice del hub">
         <strong>Saltar a:</strong>

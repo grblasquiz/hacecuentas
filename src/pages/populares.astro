@@ -154,25 +154,15 @@ const hubConfig = {
   canonical="/populares"
   audience="AR"
   schema={schema}
+  pageType="hub"
 >
   <Header slot="header" />
 
   <script type="application/ld+json" set:html={JSON.stringify(schemaBreadcrumb)} />
 
-  <nav class="breadcrumbs" aria-label="Ruta de navegación">
-    <a href="/">Inicio</a>
-    <span class="sep" aria-hidden="true">/</span>
-    <span class="current">Más usadas</span>
-  </nav>
+  <PillarHub config={hubConfig} />
 
-  <header class="page-header">
-    <h1>Las calculadoras más usadas</h1>
-    <p>
-      Las herramientas que más buscan y usan en Hacé Cuentas. Si buscás algo puntual,
-      mirá el <a href="/calculadoras">índice completo</a> o usá el <a href="/buscar">buscador</a>.
-    </p>
-  </header>
-
+  <div class="hub-listing">
   <ol class="pop-list">
     {ranked.map((c: any, i: number) => {
       const color = CATEGORY_COLORS[c.category] || BRAND_DEFAULT;
@@ -204,11 +194,14 @@ const hubConfig = {
       : 'Selección de las calculadoras más populares del sitio.'}
     {' '}¿No encontrás la tuya? Está en el <a href="/calculadoras">índice completo</a>.
   </p>
+  </div>{/* /.hub-listing */}
 
   <Footer slot="footer" />
 </Layout>
 
 <style>
+  /* pageType="hub" → main full-bleed para el hero; re-centrar el ranking debajo. */
+  .hub-listing { width: min(1180px, calc(100% - 40px)); margin: 2.25rem auto 0; }
   .breadcrumbs {
     display: flex;
     gap: 0.5rem;
