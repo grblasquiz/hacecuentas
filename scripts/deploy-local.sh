@@ -39,6 +39,33 @@ ok()  { echo -e "${GREEN}[deploy] ✓${NC} $1"; }
 warn(){ echo -e "${YELLOW}[deploy] ⚠${NC} $1"; }
 err() { echo -e "${RED}[deploy] ✗${NC} $1"; }
 
+# ─── Helpers de concurrencia (lock single-flight + timeout portable) ───────
+# macOS no trae flock(1) ni timeout(1), y shlock NO reclama locks stale. Así que
+# rodamos nuestro propio lock: creación atómica con noclobber + chequeo de vida
+# por kill -0 (reclama el lock si el holder murió, p.ej. kill -9 a un deploy).
+acquire_deploy_lock() {   # $1=lockfile · rc 0=adquirido · rc 1=ocupado por proceso VIVO
+  local lf="$1" holder
+  if ( set -o noclobber; echo "$$" > "$lf" ) 2>/dev/null; then return 0; fi
+  holder=$(cat "$lf" 2>/dev/null | tr -d '[:space:]')
+  # Sólo reclamamos si el holder es un PID real y está MUERTO. Pidfile vacío =
+  # recién creado por otra sesión → lo tratamos como vivo y reintentamos.
+  if [ -n "$holder" ] && ! kill -0 "$holder" 2>/dev/null; then
+    rm -f "$lf"
+    ( set -o noclobber; echo "$$" > "$lf" ) 2>/dev/null && return 0
+  fi
+  return 1
+}
+
+# Corre un comando con timeout duro. rc 137/143 = fue matado por el timeout.
+run_with_timeout() {   # $1=segundos · resto=comando…
+  local secs=$1; shift
+  "$@" & local pid=$!
+  ( sleep "$secs"; kill -0 "$pid" 2>/dev/null && { kill -TERM "$pid" 2>/dev/null; sleep 3; kill -KILL "$pid" 2>/dev/null; } ) >/dev/null 2>&1 & local watcher=$!
+  local rc=0; wait "$pid" || rc=$?
+  kill "$watcher" 2>/dev/null || true; wait "$watcher" 2>/dev/null || true
+  return $rc
+}
+
 # Parse args
 PURGE=true
 SMOKE=true
@@ -129,6 +156,38 @@ if [ -n "$(git status --porcelain)" ]; then
   else
     warn "auto-commit pre-build no hizo nada"
   fi
+fi
+
+# ─── 1c. Lock de deploy — single-flight entre sesiones ─────────────────────
+# Martin corre varias sesiones a la vez; antes N deploys concurrentes se pisaban:
+# dos `astro build` sobre el mismo dist/ corrompían el bundle (worker 81 MiB → CF
+# 10027, pero imprimía "OK") y el wrangler de uno se colgaba horas por contención
+# en .wrangler/. Como el target es UN solo Worker, "multi-deploy" no existe:
+# serializamos. El auto-commit de arriba ya dejó MI trabajo en HEAD, así que el
+# deploy que corra (el mío o el del holder actual) lo incluye vía detect-changes
+# (diff last-deploy-sha...HEAD). Si otro tiene el lock, ESPERO turno; cuando lo
+# tomo, detect ve el last-deploy-sha ya avanzado → si mi commit ya salió live,
+# SKIP en ~1s. Un solo build sirve a todas las sesiones encoladas.
+LOCKFILE="$REPO_ROOT/.deploy.lock"
+WRANGLER_TIMEOUT="${WRANGLER_TIMEOUT:-420}"   # matar wrangler si cuelga
+LOCK_WAIT=0
+while ! acquire_deploy_lock "$LOCKFILE"; do
+  HOLDER=$(cat "$LOCKFILE" 2>/dev/null | tr -d '[:space:]')
+  [ "$LOCK_WAIT" = 0 ] && log "otro deploy en curso (PID ${HOLDER:-?}) — espero turno; tu commit ${CURRENT_SHA:0:8} ya está en HEAD y saldrá live."
+  [ "$LOCK_WAIT" -gt 0 ] && [ $((LOCK_WAIT % 60)) = 0 ] && log "...sigo esperando el lock (${LOCK_WAIT}s · holder PID ${HOLDER:-?})"
+  sleep 5; LOCK_WAIT=$((LOCK_WAIT + 5))
+  if [ "$LOCK_WAIT" -ge 1200 ]; then
+    err "esperé 20min por el lock (holder PID ${HOLDER:-?}) y sigue tomado. Abortando sin tocar nada."
+    err "Si ese PID está colgado:  kill -9 ${HOLDER:-<pid>} ; rm -f $LOCKFILE ; y reintentá el deploy."
+    exit 1
+  fi
+done
+# Desde acá tengo el lock. Liberarlo en CUALQUIER salida (incluí set -e / exit N).
+trap 'rm -f "$LOCKFILE"' EXIT INT TERM
+if [ "$LOCK_WAIT" -gt 0 ]; then
+  ok "lock de deploy adquirido tras ${LOCK_WAIT}s de espera (PID $$)"
+else
+  ok "lock de deploy adquirido (PID $$)"
 fi
 
 # ─── 2. Detect changes ────────────────────────────────────────────────────
@@ -284,10 +343,19 @@ log "wrangler deploy desde dist/server..."
 cd dist/server
 # Capturamos output + RC reales (antes el pipe a grep enmascaraba el exit code
 # de wrangler → false-OK). Fallamos fuerte si el worker fue rechazado.
-set -o pipefail
-DEPLOY_OUT=$(npx wrangler@latest deploy 2>&1); DEPLOY_RC=$?
-set +o pipefail
+# Con timeout duro: si wrangler cuelga (contención/red/CF API), lo matamos y
+# fallamos limpio en vez de colgar horas (incidente 2026-06-23: 3h35m a 0% CPU).
+# El lock se libera al salir → la próxima sesión puede deployar.
+DEPLOY_LOG=$(mktemp -t hc-wrangler.XXXXXX)
+DEPLOY_RC=0
+run_with_timeout "$WRANGLER_TIMEOUT" npx wrangler@latest deploy >"$DEPLOY_LOG" 2>&1 || DEPLOY_RC=$?
+DEPLOY_OUT=$(cat "$DEPLOY_LOG"); rm -f "$DEPLOY_LOG"
 echo "$DEPLOY_OUT" | grep -E "(Uploaded.*assets|Success|Total Upload|Worker Startup|Current Version|error|Error)" | head -10
+if [ "$DEPLOY_RC" -eq 137 ] || [ "$DEPLOY_RC" -eq 143 ]; then
+  cd "$REPO_ROOT"
+  err "wrangler EXCEDIÓ el timeout de ${WRANGLER_TIMEOUT}s y fue matado (deploy colgado). NO está en vivo — reintentá."
+  exit 1
+fi
 if [ "$DEPLOY_RC" -ne 0 ] || echo "$DEPLOY_OUT" | grep -qE "uncompressed size limit|code: 10027"; then
   cd "$REPO_ROOT"
   err "wrangler RECHAZÓ el worker (size>64MiB o error). NO está en vivo — revisá el bundle."
