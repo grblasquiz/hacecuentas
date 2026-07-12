@@ -184,6 +184,9 @@ while ! acquire_deploy_lock "$LOCKFILE"; do
 done
 # Desde acá tengo el lock. Liberarlo en CUALQUIER salida (incluí set -e / exit N).
 trap 'rm -f "$LOCKFILE"' EXIT INT TERM
+# El `npm run build` interno pasa por build-guard.sh; le decimos que YA tenemos el
+# lock para que no intente re-adquirirlo (deadlock) — corre el build directo.
+export HC_DEPLOY_LOCK_HELD=1
 if [ "$LOCK_WAIT" -gt 0 ]; then
   ok "lock de deploy adquirido tras ${LOCK_WAIT}s de espera (PID $$)"
 else
