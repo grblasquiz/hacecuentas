@@ -62,136 +62,83 @@ const inputType = (t: string) =>
     <p class="profile-loading" data-auth-loading>Cargando…</p>
 
     <!-- ───────── No logueado: landing + login (mockup 2026-07-12) ───────── -->
-    <div class="acct-landing" data-login-view hidden>
-      <!-- HERO -->
-      <section class="al-sec al-hero">
-        <div class="wrap">
-          <nav class="al-crumb" aria-label="Ruta de navegación"><a href="/">Inicio</a>&nbsp;/&nbsp;<span>Mi Hacé Cuentas</span></nav>
-          <div class="al-hero-grid">
-            <div class="al-copy">
-              <span class="al-eyebrow">✨ Tu perfil numérico</span>
-              <h1>Tus números, listos<br><span class="accent">cuando los necesitás.</span></h1>
-              <p class="al-lead">Guardá una vez los datos que repetís siempre y encontrá cada calculadora lista para usar, desde cualquier dispositivo.</p>
-              <div class="al-benefits">
-                <div class="al-benefit"><span class="ab-ic i1" aria-hidden="true">⚡</span><span><b>Menos datos para completar</b><small>Precargamos sólo lo necesario.</small></span></div>
-                <div class="al-benefit"><span class="ab-ic i2" aria-hidden="true">🔄</span><span><b>Todo sincronizado</b><small>Celular, notebook o tablet.</small></span></div>
-                <div class="al-benefit"><span class="ab-ic i3" aria-hidden="true">⚡</span><span><b>Resultados más rápidos</b><small>Volvé a calcular en segundos.</small></span></div>
-                <div class="al-benefit"><span class="ab-ic i4" aria-hidden="true">🔒</span><span><b>Siempre bajo tu control</b><small>Editá o borrá todo cuando quieras.</small></span></div>
-              </div>
-              <div class="al-precard">
-                <div class="al-precard-head"><span>Tu perfil precarga estos datos</span><span class="al-synced">● Sincronizado</span></div>
-                <div class="al-precard-grid">
-                  <div class="al-pc"><small>Sueldo bruto</small><b>$ 1.500.000</b></div>
-                  <div class="al-pc"><small>Provincia</small><b>Buenos Aires</b></div>
-                  <div class="al-pc"><small>Antigüedad</small><b>4 años</b></div>
-                  <div class="al-pc"><small>Alquiler</small><b>$ 480.000</b></div>
-                </div>
-              </div>
+    <div class="lg-landing" data-login-view hidden>
+      <div class="lg-wrap">
+        <nav class="lg-crumb" aria-label="Ruta de navegación">
+          <a href="/">Inicio</a> <span aria-hidden="true">/</span>
+          <a href="/mi">Mi Hacé Cuentas</a> <span aria-hidden="true">/</span>
+          <span data-crumb-dest>Ingresar</span>
+        </nav>
+
+        <div class="lg-grid">
+          <!-- IZQUIERDA: propuesta contextual -->
+          <div class="lg-copy">
+            <span class="lg-eyebrow" data-login-eyebrow><span data-eyebrow-ic aria-hidden="true">✨</span><span data-eyebrow-txt>Tu perfil numérico</span></span>
+            <h1 class="lg-title">Guardá los números <span data-title-prefix></span><span class="lg-accent" data-title-word>que repetís.</span></h1>
+            <p class="lg-lead" data-login-lead>Ingresá para precargar los datos que repetís, recibir avisos cuando algo cambia y mantener juntas tus herramientas.</p>
+
+            <div class="lg-benefits">
+              <div class="lg-benefit"><span class="lg-bic" aria-hidden="true" set:html={ICONS.trendingUp} /><span><b data-benefit1-title>Datos precargados</b><small data-benefit1-desc>No volvés a escribir lo mismo cada vez.</small></span></div>
+              <div class="lg-benefit"><span class="lg-bic" aria-hidden="true" set:html={ICONS.bell} /><span><b>Alertas útiles</b><small>Te avisamos cuando cambia el dato que usás.</small></span></div>
+              <div class="lg-benefit"><span class="lg-bic" aria-hidden="true" set:html={ICONS.clock} /><span><b>Historial sincronizado</b><small>Continuá desde cualquier dispositivo.</small></span></div>
+              <div class="lg-benefit"><span class="lg-bic" aria-hidden="true" set:html={ICONS.shield} /><span><b>Datos bajo tu control</b><small>Editá, exportá o borrá cuando quieras.</small></span></div>
             </div>
 
-            <aside class="al-login">
-              <span class="al-eyebrow small">Empezá gratis</span>
-              <h2>Creá tu cuenta</h2>
-              <p class="al-login-sub">Sin contraseña. Entrá con Google o recibí un código de 6 dígitos en tu email.</p>
-
-              <!-- Google Sign-In (se rellena por JS sólo si hay Client ID configurado) -->
-              <div class="google-login" data-google-wrap hidden>
-                <div class="google-btn-host" data-google-btn></div>
-                <p class="login-err" data-google-err hidden></p>
-                <div class="al-divider"><span>o con tu email</span></div>
-              </div>
-
-              <form data-email-step>
-                <label for="login-email">Tu email</label>
-                <input id="login-email" type="email" data-login-email placeholder="tu@email.com" autocomplete="email" required />
-                <button type="submit" data-email-submit>Enviar código →</button>
-                <p class="login-err" data-email-err hidden></p>
-              </form>
-
-              <form data-code-step hidden>
-                <p class="code-sent">Te mandamos un código a <strong data-email-display></strong>.</p>
-                <label for="login-code">Código</label>
-                <input id="login-code" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" data-login-code placeholder="000000" />
-                <button type="submit" data-code-submit>Entrar</button>
-                <button type="button" class="link-btn" data-login-back>← Cambiar email</button>
-                <p class="login-err" data-code-err hidden></p>
-              </form>
-
-              <p class="al-privacy">🔒 Usamos tu email sólo para iniciar sesión y sincronizar tu perfil. <a href="/privacidad">Más sobre privacidad</a></p>
-
-              <label class="al-nl">
-                <input type="checkbox" data-nl />
-                <span>Quiero recibir novedades y herramientas útiles por email. <em>Opcional.</em></span>
-              </label>
-            </aside>
+            <p class="lg-dest"><span class="lg-dest-ic" aria-hidden="true">✓</span> <b>Destino guardado:</b> después de autenticarte volvés a <b data-dest-name>tus herramientas</b>.</p>
           </div>
-        </div>
-      </section>
 
-      <!-- CÓMO FUNCIONA -->
-      <section class="al-sec al-steps">
-        <div class="wrap">
-          <div class="al-center">
-            <span class="al-kicker">Simple de verdad</span>
-            <h2 class="al-title">Una cuenta que te ahorra tiempo</h2>
-            <p class="al-sub">No necesitás armar un perfil completo. Guardás lo que quieras, cuando lo necesitás.</p>
-          </div>
-          <div class="al-steps-grid">
-            <div class="al-step"><span class="al-num">01</span><b>Entrás sin contraseña</b><p>Google o un código temporal al email. Sin claves nuevas para recordar.</p></div>
-            <div class="al-step"><span class="al-num">02</span><b>Guardás tus datos frecuentes</b><p>Sueldo, provincia, antigüedad, alquiler y otros valores que repetís.</p></div>
-            <div class="al-step"><span class="al-num">03</span><b>Calculás más rápido</b><p>Las herramientas compatibles aparecen precargadas y listas para revisar.</p></div>
-          </div>
-        </div>
-      </section>
+          <!-- DERECHA: acceso -->
+          <aside class="lg-card">
+            <span class="lg-card-eyebrow" data-login-card-eyebrow>Acceso a tu cuenta</span>
+            <h2 class="lg-card-title">Entrá o creá tu cuenta</h2>
+            <p class="lg-card-sub">Sin contraseña. Usá Google o recibí un código temporal por email.</p>
 
-      <!-- PREVIEW DEL PANEL -->
-      <section class="al-sec al-inside">
-        <div class="wrap">
-          <div class="al-center">
-            <span class="al-kicker">Así se ve por dentro</span>
-            <h2 class="al-title">Tu información, ordenada y útil</h2>
-            <p class="al-sub">Un lugar claro para actualizar datos, continuar cálculos y controlar tu cuenta.</p>
-          </div>
-          <div class="al-dash" aria-hidden="true">
-            <aside class="al-dash-side">
-              <div class="al-dash-acct"><span class="al-dash-ava">MB</span><span class="al-dash-acct-txt"><b>Mi cuenta</b><small>martin@email.com</small></span></div>
-              <span class="al-dash-nav is-on">▤ Resumen</span>
-              <span class="al-dash-nav">👤 Mi perfil</span>
-              <span class="al-dash-nav">🕘 Actividad reciente</span>
-              <span class="al-dash-nav">♡ Favoritos</span>
-              <span class="al-dash-nav">🔒 Privacidad</span>
-            </aside>
-            <div class="al-dash-main">
-              <div class="al-dash-head"><b>Buen día, Martin</b><span class="al-synced">● Todo guardado</span></div>
-              <div class="al-dash-cards">
-                <div class="al-dash-card"><small>Perfil laboral</small><b>$ 1.500.000</b><span>Sueldo bruto mensual</span></div>
-                <div class="al-dash-card"><small>Ubicación</small><b>Buenos Aires</b><span>Provincia principal</span></div>
-                <div class="al-dash-card"><small>Antigüedad</small><b>4 años y 2 meses</b><span>Desde mayo de 2022</span></div>
-              </div>
-              <div class="al-dash-foot"><span>Tu perfil ya puede precargar <b>18 calculadoras</b>.</span><span class="al-dash-link">Explorar calculadoras →</span></div>
+            <!-- Google Sign-In (se rellena por JS sólo si hay Client ID configurado) -->
+            <div class="google-login" data-google-wrap hidden>
+              <div class="google-btn-host" data-google-btn></div>
+              <p class="login-err" data-google-err hidden></p>
+              <div class="lg-divider"><span>o con tu email</span></div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      <!-- PRIVACIDAD (navy) -->
-      <section class="al-sec al-privacy-sec">
-        <div class="wrap">
-          <div class="al-priv-grid">
-            <div class="al-priv-copy">
-              <span class="al-kicker light">Privacidad sin letra chica</span>
-              <h2 class="al-title">Tus números son tuyos.</h2>
-              <p>Mi Hacé Cuentas está pensado para ahorrar tiempo, no para convertir tus datos personales en un producto.</p>
-            </div>
-            <div class="al-priv-cards">
-              <div class="al-priv-card"><b>Sin montos en analytics</b><p>No enviamos sueldo, alquiler ni resultados a herramientas de medición.</p></div>
-              <div class="al-priv-card"><b>Newsletter separado</b><p>La suscripción es opcional y nunca viene marcada por defecto.</p></div>
-              <div class="al-priv-card"><b>Control total</b><p>Podés editar, exportar o eliminar tu perfil y tu cuenta.</p></div>
-              <div class="al-priv-card"><b>Sesión segura</b><p>Google o códigos temporales; no almacenamos una contraseña.</p></div>
-            </div>
-          </div>
+            <form data-email-step>
+              <label for="login-email">Tu email</label>
+              <input id="login-email" type="email" data-login-email placeholder="tu@email.com" autocomplete="email" required />
+              <button type="submit" data-email-submit class="lg-submit">Enviar código →</button>
+              <p class="login-err" data-email-err hidden></p>
+            </form>
+
+            <form data-code-step hidden>
+              <p class="code-sent">Te mandamos un código a <strong data-email-display></strong>.</p>
+              <label for="login-code">Código</label>
+              <input id="login-code" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" data-login-code placeholder="000000" />
+              <button type="submit" data-code-submit class="lg-submit">Entrar</button>
+              <button type="button" class="link-btn" data-login-back>← Cambiar email</button>
+              <p class="login-err" data-code-err hidden></p>
+            </form>
+
+            <p class="lg-privacy"><span aria-hidden="true">🔒</span> Usamos tu email para iniciar sesión y sincronizar tu perfil. El parámetro de retorno conserva únicamente una ruta interna segura.</p>
+
+            <label class="lg-nl">
+              <input type="checkbox" data-nl />
+              <span>Quiero recibir novedades y herramientas útiles por email. <em>Opcional.</em></span>
+            </label>
+          </aside>
         </div>
-      </section>
+
+        <!-- CUANDO INGRESES -->
+        <section class="lg-ready">
+          <div class="lg-ready-head">
+            <span class="lg-kicker">Cuando ingreses</span>
+            <h2 data-ready-title>Tu cuenta queda lista para usar</h2>
+            <p>La cuenta no bloquea las calculadoras: sólo agrega precarga, sincronización y alertas.</p>
+          </div>
+          <div class="lg-ready-grid">
+            <div class="lg-ready-card"><span class="lg-ready-ic" aria-hidden="true" set:html={ICONS.wallet} /><b>Perfil compartido</b><small>Tus datos básicos viajan entre las herramientas compatibles.</small></div>
+            <div class="lg-ready-card"><span class="lg-ready-ic" aria-hidden="true" set:html={ICONS.calendar} /><b>Próximos hitos</b><small>Las fechas que importan, organizadas por cercanía.</small></div>
+            <div class="lg-ready-card"><span class="lg-ready-ic" aria-hidden="true" set:html={ICONS.target} /><b>Decisiones conectadas</b><small>Salas que arrancan con tus datos ya cargados.</small></div>
+          </div>
+        </section>
+      </div>
     </div>
 
     <!-- ───────── Logueado: perfil ───────── -->
@@ -952,6 +899,52 @@ const inputType = (t: string) =>
   })();
 </script>
 
+<!-- Contextualización de la landing según ?next=/mi/<producto> (mockup "VAS A MI CASA"). -->
+<script is:inline>
+  (function () {
+    var CTX = {
+      casa: { accent: '#d97706', ic: '🏠', eyebrow: 'Vas a Mi Casa', dest: 'Mi Casa', word: 'tu vivienda.',
+        lead: 'Ingresá para precargar tu alquiler, recibir avisos del ICL y mantener juntas tus herramientas y decisiones de vivienda.',
+        b1t: 'Alquiler precargado', b1d: 'No volvés a escribir el monto cada mes.' },
+      plata: { accent: '#0ea66e', ic: '💰', eyebrow: 'Vas a Mi Plata', dest: 'Mi Plata', word: 'tu plata.',
+        lead: 'Ingresá para precargar tu sueldo y tus ahorros, recibir avisos cuando cambia la inflación y tener tus cuentas juntas.',
+        b1t: 'Sueldo y ahorros precargados', b1d: 'No volvés a escribir tus montos cada vez.' },
+      trabajo: { accent: '#2563eb', ic: '💼', eyebrow: 'Vas a Mi Trabajo', dest: 'Mi Trabajo', word: 'tu trabajo.',
+        lead: 'Ingresá para precargar tu sueldo y tu antigüedad, recibir avisos de paritarias y Ganancias y tener tus cuentas laborales listas.',
+        b1t: 'Sueldo y antigüedad precargados', b1d: 'No los volvés a cargar en cada cálculo.' },
+      familia: { accent: '#db2777', ic: '👨‍👩‍👧', eyebrow: 'Vas a Mi Familia', dest: 'Mi Familia', word: 'tu familia.',
+        lead: 'Ingresá para tener las cuentas de criar ordenadas, con sus fechas a la vista y precargadas con los datos de tu familia.',
+        b1t: 'Datos de tu familia precargados', b1d: 'No los repetís en cada cuenta.' },
+    };
+    function set(sel, prop, val) { var el = document.querySelector(sel); if (el) el[prop] = val; }
+    try {
+      // Ocultar la barra superior si ya hay sesión (la landing sólo se ve desloguéado).
+      if (/(^|;)\s*hc_authed=1(;|$)/.test(document.cookie)) {
+        var tb = document.querySelector('[data-login-topbar]'); if (tb) tb.hidden = true;
+      }
+      var next = new URLSearchParams(location.search).get('next') || '';
+      var m = /^\/mi\/(casa|plata|trabajo|familia)\b/.exec(next);
+      if (!m) return;
+      var c = CTX[m[1]];
+      var root = document.querySelector('.lg-landing');
+      if (root) root.style.setProperty('--login-accent', c.accent);
+      set('[data-eyebrow-ic]', 'textContent', c.ic + ' ');
+      set('[data-eyebrow-txt]', 'textContent', c.eyebrow);
+      set('[data-title-prefix]', 'textContent', 'de ');
+      set('[data-title-word]', 'textContent', c.word);
+      set('[data-login-lead]', 'textContent', c.lead);
+      set('[data-benefit1-title]', 'textContent', c.b1t);
+      set('[data-benefit1-desc]', 'textContent', c.b1d);
+      set('[data-dest-name]', 'textContent', c.dest);
+      set('[data-crumb-dest]', 'textContent', 'Ingresar a ' + c.dest);
+      set('[data-login-card-eyebrow]', 'textContent', 'Acceso a ' + c.dest);
+      set('[data-topbar-dest]', 'textContent', 'Después de entrar volvés automáticamente a ' + c.dest);
+      set('[data-ready-title]', 'textContent', c.dest + ' queda lista para usar');
+      document.title = c.dest + ' — Ingresá | Hacé Cuentas';
+    } catch (e) {}
+  })();
+</script>
+
 <style>
   /* Tus productos (movido desde la home → área logueada). */
   .productos-mi { margin: 1.5rem 0 2rem; }
@@ -1006,141 +999,103 @@ const inputType = (t: string) =>
   .profile-lead { color: var(--text-muted); margin: 0 0 1.25rem; line-height: 1.5; }
   .profile-loading { color: var(--text-subtle); text-align: center; padding: 4rem 1rem; }
 
-  /* ═══════════ Landing del login (mockup 2026-07-12) ═══════════
-     Mismo sistema visual que los hubs (PillarHub). Local, sólo estado deslogueado. */
-  .acct-landing {
-    --ink: #131729; --muted: #63697b; --line: #e5e7ef; --wash: #f7f7fb;
-    --purple: #6853e7; --blue: #2f6fed; --navy: #14182d;
-    --shadow: 0 18px 50px rgba(24, 26, 55, 0.1);
-    color: var(--ink);
-    font-family: 'Inter Variable', Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* ═══════════ Landing del login (mockup 2026-07-12, contextual) ═══════════
+     Theme-aware (tokens del sitio) + --login-accent por producto (via ?next). */
+  .lg-landing {
+    --login-accent: var(--accent);
+    background:
+      radial-gradient(90% 60% at 82% 0%, color-mix(in srgb, var(--login-accent) 12%, transparent), transparent 60%),
+      var(--bg);
   }
-  .acct-landing a { text-decoration: none; color: inherit; }
-  .acct-landing .wrap { width: min(1200px, calc(100% - 2.5rem)); margin: auto; }
-  @media (min-width: 1600px) { .acct-landing .wrap { width: min(1360px, calc(100% - 6rem)); } }
-  .acct-landing .al-sec { padding: 62px 0; }
-  .acct-landing h1, .acct-landing h2 { color: var(--ink); letter-spacing: -0.03em; }
-  .al-eyebrow {
-    display: inline-flex; align-items: center; gap: 8px; border: 1px solid #dcd6ff; background: #fff;
-    color: #5c48cb; padding: 7px 11px; border-radius: 999px; font-size: 12px; font-weight: 800;
-    text-transform: uppercase; letter-spacing: 0.6px;
-  }
-  .al-eyebrow.small { padding: 6px 10px; font-size: 11px; }
-  .al-kicker { font-size: 12px; color: var(--purple); font-weight: 850; text-transform: uppercase; letter-spacing: 0.8px; }
-  .al-kicker.light { color: #a99bff; }
-  .al-title { font-size: clamp(26px, 3.4vw, 34px); font-weight: 820; margin: 8px 0 0; letter-spacing: -0.03em; }
-  .al-sub { font-size: 16px; color: var(--muted); margin: 10px auto 0; max-width: 620px; }
-  .al-center { text-align: center; margin-bottom: 34px; }
+  .lg-landing a { text-decoration: none; }
+  .lg-wrap { max-width: 1200px; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+  .lg-crumb { font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 1.75rem; }
+  .lg-crumb a { color: var(--text-muted); }
+  .lg-crumb a:hover { color: var(--login-accent); }
+  .lg-crumb span[aria-hidden] { margin: 0 0.35rem; color: var(--text-subtle); }
 
-  /* HERO */
-  .al-hero {
-    background: radial-gradient(circle at 82% 12%, rgba(126, 101, 244, 0.20), transparent 30%), linear-gradient(180deg, #f5f3ff 0%, #fff 88%);
-    border-bottom: 1px solid #ecebfa; padding-top: 46px; padding-bottom: 56px;
-  }
-  .al-crumb { font-size: 13px; color: #74788b; margin-bottom: 24px; }
-  .al-crumb a:hover { color: var(--purple); }
-  .al-hero-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 56px; align-items: start; }
-  .al-copy { min-width: 0; }
-  .al-benefit { min-width: 0; }
-  .al-copy h1 { font-size: clamp(34px, 4.6vw, 46px); line-height: 1.05; margin: 16px 0 14px; font-weight: 850; letter-spacing: -0.04em; }
-  .al-copy h1 .accent { color: var(--purple); }
-  .al-lead { font-size: 17px; line-height: 1.6; color: #555b6f; max-width: 520px; margin: 0 0 26px; }
-  .al-benefits { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 26px; margin-bottom: 28px; }
-  .al-benefit { display: flex; gap: 12px; align-items: flex-start; }
-  .al-benefit .ab-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 16px; flex: none; }
-  .al-benefit .i1 { background: #fff6df; } .al-benefit .i2 { background: #eaf7fb; }
-  .al-benefit .i3 { background: #edf3ff; } .al-benefit .i4 { background: #f3efff; }
-  .al-benefit b { display: block; font-size: 14px; font-weight: 750; margin-bottom: 2px; }
-  .al-benefit small { color: var(--muted); font-size: 12.5px; line-height: 1.4; }
-  .al-precard { border: 1px solid var(--line); border-radius: 16px; background: #fff; padding: 16px 18px; box-shadow: 0 8px 24px rgba(24, 26, 55, 0.05); }
-  .al-precard-head { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted); margin-bottom: 12px; }
-  .al-synced { color: #0f9f6e; font-weight: 700; font-size: 12px; }
-  .al-precard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-  .al-pc { border: 1px solid var(--line); border-radius: 11px; padding: 9px 11px; }
-  .al-pc small { display: block; font-size: 10.5px; color: var(--muted); margin-bottom: 3px; }
-  .al-pc b { font-size: 13.5px; font-weight: 750; }
+  .lg-grid { display: grid; grid-template-columns: 1.05fr 460px; gap: 3rem; align-items: start; }
 
-  /* LOGIN CARD */
-  .al-login { min-width: 0; background: #fff; border: 1px solid #ddd9f5; border-radius: 22px; padding: 26px; box-shadow: var(--shadow); }
-  .al-login h2 { font-size: 24px; font-weight: 830; margin: 8px 0 6px; letter-spacing: -0.02em; }
-  .al-login-sub { font-size: 13.5px; color: var(--muted); line-height: 1.5; margin: 0 0 18px; }
-  .al-login label { display: block; font-size: 13px; font-weight: 650; margin: 0 0 6px; color: #3a4055; }
-  .al-login input[type="email"], .al-login input[type="text"] {
-    width: 100%; height: 46px; border: 1.5px solid #d8d9e4; border-radius: 12px; padding: 0 14px;
-    font: inherit; font-size: 15px; background: #fff; color: var(--ink); margin-bottom: 12px;
+  /* Izquierda */
+  .lg-eyebrow {
+    display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.4rem 0.75rem;
+    border-radius: 999px; font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--login-accent); background: color-mix(in srgb, var(--login-accent) 12%, var(--bg-card));
+    border: 1px solid color-mix(in srgb, var(--login-accent) 26%, var(--border));
   }
-  .al-login input:focus { outline: none; border-color: var(--purple); }
-  .al-login button[type="submit"] {
-    width: 100%; height: 46px; border: 0; border-radius: 12px; cursor: pointer; font: inherit;
-    font-size: 15px; font-weight: 800; color: #fff; background: linear-gradient(135deg, var(--purple), var(--blue));
-    box-shadow: 0 8px 20px rgba(83, 81, 225, 0.22);
+  .lg-title { margin: 1rem 0 0; font-size: clamp(2rem, 4.4vw, 3rem); line-height: 1.06; font-weight: 850; letter-spacing: -0.035em; color: var(--text); }
+  .lg-accent { color: var(--login-accent); }
+  .lg-lead { margin: 1rem 0 0; font-size: 1.0625rem; line-height: 1.6; color: var(--text-muted); max-width: 30rem; }
+  .lg-benefits { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1.75rem 0 0; }
+  .lg-benefit { display: flex; gap: 0.7rem; align-items: flex-start; padding: 0.9rem 1rem; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-card); }
+  .lg-bic { width: 32px; height: 32px; flex: none; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--login-accent) 12%, var(--bg-card)); color: var(--login-accent); }
+  .lg-bic :global(svg) { width: 17px; height: 17px; }
+  .lg-benefit b { display: block; font-size: 0.875rem; font-weight: 700; color: var(--text); }
+  .lg-benefit small { font-size: 0.8125rem; color: var(--text-muted); line-height: 1.4; }
+  .lg-dest { display: flex; align-items: baseline; gap: 0.4rem; margin: 1.5rem 0 0; font-size: 0.9375rem; color: var(--text-muted); }
+  .lg-dest b { color: var(--text); font-weight: 700; }
+  .lg-dest-ic { color: var(--success-text); font-weight: 800; }
+
+  /* Derecha: acceso */
+  .lg-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 1.75rem; box-shadow: var(--shadow-lg); }
+  .lg-card-eyebrow { font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: var(--login-accent); }
+  .lg-card-title { margin: 0.4rem 0 0.4rem; font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text); }
+  .lg-card-sub { margin: 0 0 1.25rem; font-size: 0.9375rem; color: var(--text-muted); line-height: 1.5; }
+  .lg-card label { display: block; font-size: 0.8125rem; font-weight: 650; margin: 0 0 0.4rem; color: var(--text); }
+  .lg-card input[type="email"], .lg-card input[type="text"] {
+    width: 100%; height: 48px; border: 1.5px solid var(--border-input); border-radius: 12px; padding: 0 0.9rem;
+    font: inherit; font-size: 1rem; background: var(--bg-card); color: var(--text); margin-bottom: 0.75rem;
   }
-  .al-login button[disabled] { opacity: 0.6; cursor: default; }
-  .al-login .link-btn { background: none; border: 0; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; padding: 8px 0 0; text-decoration: underline; }
-  .al-divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: #9aa0b0; font-size: 12px; }
-  .al-divider:before, .al-divider:after { content: ''; flex: 1; height: 1px; background: var(--line); }
-  .google-login { margin-bottom: 4px; }
+  .lg-card input:focus { outline: none; border-color: var(--login-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--login-accent) 22%, transparent); }
+  .lg-submit {
+    width: 100%; height: 48px; border: 0; border-radius: 12px; cursor: pointer; font: inherit;
+    font-size: 0.9375rem; font-weight: 700; color: #fff; background: var(--login-accent);
+  }
+  .lg-submit:hover { filter: brightness(0.96); }
+  .lg-submit[disabled] { opacity: 0.6; cursor: default; }
+  .lg-card .link-btn { display: block; background: none; border: 0; color: var(--text-muted); font: inherit; font-size: 0.8125rem; cursor: pointer; padding: 0.5rem 0 0; text-decoration: underline; }
+  .lg-divider { display: flex; align-items: center; gap: 0.75rem; margin: 1rem 0; color: var(--text-subtle); font-size: 0.75rem; }
+  .lg-divider:before, .lg-divider:after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .google-login { margin-bottom: 0.25rem; }
   .google-btn-host { display: flex; justify-content: center; overflow: hidden; }
   .google-btn-host > div, .google-btn-host iframe { max-width: 100% !important; }
-  .al-login .login-err { color: #dc2626; font-size: 12.5px; margin: 6px 0 0; }
-  .al-login .code-sent { font-size: 13px; color: var(--muted); margin: 0 0 10px; }
-  .al-privacy { display: flex; gap: 6px; font-size: 12px; color: #7b8091; line-height: 1.45; margin: 16px 0 0; }
-  .al-privacy a { color: var(--purple); font-weight: 600; }
-  .al-nl { display: flex; gap: 9px; align-items: flex-start; margin: 14px 0 0; font-size: 12.5px; color: #4a5063; line-height: 1.4; cursor: pointer; }
-  .al-nl input { width: 16px; height: 16px; margin-top: 1px; flex: none; accent-color: var(--purple); }
-  .al-nl em { color: var(--muted); font-style: normal; }
+  .lg-card .login-err { color: var(--danger); font-size: 0.8125rem; margin: 0.4rem 0 0; }
+  .lg-card .code-sent { font-size: 0.875rem; color: var(--text-muted); margin: 0 0 0.7rem; }
+  .lg-privacy { display: flex; gap: 0.4rem; font-size: 0.75rem; color: var(--text-subtle); line-height: 1.45; margin: 1rem 0 0; }
+  .lg-nl { display: flex; gap: 0.55rem; align-items: flex-start; margin: 0.9rem 0 0; font-size: 0.8125rem; color: var(--text-muted); line-height: 1.4; cursor: pointer; }
+  .lg-nl input { width: 16px; height: 16px; margin-top: 1px; flex: none; accent-color: var(--login-accent); }
+  .lg-nl em { color: var(--text-subtle); font-style: normal; }
 
-  /* CÓMO FUNCIONA */
-  .al-steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-  .al-step { border: 1px solid var(--line); border-radius: 18px; background: #fff; padding: 26px 24px; transition: 0.18s; }
-  .al-step:hover { border-color: #cfc8ff; box-shadow: 0 14px 34px rgba(33, 32, 70, 0.07); transform: translateY(-3px); }
-  .al-num { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: #f1efff; color: var(--purple); font-weight: 850; font-size: 13px; margin-bottom: 16px; }
-  .al-step b { display: block; font-size: 17px; font-weight: 780; margin-bottom: 8px; }
-  .al-step p { font-size: 13.5px; color: var(--muted); line-height: 1.55; margin: 0; }
+  /* Cuando ingreses */
+  .lg-ready { margin-top: 4rem; }
+  .lg-ready-head { text-align: center; margin-bottom: 2rem; }
+  .lg-kicker { font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--login-accent); }
+  .lg-ready-head h2 { margin: 0.5rem 0 0.5rem; font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 850; letter-spacing: -0.03em; color: var(--text); }
+  .lg-ready-head p { margin: 0 auto; max-width: 40rem; color: var(--text-muted); font-size: 0.9375rem; }
+  .lg-ready-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .lg-ready-card { padding: 1.5rem; border: 1px solid var(--border); border-radius: 16px; background: var(--bg-card); }
+  .lg-ready-ic { width: 40px; height: 40px; border-radius: 11px; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--login-accent) 12%, var(--bg-card)); color: var(--login-accent); margin-bottom: 0.9rem; }
+  .lg-ready-ic :global(svg) { width: 20px; height: 20px; }
+  .lg-ready-card b { display: block; font-size: 1.0625rem; font-weight: 700; color: var(--text); margin-bottom: 0.35rem; }
+  .lg-ready-card small { font-size: 0.875rem; color: var(--text-muted); line-height: 1.5; }
 
-  /* PREVIEW DEL PANEL */
-  .al-inside { background: var(--wash); }
-  .al-dash { display: grid; grid-template-columns: 230px 1fr; gap: 20px; background: #fff; border: 1px solid var(--line); border-radius: 22px; padding: 22px; box-shadow: 0 18px 50px rgba(24, 26, 55, 0.08); max-width: 940px; margin: 0 auto; }
-  .al-dash-side { background: #14182d; border-radius: 16px; padding: 16px; color: #cfd2e6; }
-  .al-dash-acct { display: flex; gap: 10px; align-items: center; padding-bottom: 14px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-  .al-dash-ava { width: 38px; height: 38px; border-radius: 11px; background: linear-gradient(135deg, var(--purple), var(--blue)); display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 13px; flex: none; }
-  .al-dash-acct-txt b { display: block; font-size: 13.5px; color: #fff; }
-  .al-dash-acct-txt small { font-size: 11px; color: #9aa0bd; }
-  .al-dash-nav { display: block; padding: 9px 11px; border-radius: 9px; font-size: 13px; color: #aab0c9; margin-bottom: 2px; }
-  .al-dash-nav.is-on { background: rgba(255,255,255,0.08); color: #fff; font-weight: 650; }
-  .al-dash-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-  .al-dash-head b { font-size: 19px; font-weight: 800; }
-  .al-dash-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
-  .al-dash-card { border: 1px solid var(--line); border-radius: 13px; padding: 14px; }
-  .al-dash-card small { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); margin-bottom: 7px; }
-  .al-dash-card b { display: block; font-size: 17px; font-weight: 800; margin-bottom: 4px; }
-  .al-dash-card span { font-size: 12px; color: var(--muted); }
-  .al-dash-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: #f4f2ff; border-radius: 12px; padding: 12px 16px; font-size: 13px; color: #4a5063; }
-  .al-dash-link { color: var(--purple); font-weight: 700; white-space: nowrap; }
-
-  /* PRIVACIDAD (navy) */
-  .al-privacy-sec { background: var(--navy); color: #fff; }
-  .al-priv-grid { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 40px; align-items: center; }
-  .al-priv-copy h2 { color: #fff; margin: 10px 0; }
-  .al-priv-copy p { color: #aeb3c8; font-size: 15px; line-height: 1.6; margin: 0; max-width: 420px; }
-  .al-priv-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .al-priv-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.11); border-radius: 15px; padding: 18px; }
-  .al-priv-card b { display: block; font-size: 14.5px; font-weight: 750; margin-bottom: 6px; }
-  .al-priv-card p { font-size: 12.5px; color: #aeb3c8; line-height: 1.5; margin: 0; }
+  /* Barra superior (sobre el header) */
+  .lg-topbar { background: #0f172a; color: #cbd5e1; font-size: 0.8125rem; }
+  .lg-tb-in { max-width: 1200px; margin: 0 auto; padding: 0.4rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .lg-tb-left { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .lg-tb-left strong { color: #f1f5f9; font-weight: 600; }
+  .lg-tb-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.22); }
+  .lg-tb-sub { color: #94a3b8; }
+  .lg-tb-right { color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   @media (max-width: 900px) {
-    .al-hero-grid, .al-priv-grid { grid-template-columns: 1fr; gap: 32px; }
-    .al-steps-grid, .al-dash-cards { grid-template-columns: 1fr; }
-    .al-dash { grid-template-columns: 1fr; }
-    .al-dash-side { display: none; }
+    .lg-grid { grid-template-columns: 1fr; gap: 2rem; }
+    .lg-ready-grid { grid-template-columns: 1fr; }
   }
-  @media (max-width: 560px) {
-    .acct-landing .al-sec { padding: 40px 0; }
-    .al-benefits { grid-template-columns: 1fr; }
-    .al-precard-grid { grid-template-columns: 1fr 1fr; }
-    .al-priv-cards { grid-template-columns: 1fr; }
+  @media (max-width: 640px) {
+    .lg-benefits { grid-template-columns: 1fr; }
+    .lg-tb-sub, .lg-tb-right { display: none; }
   }
-  @media (prefers-reduced-motion: reduce) { .acct-landing * { transition: none !important; } }
 
   /* Login card */
   .login-card {
@@ -1240,6 +1195,8 @@ const inputType = (t: string) =>
     background: var(--bg); border-top: 1px solid var(--border);
     box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
   }
+  /* El atributo [hidden] debe ganarle al display:flex (sólo visible logueado). */
+  .save-bar[hidden] { display: none; }
   .save-status { font-size: 0.8125rem; color: var(--text-muted); }
   .save-status.is-dirty { color: var(--accent, #2563eb); font-weight: 600; }
   .save-status.is-saved { color: var(--success, #16a34a); }
