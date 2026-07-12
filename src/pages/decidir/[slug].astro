@@ -185,30 +185,42 @@ const howItWorksHtml = md(room.howItWorks);
   <Header slot="header" />
 
   <main class="dr-page">
-    <nav class="dr-breadcrumb" aria-label="Migas de pan">
-      <a href="/">Inicio</a> <span aria-hidden="true">›</span>
-      <a href="/decidir">Decisiones</a> <span aria-hidden="true">›</span>
-      {hub && (
-        <>
-          <a href={`/decidir/${hub.slug}`}>{hub.shortLabel}</a> <span aria-hidden="true">›</span>
-        </>
-      )}
-      <span aria-current="page">{room.h1}</span>
-    </nav>
-
-    <header class="dr-head">
-      <span class="dr-eyebrow">🧭 Sala de decisión</span>
-      <h1>{room.icon} {room.h1}</h1>
-      <p class="dr-updated">Revisado: {lastReviewedLabel}</p>
+    <!-- HERO navy (mockup 2026-07-12) -->
+    <header class="dr-hero">
+      <div class="wrap">
+        <nav class="dr-breadcrumb" aria-label="Migas de pan">
+          <a href="/">Inicio</a> <span aria-hidden="true">›</span>
+          <a href="/decidir">Decisiones</a> <span aria-hidden="true">›</span>
+          {hub && (
+            <>
+              <a href={`/decidir/${hub.slug}`}>{hub.shortLabel}</a> <span aria-hidden="true">›</span>
+            </>
+          )}
+          <span aria-current="page">{room.h1}</span>
+        </nav>
+        <div class="dr-hero-grid">
+          <div class="dr-hero-copy">
+            <span class="dr-eyebrow">🧭 Sala de decisión{hub ? ` · ${hub.shortLabel}` : ''}</span>
+            <h1>{room.icon} {room.h1}</h1>
+            <p class="dr-hero-lead">{room.description}</p>
+            <div class="dr-hero-trust">
+              <span><b>✓</b> Compara costos totales</span>
+              <span><b>✓</b> Datos y supuestos vigentes 2026</span>
+              <span><b>✓</b> Resultado en 2 minutos</span>
+            </div>
+          </div>
+          {room.answer && (
+            <aside class="dr-idea" aria-label="La idea clave">
+              <span class="dr-idea-label">La idea clave</span>
+              <div class="dr-idea-text" set:html={md(room.answer).replace(/^<p>|<\/p>\s*$/g, '')} />
+            </aside>
+          )}
+        </div>
+        <p class="dr-updated">Revisado: {lastReviewedLabel}</p>
+      </div>
     </header>
 
-    {room.answer && (
-      <aside class="dr-answer" aria-label="La respuesta corta">
-        <span class="dr-answer-label">La respuesta corta</span>
-        <p class="dr-answer-text" set:html={md(room.answer).replace(/^<p>|<\/p>\s*$/g, '')} />
-      </aside>
-    )}
-
+    <div class="dr-body">
     <DecisionRoom room={room} initialResult={initialResult} />
 
     <section class="dr-section" id="como-funciona">
@@ -301,54 +313,73 @@ const howItWorksHtml = md(room.howItWorks);
         </ul>
       </section>
     )}
+    </div><!-- /.dr-body -->
   </main>
 
   <Footer slot="footer" />
 </Layout>
 
+<style is:global>
+  /* Sala full-bleed (mockup): el hero navy va de borde a borde. */
+  body[data-page-type='room'] > main#main {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: clip;
+  }
+</style>
+
 <style>
-  .dr-page {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 1.25rem 1rem 3rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.75rem;
+  .dr-page { display: block; }
+  .dr-page .wrap { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+
+  /* HERO navy */
+  .dr-hero {
+    background:
+      radial-gradient(circle at 84% 12%, rgba(126, 101, 244, 0.28), transparent 34%),
+      linear-gradient(160deg, #1a1e3a 0%, #14182d 70%);
+    color: #fff;
+    padding: 40px 0 38px;
   }
-  .dr-breadcrumb {
-    font-size: 0.8125rem;
-    color: var(--text-muted);
-  }
-  .dr-breadcrumb a {
-    color: var(--text-muted);
-    text-decoration: none;
-  }
-  .dr-breadcrumb a:hover {
-    color: var(--accent);
-    text-decoration: underline;
-  }
-  .dr-head {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-  }
+  .dr-hero .dr-breadcrumb { font-size: 0.8125rem; color: #9aa0bd; margin-bottom: 22px; }
+  .dr-hero .dr-breadcrumb a { color: #9aa0bd; text-decoration: none; }
+  .dr-hero .dr-breadcrumb a:hover { color: #fff; }
+  .dr-hero-grid { display: grid; grid-template-columns: 1.4fr 0.6fr; gap: 40px; align-items: center; }
+  .dr-hero-copy { min-width: 0; }
   .dr-eyebrow {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: var(--accent-strong, #0369a1);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    display: inline-block; font-size: 0.75rem; font-weight: 800; color: #a99bff;
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem;
   }
-  .dr-head h1 {
-    margin: 0;
-    font-size: clamp(1.5rem, 5vw, 2.125rem);
-    line-height: 1.2;
-    color: var(--text);
+  .dr-hero h1 {
+    margin: 0 0 0.7rem; font-size: clamp(1.75rem, 4.4vw, 2.6rem); line-height: 1.08;
+    color: #fff; font-weight: 850; letter-spacing: -0.03em;
   }
-  .dr-updated {
-    margin: 0;
-    font-size: 0.8125rem;
-    color: var(--text-muted);
+  .dr-hero-lead { margin: 0 0 1.1rem; font-size: 1.0625rem; line-height: 1.55; color: #c7cadd; max-width: 60ch; }
+  .dr-hero-trust { display: flex; flex-wrap: wrap; gap: 16px; font-size: 0.8125rem; font-weight: 600; color: #aeb3c8; }
+  .dr-hero-trust span { display: inline-flex; align-items: center; gap: 6px; }
+  .dr-hero-trust b { color: #39d98a; }
+  .dr-idea {
+    background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px; padding: 1.125rem 1.25rem;
+  }
+  .dr-idea-label { display: block; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #a99bff; margin-bottom: 0.5rem; }
+  .dr-idea-text { font-size: 0.95rem; line-height: 1.5; color: #e6e8f4; }
+  .dr-idea-text :global(strong) { color: #fff; }
+  .dr-updated { margin: 20px 0 0; font-size: 0.78rem; color: #7f86a3; }
+
+  /* Cuerpo (herramienta + secciones) */
+  .dr-body {
+    width: min(1180px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 2.25rem 0 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .dr-body > .dr-section { max-width: 860px; }
+  @media (max-width: 900px) {
+    .dr-hero-grid { grid-template-columns: 1fr; gap: 24px; }
   }
   .dr-section h2 {
     font-size: 1.375rem;
