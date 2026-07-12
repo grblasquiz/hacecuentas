@@ -78,15 +78,102 @@ const todayKey = new Intl.DateTimeFormat('en-CA', {
 // Estado del torneo
 const played = fixture.matches.filter((m) => m.score && m.score.ft).length;
 const total = fixture.total || fixture.matches.length;
+const teamsCount = 48;
 
 // Día a mostrar destacado: hoy si hay partidos, si no el próximo día con partidos
 const todayDay = days.find((d) => d.key === todayKey);
 const nextDay = days.find((d) => d.key >= todayKey) || days[days.length - 1];
 const featuredDay = todayDay || nextDay;
+const isFeaturedToday = !!todayDay;
 
-// Argentina: próximo / último partido
+// Próximo partido global (el primero sin jugar por orden cronológico)
+const nextOverall = sorted.find((m) => !(m.score && m.score.ft));
+
+// Chips de fecha (ventana de 6 días desde el destacado)
+const fIdx = Math.max(0, days.findIndex((d) => d.key === featuredDay.key));
+const chipDays = days.slice(fIdx, fIdx + 6);
+
+// Meses presentes (para el filtro del calendario)
+const monthLabelFmt = (key: string) => {
+  const d = kickoffUTC(key + 'T12:00', '12:00 UTC-3');
+  const l = d ? new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', month: 'long', year: 'numeric' }).format(d) : key;
+  return l.charAt(0).toUpperCase() + l.slice(1);
+};
+const monthKeys = [...new Set(days.map((d) => d.key.slice(0, 7)))];
+const months = monthKeys.map((k) => ({ key: k, label: monthLabelFmt(k + '-15') }));
+
+// Selecciones presentes (nombres resueltos) para el filtro
+const teamsPresent = [...new Set(sorted.flatMap((m) => [m.team1, m.team2]).filter((t): t is string => !!t && t in TEAMS))]
+  .map((name) => ({ name, es: TEAMS[name].es, flag: TEAMS[name].flag }))
+  .sort((a, b) => a.es.localeCompare(b.es, 'es'));
+
+// ── Fases / bracket ──────────────────────────────────────────────────────────
+const PHASE_DEFS = [
+  { key: 'grupos', label: 'Fase de grupos', short: 'Fase de grupos', tiny: 'Grupos', is: (m: any) => /^Matchday/.test(m.round) },
+  { key: 'r32', label: 'Dieciseisavos', short: '16avos', tiny: '16avos', is: (m: any) => m.round === 'Round of 32' },
+  { key: 'r16', label: 'Octavos de final', short: 'Octavos', tiny: 'Octavos', is: (m: any) => m.round === 'Round of 16' },
+  { key: 'qf', label: 'Cuartos de final', short: 'Cuartos', tiny: 'Cuartos', is: (m: any) => m.round === 'Quarter-final' },
+  { key: 'sf', label: 'Semifinales', short: 'Semifinales', tiny: 'Semis', is: (m: any) => m.round === 'Semi-final' },
+  { key: 'final', label: 'Final', short: 'Final', tiny: 'Final', is: (m: any) => m.round === 'Final' },
+];
+let currentSeen = false;
+const phaseView = PHASE_DEFS.map((p) => {
+  const ms = fixture.matches.filter(p.is);
+  const pl = ms.filter((m) => m.score && m.score.ft).length;
+  let status: 'done' | 'current' | 'upcoming';
+  if (ms.length > 0 && pl >= ms.length) status = 'done';
+  else if (!currentSeen) { status = 'current'; currentSeen = true; } else status = 'upcoming';
+  return { ...p, total: ms.length, played: pl, matches: ms, status };
+});
+const currentPhase = phaseView.find((p) => p.status === 'current') || phaseView[phaseView.length - 1];
+
+// Bracket: cuartos → semis → final (pairing secuencial estándar del cuadro FIFA)
+const qfMatches = fixture.matches.filter((m) => m.round === 'Quarter-final').sort((a, b) => a.num - b.num);
+const sfMatches = fixture.matches.filter((m) => m.round === 'Semi-final').sort((a, b) => a.num - b.num);
+const finalMatch = fixture.matches.find((m) => m.round === 'Final');
+const thirdMatch = fixture.matches.find((m) => m.round === 'Match for third place');
+let bracketGroups = sfMatches.map((sf, i) => ({ sf, qfs: [qfMatches[2 * i], qfMatches[2 * i + 1]].filter(Boolean) }));
+// El grupo con Argentina va primero (como el mockup)
+const hasArg = (g: any) => g.qfs.some((m: any) => m.team1 === 'Argentina' || m.team2 === 'Argentina');
+bracketGroups = [...bracketGroups].sort((a, b) => (hasArg(b) ? 1 : 0) - (hasArg(a) ? 1 : 0));
+
+// ── Argentina ─────────────────────────────────────────────────────────────────
 const argMatches = sorted.filter((m) => m.team1 === 'Argentina' || m.team2 === 'Argentina');
-const argNext = argMatches.find((m) => !(m.score && m.score.ft)) || argMatches[0];
+const argNext = argMatches.find((m) => !(m.score && m.score.ft)) || argMatches[argMatches.length - 1];
+const argNextUtc = argNext ? kickoffUTC(argNext.date, argNext.time)?.toISOString() || '' : '';
+const argNextOpp = argNext ? teamLabel(argNext.team1 === 'Argentina' ? argNext.team2 : argNext.team1) : null;
+// Progreso de Argentina por fase macro
+const argPhaseView = PHASE_DEFS.map((p) => {
+  const ms = argMatches.filter(p.is);
+  let state: 'done' | 'current' | 'future';
+  if (!ms.length) state = 'future';
+  else if (ms.every((m) => m.score && m.score.ft)) state = 'done';
+  else state = 'current';
+  return { ...p, state, matches: ms };
+});
+const argCurrentIdx = argPhaseView.findIndex((p) => p.state === 'current');
+
+// ── Etiquetas de estado por partido ────────────────────────────────────────────
+function statusOf(m: any): string {
+  if (m.score && m.score.ft) return 'FINAL';
+  if (nextOverall && m.num === nextOverall.num) return 'PRÓXIMO';
+  return '';
+}
+function badgeOf(m: any): string {
+  const s = statusOf(m);
+  const rl = m.group ? roundLabel(m.round) : roundLabel(m.round);
+  return s ? `${s} · ${rl}` : rl;
+}
+function slugTeams(m: any): string {
+  const a = teamLabel(m.team1), b = teamLabel(m.team2);
+  return `${a.es} ${b.es}`.toLowerCase();
+}
+function groundShort(g: string | null): string {
+  if (!g) return '';
+  // "Miami (Miami Gardens)" → "Miami Gardens" ; "New York/New Jersey (East Rutherford)" → "East Rutherford"
+  const m = g.match(/\(([^)]+)\)/);
+  return m ? m[1] : g;
+}
 
 // "Actualizado" en hora argentina
 const updatedLabel = new Intl.DateTimeFormat('es-AR', {
@@ -96,6 +183,9 @@ const updatedLabel = new Intl.DateTimeFormat('es-AR', {
   hour: '2-digit',
   minute: '2-digit',
   hour12: false,
+}).format(new Date(fixture.fetchedAt));
+const updatedTime = new Intl.DateTimeFormat('es-AR', {
+  timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', hour12: false,
 }).format(new Date(fixture.fetchedAt));
 
 // ── SEO ──────────────────────────────────────────────────────────────────────
@@ -170,215 +260,648 @@ const faqSchema = {
 };
 const schema = { '@context': 'https://schema.org', '@graph': [breadcrumb, WORLD_CUP_EVENT, dataset, faqSchema] };
 
-// Datos para el script client-side (refresh en vivo).
-// `days` va compacto para que el cliente pueda recalcular "hoy" y reconstruir
-// el bloque destacado sin redeploy (la página es estática: el todayKey del build
-// se congela y queda viejo al día siguiente).
+// Datos para el script client-side (refresh en vivo + re-render de "hoy").
 const daysData = days.map((d) => ({
   key: d.key,
   label: d.label,
   matches: d.matches.map((m) => ({
     num: m.num,
-    stage: m.group ? roundLabel(m.round) + ' · ' + m.group.replace('Group', 'Grupo') : roundLabel(m.round),
+    badge: badgeOf(m),
+    round: roundLabel(m.round),
     time: artTime(m.date, m.time),
     utc: kickoffUTC(m.date, m.time)?.toISOString() || '',
     team1: m.team1,
     team2: m.team2,
-    ground: m.ground,
+    ground: groundShort(m.ground),
     score: m.score,
+    isNext: nextOverall ? m.num === nextOverall.num : false,
   })),
 }));
-const liveConfig = { url: LIVE_FIXTURE_URL, teams: TEAMS, todayKey, days: daysData };
+const liveConfig = {
+  url: LIVE_FIXTURE_URL,
+  teams: TEAMS,
+  todayKey,
+  days: daysData,
+  argNextUtc,
+};
 ---
 
 <Layout title={title} description={description} canonical={canonical} audience="global" schema={schema} domain="life">
   <Header />
   <main class="article-main">
-    <article class="fx-page">
-      <header class="fx-header">
-        <div class="fx-eyebrow">⚽ Fixture en vivo</div>
-        <h1>Fixture Mundial 2026: calendario y resultados</h1>
-        <p class="lede">
-          Los <strong>{total} partidos</strong> del Mundial 2026 (USA · México · Canadá) con
-          <strong>horario en hora argentina</strong> y resultados que se actualizan
-          <strong>día a día</strong>. Seguí la fase de grupos y las eliminatorias, y calculá las
-          chances de tu selección.
-        </p>
-        <div class="fx-meta">
-          <span class="meta-item">📅 <strong>11 jun – 19 jul 2026</strong></span>
-          <span class="meta-item">🏆 <strong>48 selecciones</strong>, {total} partidos</span>
-          <span class="meta-item" data-live-played><strong>{played}</strong> jugados de {total}</span>
-          <span class="meta-item">🔄 Actualizado <strong data-live-updated>{updatedLabel}</strong></span>
+    <article class="fx-page" data-fx>
+
+      <!-- ── Hero ─────────────────────────────────────────────────────────── -->
+      <header class="fx-hero">
+        <span class="fx-live-pill"><span class="fx-live-dot"></span>Fixture en vivo</span>
+        <h1 class="fx-hero-title">Mundial 2026</h1>
+        <p class="fx-hero-sub">Partidos, horarios y resultados — en tu hora local</p>
+        <div class="fx-hero-meta">
+          <span class="fx-hm"><svg viewBox="0 0 24 24" class="fx-i" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a15 15 0 0 0 0 18M12 3a15 15 0 0 1 0 18M3.5 9h17M3.5 15h17"/></svg><strong>{total}</strong> partidos</span>
+          <span class="fx-hm"><svg viewBox="0 0 24 24" class="fx-i" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M4 20a5 5 0 0 1 10 0M15.5 5.5a3 3 0 0 1 0 5M17 20a5 5 0 0 0-3-4.6"/></svg><strong>{teamsCount}</strong> selecciones</span>
+          <span class="fx-hm"><svg viewBox="0 0 24 24" class="fx-i" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Actualizado <strong data-live-updated>{updatedTime}</strong></span>
         </div>
       </header>
 
-      <p class="fx-answer">
-        El <strong>fixture del Mundial 2026</strong> tiene los <strong>{total} partidos</strong> completos: arranca el <strong>11 de junio de 2026</strong> con el partido inaugural de México y termina con la final el <strong>19 de julio de 2026</strong>. Debajo tenés el calendario día por día con los horarios en tu hora local y los resultados en vivo, más los partidos de hoy.
-      </p>
-
-      <PushOptIn topic="mundial" />
-      <p class="fx-answer">
-        📅 ¿Preferís el calendario? <a href="/calendarios">Suscribite a los partidos de Argentina o al fixture completo</a> en Google/Apple Calendar — se actualiza solo, con la hora de tu país.
-      </p>
-
-      <!-- Selector de país: convierte TODOS los horarios a la hora local del visitante -->
-      <div class="fx-tzbar">
-        <label for="fx-tz">🕐 Ver horarios en</label>
-        <select id="fx-tz" aria-label="Elegí tu país para ver los horarios del Mundial en tu hora local">
-          <option value="America/Argentina/Buenos_Aires">🇦🇷 Argentina</option>
-          <option value="America/Mexico_City">🇲🇽 México</option>
-          <option value="America/Bogota">🇨🇴 Colombia</option>
-          <option value="America/Santiago">🇨🇱 Chile</option>
-          <option value="America/Lima">🇵🇪 Perú</option>
-          <option value="America/Guayaquil">🇪🇨 Ecuador</option>
-          <option value="America/Caracas">🇻🇪 Venezuela</option>
-          <option value="America/Asuncion">🇵🇾 Paraguay</option>
-          <option value="America/Montevideo">🇺🇾 Uruguay</option>
-          <option value="America/La_Paz">🇧🇴 Bolivia</option>
-          <option value="America/Sao_Paulo">🇧🇷 Brasil</option>
-          <option value="Europe/Madrid">🇪🇸 España</option>
-          <option value="America/New_York">🇺🇸 EE.UU. (Este)</option>
-          <option value="America/Los_Angeles">🇺🇸 EE.UU. (Pacífico)</option>
-        </select>
-        <span class="fx-tznote">Mostrando <strong data-tz-current>hora de Argentina</strong></span>
+      <!-- ── Tab bar + selector de zona horaria ───────────────────────────── -->
+      <div class="fx-tabwrap">
+        <div class="fx-tabs" role="tablist" aria-label="Vistas del fixture">
+          <button class="fx-tab is-active" role="tab" data-fxtab="hoy" aria-selected="true">Hoy</button>
+          <button class="fx-tab" role="tab" data-fxtab="calendario" aria-selected="false">Calendario</button>
+          <button class="fx-tab" role="tab" data-fxtab="argentina" aria-selected="false">Argentina</button>
+          <button class="fx-tab" role="tab" data-fxtab="fases" aria-selected="false">Fases</button>
+        </div>
+        <div class="fx-tzpill">
+          <span class="fx-tzflag" data-tz-flag>🇦🇷</span>
+          <label class="sr-only" for="fx-tz">Elegí tu país para ver los horarios en tu hora local</label>
+          <select id="fx-tz" aria-label="Zona horaria">
+            <option value="America/Argentina/Buenos_Aires" data-flag="🇦🇷">Hora de Argentina</option>
+            <option value="America/Mexico_City" data-flag="🇲🇽">Hora de México</option>
+            <option value="America/Bogota" data-flag="🇨🇴">Hora de Colombia</option>
+            <option value="America/Santiago" data-flag="🇨🇱">Hora de Chile</option>
+            <option value="America/Lima" data-flag="🇵🇪">Hora de Perú</option>
+            <option value="America/Guayaquil" data-flag="🇪🇨">Hora de Ecuador</option>
+            <option value="America/Caracas" data-flag="🇻🇪">Hora de Venezuela</option>
+            <option value="America/Asuncion" data-flag="🇵🇾">Hora de Paraguay</option>
+            <option value="America/Montevideo" data-flag="🇺🇾">Hora de Uruguay</option>
+            <option value="America/La_Paz" data-flag="🇧🇴">Hora de Bolivia</option>
+            <option value="America/Sao_Paulo" data-flag="🇧🇷">Hora de Brasil</option>
+            <option value="Europe/Madrid" data-flag="🇪🇸">Hora de España</option>
+            <option value="America/New_York" data-flag="🇺🇸">Hora de EE.UU. (Este)</option>
+            <option value="America/Los_Angeles" data-flag="🇺🇸">Hora de EE.UU. (Pacífico)</option>
+          </select>
+          <svg viewBox="0 0 24 24" class="fx-chev" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
       </div>
 
-      <!-- Bloque destacado: hoy / próximo día -->
-      {featuredDay && (
-        <section class="fx-today" aria-labelledby="fx-today-h">
-          <h2 id="fx-today-h">
-            {todayDay ? '⚽ Partidos de hoy' : '⏭️ Próximos partidos'}
-            <span class="fx-today-date">{featuredDay.label}</span>
-          </h2>
-          <div class="fx-today-grid">
-            {featuredDay.matches.map((m) => {
-              const t1 = teamLabel(m.team1);
-              const t2 = teamLabel(m.team2);
-              const r = result(m);
-              return (
-                <div class="fx-card" data-match data-num={m.num} data-team1={m.team1} data-team2={m.team2}>
-                  <div class="fx-card-top">
-                    <span class="fx-round">{m.group ? roundLabel(m.round) + ' · ' + m.group.replace('Group', 'Grupo') : roundLabel(m.round)}</span>
-                    <span class="fx-time" data-time data-utc={kickoffUTC(m.date, m.time)?.toISOString()}>{artTime(m.date, m.time)}</span>
-                  </div>
-                  <div class="fx-card-teams">
-                    <span class="fx-team t1"><span class="flag">{t1.flag}</span><span class="name">{t1.es}</span></span>
-                    <span class="fx-score" data-score>{r ? `${r.a} – ${r.b}` : 'vs'}</span>
-                    <span class="fx-team t2"><span class="name">{t2.es}</span><span class="flag">{t2.flag}</span></span>
-                  </div>
-                  <div class="fx-card-foot">
-                    <span class="fx-ground">📍 {m.ground}</span>
-                    <span class="fx-detail" data-detail>{r?.detail || ''}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
+      <!-- ══════════════ TAB: HOY ══════════════ -->
+      <section class="fx-panel is-active" data-fxpanel="hoy" role="tabpanel" aria-label="Hoy">
+        <div class="fx-grid">
+          <div class="fx-main">
+            <div class="fx-sec-head">
+              <h2 class="fx-h2" id="fx-hoy-title">{isFeaturedToday ? 'Partidos de hoy' : 'Próximos partidos'}</h2>
+              <span class="fx-sec-date" data-hoy-date>{featuredDay.label}</span>
+            </div>
 
-      <!-- CTA: invitar a las calcs de fútbol -->
-      <aside class="fx-cta-strip">
-        <p>
-          <strong>Antes de cada partido:</strong> calculá las chances reales de tu selección, los
-          puntos que necesita para pasar de fase o armá el prode con amigos.
-        </p>
-        <a class="fx-cta-btn" href="/mundial-2026">Ver todas las calculadoras del Mundial →</a>
-        <p class="fx-live-nav" style="margin:0.85rem 0 0;font-size:0.92rem;line-height:1.9">
-          <strong>En vivo:</strong>
-          <a href="/partidos-hoy-mundial-2026">Partidos de hoy</a> ·
-          <a href="/posiciones-mundial-2026">Tabla de posiciones</a> ·
-          <a href="/goleadores-mundial-2026">Goleadores</a> ·
-          <a href="/llave-mundial-2026">Llave de eliminación</a> ·
-          <a href="/cuando-juega-argentina-mundial-2026">¿Cuándo juega Argentina?</a>
-          {findePost && (
-            <Fragment> · <a href={`/blog/${findePost.slug}`}>Los partidos del finde</a></Fragment>
-          )}
-        </p>
-      </aside>
-
-      <!-- Fixture completo -->
-      <section class="fx-full" aria-labelledby="fx-full-h">
-        <h2 id="fx-full-h">Calendario completo, día por día</h2>
-        <p class="fx-note">
-          Elegí tu país arriba para ver los horarios en tu hora local (por defecto, Argentina UTC-3).
-          Los marcadores se completan automáticamente a medida que se juegan los partidos.
-        </p>
-        {days.map((d) => (
-          <div class={`fx-day${d.key === todayKey ? ' is-today' : ''}`} data-day={d.key}>
-            <h3 class="fx-day-h">
-              {d.key === todayKey && <span class="fx-hoy-badge">HOY</span>}
-              {d.label}
-            </h3>
-            <ul class="fx-rows">
-              {d.matches.map((m) => {
+            <div class="fx-cards" id="fx-hoy-cards">
+              {featuredDay.matches.map((m) => {
                 const t1 = teamLabel(m.team1);
                 const t2 = teamLabel(m.team2);
                 const r = result(m);
+                const isNext = nextOverall && m.num === nextOverall.num;
+                const st = statusOf(m);
                 return (
-                  <li class={`fx-row${r ? ' played' : ''}`} data-match data-num={m.num} data-team1={m.team1} data-team2={m.team2}>
-                    <span class="fx-row-time" data-time data-utc={kickoffUTC(m.date, m.time)?.toISOString()}>{artTime(m.date, m.time)}</span>
-                    <span class="fx-row-stage">{m.group ? m.group.replace('Group', 'Gr.') : roundLabel(m.round)}</span>
-                    <span class={`fx-row-team r-t1${r && r.winner === 1 ? ' win' : ''}`} data-side="1">
-                      <span class="name">{t1.es}</span><span class="flag">{t1.flag}</span>
+                  <article class={`fx-mcard${isNext ? ' is-next' : ''}${r ? ' is-played' : ''}`} data-match data-num={m.num} data-team1={m.team1} data-team2={m.team2}>
+                    <div class="fx-mcard-badge">{st && <span class={`fx-st fx-st-${st === 'FINAL' ? 'final' : 'next'}`}>{st}</span>}<span class="fx-mcard-round">{roundLabel(m.round)}</span></div>
+                    <div class="fx-mcard-body">
+                      <div class="fx-mcard-time">
+                        <span class="t" data-time data-utc={kickoffUTC(m.date, m.time)?.toISOString()}>{artTime(m.date, m.time)}</span>
+                        <span class="g">{groundShort(m.ground)}</span>
+                      </div>
+                      <div class="fx-mcard-teams">
+                        <span class="fx-side s1" data-side="1"><span class="flag">{t1.flag}</span><span class="name">{t1.es}</span></span>
+                        <span class="fx-mcard-score" data-score>{r ? `${r.a} – ${r.b}` : 'vs'}</span>
+                        <span class="fx-side s2" data-side="2"><span class="name">{t2.es}</span><span class="flag">{t2.flag}</span></span>
+                      </div>
+                      {isNext
+                        ? <a class="fx-aviso" href="#fx-avisos">Activar aviso</a>
+                        : <span class="fx-mcard-detail" data-detail>{r?.detail || ''}</span>}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+            <div class="fx-datebar">
+              <span class="fx-datebar-label">Elegí una fecha</span>
+              <div class="fx-chips" role="group" aria-label="Fechas">
+                {chipDays.map((d, i) => {
+                  const isToday = d.key === todayKey;
+                  const parts = d.label.split(' ');
+                  const dnum = d.matches[0] ? new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short' }).format(kickoffUTC(d.matches[0].date, d.matches[0].time)!) : d.key.slice(8);
+                  return (
+                    <button class={`fx-chip${d.key === featuredDay.key ? ' is-active' : ''}`} data-chip={d.key}>
+                      {isToday && <span class="fx-chip-hoy">HOY</span>}
+                      <span class="fx-chip-d">{dnum.replace('.', '').toUpperCase()}</span>
+                    </button>
+                  );
+                })}
+                <button class="fx-chip fx-chip-more" data-goto="calendario"><svg viewBox="0 0 24 24" class="fx-i" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg>Ver calendario completo</button>
+              </div>
+            </div>
+
+            <div class="fx-ad" aria-hidden="true"><span>PUBLICIDAD</span></div>
+
+            <div class="fx-road">
+              <h3 class="fx-h3">Camino a la final</h3>
+              <div class="fx-road-track">
+                {phaseView.filter((p) => ['qf', 'sf', 'final'].includes(p.key)).map((p, i, arr) => (
+                  <>
+                    <div class={`fx-road-card status-${p.status}`}>
+                      <span class="fx-road-ic">{p.key === 'final' ? '🏆' : '⚡'}</span>
+                      <span class="fx-road-name">{p.label}</span>
+                      <span class="fx-road-meta">{p.total} {p.total === 1 ? 'partido' : 'partidos'}</span>
+                      <span class="fx-road-meta2">{p.total * 2} selecciones</span>
+                    </div>
+                    {i < arr.length - 1 && <span class="fx-road-arrow" aria-hidden="true"></span>}
+                  </>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <aside class="fx-side-col">
+            {argNext && (
+              <div class="fx-scard fx-scard-arg">
+                <h3 class="fx-scard-h">Próximo partido de Argentina</h3>
+                <div class="fx-arg-when">{argNext.date === (todayDay?.matches[0]?.date) || argDayIsToday(argNext) ? 'Hoy' : artDayLabel(argNext.date, argNext.time).split(' ').slice(0, 2).join(' ')} · <strong data-time data-utc={argNextUtc}>{artTime(argNext.date, argNext.time)}</strong></div>
+                <div class="fx-arg-teams" data-match data-num={argNext.num} data-team1={argNext.team1} data-team2={argNext.team2}>
+                  <span class="fx-arg-t" data-side="1"><span class="flag">{teamLabel(argNext.team1).flag}</span><span class="name">{teamLabel(argNext.team1).es}</span></span>
+                  <span class="fx-arg-vs" data-score>vs</span>
+                  <span class="fx-arg-t" data-side="2"><span class="flag">{teamLabel(argNext.team2).flag}</span><span class="name">{teamLabel(argNext.team2).es}</span></span>
+                </div>
+                <div class="fx-arg-ground">{groundShort(argNext.ground)}</div>
+                <a class="fx-btn fx-btn-primary" href="#fx-avisos">Activar aviso</a>
+              </div>
+            )}
+            <div class="fx-scard">
+              <h3 class="fx-scard-h">Seguí a la Selección</h3>
+              <p class="fx-scard-p">No te pierdas ningún partido de Argentina.</p>
+              <a class="fx-btn fx-btn-ghost" href="/calendarios"><svg viewBox="0 0 24 24" class="fx-i" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg>Agregar al calendario</a>
+              <a class="fx-btn fx-btn-ghost" href="#fx-avisos"><svg viewBox="0 0 24 24" class="fx-i" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6M9.5 20a2.5 2.5 0 0 0 5 0"/></svg>Activar avisos</a>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ══════════════ TAB: CALENDARIO ══════════════ -->
+      <section class="fx-panel" data-fxpanel="calendario" role="tabpanel" aria-label="Calendario" hidden>
+        <div class="fx-grid">
+          <div class="fx-main">
+            <div class="fx-sec-head fx-sec-head-row">
+              <div>
+                <h2 class="fx-h2">Calendario completo</h2>
+                <span class="fx-sec-sub">Todos los partidos, día por día</span>
+              </div>
+              <a class="fx-btn fx-btn-ghost fx-btn-inline" href="/calendarios"><svg viewBox="0 0 24 24" class="fx-i" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 2.5v4M16 2.5v4M9 14l2 2 4-4"/></svg>Agregar fixture completo</a>
+            </div>
+
+            <div class="fx-filters">
+              <div class="fx-select-wrap">
+                <select class="fx-select" data-filter="month" aria-label="Mes">
+                  <option value="">Todos los meses</option>
+                  {months.map((m) => <option value={m.key}>{m.label}</option>)}
+                </select>
+                <svg viewBox="0 0 24 24" class="fx-chev" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+              <div class="fx-select-wrap">
+                <select class="fx-select" data-filter="phase" aria-label="Fase">
+                  <option value="">Todas las fases</option>
+                  <option value="grupos">Fase de grupos</option>
+                  <option value="r32">Dieciseisavos</option>
+                  <option value="r16">Octavos</option>
+                  <option value="qf">Cuartos</option>
+                  <option value="sf">Semifinales</option>
+                  <option value="final">Final</option>
+                </select>
+                <svg viewBox="0 0 24 24" class="fx-chev" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+              <div class="fx-select-wrap">
+                <select class="fx-select" data-filter="team" aria-label="Selección">
+                  <option value="">Todas las selecciones</option>
+                  {teamsPresent.map((t) => <option value={t.name}>{t.flag} {t.es}</option>)}
+                </select>
+                <svg viewBox="0 0 24 24" class="fx-chev" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+              <div class="fx-search">
+                <svg viewBox="0 0 24 24" class="fx-i" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <input type="search" data-filter="search" placeholder="Buscar selección" aria-label="Buscar selección" />
+              </div>
+            </div>
+
+            <div class="fx-cal" id="fx-cal">
+              {days.map((d) => (
+                <div class="fx-cal-day" data-day={d.key} data-month={d.key.slice(0, 7)}>
+                  <h3 class="fx-cal-dayh">
+                    {d.key === todayKey && <span class="fx-chip-hoy">HOY</span>}
+                    {d.label}
+                  </h3>
+                  <div class="fx-cards">
+                    {d.matches.map((m) => {
+                      const t1 = teamLabel(m.team1);
+                      const t2 = teamLabel(m.team2);
+                      const r = result(m);
+                      const isNext = nextOverall && m.num === nextOverall.num;
+                      const st = statusOf(m);
+                      const phaseKey = (PHASE_DEFS.find((p) => p.is(m)) || {}).key || '';
+                      return (
+                        <article
+                          class={`fx-mcard${isNext ? ' is-next' : ''}${r ? ' is-played' : ''}`}
+                          data-match data-num={m.num} data-team1={m.team1} data-team2={m.team2}
+                          data-phase={phaseKey} data-teams={`${m.team1 || ''} ${m.team2 || ''}`} data-search={slugTeams(m)}
+                        >
+                          <div class="fx-mcard-badge">{st && <span class={`fx-st fx-st-${st === 'FINAL' ? 'final' : 'next'}`}>{st}</span>}<span class="fx-mcard-round">{roundLabel(m.round)}</span></div>
+                          <div class="fx-mcard-body">
+                            <div class="fx-mcard-time">
+                              <span class="t" data-time data-utc={kickoffUTC(m.date, m.time)?.toISOString()}>{artTime(m.date, m.time)}</span>
+                              <span class="g">{groundShort(m.ground)}</span>
+                            </div>
+                            <div class="fx-mcard-teams">
+                              <span class="fx-side s1" data-side="1"><span class="flag">{t1.flag}</span><span class="name">{t1.es}</span></span>
+                              <span class="fx-mcard-score" data-score>{r ? `${r.a} – ${r.b}` : 'vs'}</span>
+                              <span class="fx-side s2" data-side="2"><span class="name">{t2.es}</span><span class="flag">{t2.flag}</span></span>
+                            </div>
+                            {isNext
+                              ? <a class="fx-aviso" href="#fx-avisos">Activar aviso</a>
+                              : <span class="fx-mcard-detail" data-detail>{r?.detail || ''}</span>}
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+              <p class="fx-cal-empty" hidden>No hay partidos que coincidan con los filtros. <button class="fx-linkbtn" data-clear-filters>Limpiar filtros</button></p>
+            </div>
+
+            <div class="fx-ad" aria-hidden="true"><span>PUBLICIDAD</span></div>
+          </div>
+
+          <aside class="fx-side-col">
+            <div class="fx-scard">
+              <h3 class="fx-scard-h">Filtrar calendario</h3>
+              <div class="fx-phasebtns">
+                <button class="fx-phasebtn is-active" data-phasebtn="">Todo</button>
+                <button class="fx-phasebtn" data-phasebtn="grupos">Fase de grupos</button>
+                <button class="fx-phasebtn" data-phasebtn="r32">16avos</button>
+                <button class="fx-phasebtn" data-phasebtn="r16">Octavos</button>
+                <button class="fx-phasebtn" data-phasebtn="qf">Cuartos</button>
+                <button class="fx-phasebtn" data-phasebtn="sf">Semifinales</button>
+                <button class="fx-phasebtn" data-phasebtn="final">Final</button>
+              </div>
+            </div>
+            <div class="fx-scard">
+              <h3 class="fx-scard-h">🇦🇷 Tu selección: Argentina</h3>
+              <label class="fx-toggle">
+                <span>Solo partidos de Argentina</span>
+                <input type="checkbox" data-arg-toggle />
+                <span class="fx-toggle-track" aria-hidden="true"><span class="fx-toggle-thumb"></span></span>
+              </label>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ══════════════ TAB: ARGENTINA ══════════════ -->
+      <section class="fx-panel" data-fxpanel="argentina" role="tabpanel" aria-label="Argentina" hidden>
+        <div class="fx-arg-head">
+          <div class="fx-arg-head-l">
+            <span class="fx-arg-badge-flag">🇦🇷</span>
+            <div>
+              <h2 class="fx-h2">Argentina en el Mundial 2026</h2>
+              <span class="fx-sec-sub">Partidos, resultados y camino a la final</span>
+            </div>
+          </div>
+          <div class="fx-arg-head-r">
+            <a class="fx-btn fx-btn-primary fx-btn-inline" href="#fx-avisos"><svg viewBox="0 0 24 24" class="fx-i" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6M9.5 20a2.5 2.5 0 0 0 5 0"/></svg>Activar avisos</a>
+            <a class="fx-btn fx-btn-ghost fx-btn-inline" href="/calendarios"><svg viewBox="0 0 24 24" class="fx-i" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg>Agregar al calendario</a>
+          </div>
+        </div>
+
+        <div class="fx-grid">
+          <div class="fx-main">
+            {argNext && (
+              <div class="fx-argnext">
+                <div class="fx-argnext-badge">{argDayIsToday(argNext) ? 'HOY · ' : ''}{roundLabel(argNext.round)}</div>
+                <div class="fx-argnext-body" data-match data-num={argNext.num} data-team1={argNext.team1} data-team2={argNext.team2}>
+                  <div class="fx-argnext-time"><strong data-time data-utc={argNextUtc}>{artTime(argNext.date, argNext.time)}</strong><span>{groundShort(argNext.ground)}</span></div>
+                  <div class="fx-argnext-team" data-side="1"><span class="flag">{teamLabel(argNext.team1).flag}</span><span class="name">{teamLabel(argNext.team1).es}</span></div>
+                  <span class="fx-argnext-vs" data-score>VS</span>
+                  <div class="fx-argnext-team" data-side="2"><span class="flag">{teamLabel(argNext.team2).flag}</span><span class="name">{teamLabel(argNext.team2).es}</span></div>
+                  <div class="fx-argnext-cd">
+                    <span class="fx-argnext-cdlabel">Empieza en</span>
+                    <strong class="fx-argnext-cdval" data-countdown data-utc={argNextUtc}>—</strong>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <h3 class="fx-h3">Partidos de Argentina</h3>
+            <ol class="fx-argtl">
+              {argMatches.map((m) => {
+                const isArg1 = m.team1 === 'Argentina';
+                const opp = teamLabel(isArg1 ? m.team2 : m.team1);
+                const r = result(m);
+                const done = !!r;
+                const isNext = argNext && m.num === argNext.num;
+                return (
+                  <li class={`fx-argtl-row${done ? ' done' : ''}${isNext ? ' current' : ''}`} data-match data-num={m.num} data-team1={m.team1} data-team2={m.team2}>
+                    <span class="fx-argtl-node" aria-hidden="true">{done ? '✓' : ''}</span>
+                    <span class="fx-argtl-badge">{isNext && argDayIsToday(m) ? 'HOY · ' : ''}{isNext ? artTime(m.date, m.time) + ' · ' : ''}{roundLabel(m.round)}</span>
+                    <span class="fx-argtl-match">
+                      <span class="fx-argtl-arg"><span class="flag">🇦🇷</span>Argentina</span>
+                      <span class="fx-argtl-res" data-score>{r ? `${isArg1 ? r.a : r.b} – ${isArg1 ? r.b : r.a}` : 'vs'}</span>
+                      <span class="fx-argtl-opp"><span class="name">{opp.es}</span><span class="flag">{opp.flag}</span></span>
                     </span>
-                    <span class="fx-row-score" data-score>{r ? `${r.a} – ${r.b}` : 'vs'}</span>
-                    <span class={`fx-row-team r-t2${r && r.winner === 2 ? ' win' : ''}`} data-side="2">
-                      <span class="flag">{t2.flag}</span><span class="name">{t2.es}</span>
-                    </span>
-                    <span class="fx-row-detail" data-detail>{r?.detail || ''}</span>
+                    <span class="fx-argtl-tag">{done ? 'Resultado' : isNext ? 'Próximo' : 'Programado'}</span>
                   </li>
                 );
               })}
-            </ul>
+            </ol>
+
+            <h3 class="fx-h3">Si avanza</h3>
+            <div class="fx-advance">
+              <div class="fx-advance-card">
+                <span class="fx-advance-ic">🏆</span>
+                <span class="fx-advance-name">Semifinal</span>
+                <span class="fx-advance-meta">{sfMatches.length ? (artDayLabel(sfMatches[sfMatches.length - 1].date, sfMatches[sfMatches.length - 1].time).split(' ').slice(0, 3).join(' ')) : 'Por definir'}</span>
+              </div>
+              <div class="fx-advance-card">
+                <span class="fx-advance-ic">🏆</span>
+                <span class="fx-advance-name">Final</span>
+                <span class="fx-advance-meta">{finalMatch ? artDayLabel(finalMatch.date, finalMatch.time).split(' ').slice(0, 3).join(' ') : '19 de julio'}</span>
+              </div>
+            </div>
           </div>
-        ))}
+
+          <aside class="fx-side-col">
+            <div class="fx-scard">
+              <h3 class="fx-scard-h">Situación de Argentina</h3>
+              <ol class="fx-stepper">
+                {argPhaseView.filter((p) => p.state !== 'future' || ['sf', 'final'].includes(p.key) || argPhaseView.some((x) => x.key === p.key && x.matches.length)).map((p, i) => {
+                  const st = p.state === 'done' ? 'done' : p.state === 'current' ? 'current' : 'future';
+                  return (
+                    <li class={`fx-step ${st}`}>
+                      <span class="fx-step-node" aria-hidden="true">{st === 'done' ? '✓' : ''}</span>
+                      <span class="fx-step-label">{p.label}</span>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+            <div class="fx-scard">
+              <h3 class="fx-scard-h">Seguí a la Selección</h3>
+              <p class="fx-scard-p">Recibí un aviso antes de cada partido.</p>
+              <a class="fx-btn fx-btn-primary" href="#fx-avisos"><svg viewBox="0 0 24 24" class="fx-i" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6M9.5 20a2.5 2.5 0 0 0 5 0"/></svg>Activar avisos</a>
+              <a class="fx-btn fx-btn-ghost" href="/calendarios"><svg viewBox="0 0 24 24" class="fx-i" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg>Agregar al calendario</a>
+            </div>
+          </aside>
+        </div>
       </section>
 
-      <!-- Funnel a las calculadoras de fútbol -->
-      <section class="fx-calcs" aria-labelledby="fx-calcs-h">
-        <h2 id="fx-calcs-h">Calculadoras para vivir el Mundial</h2>
-        <p class="group-intro">
-          Mientras seguís el fixture, poné números a la ilusión: probabilidades, puntos para
-          clasificar, penales, fantasy y el prode del Mundial.
-        </p>
-        <ul class="fx-calc-grid">
-          {featured.map((c: any) => (
-            <li>
-              <a href={`/${c.slug}`} class="fx-calc-link">
-                <span class="fx-calc-icon" aria-hidden="true">{c.icon || '⚽'}</span>
-                <span class="fx-calc-body">
-                  <strong>{c.h1}</strong>
-                  <span>{c.description}</span>
-                </span>
-              </a>
-            </li>
+      <!-- ══════════════ TAB: FASES ══════════════ -->
+      <section class="fx-panel" data-fxpanel="fases" role="tabpanel" aria-label="Fases" hidden>
+        <div class="fx-sec-head fx-sec-head-row">
+          <div>
+            <h2 class="fx-h2">Camino a la final</h2>
+            <span class="fx-sec-sub">Seguí cada etapa del Mundial 2026</span>
+          </div>
+          <div class="fx-viewtoggle" role="group" aria-label="Vista">
+            <button class="fx-vt is-active" data-view="llaves">Llaves</button>
+            <button class="fx-vt" data-view="lista">Lista</button>
+          </div>
+        </div>
+
+        <div class="fx-phasestepper">
+          {phaseView.map((p, i, arr) => (
+            <>
+              <div class={`fx-ps-node status-${p.status}`}>
+                <span class="fx-ps-dot" aria-hidden="true">{p.status === 'done' ? '✓' : p.status === 'current' ? '' : ''}</span>
+                <span class="fx-ps-name">{p.short}</span>
+                <span class="fx-ps-count">{p.total} {p.total === 1 ? 'partido' : 'partidos'}</span>
+              </div>
+              {i < arr.length - 1 && <span class={`fx-ps-line${p.status === 'done' ? ' done' : ''}`} aria-hidden="true"></span>}
+            </>
           ))}
-        </ul>
-        <p class="fx-calcs-more">
-          <a href="/mundial-2026">🏆 Hub Mundial 2026 (34 calculadoras)</a>
-          <span class="sep">·</span>
-          <a href="/categoria/deportes">⚽ Todas las calculadoras de deportes</a>
+        </div>
+
+        <div class="fx-grid">
+          <div class="fx-main">
+            <!-- Vista Llaves (bracket) -->
+            <div class="fx-bracket" data-viewpanel="llaves">
+              <h3 class="fx-h3">{currentPhase.label}</h3>
+              <div class="fx-bracket-grid">
+                <div class="fx-bracket-col fx-bracket-qf">
+                  {bracketGroups.map((g) => (
+                    <div class="fx-bracket-pair">
+                      {g.qfs.map((m: any) => {
+                        const t1 = teamLabel(m.team1), t2 = teamLabel(m.team2);
+                        const r = result(m);
+                        const isNext = nextOverall && m.num === nextOverall.num;
+                        return (
+                          <article class={`fx-bcell${isNext ? ' is-next' : ''}`} data-match data-num={m.num} data-team1={m.team1} data-team2={m.team2}>
+                            <div class="fx-bcell-row" data-side="1">
+                              <span class="flag">{t1.flag}</span><span class="name">{t1.es}</span>
+                              <span class="fx-bcell-sc" data-score-a>{r ? r.a : ''}</span>
+                            </div>
+                            <div class="fx-bcell-row" data-side="2">
+                              <span class="flag">{t2.flag}</span><span class="name">{t2.es}</span>
+                              <span class="fx-bcell-sc" data-score-b>{r ? r.b : ''}</span>
+                            </div>
+                            <div class="fx-bcell-foot">
+                              {r ? <span class="fx-bcell-detail" data-detail>{r.detail || 'Final'}</span>
+                                 : <span class="fx-bcell-when"><span data-time data-utc={kickoffUTC(m.date, m.time)?.toISOString()}>{argDayIsToday(m) ? 'Hoy · ' : ''}{artTime(m.date, m.time)}</span></span>}
+                              {isNext && <span class="fx-st fx-st-next">Próximo</span>}
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+                <div class="fx-bracket-col fx-bracket-sf">
+                  {bracketGroups.map((g) => {
+                    const m = g.sf;
+                    const t1 = teamLabel(m.team1), t2 = teamLabel(m.team2);
+                    return (
+                      <article class="fx-bcell fx-bcell-sf" data-match data-num={m.num} data-team1={m.team1} data-team2={m.team2}>
+                        <div class="fx-bcell-title">Semifinal</div>
+                        <div class="fx-bcell-row" data-side="1"><span class="flag">{t1.flag}</span><span class="name">{t1.es}</span></div>
+                        <div class="fx-bcell-row" data-side="2"><span class="flag">{t2.flag}</span><span class="name">{t2.es}</span></div>
+                        <div class="fx-bcell-foot"><span class="fx-bcell-when" data-time data-utc={kickoffUTC(m.date, m.time)?.toISOString()}>{artDayLabel(m.date, m.time).split(' ').slice(0, 3).join(' ')}</span></div>
+                      </article>
+                    );
+                  })}
+                </div>
+                <div class="fx-bracket-col fx-bracket-final">
+                  {finalMatch && (
+                    <article class="fx-bcell fx-bcell-final" data-match data-num={finalMatch.num} data-team1={finalMatch.team1} data-team2={finalMatch.team2}>
+                      <span class="fx-bcell-trophy">🏆</span>
+                      <div class="fx-bcell-title">Final</div>
+                      <div class="fx-bcell-row" data-side="1"><span class="flag">{teamLabel(finalMatch.team1).flag}</span><span class="name">{teamLabel(finalMatch.team1).es}</span></div>
+                      <div class="fx-bcell-row" data-side="2"><span class="flag">{teamLabel(finalMatch.team2).flag}</span><span class="name">{teamLabel(finalMatch.team2).es}</span></div>
+                      <div class="fx-bcell-foot"><span class="fx-bcell-when">{artDayLabel(finalMatch.date, finalMatch.time).split(' ').slice(0, 3).join(' ')}</span></div>
+                    </article>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <!-- Vista Lista -->
+            <div class="fx-listview" data-viewpanel="lista" hidden>
+              {phaseView.slice().reverse().map((p) => (
+                p.matches.length > 0 && (
+                  <div class="fx-listphase">
+                    <h3 class="fx-h3">{p.label}</h3>
+                    <div class="fx-cards">
+                      {p.matches.slice().sort((a: any, b: any) => a.num - b.num).map((m: any) => {
+                        const t1 = teamLabel(m.team1), t2 = teamLabel(m.team2);
+                        const r = result(m);
+                        return (
+                          <article class={`fx-mcard fx-mcard-sm${r ? ' is-played' : ''}`} data-match data-num={m.num} data-team1={m.team1} data-team2={m.team2}>
+                            <div class="fx-mcard-body">
+                              <div class="fx-mcard-time"><span class="t" data-time data-utc={kickoffUTC(m.date, m.time)?.toISOString()}>{artTime(m.date, m.time)}</span></div>
+                              <div class="fx-mcard-teams">
+                                <span class="fx-side s1" data-side="1"><span class="flag">{t1.flag}</span><span class="name">{t1.es}</span></span>
+                                <span class="fx-mcard-score" data-score>{r ? `${r.a} – ${r.b}` : 'vs'}</span>
+                                <span class="fx-side s2" data-side="2"><span class="name">{t2.es}</span><span class="flag">{t2.flag}</span></span>
+                              </div>
+                              <span class="fx-mcard-detail" data-detail>{r?.detail || ''}</span>
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )
+              ))}
+            </div>
+
+            <div class="fx-allphases">
+              <h3 class="fx-h3">Todas las fases</h3>
+              <div class="fx-allphases-grid">
+                {phaseView.map((p) => (
+                  <div class={`fx-apcard status-${p.status}`}>
+                    <span class="fx-apcard-num">{p.key === 'grupos' ? '⚽' : p.total}</span>
+                    <span class="fx-apcard-name">{p.short}</span>
+                    <span class="fx-apcard-meta">{p.total} {p.total === 1 ? 'partido' : 'partidos'}</span>
+                    <span class="fx-apcard-state" aria-hidden="true">{p.status === 'done' ? '✓' : p.status === 'current' ? '◉' : '○'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <aside class="fx-side-col">
+            <div class="fx-scard">
+              <h3 class="fx-scard-h">Próximas fases</h3>
+              <div class="fx-nextphase">
+                <svg viewBox="0 0 24 24" class="fx-i" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg>
+                <div><strong>Semifinales</strong><span>{sfMatches.length >= 2 ? `${artDayLabel(sfMatches[0].date, sfMatches[0].time).split(' ')[1]} y ${artDayLabel(sfMatches[1].date, sfMatches[1].time).split(' ').slice(1, 4).join(' ')}` : '14 y 15 de julio'}</span></div>
+              </div>
+              <div class="fx-nextphase">
+                <span class="fx-i" style="font-size:1.1rem">🏆</span>
+                <div><strong>Final</strong><span>{finalMatch ? artDayLabel(finalMatch.date, finalMatch.time).split(' ').slice(1, 4).join(' ') : '19 de julio'}</span></div>
+              </div>
+            </div>
+            <div class="fx-scard">
+              <h3 class="fx-scard-h">Argentina en el cuadro</h3>
+              <ol class="fx-stepper">
+                {argPhaseView.filter((p) => ['qf', 'sf', 'final'].includes(p.key) || (p.state !== 'future' && ['r16'].includes(p.key))).slice(-3).map((p) => {
+                  const st = p.state === 'done' ? 'done' : p.state === 'current' ? 'current' : 'future';
+                  const m = p.matches[0];
+                  return (
+                    <li class={`fx-step ${st}`}>
+                      <span class="fx-step-node" aria-hidden="true">{st === 'done' ? '✓' : ''}</span>
+                      <span class="fx-step-label">{p.label}<small>{m ? (argDayIsToday(m) ? `Hoy · ${artTime(m.date, m.time)} vs ${teamLabel(m.team1 === 'Argentina' ? m.team2 : m.team1).es}` : artDayLabel(m.date, m.time).split(' ').slice(0, 2).join(' ')) : p.key === 'final' && finalMatch ? artDayLabel(finalMatch.date, finalMatch.time).split(' ').slice(0, 3).join(' ') : 'Por definir'}</small></span>
+                    </li>
+                  );
+                })}
+              </ol>
+              <button class="fx-btn fx-btn-ghost" data-goto="argentina">Ver camino de Argentina</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ══════════════ Bloque SEO (siempre visible) ══════════════ -->
+      <div class="fx-seo">
+        <p class="fx-answer">
+          El <strong>fixture del Mundial 2026</strong> tiene los <strong>{total} partidos</strong> completos: arranca el <strong>11 de junio de 2026</strong> con el partido inaugural de México y termina con la final el <strong>19 de julio de 2026</strong>. Arriba tenés los partidos de hoy, el calendario completo día por día, el camino de Argentina y las llaves de eliminación — con los horarios en tu hora local y los resultados en vivo.
         </p>
-      </section>
 
-      <!-- FAQ -->
-      <section class="fx-faq" aria-labelledby="fx-faq-h">
-        <h2 id="fx-faq-h">Preguntas frecuentes</h2>
-        {faqItems.map((f) => (
-          <details class="fx-faq-item">
-            <summary>{f.q}</summary>
-            <p>{f.a}</p>
-          </details>
-        ))}
-      </section>
+        <div id="fx-avisos">
+          <PushOptIn topic="mundial" />
+        </div>
+        <p class="fx-answer">
+          📅 ¿Preferís el calendario? <a href="/calendarios">Suscribite a los partidos de Argentina o al fixture completo</a> en Google/Apple Calendar — se actualiza solo, con la hora de tu país.
+        </p>
 
-      <p class="fx-source">
-        Datos del calendario y resultados: proyecto de código abierto
-        <a href="https://github.com/openfootball/worldcup.json" rel="noopener" target="_blank">openfootball</a>
-        (dominio público) y FIFA. Horarios convertidos a hora de Argentina. Esta página se
-        actualiza automáticamente durante el torneo.
-      </p>
+        <section class="fx-calcs" aria-labelledby="fx-calcs-h">
+          <h2 id="fx-calcs-h" class="fx-h2">Calculadoras para vivir el Mundial</h2>
+          <p class="fx-group-intro">
+            Mientras seguís el fixture, poné números a la ilusión: probabilidades, puntos para
+            clasificar, penales, fantasy y el prode del Mundial.
+          </p>
+          <ul class="fx-calc-grid">
+            {featured.map((c: any) => (
+              <li>
+                <a href={`/${c.slug}`} class="fx-calc-link">
+                  <span class="fx-calc-icon" aria-hidden="true">{c.icon || '⚽'}</span>
+                  <span class="fx-calc-body">
+                    <strong>{c.h1}</strong>
+                    <span>{c.description}</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p class="fx-calcs-more">
+            <a href="/mundial-2026">🏆 Hub Mundial 2026 (34 calculadoras)</a>
+            <span class="sep">·</span>
+            <a href="/categoria/deportes">⚽ Todas las calculadoras de deportes</a>
+          </p>
+          <p class="fx-live-nav">
+            <strong>En vivo:</strong>
+            <a href="/partidos-hoy-mundial-2026">Partidos de hoy</a> ·
+            <a href="/posiciones-mundial-2026">Tabla de posiciones</a> ·
+            <a href="/goleadores-mundial-2026">Goleadores</a> ·
+            <a href="/llave-mundial-2026">Llave de eliminación</a> ·
+            <a href="/cuando-juega-argentina-mundial-2026">¿Cuándo juega Argentina?</a>
+            {findePost && (
+              <Fragment> · <a href={`/blog/${findePost.slug}`}>Los partidos del finde</a></Fragment>
+            )}
+          </p>
+        </section>
+
+        <section class="fx-faq" aria-labelledby="fx-faq-h">
+          <h2 id="fx-faq-h" class="fx-h2">Preguntas frecuentes</h2>
+          {faqItems.map((f) => (
+            <details class="fx-faq-item">
+              <summary>{f.q}</summary>
+              <p>{f.a}</p>
+            </details>
+          ))}
+        </section>
+
+        <p class="fx-source">
+          Datos del calendario y resultados: proyecto de código abierto
+          <a href="https://github.com/openfootball/worldcup.json" rel="noopener" target="_blank">openfootball</a>
+          (dominio público) y FIFA. Horarios convertidos a hora de Argentina. Esta página se
+          actualiza automáticamente durante el torneo.
+        </p>
+      </div>
+
+      <!-- Bottom tab bar (mobile) -->
+      <nav class="fx-bottomnav" aria-label="Navegación del fixture">
+        <button class="fx-bn is-active" data-fxtab="hoy">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg>
+          <span>Hoy</span>
+        </button>
+        <button class="fx-bn" data-fxtab="calendario">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 2.5v4M16 2.5v4M9 14l2 2 4-4"/></svg>
+          <span>Calendario</span>
+        </button>
+        <button class="fx-bn" data-fxtab="argentina">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8l4-4h8l4 4-3 3v9H7v-9L4 8Z"/></svg>
+          <span>Argentina</span>
+        </button>
+        <button class="fx-bn" data-fxtab="fases">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v3a4 4 0 0 1-8 0V4ZM6 5H4v2a3 3 0 0 0 3 3M18 5h2v2a3 3 0 0 1-3 3M9 14h6M10 20h4M12 14v6"/></svg>
+          <span>Fases</span>
+        </button>
+      </nav>
+
     </article>
   </main>
   <Footer />
@@ -386,398 +909,8 @@ const liveConfig = { url: LIVE_FIXTURE_URL, teams: TEAMS, todayKey, days: daysDa
 
 <script type="application/json" id="fx-live-config" set:html={JSON.stringify(liveConfig)}></script>
 
-<script>
-  // Refresh client-side: trae el JSON vivo de openfootball y completa marcadores
-  // + nombres de equipos que se vayan resolviendo (eliminatorias). Si falla,
-  // queda el snapshot server-rendered. No rompe nada: todo defensivo.
-  (function () {
-    const cfgEl = document.getElementById('fx-live-config');
-    if (!cfgEl) return;
-    let cfg: any;
-    try { cfg = JSON.parse(cfgEl.textContent || '{}'); } catch { return; }
-    const TEAMS = cfg.teams || {};
+<script src="/scripts/fixture-mundial.js" is:inline></script>
 
-    // ── Horarios por país: convertir el kickoff (UTC, en data-utc) a la zona elegida ──
-    const AR_TZ = 'America/Argentina/Buenos_Aires';
-    const ZONES = [
-      AR_TZ, 'America/Mexico_City', 'America/Bogota', 'America/Santiago', 'America/Lima',
-      'America/Guayaquil', 'America/Caracas', 'America/Asuncion', 'America/Montevideo',
-      'America/La_Paz', 'America/Sao_Paulo', 'Europe/Madrid', 'America/New_York', 'America/Los_Angeles',
-    ];
-    function tzLabel(tz: string): string {
-      const sel = document.getElementById('fx-tz') as HTMLSelectElement | null;
-      if (sel) { const o = Array.from(sel.options).find((o) => o.value === tz); if (o) return o.textContent || tz; }
-      return tz === AR_TZ ? '🇦🇷 Argentina' : tz;
-    }
-    function dayInTZ(d: Date, tz: string): string {
-      try { return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d); }
-      catch { return ''; }
-    }
-    // currentTZ: preferencia guardada > auto-detect (si está en la lista) > Argentina.
-    let currentTZ = AR_TZ;
-    try {
-      const saved = localStorage.getItem('fx-tz');
-      if (saved && ZONES.indexOf(saved) >= 0) currentTZ = saved;
-      else { const det = Intl.DateTimeFormat().resolvedOptions().timeZone; if (det && ZONES.indexOf(det) >= 0) currentTZ = det; }
-    } catch {}
-    // Formatea un kickoff UTC (ISO) a la zona actual, con marcador de día (+1/−1)
-    // relativo al día del calendario (que está agrupado en hora argentina).
-    function fmtTimeTZ(utc: string): string {
-      if (!utc) return '';
-      const d = new Date(utc);
-      if (isNaN(d.getTime())) return '';
-      let t: string;
-      try { t = new Intl.DateTimeFormat('es-AR', { timeZone: currentTZ, hour: '2-digit', minute: '2-digit', hour12: false }).format(d); }
-      catch { return ''; }
-      const ar = dayInTZ(d, AR_TZ), loc = dayInTZ(d, currentTZ);
-      let off = '';
-      if (loc && ar && loc !== ar) off = loc > ar ? ' +1' : ' −1';
-      return t + off;
-    }
-    // Reconvierte TODOS los horarios visibles ([data-time] con data-utc) a la zona actual.
-    function reformatTimes() {
-      document.querySelectorAll('[data-time][data-utc]').forEach((el) => {
-        const utc = el.getAttribute('data-utc');
-        if (utc) el.textContent = fmtTimeTZ(utc);
-      });
-    }
-
-    function label(name: string | null): { es: string; flag: string } {
-      if (!name) return { es: 'A definir', flag: '⚽' };
-      if (TEAMS[name]) return TEAMS[name];
-      let m = name.match(/^([123])([A-L])$/);
-      if (m) return { es: m[1] + '.º Grupo ' + m[2], flag: '🏳️' };
-      m = name.match(/^3([A-L/]+)$/);
-      if (m) return { es: '3.º (' + m[1] + ')', flag: '🏳️' };
-      m = name.match(/^W(\d+)$/);
-      if (m) return { es: 'Ganador M' + m[1], flag: '🏳️' };
-      m = name.match(/^L(\d+)$/);
-      if (m) return { es: 'Perdedor M' + m[1], flag: '🏳️' };
-      return { es: name, flag: '🏳️' };
-    }
-
-    function fmtResult(score: any) {
-      if (!score || !score.ft) return null;
-      let a = score.ft[0], b = score.ft[1], detail = '';
-      if (score.et) { detail = 'tras alargue ' + score.et[0] + '-' + score.et[1]; a = score.et[0]; b = score.et[1]; }
-      let winner = a > b ? 1 : b > a ? 2 : 0;
-      if (score.p) { detail = (detail ? detail + ', ' : '') + 'penales ' + score.p[0] + '-' + score.p[1]; winner = score.p[0] > score.p[1] ? 1 : 2; }
-      return { a: score.ft[0], b: score.ft[1], detail, winner };
-    }
-
-    function applyMatch(el: Element, m: any) {
-      // nombres de equipos (por si se resolvieron placeholders)
-      const sides = [
-        { side: '1', team: m.team1 },
-        { side: '2', team: m.team2 },
-      ];
-      for (const s of sides) {
-        const lab = label(s.team);
-        el.querySelectorAll('[data-side="' + s.side + '"] .name, .fx-team.t' + s.side + ' .name').forEach((n) => { n.textContent = lab.es; });
-        el.querySelectorAll('[data-side="' + s.side + '"] .flag, .fx-team.t' + s.side + ' .flag').forEach((n) => { n.textContent = lab.flag; });
-      }
-      const r = fmtResult(m.score);
-      const scoreEl = el.querySelector('[data-score]');
-      const detailEl = el.querySelector('[data-detail]');
-      if (r && scoreEl) {
-        scoreEl.textContent = r.a + ' – ' + r.b;
-        el.classList.add('played');
-        el.querySelector('.r-t1')?.classList.toggle('win', r.winner === 1);
-        el.querySelector('.r-t2')?.classList.toggle('win', r.winner === 2);
-        if (detailEl) detailEl.textContent = r.detail;
-      }
-    }
-
-    // "Hoy" en hora argentina, recalculado en el navegador (no el del build).
-    function todayKeyAR() {
-      return new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'America/Argentina/Buenos_Aires',
-        year: 'numeric', month: '2-digit', day: '2-digit',
-      }).format(new Date());
-    }
-
-    // Rellena una tarjeta clonada (.fx-card) con los datos de un partido.
-    function fillCard(card: Element, m: any) {
-      card.setAttribute('data-num', String(m.num));
-      card.setAttribute('data-team1', m.team1 || '');
-      card.setAttribute('data-team2', m.team2 || '');
-      const t1 = label(m.team1), t2 = label(m.team2);
-      const set = (sel: string, val: string) => { const e = card.querySelector(sel); if (e) e.textContent = val; };
-      set('.fx-round', m.stage || '');
-      const timeEl = card.querySelector('.fx-time');
-      if (timeEl) {
-        if (m.utc) timeEl.setAttribute('data-utc', m.utc);
-        timeEl.textContent = m.utc ? fmtTimeTZ(m.utc) : (m.time || '');
-      }
-      set('.fx-team.t1 .flag', t1.flag);
-      set('.fx-team.t1 .name', t1.es);
-      set('.fx-team.t2 .flag', t2.flag);
-      set('.fx-team.t2 .name', t2.es);
-      const r = fmtResult(m.score);
-      set('.fx-score', r ? r.a + ' – ' + r.b : 'vs');
-      set('.fx-detail', r ? r.detail : '');
-      card.classList.toggle('played', !!r);
-    }
-
-    // Recalcula "hoy" en el cliente y reubica el resaltado + el bloque destacado.
-    // La página es estática: sin esto, el todayKey del build queda viejo al otro día.
-    function relocateToday() {
-      const days = cfg.days || [];
-      if (!days.length) return;
-      const realToday = todayKeyAR();
-      let featured = days.find((d: any) => d.key === realToday);
-      const isToday = !!featured;
-      if (!featured) featured = days.find((d: any) => d.key >= realToday) || days[days.length - 1];
-      if (!featured) return;
-
-      // 1) Mover el resaltado "HOY" en el calendario completo
-      document.querySelectorAll('.fx-day').forEach((el) => {
-        const isT = el.getAttribute('data-day') === realToday;
-        el.classList.toggle('is-today', isT);
-        const h = el.querySelector('.fx-day-h');
-        if (!h) return;
-        const badge = h.querySelector('.fx-hoy-badge');
-        if (isT && !badge) {
-          const b = document.createElement('span');
-          b.className = 'fx-hoy-badge';
-          b.textContent = 'HOY';
-          h.insertBefore(b, h.firstChild);
-        } else if (!isT && badge) {
-          badge.remove();
-        }
-      });
-
-      // 2) Reconstruir el bloque destacado (hoy / próximos)
-      const section = document.querySelector('.fx-today');
-      if (!section) return;
-      const h2 = section.querySelector('#fx-today-h');
-      if (h2) {
-        const dateSpan = h2.querySelector('.fx-today-date');
-        if (dateSpan) dateSpan.textContent = featured.label;
-        // Actualizar el texto del encabezado conservando el <span> (scope de estilos)
-        for (const node of Array.from(h2.childNodes)) {
-          if (node.nodeType === 3 && (node.textContent || '').trim()) {
-            node.textContent = isToday ? '⚽ Partidos de hoy ' : '⏭️ Próximos partidos ';
-            break;
-          }
-        }
-      }
-      const grid = section.querySelector('.fx-today-grid');
-      const template = grid && grid.querySelector('.fx-card');
-      if (grid && template) {
-        const frag = document.createDocumentFragment();
-        featured.matches.forEach((m: any) => {
-          const card = template.cloneNode(true) as Element;
-          fillCard(card, m);
-          frag.appendChild(card);
-        });
-        grid.innerHTML = '';
-        grid.appendChild(frag);
-      }
-    }
-
-    // Reconstruye el bloque "hoy" sólo cuando cambia el día (evita parpadeo en
-    // cada poll; cubre el caso de dejar la pestaña abierta y cruzar la medianoche).
-    let lastTodayKey = '';
-    function syncToday() {
-      const k = todayKeyAR();
-      if (k === lastTodayKey) return;
-      lastTodayKey = k;
-      relocateToday();
-    }
-
-    async function refresh() {
-      try {
-        const res = await fetch(cfg.url, { cache: 'no-store' });
-        if (!res.ok) return null;
-        const data = await res.json();
-        if (!data || !Array.isArray(data.matches)) return null;
-        const byNum = new Map<number, any>();
-        data.matches.forEach((m: any, i: number) => byNum.set(m.num ?? i + 1, m));
-        // Set por num: los partidos de hoy aparecen 2 veces en el DOM (bloque
-        // destacado + lista completa); contar elementos inflaría el "jugados de".
-        const playedNums = new Set<number>();
-        document.querySelectorAll('[data-match]').forEach((el) => {
-          const num = Number((el as HTMLElement).dataset.num);
-          const m = byNum.get(num);
-          if (!m) return;
-          applyMatch(el, m);
-          if (m.score && m.score.ft) playedNums.add(num);
-        });
-        const played = playedNums.size;
-        const pEl = document.querySelector('[data-live-played]');
-        if (pEl) pEl.innerHTML = '<strong>' + played + '</strong> jugados de ' + byNum.size;
-        const uEl = document.querySelector('[data-live-updated]');
-        if (uEl) uEl.textContent = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date());
-        return { played, total: byNum.size };
-      } catch { /* snapshot server queda válido */ return null; }
-    }
-
-    // ── Auto-actualización: los marcadores se completan solos al terminar cada
-    // partido. La página es estática; el JSON de openfootball se actualiza durante
-    // el torneo, así que repolleamos cada 2 min sin recargar ni redeployar.
-    let poll: any = null;
-    let stopped = false;
-    async function tick() {
-      syncToday(); // corrige "hoy" (el del build queda viejo) y cubre el cambio de día
-      const st = await refresh();
-      if (st && st.total > 0 && st.played >= st.total) {
-        stopped = true; // torneo completo → no seguir polleando
-        if (poll) { clearInterval(poll); poll = null; }
-      }
-    }
-    // ── Selector de país: restaurar preferencia y reconvertir todos los horarios ──
-    const tzSel = document.getElementById('fx-tz') as HTMLSelectElement | null;
-    const tzNote = document.querySelector('[data-tz-current]');
-    function applyTZ() {
-      reformatTimes();
-      if (tzNote) tzNote.textContent = 'hora de ' + tzLabel(currentTZ).replace(/^[^\s]+\s/, '');
-    }
-    if (tzSel) {
-      tzSel.value = currentTZ;
-      tzSel.addEventListener('change', () => {
-        currentTZ = tzSel.value;
-        try { localStorage.setItem('fx-tz', currentTZ); } catch {}
-        applyTZ();
-      });
-    }
-    applyTZ(); // reconvierte el snapshot SSR (hora Argentina) a la zona detectada/guardada
-
-    tick();
-    poll = setInterval(() => { if (!document.hidden && !stopped) tick(); }, 120000);
-    // Al volver a la pestaña, actualizar al instante en vez de esperar el próximo poll.
-    document.addEventListener('visibilitychange', () => { if (!document.hidden && !stopped) tick(); });
-  })();
-</script>
-
-<style>
-  .fx-page { max-width: 980px; margin: 0 auto; padding: 1rem 1rem 3rem; }
-  .fx-header { text-align: center; padding: 1.5rem 0 1.75rem; border-bottom: 1px solid var(--border, #e2e8f0); margin-bottom: 1.75rem; }
-  .fx-eyebrow { display: inline-block; background: var(--accent-soft, #eef4ff); color: var(--accent-strong, #1e40af); padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em; margin-bottom: 0.75rem; }
-  .fx-header h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); margin: 0.25rem 0 0.75rem; line-height: 1.15; }
-  .lede { font-size: 1.05rem; color: var(--text-2, #475569); max-width: 760px; margin: 0 auto 1.25rem; line-height: 1.55; }
-  .fx-meta { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; justify-content: center; font-size: 0.875rem; color: var(--text-2, #475569); }
-  .fx-meta strong { color: var(--text, #1e293b); }
-  .meta-item { white-space: nowrap; }
-
-  .fx-answer { max-width: 760px; margin: 0 auto 1.75rem; font-size: 1rem; line-height: 1.6; color: var(--text, #1e293b); background: var(--accent-soft, #eef4ff); border: 1px solid var(--border, #e2e8f0); border-radius: 0.75rem; padding: 0.85rem 1.1rem; }
-
-  /* Selector de país para los horarios */
-  .fx-tzbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.5rem 0.65rem; margin: 0 0 1.75rem; padding: 0.7rem 0.95rem; background: var(--accent-soft, #eef4ff); border: 1px solid var(--border, #e2e8f0); border-radius: 0.75rem; font-size: 0.9rem; }
-  .fx-tzbar label { font-weight: 600; color: var(--text, #1e293b); }
-  .fx-tzbar select { padding: 0.4rem 0.6rem; border: 1px solid var(--border, #cbd5e1); border-radius: 0.5rem; background: var(--surface, #fff); color: var(--text, #1e293b); font-size: 0.9rem; font-family: inherit; cursor: pointer; max-width: 100%; }
-  .fx-tznote { color: var(--text-2, #64748b); }
-  .fx-tznote strong { color: var(--accent-strong, #1e40af); }
-
-  /* Bloque destacado */
-  .fx-today { margin: 0 0 2rem; }
-  .fx-today h2 { font-size: 1.3rem; margin: 0 0 1rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem; }
-  .fx-today-date { font-size: 0.95rem; font-weight: 500; color: var(--text-2, #64748b); text-transform: capitalize; }
-  .fx-today-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0.75rem; }
-  .fx-card { border: 1px solid var(--border, #e2e8f0); border-radius: 0.75rem; padding: 0.9rem 1rem; background: var(--surface, #fff); }
-  .fx-card.played { border-color: var(--accent, #2c5cdc); }
-  .fx-card-top { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-2, #64748b); margin-bottom: 0.6rem; }
-  .fx-round { font-weight: 600; }
-  .fx-card-teams { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 0.5rem; }
-  .fx-team { display: flex; align-items: center; gap: 0.4rem; min-width: 0; }
-  .fx-team.t1 { justify-content: flex-end; text-align: right; }
-  .fx-team.t2 { justify-content: flex-start; }
-  .fx-team .flag { font-size: 1.4rem; line-height: 1; }
-  .fx-team .name { font-weight: 600; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; }
-  .fx-score { font-weight: 700; font-size: 1.1rem; color: var(--text, #1e293b); min-width: 3rem; text-align: center; }
-  .fx-card-foot { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.78rem; color: var(--text-2, #64748b); margin-top: 0.55rem; }
-  .fx-detail { font-style: italic; }
-
-  /* CTA strip */
-  .fx-cta-strip { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1.25rem; background: var(--accent-soft, #eef4ff); border: 1px solid var(--accent, #2c5cdc); border-radius: 0.75rem; padding: 1rem 1.25rem; margin: 0 0 2.25rem; }
-  .fx-cta-strip p { margin: 0; color: var(--text, #1e293b); font-size: 0.95rem; max-width: 620px; }
-  .fx-cta-btn { background: var(--accent, #2c5cdc); color: #fff; font-weight: 600; padding: 0.6rem 1.1rem; border-radius: 0.5rem; text-decoration: none; font-size: 0.92rem; box-sizing: border-box; max-width: 100%; text-align: center; }
-  .fx-cta-btn:hover { filter: brightness(1.07); }
-
-  /* Fixture completo */
-  .fx-full { margin: 0 0 2.5rem; }
-  .fx-full h2 { font-size: 1.4rem; margin: 0 0 0.4rem; }
-  .fx-note { color: var(--text-2, #64748b); font-size: 0.9rem; margin: 0 0 1.25rem; }
-  .fx-day { margin: 0 0 1.5rem; padding: 0 0 0.5rem; }
-  .fx-day.is-today { background: var(--accent-soft, #eef4ff); border-radius: 0.75rem; padding: 0.5rem 0.85rem 0.75rem; }
-  .fx-day-h { font-size: 1.05rem; margin: 0.4rem 0 0.6rem; text-transform: capitalize; display: flex; align-items: center; gap: 0.5rem; color: var(--text, #1e293b); }
-  .fx-hoy-badge { background: var(--accent, #2c5cdc); color: #fff; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; padding: 0.15rem 0.5rem; border-radius: 999px; }
-  .fx-rows { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.3rem; }
-  .fx-row { display: grid; grid-template-columns: 3.2rem 2.6rem 1fr auto 1fr; align-items: center; gap: 0.4rem; padding: 0.5rem 0.6rem; border: 1px solid var(--border, #e2e8f0); border-radius: 0.5rem; background: var(--surface, #fff); font-size: 0.9rem; }
-  .fx-row.played { background: var(--surface-2, #f8fafc); }
-  .fx-row-time { font-variant-numeric: tabular-nums; color: var(--text-2, #64748b); font-size: 0.82rem; }
-  .fx-row-stage { font-size: 0.74rem; color: var(--text-2, #94a3b8); font-weight: 600; }
-  .fx-row-team { display: flex; align-items: center; gap: 0.4rem; min-width: 0; }
-  .fx-row-team .flag { font-size: 1.2rem; line-height: 1; flex-shrink: 0; }
-  .fx-row-team .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .fx-row-team.r-t1 { justify-content: flex-end; text-align: right; }
-  .fx-row-team.r-t2 { justify-content: flex-start; }
-  .fx-row-team.win .name { font-weight: 700; color: var(--accent-strong, #1e40af); }
-  .fx-row-score { font-weight: 700; min-width: 3rem; text-align: center; font-variant-numeric: tabular-nums; }
-  .fx-row-detail { grid-column: 3 / 6; font-size: 0.74rem; color: var(--text-2, #94a3b8); font-style: italic; text-align: center; }
-  .fx-row-detail:empty { display: none; }
-
-  /* Funnel calcs */
-  .fx-calcs { margin: 0 0 2.5rem; }
-  .fx-calcs h2 { font-size: 1.4rem; margin: 0 0 0.4rem; }
-  .group-intro { color: var(--text-2, #475569); margin: 0 0 1rem; font-size: 0.975rem; line-height: 1.5; }
-  .fx-calc-grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.75rem; }
-  .fx-calc-link { display: flex; gap: 0.75rem; padding: 0.875rem; border: 1px solid var(--border, #e2e8f0); border-radius: 0.5rem; text-decoration: none; color: inherit; transition: border-color 0.15s, transform 0.15s; height: 100%; box-sizing: border-box; }
-  .fx-calc-link:hover { border-color: var(--accent, #2c5cdc); transform: translateY(-1px); }
-  .fx-calc-icon { font-size: 1.4rem; line-height: 1.2; flex-shrink: 0; }
-  .fx-calc-body { display: flex; flex-direction: column; min-width: 0; }
-  .fx-calc-body strong { color: var(--text, #1e293b); font-size: 0.95rem; line-height: 1.3; }
-  .fx-calc-body span { margin-top: 0.25rem; color: var(--text-2, #64748b); font-size: 0.83rem; line-height: 1.4; }
-  .fx-calcs-more { margin: 1.25rem 0 0; text-align: center; font-size: 0.95rem; }
-  .fx-calcs-more a { color: var(--accent, #2c5cdc); font-weight: 600; text-decoration: none; }
-  .fx-calcs-more a:hover { text-decoration: underline; }
-  .fx-calcs-more .sep { margin: 0 0.6rem; color: var(--text-2, #cbd5e1); }
-
-  /* FAQ */
-  .fx-faq { margin: 0 0 2rem; }
-  .fx-faq h2 { font-size: 1.4rem; margin: 0 0 1rem; }
-  .fx-faq-item { border: 1px solid var(--border, #e2e8f0); border-radius: 0.5rem; padding: 0.4rem 0.9rem; margin-bottom: 0.6rem; }
-  .fx-faq-item summary { font-weight: 600; cursor: pointer; padding: 0.5rem 0; color: var(--text, #1e293b); }
-  .fx-faq-item p { margin: 0.25rem 0 0.75rem; color: var(--text-2, #475569); line-height: 1.55; font-size: 0.95rem; }
-
-  .fx-source { font-size: 0.82rem; color: var(--text-2, #94a3b8); line-height: 1.5; border-top: 1px solid var(--border, #e2e8f0); padding-top: 1rem; }
-  .fx-source a { color: var(--accent, #2c5cdc); }
-
-  @media (max-width: 640px) {
-    .fx-today-grid, .fx-calc-grid { grid-template-columns: 1fr; }
-    /* Mobile: apilar los dos equipos (cada uno a ancho COMPLETO) para que los
-       nombres de países no se trunquen. La hora y el resultado abarcan las dos
-       filas. Antes los dos equipos compartían el ancho (1fr c/u ≈ 43px) y se
-       cortaban incluso nombres como "México". */
-    .fx-row {
-      grid-template-columns: 2.8rem 1fr auto;
-      grid-template-areas:
-        "time t1 score"
-        "time t2 score";
-      row-gap: 0.1rem;
-      column-gap: 0.5rem;
-    }
-    .fx-row-stage { display: none; }
-    .fx-row-time { grid-area: time; }
-    .fx-row-team.r-t1 { grid-area: t1; justify-content: flex-start; text-align: left; }
-    .fx-row-team.r-t2 { grid-area: t2; justify-content: flex-start; }
-    .fx-row-score { grid-area: score; }
-    .fx-row-detail { grid-column: 1 / -1; }
-    /* Nombres muy largos (p. ej. "Bosnia y Herzegovina") hacen wrap a 2 líneas
-       en vez de truncarse — ahora cada equipo tiene su propia fila. */
-    .fx-row-team .name { white-space: normal; line-height: 1.15; }
-    /* Mismo apilado para las tarjetas de "hoy". */
-    .fx-card-teams {
-      grid-template-columns: 1fr auto;
-      grid-template-areas:
-        "t1 score"
-        "t2 score";
-      row-gap: 0.35rem;
-    }
-    .fx-team.t1 { grid-area: t1; justify-content: flex-start; text-align: left; }
-    .fx-team.t2 { grid-area: t2; }
-    .fx-score { grid-area: score; }
-    .fx-cta-strip { flex-direction: column; align-items: stretch; }
-    .fx-cta-strip .fx-cta-btn { display: block; width: 100%; }
-  }
+<style is:global>
+  @import '/styles/fixture-mundial.css';
 </style>
