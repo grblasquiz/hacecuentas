@@ -20,19 +20,18 @@ export interface Outputs {
 
 const fmtPesos = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
 
-// Escala 2026 (Ley 27.743): unificación de alícuotas país/exterior
-// MNI: $292.994.206 (valor 2025 actualizado) — aproximamos a $350M para 2026
-// Inmueble casa-habitación: deducción hasta $450M
-const MNI = 350_000_000;
-const DEDUCCION_CASA = 450_000_000;
+// Escala período fiscal 2025 (bienes al 31/12/2025, DDJJ 2026), Ley 27.743: unificación país/exterior
+// MNI período fiscal 2025: $384.728.044,57 (confirmado ARCA)
+// Inmueble casa-habitación: deducción/exención hasta $1.346.548.155,99
+const MNI = 384_728_044.57;
+const DEDUCCION_CASA = 1_346_548_155.99;
 
-// Escala progresiva 2026 aproximada
-// Ley 27.743: alícuotas bajadas gradualmente 2024→2027, y "régimen especial" REIBP (tasa fija)
+// Escala progresiva período fiscal 2025 (sobre el EXCEDENTE del MNI), 3 tramos
+// Ley 27.743: tope general 1,00%; "régimen especial" REIBP (tasa fija 0,45%)
 const ESCALA: Array<{ hasta: number; tasa: number; acumulado: number; }> = [
-  { hasta: 250_000_000, tasa: 0.005, acumulado: 0 },
-  { hasta: 500_000_000, tasa: 0.0075, acumulado: 1_250_000 },
-  { hasta: 1_000_000_000, tasa: 0.01, acumulado: 3_125_000 },
-  { hasta: Infinity, tasa: 0.015, acumulado: 8_125_000 },
+  { hasta: 52_664_283.73, tasa: 0.005, acumulado: 0 },
+  { hasta: 114_105_948.16, tasa: 0.0075, acumulado: 263_321.42 },
+  { hasta: Infinity, tasa: 0.01, acumulado: 724_133.89 },
 ];
 
 export function bienesPersonales(i: Inputs): Outputs {

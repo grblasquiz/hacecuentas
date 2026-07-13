@@ -2,15 +2,14 @@ export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; _chart?: any; }
 export function bienesPersonalesTramosAlicuota2026(i: Inputs): Outputs {
   const p=Number(i.patrimonio)||0; const v=Number(i.vivienda)||0;
-  const MNI=292000000; const VIV_EX=584000000;
+  const MNI=384728044.57; const VIV_EX=1346548155.99;
   const vivExenta=Math.min(v,VIV_EX);
   const base=Math.max(0, p-vivExenta-MNI);
   let imp=0; let alic='0%';
   if (base>0) {
-    if (base<=5000000000) { imp=base*0.005; alic='0.5%'; }
-    else if (base<=10000000000) { imp=5000000000*0.005+(base-5000000000)*0.0075; alic='0.75%'; }
-    else if (base<=20000000000) { imp=5000000000*0.005+5000000000*0.0075+(base-10000000000)*0.01; alic='1%'; }
-    else { imp=5000000000*0.005+5000000000*0.0075+10000000000*0.01+(base-20000000000)*0.0125; alic='1.25%'; }
+    if (base<=52664283.73) { imp=base*0.005; alic='0.5%'; }
+    else if (base<=114105948.16) { imp=263321.42+(base-52664283.73)*0.0075; alic='0.75%'; }
+    else { imp=724133.89+(base-114105948.16)*0.01; alic='1%'; }
   }
   const fmt=(n:number)=>'$'+Math.round(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
   const exento=Math.max(0, p-base);
