@@ -2,6 +2,7 @@
 // Fuente literal del mockup v7 aprobado. No se reinterpreta: la home usa el
 // mismo HTML y CSS que generaron las capturas desktop/mobile aprobadas.
 import approvedSource from '../assets/home-v7-approved.html?raw';
+import { TOTAL_DISPLAY, TOTAL_PLAIN, CATEGORY_COUNT } from '../lib/calc-counts';
 
 const css = approvedSource.match(/<style>([\s\S]*?)<\/style>/i)?.[1] || '';
 let body = approvedSource.match(/<body>([\s\S]*?)<\/body>/i)?.[1] || '';
@@ -26,6 +27,15 @@ body = body.replace(/<script[\s\S]*?<\/script>/i, '');
 body = body
   .replace(/<header class="top">[\s\S]*?<\/header>/i, '')
   .replace(/<footer class="footer">[\s\S]*?<\/footer>/i, '');
+// Contador de calculadoras: el mockup traía cifras hardcodeadas ("4.100") que
+// quedaron viejas tras la poda de calcs. Las sincronizamos con calc-counts
+// (fuente única, dinámica) para que la home muestre el MISMO número que
+// /sobre-nosotros y el resto del sitio. Nunca dos cifras distintas: una cifra
+// que contradice a otra es una señal de falta de revisión editorial (AdSense).
+body = body
+  .replace(/Más de [\d.]+\+? herramientas/g, `Más de ${TOTAL_PLAIN} herramientas`)
+  .replace(/(<strong>)[\d.]+\+?(<\/strong><small>herramientas disponibles)/g, `$1${TOTAL_DISPLAY}$2`)
+  .replace(/(<strong>)\d+(<\/strong><small>categorías)/g, `$1${CATEGORY_COUNT}$2`);
 ---
 
 <div class="approved-home-v7" set:html={body}></div>

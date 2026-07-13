@@ -10,7 +10,7 @@ import CategoryIcon from '../components/CategoryIcon.astro';
 import ProblemInterpreter from '../components/ProblemInterpreter.astro';
 import HeroSearch from '../components/HeroSearch.astro';
 import HomeRedesign from '../components/HomeRedesign.astro';
-import { PT_DISPLAY, CALC_COUNTS, CATEGORY_COUNT } from '../lib/calc-counts';
+import { PT_DISPLAY, CALC_COUNTS, CATEGORY_COUNT, TOTAL_DISPLAY } from '../lib/calc-counts';
 import { DECISION_MANIFEST } from '../lib/decisions/manifest';
 import { PILLARS } from '../lib/pillars';
 import { GONE_410_URLS } from '../lib/gone-410';
@@ -54,15 +54,12 @@ const HOME_SALA_META: Record<string, { label: string; icon: 'briefcase' | 'home'
   'que-hago-con-mis-ahorros': { label: 'Ahorro', icon: 'savings' },
 };
 
-// H1 hero: total del catálogo COMPLETO (todos los países, no solo ES-root) desde
-// la fuente única calc-counts (NUNCA hardcodear el número), redondeado HACIA ABAJO
-// a la centena para no over-promise: 4.179 → "Más de 4.100".
-
-// Conteo EXACTO del catálogo completo (todos los países), de la MISMA fuente única
-// que el hero. Antes estos displays usaban calcs.length (sólo el catálogo AR ≈ 2.793),
-// contradiciendo el "Más de 4.300" del H1 en la misma página. NUNCA usar calcs.length
-// para un total visible: calcs sólo carga ../content/calcs/*.json (ES-root/AR).
-const totalCalcsDisplay = CALC_COUNTS.total.toLocaleString('es-AR');
+// Total visible del catálogo: usamos TOTAL_DISPLAY (indexable/público, floor a la
+// centena, formato "N+") — la MISMA cifra que /sobre-nosotros, el hero v7 y todo el
+// sitio. UN único número dinámico en todas las páginas: nunca "4.100" en la home y
+// "3.300" en Sobre Nosotros (esa contradicción es señal de contenido sin revisar,
+// mala para AdSense/E-E-A-T). NUNCA hardcodear ni usar calcs.length (sólo AR ≈ 2.793).
+const totalCalcsDisplay = TOTAL_DISPLAY;
 
 // Notas recientes del blog → bloque "Novedades" en la home. Señal de frescura
 // para Google Discover + enlazado interno desde la home hacia el contenido

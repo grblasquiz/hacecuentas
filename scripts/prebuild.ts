@@ -75,13 +75,19 @@ async function main() {
   const incremental = Boolean(process.env.INCREMENTAL_CHANGES);
 
   console.log(`[prebuild] mode=${incremental ? 'incremental' : 'full'}`);
-  console.log('[prebuild] fase 1: validate:data + fiscal-gate + regenerate-formula-index + converter-tables + bcra-indices');
+  console.log('[prebuild] fase 1: validate:data + fiscal-gate + placeholder-gate + link-guard + regenerate-formula-index + converter-tables + bcra-indices');
   await Promise.all([
     run(task('validate', 'validate-data-updates')),
     // Gate anti-hardcode fiscal: falla rápido si una fórmula re-introduce un
     // valor fiscal viejo conocido (teto INSS 2025, SM 1518, etc.) en vez de
     // importar la fuente única de src/lib/data/.
     run(task('fiscal-gate', 'check-fiscal-hardcode')),
+    // Gate anti-placeholder (plan AdSense): falla el build si una calc VISIBLE
+    // conserva una frase/campo de plantilla ("fórmula estándar del tema",
+    // "Input 1/2", "Ingresá consultar", ejemplo stub, output genérico de
+    // info-selector). Impide PUBLICAR una calc a medio hacer. Para publicarla:
+    // completá el contenido o marcala "status":"draft". Ver lint-calc-quality.mjs.
+    run({ name: 'placeholder-gate', cmd: NODE, args: ['scripts/lint-calc-quality.mjs', '--gate'] }),
     // Gate de links/slugs hardcodeados (Header/Footer/home/pillars): falla si
     // un slug a mano no resuelve a ruta viva o apunta a un 410.
     run(task('link-guard', 'validate-hardcoded-slugs')),
