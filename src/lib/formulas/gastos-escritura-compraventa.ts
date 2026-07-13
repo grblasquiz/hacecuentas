@@ -38,7 +38,7 @@ export function gastosEscrituraCompraventa(i: Inputs): Outputs {
   const honorariosBruto = valor * (honPct / 100);
   const honorarios = esComprador ? Math.round(honorariosBruto * 1.21) : 0; // +IVA 21%
   const sellos = esComprador ? Math.round(valor * (selloPct / 100)) : 0;
-  const iti = !esComprador ? Math.round(valor * 0.015) : 0; // 1.5% ITI vendedor
+  const iti = 0; // ITI DEROGADO por Ley 27.743 (vigente 15/7/2024). El vendedor ya no paga 1,5% ITI.
   const otros = esComprador ? Math.round(valor * 0.004) : 0; // ~0.4% certificados etc
 
   const gastoTotal = honorarios + sellos + iti + otros;
@@ -62,14 +62,15 @@ export function gastosEscrituraCompraventa(i: Inputs): Outputs {
   const pctSobreOperacion = valor > 0 ? (gastoTotal / valor) * 100 : 0;
   const mayor = partes.length ? partes.reduce((a, b) => (b.value > a.value ? b : a)) : null;
   const mayorPct = mayor && gastoTotal > 0 ? Math.round((mayor.value / gastoTotal) * 100) : 0;
-  const ladoTxt = esComprador ? 'comprador' : 'vendedor';
-  const insightText = mayor
-    ? `Como **${ladoTxt}** vas a desembolsar **$${gastoTotal.toLocaleString('es-AR')}** en gastos de escritura, un **${pctSobreOperacion.toFixed(1)}%** del valor de la operación. El rubro más pesado es **${mayor.label.toLowerCase()}** (${mayorPct}% del total): presupuestalo aparte del precio.`
-    : `Como **${ladoTxt}** vas a desembolsar **$${gastoTotal.toLocaleString('es-AR')}** en gastos de escritura, un **${pctSobreOperacion.toFixed(1)}%** del valor de la operación. Presupuestalo aparte del precio.`;
+  const insightText = !esComprador
+    ? `Como **vendedor** ya no tenés gastos de escrituración obligatorios: el **ITI del 1,5% fue derogado en 2024** (Ley 27.743). Aparte vas a afrontar la **comisión inmobiliaria** (~3% + IVA) y, si compraste el inmueble desde el 1/1/2018, el **impuesto a las ganancias cedular** (15% sobre la ganancia, no sobre el valor total).`
+    : mayor
+    ? `Como **comprador** vas a desembolsar **$${gastoTotal.toLocaleString('es-AR')}** en gastos de escritura, un **${pctSobreOperacion.toFixed(1)}%** del valor de la operación. El rubro más pesado es **${mayor.label.toLowerCase()}** (${mayorPct}% del total): presupuestalo aparte del precio.`
+    : `Como **comprador** vas a desembolsar **$${gastoTotal.toLocaleString('es-AR')}** en gastos de escritura, un **${pctSobreOperacion.toFixed(1)}%** del valor de la operación. Presupuestalo aparte del precio.`;
   const insight = {
-    title: 'Cuánto suman los gastos',
+    title: esComprador ? 'Cuánto suman los gastos' : 'El vendedor ya no paga ITI',
     text: insightText,
-    tone: 'warn' as const,
+    tone: (esComprador ? 'warn' : 'info') as const,
     icon: '🏠',
   };
 

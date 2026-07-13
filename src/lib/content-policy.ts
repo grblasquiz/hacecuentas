@@ -27,6 +27,8 @@
  * page-feed, related, llms) y en los tests.
  */
 
+import { PRUNING_REDIRECTS } from './pruning-redirects.ts';
+
 // ---- Tipos de la política ----
 
 export type YmylRisk = 'low' | 'medium' | 'high';
@@ -253,8 +255,25 @@ export function isIndexableCalc(calc: CalcPolicyInput | null | undefined): boole
  * Regla: sólo se distribuye lo indexable — cualquier página `noindex` o
  * restringida queda fuera de todos los canales.
  */
+/**
+ * Slugs PODADOS: su JSON sigue en el repo (para conservar metadata y permitir
+ * revival), pero la URL responde 301 → categoría/otro vía PRUNING_REDIRECTS.
+ * NO deben aparecer en ninguna superficie de distribución (catálogo, categorías,
+ * relacionadas, populares/nuevas, búsqueda interna, feeds, RSS, sitemap): el link
+ * llevaría a un redirect (mala UX + señal de "contenido eliminado pero enlazado"
+ * para revisores/AdSense). Espeja el Set de scripts/generate-sitemap.ts.
+ */
+const PRUNED_SLUGS: ReadonlySet<string> = new Set(
+  Object.keys(PRUNING_REDIRECTS).map((p) => p.replace(/^\//, '')),
+);
+
+/** ¿El slug de la calc está podado (redirige por PRUNING_REDIRECTS)? */
+export function isPrunedCalc(calc: CalcPolicyInput | null | undefined): boolean {
+  return !!calc?.slug && PRUNED_SLUGS.has(calc.slug);
+}
+
 export function canDistributeCalc(calc: CalcPolicyInput | null | undefined): boolean {
-  return isIndexableCalc(calc);
+  return isIndexableCalc(calc) && !isPrunedCalc(calc);
 }
 
 /**
