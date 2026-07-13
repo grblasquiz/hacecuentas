@@ -126,11 +126,13 @@ const regionColors: Record<string, { bg: string; text: string }> = {
 const regionColor = regionColors[provincia.region] || { bg: 'var(--accent-soft)', text: 'var(--accent)' };
 
 // ─── SEO ──────────────────────────────────────────────────────────────────────
-// Si el base supera 36 chars, omitir "— Alícuotas y Guía" para mantener title ≤70.
+// Título ≤69 chars (Bing exige <70): sufijo largo solo si el base es corto.
 const baseTitle = `${calc.calcName} en ${provincia.name} 2026`;
-const pageTitle = baseTitle.length > 36
+const pageTitle = baseTitle.length <= 35
+  ? `${baseTitle} — Alícuotas y Guía | Hacé Cuentas`
+  : baseTitle.length <= 54
   ? `${baseTitle} | Hacé Cuentas`
-  : `${baseTitle} — Alícuotas y Guía | Hacé Cuentas`;
+  : baseTitle;
 
 // Build dynamic description (120–160 chars)
 const rateSnippet = provinceInfo.rate ? ` Alícuota: ${provinceInfo.rate}.` : '';
