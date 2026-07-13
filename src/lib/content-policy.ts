@@ -64,6 +64,8 @@ export interface CalcPolicyInput {
   reviewType?: ReviewType | string;
   distribution?: DistributionMode | string;
   noindex?: boolean;
+  /** 'draft' = incompleta/sin revisar → restringida (noindex + fuera de distribución + sin ads). */
+  status?: 'draft' | 'reviewed' | string;
   /** Corta anuncios SIN afectar indexación (apuestas/lotería/juego, per Publisher Policies). */
   adsenseEligible?: boolean;
   professionalReviewer?: ProfessionalReviewer | null;
@@ -220,6 +222,7 @@ export function hasValidProfessionalReviewer(calc: CalcPolicyInput | null | unde
  */
 export function isRestrictedCalc(calc: CalcPolicyInput | null | undefined): boolean {
   if (!calc) return false;
+  if (calc.status === 'draft') return true;   // borrador: incompleta/sin revisar → oculta hasta terminar
   if (calc.distribution === 'restricted') return true;
   if (calc.ymylRisk === 'high' && !hasValidProfessionalReviewer(calc)) return true;
   return false;

@@ -143,6 +143,9 @@ const makeCalcSchema = (strictDataUpdate: boolean) => z.object({
   distribution: distributionEnum.optional(),  // 'restricted' fuerza restricción manual
   restrictedMode: z.enum(['dose', 'injury', 'baby', 'clinical']).optional(),  // subgrupo del aviso
   noindex: z.boolean().optional(),
+  // ---- Estados editoriales (plan AdSense: 4 flags independientes) ----
+  status: z.enum(['draft', 'reviewed']).optional(),  // 'draft' = incompleta/sin revisar → oculta (noindex + fuera de nav/sitemap)
+  ymylReviewed: z.boolean().optional(),        // YMYL con revisión completa verificada
   adsenseEligible: z.boolean().optional(),     // false = sin anuncios pero SIGUE indexable (apuestas/juego)
   professionalReviewer: professionalReviewer.optional(),
 }).passthrough().superRefine((val, ctx) => {
