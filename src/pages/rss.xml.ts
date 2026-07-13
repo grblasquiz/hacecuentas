@@ -69,7 +69,7 @@ export const GET: APIRoute = () => {
     <atom:link href="${site}/rss.xml" rel="self" type="application/rss+xml" />
     <atom:link href="https://pubsubhubbub.superfeedr.com/" rel="hub" />
     <atom:link href="https://pubsubhubbub.appspot.com/" rel="hub" />
-    <description>Calculadoras argentinas actualizadas: sueldo, aguinaldo, monotributo, ganancias, jubilación. Datos oficiales (AFIP, BCRA, ANSES) verificados por el equipo editorial.</description>
+    <description>Calculadoras argentinas actualizadas: sueldo, aguinaldo, monotributo, ganancias, jubilación. Datos oficiales (AFIP, BCRA, ANSES) verificados por Martín Rodríguez, editor de Hacé Cuentas.</description>
     <language>es-AR</language>
     <copyright>© ${new Date().getFullYear()} Hacé Cuentas. Contenido bajo CC BY 4.0 (atribución requerida).</copyright>
     <managingEditor>editorial@hacecuentas.com (Martín Rodríguez)</managingEditor>
