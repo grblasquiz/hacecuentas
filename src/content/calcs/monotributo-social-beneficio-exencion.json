@@ -5,11 +5,11 @@
   "h1": "Monotributo Social: exención y beneficios",
   "description": "💰 Monotributo Social: el impuesto queda exento al 100% y los aportes (jubilación + obra social) bajan al 50%. Cuota real ≈ mitad de la categoría A. Requisitos y beneficios.",
   "category": "impuestos",
-  "status": "draft",
+  "status": "reviewed",
   "audience": "AR",
   "icon": "🤝",
   "formulaId": "monotributo-social-beneficio-exencion",
-  "intro": "¿Tenés un emprendimiento o trabajás en una cooperativa y querés formalizarte sin pagar la cuota completa del monotributo? El **Monotributo Social** es el régimen reducido para personas en situación de vulnerabilidad: exime el componente impositivo al 100 % y baja a la mitad los aportes de jubilación y obra social. Elegí qué querés consultar —requisitos, cuota o beneficios— y la herramienta te resume quiénes pueden inscribirse, cuánto se paga realmente cada mes y qué cobertura te da (obra social, aportes y posibilidad de facturar legalmente). Es una guía de referencia; los valores y condiciones exactos los confirma ARCA al inscribirte.",
+  "intro": "¿Tenés un emprendimiento o trabajás en una cooperativa y querés formalizarte sin pagar la cuota completa del monotributo? El **Monotributo Social** es el régimen reducido para personas en situación de vulnerabilidad: exime el componente impositivo al 100 % y baja a la mitad los aportes de jubilación (SIPA) y de obra social. Ingresá tu facturación mensual estimada y la calculadora te muestra **cuánto pagás de cuota social por mes (≈ $17.700, feb 2026)**, cuánto pagarías en el Monotributo común de categoría A (≈ $42.400) y **cuánto ahorrás**, con el desglose de cada componente. Es una guía de referencia; los valores y tu elegibilidad exacta los confirma ARCA al inscribirte.",
   "keyTakeaway": "El Monotributo Social exime el 100% del componente impositivo y reduce a la mitad los aportes de jubilación (SIPA) y de obra social. La cuota efectiva ronda los $17.700 por mes (feb 2026), contra ~$42.400 de la categoría A común, y conservás obra social, aportes jubilatorios y la posibilidad de facturar con Factura C.",
   "useCases": [
     "Un emprendedor de la economía popular inscripto en RENATEP quiere saber cuánto pagaría de cuota al formalizarse: ve que el impuesto queda exento y solo abona la mitad de SIPA y obra social.",
@@ -19,45 +19,44 @@
   ],
   "fields": [
     {
-      "id": "consulta",
-      "label": "Consultar",
-      "type": "select",
-      "required": true,
-      "options": [
-        {
-          "value": "req",
-          "label": "Requisitos"
-        },
-        {
-          "value": "cuota",
-          "label": "Cuota"
-        },
-        {
-          "value": "benef",
-          "label": "Beneficios"
-        }
-      ],
-      "default": "req"
+      "id": "facturacionMensual",
+      "label": "Facturación mensual estimada $",
+      "type": "number",
+      "required": false,
+      "placeholder": "200000",
+      "default": 200000,
+      "help": "Cuánto facturás por mes (aprox.). Sirve para chequear que no superes el tope de la categoría A; la cuota social no depende del monto."
     }
   ],
   "outputs": [
     {
-      "id": "info",
-      "label": "Info",
+      "id": "cuotaSocial",
+      "label": "Cuota mensual (social)",
       "primary": true
     },
     {
-      "id": "resumen",
-      "label": "Interpretación"
+      "id": "cuotaComun",
+      "label": "Cuota común (Cat. A)"
+    },
+    {
+      "id": "ahorroMensual",
+      "label": "Ahorro por mes"
+    },
+    {
+      "id": "desglose",
+      "label": "Desglose"
     }
   ],
   "example": {
-    "title": "Ejemplo de cálculo",
+    "title": "Ejemplo: emprendedor que factura $200.000/mes",
     "steps": [
-      "Cuota",
-      "50% de la A"
+      "**Facturación**: $200.000/mes (dentro del tope de la categoría A).",
+      "**Impuesto integrado**: $0 (exento al 100%, Ley 25.865).",
+      "**SIPA (jubilación)**: $10.104 (50% de los $20.208 de la Cat. A común).",
+      "**Obra social**: $7.590 (50% de los $15.180 de la Cat. A común).",
+      "**Cuota común Cat. A**: $6.999 + $20.208 + $15.180 = $42.387."
     ],
-    "result": "$12k"
+    "result": "Cuota Monotributo Social: **$17.694/mes** vs. **$42.387** de la categoría A común → **ahorrás $24.693 por mes** ($296.316 al año), con obra social, aportes y Factura C."
   },
   "explanation": "El **Monotributo Social** es un régimen tributario simplificado especial, creado por la **Ley 25.865** y reglamentado por el **Decreto 806/2004**, diseñado para personas en situación de vulnerabilidad económica que desarrollan una actividad económica genuina (emprendimientos productivos, cooperativas de trabajo, proyectos socio-productivos, microempresas). Es la puerta de entrada a la formalización para quienes no llegan al Monotributo común y permite acceder a obra social, aportes jubilatorios y la posibilidad de emitir facturas legalmente, sin pagar el componente impositivo y con cuota muy reducida.\n\nEsta calculadora funciona como una consulta de referencia. Según la opción elegida (requisitos, cuota o beneficios), devuelve la información correspondiente: quiénes pueden inscribirse, cuánto se paga efectivamente cada mes y qué cobertura social y económica garantiza el régimen.\n\n## Cómo se calcula\n\n```\nconsulta = {\n   \"requisitos\"  → condiciones de acceso, ingreso familiar bajo SMVM,\n                   inscripción en RENATEP / programas sociales habilitantes,\n   \"cuota\"       → componente impositivo EXENTO + 50% del aporte SIPA + 50% del componente OS,\n   \"beneficios\"  → obra social, aportes jubilatorios, facturación legal,\n                   compatibilidad con AUH y otros programas\n}\n```\n\nA diferencia del Monotributo común, el **componente impositivo está exento al 100%** y los componentes previsional y de obra social tienen reducción del **50%**. Esto convierte la cuota efectiva en una fracción de lo que pagaría un monotributista de la categoría A clásica.\n\n## Cómo encuadra la cuota\n\n| Componente | Monotributo común (Cat. A) | Monotributo Social |\n|---|---|---|\n| Impuesto integrado | Se paga | Exento al 100% |\n| Aporte SIPA (jubilación) | Se paga completo | Reducción del 50% |\n| Obra social | Se paga completo | Reducción del 50% (o exento según programa) |\n| Carga total | Cuota mensual común | Cuota muy inferior, próxima a cero en algunos casos |\n\n## Requisitos para acceder\n\n- Realizar una **actividad económica productiva** propia (oficio, emprendimiento, cooperativa, microempresa).\n- Ingreso bruto anual proyectado **dentro del tope de la categoría A** del régimen general.\n- **Ingreso familiar no debe superar** el Salario Mínimo Vital y Móvil (SMVM) por integrante (criterio orientativo, varía por trámite).\n- No ser **importador**, no tener **más de una unidad de explotación** ni **más de tres actividades** simultáneas.\n- Estar inscripto o tener encuadre con programas sociales o registros habilitantes: **RENATEP (Registro Nacional de Trabajadores y Trabajadoras de la Economía Popular)**, ex Potenciar Trabajo, cooperativa registrada en INAES, asociación civil, programas de emprendedores sociales del Ministerio de Capital Humano.\n- Para integrantes de **cooperativas**, el régimen aplica al asociado individual.\n\n## Marco normativo y organismos\n\n- **Ley 25.865** — creación del Monotributo Social.\n- **Decreto 806/2004** — reglamentación, ampliada por normativa posterior.\n- **Ley 26.117 (Microcrédito)** — interactúa con el régimen.\n- **INAES** — habilita cooperativas y mutuales.\n- **Ministerio de Capital Humano (ex Desarrollo Social)** — administra registros como RENATEP.\n- **ARCA (ex-AFIP)** — administra la inscripción y emisión de comprobantes (factura C).\n- **PAMI y obras sociales sindicales habilitadas** — son los efectores de la cobertura.\n\n## Beneficios concretos\n\n- **Obra social** con derecho a prestaciones del **PMO (Programa Médico Obligatorio)**.\n- **Aportes para jubilación futura** vía SIPA (con reducción).\n- **Capacidad de facturar legalmente** (Factura C) a personas físicas, empresas, organismos del Estado.\n- **Compatibilidad con AUH** y otros programas sociales (la AUH no se pierde por estar inscripto en MS, en general).\n- **Recategorización automática** o **baja de oficio** sin riesgo de generar deuda fiscal masiva.\n- Posibilidad de **graduarse al Monotributo común** cuando el emprendimiento crece, manteniendo el CUIT y la historia previsional.\n\n## Cuándo NO se aplica\n\n- Si la facturación esperada **supera el tope** de la categoría A: corresponde Monotributo común.\n- Si el contribuyente tiene **otros ingresos formales** que rompen el supuesto de vulnerabilidad (relación de dependencia con sueldo significativo, jubilación, etc.).\n- Si la actividad está **excluida del régimen general** (importación, profesiones liberales fuera del encuadre, etc.).\n- Si el ingreso familiar **supera el umbral** definido por la normativa: el organismo otorgante puede rechazar la inscripción.\n- Si se trata de una **sociedad comercial** o estructura empresarial: el régimen es para personas humanas o cooperativas con criterios específicos.\n",
   "faq": [
@@ -119,11 +118,11 @@
   ],
   "dataUpdate": {
     "frequency": "biannual",
-    "lastUpdated": "2026-01-16",
-    "source": "ARCA — Tabla categorías Monotributo (vigente desde feb 2026)",
+    "lastUpdated": "2026-02-01",
+    "source": "ARCA — Tabla de categorías del Monotributo (vigente feb 2026)",
     "sourceUrl": "https://www.afip.gob.ar/monotributo/categorias.asp",
-    "updateType": "auto-scrape",
-    "notes": "Fórmula fija, no requiere actualización de data externa"
+    "updateType": "manual",
+    "notes": "Importes de cuota vigentes desde feb 2026 (ARCA). Actualizar cuando ARCA publique nuevos valores de categorías."
   },
   "seoKeywords": [
     "calcular monotributo social beneficio exencion",
@@ -137,7 +136,7 @@
     "calculadora monotributo social beneficio exencion",
     "monotributo social beneficio exencion ejemplo"
   ],
-  "lastReviewed": "2026-07-10",
+  "lastReviewed": "2026-07-12",
   "referenceTables": [
     {
       "title": "Cuota mensual: Monotributo Social vs Monotributo común Cat A (feb 2026)",
