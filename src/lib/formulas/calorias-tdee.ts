@@ -57,20 +57,27 @@ export function caloriasTDEE(inputs: TDEEInputs): TDEEOutputs {
 
   const tdeeR = Math.round(tdee);
   const bmrR = Math.round(bmr);
-  const bajarR = Math.round(tdee - 500);
+  // Piso clínico: no sugerir objetivos por debajo del mínimo recomendado sin
+  // supervisión médica (un déficit genérico de 500 kcal puede caer bajo el piso o el BMR).
+  const pisoBajar = sexo === 'femenino' ? 1200 : 1500;
+  const bajarRaw = tdee - 500;
+  const bajarClamped = bajarRaw < pisoBajar;
+  const bajarR = Math.round(Math.max(bajarRaw, pisoBajar));
   const subirR = Math.round(tdee + 500);
   const nf = new Intl.NumberFormat(__lang === 'en' ? 'en-US' : 'es-AR');
+  const avisoPisoEn = bajarClamped ? ` This floor of **${nf.format(bajarR)} kcal** is the minimum recommended without medical supervision — don't go below it on your own.` : '';
+  const avisoPisoEs = bajarClamped ? ` Este piso de **${nf.format(bajarR)} kcal** es el mínimo recomendado sin supervisión médica; no bajes de ahí por tu cuenta.` : '';
 
   const _insight = __lang === 'en'
     ? {
         title: 'Reading your numbers',
-        text: `Your body burns about **${nf.format(tdeeR)} kcal/day** at your current activity level; **${nf.format(bmrR)} kcal** of that is just staying alive (resting metabolism). Eat **${nf.format(bajarR)} kcal** to lose roughly 0.5 kg/week, or **${nf.format(subirR)} kcal** to gain it.`,
+        text: `Your body burns about **${nf.format(tdeeR)} kcal/day** at your current activity level; **${nf.format(bmrR)} kcal** of that is just staying alive (resting metabolism). Eat **${nf.format(bajarR)} kcal** to lose roughly 0.5 kg/week, or **${nf.format(subirR)} kcal** to gain it.${avisoPisoEn}`,
         tone: 'neutral',
         icon: '🔥',
       }
     : {
         title: 'Cómo leer tus números',
-        text: `Tu cuerpo gasta unas **${nf.format(tdeeR)} kcal/día** con tu nivel de actividad actual; **${nf.format(bmrR)} kcal** de eso es sólo mantenerte vivo (metabolismo en reposo). Comé **${nf.format(bajarR)} kcal** para bajar ~0,5 kg/semana, o **${nf.format(subirR)} kcal** para subirlo.`,
+        text: `Tu cuerpo gasta unas **${nf.format(tdeeR)} kcal/día** con tu nivel de actividad actual; **${nf.format(bmrR)} kcal** de eso es sólo mantenerte vivo (metabolismo en reposo). Comé **${nf.format(bajarR)} kcal** para bajar ~0,5 kg/semana, o **${nf.format(subirR)} kcal** para subirlo.${avisoPisoEs}`,
         tone: 'neutral',
         icon: '🔥',
       };

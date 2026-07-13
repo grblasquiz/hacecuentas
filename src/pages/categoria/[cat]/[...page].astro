@@ -111,12 +111,12 @@ Si acabás de cobrar el primer sueldo o cambiaste de trabajo, usá la calculador
     label: 'Salud',
     title: 'Calculadoras de Salud 2026 | Hacé Cuentas',
     desc: 'Calculadoras de salud: IMC, calorías diarias (TDEE), semanas de embarazo, ovulación, BMR, frecuencia cardíaca. Basadas en fórmulas OMS y ACOG.',
-    intro: 'Herramientas para monitorear tu salud: IMC, necesidades calóricas, embarazo y ciclo menstrual. Basadas en fórmulas validadas por OMS y ACOG.',
+    intro: 'Herramientas para monitorear tu salud: IMC, necesidades calóricas, embarazo y ciclo menstrual. Basadas en fórmulas de referencia (OMS, ACOG); no reemplazan una consulta médica.',
     color: '#16a34a',
     icon: '❤️',
     seoContent: `## Calculadoras de salud basadas en evidencia
 
-Las calculadoras de salud se apoyan en **fórmulas médicas validadas**: **IMC** según la OMS (Adolphe Quetelet, 1832), **BMR** con Mifflin-St Jeor (1990) o Harris-Benedict revisada, **TDEE** con factor de actividad ACSM, **FPP (fecha probable de parto)** por regla de Naegele, **ventana fértil** según fórmula de Ogino-Knaus, y **frecuencia cardíaca máxima** con Tanaka (208 − 0.7 × edad). Estas herramientas **no reemplazan una consulta médica**: son útiles para orientarte, planificar dieta o ejercicio, y hacer seguimiento, pero ante cualquier síntoma o duda concreta consultá con tu médico o un especialista.
+Las calculadoras de salud usan **fórmulas de referencia ampliamente citadas**: **IMC** según la OMS (Adolphe Quetelet, 1832), **BMR** con Mifflin-St Jeor (1990) o Harris-Benedict revisada, **TDEE** con factor de actividad ACSM, **FPP (fecha probable de parto)** por regla de Naegele, **ventana fértil** según fórmula de Ogino-Knaus, y **frecuencia cardíaca máxima** con Tanaka (208 − 0.7 × edad). Estas herramientas **no reemplazan una consulta médica**: son útiles para orientarte, planificar dieta o ejercicio, y hacer seguimiento, pero ante cualquier síntoma o duda concreta consultá con tu médico o un especialista.
 
 ## Fórmulas más importantes
 
@@ -131,15 +131,15 @@ Las calculadoras de salud se apoyan en **fórmulas médicas validadas**: **IMC**
 
 ## Cuándo consultar profesional
 
-- Si tu **IMC está fuera de 18.5 – 29.9** (bajo peso u obesidad).
+- Si tu **IMC es menor a 18.5** (bajo peso) o **igual o mayor a 25** (sobrepeso 25–29.9, obesidad ≥30).
 - Si querés **bajar o subir más de 5 kg** con una dieta específica.
 - Si sos **embarazada** — ningún cálculo reemplaza los controles obstétricos.
-- Si tenés **dudas sobre medicación** (especialmente en mascotas).
+- Si tenés **dudas sobre tu tratamiento o medicación**, consultá con un profesional.
 - Si tu **frecuencia cardíaca en reposo > 100 bpm** o en ejercicio no baja tras descansar.`,
     faq: [
       {
         q: '¿Son precisos los resultados de estas calculadoras?',
-        a: 'Las fórmulas son **estándares médicos validados** (OMS, ACSM, ACOG). Sin embargo, son **estimaciones**: tu metabolismo real puede variar ±10-15% por factores genéticos, masa muscular, hormonales. Usalas como **punto de partida**, no como verdad absoluta.',
+        a: 'Las fórmulas son **estándares de referencia reconocidos** (OMS, ACSM, ACOG), pero su aplicación no sustituye una evaluación profesional. Sin embargo, son **estimaciones**: tu metabolismo real puede variar ±10-15% por factores genéticos, masa muscular, hormonales. Usalas como **punto de partida**, no como verdad absoluta.',
       },
       {
         q: '¿Un IMC alto siempre significa obesidad?',
@@ -150,8 +150,8 @@ Las calculadoras de salud se apoyan en **fórmulas médicas validadas**: **IMC**
         a: '**No**. La [fecha probable de parto](/calculadora-fecha-probable-parto) y las [semanas de embarazo](/calculadora-semanas-embarazo) son estimaciones por regla de Naegele (FUM + 280 días). La **ecografía del primer trimestre** es el estándar de oro para datar el embarazo. Si tus ciclos son irregulares o no recordás la FUM exacta, la ecografía es más confiable.',
       },
       {
-        q: '¿Puedo dosificar medicación para mi mascota con la calculadora?',
-        a: 'La calculadora de [dosis para mascota](/calculadora-dosis-antipulgas-peso-mascota) da un **valor estimativo** basado en peso y droga estándar. **Siempre consultá al veterinario** antes de administrar cualquier medicamento. Algunos fármacos (ibuprofeno, paracetamol, xilitol) son **tóxicos letales** para perros y gatos aun en dosis pequeñas.',
+        q: '¿Estas calculadoras reemplazan una consulta médica?',
+        a: 'No. Son herramientas **orientativas y educativas**: te ayudan a estimar valores de referencia (IMC, calorías, semanas de embarazo) y a hacer seguimiento, pero no diagnostican ni indican tratamientos. Ante cualquier síntoma, duda concreta o decisión sobre tu salud, consultá con un profesional matriculado.',
       },
       {
         q: '¿Qué TDEE usar si hago deporte irregular?',
@@ -1868,16 +1868,20 @@ function md(text: string): string {
         try { return new URLSearchParams(location.search).get('sub'); } catch (e) { return null; }
       }
       function setSub(id, push) {
-        subFilter = id;
+        // Resolver el grupo ANTES de fijar el filtro: si ?sub= apunta a un grupo
+        // inexistente (link viejo, grupo podado/renombrado, build stale), lo tratamos
+        // como "sin filtro". Si no, subFilter esconde TODAS las cards (visible=0) →
+        // "No encontramos…" + banner "Mostrando solo ." vacío, con decenas de calcs.
+        var g = id ? grid.querySelector('[data-group][id="g-' + id + '"]') : null;
+        subFilter = g ? id : null;
         try {
           var url = new URL(location.href);
-          if (id) url.searchParams.set('sub', id); else url.searchParams.delete('sub');
+          if (subFilter) url.searchParams.set('sub', subFilter); else url.searchParams.delete('sub');
           if (push) history.pushState({}, '', url);
         } catch (e) {}
         if (subActive && subName) {
-          var g = id ? grid.querySelector('[data-group][id="g-' + id + '"]') : null;
           subName.textContent = g ? (g.getAttribute('data-group-title') || '') : '';
-          subActive.hidden = !id;
+          subActive.hidden = !g;
         }
       }
 

@@ -12,6 +12,7 @@
  */
 
 import { canDistributeCalc } from './content-policy';
+import { PRUNING_REDIRECTS } from './pruning-redirects.ts';
 
 const arGlob = import.meta.glob('../content/calcs/*.json');
 const enGlob = import.meta.glob('../content/calcs-en/*.json');
@@ -80,15 +81,67 @@ export const CATEGORY_COUNT = new Set(
 ).size;
 
 // YMYL (Fase 10): la cifra PÚBLICA ("calculadoras disponibles en buscadores")
-// NO cuenta páginas restringidas ni noindex. `canDistributeCalc` = indexable +
-// distribuible. `CALC_COUNTS.total` sigue siendo el bruto del repositorio (para
-// métricas internas), pero el display público usa el indexable.
-const AR_INDEXABLE = Object.values(arEager)
-  .map((m: any) => m.default || m)
-  .filter((c: any) => canDistributeCalc(c)).length;
-const AR_RESTRICTED = CALC_COUNTS.ar - AR_INDEXABLE; // noindex + restringidas
-// Las restringidas viven sólo en AR por ahora; el público total resta esas.
-const PUBLIC_TOTAL = CALC_COUNTS.total - AR_RESTRICTED;
+// NO cuenta páginas restringidas, noindex ni podadas (301). Se computa con la
+// MISMA regla que scripts/generate-sitemap.ts para que se cumpla el invariante
+// del auditor: total público = URLs canónicas del sitemap. `CALC_COUNTS.total`
+// sigue siendo el bruto del repositorio (para métricas internas).
+//
+// Antes PUBLIC_TOTAL = total_bruto − AR_restringidas: sólo descontaba las AR
+// noindex y contaba en crudo los 13 locales, incluyendo cientos de URLs
+// EN/PT/… que redirigen (301, en PRUNING_REDIRECTS con clave prefijada
+// `/en/…`) o son noindex → sobre-conteo (3.100+ vs ~2.400 reales del sitemap).
+const enEager = import.meta.glob<any>('../content/calcs-en/*.json', { eager: true });
+const ptEager = import.meta.glob<any>('../content/calcs-pt/*.json', { eager: true });
+const ptPtEager = import.meta.glob<any>('../content/calcs-pt-pt/*.json', { eager: true });
+const mxEager = import.meta.glob<any>('../content/calcs-mx/*.json', { eager: true });
+const esEager = import.meta.glob<any>('../content/calcs-es/*.json', { eager: true });
+const coEager = import.meta.glob<any>('../content/calcs-co/*.json', { eager: true });
+const clEager = import.meta.glob<any>('../content/calcs-cl/*.json', { eager: true });
+const peEager = import.meta.glob<any>('../content/calcs-pe/*.json', { eager: true });
+const ecEager = import.meta.glob<any>('../content/calcs-ec/*.json', { eager: true });
+const veEager = import.meta.glob<any>('../content/calcs-ve/*.json', { eager: true });
+const pyEager = import.meta.glob<any>('../content/calcs-py/*.json', { eager: true });
+const uyEager = import.meta.glob<any>('../content/calcs-uy/*.json', { eager: true });
+const doEager = import.meta.glob<any>('../content/calcs-do/*.json', { eager: true });
+
+// Espeja PRUNED_SLUGS de content-policy / generate-sitemap: claves de
+// PRUNING_REDIRECTS sin la barra inicial (para locales vienen prefijadas: `en/…`).
+const PRUNED_SLUGS: ReadonlySet<string> = new Set(
+  Object.keys(PRUNING_REDIRECTS).map((p) => p.replace(/^\//, '')),
+);
+
+// Distribuibles por locale: canDistributeCalc (indexable + no restringida + no
+// podada por slug pelado) y, para locales, además excluir las podadas con clave
+// prefijada `${prefix}/${slug}` (el slug pelado colisiona con una redirección
+// ES-root, por eso el sitemap pasa el prefijo). Idéntico a generate-sitemap.ts.
+function countDistributable(glob: Record<string, any>, prefix: string): number {
+  return Object.values(glob)
+    .map((m: any) => m.default || m)
+    .filter((c: any) => canDistributeCalc(c) && (prefix ? !PRUNED_SLUGS.has(`${prefix}/${c.slug}`) : true))
+    .length;
+}
+
+const DIST = {
+  ar: countDistributable(arEager, ''),
+  en: countDistributable(enEager, 'en'),
+  pt: countDistributable(ptEager, 'pt'),
+  ptPt: countDistributable(ptPtEager, 'pt-pt'),
+  mx: countDistributable(mxEager, 'mx'),
+  es: countDistributable(esEager, 'es'),
+  co: countDistributable(coEager, 'co'),
+  cl: countDistributable(clEager, 'cl'),
+  pe: countDistributable(peEager, 'pe'),
+  ec: countDistributable(ecEager, 'ec'),
+  ve: countDistributable(veEager, 've'),
+  py: countDistributable(pyEager, 'py'),
+  uy: countDistributable(uyEager, 'uy'),
+  do: countDistributable(doEager, 'do'),
+} as const;
+
+const AR_INDEXABLE = DIST.ar;
+const AR_RESTRICTED = CALC_COUNTS.ar - AR_INDEXABLE; // noindex + restringidas + podadas AR
+// Público = suma de distribuibles de TODOS los locales = URLs canónicas del sitemap.
+const PUBLIC_TOTAL = Object.values(DIST).reduce((a, b) => a + b, 0);
 
 export const CALC_COUNTS_PUBLIC = {
   arIndexable: AR_INDEXABLE,
@@ -107,5 +160,5 @@ export const TOTAL_PLAIN = formatES(floorTo100(PUBLIC_TOTAL));
 // Total del catálogo en ESPAÑOL (excluye EN/PT-BR/PT-PT), indexable, formateado
 // en-US — para textos en inglés que refieren al catálogo hispano
 // ("Visit our full site in Spanish with N+ calculators").
-const ES_PUBLIC_TOTAL = PUBLIC_TOTAL - CALC_COUNTS.en - CALC_COUNTS.pt - CALC_COUNTS.ptPt;
+const ES_PUBLIC_TOTAL = PUBLIC_TOTAL - DIST.en - DIST.pt - DIST.ptPt;
 export const ES_TOTAL_DISPLAY_EN = `${floorTo100(ES_PUBLIC_TOTAL).toLocaleString('en-US')}+`;

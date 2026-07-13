@@ -12,23 +12,48 @@
  */
 
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { canDistributeCalc } from '../src/lib/content-policy.ts';
+import { PRUNING_REDIRECTS } from '../src/lib/pruning-redirects.ts';
 
-const CALC_DIRS = [
-  'calcs', 'calcs-en', 'calcs-pt', 'calcs-pt-pt', 'calcs-mx', 'calcs-es',
-  'calcs-co', 'calcs-cl', 'calcs-pe', 'calcs-ec', 'calcs-ve', 'calcs-py',
-  'calcs-uy', 'calcs-do',
+// MISMA regla que src/lib/calc-counts.ts y scripts/generate-sitemap.ts: el total
+// PÚBLICO cuenta sólo calcs distribuibles (indexables + no restringidas + no
+// podadas), no archivos en bruto. Antes contaba archivos → 3.400+ mientras la
+// home decía 3.100+ y el sitemap tenía ~2.400: inconsistencia que el auditor
+// marcó bloqueante. Ahora los tres coinciden.
+const PRUNED_SLUGS = new Set(Object.keys(PRUNING_REDIRECTS).map((p) => p.replace(/^\//, '')));
+
+// [dir, prefijo de URL]. Las claves de PRUNING_REDIRECTS para locales vienen
+// prefijadas (`/en/…`); sin prefijo, una calc locale viva colisiona con una
+// redirección ES-root y se contaría de más/menos.
+const CALC_DIRS: Array<[string, string]> = [
+  ['calcs', ''], ['calcs-en', 'en'], ['calcs-pt', 'pt'], ['calcs-pt-pt', 'pt-pt'],
+  ['calcs-mx', 'mx'], ['calcs-es', 'es'], ['calcs-co', 'co'], ['calcs-cl', 'cl'],
+  ['calcs-pe', 'pe'], ['calcs-ec', 'ec'], ['calcs-ve', 've'], ['calcs-py', 'py'],
+  ['calcs-uy', 'uy'], ['calcs-do', 'do'],
 ];
 
-function countDir(dir: string): number {
+function listJson(dir: string): string[] {
   try {
-    return readdirSync(`src/content/${dir}`).filter((f) => f.endsWith('.json')).length;
+    return readdirSync(`src/content/${dir}`).filter((f) => f.endsWith('.json'));
   } catch {
-    return 0;
+    return [];
   }
 }
 
-const total = CALC_DIRS.reduce((sum, dir) => sum + countDir(dir), 0);
-const ptTotal = countDir('calcs-pt');
+function countDistributable(dir: string, prefix: string): number {
+  let n = 0;
+  for (const f of listJson(dir)) {
+    let c: any;
+    try { c = JSON.parse(readFileSync(`src/content/${dir}/${f}`, 'utf8')); } catch { continue; }
+    if (canDistributeCalc(c) && (prefix ? !PRUNED_SLUGS.has(`${prefix}/${c.slug}`) : true)) n++;
+  }
+  return n;
+}
+
+const total = CALC_DIRS.reduce((sum, [dir, prefix]) => sum + countDistributable(dir, prefix), 0);
+// El sub-conteo PT-BR se muestra en bruto (calcs-pt tiene muchas noindex; el
+// distribuible < 100 floorearía a "0+"). Igual que PT_DISPLAY en calc-counts.ts.
+const ptTotal = listJson('calcs-pt').length;
 
 const floorTo100 = (n: number) => Math.floor(n / 100) * 100;
 const floored = floorTo100(total);
