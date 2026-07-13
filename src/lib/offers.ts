@@ -81,15 +81,7 @@ const OFFERS: Record<string, Offer> = {
     bodyDynamic: 'Fecha probable de parto: {value}. Andá armando lo esencial para las primeras semanas, con envío a todo el país.',
     cta: 'Ver productos para el embarazo',
     href: ml('embarazo'),
-  },
-  'calculadora-sexo-bebe-tabla-china': {
-    id: 'ml-bebe-ajuar', vertical: 'bebe', enabled: true,
-    label: '¿Nene o nena?',
-    body: 'Armá el ajuar sin apuro: bodies, mantas y lo básico para el primer mes.',
-    cta: 'Ver ropa y ajuar de bebé',
-    href: ml('ajuar-bebe'),
-  },
-  'calculadora-edad-en-semanas': {
+  },  'calculadora-edad-en-semanas': {
     id: 'ml-bebe-semanas', vertical: 'bebe', enabled: true,
     label: 'Semana a semana',
     body: 'Juguetes y artículos por etapa, elegidos por edad del bebé.',

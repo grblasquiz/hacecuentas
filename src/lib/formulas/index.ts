@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-07-12
+// Generated: 2026-07-13
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { rmPesoMaximo } from './1rm-peso-maximo';
@@ -2616,7 +2616,6 @@ import { semillasPorM2Huerta } from './semillas-por-m2-huerta';
 import { senoCosenoTangenteAnguloTriangulo } from './seno-coseno-tangente-angulo-triangulo';
 import { sensibilidadMouseDpiJuego } from './sensibilidad-mouse-dpi-juego';
 import { servoPwmAngulo } from './servo-pwm-angulo';
-import { sexoBebeTablaChina } from './sexo-bebe-tabla-china';
 import { shareOfVoiceMarketing } from './share-of-voice-marketing';
 import { sharpeRatioPortafolio } from './sharpe-ratio-portafolio';
 import { compute as compute__side_hustle_tax_savings_calculator } from './side-hustle-tax-savings-calculator';
@@ -5644,7 +5643,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'seno-coseno-tangente-angulo-triangulo': senoCosenoTangenteAnguloTriangulo,
   'sensibilidad-mouse-dpi-juego': sensibilidadMouseDpiJuego,
   'servo-pwm-angulo': servoPwmAngulo,
-  'sexo-bebe-tabla-china': sexoBebeTablaChina,
   'share-of-voice-marketing': shareOfVoiceMarketing,
   'sharpe-ratio-portafolio': sharpeRatioPortafolio,
   'side-hustle-tax-savings-calculator': compute__side_hustle_tax_savings_calculator,
