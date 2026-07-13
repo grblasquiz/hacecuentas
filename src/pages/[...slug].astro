@@ -744,49 +744,11 @@ if (externalDatasets.length > 0) {
   schemaGraph.push(...externalDatasets);
 }
 
-// Recipe schema — para calcs cocina que computan proporciones/cantidades
-// (asado por persona, sushi por invitado, vino por mesa, etc.). Google y AI
-// engines premian Recipe rich result + agrega chance de aparecer en Recipe
-// carousel + Discover. No aplica a conversiones (tazas-gramos, etc.).
-const RECIPE_SLUG_PATTERNS = [
-  'por-persona', 'por-invitado', 'por-mesa', 'para-evento', 'cumpleanos',
-  'casamiento', 'fiesta', 'asado', 'parrilla', 'cocktail',
-  'bebidas-evento', 'cantidad-empanadas', 'cantidad-hamburguesas',
-  'cantidad-pizzas', 'hielo-cubos', 'porciones-',
-];
-const isRecipeEligible = calc.category === 'cocina' &&
-  RECIPE_SLUG_PATTERNS.some((p) => calc.slug.includes(p));
-if (isRecipeEligible) {
-  const primaryOutput = calc.outputs?.find((o: any) => o.primary) || calc.outputs?.[0];
-  const recipeYield = primaryOutput?.label || 'Cantidad calculada según invitados';
-  schemaGraph.push({
-    '@type': 'Recipe',
-    name: calc.h1,
-    description: schemaDescription,
-    url: `https://hacecuentas.com/${calc.slug}`,
-    inLanguage: schemaLang,
-    author: {
-      '@type': 'Person',
-      '@id': 'https://hacecuentas.com/autores/martin-rodriguez#person',
-      name: 'Martín Rodríguez',
-      url: 'https://hacecuentas.com/autores/martin-rodriguez',
-    },
-    datePublished: (datePublished || dateModified).split('T')[0],
-    dateModified: dateModified.split('T')[0],
-    image: `https://hacecuentas.com${ogImage}`,
-    recipeCategory: 'Cantidades para eventos',
-    recipeCuisine: 'Argentina',
-    recipeYield,
-    recipeInstructions: howToSteps.map((s: any, i: number) => ({
-      '@type': 'HowToStep',
-      position: i + 1,
-      name: s.name,
-      text: s.text,
-      url: `https://hacecuentas.com/${calc.slug}#paso-${i + 1}`,
-    })),
-    keywords: (calc.seoKeywords || []).slice(0, 5).join(', '),
-  });
-}
+// Recipe schema REMOVIDO (2026-07-13): estos calcs de cocina son planificadores
+// de cantidad (asado kg/persona, bebidas, hielo, vajilla, carbón…), no recetas.
+// Faltaban cookTime/prepTime/nutrition/video/rating y fabricarlos = riesgo de
+// structured-data spam (GSC lo marcaba). El tipo correcto para una herramienta,
+// SoftwareApplication, ya se emite; sumado a HowTo + FAQ alcanza para rich results.
 
 // MathSolver schema — Google rich result para solucionadores matemáticos.
 // Solo se aplica a calcs matemáticas reales (no conversores). El reward es
@@ -893,7 +855,6 @@ if (calc.category === 'medio-ambiente') {
       url: 'https://hacecuentas.com',
     },
     isAccessibleForFree: true,
-  license: 'https://creativecommons.org/licenses/by/4.0/',
     license: 'https://creativecommons.org/licenses/by/4.0/',
   });
 }
