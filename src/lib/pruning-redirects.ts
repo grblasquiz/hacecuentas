@@ -26,7 +26,6 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/calculadora-dias-vacaciones-ganadas-antiguedad-lct': '/calculadora-dias-vacaciones-ley',
   '/calculadora-conversor-litros-pintura-por-metro-cuadrado': '/calculadora-pintura-por-m2-litros-latas',
   '/calculadora-litros-nafta-viaje-ruta-argentina': '/calculadora-combustible-viaje-auto',
-  '/calculadora-ahorro-compuesto-tiempo-duplicar-regla-72': '/calculadora-regla-72-duplicar-dinero',
   '/area-jardin': '/calculadora-area-perimetro-figuras',
   '/argon2-costo-memoria-tiempo': '/categoria/tecnologia',
   '/blog/como-calcular-aguinaldo-2026-paso-a-paso': '/blog/como-calcular-aguinaldo-2026',
