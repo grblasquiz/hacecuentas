@@ -6,6 +6,11 @@
 // que assets → soluciona sin necesidad de borrar JSONs.
 
 export const PRUNING_REDIRECTS: Record<string, string> = {
+  // Fusiones de duplicados (review AdSense 2026-07-13): calcs solapadas → canónica.
+  '/calculadora-gastos-escritura-compraventa': '/calculadora-gastos-escritura-compra-inmueble',
+  '/calculadora-gastos-escriturar-vivienda-primera-casa': '/calculadora-gastos-escritura-compra-inmueble',
+  '/calculadora-autonomia-bateria-dispositivo-mah': '/calculadora-duracion-bateria-mah-consumo',
+  '/calculadora-lluvia-captacion-techo-m3-anual': '/calculadora-recoleccion-agua-lluvia-techo',
   '/area-jardin': '/calculadora-area-perimetro-figuras',
   '/argon2-costo-memoria-tiempo': '/categoria/tecnologia',
   '/blog/como-calcular-aguinaldo-2026-paso-a-paso': '/blog/como-calcular-aguinaldo-2026',
