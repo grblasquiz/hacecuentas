@@ -286,11 +286,39 @@ export function canEmbedCalc(calc: CalcPolicyInput | null | undefined): boolean 
 /**
  * ¿Se pueden mostrar ANUNCIOS / afiliados? No en páginas restringidas.
  */
+/**
+ * ¿La calc tiene CALIDAD suficiente para monetizar? (review AdSense 2026-07:
+ * "no mostrar anuncios en páginas sin contenido suficiente o de bajo valor").
+ * Exige fuentes citadas, explicación sustancial y un ejemplo resuelto. Las
+ * podadas nunca califican. OJO: es independiente de la indexabilidad — una calc
+ * puede seguir indexada (contenido útil, rastreable) pero quedar SIN ads hasta
+ * completar fuentes/ejemplo. Gate positivo: sólo se monetiza lo que califica.
+ */
+export function isAdWorthy(calc: CalcPolicyInput | null | undefined): boolean {
+  if (!calc) return false;
+  if (isPrunedCalc(calc)) return false;
+  const sources = Array.isArray((calc as { sources?: unknown }).sources)
+    ? ((calc as { sources: unknown[] }).sources)
+    : [];
+  if (sources.length < 1) return false;
+  const explanation = typeof calc.explanation === 'string' ? calc.explanation : '';
+  if (explanation.length < 600) return false;
+  const c = calc as { example?: unknown; solvedExample?: unknown; solvedExamples?: unknown };
+  const hasExample =
+    !!c.example ||
+    !!c.solvedExample ||
+    (Array.isArray(c.solvedExamples) && c.solvedExamples.length > 0);
+  return hasExample;
+}
+
 export function canAdvertiseCalc(calc: CalcPolicyInput | null | undefined): boolean {
   // `adsenseEligible: false` corta anuncios aunque la página siga indexable
   // (apuestas/lotería/juego: se mantienen educativas y rastreables, sin ads).
   if (calc && calc.adsenseEligible === false) return false;
-  return !isRestrictedCalc(calc);
+  // Restringidas YMYL (dosis/medicación/tratamiento sin revisor válido) → sin ads.
+  if (isRestrictedCalc(calc)) return false;
+  // Review AdSense 2026-07: sólo se monetiza contenido de calidad comprobable.
+  return isAdWorthy(calc);
 }
 
 /**
