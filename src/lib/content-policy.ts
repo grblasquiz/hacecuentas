@@ -64,6 +64,8 @@ export interface CalcPolicyInput {
   reviewType?: ReviewType | string;
   distribution?: DistributionMode | string;
   noindex?: boolean;
+  /** Corta anuncios SIN afectar indexación (apuestas/lotería/juego, per Publisher Policies). */
+  adsenseEligible?: boolean;
   professionalReviewer?: ProfessionalReviewer | null;
   // toleramos cualquier otro campo del calc sin romper el tipo
   [key: string]: unknown;
@@ -263,6 +265,9 @@ export function canEmbedCalc(calc: CalcPolicyInput | null | undefined): boolean 
  * ¿Se pueden mostrar ANUNCIOS / afiliados? No en páginas restringidas.
  */
 export function canAdvertiseCalc(calc: CalcPolicyInput | null | undefined): boolean {
+  // `adsenseEligible: false` corta anuncios aunque la página siga indexable
+  // (apuestas/lotería/juego: se mantienen educativas y rastreables, sin ads).
+  if (calc && calc.adsenseEligible === false) return false;
   return !isRestrictedCalc(calc);
 }
 

@@ -143,6 +143,7 @@ const makeCalcSchema = (strictDataUpdate: boolean) => z.object({
   distribution: distributionEnum.optional(),  // 'restricted' fuerza restricción manual
   restrictedMode: z.enum(['dose', 'injury', 'baby', 'clinical']).optional(),  // subgrupo del aviso
   noindex: z.boolean().optional(),
+  adsenseEligible: z.boolean().optional(),     // false = sin anuncios pero SIGUE indexable (apuestas/juego)
   professionalReviewer: professionalReviewer.optional(),
 }).passthrough().superRefine((val, ctx) => {
   // reviewType='professional' EXIGE un revisor profesional completo.
