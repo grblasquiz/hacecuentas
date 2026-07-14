@@ -10,6 +10,7 @@ import Footer from '../../components/Footer.astro';
 import Calculator from '../../components/Calculator.astro';
 import RelatedCalcs from '../../components/RelatedCalcs.astro';
 import CalcLayoutV2 from '../../components/CalcLayoutV2.astro';
+import SdiMexico from '../../components/SdiMexico.astro';
 import ReferenceTables from '../../components/ReferenceTables.astro';
 import CalcInfographic from '../../components/CalcInfographic.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
@@ -296,6 +297,15 @@ const relatedContextual = relatedSlugs
   .map((s) => allCalcs.find((c) => c.slug === s))
   .filter(Boolean);
 
+// ── Flagship bespoke (mockups Martin) ────────────────────────────────────
+// Reemplaza a CalcLayoutV2 y trae su propio data-domain (el del mockup, que no
+// siempre coincide con el de la categoría). Forzamos también el del Layout para
+// que header/footer globales matcheen la página.
+const isSdiMexico = calc.slug === 'calculadora-salario-diario-integrado-sdi-mexico';
+const flagshipBespoke = isSdiMexico;
+const flagshipDomain: 'money' | 'data' | 'health' | 'home' | 'knowledge' | 'life' | null =
+  isSdiMexico ? 'data' : null;
+
 // TOC: top-level rendered sections (in order of appearance)
 const tocSections: Array<{ id: string; label: string }> = [
   { id: 'calculator', label: 'Calculadora' },
@@ -358,11 +368,12 @@ const hreflangTags = buildHreflangCluster({
   hreflang={hreflangTags}
   noindex={effectiveNoindex}
   noAds={!canAdvertiseCalc(calc)}
-  domain={categoryDomain(calc.category)}
+  domain={flagshipDomain || categoryDomain(calc.category)}
 >
   <Header slot="header" />
 
-  <CalcLayoutV2 calc={calc} lang="mx" />
+  {isSdiMexico && <SdiMexico calc={calc} related={relatedContextual} />}
+  {!flagshipBespoke && <CalcLayoutV2 calc={calc} lang="mx" />}
 
   <ScrollToTop />
 
