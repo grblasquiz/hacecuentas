@@ -10,6 +10,7 @@ Endpoints:
     GET /api/pulse?fresh=1               → hoy vs ayer vs mismo día semana pasada
     GET /api/report?start=&end=&fresh=1  → canales + fuente/medio del rango
 """
+import socket
 import sys
 import time
 import threading
@@ -244,5 +245,17 @@ def api_report():
 
 if __name__ == '__main__':
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 4399
-    print(f'GA4 panel · property {GA4_PROPERTY} · http://127.0.0.1:{port}')
+
+    # Si ya hay un panel escuchando, salir con 0. El LaunchAgent usa
+    # KeepAlive/SuccessfulExit=false: sale limpio → no reintenta (nada de loop
+    # de respawn); crashea → lo levanta de nuevo.
+    with socket.socket() as probe:
+        probe.settimeout(1)
+        if probe.connect_ex(('127.0.0.1', port)) == 0:
+            print(f'[{datetime.now():%Y-%m-%d %H:%M:%S}] ya hay algo escuchando '
+                  f'en {port}; no arranco otra instancia')
+            sys.exit(0)
+
+    print(f'[{datetime.now():%Y-%m-%d %H:%M:%S}] GA4 panel · property '
+          f'{GA4_PROPERTY} · http://127.0.0.1:{port}', flush=True)
     app.run(host='127.0.0.1', port=port, debug=False, threaded=True)
