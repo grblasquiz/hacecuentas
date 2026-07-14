@@ -293,15 +293,24 @@ def api_report():
 if __name__ == '__main__':
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 4399
 
-    # Si ya hay un panel escuchando, salir con 0. El LaunchAgent usa
-    # KeepAlive/SuccessfulExit=false: sale limpio → no reintenta (nada de loop
-    # de respawn); crashea → lo levanta de nuevo.
-    with socket.socket() as probe:
-        probe.settimeout(1)
-        if probe.connect_ex(('127.0.0.1', port)) == 0:
-            print(f'[{datetime.now():%Y-%m-%d %H:%M:%S}] ya hay algo escuchando '
-                  f'en {port}; no arranco otra instancia')
-            sys.exit(0)
+    # El puerto puede quedar tomado unos segundos por la instancia anterior
+    # (restart, o el socket en TIME_WAIT). Esperar a que se libere en vez de
+    # rendirse: salir con 0 acá haría que launchd lo diera por terminado bien y
+    # el panel quedaría muerto hasta el próximo login.
+    for attempt in range(15):
+        with socket.socket() as probe:
+            probe.settimeout(1)
+            if probe.connect_ex(('127.0.0.1', port)) != 0:
+                break
+        if attempt == 0:
+            print(f'[{datetime.now():%Y-%m-%d %H:%M:%S}] puerto {port} ocupado, '
+                  f'esperando que se libere…', flush=True)
+        time.sleep(2)
+    else:
+        # exit != 0 → con KeepAlive:true launchd reintenta en ThrottleInterval
+        print(f'[{datetime.now():%Y-%m-%d %H:%M:%S}] el puerto {port} sigue ocupado '
+              f'tras 30s; salgo con 1 para que launchd reintente', flush=True)
+        sys.exit(1)
 
     print(f'[{datetime.now():%Y-%m-%d %H:%M:%S}] GA4 panel · property '
           f'{GA4_PROPERTY} · http://127.0.0.1:{port}', flush=True)
