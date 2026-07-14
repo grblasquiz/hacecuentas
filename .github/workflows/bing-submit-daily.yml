@@ -2,7 +2,7 @@ name: Bing Submit daily push
 
 # Cron diario que pushea sitemap-priority.xml al Bing Webmaster Submit API.
 # Complementa IndexNow:
-#   - IndexNow (indexnow-daily.yml) señala URLs a múltiples engines de forma pasiva.
+#   - IndexNow (indexnow-push.yml) señala a múltiples engines las URLs que cambian.
 #   - Bing Submit (este) las mete directo al índice prioritario de Bing.
 #
 # Quota Bing Submit: 10.000 URLs/día (sitio nuevo arranca con menos, va subiendo).
@@ -14,8 +14,8 @@ name: Bing Submit daily push
 
 on:
   schedule:
-    # 10:00 UTC (07:00 AR) — 30 min después de indexnow-daily.yml
-    # para que Bing reciba IndexNow primero y luego Submit refuerce las prioritarias.
+    # 10:00 UTC (07:00 AR). Antes se elegía para caer 30 min después del cron
+    # indexnow-daily; ese cron ya no existe (IndexNow pasó a streaming por push).
     - cron: '0 10 * * *'
   workflow_dispatch:
     inputs:

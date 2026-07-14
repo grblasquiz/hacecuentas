@@ -10,7 +10,7 @@
 ## Cómo se usa
 1. Cada mes, mirar los picos del mes siguiente.
 2. Para cada uno: ¿existe la página? ¿los datos están actualizados (año, montos)? ¿está indexada (Bing/IndexNow)?
-3. Si falta o está vieja → arreglar y `bash scripts/post-deploy-indexnow.sh` (o `indexnow-push.py <url>`).
+3. Si falta o está vieja → arreglar y pushear a main: `indexnow-push.yml` avisa solo. Para forzar una URL puntual: `python3 scripts/indexnow-push.py /la-url`.
 4. Bonus: una Web Story AMP (`src/content/historias/`) del tema = canal Discover (no depende de autoridad).
 
 ---

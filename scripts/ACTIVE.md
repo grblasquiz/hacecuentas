@@ -41,7 +41,10 @@ Regla: un script está "vivo" si lo referencia `package.json`, un workflow de `.
 
 ## 4. Deploy / setup
 
-`deploy-local.sh`, `cf-purge-cache.sh`, `post-deploy-indexnow.sh` (manual post-deploy), `install-hooks.sh`, `new-calc.ts`, `bump-lastmod.ts`, `generate-llms-full.py`.
+`deploy-local.sh`, `cf-purge-cache.sh`, `install-hooks.sh`, `new-calc.ts`, `bump-lastmod.ts`, `generate-llms-full.py`.
+
+El aviso a IndexNow post-deploy NO se corre a mano: lo hace `indexnow-push.yml`
+en cada push a main, en streaming (sólo las URLs que cambiaron).
 
 ## 5. Herramientas AD-HOC (se corren a mano — NO están en el pipeline)
 

@@ -1,37 +1,39 @@
-name: IndexNow daily push (Bing + Yandex)
+name: IndexNow full re-submit (manual)
 
-# Cron diario que pushea TODAS las URLs del sitemap al IndexNow API
-# (Bing, Yandex, Seznam, Naver). Complementa indexnow-push.yml — ese corre
-# post-deploy en main; este corre todos los días aunque no haya deploys, para
-# que Bing/Yandex queden alineados con el push diario que Google ya recibe vía
-# google-indexing-daily.yml.
+# ⚠️ SIN CRON A PROPÓSITO. Esto se corre A MANO y sólo para eventos sitewide
+# (migración de slugs, revival masivo, recuperación tras un incidente).
 #
-# IndexNow no requiere credenciales (sólo la key file servida por CF Pages en
-# /00e48c587b06495db41032c4797d9d39.txt) — no hay secrets que configurar.
-# El script ya batchea de a 10.000 URLs (límite de IndexNow).
+# Antes esto era `indexnow-daily.yml`: un cron 09:30 UTC que mandaba las ~3100
+# URLs del sitemap TODOS LOS DÍAS, hubiera o no cambios. Eso es el "batch mode"
+# que Bing desaconseja — a genfy.net le mostró el warning literal por un cron
+# equivalente de 1443 URLs/día (ver cerebro 2026-06-24_indexnow-streaming.md).
+#
+# El número que lo cierra: Bing le da a hacecuentas ~1700 submissions/mes
+# (GetUrlSubmissionQuota → DailyQuota 0, MonthlyQuota 1700). Un solo `--all`
+# gasta ~1,8 MESES de presupuesto de una. Re-enviar URLs que no cambiaron no
+# acelera el crawl: compite contra las que sí cambiaron.
+#
+# El aviso de contenido nuevo/editado lo hace indexnow-push.yml (streaming,
+# sólo lo que cambió) en cada push a main. Esto no reemplaza a eso.
 
 on:
-  schedule:
-    # 09:30 UTC (06:30 AR) — 30 min después de google-indexing-daily.yml
-    # para evitar overlap en el runner queue.
-    - cron: '30 9 * * *'
   workflow_dispatch:
     inputs:
       mode:
-        description: 'Modo de ejecución'
+        description: 'all = sitemap entero (~3100 URLs, ~1,8 meses de quota). priority = sólo sitemap-priority.xml (~243).'
         required: false
-        default: 'all'
+        default: 'priority'
         type: choice
         options:
-          - all       # todas las URLs del sitemap (default)
-          - priority  # solo sitemap-priority.xml
+          - priority
+          - all
 
 permissions:
   contents: read
   issues: write
 
 jobs:
-  indexnow-daily:
+  indexnow-full-resubmit:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
@@ -47,14 +49,14 @@ jobs:
       - name: Push URLs to IndexNow (Bing + Yandex + Seznam + Naver)
         id: push
         run: |
-          MODE="${{ github.event.inputs.mode || 'all' }}"
+          MODE="${{ github.event.inputs.mode || 'priority' }}"
           set -o pipefail
-          if [ "$MODE" = "priority" ]; then
-            python3 scripts/indexnow-push.py 2>&1 | tee /tmp/indexnow.log
-          else
+          if [ "$MODE" = "all" ]; then
+            echo "::warning::Re-submit SITEWIDE (~3100 URLs). Sólo se justifica tras una migración de slugs."
             python3 scripts/indexnow-push.py --all 2>&1 | tee /tmp/indexnow.log
+          else
+            python3 scripts/indexnow-push.py 2>&1 | tee /tmp/indexnow.log
           fi
-          # Validar que cada submission devolvió status 200 o 202
           if grep -qE '⚠️|❌|status=4[0-9]{2}|status=5[0-9]{2}' /tmp/indexnow.log; then
             echo "::error::IndexNow push tuvo errores"
             exit 1
@@ -65,9 +67,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TITLE="🚨 IndexNow daily push falló ($(date -u +'%Y-%m-%d'))"
+          TITLE="🚨 IndexNow full re-submit falló ($(date -u +'%Y-%m-%d'))"
           BODY=$(cat <<EOF
-          El cron diario de IndexNow falló.
+          El re-submit manual de IndexNow falló.
 
           **Workflow:** [\`${{ github.workflow }}\` run #${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
           **Trigger:** ${{ github.event_name }}
@@ -80,13 +82,12 @@ jobs:
 
           ## Próximos pasos
           1. Revisar el log completo en el run linkeado arriba
-          2. Si es 403 → verificar que la key IndexNow ($KEY_LOCATION) sigue siendo válida y servida correctamente desde CF Pages
+          2. Si es 403 → verificar que la key IndexNow sigue servida en /00e48c587b06495db41032c4797d9d39.txt
           3. Si es 422 → URLs malformadas en el sitemap
-          4. Si es 429 → rate limit, reducir la frecuencia
-          5. Si es 5xx → error transitorio del proveedor, esperar y re-correr manualmente con \`workflow_dispatch\`
+          4. Si es 429 → rate limit: es la señal de que estamos mandando de más, NO re-correr
+          5. Si es 5xx → error transitorio del proveedor, esperar y re-correr
           EOF
           )
-          # Buscar issue abierto del mismo workflow para no duplicar
           EXISTING=$(gh issue list --label indexnow-failure --state open --json number --jq '.[0].number' || echo '')
           if [ -n "$EXISTING" ]; then
             gh issue comment "$EXISTING" --body "$BODY"
