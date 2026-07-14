@@ -1,0 +1,625 @@
+---
+// Flagship redesign de la calc "IMC pediátrico con percentil exacto" (mockup Martin).
+// Los números salen del MOTOR REAL: src/lib/formulas/indice-masa-corporal-pediatrico.ts
+// (tablas LMS oficiales CDC 2000 en src/lib/formulas/_cdc-bmi-lms.ts). El SSR llama
+// directamente a la fórmula; el script inline replica la misma lógica (no puede importar)
+// y recibe las tablas LMS por data-* attrs.
+//
+// YMYL SALUD: se conservan los disclaimers existentes (el de `explanation` — "Esta
+// calculadora es orientativa y no reemplaza el criterio médico profesional" — se
+// preserva renderando la prosa) y se suma el disclaimer canónico del sitio para
+// `salud` (mismo texto que CalcLayoutV2, que acá no se renderiza).
+//
+// Domain "life" por el mockup (la categoría `salud` daría "health"). Header/footer
+// = los globales del sitio.
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { indiceMasaCorporalPediatrico } from '../lib/formulas/indice-masa-corporal-pediatrico';
+import { LMS_MALE, LMS_FEMALE } from '../lib/formulas/_cdc-bmi-lms';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// La calc cubre 2 a 18 años → 24 a 216 meses. Recortamos las tablas a ese dominio
+// (+1 fila de margen para la interpolación en el borde superior) para no mandar
+// 24 filas por sexo que nunca se usan. Verificado: resultados idénticos en [24,216].
+type Row = readonly [number, number, number, number];
+const sliceDom = (t: ReadonlyArray<Row>) => t.filter((r) => r[0] <= 217);
+const LMS_M = sliceDom(LMS_MALE);
+const LMS_F = sliceDom(LMS_FEMALE);
+
+// ── Helpers espejo del motor (para los valores DERIVADOS: umbrales por percentil).
+// La clasificación y el percentil del caso cargado salen de la fórmula real, no de acá.
+function lookupLMS(table: ReadonlyArray<Row>, edadMeses: number) {
+  const clamped = Math.max(table[0][0], Math.min(table[table.length - 1][0], edadMeses));
+  let lo = 0, hi = table.length - 1;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (table[mid][0] < clamped) lo = mid + 1; else hi = mid; }
+  if (table[lo][0] === clamped || lo === 0) { const [, L, M, S] = table[lo]; return { L, M, S }; }
+  const [aLo, Llo, Mlo, Slo] = table[lo - 1];
+  const [aHi, Lhi, Mhi, Shi] = table[lo];
+  const f = (clamped - aLo) / (aHi - aLo);
+  return { L: Llo + f * (Lhi - Llo), M: Mlo + f * (Mhi - Mlo), S: Slo + f * (Shi - Slo) };
+}
+// Inversa de la fórmula LMS del motor: IMC = M·(1 + L·S·Z)^(1/L). Verificado
+// reinyectando cada umbral en la fórmula real → devuelve exactamente P5/P85/P95.
+function bmiAtZ(L: number, M: number, S: number, z: number) {
+  return Math.abs(L) < 1e-9 ? M * Math.exp(S * z) : M * Math.pow(1 + L * S * z, 1 / L);
+}
+const Z_P5 = -1.6448536269514729;
+const Z_P85 = 1.0364333894937898;
+const Z_P95 = 1.6448536269514729;
+
+// ── Caso inicial = el ejemplo documentado del JSON (niño de 8 años, 28 kg, 128 cm).
+const INIT = { peso: 28, altura: 128, edadAnios: 8, sexo: 'm' };
+const init = indiceMasaCorporalPediatrico(INIT);
+const initLMS = lookupLMS(LMS_M, INIT.edadAnios * 12);
+// Z-score exacto tal como lo calcula el motor (mismo cómputo, para mostrarlo suelto).
+const initImcExact = INIT.peso / ((INIT.altura / 100) ** 2);
+const initZ = (Math.pow(initImcExact / initLMS.M, initLMS.L) - 1) / (initLMS.L * initLMS.S);
+// OJO: percentilAprox trae sufijos como "percentil 5 (< P5)" → hay que tomar SOLO el
+// número que sigue a "percentil", no barrer no-dígitos (eso concatenaría el "5" de "P5").
+const initPct = Number(String(init.percentilAprox).match(/percentil\s+([\d.]+)/)![1]);
+
+const n1 = (n: number) => n.toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const n2 = (n: number) => n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const umb = (edadAnios: number, sexo: string) => {
+  const { L, M, S } = lookupLMS(sexo === 'f' ? LMS_F : LMS_M, edadAnios * 12);
+  return { p5: bmiAtZ(L, M, S, Z_P5), p50: bmiAtZ(L, M, S, 0), p85: bmiAtZ(L, M, S, Z_P85), p95: bmiAtZ(L, M, S, Z_P95) };
+};
+const u0 = umb(INIT.edadAnios, INIT.sexo);
+const refAges = [4, 6, 8, 10, 12, 14];
+const refRows = refAges.map((a) => ({ edad: a, ...umb(a, INIT.sexo) }));
+
+const faq = calc.faq || [];
+const sources = (calc.sources || []).slice(0, 3);
+const explanationHtml = calc.explanation ? md(calc.explanation) : '';
+---
+
+<div
+  class="cf-page ip"
+  data-domain="life"
+  data-lms-m={JSON.stringify(LMS_M)}
+  data-lms-f={JSON.stringify(LMS_F)}
+>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/categoria/salud">Salud</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">IMC pediátrico</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">🏥</span> Pediatría · Tablas CDC 2000 · 2026</p>
+      <h1 class="cf-h1">Calculadora de IMC pediátrico con <span class="cf-yr">percentil exacto</span></h1>
+      <p class="cf-sub">En chicos de 2 a 18 años el IMC no se lee como en adultos: se compara contra la curva de su edad en meses y su sexo. Acá obtenés el percentil exacto, no un rango.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Tablas LMS oficiales CDC 2000</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">👦</span> Ejemplo · 8 años · 28 kg · 128 cm</span>
+      <div class="ip-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="ip-deco-val">Percentil {n1(initPct)}</div>
+          <div class="cf-deco-card__note" id="ip-deco-note">{init.clasificacion}</div>
+        </div>
+        <span class="cf-deco-badge ip-badge">CDC</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Z-score LMS</strong> <span class="cf-deco-chip" id="ip-deco-z">{n2(initZ)}</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">Datos del chico o la chica</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="ip-peso">Peso</label><span class="cf-hint">kg</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="decimal" id="ip-peso" value="28" min="5" max="120" step="0.1" />
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="ip-altura">Altura</label><span class="cf-hint">cm</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="decimal" id="ip-altura" value="128" min="60" max="200" step="0.1" />
+        </div>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="ip-anios">Edad · años</label></div>
+          <input class="cf-input" type="number" inputmode="numeric" id="ip-anios" value="8" min="2" max="18" step="1" />
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="ip-meses">Edad · meses</label><span class="cf-hint">0 a 11</span></div>
+          <input class="cf-input" type="number" inputmode="numeric" id="ip-meses" value="0" min="0" max="11" step="1" />
+        </div>
+      </div>
+      <p class="cf-help">La curva CDC se indexa por <strong>edad en meses</strong>: los meses cambian el percentil. Cubre de 2 a 18 años (24 a 216 meses).</p>
+
+      <div class="cf-field" style="margin-top:1.1rem">
+        <div class="cf-field__row"><span class="cf-label">Sexo</span></div>
+        <div class="cf-seg ip-seg" role="group" aria-label="Sexo">
+          <button type="button" data-sexo="m" aria-pressed="true">Masculino</button>
+          <button type="button" data-sexo="f" aria-pressed="false">Femenino</button>
+        </div>
+        <p class="cf-help">Las curvas de crecimiento son distintas para varones y mujeres: el mismo IMC da percentiles diferentes.</p>
+      </div>
+
+      <button class="cf-primary" id="ip-calc-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Ejemplos:</span>
+        <button class="cf-sc" type="button" data-ej="28|128|8|0|m">8 años · 28 kg</button>
+        <button class="cf-sc" type="button" data-ej="35|140|10|0|f">10 años · 35 kg</button>
+        <button class="cf-sc" type="button" data-ej="52|152|12|0|f">12 años · 52 kg</button>
+        <button class="cf-sc" type="button" data-ej="50|160|14|0|m">14 años · 50 kg</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="ip-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="ip-big">Percentil {n1(initPct)}</div>
+      <p class="cf-result__sub" id="ip-sub">{init.clasificacion} · IMC {n1(init.imc)} kg/m² a los {INIT.edadAnios * 12} meses</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="ip-t-imc">{n1(init.imc)}</div><div class="cf-tile__label">IMC kg/m²</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="ip-t-z">{n2(initZ)}</div><div class="cf-tile__label">Z-score LMS</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="ip-t-meses">{INIT.edadAnios * 12}</div><div class="cf-tile__label">Edad en meses</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="ip-t-p85">{n1(u0.p85)}</div><div class="cf-tile__label">Umbral sobrepeso P85</div></div>
+      </div>
+      <div class="cf-result__formula" id="ip-formula">Z = ((IMC/M)^L − 1) / (L·S) · L={n2(initLMS.L)} M={n1(initLMS.M)} S={initLMS.S.toFixed(4).replace('.', ',')} → Z={n2(initZ)} → P{n1(initPct)}</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="ip-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="ip-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt"><strong>Respuesta rápida.</strong> <span id="ip-quick">Un chico de 8 años con 28 kg y 128 cm tiene un IMC de <strong>{n1(init.imc)} kg/m²</strong>, que cae en el <strong>percentil {n1(initPct)}</strong>: {init.clasificacion.toLowerCase()}.</span></p>
+    <span class="cf-formula">IMC ÷ curva CDC → percentil</span>
+  </div>
+
+  <!-- Datos clave -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">📉</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Bajo peso · debajo de P5</p>
+        <div class="cf-minicard__big"><span id="ip-k-p5">{n1(u0.p5)}</span> kg/m²</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Umbral para <span class="ip-k-ctx">8 años, varón</span>. Debajo de este IMC, el percentil cae bajo 5.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🎯</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Mediana · P50</p>
+        <div class="cf-minicard__big"><span id="ip-k-p50">{n1(u0.p50)}</span> kg/m²</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">El IMC típico de la población de referencia a esa edad y sexo.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">⚠️</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Sobrepeso · desde P85</p>
+        <div class="cf-minicard__big"><span id="ip-k-p85">{n1(u0.p85)}</span> kg/m²</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Desde este IMC, la clasificación CDC pasa a sobrepeso.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🔺</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Obesidad · desde P95</p>
+        <div class="cf-minicard__big"><span id="ip-k-p95">{n1(u0.p95)}</span> kg/m²</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Desde este IMC, la clasificación CDC pasa a obesidad.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cómo leer el resultado -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Cómo leer el resultado</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">El percentil compara; el IMC solo mide</h2>
+    <div class="ip-2col">
+      <div class="cf-side-card cf-side-card--dark ip-hl">
+        <p class="cf-side-eyebrow">Cómo leer el resultado</p>
+        <p class="ip-hl__title">Un mismo IMC cambia de categoría con la edad</p>
+        <p class="cf-side-desc">Un IMC de 17,1 es sobrepeso a los 4 años y peso normal a los 8. Por eso en pediatría se informa el percentil para la edad en meses y el sexo, nunca el IMC solo.</p>
+        <div class="ip-hl__big" id="ip-hl-big">Percentil {n1(initPct)}</div>
+        <p class="cf-side-desc" id="ip-hl-note">{init.clasificacion} · caso cargado</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-brow">
+          <span class="cf-brow__lbl">IMC del caso cargado</span>
+          <span class="cf-brow__val" id="ip-b-imc">{n1(init.imc)} kg/m²</span>
+          <span class="cf-brow__bar"><span id="ip-b-imc-bar" style={`width:${Math.min(100, (init.imc / (u0.p95 * 1.15)) * 100).toFixed(1)}%`}></span></span>
+        </div>
+        <p class="ip-note">Peso ÷ altura² — el número que mide el cuerpo</p>
+        <div class="cf-brow" style="margin-top:1rem">
+          <span class="cf-brow__lbl">Umbral de sobrepeso (P85)</span>
+          <span class="cf-brow__val" id="ip-b-p85">{n1(u0.p85)} kg/m²</span>
+          <span class="cf-brow__bar"><span class="ip-bar--warn" id="ip-b-p85-bar" style={`width:${Math.min(100, (u0.p85 / (u0.p95 * 1.15)) * 100).toFixed(1)}%`}></span></span>
+        </div>
+        <p class="ip-note">Frontera entre peso saludable y sobrepeso a esa edad</p>
+        <div class="cf-brow" style="margin-top:1rem">
+          <span class="cf-brow__lbl">Umbral de obesidad (P95)</span>
+          <span class="cf-brow__val" id="ip-b-p95">{n1(u0.p95)} kg/m²</span>
+          <span class="cf-brow__bar"><span class="ip-bar--danger" id="ip-b-p95-bar" style={`width:${Math.min(100, (u0.p95 / (u0.p95 * 1.15)) * 100).toFixed(1)}%`}></span></span>
+        </div>
+        <p class="ip-note">Frontera entre sobrepeso y obesidad a esa edad</p>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1.25rem">
+          <span class="cf-callout__ico" aria-hidden="true">🩺</span>
+          <p><strong>Los resultados son orientativos y no reemplazan la consulta médica profesional.</strong> Antes de tomar decisiones con impacto, consultá con un médico, nutricionista o profesional de la salud matriculado. No pongas a un chico a dieta por tu cuenta.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Paso a paso -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">Peso, altura, edad en años y meses, y sexo. La edad en meses es la que indexa la curva CDC.</p>
+        <p class="ip-chip" id="ip-s1">28 kg · 128 cm · 96 meses · varón</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">Calculamos el IMC, buscamos los parámetros L, M y S de la curva CDC para esa edad y obtenemos el Z-score.</p>
+        <p class="ip-chip" id="ip-s2">IMC 17,1 · Z 0,70</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">El Z-score se convierte a percentil con la normal estándar y se clasifica según los cortes del CDC.</p>
+        <p class="ip-chip" id="ip-s3">Percentil 75,7 · Peso normal (rango alto)</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Referencias -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <caption class="cf-sr" id="ip-tbl-cap">Umbrales de IMC por edad según las tablas CDC 2000, sexo masculino</caption>
+        <thead><tr><th>Edad</th><th>Bajo peso · debajo de P5</th><th>Sobrepeso · desde P85</th><th>Obesidad · desde P95</th></tr></thead>
+        <tbody id="ip-tbody">
+          {refRows.map((r) => (
+            <tr>
+              <td>{r.edad} años <small class="ip-td-sub">({r.edad * 12} meses)</small></td>
+              <td>{n1(r.p5)} kg/m²</td>
+              <td>{n1(r.p85)} kg/m²</td>
+              <td class="cf-td-em">{n1(r.p95)} kg/m²</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="ip-note" style="margin-top:0.6rem">Umbrales calculados con las mismas tablas LMS CDC 2000 que usa la calculadora. Cambian con el sexo seleccionado arriba.</p>
+  </section>
+</div>
+
+<!-- Banda: atención + referencia principal -->
+<div class="cf-band cf-band--warm" data-domain="life">
+  <div class="cf-band__inner">
+    <div class="ip-2col">
+      <div class="ip-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="ip-card__title">El IMC no mide grasa corporal</h2>
+        <p class="cf-side-desc">El IMC relaciona peso y altura, no composición corporal. Un chico con mucha masa muscular (natación, gimnasia, deportes de fuerza) puede dar un percentil alto sin exceso de grasa. También hay chicos que crecen a saltos: el peso sube antes que la altura y el percentil se mueve solo.</p>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1rem">
+          <span class="cf-callout__ico" aria-hidden="true">🩺</span>
+          <p>Un percentil aislado no diagnostica nada. Lo que mira el pediatra es la <strong>curva a lo largo del tiempo</strong> y el contexto clínico. Llevá este número a la consulta, no lo uses para decidir solo.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="ip-src__title">CDC 2000</p>
+        <div class="ip-hl__big" style="margin-top:0.2rem">P5 · P85 · P95</div>
+        <p class="cf-side-desc">Los tres cortes que separan bajo peso, peso saludable, sobrepeso y obesidad en chicos de 2 a 18 años.</p>
+        <div class="ip-chips">
+          <span class="ip-chip2">Tablas LMS bmiagerev</span>
+          <span class="ip-chip2">Edad en meses</span>
+          <span class="ip-chip2">Z-score → percentil</span>
+          <span class="ip-chip2">Interpolación lineal</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page ip">
+  {faq.length > 0 && (
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {explanationHtml && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">En detalle</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cómo se interpreta el IMC en pediatría</h2>
+      <div class="cf-prose" set:html={explanationHtml} />
+    </section>
+  )}
+</div>
+
+<!-- Banda: fuentes y metodología -->
+<div class="cf-band" data-domain="life">
+  <div class="cf-band__inner">
+    <div class="cf-section__head" style="margin-top:0">
+      <div>
+        <p class="cf-eyebrow">Fuentes y metodología</p>
+        <h2 class="cf-section__title">Números que podés defender</h2>
+      </div>
+      <p class="cf-section__lead">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026.</p>
+    </div>
+    <div class="cf-side-card cf-side-card--dark">
+      <div class="ip-src">
+        {sources.map((s: any) => (
+          <div class="ip-src__item">
+            <strong>{s.name}</strong>
+            <span><a href={s.url} rel="nofollow noopener" target="_blank">{s.url}</a></span>
+          </div>
+        ))}
+      </div>
+      <p class="ip-src__foot">● Información revisada en julio de 2026</p>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page ip">
+  {related.length > 0 && (
+    <section class="cf-section" style="margin-top:2.5rem">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🧮'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('—')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos: en chicos, la curva importa más que un número suelto.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="ip-share2">Guardar resultado</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.ip');
+    if (!root) return;
+    const LMS_M = JSON.parse(root.getAttribute('data-lms-m'));
+    const LMS_F = JSON.parse(root.getAttribute('data-lms-f'));
+
+    /* @pure-start — espejo EXACTO de src/lib/formulas/indice-masa-corporal-pediatrico.ts */
+    function normalCdf(z) {
+      if (z > 8) return 1;
+      if (z < -8) return 0;
+      const b1 = 0.319381530, b2 = -0.356563782, b3 = 1.781477937, b4 = -1.821255978, b5 = 1.330274429;
+      const p = 0.2316419, c = 0.39894228;
+      const absZ = Math.abs(z);
+      const t = 1.0 / (1.0 + p * absZ);
+      const phi = c * Math.exp(-absZ * absZ / 2.0) * (t * (b1 + t * (b2 + t * (b3 + t * (b4 + t * b5)))));
+      return z >= 0 ? 1 - phi : phi;
+    }
+    function lookupLMS(table, edadMeses) {
+      const clamped = Math.max(table[0][0], Math.min(table[table.length - 1][0], edadMeses));
+      let lo = 0, hi = table.length - 1;
+      while (lo < hi) { const mid = (lo + hi) >> 1; if (table[mid][0] < clamped) lo = mid + 1; else hi = mid; }
+      if (table[lo][0] === clamped || lo === 0) { const r = table[lo]; return { L: r[1], M: r[2], S: r[3] }; }
+      const a = table[lo - 1], b = table[lo];
+      const f = (clamped - a[0]) / (b[0] - a[0]);
+      return { L: a[1] + f * (b[1] - a[1]), M: a[2] + f * (b[2] - a[2]), S: a[3] + f * (b[3] - a[3]) };
+    }
+    function compute(peso, altura, edadAnios, sexo, TM, TF) {
+      const alturaM = altura / 100;
+      const imc = peso / (alturaM * alturaM);
+      const edadMeses = edadAnios * 12;
+      const p = lookupLMS(sexo === 'f' ? TF : TM, edadMeses);
+      const z = Math.abs(p.L) < 1e-9 ? Math.log(imc / p.M) / p.S : (Math.pow(imc / p.M, p.L) - 1) / (p.L * p.S);
+      const pct = normalCdf(z) * 100;
+      const pRound = Math.round(pct * 10) / 10;
+      let clasificacion;
+      if (pct < 5) clasificacion = 'Bajo peso';
+      else if (pct < 85) clasificacion = pct < 25 ? 'Peso normal (rango bajo)' : pct < 75 ? 'Peso normal' : 'Peso normal (rango alto)';
+      else if (pct < 95) clasificacion = 'Sobrepeso';
+      else clasificacion = 'Obesidad';
+      return { imc: Number(imc.toFixed(1)), imcExact: imc, z: z, pct: pct, pRound: pRound, clasificacion: clasificacion, L: p.L, M: p.M, S: p.S, edadMeses: edadMeses };
+    }
+    function bmiAtZ(L, M, S, z) { return Math.abs(L) < 1e-9 ? M * Math.exp(S * z) : M * Math.pow(1 + L * S * z, 1 / L); }
+    /* @pure-end */
+
+    const Z_P5 = -1.6448536269514729, Z_P85 = 1.0364333894937898, Z_P95 = 1.6448536269514729;
+    const $ = (id) => document.getElementById(id);
+    const n1 = (n) => n.toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const n2 = (n) => n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    let sexo = 'm';
+
+    function umbrales(edadAnios, sx) {
+      const p = lookupLMS(sx === 'f' ? LMS_F : LMS_M, edadAnios * 12);
+      return { p5: bmiAtZ(p.L, p.M, p.S, Z_P5), p50: bmiAtZ(p.L, p.M, p.S, 0), p85: bmiAtZ(p.L, p.M, p.S, Z_P85), p95: bmiAtZ(p.L, p.M, p.S, Z_P95) };
+    }
+    function edadAnios() {
+      const a = Number($('ip-anios').value) || 0;
+      const m = Number($('ip-meses').value) || 0;
+      return Math.max(2, Math.min(18, a + m / 12));
+    }
+    function state() {
+      return { peso: Number($('ip-peso').value) || 0, altura: Number($('ip-altura').value) || 0, edad: edadAnios(), sexo: sexo };
+    }
+
+    function render() {
+      const s = state();
+      if (!s.peso || !s.altura) return;
+      const r = compute(s.peso, s.altura, s.edad, s.sexo, LMS_M, LMS_F);
+      const u = umbrales(s.edad, s.sexo);
+      const meses = Math.round(r.edadMeses);
+      const sexoTxt = s.sexo === 'f' ? 'mujer' : 'varón';
+
+      $('ip-big').textContent = 'Percentil ' + n1(r.pRound);
+      $('ip-sub').textContent = r.clasificacion + ' · IMC ' + n1(r.imc) + ' kg/m² a los ' + meses + ' meses';
+      $('ip-t-imc').textContent = n1(r.imc);
+      $('ip-t-z').textContent = n2(r.z);
+      $('ip-t-meses').textContent = String(meses);
+      $('ip-t-p85').textContent = n1(u.p85);
+      $('ip-formula').textContent = 'Z = ((IMC/M)^L − 1) / (L·S) · L=' + n2(r.L) + ' M=' + n1(r.M) + ' S=' + r.S.toFixed(4).replace('.', ',') + ' → Z=' + n2(r.z) + ' → P' + n1(r.pRound);
+
+      $('ip-deco-val').textContent = 'Percentil ' + n1(r.pRound);
+      $('ip-deco-note').textContent = r.clasificacion;
+      $('ip-deco-z').textContent = n2(r.z);
+
+      $('ip-quick').innerHTML = 'Un chico de ' + n1(s.edad).replace(',0', '') + ' años con ' + n1(s.peso) + ' kg y ' + n1(s.altura) + ' cm tiene un IMC de <strong>' + n1(r.imc) + ' kg/m²</strong>, que cae en el <strong>percentil ' + n1(r.pRound) + '</strong>: ' + r.clasificacion.toLowerCase() + '.';
+
+      $('ip-k-p5').textContent = n1(u.p5);
+      $('ip-k-p50').textContent = n1(u.p50);
+      $('ip-k-p85').textContent = n1(u.p85);
+      $('ip-k-p95').textContent = n1(u.p95);
+      document.querySelectorAll('.ip-k-ctx').forEach((e) => { e.textContent = n1(s.edad).replace(',0', '') + ' años, ' + sexoTxt; });
+
+      $('ip-hl-big').textContent = 'Percentil ' + n1(r.pRound);
+      $('ip-hl-note').textContent = r.clasificacion + ' · caso cargado';
+
+      const scale = u.p95 * 1.15;
+      $('ip-b-imc').textContent = n1(r.imc) + ' kg/m²';
+      $('ip-b-imc-bar').style.width = Math.min(100, (r.imc / scale) * 100).toFixed(1) + '%';
+      $('ip-b-p85').textContent = n1(u.p85) + ' kg/m²';
+      $('ip-b-p85-bar').style.width = Math.min(100, (u.p85 / scale) * 100).toFixed(1) + '%';
+      $('ip-b-p95').textContent = n1(u.p95) + ' kg/m²';
+      $('ip-b-p95-bar').style.width = Math.min(100, (u.p95 / scale) * 100).toFixed(1) + '%';
+
+      $('ip-s1').textContent = n1(s.peso) + ' kg · ' + n1(s.altura) + ' cm · ' + meses + ' meses · ' + sexoTxt;
+      $('ip-s2').textContent = 'IMC ' + n1(r.imc) + ' · Z ' + n2(r.z);
+      $('ip-s3').textContent = 'Percentil ' + n1(r.pRound) + ' · ' + r.clasificacion;
+
+      const tb = $('ip-tbody');
+      tb.innerHTML = [4, 6, 8, 10, 12, 14].map(function (a) {
+        const t = umbrales(a, s.sexo);
+        return '<tr><td>' + a + ' años <small class="ip-td-sub">(' + (a * 12) + ' meses)</small></td><td>' + n1(t.p5) + ' kg/m²</td><td>' + n1(t.p85) + ' kg/m²</td><td class="cf-td-em">' + n1(t.p95) + ' kg/m²</td></tr>';
+      }).join('');
+      $('ip-tbl-cap').textContent = 'Umbrales de IMC por edad según las tablas CDC 2000, sexo ' + (s.sexo === 'f' ? 'femenino' : 'masculino');
+    }
+
+    ['ip-peso', 'ip-altura', 'ip-anios', 'ip-meses'].forEach((id) => $(id).addEventListener('input', render));
+    $('ip-calc-btn').addEventListener('click', render);
+    document.querySelectorAll('[data-sexo]').forEach((b) => b.addEventListener('click', () => {
+      sexo = b.getAttribute('data-sexo');
+      document.querySelectorAll('[data-sexo]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      render();
+    }));
+    document.querySelectorAll('[data-ej]').forEach((b) => b.addEventListener('click', () => {
+      const v = b.getAttribute('data-ej').split('|');
+      $('ip-peso').value = v[0]; $('ip-altura').value = v[1]; $('ip-anios').value = v[2]; $('ip-meses').value = v[3];
+      const sb = document.querySelector('[data-sexo="' + v[4] + '"]');
+      if (sb) { sexo = v[4]; document.querySelectorAll('[data-sexo]').forEach((x) => x.setAttribute('aria-pressed', x === sb ? 'true' : 'false')); }
+      render();
+    }));
+
+    function summary() {
+      const s = state();
+      const r = compute(s.peso, s.altura, s.edad, s.sexo, LMS_M, LMS_F);
+      return 'IMC pediátrico: ' + n1(r.imc) + ' kg/m² a los ' + Math.round(r.edadMeses) + ' meses (' + (s.sexo === 'f' ? 'mujer' : 'varón') + ') → percentil ' + n1(r.pRound) + ', ' + r.clasificacion + ' (tablas CDC 2000). Orientativo: no reemplaza la consulta médica. — hacecuentas.com';
+    }
+    function shareUrl() {
+      const s = state();
+      return location.origin + location.pathname + '?peso=' + s.peso + '&altura=' + s.altura + '&anios=' + $('ip-anios').value + '&meses=' + $('ip-meses').value + '&sexo=' + s.sexo;
+    }
+    function copy(t, btn) { navigator.clipboard?.writeText(t).then(() => { const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => btn.innerHTML = o, 1500); }); }
+    $('ip-copy').addEventListener('click', (e) => copy(summary(), e.currentTarget));
+    $('ip-detail').addEventListener('click', () => { document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' }); });
+    const s2 = $('ip-share2'); if (s2) s2.addEventListener('click', (e) => copy(shareUrl(), e.currentTarget));
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('peso')) $('ip-peso').value = q.get('peso');
+    if (q.get('altura')) $('ip-altura').value = q.get('altura');
+    if (q.get('anios')) $('ip-anios').value = q.get('anios');
+    if (q.get('meses')) $('ip-meses').value = q.get('meses');
+    if (q.get('sexo')) { const b = document.querySelector('[data-sexo="' + q.get('sexo') + '"]'); if (b) b.click(); }
+    render();
+  })();
+</script>
+
+<style>
+  /* El badge vive fuera de .cf-deco-card porque la card tiene overflow:hidden */
+  .ip .ip-deco-wrap { position: relative; }
+  .ip .ip-badge { top: -14px; right: -14px; font-size: 0.72rem; letter-spacing: 0.02em; }
+
+  .ip .ip-seg { width: 100%; }
+  .ip .ip-seg button { flex: 1; }
+
+  .ip-2col, .cf-band .ip-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .ip-2col, .cf-band .ip-2col { grid-template-columns: 0.85fr 1.15fr; } }
+
+  .ip .ip-hl__title, .cf-band .ip-hl__title { font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin: 0 0 0.6rem; letter-spacing: -0.015em; }
+  .ip .ip-hl__big, .cf-band .ip-hl__big { font-size: 1.6rem; font-weight: 800; color: #fff; margin: 1.1rem 0 0.15rem; font-variant-numeric: tabular-nums; }
+  .ip .ip-note, .cf-band .ip-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.15rem 0 0; }
+  .ip .ip-bar--warn { background: linear-gradient(90deg, #f59e0b, #fb923c) !important; }
+  .ip .ip-bar--danger { background: linear-gradient(90deg, #ef4444, #f87171) !important; }
+  .ip .ip-td-sub { color: var(--text-subtle); font-weight: 400; }
+
+  .ip .ip-chip {
+    font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-strong);
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+    border-radius: var(--radius-sm); padding: 0.35rem 0.55rem; margin: 0.7rem 0 0; display: inline-block;
+  }
+
+  .cf-band .ip-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .ip-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .ip-src__title { font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 0.2rem; }
+  .cf-band .ip-src { display: grid; gap: 0.5rem; }
+  .cf-band .ip-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .ip-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .ip-src__item span { font-size: 0.72rem; color: #8592a6; word-break: break-all; }
+  .cf-band .ip-src__item a { color: #8592a6; text-decoration: none; }
+  .cf-band .ip-src__item a:hover { color: #fff; }
+  .cf-band .ip-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+  .cf-band .ip-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+  .cf-band .ip-chip2 { font-size: 0.7rem; font-weight: 600; color: #b8c2d4; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; padding: 0.3rem 0.6rem; }
+</style>

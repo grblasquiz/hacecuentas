@@ -1,0 +1,586 @@
+---
+// Flagship redesign de "Temperatura del horno en °C, °F y gas mark" (mockup Martin).
+// Los números salen del motor real (src/lib/formulas/temperatura-horno-conversion.ts),
+// importado acá para el SSR. La tabla gas mark → °C se DERIVA del motor (no se copia)
+// y viaja al <script is:inline> por data-attr, porque el inline no puede importar.
+// La regla de convección (−20 °C) es la que documenta el propio calc (explanation + FAQ).
+// Domain "home" (ámbar) por el mockup, no por la categoría (cocina→life).
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { temperaturaHornoConversion } from '../lib/formulas/temperatura-horno-conversion';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Caso cargado por defecto: la consulta #1 del calc ("350 farenheit en celsius")
+const VALOR = 350;
+const UNIDAD = 'fahrenheit';
+const init = temperaturaHornoConversion({ valor: VALOR, unidadOrigen: UNIDAD });
+
+// Tabla gas mark → °C derivada del propio motor (1..9)
+const GAS_TABLE: Record<number, number> = {};
+for (let g = 1; g <= 9; g++) GAS_TABLE[g] = temperaturaHornoConversion({ valor: g, unidadOrigen: 'gas' }).celsius;
+const gasDelCaso = temperaturaHornoConversion({ valor: init.gas, unidadOrigen: 'gas' });
+
+const CONVECCION_DELTA = 20; // regla documentada en el explanation y la FAQ de este calc
+const MAX_ESCALA = 260;      // tope de un horno doméstico según el explanation
+
+const n = (x: number) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(x);
+const barra = (c: number) => Math.max(2, Math.min(100, Math.round((c / MAX_ESCALA) * 100)));
+
+// Referencias: 6 escenarios, cada fila es una corrida real del motor
+const REF_F = [325, 350, 375, 400, 425, 450];
+const refRows = REF_F.map((f) => ({ f, ...temperaturaHornoConversion({ valor: f, unidadOrigen: 'fahrenheit' }) }));
+
+const faq = calc.faq || [];
+const sources = (calc.sources || []).slice(0, 3);
+---
+
+<div
+  class="cf-page th"
+  data-domain="home"
+  data-gas={JSON.stringify(GAS_TABLE)}
+  data-conv={CONVECCION_DELTA}
+  data-max={MAX_ESCALA}
+>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/categoria/cocina">Cocina</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Temperatura del horno</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">🔥</span> Recetas de todo el mundo · 2026</p>
+      <h1 class="cf-h1">De Fahrenheit a Celsius <span class="cf-yr">sin errores</span></h1>
+      <p class="cf-sub">Convertí la temperatura del horno entre °C, °F y gas mark, y sabé exactamente qué se cocina en ese rango.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">🍰</span> Receta americana: 350 °F</span>
+      <div class="th-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="th-deco-val">{n(init.celsius)} °C</div>
+          <div class="cf-deco-card__note" id="th-deco-note">{init.nombreTemperatura}</div>
+        </div>
+        <span class="cf-deco-badge th-badge">🔥</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Horno a gas</strong> <span class="cf-deco-chip" id="th-deco-chip">Gas mark {init.gas}</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">¿Qué dice tu receta?</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="th-valor">Temperatura</label></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="decimal" step="1" id="th-valor" value={VALOR} />
+          <p class="cf-help" id="th-help">El número que aparece en la receta.</p>
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="th-unidad">Unidad de origen</label></div>
+          <select class="cf-input" id="th-unidad">
+            <option value="celsius">Celsius (°C)</option>
+            <option value="fahrenheit" selected>Fahrenheit (°F)</option>
+            <option value="gas">Gas mark (1-9)</option>
+          </select>
+          <p class="cf-help">°F en recetas de EE.UU. · gas mark en recetas de Reino Unido.</p>
+        </div>
+      </div>
+
+      <div class="cf-field">
+        <label class="cf-toggle" for="th-vent">
+          <span class="cf-toggle__txt">Mi horno tiene ventilador
+            <small>Convección: se le restan {CONVECCION_DELTA} °C a la temperatura de la receta.</small>
+          </span>
+          <input type="checkbox" id="th-vent" />
+          <span class="cf-switch" aria-hidden="true"></span>
+        </label>
+      </div>
+
+      <button class="cf-primary" id="th-calc-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Recetas típicas:</span>
+        <button class="cf-sc" type="button" data-f="325">325 °F</button>
+        <button class="cf-sc" type="button" data-f="350">350 °F</button>
+        <button class="cf-sc" type="button" data-f="375">375 °F</button>
+        <button class="cf-sc" type="button" data-f="400">400 °F</button>
+        <button class="cf-sc" type="button" data-f="450">450 °F</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="th-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="th-big">{n(init.celsius)} °C</div>
+      <p class="cf-result__sub" id="th-sub">{init.resumen}</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="th-t1">{n(init.fahrenheit)} °F</div><div class="cf-tile__label">Fahrenheit</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="th-t2">Gas mark {init.gas}</div><div class="cf-tile__label">Horno a gas británico</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="th-t3">{n(init.celsius - CONVECCION_DELTA)} °C</div><div class="cf-tile__label">Con ventilador (−{CONVECCION_DELTA} °C)</div></div>
+        <div class="cf-tile"><div class="cf-tile__value th-tile--txt" id="th-t4">{init.nombreTemperatura.split('(')[0].trim()}</div><div class="cf-tile__label">Rango térmico</div></div>
+      </div>
+      <div class="cf-result__formula" id="th-formula">°C = ({VALOR} − 32) × 5/9 = {n(init.celsius)}</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="th-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="th-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt"><strong>Respuesta rápida.</strong> <span id="th-quick">{VALOR} °F son <strong>{n(init.celsius)} °C</strong> y equivalen a <strong>gas mark {init.gas}</strong>: horno {init.nombreTemperatura.split('(')[0].trim().toLowerCase()}, ideal para {init.usoRecomendado.toLowerCase()}</span></p>
+    <span class="cf-formula">°C = (°F − 32) × 5/9</span>
+  </div>
+
+  <!-- 5. Datos clave -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">🌡️</span>
+        <p class="cf-minicard__sub th-cap">Tu receta, en tu horno</p>
+        <div class="cf-minicard__big" id="th-k1">{n(init.celsius)} °C</div>
+        <p class="cf-minicard__desc th-mt" id="th-k1d">{n(init.fahrenheit)} °F · gas mark {init.gas}. {init.usoRecomendado}</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🍰</span>
+        <p class="cf-minicard__sub th-cap">El horno moderado</p>
+        <div class="cf-minicard__big">180 °C = 350 °F</div>
+        <p class="cf-minicard__desc th-mt">Gas mark 4. Es la temperatura más común: bizcochuelo, tarta y pollo entero. Si una receta no aclara nada, es esta.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">💨</span>
+        <p class="cf-minicard__sub th-cap">Si tenés ventilador</p>
+        <div class="cf-minicard__big">−{CONVECCION_DELTA} °C</div>
+        <p class="cf-minicard__desc th-mt">La convección cocina más rápido porque el aire circula. Restá {CONVECCION_DELTA} °C a la receta, o dejá la temperatura y bajá un 20% el tiempo.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">⚠️</span>
+        <p class="cf-minicard__sub th-cap">Tu horno miente</p>
+        <div class="cf-minicard__big">±10-15 °C</div>
+        <p class="cf-minicard__desc th-mt">Es la desviación real típica de un horno doméstico respecto de lo que marca la perilla. Un termómetro de horno te la muestra.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Cómo leer el resultado -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Cómo leer el resultado</p>
+    <h2 class="cf-section__title th-h2">Tres escalas, una misma temperatura</h2>
+    <div class="th-2col">
+      <div class="th-hl">
+        <p class="cf-side-eyebrow th-hl__eyebrow">Cómo leer el resultado</p>
+        <p class="th-hl__title">El gas mark no es una temperatura: es un número de llave</p>
+        <p class="th-hl__desc">Los hornos a gas británicos no tienen termostato en grados, sino una llave del 1 al 9. Cada número sube unos 15 °C. La calculadora te da el gas mark más cercano a tu temperatura, no un valor exacto.</p>
+        <div class="th-hl__big" id="th-hl-big">Gas {init.gas}</div>
+        <p class="th-hl__desc" id="th-hl-note">≈ {n(gasDelCaso.celsius)} °C en la escala británica</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-breakdown__big" id="th-bd-big">{n(init.celsius)} °C</div>
+        <div class="cf-brow">
+          <span class="cf-brow__lbl">Horno convencional</span>
+          <span class="cf-brow__val" id="th-bd-1">{n(init.celsius)} °C</span>
+          <span class="cf-brow__bar"><span id="th-bd-b1" style={`width:${barra(init.celsius)}%`}></span></span>
+        </div>
+        <p class="th-note">Lo que dice la receta, sin ajustes.</p>
+        <div class="cf-brow th-mt2">
+          <span class="cf-brow__lbl">Con ventilador (convección)</span>
+          <span class="cf-brow__val" id="th-bd-2">{n(init.celsius - CONVECCION_DELTA)} °C</span>
+          <span class="cf-brow__bar"><span class="th-bar--alt" id="th-bd-b2" style={`width:${barra(init.celsius - CONVECCION_DELTA)}%`}></span></span>
+        </div>
+        <p class="th-note">Regla del calc: −{CONVECCION_DELTA} °C sobre la temperatura convencional.</p>
+        <div class="cf-brow th-mt2">
+          <span class="cf-brow__lbl">Equivalente en horno a gas</span>
+          <span class="cf-brow__val" id="th-bd-3">{n(gasDelCaso.celsius)} °C</span>
+          <span class="cf-brow__bar"><span id="th-bd-b3" style={`width:${barra(gasDelCaso.celsius)}%`}></span></span>
+        </div>
+        <p class="th-note">Gas mark <span id="th-bd-3g">{init.gas}</span>, el escalón más cercano de la escala británica.</p>
+        <div class="cf-breakdown__total">
+          <span>Tope de un horno doméstico</span>
+          <strong>{MAX_ESCALA} °C</strong>
+        </div>
+        <div class="cf-callout cf-callout--warn th-mt3">
+          <span class="cf-callout__ico" aria-hidden="true">🌡️</span>
+          <p><strong>Ningún horno marca lo que dice.</strong> La desviación típica es de ±10-15 °C, y cada vez que abrís la puerta perdés otros 10-20 °C. Si hacés repostería precisa, un termómetro de horno vale más que cualquier conversión.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Paso a paso -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title th-h2">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">Copiá el número tal cual está en la receta y elegí en qué unidad viene: °C, °F o gas mark.</p>
+        <p class="th-chip" id="th-s1">{VALOR} °F</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">La conversión entre °C y °F es exacta. El gas mark es una escala de 9 escalones: se busca el más cercano.</p>
+        <p class="th-chip" id="th-s2">({VALOR} − 32) × 5/9 = {n(init.celsius)}</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">Además de los grados tenés el rango térmico y qué se cocina bien a esa temperatura.</p>
+        <p class="th-chip" id="th-s3">{n(init.celsius)} °C = gas {init.gas}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Referencias -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Receta dice</th><th>Poné tu horno en</th><th>Gas mark</th><th>Para qué sirve</th></tr></thead>
+        <tbody>
+          {refRows.map((r) => (
+            <tr>
+              <td><span class="cf-td-dot">{r.fahrenheit} °F</span></td>
+              <td class="cf-td-em">{n(r.celsius)} °C</td>
+              <td>{r.gas > 0 ? `Gas ${r.gas}` : '—'}</td>
+              <td class="th-td-uso">{r.usoRecomendado}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- 9. Banda de atención -->
+<div class="cf-band cf-band--warm" data-domain="home">
+  <div class="cf-band__inner">
+    <div class="th-2col th-2col--band">
+      <div class="th-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="th-card__title">350 °F son 176,7 °C, pero vos poné 180</h2>
+        <p class="cf-side-desc">La conversión exacta casi nunca cae en un número redondo, y las perillas de los hornos domésticos van de 10 en 10. Redondear al valor más cercano no arruina ninguna receta: la desviación real de tu horno es mayor que ese redondeo.</p>
+        <div class="cf-callout cf-callout--warn th-mt3">
+          <span class="cf-callout__ico" aria-hidden="true">⏱️</span>
+          <p>Precalentá siempre: un horno eléctrico tarda 10-15 min en llegar a 180-200 °C y 20 min para 220 °C o más. Con piedra de pizza, 30-45 min a máxima temperatura.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="th-src__title">El horno moderado</p>
+        <div class="th-hl__big">180 °C</div>
+        <p class="cf-side-desc">= 356 °F = gas mark 4. El punto de partida de la mayoría de las recetas dulces y saladas.</p>
+        <div class="th-chips">
+          <span class="th-chip th-chip--dark">Bizcochuelo</span>
+          <span class="th-chip th-chip--dark">Tarta</span>
+          <span class="th-chip th-chip--dark">Pollo entero</span>
+          <span class="th-chip th-chip--dark">Con ventilador: 160 °C</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page th" data-domain="home">
+  <!-- 10. FAQ -->
+  {faq.length > 0 && (
+    <section class="cf-section" id="preguntas">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title th-h2">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+</div>
+
+<!-- 11. Fuentes y metodología -->
+{sources.length > 0 && (
+  <div class="cf-band" data-domain="home">
+    <div class="cf-band__inner">
+      <div class="th-2col th-2col--band">
+        <div>
+          <p class="cf-eyebrow">Fuentes y metodología</p>
+          <h2 class="th-card__title th-card__title--plain">Números que podés defender</h2>
+          <p class="cf-side-desc">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026.</p>
+        </div>
+        <div class="cf-side-card cf-side-card--dark">
+          <p class="cf-side-eyebrow">Fuentes</p>
+          <div class="th-src">
+            {sources.map((s: any) => (
+              <div class="th-src__item">
+                <strong>{s.name}</strong>
+                <span>{s.url ? String(s.url).replace(/^https?:\/\//, '').split('/')[0] : ''}</span>
+              </div>
+            ))}
+          </div>
+          <p class="th-src__foot">● Información revisada en julio de 2026</p>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+<div class="cf-page th" data-domain="home">
+  <!-- 12. Related -->
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title th-h2">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🔥'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('(')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).replace(/^🍳\s*/, '').split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- 13. CTA bar -->
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="th-share2">Copiar enlace del cálculo</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.th');
+    if (!root) return;
+    var $ = function (id) { return document.getElementById(id); };
+    var GAS = JSON.parse(root.getAttribute('data-gas'));      // derivada del motor en el SSR
+    var CONV = Number(root.getAttribute('data-conv'));
+    var MAX = Number(root.getAttribute('data-max'));
+    var n = function (x) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(x); };
+
+    // Réplica de src/lib/formulas/temperatura-horno-conversion.ts (el inline no puede importar)
+    function celsiusAGas(c) {
+      if (c < 140) return 0;
+      if (c >= 240) return 9;
+      var mejor = 1, minDiff = Infinity;
+      for (var g in GAS) {
+        var diff = Math.abs(c - GAS[g]);
+        if (diff < minDiff) { minDiff = diff; mejor = Number(g); }
+      }
+      return mejor;
+    }
+    function nombreTemp(c) {
+      if (c < 120) return 'Muy bajo (deshidratar/secar)';
+      if (c < 150) return 'Bajo (merengues, pasta seca)';
+      if (c < 170) return 'Moderado bajo (bizcochos, flanes)';
+      if (c < 190) return 'Moderado (panes, tartas, pollo)';
+      if (c < 210) return 'Moderado alto (pizzas domésticas, scones)';
+      if (c < 230) return 'Alto (pan artesanal, lomo)';
+      if (c < 260) return 'Muy alto (pizza napoletana, grill)';
+      return 'Extremo (horno a piedra)';
+    }
+    function usoRec(c) {
+      if (c < 120) return 'Deshidratación de frutas, tostar frutos secos, carnes de cocción muy larga.';
+      if (c < 150) return 'Merengue seco, pavlova, macarons (secado inicial).';
+      if (c < 170) return 'Bizcochos tipo pound cake, flan de baño María, galletas suaves.';
+      if (c < 190) return 'Bizcochuelo, torta, tartas dulces, pollo entero.';
+      if (c < 210) return 'Scones, empanadas, facturas, tartas saladas, panes rápidos.';
+      if (c < 230) return 'Pan artesanal, pizza estilo argentino a la piedra.';
+      if (c < 260) return 'Pizza napoletana, grill de carnes (biftec), horno a leña.';
+      return 'Horno de piedra profesional (pizza 60-90 s).';
+    }
+    function convertir(valor, uo) {
+      var v = Number(valor);
+      if (v === undefined || v === null || isNaN(v)) throw new Error('Ingresá un valor numérico');
+      var celsius = 0, fahrenheit = 0, gas = 0;
+      if (uo === 'celsius') { celsius = v; fahrenheit = (v * 9) / 5 + 32; gas = celsiusAGas(v); }
+      else if (uo === 'fahrenheit') { fahrenheit = v; celsius = ((v - 32) * 5) / 9; gas = celsiusAGas(celsius); }
+      else if (uo === 'gas') {
+        if (v < 1 || v > 9) throw new Error('El gas mark está entre 1 y 9');
+        gas = Math.round(v); celsius = GAS[gas]; fahrenheit = (celsius * 9) / 5 + 32;
+      } else throw new Error('Unidad no válida');
+      celsius = Number(celsius.toFixed(1)); fahrenheit = Number(fahrenheit.toFixed(1));
+      return {
+        celsius: celsius, fahrenheit: fahrenheit, gas: gas,
+        nombreTemperatura: nombreTemp(celsius), usoRecomendado: usoRec(celsius),
+        resumen: celsius.toFixed(0) + ' °C = ' + fahrenheit.toFixed(0) + ' °F = gas ' + gas + '. ' + nombreTemp(celsius) + '.',
+      };
+    }
+
+    var valorEl = $('th-valor'), unidadEl = $('th-unidad'), ventEl = $('th-vent');
+    var barra = function (c) { return Math.max(2, Math.min(100, Math.round((c / MAX) * 100))); };
+    function set(id, t) { var e = $(id); if (e) e.textContent = t; }
+    function w(id, pct) { var e = $(id); if (e) e.style.width = pct + '%'; }
+
+    var HELP = { celsius: 'El número que aparece en la receta, en grados Celsius.', fahrenheit: 'El número que aparece en la receta.', gas: 'La llave del horno a gas británico: un entero del 1 al 9.' };
+
+    function render() {
+      var uo = unidadEl.value;
+      set('th-help', HELP[uo] || HELP.fahrenheit);
+      var r;
+      try { r = convertir(valorEl.value, uo); }
+      catch (err) { set('th-big', '—'); set('th-sub', err.message); return; }
+
+      var vent = ventEl.checked;
+      var cMostrado = vent ? r.celsius - CONV : r.celsius;
+      var gasCase = r.gas > 0 ? GAS[r.gas] : null;
+      var corto = r.nombreTemperatura.split('(')[0].trim();
+
+      set('th-big', n(cMostrado) + ' °C');
+      set('th-sub', vent
+        ? 'Receta: ' + n(r.celsius) + ' °C · con ventilador poné ' + n(cMostrado) + ' °C. ' + r.nombreTemperatura + '.'
+        : r.resumen);
+      set('th-t1', n(r.fahrenheit) + ' °F');
+      set('th-t2', r.gas > 0 ? 'Gas mark ' + r.gas : 'Bajo gas 1');
+      set('th-t3', n(r.celsius - CONV) + ' °C');
+      set('th-t4', corto);
+
+      var f = uo === 'celsius' ? '°F = (' + r.celsius + ' × 9/5) + 32 = ' + n(r.fahrenheit)
+        : uo === 'gas' ? 'Gas ' + r.gas + ' = ' + n(r.celsius) + ' °C = ' + n(r.fahrenheit) + ' °F'
+        : '°C = (' + r.fahrenheit + ' − 32) × 5/9 = ' + n(r.celsius);
+      set('th-formula', f);
+      set('th-s1', uo === 'gas' ? 'Gas mark ' + valorEl.value : valorEl.value + (uo === 'celsius' ? ' °C' : ' °F'));
+      set('th-s2', f);
+      set('th-s3', n(r.celsius) + ' °C = gas ' + (r.gas > 0 ? r.gas : '—'));
+
+      set('th-deco-val', n(cMostrado) + ' °C');
+      set('th-deco-note', r.nombreTemperatura);
+      set('th-deco-chip', r.gas > 0 ? 'Gas mark ' + r.gas : 'Bajo gas 1');
+      set('th-quick', valorEl.value + (uo === 'celsius' ? ' °C' : uo === 'gas' ? ' de gas mark' : ' °F') + ' son ' + n(r.celsius) + ' °C y equivalen a ' + (r.gas > 0 ? 'gas mark ' + r.gas : 'menos que gas 1') + ': horno ' + corto.toLowerCase() + ', ideal para ' + r.usoRecomendado.toLowerCase());
+
+      set('th-k1', n(cMostrado) + ' °C');
+      set('th-k1d', n(r.fahrenheit) + ' °F · ' + (r.gas > 0 ? 'gas mark ' + r.gas : 'por debajo del gas 1') + '. ' + r.usoRecomendado);
+      set('th-hl-big', r.gas > 0 ? 'Gas ' + r.gas : 'Sin gas');
+      set('th-hl-note', gasCase !== null ? '≈ ' + n(gasCase) + ' °C en la escala británica' : 'Por debajo del mínimo del horno a gas (gas 1 = ' + GAS[1] + ' °C)');
+
+      set('th-bd-big', n(cMostrado) + ' °C');
+      set('th-bd-1', n(r.celsius) + ' °C'); w('th-bd-b1', barra(r.celsius));
+      set('th-bd-2', n(r.celsius - CONV) + ' °C'); w('th-bd-b2', barra(r.celsius - CONV));
+      set('th-bd-3', gasCase !== null ? n(gasCase) + ' °C' : '—'); w('th-bd-b3', gasCase !== null ? barra(gasCase) : 0);
+      set('th-bd-3g', r.gas > 0 ? String(r.gas) : '—');
+    }
+
+    valorEl.addEventListener('input', render);
+    unidadEl.addEventListener('change', render);
+    ventEl.addEventListener('change', render);
+    $('th-calc-btn').addEventListener('click', render);
+    Array.prototype.forEach.call(document.querySelectorAll('[data-f]'), function (b) {
+      b.addEventListener('click', function () { unidadEl.value = 'fahrenheit'; valorEl.value = b.getAttribute('data-f'); render(); });
+    });
+
+    function summary() {
+      try {
+        var r = convertir(valorEl.value, unidadEl.value);
+        return r.resumen + ' Ideal para: ' + r.usoRecomendado + ' Con ventilador: ' + n(r.celsius - CONV) + ' °C. — hacecuentas.com';
+      } catch (e) { return 'hacecuentas.com/calculadora-temperatura-horno-celsius-fahrenheit-gas'; }
+    }
+    function shareUrl() { return location.origin + location.pathname + '?valor=' + valorEl.value + '&unidad=' + unidadEl.value; }
+    function copy(t, btn) {
+      if (!navigator.clipboard) return;
+      navigator.clipboard.writeText(t).then(function () {
+        var o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(function () { btn.innerHTML = o; }, 1500);
+      });
+    }
+    $('th-copy').addEventListener('click', function (e) { copy(summary(), e.currentTarget); });
+    $('th-detail').addEventListener('click', function () { var t = document.getElementById('preguntas'); if (t) t.scrollIntoView({ behavior: 'smooth' }); });
+    var s2 = $('th-share2'); if (s2) s2.addEventListener('click', function (e) { copy(shareUrl(), e.currentTarget); });
+
+    var q = new URLSearchParams(location.search);
+    if (q.get('valor')) valorEl.value = q.get('valor');
+    if (q.get('unidad')) unidadEl.value = q.get('unidad');
+    render();
+  })();
+</script>
+
+<style>
+  .th .th-deco-wrap { position: relative; }
+  .th .th-badge { top: -14px; right: -14px; }
+  .th .th-cap { font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+  .th .th-mt { margin-top: 0.3rem; }
+  .th .th-mt2 { margin-top: 1rem; }
+  .th .th-mt3, .cf-band .th-mt3 { margin-top: 1.25rem; }
+  .th .th-h2, .cf-band .th-h2 { margin: 0.35rem 0 1.25rem; }
+  .th .cf-minicard__big { font-size: 1.25rem; }
+  .th .th-tile--txt { font-size: 1rem; line-height: 1.2; }
+  .th .th-td-uso { font-size: 0.8rem; color: var(--text-muted); min-width: 220px; }
+  .th .th-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.15rem 0 0; }
+  .th .th-bar--alt { background: linear-gradient(90deg, #06b6d4, #22d3ee) !important; }
+
+  .th-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .th-2col { grid-template-columns: 0.85fr 1.15fr; } }
+  .cf-band .th-2col--band { gap: 1.25rem; }
+
+  .th .th-hl {
+    padding: 1.4rem 1.5rem; border-radius: var(--radius-lg); color: #fff;
+    background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%);
+    box-shadow: var(--shadow-md);
+  }
+  .th .th-hl__eyebrow { color: rgba(255,255,255,0.85); }
+  .th .th-hl__title { font-size: 1.3rem; font-weight: 800; line-height: 1.2; margin: 0 0 0.6rem; letter-spacing: -0.015em; }
+  .th .th-hl__desc { font-size: 0.82rem; line-height: 1.5; margin: 0; color: rgba(255,255,255,0.86); }
+  .th .th-hl__big { font-size: 1.9rem; font-weight: 800; margin: 1.1rem 0 0.15rem; color: #fff; line-height: 1.1; }
+  .cf-band .th-hl__big { font-size: 2rem; font-weight: 800; color: #fff; margin: 1rem 0 0.4rem; font-variant-numeric: tabular-nums; }
+
+    /* El chip mono es nowrap: sin min-width:0 infla el track del grid
+     (min-width:auto en grid items) y mete scroll-x en mobile. */
+  .th .cf-steps > .cf-step { min-width: 0; }
+.th .th-chip {
+    display: inline-block; margin: 0.7rem 0 0; padding: 0.35rem 0.6rem; border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-strong);
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+    overflow-x: auto; max-width: 100%; white-space: nowrap;
+  }
+  .cf-band .th-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.9rem; }
+  .cf-band .th-chip--dark { display: inline-block; padding: 0.35rem 0.6rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #e7ecf3; }
+
+  .cf-band .th-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .th-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .th-src { display: grid; gap: 0.5rem; }
+  .cf-band .th-src__title { font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0 0 0.3rem; }
+  .cf-band .th-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .th-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .th-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .th-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+</style>

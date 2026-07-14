@@ -1,0 +1,549 @@
+---
+// Flagship redesign de la calc "liquidación final por renuncia" (mockup Martin).
+// Los números salen del motor real (src/lib/formulas/liquidacion-final-renuncia.ts):
+// días trabajados (sueldo÷30×días) + vacaciones no gozadas (sueldo÷25×días, Art. 155)
+// + SAC proporcional (sueldo÷2×meses/6, Art. 123) + SAC sobre vacaciones (÷12).
+// Por renuncia NO hay indemnización por antigüedad ni preaviso.
+// Domain "money" (índigo) — coincide con la categoría finanzas, no hace falta forzarlo.
+// Header/footer = los globales del sitio.
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// ── Réplica EXACTA de src/lib/formulas/liquidacion-final-renuncia.ts ────────
+function liq(sueldoBruto: number, diasTrabajadosMes: number, diasVacacionesNGozadas: number, mesesSemestre: number) {
+  diasTrabajadosMes = Math.min(30, Math.max(0, diasTrabajadosMes));
+  diasVacacionesNGozadas = Math.max(0, diasVacacionesNGozadas);
+  mesesSemestre = Math.min(6, Math.max(1, mesesSemestre));
+
+  const diasTrabajados = (sueldoBruto / 30) * diasTrabajadosMes;
+  const vacacionesNoGozadas = (sueldoBruto / 25) * diasVacacionesNGozadas;
+  const sacProporcional = (sueldoBruto / 2) * (mesesSemestre / 6);
+  const sacSobreVacaciones = vacacionesNoGozadas / 12;
+  const totalLiquidacion = diasTrabajados + vacacionesNoGozadas + sacProporcional + sacSobreVacaciones;
+
+  return {
+    diasTrabajados, vacacionesNoGozadas, sacProporcional, sacSobreVacaciones, totalLiquidacion,
+    gVac: vacacionesNoGozadas + sacSobreVacaciones,
+    valorDiaTrabajado: sueldoBruto / 30,
+    valorDiaVacaciones: sueldoBruto / 25,
+  };
+}
+
+const fmtAr = (n: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Math.round(n));
+const fmtK = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+const pct = (n: number, base: number) => base > 0 ? ((n / base) * 100).toFixed(1).replace('.', ',') + '%' : '0%';
+
+const INIT = { sueldo: 1_500_000, dias: 15, vac: 14, meses: 3 };
+const init = liq(INIT.sueldo, INIT.dias, INIT.vac, INIT.meses);
+
+// Tabla de referencia: mismo caso, distinto sueldo (computada con la fórmula)
+const refRows = [800_000, 1_000_000, 1_500_000, 2_000_000, 2_500_000].map((s) => ({ sueldo: s, ...liq(s, INIT.dias, INIT.vac, INIT.meses) }));
+
+const mesesOpts: any[] = (calc.fields || []).find((f: any) => f.id === 'mesesSemestre')?.options || [];
+
+const faq = calc.faq || [];
+const sources = (calc.sources || []).slice(0, 3);
+const explanationHtml = calc.explanation ? md(calc.explanation) : '';
+---
+
+<div class="cf-page lq" data-domain="money">
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/sueldos-y-trabajo">Sueldos y trabajo</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Liquidación final por renuncia</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">📋</span> Argentina · Renuncia laboral · 2026</p>
+      <h1 class="cf-h1">¿Cuánto cobrás si <span class="cf-yr">renunciás</span>?</h1>
+      <p class="cf-sub">Calculá tu liquidación final: días trabajados del último mes, vacaciones no gozadas y SAC proporcional del semestre.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">✍️</span> Solo lo devengado</span>
+      <div class="lq-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="lq-deco-val">{fmtAr(init.totalLiquidacion)}</div>
+          <div class="cf-deco-card__note">Liquidación final bruta</div>
+        </div>
+        <span class="cf-deco-badge lq-badge" aria-hidden="true">📋</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Indemnización</strong> <span class="cf-deco-chip">No corresponde</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">Contanos tu caso</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="lq-sueldo">Último sueldo bruto mensual</label><span class="cf-hint">Antes de descuentos</span></div>
+        <div class="lq-money"><span class="lq-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="lq-sueldo" value="1.500.000" /></div>
+        <p class="cf-help">Sueldo antes de los descuentos de jubilación, obra social y Ganancias.</p>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="lq-dias">Días trabajados del mes</label></div>
+          <input class="cf-input" type="number" inputmode="numeric" id="lq-dias" value="15" min="0" max="31" step="1" />
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="lq-vac">Días de vacaciones no gozadas</label></div>
+          <input class="cf-input" type="number" inputmode="numeric" id="lq-vac" value="14" min="0" max="60" step="1" />
+        </div>
+      </div>
+      <p class="cf-help" style="margin:-0.6rem 0 1.1rem">Los días del último mes se liquidan sobre meses de 30 días; las vacaciones, con el jornal del Art. 155 (sueldo ÷ 25).</p>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="lq-meses">Meses trabajados en el semestre actual</label><span class="cf-hint">SAC</span></div>
+        <select class="cf-input" id="lq-meses">
+          {mesesOpts.map((o: any) => (<option value={o.value} selected={Number(o.value) === INIT.meses}>{o.label}</option>))}
+        </select>
+        <p class="cf-help">Meses del semestre en curso (enero-junio o julio-diciembre) hasta la fecha de la renuncia.</p>
+      </div>
+
+      <button class="cf-primary" id="lq-calc-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Ejemplos:</span>
+        <button class="cf-sc" type="button" data-ej="800000">$800 mil</button>
+        <button class="cf-sc" type="button" data-ej="1000000">$1 M</button>
+        <button class="cf-sc" type="button" data-ej="2000000">$2 M</button>
+        <button class="cf-sc" type="button" data-ej="2500000">$2,5 M</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="lq-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="lq-big">{fmtAr(init.totalLiquidacion)}</div>
+      <div class="cf-result__biglabel">Liquidación final bruta</div>
+      <p class="cf-result__sub" id="lq-sub">{INIT.dias} días trabajados · {INIT.vac} días de vacaciones · {INIT.meses} de 6 meses de SAC</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="lq-t-dias">{fmtAr(init.diasTrabajados)}</div><div class="cf-tile__label">Días trabajados</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="lq-t-vac">{fmtAr(init.vacacionesNoGozadas)}</div><div class="cf-tile__label">Vacaciones no gozadas</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="lq-t-sac">{fmtAr(init.sacProporcional)}</div><div class="cf-tile__label">SAC proporcional</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="lq-t-sacvac">{fmtAr(init.sacSobreVacaciones)}</div><div class="cf-tile__label">SAC s/ vacaciones</div></div>
+      </div>
+      <div class="cf-result__formula" id="lq-formula">{fmtK(init.diasTrabajados)} + {fmtK(init.vacacionesNoGozadas)} + {fmtK(init.sacProporcional)} + {fmtK(init.sacSobreVacaciones)} = {fmtK(init.totalLiquidacion)}</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="lq-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="lq-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt"><strong>Respuesta rápida.</strong> Con un sueldo de <strong>{fmtAr(INIT.sueldo)}</strong>, {INIT.dias} días trabajados y {INIT.vac} días de vacaciones pendientes, la liquidación por renuncia da <strong id="lq-quick">{fmtAr(init.totalLiquidacion)}</strong> brutos. No incluye indemnización: al renunciar sólo cobrás lo devengado.</p>
+    <span class="cf-formula">días ÷30 + vac ÷25 + SAC ÷2</span>
+  </div>
+
+  <!-- 5 · Datos clave -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">🚫</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Indemnización</p>
+        <div class="cf-minicard__big">$0</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Por renuncia no cobrás antigüedad, preaviso ni integración del mes.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">📅</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Día trabajado</p>
+        <div class="cf-minicard__big" id="lq-k-dia">{fmtAr(init.valorDiaTrabajado)}</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Sueldo ÷ 30. Es el valor de cada día del último mes.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🏖️</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Día de vacaciones</p>
+        <div class="cf-minicard__big" id="lq-k-vac">{fmtAr(init.valorDiaVacaciones)}</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Sueldo ÷ 25 (Art. 155 LCT). Vale más que el día trabajado.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">💵</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">SAC del semestre</p>
+        <div class="cf-minicard__big" id="lq-k-sac">{INIT.meses} de 6</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Medio sueldo × meses ÷ 6 (Art. 123 LCT y Ley 23.041).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · Cómo leer el resultado -->
+  <section class="cf-section">
+    <div class="lq-2col">
+      <div class="lq-hl">
+        <p class="cf-side-eyebrow lq-hl__eyebrow">Cómo leer el resultado</p>
+        <p class="lq-hl__title">Un día de vacaciones vale más que un día trabajado</p>
+        <p class="lq-hl__desc">El día común se paga dividiendo el sueldo por 30, pero el jornal vacacional del Art. 155 LCT lo divide por 25. Por eso cada día de vacaciones pendiente rinde un 20% más en tu liquidación.</p>
+        <div class="lq-hl__big">+20%</div>
+        <p class="lq-hl__note">vale el día de vacaciones sobre el día trabajado</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-breakdown__big" id="lq-bd-total">{fmtAr(init.totalLiquidacion)}</div>
+        <div class="cf-brow">
+          <span class="cf-brow__lbl">Días trabajados del mes</span>
+          <span class="cf-brow__val" id="lq-bd-dias">{fmtAr(init.diasTrabajados)}</span>
+          <span class="cf-brow__bar"><span id="lq-bd-dias-bar" style={`width:${Math.round(init.diasTrabajados / init.totalLiquidacion * 100)}%`}></span></span>
+        </div>
+        <div class="cf-brow" style="margin-top:1rem">
+          <span class="cf-brow__lbl">Vacaciones no gozadas + SAC</span>
+          <span class="cf-brow__val" id="lq-bd-vac">{fmtAr(init.gVac)}</span>
+          <span class="cf-brow__bar"><span id="lq-bd-vac-bar" style={`width:${Math.round(init.gVac / init.totalLiquidacion * 100)}%`}></span></span>
+        </div>
+        <div class="cf-brow" style="margin-top:1rem">
+          <span class="cf-brow__lbl">SAC proporcional del semestre</span>
+          <span class="cf-brow__val" id="lq-bd-sac">{fmtAr(init.sacProporcional)}</span>
+          <span class="cf-brow__bar"><span id="lq-bd-sac-bar" style={`width:${Math.round(init.sacProporcional / init.totalLiquidacion * 100)}%`}></span></span>
+        </div>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1.25rem">
+          <span class="cf-callout__ico" aria-hidden="true">⚠️</span>
+          <p><strong>Vos tenés que dar el preaviso.</strong> Al renunciar, el Art. 231 LCT te obliga a avisar con 15 días de anticipación. Si no lo hacés, el empleador puede descontarte ese período de la liquidación.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · Paso a paso -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">Tu último sueldo bruto, los días trabajados del mes, las vacaciones pendientes y los meses del semestre.</p>
+        <p class="lq-chip" id="lq-s1">{fmtAr(INIT.sueldo)} · {INIT.dias} días · {INIT.vac} vac</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">Sumamos los cuatro conceptos devengados: días, vacaciones, SAC proporcional y SAC sobre vacaciones.</p>
+        <p class="lq-chip" id="lq-s2">{fmtK(init.diasTrabajados)} + {fmtK(init.vacacionesNoGozadas)} + {fmtK(init.sacProporcional)} + {fmtK(init.sacSobreVacaciones)}</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">Es un total bruto: al cobrarlo se le descuentan aportes. El empleador tiene 4 días hábiles para pagarlo.</p>
+        <p class="lq-chip" id="lq-s3">Total {fmtAr(init.totalLiquidacion)}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · Referencias -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Sueldo bruto</th><th>Días trabajados</th><th>Vacaciones no gozadas</th><th>Total liquidación</th></tr></thead>
+        <tbody>
+          {refRows.map((r) => (
+            <tr>
+              <td>{fmtAr(r.sueldo)}</td>
+              <td>{fmtAr(r.diasTrabajados)}</td>
+              <td>{fmtAr(r.vacacionesNoGozadas)}</td>
+              <td class="cf-td-em">{fmtAr(r.totalLiquidacion)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="lq-tnote">Escenarios con {INIT.dias} días trabajados del mes, {INIT.vac} días de vacaciones no gozadas y {INIT.meses} de 6 meses del semestre. El total incluye además el SAC proporcional y el SAC sobre vacaciones.</p>
+  </section>
+</div>
+
+<!-- 9 · Banda atención -->
+<div class="cf-band cf-band--warm" data-domain="money">
+  <div class="cf-band__inner">
+    <div class="lq-2col">
+      <div class="lq-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="lq-card__title">Renunciar no es lo mismo que ser despedido</h2>
+        <p class="cf-side-desc">Al renunciar sólo cobrás lo que ya devengaste: días, vacaciones y aguinaldo proporcional. No hay indemnización por antigüedad (Art. 245), ni preaviso a tu favor, ni integración del mes de despido. Si te presionan para renunciar cuando en realidad te están despidiendo, estás resignando esos rubros.</p>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1rem">
+          <span class="cf-callout__ico" aria-hidden="true">📌</span>
+          <p>La renuncia debe hacerse por telegrama laboral gratuito o ante escribano (Art. 240 LCT). El empleador tiene 4 días hábiles para pagarte la liquidación final.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="lq-ref__title">Último sueldo bruto</p>
+        <div class="lq-ref__big" id="lq-ref-big">{fmtAr(INIT.sueldo)}</div>
+        <p class="cf-side-desc">Base de los cuatro conceptos: se divide por 30 para los días, por 25 para las vacaciones y por 2 para el aguinaldo.</p>
+        <div class="lq-chips">
+          <span class="lq-chips__i">Art. 123 LCT</span>
+          <span class="lq-chips__i">Art. 156 LCT</span>
+          <span class="lq-chips__i">Ley 23.041</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page lq" data-domain="money">
+  <!-- 10 · FAQ -->
+  {faq.length > 0 && (
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {explanationHtml && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">En detalle</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cómo se calcula la liquidación final</h2>
+      <div class="cf-prose" set:html={explanationHtml} />
+    </section>
+  )}
+</div>
+
+<!-- 11 · Banda fuentes -->
+<div class="cf-band" data-domain="money">
+  <div class="cf-band__inner">
+    <div class="lq-2col">
+      <div>
+        <p class="cf-eyebrow">Fuentes y metodología</p>
+        <h2 class="cf-section__title" style="margin:0.35rem 0 0.6rem">Números que podés defender</h2>
+        <p class="cf-section__lead" style="max-width:52ch">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026.</p>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Marco normativo</p>
+        <div class="lq-src">
+          {sources.map((s: any) => (
+            <div class="lq-src__item">
+              <strong>{String(s.name).split('—')[0].trim()}</strong>
+              <span>{s.publisher}{s.date ? ` · ${s.date}` : ''}</span>
+            </div>
+          ))}
+        </div>
+        <p class="lq-src__foot">● Información revisada en julio de 2026</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page lq" data-domain="money">
+  <!-- 12 · Related -->
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🧮'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('—')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- 13 · CTA bar -->
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="lq-share2">Copiar enlace</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.lq');
+    if (!root) return;
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Math.round(n));
+    const fmtK = (n) => '$' + Math.round(n).toLocaleString('es-AR');
+
+    const sueldoEl = $('lq-sueldo'), diasEl = $('lq-dias'), vacEl = $('lq-vac'), mesesEl = $('lq-meses');
+
+    function num(el) { return Number((el.value || '').replace(/\D/g, '')) || 0; }
+    function fmtThousands(v) { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('es-AR') : ''; }
+
+    // Réplica EXACTA de src/lib/formulas/liquidacion-final-renuncia.ts
+    function liq(sueldoBruto, diasTrabajadosMes, diasVacacionesNGozadas, mesesSemestre) {
+      diasTrabajadosMes = Math.min(30, Math.max(0, diasTrabajadosMes));
+      diasVacacionesNGozadas = Math.max(0, diasVacacionesNGozadas);
+      mesesSemestre = Math.min(6, Math.max(1, mesesSemestre));
+      const diasTrabajados = (sueldoBruto / 30) * diasTrabajadosMes;
+      const vacacionesNoGozadas = (sueldoBruto / 25) * diasVacacionesNGozadas;
+      const sacProporcional = (sueldoBruto / 2) * (mesesSemestre / 6);
+      const sacSobreVacaciones = vacacionesNoGozadas / 12;
+      const totalLiquidacion = diasTrabajados + vacacionesNoGozadas + sacProporcional + sacSobreVacaciones;
+      return {
+        diasTrabajados, vacacionesNoGozadas, sacProporcional, sacSobreVacaciones, totalLiquidacion,
+        gVac: vacacionesNoGozadas + sacSobreVacaciones,
+        valorDiaTrabajado: sueldoBruto / 30,
+        valorDiaVacaciones: sueldoBruto / 25,
+      };
+    }
+
+    function state() {
+      return {
+        sueldo: num(sueldoEl),
+        dias: Math.min(30, Math.max(0, Number(diasEl.value) || 0)),
+        vac: Math.max(0, Number(vacEl.value) || 0),
+        meses: Number(mesesEl.value) || 3,
+      };
+    }
+
+    function render() {
+      const s = state();
+      const r = liq(s.sueldo, s.dias, s.vac, s.meses);
+
+      if (!(s.sueldo > 0)) {
+        $('lq-big').textContent = '—';
+        $('lq-sub').textContent = 'Ingresá tu sueldo bruto mensual';
+        return;
+      }
+
+      $('lq-big').textContent = fmt(r.totalLiquidacion);
+      $('lq-sub').textContent = s.dias + ' días trabajados · ' + s.vac + ' días de vacaciones · ' + s.meses + ' de 6 meses de SAC';
+      $('lq-t-dias').textContent = fmt(r.diasTrabajados);
+      $('lq-t-vac').textContent = fmt(r.vacacionesNoGozadas);
+      $('lq-t-sac').textContent = fmt(r.sacProporcional);
+      $('lq-t-sacvac').textContent = fmt(r.sacSobreVacaciones);
+      $('lq-formula').textContent = fmtK(r.diasTrabajados) + ' + ' + fmtK(r.vacacionesNoGozadas) + ' + ' + fmtK(r.sacProporcional) + ' + ' + fmtK(r.sacSobreVacaciones) + ' = ' + fmtK(r.totalLiquidacion);
+
+      $('lq-quick').textContent = fmt(r.totalLiquidacion);
+      $('lq-deco-val').textContent = fmt(r.totalLiquidacion);
+
+      $('lq-k-dia').textContent = fmt(r.valorDiaTrabajado);
+      $('lq-k-vac').textContent = fmt(r.valorDiaVacaciones);
+      $('lq-k-sac').textContent = s.meses + ' de 6';
+
+      const t = r.totalLiquidacion;
+      $('lq-bd-total').textContent = fmt(t);
+      $('lq-bd-dias').textContent = fmt(r.diasTrabajados);
+      $('lq-bd-vac').textContent = fmt(r.gVac);
+      $('lq-bd-sac').textContent = fmt(r.sacProporcional);
+      $('lq-bd-dias-bar').style.width = (t > 0 ? Math.round(r.diasTrabajados / t * 100) : 0) + '%';
+      $('lq-bd-vac-bar').style.width = (t > 0 ? Math.round(r.gVac / t * 100) : 0) + '%';
+      $('lq-bd-sac-bar').style.width = (t > 0 ? Math.round(r.sacProporcional / t * 100) : 0) + '%';
+
+      $('lq-ref-big').textContent = fmt(s.sueldo);
+
+      $('lq-s1').textContent = fmt(s.sueldo) + ' · ' + s.dias + ' días · ' + s.vac + ' vac';
+      $('lq-s2').textContent = fmtK(r.diasTrabajados) + ' + ' + fmtK(r.vacacionesNoGozadas) + ' + ' + fmtK(r.sacProporcional) + ' + ' + fmtK(r.sacSobreVacaciones);
+      $('lq-s3').textContent = 'Total ' + fmt(r.totalLiquidacion);
+    }
+
+    sueldoEl.addEventListener('input', () => { sueldoEl.value = fmtThousands(sueldoEl.value); render(); });
+    [diasEl, vacEl].forEach((el) => el.addEventListener('input', render));
+    mesesEl.addEventListener('change', render);
+    $('lq-calc-btn').addEventListener('click', render);
+    document.querySelectorAll('.lq [data-ej]').forEach((b) => b.addEventListener('click', () => { sueldoEl.value = fmtThousands(b.getAttribute('data-ej')); render(); }));
+
+    function summary() {
+      const s = state();
+      const r = liq(s.sueldo, s.dias, s.vac, s.meses);
+      return `Liquidación final por renuncia (AR): total bruto ${fmt(r.totalLiquidacion)} con sueldo ${fmt(s.sueldo)}. Días trabajados ${fmt(r.diasTrabajados)}, vacaciones no gozadas ${fmt(r.vacacionesNoGozadas)}, SAC proporcional ${fmt(r.sacProporcional)}, SAC s/ vacaciones ${fmt(r.sacSobreVacaciones)}. Sin indemnización ni preaviso. — hacecuentas.com`;
+    }
+    function shareUrl() {
+      const s = state();
+      return `${location.origin}${location.pathname}?sueldo=${s.sueldo}&dias=${s.dias}&vac=${s.vac}&meses=${s.meses}`;
+    }
+    function copy(t, btn) { navigator.clipboard?.writeText(t).then(() => { const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => btn.innerHTML = o, 1500); }); }
+    $('lq-copy').addEventListener('click', (e) => copy(summary(), e.currentTarget));
+    $('lq-detail').addEventListener('click', () => { document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' }); });
+    const s2 = $('lq-share2'); if (s2) s2.addEventListener('click', (e) => copy(shareUrl(), e.currentTarget));
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('sueldo')) sueldoEl.value = fmtThousands(q.get('sueldo'));
+    if (q.get('dias')) diasEl.value = q.get('dias');
+    if (q.get('vac')) vacEl.value = q.get('vac');
+    if (q.get('meses')) mesesEl.value = q.get('meses');
+    render();
+  })();
+</script>
+
+<style>
+  /* El badge vive fuera de .cf-deco-card porque la card tiene overflow:hidden */
+  .lq .lq-deco-wrap { position: relative; }
+  .lq .lq-badge { top: -14px; right: -14px; }
+
+  .lq .lq-money { position: relative; display: flex; align-items: center; }
+  .lq .lq-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
+  .lq .lq-money .cf-input { padding-left: 1.7rem; }
+
+  .lq-2col, .cf-band .lq-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .lq-2col, .cf-band .lq-2col { grid-template-columns: 0.85fr 1.15fr; } }
+
+  .lq .lq-hl {
+    padding: 1.5rem 1.6rem; border-radius: var(--radius-lg); color: #fff;
+    background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%);
+    box-shadow: var(--shadow-lg);
+  }
+  .lq .lq-hl__eyebrow { color: rgba(255, 255, 255, 0.82); }
+  .lq .lq-hl__title { font-size: 1.4rem; font-weight: 800; line-height: 1.2; margin: 0 0 0.6rem; letter-spacing: -0.015em; }
+  .lq .lq-hl__desc { font-size: 0.85rem; line-height: 1.55; color: rgba(255, 255, 255, 0.88); margin: 0; }
+  .lq .lq-hl__big { font-size: 2.4rem; font-weight: 800; margin: 1.1rem 0 0; line-height: 1; font-variant-numeric: tabular-nums; }
+  .lq .lq-hl__note { font-size: 0.78rem; color: rgba(255, 255, 255, 0.82); margin: 0.25rem 0 0; }
+
+  .lq .lq-chip {
+    display: inline-block; margin: 0.8rem 0 0; padding: 0.35rem 0.6rem; border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; color: var(--accent-strong);
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  }
+  .lq .lq-tnote { font-size: 0.75rem; color: var(--text-subtle); margin: 0.7rem 0 0; }
+
+  .cf-band .lq-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .lq-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+
+  .cf-band .lq-ref__title { font-size: 1.05rem; font-weight: 800; color: #fff; margin: 0 0 0.5rem; }
+  .cf-band .lq-ref__big { font-size: 2rem; font-weight: 800; color: #fff; line-height: 1; margin: 0 0 0.4rem; font-variant-numeric: tabular-nums; }
+  .cf-band .lq-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+  .cf-band .lq-chips__i { padding: 0.3rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; background: rgba(255, 255, 255, 0.1); color: #e7ecf3; border: 1px solid rgba(255, 255, 255, 0.12); }
+
+  .cf-band .lq-src { display: grid; gap: 0.5rem; }
+  .cf-band .lq-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.08); }
+  .cf-band .lq-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .lq-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .lq-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+</style>

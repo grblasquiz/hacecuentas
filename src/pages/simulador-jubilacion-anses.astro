@@ -5,6 +5,52 @@ import Layout from '../layouts/Layout.astro';
 import { freeOfferSchema } from '../lib/offer-schema';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import '../styles/calc-flagship.css';
+
+// Valores de referencia 2026 de esta página (fuente única para SSR y para el
+// script del cliente, que los lee por data-* del root). Son los mismos que ya
+// usaba el simulador: NO se inventan datos previsionales.
+const JUB_MIN = 290_000;      // jubilación mínima
+const BONO = 70_000;          // bono de refuerzo → piso = mínima + bono = $360.000
+const JUB_MAX = 1_950_000;    // tope máximo (≈8× la mínima)
+const JUB_PROM = 620_000;     // jubilación promedio
+const PUAM_PCT = 0.80;        // PUAM = 80% de la mínima → $232.000
+const PUAM = JUB_MIN * PUAM_PCT;
+const PISO = JUB_MIN + BONO;
+const TASA_ANUAL = 0.015;     // 1,5% por año de aportes (fórmula simplificada)
+const APORTES_REQ = 30;       // régimen general
+const APORTES_REQ_DOCENTE = 25;
+
+const fmtArs = (n: number) => '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(Math.round(n));
+
+// Misma fórmula simplificada que el script del cliente (documentada más abajo).
+function simular(sexo: string, edad: number, aportes: number, sueldo: number, aumento: number, regimen: string) {
+  let edadJub = sexo === 'hombre' ? 65 : 60;
+  let aportesReq = APORTES_REQ;
+  if (regimen === 'docente') aportesReq = APORTES_REQ_DOCENTE;
+  if (regimen === 'puam') { edadJub = 65; aportesReq = 0; }
+  const anosFaltan = Math.max(0, edadJub - edad);
+  const aportesAlJubilar = aportes + anosFaltan;
+  const cumpleAportes = aportesAlJubilar >= aportesReq;
+  const sueldoJub = sueldo * Math.pow(1 + aumento / 100, anosFaltan);
+  let haber: number;
+  if (regimen === 'puam') haber = PUAM;
+  else if (!cumpleAportes) haber = 0;
+  else haber = Math.max(PISO, Math.min(sueldoJub * TASA_ANUAL * aportesAlJubilar, JUB_MAX));
+  const tasaReemplazo = sueldoJub > 0 && haber > 0 ? (haber / sueldoJub) * 100 : 0;
+  return { edadJub, aportesReq, anosFaltan, aportesAlJubilar, cumpleAportes, sueldoJub, haber, tasaReemplazo };
+}
+
+// Caso por defecto del simulador: mujer, 40 años, 15 de aportes, $1.500.000, +3% anual real.
+const INIT = { sexo: 'mujer', edad: 40, aportes: 15, sueldo: 1_500_000, aumento: 3, regimen: 'general' };
+const init = simular(INIT.sexo, INIT.edad, INIT.aportes, INIT.sueldo, INIT.aumento, INIT.regimen);
+
+// Escenarios de referencia: computados con la MISMA fórmula del simulador, con el
+// caso ya en edad jubilatoria (edad 60 = edadJub de mujer ⇒ sin proyección de aumentos).
+const escenarios = [20, 25, 30, 35, 40].map((a) => ({
+  aportes: a,
+  ...simular('mujer', 60, a, INIT.sueldo, 0, 'general'),
+}));
 
 const title = 'Simulador de Jubilación ANSES 2026 — Tu Haber';
 const description = 'Simulador de jubilación ANSES: ingresá edad, años de aportes y sueldo actual → obtené tu haber jubilatorio proyectado, si cumplís requisitos y años que te faltan. Gratis.';
@@ -22,7 +68,9 @@ const schemaApp = {
   offers: freeOfferSchema({ priceCurrency: 'ARS' }),
   speakable: {
     '@type': 'SpeakableSpecification',
-    cssSelector: ['h1', '.lead', '[data-haber-estimado]'],
+    // Selectores del body rediseñado (.cf-*): el .lead y el [data-haber-estimado]
+    // del layout viejo ya no existen.
+    cssSelector: ['.cf-h1', '.cf-sub', '#sj-haber'],
   },
 };
 
@@ -62,119 +110,313 @@ const schema = {
   '@graph': [schemaApp, schemaBreadcrumb, schemaFaq],
 };
 ---
-<Layout title={title} description={description} image="/og/simulador-jubilacion-anses.png" schema={schema}>
+<Layout title={title} description={description} image="/og/simulador-jubilacion-anses.png" schema={schema} domain="life">
   <Header slot="header" />
 
-  <article class="sj-page">
-    <nav class="breadcrumbs" aria-label="Ruta de navegación">
-      <a href="/">Inicio</a>
-      <span class="sep" aria-hidden="true">/</span>
-      <a href="/categoria/finanzas">Finanzas</a>
-      <span class="sep" aria-hidden="true">/</span>
-      <span class="current">Simulador de jubilación</span>
+  <div class="cf-page sj" data-domain="life"
+    data-jub-min={JUB_MIN} data-bono={BONO} data-jub-max={JUB_MAX}
+    data-jub-prom={JUB_PROM} data-puam-pct={PUAM_PCT} data-tasa={TASA_ANUAL}>
+    <nav class="cf-crumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Inicio</a></li>
+        <li aria-hidden="true" class="cf-crumb__sep">›</li>
+        <li><a href="/categoria/finanzas">Finanzas</a></li>
+        <li aria-hidden="true" class="cf-crumb__sep">›</li>
+        <li aria-current="page">Simulador de jubilación</li>
+      </ol>
     </nav>
 
-    <header class="sj-header">
-      <h1>Simulador de jubilación ANSES 👴</h1>
-      <p class="lead">
-        Ingresá tu edad, años de aportes y sueldo actual → obtené tu <strong>haber jubilatorio proyectado</strong>, años que te faltan y recomendaciones para mejorar. Basado en la ley argentina vigente 2026.
-      </p>
+    <header class="cf-hero">
+      <div class="cf-hero__main">
+        <p class="cf-kicker"><span aria-hidden="true">👴</span> ANSES · Régimen previsional 2026</p>
+        <h1 class="cf-h1">Simulador de <span class="cf-yr">jubilación ANSES</span></h1>
+        <p class="cf-sub">Proyectá tu haber jubilatorio con tu edad, tus años de aportes y tu sueldo actual: cuánto cobrarías, cuándo y qué te falta.</p>
+        <ul class="cf-pills">
+          <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+          <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+          <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+        </ul>
+      </div>
+      <div class="cf-hero__deco" aria-hidden="true">
+        <span class="cf-deco-float"><span aria-hidden="true">📊</span> Fórmula simplificada</span>
+        <div class="sj-deco-wrap">
+          <div class="cf-deco-card">
+            <div class="cf-deco-card__label">Dato principal</div>
+            <div class="cf-deco-card__value" id="sj-deco-val">{fmtArs(init.haber)}</div>
+            <div class="cf-deco-card__note">Haber jubilatorio estimado</div>
+          </div>
+          <span class="cf-deco-badge sj-badge">👴</span>
+        </div>
+        <div class="cf-deco-sub"><strong>Tasa de reemplazo</strong> <span class="cf-deco-chip" id="sj-deco-tasa">{init.tasaReemplazo.toFixed(1).replace('.', ',')}%</span></div>
+      </div>
     </header>
 
-    <section class="sj-form">
-      <div class="sj-inputs">
-        <label>
-          <span>Sexo (afecta edad de retiro)</span>
-          <select id="sj-sexo">
-            <option value="mujer">Mujer (jubilación a los 60)</option>
-            <option value="hombre">Hombre (jubilación a los 65)</option>
-          </select>
-        </label>
-        <label>
-          <span>Edad actual</span>
-          <input type="number" id="sj-edad" min="18" max="80" value="40" />
-        </label>
-        <label>
-          <span>Años de aportes acumulados</span>
-          <input type="number" id="sj-aportes" min="0" max="50" value="15" />
-        </label>
-        <label>
-          <span>Sueldo bruto mensual actual</span>
-          <div class="sj-input-wrap">
-            <span class="prefix">$</span>
-            <input type="text" inputmode="numeric" id="sj-sueldo" value="1.500.000" />
+    <section class="cf-card" id="calc">
+      <div class="cf-panel">
+        <div class="cf-panel__head">
+          <div>
+            <p class="cf-panel__eyebrow">Calculadora</p>
+            <h2 class="cf-panel__title">Tu situación previsional</h2>
           </div>
-        </label>
-        <label>
-          <span>Aumento salarial anual esperado</span>
-          <div class="sj-input-wrap">
-            <input type="number" id="sj-aumento" value="3" min="0" max="50" />
-            <span class="suffix">% anual real</span>
+          <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+        </div>
+
+        <div class="cf-grid2">
+          <div class="cf-field">
+            <div class="cf-field__row"><label class="cf-label" for="sj-sexo">Sexo</label><span class="cf-hint">Edad de retiro</span></div>
+            <select class="cf-input" id="sj-sexo">
+              <option value="mujer">Mujer (jubilación a los 60)</option>
+              <option value="hombre">Hombre (jubilación a los 65)</option>
+            </select>
           </div>
-        </label>
-        <label>
-          <span>Régimen</span>
-          <select id="sj-regimen">
-            <option value="general">General (60/65 años, 30 aportes)</option>
-            <option value="docente">Docente (25 años de aportes)</option>
-            <option value="puam">PUAM (65+ sin 30 aportes)</option>
-          </select>
-        </label>
+          <div class="cf-field">
+            <div class="cf-field__row"><label class="cf-label" for="sj-regimen">Régimen</label></div>
+            <select class="cf-input" id="sj-regimen">
+              <option value="general">General (60/65 años, 30 aportes)</option>
+              <option value="docente">Docente (25 años de aportes)</option>
+              <option value="puam">PUAM (65+ sin 30 aportes)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="cf-grid2">
+          <div class="cf-field">
+            <div class="cf-field__row"><label class="cf-label" for="sj-edad">Edad actual</label></div>
+            <input class="cf-input cf-input--money" type="number" id="sj-edad" min="18" max="80" value="40" />
+          </div>
+          <div class="cf-field">
+            <div class="cf-field__row"><label class="cf-label" for="sj-aportes">Años de aportes</label><span class="cf-hint">Acumulados</span></div>
+            <input class="cf-input cf-input--money" type="number" id="sj-aportes" min="0" max="50" value="15" />
+          </div>
+        </div>
+
+        <div class="cf-grid2">
+          <div class="cf-field">
+            <div class="cf-field__row"><label class="cf-label" for="sj-sueldo">Sueldo bruto actual</label></div>
+            <div class="sj-money"><span class="sj-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="sj-sueldo" value="1.500.000" /></div>
+          </div>
+          <div class="cf-field">
+            <div class="cf-field__row"><label class="cf-label" for="sj-aumento">Aumento anual</label><span class="cf-hint">% real</span></div>
+            <input class="cf-input cf-input--money" type="number" id="sj-aumento" value="3" min="0" max="50" />
+          </div>
+        </div>
+        <p class="cf-help">El aumento es <strong>real</strong> (por encima de la inflación): si tu sueldo solo sigue al IPC, poné 0.</p>
+
+        <button class="cf-primary" id="sj-calc-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+        <div class="cf-shortcuts">
+          <span class="cf-shortcuts__lbl">Ejemplos:</span>
+          <button class="cf-sc" type="button" data-ej-edad="30" data-ej-aportes="8">30 años · 8 aportes</button>
+          <button class="cf-sc" type="button" data-ej-edad="45" data-ej-aportes="22">45 años · 22 aportes</button>
+          <button class="cf-sc" type="button" data-ej-edad="55" data-ej-aportes="30">55 años · 30 aportes</button>
+        </div>
+      </div>
+
+      <div class="cf-result" id="sj-result">
+        <p class="cf-result__eyebrow">Resultado estimado</p>
+        <div class="cf-result__big" id="sj-haber">{fmtArs(init.haber)}</div>
+        <div class="cf-result__biglabel">Haber jubilatorio estimado</div>
+        <p class="cf-result__sub" id="sj-haber-sub">{(init.haber / JUB_MIN).toFixed(1).replace('.', ',')}× la jubilación mínima</p>
+        <div class="cf-tiles cf-tiles--2">
+          <div class="cf-tile"><div class="cf-tile__value" id="sj-edad-jub">{init.edadJub} años</div><div class="cf-tile__label">Edad de jubilación</div></div>
+          <div class="cf-tile"><div class="cf-tile__value" id="sj-anos-faltan">{init.anosFaltan} años</div><div class="cf-tile__label">Te faltan</div></div>
+          <div class="cf-tile"><div class="cf-tile__value" id="sj-aportes-total">{init.aportesAlJubilar} años</div><div class="cf-tile__label">Aportes al jubilarte</div></div>
+          <div class="cf-tile"><div class="cf-tile__value" id="sj-tasa">{init.tasaReemplazo.toFixed(1).replace('.', ',')}%</div><div class="cf-tile__label">Tasa de reemplazo</div></div>
+        </div>
+        <div class="cf-rows">
+          <div class="cf-rrow"><span class="cf-rrow__lbl">Sueldo proyectado al jubilarte <small>con el aumento real anual</small></span><span class="cf-rrow__val" id="sj-sueldo-jub">{fmtArs(init.sueldoJub)}</span></div>
+          <div class="cf-rrow"><span class="cf-rrow__lbl">Requisito de aportes <small>del régimen elegido</small></span><span class="cf-rrow__val" id="sj-aportes-status">Cumple ({init.aportesReq} req.)</span></div>
+        </div>
+        <div class="cf-result__formula" id="sj-formula">{fmtArs(init.sueldoJub)} × 1,5% × {init.aportesAlJubilar} años = {fmtArs(init.haber)}</div>
+        <div class="cf-result__actions cf-result__actions--2">
+          <button class="cf-rbtn" type="button" id="sj-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+          <button class="cf-rbtn" type="button" id="sj-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+        </div>
       </div>
     </section>
 
-    <section class="sj-results" aria-live="polite">
-      <div class="sj-main-result">
-        <div class="sj-result-card">
-          <div class="sj-result-label">Haber jubilatorio estimado</div>
-          <div class="sj-result-value" id="sj-haber">$0</div>
-          <div class="sj-result-sub" id="sj-haber-sub">—</div>
+    <div class="cf-quick">
+      <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+      <p class="cf-quick__txt" id="sj-quick"><strong>Respuesta rápida.</strong> A los {init.edadJub} años llegarías con {init.aportesAlJubilar} años de aportes y un haber estimado de <strong>{fmtArs(init.haber)}</strong>, el {init.tasaReemplazo.toFixed(1).replace('.', ',')}% de tu sueldo proyectado.</p>
+      <span class="cf-formula">1,5% × años de aportes × sueldo</span>
+    </div>
+
+    <!-- Feasibility -->
+    <div class="cf-callout sj-feasible" id="sj-feasible" style="margin-top:1.5rem">
+      <span class="cf-callout__ico" aria-hidden="true" id="sj-feasible-ico">✓</span>
+      <p><strong id="sj-feasible-title">Vas a jubilarte en tiempo</strong><br /><span id="sj-feasible-text">—</span></p>
+    </div>
+
+    <!-- Datos clave -->
+    <section class="cf-section">
+      <div class="cf-section__head">
+        <div>
+          <p class="cf-eyebrow">Datos clave</p>
+          <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
         </div>
-        <div class="sj-result-card">
-          <div class="sj-result-label">Edad de jubilación</div>
-          <div class="sj-result-value" id="sj-edad-jub">—</div>
-          <div class="sj-result-sub" id="sj-anos-faltan">—</div>
+        <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+      </div>
+      <div class="cf-cards cf-cards--4">
+        <div class="cf-minicard cf-minicard--dark">
+          <span class="cf-minicard__ico" aria-hidden="true">⬇️</span>
+          <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Mínima + bono</p>
+          <div class="cf-minicard__big">{fmtArs(PISO)}</div>
+          <p class="cf-minicard__desc" style="margin-top:0.3rem">Piso legal para quien cumple los requisitos.</p>
         </div>
-        <div class="sj-result-card">
-          <div class="sj-result-label">Años de aportes al jubilarte</div>
-          <div class="sj-result-value" id="sj-aportes-total">—</div>
-          <div class="sj-result-sub" id="sj-aportes-status">—</div>
+        <div class="cf-minicard">
+          <span class="cf-minicard__ico" aria-hidden="true">📊</span>
+          <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Jubilación promedio</p>
+          <div class="cf-minicard__big">{fmtArs(JUB_PROM)}</div>
+          <p class="cf-minicard__desc" style="margin-top:0.3rem">Referencia del sistema para ubicar tu proyección.</p>
+        </div>
+        <div class="cf-minicard">
+          <span class="cf-minicard__ico" aria-hidden="true">⬆️</span>
+          <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Jubilación máxima</p>
+          <div class="cf-minicard__big">{fmtArs(JUB_MAX)}</div>
+          <p class="cf-minicard__desc" style="margin-top:0.3rem">Tope legal (≈8× la mínima). Los sueldos altos tienen techo.</p>
+        </div>
+        <div class="cf-minicard">
+          <span class="cf-minicard__ico" aria-hidden="true">🛟</span>
+          <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">PUAM</p>
+          <div class="cf-minicard__big">{fmtArs(PUAM)}</div>
+          <p class="cf-minicard__desc" style="margin-top:0.3rem">80% de la mínima, a los 65 y sin requisito de aportes.</p>
         </div>
       </div>
+    </section>
 
-      <div class="sj-feasible" id="sj-feasible">
-        <h3 id="sj-feasible-title">Completá los datos</h3>
-        <p id="sj-feasible-text">—</p>
+    <!-- Cómo leer el resultado -->
+    <section class="cf-section">
+      <div class="sj-2col">
+        <div class="sj-hl">
+          <p class="cf-side-eyebrow">Cómo leer el resultado</p>
+          <p class="sj-hl__title">La tasa de reemplazo es el número que importa</p>
+          <p class="sj-hl__desc">No mires el haber en pesos: mirá qué porcentaje de tu sueldo vas a cobrar. Con la fórmula simplificada, cada año de aportes suma 1,5 puntos — 30 años son el 45% del sueldo.</p>
+          <div class="sj-hl__big" id="sj-hl-big">{init.tasaReemplazo.toFixed(1).replace('.', ',')}%</div>
+          <p class="sj-hl__desc">Tasa de reemplazo del caso cargado</p>
+        </div>
+        <div class="cf-breakdown">
+          <div class="cf-brow">
+            <span class="cf-brow__lbl">Tu haber estimado</span>
+            <span class="cf-brow__val" id="sj-b-haber">{fmtArs(init.haber)}</span>
+            <span class="cf-brow__bar"><span id="sj-b-haber-bar" style={`width:${Math.min(100, Math.round((init.haber / JUB_MAX) * 100))}%`}></span></span>
+          </div>
+          <p class="sj-note">Comparado contra el tope máximo del sistema</p>
+          <div class="cf-brow" style="margin-top:1rem">
+            <span class="cf-brow__lbl">Jubilación promedio</span>
+            <span class="cf-brow__val">{fmtArs(JUB_PROM)}</span>
+            <span class="cf-brow__bar"><span class="sj-bar--alt" style={`width:${Math.round((JUB_PROM / JUB_MAX) * 100)}%`}></span></span>
+          </div>
+          <p class="sj-note">Referencia del sistema previsional</p>
+          <div class="cf-brow" style="margin-top:1rem">
+            <span class="cf-brow__lbl">Mínima + bono (piso)</span>
+            <span class="cf-brow__val">{fmtArs(PISO)}</span>
+            <span class="cf-brow__bar"><span class="sj-bar--min" style={`width:${Math.round((PISO / JUB_MAX) * 100)}%`}></span></span>
+          </div>
+          <p class="sj-note">Nadie que cumpla requisitos cobra menos que esto</p>
+          <div class="cf-callout cf-callout--warn" style="margin-top:1.25rem">
+            <span class="cf-callout__ico" aria-hidden="true">📉</span>
+            <p>Una tasa de reemplazo por debajo del <strong>50%</strong> significa que vas a cobrar menos de la mitad de tu sueldo. El promedio argentino ronda el 40-60%: si quedás corto, el ahorro complementario deja de ser opcional.</p>
+          </div>
+        </div>
       </div>
+    </section>
 
-      <div class="sj-comparison">
-        <h3>Comparación con referencias ANSES 2026</h3>
-        <table class="sj-table">
-          <thead>
-            <tr><th>Referencia</th><th>Monto estimado 2026</th><th>Tu proyección</th></tr>
-          </thead>
+    <!-- Paso a paso -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Paso a paso</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">De tus datos al resultado</h2>
+      <div class="cf-steps">
+        <div class="cf-step">
+          <div class="cf-step__num">1</div>
+          <p class="cf-step__title">Ingresá tus datos</p>
+          <p class="cf-step__desc">Tu edad, los años que ya aportaste, tu sueldo bruto actual y el régimen que te corresponde.</p>
+          <p class="sj-chip" id="sj-s1">{INIT.edad} años · {INIT.aportes} aportes · {fmtArs(INIT.sueldo)}</p>
+        </div>
+        <div class="cf-step">
+          <div class="cf-step__num">2</div>
+          <p class="cf-step__title">Aplicamos la fórmula</p>
+          <p class="cf-step__desc">Proyectamos tu sueldo hasta la edad jubilatoria y aplicamos 1,5% por cada año de aportes.</p>
+          <p class="sj-chip" id="sj-s2">{fmtArs(init.sueldoJub)} × 1,5% × {init.aportesAlJubilar}</p>
+        </div>
+        <div class="cf-step">
+          <div class="cf-step__num">3</div>
+          <p class="cf-step__title">Revisá el resultado</p>
+          <p class="cf-step__desc">Acotamos el haber entre el piso (mínima + bono) y el tope máximo del sistema.</p>
+          <p class="sj-chip" id="sj-s3">{fmtArs(init.haber)} · {init.tasaReemplazo.toFixed(1).replace('.', ',')}% del sueldo</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recomendaciones -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Tu caso</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Recomendaciones personalizadas</h2>
+      <ul class="cf-check sj-recs" id="sj-recs-list"></ul>
+    </section>
+
+    <!-- Referencias -->
+    <section class="cf-section">
+      <div class="cf-section__head">
+        <div>
+          <p class="cf-eyebrow">Referencias</p>
+          <h2 class="cf-section__title">Ejemplos para comparar</h2>
+        </div>
+        <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+      </div>
+      <div class="cf-tablewrap">
+        <table class="cf-table">
+          <thead><tr><th>Años de aportes</th><th>% acumulado (1,5% × años)</th><th>Haber estimado</th><th>Tasa de reemplazo</th></tr></thead>
           <tbody>
-            <tr><td>Jubilación mínima + bono</td><td>$360.000</td><td id="sj-vs-min">—</td></tr>
-            <tr><td>Jubilación promedio</td><td>$620.000</td><td id="sj-vs-med">—</td></tr>
-            <tr><td>Jubilación máxima</td><td>$1.950.000</td><td id="sj-vs-max">—</td></tr>
-            <tr><td>PUAM (80% mínima)</td><td>$232.000</td><td id="sj-vs-puam">—</td></tr>
+            {escenarios.map((e) => (
+              <tr>
+                <td>{e.aportes} años</td>
+                <td>{(e.aportes * 1.5).toFixed(1).replace('.', ',')}%</td>
+                <td class="cf-td-em">{e.haber > 0 ? fmtArs(e.haber) : 'No cumple requisitos'}</td>
+                <td>{e.haber > 0 ? e.tasaReemplazo.toFixed(1).replace('.', ',') + '%' : '—'}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
-
-      <div class="sj-recs" id="sj-recs">
-        <h3>Recomendaciones personalizadas</h3>
-        <ul id="sj-recs-list"></ul>
-      </div>
-
-      <div class="sj-timeline">
-        <h3>Proyección año a año</h3>
-        <canvas id="sj-chart" width="600" height="280"></canvas>
-      </div>
+      <p class="sj-note" style="margin-top:0.6rem">Calculado con un sueldo de {fmtArs(INIT.sueldo)} ya en edad jubilatoria (sin proyección de aumentos), régimen general. Con menos de 30 años de aportes no se accede al régimen general: quedan la moratoria (si está vigente) o la PUAM a los 65.</p>
     </section>
+  </div>
 
-    <section class="sj-explanation">
-      <h2>Cómo se calcula la jubilación en Argentina</h2>
+  <!-- Banda: atención + referencia principal -->
+  <div class="cf-band cf-band--warm" data-domain="life">
+    <div class="cf-band__inner">
+      <div class="sj-2col">
+        <div class="sj-card">
+          <p class="cf-eyebrow">Atención</p>
+          <h2 class="sj-card__title">Esto es una estimación, no tu haber real</h2>
+          <p class="cf-side-desc" role="note">
+            Este simulador usa una <strong>fórmula simplificada</strong> y es <strong>orientativo</strong>. No reemplaza el cálculo oficial de ANSES ni el asesoramiento de un abogado previsional. Los montos, topes y requisitos cambian con cada actualización por movilidad y con las leyes vigentes.
+          </p>
+          <div class="cf-callout cf-callout--warn" style="margin-top:1rem">
+            <span class="cf-callout__ico" aria-hidden="true">⚠️</span>
+            <p>Antes de tomar decisiones (renunciar, iniciar el trámite, entrar a una moratoria), verificá tu situación real en <strong>Mi ANSES</strong> o con un profesional matriculado. ANSES calcula con tu historia laboral real: promedio de las mejores 120 remuneraciones actualizadas por RIPTE, sumando PBU + PC + PAP por separado.</p>
+          </div>
+        </div>
+        <div class="cf-side-card cf-side-card--dark">
+          <p class="cf-side-eyebrow">Referencia principal</p>
+          <p class="sj-src__title">Requisito del régimen general</p>
+          <div class="sj-hl__big" style="margin-top:0.2rem">30 años</div>
+          <p class="cf-side-desc">De aportes, más 60 años de edad (mujer) o 65 (hombre). Sin los 30 años quedan la moratoria vigente o la PUAM a los 65.</p>
+          <div class="sj-chips">
+            <span class="sj-tag">Ley 24.241</span>
+            <span class="sj-tag">60 / 65 años</span>
+            <span class="sj-tag">Movilidad IPC</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cf-page sj" data-domain="life">
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">En detalle</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cómo se calcula la jubilación en Argentina</h2>
+      <div class="cf-prose">
       <p>La <strong>fórmula de cálculo jubilatorio</strong> del régimen general (ANSES) considera:</p>
       <ul>
         <li><strong>PBU</strong> (Prestación Básica Universal): monto fijo por año cumplido (~$40k base 2026).</li>
@@ -192,486 +434,356 @@ const schema = {
         <li>Regímenes especiales (docentes, investigadores, luz y fuerza, policías) tienen porcentajes y edades propias.</li>
       </ul>
       <p>Por eso el resultado es <strong>orientativo</strong>: sirve para ubicarte en un rango y comparar escenarios, no para conocer tu haber exacto. El cálculo oficial lo hace ANSES con tu historia laboral real (podés consultarla en <a href="https://www.anses.gob.ar/" rel="noopener">Mi ANSES</a>).</p>
-    </section>
 
-    <section class="sj-ejemplos">
-      <h2>Ejemplos resueltos paso a paso</h2>
-      <p class="sj-ejemplos-intro">Dos casos calculados con la fórmula simplificada de este simulador (1,5% × años de aportes × sueldo actualizado, con los topes 2026). Los valores son <strong>de ejemplo</strong>, no montos oficiales: sirven para ver cómo se arma el número.</p>
-
-      <div class="sj-ejemplo">
-        <h3>Ejemplo 1 — Carrera completa, sueldo medio</h3>
-        <p class="sj-ej-input">Datos de ejemplo: 30 años de aportes · sueldo actualizado al momento de jubilarse $1.500.000.</p>
-        <ol>
-          <li><strong>Porcentaje acumulado:</strong> 1,5% × 30 años = <strong>45%</strong> del sueldo.</li>
-          <li><strong>Haber base:</strong> 45% × $1.500.000 = <strong>$675.000</strong>.</li>
-          <li><strong>Topes 2026:</strong> queda por encima del mínimo (~$360.000) y por debajo del máximo (~$1.950.000), así que no se ajusta.</li>
-        </ol>
-        <p class="sj-ej-result">Haber estimado ≈ $675.000 — una tasa de reemplazo del 45% del sueldo.</p>
+      <h3>Ejemplos resueltos paso a paso</h3>
+      <p>Dos casos calculados con la fórmula simplificada de este simulador (1,5% × años de aportes × sueldo actualizado, con los topes 2026). Los valores son <strong>de ejemplo</strong>, no montos oficiales: sirven para ver cómo se arma el número.</p>
+      <p><strong>Ejemplo 1 — Carrera completa, sueldo medio.</strong> Datos de ejemplo: 30 años de aportes · sueldo actualizado al momento de jubilarse $1.500.000.</p>
+      <ol>
+        <li><strong>Porcentaje acumulado:</strong> 1,5% × 30 años = <strong>45%</strong> del sueldo.</li>
+        <li><strong>Haber base:</strong> 45% × $1.500.000 = <strong>$675.000</strong>.</li>
+        <li><strong>Topes 2026:</strong> queda por encima del mínimo (~$360.000) y por debajo del máximo (~$1.950.000), así que no se ajusta.</li>
+      </ol>
+      <p>Haber estimado ≈ $675.000 — una tasa de reemplazo del 45% del sueldo.</p>
+      <p><strong>Ejemplo 2 — Sueldo alto que toca el tope máximo.</strong> Datos de ejemplo: 35 años de aportes · sueldo actualizado $5.000.000.</p>
+      <ol>
+        <li><strong>Porcentaje acumulado:</strong> 1,5% × 35 años = <strong>52,5%</strong> del sueldo.</li>
+        <li><strong>Haber base:</strong> 52,5% × $5.000.000 = <strong>$2.625.000</strong>.</li>
+        <li><strong>Topes 2026:</strong> $2.625.000 supera el máximo (~$1.950.000), así que el haber se recorta al tope.</li>
+      </ol>
+      <p>Haber estimado = $1.950.000 (el tope), no el 52,5% del sueldo. Por eso los sueldos muy altos tienen "techo" jubilatorio y su tasa de reemplazo baja.</p>
+      <p>Recordá que ANSES no usa tu sueldo actual, sino el promedio de las mejores 120 remuneraciones actualizadas por RIPTE, y suma PBU + PC + PAP por separado. Estos ejemplos son una aproximación para entender la mecánica, no tu haber exacto.</p>
       </div>
-
-      <div class="sj-ejemplo">
-        <h3>Ejemplo 2 — Sueldo alto que toca el tope máximo</h3>
-        <p class="sj-ej-input">Datos de ejemplo: 35 años de aportes · sueldo actualizado $5.000.000.</p>
-        <ol>
-          <li><strong>Porcentaje acumulado:</strong> 1,5% × 35 años = <strong>52,5%</strong> del sueldo.</li>
-          <li><strong>Haber base:</strong> 52,5% × $5.000.000 = <strong>$2.625.000</strong>.</li>
-          <li><strong>Topes 2026:</strong> $2.625.000 supera el máximo (~$1.950.000), así que el haber se recorta al tope.</li>
-        </ol>
-        <p class="sj-ej-result">Haber estimado = $1.950.000 (el tope), no el 52,5% del sueldo. Por eso los sueldos muy altos tienen "techo" jubilatorio y su tasa de reemplazo baja.</p>
-      </div>
-
-      <p class="sj-ejemplos-nota">Recordá que ANSES no usa tu sueldo actual, sino el promedio de las mejores 120 remuneraciones actualizadas por RIPTE, y suma PBU + PC + PAP por separado. Estos ejemplos son una aproximación para entender la mecánica, no tu haber exacto.</p>
     </section>
 
-    <section class="sj-escenarios">
-      <h2>Escenarios de referencia 2026</h2>
-      <p>Cinco situaciones típicas, calculadas con la fórmula simplificada de este simulador y los valores de referencia 2026, para ubicarte rápido:</p>
-      <table class="sj-table">
-        <thead>
-          <tr><th>Escenario</th><th>Situación al jubilarse</th><th>Haber estimado 2026</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>30 años aportados</strong>, sueldo promedio $1.500.000</td>
-            <td>Cumple régimen general (1,5% × 30 años × sueldo)</td>
-            <td>~$675.000</td>
-          </tr>
-          <tr>
-            <td><strong>20 años aportados</strong> a los 65</td>
-            <td>No cumple los 30 años: moratoria (si está vigente) para completar, o esperar y acceder a PUAM</td>
-            <td>según opción</td>
-          </tr>
-          <tr>
-            <td><strong>PUAM</strong> (65+, sin 30 años de aportes)</td>
-            <td>80% de la jubilación mínima, sin requisito de aportes</td>
-            <td>~$232.000</td>
-          </tr>
-          <tr>
-            <td><strong>Jubilación mínima + bono</strong></td>
-            <td>Piso legal para quien cumple requisitos</td>
-            <td>~$360.000</td>
-          </tr>
-          <tr>
-            <td><strong>Jubilación máxima</strong></td>
-            <td>Tope legal (8× la mínima aprox.)</td>
-            <td>~$1.950.000</td>
-          </tr>
-        </tbody>
-      </table>
-      <p class="sj-escenarios-nota">Los montos de referencia se actualizan por movilidad mensual (IPC). Usá el simulador de arriba con tus datos reales para ver tu proyección personalizada.</p>
-    </section>
-
-    <aside class="sj-disclaimer" role="note">
-      <strong>⚠️ Importante:</strong> este simulador es una <strong>estimación orientativa con fórmula simplificada</strong>. No reemplaza el cálculo oficial de ANSES ni el asesoramiento de un abogado previsional. Los montos, topes y requisitos cambian con cada actualización por movilidad y con las leyes vigentes. Antes de tomar decisiones (renunciar, iniciar trámite, entrar a una moratoria), verificá tu situación real en Mi ANSES o con un profesional matriculado.
-    </aside>
-
-    <section class="sj-fuentes">
-      <h2>Fuentes y metodología</h2>
-      <ul>
-        <li><a href="https://www.anses.gob.ar/" rel="noopener">ANSES</a> — requisitos de jubilación ordinaria, PUAM y moratorias; consulta de historia laboral en Mi ANSES.</li>
-        <li><a href="https://www.argentina.gob.ar/normativa/nacional/ley-24241-639/actualizacion" rel="noopener">Ley 24.241 (SIPA)</a> — Sistema Integrado Previsional Argentino: PBU, PC, PAP y topes (texto actualizado, InfoLeg).</li>
-        <li>Movilidad jubilatoria mensual por IPC (DNU 274/2024) — los valores de referencia de esta página se revisan con cada actualización.</li>
-      </ul>
-      <p class="sj-review-line">
-        Última revisión editorial: <time datetime={lastReviewed}>9 de julio de 2026</time> · Editor responsable: <a href="/autores/martin-rodriguez">Martín Rodríguez</a>.
-        Metodología: fórmula simplificada (1,5% × años de aportes × sueldo proyectado, con topes mínimo/máximo 2026) documentada arriba.
-      </p>
-    </section>
-
-    <section class="sj-faq">
-      <h2>Preguntas frecuentes</h2>
-      <div class="faq-list">
-        {faq.map(f => (
-          <details>
-            <summary>{f.q}</summary>
-            <div class="faq-answer" set:html={f.a}></div>
+    <section class="cf-section">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f, i) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={f.a}></div>
           </details>
         ))}
       </div>
     </section>
+  </div>
 
-    <section class="sj-related">
-      <h2>Calcs relacionadas</h2>
-      <ul>
-        <li><a href="/calculadora-jubilacion-anses-monto-minimo-maxima-2026">Jubilación mínima y máxima 2026</a></li>
-        <li><a href="/calculadora-puam-pension-universal-adulto-mayor-anses-2026">PUAM: Pensión Universal Adulto Mayor</a></li>
+  <!-- Banda: fuentes y metodología -->
+  <div class="cf-band" data-domain="life">
+    <div class="cf-band__inner">
+      <div class="sj-2col">
+        <div>
+          <p class="cf-eyebrow">Fuentes y metodología</p>
+          <h2 class="sj-card__title" style="color:var(--text)">Números que podés defender</h2>
+          <p class="cf-side-desc">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026.</p>
+          <p class="cf-side-desc" style="margin-top:0.7rem">
+            Metodología: fórmula simplificada (1,5% × años de aportes × sueldo proyectado, con topes mínimo/máximo 2026), documentada arriba.
+            Los valores de referencia se actualizan por movilidad mensual (IPC).
+          </p>
+          <p class="sj-review-line">
+            Última revisión editorial: <time datetime={lastReviewed}>9 de julio de 2026</time> · Editor responsable: <a href="/autores/martin-rodriguez">Martín Rodríguez</a>.
+          </p>
+        </div>
+        <div class="cf-side-card cf-side-card--dark">
+          <p class="cf-side-eyebrow">Fuentes oficiales</p>
+          <p class="sj-src__title">Marco legal</p>
+          <div class="sj-src">
+            <div class="sj-src__item">
+              <strong><a href="https://www.anses.gob.ar/" rel="noopener">ANSES</a></strong>
+              <span>Requisitos de jubilación ordinaria, PUAM y moratorias; historia laboral en Mi ANSES.</span>
+            </div>
+            <div class="sj-src__item">
+              <strong><a href="https://www.argentina.gob.ar/normativa/nacional/ley-24241-639/actualizacion" rel="noopener">Ley 24.241 (SIPA)</a></strong>
+              <span>Sistema Integrado Previsional Argentino: PBU, PC, PAP y topes (texto actualizado, InfoLeg).</span>
+            </div>
+            <div class="sj-src__item">
+              <strong>Movilidad jubilatoria mensual por IPC</strong>
+              <span>DNU 274/2024 — los valores de referencia se revisan con cada actualización.</span>
+            </div>
+          </div>
+          <p class="sj-src__foot">● Información revisada en julio de 2026</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cf-page sj" data-domain="life">
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        <a class="cf-relcard" href="/calculadora-jubilacion-anses-monto-minimo-maxima-2026">
+          <span class="cf-relcard__ico" aria-hidden="true">📊</span>
+          <span class="cf-relcard__title">Jubilación mínima y máxima 2026</span>
+          <span class="cf-relcard__desc">Los montos vigentes del sistema previsional, con bono incluido.</span>
+          <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+        </a>
+        <a class="cf-relcard" href="/calculadora-puam-pension-universal-adulto-mayor-anses-2026">
+          <span class="cf-relcard__ico" aria-hidden="true">🛟</span>
+          <span class="cf-relcard__title">PUAM: Pensión Universal Adulto Mayor</span>
+          <span class="cf-relcard__desc">Si no llegás a los 30 años de aportes, esta es la alternativa a los 65.</span>
+          <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+        </a>
+        <a class="cf-relcard" href="/calculadora-jubilacion-cuanto-necesito">
+          <span class="cf-relcard__ico" aria-hidden="true">🎯</span>
+          <span class="cf-relcard__title">Cuánto necesito para jubilarme</span>
+          <span class="cf-relcard__desc">Cuánto ahorro complementario te hace falta para cubrir la brecha.</span>
+          <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+        </a>
+      </div>
+      <ul class="sj-morelinks">
         <li><a href="/calculadora-pension-viudez-porcentaje-conyuge">Pensión por viudez</a></li>
         <li><a href="/calculadora-pami-prestaciones-monto-copago-2026">PAMI: prestaciones y copago</a></li>
-        <li><a href="/calculadora-jubilacion-cuanto-necesito">Cuánto necesito para jubilarme</a></li>
         <li><a href="/guia/subsidios-anses-2026">Guía completa de subsidios ANSES</a></li>
       </ul>
     </section>
-  </article>
+
+    <section class="cf-ctabar">
+      <div>
+        <p class="cf-ctabar__title">Guardá este resultado.</p>
+        <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos.</p>
+      </div>
+      <div class="cf-ctabar__actions">
+        <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="sj-share2">Copiar enlace</button>
+      </div>
+    </section>
+  </div>
 
   <Footer slot="footer" />
 </Layout>
 
-<script>
-  const sexoEl = document.getElementById('sj-sexo') as HTMLSelectElement;
-  const edadEl = document.getElementById('sj-edad') as HTMLInputElement;
-  const aportesEl = document.getElementById('sj-aportes') as HTMLInputElement;
-  const sueldoEl = document.getElementById('sj-sueldo') as HTMLInputElement;
-  const aumentoEl = document.getElementById('sj-aumento') as HTMLInputElement;
-  const regimenEl = document.getElementById('sj-regimen') as HTMLSelectElement;
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.sj');
+    if (!root) return;
+    // Constantes de referencia 2026: vienen del frontmatter por data-* (fuente única).
+    const JUB_MIN = Number(root.getAttribute('data-jub-min'));
+    const BONO = Number(root.getAttribute('data-bono'));
+    const JUB_MAX = Number(root.getAttribute('data-jub-max'));
+    const JUB_PROM = Number(root.getAttribute('data-jub-prom'));
+    const PUAM_PCT = Number(root.getAttribute('data-puam-pct'));
+    const TASA = Number(root.getAttribute('data-tasa'));
+    const PISO = JUB_MIN + BONO;
+    const PUAM = JUB_MIN * PUAM_PCT;
 
-  const JUB_MIN = 290000;
-  const BONO = 70000;
-  const JUB_MAX = 1950000;
+    const $ = (id) => document.getElementById(id);
+    const fmtArs = (n) => '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(Math.round(n));
+    const dec = (n, d) => n.toFixed(d).replace('.', ',');
 
-  function fmtArs(n: number): string {
-    return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(n);
-  }
+    const sexoEl = $('sj-sexo'), edadEl = $('sj-edad'), aportesEl = $('sj-aportes'),
+      sueldoEl = $('sj-sueldo'), aumentoEl = $('sj-aumento'), regimenEl = $('sj-regimen');
 
-  function parseAmt(s: string): number {
-    return Number(String(s || '').replace(/\./g, '').replace(/,/g, '.').replace(/\D/g, '')) || 0;
-  }
+    function parseAmt(s) { return Number(String(s || '').replace(/\D/g, '')) || 0; }
+    function fmtThousands(v) { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('es-AR') : ''; }
 
-  sueldoEl.addEventListener('input', () => {
-    const val = parseAmt(sueldoEl.value);
-    sueldoEl.value = val === 0 ? '' : new Intl.NumberFormat('es-AR').format(val);
+    // Misma fórmula simplificada que el SSR (frontmatter): 1,5% × años de aportes
+    // × sueldo proyectado, acotado entre el piso (mínima + bono) y el tope máximo.
+    function simular() {
+      const sexo = sexoEl.value;
+      const edad = Number(edadEl.value) || 0;
+      const aportes = Number(aportesEl.value) || 0;
+      const sueldo = parseAmt(sueldoEl.value);
+      const aumento = Number(aumentoEl.value) || 0;
+      const regimen = regimenEl.value;
+      let edadJub = sexo === 'hombre' ? 65 : 60;
+      let aportesReq = 30;
+      if (regimen === 'docente') aportesReq = 25;
+      if (regimen === 'puam') { edadJub = 65; aportesReq = 0; }
+      const anosFaltan = Math.max(0, edadJub - edad);
+      const aportesAlJubilar = aportes + anosFaltan;
+      const cumpleAportes = aportesAlJubilar >= aportesReq;
+      const sueldoJub = sueldo * Math.pow(1 + aumento / 100, anosFaltan);
+      let haber;
+      if (regimen === 'puam') haber = PUAM;
+      else if (!cumpleAportes) haber = 0;
+      else haber = Math.max(PISO, Math.min(sueldoJub * TASA * aportesAlJubilar, JUB_MAX));
+      const tasaReemplazo = sueldoJub > 0 && haber > 0 ? (haber / sueldoJub) * 100 : 0;
+      return { sexo, edad, aportes, sueldo, aumento, regimen, edadJub, aportesReq, anosFaltan,
+        aportesAlJubilar, cumpleAportes, sueldoJub, haber, tasaReemplazo };
+    }
+
+    function render() {
+      const r = simular();
+      const tieneHaber = r.haber > 0;
+
+      $('sj-haber').textContent = tieneHaber ? fmtArs(r.haber) : '—';
+      $('sj-haber-sub').textContent = tieneHaber
+        ? dec(r.haber / JUB_MIN, 1) + '× la jubilación mínima'
+        : 'No cumple los requisitos de aportes';
+      $('sj-edad-jub').textContent = r.edadJub + ' años';
+      $('sj-anos-faltan').textContent = r.anosFaltan === 0 ? 'Ya podés' : r.anosFaltan + ' años';
+      $('sj-aportes-total').textContent = r.aportesAlJubilar + ' años';
+      $('sj-tasa').textContent = tieneHaber ? dec(r.tasaReemplazo, 1) + '%' : '—';
+      $('sj-sueldo-jub').textContent = fmtArs(r.sueldoJub);
+      $('sj-aportes-status').textContent = r.regimen === 'puam'
+        ? 'PUAM · sin requisito'
+        : r.cumpleAportes ? 'Cumple (' + r.aportesReq + ' req.)' : 'Faltan ' + (r.aportesReq - r.aportesAlJubilar) + ' años';
+      $('sj-formula').textContent = r.regimen === 'puam'
+        ? fmtArs(JUB_MIN) + ' × 80% = ' + fmtArs(PUAM)
+        : fmtArs(r.sueldoJub) + ' × 1,5% × ' + r.aportesAlJubilar + ' años = ' + (tieneHaber ? fmtArs(r.haber) : '—');
+
+      $('sj-deco-val').textContent = tieneHaber ? fmtArs(r.haber) : '—';
+      $('sj-deco-tasa').textContent = tieneHaber ? dec(r.tasaReemplazo, 1) + '%' : '—';
+
+      $('sj-quick').innerHTML = tieneHaber
+        ? '<strong>Respuesta rápida.</strong> A los ' + r.edadJub + ' años llegarías con ' + r.aportesAlJubilar +
+          ' años de aportes y un haber estimado de <strong>' + fmtArs(r.haber) + '</strong>, el ' +
+          dec(r.tasaReemplazo, 1) + '% de tu sueldo proyectado.'
+        : '<strong>Respuesta rápida.</strong> A los ' + r.edadJub + ' años llegarías con solo ' + r.aportesAlJubilar +
+          ' años de aportes y el régimen exige ' + r.aportesReq + ': sin moratoria no accederías al haber.';
+
+      $('sj-hl-big').textContent = tieneHaber ? dec(r.tasaReemplazo, 1) + '%' : '—';
+      $('sj-b-haber').textContent = tieneHaber ? fmtArs(r.haber) : '—';
+      $('sj-b-haber-bar').style.width = Math.min(100, Math.round((r.haber / JUB_MAX) * 100)) + '%';
+
+      $('sj-s1').textContent = r.edad + ' años · ' + r.aportes + ' aportes · ' + fmtArs(r.sueldo);
+      $('sj-s2').textContent = fmtArs(r.sueldoJub) + ' × 1,5% × ' + r.aportesAlJubilar;
+      $('sj-s3').textContent = tieneHaber ? fmtArs(r.haber) + ' · ' + dec(r.tasaReemplazo, 1) + '% del sueldo' : 'No cumple requisitos';
+
+      // Viabilidad
+      const fEl = $('sj-feasible'), fIco = $('sj-feasible-ico'), fT = $('sj-feasible-title'), fX = $('sj-feasible-text');
+      if (r.regimen === 'puam') {
+        fIco.textContent = '✓';
+        fT.textContent = 'Accedés a la PUAM';
+        fX.textContent = 'A los 65 años, sin importar los años de aportes, podrías acceder a la PUAM: ' + fmtArs(PUAM) + ' por mes (80% de la mínima).';
+        fEl.className = 'cf-callout sj-feasible sj-feasible--ok';
+      } else if (r.cumpleAportes) {
+        fIco.textContent = '✓';
+        fT.textContent = 'Vas a jubilarte en tiempo';
+        fX.textContent = 'Al cumplir ' + r.edadJub + ' años tendrías ' + r.aportesAlJubilar + ' años de aportes y el régimen ' +
+          r.regimen + ' exige ' + r.aportesReq + '. Llegás con ' + (r.aportesAlJubilar - r.aportesReq) + ' de margen.';
+        fEl.className = 'cf-callout sj-feasible sj-feasible--ok';
+      } else {
+        fIco.textContent = '⚠️';
+        fT.textContent = 'No cumplirías los requisitos sin ajustes';
+        fX.textContent = 'Al cumplir ' + r.edadJub + ' años solo tendrías ' + r.aportesAlJubilar + ' años de aportes y necesitás ' +
+          r.aportesReq + '. Opciones: aportar más años (empleo formal o monotributo con SIPA), moratoria vigente si ANSES la habilita, o esperar a los 65 y acceder a la PUAM.';
+        fEl.className = 'cf-callout cf-callout--warn sj-feasible';
+      }
+
+      // Recomendaciones personalizadas
+      const recs = [];
+      if (!r.cumpleAportes && r.regimen !== 'puam') {
+        recs.push('<strong>Completá aportes</strong>: te faltan ' + (r.aportesReq - r.aportesAlJubilar) +
+          ' años. Si podés, pasá a empleo formal o monotributo (aporta al SIPA) lo antes posible.');
+      }
+      if (tieneHaber && r.haber <= PISO * 1.1) {
+        recs.push('<strong>Jubilación cerca del mínimo</strong>: tu proyección roza el piso de ' + fmtArs(PISO) +
+          '. Para subir: maximizá tus últimos años de aportes, aportá voluntariamente y complementá con ahorro propio.');
+      }
+      if (tieneHaber && r.haber >= JUB_MAX) {
+        recs.push('<strong>Tocás el tope máximo</strong>: el haber quedó limitado en ' + fmtArs(JUB_MAX) +
+          '. Aportar más años ya no sube tu jubilación: el excedente conviene canalizarlo a ahorro propio.');
+      }
+      if (tieneHaber && r.haber < r.sueldoJub * 0.5) {
+        recs.push('<strong>Tasa de reemplazo baja</strong>: vas a cobrar el ' + dec(r.tasaReemplazo, 1) +
+          '% de tu sueldo, menos de la mitad. El promedio argentino ronda 40-60%: planificar ahorro complementario (plazo fijo UVA, FCI, ETFs) es crítico.');
+      }
+      if (r.anosFaltan > 10) {
+        recs.push('<strong>Tenés tiempo a favor</strong>: con ' + r.anosFaltan +
+          ' años por delante, el interés compuesto juega de tu lado. Ver <a href="/categoria/finanzas">calculadoras financieras</a>.');
+      }
+      if (r.anosFaltan <= 5 && tieneHaber) {
+        recs.push('<strong>Últimos años críticos</strong>: el cálculo oficial toma el promedio de las mejores 120 remuneraciones. Maximizar tu sueldo bruto ahora impacta directo en tu haber.');
+      }
+      if (recs.length === 0) {
+        recs.push('Tu situación previsional se ve bien. Mantené los aportes al día y considerá complementar con ahorro personal.');
+      }
+      $('sj-recs-list').innerHTML = recs.map((x) => '<li>' + x + '</li>').join('');
+    }
+
+    sueldoEl.addEventListener('input', () => { sueldoEl.value = fmtThousands(sueldoEl.value); render(); });
+    sexoEl.addEventListener('change', render);
+    regimenEl.addEventListener('change', render);
+    [edadEl, aportesEl, aumentoEl].forEach((el) => el.addEventListener('input', render));
+    $('sj-calc-btn').addEventListener('click', render);
+    document.querySelectorAll('[data-ej-edad]').forEach((b) => b.addEventListener('click', () => {
+      edadEl.value = b.getAttribute('data-ej-edad');
+      aportesEl.value = b.getAttribute('data-ej-aportes');
+      render();
+    }));
+
+    function summary() {
+      const r = simular();
+      if (r.haber <= 0) {
+        return 'Simulador de jubilación ANSES: con ' + r.edad + ' años y ' + r.aportes + ' de aportes, a los ' +
+          r.edadJub + ' llegaría con ' + r.aportesAlJubilar + ' años y el régimen exige ' + r.aportesReq +
+          '. — hacecuentas.com';
+      }
+      return 'Simulador de jubilación ANSES: haber estimado ' + fmtArs(r.haber) + ' a los ' + r.edadJub +
+        ' años, con ' + r.aportesAlJubilar + ' años de aportes (tasa de reemplazo ' + dec(r.tasaReemplazo, 1) +
+        '% sobre un sueldo proyectado de ' + fmtArs(r.sueldoJub) + '). Estimación orientativa. — hacecuentas.com';
+    }
+    function shareUrl() {
+      const r = simular();
+      return location.origin + location.pathname + '?sexo=' + r.sexo + '&edad=' + r.edad + '&aportes=' + r.aportes +
+        '&sueldo=' + r.sueldo + '&aumento=' + r.aumento + '&regimen=' + r.regimen;
+    }
+    function copy(t, btn) { navigator.clipboard?.writeText(t).then(() => { const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => btn.innerHTML = o, 1500); }); }
+    $('sj-copy').addEventListener('click', (e) => copy(summary(), e.currentTarget));
+    $('sj-detail').addEventListener('click', () => { document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' }); });
+    const s2 = $('sj-share2'); if (s2) s2.addEventListener('click', (e) => copy(shareUrl(), e.currentTarget));
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('sexo')) sexoEl.value = q.get('sexo');
+    if (q.get('regimen')) regimenEl.value = q.get('regimen');
+    if (q.get('edad')) edadEl.value = q.get('edad');
+    if (q.get('aportes')) aportesEl.value = q.get('aportes');
+    if (q.get('sueldo')) sueldoEl.value = fmtThousands(q.get('sueldo'));
+    if (q.get('aumento')) aumentoEl.value = q.get('aumento');
     render();
-  });
-
-  function compute() {
-    const sexo = sexoEl.value;
-    const edad = Number(edadEl.value) || 0;
-    const aportes = Number(aportesEl.value) || 0;
-    const sueldo = parseAmt(sueldoEl.value);
-    const aumento = Number(aumentoEl.value) || 0;
-    const regimen = regimenEl.value;
-
-    let edadJub = sexo === 'hombre' ? 65 : 60;
-    let aportesReq = 30;
-    if (regimen === 'docente') { aportesReq = 25; }
-    if (regimen === 'puam') { edadJub = 65; aportesReq = 0; }
-
-    const anosFaltan = Math.max(0, edadJub - edad);
-    const aportesAlJubilar = aportes + anosFaltan;
-    const cumpleAportes = aportesAlJubilar >= aportesReq;
-
-    // Sueldo al momento de jubilación (con aumentos anuales reales)
-    const sueldoJub = sueldo * Math.pow(1 + aumento / 100, anosFaltan);
-
-    // Haber estimado (fórmula simplificada)
-    let haber: number;
-    if (regimen === 'puam') {
-      haber = JUB_MIN * 0.80;
-    } else if (!cumpleAportes) {
-      haber = 0;
-    } else {
-      // 1.5% por cada año × sueldo actualizado
-      haber = sueldoJub * 0.015 * aportesAlJubilar;
-      // Aplicar topes
-      haber = Math.max(JUB_MIN + BONO, Math.min(haber, JUB_MAX));
-    }
-
-    return {
-      edad, edadJub, anosFaltan, aportes, aportesAlJubilar, cumpleAportes,
-      aportesReq, sueldoJub, haber, regimen, sexo,
-    };
-  }
-
-  function render() {
-    const r = compute();
-
-    (document.getElementById('sj-haber') as any).textContent = r.haber > 0 ? fmtArs(r.haber) : '—';
-    (document.getElementById('sj-haber-sub') as any).textContent = r.haber > 0
-      ? `${(r.haber / JUB_MIN).toFixed(1)}× jubilación mínima`
-      : 'No cumple requisitos';
-    (document.getElementById('sj-edad-jub') as any).textContent = r.edadJub + ' años';
-    (document.getElementById('sj-anos-faltan') as any).textContent =
-      r.anosFaltan === 0 ? '¡Ya podés jubilarte!' : `Faltan ${r.anosFaltan} años`;
-    (document.getElementById('sj-aportes-total') as any).textContent = r.aportesAlJubilar + ' años';
-    (document.getElementById('sj-aportes-status') as any).textContent =
-      r.cumpleAportes ? `Cumple (req ${r.aportesReq})` : `Te faltan ${r.aportesReq - r.aportesAlJubilar} años`;
-
-    // Feasibility
-    const feasibleTitle = document.getElementById('sj-feasible-title')!;
-    const feasibleText = document.getElementById('sj-feasible-text')!;
-    const feasibleEl = document.getElementById('sj-feasible')!;
-    if (r.regimen === 'puam') {
-      feasibleTitle.textContent = '✓ Accedés a PUAM';
-      feasibleText.textContent = `A los 65 años, sin importar años de aportes, podrás acceder a la PUAM: ~${fmtArs(JUB_MIN * 0.8)}/mes.`;
-      feasibleEl.className = 'sj-feasible ok';
-    } else if (r.cumpleAportes) {
-      feasibleTitle.textContent = '✓ Vas a jubilarte en tiempo';
-      feasibleText.textContent = `Al cumplir ${r.edadJub} años tendrás ${r.aportesAlJubilar} años de aportes (${r.aportesReq} requeridos). Vas a jubilarte por el régimen ${r.regimen}.`;
-      feasibleEl.className = 'sj-feasible ok';
-    } else {
-      feasibleTitle.textContent = '⚠️ No cumplirías requisitos sin ajustes';
-      feasibleText.textContent = `Al cumplir ${r.edadJub} años solo tendrías ${r.aportesAlJubilar} años de aportes. Necesitás ${r.aportesReq}. Opciones: 1) Aportar más años (empleo formal o monotributo con SIPA). 2) Moratoria vigente (si ANSES la habilita). 3) Esperar a los 65 y acceder a PUAM.`;
-      feasibleEl.className = 'sj-feasible warning';
-    }
-
-    // Comparación
-    (document.getElementById('sj-vs-min') as any).textContent = r.haber > 0 ? `${(r.haber / (JUB_MIN + BONO)).toFixed(2)}x` : '—';
-    (document.getElementById('sj-vs-med') as any).textContent = r.haber > 0 ? `${(r.haber / 620000).toFixed(2)}x` : '—';
-    (document.getElementById('sj-vs-max') as any).textContent = r.haber > 0 ? `${(r.haber / JUB_MAX).toFixed(2)}x` : '—';
-    (document.getElementById('sj-vs-puam') as any).textContent = `${(Math.max(0, r.haber) / (JUB_MIN * 0.8)).toFixed(2)}x`;
-
-    // Recomendaciones
-    const recs: string[] = [];
-    if (!r.cumpleAportes && r.regimen !== 'puam') {
-      recs.push(`<strong>Completá aportes</strong>: te faltan ${r.aportesReq - r.aportesAlJubilar} años. Si podés, pasá a empleo formal o monotributo (SIPA) ya mismo.`);
-    }
-    if (r.haber > 0 && r.haber <= (JUB_MIN + BONO) * 1.1) {
-      recs.push(`<strong>Jubilación baja</strong>: tu proyección está cerca del mínimo. Para subir: maximizá tus últimos años de aportes (mejor sueldo entra al promedio) + aportá voluntariamente + complementá con ahorro propio.`);
-    }
-    if (r.haber > 0 && r.haber < r.sueldoJub * 0.5) {
-      recs.push(`<strong>Tasa de reemplazo baja</strong>: la jubilación será menos del 50% de tu sueldo. Diferencial promedio Argentina: ~40-60%. Planificar ahorro complementario (plazo fijo UVA, FCI, ETFs) es crítico.`);
-    }
-    if (r.anosFaltan > 10) {
-      const montoRetiroFire = r.sueldoJub * 12 * 25;
-      recs.push(`<strong>Retiro anticipado (FIRE)</strong>: con ${r.anosFaltan} años por delante podés construir un portafolio de ~${fmtArs(montoRetiroFire)} (regla 25x) y retirarte antes. Ver <a href="/categoria/finanzas">calculadoras financieras</a>.`);
-    }
-    if (r.anosFaltan <= 5 && r.haber > 0) {
-      recs.push(`<strong>Últimos años críticos</strong>: el cálculo toma el mejor promedio de 120 meses de aportes. Maximizá tu sueldo bruto los próximos años (promoción, cambio a mejor puesto) — impacta directo en tu jubilación.`);
-    }
-    if (recs.length === 0) {
-      recs.push('Tu situación jubilatoria se ve bien. Mantené los aportes al día y considerá complementar con ahorro personal.');
-    }
-
-    const list = document.getElementById('sj-recs-list')!;
-    list.innerHTML = recs.map(r => '<li>' + r + '</li>').join('');
-
-    renderChart(r);
-  }
-
-  function renderChart(r: any) {
-    const canvas = document.getElementById('sj-chart') as HTMLCanvasElement;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d')!;
-    const W = canvas.width, H = canvas.height;
-    ctx.clearRect(0, 0, W, H);
-
-    if (r.anosFaltan === 0) {
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '14px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('Ya estás en edad jubilatoria', W / 2, H / 2);
-      return;
-    }
-
-    // Proyección sueldo y jubilación proyectada año a año
-    const data: { edad: number; sueldo: number; haberSi: number }[] = [];
-    const aum = Number(aumentoEl.value) / 100;
-    const sueldoActual = parseAmt(sueldoEl.value);
-    for (let y = 0; y <= r.anosFaltan; y++) {
-      const sueldoY = sueldoActual * Math.pow(1 + aum, y);
-      const aportesY = r.aportes + y;
-      const haberY = aportesY >= r.aportesReq ? Math.max(JUB_MIN + BONO, Math.min(sueldoY * 0.015 * aportesY, JUB_MAX)) : 0;
-      data.push({ edad: r.edad + y, sueldo: sueldoY, haberSi: haberY });
-    }
-
-    const margin = { t: 20, r: 20, b: 40, l: 70 };
-    const iw = W - margin.l - margin.r;
-    const ih = H - margin.t - margin.b;
-    const maxY = Math.max(...data.map(d => d.sueldo));
-
-    // Ejes
-    ctx.strokeStyle = '#cbd5e1';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(margin.l, margin.t); ctx.lineTo(margin.l, margin.t + ih); ctx.lineTo(margin.l + iw, margin.t + ih); ctx.stroke();
-
-    // Labels Y
-    ctx.fillStyle = '#64748b';
-    ctx.font = '11px system-ui';
-    ctx.textAlign = 'right';
-    for (let i = 0; i <= 4; i++) {
-      const v = (maxY / 4) * i;
-      const y = margin.t + ih - (i / 4) * ih;
-      ctx.fillText(fmtArs(v), margin.l - 5, y + 3);
-      ctx.strokeStyle = '#e2e8f0';
-      ctx.beginPath(); ctx.moveTo(margin.l, y); ctx.lineTo(margin.l + iw, y); ctx.stroke();
-    }
-
-    // Línea sueldo
-    ctx.strokeStyle = '#3b82f6';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    data.forEach((d, i) => {
-      const x = margin.l + (i / (data.length - 1)) * iw;
-      const y = margin.t + ih - (d.sueldo / maxY) * ih;
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-
-    // Línea haber
-    ctx.strokeStyle = '#10b981';
-    ctx.lineWidth = 3;
-    ctx.setLineDash([4, 4]);
-    ctx.beginPath();
-    data.forEach((d, i) => {
-      const x = margin.l + (i / (data.length - 1)) * iw;
-      const y = margin.t + ih - (d.haberSi / maxY) * ih;
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Labels X
-    ctx.fillStyle = '#64748b';
-    ctx.textAlign = 'center';
-    [0, Math.floor(data.length / 2), data.length - 1].forEach(i => {
-      const x = margin.l + (i / (data.length - 1)) * iw;
-      ctx.fillText(`${data[i].edad}a`, x, margin.t + ih + 18);
-    });
-
-    // Leyenda
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#3b82f6';
-    ctx.fillRect(margin.l + 10, margin.t + 10, 20, 3);
-    ctx.fillStyle = '#475569';
-    ctx.fillText('Sueldo proyectado', margin.l + 40, margin.t + 14);
-
-    ctx.strokeStyle = '#10b981';
-    ctx.setLineDash([4, 4]);
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(margin.l + 200, margin.t + 12);
-    ctx.lineTo(margin.l + 220, margin.t + 12);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillText('Haber jubilatorio si me jubilo ahí', margin.l + 225, margin.t + 14);
-  }
-
-  sexoEl.addEventListener('change', render);
-  edadEl.addEventListener('input', render);
-  aportesEl.addEventListener('input', render);
-  aumentoEl.addEventListener('input', render);
-  regimenEl.addEventListener('change', render);
-
-  render();
+  })();
 </script>
 
 <style>
-  .sj-page { max-width: 980px; margin: 0 auto; padding: 1rem 1.25rem 5rem; color: var(--text); }
-  .breadcrumbs { font-size: .875rem; color: var(--text-muted); margin-bottom: 1.5rem; }
-  .breadcrumbs a { color: var(--accent); text-decoration: none; }
-  .breadcrumbs .sep { margin: 0 .5rem; color: var(--text-subtle); }
+  /* El badge vive fuera de .cf-deco-card porque la card tiene overflow:hidden */
+  .sj .sj-deco-wrap { position: relative; }
+  .sj .sj-badge { top: 50%; right: -16px; transform: translateY(-50%); width: 48px; height: 48px; font-size: 1.2rem; }
 
-  .sj-header {
-    padding: 2.5rem 2rem 2rem;
-    border-radius: var(--radius-lg);
-    background: linear-gradient(135deg, rgba(59,130,246,.08), var(--bg-soft));
-    border: 1px solid var(--border);
-    margin-bottom: 2rem;
-    text-align: center;
-  }
-  .sj-header h1 { font-size: clamp(2rem, 5vw, 2.6rem); margin: 0 0 .75rem; font-weight: 800; letter-spacing: -.02em; }
-  .lead { color: var(--text-muted); font-size: 1.05rem; max-width: 720px; margin: 0 auto; line-height: 1.6; }
-  .lead strong { color: var(--text); font-weight: 700; }
+  .sj .sj-money { position: relative; display: flex; align-items: center; }
+  .sj .sj-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
+  .sj .sj-money .cf-input { padding-left: 1.7rem; }
 
-  .sj-form { margin: 2rem 0; }
-  .sj-inputs {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 1rem;
-  }
-  .sj-inputs label { display: flex; flex-direction: column; gap: .4rem; font-size: .9rem; color: var(--text-muted); font-weight: 500; }
-  .sj-inputs input, .sj-inputs select {
-    padding: .65rem .85rem;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-sm);
-    background: var(--bg-card);
-    color: var(--text);
-    font-size: 1rem;
-  }
-  .sj-inputs input:focus, .sj-inputs select:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-soft);
-  }
-  .sj-input-wrap {
-    display: flex;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-sm);
-    background: var(--bg-card);
-  }
-  .sj-input-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .sj-input-wrap .prefix { padding: .65rem .7rem .65rem .8rem; color: var(--text-subtle); font-weight: 600; }
-  .sj-input-wrap .suffix { padding: .65rem .8rem; color: var(--text-subtle); font-size: .85rem; }
-  .sj-input-wrap input { border: 0; background: transparent; padding: .65rem .85rem .65rem 0; font-size: 1rem; color: var(--text); width: 100%; }
-  .sj-input-wrap input:focus { outline: none; }
+  .sj-2col, .cf-band .sj-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .sj-2col, .cf-band .sj-2col { grid-template-columns: 0.85fr 1.15fr; } }
 
-  .sj-results { margin: 2rem 0; padding: 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
-  .sj-main-result {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-  }
-  .sj-result-card {
-    padding: 1.25rem;
-    background: var(--bg-soft);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    text-align: center;
-  }
-  .sj-result-label { font-size: .72rem; color: var(--text-subtle); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; margin-bottom: .4rem; }
-  .sj-result-value { font-size: 1.8rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.1; }
-  .sj-result-sub { margin-top: .3rem; font-size: .82rem; color: var(--text-muted); }
+  .sj .sj-hl { padding: 1.5rem 1.6rem; border-radius: var(--radius-lg); color: #fff; background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%); }
+  .sj .sj-hl .cf-side-eyebrow { color: rgba(255,255,255,0.75); }
+  .sj .sj-hl__title { font-size: 1.35rem; font-weight: 800; margin: 0 0 0.5rem; line-height: 1.2; letter-spacing: -0.015em; }
+  .sj .sj-hl__desc { font-size: 0.82rem; color: rgba(255,255,255,0.82); line-height: 1.5; margin: 0; }
+  .sj .sj-hl__big { font-size: 1.9rem; font-weight: 800; margin: 1.1rem 0 0.15rem; font-variant-numeric: tabular-nums; }
+  .sj .sj-bar--alt { background: linear-gradient(90deg, #f59e0b, #fb923c) !important; }
+  .sj .sj-bar--min { background: linear-gradient(90deg, #94a3b8, #cbd5e1) !important; }
+  .sj .sj-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.15rem 0 0; }
+  .sj .sj-chip { margin: 0.7rem 0 0; padding: 0.4rem 0.6rem; border-radius: var(--radius-sm); background: var(--bg-soft); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.68rem; color: var(--accent-strong); overflow-x: auto; white-space: nowrap; }
 
-  .sj-feasible { padding: 1.25rem 1.5rem; border-radius: var(--radius-sm); margin-bottom: 2rem; border-left: 4px solid var(--accent); background: var(--bg-soft); }
-  .sj-feasible.ok { border-color: #10b981; background: rgba(16,185,129,.07); }
-  .sj-feasible.warning { border-color: #f59e0b; background: rgba(245,158,11,.08); }
-  .sj-feasible h3 { margin: 0 0 .5rem; font-size: 1.1rem; color: var(--text); font-weight: 700; }
-  .sj-feasible p { margin: 0; color: var(--text); line-height: 1.55; font-size: .95rem; }
+  /* Viabilidad: verde cuando cumple; el caso "no cumple" usa .cf-callout--warn */
+  .sj .sj-feasible--ok { background: #f0fdf4; border-color: #bbf7d0; border-left-color: #16a34a; color: #14532d; }
+  .sj .sj-feasible--ok strong { color: #15803d; }
+  :root[data-theme="dark"] .sj .sj-feasible--ok { background: rgba(22,163,74,0.12); border-color: rgba(22,163,74,0.3); color: #bbf7d0; }
+  :root[data-theme="dark"] .sj .sj-feasible--ok strong { color: #4ade80; }
 
-  .sj-comparison { margin-bottom: 2rem; }
-  .sj-comparison h3 { font-size: 1rem; margin: 0 0 .75rem; color: var(--text); font-weight: 700; }
-  .sj-table { width: 100%; border-collapse: collapse; background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
-  .sj-table th, .sj-table td { padding: .7rem 1rem; text-align: left; font-size: .92rem; border-bottom: 1px solid var(--border); }
-  .sj-table th { background: var(--bg-muted); font-weight: 700; color: var(--text); font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; }
-  .sj-table tbody tr:last-child td { border-bottom: 0; }
+  .sj .sj-recs { gap: 0.7rem; }
+  .sj .sj-recs li { font-size: 0.88rem; line-height: 1.55; }
+  .sj .sj-recs a { color: var(--accent); }
 
-  .sj-recs { margin-bottom: 2rem; padding: 1.25rem 1.5rem; background: var(--warning-soft); border-left: 4px solid var(--warning); border-radius: var(--radius-sm); }
-  .sj-recs h3 { margin: 0 0 .75rem; font-size: 1rem; color: var(--text); font-weight: 700; }
-  .sj-recs ul { margin: 0; padding-left: 1.2rem; }
-  .sj-recs li { margin: .4rem 0; line-height: 1.55; color: var(--text); font-size: .92rem; }
-  .sj-recs a { color: var(--accent); }
+  .sj .sj-morelinks { list-style: none; display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0 0; padding: 0; }
+  .sj .sj-morelinks a { display: inline-flex; padding: 0.4rem 0.8rem; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); font-size: 0.78rem; font-weight: 600; text-decoration: none; }
+  .sj .sj-morelinks a:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 
-  .sj-timeline h3 { font-size: 1rem; margin: 0 0 .75rem; color: var(--text); font-weight: 700; }
-  .sj-timeline canvas { width: 100%; max-width: 600px; height: auto; background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius-sm); }
-
-  .sj-explanation, .sj-faq, .sj-related, .sj-escenarios, .sj-fuentes, .sj-ejemplos { margin: 2.5rem 0; }
-  .sj-ejemplos h2 { font-size: 1.3rem; margin: 0 0 1rem; color: var(--text); font-weight: 700; }
-  .sj-ejemplos-intro, .sj-ejemplos-nota { color: var(--text-muted); line-height: 1.65; font-size: .92rem; }
-  .sj-ejemplos-nota { margin-top: .5rem; font-size: .88rem; }
-  .sj-ejemplo { padding: 1.25rem 1.5rem; background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 1rem; }
-  .sj-ejemplo h3 { font-size: 1.05rem; margin: 0 0 .6rem; color: var(--text); font-weight: 700; }
-  .sj-ejemplo .sj-ej-input { font-size: .85rem; color: var(--text-subtle); font-style: italic; margin: 0 0 .5rem; }
-  .sj-ejemplo ol { margin: .5rem 0 .5rem 1.2rem; padding: 0; color: var(--text-muted); line-height: 1.65; font-size: .93rem; }
-  .sj-ejemplo ol li { margin: .3rem 0; }
-  .sj-ejemplo ol li strong { color: var(--text); }
-  .sj-ejemplo .sj-ej-result { margin: .6rem 0 0; padding-top: .6rem; border-top: 1px solid var(--border); color: var(--text); font-weight: 600; font-size: .95rem; }
-  .sj-explanation h2, .sj-faq h2, .sj-related h2, .sj-escenarios h2, .sj-fuentes h2 { font-size: 1.3rem; margin: 0 0 1rem; color: var(--text); font-weight: 700; }
-  .sj-explanation h3 { font-size: 1.05rem; margin: 1.25rem 0 .5rem; color: var(--text); font-weight: 700; }
-  .sj-escenarios p, .sj-fuentes li { color: var(--text-muted); line-height: 1.65; }
-  .sj-escenarios .sj-table { overflow-x: auto; display: block; }
-  .sj-escenarios-nota { font-size: .88rem; margin-top: .75rem; }
-  .sj-fuentes ul { padding-left: 1.2rem; margin: 0 0 1rem; }
-  .sj-fuentes a { color: var(--accent); }
-  .sj-review-line { font-size: .85rem; color: var(--text-subtle); border-top: 1px solid var(--border); padding-top: .75rem; }
-  .sj-disclaimer {
-    margin: 2rem 0;
-    padding: 1.1rem 1.4rem;
-    border-left: 4px solid #f59e0b;
-    background: rgba(245,158,11,.08);
-    border-radius: var(--radius-sm);
-    color: var(--text);
-    line-height: 1.6;
-    font-size: .93rem;
-  }
-  .sj-explanation p, .sj-explanation li { color: var(--text-muted); line-height: 1.65; }
-  .sj-explanation a { color: var(--accent); }
-  .sj-related ul { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: .5rem; }
-  .sj-related li a { display: block; padding: .8rem 1rem; background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--accent); text-decoration: none; font-size: .92rem; font-weight: 500; }
-  .sj-related li a:hover { background: var(--accent-soft); }
-
-  .faq-list details { border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: .5rem; overflow: hidden; background: var(--bg-card); }
-  .faq-list summary { padding: 1rem 1.25rem; cursor: pointer; font-weight: 600; color: var(--text); list-style: none; display: flex; justify-content: space-between; gap: 1rem; }
-  .faq-list summary::after { content: ''; width: 10px; height: 10px; border: 2px solid var(--text-muted); border-top: 0; border-left: 0; transform: rotate(45deg); transition: transform .2s; }
-  .faq-list details[open] summary::after { transform: rotate(-135deg); }
-  .faq-answer { padding: 0 1.25rem 1.2rem; color: var(--text-muted); line-height: 1.65; font-size: .95rem; }
+  .cf-band .sj-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .sj-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .sj-hl__big { font-size: 1.9rem; font-weight: 800; color: #fff; margin: 0.2rem 0 0.4rem; font-variant-numeric: tabular-nums; }
+  .cf-band .sj-review-line { font-size: 0.75rem; color: var(--text-subtle); border-top: 1px solid var(--border); padding-top: 0.75rem; margin-top: 0.9rem; }
+  .cf-band .sj-review-line a { color: var(--accent); }
+  .cf-band .sj-src__title { font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 0.9rem; }
+  .cf-band .sj-src { display: grid; gap: 0.5rem; }
+  .cf-band .sj-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .sj-src__item strong { display: block; font-size: 0.8rem; font-weight: 700; color: #fff; line-height: 1.35; }
+  .cf-band .sj-src__item strong a { color: #fff; text-decoration: underline; }
+  .cf-band .sj-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .sj-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+  .cf-band .sj-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.9rem; }
+  .cf-band .sj-tag { padding: 0.25rem 0.6rem; border-radius: 999px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); font-size: 0.7rem; font-weight: 700; color: #e7ecf3; }
 </style>

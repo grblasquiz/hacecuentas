@@ -1,0 +1,605 @@
+---
+// Flagship redesign de "Calculadora de combustible para un viaje" (mockup Martin).
+// Los números salen del motor real (src/lib/formulas/viaje-combustible.ts), importado acá
+// para el SSR y replicado en el <script is:inline> (que no puede importar).
+// El precio del litro NO está hardcodeado: se lee de la referenceTable del propio calc
+// (snapshot junio 2026 de la Secretaría de Energía). No hay feed de nafta en src/data/live.
+// Domain "home" (ámbar) por el mockup, no por la categoría (viajes→life).
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { viajeCombustible } from '../lib/formulas/viaje-combustible';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// ── Precios: de la referenceTable del propio calc, no inventados ──────────────
+const tablaPrecios = (calc.referenceTables || []).find((t: any) => /precio del litro por provincia/i.test(t.title || ''));
+const parse$ = (s: string) => Number(String(s).replace(/[^\d]/g, '')) || 0;
+const PROVINCIAS: { prov: string; super: number; premium: number; gasoil: number }[] =
+  (tablaPrecios?.rows || []).map((r: string[]) => ({ prov: r[0], super: parse$(r[1]), premium: parse$(r[2]), gasoil: parse$(r[3]) }))
+    .filter((p: any) => p.super > 0);
+const nacional = PROVINCIAS.find((p) => /promedio nacional/i.test(p.prov));
+const PRECIO = nacional?.super || 0;
+const FUENTE_PRECIOS = tablaPrecios?.title || '';
+const minProv = PROVINCIAS.filter((p) => !/promedio/i.test(p.prov)).reduce((a, b) => (b.super < a.super ? b : a), PROVINCIAS[1] || PROVINCIAS[0]);
+const maxProv = PROVINCIAS.filter((p) => !/promedio/i.test(p.prov)).reduce((a, b) => (b.super > a.super ? b : a), PROVINCIAS[1] || PROVINCIAS[0]);
+
+// Caso cargado por defecto = el `example` documentado (Buenos Aires → Mar del Plata, 4 pax)
+// con el precio más fresco del repo (promedio nacional nafta súper, junio 2026).
+const KM = 400, CONSUMO = 8, PAX = 4, IDA = 'ida-vuelta';
+const init = viajeCombustible({ distanciaKm: KM, consumo: CONSUMO, precioLitro: PRECIO, pasajeros: PAX, ida: IDA });
+
+const $ = (x: number) => '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(Math.round(x));
+// El motor devuelve costoPorKm con 2 decimales: no los tiramos redondeando a entero
+const $d = (x: number) => '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(x);
+const nf = (x: number) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(x);
+const km = (x: number) => new Intl.NumberFormat('es-AR').format(x);
+
+// Perfiles de auto (consumos del propio explanation del calc), corridos por el motor
+const PERFILES = [
+  { n: 'Híbrido', c: 5, d: 'Corolla Hybrid, Camry' },
+  { n: 'Tu auto', c: CONSUMO, d: 'El consumo que cargaste' },
+  { n: 'SUV grande', c: 12, d: 'Territory, Commander' },
+];
+const perfiles = PERFILES.map((p) => ({ ...p, r: viajeCombustible({ distanciaKm: KM, consumo: p.c, precioLitro: PRECIO, pasajeros: PAX, ida: IDA }) }));
+const maxPerfil = Math.max(...perfiles.map((p) => p.r.costoTotal));
+
+// Destinos (distancias del propio explanation del calc), corridos por el motor
+const DESTINOS = [
+  { n: 'Mar del Plata', km: 400 },
+  { n: 'Córdoba', km: 700 },
+  { n: 'Mendoza', km: 1040 },
+  { n: 'Iguazú', km: 1320 },
+  { n: 'Salta', km: 1610 },
+  { n: 'Bariloche', km: 1635 },
+];
+const refRows = DESTINOS.map((d) => ({ ...d, r: viajeCombustible({ distanciaKm: d.km, consumo: CONSUMO, precioLitro: PRECIO, pasajeros: PAX, ida: IDA }) }));
+
+const faq = calc.faq || [];
+const sources = (calc.sources || []).slice(0, 3);
+---
+
+<div class="cf-page vc" data-domain="home" data-precios={JSON.stringify(PROVINCIAS)}>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/categoria/viajes">Viajes</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Combustible para un viaje</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">⛽</span> Antes de salir a la ruta · 2026</p>
+      <h1 class="cf-h1">Calculadora de combustible <span class="cf-yr">para tu viaje</span></h1>
+      <p class="cf-sub">Cuántos litros vas a quemar, cuánto te sale y cuánto pone cada uno. Con los precios por provincia de junio 2026.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">🏖️</span> Buenos Aires → Mar del Plata</span>
+      <div class="vc-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="vc-deco-val">{$(init.costoTotal)}</div>
+          <div class="cf-deco-card__note" id="vc-deco-note">{km(init.distanciaEfectiva)} km ida y vuelta</div>
+        </div>
+        <span class="cf-deco-badge vc-badge">⛽</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Por pasajero</strong> <span class="cf-deco-chip" id="vc-deco-chip">{$(init.costoPorPersona)}</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">Los datos del viaje</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><span class="cf-label">¿Ida o ida y vuelta?</span></div>
+        <div class="cf-seg vc-seg" role="group" aria-label="Tipo de viaje">
+          <button type="button" data-ida="ida" aria-pressed="false">Solo ida</button>
+          <button type="button" data-ida="ida-vuelta" aria-pressed="true">Ida y vuelta</button>
+        </div>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="vc-km">Distancia (ida)</label><span class="cf-hint">km</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="decimal" step="1" min="1" id="vc-km" value={KM} />
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="vc-consumo">Consumo del auto</label><span class="cf-hint">L/100km</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="decimal" step="0.1" min="1" max="30" id="vc-consumo" value={CONSUMO} />
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="vc-precio">Precio del litro</label><span class="cf-hint">$</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="decimal" step="10" min="1" id="vc-precio" value={PRECIO} />
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="vc-pax">Pasajeros</label><span class="cf-hint">para dividir</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="numeric" step="1" min="1" max="10" id="vc-pax" value={PAX} />
+        </div>
+      </div>
+      <p class="cf-help vc-help">Nafta común en ruta: 6-8 L/100km · sedán 7-9 · SUV 8-14 · diesel 5-7 · híbrido 4-6. El precio arranca en el promedio nacional de nafta súper de junio 2026.</p>
+
+      <button class="cf-primary" id="vc-calc-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Precio súper por zona:</span>
+        {PROVINCIAS.filter((p) => /promedio nacional|^CABA$|Córdoba|Mendoza|Neuquén|Tierra del Fuego/i.test(p.prov)).map((p) => (
+          <button class="cf-sc" type="button" data-precio={p.super}>{p.prov.replace('Promedio nacional', 'Nacional')} {$(p.super)}</button>
+        ))}
+      </div>
+    </div>
+
+    <div class="cf-result" id="vc-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="vc-big">{$(init.costoTotal)}</div>
+      <p class="cf-result__sub" id="vc-sub">{km(init.distanciaEfectiva)} km ida y vuelta con el litro a {$(PRECIO)}</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="vc-t1">{nf(init.litrosTotales)} L</div><div class="cf-tile__label">Litros a cargar</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="vc-t2">{km(init.distanciaEfectiva)} km</div><div class="cf-tile__label">Distancia total</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="vc-t3">{$(init.costoPorPersona)}</div><div class="cf-tile__label">Por pasajero (<span id="vc-t3p">{PAX}</span>)</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="vc-t4">{$d(init.costoPorKm)}</div><div class="cf-tile__label">Costo por km</div></div>
+      </div>
+      <div class="cf-result__formula" id="vc-formula">({km(init.distanciaEfectiva)} ÷ 100) × {nf(CONSUMO)} × {$(PRECIO)} = {$(init.costoTotal)}</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="vc-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="vc-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt"><strong>Respuesta rápida.</strong> <span id="vc-quick">Recorrer {km(init.distanciaEfectiva)} km consume <strong>{nf(init.litrosTotales)} L</strong> y cuesta <strong>{$(init.costoTotal)}</strong>. Dividido entre {PAX} pasajeros, son <strong>{$(init.costoPorPersona)} por persona</strong>.</span></p>
+    <span class="cf-formula">(km ÷ 100) × L/100km × $/L</span>
+  </div>
+
+  <!-- 5. Datos clave -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">🛢️</span>
+        <p class="cf-minicard__sub vc-cap">Lo que vas a cargar</p>
+        <div class="cf-minicard__big" id="vc-k1">{nf(init.litrosTotales)} L</div>
+        <p class="cf-minicard__desc vc-mt" id="vc-k1d">Para {km(init.distanciaEfectiva)} km a {nf(CONSUMO)} L/100km. En la Patagonia hay tramos de 150-200 km sin estaciones: no juegues con la reserva.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🐢</span>
+        <p class="cf-minicard__sub vc-cap">Si vas a 130 en vez de 100</p>
+        <div class="cf-minicard__big">+35%</div>
+        <p class="cf-minicard__desc vc-mt">De consumo. La resistencia del aire crece al cuadrado de la velocidad: la franja eficiente está entre 90 y 110 km/h.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🗺️</span>
+        <p class="cf-minicard__sub vc-cap">El litro no vale igual en todo el país</p>
+        <div class="cf-minicard__big">{$(minProv.super)} – {$(maxProv.super)}</div>
+        <p class="cf-minicard__desc vc-mt">Es el rango de la nafta súper entre {minProv.prov} y {maxProv.prov} (junio 2026). Cargá lleno antes de entrar en zona cara.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🧾</span>
+        <p class="cf-minicard__sub vc-cap">El combustible no es todo</p>
+        <div class="cf-minicard__big">+ peajes</div>
+        <p class="cf-minicard__desc vc-mt">Sumale peajes, comida en ruta y estacionamiento. En la Ruta 2 ida y vuelta son unos $25.000 más ($21.000 con Telepase).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Cómo leer el resultado -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Cómo leer el resultado</p>
+    <h2 class="cf-section__title vc-h2">El auto que elegís cambia todo</h2>
+    <div class="vc-2col">
+      <div class="vc-hl">
+        <p class="cf-side-eyebrow vc-hl__eyebrow">Cómo leer el resultado</p>
+        <p class="vc-hl__title">Mismo viaje, tres autos, tres facturas</p>
+        <p class="vc-hl__desc">Los km son los mismos y el precio del litro también: lo único que cambia es cuánto toma tu motor cada 100 km. Por eso el consumo real —el medido, no el del folleto— es el dato que más conviene afinar.</p>
+        <div class="vc-hl__big" id="vc-hl-big">{$(init.costoTotal)}</div>
+        <p class="vc-hl__desc" id="vc-hl-note">Con tu auto a {nf(CONSUMO)} L/100km</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-breakdown__big" id="vc-bd-big">{$(init.costoTotal)}</div>
+        {perfiles.map((p, i) => (
+          <div class={i === 0 ? 'cf-brow' : 'cf-brow vc-mt2'}>
+            <span class="cf-brow__lbl" id={`vc-bd-l${i}`}>{p.n} · {nf(p.c)} L/100km</span>
+            <span class="cf-brow__val" id={`vc-bd-${i}`}>{$(p.r.costoTotal)}</span>
+            <span class="cf-brow__bar"><span class={i === 1 ? 'vc-bar--mine' : ''} id={`vc-bd-b${i}`} style={`width:${Math.round((p.r.costoTotal / maxPerfil) * 100)}%`}></span></span>
+          </div>
+        ))}
+        <div class="cf-breakdown__total">
+          <span id="vc-bd-totall">Lo que pone cada uno de los {PAX} pasajeros</span>
+          <strong id="vc-bd-total">{$(init.costoPorPersona)}</strong>
+        </div>
+        <div class="cf-callout cf-callout--warn vc-mt3">
+          <span class="cf-callout__ico" aria-hidden="true">🚗</span>
+          <p><strong>El consumo del folleto no es el tuyo.</strong> Medilo así: cargá tanque lleno, anotá el kilometraje, hacé 200-400 km de ruta, volvé a llenar y dividí <code>(litros cargados × 100) ÷ km recorridos</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Paso a paso -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title vc-h2">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">Distancia de ida, consumo de tu auto, precio del litro donde vas a cargar y cuántos van en el auto.</p>
+        <p class="vc-chip" id="vc-s1">{km(KM)} km × 2 · {nf(CONSUMO)} L/100km</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">Los km totales dividido 100, por el consumo, da los litros. Los litros por el precio, el costo.</p>
+        <p class="vc-chip" id="vc-s2">({km(init.distanciaEfectiva)} ÷ 100) × {nf(CONSUMO)} = {nf(init.litrosTotales)} L</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">Tenés el total, el costo por km y lo que le toca a cada pasajero para dividir sin discusiones.</p>
+        <p class="vc-chip" id="vc-s3">{$(init.costoTotal)} · {$(init.costoPorPersona)} c/u</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Referencias -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Desde Buenos Aires hasta</th><th>Distancia</th><th>Litros</th><th id="vc-th4">Costo · por pasajero</th></tr></thead>
+        <tbody id="vc-tbody">
+          {refRows.map((d) => (
+            <tr>
+              <td><span class="cf-td-dot">{d.n}</span><span class="vc-td-nota">{km(d.km)} km de ida</span></td>
+              <td>{km(d.r.distanciaEfectiva)} km</td>
+              <td>{nf(d.r.litrosTotales)} L</td>
+              <td class="cf-td-em">{$(d.r.costoTotal)} <span class="vc-td-pax">· {$(d.r.costoPorPersona)} c/u</span></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="vc-tnote" id="vc-tnote">Ida y vuelta, con el consumo, el precio y los pasajeros que tengas cargados arriba. Sin peajes ni comida.</p>
+  </section>
+</div>
+
+<!-- 9. Banda de atención -->
+<div class="cf-band cf-band--warm" data-domain="home">
+  <div class="cf-band__inner">
+    <div class="vc-2col vc-2col--band">
+      <div class="vc-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="vc-card__title">Esto es combustible, no el costo del viaje</h2>
+        <p class="cf-side-desc">La cuenta de arriba no incluye peajes, comida en ruta ni estacionamiento en destino. Para un Buenos Aires - Mar del Plata de 4 personas, sumale unos $25.000 de peajes y $15.000-25.000 de paradas: el viaje real ronda los $140.000-160.000.</p>
+        <div class="cf-callout cf-callout--warn vc-mt3">
+          <span class="cf-callout__ico" aria-hidden="true">🤝</span>
+          <p>Acordá antes de salir cómo se divide. Lo más común es partes iguales incluyendo al conductor, que ya pone el auto y el tiempo. Si alguien no maneja, no le cobres el desgaste aparte.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="vc-src__title">Nafta súper, junio 2026</p>
+        <div class="vc-hl__big">{$(PRECIO)}</div>
+        <p class="cf-side-desc">Promedio nacional por litro según la Secretaría de Energía. Es el valor con el que arranca la calculadora.</p>
+        <div class="vc-chips">
+          {PROVINCIAS.filter((p) => /^CABA$|Córdoba|Mendoza|Neuquén|Tierra del Fuego/.test(p.prov)).map((p) => (
+            <span class="vc-chip vc-chip--dark">{p.prov} {$(p.super)}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page vc" data-domain="home">
+  <!-- 10. FAQ -->
+  {faq.length > 0 && (
+    <section class="cf-section" id="preguntas">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title vc-h2">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+</div>
+
+<!-- 11. Fuentes y metodología -->
+{sources.length > 0 && (
+  <div class="cf-band" data-domain="home">
+    <div class="cf-band__inner">
+      <div class="vc-2col vc-2col--band">
+        <div>
+          <p class="cf-eyebrow">Fuentes y metodología</p>
+          <h2 class="vc-card__title vc-card__title--plain">Números que podés defender</h2>
+          <p class="cf-side-desc">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026.</p>
+          {FUENTE_PRECIOS && <p class="cf-side-desc vc-mt2">Los precios del litro salen de <strong>{FUENTE_PRECIOS.toLowerCase()}</strong>, snapshot de la Secretaría de Energía sobre 4.623 estaciones.</p>}
+        </div>
+        <div class="cf-side-card cf-side-card--dark">
+          <p class="cf-side-eyebrow">Fuentes</p>
+          <div class="vc-src">
+            {sources.map((s: any) => (
+              <div class="vc-src__item">
+                <strong>{s.name}</strong>
+                <span>{s.url ? String(s.url).replace(/^https?:\/\//, '').split('/')[0] : ''}</span>
+              </div>
+            ))}
+          </div>
+          <p class="vc-src__foot">● Información revisada en julio de 2026</p>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+<div class="cf-page vc" data-domain="home">
+  <!-- 12. Related -->
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title vc-h2">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '⛽'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('(')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- 13. CTA bar -->
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="vc-share2">Copiar enlace del cálculo</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.vc');
+    if (!root) return;
+    var $id = function (id) { return document.getElementById(id); };
+    var money = function (x) { return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(Math.round(x)); };
+    // El motor devuelve costoPorKm con 2 decimales: no los tiramos redondeando a entero
+    var moneyD = function (x) { return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(x); };
+    var nf = function (x) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(x); };
+    var kmf = function (x) { return new Intl.NumberFormat('es-AR').format(x); };
+
+    // Réplica de src/lib/formulas/viaje-combustible.ts (el inline no puede importar)
+    function viaje(distanciaKm, consumo, precioLitro, pasajeros, ida) {
+      var km = Number(distanciaKm), cons = Number(consumo), precio = Number(precioLitro);
+      var pax = Math.max(1, Number(pasajeros) || 1);
+      var idaVuelta = ida === 'ida-vuelta';
+      if (!km || km <= 0) throw new Error('Ingresá la distancia en km');
+      if (!cons || cons <= 0) throw new Error('Ingresá el consumo cada 100 km');
+      if (!precio || precio <= 0) throw new Error('Ingresá el precio del litro');
+      var distanciaEfectiva = idaVuelta ? km * 2 : km;
+      var litrosTotales = (distanciaEfectiva / 100) * cons;
+      var costoTotal = litrosTotales * precio;
+      return {
+        litrosTotales: Math.round(litrosTotales * 100) / 100,
+        costoTotal: Math.round(costoTotal),
+        costoPorPersona: Math.round(costoTotal / pax),
+        costoPorKm: Math.round((costoTotal / distanciaEfectiva) * 100) / 100,
+        distanciaEfectiva: distanciaEfectiva,
+      };
+    }
+
+    var kmEl = $id('vc-km'), consEl = $id('vc-consumo'), precioEl = $id('vc-precio'), paxEl = $id('vc-pax');
+    var ida = 'ida-vuelta';
+    function set(id, t) { var e = $id(id); if (e) e.textContent = t; }
+    function w(id, pct) { var e = $id(id); if (e) e.style.width = Math.max(2, Math.min(100, pct)) + '%'; }
+
+    var PERFILES = [{ n: 'Híbrido', c: 5 }, { n: 'Tu auto', c: null }, { n: 'SUV grande', c: 12 }];
+    var DESTINOS = [
+      { n: 'Mar del Plata', km: 400 }, { n: 'Córdoba', km: 700 }, { n: 'Mendoza', km: 1040 },
+      { n: 'Iguazú', km: 1320 }, { n: 'Salta', km: 1610 }, { n: 'Bariloche', km: 1635 },
+    ];
+
+    function render() {
+      var k = Number(kmEl.value), c = Number(consEl.value), p = Number(precioEl.value), pax = Number(paxEl.value);
+      var r;
+      try { r = viaje(k, c, p, pax, ida); }
+      catch (err) { set('vc-big', '—'); set('vc-sub', err.message); return; }
+
+      var vuelta = ida === 'ida-vuelta';
+      set('vc-big', money(r.costoTotal));
+      set('vc-sub', kmf(r.distanciaEfectiva) + ' km ' + (vuelta ? 'ida y vuelta' : 'de ida') + ' con el litro a ' + money(p));
+      set('vc-t1', nf(r.litrosTotales) + ' L');
+      set('vc-t2', kmf(r.distanciaEfectiva) + ' km');
+      set('vc-t3', money(r.costoPorPersona)); set('vc-t3p', String(Math.max(1, pax || 1)));
+      set('vc-t4', moneyD(r.costoPorKm));
+      set('vc-formula', '(' + kmf(r.distanciaEfectiva) + ' ÷ 100) × ' + nf(c) + ' × ' + money(p) + ' = ' + money(r.costoTotal));
+
+      set('vc-deco-val', money(r.costoTotal));
+      set('vc-deco-note', kmf(r.distanciaEfectiva) + ' km ' + (vuelta ? 'ida y vuelta' : 'de ida'));
+      set('vc-deco-chip', money(r.costoPorPersona));
+      set('vc-quick', 'Recorrer ' + kmf(r.distanciaEfectiva) + ' km consume ' + nf(r.litrosTotales) + ' L y cuesta ' + money(r.costoTotal)
+        + (pax > 1 ? '. Dividido entre ' + pax + ' pasajeros, son ' + money(r.costoPorPersona) + ' por persona.' : ' (≈' + moneyD(r.costoPorKm) + ' por km).'));
+
+      set('vc-k1', nf(r.litrosTotales) + ' L');
+      set('vc-k1d', 'Para ' + kmf(r.distanciaEfectiva) + ' km a ' + nf(c) + ' L/100km. En la Patagonia hay tramos de 150-200 km sin estaciones: no juegues con la reserva.');
+      set('vc-hl-big', money(r.costoTotal));
+      set('vc-hl-note', 'Con tu auto a ' + nf(c) + ' L/100km');
+      set('vc-bd-big', money(r.costoTotal));
+
+      var vals = [], i;
+      for (i = 0; i < PERFILES.length; i++) {
+        var cons = PERFILES[i].c === null ? c : PERFILES[i].c;
+        var rr;
+        try { rr = viaje(k, cons, p, pax, ida); } catch (e) { rr = { costoTotal: 0 }; }
+        vals.push({ cons: cons, r: rr });
+      }
+      var max = Math.max.apply(null, vals.map(function (v) { return v.r.costoTotal; })) || 1;
+      for (i = 0; i < vals.length; i++) {
+        set('vc-bd-l' + i, PERFILES[i].n + ' · ' + nf(vals[i].cons) + ' L/100km');
+        set('vc-bd-' + i, money(vals[i].r.costoTotal));
+        w('vc-bd-b' + i, Math.round((vals[i].r.costoTotal / max) * 100));
+      }
+      set('vc-bd-totall', pax > 1 ? 'Lo que pone cada uno de los ' + pax + ' pasajeros' : 'Vas solo: lo ponés todo vos');
+      set('vc-bd-total', money(r.costoPorPersona));
+
+      set('vc-s1', kmf(k) + ' km' + (vuelta ? ' × 2' : '') + ' · ' + nf(c) + ' L/100km');
+      set('vc-s2', '(' + kmf(r.distanciaEfectiva) + ' ÷ 100) × ' + nf(c) + ' = ' + nf(r.litrosTotales) + ' L');
+      set('vc-s3', money(r.costoTotal) + ' · ' + money(r.costoPorPersona) + ' c/u');
+      renderTable(c, p, pax);
+    }
+
+    function renderTable(c, p, pax) {
+      var tb = $id('vc-tbody'); if (!tb) return;
+      var html = '';
+      for (var i = 0; i < DESTINOS.length; i++) {
+        var d = DESTINOS[i], rr;
+        try { rr = viaje(d.km, c, p, pax, ida); } catch (e) { continue; }
+        html += '<tr><td><span class="cf-td-dot">' + d.n + '</span><span class="vc-td-nota">' + kmf(d.km) + ' km de ida</span></td>'
+          + '<td>' + kmf(rr.distanciaEfectiva) + ' km</td>'
+          + '<td>' + nf(rr.litrosTotales) + ' L</td>'
+          + '<td class="cf-td-em">' + money(rr.costoTotal) + ' <span class="vc-td-pax">· ' + money(rr.costoPorPersona) + ' c/u</span></td></tr>';
+      }
+      tb.innerHTML = html;
+      set('vc-tnote', (ida === 'ida-vuelta' ? 'Ida y vuelta' : 'Solo ida') + ', con el consumo, el precio y los pasajeros que tengas cargados arriba. Sin peajes ni comida.');
+    }
+
+    kmEl.addEventListener('input', render);
+    consEl.addEventListener('input', render);
+    precioEl.addEventListener('input', render);
+    paxEl.addEventListener('input', render);
+    $id('vc-calc-btn').addEventListener('click', render);
+    Array.prototype.forEach.call(document.querySelectorAll('[data-ida]'), function (b) {
+      b.addEventListener('click', function () {
+        ida = b.getAttribute('data-ida');
+        Array.prototype.forEach.call(document.querySelectorAll('[data-ida]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        render();
+      });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-precio]'), function (b) {
+      b.addEventListener('click', function () { precioEl.value = b.getAttribute('data-precio'); render(); });
+    });
+
+    function summary() {
+      try {
+        var r = viaje(Number(kmEl.value), Number(consEl.value), Number(precioEl.value), Number(paxEl.value), ida);
+        return 'Viaje de ' + kmf(r.distanciaEfectiva) + ' km: ' + nf(r.litrosTotales) + ' L de combustible = ' + money(r.costoTotal)
+          + ' (' + moneyD(r.costoPorKm) + '/km). Entre ' + Math.max(1, Number(paxEl.value) || 1) + ' pasajeros: ' + money(r.costoPorPersona) + ' c/u. — hacecuentas.com';
+      } catch (e) { return 'hacecuentas.com/calculadora-combustible-viaje-auto'; }
+    }
+    function shareUrl() {
+      return location.origin + location.pathname + '?km=' + kmEl.value + '&consumo=' + consEl.value + '&precio=' + precioEl.value + '&pax=' + paxEl.value + '&ida=' + ida;
+    }
+    function copy(t, btn) {
+      if (!navigator.clipboard) return;
+      navigator.clipboard.writeText(t).then(function () {
+        var o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(function () { btn.innerHTML = o; }, 1500);
+      });
+    }
+    $id('vc-copy').addEventListener('click', function (e) { copy(summary(), e.currentTarget); });
+    $id('vc-detail').addEventListener('click', function () { var t = document.getElementById('preguntas'); if (t) t.scrollIntoView({ behavior: 'smooth' }); });
+    var s2 = $id('vc-share2'); if (s2) s2.addEventListener('click', function (e) { copy(shareUrl(), e.currentTarget); });
+
+    var q = new URLSearchParams(location.search);
+    if (q.get('km')) kmEl.value = q.get('km');
+    if (q.get('consumo')) consEl.value = q.get('consumo');
+    if (q.get('precio')) precioEl.value = q.get('precio');
+    if (q.get('pax')) paxEl.value = q.get('pax');
+    if (q.get('ida') === 'ida') { var bt = document.querySelector('[data-ida="ida"]'); if (bt) { bt.click(); return; } }
+    render();
+  })();
+</script>
+
+<style>
+  .vc .vc-deco-wrap { position: relative; }
+  .vc .vc-badge { top: -14px; right: -14px; }
+  .vc .cf-deco-card__value { font-size: 1.8rem; }
+  .vc .vc-cap { font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+  .vc .vc-mt { margin-top: 0.3rem; }
+  .vc .vc-mt2, .cf-band .vc-mt2 { margin-top: 1rem; }
+  .vc .vc-mt3, .cf-band .vc-mt3 { margin-top: 1.25rem; }
+  .vc .vc-h2, .cf-band .vc-h2 { margin: 0.35rem 0 1.25rem; }
+  .vc .vc-help { margin: 0 0 1rem; }
+  .vc .vc-seg { width: 100%; }
+  .vc .vc-seg button { flex: 1; }
+  .vc .cf-minicard__big { font-size: 1.3rem; }
+  .vc .vc-tnote { font-size: 0.78rem; color: var(--text-subtle); margin: 0.75rem 0 0; }
+  .vc .vc-td-nota { display: block; font-size: 0.72rem; color: var(--text-subtle); padding-left: 1.15rem; }
+  .vc .vc-td-pax { font-weight: 400; color: var(--text-subtle); font-size: 0.8rem; }
+  .vc .vc-bar--mine { background: linear-gradient(90deg, #16a34a, #4ade80) !important; }
+  .vc .cf-callout code { font-family: var(--font-mono); font-size: 0.85em; }
+
+  .vc-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .vc-2col { grid-template-columns: 0.85fr 1.15fr; } }
+  .cf-band .vc-2col--band { gap: 1.25rem; }
+
+  .vc .vc-hl {
+    padding: 1.4rem 1.5rem; border-radius: var(--radius-lg); color: #fff;
+    background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%);
+    box-shadow: var(--shadow-md);
+  }
+  .vc .vc-hl__eyebrow { color: rgba(255,255,255,0.85); }
+  .vc .vc-hl__title { font-size: 1.3rem; font-weight: 800; line-height: 1.2; margin: 0 0 0.6rem; letter-spacing: -0.015em; }
+  .vc .vc-hl__desc { font-size: 0.82rem; line-height: 1.5; margin: 0; color: rgba(255,255,255,0.86); }
+  .vc .vc-hl__big { font-size: 1.9rem; font-weight: 800; margin: 1.1rem 0 0.15rem; color: #fff; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .cf-band .vc-hl__big { font-size: 2rem; font-weight: 800; color: #fff; margin: 0.9rem 0 0.4rem; font-variant-numeric: tabular-nums; line-height: 1.1; }
+
+    /* El chip mono es nowrap: sin min-width:0 infla el track del grid
+     (min-width:auto en grid items) y mete scroll-x en mobile. */
+  .vc .cf-steps > .cf-step { min-width: 0; }
+.vc .vc-chip {
+    display: inline-block; margin: 0.7rem 0 0; padding: 0.35rem 0.6rem; border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-strong);
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+    overflow-x: auto; max-width: 100%; white-space: nowrap;
+  }
+  .cf-band .vc-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.9rem; }
+  .cf-band .vc-chip--dark { display: inline-block; padding: 0.35rem 0.6rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #e7ecf3; }
+
+  .cf-band .vc-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .vc-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .vc-src { display: grid; gap: 0.5rem; }
+  .cf-band .vc-src__title { font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0 0 0.3rem; }
+  .cf-band .vc-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .vc-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .vc-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .vc-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+</style>

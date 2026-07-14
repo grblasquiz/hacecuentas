@@ -1,16 +1,572 @@
 ---
 export const prerender = true;
-import FeriadosLanding from '../components/FeriadosLanding.astro';
-import { FERIADOS_LATAM_2026 } from '../lib/data/feriados-latam-2026';
 
-const related = [
-  { href: '/dias-entre-dos-fechas', label: 'Días entre dos fechas' },
-  { href: '/calculadora-cuenta-regresiva-dias-faltan', label: 'Cuenta regresiva: cuántos días faltan' },
-  { href: '/cl/calculadora-finiquito-renuncia-chile-articulo-162', label: 'Calculadora de finiquito Chile' },
-  { href: '/cl', label: 'Más calculadoras para Chile' },
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import CalendarGrid from '../components/CalendarGrid.astro';
+import { FERIADOS_LATAM_2026 } from '../lib/data/feriados-latam-2026';
+import { sourceRel } from '../lib/source-rel';
+import '../styles/calc-flagship.css';
+
+// Landing de feriados de Chile — flagship redesign (mockup Martin).
+// STANDALONE a propósito: las otras 4 landings de feriados LATAM siguen usando
+// <FeriadosLanding>, que es compartido; rediseñar acá sin tocar ese componente
+// deja Perú/Colombia/México/Ecuador exactamente como estaban.
+// Cero data inventada: los 16 feriados, el marco legal y las fuentes salen de
+// src/lib/data/feriados-latam-2026.ts (fuente única verificada).
+// Se conservan schema (WebPage/Dataset/BreadcrumbList/FAQPage), licencia CC-BY
+// 4.0 y el bloque "Cómo citar". Domain "health" por el mockup.
+
+const data = FERIADOS_LATAM_2026.chile;
+const { pais, gentilicio, audience, slug, totalLabel, dataAsOf, marco, notaTipo, fuentes, feriados } = data;
+
+const SITE = 'https://hacecuentas.com';
+const URL = `${SITE}/${slug}`;
+const total = feriados.length;
+
+const IRRENUNCIABLE = 'Irrenunciable';
+const irrenunciables = feriados.filter((f) => f.tipo === IRRENUNCIABLE);
+// Fin de semana largo = feriado en lunes o viernes (pega con el finde).
+const findesLargos = feriados.filter((f) => f.dia === 'Lunes' || f.dia === 'Viernes');
+// Puente clásico: feriado en martes → pedís el lunes; en jueves → pedís el viernes.
+const puentes = feriados
+  .filter((f) => f.dia === 'Martes' || f.dia === 'Jueves')
+  .map((f) => ({ ...f, pedir: f.dia === 'Martes' ? 'el lunes anterior' : 'el viernes siguiente' }));
+
+// Próximo feriado — SSR al build; el <script> lo refina client-side.
+const buildHoy = new Date().toISOString().slice(0, 10);
+const pendientes = feriados.filter((f) => f.fecha >= buildHoy);
+const proximo = pendientes[0] ?? null;
+const diasHasta = proximo
+  ? Math.max(0, Math.round((Date.parse(proximo.fecha + 'T00:00:00') - Date.parse(buildHoy + 'T00:00:00')) / 86400000))
+  : null;
+const quedanEnAnio = pendientes.length;
+const diasHastaTxt = diasHasta === 0 ? 'es hoy' : diasHasta === 1 ? 'es mañana' : `faltan ${diasHasta} días`;
+const findesYPuentes = feriados.filter((f) => ['Lunes', 'Viernes', 'Martes', 'Jueves'].includes(f.dia));
+const proxFindeLargo = findesYPuentes.find((f) => f.fecha >= buildHoy) ?? null;
+const proxFindeEsPuente = proxFindeLargo ? (proxFindeLargo.dia === 'Martes' || proxFindeLargo.dia === 'Jueves') : false;
+
+const MESES_C = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const MESES_L = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const fmtFecha = (iso: string) => { const [, m, d] = iso.split('-'); return `${d}/${MESES_C[Number(m) - 1]}`; };
+const fmtLarga = (iso: string) => { const [, m, d] = iso.split('-'); return `${Number(d)} de ${MESES_L[Number(m) - 1]}`; };
+
+// Interlink transaccional: trabajás el feriado → cuánto cobrás.
+const RECARGO_CALC = {
+  href: '/cl/calculadora-horas-extras-chile-recargo-50-ley-40-horas',
+  label: 'Calculadora de horas extra en Chile (recargo 50%)',
+};
+
+const OTROS_FERIADOS = [
+  { slug: 'calculadora-feriados-argentina-2026-calendario', pais: 'Argentina', flag: '🇦🇷' },
+  { slug: 'feriados-colombia-2026', pais: 'Colombia', flag: '🇨🇴' },
+  { slug: 'feriados-peru-2026', pais: 'Perú', flag: '🇵🇪' },
+  { slug: 'feriados-mexico-2026', pais: 'México', flag: '🇲🇽' },
+  { slug: 'feriados-ecuador-2026', pais: 'Ecuador', flag: '🇪🇨' },
 ];
 
 const title = 'Feriados Chile 2026: los 16 días irrenunciables y puentes';
 const description = 'Calendario Chile 2026: los 16 feriados nacionales con la fecha, el día de la semana y cuáles son irrenunciables. Mirá los fines de semana largos y cuál es el próximo feriado.';
+
+const faq = [
+  { q: `¿Cuántos feriados hay en ${pais} en 2026?`, a: `En 2026 hay ${totalLabel} en ${pais}. El detalle con la fecha exacta y el día de la semana de cada uno está en la tabla de esta página.` },
+  { q: `¿Cuáles son los feriados irrenunciables en ${pais} 2026?`, a: `Son ${irrenunciables.length}: ${irrenunciables.map((f) => `${f.nombre} (${fmtLarga(f.fecha)})`).join(', ')}. En esos días el comercio cierra obligatoriamente y no se puede pactar trabajo.` },
+  { q: `¿Cuándo es el próximo feriado en ${pais}?`, a: proximo ? `El próximo feriado en ${pais} es el ${fmtLarga(proximo.fecha)} (${proximo.dia}): ${proximo.nombre}${diasHasta !== null && diasHasta > 1 ? `, faltan ${diasHasta} días` : ''}. Quedan ${quedanEnAnio} feriado${quedanEnAnio === 1 ? '' : 's'} en lo que resta de 2026. La tabla marca el próximo automáticamente según la fecha de hoy.` : `Ya pasaron todos los feriados nacionales de 2026 en ${pais}. Usá el calendario para planificar tus días libres del próximo año.` },
+  { q: `¿Cuántos fines de semana largos hay en 2026?`, a: `En 2026 hay ${findesLargos.length} feriados que caen lunes o viernes en ${pais}, así que arman un fin de semana largo por sí solos.${proxFindeLargo ? ` El próximo es ${proxFindeLargo.dia} ${fmtLarga(proxFindeLargo.fecha)} (${proxFindeLargo.nombre}).` : ''}` },
+  { q: `¿Cómo armo un puente en 2026 en ${pais}?`, a: puentes.length ? `Un puente se arma cuando un feriado cae martes o jueves: pedís el lunes anterior o el viernes siguiente y te quedan 4 días seguidos. En ${pais} hay ${puentes.length} feriado${puentes.length === 1 ? '' : 's'} en martes o jueves en 2026 para aprovechar así. El detalle está en la sección "Puentes 2026" de esta página.` : `En 2026 no hay feriados nacionales en martes o jueves en ${pais}, así que no se arma un puente clásico de 4 días con un solo día de licencia.` },
+  { q: `¿Qué significa que un feriado sea irrenunciable?`, a: `${notaTipo} En el resto de los feriados el comercio puede abrir y se puede pactar trabajo, con el pago que corresponda.` },
+  { q: `¿Estos feriados son nacionales o también hay locales?`, a: `La tabla lista los feriados nacionales de ${pais} (válidos en todo el país). Además puede haber feriados regionales o comunales según la zona, que no están incluidos acá.` },
+  { q: `¿Se trabaja en los feriados? ¿Cómo se paga si trabajo un feriado en ${pais}?`, a: `${notaTipo} Para calcular exactamente cuánto cobrás por trabajar un feriado, usá la ${RECARGO_CALC.label.toLowerCase()}, enlazada en esta página.` },
+  { q: `¿De dónde salen estas fechas?`, a: `De las normas oficiales de ${pais} (${marco}). Verificamos cada fecha y su día de la semana contra el calendario real 2026. Última revisión: ${dataAsOf}.` },
+  { q: `¿Puedo usar este calendario en mi web o trabajo?`, a: `Sí, bajo licencia CC-BY 4.0: reproducí los datos citando la fuente con un enlace a hacecuentas.com. Más abajo está el bloque "Cómo citar".` },
+];
+
+const datasetSchema = {
+  '@type': 'Dataset', '@id': `${URL}#dataset`,
+  name: `Feriados ${pais} 2026 — calendario oficial`,
+  description: `Calendario de feriados nacionales de ${pais} en 2026: fecha observada, día de la semana y tipo de cada feriado. ${marco}.`,
+  url: URL, license: 'https://creativecommons.org/licenses/by/4.0/', isAccessibleForFree: true,
+  inLanguage: 'es', dateModified: dataAsOf, temporalCoverage: '2026',
+  spatialCoverage: { '@type': 'Place', name: pais },
+  creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: SITE },
+  keywords: [`feriados ${pais}`, `feriados ${pais} 2026`, `festivos ${pais} 2026`, 'calendario', 'fines de semana largos'],
+  variableMeasured: ['Fecha del feriado', 'Día de la semana', 'Nombre del feriado', 'Tipo'],
+};
+const schema = { '@context': 'https://schema.org', '@graph': [
+  { '@type': 'WebPage', '@id': `${URL}#webpage`, name: title, description, url: URL, inLanguage: 'es', dateModified: dataAsOf, mainEntity: { '@id': `${URL}#dataset` } },
+  datasetSchema,
+  { '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${SITE}/` },
+    { '@type': 'ListItem', position: 2, name: `Feriados ${pais} 2026`, item: URL } ] },
+  { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+] };
 ---
-<FeriadosLanding data={FERIADOS_LATAM_2026.chile} related={related} title={title} description={description} />
+
+<Layout title={title} description={description} canonical={`/${slug}`} audience={audience} schema={schema} domain="health">
+  <Header slot="header" />
+
+  <main>
+    <div class="cf-page fc" data-domain="health">
+      <nav class="cf-crumb" aria-label="Breadcrumb">
+        <ol>
+          <li><a href="/">Inicio</a></li>
+          <li aria-hidden="true" class="cf-crumb__sep">›</li>
+          <li><a href="/cl">Chile</a></li>
+          <li aria-hidden="true" class="cf-crumb__sep">›</li>
+          <li aria-current="page">Feriados 2026</li>
+        </ol>
+      </nav>
+
+      <header class="cf-hero">
+        <div class="cf-hero__main">
+          <p class="cf-kicker"><span aria-hidden="true">🇨🇱</span> Chile · Calendario oficial 2026</p>
+          <h1 class="cf-h1">Feriados de Chile <span class="cf-yr">2026</span></h1>
+          <p class="cf-sub">Los {total} feriados nacionales con su fecha exacta y día de la semana, cuáles son irrenunciables y dónde están los fines de semana largos.</p>
+          <ul class="cf-pills">
+            <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+            <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Fuentes oficiales</li>
+            <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos abiertos CC-BY 4.0</li>
+          </ul>
+          <p class="fc-updated">
+            Última revisión: <time datetime={dataAsOf}>{dataAsOf}</time> ·
+            Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> (uso libre con atribución)
+          </p>
+        </div>
+        <div class="cf-hero__deco">
+          <div class="fc-deco-wrap">
+            <div class="cf-deco-card" data-proximo>
+              <div class="cf-deco-card__label">Dato principal · próximo feriado</div>
+              <div class="cf-deco-card__value" data-proximo-main>{proximo ? `${proximo.dia} ${fmtLarga(proximo.fecha)}` : 'Sin feriados pendientes'}</div>
+              <div class="cf-deco-card__note"><span data-proximo-nombre>{proximo ? proximo.nombre : '2026 ya terminó su calendario'}</span> · <span data-proximo-days>{proximo ? diasHastaTxt : 'ver 2027'}</span></div>
+            </div>
+            <span class="cf-deco-badge fc-badge" aria-hidden="true">🗓️</span>
+          </div>
+          <div class="cf-deco-sub"><strong>Irrenunciables</strong> <span class="cf-deco-chip">{irrenunciables.length} de {total}</span></div>
+        </div>
+      </header>
+
+      <p class="answer-snippet cf-sr">
+        En 2026, Chile tiene {totalLabel}, de los cuales {irrenunciables.length} son irrenunciables.
+        {proximo ? ` El próximo es ${proximo.dia} ${fmtLarga(proximo.fecha)} (${proximo.nombre}), ${diasHastaTxt}.` : ' Ya pasaron todos los feriados nacionales de 2026.'}
+        Hay {findesLargos.length} fines de semana largos y {puentes.length} puentes aprovechables.
+      </p>
+
+      <div class="cf-quick">
+        <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+        <p class="cf-quick__txt">
+          <strong>Respuesta rápida.</strong> Chile tiene <strong>{totalLabel}</strong> en 2026, {irrenunciables.length} de ellos irrenunciables.
+          {proximo ? <span> El próximo es <strong>{proximo.dia} {fmtLarga(proximo.fecha)}</strong> ({proximo.nombre}), {diasHastaTxt}.</span> : <span> Ya pasaron todos los de este año.</span>}
+        </p>
+        <span class="cf-formula">{findesLargos.length} findes largos · {puentes.length} puentes</span>
+      </div>
+
+      <div class="cf-stats">
+        <div class="cf-stat cf-stat--accent">
+          <div class="cf-stat__label">Feriados 2026</div>
+          <div class="cf-stat__value">{total} días</div>
+          <div class="cf-stat__sub">Calendario nacional completo</div>
+        </div>
+        <div class="cf-stat">
+          <div class="cf-stat__label">Irrenunciables</div>
+          <div class="cf-stat__value">{irrenunciables.length}</div>
+          <div class="cf-stat__sub">El comercio cierra obligatoriamente</div>
+        </div>
+        <div class="cf-stat">
+          <div class="cf-stat__label">Fines de semana largos</div>
+          <div class="cf-stat__value">{findesLargos.length}</div>
+          <div class="cf-stat__sub">Feriados en lunes o viernes</div>
+        </div>
+        <div class="cf-stat">
+          <div class="cf-stat__label">Puentes aprovechables</div>
+          <div class="cf-stat__value">{puentes.length}</div>
+          <div class="cf-stat__sub">Feriados en martes o jueves</div>
+        </div>
+      </div>
+
+      <!-- Datos clave -->
+      <section class="cf-section">
+        <div class="cf-section__head">
+          <div>
+            <p class="cf-eyebrow">Datos clave</p>
+            <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+          </div>
+          <p class="cf-section__lead">Valores de referencia del calendario 2026 y reglas principales para interpretarlo.</p>
+        </div>
+        <div class="cf-cards cf-cards--4">
+          <div class="cf-minicard cf-minicard--dark">
+            <span class="cf-minicard__ico" aria-hidden="true">🔒</span>
+            <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Irrenunciables</p>
+            <div class="cf-minicard__big">{irrenunciables.length} feriados</div>
+            <p class="cf-minicard__desc" style="margin-top:0.3rem">Año Nuevo, 1 de mayo, 18 y 19 de septiembre, y Navidad.</p>
+          </div>
+          <div class="cf-minicard">
+            <span class="cf-minicard__ico" aria-hidden="true">🎉</span>
+            <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Fiestas Patrias</p>
+            <div class="cf-minicard__big">18 y 19/sep</div>
+            <p class="cf-minicard__desc" style="margin-top:0.3rem">Caen viernes y sábado: el 18 arma fin de semana largo.</p>
+          </div>
+          <div class="cf-minicard">
+            <span class="cf-minicard__ico" aria-hidden="true">🌉</span>
+            <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Puentes</p>
+            <div class="cf-minicard__big">{puentes.length} chances</div>
+            <p class="cf-minicard__desc" style="margin-top:0.3rem">Con un solo día de licencia armás 4 días seguidos.</p>
+          </div>
+          <div class="cf-minicard">
+            <span class="cf-minicard__ico" aria-hidden="true">⚖️</span>
+            <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Marco legal</p>
+            <div class="cf-minicard__big">Ley 19.668</div>
+            <p class="cf-minicard__desc" style="margin-top:0.3rem">Feriados legales fijados por ley (Dirección del Trabajo).</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Calendario visual -->
+      <section class="cf-section">
+        <div class="cf-section__head">
+          <div>
+            <p class="cf-eyebrow">El año completo</p>
+            <h2 class="cf-section__title">Calendario Chile 2026 mes a mes</h2>
+          </div>
+          <p class="cf-section__lead">Los {total} feriados marcados en color sobre el año entero. Más abajo, la tabla con fecha, día y tipo.</p>
+        </div>
+        <CalendarGrid feriados={feriados.map((f) => ({ fecha: f.fecha, nombre: f.nombre }))} pais={pais} />
+      </section>
+
+      <!-- Cómo leer el calendario -->
+      <section class="cf-section">
+        <p class="cf-eyebrow">Cómo leer el calendario</p>
+        <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">No todos los feriados valen lo mismo</h2>
+        <div class="fc-2col">
+          <div class="fc-hl">
+            <p class="cf-side-eyebrow">La distinción que importa</p>
+            <p class="fc-hl__title">Irrenunciable no es "feriado común"</p>
+            <p class="fc-hl__desc">En un feriado irrenunciable el comercio cierra por obligación y no se puede pactar trabajo. En el resto, se puede abrir y trabajar con el pago que corresponda.</p>
+            <div class="fc-hl__big">{irrenunciables.length} de {total}</div>
+            <p class="fc-hl__desc">Feriados irrenunciables en 2026</p>
+          </div>
+          <div class="cf-breakdown">
+            <div class="cf-brow">
+              <span class="cf-brow__lbl">Irrenunciables</span>
+              <span class="cf-brow__val">{irrenunciables.length} días</span>
+              <span class="cf-brow__bar"><span style={`width:${Math.round((irrenunciables.length / total) * 100)}%`}></span></span>
+            </div>
+            <p class="fc-note">El comercio cierra: no se puede pactar trabajo.</p>
+            <div class="cf-brow" style="margin-top:1rem">
+              <span class="cf-brow__lbl">Arman fin de semana largo</span>
+              <span class="cf-brow__val">{findesLargos.length} días</span>
+              <span class="cf-brow__bar"><span class="fc-bar--alt" style={`width:${Math.round((findesLargos.length / total) * 100)}%`}></span></span>
+            </div>
+            <p class="fc-note">Caen lunes o viernes y pegan solos con el finde.</p>
+            <div class="cf-brow" style="margin-top:1rem">
+              <span class="cf-brow__lbl">Sirven para puente</span>
+              <span class="cf-brow__val">{puentes.length} días</span>
+              <span class="cf-brow__bar"><span class="fc-bar--mid" style={`width:${Math.round((puentes.length / total) * 100)}%`}></span></span>
+            </div>
+            <p class="fc-note">Caen martes o jueves: con un día de licencia son 4 días.</p>
+            <div class="cf-callout cf-callout--warn" style="margin-top:1.25rem">
+              <span class="cf-callout__ico" aria-hidden="true">⚠️</span>
+              <p>Los feriados que caen sábado o domingo no generan día libre extra: en 2026 hay {feriados.filter((f) => f.dia === 'Sábado' || f.dia === 'Domingo').length} en esa situación.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tabla -->
+      <section class="cf-section" id="tabla">
+        <div class="cf-section__head">
+          <div>
+            <p class="cf-eyebrow">Tabla de referencia</p>
+            <h2 class="cf-section__title">Los {total} feriados, uno por uno</h2>
+          </div>
+          <p class="cf-section__lead">Fecha observada, día de la semana y tipo de cada feriado nacional de 2026.</p>
+        </div>
+        <div class="cf-tablewrap">
+          <table class="cf-table" id="feriados-table">
+            <thead><tr><th>Fecha</th><th>Día</th><th>Feriado</th><th>Tipo</th></tr></thead>
+            <tbody>
+              {feriados.map((f) => (
+                <tr data-fecha={f.fecha} data-nombre={f.nombre}>
+                  <td class="fc-nowrap"><strong>{fmtFecha(f.fecha)}</strong></td>
+                  <td>{f.dia}</td>
+                  <td>{f.nombre}{f.nota && <span class="fc-feriado-nota"> · {f.nota}</span>}<span class="fc-proximo-badge" data-badge hidden>Próximo</span></td>
+                  <td class={f.tipo === IRRENUNCIABLE ? 'cf-td-em' : undefined}>{f.tipo}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {notaTipo && <p class="fc-note" style="margin-top:0.6rem">{notaTipo}</p>}
+      </section>
+
+      <!-- Fines de semana largos y puentes -->
+      <section class="cf-section">
+        <div class="cf-section__head">
+          <div>
+            <p class="cf-eyebrow">Planificá tus días libres</p>
+            <h2 class="cf-section__title">Fines de semana largos y puentes</h2>
+          </div>
+          <p class="cf-section__lead">Usalos como orientación para pedir licencia y estirar el descanso.</p>
+        </div>
+        <div class="cf-cmp">
+          <div class="cf-cmp__col cf-cmp__col--yes">
+            <div class="cf-cmp__head"><span aria-hidden="true">✓</span> Pegan solos con el fin de semana</div>
+            <ul class="cf-cmp__list">
+              {findesLargos.map((f) => (<li><strong>{f.dia} {fmtFecha(f.fecha)}</strong> — {f.nombre}</li>))}
+            </ul>
+          </div>
+          <div class="cf-cmp__col cf-cmp__col--warn">
+            <div class="cf-cmp__head"><span aria-hidden="true">🌉</span> Puentes: 4 días con 1 de licencia</div>
+            <ul class="cf-cmp__list">
+              {puentes.map((f) => (<li><strong>{f.dia} {fmtFecha(f.fecha)}</strong> — {f.nombre}: pedí {f.pedir}.</li>))}
+            </ul>
+          </div>
+        </div>
+        {proxFindeLargo && (
+          <p class="fc-note" style="margin-top:0.9rem">
+            Próximo fin de semana largo: <strong>{proxFindeLargo.dia} {fmtLarga(proxFindeLargo.fecha)}</strong> — {proxFindeLargo.nombre}
+            {proxFindeEsPuente ? ' (armá el puente pidiendo un día)' : ' (pega solo con el fin de semana)'}.
+          </p>
+        )}
+      </section>
+    </div>
+
+    <!-- Banda: trabajar un feriado -->
+    <div class="cf-band cf-band--warm" data-domain="health">
+      <div class="cf-band__inner">
+        <div class="fc-2col">
+          <div class="fc-card">
+            <p class="cf-eyebrow">Atención</p>
+            <h2 class="fc-card__title">¿Te toca trabajar un feriado?</h2>
+            <p class="cf-side-desc">{notaTipo} En los feriados no irrenunciables se puede trabajar, y la legislación laboral reconoce un recargo sobre el valor de la jornada.</p>
+            <div class="cf-callout cf-callout--warn" style="margin-top:1rem">
+              <span class="cf-callout__ico" aria-hidden="true">💰</span>
+              <p>Para saber el monto exacto según tu sueldo y las horas trabajadas, usá la <a href={RECARGO_CALC.href}>{RECARGO_CALC.label}</a>.</p>
+            </div>
+          </div>
+          <div class="cf-side-card cf-side-card--dark">
+            <p class="cf-side-eyebrow">Referencia principal</p>
+            <p class="fc-src__title">Feriados irrenunciables</p>
+            <div class="fc-hl__big" style="margin-top:0.2rem">{irrenunciables.length} de {total}</div>
+            <p class="cf-side-desc">Días en que el comercio cierra obligatoriamente y no se puede pactar trabajo.</p>
+            <div class="fc-chips">
+              {irrenunciables.map((f) => (<span class="fc-chip fc-chip--dark">{fmtFecha(f.fecha)} · {f.nombre}</span>))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cf-page fc" data-domain="health">
+      <!-- FAQ -->
+      <section class="cf-section" id="faq">
+        <p class="cf-eyebrow">Preguntas frecuentes</p>
+        <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+        <div class="cf-faq">
+          {faq.map((f, i) => (
+            <details class="cf-faq__item" open={i === 0}>
+              <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+              <div class="cf-faq__a">{f.a}</div>
+            </details>
+          ))}
+        </div>
+      </section>
+    </div>
+
+    <!-- Banda: fuentes, metodología y datos abiertos -->
+    <div class="cf-band" data-domain="health">
+      <div class="cf-band__inner">
+        <div class="fc-2col">
+          <div class="fc-card">
+            <p class="cf-eyebrow">Fuentes y metodología</p>
+            <h2 class="fc-card__title">Números que podés defender</h2>
+            <p class="cf-side-desc">Las fechas y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026. Cada feriado y su día de la semana fueron verificados contra el calendario real.</p>
+            <p class="fc-cite-lbl">Cómo citar este calendario</p>
+            <pre class="fc-cite"><code>Fuente: Hacé Cuentas — {URL}
+Feriados {pais} 2026 · Licencia CC-BY 4.0</code></pre>
+          </div>
+          <div class="cf-side-card cf-side-card--dark">
+            <p class="cf-side-eyebrow">Fuentes oficiales</p>
+            <p class="fc-src__title">Datos contrastados</p>
+            <div class="fc-src">
+              {fuentes.map((s) => (
+                <a class="fc-src__item" href={s.url} rel={sourceRel(s.url)} target="_blank">
+                  <strong>{s.nombre.split('—')[0].trim()}</strong>
+                  <span>{s.nombre.includes('—') ? s.nombre.split('—').slice(1).join('—').trim() : 'Fuente oficial'}</span>
+                </a>
+              ))}
+              <div class="fc-src__item"><strong>{marco.charAt(0).toUpperCase() + marco.slice(1)}</strong><span>Marco legal de los feriados en {pais}</span></div>
+            </div>
+            <p class="fc-src__foot">● Información revisada en julio de 2026</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cf-page fc" data-domain="health">
+      <!-- Otros países -->
+      <section class="cf-section">
+        <div class="cf-section__head">
+          <div>
+            <p class="cf-eyebrow">Más calendarios</p>
+            <h2 class="cf-section__title">Feriados de otros países en 2026</h2>
+          </div>
+          <p class="cf-section__lead">Mismo formato, con fechas, días de la semana y fines de semana largos.</p>
+        </div>
+        <ul class="fc-paises">
+          {OTROS_FERIADOS.map((p) => (<li><a href={`/${p.slug}`}><span aria-hidden="true">{p.flag}</span> Feriados {p.pais} 2026</a></li>))}
+        </ul>
+      </section>
+
+      <!-- Related -->
+      <section class="cf-section">
+        <p class="cf-eyebrow">Seguí calculando</p>
+        <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Herramientas relacionadas</h2>
+        <div class="cf-related__grid">
+          <a class="cf-relcard" href={RECARGO_CALC.href}>
+            <span class="cf-relcard__ico" aria-hidden="true">💰</span>
+            <span class="cf-relcard__title">Horas extra en Chile</span>
+            <span class="cf-relcard__desc">Calculá el recargo del 50% si te toca trabajar un feriado.</span>
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="cf-relcard" href="/dias-entre-dos-fechas">
+            <span class="cf-relcard__ico" aria-hidden="true">📅</span>
+            <span class="cf-relcard__title">Días entre dos fechas</span>
+            <span class="cf-relcard__desc">Contá cuántos días hay entre el hoy y tu próxima escapada.</span>
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="cf-relcard" href="/calculadora-cuenta-regresiva-dias-faltan">
+            <span class="cf-relcard__ico" aria-hidden="true">⏳</span>
+            <span class="cf-relcard__title">Cuenta regresiva</span>
+            <span class="cf-relcard__desc">Cuántos días faltan para el próximo feriado o evento.</span>
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        </div>
+      </section>
+
+      <section class="cf-ctabar">
+        <div>
+          <p class="cf-ctabar__title">Guardá este calendario.</p>
+          <p class="cf-ctabar__sub">Volvé cuando quieras planificar tu próximo fin de semana largo.</p>
+        </div>
+        <div class="cf-ctabar__actions">
+          <a class="cf-ctabar__btn cf-ctabar__btn--solid" href="/cl">Más calculadoras para Chile</a>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <Footer slot="footer" />
+</Layout>
+
+<script is:inline>
+  // Marca el próximo feriado según la fecha de hoy (client-side → siempre fresco,
+  // aunque el HTML esté cacheado desde un build anterior).
+  (function () {
+    const hoy = new Date();
+    const hoyISO = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-' + String(hoy.getDate()).padStart(2, '0');
+    const rows = Array.prototype.slice.call(document.querySelectorAll('#feriados-table tbody tr'));
+    let prox = null;
+    for (const tr of rows) {
+      const f = tr.getAttribute('data-fecha');
+      if (f && f >= hoyISO) { prox = { fecha: f, row: tr }; break; }
+    }
+    const card = document.querySelector('[data-proximo]');
+    if (!prox) {
+      if (card) {
+        const m = card.querySelector('[data-proximo-main]');
+        const n = card.querySelector('[data-proximo-nombre]');
+        const d = card.querySelector('[data-proximo-days]');
+        if (m) m.textContent = 'Sin feriados pendientes';
+        if (n) n.textContent = '2026 ya terminó su calendario';
+        if (d) d.textContent = 'ver 2027';
+      }
+      return;
+    }
+    // El nombre sale de data-nombre y NO de textContent: la celda también
+    // contiene la nota y el badge "Próximo" (aunque esté hidden, textContent lo incluye).
+    const nombre = prox.row.getAttribute('data-nombre') || '';
+    const dia = prox.row.children[1].textContent.trim();
+    const [, mm, dd] = prox.fecha.split('-');
+    const mesesL = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const dds = Math.max(0, Math.round((Date.parse(prox.fecha + 'T00:00:00') - Date.parse(hoyISO + 'T00:00:00')) / 86400000));
+
+    prox.row.classList.add('fc-proximo-row');
+    // El badge ya viene en el SSR (hidden): así conserva los estilos scopeados,
+    // que un elemento creado con createElement no recibiría.
+    const badge = prox.row.querySelector('[data-badge]');
+    if (badge) badge.removeAttribute('hidden');
+
+    if (card) {
+      const m = card.querySelector('[data-proximo-main]');
+      const n = card.querySelector('[data-proximo-nombre]');
+      const d = card.querySelector('[data-proximo-days]');
+      if (m) m.textContent = dia + ' ' + Number(dd) + ' de ' + mesesL[Number(mm) - 1];
+      if (n) n.textContent = nombre;
+      if (d) d.textContent = dds === 0 ? 'es hoy' : dds === 1 ? 'es mañana' : 'faltan ' + dds + ' días';
+    }
+  })();
+</script>
+
+<style>
+  .fc .fc-updated { font-size: 0.75rem; color: var(--text-subtle); margin: 1rem 0 0; }
+  .fc .fc-updated a { color: var(--accent); }
+  .fc .fc-deco-wrap { position: relative; }
+  .fc .fc-badge { top: -14px; right: -14px; width: 48px; height: 48px; font-size: 1.2rem; }
+  .fc .cf-deco-card__value { font-size: 1.35rem; }
+
+  .fc .fc-note { font-size: 0.75rem; color: var(--text-subtle); margin: 0.15rem 0 0; line-height: 1.5; }
+  .fc .fc-nowrap { white-space: nowrap; }
+  .fc .fc-feriado-nota { color: var(--text-subtle); font-size: 0.8rem; }
+  .fc .fc-bar--alt { background: linear-gradient(90deg, #f59e0b, #fb923c) !important; }
+  .fc .fc-bar--mid { background: linear-gradient(90deg, #8b5cf6, #a78bfa) !important; }
+
+  /* Fila del próximo feriado (la marca el script) */
+  .fc tr.fc-proximo-row { background: color-mix(in srgb, var(--accent) 10%, transparent) !important; }
+  .fc .fc-proximo-badge {
+    display: inline-block; margin-left: 0.5rem; padding: 0.05rem 0.45rem; border-radius: 0.4rem;
+    font-size: 0.65rem; font-weight: 800; color: #fff; background: var(--accent); vertical-align: middle;
+  }
+  .fc .fc-proximo-badge[hidden] { display: none; }
+
+  .fc .fc-chip, .cf-band .fc-chip {
+    display: inline-block; padding: 0.3rem 0.6rem; border-radius: var(--radius-sm);
+    background: var(--bg-soft); border: 1px solid var(--border);
+    font-size: 0.72rem; font-weight: 700; color: var(--accent-strong);
+  }
+  .fc-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+  .cf-band .fc-chip--dark { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.14); color: #e7ecf3; }
+
+  .fc-2col, .cf-band .fc-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .fc-2col, .cf-band .fc-2col { grid-template-columns: 0.85fr 1.15fr; } }
+
+  .fc .fc-hl { padding: 1.5rem 1.6rem; border-radius: var(--radius-lg); color: #fff; background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%); }
+  .fc .fc-hl .cf-side-eyebrow { color: rgba(255,255,255,0.75); }
+  .fc .fc-hl__title { font-size: 1.3rem; font-weight: 800; margin: 0 0 0.5rem; line-height: 1.2; letter-spacing: -0.015em; }
+  .fc .fc-hl__desc { font-size: 0.82rem; color: rgba(255,255,255,0.8); line-height: 1.5; margin: 0; }
+  .fc .fc-hl__big { font-size: 1.9rem; font-weight: 800; margin: 1.1rem 0 0.15rem; letter-spacing: -0.02em; }
+  .cf-band .fc-hl__big { font-size: 2rem; font-weight: 800; color: #fff; margin: 0 0 0.2rem; letter-spacing: -0.02em; }
+
+  .fc .fc-paises { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: 0.5rem; }
+  @media (min-width: 640px) { .fc .fc-paises { grid-template-columns: repeat(3, 1fr); } }
+  .fc .fc-paises a {
+    display: flex; align-items: center; gap: 0.5rem; padding: 0.8rem 1rem;
+    border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card);
+    color: var(--text); text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: border-color 0.15s, transform 0.15s;
+  }
+  .fc .fc-paises a:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+
+  .cf-band .fc-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .fc-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .fc-card a { color: var(--accent); font-weight: 700; }
+  .cf-band .fc-cite-lbl { font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-subtle); margin: 1.25rem 0 0.4rem; }
+  .cf-band .fc-cite { margin: 0; padding: 0.6rem 0.75rem; border-radius: var(--radius-sm); background: var(--bg-soft); border: 1px solid var(--border); overflow-x: auto; }
+  .cf-band .fc-cite code { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-subtle); white-space: pre-wrap; }
+  .cf-band .fc-src__title { font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 0.9rem; }
+  .cf-band .fc-src { display: grid; gap: 0.5rem; }
+  .cf-band .fc-src__item { display: block; padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); text-decoration: none; }
+  .cf-band a.fc-src__item:hover { background: rgba(255,255,255,0.11); }
+  .cf-band .fc-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .fc-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .fc-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+</style>

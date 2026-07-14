@@ -1,0 +1,705 @@
+---
+// Flagship redesign de la calc "indemnización por despido sin causa" (mockup Martin).
+// Los números salen del motor real (src/lib/formulas/indemnizacion.ts): Art. 245 LCT
+// (mejor remuneración × años computables, fracción > 3 meses suma 1 año), tope de
+// convenio con piso Vizzoti (67%), preaviso Art. 231, integración del mes Art. 233,
+// SAC proporcional Art. 123 y vacaciones no gozadas Arts. 150/155/156.
+// Domain "health" (rojo/crimson) por el mockup, no por la categoría (finanzas→money).
+// Header/footer = los globales del sitio.
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// ── Réplica EXACTA de src/lib/formulas/indemnizacion.ts ─────────────────────
+function indem(sueldo: number, anios: number, meses: number, diaDespido: number, mesDespido: number, tope: number) {
+  anios = Math.max(0, anios || 0);
+  meses = Math.max(0, Math.min(11, meses || 0));
+  diaDespido = Math.max(1, Math.min(31, diaDespido || 15));
+  tope = Math.max(0, tope || 0);
+
+  const antiguedadTotalMeses = anios * 12 + meses;
+  const aniosComputables = meses > 3 ? anios + 1 : anios;
+
+  // Art. 245 + fallo Vizzoti: si el tope reduce la base más del 33%, se usa el 67%.
+  let baseArt245 = sueldo;
+  let vizzotiAplicado = false;
+  if (tope > 0) {
+    const minConVizzoti = sueldo * 0.67;
+    if (tope < minConVizzoti) { baseArt245 = minConVizzoti; vizzotiAplicado = true; }
+    else baseArt245 = tope;
+  }
+  const antiguedad = baseArt245 * aniosComputables;
+
+  // Preaviso Art. 231: 15 días (<3m) / 1 mes (3m-5a) / 2 meses (>5a)
+  let mesesPreaviso: number;
+  if (antiguedadTotalMeses < 3) mesesPreaviso = 0.5;
+  else if (antiguedadTotalMeses <= 60) mesesPreaviso = 1;
+  else mesesPreaviso = 2;
+  const preaviso = sueldo * mesesPreaviso;
+  const sacPreaviso = preaviso / 12;
+
+  // Integración mes de despido Art. 233 (meses de 30 días)
+  const diasFaltantes = Math.max(0, 30 - diaDespido);
+  const integracionMes = (sueldo / 30) * diasFaltantes;
+  const sacIntegracion = integracionMes / 12;
+
+  // SAC proporcional del semestre en curso Art. 123
+  const mesEnSemestre = ((mesDespido - 1) % 6) + 1;
+  const diasSemestre = Math.min(180, (mesEnSemestre - 1) * 30 + diaDespido);
+  const sacProporcional = (sueldo / 2) * (diasSemestre / 180);
+
+  // Vacaciones no gozadas proporcionales (Art. 150 días/año, Art. 155 jornal ÷25)
+  let diasVacAnual: number;
+  if (antiguedadTotalMeses <= 60) diasVacAnual = 14;
+  else if (antiguedadTotalMeses <= 120) diasVacAnual = 21;
+  else if (antiguedadTotalMeses <= 240) diasVacAnual = 28;
+  else diasVacAnual = 35;
+  const diasVacProp = (diasVacAnual * Math.min(360, (mesDespido - 1) * 30 + diaDespido)) / 360;
+  const vacacionesProporcionales = (sueldo / 25) * diasVacProp;
+  const sacVacaciones = vacacionesProporcionales / 12;
+
+  const total = antiguedad + preaviso + sacPreaviso + integracionMes + sacIntegracion +
+    sacProporcional + vacacionesProporcionales + sacVacaciones;
+
+  // El motor redondea CADA componente por separado (y el total sobre el float).
+  // Replicamos ese orden para que lo que mostramos sean literalmente sus salidas y
+  // los tiles reconcilien con el total (agrupar floats desviaba $1).
+  const rAnt = Math.round(antiguedad);
+  const rPre = Math.round(preaviso), rSacPre = Math.round(sacPreaviso);
+  const rInt = Math.round(integracionMes), rSacInt = Math.round(sacIntegracion);
+  const rSacProp = Math.round(sacProporcional);
+  const rVac = Math.round(vacacionesProporcionales), rSacVac = Math.round(sacVacaciones);
+
+  return {
+    antiguedad: rAnt, preaviso: rPre, sacPreaviso: rSacPre,
+    integracionMes: rInt, sacIntegracion: rSacInt, sacProporcional: rSacProp,
+    vacacionesProporcionales: rVac, sacVacaciones: rSacVac,
+    total: Math.round(total), aniosComputables, baseArt245: Math.round(baseArt245),
+    vizzotiAplicado, mesesPreaviso, diasVacAnual,
+    // agrupaciones para los tiles / barras (sobre los componentes ya redondeados)
+    gPreaviso: rPre + rSacPre,
+    gIntegracion: rInt + rSacInt,
+    gSacVac: rSacProp + rVac + rSacVac,
+  };
+}
+
+const fmtAr = (n: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Math.round(n));
+const pct = (n: number, base: number) => base > 0 ? ((n / base) * 100).toFixed(1).replace('.', ',') + '%' : '0%';
+const millones = (n: number) => '$' + (n / 1_000_000).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + ' M';
+
+// Caso cargado por defecto en el panel
+const INIT = { sueldo: 2_000_000, anios: 5, meses: 4, dia: 15, mes: 6, tope: 0 };
+const init = indem(INIT.sueldo, INIT.anios, INIT.meses, INIT.dia, INIT.mes, INIT.tope);
+
+// Tabla de referencia: mismo sueldo/fecha, distinta antigüedad (computada con la fórmula)
+const refRows = [
+  { label: '1 año', a: 1, m: 0 },
+  { label: '3 años', a: 3, m: 0 },
+  { label: '5 años', a: 5, m: 0 },
+  { label: '5 años y 4 meses', a: 5, m: 4 },
+  { label: '10 años', a: 10, m: 0 },
+  { label: '20 años', a: 20, m: 0 },
+].map((r) => ({ ...r, ...indem(INIT.sueldo, r.a, r.m, INIT.dia, INIT.mes, INIT.tope) }));
+
+const MESES_LBL = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+const convenioOpts = (calc.fields || []).find((f: any) => f.id === 'convenio')?.options || [];
+
+const faq = calc.faq || [];
+const sources = (calc.sources || []).slice(0, 3);
+const explanationHtml = calc.explanation ? md(calc.explanation) : '';
+---
+
+<div class="cf-page ix" data-domain="health">
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/sueldos-y-trabajo">Sueldos y trabajo</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Indemnización por despido</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">⚖️</span> Argentina · Despido sin causa · 2026</p>
+      <h1 class="cf-h1">Calculadora de <span class="cf-yr">indemnización por despido</span></h1>
+      <p class="cf-sub">Estimá cuánto te corresponde cobrar si te despiden sin causa: antigüedad, preaviso, integración del mes, SAC y vacaciones no gozadas.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">📋</span> Liquidación final</span>
+      <div class="ix-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="ix-deco-val">{millones(init.total)}</div>
+          <div class="cf-deco-card__note">Total bruto estimado</div>
+        </div>
+        <span class="cf-deco-badge ix-badge" aria-hidden="true">⚖️</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Antigüedad (Art. 245)</strong> <span class="cf-deco-chip" id="ix-deco-chip">{pct(init.antiguedad, init.total)}</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">Contanos tu caso</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="ix-sueldo">Mejor sueldo bruto del último año</label><span class="cf-hint">Normal y habitual</span></div>
+        <div class="ix-money"><span class="ix-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="ix-sueldo" value="2.000.000" /></div>
+        <p class="cf-help">La mejor remuneración mensual, normal y habitual. No incluyas SAC, vacaciones ni bonos que no sean de pago mensual (Art. 245 LCT, texto s/ Ley 27.802).</p>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="ix-anios">Años de antigüedad</label></div>
+          <input class="cf-input" type="number" inputmode="numeric" id="ix-anios" value="5" min="0" max="50" step="1" />
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="ix-meses">Meses sueltos</label><span class="cf-hint">0 a 11</span></div>
+          <input class="cf-input" type="number" inputmode="numeric" id="ix-meses" value="4" min="0" max="11" step="1" />
+        </div>
+      </div>
+      <p class="cf-help" style="margin:-0.6rem 0 1.1rem">Una fracción mayor a 3 meses cuenta como un año entero (Art. 245 LCT).</p>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="ix-dia">Día del despido</label></div>
+          <input class="cf-input" type="number" inputmode="numeric" id="ix-dia" value="15" min="1" max="31" step="1" />
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="ix-mes">Mes del despido</label></div>
+          <select class="cf-input" id="ix-mes">
+            {MESES_LBL.map((m, i) => (<option value={String(i + 1)} selected={i + 1 === INIT.mes}>{m}</option>))}
+          </select>
+        </div>
+      </div>
+      <p class="cf-help" style="margin:-0.6rem 0 1.1rem">Definen la integración del mes, el SAC proporcional y las vacaciones del año en curso.</p>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="ix-convenio">Convenio (CCT)</label><span class="cf-hint">Tope Art. 245</span></div>
+        <select class="cf-input" id="ix-convenio">
+          {convenioOpts.map((o: any) => (<option value={o.value} selected={String(o.value) === '0'}>{o.label}</option>))}
+        </select>
+        <p class="cf-help">Topes de referencia aproximados 2026. El vigente lo fija la última Resolución de tu CCT: verificalo en argentina.gob.ar/trabajo/topes.</p>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="ix-tope">Tope exacto (override)</label><span class="cf-hint">Opcional</span></div>
+        <div class="ix-money"><span class="ix-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="ix-tope" value="0" /></div>
+        <p class="cf-help">Dejá en 0 para no aplicar tope. Si el tope reduce tu base más del 33%, igual se aplica Vizzoti (67% de tu sueldo real).</p>
+      </div>
+
+      <button class="cf-primary" id="ix-calc-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Ejemplos:</span>
+        <button class="cf-sc" type="button" data-ej="1000000">$1 M</button>
+        <button class="cf-sc" type="button" data-ej="1500000">$1,5 M</button>
+        <button class="cf-sc" type="button" data-ej="2500000">$2,5 M</button>
+        <button class="cf-sc" type="button" data-ej="3500000">$3,5 M</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="ix-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="ix-big">{fmtAr(init.total)}</div>
+      <div class="cf-result__biglabel">Indemnización total bruta</div>
+      <p class="cf-result__sub" id="ix-sub">{init.aniosComputables} años computables · base {fmtAr(init.baseArt245)}</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="ix-t-ant">{fmtAr(init.antiguedad)}</div><div class="cf-tile__label">Antigüedad · Art. 245</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="ix-t-pre">{fmtAr(init.gPreaviso)}</div><div class="cf-tile__label">Preaviso + SAC</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="ix-t-int">{fmtAr(init.gIntegracion)}</div><div class="cf-tile__label">Integración + SAC</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="ix-t-sac">{fmtAr(init.gSacVac)}</div><div class="cf-tile__label">SAC prop. + vacaciones</div></div>
+      </div>
+      <p class="cf-result__sub ix-vizzoti" id="ix-vizzoti" hidden>⚖️ El tope de convenio reducía la base más del 33%: por el fallo <strong>Vizzoti</strong> se tomó el 67% de tu sueldo (<span id="ix-vizzoti-base"></span>).</p>
+      <div class="cf-result__formula" id="ix-formula">{fmtAr(init.baseArt245)} × {init.aniosComputables} años = {fmtAr(init.antiguedad)}</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="ix-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="ix-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt"><strong>Respuesta rápida.</strong> Con un mejor sueldo de <strong>{fmtAr(INIT.sueldo)}</strong> y {INIT.anios} años y {INIT.meses} meses de antigüedad, la indemnización total ronda <strong id="ix-quick">{fmtAr(init.total)}</strong> brutos, de los cuales {fmtAr(init.antiguedad)} son de antigüedad.</p>
+    <span class="cf-formula">mejor sueldo × años computables</span>
+  </div>
+
+  <!-- 5 · Datos clave -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">📆</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Años computables</p>
+        <div class="cf-minicard__big" id="ix-k-anios">{init.aniosComputables}</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">La fracción mayor a 3 meses suma un año entero.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">💼</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Base del Art. 245</p>
+        <div class="cf-minicard__big" id="ix-k-base">{fmtAr(init.baseArt245)}</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Mejor remuneración mensual, con tope y piso Vizzoti si aplican.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">📨</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Preaviso</p>
+        <div class="cf-minicard__big" id="ix-k-preaviso">2 meses</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">15 días hasta 3 meses, 1 mes hasta 5 años, 2 meses después.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🏖️</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Vacaciones por año</p>
+        <div class="cf-minicard__big" id="ix-k-vac">21 días</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">14 / 21 / 28 / 35 días según antigüedad (Art. 150 LCT).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · Cómo leer el resultado -->
+  <section class="cf-section">
+    <div class="ix-2col">
+      <div class="ix-hl">
+        <p class="cf-side-eyebrow ix-hl__eyebrow">Cómo leer el resultado</p>
+        <p class="ix-hl__title">La antigüedad es el componente que manda</p>
+        <p class="ix-hl__desc">El Art. 245 concentra la mayor parte de la liquidación y crece un sueldo entero por cada año trabajado. Los demás rubros dependen de la fecha del despido, no de la antigüedad.</p>
+        <div class="ix-hl__big" id="ix-hl-big">{pct(init.antiguedad, init.total)}</div>
+        <p class="ix-hl__note">del total corresponde a la antigüedad</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-breakdown__big" id="ix-bd-total">{fmtAr(init.total)}</div>
+        <div class="cf-brow">
+          <span class="cf-brow__lbl">Antigüedad (Art. 245)</span>
+          <span class="cf-brow__val" id="ix-bd-ant">{fmtAr(init.antiguedad)}</span>
+          <span class="cf-brow__bar"><span id="ix-bd-ant-bar" style={`width:${Math.round(init.antiguedad / init.total * 100)}%`}></span></span>
+        </div>
+        <div class="cf-brow" style="margin-top:1rem">
+          <span class="cf-brow__lbl">Preaviso + integración del mes</span>
+          <span class="cf-brow__val" id="ix-bd-pre">{fmtAr(init.gPreaviso + init.gIntegracion)}</span>
+          <span class="cf-brow__bar"><span id="ix-bd-pre-bar" style={`width:${Math.round((init.gPreaviso + init.gIntegracion) / init.total * 100)}%`}></span></span>
+        </div>
+        <div class="cf-brow" style="margin-top:1rem">
+          <span class="cf-brow__lbl">SAC proporcional + vacaciones</span>
+          <span class="cf-brow__val" id="ix-bd-sac">{fmtAr(init.gSacVac)}</span>
+          <span class="cf-brow__bar"><span id="ix-bd-sac-bar" style={`width:${Math.round(init.gSacVac / init.total * 100)}%`}></span></span>
+        </div>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1.25rem">
+          <span class="cf-callout__ico" aria-hidden="true">⚖️</span>
+          <p><strong>El tope de convenio puede recortar la base.</strong> Si el tope del CCT reduce tu mejor sueldo más del 33%, el fallo Vizzoti fija un piso del 67% de tu remuneración real.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · Paso a paso -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">Tu mejor sueldo bruto normal y habitual del último año, la antigüedad y la fecha exacta del despido.</p>
+        <p class="ix-chip" id="ix-s1">{fmtAr(INIT.sueldo)} · {INIT.anios}a {INIT.meses}m</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">Base del Art. 245 × años computables, más preaviso, integración del mes, SAC proporcional y vacaciones.</p>
+        <p class="ix-chip" id="ix-s2">{fmtAr(init.baseArt245)} × {init.aniosComputables} = {fmtAr(init.antiguedad)}</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">Es un total bruto. Del preaviso y la integración se descuentan aportes; la indemnización del Art. 245 está exenta.</p>
+        <p class="ix-chip" id="ix-s3">Total {fmtAr(init.total)}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · Referencias -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Antigüedad</th><th>Años computables</th><th>Antigüedad (Art. 245)</th><th>Total estimado</th></tr></thead>
+        <tbody>
+          {refRows.map((r) => (
+            <tr>
+              <td>{r.label}</td>
+              <td>{r.aniosComputables}</td>
+              <td>{fmtAr(r.antiguedad)}</td>
+              <td class="cf-td-em">{fmtAr(r.total)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="ix-tnote">Escenarios calculados con un mejor sueldo bruto de {fmtAr(INIT.sueldo)}, despido el {INIT.dia} de {MESES_LBL[INIT.mes - 1].toLowerCase()} y sin tope de convenio.</p>
+  </section>
+</div>
+
+<!-- 9 · Banda atención -->
+<div class="cf-band cf-band--warm" data-domain="health">
+  <div class="cf-band__inner">
+    <div class="ix-2col">
+      <div class="ix-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="ix-card__title">El total bruto no es lo que cobrás en mano</h2>
+        <p class="cf-side-desc">La indemnización por antigüedad del Art. 245 está exenta de Ganancias y de aportes. Pero el preaviso, la integración del mes, el SAC proporcional y las vacaciones no gozadas sí son remuneratorios: se les descuentan aportes y, según el monto, Ganancias.</p>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1rem">
+          <span class="cf-callout__ico" aria-hidden="true">📌</span>
+          <p>Si el trabajo no estaba registrado o el pago se demora, las Leyes 25.323 y 24.013 habilitan multas e incrementos que esta calculadora no incluye. Consultá con un abogado laboral.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="ix-ref__title">Base del Art. 245</p>
+        <div class="ix-ref__big" id="ix-ref-big">{fmtAr(init.baseArt245)}</div>
+        <p class="cf-side-desc" id="ix-ref-sub">Mejor remuneración mensual, normal y habitual del último año</p>
+        <div class="ix-chips">
+          <span class="ix-chips__i">Art. 245 LCT</span>
+          <span class="ix-chips__i">Fallo Vizzoti</span>
+          <span class="ix-chips__i">Ley 27.802</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page ix" data-domain="health">
+  <!-- 10 · FAQ -->
+  {faq.length > 0 && (
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {explanationHtml && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">En detalle</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cómo se calcula la indemnización</h2>
+      <div class="cf-prose" set:html={explanationHtml} />
+    </section>
+  )}
+</div>
+
+<!-- 11 · Banda fuentes -->
+<div class="cf-band" data-domain="health">
+  <div class="cf-band__inner">
+    <div class="ix-2col">
+      <div>
+        <p class="cf-eyebrow">Fuentes y metodología</p>
+        <h2 class="cf-section__title" style="margin:0.35rem 0 0.6rem">Números que podés defender</h2>
+        <p class="cf-section__lead" style="max-width:52ch">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026.</p>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Marco normativo</p>
+        <div class="ix-src">
+          {sources.map((s: any) => (
+            <div class="ix-src__item">
+              <strong>{String(s.name).split('—')[0].trim()}</strong>
+              <span>{s.publisher}{s.date ? ` · ${s.date}` : ''}</span>
+            </div>
+          ))}
+        </div>
+        <p class="ix-src__foot">● Información revisada en julio de 2026</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page ix" data-domain="health">
+  <!-- 12 · Related -->
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🧮'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('—')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- 13 · CTA bar -->
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="ix-share2">Copiar enlace</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.ix');
+    if (!root) return;
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Math.round(n));
+    const mill = (n) => '$' + (n / 1e6).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + ' M';
+    const pct = (n, base) => base > 0 ? ((n / base) * 100).toFixed(1).replace('.', ',') + '%' : '0%';
+
+    const sueldoEl = $('ix-sueldo'), aniosEl = $('ix-anios'), mesesEl = $('ix-meses'),
+      diaEl = $('ix-dia'), mesEl = $('ix-mes'), convEl = $('ix-convenio'), topeEl = $('ix-tope');
+
+    function num(el) { return Number((el.value || '').replace(/\D/g, '')) || 0; }
+    function fmtThousands(v) { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('es-AR') : ''; }
+
+    // Réplica EXACTA de src/lib/formulas/indemnizacion.ts
+    function indem(sueldo, anios, meses, diaDespido, mesDespido, tope) {
+      anios = Math.max(0, anios || 0);
+      meses = Math.max(0, Math.min(11, meses || 0));
+      diaDespido = Math.max(1, Math.min(31, diaDespido || 15));
+      tope = Math.max(0, tope || 0);
+
+      const antiguedadTotalMeses = anios * 12 + meses;
+      const aniosComputables = meses > 3 ? anios + 1 : anios;
+
+      let baseArt245 = sueldo, vizzotiAplicado = false;
+      if (tope > 0) {
+        const minConVizzoti = sueldo * 0.67;
+        if (tope < minConVizzoti) { baseArt245 = minConVizzoti; vizzotiAplicado = true; }
+        else baseArt245 = tope;
+      }
+      const antiguedad = baseArt245 * aniosComputables;
+
+      let mesesPreaviso;
+      if (antiguedadTotalMeses < 3) mesesPreaviso = 0.5;
+      else if (antiguedadTotalMeses <= 60) mesesPreaviso = 1;
+      else mesesPreaviso = 2;
+      const preaviso = sueldo * mesesPreaviso;
+      const sacPreaviso = preaviso / 12;
+
+      const diasFaltantes = Math.max(0, 30 - diaDespido);
+      const integracionMes = (sueldo / 30) * diasFaltantes;
+      const sacIntegracion = integracionMes / 12;
+
+      const mesEnSemestre = ((mesDespido - 1) % 6) + 1;
+      const diasSemestre = Math.min(180, (mesEnSemestre - 1) * 30 + diaDespido);
+      const sacProporcional = (sueldo / 2) * (diasSemestre / 180);
+
+      let diasVacAnual;
+      if (antiguedadTotalMeses <= 60) diasVacAnual = 14;
+      else if (antiguedadTotalMeses <= 120) diasVacAnual = 21;
+      else if (antiguedadTotalMeses <= 240) diasVacAnual = 28;
+      else diasVacAnual = 35;
+      const diasVacProp = (diasVacAnual * Math.min(360, (mesDespido - 1) * 30 + diaDespido)) / 360;
+      const vacacionesProporcionales = (sueldo / 25) * diasVacProp;
+      const sacVacaciones = vacacionesProporcionales / 12;
+
+      const total = antiguedad + preaviso + sacPreaviso + integracionMes + sacIntegracion +
+        sacProporcional + vacacionesProporcionales + sacVacaciones;
+
+      // Mismo orden de redondeo que el motor (cada componente aparte, total sobre el float).
+      const rAnt = Math.round(antiguedad);
+      const rPre = Math.round(preaviso), rSacPre = Math.round(sacPreaviso);
+      const rInt = Math.round(integracionMes), rSacInt = Math.round(sacIntegracion);
+      const rSacProp = Math.round(sacProporcional);
+      const rVac = Math.round(vacacionesProporcionales), rSacVac = Math.round(sacVacaciones);
+
+      return {
+        antiguedad: rAnt, preaviso: rPre, sacPreaviso: rSacPre,
+        integracionMes: rInt, sacIntegracion: rSacInt, sacProporcional: rSacProp,
+        vacacionesProporcionales: rVac, sacVacaciones: rSacVac,
+        total: Math.round(total), aniosComputables, baseArt245: Math.round(baseArt245),
+        vizzotiAplicado, mesesPreaviso, diasVacAnual,
+        gPreaviso: rPre + rSacPre,
+        gIntegracion: rInt + rSacInt,
+        gSacVac: rSacProp + rVac + rSacVac,
+      };
+    }
+
+    function state() {
+      const sueldo = num(sueldoEl);
+      const anios = Math.max(0, Number(aniosEl.value) || 0);
+      const meses = Math.max(0, Math.min(11, Number(mesesEl.value) || 0));
+      const dia = Math.max(1, Math.min(31, Number(diaEl.value) || 15));
+      const mes = Number(mesEl.value) || 6;
+      // El motor prioriza el override manual; si está en 0 usa el tope del CCT elegido.
+      const topeManual = num(topeEl);
+      const topeConv = Number(convEl.value) || 0;
+      const tope = topeManual > 0 ? topeManual : topeConv;
+      return { sueldo, anios, meses, dia, mes, tope };
+    }
+
+    function render() {
+      const s = state();
+      const ok = s.sueldo > 0 && (s.anios > 0 || s.meses > 0);
+      const r = indem(s.sueldo, s.anios, s.meses, s.dia, s.mes, s.tope);
+
+      if (!ok) {
+        $('ix-big').textContent = '—';
+        $('ix-sub').textContent = s.sueldo <= 0 ? 'Ingresá el sueldo bruto mensual' : 'Ingresá la antigüedad laboral';
+        return;
+      }
+
+      $('ix-big').textContent = fmt(r.total);
+      $('ix-sub').textContent = r.aniosComputables + (r.aniosComputables === 1 ? ' año computable · base ' : ' años computables · base ') + fmt(r.baseArt245);
+      $('ix-t-ant').textContent = fmt(r.antiguedad);
+      $('ix-t-pre').textContent = fmt(r.gPreaviso);
+      $('ix-t-int').textContent = fmt(r.gIntegracion);
+      $('ix-t-sac').textContent = fmt(r.gSacVac);
+      $('ix-formula').textContent = fmt(r.baseArt245) + ' × ' + r.aniosComputables + (r.aniosComputables === 1 ? ' año = ' : ' años = ') + fmt(r.antiguedad);
+
+      const vz = $('ix-vizzoti');
+      vz.hidden = !r.vizzotiAplicado;
+      if (r.vizzotiAplicado) $('ix-vizzoti-base').textContent = fmt(r.baseArt245);
+
+      $('ix-quick').textContent = fmt(r.total);
+      $('ix-deco-val').textContent = mill(r.total);
+      $('ix-deco-chip').textContent = pct(r.antiguedad, r.total);
+
+      // Datos clave
+      $('ix-k-anios').textContent = String(r.aniosComputables);
+      $('ix-k-base').textContent = fmt(r.baseArt245);
+      $('ix-k-preaviso').textContent = r.mesesPreaviso === 0.5 ? '15 días' : (r.mesesPreaviso === 1 ? '1 mes' : '2 meses');
+      $('ix-k-vac').textContent = r.diasVacAnual + ' días';
+
+      // Breakdown
+      $('ix-hl-big').textContent = pct(r.antiguedad, r.total);
+      $('ix-bd-total').textContent = fmt(r.total);
+      $('ix-bd-ant').textContent = fmt(r.antiguedad);
+      $('ix-bd-pre').textContent = fmt(r.gPreaviso + r.gIntegracion);
+      $('ix-bd-sac').textContent = fmt(r.gSacVac);
+      $('ix-bd-ant-bar').style.width = (r.total > 0 ? Math.round(r.antiguedad / r.total * 100) : 0) + '%';
+      $('ix-bd-pre-bar').style.width = (r.total > 0 ? Math.round((r.gPreaviso + r.gIntegracion) / r.total * 100) : 0) + '%';
+      $('ix-bd-sac-bar').style.width = (r.total > 0 ? Math.round(r.gSacVac / r.total * 100) : 0) + '%';
+
+      // Referencia principal (banda)
+      $('ix-ref-big').textContent = fmt(r.baseArt245);
+      $('ix-ref-sub').textContent = r.vizzotiAplicado
+        ? 'Piso Vizzoti: 67% de tu mejor remuneración mensual'
+        : (s.tope > 0 ? 'Tope de convenio aplicado sobre la mejor remuneración' : 'Mejor remuneración mensual, normal y habitual del último año');
+
+      // Chips de los pasos
+      $('ix-s1').textContent = fmt(s.sueldo) + ' · ' + s.anios + 'a ' + s.meses + 'm';
+      $('ix-s2').textContent = fmt(r.baseArt245) + ' × ' + r.aniosComputables + ' = ' + fmt(r.antiguedad);
+      $('ix-s3').textContent = 'Total ' + fmt(r.total);
+    }
+
+    sueldoEl.addEventListener('input', () => { sueldoEl.value = fmtThousands(sueldoEl.value); render(); });
+    topeEl.addEventListener('input', () => { topeEl.value = fmtThousands(topeEl.value); render(); });
+    [aniosEl, mesesEl, diaEl].forEach((el) => el.addEventListener('input', render));
+    [mesEl, convEl].forEach((el) => el.addEventListener('change', render));
+    $('ix-calc-btn').addEventListener('click', render);
+    document.querySelectorAll('.ix [data-ej]').forEach((b) => b.addEventListener('click', () => { sueldoEl.value = fmtThousands(b.getAttribute('data-ej')); render(); }));
+
+    function summary() {
+      const s = state();
+      const r = indem(s.sueldo, s.anios, s.meses, s.dia, s.mes, s.tope);
+      return `Indemnización por despido sin causa (AR): total bruto ${fmt(r.total)} con mejor sueldo ${fmt(s.sueldo)} y ${s.anios} años ${s.meses} meses de antigüedad (${r.aniosComputables} computables). Antigüedad Art. 245 ${fmt(r.antiguedad)}, preaviso + SAC ${fmt(r.gPreaviso)}, integración + SAC ${fmt(r.gIntegracion)}, SAC prop. + vacaciones ${fmt(r.gSacVac)}. — hacecuentas.com`;
+    }
+    function shareUrl() {
+      const s = state();
+      return `${location.origin}${location.pathname}?sueldo=${s.sueldo}&anios=${s.anios}&meses=${s.meses}&dia=${s.dia}&mes=${s.mes}&tope=${num(topeEl)}`;
+    }
+    function copy(t, btn) { navigator.clipboard?.writeText(t).then(() => { const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => btn.innerHTML = o, 1500); }); }
+    $('ix-copy').addEventListener('click', (e) => copy(summary(), e.currentTarget));
+    $('ix-detail').addEventListener('click', () => { document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' }); });
+    const s2 = $('ix-share2'); if (s2) s2.addEventListener('click', (e) => copy(shareUrl(), e.currentTarget));
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('sueldo')) sueldoEl.value = fmtThousands(q.get('sueldo'));
+    if (q.get('anios')) aniosEl.value = q.get('anios');
+    if (q.get('meses')) mesesEl.value = q.get('meses');
+    if (q.get('dia')) diaEl.value = q.get('dia');
+    if (q.get('mes')) mesEl.value = q.get('mes');
+    if (q.get('tope')) topeEl.value = fmtThousands(q.get('tope'));
+    render();
+  })();
+</script>
+
+<style>
+  /* El badge vive fuera de .cf-deco-card porque la card tiene overflow:hidden */
+  .ix .ix-deco-wrap { position: relative; }
+  .ix .ix-badge { top: -14px; right: -14px; }
+
+  .ix .ix-money { position: relative; display: flex; align-items: center; }
+  .ix .ix-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
+  .ix .ix-money .cf-input { padding-left: 1.7rem; }
+
+  .ix .ix-vizzoti { color: #fbbf24; margin: 0 0 1rem; }
+  .ix .ix-vizzoti strong { color: #fde68a; }
+
+  .ix-2col, .cf-band .ix-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .ix-2col, .cf-band .ix-2col { grid-template-columns: 0.85fr 1.15fr; } }
+
+  /* Card izquierda con gradient del accent */
+  .ix .ix-hl {
+    padding: 1.5rem 1.6rem; border-radius: var(--radius-lg); color: #fff;
+    background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%);
+    box-shadow: var(--shadow-lg);
+  }
+  .ix .ix-hl__eyebrow { color: rgba(255, 255, 255, 0.82); }
+  .ix .ix-hl__title { font-size: 1.4rem; font-weight: 800; line-height: 1.2; margin: 0 0 0.6rem; letter-spacing: -0.015em; }
+  .ix .ix-hl__desc { font-size: 0.85rem; line-height: 1.55; color: rgba(255, 255, 255, 0.88); margin: 0; }
+  .ix .ix-hl__big { font-size: 2.4rem; font-weight: 800; margin: 1.1rem 0 0; line-height: 1; font-variant-numeric: tabular-nums; }
+  .ix .ix-hl__note { font-size: 0.78rem; color: rgba(255, 255, 255, 0.82); margin: 0.25rem 0 0; }
+
+  .ix .ix-chip {
+    display: inline-block; margin: 0.8rem 0 0; padding: 0.35rem 0.6rem; border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; color: var(--accent-strong);
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  }
+  .ix .ix-tnote { font-size: 0.75rem; color: var(--text-subtle); margin: 0.7rem 0 0; }
+
+  .cf-band .ix-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .ix-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+
+  .cf-band .ix-ref__title { font-size: 1.05rem; font-weight: 800; color: #fff; margin: 0 0 0.5rem; }
+  .cf-band .ix-ref__big { font-size: 2rem; font-weight: 800; color: #fff; line-height: 1; margin: 0 0 0.4rem; font-variant-numeric: tabular-nums; }
+  .cf-band .ix-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+  .cf-band .ix-chips__i { padding: 0.3rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; background: rgba(255, 255, 255, 0.1); color: #e7ecf3; border: 1px solid rgba(255, 255, 255, 0.12); }
+
+  .cf-band .ix-src { display: grid; gap: 0.5rem; }
+  .cf-band .ix-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.08); }
+  .cf-band .ix-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .ix-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .ix-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+</style>

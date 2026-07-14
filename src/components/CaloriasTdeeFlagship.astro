@@ -1,0 +1,597 @@
+---
+// Flagship redesign de la calc "calorías diarias (TDEE)" (mockup Martin).
+// Los números salen del MOTOR REAL: src/lib/formulas/calorias-tdee.ts
+// (Mifflin-St Jeor + factores de actividad + piso clínico). El SSR llama directamente
+// a la fórmula; el script inline replica la misma lógica (no puede importar) y recibe
+// los factores y el piso por data-* attrs.
+//
+// YMYL SALUD: se conservan los disclaimers existentes — el de `intro` ("Consultá con
+// nutricionista para ajustar a composición corporal real") se preserva renderando la
+// prosa — y se suma el disclaimer canónico del sitio para `salud` (mismo texto que
+// CalcLayoutV2, que acá no se renderiza). El PISO CLÍNICO del motor (1.200 kcal mujeres
+// / 1.500 kcal hombres) se replica tal cual, con su aviso.
+//
+// Domain "health" = el de la categoría `salud`, así que NO hace falta forzarlo en el
+// router. Header/footer = los globales del sitio.
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { caloriasTDEE } from '../lib/formulas/calorias-tdee';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Espejo EXACTO de las constantes de src/lib/formulas/calorias-tdee.ts (el módulo no
+// las exporta). Verificado contra el motor en toda la grilla de inputs.
+const FACTORES: Record<string, { factor: number; label: string; short: string }> = {
+  sedentario: { factor: 1.2, label: 'Sedentario (poco o ningún ejercicio)', short: 'Sedentario' },
+  ligero: { factor: 1.375, label: 'Ligero (1-3 días/semana)', short: 'Ligero' },
+  moderado: { factor: 1.55, label: 'Moderado (3-5 días/semana)', short: 'Moderado' },
+  intenso: { factor: 1.725, label: 'Intenso (6-7 días/semana)', short: 'Intenso' },
+  muy_intenso: { factor: 1.9, label: 'Muy intenso (2x/día o trabajo físico)', short: 'Muy intenso' },
+};
+// Piso clínico del motor: no sugerir objetivos por debajo del mínimo recomendado.
+const PISO = { masculino: 1500, femenino: 1200 };
+
+// ── Caso inicial = el ejemplo documentado del JSON (hombre, 30 años, 75 kg, 175 cm).
+const INIT = { peso: 75, altura: 175, edad: 30, sexo: 'masculino', actividad: 'moderado' };
+const init = caloriasTDEE(INIT);
+
+const nf = (n: number) => Math.round(n).toLocaleString('es-AR');
+const n2 = (n: number) => n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 3 });
+
+const initFactor = FACTORES[INIT.actividad].factor;
+const initActividadKcal = init.tdee - init.bmr;
+const initPiso = PISO[INIT.sexo as 'masculino' | 'femenino'];
+const initClamped = init.tdee - 500 < initPiso;
+
+// Tabla de referencia: los 5 niveles de actividad del motor, con la persona cargada.
+const refRows = Object.keys(FACTORES).map((k) => {
+  const r = caloriasTDEE({ ...INIT, actividad: k });
+  return { key: k, short: FACTORES[k].short, factor: FACTORES[k].factor, tdee: r.tdee, bajar: r.paraBajarPeso };
+});
+
+const faq = calc.faq || [];
+const sources = (calc.sources || []).slice(0, 3);
+const introHtml = calc.intro ? md(calc.intro) : '';
+const explanationHtml = calc.explanation ? md(calc.explanation) : '';
+---
+
+<div
+  class="cf-page td"
+  data-domain="health"
+  data-factores={JSON.stringify(Object.fromEntries(Object.entries(FACTORES).map(([k, v]) => [k, v.factor])))}
+  data-labels={JSON.stringify(Object.fromEntries(Object.entries(FACTORES).map(([k, v]) => [k, v.short])))}
+  data-piso={JSON.stringify(PISO)}
+>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/categoria/salud">Salud</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Calorías diarias (TDEE)</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">🔥</span> Nutrición · Mifflin-St Jeor · 2026</p>
+      <h1 class="cf-h1">¿Cuántas <span class="cf-yr">calorías</span> necesitás por día?</h1>
+      <p class="cf-sub">Tu TDEE es todo lo que quemás en un día: el metabolismo en reposo más la actividad. Es el punto de partida de cualquier plan para bajar, subir o mantener.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Fórmula Mifflin-St Jeor</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">🏃</span> Ejemplo · 30 años · 75 kg · 175 cm</span>
+      <div class="td-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="td-deco-val">{nf(init.tdee)}</div>
+          <div class="cf-deco-card__note">kcal/día para mantener tu peso</div>
+        </div>
+        <span class="cf-deco-badge td-badge" aria-hidden="true">🔥</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Metabolismo basal</strong> <span class="cf-deco-chip" id="td-deco-bmr">{nf(init.bmr)} kcal</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">Tus datos</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><span class="cf-label">Sexo biológico</span></div>
+        <div class="cf-seg td-seg" role="group" aria-label="Sexo biológico">
+          <button type="button" data-sexo="masculino" aria-pressed="true">Masculino</button>
+          <button type="button" data-sexo="femenino" aria-pressed="false">Femenino</button>
+        </div>
+        <p class="cf-help">Mifflin-St Jeor usa una constante distinta por sexo: +5 en hombres, −161 en mujeres.</p>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="td-peso">Peso</label><span class="cf-hint">kg</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="decimal" id="td-peso" value="75" min="30" max="300" step="0.1" />
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="td-altura">Altura</label><span class="cf-hint">cm</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="numeric" id="td-altura" value="175" min="100" max="250" step="1" />
+        </div>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="td-edad">Edad</label><span class="cf-hint">años</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="numeric" id="td-edad" value="30" min="15" max="100" step="1" />
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="td-actividad">Actividad física</label></div>
+          <select class="cf-input" id="td-actividad">
+            <option value="sedentario">Sedentario (poco o ningún ejercicio)</option>
+            <option value="ligero">Ligero (1-3 días/semana)</option>
+            <option value="moderado" selected>Moderado (3-5 días/semana)</option>
+            <option value="intenso">Intenso (6-7 días/semana)</option>
+            <option value="muy_intenso">Muy intenso (2x/día o trabajo físico)</option>
+          </select>
+        </div>
+      </div>
+      <p class="cf-help">Sedentario: oficina, menos de 2 entrenos por semana. Moderado: 3 a 5 entrenos. Muy intenso: atleta, 2 entrenos por día o trabajo físico pesado.</p>
+
+      <button class="cf-primary" id="td-calc-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Ejemplos:</span>
+        <button class="cf-sc" type="button" data-ej="masculino|75|175|30|moderado">Hombre 30 · 75 kg</button>
+        <button class="cf-sc" type="button" data-ej="femenino|60|165|30|ligero">Mujer 30 · 60 kg</button>
+        <button class="cf-sc" type="button" data-ej="masculino|85|180|45|sedentario">Hombre 45 · 85 kg</button>
+        <button class="cf-sc" type="button" data-ej="femenino|55|160|25|intenso">Mujer 25 · 55 kg</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="td-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="td-big">{nf(init.tdee)}</div>
+      <p class="cf-result__sub" id="td-sub">kcal/día para mantener tu peso · {init.nivelActividad}</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="td-t-bmr">{nf(init.bmr)}</div><div class="cf-tile__label">BMR · metabolismo basal</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="td-t-factor">×{n2(initFactor)}</div><div class="cf-tile__label">Factor de actividad</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="td-t-bajar">{nf(init.paraBajarPeso)}</div><div class="cf-tile__label">Para bajar ~0,5 kg/sem</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="td-t-subir">{nf(init.paraSubirPeso)}</div><div class="cf-tile__label">Para subir ~0,5 kg/sem</div></div>
+      </div>
+      <div class="cf-result__formula" id="td-formula">BMR = 10×75 + 6,25×175 − 5×30 + 5 = {nf(init.bmr)} · TDEE = {nf(init.bmr)} × {n2(initFactor)} = {nf(init.tdee)}</div>
+      <p class="cf-result__sub td-piso" id="td-piso" hidden={!initClamped}>⚠️ El déficit de 500 kcal caería por debajo del piso recomendado: te mostramos <strong id="td-piso-val">{nf(initPiso)} kcal</strong>, el mínimo sin supervisión médica. No bajes de ahí por tu cuenta.</p>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="td-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="td-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt"><strong>Respuesta rápida.</strong> <span id="td-quick">Un hombre de 30 años, 75 kg y 175 cm con actividad moderada gasta unas <strong>{nf(init.tdee)} kcal/día</strong>. Para bajar ~0,5 kg por semana: <strong>{nf(init.paraBajarPeso)} kcal</strong>. Para subir: <strong>{nf(init.paraSubirPeso)} kcal</strong>.</span></p>
+    <span class="cf-formula">TDEE = BMR × factor</span>
+  </div>
+
+  <!-- Datos clave -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">⚙️</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Factor de actividad</p>
+        <div class="cf-minicard__big">×<span id="td-k-factor">{n2(initFactor)}</span></div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem"><span id="td-k-factor-lbl">{FACTORES[INIT.actividad].short}</span>. Multiplica tu metabolismo basal para llegar al gasto total.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">📉</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Déficit para bajar</p>
+        <div class="cf-minicard__big">500 kcal</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Por día, para perder aproximadamente 0,5 kg por semana.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🧈</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">1 kg de grasa</p>
+        <div class="cf-minicard__big">7.700 kcal</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Por eso 500 kcal/día durante una semana ≈ medio kilo.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🛑</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Piso recomendado</p>
+        <div class="cf-minicard__big"><span id="td-k-piso">{nf(initPiso)}</span> kcal</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Mínimo sin supervisión médica (<span id="td-k-piso-sexo">1.500 hombres · 1.200 mujeres</span>). La calculadora nunca sugiere menos.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cómo leer el resultado -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Cómo leer el resultado</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Casi dos tercios los quemás sin moverte</h2>
+    <div class="td-2col">
+      <div class="cf-side-card cf-side-card--dark td-hl">
+        <p class="cf-side-eyebrow">Cómo leer el resultado</p>
+        <p class="td-hl__title">El TDEE es un punto de partida, no una meta</p>
+        <p class="cf-side-desc">La fórmula estima; tu gasto real depende de masa muscular, genética y cuánto te movés fuera del gimnasio. Usalo 2 o 3 semanas, pesate y ajustá según lo que pase en la balanza.</p>
+        <div class="td-hl__big" id="td-hl-big">{nf(init.tdee)} kcal</div>
+        <p class="cf-side-desc" id="td-hl-note">Gasto total estimado por día</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-brow">
+          <span class="cf-brow__lbl">Metabolismo basal (BMR)</span>
+          <span class="cf-brow__val" id="td-b-bmr">{nf(init.bmr)} kcal</span>
+          <span class="cf-brow__bar"><span id="td-b-bmr-bar" style={`width:${((init.bmr / init.tdee) * 100).toFixed(1)}%`}></span></span>
+        </div>
+        <p class="td-note">Lo que gastás respirando, digiriendo y en reposo — <span id="td-b-bmr-pct">{Math.round((init.bmr / init.tdee) * 100)}%</span> del total</p>
+        <div class="cf-brow" style="margin-top:1rem">
+          <span class="cf-brow__lbl">Actividad y efecto térmico</span>
+          <span class="cf-brow__val" id="td-b-act">{nf(initActividadKcal)} kcal</span>
+          <span class="cf-brow__bar"><span class="td-bar--alt" id="td-b-act-bar" style={`width:${((initActividadKcal / init.tdee) * 100).toFixed(1)}%`}></span></span>
+        </div>
+        <p class="td-note">Todo lo que sumás por moverte y por digerir la comida</p>
+        <div class="cf-brow" style="margin-top:1rem">
+          <span class="cf-brow__lbl">TDEE · gasto total</span>
+          <span class="cf-brow__val" id="td-b-tdee">{nf(init.tdee)} kcal</span>
+          <span class="cf-brow__bar"><span style="width:100%"></span></span>
+        </div>
+        <p class="td-note">BMR × factor de actividad</p>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1.25rem">
+          <span class="cf-callout__ico" aria-hidden="true">🩺</span>
+          <p><strong>Los resultados son orientativos y no reemplazan la consulta médica profesional.</strong> Antes de tomar decisiones con impacto, consultá con un médico, nutricionista o profesional de la salud matriculado. No bajes del piso recomendado por tu cuenta.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Paso a paso -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">Sexo, peso, altura, edad y cuánto te movés en una semana promedio.</p>
+        <p class="td-chip" id="td-s1">75 kg · 175 cm · 30 años · moderado</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">Mifflin-St Jeor te da el metabolismo basal; el factor de actividad lo escala al gasto total del día.</p>
+        <p class="td-chip" id="td-s2">BMR 1.699 × 1,55</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">Del TDEE salen los tres objetivos: mantener, bajar (−500) y subir (+500), siempre sobre el piso recomendado.</p>
+        <p class="td-chip" id="td-s3">TDEE 2.633 kcal/día</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Referencias -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <caption class="cf-sr" id="td-tbl-cap">Gasto calórico por nivel de actividad para los datos cargados</caption>
+        <thead><tr><th>Nivel de actividad</th><th>Factor</th><th>TDEE · mantener</th><th>Para bajar peso</th></tr></thead>
+        <tbody id="td-tbody">
+          {refRows.map((r) => (
+            <tr>
+              <td>{r.short}</td>
+              <td>×{n2(r.factor)}</td>
+              <td>{nf(r.tdee)} kcal</td>
+              <td class="cf-td-em">{nf(r.bajar)} kcal</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="td-note" style="margin-top:0.6rem">Calculado con los datos cargados arriba. Cambiá peso, altura, edad o sexo y la tabla se recalcula.</p>
+  </section>
+</div>
+
+<!-- Banda: atención + referencia principal -->
+<div class="cf-band cf-band--warm" data-domain="health">
+  <div class="cf-band__inner">
+    <div class="td-2col">
+      <div class="td-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="td-card__title">El factor de actividad es donde casi todos se equivocan</h2>
+        <p class="cf-side-desc">La mayoría se sobreestima: ir al gimnasio 3 veces por semana y pasar el resto del día sentado es <strong>moderado</strong>, no intenso. Elegir un factor de más infla el TDEE varios cientos de kcal y hace que un supuesto déficit no sea déficit. Si dudás, elegí el nivel más bajo y ajustá con la balanza.</p>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1rem">
+          <span class="cf-callout__ico" aria-hidden="true">⚖️</span>
+          <p>Ninguna fórmula reemplaza medir: sostené las mismas calorías 2 o 3 semanas y mirá la tendencia del peso, no el día a día.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="td-src__title">Mifflin-St Jeor</p>
+        <div class="td-hl__big" style="margin-top:0.2rem">± 10%</div>
+        <p class="cf-side-desc">Es la ecuación más precisa para población general según la American Dietetic Association, pero sigue siendo una estimación con margen de error.</p>
+        <div class="td-chips">
+          <span class="td-chip2">10×peso + 6,25×altura</span>
+          <span class="td-chip2">− 5×edad</span>
+          <span class="td-chip2">+5 hombres / −161 mujeres</span>
+          <span class="td-chip2">× factor actividad</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page td">
+  {faq.length > 0 && (
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {introHtml && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Qué es el TDEE</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Gasto energético diario total</h2>
+      <div class="cf-prose" set:html={introHtml} />
+    </section>
+  )}
+
+  {explanationHtml && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">En detalle</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cómo se calcula tu gasto calórico</h2>
+      <div class="cf-prose" set:html={explanationHtml} />
+    </section>
+  )}
+</div>
+
+<!-- Banda: fuentes y metodología -->
+<div class="cf-band" data-domain="health">
+  <div class="cf-band__inner">
+    <div class="cf-section__head" style="margin-top:0">
+      <div>
+        <p class="cf-eyebrow">Fuentes y metodología</p>
+        <h2 class="cf-section__title">Números que podés defender</h2>
+      </div>
+      <p class="cf-section__lead">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026.</p>
+    </div>
+    <div class="cf-side-card cf-side-card--dark">
+      <div class="td-src">
+        {sources.map((s: any) => (
+          <div class="td-src__item">
+            <strong>{s.name}</strong>
+            <span><a href={s.url} rel="nofollow noopener" target="_blank">{s.url}</a></span>
+          </div>
+        ))}
+      </div>
+      <p class="td-src__foot">● Información revisada en julio de 2026</p>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page td">
+  {related.length > 0 && (
+    <section class="cf-section" style="margin-top:2.5rem">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🧮'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('—')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos: el TDEE se mueve con el peso y la actividad.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="td-share2">Guardar resultado</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.td');
+    if (!root) return;
+    const FACTORES = JSON.parse(root.getAttribute('data-factores'));
+    const LABELS = JSON.parse(root.getAttribute('data-labels'));
+    const PISO = JSON.parse(root.getAttribute('data-piso'));
+
+    /* @pure-start — espejo EXACTO de src/lib/formulas/calorias-tdee.ts */
+    function compute(peso, altura, edad, sexo, actividad, FAC, PIS) {
+      let bmr;
+      if (sexo === 'femenino') bmr = 10 * peso + 6.25 * altura - 5 * edad - 161;
+      else bmr = 10 * peso + 6.25 * altura - 5 * edad + 5;
+      const factor = FAC[actividad] !== undefined ? FAC[actividad] : FAC.moderado;
+      const tdee = bmr * factor;
+      const tdeeR = Math.round(tdee);
+      const bmrR = Math.round(bmr);
+      const pisoBajar = sexo === 'femenino' ? PIS.femenino : PIS.masculino;
+      const bajarRaw = tdee - 500;
+      const bajarClamped = bajarRaw < pisoBajar;
+      const bajarR = Math.round(Math.max(bajarRaw, pisoBajar));
+      const subirR = Math.round(tdee + 500);
+      return { bmr: bmrR, tdee: tdeeR, bajar: bajarR, subir: subirR, factor: factor, clamped: bajarClamped, piso: pisoBajar };
+    }
+    /* @pure-end */
+
+    const $ = (id) => document.getElementById(id);
+    const nf = (n) => Math.round(n).toLocaleString('es-AR');
+    const n2 = (n) => n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 3 });
+    let sexo = 'masculino';
+
+    function state() {
+      return {
+        peso: Number($('td-peso').value) || 0,
+        altura: Number($('td-altura').value) || 0,
+        edad: Number($('td-edad').value) || 0,
+        sexo: sexo,
+        actividad: $('td-actividad').value,
+      };
+    }
+
+    function render() {
+      const s = state();
+      if (!s.peso || !s.altura || !s.edad) return;
+      const r = compute(s.peso, s.altura, s.edad, s.sexo, s.actividad, FACTORES, PISO);
+      const actKcal = r.tdee - r.bmr;
+      const pctBmr = r.tdee > 0 ? (r.bmr / r.tdee) * 100 : 0;
+      const cte = s.sexo === 'femenino' ? '− 161' : '+ 5';
+      const sexoTxt = s.sexo === 'femenino' ? 'Una mujer' : 'Un hombre';
+
+      $('td-big').textContent = nf(r.tdee);
+      $('td-sub').textContent = 'kcal/día para mantener tu peso · ' + LABELS[s.actividad];
+      $('td-t-bmr').textContent = nf(r.bmr);
+      $('td-t-factor').textContent = '×' + n2(r.factor);
+      $('td-t-bajar').textContent = nf(r.bajar);
+      $('td-t-subir').textContent = nf(r.subir);
+      $('td-formula').textContent = 'BMR = 10×' + s.peso + ' + 6,25×' + s.altura + ' − 5×' + s.edad + ' ' + cte + ' = ' + nf(r.bmr) + ' · TDEE = ' + nf(r.bmr) + ' × ' + n2(r.factor) + ' = ' + nf(r.tdee);
+
+      $('td-piso').hidden = !r.clamped;
+      $('td-piso-val').textContent = nf(r.piso) + ' kcal';
+
+      $('td-deco-val').textContent = nf(r.tdee);
+      $('td-deco-bmr').textContent = nf(r.bmr) + ' kcal';
+
+      $('td-quick').innerHTML = sexoTxt + ' de ' + s.edad + ' años, ' + nf(s.peso) + ' kg y ' + nf(s.altura) + ' cm con actividad ' + LABELS[s.actividad].toLowerCase() + ' gasta unas <strong>' + nf(r.tdee) + ' kcal/día</strong>. Para bajar ~0,5 kg por semana: <strong>' + nf(r.bajar) + ' kcal</strong>. Para subir: <strong>' + nf(r.subir) + ' kcal</strong>.';
+
+      $('td-k-factor').textContent = n2(r.factor);
+      $('td-k-factor-lbl').textContent = LABELS[s.actividad];
+      $('td-k-piso').textContent = nf(r.piso);
+      $('td-k-piso-sexo').textContent = s.sexo === 'femenino' ? '1.200 kcal en mujeres' : '1.500 kcal en hombres';
+
+      $('td-hl-big').textContent = nf(r.tdee) + ' kcal';
+
+      $('td-b-bmr').textContent = nf(r.bmr) + ' kcal';
+      $('td-b-bmr-bar').style.width = pctBmr.toFixed(1) + '%';
+      $('td-b-bmr-pct').textContent = Math.round(pctBmr) + '%';
+      $('td-b-act').textContent = nf(actKcal) + ' kcal';
+      $('td-b-act-bar').style.width = (r.tdee > 0 ? (actKcal / r.tdee) * 100 : 0).toFixed(1) + '%';
+      $('td-b-tdee').textContent = nf(r.tdee) + ' kcal';
+
+      $('td-s1').textContent = nf(s.peso) + ' kg · ' + nf(s.altura) + ' cm · ' + s.edad + ' años · ' + LABELS[s.actividad].toLowerCase();
+      $('td-s2').textContent = 'BMR ' + nf(r.bmr) + ' × ' + n2(r.factor);
+      $('td-s3').textContent = 'TDEE ' + nf(r.tdee) + ' kcal/día';
+
+      $('td-tbody').innerHTML = Object.keys(FACTORES).map(function (k) {
+        const x = compute(s.peso, s.altura, s.edad, s.sexo, k, FACTORES, PISO);
+        return '<tr><td>' + LABELS[k] + '</td><td>×' + n2(x.factor) + '</td><td>' + nf(x.tdee) + ' kcal</td><td class="cf-td-em">' + nf(x.bajar) + ' kcal</td></tr>';
+      }).join('');
+    }
+
+    ['td-peso', 'td-altura', 'td-edad'].forEach((id) => $(id).addEventListener('input', render));
+    $('td-actividad').addEventListener('change', render);
+    $('td-calc-btn').addEventListener('click', render);
+    document.querySelectorAll('[data-sexo]').forEach((b) => b.addEventListener('click', () => {
+      sexo = b.getAttribute('data-sexo');
+      document.querySelectorAll('[data-sexo]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      render();
+    }));
+    document.querySelectorAll('[data-ej]').forEach((b) => b.addEventListener('click', () => {
+      const v = b.getAttribute('data-ej').split('|');
+      const sb = document.querySelector('[data-sexo="' + v[0] + '"]');
+      if (sb) { sexo = v[0]; document.querySelectorAll('[data-sexo]').forEach((x) => x.setAttribute('aria-pressed', x === sb ? 'true' : 'false')); }
+      $('td-peso').value = v[1]; $('td-altura').value = v[2]; $('td-edad').value = v[3]; $('td-actividad').value = v[4];
+      render();
+    }));
+
+    function summary() {
+      const s = state();
+      const r = compute(s.peso, s.altura, s.edad, s.sexo, s.actividad, FACTORES, PISO);
+      return 'TDEE: ' + nf(r.tdee) + ' kcal/día (BMR ' + nf(r.bmr) + ' × ' + n2(r.factor) + ', ' + LABELS[s.actividad] + '). Bajar ~0,5 kg/sem: ' + nf(r.bajar) + ' kcal. Subir: ' + nf(r.subir) + ' kcal. Orientativo: no reemplaza la consulta médica. — hacecuentas.com';
+    }
+    function shareUrl() {
+      const s = state();
+      return location.origin + location.pathname + '?peso=' + s.peso + '&altura=' + s.altura + '&edad=' + s.edad + '&sexo=' + s.sexo + '&actividad=' + s.actividad;
+    }
+    function copy(t, btn) { navigator.clipboard?.writeText(t).then(() => { const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => btn.innerHTML = o, 1500); }); }
+    $('td-copy').addEventListener('click', (e) => copy(summary(), e.currentTarget));
+    $('td-detail').addEventListener('click', () => { document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' }); });
+    const s2 = $('td-share2'); if (s2) s2.addEventListener('click', (e) => copy(shareUrl(), e.currentTarget));
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('peso')) $('td-peso').value = q.get('peso');
+    if (q.get('altura')) $('td-altura').value = q.get('altura');
+    if (q.get('edad')) $('td-edad').value = q.get('edad');
+    if (q.get('actividad')) $('td-actividad').value = q.get('actividad');
+    if (q.get('sexo')) { const b = document.querySelector('[data-sexo="' + q.get('sexo') + '"]'); if (b) b.click(); }
+    render();
+  })();
+</script>
+
+<style>
+  /* El badge vive fuera de .cf-deco-card porque la card tiene overflow:hidden */
+  .td .td-deco-wrap { position: relative; }
+  .td .td-badge { top: -14px; right: -14px; }
+
+  .td .td-seg { width: 100%; }
+  .td .td-seg button { flex: 1; }
+  .td .td-piso { color: #fbbf24; margin: 0 0 1rem; }
+  .td .td-piso strong { color: #fde68a; }
+
+  .td-2col, .cf-band .td-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .td-2col, .cf-band .td-2col { grid-template-columns: 0.85fr 1.15fr; } }
+
+  .td .td-hl__title, .cf-band .td-hl__title { font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin: 0 0 0.6rem; letter-spacing: -0.015em; }
+  .td .td-hl__big, .cf-band .td-hl__big { font-size: 1.6rem; font-weight: 800; color: #fff; margin: 1.1rem 0 0.15rem; font-variant-numeric: tabular-nums; }
+  .td .td-note, .cf-band .td-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.15rem 0 0; }
+  .td .td-bar--alt { background: linear-gradient(90deg, #f59e0b, #fb923c) !important; }
+
+  .td .td-chip {
+    font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-strong);
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+    border-radius: var(--radius-sm); padding: 0.35rem 0.55rem; margin: 0.7rem 0 0; display: inline-block;
+  }
+
+  .cf-band .td-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .td-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .td-src__title { font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 0.2rem; }
+  .cf-band .td-src { display: grid; gap: 0.5rem; }
+  .cf-band .td-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .td-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .td-src__item span { font-size: 0.72rem; color: #8592a6; word-break: break-all; }
+  .cf-band .td-src__item a { color: #8592a6; text-decoration: none; }
+  .cf-band .td-src__item a:hover { color: #fff; }
+  .cf-band .td-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+  .cf-band .td-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+  .cf-band .td-chip2 { font-size: 0.7rem; font-weight: 600; color: #b8c2d4; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; padding: 0.3rem 0.6rem; }
+</style>

@@ -1,0 +1,630 @@
+---
+// Flagship redesign de la calc "paritaria UOCRA por categoría y zona" (mockup Martin).
+// Los números salen del motor real (src/lib/formulas/paritaria-uocra-construccion-2026-categoria.ts):
+// escala julio 2026 CCT 76/75, presentismo 20% (art. 52), fondo de cese 12%/8%
+// (Ley 22.250), aportes 17% y contribuciones patronales ~23%.
+// La escala de jornales NO se exporta del motor → la DERIVAMOS llamándolo
+// (22 jornadas sin presentismo ⇒ salario_basico = jornal × 8 × 22), así no se
+// duplica la tabla y nunca queda desfasada de la fuente única.
+// Domain "home" (ámbar) por el mockup, no por la categoría (finanzas→money).
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { compute as uocraCompute } from '../lib/formulas/paritaria-uocra-construccion-2026-categoria';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const HORAS_JORNADA = 8;
+const DIAS_MES_BASE = 22;
+
+const CATS = ['ayudante', 'medio_oficial', 'oficial', 'oficial_especializado', 'sereno'] as const;
+const ZONAS = ['a', 'b', 'c', 'c_austral'] as const;
+
+const CAT_LABEL: Record<string, string> = {
+  ayudante: 'Ayudante',
+  medio_oficial: 'Medio Oficial',
+  oficial: 'Oficial',
+  oficial_especializado: 'Oficial Especializado',
+  sereno: 'Sereno (mensualizado)',
+};
+const ZONA_LABEL: Record<string, string> = {
+  a: 'Zona A — CABA, GBA y mayoría de las provincias',
+  b: 'Zona B — La Pampa, Neuquén, Río Negro, Chubut',
+  c: 'Zona C — Santa Cruz',
+  c_austral: 'Zona C Austral — Tierra del Fuego',
+};
+const ZONA_CORTA: Record<string, string> = { a: 'Zona A', b: 'Zona B', c: 'Zona C', c_austral: 'Zona C Austral' };
+
+function liquidar(categoria: string, zona: string, dias: number, antig: number, pres: boolean, he50 = 0, he100 = 0) {
+  return uocraCompute({
+    categoria, zona,
+    dias_trabajados: dias,
+    antiguedad_anios: antig,
+    presentismo: pres ? 'si' : 'no',
+    horas_extra_50: he50,
+    horas_extra_100: he100,
+  } as any);
+}
+
+// Escala derivada del motor: con 22 jornadas y sin presentismo el básico devengado
+// es jornal × 8 × 22 (176) para las categorías horarias, y el sueldo mensual de
+// convenio para el sereno. Los jornales son enteros → la división es exacta.
+const basico22 = (cat: string, zona: string) => liquidar(cat, zona, DIAS_MES_BASE, 0, false).salario_basico as number;
+const JORNALES: Record<string, Record<string, number>> = {};
+for (const c of CATS) {
+  if (c === 'sereno') continue;
+  JORNALES[c] = {};
+  for (const z of ZONAS) JORNALES[c][z] = basico22(c, z) / (HORAS_JORNADA * DIAS_MES_BASE);
+}
+const SERENO: Record<string, number> = {};
+for (const z of ZONAS) SERENO[z] = basico22('sereno', z);
+
+// Defaults del JSON de la calc: oficial · zona A · 22 días · antigüedad 0 · presentismo sí.
+const INIT_CAT = 'oficial';
+const INIT_ZONA = 'a';
+const INIT_DIAS = 22;
+const INIT_ANTIG = 0;
+const INIT_PRES = true;
+
+const init = liquidar(INIT_CAT, INIT_ZONA, INIT_DIAS, INIT_ANTIG, INIT_PRES);
+const initJornal = JORNALES[INIT_CAT][INIT_ZONA];
+const initCese = INIT_ANTIG < 1 ? 12 : 8;
+
+const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+
+// Filas de referencia: computadas con el motor real, a la zona y días del caso cargado.
+const refRows = CATS.map((c) => {
+  const r = liquidar(c, INIT_ZONA, INIT_DIAS, INIT_ANTIG, INIT_PRES);
+  return {
+    cat: c,
+    label: CAT_LABEL[c],
+    jornal: c === 'sereno' ? null : JORNALES[c][INIT_ZONA],
+    basico: r.salario_basico as number,
+    bruto: r.total_bruto as number,
+    neto: r.sueldo_neto as number,
+  };
+});
+
+const sources = (calc.sources || []).slice(0, 3);
+const faq = calc.faq || [];
+const explanationHtml = calc.explanation ? md(calc.explanation) : '';
+---
+
+<div
+  class="cf-page uo"
+  data-domain="home"
+  data-jornales={JSON.stringify(JORNALES)}
+  data-sereno={JSON.stringify(SERENO)}
+>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/sueldos-y-trabajo">Sueldos y trabajo</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Sueldo UOCRA</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">🏗️</span> UOCRA · CCT 76/75 · escala julio 2026</p>
+      <h1 class="cf-h1">Sueldo <span class="cf-yr">UOCRA construcción</span> por categoría y zona</h1>
+      <p class="cf-sub">Calculá el jornal, el bruto y el neto de bolsillo con la escala vigente, más el fondo de cese que se acumula a tu favor.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">👷</span> Escala julio 2026</span>
+      <div class="uo-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="uo-deco-val">{fmt(init.sueldo_neto as number)}</div>
+          <div class="cf-deco-card__note">Sueldo neto estimado del mes</div>
+        </div>
+        <span class="cf-deco-badge uo-badge">CCT</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Jornal horario</strong> <span class="cf-deco-chip" id="uo-deco-jornal">{fmt(initJornal)}/h</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">Tu liquidación del mes</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="uo-cat">Categoría</label></div>
+          <select class="cf-input" id="uo-cat">
+            {CATS.map((c) => (<option value={c} selected={c === INIT_CAT}>{CAT_LABEL[c]}</option>))}
+          </select>
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="uo-zona">Zona del convenio</label></div>
+          <select class="cf-input" id="uo-zona">
+            {ZONAS.map((z) => (<option value={z} selected={z === INIT_ZONA}>{ZONA_LABEL[z]}</option>))}
+          </select>
+        </div>
+      </div>
+      <p class="cf-help">El CCT 76/75 fija una escala de jornales distinta por zona: no es un porcentaje sobre la Zona A.</p>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="uo-dias">Días trabajados</label><span class="cf-hint">Jornadas de 8 hs</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="numeric" id="uo-dias" min="0" max="31" step="1" value="22" />
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="uo-antig">Antigüedad</label><span class="cf-hint">Años en la empresa</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="numeric" id="uo-antig" min="0" step="1" value="0" />
+        </div>
+      </div>
+      <p class="cf-help">El CCT 76/75 <strong>no paga adicional por antigüedad</strong>. Ese dato solo define la alícuota del fondo de cese: 12% el primer año, 8% desde el segundo.</p>
+
+      <div class="cf-field">
+        <label class="cf-toggle" for="uo-pres">
+          <span class="cf-toggle__txt">Asistencia perfecta<small>Premio del 20% sobre el básico devengado (art. 52 CCT 76/75).</small></span>
+          <input type="checkbox" id="uo-pres" checked />
+          <span class="cf-switch"></span>
+        </label>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="uo-he50">Horas extra al 50%</label></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="numeric" id="uo-he50" min="0" step="1" value="0" />
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="uo-he100">Horas extra al 100%</label></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="numeric" id="uo-he100" min="0" step="1" value="0" />
+        </div>
+      </div>
+
+      <button class="cf-primary" id="uo-calc-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Categorías:</span>
+        <button class="cf-sc" type="button" data-cat="ayudante">Ayudante</button>
+        <button class="cf-sc" type="button" data-cat="medio_oficial">Medio Oficial</button>
+        <button class="cf-sc" type="button" data-cat="oficial">Oficial</button>
+        <button class="cf-sc" type="button" data-cat="oficial_especializado">Especializado</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="uo-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="uo-big">{fmt(init.sueldo_neto as number)}</div>
+      <div class="cf-result__biglabel">Sueldo neto estimado del mes</div>
+      <p class="cf-result__sub" id="uo-sub">{CAT_LABEL[INIT_CAT]} · {ZONA_CORTA[INIT_ZONA]} · {INIT_DIAS} jornadas de {HORAS_JORNADA} hs</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="uo-t-jornal">{fmt(initJornal)}</div><div class="cf-tile__label">Jornal por hora</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="uo-t-bruto">{fmt(init.total_bruto as number)}</div><div class="cf-tile__label">Total bruto</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="uo-t-cese">{fmt(init.fondo_cese as number)}</div><div class="cf-tile__label">Fondo de cese · <span id="uo-t-cese-pct">{initCese}%</span></div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="uo-t-costo">{fmt(init.costo_empleador as number)}</div><div class="cf-tile__label">Costo empleador</div></div>
+      </div>
+      <div class="cf-rows">
+        <div class="cf-rrow"><span class="cf-rrow__lbl">Básico devengado <small>jornal × 8 hs × días trabajados</small></span><span class="cf-rrow__val" id="uo-r-basico">{fmt(init.salario_basico as number)}</span></div>
+        <div class="cf-rrow"><span class="cf-rrow__lbl">Presentismo <small>20% · asistencia perfecta</small></span><span class="cf-rrow__val" id="uo-r-pres">{fmt(init.adicional_presentismo as number)}</span></div>
+        <div class="cf-rrow"><span class="cf-rrow__lbl">Aportes del trabajador <small>17% · jubilación 11 + OS 3 + PAMI 3</small></span><span class="cf-rrow__val" id="uo-r-desc">−{fmt(init.descuentos_trabajador as number)}</span></div>
+      </div>
+      <div class="cf-result__formula" id="uo-formula">{fmt(initJornal)}/h × 8 hs × {INIT_DIAS} días + 20% − 17% = {fmt(init.sueldo_neto as number)}</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="uo-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="uo-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt" id="uo-quick"><strong>Respuesta rápida.</strong> Un {CAT_LABEL[INIT_CAT]} de {ZONA_CORTA[INIT_ZONA]} cobra {fmt(initJornal)} por hora: en {INIT_DIAS} jornadas son <strong>{fmt(init.total_bruto as number)} brutos</strong> y <strong>{fmt(init.sueldo_neto as number)} netos</strong>, más {fmt(init.fondo_cese as number)} de fondo de cese.</p>
+    <span class="cf-formula">jornal × 8 hs × días + 20%</span>
+  </div>
+
+  <!-- Datos clave -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">✅</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Presentismo</p>
+        <div class="cf-minicard__big">20%</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Del básico devengado por asistencia perfecta (art. 52 CCT 76/75).</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🏦</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Fondo de cese</p>
+        <div class="cf-minicard__big">12% / 8%</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Ley 22.250: 12% el primer año, 8% desde el segundo. Lo deposita el empleador.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">📉</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Aportes del trabajador</p>
+        <div class="cf-minicard__big">17%</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Jubilación 11% + obra social 3% + INSSJP (PAMI) 3%.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🚫</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Antigüedad</p>
+        <div class="cf-minicard__big">Sin adicional</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">El CCT 76/75 no paga plus por antigüedad: lo reemplaza el fondo de cese.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cómo leer el resultado -->
+  <section class="cf-section">
+    <div class="uo-2col">
+      <div class="uo-hl">
+        <p class="cf-side-eyebrow">Cómo leer el resultado</p>
+        <p class="uo-hl__title">El fondo de cese no sale de tu bolsillo</p>
+        <p class="uo-hl__desc">Los aportes del 17% sí se descuentan del bruto. El fondo de cese, en cambio, lo deposita el empleador en una cuenta a tu nombre: es remuneración diferida que retirás al terminar la obra, cualquiera sea la causa.</p>
+        <div class="uo-hl__big" id="uo-hl-big">{fmt(initJornal)}</div>
+        <p class="uo-hl__desc">Jornal horario del caso cargado</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-brow">
+          <span class="cf-brow__lbl">Básico devengado</span>
+          <span class="cf-brow__val" id="uo-b-basico">{fmt(init.salario_basico as number)}</span>
+          <span class="cf-brow__bar"><span id="uo-b-basico-bar" style={`width:${Math.round(((init.salario_basico as number) / (init.total_bruto as number)) * 100)}%`}></span></span>
+        </div>
+        <p class="uo-note">Jornal × 8 hs × días trabajados</p>
+        <div class="cf-brow" style="margin-top:1rem">
+          <span class="cf-brow__lbl">Presentismo (20%)</span>
+          <span class="cf-brow__val" id="uo-b-pres">{fmt(init.adicional_presentismo as number)}</span>
+          <span class="cf-brow__bar"><span class="uo-bar--alt" id="uo-b-pres-bar" style={`width:${Math.round(((init.adicional_presentismo as number) / (init.total_bruto as number)) * 100)}%`}></span></span>
+        </div>
+        <p class="uo-note">Se pierde ante cualquier inasistencia injustificada</p>
+        <div class="cf-brow" style="margin-top:1rem">
+          <span class="cf-brow__lbl">Horas extra</span>
+          <span class="cf-brow__val" id="uo-b-he">{fmt(init.horas_extra_total as number)}</span>
+          <span class="cf-brow__bar"><span class="uo-bar--he" id="uo-b-he-bar" style="width:0%"></span></span>
+        </div>
+        <p class="uo-note">50% en días hábiles · 100% sábados después de las 13, domingos y feriados</p>
+        <div class="cf-breakdown__total"><span>Total bruto remunerativo</span><strong id="uo-b-total">{fmt(init.total_bruto as number)}</strong></div>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1.25rem">
+          <span class="cf-callout__ico" aria-hidden="true">🏦</span>
+          <p>Además del neto, el empleador te acumula <strong id="uo-b-cese">{fmt(init.fondo_cese as number)}</strong> de fondo de cese este mes. <strong>No se descuenta del sueldo</strong>: se suma a tu favor.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Paso a paso -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">Tu categoría y zona del convenio definen el jornal horario de la escala vigente.</p>
+        <p class="uo-chip" id="uo-s1">{CAT_LABEL[INIT_CAT]} · {ZONA_CORTA[INIT_ZONA]} · {fmt(initJornal)}/h</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">Jornal × 8 horas × días trabajados, más el presentismo del 20% y las horas extra.</p>
+        <p class="uo-chip" id="uo-s2">{fmt(initJornal)} × 8 × {INIT_DIAS} = {fmt(init.salario_basico as number)}</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">Al bruto se le restan los aportes del 17%. El fondo de cese va aparte, a tu favor.</p>
+        <p class="uo-chip" id="uo-s3">{fmt(init.total_bruto as number)} − 17% = {fmt(init.sueldo_neto as number)}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Referencias -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Categoría</th><th>Jornal</th><th>Total bruto</th><th>Neto de bolsillo</th></tr></thead>
+        <tbody id="uo-tbody">
+          {refRows.map((r) => (
+            <tr>
+              <td>{r.label}</td>
+              <td>{r.jornal ? fmt(r.jornal) + '/h' : '— mensual'}</td>
+              <td>{fmt(r.bruto)}</td>
+              <td class="cf-td-em">{fmt(r.neto)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="uo-note" style="margin-top:0.6rem" id="uo-tbl-note">Calculado en {ZONA_CORTA[INIT_ZONA]} con {INIT_DIAS} jornadas y asistencia perfecta, según los datos que cargaste arriba. Sin horas extra ni adicionales por especialidad.</p>
+  </section>
+</div>
+
+<!-- Banda: atención + referencia principal -->
+<div class="cf-band cf-band--warm" data-domain="home">
+  <div class="cf-band__inner">
+    <div class="uo-2col">
+      <div class="uo-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="uo-card__title">La escala cambia con cada paritaria</h2>
+        <p class="cf-side-desc">La paritaria UOCRA–CAMARCO se renegocia por tramos cortos: el acuerdo de mayo 2026 fijó subas acumulativas de 2,1% en junio, 2% en julio y 1,9% en agosto. Esta calculadora usa la escala de <strong>julio 2026</strong>: verificá siempre la última circular antes de liquidar.</p>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1rem">
+          <span class="cf-callout__ico" aria-hidden="true">🧰</span>
+          <p>No incluye ART (varía por siniestralidad), adicionales por especialidad (+15% soldadores de alta presión, +10% montadores y electricistas), altura, insalubridad ni ropa de trabajo. El personal jerárquico y técnico se rige por <strong>UECARA</strong>, no por el CCT 76/75.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="uo-src__title">Jornal Oficial · Zona A</p>
+        <div class="uo-hl__big" style="margin-top:0.2rem">{fmt(JORNALES.oficial.a)}/h</div>
+        <p class="cf-side-desc">Escala julio 2026 del CCT 76/75. En Zona C Austral el mismo Oficial cobra {fmt(JORNALES.oficial.c_austral)}/h.</p>
+        <div class="uo-chips">
+          <span class="uo-tag">CCT 76/75</span>
+          <span class="uo-tag">Ley 22.250</span>
+          <span class="uo-tag">Julio 2026</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page uo" data-domain="home">
+  {faq.length > 0 && (
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {explanationHtml && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">En detalle</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cómo se liquida un sueldo de la construcción</h2>
+      <div class="cf-prose" set:html={explanationHtml} />
+    </section>
+  )}
+</div>
+
+<!-- Banda: fuentes y metodología -->
+<div class="cf-band" data-domain="home">
+  <div class="cf-band__inner">
+    <div class="uo-2col">
+      <div>
+        <p class="cf-eyebrow">Fuentes y metodología</p>
+        <h2 class="uo-card__title" style="color:var(--text)">Números que podés defender</h2>
+        <p class="cf-side-desc">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026.</p>
+        <p class="cf-side-desc" style="margin-top:0.7rem">Los jornales por categoría y zona salen de la escala de julio 2026 del acuerdo UOCRA–CAMARCO. Las contribuciones patronales son aproximadas (~23%) y no incluyen ART.</p>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Fuentes oficiales</p>
+        <p class="uo-src__title">Escala y marco legal</p>
+        <div class="uo-src">
+          {sources.map((s: any) => (
+            <div class="uo-src__item">
+              <strong>{s.name}</strong>
+              <span>{s.publisher}</span>
+            </div>
+          ))}
+        </div>
+        <p class="uo-src__foot">● Información revisada en julio de 2026</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page uo" data-domain="home">
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🧮'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('—')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="uo-share2">Copiar enlace</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.uo');
+    if (!root) return;
+    const JORNALES = JSON.parse(root.getAttribute('data-jornales'));
+    const SERENO = JSON.parse(root.getAttribute('data-sereno'));
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n) => '$' + Math.round(n).toLocaleString('es-AR');
+
+    const HORAS_JORNADA = 8, DIAS_MES_BASE = 22;
+    const CAT_LABEL = {
+      ayudante: 'Ayudante', medio_oficial: 'Medio Oficial', oficial: 'Oficial',
+      oficial_especializado: 'Oficial Especializado', sereno: 'Sereno (mensualizado)',
+    };
+    const ZONA_CORTA = { a: 'Zona A', b: 'Zona B', c: 'Zona C', c_austral: 'Zona C Austral' };
+    const CATS = ['ayudante', 'medio_oficial', 'oficial', 'oficial_especializado', 'sereno'];
+
+    const catEl = $('uo-cat'), zonaEl = $('uo-zona'), diasEl = $('uo-dias'),
+      antigEl = $('uo-antig'), presEl = $('uo-pres'), he50El = $('uo-he50'), he100El = $('uo-he100');
+
+    // Réplica exacta del motor (paritaria-uocra-construccion-2026-categoria.ts),
+    // incluidos los clamps de días (0-31), antigüedad (≥0) y horas extra (≥0).
+    function liq(categoria, zona, diasRaw, antigRaw, pres, he50Raw, he100Raw) {
+      const dias = Math.min(Math.max(Number(diasRaw) || 0, 0), 31);
+      const antig = Math.max(Number(antigRaw) || 0, 0);
+      const he50 = Math.max(Number(he50Raw) || 0, 0);
+      const he100 = Math.max(Number(he100Raw) || 0, 0);
+      const esSereno = categoria === 'sereno';
+      const mensual = SERENO[zona] !== undefined ? SERENO[zona] : SERENO.a;
+      const jornal = esSereno
+        ? mensual / (DIAS_MES_BASE * HORAS_JORNADA)
+        : ((JORNALES[categoria] && JORNALES[categoria][zona]) !== undefined ? JORNALES[categoria][zona] : JORNALES.oficial.a);
+      const basico = esSereno ? mensual * (dias / DIAS_MES_BASE) : jornal * HORAS_JORNADA * dias;
+      const presentismo = pres ? basico * 0.20 : 0;
+      const he = he50 * jornal * 1.5 + he100 * jornal * 2.0;
+      const bruto = basico + presentismo + he;
+      const pCese = antig < 1 ? 0.12 : 0.08;
+      const cese = bruto * pCese;
+      const desc = bruto * 0.17;
+      const neto = bruto - desc;
+      const costo = bruto + bruto * 0.23 + cese;
+      return { dias, antig, jornal, basico, presentismo, he, bruto, cese, pCese, desc, neto, costo, esSereno };
+    }
+
+    function pct(part, total) { return total > 0 ? Math.round((part / total) * 100) : 0; }
+
+    function render() {
+      const cat = catEl.value, zona = zonaEl.value;
+      const r = liq(cat, zona, diasEl.value, antigEl.value, presEl.checked, he50El.value, he100El.value);
+
+      $('uo-big').textContent = fmt(r.neto);
+      $('uo-sub').textContent = CAT_LABEL[cat] + ' · ' + ZONA_CORTA[zona] + ' · ' + r.dias + ' jornadas de 8 hs';
+      $('uo-t-jornal').textContent = fmt(r.jornal);
+      $('uo-t-bruto').textContent = fmt(r.bruto);
+      $('uo-t-cese').textContent = fmt(r.cese);
+      $('uo-t-cese-pct').textContent = Math.round(r.pCese * 100) + '%';
+      $('uo-t-costo').textContent = fmt(r.costo);
+      $('uo-r-basico').textContent = fmt(r.basico);
+      $('uo-r-pres').textContent = fmt(r.presentismo);
+      $('uo-r-desc').textContent = '−' + fmt(r.desc);
+      $('uo-formula').textContent = r.esSereno
+        ? fmt(SERENO[zona]) + ' mensual × ' + r.dias + '/22 + 20% − 17% = ' + fmt(r.neto)
+        : fmt(r.jornal) + '/h × 8 hs × ' + r.dias + ' días + 20% − 17% = ' + fmt(r.neto);
+
+      $('uo-deco-val').textContent = fmt(r.neto);
+      $('uo-deco-jornal').textContent = fmt(r.jornal) + '/h';
+
+      $('uo-quick').innerHTML = '<strong>Respuesta rápida.</strong> Un ' + CAT_LABEL[cat] + ' de ' + ZONA_CORTA[zona] +
+        ' cobra ' + fmt(r.jornal) + ' por hora: en ' + r.dias + ' jornadas son <strong>' + fmt(r.bruto) +
+        ' brutos</strong> y <strong>' + fmt(r.neto) + ' netos</strong>, más ' + fmt(r.cese) + ' de fondo de cese.';
+
+      $('uo-hl-big').textContent = fmt(r.jornal);
+      $('uo-b-basico').textContent = fmt(r.basico);
+      $('uo-b-pres').textContent = fmt(r.presentismo);
+      $('uo-b-he').textContent = fmt(r.he);
+      $('uo-b-total').textContent = fmt(r.bruto);
+      $('uo-b-cese').textContent = fmt(r.cese);
+      $('uo-b-basico-bar').style.width = pct(r.basico, r.bruto) + '%';
+      $('uo-b-pres-bar').style.width = pct(r.presentismo, r.bruto) + '%';
+      $('uo-b-he-bar').style.width = pct(r.he, r.bruto) + '%';
+
+      $('uo-s1').textContent = CAT_LABEL[cat] + ' · ' + ZONA_CORTA[zona] + ' · ' + fmt(r.jornal) + '/h';
+      $('uo-s2').textContent = r.esSereno
+        ? fmt(SERENO[zona]) + ' × ' + r.dias + '/22 = ' + fmt(r.basico)
+        : fmt(r.jornal) + ' × 8 × ' + r.dias + ' = ' + fmt(r.basico);
+      $('uo-s3').textContent = fmt(r.bruto) + ' − 17% = ' + fmt(r.neto);
+
+      $('uo-tbody').innerHTML = CATS.map(function (c) {
+        const x = liq(c, zona, diasEl.value, antigEl.value, presEl.checked, he50El.value, he100El.value);
+        return '<tr><td>' + CAT_LABEL[c] + '</td><td>' + (c === 'sereno' ? '— mensual' : fmt(x.jornal) + '/h') +
+          '</td><td>' + fmt(x.bruto) + '</td><td class="cf-td-em">' + fmt(x.neto) + '</td></tr>';
+      }).join('');
+      $('uo-tbl-note').textContent = 'Calculado en ' + ZONA_CORTA[zona] + ' con ' + r.dias + ' jornadas y ' +
+        (presEl.checked ? 'asistencia perfecta' : 'sin presentismo') +
+        ', según los datos que cargaste arriba. Sin horas extra ni adicionales por especialidad.';
+    }
+
+    [catEl, zonaEl].forEach((el) => el.addEventListener('change', render));
+    [diasEl, antigEl, he50El, he100El].forEach((el) => el.addEventListener('input', render));
+    presEl.addEventListener('change', render);
+    $('uo-calc-btn').addEventListener('click', render);
+    document.querySelectorAll('[data-cat]').forEach((b) => b.addEventListener('click', () => {
+      catEl.value = b.getAttribute('data-cat'); render();
+    }));
+
+    function summary() {
+      const cat = catEl.value, zona = zonaEl.value;
+      const r = liq(cat, zona, diasEl.value, antigEl.value, presEl.checked, he50El.value, he100El.value);
+      return 'Sueldo UOCRA (CCT 76/75, escala julio 2026) — ' + CAT_LABEL[cat] + ', ' + ZONA_CORTA[zona] +
+        ', ' + r.dias + ' jornadas: jornal ' + fmt(r.jornal) + '/h, bruto ' + fmt(r.bruto) + ', neto ' +
+        fmt(r.neto) + '. Fondo de cese ' + fmt(r.cese) + ' (' + Math.round(r.pCese * 100) + '%). — hacecuentas.com';
+    }
+    function shareUrl() {
+      return location.origin + location.pathname + '?cat=' + catEl.value + '&zona=' + zonaEl.value +
+        '&dias=' + diasEl.value + '&antig=' + antigEl.value + '&pres=' + (presEl.checked ? 'si' : 'no');
+    }
+    function copy(t, btn) { navigator.clipboard?.writeText(t).then(() => { const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => btn.innerHTML = o, 1500); }); }
+    $('uo-copy').addEventListener('click', (e) => copy(summary(), e.currentTarget));
+    $('uo-detail').addEventListener('click', () => { document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' }); });
+    const s2 = $('uo-share2'); if (s2) s2.addEventListener('click', (e) => copy(shareUrl(), e.currentTarget));
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('cat')) catEl.value = q.get('cat');
+    if (q.get('zona')) zonaEl.value = q.get('zona');
+    if (q.get('dias')) diasEl.value = q.get('dias');
+    if (q.get('antig')) antigEl.value = q.get('antig');
+    if (q.get('pres')) presEl.checked = q.get('pres') === 'si';
+    render();
+  })();
+</script>
+
+<style>
+  /* El badge vive fuera de .cf-deco-card porque la card tiene overflow:hidden */
+  .uo .uo-deco-wrap { position: relative; }
+  .uo .uo-badge { top: 50%; right: -16px; transform: translateY(-50%); width: 48px; height: 48px; font-size: 0.78rem; letter-spacing: 0.02em; }
+
+  .uo-2col, .cf-band .uo-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .uo-2col, .cf-band .uo-2col { grid-template-columns: 0.85fr 1.15fr; } }
+
+  .uo .uo-hl { padding: 1.5rem 1.6rem; border-radius: var(--radius-lg); color: #fff; background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%); }
+  .uo .uo-hl .cf-side-eyebrow { color: rgba(255,255,255,0.75); }
+  .uo .uo-hl__title { font-size: 1.35rem; font-weight: 800; margin: 0 0 0.5rem; line-height: 1.2; letter-spacing: -0.015em; }
+  .uo .uo-hl__desc { font-size: 0.82rem; color: rgba(255,255,255,0.82); line-height: 1.5; margin: 0; }
+  .uo .uo-hl__big { font-size: 1.9rem; font-weight: 800; margin: 1.1rem 0 0.15rem; font-variant-numeric: tabular-nums; }
+  .uo .uo-bar--alt { background: linear-gradient(90deg, #10b981, #34d399) !important; }
+  .uo .uo-bar--he { background: linear-gradient(90deg, #8b5cf6, #a78bfa) !important; }
+  .uo .uo-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.15rem 0 0; }
+  .uo .uo-chip { margin: 0.7rem 0 0; padding: 0.4rem 0.6rem; border-radius: var(--radius-sm); background: var(--bg-soft); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.68rem; color: var(--accent-strong); overflow-x: auto; white-space: nowrap; }
+
+  .cf-band .uo-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .uo-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .uo-hl__big { font-size: 1.9rem; font-weight: 800; color: #fff; margin: 0.2rem 0 0.4rem; font-variant-numeric: tabular-nums; }
+  .cf-band .uo-src__title { font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 0.9rem; }
+  .cf-band .uo-src { display: grid; gap: 0.5rem; }
+  .cf-band .uo-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .uo-src__item strong { display: block; font-size: 0.8rem; font-weight: 700; color: #fff; line-height: 1.35; }
+  .cf-band .uo-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .uo-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+  .cf-band .uo-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.9rem; }
+  .cf-band .uo-tag { padding: 0.25rem 0.6rem; border-radius: 999px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); font-size: 0.7rem; font-weight: 700; color: #e7ecf3; }
+</style>

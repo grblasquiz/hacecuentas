@@ -1,0 +1,588 @@
+---
+// Flagship redesign de la calc "aportes patronales y cargas sociales" — Argentina (mockup Martin).
+// Los números salen del motor real (src/lib/formulas/aportes-patronales-cargas-sociales.ts):
+//   costo = bruto + (SIPA + INSSJP + FNE + AAFF del Dec. 814) + ART + obra social 6%.
+// Las alícuotas NO están exportadas por la fórmula: se DERIVAN del propio motor
+// (bruto 1.000.000 → cada componente / 1e6 = alícuota), para que no haya una tabla
+// duplicada que se desincronice si el fetcher cambia las constantes.
+// OJO: la suma de componentes del inciso a da 20,8% (no el 20,4% nominal del régimen);
+// el referenceTable del JSON ya documenta esa diferencia (redondeo de cada concepto).
+// Domain "data" (esmeralda) por el mockup, no por la categoría (finanzas→money).
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { aportesPatronalesCargasSociales } from '../lib/formulas/aportes-patronales-cargas-sociales';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+const pct1 = (n: number) => n.toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+const pct2 = (n: number) => n.toLocaleString('es-AR', { maximumFractionDigits: 2 }) + '%';
+
+const BASE = 1_000_000; // base de derivación: cada componente / 1e6 = alícuota
+const derivar = (actividad: any, riesgo: any, os: boolean) => {
+  const r = aportesPatronalesCargasSociales({ sueldoBruto: BASE, actividadEmpleadora: actividad, riesgoART: riesgo, obraSocialEmpleador: os });
+  return {
+    sipa: (r.aporteSIPA / BASE) * 100,
+    inssjp: (r.aporteINSSJP / BASE) * 100,
+    fne: (r.aporteFNE / BASE) * 100,
+    aaff: (r.aporteAAFF / BASE) * 100,
+    art: (r.art / BASE) * 100,
+    os: (r.obraSocial / BASE) * 100,
+    empleado: (r.aportesEmpleado / BASE) * 100,
+  };
+};
+const A = derivar('comercio', 'medio', true);   // inciso a
+const B = derivar('industria', 'medio', true);  // inciso b
+const ART = {
+  bajo: derivar('comercio', 'bajo', true).art,
+  medio: A.art,
+  alto: derivar('comercio', 'alto', true).art,
+};
+const UNIF_A = A.sipa + A.inssjp + A.fne + A.aaff; // 20,8%
+const UNIF_B = B.sipa + B.inssjp + B.fne + B.aaff; // 17,6%
+
+const INIT = { sueldoBruto: 1_500_000, actividadEmpleadora: 'comercio' as const, riesgoART: 'medio' as const, obraSocialEmpleador: true };
+const init = aportesPatronalesCargasSociales(INIT);
+const initPctCargas = (init.totalCargasPatronales / INIT.sueldoBruto) * 100;
+
+const fields = calc.fields || [];
+const fieldOpts = (id: string) => {
+  const f = fields.find((x: any) => x.id === id);
+  return (f?.options || []) as { value: string; label: string }[];
+};
+const actOpts = fieldOpts('actividadEmpleadora');
+const artOpts = fieldOpts('riesgoART');
+
+const refRows = [800_000, 1_200_000, 1_500_000, 2_000_000, 3_000_000, 5_000_000].map((s) => {
+  const r = aportesPatronalesCargasSociales({ ...INIT, sueldoBruto: s });
+  return { bruto: s, cargas: r.totalCargasPatronales, costo: r.costoTotalEmpresa, neto: r.sueldoNetoEmpleado };
+});
+
+// Barras sobre el costo total de la empresa
+const barBruto = (INIT.sueldoBruto / init.costoTotalEmpresa) * 100;
+const barCargas = (init.totalCargasPatronales / init.costoTotalEmpresa) * 100;
+const barEmpleado = (init.aportesEmpleado / init.costoTotalEmpresa) * 100;
+
+const tasasAttr = JSON.stringify({ a: A, b: B, art: ART, empleado: A.empleado, os: A.os });
+const faq = calc.faq || [];
+const sources = calc.sources || [];
+---
+
+<div class="cf-page apc" data-domain="data" data-tasas={tasasAttr}>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/categoria/finanzas">Finanzas</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Aportes patronales</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">🏢</span> Argentina · Cargas sociales · 2026</p>
+      <h1 class="cf-h1">Costo de un <span class="cf-yr">empleado registrado</span></h1>
+      <p class="cf-sub">Cuánto desembolsa realmente la empresa por cada sueldo bruto del recibo: contribuciones del Decreto 814, obra social y ART.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">💼</span> Empleo en blanco</span>
+      <div class="apc-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="apc-deco-val">{fmt(init.costoTotalEmpresa)}</div>
+          <div class="cf-deco-card__note">Costo real · bruto {fmt(INIT.sueldoBruto)}</div>
+        </div>
+        <span class="cf-deco-badge apc-badge">ART</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Cargas sobre el bruto</strong> <span class="cf-deco-chip" id="apc-deco-pct">{pct1(initPctCargas)}</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">El sueldo y el encuadre</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="apc-bruto">Sueldo bruto mensual</label><span class="cf-hint">Del recibo</span></div>
+        <div class="apc-money"><span class="apc-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="apc-bruto" value="1.500.000" /></div>
+        <p class="cf-help">Remuneración bruta sujeta a aportes (básico + adicionales remunerativos). No incluye viáticos no remunerativos.</p>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="apc-act">Actividad del empleador</label></div>
+          <select class="cf-input" id="apc-act">
+            {actOpts.map((o) => <option value={o.value} selected={o.value === 'comercio'}>{o.label}</option>)}
+          </select>
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="apc-art">Nivel de riesgo ART</label></div>
+          <select class="cf-input" id="apc-art">
+            {artOpts.map((o) => <option value={o.value} selected={o.value === 'medio'}>{o.label}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div class="cf-field">
+        <label class="cf-toggle">
+          <span class="cf-toggle__txt">Pago obra social como contribución<small>El 6% del empleador (Ley 23.660). Desactivalo sólo si tu caso no lo incluye.</small></span>
+          <input type="checkbox" id="apc-os" checked />
+          <span class="cf-switch"></span>
+        </label>
+      </div>
+
+      <button class="cf-primary" id="apc-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Ejemplos:</span>
+        <button class="cf-sc" type="button" data-ej="800000">$800.000</button>
+        <button class="cf-sc" type="button" data-ej="1200000">$1,2 M</button>
+        <button class="cf-sc" type="button" data-ej="2000000">$2 M</button>
+        <button class="cf-sc" type="button" data-ej="3000000">$3 M</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="apc-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="apc-big">{fmt(init.costoTotalEmpresa)}</div>
+      <p class="cf-result__biglabel" id="apc-biglabel">de costo real por mes</p>
+      <p class="cf-result__sub" id="apc-sub">Las cargas patronales suman {pct1(initPctCargas)} sobre el bruto del recibo</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="apc-t-cargas">{fmt(init.totalCargasPatronales)}</div><div class="cf-tile__label">Cargas patronales</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="apc-t-pct">{pct1(initPctCargas)}</div><div class="cf-tile__label">Sobre el bruto</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="apc-t-neto">{fmt(init.sueldoNetoEmpleado)}</div><div class="cf-tile__label">Neto del empleado</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="apc-t-emp">{fmt(init.aportesEmpleado)}</div><div class="cf-tile__label">Aportes del empleado</div></div>
+      </div>
+      <div class="cf-rows">
+        <div class="cf-rrow"><span class="cf-rrow__lbl">SIPA · jubilación <small id="apc-r-sipa-a">{pct2(A.sipa)} · Dec. 814 inc. a</small></span><span class="cf-rrow__val" id="apc-r-sipa">{fmt(init.aporteSIPA)}</span></div>
+        <div class="cf-rrow"><span class="cf-rrow__lbl">INSSJP · PAMI <small id="apc-r-pami-a">{pct2(A.inssjp)}</small></span><span class="cf-rrow__val" id="apc-r-pami">{fmt(init.aporteINSSJP)}</span></div>
+        <div class="cf-rrow"><span class="cf-rrow__lbl">Fondo Nacional de Empleo <small id="apc-r-fne-a">{pct2(A.fne)}</small></span><span class="cf-rrow__val" id="apc-r-fne">{fmt(init.aporteFNE)}</span></div>
+        <div class="cf-rrow"><span class="cf-rrow__lbl">Asignaciones familiares <small id="apc-r-aaff-a">{pct2(A.aaff)}</small></span><span class="cf-rrow__val" id="apc-r-aaff">{fmt(init.aporteAAFF)}</span></div>
+        <div class="cf-rrow"><span class="cf-rrow__lbl">ART <small id="apc-r-art-a">{pct2(A.art)} · riesgo medio (estimación)</small></span><span class="cf-rrow__val" id="apc-r-art">{fmt(init.art)}</span></div>
+        <div class="cf-rrow"><span class="cf-rrow__lbl">Obra social empleador <small id="apc-r-os-a">{pct2(A.os)} · Ley 23.660</small></span><span class="cf-rrow__val" id="apc-r-os">{fmt(init.obraSocial)}</span></div>
+      </div>
+      <div class="cf-result__formula" id="apc-formula">{fmt(INIT.sueldoBruto)} + {fmt(init.totalCargasPatronales)} = {fmt(init.costoTotalEmpresa)}</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="apc-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="apc-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt" id="apc-quick"><strong>Respuesta rápida.</strong> Por un sueldo bruto de {fmt(INIT.sueldoBruto)} en comercio con ART de riesgo medio, la empresa desembolsa <strong>{fmt(init.costoTotalEmpresa)}</strong> por mes y el empleado se lleva {fmt(init.sueldoNetoEmpleado)} de bolsillo.</p>
+    <span class="cf-formula">bruto + {pct1(initPctCargas)}</span>
+  </div>
+
+  <!-- DATOS CLAVE -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">🏛️</span>
+        <p class="cf-minicard__sub apc-mc-lbl">Unificado Dec. 814 · inc. a</p>
+        <div class="cf-minicard__big">{pct2(UNIF_A)}</div>
+        <p class="cf-minicard__desc apc-mc-desc">Comercio y servicios grandes: SIPA {pct2(A.sipa)} + PAMI {pct2(A.inssjp)} + FNE {pct2(A.fne)} + AAFF {pct2(A.aaff)}. La alícuota nominal del régimen es 20,4%; la diferencia es el redondeo de cada concepto.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🏭</span>
+        <p class="cf-minicard__sub apc-mc-lbl">Unificado Dec. 814 · inc. b</p>
+        <div class="cf-minicard__big">{pct2(UNIF_B)}</div>
+        <p class="cf-minicard__desc apc-mc-desc">PyME, industria y agro. Requiere certificado MiPyME vigente de SEPyME para encuadrar acá.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🏥</span>
+        <p class="cf-minicard__sub apc-mc-lbl">Obra social empleador</p>
+        <div class="cf-minicard__big">{pct2(A.os)}</div>
+        <p class="cf-minicard__desc apc-mc-desc">Contribución del empleador de la Ley 23.660, por fuera del Decreto 814.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">⛑️</span>
+        <p class="cf-minicard__sub apc-mc-lbl">ART según riesgo</p>
+        <div class="cf-minicard__big">{pct2(ART.bajo)} – {pct2(ART.alto)}</div>
+        <p class="cf-minicard__desc apc-mc-desc">Estimación por nivel de riesgo (Ley 24.557). La alícuota real la fija tu ART según el CIIU y la siniestralidad.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CÓMO LEER EL RESULTADO -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Cómo leer el resultado</p>
+    <h2 class="cf-section__title apc-t2">El bruto del recibo no es lo que sale la empresa</h2>
+    <div class="apc-2col">
+      <div class="cf-side-card cf-side-card--dark apc-hl">
+        <p class="cf-side-eyebrow">Cómo leer el resultado</p>
+        <p class="apc-hl__title">Hay dos descuentos distintos y se confunden</p>
+        <p class="cf-side-desc">Las contribuciones patronales las paga la empresa <em>por encima</em> del bruto. Los aportes del empleado salen <em>de adentro</em> del bruto: bajan lo que cobra, pero no le cuestan nada extra a la empresa.</p>
+        <div class="apc-hl__big" id="apc-hl-big">{pct1(initPctCargas)}</div>
+        <p class="cf-side-desc">Es lo que la empresa suma sobre el sueldo bruto</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-breakdown__big" id="apc-bd-big">{fmt(init.costoTotalEmpresa)}</div>
+        <p class="apc-note apc-note--top">Costo total de la empresa, por mes</p>
+        <div class="cf-brow">
+          <span class="cf-brow__lbl">Sueldo bruto del recibo</span>
+          <span class="cf-brow__val" id="apc-bd-bruto">{fmt(INIT.sueldoBruto)}</span>
+          <span class="cf-brow__bar"><span id="apc-bd-bruto-bar" style={`width:${barBruto.toFixed(1)}%`}></span></span>
+        </div>
+        <div class="cf-brow apc-brow--sp">
+          <span class="cf-brow__lbl">Cargas patronales (las paga la empresa)</span>
+          <span class="cf-brow__val" id="apc-bd-cargas">+ {fmt(init.totalCargasPatronales)}</span>
+          <span class="cf-brow__bar"><span class="apc-bar--alt" id="apc-bd-cargas-bar" style={`width:${barCargas.toFixed(1)}%`}></span></span>
+        </div>
+        <div class="cf-brow apc-brow--sp">
+          <span class="cf-brow__lbl">Aportes del empleado (salen del bruto)</span>
+          <span class="cf-brow__val" id="apc-bd-emp">− {fmt(init.aportesEmpleado)}</span>
+          <span class="cf-brow__bar"><span class="apc-bar--emp" id="apc-bd-emp-bar" style={`width:${barEmpleado.toFixed(1)}%`}></span></span>
+        </div>
+        <div class="cf-breakdown__total">
+          <span>Neto que cobra el trabajador</span>
+          <strong id="apc-bd-neto">{fmt(init.sueldoNetoEmpleado)}</strong>
+        </div>
+        <div class="cf-callout cf-callout--warn apc-cal">
+          <span class="cf-callout__ico" aria-hidden="true">⚠️</span>
+          <p>El neto es <strong>antes de Ganancias</strong>. Si el sueldo supera el mínimo no imponible, el empleador también retiene el impuesto de 4ta categoría.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PASO A PASO -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title apc-t2">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">El bruto del recibo, la actividad del empleador (define el inciso del Decreto 814) y el nivel de riesgo de la ART.</p>
+        <span class="apc-chip" id="apc-s1">{fmt(INIT.sueldoBruto)} · comercio · ART medio</span>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">Sumamos los cuatro subsistemas del Decreto 814, la ART según el riesgo y el 6% de obra social del empleador.</p>
+        <span class="apc-chip" id="apc-s2">{pct2(UNIF_A)} + {pct2(A.art)} + {pct2(A.os)} = {pct1(initPctCargas)}</span>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">Ese porcentaje aplicado al bruto son las cargas; sumadas al sueldo dan el costo real del puesto para la empresa.</p>
+        <span class="apc-chip" id="apc-s3">{fmt(init.costoTotalEmpresa)} · +{fmt(init.totalCargasPatronales)}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- REFERENCIAS -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Sueldo bruto</th><th>Cargas patronales</th><th>Costo total empresa</th><th>Neto del empleado</th></tr></thead>
+        <tbody>
+          {refRows.map((r) => (
+            <tr>
+              <td>{fmt(r.bruto)}</td>
+              <td>{fmt(r.cargas)}</td>
+              <td class="cf-td-em">{fmt(r.costo)}</td>
+              <td>{fmt(r.neto)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="apc-tnote">Escenarios calculados con la misma fórmula para comercio (Dec. 814 inc. a), ART de riesgo medio y obra social del empleador incluida.</p>
+  </section>
+</div>
+
+<!-- Banda: atención + referencia principal -->
+<div class="cf-band cf-band--warm" data-domain="data">
+  <div class="cf-band__inner">
+    <div class="apc-2col">
+      <div class="apc-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="apc-card__title">El costo anual es mayor que doce de estos</h2>
+        <p class="cf-side-desc">Esta cuenta es la del mes. Al año se le suman el aguinaldo (con sus propias cargas), las vacaciones pagas, la provisión por indemnización y los adicionales del convenio. Tampoco descuenta el mínimo no imponible por trabajador de la Ley 27.430, que reduce levemente la base, ni los regímenes de promoción del empleo.</p>
+        <div class="cf-callout cf-callout--warn apc-cal">
+          <span class="cf-callout__ico" aria-hidden="true">📋</span>
+          <p>La alícuota de <strong>ART</strong> es una estimación por nivel de riesgo: la real la fija tu aseguradora según el CIIU y la siniestralidad de la empresa.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="apc-src__title">Carga patronal del caso cargado</p>
+        <div class="apc-ref__big">{pct1(initPctCargas)}</div>
+        <p class="cf-side-desc">Sobre el sueldo bruto · comercio (inc. a) con ART de riesgo medio y obra social</p>
+        <div class="apc-chips">
+          <span class="apc-chip2">Inc. a {pct2(UNIF_A)}</span>
+          <span class="apc-chip2">Inc. b {pct2(UNIF_B)}</span>
+          <span class="apc-chip2">Obra social {pct2(A.os)}</span>
+          <span class="apc-chip2">ART {pct2(ART.bajo)}–{pct2(ART.alto)}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page apc" data-domain="data">
+  {faq.length > 0 && (
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title apc-t2">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+</div>
+
+<!-- Banda: fuentes y metodología -->
+<div class="cf-band" data-domain="data">
+  <div class="cf-band__inner">
+    <div class="apc-2col">
+      <div class="apc-card">
+        <p class="cf-eyebrow">Fuentes y metodología</p>
+        <h2 class="apc-card__title">Números que podés defender</h2>
+        <p class="cf-side-desc">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026. Las contribuciones salen del Decreto 814/2001 con las modificaciones de la Ley 27.430; la obra social, de la Ley 23.660; y la cobertura de riesgos, de la Ley 24.557.</p>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Fuentes oficiales</p>
+        <p class="apc-src__title">Marco normativo 2026</p>
+        <div class="apc-src">
+          {sources.map((s: any) => (
+            <div class="apc-src__item">
+              <strong>{typeof s === 'string' ? s : String(s.name || '').split(' - ')[0].trim()}</strong>
+              {typeof s !== 'string' && String(s.name || '').includes(' - ') && <span>{String(s.name).split(' - ').slice(1).join(' - ').trim()}</span>}
+            </div>
+          ))}
+        </div>
+        <p class="apc-src__foot">● Información revisada en julio de 2026</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page apc" data-domain="data">
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title apc-t2">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🧮'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('—')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="apc-share2">Guardar resultado</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.apc');
+    if (!root) return;
+    const T = JSON.parse(root.getAttribute('data-tasas'));
+    const $ = function (id) { return document.getElementById(id); };
+    const fmt = function (n) { return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(Math.round(n)); };
+    const pct1 = function (n) { return n.toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'; };
+    const pct2 = function (n) { return n.toLocaleString('es-AR', { maximumFractionDigits: 2 }) + '%'; };
+
+    const brutoEl = $('apc-bruto'), actEl = $('apc-act'), artEl = $('apc-art'), osEl = $('apc-os');
+    function digits(v) { return Number(String(v || '').replace(/\D/g, '')) || 0; }
+    function fmtThousands(v) { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('es-AR') : ''; }
+
+    // Réplica de aportesPatronalesCargasSociales(): sólo 'comercio' va por el inciso a.
+    function calcular(bruto, actividad, riesgo, pagaOs) {
+      const al = actividad === 'comercio' ? T.a : T.b;
+      const sipa = bruto * (al.sipa / 100);
+      const inssjp = bruto * (al.inssjp / 100);
+      const fne = bruto * (al.fne / 100);
+      const aaff = bruto * (al.aaff / 100);
+      const art = bruto * (T.art[riesgo] / 100);
+      const os = pagaOs ? bruto * (T.os / 100) : 0;
+      const cargas = sipa + inssjp + fne + aaff + art + os;
+      const empleado = bruto * (T.empleado / 100);
+      return {
+        sipa: sipa, inssjp: inssjp, fne: fne, aaff: aaff, art: art, os: os,
+        cargas: cargas, costo: bruto + cargas, empleado: empleado, neto: bruto - empleado,
+        pct: bruto > 0 ? (cargas / bruto) * 100 : 0,
+        unif: al.sipa + al.inssjp + al.fne + al.aaff,
+      };
+    }
+
+    function render() {
+      const bruto = digits(brutoEl.value);
+      const actividad = actEl.value, riesgo = artEl.value, pagaOs = osEl.checked;
+      const r = calcular(bruto, actividad, riesgo, pagaOs);
+      const incLbl = actividad === 'comercio' ? 'Dec. 814 inc. a' : 'Dec. 814 inc. b';
+      const al = actividad === 'comercio' ? T.a : T.b;
+
+      $('apc-big').textContent = fmt(r.costo);
+      $('apc-sub').textContent = 'Las cargas patronales suman ' + pct1(r.pct) + ' sobre el bruto del recibo';
+      $('apc-t-cargas').textContent = fmt(r.cargas);
+      $('apc-t-pct').textContent = pct1(r.pct);
+      $('apc-t-neto').textContent = fmt(r.neto);
+      $('apc-t-emp').textContent = fmt(r.empleado);
+
+      $('apc-r-sipa').textContent = fmt(r.sipa);
+      $('apc-r-pami').textContent = fmt(r.inssjp);
+      $('apc-r-fne').textContent = fmt(r.fne);
+      $('apc-r-aaff').textContent = fmt(r.aaff);
+      $('apc-r-art').textContent = fmt(r.art);
+      $('apc-r-os').textContent = fmt(r.os);
+      $('apc-r-sipa-a').textContent = pct2(al.sipa) + ' · ' + incLbl;
+      $('apc-r-pami-a').textContent = pct2(al.inssjp);
+      $('apc-r-fne-a').textContent = pct2(al.fne);
+      $('apc-r-aaff-a').textContent = pct2(al.aaff);
+      $('apc-r-art-a').textContent = pct2(T.art[riesgo]) + ' · riesgo ' + riesgo + ' (estimación)';
+      $('apc-r-os-a').textContent = pagaOs ? pct2(T.os) + ' · Ley 23.660' : 'no incluida';
+      $('apc-formula').textContent = fmt(bruto) + ' + ' + fmt(r.cargas) + ' = ' + fmt(r.costo);
+
+      const dv = $('apc-deco-val'); if (dv) dv.textContent = fmt(r.costo);
+      const dn = document.querySelector('.apc .cf-deco-card__note');
+      if (dn) dn.textContent = 'Costo real · bruto ' + fmt(bruto);
+      const dp = $('apc-deco-pct'); if (dp) dp.textContent = pct1(r.pct);
+
+      $('apc-hl-big').textContent = pct1(r.pct);
+      $('apc-bd-big').textContent = fmt(r.costo);
+      $('apc-bd-bruto').textContent = fmt(bruto);
+      $('apc-bd-cargas').textContent = '+ ' + fmt(r.cargas);
+      $('apc-bd-emp').textContent = '− ' + fmt(r.empleado);
+      $('apc-bd-neto').textContent = fmt(r.neto);
+      const ct = r.costo > 0 ? r.costo : 1;
+      $('apc-bd-bruto-bar').style.width = ((bruto / ct) * 100).toFixed(1) + '%';
+      $('apc-bd-cargas-bar').style.width = ((r.cargas / ct) * 100).toFixed(1) + '%';
+      $('apc-bd-emp-bar').style.width = ((r.empleado / ct) * 100).toFixed(1) + '%';
+
+      const actTxt = actEl.options[actEl.selectedIndex].text.split('(')[0].trim();
+      $('apc-s1').textContent = fmt(bruto) + ' · ' + actTxt + ' · ART ' + riesgo;
+      $('apc-s2').textContent = pct2(r.unif) + ' + ' + pct2(T.art[riesgo]) + (pagaOs ? ' + ' + pct2(T.os) : '') + ' = ' + pct1(r.pct);
+      $('apc-s3').textContent = fmt(r.costo) + ' · +' + fmt(r.cargas);
+    }
+
+    brutoEl.addEventListener('input', function () { brutoEl.value = fmtThousands(brutoEl.value); render(); });
+    actEl.addEventListener('change', render);
+    artEl.addEventListener('change', render);
+    osEl.addEventListener('change', render);
+    $('apc-btn').addEventListener('click', render);
+    document.querySelectorAll('[data-ej]').forEach(function (b) {
+      b.addEventListener('click', function () { brutoEl.value = fmtThousands(b.getAttribute('data-ej')); render(); });
+    });
+
+    function summary() {
+      const bruto = digits(brutoEl.value);
+      const r = calcular(bruto, actEl.value, artEl.value, osEl.checked);
+      return 'Costo de un empleado registrado: por un sueldo bruto de ' + fmt(bruto) + ', la empresa desembolsa ' + fmt(r.costo) + ' por mes (' + pct1(r.pct) + ' de cargas patronales) y el empleado cobra ' + fmt(r.neto) + ' de neto. — hacecuentas.com';
+    }
+    function shareUrl() {
+      return location.origin + location.pathname + '?bruto=' + digits(brutoEl.value) + '&actividad=' + actEl.value + '&art=' + artEl.value + '&os=' + (osEl.checked ? '1' : '0');
+    }
+    function copy(t, btn) {
+      if (!navigator.clipboard) return;
+      navigator.clipboard.writeText(t).then(function () {
+        const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(function () { btn.innerHTML = o; }, 1500);
+      });
+    }
+    $('apc-copy').addEventListener('click', function (e) { copy(summary(), e.currentTarget); });
+    $('apc-detail').addEventListener('click', function () {
+      const t = document.getElementById('como-funciona'); if (t) t.scrollIntoView({ behavior: 'smooth' });
+    });
+    const s2 = $('apc-share2'); if (s2) s2.addEventListener('click', function (e) { copy(shareUrl(), e.currentTarget); });
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('bruto')) brutoEl.value = fmtThousands(q.get('bruto'));
+    if (q.get('actividad')) actEl.value = q.get('actividad');
+    if (q.get('art')) artEl.value = q.get('art');
+    if (q.get('os')) osEl.checked = q.get('os') !== '0';
+    render();
+  })();
+</script>
+
+<style>
+  .apc .apc-deco-wrap { position: relative; }
+  .apc .apc-badge { top: 50%; right: -16px; transform: translateY(-50%); width: 48px; height: 48px; font-size: 0.78rem; letter-spacing: 0.02em; }
+
+  .apc .apc-money { position: relative; display: flex; align-items: center; }
+  .apc .apc-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
+  .apc .apc-money .cf-input { padding-left: 1.7rem; }
+
+  .apc .cf-section__title.apc-t2 { margin: 0.35rem 0 1.25rem; }
+  .apc .apc-mc-lbl { font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+  .apc .apc-mc-desc { margin-top: 0.3rem; }
+  .apc .apc-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.15rem 0 0; }
+  .apc .apc-note--top { margin: -0.6rem 0 1rem; }
+  .apc .apc-brow--sp { margin-top: 1rem; }
+  .apc .apc-cal, .cf-band .apc-cal { margin-top: 1.25rem; }
+  .apc .apc-bar--alt { background: linear-gradient(90deg, #f59e0b, #fb923c) !important; }
+  .apc .apc-bar--emp { background: linear-gradient(90deg, #64748b, #94a3b8) !important; }
+  .apc .apc-tnote { font-size: 0.75rem; color: var(--text-subtle); margin: 0.7rem 0 0; }
+
+  .apc .apc-chip {
+    display: inline-block; margin-top: 0.8rem; padding: 0.35rem 0.6rem; border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; color: var(--accent-strong);
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+
+  .apc-2col, .cf-band .apc-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .apc-2col, .cf-band .apc-2col { grid-template-columns: 0.85fr 1.15fr; } }
+
+  .apc .apc-hl__title { font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin: 0 0 0.6rem; letter-spacing: -0.015em; }
+  .apc .apc-hl__big { font-size: 2rem; font-weight: 800; color: #fff; margin: 1.1rem 0 0.15rem; font-variant-numeric: tabular-nums; }
+
+  .cf-band .apc-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .apc-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .apc-src__title { font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 0.9rem; }
+  .cf-band .apc-src { display: grid; gap: 0.5rem; }
+  .cf-band .apc-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .apc-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .apc-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .apc-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+  .cf-band .apc-ref__big { font-size: 2.2rem; font-weight: 800; color: #fff; margin: 0.2rem 0 0.15rem; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .cf-band .apc-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+  .cf-band .apc-chip2 { padding: 0.3rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; background: rgba(255,255,255,0.09); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); }
+</style>

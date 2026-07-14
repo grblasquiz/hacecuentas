@@ -1,0 +1,514 @@
+---
+// Flagship redesign de la calc "fondo de desempleo ANSES" (mockup Martin).
+// Los números salen del motor real (src/lib/formulas/fondo-desempleo-anses-monto-tiempo.ts):
+// prestación = 75% de la mejor remuneración neta de los últimos 6 meses, acotada
+// entre el piso y el techo que fija ANSES por resolución (DESEMPLEO_PISO/TECHO,
+// fuente única src/lib/data/smvm-ar-2026.ts). Duración = 2/4/8/12 cuotas según
+// meses aportados en los últimos 3 años. Domain "data" (esmeralda) por el mockup,
+// no por la categoría (finanzas→money). Header/footer = los globales del sitio.
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { DESEMPLEO_PISO, DESEMPLEO_TECHO } from '../lib/data/smvm-ar-2026';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Réplica exacta de la lógica del motor (misma fuente de constantes).
+function prestacion(s: number, m: number) {
+  const montoBase = s * 0.75;
+  const monto = s > 0 ? Math.min(Math.max(montoBase, DESEMPLEO_PISO), DESEMPLEO_TECHO) : 0;
+  const dur = m < 12 ? 2 : m < 24 ? 4 : m < 36 ? 8 : 12;
+  return {
+    montoBase,
+    monto,
+    dur,
+    total: monto * dur,
+    topeMax: montoBase > DESEMPLEO_TECHO,
+    topeMin: s > 0 && montoBase < DESEMPLEO_PISO,
+  };
+}
+
+const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+
+// Defaults del JSON de la calc (sueldoPromedio 800.000 · mesesTrabajados 24).
+const INIT_S = 800_000;
+const INIT_M = 24;
+const init = prestacion(INIT_S, INIT_M);
+
+// Filas de referencia: computadas con la fórmula real, a la duración del caso cargado.
+const refRows = [200_000, 242_000, 300_000, 400_000, 484_000, 600_000].map((s) => ({
+  sueldo: s,
+  ...prestacion(s, INIT_M),
+}));
+
+const sources = (calc.sources || []).slice(0, 3);
+const faq = calc.faq || [];
+const explanationHtml = calc.explanation ? md(calc.explanation) : '';
+---
+
+<div
+  class="cf-page fd"
+  data-domain="data"
+  data-piso={DESEMPLEO_PISO}
+  data-techo={DESEMPLEO_TECHO}
+>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/sueldos-y-trabajo">Sueldos y trabajo</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Fondo de desempleo ANSES</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">🛟</span> ANSES · Prestación por desempleo 2026</p>
+      <h1 class="cf-h1">Calculadora de <span class="cf-yr">fondo de desempleo ANSES</span></h1>
+      <p class="cf-sub">Estimá cuánto vas a cobrar por mes y por cuántas cuotas, según tu mejor sueldo neto y los meses que aportaste.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">📄</span> Despido sin causa</span>
+      <div class="fd-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="fd-deco-val">{fmt(init.monto)}</div>
+          <div class="cf-deco-card__note">Prestación mensual estimada</div>
+        </div>
+        <span class="cf-deco-badge fd-badge">🛟</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Duración del cobro</strong> <span class="cf-deco-chip" id="fd-deco-dur">{init.dur} cuotas</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">Tus datos del cese</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="fd-sueldo">Mejor sueldo neto</label><span class="cf-hint">Últimos 6 meses</span></div>
+          <div class="fd-money"><span class="fd-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="fd-sueldo" value="800.000" /></div>
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="fd-meses">Meses aportados</label><span class="cf-hint">Últimos 3 años</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="numeric" id="fd-meses" min="0" max="36" step="1" value="24" />
+        </div>
+      </div>
+      <p class="cf-help">La prestación toma la <strong>mejor</strong> remuneración neta del semestre previo, no el promedio. Los meses aportados definen cuántas cuotas cobrás.</p>
+
+      <button class="cf-primary" id="fd-calc-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Ejemplos:</span>
+        <button class="cf-sc" type="button" data-ej="250000">$250 mil</button>
+        <button class="cf-sc" type="button" data-ej="350000">$350 mil</button>
+        <button class="cf-sc" type="button" data-ej="484000">$484 mil</button>
+        <button class="cf-sc" type="button" data-ej="600000">$600 mil</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="fd-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="fd-big">{fmt(init.monto)}</div>
+      <div class="cf-result__biglabel">Prestación mensual</div>
+      <p class="cf-result__sub" id="fd-sub">Con {INIT_M} meses aportados · el 75% quedó limitado por el techo de ANSES</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="fd-t-dur">{init.dur} meses</div><div class="cf-tile__label">Duración del cobro</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="fd-t-total">{fmt(init.total)}</div><div class="cf-tile__label">Total estimado</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="fd-t-base">{fmt(init.montoBase)}</div><div class="cf-tile__label">75% de tu sueldo</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="fd-t-tope">Techo ANSES</div><div class="cf-tile__label">Tope aplicado</div></div>
+      </div>
+      <div class="cf-result__formula" id="fd-formula">min(max({fmt(INIT_S)} × 0,75 ; {fmt(DESEMPLEO_PISO)}) ; {fmt(DESEMPLEO_TECHO)}) = {fmt(init.monto)}</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="fd-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="fd-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt" id="fd-quick"><strong>Respuesta rápida.</strong> Con un mejor sueldo neto de {fmt(INIT_S)} y {INIT_M} meses aportados cobrás <strong>{fmt(init.monto)} por mes durante {init.dur} meses</strong> (~{fmt(init.total)} en total).</p>
+    <span class="cf-formula">75% del sueldo, entre {fmt(DESEMPLEO_PISO)} y {fmt(DESEMPLEO_TECHO)}</span>
+  </div>
+
+  <!-- Datos clave -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">📐</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Base de cálculo</p>
+        <div class="cf-minicard__big">75%</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">De la mejor remuneración neta de los últimos 6 meses.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">⬇️</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Piso ANSES</p>
+        <div class="cf-minicard__big">{fmt(DESEMPLEO_PISO)}</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Mínimo que cobrás aunque el 75% dé menos.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">⬆️</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Techo ANSES</p>
+        <div class="cf-minicard__big">{fmt(DESEMPLEO_TECHO)}</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Máximo de la prestación, por más alto que sea tu sueldo.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">⏳</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Plazo del trámite</p>
+        <div class="cf-minicard__big">90 días</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Desde el cese para inscribirte. Después se pierden cuotas.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cómo leer el resultado -->
+  <section class="cf-section">
+    <div class="fd-2col">
+      <div class="fd-hl">
+        <p class="cf-side-eyebrow">Cómo leer el resultado</p>
+        <p class="fd-hl__title">El 75% no siempre es lo que cobrás</p>
+        <p class="fd-hl__desc">La prestación arranca en el 75% de tu mejor sueldo neto, pero después se recorta contra el piso y el techo que ANSES fija por resolución. Con sueldos altos, el techo manda.</p>
+        <div class="fd-hl__big" id="fd-hl-big">{fmt(init.monto)}</div>
+        <p class="fd-hl__desc">Prestación mensual del caso cargado</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-brow">
+          <span class="cf-brow__lbl">Tu mejor sueldo neto</span>
+          <span class="cf-brow__val" id="fd-b-sueldo">{fmt(INIT_S)}</span>
+          <span class="cf-brow__bar"><span id="fd-b-sueldo-bar" style="width:100%"></span></span>
+        </div>
+        <p class="fd-note">Base de la que parte el cálculo</p>
+        <div class="cf-brow" style="margin-top:1rem">
+          <span class="cf-brow__lbl">75% del sueldo</span>
+          <span class="cf-brow__val" id="fd-b-base">{fmt(init.montoBase)}</span>
+          <span class="cf-brow__bar"><span id="fd-b-base-bar" style="width:75%"></span></span>
+        </div>
+        <p class="fd-note">Monto antes de aplicar piso y techo</p>
+        <div class="cf-brow" style="margin-top:1rem">
+          <span class="cf-brow__lbl">Lo que efectivamente cobrás</span>
+          <span class="cf-brow__val" id="fd-b-monto">{fmt(init.monto)}</span>
+          <span class="cf-brow__bar"><span class="fd-bar--alt" id="fd-b-monto-bar" style={`width:${Math.round((init.monto / INIT_S) * 100)}%`}></span></span>
+        </div>
+        <p class="fd-note" id="fd-b-note">Recortado por el techo de {fmt(DESEMPLEO_TECHO)}</p>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1.25rem">
+          <span class="cf-callout__ico" aria-hidden="true">📉</span>
+          <p>El monto no se mantiene fijo: <strong>desde el 5° mes baja al 85%</strong> del valor inicial y <strong>desde el 9° al 70%</strong>. Acá ves la cuota inicial.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Paso a paso -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">Tu mejor remuneración neta de los últimos 6 meses y los meses que aportaste en los últimos 3 años.</p>
+        <p class="fd-chip" id="fd-s1">{fmt(INIT_S)} · {INIT_M} meses</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">Tomamos el 75% del sueldo y lo acotamos entre el piso y el techo vigentes de ANSES.</p>
+        <p class="fd-chip" id="fd-s2">{fmt(INIT_S)} × 0,75 = {fmt(init.montoBase)}</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">Los meses aportados definen la cantidad de cuotas: 2, 4, 8 o 12.</p>
+        <p class="fd-chip" id="fd-s3">{fmt(init.monto)} × {init.dur} = {fmt(init.total)}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Referencias -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Mejor sueldo neto</th><th>75% del sueldo</th><th>Cobra por mes</th><th id="fd-th-total">Total en {init.dur} cuotas</th></tr></thead>
+        <tbody id="fd-tbody">
+          {refRows.map((r) => (
+            <tr>
+              <td>{fmt(r.sueldo)}</td>
+              <td>{fmt(r.montoBase)}</td>
+              <td class="cf-td-em">{fmt(r.monto)}</td>
+              <td>{fmt(r.total)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="fd-note" style="margin-top:0.6rem">Por debajo de {fmt(DESEMPLEO_PISO / 0.75)} de sueldo siempre cobrás el piso; por encima de {fmt(DESEMPLEO_TECHO / 0.75)}, siempre el techo. Duración calculada con los meses aportados que cargaste.</p>
+  </section>
+</div>
+
+<!-- Banda: atención + referencia principal -->
+<div class="cf-band cf-band--warm" data-domain="data">
+  <div class="cf-band__inner">
+    <div class="fd-2col">
+      <div class="fd-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="fd-card__title">No todo cese da derecho a cobrar</h2>
+        <p class="cf-side-desc">La prestación cubre el desempleo <strong>involuntario</strong>: despido sin justa causa, mutuo acuerdo, fin de contrato a plazo fijo o fin de obra. La renuncia voluntaria no genera derecho, y tampoco podés cobrarla en simultáneo con otro trabajo registrado o una jubilación.</p>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1rem">
+          <span class="cf-callout__ico" aria-hidden="true">⏰</span>
+          <p>Tenés <strong>90 días desde el cese</strong> para inscribirte en ANSES. Pasado ese plazo se pierden cuotas. Estimación orientativa: el monto final lo liquida ANSES con tu historia laboral real.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="fd-src__title">Techo de la prestación</p>
+        <div class="fd-hl__big" style="margin-top:0.2rem">{fmt(DESEMPLEO_TECHO)}</div>
+        <p class="cf-side-desc">Máximo mensual que paga ANSES, sin importar cuánto ganabas. El piso es {fmt(DESEMPLEO_PISO)}.</p>
+        <div class="fd-chips">
+          <span class="fd-tag">Ley 24.013</span>
+          <span class="fd-tag">Piso {fmt(DESEMPLEO_PISO)}</span>
+          <span class="fd-tag">2 a 12 cuotas</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page fd" data-domain="data">
+  {faq.length > 0 && (
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {explanationHtml && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">En detalle</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cómo funciona el seguro de desempleo</h2>
+      <div class="cf-prose" set:html={explanationHtml} />
+    </section>
+  )}
+</div>
+
+<!-- Banda: fuentes y metodología -->
+<div class="cf-band" data-domain="data">
+  <div class="cf-band__inner">
+    <div class="fd-2col">
+      <div>
+        <p class="cf-eyebrow">Fuentes y metodología</p>
+        <h2 class="fd-card__title" style="color:var(--text)">Números que podés defender</h2>
+        <p class="cf-side-desc">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026.</p>
+        <p class="cf-side-desc" style="margin-top:0.7rem">El piso y el techo los fija ANSES por resolución y rondan el 50% y el 100% del SMVM, pero se aplican con rezago: por eso no coinciden exactamente con el salario mínimo vigente.</p>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Fuentes oficiales</p>
+        <p class="fd-src__title">Marco legal</p>
+        <div class="fd-src">
+          {sources.map((s: any) => (
+            <div class="fd-src__item">
+              <strong>{s.name}</strong>
+              <span>{s.publisher}</span>
+            </div>
+          ))}
+        </div>
+        <p class="fd-src__foot">● Información revisada en julio de 2026</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page fd" data-domain="data">
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🧮'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('—')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="fd-share2">Copiar enlace</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.fd');
+    if (!root) return;
+    const PISO = Number(root.getAttribute('data-piso'));
+    const TECHO = Number(root.getAttribute('data-techo'));
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n) => '$' + Math.round(n).toLocaleString('es-AR');
+    const sueldoEl = $('fd-sueldo'), mesesEl = $('fd-meses');
+
+    function rawSueldo() { return Number((sueldoEl.value || '').replace(/\D/g, '')) || 0; }
+    function fmtThousands(v) { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('es-AR') : ''; }
+
+    // Réplica exacta del motor (fondo-desempleo-anses-monto-tiempo.ts).
+    function prestacion(s, m) {
+      const montoBase = s * 0.75;
+      const monto = s > 0 ? Math.min(Math.max(montoBase, PISO), TECHO) : 0;
+      const dur = m < 12 ? 2 : m < 24 ? 4 : m < 36 ? 8 : 12;
+      return {
+        montoBase, monto, dur, total: monto * dur,
+        topeMax: montoBase > TECHO,
+        topeMin: s > 0 && montoBase < PISO,
+      };
+    }
+
+    const REF = [200000, 242000, 300000, 400000, 484000, 600000];
+
+    function render() {
+      const s = rawSueldo();
+      const m = Number(mesesEl.value) || 0;
+      const r = prestacion(s, m);
+
+      $('fd-big').textContent = fmt(r.monto);
+      $('fd-sub').textContent = 'Con ' + m + ' meses aportados · ' +
+        (r.topeMax ? 'el 75% quedó limitado por el techo de ANSES'
+          : r.topeMin ? 'se aplicó el piso porque el 75% quedaba por debajo'
+          : 'el 75% cae dentro de la banda de ANSES');
+      $('fd-t-dur').textContent = r.dur + ' meses';
+      $('fd-t-total').textContent = fmt(r.total);
+      $('fd-t-base').textContent = fmt(r.montoBase);
+      $('fd-t-tope').textContent = r.topeMax ? 'Techo ANSES' : r.topeMin ? 'Piso ANSES' : 'Sin tope';
+      $('fd-formula').textContent = 'min(max(' + fmt(s) + ' × 0,75 ; ' + fmt(PISO) + ') ; ' + fmt(TECHO) + ') = ' + fmt(r.monto);
+
+      $('fd-deco-val').textContent = fmt(r.monto);
+      $('fd-deco-dur').textContent = r.dur + ' cuotas';
+
+      $('fd-quick').innerHTML = '<strong>Respuesta rápida.</strong> Con un mejor sueldo neto de ' + fmt(s) +
+        ' y ' + m + ' meses aportados cobrás <strong>' + fmt(r.monto) + ' por mes durante ' + r.dur +
+        ' meses</strong> (~' + fmt(r.total) + ' en total).';
+
+      $('fd-hl-big').textContent = fmt(r.monto);
+      $('fd-b-sueldo').textContent = fmt(s);
+      $('fd-b-base').textContent = fmt(r.montoBase);
+      $('fd-b-monto').textContent = fmt(r.monto);
+      const pctMonto = s > 0 ? Math.round((r.monto / s) * 100) : 0;
+      $('fd-b-monto-bar').style.width = Math.min(100, pctMonto) + '%';
+      $('fd-b-note').textContent = r.topeMax ? 'Recortado por el techo de ' + fmt(TECHO)
+        : r.topeMin ? 'Elevado al piso de ' + fmt(PISO)
+        : 'El 75% cae dentro de la banda: cobrás el monto pleno';
+
+      $('fd-s1').textContent = fmt(s) + ' · ' + m + ' meses';
+      $('fd-s2').textContent = fmt(s) + ' × 0,75 = ' + fmt(r.montoBase);
+      $('fd-s3').textContent = fmt(r.monto) + ' × ' + r.dur + ' = ' + fmt(r.total);
+
+      $('fd-th-total').textContent = 'Total en ' + r.dur + ' cuotas';
+      $('fd-tbody').innerHTML = REF.map(function (v) {
+        const x = prestacion(v, m);
+        return '<tr><td>' + fmt(v) + '</td><td>' + fmt(x.montoBase) + '</td><td class="cf-td-em">' +
+          fmt(x.monto) + '</td><td>' + fmt(x.total) + '</td></tr>';
+      }).join('');
+    }
+
+    sueldoEl.addEventListener('input', () => { sueldoEl.value = fmtThousands(sueldoEl.value); render(); });
+    mesesEl.addEventListener('input', render);
+    $('fd-calc-btn').addEventListener('click', render);
+    document.querySelectorAll('[data-ej]').forEach((b) => b.addEventListener('click', () => {
+      sueldoEl.value = fmtThousands(b.getAttribute('data-ej')); render();
+    }));
+
+    function summary() {
+      const s = rawSueldo(); const m = Number(mesesEl.value) || 0; const r = prestacion(s, m);
+      return 'Fondo de desempleo ANSES con mejor sueldo neto ' + fmt(s) + ' y ' + m + ' meses aportados: ' +
+        fmt(r.monto) + '/mes durante ' + r.dur + ' meses (~' + fmt(r.total) + ' en total). — hacecuentas.com';
+    }
+    function shareUrl() { return location.origin + location.pathname + '?sueldo=' + rawSueldo() + '&meses=' + (Number(mesesEl.value) || 0); }
+    function copy(t, btn) { navigator.clipboard?.writeText(t).then(() => { const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => btn.innerHTML = o, 1500); }); }
+    $('fd-copy').addEventListener('click', (e) => copy(summary(), e.currentTarget));
+    $('fd-detail').addEventListener('click', () => { document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' }); });
+    const s2 = $('fd-share2'); if (s2) s2.addEventListener('click', (e) => copy(shareUrl(), e.currentTarget));
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('sueldo')) sueldoEl.value = fmtThousands(q.get('sueldo'));
+    if (q.get('meses')) mesesEl.value = q.get('meses');
+    render();
+  })();
+</script>
+
+<style>
+  /* El badge vive fuera de .cf-deco-card porque la card tiene overflow:hidden */
+  .fd .fd-deco-wrap { position: relative; }
+  .fd .fd-badge { top: 50%; right: -16px; transform: translateY(-50%); width: 48px; height: 48px; font-size: 1.2rem; }
+
+  .fd .fd-money { position: relative; display: flex; align-items: center; }
+  .fd .fd-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
+  .fd .fd-money .cf-input { padding-left: 1.7rem; }
+
+  .fd-2col, .cf-band .fd-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .fd-2col, .cf-band .fd-2col { grid-template-columns: 0.85fr 1.15fr; } }
+
+  .fd .fd-hl { padding: 1.5rem 1.6rem; border-radius: var(--radius-lg); color: #fff; background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%); }
+  .fd .fd-hl .cf-side-eyebrow { color: rgba(255,255,255,0.75); }
+  .fd .fd-hl__title { font-size: 1.35rem; font-weight: 800; margin: 0 0 0.5rem; line-height: 1.2; letter-spacing: -0.015em; }
+  .fd .fd-hl__desc { font-size: 0.82rem; color: rgba(255,255,255,0.82); line-height: 1.5; margin: 0; }
+  .fd .fd-hl__big { font-size: 1.7rem; font-weight: 800; margin: 1.1rem 0 0.15rem; font-variant-numeric: tabular-nums; }
+  .fd .fd-bar--alt { background: linear-gradient(90deg, #f59e0b, #fb923c) !important; }
+  .fd .fd-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.15rem 0 0; }
+  .fd .fd-chip { margin: 0.7rem 0 0; padding: 0.4rem 0.6rem; border-radius: var(--radius-sm); background: var(--bg-soft); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-strong); overflow-x: auto; white-space: nowrap; }
+
+  .cf-band .fd-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .fd-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .fd-hl__big { font-size: 2rem; font-weight: 800; color: #fff; margin: 0.2rem 0 0.4rem; font-variant-numeric: tabular-nums; }
+  .cf-band .fd-src__title { font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 0.9rem; }
+  .cf-band .fd-src { display: grid; gap: 0.5rem; }
+  .cf-band .fd-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .fd-src__item strong { display: block; font-size: 0.8rem; font-weight: 700; color: #fff; line-height: 1.35; }
+  .cf-band .fd-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .fd-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+  .cf-band .fd-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.9rem; }
+  .cf-band .fd-tag { padding: 0.25rem 0.6rem; border-radius: 999px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); font-size: 0.7rem; font-weight: 700; color: #e7ecf3; }
+</style>

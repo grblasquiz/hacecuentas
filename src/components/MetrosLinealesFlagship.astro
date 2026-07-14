@@ -1,0 +1,600 @@
+---
+// Flagship redesign de "Conversor de metros lineales a metros cuadrados" (mockup Martin).
+// Los números salen del motor real (src/lib/formulas/conversor-metros-lineales-a-metros-cuadrados.ts),
+// importado acá para el SSR y replicado en el <script is:inline> (que no puede importar).
+// El margen de desperdicio (+10%) es la regla que documenta el propio calc (answerSnippet,
+// explanation y FAQ): se aplica al INPUT y el resultado lo devuelve el mismo motor.
+// Domain "life" (cian) por el mockup, no por la categoría (construccion→home).
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { conversorMetrosLinealesAMetrosCuadrados as conv } from '../lib/formulas/conversor-metros-lineales-a-metros-cuadrados';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Caso cargado por defecto = el `solvedExample` documentado (10 ml de tela de 1,40 m)
+const VALOR = 10;
+const ANCHO = 1.4;
+const DIR = 'ida';
+const DESPERDICIO = 0.10; // regla documentada en el propio calc
+
+const init = conv({ valor: VALOR, ancho: ANCHO, direccion: DIR });
+const porMetro = conv({ valor: 1, ancho: ANCHO, direccion: DIR });          // cuánto rinde 1 ml
+const conMargen = conv({ valor: VALOR * (1 + DESPERDICIO), ancho: ANCHO, direccion: DIR });
+const vuelta = conv({ valor: init.metrosCuadrados, ancho: ANCHO, direccion: 'vuelta' });
+
+const nf = (x: number) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(x);
+// Mismo formateo que usa el motor para `resultado`, para no mezclar separadores en el panel
+const trim = (x: number) => x.toFixed(2).replace(/\.?0+$/, '');
+
+// Anchos reales del propio calc (referenceTables + presets)
+const MATERIALES = [
+  { label: 'Papel tapiz', ancho: 0.53, nota: 'Rollo estándar europeo', ico: '🧱' },
+  { label: 'Chapa (ancho útil)', ancho: 0.9, nota: 'Descontado el traslape', ico: '🏠' },
+  { label: 'Membrana asfáltica', ancho: 1, nota: 'ml y m² coinciden', ico: '🧰' },
+  { label: 'Tela estándar', ancho: 1.4, nota: 'Algodón / poliéster', ico: '🧵' },
+  { label: 'Tela importada', ancho: 1.5, nota: 'Premium', ico: '🪡' },
+  { label: 'Alfombra / pasto', ancho: 4, nota: 'Rollo ancho', ico: '🟩' },
+];
+const refRows = MATERIALES.map((m) => ({
+  ...m,
+  rinde: conv({ valor: VALOR, ancho: m.ancho, direccion: DIR }).resultado,
+  conDesp: conv({ valor: VALOR * (1 + DESPERDICIO), ancho: m.ancho, direccion: DIR }).resultado,
+}));
+
+// Barras: proporción de m² por metro lineal contra el ancho más grande de la tabla
+const MAX_ANCHO = 4;
+const barra = (a: number) => Math.max(2, Math.min(100, Math.round((a / MAX_ANCHO) * 100)));
+
+const faq = calc.faq || [];
+const sources = (calc.sources || []).slice(0, 3);
+---
+
+<div
+  class="cf-page ml"
+  data-domain="life"
+  data-desp={DESPERDICIO}
+  data-maxancho={MAX_ANCHO}
+>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/categoria/construccion">Construcción</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Metros lineales a m²</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">📏</span> Antes de ir al corralón · 2026</p>
+      <h1 class="cf-h1">Convertí metros lineales <span class="cf-yr">a metros cuadrados</span></h1>
+      <p class="cf-sub">Un metro lineal no vale siempre lo mismo: depende del ancho del rollo. Cargá el ancho real y comprá la cantidad justa.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">🧵</span> Tela de 1,40 m de ancho</span>
+      <div class="ml-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="ml-deco-val">{init.resultado}</div>
+          <div class="cf-deco-card__note" id="ml-deco-note">De {nf(VALOR)} metros lineales</div>
+        </div>
+        <span class="cf-deco-badge ml-badge">m²</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Cada metro lineal rinde</strong> <span class="cf-deco-chip" id="ml-deco-chip">{porMetro.resultado}</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">Cargá el valor y el ancho real</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><span class="cf-label">Dirección de conversión</span></div>
+        <div class="cf-seg ml-seg" role="group" aria-label="Dirección de conversión">
+          <button type="button" data-dir="ida" aria-pressed="true">Metros lineales → m²</button>
+          <button type="button" data-dir="vuelta" aria-pressed="false">m² → Metros lineales</button>
+        </div>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="ml-valor" id="ml-lbl-valor">Metros lineales</label></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="decimal" step="0.01" min="0" id="ml-valor" value={VALOR} />
+          <p class="cf-help" id="ml-help-valor">Los metros de largo que vas a comprar del rollo.</p>
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="ml-ancho">Ancho del material</label><span class="cf-hint">en metros</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="decimal" step="0.01" min="0.01" max="5" id="ml-ancho" value={ANCHO} />
+          <p class="cf-help">Preguntalo en el local: es el dato que más se olvida y el que más caro sale.</p>
+        </div>
+      </div>
+
+      <button class="cf-primary" id="ml-calc-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Anchos típicos:</span>
+        <button class="cf-sc" type="button" data-ancho="1.4">Tela 1,40 m</button>
+        <button class="cf-sc" type="button" data-ancho="1">Membrana 1 m</button>
+        <button class="cf-sc" type="button" data-ancho="4">Alfombra 4 m</button>
+        <button class="cf-sc" type="button" data-ancho="0.53">Papel 0,53 m</button>
+        <button class="cf-sc" type="button" data-ancho="0.1">Machimbre 0,10 m</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="ml-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="ml-big">{init.resultado}</div>
+      <p class="cf-result__sub" id="ml-sub">{init.resumen}</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="ml-t1">{trim(init.metrosLineales)} ml</div><div class="cf-tile__label">Metros lineales</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="ml-t2">{trim(init.metrosCuadrados)} m²</div><div class="cf-tile__label">Metros cuadrados</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="ml-t3">{porMetro.resultado}</div><div class="cf-tile__label" id="ml-t3l">Rinde cada metro lineal</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="ml-t4">{conMargen.resultado}</div><div class="cf-tile__label">Con 10% de desperdicio</div></div>
+      </div>
+      <div class="cf-result__formula" id="ml-formula">{nf(VALOR)} ml × {nf(ANCHO)} m = {init.resultado}</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="ml-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="ml-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt"><strong>Respuesta rápida.</strong> <span id="ml-quick">{nf(VALOR)} metros lineales de un material de {nf(ANCHO)} m de ancho son <strong>{init.resultado}</strong>. Pedí <strong>{conMargen.resultado}</strong> si querés cubrir el 10% de desperdicio por cortes.</span></p>
+    <span class="cf-formula">m² = ml × ancho</span>
+  </div>
+
+  <!-- 5. Datos clave -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">📐</span>
+        <p class="cf-minicard__sub ml-cap" id="ml-k1t">Cada metro lineal rinde</p>
+        <div class="cf-minicard__big" id="ml-k1">{porMetro.resultado}</div>
+        <p class="cf-minicard__desc ml-mt" id="ml-k1d">Con un ancho de {nf(ANCHO)} m. Multiplicá ese número por los metros que pidas y tenés la superficie.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">✖️</span>
+        <p class="cf-minicard__sub ml-cap">La fórmula, entera</p>
+        <div class="cf-minicard__big">m² = ml × ancho</div>
+        <p class="cf-minicard__desc ml-mt">Y al revés, <code>ml = m² ÷ ancho</code>. No hay factor fijo: sin el ancho, la conversión no existe.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">✂️</span>
+        <p class="cf-minicard__sub ml-cap">Margen de desperdicio</p>
+        <div class="cf-minicard__big">+10%</div>
+        <p class="cf-minicard__desc ml-mt">Para cortes, dobladillos y traslapes de corte recto. Subilo a 15% si hay diagonales, formas irregulares o rapport.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">⚠️</span>
+        <p class="cf-minicard__sub ml-cap">Ancho útil ≠ ancho nominal</p>
+        <div class="cf-minicard__big">0,90 m</div>
+        <p class="cf-minicard__desc ml-mt">Una chapa de 1 m rinde 0,83-0,90 m útiles por el traslape. En machimbre pasa lo mismo con el encastre.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Cómo leer el resultado -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Cómo leer el resultado</p>
+    <h2 class="cf-section__title ml-h2">El ancho es todo el cálculo</h2>
+    <div class="ml-2col">
+      <div class="ml-hl">
+        <p class="cf-side-eyebrow ml-hl__eyebrow">Cómo leer el resultado</p>
+        <p class="ml-hl__title">El mismo metro lineal, tres materiales, tres superficies</p>
+        <p class="ml-hl__desc">Un metro de papel tapiz cubre 0,53 m². Uno de tela, 1,40 m². Uno de alfombra, 4 m². Es el mismo metro: cambia el ancho del rollo. Por eso "10 metros" no significa nada hasta que sabés de qué.</p>
+        <div class="ml-hl__big" id="ml-hl-big">{porMetro.resultado}</div>
+        <p class="ml-hl__desc" id="ml-hl-note">Lo que rinde cada metro lineal con el ancho cargado</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-breakdown__big" id="ml-bd-big">{init.resultado}</div>
+        <div class="cf-brow">
+          <span class="cf-brow__lbl">Papel tapiz · 0,53 m de ancho</span>
+          <span class="cf-brow__val" id="ml-bd-1">{conv({ valor: VALOR, ancho: 0.53, direccion: DIR }).resultado}</span>
+          <span class="cf-brow__bar"><span style={`width:${barra(0.53)}%`}></span></span>
+        </div>
+        <div class="cf-brow ml-mt2">
+          <span class="cf-brow__lbl">Tela · 1,40 m de ancho</span>
+          <span class="cf-brow__val" id="ml-bd-2">{conv({ valor: VALOR, ancho: 1.4, direccion: DIR }).resultado}</span>
+          <span class="cf-brow__bar"><span style={`width:${barra(1.4)}%`}></span></span>
+        </div>
+        <div class="cf-brow ml-mt2">
+          <span class="cf-brow__lbl">Alfombra o pasto · 4 m de ancho</span>
+          <span class="cf-brow__val" id="ml-bd-3">{conv({ valor: VALOR, ancho: 4, direccion: DIR }).resultado}</span>
+          <span class="cf-brow__bar"><span style={`width:${barra(4)}%`}></span></span>
+        </div>
+        <div class="cf-breakdown__total">
+          <span id="ml-bd-totall">Tus {nf(VALOR)} ml con ancho {nf(ANCHO)} m</span>
+          <strong id="ml-bd-total">{init.resultado}</strong>
+        </div>
+        <div class="cf-callout cf-callout--warn ml-mt3">
+          <span class="cf-callout__ico" aria-hidden="true">🚩</span>
+          <p><strong>No asumas el ancho.</strong> Pedir 50 ml de membrana creyendo que viene de 1 m cuando el proveedor despacha de 0,90 m te deja 5 m² sin cubrir: hay que comprar otro rollo entero y pagar flete de nuevo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Paso a paso -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title ml-h2">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">Elegí la dirección, cargá la cantidad y —lo importante— el ancho real del rollo, la tabla o la chapa.</p>
+        <p class="ml-chip" id="ml-s1">{nf(VALOR)} ml · ancho {nf(ANCHO)} m</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">Una multiplicación en un sentido y una división en el otro. Sin factores mágicos ni tablas de conversión falsas.</p>
+        <p class="ml-chip" id="ml-s2">{nf(VALOR)} × {nf(ANCHO)} = {nf(init.metrosCuadrados)}</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">Mirá también la fila con 10% de desperdicio: es la cantidad que conviene pedir en el local.</p>
+        <p class="ml-chip" id="ml-s3">{init.resultado} · pedí {conMargen.resultado}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Referencias -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Material</th><th>Ancho estándar</th><th id="ml-th3">Tus {nf(VALOR)} ml rinden</th><th>Con 10% de desperdicio</th></tr></thead>
+        <tbody id="ml-tbody">
+          {refRows.map((r) => (
+            <tr>
+              <td><span class="cf-td-dot">{r.label}</span><span class="ml-td-nota">{r.nota}</span></td>
+              <td>{nf(r.ancho)} m</td>
+              <td class="cf-td-em">{r.rinde}</td>
+              <td>{r.conDesp}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- 9. Banda de atención -->
+<div class="cf-band cf-band--warm" data-domain="life">
+  <div class="cf-band__inner">
+    <div class="ml-2col ml-2col--band">
+      <div class="ml-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="ml-card__title">Redondeá al final, y siempre para arriba</h2>
+        <p class="cf-side-desc">Hacé la cuenta con todos los decimales y recién después redondeá: los materiales se venden en unidades enteras y quedarte 20 cm corto en medio de una obra cuesta mucho más que el metro que sobra. Si el cálculo da 8,5 ml, pedí 9,5.</p>
+        <div class="cf-callout cf-callout--warn ml-mt3">
+          <span class="cf-callout__ico" aria-hidden="true">💡</span>
+          <p>En moquette y pasto sintético, todas las tiras deben ir en el mismo sentido del pelo. Eso puede sumar hasta un 15% de desperdicio extra que el cálculo puro no ve.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="ml-src__title">El caso cargado</p>
+        <div class="ml-hl__big" id="ml-ref-big">{init.resultado}</div>
+        <p class="cf-side-desc" id="ml-ref-sub">{init.resumen}</p>
+        <div class="ml-chips">
+          <span class="ml-chip ml-chip--dark" id="ml-ref-c1">Ancho {nf(ANCHO)} m</span>
+          <span class="ml-chip ml-chip--dark" id="ml-ref-c2">1 ml = {porMetro.resultado}</span>
+          <span class="ml-chip ml-chip--dark" id="ml-ref-c3">+10% = {conMargen.resultado}</span>
+          <span class="ml-chip ml-chip--dark" id="ml-ref-c4">Vuelta: {vuelta.resultado}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page ml" data-domain="life">
+  <!-- 10. FAQ -->
+  {faq.length > 0 && (
+    <section class="cf-section" id="preguntas">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title ml-h2">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+</div>
+
+<!-- 11. Fuentes y metodología -->
+{sources.length > 0 && (
+  <div class="cf-band" data-domain="life">
+    <div class="cf-band__inner">
+      <div class="ml-2col ml-2col--band">
+        <div>
+          <p class="cf-eyebrow">Fuentes y metodología</p>
+          <h2 class="ml-card__title ml-card__title--plain">Números que podés defender</h2>
+          <p class="cf-side-desc">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026.</p>
+        </div>
+        <div class="cf-side-card cf-side-card--dark">
+          <p class="cf-side-eyebrow">Fuentes</p>
+          <div class="ml-src">
+            {sources.map((s: any) => (
+              <div class="ml-src__item">
+                <strong>{s.name}</strong>
+                <span>{s.url ? String(s.url).replace(/^https?:\/\//, '').split('/')[0] : ''}</span>
+              </div>
+            ))}
+          </div>
+          <p class="ml-src__foot">● Información revisada en julio de 2026</p>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+<div class="cf-page ml" data-domain="life">
+  <!-- 12. Related -->
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title ml-h2">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '📏'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('(')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- 13. CTA bar -->
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="ml-share2">Copiar enlace del cálculo</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.ml');
+    if (!root) return;
+    var $ = function (id) { return document.getElementById(id); };
+    var DESP = Number(root.getAttribute('data-desp'));
+    var MAXA = Number(root.getAttribute('data-maxancho'));
+    var nf = function (x) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(x); };
+    // Mismo formateo que el motor para `resultado`, para no mezclar separadores en el panel
+    var trim = function (x) { return x.toFixed(2).replace(/\.?0+$/, ''); };
+
+    // Réplica de src/lib/formulas/conversor-metros-lineales-a-metros-cuadrados.ts
+    function conv(valor, ancho, d) {
+      var v = Number(valor), a = Number(ancho);
+      if (!v || v <= 0) throw new Error('Ingresá un valor positivo a convertir');
+      if (!a || a <= 0) throw new Error('Ingresá el ancho del material (ej: tela 1.40 m, chapa 1.0 m, tabla 0.25 m)');
+      if (a > 5) throw new Error('Ancho muy grande (>5 m). Verificá la unidad — debe estar en metros.');
+      var ml, m2, fromLabel, toLabel, out;
+      if (d === 'vuelta') { m2 = v; ml = v / a; fromLabel = 'm²'; toLabel = 'metros lineales'; out = ml; }
+      else { ml = v; m2 = v * a; fromLabel = 'metros lineales'; toLabel = 'm²'; out = m2; }
+      return {
+        resultado: trim(out) + ' ' + toLabel,
+        resumen: v + ' ' + fromLabel + ' con ancho ' + a + ' m = ' + trim(out) + ' ' + toLabel + '.',
+        metrosLineales: Number(ml.toFixed(4)),
+        metrosCuadrados: Number(m2.toFixed(4)),
+        anchoUsado: a,
+      };
+    }
+
+    var valorEl = $('ml-valor'), anchoEl = $('ml-ancho');
+    var dir = 'ida';
+    var barra = function (a) { return Math.max(2, Math.min(100, Math.round((a / MAXA) * 100))); };
+    function set(id, t) { var e = $(id); if (e) e.textContent = t; }
+
+    var MATS = [
+      { label: 'Papel tapiz', ancho: 0.53, nota: 'Rollo estándar europeo' },
+      { label: 'Chapa (ancho útil)', ancho: 0.9, nota: 'Descontado el traslape' },
+      { label: 'Membrana asfáltica', ancho: 1, nota: 'ml y m² coinciden' },
+      { label: 'Tela estándar', ancho: 1.4, nota: 'Algodón / poliéster' },
+      { label: 'Tela importada', ancho: 1.5, nota: 'Premium' },
+      { label: 'Alfombra / pasto', ancho: 4, nota: 'Rollo ancho' },
+    ];
+
+    function render() {
+      var v = Number(valorEl.value), a = Number(anchoEl.value);
+      var esIda = dir === 'ida';
+      set('ml-lbl-valor', esIda ? 'Metros lineales' : 'Metros cuadrados');
+      set('ml-help-valor', esIda ? 'Los metros de largo que vas a comprar del rollo.' : 'La superficie que necesitás cubrir, en m².');
+
+      var r, porM, conM, vue;
+      try {
+        r = conv(v, a, dir);
+        porM = conv(1, a, dir);
+        conM = conv(v * (1 + DESP), a, dir);
+        vue = conv(esIda ? r.metrosCuadrados : r.metrosLineales, a, esIda ? 'vuelta' : 'ida');
+      } catch (err) {
+        set('ml-big', '—'); set('ml-sub', err.message);
+        return;
+      }
+
+      set('ml-big', r.resultado); set('ml-sub', r.resumen);
+      set('ml-t1', trim(r.metrosLineales) + ' ml');
+      set('ml-t2', trim(r.metrosCuadrados) + ' m²');
+      set('ml-t3', porM.resultado);
+      set('ml-t3l', esIda ? 'Rinde cada metro lineal' : 'Metros lineales por cada m²');
+      set('ml-t4', conM.resultado);
+      set('ml-formula', esIda ? nf(v) + ' ml × ' + nf(a) + ' m = ' + r.resultado : nf(v) + ' m² ÷ ' + nf(a) + ' m = ' + r.resultado);
+
+      set('ml-deco-val', r.resultado);
+      set('ml-deco-note', esIda ? 'De ' + nf(v) + ' metros lineales' : 'Para cubrir ' + nf(v) + ' m²');
+      set('ml-deco-chip', porM.resultado);
+      set('ml-quick', esIda
+        ? nf(v) + ' metros lineales de un material de ' + nf(a) + ' m de ancho son ' + r.resultado + '. Pedí ' + conM.resultado + ' si querés cubrir el 10% de desperdicio por cortes.'
+        : 'Para cubrir ' + nf(v) + ' m² con un material de ' + nf(a) + ' m de ancho necesitás ' + r.resultado + '. Pedí ' + conM.resultado + ' si querés cubrir el 10% de desperdicio por cortes.');
+
+      set('ml-k1', porM.resultado);
+      set('ml-k1t', esIda ? 'Cada metro lineal rinde' : 'Cada m² se lleva');
+      set('ml-k1d', 'Con un ancho de ' + nf(a) + ' m. ' + (esIda ? 'Multiplicá ese número por los metros que pidas y tenés la superficie.' : 'Multiplicá ese número por los m² que quieras cubrir y tenés los metros a pedir.'));
+      set('ml-hl-big', porM.resultado);
+      set('ml-hl-note', esIda ? 'Lo que rinde cada metro lineal con el ancho cargado' : 'Lo que hay que pedir por cada m² con el ancho cargado');
+      set('ml-bd-big', r.resultado);
+      set('ml-bd-totall', esIda ? 'Tus ' + nf(v) + ' ml con ancho ' + nf(a) + ' m' : 'Tus ' + nf(v) + ' m² con ancho ' + nf(a) + ' m');
+      set('ml-bd-total', r.resultado);
+      var comp = [['ml-bd-1', 0.53], ['ml-bd-2', 1.4], ['ml-bd-3', 4]];
+      for (var i = 0; i < comp.length; i++) {
+        try { set(comp[i][0], conv(v, comp[i][1], dir).resultado); } catch (e) { set(comp[i][0], '—'); }
+      }
+      set('ml-s1', nf(v) + (esIda ? ' ml' : ' m²') + ' · ancho ' + nf(a) + ' m');
+      set('ml-s2', esIda ? nf(v) + ' × ' + nf(a) + ' = ' + nf(r.metrosCuadrados) : nf(v) + ' ÷ ' + nf(a) + ' = ' + nf(r.metrosLineales));
+      set('ml-s3', r.resultado + ' · pedí ' + conM.resultado);
+      set('ml-ref-big', r.resultado); set('ml-ref-sub', r.resumen);
+      set('ml-ref-c1', 'Ancho ' + nf(a) + ' m');
+      set('ml-ref-c2', '1 ' + (esIda ? 'ml' : 'm²') + ' = ' + porM.resultado);
+      set('ml-ref-c3', '+10% = ' + conM.resultado);
+      set('ml-ref-c4', 'Vuelta: ' + vue.resultado);
+      renderTable(v);
+    }
+
+    function renderTable(v) {
+      var tb = $('ml-tbody'); if (!tb) return;
+      set('ml-th3', 'Tus ' + nf(v) + (dir === 'ida' ? ' ml rinden' : ' m² necesitan'));
+      var html = '';
+      for (var i = 0; i < MATS.length; i++) {
+        var m = MATS[i], rinde = '—', desp = '—';
+        try { rinde = conv(v, m.ancho, dir).resultado; desp = conv(v * (1 + DESP), m.ancho, dir).resultado; } catch (e) {}
+        html += '<tr><td><span class="cf-td-dot">' + m.label + '</span><span class="ml-td-nota">' + m.nota + '</span></td>'
+          + '<td>' + nf(m.ancho) + ' m</td>'
+          + '<td class="cf-td-em">' + rinde + '</td>'
+          + '<td>' + desp + '</td></tr>';
+      }
+      tb.innerHTML = html;
+    }
+
+    valorEl.addEventListener('input', render);
+    anchoEl.addEventListener('input', render);
+    $('ml-calc-btn').addEventListener('click', render);
+    Array.prototype.forEach.call(document.querySelectorAll('[data-dir]'), function (b) {
+      b.addEventListener('click', function () {
+        dir = b.getAttribute('data-dir');
+        Array.prototype.forEach.call(document.querySelectorAll('[data-dir]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        render();
+      });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-ancho]'), function (b) {
+      b.addEventListener('click', function () { anchoEl.value = b.getAttribute('data-ancho'); render(); });
+    });
+
+    function summary() {
+      try {
+        var r = conv(Number(valorEl.value), Number(anchoEl.value), dir);
+        var c = conv(Number(valorEl.value) * (1 + DESP), Number(anchoEl.value), dir);
+        return r.resumen + ' Con 10% de desperdicio: ' + c.resultado + '. — hacecuentas.com';
+      } catch (e) { return 'hacecuentas.com/calculadora-conversor-metros-lineales-a-metros-cuadrados'; }
+    }
+    function shareUrl() { return location.origin + location.pathname + '?valor=' + valorEl.value + '&ancho=' + anchoEl.value + '&dir=' + dir; }
+    function copy(t, btn) {
+      if (!navigator.clipboard) return;
+      navigator.clipboard.writeText(t).then(function () {
+        var o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(function () { btn.innerHTML = o; }, 1500);
+      });
+    }
+    $('ml-copy').addEventListener('click', function (e) { copy(summary(), e.currentTarget); });
+    $('ml-detail').addEventListener('click', function () { var t = document.getElementById('preguntas'); if (t) t.scrollIntoView({ behavior: 'smooth' }); });
+    var s2 = $('ml-share2'); if (s2) s2.addEventListener('click', function (e) { copy(shareUrl(), e.currentTarget); });
+
+    var q = new URLSearchParams(location.search);
+    if (q.get('valor')) valorEl.value = q.get('valor');
+    if (q.get('ancho')) anchoEl.value = q.get('ancho');
+    if (q.get('dir') === 'vuelta') { var bt = document.querySelector('[data-dir="vuelta"]'); if (bt) { bt.click(); return; } }
+    render();
+  })();
+</script>
+
+<style>
+  .ml .ml-deco-wrap { position: relative; }
+  .ml .ml-badge { top: -14px; right: -14px; font-size: 1rem; }
+  .ml .cf-deco-card__value { font-size: 1.7rem; }
+  .ml .ml-cap { font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+  .ml .ml-mt { margin-top: 0.3rem; }
+  .ml .ml-mt2 { margin-top: 1rem; }
+  .ml .ml-mt3, .cf-band .ml-mt3 { margin-top: 1.25rem; }
+  .ml .ml-h2, .cf-band .ml-h2 { margin: 0.35rem 0 1.25rem; }
+  .ml .cf-minicard__big { font-size: 1.2rem; }
+  .ml .cf-minicard code { font-family: var(--font-mono); font-size: 0.85em; }
+  .ml .ml-seg { width: 100%; }
+  .ml .ml-seg button { flex: 1; }
+  .ml .ml-td-nota { display: block; font-size: 0.72rem; color: var(--text-subtle); padding-left: 1.15rem; }
+
+  .ml-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .ml-2col { grid-template-columns: 0.85fr 1.15fr; } }
+  .cf-band .ml-2col--band { gap: 1.25rem; }
+
+  .ml .ml-hl {
+    padding: 1.4rem 1.5rem; border-radius: var(--radius-lg); color: #fff;
+    background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%);
+    box-shadow: var(--shadow-md);
+  }
+  .ml .ml-hl__eyebrow { color: rgba(255,255,255,0.85); }
+  .ml .ml-hl__title { font-size: 1.3rem; font-weight: 800; line-height: 1.2; margin: 0 0 0.6rem; letter-spacing: -0.015em; }
+  .ml .ml-hl__desc { font-size: 0.82rem; line-height: 1.5; margin: 0; color: rgba(255,255,255,0.86); }
+  .ml .ml-hl__big { font-size: 1.8rem; font-weight: 800; margin: 1.1rem 0 0.15rem; color: #fff; line-height: 1.1; }
+  .cf-band .ml-hl__big { font-size: 1.8rem; font-weight: 800; color: #fff; margin: 0.9rem 0 0.4rem; font-variant-numeric: tabular-nums; line-height: 1.1; }
+
+    /* El chip mono es nowrap: sin min-width:0 infla el track del grid
+     (min-width:auto en grid items) y mete scroll-x en mobile. */
+  .ml .cf-steps > .cf-step { min-width: 0; }
+.ml .ml-chip {
+    display: inline-block; margin: 0.7rem 0 0; padding: 0.35rem 0.6rem; border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-strong);
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+    overflow-x: auto; max-width: 100%; white-space: nowrap;
+  }
+  .cf-band .ml-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.9rem; }
+  .cf-band .ml-chip--dark { display: inline-block; padding: 0.35rem 0.6rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #e7ecf3; }
+
+  .cf-band .ml-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .ml-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .ml-src { display: grid; gap: 0.5rem; }
+  .cf-band .ml-src__title { font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0 0 0.3rem; }
+  .cf-band .ml-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .ml-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .ml-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .ml-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+</style>

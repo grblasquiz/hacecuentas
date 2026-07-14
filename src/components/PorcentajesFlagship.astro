@@ -1,0 +1,596 @@
+---
+// Flagship redesign de "Calculadora de porcentajes" (mockup Martin).
+// Los números salen del motor real (src/lib/formulas/porcentaje.ts), importado acá
+// para el SSR y replicado en el <script is:inline> (que no puede importar).
+// 5 modos: X% de Y · descuento · aumento · qué % es X de Y · variación.
+// Domain "knowledge" (violeta) por el mockup, no por la categoría (vida→life).
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { porcentaje } from '../lib/formulas/porcentaje';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Caso cargado por defecto = el `example` documentado del calc (25% sobre $8.500)
+const V1 = 8500;
+const V2 = 25;
+const run = (modo: string, v1 = V1, v2 = V2) => porcentaje({ modo, valor1: v1, valor2: v2 });
+
+const init = run('simple');
+const initDesc = run('descuento');
+const initAum = run('aumento');
+const uno = run('simple', V1, 1);      // 1% de 8.500
+const diez = run('simple', V1, 10);    // 10% de 8.500
+
+const fmt = (n: number) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(n);
+
+// Tabla de referencia: cada fila es una corrida real del motor
+const REF_PCTS = [5, 10, 15, 21, 25, 50];
+const refRows = REF_PCTS.map((p) => ({
+  pct: p,
+  parte: run('simple', V1, p).resultado,
+  conDesc: run('descuento', V1, p).resultado,
+  conAum: run('aumento', V1, p).resultado,
+}));
+
+// Descuentos encadenados 20%+20% → el motor, dos pasos
+const paso1 = run('descuento', 100, 20);
+const paso2 = run('descuento', Number(String(paso1.resultado).replace(/\./g, '').replace(',', '.')), 20);
+const encadenado = run('variacion', 100, Number(String(paso2.resultado).replace(/\./g, '').replace(',', '.')));
+
+const faq = calc.faq || [];
+const sources = (calc.sources || []).slice(0, 3);
+---
+
+<div class="cf-page pj" data-domain="knowledge" data-v1={V1} data-v2={V2}>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/categoria/vida">Vida cotidiana</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Calculadora de porcentajes</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">📊</span> Matemática de todos los días · 2026</p>
+      <h1 class="cf-h1">Calculadora de <span class="cf-yr">porcentajes</span></h1>
+      <p class="cf-sub">Descuentos, aumentos, proporciones y variaciones. Cinco cálculos en una sola herramienta, con la fórmula a la vista.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">🏷️</span> Ejemplo: 25% sobre 8.500</span>
+      <div class="pj-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="pj-deco-val">{init.resultado}</div>
+          <div class="cf-deco-card__note" id="pj-deco-note">{init.explicacion}</div>
+        </div>
+        <span class="cf-deco-badge pj-badge">%</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Fórmula aplicada</strong> <span class="cf-deco-chip" id="pj-deco-chip">Y × X ÷ 100</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">Elegí el modo y cargá los dos valores</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="pj-modo">¿Qué querés calcular?</label><span class="cf-hint">5 modos</span></div>
+        <select class="cf-input" id="pj-modo">
+          <option value="simple" selected>Cuánto es X% de Y</option>
+          <option value="descuento">Precio con descuento</option>
+          <option value="aumento">Precio con aumento</option>
+          <option value="diferencia">Qué % es X de Y</option>
+          <option value="variacion">Variación % entre dos valores</option>
+        </select>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="pj-v1" id="pj-lbl1">Valor base</label></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="decimal" step="0.01" id="pj-v1" value={V1} />
+          <p class="cf-help" id="pj-help1">Precio, monto base o valor inicial según el modo elegido.</p>
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="pj-v2" id="pj-lbl2">Porcentaje</label></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="decimal" step="0.01" id="pj-v2" value={V2} />
+          <p class="cf-help" id="pj-help2">El porcentaje a aplicar sobre el valor base.</p>
+        </div>
+      </div>
+
+      <button class="cf-primary" id="pj-calc-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Atajos:</span>
+        <button class="cf-sc" type="button" data-pct="10">10%</button>
+        <button class="cf-sc" type="button" data-pct="15">15%</button>
+        <button class="cf-sc" type="button" data-pct="21">21% (IVA)</button>
+        <button class="cf-sc" type="button" data-pct="30">30%</button>
+        <button class="cf-sc" type="button" data-pct="50">50%</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="pj-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="pj-big">{init.resultado}</div>
+      <p class="cf-result__sub" id="pj-sub">{init.explicacion}</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="pj-t1">{uno.resultado}</div><div class="cf-tile__label" id="pj-t1l">1% de {fmt(V1)}</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="pj-t2">{diez.resultado}</div><div class="cf-tile__label" id="pj-t2l">10% de {fmt(V1)}</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="pj-t3">{initDesc.resultado}</div><div class="cf-tile__label" id="pj-t3l">Con {V2}% de descuento</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="pj-t4">{initAum.resultado}</div><div class="cf-tile__label" id="pj-t4l">Con {V2}% de aumento</div></div>
+      </div>
+      <div class="cf-result__formula" id="pj-formula">{init.formula}</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="pj-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="pj-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt"><strong>Respuesta rápida.</strong> <span id="pj-quick">El {V2}% de {fmt(V1)} es <strong>{init.resultado}</strong>. Con ese descuento pagás <strong>{initDesc.resultado}</strong>; con ese aumento, <strong>{initAum.resultado}</strong>.</span></p>
+    <span class="cf-formula" id="pj-quick-f">Y × X ÷ 100</span>
+  </div>
+
+  <!-- 5. Datos clave -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">🧮</span>
+        <p class="cf-minicard__sub pj-cap">1% del caso cargado</p>
+        <div class="cf-minicard__big" id="pj-k1">{uno.resultado}</div>
+        <p class="cf-minicard__desc pj-mt">Cada punto porcentual sobre {fmt(V1)}. Multiplicalo por el % que necesites y tenés el resultado de memoria.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">➗</span>
+        <p class="cf-minicard__sub pj-cap">La fórmula base</p>
+        <div class="cf-minicard__big">(Y × X) ÷ 100</div>
+        <p class="cf-minicard__desc pj-mt">X% de Y. Para aumentos multiplicá por <code>1 + X/100</code>; para descuentos, por <code>1 − X/100</code>.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🔁</span>
+        <p class="cf-minicard__sub pj-cap">El truco que casi nadie usa</p>
+        <div class="cf-minicard__big">X% de Y = Y% de X</div>
+        <p class="cf-minicard__desc pj-mt">El 15% de 80 es lo mismo que el 80% de 15 = 12. Dalo vuelta cuando uno de los dos sea más fácil.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">⚠️</span>
+        <p class="cf-minicard__sub pj-cap">20% + 20% no es 40%</p>
+        <div class="cf-minicard__big">{encadenado.resultado}</div>
+        <p class="cf-minicard__desc pj-mt">Dos descuentos del 20% encadenados dejan el precio en {paso2.resultado} sobre 100: el segundo se aplica al monto ya rebajado.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Cómo leer el resultado -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Cómo leer el resultado</p>
+    <h2 class="cf-section__title pj-h2">La escalera del porcentaje</h2>
+    <div class="pj-2col">
+      <div class="pj-hl">
+        <p class="cf-side-eyebrow pj-hl__eyebrow">Cómo leer el resultado</p>
+        <p class="pj-hl__title">Un porcentaje siempre es una parte de 100</p>
+        <p class="pj-hl__desc">El {V2}% significa 25 partes de cada 100. Aplicado a {fmt(V1)}, esas partes valen lo que ves abajo. Si cambiás el modo, el mismo par de valores responde otra pregunta.</p>
+        <div class="pj-hl__big" id="pj-hl-big">{init.resultado}</div>
+        <p class="pj-hl__desc" id="pj-hl-note">{init.explicacion}</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-breakdown__big" id="pj-bd-big">{fmt(V1)}</div>
+        <div class="cf-brow">
+          <span class="cf-brow__lbl">1% del valor base</span>
+          <span class="cf-brow__val" id="pj-bd-1">{uno.resultado}</span>
+          <span class="cf-brow__bar"><span id="pj-bd-b1" style="width:1%"></span></span>
+        </div>
+        <div class="cf-brow pj-mt2">
+          <span class="cf-brow__lbl">10% del valor base</span>
+          <span class="cf-brow__val" id="pj-bd-2">{diez.resultado}</span>
+          <span class="cf-brow__bar"><span id="pj-bd-b2" style="width:10%"></span></span>
+        </div>
+        <div class="cf-brow pj-mt2">
+          <span class="cf-brow__lbl" id="pj-bd-3l">{V2}% del valor base</span>
+          <span class="cf-brow__val" id="pj-bd-3">{init.resultado}</span>
+          <span class="cf-brow__bar"><span id="pj-bd-b3" style={`width:${Math.min(100, V2)}%`}></span></span>
+        </div>
+        <div class="cf-breakdown__total">
+          <span>Valor base completo (100%)</span>
+          <strong id="pj-bd-total">{fmt(V1)}</strong>
+        </div>
+        <div class="cf-callout cf-callout--warn pj-mt3">
+          <span class="cf-callout__ico" aria-hidden="true">🚩</span>
+          <p><strong>No sumes porcentajes.</strong> Un aumento del 20% seguido de un descuento del 20% no te deja igual: 100 → 120 → 96. Perdés un 4% en el camino.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Paso a paso -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title pj-h2">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">Elegí el modo y cargá los dos valores. Según el modo, el segundo campo es un porcentaje o un valor final.</p>
+        <p class="pj-chip" id="pj-s1">Y = {fmt(V1)} · X = {fmt(V2)}%</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">Cada modo usa su propia cuenta. La calculadora te muestra la operación exacta que se ejecutó, sin cajas negras.</p>
+        <p class="pj-chip" id="pj-s2">{init.formula}</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">Además del número principal tenés el 1%, el 10% y el precio con descuento y con aumento para contrastar.</p>
+        <p class="pj-chip" id="pj-s3">{init.resultado}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Referencias -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Porcentaje</th><th id="pj-th2">La parte de {fmt(V1)}</th><th>Con descuento</th><th>Con aumento</th></tr></thead>
+        <tbody id="pj-tbody">
+          {refRows.map((r) => (
+            <tr>
+              <td><span class="cf-td-dot">{r.pct}%</span></td>
+              <td class="cf-td-em">{r.parte}</td>
+              <td>{r.conDesc}</td>
+              <td>{r.conAum}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- 9. Banda de atención -->
+<div class="cf-band cf-band--warm" data-domain="knowledge">
+  <div class="cf-band__inner">
+    <div class="pj-2col pj-2col--band">
+      <div class="pj-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="pj-card__title">Puntos porcentuales y porcentajes no son lo mismo</h2>
+        <p class="cf-side-desc">Si una tasa sube de 50% a 55%, subió <strong>5 puntos porcentuales</strong>, pero la variación relativa es del <strong>10%</strong> (5 ÷ 50 × 100). Los dos números son correctos y describen cosas distintas: el error es intercambiarlos.</p>
+        <div class="cf-callout cf-callout--warn pj-mt3">
+          <span class="cf-callout__ico" aria-hidden="true">💡</span>
+          <p>Lo mismo pasa con el IVA: si un precio final es $121 con 21% incluido, el IVA no es el 21% de $121. La base es <code>121 ÷ 1,21 = 100</code> y el IVA, $21.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="pj-src__title">El caso cargado</p>
+        <div class="pj-hl__big" id="pj-ref-big">{init.resultado}</div>
+        <p class="cf-side-desc" id="pj-ref-sub">{init.explicacion}</p>
+        <div class="pj-chips">
+          <span class="pj-chip pj-chip--dark" id="pj-ref-c1">1% = {uno.resultado}</span>
+          <span class="pj-chip pj-chip--dark" id="pj-ref-c2">10% = {diez.resultado}</span>
+          <span class="pj-chip pj-chip--dark" id="pj-ref-c3">−{V2}% = {initDesc.resultado}</span>
+          <span class="pj-chip pj-chip--dark" id="pj-ref-c4">+{V2}% = {initAum.resultado}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page pj" data-domain="knowledge">
+  <!-- 10. FAQ -->
+  {faq.length > 0 && (
+    <section class="cf-section" id="preguntas">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title pj-h2">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+</div>
+
+<!-- 11. Fuentes y metodología -->
+{sources.length > 0 && (
+  <div class="cf-band" data-domain="knowledge">
+    <div class="cf-band__inner">
+      <div class="pj-2col pj-2col--band">
+        <div>
+          <p class="cf-eyebrow">Fuentes y metodología</p>
+          <h2 class="pj-card__title pj-card__title--plain">Números que podés defender</h2>
+          <p class="cf-side-desc">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026.</p>
+        </div>
+        <div class="cf-side-card cf-side-card--dark">
+          <p class="cf-side-eyebrow">Fuentes</p>
+          <div class="pj-src">
+            {sources.map((s: any) => (
+              <div class="pj-src__item">
+                <strong>{s.name}</strong>
+                <span>{s.url ? String(s.url).replace(/^https?:\/\//, '').split('/')[0] : ''}</span>
+              </div>
+            ))}
+          </div>
+          <p class="pj-src__foot">● Información revisada en julio de 2026</p>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+<div class="cf-page pj" data-domain="knowledge">
+  <!-- 12. Related -->
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title pj-h2">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '📊'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('(')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- 13. CTA bar -->
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="pj-share2">Copiar enlace del cálculo</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.pj');
+    if (!root) return;
+    var $ = function (id) { return document.getElementById(id); };
+    var fmt = function (n) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(n); };
+
+    // Réplica exacta de src/lib/formulas/porcentaje.ts (el inline no puede importar)
+    function porcentaje(modo, v1, v2) {
+      if (isNaN(v1) || isNaN(v2)) throw new Error('Ingresá valores numéricos válidos');
+      switch (modo) {
+        case 'simple': {
+          var r = (v1 * v2) / 100;
+          return { resultado: fmt(r), formula: v1 + ' × ' + v2 + ' ÷ 100 = ' + fmt(r), explicacion: 'El ' + v2 + '% de ' + v1 + ' es ' + fmt(r) };
+        }
+        case 'descuento': {
+          var d = (v1 * v2) / 100, f = v1 - d;
+          return { resultado: fmt(f), formula: v1 + ' − (' + v1 + ' × ' + v2 + '%) = ' + fmt(f), explicacion: v1 + ' con ' + v2 + '% de descuento: ahorrás ' + fmt(d) + ' y pagás ' + fmt(f) };
+        }
+        case 'aumento': {
+          var a = (v1 * v2) / 100, fa = v1 + a;
+          return { resultado: fmt(fa), formula: v1 + ' + (' + v1 + ' × ' + v2 + '%) = ' + fmt(fa), explicacion: v1 + ' con ' + v2 + '% de aumento: sumás ' + fmt(a) + ' y pagás ' + fmt(fa) };
+        }
+        case 'diferencia': {
+          if (v2 === 0) throw new Error('El segundo valor no puede ser cero');
+          var p = (v1 / v2) * 100;
+          return { resultado: p.toFixed(2) + '%', formula: '(' + v1 + ' ÷ ' + v2 + ') × 100', explicacion: v1 + ' es el ' + p.toFixed(2) + '% de ' + v2 };
+        }
+        case 'variacion': {
+          if (v1 === 0) throw new Error('El valor inicial no puede ser cero');
+          var va = ((v2 - v1) / v1) * 100;
+          var sg = va >= 0 ? '+' : '';
+          return {
+            resultado: sg + va.toFixed(2) + '%',
+            formula: '((' + v2 + ' − ' + v1 + ') ÷ ' + v1 + ') × 100',
+            explicacion: va >= 0 ? 'Aumentó ' + va.toFixed(2) + '% de ' + v1 + ' a ' + v2 : 'Disminuyó ' + Math.abs(va).toFixed(2) + '% de ' + v1 + ' a ' + v2,
+          };
+        }
+        default: throw new Error('Modo no reconocido');
+      }
+    }
+
+    var modoEl = $('pj-modo'), v1El = $('pj-v1'), v2El = $('pj-v2');
+    var LBL = {
+      simple:     { l1: 'Valor base', l2: 'Porcentaje', h1: 'El monto sobre el que sacás el porcentaje.', h2: 'El porcentaje a aplicar sobre el valor base.', f: 'Y × X ÷ 100' },
+      descuento:  { l1: 'Precio original', l2: 'Descuento (%)', h1: 'El precio de lista, antes del descuento.', h2: 'Cuánto off te hacen, en porcentaje.', f: 'Y × (1 − X/100)' },
+      aumento:    { l1: 'Precio original', l2: 'Aumento (%)', h1: 'El valor antes del aumento.', h2: 'Cuánto sube, en porcentaje.', f: 'Y × (1 + X/100)' },
+      diferencia: { l1: 'Valor X (la parte)', l2: 'Valor Y (el total)', h1: 'El número del que querés saber qué porción representa.', h2: 'El total contra el que comparás. No puede ser cero.', f: '(X ÷ Y) × 100' },
+      variacion:  { l1: 'Valor inicial', l2: 'Valor final', h1: 'De dónde partía. No puede ser cero.', h2: 'A dónde llegó.', f: '((final − inicial) ÷ inicial) × 100' },
+    };
+    var esPct = function (m) { return m === 'simple' || m === 'descuento' || m === 'aumento'; };
+    var num = function (el) { return Number(el.value); };
+
+    function set(id, txt) { var e = $(id); if (e) e.textContent = txt; }
+
+    function render() {
+      var m = modoEl.value, v1 = num(v1El), v2 = num(v2El);
+      var L = LBL[m] || LBL.simple;
+      set('pj-lbl1', L.l1); set('pj-lbl2', L.l2); set('pj-help1', L.h1); set('pj-help2', L.h2);
+
+      var r;
+      try { r = porcentaje(m, v1, v2); }
+      catch (err) {
+        set('pj-big', '—'); set('pj-sub', err.message); set('pj-formula', L.f);
+        return;
+      }
+
+      set('pj-big', r.resultado); set('pj-sub', r.explicacion); set('pj-formula', r.formula);
+      set('pj-deco-val', r.resultado); set('pj-deco-note', r.explicacion); set('pj-deco-chip', L.f);
+      set('pj-quick-f', L.f);
+      set('pj-hl-big', r.resultado); set('pj-hl-note', r.explicacion);
+      set('pj-ref-big', r.resultado); set('pj-ref-sub', r.explicacion);
+      set('pj-s2', r.formula); set('pj-s3', r.resultado);
+
+      // Tiles + breakdown: dos familias según qué representa el segundo valor
+      if (esPct(m)) {
+        var uno = porcentaje('simple', v1, 1), diez = porcentaje('simple', v1, 10);
+        var des = porcentaje('descuento', v1, v2), aum = porcentaje('aumento', v1, v2);
+        var parte = porcentaje('simple', v1, v2);
+        set('pj-t1', uno.resultado);  set('pj-t1l', '1% de ' + fmt(v1));
+        set('pj-t2', diez.resultado); set('pj-t2l', '10% de ' + fmt(v1));
+        set('pj-t3', des.resultado);  set('pj-t3l', 'Con ' + fmt(v2) + '% de descuento');
+        set('pj-t4', aum.resultado);  set('pj-t4l', 'Con ' + fmt(v2) + '% de aumento');
+        set('pj-s1', 'Y = ' + fmt(v1) + ' · X = ' + fmt(v2) + '%');
+        set('pj-quick', 'El ' + fmt(v2) + '% de ' + fmt(v1) + ' es ' + parte.resultado + '. Con ese descuento pagás ' + des.resultado + '; con ese aumento, ' + aum.resultado + '.');
+        set('pj-k1', uno.resultado);
+        set('pj-bd-big', fmt(v1)); set('pj-bd-total', fmt(v1));
+        set('pj-bd-1', uno.resultado); set('pj-bd-2', diez.resultado);
+        set('pj-bd-3', parte.resultado); set('pj-bd-3l', fmt(v2) + '% del valor base');
+        var b3 = $('pj-bd-b3'); if (b3) b3.style.width = Math.max(0, Math.min(100, v2)) + '%';
+        set('pj-ref-c1', '1% = ' + uno.resultado); set('pj-ref-c2', '10% = ' + diez.resultado);
+        set('pj-ref-c3', '−' + fmt(v2) + '% = ' + des.resultado); set('pj-ref-c4', '+' + fmt(v2) + '% = ' + aum.resultado);
+        renderTable(v1);
+      } else {
+        var sw = function (fn) { try { return porcentaje(fn, v2, v1).resultado; } catch (e) { return '—'; } };
+        var dif = function () { try { return porcentaje('diferencia', v1, v2).resultado; } catch (e) { return '—'; } };
+        var vari = function () { try { return porcentaje('variacion', v1, v2).resultado; } catch (e) { return '—'; } };
+        set('pj-t1', dif());        set('pj-t1l', fmt(v1) + ' sobre ' + fmt(v2));
+        set('pj-t2', sw('diferencia')); set('pj-t2l', fmt(v2) + ' sobre ' + fmt(v1));
+        set('pj-t3', vari());       set('pj-t3l', 'Variación ' + fmt(v1) + ' → ' + fmt(v2));
+        set('pj-t4', sw('variacion')); set('pj-t4l', 'Variación ' + fmt(v2) + ' → ' + fmt(v1));
+        set('pj-s1', 'X = ' + fmt(v1) + ' · Y = ' + fmt(v2));
+        set('pj-quick', r.explicacion + '.');
+        set('pj-k1', '—');
+        set('pj-bd-big', fmt(v1));
+        set('pj-bd-1', '—'); set('pj-bd-2', '—');
+        set('pj-bd-3', r.resultado); set('pj-bd-3l', m === 'variacion' ? 'Variación entre los dos valores' : 'Proporción sobre el total');
+        set('pj-bd-total', fmt(v2));
+        set('pj-ref-c1', 'X = ' + fmt(v1)); set('pj-ref-c2', 'Y = ' + fmt(v2));
+        set('pj-ref-c3', dif()); set('pj-ref-c4', vari());
+      }
+    }
+
+    var REF = [5, 10, 15, 21, 25, 50];
+    function renderTable(v1) {
+      var tb = $('pj-tbody'); if (!tb) return;
+      set('pj-th2', 'La parte de ' + fmt(v1));
+      var html = '';
+      for (var i = 0; i < REF.length; i++) {
+        var p = REF[i];
+        html += '<tr><td><span class="cf-td-dot">' + p + '%</span></td>'
+          + '<td class="cf-td-em">' + porcentaje('simple', v1, p).resultado + '</td>'
+          + '<td>' + porcentaje('descuento', v1, p).resultado + '</td>'
+          + '<td>' + porcentaje('aumento', v1, p).resultado + '</td></tr>';
+      }
+      tb.innerHTML = html;
+    }
+
+    modoEl.addEventListener('change', render);
+    v1El.addEventListener('input', render);
+    v2El.addEventListener('input', render);
+    $('pj-calc-btn').addEventListener('click', render);
+    Array.prototype.forEach.call(document.querySelectorAll('[data-pct]'), function (b) {
+      b.addEventListener('click', function () { v2El.value = b.getAttribute('data-pct'); render(); });
+    });
+
+    function summary() {
+      try {
+        var r = porcentaje(modoEl.value, num(v1El), num(v2El));
+        return r.explicacion + ' (' + r.formula + '). — hacecuentas.com';
+      } catch (e) { return 'hacecuentas.com/calculadora-porcentajes'; }
+    }
+    function shareUrl() { return location.origin + location.pathname + '?modo=' + modoEl.value + '&v1=' + v1El.value + '&v2=' + v2El.value; }
+    function copy(t, btn) {
+      if (!navigator.clipboard) return;
+      navigator.clipboard.writeText(t).then(function () {
+        var o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(function () { btn.innerHTML = o; }, 1500);
+      });
+    }
+    $('pj-copy').addEventListener('click', function (e) { copy(summary(), e.currentTarget); });
+    $('pj-detail').addEventListener('click', function () { var t = document.getElementById('preguntas'); if (t) t.scrollIntoView({ behavior: 'smooth' }); });
+    var s2 = $('pj-share2'); if (s2) s2.addEventListener('click', function (e) { copy(shareUrl(), e.currentTarget); });
+
+    var q = new URLSearchParams(location.search);
+    if (q.get('modo')) modoEl.value = q.get('modo');
+    if (q.get('v1')) v1El.value = q.get('v1');
+    if (q.get('v2')) v2El.value = q.get('v2');
+    render();
+  })();
+</script>
+
+<style>
+  .pj .pj-deco-wrap { position: relative; }
+  .pj .pj-badge { top: -14px; right: -14px; font-size: 1.4rem; }
+  .pj .cf-deco-card__value { font-size: 2.2rem; }
+  .pj .pj-cap { font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+  .pj .pj-mt { margin-top: 0.3rem; }
+  .pj .pj-mt2 { margin-top: 1rem; }
+  .pj .pj-mt3 { margin-top: 1.25rem; }
+  .pj .pj-h2, .cf-band .pj-h2 { margin: 0.35rem 0 1.25rem; }
+  .pj .cf-minicard__big { font-size: 1.15rem; }
+  .pj .cf-minicard--dark .cf-minicard__big { font-size: 1.6rem; }
+  .pj .cf-minicard code { font-family: var(--font-mono); font-size: 0.85em; }
+
+  .pj-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .pj-2col { grid-template-columns: 0.85fr 1.15fr; } }
+  .cf-band .pj-2col--band { gap: 1.25rem; }
+
+  .pj .pj-hl, .cf-band .pj-hl {
+    padding: 1.4rem 1.5rem; border-radius: var(--radius-lg); color: #fff;
+    background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%);
+    box-shadow: var(--shadow-md);
+  }
+  .pj .pj-hl__eyebrow { color: rgba(255,255,255,0.85); }
+  .pj .pj-hl__title { font-size: 1.35rem; font-weight: 800; line-height: 1.2; margin: 0 0 0.6rem; letter-spacing: -0.015em; }
+  .pj .pj-hl__desc, .cf-band .pj-hl__desc { font-size: 0.82rem; line-height: 1.5; margin: 0; color: rgba(255,255,255,0.86); }
+  .pj .pj-hl__big, .cf-band .pj-hl__big { font-size: 1.9rem; font-weight: 800; margin: 1.1rem 0 0.15rem; font-variant-numeric: tabular-nums; color: #fff; line-height: 1.1; }
+
+    /* El chip mono es nowrap: sin min-width:0 infla el track del grid
+     (min-width:auto en grid items) y mete scroll-x en mobile. */
+  .pj .cf-steps > .cf-step { min-width: 0; }
+.pj .pj-chip, .cf-band .pj-chip {
+    display: inline-block; margin: 0.7rem 0 0; padding: 0.35rem 0.6rem; border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-strong);
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+    overflow-x: auto; max-width: 100%; white-space: nowrap;
+  }
+  .cf-band .pj-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.9rem; }
+  .cf-band .pj-chip--dark { margin: 0; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.12); color: #e7ecf3; }
+
+  .cf-band .pj-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .pj-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .pj-card__title--plain { margin-top: 0.35rem; }
+  .cf-band .pj-src { display: grid; gap: 0.5rem; }
+  .cf-band .pj-src__title { font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0 0 0.6rem; }
+  .cf-band .pj-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .pj-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .pj-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .pj-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+</style>

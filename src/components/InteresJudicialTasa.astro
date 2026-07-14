@@ -1,0 +1,594 @@
+---
+// Flagship redesign de la calc "interés judicial (tasa activa BNA)" — Argentina (mockup Martin).
+// Los números salen del motor real (src/lib/formulas/interes-judicial-tasa.ts):
+//   interés SIMPLE = capital × (tasa anual / 365) × días.
+// NOTA: el motor NO tiene modo capitalizado (la CSJN en "Oliva c/ COMA", 29/02/2024,
+// invalidó la capitalización periódica del Acta CNAT 2764), así que no se inventa acá:
+// la banda "Atención" explica por qué la liquidación es a interés simple.
+// Las tasas de los presets/jurisdicciones NO están exportadas por la fórmula: se
+// DERIVAN del propio motor (capital 1.000.000 a 365 días → intereses/10.000 = % anual),
+// para que no haya una tabla duplicada que se desincronice.
+// Domain "knowledge" (violeta) por el mockup, no por la categoría (finanzas→money).
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { interesJudicialTasa } from '../lib/formulas/interes-judicial-tasa';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+const num = (n: number) => Math.round(n).toLocaleString('es-AR');
+const pct1 = (n: number) => n.toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+const tasaTxt = (n: number) => n.toLocaleString('es-AR', { maximumFractionDigits: 2 }) + '% TNA';
+
+const D_DESDE = '2025-07-14';
+const D_HASTA = '2026-07-14'; // 365 días exactos
+const CAPITAL = 5_000_000;
+
+// Tasa anual efectivamente aplicada por el MOTOR para cada opción (derivada, no copiada).
+function tasaDelMotor(opts: { tasaPreset?: string; jurisdiccion?: string }) {
+  const r = interesJudicialTasa({ capital: 1_000_000, fechaDesde: D_DESDE, fechaHasta: D_HASTA, ...opts });
+  return { tasa: r.interesesGenerados / 10_000, label: String(r.tasaAplicada).split('—').slice(1).join('—').trim() };
+}
+
+const fields = calc.fields || [];
+const fieldOpts = (id: string) => {
+  const f = fields.find((x: any) => x.id === id);
+  return (f?.options || []) as { value: string; label: string }[];
+};
+const jurisOpts = fieldOpts('jurisdiccion');
+const presetOpts = fieldOpts('tasaPreset');
+
+// Presets reales del motor (excluye 'manual', que usa la tasa que carga el usuario)
+const presets = presetOpts
+  .filter((o) => o.value !== 'manual')
+  .map((o) => ({ value: o.value, label: o.label, ...tasaDelMotor({ tasaPreset: o.value }) }));
+const jurisdicciones = jurisOpts
+  .filter((o) => o.value !== 'ninguna')
+  .map((o) => ({ value: o.value, label: o.label, ...tasaDelMotor({ jurisdiccion: o.value }) }));
+
+const init = interesJudicialTasa({
+  capital: CAPITAL, tasaPreset: 'activa_bna_33', jurisdiccion: 'ninguna', fechaDesde: D_DESDE, fechaHasta: D_HASTA,
+});
+const initTasa = tasaDelMotor({ tasaPreset: 'activa_bna_33' }).tasa;
+const initPctNum = (init.interesesGenerados / CAPITAL) * 100;
+
+const plazos: { lbl: string; desde: string }[] = [
+  { lbl: '90 días', desde: '2026-04-15' },
+  { lbl: '180 días', desde: '2026-01-15' },
+  { lbl: '1 año', desde: '2025-07-14' },
+  { lbl: '2 años', desde: '2024-07-14' },
+  { lbl: '3 años', desde: '2023-07-14' },
+];
+const refRows = plazos.map((p) => {
+  const r = interesJudicialTasa({ capital: CAPITAL, tasaPreset: 'activa_bna_33', jurisdiccion: 'ninguna', fechaDesde: p.desde, fechaHasta: D_HASTA });
+  return { lbl: p.lbl, dias: r.diasTranscurridos, intereses: r.interesesGenerados, total: r.totalConIntereses };
+});
+
+const barCap = (CAPITAL / init.totalConIntereses) * 100;
+const barInt = (init.interesesGenerados / init.totalConIntereses) * 100;
+
+const tablaAttr = JSON.stringify({
+  presets: presets.reduce((acc: any, p) => { acc[p.value] = p.tasa; return acc; }, {}),
+  juris: jurisdicciones.reduce((acc: any, j) => { acc[j.value] = j.tasa; return acc; }, {}),
+});
+
+const faq = calc.faq || [];
+const sources = calc.sources || [];
+---
+
+<div class="cf-page ijt" data-domain="knowledge" data-tasas={tablaAttr}>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/categoria/finanzas">Finanzas</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Interés judicial</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">⚖️</span> Argentina · Tasa activa BNA · 2026</p>
+      <h1 class="cf-h1">Calculadora de <span class="cf-yr">interés judicial</span></h1>
+      <p class="cf-sub">Actualizá una deuda desde la fecha de mora hasta hoy con la tasa que ordena la doctrina de tu fuero, a interés simple.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">📅</span> Desde la mora hasta el pago</span>
+      <div class="ijt-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="ijt-deco-val">{fmt(init.totalConIntereses)}</div>
+          <div class="cf-deco-card__note">Total reclamable · capital {fmt(CAPITAL)}</div>
+        </div>
+        <span class="cf-deco-badge ijt-badge">⚖️</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Intereses</strong> <span class="cf-deco-chip" id="ijt-deco-int">{pct1(initPctNum)}</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">La deuda y el período</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="ijt-capital">Capital de la deuda</label><span class="cf-hint">Sin intereses</span></div>
+        <div class="ijt-money"><span class="ijt-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="ijt-capital" value="5.000.000" /></div>
+        <p class="cf-help">Monto nominal reclamado a la fecha de mora, antes de aplicar intereses.</p>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="ijt-juris">Jurisdicción</label><span class="cf-hint">Preselecciona la tasa</span></div>
+        <select class="cf-input" id="ijt-juris">
+          {jurisOpts.map((o) => <option value={o.value} selected={o.value === 'ninguna'}>{o.label}</option>)}
+        </select>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="ijt-preset">Tasa a usar</label></div>
+          <select class="cf-input" id="ijt-preset">
+            {presetOpts.map((o) => <option value={o.value} selected={o.value === 'activa_bna_33'}>{o.label}</option>)}
+          </select>
+        </div>
+        <div class="cf-field ijt-manual" id="ijt-manual-wrap" hidden>
+          <div class="cf-field__row"><label class="cf-label" for="ijt-manual">Tasa manual anual</label><span class="cf-hint">% TNA</span></div>
+          <input class="cf-input" type="number" id="ijt-manual" value="33" min="0" step="0.5" />
+        </div>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="ijt-desde">Fecha desde (mora)</label></div>
+          <input class="cf-input" type="date" id="ijt-desde" value={D_DESDE} />
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="ijt-hasta">Fecha hasta</label></div>
+          <input class="cf-input" type="date" id="ijt-hasta" value={D_HASTA} />
+        </div>
+      </div>
+
+      <button class="cf-primary" id="ijt-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Plazos:</span>
+        {plazos.map((p) => <button class="cf-sc" type="button" data-desde={p.desde}>{p.lbl}</button>)}
+      </div>
+      <p class="cf-help ijt-err" id="ijt-err" hidden></p>
+    </div>
+
+    <div class="cf-result" id="ijt-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="ijt-big">{fmt(init.totalConIntereses)}</div>
+      <p class="cf-result__biglabel" id="ijt-biglabel">de total reclamable</p>
+      <p class="cf-result__sub" id="ijt-sub">Capital {fmt(CAPITAL)} + {fmt(init.interesesGenerados)} de intereses · {num(init.diasTranscurridos)} días</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="ijt-t-int">{fmt(init.interesesGenerados)}</div><div class="cf-tile__label">Intereses generados</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="ijt-t-pct">{pct1(initPctNum)}</div><div class="cf-tile__label">Sobre el capital</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="ijt-t-dias">{num(init.diasTranscurridos)}</div><div class="cf-tile__label">Días transcurridos</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="ijt-t-tasa">{tasaTxt(initTasa)}</div><div class="cf-tile__label">Tasa aplicada</div></div>
+      </div>
+      <div class="cf-result__formula" id="ijt-formula">{fmt(CAPITAL)} × ({tasaTxt(initTasa).replace(' TNA', '')} ÷ 365) × {num(init.diasTranscurridos)} días = {fmt(init.interesesGenerados)}</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="ijt-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="ijt-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt" id="ijt-quick"><strong>Respuesta rápida.</strong> Un capital de {fmt(CAPITAL)} en mora durante {num(init.diasTranscurridos)} días a la tasa activa BNA de referencia devenga <strong>{fmt(init.interesesGenerados)}</strong> de intereses: el total reclamable llega a {fmt(init.totalConIntereses)}.</p>
+    <span class="cf-formula">capital × (tasa ÷ 365) × días</span>
+  </div>
+
+  <!-- DATOS CLAVE -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      {presets.map((p, i) => (
+        <div class={`cf-minicard${i === 0 ? ' cf-minicard--dark' : ''}`}>
+          <span class="cf-minicard__ico" aria-hidden="true">{['🏦', '📈', '📉', '🧾'][i] || '⚖️'}</span>
+          <p class="cf-minicard__sub ijt-mc-lbl">{p.label.split('(')[0].trim()}</p>
+          <div class="cf-minicard__big">{tasaTxt(p.tasa)}</div>
+          <p class="cf-minicard__desc ijt-mc-desc">{p.tasa >= 72
+            ? 'Resarcitoria de ARCA para deudas impositivas: es la más alta y no se usa en juicios civiles.'
+            : p.tasa >= 38
+              ? 'Valor de la activa BNA a enero de 2026. Sirve para liquidaciones ancladas a ese momento.'
+              : p.tasa >= 33
+                ? 'Es la que aplican por defecto los fueros civil, comercial y laboral de Nación.'
+                : 'Se usaba en el fuero previsional y en la vieja doctrina "Cabrera" de la SCBA.'}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- CÓMO LEER EL RESULTADO -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Cómo leer el resultado</p>
+    <h2 class="cf-section__title ijt-t2">Cuánto del reclamo es capital y cuánto interés</h2>
+    <div class="ijt-2col">
+      <div class="cf-side-card cf-side-card--dark ijt-hl">
+        <p class="cf-side-eyebrow">Cómo leer el resultado</p>
+        <p class="ijt-hl__title">La tasa la fija el juzgado, no la calculadora</p>
+        <p class="cf-side-desc">Cada fuero sigue su doctrina y la tasa real del banco cambia mes a mes. Este número es una estimación para negociar o dimensionar el reclamo: la liquidación que aprueba el juzgado es la que vale.</p>
+        <div class="ijt-hl__big" id="ijt-hl-big">{pct1(initPctNum)}</div>
+        <p class="cf-side-desc">Es lo que agregaron los intereses sobre el capital</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-breakdown__big" id="ijt-bd-big">{fmt(init.totalConIntereses)}</div>
+        <p class="ijt-note ijt-note--top">Total reclamable del caso cargado</p>
+        <div class="cf-brow">
+          <span class="cf-brow__lbl">Capital</span>
+          <span class="cf-brow__val" id="ijt-bd-cap">{fmt(CAPITAL)}</span>
+          <span class="cf-brow__bar"><span id="ijt-bd-cap-bar" style={`width:${barCap.toFixed(1)}%`}></span></span>
+        </div>
+        <div class="cf-brow ijt-brow--sp">
+          <span class="cf-brow__lbl">Intereses</span>
+          <span class="cf-brow__val" id="ijt-bd-int">{fmt(init.interesesGenerados)}</span>
+          <span class="cf-brow__bar"><span class="ijt-bar--alt" id="ijt-bd-int-bar" style={`width:${barInt.toFixed(1)}%`}></span></span>
+        </div>
+        <div class="cf-brow ijt-brow--sp">
+          <span class="cf-brow__lbl">Interés por día</span>
+          <span class="cf-brow__val" id="ijt-bd-dia">{fmt(init.interesesGenerados / Math.max(1, init.diasTranscurridos))}</span>
+          <span class="cf-brow__bar"><span class="ijt-bar--full" style="width:100%"></span></span>
+        </div>
+        <div class="cf-breakdown__total">
+          <span>Total reclamable</span>
+          <strong id="ijt-bd-total">{fmt(init.totalConIntereses)}</strong>
+        </div>
+        <div class="cf-callout cf-callout--warn ijt-cal">
+          <span class="cf-callout__ico" aria-hidden="true">⚠️</span>
+          <p>La tasa real <strong>varía mes a mes</strong> y cada juzgado puede ordenar otra. Verificá la que aplica tu expediente antes de presentar la liquidación.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PASO A PASO -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title ijt-t2">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">El capital reclamado y las fechas de mora y de corte. La jurisdicción preselecciona la tasa que ordena la doctrina del fuero.</p>
+        <span class="ijt-chip" id="ijt-s1">{fmt(CAPITAL)} · {num(init.diasTranscurridos)} días</span>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">Interés simple: pasamos la tasa anual a diaria dividiendo por 365 y la multiplicamos por los días corridos de mora.</p>
+        <span class="ijt-chip" id="ijt-s2">{tasaTxt(initTasa).replace(' TNA', '')} ÷ 365 × {num(init.diasTranscurridos)}</span>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">Sumamos los intereses al capital. Ese total es el punto de partida para la liquidación que presentás en el expediente.</p>
+        <span class="ijt-chip" id="ijt-s3">{fmt(init.totalConIntereses)} · +{pct1(initPctNum)}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- REFERENCIAS -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Plazo de mora</th><th>Días corridos</th><th>Intereses</th><th>Total reclamable</th></tr></thead>
+        <tbody>
+          {refRows.map((r) => (
+            <tr>
+              <td><span class="cf-td-dot">{r.lbl}</span></td>
+              <td>{num(r.dias)}</td>
+              <td>{fmt(r.intereses)}</td>
+              <td class="cf-td-em">{fmt(r.total)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="ijt-tnote">Escenarios calculados con la misma fórmula sobre un capital de {fmt(CAPITAL)} a la tasa activa BNA de referencia ({tasaTxt(initTasa)}), con corte al {new Date(D_HASTA + 'T00:00:00').toLocaleDateString('es-AR')}.</p>
+  </section>
+</div>
+
+<!-- Banda: atención (interés simple, no capitalizado) + referencia principal -->
+<div class="cf-band cf-band--warm" data-domain="knowledge">
+  <div class="cf-band__inner">
+    <div class="ijt-2col">
+      <div class="ijt-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="ijt-card__title">Esta liquidación es a interés simple, no capitalizado</h2>
+        <p class="cf-side-desc">La calculadora aplica interés simple sobre el capital original: no capitaliza los intereses ya devengados. En materia laboral, la CSJN en <strong>"Oliva, Fabio Omar c/ COMA S.A."</strong> (29/02/2024) invalidó la capitalización periódica que preveía el Acta CNAT 2764, y por eso el cálculo no la incluye. Si tu expediente tiene una capitalización ordenada por el juzgado (por ejemplo, al practicarse la liquidación conforme el art. 770 del CCyCN), el resultado real va a ser mayor que el de acá.</p>
+        <div class="cf-callout cf-callout--warn ijt-cal">
+          <span class="cf-callout__ico" aria-hidden="true">⚖️</span>
+          <p>Herramienta orientativa: no reemplaza la liquidación oficial ni el asesoramiento de un abogado.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="ijt-src__title">Tasa activa BNA de referencia</p>
+        <div class="ijt-ref__big">{tasaTxt(initTasa)}</div>
+        <p class="cf-side-desc">Es la que aplican por defecto los fueros civil, comercial y laboral de Nación (plenario "Samudio de Martínez", CNCiv, 2009)</p>
+        <div class="ijt-chips">
+          {jurisdicciones.map((j) => <span class="ijt-chip2">{j.value === 'pba' ? 'PBA' : j.value === 'caba' ? 'CABA' : 'Nación'} · {tasaTxt(j.tasa)}</span>)}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page ijt" data-domain="knowledge">
+  {faq.length > 0 && (
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title ijt-t2">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+</div>
+
+<!-- Banda: fuentes y metodología -->
+<div class="cf-band" data-domain="knowledge">
+  <div class="cf-band__inner">
+    <div class="ijt-2col">
+      <div class="ijt-card">
+        <p class="cf-eyebrow">Fuentes y metodología</p>
+        <h2 class="ijt-card__title">Números que podés defender</h2>
+        <p class="cf-side-desc">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026. Las tasas de referencia siguen la doctrina vigente de cada fuero (Samudio, Barrios, Eiben) y el interés se liquida según los arts. 767 a 771 del Código Civil y Comercial.</p>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Fuentes oficiales</p>
+        <p class="ijt-src__title">Doctrina y normativa</p>
+        <div class="ijt-src">
+          {sources.map((s: any) => (
+            <div class="ijt-src__item">
+              <strong>{typeof s === 'string' ? s : String(s.name || '').split(/[—:(]/)[0].trim()}</strong>
+              {typeof s !== 'string' && s.publisher && <span>{s.publisher}</span>}
+            </div>
+          ))}
+        </div>
+        <p class="ijt-src__foot">● Información revisada en julio de 2026</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page ijt" data-domain="knowledge">
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title ijt-t2">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🧮'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('—')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="ijt-share2">Guardar resultado</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.ijt');
+    if (!root) return;
+    const T = JSON.parse(root.getAttribute('data-tasas'));
+    const $ = function (id) { return document.getElementById(id); };
+    const fmt = function (n) { return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(Math.round(n)); };
+    const num = function (n) { return Math.round(n).toLocaleString('es-AR'); };
+    const pct1 = function (n) { return n.toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'; };
+    const tasaTxt = function (n) { return n.toLocaleString('es-AR', { maximumFractionDigits: 2 }) + '% TNA'; };
+
+    const capEl = $('ijt-capital'), jurisEl = $('ijt-juris'), presetEl = $('ijt-preset'),
+      manualEl = $('ijt-manual'), manualWrap = $('ijt-manual-wrap'), desdeEl = $('ijt-desde'), hastaEl = $('ijt-hasta'), errEl = $('ijt-err');
+
+    function digits(v) { return Number(String(v || '').replace(/\D/g, '')) || 0; }
+    function fmtThousands(v) { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('es-AR') : ''; }
+
+    // Réplica del parseo de fechas del motor: new Date(y, m-1, d) local, sin UTC.
+    function parseFecha(s) {
+      const p = String(s || '').split('-').map(Number);
+      if (p.length !== 3 || p.some(isNaN)) return null;
+      return new Date(p[0], p[1] - 1, p[2]);
+    }
+
+    // Tasa efectiva: jurisdicción gana sobre preset; 'manual' usa el input.
+    function tasaActual() {
+      const j = jurisEl.value;
+      if (j && j !== 'ninguna' && T.juris[j] !== undefined) return T.juris[j];
+      const p = presetEl.value;
+      if (p === 'manual') return Number(manualEl.value) || 0;
+      return T.presets[p] !== undefined ? T.presets[p] : 0;
+    }
+
+    // Réplica de interesJudicialTasa(): interés SIMPLE, sin capitalización.
+    function calcular(capital, tasaAnual, desde, hasta) {
+      const dias = Math.round((hasta.getTime() - desde.getTime()) / 86400000);
+      const intereses = capital * (tasaAnual / 100 / 365) * dias;
+      return { dias: dias, intereses: intereses, total: capital + intereses, pct: capital > 0 ? (intereses / capital) * 100 : 0 };
+    }
+
+    function render() {
+      const usaManual = presetEl.value === 'manual' && (jurisEl.value === 'ninguna' || !jurisEl.value);
+      manualWrap.hidden = !usaManual;
+      // Con jurisdicción elegida, la tasa la manda el fuero: el preset queda inerte.
+      presetEl.disabled = jurisEl.value !== 'ninguna' && !!jurisEl.value;
+
+      const capital = digits(capEl.value);
+      const tasa = tasaActual();
+      const desde = parseFecha(desdeEl.value), hasta = parseFecha(hastaEl.value);
+
+      let err = '';
+      if (!capital || capital <= 0) err = 'Ingresá el capital de la deuda.';
+      else if (!tasa || tasa <= 0) err = 'Ingresá una tasa anual mayor a cero.';
+      else if (!desde || !hasta) err = 'Ingresá fechas válidas.';
+      else if (desde > hasta) err = 'La fecha desde no puede ser posterior a la fecha hasta.';
+      errEl.hidden = !err;
+      errEl.textContent = err;
+      if (err) return;
+
+      const r = calcular(capital, tasa, desde, hasta);
+      $('ijt-big').textContent = fmt(r.total);
+      $('ijt-sub').textContent = 'Capital ' + fmt(capital) + ' + ' + fmt(r.intereses) + ' de intereses · ' + num(r.dias) + ' días';
+      $('ijt-t-int').textContent = fmt(r.intereses);
+      $('ijt-t-pct').textContent = pct1(r.pct);
+      $('ijt-t-dias').textContent = num(r.dias);
+      $('ijt-t-tasa').textContent = tasaTxt(tasa);
+      $('ijt-formula').textContent = fmt(capital) + ' × (' + tasa.toLocaleString('es-AR', { maximumFractionDigits: 2 }) + '% ÷ 365) × ' + num(r.dias) + ' días = ' + fmt(r.intereses);
+
+      const dv = $('ijt-deco-val'); if (dv) dv.textContent = fmt(r.total);
+      const dn = document.querySelector('.ijt .cf-deco-card__note');
+      if (dn) dn.textContent = 'Total reclamable · capital ' + fmt(capital);
+      const di = $('ijt-deco-int'); if (di) di.textContent = pct1(r.pct);
+
+      $('ijt-hl-big').textContent = pct1(r.pct);
+      $('ijt-bd-big').textContent = fmt(r.total);
+      $('ijt-bd-cap').textContent = fmt(capital);
+      $('ijt-bd-int').textContent = fmt(r.intereses);
+      $('ijt-bd-dia').textContent = fmt(r.intereses / Math.max(1, r.dias));
+      $('ijt-bd-total').textContent = fmt(r.total);
+      const tt = r.total > 0 ? r.total : 1;
+      $('ijt-bd-cap-bar').style.width = ((capital / tt) * 100).toFixed(1) + '%';
+      $('ijt-bd-int-bar').style.width = ((r.intereses / tt) * 100).toFixed(1) + '%';
+
+      $('ijt-s1').textContent = fmt(capital) + ' · ' + num(r.dias) + ' días';
+      $('ijt-s2').textContent = tasa.toLocaleString('es-AR', { maximumFractionDigits: 2 }) + '% ÷ 365 × ' + num(r.dias);
+      $('ijt-s3').textContent = fmt(r.total) + ' · +' + pct1(r.pct);
+    }
+
+    capEl.addEventListener('input', function () { capEl.value = fmtThousands(capEl.value); render(); });
+    jurisEl.addEventListener('change', render);
+    presetEl.addEventListener('change', render);
+    manualEl.addEventListener('input', render);
+    desdeEl.addEventListener('change', render);
+    hastaEl.addEventListener('change', render);
+    $('ijt-btn').addEventListener('click', render);
+    document.querySelectorAll('[data-desde]').forEach(function (b) {
+      b.addEventListener('click', function () { desdeEl.value = b.getAttribute('data-desde'); render(); });
+    });
+
+    function summary() {
+      const capital = digits(capEl.value), tasa = tasaActual();
+      const desde = parseFecha(desdeEl.value), hasta = parseFecha(hastaEl.value);
+      if (!capital || !tasa || !desde || !hasta || desde > hasta) return '';
+      const r = calcular(capital, tasa, desde, hasta);
+      return 'Interés judicial: un capital de ' + fmt(capital) + ' en mora ' + num(r.dias) + ' días a ' + tasaTxt(tasa) + ' devenga ' + fmt(r.intereses) + ' de intereses (' + pct1(r.pct) + ' del capital). Total reclamable: ' + fmt(r.total) + '. Interés simple, estimación orientativa. — hacecuentas.com';
+    }
+    function shareUrl() {
+      return location.origin + location.pathname + '?capital=' + digits(capEl.value) + '&juris=' + jurisEl.value + '&preset=' + presetEl.value + '&desde=' + desdeEl.value + '&hasta=' + hastaEl.value;
+    }
+    function copy(t, btn) {
+      if (!navigator.clipboard || !t) return;
+      navigator.clipboard.writeText(t).then(function () {
+        const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(function () { btn.innerHTML = o; }, 1500);
+      });
+    }
+    $('ijt-copy').addEventListener('click', function (e) { copy(summary(), e.currentTarget); });
+    $('ijt-detail').addEventListener('click', function () {
+      const t = document.getElementById('como-funciona'); if (t) t.scrollIntoView({ behavior: 'smooth' });
+    });
+    const s2 = $('ijt-share2'); if (s2) s2.addEventListener('click', function (e) { copy(shareUrl(), e.currentTarget); });
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('capital')) capEl.value = fmtThousands(q.get('capital'));
+    if (q.get('juris')) jurisEl.value = q.get('juris');
+    if (q.get('preset')) presetEl.value = q.get('preset');
+    if (q.get('desde')) desdeEl.value = q.get('desde');
+    if (q.get('hasta')) hastaEl.value = q.get('hasta');
+    render();
+  })();
+</script>
+
+<style>
+  .ijt .ijt-deco-wrap { position: relative; }
+  .ijt .ijt-badge { top: 50%; right: -16px; transform: translateY(-50%); width: 48px; height: 48px; font-size: 1.4rem; }
+
+  .ijt .ijt-money { position: relative; display: flex; align-items: center; }
+  .ijt .ijt-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
+  .ijt .ijt-money .cf-input { padding-left: 1.7rem; }
+  .ijt .cf-input:disabled { opacity: 0.55; cursor: not-allowed; }
+  .ijt .ijt-err { color: #b45309; font-weight: 600; margin-top: 0.7rem; }
+  :root[data-theme="dark"] .ijt .ijt-err { color: #fbbf24; }
+
+  .ijt .cf-section__title.ijt-t2 { margin: 0.35rem 0 1.25rem; }
+  .ijt .ijt-mc-lbl { font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+  .ijt .ijt-mc-desc { margin-top: 0.3rem; }
+  .ijt .ijt-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.15rem 0 0; }
+  .ijt .ijt-note--top { margin: -0.6rem 0 1rem; }
+  .ijt .ijt-brow--sp { margin-top: 1rem; }
+  .ijt .ijt-cal, .cf-band .ijt-cal { margin-top: 1.25rem; }
+  .ijt .ijt-bar--alt { background: linear-gradient(90deg, #f59e0b, #fb923c) !important; }
+  .ijt .ijt-bar--full { display: block; height: 100%; background: rgba(120,130,150,0.35); }
+  .ijt .ijt-tnote { font-size: 0.75rem; color: var(--text-subtle); margin: 0.7rem 0 0; }
+
+  .ijt .ijt-chip {
+    display: inline-block; margin-top: 0.8rem; padding: 0.35rem 0.6rem; border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; color: var(--accent-strong);
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+
+  .ijt-2col, .cf-band .ijt-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .ijt-2col, .cf-band .ijt-2col { grid-template-columns: 0.85fr 1.15fr; } }
+
+  .ijt .ijt-hl__title { font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin: 0 0 0.6rem; letter-spacing: -0.015em; }
+  .ijt .ijt-hl__big { font-size: 2rem; font-weight: 800; color: #fff; margin: 1.1rem 0 0.15rem; font-variant-numeric: tabular-nums; }
+
+  .cf-band .ijt-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .ijt-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .ijt-src__title { font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 0.9rem; }
+  .cf-band .ijt-src { display: grid; gap: 0.5rem; }
+  .cf-band .ijt-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .ijt-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .ijt-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .ijt-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+  .cf-band .ijt-ref__big { font-size: 2.2rem; font-weight: 800; color: #fff; margin: 0.2rem 0 0.15rem; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .cf-band .ijt-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+  .cf-band .ijt-chip2 { padding: 0.3rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; background: rgba(255,255,255,0.09); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); }
+</style>

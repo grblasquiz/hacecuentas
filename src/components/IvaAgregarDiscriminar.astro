@@ -1,0 +1,552 @@
+---
+// Flagship redesign de la calc "IVA: agregar o discriminar" — Argentina (mockup Martin).
+// Los números salen del motor real (src/lib/formulas/precio-iva.ts):
+//   agregar     → iva = neto × alícuota ; total = neto + iva
+//   discriminar → neto = total / (1 + alícuota) ; iva = total − neto
+// El factor del mockup (21/121 = 0,17355) es iva/total del modo discriminar: sale
+// computado del motor, no hardcodeado. Domain "data" (esmeralda) por el mockup,
+// no por la categoría (negocios→money). Header/footer = los globales del sitio.
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { precioIva } from '../lib/formulas/precio-iva';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const ALICUOTAS = [
+  { value: '21', label: '21 % (general)' },
+  { value: '10.5', label: '10,5 % (reducida: carnes, granos, construcción)' },
+  { value: '27', label: '27 % (aumentada: telefonía, gas, energía comercial)' },
+  { value: '5', label: '5 % (diarios y revistas grandes)' },
+  { value: '2.5', label: '2,5 % (diarios locales)' },
+];
+
+const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+const fmtFactor = (n: number) => n.toLocaleString('es-AR', { minimumFractionDigits: 5, maximumFractionDigits: 5 });
+const fmtAlic = (n: number) => n.toLocaleString('es-AR', { maximumFractionDigits: 2 });
+const pct1 = (n: number) => n.toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+
+const INIT_MONTO = 1_000_000;
+const INIT_ALIC = 21;
+const init = precioIva({ monto: INIT_MONTO, modo: 'discriminar', alicuota: INIT_ALIC });
+// Factor de discriminación = iva/total. Con 21% da 21/121 = 0,17355 (el del mockup).
+const initFactor = init.iva / init.total;
+
+const refRows = ALICUOTAS.map((a) => {
+  const al = Number(a.value);
+  const d = precioIva({ monto: 1_000_000, modo: 'discriminar', alicuota: al });
+  return { alic: al, agregar: 1 + al / 100, discriminar: d.iva / d.total, ivaSobreMillon: d.iva };
+});
+
+// Barras del desglose: neto / IVA / total sobre el monto cargado
+const barNeto = (init.neto / init.total) * 100;
+const barIva = (init.iva / init.total) * 100;
+
+const faq = calc.faq || [];
+const sources = calc.sources || [];
+---
+
+<div class="cf-page ivd" data-domain="data" data-alicuotas={JSON.stringify(ALICUOTAS.map((a) => Number(a.value)))}>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/categoria/negocios">Negocios</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">IVA: agregar o discriminar</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">🧾</span> Argentina · Ley 23.349 · 2026</p>
+      <h1 class="cf-h1">Calculadora de <span class="cf-yr">IVA incluido</span></h1>
+      <p class="cf-sub">Sacá el IVA de un precio que ya lo incluye o agregalo a un neto, con las alícuotas vigentes: 21%, 10,5% y 27%.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">🔎</span> Discriminar IVA 21%</span>
+      <div class="ivd-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="ivd-deco-val">{fmt(init.neto)}</div>
+          <div class="cf-deco-card__note">Neto sin IVA · de un total de {fmt(INIT_MONTO)}</div>
+        </div>
+        <span class="cf-deco-badge ivd-badge">%</span>
+      </div>
+      <div class="cf-deco-sub"><strong>IVA contenido</strong> <span class="cf-deco-chip" id="ivd-deco-iva">{fmt(init.iva)}</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">El monto y la alícuota</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><span class="cf-label">¿Qué querés hacer?</span></div>
+        <div class="cf-seg ivd-seg" role="group" aria-label="Modo de cálculo">
+          <button type="button" data-modo="discriminar" aria-pressed="true">Discriminar IVA</button>
+          <button type="button" data-modo="agregar" aria-pressed="false">Agregar IVA</button>
+        </div>
+        <p class="cf-help" id="ivd-modo-help">Discriminar: el monto ya incluye IVA y querés saber cuánto es neto y cuánto impuesto.</p>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="ivd-monto">Monto</label><span class="cf-hint" id="ivd-monto-hint">Con IVA</span></div>
+          <div class="ivd-money"><span class="ivd-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="ivd-monto" value="1.000.000" /></div>
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="ivd-alic">Alícuota IVA</label></div>
+          <select class="cf-input" id="ivd-alic">
+            {ALICUOTAS.map((a) => <option value={a.value} selected={a.value === '21'}>{a.label}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <button class="cf-primary" id="ivd-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Ejemplos:</span>
+        <button class="cf-sc" type="button" data-ej="121000">$121.000</button>
+        <button class="cf-sc" type="button" data-ej="500000">$500.000</button>
+        <button class="cf-sc" type="button" data-ej="1000000">$1 M</button>
+        <button class="cf-sc" type="button" data-ej="2500000">$2,5 M</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="ivd-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="ivd-big">{fmt(init.neto)}</div>
+      <p class="cf-result__biglabel" id="ivd-biglabel">de precio neto, sin IVA</p>
+      <p class="cf-result__sub" id="ivd-sub">El IVA es el {pct1(barIva)} del precio final — no el {fmtAlic(INIT_ALIC)}%.</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="ivd-t-neto">{fmt(init.neto)}</div><div class="cf-tile__label">Precio neto</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="ivd-t-iva">{fmt(init.iva)}</div><div class="cf-tile__label">IVA · <span id="ivd-t-iva-alic">{fmtAlic(INIT_ALIC)}%</span></div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="ivd-t-total">{fmt(init.total)}</div><div class="cf-tile__label">Total con IVA</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="ivd-t-factor">{fmtFactor(initFactor)}</div><div class="cf-tile__label" id="ivd-t-factor-lbl">Factor · IVA / total</div></div>
+      </div>
+      <div class="cf-result__formula" id="ivd-formula">IVA = {fmt(init.total)} × 21/121 = {fmt(init.total)} × {fmtFactor(initFactor)} = {fmt(init.iva)}</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="ivd-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="ivd-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt" id="ivd-quick"><strong>Respuesta rápida.</strong> De un precio de {fmt(INIT_MONTO)} con IVA del 21%, <strong>{fmt(init.iva)} son impuesto</strong> y {fmt(init.neto)} es el neto. Para sacar el IVA de un total dividí por 1,21 — no le restes el 21%.</p>
+    <span class="cf-formula">IVA = total × 21/121</span>
+  </div>
+
+  <!-- DATOS CLAVE -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">🔑</span>
+        <p class="cf-minicard__sub ivd-mc-lbl">Factor para discriminar 21%</p>
+        <div class="cf-minicard__big">{fmtFactor(initFactor)}</div>
+        <p class="cf-minicard__desc ivd-mc-desc">Es 21/121. Multiplicá el total por este factor y obtenés el IVA contenido, directo.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🛒</span>
+        <p class="cf-minicard__sub ivd-mc-lbl">Alícuota general</p>
+        <div class="cf-minicard__big">21%</div>
+        <p class="cf-minicard__desc ivd-mc-desc">La mayoría de bienes y servicios: alimentos procesados, indumentaria, electrónica, servicios profesionales.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🥩</span>
+        <p class="cf-minicard__sub ivd-mc-lbl">Reducida · factor {fmtFactor(refRows[1].discriminar)}</p>
+        <div class="cf-minicard__big">10,5%</div>
+        <p class="cf-minicard__desc ivd-mc-desc">Carnes, frutas y verduras frescas, granos, pan común, obra de vivienda y transporte de pasajeros.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">📡</span>
+        <p class="cf-minicard__sub ivd-mc-lbl">Aumentada · factor {fmtFactor(refRows[2].discriminar)}</p>
+        <div class="cf-minicard__big">27%</div>
+        <p class="cf-minicard__desc ivd-mc-desc">Telefonía, internet, gas y energía eléctrica cuando el usuario es comercial o industrial.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CÓMO LEER EL RESULTADO -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Cómo leer el resultado</p>
+    <h2 class="cf-section__title ivd-t2">El IVA no es el 21% del precio final</h2>
+    <div class="ivd-2col">
+      <div class="cf-side-card cf-side-card--dark ivd-hl">
+        <p class="cf-side-eyebrow">Cómo leer el resultado</p>
+        <p class="ivd-hl__title">El 21% se calcula sobre el neto, no sobre el total</p>
+        <p class="cf-side-desc">Por eso, cuando el precio ya incluye impuesto, el IVA representa una porción menor del total. Restarle un 21% al precio final es el error más común y deja diferencias grandes en facturas altas.</p>
+        <div class="ivd-hl__big" id="ivd-hl-big">{pct1(barIva)}</div>
+        <p class="cf-side-desc">Es el peso real del IVA sobre el precio final</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-breakdown__big" id="ivd-bd-big">{fmt(init.total)}</div>
+        <p class="ivd-note ivd-note--top">Precio final del caso cargado</p>
+        <div class="cf-brow">
+          <span class="cf-brow__lbl">Precio neto</span>
+          <span class="cf-brow__val" id="ivd-bd-neto">{fmt(init.neto)}</span>
+          <span class="cf-brow__bar"><span id="ivd-bd-neto-bar" style={`width:${barNeto.toFixed(1)}%`}></span></span>
+        </div>
+        <div class="cf-brow ivd-brow--sp">
+          <span class="cf-brow__lbl">IVA contenido</span>
+          <span class="cf-brow__val" id="ivd-bd-iva">{fmt(init.iva)}</span>
+          <span class="cf-brow__bar"><span class="ivd-bar--alt" id="ivd-bd-iva-bar" style={`width:${barIva.toFixed(1)}%`}></span></span>
+        </div>
+        <div class="cf-brow ivd-brow--sp">
+          <span class="cf-brow__lbl">Total facturado</span>
+          <span class="cf-brow__val" id="ivd-bd-total">{fmt(init.total)}</span>
+          <span class="cf-brow__bar"><span class="ivd-bar--full" style="width:100%"></span></span>
+        </div>
+        <div class="cf-breakdown__total">
+          <span>El IVA sobre el precio final es</span>
+          <strong id="ivd-bd-pct">{pct1(barIva)}</strong>
+        </div>
+        <div class="cf-callout cf-callout--warn ivd-cal">
+          <span class="cf-callout__ico" aria-hidden="true">⚠️</span>
+          <p>Sacar el IVA con <strong>total × 21%</strong> da mal. Lo correcto es <strong>total ÷ 1,21</strong> para el neto, o <strong>total × 21/121</strong> para el impuesto.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PASO A PASO -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title ivd-t2">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">El monto y si ya tiene el IVA adentro o no. Después elegí la alícuota que corresponde al bien o servicio.</p>
+        <span class="ivd-chip" id="ivd-s1">{fmt(INIT_MONTO)} con IVA · 21%</span>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">Para discriminar dividimos el total por 1 + alícuota y sacamos el neto; la diferencia contra el total es el impuesto.</p>
+        <span class="ivd-chip" id="ivd-s2">{fmt(INIT_MONTO)} ÷ 1,21 = {fmt(init.neto)}</span>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">Si sos responsable inscripto, ese IVA es crédito fiscal que podés computar en tu declaración mensual.</p>
+        <span class="ivd-chip" id="ivd-s3">IVA {fmt(init.iva)} · {pct1(barIva)} del total</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- REFERENCIAS -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Alícuota</th><th>Factor para agregar</th><th>Factor para discriminar</th><th>IVA en un total de $1.000.000</th></tr></thead>
+        <tbody>
+          {refRows.map((r) => (
+            <tr>
+              <td><span class="cf-td-dot">{fmtAlic(r.alic)}%</span></td>
+              <td>× {r.agregar.toLocaleString('es-AR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</td>
+              <td>× {fmtFactor(r.discriminar)}</td>
+              <td class="cf-td-em">{fmt(r.ivaSobreMillon)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="ivd-tnote">Factores calculados con la misma fórmula: agregar = 1 + alícuota; discriminar = alícuota / (100 + alícuota).</p>
+  </section>
+</div>
+
+<!-- Banda: atención + referencia principal -->
+<div class="cf-band cf-band--warm" data-domain="data">
+  <div class="cf-band__inner">
+    <div class="ivd-2col">
+      <div class="ivd-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="ivd-card__title">No todos los que facturan discriminan IVA</h2>
+        <p class="cf-side-desc">El monotributista emite factura C y no discrimina IVA: lo tiene integrado en la cuota mensual, así que no podés computar crédito fiscal de esa compra. El responsable inscripto emite factura A (IVA discriminado) a otro inscripto y factura B (IVA incluido en el precio) a consumidor final.</p>
+        <div class="cf-callout cf-callout--warn ivd-cal">
+          <span class="cf-callout__ico" aria-hidden="true">💡</span>
+          <p>Si sos responsable inscripto, pedí siempre <strong>factura A</strong> a tus proveedores inscriptos: sin ella perdés el crédito fiscal.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="ivd-src__title">Factor para discriminar 21%</p>
+        <div class="ivd-ref__big">{fmtFactor(initFactor)}</div>
+        <p class="cf-side-desc">21 / 121 · multiplicá el total por este número y obtenés el IVA contenido</p>
+        <div class="ivd-chips">
+          <span class="ivd-chip2">10,5% → {fmtFactor(refRows[1].discriminar)}</span>
+          <span class="ivd-chip2">27% → {fmtFactor(refRows[2].discriminar)}</span>
+          <span class="ivd-chip2">Neto = total ÷ 1,21</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page ivd" data-domain="data">
+  {faq.length > 0 && (
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title ivd-t2">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+</div>
+
+<!-- Banda: fuentes y metodología -->
+<div class="cf-band" data-domain="data">
+  <div class="cf-band__inner">
+    <div class="ivd-2col">
+      <div class="ivd-card">
+        <p class="cf-eyebrow">Fuentes y metodología</p>
+        <h2 class="ivd-card__title">Números que podés defender</h2>
+        <p class="cf-side-desc">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026. Las alícuotas del 21%, 10,5% y 27% surgen del art. 28 de la Ley 23.349 y sus decretos reglamentarios; los factores de discriminación se derivan de esas alícuotas, no se cargan a mano.</p>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Fuentes oficiales</p>
+        <p class="ivd-src__title">Marco normativo 2026</p>
+        <div class="ivd-src">
+          {sources.map((s: any) => (
+            <div class="ivd-src__item">
+              <strong>{typeof s === 'string' ? s : String(s.name || '').split(' - ')[0].trim()}</strong>
+              {typeof s !== 'string' && String(s.name || '').includes(' - ') && <span>{String(s.name).split(' - ').slice(1).join(' - ').trim()}</span>}
+            </div>
+          ))}
+        </div>
+        <p class="ivd-src__foot">● Información revisada en julio de 2026</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page ivd" data-domain="data">
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title ivd-t2">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🧮'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('—')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="ivd-share2">Guardar resultado</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.ivd');
+    if (!root) return;
+    const $ = function (id) { return document.getElementById(id); };
+    const fmt = function (n) { return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(Math.round(n)); };
+    const fmtFactor = function (n) { return n.toLocaleString('es-AR', { minimumFractionDigits: 5, maximumFractionDigits: 5 }); };
+    const fmtAlic = function (n) { return n.toLocaleString('es-AR', { maximumFractionDigits: 2 }); };
+    const pct1 = function (n) { return n.toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'; };
+    const fmtMul = function (n) { return n.toLocaleString('es-AR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }); };
+
+    const montoEl = $('ivd-monto'), alicEl = $('ivd-alic');
+    let modo = 'discriminar';
+
+    function digits(v) { return Number(String(v || '').replace(/\D/g, '')) || 0; }
+    function fmtThousands(v) { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('es-AR') : ''; }
+
+    // Réplica exacta de precioIva() de src/lib/formulas/precio-iva.ts
+    function calcular(monto, modo, alicuota) {
+      const alic = alicuota / 100;
+      if (modo === 'agregar') {
+        const iva = monto * alic;
+        return { neto: monto, iva: iva, total: monto + iva };
+      }
+      const neto = monto / (1 + alic);
+      return { neto: neto, iva: monto - neto, total: monto };
+    }
+
+    function render() {
+      const monto = digits(montoEl.value);
+      const alic = Number(alicEl.value);
+      const r = calcular(monto, modo, alic);
+      const factorDisc = alic / (100 + alic);
+      const pesoIva = r.total > 0 ? (r.iva / r.total) * 100 : 0;
+      const esDisc = modo === 'discriminar';
+
+      $('ivd-big').textContent = esDisc ? fmt(r.neto) : fmt(r.total);
+      $('ivd-biglabel').textContent = esDisc ? 'de precio neto, sin IVA' : 'de precio final, con IVA';
+      $('ivd-sub').textContent = esDisc
+        ? 'El IVA es el ' + pct1(pesoIva) + ' del precio final — no el ' + fmtAlic(alic) + '%.'
+        : 'Sobre un neto de ' + fmt(r.neto) + ', el IVA del ' + fmtAlic(alic) + '% suma ' + fmt(r.iva) + '.';
+
+      $('ivd-t-neto').textContent = fmt(r.neto);
+      $('ivd-t-iva').textContent = fmt(r.iva);
+      $('ivd-t-iva-alic').textContent = fmtAlic(alic) + '%';
+      $('ivd-t-total').textContent = fmt(r.total);
+      $('ivd-t-factor').textContent = esDisc ? fmtFactor(factorDisc) : '× ' + fmtMul(1 + alic / 100);
+      $('ivd-t-factor-lbl').textContent = esDisc ? 'Factor · IVA / total' : 'Factor · neto → total';
+
+      $('ivd-formula').textContent = esDisc
+        ? 'IVA = ' + fmt(r.total) + ' × ' + alic + '/' + (100 + alic) + ' = ' + fmt(r.total) + ' × ' + fmtFactor(factorDisc) + ' = ' + fmt(r.iva)
+        : 'Total = ' + fmt(r.neto) + ' × ' + fmtMul(1 + alic / 100) + ' = ' + fmt(r.total) + ' · IVA = ' + fmt(r.iva);
+
+      const dv = $('ivd-deco-val'); if (dv) dv.textContent = esDisc ? fmt(r.neto) : fmt(r.total);
+      const dn = document.querySelector('.ivd .cf-deco-card__note');
+      if (dn) dn.textContent = esDisc ? 'Neto sin IVA · de un total de ' + fmt(r.total) : 'Total con IVA · de un neto de ' + fmt(r.neto);
+      const di = $('ivd-deco-iva'); if (di) di.textContent = fmt(r.iva);
+
+      $('ivd-hl-big').textContent = pct1(pesoIva);
+      $('ivd-bd-big').textContent = fmt(r.total);
+      $('ivd-bd-neto').textContent = fmt(r.neto);
+      $('ivd-bd-iva').textContent = fmt(r.iva);
+      $('ivd-bd-total').textContent = fmt(r.total);
+      $('ivd-bd-pct').textContent = pct1(pesoIva);
+      const pn = r.total > 0 ? (r.neto / r.total) * 100 : 0;
+      $('ivd-bd-neto-bar').style.width = pn.toFixed(1) + '%';
+      $('ivd-bd-iva-bar').style.width = pesoIva.toFixed(1) + '%';
+
+      $('ivd-s1').textContent = fmt(monto) + (esDisc ? ' con IVA · ' : ' neto · ') + fmtAlic(alic) + '%';
+      $('ivd-s2').textContent = esDisc
+        ? fmt(monto) + ' ÷ ' + fmtMul(1 + alic / 100) + ' = ' + fmt(r.neto)
+        : fmt(monto) + ' × ' + fmtMul(1 + alic / 100) + ' = ' + fmt(r.total);
+      $('ivd-s3').textContent = 'IVA ' + fmt(r.iva) + ' · ' + pct1(pesoIva) + ' del total';
+
+      $('ivd-monto-hint').textContent = esDisc ? 'Con IVA' : 'Sin IVA';
+      $('ivd-modo-help').textContent = esDisc
+        ? 'Discriminar: el monto ya incluye IVA y querés saber cuánto es neto y cuánto impuesto.'
+        : 'Agregar: el monto es el neto y querés saber el precio final con IVA.';
+    }
+
+    montoEl.addEventListener('input', function () { montoEl.value = fmtThousands(montoEl.value); render(); });
+    alicEl.addEventListener('change', render);
+    $('ivd-btn').addEventListener('click', render);
+    document.querySelectorAll('[data-modo]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        modo = b.getAttribute('data-modo');
+        document.querySelectorAll('[data-modo]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        render();
+      });
+    });
+    document.querySelectorAll('[data-ej]').forEach(function (b) {
+      b.addEventListener('click', function () { montoEl.value = fmtThousands(b.getAttribute('data-ej')); render(); });
+    });
+
+    function summary() {
+      const monto = digits(montoEl.value), alic = Number(alicEl.value);
+      const r = calcular(monto, modo, alic);
+      return modo === 'discriminar'
+        ? 'IVA ' + fmtAlic(alic) + '%: de un total de ' + fmt(r.total) + ', ' + fmt(r.iva) + ' son IVA y ' + fmt(r.neto) + ' es el neto. — hacecuentas.com'
+        : 'IVA ' + fmtAlic(alic) + '%: sobre un neto de ' + fmt(r.neto) + ', el IVA suma ' + fmt(r.iva) + ' y el total queda en ' + fmt(r.total) + '. — hacecuentas.com';
+    }
+    function shareUrl() { return location.origin + location.pathname + '?monto=' + digits(montoEl.value) + '&modo=' + modo + '&alicuota=' + alicEl.value; }
+    function copy(t, btn) {
+      if (!navigator.clipboard) return;
+      navigator.clipboard.writeText(t).then(function () {
+        const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(function () { btn.innerHTML = o; }, 1500);
+      });
+    }
+    $('ivd-copy').addEventListener('click', function (e) { copy(summary(), e.currentTarget); });
+    $('ivd-detail').addEventListener('click', function () {
+      const t = document.getElementById('como-funciona'); if (t) t.scrollIntoView({ behavior: 'smooth' });
+    });
+    const s2 = $('ivd-share2'); if (s2) s2.addEventListener('click', function (e) { copy(shareUrl(), e.currentTarget); });
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('monto')) montoEl.value = fmtThousands(q.get('monto'));
+    if (q.get('alicuota')) alicEl.value = q.get('alicuota');
+    if (q.get('modo') === 'agregar') { const b = document.querySelector('[data-modo="agregar"]'); if (b) { b.click(); return; } }
+    render();
+  })();
+</script>
+
+<style>
+  .ivd .ivd-deco-wrap { position: relative; }
+  .ivd .ivd-badge { top: 50%; right: -16px; transform: translateY(-50%); width: 48px; height: 48px; font-size: 1.4rem; }
+
+  .ivd .ivd-money { position: relative; display: flex; align-items: center; }
+  .ivd .ivd-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
+  .ivd .ivd-money .cf-input { padding-left: 1.7rem; }
+  .ivd .ivd-seg { width: 100%; }
+  .ivd .ivd-seg button { flex: 1; }
+
+  .ivd .cf-section__title.ivd-t2 { margin: 0.35rem 0 1.25rem; }
+  .ivd .ivd-mc-lbl { font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+  .ivd .ivd-mc-desc { margin-top: 0.3rem; }
+  .ivd .ivd-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.15rem 0 0; }
+  .ivd .ivd-note--top { margin: -0.6rem 0 1rem; }
+  .ivd .ivd-brow--sp { margin-top: 1rem; }
+  .ivd .ivd-cal, .cf-band .ivd-cal { margin-top: 1.25rem; }
+  .ivd .ivd-bar--alt { background: linear-gradient(90deg, #f59e0b, #fb923c) !important; }
+  .ivd .ivd-bar--full { display: block; height: 100%; background: rgba(120,130,150,0.35); }
+  .ivd .ivd-tnote { font-size: 0.75rem; color: var(--text-subtle); margin: 0.7rem 0 0; }
+
+  .ivd .ivd-chip {
+    display: inline-block; margin-top: 0.8rem; padding: 0.35rem 0.6rem; border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; color: var(--accent-strong);
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+
+  .ivd-2col, .cf-band .ivd-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .ivd-2col, .cf-band .ivd-2col { grid-template-columns: 0.85fr 1.15fr; } }
+
+  .ivd .ivd-hl__title { font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin: 0 0 0.6rem; letter-spacing: -0.015em; }
+  .ivd .ivd-hl__big { font-size: 2rem; font-weight: 800; color: #fff; margin: 1.1rem 0 0.15rem; font-variant-numeric: tabular-nums; }
+
+  .cf-band .ivd-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .ivd-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .ivd-src__title { font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 0.9rem; }
+  .cf-band .ivd-src { display: grid; gap: 0.5rem; }
+  .cf-band .ivd-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .ivd-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .ivd-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .ivd-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+  .cf-band .ivd-ref__big { font-size: 2.2rem; font-weight: 800; color: #fff; margin: 0.2rem 0 0.15rem; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .cf-band .ivd-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+  .cf-band .ivd-chip2 { padding: 0.3rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; background: rgba(255,255,255,0.09); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); font-family: var(--font-mono); }
+</style>

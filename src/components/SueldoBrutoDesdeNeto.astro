@@ -1,0 +1,530 @@
+---
+// Flagship redesign de la calc "sueldo bruto desde neto" (mockup Martin).
+// Los números salen del motor real (src/lib/formulas/sueldo-bruto-desde-neto.ts):
+// operación inversa bruto = neto / (1 − aportes). Las tres tasas (14/17/20%) son
+// las opciones reales del campo `aportes` del JSON. NO incluye Ganancias (el motor
+// tampoco lo hace). Domain "data" (esmeralda) por el mockup, no por la categoría.
+// Header/footer = los globales del sitio.
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// ── Réplica EXACTA de src/lib/formulas/sueldo-bruto-desde-neto.ts ───────────
+function brutoDesdeNeto(netoDeseado: number, aportesPorc: number) {
+  const tasa = (aportesPorc || 17) / 100;
+  const sueldoBruto = netoDeseado / (1 - tasa);
+  const aportesMonto = sueldoBruto * tasa;
+  const netoResultado = sueldoBruto - aportesMonto;
+  return { sueldoBruto, aportesMonto, netoResultado, tasa };
+}
+
+const fmtAr = (n: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Math.round(n));
+const pctStr = (n: number) => n.toFixed(1).replace('.', ',') + '%';
+const coefStr = (tasa: number) => (1 - tasa).toFixed(2).replace('.', ',');
+
+const INIT = { neto: 1_200_000, aportes: 17 };
+const init = brutoDesdeNeto(INIT.neto, INIT.aportes);
+// Cuánto más alto es el bruto respecto del neto (dato aritmético del propio resultado)
+const gapPct = (init.sueldoBruto / INIT.neto - 1) * 100;
+
+// Opciones reales del campo `aportes` del JSON
+const aportesOpts: any[] = (calc.fields || []).find((f: any) => f.id === 'aportes')?.options || [];
+const TASAS = aportesOpts.map((o: any) => Number(o.value)).filter((n: number) => n > 0);
+
+// Escenarios de las 3 tasas para el neto cargado (computados con la fórmula)
+const escenarios = TASAS.map((t) => ({ tasa: t, ...brutoDesdeNeto(INIT.neto, t) }));
+const maxBruto = Math.max(...escenarios.map((e) => e.sueldoBruto), 1);
+
+// Tabla de referencia: mismo neto, las 3 tasas reales del selector
+const refRows = [500_000, 800_000, 1_000_000, 1_200_000, 1_500_000, 2_000_000].map((n) => ({
+  neto: n,
+  cols: TASAS.map((t) => brutoDesdeNeto(n, t).sueldoBruto),
+}));
+
+const subPorTasa: Record<string, string> = {
+  '14': 'Sin aporte a obra social sindical',
+  '17': 'Jubilación SIPA 11% + obra social 3% + PAMI 3%',
+  '20': 'Incluye cuota sindical además del 17% obligatorio',
+};
+
+const faq = calc.faq || [];
+const sources = (calc.sources || []).slice(0, 3);
+const explanationHtml = calc.explanation ? md(calc.explanation) : '';
+---
+
+<div class="cf-page sb" data-domain="data" data-sub={JSON.stringify(subPorTasa)}>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/sueldos-y-trabajo">Sueldos y trabajo</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Sueldo neto a bruto</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">🔄</span> Argentina · Negociación salarial · 2026</p>
+      <h1 class="cf-h1">¿Qué <span class="cf-yr">sueldo bruto</span> necesitás para cobrar tu neto?</h1>
+      <p class="cf-sub">Decinos cuánto querés llevarte en mano y calculamos el bruto que tenés que pedir, descontando los aportes obligatorios.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">🎯</span> Piso para negociar</span>
+      <div class="sb-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="sb-deco-val">{fmtAr(init.sueldoBruto)}</div>
+          <div class="cf-deco-card__note">Bruto para llevarte {fmtAr(INIT.neto)}</div>
+        </div>
+        <span class="cf-deco-badge sb-badge" aria-hidden="true">🔄</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Se va en aportes</strong> <span class="cf-deco-chip" id="sb-deco-chip">{fmtAr(init.aportesMonto)}</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">¿Cuánto querés cobrar?</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="sb-neto">Sueldo neto deseado</label></div>
+          <div class="sb-money"><span class="sb-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="sb-neto" value="1.200.000" /></div>
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="sb-aportes">Porcentaje de aportes</label></div>
+          <select class="cf-input" id="sb-aportes">
+            {aportesOpts.map((o: any) => (<option value={o.value} selected={Number(o.value) === INIT.aportes}>{o.label}</option>))}
+          </select>
+        </div>
+      </div>
+      <p class="cf-help" style="margin:-0.6rem 0 1.1rem">El neto es lo que te queda en mano después de los descuentos obligatorios; el bruto es el número que figura en el contrato y en el recibo.</p>
+
+      <button class="cf-primary" id="sb-calc-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Ejemplos:</span>
+        <button class="cf-sc" type="button" data-ej="800000">$800 mil</button>
+        <button class="cf-sc" type="button" data-ej="1000000">$1 M</button>
+        <button class="cf-sc" type="button" data-ej="1500000">$1,5 M</button>
+        <button class="cf-sc" type="button" data-ej="2000000">$2 M</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="sb-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="sb-big">{fmtAr(init.sueldoBruto)}</div>
+      <div class="cf-result__biglabel">Sueldo bruto necesario</div>
+      <p class="cf-result__sub" id="sb-sub">Para llevarte {fmtAr(INIT.neto)} en mano con {INIT.aportes}% de aportes</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="sb-t-aportes">{fmtAr(init.aportesMonto)}</div><div class="cf-tile__label">Aportes del empleado</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="sb-t-neto">{fmtAr(init.netoResultado)}</div><div class="cf-tile__label">Neto verificado</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="sb-t-tasa">{INIT.aportes}%</div><div class="cf-tile__label">Tasa de aportes</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="sb-t-gap">+{pctStr(gapPct)}</div><div class="cf-tile__label">Sobre tu neto</div></div>
+      </div>
+      <div class="cf-result__formula" id="sb-formula">{fmtAr(INIT.neto)} ÷ (1 − 0,17) = {fmtAr(init.sueldoBruto)}</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="sb-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="sb-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt"><strong>Respuesta rápida.</strong> Para llevarte <strong>{fmtAr(INIT.neto)}</strong> netos necesitás un bruto de <strong id="sb-quick">{fmtAr(init.sueldoBruto)}</strong>: son <strong>{pctStr(gapPct)}</strong> más que tu neto, porque {fmtAr(init.aportesMonto)} se van en aportes antes de cobrar.</p>
+    <span class="cf-formula">bruto = neto ÷ (1 − aportes)</span>
+  </div>
+
+  <!-- 5 · Datos clave -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">➗</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Divisor del cálculo</p>
+        <div class="cf-minicard__big" id="sb-k-coef">÷ {coefStr(init.tasa)}</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Es 1 menos la tasa de aportes elegida. Se mueve si cambiás el porcentaje.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🏛️</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Jubilación SIPA</p>
+        <div class="cf-minicard__big">11%</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Aporte personal jubilatorio (Ley 24.241, art. 11).</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🏥</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Obra social</p>
+        <div class="cf-minicard__big">3%</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Aporte a la obra social (Ley 23.660, art. 16).</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">👵</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">PAMI · INSSJP</p>
+        <div class="cf-minicard__big">3%</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Aporte al INSSJP (Ley 19.032). Los tres suman el 17% estándar.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · Cómo leer el resultado -->
+  <section class="cf-section">
+    <div class="sb-2col">
+      <div class="sb-hl">
+        <p class="cf-side-eyebrow sb-hl__eyebrow">Cómo leer el resultado</p>
+        <p class="sb-hl__title">El bruto sube más rápido que el neto</p>
+        <p class="sb-hl__desc">Los aportes se calculan sobre el bruto, no sobre el neto. Por eso, para sumar un peso en mano hay que pedir más de un peso en el contrato: la diferencia no es la tasa de aportes, es mayor.</p>
+        <div class="sb-hl__big" id="sb-hl-big">+{pctStr(gapPct)}</div>
+        <p class="sb-hl__note">más alto que el neto que querés cobrar</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-breakdown__lead">Mismo neto de <strong id="sb-bd-neto">{fmtAr(INIT.neto)}</strong>, distinto régimen de aportes:</div>
+        {escenarios.map((e) => (
+          <div class="cf-brow" style="margin-top:0.9rem" data-esc={e.tasa}>
+            <span class="cf-brow__lbl">Aportes {e.tasa}%</span>
+            <span class="cf-brow__val" data-esc-val={e.tasa}>{fmtAr(e.sueldoBruto)}</span>
+            <span class="cf-brow__bar"><span data-esc-bar={e.tasa} style={`width:${Math.round(e.sueldoBruto / maxBruto * 100)}%`}></span></span>
+          </div>
+        ))}
+        <div class="cf-callout cf-callout--warn" style="margin-top:1.25rem">
+          <span class="cf-callout__ico" aria-hidden="true">⚠️</span>
+          <p><strong>No incluye Impuesto a las Ganancias.</strong> Este cálculo cubre sólo los aportes. Si tu sueldo supera el mínimo no imponible, el bruto real que necesitás es más alto (Ley 20.628).</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · Paso a paso -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">El neto que querés llevarte en mano y el régimen de aportes que te corresponde.</p>
+        <p class="sb-chip" id="sb-s1">{fmtAr(INIT.neto)} · {INIT.aportes}%</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">Dividimos tu neto por 1 menos la tasa de aportes. Es la operación inversa al recibo de sueldo.</p>
+        <p class="sb-chip" id="sb-s2">{fmtAr(INIT.neto)} ÷ {coefStr(init.tasa)} = {fmtAr(init.sueldoBruto)}</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">Usá ese bruto como piso al negociar. Verificá que el neto reconstruido coincida con lo que pediste.</p>
+        <p class="sb-chip" id="sb-s3">Bruto {fmtAr(init.sueldoBruto)}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · Referencias -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead>
+          <tr>
+            <th>Neto deseado (en mano)</th>
+            {TASAS.map((t) => (<th>Bruto con {t}% de aportes</th>))}
+          </tr>
+        </thead>
+        <tbody>
+          {refRows.map((r) => (
+            <tr>
+              <td>{fmtAr(r.neto)}</td>
+              {r.cols.map((v, i) => (
+                <td class={TASAS[i] === 17 ? 'cf-td-em' : undefined}>{fmtAr(v)}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="sb-tnote">Las tres columnas son las opciones reales del selector de aportes. No incluyen Impuesto a las Ganancias.</p>
+  </section>
+</div>
+
+<!-- 9 · Banda atención -->
+<div class="cf-band cf-band--warm" data-domain="data">
+  <div class="cf-band__inner">
+    <div class="sb-2col">
+      <div class="sb-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="sb-card__title">Si cobrás alto, Ganancias cambia la cuenta</h2>
+        <p class="cf-side-desc">Esta calculadora hace la inversa de los aportes: bruto = neto ÷ (1 − tasa). No estima el Impuesto a las Ganancias, que se retiene además de los aportes cuando el sueldo supera el mínimo no imponible. En ese caso, el bruto que necesitás pedir es mayor al que ves acá.</p>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1rem">
+          <span class="cf-callout__ico" aria-hidden="true">💡</span>
+          <p>Los aportes se calculan hasta una base imponible máxima que ANSES actualiza por trimestre. Por encima de ese tope, el descuento deja de crecer y el neto sube más rápido.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="sb-ref__title">Aportes del empleado</p>
+        <div class="sb-ref__big" id="sb-ref-big">{INIT.aportes}%</div>
+        <p class="cf-side-desc" id="sb-ref-sub">{subPorTasa[String(INIT.aportes)]}</p>
+        <div class="sb-chips">
+          <span class="sb-chips__i">Ley 24.241</span>
+          <span class="sb-chips__i">Ley 23.660</span>
+          <span class="sb-chips__i">Ley 19.032</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page sb" data-domain="data">
+  <!-- 10 · FAQ -->
+  {faq.length > 0 && (
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {explanationHtml && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">En detalle</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cómo funciona el cálculo inverso</h2>
+      <div class="cf-prose" set:html={explanationHtml} />
+    </section>
+  )}
+</div>
+
+<!-- 11 · Banda fuentes -->
+<div class="cf-band" data-domain="data">
+  <div class="cf-band__inner">
+    <div class="sb-2col">
+      <div>
+        <p class="cf-eyebrow">Fuentes y metodología</p>
+        <h2 class="cf-section__title" style="margin:0.35rem 0 0.6rem">Números que podés defender</h2>
+        <p class="cf-section__lead" style="max-width:52ch">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026.</p>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Marco normativo</p>
+        <div class="sb-src">
+          {sources.map((s: any) => (
+            <div class="sb-src__item">
+              <strong>{String(s.name).split('—')[0].trim()}</strong>
+              <span>{s.publisher}{s.date ? ` · ${s.date}` : ''}</span>
+            </div>
+          ))}
+        </div>
+        <p class="sb-src__foot">● Información revisada en julio de 2026</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page sb" data-domain="data">
+  <!-- 12 · Related -->
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🧮'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('—')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- 13 · CTA bar -->
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="sb-share2">Copiar enlace</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.sb');
+    if (!root) return;
+    const SUB = JSON.parse(root.getAttribute('data-sub') || '{}');
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Math.round(n));
+    const pctStr = (n) => n.toFixed(1).replace('.', ',') + '%';
+    const coefStr = (tasa) => (1 - tasa).toFixed(2).replace('.', ',');
+
+    const netoEl = $('sb-neto'), aportesEl = $('sb-aportes');
+
+    function num(el) { return Number((el.value || '').replace(/\D/g, '')) || 0; }
+    function fmtThousands(v) { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('es-AR') : ''; }
+
+    // Réplica EXACTA de src/lib/formulas/sueldo-bruto-desde-neto.ts
+    function brutoDesdeNeto(netoDeseado, aportesPorc) {
+      const tasa = (aportesPorc || 17) / 100;
+      const sueldoBruto = netoDeseado / (1 - tasa);
+      const aportesMonto = sueldoBruto * tasa;
+      const netoResultado = sueldoBruto - aportesMonto;
+      return { sueldoBruto, aportesMonto, netoResultado, tasa };
+    }
+
+    function render() {
+      const neto = num(netoEl);
+      const porc = Number(aportesEl.value) || 17;
+      const r = brutoDesdeNeto(neto, porc);
+
+      if (!(neto > 0)) {
+        $('sb-big').textContent = '—';
+        $('sb-sub').textContent = 'Ingresá el sueldo neto deseado';
+        return;
+      }
+
+      const gap = (r.sueldoBruto / neto - 1) * 100;
+
+      $('sb-big').textContent = fmt(r.sueldoBruto);
+      $('sb-sub').textContent = 'Para llevarte ' + fmt(neto) + ' en mano con ' + porc + '% de aportes';
+      $('sb-t-aportes').textContent = fmt(r.aportesMonto);
+      $('sb-t-neto').textContent = fmt(r.netoResultado);
+      $('sb-t-tasa').textContent = porc + '%';
+      $('sb-t-gap').textContent = '+' + pctStr(gap);
+      $('sb-formula').textContent = fmt(neto) + ' ÷ (1 − 0,' + porc + ') = ' + fmt(r.sueldoBruto);
+
+      $('sb-quick').textContent = fmt(r.sueldoBruto);
+      $('sb-deco-val').textContent = fmt(r.sueldoBruto);
+      $('sb-deco-chip').textContent = fmt(r.aportesMonto);
+
+      $('sb-k-coef').textContent = '÷ ' + coefStr(r.tasa);
+      $('sb-hl-big').textContent = '+' + pctStr(gap);
+
+      // Escenarios (las 3 tasas reales del selector), barras a escala del mayor
+      $('sb-bd-neto').textContent = fmt(neto);
+      const rows = Array.from(root.querySelectorAll('[data-esc]'));
+      const vals = rows.map((el) => brutoDesdeNeto(neto, Number(el.getAttribute('data-esc'))).sueldoBruto);
+      const max = Math.max.apply(null, vals.concat([1]));
+      rows.forEach((el, i) => {
+        const t = el.getAttribute('data-esc');
+        const v = vals[i];
+        const valEl = root.querySelector('[data-esc-val="' + t + '"]');
+        const barEl = root.querySelector('[data-esc-bar="' + t + '"]');
+        if (valEl) valEl.textContent = fmt(v);
+        if (barEl) barEl.style.width = Math.round(v / max * 100) + '%';
+      });
+
+      $('sb-ref-big').textContent = porc + '%';
+      $('sb-ref-sub').textContent = SUB[String(porc)] || '';
+
+      $('sb-s1').textContent = fmt(neto) + ' · ' + porc + '%';
+      $('sb-s2').textContent = fmt(neto) + ' ÷ ' + coefStr(r.tasa) + ' = ' + fmt(r.sueldoBruto);
+      $('sb-s3').textContent = 'Bruto ' + fmt(r.sueldoBruto);
+    }
+
+    netoEl.addEventListener('input', () => { netoEl.value = fmtThousands(netoEl.value); render(); });
+    aportesEl.addEventListener('change', render);
+    $('sb-calc-btn').addEventListener('click', render);
+    document.querySelectorAll('.sb [data-ej]').forEach((b) => b.addEventListener('click', () => { netoEl.value = fmtThousands(b.getAttribute('data-ej')); render(); }));
+
+    function summary() {
+      const neto = num(netoEl);
+      const porc = Number(aportesEl.value) || 17;
+      const r = brutoDesdeNeto(neto, porc);
+      return `Para cobrar ${fmt(neto)} netos en Argentina necesitás un sueldo bruto de ${fmt(r.sueldoBruto)}: ${fmt(r.aportesMonto)} se van en aportes (${porc}%). No incluye Ganancias. — hacecuentas.com`;
+    }
+    function shareUrl() { return `${location.origin}${location.pathname}?neto=${num(netoEl)}&aportes=${aportesEl.value}`; }
+    function copy(t, btn) { navigator.clipboard?.writeText(t).then(() => { const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => btn.innerHTML = o, 1500); }); }
+    $('sb-copy').addEventListener('click', (e) => copy(summary(), e.currentTarget));
+    $('sb-detail').addEventListener('click', () => { document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' }); });
+    const s2 = $('sb-share2'); if (s2) s2.addEventListener('click', (e) => copy(shareUrl(), e.currentTarget));
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('neto')) netoEl.value = fmtThousands(q.get('neto'));
+    if (q.get('aportes')) aportesEl.value = q.get('aportes');
+    render();
+  })();
+</script>
+
+<style>
+  /* El badge vive fuera de .cf-deco-card porque la card tiene overflow:hidden */
+  .sb .sb-deco-wrap { position: relative; }
+  .sb .sb-badge { top: -14px; right: -14px; }
+
+  .sb .sb-money { position: relative; display: flex; align-items: center; }
+  .sb .sb-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
+  .sb .sb-money .cf-input { padding-left: 1.7rem; }
+
+  .sb-2col, .cf-band .sb-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .sb-2col, .cf-band .sb-2col { grid-template-columns: 0.85fr 1.15fr; } }
+
+  .sb .cf-breakdown__lead { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem; }
+  .sb .cf-breakdown__lead strong { color: var(--text); font-variant-numeric: tabular-nums; }
+
+  .sb .sb-hl {
+    padding: 1.5rem 1.6rem; border-radius: var(--radius-lg); color: #fff;
+    background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%);
+    box-shadow: var(--shadow-lg);
+  }
+  .sb .sb-hl__eyebrow { color: rgba(255, 255, 255, 0.82); }
+  .sb .sb-hl__title { font-size: 1.4rem; font-weight: 800; line-height: 1.2; margin: 0 0 0.6rem; letter-spacing: -0.015em; }
+  .sb .sb-hl__desc { font-size: 0.85rem; line-height: 1.55; color: rgba(255, 255, 255, 0.88); margin: 0; }
+  .sb .sb-hl__big { font-size: 2.4rem; font-weight: 800; margin: 1.1rem 0 0; line-height: 1; font-variant-numeric: tabular-nums; }
+  .sb .sb-hl__note { font-size: 0.78rem; color: rgba(255, 255, 255, 0.82); margin: 0.25rem 0 0; }
+
+  .sb .sb-chip {
+    display: inline-block; margin: 0.8rem 0 0; padding: 0.35rem 0.6rem; border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; color: var(--accent-strong);
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  }
+  .sb .sb-tnote { font-size: 0.75rem; color: var(--text-subtle); margin: 0.7rem 0 0; }
+
+  .cf-band .sb-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .sb-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+
+  .cf-band .sb-ref__title { font-size: 1.05rem; font-weight: 800; color: #fff; margin: 0 0 0.5rem; }
+  .cf-band .sb-ref__big { font-size: 2rem; font-weight: 800; color: #fff; line-height: 1; margin: 0 0 0.4rem; font-variant-numeric: tabular-nums; }
+  .cf-band .sb-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+  .cf-band .sb-chips__i { padding: 0.3rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; background: rgba(255, 255, 255, 0.1); color: #e7ecf3; border: 1px solid rgba(255, 255, 255, 0.12); }
+
+  .cf-band .sb-src { display: grid; gap: 0.5rem; }
+  .cf-band .sb-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.08); }
+  .cf-band .sb-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .sb-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .sb-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+</style>

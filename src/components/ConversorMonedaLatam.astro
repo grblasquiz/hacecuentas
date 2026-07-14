@@ -1,0 +1,567 @@
+---
+// Flagship redesign de la calc "conversor de monedas LATAM" (mockup Martin).
+// Los números salen del motor real (src/lib/formulas/conversor-moneda-latam.ts),
+// cuyas tasas vienen del snapshot EN VIVO src/data/live/*.json (cron diario):
+// ARS = dólar oficial, COP = TRM, CLP = dólar observado, resto = mercado.
+// NADA hardcodeado acá. Domain "data" (esmeralda) por el mockup, no por la
+// categoría (finanzas→money). Header/footer = los globales del sitio.
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { conversorMonedaLatam, TASAS_VS_USD, FX_AS_OF } from '../lib/formulas/conversor-moneda-latam';
+import dolarLive from '../data/live/dolar.json';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const MONEDAS: Record<string, { nombre: string; flag: string; pais: string; fuente: string }> = {
+  USD: { nombre: 'Dólar estadounidense', flag: '🇺🇸', pais: 'Estados Unidos', fuente: 'Moneda base' },
+  ARS: { nombre: 'Peso argentino', flag: '🇦🇷', pais: 'Argentina', fuente: 'Dólar oficial (BCRA)' },
+  BRL: { nombre: 'Real brasileño', flag: '🇧🇷', pais: 'Brasil', fuente: 'Mercado USD/BRL' },
+  CLP: { nombre: 'Peso chileno', flag: '🇨🇱', pais: 'Chile', fuente: 'Dólar observado (BCCh)' },
+  UYU: { nombre: 'Peso uruguayo', flag: '🇺🇾', pais: 'Uruguay', fuente: 'Mercado USD/UYU' },
+  MXN: { nombre: 'Peso mexicano', flag: '🇲🇽', pais: 'México', fuente: 'Mercado USD/MXN' },
+  COP: { nombre: 'Peso colombiano', flag: '🇨🇴', pais: 'Colombia', fuente: 'TRM oficial' },
+  PEN: { nombre: 'Sol peruano', flag: '🇵🇪', pais: 'Perú', fuente: 'Mercado USD/PEN' },
+  BOB: { nombre: 'Boliviano', flag: '🇧🇴', pais: 'Bolivia', fuente: 'Anclado al dólar (BCB)' },
+};
+
+// Mismo formateo que el motor (el resultado tiene que coincidir carácter a carácter).
+const fmt = (n: number, dec = 2) =>
+  new Intl.NumberFormat('es-AR', {
+    minimumFractionDigits: dec > 0 ? 2 : 0,
+    maximumFractionDigits: Math.max(dec, 2),
+  }).format(n);
+const decimalesDe = (n: number) => (n > 1000 ? 0 : n > 1 ? 2 : 4);
+const fmtAuto = (n: number) => fmt(n, decimalesDe(n));
+
+const INIT = { monto: 100, origen: 'USD', destino: 'ARS' };
+const init = conversorMonedaLatam({ monto: INIT.monto, monedaOrigen: INIT.origen, monedaDestino: INIT.destino });
+const tasaInit = TASAS_VS_USD[INIT.destino] / TASAS_VS_USD[INIT.origen];
+const inversaInit = TASAS_VS_USD[INIT.origen] / TASAS_VS_USD[INIT.destino];
+
+// Fila por moneda de la tabla de referencia — computada con el MOTOR REAL.
+const REF_ORDEN = ['ARS', 'BRL', 'CLP', 'UYU', 'MXN', 'COP'];
+const refRows = REF_ORDEN.map((cod) => {
+  const cien = conversorMonedaLatam({ monto: 100, monedaOrigen: 'USD', monedaDestino: cod });
+  const mil = conversorMonedaLatam({ monto: 1000, monedaOrigen: cod, monedaDestino: 'USD' });
+  return { cod, ...MONEDAS[cod], tasa: TASAS_VS_USD[cod], cien: cien.resultado, mil: mil.resultado };
+});
+
+// Dólares argentinos en vivo (dolar.json) — explican por qué el número difiere
+// del que ves en otro lado. Solo se muestran los que trae el snapshot.
+const Q = (dolarLive as any)?.quotes || {};
+const midDe = (k: string) => {
+  const q = Q[k];
+  const c = Number(q?.compra), v = Number(q?.venta);
+  if (Number.isFinite(c) && Number.isFinite(v) && c > 0 && v > 0) return (c + v) / 2;
+  return Number.isFinite(v) && v > 0 ? v : Number.isFinite(c) && c > 0 ? c : null;
+};
+const dolares = [
+  { k: 'oficial', label: 'Oficial', nota: 'El que usa esta calculadora', valor: midDe('oficial') },
+  { k: 'blue', label: 'Blue', nota: 'Mercado informal', valor: midDe('blue') },
+  { k: 'bolsa', label: 'MEP / Bolsa', nota: 'Vía bonos, legal', valor: midDe('bolsa') },
+  { k: 'contadoconliqui', label: 'Contado con liqui', nota: 'Dólar de salida', valor: midDe('contadoconliqui') },
+].filter((d) => d.valor !== null) as { k: string; label: string; nota: string; valor: number }[];
+const maxDolar = dolares.length ? Math.max(...dolares.map((d) => d.valor)) : 0;
+const brechaBlue = dolares.find((d) => d.k === 'blue') && dolares.find((d) => d.k === 'oficial')
+  ? ((dolares.find((d) => d.k === 'blue')!.valor / dolares.find((d) => d.k === 'oficial')!.valor) - 1) * 100
+  : null;
+
+const fxFecha = new Date(FX_AS_OF + 'T00:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long' });
+const fxCorto = new Date(FX_AS_OF + 'T00:00:00').toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
+
+const faq = calc.faq || [];
+const sources = (calc.sources || []) as { name: string; url?: string }[];
+const explanationHtml = calc.explanation ? md(calc.explanation) : '';
+---
+
+<div
+  class="cf-page cm"
+  data-domain="data"
+  data-tasas={JSON.stringify(TASAS_VS_USD)}
+  data-nombres={JSON.stringify(Object.fromEntries(Object.entries(MONEDAS).map(([k, v]) => [k, v.nombre])))}
+  data-asof={fxCorto}
+>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/categoria/finanzas">Finanzas</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Conversor de monedas</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">💱</span> Latinoamérica · Cotizaciones 2026</p>
+      <h1 class="cf-h1">Dólar, peso y real en <span class="cf-yr">un solo conversor</span></h1>
+      <p class="cf-sub">Convertí entre las 9 monedas de la región y el dólar, con cotizaciones que se actualizan todos los días.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">🔄</span> Actualizado el {fxFecha}</span>
+      <div class="cm-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="cm-deco-val">{fmtAuto(init.resultado)}</div>
+          <div class="cf-deco-card__note" id="cm-deco-note">{INIT.monto} {INIT.origen} en {INIT.destino}</div>
+        </div>
+        <span class="cf-deco-badge cm-badge">$</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Tipo de cambio</strong> <span class="cf-deco-chip" id="cm-deco-chip">{init.tipoCambio.replace('1 ' + INIT.origen + ' = ', '')}</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">Convertí tu monto</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="cm-monto">Monto</label><span class="cf-hint" id="cm-monto-hint">{MONEDAS[INIT.origen].nombre}</span></div>
+        <input class="cf-input cf-input--money" type="text" inputmode="decimal" id="cm-monto" value={fmt(INIT.monto)} />
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="cm-origen">De</label></div>
+          <select class="cf-input" id="cm-origen">
+            {Object.entries(MONEDAS).map(([k, v]) => (
+              <option value={k} selected={k === INIT.origen}>{v.flag} {k} — {v.nombre}</option>
+            ))}
+          </select>
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="cm-destino">A</label></div>
+          <select class="cf-input" id="cm-destino">
+            {Object.entries(MONEDAS).map(([k, v]) => (
+              <option value={k} selected={k === INIT.destino}>{v.flag} {k} — {v.nombre}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <button class="cf-swap cm-swap" type="button" id="cm-swap" aria-label="Invertir monedas" title="Invertir monedas">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4M7 4L3 8M7 4l4 4M17 8v12M17 20l4-4M17 20l-4-4"/></svg>
+      </button>
+
+      <p class="cf-help" id="cm-err" hidden></p>
+
+      <button class="cf-primary" id="cm-calc-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Ejemplos:</span>
+        <button class="cf-sc" type="button" data-ej="100|USD|ARS">100 USD → ARS</button>
+        <button class="cf-sc" type="button" data-ej="1000|ARS|BRL">1.000 ARS → BRL</button>
+        <button class="cf-sc" type="button" data-ej="100|USD|CLP">100 USD → CLP</button>
+        <button class="cf-sc" type="button" data-ej="500|BRL|ARS">500 BRL → ARS</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="cm-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="cm-big">{fmtAuto(init.resultado)}</div>
+      <p class="cf-result__sub" id="cm-sub">{MONEDAS[INIT.destino].nombre} · cotización del {fxFecha}</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="cm-t-tasa">{fmt(tasaInit, 4)}</div><div class="cf-tile__label" id="cm-t-tasa-lbl">{INIT.destino} por 1 {INIT.origen}</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="cm-t-inv">{fmt(inversaInit, 4)}</div><div class="cf-tile__label" id="cm-t-inv-lbl">{INIT.origen} por 1 {INIT.destino}</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="cm-t-usd">{fmtAuto(INIT.monto / TASAS_VS_USD[INIT.origen])}</div><div class="cf-tile__label">Equivale en USD</div></div>
+        <div class="cf-tile"><div class="cf-tile__value">{fxCorto}</div><div class="cf-tile__label">Cotización · se actualiza a diario</div></div>
+      </div>
+      <div class="cf-result__formula" id="cm-formula">{init.formula}</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="cm-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="cm-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt"><strong>Respuesta rápida.</strong> Hoy <strong>{INIT.monto} {INIT.origen}</strong> equivalen a <strong id="cm-quick">{fmtAuto(init.resultado)} {INIT.destino}</strong> al tipo de cambio de referencia.</p>
+    <span class="cf-formula">origen ÷ tasa × tasa destino</span>
+  </div>
+
+  <!-- Datos clave -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">🇦🇷</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Dólar oficial</p>
+        <div class="cf-minicard__big">{fmt(TASAS_VS_USD.ARS, 0)}</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Pesos por dólar. Es la tasa que usa esta calculadora para el ARS.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🇧🇷</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Real brasileño</p>
+        <div class="cf-minicard__big">{fmt(TASAS_VS_USD.BRL, 2)}</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Reales por dólar. La moneda más transaccionada de la región.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🇨🇱</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Peso chileno</p>
+        <div class="cf-minicard__big">{fmt(TASAS_VS_USD.CLP, 0)}</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Dólar observado que publica el Banco Central de Chile.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🔄</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Frecuencia</p>
+        <div class="cf-minicard__big">Diaria</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Las 9 cotizaciones se refrescan todos los días, no quedan congeladas.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cómo leer el resultado -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Cómo leer el resultado</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">En Argentina no hay un solo dólar</h2>
+    <div class="cm-2col">
+      <div class="cm-hl">
+        <p class="cf-side-eyebrow">Tasa aplicada</p>
+        <p class="cm-hl__title">Esta calculadora usa el dólar oficial</p>
+        <p class="cm-hl__desc">Es la referencia del BCRA. Si comparás contra el blue o el MEP, el número te va a dar distinto: no es un error, es otro mercado.</p>
+        <div class="cm-hl__big">{fmt(TASAS_VS_USD.ARS, 2)}</div>
+        <p class="cm-hl__desc">Pesos por dólar · {fxFecha}</p>
+      </div>
+      <div class="cf-breakdown">
+        {dolares.map((d, i) => (
+          <>
+            <div class="cf-brow" style={i > 0 ? 'margin-top:1rem' : undefined}>
+              <span class="cf-brow__lbl">{d.label}</span>
+              <span class="cf-brow__val">{fmt(d.valor, 0)}</span>
+              <span class="cf-brow__bar"><span class={d.k === 'oficial' ? undefined : 'cm-bar--alt'} style={`width:${Math.round((d.valor / maxDolar) * 100)}%`}></span></span>
+            </div>
+            <p class="cm-note">{d.nota}</p>
+          </>
+        ))}
+        {brechaBlue !== null && (
+          <div class="cf-callout cf-callout--warn" style="margin-top:1.25rem">
+            <span class="cf-callout__ico" aria-hidden="true">⚠️</span>
+            <p>El blue está <strong>{fmt(brechaBlue, 2)}%</strong> por encima del oficial. Si vas a cambiar plata en la calle, tu número real se parece más a esa fila.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <!-- Paso a paso -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">Elegís el monto, la moneda que tenés y la moneda a la que querés llegar.</p>
+        <span class="cm-chip" id="cm-step1">{fmt(INIT.monto)} {INIT.origen} → {INIT.destino}</span>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">Todo pasa por el dólar: dividimos por la tasa de origen y multiplicamos por la de destino.</p>
+        <span class="cm-chip" id="cm-step2">÷ {fmt(TASAS_VS_USD[INIT.origen], 2)} × {fmt(TASAS_VS_USD[INIT.destino], 2)}</span>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">Te mostramos el monto convertido, el tipo de cambio usado y la fecha de la cotización.</p>
+        <span class="cm-chip" id="cm-step3">{fmtAuto(init.resultado)} {INIT.destino}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Referencias -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Moneda</th><th>1 USD equivale a</th><th>100 USD</th><th>1.000 en dólares</th></tr></thead>
+        <tbody>
+          {refRows.map((r) => (
+            <tr>
+              <td><span aria-hidden="true">{r.flag}</span> {r.cod} · {r.pais}</td>
+              <td>{fmt(r.tasa, r.tasa > 100 ? 0 : 4)}</td>
+              <td class="cf-td-em">{fmtAuto(r.cien)}</td>
+              <td>US$ {fmtAuto(r.mil)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="cm-note" style="margin-top:0.6rem">Cotizaciones del {fxFecha}. La última columna muestra cuánto valen 1.000 unidades de cada moneda en dólares.</p>
+  </section>
+</div>
+
+<!-- Banda: spread y comisiones -->
+<div class="cf-band cf-band--warm" data-domain="data">
+  <div class="cf-band__inner">
+    <div class="cm-2col">
+      <div class="cm-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="cm-card__title">Nunca te van a dar exactamente este número</h2>
+        <p class="cf-side-desc">La cotización de referencia es el punto medio del mercado. Bancos, casas de cambio y tarjetas cobran un <strong>spread</strong> (diferencia entre compra y venta) y, según el país, impuestos sobre la operación.</p>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1rem">
+          <span class="cf-callout__ico" aria-hidden="true">💡</span>
+          <p>Antes de cerrar el cambio, pedí el valor final "en mano" con comisiones incluidas y compará contra este número.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="cm-src__title">Dólar oficial</p>
+        <div class="cm-hl__big" style="margin-top:0.2rem">{fmt(TASAS_VS_USD.ARS, 2)}</div>
+        <p class="cf-side-desc">Pesos argentinos por dólar · cotización del {fxFecha}</p>
+        <div class="cm-chips">
+          {dolares.filter((d) => d.k !== 'oficial').map((d) => (
+            <span class="cm-chip cm-chip--dark">{d.label} {fmt(d.valor, 0)}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page cm" data-domain="data">
+  {faq.length > 0 && (
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {explanationHtml && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">En detalle</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cómo funciona la conversión</h2>
+      <div class="cf-prose" set:html={explanationHtml} />
+    </section>
+  )}
+</div>
+
+<!-- Banda: fuentes y metodología -->
+<div class="cf-band" data-domain="data">
+  <div class="cf-band__inner">
+    <div class="cm-2col">
+      <div class="cm-card">
+        <p class="cf-eyebrow">Fuentes y metodología</p>
+        <h2 class="cm-card__title">Números que podés defender</h2>
+        <p class="cf-side-desc">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026.</p>
+        <p class="cm-formula-note">resultado = monto ÷ tasa(origen) × tasa(destino) · tasas = 1 USD en cada moneda</p>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Fuentes</p>
+        <p class="cm-src__title">Datos contrastados</p>
+        <div class="cm-src">
+          {sources.slice(0, 3).map((s) => (
+            <div class="cm-src__item"><strong>{String(s.name).split('—')[0].trim()}</strong><span>{String(s.name).includes('—') ? String(s.name).split('—').slice(1).join('—').trim() : 'Fuente oficial'}</span></div>
+          ))}
+        </div>
+        <p class="cm-src__foot">● Información revisada en julio de 2026</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page cm" data-domain="data">
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '💱'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('—')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="cm-share2">Guardar conversión</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.cm');
+    if (!root) return;
+    const T = JSON.parse(root.getAttribute('data-tasas'));
+    const NOMBRES = JSON.parse(root.getAttribute('data-nombres'));
+    const ASOF = root.getAttribute('data-asof');
+    const $ = (id) => document.getElementById(id);
+
+    // Mismo formateo que el motor.
+    const fmt = (n, dec) => {
+      if (dec === undefined) dec = 2;
+      return new Intl.NumberFormat('es-AR', {
+        minimumFractionDigits: dec > 0 ? 2 : 0,
+        maximumFractionDigits: Math.max(dec, 2),
+      }).format(n);
+    };
+    const decimalesDe = (n) => (n > 1000 ? 0 : n > 1 ? 2 : 4);
+    const fmtAuto = (n) => fmt(n, decimalesDe(n));
+
+    const montoEl = $('cm-monto'), origenEl = $('cm-origen'), destinoEl = $('cm-destino'), errEl = $('cm-err');
+
+    // Acepta "1.234,56" (es-AR) y "1234.56".
+    function monto() {
+      let v = (montoEl.value || '').trim().replace(/\s/g, '');
+      if (v.indexOf(',') > -1) v = v.replace(/\./g, '').replace(',', '.');
+      else if ((v.match(/\./g) || []).length > 1) v = v.replace(/\./g, '');
+      const n = Number(v);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function calc() {
+      const m = monto(), o = origenEl.value, d = destinoEl.value;
+      if (!(m > 0)) return { err: 'Ingresá un monto válido mayor a 0.' };
+      if (o === d) return { err: 'Elegí dos monedas distintas.' };
+      const tasaO = T[o], tasaD = T[d];
+      const enUsd = m / tasaO;
+      const bruto = enUsd * tasaD;
+      const dec = decimalesDe(bruto);
+      const resultado = Number(bruto.toFixed(dec));
+      const directo = tasaD / tasaO;
+      let formula;
+      if (o === 'USD') formula = `${fmt(m)} USD × ${fmt(tasaD)} = ${fmt(resultado, dec)} ${d}`;
+      else if (d === 'USD') formula = `${fmt(m)} ${o} ÷ ${fmt(tasaO)} = ${fmt(resultado, dec)} USD`;
+      else formula = `${fmt(m)} ${o} ÷ ${fmt(tasaO)} = ${fmt(enUsd, 4)} USD × ${fmt(tasaD)} = ${fmt(resultado, dec)} ${d}`;
+      return { m, o, d, tasaO, tasaD, enUsd, resultado, dec, directo, inversa: tasaO / tasaD, formula };
+    }
+
+    function render() {
+      const r = calc();
+      $('cm-monto-hint').textContent = NOMBRES[origenEl.value] || '';
+      if (r.err) {
+        errEl.textContent = r.err; errEl.hidden = false;
+        $('cm-big').textContent = '—';
+        $('cm-sub').textContent = r.err;
+        return;
+      }
+      errEl.hidden = true;
+      const res = fmtAuto(r.resultado);
+      $('cm-big').textContent = res;
+      $('cm-sub').textContent = (NOMBRES[r.d] || r.d) + ' · cotización del ' + ASOF;
+      $('cm-t-tasa').textContent = fmt(r.directo, 4);
+      $('cm-t-tasa-lbl').textContent = r.d + ' por 1 ' + r.o;
+      $('cm-t-inv').textContent = fmt(r.inversa, 4);
+      $('cm-t-inv-lbl').textContent = r.o + ' por 1 ' + r.d;
+      $('cm-t-usd').textContent = fmtAuto(Number(r.enUsd.toFixed(decimalesDe(r.enUsd))));
+      $('cm-formula').textContent = r.formula;
+      $('cm-quick').textContent = res + ' ' + r.d;
+      $('cm-deco-val').textContent = res;
+      $('cm-deco-note').textContent = fmt(r.m) + ' ' + r.o + ' en ' + r.d;
+      $('cm-deco-chip').textContent = fmt(r.directo, 4) + ' ' + r.d;
+      $('cm-step1').textContent = fmt(r.m) + ' ' + r.o + ' → ' + r.d;
+      $('cm-step2').textContent = '÷ ' + fmt(r.tasaO) + ' × ' + fmt(r.tasaD);
+      $('cm-step3').textContent = res + ' ' + r.d;
+    }
+
+    montoEl.addEventListener('input', render);
+    origenEl.addEventListener('change', render);
+    destinoEl.addEventListener('change', render);
+    $('cm-calc-btn').addEventListener('click', render);
+    $('cm-swap').addEventListener('click', () => {
+      const a = origenEl.value; origenEl.value = destinoEl.value; destinoEl.value = a; render();
+    });
+    document.querySelectorAll('[data-ej]').forEach((b) => b.addEventListener('click', () => {
+      const p = b.getAttribute('data-ej').split('|');
+      montoEl.value = fmt(Number(p[0])); origenEl.value = p[1]; destinoEl.value = p[2]; render();
+    }));
+
+    function summary() {
+      const r = calc();
+      if (r.err) return r.err;
+      return `${fmt(r.m)} ${r.o} = ${fmtAuto(r.resultado)} ${r.d} (${fmt(r.directo, 4)} ${r.d} por ${r.o}, cotización del ${ASOF}). — hacecuentas.com`;
+    }
+    function shareUrl() { return `${location.origin}${location.pathname}?monto=${monto()}&de=${origenEl.value}&a=${destinoEl.value}`; }
+    function copy(t, btn) { navigator.clipboard?.writeText(t).then(() => { const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => btn.innerHTML = o, 1500); }); }
+    $('cm-copy').addEventListener('click', (e) => copy(summary(), e.currentTarget));
+    $('cm-detail').addEventListener('click', () => { document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' }); });
+    const s2 = $('cm-share2'); if (s2) s2.addEventListener('click', (e) => copy(shareUrl(), e.currentTarget));
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('monto') && Number(q.get('monto')) > 0) montoEl.value = fmt(Number(q.get('monto')));
+    if (q.get('de') && T[q.get('de')]) origenEl.value = q.get('de');
+    if (q.get('a') && T[q.get('a')]) destinoEl.value = q.get('a');
+    render();
+  })();
+</script>
+
+<style>
+  .cm .cm-deco-wrap { position: relative; }
+  .cm .cm-badge { top: 50%; right: -14px; transform: translateY(-50%); width: 44px; height: 44px; font-size: 1.2rem; }
+
+  .cm .cm-swap { margin: -0.35rem 0 0.9rem; }
+  .cm .cm-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.15rem 0 0; }
+  .cm .cm-bar--alt { background: linear-gradient(90deg, #f59e0b, #fb923c) !important; }
+
+  .cm .cm-chip {
+    display: inline-block; margin-top: 0.7rem; padding: 0.3rem 0.6rem; border-radius: var(--radius-sm);
+    background: var(--bg-soft); border: 1px solid var(--border);
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; color: var(--accent-strong);
+  }
+  .cm-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+  .cf-band .cm-chip--dark { margin-top: 0; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.14); color: #e7ecf3; }
+
+  .cm-2col, .cf-band .cm-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .cm-2col, .cf-band .cm-2col { grid-template-columns: 0.85fr 1.15fr; } }
+
+  .cm .cm-hl { padding: 1.5rem 1.6rem; border-radius: var(--radius-lg); color: #fff; background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%); }
+  .cm .cm-hl .cf-side-eyebrow { color: rgba(255,255,255,0.75); }
+  .cm .cm-hl__title { font-size: 1.3rem; font-weight: 800; margin: 0 0 0.5rem; line-height: 1.2; letter-spacing: -0.015em; }
+  .cm .cm-hl__desc { font-size: 0.82rem; color: rgba(255,255,255,0.8); line-height: 1.5; margin: 0; }
+  .cm .cm-hl__big { font-size: 1.9rem; font-weight: 800; margin: 1.1rem 0 0.15rem; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .cf-band .cm-hl__big { font-size: 2rem; font-weight: 800; color: #fff; margin: 0 0 0.2rem; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
+  .cf-band .cm-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .cm-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .cm-formula-note { margin: 1rem 0 0; padding: 0.5rem 0.7rem; border-radius: var(--radius-sm); background: var(--bg-soft); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-subtle); overflow-x: auto; }
+  .cf-band .cm-src__title { font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 0.9rem; }
+  .cf-band .cm-src { display: grid; gap: 0.5rem; }
+  .cf-band .cm-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .cm-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .cm-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .cm-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+</style>

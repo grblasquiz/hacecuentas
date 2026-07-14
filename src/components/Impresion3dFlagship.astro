@@ -1,0 +1,557 @@
+---
+// Flagship redesign de "Costo de impresión 3D por pieza" (mockup Martin).
+// Los números salen del motor real (src/lib/formulas/costo-impresion-3d-pieza.ts),
+// importado acá para el SSR y replicado en el <script is:inline> (que no puede importar).
+// Domain "knowledge" (violeta): coincide con la categoría (tecnologia→knowledge).
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { costoImpresion3dPieza } from '../lib/formulas/costo-impresion-3d-pieza';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Caso cargado por defecto = el `example` documentado del calc (llavero PLA)
+const D = { gramos: 50, precioKg: 15000, horas: 4, watts: 150, kwh: 120, margen: 50 };
+const init = costoImpresion3dPieza({ ...D });
+const ganancia = init.precioFinal - init.costoTotal;
+const pctMat = init.costoTotal > 0 ? Math.round((init.costoMaterial / init.costoTotal) * 100) : 0;
+const pctLuz = init.costoTotal > 0 ? Math.round((init.costoLuz / init.costoTotal) * 100) : 0;
+const pctDes = init.costoTotal > 0 ? Math.round((init.costoDesgaste / init.costoTotal) * 100) : 0;
+
+const $ = (x: number) => '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(Math.round(x));
+const nf = (x: number) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(x);
+
+// Referencias: los 5 escenarios documentados del calc, cada fila corrida por el motor
+const ESCENARIOS = [
+  { n: 'Pieza chica PLA', d: '50 g · 4 hs · 150 W · $15.000/kg', i: { gramos: 50, precioKg: 15000, horas: 4, watts: 150, kwh: 120, margen: 50 } },
+  { n: 'Pieza mediana PETG', d: '120 g · 8 hs · 150 W · $18.000/kg', i: { gramos: 120, precioKg: 18000, horas: 8, watts: 150, kwh: 120, margen: 80 } },
+  { n: 'Pieza grande ABS', d: '300 g · 20 hs · 200 W · $16.000/kg', i: { gramos: 300, precioKg: 16000, horas: 20, watts: 200, kwh: 120, margen: 100 } },
+  { n: 'Figura TPU', d: '80 g · 6 hs · 120 W · $30.000/kg', i: { gramos: 80, precioKg: 30000, horas: 6, watts: 120, kwh: 120, margen: 100 } },
+  { n: 'Print rápido PLA premium', d: '30 g · 1,5 hs · 100 W · $35.000/kg', i: { gramos: 30, precioKg: 35000, horas: 1.5, watts: 100, kwh: 120, margen: 50 } },
+];
+const refRows = ESCENARIOS.map((e) => ({ ...e, r: costoImpresion3dPieza({ ...e.i }) }));
+
+const faq = calc.faq || [];
+const sources = (calc.sources || []).slice(0, 3);
+---
+
+<div class="cf-page i3" data-domain="knowledge">
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/categoria/tecnologia">Tecnología</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Costo de impresión 3D</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">🖨️</span> Pricing para makers · 2026</p>
+      <h1 class="cf-h1">Costo real de una <span class="cf-yr">impresión 3D</span></h1>
+      <p class="cf-sub">Filamento, electricidad y desgaste de la máquina. Sumá tu margen y sabé cuánto cobrar por cada pieza.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">🧵</span> Llavero PLA · 50 g</span>
+      <div class="i3-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="i3-deco-val">{$(init.precioFinal)}</div>
+          <div class="cf-deco-card__note">Precio de venta sugerido</div>
+        </div>
+        <span class="cf-deco-badge i3-badge">3D</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Tu ganancia</strong> <span class="cf-deco-chip" id="i3-deco-chip">{$(ganancia)}</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">Los datos del print</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="i3-gramos">Gramos de filamento</label><span class="cf-hint">g</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="decimal" step="1" min="1" max="5000" id="i3-gramos" value={D.gramos} />
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="i3-preciokg">Precio por kilo</label><span class="cf-hint">$/kg</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="decimal" step="100" min="1000" max="200000" id="i3-preciokg" value={D.precioKg} />
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="i3-horas">Horas de impresión</label><span class="cf-hint">hs</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="decimal" step="0.1" min="0.1" max="200" id="i3-horas" value={D.horas} />
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="i3-watts">Consumo promedio</label><span class="cf-hint">W</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="decimal" step="10" min="50" max="500" id="i3-watts" value={D.watts} />
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="i3-kwh">Costo del kWh</label><span class="cf-hint">$/kWh</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="decimal" step="5" min="10" max="2000" id="i3-kwh" value={D.kwh} />
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="i3-margen">Margen de ganancia</label><span class="cf-hint">%</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="decimal" step="5" min="0" max="500" id="i3-margen" value={D.margen} />
+        </div>
+      </div>
+      <p class="cf-help i3-help">Ender 3 V2: 100-150 W · Prusa MK4: 100-120 W · Bambu P1S: 180-250 W · Bambu X1C: 250-350 W · resina LCD: 40-80 W.</p>
+
+      <button class="cf-primary" id="i3-calc-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Margen por mercado:</span>
+        <button class="cf-sc" type="button" data-mg="10">Familia 10%</button>
+        <button class="cf-sc" type="button" data-mg="30">Amigos 30%</button>
+        <button class="cf-sc" type="button" data-mg="50">Conocidos 50%</button>
+        <button class="cf-sc" type="button" data-mg="100">Online 100%</button>
+        <button class="cf-sc" type="button" data-mg="200">B2B 200%</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="i3-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="i3-big">{$(init.precioFinal)}</div>
+      <p class="cf-result__sub" id="i3-sub">Precio de venta con {D.margen}% de margen · costo real {$(init.costoTotal)} · ganancia {$(ganancia)}</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="i3-t1">{$(init.costoMaterial)}</div><div class="cf-tile__label">Filamento · <span id="i3-t1p">{pctMat}%</span></div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="i3-t2">{$(init.costoLuz)}</div><div class="cf-tile__label">Electricidad · <span id="i3-t2p">{pctLuz}%</span></div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="i3-t3">{$(init.costoDesgaste)}</div><div class="cf-tile__label">Desgaste · <span id="i3-t3p">{pctDes}%</span></div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="i3-t4">{$(ganancia)}</div><div class="cf-tile__label">Tu ganancia neta</div></div>
+      </div>
+      <div class="cf-result__formula" id="i3-formula">{$(init.costoTotal)} × (1 + {D.margen}/100) = {$(init.precioFinal)}</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="i3-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="i3-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt"><strong>Respuesta rápida.</strong> <span id="i3-quick">Ese print te cuesta <strong>{$(init.costoTotal)}</strong> y con {D.margen}% de margen lo cobrás <strong>{$(init.precioFinal)}</strong>: te quedan <strong>{$(ganancia)}</strong> de ganancia. El filamento es el {pctMat}% del costo.</span></p>
+    <span class="cf-formula" id="i3-quick-f">{init.desglose}</span>
+  </div>
+
+  <!-- 5. Datos clave -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">🧵</span>
+        <p class="cf-minicard__sub i3-cap">El filamento manda</p>
+        <div class="cf-minicard__big" id="i3-k1">{pctMat}%</div>
+        <p class="cf-minicard__desc i3-mt" id="i3-k1d">Del costo total del print. Ahí está la palanca real para ajustar el precio: la luz es apenas el {pctLuz}%.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🔧</span>
+        <p class="cf-minicard__sub i3-cap">Desgaste de la máquina</p>
+        <div class="cf-minicard__big">10%</div>
+        <p class="cf-minicard__desc i3-mt">Sobre material + luz. Cubre boquillas, correas, rulemanes, PEI, termistores y depreciación. En producción intensiva subilo a 15-20%.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">💰</span>
+        <p class="cf-minicard__sub i3-cap">Margen justo</p>
+        <div class="cf-minicard__big">50-100%</div>
+        <p class="cf-minicard__desc i3-mt">Para venta directa. Online conviene 80-150% y para B2B, 150-200% como mínimo. A familia y amigos, 0-30%.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">⚠️</span>
+        <p class="cf-minicard__sub i3-cap">Prints fallidos</p>
+        <div class="cf-minicard__big">5-10%</div>
+        <p class="cf-minicard__desc i3-mt">Asumí ese porcentaje de fails anuales; en prints de más de 12 hs, 15%. Si no lo cobrás, cada reimpresión sale de tu ganancia.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Cómo leer el resultado -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Cómo leer el resultado</p>
+    <h2 class="cf-section__title i3-h2">Dónde se va la plata del print</h2>
+    <div class="i3-2col">
+      <div class="i3-hl">
+        <p class="cf-side-eyebrow i3-hl__eyebrow">Cómo leer el resultado</p>
+        <p class="i3-hl__title">La luz casi nunca es el problema</p>
+        <p class="i3-hl__desc">Aun en un print de 20 horas, la electricidad ronda el 8% del costo. El que decide tu precio es el filamento. Si querés bajar el precio sin perder plata, bajá gramos (infill, paredes) antes que horas.</p>
+        <div class="i3-hl__big" id="i3-hl-big">{$(init.costoTotal)}</div>
+        <p class="i3-hl__desc">Costo real de la pieza, antes de tu margen</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-breakdown__big" id="i3-bd-big">{$(init.costoTotal)}</div>
+        <div class="cf-brow">
+          <span class="cf-brow__lbl">Filamento</span>
+          <span class="cf-brow__val" id="i3-bd-1">{$(init.costoMaterial)}</span>
+          <span class="cf-brow__bar"><span id="i3-bd-b1" style={`width:${pctMat}%`}></span></span>
+        </div>
+        <p class="i3-note">(gramos ÷ 1000) × precio del kilo</p>
+        <div class="cf-brow i3-mt2">
+          <span class="cf-brow__lbl">Electricidad</span>
+          <span class="cf-brow__val" id="i3-bd-2">{$(init.costoLuz)}</span>
+          <span class="cf-brow__bar"><span id="i3-bd-b2" style={`width:${pctLuz}%`}></span></span>
+        </div>
+        <p class="i3-note">horas × (watts ÷ 1000) × precio del kWh</p>
+        <div class="cf-brow i3-mt2">
+          <span class="cf-brow__lbl">Desgaste de la impresora</span>
+          <span class="cf-brow__val" id="i3-bd-3">{$(init.costoDesgaste)}</span>
+          <span class="cf-brow__bar"><span class="i3-bar--alt" id="i3-bd-b3" style={`width:${pctDes}%`}></span></span>
+        </div>
+        <p class="i3-note">10% de (filamento + electricidad)</p>
+        <div class="cf-breakdown__total">
+          <span>Precio de venta con tu margen</span>
+          <strong id="i3-bd-total">{$(init.precioFinal)}</strong>
+        </div>
+        <div class="cf-callout cf-callout--warn i3-mt3">
+          <span class="cf-callout__ico" aria-hidden="true">⏱️</span>
+          <p><strong>Falta tu tiempo.</strong> Esta cuenta no incluye modelado, laminado, limpieza de soportes ni empaque. Sumale 20-30% de mano de obra, y cobrá el diseño aparte ($500-5.000) si el modelo lo hiciste vos.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Paso a paso -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title i3-h2">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">Los gramos y las horas te los da el laminador (Cura, PrusaSlicer, Bambu Studio) al previsualizar el print.</p>
+        <p class="i3-chip" id="i3-s1">{D.gramos} g · {nf(D.horas)} hs · {D.watts} W</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">Material más electricidad, más un 10% de desgaste sobre esos dos. Ese es el costo antes de ganar un peso.</p>
+        <p class="i3-chip" id="i3-s2">{$(init.costoMaterial)} + {$(init.costoLuz)} + {$(init.costoDesgaste)} = {$(init.costoTotal)}</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">El precio final aplica tu margen sobre el costo. Mirá el desglose para saber qué rubro te conviene tocar.</p>
+        <p class="i3-chip" id="i3-s3">{$(init.costoTotal)} × 1,5 = {$(init.precioFinal)}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Referencias -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Escenario</th><th>Filamento</th><th>Costo total</th><th>Precio final</th></tr></thead>
+        <tbody>
+          {refRows.map((e) => (
+            <tr>
+              <td><span class="cf-td-dot">{e.n}</span><span class="i3-td-nota">{e.d} · margen {e.i.margen}%</span></td>
+              <td>{$(e.r.costoMaterial)}</td>
+              <td>{$(e.r.costoTotal)}</td>
+              <td class="cf-td-em">{$(e.r.precioFinal)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="i3-tnote">Todos con el kWh a $120. Cambiá los valores de la calculadora para tu caso: el precio del filamento y el margen son los que más mueven el resultado.</p>
+  </section>
+</div>
+
+<!-- 9. Banda de atención -->
+<div class="cf-band cf-band--warm" data-domain="knowledge">
+  <div class="cf-band__inner">
+    <div class="i3-2col i3-2col--band">
+      <div class="i3-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="i3-card__title">Competir solo por precio te funde</h2>
+        <p class="cf-side-desc">El costo es un piso, no un precio. Si vendés al costo (margen 0%) no cubrís fallas, reimpresiones, empaque ni el tiempo que le pusiste. Antes de bajar el número, comunicá lo que estás vendiendo: acabado, tolerancias, material, plazo.</p>
+        <div class="cf-callout cf-callout--warn i3-mt3">
+          <span class="cf-callout__ico" aria-hidden="true">📦</span>
+          <p>Lo que casi siempre falta en la cuenta: bolsa, burbuja, cinta y el envío. Sumalos aparte — en piezas chicas el empaque puede pesar más que la electricidad.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="i3-src__title">El caso cargado</p>
+        <div class="i3-hl__big" id="i3-ref-big">{$(init.precioFinal)}</div>
+        <p class="cf-side-desc" id="i3-ref-sub">Precio de venta del llavero PLA de 50 g con 50% de margen. Costo real {$(init.costoTotal)}.</p>
+        <div class="i3-chips">
+          <span class="i3-chip i3-chip--dark" id="i3-ref-c1">Filamento {$(init.costoMaterial)}</span>
+          <span class="i3-chip i3-chip--dark" id="i3-ref-c2">Luz {$(init.costoLuz)}</span>
+          <span class="i3-chip i3-chip--dark" id="i3-ref-c3">Desgaste {$(init.costoDesgaste)}</span>
+          <span class="i3-chip i3-chip--dark" id="i3-ref-c4">Ganancia {$(ganancia)}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page i3" data-domain="knowledge">
+  <!-- 10. FAQ -->
+  {faq.length > 0 && (
+    <section class="cf-section" id="preguntas">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title i3-h2">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+</div>
+
+<!-- 11. Fuentes y metodología -->
+{sources.length > 0 && (
+  <div class="cf-band" data-domain="knowledge">
+    <div class="cf-band__inner">
+      <div class="i3-2col i3-2col--band">
+        <div>
+          <p class="cf-eyebrow">Fuentes y metodología</p>
+          <h2 class="i3-card__title i3-card__title--plain">Números que podés defender</h2>
+          <p class="cf-side-desc">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026.</p>
+        </div>
+        <div class="cf-side-card cf-side-card--dark">
+          <p class="cf-side-eyebrow">Fuentes</p>
+          <div class="i3-src">
+            {sources.map((s: any) => (
+              <div class="i3-src__item">
+                <strong>{s.name}</strong>
+                <span>{s.publisher || (s.url ? String(s.url).replace(/^https?:\/\//, '').split('/')[0] : '')}</span>
+              </div>
+            ))}
+          </div>
+          <p class="i3-src__foot">● Información revisada en julio de 2026</p>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+<div class="cf-page i3" data-domain="knowledge">
+  <!-- 12. Related -->
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title i3-h2">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🖨️'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('(')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].split('·')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- 13. CTA bar -->
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="i3-share2">Copiar enlace del cálculo</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.i3');
+    if (!root) return;
+    var $id = function (id) { return document.getElementById(id); };
+    var money = function (x) { return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(Math.round(x)); };
+    var nf = function (x) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(x); };
+
+    // Réplica de src/lib/formulas/costo-impresion-3d-pieza.ts (el inline no puede importar)
+    function costo3d(i) {
+      var g = Number(i.gramos), pk = Number(i.precioKg), h = Number(i.horas),
+          w = Number(i.watts), kwh = Number(i.kwh), mg = Number(i.margen);
+      if (!g || !pk || !h || !w || !kwh) throw new Error('Completá todos los campos');
+      var material = (g / 1000) * pk;
+      var luz = h * (w / 1000) * kwh;
+      var desgaste = (material + luz) * 0.10;
+      var total = material + luz + desgaste;
+      var precio = total * (1 + mg / 100);
+      return {
+        precioFinal: Number(precio.toFixed(0)),
+        costoMaterial: Number(material.toFixed(0)),
+        costoLuz: Number(luz.toFixed(0)),
+        costoDesgaste: Number(desgaste.toFixed(0)),
+        costoTotal: Number(total.toFixed(0)),
+        desglose: 'Material ' + Math.round((material / total) * 100) + '% · Luz ' + Math.round((luz / total) * 100) + '% · Desgaste ' + Math.round((desgaste / total) * 100) + '%',
+        ganancia: Math.round(precio - total),
+        pctMaterial: Math.round((material / total) * 100),
+      };
+    }
+
+    var ids = ['gramos', 'preciokg', 'horas', 'watts', 'kwh', 'margen'];
+    var el = {};
+    for (var k = 0; k < ids.length; k++) el[ids[k]] = $id('i3-' + ids[k]);
+    function set(id, t) { var e = $id(id); if (e) e.textContent = t; }
+    function w(id, pct) { var e = $id(id); if (e) e.style.width = Math.max(0, Math.min(100, pct)) + '%'; }
+    function inputs() {
+      return {
+        gramos: Number(el.gramos.value), precioKg: Number(el.preciokg.value), horas: Number(el.horas.value),
+        watts: Number(el.watts.value), kwh: Number(el.kwh.value), margen: Number(el.margen.value),
+      };
+    }
+
+    function render() {
+      var i = inputs(), r;
+      try { r = costo3d(i); }
+      catch (err) { set('i3-big', '—'); set('i3-sub', err.message); return; }
+
+      var t = r.costoTotal || 1;
+      var pMat = Math.round((r.costoMaterial / t) * 100);
+      var pLuz = Math.round((r.costoLuz / t) * 100);
+      var pDes = Math.round((r.costoDesgaste / t) * 100);
+      var mg = Number(i.margen) || 0;
+
+      set('i3-big', money(r.precioFinal));
+      set('i3-sub', 'Precio de venta con ' + nf(mg) + '% de margen · costo real ' + money(r.costoTotal) + ' · ganancia ' + money(r.ganancia));
+      set('i3-t1', money(r.costoMaterial)); set('i3-t1p', pMat + '%');
+      set('i3-t2', money(r.costoLuz));      set('i3-t2p', pLuz + '%');
+      set('i3-t3', money(r.costoDesgaste)); set('i3-t3p', pDes + '%');
+      set('i3-t4', money(r.ganancia));
+      set('i3-formula', money(r.costoTotal) + ' × (1 + ' + nf(mg) + '/100) = ' + money(r.precioFinal));
+
+      set('i3-deco-val', money(r.precioFinal));
+      set('i3-deco-chip', money(r.ganancia));
+      set('i3-quick', 'Ese print te cuesta ' + money(r.costoTotal) + ' y con ' + nf(mg) + '% de margen lo cobrás ' + money(r.precioFinal) + ': te quedan ' + money(r.ganancia) + ' de ganancia. El filamento es el ' + pMat + '% del costo.');
+      set('i3-quick-f', r.desglose);
+
+      set('i3-k1', pMat + '%');
+      set('i3-k1d', 'Del costo total del print. Ahí está la palanca real para ajustar el precio: la luz es apenas el ' + pLuz + '%.');
+      set('i3-hl-big', money(r.costoTotal));
+      set('i3-bd-big', money(r.costoTotal));
+      set('i3-bd-1', money(r.costoMaterial)); w('i3-bd-b1', pMat);
+      set('i3-bd-2', money(r.costoLuz));      w('i3-bd-b2', pLuz);
+      set('i3-bd-3', money(r.costoDesgaste)); w('i3-bd-b3', pDes);
+      set('i3-bd-total', money(r.precioFinal));
+      set('i3-s1', i.gramos + ' g · ' + nf(i.horas) + ' hs · ' + i.watts + ' W');
+      set('i3-s2', money(r.costoMaterial) + ' + ' + money(r.costoLuz) + ' + ' + money(r.costoDesgaste) + ' = ' + money(r.costoTotal));
+      set('i3-s3', money(r.costoTotal) + ' × ' + nf(1 + mg / 100) + ' = ' + money(r.precioFinal));
+      set('i3-ref-big', money(r.precioFinal));
+      set('i3-ref-sub', 'Precio de venta de un print de ' + i.gramos + ' g con ' + nf(mg) + '% de margen. Costo real ' + money(r.costoTotal) + '.');
+      set('i3-ref-c1', 'Filamento ' + money(r.costoMaterial));
+      set('i3-ref-c2', 'Luz ' + money(r.costoLuz));
+      set('i3-ref-c3', 'Desgaste ' + money(r.costoDesgaste));
+      set('i3-ref-c4', 'Ganancia ' + money(r.ganancia));
+    }
+
+    for (var j = 0; j < ids.length; j++) el[ids[j]].addEventListener('input', render);
+    $id('i3-calc-btn').addEventListener('click', render);
+    Array.prototype.forEach.call(document.querySelectorAll('[data-mg]'), function (b) {
+      b.addEventListener('click', function () { el.margen.value = b.getAttribute('data-mg'); render(); });
+    });
+
+    function summary() {
+      try {
+        var i = inputs(), r = costo3d(i);
+        return 'Impresión 3D de ' + i.gramos + ' g en ' + nf(i.horas) + ' hs: costo ' + money(r.costoTotal)
+          + ' (' + r.desglose + '). Con ' + nf(i.margen) + '% de margen, precio de venta ' + money(r.precioFinal)
+          + ' y ganancia ' + money(r.ganancia) + '. — hacecuentas.com';
+      } catch (e) { return 'hacecuentas.com/calculadora-costo-impresion-3d-pieza'; }
+    }
+    function shareUrl() {
+      var i = inputs();
+      return location.origin + location.pathname + '?g=' + i.gramos + '&pk=' + i.precioKg + '&h=' + i.horas + '&w=' + i.watts + '&kwh=' + i.kwh + '&mg=' + i.margen;
+    }
+    function copy(t, btn) {
+      if (!navigator.clipboard) return;
+      navigator.clipboard.writeText(t).then(function () {
+        var o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(function () { btn.innerHTML = o; }, 1500);
+      });
+    }
+    $id('i3-copy').addEventListener('click', function (e) { copy(summary(), e.currentTarget); });
+    $id('i3-detail').addEventListener('click', function () { var t = document.getElementById('preguntas'); if (t) t.scrollIntoView({ behavior: 'smooth' }); });
+    var s2 = $id('i3-share2'); if (s2) s2.addEventListener('click', function (e) { copy(shareUrl(), e.currentTarget); });
+
+    var q = new URLSearchParams(location.search);
+    var mapq = { g: 'gramos', pk: 'preciokg', h: 'horas', w: 'watts', kwh: 'kwh', mg: 'margen' };
+    for (var qk in mapq) if (q.get(qk)) el[mapq[qk]].value = q.get(qk);
+    render();
+  })();
+</script>
+
+<style>
+  .i3 .i3-deco-wrap { position: relative; }
+  .i3 .i3-badge { top: -14px; right: -14px; font-size: 0.9rem; }
+  .i3 .i3-cap { font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+  .i3 .i3-mt { margin-top: 0.3rem; }
+  .i3 .i3-mt2 { margin-top: 1rem; }
+  .i3 .i3-mt3, .cf-band .i3-mt3 { margin-top: 1.25rem; }
+  .i3 .i3-h2, .cf-band .i3-h2 { margin: 0.35rem 0 1.25rem; }
+  .i3 .i3-help { margin: 0 0 1rem; }
+  .i3 .i3-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.15rem 0 0; font-family: var(--font-mono); }
+  .i3 .i3-tnote { font-size: 0.78rem; color: var(--text-subtle); margin: 0.75rem 0 0; }
+  .i3 .i3-td-nota { display: block; font-size: 0.72rem; color: var(--text-subtle); padding-left: 1.15rem; }
+  .i3 .i3-bar--alt { background: linear-gradient(90deg, #f59e0b, #fb923c) !important; }
+
+  .i3-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .i3-2col { grid-template-columns: 0.85fr 1.15fr; } }
+  .cf-band .i3-2col--band { gap: 1.25rem; }
+
+  .i3 .i3-hl {
+    padding: 1.4rem 1.5rem; border-radius: var(--radius-lg); color: #fff;
+    background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%);
+    box-shadow: var(--shadow-md);
+  }
+  .i3 .i3-hl__eyebrow { color: rgba(255,255,255,0.85); }
+  .i3 .i3-hl__title { font-size: 1.3rem; font-weight: 800; line-height: 1.2; margin: 0 0 0.6rem; letter-spacing: -0.015em; }
+  .i3 .i3-hl__desc { font-size: 0.82rem; line-height: 1.5; margin: 0; color: rgba(255,255,255,0.86); }
+  .i3 .i3-hl__big { font-size: 1.9rem; font-weight: 800; margin: 1.1rem 0 0.15rem; color: #fff; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .cf-band .i3-hl__big { font-size: 1.9rem; font-weight: 800; color: #fff; margin: 0.9rem 0 0.4rem; font-variant-numeric: tabular-nums; line-height: 1.1; }
+
+    /* El chip mono es nowrap: sin min-width:0 infla el track del grid
+     (min-width:auto en grid items) y mete scroll-x en mobile. */
+  .i3 .cf-steps > .cf-step { min-width: 0; }
+.i3 .i3-chip {
+    display: inline-block; margin: 0.7rem 0 0; padding: 0.35rem 0.6rem; border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.7rem; color: var(--accent-strong);
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+    overflow-x: auto; max-width: 100%; white-space: nowrap;
+  }
+  .cf-band .i3-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.9rem; }
+  .cf-band .i3-chip--dark { display: inline-block; padding: 0.35rem 0.6rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #e7ecf3; }
+
+  .cf-band .i3-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .i3-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .i3-src { display: grid; gap: 0.5rem; }
+  .cf-band .i3-src__title { font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0 0 0.3rem; }
+  .cf-band .i3-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .i3-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .i3-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .i3-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+</style>

@@ -1,0 +1,583 @@
+---
+// Flagship redesign de la calc "Ganancias 4ta categoría 2026" — Argentina (mockup Martin).
+// Los números salen del motor real (src/lib/formulas/ganancias-cuarta-categoria-2026.ts)
+// + sus constantes en src/lib/formulas/_ganancias-escala.ts (que el fetcher de ARCA
+// auto-actualiza por semestre) y BASE_IMPONIBLE_MAXIMA_APORTES de sueldo-ar.ts.
+// Domain "knowledge" (violeta) por el mockup, no por la categoría (impuestos→money).
+// Header/footer = los globales del sitio.
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { gananciasCuartaCategoria2026 } from '../lib/formulas/ganancias-cuarta-categoria-2026';
+import {
+  MNI_MENSUAL_BASE,
+  INCREMENTO_CONYUGE_MENSUAL,
+  INCREMENTO_HIJO_MENSUAL,
+  ESCALA,
+  aplicarEscalaMensual,
+} from '../lib/formulas/_ganancias-escala';
+import { BASE_IMPONIBLE_MAXIMA_APORTES } from '../lib/formulas/sueldo-ar';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+const pct = (n: number, dec = 2) =>
+  n.toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + '%';
+
+const INIT = { sueldoBrutoMensual: 3_500_000, cargasFamiliares: 0, conyuge: 'no', hijos: 0, deduccionesEspeciales: 0 };
+const init = gananciasCuartaCategoria2026(INIT);
+const initAportes = Math.min(INIT.sueldoBrutoMensual, BASE_IMPONIBLE_MAXIMA_APORTES) * 0.17;
+const initMarginal = aplicarEscalaMensual(init.gananciaNetaSujetaImpuesto / 12).marginal;
+
+// Piso a partir del cual el motor empieza a liquidar impuesto (bisección sobre la
+// fórmula real, no un valor hardcodeado): deducciones anuales / (0,83 × 13).
+function pisoBruto(conyuge: string, hijos: number) {
+  let lo = 500_000, hi = 12_000_000;
+  for (let k = 0; k < 60; k++) {
+    const m = (lo + hi) / 2;
+    const r = gananciasCuartaCategoria2026({ ...INIT, sueldoBrutoMensual: m, conyuge, hijos });
+    if (r.impuestoAnual > 0) hi = m; else lo = m;
+  }
+  return hi;
+}
+const PISO_SOLTERO = pisoBruto('no', 0);
+
+const refRows = [2_000_000, 2_500_000, 3_000_000, 3_500_000, 4_500_000, 6_000_000].map((s) => {
+  const r = gananciasCuartaCategoria2026({ ...INIT, sueldoBrutoMensual: s });
+  return { bruto: s, mensual: r.impuestoMensual, anual: r.impuestoAnual, efectiva: r.tasaEfectiva };
+});
+
+// Porcentajes de las barras del desglose (sobre la ganancia anual del caso cargado)
+const barDed = (init.deduccionesTotal / init.gananciaAnual) * 100;
+const barGnsi = (init.gananciaNetaSujetaImpuesto / init.gananciaAnual) * 100;
+const barImp = (init.impuestoAnual / init.gananciaAnual) * 100;
+
+const escalaAttr = JSON.stringify(ESCALA.map((t) => ({ h: t.hasta === Infinity ? null : t.hasta, t: t.tasa, a: t.acumulado })));
+const faq = calc.faq || [];
+const sources = calc.sources || [];
+---
+
+<div
+  class="cf-page gcc"
+  data-domain="knowledge"
+  data-mni={MNI_MENSUAL_BASE}
+  data-conyuge={INCREMENTO_CONYUGE_MENSUAL}
+  data-hijo={INCREMENTO_HIJO_MENSUAL}
+  data-tope={BASE_IMPONIBLE_MAXIMA_APORTES}
+  data-escala={escalaAttr}
+>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/categoria/impuestos">Impuestos</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Ganancias 4ta categoría</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">🏛️</span> Argentina · Retención 4ta categoría · 2026</p>
+      <h1 class="cf-h1">¿Cuánto te retienen de <span class="cf-yr">Ganancias</span>?</h1>
+      <p class="cf-sub">Calculá la retención mensual del impuesto sobre tu sueldo con las deducciones de ARCA y la escala progresiva del Art. 94 vigente en 2026.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">🧾</span> Relación de dependencia</span>
+      <div class="gcc-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="gcc-deco-val">{fmt(init.impuestoMensual)}</div>
+          <div class="cf-deco-card__note">Retención mensual · bruto {fmt(INIT.sueldoBrutoMensual)}</div>
+        </div>
+        <span class="cf-deco-badge gcc-badge">4ta</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Tasa efectiva</strong> <span class="cf-deco-chip" id="gcc-deco-pct">{pct(init.tasaEfectiva)}</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">Tu sueldo y tus deducciones</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="gcc-bruto">Sueldo bruto mensual</label><span class="cf-hint">Del recibo</span></div>
+        <div class="gcc-money"><span class="gcc-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="gcc-bruto" value="3.500.000" /></div>
+        <p class="cf-help">Remuneración bruta sujeta a aportes, antes de descuentos. La calculadora anualiza 13 sueldos (incluye el SAC).</p>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="gcc-conyuge">¿Cónyuge a cargo?</label></div>
+          <select class="cf-input" id="gcc-conyuge">
+            <option value="no" selected>No</option>
+            <option value="si">Sí</option>
+          </select>
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="gcc-hijos">Hijos a cargo</label></div>
+          <input class="cf-input" type="number" id="gcc-hijos" value="0" min="0" max="10" step="1" />
+        </div>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="gcc-otras">Otras deducciones anuales</label><span class="cf-hint">SiRADIG</span></div>
+        <div class="gcc-money"><span class="gcc-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="gcc-otras" value="0" /></div>
+        <p class="cf-help">Alquiler, cuota médica, intereses hipotecarios, donaciones y demás conceptos que cargás en el SiRADIG (F.572 web), en total anual.</p>
+      </div>
+
+      <button class="cf-primary" id="gcc-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Ejemplos:</span>
+        <button class="cf-sc" type="button" data-ej="2500000">$2,5 M</button>
+        <button class="cf-sc" type="button" data-ej="3000000">$3 M</button>
+        <button class="cf-sc" type="button" data-ej="4500000">$4,5 M</button>
+        <button class="cf-sc" type="button" data-ej="6000000">$6 M</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="gcc-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="gcc-big">{fmt(init.impuestoMensual)}</div>
+      <p class="cf-result__biglabel" id="gcc-biglabel">de retención por mes</p>
+      <p class="cf-result__sub" id="gcc-sub">Tasa efectiva {pct(init.tasaEfectiva)} sobre tu ganancia anual · alícuota marginal {pct(initMarginal * 100, 0)}</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="gcc-t-anual">{fmt(init.impuestoAnual)}</div><div class="cf-tile__label">Impuesto anual</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="gcc-t-efec">{pct(init.tasaEfectiva)}</div><div class="cf-tile__label">Tasa efectiva</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="gcc-t-gnsi">{fmt(init.gananciaNetaSujetaImpuesto)}</div><div class="cf-tile__label">Ganancia sujeta a impuesto</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="gcc-t-ded">{fmt(init.deduccionesTotal)}</div><div class="cf-tile__label">Deducciones anuales</div></div>
+      </div>
+      <div class="cf-result__formula" id="gcc-formula">escala({fmt(init.gananciaAnual)} − {fmt(init.deduccionesTotal)}) = {fmt(init.impuestoAnual)}/año</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="gcc-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="gcc-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt" id="gcc-quick"><strong>Respuesta rápida.</strong> Con un bruto de {fmt(INIT.sueldoBrutoMensual)} por mes, soltero y sin hijos, te retienen unos <strong>{fmt(init.impuestoMensual)} por mes</strong> ({fmt(init.impuestoAnual)} al año). Un empleado sin cargas de familia recién empieza a tributar arriba de {fmt(PISO_SOLTERO)} de bruto.</p>
+    <span class="cf-formula">escala 5% – 35%</span>
+  </div>
+
+  <!-- DATOS CLAVE -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">🛡️</span>
+        <p class="cf-minicard__sub gcc-mc-lbl">MNI + deducción especial</p>
+        <div class="cf-minicard__big">{fmt(MNI_MENSUAL_BASE)}</div>
+        <p class="cf-minicard__desc gcc-mc-desc">Por mes, para un empleado soltero. Combina la ganancia no imponible y la deducción especial del art. 30 inc. c) ap. 2.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">📏</span>
+        <p class="cf-minicard__sub gcc-mc-lbl">Piso: soltero sin hijos</p>
+        <div class="cf-minicard__big">{fmt(PISO_SOLTERO)}</div>
+        <p class="cf-minicard__desc gcc-mc-desc">Bruto mensual a partir del cual empieza a tributar. Por debajo, el impuesto da $0.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">💍</span>
+        <p class="cf-minicard__sub gcc-mc-lbl">Cónyuge a cargo</p>
+        <div class="cf-minicard__big">{fmt(INCREMENTO_CONYUGE_MENSUAL)}</div>
+        <p class="cf-minicard__desc gcc-mc-desc">Deducción mensual adicional. Hay que declararlo en el SiRADIG para que el empleador lo aplique.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">👶</span>
+        <p class="cf-minicard__sub gcc-mc-lbl">Hijo a cargo</p>
+        <div class="cf-minicard__big">{fmt(INCREMENTO_HIJO_MENSUAL)}</div>
+        <p class="cf-minicard__desc gcc-mc-desc">Por hijo menor de 18 años (o incapacitado sin límite de edad), mientras no supere el tope de ingresos.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CÓMO LEER EL RESULTADO -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Cómo leer el resultado</p>
+    <h2 class="cf-section__title gcc-t2">De tu ganancia anual, esto se va en impuesto</h2>
+    <div class="gcc-2col">
+      <div class="cf-side-card cf-side-card--dark gcc-hl">
+        <p class="cf-side-eyebrow">Cómo leer el resultado</p>
+        <p class="gcc-hl__title">La tasa efectiva no es la de la escala</p>
+        <p class="cf-side-desc">La escala del Art. 94 es progresiva: la alícuota más alta que te toca se aplica sólo al excedente de ese tramo, no a todo tu sueldo. Por eso lo que realmente pagás sobre el total es mucho menor.</p>
+        <div class="gcc-hl__big" id="gcc-hl-big">{fmt(init.impuestoMensual)}</div>
+        <p class="cf-side-desc">Retención mensual del caso cargado</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-breakdown__big" id="gcc-bd-big">{fmt(init.gananciaAnual)}</div>
+        <p class="gcc-note gcc-note--top">Ganancia anual (13 sueldos, neta de aportes)</p>
+        <div class="cf-brow">
+          <span class="cf-brow__lbl">Deducciones anuales</span>
+          <span class="cf-brow__val" id="gcc-bd-ded">− {fmt(init.deduccionesTotal)}</span>
+          <span class="cf-brow__bar"><span id="gcc-bd-ded-bar" style={`width:${Math.min(100, barDed).toFixed(1)}%`}></span></span>
+        </div>
+        <div class="cf-brow gcc-brow--sp">
+          <span class="cf-brow__lbl">Ganancia sujeta a impuesto</span>
+          <span class="cf-brow__val" id="gcc-bd-gnsi">{fmt(init.gananciaNetaSujetaImpuesto)}</span>
+          <span class="cf-brow__bar"><span class="gcc-bar--alt" id="gcc-bd-gnsi-bar" style={`width:${Math.min(100, barGnsi).toFixed(1)}%`}></span></span>
+        </div>
+        <div class="cf-brow gcc-brow--sp">
+          <span class="cf-brow__lbl">Impuesto anual</span>
+          <span class="cf-brow__val" id="gcc-bd-imp">{fmt(init.impuestoAnual)}</span>
+          <span class="cf-brow__bar"><span class="gcc-bar--imp" id="gcc-bd-imp-bar" style={`width:${Math.min(100, barImp).toFixed(1)}%`}></span></span>
+        </div>
+        <div class="cf-breakdown__total">
+          <span>Te queda en mano (antes de otros descuentos)</span>
+          <strong id="gcc-bd-mano">{fmt(init.gananciaAnual - init.impuestoAnual)}</strong>
+        </div>
+        <div class="cf-callout cf-callout--warn gcc-cal">
+          <span class="cf-callout__ico" aria-hidden="true">⚠️</span>
+          <p>Si no cargás tus deducciones en el <strong>SiRADIG</strong>, el empleador retiene sin ellas y pagás de más. El F.572 web se puede completar y modificar durante todo el año.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PASO A PASO -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title gcc-t2">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">Tu sueldo bruto mensual y las cargas de familia que declarás. Restamos el 17% de aportes y anualizamos 13 sueldos.</p>
+        <span class="gcc-chip" id="gcc-s1">bruto {fmt(INIT.sueldoBrutoMensual)} → anual {fmt(init.gananciaAnual)}</span>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">Restamos las deducciones de ARCA y pasamos el excedente por la escala progresiva del Art. 94 (9 tramos, del 5% al 35%).</p>
+        <span class="gcc-chip" id="gcc-s2">{fmt(init.gananciaNetaSujetaImpuesto)} → marginal {pct(initMarginal * 100, 0)}</span>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">El impuesto anual dividido 12 es lo que te descuenta el empleador cada mes como retención de 4ta categoría.</p>
+        <span class="gcc-chip" id="gcc-s3">{fmt(init.impuestoMensual)}/mes · {pct(init.tasaEfectiva)} efectivo</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- REFERENCIAS -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Sueldo bruto mensual</th><th>Retención por mes</th><th>Impuesto anual</th><th>Tasa efectiva</th></tr></thead>
+        <tbody>
+          {refRows.map((r) => (
+            <tr>
+              <td>{fmt(r.bruto)}</td>
+              <td>{r.mensual > 0 ? fmt(r.mensual) : '$0'}</td>
+              <td>{r.anual > 0 ? fmt(r.anual) : '$0'}</td>
+              <td class="cf-td-em">{r.anual > 0 ? pct(r.efectiva) : 'No tributa'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="gcc-tnote">Escenarios calculados con la misma fórmula, para un empleado soltero sin hijos ni otras deducciones.</p>
+  </section>
+</div>
+
+<!-- Banda: atención + referencia principal -->
+<div class="cf-band cf-band--warm" data-domain="knowledge">
+  <div class="cf-band__inner">
+    <div class="gcc-2col">
+      <div class="gcc-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="gcc-card__title">Es una estimación, no tu liquidación final</h2>
+        <p class="cf-side-desc">El empleador liquida mes a mes de forma acumulada: la retención real varía si cobrás aguinaldo, bonos, horas extra o si cambian tus deducciones a mitad de año. Esta calculadora prorratea el impuesto anual en 12 cuotas iguales.</p>
+        <div class="cf-callout cf-callout--warn gcc-cal">
+          <span class="cf-callout__ico" aria-hidden="true">📋</span>
+          <p>Los montos de deducciones y la escala los actualiza <strong>ARCA por semestre</strong> según el IPC del INDEC. Los de esta página son los del primer semestre de 2026.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="gcc-src__title">Piso para empezar a tributar</p>
+        <div class="gcc-ref__big">{fmt(PISO_SOLTERO)}</div>
+        <p class="cf-side-desc">Bruto mensual · empleado soltero sin hijos ni otras deducciones</p>
+        <div class="gcc-chips">
+          <span class="gcc-chip2">MNI + especial {fmt(MNI_MENSUAL_BASE)}/mes</span>
+          <span class="gcc-chip2">Cónyuge +{fmt(INCREMENTO_CONYUGE_MENSUAL)}</span>
+          <span class="gcc-chip2">Hijo +{fmt(INCREMENTO_HIJO_MENSUAL)}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page gcc" data-domain="knowledge">
+  {faq.length > 0 && (
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title gcc-t2">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+</div>
+
+<!-- Banda: fuentes y metodología -->
+<div class="cf-band" data-domain="knowledge">
+  <div class="cf-band__inner">
+    <div class="gcc-2col">
+      <div class="gcc-card">
+        <p class="cf-eyebrow">Fuentes y metodología</p>
+        <h2 class="gcc-card__title">Números que podés defender</h2>
+        <p class="cf-side-desc">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026. El mínimo no imponible, las cargas de familia y los nueve tramos de la escala salen de las tablas que publica ARCA y se actualizan cada semestre por IPC del INDEC.</p>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Fuentes oficiales</p>
+        <p class="gcc-src__title">Marco normativo 2026</p>
+        <div class="gcc-src">
+          {sources.map((s: any) => (
+            <div class="gcc-src__item">
+              <strong>{typeof s === 'string' ? s : String(s.name || '').split('—')[0].trim()}</strong>
+              {typeof s !== 'string' && String(s.name || '').includes('—') && <span>{String(s.name).split('—').slice(1).join('—').trim()}</span>}
+            </div>
+          ))}
+        </div>
+        <p class="gcc-src__foot">● Información revisada en julio de 2026</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page gcc" data-domain="knowledge">
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title gcc-t2">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🧮'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('—')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="gcc-share2">Guardar resultado</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.gcc');
+    if (!root) return;
+    const MNI = Number(root.getAttribute('data-mni'));
+    const D_CONY = Number(root.getAttribute('data-conyuge'));
+    const D_HIJO = Number(root.getAttribute('data-hijo'));
+    const TOPE = Number(root.getAttribute('data-tope'));
+    const ESCALA = JSON.parse(root.getAttribute('data-escala')).map(function (t) {
+      return { hasta: t.h === null ? Infinity : t.h, tasa: t.t, acumulado: t.a };
+    });
+    const $ = function (id) { return document.getElementById(id); };
+    const fmt = function (n) { return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(Math.round(n)); };
+    const pct = function (n, dec) {
+      if (dec === undefined) dec = 2;
+      return n.toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + '%';
+    };
+
+    // Réplica exacta de aplicarEscalaMensual() de _ganancias-escala.ts
+    function escalaMensual(base) {
+      if (base <= 0) return { impuesto: 0, marginal: 0 };
+      let anterior = 0;
+      for (let i = 0; i < ESCALA.length; i++) {
+        const tr = ESCALA[i];
+        if (base <= tr.hasta) return { impuesto: tr.acumulado + (base - anterior) * tr.tasa, marginal: tr.tasa };
+        anterior = tr.hasta;
+      }
+      const u = ESCALA[ESCALA.length - 1];
+      return { impuesto: u.acumulado + (base - anterior) * u.tasa, marginal: u.tasa };
+    }
+
+    // Réplica exacta de gananciasCuartaCategoria2026()
+    function calcular(bruto, conyuge, hijos, otras) {
+      const aportes = Math.min(bruto, TOPE) * 0.17;
+      const netoSS = bruto - aportes;
+      const gananciaAnual = netoSS * 13;
+      const dedFam = (conyuge ? D_CONY : 0) + hijos * D_HIJO;
+      const deduccionesTotal = (MNI + dedFam) * 12 + otras;
+      const gnsi = Math.max(0, gananciaAnual - deduccionesTotal);
+      const esc = escalaMensual(gnsi / 12);
+      const impuestoAnual = esc.impuesto * 12;
+      const impuestoMensual = impuestoAnual / 12;
+      const tasaEfectiva = gananciaAnual > 0 ? (impuestoAnual / gananciaAnual) * 100 : 0;
+      return {
+        aportes: aportes, netoSS: netoSS, gananciaAnual: gananciaAnual, deduccionesTotal: deduccionesTotal,
+        gnsi: gnsi, impuestoAnual: impuestoAnual, impuestoMensual: impuestoMensual,
+        tasaEfectiva: Number(tasaEfectiva.toFixed(2)), marginal: esc.marginal,
+      };
+    }
+
+    const brutoEl = $('gcc-bruto'), conyEl = $('gcc-conyuge'), hijosEl = $('gcc-hijos'), otrasEl = $('gcc-otras');
+    function digits(v) { return Number(String(v || '').replace(/\D/g, '')) || 0; }
+    function fmtThousands(v) { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('es-AR') : ''; }
+    function inputs() {
+      return { bruto: digits(brutoEl.value), conyuge: conyEl.value === 'si', hijos: Math.max(0, Number(hijosEl.value) || 0), otras: digits(otrasEl.value) };
+    }
+
+    function render() {
+      const i = inputs();
+      const r = calcular(i.bruto, i.conyuge, i.hijos, i.otras);
+      const paga = r.impuestoAnual > 0;
+      $('gcc-big').textContent = fmt(r.impuestoMensual);
+      $('gcc-biglabel').textContent = paga ? 'de retención por mes' : 'no tributás Ganancias';
+      $('gcc-sub').textContent = paga
+        ? 'Tasa efectiva ' + pct(r.tasaEfectiva) + ' sobre tu ganancia anual · alícuota marginal ' + pct(r.marginal * 100, 0)
+        : 'Tus deducciones (' + fmt(r.deduccionesTotal) + ') superan tu ganancia anual (' + fmt(r.gananciaAnual) + ').';
+      $('gcc-t-anual').textContent = fmt(r.impuestoAnual);
+      $('gcc-t-efec').textContent = pct(r.tasaEfectiva);
+      $('gcc-t-gnsi').textContent = fmt(r.gnsi);
+      $('gcc-t-ded').textContent = fmt(r.deduccionesTotal);
+      $('gcc-formula').textContent = 'escala(' + fmt(r.gananciaAnual) + ' − ' + fmt(r.deduccionesTotal) + ') = ' + fmt(r.impuestoAnual) + '/año';
+
+      const dv = $('gcc-deco-val'); if (dv) dv.textContent = fmt(r.impuestoMensual);
+      const dp = $('gcc-deco-pct'); if (dp) dp.textContent = pct(r.tasaEfectiva);
+
+      $('gcc-hl-big').textContent = fmt(r.impuestoMensual);
+      $('gcc-bd-big').textContent = fmt(r.gananciaAnual);
+      $('gcc-bd-ded').textContent = '− ' + fmt(r.deduccionesTotal);
+      $('gcc-bd-gnsi').textContent = fmt(r.gnsi);
+      $('gcc-bd-imp').textContent = fmt(r.impuestoAnual);
+      $('gcc-bd-mano').textContent = fmt(Math.max(0, r.gananciaAnual - r.impuestoAnual));
+      const ga = r.gananciaAnual > 0 ? r.gananciaAnual : 1;
+      $('gcc-bd-ded-bar').style.width = Math.min(100, (r.deduccionesTotal / ga) * 100).toFixed(1) + '%';
+      $('gcc-bd-gnsi-bar').style.width = Math.min(100, (r.gnsi / ga) * 100).toFixed(1) + '%';
+      $('gcc-bd-imp-bar').style.width = Math.min(100, (r.impuestoAnual / ga) * 100).toFixed(1) + '%';
+
+      $('gcc-s1').textContent = 'bruto ' + fmt(i.bruto) + ' → anual ' + fmt(r.gananciaAnual);
+      $('gcc-s2').textContent = fmt(r.gnsi) + ' → marginal ' + pct(r.marginal * 100, 0);
+      $('gcc-s3').textContent = fmt(r.impuestoMensual) + '/mes · ' + pct(r.tasaEfectiva) + ' efectivo';
+    }
+
+    brutoEl.addEventListener('input', function () { brutoEl.value = fmtThousands(brutoEl.value); render(); });
+    otrasEl.addEventListener('input', function () { otrasEl.value = fmtThousands(otrasEl.value); render(); });
+    conyEl.addEventListener('change', render);
+    hijosEl.addEventListener('input', render);
+    $('gcc-btn').addEventListener('click', render);
+    document.querySelectorAll('[data-ej]').forEach(function (b) {
+      b.addEventListener('click', function () { brutoEl.value = fmtThousands(b.getAttribute('data-ej')); render(); });
+    });
+
+    function summary() {
+      const i = inputs();
+      const r = calcular(i.bruto, i.conyuge, i.hijos, i.otras);
+      if (r.impuestoAnual <= 0) return 'Con un sueldo bruto de ' + fmt(i.bruto) + '/mes no tributás Ganancias: tus deducciones (' + fmt(r.deduccionesTotal) + ') superan tu ganancia anual (' + fmt(r.gananciaAnual) + '). — hacecuentas.com';
+      return 'Ganancias 4ta categoría 2026: con un bruto de ' + fmt(i.bruto) + '/mes te retienen ' + fmt(r.impuestoMensual) + ' por mes (' + fmt(r.impuestoAnual) + ' al año), una tasa efectiva del ' + pct(r.tasaEfectiva) + '. — hacecuentas.com';
+    }
+    function shareUrl() {
+      const i = inputs();
+      return location.origin + location.pathname + '?bruto=' + i.bruto + '&conyuge=' + (i.conyuge ? 'si' : 'no') + '&hijos=' + i.hijos + '&otras=' + i.otras;
+    }
+    function copy(t, btn) {
+      if (!navigator.clipboard) return;
+      navigator.clipboard.writeText(t).then(function () {
+        const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(function () { btn.innerHTML = o; }, 1500);
+      });
+    }
+    $('gcc-copy').addEventListener('click', function (e) { copy(summary(), e.currentTarget); });
+    $('gcc-detail').addEventListener('click', function () {
+      const t = document.getElementById('como-funciona'); if (t) t.scrollIntoView({ behavior: 'smooth' });
+    });
+    const s2 = $('gcc-share2'); if (s2) s2.addEventListener('click', function (e) { copy(shareUrl(), e.currentTarget); });
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('bruto')) brutoEl.value = fmtThousands(q.get('bruto'));
+    if (q.get('conyuge')) conyEl.value = q.get('conyuge') === 'si' ? 'si' : 'no';
+    if (q.get('hijos')) hijosEl.value = String(Math.max(0, Number(q.get('hijos')) || 0));
+    if (q.get('otras')) otrasEl.value = fmtThousands(q.get('otras'));
+    render();
+  })();
+</script>
+
+<style>
+  /* El badge vive fuera de .cf-deco-card porque la card tiene overflow:hidden */
+  .gcc .gcc-deco-wrap { position: relative; }
+  .gcc .gcc-badge { top: 50%; right: -16px; transform: translateY(-50%); width: 48px; height: 48px; font-size: 0.8rem; letter-spacing: 0.01em; }
+
+  .gcc .gcc-money { position: relative; display: flex; align-items: center; }
+  .gcc .gcc-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
+  .gcc .gcc-money .cf-input { padding-left: 1.7rem; }
+
+  .gcc .cf-section__title.gcc-t2 { margin: 0.35rem 0 1.25rem; }
+  .gcc .gcc-mc-lbl { font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+  .gcc .gcc-mc-desc { margin-top: 0.3rem; }
+  .gcc .gcc-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.15rem 0 0; }
+  .gcc .gcc-note--top { margin: -0.6rem 0 1rem; }
+  .gcc .gcc-brow--sp { margin-top: 1rem; }
+  .gcc .gcc-cal, .cf-band .gcc-cal { margin-top: 1.25rem; }
+  .gcc .gcc-bar--alt { background: linear-gradient(90deg, #8b5cf6, #a78bfa) !important; }
+  .gcc .gcc-bar--imp { background: linear-gradient(90deg, #f59e0b, #fb923c) !important; }
+  .gcc .gcc-tnote { font-size: 0.75rem; color: var(--text-subtle); margin: 0.7rem 0 0; }
+
+  .gcc .gcc-chip {
+    display: inline-block; margin-top: 0.8rem; padding: 0.35rem 0.6rem; border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; color: var(--accent-strong);
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+
+  .gcc-2col, .cf-band .gcc-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .gcc-2col, .cf-band .gcc-2col { grid-template-columns: 0.85fr 1.15fr; } }
+
+  .gcc .gcc-hl__title { font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin: 0 0 0.6rem; letter-spacing: -0.015em; }
+  .gcc .gcc-hl__big { font-size: 1.8rem; font-weight: 800; color: #fff; margin: 1.1rem 0 0.15rem; font-variant-numeric: tabular-nums; }
+
+  .cf-band .gcc-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .gcc-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .gcc-src__title { font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 0.9rem; }
+  .cf-band .gcc-src { display: grid; gap: 0.5rem; }
+  .cf-band .gcc-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .gcc-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .gcc-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .gcc-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+  .cf-band .gcc-ref__big { font-size: 2rem; font-weight: 800; color: #fff; margin: 0.2rem 0 0.15rem; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .cf-band .gcc-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+  .cf-band .gcc-chip2 { padding: 0.3rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; background: rgba(255,255,255,0.09); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); }
+</style>

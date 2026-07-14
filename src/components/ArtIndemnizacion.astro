@@ -1,0 +1,552 @@
+---
+// Flagship redesign de la calc "indemnización ART por incapacidad permanente" (mockup Martin).
+// Los números salen del motor real (src/lib/formulas/art-indemnizacion-tabla-incapacidad-permanente.ts):
+// Art. 14 Ley 24.557 → 53 × VIB × (65/edad) × (%incapacidad/100), más el adicional
+// del 20% de la Ley 26.773 Art. 3°. El SSR llama a la fórmula real; el script del
+// cliente replica la misma lógica (verificada contra el motor). Domain "health"
+// (rosa coral) por el mockup, no por la categoría (finanzas→money).
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { artIndemnizacionTablaIncapacidadPermanente } from '../lib/formulas/art-indemnizacion-tabla-incapacidad-permanente';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Constantes de la ley (Art. 14 inc. 2 a) Ley 24.557). El motor las tiene como
+// COEFICIENTE_LRT = 53 y el factor etario 65/edad.
+const COEF = 53;
+const EDAD_BASE = 65;
+
+// Defaults = los placeholders del JSON, que son también los del ejemplo resuelto.
+const INIT_VIB = 1_500_000;
+const INIT_EDAD = 38;
+const INIT_PORC = 25;
+
+const init = artIndemnizacionTablaIncapacidadPermanente({
+  sueldoBrutoMensual: INIT_VIB,
+  edadTrabajador: INIT_EDAD,
+  porcentajeIncapacidad: INIT_PORC,
+});
+
+const fmt = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
+const mill = (n: number) => '$' + (n / 1e6).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + ' M';
+
+// Etiqueta corta de la categoría del Art. 8° LRT (el motor devuelve el texto largo).
+function categoriaCorta(porc: number) {
+  return porc >= 66 ? 'Total (≥66%)' : porc >= 50 ? 'Parcial 50-65%' : 'Parcial (<50%)';
+}
+
+// Filas de referencia: computadas con el motor real, al VIB y edad del caso cargado.
+const BAREMO = [
+  { porc: 10, label: '10% — hernia discal leve' },
+  { porc: 15, label: '15% — hernia discal con limitación' },
+  { porc: 25, label: '25% — limitación de columna lumbar' },
+  { porc: 42, label: '42% — pérdida de visión de un ojo' },
+  { porc: 65, label: '65% — amputación de mano dominante' },
+  { porc: 100, label: '100% — incapacidad total' },
+];
+const refRows = BAREMO.map((b) => {
+  const r = artIndemnizacionTablaIncapacidadPermanente({
+    sueldoBrutoMensual: INIT_VIB,
+    edadTrabajador: INIT_EDAD,
+    porcentajeIncapacidad: b.porc,
+  });
+  return { ...b, base: r.indemnizacionBaseLRT, adic: r.adicional20Ley26773, total: r.indemnizacionUnica };
+});
+
+// Piso mínimo vigente de la Resolución SRT 15/2026 (mar–ago 2026). NO está en el
+// motor: la calc informa la fórmula y el usuario compara contra el piso vigente.
+const PISO_SRT = 97_502_420;
+
+const sources = (calc.sources || []).slice(0, 3);
+const faq = calc.faq || [];
+const explanationHtml = calc.explanation ? md(calc.explanation) : '';
+---
+
+<div
+  class="cf-page art"
+  data-domain="health"
+  data-coef={COEF}
+  data-edad-base={EDAD_BASE}
+>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/sueldos-y-trabajo">Sueldos y trabajo</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Indemnización ART</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">⚖️</span> Ley 24.557 · Riesgos del trabajo 2026</p>
+      <h1 class="cf-h1">Calculadora de <span class="cf-yr">indemnización ART por incapacidad</span></h1>
+      <p class="cf-sub">Estimá la indemnización del Art. 14 LRT según tu ingreso base, tu edad y el porcentaje de incapacidad que dictaminó la Comisión Médica.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">🏥</span> Accidente laboral</span>
+      <div class="art-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="art-deco-val">{mill(init.indemnizacionUnica)}</div>
+          <div class="cf-deco-card__note">Indemnización única estimada</div>
+        </div>
+        <span class="cf-deco-badge art-badge">LRT</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Factor edad</strong> <span class="cf-deco-chip" id="art-deco-factor">65 / {INIT_EDAD}</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">Datos del siniestro</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="art-vib">Ingreso base mensual (VIB)</label><span class="cf-hint">Promedio 12 meses</span></div>
+        <div class="art-money"><span class="art-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="art-vib" value="1.500.000" /></div>
+        <p class="cf-help">Promedio de las remuneraciones devengadas en los 12 meses anteriores al siniestro (Ley 27.348), no el sueldo del último mes.</p>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="art-edad">Edad al siniestro</label><span class="cf-hint">16 a 75</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="numeric" id="art-edad" min="16" max="75" step="1" value="38" />
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="art-porc">Incapacidad</label><span class="cf-hint">Baremo 659/96</span></div>
+          <input class="cf-input cf-input--money" type="number" inputmode="numeric" id="art-porc" min="1" max="100" step="1" value="25" />
+        </div>
+      </div>
+      <p class="cf-help">El porcentaje lo dictamina la <strong>Comisión Médica Jurisdiccional</strong> según el baremo del Decreto 659/96 (Anexo I sustituido por el Decreto 549/2025, vigente feb-2026).</p>
+
+      <button class="cf-primary" id="art-calc-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Baremo:</span>
+        <button class="cf-sc" type="button" data-porc="14">Índice 14%</button>
+        <button class="cf-sc" type="button" data-porc="25">Columna 25%</button>
+        <button class="cf-sc" type="button" data-porc="42">Un ojo 42%</button>
+        <button class="cf-sc" type="button" data-porc="65">Mano 65%</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="art-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="art-big">{fmt(init.indemnizacionUnica)}</div>
+      <div class="cf-result__biglabel">Indemnización única (con el 20% de la Ley 26.773)</div>
+      <p class="cf-result__sub" id="art-sub">{init.categoriaIncapacidad}</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="art-t-base">{fmt(init.indemnizacionBaseLRT)}</div><div class="cf-tile__label">Base Art. 14 LRT</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="art-t-adic">{fmt(init.adicional20Ley26773)}</div><div class="cf-tile__label">Adicional 20% Ley 26.773</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="art-t-factor">{(EDAD_BASE / INIT_EDAD).toFixed(4)}</div><div class="cf-tile__label">Factor edad (65 / edad)</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="art-t-cat">{categoriaCorta(INIT_PORC)}</div><div class="cf-tile__label">Categoría Art. 8° LRT</div></div>
+      </div>
+      <div class="cf-result__formula" id="art-formula">53 × {fmt(INIT_VIB)} × (65/{INIT_EDAD}) × {INIT_PORC}% × 1,20 = {fmt(init.indemnizacionUnica)}</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="art-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="art-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt" id="art-quick"><strong>Respuesta rápida.</strong> Con un VIB de {fmt(INIT_VIB)}, {INIT_EDAD} años y {INIT_PORC}% de incapacidad, la indemnización estimada es <strong>{fmt(init.indemnizacionUnica)}</strong> ({fmt(init.indemnizacionBaseLRT)} de base más {fmt(init.adicional20Ley26773)} del adicional del 20%).</p>
+    <span class="cf-formula">53 × VIB × 65/edad × %</span>
+  </div>
+
+  <!-- Datos clave -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">📐</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Coeficiente legal</p>
+        <div class="cf-minicard__big">53</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Fijo en el Art. 14 inc. 2 a) de la Ley 24.557. No varía.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🎂</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Factor etario</p>
+        <div class="cf-minicard__big">65 / edad</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">A menor edad, más años de proyección laboral perdidos y mayor monto.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">➕</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Adicional Ley 26.773</p>
+        <div class="cf-minicard__big">20%</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Pago único. No corresponde si el accidente fue <em>in itinere</em>.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🛡️</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Piso SRT vigente</p>
+        <div class="cf-minicard__big">{mill(PISO_SRT)}</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Res. SRT 15/2026 (mar–ago 2026). Si la fórmula da menos, se aplica el piso.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cómo leer el resultado -->
+  <section class="cf-section">
+    <div class="art-2col">
+      <div class="art-hl">
+        <p class="cf-side-eyebrow">Cómo leer el resultado</p>
+        <p class="art-hl__title">La edad pesa tanto como el porcentaje</p>
+        <p class="art-hl__desc">El factor 65/edad multiplica todo el cálculo: a los 28 años vale 2,32 y a los 55 años, 1,18. El mismo porcentaje de incapacidad puede valer el doble según cuándo ocurrió el siniestro.</p>
+        <div class="art-hl__big" id="art-hl-big">{(EDAD_BASE / INIT_EDAD).toFixed(4)}</div>
+        <p class="art-hl__desc">Factor edad del caso cargado (65 / <span id="art-hl-edad">{INIT_EDAD}</span>)</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-brow">
+          <span class="cf-brow__lbl">Base Art. 14 LRT</span>
+          <span class="cf-brow__val" id="art-b-base">{fmt(init.indemnizacionBaseLRT)}</span>
+          <span class="cf-brow__bar"><span id="art-b-base-bar" style="width:83.33%"></span></span>
+        </div>
+        <p class="art-note">53 × VIB × (65/edad) × % de incapacidad</p>
+        <div class="cf-brow" style="margin-top:1rem">
+          <span class="cf-brow__lbl">Adicional 20% (Ley 26.773)</span>
+          <span class="cf-brow__val" id="art-b-adic">{fmt(init.adicional20Ley26773)}</span>
+          <span class="cf-brow__bar"><span class="art-bar--alt" id="art-b-adic-bar" style="width:16.67%"></span></span>
+        </div>
+        <p class="art-note">Concepto de pago único, salvo accidente <em>in itinere</em></p>
+        <div class="cf-brow" style="margin-top:1rem">
+          <span class="cf-brow__lbl">Total a percibir</span>
+          <span class="cf-brow__val" id="art-b-total">{fmt(init.indemnizacionUnica)}</span>
+          <span class="cf-brow__bar"><span style="width:100%"></span></span>
+        </div>
+        <p class="art-note">Antes de comparar contra el piso mínimo de la SRT</p>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1.25rem">
+          <span class="cf-callout__ico" aria-hidden="true">⚠️</span>
+          <p>Si el accidente fue <strong><em>in itinere</em></strong> (camino al trabajo), el 20% <strong>no corresponde</strong>: el total sería <span id="art-sin20">{fmt(init.indemnizacionBaseLRT)}</span>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Paso a paso -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">El VIB (promedio de los últimos 12 meses), tu edad al siniestro y el porcentaje del dictamen médico.</p>
+        <p class="art-chip" id="art-s1">{fmt(INIT_VIB)} · {INIT_EDAD} años · {INIT_PORC}%</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">53 × VIB × (65/edad) × % de incapacidad, y encima el adicional del 20% de la Ley 26.773.</p>
+        <p class="art-chip" id="art-s2">53 × {fmt(INIT_VIB)} × {(EDAD_BASE / INIT_EDAD).toFixed(4)} × 0,25 = {fmt(init.indemnizacionBaseLRT)}</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">Compará el total contra el piso mínimo de la Resolución SRT vigente: si da menos, cobrás el piso.</p>
+        <p class="art-chip" id="art-s3">{fmt(init.indemnizacionBaseLRT)} × 1,20 = {fmt(init.indemnizacionUnica)}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Referencias -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>% de incapacidad (baremo)</th><th>Base Art. 14 LRT</th><th>Adicional 20%</th><th>Total estimado</th></tr></thead>
+        <tbody id="art-tbody">
+          {refRows.map((r) => (
+            <tr>
+              <td>{r.label}</td>
+              <td>{fmt(r.base)}</td>
+              <td>{fmt(r.adic)}</td>
+              <td class="cf-td-em">{fmt(r.total)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="art-note" style="margin-top:0.6rem" id="art-tbl-note">Calculado con el VIB ({fmt(INIT_VIB)}) y la edad ({INIT_EDAD} años) que cargaste arriba. Los porcentajes son ejemplos del baremo: el tuyo lo define la Comisión Médica.</p>
+  </section>
+</div>
+
+<!-- Banda: atención + referencia principal -->
+<div class="cf-band cf-band--warm" data-domain="health">
+  <div class="cf-band__inner">
+    <div class="art-2col">
+      <div class="art-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="art-card__title">El porcentaje no lo elegís vos</h2>
+        <p class="cf-side-desc">El grado de incapacidad lo dictamina la <strong>Comisión Médica Jurisdiccional</strong> según el baremo oficial, ponderando la patología, las secuelas funcionales, la edad, la profesión y el estado preexistente. Desde la Ley 27.348 es obligatorio agotar la vía administrativa ante las Comisiones Médicas antes de iniciar acción judicial.</p>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1rem">
+          <span class="cf-callout__ico" aria-hidden="true">⚖️</span>
+          <p>Estimación orientativa: <strong>no es asesoramiento legal</strong>. El monto definitivo depende del dictamen, del piso SRT vigente al pago y de la actualización por RIPTE. Consultá con un abogado laboralista o con la Comisión Médica antes de aceptar una liquidación.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="art-src__title">Piso mínimo vigente</p>
+        <div class="art-hl__big" style="margin-top:0.2rem">{fmt(PISO_SRT)}</div>
+        <p class="cf-side-desc">Resolución SRT 15/2026, vigente del 1 de marzo al 31 de agosto de 2026 para la indemnización por ILP del Art. 14 inc. 2 a) y b).</p>
+        <div class="art-chips">
+          <span class="art-tag">Ley 24.557</span>
+          <span class="art-tag">Ley 26.773</span>
+          <span class="art-tag">Decreto 659/96</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page art" data-domain="health">
+  {faq.length > 0 && (
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {explanationHtml && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">En detalle</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Incapacidad permanente, baremo y Comisión Médica</h2>
+      <div class="cf-prose" set:html={explanationHtml} />
+    </section>
+  )}
+</div>
+
+<!-- Banda: fuentes y metodología -->
+<div class="cf-band" data-domain="health">
+  <div class="cf-band__inner">
+    <div class="art-2col">
+      <div>
+        <p class="cf-eyebrow">Fuentes y metodología</p>
+        <h2 class="art-card__title" style="color:var(--text)">Números que podés defender</h2>
+        <p class="cf-side-desc">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026.</p>
+        <p class="cf-side-desc" style="margin-top:0.7rem">El coeficiente 53 y el factor 65/edad están en la ley y no varían. Los pisos mínimos los actualiza la SRT por resolución semestral: la calculadora aplica la fórmula del Art. 14 y te deja comparar contra el piso vigente.</p>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Fuentes oficiales</p>
+        <p class="art-src__title">Marco legal</p>
+        <div class="art-src">
+          {sources.map((s: any) => (
+            <div class="art-src__item">
+              <strong>{s.name}</strong>
+              <span>{s.publisher}</span>
+            </div>
+          ))}
+        </div>
+        <p class="art-src__foot">● Información revisada en julio de 2026</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page art" data-domain="health">
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🧮'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('—')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="art-share2">Copiar enlace</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.art');
+    if (!root) return;
+    const COEF = Number(root.getAttribute('data-coef'));
+    const EDAD_BASE = Number(root.getAttribute('data-edad-base'));
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n) => '$' + Math.round(n).toLocaleString('es-AR');
+    const mill = (n) => '$' + (n / 1e6).toLocaleString('es-AR', { maximumFractionDigits: 1 }) + ' M';
+    const vibEl = $('art-vib'), edadEl = $('art-edad'), porcEl = $('art-porc');
+
+    function rawVib() { return Number((vibEl.value || '').replace(/\D/g, '')) || 0; }
+    function fmtThousands(v) { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('es-AR') : ''; }
+
+    // Réplica exacta del motor (art-indemnizacion-tabla-incapacidad-permanente.ts),
+    // incluidos los clamps de edad (16-75) y porcentaje (1-100).
+    function indem(sueldo, edadRaw, porcRaw) {
+      const edad = Math.max(16, Math.min(75, Number(edadRaw) || 0));
+      const porc = Math.max(1, Math.min(100, Number(porcRaw) || 0));
+      const factor = EDAD_BASE / edad;
+      const base = COEF * sueldo * factor * (porc / 100);
+      const adic = base * 0.2;
+      return { edad, porc, factor, base, adic, total: base + adic };
+    }
+    function categoriaLarga(porc) {
+      return porc >= 66 ? 'Incapacidad TOTAL (≥66%) — Art. 8° inc. 3 LRT'
+        : porc >= 50 ? 'Incapacidad PARCIAL con derecho a prestaciones (50-65%) — Art. 14 inc. 2 b'
+        : 'Incapacidad PARCIAL (<50%) — indemnización única Art. 14 inc. 2 a';
+    }
+    function categoriaCorta(porc) {
+      return porc >= 66 ? 'Total (≥66%)' : porc >= 50 ? 'Parcial 50-65%' : 'Parcial (<50%)';
+    }
+
+    const BAREMO = [
+      [10, '10% — hernia discal leve'],
+      [15, '15% — hernia discal con limitación'],
+      [25, '25% — limitación de columna lumbar'],
+      [42, '42% — pérdida de visión de un ojo'],
+      [65, '65% — amputación de mano dominante'],
+      [100, '100% — incapacidad total'],
+    ];
+
+    function render() {
+      const vib = rawVib();
+      const r = indem(vib, edadEl.value, porcEl.value);
+
+      $('art-big').textContent = fmt(r.total);
+      $('art-sub').textContent = categoriaLarga(r.porc);
+      $('art-t-base').textContent = fmt(r.base);
+      $('art-t-adic').textContent = fmt(r.adic);
+      $('art-t-factor').textContent = r.factor.toFixed(4);
+      $('art-t-cat').textContent = categoriaCorta(r.porc);
+      $('art-formula').textContent = '53 × ' + fmt(vib) + ' × (65/' + r.edad + ') × ' + r.porc + '% × 1,20 = ' + fmt(r.total);
+
+      $('art-deco-val').textContent = mill(r.total);
+      $('art-deco-factor').textContent = '65 / ' + r.edad;
+
+      $('art-quick').innerHTML = '<strong>Respuesta rápida.</strong> Con un VIB de ' + fmt(vib) + ', ' + r.edad +
+        ' años y ' + r.porc + '% de incapacidad, la indemnización estimada es <strong>' + fmt(r.total) +
+        '</strong> (' + fmt(r.base) + ' de base más ' + fmt(r.adic) + ' del adicional del 20%).';
+
+      $('art-hl-big').textContent = r.factor.toFixed(4);
+      $('art-hl-edad').textContent = r.edad;
+      $('art-b-base').textContent = fmt(r.base);
+      $('art-b-adic').textContent = fmt(r.adic);
+      $('art-b-total').textContent = fmt(r.total);
+      $('art-b-base-bar').style.width = '83.33%';
+      $('art-b-adic-bar').style.width = '16.67%';
+      $('art-sin20').textContent = fmt(r.base);
+
+      $('art-s1').textContent = fmt(vib) + ' · ' + r.edad + ' años · ' + r.porc + '%';
+      $('art-s2').textContent = '53 × ' + fmt(vib) + ' × ' + r.factor.toFixed(4) + ' × ' +
+        String(r.porc / 100).replace('.', ',') + ' = ' + fmt(r.base);
+      $('art-s3').textContent = fmt(r.base) + ' × 1,20 = ' + fmt(r.total);
+
+      $('art-tbody').innerHTML = BAREMO.map(function (b) {
+        const x = indem(vib, edadEl.value, b[0]);
+        return '<tr><td>' + b[1] + '</td><td>' + fmt(x.base) + '</td><td>' + fmt(x.adic) +
+          '</td><td class="cf-td-em">' + fmt(x.total) + '</td></tr>';
+      }).join('');
+      $('art-tbl-note').textContent = 'Calculado con el VIB (' + fmt(vib) + ') y la edad (' + r.edad +
+        ' años) que cargaste arriba. Los porcentajes son ejemplos del baremo: el tuyo lo define la Comisión Médica.';
+    }
+
+    vibEl.addEventListener('input', () => { vibEl.value = fmtThousands(vibEl.value); render(); });
+    edadEl.addEventListener('input', render);
+    porcEl.addEventListener('input', render);
+    $('art-calc-btn').addEventListener('click', render);
+    document.querySelectorAll('[data-porc]').forEach((b) => b.addEventListener('click', () => {
+      porcEl.value = b.getAttribute('data-porc'); render();
+    }));
+
+    function summary() {
+      const vib = rawVib(); const r = indem(vib, edadEl.value, porcEl.value);
+      return 'Indemnización ART (Art. 14 Ley 24.557) con VIB ' + fmt(vib) + ', ' + r.edad + ' años y ' +
+        r.porc + '% de incapacidad: ' + fmt(r.total) + ' (base ' + fmt(r.base) + ' + 20% Ley 26.773 ' +
+        fmt(r.adic) + '). — hacecuentas.com';
+    }
+    function shareUrl() { return location.origin + location.pathname + '?vib=' + rawVib() + '&edad=' + edadEl.value + '&porc=' + porcEl.value; }
+    function copy(t, btn) { navigator.clipboard?.writeText(t).then(() => { const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => btn.innerHTML = o, 1500); }); }
+    $('art-copy').addEventListener('click', (e) => copy(summary(), e.currentTarget));
+    $('art-detail').addEventListener('click', () => { document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' }); });
+    const s2 = $('art-share2'); if (s2) s2.addEventListener('click', (e) => copy(shareUrl(), e.currentTarget));
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('vib')) vibEl.value = fmtThousands(q.get('vib'));
+    if (q.get('edad')) edadEl.value = q.get('edad');
+    if (q.get('porc')) porcEl.value = q.get('porc');
+    render();
+  })();
+</script>
+
+<style>
+  /* El badge vive fuera de .cf-deco-card porque la card tiene overflow:hidden */
+  .art .art-deco-wrap { position: relative; }
+  .art .art-badge { top: 50%; right: -16px; transform: translateY(-50%); width: 48px; height: 48px; font-size: 0.78rem; letter-spacing: 0.02em; }
+
+  .art .art-money { position: relative; display: flex; align-items: center; }
+  .art .art-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
+  .art .art-money .cf-input { padding-left: 1.7rem; }
+
+  .art-2col, .cf-band .art-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .art-2col, .cf-band .art-2col { grid-template-columns: 0.85fr 1.15fr; } }
+
+  .art .art-hl { padding: 1.5rem 1.6rem; border-radius: var(--radius-lg); color: #fff; background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%); }
+  .art .art-hl .cf-side-eyebrow { color: rgba(255,255,255,0.75); }
+  .art .art-hl__title { font-size: 1.35rem; font-weight: 800; margin: 0 0 0.5rem; line-height: 1.2; letter-spacing: -0.015em; }
+  .art .art-hl__desc { font-size: 0.82rem; color: rgba(255,255,255,0.82); line-height: 1.5; margin: 0; }
+  .art .art-hl__big { font-size: 1.9rem; font-weight: 800; margin: 1.1rem 0 0.15rem; font-variant-numeric: tabular-nums; }
+  .art .art-bar--alt { background: linear-gradient(90deg, #f59e0b, #fb923c) !important; }
+  .art .art-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.15rem 0 0; }
+  .art .art-chip { margin: 0.7rem 0 0; padding: 0.4rem 0.6rem; border-radius: var(--radius-sm); background: var(--bg-soft); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.68rem; color: var(--accent-strong); overflow-x: auto; white-space: nowrap; }
+
+  .cf-band .art-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .art-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .art-hl__big { font-size: 1.9rem; font-weight: 800; color: #fff; margin: 0.2rem 0 0.4rem; font-variant-numeric: tabular-nums; }
+  .cf-band .art-src__title { font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 0.9rem; }
+  .cf-band .art-src { display: grid; gap: 0.5rem; }
+  .cf-band .art-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .art-src__item strong { display: block; font-size: 0.8rem; font-weight: 700; color: #fff; line-height: 1.35; }
+  .cf-band .art-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .art-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+  .cf-band .art-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.9rem; }
+  .cf-band .art-tag { padding: 0.25rem 0.6rem; border-radius: 999px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); font-size: 0.7rem; font-weight: 700; color: #e7ecf3; }
+</style>

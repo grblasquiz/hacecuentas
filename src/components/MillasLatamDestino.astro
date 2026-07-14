@@ -1,0 +1,585 @@
+---
+// Flagship redesign de la calc "millas LATAM Pass por destino" (mockup Martin).
+// Los números salen del motor real (src/lib/formulas/millas-latam-destino.ts):
+// tabla DEST_MILES [economy-ida, economy-i/v, business-i/v], referencia editorial
+// 1,2¢ USD por milla y tasas default USD 190. Domain "health" (rosa coral) por el
+// mockup, no por la categoría (viajes→life/cian). Header/footer = los globales.
+//
+// OJO: esta calc NO es la de Avianca LifeMiles (MillasLifeMiles.astro, ref 1,6¢).
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { millasLatamDestino } from '../lib/formulas/millas-latam-destino';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Espejo de las constantes del motor (el script is:inline no puede importar).
+// Verificado contra src/lib/formulas/millas-latam-destino.ts y el referenceTables del JSON.
+const DEST: Record<string, { label: string; flag: string; iata: string; m: [number, number, number] }> = {
+  'buenos-aires': { label: 'Buenos Aires', flag: '🇦🇷', iata: 'EZE', m: [7000, 14000, 30000] },
+  santiago: { label: 'Santiago', flag: '🇨🇱', iata: 'SCL', m: [7000, 14000, 30000] },
+  miami: { label: 'Miami', flag: '🇺🇸', iata: 'MIA', m: [25000, 50000, 85000] },
+  madrid: { label: 'Madrid', flag: '🇪🇸', iata: 'MAD', m: [45000, 90000, 150000] },
+  londres: { label: 'Londres', flag: '🇬🇧', iata: 'LHR', m: [55000, 110000, 170000] },
+  sydney: { label: 'Sydney', flag: '🇦🇺', iata: 'SYD', m: [60000, 120000, 180000] },
+};
+const REF_CENT = 1.2;      // REF_CENT_POR_MILLA del motor (referencia editorial)
+const TASAS_DEFAULT = 190; // TASAS_DEFAULT_USD del motor
+
+const nMil = (n: number) => n.toLocaleString('es-AR');
+const usd = (n: number) => 'USD ' + Math.round(n).toLocaleString('es-AR');
+const cent = (n: number) => n.toFixed(2).replace('.', ',') + '¢';
+
+// Millas por destino/cabina/viaje — misma rama que el motor.
+const millasDe = (destino: string, cabina: string, viaje: string) => {
+  const a = DEST[destino].m;
+  return cabina === 'business' ? a[2] : viaje === 'ida-vuelta' ? a[1] : a[0];
+};
+// Derivados del canje (cpm y veredicto los calcula el motor; acá replicamos para la UI).
+function canje(destino: string, cabina: string, viaje: string, cash: number, tasas = TASAS_DEFAULT) {
+  const millas = millasDe(destino, cabina, viaje);
+  const valorRef = (millas * REF_CENT) / 100;
+  const costoCanje = valorRef + tasas;
+  const neto = cash - tasas;
+  const cpm = cash > 0 && millas > 0 ? (neto / millas) * 100 : 0;
+  return { millas, valorRef, costoCanje, neto, cpm, ahorro: cash - costoCanje, conviene: neto > 0 && cpm >= REF_CENT };
+}
+
+const INIT = { destino: 'miami', cabina: 'economy', viaje: 'ida-vuelta', cash: 900 };
+const init = canje(INIT.destino, INIT.cabina, INIT.viaje, INIT.cash);
+
+// Tabla de referencia — computada con el MOTOR REAL, un destino por fila.
+const refRows = Object.entries(DEST).map(([k, v]) => {
+  const eIda = millasLatamDestino({ destino: k, cabina: 'economy', tipoViaje: 'ida' });
+  const eIV = millasLatamDestino({ destino: k, cabina: 'economy', tipoViaje: 'ida-vuelta' });
+  const bIV = millasLatamDestino({ destino: k, cabina: 'business', tipoViaje: 'ida-vuelta' });
+  return { ...v, cod: k, eIda: eIda.millasRequeridas, eIV: eIV.millasRequeridas, bIV: bIV.millasRequeridas, valorBiv: bIV.valorEstimadoUsd };
+});
+
+const faq = calc.faq || [];
+const sources = (calc.sources || []) as { name: string; url?: string }[];
+const explanationHtml = calc.explanation ? md(calc.explanation) : '';
+---
+
+<div
+  class="cf-page ml"
+  data-domain="health"
+  data-dest={JSON.stringify(Object.fromEntries(Object.entries(DEST).map(([k, v]) => [k, { l: v.label, f: v.flag, i: v.iata, m: v.m }])))}
+  data-ref={REF_CENT}
+  data-tasas={TASAS_DEFAULT}
+>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/categoria/viajes">Viajes</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Millas LATAM Pass</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">✈️</span> LATAM Pass · Canjes 2026</p>
+      <h1 class="cf-h1">¿Cuántas millas LATAM necesitás para <span class="cf-yr">tu destino</span>?</h1>
+      <p class="cf-sub">Mirá el canje por destino y cabina, compará contra el precio en efectivo y descubrí si te conviene usar las millas.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">💳</span> Referencia {cent(REF_CENT)} por milla</span>
+      <div class="ml-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="ml-deco-val">{nMil(init.millas)}</div>
+          <div class="cf-deco-card__note" id="ml-deco-note">millas · Miami economy ida y vuelta</div>
+        </div>
+        <span class="cf-deco-badge ml-badge">LP</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Valor del canje</strong> <span class="cf-deco-chip" id="ml-deco-chip">{usd(init.valorRef)}</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">Armá tu canje</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="ml-destino">Destino</label><span class="cf-hint" id="ml-iata">MIA</span></div>
+        <select class="cf-input" id="ml-destino">
+          {Object.entries(DEST).map(([k, v]) => (
+            <option value={k} selected={k === INIT.destino}>{v.flag} {v.label}</option>
+          ))}
+        </select>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><span class="cf-label">Cabina</span></div>
+          <div class="cf-seg ml-seg" role="group" aria-label="Cabina">
+            <button type="button" data-cab="economy" aria-pressed="true">Economy</button>
+            <button type="button" data-cab="business" aria-pressed="false">Business</button>
+          </div>
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><span class="cf-label">Tipo de viaje</span></div>
+          <div class="cf-seg ml-seg" role="group" aria-label="Tipo de viaje">
+            <button type="button" data-viaje="ida" aria-pressed="false">Solo ida</button>
+            <button type="button" data-viaje="ida-vuelta" aria-pressed="true">Ida y vuelta</button>
+          </div>
+        </div>
+      </div>
+      <p class="cf-help" id="ml-viaje-help" hidden>En business, la tabla de referencia cotiza el mismo canje para ida y para ida y vuelta.</p>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="ml-cash">Precio del pasaje en efectivo</label><span class="cf-hint">Opcional</span></div>
+        <div class="ml-money"><span class="ml-money__sign">USD</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="ml-cash" value={nMil(INIT.cash)} /></div>
+        <p class="cf-help">El mismo vuelo pagando con tarjeta. Con eso calculamos cuánto te rinde cada milla.</p>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="ml-tasas">Impuestos y tasas del canje</label><span class="cf-hint">Se pagan en plata</span></div>
+        <div class="ml-money"><span class="ml-money__sign">USD</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="ml-tasas" value={nMil(TASAS_DEFAULT)} /></div>
+      </div>
+
+      <button class="cf-primary" id="ml-calc-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Ejemplos:</span>
+        <button class="cf-sc" type="button" data-ej="miami|economy|ida-vuelta|900">Miami economy</button>
+        <button class="cf-sc" type="button" data-ej="madrid|business|ida-vuelta|3800">Madrid business</button>
+        <button class="cf-sc" type="button" data-ej="buenos-aires|economy|ida-vuelta|350">Buenos Aires</button>
+        <button class="cf-sc" type="button" data-ej="sydney|economy|ida-vuelta|1800">Sydney</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="ml-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="ml-big">{nMil(init.millas)}</div>
+      <p class="cf-result__sub" id="ml-sub">millas LATAM Pass + {usd(TASAS_DEFAULT)} de impuestos y tasas</p>
+      <p class="ml-verdict" id="ml-verdict" data-ok={init.conviene ? '1' : '0'}>{init.conviene ? '✓ Conviene canjear' : '✕ Conviene pagar en efectivo'}</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="ml-t-cpm">{cent(init.cpm)}</div><div class="cf-tile__label">Te rinde por milla</div></div>
+        <div class="cf-tile"><div class="cf-tile__value">{cent(REF_CENT)}</div><div class="cf-tile__label">Referencia del programa</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="ml-t-valor">{usd(init.valorRef)}</div><div class="cf-tile__label">Valor del canje</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="ml-t-ahorro">{usd(init.ahorro)}</div><div class="cf-tile__label">Ahorro estimado</div></div>
+      </div>
+      <div class="cf-compose">
+        <div class="cf-compose__lbl">Canje vs. efectivo</div>
+        <div class="cf-bar"><span class="cf-bar__fill" id="ml-bar" style={`width:${Math.round((init.costoCanje / INIT.cash) * 100)}%`}></span><span class="cf-bar__fill cf-bar__fill--muted" style={`width:${100 - Math.round((init.costoCanje / INIT.cash) * 100)}%`}></span></div>
+        <div class="cf-bar__ends"><span id="ml-bar-a">Canje: millas + tasas {usd(init.costoCanje)}</span><span id="ml-bar-b">Pago en efectivo {usd(INIT.cash)}</span></div>
+      </div>
+      <div class="cf-result__formula" id="ml-formula">({usd(INIT.cash)} − {usd(TASAS_DEFAULT)}) ÷ {nMil(init.millas)} = {cent(init.cpm)} por milla</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="ml-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="ml-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt"><strong>Respuesta rápida.</strong> Miami en economy ida y vuelta sale <strong>{nMil(init.millas)} millas</strong> más {usd(TASAS_DEFAULT)} de tasas: cada milla te rinde <strong>{cent(init.cpm)}</strong>.</p>
+    <span class="cf-formula">canje ≥ {cent(REF_CENT)} = conviene</span>
+  </div>
+
+  <!-- Datos clave -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">💳</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Vale una milla</p>
+        <div class="cf-minicard__big">{cent(REF_CENT)}</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Referencia editorial en dólares. Es el umbral del veredicto.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🌎</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Canje regional</p>
+        <div class="cf-minicard__big">{nMil(DEST['buenos-aires'].m[1])}</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Millas para economy ida y vuelta dentro de la región.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">✈️</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Larga distancia</p>
+        <div class="cf-minicard__big">{nMil(DEST.sydney.m[1])}</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Economy ida y vuelta al destino más lejano de la tabla.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🧾</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Tasas típicas</p>
+        <div class="cf-minicard__big">{usd(TASAS_DEFAULT)}</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Se pagan en plata aunque canjees. Cambian según la ruta.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cómo leer el resultado -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Cómo leer el resultado</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Todo depende de cuánto te rinde la milla</h2>
+    <div class="ml-2col">
+      <div class="ml-hl">
+        <p class="cf-side-eyebrow">Umbral de decisión</p>
+        <p class="ml-hl__title">Si superás la referencia, canjeá</p>
+        <p class="ml-hl__desc">Dividimos lo que evitás pagar en efectivo (precio − tasas) por las millas que entregás. Si el resultado supera la referencia, el canje rinde.</p>
+        <div class="ml-hl__big">{cent(REF_CENT)}</div>
+        <p class="ml-hl__desc">Valor de referencia por milla</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-brow">
+          <span class="cf-brow__lbl">Canje flojo</span>
+          <span class="cf-brow__val">menos de {cent(REF_CENT)}</span>
+          <span class="cf-brow__bar"><span class="ml-bar--bad" style="width:30%"></span></span>
+        </div>
+        <p class="ml-note">Suele convenir pagar en efectivo y guardar las millas.</p>
+        <div class="cf-brow" style="margin-top:0.9rem">
+          <span class="cf-brow__lbl">Canje razonable</span>
+          <span class="cf-brow__val">{cent(REF_CENT)} a 2,5¢</span>
+          <span class="cf-brow__bar"><span class="ml-bar--mid" style="width:60%"></span></span>
+        </div>
+        <p class="ml-note">Estás en el rango esperado del programa.</p>
+        <div class="cf-brow" style="margin-top:0.9rem">
+          <span class="cf-brow__lbl">Sweet spot</span>
+          <span class="cf-brow__val">más de 3¢</span>
+          <span class="cf-brow__bar"><span style="width:100%"></span></span>
+        </div>
+        <p class="ml-note">Típico de business en vuelos largos, donde el pasaje cash se dispara.</p>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1.25rem">
+          <span class="cf-callout__ico" aria-hidden="true">⚠️</span>
+          <p>Las tasas se pagan igual: si el pasaje en efectivo cuesta menos que las tasas del canje, canjear nunca conviene.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Paso a paso -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">Elegís destino, cabina y tipo de viaje, y opcionalmente el precio del pasaje en efectivo.</p>
+        <span class="ml-chip" id="ml-step1">Miami · economy · ida y vuelta</span>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">Buscamos las millas del canje y calculamos cuánto rinde cada una contra el precio cash.</p>
+        <span class="ml-chip" id="ml-step2">({usd(INIT.cash)} − {usd(TASAS_DEFAULT)}) ÷ {nMil(init.millas)}</span>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">Te mostramos las millas, lo que rinde cada una y si conviene canjear o pagar.</p>
+        <span class="ml-chip" id="ml-step3">{nMil(init.millas)} millas · {cent(init.cpm)}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Referencias -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Destino</th><th>Economy ida</th><th>Economy ida y vuelta</th><th>Business ida y vuelta</th></tr></thead>
+        <tbody>
+          {refRows.map((r) => (
+            <tr>
+              <td><span aria-hidden="true">{r.flag}</span> {r.label} · {r.iata}</td>
+              <td>{nMil(r.eIda)}</td>
+              <td>{nMil(r.eIV)}</td>
+              <td class="cf-td-em">{nMil(r.bIV)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="ml-note" style="margin-top:0.6rem">Millas del programa LATAM Pass (referencia 2026). La emisión es dinámica: estos valores son el piso.</p>
+  </section>
+</div>
+
+<!-- Banda: impuestos y tasas -->
+<div class="cf-band cf-band--warm" data-domain="health">
+  <div class="cf-band__inner">
+    <div class="ml-2col">
+      <div class="ml-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="ml-card__title">Las millas no cubren los impuestos</h2>
+        <p class="cf-side-desc">Aunque canjees el pasaje entero, las tasas de aeropuerto y los fees se pagan en efectivo. En rutas baratas pueden representar casi todo el precio del vuelo, y ahí el canje deja de tener sentido.</p>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1rem">
+          <span class="cf-callout__ico" aria-hidden="true">💡</span>
+          <p>Antes de confirmar, sumá millas + tasas y compará contra el precio final del pasaje pagado en efectivo.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="ml-src__title">Valor de la milla</p>
+        <div class="ml-hl__big" style="margin-top:0.2rem">{cent(REF_CENT)}</div>
+        <p class="cf-side-desc">Referencia editorial en dólares por milla LATAM Pass. No es un valor oficial del programa.</p>
+        <div class="ml-chips">
+          <span class="ml-chip ml-chip--dark">Tasas típicas {usd(TASAS_DEFAULT)}</span>
+          <span class="ml-chip ml-chip--dark">Regional {nMil(DEST['buenos-aires'].m[1])} millas</span>
+          <span class="ml-chip ml-chip--dark">Business Madrid {nMil(DEST.madrid.m[2])}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page ml" data-domain="health">
+  {faq.length > 0 && (
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {explanationHtml && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">En detalle</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cómo funcionan las millas LATAM Pass</h2>
+      <div class="cf-prose" set:html={explanationHtml} />
+    </section>
+  )}
+</div>
+
+<!-- Banda: fuentes y metodología -->
+<div class="cf-band" data-domain="health">
+  <div class="cf-band__inner">
+    <div class="ml-2col">
+      <div class="ml-card">
+        <p class="cf-eyebrow">Fuentes y metodología</p>
+        <h2 class="ml-card__title">Números que podés defender</h2>
+        <p class="cf-side-desc">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026. Los canjes son valores de referencia, no tarifas garantizadas: dependen de disponibilidad, ruta y fecha.</p>
+        <p class="ml-formula-note">valor por milla = (precio cash − tasas del canje) ÷ millas requeridas × 100</p>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Fuentes</p>
+        <p class="ml-src__title">Datos contrastados</p>
+        <div class="ml-src">
+          {sources.slice(0, 3).map((s) => (
+            <div class="ml-src__item"><strong>{String(s.name).split(' - ')[0].split('—')[0].trim()}</strong><span>{String(s.name).includes(' - ') ? String(s.name).split(' - ').slice(1).join(' - ').trim() : 'Programa, reglas y condiciones'}</span></div>
+          ))}
+        </div>
+        <p class="ml-src__foot">● Información revisada en julio de 2026</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page ml" data-domain="health">
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '✈️'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('—')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="ml-share2">Guardar canje</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.ml');
+    if (!root) return;
+    const DEST = JSON.parse(root.getAttribute('data-dest'));
+    const REF = Number(root.getAttribute('data-ref'));
+    const TASAS_DEF = Number(root.getAttribute('data-tasas'));
+    const $ = (id) => document.getElementById(id);
+    const nMil = (n) => Number(n).toLocaleString('es-AR');
+    const usd = (n) => 'USD ' + Math.round(n).toLocaleString('es-AR');
+    const cent = (n) => n.toFixed(2).replace('.', ',') + '¢';
+    let cabina = 'economy', viaje = 'ida-vuelta';
+    const destEl = $('ml-destino'), cashEl = $('ml-cash'), tasasEl = $('ml-tasas');
+
+    const numOf = (el) => Number((el.value || '').replace(/\D/g, '')) || 0;
+    const fmtTh = (v) => { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('es-AR') : ''; };
+
+    function calc() {
+      const d = DEST[destEl.value];
+      const millas = cabina === 'business' ? d.m[2] : viaje === 'ida-vuelta' ? d.m[1] : d.m[0];
+      const cash = numOf(cashEl);
+      const tasas = tasasEl.value.trim() === '' ? TASAS_DEF : numOf(tasasEl);
+      const valorRef = (millas * REF) / 100;
+      const costoCanje = valorRef + tasas;
+      const neto = cash - tasas;
+      const cpm = cash > 0 && millas > 0 ? (neto / millas) * 100 : 0;
+      return { d, millas, cash, tasas, valorRef, costoCanje, neto, cpm, ahorro: cash - costoCanje, conviene: neto > 0 && cpm >= REF };
+    }
+
+    function render() {
+      const r = calc();
+      $('ml-iata').textContent = r.d.i;
+      $('ml-big').textContent = nMil(r.millas);
+      $('ml-sub').textContent = 'millas LATAM Pass + ' + usd(r.tasas) + ' de impuestos y tasas';
+      $('ml-viaje-help').hidden = cabina !== 'business';
+      const v = $('ml-verdict');
+      if (r.cash > 0) {
+        v.hidden = false;
+        v.textContent = r.conviene ? '✓ Conviene canjear' : '✕ Conviene pagar en efectivo';
+        v.setAttribute('data-ok', r.conviene ? '1' : '0');
+      } else { v.hidden = true; }
+      $('ml-t-cpm').textContent = r.cash > 0 ? cent(r.cpm) : '—';
+      $('ml-t-valor').textContent = usd(r.valorRef);
+      $('ml-t-ahorro').textContent = r.cash > 0 ? usd(r.ahorro) : '—';
+      const pct = r.cash > 0 ? Math.max(0, Math.min(100, Math.round((r.costoCanje / r.cash) * 100))) : 0;
+      $('ml-bar').style.width = pct + '%';
+      $('ml-bar').nextElementSibling.style.width = (100 - pct) + '%';
+      $('ml-bar-a').textContent = 'Canje: millas + tasas ' + usd(r.costoCanje);
+      $('ml-bar-b').textContent = r.cash > 0 ? 'Pago en efectivo ' + usd(r.cash) : 'Ingresá el precio en efectivo';
+      $('ml-formula').textContent = r.cash > 0
+        ? `(${usd(r.cash)} − ${usd(r.tasas)}) ÷ ${nMil(r.millas)} = ${cent(r.cpm)} por milla`
+        : `${nMil(r.millas)} millas × ${cent(REF)} = ${usd(r.valorRef)} de valor de referencia`;
+      $('ml-deco-val').textContent = nMil(r.millas);
+      const cabTxt = cabina === 'business' ? 'business' : 'economy';
+      const viaTxt = cabina === 'business' ? 'ida y vuelta' : viaje === 'ida-vuelta' ? 'ida y vuelta' : 'solo ida';
+      $('ml-deco-note').textContent = 'millas · ' + r.d.l + ' ' + cabTxt + ' ' + viaTxt;
+      $('ml-deco-chip').textContent = usd(r.valorRef);
+      $('ml-step1').textContent = r.d.l + ' · ' + cabTxt + ' · ' + viaTxt;
+      $('ml-step2').textContent = r.cash > 0
+        ? `(${usd(r.cash)} − ${usd(r.tasas)}) ÷ ${nMil(r.millas)}`
+        : `${nMil(r.millas)} × ${cent(REF)}`;
+      $('ml-step3').textContent = nMil(r.millas) + ' millas' + (r.cash > 0 ? ' · ' + cent(r.cpm) : '');
+      const q = $('ml-quick'); if (q) q.textContent = nMil(r.millas);
+    }
+
+    destEl.addEventListener('change', render);
+    cashEl.addEventListener('input', () => { cashEl.value = fmtTh(cashEl.value); render(); });
+    tasasEl.addEventListener('input', () => { tasasEl.value = fmtTh(tasasEl.value); render(); });
+    $('ml-calc-btn').addEventListener('click', render);
+    document.querySelectorAll('[data-cab]').forEach((b) => b.addEventListener('click', () => {
+      cabina = b.getAttribute('data-cab');
+      document.querySelectorAll('[data-cab]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      render();
+    }));
+    document.querySelectorAll('[data-viaje]').forEach((b) => b.addEventListener('click', () => {
+      viaje = b.getAttribute('data-viaje');
+      document.querySelectorAll('[data-viaje]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      render();
+    }));
+    document.querySelectorAll('[data-ej]').forEach((b) => b.addEventListener('click', () => {
+      const p = b.getAttribute('data-ej').split('|');
+      destEl.value = p[0];
+      const cb = document.querySelector(`[data-cab="${p[1]}"]`); if (cb) cb.click();
+      const vb = document.querySelector(`[data-viaje="${p[2]}"]`); if (vb) vb.click();
+      cashEl.value = fmtTh(p[3]);
+      render();
+    }));
+
+    function summary() {
+      const r = calc();
+      return `Millas LATAM Pass a ${r.d.l} en ${cabina}: ${nMil(r.millas)} millas + ${usd(r.tasas)} de tasas.` +
+        (r.cash > 0 ? ` Con precio cash ${usd(r.cash)}, cada milla rinde ${cent(r.cpm)} (referencia ${cent(REF)}).` : '') + ' — hacecuentas.com';
+    }
+    function shareUrl() { return `${location.origin}${location.pathname}?destino=${destEl.value}&cabina=${cabina}&viaje=${viaje}&cash=${numOf(cashEl)}&tasas=${numOf(tasasEl)}`; }
+    function copy(t, btn) { navigator.clipboard?.writeText(t).then(() => { const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => btn.innerHTML = o, 1500); }); }
+    $('ml-copy').addEventListener('click', (e) => copy(summary(), e.currentTarget));
+    $('ml-detail').addEventListener('click', () => { document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' }); });
+    const s2 = $('ml-share2'); if (s2) s2.addEventListener('click', (e) => copy(shareUrl(), e.currentTarget));
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('destino') && DEST[q.get('destino')]) destEl.value = q.get('destino');
+    if (q.get('cash')) cashEl.value = fmtTh(q.get('cash'));
+    if (q.get('tasas')) tasasEl.value = fmtTh(q.get('tasas'));
+    if (q.get('cabina')) { const b = document.querySelector(`[data-cab="${q.get('cabina')}"]`); if (b) b.click(); }
+    if (q.get('viaje')) { const b = document.querySelector(`[data-viaje="${q.get('viaje')}"]`); if (b) b.click(); }
+    render();
+  })();
+</script>
+
+<style>
+  .ml .ml-deco-wrap { position: relative; }
+  .ml .ml-badge { top: 50%; right: -14px; transform: translateY(-50%); width: 44px; height: 44px; font-size: 0.8rem; background: #fff; color: var(--accent-strong); }
+
+  .ml .ml-money { position: relative; display: flex; align-items: center; }
+  .ml .ml-money__sign { position: absolute; left: 0.8rem; font-weight: 700; font-size: 0.78rem; color: var(--text-subtle); pointer-events: none; }
+  .ml .ml-money .cf-input { padding-left: 3rem; }
+  .ml .ml-seg { width: 100%; }
+  .ml .ml-seg button { flex: 1; }
+
+  .ml .ml-verdict { display: inline-block; margin: 0 0 1rem; padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
+  .ml .ml-verdict[data-ok="1"] { background: rgba(34,197,94,0.18); color: #4ade80; border: 1px solid rgba(34,197,94,0.35); }
+  .ml .ml-verdict[data-ok="0"] { background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.35); }
+
+  .ml .ml-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.2rem 0 0; }
+  .ml .ml-bar--bad { background: linear-gradient(90deg, #ef4444, #f87171) !important; }
+  .ml .ml-bar--mid { background: linear-gradient(90deg, #8b5cf6, #a78bfa) !important; }
+
+  .ml .ml-chip {
+    display: inline-block; margin-top: 0.7rem; padding: 0.3rem 0.6rem; border-radius: var(--radius-sm);
+    background: var(--bg-soft); border: 1px solid var(--border);
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; color: var(--accent-strong);
+  }
+  .ml-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+  .cf-band .ml-chip--dark { margin-top: 0; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.14); color: #e7ecf3; }
+
+  .ml-2col, .cf-band .ml-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .ml-2col, .cf-band .ml-2col { grid-template-columns: 0.85fr 1.15fr; } }
+
+  .ml .ml-hl { padding: 1.5rem 1.6rem; border-radius: var(--radius-lg); color: #fff; background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%); }
+  .ml .ml-hl .cf-side-eyebrow { color: rgba(255,255,255,0.75); }
+  .ml .ml-hl__title { font-size: 1.3rem; font-weight: 800; margin: 0 0 0.5rem; line-height: 1.2; letter-spacing: -0.015em; }
+  .ml .ml-hl__desc { font-size: 0.82rem; color: rgba(255,255,255,0.8); line-height: 1.5; margin: 0; }
+  .ml .ml-hl__big { font-size: 2.2rem; font-weight: 800; margin: 1.1rem 0 0.15rem; letter-spacing: -0.02em; }
+  .cf-band .ml-hl__big { font-size: 2.2rem; font-weight: 800; color: #fff; margin: 0 0 0.2rem; letter-spacing: -0.02em; }
+
+  .cf-band .ml-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .ml-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .ml-formula-note { margin: 1rem 0 0; padding: 0.5rem 0.7rem; border-radius: var(--radius-sm); background: var(--bg-soft); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-subtle); overflow-x: auto; }
+  .cf-band .ml-src__title { font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 0.9rem; }
+  .cf-band .ml-src { display: grid; gap: 0.5rem; }
+  .cf-band .ml-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .ml-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .ml-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .ml-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+</style>

@@ -1,0 +1,536 @@
+---
+// Flagship redesign de la calc "aguinaldo (SAC) de empleada de casa particular" (mockup Martin).
+// Los números salen del motor real (src/lib/formulas/aguinaldo-empleada-casa-particular.ts):
+// Art. 39 Ley 26.844 → SAC = (mejor sueldo del semestre / 2) × (meses / 6).
+//
+// ⚠️ HONESTIDAD: en el motor, `categoria` NO modifica el importe — sólo etiqueta el
+// mensaje. El repo NO hardcodea las escalas UPACP a propósito (ver dataUpdate.notes
+// del JSON: "no hardcodeamos escalas UPACP porque varían por paritaria"), así que la
+// página NO muestra montos por categoría: la base es el sueldo que ingresa el usuario.
+//
+// Domain "health" (rosa) por el mockup, no por la categoría (finanzas→money).
+// Header/footer = los globales del sitio.
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// ── Réplica EXACTA de src/lib/formulas/aguinaldo-empleada-casa-particular.ts ─
+function sacCasa(sueldoMensual: number, mesesTrabajados: number) {
+  const meses = Math.max(1, Math.min(6, mesesTrabajados || 6));
+  const aguinaldoCuota = (sueldoMensual / 2) * (meses / 6);
+  return {
+    aguinaldoCuota,
+    mejorSueldoBase: sueldoMensual,
+    meses,
+    proporcion: meses / 6,
+    coeficiente: 0.5 * (meses / 6),
+  };
+}
+
+const fmtAr = (n: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Math.round(n));
+const pctStr = (n: number) => (n * 100).toFixed(1).replace('.', ',').replace(',0', '') + '%';
+const coefStr = (n: number) => n.toFixed(4).replace('.', ',');
+const fracStr = (m: number) => `${m}/6`;
+
+const INIT = { sueldo: 400_000, meses: 6, categoria: '5-tareas-generales' };
+const init = sacCasa(INIT.sueldo, INIT.meses);
+
+const categoriaOpts: any[] = (calc.fields || []).find((f: any) => f.id === 'categoria')?.options || [];
+
+// Escenarios para el breakdown (2/4/6 meses), computados con la fórmula
+const escenarios = [2, 4, 6].map((m) => ({ m, ...sacCasa(INIT.sueldo, m) }));
+const maxEsc = Math.max(...escenarios.map((e) => e.aguinaldoCuota), 1);
+
+// Tabla de referencia: los 6 meses posibles, computados con la fórmula
+const refRows = [1, 2, 3, 4, 5, 6].map((m) => ({ ...sacCasa(INIT.sueldo, m) }));
+
+const faq = calc.faq || [];
+const sources = (calc.sources || []).slice(0, 3);
+const explanationHtml = calc.explanation ? md(calc.explanation) : '';
+---
+
+<div class="cf-page cp" data-domain="health">
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/sueldos-y-trabajo">Sueldos y trabajo</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Aguinaldo de empleada de casa particular</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">👩‍🍼</span> Argentina · Casas particulares · 2026</p>
+      <h1 class="cf-h1">Aguinaldo de <span class="cf-yr">empleada de casa particular</span></h1>
+      <p class="cf-sub">Calculá el SAC del personal de casas particulares por meses trabajados del semestre, incluso con jornada parcial o por horas.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos verificados 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Resultado explicado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">💵</span> Art. 39 · Ley 26.844</span>
+      <div class="cp-deco-wrap">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Dato principal</div>
+          <div class="cf-deco-card__value" id="cp-deco-val">{fmtAr(init.aguinaldoCuota)}</div>
+          <div class="cf-deco-card__note">Cuota del semestre</div>
+        </div>
+        <span class="cf-deco-badge cp-badge" aria-hidden="true">💵</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Sobre el mejor sueldo</strong> <span class="cf-deco-chip" id="cp-deco-chip">× {coefStr(init.coeficiente)}</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Calculadora</p>
+          <h2 class="cf-panel__title">Contanos el caso</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-grid2">
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="cp-sueldo">Mejor sueldo del semestre</label></div>
+          <div class="cp-money"><span class="cp-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="cp-sueldo" value="400.000" /></div>
+        </div>
+        <div class="cf-field">
+          <div class="cf-field__row"><label class="cf-label" for="cp-meses">Meses trabajados</label><span class="cf-hint">1 a 6</span></div>
+          <input class="cf-input" type="number" inputmode="numeric" id="cp-meses" value="6" min="1" max="6" step="1" />
+        </div>
+      </div>
+      <p class="cf-help" style="margin:-0.6rem 0 1.1rem">Mejor remuneración mensual normal y habitual del semestre (Art. 39 Ley 26.844). Si cobra por hora, calculá el equivalente mensual. Para el SAC de junio cuenta enero-junio; para el de diciembre, julio-diciembre.</p>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="cp-categoria">Categoría UPACP (CCT 56/75)</label></div>
+        <select class="cf-input" id="cp-categoria">
+          {categoriaOpts.map((o: any) => (<option value={o.value} selected={o.value === INIT.categoria}>{o.label}</option>))}
+        </select>
+        <p class="cf-help">Identifica la escala salarial mínima que le corresponde. No modifica la cuenta del aguinaldo: el SAC se calcula sobre el sueldo real que cobra, que va arriba.</p>
+      </div>
+
+      <button class="cf-primary" id="cp-calc-btn" type="button">Calcular resultado <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Ejemplos:</span>
+        <button class="cf-sc" type="button" data-ej="300000">$300 mil</button>
+        <button class="cf-sc" type="button" data-ej="500000">$500 mil</button>
+        <button class="cf-sc" type="button" data-ej="600000">$600 mil</button>
+        <button class="cf-sc" type="button" data-ej="800000">$800 mil</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="cp-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="cp-big">{fmtAr(init.aguinaldoCuota)}</div>
+      <div class="cf-result__biglabel">Aguinaldo (cuota semestral)</div>
+      <p class="cf-result__sub" id="cp-sub">Semestre completo · 6 de 6 meses</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="cp-t-base">{fmtAr(init.mejorSueldoBase)}</div><div class="cf-tile__label">Base del cálculo</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="cp-t-meses">{INIT.meses} de 6</div><div class="cf-tile__label">Meses computados</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="cp-t-prop">{pctStr(init.proporcion)}</div><div class="cf-tile__label">Proporción del semestre</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="cp-t-coef">{coefStr(init.coeficiente)}</div><div class="cf-tile__label">Coeficiente s/ sueldo</div></div>
+      </div>
+      <div class="cf-result__formula" id="cp-formula">({fmtAr(INIT.sueldo)} ÷ 2) × ({INIT.meses} ÷ 6) = {fmtAr(init.aguinaldoCuota)}</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="cp-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="cp-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt"><strong>Respuesta rápida.</strong> Con un mejor sueldo de <strong>{fmtAr(INIT.sueldo)}</strong> y el semestre completo, el aguinaldo es <strong id="cp-quick">{fmtAr(init.aguinaldoCuota)}</strong>: medio sueldo. Si trabajó menos de 6 meses, se paga proporcional.</p>
+    <span class="cf-formula">(mejor sueldo ÷ 2) × (meses ÷ 6)</span>
+  </div>
+
+  <!-- 5 · Datos clave -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Datos clave</p>
+        <h2 class="cf-section__title">Todo lo importante, de un vistazo</h2>
+      </div>
+      <p class="cf-section__lead">Valores de referencia del caso cargado y reglas principales para interpretar el resultado.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">✖️</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Coeficiente</p>
+        <div class="cf-minicard__big" id="cp-k-coef">{coefStr(init.coeficiente)}</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Es 0,5 × meses ÷ 6. Multiplicá el mejor sueldo por este número.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">📜</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Base legal</p>
+        <div class="cf-minicard__big">Art. 39</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Ley 26.844, régimen de casas particulares. Fórmula idéntica al SAC general.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🗓️</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Cuotas del año</p>
+        <div class="cf-minicard__big">30/6 y 31/12</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Se paga hasta el último día hábil de junio y de diciembre.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">⏱️</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Jornada parcial</p>
+        <div class="cf-minicard__big">Sí devenga</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Trabajar por horas o medio tiempo no quita el derecho al SAC proporcional.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · Cómo leer el resultado -->
+  <section class="cf-section">
+    <div class="cp-2col">
+      <div class="cp-hl">
+        <p class="cf-side-eyebrow cp-hl__eyebrow">Cómo leer el resultado</p>
+        <p class="cp-hl__title">El aguinaldo es siempre medio sueldo, prorrateado</p>
+        <p class="cp-hl__desc">La cuota máxima es el 50% del mejor sueldo del semestre. Cada mes trabajado suma una sexta parte de ese medio sueldo, así que la cuenta crece de forma pareja: no hay saltos ni mínimos.</p>
+        <div class="cp-hl__big">50%</div>
+        <p class="cp-hl__note">del mejor sueldo, con el semestre completo</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-breakdown__lead">Mismo sueldo de <strong id="cp-bd-base">{fmtAr(INIT.sueldo)}</strong>, distinto tiempo trabajado:</div>
+        {escenarios.map((e) => (
+          <div class="cf-brow" style="margin-top:0.9rem" data-esc={e.m}>
+            <span class="cf-brow__lbl">{e.m} de 6 meses</span>
+            <span class="cf-brow__val" data-esc-val={e.m}>{fmtAr(e.aguinaldoCuota)}</span>
+            <span class="cf-brow__bar"><span data-esc-bar={e.m} style={`width:${Math.round(e.aguinaldoCuota / maxEsc * 100)}%`}></span></span>
+          </div>
+        ))}
+        <div class="cf-callout cf-callout--warn" style="margin-top:1.25rem">
+          <span class="cf-callout__ico" aria-hidden="true">⚠️</span>
+          <p><strong>La categoría no cambia el importe.</strong> Define la escala salarial mínima del CCT 56/75, pero el SAC se calcula sobre el sueldo real que cobra. Verificá la escala vigente de la CNTCP y, si el sueldo está por debajo, corregí primero el sueldo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · Paso a paso -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Paso a paso</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">De tus datos al resultado</h2>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Ingresá tus datos</p>
+        <p class="cf-step__desc">El mejor sueldo mensual del semestre y cuántos de los seis meses trabajó efectivamente.</p>
+        <p class="cp-chip" id="cp-s1">{fmtAr(INIT.sueldo)} · {INIT.meses} de 6 meses</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicamos la fórmula</p>
+        <p class="cf-step__desc">Dividimos el mejor sueldo por dos y lo prorrateamos por los meses trabajados sobre seis.</p>
+        <p class="cp-chip" id="cp-s2">({fmtAr(INIT.sueldo)} ÷ 2) × {fracStr(INIT.meses)} = {fmtAr(init.aguinaldoCuota)}</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Revisá el resultado</p>
+        <p class="cf-step__desc">Pagalo hasta el último día hábil de junio o diciembre. Fuera de plazo genera intereses y multas.</p>
+        <p class="cp-chip" id="cp-s3">SAC {fmtAr(init.aguinaldoCuota)}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · Referencias -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencias</p>
+        <h2 class="cf-section__title">Ejemplos para comparar</h2>
+      </div>
+      <p class="cf-section__lead">Usalos como orientación y ajustá los datos de la calculadora a tu situación.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Meses trabajados</th><th>Proporción</th><th>Coeficiente sobre el sueldo</th><th>SAC con el sueldo cargado</th></tr></thead>
+        <tbody>
+          {refRows.map((r) => (
+            <tr data-ref={r.meses}>
+              <td>{r.meses === 6 ? '6 meses (semestre completo)' : `${r.meses} ${r.meses === 1 ? 'mes' : 'meses'}`}</td>
+              <td>{fracStr(r.meses)}</td>
+              <td>{coefStr(r.coeficiente)}</td>
+              <td class="cf-td-em" data-ref-val={r.meses}>{fmtAr(r.aguinaldoCuota)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="cp-tnote">La última columna se recalcula con el mejor sueldo que cargues arriba. El coeficiente sale de la fórmula: 0,5 × meses ÷ 6.</p>
+  </section>
+</div>
+
+<!-- 9 · Banda atención -->
+<div class="cf-band cf-band--warm" data-domain="health">
+  <div class="cf-band__inner">
+    <div class="cp-2col">
+      <div class="cp-card">
+        <p class="cf-eyebrow">Atención</p>
+        <h2 class="cp-card__title">El sueldo manda; la categoría sólo fija el piso</h2>
+        <p class="cf-side-desc">El aguinaldo se calcula sobre la mejor remuneración real del semestre, no sobre la escala de la categoría. La categoría UPACP del CCT 56/75 sirve para verificar que el sueldo no esté por debajo del mínimo de la paritaria vigente. Como esas escalas cambian con cada acuerdo de la CNTCP, no las fijamos acá: consultá la resolución vigente y usá el sueldo efectivamente pagado.</p>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1rem">
+          <span class="cf-callout__ico" aria-hidden="true">📌</span>
+          <p>Si el sueldo subió durante el semestre, la base es el mes más alto, no el promedio ni el último. Un aumento en junio o diciembre levanta toda la cuota.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Referencia principal</p>
+        <p class="cp-ref__title">Base del cálculo</p>
+        <div class="cp-ref__big" id="cp-ref-big">{fmtAr(INIT.sueldo)}</div>
+        <p class="cf-side-desc" id="cp-ref-sub">Mejor remuneración mensual del semestre · categoría 5ta (tareas generales)</p>
+        <div class="cp-chips">
+          <span class="cp-chips__i">Ley 26.844</span>
+          <span class="cp-chips__i">Ley 23.041</span>
+          <span class="cp-chips__i">CCT 56/75</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page cp" data-domain="health">
+  <!-- 10 · FAQ -->
+  {faq.length > 0 && (
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {explanationHtml && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">En detalle</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cómo funciona el SAC en casas particulares</h2>
+      <div class="cf-prose" set:html={explanationHtml} />
+    </section>
+  )}
+</div>
+
+<!-- 11 · Banda fuentes -->
+<div class="cf-band" data-domain="health">
+  <div class="cf-band__inner">
+    <div class="cp-2col">
+      <div>
+        <p class="cf-eyebrow">Fuentes y metodología</p>
+        <h2 class="cf-section__title" style="margin:0.35rem 0 0.6rem">Números que podés defender</h2>
+        <p class="cf-section__lead" style="max-width:52ch">La fórmula y los parámetros se contrastan con fuentes oficiales y se revisan durante 2026.</p>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Marco normativo</p>
+        <div class="cp-src">
+          {sources.map((s: any) => (
+            <div class="cp-src__item">
+              <strong>{String(s.name).split('—')[0].trim()}</strong>
+              <span>{s.publisher}{s.date ? ` · ${s.date}` : ''}</span>
+            </div>
+          ))}
+        </div>
+        <p class="cp-src__foot">● Información revisada en julio de 2026</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page cp" data-domain="health">
+  <!-- 12 · Related -->
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🧮'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('—')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- 13 · CTA bar -->
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá este resultado.</p>
+      <p class="cf-ctabar__sub">Volvé a calcular cuando cambien tus datos.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="cp-share2">Copiar enlace</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.cp');
+    if (!root) return;
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Math.round(n));
+    const pctStr = (n) => (n * 100).toFixed(1).replace('.', ',').replace(',0', '') + '%';
+    const coefStr = (n) => n.toFixed(4).replace('.', ',');
+
+    const sueldoEl = $('cp-sueldo'), mesesEl = $('cp-meses'), catEl = $('cp-categoria');
+
+    function num(el) { return Number((el.value || '').replace(/\D/g, '')) || 0; }
+    function fmtThousands(v) { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('es-AR') : ''; }
+
+    // Réplica EXACTA de src/lib/formulas/aguinaldo-empleada-casa-particular.ts
+    // Ojo: `categoria` NO entra en la cuenta — el motor sólo la usa para el mensaje.
+    function sacCasa(sueldoMensual, mesesTrabajados) {
+      const meses = Math.max(1, Math.min(6, mesesTrabajados || 6));
+      const aguinaldoCuota = (sueldoMensual / 2) * (meses / 6);
+      return {
+        aguinaldoCuota, mejorSueldoBase: sueldoMensual, meses,
+        proporcion: meses / 6, coeficiente: 0.5 * (meses / 6),
+      };
+    }
+
+    function catLabel() {
+      const o = catEl.options[catEl.selectedIndex];
+      return o ? o.text : '';
+    }
+
+    function render() {
+      const sueldo = num(sueldoEl);
+      const mesesIn = Number(mesesEl.value) || 6;
+      const r = sacCasa(sueldo, mesesIn);
+
+      if (!(sueldo > 0)) {
+        $('cp-big').textContent = '—';
+        $('cp-sub').textContent = 'Ingresá el mejor sueldo mensual del semestre.';
+        return;
+      }
+
+      $('cp-big').textContent = fmt(r.aguinaldoCuota);
+      $('cp-sub').textContent = r.meses >= 6 ? 'Semestre completo · 6 de 6 meses' : 'Proporcional · ' + r.meses + ' de 6 meses';
+      $('cp-t-base').textContent = fmt(r.mejorSueldoBase);
+      $('cp-t-meses').textContent = r.meses + ' de 6';
+      $('cp-t-prop').textContent = pctStr(r.proporcion);
+      $('cp-t-coef').textContent = coefStr(r.coeficiente);
+      $('cp-formula').textContent = '(' + fmt(sueldo) + ' ÷ 2) × (' + r.meses + ' ÷ 6) = ' + fmt(r.aguinaldoCuota);
+
+      $('cp-quick').textContent = fmt(r.aguinaldoCuota);
+      $('cp-deco-val').textContent = fmt(r.aguinaldoCuota);
+      $('cp-deco-chip').textContent = '× ' + coefStr(r.coeficiente);
+      $('cp-k-coef').textContent = coefStr(r.coeficiente);
+
+      // Escenarios 2/4/6 meses con el sueldo cargado
+      $('cp-bd-base').textContent = fmt(sueldo);
+      const rows = Array.from(root.querySelectorAll('[data-esc]'));
+      const vals = rows.map((el) => sacCasa(sueldo, Number(el.getAttribute('data-esc'))).aguinaldoCuota);
+      const max = Math.max.apply(null, vals.concat([1]));
+      rows.forEach((el, i) => {
+        const m = el.getAttribute('data-esc');
+        const valEl = root.querySelector('[data-esc-val="' + m + '"]');
+        const barEl = root.querySelector('[data-esc-bar="' + m + '"]');
+        if (valEl) valEl.textContent = fmt(vals[i]);
+        if (barEl) barEl.style.width = Math.round(vals[i] / max * 100) + '%';
+      });
+
+      // Tabla de referencia (1..6 meses) con el sueldo cargado
+      root.querySelectorAll('[data-ref-val]').forEach((el) => {
+        const m = Number(el.getAttribute('data-ref-val'));
+        el.textContent = fmt(sacCasa(sueldo, m).aguinaldoCuota);
+      });
+
+      $('cp-ref-big').textContent = fmt(sueldo);
+      $('cp-ref-sub').textContent = 'Mejor remuneración mensual del semestre · ' + catLabel();
+
+      $('cp-s1').textContent = fmt(sueldo) + ' · ' + r.meses + ' de 6 meses';
+      $('cp-s2').textContent = '(' + fmt(sueldo) + ' ÷ 2) × ' + r.meses + '/6 = ' + fmt(r.aguinaldoCuota);
+      $('cp-s3').textContent = 'SAC ' + fmt(r.aguinaldoCuota);
+    }
+
+    sueldoEl.addEventListener('input', () => { sueldoEl.value = fmtThousands(sueldoEl.value); render(); });
+    mesesEl.addEventListener('input', render);
+    catEl.addEventListener('change', render);
+    $('cp-calc-btn').addEventListener('click', render);
+    document.querySelectorAll('.cp [data-ej]').forEach((b) => b.addEventListener('click', () => { sueldoEl.value = fmtThousands(b.getAttribute('data-ej')); render(); }));
+
+    function summary() {
+      const sueldo = num(sueldoEl);
+      const r = sacCasa(sueldo, Number(mesesEl.value) || 6);
+      return `Aguinaldo (SAC) de empleada de casa particular: ${fmt(r.aguinaldoCuota)} con un mejor sueldo de ${fmt(sueldo)} y ${r.meses} de 6 meses trabajados del semestre. Art. 39 Ley 26.844. Categoría: ${catLabel()}. — hacecuentas.com`;
+    }
+    function shareUrl() { return `${location.origin}${location.pathname}?sueldo=${num(sueldoEl)}&meses=${Number(mesesEl.value) || 6}&categoria=${catEl.value}`; }
+    function copy(t, btn) { navigator.clipboard?.writeText(t).then(() => { const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => btn.innerHTML = o, 1500); }); }
+    $('cp-copy').addEventListener('click', (e) => copy(summary(), e.currentTarget));
+    $('cp-detail').addEventListener('click', () => { document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' }); });
+    const s2 = $('cp-share2'); if (s2) s2.addEventListener('click', (e) => copy(shareUrl(), e.currentTarget));
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('sueldo')) sueldoEl.value = fmtThousands(q.get('sueldo'));
+    if (q.get('meses')) mesesEl.value = q.get('meses');
+    if (q.get('categoria')) catEl.value = q.get('categoria');
+    render();
+  })();
+</script>
+
+<style>
+  /* El badge vive fuera de .cf-deco-card porque la card tiene overflow:hidden */
+  .cp .cp-deco-wrap { position: relative; }
+  .cp .cp-badge { top: -14px; right: -14px; }
+
+  .cp .cp-money { position: relative; display: flex; align-items: center; }
+  .cp .cp-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
+  .cp .cp-money .cf-input { padding-left: 1.7rem; }
+
+  .cp-2col, .cf-band .cp-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .cp-2col, .cf-band .cp-2col { grid-template-columns: 0.85fr 1.15fr; } }
+
+  .cp .cf-breakdown__lead { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.2rem; }
+  .cp .cf-breakdown__lead strong { color: var(--text); font-variant-numeric: tabular-nums; }
+
+  .cp .cp-hl {
+    padding: 1.5rem 1.6rem; border-radius: var(--radius-lg); color: #fff;
+    background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%);
+    box-shadow: var(--shadow-lg);
+  }
+  .cp .cp-hl__eyebrow { color: rgba(255, 255, 255, 0.82); }
+  .cp .cp-hl__title { font-size: 1.4rem; font-weight: 800; line-height: 1.2; margin: 0 0 0.6rem; letter-spacing: -0.015em; }
+  .cp .cp-hl__desc { font-size: 0.85rem; line-height: 1.55; color: rgba(255, 255, 255, 0.88); margin: 0; }
+  .cp .cp-hl__big { font-size: 2.4rem; font-weight: 800; margin: 1.1rem 0 0; line-height: 1; font-variant-numeric: tabular-nums; }
+  .cp .cp-hl__note { font-size: 0.78rem; color: rgba(255, 255, 255, 0.82); margin: 0.25rem 0 0; }
+
+  .cp .cp-chip {
+    display: inline-block; margin: 0.8rem 0 0; padding: 0.35rem 0.6rem; border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; color: var(--accent-strong);
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  }
+  .cp .cp-tnote { font-size: 0.75rem; color: var(--text-subtle); margin: 0.7rem 0 0; }
+
+  .cf-band .cp-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .cp-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+
+  .cf-band .cp-ref__title { font-size: 1.05rem; font-weight: 800; color: #fff; margin: 0 0 0.5rem; }
+  .cf-band .cp-ref__big { font-size: 2rem; font-weight: 800; color: #fff; line-height: 1; margin: 0 0 0.4rem; font-variant-numeric: tabular-nums; }
+  .cf-band .cp-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+  .cf-band .cp-chips__i { padding: 0.3rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; background: rgba(255, 255, 255, 0.1); color: #e7ecf3; border: 1px solid rgba(255, 255, 255, 0.12); }
+
+  .cf-band .cp-src { display: grid; gap: 0.5rem; }
+  .cf-band .cp-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.08); }
+  .cf-band .cp-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .cp-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .cp-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+</style>
