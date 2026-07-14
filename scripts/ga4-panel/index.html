@@ -687,11 +687,15 @@ function renderReport() {
   const prevTotal = channel === ALL ? r.totals.prev : shown.reduce((a, c) => a + c.prev, 0);
   const same = r.range.start === r.range.end;
 
+  // el previo va desplazado un múltiplo de 7: mismos días de la semana
+  const cmp = same
+    ? `el mismo día de la semana pasada · ${prettyDay(r.prevRange.start)}`
+    : `${prettyDay(r.prevRange.start)} → ${prettyDay(r.prevRange.end)}`;
+
   $('report-title').textContent = channel === ALL ? 'Sesiones por canal' : `Sesiones · ${channel}`;
   $('report-sub').innerHTML =
     (same ? `<b>${prettyDay(r.range.start)}</b>` : `<b>${prettyDay(r.range.start)} → ${prettyDay(r.range.end)}</b>`) +
-    ` · ${fmt(total)} sesiones` + (channel === ALL ? '' : ` de ${channel}`) + ` · comparado contra ` +
-    (same ? prettyDay(r.prevRange.start) : `${prettyDay(r.prevRange.start)} → ${prettyDay(r.prevRange.end)}`) +
+    ` · ${fmt(total)} sesiones` + (channel === ALL ? '' : ` de ${channel}`) + ` · comparado contra ${cmp}` +
     ` (${fmt(prevTotal)}). ` +
     (channel === ALL ? 'Tocá un canal para abrirlo por fuente / medio.'
                      : 'Share y Δ son sobre este canal. Poné "Todos los canales" para volver al total.') +

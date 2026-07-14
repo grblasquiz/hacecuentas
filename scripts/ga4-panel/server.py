@@ -140,11 +140,23 @@ def build_pulse():
 
 # ── reporte por rango ────────────────────────────────────────────────────────
 def build_report(start, end):
-    """Canales + fuente/medio del rango, contra el rango previo del mismo largo."""
+    """Canales + fuente/medio del rango, contra el rango previo comparable.
+
+    El período previo se desplaza un múltiplo de 7 días, no el largo del rango:
+    así siempre caen los MISMOS días de la semana. Un lunes contra el domingo
+    anterior no es comparable — el día de la semana manda más que la tendencia.
+
+    Se redondea para arriba (`ceil`) para que el desplazamiento nunca sea menor
+    que el rango, si no los períodos se solaparían:
+        1 día  → 7   (mismo día, semana pasada)
+        7 / 28 → 7 / 28  (ya alineados: el mix de días se repite)
+        10     → 14  (7 solaparía)
+        90     → 91  (90 no es múltiplo de 7 y desalinearía)
+    """
     s, e = date.fromisoformat(start), date.fromisoformat(end)
     span = (e - s).days + 1
-    prev_e = s - timedelta(days=1)
-    prev_s = prev_e - timedelta(days=span - 1)
+    shift = (span + 6) // 7 * 7
+    prev_s, prev_e = s - timedelta(days=shift), e - timedelta(days=shift)
 
     dims = ['sessionDefaultChannelGroup', 'sessionSourceMedium']
     cur = run(dims, ['sessions', 'totalUsers', 'engagedSessions'], start, end)
@@ -178,6 +190,7 @@ def build_report(start, end):
     return {
         'range': {'start': start, 'end': end},
         'prevRange': {'start': prev_s.isoformat(), 'end': prev_e.isoformat()},
+        'shiftDays': shift,
         'includesToday': e >= date.today(),
         'channels': channels,
         'totals': {
