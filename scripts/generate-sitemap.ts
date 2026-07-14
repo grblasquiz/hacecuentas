@@ -872,7 +872,6 @@ sitemaps.push({
     core('/guia/mascotas',                       '0.85', 'weekly'),
     core('/guia/viajes',                         '0.85', 'weekly'),
     core('/global',                              '0.9',  'weekly',  true),
-    core('/es',                                  '0.85', 'weekly',  true),
     core('/es/calculadoras',                     '0.85', 'weekly',  true),
     core('/es/datos-cuota-autonomos-2026',       '0.8',  'monthly', true),
     core('/cl/calculadoras',                     '0.85', 'weekly',  true),
@@ -904,9 +903,12 @@ sitemaps.push({
     core('/uy/calculadoras',                     '0.85', 'weekly',  true),
     core('/do/calculadoras',                     '0.85', 'weekly',  true),
     core('/pt-pt/calculadoras',                  '0.85', 'weekly',  true),
-    core('/mx',                                  '0.85', 'weekly',  true),
-    core('/co',                                  '0.8',  'weekly'),
-    core('/cl',                                  '0.8',  'weekly'),
+    // /mx /co /cl /es /pt /en NO se listan acá: cada sitemap-<locale>.xml ya
+    // publica su home (sitemapForLocale con withIndex), heredando el lastmod
+    // del cambio más reciente del locale. Estaban duplicados acá con
+    // priority/lastmod en conflicto —y /es y /mx además con dynamic=true, que
+    // les ponía lastmod=hoy en cada build. El duplicado no se veía porque el
+    // filtro de _redirects los borraba de los dos lados (bug del trailing slash).
     core('/calculadora',                         '0.75', 'monthly'),
     core('/embeber',                             '0.6',  'monthly'),
     core('/enlazanos',                           '0.5',  'monthly'),
@@ -926,6 +928,26 @@ sitemaps.push({
     core('/glosario',                            '0.5',  'monthly'),
     core('/blog',                                '0.7',  'weekly'),
     core('/datasets',                            '0.6',  'monthly'),
+    // Los hubs de vertical (/mx /co /cl /es /pt /en) NO van acá: cada
+    // sitemap-<locale>.xml ya publica su home vía sitemapForLocale(withIndex),
+    // con un lastmod que hereda el cambio más reciente del locale. Listarlos
+    // también en core duplicaba la URL con priority/lastmod en conflicto.
+    // Páginas de datos/actualidad y curadurías que no estaban listadas.
+    core('/valores-vigentes',                    '0.8',  'weekly'),
+    core('/que-sueldo-necesito',                 '0.75', 'monthly'),
+    core('/vencimientos-afip-2026',              '0.7',  'monthly'),
+    core('/recategorizacion-monotributo-julio-2026', '0.7', 'monthly'),
+    core('/wizard/que-monotributo-me-conviene-2026', '0.7', 'monthly'),
+    core('/calendarios',                         '0.7',  'monthly'),
+    core('/top',                                 '0.7',  'weekly'),
+    core('/top/anses-afip-argentina',            '0.65', 'weekly'),
+    core('/top/emprendedores-argentina',         '0.65', 'weekly'),
+    core('/top/freelancers-2026',                '0.65', 'weekly'),
+    core('/informes',                            '0.6',  'monthly'),
+    core('/desarrolladores',                     '0.6',  'monthly'),
+    // E-E-A-T: la bio del autor sostiene el authorship de todo el sitio.
+    core('/autores/martin-rodriguez',            '0.5',  'monthly'),
+    core('/prensa',                              '0.5',  'monthly'),
     core('/datos-monotributo-2026',              '0.7',  'monthly'),
     core('/datos-ganancias-2026',                '0.7',  'monthly'),
     core('/datos-topes-sipa-2026',               '0.7',  'monthly'),
@@ -1050,7 +1072,10 @@ function sitemapForLocale(cs: any[], locale: string, dir: string, withIndex: boo
   return { name: `sitemap-${locale}.xml`, urls };
 }
 
-if (calcsEn.length > 0) sitemaps.push(sitemapForLocale(calcsEn, 'en', CALCS_EN_DIR, false));
+// `en` era el único locale sin home en su sitemap. /en responde 200, es
+// self-canonical e indexable igual que el resto, así que quedaba fuera del
+// sitemap (y del push a IndexNow) sin motivo.
+if (calcsEn.length > 0) sitemaps.push(sitemapForLocale(calcsEn, 'en', CALCS_EN_DIR, true));
 if (calcsPt.length > 0) sitemaps.push(sitemapForLocale(calcsPt, 'pt', CALCS_PT_DIR, true));
 if (calcsMx.length > 0) sitemaps.push(sitemapForLocale(calcsMx, 'mx', CALCS_MX_DIR, true));
 if (calcsEs.length > 0) sitemaps.push(sitemapForLocale(calcsEs, 'es', CALCS_ES_DIR, true));
@@ -1490,9 +1515,20 @@ try {
   const redirectSources = new Set<string>();
   const rtxt = readFileSync(join(PUBLIC_DIR, '_redirects'), 'utf8');
   for (const line of rtxt.split('\n')) {
-    const m = line.trim().match(/^(\/[^\s]+)\s+\S+\s+30[18]\b/);
+    const m = line.trim().match(/^(\/[^\s]+)\s+(\S+)\s+30[18]\b/);
     if (m && !m[1].includes('*') && !m[1].includes(':')) {
-      redirectSources.add(m[1].replace(/\/$/, '') || '/');
+      const src = m[1].replace(/\/$/, '') || '/';
+      // Normalización de trailing slash (`/mx/` → `/mx`): el destino ES la URL
+      // canónica. Como acá el source se normaliza sacándole la barra final,
+      // `/mx/` colapsa a `/mx` y el filtro terminaba excluyendo del sitemap
+      // justo la URL que la redirección canonicaliza. Los 6 hubs de vertical
+      // (/mx /co /cl /es /pt /en) quedaban fuera del sitemap —y por lo tanto
+      // fuera del push a IndexNow— por esta vía.
+      let dstPath = m[2];
+      try { dstPath = new URL(dstPath, site).pathname; } catch { /* destino relativo raro */ }
+      dstPath = dstPath.replace(/\/$/, '') || '/';
+      if (src === dstPath) continue;
+      redirectSources.add(src);
     }
   }
   for (const s of sitemaps) {
