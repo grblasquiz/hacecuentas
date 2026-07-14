@@ -92,6 +92,9 @@ que cambiar de canal no repega a la API.
 </plist>
 ```
 
-`KeepAlive/SuccessfulExit=false` (no `KeepAlive: true`) a propósito: si el puerto
-ya está ocupado el server sale con 0 y launchd **no** reintenta, así no entra en
-loop de respawn. Si crashea, exit ≠ 0 y lo levanta.
+`KeepAlive: true` a secas, **nunca `SuccessfulExit: false`**: eso último significa
+"si salió bien, no lo reinicies", y un exit 0 (el puerto ocupado un instante al
+reiniciar) dejaba el panel muerto hasta el próximo login. El guard de puerto del
+server no se rinde: espera hasta 30 s a que se libere y, si no puede, sale con 1
+para que launchd reintente. Verificado con SIGKILL (revive en 5 s) y SIGTERM
+(8 s). El proceso cuelga de launchd (PPID 1), no de ninguna sesión.
