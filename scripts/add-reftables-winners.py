@@ -211,20 +211,6 @@ TABLES = {
    "rows": ovul_rows,
    "note": "La ventana fértil abarca los 5 días previos a la ovulación más el día de la ovulación, porque los espermatozoides sobreviven hasta 5 días. El día 1 es el primer día de la menstruación. Es una estimación; los ciclos varían entre personas y meses."}
 ],
-"sexo-bebe-tabla-china.json": [
-  {"title": "Métodos populares para predecir el sexo del bebé y su precisión",
-   "caption": "Ninguno tiene base científica: todos aciertan cerca del 50%, como tirar una moneda.",
-   "headers": ["Método", "En qué se basa", "Precisión real"],
-   "rows": [
-     ["Tabla china del embarazo", "Edad lunar de la madre + mes de concepción", "≈ 50% (azar)"],
-     ["Teoría del Nub", "Ángulo del tubérculo genital en la ecografía de semana 12", "Variable, no fiable"],
-     ["Método Ramzi", "Lado de implantación de la placenta", "Sin respaldo científico"],
-     ["Forma de la panza", "Panza alta/baja o redonda/puntuda", "≈ 50% (mito)"],
-     ["Frecuencia cardíaca fetal", "Más o menos de 140 latidos por minuto", "Sin correlación con el sexo"],
-     ["Ecografía (semana 18–20)", "Visualización directa de los genitales", "≈ 95–99%"],
-     ["Análisis de ADN fetal en sangre", "ADN del bebé en sangre materna (desde semana 9–10)", "≈ 99%"]],
-   "note": "La tabla china es un entretenimiento sin validez médica. Los únicos métodos confiables para conocer el sexo son la ecografía morfológica y el análisis de ADN fetal (NIPT)."}
-],
 "indemnizacion.json": [
   {"title": "Indemnización por despido según antigüedad (art. 245 LCT)",
    "caption": "Meses de la mejor remuneración a indemnizar por despido sin causa.",

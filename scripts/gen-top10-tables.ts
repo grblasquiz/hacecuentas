@@ -100,24 +100,7 @@ function patchCalc(slug: string, genTables: any[], genExamples: any[], genTitleP
   patchCalc('ganancias-sueldo', [tablaUmbral, tablaSim], examples, ['¿Desde qué sueldo bruto pagás Ganancias', 'Cuánto te retiene Ganancias por nivel']);
 }
 
-// ─────────────────────────── 2) SEXO BEBÉ — TABLA CHINA ───────────────────────────
-{
-  const src = fs.readFileSync(path.join('src/lib/formulas/sexo-bebe-tabla-china.ts'), 'utf8');
-  const block = src.match(/const tabla[^=]*=\s*\{([\s\S]*?)\n\};/)![1];
-  const matrix: Array<[number, string[]]> = [...block.matchAll(/(\d+):\s*\[([^\]]+)\]/g)]
-    .map((m) => [Number(m[1]), [...m[2].matchAll(/'([FM])'/g)].map((x) => x[1])] as [number, string[]]);
-  const rows = matrix.map(([edadLunar, cells]) => [String(edadLunar), ...cells.map((s) => (s === 'F' ? 'Nena' : 'Nene'))]);
-  const tabla = {
-    title: 'Tabla china del sexo del bebé 2026 (matriz completa)',
-    caption: 'Cruzá tu edad lunar (fila) con el mes de concepción (columna). La edad lunar es tu edad + 1 año.',
-    headers: ['Edad lunar', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-    rows,
-    note: 'Edad lunar = edad cumplida + 1 (ej.: si tenés 28, buscá la fila 29). Es la tabla del calendario chino tradicional. Precisión real ≈ 50% (igual que el azar): para saber el sexo de verdad, ecografía (sem. 16-20) o test de ADN fetal (sem. 9-10). Esta tabla es por diversión.',
-  };
-  patchCalc('sexo-bebe-tabla-china', [tabla], [], ['Tabla china del sexo del bebé']);
-}
-
-// ─────────────────────────── 3) ART — INDEMNIZACIÓN ───────────────────────────
+// ─────────────────────────── 2) ART — INDEMNIZACIÓN ───────────────────────────
 {
   const VIB = 1_500_000, EDAD = 40;
   const baremo: Array<[number, string]> = [
