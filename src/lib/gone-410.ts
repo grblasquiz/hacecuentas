@@ -398,6 +398,10 @@ export const GONE_410_URLS: ReadonlySet<string> = new Set<string>([
   "/calculadora-seguro-vida-temporal-vs-permanente-prima",
   "/calculadora-selenio-diario-oxidativo",
   "/calculadora-servicios-hogar-luz-gas-agua-mensual-estimado",
+  // 7-14: retirada por decisión de Martin (pseudociencia). Excepción al criterio
+  // de arriba: tenía 4 sesiones orgánicas/mes (no 0), pero se borra igual. El 301
+  // a /calculadora-embarazo se quitó de _redirects a pedido.
+  "/calculadora-sexo-bebe-tabla-china",
   "/calculadora-snacks-por-invitado-juntada",
   "/calculadora-staking-atom-cosmos-validador",
   "/calculadora-staking-bnb-binance-launchpool",
