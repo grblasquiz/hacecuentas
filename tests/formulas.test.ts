@@ -468,13 +468,14 @@ describe('gastosEscrituraCompraventa (defaults selloPct/honorariosPct)', () => {
     expect(r.honorarios).toBe(1_210_000); // honorarios sigue con default 2%
   });
 
-  it('vendedor → solo ITI 1.5%, sin honorarios/sellos', () => {
+  it('vendedor → sin ITI derogado, honorarios ni sellos', () => {
     const r = gastosEscrituraCompraventa({ valorOperacion: 50_000_000, esComprador: 'vendedor' });
-    expect(r.iti).toBe(750_000); // 50M*1.5%
+    expect(r.iti).toBe(0); // derogado por Ley 27.743 desde el 15/7/2024
     expect(r.honorarios).toBe(0);
     expect(r.sellos).toBe(0);
     expect(r.otros).toBe(0);
-    expect(r.gastoTotal).toBe(750_000);
+    expect(r.gastoTotal).toBe(0);
+    expect(r._insight?.title).toContain('ya no paga ITI');
   });
 
   it('valor 0 o ausente → error', () => {

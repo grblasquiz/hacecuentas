@@ -3,6 +3,7 @@ import CookieConsent from '../components/CookieConsent.astro';
 import InstallPrompt from '../components/InstallPrompt.astro';
 import ProfileStore from '../components/ProfileStore.astro';
 import { EZOIC_ENABLED } from '../lib/ezoic';
+import { ADSENSE_SERVING_ENABLED } from '../lib/adsense';
 import { HC_ALLOWED_PARAMS } from '../lib/analytics';
 
 // Self-hosted fonts (subset latin) — elimina render-blocking de Google Fonts.
@@ -665,7 +666,7 @@ const globalSchema = {
         partner de mediación en el panel), así que cargarlo nosotros duplicaría
         y violaría policy. La verificación de cuenta (meta de arriba + línea en
         ads.txt) se mantiene SIEMPRE — Ezoic la necesita. */}
-    {!EZOIC_ENABLED && !noAds && (
+    {ADSENSE_SERVING_ENABLED && !EZOIC_ENABLED && !noAds && (
       <script set:html={`window.addEventListener('load',function(){(window.requestIdleCallback||function(f){setTimeout(f,1500)})(function(){var s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6276944768601561';document.head.appendChild(s);});});`} />
     )}
 

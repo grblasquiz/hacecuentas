@@ -4,6 +4,7 @@ import { compute as computeIrpf } from '../src/lib/formulas/irpf-2026-tramos-esp
 import { compute as computeUf } from '../src/lib/formulas/uf-uta-utm-chile-conversion-pesos-2026';
 import { compute as numeroALetras } from '../src/lib/formulas/conversor-numero-a-letras-cantidad';
 import { TOPES, CUOTA_SERVICIOS, CUOTA_BIENES } from '../src/lib/data/monotributo-2026';
+import clLive from '../src/data/live/chile.json';
 
 describe('páginas prioritarias de Bing', () => {
   it('usa el tope BIESS de 80 SBU y las tasas oficiales por plazo', () => {
@@ -54,7 +55,10 @@ describe('páginas prioritarias de Bing', () => {
     const utm = computeUf({ tipo_conversion: 'utm_a_pesos', monto: 5 });
     expect(uf.valor_unitario).toBe(40_844.79);
     expect(uf.resultado_conversion).toBe(4_084_479);
-    expect(uf.fecha_vigencia).toContain('09-07-2026');
+    const liveDate = new Intl.DateTimeFormat('es-CL', {
+      day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'America/Santiago',
+    }).format(new Date(clLive.uf.fecha));
+    expect(uf.fecha_vigencia).toContain(liveDate);
     expect(utm.valor_unitario).toBe(71_649);
     expect(utm.resultado_conversion).toBe(358_245);
   });

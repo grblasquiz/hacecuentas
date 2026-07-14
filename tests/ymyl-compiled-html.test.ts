@@ -15,6 +15,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { isRestrictedCalc } from '../src/lib/content-policy.ts';
+import { GONE_410_URLS } from '../src/lib/gone-410.ts';
+import { PRUNING_REDIRECTS } from '../src/lib/pruning-redirects.ts';
 
 const ROOT = process.cwd();
 const DIST = join(ROOT, 'dist/client');
@@ -38,7 +40,13 @@ function restrictedList(): Array<{ slug: string; en: boolean }> {
       if (!f.endsWith('.json')) continue;
       let c: any;
       try { c = JSON.parse(readFileSync(join(dir, f), 'utf8')); } catch { continue; }
-      if (isRestrictedCalc(c)) out.push({ slug: c.slug, en });
+      const path = `${en ? '/en/' : '/'}${c.slug}`;
+      // Los aliases retirados se borran de dist deliberadamente y los resuelve
+      // el wrapper como 301/410; no son páginas compiladas a las que aplicar el
+      // contrato visual YMYL.
+      if (isRestrictedCalc(c) && !GONE_410_URLS.has(path) && !(path in PRUNING_REDIRECTS)) {
+        out.push({ slug: c.slug, en });
+      }
     }
   }
   return out;

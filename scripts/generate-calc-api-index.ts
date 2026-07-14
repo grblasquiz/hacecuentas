@@ -23,6 +23,17 @@ const OUT_FILE = join(OUT_DIR, 'calcs-index.json');
 const OUT_SLIM = join(OUT_DIR, 'calcs-slim.json');
 const OUT_TOP = join(OUT_DIR, 'calcs-top.json');
 
+// Redirects estáticos fuera del mapa de pruning (migraciones históricas,
+// variantes con mayúsculas/encoding, etc.). También son URLs no canónicas y
+// por lo tanto no deben publicarse en el catálogo API.
+const STATIC_REDIRECT_PATHS = new Set(
+  readFileSync(join(ROOT, 'public', '_redirects'), 'utf8')
+    .split(/\r?\n/)
+    .map((line) => line.trim().split(/\s+/))
+    .filter((parts) => parts.length >= 3 && /^30[1278]$/.test(parts.at(-1) || ''))
+    .map((parts) => parts[0]),
+);
+
 const LOCALES: Array<{ dir: string; pathPrefix: string; locale: string }> = [
   { dir: 'src/content/calcs', pathPrefix: '', locale: 'es' },
   { dir: 'src/content/calcs-en', pathPrefix: 'en/', locale: 'en' },
@@ -76,7 +87,7 @@ function shortTitle(raw: string): string {
 
 /** URLs muertas (410) o redirigidas (301 pruning): no van al slim ni al top. */
 function isDeadPath(path: string): boolean {
-  return GONE_410_URLS.has(path) || path in PRUNING_REDIRECTS;
+  return GONE_410_URLS.has(path) || path in PRUNING_REDIRECTS || STATIC_REDIRECT_PATHS.has(path);
 }
 
 // ---------------------------------------------------------------------------
@@ -163,6 +174,8 @@ const slim: SlimEntry[] = [];
 const deadEsSlugs = new Set<string>();
 let skipped = 0;
 let included = 0;
+let skippedDead = 0;
+let skippedCanonicalAlias = 0;
 
 for (const { dir, pathPrefix, locale } of LOCALES) {
   const fullDir = join(ROOT, dir);
@@ -178,6 +191,22 @@ for (const { dir, pathPrefix, locale } of LOCALES) {
       const slug = data.slug;
       if (!slug) {
         skipped++;
+        continue;
+      }
+      const path = `/${pathPrefix}${slug}`;
+      // El índice público es un contrato de URLs canónicas, no un inventario de
+      // JSONs históricos. Incluir rutas que el worker responde 301/410 hizo que
+      // agentes, feeds y crawlers descubrieran cientos de aliases como si fueran
+      // calculadoras vigentes.
+      if (isDeadPath(path)) {
+        skipped++;
+        skippedDead++;
+        if (pathPrefix === '') deadEsSlugs.add(slug);
+        continue;
+      }
+      if (data.canonicalSlug && data.canonicalSlug !== slug) {
+        skipped++;
+        skippedCanonicalAlias++;
         continue;
       }
       out.push({
@@ -198,18 +227,11 @@ for (const { dir, pathPrefix, locale } of LOCALES) {
         const prefill = buildPrefillQuery(data);
         if (prefill) prefillBySlug.set(slug, prefill);
       }
-      const path = `/${pathPrefix}${slug}`;
-      if (isDeadPath(path)) {
-        // Sigue en el index full (comportamiento histórico: el JSON existe para
-        // que el middleware redirija), pero no se sugiere en 404 ni en el top.
-        if (pathPrefix === '') deadEsSlugs.add(slug);
-      } else {
-        slim.push({
-          s: slug,
-          t: shortTitle(String(data.h1 || data.title || slug)),
-          l: pathPrefix.replace(/\/$/, ''),
-        });
-      }
+      slim.push({
+        s: slug,
+        t: shortTitle(String(data.h1 || data.title || slug)),
+        l: pathPrefix.replace(/\/$/, ''),
+      });
       included++;
     } catch (e) {
       skipped++;
@@ -287,7 +309,7 @@ mkdirSync(OUT_DIR, { recursive: true });
 writeFileSync(OUT_FILE, JSON.stringify(meta, null, 0));
 
 const bytes = JSON.stringify(meta).length;
-console.log(`✓ calcs-index.json: ${included} calcs (${skipped} skipped) — ${(bytes / 1024).toFixed(1)} KB`);
+console.log(`✓ calcs-index.json: ${included} calcs (${skipped} skipped: ${skippedDead} retired, ${skippedCanonicalAlias} aliases) — ${(bytes / 1024).toFixed(1)} KB`);
 
 // ---------------------------------------------------------------------------
 // /api/calcs-slim.json — índice ultraliviano [{s, t, l}] de TODAS las calcs.
