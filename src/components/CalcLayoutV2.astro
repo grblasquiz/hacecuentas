@@ -467,11 +467,22 @@ const _metAnchor = uiLang === 'en' ? 'methodology' : uiLang === 'pt' ? 'metodolo
 const _polLink = `<a href="/politica-editorial">${_polAnchor}</a>`;
 const _metLink = `<a href="/metodologia">${_metAnchor}</a>`;
 const _firstSourceName = sources?.[0]?.name || '';
-const editorialHtml = uiLang === 'en'
-  ? `${catLabel} calculator reviewed by Martín Rodríguez, editor of Hacé Cuentas${_firstSourceName ? `, checked against ${_firstSourceName}` : ''}, following our ${_polLink} and ${_metLink}.`
-  : uiLang === 'pt'
-  ? `Calculadora de ${catLabel.toLowerCase()} revisada por Martín Rodríguez, editor do Hacé Cuentas${_firstSourceName ? `, conferida com ${_firstSourceName}` : ''}, conforme nossa ${_polLink} e nossa ${_metLink}.`
-  : `Calculadora de ${catLabel.toLowerCase()} revisada por Martín Rodríguez, editor de Hacé Cuentas${_firstSourceName ? `, contrastada con ${_firstSourceName}` : ''}, según nuestra ${_polLink} y ${_metLink}.`;
+// Nivel de revisión REAL: solo las calcs con reviewType editorial/profesional
+// declaran "revisada por Martín Rodríguez" (E-E-A-T verdadero). El resto muestra
+// una frase honesta de verificación automática — NUNCA claim de revisión humana
+// en páginas no revisadas (auditoría AdSense: no afirmar "revisado" sin revisión).
+const _isReviewed = calc.reviewType === 'editorial' || calc.reviewType === 'professional';
+const editorialHtml = _isReviewed
+  ? (uiLang === 'en'
+    ? `${catLabel} calculator reviewed by Martín Rodríguez, editor of Hacé Cuentas${_firstSourceName ? `, checked against ${_firstSourceName}` : ''}, following our ${_polLink} and ${_metLink}.`
+    : uiLang === 'pt'
+    ? `Calculadora de ${catLabel.toLowerCase()} revisada por Martín Rodríguez, editor do Hacé Cuentas${_firstSourceName ? `, conferida com ${_firstSourceName}` : ''}, conforme nossa ${_polLink} e nossa ${_metLink}.`
+    : `Calculadora de ${catLabel.toLowerCase()} revisada por Martín Rodríguez, editor de Hacé Cuentas${_firstSourceName ? `, contrastada con ${_firstSourceName}` : ''}, según nuestra ${_polLink} y ${_metLink}.`)
+  : (uiLang === 'en'
+    ? `${catLabel} calculator with its formula verified automatically${_firstSourceName ? ` against ${_firstSourceName}` : ' against the cited sources'}, per our ${_polLink} and ${_metLink}.`
+    : uiLang === 'pt'
+    ? `Calculadora de ${catLabel.toLowerCase()} com fórmula verificada automaticamente${_firstSourceName ? ` com ${_firstSourceName}` : ' com as fontes citadas'}, conforme nossa ${_polLink} e nossa ${_metLink}.`
+    : `Calculadora de ${catLabel.toLowerCase()} con fórmula verificada automáticamente${_firstSourceName ? ` contra ${_firstSourceName}` : ' contra las fuentes citadas'}, según nuestra ${_polLink} y ${_metLink}.`);
 ---
 
 <article class:list={['calc-page', 'calc-v2', redesign && 'calc-v3']}>
@@ -855,7 +866,7 @@ const editorialHtml = uiLang === 'en'
         <h2>{L.methodology}</h2>
         <div class="v2-trust-grid">
           <div class="v2-trust-item"><div class="tl">{L.editorial}</div><p set:html={editorialHtml}></p></div>
-          <div class="v2-trust-item"><div class="tl">{L.updateLbl}</div><p>{L.lastReview}: <strong>{updated || updatedLabel}</strong>. {L.updateTxt}</p></div>
+          <div class="v2-trust-item"><div class="tl">{L.updateLbl}</div><p>{_isReviewed ? L.lastReview : L.updated}: <strong>{updated || updatedLabel}</strong>. {L.updateTxt}</p></div>
           <div class="v2-trust-item"><div class="tl">{L.privacy}</div><p>{L.privacyTxt}</p></div>
           <div class="v2-trust-item"><div class="tl">{L.limits}</div><p>{L.limitsTxt}</p></div>
         </div>
