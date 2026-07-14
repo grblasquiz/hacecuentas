@@ -150,6 +150,15 @@ export const CALC_COUNTS_PUBLIC = {
   repoTotal: CALC_COUNTS.total,
 } as const;
 
+// Métricas públicas explícitas: no mezclar herramientas del catálogo raíz con
+// versiones localizadas ni con el total bruto del repositorio.
+export const ROOT_CATALOG_COUNT = AR_INDEXABLE;
+export const LOCALIZED_VERSION_COUNT = PUBLIC_TOTAL - AR_INDEXABLE;
+export const PUBLIC_URL_COUNT = PUBLIC_TOTAL;
+export const ROOT_CATALOG_EXACT = formatES(ROOT_CATALOG_COUNT);
+export const LOCALIZED_VERSION_EXACT = formatES(LOCALIZED_VERSION_COUNT);
+export const PUBLIC_URL_EXACT = formatES(PUBLIC_URL_COUNT);
+
 // Display público del contador de "herramientas": usa el catálogo ESPAÑOL
 // distribuible (= lo que muestra /calculadoras y la suma de categorías visibles),
 // NO el total multi-idioma. Antes usaba PUBLIC_TOTAL (todas las locales, ~2.400):

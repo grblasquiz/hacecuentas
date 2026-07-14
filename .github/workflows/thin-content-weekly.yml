@@ -31,15 +31,20 @@ jobs:
           node -e "
           const fs = require('fs');
           const path = require('path');
-          const dir = 'src/content/calcs';
-          const files = fs.readdirSync(dir).filter(f => f.endsWith('.json'));
+          const base = 'src/content';
+          const dirs = fs.readdirSync(base, { withFileTypes: true })
+            .filter(d => d.isDirectory() && d.name.startsWith('calcs'))
+            .map(d => path.join(base, d.name));
+          const files = dirs.flatMap(dir => fs.readdirSync(dir)
+            .filter(f => f.endsWith('.json')).map(f => path.join(dir, f)));
           const thin = [];
           for (const f of files) {
             try {
-              const d = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
+              const d = JSON.parse(fs.readFileSync(f, 'utf8'));
               const len = (d.explanation || '').length;
-              if (len < 1500) {
-                thin.push({ slug: d.slug || f, len, h1: d.h1 || '' });
+              const restricted = d.noindex === true || d.status === 'draft' || d.distribution === 'restricted';
+              if (len < 1500 && !restricted) {
+                thin.push({ file: f, slug: d.slug || f, len, h1: d.h1 || '' });
               }
             } catch (e) {}
           }

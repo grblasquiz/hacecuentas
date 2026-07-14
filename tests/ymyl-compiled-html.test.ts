@@ -31,8 +31,8 @@ function distHtml(slug: string, en: boolean): string | null {
 }
 
 // Restringidas reales, computadas desde el contenido.
-function restrictedList(): Array<{ slug: string; en: boolean }> {
-  const out: Array<{ slug: string; en: boolean }> = [];
+function restrictedList(): Array<{ slug: string; en: boolean; requiresClinicalNotice: boolean }> {
+  const out: Array<{ slug: string; en: boolean; requiresClinicalNotice: boolean }> = [];
   for (const [d, en] of [['calcs', false], ['calcs-en', true]] as const) {
     const dir = join(ROOT, 'src/content', d);
     if (!existsSync(dir)) continue;
@@ -45,7 +45,7 @@ function restrictedList(): Array<{ slug: string; en: boolean }> {
       // el wrapper como 301/410; no son páginas compiladas a las que aplicar el
       // contrato visual YMYL.
       if (isRestrictedCalc(c) && !GONE_410_URLS.has(path) && !(path in PRUNING_REDIRECTS)) {
-        out.push({ slug: c.slug, en });
+        out.push({ slug: c.slug, en, requiresClinicalNotice: c.ymylRisk === 'high' });
       }
     }
   }
@@ -92,7 +92,7 @@ describe.skipIf(!hasDist)('YMYL compiled — cada restringida bloqueada', () => 
     expect(restricted.length).toBeGreaterThan(0);
   });
 
-  for (const { slug, en } of restricted) {
+  for (const { slug, en, requiresClinicalNotice } of restricted) {
     const label = (en ? '/en/' : '/') + slug;
     it(`${label} — noindex, sin widget/ads/export/embed y fuera de canales`, () => {
       const html = distHtml(slug, en);
@@ -113,8 +113,11 @@ describe.skipIf(!hasDist)('YMYL compiled — cada restringida bloqueada', () => 
       for (const phrase of FORBIDDEN_BYLINE) {
         expect(text.includes(phrase), `${label} byline "${phrase}"`).toBe(false);
       }
-      // 6) aviso presente
-      expect(html.includes('Herramienta temporalmente limitada'), `${label} sin aviso`).toBe(true);
+      // 6) el aviso clínico corresponde a YMYL alto; un borrador editorial
+      // no debe fingir que requiere evaluación médica.
+      if (requiresClinicalNotice) {
+        expect(html.includes('Herramienta temporalmente limitada'), `${label} sin aviso`).toBe(true);
+      }
 
       // 7) fuera de sitemaps
       for (const sm of sitemaps) {

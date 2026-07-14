@@ -20,29 +20,31 @@ import {
   isRestrictedCalc,
   isPrunedCalc,
   isAdWorthy,
+  canAdvertiseCalc,
   hasValidProfessionalReviewer,
 } from '../src/lib/content-policy.ts';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const CONTENT = join(ROOT, 'src/content');
 const REPORTS = join(ROOT, 'reports');
-const TODAY = '2026-07-13'; // fecha de la corrida; pasada explícitamente (no Date.now, rompe resume)
+const TODAY = '2026-07-14'; // fecha de esta auditoría editorial completa
 
 // Locales: carpeta → {lang, country}
-const LOCALES: Record<string, { lang: string; country: string }> = {
-  'calcs': { lang: 'es', country: 'AR' },
-  'calcs-mx': { lang: 'es', country: 'MX' },
-  'calcs-co': { lang: 'es', country: 'CO' },
-  'calcs-cl': { lang: 'es', country: 'CL' },
-  'calcs-pe': { lang: 'es', country: 'PE' },
-  'calcs-ec': { lang: 'es', country: 'EC' },
-  'calcs-ve': { lang: 'es', country: 'VE' },
-  'calcs-uy': { lang: 'es', country: 'UY' },
-  'calcs-do': { lang: 'es', country: 'DO' },
-  'calcs-es': { lang: 'es', country: 'ES' },
-  'calcs-en': { lang: 'en', country: 'US' },
-  'calcs-pt': { lang: 'pt', country: 'BR' },
-  'calcs-pt-pt': { lang: 'pt', country: 'PT' },
+const LOCALES: Record<string, { lang: string; country: string; prefix: string }> = {
+  'calcs': { lang: 'es', country: 'AR', prefix: '' },
+  'calcs-mx': { lang: 'es', country: 'MX', prefix: 'mx' },
+  'calcs-co': { lang: 'es', country: 'CO', prefix: 'co' },
+  'calcs-cl': { lang: 'es', country: 'CL', prefix: 'cl' },
+  'calcs-pe': { lang: 'es', country: 'PE', prefix: 'pe' },
+  'calcs-ec': { lang: 'es', country: 'EC', prefix: 'ec' },
+  'calcs-ve': { lang: 'es', country: 'VE', prefix: 've' },
+  'calcs-py': { lang: 'es', country: 'PY', prefix: 'py' },
+  'calcs-uy': { lang: 'es', country: 'UY', prefix: 'uy' },
+  'calcs-do': { lang: 'es', country: 'DO', prefix: 'do' },
+  'calcs-es': { lang: 'es', country: 'ES', prefix: 'es' },
+  'calcs-en': { lang: 'en', country: 'US', prefix: 'en' },
+  'calcs-pt': { lang: 'pt', country: 'BR', prefix: 'pt' },
+  'calcs-pt-pt': { lang: 'pt', country: 'PT', prefix: 'pt-pt' },
 };
 
 // Frases genéricas / restos de plantilla que NO pueden aparecer en publishable (#3).
@@ -73,6 +75,7 @@ type EditorialState =
   | 'published';
 
 interface Row {
+  url: string;
   slug: string;
   lang: string;
   country: string;
@@ -93,6 +96,13 @@ interface Row {
   professionalReviewer: string;
   fields: number;
   formulaSignature: string;
+  formulaType: string;
+  primarySource: string;
+  primarySourceUrl: string;
+  sourceVerified: boolean;
+  automatedTests: string;
+  adsEligible: boolean;
+  quarantineReasons: string[];
   hasTests: boolean;
   ymyl: 'LOW' | 'MODERATE' | 'HIGH';
   genericHits: string[];
@@ -169,10 +179,11 @@ for (const [folder, meta] of Object.entries(LOCALES)) {
     const state = editorialState(c);
 
     const row: Row = {
+      url: `https://hacecuentas.com/${meta.prefix ? `${meta.prefix}/` : ''}${c.slug}`,
       slug: c.slug, lang: meta.lang, country: meta.country, category: c.category || '',
       editorialState: state,
       indexable: !isRestrictedCalc(c) && c.noindex !== true && !prunedSet.has(c.slug),
-      canonical: `https://hacecuentas.com/${c.slug}`,
+      canonical: `https://hacecuentas.com/${meta.prefix ? `${meta.prefix}/` : ''}${c.slug}`,
       title: c.title || '', metaDescription: c.description || '', h1: c.h1 || '',
       words, wordsBody: words,
       sources: sources.length, officialSources,
@@ -181,7 +192,14 @@ for (const [folder, meta] of Object.entries(LOCALES)) {
       professionalReviewer: c.professionalReviewer?.name || '',
       fields: (c.fields || []).length,
       formulaSignature: formulaSignature(c),
-      hasTests: false, // #7: tests por fórmula — pendiente sistema de tests (fase 2)
+      formulaType: c.methodType || c.formulaType || (c.formulaId ? 'programmed-method' : 'undocumented'),
+      primarySource: sources[0]?.name || c.dataUpdate?.source || '',
+      primarySourceUrl: sources[0]?.url || c.dataUpdate?.sourceUrl || '',
+      sourceVerified: c.sourceVerified === true,
+      automatedTests: c.automatedTests || 'pending',
+      adsEligible: canAdvertiseCalc(c),
+      quarantineReasons: Array.isArray(c.quarantineReasons) ? c.quarantineReasons : [],
+      hasTests: c.automatedTests === 'passed',
       ymyl, genericHits: generic, blocks: [], decision: 'KEEP',
     };
 
@@ -259,9 +277,11 @@ writeFileSync(join(REPORTS, 'adsense-audit.json'), JSON.stringify({
   rows,
 }, null, 2));
 
-const cols: (keyof Row)[] = ['slug', 'lang', 'country', 'category', 'editorialState', 'indexable',
+const cols: (keyof Row)[] = ['url', 'slug', 'lang', 'country', 'category', 'editorialState', 'indexable',
   'title', 'metaDescription', 'h1', 'words', 'sources', 'officialSources', 'reviewDate',
-  'editor', 'professionalReviewer', 'fields', 'formulaSignature', 'ymyl', 'decision'];
+  'dataUpdate', 'editor', 'professionalReviewer', 'fields', 'formulaSignature', 'formulaType',
+  'primarySource', 'primarySourceUrl', 'sourceVerified', 'automatedTests', 'adsEligible',
+  'quarantineReasons', 'ymyl', 'blocks', 'decision'];
 writeFileSync(join(REPORTS, 'adsense-audit.csv'),
   [cols.join(','), ...rows.map((r) => cols.map((c) => csvEsc(
     Array.isArray(r[c]) ? (r[c] as any[]).join(';') : r[c])).join(','))].join('\n'));

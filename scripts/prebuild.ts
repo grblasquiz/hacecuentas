@@ -75,9 +75,13 @@ async function main() {
   const incremental = Boolean(process.env.INCREMENTAL_CHANGES);
 
   console.log(`[prebuild] mode=${incremental ? 'incremental' : 'full'}`);
-  console.log('[prebuild] fase 1: validate:data + fiscal-gate + placeholder-gate + link-guard + regenerate-formula-index + converter-tables + bcra-indices');
+  console.log('[prebuild] fase 1: validate:data + editorial-gate + temporal-gate + fiscal-gate + placeholder-gate + link-guard + regenerate-formula-index + converter-tables + bcra-indices');
   await Promise.all([
     run(task('validate', 'validate-data-updates')),
+    // Bloquea publicación indexable de cualquier calc bajo el piso editorial.
+    // La salida segura es completar revisión o marcarla draft/noindex.
+    run({ name: 'editorial-gate', cmd: NODE, args: [...FLAGS, 'scripts/quarantine-editorial-risk.ts', '--strict'] }),
+    run(task('temporal-gate', 'check-temporal-claims')),
     // Gate anti-hardcode fiscal: falla rápido si una fórmula re-introduce un
     // valor fiscal viejo conocido (teto INSS 2025, SM 1518, etc.) en vez de
     // importar la fuente única de src/lib/data/.

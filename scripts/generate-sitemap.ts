@@ -1277,6 +1277,10 @@ if (PRODUCTS.length > 0) {
 // 8. Argentina provincial — lastmod del JSON de la calc
 const argUrls: Url[] = [];
 for (const calc of argCalcs as any[]) {
+  // Las páginas provinciales son vistas derivadas de una calculadora raíz.
+  // Si la raíz quedó noindex/restringida, ninguna variante provincial puede
+  // permanecer en sitemap. `calcBySlug` contiene sólo calcs distribuibles.
+  if (!calcBySlug.has(calc.calcSlug)) continue;
   // Buscar el archivo JSON en argentina/ que corresponda
   const argFile = safeReadDir(ARGENTINA_DIR).find(f => {
     if (f === 'provincias.json') return false;

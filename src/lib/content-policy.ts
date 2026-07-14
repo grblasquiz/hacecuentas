@@ -72,6 +72,12 @@ export interface CalcPolicyInput {
   /** Corta anuncios SIN afectar indexación (apuestas/lotería/juego, per Publisher Policies). */
   adsenseEligible?: boolean;
   professionalReviewer?: ProfessionalReviewer | null;
+  /** Aprobación humana explícita; nunca se infiere de tests o longitud. */
+  editorialReview?: 'pending' | 'approved' | 'rejected' | string;
+  /** La fuente fue abierta y contrastada por una persona con el dato usado. */
+  sourceVerified?: boolean;
+  /** La fórmula aprobó casos automatizados documentados. */
+  automatedTests?: 'pending' | 'passed' | 'failed' | string;
   // toleramos cualquier otro campo del calc sin romper el tipo
   [key: string]: unknown;
 }
@@ -326,6 +332,11 @@ export function canAdvertiseCalc(calc: CalcPolicyInput | null | undefined): bool
   if (calc && calc.adsenseEligible === false) return false;
   // Restringidas YMYL (dosis/medicación/tratamiento sin revisor válido) → sin ads.
   if (isRestrictedCalc(calc)) return false;
+  // Monetización opt-in: un test verde no equivale a revisión editorial.
+  // Hasta que los tres estados sean explícitos, la página permanece sin ads.
+  if (calc?.sourceVerified !== true) return false;
+  if (calc?.editorialReview !== 'approved') return false;
+  if (calc?.automatedTests !== 'passed') return false;
   // Review AdSense 2026-07: sólo se monetiza contenido de calidad comprobable.
   return isAdWorthy(calc);
 }

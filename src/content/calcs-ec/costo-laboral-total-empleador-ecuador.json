@@ -24,18 +24,67 @@
     "Estimar la carga laboral total de una pyme con 5 empleados de $600 cada uno para presupuestar la nómina anual."
   ],
   "fields": [
-    { "id": "sueldoMensual", "label": "Sueldo mensual ($)", "type": "number", "required": true, "placeholder": "600", "min": 0, "step": 0.01, "unit": "$" },
-    { "id": "segundoAnio", "label": "¿Es el segundo año o más? (aplica fondos de reserva)", "type": "select", "default": "false", "options": [ { "value": "false", "label": "No (primer año)" }, { "value": "true", "label": "Sí (segundo año en adelante)" } ] }
+    {
+      "id": "sueldoMensual",
+      "label": "Sueldo mensual ($)",
+      "type": "number",
+      "required": true,
+      "placeholder": "600",
+      "min": 0,
+      "step": 0.01,
+      "unit": "$"
+    },
+    {
+      "id": "segundoAnio",
+      "label": "¿Es el segundo año o más? (aplica fondos de reserva)",
+      "type": "select",
+      "default": "false",
+      "options": [
+        {
+          "value": "false",
+          "label": "No (primer año)"
+        },
+        {
+          "value": "true",
+          "label": "Sí (segundo año en adelante)"
+        }
+      ]
+    }
   ],
   "outputs": [
-    { "id": "costoMensual", "label": "Costo laboral mensual", "primary": true },
-    { "id": "costoAnual", "label": "Costo laboral anual" },
-    { "id": "aportePatronal", "label": "Aporte patronal (11,15%)" },
-    { "id": "provisionDecimos", "label": "Provisión décimos (13º + 14º)" },
-    { "id": "provisionVacaciones", "label": "Provisión vacaciones" },
-    { "id": "fondosReserva", "label": "Fondos de reserva" },
-    { "id": "factorSobreSueldo", "label": "Factor sobre el sueldo" },
-    { "id": "detalle", "label": "Detalle" }
+    {
+      "id": "costoMensual",
+      "label": "Costo laboral mensual",
+      "primary": true
+    },
+    {
+      "id": "costoAnual",
+      "label": "Costo laboral anual"
+    },
+    {
+      "id": "aportePatronal",
+      "label": "Aporte patronal (11,15%)"
+    },
+    {
+      "id": "provisionDecimos",
+      "label": "Provisión décimos (13º + 14º)"
+    },
+    {
+      "id": "provisionVacaciones",
+      "label": "Provisión vacaciones"
+    },
+    {
+      "id": "fondosReserva",
+      "label": "Fondos de reserva"
+    },
+    {
+      "id": "factorSobreSueldo",
+      "label": "Factor sobre el sueldo"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
   ],
   "example": {
     "title": "Ejemplo: sueldo $600, segundo año",
@@ -51,20 +100,56 @@
   },
   "explanation": "## Qué compone el costo laboral en Ecuador\n\nAdemás del sueldo, la empresa asume cada mes:\n\n| Concepto | Cálculo mensual | % o monto |\n|---|---|---|\n| Aporte patronal IESS | sueldo × 11,15% | 11,15% |\n| Décimo tercero (provisión) | sueldo × 8,33% | 8,33% |\n| Décimo cuarto (provisión) | SBU ÷ 12 | $40,17 (2026) |\n| Vacaciones (provisión) | sueldo × 4,16% | ~4,16% |\n| Fondos de reserva | sueldo × 8,33% (desde 2º año) | 8,33% |\n\n```\nCosto mensual = sueldo + aporte patronal + provisión 13º + provisión 14º + provisión vacaciones + fondos de reserva\nCosto anual    = costo mensual × 12\nFactor         = costo mensual ÷ sueldo\n```\n\nDurante el **primer año** no se incluyen los fondos de reserva (todavía no se generan); **desde el segundo año** se suman. Podés calcular el monto exacto de fondos de reserva para un sueldo dado en la [calculadora de fondos de reserva](/ec/calculadora-fondos-de-reserva-ecuador).\n\n## Costo mensual por nivel de sueldo (segundo año, con fondos de reserva)\n\n| Sueldo | Patronal (11,15%) | Décimo 13º (8,33%) | Décimo 14º (fijo) | Vacaciones (4,16%) | Fondos res. (8,33%) | Costo mensual | Factor |\n|---|---|---|---|---|---|---|---|\n| $482 | $53,74 | $40,15 | $40,17 | $20,05 | $40,15 | $676,26 | 1,40× |\n| $600 | $66,90 | $49,98 | $40,17 | $24,96 | $49,98 | $831,99 | 1,39× |\n| $800 | $89,20 | $66,64 | $40,17 | $33,28 | $66,64 | $1.095,93 | 1,37× |\n| $1.200 | $133,80 | $99,96 | $40,17 | $49,92 | $99,96 | $1.623,81 | 1,35× |\n\nFijate cómo el **factor baja** a medida que sube el sueldo: el décimo cuarto es un monto fijo, así que pesa más cuando el sueldo es bajo.\n\n## Ejemplos resueltos\n\n**1) Sueldo $600, segundo año:** patronal $66,90 + 13º $49,98 + 14º $40,17 + vacaciones $24,96 + fondos $49,98 = **$831,99/mes** (≈ $9.984/año), factor 1,39×.\n\n**2) Sueldo $600, primer año (sin fondos):** $600 + $66,90 + $49,98 + $40,17 + $24,96 = **$782,01/mes**, factor 1,30×.\n\n**3) Sueldo $1.200, segundo año:** costo ≈ **$1.623,81/mes**, factor 1,35× (el décimo cuarto fijo pesa menos en proporción).\n\n## Primer año vs segundo año\n\nDurante el **primer año** no se provisionan fondos de reserva (no se han generado todavía), por lo que el costo es menor (factor ≈ 1,30×). **Desde el segundo año** se suma el 8,33% de fondos de reserva, que eleva el factor a ≈ 1,39×.\n\n## Errores comunes\n\n- **Olvidar el décimo cuarto fijo.** No escala con el sueldo: son ~$40,17/mes para todos en 2026.\n- **Incluir fondos de reserva el primer año.** Recién aplican desde el mes 13.\n- **Pensar que el costo es solo sueldo + IESS.** Las provisiones de décimos y vacaciones suman cerca de un 20% adicional.\n\n## Cuándo aplica y excepciones\n\nAplica a empleados en relación de dependencia del sector privado. No incluye costos adicionales como seguro de riesgos del trabajo específico, capacitación, uniformes, transporte, beneficios voluntarios ni indemnizaciones eventuales. Tampoco contempla las [utilidades (15% de la ganancia de la empresa)](/ec/calculadora-utilidades-ecuador), que son un costo separado y variable. Para verificar el desglose del aporte patronal, la [calculadora de aportes al IESS](/ec/calculadora-aporte-iess-ecuador) muestra el 11,15% en detalle junto al aporte personal del trabajador.\n\n## Disclaimer\n\nCálculo **orientativo** de las cargas obligatorias principales. El décimo cuarto es un monto fijo (1 SBU) que no escala con el sueldo, por lo que su peso relativo es mayor en sueldos bajos. Verificá tu caso con un contador.\n",
   "faq": [
-    { "q": "¿Cuánto le cuesta un empleado a la empresa en Ecuador?", "a": "El sueldo más el aporte patronal (11,15%) y las provisiones de décimos, vacaciones y fondos de reserva. En total suele rondar **1,30×** el sueldo el primer año y **1,39×** desde el segundo año (cuando se suman los fondos de reserva)." },
-    { "q": "¿Cuál es el aporte patronal al IESS?", "a": "El aporte patronal del sector privado es del **11,15%** del sueldo y lo paga íntegramente el empleador, además del 9,45% que se descuenta al trabajador." },
-    { "q": "¿Por qué el costo es mayor desde el segundo año?", "a": "Porque a partir del segundo año la empresa debe provisionar los **fondos de reserva (8,33%)**, que no aplican durante el primer año de la relación laboral." },
-    { "q": "¿Cómo se provisiona el décimo tercero y cuarto?", "a": "El décimo tercero se provisiona como el 8,33% del sueldo cada mes (1/12). El décimo cuarto, al ser un monto fijo de 1 SBU, se provisiona como SBU ÷ 12 = $40,17 mensuales en 2026." },
-    { "q": "¿Las vacaciones tienen un costo mensual?", "a": "Sí. La empresa provisiona las vacaciones, que equivalen aproximadamente al 4,16% del sueldo mensual (15 días al año, que es 1/24 del salario anual)." },
-    { "q": "¿El décimo cuarto pesa igual en todos los sueldos?", "a": "No. El décimo cuarto es un monto fijo (1 SBU, $482 en 2026) que no depende del sueldo, así que pesa proporcionalmente más en sueldos bajos que en altos, elevando el factor de carga." },
-    { "q": "¿Qué otros costos no incluye esta calculadora?", "a": "No incluye el seguro de riesgos del trabajo específico, capacitación, uniformes, transporte, beneficios voluntarios ni costos de reclutamiento. Es una base de las cargas obligatorias principales." },
-    { "q": "¿Las utilidades cuentan dentro del costo laboral?", "a": "Las utilidades (15% anual sobre las ganancias de la empresa repartidas entre los trabajadores) son un costo separado y variable que depende del resultado del ejercicio, por lo que esta calculadora no las incluye en el costo mensual fijo." },
-    { "q": "¿El factor de carga es el mismo para todos los sueldos?", "a": "No exactamente. Como el décimo cuarto es fijo, el factor es algo mayor en sueldos cercanos al SBU (≈1,40×) y baja levemente en sueldos altos (≈1,35×)." },
-    { "q": "¿Cómo calculo el costo anual de un empleado?", "a": "Multiplicá el costo mensual por 12. Por ejemplo, un empleado de $600 en su segundo año cuesta unos $831,99 al mes, es decir cerca de $9.984 al año." }
+    {
+      "q": "¿Cuánto le cuesta un empleado a la empresa en Ecuador?",
+      "a": "El sueldo más el aporte patronal (11,15%) y las provisiones de décimos, vacaciones y fondos de reserva. En total suele rondar **1,30×** el sueldo el primer año y **1,39×** desde el segundo año (cuando se suman los fondos de reserva)."
+    },
+    {
+      "q": "¿Cuál es el aporte patronal al IESS?",
+      "a": "El aporte patronal del sector privado es del **11,15%** del sueldo y lo paga íntegramente el empleador, además del 9,45% que se descuenta al trabajador."
+    },
+    {
+      "q": "¿Por qué el costo es mayor desde el segundo año?",
+      "a": "Porque a partir del segundo año la empresa debe provisionar los **fondos de reserva (8,33%)**, que no aplican durante el primer año de la relación laboral."
+    },
+    {
+      "q": "¿Cómo se provisiona el décimo tercero y cuarto?",
+      "a": "El décimo tercero se provisiona como el 8,33% del sueldo cada mes (1/12). El décimo cuarto, al ser un monto fijo de 1 SBU, se provisiona como SBU ÷ 12 = $40,17 mensuales en 2026."
+    },
+    {
+      "q": "¿Las vacaciones tienen un costo mensual?",
+      "a": "Sí. La empresa provisiona las vacaciones, que equivalen aproximadamente al 4,16% del sueldo mensual (15 días al año, que es 1/24 del salario anual)."
+    },
+    {
+      "q": "¿El décimo cuarto pesa igual en todos los sueldos?",
+      "a": "No. El décimo cuarto es un monto fijo (1 SBU, $482 en 2026) que no depende del sueldo, así que pesa proporcionalmente más en sueldos bajos que en altos, elevando el factor de carga."
+    },
+    {
+      "q": "¿Qué otros costos no incluye esta calculadora?",
+      "a": "No incluye el seguro de riesgos del trabajo específico, capacitación, uniformes, transporte, beneficios voluntarios ni costos de reclutamiento. Es una base de las cargas obligatorias principales."
+    },
+    {
+      "q": "¿Las utilidades cuentan dentro del costo laboral?",
+      "a": "Las utilidades (15% anual sobre las ganancias de la empresa repartidas entre los trabajadores) son un costo separado y variable que depende del resultado del ejercicio, por lo que esta calculadora no las incluye en el costo mensual fijo."
+    },
+    {
+      "q": "¿El factor de carga es el mismo para todos los sueldos?",
+      "a": "No exactamente. Como el décimo cuarto es fijo, el factor es algo mayor en sueldos cercanos al SBU (≈1,40×) y baja levemente en sueldos altos (≈1,35×)."
+    },
+    {
+      "q": "¿Cómo calculo el costo anual de un empleado?",
+      "a": "Multiplicá el costo mensual por 12. Por ejemplo, un empleado de $600 en su segundo año cuesta unos $831,99 al mes, es decir cerca de $9.984 al año."
+    }
   ],
   "sources": [
-    { "name": "IESS — Aportes patronales", "url": "https://www.iess.gob.ec/" },
-    { "name": "Código del Trabajo del Ecuador", "url": "https://www.trabajo.gob.ec/biblioteca/" }
+    {
+      "name": "IESS — Aportes patronales",
+      "url": "https://www.iess.gob.ec/"
+    },
+    {
+      "name": "Código del Trabajo del Ecuador",
+      "url": "https://www.trabajo.gob.ec/biblioteca/"
+    }
   ],
   "relatedSlugs": [],
   "dataUpdate": {
@@ -87,16 +172,49 @@
   "referenceTables": [
     {
       "title": "Componentes del costo laboral en Ecuador 2026",
-      "headers": ["Concepto", "Base de cálculo", "Porcentaje / Monto"],
+      "headers": [
+        "Concepto",
+        "Base de cálculo",
+        "Porcentaje / Monto"
+      ],
       "rows": [
-        ["Aporte patronal IESS", "Sueldo mensual", "11,15%"],
-        ["Décimo tercero (provisión)", "Sueldo mensual", "8,33% (1/12)"],
-        ["Décimo cuarto (provisión)", "Salario Básico Unificado ÷ 12", "$40,17/mes (2026)"],
-        ["Vacaciones (provisión)", "Sueldo mensual", "4,16% (15 días/año)"],
-        ["Fondos de reserva", "Sueldo mensual", "8,33% (desde el 2.º año)"]
+        [
+          "Aporte patronal IESS",
+          "Sueldo mensual",
+          "11,15%"
+        ],
+        [
+          "Décimo tercero (provisión)",
+          "Sueldo mensual",
+          "8,33% (1/12)"
+        ],
+        [
+          "Décimo cuarto (provisión)",
+          "Salario Básico Unificado ÷ 12",
+          "$40,17/mes (2026)"
+        ],
+        [
+          "Vacaciones (provisión)",
+          "Sueldo mensual",
+          "4,16% (15 días/año)"
+        ],
+        [
+          "Fondos de reserva",
+          "Sueldo mensual",
+          "8,33% (desde el 2.º año)"
+        ]
       ],
       "note": "Fuente: IESS Ecuador — Ley de Seguridad Social / Código del Trabajo (2026). SBU 2026 = $482. Fondos de reserva aplican desde el mes 13 de la relación laboral."
     }
   ],
-  "lastReviewed": "2026-06-20"
+  "lastReviewed": "2026-06-20",
+  "status": "draft",
+  "noindex": true,
+  "distribution": "restricted",
+  "adsenseEligible": false,
+  "editorialReview": "pending",
+  "sourceVerified": false,
+  "quarantineReasons": [
+    "generic-data-source"
+  ]
 }
