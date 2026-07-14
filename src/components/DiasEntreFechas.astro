@@ -1,0 +1,467 @@
+---
+// Flagship redesign de la calc "días entre dos fechas" (mockup Martin).
+// Calculadora interactiva real (corridos/hábiles/no-laborables con feriados AR)
+// + secciones SEO. Domain "life" (teal). Header/footer = globales del sitio.
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { FERIADOS_AR_2026 } from '../lib/data/feriados-ar-2026';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Feriados que reducen días hábiles: nacionales (inamovibles + trasladables).
+// Los puentes turísticos y "no-laborable" NO restan (son optativos) → así
+// julio 1-31 = 22 hábiles / 9 no laborables, como el mockup.
+const feriados = FERIADOS_AR_2026
+  .filter((f) => f.tipo === 'inamovible' || f.tipo === 'trasladable')
+  .map((f) => f.fecha);
+const FER = new Set(feriados);
+
+const DEF_DESDE = '2026-07-01';
+const DEF_HASTA = '2026-07-31';
+const DEF_BASE = '2026-07-13';
+
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const parse = (s: string) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const MS = 86400000;
+function computeDias(desdeStr: string, hastaStr: string, incluir: boolean) {
+  const a0 = parse(desdeStr), b0 = parse(hastaStr);
+  const a = a0 <= b0 ? a0 : b0, b = a0 <= b0 ? b0 : a0;
+  const raw = Math.round((b.getTime() - a.getTime()) / MS);
+  const corridos = incluir ? raw + 1 : raw;
+  let habiles = 0, noLab = 0;
+  const cur = new Date(a.getTime());
+  const last = incluir ? b : new Date(b.getTime() - MS);
+  while (cur <= last) {
+    const wd = cur.getDay();
+    if (wd === 0 || wd === 6 || FER.has(iso(cur))) noLab++; else habiles++;
+    cur.setDate(cur.getDate() + 1);
+  }
+  return { corridos, habiles, noLab, semEnteras: Math.floor(corridos / 7), diasResto: corridos % 7, pct: corridos > 0 ? Math.round(habiles / corridos * 100) : 0 };
+}
+const init = computeDias(DEF_DESDE, DEF_HASTA, true);
+const fmtLong = (s: string) => parse(s).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+const fmtShort = (s: string) => parse(s).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+
+// ── Plazos típicos (SSR con base fija; el cliente la pone en "hoy") ──────────
+function addDays(s: string, n: number) { const d = parse(s); d.setDate(d.getDate() + n); return d; }
+function addBiz(s: string, n: number) { const d = parse(s); let c = 0; while (c < n) { d.setDate(d.getDate() + 1); const wd = d.getDay(); if (wd !== 0 && wd !== 6 && !FER.has(iso(d))) c++; } return d; }
+function addMonths(s: string, n: number) { const d = parse(s); d.setMonth(d.getMonth() + n); return d; }
+const plazoDefs = [
+  { label: '10 días hábiles', calc: (b: string) => addBiz(b, 10), kind: 'Hábiles' },
+  { label: '30 días', calc: (b: string) => addDays(b, 30), kind: 'Corridos' },
+  { label: '60 días', calc: (b: string) => addDays(b, 60), kind: 'Corridos' },
+  { label: '90 días', calc: (b: string) => addDays(b, 90), kind: 'Corridos' },
+  { label: '6 meses', calc: (b: string) => addMonths(b, 6), kind: 'Calendario' },
+  { label: '1 año', calc: (b: string) => addMonths(b, 12), kind: 'Calendario' },
+];
+const plazos = plazoDefs.map((p) => ({ label: p.label, kind: p.kind, date: p.calc(DEF_BASE) }));
+const MES3 = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const fmtP = (d: Date) => `${d.getDate()} ${MES3[d.getMonth()]}. ${d.getFullYear()}`;
+
+// ── Contenido ───────────────────────────────────────────────────────────────
+const casos = [
+  { ico: '📄', title: 'Contratos y vencimientos', desc: 'Calculá cuánto falta para una renovación o cuándo termina un plazo.' },
+  { ico: '✈️', title: 'Viajes y estadías', desc: 'Contá noches, días completos y duración total de una estadía.' },
+  { ico: '💼', title: 'Antigüedad laboral', desc: 'Medí el tiempo exacto entre fecha de ingreso y fecha de corte.' },
+  { ico: '⚖️', title: 'Plazos legales', desc: 'Diferenciá días corridos y hábiles antes de revisar la norma específica.' },
+];
+const equivalencias = [
+  ['1 semana', '7 días', 'Períodos cortos y viajes'],
+  ['1 quincena', '15 días', 'Pagos y liquidaciones'],
+  ['1 mes promedio', '30,4 días', 'Estimaciones generales'],
+  ['1 trimestre', '≈ 91 días', 'Contratos e informes'],
+  ['1 año', '365 o 366 días', 'Antigüedad y aniversarios'],
+];
+const refTable = (calc.referenceTables || [])[0];
+const faq = calc.faq || [];
+const sources = calc.sources || [];
+const explanationHtml = calc.explanation ? md(calc.explanation) : '';
+---
+
+<div class="cf-page def" data-domain="life" data-feriados={JSON.stringify(feriados)} data-def-desde={DEF_DESDE} data-def-hasta={DEF_HASTA}>
+
+  <!-- Breadcrumb -->
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/categoria/vida">Vida cotidiana</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Días entre dos fechas</li>
+    </ol>
+  </nav>
+
+  <!-- Hero -->
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">📅</span> Vida cotidiana</p>
+      <h1 class="cf-h1">Calculadora de días entre dos fechas</h1>
+      <p class="cf-sub">Calculá días corridos y hábiles, semanas, meses y años. Incluye feriados argentinos y te ayuda a resolver plazos sin contar a mano.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Actualizada en julio de 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Feriados nacionales incluidos</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado en tu dispositivo</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <div class="def-cal">
+        <div class="def-cal__top">Julio 2026</div>
+        <div class="def-cal__num">31</div>
+        <span class="def-cal__ring"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Calculadora -->
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Tu cálculo</p>
+          <h2 class="cf-panel__title">Elegí las dos fechas</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-dates">
+        <div class="cf-field" style="margin:0">
+          <div class="cf-field__row"><label class="cf-label" for="def-desde">Fecha inicial</label><span class="cf-hint">Desde</span></div>
+          <input class="cf-input" type="date" id="def-desde" value={DEF_DESDE} />
+        </div>
+        <button class="cf-swap" id="def-swap" type="button" aria-label="Intercambiar fechas"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></button>
+        <div class="cf-field" style="margin:0">
+          <div class="cf-field__row"><label class="cf-label" for="def-hasta">Fecha final</label><span class="cf-hint">Hasta</span></div>
+          <input class="cf-input" type="date" id="def-hasta" value={DEF_HASTA} />
+        </div>
+      </div>
+
+      <div class="cf-field" style="margin:1.1rem 0">
+        <label class="cf-toggle" for="def-incluir">
+          <span class="cf-toggle__txt">Incluir ambas fechas<small>Cuenta el día inicial y el final</small></span>
+          <input type="checkbox" id="def-incluir" checked />
+          <span class="cf-switch"></span>
+        </label>
+      </div>
+
+      <div class="cf-field" style="margin-bottom:1.1rem">
+        <div class="cf-seg" role="group" aria-label="Tipo de días">
+          <button type="button" data-mode="corridos" aria-pressed="false">Corridos</button>
+          <button type="button" data-mode="habiles" aria-pressed="false">Hábiles</button>
+          <button type="button" data-mode="ambos" aria-pressed="true">Ver ambos</button>
+        </div>
+      </div>
+
+      <button class="cf-primary" id="def-calc-btn" type="button">Calcular diferencia <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Atajos:</span>
+        <button class="cf-sc" type="button" data-sc="7">7 días</button>
+        <button class="cf-sc" type="button" data-sc="30">30 días</button>
+        <button class="cf-sc" type="button" data-sc="90">90 días</button>
+        <button class="cf-sc" type="button" data-sc="eom">Hasta fin de mes</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="def-result">
+      <p class="cf-result__eyebrow">Resultado</p>
+      <div class="cf-result__big" id="def-big">{init.corridos}</div>
+      <div class="cf-result__biglabel" id="def-biglabel">días corridos</div>
+      <p class="cf-result__sub" id="def-sub">Del {fmtLong(DEF_DESDE)} al {fmtLong(DEF_HASTA)} · incluyendo ambas fechas</p>
+      <div class="cf-tiles">
+        <div class="cf-tile"><div class="cf-tile__value" id="def-t-hab">{init.habiles}</div><div class="cf-tile__label">Días hábiles</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="def-t-nolab">{init.noLab}</div><div class="cf-tile__label">No laborables</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="def-t-sem">{init.semEnteras} + {init.diasResto}</div><div class="cf-tile__label">Semanas + días</div></div>
+      </div>
+      <div class="cf-compose">
+        <div class="cf-bar"><span class="cf-bar__fill" id="def-bar" style={`width:${init.pct}%`}></span><span class="cf-bar__fill cf-bar__fill--muted" style={`width:${100 - init.pct}%`}></span></div>
+        <div class="cf-bar__ends"><span id="def-bar-a">{fmtShort(DEF_DESDE)}</span><span id="def-bar-pct">{init.pct}% hábiles</span><span id="def-bar-b">{fmtShort(DEF_HASTA)}</span></div>
+      </div>
+      <div class="cf-result__actions">
+        <button class="cf-rbtn" type="button" id="def-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="def-share"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Compartir</button>
+        <button class="cf-rbtn" type="button" id="def-reset"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v6h6M21 12a9 9 0 1 1-3-6.7L21 8"/></svg> Nuevo cálculo</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Respuesta rápida -->
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt"><strong>Respuesta rápida.</strong> La diferencia se obtiene restando la fecha inicial a la final. Los días hábiles excluyen fines de semana y feriados.</p>
+    <span class="cf-formula">fecha final − fecha inicial</span>
+  </div>
+
+  <!-- Plazos típicos -->
+  <section class="cf-section def-plazos-sec">
+    <div class="def-plazos-head">
+      <div>
+        <p class="cf-eyebrow">Resolver un vencimiento</p>
+        <h2 class="cf-section__title">Plazos típicos desde una fecha</h2>
+        <p class="cf-section__lead">Elegí una fecha base y mirá cuándo terminan los plazos administrativos, comerciales y judiciales más comunes.</p>
+      </div>
+      <div class="cf-field" style="margin:0;min-width:200px">
+        <div class="cf-field__row"><label class="cf-label" for="def-base">Fecha base</label></div>
+        <input class="cf-input" type="date" id="def-base" value={DEF_BASE} />
+      </div>
+    </div>
+    <div class="def-plazos" id="def-plazos">
+      {plazos.map((p) => (
+        <div class="def-plazo" data-kind={p.kind}>
+          <div class="def-plazo__lbl">{p.label}</div>
+          <div class="def-plazo__date">{fmtP(p.date)}</div>
+          <div class="def-plazo__kind">{p.kind}</div>
+        </div>
+      ))}
+    </div>
+    <p class="def-plazos-note">* Los días hábiles excluyen sábados, domingos y feriados nacionales argentinos de 2026.</p>
+  </section>
+
+  <!-- Cómo se calcula (2 col) -->
+  <section class="cf-section">
+    <div class="cf-2col">
+      <div>
+        <p class="cf-eyebrow">Sin vueltas</p>
+        <h2 class="cf-section__title" style="margin:0.35rem 0 0.5rem">Cómo se calculan los días entre fechas</h2>
+        <p class="cf-section__lead" style="max-width:60ch;margin-bottom:1.25rem">La herramienta normaliza ambas fechas, calcula la diferencia y después separa los días hábiles de los no laborables.</p>
+        <div class="cf-steps">
+          <div class="cf-step"><div class="cf-step__num">1</div><p class="cf-step__title">Restamos las fechas</p><p class="cf-step__desc">Convertimos cada fecha a un mismo punto horario para evitar errores por zona horaria.</p></div>
+          <div class="cf-step"><div class="cf-step__num">2</div><p class="cf-step__title">Revisamos el calendario</p><p class="cf-step__desc">Identificamos sábados, domingos y feriados nacionales dentro del período.</p></div>
+          <div class="cf-step"><div class="cf-step__num">3</div><p class="cf-step__title">Te damos el desglose</p><p class="cf-step__desc">Mostramos días corridos, hábiles, semanas y equivalencias en una sola respuesta.</p></div>
+        </div>
+        <div class="cf-callout cf-callout--warn">
+          <span class="cf-callout__ico" aria-hidden="true">⚠️</span>
+          <p><strong>¿Incluyendo o excluyendo?</strong> Si un contrato dice "30 días desde la firma", normalmente el día inicial no se cuenta. Si habla de un período "del 1 al 31", suelen incluirse ambos extremos. Revisá siempre el texto aplicable.</p>
+        </div>
+        {explanationHtml && (
+          <div class="cf-prose" style="margin-top:1.5rem" set:html={explanationHtml} />
+        )}
+      </div>
+      <aside class="cf-side">
+        <div class="cf-side-card">
+          <p class="cf-side-eyebrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Qué incluye el cálculo</p>
+          <ul class="cf-check">
+            <li>Días corridos totales</li>
+            <li>Días hábiles y no laborables</li>
+            <li>Semanas completas y días restantes</li>
+            <li>Años bisiestos automáticamente</li>
+          </ul>
+        </div>
+        <div class="cf-side-card cf-side-card--dark">
+          <p class="cf-side-eyebrow">▤ Fuentes y método</p>
+          <p class="cf-side-desc">Calendario de feriados nacionales 2026 y reglas de cómputo de fechas documentadas.</p>
+          <a class="cf-side-link" href="#como-funciona">Ver metodología completa <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="cf-side-card">
+          <p class="cf-side-eyebrow">📍 País del calendario</p>
+          <p class="cf-side-desc">Los feriados cambian según el país. Esta versión usa Argentina.</p>
+          <div class="cf-side-flag"><span aria-hidden="true">🇦🇷</span> <strong>Argentina</strong> <span style="color:var(--text-subtle);font-size:0.75rem">· Feriados 2026</span></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Casos -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Casos reales</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cuándo te sirve esta calculadora</h2>
+    <div class="cf-cards">
+      {casos.map((c) => (
+        <div class="cf-minicard"><span class="cf-minicard__ico" aria-hidden="true">{c.ico}</span><p class="cf-minicard__title">{c.title}</p><p class="cf-minicard__desc">{c.desc}</p></div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Equivalencias -->
+  <section class="cf-section" id="como-funciona">
+    <p class="cf-eyebrow">Referencia rápida</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Equivalencias habituales</h2>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Período</th><th>Días aproximados</th><th>Uso habitual</th></tr></thead>
+        <tbody>
+          {equivalencias.map((r) => (<tr><td>{r[0]}</td><td class="cf-td-em">{r[1]}</td><td>{r[2]}</td></tr>))}
+        </tbody>
+      </table>
+    </div>
+    {refTable && (
+      <div class="cf-tablewrap" style="margin-top:1rem">
+        <table class="cf-table">
+          <thead><tr>{refTable.headers.map((h: string) => (<th>{h}</th>))}</tr></thead>
+          <tbody>{refTable.rows.map((row: string[]) => (<tr>{row.map((c, i) => (<td class={i === 1 ? 'cf-td-em' : ''}>{c}</td>))}</tr>))}</tbody>
+        </table>
+      </div>
+    )}
+  </section>
+
+  <!-- FAQ -->
+  {faq.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que suele generar dudas</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- Related -->
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Calculadoras relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🧮'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Abrir calculadora <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- CTA -->
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">¿Usás esta calculadora seguido?</p>
+      <p class="cf-ctabar__sub">Guardala en Mi Hacé Cuentas o copiá un enlace con las fechas ya cargadas.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <a class="cf-ctabar__btn" href="/mi-hacecuentas?next=/dias-entre-dos-fechas"><span aria-hidden="true">☆</span> Guardar calculadora</a>
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="def-share2">Copiar enlace</button>
+    </div>
+  </section>
+
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.def');
+    if (!root) return;
+    const FER = new Set(JSON.parse(root.getAttribute('data-feriados') || '[]'));
+    const DEF_DESDE = root.getAttribute('data-def-desde'), DEF_HASTA = root.getAttribute('data-def-hasta');
+    const MS = 86400000;
+    const $ = (id) => document.getElementById(id);
+    const desde = $('def-desde'), hasta = $('def-hasta'), incluir = $('def-incluir');
+    const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const parse = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+    const fmtLong = (d) => d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+    const fmtShort = (d) => d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+    const MES3 = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const fmtP = (d) => `${d.getDate()} ${MES3[d.getMonth()]}. ${d.getFullYear()}`;
+    let mode = 'ambos';
+
+    function compute(a0, b0, inc) {
+      const a = a0 <= b0 ? a0 : b0, b = a0 <= b0 ? b0 : a0;
+      const raw = Math.round((b.getTime() - a.getTime()) / MS);
+      const corridos = inc ? raw + 1 : raw;
+      let habiles = 0, noLab = 0;
+      const cur = new Date(a.getTime());
+      const last = inc ? b : new Date(b.getTime() - MS);
+      while (cur <= last) { const wd = cur.getDay(); if (wd === 0 || wd === 6 || FER.has(iso(cur))) noLab++; else habiles++; cur.setDate(cur.getDate() + 1); }
+      return { corridos, habiles, noLab, semEnteras: Math.floor(corridos / 7), diasResto: corridos % 7, pct: corridos > 0 ? Math.round(habiles / corridos * 100) : 0 };
+    }
+
+    function render() {
+      if (!desde.value || !hasta.value) return;
+      const a = parse(desde.value), b = parse(hasta.value), inc = incluir.checked;
+      const r = compute(a, b, inc);
+      const big = mode === 'habiles' ? r.habiles : r.corridos;
+      $('def-big').textContent = String(big);
+      $('def-biglabel').textContent = mode === 'habiles' ? 'días hábiles' : 'días corridos';
+      const lo = a <= b ? a : b, hi = a <= b ? b : a;
+      $('def-sub').textContent = `Del ${fmtLong(lo)} al ${fmtLong(hi)} · ${inc ? 'incluyendo' : 'sin incluir'} ambas fechas`;
+      $('def-t-hab').textContent = String(r.habiles);
+      $('def-t-nolab').textContent = String(r.noLab);
+      $('def-t-sem').textContent = `${r.semEnteras} + ${r.diasResto}`;
+      $('def-bar').style.width = r.pct + '%';
+      $('def-bar').nextElementSibling.style.width = (100 - r.pct) + '%';
+      $('def-bar-a').textContent = fmtShort(lo);
+      $('def-bar-b').textContent = fmtShort(hi);
+      $('def-bar-pct').textContent = r.pct + '% hábiles';
+    }
+
+    // plazos
+    function addDays(d, n) { const x = new Date(d.getTime()); x.setDate(x.getDate() + n); return x; }
+    function addBiz(d, n) { const x = new Date(d.getTime()); let c = 0; while (c < n) { x.setDate(x.getDate() + 1); const wd = x.getDay(); if (wd !== 0 && wd !== 6 && !FER.has(iso(x))) c++; } return x; }
+    function addMonths(d, n) { const x = new Date(d.getTime()); x.setMonth(x.getMonth() + n); return x; }
+    const plazoDefs = [
+      ['10 días hábiles', (b) => addBiz(b, 10), 'Hábiles'], ['30 días', (b) => addDays(b, 30), 'Corridos'],
+      ['60 días', (b) => addDays(b, 60), 'Corridos'], ['90 días', (b) => addDays(b, 90), 'Corridos'],
+      ['6 meses', (b) => addMonths(b, 6), 'Calendario'], ['1 año', (b) => addMonths(b, 12), 'Calendario'],
+    ];
+    function renderPlazos() {
+      const base = $('def-base'); if (!base.value) return;
+      const b = parse(base.value);
+      const cells = document.querySelectorAll('#def-plazos .def-plazo');
+      plazoDefs.forEach((p, i) => { const cell = cells[i]; if (cell) cell.querySelector('.def-plazo__date').textContent = fmtP(p[1](b)); });
+    }
+
+    desde.addEventListener('change', render); hasta.addEventListener('change', render); incluir.addEventListener('change', render);
+    $('def-calc-btn').addEventListener('click', render);
+    document.querySelectorAll('.cf-seg [data-mode]').forEach((btn) => btn.addEventListener('click', () => {
+      mode = btn.getAttribute('data-mode');
+      document.querySelectorAll('.cf-seg [data-mode]').forEach((b) => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
+      render();
+    }));
+    document.querySelectorAll('[data-sc]').forEach((btn) => btn.addEventListener('click', () => {
+      const sc = btn.getAttribute('data-sc'); if (!desde.value) desde.value = DEF_DESDE; const a = parse(desde.value);
+      let end;
+      if (sc === 'eom') end = new Date(a.getFullYear(), a.getMonth() + 1, 0);
+      else { end = new Date(a.getTime()); end.setDate(end.getDate() + Number(sc)); }
+      hasta.value = iso(end); render();
+    }));
+    $('def-swap').addEventListener('click', () => { const t = desde.value; desde.value = hasta.value; hasta.value = t; render(); });
+    $('def-reset').addEventListener('click', () => { desde.value = DEF_DESDE; hasta.value = DEF_HASTA; incluir.checked = true; render(); });
+    $('def-base').addEventListener('change', renderPlazos);
+
+    function summary() {
+      const a = parse(desde.value), b = parse(hasta.value), r = compute(a, b, incluir.checked);
+      const lo = a <= b ? a : b, hi = a <= b ? b : a;
+      return `Del ${fmtLong(lo)} al ${fmtLong(hi)}: ${r.corridos} días corridos, ${r.habiles} hábiles, ${r.noLab} no laborables. — hacecuentas.com`;
+    }
+    function shareUrl() { return `${location.origin}${location.pathname}?desde=${desde.value}&hasta=${hasta.value}`; }
+    function copy(text, btn) { navigator.clipboard?.writeText(text).then(() => { const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => btn.innerHTML = o, 1500); }); }
+    $('def-copy').addEventListener('click', (e) => copy(summary(), e.currentTarget));
+    $('def-share').addEventListener('click', (e) => { if (navigator.share) navigator.share({ title: 'Días entre dos fechas', text: summary(), url: shareUrl() }).catch(() => {}); else copy(shareUrl(), e.currentTarget); });
+    const s2 = $('def-share2'); if (s2) s2.addEventListener('click', (e) => copy(shareUrl(), e.currentTarget));
+
+    // fecha base → hoy (mantiene los plazos siempre frescos)
+    const today = new Date(); const base = $('def-base');
+    if (base) { base.value = iso(today); renderPlazos(); }
+    // aplicar params ?desde&hasta si vienen
+    const q = new URLSearchParams(location.search);
+    if (q.get('desde')) desde.value = q.get('desde');
+    if (q.get('hasta')) hasta.value = q.get('hasta');
+    render();
+  })();
+</script>
+
+<style>
+  .def-cal { position: relative; width: 150px; margin-left: auto; padding: 1rem 1.2rem 1.3rem; border-radius: var(--radius-lg); background: var(--bg-card); border: 1px solid var(--border); box-shadow: var(--shadow-lg); text-align: center; }
+  .def-cal::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 8px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+  .def-cal__top { font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin-top: 0.6rem; }
+  .def-cal__num { font-size: 3.4rem; font-weight: 800; color: var(--text); line-height: 1; margin-top: 0.2rem; }
+  .def-cal__ring { position: absolute; bottom: -16px; right: -16px; width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: var(--shadow-md); }
+  .def-cal__ring::after { content: "⇄"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.2rem; }
+
+  .def-plazos-sec { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 1.6rem 1.75rem; }
+  .def-plazos-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+  .def-plazos-head .cf-section__title { margin: 0.35rem 0 0.4rem; }
+  .def-plazos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.7rem; }
+  @media (min-width: 720px) { .def-plazos { grid-template-columns: repeat(6, 1fr); } }
+  .def-plazo { padding: 0.85rem 0.9rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-soft); }
+  .def-plazo[data-kind="Hábiles"] { border-color: color-mix(in srgb, var(--accent) 40%, transparent); background: var(--accent-soft); }
+  .def-plazo__lbl { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent); }
+  .def-plazo__date { font-size: 1rem; font-weight: 800; color: var(--text); margin: 0.3rem 0 0.15rem; }
+  .def-plazo__kind { font-size: 0.7rem; color: var(--text-subtle); }
+  .def-plazos-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.9rem 0 0; }
+</style>

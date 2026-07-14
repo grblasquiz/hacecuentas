@@ -1,0 +1,356 @@
+---
+// Flagship redesign de la calc "aguinaldo (SAC)" (mockup Martin).
+// Calculadora interactiva (SAC = mejorSueldo/2 × meses/6, aportes 17%, neto).
+// Domain "money" (índigo). Header/footer = globales del sitio.
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const CAP = 4414652.38; // BASE_IMPONIBLE_MAXIMA_APORTES (sueldo-ar.ts)
+function sac(m: number, meses: number) {
+  const bruto = (m / 2) * (meses / 6);
+  const desc = Math.min(bruto, CAP / 2) * 0.17;
+  return { bruto, desc, neto: bruto - desc, prop: Math.round((meses / 6) * 100) };
+}
+const fmtAr = (n: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Math.round(n));
+
+const INIT_M = 1200000, INIT_MESES = 6;
+const init = sac(INIT_M, INIT_MESES);
+const escenarios = [{ meses: 3, prop: '50%' }, { meses: 4, prop: '66,7%' }, { meses: 6, prop: '100%' }]
+  .map((e) => ({ ...e, ...sac(INIT_M, e.meses) }));
+const refRows = [600000, 900000, 1200000, 1500000, 1800000].map((m) => ({ sueldo: m, ...sac(m, 6) }));
+
+const incluye = ['Sueldo básico remunerativo', 'Horas extra y comisiones remunerativas', 'Adicionales por antigüedad y presentismo', 'Bonos remunerativos del mes'];
+const noIncluye = ['Asignaciones familiares', 'Reintegros y viáticos no remunerativos', 'Bonos expresamente no remunerativos', 'Asignación por maternidad de ANSES'];
+
+const faq = calc.faq || [];
+const explanationHtml = calc.explanation ? md(calc.explanation) : '';
+---
+
+<div class="cf-page ag" data-domain="money" data-cap={CAP}>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/sueldos-y-trabajo">Sueldos y trabajo</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Aguinaldo SAC</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">💰</span> Sueldos y trabajo</p>
+      <h1 class="cf-h1">Calculadora de aguinaldo (SAC)</h1>
+      <p class="cf-sub">Estimá cuánto te corresponde cobrar en junio o diciembre: aguinaldo bruto, descuentos y monto aproximado en mano.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Fórmula legal verificada</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Actualizada en junio de 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado en tu dispositivo</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <div class="cf-deco-card">
+        <span class="cf-deco-badge">$</span>
+        <div class="cf-deco-card__label">Medio aguinaldo</div>
+        <div class="cf-deco-card__value" id="ag-deco-val">{fmtAr(init.neto)}</div>
+        <div class="cf-deco-card__note">Estimación neta con tus datos</div>
+      </div>
+      <div class="cf-deco-sub"><strong>Próxima cuota</strong> <span class="cf-deco-chip" id="ag-deco-cuota">18 diciembre</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Tu cálculo</p>
+          <h2 class="cf-panel__title">Ingresá tu mejor sueldo</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="ag-sueldo">Mejor sueldo bruto del semestre</label><span class="cf-hint">Básico + remunerativos</span></div>
+        <div class="ag-money"><span class="ag-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="ag-sueldo" value="1.200.000" /></div>
+        <p class="cf-help">Usá el mes con mayor remuneración bruta, no el promedio ni necesariamente el último.</p>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><span class="cf-label">¿Qué cuota estás calculando?</span></div>
+        <div class="cf-seg" role="group" aria-label="Cuota">
+          <button type="button" data-cuota="junio" aria-pressed="false">1ª · Junio</button>
+          <button type="button" data-cuota="diciembre" aria-pressed="true">2ª · Diciembre</button>
+        </div>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><span class="cf-label">Meses trabajados en el semestre</span></div>
+        <div class="cf-chips" role="group" aria-label="Meses trabajados">
+          {[1, 2, 3, 4, 5, 6].map((m) => (<button class="cf-chip" type="button" data-meses={m} aria-pressed={m === 6 ? 'true' : 'false'}>{m}</button>))}
+        </div>
+      </div>
+
+      <div class="cf-field">
+        <label class="cf-toggle" for="ag-neto">
+          <span class="cf-toggle__txt">Estimar monto en mano<small>Aplica 17% de aportes habituales. No incluye Ganancias.</small></span>
+          <input type="checkbox" id="ag-neto" checked />
+          <span class="cf-switch"></span>
+        </label>
+      </div>
+
+      <button class="cf-primary" id="ag-calc-btn" type="button">Calcular mi aguinaldo <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Ejemplos:</span>
+        <button class="cf-sc" type="button" data-ej="800000">$800 mil</button>
+        <button class="cf-sc" type="button" data-ej="900000">$900 mil</button>
+        <button class="cf-sc" type="button" data-ej="1600000">$1,6 M</button>
+        <button class="cf-sc" type="button" data-ej="1800000">$1,8 M</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="ag-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="ag-big">{fmtAr(init.neto)}</div>
+      <div class="cf-result__biglabel" id="ag-biglabel">Aguinaldo neto aproximado</div>
+      <p class="cf-result__sub" id="ag-sub">Semestre completo · 6 de 6 meses</p>
+      <div class="cf-tiles">
+        <div class="cf-tile"><div class="cf-tile__value" id="ag-t-bruto">{fmtAr(init.bruto)}</div><div class="cf-tile__label">SAC bruto</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="ag-t-aportes">{fmtAr(init.desc)}</div><div class="cf-tile__label">Aportes 17%</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="ag-t-prop">{init.prop}%</div><div class="cf-tile__label">Proporción</div></div>
+      </div>
+      <div class="cf-compose">
+        <div class="cf-compose__lbl">Cómo se compone</div>
+        <div class="cf-bar"><span class="cf-bar__fill" id="ag-bar" style={`width:${Math.round(init.neto / init.bruto * 100)}%`}></span><span class="cf-bar__fill cf-bar__fill--muted" style={`width:${100 - Math.round(init.neto / init.bruto * 100)}%`}></span></div>
+        <div class="cf-bar__ends"><span id="ag-bar-a">{fmtAr(init.bruto)} bruto</span><span id="ag-bar-b">17% aportes</span></div>
+      </div>
+      <div class="cf-result__formula" id="ag-formula">{fmtAr(INIT_M)} ÷ 2 = {fmtAr(init.bruto)}</div>
+      <div class="cf-result__actions">
+        <button class="cf-rbtn" type="button" id="ag-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="ag-share"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Compartir</button>
+        <button class="cf-rbtn" type="button" id="ag-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver detalle</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt"><strong>Respuesta rápida.</strong> Cada cuota del SAC es el 50% del mejor sueldo bruto del semestre. Si trabajaste menos de seis meses, se paga proporcional.</p>
+    <span class="cf-formula">mejor sueldo ÷ 2 × meses/6</span>
+  </div>
+
+  <!-- Cómo se calcula -->
+  <section class="cf-section">
+    <div class="cf-2col">
+      <div>
+        <p class="cf-eyebrow">La cuenta, paso a paso</p>
+        <h2 class="cf-section__title" style="margin:0.35rem 0 0.5rem">Cómo se calcula el aguinaldo</h2>
+        <p class="cf-section__lead" style="max-width:60ch;margin-bottom:1.25rem">La fórmula parte de la mejor remuneración mensual devengada dentro del semestre correspondiente.</p>
+        <div class="cf-steps">
+          <div class="cf-step"><div class="cf-step__num">1</div><p class="cf-step__title">Encontrá el mejor sueldo</p><p class="cf-step__desc">Compará los seis recibos y quedate con la remuneración bruta más alta.</p></div>
+          <div class="cf-step"><div class="cf-step__num">2</div><p class="cf-step__title">Calculá la mitad</p><p class="cf-step__desc">Para un semestre completo, el SAC bruto equivale al 50% de ese monto.</p></div>
+          <div class="cf-step"><div class="cf-step__num">3</div><p class="cf-step__title">Aplicá el proporcional</p><p class="cf-step__desc">Si trabajaste menos de seis meses, multiplicá por la fracción trabajada.</p></div>
+        </div>
+        {explanationHtml && (<div class="cf-prose" style="margin-top:1.5rem" set:html={explanationHtml} />)}
+      </div>
+      <aside class="cf-side">
+        <div class="cf-side-card">
+          <p class="cf-side-eyebrow"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Esta estimación incluye</p>
+          <ul class="cf-check">
+            <li>SAC bruto por mejor sueldo</li>
+            <li>Proporcional por meses trabajados</li>
+            <li>Jubilación, obra social y PAMI</li>
+            <li>Resultado aproximado en mano</li>
+          </ul>
+        </div>
+        <div class="cf-side-card cf-side-card--dark">
+          <p class="cf-side-eyebrow">▤ Base legal</p>
+          <p class="cf-side-desc">LCT 20.744, arts. 121 y 122, y Ley 27.073 sobre cuotas y fechas de pago.</p>
+          <a class="cf-side-link" href="#como-funciona">Ver fuentes y metodología <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="cf-side-card">
+          <p class="cf-side-eyebrow">🗓️ Próximo pago</p>
+          <p class="cf-side-desc" id="ag-prox-txt">La segunda cuota del SAC 2026 vence el 18 de diciembre.</p>
+          <div class="cf-side-flag"><strong id="ag-prox-fecha">18 dic. 2026</strong> <span style="color:var(--text-subtle);font-size:0.75rem" id="ag-prox-sem">· Semestre julio-diciembre</span></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Qué conceptos entran -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Qué sueldo usar</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Qué conceptos entran en el “mejor sueldo”</h2>
+    <div class="cf-cmp">
+      <div class="cf-cmp__col cf-cmp__col--yes">
+        <div class="cf-cmp__head"><span aria-hidden="true">✓</span> Generalmente se incluyen</div>
+        <ul class="cf-cmp__list">{incluye.map((x) => (<li>{x}</li>))}</ul>
+      </div>
+      <div class="cf-cmp__col cf-cmp__col--no">
+        <div class="cf-cmp__head"><span aria-hidden="true">✕</span> Generalmente no se incluyen</div>
+        <ul class="cf-cmp__list">{noIncluye.map((x) => (<li>{x}</li>))}</ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Escenarios -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Compará escenarios</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 0.4rem">El mismo sueldo, distinto tiempo trabajado</h2>
+    <p class="cf-section__lead" style="margin-bottom:1.25rem">Ejemplo con mejor sueldo bruto de {fmtAr(INIT_M)} y descuentos estimados del 17%.</p>
+    <div class="cf-cards cf-cards--3">
+      {escenarios.map((e) => (
+        <div class="cf-minicard">
+          <p class="cf-minicard__sub" style="margin:0 0 0.3rem;font-weight:700;color:var(--accent)">{e.meses} meses · {e.prop}</p>
+          <div class="cf-minicard__big">{fmtAr(e.bruto)}</div>
+          <p class="cf-minicard__desc" style="margin:0.15rem 0 0.5rem">SAC bruto</p>
+          <p class="cf-minicard__title" style="color:var(--accent)">{fmtAr(e.neto)} neto</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Referencia rápida -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Referencia rápida</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Aguinaldo según tu mejor sueldo</h2>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Mejor sueldo bruto</th><th>SAC bruto</th><th>Aportes 17%</th><th>Neto estimado</th></tr></thead>
+        <tbody>
+          {refRows.map((r) => (<tr><td>{fmtAr(r.sueldo)}</td><td>{fmtAr(r.bruto)}</td><td>{fmtAr(r.desc)}</td><td class="cf-td-em">{fmtAr(r.neto)}</td></tr>))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Calendario -->
+  <section class="cf-section" id="como-funciona">
+    <p class="cf-eyebrow">Calendario 2026</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cuándo se paga el aguinaldo</h2>
+    <div class="cf-cards">
+      <div class="cf-minicard"><span class="cf-minicard__ico" aria-hidden="true">🗓️</span><p class="cf-minicard__sub" style="font-weight:700;color:var(--accent)">Primera cuota</p><div class="cf-minicard__big">30 de junio</div><p class="cf-minicard__desc" style="margin-top:0.3rem">Corresponde al semestre enero-junio.</p></div>
+      <div class="cf-minicard"><span class="cf-minicard__ico" aria-hidden="true">🎄</span><p class="cf-minicard__sub" style="font-weight:700;color:var(--accent)">Segunda cuota</p><div class="cf-minicard__big">18 de diciembre</div><p class="cf-minicard__desc" style="margin-top:0.3rem">Corresponde al semestre julio-diciembre.</p></div>
+    </div>
+  </section>
+
+  {faq.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que suele generar dudas</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí haciendo cuentas</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Calculadoras relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🧮'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Abrir calculadora <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá el resultado para comparar tu recibo.</p>
+      <p class="cf-ctabar__sub">Copiá un enlace con tus datos o guardalo en Mi Hacé Cuentas.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <a class="cf-ctabar__btn" href="/mi-hacecuentas?next=/calculadora-aguinaldo-sac"><span aria-hidden="true">☆</span> Guardar cálculo</a>
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="ag-share2">Copiar enlace</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.ag');
+    if (!root) return;
+    const CAP = Number(root.getAttribute('data-cap'));
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Math.round(n));
+    const sueldoEl = $('ag-sueldo'), netoEl = $('ag-neto');
+    let meses = 6, cuota = 'diciembre';
+
+    function rawSueldo() { return Number((sueldoEl.value || '').replace(/\D/g, '')) || 0; }
+    function fmtThousands(v) { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('es-AR') : ''; }
+
+    function sac(m, mm) { const bruto = (m / 2) * (mm / 6); const desc = Math.min(bruto, CAP / 2) * 0.17; return { bruto, desc, neto: bruto - desc, prop: Math.round((mm / 6) * 100) }; }
+
+    function render() {
+      const m = rawSueldo(); const s = sac(m, meses); const neto = netoEl.checked;
+      $('ag-big').textContent = fmt(neto ? s.neto : s.bruto);
+      $('ag-biglabel').textContent = neto ? 'Aguinaldo neto aproximado' : 'Aguinaldo bruto';
+      $('ag-sub').textContent = meses === 6 ? 'Semestre completo · 6 de 6 meses' : `Proporcional · ${meses} de 6 meses`;
+      $('ag-t-bruto').textContent = fmt(s.bruto);
+      $('ag-t-aportes').textContent = fmt(s.desc);
+      $('ag-t-prop').textContent = s.prop + '%';
+      const pctNeto = s.bruto > 0 ? Math.round(s.neto / s.bruto * 100) : 0;
+      $('ag-bar').style.width = pctNeto + '%';
+      $('ag-bar').nextElementSibling.style.width = (100 - pctNeto) + '%';
+      $('ag-bar-a').textContent = fmt(s.bruto) + ' bruto';
+      $('ag-formula').textContent = meses === 6 ? `${fmt(m)} ÷ 2 = ${fmt(s.bruto)}` : `${fmt(m)} ÷ 2 × ${meses}/6 = ${fmt(s.bruto)}`;
+      const dv = $('ag-deco-val'); if (dv) dv.textContent = fmt(neto ? s.neto : s.bruto);
+    }
+    function renderCuota() {
+      const jun = cuota === 'junio';
+      $('ag-deco-cuota').textContent = jun ? '30 junio' : '18 diciembre';
+      $('ag-prox-txt').textContent = jun ? 'La primera cuota del SAC 2026 vence el 30 de junio.' : 'La segunda cuota del SAC 2026 vence el 18 de diciembre.';
+      $('ag-prox-fecha').textContent = jun ? '30 jun. 2026' : '18 dic. 2026';
+      $('ag-prox-sem').textContent = jun ? '· Semestre enero-junio' : '· Semestre julio-diciembre';
+    }
+
+    sueldoEl.addEventListener('input', () => { const p = sueldoEl.selectionStart; sueldoEl.value = fmtThousands(sueldoEl.value); render(); });
+    netoEl.addEventListener('change', render);
+    $('ag-calc-btn').addEventListener('click', render);
+    document.querySelectorAll('.cf-chip[data-meses]').forEach((b) => b.addEventListener('click', () => {
+      meses = Number(b.getAttribute('data-meses'));
+      document.querySelectorAll('.cf-chip[data-meses]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      render();
+    }));
+    document.querySelectorAll('[data-cuota]').forEach((b) => b.addEventListener('click', () => {
+      cuota = b.getAttribute('data-cuota');
+      document.querySelectorAll('[data-cuota]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      renderCuota();
+    }));
+    document.querySelectorAll('[data-ej]').forEach((b) => b.addEventListener('click', () => { sueldoEl.value = fmtThousands(b.getAttribute('data-ej')); render(); }));
+
+    function summary() { const m = rawSueldo(); const s = sac(m, meses); return `Aguinaldo (SAC) con mejor sueldo ${fmt(m)}: bruto ${fmt(s.bruto)}, aportes ${fmt(s.desc)}, neto aprox. ${fmt(s.neto)}. — hacecuentas.com`; }
+    function shareUrl() { return `${location.origin}${location.pathname}?sueldo=${rawSueldo()}&meses=${meses}`; }
+    function copy(t, btn) { navigator.clipboard?.writeText(t).then(() => { const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => btn.innerHTML = o, 1500); }); }
+    $('ag-copy').addEventListener('click', (e) => copy(summary(), e.currentTarget));
+    $('ag-share').addEventListener('click', (e) => { if (navigator.share) navigator.share({ title: 'Aguinaldo SAC', text: summary(), url: shareUrl() }).catch(() => {}); else copy(shareUrl(), e.currentTarget); });
+    $('ag-detail').addEventListener('click', () => { document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' }); });
+    const s2 = $('ag-share2'); if (s2) s2.addEventListener('click', (e) => copy(shareUrl(), e.currentTarget));
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('sueldo')) sueldoEl.value = fmtThousands(q.get('sueldo'));
+    if (q.get('meses')) { const b = document.querySelector(`.cf-chip[data-meses="${q.get('meses')}"]`); if (b) b.click(); }
+    render();
+  })();
+</script>
+
+<style>
+  .ag .ag-money { position: relative; display: flex; align-items: center; }
+  .ag .ag-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
+  .ag .ag-money .cf-input { padding-left: 1.7rem; }
+</style>

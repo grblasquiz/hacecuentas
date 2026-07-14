@@ -7,6 +7,8 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Calculator from '../components/Calculator.astro';
 import CalcLayoutV2 from '../components/CalcLayoutV2.astro';
+import DiasEntreFechas from '../components/DiasEntreFechas.astro';
+import AguinaldoSac from '../components/AguinaldoSac.astro';
 import LiveData from '../components/LiveData.astro';
 import RelatedCalcs from '../components/RelatedCalcs.astro';
 import ogManifest from '../lib/og-manifest.json';
@@ -1127,6 +1129,19 @@ const langPills = [
   mxVersion && { href: `/mx/${mxVersion.slug}`, hreflang: 'es-MX', lang: 'es-MX', flag: '🇲🇽', label: 'México' },
   esVersion && { href: `/es/${esVersion.slug}`, hreflang: 'es-ES', lang: 'es-ES', flag: '🇪🇸', label: 'España' },
 ].filter(Boolean) as { href: string; hreflang: string; lang: string; flag: string; label: string }[];
+
+// ── Flagship bespoke por-slug (mockups Martin) ───────────────────────────────
+const isDiasEntreFechas = calc.slug === 'dias-entre-dos-fechas';
+const diasRelated = isDiasEntreFechas
+  ? ['calculadora-edad-exacta', 'calculadora-dias-laborables-habiles-entre-fechas', 'calculadora-cuantos-dias-faltan-para-una-fecha']
+      .map((s) => allCalcs.find((c: any) => c.slug === s)).filter(Boolean)
+  : [];
+const isAguinaldoSac = calc.slug === 'calculadora-aguinaldo-sac';
+const agRelated = isAguinaldoSac
+  ? ['sueldo-en-mano-argentina', 'calculadora-ganancias-aguinaldo-sac-retencion', 'calculadora-cuanto-falta-aguinaldo-junio-diciembre']
+      .map((s) => allCalcs.find((c: any) => c.slug === s)).filter(Boolean)
+  : [];
+const flagshipBespoke = isDiasEntreFechas || isAguinaldoSac;
 ---
 
 <Layout
@@ -1144,7 +1159,9 @@ const langPills = [
 >
   <Header slot="header" />
 
-  <CalcLayoutV2 calc={calc} dataAsOf={_dataAsOf ?? undefined} />
+  {isDiasEntreFechas && <DiasEntreFechas calc={calc} related={diasRelated} />}
+  {isAguinaldoSac && <AguinaldoSac calc={calc} related={agRelated} />}
+  {!flagshipBespoke && <CalcLayoutV2 calc={calc} dataAsOf={_dataAsOf ?? undefined} />}
 
   <ScrollToTop />
 
