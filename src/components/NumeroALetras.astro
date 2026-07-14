@@ -1,0 +1,603 @@
+---
+// Flagship redesign del conversor "número a letras" (mockup Martin).
+// Reusa la MISMA lógica que la fórmula (src/lib/numero-a-letras.ts, reglas RAE
+// escala larga) — nada duplicado. Domain "knowledge" (violeta), que además
+// coincide con el de la categoría matemática.
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { MONEDAS, enteroALetras, capitalizar, importeEnLetras, splitImporte, terminaEnEscala } from '../lib/numero-a-letras.js';
+// El módulo entra CRUDO al <script is:inline> (que no puede importar): así el
+// cliente corre la MISMA lógica que el SSR y la fórmula, sin duplicarla. Los
+// <script> hoisted de componentes nuevos 404ean en dev y dejan la calc inerte.
+import numeroALetrasRaw from '../lib/numero-a-letras.js?raw';
+const libInline = numeroALetrasRaw.replace(/^export /gm, '');
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Los "usos" del mockup mapean a los formatos reales de la fórmula:
+// cheque→cheque, factura/recibo→moneda, contrato→contrato.
+const USOS = [
+  { id: 'cheque', label: 'Cheque', ico: '🏦', titulo: 'Cheque bancario', desc: 'Mayúsculas, moneda y centavos expresados como fracción sobre 100.' },
+  { id: 'factura', label: 'Factura', ico: '📄', titulo: 'Factura o presupuesto', desc: 'Importe completo en palabras, con nombre de moneda y centavos.' },
+  { id: 'recibo', label: 'Recibo', ico: '🧾', titulo: 'Recibo simple', desc: 'Texto claro para acompañar la cifra numérica del comprobante.' },
+  { id: 'contrato', label: 'Contrato', ico: '✍️', titulo: 'Cláusula de contrato', desc: 'Cantidad escrita en letras y cifra entre paréntesis para evitar dudas.' },
+];
+
+function convertir(numero: number, uso: string, salida: string, monedaCode: string): string {
+  const m = MONEDAS[monedaCode] || MONEDAS.ARS;
+  const { entero, centavos } = splitImporte(numero);
+  const neg = numero < 0;
+
+  if (salida === 'sin-moneda') {
+    let t = enteroALetras(entero, false);
+    if (neg) t = 'menos ' + t;
+    return capitalizar(t);
+  }
+
+  let texto: string;
+  if (uso === 'cheque') {
+    // Formato bancario: importe en letras + moneda + centavos como NN/100.
+    const letras = enteroALetras(entero, true);
+    const conector = terminaEnEscala(letras) ? 'de ' : '';
+    const unidad = entero === 1 ? m.singular : m.plural;
+    texto = `${letras} ${conector}${unidad} con ${String(centavos).padStart(2, '0')}/100`;
+  } else {
+    texto = importeEnLetras(entero, centavos, m);
+  }
+  if (neg) texto = 'menos ' + texto;
+  return salida === 'mayusculas' ? texto.toUpperCase() : capitalizar(texto);
+}
+
+const INIT = { numero: 1250000.5, uso: 'cheque', salida: 'mayusculas', moneda: 'ARS' };
+const initTexto = convertir(INIT.numero, INIT.uso, INIT.salida, INIT.moneda);
+const initSplit = splitImporte(INIT.numero);
+
+const nfAr = (n: number) => n.toLocaleString('es-AR');
+const nfDec = (n: number) => n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+// Ejemplos: se calculan con la misma función, no hardcodeados
+const EJEMPLOS = [
+  { k: 'Mil', n: 1000, uso: 'factura', salida: 'sin-moneda' },
+  { k: 'Con decimales', n: 1525.75, uso: 'factura', salida: 'minusculas' },
+  { k: 'Un millón', n: 1000000, uso: 'factura', salida: 'sin-moneda' },
+  { k: 'Importe grande', n: 25300000, uso: 'factura', salida: 'sin-moneda' },
+].map((e) => ({ ...e, txt: convertir(e.n, e.uso, e.salida, 'ARS') }));
+
+const MONEDAS_UI = [
+  { code: 'ARS', flag: '🇦🇷', label: 'Peso argentino' },
+  { code: 'MXN', flag: '🇲🇽', label: 'Peso mexicano' },
+  { code: 'COP', flag: '🇨🇴', label: 'Peso colombiano' },
+  { code: 'CLP', flag: '🇨🇱', label: 'Peso chileno' },
+  { code: 'PEN', flag: '🇵🇪', label: 'Sol peruano' },
+  { code: 'USD', flag: '🇺🇸', label: 'Dólar' },
+];
+
+const ESCALA = [
+  { k: 'Mil', v: '1.000', n: '10³' },
+  { k: 'Millón', v: '1.000.000', n: '10⁶' },
+  { k: 'Mil millones', v: '1.000.000.000', n: '10⁹' },
+  { k: 'Billón', v: '10¹²', n: 'un millón de millones', hl: true },
+  { k: 'Trillón', v: '10¹⁸', n: 'escala larga' },
+];
+
+const faq = calc.faq || [];
+const explanationHtml = calc.explanation ? md(calc.explanation) : '';
+---
+
+<div class="cf-page nl" data-domain="knowledge" data-monedas={JSON.stringify(MONEDAS)}>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/categoria/matematica">Matemática</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Número a letras</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">✍️</span> Conversor de cantidades</p>
+      <h1 class="cf-h1">Convertí cualquier <span class="cf-yr">número a letras</span></h1>
+      <p class="cf-sub">Escribí una cantidad y obtenela en palabras, lista para usar en cheques, facturas, recibos o contratos.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Reglas del español</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Monedas de Latinoamérica</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Conversión privada</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <div class="cf-deco-card">
+        <div class="cf-deco-card__label">Número</div>
+        <div class="cf-deco-card__value nl-deco__num">{nfDec(INIT.numero)}</div>
+      </div>
+      <div class="nl-deco-wrap">
+        <div class="nl-arrow" aria-hidden="true">→</div>
+        <div class="nl-deco-txt">
+          <p class="nl-deco-txt__k">En letras</p>
+          <p class="nl-deco-txt__v">Un millón doscientos cincuenta mil con cincuenta centavos</p>
+          <p class="nl-deco-txt__n">Listo para copiar</p>
+        </div>
+        <span class="cf-deco-badge nl-badge">ABC</span>
+      </div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Tu conversión</p>
+          <h2 class="cf-panel__title">Ingresá la cantidad</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="nl-num">Número o importe</label><span class="cf-hint">Admite decimales</span></div>
+        <div class="nl-money"><span class="nl-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="decimal" id="nl-num" value={nfDec(INIT.numero)} /></div>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><span class="cf-label">¿Para qué lo vas a usar?</span></div>
+        <div class="cf-chips nl-usos" role="group" aria-label="Uso del documento">
+          {USOS.map((u) => (
+            <button class="cf-chip nl-chip" type="button" data-uso={u.id} aria-pressed={u.id === INIT.uso ? 'true' : 'false'}>{u.label}</button>
+          ))}
+        </div>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="nl-moneda">Moneda</label><span class="cf-hint" id="nl-mcode">ARS</span></div>
+        <select class="cf-input" id="nl-moneda">
+          {MONEDAS_UI.map((m) => (
+            <option value={m.code} selected={m.code === INIT.moneda}>{m.flag} {m.label}</option>
+          ))}
+        </select>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><span class="cf-label">Formato de salida</span></div>
+        <div class="cf-seg nl-seg" role="group" aria-label="Formato de salida">
+          <button type="button" data-salida="mayusculas" aria-pressed="true">MAYÚSCULAS</button>
+          <button type="button" data-salida="minusculas" aria-pressed="false">Minúsculas</button>
+          <button type="button" data-salida="sin-moneda" aria-pressed="false">Sin moneda</button>
+        </div>
+      </div>
+
+      <button class="cf-primary" id="nl-calc-btn" type="button">Convertir a letras <span aria-hidden="true">→</span></button>
+    </div>
+
+    <div class="cf-result" id="nl-result">
+      <p class="cf-result__eyebrow">Resultado</p>
+      <p class="nl-uso-lbl" id="nl-uso-lbl">Importe para cheque</p>
+      <p class="nl-out" id="nl-out">{initTexto}</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value nl-tile" id="nl-t-entero">{nfAr(initSplit.entero)} pesos</div><div class="cf-tile__label">Parte entera</div></div>
+        <div class="cf-tile"><div class="cf-tile__value nl-tile" id="nl-t-dec">{initSplit.centavos} centavos</div><div class="cf-tile__label">Decimales</div></div>
+      </div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn nl-rbtn--solid" type="button" id="nl-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="nl-speak"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg> Escuchar</button>
+      </div>
+      <p class="cf-result__sub nl-foot" id="nl-foot">Formato bancario: importe en letras + moneda + centavos / 100</p>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">✍️</span>
+    <p class="cf-quick__txt"><strong>Respuesta rápida.</strong> {nfDec(INIT.numero)} se escribe “{convertir(INIT.numero, 'factura', 'minusculas', 'ARS')}”.</p>
+    <span class="cf-formula">{nfDec(INIT.numero)} = texto</span>
+  </div>
+
+  <!-- Conversiones frecuentes -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Probalo con un ejemplo</p>
+        <h2 class="cf-section__title">Conversiones frecuentes</h2>
+      </div>
+      <p class="cf-section__lead">Atajos para comprobar importes comunes y ver cómo se escriben correctamente.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      {EJEMPLOS.map((e) => (
+        <button class="cf-minicard nl-ej" type="button" data-ej={e.n}>
+          <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">{e.k}</p>
+          <div class="cf-minicard__big">{e.n.toLocaleString('es-AR', { minimumFractionDigits: e.n % 1 !== 0 ? 2 : 0, maximumFractionDigits: 2 })}</div>
+          <p class="cf-minicard__desc" style="margin-top:0.3rem">{e.txt}</p>
+        </button>
+      ))}
+    </div>
+  </section>
+
+  <!-- Un formato para cada documento -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Elegí el contexto</p>
+        <h2 class="cf-section__title">Un formato para cada documento</h2>
+      </div>
+      <p class="cf-section__lead">El mismo número puede necesitar moneda, mayúsculas o centavos escritos de manera diferente.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      {USOS.map((u, i) => (
+        <div class={`cf-minicard${i === 0 ? ' cf-minicard--dark' : ''}`}>
+          <span class="cf-minicard__ico" aria-hidden="true">{u.ico}</span>
+          <p class="cf-minicard__title">{u.label}</p>
+          <p class="cf-minicard__desc">{u.desc}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Vista previa -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Vista previa</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cambiá el formato en un toque</h2>
+    <div class="nl-2col">
+      <div class="nl-list" role="group" aria-label="Vista previa por formato">
+        {USOS.map((u, i) => (
+          <button class="nl-listitem" type="button" data-prev={u.id} aria-pressed={i === 0 ? 'true' : 'false'}>
+            <span class="nl-listitem__ico" aria-hidden="true">{u.ico}</span>
+            <span class="nl-listitem__txt">{u.titulo}</span>
+          </button>
+        ))}
+        <button class="nl-listitem" type="button" data-prev="simple" aria-pressed="false">
+          <span class="nl-listitem__ico" aria-hidden="true">123</span>
+          <span class="nl-listitem__txt">Solo número en letras</span>
+        </button>
+      </div>
+      <div class="nl-preview">
+        <p class="cf-side-eyebrow" id="nl-prev-k">Vista previa · cheque</p>
+        <p class="nl-preview__txt" id="nl-prev-txt">“{initTexto}”</p>
+        <div class="nl-preview__foot">
+          <span id="nl-prev-tags">✓ Mayúsculas · ✓ Moneda · ✓ Centavos</span>
+          <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="nl-prev-copy">Copiar texto</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Reglas -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Escritura correcta</p>
+        <h2 class="cf-section__title">Las reglas que aplica el conversor</h2>
+      </div>
+      <p class="cf-section__lead">La salida respeta las formas cardinales habituales del español y adapta “uno” delante de sustantivos.</p>
+    </div>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Del 1 al 29, una sola palabra</p>
+        <p class="cf-step__desc">Los cardinales de esta serie se escriben unidos, y “uno” se apocopa cuando corresponde.</p>
+        <p class="nl-chipcalc">16 → dieciséis · 21 → veintiuno</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Desde 30, se usa “y”</p>
+        <p class="cf-step__desc">Las decenas y unidades se conectan con “y” solamente en este tramo.</p>
+        <p class="nl-chipcalc">31 → treinta y uno</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Cien exacto, ciento compuesto</p>
+        <p class="cf-step__desc">La forma cambia cuando el número lleva algo detrás de la centena.</p>
+        <p class="nl-chipcalc">100 → cien · 105 → ciento cinco</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Monedas -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Monedas de Latinoamérica</p>
+        <h2 class="cf-section__title">El nombre correcto según el país</h2>
+      </div>
+      <p class="cf-section__lead">Elegí la moneda para adaptar singular, plural y forma de los centavos en el resultado.</p>
+    </div>
+    <div class="nl-monedas">
+      {MONEDAS_UI.map((m) => (
+        <button class="nl-moneda" type="button" data-moneda={m.code} aria-pressed={m.code === INIT.moneda ? 'true' : 'false'}>
+          <span class="nl-moneda__flag" aria-hidden="true">{m.flag}</span>
+          <span class="nl-moneda__label">{m.label}</span>
+          <span class="nl-moneda__sub">{m.code} · {MONEDAS[m.code].plural} · {MONEDAS[m.code].centPlural}</span>
+        </button>
+      ))}
+    </div>
+    <div class="cf-callout cf-callout--warn" style="margin-top:1.25rem">
+      <span class="cf-callout__ico" aria-hidden="true">💡</span>
+      <p>También podés usar el modo “sin moneda” para convertir cantidades neutras: kilos, metros o unidades de inventario.</p>
+    </div>
+  </section>
+
+  <!-- Escala -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Números grandes</p>
+        <h2 class="cf-section__title">Cómo crece la escala en español</h2>
+      </div>
+      <p class="cf-section__lead">El español usa la escala larga: un billón equivale a un millón de millones, no a mil millones.</p>
+    </div>
+    <div class="nl-escala">
+      {ESCALA.map((e) => (
+        <div class={`cf-minicard${e.hl ? ' nl-minicard--hl' : ''}`}>
+          <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">{e.k}</p>
+          <div class="cf-minicard__big">{e.v}</div>
+          <p class="cf-minicard__desc" style="margin-top:0.25rem">{e.n}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Errores comunes -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Evitá errores</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Detalles que suelen escribirse mal</h2>
+    <div class="cf-cmp">
+      <div class="cf-cmp__col cf-cmp__col--no">
+        <div class="cf-cmp__head"><span aria-hidden="true">✕</span> Formas que conviene evitar</div>
+        <ul class="cf-cmp__list">
+          <li><strong>una millón</strong> de pesos</li>
+          <li><strong>veintiune</strong> pesos</li>
+          <li><strong>ciento</strong> para 100 exacto</li>
+          <li><strong>un billón</strong> para 1.000 millones</li>
+        </ul>
+      </div>
+      <div class="cf-cmp__col cf-cmp__col--yes">
+        <div class="cf-cmp__head"><span aria-hidden="true">✓</span> La forma que genera la herramienta</div>
+        <ul class="cf-cmp__list">
+          <li><strong>un millón</strong> de pesos</li>
+          <li><strong>veintiún</strong> pesos</li>
+          <li><strong>cien</strong> para 100 exacto</li>
+          <li><strong>mil millones</strong> para 1.000 millones</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  {faq.length > 0 && (
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {explanationHtml && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">En detalle</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cómo se escriben los números en español</h2>
+      <div class="cf-prose" set:html={explanationHtml} />
+    </section>
+  )}
+
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí convirtiendo</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🔢'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('(')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Convertir <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá el conversor para tu próximo documento.</p>
+      <p class="cf-ctabar__sub">Cheques, facturas, recibos y contratos sin errores.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="nl-share2">Guardar herramienta</button>
+    </div>
+  </section>
+</div>
+
+<!-- 1) el módulo compartido, crudo (define MONEDAS, enteroALetras, …) -->
+<script is:inline set:html={libInline}></script>
+<!-- 2) el handler, que usa esas mismas funciones -->
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.nl');
+    if (!root) return;
+    const $ = (id) => document.getElementById(id);
+    const nfAr = (n) => n.toLocaleString('es-AR');
+    let uso = 'cheque', salida = 'mayusculas', prev = 'cheque';
+    const numEl = $('nl-num'), monedaEl = $('nl-moneda');
+
+    const USO_LBL = {
+      cheque: 'Importe para cheque', factura: 'Importe para factura',
+      recibo: 'Importe para recibo', contrato: 'Importe para contrato', simple: 'Número en letras',
+    };
+    const PREV_K = {
+      cheque: 'Vista previa · cheque', factura: 'Vista previa · factura',
+      recibo: 'Vista previa · recibo', contrato: 'Vista previa · contrato', simple: 'Vista previa · solo letras',
+    };
+
+    /** Parsea "1.250.000,50" (es-AR) a número. */
+    function parseNum(v) {
+      const s = String(v || '').replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
+      const n = Number(s);
+      return Number.isFinite(n) ? n : 0;
+    }
+    function fmtInput(v) {
+      const raw = String(v || '').replace(/[^\d,]/g, '');
+      const parts = raw.split(',');
+      const e = parts[0] ? Number(parts[0].replace(/\D/g, '')).toLocaleString('es-AR') : '';
+      return parts.length > 1 ? e + ',' + parts[1].slice(0, 2) : e;
+    }
+
+    function convertir(numero, u, sal, code) {
+      const m = MONEDAS[code] || MONEDAS.ARS;
+      const sp = splitImporte(numero);
+      const neg = numero < 0;
+      if (sal === 'sin-moneda' || u === 'simple') {
+        let t = enteroALetras(sp.entero, false);
+        if (neg) t = 'menos ' + t;
+        return capitalizar(t);
+      }
+      let texto;
+      if (u === 'cheque') {
+        const letras = enteroALetras(sp.entero, true);
+        const conector = terminaEnEscala(letras) ? 'de ' : '';
+        const unidad = sp.entero === 1 ? m.singular : m.plural;
+        texto = letras + ' ' + conector + unidad + ' con ' + String(sp.centavos).padStart(2, '0') + '/100';
+      } else {
+        texto = importeEnLetras(sp.entero, sp.centavos, m);
+      }
+      if (neg) texto = 'menos ' + texto;
+      return sal === 'mayusculas' ? texto.toUpperCase() : capitalizar(texto);
+    }
+
+    function render() {
+      const n = parseNum(numEl.value);
+      const code = monedaEl.value;
+      const m = MONEDAS[code] || MONEDAS.ARS;
+      const sp = splitImporte(n);
+
+      $('nl-out').textContent = convertir(n, uso, salida, code);
+      $('nl-uso-lbl').textContent = USO_LBL[uso] || 'Importe';
+      $('nl-mcode').textContent = code;
+      $('nl-t-entero').textContent = nfAr(sp.entero) + ' ' + (sp.entero === 1 ? m.singular.split(' ')[0] : m.plural.split(' ')[0]);
+      $('nl-t-dec').textContent = sp.centavos + ' ' + (sp.centavos === 1 ? m.centSingular : m.centPlural);
+      $('nl-foot').textContent = uso === 'cheque'
+        ? 'Formato bancario: importe en letras + moneda + centavos / 100'
+        : salida === 'sin-moneda' ? 'Número suelto en letras, sin moneda ni centavos.'
+        : 'Importe en letras con nombre de moneda y centavos.';
+
+      const prevSal = prev === 'simple' ? 'sin-moneda' : (prev === 'cheque' ? 'mayusculas' : 'minusculas');
+      $('nl-prev-txt').textContent = '“' + convertir(n, prev, prevSal, code) + '”';
+      $('nl-prev-k').textContent = PREV_K[prev];
+      $('nl-prev-tags').textContent = prev === 'cheque' ? '✓ Mayúsculas · ✓ Moneda · ✓ Centavos'
+        : prev === 'simple' ? '✓ Solo letras · ✗ Moneda' : '✓ Moneda · ✓ Centavos';
+    }
+
+    numEl.addEventListener('input', () => { numEl.value = fmtInput(numEl.value); render(); });
+    monedaEl.addEventListener('change', render);
+    $('nl-calc-btn').addEventListener('click', render);
+    document.querySelectorAll('[data-uso]').forEach((b) => b.addEventListener('click', () => {
+      uso = b.getAttribute('data-uso');
+      document.querySelectorAll('[data-uso]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      render();
+    }));
+    document.querySelectorAll('[data-salida]').forEach((b) => b.addEventListener('click', () => {
+      salida = b.getAttribute('data-salida');
+      document.querySelectorAll('[data-salida]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      render();
+    }));
+    document.querySelectorAll('[data-prev]').forEach((b) => b.addEventListener('click', () => {
+      prev = b.getAttribute('data-prev');
+      document.querySelectorAll('[data-prev]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      render();
+    }));
+    document.querySelectorAll('[data-moneda]').forEach((b) => b.addEventListener('click', () => {
+      monedaEl.value = b.getAttribute('data-moneda');
+      document.querySelectorAll('[data-moneda]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      render();
+    }));
+    document.querySelectorAll('[data-ej]').forEach((b) => b.addEventListener('click', () => {
+      numEl.value = fmtInput(String(b.getAttribute('data-ej')).replace('.', ','));
+      render();
+      document.getElementById('calc').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }));
+
+    function copy(t, btn) {
+      navigator.clipboard?.writeText(t).then(() => {
+        const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => { btn.innerHTML = o; }, 1500);
+      });
+    }
+    $('nl-copy').addEventListener('click', (e) => copy($('nl-out').textContent || '', e.currentTarget));
+    $('nl-prev-copy').addEventListener('click', (e) => copy(($('nl-prev-txt').textContent || '').replace(/[“”]/g, ''), e.currentTarget));
+    $('nl-speak').addEventListener('click', () => {
+      const t = $('nl-out').textContent || '';
+      if ('speechSynthesis' in window && t) {
+        const u = new SpeechSynthesisUtterance(t.toLowerCase());
+        u.lang = 'es-AR';
+        speechSynthesis.cancel();
+        speechSynthesis.speak(u);
+      }
+    });
+    $('nl-share2').addEventListener('click', (e) =>
+      copy(location.origin + location.pathname + '?n=' + parseNum(numEl.value) + '&uso=' + uso, e.currentTarget));
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('n')) numEl.value = fmtInput(String(q.get('n')).replace('.', ','));
+    if (q.get('uso')) { const b = document.querySelector('[data-uso="' + q.get('uso') + '"]'); if (b) b.click(); }
+    render();
+  })();
+</script>
+
+<style>
+  .nl .nl-deco-wrap { position: relative; margin-top: 0.7rem; }
+  .nl .nl-arrow { position: absolute; top: -22px; left: 14px; width: 30px; height: 30px; border-radius: 50%; background: #fbbf24; color: #78350f; display: flex; align-items: center; justify-content: center; font-weight: 800; box-shadow: var(--shadow-md); }
+  .nl .nl-deco-txt { padding: 1.1rem 1.1rem 0.9rem; border-radius: var(--radius-lg); background: var(--bg-card); border: 1px solid var(--border); box-shadow: var(--shadow-md); }
+  .nl .nl-deco-txt__k { font-size: 0.58rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-subtle); margin: 0 0 0.2rem; }
+  .nl .nl-deco-txt__v { font-size: 0.9rem; font-weight: 700; color: var(--text); line-height: 1.35; margin: 0 0 0.3rem; }
+  .nl .nl-deco-txt__n { font-size: 0.68rem; color: var(--text-subtle); margin: 0; }
+  .nl .nl-badge { top: auto; bottom: -14px; right: -14px; width: 44px; height: 44px; font-size: 0.72rem; background: #10b981; color: #fff; }
+  .nl .nl-deco__num { font-variant-numeric: tabular-nums; font-size: 1.6rem; }
+
+  .nl .nl-money { position: relative; display: flex; align-items: center; }
+  .nl .nl-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
+  .nl .nl-money .cf-input { padding-left: 1.7rem; }
+  .nl .nl-seg { width: 100%; }
+  .nl .nl-seg button { flex: 1; font-size: 0.72rem; }
+  .nl .nl-chip { flex: 1; min-width: 0; font-size: 0.8rem; }
+
+  .nl .nl-uso-lbl { font-size: 0.72rem; color: #8592a6; margin: 0.6rem 0 0.5rem; }
+  .nl .nl-out { font-size: clamp(1.05rem, 2.4vw, 1.4rem); font-weight: 800; color: #fff; line-height: 1.35; margin: 0 0 1.2rem; word-break: break-word; }
+  .nl .nl-tile { font-size: 0.95rem; }
+  .nl .nl-foot { margin: 0.9rem 0 0; font-size: 0.68rem; }
+  .nl .nl-rbtn--solid { background: #fff; color: var(--accent-strong); border-color: #fff; }
+  .nl .nl-rbtn--solid:hover { background: #fff; filter: brightness(0.95); }
+
+  .nl .nl-ej { cursor: pointer; text-align: left; font-family: inherit; transition: transform 0.15s, border-color 0.15s; }
+  .nl .nl-ej:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .nl .nl-chipcalc { margin: 0.7rem 0 0; padding: 0.4rem 0.6rem; border-radius: var(--radius-sm); background: var(--bg-soft); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent-strong); overflow-x: auto; }
+
+  .nl-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 860px) { .nl-2col { grid-template-columns: 0.8fr 1.2fr; } }
+  .nl .nl-list { display: grid; gap: 0.4rem; }
+  .nl .nl-listitem { display: flex; align-items: center; gap: 0.6rem; width: 100%; padding: 0.7rem 0.85rem; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg-card); cursor: pointer; font-family: inherit; text-align: left; transition: all 0.15s; }
+  .nl .nl-listitem[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+  .nl .nl-listitem__ico { width: 26px; height: 26px; flex-shrink: 0; border-radius: 7px; background: var(--bg-muted); display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; }
+  .nl .nl-listitem[aria-pressed="true"] .nl-listitem__ico { background: var(--accent); color: #fff; }
+  .nl .nl-listitem__txt { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+
+  .nl .nl-preview { padding: 1.5rem 1.6rem; border-radius: var(--radius-lg); color: #e7ecf3; background: linear-gradient(160deg, #14213a 0%, #0b1120 100%); }
+  .nl .nl-preview .cf-side-eyebrow { color: color-mix(in srgb, var(--accent-2) 55%, #fff); }
+  .nl .nl-preview__txt { font-size: clamp(1rem, 2.2vw, 1.3rem); font-weight: 700; color: #fff; line-height: 1.4; margin: 0 0 1.2rem; word-break: break-word; }
+  .nl .nl-preview__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; font-size: 0.72rem; color: #8592a6; }
+
+  .nl .nl-monedas { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+  @media (min-width: 720px) { .nl .nl-monedas { grid-template-columns: repeat(3, 1fr); } }
+  .nl .nl-moneda { padding: 0.9rem 1rem; border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--bg-card); cursor: pointer; font-family: inherit; text-align: left; transition: all 0.15s; }
+  .nl .nl-moneda[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .nl .nl-moneda__flag { font-size: 1.2rem; }
+  .nl .nl-moneda__label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--text); margin-top: 0.25rem; }
+  .nl .nl-moneda__sub { display: block; font-size: 0.68rem; color: var(--text-subtle); margin-top: 0.1rem; }
+
+  .nl .nl-escala { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.7rem; }
+  @media (min-width: 900px) { .nl .nl-escala { grid-template-columns: repeat(5, 1fr); } }
+  .nl .nl-minicard--hl { background: #fefce8; border-color: #fde047; border-top-color: #eab308; }
+  :root[data-theme="dark"] .nl .nl-minicard--hl { background: rgba(202,138,4,0.16); border-color: rgba(250,204,21,0.35); }
+  .nl .nl-escala .cf-minicard__big { font-size: 1.05rem; }
+</style>

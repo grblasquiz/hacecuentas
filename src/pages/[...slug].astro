@@ -10,6 +10,7 @@ import CalcLayoutV2 from '../components/CalcLayoutV2.astro';
 import DiasEntreFechas from '../components/DiasEntreFechas.astro';
 import AguinaldoSac from '../components/AguinaldoSac.astro';
 import MillasLifeMiles from '../components/MillasLifeMiles.astro';
+import NumeroALetras from '../components/NumeroALetras.astro';
 import LiveData from '../components/LiveData.astro';
 import RelatedCalcs from '../components/RelatedCalcs.astro';
 import ogManifest from '../lib/og-manifest.json';
@@ -1147,8 +1148,14 @@ const lmRelated = isLifeMiles
   ? ['calculadora-valor-millas-punto-centavos', 'calculadora-puntos-vs-cash-vuelo-cuando-conviene', 'calculadora-millas-american-aa-destino']
       .map((s) => allCalcs.find((c: any) => c.slug === s)).filter(Boolean)
   : [];
-const flagshipBespoke = isDiasEntreFechas || isAguinaldoSac || isLifeMiles;
+const isNumeroALetras = calc.slug === 'conversor-numero-a-letras-cantidad';
+const nlRelated = isNumeroALetras
+  ? ['conversor-letras-a-numero', 'conversor-numero-a-ordinal', 'conversor-numeros-romanos-arabigos']
+      .map((s) => allCalcs.find((c: any) => c.slug === s)).filter(Boolean)
+  : [];
+const flagshipBespoke = isDiasEntreFechas || isAguinaldoSac || isLifeMiles || isNumeroALetras;
 // El mockup no usa el color de la categoría (viajes→life/cian): va rosa coral.
+// Número a letras ya coincide (matematica→knowledge), no hace falta forzarlo.
 const flagshipDomain: 'money' | 'data' | 'health' | 'home' | 'knowledge' | 'life' | null =
   isLifeMiles ? 'health' : null;
 ---
@@ -1171,6 +1178,7 @@ const flagshipDomain: 'money' | 'data' | 'health' | 'home' | 'knowledge' | 'life
   {isDiasEntreFechas && <DiasEntreFechas calc={calc} related={diasRelated} />}
   {isAguinaldoSac && <AguinaldoSac calc={calc} related={agRelated} />}
   {isLifeMiles && <MillasLifeMiles calc={calc} related={lmRelated} />}
+  {isNumeroALetras && <NumeroALetras calc={calc} related={nlRelated} />}
   {!flagshipBespoke && <CalcLayoutV2 calc={calc} dataAsOf={_dataAsOf ?? undefined} />}
 
   <ScrollToTop />
