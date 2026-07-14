@@ -2,8 +2,8 @@
  * Gate post-build: impide desplegar un catálogo machine-readable que anuncie
  * aliases, rutas retiradas o páginas sin HTML/canonical propio.
  */
-import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { GONE_410_URLS } from '../src/lib/gone-410.ts';
 import { PRUNING_REDIRECTS } from '../src/lib/pruning-redirects.ts';
 
@@ -29,6 +29,16 @@ function normalizeUrl(value: string): string {
 function htmlFileFor(pathname: string): string {
   const clean = pathname.replace(/^\/+|\/+$/g, '');
   return resolve(DIST, clean ? `${clean}.html` : 'index.html');
+}
+
+function htmlFiles(dir: string): string[] {
+  const out: string[] = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...htmlFiles(path));
+    else if (entry.name.endsWith('.html')) out.push(path);
+  }
+  return out;
 }
 
 if (!existsSync(API_FILE)) throw new Error(`[integrity] falta ${API_FILE}`);
@@ -70,6 +80,22 @@ for (const entry of entries) {
   }
 }
 
+// Ninguna página compilada puede seguir enlazando aliases 301 o retiradas 410.
+// Este gate cubre catálogos, relacionadas, rails y links editoriales completos.
+let internalHrefCount = 0;
+for (const file of htmlFiles(DIST)) {
+  const html = readFileSync(file, 'utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+  for (const match of html.matchAll(/href=["'](\/[^"'?#\s]*)/gi)) {
+    const path = match[1].replace(/\.html$/, '').replace(/\/$/, '') || '/';
+    internalHrefCount++;
+    if (GONE_410_URLS.has(path)) errors.push(`href interno a 410: ${path} (${file.replace(`${DIST}/`, '')})`);
+    if (path in PRUNING_REDIRECTS) errors.push(`href interno a 301: ${path} (${file.replace(`${DIST}/`, '')})`);
+    if (STATIC_REDIRECT_PATHS.has(path)) errors.push(`href interno a _redirects: ${path} (${file.replace(`${DIST}/`, '')})`);
+    if (errors.length >= 50) break;
+  }
+  if (errors.length >= 50) break;
+}
+
 // El wrapper debe contener el mapa completo: los HTML retirados se borran del
 // build, por lo que este código es quien garantiza su 301/410 en producción.
 const wrapper = readFileSync(WRAPPER, 'utf8');
@@ -94,4 +120,4 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`[integrity] OK: ${entries.length} URLs públicas con HTML, canonical y routing coherentes`);
+console.log(`[integrity] OK: ${entries.length} URLs públicas y ${internalHrefCount} href internos con HTML, canonical y routing coherentes`);

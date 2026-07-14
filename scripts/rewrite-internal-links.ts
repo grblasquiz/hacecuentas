@@ -27,12 +27,25 @@ function files(dir: string): string[] {
   return out;
 }
 
+function canonicalTarget(path: string): string {
+  const seen = new Set<string>();
+  let current = path;
+  while (!seen.has(current)) {
+    seen.add(current);
+    if (GONE_410_URLS.has(current)) return '/calculadoras';
+    const next = redirects.get(current);
+    if (!next || !next.startsWith('/')) return next || current;
+    current = next;
+  }
+  return '/calculadoras';
+}
+
 let changedFiles = 0;
 let rewritten = 0;
 for (const file of files(DIST)) {
   const before = readFileSync(file, 'utf8');
   const after = before.replace(/href=(["'])(\/[^"'?#\s]*)([^"']*)\1/g, (full, quote, path, suffix) => {
-    const target = redirects.get(path) || (GONE_410_URLS.has(path) ? '/calculadoras' : '');
+    const target = canonicalTarget(path);
     if (!target || target === path) return full;
     rewritten++;
     return `href=${quote}${target}${suffix}${quote}`;

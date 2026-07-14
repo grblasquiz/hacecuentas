@@ -7,14 +7,15 @@ import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
 import PillarHub from '../../components/PillarHub.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
+import { canDistributeCalc } from '../../lib/content-policy';
 import { PORTUGAL_2026, fmtEUR, DATA_AS_OF } from '../../lib/data/portugal-2026';
 
 const localeModules = import.meta.glob<any>('../../content/calcs-pt-pt/*.json', { eager: true });
 const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
-const localeCalcs = Object.values(localeModules).map((m: any) => m.default || m);
+const localeCalcs = Object.values(localeModules).map((m: any) => m.default || m).filter((c: any) => canDistributeCalc(c, 'pt-pt'));
 const audienceFiltered = Object.values(mainModules)
   .map((m: any) => m.default || m)
-  .filter((c: any) => c.audience === 'PT');
+  .filter((c: any) => c.audience === 'PT' && canDistributeCalc(c));
 const calcs = [...localeCalcs, ...audienceFiltered];
 
 const localeSlugs = new Set(localeCalcs.map((c: any) => c.slug));

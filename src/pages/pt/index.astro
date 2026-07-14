@@ -5,13 +5,14 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
+import { canDistributeCalc } from '../../lib/content-policy';
 import PillarHub from '../../components/PillarHub.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
 import { TOTAL_DISPLAY } from '../../lib/calc-counts';
 
 // Load all English calculators
 const calcModules = import.meta.glob<any>('../../content/calcs-pt/*.json', { eager: true });
-const calcs = Object.values(calcModules).map((m: any) => m.default || m);
+const calcs = Object.values(calcModules).map((m: any) => m.default || m).filter((c: any) => canDistributeCalc(c, 'pt'));
 
 // Group by category
 const byCategory: Record<string, any[]> = {};

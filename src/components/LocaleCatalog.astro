@@ -6,6 +6,7 @@
 import Layout from '../layouts/Layout.astro';
 import Header from './Header.astro';
 import Footer from './Footer.astro';
+import { isDistributablePublicPath } from '../lib/content-policy';
 
 interface CalcItem { h1: string; slug: string; icon?: string; category: string; url: string; }
 interface Props {
@@ -18,7 +19,8 @@ interface Props {
   dataLink?: string;    // '/co/datos-...'
   dataLabel?: string;   // '📊 …'
 }
-const { calcs, prefix, audience, country, lang, topics, dataLink, dataLabel } = Astro.props as Props;
+const { calcs: suppliedCalcs, prefix, audience, country, lang, topics, dataLink, dataLabel } = Astro.props as Props;
+const calcs = suppliedCalcs.filter((calc) => isDistributablePublicPath(calc.url));
 
 const CAT: Record<string, { label: string; color: string; icon: string }> = {
   finanzas:         { label: 'Finanzas',       color: '#2563eb', icon: '💰' },

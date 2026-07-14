@@ -173,7 +173,6 @@ export const PILLARS: PillarDef[] = [
       'calculadora-costo-laboral-empleado',
       'calculadora-cuanto-cobro-por-hora-freelance',
       'calculadora-impuestos-monotributo-freelance',
-      'calculadora-hora-freelance-por-pais-mercado',
       'calculadora-roas-retorno-inversion-publicitaria',
       'calculadora-cac-ltv-costo-adquisicion-cliente',
       'calculadora-tasa-de-conversion',

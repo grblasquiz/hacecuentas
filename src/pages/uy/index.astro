@@ -7,14 +7,15 @@ import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
 import PillarHub from '../../components/PillarHub.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
+import { canDistributeCalc } from '../../lib/content-policy';
 import { URUGUAY_2026, fmtUYU } from '../../lib/data/uruguay-2026';
 
 const localeModules = import.meta.glob<any>('../../content/calcs-uy/*.json', { eager: true });
 const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
-const localeCalcs = Object.values(localeModules).map((m: any) => m.default || m);
+const localeCalcs = Object.values(localeModules).map((m: any) => m.default || m).filter((c: any) => canDistributeCalc(c, 'uy'));
 const audienceFiltered = Object.values(mainModules)
   .map((m: any) => m.default || m)
-  .filter((c: any) => c.audience === 'UY');
+  .filter((c: any) => c.audience === 'UY' && canDistributeCalc(c));
 const calcs = [...localeCalcs, ...audienceFiltered];
 
 const localeSlugs = new Set(localeCalcs.map((c: any) => c.slug));
