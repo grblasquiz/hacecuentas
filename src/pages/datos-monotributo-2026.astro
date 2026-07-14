@@ -4,11 +4,13 @@ export const prerender = true;
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import '../styles/calc-flagship.css';
 import {
   CATEGORIAS,
   TOPES,
   CUOTA_SERVICIOS,
   CUOTA_BIENES,
+  PARAMS_FISICOS,
   META,
   fmtARS,
   componentes,
@@ -170,224 +172,367 @@ const schema = {
   canonical="/datos-monotributo-2026"
   audience="AR"
   schema={schema}
-  domain="data"
+  domain="knowledge"
 >
   <Header slot="header" />
 
-  <main class="article-main">
-    <article class="page-content datos-page">
-      <header class="article-header">
-        <nav class="crumbs" aria-label="Migas de pan">
-          <a href="/">Inicio</a> <span>›</span> <span>Datos Monotributo 2026</span>
-        </nav>
-        <h1>Categorías del monotributo 2026: tabla de topes y cuotas (A a K)</h1>
-        <p class="answer-snippet">
-          <strong>Monotributo 2026:</strong> 11 categorías de la <strong>A</strong> (tope
-          {fmtARS(topeMin)} anuales, cuota {fmtARS(cuotaMin)}) a la <strong>K</strong>
-          (tope {fmtARS(topeMax)}, cuota {fmtARS(cuotaMaxServ)} servicios). Valores oficiales
-          de ARCA vigentes desde el {new Date(META.vigencia).toLocaleDateString('es-AR')}. Tabla completa abajo.
-        </p>
-        <p class="lede">
-          Tabla de referencia con las <strong>11 categorías del monotributo</strong> (A a K)
-          vigentes en 2026: tope de facturación, cuota mensual de servicios y de venta de
-          bienes, y desglose impositivo. Datos oficiales de <strong>ARCA</strong>, vigentes
-          desde el {new Date(META.vigencia).toLocaleDateString('es-AR')}.
-          Recategorización {META.recategorizacion}.
-        </p>
-        <p class="updated">
-          Última revisión: <time datetime={ULTIMA_REVISION}>{new Date(ULTIMA_REVISION).toLocaleDateString('es-AR')}</time> ·
-          Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> (uso libre con atribución)
-        </p>
+  <main>
+    <div class="cf-page mo" data-domain="knowledge">
+      <nav class="cf-crumb" aria-label="Breadcrumb">
+        <ol>
+          <li><a href="/">Inicio</a></li>
+          <li aria-hidden="true" class="cf-crumb__sep">›</li>
+          <li><a href="/datasets">Datos fiscales</a></li>
+          <li aria-hidden="true" class="cf-crumb__sep">›</li>
+          <li aria-current="page">Monotributo 2026</li>
+        </ol>
+      </nav>
+
+      <header class="cf-hero">
+        <div class="cf-hero__main">
+          <p class="cf-kicker"><span aria-hidden="true">🇦🇷</span> Argentina · valores oficiales 2026</p>
+          <h1 class="cf-h1">Categorías del <span class="cf-yr">monotributo 2026</span></h1>
+          <p class="cf-sub">Topes de facturación y cuotas mensuales de las 11 categorías, para servicios y venta de bienes.</p>
+          <ul class="cf-pills">
+            <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Fuente oficial ARCA</li>
+            <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Vigentes desde febrero</li>
+            <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos abiertos CC-BY 4.0</li>
+          </ul>
+          <p class="mo-updated">
+            Última revisión: <time datetime={ULTIMA_REVISION}>{new Date(ULTIMA_REVISION).toLocaleDateString('es-AR')}</time> ·
+            Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">CC-BY 4.0</a> (uso libre con atribución)
+          </p>
+        </div>
+        <div class="cf-hero__deco" aria-hidden="true">
+          <div class="mo-deco-wrap">
+            <div class="cf-deco-card">
+              <div class="cf-deco-card__label">Tope máximo anual · cat. K</div>
+              <div class="cf-deco-card__value">${(topeMax / 1e6).toLocaleString('es-AR', { maximumFractionDigits: 1 })} M</div>
+              <div class="cf-deco-card__note">Servicios y venta de bienes</div>
+            </div>
+            <span class="cf-deco-badge mo-badge">$</span>
+          </div>
+          <div class="mo-float">
+            <span class="mo-float__k">Cuota mínima · cat. A</span>
+            <strong class="mo-float__v">{fmtARS(cuotaMin)}</strong>
+            <span class="mo-float__n">por mes</span>
+          </div>
+        </div>
       </header>
 
-      <section class="stats-callout" aria-label="Datos destacados">
-        <div class="stat">
-          <span class="stat-num">11</span>
-          <span class="stat-label">categorías (A&nbsp;a&nbsp;K)</span>
+      <p class="answer-snippet cf-sr">
+        Monotributo 2026: 11 categorías de la A (tope {fmtARS(topeMin)} anuales, cuota {fmtARS(cuotaMin)})
+        a la K (tope {fmtARS(topeMax)}, cuota {fmtARS(cuotaMaxServ)} servicios). Valores oficiales de ARCA
+        vigentes desde el {new Date(META.vigencia).toLocaleDateString('es-AR')}.
+      </p>
+
+      <div class="cf-stats">
+        <div class="cf-stat cf-stat--accent">
+          <div class="cf-stat__label">Categorías</div>
+          <div class="cf-stat__value">11 · A hasta K</div>
+          <div class="cf-stat__sub">Escala completa 2026</div>
         </div>
-        <div class="stat">
-          <span class="stat-num">{fmtARS(cuotaMin)}</span>
-          <span class="stat-label">cuota más baja (cat.&nbsp;A)</span>
+        <div class="cf-stat">
+          <div class="cf-stat__label">Cuota más baja</div>
+          <div class="cf-stat__value">{fmtARS(cuotaMin)}</div>
+          <div class="cf-stat__sub">Categoría A</div>
         </div>
-        <div class="stat">
-          <span class="stat-num">{fmtARS(topeMax)}</span>
-          <span class="stat-label">tope anual más alto (cat.&nbsp;K)</span>
+        <div class="cf-stat">
+          <div class="cf-stat__label">Tope anual máximo</div>
+          <div class="cf-stat__value">{fmtARS(topeMax)}</div>
+          <div class="cf-stat__sub">Categoría K</div>
         </div>
-        <div class="stat">
-          <span class="stat-num">{fmtARS(facturacionMensualMaxA)}</span>
-          <span class="stat-label">facturación mensual máx. cat.&nbsp;A</span>
+        <div class="cf-stat">
+          <div class="cf-stat__label">Cuota más alta</div>
+          <div class="cf-stat__value">{fmtARS(cuotaMaxServ)}</div>
+          <div class="cf-stat__sub">Categoría K · servicios</div>
         </div>
+      </div>
+
+      <!-- Escala visual -->
+      <section class="cf-section">
+        <div class="cf-section__head">
+          <div>
+            <p class="cf-eyebrow">La escala completa</p>
+            <h2 class="cf-section__title">De la categoría A a la K</h2>
+          </div>
+          <p class="cf-section__lead">Cada escalón aumenta el tope de ingresos brutos de los últimos 12 meses. Las últimas categorías también admiten servicios.</p>
+        </div>
+        <div class="mo-chart">
+          {filas.map((f) => (
+            <div class="mo-bar" style={`--h:${Math.max(6, Math.round((f.topeAnual / topeMax) * 100))}%`}>
+              <span class="mo-bar__fill" data-cat={f.cat}></span>
+              <span class="mo-bar__cat">{f.cat}</span>
+              <span class="mo-bar__val">{(f.topeAnual / 1e6).toLocaleString('es-AR', { maximumFractionDigits: 0 })}M</span>
+            </div>
+          ))}
+        </div>
+        <p class="mo-foot">Altura = tope anual de facturación. Las categorías I, J y K sólo admiten servicios desde la reforma.</p>
       </section>
 
-      <section>
-        <h2>Tabla de categorías del monotributo 2026</h2>
-        <p>
-          Tope de ingresos brutos anuales (igual para servicios y para venta de bienes) y cuota
-          total mensual de cada categoría. La cuota de venta de bienes coincide con la de servicios
-          hasta la categoría D y es menor a partir de la E.
-        </p>
-        <div class="table-wrap">
-          <table>
+      <!-- Tabla maestra -->
+      <section class="cf-section" id="tabla">
+        <div class="cf-section__head">
+          <div>
+            <p class="cf-eyebrow">Tabla de referencia</p>
+            <h2 class="cf-section__title">Topes y cuotas mensuales</h2>
+          </div>
+          <p class="cf-section__lead">El tope es igual para ambas actividades. Desde la categoría C, la cuota cambia entre servicios y venta de bienes.</p>
+        </div>
+        <div class="cf-tablewrap">
+          <table class="cf-table">
             <thead>
-              <tr>
-                <th>Cat.</th>
-                <th>Tope anual</th>
-                <th>Tope mensual (prom.)</th>
-                <th>Cuota servicios</th>
-                <th>Cuota venta de bienes</th>
-              </tr>
+              <tr><th>Cat.</th><th>Tope anual</th><th>Promedio mensual</th><th>Cuota servicios</th><th>Cuota bienes</th></tr>
             </thead>
             <tbody>
               {filas.map((f) => (
                 <tr>
-                  <td data-label="Categoría"><strong>{f.cat}</strong></td>
-                  <td data-label="Tope anual">{fmtARS(f.topeAnual)}</td>
-                  <td data-label="Tope mensual">{fmtARS(f.topeMensual)}</td>
-                  <td data-label="Cuota servicios">{fmtARS(f.cuotaServicios)}</td>
-                  <td data-label="Cuota bienes">{fmtARS(f.cuotaBienes)}</td>
+                  <td><strong>{f.cat}</strong></td>
+                  <td>{fmtARS(f.topeAnual)}</td>
+                  <td>{fmtARS(f.topeMensual)}</td>
+                  <td class="cf-td-em">{fmtARS(f.cuotaServicios)}</td>
+                  <td>{fmtARS(f.cuotaBienes)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <p class="note">
-          Cuotas totales mensuales (impuesto integrado + SIPA + obra social). Tope mensual promedio =
-          tope anual ÷ 12 (referencia; el control real es sobre los ingresos de los últimos 12 meses).
-        </p>
       </section>
 
-      <section>
-        <h2>Qué cambió en el monotributo 2026</h2>
-        <ul class="cambios">
-          <li>
-            <strong>Servicios ya no topea en H.</strong> Con la reforma 2026, las categorías
-            I, J y K aplican también a locaciones y prestaciones de servicios, no sólo a venta
-            de bienes. Antes, quien daba servicios no podía pasar de la H.
-          </li>
-          <li>
-            <strong>Cuota distinta según actividad en las categorías altas.</strong> En I, J y K,
-            servicios paga más que venta de bienes. En la K la diferencia es de {ratioServBienesK.toFixed(1)}×:
-            {' '}{fmtARS(cuotaMaxServ)} (servicios) contra {fmtARS(cuotaMaxBienes)} (bienes).
-          </li>
-          <li>
-            <strong>Topes de facturación iguales para ambas actividades.</strong> Lo que cambia
-            entre servicios y bienes es la cuota, no el límite de ingresos de cada categoría.
-          </li>
-        </ul>
-      </section>
-
-      <section>
-        <h2>Desglose de la cuota: impuesto, jubilación y obra social</h2>
-        <p>
-          Cada cuota mensual (acá, la de servicios) se compone de tres partes: el impuesto integrado,
-          el aporte jubilatorio al SIPA y el aporte a la obra social.
-        </p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Cat.</th>
-                <th>Impuesto integrado</th>
-                <th>SIPA (jubilación)</th>
-                <th>Obra social</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filas.map((f) => (
-                <tr>
-                  <td data-label="Categoría"><strong>{f.cat}</strong></td>
-                  <td data-label="Integrado">{fmtARS(f.desglose.integrado)}</td>
-                  <td data-label="SIPA">{fmtARS(f.desglose.sipa)}</td>
-                  <td data-label="Obra social">{fmtARS(f.desglose.obraSocial)}</td>
-                  <td data-label="Total">{fmtARS(f.desglose.total)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <!-- Claves -->
+      <section class="cf-section">
+        <p class="cf-eyebrow">Claves 2026</p>
+        <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Qué tenés que mirar</h2>
+        <div class="cf-cards cf-cards--3">
+          <div class="cf-minicard cf-minicard--dark">
+            <span class="cf-minicard__ico" aria-hidden="true">📈</span>
+            <p class="cf-minicard__title">Servicios llega hasta la K</p>
+            <p class="cf-minicard__desc">Las categorías I, J y K admiten tanto locaciones y prestaciones de servicios como venta de bienes.</p>
+          </div>
+          <div class="cf-minicard">
+            <span class="cf-minicard__ico" aria-hidden="true">⚖️</span>
+            <p class="cf-minicard__title">Mismos topes de ingresos</p>
+            <p class="cf-minicard__desc">Servicios y venta de bienes comparten el mismo límite anual en cada categoría.</p>
+          </div>
+          <div class="cf-minicard">
+            <span class="cf-minicard__ico" aria-hidden="true">💳</span>
+            <p class="cf-minicard__title">Cuotas diferentes</p>
+            <p class="cf-minicard__desc">En las categorías altas, servicios paga una cuota mensual bastante mayor que venta de bienes.</p>
+          </div>
         </div>
-        <p class="note">
-          Desglose ilustrativo: el dato exacto y oficial es el total de cada cuota; la proporción
-          integrado/SIPA/obra social es aproximada.
-        </p>
       </section>
 
-      <section>
-        <h2>Calculá tu caso</h2>
-        <div class="wizard-cta">
-          <p>
-            <strong>¿No sabés qué categoría te corresponde?</strong> Respondé 5 preguntas y descubrí
-            tu categoría exacta (A a K), la cuota que vas a pagar y si te conviene el Régimen General.
-          </p>
-          <a href="/wizard/que-monotributo-me-conviene-2026">Hacer el test: ¿qué monotributo me conviene? →</a>
+      <!-- Cat K: dos cuotas -->
+      <section class="cf-section">
+        <div class="mo-2col">
+          <div class="mo-hl">
+            <p class="cf-side-eyebrow">Categoría K</p>
+            <p class="mo-hl__title">La misma facturación, dos cuotas muy distintas</p>
+            <p class="mo-hl__desc">El tope anual es idéntico, pero el impuesto integrado cambia según el tipo de actividad.</p>
+            <div class="mo-hl__big">{fmtARS(topeMax)}</div>
+            <p class="mo-hl__desc">Tope anual ambas actividades</p>
+          </div>
+          <div class="cf-breakdown">
+            <div class="cf-brow">
+              <span class="cf-brow__lbl">Servicios</span>
+              <span class="cf-brow__val">{fmtARS(cuotaMaxServ)}</span>
+              <span class="cf-brow__bar"><span style="width:100%"></span></span>
+            </div>
+            <p class="mo-note">Cuota mensual · categoría K</p>
+            <div class="cf-brow" style="margin-top:1rem">
+              <span class="cf-brow__lbl">Venta de bienes</span>
+              <span class="cf-brow__val">{fmtARS(cuotaMaxBienes)}</span>
+              <span class="cf-brow__bar"><span class="mo-bar--alt" style={`width:${Math.round((cuotaMaxBienes / cuotaMaxServ) * 100)}%`}></span></span>
+            </div>
+            <p class="mo-note">Cuota mensual · categoría K</p>
+            <div class="cf-breakdown__total">
+              <span>Servicios paga aproximadamente</span>
+              <strong>{ratioServBienesK.toLocaleString('es-AR', { maximumFractionDigits: 1 })}×</strong>
+            </div>
+          </div>
         </div>
-        <p>
-          Esta página es la tabla de referencia. Para saber en qué categoría caés según tu facturación,
-          o cuánto te conviene cada régimen, usá las calculadoras:
-        </p>
-        <ul class="calc-links">
-          <li><a href="/calculadora-monotributo-categoria-2026-recategorizacion-julio">Calculadora de recategorización de monotributo (julio 2026)</a></li>
-          <li><a href="/calculadora-monotributo-cuota-2026-todas-categorias">Cuota de monotributo 2026 — todas las categorías</a></li>
-          <li><a href="/calculadora-monotributo-mejor-categoria-2026">Mejor categoría de monotributo para tu facturación</a></li>
-          <li><a href="/calculadora-monotributo-vs-responsable-inscripto">Monotributo vs. responsable inscripto</a></li>
-          <li><a href="/simulador-monotributo-neto">Cuánto te queda neto por mes (simulador)</a></li>
-          <li><a href="/calculadora-facturacion-maxima-monotributo-vs-ri">Facturación máxima del monotributo — ¿te conviene seguir?</a></li>
-          <li><a href="/calculadora-monotributo-vs-autonomo-vs-empleado-mismo-ingreso">Monotributo vs. autónomo vs. empleado (mismo ingreso)</a></li>
-          <li><a href="/calculadora-obra-social-monotributo-2026">Obra social del monotributo — aporte y adherentes</a></li>
-          <li><a href="/calculadora-autonomos-categoria-monto-2026">Autónomos (Régimen General) — categorías y aporte</a></li>
-          <li><a href="/calculadora-monotributo-2026">Calculadora de monotributo</a></li>
-        </ul>
-        <p>
-          Más tablas de datos: <a href="/datos-ganancias-2026">escala de Ganancias 2026</a> ·
-          <a href="/datos-topes-sipa-2026">topes de aportes SIPA 2026</a> ·
-          <a href="/datos-aguinaldo-2026">aguinaldo (SAC) 2026</a> ·
-          <a href="/datos-salario-minimo-latam-2026">salario mínimo LATAM 2026</a>.
-          Y para no pagar con intereses: <a href="/vencimientos-afip-2026">calendario de vencimientos AFIP 2026</a>
-          (cuota mensual, recategorización, IVA y Ganancias).
-        </p>
       </section>
 
-      <section class="cite-instructions" aria-label="Descargar datos">
-        <h2>Descargar estos datos</h2>
-        <p>Datos abiertos (CC-BY 4.0), listos para usar en tu app, planilla o análisis:</p>
-        <p>
-          <a href="/datos/monotributo-2026.json" download>⬇ Descargar JSON</a> ·
-          <a href="/datos/monotributo-2026.csv" download>⬇ Descargar CSV</a>
-        </p>
+      <!-- Composición de la cuota -->
+      <section class="cf-section">
+        <div class="cf-section__head">
+          <div>
+            <p class="cf-eyebrow">Qué incluye la cuota</p>
+            <h2 class="cf-section__title">Impuesto, jubilación y obra social</h2>
+          </div>
+          <p class="cf-section__lead">Ejemplo con la categoría C para servicios. La cuota total reúne tres componentes en un único pago mensual.</p>
+        </div>
+        <div class="mo-2col">
+          <div class="mo-donut-card">
+            <div class="mo-donut" aria-hidden="true"><span>C</span></div>
+            <div>
+              <p class="mo-donut__k">Categoría C · servicios</p>
+              <p class="mo-donut__v">{fmtARS(componentes('C', 'servicios').total)}</p>
+              <p class="mo-donut__n">Cuota mensual total</p>
+            </div>
+          </div>
+          <div class="cf-breakdown">
+            <p class="cf-side-eyebrow">Composición aproximada</p>
+            {[
+              { k: 'Impuesto integrado', v: componentes('C', 'servicios').integrado },
+              { k: 'Aporte jubilatorio · SIPA', v: componentes('C', 'servicios').sipa },
+              { k: 'Aporte obra social', v: componentes('C', 'servicios').obraSocial },
+            ].map((x) => (
+              <div class="cf-brow" style="margin-bottom:0.7rem">
+                <span class="cf-brow__lbl">{x.k}</span>
+                <span class="cf-brow__val">{fmtARS(x.v)}</span>
+                <span class="cf-brow__bar"><span style={`width:${Math.round((x.v / componentes('C', 'servicios').total) * 100)}%`}></span></span>
+              </div>
+            ))}
+            <div class="cf-breakdown__total"><span>Cuota total</span><strong>{fmtARS(componentes('C', 'servicios').total)}</strong></div>
+            <p class="mo-note" style="margin-top:0.6rem">El dato exacto es el total oficial; el desglose mantiene la proporción aproximada de cada componente.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Franja: recategorización -->
+    <div class="cf-band cf-band--warm" data-domain="knowledge">
+      <div class="cf-band__inner">
+        <div class="mo-2col">
+          <div>
+            <p class="cf-eyebrow">Recategorización</p>
+            <h2 class="mo-card__title">Revisá tu categoría cada semestre</h2>
+            <p class="cf-side-desc">
+              La recategorización es {META.recategorizacion}: se comparan los ingresos brutos de los últimos
+              12 meses y, si cambian tu situación, corresponde recategorizarse en el portal de ARCA.
+            </p>
+            <div class="cf-callout cf-callout--warn" style="margin-top:1rem">
+              <span class="cf-callout__ico" aria-hidden="true">📅</span>
+              <p>Si superás el tope de la categoría K quedás excluido del régimen y pasás a responsable inscripto.</p>
+            </div>
+          </div>
+          <div class="mo-reca">
+            <span class="mo-reca__k">Frecuencia</span>
+            <strong class="mo-reca__v">Semestral</strong>
+            <span class="mo-reca__n">Enero y julio · fuente {META.fuente}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cf-page mo" data-domain="knowledge">
+      <!-- Otros parámetros -->
+      <section class="cf-section">
+        <div class="cf-section__head">
+          <div>
+            <p class="cf-eyebrow">No es sólo facturación</p>
+            <h2 class="cf-section__title">Otros parámetros de la categoría</h2>
+          </div>
+          <p class="cf-section__lead">ARCA también considera la superficie afectada, la energía consumida y los alquileres devengados.</p>
+        </div>
+        <div class="cf-cards cf-cards--3">
+          <div class="cf-minicard">
+            <span class="cf-minicard__ico" aria-hidden="true">📐</span>
+            <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Superficie afectada</p>
+            <div class="cf-minicard__big">Hasta {PARAMS_FISICOS.K.superficie} m²</div>
+            <p class="cf-minicard__desc" style="margin-top:0.3rem">Tope del régimen (categorías G a K).</p>
+          </div>
+          <div class="cf-minicard">
+            <span class="cf-minicard__ico" aria-hidden="true">⚡</span>
+            <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Energía consumida</p>
+            <div class="cf-minicard__big">Hasta {PARAMS_FISICOS.K.energia.toLocaleString('es-AR')} kWh</div>
+            <p class="cf-minicard__desc" style="margin-top:0.3rem">Consumo eléctrico anual máximo.</p>
+          </div>
+          <div class="cf-minicard">
+            <span class="cf-minicard__ico" aria-hidden="true">🏠</span>
+            <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Alquileres</p>
+            <div class="cf-minicard__big">{fmtARS(PARAMS_FISICOS.K.alquiler)}</div>
+            <p class="cf-minicard__desc" style="margin-top:0.3rem">Devengados al año, categorías superiores.</p>
+          </div>
+        </div>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1.25rem">
+          <span class="cf-callout__ico" aria-hidden="true">⚠️</span>
+          <p>Superficie y energía son los parámetros históricos del régimen y los alquileres son orientativos: confirmalos contra ARCA antes de usarlos al límite.</p>
+        </div>
       </section>
 
-      <section class="cite-instructions">
-        <h2>Cómo citar esta tabla</h2>
-        <p>¿Usás estos datos en una nota, trabajo, app o web? La atribución pedida es:</p>
-        <pre><code>Fuente: Hacé Cuentas — https://hacecuentas.com/datos-monotributo-2026
-Datos oficiales ARCA · Licencia CC-BY 4.0</code></pre>
-        <p>
-          Si publicás online, te agradecemos el enlace a
-          <a href="https://hacecuentas.com/datos-monotributo-2026">hacecuentas.com/datos-monotributo-2026</a>.
-        </p>
+      <section class="cf-section">
+        <p class="cf-eyebrow">Preguntas frecuentes</p>
+        <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+        <div class="cf-faq">
+          {faq.map((f, i) => (
+            <details class="cf-faq__item" open={i === 0}>
+              <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+              <div class="cf-faq__a">{f.a}</div>
+            </details>
+          ))}
+        </div>
+      </section>
+    </div>
+
+    <!-- Franja: datos abiertos + fuente -->
+    <div class="cf-band" data-domain="knowledge">
+      <div class="cf-band__inner">
+        <div class="mo-2col">
+          <div class="mo-card">
+            <p class="cf-eyebrow">Datos abiertos · CC-BY 4.0</p>
+            <h2 class="mo-card__title">Usá la tabla en tu proyecto</h2>
+            <p class="cf-side-desc">Descargá la tabla completa en formato abierto o citá la fuente con atribución (uso libre para prensa, blogs y proyectos).</p>
+            <div class="mo-dl">
+              <a class="cf-ctabar__btn cf-ctabar__btn--solid" href="/api/monotributo-2026.json" download>Descargar JSON</a>
+              <a class="cf-ctabar__btn mo-dl__ghost" href="/api/monotributo-2026.csv" download>Descargar CSV</a>
+            </div>
+            <p class="mo-cite">
+              Fuente: Hacé Cuentas — Tabla monotributo {new Date(META.vigencia).getFullYear()} (datos {META.fuente}).
+              Licencia CC-BY 4.0. {PAGE_URL}
+            </p>
+          </div>
+          <div class="cf-side-card cf-side-card--dark">
+            <p class="cf-side-eyebrow">Fuente oficial</p>
+            <p class="mo-src__title">Datos verificados</p>
+            <div class="mo-src">
+              <div class="mo-src__item"><strong>ARCA · Monotributo</strong><span>Montos y categorías vigentes desde {new Date(META.vigencia).toLocaleDateString('es-AR')}</span></div>
+              <div class="mo-src__item"><strong>Ley 24.977</strong><span>Régimen Simplificado para Pequeños Contribuyentes</span></div>
+              <div class="mo-src__item"><strong>Ley 27.743</strong><span>Actualización semestral según IPC</span></div>
+            </div>
+            <p class="mo-src__foot">● Última revisión: {new Date(ULTIMA_REVISION).toLocaleDateString('es-AR')}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cf-page mo" data-domain="knowledge">
+      <section class="cf-section">
+        <p class="cf-eyebrow">Seguí haciendo cuentas</p>
+        <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Calculadoras relacionadas</h2>
+        <div class="cf-related__grid">
+          <a class="cf-relcard" href="/calculadora-monotributo-categoria-2026-recategorizacion-julio">
+            <span class="cf-relcard__ico" aria-hidden="true">🧾</span>
+            <span class="cf-relcard__title">Calculadora de monotributo</span>
+            <span class="cf-relcard__desc">Ingresá tu facturación y obtené la categoría que te corresponde.</span>
+            <span class="cf-relcard__link">Calcular categoría <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="cf-relcard" href="/recategorizacion-monotributo-julio-2026">
+            <span class="cf-relcard__ico" aria-hidden="true">📅</span>
+            <span class="cf-relcard__title">Recategorización julio</span>
+            <span class="cf-relcard__desc">Revisá los últimos 12 meses y verificá si tenés que cambiar.</span>
+            <span class="cf-relcard__link">Revisar recategorización <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="cf-relcard" href="/monotributo-vs-inscripto">
+            <span class="cf-relcard__ico" aria-hidden="true">⚖️</span>
+            <span class="cf-relcard__title">Monotributo vs. RI</span>
+            <span class="cf-relcard__desc">Compará costos y cargas de ambos regímenes.</span>
+            <span class="cf-relcard__link">Comparar regímenes <span aria-hidden="true">→</span></span>
+          </a>
+        </div>
       </section>
 
-      <section class="faq">
-        <h2>Preguntas frecuentes</h2>
-        {faq.map((f) => (
-          <details>
-            <summary>{f.q}</summary>
-            <p>{f.a}</p>
-          </details>
-        ))}
+      <section class="cf-ctabar">
+        <div>
+          <p class="cf-ctabar__title">Guardá esta tabla para tu próxima recategorización.</p>
+          <p class="cf-ctabar__sub">Tené siempre a mano los topes y cuotas oficiales.</p>
+        </div>
+        <div class="cf-ctabar__actions">
+          <a class="cf-ctabar__btn cf-ctabar__btn--solid" href="/calculadora-monotributo-categoria-2026-recategorizacion-julio">Calcular mi categoría</a>
+        </div>
       </section>
-
-      <section class="fuentes">
-        <h2>Fuentes</h2>
-        <ul>
-          <li>
-            <a href={META.fuenteUrl} rel="nofollow noopener" target="_blank">ARCA — Categorías del monotributo</a>
-            (fuente oficial, vigencia {new Date(META.vigencia).toLocaleDateString('es-AR')})
-          </li>
-          <li>Topes validados contra C5N y Estudio Bertora Brown.</li>
-        </ul>
-      </section>
-    </article>
+    </div>
   </main>
 
   <Footer slot="footer" />
@@ -530,4 +675,60 @@ Datos oficiales ARCA · Licencia CC-BY 4.0</code></pre>
     color: var(--text-muted, #555);
     line-height: 1.6;
   }
+</style>
+
+<style>
+  .mo .mo-updated { font-size: 0.75rem; color: var(--text-subtle); margin: 1rem 0 0; }
+  .mo .mo-updated a { color: var(--accent); }
+  .mo .mo-deco-wrap { position: relative; }
+  .mo .mo-badge { top: 50%; right: -14px; transform: translateY(-50%); width: 44px; height: 44px; font-size: 1.1rem; }
+  .mo .mo-float { margin-top: 0.7rem; padding: 0.75rem 0.9rem; border-radius: var(--radius); background: var(--bg-card); border: 1px solid var(--border); }
+  .mo .mo-float__k { font-size: 0.58rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-subtle); }
+  .mo .mo-float__v { display: block; font-size: 1.45rem; font-weight: 800; color: var(--text); line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .mo .mo-float__n { font-size: 0.68rem; color: var(--text-subtle); }
+
+  /* Gráfico de barras de la escala A→K */
+  .mo .mo-chart { display: grid; grid-template-columns: repeat(11, 1fr); gap: 0.35rem; align-items: end; height: 240px; padding: 1.25rem 1rem 0; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .mo .mo-bar { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 0.3rem; }
+  .mo .mo-bar__fill { width: 100%; height: var(--h); border-radius: 6px 6px 0 0; background: linear-gradient(180deg, var(--accent-2), var(--accent)); min-height: 6px; }
+  /* Las últimas categorías viran a ámbar, como el mockup */
+  .mo .mo-bar__fill[data-cat="I"], .mo .mo-bar__fill[data-cat="J"], .mo .mo-bar__fill[data-cat="K"] { background: linear-gradient(180deg, #fbbf24, #f59e0b); }
+  .mo .mo-bar__cat { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); }
+  .mo .mo-bar__val { font-size: 0.55rem; color: var(--text-subtle); font-variant-numeric: tabular-nums; }
+  @media (max-width: 560px) { .mo .mo-chart { height: 180px; } .mo .mo-bar__val { display: none; } }
+  .mo .mo-foot, .mo .mo-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.6rem 0 0; }
+  .mo .mo-note { margin: 0.15rem 0 0; }
+
+  .mo-2col, .cf-band .mo-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .mo-2col, .cf-band .mo-2col { grid-template-columns: 0.85fr 1.15fr; } }
+
+  .mo .mo-hl { padding: 1.5rem 1.6rem; border-radius: var(--radius-lg); color: #fff; background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%); }
+  .mo .mo-hl .cf-side-eyebrow { color: rgba(255,255,255,0.75); }
+  .mo .mo-hl__title { font-size: 1.3rem; font-weight: 800; margin: 0 0 0.5rem; line-height: 1.2; letter-spacing: -0.015em; }
+  .mo .mo-hl__desc { font-size: 0.82rem; color: rgba(255,255,255,0.8); line-height: 1.5; margin: 0; }
+  .mo .mo-hl__big { font-size: 1.6rem; font-weight: 800; margin: 1.1rem 0 0.15rem; font-variant-numeric: tabular-nums; }
+  .mo .mo-bar--alt { background: linear-gradient(90deg, #10b981, #34d399) !important; }
+
+  .mo .mo-donut-card { display: flex; align-items: center; gap: 1.1rem; padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .mo .mo-donut { width: 92px; height: 92px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--accent) 0 28%, var(--accent-2) 28% 61%, #10b981 61% 100%); }
+  .mo .mo-donut span { width: 60px; height: 60px; border-radius: 50%; background: var(--bg-card); display: grid; place-items: center; font-size: 1.3rem; font-weight: 800; color: var(--accent); }
+  .mo .mo-donut__k { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-subtle); margin: 0; }
+  .mo .mo-donut__v { font-size: 1.6rem; font-weight: 800; color: var(--text); margin: 0.15rem 0; font-variant-numeric: tabular-nums; }
+  .mo .mo-donut__n { font-size: 0.75rem; color: var(--text-subtle); margin: 0; }
+
+  .cf-band .mo-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .mo-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .mo-dl { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+  .cf-band .mo-dl__ghost { background: var(--bg-soft); color: var(--accent-strong); border-color: var(--border); }
+  .cf-band .mo-cite { margin: 0.9rem 0 0; padding: 0.6rem 0.75rem; border-radius: var(--radius-sm); background: var(--bg-soft); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-subtle); overflow-x: auto; }
+  .cf-band .mo-reca { padding: 1.5rem 1.6rem; border-radius: var(--radius-lg); background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%); color: #fff; }
+  .cf-band .mo-reca__k { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: rgba(255,255,255,0.8); }
+  .cf-band .mo-reca__v { display: block; font-size: 2.2rem; font-weight: 800; line-height: 1.1; }
+  .cf-band .mo-reca__n { font-size: 0.75rem; color: rgba(255,255,255,0.8); }
+  .cf-band .mo-src__title { font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 0.9rem; }
+  .cf-band .mo-src { display: grid; gap: 0.5rem; }
+  .cf-band .mo-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .mo-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .mo-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .mo-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
 </style>
