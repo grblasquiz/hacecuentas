@@ -7,6 +7,12 @@ Chequea lo que el template `src/pages/blog/[slug].astro` realmente consume:
   - relatedCalcs resuelven contra calcs/ (AR), calcs-co/ o calcs-mx/
     → si no resuelven, `.filter(Boolean)` los descarta sin avisar y se caen
       los 3 CTAs y el sidebar entero
+  - que la calc NO esté podada: "el JSON existe" != "la URL vive". Las podadas
+    siguen teniendo su JSON en el repo pero devuelven 301 al hub del país.
+    Pasó el 2026-07-14: 6 de 27 links iban a podadas y el audit daba 0 errores,
+    incluido el CTA principal de la nota con deadline. Se chequea offline
+    contra pruning-redirects.ts + gone-410.ts (apto pre-deploy); para prod,
+    curl -sI (NUNCA -L, que sigue el redirect y lo tapa).
   - el prefijo de los links internos coincide con el audience del post
     (una nota CO que linkea /slug en vez de /co/slug = 404)
   - anchors del tableOfContents == id de los <h2>
@@ -54,7 +60,34 @@ def load_calcs():
     return out
 
 
-def audit(path, calcs):
+def load_dead():
+    """Slugs cuya URL NO vive aunque el JSON siga en el repo: podadas (301 al
+    hub) y 410. La poda es intencional — el fix es apuntar a otra calc, nunca
+    ablandar estas listas.
+
+    Ojo: pruning-redirects.ts mapea '/source': '/target'. Sólo la CLAVE está
+    muerta; el target está vivo y es justamente adonde conviene apuntar. Hay
+    que parsear sólo el lado izquierdo — matchear ambos marca como podadas a
+    calcs sanas (p. ej. isr-mexico-2026-tarifa-mensual-empleado, que es target
+    de isr-sueldo-mexico).
+    """
+    dead = set()
+
+    p = os.path.join(ROOT, 'src/lib/pruning-redirects.ts')
+    if os.path.exists(p):
+        for m in re.finditer(r'^\s*[\'"`](/[^\'"`]+)[\'"`]\s*:', open(p).read(), re.M):
+            dead.add(m.group(1).rstrip('/').split('/')[-1])
+
+    # gone-410 es una lista plana de paths (no un mapa): todo el contenido muere.
+    p = os.path.join(ROOT, 'src/lib/gone-410.ts')
+    if os.path.exists(p):
+        for m in re.finditer(r'[\'"`](/[a-z0-9/-]{6,})[\'"`]', open(p).read()):
+            dead.add(m.group(1).rstrip('/').split('/')[-1])
+
+    return dead
+
+
+def audit(path, calcs, dead):
     errs, warns = [], []
     name = os.path.basename(path)
     try:
@@ -92,11 +125,14 @@ def audit(path, calcs):
     rel = d.get('relatedCalcs') or []
     if not rel:
         errs.append('relatedCalcs vacío → sin CTA ni sidebar')
-    for s in rel:
+    for i, s in enumerate(rel):
+        cta = ' [CTA PRINCIPAL]' if i == 0 else ''
         if s not in calcs:
-            errs.append(f'relatedCalcs "{s}" NO EXISTE → se descarta en silencio')
+            errs.append(f'relatedCalcs "{s}" NO EXISTE → se descarta en silencio{cta}')
+        elif s in dead:
+            errs.append(f'relatedCalcs "{s}" está PODADA → 301 al hub, el JSON existe pero la URL no vive{cta}')
         elif calcs[s] != want:
-            errs.append(f'relatedCalcs "{s}" vive en "{calcs[s] or "/"}" pero el post es {aud}')
+            errs.append(f'relatedCalcs "{s}" vive en "{calcs[s] or "/"}" pero el post es {aud}{cta}')
 
     content = d['content']
 
@@ -106,7 +142,9 @@ def audit(path, calcs):
         if not m:
             continue
         slug = m.group(2)
-        if slug in calcs:
+        if slug in dead:
+            errs.append(f'link "{href}" apunta a una calc PODADA → 301 al hub')
+        elif slug in calcs:
             real = calcs[slug]
             if (m.group(1) or '') != real:
                 errs.append(f'link "{href}" mal prefijado → debería ser "{real}/{slug}"')
@@ -136,6 +174,7 @@ def audit(path, calcs):
 
 def main():
     calcs = load_calcs()
+    dead = load_dead()
     only = None
     if '--only' in sys.argv:
         only = set(sys.argv[sys.argv.index('--only') + 1].split(','))
@@ -146,7 +185,7 @@ def main():
 
     tot_e = tot_w = 0
     for f in files:
-        e, w = audit(os.path.join(BLOG, f), calcs)
+        e, w = audit(os.path.join(BLOG, f), calcs, dead)
         tot_e += len(e)
         tot_w += len(w)
         if e or w:
