@@ -7,7 +7,7 @@ import Footer from '../components/Footer.astro';
 import {
   PROFILE_GROUPS, PROFILE_FIELDS, PROVINCES_BY_COUNTRY, CURRENCY_BY_COUNTRY,
 } from '../lib/profile/schema';
-import { PRODUCTS } from '../lib/products/manifest';
+import { PRODUCTS, PRODUCT_BY_TOOL_SLUG } from '../lib/products/manifest';
 import { ICONS } from '../lib/products/dashboard';
 import profileUsage from '../lib/profile/usage-auto.json';
 
@@ -22,6 +22,26 @@ const totalFields = PROFILE_FIELDS.length;
 const profileConfig = JSON.stringify({
   provinces: PROVINCES_BY_COUNTRY,
   currency: CURRENCY_BY_COUNTRY,
+});
+
+// Config del dashboard logueado. TODO sale del manifest de productos (fuente de
+// verdad ya validada contra el catálogo): hitos con su regla de recurrencia,
+// claves de perfil por vertical y slugs elegibles para alerta. El cliente
+// resuelve la próxima ocurrencia de cada hito ≥ hoy, así nunca mostramos una
+// fecha vencida ni horneamos una fecha en el HTML prerenderizado.
+const dashConfig = JSON.stringify({
+  products: PRODUCTS.map((p) => ({
+    slug: p.slug,
+    name: p.name,
+    icon: p.icon,
+    profileKeys: p.profileKeys,
+    alertSlugs: p.alertSlugs,
+    milestones: p.milestones,
+  })),
+  productByTool: Object.fromEntries(PRODUCT_BY_TOOL_SLUG),
+  productName: Object.fromEntries(PRODUCTS.map((p) => [p.id, p.name])),
+  // Claves de los 3 montos del resumen (mismas del perfil, sin duplicar copy).
+  metrics: { ingreso: 'trabajo.sueldoNeto', gastos: 'gastos.recurrentesMensual' },
 });
 
 const schema = {
@@ -142,67 +162,243 @@ const inputType = (t: string) =>
       </div>
     </div>
 
-    <!-- ───────── Logueado: perfil ───────── -->
+    <!-- ───────── Logueado: dashboard "centro de control" (mockup 2026-07-14) ─────────
+         REGLA DURA: no se inventan datos del usuario. Cada número sale de una
+         fuente REAL y verificable:
+           · montos            → perfil del server (/api/auth/me → HCProfile)
+           · "Lo próximo"      → PRODUCTS[].milestones + regla de recurrencia
+           · "Alertas activas" → /api/alerts/mine
+           · "Continuar…"      → hc_recent + hc-history-<slug> (resultado guardado)
+           · % del perfil      → campos cargados / campos totales
+         Sin dato ⇒ estado vacío + CTA. Nunca un monto de ejemplo. -->
     <section data-profile-view hidden>
-      <div class="acct-wrap">
-      <header class="profile-hero">
-        <h1>Mi Hacé Cuentas</h1>
-        <p class="profile-lead">
-          Tu perfil numérico. Lo cargás una vez y precarga todas las calculadoras,
-          en cualquier dispositivo donde inicies sesión.
-        </p>
-      </header>
-      <!-- Encabezado de cuenta (#19) -->
-      <div class="account-card">
-        <div class="account-avatar" data-account-avatar aria-hidden="true"></div>
-        <div class="account-info">
-          <strong class="account-email" data-account-email></strong>
-          <span class="account-sub" data-account-sub></span>
-        </div>
-        <div class="account-menu">
-          <button type="button" class="link-btn" data-logout>Cerrar sesión</button>
-          <button type="button" class="link-btn link-subtle" data-logout-all>Cerrar en todos los dispositivos</button>
-        </div>
-      </div>
+      <div class="hcd" data-hcd>
+        <div class="hcd-scrim" data-hcd-scrim hidden></div>
 
-      <!-- Tus productos: la experiencia de marca con recurrencia (perfil + alertas
-           + hitos + historial). Movido acá desde la home: vive en el área logueada. -->
-      <section class="productos-mi" aria-labelledby="productos-mi-h">
-        <div class="section-header">
-          <div>
-            <span class="eyebrow eyebrow-inline">⭐ Tus productos</span>
-            <h2 id="productos-mi-h">Las cuentas que hacés todos los meses, en un solo lugar</h2>
-            <p class="productos-mi-lede">
-              Tus números precargan cada producto y vuelven con alertas, fechas e historial. Elegí uno.
-            </p>
-          </div>
-          <a href="/mi" class="see-all">Ver mis productos →</a>
-        </div>
-        <div class="productos-mi-grid">
-          {PRODUCTS.map((p) => (
-            <a href={`/mi/${p.slug}`} class="producto-card" style={`--c-accent:${p.accent}`}>
-              <span class="producto-icon" aria-hidden="true">{p.icon}</span>
-              <span class="producto-name">{p.name}</span>
-              <span class="producto-tag">{p.tagline}</span>
+        <!-- ───── Sidebar (drawer en <900px) ───── -->
+        <aside class="hcd-side" data-hcd-side aria-label="Tu espacio">
+          <div class="hcd-side-top">
+            <a class="hcd-brand" href="/">
+              <span class="hcd-brand-mark" aria-hidden="true">HC</span>
+              <span class="hcd-brand-word">Hacé Cuentas</span>
             </a>
-          ))}
-        </div>
-      </section>
+            <button type="button" class="hcd-side-close" data-hcd-close aria-label="Cerrar menú">✕</button>
+          </div>
 
-      <!-- Progreso del perfil (#7) + toggle ocultar montos (#16) -->
-      <div class="profile-toolbar">
-        <button type="button" class="amounts-toggle" data-amounts-toggle aria-pressed="false">
-          <span class="eye-open" aria-hidden="true">👁️</span><span class="eye-off" aria-hidden="true" hidden>🙈</span>
-          <span data-amounts-toggle-label>Ocultar montos</span>
-        </button>
-      </div>
-      <div class="profile-progress" data-progress-wrap>
-        <div class="profile-progress-head">
-          <span class="profile-progress-label" data-progress-label></span>
-          <span class="profile-progress-pct" data-progress-pct></span>
-        </div>
-        <div class="profile-progress-track"><div class="profile-progress-fill" data-progress-fill></div></div>
-      </div>
+          <nav class="hcd-nav" aria-label="Secciones">
+            <span class="hcd-nav-label">Tu espacio</span>
+            <a class="hcd-navlink" href="#resumen" data-hcd-link="resumen"><span class="hcd-navic" aria-hidden="true" set:html={ICONS.growth} /><span>Resumen</span></a>
+            <a class="hcd-navlink" href="#mis-productos" data-hcd-link="mis-productos"><span class="hcd-navic" aria-hidden="true" set:html={ICONS.box} /><span>Mis productos</span></a>
+            <a class="hcd-navlink" href="#mi-perfil" data-hcd-link="mi-perfil"><span class="hcd-navic" aria-hidden="true" set:html={ICONS.doc} /><span>Mi perfil</span><span class="hcd-badge" data-hcd-badge-perfil hidden></span></a>
+            <a class="hcd-navlink" href="#actividad" data-hcd-link="actividad"><span class="hcd-navic" aria-hidden="true" set:html={ICONS.clock} /><span>Actividad</span></a>
+            <a class="hcd-navlink" href="#alertas" data-hcd-link="alertas"><span class="hcd-navic" aria-hidden="true" set:html={ICONS.bell} /><span>Alertas</span><span class="hcd-badge hcd-badge-num" data-hcd-badge-alertas hidden></span></a>
+            <span class="hcd-nav-label">Descubrir</span>
+            <a class="hcd-navlink" href="/calculadoras"><span class="hcd-navic" aria-hidden="true" set:html={ICONS.percent} /><span>Calculadoras</span></a>
+            <a class="hcd-navlink" href="/decidir"><span class="hcd-navic" aria-hidden="true" set:html={ICONS.scale} /><span>Salas de decisión</span></a>
+          </nav>
+
+          <div class="hcd-sync">
+            <b><span class="hcd-sync-dot" aria-hidden="true"></span>Todo sincronizado</b>
+            <small>Tus datos están disponibles en todos tus dispositivos.</small>
+          </div>
+
+          <div class="hcd-user">
+            <button type="button" class="hcd-user-btn" data-hcd-user-btn aria-expanded="false">
+              <span class="account-avatar" data-account-avatar aria-hidden="true"></span>
+              <span class="hcd-user-txt">
+                <b data-hcd-user-name>Tu cuenta</b>
+                <small data-hcd-user-email></small>
+              </span>
+              <span class="hcd-user-chev" aria-hidden="true">⌃</span>
+            </button>
+            <div class="hcd-user-menu" data-hcd-user-menu hidden>
+              <a href="#mi-perfil">Mi perfil</a>
+              <a href="/privacidad">Privacidad</a>
+              <button type="button" class="link-btn" data-logout>Cerrar sesión</button>
+              <button type="button" class="link-btn link-subtle" data-logout-all>Cerrar en todos los dispositivos</button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- ───── Columna de contenido ───── -->
+        <div class="hcd-main">
+          <div class="hcd-topbar">
+            <button type="button" class="hcd-burger" data-hcd-open aria-label="Abrir menú" aria-expanded="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            </button>
+
+            <form class="hcd-search" action="/buscar" method="get" role="search">
+              <span class="hcd-search-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
+              <input type="search" name="q" data-hcd-search placeholder="Buscar una calculadora…" aria-label="Buscar una calculadora" autocomplete="off" />
+              <kbd class="hcd-kbd" aria-hidden="true">⌘K</kbd>
+            </form>
+
+            <div class="hcd-tb-actions">
+              <button type="button" class="amounts-toggle hcd-amounts" data-amounts-toggle aria-pressed="false">
+                <span class="eye-open" aria-hidden="true">👁️</span><span class="eye-off" aria-hidden="true" hidden>🙈</span>
+                <span class="hcd-amounts-lbl" data-amounts-toggle-label>Ocultar montos</span>
+              </button>
+              <a class="hcd-icon-btn hcd-bell" href="#alertas" aria-label="Tus alertas">
+                <span class="hcd-bell-ic" aria-hidden="true" set:html={ICONS.bell} />
+                <span class="hcd-bell-dot" data-hcd-bell-dot hidden></span>
+              </a>
+              <button type="button" class="hcd-icon-btn" data-hcd-theme aria-label="Cambiar tema">
+                <svg class="hcd-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg>
+                <svg class="hcd-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="hcd-content">
+            <!-- 1 · Encabezado -->
+            <header class="hcd-head" id="resumen">
+              <span class="hcd-eyebrow">Mi Hacé Cuentas</span>
+              <h1 data-hcd-hello>Tus números, en orden.</h1>
+              <p class="hcd-sub">Un resumen práctico de lo que cambió y de las cuentas que siguen.</p>
+            </header>
+
+            <!-- 2 · Stat cards. Los 3 montos salen del PERFIL REAL del usuario;
+                 vacío ⇒ CTA de onboarding, nunca un número de ejemplo. -->
+            <div class="hcd-stats">
+              <article class="hcd-stat" data-hcd-stat="ingreso">
+                <div class="hcd-stat-top">
+                  <span class="hcd-stat-label">Ingreso mensual</span>
+                  <span class="hcd-stat-ic" style="--i:#0ea66e" aria-hidden="true" set:html={ICONS.wallet} />
+                </div>
+                <strong class="hcd-stat-val hcd-money" data-hcd-val>—</strong>
+                <p class="hcd-stat-note"><span data-hcd-note></span><a class="hcd-stat-cta" data-hcd-cta href="#mi-perfil" hidden>Cargá tu sueldo neto →</a></p>
+              </article>
+
+              <article class="hcd-stat" data-hcd-stat="gastos">
+                <div class="hcd-stat-top">
+                  <span class="hcd-stat-label">Gastos fijos</span>
+                  <span class="hcd-stat-ic" style="--i:#d97706" aria-hidden="true" set:html={ICONS.receipt} />
+                </div>
+                <strong class="hcd-stat-val hcd-money" data-hcd-val>—</strong>
+                <p class="hcd-stat-note"><span data-hcd-note></span><a class="hcd-stat-cta" data-hcd-cta href="#mi-perfil" hidden>Cargá tus gastos fijos →</a></p>
+              </article>
+
+              <article class="hcd-stat" data-hcd-stat="disponible">
+                <div class="hcd-stat-top">
+                  <span class="hcd-stat-label">Disponible estimado</span>
+                  <span class="hcd-stat-ic" style="--i:#2563eb" aria-hidden="true" set:html={ICONS.coins} />
+                </div>
+                <strong class="hcd-stat-val hcd-money" data-hcd-val>—</strong>
+                <p class="hcd-stat-note"><span data-hcd-note></span><a class="hcd-stat-cta" data-hcd-cta href="#mi-perfil" hidden>Completá tu perfil →</a></p>
+              </article>
+
+              <!-- 4ª: azul llena. El gauge muestra tu TASA DE AHORRO (aritmética
+                   sobre tus dos montos), NO el puntaje compuesto de salud
+                   financiera: ese suma liquidez y deudas, y se calcula entero en
+                   la sala /decidir/cual-es-mi-salud-financiera. -->
+              <article class="hcd-stat hcd-stat-hero" data-hcd-stat="salud">
+                <div class="hcd-stat-top">
+                  <span class="hcd-stat-label">Salud financiera</span>
+                  <span class="hcd-stat-ic" aria-hidden="true" set:html={ICONS.heart} />
+                </div>
+                <div class="hcd-gauge-row">
+                  <span class="hcd-gauge" data-hcd-gauge>
+                    <svg viewBox="0 0 72 72" aria-hidden="true">
+                      <circle class="hcd-gauge-bg" cx="36" cy="36" r="30" />
+                      <circle class="hcd-gauge-fg" cx="36" cy="36" r="30" data-hcd-gauge-fg />
+                    </svg>
+                    <b data-hcd-gauge-val>—</b>
+                  </span>
+                  <span class="hcd-gauge-txt">
+                    <b data-hcd-gauge-cap>Tasa de ahorro</b>
+                    <small data-hcd-gauge-note>Cargá tu ingreso y tus gastos fijos para verla.</small>
+                  </span>
+                </div>
+                <a class="hcd-stat-link" data-hcd-salud-cta href="#mi-perfil">Completar perfil →</a>
+              </article>
+            </div>
+
+            <!-- 3 · Tus productos -->
+            <section class="hcd-sec" id="mis-productos" aria-labelledby="hcd-prods-h">
+              <div class="hcd-sec-head">
+                <div>
+                  <h2 id="hcd-prods-h">Tus productos</h2>
+                  <p>Las cuentas que hacés todos los meses, precargadas con tus números.</p>
+                </div>
+                <a class="hcd-see" href="/mi">Ver todo →</a>
+              </div>
+              <div class="hcd-prods">
+                {PRODUCTS.map((p) => (
+                  <article class="hcd-prod" data-hcd-prod={p.slug} style={`--c:${p.accent}`}>
+                    <div class="hcd-prod-top">
+                      <span class="hcd-prod-ic" aria-hidden="true">{p.icon}</span>
+                      <span class="hcd-prod-badge" data-hcd-prod-badge hidden></span>
+                    </div>
+                    <a class="hcd-prod-name" href={`/mi/${p.slug}`}>{p.name}</a>
+                    <span class="hcd-prod-tag">{p.tagline}</span>
+                    <div class="hcd-prod-foot">
+                      <span class="hcd-prod-next-lbl">Próximo paso</span>
+                      <a class="hcd-prod-next" data-hcd-prod-next href={`/mi/${p.slug}`}>Abrir →</a>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <!-- 4 · Dos columnas -->
+            <div class="hcd-cols">
+              <!-- Izq: Lo próximo (fechas REALES de PRODUCTS[].milestones) -->
+              <section class="hcd-card" aria-labelledby="hcd-next-h">
+                <div class="hcd-sec-head">
+                  <div><h2 id="hcd-next-h">Lo próximo</h2><p>Fechas que se vienen en tus productos.</p></div>
+                  <a class="hcd-see" href="/mi">Ver calendario →</a>
+                </div>
+                <ul class="hcd-next" data-hcd-next></ul>
+              </section>
+
+              <div class="hcd-col-side">
+                <!-- Alertas activas (REAL: /api/alerts/mine) -->
+                <section class="hcd-card alerts-block" id="alertas" data-alerts-block aria-labelledby="hcd-alerts-h">
+                  <div class="hcd-sec-head">
+                    <div><h2 id="hcd-alerts-h">Alertas activas</h2><p>Te avisamos por mail cuando una actualización normativa cambia un resultado que guardaste.</p></div>
+                  </div>
+                  <p class="alerts-empty" data-alerts-empty hidden>Todavía no tenés alertas. Creá una desde cualquier calculadora fiscal, con el botón <strong>“Avisame si una norma cambia este resultado”</strong>.</p>
+                  <ul class="alerts-list" data-alerts-list></ul>
+                </section>
+
+                <!-- Tu perfil numérico (REAL: campos cargados / totales) -->
+                <section class="hcd-card hcd-progress-card" data-progress-wrap aria-labelledby="hcd-prog-h">
+                  <div class="hcd-sec-head"><div><h2 id="hcd-prog-h">Tu perfil numérico</h2></div><span class="profile-progress-pct" data-progress-pct></span></div>
+                  <div class="profile-progress-track"><div class="profile-progress-fill" data-progress-fill></div></div>
+                  <p class="profile-progress-label" data-progress-label></p>
+                  <p class="hcd-progress-help">Cuantos más datos cargues, más calculadoras arrancan con tus números ya puestos.</p>
+                  <div class="hcd-progress-btns">
+                    <a class="hcd-btn hcd-btn-primary" href="#mi-perfil">Completar perfil</a>
+                    <a class="hcd-btn" href="/privacidad">Privacidad</a>
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            <!-- 5 · Continuar donde dejaste (REAL: hc_recent + hc-history-<slug>) -->
+            <section class="hcd-sec" aria-labelledby="hcd-cont-h">
+              <div class="hcd-sec-head">
+                <div><h2 id="hcd-cont-h">Continuar donde dejaste</h2><p>Las últimas calculadoras que abriste, con el resultado que guardaste.</p></div>
+                <a class="hcd-see" href="#actividad">Ver actividad →</a>
+              </div>
+              <div class="hcd-cont" data-hcd-cont></div>
+              <p class="hcd-empty" data-hcd-cont-empty hidden>Todavía no guardaste cálculos. <a href="/calculadoras">Elegí una calculadora</a> y va a aparecer acá.</p>
+            </section>
+
+            <!-- 6 · Mi perfil -->
+            <section class="hcd-sec" id="mi-perfil" aria-labelledby="hcd-perfil-h">
+              <div class="hcd-sec-head">
+                <div>
+                  <h2 id="hcd-perfil-h">Mi perfil</h2>
+                  <p>Lo cargás una vez y precarga todas las calculadoras, en cualquier dispositivo donde inicies sesión.</p>
+                </div>
+              </div>
+              <div class="hcd-acct">
+                <span class="account-info">
+                  <strong class="account-email" data-account-email></strong>
+                  <span class="account-sub" data-account-sub></span>
+                </span>
+              </div>
 
       <form class="profile-form" data-profile-form>
         {groups.map((g) => (
@@ -282,33 +478,31 @@ const inputType = (t: string) =>
         ))}
       </form>
 
-      <!-- Recientes + Favoritos (#19): tu actividad, unificada en el panel.
-           Datos de localStorage (hc_recent / hc_favs, contrato {s,t,l,d}), 100%
-           cliente, ocultos si están vacíos. Misma reconstrucción de URL que el home. -->
-      <section class="panel-calcs" data-panel-calcs hidden>
-        <div class="panel-calcs-group" data-recent-group hidden>
-          <h2 class="panel-calcs-h">🕘 Usadas recientemente</h2>
-          <div class="panel-calcs-grid" data-recent-grid></div>
-        </div>
-        <div class="panel-calcs-group" data-favs-group hidden>
-          <h2 class="panel-calcs-h">⭐ Tus favoritas</h2>
-          <div class="panel-calcs-grid" data-favs-grid></div>
-        </div>
-      </section>
+              <div class="profile-actions">
+                <button type="button" class="profile-clear-all" data-profile-clear-all>Borrar todos mis datos</button>
+                <button type="button" class="profile-delete-account" data-delete-account>Borrar mi cuenta</button>
+              </div>
+            </section>
 
-      <!-- Alertas de cambios normativos -->
-      <section class="alerts-block" data-alerts-block>
-        <h2 class="alerts-h">🔔 Tus alertas de cambios</h2>
-        <p class="alerts-intro">Te avisamos por mail cuando una actualización normativa cambia un resultado que guardaste.</p>
-        <p class="alerts-empty" data-alerts-empty hidden>Todavía no tenés alertas. Creá una desde cualquier calculadora fiscal, con el botón <strong>“Avisame si una norma cambia este resultado”</strong>.</p>
-        <ul class="alerts-list" data-alerts-list></ul>
-      </section>
-
-      <div class="profile-actions">
-        <button type="button" class="profile-clear-all" data-profile-clear-all>Borrar todos mis datos</button>
-        <button type="button" class="profile-delete-account" data-delete-account>Borrar mi cuenta</button>
-      </div>
-      </div><!-- /.acct-wrap -->
+            <!-- 7 · Actividad — favoritas (hc_favs). Las recientes viven arriba,
+                 en "Continuar donde dejaste": el grupo de recientes de este panel
+                 se retiró a propósito (renderGroup() lo saltea si no está en el DOM). -->
+            <section class="hcd-sec" id="actividad" aria-labelledby="hcd-act-h">
+              <div class="hcd-sec-head">
+                <div><h2 id="hcd-act-h">Actividad</h2><p>Lo que guardaste y lo que marcaste como favorito.</p></div>
+                <a class="hcd-see" href="/calculadoras">Ver calculadoras →</a>
+              </div>
+              <section class="panel-calcs" data-panel-calcs hidden>
+                <div class="panel-calcs-group" data-favs-group hidden>
+                  <h3 class="panel-calcs-h">⭐ Tus favoritas</h3>
+                  <div class="panel-calcs-grid" data-favs-grid></div>
+                </div>
+              </section>
+              <p class="hcd-empty" data-hcd-favs-empty hidden>Todavía no marcaste favoritas. Tocá la ⭐ en cualquier calculadora para tenerla acá.</p>
+            </section>
+          </div><!-- /.hcd-content -->
+        </div><!-- /.hcd-main -->
+      </div><!-- /.hcd -->
     </section>
   </div>
 
@@ -319,13 +513,14 @@ const inputType = (t: string) =>
   </div>
 
   <script type="application/json" data-profile-config set:html={profileConfig}></script>
+  <script type="application/json" data-dash-config set:html={dashConfig}></script>
 
   <Footer slot="footer" />
 </Layout>
 
 <style is:global>
   /* Landing del login (mockup): full-bleed como los hubs. El dashboard logueado
-     se re-centra con .acct-wrap. */
+     también es full-bleed (sidebar + contenido ocupan todo el ancho). */
   body[data-page-type='hub'] > main#main {
     width: 100% !important;
     max-width: none !important;
@@ -346,6 +541,436 @@ const inputType = (t: string) =>
   .pc-link:hover { color: var(--accent); }
   .pc-remove { flex-shrink: 0; width: 26px; height: 26px; border-radius: 999px; border: none; background: transparent; color: var(--text-subtle); font-size: 1.15rem; line-height: 1; cursor: pointer; }
   .pc-remove:hover { background: var(--bg-muted); color: var(--danger, #dc2626); }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     DASHBOARD LOGUEADO (.hcd-*) — mockup 2026-07-14.
+     Global porque casi todo el contenido se puebla por DOM API (sin scope
+     hash de Astro). Prefijo `.hcd-` propio de esta página; nada acá existe
+     en otra ruta. NO toca calc-flagship.css.
+     ═══════════════════════════════════════════════════════════════════ */
+
+  /* En modo dashboard la página usa su propio chrome → el header/footer del
+     sitio se esconden. La vista desloguéada NO lleva esta clase: conserva el
+     header, el footer y la barra de "Acceso seguro" tal cual. */
+  body.hc-dash-mode .site-header,
+  body.hc-dash-mode .lg-topbar,
+  body.hc-dash-mode .site-footer { display: none !important; }
+  body.hc-dash-mode { background: #f4f5f9; }
+  :root[data-theme='dark'] body.hc-dash-mode { background: #0b1020; }
+  body.hc-drawer-open { overflow: hidden; }
+
+  /* Ocultar montos (#16): vale para todo el dashboard, no sólo el form. */
+  body.hc-amounts-hidden .hcd-money { filter: blur(8px); user-select: none; }
+
+  .hcd {
+    --hcd-side: #1a1f36;
+    --hcd-side-2: #151a2e;
+    --hcd-side-tx: #c7d0e0;
+    --hcd-side-dim: #79839a;
+    --hcd-a: #2563eb;
+    --hcd-bg: #f4f5f9;
+    --hcd-card: #ffffff;
+    --hcd-bd: #e5e8ef;
+    --hcd-tx: #0f172a;
+    --hcd-mu: #64748b;
+    --hcd-su: #94a3b8;
+    --hcd-sh: 0 1px 2px rgba(16, 24, 40, 0.05);
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr);
+    min-height: 100vh;
+    background: var(--hcd-bg);
+    color: var(--hcd-tx);
+    font-synthesis: none;
+  }
+  :root[data-theme='dark'] .hcd {
+    --hcd-bg: #0b1020;
+    --hcd-card: #131a2e;
+    --hcd-bd: #262f47;
+    --hcd-tx: #e8edf7;
+    --hcd-mu: #98a3b8;
+    --hcd-su: #6b7688;
+    --hcd-sh: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  .hcd a { text-decoration: none; }
+
+  /* ───────── Sidebar ───────── */
+  .hcd-side {
+    position: sticky; top: 0; align-self: start;
+    height: 100vh; display: flex; flex-direction: column; min-height: 0;
+    background: var(--hcd-side); color: var(--hcd-side-tx);
+    padding: 1.1rem 0.75rem 0.9rem;
+  }
+  .hcd-side-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0 0.4rem 0.35rem; }
+  .hcd-brand { display: inline-flex; align-items: center; gap: 0.6rem; min-width: 0; }
+  .hcd-brand-mark {
+    width: 32px; height: 32px; flex: none; border-radius: 9px; background: var(--hcd-a);
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 0.75rem; font-weight: 800; letter-spacing: -0.02em;
+  }
+  .hcd-brand-word { color: #fff; font-weight: 700; font-size: 0.9375rem; letter-spacing: -0.01em; white-space: nowrap; }
+  .hcd-side-close {
+    display: none; width: 44px; height: 44px; flex: none; border: 0; border-radius: 9px;
+    background: transparent; color: var(--hcd-side-tx); font-size: 1rem; cursor: pointer;
+  }
+  .hcd-side-close:hover { background: rgba(255, 255, 255, 0.08); }
+
+  .hcd-nav { display: flex; flex-direction: column; gap: 0.1rem; margin-top: 1.1rem; overflow-y: auto; min-height: 0; flex: 1; }
+  .hcd-nav-label {
+    padding: 0.75rem 0.7rem 0.35rem; font-size: 0.625rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--hcd-side-dim);
+  }
+  .hcd-navlink {
+    position: relative; display: flex; align-items: center; gap: 0.65rem;
+    min-height: 44px; padding: 0.55rem 0.7rem; border-radius: 9px;
+    color: var(--hcd-side-tx); font-size: 0.875rem; font-weight: 550;
+    border-left: 3px solid transparent; transition: background-color 0.14s, color 0.14s;
+  }
+  .hcd-navlink:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
+  .hcd-navlink.is-active {
+    background: color-mix(in srgb, var(--hcd-a) 30%, transparent);
+    border-left-color: var(--hcd-a); color: #fff; font-weight: 650;
+  }
+  .hcd-navic { width: 17px; height: 17px; flex: none; display: inline-flex; opacity: 0.9; }
+  .hcd-navic svg { width: 100%; height: 100%; }
+  .hcd-navlink > span:nth-child(2) { flex: 1; min-width: 0; }
+  .hcd-badge {
+    flex: none; padding: 0.1rem 0.4rem; border-radius: 999px; font-size: 0.6875rem; font-weight: 700;
+    background: rgba(255, 255, 255, 0.12); color: #e2e8f0;
+  }
+  .hcd-badge[hidden] { display: none; }
+  .hcd-badge-num { background: var(--hcd-a); color: #fff; min-width: 20px; text-align: center; }
+
+  .hcd-sync {
+    margin: 0.75rem 0.15rem 0.6rem; padding: 0.75rem 0.8rem; border-radius: 11px;
+    background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .hcd-sync b { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8125rem; font-weight: 650; color: #fff; }
+  .hcd-sync small { display: block; margin-top: 0.2rem; font-size: 0.6875rem; line-height: 1.4; color: var(--hcd-side-dim); }
+  .hcd-sync-dot { width: 7px; height: 7px; flex: none; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2); }
+
+  .hcd-user { position: relative; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 0.6rem; }
+  .hcd-user-btn {
+    width: 100%; display: flex; align-items: center; gap: 0.6rem; min-height: 44px;
+    padding: 0.4rem 0.5rem; border: 0; border-radius: 10px; background: transparent;
+    color: inherit; font: inherit; cursor: pointer; text-align: left;
+  }
+  .hcd-user-btn:hover { background: rgba(255, 255, 255, 0.07); }
+  .hcd-user .account-avatar { width: 32px; height: 32px; flex: none; font-size: 0.875rem; background: var(--hcd-a); }
+  .hcd-user-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .hcd-user-txt b { font-size: 0.8125rem; font-weight: 650; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hcd-user-txt small { font-size: 0.6875rem; color: var(--hcd-side-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hcd-user-chev { flex: none; color: var(--hcd-side-dim); font-size: 0.75rem; }
+  .hcd-user-menu {
+    position: absolute; bottom: calc(100% + 0.35rem); left: 0.25rem; right: 0.25rem; z-index: 5;
+    display: flex; flex-direction: column; align-items: flex-start; gap: 0.1rem; padding: 0.4rem;
+    background: var(--hcd-side-2); border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 11px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  }
+  .hcd-user-menu[hidden] { display: none; }
+  .hcd-user-menu a, .hcd-user-menu .link-btn {
+    display: block; width: 100%; text-align: left; padding: 0.55rem 0.55rem; border-radius: 7px;
+    font-size: 0.8125rem; color: var(--hcd-side-tx) !important; text-decoration: none;
+    background: none; border: 0; cursor: pointer; font: inherit;
+  }
+  .hcd-user-menu a:hover, .hcd-user-menu .link-btn:hover { background: rgba(255, 255, 255, 0.08); color: #fff !important; }
+  .hcd-user-menu .link-subtle { color: var(--hcd-side-dim) !important; font-size: 0.75rem !important; }
+
+  /* ───────── Topbar ───────── */
+  .hcd-main { min-width: 0; display: flex; flex-direction: column; }
+  .hcd-topbar {
+    position: sticky; top: 0; z-index: 30;
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.7rem 1.5rem; border-bottom: 1px solid var(--hcd-bd);
+    background: color-mix(in srgb, var(--hcd-bg) 90%, transparent);
+    backdrop-filter: blur(10px);
+  }
+  .hcd-burger {
+    display: none; width: 44px; height: 44px; flex: none; align-items: center; justify-content: center;
+    border: 1px solid var(--hcd-bd); border-radius: 10px; background: var(--hcd-card);
+    color: var(--hcd-tx); cursor: pointer;
+  }
+  .hcd-burger svg { width: 20px; height: 20px; }
+  .hcd-search { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; }
+  .hcd-search-ic { position: absolute; left: 0.75rem; width: 17px; height: 17px; color: var(--hcd-su); pointer-events: none; }
+  .hcd-search-ic svg { width: 100%; height: 100%; }
+  .hcd-search input {
+    width: 100%; height: 42px; padding: 0 3.2rem 0 2.4rem;
+    border: 1px solid var(--hcd-bd); border-radius: 10px;
+    background: var(--hcd-card); color: var(--hcd-tx); font: inherit; font-size: 0.875rem;
+  }
+  .hcd-search input::-webkit-search-cancel-button { -webkit-appearance: none; }
+  .hcd-search input:focus { outline: none; border-color: var(--hcd-a); box-shadow: 0 0 0 3px color-mix(in srgb, var(--hcd-a) 18%, transparent); }
+  .hcd-kbd {
+    position: absolute; right: 0.6rem; padding: 0.1rem 0.35rem; border-radius: 5px;
+    border: 1px solid var(--hcd-bd); background: var(--hcd-bg);
+    font-family: inherit; font-size: 0.6875rem; color: var(--hcd-su); pointer-events: none;
+  }
+  .hcd-tb-actions { display: flex; align-items: center; gap: 0.4rem; flex: none; }
+  .hcd .amounts-toggle.hcd-amounts {
+    min-height: 42px; gap: 0.4rem; padding: 0 0.75rem; border: 1px solid var(--hcd-bd);
+    border-radius: 10px; background: var(--hcd-card); color: var(--hcd-mu); font-size: 0.8125rem;
+  }
+  .hcd .amounts-toggle.hcd-amounts:hover { border-color: var(--hcd-a); color: var(--hcd-a); }
+  .hcd-icon-btn {
+    position: relative; width: 42px; height: 42px; flex: none;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--hcd-bd); border-radius: 10px; background: var(--hcd-card);
+    color: var(--hcd-mu); cursor: pointer;
+  }
+  .hcd-icon-btn:hover { border-color: var(--hcd-a); color: var(--hcd-a); }
+  .hcd-icon-btn svg, .hcd-bell-ic { width: 18px; height: 18px; }
+  .hcd-bell-ic svg { width: 100%; height: 100%; }
+  .hcd-bell-dot {
+    position: absolute; top: 8px; right: 9px; width: 8px; height: 8px; border-radius: 50%;
+    background: #ef4444; border: 2px solid var(--hcd-card);
+  }
+  .hcd-bell-dot[hidden] { display: none; }
+  .hcd-moon { display: none; }
+  :root[data-theme='dark'] .hcd-sun { display: none; }
+  :root[data-theme='dark'] .hcd-moon { display: block; }
+
+  /* ───────── Contenido ───────── */
+  .hcd-content { padding: 1.75rem 1.5rem 4rem; display: flex; flex-direction: column; gap: 1.75rem; min-width: 0; }
+  .hcd-content > * { min-width: 0; }
+  .hcd-head { scroll-margin-top: 72px; }
+  .hcd-eyebrow { font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hcd-a); }
+  .hcd-head h1 { margin: 0.45rem 0 0; font-size: clamp(1.5rem, 3.2vw, 2rem); font-weight: 800; letter-spacing: -0.03em; color: var(--hcd-tx); line-height: 1.15; }
+  .hcd-sub { margin: 0.4rem 0 0; font-size: 0.9375rem; color: var(--hcd-mu); line-height: 1.55; max-width: 60ch; }
+
+  .hcd-sec { scroll-margin-top: 72px; }
+  .hcd-sec-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+  .hcd-sec-head h2 { margin: 0; font-size: 1.125rem; font-weight: 700; letter-spacing: -0.015em; color: var(--hcd-tx); }
+  .hcd-sec-head p { margin: 0.2rem 0 0; font-size: 0.8438rem; color: var(--hcd-mu); line-height: 1.5; }
+  .hcd-see { flex: none; font-size: 0.8125rem; font-weight: 650; color: var(--hcd-a); white-space: nowrap; }
+  .hcd-see:hover { text-decoration: underline; }
+  .hcd-card { background: var(--hcd-card); border: 1px solid var(--hcd-bd); border-radius: 14px; padding: 1.25rem; box-shadow: var(--hcd-sh); scroll-margin-top: 72px; }
+  .hcd-empty { margin: 0; font-size: 0.875rem; color: var(--hcd-mu); line-height: 1.55; }
+  .hcd-empty[hidden] { display: none; }
+  .hcd-empty a { color: var(--hcd-a); font-weight: 600; }
+
+  /* ───────── Stat cards ───────── */
+  .hcd-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+  .hcd-stat {
+    display: flex; flex-direction: column; min-width: 0;
+    background: var(--hcd-card); border: 1px solid var(--hcd-bd); border-radius: 14px;
+    padding: 1.1rem 1.2rem; box-shadow: var(--hcd-sh);
+  }
+  .hcd-stat-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.6rem; }
+  .hcd-stat-label { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--hcd-su); }
+  .hcd-stat-ic {
+    width: 30px; height: 30px; flex: none; border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--i, #2563eb) 13%, transparent); color: var(--i, #2563eb);
+  }
+  .hcd-stat-ic svg { width: 16px; height: 16px; }
+  .hcd-stat-val {
+    display: block; margin: 0.6rem 0 0.3rem; font-family: var(--font-num, inherit);
+    font-size: 1.6rem; font-weight: 700; letter-spacing: -0.025em; color: var(--hcd-su);
+    overflow-wrap: anywhere;
+  }
+  .hcd-stat-val.is-set { color: var(--hcd-tx); }
+  .hcd-stat.is-neg .hcd-stat-val.is-set { color: #dc2626; }
+  .hcd-stat-note { margin: 0; font-size: 0.75rem; color: var(--hcd-mu); line-height: 1.45; }
+  .hcd-stat-note > span[hidden] { display: none; }
+  .hcd-stat-cta { font-size: 0.75rem; font-weight: 650; color: var(--hcd-a); }
+  .hcd-stat-cta:hover { text-decoration: underline; }
+  .hcd-stat-cta[hidden] { display: none; }
+
+  /* 4ª card: azul llena + gauge */
+  .hcd-stat-hero { background: linear-gradient(150deg, #2563eb 0%, #1e40af 100%); border-color: transparent; color: #fff; }
+  .hcd-stat-hero .hcd-stat-label { color: rgba(255, 255, 255, 0.72); }
+  .hcd-stat-hero .hcd-stat-ic { background: rgba(255, 255, 255, 0.16); color: #fff; }
+  .hcd-gauge-row { display: flex; align-items: center; gap: 0.8rem; margin: 0.75rem 0 0.6rem; }
+  .hcd-gauge { position: relative; width: 62px; height: 62px; flex: none; display: inline-flex; align-items: center; justify-content: center; }
+  .hcd-gauge svg { width: 62px; height: 62px; transform: rotate(-90deg); }
+  .hcd-gauge-bg { fill: none; stroke: rgba(255, 255, 255, 0.2); stroke-width: 6; }
+  .hcd-gauge-fg { fill: none; stroke: #fff; stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
+  .hcd-gauge.is-empty .hcd-gauge-fg { stroke: rgba(255, 255, 255, 0.35); stroke-dasharray: 4 6 !important; stroke-dashoffset: 0 !important; }
+  .hcd-gauge b { position: absolute; font-family: var(--font-num, inherit); font-size: 0.9375rem; font-weight: 700; color: #fff; }
+  .hcd-gauge-txt { min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+  .hcd-gauge-txt b { font-size: 0.8125rem; font-weight: 700; color: #fff; }
+  .hcd-gauge-txt small { font-size: 0.6875rem; line-height: 1.4; color: rgba(255, 255, 255, 0.75); }
+  .hcd-stat-link { margin-top: auto; font-size: 0.8125rem; font-weight: 650; color: #fff; }
+  .hcd-stat-link:hover { text-decoration: underline; }
+
+  /* ───────── Tus productos ───────── */
+  .hcd-prods { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+  .hcd-prod {
+    position: relative; display: flex; flex-direction: column; min-width: 0;
+    background: var(--hcd-card); border: 1px solid var(--hcd-bd); border-radius: 14px;
+    padding: 1.1rem 1.15rem 0.9rem; box-shadow: var(--hcd-sh); overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  }
+  .hcd-prod::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--c); }
+  .hcd-prod:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--c) 45%, var(--hcd-bd)); box-shadow: 0 8px 22px -8px color-mix(in srgb, var(--c) 40%, transparent); }
+  .hcd-prod-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.6rem; }
+  .hcd-prod-ic {
+    width: 40px; height: 40px; flex: none; border-radius: 11px; font-size: 1.25rem; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--c) 14%, transparent);
+  }
+  .hcd-prod-badge {
+    flex: none; padding: 0.15rem 0.45rem; border-radius: 999px;
+    font-size: 0.625rem; font-weight: 750; letter-spacing: 0.04em; text-transform: uppercase;
+    background: var(--hcd-bg); color: var(--hcd-mu); border: 1px solid var(--hcd-bd);
+  }
+  .hcd-prod-badge[hidden] { display: none; }
+  .hcd-prod-badge.is-alert { background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--c); border-color: color-mix(in srgb, var(--c) 32%, transparent); }
+  .hcd-prod-badge.is-ok { background: color-mix(in srgb, #16a34a 14%, transparent); color: #15803d; border-color: color-mix(in srgb, #16a34a 28%, transparent); }
+  :root[data-theme='dark'] .hcd-prod-badge.is-ok { color: #4ade80; }
+  .hcd-prod-name { font-size: 1rem; font-weight: 750; letter-spacing: -0.015em; color: var(--hcd-tx); }
+  .hcd-prod-name::after { content: ''; position: absolute; inset: 0; }
+  .hcd-prod:hover .hcd-prod-name { color: var(--c); }
+  .hcd-prod-tag { margin-top: 0.15rem; font-size: 0.8125rem; color: var(--hcd-mu); }
+  .hcd-prod-foot { margin-top: 0.9rem; padding-top: 0.7rem; border-top: 1px solid var(--hcd-bd); display: flex; flex-direction: column; gap: 0.15rem; }
+  .hcd-prod-next-lbl { font-size: 0.625rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--hcd-su); }
+  .hcd-prod-next { position: relative; z-index: 1; font-size: 0.8125rem; font-weight: 650; color: var(--c); line-height: 1.35; }
+  .hcd-prod-next:hover { text-decoration: underline; }
+
+  /* ───────── 2 columnas ───────── */
+  .hcd-cols { display: grid; grid-template-columns: minmax(0, 1fr) 350px; gap: 1.25rem; align-items: start; }
+  .hcd-col-side { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
+
+  /* Lo próximo */
+  .hcd-next { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .hcd-next-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.85rem 0; border-bottom: 1px solid var(--hcd-bd); }
+  .hcd-next-item:first-child { padding-top: 0; }
+  .hcd-next-item:last-child { border-bottom: 0; padding-bottom: 0; }
+  .hcd-next-date {
+    flex: none; width: 46px; height: 50px; border-radius: 10px;
+    background: var(--hcd-bg); border: 1px solid var(--hcd-bd);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1;
+  }
+  .hcd-next-date b { font-family: var(--font-num, inherit); font-size: 1.1rem; font-weight: 750; color: var(--hcd-tx); }
+  .hcd-next-date small { font-size: 0.5625rem; font-weight: 700; letter-spacing: 0.05em; color: var(--hcd-a); }
+  .hcd-next-ic { flex: none; font-size: 1.05rem; line-height: 1; }
+  .hcd-next-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+  .hcd-next-body b { font-size: 0.9375rem; font-weight: 650; color: var(--hcd-tx); }
+  .hcd-next-body small { font-size: 0.75rem; color: var(--hcd-mu); line-height: 1.45; }
+  .hcd-next-cta { flex: none; font-size: 0.8125rem; font-weight: 650; color: var(--hcd-a); white-space: nowrap; }
+  .hcd-next-cta:hover { text-decoration: underline; }
+
+  /* Alertas + perfil numérico (reusan el markup y la lógica que ya existían) */
+  .hcd .alerts-empty { font-size: 0.8125rem; color: var(--hcd-mu); line-height: 1.5; padding: 0.8rem 0.9rem; background: var(--hcd-bg); border-radius: 10px; margin: 0; }
+  .hcd .alerts-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+  .hcd .alerts-list:empty { display: none; }
+  .hcd .alert-item { display: flex; align-items: center; gap: 0.7rem; padding: 0.7rem 0.85rem; border: 1px solid var(--hcd-bd); border-radius: 10px; }
+  .hcd .alert-item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+  .hcd .alert-item-title { font-weight: 650; font-size: 0.875rem; color: var(--hcd-a); }
+  .hcd .alert-item-title:hover { text-decoration: underline; }
+  .hcd .alert-item-meta { font-size: 0.75rem; color: var(--hcd-mu); }
+  .hcd .alert-item-del { flex: none; width: 2rem; height: 2rem; border: 1px solid var(--hcd-bd); border-radius: 8px; background: none; color: var(--hcd-su); cursor: pointer; }
+  .hcd .alert-item-del:hover { border-color: #dc2626; color: #dc2626; }
+
+  .hcd-progress-card .hcd-sec-head { align-items: center; margin-bottom: 0.6rem; }
+  .hcd .profile-progress-pct { font-family: var(--font-num, inherit); font-size: 1.25rem; font-weight: 750; color: var(--hcd-a); }
+  .hcd .profile-progress-track { height: 8px; background: var(--hcd-bg); border: 1px solid var(--hcd-bd); border-radius: 999px; overflow: hidden; }
+  .hcd .profile-progress-fill { height: 100%; width: 0; background: var(--hcd-a); border-radius: 999px; transition: width 0.35s ease; }
+  .hcd .profile-progress-label { margin: 0.5rem 0 0; font-size: 0.8125rem; font-weight: 600; color: var(--hcd-tx); }
+  .hcd-progress-help { margin: 0.3rem 0 0; font-size: 0.75rem; color: var(--hcd-mu); line-height: 1.45; }
+  .hcd-progress-btns { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.9rem; }
+  .hcd-btn {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 38px; padding: 0 0.9rem;
+    border: 1px solid var(--hcd-bd); border-radius: 9px; background: var(--hcd-card);
+    font-size: 0.8125rem; font-weight: 650; color: var(--hcd-tx);
+  }
+  .hcd-btn:hover { border-color: var(--hcd-a); color: var(--hcd-a); }
+  .hcd-btn-primary { background: var(--hcd-a); border-color: var(--hcd-a); color: #fff; }
+  .hcd-btn-primary:hover { filter: brightness(0.95); color: #fff; }
+
+  /* ───────── Continuar donde dejaste ───────── */
+  .hcd-cont { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+  .hcd-cont[hidden] { display: none; }
+  .hcd-cont-card {
+    display: flex; flex-direction: column; min-width: 0;
+    background: var(--hcd-card); border: 1px solid var(--hcd-bd); border-radius: 14px;
+    padding: 1rem 1.1rem; box-shadow: var(--hcd-sh);
+  }
+  .hcd-cont-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+  .hcd-cont-eyebrow { font-size: 0.625rem; font-weight: 750; letter-spacing: 0.06em; text-transform: uppercase; color: var(--hcd-a); }
+  .hcd-cont-when { font-size: 0.6875rem; color: var(--hcd-su); white-space: nowrap; }
+  .hcd-cont-title { margin: 0.4rem 0 0.7rem; font-size: 0.9375rem; font-weight: 650; line-height: 1.35; color: var(--hcd-tx); }
+  .hcd-cont-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+    padding: 0.6rem 0.7rem; border-radius: 9px; background: var(--hcd-bg); border: 1px solid var(--hcd-bd);
+  }
+  .hcd-cont-row-lbl { font-size: 0.6875rem; color: var(--hcd-mu); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hcd-cont-row-val { font-family: var(--font-num, inherit); font-size: 0.875rem; font-weight: 750; color: var(--hcd-tx); white-space: nowrap; }
+  .hcd-cont-norow { margin: 0; padding: 0.6rem 0.7rem; border-radius: 9px; background: var(--hcd-bg); font-size: 0.75rem; color: var(--hcd-mu); }
+  .hcd-cont-cta { margin-top: 0.7rem; font-size: 0.8125rem; font-weight: 650; color: var(--hcd-a); }
+  .hcd-cont-cta:hover { text-decoration: underline; }
+
+  /* ───────── Mi perfil (form heredado) ───────── */
+  .hcd-acct { margin-bottom: 1rem; }
+  .hcd .account-info { display: flex; flex-direction: column; gap: 0.15rem; }
+  .hcd .account-email { font-size: 0.9375rem; font-weight: 650; color: var(--hcd-tx); }
+  .hcd .account-sub { font-size: 0.75rem; color: var(--hcd-su); }
+  .hcd .profile-form { gap: 1rem; }
+  .hcd .profile-group { background: var(--hcd-card); border-color: var(--hcd-bd); border-radius: 12px; box-shadow: var(--hcd-sh); }
+  .hcd .group-toggle { min-height: 48px; color: var(--hcd-tx); }
+  .hcd .profile-row label { color: var(--hcd-tx); }
+  .hcd .profile-control input, .hcd .profile-control select { background: var(--hcd-card); border-color: var(--hcd-bd); color: var(--hcd-tx); min-height: 40px; }
+  .hcd .panel-calcs { margin: 0; }
+  .hcd .pc-card { background: var(--hcd-card); border-color: var(--hcd-bd); border-radius: 10px; }
+  .hcd .pc-link { color: var(--hcd-tx); }
+  .hcd .panel-calcs-h { font-size: 0.9375rem; color: var(--hcd-tx); }
+  .hcd .profile-actions { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--hcd-bd); }
+
+  /* Barra de guardado: alineada con la columna de contenido. */
+  body.hc-dash-mode .save-bar {
+    max-width: none; margin: 0 0 0 250px; background: var(--bg-card, #fff);
+    border-top: 1px solid #e5e8ef; padding-left: 1.5rem; padding-right: 1.5rem;
+  }
+  :root[data-theme='dark'] body.hc-dash-mode .save-bar { border-top-color: #262f47; }
+
+  /* ───────── Responsive ───────── */
+  .hcd-scrim { display: none; }
+  @media (max-width: 1180px) {
+    .hcd-stats, .hcd-prods { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 1060px) {
+    .hcd-cols { grid-template-columns: minmax(0, 1fr); }
+    .hcd-cont { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 900px) {
+    /* El sidebar fijo no sirve en mobile → drawer desde la izquierda. */
+    .hcd { grid-template-columns: minmax(0, 1fr); }
+    .hcd-side {
+      position: fixed; top: 0; left: 0; bottom: 0; height: 100%;
+      width: 272px; max-width: 84vw; z-index: 60;
+      transform: translateX(-100%); transition: transform 0.22s ease;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.35);
+    }
+    .hcd-side.is-open { transform: none; }
+    .hcd-side-close { display: inline-flex; align-items: center; justify-content: center; }
+    .hcd-scrim { display: block; position: fixed; inset: 0; z-index: 50; background: rgba(2, 6, 23, 0.55); }
+    .hcd-scrim[hidden] { display: none; }
+    .hcd-burger { display: inline-flex; }
+    body.hc-dash-mode .save-bar { margin-left: 0; padding-left: 1rem; padding-right: 1rem; }
+  }
+  @media (max-width: 720px) {
+    .hcd-topbar { padding: 0.6rem 1rem; }
+    .hcd-content { padding: 1.25rem 1rem 3.5rem; gap: 1.5rem; }
+    /* El buscador queda como ícono/lupa; se expande al enfocarlo. */
+    .hcd-search { flex: none; width: 44px; transition: width 0.18s ease; }
+    .hcd-search input { height: 44px; padding-right: 0.6rem; cursor: pointer; }
+    .hcd-search:focus-within { flex: 1; width: auto; }
+    .hcd-kbd { display: none; }
+    .hcd-amounts-lbl { display: none; }
+    /* Targets táctiles ≥44px. */
+    .hcd .amounts-toggle.hcd-amounts { width: 44px; height: 44px; padding: 0; justify-content: center; }
+    .hcd-icon-btn, .hcd-burger { width: 44px; height: 44px; }
+  }
+  @media (max-width: 640px) {
+    .hcd-stats, .hcd-prods, .hcd-cont { grid-template-columns: minmax(0, 1fr); }
+    .hcd-sec-head { flex-direction: column; align-items: flex-start; gap: 0.35rem; }
+    .hcd-progress-card .hcd-sec-head { flex-direction: row; align-items: center; justify-content: space-between; }
+    .hcd-next-item { flex-wrap: wrap; }
+    .hcd-next-cta { width: 100%; text-align: right; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hcd-side, .hcd-gauge-fg, .hcd .profile-progress-fill, .hcd-prod { transition: none; }
+  }
 </style>
 
 <script is:inline>
@@ -420,6 +1045,10 @@ const inputType = (t: string) =>
       qs('[data-auth-loading]').hidden = view !== 'loading';
       qs('[data-login-view]').hidden = view !== 'login';
       qs('[data-profile-view]').hidden = view !== 'profile';
+      // El dashboard logueado trae su propio chrome (sidebar + topbar): en ese
+      // modo escondemos el header/footer del sitio. La vista desloguéada los
+      // conserva intactos.
+      try { document.body.classList.toggle('hc-dash-mode', view === 'profile'); } catch (e) {}
     }
 
     function fmtDate(iso) { try { return new Date(iso).toLocaleDateString('es-AR'); } catch (e) { return ''; } }
@@ -497,6 +1126,9 @@ const inputType = (t: string) =>
       var pe = qs('[data-progress-pct]'); if (pe) pe.textContent = pct + '%';
       var le = qs('[data-progress-label]');
       if (le) le.textContent = n === 0 ? 'Tu perfil está vacío — cargá tus datos' : (n + ' de ' + total + ' datos cargados');
+      // El dashboard espeja este % en el badge del sidebar (misma cuenta real,
+      // una sola fuente).
+      try { window.dispatchEvent(new CustomEvent('hc-dash-progress', { detail: { pct: pct, n: n, total: total } })); } catch (e) {}
     }
 
     function setStatus(text, kind) {
@@ -526,6 +1158,9 @@ const inputType = (t: string) =>
     // Ocultar/mostrar montos (#16) — blur en los campos $, recordado en localStorage.
     function applyAmountsHidden(on) {
       var form = qs('[data-profile-form]'); if (form) form.classList.toggle('amounts-hidden', on);
+      // Los montos del resumen (.hcd-money) también se difuminan: el toggle vale
+      // para toda la pantalla, no sólo para el formulario.
+      try { document.body.classList.toggle('hc-amounts-hidden', on); } catch (e) {}
       var btn = qs('[data-amounts-toggle]'); if (!btn) return;
       btn.setAttribute('aria-pressed', on ? 'true' : 'false');
       var eo = qs('.eye-open'), ef = qs('.eye-off'); if (eo) eo.hidden = on; if (ef) ef.hidden = !on;
@@ -740,6 +1375,9 @@ const inputType = (t: string) =>
     function showProfile(me) {
       fillAccountHeader(me);
       show('profile');
+      // El dashboard usa el email para el saludo y el pie del sidebar. Se lo
+      // pasamos por evento en vez de re-pedir /api/auth/me.
+      try { window.dispatchEvent(new CustomEvent('hc-dash-me', { detail: { email: me.email || '' } })); } catch (e) {}
       var bar = qs('[data-save-bar]'); if (bar) bar.hidden = false;
       hydrateEditor(me.profile || {});
       wireEditor();
@@ -758,6 +1396,9 @@ const inputType = (t: string) =>
       var alerts = (r.data && r.data.alerts) || [];
       list.innerHTML = '';
       if (empty) empty.hidden = alerts.length > 0;
+      // El dashboard usa el mismo fetch para el badge del sidebar, el punto de
+      // la campana y los badges por producto (no re-pedimos la lista).
+      try { window.dispatchEvent(new CustomEvent('hc-dash-alerts', { detail: { alerts: alerts } })); } catch (e) {}
       alerts.forEach(function (a) {
         var li = document.createElement('li');
         li.className = 'alert-item';
@@ -946,58 +1587,418 @@ const inputType = (t: string) =>
   })();
 </script>
 
-<style>
-  /* Tus productos (movido desde la home → área logueada). */
-  .productos-mi { margin: 1.5rem 0 2rem; }
-  .productos-mi .section-header {
-    display: flex; align-items: flex-end; justify-content: space-between;
-    gap: 1rem; margin-bottom: 1.25rem;
-  }
-  .productos-mi .section-header h2 { margin: 0; font-size: 1.5rem; }
-  .productos-mi .eyebrow {
-    font-size: 0.75rem; font-weight: 700; color: var(--accent);
-    text-transform: uppercase; letter-spacing: 0.08em;
-  }
-  .productos-mi .eyebrow-inline {
-    display: inline-flex; align-items: center; gap: 0.375rem; margin-bottom: 0.375rem;
-  }
-  .productos-mi .see-all {
-    font-size: 0.875rem; color: var(--accent); text-decoration: none;
-    font-weight: 500; white-space: nowrap;
-  }
-  .productos-mi .see-all:hover { text-decoration: underline; }
-  .productos-mi-lede { margin: 0.5rem 0 0; max-width: 60ch; color: var(--text-muted); font-size: 0.9375rem; line-height: 1.55; }
-  .productos-mi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.25rem; }
-  .producto-card {
-    position: relative;
-    display: flex; flex-direction: column; gap: 0.35rem;
-    padding: 1.5rem 1.4rem 1.45rem;
-    background: linear-gradient(165deg, color-mix(in srgb, var(--c-accent) 13%, var(--bg-card)), var(--bg-card) 72%);
-    border: 1px solid color-mix(in srgb, var(--c-accent) 30%, var(--border));
-    border-radius: 18px; text-decoration: none; color: var(--text); overflow: hidden;
-    transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
-  }
-  .producto-card:hover { transform: translateY(-3px); border-color: var(--c-accent); box-shadow: 0 10px 28px -6px color-mix(in srgb, var(--c-accent) 32%, transparent); }
-  .producto-icon {
-    width: 54px; height: 54px; border-radius: 15px; margin-bottom: 0.35rem;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: color-mix(in srgb, var(--c-accent) 18%, var(--bg-card));
-    font-size: 1.85rem; line-height: 1;
-  }
-  .producto-name { font-size: 1.1875rem; font-weight: 800; letter-spacing: -0.02em; }
-  .producto-tag { color: var(--c-accent); font-weight: 600; font-size: 0.875rem; }
-  @media (hover: none) {
-    .producto-card:hover { transform: none; box-shadow: none; }
-  }
-  @media (max-width: 640px) {
-    .productos-mi .section-header { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
-    .productos-mi .section-header h2 { font-size: 1.25rem; }
-  }
+<!-- ═══════════ Dashboard logueado (mockup 2026-07-14) ═══════════
+     Render 100% cliente sobre datos REALES. Cada bloque declara su fuente.
+     Si un dato no existe ⇒ estado vacío + CTA. Nunca un valor de ejemplo. -->
+<script is:inline>
+  (function () {
+    var cfgEl = document.querySelector('[data-dash-config]');
+    var root = document.querySelector('[data-hcd]');
+    if (!cfgEl || !root) return;
+    var CFG; try { CFG = JSON.parse(cfgEl.textContent || '{}'); } catch (e) { return; }
 
+    var MON = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+    var qs = function (s) { return root.querySelector(s); };
+    var qsa = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
+    var alertsCache = [];
+
+    // ── utils ───────────────────────────────────────────────
+    function num(v) {
+      if (typeof v === 'number') return isFinite(v) ? v : NaN;
+      var s = String(v == null ? '' : v).trim();
+      if (!s) return NaN;
+      var n = Number(s);
+      if (isFinite(n)) return n;
+      n = Number(s.replace(/\./g, '').replace(',', '.')); // fallback es-AR
+      return isFinite(n) ? n : NaN;
+    }
+    function money(n) { return '$ ' + Math.round(n).toLocaleString('es-AR'); }
+    function pget(key) { try { return window.HCProfile ? window.HCProfile.get(key) : undefined; } catch (e) { return undefined; } }
+    function pnum(key) { var v = pget(key); return (v === undefined || v === null || v === '') ? NaN : num(v); }
+    function has(key) { var v = pget(key); return v !== undefined && v !== null && v !== ''; }
+    function txt(el, s) { if (el) el.textContent = s; }
+
+    // ── 1 · Saludo + pie del sidebar (fuente: email de la sesión) ──
+    function nameFromEmail(email) {
+      var local = String(email || '').split('@')[0] || '';
+      var first = local.split(/[._+\-0-9]+/).filter(Boolean)[0] || '';
+      if (first.replace(/[^a-záéíóúñü]/gi, '').length < 2) return ''; // basura ⇒ sin nombre
+      return first.charAt(0).toUpperCase() + first.slice(1);
+    }
+    function maskEmail(email) {
+      var p = String(email || '').split('@');
+      if (p.length !== 2) return String(email || '');
+      var l = p[0];
+      var keep = l.length <= 2 ? l.charAt(0) : l.slice(0, 2);
+      return keep + '•••@' + p[1];
+    }
+    function renderMe(email) {
+      var n = nameFromEmail(email);
+      txt(qs('[data-hcd-hello]'), n ? 'Hola, ' + n + '. Tus números, en orden.' : 'Tus números, en orden.');
+      txt(qs('[data-hcd-user-name]'), n || 'Tu cuenta');
+      txt(qs('[data-hcd-user-email]'), maskEmail(email));
+    }
+
+    // ── 2 · Stat cards (fuente: perfil real del server) ──────
+    function fillStat(id, value, note, ctaWhenEmpty) {
+      var card = qs('[data-hcd-stat="' + id + '"]'); if (!card) return;
+      var val = card.querySelector('[data-hcd-val]');
+      var noteEl = card.querySelector('[data-hcd-note]');
+      var cta = card.querySelector('[data-hcd-cta]');
+      var ok = value !== null;
+      if (val) { val.textContent = ok ? value : '—'; val.classList.toggle('is-set', ok); }
+      if (noteEl) { noteEl.textContent = ok ? note : ''; noteEl.hidden = !ok; }
+      if (cta) cta.hidden = ok;
+      card.classList.toggle('is-empty', !ok);
+    }
+    function renderStats() {
+      var ing = pnum(CFG.metrics.ingreso);
+      var gas = pnum(CFG.metrics.gastos);
+      var hasIng = isFinite(ing), hasGas = isFinite(gas);
+
+      fillStat('ingreso', hasIng ? money(ing) : null, 'Sueldo neto, de tu perfil');
+      fillStat('gastos', hasGas ? money(gas) : null, 'Gastos fijos, de tu perfil');
+
+      var both = hasIng && hasGas;
+      var disp = both ? ing - gas : NaN;
+      fillStat('disponible', both ? money(disp) : null, 'Ingreso neto − gastos fijos');
+      var dispCard = qs('[data-hcd-stat="disponible"]');
+      if (dispCard) dispCard.classList.toggle('is-neg', both && disp < 0);
+
+      // Gauge: TASA DE AHORRO real = (ingreso − gastos) / ingreso. No es el
+      // puntaje compuesto de salud financiera (ese pondera liquidez y deudas y
+      // se calcula entero en la sala) → lo etiquetamos por su nombre exacto.
+      var gEl = qs('[data-hcd-gauge]');
+      var fg = qs('[data-hcd-gauge-fg]');
+      var C = 2 * Math.PI * 30;
+      var okG = both && ing > 0;
+      var tasa = okG ? ((ing - gas) / ing) * 100 : 0;
+      var shown = Math.max(0, Math.min(100, tasa));
+      txt(qs('[data-hcd-gauge-val]'), okG ? Math.round(tasa) + '%' : '—');
+      txt(qs('[data-hcd-gauge-cap]'), okG ? 'Tasa de ahorro' : 'Sin datos suficientes');
+      txt(qs('[data-hcd-gauge-note]'), okG
+        ? 'Lo que te queda del ingreso después de tus gastos fijos. El puntaje completo suma además liquidez y deudas.'
+        : 'Cargá tu ingreso y tus gastos fijos para verla.');
+      if (gEl) gEl.classList.toggle('is-empty', !okG);
+      if (fg) { fg.style.strokeDasharray = C.toFixed(1); fg.style.strokeDashoffset = (C * (1 - shown / 100)).toFixed(1); }
+      var sc = qs('[data-hcd-salud-cta]');
+      if (sc) {
+        sc.textContent = okG ? 'Ver diagnóstico →' : 'Completar perfil →';
+        sc.href = okG ? '/decidir/cual-es-mi-salud-financiera' : '#mi-perfil';
+      }
+    }
+
+    // ── 3 · Hitos (fuente: PRODUCTS[].milestones, próxima ocurrencia ≥ hoy) ──
+    function stripTime(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+    function nextOccurrence(rule, now) {
+      var y = now.getFullYear(), t = stripTime(now);
+      function mk(yy, mm, dd) { return new Date(yy, mm, dd); }
+      function lastDay(yy, mm) { return new Date(yy, mm + 1, 0); }
+      if (rule.type === 'monthly-last') {
+        var a = lastDay(y, now.getMonth());
+        return a < t ? lastDay(y, now.getMonth() + 1) : a;
+      }
+      if (rule.type === 'monthly-day') {
+        var b = mk(y, now.getMonth(), rule.day);
+        return b < t ? mk(y, now.getMonth() + 1, rule.day) : b;
+      }
+      if (rule.type === 'yearly') {
+        var c = mk(y, rule.month - 1, rule.day);
+        return c < t ? mk(y + 1, rule.month - 1, rule.day) : c;
+      }
+      if (rule.type === 'biyearly') {
+        var cands = [mk(y, rule.month1 - 1, rule.day), mk(y, rule.month2 - 1, rule.day), mk(y + 1, rule.month1 - 1, rule.day)];
+        for (var i = 0; i < cands.length; i++) if (cands[i] >= t) return cands[i];
+        return cands[cands.length - 1];
+      }
+      return now;
+    }
+    function allMilestones() {
+      var now = new Date(), out = [];
+      (CFG.products || []).forEach(function (p) {
+        (p.milestones || []).forEach(function (m) {
+          var d = nextOccurrence(m.rule, now);
+          out.push({ p: p, m: m, d: d, days: Math.round((stripTime(d) - stripTime(now)) / 86400000) });
+        });
+      });
+      return out.sort(function (a, b) { return a.d - b.d; });
+    }
+    function countdown(days) { return days === 0 ? 'Es hoy.' : days === 1 ? 'Falta 1 día.' : 'Faltan ' + days + ' días.'; }
+    function renderNext(items) {
+      var ul = qs('[data-hcd-next]'); if (!ul) return;
+      ul.innerHTML = '';
+      items.slice(0, 4).forEach(function (it) {
+        var li = document.createElement('li');
+        li.className = 'hcd-next-item';
+        var date = document.createElement('span');
+        date.className = 'hcd-next-date';
+        date.innerHTML = '<b>' + String(it.d.getDate()).padStart(2, '0') + '</b><small>' + MON[it.d.getMonth()] + '</small>';
+        var ic = document.createElement('span');
+        ic.className = 'hcd-next-ic'; ic.setAttribute('aria-hidden', 'true'); ic.textContent = it.m.emoji;
+        var body = document.createElement('span');
+        body.className = 'hcd-next-body';
+        var b = document.createElement('b'); b.textContent = it.m.label;
+        var small = document.createElement('small'); small.textContent = countdown(it.days) + ' ' + it.m.detail;
+        body.appendChild(b); body.appendChild(small);
+        li.appendChild(date); li.appendChild(ic); li.appendChild(body);
+        if (it.m.toolSlug) {
+          var a = document.createElement('a');
+          a.className = 'hcd-next-cta'; a.href = '/' + it.m.toolSlug; a.textContent = 'Calcular →';
+          li.appendChild(a);
+        }
+        ul.appendChild(li);
+      });
+    }
+
+    // ── 4 · Productos: badge + próximo paso (perfil + alertas + hitos reales) ──
+    function renderProds(items) {
+      (CFG.products || []).forEach(function (p) {
+        var card = qs('[data-hcd-prod="' + p.slug + '"]'); if (!card) return;
+
+        var mine = alertsCache.filter(function (a) { return (p.alertSlugs || []).indexOf(a.slug) !== -1; }).length;
+        var keys = p.profileKeys || [];
+        var filled = keys.filter(has).length;
+        var badge = card.querySelector('[data-hcd-prod-badge]');
+        if (badge) {
+          var label = '', kind = '';
+          if (mine > 0) { label = mine + (mine === 1 ? ' alerta' : ' alertas'); kind = 'alert'; }
+          else if (!keys.length) { label = ''; }
+          else if (filled === 0) { label = 'Sin datos'; kind = 'empty'; }
+          else if (filled === keys.length) { label = 'Completo'; kind = 'ok'; }
+          else { label = filled + '/' + keys.length + ' datos'; kind = 'part'; }
+          badge.textContent = label;
+          badge.hidden = !label;
+          badge.className = 'hcd-prod-badge' + (kind ? ' is-' + kind : '');
+        }
+
+        var next = items.filter(function (it) { return it.p.slug === p.slug; })[0];
+        var na = card.querySelector('[data-hcd-prod-next]');
+        if (na) {
+          if (next) {
+            na.textContent = next.m.label + ' · ' + next.d.getDate() + ' ' + MON[next.d.getMonth()].toLowerCase() + ' →';
+            na.href = next.m.toolSlug ? '/' + next.m.toolSlug : '/mi/' + p.slug;
+          } else {
+            na.textContent = 'Abrir ' + p.name + ' →';
+            na.href = '/mi/' + p.slug;
+          }
+        }
+      });
+    }
+
+    // ── 5 · Continuar donde dejaste (hc_recent + hc-history-<slug>) ──
+    function readLS(key) {
+      try { var a = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+    }
+    function validRecent(f) { return f && typeof f.s === 'string' && /^[a-z0-9][a-z0-9/-]*$/i.test(f.s); }
+    function relTime(iso) {
+      var t = Date.parse(iso); if (!isFinite(t)) return '';
+      var s = Math.floor((Date.now() - t) / 1000);
+      if (s < 60) return 'recién';
+      var m = Math.floor(s / 60); if (m < 60) return 'hace ' + m + ' min';
+      var h = Math.floor(m / 60); if (h < 24) return 'hace ' + h + ' h';
+      var d = Math.floor(h / 24); if (d < 30) return 'hace ' + d + (d === 1 ? ' día' : ' días');
+      var mo = Math.floor(d / 30); return 'hace ' + mo + (mo === 1 ? ' mes' : ' meses');
+    }
+    function lastResult(slug) {
+      var h = readLS('hc-history-' + slug);
+      if (!h.length) return null;
+      var e = h.slice().sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); })[0];
+      return (e && e.primary) ? { primary: String(e.primary), label: String(e.label || 'Tu resultado') } : null;
+    }
+    function renderCont() {
+      var wrap = qs('[data-hcd-cont]'); var empty = qs('[data-hcd-cont-empty]');
+      if (!wrap) return;
+      wrap.innerHTML = '';
+      var list = readLS('hc_recent').filter(validRecent).slice().reverse().slice(0, 3);
+      if (!list.length) { wrap.hidden = true; if (empty) empty.hidden = false; return; }
+      wrap.hidden = false; if (empty) empty.hidden = true;
+      list.forEach(function (f) {
+        var pid = (CFG.productByTool || {})[f.s];
+        var pname = pid ? (CFG.productName || {})[pid] : null;
+        var href = (f.l ? '/' + f.l : '') + '/' + f.s;
+        var card = document.createElement('article');
+        card.className = 'hcd-cont-card';
+
+        var top = document.createElement('div');
+        top.className = 'hcd-cont-top';
+        var eye = document.createElement('span');
+        eye.className = 'hcd-cont-eyebrow'; eye.textContent = pname || 'Calculadora';
+        var when = document.createElement('span');
+        when.className = 'hcd-cont-when'; when.textContent = relTime(f.d);
+        top.appendChild(eye); top.appendChild(when);
+
+        var h3 = document.createElement('h3');
+        h3.className = 'hcd-cont-title';
+        h3.textContent = (typeof f.t === 'string' && f.t) ? f.t : f.s.replace(/-/g, ' ');
+
+        card.appendChild(top); card.appendChild(h3);
+
+        var res = lastResult(f.s);
+        if (res) {
+          var row = document.createElement('div');
+          row.className = 'hcd-cont-row';
+          var rl = document.createElement('span'); rl.className = 'hcd-cont-row-lbl'; rl.textContent = res.label;
+          var rv = document.createElement('b'); rv.className = 'hcd-cont-row-val hcd-money'; rv.textContent = res.primary;
+          row.appendChild(rl); row.appendChild(rv);
+          card.appendChild(row);
+        } else {
+          var no = document.createElement('p');
+          no.className = 'hcd-cont-norow'; no.textContent = 'Todavía no guardaste un resultado acá.';
+          card.appendChild(no);
+        }
+
+        var a = document.createElement('a');
+        a.className = 'hcd-cont-cta'; a.href = href;
+        a.textContent = res ? 'Abrir y actualizar →' : 'Abrir →';
+        card.appendChild(a);
+        wrap.appendChild(card);
+      });
+    }
+    function renderFavsEmpty() {
+      var e = qs('[data-hcd-favs-empty]');
+      if (e) e.hidden = readLS('hc_favs').length > 0;
+    }
+
+    // ── 6 · Badges del sidebar / campana ────────────────────
+    function renderAlertsBits() {
+      var n = alertsCache.length;
+      var b = qs('[data-hcd-badge-alertas]');
+      if (b) { b.textContent = String(n); b.hidden = n === 0; }
+      var dot = qs('[data-hcd-bell-dot]');
+      if (dot) dot.hidden = n === 0;
+    }
+
+    // ── Drawer (mobile) ─────────────────────────────────────
+    var side = qs('[data-hcd-side]'), scrim = qs('[data-hcd-scrim]'), burger = qs('[data-hcd-open]');
+    function setDrawer(open) {
+      if (!side) return;
+      side.classList.toggle('is-open', open);
+      if (scrim) scrim.hidden = !open;
+      if (burger) burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      document.body.classList.toggle('hc-drawer-open', open);
+      if (open) { var f = side.querySelector('[data-hcd-close]'); if (f) f.focus(); }
+    }
+    if (burger) burger.addEventListener('click', function () { setDrawer(!side.classList.contains('is-open')); });
+    var closeBtn = qs('[data-hcd-close]'); if (closeBtn) closeBtn.addEventListener('click', function () { setDrawer(false); if (burger) burger.focus(); });
+    if (scrim) scrim.addEventListener('click', function () { setDrawer(false); });
+    qsa('.hcd-nav a').forEach(function (a) { a.addEventListener('click', function () { setDrawer(false); }); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && side && side.classList.contains('is-open')) { setDrawer(false); if (burger) burger.focus(); }
+    });
+
+    // ── Menú de usuario ─────────────────────────────────────
+    var ub = qs('[data-hcd-user-btn]'), um = qs('[data-hcd-user-menu]');
+    if (ub && um) {
+      ub.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var open = um.hidden;
+        um.hidden = !open;
+        ub.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      document.addEventListener('click', function (e) {
+        if (!um.hidden && !um.contains(e.target) && !ub.contains(e.target)) { um.hidden = true; ub.setAttribute('aria-expanded', 'false'); }
+      });
+    }
+
+    // ── Tema (misma política que Layout/Header: clave 'hc-theme') ──
+    var tb = qs('[data-hcd-theme]');
+    if (tb) tb.addEventListener('click', function () {
+      var cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      var next = cur === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('hc-theme', next); } catch (e) {}
+    });
+
+    // ── ⌘K / Ctrl+K → foco en el buscador ───────────────────
+    document.addEventListener('keydown', function (e) {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+        var input = qs('[data-hcd-search]');
+        if (input && !document.querySelector('[data-profile-view]').hidden) { e.preventDefault(); input.focus(); input.select(); }
+      }
+    });
+
+    // ── Scroll-spy del sidebar ──────────────────────────────
+    // Por posición, no por intersectionRatio: las secciones tienen alturas muy
+    // dispares (#resumen ~100px vs #mi-perfil ~2000px) y una sección más alta
+    // que el viewport nunca llega a un ratio alto → la chiquita ganaba siempre.
+    // Regla: gana la última sección cuyo tope ya pasó la línea de la topbar.
+    function initSpy() {
+      // En ORDEN DE DOCUMENTO (#alertas vive en la columna derecha, antes de
+      // #mi-perfil): el desempate del fondo depende de este orden.
+      var ids = ['resumen', 'mis-productos', 'alertas', 'mi-perfil', 'actividad'];
+      var secs = ids.map(function (id) { return document.getElementById(id); }).filter(Boolean);
+      if (!secs.length) return;
+      var links = {};
+      qsa('[data-hcd-link]').forEach(function (a) { links[a.getAttribute('data-hcd-link')] = a; });
+      var ticking = false;
+      function update() {
+        ticking = false;
+        var line = 100, best = null, bestTop = -Infinity, firstId = null, firstTop = Infinity;
+        secs.forEach(function (el) {
+          var top = el.getBoundingClientRect().top;
+          if (top < firstTop) { firstTop = top; firstId = el.id; }
+          if (top <= line && top > bestTop) { bestTop = top; best = el.id; }
+        });
+        best = best || firstId;
+        // Última sección: nunca llega a cruzar la línea porque no queda página
+        // para scrollear debajo. Si tocamos el fondo, gana la última visible.
+        if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+          var lastVisible = null;
+          secs.forEach(function (el) {
+            var r = el.getBoundingClientRect();
+            if (r.top < window.innerHeight && r.bottom > 0) lastVisible = el.id;
+          });
+          if (lastVisible) best = lastVisible;
+        }
+        ids.forEach(function (id) { if (links[id]) links[id].classList.toggle('is-active', id === best); });
+      }
+      function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', onScroll, { passive: true });
+      update();
+    }
+
+    // ── Orquestación ────────────────────────────────────────
+    var pending = false;
+    function renderProfileBits() {
+      var items = allMilestones();
+      renderStats();
+      renderNext(items);
+      renderProds(items);
+    }
+    function schedule() {
+      if (pending) return; pending = true;
+      requestAnimationFrame(function () { pending = false; renderProfileBits(); });
+    }
+
+    window.addEventListener('hc-dash-me', function (e) {
+      renderMe((e.detail && e.detail.email) || '');
+      renderProfileBits();
+      renderCont();
+      renderFavsEmpty();
+    });
+    window.addEventListener('hc-profile-change', schedule);
+    window.addEventListener('hc-dash-progress', function (e) {
+      var b = qs('[data-hcd-badge-perfil]');
+      var pct = (e.detail && e.detail.pct) || 0;
+      if (b) { b.textContent = pct + '%'; b.hidden = false; }
+    });
+    window.addEventListener('hc-dash-alerts', function (e) {
+      alertsCache = (e.detail && e.detail.alerts) || [];
+      renderAlertsBits();
+      renderProds(allMilestones());
+    });
+
+    // Primer pintado (hitos y recientes no dependen de la sesión).
+    renderProfileBits();
+    renderCont();
+    renderFavsEmpty();
+    initSpy();
+  })();
+</script>
+
+<style>
   .profile-page { }
-  .acct-wrap { max-width: 720px; margin: 0 auto; padding: 2rem 1rem 3rem; }
-  .profile-hero h1 { font-size: 1.75rem; margin: 0 0 0.5rem; }
-  .profile-lead { color: var(--text-muted); margin: 0 0 1.25rem; line-height: 1.5; }
   .profile-loading { color: var(--text-subtle); text-align: center; padding: 4rem 1rem; }
 
   /* ═══════════ Landing del login (mockup 2026-07-12, contextual) ═══════════
@@ -1152,11 +2153,8 @@ const inputType = (t: string) =>
   .login-benefits li span { flex: 0 0 auto; }
   .login-benefits strong { color: var(--text); font-weight: 600; }
 
-  /* Profile (logged in) — encabezado de cuenta (#19) */
-  .account-card {
-    display: flex; align-items: center; gap: 0.875rem;
-    padding: 0.875rem 1rem; background: var(--bg-muted); border-radius: var(--radius-sm); margin-bottom: 1.25rem;
-  }
+  /* Profile (logged in) — avatar de cuenta (#19). El dashboard lo reubica en el
+     pie del sidebar (.hcd-user) y ajusta tamaño/color allá. */
   .account-avatar {
     flex: 0 0 auto; width: 2.75rem; height: 2.75rem; border-radius: 50%;
     background: var(--accent, #2563eb); color: #fff; display: flex; align-items: center; justify-content: center;
@@ -1165,19 +2163,15 @@ const inputType = (t: string) =>
   .account-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
   .account-email { font-size: 0.9375rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .account-sub { font-size: 0.75rem; color: var(--text-subtle); }
-  .account-menu { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 0.15rem; }
   .link-subtle { color: var(--text-subtle) !important; font-size: 0.75rem !important; }
 
-  /* Toolbar (toggle ocultar montos #16) */
-  .profile-toolbar { display: flex; justify-content: flex-end; margin: 0 0 0.75rem; }
+  /* Toggle ocultar montos (#16) — vive en la topbar del dashboard (.hcd-amounts). */
   .amounts-toggle { display: inline-flex; align-items: center; gap: 0.4rem; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.35rem 0.75rem; font: inherit; font-size: 0.75rem; color: var(--text-muted); cursor: pointer; }
   .amounts-toggle:hover { border-color: var(--accent, #2563eb); color: var(--accent, #2563eb); }
   .profile-form.amounts-hidden input[data-money] { filter: blur(6px); }
   .profile-form.amounts-hidden input[data-money]:focus { filter: none; }
 
   /* Progreso del perfil (#7) */
-  .profile-progress { margin: 0 0 1.5rem; }
-  .profile-progress-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.4rem; }
   .profile-progress-label { font-size: 0.8125rem; font-weight: 600; color: var(--text); }
   .profile-progress-pct { font-size: 0.8125rem; font-weight: 700; color: var(--accent, #2563eb); }
   .profile-progress-track { height: 8px; background: var(--bg-muted); border-radius: 999px; overflow: hidden; }
@@ -1232,10 +2226,8 @@ const inputType = (t: string) =>
   .profile-del { flex: 0 0 auto; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-subtle); width: 2rem; height: 2rem; cursor: pointer; }
   .profile-del:hover { border-color: var(--danger); color: var(--danger); }
   .profile-meta { margin: 0; font-size: 0.6875rem; color: var(--text-subtle); }
-  /* Alertas de cambios normativos */
-  .alerts-block { margin-top: 2rem; }
-  .alerts-h { font-size: 1.05rem; margin: 0 0 0.25rem; }
-  .alerts-intro { font-size: 0.8125rem; color: var(--text-muted); margin: 0 0 1rem; line-height: 1.5; }
+  /* Alertas de cambios normativos. El markup de cada item lo crea loadAlerts()
+     por DOM API → su estilo vive en el bloque global (.hcd .alert-item…). */
   .alerts-empty { font-size: 0.8125rem; color: var(--text-subtle); line-height: 1.5; padding: 0.875rem 1rem; background: var(--bg-muted); border-radius: var(--radius-sm); margin: 0; }
   .alerts-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
   .alert-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-sm); }
