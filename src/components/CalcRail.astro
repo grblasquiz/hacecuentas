@@ -20,6 +20,7 @@
 import relatedAutoEs from '../lib/related-auto.json';
 import relatedAutoEn from '../lib/related-auto-en.json';
 import relatedAutoPt from '../lib/related-auto-pt.json';
+import { canDistributeCalc } from '../lib/content-policy';
 
 export interface RailItem {
   icon?: string;
@@ -67,20 +68,57 @@ function shortenLabel(s: string): string {
   return out.charAt(0).toUpperCase() + out.slice(1);
 }
 
+const modules = lang === 'en' ? enModules : lang === 'pt' ? ptModules : esModules;
+const everyCalc = Object.values(modules)
+  .map((m: any) => m.default || m)
+  .filter((c: any) => c && c.slug);
+/** Todos los slugs de calc, distribuibles o no: para distinguir "calc excluida
+ *  por política" de "href que no es una calc" (hubs, categorías, estáticas). */
+const allSlugs = new Set<string>(everyCalc.map((c: any) => c.slug));
+// OJO: filtrar por `canDistributeCalc()`, NO por el campo crudo `c.noindex`. La
+// política DERIVA la restricción (`ymylRisk:'high'` sin revisor válido) y además
+// excluye las podadas; una calc restringida puede no tener `noindex:true` escrito
+// a mano en el JSON y colarse igual. Ver src/lib/content-policy.ts.
+const bySlug = new Map<string, any>(
+  everyCalc.filter((c: any) => canDistributeCalc(c)).map((c: any) => [c.slug, c])
+);
+
+/**
+ * Deja pasar sólo lo enlazable: si el href apunta a una calc que la política
+ * excluye (restringida / noindex / podada), se cae. Los hrefs que NO son calcs
+ * (hubs como /mundial-2026, /calculadora-cientifica, categorías) se mantienen:
+ * no los gobierna content-policy.
+ *
+ * Esto vale también para las listas CURADAS a mano (`items`/`pinned`): son
+ * justamente las que esquivan el filtro que sí aplican las relacionadas
+ * automáticas, y es como el rail de IMC terminó enlazando una calc desactivada
+ * por el gate YMYL.
+ */
+function linkable(it: RailItem): boolean {
+  // `bySlug`/`allSlugs` tienen el slug pelado, pero los href de en/pt vienen con
+  // prefijo de locale: sin sacarlo, el filtro no matchearía nunca y dejaría pasar
+  // todo (fail-open silencioso).
+  const slug = (it.slug || it.href)
+    .replace(/^\/(en|pt)\//, '')
+    .replace(/^\//, '')
+    .replace(/\/$/, '');
+  // `bySlug` ya sólo tiene distribuibles: si el slug es de una calc conocida y
+  // no está acá, es porque la política la excluyó.
+  return bySlug.has(slug) || !allSlugs.has(slug);
+}
+
 let rail: RailItem[];
 if (items && items.length) {
-  rail = items.slice(0, limit).map((it) => ({
-    ...it,
-    slug: it.slug || it.href.replace(/^\//, ''),
-  }));
+  rail = items
+    .filter(linkable)
+    .slice(0, limit)
+    .map((it) => ({
+      ...it,
+      slug: it.slug || it.href.replace(/^\//, ''),
+    }));
 } else {
   // relatedSlugs (curado) > related-auto (TF-IDF). Sin relleno por categoría:
   // mejor un rail más corto pero 100% relevante.
-  const modules = lang === 'en' ? enModules : lang === 'pt' ? ptModules : esModules;
-  const allCalcs = Object.values(modules)
-    .map((m: any) => m.default || m)
-    .filter((c: any) => c && c.slug && !c.noindex);
-  const bySlug = new Map<string, any>(allCalcs.map((c: any) => [c.slug, c]));
   const relatedAuto = lang === 'en' ? relatedAutoEn : lang === 'pt' ? relatedAutoPt : relatedAutoEs;
   const prefix = lang === 'en' ? '/en/' : lang === 'pt' ? '/pt/' : '/';
 
@@ -109,6 +147,7 @@ if (items && items.length) {
 if (pinned && pinned.length) {
   const have = new Set(rail.map((r) => r.href));
   const pins = pinned
+    .filter(linkable)
     .filter((p) => p.href.replace(/^\//, '') !== currentSlug && !have.has(p.href))
     .map((p) => ({ ...p, slug: p.slug || p.href.replace(/^\//, '') }));
   rail = [...pins, ...rail].slice(0, limit);
