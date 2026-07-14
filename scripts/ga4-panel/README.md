@@ -22,7 +22,16 @@ El plist vive en `~/Library/LaunchAgents/com.hacecuentas.ga4-panel.plist` (fuera
 del repo, como los otros 7 agents de hacecuentas). Para recrearlo en otra máquina,
 copiar el bloque de abajo.
 
-## Cómo leerlo — tres trampas que el panel ya desactiva
+## Cómo leerlo — cuatro trampas que el panel ya desactiva
+
+**0. `sessions` NO es aditiva sobre las dimensiones — nunca sumar filas para un
+total.** GA4 cuenta una sesión en cada combinación que toca. Medido: sin
+dimensiones **1040** (el real) · sumando `hour` 1069 (+3%) · sumando canales
+**1535 (+48%)**. El +48% es sólo del día abierto (en días cerrados: 0,0%); el +3%
+de `hour` es estructural (sesiones a caballo de dos horas). Por eso cada número
+sale de la query con la mínima dimensionalidad que lo responde — `credited` sin
+`hour` para los totales, `series` con `hour` sólo para la curva. Si agregás una
+métrica, contra-chequeala contra `dimensions=[]`.
 
 **1. El corte va en la última hora COMPLETA.** GA4 tiene 1–2 h de lag, así que la
 última hora con datos está a medio llenar: comparar sus 61 sesiones contra los 66
