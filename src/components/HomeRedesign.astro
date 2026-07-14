@@ -36,6 +36,29 @@ body = body
   .replace(/Más de [\d.]+\+? herramientas/g, `Más de ${TOTAL_PLAIN} herramientas`)
   .replace(/(<strong>)[\d.]+\+?(<\/strong><small>herramientas disponibles)/g, `$1${TOTAL_DISPLAY}$2`)
   .replace(/(<strong>)\d+(<\/strong><small>categorías)/g, `$1${CATEGORY_COUNT}$2`);
+
+// Blog "Últimas notas": el mockup traía 6 notas HARDCODEADAS (fechas congeladas
+// al 10-jul + 2 titulares del Mundial ya vencidos "octavos el finde"). Un feed
+// estático de "últimas notas" que no se mueve es señal de falta de revisión
+// editorial (AdSense) y muestra contenido temporal vencido. Lo reemplazamos por
+// las notas reales más recientes que ya computa la home (recentPosts, ordenadas
+// por fecha y filtradas de 410-gone). Si aparece una nota del Mundial ahora es un
+// post real con su fecha, no un titular fabricado que envejece en la portada.
+const { recentPosts = [] } = Astro.props as {
+  recentPosts?: Array<{ slug: string; title: string; emoji?: string; date?: string }>;
+};
+if (recentPosts.length) {
+  const esc = (s: string) =>
+    String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const blogCards = recentPosts
+    .slice(0, 6)
+    .map(
+      (p) =>
+        `<article class="blogFull" data-blog-slug="${esc(p.slug)}"><b>${esc(p.title)}</b><small>${esc(p.date || '')}</small></article>`,
+    )
+    .join('');
+  body = body.replace(/<div class="blogGridFull">[\s\S]*?<\/div>/, `<div class="blogGridFull">${blogCards}</div>`);
+}
 ---
 
 <div class="approved-home-v7" set:html={body}></div>
@@ -402,7 +425,10 @@ body = body
       const u = pick(GUIDES, labelOf(el)); if (u) setHref(el, u);
     });
     // Blog → índice del blog
-    root.querySelectorAll('.blogFull').forEach((el) => setHref(el, '/blog'));
+    root.querySelectorAll('.blogFull').forEach((el) => {
+      const s = el.getAttribute('data-blog-slug');
+      setHref(el, s ? '/blog/' + s : '/blog');
+    });
     // Chips del hero (Sueldo/Aguinaldo/Alquiler/Deudas)
     root.querySelectorAll('.askBottom .chip').forEach((el) => {
       const u = pick(CALCS, el.textContent); if (u) setHref(el, u);

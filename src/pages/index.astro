@@ -1216,11 +1216,11 @@ const schema = {
 
       // Datos en vivo (dólar MEP, inflación, UVA) — fetch progresivo con fallback.
       // Si falla (CORS/red), quedan los "···" y el link a /valores-bcra.
-      var panel = document.querySelector('[data-hoy-panel]');
-      if (!panel || panel.dataset.hoyWired) return;
-      panel.dataset.hoyWired = '1';
+      var panels = document.querySelectorAll('[data-hoy-panel]:not([data-hoy-wired])');
+      if (!panels.length) return;
+      panels.forEach(function (p) { p.setAttribute('data-hoy-wired', '1'); });
       var fmt = function (n, dec) { return Number(n).toLocaleString('es-AR', { minimumFractionDigits: dec || 0, maximumFractionDigits: dec || 0 }); };
-      var put = function (k, v) { var n = panel.querySelector('[data-hoy="' + k + '"]'); if (n) n.textContent = v; };
+      var put = function (k, v) { document.querySelectorAll('[data-hoy="' + k + '"]').forEach(function (n) { n.textContent = v; }); };
       var grab = function (url) { return fetch(url, { mode: 'cors' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); };
       grab('https://dolarapi.com/v1/dolares').then(function (arr) {
         if (!Array.isArray(arr)) return;
