@@ -4,7 +4,6 @@ export const prerender = true;
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import Newsletter from '../../components/Newsletter.astro';
 import PreferredSourceCta from '../../components/PreferredSourceCta.astro';
 import { filterByIncremental } from '../../lib/incremental';
 
@@ -25,12 +24,7 @@ const siteUrl = 'https://hacecuentas.com';
 // (blog-<slug>.jpg, 1200×630, JPG). Discover pondera fuerte la imagen y prefiere
 // JPG ≥1200px. El generador produce imagen para TODO post con slug/title/
 // description (que son required acá), así que siempre existe en el deploy.
-// No usamos node:fs para chequear: el adapter de Cloudflare corre las páginas
-// en workerd y node:fs rompe el build. og-default.png queda como red de
-// seguridad sólo si alguien borra el JPG a mano.
-// heroImage (foto/ilustración real, ≥1200px) tiene prioridad para og:image + schema
-// image: Discover es image-first y prefiere imágenes reales antes que la card de texto.
-// Si el post no define heroImage, caemos a la OG card de marca (blog-<slug>.jpg).
+// heroImage (foto/ilustración real, ≥1200px) tiene prioridad para og:image + schema.
 const ogImage = (post.heroImage as string)?.trim() || `/og/blog-${post.slug}.jpg`;
 const ogImageAbs = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`;
 
@@ -46,6 +40,8 @@ const relatedCalcs = (post.relatedCalcs || [])
 // ─── Category labels ─────────────────────────────────────────────────────────
 const categoryLabels: Record<string, string> = {
   finanzas: 'Finanzas',
+  fiscal: 'Impuestos',
+  economia: 'Economía',
   negocios: 'Negocios',
   negocio: 'Negocios',
   salud: 'Salud',
@@ -53,6 +49,7 @@ const categoryLabels: Record<string, string> = {
   deportes: 'Deportes',
   viajes: 'Viajes',
   vida: 'Vida cotidiana',
+  hogar: 'Hogar',
   mascotas: 'Mascotas',
   matematica: 'Matemática',
   construccion: 'Construcción',
@@ -66,28 +63,6 @@ const categoryLabels: Record<string, string> = {
 
 const categoryLabel = categoryLabels[post.category] || post.category;
 
-// ─── Category badge colors ────────────────────────────────────────────────────
-const categoryColors: Record<string, { bg: string; text: string }> = {
-  finanzas:       { bg: '#eff6ff', text: '#1d4ed8' },
-  negocios:       { bg: '#f0fdf4', text: '#15803d' },
-  negocio:        { bg: '#f0fdf4', text: '#15803d' },
-  salud:          { bg: '#fdf4ff', text: '#9333ea' },
-  marketing:      { bg: '#fff7ed', text: '#c2410c' },
-  deportes:       { bg: '#ecfdf5', text: '#059669' },
-  viajes:         { bg: '#fff1f2', text: '#be123c' },
-  vida:           { bg: '#f0f9ff', text: '#0369a1' },
-  mascotas:       { bg: '#fefce8', text: '#854d0e' },
-  matematica:     { bg: '#f5f3ff', text: '#6d28d9' },
-  construccion:   { bg: '#fafaf9', text: '#78716c' },
-  cocina:         { bg: '#fff7ed', text: '#c2410c' },
-  educacion:      { bg: '#eff6ff', text: '#1d4ed8' },
-  automotor:      { bg: '#f8fafc', text: '#475569' },
-  tecnologia:     { bg: '#f0fdf4', text: '#15803d' },
-  'medio-ambiente': { bg: '#f0fdf4', text: '#166534' },
-  electronica:    { bg: '#eff6ff', text: '#1e40af' },
-};
-const catColor = categoryColors[post.category] || { bg: 'var(--accent-soft)', text: 'var(--accent)' };
-
 // ─── Date formatting ──────────────────────────────────────────────────────────
 function formatDate(iso: string): string {
   const d = new Date(iso + 'T00:00:00Z');
@@ -95,6 +70,8 @@ function formatDate(iso: string): string {
 }
 const dateFormatted = formatDate(post.date);
 const dateISO = new Date(post.date + 'T00:00:00Z').toISOString();
+const reviewedRaw = post.updatedDate || post.lastReviewed || post.date;
+const reviewedFormatted = formatDate(reviewedRaw);
 
 // ─── Autor a mostrar ──────────────────────────────────────────────────────────
 // Los JSON viejos traen author genérico ("Hacé Cuentas", "Equipo editorial…"),
@@ -104,6 +81,13 @@ const rawAuthor = (post.author || '').trim();
 const displayAuthor = (!rawAuthor || /hac[eé] cuentas|equipo/i.test(rawAuthor))
   ? 'Martín Rodríguez'
   : rawAuthor;
+const authorInitials = displayAuthor
+  .split(/\s+/)
+  .map((w: string) => w[0])
+  .filter(Boolean)
+  .slice(0, 2)
+  .join('')
+  .toUpperCase();
 
 // ─── TOC: parse h2 headings from HTML content ─────────────────────────────────
 interface TocItem { id: string; text: string }
@@ -115,7 +99,7 @@ function buildToc(html: string): TocItem[] {
     const rawText = match[1].replace(/<[^>]+>/g, '').trim();
     const id = rawText
       .toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .slice(0, 80);
@@ -124,55 +108,96 @@ function buildToc(html: string): TocItem[] {
   return toc;
 }
 
-// Inject IDs into h2 tags in content so anchor links work
+// Inject IDs into h2 tags in content so anchor links work (skips h2 que ya traen id)
 function injectH2Ids(html: string, toc: TocItem[]): string {
   let idx = 0;
   return html.replace(/<h2([^>]*)>/gi, (_match: string, attrs: string) => {
     const item = toc[idx++];
     if (!item) return `<h2${attrs}>`;
-    // Avoid double-injecting if id already present
     if (/\bid=/.test(attrs)) return `<h2${attrs}>`;
     return `<h2${attrs} id="${item.id}">`;
   });
 }
 
-const toc = buildToc(post.content || '');
-const contentWithIds = injectH2Ids(post.content || '', toc);
+const autoToc = buildToc(post.content || '');
+const contentWithIds = injectH2Ids(post.content || '', autoToc);
 
-// ─── CTA contextual inline ────────────────────────────────────────────────
-// El bloque "Calculadoras relacionadas" del pie es genérico y llega tarde.
-// Insertamos un CTA a la calculadora principal (relatedCalcs[0]) justo después
-// del primer párrafo: contextual ("hacé el cálculo con tus números"), no un
-// "más calculadoras" al final. Se inyecta en el HTML del cuerpo.
+// TOC mostrado: preferimos el campo tableOfContents (títulos limpios + anchors
+// que ya matchean los id del contenido). Si no existe, caemos al parseo de H2.
+const tocItems: TocItem[] = (post.tableOfContents && post.tableOfContents.length)
+  ? post.tableOfContents.map((t: any) => ({ id: t.anchor, text: t.title }))
+  : autoToc;
+
+// ─── Datos de marca / mockup ─────────────────────────────────────────────────
+const kickerStatus = /^(informe|actualizacion|novedades|noticias)/i.test(post.slug)
+  ? 'Informe'
+  : 'Guía actualizada';
+
+const keyFacts: Array<{ label: string; value: string }> = post.keyFacts || [];
+const keyTakeaways: string[] = post.keyTakeaways || [];
+const sources: Array<{ title: string; url: string }> = post.sources || [];
+const verified = sources.length > 0;
+
+// ─── CTAs a la calculadora principal ──────────────────────────────────────────
 const primaryCalc: any = relatedCalcs[0];
-const ctaVerb = post.category === 'salud'
-  ? 'Calculalo para tu caso'
-  : (['finanzas', 'economia', 'fiscal', 'negocios'].includes(post.category)
-      ? 'Hacé el cálculo con tus números'
-      : 'Probalo con tus datos');
-const primaryCalcLabel = primaryCalc
-  ? String(primaryCalc.h1 || primaryCalc.title || '').split('|')[0].trim()
+const cleanCalcName = (c: any) => String(c?.h1 || c?.title || '').split('|')[0].trim();
+const calcCta = {
+  eyebrow: post.calcCta?.eyebrow || 'Calculadora recomendada',
+  title: post.calcCta?.title || (primaryCalc ? cleanCalcName(primaryCalc) : ''),
+  desc: post.calcCta?.desc
+    || (primaryCalc?.description ? String(primaryCalc.description).split('|')[0].trim().slice(0, 150) : ''),
+  label: post.calcCta?.label || 'Usar la calculadora',
+};
+const sidebarCta = {
+  title: post.sidebarCta?.title || '¿Necesitás el número exacto?',
+  desc: post.sidebarCta?.desc || 'Hacé el cálculo gratis con tus propios datos.',
+  label: post.sidebarCta?.label || 'Calcular ahora',
+};
+const answerCtaLabel = post.answerCtaLabel || 'Ir a la calculadora';
+
+// ─── Inyección de bloques de marca en el cuerpo ───────────────────────────────
+// "Lo esencial, en 30 segundos" (keyTakeaways) tras el 1er párrafo, y la tarjeta
+// violeta de la calculadora justo antes del primer H2 — como en el mockup.
+const summaryHtml = keyTakeaways.length
+  ? `<aside class="hc-summary" role="note">`
+    + `<div class="hc-summary__head"><span class="hc-summary__icon" aria-hidden="true">+</span>`
+    + `<span class="hc-summary__title">Lo esencial, en 30 segundos</span></div>`
+    + `<ul class="hc-summary__list">`
+    + keyTakeaways.map((t) => `<li>${t}</li>`).join('')
+    + `</ul></aside>`
   : '';
-const inlineCta = primaryCalc
-  ? `<aside class="inline-cta" role="note">`
-    + `<span class="inline-cta__icon" aria-hidden="true">${primaryCalc.icon || '🧮'}</span>`
-    + `<span class="inline-cta__txt"><strong>${ctaVerb}</strong>`
-    + `<a href="/${primaryCalc.slug}">${primaryCalcLabel} →</a></span>`
+
+const calcCardHtml = primaryCalc
+  ? `<aside class="hc-calc-cta">`
+    + `<div class="hc-calc-cta__body">`
+    + `<span class="hc-calc-cta__eyebrow">${calcCta.eyebrow}</span>`
+    + `<span class="hc-calc-cta__title">${calcCta.title}</span>`
+    + (calcCta.desc ? `<span class="hc-calc-cta__desc">${calcCta.desc}</span>` : '')
+    + `<a class="hc-calc-cta__btn" href="/${primaryCalc.slug}">${calcCta.label} <span aria-hidden="true">→</span></a>`
+    + `</div>`
+    + `<span class="hc-calc-cta__glyph" aria-hidden="true">${primaryCalc.icon || '🧮'}</span>`
     + `</aside>`
   : '';
-// Insertar tras el primer </p>; si no hay párrafo, al inicio del cuerpo.
+
 let bodyHtml = contentWithIds;
-if (inlineCta) {
-  const p = bodyHtml.indexOf('</p>');
-  bodyHtml = p !== -1
-    ? bodyHtml.slice(0, p + 4) + inlineCta + bodyHtml.slice(p + 4)
-    : inlineCta + bodyHtml;
+{
+  const h2Pos = bodyHtml.search(/<h2/i);
+  const firstPEnd = bodyHtml.indexOf('</p>');
+  const inserts: Array<{ pos: number; html: string }> = [];
+  if (summaryHtml && firstPEnd !== -1 && (h2Pos === -1 || firstPEnd < h2Pos)) {
+    inserts.push({ pos: firstPEnd + 4, html: summaryHtml });
+  }
+  if (calcCardHtml) {
+    inserts.push({ pos: h2Pos !== -1 ? h2Pos : bodyHtml.length, html: calcCardHtml });
+  }
+  inserts
+    .sort((a, b) => b.pos - a.pos)
+    .forEach((ins) => {
+      bodyHtml = bodyHtml.slice(0, ins.pos) + ins.html + bodyHtml.slice(ins.pos);
+    });
 }
 
 // ─── Schema.org ──────────────────────────────────────────────────────────────
-// NewsArticle si es un informe periódico (datos económicos, news real).
-// Mejora elegibilidad para Google Discover + Top Stories carousel.
-// Detección: slug contiene "informe", "actualizacion", "novedades", o tags news.
 const isNews = /^(informe|actualizacion|novedades|noticias)/i.test(post.slug) ||
                (post.tags || []).some((t: string) => /news|informe|actualidad/i.test(t));
 const articleType = isNews ? 'NewsArticle' : 'BlogPosting';
@@ -183,7 +208,7 @@ const articleSchema: any = {
   headline: post.title,
   description: post.description,
   datePublished: dateISO,
-  dateModified: dateISO,
+  dateModified: post.updatedDate ? new Date(post.updatedDate + 'T00:00:00Z').toISOString() : dateISO,
   author: displayAuthor === 'Martín Rodríguez' ? {
     '@type': 'Person',
     '@id': `${siteUrl}/autores/martin-rodriguez#person`,
@@ -207,13 +232,9 @@ const articleSchema: any = {
     '@type': 'WebPage',
     '@id': `${siteUrl}/blog/${post.slug}`,
   },
-  // Imagen OG/Discover real por post (1200×630 JPG, generada en prebuild).
-  // Antes eran 3x og-default.png placeholder con TODOs — Discover descartaba la
-  // imagen por genérica. Ahora cada post tiene su card de marca con el titular.
   image: [ogImageAbs],
   inLanguage: 'es-AR',
   keywords: (post.seoKeywords || []).join(', '),
-  // articleBody para que Google Discover entienda contenido completo
   articleBody: post.content?.replace(/<[^>]+>/g, '').slice(0, 3000),
   wordCount: post.content?.replace(/<[^>]+>/g, '').split(/\s+/).filter(Boolean).length || 0,
 };
@@ -222,24 +243,9 @@ const breadcrumbSchema = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    {
-      '@type': 'ListItem',
-      position: 1,
-      name: 'Inicio',
-      item: siteUrl,
-    },
-    {
-      '@type': 'ListItem',
-      position: 2,
-      name: 'Blog',
-      item: `${siteUrl}/blog`,
-    },
-    {
-      '@type': 'ListItem',
-      position: 3,
-      name: post.title,
-      item: `${siteUrl}/blog/${post.slug}`,
-    },
+    { '@type': 'ListItem', position: 1, name: 'Inicio', item: siteUrl },
+    { '@type': 'ListItem', position: 2, name: 'Blog', item: `${siteUrl}/blog` },
+    { '@type': 'ListItem', position: 3, name: post.title, item: `${siteUrl}/blog/${post.slug}` },
   ],
 };
 
@@ -250,15 +256,11 @@ const faqSchema = post.faq && post.faq.length > 0
       mainEntity: post.faq.map((item: { q: string; a: string }) => ({
         '@type': 'Question',
         name: item.q,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: item.a,
-        },
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
       })),
     }
   : null;
 
-// Combine all schemas into a @graph
 const pageSchema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -267,6 +269,12 @@ const pageSchema = {
     ...(faqSchema ? [faqSchema] : []),
   ],
 };
+
+const showToc = tocItems.length >= 3;
+const showSidebar = showToc || !!primaryCalc;
+const isYmylTop = ['finanzas', 'negocios', 'salud', 'familia'].includes(post.category);
+const isYmylBottom = ['finanzas', 'negocios'].includes(post.category);
+// Breadcrumb corto: último crumb = categoría (como en el mockup), no el título largo.
 ---
 
 <Layout
@@ -289,75 +297,88 @@ const pageSchema = {
 >
   <Header slot="header" />
 
-  <div class="blog-wrap">
+  <div class="bp">
 
     <!-- Breadcrumbs -->
-    <nav class="breadcrumb" aria-label="Breadcrumb">
+    <nav class="bp-crumb" aria-label="Breadcrumb">
       <ol>
         <li><a href="/">Inicio</a></li>
         <li aria-hidden="true" class="sep">›</li>
         <li><a href="/blog">Blog</a></li>
         <li aria-hidden="true" class="sep">›</li>
-        <li aria-current="page">{post.title}</li>
+        <li aria-current="page">{categoryLabel}</li>
       </ol>
     </nav>
 
-    <div class="blog-layout">
+    <!-- Hero -->
+    <header class="bp-hero">
+      <p class="bp-kicker">
+        <span class="bp-kicker__cat">{categoryLabel}</span>
+        <span class="bp-kicker__dot" aria-hidden="true">·</span>
+        <span class="bp-kicker__status">{kickerStatus}</span>
+      </p>
+      <h1 class="bp-title">{post.h1 || String(post.title).split('|')[0].trim()}</h1>
+      <p class="bp-sub">{post.lead || post.description}</p>
+      <div class="bp-byline">
+        <span class="bp-avatar" aria-hidden="true">{authorInitials}</span>
+        <div class="bp-byline__text">
+          {displayAuthor === 'Martín Rodríguez' ? (
+            <a href="/autores/martin-rodriguez" rel="author" class="bp-byline__author">{displayAuthor}</a>
+          ) : (
+            <span class="bp-byline__author">{displayAuthor}</span>
+          )}
+          <div class="bp-byline__meta">
+            <time datetime={dateISO}>{dateFormatted}</time>
+            <span class="bp-byline__dot" aria-hidden="true">·</span>
+            <span>{post.readingTime} min</span>
+            {verified && (
+              <>
+                <span class="bp-byline__dot" aria-hidden="true">·</span>
+                <span class="bp-verified">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  Verificado con fuentes oficiales
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Answer bar (respuesta corta + CTA) -->
+    {keyFacts.length > 0 && (
+      <div class="bp-answer">
+        <div class="bp-answer__facts">
+          {keyFacts.map((f) => (
+            <div class="bp-fact">
+              <span class="bp-fact__label">{f.label}</span>
+              <span class="bp-fact__value">{f.value}</span>
+            </div>
+          ))}
+        </div>
+        {primaryCalc && (
+          <a class="bp-answer__cta" href={`/${primaryCalc.slug}`}>
+            {answerCtaLabel} <span aria-hidden="true">→</span>
+          </a>
+        )}
+      </div>
+    )}
+
+    <div class={`bp-grid${showSidebar ? '' : ' bp-grid--full'}`}>
 
       <!-- Main column -->
-      <article class="article">
+      <article class="bp-main">
 
-        <!-- Article header -->
-        <header class="article-header">
-          {post.heroImage ? (
-            <figure class="hero-figure">
-              <img class="hero-image" src={post.heroImage} alt={post.h1 || post.title} width="1200" height="630" loading="eager" fetchpriority="high" decoding="async" />
-              {post.heroImageCredit && <figcaption class="hero-credit" set:html={post.heroImageCredit} />}
-            </figure>
-          ) : (
-            <div class="hero-emoji" aria-hidden="true"><span>{post.heroEmoji || '📝'}</span></div>
-          )}
-          <span
-            class="cat-badge"
-            style={`background:${catColor.bg};color:${catColor.text}`}
-          >{categoryLabel}</span>
-          <h1>{post.h1 || post.title}</h1>
-          <p class="article-description">{post.description}</p>
-          {post.webStory && (
-            <a class="story-chip" href={post.webStory} style="display:inline-block;margin:0.1rem 0 0;font-size:0.9rem;font-weight:600;color:#2563eb;text-decoration:none">▶ Ver esta nota como historia</a>
-          )}
-          <div class="meta-line">
-            <span class="meta-item">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-              <time datetime={dateISO}>{dateFormatted}</time>
-            </span>
-            <span class="meta-sep" aria-hidden="true">·</span>
-            <span class="meta-item">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-              {post.readingTime} min de lectura
-            </span>
-            <span class="meta-sep" aria-hidden="true">·</span>
-            <span class="meta-item">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              {displayAuthor === 'Martín Rodríguez' ? (
-                <a href="/autores/martin-rodriguez" rel="author" class="meta-author-link">{displayAuthor}</a>
-              ) : (
-                displayAuthor
-              )}
-            </span>
-          </div>
-        </header>
-
-        <!-- TOC mobile (inline box, shown above content on small screens) -->
-        {toc.length >= 3 && (
-          <nav class="toc-mobile" aria-label="Tabla de contenidos">
-            <details open>
+        <!-- TOC mobile -->
+        {showToc && (
+          <nav class="bp-toc-mobile" aria-label="Tabla de contenidos">
+            <details>
               <summary>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-                Contenidos
+                En este artículo
               </summary>
-              <ol class="toc-list">
-                {toc.map((item) => (
+              <ol class="bp-toc__list">
+                {tocItems.map((item) => (
                   <li><a href={`#${item.id}`}>{item.text}</a></li>
                 ))}
               </ol>
@@ -365,799 +386,735 @@ const pageSchema = {
           </nav>
         )}
 
-        <!-- Disclaimer pre-content para posts YMYL (finanzas, salud, etc.) -->
-        {['finanzas', 'negocios', 'salud', 'familia'].includes(post.category) && (
-          <aside class="post-disclaimer" role="note">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="16" x2="12" y2="12"/>
-              <line x1="12" y1="8" x2="12.01" y2="8"/>
-            </svg>
+        <!-- Disclaimer YMYL -->
+        {isYmylTop && (
+          <aside class="bp-disclaimer" role="note">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             <p>
               <strong>Información educativa, no asesoramiento profesional.</strong> Este artículo es contenido periodístico basado en fuentes públicas. No constituye asesoramiento {post.category === 'salud' ? 'médico' : 'financiero en inversión (Ley 26.831, RG CNV 840/2020) ni contable'}. Para decisiones importantes consultá con un/a {post.category === 'salud' ? 'profesional de la salud matriculado/a' : 'contador/a o asesor/a financiero/a matriculado/a'}. <a href="/aviso-legal">Leer aviso legal</a>.
             </p>
           </aside>
         )}
 
-        <!-- Article body -->
-        <div class="article-body prose" set:html={bodyHtml} />
+        <!-- Article body (con bloques de marca inyectados) -->
+        <div class="bp-body prose" set:html={bodyHtml} />
 
-        <!-- Disclaimer post-content en YMYL -->
-        {['finanzas', 'negocios'].includes(post.category) && (
-          <aside class="post-disclaimer-bottom" role="note">
-            <p>
-              <strong>📌 Recordá:</strong> Hacé Cuentas no es un asesor financiero registrado ante la CNV. Este contenido es educativo y no sustituye el consejo profesional. Las decisiones de inversión implican riesgo de pérdida de capital y deben tomarse consultando con un profesional matriculado.
-            </p>
+        {isYmylBottom && (
+          <aside class="bp-disclaimer bp-disclaimer--bottom" role="note">
+            <p><strong>📌 Recordá:</strong> Hacé Cuentas no es un asesor financiero registrado ante la CNV. Este contenido es educativo y no sustituye el consejo profesional. Las decisiones de inversión implican riesgo de pérdida de capital y deben tomarse consultando con un profesional matriculado.</p>
           </aside>
         )}
 
-        <!-- Related calcs section -->
-        {relatedCalcs.length > 0 && (
-          <section class="related-calcs-section">
-            <h2>Calculadoras relacionadas</h2>
-            <div class="related-calcs-grid">
-              {relatedCalcs.map((calc: any) => (
-                <a href={`/${calc.slug}`} class="calc-card">
-                  <div class="calc-card-icon">{calc.icon}</div>
-                  <div class="calc-card-body">
-                    <div class="calc-card-cat">
-                      {categoryLabels[calc.category] || calc.category}
-                    </div>
-                    <div class="calc-card-title">{calc.h1}</div>
-                    {calc.description && (
-                      <div class="calc-card-desc">{calc.description.slice(0, 90)}{calc.description.length > 90 ? '…' : ''}</div>
-                    )}
-                  </div>
-                  <svg class="calc-card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+        <!-- Fuentes oficiales -->
+        {sources.length > 0 && (
+          <section class="bp-sources">
+            <p class="bp-eyebrow">Transparencia editorial</p>
+            <h2 class="bp-sources__title">Fuentes oficiales</h2>
+            <p class="bp-sources__desc">Última revisión editorial: {reviewedFormatted}. Contrastamos montos y procedimiento con documentación pública.</p>
+            <div class="bp-sources__list">
+              {sources.map((s) => (
+                <a class="bp-source" href={s.url} target="_blank" rel="noopener nofollow">
+                  <span class="bp-source__title">{s.title}</span>
+                  <svg class="bp-source__ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                 </a>
               ))}
             </div>
           </section>
         )}
 
-        <!-- FAQ section -->
+        <!-- FAQ -->
         {post.faq && post.faq.length > 0 && (
-          <section class="faq-section">
-            <h2>Preguntas frecuentes</h2>
-            <div class="faq-list">
+          <section class="bp-faq">
+            <h2 class="bp-faq__title">Preguntas frecuentes</h2>
+            <div class="bp-faq__list">
               {post.faq.map((item: { q: string; a: string }, i: number) => (
-                <details class="faq-item" open={i === 0}>
-                  <summary class="faq-q">
+                <details class="bp-faq__item" open={i === 0}>
+                  <summary class="bp-faq__q">
                     <span>{item.q}</span>
-                    <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                    <svg class="bp-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
                   </summary>
-                  <div class="faq-a">{item.a}</div>
+                  <div class="bp-faq__a">{item.a}</div>
                 </details>
               ))}
             </div>
           </section>
         )}
 
-        <!-- Fuente preferida en Google (Preferred Sources, señal global 2026) -->
         <PreferredSourceCta lang="es" />
-
-        <!-- Newsletter -->
-        <div class="newsletter-wrap">
-          <Newsletter />
-        </div>
 
       </article>
 
-      <!-- Sidebar TOC (desktop sticky) -->
-      {toc.length >= 3 && (
-        <aside class="toc-sidebar" aria-label="Tabla de contenidos">
-          <div class="toc-sticky">
-            <div class="toc-title">En este artículo</div>
-            <nav>
-              <ol class="toc-list">
-                {toc.map((item) => (
-                  <li><a href={`#${item.id}`}>{item.text}</a></li>
-                ))}
-              </ol>
-            </nav>
+      <!-- Sidebar -->
+      {showSidebar && (
+        <aside class="bp-side" aria-label="Recursos del artículo">
+          <div class="bp-side__sticky">
+            {showToc && (
+              <nav class="bp-toc" aria-label="Tabla de contenidos">
+                <div class="bp-toc__head">
+                  <span class="bp-eyebrow">En este artículo</span>
+                  <span class="bp-toc__pct" aria-hidden="true">0%</span>
+                </div>
+                <ol class="bp-toc__list">
+                  {tocItems.map((item) => (
+                    <li><a href={`#${item.id}`}>{item.text}</a></li>
+                  ))}
+                </ol>
+              </nav>
+            )}
+            {primaryCalc && (
+              <div class="bp-side-cta">
+                <p class="bp-side-cta__title">{sidebarCta.title}</p>
+                <p class="bp-side-cta__desc">{sidebarCta.desc}</p>
+                <a class="bp-side-cta__btn" href={`/${primaryCalc.slug}`}>{sidebarCta.label} <span aria-hidden="true">→</span></a>
+                <p class="bp-side-cta__note">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                  Contenido revisado y actualizado con información oficial
+                </p>
+              </div>
+            )}
           </div>
         </aside>
       )}
 
-    </div><!-- /blog-layout -->
-  </div><!-- /blog-wrap -->
+    </div><!-- /bp-grid -->
+
+    <!-- Calculadoras relacionadas -->
+    {relatedCalcs.length > 0 && (
+      <section class="bp-related">
+        <p class="bp-eyebrow">Seguí haciendo cuentas</p>
+        <h2 class="bp-related__title">Calculadoras relacionadas</h2>
+        <div class="bp-related__grid">
+          {relatedCalcs.slice(0, 3).map((calc: any) => (
+            <a href={`/${calc.slug}`} class="bp-calc-card">
+              <span class="bp-calc-card__icon" aria-hidden="true">{calc.icon || '🧮'}</span>
+              <span class="bp-calc-card__title">{cleanCalcName(calc)}</span>
+              {calc.description && (
+                <span class="bp-calc-card__desc">{String(calc.description).split('|')[0].trim().slice(0, 90)}</span>
+              )}
+              <span class="bp-calc-card__link">Calcular ahora <span aria-hidden="true">→</span></span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Newsletter -->
+    <section class="bp-news" data-nosnippet aria-labelledby="bp-news-title">
+      <div class="bp-news__text">
+        <h2 id="bp-news-title" class="bp-news__title">Cuando cambie un número clave, te avisamos.</h2>
+        <p class="bp-news__sub">Monotributo, dólar, sueldos y vencimientos. Dos minutos, cero spam.</p>
+      </div>
+      <form class="bp-news__form" id="bp-news-form" novalidate>
+        <label class="bp-sr" for="bp-news-email">Tu email</label>
+        <input type="email" id="bp-news-email" name="email" placeholder="tu@email.com" required autocomplete="email" aria-describedby="bp-news-msg" />
+        <button type="submit" class="bp-news__btn">Quiero recibirlo</button>
+        <p class="bp-news__msg" id="bp-news-msg" role="status" aria-live="polite" hidden></p>
+      </form>
+    </section>
+
+  </div><!-- /bp -->
 
   <Footer slot="footer" />
 </Layout>
 
 <script>
-  // TOC active heading highlight via IntersectionObserver
+  // ── TOC: highlight de la sección activa + % de lectura ──────────────────────
   (function () {
-    const tocLinks = document.querySelectorAll<HTMLAnchorElement>('.toc-sidebar a, .toc-mobile a');
-    if (!tocLinks.length) return;
+    const tocLinks = document.querySelectorAll<HTMLAnchorElement>('.bp-toc a, .bp-toc-mobile a');
+    const headings = Array.from(document.querySelectorAll<HTMLElement>('.bp-body h2[id]'));
+    const pct = document.querySelector<HTMLElement>('.bp-toc__pct');
+    const main = document.querySelector<HTMLElement>('.bp-main');
 
-    const headings = Array.from(
-      document.querySelectorAll<HTMLElement>('.article-body h2[id]')
-    );
-    if (!headings.length) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const id = entry.target.getAttribute('id');
-            tocLinks.forEach((a) => {
-              const active = a.getAttribute('href') === `#${id}`;
-              a.classList.toggle('active', active);
-            });
-            break;
+    if (tocLinks.length && headings.length) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              const id = entry.target.getAttribute('id');
+              tocLinks.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === `#${id}`));
+              break;
+            }
           }
-        }
-      },
-      { rootMargin: '0px 0px -70% 0px', threshold: 0 }
-    );
+        },
+        { rootMargin: '0px 0px -70% 0px', threshold: 0 }
+      );
+      headings.forEach((h) => observer.observe(h));
+    }
 
-    headings.forEach((h) => observer.observe(h));
+    // % de lectura del artículo (como en el mockup)
+    if (pct && main) {
+      let ticking = false;
+      const update = () => {
+        ticking = false;
+        const rect = main.getBoundingClientRect();
+        const vh = window.innerHeight;
+        const total = rect.height - vh;
+        const scrolled = -rect.top;
+        const p = total > 0 ? Math.min(100, Math.max(0, Math.round((scrolled / total) * 100))) : (rect.top < vh ? 100 : 0);
+        pct.textContent = p + '%';
+      };
+      window.addEventListener('scroll', () => {
+        if (!ticking) { ticking = true; requestAnimationFrame(update); }
+      }, { passive: true });
+      update();
+    }
   })();
+
+  // ── Newsletter inline (mismo endpoint que el componente global) ─────────────
+  (window.requestIdleCallback || function (fn: any) { return setTimeout(fn, 1); })(function () {
+    const form = document.getElementById('bp-news-form') as HTMLFormElement | null;
+    const msg = document.getElementById('bp-news-msg') as HTMLElement | null;
+    if (!form || !msg) return;
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const input = form.querySelector('input[type="email"]') as HTMLInputElement | null;
+      const email = input ? input.value.trim() : '';
+      const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+      if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
+        msg.hidden = false; msg.textContent = 'Ingresá un email válido.'; msg.className = 'bp-news__msg bp-news__msg--err';
+        return;
+      }
+      if (btn) btn.disabled = true;
+      msg.hidden = false; msg.textContent = 'Guardando…'; msg.className = 'bp-news__msg';
+      try {
+        const res = await fetch('/api/newsletter', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ email, source: 'blog' }),
+        });
+        if (res.ok) {
+          msg.textContent = '¡Listo! Quedás suscripto.'; msg.className = 'bp-news__msg bp-news__msg--ok';
+          if (input) input.value = '';
+          if (typeof (window as any).gtag === 'function') (window as any).gtag('event', 'newsletter_signup', { method: 'blog' });
+        } else {
+          const j = await res.json().catch(() => ({}));
+          msg.textContent = j.error || 'No se pudo guardar, intentá en un rato.'; msg.className = 'bp-news__msg bp-news__msg--err';
+        }
+      } catch (err) {
+        msg.textContent = 'Error de red. Revisá tu conexión.'; msg.className = 'bp-news__msg bp-news__msg--err';
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    });
+  });
 </script>
 
 <style>
-  /* ── Layout wrapper ─────────────────────────────────────────────────────── */
-  .blog-wrap {
-    max-width: 1100px;
+  /* ═══════════════════════════════════════════════════════════════════════════
+     Blog post — diseño mockup (violeta = domain "knowledge")
+     ═══════════════════════════════════════════════════════════════════════════ */
+  .bp {
+    max-width: 1080px;
     margin: 0 auto;
-    padding: 1.5rem 1rem 4rem;
+    padding: 1.25rem 1.15rem 4rem;
   }
 
-  .blog-layout {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2rem;
-    margin-top: 1.5rem;
-  }
-
-  @media (min-width: 1024px) {
-    .blog-layout {
-      grid-template-columns: 1fr 220px;
-      align-items: start;
-    }
-    /* Put sidebar in column 2 via order, article stays col 1 */
-    .toc-sidebar { order: 2; }
-    .article     { order: 1; }
-  }
-
-  /* ── Breadcrumb ─────────────────────────────────────────────────────────── */
-  .breadcrumb ol {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.25rem 0.375rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    font-size: 0.8125rem;
-    color: var(--text-muted);
-  }
-  .breadcrumb a {
-    color: var(--text-muted);
-    text-decoration: none;
-  }
-  .breadcrumb a:hover { color: var(--accent); text-decoration: underline; }
-  .breadcrumb .sep { color: var(--border-strong); }
-  .breadcrumb [aria-current="page"] {
-    color: var(--text-subtle);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 260px;
-  }
-
-  /* ── Article container ──────────────────────────────────────────────────── */
-  .article {
-    min-width: 0;
-    max-width: 720px;
-  }
-
-  /* ── Article header ─────────────────────────────────────────────────────── */
-  .article-header {
-    margin-bottom: 2rem;
-  }
-
-  /* Tratamiento contenido del emoji: en vez de un glifo suelto de 3rem, lo
-     envolvemos en un tile tintado (como .ui-action__icon del UI kit). Menos
-     "emoji gigante", más elemento de marca. No usamos imágenes IA (regla SEO). */
-  .hero-emoji {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 56px;
-    height: 56px;
-    border-radius: 14px;
-    background: var(--accent-soft);
-    border: 1px solid var(--border);
-    margin-bottom: 1rem;
-  }
-  .hero-emoji span {
-    font-size: 1.75rem;
-    line-height: 1;
-  }
-
-  .hero-figure {
-    margin: 0 0 1.5rem;
-  }
-
-  .hero-image {
-    display: block;
-    width: 100%;
-    max-width: 760px;
-    aspect-ratio: 1200 / 630;
-    height: auto;
-    object-fit: cover;
-    border-radius: 12px;
-    margin: 0 auto 0.4rem;
-  }
-
-  .hero-credit {
-    font-size: 0.78rem;
-    color: var(--text-muted, #6b7280);
-    text-align: center;
-    margin: 0;
-  }
-
-  .hero-credit a {
-    color: inherit;
-    text-decoration: underline;
-  }
-
-  .cat-badge {
+  .bp-eyebrow {
     display: inline-block;
     font-size: 0.6875rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.07em;
-    padding: 0.25rem 0.625rem;
-    border-radius: 99px;
-    margin-bottom: 0.875rem;
+    letter-spacing: 0.09em;
+    color: var(--accent);
   }
 
-  .article-header h1 {
-    font-size: clamp(1.5rem, 4vw, 2.125rem);
-    font-weight: 800;
-    line-height: 1.2;
-    color: var(--text);
-    margin: 0 0 0.75rem;
-    letter-spacing: -0.02em;
+  /* ── Breadcrumb ─────────────────────────────────────────────────────────── */
+  .bp-crumb ol {
+    display: flex; flex-wrap: wrap; align-items: center;
+    gap: 0.25rem 0.4rem; list-style: none; margin: 0; padding: 0;
+    font-size: 0.8125rem; color: var(--text-subtle);
+  }
+  .bp-crumb a { color: var(--text-subtle); text-decoration: none; }
+  .bp-crumb a:hover { color: var(--accent); }
+  .bp-crumb .sep { color: var(--border-strong); }
+  .bp-crumb [aria-current="page"] { color: var(--text-muted); }
+
+  /* ── Hero ───────────────────────────────────────────────────────────────── */
+  .bp-hero { margin: 1.5rem 0 0; max-width: 820px; }
+
+  .bp-kicker {
+    display: flex; align-items: center; gap: 0.5rem;
+    margin: 0 0 0.9rem; font-size: 0.6875rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.09em;
+  }
+  .bp-kicker__cat { color: var(--accent); }
+  .bp-kicker__cat::before { content: "—"; margin-right: 0.4rem; }
+  .bp-kicker__dot { color: var(--border-strong); }
+  .bp-kicker__status { color: var(--text-subtle); }
+
+  .bp-title {
+    font-size: clamp(1.9rem, 5vw, 3rem);
+    font-weight: 800; line-height: 1.08; letter-spacing: -0.025em;
+    color: var(--text); margin: 0 0 1rem;
   }
 
-  .article-description {
-    font-size: 1.0625rem;
-    color: var(--text-muted);
-    line-height: 1.6;
-    margin: 0 0 1.25rem;
+  .bp-sub {
+    font-size: clamp(1.0625rem, 2vw, 1.1875rem);
+    line-height: 1.55; color: var(--text-muted);
+    margin: 0 0 1.5rem; max-width: 660px;
   }
 
-  .meta-line {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.25rem 0.5rem;
-    font-size: 0.8125rem;
-    color: var(--text-subtle);
+  .bp-byline { display: flex; align-items: center; gap: 0.75rem; }
+  .bp-avatar {
+    flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff; font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.02em;
+  }
+  .bp-byline__text { min-width: 0; }
+  .bp-byline__author {
+    display: block; font-size: 0.875rem; font-weight: 700;
+    color: var(--text); text-decoration: none; line-height: 1.3;
+  }
+  a.bp-byline__author:hover { color: var(--accent); }
+  .bp-byline__meta {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.45rem;
+    font-size: 0.8125rem; color: var(--text-subtle); margin-top: 0.1rem;
+  }
+  .bp-byline__dot { color: var(--border-strong); }
+  .bp-verified {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    color: var(--success); font-weight: 600;
   }
 
-  .meta-item {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
+  /* ── Answer bar ─────────────────────────────────────────────────────────── */
+  .bp-answer {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 1.25rem 1.75rem;
+    margin: 1.75rem 0 0;
+    padding: 1.15rem 1.4rem;
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+    border-radius: var(--radius-lg);
   }
-
-  .meta-item svg { flex-shrink: 0; }
-  .meta-author-link {
-    color: inherit;
-    text-decoration: none;
+  .bp-answer__facts {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem 1.75rem; flex: 1; min-width: 0;
   }
-  .meta-author-link:hover { color: var(--accent); text-decoration: underline; }
+  .bp-fact { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+  .bp-fact__label {
+    font-size: 0.625rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.07em; color: var(--text-subtle);
+  }
+  .bp-fact__value {
+    font-size: 0.9375rem; font-weight: 700; color: var(--text); line-height: 1.3;
+  }
+  .bp-answer__cta {
+    flex-shrink: 0; display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.7rem 1.15rem; border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    color: #fff; font-size: 0.875rem; font-weight: 700; text-decoration: none;
+    box-shadow: var(--shadow-accent); transition: transform 0.15s, filter 0.15s;
+  }
+  .bp-answer__cta:hover { transform: translateY(-1px); filter: brightness(1.05); }
 
-  .meta-sep { color: var(--border-strong); }
+  /* ── Grid ───────────────────────────────────────────────────────────────── */
+  .bp-grid {
+    display: grid; grid-template-columns: 1fr; gap: 2.5rem;
+    margin-top: 2.5rem;
+  }
+  @media (min-width: 960px) {
+    .bp-grid { grid-template-columns: minmax(0, 1fr) 300px; align-items: start; gap: 3rem; }
+    .bp-grid--full { grid-template-columns: minmax(0, 1fr); }
+    .bp-main { max-width: 720px; }
+  }
+  .bp-main { min-width: 0; }
 
   /* ── TOC mobile ─────────────────────────────────────────────────────────── */
-  .toc-mobile {
-    background: var(--bg-soft);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 0.75rem 1rem;
-    margin-bottom: 2rem;
+  .bp-toc-mobile {
+    background: var(--bg-soft); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 0.5rem 1rem; margin-bottom: 2rem;
   }
-
-  .toc-mobile details[open] summary svg { transform: rotate(180deg); }
-
-  .toc-mobile summary {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 600;
-    font-size: 0.9375rem;
-    cursor: pointer;
-    list-style: none;
-    color: var(--text);
+  .bp-toc-mobile summary {
+    display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0;
+    font-weight: 700; font-size: 0.875rem; color: var(--text);
+    cursor: pointer; list-style: none; text-transform: uppercase; letter-spacing: 0.04em;
   }
-  .toc-mobile summary::-webkit-details-marker { display: none; }
-  .toc-mobile summary svg { transition: transform 0.2s; }
+  .bp-toc-mobile summary::-webkit-details-marker { display: none; }
+  .bp-toc-mobile summary svg { color: var(--accent); transition: transform 0.2s; }
+  .bp-toc-mobile details[open] summary svg { transform: rotate(90deg); }
+  @media (min-width: 960px) { .bp-toc-mobile { display: none; } }
 
-  @media (min-width: 1024px) {
-    .toc-mobile { display: none; }
+  /* ── TOC list (compartida) ──────────────────────────────────────────────── */
+  .bp-toc__list {
+    list-style: none; margin: 0.6rem 0 0; padding: 0;
+    display: flex; flex-direction: column; gap: 0.1rem; counter-reset: toc;
   }
-
-  /* ── TOC shared list styles ─────────────────────────────────────────────── */
-  .toc-list {
-    list-style: none;
-    margin: 0.75rem 0 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
-    counter-reset: toc-counter;
-  }
-
-  .toc-list li {
-    counter-increment: toc-counter;
-  }
-
-  .toc-list a {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    color: var(--text-muted);
-    text-decoration: none;
-    padding: 0.3rem 0.5rem;
-    border-radius: var(--radius-sm);
-    line-height: 1.4;
+  .bp-toc__list li { counter-increment: toc; }
+  .bp-toc__list a {
+    display: flex; gap: 0.55rem; align-items: baseline;
+    font-size: 0.8125rem; line-height: 1.4; color: var(--text-muted);
+    text-decoration: none; padding: 0.4rem 0.5rem; border-radius: var(--radius-sm);
     transition: background 0.12s, color 0.12s;
   }
+  .bp-toc__list a::before {
+    content: counter(toc); flex-shrink: 0;
+    font-size: 0.6875rem; font-weight: 700; color: var(--text-subtle);
+    font-variant-numeric: tabular-nums; min-width: 1ch;
+  }
+  .bp-toc__list a:hover { color: var(--accent); background: var(--accent-soft); }
+  .bp-toc__list a.active {
+    color: var(--accent); background: var(--accent-soft); font-weight: 600;
+  }
+  .bp-toc__list a.active::before { color: var(--accent); }
 
-  .toc-list a::before {
-    content: counter(toc-counter) ".";
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--border-strong);
-    flex-shrink: 0;
+  /* ── Sidebar ────────────────────────────────────────────────────────────── */
+  .bp-side { display: none; }
+  @media (min-width: 960px) {
+    .bp-side { display: block; }
+    .bp-side__sticky { position: sticky; top: 5rem; display: flex; flex-direction: column; gap: 1rem; }
+  }
+  .bp-toc {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 1.1rem 1.2rem;
+  }
+  .bp-toc__head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+  .bp-toc__pct { font-size: 0.8125rem; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+  .bp-side-cta {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 1.2rem;
+  }
+  .bp-side-cta__title { margin: 0 0 0.35rem; font-size: 0.9375rem; font-weight: 700; color: var(--text); line-height: 1.3; }
+  .bp-side-cta__desc { margin: 0 0 0.9rem; font-size: 0.8125rem; color: var(--text-muted); line-height: 1.5; }
+  .bp-side-cta__btn {
+    display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+    padding: 0.7rem 1rem; border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    color: #fff; font-size: 0.875rem; font-weight: 700; text-decoration: none;
+    transition: transform 0.15s, filter 0.15s;
+  }
+  .bp-side-cta__btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+  .bp-side-cta__note {
+    display: flex; gap: 0.4rem; align-items: flex-start;
+    margin: 0.8rem 0 0; font-size: 0.6875rem; line-height: 1.45; color: var(--text-subtle);
+  }
+  .bp-side-cta__note svg { flex-shrink: 0; color: var(--success); margin-top: 1px; }
+
+  /* ── Disclaimers ────────────────────────────────────────────────────────── */
+  .bp-disclaimer {
+    display: flex; gap: 0.8rem; align-items: flex-start;
+    margin: 0 0 2rem; padding: 0.95rem 1.15rem;
+    background: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #f59e0b;
+    border-radius: var(--radius); color: #78350f; font-size: 0.9375rem; line-height: 1.6;
+  }
+  .bp-disclaimer svg { flex-shrink: 0; color: #d97706; margin-top: 2px; }
+  .bp-disclaimer p { margin: 0; }
+  .bp-disclaimer a { color: #92400e; font-weight: 700; }
+  .bp-disclaimer--bottom {
+    margin: 2.5rem 0 0; background: var(--bg-soft); border: 1px solid var(--border);
+    border-left: 3px solid var(--accent); color: var(--text-muted);
+  }
+  :root[data-theme="dark"] .bp-disclaimer {
+    background: rgba(180, 83, 9, 0.15); border-color: rgba(245, 158, 11, 0.4); color: #fde68a;
+  }
+  :root[data-theme="dark"] .bp-disclaimer a { color: #fbbf24; }
+  :root[data-theme="dark"] .bp-disclaimer--bottom {
+    background: var(--bg-soft); border-color: var(--border);
+    border-left-color: var(--accent); color: var(--text-muted);
   }
 
-  .toc-list a:hover,
-  .toc-list a.active {
-    color: var(--accent);
-    background: var(--accent-soft);
-  }
-
-  /* ── Sidebar TOC ────────────────────────────────────────────────────────── */
-  .toc-sidebar {
-    display: none;
-  }
-
-  @media (min-width: 1024px) {
-    .toc-sidebar {
-      display: block;
-    }
-
-    .toc-sticky {
-      position: sticky;
-      top: 5rem;
-      background: var(--bg-soft);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1rem 1.25rem;
-    }
-
-    .toc-title {
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-subtle);
-      margin-bottom: 0.5rem;
-    }
-  }
-
-  /* ── YMYL Disclaimer ─────────────────────────────────────────────────────── */
-  .post-disclaimer {
-    display: flex;
-    gap: 0.875rem;
-    align-items: flex-start;
-    margin: 0 0 2rem;
-    padding: 1rem 1.25rem;
-    background: #fffbeb;
-    border: 1px solid #fde68a;
-    border-left: 4px solid #f59e0b;
-    border-radius: var(--radius-sm);
-    color: #78350f;
-    font-size: 0.9375rem;
-    line-height: 1.6;
-  }
-  .post-disclaimer svg { flex-shrink: 0; color: #d97706; margin-top: 3px; }
-  .post-disclaimer p { margin: 0; }
-  .post-disclaimer a { color: #92400e; font-weight: 600; }
-  :root[data-theme="dark"] .post-disclaimer {
-    background: rgba(180, 83, 9, 0.15);
-    border-color: rgba(245, 158, 11, 0.4);
-    color: #fde68a;
-  }
-  :root[data-theme="dark"] .post-disclaimer a { color: #fbbf24; }
-
-  .post-disclaimer-bottom {
-    margin: 2.5rem 0 1.5rem;
-    padding: 1rem 1.25rem;
-    background: var(--bg-soft);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent);
-    border-radius: var(--radius-sm);
-    color: var(--text-muted);
-    font-size: 0.9375rem;
-    line-height: 1.6;
-  }
-  .post-disclaimer-bottom p { margin: 0; }
-
-  /* ── Prose / Article body ───────────────────────────────────────────────── */
-  .prose {
-    font-size: 1.0625rem;
-    line-height: 1.75;
-    color: var(--text);
-  }
-
+  /* ═══ PROSE ═══════════════════════════════════════════════════════════════ */
+  .prose { font-size: 1.0625rem; line-height: 1.75; color: var(--text); }
+  .prose :global(p) { margin: 0 0 1.25rem; }
   .prose :global(h2) {
-    font-size: 1.5rem;
-    font-weight: 700;
-    line-height: 1.25;
-    color: var(--text);
-    margin: 2.5rem 0 1rem;
-    letter-spacing: -0.015em;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid var(--border);
-    scroll-margin-top: 4.5rem;
+    font-size: clamp(1.375rem, 2.6vw, 1.6rem); font-weight: 800; line-height: 1.2;
+    letter-spacing: -0.02em; color: var(--text);
+    margin: 2.75rem 0 1rem; scroll-margin-top: 5rem;
   }
-
   .prose :global(h3) {
-    font-size: 1.1875rem;
-    font-weight: 700;
-    line-height: 1.3;
-    color: var(--text);
-    margin: 2rem 0 0.75rem;
-    scroll-margin-top: 4.5rem;
+    font-size: 1.1875rem; font-weight: 700; line-height: 1.3; color: var(--text);
+    margin: 2rem 0 0.75rem; scroll-margin-top: 5rem;
   }
-
-  .prose :global(h4) {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--text);
-    margin: 1.5rem 0 0.5rem;
-  }
-
-  .prose :global(p) {
-    margin: 0 0 1.25rem;
-  }
-
+  .prose :global(h4) { font-size: 1rem; font-weight: 700; color: var(--text); margin: 1.5rem 0 0.5rem; }
   .prose :global(a) {
-    color: var(--accent);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    text-decoration-thickness: 1px;
+    color: var(--accent); text-decoration: underline;
+    text-underline-offset: 3px; text-decoration-thickness: 1px; font-weight: 500;
   }
-  .prose :global(a:hover) {
-    color: var(--accent-hover);
-  }
-
-  .prose :global(ul),
-  .prose :global(ol) {
-    margin: 0 0 1.25rem 1.5rem;
-    padding: 0;
-  }
-
-  .prose :global(li) {
-    margin-bottom: 0.4rem;
-  }
-
-  .prose :global(li > ul),
-  .prose :global(li > ol) {
-    margin-top: 0.4rem;
-    margin-bottom: 0;
-  }
-
-  .prose :global(strong) {
-    font-weight: 700;
-    color: var(--text);
-  }
-
-  .prose :global(em) {
-    font-style: italic;
-  }
-
+  .prose :global(a:hover) { color: var(--accent-hover); }
+  .prose :global(ul), .prose :global(ol) { margin: 0 0 1.25rem 1.4rem; padding: 0; }
+  .prose :global(li) { margin-bottom: 0.4rem; }
+  .prose :global(li::marker) { color: var(--accent); }
+  .prose :global(li > ul), .prose :global(li > ol) { margin-top: 0.4rem; margin-bottom: 0; }
+  .prose :global(strong) { font-weight: 700; color: var(--text); }
+  .prose :global(em) { font-style: italic; }
   .prose :global(blockquote) {
-    margin: 1.5rem 0;
-    padding: 1rem 1.25rem;
-    border-left: 4px solid var(--accent);
-    background: var(--accent-soft);
-    border-radius: 0 var(--radius) var(--radius) 0;
-    color: var(--text-muted);
-    font-style: italic;
+    margin: 1.5rem 0; padding: 1rem 1.25rem; border-left: 4px solid var(--accent);
+    background: var(--accent-soft); border-radius: 0 var(--radius) var(--radius) 0;
+    color: var(--text-muted); font-style: italic;
   }
-
-  .prose :global(blockquote p) {
-    margin: 0;
-  }
-
+  .prose :global(blockquote p) { margin: 0; }
   .prose :global(code) {
-    font-family: var(--font-mono);
-    font-size: 0.875em;
-    background: var(--bg-muted);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 0.125em 0.375em;
-    color: var(--text);
+    font-family: var(--font-mono); font-size: 0.875em; background: var(--bg-muted);
+    border: 1px solid var(--border); border-radius: 4px; padding: 0.125em 0.375em; color: var(--text);
   }
-
   .prose :global(pre) {
-    background: var(--bg-muted);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.25rem;
-    overflow-x: auto;
-    margin: 1.5rem 0;
-    font-size: 0.875rem;
-    line-height: 1.6;
+    background: var(--bg-muted); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 1.25rem; overflow-x: auto; margin: 1.5rem 0; font-size: 0.875rem; line-height: 1.6;
   }
-
-  .prose :global(pre code) {
-    background: none;
-    border: none;
-    padding: 0;
-    font-size: inherit;
-  }
-
-  .prose :global(table) {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1.5rem 0;
-    font-size: 0.9375rem;
-    overflow-x: auto;
-    display: block;
-  }
-
-  .prose :global(th) {
-    background: var(--bg-soft);
-    font-weight: 700;
-    font-size: 0.8125rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 0.625rem 0.875rem;
-    border: 1px solid var(--border);
-    color: var(--text-muted);
-    white-space: nowrap;
-  }
-
-  .prose :global(td) {
-    padding: 0.625rem 0.875rem;
-    border: 1px solid var(--border);
-    vertical-align: top;
-  }
-
-  .prose :global(tr:nth-child(even) td) {
-    background: var(--bg-soft);
-  }
-
+  .prose :global(pre code) { background: none; border: none; padding: 0; }
   .prose :global(img) {
-    max-width: 100%;
-    height: auto;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    margin: 1.5rem 0;
+    max-width: 100%; height: auto; border-radius: var(--radius); border: 1px solid var(--border); margin: 1.5rem 0;
+  }
+  .prose :global(hr) { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+
+  /* Tablas — encabezado violeta, zebra, scroll horizontal en contenedor */
+  .prose :global(table) {
+    width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.75rem 0;
+    font-size: 0.9375rem; display: block; overflow-x: auto;
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+  }
+  .prose :global(thead) { background: var(--accent-soft); }
+  .prose :global(th) {
+    font-weight: 700; font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em;
+    padding: 0.75rem 0.9rem; text-align: left; color: var(--accent); white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+  }
+  .prose :global(td) { padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .prose :global(tbody tr:last-child td) { border-bottom: none; }
+  .prose :global(tbody tr:nth-child(even)) { background: var(--bg-soft); }
+
+  /* Tabla de categorías: primera columna como badge violeta (opt-in por clase) */
+  .prose :global(.hc-cat-table td:first-child) {
+    font-weight: 800; color: var(--accent);
+  }
+  .prose :global(.hc-cat-table tbody td:first-child) {
+    text-align: center; width: 1%; white-space: nowrap;
   }
 
-  .prose :global(hr) {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 2.5rem 0;
-  }
-
-  /* ── CTA contextual inline (inyectado en el cuerpo con set:html) ───────────
-     Va con :global porque el HTML viene de set:html y no recibe el atributo
-     de scope de Astro. */
-  .article-body :global(.inline-cta) {
-    display: flex;
-    align-items: center;
-    gap: 0.875rem;
-    margin: 1.75rem 0;
-    padding: 0.95rem 1.15rem;
+  /* ── Bloque: Lo esencial en 30 segundos (keyTakeaways) ──────────────────── */
+  .prose :global(.hc-summary) {
+    margin: 1.75rem 0; padding: 1.3rem 1.4rem;
     background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+    border-radius: var(--radius-lg);
+  }
+  .prose :global(.hc-summary__head) { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.9rem; }
+  .prose :global(.hc-summary__icon) {
+    flex-shrink: 0; width: 26px; height: 26px; border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #fff; font-size: 1.1rem; font-weight: 700; line-height: 1;
+  }
+  .prose :global(.hc-summary__title) { font-size: 1rem; font-weight: 800; color: var(--text); }
+  .prose :global(.hc-summary__list) { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+  .prose :global(.hc-summary__list li) {
+    position: relative; padding-left: 1.75rem; margin: 0;
+    font-size: 0.9375rem; line-height: 1.5; color: var(--text-muted);
+  }
+  .prose :global(.hc-summary__list li::before) {
+    content: "✓"; position: absolute; left: 0; top: -1px;
+    color: var(--accent); font-weight: 800; font-size: 0.95rem;
+  }
+
+  /* ── Bloque: tarjeta violeta de la calculadora ──────────────────────────── */
+  .prose :global(.hc-calc-cta) {
+    position: relative; overflow: hidden; margin: 2rem 0;
+    padding: 1.5rem 1.6rem; border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 55%, var(--accent-strong) 100%);
+    color: #fff; box-shadow: var(--shadow-accent);
+  }
+  .prose :global(.hc-calc-cta__body) { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: flex-start; }
+  .prose :global(.hc-calc-cta__eyebrow) {
+    font-size: 0.625rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.85); margin-bottom: 0.5rem;
+  }
+  .prose :global(.hc-calc-cta__title) { font-size: 1.25rem; font-weight: 800; line-height: 1.25; margin-bottom: 0.45rem; }
+  .prose :global(.hc-calc-cta__desc) { font-size: 0.9375rem; line-height: 1.55; color: rgba(255, 255, 255, 0.9); margin-bottom: 1.1rem; max-width: 46ch; }
+  .prose :global(.hc-calc-cta__btn) {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.7rem 1.15rem; border-radius: var(--radius);
+    background: #fff; color: var(--accent-strong); font-size: 0.875rem; font-weight: 700;
+    text-decoration: none; transition: transform 0.15s;
+  }
+  .prose :global(.hc-calc-cta__btn:hover) { transform: translateY(-1px); color: var(--accent-strong); }
+  .prose :global(.hc-calc-cta__glyph) {
+    position: absolute; right: -0.5rem; bottom: -1.5rem; z-index: 0;
+    font-size: 8rem; line-height: 1; opacity: 0.14; filter: grayscale(1) brightness(3);
+    pointer-events: none;
+  }
+
+  /* ── Componente: callout (Ojo con esto / nota) ──────────────────────────── */
+  .prose :global(.hc-callout) {
+    display: flex; gap: 0.8rem; align-items: flex-start; margin: 1.75rem 0;
+    padding: 1rem 1.2rem; border-radius: var(--radius);
+    background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+    border-left: 4px solid var(--accent); font-size: 0.9375rem; line-height: 1.6; color: var(--text-muted);
+  }
+  .prose :global(.hc-callout p) { margin: 0; }
+  .prose :global(.hc-callout__ico) { flex-shrink: 0; font-size: 1.15rem; line-height: 1.4; }
+  .prose :global(.hc-callout--warning) {
+    background: #fffbeb; border-color: #fde68a; border-left-color: #f59e0b; color: #78350f;
+  }
+  .prose :global(.hc-callout--warning strong) { color: #92400e; }
+  :root[data-theme="dark"] .prose :global(.hc-callout--warning) {
+    background: rgba(180, 83, 9, 0.15); border-color: rgba(245, 158, 11, 0.4); color: #fde68a;
+  }
+  :root[data-theme="dark"] .prose :global(.hc-callout--warning strong) { color: #fbbf24; }
+
+  /* ── Componente: timeline (3 tarjetas) ──────────────────────────────────── */
+  .prose :global(.hc-timeline) {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.75rem; margin: 1.75rem 0; padding: 0; list-style: none;
+  }
+  .prose :global(.hc-timeline > li) {
+    margin: 0; padding: 0.9rem 1rem; border: 1px solid var(--border);
+    border-radius: var(--radius); background: var(--bg-card);
+  }
+  .prose :global(.hc-timeline > li.is-now) {
+    border-color: var(--accent); background: var(--accent-soft);
+    box-shadow: 0 0 0 1px var(--accent) inset;
+  }
+  .prose :global(.hc-timeline__when) {
+    display: block; font-size: 0.625rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--accent); margin-bottom: 0.4rem;
+  }
+  .prose :global(.hc-timeline__val) { display: block; font-size: 1.05rem; font-weight: 800; color: var(--text); margin-bottom: 0.25rem; }
+  .prose :global(.hc-timeline__sub) { display: block; font-size: 0.78rem; color: var(--text-subtle); line-height: 1.4; }
+
+  /* ── Componente: tarjetas (parámetros) ──────────────────────────────────── */
+  .prose :global(.hc-cards) {
+    display: grid; grid-template-columns: 1fr;
+    gap: 0.85rem; margin: 1.75rem 0; padding: 0; list-style: none;
+  }
+  @media (min-width: 520px) { .prose :global(.hc-cards) { grid-template-columns: repeat(2, 1fr); } }
+  .prose :global(.hc-cards > li) {
+    margin: 0; padding: 1.1rem 1.15rem; border: 1px solid var(--border);
+    border-radius: var(--radius-lg); background: var(--bg-card);
+  }
+  .prose :global(.hc-cards__ico) {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border-radius: 10px; margin-bottom: 0.7rem;
+    background: var(--accent-soft); color: var(--accent); font-size: 1.15rem;
+  }
+  .prose :global(.hc-cards__title) { display: block; font-size: 0.9375rem; font-weight: 700; color: var(--text); margin-bottom: 0.25rem; }
+  .prose :global(.hc-cards__desc) { display: block; font-size: 0.84rem; color: var(--text-muted); line-height: 1.5; }
+
+  /* ── Componente: pasos numerados ────────────────────────────────────────── */
+  .prose :global(.hc-steps) { list-style: none; margin: 1.75rem 0; padding: 0; counter-reset: step; display: grid; gap: 0.7rem; }
+  .prose :global(.hc-steps > li) {
+    counter-increment: step; position: relative; margin: 0;
+    padding: 0.9rem 1.1rem 0.9rem 3.4rem; border: 1px solid var(--border);
+    border-radius: var(--radius); background: var(--bg-card);
+  }
+  .prose :global(.hc-steps > li::before) {
+    content: counter(step); position: absolute; left: 1rem; top: 0.85rem;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover)); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8125rem; font-weight: 800;
+  }
+  .prose :global(.hc-steps__title) { display: block; font-weight: 700; color: var(--text); font-size: 0.95rem; margin-bottom: 0.15rem; }
+  .prose :global(.hc-steps__desc) { display: block; font-size: 0.875rem; color: var(--text-muted); line-height: 1.5; }
+
+  /* ── Inline CTA (legacy en cuerpos viejos) ──────────────────────────────── */
+  .prose :global(.inline-cta) {
+    display: flex; align-items: center; gap: 0.875rem; margin: 1.75rem 0;
+    padding: 0.95rem 1.15rem; background: var(--accent-soft);
     border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
-    border-left: 4px solid var(--accent);
-    border-radius: var(--radius);
+    border-left: 4px solid var(--accent); border-radius: var(--radius);
   }
-  .article-body :global(.inline-cta__icon) {
-    font-size: 1.6rem;
-    line-height: 1;
-    flex-shrink: 0;
-  }
-  .article-body :global(.inline-cta__txt) {
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-    min-width: 0;
-  }
-  .article-body :global(.inline-cta__txt strong) {
-    font-size: 0.95rem;
-    color: var(--text);
-    line-height: 1.3;
-  }
-  .article-body :global(.inline-cta__txt a) {
-    font-weight: 700;
-    color: var(--accent);
-    text-decoration: none;
-  }
-  .article-body :global(.inline-cta__txt a:hover) { text-decoration: underline; }
+  .prose :global(.inline-cta__icon) { font-size: 1.6rem; line-height: 1; flex-shrink: 0; }
+  .prose :global(.inline-cta__txt) { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+  .prose :global(.inline-cta__txt strong) { font-size: 0.95rem; color: var(--text); }
+  .prose :global(.inline-cta__txt a) { font-weight: 700; color: var(--accent); text-decoration: none; }
+  .prose :global(.inline-cta__txt a:hover) { text-decoration: underline; }
 
-  /* ── Related calcs ──────────────────────────────────────────────────────── */
-  .related-calcs-section {
-    margin-top: 3rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--border);
+  /* ── Fuentes oficiales ──────────────────────────────────────────────────── */
+  .bp-sources { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+  .bp-sources__title { font-size: 1.35rem; font-weight: 800; color: var(--text); margin: 0.4rem 0 0.5rem; letter-spacing: -0.01em; }
+  .bp-sources__desc { font-size: 0.875rem; color: var(--text-muted); line-height: 1.55; margin: 0 0 1.1rem; }
+  .bp-sources__list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .bp-source {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    padding: 0.8rem 1rem; border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--bg-card); text-decoration: none; color: var(--text);
+    transition: border-color 0.15s, background 0.15s;
   }
-
-  .related-calcs-section h2 {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin: 0 0 1.25rem;
-    color: var(--text);
-  }
-
-  .related-calcs-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0.625rem;
-  }
-
-  @media (min-width: 600px) {
-    .related-calcs-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  .calc-card {
-    display: flex;
-    align-items: center;
-    gap: 0.875rem;
-    padding: 1rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    text-decoration: none;
-    color: var(--text);
-    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s;
-  }
-
-  .calc-card:hover {
-    border-color: var(--accent);
-    background: var(--bg);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-  }
-
-  .calc-card-icon {
-    flex-shrink: 0;
-    width: 40px;
-    height: 40px;
-    background: var(--accent-soft);
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-  }
-
-  .calc-card-body {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .calc-card-cat {
-    font-size: 0.6875rem;
-    font-weight: 700;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 0.2rem;
-  }
-
-  .calc-card-title {
-    font-size: 0.9375rem;
-    font-weight: 600;
-    line-height: 1.3;
-    color: var(--text);
-  }
-
-  .calc-card-desc {
-    font-size: 0.8125rem;
-    color: var(--text-muted);
-    margin-top: 0.25rem;
-    line-height: 1.4;
-  }
-
-  .calc-card-arrow {
-    flex-shrink: 0;
-    color: var(--border-strong);
-    transition: color 0.15s, transform 0.15s;
-  }
-
-  .calc-card:hover .calc-card-arrow {
-    color: var(--accent);
-    transform: translateX(2px);
-  }
+  .bp-source:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .bp-source__title { font-size: 0.875rem; font-weight: 600; }
+  .bp-source__ico { flex-shrink: 0; color: var(--text-subtle); }
+  .bp-source:hover .bp-source__ico { color: var(--accent); }
 
   /* ── FAQ ────────────────────────────────────────────────────────────────── */
-  .faq-section {
-    margin-top: 3rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--border);
+  .bp-faq { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+  .bp-faq__title { font-size: 1.35rem; font-weight: 800; color: var(--text); margin: 0 0 1.25rem; letter-spacing: -0.01em; }
+  .bp-faq__list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .bp-faq__item { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .bp-faq__item[open] { border-color: var(--accent); }
+  .bp-faq__q {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    padding: 1rem 1.125rem; cursor: pointer; list-style: none;
+    font-weight: 600; font-size: 0.9375rem; color: var(--text); line-height: 1.4;
+  }
+  .bp-faq__q::-webkit-details-marker { display: none; }
+  .bp-faq__chev { flex-shrink: 0; color: var(--text-subtle); transition: transform 0.2s; }
+  .bp-faq__item[open] .bp-faq__chev { transform: rotate(180deg); color: var(--accent); }
+  .bp-faq__a {
+    padding: 0 1.125rem 1rem; font-size: 0.9375rem; color: var(--text-muted); line-height: 1.65;
+    border-top: 1px solid var(--border); padding-top: 0.875rem;
   }
 
-  .faq-section h2 {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin: 0 0 1.25rem;
-    color: var(--text);
+  /* ── Related calcs ──────────────────────────────────────────────────────── */
+  .bp-related { margin-top: 3.5rem; }
+  .bp-related__title { font-size: 1.5rem; font-weight: 800; color: var(--text); margin: 0.4rem 0 1.25rem; letter-spacing: -0.015em; }
+  .bp-related__grid { display: grid; grid-template-columns: 1fr; gap: 0.85rem; }
+  @media (min-width: 640px) { .bp-related__grid { grid-template-columns: repeat(3, 1fr); } }
+  .bp-calc-card {
+    display: flex; flex-direction: column; align-items: flex-start;
+    padding: 1.25rem; border: 1px solid var(--border); border-radius: var(--radius-lg);
+    background: var(--bg-card); text-decoration: none; color: var(--text);
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  }
+  .bp-calc-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: var(--shadow-md); }
+  .bp-calc-card__icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 42px; height: 42px; border-radius: 11px; margin-bottom: 0.85rem;
+    background: var(--accent-soft); font-size: 1.3rem;
+  }
+  .bp-calc-card__title { font-size: 0.9375rem; font-weight: 700; line-height: 1.3; color: var(--text); margin-bottom: 0.35rem; }
+  .bp-calc-card__desc { font-size: 0.8125rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 0.9rem; }
+  .bp-calc-card__link { margin-top: auto; font-size: 0.8125rem; font-weight: 700; color: var(--accent); display: inline-flex; gap: 0.3rem; align-items: center; }
+
+  /* ── Newsletter (barra oscura) ──────────────────────────────────────────── */
+  .bp-news {
+    margin-top: 3.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: 1.5rem 2rem; padding: 1.75rem 2rem; border-radius: var(--radius-xl);
+    background: #171526;
+    background: linear-gradient(120deg, #1b1830 0%, #241a3d 100%);
+    border: 1px solid rgba(168, 85, 247, 0.18);
+  }
+  .bp-news__title { margin: 0 0 0.3rem; font-size: clamp(1.15rem, 2.4vw, 1.4rem); font-weight: 800; color: #fff; letter-spacing: -0.01em; line-height: 1.2; }
+  .bp-news__sub { margin: 0; font-size: 0.9rem; color: rgba(255, 255, 255, 0.62); line-height: 1.5; }
+  .bp-news__form { display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 280px; max-width: 440px; }
+  .bp-news__form input[type="email"] {
+    flex: 1; min-width: 0; padding: 0.75rem 0.95rem; border-radius: var(--radius);
+    border: 1px solid rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.07);
+    color: #fff; font-family: inherit; font-size: 0.9rem;
+  }
+  .bp-news__form input[type="email"]::placeholder { color: rgba(255, 255, 255, 0.42); }
+  .bp-news__form input[type="email"]:focus { outline: none; border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.25); }
+  .bp-news__btn {
+    flex-shrink: 0; padding: 0.75rem 1.15rem; border: none; border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--accent-2), var(--accent)); color: #fff;
+    font-family: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer;
+    transition: transform 0.15s, filter 0.15s;
+  }
+  .bp-news__btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
+  .bp-news__btn:disabled { opacity: 0.6; cursor: default; }
+  .bp-news__msg { width: 100%; margin: 0.25rem 0 0; font-size: 0.8rem; color: rgba(255, 255, 255, 0.75); }
+  .bp-news__msg--ok { color: #86efac; }
+  .bp-news__msg--err { color: #fca5a5; }
+  @media (max-width: 640px) {
+    .bp-news { flex-direction: column; align-items: stretch; padding: 1.5rem 1.35rem; }
+    .bp-news__form { max-width: none; }
   }
 
-  .faq-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
+  .bp-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
-  .faq-item {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    transition: border-color 0.15s;
-  }
-
-  .faq-item[open] {
-    border-color: var(--accent);
-  }
-
-  .faq-q {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 1rem 1.125rem;
-    cursor: pointer;
-    list-style: none;
-    font-weight: 600;
-    font-size: 0.9375rem;
-    color: var(--text);
-    line-height: 1.4;
-    user-select: none;
-  }
-  .faq-q::-webkit-details-marker { display: none; }
-
-  .faq-item[open] .faq-chevron {
-    transform: rotate(180deg);
-  }
-
-  .faq-chevron {
-    flex-shrink: 0;
-    color: var(--text-subtle);
-    transition: transform 0.2s;
-  }
-
-  .faq-a {
-    padding: 0 1.125rem 1rem;
-    font-size: 0.9375rem;
-    color: var(--text-muted);
-    line-height: 1.65;
-    border-top: 1px solid var(--border);
-    padding-top: 0.875rem;
-  }
-
-  /* ── Newsletter wrapper ─────────────────────────────────────────────────── */
-  .newsletter-wrap {
-    margin-top: 3rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--border);
+  /* ── Answer bar responsive ──────────────────────────────────────────────── */
+  @media (max-width: 640px) {
+    .bp-answer { flex-direction: column; align-items: stretch; }
+    .bp-answer__facts { grid-template-columns: 1fr; gap: 0.9rem; }
+    .bp-answer__cta { justify-content: center; }
   }
 </style>
