@@ -173,6 +173,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       <p class="cf-result__eyebrow">Resultado</p>
       <p class="nl-uso-lbl" id="nl-uso-lbl">Importe para cheque</p>
       <p class="nl-out" id="nl-out">{initTexto}</p>
+      <p class="cf-stale-hint">Apretá <strong>Convertir a letras</strong> para actualizar el resultado.</p>
       <div class="cf-tiles cf-tiles--2">
         <div class="cf-tile"><div class="cf-tile__value nl-tile" id="nl-t-entero">{nfAr(initSplit.entero)} pesos</div><div class="cf-tile__label">Parte entera</div></div>
         <div class="cf-tile"><div class="cf-tile__value nl-tile" id="nl-t-dec">{initSplit.centavos} centavos</div><div class="cf-tile__label">Decimales</div></div>
@@ -467,6 +468,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       return sal === 'mayusculas' ? texto.toUpperCase() : capitalizar(texto);
     }
 
+    /** Resultado de la calc: SOLO lo dispara el botón Convertir (o Enter). */
     function render() {
       const n = parseNum(numEl.value);
       const code = monedaEl.value;
@@ -475,14 +477,19 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
 
       $('nl-out').textContent = convertir(n, uso, salida, code);
       $('nl-uso-lbl').textContent = USO_LBL[uso] || 'Importe';
-      $('nl-mcode').textContent = code;
       $('nl-t-entero').textContent = nfAr(sp.entero) + ' ' + (sp.entero === 1 ? m.singular.split(' ')[0] : m.plural.split(' ')[0]);
       $('nl-t-dec').textContent = sp.centavos + ' ' + (sp.centavos === 1 ? m.centSingular : m.centPlural);
       $('nl-foot').textContent = uso === 'cheque'
         ? 'Formato bancario: importe en letras + moneda + centavos / 100'
         : salida === 'sin-moneda' ? 'Número suelto en letras, sin moneda ni centavos.'
         : 'Importe en letras con nombre de moneda y centavos.';
+      resultEl && resultEl.removeAttribute('data-stale');
+    }
 
+    /** La "Vista previa" es una demo aparte del resultado → sigue siendo reactiva. */
+    function renderPrev() {
+      const n = parseNum(numEl.value);
+      const code = monedaEl.value;
       const prevSal = prev === 'simple' ? 'sin-moneda' : (prev === 'cheque' ? 'mayusculas' : 'minusculas');
       $('nl-prev-txt').textContent = '“' + convertir(n, prev, prevSal, code) + '”';
       $('nl-prev-k').textContent = PREV_K[prev];
@@ -490,32 +497,38 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
         : prev === 'simple' ? '✓ Solo letras · ✗ Moneda' : '✓ Moneda · ✓ Centavos';
     }
 
-    numEl.addEventListener('input', () => { numEl.value = fmtInput(numEl.value); render(); });
-    monedaEl.addEventListener('change', render);
+    const resultEl = $('nl-result');
+    const stale = () => { resultEl && resultEl.setAttribute('data-stale', '1'); };
+    /** Label informativo del propio select de moneda: sigue en vivo. */
+    const syncMcode = () => { $('nl-mcode').textContent = monedaEl.value; };
+
+    numEl.addEventListener('input', () => { numEl.value = fmtInput(numEl.value); stale(); renderPrev(); });
+    numEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); render(); } });
+    monedaEl.addEventListener('change', () => { syncMcode(); stale(); renderPrev(); });
     $('nl-calc-btn').addEventListener('click', render);
     document.querySelectorAll('[data-uso]').forEach((b) => b.addEventListener('click', () => {
       uso = b.getAttribute('data-uso');
       document.querySelectorAll('[data-uso]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-      render();
+      stale();
     }));
     document.querySelectorAll('[data-salida]').forEach((b) => b.addEventListener('click', () => {
       salida = b.getAttribute('data-salida');
       document.querySelectorAll('[data-salida]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-      render();
+      stale();
     }));
     document.querySelectorAll('[data-prev]').forEach((b) => b.addEventListener('click', () => {
       prev = b.getAttribute('data-prev');
       document.querySelectorAll('[data-prev]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-      render();
+      renderPrev();
     }));
     document.querySelectorAll('[data-moneda]').forEach((b) => b.addEventListener('click', () => {
       monedaEl.value = b.getAttribute('data-moneda');
       document.querySelectorAll('[data-moneda]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-      render();
+      syncMcode(); stale(); renderPrev();
     }));
     document.querySelectorAll('[data-ej]').forEach((b) => b.addEventListener('click', () => {
       numEl.value = fmtInput(String(b.getAttribute('data-ej')).replace('.', ','));
-      render();
+      stale(); renderPrev();
       document.getElementById('calc').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }));
 
@@ -541,7 +554,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
     const q = new URLSearchParams(location.search);
     if (q.get('n')) numEl.value = fmtInput(String(q.get('n')).replace('.', ','));
     if (q.get('uso')) { const b = document.querySelector('[data-uso="' + q.get('uso') + '"]'); if (b) b.click(); }
-    render();
+    syncMcode(); render(); renderPrev();
   })();
 </script>
 
@@ -566,6 +579,14 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
   .nl .nl-out { font-size: clamp(1.05rem, 2.4vw, 1.4rem); font-weight: 800; color: #fff; line-height: 1.35; margin: 0 0 1.2rem; word-break: break-word; }
   .nl .nl-tile { font-size: 0.95rem; }
   .nl .nl-foot { margin: 0.9rem 0 0; font-size: 0.68rem; }
+
+  /* Resultado desactualizado: el botón Convertir es el único que dispara la conversión.
+     Acá el resultado grande es .nl-out (no .cf-result__big). La "Vista previa" queda afuera: es reactiva. */
+  .nl .cf-result[data-stale="1"] .nl-out,
+  .nl .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .nl .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: -0.6rem 0 0.9rem; }
+  .nl .cf-stale-hint strong { color: #fde68a; }
+  .nl .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
   .nl .nl-rbtn--solid { background: #fff; color: var(--accent-strong); border-color: #fff; }
   .nl .nl-rbtn--solid:hover { background: #fff; filter: brightness(0.95); }
 

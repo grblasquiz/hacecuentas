@@ -183,6 +183,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
         <button class="cf-rbtn" type="button" id="ml-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
         <button class="cf-rbtn" type="button" id="ml-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
       </div>
+      <p class="cf-stale-hint">Cambiaste un dato — apretá <strong>Calcular</strong> para actualizar.</p>
     </div>
   </section>
 
@@ -457,12 +458,18 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       return { d, millas, cash, tasas, valorRef, costoCanje, neto, cpm, ahorro: cash - costoCanje, conviene: neto > 0 && cpm >= REF };
     }
 
+    // Labels del propio formulario (código IATA del destino elegido, ayuda del segmented):
+    // feedback de UI, no cálculo → siguen en vivo.
+    function syncInputLabels() {
+      $('ml-iata').textContent = (DEST[destEl.value] || {}).i || '';
+      $('ml-viaje-help').hidden = cabina !== 'business';
+    }
+
     function render() {
       const r = calc();
-      $('ml-iata').textContent = r.d.i;
+      syncInputLabels();
       $('ml-big').textContent = nMil(r.millas);
       $('ml-sub').textContent = 'millas LATAM Pass + ' + usd(r.tasas) + ' de impuestos y tasas';
-      $('ml-viaje-help').hidden = cabina !== 'business';
       const v = $('ml-verdict');
       if (r.cash > 0) {
         v.hidden = false;
@@ -493,19 +500,28 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       const q = $('ml-quick'); if (q) q.textContent = nMil(r.millas);
     }
 
-    destEl.addEventListener('change', render);
-    cashEl.addEventListener('input', () => { cashEl.value = fmtTh(cashEl.value); render(); });
-    tasasEl.addEventListener('input', () => { tasasEl.value = fmtTh(tasasEl.value); render(); });
-    $('ml-calc-btn').addEventListener('click', render);
+    // El botón Calcular es el único que calcula: tocar un input sólo marca el resultado como vencido.
+    const resultEl = $('ml-result');
+    const markStale = () => { if (resultEl) resultEl.setAttribute('data-stale', '1'); };
+    const runCalc = () => { if (render() !== false && resultEl) resultEl.removeAttribute('data-stale'); };
+
+    destEl.addEventListener('change', () => { syncInputLabels(); markStale(); });
+    cashEl.addEventListener('input', () => { cashEl.value = fmtTh(cashEl.value); markStale(); });
+    tasasEl.addEventListener('input', () => { tasasEl.value = fmtTh(tasasEl.value); markStale(); });
+    $('ml-calc-btn').addEventListener('click', runCalc);
+    root.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target?.matches?.('input')) { e.preventDefault(); runCalc(); }
+    });
     document.querySelectorAll('[data-cab]').forEach((b) => b.addEventListener('click', () => {
       cabina = b.getAttribute('data-cab');
       document.querySelectorAll('[data-cab]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-      render();
+      syncInputLabels();
+      markStale();
     }));
     document.querySelectorAll('[data-viaje]').forEach((b) => b.addEventListener('click', () => {
       viaje = b.getAttribute('data-viaje');
       document.querySelectorAll('[data-viaje]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-      render();
+      markStale();
     }));
     document.querySelectorAll('[data-ej]').forEach((b) => b.addEventListener('click', () => {
       const p = b.getAttribute('data-ej').split('|');
@@ -513,7 +529,8 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       const cb = document.querySelector(`[data-cab="${p[1]}"]`); if (cb) cb.click();
       const vb = document.querySelector(`[data-viaje="${p[2]}"]`); if (vb) vb.click();
       cashEl.value = fmtTh(p[3]);
-      render();
+      syncInputLabels();
+      markStale();
     }));
 
     function summary() {
@@ -533,11 +550,19 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
     if (q.get('tasas')) tasasEl.value = fmtTh(q.get('tasas'));
     if (q.get('cabina')) { const b = document.querySelector(`[data-cab="${q.get('cabina')}"]`); if (b) b.click(); }
     if (q.get('viaje')) { const b = document.querySelector(`[data-viaje="${q.get('viaje')}"]`); if (b) b.click(); }
-    render();
+    runCalc();
   })();
 </script>
 
 <style>
+  /* Resultado vencido: se tocó un input y todavía no se apretó Calcular. */
+  .ml .cf-result[data-stale="1"] .cf-result__big,
+  .ml .cf-result[data-stale="1"] .ml-verdict,
+  .ml .cf-result[data-stale="1"] .cf-tiles,
+  .ml .cf-result[data-stale="1"] .cf-compose { opacity: 0.45; transition: opacity .15s; }
+  .ml .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .ml .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
+
   .ml .ml-deco-wrap { position: relative; }
   .ml .ml-badge { top: 50%; right: -14px; transform: translateY(-50%); width: 44px; height: 44px; font-size: 0.8rem; background: #fff; color: var(--accent-strong); }
 

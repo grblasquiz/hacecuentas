@@ -136,6 +136,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
         <button class="cf-rbtn" type="button" id="fd-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
         <button class="cf-rbtn" type="button" id="fd-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
       </div>
+      <p class="cf-stale-hint">Cambiaste un dato — apretá <strong>Calcular</strong> para actualizar.</p>
     </div>
   </section>
 
@@ -454,11 +455,19 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       }).join('');
     }
 
-    sueldoEl.addEventListener('input', () => { sueldoEl.value = fmtThousands(sueldoEl.value); render(); });
-    mesesEl.addEventListener('input', render);
-    $('fd-calc-btn').addEventListener('click', render);
+    // El botón Calcular es el único que calcula: tocar un input sólo marca el resultado como vencido.
+    const resultEl = $('fd-result');
+    const markStale = () => { if (resultEl) resultEl.setAttribute('data-stale', '1'); };
+    const runCalc = () => { if (render() !== false && resultEl) resultEl.removeAttribute('data-stale'); };
+
+    sueldoEl.addEventListener('input', () => { sueldoEl.value = fmtThousands(sueldoEl.value); markStale(); });
+    mesesEl.addEventListener('input', markStale);
+    $('fd-calc-btn').addEventListener('click', runCalc);
+    root.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target?.matches?.('input')) { e.preventDefault(); runCalc(); }
+    });
     document.querySelectorAll('[data-ej]').forEach((b) => b.addEventListener('click', () => {
-      sueldoEl.value = fmtThousands(b.getAttribute('data-ej')); render();
+      sueldoEl.value = fmtThousands(b.getAttribute('data-ej')); markStale();
     }));
 
     function summary() {
@@ -475,11 +484,17 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
     const q = new URLSearchParams(location.search);
     if (q.get('sueldo')) sueldoEl.value = fmtThousands(q.get('sueldo'));
     if (q.get('meses')) mesesEl.value = q.get('meses');
-    render();
+    runCalc();
   })();
 </script>
 
 <style>
+  /* Resultado vencido: se tocó un input y todavía no se apretó Calcular. */
+  .fd .cf-result[data-stale="1"] .cf-result__big,
+  .fd .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .fd .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .fd .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
+
   /* El badge vive fuera de .cf-deco-card porque la card tiene overflow:hidden */
   .fd .fd-deco-wrap { position: relative; }
   .fd .fd-badge { top: 50%; right: -16px; transform: translateY(-50%); width: 48px; height: 48px; font-size: 1.2rem; }

@@ -179,6 +179,7 @@ const sources = calc.sources || [];
         <button class="cf-rbtn" type="button" id="apc-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
         <button class="cf-rbtn" type="button" id="apc-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
       </div>
+      <p class="cf-stale-hint">Cambiaste un dato — apretá <strong>Calcular</strong> para actualizar.</p>
     </div>
   </section>
 
@@ -505,13 +506,21 @@ const sources = calc.sources || [];
       $('apc-s3').textContent = fmt(r.costo) + ' · +' + fmt(r.cargas);
     }
 
-    brutoEl.addEventListener('input', function () { brutoEl.value = fmtThousands(brutoEl.value); render(); });
-    actEl.addEventListener('change', render);
-    artEl.addEventListener('change', render);
-    osEl.addEventListener('change', render);
-    $('apc-btn').addEventListener('click', render);
+    // El botón Calcular es el único que calcula: tocar un input sólo marca el resultado como vencido.
+    const resultEl = $('apc-result');
+    function markStale() { if (resultEl) resultEl.setAttribute('data-stale', '1'); }
+    function runCalc() { if (render() !== false && resultEl) resultEl.removeAttribute('data-stale'); }
+
+    brutoEl.addEventListener('input', function () { brutoEl.value = fmtThousands(brutoEl.value); markStale(); });
+    actEl.addEventListener('change', markStale);
+    artEl.addEventListener('change', markStale);
+    osEl.addEventListener('change', markStale);
+    $('apc-btn').addEventListener('click', runCalc);
+    root.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && e.target && e.target.matches && e.target.matches('input')) { e.preventDefault(); runCalc(); }
+    });
     document.querySelectorAll('[data-ej]').forEach(function (b) {
-      b.addEventListener('click', function () { brutoEl.value = fmtThousands(b.getAttribute('data-ej')); render(); });
+      b.addEventListener('click', function () { brutoEl.value = fmtThousands(b.getAttribute('data-ej')); markStale(); });
     });
 
     function summary() {
@@ -539,11 +548,18 @@ const sources = calc.sources || [];
     if (q.get('actividad')) actEl.value = q.get('actividad');
     if (q.get('art')) artEl.value = q.get('art');
     if (q.get('os')) osEl.checked = q.get('os') !== '0';
-    render();
+    runCalc();
   })();
 </script>
 
 <style>
+  /* Resultado vencido: se tocó un input y todavía no se apretó Calcular. */
+  .apc .cf-result[data-stale="1"] .cf-result__big,
+  .apc .cf-result[data-stale="1"] .cf-tiles,
+  .apc .cf-result[data-stale="1"] .cf-rows { opacity: 0.45; transition: opacity .15s; }
+  .apc .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .apc .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
+
   .apc .apc-deco-wrap { position: relative; }
   .apc .apc-badge { top: 50%; right: -16px; transform: translateY(-50%); width: 48px; height: 48px; font-size: 0.78rem; letter-spacing: 0.02em; }
 

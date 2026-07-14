@@ -183,6 +183,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
         <button class="cf-rbtn" type="button" id="cm-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
         <button class="cf-rbtn" type="button" id="cm-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
       </div>
+      <p class="cf-stale-hint">Cambiaste un dato — apretá <strong>Calcular</strong> para actualizar.</p>
     </div>
   </section>
 
@@ -470,14 +471,19 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       return { m, o, d, tasaO, tasaD, enUsd, resultado, dec, directo, inversa: tasaO / tasaD, formula };
     }
 
+    // Label del propio input (nombre de la moneda de origen): feedback de UI, no cálculo → sigue en vivo.
+    function syncInputLabels() {
+      $('cm-monto-hint').textContent = NOMBRES[origenEl.value] || '';
+    }
+
     function render() {
       const r = calc();
-      $('cm-monto-hint').textContent = NOMBRES[origenEl.value] || '';
+      syncInputLabels();
       if (r.err) {
         errEl.textContent = r.err; errEl.hidden = false;
         $('cm-big').textContent = '—';
         $('cm-sub').textContent = r.err;
-        return;
+        return false;
       }
       errEl.hidden = true;
       const res = fmtAuto(r.resultado);
@@ -498,16 +504,24 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       $('cm-step3').textContent = res + ' ' + r.d;
     }
 
-    montoEl.addEventListener('input', render);
-    origenEl.addEventListener('change', render);
-    destinoEl.addEventListener('change', render);
-    $('cm-calc-btn').addEventListener('click', render);
+    // El botón Calcular es el único que calcula: tocar un input sólo marca el resultado como vencido.
+    const resultEl = $('cm-result');
+    const markStale = () => { if (resultEl) resultEl.setAttribute('data-stale', '1'); };
+    const runCalc = () => { if (render() !== false && resultEl) resultEl.removeAttribute('data-stale'); };
+
+    montoEl.addEventListener('input', markStale);
+    origenEl.addEventListener('change', () => { syncInputLabels(); markStale(); });
+    destinoEl.addEventListener('change', markStale);
+    $('cm-calc-btn').addEventListener('click', runCalc);
+    root.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target?.matches?.('input')) { e.preventDefault(); runCalc(); }
+    });
     $('cm-swap').addEventListener('click', () => {
-      const a = origenEl.value; origenEl.value = destinoEl.value; destinoEl.value = a; render();
+      const a = origenEl.value; origenEl.value = destinoEl.value; destinoEl.value = a; syncInputLabels(); markStale();
     });
     document.querySelectorAll('[data-ej]').forEach((b) => b.addEventListener('click', () => {
       const p = b.getAttribute('data-ej').split('|');
-      montoEl.value = fmt(Number(p[0])); origenEl.value = p[1]; destinoEl.value = p[2]; render();
+      montoEl.value = fmt(Number(p[0])); origenEl.value = p[1]; destinoEl.value = p[2]; syncInputLabels(); markStale();
     }));
 
     function summary() {
@@ -525,11 +539,17 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
     if (q.get('monto') && Number(q.get('monto')) > 0) montoEl.value = fmt(Number(q.get('monto')));
     if (q.get('de') && T[q.get('de')]) origenEl.value = q.get('de');
     if (q.get('a') && T[q.get('a')]) destinoEl.value = q.get('a');
-    render();
+    runCalc();
   })();
 </script>
 
 <style>
+  /* Resultado vencido: se tocó un input y todavía no se apretó Calcular. */
+  .cm .cf-result[data-stale="1"] .cf-result__big,
+  .cm .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .cm .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .cm .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
+
   .cm .cm-deco-wrap { position: relative; }
   .cm .cm-badge { top: 50%; right: -14px; transform: translateY(-50%); width: 44px; height: 44px; font-size: 1.2rem; }
 

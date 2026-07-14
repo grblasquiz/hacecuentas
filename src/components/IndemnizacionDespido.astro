@@ -219,6 +219,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       <div class="cf-result__big" id="ix-big">{fmtAr(init.total)}</div>
       <div class="cf-result__biglabel">Indemnización total bruta</div>
       <p class="cf-result__sub" id="ix-sub">{init.aniosComputables} años computables · base {fmtAr(init.baseArt245)}</p>
+      <p class="cf-stale-hint">Apretá <strong>Calcular</strong> para actualizar el resultado.</p>
       <div class="cf-tiles cf-tiles--2">
         <div class="cf-tile"><div class="cf-tile__value" id="ix-t-ant">{fmtAr(init.antiguedad)}</div><div class="cf-tile__label">Antigüedad · Art. 245</div></div>
         <div class="cf-tile"><div class="cf-tile__value" id="ix-t-pre">{fmtAr(init.gPreaviso)}</div><div class="cf-tile__label">Preaviso + SAC</div></div>
@@ -572,6 +573,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       const s = state();
       const ok = s.sueldo > 0 && (s.anios > 0 || s.meses > 0);
       const r = indem(s.sueldo, s.anios, s.meses, s.dia, s.mes, s.tope);
+      resultEl && resultEl.removeAttribute('data-stale');
 
       if (!ok) {
         $('ix-big').textContent = '—';
@@ -623,12 +625,17 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       $('ix-s3').textContent = 'Total ' + fmt(r.total);
     }
 
-    sueldoEl.addEventListener('input', () => { sueldoEl.value = fmtThousands(sueldoEl.value); render(); });
-    topeEl.addEventListener('input', () => { topeEl.value = fmtThousands(topeEl.value); render(); });
-    [aniosEl, mesesEl, diaEl].forEach((el) => el.addEventListener('input', render));
-    [mesEl, convEl].forEach((el) => el.addEventListener('change', render));
+    const resultEl = $('ix-result');
+    const stale = () => { resultEl && resultEl.setAttribute('data-stale', '1'); };
+    const onEnter = (e) => { if (e.key === 'Enter') { e.preventDefault(); render(); } };
+
+    sueldoEl.addEventListener('input', () => { sueldoEl.value = fmtThousands(sueldoEl.value); stale(); });
+    topeEl.addEventListener('input', () => { topeEl.value = fmtThousands(topeEl.value); stale(); });
+    [aniosEl, mesesEl, diaEl].forEach((el) => el.addEventListener('input', stale));
+    [mesEl, convEl].forEach((el) => el.addEventListener('change', stale));
+    [sueldoEl, topeEl, aniosEl, mesesEl, diaEl].forEach((el) => el.addEventListener('keydown', onEnter));
     $('ix-calc-btn').addEventListener('click', render);
-    document.querySelectorAll('.ix [data-ej]').forEach((b) => b.addEventListener('click', () => { sueldoEl.value = fmtThousands(b.getAttribute('data-ej')); render(); }));
+    document.querySelectorAll('.ix [data-ej]').forEach((b) => b.addEventListener('click', () => { sueldoEl.value = fmtThousands(b.getAttribute('data-ej')); stale(); }));
 
     function summary() {
       const s = state();
@@ -666,6 +673,13 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
 
   .ix .ix-vizzoti { color: #fbbf24; margin: 0 0 1rem; }
   .ix .ix-vizzoti strong { color: #fde68a; }
+
+  /* Resultado desactualizado: el botón Calcular es el único que dispara el cálculo */
+  .ix .cf-result[data-stale="1"] .cf-result__big,
+  .ix .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .ix .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .ix .cf-stale-hint strong { color: #fde68a; }
+  .ix .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
 
   .ix-2col, .cf-band .ix-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
   @media (min-width: 900px) { .ix-2col, .cf-band .ix-2col { grid-template-columns: 0.85fr 1.15fr; } }

@@ -158,6 +158,7 @@ const f4 = (n: number) => n.toFixed(4);
       <p class="cf-result__eyebrow">Tu salario diario integrado</p>
       <div class="cf-result__big" id="sd-big">{fmtMXN(init.sdi)}</div>
       <p class="cf-result__sub" id="sd-sub">por día · SBC mensual {fmtMXN(init.sbcMensual)}</p>
+      <p class="cf-stale-hint">Apretá <strong>Calcular</strong> para actualizar el resultado.</p>
       <div class="cf-tiles cf-tiles--2">
         <div class="cf-tile"><div class="cf-tile__value" id="sd-t-factor">{f4(init.factor)}</div><div class="cf-tile__label">Factor · prestaciones incluidas</div></div>
         <div class="cf-tile"><div class="cf-tile__value" id="sd-t-sbc">{fmtMXN(init.sbcMensual)}</div><div class="cf-tile__label">SBC mensual · referencia IMSS</div></div>
@@ -499,11 +500,17 @@ const f4 = (n: number) => n.toFixed(4);
       $('sd-topado').hidden = !c.topado;
       const dv = $('sd-deco-val'); if (dv) dv.textContent = fmt(c.sdi);
       const df = $('sd-deco-factor'); if (df) df.textContent = c.factor.toFixed(4);
+      resultEl && resultEl.removeAttribute('data-stale');
     }
 
-    ['sd-salario', 'sd-extras'].forEach((id) => $(id).addEventListener('input', (e) => { e.target.value = fmtTh(e.target.value); render(); }));
-    ['sd-anios', 'sd-agui', 'sd-prima'].forEach((id) => $(id).addEventListener('input', render));
-    $('sd-periodo').addEventListener('change', render);
+    const resultEl = $('sd-result');
+    const stale = () => { resultEl && resultEl.setAttribute('data-stale', '1'); };
+    const onEnter = (e) => { if (e.key === 'Enter') { e.preventDefault(); render(); } };
+
+    ['sd-salario', 'sd-extras'].forEach((id) => $(id).addEventListener('input', (e) => { e.target.value = fmtTh(e.target.value); stale(); }));
+    ['sd-anios', 'sd-agui', 'sd-prima'].forEach((id) => $(id).addEventListener('input', stale));
+    ['sd-salario', 'sd-extras', 'sd-anios', 'sd-agui', 'sd-prima'].forEach((id) => $(id).addEventListener('keydown', onEnter));
+    $('sd-periodo').addEventListener('change', stale);
     $('sd-calc-btn').addEventListener('click', render);
 
     function summary() {
@@ -536,6 +543,14 @@ const f4 = (n: number) => n.toFixed(4);
   .sd .sd-money__sign { position: absolute; left: 0.75rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
   .sd .sd-money .cf-input { padding-left: 1.6rem; }
   .sd .sd-topado { color: #fbbf24; margin: 0 0 1rem; }
+
+  /* Resultado desactualizado: el botón Calcular es el único que dispara el cálculo */
+  .sd .cf-result[data-stale="1"] .cf-result__big,
+  .sd .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .sd .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .sd .cf-stale-hint strong { color: #fde68a; }
+  .sd .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
+
   .sd .sd-chipcalc { margin: 0.7rem 0 0; padding: 0.4rem 0.6rem; border-radius: var(--radius-sm); background: var(--bg-soft); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent-strong); overflow-x: auto; }
 
   .sd-2col, .cf-band .sd-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }

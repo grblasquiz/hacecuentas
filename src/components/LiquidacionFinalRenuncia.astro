@@ -137,6 +137,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       <div class="cf-result__big" id="lq-big">{fmtAr(init.totalLiquidacion)}</div>
       <div class="cf-result__biglabel">Liquidación final bruta</div>
       <p class="cf-result__sub" id="lq-sub">{INIT.dias} días trabajados · {INIT.vac} días de vacaciones · {INIT.meses} de 6 meses de SAC</p>
+      <p class="cf-stale-hint">Apretá <strong>Calcular</strong> para actualizar el resultado.</p>
       <div class="cf-tiles cf-tiles--2">
         <div class="cf-tile"><div class="cf-tile__value" id="lq-t-dias">{fmtAr(init.diasTrabajados)}</div><div class="cf-tile__label">Días trabajados</div></div>
         <div class="cf-tile"><div class="cf-tile__value" id="lq-t-vac">{fmtAr(init.vacacionesNoGozadas)}</div><div class="cf-tile__label">Vacaciones no gozadas</div></div>
@@ -436,6 +437,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
     function render() {
       const s = state();
       const r = liq(s.sueldo, s.dias, s.vac, s.meses);
+      resultEl && resultEl.removeAttribute('data-stale');
 
       if (!(s.sueldo > 0)) {
         $('lq-big').textContent = '—';
@@ -474,11 +476,16 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       $('lq-s3').textContent = 'Total ' + fmt(r.totalLiquidacion);
     }
 
-    sueldoEl.addEventListener('input', () => { sueldoEl.value = fmtThousands(sueldoEl.value); render(); });
-    [diasEl, vacEl].forEach((el) => el.addEventListener('input', render));
-    mesesEl.addEventListener('change', render);
+    const resultEl = $('lq-result');
+    const stale = () => { resultEl && resultEl.setAttribute('data-stale', '1'); };
+    const onEnter = (e) => { if (e.key === 'Enter') { e.preventDefault(); render(); } };
+
+    sueldoEl.addEventListener('input', () => { sueldoEl.value = fmtThousands(sueldoEl.value); stale(); });
+    [diasEl, vacEl].forEach((el) => el.addEventListener('input', stale));
+    [sueldoEl, diasEl, vacEl].forEach((el) => el.addEventListener('keydown', onEnter));
+    mesesEl.addEventListener('change', stale);
     $('lq-calc-btn').addEventListener('click', render);
-    document.querySelectorAll('.lq [data-ej]').forEach((b) => b.addEventListener('click', () => { sueldoEl.value = fmtThousands(b.getAttribute('data-ej')); render(); }));
+    document.querySelectorAll('.lq [data-ej]').forEach((b) => b.addEventListener('click', () => { sueldoEl.value = fmtThousands(b.getAttribute('data-ej')); stale(); }));
 
     function summary() {
       const s = state();
@@ -511,6 +518,13 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
   .lq .lq-money { position: relative; display: flex; align-items: center; }
   .lq .lq-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
   .lq .lq-money .cf-input { padding-left: 1.7rem; }
+
+  /* Resultado desactualizado: el botón Calcular es el único que dispara el cálculo */
+  .lq .cf-result[data-stale="1"] .cf-result__big,
+  .lq .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .lq .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .lq .cf-stale-hint strong { color: #fde68a; }
+  .lq .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
 
   .lq-2col, .cf-band .lq-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
   @media (min-width: 900px) { .lq-2col, .cf-band .lq-2col { grid-template-columns: 0.85fr 1.15fr; } }

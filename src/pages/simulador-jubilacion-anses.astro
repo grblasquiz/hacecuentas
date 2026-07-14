@@ -228,6 +228,7 @@ const schema = {
           <div class="cf-rrow"><span class="cf-rrow__lbl">Requisito de aportes <small>del régimen elegido</small></span><span class="cf-rrow__val" id="sj-aportes-status">Cumple ({init.aportesReq} req.)</span></div>
         </div>
         <div class="cf-result__formula" id="sj-formula">{fmtArs(init.sueldoJub)} × 1,5% × {init.aportesAlJubilar} años = {fmtArs(init.haber)}</div>
+        <p class="cf-stale-hint">Apretá Calcular para actualizar</p>
         <div class="cf-result__actions cf-result__actions--2">
           <button class="cf-rbtn" type="button" id="sj-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
           <button class="cf-rbtn" type="button" id="sj-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
@@ -577,6 +578,14 @@ const schema = {
     function parseAmt(s) { return Number(String(s || '').replace(/\D/g, '')) || 0; }
     function fmtThousands(v) { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('es-AR') : ''; }
 
+    // El resultado SÓLO se recalcula al apretar Calcular (o Enter en un input).
+    // Cualquier cambio de input marca el panel como pendiente, no dispara el cálculo.
+    const resultEl = $('sj-result');
+    function markStale() { if (resultEl) resultEl.setAttribute('data-stale', '1'); }
+    function clearStale() { if (resultEl) resultEl.removeAttribute('data-stale'); }
+    function calcular() { render(); clearStale(); }
+    function onEnter(el) { el.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); calcular(); } }); }
+
     // Misma fórmula simplificada que el SSR (frontmatter): 1,5% × años de aportes
     // × sueldo proyectado, acotado entre el piso (mínima + bono) y el tope máximo.
     function simular() {
@@ -693,15 +702,18 @@ const schema = {
       $('sj-recs-list').innerHTML = recs.map((x) => '<li>' + x + '</li>').join('');
     }
 
-    sueldoEl.addEventListener('input', () => { sueldoEl.value = fmtThousands(sueldoEl.value); render(); });
-    sexoEl.addEventListener('change', render);
-    regimenEl.addEventListener('change', render);
-    [edadEl, aportesEl, aumentoEl].forEach((el) => el.addEventListener('input', render));
-    $('sj-calc-btn').addEventListener('click', render);
+    // El formateo de miles sigue en vivo (es feedback de UI del propio input), el cálculo no.
+    sueldoEl.addEventListener('input', () => { sueldoEl.value = fmtThousands(sueldoEl.value); markStale(); });
+    sexoEl.addEventListener('change', markStale);
+    regimenEl.addEventListener('change', markStale);
+    [edadEl, aportesEl, aumentoEl].forEach((el) => el.addEventListener('input', markStale));
+    [sexoEl, regimenEl, edadEl, aportesEl, sueldoEl, aumentoEl].forEach((el) => onEnter(el));
+    $('sj-calc-btn').addEventListener('click', calcular);
+    // Ejemplos: escriben los valores en los inputs, pero no recalculan.
     document.querySelectorAll('[data-ej-edad]').forEach((b) => b.addEventListener('click', () => {
       edadEl.value = b.getAttribute('data-ej-edad');
       aportesEl.value = b.getAttribute('data-ej-aportes');
-      render();
+      markStale();
     }));
 
     function summary() {
@@ -732,7 +744,7 @@ const schema = {
     if (q.get('aportes')) aportesEl.value = q.get('aportes');
     if (q.get('sueldo')) sueldoEl.value = fmtThousands(q.get('sueldo'));
     if (q.get('aumento')) aumentoEl.value = q.get('aumento');
-    render();
+    calcular();
   })();
 </script>
 
@@ -740,6 +752,12 @@ const schema = {
   /* El badge vive fuera de .cf-deco-card porque la card tiene overflow:hidden */
   .sj .sj-deco-wrap { position: relative; }
   .sj .sj-badge { top: 50%; right: -16px; transform: translateY(-50%); width: 48px; height: 48px; font-size: 1.2rem; }
+
+  /* Resultado pendiente: se tocó un input y todavía no se apretó Calcular */
+  .sj .cf-result[data-stale="1"] .cf-result__big,
+  .sj .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .sj .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .sj .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
 
   .sj .sj-money { position: relative; display: flex; align-items: center; }
   .sj .sj-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }

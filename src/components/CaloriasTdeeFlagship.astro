@@ -169,6 +169,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       </div>
       <div class="cf-result__formula" id="td-formula">BMR = 10×75 + 6,25×175 − 5×30 + 5 = {nf(init.bmr)} · TDEE = {nf(init.bmr)} × {n2(initFactor)} = {nf(init.tdee)}</div>
       <p class="cf-result__sub td-piso" id="td-piso" hidden={!initClamped}>⚠️ El déficit de 500 kcal caería por debajo del piso recomendado: te mostramos <strong id="td-piso-val">{nf(initPiso)} kcal</strong>, el mínimo sin supervisión médica. No bajes de ahí por tu cuenta.</p>
+      <p class="cf-stale-hint">Apretá Calcular para actualizar</p>
       <div class="cf-result__actions cf-result__actions--2">
         <button class="cf-rbtn" type="button" id="td-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
         <button class="cf-rbtn" type="button" id="td-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
@@ -459,6 +460,14 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
     const n2 = (n) => n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 3 });
     let sexo = 'masculino';
 
+    // El resultado SÓLO se recalcula al apretar Calcular (o Enter en un input).
+    // Cualquier cambio de input marca el panel como pendiente, no dispara el cálculo.
+    const resultEl = $('td-result');
+    function markStale() { if (resultEl) resultEl.setAttribute('data-stale', '1'); }
+    function clearStale() { if (resultEl) resultEl.removeAttribute('data-stale'); }
+    function calcular() { if (render() !== false) clearStale(); }
+    function onEnter(el) { el.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); calcular(); } }); }
+
     function state() {
       return {
         peso: Number($('td-peso').value) || 0,
@@ -471,7 +480,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
 
     function render() {
       const s = state();
-      if (!s.peso || !s.altura || !s.edad) return;
+      if (!s.peso || !s.altura || !s.edad) return false;
       const r = compute(s.peso, s.altura, s.edad, s.sexo, s.actividad, FACTORES, PISO);
       const actKcal = r.tdee - r.bmr;
       const pctBmr = r.tdee > 0 ? (r.bmr / r.tdee) * 100 : 0;
@@ -518,20 +527,23 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       }).join('');
     }
 
-    ['td-peso', 'td-altura', 'td-edad'].forEach((id) => $(id).addEventListener('input', render));
-    $('td-actividad').addEventListener('change', render);
-    $('td-calc-btn').addEventListener('click', render);
+    ['td-peso', 'td-altura', 'td-edad'].forEach((id) => { $(id).addEventListener('input', markStale); onEnter($(id)); });
+    $('td-actividad').addEventListener('change', markStale);
+    onEnter($('td-actividad'));
+    $('td-calc-btn').addEventListener('click', calcular);
+    // Segmented: marca la opción elegida (feedback de UI), pero no calcula.
     document.querySelectorAll('[data-sexo]').forEach((b) => b.addEventListener('click', () => {
       sexo = b.getAttribute('data-sexo');
       document.querySelectorAll('[data-sexo]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-      render();
+      markStale();
     }));
+    // Ejemplos: escriben los valores en los inputs, pero no recalculan.
     document.querySelectorAll('[data-ej]').forEach((b) => b.addEventListener('click', () => {
       const v = b.getAttribute('data-ej').split('|');
       const sb = document.querySelector('[data-sexo="' + v[0] + '"]');
       if (sb) { sexo = v[0]; document.querySelectorAll('[data-sexo]').forEach((x) => x.setAttribute('aria-pressed', x === sb ? 'true' : 'false')); }
       $('td-peso').value = v[1]; $('td-altura').value = v[2]; $('td-edad').value = v[3]; $('td-actividad').value = v[4];
-      render();
+      markStale();
     }));
 
     function summary() {
@@ -554,7 +566,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
     if (q.get('edad')) $('td-edad').value = q.get('edad');
     if (q.get('actividad')) $('td-actividad').value = q.get('actividad');
     if (q.get('sexo')) { const b = document.querySelector('[data-sexo="' + q.get('sexo') + '"]'); if (b) b.click(); }
-    render();
+    calcular();
   })();
 </script>
 
@@ -567,6 +579,12 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
   .td .td-seg button { flex: 1; }
   .td .td-piso { color: #fbbf24; margin: 0 0 1rem; }
   .td .td-piso strong { color: #fde68a; }
+
+  /* Resultado pendiente: se tocó un input y todavía no se apretó Calcular */
+  .td .cf-result[data-stale="1"] .cf-result__big,
+  .td .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .td .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .td .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
 
   .td-2col, .cf-band .td-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
   @media (min-width: 900px) { .td-2col, .cf-band .td-2col { grid-template-columns: 0.85fr 1.15fr; } }

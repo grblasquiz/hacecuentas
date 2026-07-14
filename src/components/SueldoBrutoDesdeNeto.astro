@@ -130,6 +130,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       <div class="cf-result__big" id="sb-big">{fmtAr(init.sueldoBruto)}</div>
       <div class="cf-result__biglabel">Sueldo bruto necesario</div>
       <p class="cf-result__sub" id="sb-sub">Para llevarte {fmtAr(INIT.neto)} en mano con {INIT.aportes}% de aportes</p>
+      <p class="cf-stale-hint">Apretá <strong>Calcular</strong> para actualizar el resultado.</p>
       <div class="cf-tiles cf-tiles--2">
         <div class="cf-tile"><div class="cf-tile__value" id="sb-t-aportes">{fmtAr(init.aportesMonto)}</div><div class="cf-tile__label">Aportes del empleado</div></div>
         <div class="cf-tile"><div class="cf-tile__value" id="sb-t-neto">{fmtAr(init.netoResultado)}</div><div class="cf-tile__label">Neto verificado</div></div>
@@ -411,6 +412,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       const neto = num(netoEl);
       const porc = Number(aportesEl.value) || 17;
       const r = brutoDesdeNeto(neto, porc);
+      resultEl && resultEl.removeAttribute('data-stale');
 
       if (!(neto > 0)) {
         $('sb-big').textContent = '—';
@@ -457,10 +459,14 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       $('sb-s3').textContent = 'Bruto ' + fmt(r.sueldoBruto);
     }
 
-    netoEl.addEventListener('input', () => { netoEl.value = fmtThousands(netoEl.value); render(); });
-    aportesEl.addEventListener('change', render);
+    const resultEl = $('sb-result');
+    const stale = () => { resultEl && resultEl.setAttribute('data-stale', '1'); };
+
+    netoEl.addEventListener('input', () => { netoEl.value = fmtThousands(netoEl.value); stale(); });
+    netoEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); render(); } });
+    aportesEl.addEventListener('change', stale);
     $('sb-calc-btn').addEventListener('click', render);
-    document.querySelectorAll('.sb [data-ej]').forEach((b) => b.addEventListener('click', () => { netoEl.value = fmtThousands(b.getAttribute('data-ej')); render(); }));
+    document.querySelectorAll('.sb [data-ej]').forEach((b) => b.addEventListener('click', () => { netoEl.value = fmtThousands(b.getAttribute('data-ej')); stale(); }));
 
     function summary() {
       const neto = num(netoEl);
@@ -489,6 +495,13 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
   .sb .sb-money { position: relative; display: flex; align-items: center; }
   .sb .sb-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
   .sb .sb-money .cf-input { padding-left: 1.7rem; }
+
+  /* Resultado desactualizado: el botón Calcular es el único que dispara el cálculo */
+  .sb .cf-result[data-stale="1"] .cf-result__big,
+  .sb .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .sb .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .sb .cf-stale-hint strong { color: #fde68a; }
+  .sb .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
 
   .sb-2col, .cf-band .sb-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
   @media (min-width: 900px) { .sb-2col, .cf-band .sb-2col { grid-template-columns: 0.85fr 1.15fr; } }

@@ -153,6 +153,7 @@ const sources = calc.sources || [];
       <div class="cf-result__big" id="gcc-big">{fmt(init.impuestoMensual)}</div>
       <p class="cf-result__biglabel" id="gcc-biglabel">de retención por mes</p>
       <p class="cf-result__sub" id="gcc-sub">Tasa efectiva {pct(init.tasaEfectiva)} sobre tu ganancia anual · alícuota marginal {pct(initMarginal * 100, 0)}</p>
+      <p class="cf-stale-hint">Apretá <strong>Calcular</strong> para actualizar el resultado.</p>
       <div class="cf-tiles cf-tiles--2">
         <div class="cf-tile"><div class="cf-tile__value" id="gcc-t-anual">{fmt(init.impuestoAnual)}</div><div class="cf-tile__label">Impuesto anual</div></div>
         <div class="cf-tile"><div class="cf-tile__value" id="gcc-t-efec">{pct(init.tasaEfectiva)}</div><div class="cf-tile__label">Tasa efectiva</div></div>
@@ -495,15 +496,21 @@ const sources = calc.sources || [];
       $('gcc-s1').textContent = 'bruto ' + fmt(i.bruto) + ' → anual ' + fmt(r.gananciaAnual);
       $('gcc-s2').textContent = fmt(r.gnsi) + ' → marginal ' + pct(r.marginal * 100, 0);
       $('gcc-s3').textContent = fmt(r.impuestoMensual) + '/mes · ' + pct(r.tasaEfectiva) + ' efectivo';
+      if (resultEl) resultEl.removeAttribute('data-stale');
     }
 
-    brutoEl.addEventListener('input', function () { brutoEl.value = fmtThousands(brutoEl.value); render(); });
-    otrasEl.addEventListener('input', function () { otrasEl.value = fmtThousands(otrasEl.value); render(); });
-    conyEl.addEventListener('change', render);
-    hijosEl.addEventListener('input', render);
+    const resultEl = $('gcc-result');
+    function stale() { if (resultEl) resultEl.setAttribute('data-stale', '1'); }
+    function onEnter(e) { if (e.key === 'Enter') { e.preventDefault(); render(); } }
+
+    brutoEl.addEventListener('input', function () { brutoEl.value = fmtThousands(brutoEl.value); stale(); });
+    otrasEl.addEventListener('input', function () { otrasEl.value = fmtThousands(otrasEl.value); stale(); });
+    conyEl.addEventListener('change', stale);
+    hijosEl.addEventListener('input', stale);
+    [brutoEl, otrasEl, hijosEl].forEach(function (el) { el.addEventListener('keydown', onEnter); });
     $('gcc-btn').addEventListener('click', render);
     document.querySelectorAll('[data-ej]').forEach(function (b) {
-      b.addEventListener('click', function () { brutoEl.value = fmtThousands(b.getAttribute('data-ej')); render(); });
+      b.addEventListener('click', function () { brutoEl.value = fmtThousands(b.getAttribute('data-ej')); stale(); });
     });
 
     function summary() {
@@ -545,6 +552,13 @@ const sources = calc.sources || [];
   .gcc .gcc-money { position: relative; display: flex; align-items: center; }
   .gcc .gcc-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
   .gcc .gcc-money .cf-input { padding-left: 1.7rem; }
+
+  /* Resultado desactualizado: el botón Calcular es el único que dispara el cálculo */
+  .gcc .cf-result[data-stale="1"] .cf-result__big,
+  .gcc .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .gcc .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .gcc .cf-stale-hint strong { color: #fde68a; }
+  .gcc .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
 
   .gcc .cf-section__title.gcc-t2 { margin: 0.35rem 0 1.25rem; }
   .gcc .gcc-mc-lbl { font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }

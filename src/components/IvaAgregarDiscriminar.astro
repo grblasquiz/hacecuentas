@@ -141,6 +141,7 @@ const sources = calc.sources || [];
         <button class="cf-rbtn" type="button" id="ivd-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
         <button class="cf-rbtn" type="button" id="ivd-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
       </div>
+      <p class="cf-stale-hint">Cambiaste un dato — apretá <strong>Calcular</strong> para actualizar.</p>
     </div>
   </section>
 
@@ -457,24 +458,39 @@ const sources = calc.sources || [];
         : fmt(monto) + ' × ' + fmtMul(1 + alic / 100) + ' = ' + fmt(r.total);
       $('ivd-s3').textContent = 'IVA ' + fmt(r.iva) + ' · ' + pct1(pesoIva) + ' del total';
 
+      syncInputLabels();
+    }
+
+    // Labels del propio input (qué se espera cargar): feedback de UI, no cálculo → siguen en vivo.
+    function syncInputLabels() {
+      const esDisc = modo === 'discriminar';
       $('ivd-monto-hint').textContent = esDisc ? 'Con IVA' : 'Sin IVA';
       $('ivd-modo-help').textContent = esDisc
         ? 'Discriminar: el monto ya incluye IVA y querés saber cuánto es neto y cuánto impuesto.'
         : 'Agregar: el monto es el neto y querés saber el precio final con IVA.';
     }
 
-    montoEl.addEventListener('input', function () { montoEl.value = fmtThousands(montoEl.value); render(); });
-    alicEl.addEventListener('change', render);
-    $('ivd-btn').addEventListener('click', render);
+    // El botón Calcular es el único que calcula: tocar un input sólo marca el resultado como vencido.
+    const resultEl = $('ivd-result');
+    function markStale() { if (resultEl) resultEl.setAttribute('data-stale', '1'); }
+    function runCalc() { if (render() !== false && resultEl) resultEl.removeAttribute('data-stale'); }
+
+    montoEl.addEventListener('input', function () { montoEl.value = fmtThousands(montoEl.value); markStale(); });
+    alicEl.addEventListener('change', markStale);
+    $('ivd-btn').addEventListener('click', runCalc);
+    root.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && e.target && e.target.matches && e.target.matches('input')) { e.preventDefault(); runCalc(); }
+    });
     document.querySelectorAll('[data-modo]').forEach(function (b) {
       b.addEventListener('click', function () {
         modo = b.getAttribute('data-modo');
         document.querySelectorAll('[data-modo]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
-        render();
+        syncInputLabels();
+        markStale();
       });
     });
     document.querySelectorAll('[data-ej]').forEach(function (b) {
-      b.addEventListener('click', function () { montoEl.value = fmtThousands(b.getAttribute('data-ej')); render(); });
+      b.addEventListener('click', function () { montoEl.value = fmtThousands(b.getAttribute('data-ej')); markStale(); });
     });
 
     function summary() {
@@ -500,12 +516,18 @@ const sources = calc.sources || [];
     const q = new URLSearchParams(location.search);
     if (q.get('monto')) montoEl.value = fmtThousands(q.get('monto'));
     if (q.get('alicuota')) alicEl.value = q.get('alicuota');
-    if (q.get('modo') === 'agregar') { const b = document.querySelector('[data-modo="agregar"]'); if (b) { b.click(); return; } }
-    render();
+    if (q.get('modo') === 'agregar') { const b = document.querySelector('[data-modo="agregar"]'); if (b) b.click(); }
+    runCalc();
   })();
 </script>
 
 <style>
+  /* Resultado vencido: se tocó un input y todavía no se apretó Calcular. */
+  .ivd .cf-result[data-stale="1"] .cf-result__big,
+  .ivd .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .ivd .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .ivd .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
+
   .ivd .ivd-deco-wrap { position: relative; }
   .ivd .ivd-badge { top: 50%; right: -16px; transform: translateY(-50%); width: 48px; height: 48px; font-size: 1.4rem; }
 

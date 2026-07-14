@@ -185,6 +185,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
         <button class="cf-rbtn" type="button" id="ip-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
         <button class="cf-rbtn" type="button" id="ip-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
       </div>
+      <p class="cf-stale-hint">Cambiaste un dato — apretá <strong>Calcular</strong> para actualizar.</p>
     </div>
   </section>
 
@@ -498,7 +499,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
 
     function render() {
       const s = state();
-      if (!s.peso || !s.altura) return;
+      if (!s.peso || !s.altura) return false;
       const r = compute(s.peso, s.altura, s.edad, s.sexo, LMS_M, LMS_F);
       const u = umbrales(s.edad, s.sexo);
       const meses = Math.round(r.edadMeses);
@@ -547,19 +548,27 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       $('ip-tbl-cap').textContent = 'Umbrales de IMC por edad según las tablas CDC 2000, sexo ' + (s.sexo === 'f' ? 'femenino' : 'masculino');
     }
 
-    ['ip-peso', 'ip-altura', 'ip-anios', 'ip-meses'].forEach((id) => $(id).addEventListener('input', render));
-    $('ip-calc-btn').addEventListener('click', render);
+    // El botón Calcular es el único que calcula: tocar un input sólo marca el resultado como vencido.
+    const resultEl = $('ip-result');
+    const markStale = () => { if (resultEl) resultEl.setAttribute('data-stale', '1'); };
+    const runCalc = () => { if (render() !== false && resultEl) resultEl.removeAttribute('data-stale'); };
+
+    ['ip-peso', 'ip-altura', 'ip-anios', 'ip-meses'].forEach((id) => $(id).addEventListener('input', markStale));
+    $('ip-calc-btn').addEventListener('click', runCalc);
+    root.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target?.matches?.('input')) { e.preventDefault(); runCalc(); }
+    });
     document.querySelectorAll('[data-sexo]').forEach((b) => b.addEventListener('click', () => {
       sexo = b.getAttribute('data-sexo');
       document.querySelectorAll('[data-sexo]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-      render();
+      markStale();
     }));
     document.querySelectorAll('[data-ej]').forEach((b) => b.addEventListener('click', () => {
       const v = b.getAttribute('data-ej').split('|');
       $('ip-peso').value = v[0]; $('ip-altura').value = v[1]; $('ip-anios').value = v[2]; $('ip-meses').value = v[3];
       const sb = document.querySelector('[data-sexo="' + v[4] + '"]');
       if (sb) { sexo = v[4]; document.querySelectorAll('[data-sexo]').forEach((x) => x.setAttribute('aria-pressed', x === sb ? 'true' : 'false')); }
-      render();
+      markStale();
     }));
 
     function summary() {
@@ -582,11 +591,17 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
     if (q.get('anios')) $('ip-anios').value = q.get('anios');
     if (q.get('meses')) $('ip-meses').value = q.get('meses');
     if (q.get('sexo')) { const b = document.querySelector('[data-sexo="' + q.get('sexo') + '"]'); if (b) b.click(); }
-    render();
+    runCalc();
   })();
 </script>
 
 <style>
+  /* Resultado vencido: se tocó un input y todavía no se apretó Calcular. */
+  .ip .cf-result[data-stale="1"] .cf-result__big,
+  .ip .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .ip .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .ip .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
+
   /* El badge vive fuera de .cf-deco-card porque la card tiene overflow:hidden */
   .ip .ip-deco-wrap { position: relative; }
   .ip .ip-badge { top: -14px; right: -14px; font-size: 0.72rem; letter-spacing: 0.02em; }

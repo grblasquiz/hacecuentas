@@ -133,6 +133,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       <div class="cf-result__big" id="cp-big">{fmtAr(init.aguinaldoCuota)}</div>
       <div class="cf-result__biglabel">Aguinaldo (cuota semestral)</div>
       <p class="cf-result__sub" id="cp-sub">Semestre completo · 6 de 6 meses</p>
+      <p class="cf-stale-hint">Apretá <strong>Calcular</strong> para actualizar el resultado.</p>
       <div class="cf-tiles cf-tiles--2">
         <div class="cf-tile"><div class="cf-tile__value" id="cp-t-base">{fmtAr(init.mejorSueldoBase)}</div><div class="cf-tile__label">Base del cálculo</div></div>
         <div class="cf-tile"><div class="cf-tile__value" id="cp-t-meses">{INIT.meses} de 6</div><div class="cf-tile__label">Meses computados</div></div>
@@ -415,6 +416,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       const sueldo = num(sueldoEl);
       const mesesIn = Number(mesesEl.value) || 6;
       const r = sacCasa(sueldo, mesesIn);
+      resultEl && resultEl.removeAttribute('data-stale');
 
       if (!(sueldo > 0)) {
         $('cp-big').textContent = '—';
@@ -462,11 +464,16 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       $('cp-s3').textContent = 'SAC ' + fmt(r.aguinaldoCuota);
     }
 
-    sueldoEl.addEventListener('input', () => { sueldoEl.value = fmtThousands(sueldoEl.value); render(); });
-    mesesEl.addEventListener('input', render);
-    catEl.addEventListener('change', render);
+    const resultEl = $('cp-result');
+    const stale = () => { resultEl && resultEl.setAttribute('data-stale', '1'); };
+    const onEnter = (e) => { if (e.key === 'Enter') { e.preventDefault(); render(); } };
+
+    sueldoEl.addEventListener('input', () => { sueldoEl.value = fmtThousands(sueldoEl.value); stale(); });
+    mesesEl.addEventListener('input', stale);
+    [sueldoEl, mesesEl].forEach((el) => el.addEventListener('keydown', onEnter));
+    catEl.addEventListener('change', stale);
     $('cp-calc-btn').addEventListener('click', render);
-    document.querySelectorAll('.cp [data-ej]').forEach((b) => b.addEventListener('click', () => { sueldoEl.value = fmtThousands(b.getAttribute('data-ej')); render(); }));
+    document.querySelectorAll('.cp [data-ej]').forEach((b) => b.addEventListener('click', () => { sueldoEl.value = fmtThousands(b.getAttribute('data-ej')); stale(); }));
 
     function summary() {
       const sueldo = num(sueldoEl);
@@ -495,6 +502,13 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
   .cp .cp-money { position: relative; display: flex; align-items: center; }
   .cp .cp-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
   .cp .cp-money .cf-input { padding-left: 1.7rem; }
+
+  /* Resultado desactualizado: el botón Calcular es el único que dispara el cálculo */
+  .cp .cf-result[data-stale="1"] .cf-result__big,
+  .cp .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .cp .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .cp .cf-stale-hint strong { color: #fde68a; }
+  .cp .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
 
   .cp-2col, .cf-band .cp-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
   @media (min-width: 900px) { .cp-2col, .cf-band .cp-2col { grid-template-columns: 0.85fr 1.15fr; } }

@@ -220,6 +220,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
         <button class="cf-rbtn" type="button" id="uo-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
         <button class="cf-rbtn" type="button" id="uo-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
       </div>
+      <p class="cf-stale-hint">Cambiaste un dato — apretá <strong>Calcular</strong> para actualizar.</p>
     </div>
   </section>
 
@@ -564,12 +565,20 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
         ', según los datos que cargaste arriba. Sin horas extra ni adicionales por especialidad.';
     }
 
-    [catEl, zonaEl].forEach((el) => el.addEventListener('change', render));
-    [diasEl, antigEl, he50El, he100El].forEach((el) => el.addEventListener('input', render));
-    presEl.addEventListener('change', render);
-    $('uo-calc-btn').addEventListener('click', render);
+    // El botón Calcular es el único que calcula: tocar un input sólo marca el resultado como vencido.
+    const resultEl = $('uo-result');
+    const markStale = () => { if (resultEl) resultEl.setAttribute('data-stale', '1'); };
+    const runCalc = () => { if (render() !== false && resultEl) resultEl.removeAttribute('data-stale'); };
+
+    [catEl, zonaEl].forEach((el) => el.addEventListener('change', markStale));
+    [diasEl, antigEl, he50El, he100El].forEach((el) => el.addEventListener('input', markStale));
+    presEl.addEventListener('change', markStale);
+    $('uo-calc-btn').addEventListener('click', runCalc);
+    root.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target?.matches?.('input')) { e.preventDefault(); runCalc(); }
+    });
     document.querySelectorAll('[data-cat]').forEach((b) => b.addEventListener('click', () => {
-      catEl.value = b.getAttribute('data-cat'); render();
+      catEl.value = b.getAttribute('data-cat'); markStale();
     }));
 
     function summary() {
@@ -594,11 +603,18 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
     if (q.get('dias')) diasEl.value = q.get('dias');
     if (q.get('antig')) antigEl.value = q.get('antig');
     if (q.get('pres')) presEl.checked = q.get('pres') === 'si';
-    render();
+    runCalc();
   })();
 </script>
 
 <style>
+  /* Resultado vencido: se tocó un input y todavía no se apretó Calcular. */
+  .uo .cf-result[data-stale="1"] .cf-result__big,
+  .uo .cf-result[data-stale="1"] .cf-tiles,
+  .uo .cf-result[data-stale="1"] .cf-rows { opacity: 0.45; transition: opacity .15s; }
+  .uo .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .uo .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
+
   /* El badge vive fuera de .cf-deco-card porque la card tiene overflow:hidden */
   .uo .uo-deco-wrap { position: relative; }
   .uo .uo-badge { top: 50%; right: -16px; transform: translateY(-50%); width: 48px; height: 48px; font-size: 0.78rem; letter-spacing: 0.02em; }

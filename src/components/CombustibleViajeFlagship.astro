@@ -154,6 +154,7 @@ const sources = (calc.sources || []).slice(0, 3);
         <div class="cf-tile"><div class="cf-tile__value" id="vc-t4">{$d(init.costoPorKm)}</div><div class="cf-tile__label">Costo por km</div></div>
       </div>
       <div class="cf-result__formula" id="vc-formula">({km(init.distanciaEfectiva)} ÷ 100) × {nf(CONSUMO)} × {$(PRECIO)} = {$(init.costoTotal)}</div>
+      <p class="cf-stale-hint">Apretá Calcular para actualizar</p>
       <div class="cf-result__actions cf-result__actions--2">
         <button class="cf-rbtn" type="button" id="vc-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
         <button class="cf-rbtn" type="button" id="vc-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
@@ -432,6 +433,14 @@ const sources = (calc.sources || []).slice(0, 3);
     function set(id, t) { var e = $id(id); if (e) e.textContent = t; }
     function w(id, pct) { var e = $id(id); if (e) e.style.width = Math.max(2, Math.min(100, pct)) + '%'; }
 
+    // El resultado SÓLO se recalcula al apretar Calcular (o Enter en un input).
+    // Cualquier cambio de input marca el panel como pendiente, no dispara el cálculo.
+    var resultEl = $id('vc-result');
+    function markStale() { if (resultEl) resultEl.setAttribute('data-stale', '1'); }
+    function clearStale() { if (resultEl) resultEl.removeAttribute('data-stale'); }
+    function calcular() { render(); clearStale(); }
+    function onEnter(el) { el.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); calcular(); } }); }
+
     var PERFILES = [{ n: 'Híbrido', c: 5 }, { n: 'Tu auto', c: null }, { n: 'SUV grande', c: 12 }];
     var DESTINOS = [
       { n: 'Mar del Plata', km: 400 }, { n: 'Córdoba', km: 700 }, { n: 'Mendoza', km: 1040 },
@@ -502,20 +511,23 @@ const sources = (calc.sources || []).slice(0, 3);
       set('vc-tnote', (ida === 'ida-vuelta' ? 'Ida y vuelta' : 'Solo ida') + ', con el consumo, el precio y los pasajeros que tengas cargados arriba. Sin peajes ni comida.');
     }
 
-    kmEl.addEventListener('input', render);
-    consEl.addEventListener('input', render);
-    precioEl.addEventListener('input', render);
-    paxEl.addEventListener('input', render);
-    $id('vc-calc-btn').addEventListener('click', render);
+    kmEl.addEventListener('input', markStale);
+    consEl.addEventListener('input', markStale);
+    precioEl.addEventListener('input', markStale);
+    paxEl.addEventListener('input', markStale);
+    onEnter(kmEl); onEnter(consEl); onEnter(precioEl); onEnter(paxEl);
+    $id('vc-calc-btn').addEventListener('click', calcular);
+    // Segmented: marca la opción elegida (feedback de UI), pero no calcula.
     Array.prototype.forEach.call(document.querySelectorAll('[data-ida]'), function (b) {
       b.addEventListener('click', function () {
         ida = b.getAttribute('data-ida');
         Array.prototype.forEach.call(document.querySelectorAll('[data-ida]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
-        render();
+        markStale();
       });
     });
+    // Precio por zona: escribe el precio en el input, pero no recalcula.
     Array.prototype.forEach.call(document.querySelectorAll('[data-precio]'), function (b) {
-      b.addEventListener('click', function () { precioEl.value = b.getAttribute('data-precio'); render(); });
+      b.addEventListener('click', function () { precioEl.value = b.getAttribute('data-precio'); markStale(); });
     });
 
     function summary() {
@@ -543,8 +555,9 @@ const sources = (calc.sources || []).slice(0, 3);
     if (q.get('consumo')) consEl.value = q.get('consumo');
     if (q.get('precio')) precioEl.value = q.get('precio');
     if (q.get('pax')) paxEl.value = q.get('pax');
-    if (q.get('ida') === 'ida') { var bt = document.querySelector('[data-ida="ida"]'); if (bt) { bt.click(); return; } }
-    render();
+    // El click sólo fija el tipo de viaje y marca stale: el cálculo inicial lo hace calcular().
+    if (q.get('ida') === 'ida') { var bt = document.querySelector('[data-ida="ida"]'); if (bt) bt.click(); }
+    calcular();
   })();
 </script>
 
@@ -566,6 +579,12 @@ const sources = (calc.sources || []).slice(0, 3);
   .vc .vc-td-pax { font-weight: 400; color: var(--text-subtle); font-size: 0.8rem; }
   .vc .vc-bar--mine { background: linear-gradient(90deg, #16a34a, #4ade80) !important; }
   .vc .cf-callout code { font-family: var(--font-mono); font-size: 0.85em; }
+
+  /* Resultado pendiente: se tocó un input y todavía no se apretó Calcular */
+  .vc .cf-result[data-stale="1"] .cf-result__big,
+  .vc .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .vc .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .vc .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
 
   .vc-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
   @media (min-width: 900px) { .vc-2col { grid-template-columns: 0.85fr 1.15fr; } }

@@ -145,6 +145,7 @@ const sources = (calc.sources || []).slice(0, 3);
         <div class="cf-tile"><div class="cf-tile__value" id="ml-t4">{conMargen.resultado}</div><div class="cf-tile__label">Con 10% de desperdicio</div></div>
       </div>
       <div class="cf-result__formula" id="ml-formula">{nf(VALOR)} ml × {nf(ANCHO)} m = {init.resultado}</div>
+      <p class="cf-stale-hint">Apretá Calcular para actualizar</p>
       <div class="cf-result__actions cf-result__actions--2">
         <button class="cf-rbtn" type="button" id="ml-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
         <button class="cf-rbtn" type="button" id="ml-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
@@ -437,11 +438,26 @@ const sources = (calc.sources || []).slice(0, 3);
       { label: 'Alfombra / pasto', ancho: 4, nota: 'Rollo ancho' },
     ];
 
-    function render() {
-      var v = Number(valorEl.value), a = Number(anchoEl.value);
+    // El resultado SÓLO se recalcula al apretar Calcular (o Enter en un input).
+    // Cualquier cambio de input marca el panel como pendiente, no dispara el cálculo.
+    var resultEl = $('ml-result');
+    function markStale() { if (resultEl) resultEl.setAttribute('data-stale', '1'); }
+    function clearStale() { if (resultEl) resultEl.removeAttribute('data-stale'); }
+    function calcular() { render(); clearStale(); }
+    function onEnter(el) { el.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); calcular(); } }); }
+
+    // Label/help del propio input: es feedback de UI (qué se espera en el campo
+    // según la dirección elegida), no resultado → se actualiza en vivo.
+    function syncLabels() {
       var esIda = dir === 'ida';
       set('ml-lbl-valor', esIda ? 'Metros lineales' : 'Metros cuadrados');
       set('ml-help-valor', esIda ? 'Los metros de largo que vas a comprar del rollo.' : 'La superficie que necesitás cubrir, en m².');
+    }
+
+    function render() {
+      var v = Number(valorEl.value), a = Number(anchoEl.value);
+      var esIda = dir === 'ida';
+      syncLabels();
 
       var r, porM, conM, vue;
       try {
@@ -507,18 +523,22 @@ const sources = (calc.sources || []).slice(0, 3);
       tb.innerHTML = html;
     }
 
-    valorEl.addEventListener('input', render);
-    anchoEl.addEventListener('input', render);
-    $('ml-calc-btn').addEventListener('click', render);
+    valorEl.addEventListener('input', markStale);
+    anchoEl.addEventListener('input', markStale);
+    onEnter(valorEl); onEnter(anchoEl);
+    $('ml-calc-btn').addEventListener('click', calcular);
+    // Segmented: marca la opción elegida (feedback de UI), pero no calcula.
     Array.prototype.forEach.call(document.querySelectorAll('[data-dir]'), function (b) {
       b.addEventListener('click', function () {
         dir = b.getAttribute('data-dir');
         Array.prototype.forEach.call(document.querySelectorAll('[data-dir]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
-        render();
+        syncLabels();
+        markStale();
       });
     });
+    // Anchos típicos: escriben el ancho en el input, pero no recalculan.
     Array.prototype.forEach.call(document.querySelectorAll('[data-ancho]'), function (b) {
-      b.addEventListener('click', function () { anchoEl.value = b.getAttribute('data-ancho'); render(); });
+      b.addEventListener('click', function () { anchoEl.value = b.getAttribute('data-ancho'); markStale(); });
     });
 
     function summary() {
@@ -542,8 +562,9 @@ const sources = (calc.sources || []).slice(0, 3);
     var q = new URLSearchParams(location.search);
     if (q.get('valor')) valorEl.value = q.get('valor');
     if (q.get('ancho')) anchoEl.value = q.get('ancho');
-    if (q.get('dir') === 'vuelta') { var bt = document.querySelector('[data-dir="vuelta"]'); if (bt) { bt.click(); return; } }
-    render();
+    // El click sólo fija la dirección y marca stale: el cálculo inicial lo hace calcular().
+    if (q.get('dir') === 'vuelta') { var bt = document.querySelector('[data-dir="vuelta"]'); if (bt) bt.click(); }
+    calcular();
   })();
 </script>
 
@@ -561,6 +582,12 @@ const sources = (calc.sources || []).slice(0, 3);
   .ml .ml-seg { width: 100%; }
   .ml .ml-seg button { flex: 1; }
   .ml .ml-td-nota { display: block; font-size: 0.72rem; color: var(--text-subtle); padding-left: 1.15rem; }
+
+  /* Resultado pendiente: se tocó un input y todavía no se apretó Calcular */
+  .ml .cf-result[data-stale="1"] .cf-result__big,
+  .ml .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .ml .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .ml .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
 
   .ml-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
   @media (min-width: 900px) { .ml-2col { grid-template-columns: 0.85fr 1.15fr; } }

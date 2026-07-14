@@ -185,6 +185,7 @@ const sources = calc.sources || [];
         <button class="cf-rbtn" type="button" id="ijt-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
         <button class="cf-rbtn" type="button" id="ijt-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
       </div>
+      <p class="cf-stale-hint">Cambiaste un dato — apretá <strong>Calcular</strong> para actualizar.</p>
     </div>
   </section>
 
@@ -455,11 +456,16 @@ const sources = calc.sources || [];
       return { dias: dias, intereses: intereses, total: capital + intereses, pct: capital > 0 ? (intereses / capital) * 100 : 0 };
     }
 
-    function render() {
+    // Estado del propio formulario (qué campos se muestran/habilitan): feedback de UI, no cálculo → sigue en vivo.
+    function syncInputLabels() {
       const usaManual = presetEl.value === 'manual' && (jurisEl.value === 'ninguna' || !jurisEl.value);
       manualWrap.hidden = !usaManual;
       // Con jurisdicción elegida, la tasa la manda el fuero: el preset queda inerte.
       presetEl.disabled = jurisEl.value !== 'ninguna' && !!jurisEl.value;
+    }
+
+    function render() {
+      syncInputLabels();
 
       const capital = digits(capEl.value);
       const tasa = tasaActual();
@@ -472,7 +478,7 @@ const sources = calc.sources || [];
       else if (desde > hasta) err = 'La fecha desde no puede ser posterior a la fecha hasta.';
       errEl.hidden = !err;
       errEl.textContent = err;
-      if (err) return;
+      if (err) return false;
 
       const r = calcular(capital, tasa, desde, hasta);
       $('ijt-big').textContent = fmt(r.total);
@@ -503,15 +509,23 @@ const sources = calc.sources || [];
       $('ijt-s3').textContent = fmt(r.total) + ' · +' + pct1(r.pct);
     }
 
-    capEl.addEventListener('input', function () { capEl.value = fmtThousands(capEl.value); render(); });
-    jurisEl.addEventListener('change', render);
-    presetEl.addEventListener('change', render);
-    manualEl.addEventListener('input', render);
-    desdeEl.addEventListener('change', render);
-    hastaEl.addEventListener('change', render);
-    $('ijt-btn').addEventListener('click', render);
+    // El botón Calcular es el único que calcula: tocar un input sólo marca el resultado como vencido.
+    const resultEl = $('ijt-result');
+    function markStale() { if (resultEl) resultEl.setAttribute('data-stale', '1'); }
+    function runCalc() { if (render() !== false && resultEl) resultEl.removeAttribute('data-stale'); }
+
+    capEl.addEventListener('input', function () { capEl.value = fmtThousands(capEl.value); markStale(); });
+    jurisEl.addEventListener('change', function () { syncInputLabels(); markStale(); });
+    presetEl.addEventListener('change', function () { syncInputLabels(); markStale(); });
+    manualEl.addEventListener('input', markStale);
+    desdeEl.addEventListener('change', markStale);
+    hastaEl.addEventListener('change', markStale);
+    $('ijt-btn').addEventListener('click', runCalc);
+    root.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && e.target && e.target.matches && e.target.matches('input')) { e.preventDefault(); runCalc(); }
+    });
     document.querySelectorAll('[data-desde]').forEach(function (b) {
-      b.addEventListener('click', function () { desdeEl.value = b.getAttribute('data-desde'); render(); });
+      b.addEventListener('click', function () { desdeEl.value = b.getAttribute('data-desde'); markStale(); });
     });
 
     function summary() {
@@ -542,11 +556,17 @@ const sources = calc.sources || [];
     if (q.get('preset')) presetEl.value = q.get('preset');
     if (q.get('desde')) desdeEl.value = q.get('desde');
     if (q.get('hasta')) hastaEl.value = q.get('hasta');
-    render();
+    runCalc();
   })();
 </script>
 
 <style>
+  /* Resultado vencido: se tocó un input y todavía no se apretó Calcular. */
+  .ijt .cf-result[data-stale="1"] .cf-result__big,
+  .ijt .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .ijt .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .ijt .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
+
   .ijt .ijt-deco-wrap { position: relative; }
   .ijt .ijt-badge { top: 50%; right: -16px; transform: translateY(-50%); width: 48px; height: 48px; font-size: 1.4rem; }
 

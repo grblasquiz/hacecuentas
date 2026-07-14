@@ -132,6 +132,7 @@ const sources = (calc.sources || []).slice(0, 3);
         <div class="cf-tile"><div class="cf-tile__value" id="i3-t4">{$(ganancia)}</div><div class="cf-tile__label">Tu ganancia neta</div></div>
       </div>
       <div class="cf-result__formula" id="i3-formula">{$(init.costoTotal)} × (1 + {D.margen}/100) = {$(init.precioFinal)}</div>
+      <p class="cf-stale-hint">Apretá Calcular para actualizar</p>
       <div class="cf-result__actions cf-result__actions--2">
         <button class="cf-rbtn" type="button" id="i3-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
         <button class="cf-rbtn" type="button" id="i3-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
@@ -427,6 +428,14 @@ const sources = (calc.sources || []).slice(0, 3);
       };
     }
 
+    // El resultado SÓLO se recalcula al apretar Calcular (o Enter en un input).
+    // Cualquier cambio de input marca el panel como pendiente, no dispara el cálculo.
+    var resultEl = $id('i3-result');
+    function markStale() { if (resultEl) resultEl.setAttribute('data-stale', '1'); }
+    function clearStale() { if (resultEl) resultEl.removeAttribute('data-stale'); }
+    function calcular() { render(); clearStale(); }
+    function onEnter(e2) { e2.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); calcular(); } }); }
+
     function render() {
       var i = inputs(), r;
       try { r = costo3d(i); }
@@ -470,10 +479,11 @@ const sources = (calc.sources || []).slice(0, 3);
       set('i3-ref-c4', 'Ganancia ' + money(r.ganancia));
     }
 
-    for (var j = 0; j < ids.length; j++) el[ids[j]].addEventListener('input', render);
-    $id('i3-calc-btn').addEventListener('click', render);
+    for (var j = 0; j < ids.length; j++) { el[ids[j]].addEventListener('input', markStale); onEnter(el[ids[j]]); }
+    $id('i3-calc-btn').addEventListener('click', calcular);
+    // Margen por mercado: escribe el margen en el input, pero no recalcula.
     Array.prototype.forEach.call(document.querySelectorAll('[data-mg]'), function (b) {
-      b.addEventListener('click', function () { el.margen.value = b.getAttribute('data-mg'); render(); });
+      b.addEventListener('click', function () { el.margen.value = b.getAttribute('data-mg'); markStale(); });
     });
 
     function summary() {
@@ -501,7 +511,7 @@ const sources = (calc.sources || []).slice(0, 3);
     var q = new URLSearchParams(location.search);
     var mapq = { g: 'gramos', pk: 'preciokg', h: 'horas', w: 'watts', kwh: 'kwh', mg: 'margen' };
     for (var qk in mapq) if (q.get(qk)) el[mapq[qk]].value = q.get(qk);
-    render();
+    calcular();
   })();
 </script>
 
@@ -518,6 +528,12 @@ const sources = (calc.sources || []).slice(0, 3);
   .i3 .i3-tnote { font-size: 0.78rem; color: var(--text-subtle); margin: 0.75rem 0 0; }
   .i3 .i3-td-nota { display: block; font-size: 0.72rem; color: var(--text-subtle); padding-left: 1.15rem; }
   .i3 .i3-bar--alt { background: linear-gradient(90deg, #f59e0b, #fb923c) !important; }
+
+  /* Resultado pendiente: se tocó un input y todavía no se apretó Calcular */
+  .i3 .cf-result[data-stale="1"] .cf-result__big,
+  .i3 .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .i3 .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .i3 .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
 
   .i3-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
   @media (min-width: 900px) { .i3-2col { grid-template-columns: 0.85fr 1.15fr; } }

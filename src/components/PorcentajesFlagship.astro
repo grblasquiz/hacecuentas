@@ -135,6 +135,7 @@ const sources = (calc.sources || []).slice(0, 3);
         <div class="cf-tile"><div class="cf-tile__value" id="pj-t4">{initAum.resultado}</div><div class="cf-tile__label" id="pj-t4l">Con {V2}% de aumento</div></div>
       </div>
       <div class="cf-result__formula" id="pj-formula">{init.formula}</div>
+      <p class="cf-stale-hint">Apretá Calcular para actualizar</p>
       <div class="cf-result__actions cf-result__actions--2">
         <button class="cf-rbtn" type="button" id="pj-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
         <button class="cf-rbtn" type="button" id="pj-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver desglose</button>
@@ -439,10 +440,25 @@ const sources = (calc.sources || []).slice(0, 3);
 
     function set(id, txt) { var e = $(id); if (e) e.textContent = txt; }
 
+    // El resultado SÓLO se recalcula al apretar Calcular (o Enter en un input).
+    // Cualquier cambio de input marca el panel como pendiente, no dispara el cálculo.
+    var resultEl = $('pj-result');
+    function markStale() { if (resultEl) resultEl.setAttribute('data-stale', '1'); }
+    function clearStale() { if (resultEl) resultEl.removeAttribute('data-stale'); }
+    function calcular() { render(); clearStale(); }
+    function onEnter(el) { el.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); calcular(); } }); }
+
+    // Labels/help de los propios inputs: son feedback de UI (qué significa cada
+    // campo en el modo elegido), no resultado → se actualizan en vivo.
+    function syncLabels() {
+      var L = LBL[modoEl.value] || LBL.simple;
+      set('pj-lbl1', L.l1); set('pj-lbl2', L.l2); set('pj-help1', L.h1); set('pj-help2', L.h2);
+    }
+
     function render() {
       var m = modoEl.value, v1 = num(v1El), v2 = num(v2El);
       var L = LBL[m] || LBL.simple;
-      set('pj-lbl1', L.l1); set('pj-lbl2', L.l2); set('pj-help1', L.h1); set('pj-help2', L.h2);
+      syncLabels();
 
       var r;
       try { r = porcentaje(m, v1, v2); }
@@ -512,12 +528,14 @@ const sources = (calc.sources || []).slice(0, 3);
       tb.innerHTML = html;
     }
 
-    modoEl.addEventListener('change', render);
-    v1El.addEventListener('input', render);
-    v2El.addEventListener('input', render);
-    $('pj-calc-btn').addEventListener('click', render);
+    modoEl.addEventListener('change', function () { syncLabels(); markStale(); });
+    v1El.addEventListener('input', markStale);
+    v2El.addEventListener('input', markStale);
+    onEnter(modoEl); onEnter(v1El); onEnter(v2El);
+    $('pj-calc-btn').addEventListener('click', calcular);
+    // Atajos: escriben el porcentaje en el input, pero no recalculan.
     Array.prototype.forEach.call(document.querySelectorAll('[data-pct]'), function (b) {
-      b.addEventListener('click', function () { v2El.value = b.getAttribute('data-pct'); render(); });
+      b.addEventListener('click', function () { v2El.value = b.getAttribute('data-pct'); markStale(); });
     });
 
     function summary() {
@@ -541,7 +559,7 @@ const sources = (calc.sources || []).slice(0, 3);
     if (q.get('modo')) modoEl.value = q.get('modo');
     if (q.get('v1')) v1El.value = q.get('v1');
     if (q.get('v2')) v2El.value = q.get('v2');
-    render();
+    calcular();
   })();
 </script>
 
@@ -557,6 +575,12 @@ const sources = (calc.sources || []).slice(0, 3);
   .pj .cf-minicard__big { font-size: 1.15rem; }
   .pj .cf-minicard--dark .cf-minicard__big { font-size: 1.6rem; }
   .pj .cf-minicard code { font-family: var(--font-mono); font-size: 0.85em; }
+
+  /* Resultado pendiente: se tocó un input y todavía no se apretó Calcular */
+  .pj .cf-result[data-stale="1"] .cf-result__big,
+  .pj .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .pj .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .pj .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
 
   .pj-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
   @media (min-width: 900px) { .pj-2col { grid-template-columns: 0.85fr 1.15fr; } }

@@ -60,7 +60,9 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
   class="cf-page rd"
   data-domain="knowledge"
   data-smlmv={SMLMV}
-  data-noct={R.nocturno}
+  {/* OJO: NO llamar a esto data-noct — los botones Diurna/Nocturna usan
+      data-noct y el click les burbujea al root, que pisaría el valor. */}
+  data-noctpct={R.nocturno}
   data-etapas={JSON.stringify(ETAPAS.map((e) => ({ id: e.id, r: e.recargo, d: e.divisor, s: e.sub })))}
 >
   <nav class="cf-crumb" aria-label="Breadcrumb">
@@ -169,6 +171,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       <div class="cf-result__big" id="rd-big">{fmtCOP(init.total)}</div>
       <div class="cf-result__biglabel" id="rd-biglabel">Valor total por {INIT_HORAS} horas diurnas</div>
       <p class="cf-result__sub" id="rd-sub">Domingo o festivo {e0.sub}</p>
+      <p class="cf-stale-hint">Apretá <strong>Calcular</strong> para actualizar el resultado.</p>
       <div class="cf-tiles">
         <div class="cf-tile"><div class="cf-tile__value" id="rd-t-hora">{fmtCOP(init.horaOrdinaria)}</div><div class="cf-tile__label">Hora ordinaria</div></div>
         <div class="cf-tile"><div class="cf-tile__value" id="rd-t-rec">{init.recargoPct}%</div><div class="cf-tile__label">Recargo</div></div>
@@ -412,7 +415,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
   (function () {
     const root = document.querySelector('.rd');
     if (!root) return;
-    const NOCT = Number(root.getAttribute('data-noct'));
+    const NOCT = Number(root.getAttribute('data-noctpct'));
     const ETAPAS = JSON.parse(root.getAttribute('data-etapas'));
     const $ = (id) => document.getElementById(id);
     const fmt = (n) => '$' + new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(Math.round(n));
@@ -451,22 +454,29 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       $('rd-bar-a').textContent = 'Base ' + fmt(c.base);
       $('rd-bar-b').textContent = 'Recargo ' + fmt(c.extra);
       $('rd-formula').textContent = `${fmt2(c.horaOrdinaria)} × ${c.horas.toLocaleString('es-CO', { maximumFractionDigits: 2 })} × ${fx(c.factor)} = ${fmt(c.total)}`;
+      resultEl && resultEl.removeAttribute('data-stale');
     }
 
-    salarioEl.addEventListener('input', () => { salarioEl.value = fmtThousands(salarioEl.value); render(); });
-    horasEl.addEventListener('input', render);
+    const resultEl = $('rd-result');
+    const stale = () => { resultEl && resultEl.setAttribute('data-stale', '1'); };
+    const onEnter = (e) => { if (e.key === 'Enter') { e.preventDefault(); render(); } };
+
+    salarioEl.addEventListener('input', () => { salarioEl.value = fmtThousands(salarioEl.value); stale(); });
+    horasEl.addEventListener('input', stale);
+    salarioEl.addEventListener('keydown', onEnter);
+    horasEl.addEventListener('keydown', onEnter);
     $('rd-calc-btn').addEventListener('click', render);
-    $('rd-menos').addEventListener('click', () => { horasEl.value = String(Math.max(0.5, rawHoras() - 1)).replace('.', ','); render(); });
-    $('rd-mas').addEventListener('click', () => { horasEl.value = String(Math.min(24, rawHoras() + 1)).replace('.', ','); render(); });
+    $('rd-menos').addEventListener('click', () => { horasEl.value = String(Math.max(0.5, rawHoras() - 1)).replace('.', ','); stale(); });
+    $('rd-mas').addEventListener('click', () => { horasEl.value = String(Math.min(24, rawHoras() + 1)).replace('.', ','); stale(); });
     document.querySelectorAll('[data-etapa]').forEach((b) => b.addEventListener('click', () => {
       etapa = b.getAttribute('data-etapa');
       document.querySelectorAll('[data-etapa]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-      render();
+      stale();
     }));
     document.querySelectorAll('[data-noct]').forEach((b) => b.addEventListener('click', () => {
       nocturno = b.getAttribute('data-noct') === 'si';
       document.querySelectorAll('[data-noct]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-      render();
+      stale();
     }));
 
     function summary() {
@@ -523,6 +533,13 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
   .rd .rd-step:hover { background: var(--accent-soft); }
   .rd .rd-hin { text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
   .rd .rd-hu { font-size: 0.82rem; color: var(--text-subtle); flex-shrink: 0; }
+
+  /* Resultado desactualizado: el botón Calcular es el único que dispara el cálculo */
+  .rd .cf-result[data-stale="1"] .cf-result__big,
+  .rd .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .rd .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .rd .cf-stale-hint strong { color: #fde68a; }
+  .rd .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
 
   .rd .rd-chipcalc { margin: 0.7rem 0 0; padding: 0.4rem 0.6rem; border-radius: var(--radius-sm); background: var(--bg-soft); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent-strong); overflow-x: auto; }
   .rd .rd-foot { font-size: 0.75rem; color: var(--text-subtle); margin: 0.7rem 0 0; }

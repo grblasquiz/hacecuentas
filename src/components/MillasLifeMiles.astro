@@ -146,6 +146,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       <div class="cf-result__big" id="lm-big">{nMil(init.millas)} millas</div>
       <p class="cf-result__sub" id="lm-sub">+ {usd(INIT.tasas)} aprox. en impuestos y tasas</p>
       <p class="lm-verdict" id="lm-verdict" data-ok={init.conviene ? '1' : '0'}>{init.conviene ? '✓ Conviene canjear' : '✕ Conviene pagar cash'}</p>
+      <p class="cf-stale-hint">Apretá <strong>Calcular</strong> para actualizar el resultado.</p>
       <div class="cf-tiles">
         <div class="cf-tile"><div class="cf-tile__value" id="lm-t-cpm">{cent(init.cpm)}</div><div class="cf-tile__label">Valor por milla</div></div>
         <div class="cf-tile"><div class="cf-tile__value">{cent(REF_CENT)}</div><div class="cf-tile__label">Referencia</div></div>
@@ -436,20 +437,30 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       $('lm-formula').textContent = r.cash > 0
         ? `(${usd(r.cash)} − ${usd(TASAS)}) ÷ ${nMil(r.millas)} = ${cent(r.cpm)} por milla`
         : `${nMil(r.millas)} millas × ${cent(REF)} = ${usd(r.valorRef)} de valor de referencia`;
+      resultEl && resultEl.removeAttribute('data-stale');
     }
 
-    destEl.addEventListener('change', render);
-    cashEl.addEventListener('input', () => { cashEl.value = fmtTh(cashEl.value); render(); });
+    const resultEl = $('lm-result');
+    const stale = () => { resultEl && resultEl.setAttribute('data-stale', '1'); };
+    // Labels informativos del propio panel (IATA + ayuda de cabina): siguen en vivo, no son el resultado.
+    function syncLabels() {
+      const d = DEST[destEl.value]; if (d) $('lm-iata').textContent = d.i;
+      $('lm-viaje-help').hidden = cabina !== 'business';
+    }
+
+    destEl.addEventListener('change', () => { syncLabels(); stale(); });
+    cashEl.addEventListener('input', () => { cashEl.value = fmtTh(cashEl.value); stale(); });
+    cashEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); render(); } });
     $('lm-calc-btn').addEventListener('click', render);
     document.querySelectorAll('[data-cab]').forEach((b) => b.addEventListener('click', () => {
       cabina = b.getAttribute('data-cab');
       document.querySelectorAll('[data-cab]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-      render();
+      syncLabels(); stale();
     }));
     document.querySelectorAll('[data-viaje]').forEach((b) => b.addEventListener('click', () => {
       viaje = b.getAttribute('data-viaje');
       document.querySelectorAll('[data-viaje]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-      render();
+      stale();
     }));
 
     function summary() {
@@ -487,6 +498,13 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
   .lm .lm-verdict { display: inline-block; margin: 0 0 1rem; padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
   .lm .lm-verdict[data-ok="1"] { background: rgba(34,197,94,0.18); color: #4ade80; border: 1px solid rgba(34,197,94,0.35); }
   .lm .lm-verdict[data-ok="0"] { background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.35); }
+
+  /* Resultado desactualizado: el botón Calcular es el único que dispara el cálculo */
+  .lm .cf-result[data-stale="1"] .cf-result__big,
+  .lm .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .lm .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .lm .cf-stale-hint strong { color: #fde68a; }
+  .lm .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
 
   .lm .lm-tr--hl { background: var(--accent-soft) !important; }
   .lm .lm-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.2rem 0 0; }

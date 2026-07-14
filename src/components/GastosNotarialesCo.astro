@@ -130,6 +130,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       <p class="cf-result__eyebrow">Costo total estimado</p>
       <div class="cf-result__big" id="gn-big">{fmtCOP(init.total)}</div>
       <p class="cf-result__sub" id="gn-sub">{pct(init.total, INIT)} del valor del inmueble</p>
+      <p class="cf-stale-hint">Apretá <strong>Calcular</strong> para actualizar el resultado.</p>
       <div class="cf-tiles cf-tiles--2">
         <div class="cf-tile"><div class="cf-tile__value" id="gn-t-comp">{fmtCOP(init.comprador)}</div><div class="cf-tile__label">Comprador · <span id="gn-t-comp-pct">{pct(init.comprador, INIT)}</span></div></div>
         <div class="cf-tile"><div class="cf-tile__value" id="gn-t-vend">{fmtCOP(init.vendedor)}</div><div class="cf-tile__label">Vendedor · <span id="gn-t-vend-pct">{pct(init.vendedor, INIT)}</span></div></div>
@@ -427,17 +428,22 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       $('gn-timbre').hidden = !(v > T.timbre);
       const dv = $('gn-deco-val'); if (dv) dv.textContent = mill(c.total);
       const dp = $('gn-deco-pct'); if (dp) dp.textContent = pct(c.total, v);
+      resultEl && resultEl.removeAttribute('data-stale');
     }
 
-    valorEl.addEventListener('input', () => { valorEl.value = fmtThousands(valorEl.value); render(); });
-    repartoEl.addEventListener('change', render);
+    const resultEl = $('gn-result');
+    const stale = () => { resultEl && resultEl.setAttribute('data-stale', '1'); };
+
+    valorEl.addEventListener('input', () => { valorEl.value = fmtThousands(valorEl.value); stale(); });
+    valorEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); render(); } });
+    repartoEl.addEventListener('change', stale);
     $('gn-calc-btn').addEventListener('click', render);
     document.querySelectorAll('[data-vend]').forEach((b) => b.addEventListener('click', () => {
       vendedor = b.getAttribute('data-vend');
       document.querySelectorAll('[data-vend]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-      render();
+      stale();
     }));
-    document.querySelectorAll('[data-ej]').forEach((b) => b.addEventListener('click', () => { valorEl.value = fmtThousands(b.getAttribute('data-ej')); render(); }));
+    document.querySelectorAll('[data-ej]').forEach((b) => b.addEventListener('click', () => { valorEl.value = fmtThousands(b.getAttribute('data-ej')); stale(); }));
 
     function summary() {
       const v = raw(); const c = cierre(v);
@@ -469,6 +475,13 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
   .gn .gn-seg button { flex: 1; }
   .gn .gn-timbre { color: #fbbf24; margin: 0 0 1rem; }
   .gn .gn-timbre strong { color: #fde68a; }
+
+  /* Resultado desactualizado: el botón Calcular es el único que dispara el cálculo */
+  .gn .cf-result[data-stale="1"] .cf-result__big,
+  .gn .cf-result[data-stale="1"] .cf-tiles { opacity: 0.45; transition: opacity .15s; }
+  .gn .cf-stale-hint { display: none; font-size: 0.72rem; color: #fbbf24; margin: 0.5rem 0 0; }
+  .gn .cf-stale-hint strong { color: #fde68a; }
+  .gn .cf-result[data-stale="1"] .cf-stale-hint { display: block; }
 
   .gn-2col, .cf-band .gn-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
   @media (min-width: 900px) { .gn-2col, .cf-band .gn-2col { grid-template-columns: 0.85fr 1.15fr; } }
