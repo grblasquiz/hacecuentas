@@ -50,7 +50,13 @@ function countDistributable(dir: string, prefix: string): number {
   return n;
 }
 
-const total = CALC_DIRS.reduce((sum, [dir, prefix]) => sum + countDistributable(dir, prefix), 0);
+// El contador público de "herramientas" = catálogo ESPAÑOL distribuible (dir
+// 'calcs', sin prefijo), IGUAL que TOTAL_DISPLAY en calc-counts.ts y que
+// /calculadoras. Así home, llms.txt, README y el catálogo dicen el mismo número
+// (~1.400+) y se cumple "total público = suma de categorías" del auditor. El
+// total multi-idioma (~2.400) queda sólo como URLs del sitemap, no como cifra
+// advertida.
+const total = countDistributable('calcs', '');
 // El sub-conteo PT-BR se muestra en bruto (calcs-pt tiene muchas noindex; el
 // distribuible < 100 floorearía a "0+"). Igual que PT_DISPLAY en calc-counts.ts.
 const ptTotal = listJson('calcs-pt').length;

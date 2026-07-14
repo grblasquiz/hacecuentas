@@ -150,12 +150,18 @@ export const CALC_COUNTS_PUBLIC = {
   repoTotal: CALC_COUNTS.total,
 } as const;
 
-// Displays públicos: usan el conteo indexable (excluye restringidas/noindex).
-export const TOTAL_DISPLAY = `${formatES(floorTo100(PUBLIC_TOTAL))}+`;
+// Display público del contador de "herramientas": usa el catálogo ESPAÑOL
+// distribuible (= lo que muestra /calculadoras y la suma de categorías visibles),
+// NO el total multi-idioma. Antes usaba PUBLIC_TOTAL (todas las locales, ~2.400):
+// la home decía "2.400+" pero /calculadoras y las categorías suman ~1.400 →
+// inconsistencia que el auditor marca (portada vs catálogo). El invariante del
+// auditor es "total público = suma de categorías", y las categorías visibles son
+// las del catálogo ES. PUBLIC_TOTAL queda para métricas internas / sitemap.
+export const TOTAL_DISPLAY = `${formatES(floorTo100(AR_INDEXABLE))}+`;
 export const AR_DISPLAY = `${formatES(floorTo100(AR_INDEXABLE))}+`;
 export const PT_DISPLAY = `${formatES(floorTo100(CALC_COUNTS.pt))}+`;
 // Sin sufijo "+", para frases tipo "Más de {TOTAL_PLAIN} calculadoras".
-export const TOTAL_PLAIN = formatES(floorTo100(PUBLIC_TOTAL));
+export const TOTAL_PLAIN = formatES(floorTo100(AR_INDEXABLE));
 
 // Total del catálogo en ESPAÑOL (excluye EN/PT-BR/PT-PT), indexable, formateado
 // en-US — para textos en inglés que refieren al catálogo hispano
