@@ -1,0 +1,566 @@
+---
+// Flagship redesign de la calc "recargo dominical y festivo" — Colombia (mockup Martin).
+// Números del motor real (src/lib/formulas/recargo-dominical-festivo-colombia-2026.ts):
+// recargo 80% → 90% (01-jul-2026) → 100% (01-jul-2027) por Ley 2466/2025, y divisor
+// de la hora 220 → 210 el 15-jul-2026 por Ley 2101/2021 (son DOS fechas distintas).
+// Domain "knowledge" (violeta) por el mockup, no por la categoría (finanzas→money).
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { COLOMBIA_2026, fmtCOP } from '../lib/data/colombia-2026';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const R = COLOMBIA_2026.recargos;
+const J = COLOMBIA_2026.jornada;
+const SMLMV = COLOMBIA_2026.smlmv;
+
+// Etapas: el recargo y el divisor cambian en fechas DISTINTAS de julio 2026.
+const ETAPAS = [
+  { id: 'jun', chip: 'Ene–jun · 80%', recargo: R.dominicalFestivoHasta30Jun2026, divisor: J.divisorMensualHasta14Jul2026, sub: 'hasta el 30 de junio de 2026' },
+  { id: 'jul1', chip: '1–14 jul · 90%', recargo: R.dominicalFestivoDesde01Jul2026, divisor: J.divisorMensualHasta14Jul2026, sub: 'del 1 al 14 de julio de 2026' },
+  { id: 'jul15', chip: 'Desde 15-jul · 90%', recargo: R.dominicalFestivoDesde01Jul2026, divisor: J.divisorMensualDesde15Jul2026, sub: 'desde el 15 de julio de 2026' },
+];
+const DEFAULT_ETAPA = 'jul15';
+
+function calcular(salario: number, horas: number, recargo: number, divisor: number, nocturno = false) {
+  const recNoct = nocturno ? R.nocturno : 0;
+  const horaOrdinaria = salario / divisor;
+  const factor = 1 + recargo + recNoct;
+  const horaFestiva = horaOrdinaria * factor;
+  const base = horaOrdinaria * horas;
+  const total = horaFestiva * horas;
+  return { horaOrdinaria, factor, horaFestiva, base, extra: total - base, total, recargoPct: Math.round((recargo + recNoct) * 100) };
+}
+const fmt2 = (n: number) => '$' + n.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fx = (n: number) => n.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const INIT_HORAS = 8;
+const e0 = ETAPAS.find((e) => e.id === DEFAULT_ETAPA)!;
+const init = calcular(SMLMV, INIT_HORAS, e0.recargo, e0.divisor);
+
+// Ejemplos reales: misma jornada de 8 h, distintos salarios (etapa vigente)
+const ejemplos = [SMLMV, 2_500_000, 4_000_000].map((s) => ({
+  salario: s, esMin: s === SMLMV, ...calcular(s, INIT_HORAS, e0.recargo, e0.divisor),
+}));
+
+// Combinaciones: el nocturno/extra se ACUMULA sobre el dominical (no se multiplica)
+const combos = [
+  { tipo: 'Dominical / festivo diurno', rec: '+90%', factor: 1 + R.dominicalFestivoDesde01Jul2026, dest: true },
+  { tipo: 'Dominical / festivo nocturno', rec: '+90% +35%', factor: 1 + R.dominicalFestivoDesde01Jul2026 + R.nocturno },
+  { tipo: 'Extra diurna dominical', rec: '+90% +25%', factor: 1 + R.dominicalFestivoDesde01Jul2026 + R.extraDiurna },
+  { tipo: 'Extra nocturna dominical', rec: '+90% +75%', factor: 1 + R.dominicalFestivoDesde01Jul2026 + R.extraNocturna },
+].map((c) => ({ ...c, valor: (SMLMV / J.divisorMensualDesde15Jul2026) * c.factor }));
+
+const faq = calc.faq || [];
+const explanationHtml = calc.explanation ? md(calc.explanation) : '';
+---
+
+<div
+  class="cf-page rd"
+  data-domain="knowledge"
+  data-smlmv={SMLMV}
+  data-noct={R.nocturno}
+  data-etapas={JSON.stringify(ETAPAS.map((e) => ({ id: e.id, r: e.recargo, d: e.divisor, s: e.sub })))}
+>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/co/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/co/calculadoras">Colombia</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Recargo dominical y festivo</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">🇨🇴</span> Colombia · Reforma laboral 2026</p>
+      <h1 class="cf-h1">Calculadora de <span class="cf-yr">recargo dominical y festivo</span></h1>
+      <p class="cf-sub">Calculá cuánto te deben pagar por trabajar un domingo, festivo o día de descanso obligatorio en Colombia.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Recargo actualizado al 90%</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos oficiales 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <div class="rd-dial">
+        <span class="rd-dial__k">Dom</span>
+        <strong class="rd-dial__v">90%</strong>
+        <span class="rd-dial__n">recargo vigente</span>
+      </div>
+      <div class="cf-deco-card rd-next">
+        <div class="cf-deco-card__label">Próximo escalón</div>
+        <div class="cf-deco-card__value">100%</div>
+        <div class="cf-deco-card__note">desde el 1 de julio de 2027</div>
+      </div>
+      <div class="cf-deco-sub"><strong>Sube 10 puntos</strong> <span class="cf-deco-chip">Ley 2466/2025</span></div>
+    </div>
+  </header>
+
+  <!-- Timeline de la reforma -->
+  <ol class="rd-timeline" aria-label="Escalones del recargo dominical">
+    <li class="rd-tl">
+      <span class="rd-tl__when">Hasta jun 2026</span>
+      <strong class="rd-tl__v">80%</strong>
+    </li>
+    <li class="rd-tl__arrow" aria-hidden="true">→</li>
+    <li class="rd-tl rd-tl--now">
+      <span class="rd-tl__when">Desde jul 2026</span>
+      <strong class="rd-tl__v">90%</strong>
+    </li>
+    <li class="rd-tl__arrow" aria-hidden="true">→</li>
+    <li class="rd-tl">
+      <span class="rd-tl__when">Desde jul 2027</span>
+      <strong class="rd-tl__v">100%</strong>
+    </li>
+  </ol>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Tu cálculo</p>
+          <h2 class="cf-panel__title">Ingresá los datos de tu jornada</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="rd-salario">Salario mensual</label><span class="cf-hint">Sin auxilio de transporte</span></div>
+        <div class="rd-money"><span class="rd-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="rd-salario" value={SMLMV.toLocaleString('es-CO')} /></div>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><span class="cf-label">¿Cuándo trabajaste?</span></div>
+        <div class="cf-chips rd-etapas" role="group" aria-label="Etapa de la reforma">
+          {ETAPAS.map((e) => (
+            <button class="cf-chip rd-chip" type="button" data-etapa={e.id} aria-pressed={e.id === DEFAULT_ETAPA ? 'true' : 'false'}>{e.chip}</button>
+          ))}
+        </div>
+        <p class="cf-help">El recargo subió al 90% el 1 de julio, pero la hora ordinaria recién subió el 15 (divisor 220 → 210).</p>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><span class="cf-label">Tipo de jornada</span></div>
+        <div class="cf-seg rd-seg" role="group" aria-label="Tipo de jornada">
+          <button type="button" data-noct="no" aria-pressed="true"><span aria-hidden="true">☀️</span> Diurna</button>
+          <button type="button" data-noct="si" aria-pressed="false"><span aria-hidden="true">🌙</span> Nocturna</button>
+        </div>
+        <p class="cf-help">Nocturna = 19:00–06:00. Suma 35% que se acumula sobre el dominical.</p>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="rd-horas">Horas trabajadas</label><span class="cf-hint">Domingo o festivo</span></div>
+        <div class="rd-stepper">
+          <button class="rd-step" type="button" id="rd-menos" aria-label="Restar una hora">−</button>
+          <input class="cf-input rd-hin" type="text" inputmode="decimal" id="rd-horas" value="8" />
+          <span class="rd-hu">horas</span>
+          <button class="rd-step" type="button" id="rd-mas" aria-label="Sumar una hora">+</button>
+        </div>
+      </div>
+
+      <button class="cf-primary" id="rd-calc-btn" type="button">Calcular mi recargo <span aria-hidden="true">→</span></button>
+    </div>
+
+    <div class="cf-result" id="rd-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="rd-big">{fmtCOP(init.total)}</div>
+      <div class="cf-result__biglabel" id="rd-biglabel">Valor total por {INIT_HORAS} horas diurnas</div>
+      <p class="cf-result__sub" id="rd-sub">Domingo o festivo {e0.sub}</p>
+      <div class="cf-tiles">
+        <div class="cf-tile"><div class="cf-tile__value" id="rd-t-hora">{fmtCOP(init.horaOrdinaria)}</div><div class="cf-tile__label">Hora ordinaria</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="rd-t-rec">{init.recargoPct}%</div><div class="cf-tile__label">Recargo</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="rd-t-fac">× {fx(init.factor)}</div><div class="cf-tile__label">Factor total</div></div>
+      </div>
+      <div class="cf-compose">
+        <div class="cf-compose__lbl">Valor base vs recargo</div>
+        <div class="cf-bar"><span class="cf-bar__fill" id="rd-bar" style={`width:${Math.round(init.base / init.total * 100)}%`}></span><span class="cf-bar__fill cf-bar__fill--muted" style={`width:${100 - Math.round(init.base / init.total * 100)}%`}></span></div>
+        <div class="cf-bar__ends"><span id="rd-bar-a">Base {fmtCOP(init.base)}</span><span id="rd-bar-b">Recargo {fmtCOP(init.extra)}</span></div>
+      </div>
+      <div class="cf-result__formula" id="rd-formula">{fmt2(init.horaOrdinaria)} × {INIT_HORAS} × {fx(init.factor)} = {fmtCOP(init.total)}</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="rd-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="rd-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver detalle</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt"><strong>Respuesta rápida.</strong> Con el salario mínimo, {INIT_HORAS} horas diurnas en domingo o festivo valen aproximadamente <strong>{fmtCOP(init.total)}</strong>.</p>
+    <span class="cf-formula">hora × horas × {fx(init.factor)}</span>
+  </div>
+
+  <!-- Cómo se calcula -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">La cuenta, paso a paso</p>
+        <h2 class="cf-section__title">Cómo se calcula el recargo</h2>
+      </div>
+      <p class="cf-section__lead">El 90% es un adicional sobre la hora ordinaria. Por eso el valor total de la hora trabajada equivale al 190%.</p>
+    </div>
+    <div class="cf-steps">
+      <div class="cf-step">
+        <div class="cf-step__num">1</div>
+        <p class="cf-step__title">Calculá tu hora ordinaria</p>
+        <p class="cf-step__desc">Dividí el salario mensual por el divisor legal vigente para la fecha.</p>
+        <p class="rd-chipcalc">{fmtCOP(SMLMV)} ÷ {e0.divisor} = {fmt2(init.horaOrdinaria)}</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">2</div>
+        <p class="cf-step__title">Aplicá el recargo</p>
+        <p class="cf-step__desc">Desde el 1 de julio de 2026 es del 90% adicional sobre esa hora.</p>
+        <p class="rd-chipcalc">{fmt2(init.horaOrdinaria)} × 90% = {fmt2(init.horaOrdinaria * 0.9)}</p>
+      </div>
+      <div class="cf-step">
+        <div class="cf-step__num">3</div>
+        <p class="cf-step__title">Multiplicá por las horas</p>
+        <p class="cf-step__desc">Sumá hora base + recargo, y multiplicá el resultado por el tiempo trabajado.</p>
+        <p class="rd-chipcalc">{fmt2(init.horaFestiva)} × {INIT_HORAS} = {fmtCOP(init.total)}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Doble cambio de julio -->
+  <section class="cf-section">
+    <div class="rd-double">
+      <div class="rd-double__main">
+        <p class="cf-side-eyebrow">Julio 2026 · doble cambio</p>
+        <h2 class="rd-double__title">Sube el recargo y también el valor hora</h2>
+        <p class="rd-double__desc">Son dos fechas distintas. El recargo cambió el 1 de julio, y la jornada máxima bajó a 42 horas desde el 15.</p>
+      </div>
+      <div class="rd-double__side">
+        <div class="rd-mini">
+          <span class="rd-mini__k">1 de julio</span>
+          <strong class="rd-mini__v">80% → 90%</strong>
+          <span class="rd-mini__n">Reforma laboral (Ley 2466/2025)</span>
+        </div>
+        <div class="rd-mini">
+          <span class="rd-mini__k">15 de julio</span>
+          <strong class="rd-mini__v">220 h → 210 h</strong>
+          <span class="rd-mini__n">La hora vale 4,76% más (Ley 2101/2021)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ejemplos reales -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Ejemplos reales</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 0.4rem">Cuánto vale una jornada de 8 horas</h2>
+    <p class="cf-section__lead" style="margin-bottom:1.25rem">Escenarios diurnos {e0.sub}, con recargo del 90%.</p>
+    <div class="cf-cards cf-cards--3">
+      {ejemplos.map((e) => (
+        <div class={`cf-minicard${e.esMin ? ' rd-minicard--hl' : ''}`}>
+          <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">{e.esMin ? 'Salario mínimo' : 'Salario mensual'}</p>
+          <div class="cf-minicard__big">{fmtCOP(e.salario)}</div>
+          <div class="rd-rows">
+            <div class="rd-row"><span>Hora base</span><strong>{fmtCOP(e.horaOrdinaria)}</strong></div>
+            <div class="rd-row"><span>Recargo adicional</span><strong>{fmtCOP(e.extra)}</strong></div>
+          </div>
+          <div class="rd-total"><span>Total {INIT_HORAS} horas</span><strong>{fmtCOP(e.total)}</strong></div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Combinaciones -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Combinaciones</p>
+        <h2 class="cf-section__title">Si además es nocturna o extra</h2>
+      </div>
+      <p class="cf-section__lead">Los recargos se suman sobre la misma hora ordinaria, no se multiplican entre sí.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Tipo de hora</th><th>Recargos</th><th>Factor total</th><th>Con salario mínimo</th></tr></thead>
+        <tbody>
+          {combos.map((c) => (
+            <tr>
+              <td><span class="cf-td-dot">{c.tipo}</span></td>
+              <td>{c.rec}</td>
+              <td>× {fx(c.factor)}</td>
+              <td class="cf-td-em">{fmtCOP(c.valor)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="rd-foot">Valor de UNA hora con el salario mínimo ({fmtCOP(SMLMV)}) y divisor 210, vigente desde el 15 de julio de 2026.</p>
+  </section>
+
+  <!-- Qué tener en cuenta -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Qué tener en cuenta</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Pago, descanso y habitualidad</h2>
+    <div class="cf-cmp">
+      <div class="cf-cmp__col cf-cmp__col--yes">
+        <div class="cf-cmp__head"><span aria-hidden="true">✓</span> El recargo se paga por las horas trabajadas</div>
+        <ul class="cf-cmp__list">
+          <li>Aplica a domingo, festivo o día de descanso obligatorio pactado.</li>
+          <li>Es adicional al salario ordinario que ya cobrás por el mes.</li>
+          <li>Se puede combinar con recargo nocturno y con horas extra.</li>
+          <li>Las convenciones colectivas pueden fijar porcentajes superiores.</li>
+        </ul>
+      </div>
+      <div class="cf-cmp__col cf-cmp__col--warn">
+        <div class="cf-cmp__head"><span aria-hidden="true">⚠️</span> El descanso compensatorio es otro derecho</div>
+        <ul class="cf-cmp__list">
+          <li>Si el trabajo dominical es habitual, tenés derecho a compensatorio.</li>
+          <li>El empleador debe conservar y exhibir el registro de horas.</li>
+          <li>El día de descanso no reemplaza el pago del recargo si ya se causó.</li>
+          <li>Ante diferencias, pedí la liquidación detallada por escrito.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="cf-callout cf-callout--warn" style="margin-top:1.25rem">
+      <span class="cf-callout__ico" aria-hidden="true">⚖️</span>
+      <p>Esta herramienta da una estimación orientativa. Para tu caso puntual, consultá al Ministerio del Trabajo o a un profesional laboral.</p>
+    </div>
+  </section>
+</div>
+
+<!-- Banda: base legal + fuentes -->
+<div class="cf-band" data-domain="knowledge">
+  <div class="cf-band__inner">
+    <div class="rd-2col">
+      <div class="rd-card">
+        <p class="cf-eyebrow">Base legal</p>
+        <h2 class="rd-card__title">El 90% ya está vigente</h2>
+        <p class="cf-side-desc">La Ley 2466 de 2025 estableció el aumento gradual del recargo por trabajar en día de descanso obligatorio: 80% hasta junio de 2026, 90% desde julio de 2026 y 100% desde julio de 2027.</p>
+        <div class="rd-legal">
+          <div>
+            <strong>Artículos 179 y 180 del CST</strong>
+            <span>Modificados por la Ley 2466 de 2025</span>
+          </div>
+          <span class="rd-legal__v">90%</span>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Fuentes oficiales</p>
+        <p class="rd-src__title">Datos verificados</p>
+        <div class="rd-src">
+          <div class="rd-src__item"><strong>Ley 2466 de 2025</strong><span>Reforma laboral · recargo dominical escalonado</span></div>
+          <div class="rd-src__item"><strong>Ley 2101 de 2021</strong><span>Jornada de 42 horas · divisor 210 desde el 15-jul-2026</span></div>
+          <div class="rd-src__item"><strong>Código Sustantivo del Trabajo</strong><span>Arts. 168, 179 y 180 · recargos</span></div>
+          <div class="rd-src__item"><strong>Decreto 1469 de 2025</strong><span>Salario mínimo 2026 · {fmtCOP(SMLMV)}</span></div>
+        </div>
+        <p class="rd-src__foot">● Actualizado en julio de 2026</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page rd" data-domain="knowledge">
+  {faq.length > 0 && (
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que suele generar dudas</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {explanationHtml && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">En detalle</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cómo funciona el recargo en Colombia</h2>
+      <div class="cf-prose" set:html={explanationHtml} />
+    </section>
+  )}
+
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Calculadoras relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/co/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🧮'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('—')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá el resultado para revisar tu desprendible.</p>
+      <p class="cf-ctabar__sub">Compará la estimación con el detalle de tu nómina.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="rd-share2">Guardar cálculo</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.rd');
+    if (!root) return;
+    const NOCT = Number(root.getAttribute('data-noct'));
+    const ETAPAS = JSON.parse(root.getAttribute('data-etapas'));
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n) => '$' + new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(Math.round(n));
+    const fmt2 = (n) => '$' + n.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const fx = (n) => n.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const salarioEl = $('rd-salario'), horasEl = $('rd-horas');
+    let etapa = 'jul15', nocturno = false;
+
+    function rawSalario() { return Number((salarioEl.value || '').replace(/\D/g, '')) || 0; }
+    function rawHoras() { const n = Number(String(horasEl.value || '').replace(',', '.').replace(/[^\d.]/g, '')); return Number.isFinite(n) && n > 0 ? Math.min(n, 24) : 0; }
+    function fmtThousands(v) { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('es-CO') : ''; }
+
+    function calcular() {
+      const e = ETAPAS.find((x) => x.id === etapa);
+      const salario = rawSalario(), horas = rawHoras();
+      const recNoct = nocturno ? NOCT : 0;
+      const horaOrdinaria = e.d > 0 ? salario / e.d : 0;
+      const factor = 1 + e.r + recNoct;
+      const horaFestiva = horaOrdinaria * factor;
+      const base = horaOrdinaria * horas;
+      const total = horaFestiva * horas;
+      return { e, salario, horas, horaOrdinaria, factor, horaFestiva, base, extra: total - base, total, recargoPct: Math.round((e.r + recNoct) * 100) };
+    }
+
+    function render() {
+      const c = calcular();
+      $('rd-big').textContent = fmt(c.total);
+      $('rd-biglabel').textContent = `Valor total por ${c.horas.toLocaleString('es-CO', { maximumFractionDigits: 2 })} horas ${nocturno ? 'nocturnas' : 'diurnas'}`;
+      $('rd-sub').textContent = `Domingo o festivo ${c.e.s}`;
+      $('rd-t-hora').textContent = fmt(c.horaOrdinaria);
+      $('rd-t-rec').textContent = c.recargoPct + '%';
+      $('rd-t-fac').textContent = '× ' + fx(c.factor);
+      const pb = c.total > 0 ? Math.round(c.base / c.total * 100) : 0;
+      $('rd-bar').style.width = pb + '%';
+      $('rd-bar').nextElementSibling.style.width = (100 - pb) + '%';
+      $('rd-bar-a').textContent = 'Base ' + fmt(c.base);
+      $('rd-bar-b').textContent = 'Recargo ' + fmt(c.extra);
+      $('rd-formula').textContent = `${fmt2(c.horaOrdinaria)} × ${c.horas.toLocaleString('es-CO', { maximumFractionDigits: 2 })} × ${fx(c.factor)} = ${fmt(c.total)}`;
+    }
+
+    salarioEl.addEventListener('input', () => { salarioEl.value = fmtThousands(salarioEl.value); render(); });
+    horasEl.addEventListener('input', render);
+    $('rd-calc-btn').addEventListener('click', render);
+    $('rd-menos').addEventListener('click', () => { horasEl.value = String(Math.max(0.5, rawHoras() - 1)).replace('.', ','); render(); });
+    $('rd-mas').addEventListener('click', () => { horasEl.value = String(Math.min(24, rawHoras() + 1)).replace('.', ','); render(); });
+    document.querySelectorAll('[data-etapa]').forEach((b) => b.addEventListener('click', () => {
+      etapa = b.getAttribute('data-etapa');
+      document.querySelectorAll('[data-etapa]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      render();
+    }));
+    document.querySelectorAll('[data-noct]').forEach((b) => b.addEventListener('click', () => {
+      nocturno = b.getAttribute('data-noct') === 'si';
+      document.querySelectorAll('[data-noct]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      render();
+    }));
+
+    function summary() {
+      const c = calcular();
+      return `Recargo dominical/festivo en Colombia: ${c.horas} h con salario ${fmt(c.salario)} = ${fmt(c.total)} (hora ordinaria ${fmt(c.horaOrdinaria)}, recargo ${c.recargoPct}%, factor ${fx(c.factor)}). — hacecuentas.com`;
+    }
+    function shareUrl() { return `${location.origin}${location.pathname}?salario=${rawSalario()}&horas=${rawHoras()}&etapa=${etapa}&noct=${nocturno ? 'si' : 'no'}`; }
+    function copy(t, btn) { navigator.clipboard?.writeText(t).then(() => { const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => btn.innerHTML = o, 1500); }); }
+    $('rd-copy').addEventListener('click', (e) => copy(summary(), e.currentTarget));
+    $('rd-detail').addEventListener('click', () => { document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' }); });
+    const s2 = $('rd-share2'); if (s2) s2.addEventListener('click', (e) => copy(shareUrl(), e.currentTarget));
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('salario')) salarioEl.value = fmtThousands(q.get('salario'));
+    if (q.get('horas')) horasEl.value = String(q.get('horas')).replace('.', ',');
+    if (q.get('etapa')) { const b = document.querySelector(`[data-etapa="${q.get('etapa')}"]`); if (b) b.click(); }
+    if (q.get('noct') === 'si') { const b = document.querySelector('[data-noct="si"]'); if (b) b.click(); }
+    render();
+  })();
+</script>
+
+<style>
+  /* Hero deco: dial amarillo + card del próximo escalón */
+  .rd .rd-dial {
+    width: 132px; height: 132px; border-radius: 50%; margin: 0 0 0.9rem auto;
+    background: radial-gradient(circle at 30% 30%, #fde68a, #fbbf24 70%);
+    color: #78350f; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    box-shadow: var(--shadow-lg);
+  }
+  .rd .rd-dial__k { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.09em; opacity: 0.75; }
+  .rd .rd-dial__v { font-size: 2.1rem; font-weight: 800; line-height: 1; }
+  .rd .rd-dial__n { font-size: 0.62rem; font-weight: 700; opacity: 0.8; }
+  .rd .rd-next .cf-deco-card__value { font-size: 2.2rem; }
+
+  /* Timeline */
+  .rd .rd-timeline { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; list-style: none; margin: 1.25rem 0 0; padding: 0.9rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .rd .rd-tl { flex: 1; min-width: 120px; padding: 0.6rem 0.9rem; border-radius: var(--radius); background: var(--bg-soft); display: flex; flex-direction: column; gap: 0.1rem; }
+  .rd .rd-tl--now { background: #fef9c3; border: 1px solid #fde047; }
+  :root[data-theme="dark"] .rd .rd-tl--now { background: rgba(202,138,4,0.22); border-color: rgba(250,204,21,0.4); }
+  .rd .rd-tl__when { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-subtle); }
+  .rd .rd-tl__v { font-size: 1.15rem; font-weight: 800; color: var(--text); }
+  .rd .rd-tl__arrow { color: var(--border-strong); font-weight: 800; }
+
+  .rd .rd-money { position: relative; display: flex; align-items: center; }
+  .rd .rd-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
+  .rd .rd-money .cf-input { padding-left: 1.7rem; }
+  .rd .rd-seg { width: 100%; }
+  .rd .rd-seg button { flex: 1; }
+  .rd .rd-chip { min-width: 0; flex: 1; font-size: 0.78rem; }
+
+  /* Stepper de horas */
+  .rd .rd-stepper { display: flex; align-items: center; gap: 0.5rem; }
+  .rd .rd-step { width: 40px; height: 40px; flex-shrink: 0; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg-card); color: var(--accent); font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: background 0.15s; }
+  .rd .rd-step:hover { background: var(--accent-soft); }
+  .rd .rd-hin { text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .rd .rd-hu { font-size: 0.82rem; color: var(--text-subtle); flex-shrink: 0; }
+
+  .rd .rd-chipcalc { margin: 0.7rem 0 0; padding: 0.4rem 0.6rem; border-radius: var(--radius-sm); background: var(--bg-soft); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent-strong); overflow-x: auto; }
+  .rd .rd-foot { font-size: 0.75rem; color: var(--text-subtle); margin: 0.7rem 0 0; }
+
+  /* Card "doble cambio" */
+  .rd .rd-double { display: grid; grid-template-columns: 1fr; gap: 1.25rem; padding: 1.75rem; border-radius: var(--radius-xl); color: #e7ecf3; background: linear-gradient(150deg, color-mix(in srgb, var(--accent) 60%, #14152b) 0%, #191631 100%); }
+  @media (min-width: 860px) { .rd .rd-double { grid-template-columns: 1.1fr 0.9fr; align-items: center; } }
+  .rd .rd-double .cf-side-eyebrow { color: color-mix(in srgb, var(--accent-2) 55%, #fff); }
+  .rd .rd-double__title { font-size: clamp(1.35rem, 3vw, 1.75rem); font-weight: 800; color: #fff; letter-spacing: -0.02em; margin: 0 0 0.5rem; line-height: 1.15; }
+  .rd .rd-double__desc { font-size: 0.9rem; color: rgba(255,255,255,0.72); line-height: 1.55; margin: 0; }
+  .rd .rd-double__side { display: grid; gap: 0.6rem; }
+  .rd .rd-mini { padding: 0.85rem 1rem; border-radius: var(--radius); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); }
+  .rd .rd-mini__k { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: rgba(255,255,255,0.6); }
+  .rd .rd-mini__v { display: block; font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0.1rem 0; }
+  .rd .rd-mini__n { font-size: 0.7rem; color: rgba(255,255,255,0.6); }
+
+  /* Ejemplos */
+  .rd .rd-minicard--hl { background: #fefce8; border-color: #fde047; border-top-color: #eab308; }
+  :root[data-theme="dark"] .rd .rd-minicard--hl { background: rgba(202,138,4,0.16); border-color: rgba(250,204,21,0.35); }
+  .rd .rd-rows { margin: 0.85rem 0 0; display: grid; gap: 0.3rem; }
+  .rd .rd-row { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.78rem; color: var(--text-muted); }
+  .rd .rd-row strong { color: var(--text); font-variant-numeric: tabular-nums; }
+  .rd .rd-total { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px dashed var(--border); font-size: 0.78rem; color: var(--text-muted); }
+  .rd .rd-total strong { font-size: 1.05rem; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+  /* Banda */
+  .cf-band .rd-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .cf-band .rd-2col { grid-template-columns: 1fr 1fr; } }
+  .cf-band .rd-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .rd-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; }
+  .cf-band .rd-legal { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1rem; padding: 0.85rem 1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-soft); }
+  .cf-band .rd-legal strong { display: block; font-size: 0.85rem; color: var(--text); }
+  .cf-band .rd-legal span { font-size: 0.72rem; color: var(--text-subtle); }
+  .cf-band .rd-legal__v { font-size: 1.5rem; font-weight: 800; color: var(--accent); flex-shrink: 0; }
+  .cf-band .rd-src__title { font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 0.9rem; }
+  .cf-band .rd-src { display: grid; gap: 0.5rem; }
+  .cf-band .rd-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .rd-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .rd-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .rd-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+</style>
