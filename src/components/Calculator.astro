@@ -13,6 +13,7 @@ import ResultContext from "./ResultContext.astro";
 import type { EquivalenciaId } from "./ResultContext.astro";
 import { isAlertEligible, getAlertConfig } from "../lib/alerts/eligible";
 import { getCoopSource, getDataset } from "../lib/coop/datasets";
+import { canEmbedCalc } from '../lib/content-policy';
 export interface Field {
   id: string;
   label: string;
@@ -549,8 +550,12 @@ const editorialOnLabel = lang === 'en' ? 'Last editorial review' : lang === 'pt'
 // Embed inline: snippet server-rendered (no necesita JS para construirse) con
 // crédito = backlink followable en la página anfitriona (marca→home, nombre→calc).
 const embedOrigin = 'https://hacecuentas.com';
+const publicPath = Astro.url.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
+// El endpoint /embed/[slug] sólo existe para el catálogo ES raíz. Ocultar la
+// oferta en locales evita publicar miles de previews que responden 404.
+const canOfferEmbed = publicPath === `/${config.slug}` && canEmbedCalc(config);
 const embedSrc = `${embedOrigin}/embed/${config.slug}`;
-const embedCalcUrl = `${embedOrigin}/${config.slug}`;
+const embedCalcUrl = `${embedOrigin}${publicPath}`;
 const editorialSuggestionSubject = encodeURIComponent(`Mejora para ${config.h1}`);
 const editorialSuggestionBody = encodeURIComponent(
   `Hola, quiero proponer una mejora para esta calculadora:\n\n${config.h1}\n${embedCalcUrl}\n\nQué corregiría o agregaría:\n\n\nFuente o explicación, si aplica:\n`
@@ -1181,11 +1186,11 @@ const formatFreshnessDate = (iso: string): string => {
             {lang === 'en' ? 'Image' : lang === 'pt' ? 'Imagem' : 'Imagen'}
           </button>
           <!-- Embeber — revela el bloque de embed (oculto por defecto para usuarios comunes) -->
-          <button type="button" class="btn-share" data-action="embed-reveal"
+          {canOfferEmbed && <button type="button" class="btn-share" data-action="embed-reveal"
             title={lang === 'en' ? 'Embed this calculator on your website' : lang === 'pt' ? 'Incorporar esta calculadora no seu site' : 'Incrustá esta calculadora en tu web'}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
             {lang === 'en' ? 'Embed' : lang === 'pt' ? 'Incorporar' : 'Embeber en tu web'}
-          </button>
+          </button>}
           {config.calendarReminder && (
             <button
               type="button"
@@ -1330,7 +1335,7 @@ const formatFreshnessDate = (iso: string): string => {
        motor de backlinks. <details> = se despliega el código SIN depender del JS
        de la calc (que en dev no corre); el copiar lo maneja el <script is:inline>
        de abajo (corre en dev y prod, con fallback execCommand para webviews). -->
-  <details class="embed-cta" data-embed data-slug={config.slug}>
+  {canOfferEmbed && <details class="embed-cta" data-embed data-slug={config.slug}>
     <summary class="embed-cta-summary">
       <span class="embed-cta-copy" data-nosnippet>
         <strong class="embed-cta-title">{lang === 'en' ? 'Have a website? Embed this calculator for free' : lang === 'pt' ? 'Tem um site? Incorpore esta calculadora grátis' : '¿Tenés una web? Incrustá esta calculadora gratis'}</strong>
@@ -1353,7 +1358,7 @@ const formatFreshnessDate = (iso: string): string => {
       </div>
       <p class="embed-panel-note">{lang === 'en' ? 'Paste it on your site. Keep the credit link — thanks for sharing.' : lang === 'pt' ? 'Cole no seu site. Mantenha o link de crédito — obrigado por compartilhar.' : 'Pegalo en tu sitio. Dejá el link de crédito — gracias por compartir.'} <a href={`${embedOrigin}/embeber`} target="_blank" rel="noopener">{lang === 'en' ? 'More widgets →' : lang === 'pt' ? 'Mais widgets →' : 'Más widgets →'}</a></p>
     </div>
-  </details>
+  </details>}
   <script is:inline>
     (function () {
       var s = document.currentScript;

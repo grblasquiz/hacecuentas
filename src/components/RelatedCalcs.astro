@@ -44,7 +44,8 @@ const VERTICAL_MODULES: Record<string, any> = { co: coModules, mx: mxModules, cl
 const calcModules = lang === 'en' ? enModules : lang === 'pt' ? ptModules : lang === 'es-ES' ? esEsModules
   : VERTICAL_MODULES[lang] ? VERTICAL_MODULES[lang] : esModules;
 // Excluir restringidas/noindex del pool: no se recomiendan como relacionadas.
-const allCalcs = Object.values(calcModules).map((m: any) => m.default || m).filter((c: any) => canDistributeCalc(c));
+const policyPrefix = lang === 'es-ES' ? 'es' : lang === 'es' ? '' : lang;
+const allCalcs = Object.values(calcModules).map((m: any) => m.default || m).filter((c: any) => canDistributeCalc(c, policyPrefix));
 const bySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
 
 const VERTICAL_PREFIX: Record<string, string> = { co: '/co/', mx: '/mx/', cl: '/cl/', pe: '/pe/', ec: '/ec/', ve: '/ve/', py: '/py/', uy: '/uy/', do: '/do/', 'pt-pt': '/pt-pt/' };
@@ -143,7 +144,8 @@ const seeAllLabel = lang === 'en' ? 'See all →' : lang === 'pt' ? 'Ver todas �
 const homeHref = lang === 'en' ? '/en' : lang === 'pt' ? '/pt' : lang === 'es-ES' ? '/es'
   : VERTICAL_PREFIX[lang] ? VERTICAL_PREFIX[lang].slice(0, -1) : '/';
 // Los hubs /categoria/<cat> sólo existen en ES root. EN/PT/verticales caen a su home/hub-país.
-const hasCategoryHubs = lang === 'es' || lang === 'es-ES';
+const CATEGORY_HUBS = new Set(['astronomia','automotor','ciencia','cocina','construccion','deportes','educacion','electronica','entretenimiento','familia','finanzas','hogar','idiomas','impuestos','jardineria','juegos','marketing','mascotas','matematica','medio-ambiente','negocios','salud','tecnologia','viajes','vida']);
+const hasCategoryHubs = lang === 'es' && CATEGORY_HUBS.has(category);
 const seeAllHref = hasCategoryHubs && category ? `/categoria/${category}` : homeHref;
 ---
 

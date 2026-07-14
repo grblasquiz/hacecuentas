@@ -28,6 +28,7 @@
  */
 
 import { PRUNING_REDIRECTS } from './pruning-redirects.ts';
+import { GONE_410_URLS } from './gone-410.ts';
 
 // ---- Tipos de la política ----
 
@@ -264,16 +265,24 @@ export function isIndexableCalc(calc: CalcPolicyInput | null | undefined): boole
  * para revisores/AdSense). Espeja el Set de scripts/generate-sitemap.ts.
  */
 const PRUNED_SLUGS: ReadonlySet<string> = new Set(
-  Object.keys(PRUNING_REDIRECTS).map((p) => p.replace(/^\//, '')),
+  [...Object.keys(PRUNING_REDIRECTS), ...GONE_410_URLS].map((p) => p.replace(/^\//, '')),
 );
 
 /** ¿El slug de la calc está podado (redirige por PRUNING_REDIRECTS)? */
-export function isPrunedCalc(calc: CalcPolicyInput | null | undefined): boolean {
-  return !!calc?.slug && PRUNED_SLUGS.has(calc.slug);
+export function isPrunedCalc(calc: CalcPolicyInput | null | undefined, routePrefix = ''): boolean {
+  if (!calc?.slug) return false;
+  const prefix = routePrefix.replace(/^\/|\/$/g, '');
+  return PRUNED_SLUGS.has(prefix ? `${prefix}/${calc.slug}` : calc.slug);
 }
 
-export function canDistributeCalc(calc: CalcPolicyInput | null | undefined): boolean {
-  return isIndexableCalc(calc) && !isPrunedCalc(calc);
+export function canDistributeCalc(calc: CalcPolicyInput | null | undefined, routePrefix = ''): boolean {
+  return isIndexableCalc(calc) && !isPrunedCalc(calc, routePrefix);
+}
+
+/** ¿Una ruta pública concreta evita aliases 301 y URLs retiradas 410? */
+export function isDistributablePublicPath(pathname: string): boolean {
+  const path = `/${pathname.replace(/^\/+|\/+$/g, '')}`;
+  return !(path in PRUNING_REDIRECTS) && !GONE_410_URLS.has(path);
 }
 
 /**

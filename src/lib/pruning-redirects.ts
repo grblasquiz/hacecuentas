@@ -6,6 +6,23 @@
 // que assets → soluciona sin necesidad de borrar JSONs.
 
 export const PRUNING_REDIRECTS: Record<string, string> = {
+  // Aliases internos legacy detectados por el recrawl integral post-deploy.
+  '/contador-de-palabras-y-caracteres': '/calculadora-contador-de-palabras-y-caracteres',
+  '/co/calculadora-cesantias-colombia-2026': '/co/calculadora-cesantias-colombia-12-porciento-anual',
+  '/mx/calculadora-aguinaldo-mexico-2026': '/mx/calculadora-aguinaldo-mexico-2026-15-dias-tope-30',
+  '/pe/calculadora-cts-peru-compensacion-tiempo-servicios-2026': '/pe/calculadora-cts-peru-deposito-semestral',
+  '/ec/horas-extra-suplementarias-ecuador': '/ec/calculadora-horas-extra-suplementarias-ecuador',
+  '/consumo-electrico-aparato-kwh-mes': '/calculadora-watts-consumo-electrico-aparato-hora',
+  '/ec/datos-salario-basico-ecuador-2026': '/datos-salario-basico-ecuador-2026',
+  '/calcular-iva': '/calculadora-iva-agregar-discriminar',
+  '/calculadora-ganancias-cuarta-categoria': '/calculadora-ganancias-empleados-4ta-categoria-2026',
+  '/liquidacion-final-trabajo': '/calculadora-liquidacion-final-renuncia',
+  '/regla-50-30-20': '/calculadora-presupuesto-regla-50-30-20',
+  '/calculadora-valuacion-fiscal-automotor-caba': '/calculadora-valuacion-fiscal-automotor-argentina',
+  '/categoria/laboral': '/categoria/finanzas',
+  '/categoria/vehiculos': '/categoria/automotor',
+  '/categoria/empresas': '/categoria/negocios',
+  '/categoria/vivienda': '/categoria/vida',
   // Fusiones de duplicados (review AdSense 2026-07-13): calcs solapadas → canónica.
   '/calculadora-gastos-escritura-compraventa': '/calculadora-gastos-escritura-compra-inmueble',
   '/calculadora-gastos-escriturar-vivienda-primera-casa': '/calculadora-gastos-escritura-compra-inmueble',

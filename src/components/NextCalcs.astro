@@ -71,7 +71,8 @@ const modules = BUCKETS[lang] || BUCKETS[''];
 const relatedAuto = (AUTOS[lang] || relatedAutoEs) as Record<string, string[]>;
 const linkPrefix = lang ? `/${lang}/` : '/';
 
-const allCalcs = Object.values(modules).map((m: any) => m.default || m).filter((c: any) => c && c.slug && canDistributeCalc(c));
+const policyPrefix = lang === 'es-ES' ? 'es' : lang;
+const allCalcs = Object.values(modules).map((m: any) => m.default || m).filter((c: any) => c && c.slug && canDistributeCalc(c, policyPrefix));
 const bySlug = new Map<string, any>(allCalcs.map((c: any) => [c.slug, c]));
 
 const relatedSlugs: string[] = calc.relatedSlugs || [];
