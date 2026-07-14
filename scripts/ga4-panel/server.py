@@ -61,8 +61,14 @@ def run(dimensions, metrics, start, end, limit=100000):
 
 
 # ── pulso del día ────────────────────────────────────────────────────────────
+ALL = '__all__'
+
+
 def build_pulse():
     """Hoy vs ayer vs mismo día de la semana pasada, cortados a la misma hora.
+
+    Devuelve la curva de 24 h de cada día por canal (y el total en ALL), así el
+    front filtra por canal sin volver a pegarle a la API.
 
     El corte es la última hora COMPLETA. La hora en curso está a medio llenar
     (si son las 14:37, la hora 14 tiene 37 min contra los 60 min de ayer), así
@@ -88,30 +94,30 @@ def build_pulse():
     last_hour = max(hours_today.keys(), default=0)          # hora en curso (parcial)
     cutoff = max(last_hour - 1, 0)                          # última hora completa
 
-    def cumulative(d, upto):
-        return sum(s for hr, chans in by_day.get(key(d), {}).items()
-                   for s in chans.values() if hr <= upto)
+    days = {'today': today, 'yesterday': yesterday, 'lastWeek': last_week}
+    channels = set()
+    for d in days.values():
+        for chans in by_day.get(key(d), {}).values():
+            channels.update(chans)
 
-    def channels(d, upto):
-        acc = defaultdict(int)
-        for hr, chans in by_day.get(key(d), {}).items():
-            if hr <= upto:
-                for ch, s in chans.items():
-                    acc[ch] += s
-        return acc
-
-    def curve(d):
+    def curve(d, ch=None):
         h = by_day.get(key(d), {})
-        return [sum(h.get(hr, {}).values()) for hr in range(24)]
+        return [sum(h.get(hr, {}).values()) if ch is None else h.get(hr, {}).get(ch, 0)
+                for hr in range(24)]
 
-    ch_today = channels(today, cutoff)
-    ch_yest = channels(yesterday, cutoff)
-    ch_week = channels(last_week, cutoff)
-    all_ch = sorted(set(ch_today) | set(ch_yest) | set(ch_week),
-                    key=lambda c: -ch_today.get(c, 0))
+    series = {ALL: {k: curve(d) for k, d in days.items()}}
+    for ch in channels:
+        series[ch] = {k: curve(d, ch) for k, d in days.items()}
 
-    total_today = cumulative(today, cutoff)
-    unassigned = ch_today.get('Unassigned', 0)
+    upto = lambda arr: sum(arr[:cutoff + 1])
+    order = sorted(channels, key=lambda c: -upto(series[c]['today']))
+
+    # Unassigned: hoy vs ayer al mismo corte. Si hoy está inflado, el resto de
+    # los canales está subestimado — el front lo usa para no pintar el delta.
+    def unassigned(day):
+        tot = upto(series[ALL][day])
+        un = upto(series.get('Unassigned', {}).get(day, [0] * 24))
+        return {'sessions': un, 'share': (un / tot) if tot else 0}
 
     realtime = None
     try:
@@ -124,29 +130,10 @@ def build_pulse():
     return {
         'cutoff': cutoff,
         'lastHour': last_hour,
-        'dates': {'today': today.isoformat(), 'yesterday': yesterday.isoformat(),
-                  'lastWeek': last_week.isoformat()},
-        'totals': {
-            'today': total_today,
-            'yesterday': cumulative(yesterday, cutoff),
-            'lastWeek': cumulative(last_week, cutoff),
-        },
-        'fullDay': {
-            'yesterday': sum(curve(yesterday)),
-            'lastWeek': sum(curve(last_week)),
-        },
-        'partialHour': {
-            'hour': last_hour,
-            'today': sum(hours_today.get(last_hour, {}).values()),
-            'yesterday': sum(by_day.get(key(yesterday), {}).get(last_hour, {}).values()),
-            'lastWeek': sum(by_day.get(key(last_week), {}).get(last_hour, {}).values()),
-        },
-        'curves': {'today': curve(today), 'yesterday': curve(yesterday),
-                   'lastWeek': curve(last_week)},
-        'channels': [{'channel': c, 'today': ch_today.get(c, 0),
-                      'yesterday': ch_yest.get(c, 0), 'lastWeek': ch_week.get(c, 0)}
-                     for c in all_ch],
-        'unassignedShare': (unassigned / total_today) if total_today else 0,
+        'dates': {k: d.isoformat() for k, d in days.items()},
+        'channels': order,
+        'series': series,
+        'unassigned': {'today': unassigned('today'), 'yesterday': unassigned('yesterday')},
         'realtimeUsers': realtime,
     }
 

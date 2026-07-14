@@ -114,6 +114,8 @@
   .delta b { font-weight: 600; font-variant-numeric: tabular-nums; }
   .up b { color: var(--good); }
   .down b { color: var(--critical); }
+  /* delta que la atribución todavía no respalda: se muestra, no se colorea */
+  .delta b.unsure { color: var(--text-secondary); font-weight: 600; cursor: help; }
   .swatch { width: 9px; height: 9px; border-radius: 2px; flex: none; }
   .tile .foot { font-size: 11.5px; color: var(--muted); margin-top: 7px; font-variant-numeric: tabular-nums; }
 
@@ -155,10 +157,15 @@
   .presets button[aria-pressed="true"] { background: var(--series-1); color: #fff; font-weight: 500; }
   .presets button[aria-pressed="true"]:hover { filter: brightness(1.08); }
   .range { display: flex; gap: 6px; align-items: center; font-size: 12.5px; color: var(--text-secondary); }
-  input[type="date"] {
+  input[type="date"], select {
     font: inherit; font-size: 12.5px; padding: 5px 8px; border-radius: 7px;
     border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
   }
+  .filters.scope { margin: 0 0 18px; }
+  .filters.scope label { font-size: 12.5px; color: var(--text-secondary); }
+  .filters.scope select { font-size: 13px; padding: 6px 10px; font-weight: 500; }
+  .filters.scope select:not([data-all]) { border-color: var(--series-1); color: var(--series-1); }
+  .scope-note { font-size: 12px; color: var(--muted); }
 
   /* table */
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -210,9 +217,16 @@
 
   <div class="err" id="err" hidden></div>
 
+  <!-- filtro de canal: scopea TODO el panel, por eso va arriba de todo -->
+  <div class="filters scope">
+    <label for="channel">Canal</label>
+    <select id="channel"><option value="__all__">Todos los canales</option></select>
+    <span class="scope-note" id="scope-note" hidden></span>
+  </div>
+
   <!-- ── PULSO DEL DÍA ────────────────────────────────────────────── -->
   <section class="card" id="pulse-card">
-    <h2>Cómo venimos hoy</h2>
+    <h2 id="pulse-title">Cómo venimos hoy</h2>
     <p class="sub" id="pulse-sub">Cargando…</p>
 
     <div class="notice" id="partial-notice" hidden>
@@ -265,13 +279,13 @@
   </div>
 
   <section class="card">
-    <h2>Sesiones por canal</h2>
+    <h2 id="report-title">Sesiones por canal</h2>
     <p class="sub" id="report-sub">Cargando…</p>
     <div class="tbl-scroll">
       <table id="tbl">
         <thead>
           <tr>
-            <th>Canal · fuente / medio</th>
+            <th id="th-first">Canal · fuente / medio</th>
             <th class="bar-cell"></th>
             <th>Sesiones</th>
             <th>Share</th>
@@ -299,8 +313,19 @@ const SERIES = [
   { key: 'lastWeek',  label: 'Mismo día sem. pas.',  color: 'var(--series-3)' },
 ];
 
-let pulse = null, report = null, cumMode = true, tableView = false;
+const ALL = '__all__';
+let pulse = null, report = null, cumMode = true, tableView = false, channel = ALL;
 const openChannels = new Set();
+
+/* Con "Unassigned" inflado, un canal suelto de hoy está SUBESTIMADO: esas
+   sesiones todavía no se repartieron. Ayer a esta hora quedaba ~1% sin asignar,
+   hoy puede ser 50% — el delta del canal mide el lag de atribución, no tráfico.
+   Umbral: 3× el residuo ya asentado de ayer, y al menos 5 puntos. */
+const attributionSkewed = () => {
+  if (!pulse || channel === ALL || channel === 'Unassigned') return false;
+  const t = pulse.unassigned.today.share, y = pulse.unassigned.yesterday.share;
+  return t > 0.05 && t > Math.max(y * 3, 0.05);
+};
 
 /* ── tema ─────────────────────────────────────────────────────────── */
 $('theme').onclick = () => {
@@ -345,7 +370,7 @@ async function loadPulse(fresh) {
     const r = await fetch('/api/pulse' + (fresh ? '?fresh=1' : ''));
     const d = await r.json();
     if (d.error) throw new Error(d.error);
-    pulse = d; renderPulse(); tickStamp();
+    pulse = d; syncChannelOptions(); applyScope(); renderPulse(); tickStamp();
   } catch (e) { showErr('No se pudo leer el pulso del día: ' + e.message); }
   finally { $('pulse-card').classList.remove('loading'); }
 }
@@ -358,7 +383,7 @@ async function loadReport(fresh) {
     const r = await fetch(`/api/report?start=${start}&end=${end}${fresh ? '&fresh=1' : ''}`);
     const d = await r.json();
     if (d.error) throw new Error(d.error);
-    report = d; renderReport();
+    report = d; syncChannelOptions(); renderReport();
   } catch (e) { showErr('No se pudo leer el reporte por canal: ' + e.message); }
   finally { tbl.classList.remove('loading'); }
 }
@@ -372,18 +397,31 @@ $('refresh').onclick = async () => {
 };
 
 /* ── pulso ────────────────────────────────────────────────────────── */
-function deltaHtml(cur, base, label) {
+function deltaHtml(cur, base, label, skewed) {
   if (!base) return `<div class="delta">— vs ${label} (sin datos)</div>`;
   const pct = (cur - base) / base * 100;
   const up = pct >= 0;
-  return `<div class="delta ${up ? 'up' : 'down'}">
-    <b>${up ? '↑' : '↓'} ${up ? '+' : '−'}${Math.abs(pct).toFixed(0)}%</b> vs ${label} · ${fmt(base)}</div>`;
+  const sign = `${up ? '↑' : '↓'} ${up ? '+' : '−'}${Math.abs(pct).toFixed(0)}%`;
+  // sin atribución cerrada no hay conclusión: se muestra el número, no el color
+  if (skewed) return `<div class="delta"><b class="unsure" title="La atribución de hoy todavía no cerró">⚠ ${sign}</b> vs ${label} · ${fmt(base)}</div>`;
+  return `<div class="delta ${up ? 'up' : 'down'}"><b>${sign}</b> vs ${label} · ${fmt(base)}</div>`;
 }
 
-function renderPulse() {
-  const p = pulse, t = p.totals;
-  const hh = String(p.cutoff).padStart(2, '0');
+const curOf = key => pulse.series[channel]?.[key] || new Array(24).fill(0);
+const upto = (arr, n) => arr.slice(0, n + 1).reduce((a, b) => a + b, 0);
 
+function renderPulse() {
+  const p = pulse;
+  const hh = String(p.cutoff).padStart(2, '0');
+  const label = channel === ALL ? '' : ` · ${channel}`;
+  const t = {
+    today: upto(curOf('today'), p.cutoff),
+    yesterday: upto(curOf('yesterday'), p.cutoff),
+    lastWeek: upto(curOf('lastWeek'), p.cutoff),
+  };
+  const skew = attributionSkewed();
+
+  $('pulse-title').textContent = 'Cómo venimos hoy' + label;
   $('pulse-sub').innerHTML =
     `Sesiones acumuladas hasta las <b>${hh}:59</b>, con los tres días cortados a la misma hora.`;
 
@@ -392,46 +430,84 @@ function renderPulse() {
       <div class="k"><span class="swatch" style="background:var(--series-1)"></span>Hoy · ${prettyDay(p.dates.today)}</div>
       <div class="v">${fmt(t.today)}</div>
       <div class="deltas">
-        ${deltaHtml(t.today, t.yesterday, 'ayer')}
-        ${deltaHtml(t.today, t.lastWeek, prettyDay(p.dates.lastWeek))}
+        ${deltaHtml(t.today, t.yesterday, 'ayer', skew)}
+        ${deltaHtml(t.today, t.lastWeek, prettyDay(p.dates.lastWeek), skew)}
       </div>
     </div>
     <div class="tile baseline">
       <div class="k"><span class="swatch" style="background:var(--series-2)"></span>Ayer · mismo corte</div>
       <div class="v">${fmt(t.yesterday)}</div>
-      <div class="foot">día completo: ${fmt(p.fullDay.yesterday)}</div>
+      <div class="foot">día completo: ${fmt(curOf('yesterday').reduce((a, b) => a + b, 0))}</div>
     </div>
     <div class="tile baseline">
       <div class="k"><span class="swatch" style="background:var(--series-3)"></span>${prettyDay(p.dates.lastWeek)} · mismo corte</div>
       <div class="v">${fmt(t.lastWeek)}</div>
-      <div class="foot">día completo: ${fmt(p.fullDay.lastWeek)}</div>
+      <div class="foot">día completo: ${fmt(curOf('lastWeek').reduce((a, b) => a + b, 0))}</div>
     </div>`;
 
   // hora en curso: incompleta, se informa pero no entra en la comparación
-  const ph = p.partialHour;
+  const ph = {
+    today: curOf('today')[p.lastHour], yesterday: curOf('yesterday')[p.lastHour],
+  };
   $('partial-text').innerHTML =
-    `La hora <b>${String(ph.hour).padStart(2, '0')}</b> está en curso (${fmt(ph.today)} sesiones hasta ahora) y
+    `La hora <b>${String(p.lastHour).padStart(2, '0')}</b> está en curso (${fmt(ph.today)} sesiones hasta ahora) y
      <b>queda fuera de los números de arriba</b>: compararla contra una hora completa de ayer
      (${fmt(ph.yesterday)}) inventaría una caída que no existe.` +
-    (p.realtimeUsers != null ? ` En tiempo real hay <b>${fmt(p.realtimeUsers)}</b> usuarios activos.` : '');
+    (p.realtimeUsers != null && channel === ALL
+      ? ` En tiempo real hay <b>${fmt(p.realtimeUsers)}</b> usuarios activos.` : '');
   $('partial-notice').hidden = false;
 
-  // Unassigned del mismo día se reasigna en 24-48h — no es un canal real
-  const un = p.unassignedShare;
-  if (un > 0.03) {
-    $('unassigned-text').innerHTML =
-      `<b>${(un * 100).toFixed(0)}% de las sesiones de hoy están en "Unassigned"</b> — es el lag de atribución
-       de GA4, se reasigna a los canales reales en 24–48 h. Hoy siempre se ve peor por canal que un día ya asentado.`;
-    $('unassigned-notice').hidden = false;
-  } else $('unassigned-notice').hidden = true;
+  renderUnassignedNotice(skew);
 
-  $('legend').innerHTML = SERIES.map(s => {
-    const d = s.key === 'today' ? p.dates.today : s.key === 'yesterday' ? p.dates.yesterday : p.dates.lastWeek;
-    return `<span class="item"><span class="line" style="background:${s.color}"></span>${s.label} · ${prettyDay(d)}</span>`;
-  }).join('');
+  $('legend').innerHTML = SERIES.map(s =>
+    `<span class="item"><span class="line" style="background:${s.color}"></span>${s.label} · ${prettyDay(p.dates[s.key])}</span>`
+  ).join('');
 
   drawChart();
   renderCurveTable();
+}
+
+function renderUnassignedNotice(skew) {
+  const p = pulse, un = p.unassigned;
+  if (un.today.share <= 0.03) { $('unassigned-notice').hidden = true; return; }
+  const pct = n => (n * 100).toFixed(0) + '%';
+  $('unassigned-text').innerHTML = skew
+    // filtrando un canal, el lag de atribución se lee como caída de ESE canal
+    ? `<b>El ${channel} de hoy está subestimado, no caído.</b> ${fmt(un.today.sessions)} sesiones
+       (${pct(un.today.share)} del día) siguen en "Unassigned" y todavía no se repartieron a su canal;
+       ayer a esta misma hora quedaban ${fmt(un.yesterday.sessions)} (${pct(un.yesterday.share)}).
+       GA4 las reasigna en 24–48 h. Por eso el Δ de hoy va sin color: mide la atribución, no el tráfico.
+       <b>Para leer ${channel} de verdad, comparar ayer contra el mismo día de la semana pasada</b> — los dos ya cerrados.`
+    : `<b>${pct(un.today.share)} de las sesiones de hoy están en "Unassigned"</b> — es el lag de atribución
+       de GA4, se reasigna a los canales reales en 24–48 h. Hoy siempre se ve peor por canal que un día ya asentado.`;
+  $('unassigned-notice').hidden = false;
+}
+
+/* ── filtro de canal ──────────────────────────────────────────────── */
+function syncChannelOptions() {
+  const sel = $('channel');
+  const names = new Set(pulse?.channels || []);
+  for (const c of report?.channels || []) names.add(c.channel);
+  const opts = [ALL, ...[...names].filter(n => n !== ALL)];
+  if (sel.dataset.opts === opts.join('|')) return;
+  sel.dataset.opts = opts.join('|');
+  sel.innerHTML = opts.map(o =>
+    `<option value="${escapeAttr(o)}">${o === ALL ? 'Todos los canales' : escapeHtml(o)}</option>`).join('');
+  sel.value = names.has(channel) || channel === ALL ? channel : ALL;
+}
+
+$('channel').onchange = e => {
+  channel = e.target.value;
+  applyScope();
+  if (pulse) renderPulse();
+  if (report) renderReport();
+};
+
+function applyScope() {
+  const sel = $('channel');
+  if (channel === ALL) sel.setAttribute('data-all', ''); else sel.removeAttribute('data-all');
+  $('scope-note').hidden = channel === ALL;
+  $('scope-note').textContent = 'todo el panel filtrado por este canal';
 }
 
 /* ── curva por hora ───────────────────────────────────────────────── */
@@ -439,7 +515,7 @@ const W = 860, H = 300, PAD = { t: 14, r: 74, b: 34, l: 46 };
 const PW = W - PAD.l - PAD.r, PH = H - PAD.t - PAD.b;
 
 function seriesData(key) {
-  const raw = pulse.curves[key];
+  const raw = curOf(key);
   if (!cumMode) return raw;
   let acc = 0;
   return raw.map(v => (acc += v));
@@ -604,21 +680,31 @@ function pctCell(cur, prev) {
 }
 
 function renderReport() {
-  const r = report, total = r.totals.sessions;
+  const r = report;
+  const shown = channel === ALL ? r.channels : r.channels.filter(c => c.channel === channel);
+  // filtrado, el share es sobre el canal: "43% del orgánico", no del total del sitio
+  const total = channel === ALL ? r.totals.sessions : shown.reduce((a, c) => a + c.sessions, 0);
+  const prevTotal = channel === ALL ? r.totals.prev : shown.reduce((a, c) => a + c.prev, 0);
   const same = r.range.start === r.range.end;
+
+  $('report-title').textContent = channel === ALL ? 'Sesiones por canal' : `Sesiones · ${channel}`;
   $('report-sub').innerHTML =
     (same ? `<b>${prettyDay(r.range.start)}</b>` : `<b>${prettyDay(r.range.start)} → ${prettyDay(r.range.end)}</b>`) +
-    ` · ${fmt(total)} sesiones · comparado contra ` +
+    ` · ${fmt(total)} sesiones` + (channel === ALL ? '' : ` de ${channel}`) + ` · comparado contra ` +
     (same ? prettyDay(r.prevRange.start) : `${prettyDay(r.prevRange.start)} → ${prettyDay(r.prevRange.end)}`) +
-    ` (${fmt(r.totals.prev)}). Tocá un canal para abrirlo por fuente / medio.` +
+    ` (${fmt(prevTotal)}). ` +
+    (channel === ALL ? 'Tocá un canal para abrirlo por fuente / medio.'
+                     : 'Share y Δ son sobre este canal. Poné "Todos los canales" para volver al total.') +
     (r.includesToday ? ` <b>El rango incluye hoy</b>, que es un día parcial: el Δ va a dar negativo por eso.` : '');
 
-  $('report-empty').hidden = r.channels.length > 0;
-  const max = r.channels[0]?.sessions || 1;
+  $('report-empty').hidden = shown.length > 0;
+  $('report-empty').textContent = channel === ALL
+    ? 'Sin sesiones en este rango.' : `Sin sesiones de ${channel} en este rango.`;
+  const max = shown[0]?.sessions || 1;
 
   let html = '';
-  for (const c of r.channels) {
-    const open = openChannels.has(c.channel);
+  for (const c of shown) {
+    const open = openChannels.has(c.channel) || channel !== ALL;   // filtrado, ya viene abierto
     const eng = c.sessions ? (c.engaged / c.sessions * 100).toFixed(0) + '%' : '—';
     html += `<tr class="ch ${open ? 'open' : ''}" data-ch="${escapeAttr(c.channel)}" tabindex="0" role="button"
               aria-expanded="${open}">
