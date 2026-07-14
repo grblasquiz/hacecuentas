@@ -9,6 +9,7 @@ import Calculator from '../components/Calculator.astro';
 import CalcLayoutV2 from '../components/CalcLayoutV2.astro';
 import DiasEntreFechas from '../components/DiasEntreFechas.astro';
 import AguinaldoSac from '../components/AguinaldoSac.astro';
+import MillasLifeMiles from '../components/MillasLifeMiles.astro';
 import LiveData from '../components/LiveData.astro';
 import RelatedCalcs from '../components/RelatedCalcs.astro';
 import ogManifest from '../lib/og-manifest.json';
@@ -1141,7 +1142,15 @@ const agRelated = isAguinaldoSac
   ? ['sueldo-en-mano-argentina', 'calculadora-ganancias-aguinaldo-sac-retencion', 'calculadora-cuanto-falta-aguinaldo-junio-diciembre']
       .map((s) => allCalcs.find((c: any) => c.slug === s)).filter(Boolean)
   : [];
-const flagshipBespoke = isDiasEntreFechas || isAguinaldoSac;
+const isLifeMiles = calc.slug === 'calculadora-millas-avianca-lifemiles';
+const lmRelated = isLifeMiles
+  ? ['calculadora-valor-millas-punto-centavos', 'calculadora-puntos-vs-cash-vuelo-cuando-conviene', 'calculadora-millas-american-aa-destino']
+      .map((s) => allCalcs.find((c: any) => c.slug === s)).filter(Boolean)
+  : [];
+const flagshipBespoke = isDiasEntreFechas || isAguinaldoSac || isLifeMiles;
+// El mockup no usa el color de la categoría (viajes→life/cian): va rosa coral.
+const flagshipDomain: 'money' | 'data' | 'health' | 'home' | 'knowledge' | 'life' | null =
+  isLifeMiles ? 'health' : null;
 ---
 
 <Layout
@@ -1154,13 +1163,14 @@ const flagshipBespoke = isDiasEntreFechas || isAguinaldoSac;
   canonical={calc.canonicalSlug ? `/${calc.canonicalSlug}` : undefined}
   noindex={effectiveNoindex}
   noAds={!canAdvertiseCalc(calc)}
-  domain={categoryDomain(calc.category)}
+  domain={flagshipDomain || categoryDomain(calc.category)}
   pageType="calculator"
 >
   <Header slot="header" />
 
   {isDiasEntreFechas && <DiasEntreFechas calc={calc} related={diasRelated} />}
   {isAguinaldoSac && <AguinaldoSac calc={calc} related={agRelated} />}
+  {isLifeMiles && <MillasLifeMiles calc={calc} related={lmRelated} />}
   {!flagshipBespoke && <CalcLayoutV2 calc={calc} dataAsOf={_dataAsOf ?? undefined} />}
 
   <ScrollToTop />

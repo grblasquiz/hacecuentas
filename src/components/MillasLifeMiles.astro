@@ -1,0 +1,519 @@
+---
+// Flagship redesign de la calc "millas Avianca LifeMiles" (mockup Martin).
+// Números del motor real (src/lib/formulas/millas-avianca-lifemiles.ts): tabla
+// DEST_MILES [economy-ida, economy-i/v, business], referencia 1,6¢/milla y tasas
+// default USD 220. Domain "health" (rosa coral) por el mockup, no por la
+// categoría (viajes→life/cian).
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Espejo de las constantes del motor (el script is:inline no puede importar).
+const DEST: Record<string, { label: string; flag: string; iata: string; m: [number, number, number] }> = {
+  bogota: { label: 'Bogotá', flag: '🇨🇴', iata: 'BOG', m: [7500, 15000, 30000] },
+  'buenos-aires': { label: 'Buenos Aires', flag: '🇦🇷', iata: 'EZE', m: [20000, 40000, 70000] },
+  miami: { label: 'Miami', flag: '🇺🇸', iata: 'MIA', m: [15000, 30000, 55000] },
+  madrid: { label: 'Madrid', flag: '🇪🇸', iata: 'MAD', m: [30000, 60000, 100000] },
+  'são-paulo': { label: 'São Paulo', flag: '🇧🇷', iata: 'GRU', m: [17500, 35000, 60000] },
+  lima: { label: 'Lima', flag: '🇵🇪', iata: 'LIM', m: [10000, 20000, 40000] },
+};
+const REF_CENT = 1.6;
+const TASAS_DEFAULT = 220;
+
+function millasDe(destino: string, cabina: string, viaje: string) {
+  const a = DEST[destino].m;
+  return cabina === 'business' ? a[2] : viaje === 'ida-vuelta' ? a[1] : a[0];
+}
+function canje(destino: string, cabina: string, viaje: string, precioCash: number, tasas: number) {
+  const millas = millasDe(destino, cabina, viaje);
+  const valorRef = (millas * REF_CENT) / 100;          // lo que "valen" las millas a la referencia
+  const costoCanje = valorRef + tasas;                  // canje = valor de millas + tasas en plata
+  const neto = precioCash - tasas;
+  const cpm = precioCash > 0 && millas > 0 ? (neto / millas) * 100 : 0;
+  return { millas, valorRef, costoCanje, neto, cpm, ahorro: precioCash - costoCanje, conviene: cpm >= REF_CENT };
+}
+
+const INIT = { destino: 'madrid', cabina: 'business', viaje: 'ida-vuelta', cash: 3800, tasas: TASAS_DEFAULT };
+const init = canje(INIT.destino, INIT.cabina, INIT.viaje, INIT.cash, INIT.tasas);
+
+const nMil = (n: number) => n.toLocaleString('es-AR');
+const usd = (n: number) => 'USD ' + Math.round(n).toLocaleString('es-AR');
+const cent = (n: number) => n.toFixed(2).replace('.', ',') + '¢';
+
+// Sweet spots: filas verificadas del referenceTables del JSON
+const SWEET = [
+  { ruta: 'Buenos Aires → Madrid', flag: '🇪🇸', cab: 'Business', millas: '63.000', cash: 'USD 3.500-4.500', vpm: '5,6-7,1¢', hl: true },
+  { ruta: 'Buenos Aires → Miami', flag: '🇺🇸', cab: 'Business', millas: '55.000', cash: 'USD 1.800-2.800', vpm: '3,3-5,1¢' },
+  { ruta: 'Buenos Aires → Miami', flag: '🇺🇸', cab: 'Economy', millas: '30.000', cash: 'USD 600-800', vpm: '2,0-2,7¢' },
+  { ruta: 'Bogotá → Europa', flag: '🇪🇺', cab: 'Business', millas: '60.000', cash: 'USD 3.000-4.000', vpm: '5,0-6,7¢' },
+  { ruta: 'Bogotá → Miami', flag: '🇺🇸', cab: 'Business', millas: '35.000', cash: 'USD 1.200-1.600', vpm: '3,4-4,6¢' },
+];
+
+const faq = calc.faq || [];
+const explanationHtml = calc.explanation ? md(calc.explanation) : '';
+---
+
+<div
+  class="cf-page lm"
+  data-domain="health"
+  data-dest={JSON.stringify(Object.fromEntries(Object.entries(DEST).map(([k, v]) => [k, { l: v.label, f: v.flag, i: v.iata, m: v.m }])))}
+  data-ref={REF_CENT}
+  data-tasas={TASAS_DEFAULT}
+>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/categoria/viajes">Viajes</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Avianca LifeMiles</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">✈️</span> Avianca · LifeMiles 2026</p>
+      <h1 class="cf-h1">¿Cuántas millas necesitás para tu <span class="cf-yr">próximo vuelo</span>?</h1>
+      <p class="cf-sub">Estimá el canje por destino y cabina, compará contra el precio cash y descubrí si conviene usar tus LifeMiles.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Tabla de referencia 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Comparación millas vs. cash</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo privado</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <div class="lm-orb"></div>
+      <div class="lm-deco-wrap">
+        <div class="cf-deco-card cf-deco-card--navy">
+          <div class="cf-deco-card__label">Sweet spot · business</div>
+          <div class="cf-deco-card__value">63.000 millas</div>
+          <div class="cf-deco-card__note">Buenos Aires → Madrid · ida</div>
+        </div>
+        <span class="cf-deco-badge lm-badge">LM</span>
+      </div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Tu búsqueda</p>
+          <h2 class="cf-panel__title">Armá tu viaje</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="lm-destino">Destino</label><span class="cf-hint" id="lm-iata">MAD</span></div>
+        <select class="cf-input" id="lm-destino">
+          {Object.entries(DEST).map(([k, v]) => (
+            <option value={k} selected={k === INIT.destino}>{v.flag} {v.label}</option>
+          ))}
+        </select>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><span class="cf-label">Cabina</span></div>
+        <div class="cf-seg lm-seg" role="group" aria-label="Cabina">
+          <button type="button" data-cab="economy" aria-pressed="false">Economy</button>
+          <button type="button" data-cab="business" aria-pressed="true">Business</button>
+        </div>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><span class="cf-label">Tipo de viaje</span></div>
+        <div class="cf-seg lm-seg" role="group" aria-label="Tipo de viaje">
+          <button type="button" data-viaje="ida" aria-pressed="false">Solo ida</button>
+          <button type="button" data-viaje="ida-vuelta" aria-pressed="true">Ida y vuelta</button>
+        </div>
+        <p class="cf-help" id="lm-viaje-help" hidden>En business, LifeMiles cotiza el mismo canje de referencia para ida y para ida y vuelta.</p>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="lm-cash">Precio cash del pasaje</label><span class="cf-hint">Opcional</span></div>
+        <div class="lm-money"><span class="lm-money__sign">USD</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="lm-cash" value={nMil(INIT.cash)} /></div>
+        <p class="cf-help">El mismo vuelo pagando en efectivo. Con eso calculamos cuánto rinde cada milla.</p>
+      </div>
+
+      <button class="cf-primary" id="lm-calc-btn" type="button">Calcular mis LifeMiles <span aria-hidden="true">→</span></button>
+    </div>
+
+    <div class="cf-result" id="lm-result">
+      <p class="cf-result__eyebrow">Resultado estimado</p>
+      <div class="cf-result__big" id="lm-big">{nMil(init.millas)} millas</div>
+      <p class="cf-result__sub" id="lm-sub">+ {usd(INIT.tasas)} aprox. en impuestos y tasas</p>
+      <p class="lm-verdict" id="lm-verdict" data-ok={init.conviene ? '1' : '0'}>{init.conviene ? '✓ Conviene canjear' : '✕ Conviene pagar cash'}</p>
+      <div class="cf-tiles">
+        <div class="cf-tile"><div class="cf-tile__value" id="lm-t-cpm">{cent(init.cpm)}</div><div class="cf-tile__label">Valor por milla</div></div>
+        <div class="cf-tile"><div class="cf-tile__value">{cent(REF_CENT)}</div><div class="cf-tile__label">Referencia</div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="lm-t-ahorro">{usd(init.ahorro)}</div><div class="cf-tile__label">Ahorro estimado</div></div>
+      </div>
+      <div class="cf-compose">
+        <div class="cf-compose__lbl">Canje vs. efectivo</div>
+        <div class="cf-bar"><span class="cf-bar__fill" id="lm-bar" style={`width:${Math.round(init.costoCanje / INIT.cash * 100)}%`}></span><span class="cf-bar__fill cf-bar__fill--muted" style={`width:${100 - Math.round(init.costoCanje / INIT.cash * 100)}%`}></span></div>
+        <div class="cf-bar__ends"><span id="lm-bar-a">Canje: millas + tasas {usd(init.costoCanje)}</span><span id="lm-bar-b">Pago en efectivo {usd(INIT.cash)}</span></div>
+      </div>
+      <div class="cf-result__formula" id="lm-formula">({usd(INIT.cash)} − {usd(INIT.tasas)}) ÷ {nMil(init.millas)} = {cent(init.cpm)} por milla</div>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="lm-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
+        <button class="cf-rbtn" type="button" id="lm-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver ruta</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">✈️</span>
+    <p class="cf-quick__txt"><strong>Respuesta rápida.</strong> Madrid en business ida y vuelta requiere cerca de <strong>{nMil(init.millas)} LifeMiles</strong> más impuestos.</p>
+    <span class="cf-formula">canje &gt; {cent(REF_CENT)} = bueno</span>
+  </div>
+
+  <!-- Sweet spots -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Mejores canjes</p>
+        <h2 class="cf-section__title">Sweet spots LifeMiles 2026</h2>
+      </div>
+      <p class="cf-section__lead">Rutas donde la diferencia entre precio cash y millas suele generar el mayor valor.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Ruta · solo ida</th><th>Cabina</th><th>Millas</th><th>Cash aprox.</th><th>Valor por milla</th></tr></thead>
+        <tbody>
+          {SWEET.map((s) => (
+            <tr class={s.hl ? 'lm-tr--hl' : undefined}>
+              <td><span aria-hidden="true">{s.flag}</span> {s.ruta}</td>
+              <td>{s.cab}</td>
+              <td>{s.millas}</td>
+              <td>{s.cash}</td>
+              <td class="cf-td-em">{s.vpm}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Qué determina el precio -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">El precio del premio</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Qué determina cuántas millas cuesta</h2>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">🌎</span>
+        <p class="cf-minicard__title">Destino y región</p>
+        <p class="cf-minicard__desc">LifeMiles usa zonas de origen y destino: cuanto más lejos, más millas.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">💺</span>
+        <p class="cf-minicard__title">Cabina</p>
+        <p class="cf-minicard__desc">Business puede costar dos o tres veces más que economy, pero rinde mejor.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">📅</span>
+        <p class="cf-minicard__title">Fecha y demanda</p>
+        <p class="cf-minicard__desc">Vacaciones y temporada alta reducen la disponibilidad de premios.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🤝</span>
+        <p class="cf-minicard__title">Aerolínea socia</p>
+        <p class="cf-minicard__desc">Star Alliance amplía rutas y puede cambiar tasas y recargos.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Valor de referencia -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Valor de referencia</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cuánto vale una LifeMile</h2>
+    <div class="lm-2col">
+      <div class="lm-hl">
+        <p class="cf-side-eyebrow">Valor de referencia</p>
+        <p class="lm-hl__title">Una LifeMile vale cerca de</p>
+        <div class="lm-hl__big">{cent(REF_CENT)} USD</div>
+        <p class="lm-hl__desc">por milla · promedio orientativo</p>
+        <p class="lm-hl__desc" style="margin-top:0.7rem">Es una referencia para comparar: el valor real depende de lo que evitás pagar en efectivo.</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-brow">
+          <span class="cf-brow__lbl">Canje flojo</span>
+          <span class="cf-brow__val">menos de 1,2¢</span>
+          <span class="cf-brow__bar"><span class="lm-bar--bad" style="width:30%"></span></span>
+        </div>
+        <p class="lm-note">Suele convenir pagar cash y guardar las millas.</p>
+        <div class="cf-brow" style="margin-top:0.9rem">
+          <span class="cf-brow__lbl">Canje base</span>
+          <span class="cf-brow__val">1,6–2,5¢</span>
+          <span class="cf-brow__bar"><span class="lm-bar--mid" style="width:60%"></span></span>
+        </div>
+        <p class="lm-note">Estás en el promedio esperado del programa.</p>
+        <div class="cf-brow" style="margin-top:0.9rem">
+          <span class="cf-brow__lbl">Sweet spot</span>
+          <span class="cf-brow__val">más de 3¢</span>
+          <span class="cf-brow__bar"><span style="width:100%"></span></span>
+        </div>
+        <p class="lm-note">Típico de business en vuelos de larga distancia.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cómo mejorar el canje -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Maximizá tus millas</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cómo conseguir un mejor canje</h2>
+    <div class="cf-steps">
+      <div class="cf-step"><div class="cf-step__num">1</div><p class="cf-step__title">Buscá fechas flexibles</p><p class="cf-step__desc">Comparé varias fechas: la disponibilidad de premios puede cambiar mucho entre semana y fin de semana.</p></div>
+      <div class="cf-step"><div class="cf-step__num">2</div><p class="cf-step__title">Priorizá vuelos largos</p><p class="cf-step__desc">Las cabinas premium transatlánticas suelen entregar el mayor valor por milla.</p></div>
+      <div class="cf-step"><div class="cf-step__num">3</div><p class="cf-step__title">Compará socios</p><p class="cf-step__desc">Star Alliance abre rutas alternativas, con distintos impuestos y recargos.</p></div>
+    </div>
+  </section>
+</div>
+
+<!-- Banda: impuestos y tasas -->
+<div class="cf-band cf-band--warm" data-domain="health">
+  <div class="cf-band__inner">
+    <div class="lm-2col">
+      <div>
+        <p class="cf-eyebrow">No todo se paga con millas</p>
+        <h2 class="lm-card__title">Impuestos y tasas van aparte</h2>
+        <p class="cf-side-desc">Antes de confirmar, sumá el total en efectivo del canje y compará contra el precio final del pasaje cash.</p>
+      </div>
+      <div class="lm-fees">
+        <div class="lm-fee"><span>Tasas de aeropuerto</span><strong>USD 50–200</strong></div>
+        <div class="lm-fee"><span>Fuel surcharge</span><strong>Depende del socio</strong></div>
+        <div class="lm-fee"><span>Booking fee</span><strong>Puede aplicar</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page lm" data-domain="health">
+  <!-- Vencimiento -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Saldo LifeMiles</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">¿Las millas vencen?</h2>
+    <div class="cf-cmp">
+      <div class="cf-cmp__col cf-cmp__col--yes">
+        <div class="cf-cmp__head"><span aria-hidden="true">✓</span> Política actual</div>
+        <p class="lm-cmp__title">No tienen vencimiento fijo</p>
+        <p class="lm-cmp__desc">LifeMiles mantiene las millas disponibles mientras la cuenta continúe activa y cumpla las condiciones del programa.</p>
+      </div>
+      <div class="cf-cmp__col cf-cmp__col--warn">
+        <div class="cf-cmp__head"><span aria-hidden="true">⚠️</span> Buena práctica</div>
+        <p class="lm-cmp__title">Revisá tu cuenta una vez al año</p>
+        <p class="lm-cmp__desc">Entrá periódicamente, controlá movimientos y evitá períodos prolongados de inactividad.</p>
+      </div>
+    </div>
+  </section>
+
+  {faq.length > 0 && (
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+</div>
+
+<!-- Banda: metodología -->
+<div class="cf-band" data-domain="health">
+  <div class="cf-band__inner">
+    <div class="lm-2col">
+      <div class="lm-card">
+        <p class="cf-eyebrow">Metodología</p>
+        <h2 class="lm-card__title">Valores de referencia, no tarifas garantizadas</h2>
+        <p class="cf-side-desc">Los premios pueden variar según disponibilidad, ruta, cabina y aerolínea operadora. Siempre confirmá el valor final en LifeMiles.</p>
+        <p class="lm-formula-note">valor por milla = (precio cash − impuestos del canje) ÷ millas requeridas × 100</p>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Fuentes</p>
+        <p class="lm-src__title">Datos contrastados</p>
+        <div class="lm-src">
+          <div class="lm-src__item"><strong>Avianca LifeMiles</strong><span>Programa, reglas y condiciones</span></div>
+          <div class="lm-src__item"><strong>The Points Guy</strong><span>Valuación de millas de referencia</span></div>
+          <div class="lm-src__item"><strong>AwardWallet</strong><span>Seguimiento y condiciones de programa</span></div>
+        </div>
+        <p class="lm-src__foot">● Última revisión: julio de 2026</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page lm" data-domain="health">
+  {explanationHtml && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">En detalle</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cómo funcionan las LifeMiles</h2>
+      <div class="cf-prose" set:html={explanationHtml} />
+    </section>
+  )}
+
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí planificando</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Calculadoras relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '✈️'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('—')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá tu objetivo y seguí acumulando.</p>
+      <p class="cf-ctabar__sub">Tené siempre a mano cuántas millas te faltan para tu próximo canje.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="lm-share2">Guardar objetivo</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.lm');
+    if (!root) return;
+    const DEST = JSON.parse(root.getAttribute('data-dest'));
+    const REF = Number(root.getAttribute('data-ref'));
+    const TASAS = Number(root.getAttribute('data-tasas'));
+    const $ = (id) => document.getElementById(id);
+    const nMil = (n) => Number(n).toLocaleString('es-AR');
+    const usd = (n) => 'USD ' + Math.round(n).toLocaleString('es-AR');
+    const cent = (n) => n.toFixed(2).replace('.', ',') + '¢';
+    let cabina = 'business', viaje = 'ida-vuelta';
+    const destEl = $('lm-destino'), cashEl = $('lm-cash');
+
+    function cash() { return Number((cashEl.value || '').replace(/\D/g, '')) || 0; }
+    function fmtTh(v) { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('es-AR') : ''; }
+
+    function calc() {
+      const d = DEST[destEl.value];
+      const millas = cabina === 'business' ? d.m[2] : viaje === 'ida-vuelta' ? d.m[1] : d.m[0];
+      const c = cash();
+      const valorRef = (millas * REF) / 100;
+      const costoCanje = valorRef + TASAS;
+      const neto = c - TASAS;
+      const cpm = c > 0 && millas > 0 ? (neto / millas) * 100 : 0;
+      return { d, millas, cash: c, valorRef, costoCanje, neto, cpm, ahorro: c - costoCanje, conviene: cpm >= REF };
+    }
+
+    function render() {
+      const r = calc();
+      $('lm-iata').textContent = r.d.i;
+      $('lm-big').textContent = nMil(r.millas) + ' millas';
+      $('lm-sub').textContent = `+ ${usd(TASAS)} aprox. en impuestos y tasas`;
+      $('lm-viaje-help').hidden = cabina !== 'business';
+      const v = $('lm-verdict');
+      if (r.cash > 0) {
+        v.hidden = false;
+        v.textContent = r.conviene ? '✓ Conviene canjear' : '✕ Conviene pagar cash';
+        v.setAttribute('data-ok', r.conviene ? '1' : '0');
+      } else { v.hidden = true; }
+      $('lm-t-cpm').textContent = r.cash > 0 ? cent(r.cpm) : '—';
+      $('lm-t-ahorro').textContent = r.cash > 0 ? usd(r.ahorro) : '—';
+      const pct = r.cash > 0 ? Math.max(0, Math.min(100, Math.round(r.costoCanje / r.cash * 100))) : 0;
+      $('lm-bar').style.width = pct + '%';
+      $('lm-bar').nextElementSibling.style.width = (100 - pct) + '%';
+      $('lm-bar-a').textContent = 'Canje: millas + tasas ' + usd(r.costoCanje);
+      $('lm-bar-b').textContent = r.cash > 0 ? 'Pago en efectivo ' + usd(r.cash) : 'Ingresá el precio cash';
+      $('lm-formula').textContent = r.cash > 0
+        ? `(${usd(r.cash)} − ${usd(TASAS)}) ÷ ${nMil(r.millas)} = ${cent(r.cpm)} por milla`
+        : `${nMil(r.millas)} millas × ${cent(REF)} = ${usd(r.valorRef)} de valor de referencia`;
+    }
+
+    destEl.addEventListener('change', render);
+    cashEl.addEventListener('input', () => { cashEl.value = fmtTh(cashEl.value); render(); });
+    $('lm-calc-btn').addEventListener('click', render);
+    document.querySelectorAll('[data-cab]').forEach((b) => b.addEventListener('click', () => {
+      cabina = b.getAttribute('data-cab');
+      document.querySelectorAll('[data-cab]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      render();
+    }));
+    document.querySelectorAll('[data-viaje]').forEach((b) => b.addEventListener('click', () => {
+      viaje = b.getAttribute('data-viaje');
+      document.querySelectorAll('[data-viaje]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      render();
+    }));
+
+    function summary() {
+      const r = calc();
+      return `Avianca LifeMiles a ${r.d.l} en ${cabina}: ${nMil(r.millas)} millas + ${usd(TASAS)} de tasas.` +
+        (r.cash > 0 ? ` Con precio cash ${usd(r.cash)}, cada milla rinde ${cent(r.cpm)} (referencia ${cent(REF)}).` : '') + ' — hacecuentas.com';
+    }
+    function shareUrl() { return `${location.origin}${location.pathname}?destino=${destEl.value}&cabina=${cabina}&viaje=${viaje}&cash=${cash()}`; }
+    function copy(t, btn) { navigator.clipboard?.writeText(t).then(() => { const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => btn.innerHTML = o, 1500); }); }
+    $('lm-copy').addEventListener('click', (e) => copy(summary(), e.currentTarget));
+    $('lm-detail').addEventListener('click', () => { document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' }); });
+    const s2 = $('lm-share2'); if (s2) s2.addEventListener('click', (e) => copy(shareUrl(), e.currentTarget));
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('destino') && DEST[q.get('destino')]) destEl.value = q.get('destino');
+    if (q.get('cash')) cashEl.value = fmtTh(q.get('cash'));
+    if (q.get('cabina')) { const b = document.querySelector(`[data-cab="${q.get('cabina')}"]`); if (b) b.click(); }
+    if (q.get('viaje')) { const b = document.querySelector(`[data-viaje="${q.get('viaje')}"]`); if (b) b.click(); }
+    render();
+  })();
+</script>
+
+<style>
+  /* Orbe decorativo del hero */
+  .lm .lm-orb { width: 128px; height: 128px; border-radius: 50%; margin: 0 0 -34px auto; background: radial-gradient(circle at 32% 30%, #bae6fd, #0ea5e9 60%, #0369a1); box-shadow: var(--shadow-lg); }
+  .lm .lm-deco-wrap { position: relative; }
+  .lm .lm-badge { top: 50%; right: -14px; transform: translateY(-50%); width: 44px; height: 44px; font-size: 0.75rem; background: #fff; color: var(--accent-strong); }
+
+  .lm .lm-money { position: relative; display: flex; align-items: center; }
+  .lm .lm-money__sign { position: absolute; left: 0.8rem; font-weight: 700; font-size: 0.78rem; color: var(--text-subtle); pointer-events: none; }
+  .lm .lm-money .cf-input { padding-left: 3rem; }
+  .lm .lm-seg { width: 100%; }
+  .lm .lm-seg button { flex: 1; }
+
+  .lm .lm-verdict { display: inline-block; margin: 0 0 1rem; padding: 0.3rem 0.7rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
+  .lm .lm-verdict[data-ok="1"] { background: rgba(34,197,94,0.18); color: #4ade80; border: 1px solid rgba(34,197,94,0.35); }
+  .lm .lm-verdict[data-ok="0"] { background: rgba(245,158,11,0.18); color: #fbbf24; border: 1px solid rgba(245,158,11,0.35); }
+
+  .lm .lm-tr--hl { background: var(--accent-soft) !important; }
+  .lm .lm-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.2rem 0 0; }
+  .lm .lm-bar--bad { background: linear-gradient(90deg, #ef4444, #f87171) !important; }
+  .lm .lm-bar--mid { background: linear-gradient(90deg, #8b5cf6, #a78bfa) !important; }
+
+  .lm-2col, .cf-band .lm-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .lm-2col, .cf-band .lm-2col { grid-template-columns: 0.85fr 1.15fr; } }
+
+  .lm .lm-hl { padding: 1.5rem 1.6rem; border-radius: var(--radius-lg); color: #fff; background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%); }
+  .lm .lm-hl .cf-side-eyebrow { color: rgba(255,255,255,0.75); }
+  .lm .lm-hl__title { font-size: 1.2rem; font-weight: 700; margin: 0; }
+  .lm .lm-hl__big { font-size: 2.4rem; font-weight: 800; margin: 0.4rem 0 0.15rem; letter-spacing: -0.02em; }
+  .lm .lm-hl__desc { font-size: 0.8rem; color: rgba(255,255,255,0.8); line-height: 1.5; margin: 0; }
+  .lm .lm-cmp__title { font-size: 1.05rem; font-weight: 800; color: var(--text); margin: 0 0 0.35rem; }
+  .lm .lm-cmp__desc { font-size: 0.83rem; color: var(--text-muted); line-height: 1.5; margin: 0; }
+
+  .cf-band .lm-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .lm-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .lm-formula-note { margin: 1rem 0 0; padding: 0.5rem 0.7rem; border-radius: var(--radius-sm); background: var(--bg-soft); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-subtle); overflow-x: auto; }
+  .cf-band .lm-fees { display: grid; gap: 0.5rem; }
+  .cf-band .lm-fee { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.85rem 1rem; border-radius: var(--radius); background: var(--bg-card); border: 1px solid var(--border); font-size: 0.85rem; color: var(--text-muted); }
+  .cf-band .lm-fee strong { color: var(--text); font-weight: 700; }
+  .cf-band .lm-src__title { font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 0.9rem; }
+  .cf-band .lm-src { display: grid; gap: 0.5rem; }
+  .cf-band .lm-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .lm-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .lm-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .lm-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+</style>
