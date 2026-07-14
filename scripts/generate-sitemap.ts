@@ -1435,7 +1435,10 @@ try {
     if (m && !m[1].includes('*') && !m[1].includes(':')) redirSrc.add(m[1].replace(/\/$/, '') || '/');
   }
   imageEntriesClean = imageEntries.filter((e) => {
-    try { return !redirSrc.has(new URL(e.loc).pathname.replace(/\/$/, '') || '/'); } catch { return true; }
+    try {
+      const path = new URL(e.loc).pathname.replace(/\/$/, '') || '/';
+      return !redirSrc.has(path) && !GONE_410_URLS.has(path) && !(path in PRUNING_REDIRECTS);
+    } catch { return true; }
   });
 } catch { /* no-op */ }
 if (imageEntriesClean.length > 0) {

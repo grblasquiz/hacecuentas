@@ -269,6 +269,6 @@ export const room: DecisionRoom = {
     },
   ],
   sources: [
-    { name: 'Regla 50/30/20 de presupuesto personal', url: 'https://hacecuentas.com/regla-50-30-20' },
+    { name: 'Regla 50/30/20 de presupuesto personal', url: 'https://hacecuentas.com/calculadora-presupuesto-regla-50-30-20' },
   ],
 };
