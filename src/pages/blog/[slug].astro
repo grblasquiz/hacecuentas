@@ -29,9 +29,27 @@ const ogImage = (post.heroImage as string)?.trim() || `/og/blog-${post.slug}.jpg
 const ogImageAbs = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`;
 
 // ─── Related calcs ──────────────────────────────────────────────────────────
-const calcModules = import.meta.glob<any>('../../content/calcs/*.json', { eager: true });
-const allCalcs = Object.values(calcModules).map((m: any) => m.default || m);
-const calcBySlug = new Map(allCalcs.map((c: any) => [c.slug, c]));
+// Las calcs de país viven en colecciones separadas y se sirven bajo prefijo
+// (/co/<slug>, /mx/<slug>); las AR van en la raíz. Resolvemos las tres y
+// guardamos el href ya prefijado en __href. Sin esto, un relatedCalcs de
+// CO/MX no matchea y `.filter(Boolean)` lo descarta en silencio → se caen
+// los 3 CTAs y el sidebar entero. Verificado: 0 colisiones de slug entre las
+// colecciones, y AR tiene precedencia por si alguna vez aparece una.
+const calcSources = [
+  [import.meta.glob<any>('../../content/calcs/*.json', { eager: true }), ''],
+  [import.meta.glob<any>('../../content/calcs-co/*.json', { eager: true }), '/co'],
+  [import.meta.glob<any>('../../content/calcs-mx/*.json', { eager: true }), '/mx'],
+] as const;
+
+const calcBySlug = new Map<string, any>();
+for (const [mods, prefix] of calcSources) {
+  for (const mod of Object.values(mods)) {
+    const c: any = (mod as any).default || mod;
+    if (c?.slug && !calcBySlug.has(c.slug)) {
+      calcBySlug.set(c.slug, { ...c, __href: `${prefix}/${c.slug}` });
+    }
+  }
+}
 
 const relatedCalcs = (post.relatedCalcs || [])
   .map((s: string) => calcBySlug.get(s))
@@ -63,10 +81,28 @@ const categoryLabels: Record<string, string> = {
 
 const categoryLabel = categoryLabels[post.category] || post.category;
 
+// ─── Audience / locale ────────────────────────────────────────────────────────
+// El blog nació sólo-AR y tenía audience e idioma hardcodeados. Ahora sale del
+// post para poder publicar notas CO/MX; AR sigue siendo el default, así que los
+// posts que no declaran `audience` se comportan igual que antes.
+const AUDIENCE_LOCALES: Record<string, string> = { AR: 'es-AR', CO: 'es-CO', MX: 'es-MX' };
+const rawAudience = String(post.audience || 'AR').toUpperCase();
+const audience = (AUDIENCE_LOCALES[rawAudience] ? rawAudience : 'AR') as 'AR' | 'CO' | 'MX';
+const locale = AUDIENCE_LOCALES[audience];
+
+// Los disclaimers YMYL citaban regulación argentina (Ley 26.831 / RG CNV 840/2020)
+// y usaban voseo. En una nota CO/MX eso es normativa del país equivocado, así que
+// el marco regulatorio y el imperativo se eligen por audiencia.
+const ymylCopy = {
+  AR: { regulador: ' en inversión (Ley 26.831, RG CNV 840/2020)', consulta: 'consultá', recorda: 'Recordá', registro: 'no es un asesor financiero registrado ante la CNV' },
+  CO: { regulador: ' en inversión', consulta: 'consulte', recorda: 'Recuerde', registro: 'no es un asesor financiero vigilado por la Superintendencia Financiera de Colombia' },
+  MX: { regulador: ' en inversión', consulta: 'consulta', recorda: 'Recuerda', registro: 'no es un asesor financiero registrado ante la CNBV' },
+}[audience];
+
 // ─── Date formatting ──────────────────────────────────────────────────────────
 function formatDate(iso: string): string {
   const d = new Date(iso + 'T00:00:00Z');
-  return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+  return d.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 }
 const dateFormatted = formatDate(post.date);
 const dateISO = new Date(post.date + 'T00:00:00Z').toISOString();
@@ -173,7 +209,7 @@ const calcCardHtml = primaryCalc
     + `<span class="hc-calc-cta__eyebrow">${calcCta.eyebrow}</span>`
     + `<span class="hc-calc-cta__title">${calcCta.title}</span>`
     + (calcCta.desc ? `<span class="hc-calc-cta__desc">${calcCta.desc}</span>` : '')
-    + `<a class="hc-calc-cta__btn" href="/${primaryCalc.slug}">${calcCta.label} <span aria-hidden="true">→</span></a>`
+    + `<a class="hc-calc-cta__btn" href="${primaryCalc.__href}">${calcCta.label} <span aria-hidden="true">→</span></a>`
     + `</div>`
     + `<span class="hc-calc-cta__glyph" aria-hidden="true">${primaryCalc.icon || '🧮'}</span>`
     + `</aside>`
@@ -233,7 +269,7 @@ const articleSchema: any = {
     '@id': `${siteUrl}/blog/${post.slug}`,
   },
   image: [ogImageAbs],
-  inLanguage: 'es-AR',
+  inLanguage: locale,
   keywords: (post.seoKeywords || []).join(', '),
   articleBody: post.content?.replace(/<[^>]+>/g, '').slice(0, 3000),
   wordCount: post.content?.replace(/<[^>]+>/g, '').split(/\s+/).filter(Boolean).length || 0,
@@ -285,7 +321,7 @@ const isYmylBottom = ['finanzas', 'negocios'].includes(post.category);
   image={ogImage}
   ogTitle={post.ogTitle}
   noindex={false}
-  audience="AR"
+  audience={audience}
   ogType="article"
   articleAuthor={displayAuthor}
   articleSection={categoryLabel}
@@ -357,7 +393,7 @@ const isYmylBottom = ['finanzas', 'negocios'].includes(post.category);
           ))}
         </div>
         {primaryCalc && (
-          <a class="bp-answer__cta" href={`/${primaryCalc.slug}`}>
+          <a class="bp-answer__cta" href={primaryCalc.__href}>
             {answerCtaLabel} <span aria-hidden="true">→</span>
           </a>
         )}
@@ -391,7 +427,7 @@ const isYmylBottom = ['finanzas', 'negocios'].includes(post.category);
           <aside class="bp-disclaimer" role="note">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             <p>
-              <strong>Información educativa, no asesoramiento profesional.</strong> Este artículo es contenido periodístico basado en fuentes públicas. No constituye asesoramiento {post.category === 'salud' ? 'médico' : 'financiero en inversión (Ley 26.831, RG CNV 840/2020) ni contable'}. Para decisiones importantes consultá con un/a {post.category === 'salud' ? 'profesional de la salud matriculado/a' : 'contador/a o asesor/a financiero/a matriculado/a'}. <a href="/aviso-legal">Leer aviso legal</a>.
+              <strong>Información educativa, no asesoramiento profesional.</strong> Este artículo es contenido periodístico basado en fuentes públicas. No constituye asesoramiento {post.category === 'salud' ? 'médico' : `financiero${ymylCopy.regulador} ni contable`}. Para decisiones importantes {ymylCopy.consulta} con un/a {post.category === 'salud' ? 'profesional de la salud matriculado/a' : 'contador/a o asesor/a financiero/a matriculado/a'}. <a href="/aviso-legal">Leer aviso legal</a>.
             </p>
           </aside>
         )}
@@ -401,7 +437,7 @@ const isYmylBottom = ['finanzas', 'negocios'].includes(post.category);
 
         {isYmylBottom && (
           <aside class="bp-disclaimer bp-disclaimer--bottom" role="note">
-            <p><strong>📌 Recordá:</strong> Hacé Cuentas no es un asesor financiero registrado ante la CNV. Este contenido es educativo y no sustituye el consejo profesional. Las decisiones de inversión implican riesgo de pérdida de capital y deben tomarse consultando con un profesional matriculado.</p>
+            <p><strong>📌 {ymylCopy.recorda}:</strong> Hacé Cuentas {ymylCopy.registro}. Este contenido es educativo y no sustituye el consejo profesional. Las decisiones de inversión implican riesgo de pérdida de capital y deben tomarse consultando con un profesional matriculado.</p>
           </aside>
         )}
 
@@ -465,7 +501,7 @@ const isYmylBottom = ['finanzas', 'negocios'].includes(post.category);
               <div class="bp-side-cta">
                 <p class="bp-side-cta__title">{sidebarCta.title}</p>
                 <p class="bp-side-cta__desc">{sidebarCta.desc}</p>
-                <a class="bp-side-cta__btn" href={`/${primaryCalc.slug}`}>{sidebarCta.label} <span aria-hidden="true">→</span></a>
+                <a class="bp-side-cta__btn" href={primaryCalc.__href}>{sidebarCta.label} <span aria-hidden="true">→</span></a>
                 <p class="bp-side-cta__note">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
                   Contenido revisado y actualizado con información oficial
@@ -485,7 +521,7 @@ const isYmylBottom = ['finanzas', 'negocios'].includes(post.category);
         <h2 class="bp-related__title">Calculadoras relacionadas</h2>
         <div class="bp-related__grid">
           {relatedCalcs.slice(0, 3).map((calc: any) => (
-            <a href={`/${calc.slug}`} class="bp-calc-card">
+            <a href={calc.__href} class="bp-calc-card">
               <span class="bp-calc-card__icon" aria-hidden="true">{calc.icon || '🧮'}</span>
               <span class="bp-calc-card__title">{cleanCalcName(calc)}</span>
               {calc.description && (
