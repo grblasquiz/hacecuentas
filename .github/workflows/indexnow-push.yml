@@ -4,13 +4,21 @@ name: IndexNow push (post-deploy)
 #
 # Modo STREAMING, no batch. Bing desaconseja explícitamente el "batch mode"
 # (re-enviar el sitio entero) y a genfy.net le mostró el warning por hacer
-# exactamente esto con un cron diario de 1443 URLs. Acá era peor: este workflow
-# corría `--all` (~3100 URLs) en CADA push a main, y main recibe 34-63 pushes/día
-# → ~130.000 URLs/día, ~3,7M/mes. El presupuesto de submissions que Bing le da a
-# hacecuentas es ~1700/mes (GetUrlSubmissionQuota). Todo ese ruido no acelera
-# nada: compite contra las URLs que sí cambiaron.
+# exactamente esto con un cron diario de 1443 URLs.
 #
-# Volumen real de cambios: ~270 URLs/día. Eso es lo que se manda ahora.
+# Acá el workflow corría `--all` (~3117 URLs) + priority (243) en cada push a
+# main. origin/main recibe ~5 pushes/día (todos de bots: data-live, sitemap,
+# arca, audit, reddit-queue) y ~2 matcheaban el paths filter viejo:
+#   2 x 3360 + 3117 del cron diario ≈ 9840 URLs/día ≈ 295k/mes.
+# Bing honra ~1700/mes (GetUrlSubmissionQuota) → ~173x. Un solo `--all` gasta
+# 1,8 meses de presupuesto. Y era ruido puro: esos 2 pushes son chore(data-live)
+# y chore(sitemap), que no tocan ningún JSON de calc.
+#
+# ⚠️ Ojo al medir esto: el trabajo de Martin vive en main LOCAL (que va ~1000+
+# commits adelante de origin y NO se reconcilia — el deploy real es wrangler
+# local). Contar `git log main` cuenta commits que nunca llegan a GitHub y no
+# disparan nada. Lo que dispara workflows es `git log origin/main`.
+#
 # Para un evento sitewide (migración de slugs) está indexnow-full-resubmit.yml,
 # a mano.
 
