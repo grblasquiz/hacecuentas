@@ -14,6 +14,7 @@ import socket
 import sys
 import time
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, timedelta
 from collections import defaultdict
 
@@ -68,56 +69,87 @@ ALL = '__all__'
 def build_pulse():
     """Hoy vs ayer vs mismo día de la semana pasada, cortados a la misma hora.
 
-    Devuelve la curva de 24 h de cada día por canal (y el total en ALL), así el
-    front filtra por canal sin volver a pegarle a la API.
+    OJO con `sessions` en GA4: NO es aditiva sobre las dimensiones. Una sesión se
+    cuenta en cada combinación que toca, así que sumar las filas de una query
+    dimensionada infla el total. Medido en esta property:
 
-    El corte es la última hora COMPLETA. La hora en curso está a medio llenar
-    (si son las 14:37, la hora 14 tiene 37 min contra los 60 min de ayer), así
-    que compararla produce una caída fantasma. Se devuelve aparte, marcada.
+        sin dimensiones (el número real) ....... 1040   ← el de la UI de GA4
+        sumando hour ........................... 1069  (+3%, sesiones a caballo de dos horas)
+        sumando canales ........................ 1535  (+48% HOY, 0% en días cerrados)
+
+    El +48% es lag de atribución del día abierto (misma causa que el "Unassigned"
+    al 50%): mientras no cierra, una sesión aparece en más de un canal. En días
+    cerrados la suma por canal da exacto.
+
+    Por eso van cuatro queries en vez de una: cada número sale de la query con la
+    MÍNIMA dimensionalidad que lo responde, y nunca se suman canales para un total.
+        credited  ← sin `hour`: el total acreditado, el que coincide con GA4
+        series    ← con `hour`: sólo para la forma de la curva y el corte horario
     """
     today = date.today()
     yesterday = today - timedelta(days=1)
     last_week = today - timedelta(days=7)
+    d1, d2 = last_week.isoformat(), today.isoformat()
+    CH = 'sessionDefaultChannelGroup'
 
-    rows = run(['date', 'hour', 'sessionDefaultChannelGroup'], ['sessions'],
-               last_week.isoformat(), today.isoformat())
+    with ThreadPoolExecutor(max_workers=4) as ex:
+        f_curve_ch = ex.submit(run, ['date', 'hour', CH], ['sessions'], d1, d2)
+        f_curve_all = ex.submit(run, ['date', 'hour'], ['sessions'], d1, d2)
+        f_cred_all = ex.submit(run, ['date'], ['sessions'], d1, d2)
+        f_cred_ch = ex.submit(run, ['date', CH], ['sessions'], d1, d2)
+        rows_ch, rows_all = f_curve_ch.result(), f_curve_all.result()
+        rows_cred, rows_cred_ch = f_cred_all.result(), f_cred_ch.result()
 
-    # {'YYYYMMDD': {hour: {channel: sessions}}}
+    # curvas: {'YYYYMMDD': {hour: {channel: sessions}}} y {'YYYYMMDD': {hour: s}}
     by_day = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
-    for dims, mets in rows:
-        d, hr, ch = dims[0], int(dims[1]), dims[2]
-        by_day[d][hr][ch] += mets[0]
+    for dims, mets in rows_ch:
+        by_day[dims[0]][int(dims[1])][dims[2]] += mets[0]
+    by_day_all = defaultdict(lambda: defaultdict(int))
+    for dims, mets in rows_all:
+        by_day_all[dims[0]][int(dims[1])] += mets[0]
+
+    # acreditadas: {'YYYYMMDD': {channel|ALL: sessions}} — sin `hour`, no infladas
+    cred = defaultdict(lambda: defaultdict(int))
+    for dims, mets in rows_cred:
+        cred[dims[0]][ALL] += mets[0]
+    for dims, mets in rows_cred_ch:
+        cred[dims[0]][dims[1]] += mets[0]
 
     def key(d):
         return d.strftime('%Y%m%d')
 
-    hours_today = by_day.get(key(today), {})
+    hours_today = by_day_all.get(key(today), {})
     last_hour = max(hours_today.keys(), default=0)          # hora en curso (parcial)
     cutoff = max(last_hour - 1, 0)                          # última hora completa
 
     days = {'today': today, 'yesterday': yesterday, 'lastWeek': last_week}
     channels = set()
     for d in days.values():
-        for chans in by_day.get(key(d), {}).values():
-            channels.update(chans)
+        channels.update(k for k in cred.get(key(d), {}) if k != ALL)
 
     def curve(d, ch=None):
+        if ch is None:
+            h = by_day_all.get(key(d), {})
+            return [h.get(hr, 0) for hr in range(24)]
         h = by_day.get(key(d), {})
-        return [sum(h.get(hr, {}).values()) if ch is None else h.get(hr, {}).get(ch, 0)
-                for hr in range(24)]
+        return [h.get(hr, {}).get(ch, 0) for hr in range(24)]
 
     series = {ALL: {k: curve(d) for k, d in days.items()}}
     for ch in channels:
         series[ch] = {k: curve(d, ch) for k, d in days.items()}
 
-    upto = lambda arr: sum(arr[:cutoff + 1])
-    order = sorted(channels, key=lambda c: -upto(series[c]['today']))
+    credited = {slot: {k: cred.get(key(d), {}).get(slot, 0) for k, d in days.items()}
+                for slot in [ALL] + list(channels)}
 
-    # Unassigned: hoy vs ayer al mismo corte. Si hoy está inflado, el resto de
-    # los canales está subestimado — el front lo usa para no pintar el delta.
+    upto = lambda arr: sum(arr[:cutoff + 1])
+    order = sorted(channels, key=lambda c: -credited[c]['today'])
+
+    # Unassigned sobre acreditadas (no sobre la curva: sería share de un inflado).
+    # Si hoy está alto, el resto de los canales está subestimado — el front lo usa
+    # para no pintar el delta.
     def unassigned(day):
-        tot = upto(series[ALL][day])
-        un = upto(series.get('Unassigned', {}).get(day, [0] * 24))
+        tot = credited[ALL][day]
+        un = credited.get('Unassigned', {}).get(day, 0)
         return {'sessions': un, 'share': (un / tot) if tot else 0}
 
     realtime = None
@@ -133,7 +165,8 @@ def build_pulse():
         'lastHour': last_hour,
         'dates': {k: d.isoformat() for k, d in days.items()},
         'channels': order,
-        'series': series,
+        'series': series,      # por hora: la forma de la curva y el corte
+        'credited': credited,  # sin `hour`: el total que coincide con GA4
         'unassigned': {'today': unassigned('today'), 'yesterday': unassigned('yesterday')},
         'realtimeUsers': realtime,
     }
@@ -160,8 +193,19 @@ def build_report(start, end):
     prev_s, prev_e = s - timedelta(days=shift), e - timedelta(days=shift)
 
     dims = ['sessionDefaultChannelGroup', 'sessionSourceMedium']
-    cur = run(dims, ['sessions', 'totalUsers', 'engagedSessions'], start, end)
-    prv = run(dims, ['sessions'], prev_s.isoformat(), prev_e.isoformat())
+    with ThreadPoolExecutor(max_workers=4) as ex:
+        f_cur = ex.submit(run, dims, ['sessions', 'totalUsers', 'engagedSessions'], start, end)
+        f_prv = ex.submit(run, dims, ['sessions'], prev_s.isoformat(), prev_e.isoformat())
+        # sin dimensiones: el total acreditado. Sumar canales lo infla (+48% con
+        # el día abierto), así que el total NUNCA sale de la tabla.
+        f_tot = ex.submit(run, [], ['sessions', 'totalUsers'], start, end)
+        f_tot_prv = ex.submit(run, [], ['sessions'], prev_s.isoformat(), prev_e.isoformat())
+        cur, prv = f_cur.result(), f_prv.result()
+        tot, tot_prv = f_tot.result(), f_tot_prv.result()
+
+    credited = {'sessions': tot[0][1][0] if tot else 0,
+                'users': tot[0][1][1] if tot else 0,
+                'prev': tot_prv[0][1][0] if tot_prv else 0}
 
     # {channel: {sourceMedium: {...}}}
     tree = defaultdict(lambda: defaultdict(lambda: {'sessions': 0, 'users': 0,
@@ -194,9 +238,12 @@ def build_report(start, end):
         'shiftDays': shift,
         'includesToday': e >= date.today(),
         'channels': channels,
-        'totals': {
+        # acreditado (query sin dimensiones) — el número que coincide con GA4
+        'totals': credited,
+        # lo que suman las filas de la tabla: con el día abierto es mayor que el
+        # acreditado porque una sesión cae en más de un canal. El front avisa.
+        'channelSum': {
             'sessions': sum(c['sessions'] for c in channels),
-            'users': sum(c['users'] for c in channels),
             'prev': sum(c['prev'] for c in channels),
         },
     }

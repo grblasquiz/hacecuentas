@@ -408,13 +408,17 @@ function deltaHtml(cur, base, label, skewed) {
 }
 
 const curOf = key => pulse.series[channel]?.[key] || new Array(24).fill(0);
+const credOf = key => pulse.credited[channel]?.[key] ?? 0;
 const upto = (arr, n) => arr.slice(0, n + 1).reduce((a, b) => a + b, 0);
 
 function renderPulse() {
   const p = pulse;
   const hh = String(p.cutoff).padStart(2, '0');
   const label = channel === ALL ? '' : ` · ${channel}`;
-  const t = {
+  // el valor es el ACREDITADO (query sin `hour`: el que coincide con GA4).
+  // el corte por hora sólo se usa para el %, si no compararíamos un día parcial
+  // contra días enteros.
+  const cut = {
     today: upto(curOf('today'), p.cutoff),
     yesterday: upto(curOf('yesterday'), p.cutoff),
     lastWeek: upto(curOf('lastWeek'), p.cutoff),
@@ -423,26 +427,30 @@ function renderPulse() {
 
   $('pulse-title').textContent = 'Cómo venimos hoy' + label;
   $('pulse-sub').innerHTML =
-    `Sesiones acumuladas hasta las <b>${hh}:59</b>, con los tres días cortados a la misma hora.`;
+    `El número es de <b>sesiones acreditadas</b> — el mismo que da GA4. Los % comparan hasta
+     las <b>${hh}:59</b>, el mismo corte en los tres días, porque hoy es un día a medio andar.
+     Cortar por hora cuenta dos veces las sesiones a caballo de dos horas, así que el acumulado
+     corre ~3% arriba del acreditado.`;
 
   $('tiles').innerHTML = `
     <div class="tile">
       <div class="k"><span class="swatch" style="background:var(--series-1)"></span>Hoy · ${prettyDay(p.dates.today)}</div>
-      <div class="v">${fmt(t.today)}</div>
+      <div class="v">${fmt(credOf('today'))}</div>
       <div class="deltas">
-        ${deltaHtml(t.today, t.yesterday, 'ayer', skew)}
-        ${deltaHtml(t.today, t.lastWeek, prettyDay(p.dates.lastWeek), skew)}
+        ${deltaHtml(cut.today, cut.yesterday, 'ayer a esta hora', skew)}
+        ${deltaHtml(cut.today, cut.lastWeek, prettyDay(p.dates.lastWeek) + ' a esta hora', skew)}
       </div>
+      <div class="foot">a esta hora vamos: ${fmt(cut.today)} — de ahí salen los %</div>
     </div>
     <div class="tile baseline">
-      <div class="k"><span class="swatch" style="background:var(--series-2)"></span>Ayer · mismo corte</div>
-      <div class="v">${fmt(t.yesterday)}</div>
-      <div class="foot">día completo: ${fmt(curOf('yesterday').reduce((a, b) => a + b, 0))}</div>
+      <div class="k"><span class="swatch" style="background:var(--series-2)"></span>Ayer · ${prettyDay(p.dates.yesterday)}</div>
+      <div class="v">${fmt(credOf('yesterday'))}</div>
+      <div class="foot">a esta hora iba: ${fmt(cut.yesterday)}</div>
     </div>
     <div class="tile baseline">
-      <div class="k"><span class="swatch" style="background:var(--series-3)"></span>${prettyDay(p.dates.lastWeek)} · mismo corte</div>
-      <div class="v">${fmt(t.lastWeek)}</div>
-      <div class="foot">día completo: ${fmt(curOf('lastWeek').reduce((a, b) => a + b, 0))}</div>
+      <div class="k"><span class="swatch" style="background:var(--series-3)"></span>${prettyDay(p.dates.lastWeek)}</div>
+      <div class="v">${fmt(credOf('lastWeek'))}</div>
+      <div class="foot">a esta hora iba: ${fmt(cut.lastWeek)}</div>
     </div>`;
 
   // hora en curso: incompleta, se informa pero no entra en la comparación
@@ -682,10 +690,14 @@ function pctCell(cur, prev) {
 function renderReport() {
   const r = report;
   const shown = channel === ALL ? r.channels : r.channels.filter(c => c.channel === channel);
-  // filtrado, el share es sobre el canal: "43% del orgánico", no del total del sitio
+  // el total es el ACREDITADO (query sin dimensiones), nunca la suma de la tabla:
+  // con el día abierto una sesión cae en más de un canal y la suma se infla.
   const total = channel === ALL ? r.totals.sessions : shown.reduce((a, c) => a + c.sessions, 0);
   const prevTotal = channel === ALL ? r.totals.prev : shown.reduce((a, c) => a + c.prev, 0);
+  // ...pero el share sí va sobre la suma de las filas, si no, no daría 100%
+  const shareBase = shown.reduce((a, c) => a + c.sessions, 0);
   const same = r.range.start === r.range.end;
+  const inflated = channel === ALL && total && (r.channelSum.sessions - total) / total > 0.02;
 
   // el previo va desplazado un múltiplo de 7: mismos días de la semana
   const cmp = same
@@ -695,10 +707,12 @@ function renderReport() {
   $('report-title').textContent = channel === ALL ? 'Sesiones por canal' : `Sesiones · ${channel}`;
   $('report-sub').innerHTML =
     (same ? `<b>${prettyDay(r.range.start)}</b>` : `<b>${prettyDay(r.range.start)} → ${prettyDay(r.range.end)}</b>`) +
-    ` · ${fmt(total)} sesiones` + (channel === ALL ? '' : ` de ${channel}`) + ` · comparado contra ${cmp}` +
-    ` (${fmt(prevTotal)}). ` +
+    ` · ${fmt(total)} sesiones acreditadas` + (channel === ALL ? '' : ` de ${channel}`) +
+    ` · comparado contra ${cmp} (${fmt(prevTotal)}). ` +
     (channel === ALL ? 'Tocá un canal para abrirlo por fuente / medio.'
                      : 'Share y Δ son sobre este canal. Poné "Todos los canales" para volver al total.') +
+    (inflated ? ` <b>Las filas suman ${fmt(r.channelSum.sessions)}, más que las ${fmt(total)} acreditadas</b>:
+       con el día todavía abierto GA4 cuenta una misma sesión en más de un canal. Cierra solo en 24–48 h.` : '') +
     (r.includesToday ? ` <b>El rango incluye hoy</b>, que es un día parcial: el Δ va a dar negativo por eso.` : '');
 
   $('report-empty').hidden = shown.length > 0;
@@ -718,7 +732,7 @@ function renderReport() {
         </svg>${escapeHtml(c.channel)}</span></td>
       <td class="bar-cell"><div class="bar-track"><div class="bar" style="width:${(c.sessions / max * 100).toFixed(1)}%"></div></div></td>
       <td>${fmt(c.sessions)}</td>
-      <td class="share">${total ? (c.sessions / total * 100).toFixed(1) + '%' : '—'}</td>
+      <td class="share">${shareBase ? (c.sessions / shareBase * 100).toFixed(1) + '%' : '—'}</td>
       ${pctCell(c.sessions, c.prev)}
       <td>${fmt(c.users)}</td>
       <td>${eng}</td>
@@ -730,7 +744,7 @@ function renderReport() {
           <td>${escapeHtml(s.sourceMedium)}</td>
           <td class="bar-cell"><div class="bar-track"><div class="bar" style="width:${(s.sessions / max * 100).toFixed(1)}%"></div></div></td>
           <td>${fmt(s.sessions)}</td>
-          <td class="share">${total ? (s.sessions / total * 100).toFixed(1) + '%' : '—'}</td>
+          <td class="share">${shareBase ? (s.sessions / shareBase * 100).toFixed(1) + '%' : '—'}</td>
           ${pctCell(s.sessions, s.prev)}
           <td>${fmt(s.users)}</td>
           <td>${se}</td>
