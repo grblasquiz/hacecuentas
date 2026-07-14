@@ -1,0 +1,490 @@
+---
+// Flagship redesign de la calc "gastos notariales y registro" — Colombia (mockup Martin).
+// Los números salen del motor real (src/lib/formulas/gastos-notariales-registro-compraventa-2026.ts):
+// notaría 0,54% (reparto pactable) + registro 1,67% + beneficencia 0,29% (comprador)
+// + retefuente 1% (vendedor persona natural). Domain "data" (esmeralda) por el mockup,
+// no por la categoría. Header/footer = los globales del sitio.
+import '../styles/calc-flagship.css';
+import { md } from '../lib/markdown';
+import { COLOMBIA_2026, fmtCOP } from '../lib/data/colombia-2026';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const C = COLOMBIA_2026.compraventa;
+const UMBRAL_TIMBRE = C.timbreDesdeUvt * COLOMBIA_2026.uvt; // $1.047.480.000 en 2026
+
+function cierre(valor: number, reparto = 'mitades', vendedorPN = true) {
+  const notaria = valor * C.derechosNotariales;
+  const registro = valor * C.impuestoRegistroBogota;
+  const beneficencia = valor * C.beneficenciaBogota;
+  const retefuente = vendedorPN ? valor * C.retencionVendedorPN : 0;
+  const notariaComprador = reparto === 'mitades' ? notaria / 2 : reparto === 'comprador' ? notaria : 0;
+  const notariaVendedor = notaria - notariaComprador;
+  const comprador = notariaComprador + registro + beneficencia;
+  const vendedor = notariaVendedor + retefuente;
+  return { notaria, registro, beneficencia, retefuente, notariaComprador, notariaVendedor, comprador, vendedor, total: comprador + vendedor };
+}
+const pct = (n: number, base: number) => ((n / base) * 100).toFixed(2).replace('.', ',') + '%';
+const millones = (n: number) => '$' + (n / 1_000_000).toLocaleString('es-CO', { maximumFractionDigits: 2 }) + ' millones';
+const pctTasa = (t: number) => t.toLocaleString('es-CO', { style: 'percent', minimumFractionDigits: 2 });
+
+const INIT = 500_000_000;
+const init = cierre(INIT);
+const refRows = [200_000_000, 300_000_000, 500_000_000, 800_000_000, 1_000_000_000].map((v) => ({ valor: v, ...cierre(v) }));
+
+const faq = calc.faq || [];
+const explanationHtml = calc.explanation ? md(calc.explanation) : '';
+---
+
+<div
+  class="cf-page gn"
+  data-domain="data"
+  data-notaria={C.derechosNotariales}
+  data-registro={C.impuestoRegistroBogota}
+  data-benef={C.beneficenciaBogota}
+  data-rete={C.retencionVendedorPN}
+  data-timbre={UMBRAL_TIMBRE}
+>
+  <nav class="cf-crumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/co/">Inicio</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li><a href="/co/calculadoras">Colombia</a></li>
+      <li aria-hidden="true" class="cf-crumb__sep">›</li>
+      <li aria-current="page">Gastos de escrituración</li>
+    </ol>
+  </nav>
+
+  <header class="cf-hero">
+    <div class="cf-hero__main">
+      <p class="cf-kicker"><span aria-hidden="true">🇨🇴</span> Colombia · Compraventa 2026</p>
+      <h1 class="cf-h1">Calculadora de <span class="cf-yr">gastos notariales y registro</span></h1>
+      <p class="cf-sub">Estimá cuánto paga el comprador y cuánto paga el vendedor al escriturar un inmueble en Colombia.</p>
+      <ul class="cf-pills">
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Tarifas SNR 2026</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Desglose por parte</li>
+        <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Cálculo orientativo</li>
+      </ul>
+    </div>
+    <div class="cf-hero__deco" aria-hidden="true">
+      <span class="cf-deco-float"><span aria-hidden="true">🏠</span> Compra de vivienda</span>
+      <div class="gn-deco-wrap">
+        <div class="cf-deco-card cf-deco-card--navy">
+          <div class="cf-deco-card__label">Ejemplo · inmueble $500 M</div>
+          <div class="cf-deco-card__value" id="gn-deco-val">{millones(init.total)}</div>
+          <div class="cf-deco-card__note">Costos totales estimados</div>
+        </div>
+        <span class="cf-deco-badge gn-badge">SNR</span>
+      </div>
+      <div class="cf-deco-sub"><strong>Total sobre el precio</strong> <span class="cf-deco-chip" id="gn-deco-pct">{pct(init.total, INIT)}</span></div>
+    </div>
+  </header>
+
+  <section class="cf-card" id="calc">
+    <div class="cf-panel">
+      <div class="cf-panel__head">
+        <div>
+          <p class="cf-panel__eyebrow">Datos de la operación</p>
+          <h2 class="cf-panel__title">Contanos sobre el inmueble</h2>
+        </div>
+        <span class="cf-panel__priv"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> No guardamos tus datos</span>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="gn-valor">Valor de compraventa</label><span class="cf-hint">Valor de escritura</span></div>
+        <div class="gn-money"><span class="gn-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="gn-valor" value="500.000.000" /></div>
+        <p class="cf-help">El valor que quedará en la escritura pública. Escriturar por debajo del precio real es evasión y te encarece la ganancia ocasional cuando vendas.</p>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><label class="cf-label" for="gn-reparto">Derechos notariales</label><span class="cf-hint">Negociable</span></div>
+        <select class="cf-input" id="gn-reparto">
+          <option value="mitades" selected>Por mitades (uso en Bogotá)</option>
+          <option value="comprador">100% el comprador</option>
+          <option value="vendedor">100% el vendedor</option>
+        </select>
+      </div>
+
+      <div class="cf-field">
+        <div class="cf-field__row"><span class="cf-label">El vendedor es…</span></div>
+        <div class="cf-seg gn-seg" role="group" aria-label="Tipo de vendedor">
+          <button type="button" data-vend="natural" aria-pressed="true">Persona natural</button>
+          <button type="button" data-vend="juridica" aria-pressed="false">Persona jurídica</button>
+        </div>
+        <p class="cf-help">La retención del 1% en notaría solo se le practica al vendedor persona natural.</p>
+      </div>
+
+      <button class="cf-primary" id="gn-calc-btn" type="button">Calcular gastos de cierre <span aria-hidden="true">→</span></button>
+
+      <div class="cf-shortcuts">
+        <span class="cf-shortcuts__lbl">Ejemplos:</span>
+        <button class="cf-sc" type="button" data-ej="200000000">$200 M</button>
+        <button class="cf-sc" type="button" data-ej="300000000">$300 M</button>
+        <button class="cf-sc" type="button" data-ej="800000000">$800 M</button>
+        <button class="cf-sc" type="button" data-ej="1200000000">$1.200 M</button>
+      </div>
+    </div>
+
+    <div class="cf-result" id="gn-result">
+      <p class="cf-result__eyebrow">Costo total estimado</p>
+      <div class="cf-result__big" id="gn-big">{fmtCOP(init.total)}</div>
+      <p class="cf-result__sub" id="gn-sub">{pct(init.total, INIT)} del valor del inmueble</p>
+      <div class="cf-tiles cf-tiles--2">
+        <div class="cf-tile"><div class="cf-tile__value" id="gn-t-comp">{fmtCOP(init.comprador)}</div><div class="cf-tile__label">Comprador · <span id="gn-t-comp-pct">{pct(init.comprador, INIT)}</span></div></div>
+        <div class="cf-tile"><div class="cf-tile__value" id="gn-t-vend">{fmtCOP(init.vendedor)}</div><div class="cf-tile__label">Vendedor · <span id="gn-t-vend-pct">{pct(init.vendedor, INIT)}</span></div></div>
+      </div>
+      <div class="cf-rows">
+        <div class="cf-rrow"><span class="cf-rrow__lbl">Derechos notariales <small>0,54% · según el reparto pactado</small></span><span class="cf-rrow__val" id="gn-r-notaria">{fmtCOP(init.notaria)}</span></div>
+        <div class="cf-rrow"><span class="cf-rrow__lbl">Registro + beneficencia <small>1,67% + 0,29% · comprador</small></span><span class="cf-rrow__val" id="gn-r-registro">{fmtCOP(init.registro + init.beneficencia)}</span></div>
+        <div class="cf-rrow"><span class="cf-rrow__lbl">Retención en la fuente <small>1% · vendedor</small></span><span class="cf-rrow__val" id="gn-r-rete">{fmtCOP(init.retefuente)}</span></div>
+      </div>
+      <div class="cf-compose">
+        <div class="cf-compose__lbl">Cómo se reparte</div>
+        <div class="cf-bar"><span class="cf-bar__fill" id="gn-bar" style={`width:${Math.round(init.comprador / init.total * 100)}%`}></span><span class="cf-bar__fill cf-bar__fill--muted" style={`width:${100 - Math.round(init.comprador / init.total * 100)}%`}></span></div>
+        <div class="cf-bar__ends"><span id="gn-bar-a">Comprador {fmtCOP(init.comprador)}</span><span id="gn-bar-b">Vendedor {fmtCOP(init.vendedor)}</span></div>
+      </div>
+      <p class="cf-result__sub gn-timbre" id="gn-timbre" hidden>⚠️ La venta supera 20.000 UVT ({fmtCOP(UMBRAL_TIMBRE)}): además aplica <strong>impuesto de timbre</strong>, que puede ser el rubro más grande del cierre.</p>
+      <div class="cf-result__actions cf-result__actions--2">
+        <button class="cf-rbtn" type="button" id="gn-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar desglose</button>
+        <button class="cf-rbtn" type="button" id="gn-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver detalle</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="cf-quick">
+    <span class="cf-quick__ico" aria-hidden="true">⚡</span>
+    <p class="cf-quick__txt"><strong>Respuesta rápida.</strong> Para un inmueble de {millones(INIT)}, reservá cerca de <strong>{millones(init.comprador)}</strong> si comprás y <strong>{millones(init.vendedor)}</strong> si vendés.</p>
+    <span class="cf-formula">total aprox. {pct(init.total, INIT)}</span>
+  </div>
+
+  <!-- El costo, rubro por rubro -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">El costo, rubro por rubro</p>
+        <h2 class="cf-section__title">Qué se paga al escriturar</h2>
+      </div>
+      <p class="cf-section__lead">Las tarifas notariales son nacionales; el impuesto de registro es departamental y cambia fuera de Bogotá.</p>
+    </div>
+    <div class="cf-cards cf-cards--4">
+      <div class="cf-minicard cf-minicard--dark">
+        <span class="cf-minicard__ico" aria-hidden="true">🏛️</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Derechos notariales</p>
+        <div class="cf-minicard__big">0,54%</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Del valor de la escritura. Se reparten según lo pactado.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">📄</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Impuesto de registro</p>
+        <div class="cf-minicard__big">1,67%</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Bogotá/Cundinamarca. A cargo del comprador.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🏦</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Beneficencia y registro</p>
+        <div class="cf-minicard__big">0,29%</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">Se liquida al radicar la escritura. Comprador.</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">📉</span>
+        <p class="cf-minicard__sub" style="font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Retención en la fuente</p>
+        <div class="cf-minicard__big">1%</div>
+        <p class="cf-minicard__desc" style="margin-top:0.3rem">A cargo del vendedor persona natural.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quién paga qué -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Quién paga qué</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Comprador y vendedor no asumen lo mismo</h2>
+    <div class="gn-2col">
+      <div class="cf-side-card cf-side-card--dark gn-hl">
+        <p class="cf-side-eyebrow">Reparto del cierre</p>
+        <p class="gn-hl__title">Comprador y vendedor no asumen lo mismo</p>
+        <p class="cf-side-desc">La notaría suele dividirse entre ambas partes. Registro e impuesto departamental normalmente quedan del lado comprador; la retención, del vendedor.</p>
+        <div class="gn-hl__big">{fmtCOP(INIT)}</div>
+        <p class="cf-side-desc">Valor de la operación del ejemplo</p>
+      </div>
+      <div class="cf-breakdown">
+        <div class="cf-brow">
+          <span class="cf-brow__lbl">Comprador</span>
+          <span class="cf-brow__val">{millones(init.comprador)}</span>
+          <span class="cf-brow__bar"><span style={`width:${Math.round(init.comprador / init.total * 100)}%`}></span></span>
+        </div>
+        <p class="gn-note">Notaría + registro + impuestos departamentales</p>
+        <div class="cf-brow" style="margin-top:1rem">
+          <span class="cf-brow__lbl">Vendedor</span>
+          <span class="cf-brow__val">{millones(init.vendedor)}</span>
+          <span class="cf-brow__bar"><span class="gn-bar--alt" style={`width:${Math.round(init.vendedor / init.total * 100)}%`}></span></span>
+        </div>
+        <p class="gn-note">Notaría + retención en la fuente</p>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1.25rem">
+          <span class="cf-callout__ico" aria-hidden="true">✍️</span>
+          <p>La promesa de compraventa puede pactar una distribución diferente entre las partes.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Proceso de cierre -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Proceso de cierre</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">De la promesa al registro</h2>
+    <div class="cf-steps cf-steps--4">
+      <div class="cf-step"><div class="cf-step__num">1</div><p class="cf-step__title">Promesa de compraventa</p><p class="cf-step__desc">Se acuerdan precio, forma de pago, fecha de firma y quién asume cada gasto.</p></div>
+      <div class="cf-step"><div class="cf-step__num">2</div><p class="cf-step__title">Firma en notaría</p><p class="cf-step__desc">Se firma la escritura pública y se pagan los derechos notariales y la retención.</p></div>
+      <div class="cf-step"><div class="cf-step__num">3</div><p class="cf-step__title">Impuestos y registro</p><p class="cf-step__desc">Se liquidan registro y beneficencia, y se radica en la Oficina de Registro.</p></div>
+      <div class="cf-step"><div class="cf-step__num">4</div><p class="cf-step__title">Nuevo propietario</p><p class="cf-step__desc">Con la inscripción en el folio de matrícula, el comprador es dueño ante terceros.</p></div>
+    </div>
+  </section>
+
+  <!-- Tarifas especiales -->
+  <section class="cf-section">
+    <p class="cf-eyebrow">Tarifas especiales</p>
+    <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">El tipo de vivienda puede cambiar el costo</h2>
+    <div class="cf-cards cf-cards--3">
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🏢</span>
+        <p class="cf-minicard__title">Vivienda no VIS</p>
+        <p class="cf-minicard__desc">Aplica el esquema general de derechos notariales, registro e impuestos. Es lo que calcula esta herramienta.</p>
+        <p class="cf-minicard__sub" style="color:var(--accent);font-weight:700;margin-top:0.6rem">Tarifa general</p>
+      </div>
+      <div class="cf-minicard gn-minicard--soft">
+        <span class="cf-minicard__ico" aria-hidden="true">🏘️</span>
+        <p class="cf-minicard__title">Vivienda VIS</p>
+        <p class="cf-minicard__desc">Algunos actos tienen tarifas notariales reducidas si se acredita la condición ante la notaría.</p>
+        <p class="cf-minicard__sub" style="color:var(--accent);font-weight:700;margin-top:0.6rem">Beneficio sujeto a certificación</p>
+      </div>
+      <div class="cf-minicard">
+        <span class="cf-minicard__ico" aria-hidden="true">🏡</span>
+        <p class="cf-minicard__title">Vivienda VIP</p>
+        <p class="cf-minicard__desc">Interés prioritario: confirmá con la notaría y la gobernación qué beneficios aplican a tu caso.</p>
+        <p class="cf-minicard__sub" style="color:var(--accent);font-weight:700;margin-top:0.6rem">Revisar requisitos</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Referencia rápida -->
+  <section class="cf-section">
+    <div class="cf-section__head">
+      <div>
+        <p class="cf-eyebrow">Referencia rápida</p>
+        <h2 class="cf-section__title">Ejemplos por valor del inmueble</h2>
+      </div>
+      <p class="cf-section__lead">Estimación con notaría por mitades y vendedor persona natural. El valor final depende del departamento y de la liquidación oficial.</p>
+    </div>
+    <div class="cf-tablewrap">
+      <table class="cf-table">
+        <thead><tr><th>Valor del inmueble</th><th>Comprador</th><th>Vendedor</th><th>Total aproximado</th></tr></thead>
+        <tbody>
+          {refRows.map((r) => (
+            <tr>
+              <td>{fmtCOP(r.valor)}</td>
+              <td>{fmtCOP(r.comprador)}</td>
+              <td>{fmtCOP(r.vendedor)}</td>
+              <td class="cf-td-em">{fmtCOP(r.total)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- Banda: antes de firmar + fuentes -->
+<div class="cf-band" data-domain="data">
+  <div class="cf-band__inner">
+    <div class="gn-2col">
+      <div class="gn-card">
+        <p class="cf-eyebrow">Antes de firmar</p>
+        <h2 class="gn-card__title">La base no siempre es solo el precio pactado</h2>
+        <p class="cf-side-desc">La notaría puede liquidar sobre el mayor valor aplicable entre precio y avalúo catastral, y otras bases exigidas por la normativa. Además, los derechos notariales pagan IVA del 19%.</p>
+        <div class="cf-callout cf-callout--warn" style="margin-top:1rem">
+          <span class="cf-callout__ico" aria-hidden="true">💡</span>
+          <p>Pedí la liquidación previa en la notaría y confirmá el impuesto departamental antes de separar el dinero del cierre.</p>
+        </div>
+      </div>
+      <div class="cf-side-card cf-side-card--dark">
+        <p class="cf-side-eyebrow">Fuentes oficiales</p>
+        <p class="gn-src__title">Tarifas 2026</p>
+        <div class="gn-src">
+          <div class="gn-src__item"><strong>Superintendencia de Notariado y Registro</strong><span>Resolución 2026-000964-6 · derechos notariales 0,54%</span></div>
+          <div class="gn-src__item"><strong>Ley 1579 de 2012</strong><span>Estatuto de Registro de Instrumentos Públicos</span></div>
+          <div class="gn-src__item"><strong>Ley 223 de 1995</strong><span>Impuesto de registro departamental</span></div>
+          <div class="gn-src__item"><strong>Estatuto Tributario, arts. 398-401</strong><span>Retención en la fuente al vendedor</span></div>
+        </div>
+        <p class="gn-src__foot">● Valores actualizados para 2026</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="cf-page gn" data-domain="data">
+  {faq.length > 0 && (
+    <section class="cf-section" id="como-funciona">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f: any, i: number) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a" set:html={md(f.a)} />
+          </details>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {explanationHtml && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">En detalle</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cómo funciona el cierre en Colombia</h2>
+      <div class="cf-prose" set:html={explanationHtml} />
+    </section>
+  )}
+
+  {related.length > 0 && (
+    <section class="cf-section">
+      <p class="cf-eyebrow">Seguí calculando</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Herramientas relacionadas</h2>
+      <div class="cf-related__grid">
+        {related.slice(0, 3).map((c: any) => (
+          <a class="cf-relcard" href={`/co/${c.slug}`}>
+            <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🧮'}</span>
+            <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].split('—')[0].trim()}</span>
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            <span class="cf-relcard__link">Calcular <span aria-hidden="true">→</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section class="cf-ctabar">
+    <div>
+      <p class="cf-ctabar__title">Guardá el presupuesto antes de firmar.</p>
+      <p class="cf-ctabar__sub">Llegá a la notaría sabiendo cuánto debe pagar cada parte.</p>
+    </div>
+    <div class="cf-ctabar__actions">
+      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="gn-share2">Guardar presupuesto</button>
+    </div>
+  </section>
+</div>
+
+<script is:inline>
+  (function () {
+    const root = document.querySelector('.gn');
+    if (!root) return;
+    const T = {
+      notaria: Number(root.getAttribute('data-notaria')),
+      registro: Number(root.getAttribute('data-registro')),
+      benef: Number(root.getAttribute('data-benef')),
+      rete: Number(root.getAttribute('data-rete')),
+      timbre: Number(root.getAttribute('data-timbre')),
+    };
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n) => '$' + new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(Math.round(n));
+    const mill = (n) => '$' + (n / 1e6).toLocaleString('es-CO', { maximumFractionDigits: 2 }) + ' millones';
+    const pct = (n, base) => base > 0 ? ((n / base) * 100).toFixed(2).replace('.', ',') + '%' : '0%';
+    const valorEl = $('gn-valor'), repartoEl = $('gn-reparto');
+    let vendedor = 'natural';
+
+    function raw() { return Number((valorEl.value || '').replace(/\D/g, '')) || 0; }
+    function fmtThousands(v) { const n = String(v).replace(/\D/g, ''); return n ? Number(n).toLocaleString('es-CO') : ''; }
+
+    function cierre(valor) {
+      const reparto = repartoEl.value;
+      const pn = vendedor !== 'juridica';
+      const notaria = valor * T.notaria;
+      const registro = valor * T.registro;
+      const benef = valor * T.benef;
+      const retefuente = pn ? valor * T.rete : 0;
+      const nComp = reparto === 'mitades' ? notaria / 2 : reparto === 'comprador' ? notaria : 0;
+      const nVend = notaria - nComp;
+      const comprador = nComp + registro + benef;
+      const vend = nVend + retefuente;
+      return { notaria, registro, benef, retefuente, comprador, vendedor: vend, total: comprador + vend };
+    }
+
+    function render() {
+      const v = raw(); const c = cierre(v);
+      $('gn-big').textContent = fmt(c.total);
+      $('gn-sub').textContent = pct(c.total, v) + ' del valor del inmueble';
+      $('gn-t-comp').textContent = fmt(c.comprador);
+      $('gn-t-comp-pct').textContent = pct(c.comprador, v);
+      $('gn-t-vend').textContent = fmt(c.vendedor);
+      $('gn-t-vend-pct').textContent = pct(c.vendedor, v);
+      $('gn-r-notaria').textContent = fmt(c.notaria);
+      $('gn-r-registro').textContent = fmt(c.registro + c.benef);
+      $('gn-r-rete').textContent = fmt(c.retefuente);
+      const pc = c.total > 0 ? Math.round(c.comprador / c.total * 100) : 0;
+      $('gn-bar').style.width = pc + '%';
+      $('gn-bar').nextElementSibling.style.width = (100 - pc) + '%';
+      $('gn-bar-a').textContent = 'Comprador ' + fmt(c.comprador);
+      $('gn-bar-b').textContent = 'Vendedor ' + fmt(c.vendedor);
+      $('gn-timbre').hidden = !(v > T.timbre);
+      const dv = $('gn-deco-val'); if (dv) dv.textContent = mill(c.total);
+      const dp = $('gn-deco-pct'); if (dp) dp.textContent = pct(c.total, v);
+    }
+
+    valorEl.addEventListener('input', () => { valorEl.value = fmtThousands(valorEl.value); render(); });
+    repartoEl.addEventListener('change', render);
+    $('gn-calc-btn').addEventListener('click', render);
+    document.querySelectorAll('[data-vend]').forEach((b) => b.addEventListener('click', () => {
+      vendedor = b.getAttribute('data-vend');
+      document.querySelectorAll('[data-vend]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      render();
+    }));
+    document.querySelectorAll('[data-ej]').forEach((b) => b.addEventListener('click', () => { valorEl.value = fmtThousands(b.getAttribute('data-ej')); render(); }));
+
+    function summary() {
+      const v = raw(); const c = cierre(v);
+      return `Gastos de escrituración de un inmueble de ${fmt(v)} en Colombia: total ${fmt(c.total)} (${pct(c.total, v)}). Comprador ${fmt(c.comprador)}, vendedor ${fmt(c.vendedor)}. — hacecuentas.com`;
+    }
+    function shareUrl() { return `${location.origin}${location.pathname}?valor=${raw()}&reparto=${repartoEl.value}&vendedor=${vendedor}`; }
+    function copy(t, btn) { navigator.clipboard?.writeText(t).then(() => { const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => btn.innerHTML = o, 1500); }); }
+    $('gn-copy').addEventListener('click', (e) => copy(summary(), e.currentTarget));
+    $('gn-detail').addEventListener('click', () => { document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' }); });
+    const s2 = $('gn-share2'); if (s2) s2.addEventListener('click', (e) => copy(shareUrl(), e.currentTarget));
+
+    const q = new URLSearchParams(location.search);
+    if (q.get('valor')) valorEl.value = fmtThousands(q.get('valor'));
+    if (q.get('reparto')) repartoEl.value = q.get('reparto');
+    if (q.get('vendedor')) { const b = document.querySelector(`[data-vend="${q.get('vendedor')}"]`); if (b) b.click(); }
+    render();
+  })();
+</script>
+
+<style>
+  /* El badge vive fuera de .cf-deco-card porque la card tiene overflow:hidden */
+  .gn .gn-deco-wrap { position: relative; }
+  .gn .gn-badge { top: 50%; right: -16px; transform: translateY(-50%); width: 48px; height: 48px; font-size: 0.78rem; letter-spacing: 0.02em; }
+
+  .gn .gn-money { position: relative; display: flex; align-items: center; }
+  .gn .gn-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
+  .gn .gn-money .cf-input { padding-left: 1.7rem; }
+  .gn .gn-seg { width: 100%; }
+  .gn .gn-seg button { flex: 1; }
+  .gn .gn-timbre { color: #fbbf24; margin: 0 0 1rem; }
+  .gn .gn-timbre strong { color: #fde68a; }
+
+  .gn-2col, .cf-band .gn-2col { display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start; }
+  @media (min-width: 900px) { .gn-2col, .cf-band .gn-2col { grid-template-columns: 0.85fr 1.15fr; } }
+
+  .gn .gn-hl__title { font-size: 1.4rem; font-weight: 800; color: #fff; line-height: 1.2; margin: 0 0 0.6rem; letter-spacing: -0.015em; }
+  .gn .gn-hl__big { font-size: 1.6rem; font-weight: 800; color: #fff; margin: 1.1rem 0 0.15rem; font-variant-numeric: tabular-nums; }
+  .gn .gn-note { font-size: 0.72rem; color: var(--text-subtle); margin: 0.15rem 0 0; }
+  .gn .gn-bar--alt { background: linear-gradient(90deg, #f59e0b, #fb923c) !important; }
+  .gn .gn-minicard--soft { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 25%, transparent); }
+
+  .cf-band .gn-card { padding: 1.5rem 1.6rem; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg-card); }
+  .cf-band .gn-card__title { font-size: 1.35rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; margin: 0.35rem 0 0.6rem; line-height: 1.2; }
+  .cf-band .gn-src__title { font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 0.9rem; }
+  .cf-band .gn-src { display: grid; gap: 0.5rem; }
+  .cf-band .gn-src__item { padding: 0.7rem 0.85rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); }
+  .cf-band .gn-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .cf-band .gn-src__item span { font-size: 0.72rem; color: #8592a6; }
+  .cf-band .gn-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+</style>
