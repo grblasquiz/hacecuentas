@@ -27,7 +27,7 @@ import {
 const ROOT = new URL('..', import.meta.url).pathname;
 const CONTENT = join(ROOT, 'src/content');
 const REPORTS = join(ROOT, 'reports');
-const TODAY = '2026-07-14'; // fecha de esta auditoría editorial completa
+const TODAY = new Date().toISOString().slice(0, 10);
 
 // Locales: carpeta → {lang, country}
 const LOCALES: Record<string, { lang: string; country: string; prefix: string }> = {
@@ -63,7 +63,7 @@ const GENERIC_TOKEN = [
   /:\s*"undefined"/,          // un campo con valor literal "undefined"
   /:\s*"null"/,               // valor literal "null" (string)
   /\bNaN\b/,                  // NaN suelto
-  /"\s*(?:TODO|FIXME)(?:\s*[:\-—][^"]*)?"/i, // marcador técnico como valor; no confundir el español «TODO»
+  /"\s*(?:TODO|FIXME)(?:\s*[:\-—][^"]*)?"\s*[,}]/, // marcador técnico en mayúsculas; no el español «todo»
 ];
 
 type Decision = 'KEEP' | 'IMPROVE' | 'MERGE_301' | 'DRAFT';
@@ -269,6 +269,10 @@ for (const r of rows) {
 // ---------- reports ----------
 if (!existsSync(REPORTS)) mkdirSync(REPORTS, { recursive: true });
 const publishable = rows.filter((r) => r.decision === 'KEEP');
+// El gate debe mirar la superficie realmente distribuida, no sólo KEEP.
+// KEEP ya excluye P0 por definición, por lo que auditar P0 dentro de KEEP era
+// una tautología incapaz de fallar.
+const distributed = rows.filter((r) => r.indexable && !prunedSet.has(r.slug));
 const csvEsc = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`;
 
 writeFileSync(join(REPORTS, 'adsense-audit.json'), JSON.stringify({
@@ -317,7 +321,9 @@ writeFileSync(join(REPORTS, 'adsense-broken-links.csv'), ['from,to,reason', ...b
 
 // ---------- resumen ----------
 const byDec = rows.reduce((a, r) => ((a[r.decision] = (a[r.decision] || 0) + 1), a), {} as Record<string, number>);
-const p0InPublishable = publishable.filter((r) => r.blocks.some((b) => b.startsWith('P0')));
+const blockingInDistributed = distributed.filter((r) =>
+  r.blocks.some((b) => b.startsWith('P0') || b.startsWith('P1')),
+);
 console.log('=== AUDIT:ADSENSE ===');
 console.log('Total URLs auditadas:', rows.length);
 console.log('Por decisión:', JSON.stringify(byDec));
@@ -331,8 +337,10 @@ console.log('Frases genéricas en KEEP:', publishable.filter((r) => r.genericHit
 console.log('Reports → reports/adsense-*.{json,csv}');
 
 const GATE = process.argv.includes('--gate');
-if (p0InPublishable.length > 0) {
-  console.error(`\n❌ GATE FAIL: ${p0InPublishable.length} páginas KEEP con bloqueo P0.`);
+if (blockingInDistributed.length > 0) {
+  console.error(`\n❌ GATE FAIL: ${blockingInDistributed.length} páginas distribuidas con bloqueo P0/P1.`);
+  blockingInDistributed.slice(0, 30).forEach((row) =>
+    console.error(`  - ${row.url}: ${row.blocks.join('; ')}`));
   process.exit(1);
 }
-console.log(GATE ? '\n✅ GATE OK: 0 KEEP con bloqueo P0.' : '\n(usá --gate para CI)');
+console.log(GATE ? '\n✅ GATE OK: 0 páginas distribuidas con bloqueo P0/P1.' : '\n(usá --gate para CI)');

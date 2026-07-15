@@ -81,6 +81,8 @@ async function main() {
     // Bloquea publicación indexable de cualquier calc bajo el piso editorial.
     // La salida segura es completar revisión o marcarla draft/noindex.
     run({ name: 'editorial-gate', cmd: NODE, args: [...FLAGS, 'scripts/quarantine-editorial-risk.ts', '--strict'] }),
+    run({ name: 'adsense-gate', cmd: NODE, args: [...FLAGS, 'scripts/audit-adsense.ts', '--gate'] }),
+    run({ name: 'blog-adsense-gate', cmd: NODE, args: [...FLAGS, 'scripts/audit-blog-adsense.ts', '--gate'] }),
     run(task('temporal-gate', 'check-temporal-claims')),
     // Gate anti-hardcode fiscal: falla rápido si una fórmula re-introduce un
     // valor fiscal viejo conocido (teto INSS 2025, SM 1518, etc.) en vez de

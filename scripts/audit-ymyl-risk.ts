@@ -397,10 +397,16 @@ function main() {
       join(ROOT, 'public/google-page-feed.csv'),
       join(ROOT, 'src/lib/related-auto.json'),
     ].filter((f) => existsSync(f));
+    const exactSlugInChannel = (txt: string, slug: string): boolean => {
+      const escaped = slug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Exige límite de ruta/valor a ambos lados: evita que `foo` coincida con
+      // `foo-bar`, que producía falsos positivos en slugs prefijo.
+      return new RegExp(`(?:^|[\\/"'>,])${escaped}(?=$|[\\/"'<,?#])`, 'm').test(txt);
+    };
     for (const f of channelFiles) {
       const txt = readFileSync(f, 'utf8');
       for (const slug of restrictedSlugs) {
-        if (txt.includes('/' + slug) || txt.includes('"' + slug + '"') || txt.includes('>' + slug + '<')) {
+        if (exactSlugInChannel(txt, slug)) {
           violations.push(`restringida en canal ${f.replace(ROOT + '/', '')}: ${slug}`);
         }
       }

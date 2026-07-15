@@ -215,7 +215,7 @@ for (const p of profiles) {
     }));
     while(faq.length<7){const n=faq.length+1;faq.push({q:`¿Qué debo revisar antes del paso ${n}?`,a:`Revisá período, unidad, fuente y supuestos antes de usar el resultado de ${p.label}.`});}
     const article={
-      slug,title:`${title} | Hacé Cuentas`,
+      slug,title,
       description:`Guía práctica sobre ${p.label}: definición, cálculo, ejemplos, controles y errores que conviene evitar.`,
       answerSnippet:plain(c.answerSnippet||c.keyTakeaway||c.description).slice(0,300),
       lastReviewed:TODAY,
