@@ -5,6 +5,9 @@ export interface Inputs {
   edad: number;
   sexo: string;
   grasaCorporal: number;
+  actividad?: string;
+  masaMuscular?: number;
+  cintura?: number;
 }
 export interface Outputs {
   edadMetabolica: number;
@@ -13,6 +16,8 @@ export interface Outputs {
   diferencia: number;
   evaluacion: string;
   mensaje: string;
+  tdee: number;
+  factores: string;
   _insight?: any;
   _chart?: any;
 }
@@ -57,6 +62,9 @@ export function edadMetabolica(i: Inputs): Outputs {
   edadMetabolica = Math.max(10, Math.min(100, Math.round(edadMetabolica)));
 
   const diferencia = edadMetabolica - edad;
+  const actividadFactor: Record<string, number> = { sedentaria: 1.2, ligera: 1.375, moderada: 1.55, alta: 1.725 };
+  const tdee = rmrReal * (actividadFactor[String(i.actividad || 'sedentaria')] || 1.2);
+  const factores = `La estimación usa edad, sexo, peso, altura${grasaCorporal ? ', grasa corporal' : ''}${i.masaMuscular ? ', masa muscular informada' : ''}${i.cintura ? ' y cintura como contexto' : ''}. No es una métrica clínica estandarizada.`;
   let evaluacion: string;
   if (diferencia <= -5) evaluacion = 'Excelente — tu metabolismo es más joven que tu edad cronológica';
   else if (diferencia <= 0) evaluacion = 'Bueno — tu metabolismo está alineado con tu edad';
@@ -96,6 +104,8 @@ export function edadMetabolica(i: Inputs): Outputs {
     diferencia: dif,
     evaluacion,
     mensaje: `Edad metabólica: ${edadMetabolica} años (edad real: ${edad}). ${evaluacion}.`,
+    tdee: Math.round(tdee),
+    factores,
     _insight,
     _chart,
   };

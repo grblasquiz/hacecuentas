@@ -1445,6 +1445,7 @@ import { compute as compute__hipoteca_inversa_mayores_65_espana } from './hipote
 import { compute as compute__hipoteca_mensual_cuota_fija } from './hipoteca-mensual-cuota-fija';
 import { hipotecaUvaSantander } from './hipoteca-uva-santander';
 import { hitosDesarrolloBebeEdadMeses } from './hitos-desarrollo-bebe-edad-meses';
+import { homaIrQuicki } from './homa-ir-quicki';
 import { compute as compute__home_affordability_by_income_calculator } from './home-affordability-by-income-calculator';
 import { honorariosAbogado } from './honorarios-abogado';
 import { honorariosAbogadoEspanaTurnoOficio } from './honorarios-abogado-espana-turno-oficio';
@@ -1487,6 +1488,7 @@ import { horasSueno } from './horas-sueno';
 import { horasSuenoBebePorEdadTablaRecomendada } from './horas-sueno-bebe-por-edad-tabla-recomendada';
 import { horasSuenoHijoEdadRecomendadas } from './horas-sueno-hijo-edad-recomendadas';
 import { horasSuenoNecesariasEdadAdulto } from './horas-sueno-necesarias-edad-adulto';
+import { horasTrabajadasSemanal } from './horas-trabajadas-semanal';
 import { horasTrabajoComprar } from './horas-trabajo-comprar';
 import { horasVidaRestantes } from './horas-vida-restantes';
 import { compute as compute__hotel_split_cost_calculator } from './hotel-split-cost-calculator';
@@ -2014,6 +2016,7 @@ import { notaPromedioBachilleratoSecundarioMaterias } from './nota-promedio-bach
 import { notacionCientifica } from './notacion-cientifica';
 import { nps } from './nps';
 import { numeroAOrdinal } from './numero-a-ordinal';
+import { numeroCaminoVida } from './numero-camino-vida';
 import { numeroCuidadoresFiestaInfantilEdad } from './numero-cuidadores-fiesta-infantil-edad';
 import { numeroOxidacionElemento } from './numero-oxidacion-elemento';
 import { numerosPrimos } from './numeros-primos';
@@ -2740,6 +2743,7 @@ import { compute as compute__tabla_impuesto_renta_personas_naturales_colombia_20
 import { tablaWilksPowerliftingScore } from './tabla-wilks-powerlifting-score';
 import { tableroMelaminaCortesAprovechamiento } from './tablero-melamina-cortes-aprovechamiento';
 import { tallaAnilloDedo } from './talla-anillo-dedo';
+import { tallaPantalonJeans } from './talla-pantalon-jeans';
 import { tallaRopaInternacional } from './talla-ropa-internacional';
 import { tallaSostenCopa } from './talla-sosten-copa';
 import { tallaZapatoBebe } from './talla-zapato-bebe';
@@ -4487,6 +4491,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'hipoteca-mensual-cuota-fija': compute__hipoteca_mensual_cuota_fija,
   'hipoteca-uva-santander': hipotecaUvaSantander,
   'hitos-desarrollo-bebe-edad-meses': hitosDesarrolloBebeEdadMeses,
+  'homa-ir-quicki': homaIrQuicki,
   'home-affordability-by-income-calculator': compute__home_affordability_by_income_calculator,
   'honorarios-abogado': honorariosAbogado,
   'honorarios-abogado-espana-turno-oficio': honorariosAbogadoEspanaTurnoOficio,
@@ -4529,6 +4534,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'horas-sueno-bebe-por-edad-tabla-recomendada': horasSuenoBebePorEdadTablaRecomendada,
   'horas-sueno-hijo-edad-recomendadas': horasSuenoHijoEdadRecomendadas,
   'horas-sueno-necesarias-edad-adulto': horasSuenoNecesariasEdadAdulto,
+  'horas-trabajadas-semanal': horasTrabajadasSemanal,
   'horas-trabajo-comprar': horasTrabajoComprar,
   'horas-vida-restantes': horasVidaRestantes,
   'hotel-split-cost-calculator': compute__hotel_split_cost_calculator,
@@ -5056,6 +5062,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'notacion-cientifica': notacionCientifica,
   'nps': nps,
   'numero-a-ordinal': numeroAOrdinal,
+  'numero-camino-vida': numeroCaminoVida,
   'numero-cuidadores-fiesta-infantil-edad': numeroCuidadoresFiestaInfantilEdad,
   'numero-oxidacion-elemento': numeroOxidacionElemento,
   'numeros-primos': numerosPrimos,
@@ -5782,6 +5789,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'tabla-wilks-powerlifting-score': tablaWilksPowerliftingScore,
   'tablero-melamina-cortes-aprovechamiento': tableroMelaminaCortesAprovechamiento,
   'talla-anillo-dedo': tallaAnilloDedo,
+  'talla-pantalon-jeans': tallaPantalonJeans,
   'talla-ropa-internacional': tallaRopaInternacional,
   'talla-sosten-copa': tallaSostenCopa,
   'talla-zapato-bebe': tallaZapatoBebe,

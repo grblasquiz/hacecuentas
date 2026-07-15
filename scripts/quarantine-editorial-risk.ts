@@ -22,7 +22,8 @@ const GENERIC_SOURCE_HOSTS = new Set([
   'bcentral.cl', 'dian.gov.co', 'banrep.gov.co', 'sat.gob.mx', 'datos.gov.co',
 ]);
 const BCRA_TOPIC_RE = /(banco|bcra|tasa|inter[eé]s|cr[eé]dito|pr[eé]stamo|uva|moneda|d[oó]lar|cambio|inflaci[oó]n|plazo-fijo|cbu|cvu|financ|bono|mercado|ahorro|alquiler|hipoteca|bitcoin)/i;
-const HIGH_STAKES_RE = /(fertil|vitrific|ovulo|embarazo-riesgo|sintoma|diagnost|dosis|medicament|insulina|control-esfinter|quitar-panal|indemniz|liquidacion|jubilacion|pension|impuesto|ganancias|losa|viga|columna|cimiento|estructural|potencia-electrica|cable-seccion)/i;
+// Los límites por guion evitan falsos positivos como "suspensión" → "pensión".
+const HIGH_STAKES_RE = /(?:^|-)(?:fertil[^-]*|vitrific[^-]*|ovulo[^-]*|embarazo-riesgo|sintoma[^-]*|diagnost[^-]*|dosis|medicament[^-]*|insulina|control-esfinter|quitar-panal|indemniz[^-]*|liquidacion|jubilacion|pension|impuesto|ganancias|losa|viga|columna|cimiento|estructural|potencia-electrica|cable-seccion)(?:-|$)/i;
 
 function genericDataSource(value: unknown): boolean {
   if (typeof value !== 'string' || !value) return false;

@@ -3,6 +3,7 @@ export interface Inputs {
   contornoBajo: number;
   contornoPecho: number;
   sistema: string;
+  unidad?: string;
 }
 export interface Outputs {
   tallaContorno: number;
@@ -11,14 +12,20 @@ export interface Outputs {
   tallaUS: string;
   tallaEU: string;
   tallaUK: string;
+  tallaAR: string;
+  tallaES: string;
+  tallaMX: string;
+  tallaCO: string;
+  alternativas: string;
   mensaje: string;
   _insight?: any;
   _chart?: any;
 }
 
 export function tallaSostenCopa(i: Inputs): Outputs {
-  const contornoBajo = Number(i.contornoBajo); // cm bajo el busto
-  const contornoPecho = Number(i.contornoPecho); // cm en la parte más ancha
+  const factor = i.unidad === 'in' ? 2.54 : 1;
+  const contornoBajo = Number(i.contornoBajo) * factor; // cm bajo el busto
+  const contornoPecho = Number(i.contornoPecho) * factor; // cm en la parte más ancha
   if (!contornoBajo || contornoBajo < 55 || contornoBajo > 130) throw new Error('Ingresá el contorno bajo el busto en cm');
   if (!contornoPecho || contornoPecho < 60 || contornoPecho > 150) throw new Error('Ingresá el contorno del pecho en cm');
 
@@ -56,6 +63,12 @@ export function tallaSostenCopa(i: Inputs): Outputs {
 
   // UK: similar a US
   const tallaUK = tallaUS;
+  const tallaAR = `${tallaContorno + 15}${copa}`;
+  const tallaES = tallaAR;
+  const tallaMX = tallaUS;
+  const tallaCO = tallaUS;
+  const copaSimple = copa.replace(' (DD)', '');
+  const alternativas = `${Math.max(55, tallaContorno - 5)}${String.fromCharCode(Math.min(90, copaSimple.charCodeAt(0) + 1))} o ${tallaContorno + 5}${String.fromCharCode(Math.max(65, copaSimple.charCodeAt(0) - 1))}`;
 
   const diffFmt = diferencia.toFixed(0);
   const _insight = {
@@ -90,6 +103,11 @@ export function tallaSostenCopa(i: Inputs): Outputs {
     tallaUS,
     tallaEU,
     tallaUK,
+    tallaAR,
+    tallaES,
+    tallaMX,
+    tallaCO,
+    alternativas,
     mensaje: `Tu talla es ${tallaCompleta} (EU). US/UK: ${tallaUS}. Contorno: ${tallaContorno}, Copa: ${copa}.`,
     _insight,
     _chart,

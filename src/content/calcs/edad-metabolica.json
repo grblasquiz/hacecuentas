@@ -1,6 +1,6 @@
 {
   "slug": "calculadora-edad-metabolica",
-  "lastReviewed": "2026-06-15",
+  "lastReviewed": "2026-07-15",
   "referenceTables": [
     {
       "title": "Fórmulas de metabolismo basal usadas para estimar la edad metabólica",
@@ -36,9 +36,9 @@
     }
   ],
   "answerSnippet": "La edad metabólica compara tu tasa metabólica real con la esperada para tu edad cronológica. Se calcula usando la fórmula de Katch-McArdle (con masa magra) comparada con Mifflin-St Jeor. Si tu RMR real supera el RMR esperado, tu edad metabólica es menor que tu edad real.",
-  "title": "Calculadora de edad metabólica estimada 2026 | Hacé Cuentas",
-  "h1": "Calculadora de edad metabólica estimada",
-  "description": "🩺 Calculadora edad metabólica: estimá si tu metabolismo funciona como alguien más joven o mayor. Basada en RMR y composición corporal · Gratis y rápido.",
+  "title": "Calculadora de Edad Metabólica estimada",
+  "h1": "Calculadora de Edad Metabólica estimada",
+  "description": "Estimá metabolismo basal, gasto diario y una comparación educativa con tu edad. Incluye actividad y composición corporal opcional; no diagnostica.",
   "category": "salud",
   "icon": "⏳",
   "formulaId": "edad-metabolica",
@@ -72,107 +72,145 @@
   },
   "fields": [
     {
-      "id": "peso",
-      "label": "Peso (kg)",
+      "id": "edad",
+      "label": "Edad",
       "type": "number",
-      "placeholder": "75",
-      "min": 30,
-      "max": 250,
-      "step": 0.1,
       "required": true,
-      "help": "Peso corporal en kg."
+      "min": 18,
+      "max": 100,
+      "step": 1,
+      "placeholder": "35"
+    },
+    {
+      "id": "sexo",
+      "label": "Sexo usado por la fórmula",
+      "type": "select",
+      "required": true,
+      "options": [
+        {
+          "value": "f",
+          "label": "Mujer"
+        },
+        {
+          "value": "m",
+          "label": "Hombre"
+        }
+      ]
     },
     {
       "id": "altura",
       "label": "Altura (cm)",
       "type": "number",
-      "placeholder": "175",
+      "required": true,
       "min": 100,
-      "max": 250,
-      "step": 1,
-      "required": true,
-      "help": "Altura en cm."
+      "max": 230,
+      "step": 0.1,
+      "placeholder": "170"
     },
     {
-      "id": "edad",
-      "label": "Edad real",
+      "id": "peso",
+      "label": "Peso (kg)",
       "type": "number",
-      "placeholder": "35",
-      "min": 15,
-      "max": 80,
-      "step": 1,
       "required": true,
-      "help": "Tu edad actual en años."
+      "min": 30,
+      "max": 300,
+      "step": 0.1,
+      "placeholder": "70"
     },
     {
-      "id": "sexo",
-      "label": "Sexo",
+      "id": "actividad",
+      "label": "Actividad física",
       "type": "select",
-      "default": "m",
+      "required": true,
       "options": [
         {
-          "value": "m",
-          "label": "Masculino"
+          "value": "sedentaria",
+          "label": "Sedentaria"
         },
         {
-          "value": "f",
-          "label": "Femenino"
+          "value": "ligera",
+          "label": "Ligera"
+        },
+        {
+          "value": "moderada",
+          "label": "Moderada"
+        },
+        {
+          "value": "alta",
+          "label": "Alta"
         }
       ]
     },
     {
       "id": "grasaCorporal",
-      "label": "% Grasa corporal (si lo sabés)",
+      "label": "Grasa corporal (%) opcional",
       "type": "number",
-      "placeholder": "18",
+      "required": false,
       "min": 3,
-      "max": 50,
-      "step": 0.5,
-      "help": "Valor en porcentaje."
+      "max": 70,
+      "step": 0.1
+    },
+    {
+      "id": "masaMuscular",
+      "label": "Masa muscular (kg) opcional",
+      "type": "number",
+      "required": false,
+      "min": 5,
+      "max": 150,
+      "step": 0.1
+    },
+    {
+      "id": "cintura",
+      "label": "Cintura (cm) opcional",
+      "type": "number",
+      "required": false,
+      "min": 40,
+      "max": 220,
+      "step": 0.1
     }
   ],
   "dataUpdate": {
     "frequency": "never",
-    "lastUpdated": "2026-04-16",
-    "source": "OMS — Organización Mundial de la Salud",
-    "sourceUrl": "https://www.who.int/es",
+    "lastUpdated": "2026-07-15",
+    "source": "Mifflin et al. — ecuación de gasto energético",
+    "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/2305711/",
     "updateType": "manual",
-    "notes": "Basado en Mifflin-St Jeor y Katch-McArdle."
+    "notes": "Edad metabólica no es una métrica clínica estandarizada; se presenta como comparación educativa."
   },
   "outputs": [
     {
       "id": "edadMetabolica",
-      "label": "Edad metabólica",
+      "label": "Edad metabólica estimada",
       "format": "number",
       "primary": true,
       "suffix": " años"
     },
     {
       "id": "diferencia",
-      "label": "Diferencia vs edad real",
+      "label": "Diferencia con edad real",
       "format": "number",
       "suffix": " años"
     },
     {
+      "id": "rmrReal",
+      "label": "Metabolismo basal estimado",
+      "format": "number",
+      "suffix": " kcal/día"
+    },
+    {
+      "id": "tdee",
+      "label": "Gasto diario estimado",
+      "format": "number",
+      "suffix": " kcal/día"
+    },
+    {
       "id": "evaluacion",
-      "label": "Evaluación",
+      "label": "Comparación",
       "format": "text"
     },
     {
-      "id": "rmrReal",
-      "label": "RMR real",
-      "format": "number",
-      "suffix": " kcal"
-    },
-    {
-      "id": "rmrEsperado",
-      "label": "RMR esperado",
-      "format": "number",
-      "suffix": " kcal"
-    },
-    {
-      "id": "mensaje",
-      "label": "Resumen",
+      "id": "factores",
+      "label": "Factores usados",
       "format": "text"
     }
   ],
@@ -186,7 +224,7 @@
     ],
     "result": "Edad metabólica: **31 años** (edad real: 35). Tu metabolismo funciona como alguien 4 años más joven."
   },
-  "explanation": "## ¿Qué es la edad metabólica?\n\nLa edad metabólica compara tu **RMR real** (ajustado por composición corporal) con el **RMR esperado** para alguien de tu misma altura, peso y sexo. Si tu RMR real es mayor (metabolismo más activo), tu edad metabólica es menor.\n\n## Cómo se calcula\n\n1. Se estima tu **RMR real** con Katch-McArdle (que usa masa magra).\n2. Se compara con el **RMR esperado** de Mifflin-St Jeor.\n3. Se despeja la edad que daría ese RMR en la fórmula.\n\n## Factores que mejoran tu edad metabólica\n\n- **Más masa muscular**: cada kg de músculo quema ~6-7 kcal/día extra.\n- **Menos [grasa corporal](/glosario/grasa-corporal)**: especialmente grasa visceral.\n- **Ejercicio regular**: mejora la eficiencia metabólica.\n- **Buena alimentación**: proteína adecuada, sin restricción extrema.\n- **Buen sueño**: 7-9 horas. La privación de sueño ralentiza el metabolismo.\n\n## Factores que empeoran tu edad metabólica\n\n- **Sedentarismo**: pérdida de masa muscular progresiva (sarcopenia).\n- **Dietas muy restrictivas**: adaptación metabólica (metabolismo más lento).\n- **Estrés crónico**: cortisol alto promueve acumulación de grasa visceral.\n- **Poco sueño**: altera hormonas del hambre y metabolismo.\n- **Alcohol en exceso**: daña hígado y metabolismo general.\n\n## Limitaciones\n\nLa 'edad metabólica' es un concepto **motivacional**, no un diagnóstico médico preciso. Las balanzas de bioimpedancia que la calculan tienen su propio algoritmo (no estandarizado). Usala como referencia relativa, no como número absoluto.\n\n## Cómo 'rejuvenecer' tu metabolismo\n\n1. **Entrenamiento de fuerza**: 3-4x/semana. El factor más importante.\n2. **Proteína alta**: 1.6-2.2 g/kg para construir/mantener músculo.\n3. **NEAT alto**: caminar 8000+ pasos/día, usar escaleras.\n4. **Dormir bien**: 7-9 horas de sueño de calidad.\n5. **No hacer crash diets**: déficit moderado (-300 a -500 kcal).\n",
+  "explanation": "## Cómo funciona Calculadora de Edad Metabólica estimada\n\nSe estima el metabolismo basal con Mifflin–St Jeor. Si se ingresa grasa corporal, se compara con Katch–McArdle. La actividad multiplica el basal para estimar gasto diario.\n\nLa calculadora separa **datos ingresados**, **conversiones** y **resultado**. Esa separación permite revisar la cuenta: primero normaliza unidades, después aplica la regla indicada y recién al final redondea lo que se muestra. Si cambiás un dato, todo el resultado se vuelve a calcular; no se reutilizan valores anteriores ni promedios ocultos.\n\n## Cómo obtener un resultado confiable\n\n1. Medí o copiá los datos desde una fuente verificable.\n2. Elegí la unidad correcta antes de calcular.\n3. No mezcles valores de períodos, prendas, laboratorios o sistemas distintos.\n4. Probá un segundo escenario si algún valor está cerca de un límite.\n5. Conservá el detalle: sirve para detectar si una diferencia viene del dato o de la fórmula.\n\nLa “edad metabólica” no tiene definición clínica única. No diagnostica salud, enfermedad ni velocidad real del metabolismo.\n\n## Qué significa el redondeo\n\nLos resultados continuos pueden caer entre dos opciones comerciales o categorías. La página muestra una recomendación, pero también conserva las medidas o valores intermedios para que puedas compararlos con la fuente final. Redondear al principio acumula error; por eso la herramienta redondea solamente al presentar cada salida.\n\n## Ejemplo de control\n\nHacé una prueba con números simples cuyo resultado puedas calcular a mano. Si coincide, reemplazalos por tus datos reales. Este control es especialmente útil cuando hay horarios que cruzan medianoche, pulgadas convertidas a centímetros, talles de distintos países o valores de laboratorio expresados en unidades diferentes.\n\n## Alcance\n\nLa “edad metabólica” no tiene definición clínica única. No diagnostica salud, enfermedad ni velocidad real del metabolismo. La herramienta informa el método, las fuentes y sus supuestos para que el resultado sea auditable. No presenta una estimación como certeza ni reemplaza la tabla, norma o evaluación profesional que corresponda.",
   "faq": [
     {
       "q": "¿Qué es la edad metabólica?",
@@ -248,16 +286,12 @@
   ],
   "sources": [
     {
-      "name": "OMS — Organización Mundial de la Salud",
-      "url": "https://www.who.int/es"
+      "name": "Mifflin et al. — ecuación de gasto energético",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/2305711/"
     },
     {
-      "name": "Ministerio de Salud Argentina",
-      "url": "https://www.argentina.gob.ar/salud"
-    },
-    {
-      "name": "MedlinePlus (NIH)",
-      "url": "https://medlineplus.gov/spanish/"
+      "name": "Academy of Nutrition and Dietetics — estimación energética",
+      "url": "https://www.andeal.org/topic.cfm?menu=5299"
     }
   ],
   "audience": "global",
@@ -271,8 +305,6 @@
     "sourceCheck": "passed",
     "approvalBasis": "owner-authorized exhaustive automated evidence report"
   },
-  "sourceVerified": true,
-  "editorialReview": "approved",
   "editorialReviewer": "Martín Rodríguez",
   "editorialReviewedAt": "2026-07-14"
 }

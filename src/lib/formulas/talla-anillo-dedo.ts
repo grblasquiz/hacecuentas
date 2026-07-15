@@ -1,6 +1,9 @@
 /** Talla de anillo por circunferencia del dedo */
 export interface Inputs {
   circunferencia: number;
+  diametro?: number;
+  metodo?: string;
+  unidad?: string;
   sistema: string;
   __lang?: string;
 }
@@ -9,14 +12,17 @@ export interface Outputs {
   tallaUS: number;
   tallaEU: number;
   tallaUK: string;
+  tallaES: number;
   diametro: number;
   mensaje: string;
+  recomendacion: string;
   _insight?: any;
 }
 
 export function tallaAnilloDedo(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
-  const circ = Number(i.circunferencia); // mm
+  const factor = i.unidad === 'in' ? 25.4 : 1;
+  const circ = i.metodo === 'diametro' ? Number(i.diametro) * factor * Math.PI : Number(i.circunferencia) * factor; // mm
   if (!circ || circ < 35 || circ > 80) throw new Error(
     __lang === 'en'
       ? 'Enter the finger circumference in mm (35-80)'
@@ -34,6 +40,7 @@ export function tallaAnilloDedo(i: Inputs): Outputs {
 
   // AR: similar a EU
   const tallaAR = tallaEU;
+  const tallaES = Math.max(0, Math.round(circ - 40));
 
   // UK: letras
   const ukSizes = ['F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
@@ -41,6 +48,7 @@ export function tallaAnilloDedo(i: Inputs): Outputs {
   const tallaUK = ukIndex >= 0 && ukIndex < ukSizes.length ? ukSizes[ukIndex] : '—';
 
   const usVal = Math.max(0, tallaUS);
+  const recomendacion = 'Si quedás entre dos talles, elegí el mayor para anillos anchos o dedos que se hinchan; confirmá siempre con la guía de la joyería.';
   const diaFmt = diametro.toFixed(1);
   const _insight = {
     title: __lang === 'en' ? 'Your ring size' : 'Tu talla de anillo',
@@ -55,10 +63,12 @@ export function tallaAnilloDedo(i: Inputs): Outputs {
     tallaUS: usVal,
     tallaEU,
     tallaUK,
+    tallaES,
     diametro: Number(diametro.toFixed(1)),
     mensaje: __lang === 'en'
       ? `Circumference ${circ}mm → Diameter ${diametro.toFixed(1)}mm. Size AR/EU: ${tallaAR} | US: ${usVal} | UK: ${tallaUK}.`
       : `Circunferencia ${circ}mm → Diámetro ${diametro.toFixed(1)}mm. Talla AR/EU: ${tallaAR} | US: ${usVal} | UK: ${tallaUK}.`,
+    recomendacion,
     _insight,
   };
 }
