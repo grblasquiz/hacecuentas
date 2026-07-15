@@ -14,6 +14,7 @@
  * no tiene contenido, muestra un fallback corto (no queda vacía).
  */
 import Calculator from './Calculator.astro';
+import FinancialClusterCalculator from './FinancialClusterCalculator.astro';
 import { getDatosSource } from '../lib/datos-source-map';
 import { shouldShowReviewDate } from '../lib/review-dates';
 import { sourceRel } from '../lib/source-rel';
@@ -74,6 +75,11 @@ const { calc, dataAsOf, lang = '' } = Astro.props as Props;
 // flagship-top que se harán bespoke a mano (ver redesign-exclude.ts). El widget
 // y el CSS se activan con la clase `.calc-v3` en el <article> + el prop redesign.
 const redesign = !isBespokeTop(calc.slug);
+const hasFinancialClusterUX = [
+  'calculadora-tiempo-para-ahorrar-meta',
+  'calculadora-cancelacion-anticipada-prestamo',
+  'calculadora-refinanciacion-prestamo',
+].includes(calc.slug);
 // Prefijo para TODOS los links internos (AR='' → '/', locales → '/es', '/pt', ...).
 const linkPrefix = lang ? `/${lang}` : '';
 const P = (slug: string) => `${linkPrefix}/${slug}`;
@@ -547,6 +553,8 @@ const editorialHtml = _isReviewed
   <section id="calculadora">
     {calcIsRestricted ? (
       <RestrictedNotice calc={calc} lang={lang} />
+    ) : hasFinancialClusterUX ? (
+      <FinancialClusterCalculator calc={calc} />
     ) : (
       <Calculator config={calc} dataAsOf={dataAsOf ?? undefined} lang={calcWidgetLang} redesign={redesign}>
         {/* Bloque de decisión post-resultado (copy propio o cohorte P0): el
