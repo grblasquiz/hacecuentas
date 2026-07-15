@@ -14,6 +14,7 @@ import type { EquivalenciaId } from "./ResultContext.astro";
 import { isAlertEligible, getAlertConfig } from "../lib/alerts/eligible";
 import { getCoopSource, getDataset } from "../lib/coop/datasets";
 import { canEmbedCalc } from '../lib/content-policy';
+import { getCalculatorDisclaimer } from '../lib/disclaimers';
 export interface Field {
   id: string;
   label: string;
@@ -382,86 +383,9 @@ const translations = {
 };
 const t = translations[lang as keyof typeof translations] || translations.es;
 
-// Disclaimers inline por calculadora sensible (override específico).
-// El fallback por categoría aplica a CUALQUIER calc de finanzas/salud/etc.
-const disclaimers: Record<string, string> = {
-  'sueldo-en-mano-argentina': 'Cálculo aproximado según escala del impuesto a las ganancias 2026. Consultá con tu empleador o contador para tu caso específico.',
-  'calculadora-aguinaldo-sac': 'El aguinaldo se calcula sobre la mejor remuneración del semestre (Ley 27.073). Para liquidación final, consultá a tu contador.',
-  'calculadora-monotributo-2026': 'Los montos son de ARCA (ex-AFIP) 2026. Pueden actualizarse semestralmente. Consultá arca.gob.ar para confirmar o hablá con tu contador.',
-  'calculadora-cuota-prestamo': 'Cálculo ilustrativo de cuota francesa. La CFT real puede diferir por seguros, gastos e impuestos. Consultá al banco antes de firmar.',
-  'calculadora-imc': 'El IMC es orientativo. No reemplaza una consulta médica. Factores como masa muscular afectan el resultado.',
-  'calculadora-calorias-diarias-tdee': 'Estimación basada en fórmula Mifflin-St Jeor. Consultá a un nutricionista matriculado para planes específicos.',
-  'calculadora-embarazo': 'Cálculo por regla de Naegele. La fecha real puede variar ±2 semanas. Consultá a tu obstetra.',
-  'calculadora-ovulacion-dias-fertiles': 'Estimación estadística. Consultá a un ginecólogo si buscás o evitás un embarazo.',
-  'calculadora-interes-compuesto': 'Cálculo ilustrativo. No constituye asesoramiento en inversión (Ley 26.831 / RG CNV 840/2020). Las inversiones reales varían según mercado, comisiones e impuestos.',
-};
-
-// Fallback por categoría — cubre YMYL (finanzas, salud, negocios) aunque la
-// calc específica no tenga disclaimer individual definido.
-const categoryDisclaimers: Record<string, string> = {
-  finanzas: 'Herramienta educativa. No constituye asesoramiento en inversión (Ley 26.831 / RG CNV 840/2020). Consultá a un contador o asesor financiero matriculado antes de tomar decisiones.',
-  negocios: 'Cálculo ilustrativo. No constituye asesoramiento contable ni financiero. Consultá a un contador público para tu caso específico.',
-  salud: 'Resultado orientativo. No reemplaza el diagnóstico ni el tratamiento médico. Consultá con un profesional de la salud matriculado.',
-  deportes: 'Estimación genérica. Consultá con un profesional del deporte o médico deportólogo para planes personalizados.',
-  familia: 'Información general. Para decisiones de salud, fertilidad o crianza consultá con profesionales matriculados.',
-  mascotas: 'Orientativo. Consultá con veterinario matriculado para el estado de salud de tu mascota.',
-  construccion: 'Estimación. Los proyectos constructivos requieren cálculo estructural profesional y dirección técnica.',
-};
-
-// Fallback "laboral/sueldos": las calcs de sueldo/aguinaldo/indemnización son
-// category=finanzas y caían en el disclaimer de INVERSIÓN (Ley 26.831/CNV), que
-// no tiene nada que ver con una liquidación de sueldo. Detectamos por slug.
-const LABORAL_RE = /sueldo|aguinaldo|indemniz|vacacion|liquidacion|paritaria|antiguedad|horas-extra|preaviso|finiquito|despido/;
-const laboralDisclaimer = 'Cálculo orientativo según la LCT y las escalas vigentes. Para tu liquidación exacta consultá a tu empleador o a un contador.';
-
-// Calcs de DOSIS / suplementación (YMYL médico crítico): disclaimer más fuerte
-// que el genérico de salud — explícito en que NO es una indicación de dosis ni
-// receta, para que un revisor (AdSense) lo vea in-situ. Las ~9 calcs de dosis
-// llevan "dosis" en el slug; "posolog"/"suplementaci" cubre variantes.
-const DOSIS_RE = /dosis|posolog|suplementaci/;
-const dosisDisc = {
-  es: 'Las dosis que ves son orientativas y generales: NO son una indicación médica para tu caso ni una receta. No te automediques ni modifiques una dosis indicada por un profesional. Consultá con tu médico o farmacéutico antes de tomar suplementos o medicamentos.',
-  en: 'The doses shown are general estimates — NOT medical advice or a prescription for your case. Do not self-medicate or change a dose set by a professional. Consult your doctor or pharmacist before taking supplements or medication.',
-  pt: 'As doses mostradas são estimativas gerais — NÃO são orientação médica nem receita. Não se automedique nem altere uma dose indicada por um profissional. Consulte seu médico ou farmacêutico antes de tomar suplementos ou medicamentos.',
-};
-const dosisDiscVet = 'Las dosis son orientativas y generales: NO reemplazan la indicación de un veterinario. No mediques a tu mascota por tu cuenta. Consultá con un veterinario matriculado.';
-
-// Disclaimers por categoría para audiencia global (EN/PT): MISMA cobertura YMYL
-// que ES pero SIN referencias a leyes argentinas (que no aplican afuera).
-const categoryDisclaimersEN: Record<string, string> = {
-  finanzas: 'Educational tool, not investment advice. Consult a licensed financial advisor before making decisions.',
-  negocios: 'Illustrative estimate, not accounting or financial advice. Consult a licensed accountant for your case.',
-  salud: 'For guidance only — not medical advice. Consult a licensed healthcare professional.',
-  deportes: 'Generic estimate. Consult a sports professional or physician for a personalized plan.',
-  familia: 'General information. For health, fertility or parenting decisions consult licensed professionals.',
-  mascotas: 'For guidance only. Consult a licensed veterinarian about your pet’s health.',
-  construccion: 'Estimate only. Construction projects require professional structural calculation and supervision.',
-};
-const categoryDisclaimersPT: Record<string, string> = {
-  finanzas: 'Ferramenta educativa, não é recomendação de investimento. Consulte um contador ou assessor financeiro.',
-  negocios: 'Estimativa ilustrativa, não substitui orientação contábil. Consulte um contador para o seu caso.',
-  salud: 'Resultado orientativo — não substitui avaliação médica. Consulte um profissional de saúde.',
-  deportes: 'Estimativa genérica. Consulte um profissional de educação física ou médico do esporte.',
-  familia: 'Informação geral. Para decisões de saúde, fertilidade ou maternidade consulte profissionais.',
-  mascotas: 'Apenas orientativo. Consulte um veterinário sobre a saúde do seu animal.',
-  construccion: 'Apenas estimativa. Obras exigem cálculo estrutural profissional e acompanhamento técnico.',
-};
-
-// Disclaimer inline junto al resultado, por idioma. ES mantiene los overrides
-// por slug + el fallback laboral; EN/PT usan los mapas globales sin leyes AR.
-const disclaimer = (() => {
-  // Dosis: prioridad sobre el genérico de salud, en los 3 idiomas.
-  const isDosis = DOSIS_RE.test(config.slug);
-  if (isDosis && config.category === 'mascotas' && lang === 'es') return dosisDiscVet;
-  if (isDosis && ['salud', 'familia', 'deportes'].includes(config.category)) {
-    return dosisDisc[lang as 'es' | 'en' | 'pt'] || dosisDisc.es;
-  }
-  if (lang === 'en') return categoryDisclaimersEN[config.category] || '';
-  if (lang === 'pt') return categoryDisclaimersPT[config.category] || '';
-  if (disclaimers[config.slug]) return disclaimers[config.slug];
-  if (config.category === 'finanzas' && LABORAL_RE.test(config.slug)) return laboralDisclaimer;
-  return categoryDisclaimers[config.category] || '';
-})();
+// Clasificación por riesgo real: una licencia, una receta, pintura o un
+// documento no heredan referencias financieras de una categoría amplia.
+const disclaimer = getCalculatorDisclaimer(config, lang as 'es' | 'en' | 'pt');
 
 const basicFields = config.fields.filter((f) => !f.advanced);
 const advancedFields = config.fields.filter((f) => f.advanced);

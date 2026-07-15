@@ -5,7 +5,7 @@
 // de cookies casero vuelve a manejar la UE). Mismo patrón que OFFERS_PAUSED.
 //
 // Decisiones (2026-06-25, Martin):
-//  - CMP en UE: el gatekeeper de Ezoic (TCF 2.2 certificado) maneja el consent
+//  - CMP en UE: el gatekeeper certificado de Ezoic maneja el TCF vigente
 //    en la UE/UK; el banner casero (CookieConsent.astro) se defiere ahí. En
 //    LATAM/AR/US no cambia nada (Consent Mode default granted, sin banner).
 //    ⚠️ Activar "Google Consent Mode" en el panel de Ezoic para que el gatekeeper

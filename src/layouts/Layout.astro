@@ -3,7 +3,7 @@ import CookieConsent from '../components/CookieConsent.astro';
 import InstallPrompt from '../components/InstallPrompt.astro';
 import ProfileStore from '../components/ProfileStore.astro';
 import { EZOIC_ENABLED } from '../lib/ezoic';
-import { ADSENSE_SERVING_ENABLED } from '../lib/adsense';
+import { ADSENSE_SERVING_ENABLED, isAdsenseExcludedPath } from '../lib/adsense';
 import { HC_ALLOWED_PARAMS } from '../lib/analytics';
 
 // Self-hosted fonts (subset latin) — elimina render-blocking de Google Fonts.
@@ -98,6 +98,9 @@ const socialTitle = ogTitle || title;
 const siteUrl = 'https://hacecuentas.com';
 // Cloudflare Pages sirve /foo.html en /foo — canonical sin .html para matchear sitemap
 const cleanPath = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/') || '/';
+// Defensa central para Auto Ads: estas pantallas no tienen contenido editorial
+// monetizable aunque una página olvide pasar noAds={true}.
+const effectiveNoAds = noAds || noindex || isAdsenseExcludedPath(cleanPath);
 const fullCanonical = canonical
   ? (canonical.startsWith('http') ? canonical : `${siteUrl}${canonical}`)
   : `${siteUrl}${cleanPath}`;
@@ -589,6 +592,18 @@ const globalSchema = {
         ad_personalization: 'denied',
         wait_for_update: 500
       });
+      // Override regional ANTES de cualquier config/ping: en EEE, UK y Suiza
+      // también Analytics queda denegado hasta una elección explícita.
+      gtag('consent', 'default', {
+        analytics_storage: 'denied',
+        functionality_storage: 'granted',
+        security_storage: 'granted',
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        region: ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO','GB','CH'],
+        wait_for_update: 500
+      });
       gtag('set', 'url_passthrough', true);
       gtag('set', 'ads_data_redaction', true);
       gtag('js', new Date());
@@ -628,7 +643,7 @@ const globalSchema = {
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-789KMTKWX2"></script>
 
     {/* Ezoic — display ads. Orden requerido por Ezoic: privacy scripts (CMP
-        gatekeeper, TCF 2.2) ANTES del header script. data-cfasync="false" evita
+        gatekeeper certificado con TCF vigente) ANTES del header script. data-cfasync="false" evita
         que Rocket Loader de CF los reordene. is:inline = Astro los deja verbatim.
         El Consent Mode default de GA4/Ads (arriba) NO se toca; el gatekeeper de
         Ezoic maneja el consent de la UE (ver src/lib/ezoic.ts). Kill-switch:
@@ -666,7 +681,7 @@ const globalSchema = {
         partner de mediación en el panel), así que cargarlo nosotros duplicaría
         y violaría policy. La verificación de cuenta (meta de arriba + línea en
         ads.txt) se mantiene SIEMPRE — Ezoic la necesita. */}
-    {ADSENSE_SERVING_ENABLED && !EZOIC_ENABLED && !noAds && (
+    {ADSENSE_SERVING_ENABLED && !EZOIC_ENABLED && !effectiveNoAds && (
       <script set:html={`window.addEventListener('load',function(){(window.requestIdleCallback||function(f){setTimeout(f,1500)})(function(){var s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6276944768601561';document.head.appendChild(s);});});`} />
     )}
 

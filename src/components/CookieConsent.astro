@@ -14,7 +14,7 @@ const COPY = {
     bannerAria: 'Aviso de cookies',
     title: 'Cookies y privacidad',
     text: 'Usamos cookies para medir el tráfico (Google Analytics) y mostrar publicidad relevante. Las cookies necesarias para que el sitio funcione siempre están activas. Podés aceptar todo, rechazar las opcionales o configurar tus preferencias.',
-    moreInfo: 'Más info', cookieList: 'Lista de cookies',
+    moreInfo: 'Más info', cookieList: 'Lista de cookies', googleData: 'Cómo Google usa los datos',
     reject: 'Solo necesarias', customize: 'Configurar', acceptAll: 'Aceptar todo',
     modalTitle: 'Configurar cookies', close: 'Cerrar',
     modalIntro: 'Elegí qué cookies querés permitir. Tu decisión se guarda en este dispositivo.',
@@ -31,7 +31,7 @@ const COPY = {
     bannerAria: 'Cookie notice',
     title: 'Cookies & privacy',
     text: 'We use cookies to measure traffic (Google Analytics) and show relevant ads. The cookies the site needs to work are always on. You can accept everything, reject the optional ones, or set your own preferences.',
-    moreInfo: 'Learn more', cookieList: 'Cookie list',
+    moreInfo: 'Learn more', cookieList: 'Cookie list', googleData: 'How Google uses data',
     reject: 'Essential only', customize: 'Customize', acceptAll: 'Accept all',
     modalTitle: 'Cookie settings', close: 'Close',
     modalIntro: 'Choose which cookies to allow. Your choice is saved on this device.',
@@ -48,7 +48,7 @@ const COPY = {
     bannerAria: 'Aviso de cookies',
     title: 'Cookies e privacidade',
     text: 'Usamos cookies para medir o tráfego (Google Analytics) e exibir publicidade relevante. Os cookies necessários para o site funcionar ficam sempre ativos. Você pode aceitar tudo, recusar os opcionais ou configurar suas preferências.',
-    moreInfo: 'Saiba mais', cookieList: 'Lista de cookies',
+    moreInfo: 'Saiba mais', cookieList: 'Lista de cookies', googleData: 'Como o Google usa os dados',
     reject: 'Somente necessários', customize: 'Configurar', acceptAll: 'Aceitar tudo',
     modalTitle: 'Configurar cookies', close: 'Fechar',
     modalIntro: 'Escolha quais cookies permitir. Sua decisão fica salva neste dispositivo.',
@@ -72,7 +72,8 @@ const t = COPY[lang] || COPY.es;
       <h2 class="hc-cb-title">{t.title}</h2>
       <p class="hc-cb-text">
         {t.text}
-        <a href="/privacidad">{t.moreInfo}</a> · <a href="/cookies">{t.cookieList}</a>
+        <a href="/privacidad">{t.moreInfo}</a> · <a href="/cookies">{t.cookieList}</a> ·
+        <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener noreferrer">{t.googleData}</a>
       </p>
       <div class="hc-cb-actions">
         <button type="button" class="hc-btn hc-btn-ghost" id="hc-cb-reject">{t.reject}</button>
@@ -135,8 +136,8 @@ const t = COPY[lang] || COPY.es;
   // EEA (27 UE) + EEA extra (IS, LI, NO) + UK + Suiza. Fuera de esta lista el banner
   // no se muestra y no se dispara ningún consent update, así que prevalece el default
   // granted del Layout (Argentina/LATAM no requieren opt-in bajo Ley 25.326 y LGPD).
-  // Cuando llegue AdSense: reemplazar este component por Google Funding Choices
-  // (certificado IAB TCF v2.2).
+  // Antes de servir AdSense: reemplazar este componente por Google Privacy &
+  // Messaging (CMP certificada e integrada con la versión TCF vigente).
   var REQUIRES_CONSENT = new Set([
     'AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT',
     'LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE',
@@ -232,7 +233,7 @@ const t = COPY[lang] || COPY.es;
   // Limpiar clave v1 vieja (usuarios legacy con analytics:false quedaban silenciados).
   try { localStorage.removeItem('hc-consent-v1'); } catch (e) {}
 
-  // Ezoic activo → su CMP gatekeeper (TCF 2.2 certificado) posee el consent de
+  // Ezoic activo → su CMP gatekeeper certificado posee el consent de
   // la UE. No auto-mostramos el banner casero ni disparamos consent update acá:
   // Ezoic maneja Consent Mode vía su integración (activar "Google Consent Mode"
   // en el panel). hcOpenCookieSettings ya quedó definido arriba por si el footer

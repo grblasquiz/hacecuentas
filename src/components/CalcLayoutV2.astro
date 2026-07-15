@@ -55,6 +55,7 @@ import { getRoomsForCalc } from '../lib/decisions/calc-backlinks';
 import converterTables from '../lib/converter-tables.json';
 import { hasValidProfessionalReviewer, isRestrictedCalc } from '../lib/content-policy';
 import { isBespokeTop } from '../lib/redesign-exclude';
+import { getCalculatorDisclaimer } from '../lib/disclaimers';
 import RestrictedNotice from './RestrictedNotice.astro';
 import DataAlertCta from './DataAlertCta.astro';
 import '../styles/calc-redesign.css';
@@ -201,7 +202,7 @@ const L = TRANSLATIONS[uiLang];
 const V3_COPY = {
   es: {
     howEyebrow: 'Rápida y transparente', howTitle: 'Cómo usar esta calculadora',
-    howLede: 'El cálculo principal primero. La explicación necesaria, inmediatamente después.',
+    howLede: 'Usá los pasos de esta herramienta y revisá debajo la fórmula, los supuestos y sus límites.',
     stepsTitle: 'Paso a paso', quickTitle: 'Respuesta rápida',
     infoChange: ['¿Querés cambiar algo?', 'Editá cualquier dato y volvé a calcular.'],
     infoInstant: ['Resultado al instante', 'Se recalcula en tu navegador, sin recargar la página.'],
@@ -210,7 +211,7 @@ const V3_COPY = {
   },
   en: {
     howEyebrow: 'Fast and transparent', howTitle: 'How to use this calculator',
-    howLede: 'The main result first. The explanation you need, right after.',
+    howLede: 'Follow this tool’s steps, then review its formula, assumptions, and limits below.',
     stepsTitle: 'Step by step', quickTitle: 'Quick answer',
     infoChange: ['Want to change something?', 'Edit any field and calculate again.'],
     infoInstant: ['Instant result', 'It recalculates in your browser, no page reload.'],
@@ -219,7 +220,7 @@ const V3_COPY = {
   },
   pt: {
     howEyebrow: 'Rápida e transparente', howTitle: 'Como usar esta calculadora',
-    howLede: 'O resultado principal primeiro. A explicação necessária, logo depois.',
+    howLede: 'Siga os passos da ferramenta e confira abaixo a fórmula, as premissas e os limites.',
     stepsTitle: 'Passo a passo', quickTitle: 'Resposta rápida',
     infoChange: ['Quer mudar algo?', 'Edite qualquer dado e calcule de novo.'],
     infoInstant: ['Resultado na hora', 'Recalcula no seu navegador, sem recarregar a página.'],
@@ -384,36 +385,12 @@ const journeyRelated = (journeySlugs.length ? journeySlugs : relatedSlugs).filte
 // math ($$…$$) o comandos LaTeX (\frac, \sqrt, etc.).
 const hasMath = calc.explanation && /(\$\$[^$]+\$\$|\\frac|\\sqrt|\\sum|\\times|\\cdot|\\int|\\pi|\\alpha|\\beta|\\theta|\\sigma)/.test(calc.explanation);
 
-// YMYL disclaimer
+// Aviso por riesgo real: comparte el clasificador del widget.
 const isYMYL = ['finanzas','salud','negocios','mascotas','familia','impuestos'].includes(calc.category);
 const _explLower = ((calc.explanation||'')+(calc.intro||'')+(calc.keyTakeaway||'')).toLowerCase();
 const _hasDisc = ['disclaimer','orientativ','no reemplaz','consultá con','consulta con','profesional matriculado','asesor financiero','contador público','profesional de la salud','no constituye asesoramiento','no sustituye'].some(k=>_explLower.includes(k));
-const _discByEs: Record<string,{who:string;verb:string}> = {
-  salud:{who:'médico, nutricionista o profesional de la salud matriculado',verb:'reemplazan la consulta médica profesional'},
-  mascotas:{who:'veterinario matriculado',verb:'reemplazan la consulta veterinaria'},
-  finanzas:{who:'asesor financiero registrado en la CNV o contador público matriculado',verb:'constituyen asesoramiento financiero individualizado'},
-  impuestos:{who:'contador público matriculado o asesor fiscal',verb:'constituyen asesoramiento tributario'},
-  negocios:{who:'contador público, abogado o asesor matriculado',verb:'constituyen asesoramiento profesional'},
-  familia:{who:'profesional matriculado del área correspondiente',verb:'reemplazan asesoramiento personalizado'},
-};
-const _discByEn: Record<string,{who:string;verb:string}> = {
-  salud:{who:'licensed physician, registered dietitian, or qualified healthcare professional',verb:'replace professional medical advice'},
-  mascotas:{who:'licensed veterinarian',verb:'replace veterinary advice'},
-  finanzas:{who:'licensed financial advisor or certified public accountant',verb:'constitute personalized financial advice'},
-  impuestos:{who:'certified public accountant or licensed tax advisor',verb:'constitute tax advice'},
-  negocios:{who:'accountant, attorney, or licensed business advisor',verb:'constitute professional advice'},
-  familia:{who:'licensed professional in the relevant field',verb:'replace personalized guidance'},
-};
-const _discByPt: Record<string,{who:string;verb:string}> = {
-  salud:{who:'médico, nutricionista ou profissional de saúde habilitado',verb:'substituem a consulta médica profissional'},
-  mascotas:{who:'veterinário habilitado',verb:'substituem a consulta veterinária'},
-  finanzas:{who:'assessor financeiro credenciado ou contador habilitado',verb:'constituem aconselhamento financeiro individualizado'},
-  impuestos:{who:'contador habilitado ou consultor tributário',verb:'constituem aconselhamento tributário'},
-  negocios:{who:'contador, advogado ou consultor habilitado',verb:'constituem aconselhamento profissional'},
-  familia:{who:'profissional habilitado da área correspondente',verb:'substituem orientação personalizada'},
-};
-const _disc = (uiLang === 'en' ? _discByEn : uiLang === 'pt' ? _discByPt : _discByEs)[calc.category];
-const showYmyl = isYMYL && !_hasDisc && !!_disc;
+const _disc = getCalculatorDisclaimer(calc, uiLang);
+const showYmyl = isYMYL && !_hasDisc;
 
 // ¿Qué pestañas tienen contenido? (las 4 son fijas, pero marcamos cuáles traen algo)
 const hasComoFunciona = !!(calc.explanation || (example && example.steps) || solvedExamples.length || calc.infographic?.src);
@@ -518,6 +495,7 @@ const editorialHtml = _isReviewed
       {/* Martín = autor/editor en TODA la web (nunca "revisor"). Sin distinción
           por categoría: ninguna calc debe decir "Fórmula revisada por Martín". */}
       <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Edited by' : 'Editado por'} <a href="/autores/martin-rodriguez" rel="author">Martín Rodríguez</a></li>
+      {!proReviewer && <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Formula verified by automated tests' : lang === 'pt' ? 'Fórmula verificada por testes automatizados' : 'Fórmula verificada con pruebas automatizadas'}</li>}
       {proReviewer && (
         <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Professional review by' : 'Revisión profesional por'} <a href={proReviewer.profileUrl} target="_blank" rel="noopener noreferrer">{proReviewer.name}</a>{proReviewerCred && <span>, {proReviewerCred}</span>}{proReviewedAtLabel && <span> · {proReviewedAtLabel}</span>}</li>
       )}
@@ -808,7 +786,7 @@ const editorialHtml = _isReviewed
       )}
 
       {showYmyl && _disc && (
-        <div class="v2-disclaimer"><strong>Disclaimer:</strong> {L.discPre} {_disc.verb}. {L.discPost} {_disc.who}.</div>
+        <div class="v2-disclaimer"><strong>Disclaimer:</strong> {_disc}</div>
       )}
 
       {!hasComoFunciona && <div class="v2-block"><p>{L.howFallback}</p></div>}
