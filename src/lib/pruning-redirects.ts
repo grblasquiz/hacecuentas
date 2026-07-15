@@ -195,6 +195,8 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/calculadora-capacidad-carga-camioneta-peso-util': '/categoria/automotor',
   '/calculadora-carga-maxima-columna-hormigon': '/categoria/construccion',
   '/calculadora-carga-semanal-running-regla-10': '/categoria/deportes',
+  // Zodiaco/numerologia: out of scope del sitio (mismo criterio que el bloque 2026-04-22 de _redirects)
+  '/calculadora-carta-natal-basica': '/categoria/vida',
   '/calculadora-cbc-uba-materias-regularidad-requisitos': '/categoria/educacion',
   '/calculadora-cemento-arena-hormigon-receta-metro-cubico': '/calculadora-cemento-arena-piedra-por-m3-hormigon',
   '/calculadora-cemento-arena-m3': '/calculadora-cemento-arena-piedra-por-m3-hormigon',
