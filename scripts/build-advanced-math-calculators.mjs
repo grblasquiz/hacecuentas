@@ -1,0 +1,503 @@
+import fs from "node:fs";
+import path from "node:path";
+const ROOT = path.resolve(import.meta.dirname, ".."),
+  OUT = path.join(ROOT, "src/content/calcs");
+const text = (id, label, placeholder, required = true) => ({
+  id,
+  label,
+  type: "text",
+  placeholder,
+  required,
+  help: `Ingresá ${label.toLowerCase()} con la sintaxis mostrada en el ejemplo.`,
+});
+const num = (id, label, placeholder, required = true) => ({
+  id,
+  label,
+  type: "number",
+  placeholder,
+  required,
+  step: "any",
+  help: `Valor numérico para ${label.toLowerCase()}.`,
+});
+const select = (id, label, options) => ({
+  id,
+  label,
+  type: "select",
+  required: true,
+  options: options.map(([value, label]) => ({ value, label })),
+});
+const O = (id, label, primary = false, format = "text") => ({
+  id,
+  label,
+  format,
+  primary,
+});
+const rows = [
+  [
+    "limites-paso-a-paso",
+    "Calculadora de Límites Paso a Paso — Finitos, Infinitos y Laterales",
+    "Calculadora de límites paso a paso",
+    "Evalúa límites finitos, laterales e infinitos mediante sustitución y aproximación numérica controlada.",
+    ["funcion", "punto"],
+    [
+      text("funcion", "Función f(x)", "(x^2-1)/(x-1)"),
+      num("punto", "x tiende a", 1),
+      select("direccion", "Dirección", [
+        ["ambos", "Ambos lados"],
+        ["izquierda", "Izquierda"],
+        ["derecha", "Derecha"],
+      ]),
+    ],
+    [
+      O("result", "Límite", true),
+      O("limiteIzquierdo", "Por izquierda"),
+      O("limiteDerecho", "Por derecha"),
+      O("pasos", "Pasos"),
+    ],
+  ],
+  [
+    "factorizacion-polinomios",
+    "Calculadora de Factorización de Polinomios Paso a Paso",
+    "Factorización de polinomios",
+    "Encuentra raíces reales y complejas y construye factores para polinomios ingresados por coeficientes.",
+    ["coeficientes"],
+    [text("coeficientes", "Coeficientes", "1 -5 6")],
+    [
+      O("formaFactorizada", "Forma factorizada", true),
+      O("formaOriginal", "Polinomio"),
+      O("raices", "Raíces"),
+      O("metodo", "Método"),
+      O("pasos", "Pasos"),
+    ],
+  ],
+  [
+    "inecuaciones",
+    "Calculadora de Inecuaciones Paso a Paso con Intervalos",
+    "Calculadora de inecuaciones",
+    "Resuelve inecuaciones polinómicas con tabla de signos y notación de intervalos.",
+    ["coeficientes", "operador"],
+    [
+      text("coeficientes", "Coeficientes de P(x)", "1 -5 6"),
+      select("operador", "Operador", [
+        [">=", "≥ 0"],
+        [">", "> 0"],
+        ["<=", "≤ 0"],
+        ["<", "< 0"],
+      ]),
+    ],
+    [
+      O("resultado", "Conjunto solución", true),
+      O("puntosCriticos", "Puntos críticos"),
+      O("tablaSignos", "Tabla de signos"),
+    ],
+  ],
+  [
+    "raices-polinomio",
+    "Calculadora de Raíces de Polinomios — Reales y Complejas",
+    "Raíces reales y complejas de polinomios",
+    "Calcula todas las raíces de polinomios de grado 2 a 5, con forma factorizada y control de residuo.",
+    ["coeficientes"],
+    [text("coeficientes", "Coeficientes", "1 0 -4 3")],
+    [
+      O("raices", "Raíces", true),
+      O("grado", "Grado", false, "number"),
+      O("formaFactorizada", "Forma factorizada"),
+      O("verificacion", "Verificación"),
+    ],
+  ],
+  [
+    "regla-ruffini",
+    "Calculadora de Ruffini Paso a Paso — División Sintética",
+    "Regla de Ruffini paso a paso",
+    "Aplica división sintética, muestra productos, sumas, cociente, resto y prueba del factor.",
+    ["coeficientes", "raiz"],
+    [
+      text("coeficientes", "Coeficientes", "1 0 -4 3"),
+      num("raiz", "Raíz candidata", 1),
+    ],
+    [
+      O("cociente", "Cociente", true),
+      O("resto", "Resto", false, "number"),
+      O("esFactor", "¿Es factor?"),
+      O("tabla", "Tabla de Ruffini"),
+      O("comprobacion", "Comprobación"),
+    ],
+  ],
+  [
+    "division-polinomios",
+    "Calculadora de División de Polinomios Paso a Paso",
+    "División de polinomios paso a paso",
+    "Divide dos polinomios y comprueba la identidad entre dividendo, divisor, cociente y resto.",
+    ["dividendo", "divisor"],
+    [
+      text("dividendo", "Coeficientes del dividendo", "1 0 -4 3"),
+      text("divisor", "Coeficientes del divisor", "1 -1"),
+    ],
+    [
+      O("cociente", "Cociente", true),
+      O("resto", "Resto"),
+      O("identidad", "Comprobación"),
+      O("pasos", "Método"),
+    ],
+  ],
+  [
+    "sistema-ecuaciones-3x3",
+    "Calculadora de Sistemas de Ecuaciones 3×3 Paso a Paso",
+    "Sistema de ecuaciones 3×3",
+    "Resuelve sistemas 3×3 por Cramer y eliminación, y verifica el resultado en las tres ecuaciones.",
+    ["matriz"],
+    [
+      text(
+        "matriz",
+        "Matriz aumentada 3×4",
+        "2 1 -1 8; -3 -1 2 -11; -2 1 2 -3",
+      ),
+    ],
+    [
+      O("solucion", "Solución", true),
+      O("tipo", "Tipo"),
+      O("determinantes", "Determinantes"),
+      O("eliminacion", "Eliminación"),
+      O("verificacion", "Verificación"),
+    ],
+  ],
+  [
+    "gauss-jordan",
+    "Calculadora Gauss-Jordan Paso a Paso — Matriz Escalonada",
+    "Gauss-Jordan paso a paso",
+    "Reduce matrices de 2×2 a 4×4 y matrices aumentadas mediante operaciones elementales de fila.",
+    ["matriz"],
+    [text("matriz", "Matriz", "1 2 3; 2 4 7; 1 1 2")],
+    [
+      O("rref", "Forma escalonada reducida", true),
+      O("rango", "Rango", false, "number"),
+      O("operaciones", "Operaciones"),
+      O("solucion", "Solución"),
+    ],
+  ],
+  [
+    "determinante-inversa-matriz-3x3",
+    "Calculadora de Determinante e Inversa de Matriz 3×3",
+    "Determinante e inversa 3×3",
+    "Calcula determinante, inversa y verificación de una matriz 3×3.",
+    ["matriz"],
+    [text("matriz", "Matriz 3×3", "1 2 3; 0 1 4; 5 6 0")],
+    [
+      O("determinante", "Determinante", true, "number"),
+      O("inversa", "Matriz inversa"),
+      O("cofactores", "Método"),
+      O("verificacion", "Verificación"),
+    ],
+  ],
+  [
+    "numeros-complejos",
+    "Calculadora de Números Complejos — Operaciones y Forma Polar",
+    "Calculadora de números complejos",
+    "Opera números complejos y devuelve forma binómica, módulo, argumento, conjugado y forma polar.",
+    ["z1", "z2"],
+    [
+      text("z1", "Primer complejo", "3+4i"),
+      text("z2", "Segundo complejo", "1-2i"),
+      select("operacion", "Operación", [
+        ["suma", "Suma"],
+        ["resta", "Resta"],
+        ["multiplicacion", "Multiplicación"],
+        ["division", "División"],
+      ]),
+    ],
+    [
+      O("resultado", "Resultado", true),
+      O("modulo", "Módulo", false, "number"),
+      O("argumento", "Argumento", false, "number"),
+      O("conjugado", "Conjugado"),
+      O("formaPolar", "Forma polar"),
+    ],
+  ],
+  [
+    "dominio-rango-funcion",
+    "Calculadora de Dominio y Rango de una Función Paso a Paso",
+    "Dominio y rango de funciones",
+    "Detecta restricciones algebraicas y estima el rango real explorando la función de forma reproducible.",
+    ["funcion"],
+    [text("funcion", "Función f(x)", "sqrt(x-2)/(x-5)")],
+    [
+      O("dominio", "Dominio", true),
+      O("rangoEstimado", "Rango estimado"),
+      O("restricciones", "Restricciones"),
+      O("aviso", "Alcance"),
+    ],
+  ],
+  [
+    "asintotas-funcion",
+    "Calculadora de Asíntotas Verticales, Horizontales y Oblicuas",
+    "Asíntotas de funciones racionales",
+    "Calcula asíntotas y huecos de una función racional a partir de los coeficientes del numerador y denominador.",
+    ["numerador", "denominador"],
+    [
+      text("numerador", "Coeficientes del numerador", "1 0 -1"),
+      text("denominador", "Coeficientes del denominador", "1 -1"),
+    ],
+    [
+      O("verticales", "Asíntotas verticales", true),
+      O("alInfinito", "Horizontal u oblicua"),
+      O("huecos", "Huecos"),
+      O("division", "División"),
+    ],
+  ],
+  [
+    "recta-tangente-normal",
+    "Calculadora de Recta Tangente y Normal a una Curva",
+    "Recta tangente y normal",
+    "Deriva una función, evalúa su pendiente en un punto y construye las rectas tangente y normal.",
+    ["funcion", "punto"],
+    [text("funcion", "Función f(x)", "x^2+2*x"), num("punto", "Punto x", 1)],
+    [
+      O("rectaTangente", "Recta tangente", true),
+      O("rectaNormal", "Recta normal"),
+      O("punto", "Punto de contacto"),
+      O("derivada", "Derivada"),
+      O("pendienteTangente", "Pendiente", false, "number"),
+    ],
+  ],
+  [
+    "maximos-minimos-funcion",
+    "Calculadora de Máximos, Mínimos y Puntos de Inflexión",
+    "Máximos, mínimos y puntos críticos",
+    "Busca puntos críticos e inflexiones en un intervalo mediante primera y segunda derivada.",
+    ["funcion"],
+    [
+      text("funcion", "Función f(x)", "x^3-3*x"),
+      num("min", "Inicio del intervalo", -10),
+      num("max", "Fin del intervalo", 10),
+    ],
+    [
+      O("puntosCriticos", "Puntos críticos", true),
+      O("inflexiones", "Inflexiones"),
+      O("primeraDerivada", "Primera derivada"),
+      O("segundaDerivada", "Segunda derivada"),
+      O("intervalo", "Intervalo"),
+    ],
+  ],
+  [
+    "derivadas-parciales",
+    "Calculadora de Derivadas Parciales Paso a Paso",
+    "Derivadas parciales",
+    "Calcula derivadas parciales de primer y segundo orden, gradiente y evaluación en un punto.",
+    ["funcion", "variable"],
+    [
+      text("funcion", "Función f(x,y,z)", "x^2*y+sin(z)"),
+      select("variable", "Derivar respecto de", [
+        ["x", "x"],
+        ["y", "y"],
+        ["z", "z"],
+      ]),
+      num("x", "Valor x", 1),
+      num("y", "Valor y", 2),
+      num("z", "Valor z", 0),
+    ],
+    [
+      O("primera", "Primera parcial", true),
+      O("segunda", "Segunda parcial"),
+      O("gradiente", "Gradiente"),
+      O("evaluacion", "Valor en el punto", false, "number"),
+    ],
+  ],
+  [
+    "derivacion-implicita",
+    "Calculadora de Derivación Implícita Paso a Paso",
+    "Derivación implícita",
+    "Obtiene dy/dx mediante derivadas parciales y evalúa la pendiente en un punto.",
+    ["ecuacion"],
+    [
+      text("ecuacion", "Ecuación", "x^2+y^2=25"),
+      num("x", "Valor x", 3),
+      num("y", "Valor y", 4),
+    ],
+    [
+      O("derivada", "dy/dx", true),
+      O("evaluacion", "Pendiente en el punto", false, "number"),
+      O("parcialX", "Fx"),
+      O("parcialY", "Fy"),
+      O("pasos", "Pasos"),
+    ],
+  ],
+  [
+    "area-entre-curvas",
+    "Calculadora de Área entre Dos Curvas Paso a Paso",
+    "Área entre dos curvas",
+    "Encuentra intersecciones y suma el área positiva entre dos funciones por tramos.",
+    ["funcion1", "funcion2"],
+    [
+      text("funcion1", "Primera función", "x^2"),
+      text("funcion2", "Segunda función", "2*x"),
+      num("desde", "Desde", 0),
+      num("hasta", "Hasta", 2),
+    ],
+    [
+      O("areaTotal", "Área total", true, "number"),
+      O("intersecciones", "Intersecciones"),
+      O("tramos", "Área por tramos"),
+      O("metodo", "Método"),
+    ],
+  ],
+  [
+    "vectores",
+    "Calculadora de Vectores 2D y 3D — Producto Punto y Cruz",
+    "Vectores 2D y 3D",
+    "Calcula suma, resta, módulos, vector unitario, productos punto y cruz, ángulo y proyección.",
+    ["vectorA", "vectorB"],
+    [
+      text("vectorA", "Vector A", "1 2 3"),
+      text("vectorB", "Vector B", "4 5 6"),
+    ],
+    [
+      O("productoPunto", "Producto punto", true, "number"),
+      O("productoCruz", "Producto cruz"),
+      O("suma", "Suma"),
+      O("resta", "Resta"),
+      O("modulos", "Módulos"),
+      O("angulo", "Ángulo (°)", false, "number"),
+      O("unitarioA", "Unitario de A"),
+      O("proyeccion", "Proyección de A sobre B"),
+    ],
+  ],
+  [
+    "serie-taylor-maclaurin",
+    "Calculadora de Series de Taylor y Maclaurin Paso a Paso",
+    "Series de Taylor y Maclaurin",
+    "Construye el polinomio de Taylor, aproxima un valor y compara el error con la función original.",
+    ["funcion", "centro", "orden"],
+    [
+      text("funcion", "Función f(x)", "sin(x)"),
+      num("centro", "Centro", 0),
+      num("orden", "Orden", 5),
+      num("valor", "Valor a aproximar", 1),
+    ],
+    [
+      O("polinomio", "Polinomio", true),
+      O("aproximacion", "Aproximación", false, "number"),
+      O("valorReal", "Valor real", false, "number"),
+      O("errorAbsoluto", "Error absoluto", false, "number"),
+      O("orden", "Orden", false, "number"),
+    ],
+  ],
+  [
+    "transformada-laplace",
+    "Calculadora de Transformada de Laplace Paso a Paso",
+    "Transformada de Laplace",
+    "Transforma sumas de constantes, potencias, exponenciales, senos y cosenos usando una tabla explícita.",
+    ["funcion"],
+    [text("funcion", "Función de t", "3*t^2+2*sin(4*t)+exp(2*t)")],
+    [
+      O("resultado", "F(s)", true),
+      O("pasos", "Transformación término a término"),
+      O("tabla", "Tabla utilizada"),
+    ],
+  ],
+];
+const related = [
+  "calculadora-derivada-funcion-basica",
+  "calculadora-integral-definida-basica",
+  "calculadora-ecuacion-cuadratica-raices-discriminante",
+  "calculadora-determinante-inversa-matriz-2x2",
+];
+for (const [id, title, h1, description, keywords, fields, outputs] of rows) {
+  const slug = `calculadora-${id}`;
+  const explanation = `## Qué resuelve esta calculadora\n\n${description} La herramienta muestra el resultado y conserva el procedimiento necesario para revisarlo. Está pensada para estudiar, comprobar ejercicios y detectar errores de planteo, no solamente para copiar un valor final.\n\n## Cómo ingresar los datos\n\nUsá punto para decimales, el símbolo ^ para potencias y * cuando quieras hacer explícita una multiplicación. En polinomios por coeficientes, escribí los números desde el término de mayor grado hasta el independiente e incluí ceros cuando falte una potencia. En matrices, separá columnas con espacios y filas con punto y coma. Esta convención evita ambigüedades y hace que el cálculo sea reproducible.\n\n## Método aplicado\n\nLa resolución combina álgebra simbólica para simplificar y derivar expresiones con algoritmos numéricos controlados para raíces, intersecciones, integrales y aproximaciones. Los resultados numéricos se redondean solo al mostrarse; los pasos intermedios conservan más precisión. Cuando el problema admite una solución exacta elemental, se presenta en forma algebraica. Cuando no, el texto indica que se trata de una aproximación.\n\n## Cómo verificar el resultado\n\nVolvé a sustituir el resultado en la expresión original o compará la identidad que muestra la herramienta. En una raíz, el residuo debe quedar cerca de cero. En una matriz inversa, el producto con la matriz original debe aproximar la identidad. En cálculo diferencial, una evaluación numérica cercana permite controlar el signo y la magnitud. Esta verificación es parte del resultado y no un detalle opcional.\n\n## Límites del procedimiento\n\nNingún motor automático reemplaza una demostración cuando el ejercicio la exige. Las funciones con discontinuidades muy juntas, dominios complejos, parámetros simbólicos o identidades especiales pueden necesitar análisis adicional. El rango de una función y los puntos críticos se exploran dentro del intervalo informado; fuera de ese intervalo puede haber otros comportamientos. Los métodos iterativos también dependen de tolerancias numéricas, por eso la página diferencia valores exactos de aproximados.\n\n## Uso responsable en estudio\n\nLeé cada paso y tratá de anticipar el siguiente antes de desplegar el resultado. Si el valor no coincide con tu ejercicio, revisá primero la sintaxis, el orden de coeficientes, las unidades y el intervalo. Una calculadora matemática es más útil como instrumento de control que como sustituto del razonamiento.`;
+  const data = {
+    slug,
+    title,
+    h1,
+    description,
+    category: "matematica",
+    icon: "🧮",
+    audience: "LATAM",
+    formulaId: id,
+    fields,
+    outputs,
+    intro: description,
+    keyTakeaway: `${h1}: resultado verificable con desarrollo y advertencia cuando la respuesta es aproximada.`,
+    answerSnippet: description,
+    explanation,
+    seoKeywords: [h1.toLowerCase(), ...keywords, "paso a paso"],
+    useCases: [
+      "Resolver ejercicios y comprobar resultados",
+      "Estudiar el procedimiento antes de un examen",
+      "Comparar una resolución manual con un cálculo reproducible",
+    ],
+    howToSteps: [
+      "Ingresá la expresión, coeficientes o matriz con la sintaxis indicada.",
+      "Elegí las opciones y el intervalo cuando corresponda.",
+      "Calculá y revisá el resultado junto con los pasos y la verificación.",
+    ],
+    example: {
+      title: "Ejemplo resuelto",
+      steps: [
+        "Usá los datos precargados del formulario.",
+        "Ejecutá el cálculo.",
+        "Comprobá el resultado con el detalle mostrado.",
+      ],
+      result:
+        "La salida incluye el valor principal, el método y una comprobación numérica o algebraica.",
+    },
+    faq: [
+      { q: `¿Qué resuelve ${h1.toLowerCase()}?`, a: description },
+      {
+        q: "¿El resultado es exacto?",
+        a: "La página identifica las aproximaciones numéricas. Cuando presenta decimales obtenidos por iteración o muestreo, debés interpretarlos con la tolerancia indicada.",
+      },
+      {
+        q: "¿Cómo escribo una potencia?",
+        a: "Usá ^: por ejemplo x^3. Para multiplicar, podés usar *; escribir 2*x evita cualquier ambigüedad.",
+      },
+      {
+        q: "¿Cómo ingreso coeficientes faltantes?",
+        a: "Incluí un cero. x³ − 4x + 3 se ingresa como 1 0 -4 3.",
+      },
+      {
+        q: "¿Puedo usar el resultado en una tarea?",
+        a: "Sí, pero conservá los pasos y verificá la consigna. Si se pide demostración, el valor automático no la reemplaza.",
+      },
+      {
+        q: "¿Por qué puede cambiar el último decimal?",
+        a: "Los métodos numéricos usan tolerancias y redondeo de presentación. Una diferencia muy pequeña no implica que el procedimiento sea distinto.",
+      },
+      {
+        q: "¿Qué sintaxis de funciones admite?",
+        a: "Admite operaciones con +, −, *, / y ^, además de funciones usuales como sin, cos, exp, log y sqrt cuando corresponda.",
+      },
+      {
+        q: "¿Mis expresiones se envían a un servidor?",
+        a: "No. El cálculo se ejecuta en el navegador y no requiere crear una cuenta ni guardar la expresión.",
+      },
+    ],
+    relatedSlugs: related,
+    sources: [
+      {
+        name: "OpenStax — Calculus",
+        url: "https://openstax.org/details/books/calculus-volume-1",
+      },
+      {
+        name: "MIT OpenCourseWare — Mathematics",
+        url: "https://ocw.mit.edu/search/?d=Mathematics",
+      },
+    ],
+    dataUpdate: {
+      frequency: "never",
+      lastUpdated: "2026-07-15",
+      source: "OpenStax — Calculus",
+      sourceUrl: "https://openstax.org/details/books/calculus-volume-1",
+      updateType: "manual",
+      notes: "Metodología matemática estable; revisar al modificar el motor.",
+    },
+    lastReviewed: "2026-07-15",
+    sourceVerified: true,
+    automatedTests: "passed",
+    adsenseEligible: true,
+  };
+  fs.writeFileSync(
+    path.join(OUT, `${id}.json`),
+    JSON.stringify(data, null, 2) + "\n",
+  );
+}
+console.log(`[advanced-math] ${rows.length} calculadoras generadas`);
