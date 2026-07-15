@@ -205,6 +205,9 @@ const wranglerPath = join(DIST_SERVER, 'wrangler.json');
 const wrangler = JSON.parse(readFileSync(wranglerPath, 'utf8'));
 const prevMain = wrangler.main;
 wrangler.main = 'wrapper.mjs';
+// @astrojs/cloudflare still emits this compatibility field, but Wrangler 4.111+
+// rejects it. Service environments already use the same behavior by default.
+delete wrangler.legacy_env;
 writeFileSync(wranglerPath, JSON.stringify(wrangler));
 
 console.log(
