@@ -898,6 +898,7 @@ sitemaps.push({
     core('/uy/validar-cedula',                   '0.8',  'monthly'),
     core('/ec/calculadoras',                     '0.85', 'weekly',  true),
     core('/ec/validar-cedula',                   '0.8',  'monthly'),
+    core('/ve',                                  '0.85', 'weekly',  true),
     core('/ve/calculadoras',                     '0.85', 'weekly',  true),
     core('/py/calculadoras',                     '0.85', 'weekly',  true),
     core('/uy/calculadoras',                     '0.85', 'weekly',  true),
