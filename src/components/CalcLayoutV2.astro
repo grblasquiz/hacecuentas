@@ -78,7 +78,8 @@ const linkPrefix = lang ? `/${lang}` : '';
 const P = (slug: string) => `${linkPrefix}/${slug}`;
 // Idioma de UI: los verticales hispanos usan 'es'; solo en/pt traducen.
 const uiLang: 'es' | 'en' | 'pt' = lang === 'en' ? 'en' : (lang === 'pt' || lang === 'pt-pt') ? 'pt' : 'es';
-const dateLocale = uiLang === 'en' ? 'en-US' : uiLang === 'pt' ? 'pt-BR' : 'es-AR';
+const isNeutralSpanish = uiLang === 'es' && Boolean(lang);
+const dateLocale = uiLang === 'en' ? 'en-US' : uiLang === 'pt' ? 'pt-BR' : ({ mx: 'es-MX', es: 'es-ES', co: 'es-CO', cl: 'es-CL', pe: 'es-PE', ec: 'es-EC', ve: 'es-VE', py: 'es-PY', uy: 'es-UY', do: 'es-DO' } as Record<string, string>)[lang] || 'es-AR';
 // Idioma del widget Calculator (solo es/en/pt; los verticales hispanos usan 'es').
 const calcWidgetLang = lang === 'en' ? 'en' : (lang === 'pt' || lang === 'pt-pt') ? 'pt' : 'es';
 // Locale para RelatedCalcs (bucket correcto): AR→'es' (=calcs/), España→'es-ES'
@@ -193,7 +194,16 @@ const TRANSLATIONS = {
     ariaBreadcrumb: 'Trilha de navegação', ariaSections: 'Seções', ariaQuick: 'Resposta rápida', ariaDirect: 'Resposta direta',
   },
 } as const;
-const L = TRANSLATIONS[uiLang];
+const baseL = TRANSLATIONS[uiLang];
+const L = isNeutralSpanish ? {
+  ...baseL,
+  guideEyebrow: '📘 ¿Quieres entender más a fondo?',
+  guideRead: 'Lee la guía:',
+  compareEyebrow: '¿Dudas entre opciones?',
+  introFallback: 'Completa los datos de arriba y obtén el resultado al instante. Debajo encontrarás cómo funciona el cálculo, ejemplos y preguntas frecuentes.',
+  howFallback: 'Esta calculadora aplica la fórmula directa sobre los datos que ingresas. Completa los valores para ver el resultado.',
+  restrictedTxt: 'Esta herramienta no entrega dosis, cantidades ni pautas individuales. Una recomendación personalizada depende de factores clínicos que sólo un profesional habilitado puede evaluar. Usa el aviso de arriba como guía y consulta con un profesional.',
+} : baseL;
 
 // ── Copy + datos del rediseño v3 (mockup) ───────────────────────────────────
 // Sección "Cómo usar" (Paso a paso + card oscura de respuesta rápida) y las 3
@@ -228,7 +238,14 @@ const V3_COPY = {
     fallbackSteps: ['Informe os dados', 'Toque no botão Calcular', 'Confira o resultado'],
   },
 } as const;
-const V3 = V3_COPY[uiLang];
+const baseV3 = V3_COPY[uiLang];
+const V3 = isNeutralSpanish ? {
+  ...baseV3,
+  howLede: 'Sigue los pasos de esta herramienta y revisa debajo la fórmula, los supuestos y sus límites.',
+  infoChange: ['¿Quieres cambiar algo?', 'Edita cualquier dato y calcula de nuevo.'],
+  infoMethod: ['Metodología', 'Consulta las fuentes y la fórmula en la pestaña de abajo.'],
+  fallbackSteps: ['Ingresa los datos', 'Toca el botón Calcular', 'Revisa el resultado'],
+} : baseV3;
 // Pasos: máx 3, desde howToSteps ({name,text} o string). Si no hay, genéricos.
 const v3RawSteps = (Array.isArray(calc.howToSteps) ? calc.howToSteps : [])
   .map((s: any) => (typeof s === 'string' ? { name: s } : s))
@@ -611,7 +628,7 @@ const editorialHtml = _isReviewed
       data-driven (reemplaza a la banda genérica retirada). Se auto-oculta si el
       usuario ya dejó su mail o cuando aparece la alerta personalizada del
       widget (alert-capture post-resultado). */}
-  {showDataAlert && <DataAlertCta slug={calc.slug} dataUpdate={calc.dataUpdate} />}
+  {showDataAlert && <DataAlertCta slug={calc.slug} dataUpdate={calc.dataUpdate} neutralSpanish={isNeutralSpanish} />}
 
   <!-- Oferta contextual (se revela post-resultado) -->
   {contextualOffer && <SponsoredOffer offer={contextualOffer} slug={calc.slug} />}
@@ -916,8 +933,8 @@ const editorialHtml = _isReviewed
   {pillarGuideSlug && pillarGuideTitle && (
     <aside class="v2-guide">
       <div class="gc-text">
-        <span class="eb">📘 ¿Querés entender más a fondo?</span>
-        <strong>Leé la guía: {pillarGuideTitle}</strong>
+        <span class="eb">{isNeutralSpanish ? '📘 ¿Quieres entender más a fondo?' : '📘 ¿Querés entender más a fondo?'}</span>
+        <strong>{isNeutralSpanish ? 'Lee la guía:' : 'Leé la guía:'} {pillarGuideTitle}</strong>
         <span class="gd">Contexto, conceptos y cómo combinar calculadoras del tema.</span>
       </div>
       <a class="gb" href={`/guia/${pillarGuideSlug}`}>{L.guideOpen}</a>

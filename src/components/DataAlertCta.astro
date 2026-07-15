@@ -24,8 +24,9 @@ interface Props {
   slug: string;
   /** dataUpdate del JSON del calc (source, frequency, …) — solo para el copy. */
   dataUpdate?: { source?: string; frequency?: string } | null;
+  neutralSpanish?: boolean;
 }
-const { slug, dataUpdate = null } = Astro.props as Props;
+const { slug, dataUpdate = null, neutralSpanish = false } = Astro.props as Props;
 
 // Qué dato es y quién lo publica, por patrón de slug (las familias de datos
 // vivos del sitio). Fallback: la fuente declarada en dataUpdate.source.
@@ -44,21 +45,23 @@ const TOPICS: Array<{ re: RegExp; what: string; who: string }> = [
 const hit = TOPICS.find((t) => t.re.test(slug));
 const who = hit?.who || dataUpdate?.source || 'la fuente oficial';
 const what = hit?.what || 'el dato nuevo que usa esta calculadora';
-const lead = `Te mandamos un solo mail cuando ${who} publique ${what}. Nada más.`;
+const lead = neutralSpanish
+  ? `Te enviaremos un solo email cuando ${who} publique ${what}. Nada más.`
+  : `Te mandamos un solo mail cuando ${who} publique ${what}. Nada más.`;
 ---
 
-<section class="dac" data-nosnippet data-slug={slug} aria-labelledby="dac-h">
+<section class="dac" data-nosnippet data-slug={slug} data-spanish-variant={neutralSpanish ? 'neutral' : 'ar'} aria-labelledby="dac-h">
   <div class="dac-txt">
-    <p class="dac-h" id="dac-h"><span aria-hidden="true">🔔</span> <strong>Avisame cuando cambie este dato</strong></p>
+    <p class="dac-h" id="dac-h"><span aria-hidden="true">🔔</span> <strong>{neutralSpanish ? 'Avísame cuando cambie este dato' : 'Avisame cuando cambie este dato'}</strong></p>
     <p class="dac-lead">{lead}</p>
   </div>
   <form class="dac-form" data-dac-form novalidate>
     <label class="dac-vh" for="dac-email">Email</label>
     <input type="email" id="dac-email" name="email" placeholder="tu@email.com" required autocomplete="email" inputmode="email" enterkeyhint="send" data-dac-input />
-    <button type="submit" class="dac-btn" data-dac-btn>Avisame</button>
+    <button type="submit" class="dac-btn" data-dac-btn>{neutralSpanish ? 'Avísame' : 'Avisame'}</button>
     <p class="dac-msg" data-dac-msg role="status" aria-live="polite" hidden></p>
   </form>
-  <p class="dac-note">Gratis · Sin spam · Salís con un click</p>
+  <p class="dac-note">{neutralSpanish ? 'Gratis · Sin spam · Cancela con un clic' : 'Gratis · Sin spam · Salís con un click'}</p>
 </section>
 
 <style>
@@ -107,6 +110,7 @@ const lead = `Te mandamos un solo mail cuando ${who} publique ${what}. Nada más
       if (!form || form.dataset.dacReady === '1') return;
       form.dataset.dacReady = '1';
       var slug = card.dataset.slug || '';
+      var neutralSpanish = card.dataset.spanishVariant === 'neutral';
       var subscribedHere = false;
 
       // hcTrack = shim global (Layout) con whitelist. Reusamos los eventos de la
@@ -145,7 +149,7 @@ const lead = `Te mandamos un solo mail cuando ${who} publique ${what}. Nada más
       form.addEventListener('submit', async function (e) {
         e.preventDefault();
         var email = input ? input.value.trim() : '';
-        if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) { show('Ingresá un email válido.', 'err'); return; }
+        if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) { show(neutralSpanish ? 'Ingresa un email válido.' : 'Ingresá un email válido.', 'err'); return; }
         if (btn) btn.disabled = true;
         show('Guardando…', '');
         try {
@@ -157,7 +161,7 @@ const lead = `Te mandamos un solo mail cuando ${who} publique ${what}. Nada más
           });
           if (res.ok) {
             subscribedHere = true;
-            show('¡Listo! Te avisamos apenas se publique el dato nuevo.', 'ok');
+            show(neutralSpanish ? '¡Listo! Te avisaremos cuando se publique el dato nuevo.' : '¡Listo! Te avisamos apenas se publique el dato nuevo.', 'ok');
             if (input) input.value = '';
             if (btn) btn.hidden = true;
             markSubscribed();
@@ -168,9 +172,9 @@ const lead = `Te mandamos un solo mail cuando ${who} publique ${what}. Nada más
             if (typeof window.gtag === 'function') window.gtag('event', 'data_alert_subscribe', { calc_slug: slug });
           } else {
             var j = await res.json().catch(function () { return {}; });
-            show((j && j.error) || 'No se pudo guardar, probá en un rato.', 'err');
+            show((j && j.error) || (neutralSpanish ? 'No se pudo guardar. Intenta de nuevo en un momento.' : 'No se pudo guardar, probá en un rato.'), 'err');
           }
-        } catch (err) { show('Error de red. Revisá tu conexión.', 'err'); }
+        } catch (err) { show(neutralSpanish ? 'Error de red. Revisa tu conexión.' : 'Error de red. Revisá tu conexión.', 'err'); }
         finally { if (btn && !btn.hidden) btn.disabled = false; }
       });
     });
