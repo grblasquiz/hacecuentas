@@ -12,6 +12,7 @@ import { primaryHubOf } from '../../lib/decisions/hubs';
 import { relatedRooms } from '../../lib/decisions/related';
 import { equivalentsByEsSlug } from '../../lib/decisions/locales';
 import { buildHreflangCluster } from '../../lib/hreflang';
+import { getPriorityDecision } from '../../lib/decisions/priority';
 
 export async function getStaticPaths() {
   return DECISION_LIST.map((room) => ({
@@ -22,6 +23,9 @@ export async function getStaticPaths() {
 
 const { slug } = Astro.props;
 const room = getRoom(slug)!;
+const priority = getPriorityDecision(room.slug);
+const pageTitle = priority?.seoTitle ?? room.title;
+const pageDescription = priority?.seoDescription ?? room.description;
 
 const site = 'https://hacecuentas.com';
 const url = `${site}/decidir/${room.slug}`;
@@ -96,7 +100,7 @@ const schemaGraph: any[] = [
   {
     '@type': ['WebApplication', 'SoftwareApplication'],
     name: room.h1,
-    description: room.description,
+    description: pageDescription,
     url,
     mainEntityOfPage: url,
     applicationCategory: 'FinanceApplication',
@@ -171,8 +175,8 @@ const howItWorksHtml = md(room.howItWorks);
 ---
 
 <Layout
-  title={room.title}
-  description={room.description}
+  title={pageTitle}
+  description={pageDescription}
   schema={schema}
   audience="AR"
   hreflang={hreflang}
@@ -200,9 +204,9 @@ const howItWorksHtml = md(room.howItWorks);
         </nav>
         <div class="dr-hero-grid">
           <div class="dr-hero-copy">
-            <span class="dr-eyebrow">🧭 Sala de decisión{hub ? ` · ${hub.shortLabel}` : ''}</span>
+            <span class="dr-eyebrow">🧭 {priority ? 'Sala esencial' : 'Sala de decisión'}{hub ? ` · ${hub.shortLabel}` : ''}</span>
             <h1>{room.icon} {room.h1}</h1>
-            <p class="dr-hero-lead">{room.description}</p>
+            <p class="dr-hero-lead">{pageDescription}</p>
             <div class="dr-hero-trust">
               <span><b>✓</b> Compara costos totales</span>
               <span><b>✓</b> Datos y supuestos vigentes 2026</span>
@@ -221,6 +225,15 @@ const howItWorksHtml = md(room.howItWorks);
     </header>
 
     <div class="dr-body">
+    {priority && (
+      <section class="dr-search-answer" aria-labelledby="respuesta-corta">
+        <div>
+          <span class="dr-search-answer-label">Respuesta corta</span>
+          <h2 id="respuesta-corta">{priority.questionTitle}</h2>
+        </div>
+        <p>{priority.searchAnswer}</p>
+      </section>
+    )}
     <DecisionRoom room={room} initialResult={initialResult} />
 
     <section class="dr-section" id="como-funciona">
@@ -313,6 +326,23 @@ const howItWorksHtml = md(room.howItWorks);
         </ul>
       </section>
     )}
+
+    {priority && (
+      <aside class="dr-editorial-proof" aria-label="Autoría y metodología">
+        <div>
+          <strong>Herramienta y análisis de Hacé Cuentas</strong>
+          <p>
+            Contenido editado por <a href="/autores/martin-rodriguez">Martín Rodríguez</a>.
+            La fórmula, los supuestos y las limitaciones están publicados para que puedas revisar cómo se llega al resultado.
+          </p>
+        </div>
+        <nav aria-label="Confianza editorial">
+          <a href="/metodologia">Metodología</a>
+          {(room.sources?.length ?? 0) > 0 && <a href="#fuentes">{room.sources.length} fuentes</a>}
+          <span>Revisado {lastReviewedLabel}</span>
+        </nav>
+      </aside>
+    )}
     </div><!-- /.dr-body -->
   </main>
 
@@ -358,6 +388,44 @@ const howItWorksHtml = md(room.howItWorks);
   }
   .dr-hero-lead { margin: 0 0 1.1rem; font-size: 1.0625rem; line-height: 1.55; color: #c7cadd; max-width: 60ch; }
   .dr-hero-trust { display: flex; flex-wrap: wrap; gap: 16px; font-size: 0.8125rem; font-weight: 600; color: #aeb3c8; }
+
+  .dr-search-answer {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 1.5rem;
+    align-items: start;
+    padding: 1.35rem 1.5rem;
+    border: 1px solid #cfd8f3;
+    border-left: 4px solid #4f5ee9;
+    border-radius: 14px;
+    background: #f7f8ff;
+  }
+  .dr-search-answer-label { color: #4050cf; font-size: 0.75rem; font-weight: 850; letter-spacing: 0.06em; text-transform: uppercase; }
+  .dr-search-answer h2 { margin: 0.35rem 0 0; font-size: 1.25rem; line-height: 1.25; color: #171c3b; }
+  .dr-search-answer p { margin: 0; color: #3f4763; line-height: 1.65; }
+
+  .dr-editorial-proof {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    align-items: flex-start;
+    padding: 1.25rem 1.4rem;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--bg-card, #fff);
+  }
+  .dr-editorial-proof strong { color: var(--text); }
+  .dr-editorial-proof p { margin: 0.35rem 0 0; max-width: 65ch; color: var(--text-2, #5b6478); line-height: 1.55; }
+  .dr-editorial-proof nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.55rem; font-size: 0.8rem; }
+  .dr-editorial-proof nav > * { white-space: nowrap; padding: 0.35rem 0.55rem; border-radius: 999px; background: #f1f3f8; color: #394361; }
+  .dr-editorial-proof a { font-weight: 700; text-decoration: none; }
+  .dr-editorial-proof a:hover { text-decoration: underline; }
+
+  @media (max-width: 720px) {
+    .dr-search-answer { grid-template-columns: 1fr; gap: 0.75rem; padding: 1.1rem; }
+    .dr-editorial-proof { flex-direction: column; }
+    .dr-editorial-proof nav { justify-content: flex-start; }
+  }
   .dr-hero-trust span { display: inline-flex; align-items: center; gap: 6px; }
   .dr-hero-trust b { color: #39d98a; }
   .dr-idea {

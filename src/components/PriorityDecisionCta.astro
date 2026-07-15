@@ -1,0 +1,85 @@
+---
+interface Props {
+  roomSlug: string;
+  title: string;
+  description: string;
+  sourcePage: string;
+  label?: string;
+}
+
+const {
+  roomSlug,
+  title,
+  description,
+  sourcePage,
+  label = 'Abrir la sala y tomar la decisión →',
+} = Astro.props;
+---
+
+<aside
+  class="pdc"
+  data-priority-decision-cta
+  data-room-slug={roomSlug}
+  data-source-page={sourcePage}
+  aria-labelledby={`pdc-${roomSlug}`}
+>
+  <span class="pdc__icon" aria-hidden="true">🧭</span>
+  <div class="pdc__body">
+    <span class="pdc__eyebrow">Siguiente decisión</span>
+    <h2 id={`pdc-${roomSlug}`}>{title}</h2>
+    <p>{description}</p>
+  </div>
+  <a href={`/decidir/${roomSlug}?from=${sourcePage}`} data-decision-room>{label}</a>
+</aside>
+
+<script>
+  function wirePriorityDecisionCtas() {
+    const cards = document.querySelectorAll('[data-priority-decision-cta]:not([data-pdc-wired])');
+    cards.forEach((node) => {
+      const card = node as HTMLElement;
+      card.dataset.pdcWired = '1';
+      const target_slug = card.dataset.roomSlug || '';
+      const source_page = card.dataset.sourcePage || '';
+      const send = (name: string) => {
+        if (typeof (window as any).hcTrack === 'function') {
+          (window as any).hcTrack(name, { target_slug, source_page });
+        }
+      };
+      card.querySelector('[data-decision-room]')?.addEventListener('click', () => send('hc_decision_room_clicked'));
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+          if (!entries.some((entry) => entry.isIntersecting)) return;
+          observer.disconnect();
+          send('hc_decision_room_impression');
+        }, { threshold: 0.35 });
+        observer.observe(card);
+      }
+    });
+  }
+  wirePriorityDecisionCtas();
+  document.addEventListener('astro:page-load', wirePriorityDecisionCtas);
+</script>
+
+<style>
+  .pdc {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 1rem;
+    align-items: center;
+    margin: 1.25rem 0 2rem;
+    padding: 1.15rem 1.25rem;
+    border: 1px solid color-mix(in srgb, var(--cf-accent, #4f5ee9) 25%, #dfe3ef);
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--cf-accent, #4f5ee9) 5%, #fff);
+  }
+  .pdc__icon { font-size: 1.7rem; }
+  .pdc__eyebrow { color: var(--cf-accent, #4655d8); font-size: 0.72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+  .pdc h2 { margin: .2rem 0 .3rem; color: #17213b; font-size: 1.15rem; line-height: 1.3; }
+  .pdc p { margin: 0; color: #5c667d; font-size: .9rem; line-height: 1.5; }
+  .pdc a { padding: .75rem .9rem; border-radius: 10px; background: var(--cf-accent, #4655d8); color: #fff; font-size: .88rem; font-weight: 750; text-align: center; text-decoration: none; white-space: nowrap; }
+  .pdc a:hover { filter: brightness(1.06); }
+  @media (max-width: 720px) {
+    .pdc { grid-template-columns: auto minmax(0, 1fr); }
+    .pdc a { grid-column: 1 / -1; white-space: normal; }
+  }
+</style>

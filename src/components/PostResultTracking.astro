@@ -8,6 +8,7 @@
  * Centraliza el tracking en un solo lugar (no scatter por componente). Emite:
  *   · hc_scenario_viewed        — se revelaron los escenarios dinámicos
  *   · hc_next_step_clicked      — click en "seguí calculando" / próximo paso
+ *   · hc_decision_room_impression — CTA de sala visible después de calcular
  *   · hc_decision_room_clicked  — click en el CTA a la sala de decisión
  *   · hc_post_result_scroll     — el usuario scrolleó a la zona post-resultado
  *   · hc_post_result_interaction — META: primera acción post-resultado (una vez
@@ -30,6 +31,7 @@ const { slug, category } = Astro.props;
 
     var interacted = false;    // meta: una vez por cálculo
     var scenariosSeen = false;
+    var roomImpressionSeen = false;
     var scrollSeen = false;
     var observer = null;
     var nextBox = document.querySelector('[data-next-box]');
@@ -44,7 +46,7 @@ const { slug, category } = Astro.props;
       var detail = ev && ev.detail ? ev.detail : null;
       if (!detail || !detail.output) return;
       // Reset por cada nuevo cálculo (el usuario puede recalcular varias veces).
-      interacted = false; scenariosSeen = false; scrollSeen = false;
+      interacted = false; scenariosSeen = false; roomImpressionSeen = false; scrollSeen = false;
 
       // Escenarios dinámicos: Calculator los revela síncrono tras el resultado.
       setTimeout(function () {
@@ -52,6 +54,14 @@ const { slug, category } = Astro.props;
         if (sc && !sc.hidden && !scenariosSeen) {
           scenariosSeen = true;
           track('hc_scenario_viewed', p());
+        }
+        var roomCta = document.querySelector('[data-prd]:not([hidden]) [data-decision-room]');
+        if (roomCta && !roomImpressionSeen) {
+          roomImpressionSeen = true;
+          track('hc_decision_room_impression', p({
+            target_slug: roomCta.getAttribute('data-room-slug') || '',
+            source_page: 'post_result'
+          }));
         }
       }, 80);
 
@@ -79,8 +89,12 @@ const { slug, category } = Astro.props;
       var node = ev.target;
       if (!node || !node.closest) return;
       // 1) CTA a la sala de decisión (tiene prioridad; también vive en next-box).
-      if (node.closest('[data-decision-room]')) {
-        track('hc_decision_room_clicked', p());
+      var roomLink = node.closest('[data-decision-room]');
+      if (roomLink) {
+        track('hc_decision_room_clicked', p({
+          target_slug: roomLink.getAttribute('data-room-slug') || '',
+          source_page: roomLink.closest('[data-prd]') ? 'post_result' : 'calc_guide'
+        }));
         meta('decision_room');
         return;
       }

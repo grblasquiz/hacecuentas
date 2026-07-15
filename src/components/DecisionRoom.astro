@@ -315,6 +315,19 @@ const STATUS_BADGE: Record<DecisionResult['status'], string> = {
       } catch {}
     }
 
+    // Vista de sala y procedencia. Solo aceptamos un slug técnico en `from`:
+    // nunca enviamos valores financieros ni el querystring completo a GA4.
+    try {
+      const rawFrom = new URLSearchParams(location.search).get('from') || '';
+      const safeFrom = /^[a-z0-9-]{1,100}$/.test(rawFrom) ? rawFrom : '';
+      track('decision_view', {
+        source_page: safeFrom ? 'calculator' : 'direct',
+        from_calc: safeFrom,
+      });
+    } catch {
+      track('decision_view', { source_page: 'direct' });
+    }
+
     // — Estado del funnel —
     const isWizard = !!form?.hasAttribute('data-wizard');
     const panels = form ? (Array.from(form.querySelectorAll('[data-dr-step]')) as HTMLElement[]) : [];

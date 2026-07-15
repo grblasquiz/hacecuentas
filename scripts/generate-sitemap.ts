@@ -30,6 +30,7 @@ import { PRUNING_REDIRECTS } from '../src/lib/pruning-redirects.ts';
 import { DECISION_MANIFEST } from '../src/lib/decisions/manifest.ts';
 import { DECISION_MANIFEST_LOCALES } from '../src/lib/decisions/manifest-locales.ts';
 import { DECISION_HUBS } from '../src/lib/decisions/hubs.ts';
+import { PRIORITY_DECISIONS } from '../src/lib/decisions/priority.ts';
 import { PRODUCTS } from '../src/lib/products/manifest.ts';
 
 const PRUNED_SLUGS = new Set(Object.keys(PRUNING_REDIRECTS).map((p) => p.replace(/^\//, '')));
@@ -613,6 +614,19 @@ const priorityUrls: Url[] = [
   prio('/guia/estimar-materiales-construccion-sin-comprar-de-mas', '0.85', 'monthly'),
   prio('/guia/fondo-emergencia-como-calcular',                   '0.85', 'monthly'),
 ];
+// Salas P0: una cohorte chica y estable para concentrar descubrimiento. El
+// lastmod viene de la revisión editorial real de cada sala, nunca del deploy.
+const priorityDecisionMeta = new Map(DECISION_MANIFEST.map((room) => [room.slug, room]));
+for (const decision of PRIORITY_DECISIONS) {
+  const room = priorityDecisionMeta.get(decision.slug);
+  if (!room) throw new Error(`Sala P0 sin manifest: ${decision.slug}`);
+  priorityUrls.push({
+    loc: `${site}/decidir/${decision.slug}`,
+    priority: '0.95',
+    changefreq: 'weekly',
+    lastmod: clampToToday(room.lastReviewed),
+  });
+}
 // Top categorías (las más grandes) — estable salvo deploys del template de categoría
 for (const cat of ['finanzas', 'vida', 'salud', 'educacion', 'mascotas', 'matematica', 'cocina', 'deportes', 'tecnologia', 'viajes', 'construccion', 'marketing', 'negocios', 'ciencia', 'automotor', 'familia', 'idiomas', 'jardineria', 'electronica', 'entretenimiento']) {
   priorityUrls.push(prio(`/categoria/${cat}`, '0.85', 'weekly'));
@@ -795,7 +809,7 @@ for (const { c } of autoTopPriority) {
     lastmod: getCalcLastMod(c, fp, buildDate),
   });
 }
-console.log(`📌 sitemap-priority.xml: ${topPrioritySlugs.length} curated + ${autoTopPriority.length} auto-completeness`);
+console.log(`📌 sitemap-priority.xml: ${PRIORITY_DECISIONS.length} salas P0 + ${topPrioritySlugs.length} curated + ${autoTopPriority.length} auto-completeness`);
 
 sitemaps.push({ name: 'sitemap-priority.xml', urls: priorityUrls });
 

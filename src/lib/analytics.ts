@@ -46,6 +46,7 @@ export const HC_EVENTS = [
   // Post-resultado (segunda acción) — mide post_result_interaction_rate
   'hc_scenario_viewed',
   'hc_next_step_clicked',
+  'hc_decision_room_impression',
   'hc_decision_room_clicked',
   'hc_post_result_scroll',
   'hc_post_result_interaction',

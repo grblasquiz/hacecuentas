@@ -8,6 +8,7 @@ import { DECISION_MANIFEST } from '../../lib/decisions/manifest';
 import { DECISION_HUBS, INDEX_EXTRA_GROUPS } from '../../lib/decisions/hubs';
 import { DECISION_COUNTRY_LIST } from '../../lib/decisions/locales';
 import { buildHreflangCluster } from '../../lib/hreflang';
+import { PRIORITY_DECISIONS } from '../../lib/decisions/priority';
 
 // Cluster hreflang de los índices de salas: AR raíz + verticales país.
 const hreflang = buildHreflangCluster({
@@ -24,11 +25,15 @@ const description =
   'No son calculadoras sueltas: son experiencias completas para decisiones de plata importantes. Cargás tus datos una vez y combinamos varias fórmulas para darte una conclusión clara, escenarios y próximos pasos.';
 
 const bySlug = new Map(DECISION_MANIFEST.map((r) => [r.slug, r]));
+const priorityRooms = PRIORITY_DECISIONS
+  .map((item) => bySlug.get(item.slug))
+  .filter((room): room is NonNullable<typeof room> => Boolean(room));
+const prioritySlugSet = new Set(PRIORITY_DECISIONS.map((item) => item.slug));
 
 // Índice agrupado: cada sala aparece UNA vez, bajo su hub primario (el primero
 // de DECISION_HUBS que la contiene; los hubs pueden solaparse entre sí, el
 // índice no). Después, los grupos sin hub propio (auto/familia/ahorro).
-const seen = new Set<string>();
+const seen = new Set<string>(prioritySlugSet);
 const hubSections = DECISION_HUBS.map((hub) => {
   const rooms = hub.roomSlugs
     .filter((s) => !seen.has(s) && bySlug.has(s))
@@ -63,7 +68,7 @@ const schema = {
     },
     {
       '@type': 'ItemList',
-      itemListElement: DECISION_MANIFEST.map((r, i) => ({
+      itemListElement: [...priorityRooms, ...DECISION_MANIFEST.filter((r) => !prioritySlugSet.has(r.slug))].map((r, i) => ({
         '@type': 'ListItem',
         position: i + 1,
         url: `${site}/decidir/${r.slug}`,
@@ -92,6 +97,27 @@ const schema = {
         ))}
       </nav>
     </header>
+
+    <section class="dh-group dh-priority" aria-labelledby="dh-priority-title">
+      <div class="dh-group-head">
+        <div>
+          <span class="dh-priority-label">Empezá por acá</span>
+          <h2 id="dh-priority-title">Las 10 decisiones esenciales</h2>
+        </div>
+      </div>
+      <ul class="dh-grid">
+        {priorityRooms.map((r) => (
+          <li>
+            <a href={`/decidir/${r.slug}`} class="dh-card" data-priority-room data-room-slug={r.slug}>
+              <span class="dh-icon" aria-hidden="true">{r.icon}</span>
+              <span class="dh-card-title">{r.h1}</span>
+              <span class="dh-card-desc">{r.description}</span>
+              <span class="dh-card-cta">Abrir la sala →</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
 
     {hubSections.map(({ hub, rooms }) => (
       <section class="dh-group">
@@ -178,6 +204,16 @@ const schema = {
 
   <Footer slot="footer" />
 </Layout>
+
+<script>
+  document.querySelectorAll('[data-priority-room]').forEach((node) => {
+    const card = node as HTMLElement;
+    const target_slug = card.dataset.roomSlug || '';
+    card.addEventListener('click', () => {
+      if (typeof (window as any).hcTrack === 'function') (window as any).hcTrack('hc_decision_room_clicked', { source_page: 'decision_hub', target_slug });
+    });
+  });
+</script>
 
 <style>
   .dh {
@@ -289,6 +325,8 @@ const schema = {
     text-decoration: none;
     transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s;
   }
+  .dh-priority { padding: 1rem; border: 1px solid #cfd8f3; border-radius: 18px; background: #f7f8ff; }
+  .dh-priority-label { display: block; margin-bottom: .25rem; color: #4050cf; font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
   .dh-card:hover {
     border-color: var(--accent);
     transform: translateY(-2px);

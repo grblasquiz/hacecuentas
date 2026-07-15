@@ -16,7 +16,7 @@ describe('catálogo de eventos', () => {
       'hc_calculator_success', 'hc_calculator_abandoned', 'hc_calculator_validation_error', 'hc_calculator_runtime_error',
       'hc_result_copy', 'hc_result_share', 'hc_result_save', 'hc_result_email_open',
       'hc_result_email_sent', 'hc_formula_expanded', 'hc_related_calculator_clicked',
-      'hc_scenario_viewed', 'hc_next_step_clicked', 'hc_decision_room_clicked',
+      'hc_scenario_viewed', 'hc_next_step_clicked', 'hc_decision_room_clicked', 'hc_decision_room_impression',
       'hc_post_result_scroll', 'hc_post_result_interaction',
       'hc_email_band_view', 'hc_email_band_focus', 'hc_email_band_signup',
       'hc_feedback_positive', 'hc_feedback_negative', 'hc_recent_calculator_opened',

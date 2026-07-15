@@ -52,6 +52,7 @@ import { getOfferForCalc } from '../lib/offers';
 import { resolveGuideSlug, GUIDE_TITLES } from '../lib/category-guide-map';
 import { getJourneySteps } from '../lib/journeys';
 import { getRoomsForCalc } from '../lib/decisions/calc-backlinks';
+import { getPriorityDecisionCta, sortDecisionLinksByPriority } from '../lib/decisions/priority';
 import converterTables from '../lib/converter-tables.json';
 import { hasValidProfessionalReviewer, isRestrictedCalc } from '../lib/content-policy';
 import { isBespokeTop } from '../lib/redesign-exclude';
@@ -87,7 +88,11 @@ const calcWidgetLang = lang === 'en' ? 'en' : (lang === 'pt' || lang === 'pt-pt'
 const relatedLang = !lang ? 'es' : (lang === 'es' ? 'es-ES' : lang);
 // Salas de decisión que usan esta calc como componente (AR y verticales con
 // salas propias; el resto devuelve []). Máx 2 para no diluir.
-const decisionRooms = getRoomsForCalc(calc.slug, lang).slice(0, 2);
+const decisionRooms = sortDecisionLinksByPriority(getRoomsForCalc(calc.slug, lang)).slice(0, 2);
+// Las calcs con copy editorial propio conservan su postResult. Para el resto,
+// la cohorte P0 aporta un CTA contextual centralizado sin tocar decenas de JSON
+// (varios se actualizan por automatizaciones y no deben divergir).
+const decisionPostResult = calc.postResult ?? getPriorityDecisionCta(calc.slug, lang);
 
 // ---- Autoría / revisión (política YMYL, ver src/lib/content-policy.ts) ----
 // Martín Rodríguez es autor/editor en TODA la web, NO revisor clínico. Ninguna
@@ -544,27 +549,26 @@ const editorialHtml = _isReviewed
       <RestrictedNotice calc={calc} lang={lang} />
     ) : (
       <Calculator config={calc} dataAsOf={dataAsOf ?? undefined} lang={calcWidgetLang} redesign={redesign}>
-        {/* Bloque de decisión post-resultado (opt-in vía calc.postResult): el
+        {/* Bloque de decisión post-resultado (copy propio o cohorte P0): el
             número se vuelve el principio de una segunda acción. Va PRIMERO en el
             slot para quedar arriba del "seguí calculando". */}
-        {calc.postResult && (
+        {decisionPostResult && (
           <PostResultDecisionBlock
             slot="next-steps"
             slug={calc.slug}
             category={calc.category}
-            lead={calc.postResult.lead}
-            meaning={calc.postResult.meaning}
-            room={calc.postResult.room}
-            lang={lang}
+            lead={decisionPostResult.lead}
+            meaning={decisionPostResult.meaning}
+            room={decisionPostResult.room}
+            lang={uiLang}
           />
         )}
         {/* "Seguí calculando" dentro del widget: el slot cae en el hueco de la
             columna izquierda (bajo el form) y se revela al haber resultado.
             lang completo (no calcWidgetLang) para resolver el locale correcto. */}
         <NextCalcs slot="next-steps" calc={calc} lang={lang} />
-        {/* Instrumentación del funnel post-resultado (solo donde hay bloque de
-            decisión, para acotar el piloto y medir post_result_interaction_rate). */}
-        {calc.postResult && <PostResultTracking slot="next-steps" slug={calc.slug} category={calc.category} />}
+        {/* Instrumentación del funnel post-resultado y de los enlaces de sala. */}
+        {(decisionPostResult || decisionRooms.length > 0) && <PostResultTracking slot="next-steps" slug={calc.slug} category={calc.category} />}
       </Calculator>
     )}
   </section>
@@ -920,7 +924,7 @@ const editorialHtml = _isReviewed
         <strong>{room.h1}</strong>
         <span class="gd">Esta calculadora es parte de una sala de decisión: varios cálculos juntos y un veredicto claro.</span>
       </div>
-      <a class="gb" href={room.href}>Entrar a la sala →</a>
+      <a class="gb" href={room.href} data-decision-room data-room-slug={room.href.split('/').pop()}>Entrar a la sala →</a>
     </aside>
   ))}
 
