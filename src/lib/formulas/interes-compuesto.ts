@@ -19,6 +19,9 @@ export interface InteresInputs {
   frecuenciaCapitalizacion?: string;
   /** Inflación anual esperada (%). Opcional: si se ingresa, calcula poder de compra real. */
   inflacionAnual?: number;
+  aporteExtraordinarioAnual?: number;
+  comisionAnual?: number;
+  impuestoGanancia?: number;
   __lang?: string;
 }
 
@@ -108,6 +111,9 @@ export function interesCompuesto(inputs: InteresInputs): InteresOutputs {
   // Inflación opcional: '' / null / undefined / 0 → sin capa de poder de compra.
   const inflRaw = inputs.inflacionAnual;
   const inflacion = inflRaw === '' || inflRaw === null || inflRaw === undefined ? 0 : Number(inflRaw) || 0;
+  const aporteExtra = Math.max(0, Number(inputs.aporteExtraordinarioAnual) || 0);
+  const comision = Math.max(0, Number(inputs.comisionAnual) || 0);
+  const impuesto = Math.max(0, Math.min(100, Number(inputs.impuestoGanancia) || 0));
 
   if (capital < 0) throw new Error(T.errorCapitalNegativo);
   if (capital === 0 && aporte === 0) throw new Error(T.errorCapitalOAporte);
@@ -116,7 +122,7 @@ export function interesCompuesto(inputs: InteresInputs): InteresOutputs {
 
   // Tasa MENSUAL equivalente a la frecuencia de capitalización elegida.
   // Con frecuencia mensual (m=12) ⇒ i = tasaAnual/100/12 (idéntico a la versión previa).
-  const r = tasaAnual / 100;
+  const r = Math.max(-0.99, tasaAnual / 100 - comision / 100);
   const ratePerPeriod = r / m;
   const i = Math.pow(1 + ratePerPeriod, m / 12) - 1;
   const n = anios * 12;
@@ -124,9 +130,15 @@ export function interesCompuesto(inputs: InteresInputs): InteresOutputs {
 
   const vfCapital = capital * factor;
   const vfAportes = i === 0 ? aporte * n : aporte * ((factor - 1) / i);
-  const valorFinal = vfCapital + vfAportes;
-
-  const totalAportado = capital + aporte * n;
+  let vfExtras = 0;
+  for (let mesExtra = 12; mesExtra <= n; mesExtra += 12) {
+    vfExtras += aporteExtra * Math.pow(1 + i, n - mesExtra);
+  }
+  const cantidadExtras = Math.floor(n / 12);
+  const totalAportado = capital + aporte * n + aporteExtra * cantidadExtras;
+  const valorBruto = vfCapital + vfAportes + vfExtras;
+  const impuestoEstimado = Math.max(0, valorBruto - totalAportado) * impuesto / 100;
+  const valorFinal = valorBruto - impuestoEstimado;
   const gananciaIntereses = valorFinal - totalAportado;
   // Formato amigable: para rendimientos grandes, expresar como multiplicador ×N
   // en vez de porcentaje con miles de dígitos ("x346" es más intuitivo que "34485%").
@@ -158,12 +170,15 @@ export function interesCompuesto(inputs: InteresInputs): InteresOutputs {
   for (let k = 0; k <= anios; k++) {
     const nK = k * 12;
     const factorK = Math.pow(1 + i, nK);
-    const vfK = capital * factorK + (i === 0 ? aporte * nK : aporte * ((factorK - 1) / i));
-    const aportadoK = capital + aporte * nK;
+    let extrasK = 0;
+    for (let mesExtra = 12; mesExtra <= nK; mesExtra += 12) extrasK += aporteExtra * Math.pow(1 + i, nK - mesExtra);
+    const aportadoK = capital + aporte * nK + aporteExtra * Math.floor(nK / 12);
+    const brutoK = capital * factorK + (i === 0 ? aporte * nK : aporte * ((factorK - 1) / i)) + extrasK;
+    const vfK = brutoK - Math.max(0, brutoK - aportadoK) * impuesto / 100;
     serieValor.push(Math.round(vfK));
     serieAportado.push(Math.round(aportadoK));
     if (k >= 1) {
-      const interesAnioK = vfK - prevVf - aporteAnual;
+      const interesAnioK = vfK - prevVf - aporteAnual - aporteExtra;
       if (crossYear === 0 && aporteAnual > 0 && interesAnioK > aporteAnual) crossYear = k;
       tableRows.push([`${k}`, fmtAR(vfK), fmtAR(aportadoK), fmtAR(Math.max(0, vfK - aportadoK))]);
     }
@@ -189,7 +204,7 @@ export function interesCompuesto(inputs: InteresInputs): InteresOutputs {
   // ── Vista 2: desglose (donut) — las slices SUMAN el valor final ──
   const sliceData = [
     { label: T.sliceCapital, value: Math.round(capital) },
-    { label: T.sliceAportes, value: Math.round(aporte * n) },
+    { label: T.sliceAportes, value: Math.round(aporte * n + aporteExtra * cantidadExtras) },
     { label: T.sliceInteres, value: Math.round(Math.max(0, gananciaIntereses)) },
   ];
   const chartDesglose = {
@@ -232,6 +247,9 @@ export function interesCompuesto(inputs: InteresInputs): InteresOutputs {
       ? `From **year ${crossYear}** on, what you earn in interest each year is more than what you contribute.`
       : `A partir del **año ${crossYear}**, lo que ganás en intereses cada año supera lo que aportás.`);
   }
+  if (aporteExtra > 0) partes.push(`Incluimos **${fmtAR(aporteExtra)} por año** de aportes extraordinarios.`);
+  if (comision > 0) partes.push(`La proyección descuenta una comisión anual de **${comision}%** de la tasa ingresada.`);
+  if (impuesto > 0) partes.push(`Al final se descuentan **${fmtAR(impuestoEstimado)}** de impuestos estimados sobre la ganancia.`);
 
   let tone: 'good' | 'warn' | 'neutral' = pctInteres >= 50 ? 'good' : 'neutral';
   let icon = pctInteres >= 50 ? '🚀' : '📈';

@@ -5,12 +5,14 @@ export interface Inputs {
   precioCuotas: number;
   cantidadCuotas: number;
   inflacionMensual: number;
+  rendimientoAlternativoMensual?: number;
 }
 
 export interface Outputs {
   costoFinanciero: number;
   cftPorcentaje: number;
   tnaEquivalente: number;
+  teaImplicita: number;
   valorPresenteCuotas: number;
   ahorroReal: number;
   convieneCuotas: string;
@@ -25,6 +27,7 @@ export function costoRealCuotasSinInteres(i: Inputs): Outputs {
   const cuotasTotal = Number(i.precioCuotas);
   const cuotas = Number(i.cantidadCuotas);
   const inflaMensual = Number(i.inflacionMensual) || 0;
+  const rendimientoAlternativo = Number(i.rendimientoAlternativoMensual) || 0;
 
   if (!contado || contado <= 0) throw new Error('Ingresá el precio de contado');
   if (!cuotasTotal || cuotasTotal <= 0) throw new Error('Ingresá el precio total en cuotas');
@@ -33,12 +36,25 @@ export function costoRealCuotasSinInteres(i: Inputs): Outputs {
   const valorCuota = cuotasTotal / cuotas;
   const costoFinanciero = cuotasTotal - contado;
   const cftPorcentaje = (costoFinanciero / contado) * 100;
-  const tnaEquivalente = (cftPorcentaje / cuotas) * 12;
+  // Tasa implícita: resuelve contado = suma(cuota / (1+r)^m) por búsqueda binaria.
+  let low = 0;
+  let high = 10;
+  for (let k = 0; k < 100; k++) {
+    const mid = (low + high) / 2;
+    let vp = 0;
+    for (let m = 1; m <= cuotas; m++) vp += valorCuota / Math.pow(1 + mid, m);
+    if (vp > contado) low = mid;
+    else high = mid;
+  }
+  const tasaImplicitaMensual = costoFinanciero > 0 ? (low + high) / 2 : 0;
+  const tnaEquivalente = tasaImplicitaMensual * 12 * 100;
+  const teaImplicita = (Math.pow(1 + tasaImplicitaMensual, 12) - 1) * 100;
 
   // Valor presente de las cuotas con inflación
   let valorPresenteCuotas = 0;
+  const tasaDescuento = rendimientoAlternativo > 0 ? rendimientoAlternativo : inflaMensual;
   for (let m = 1; m <= cuotas; m++) {
-    const factorInflacion = Math.pow(1 + inflaMensual / 100, m);
+    const factorInflacion = Math.pow(1 + tasaDescuento / 100, m);
     valorPresenteCuotas += valorCuota / factorInflacion;
   }
 
@@ -51,14 +67,14 @@ export function costoRealCuotasSinInteres(i: Inputs): Outputs {
       : 'Indiferente';
 
   const formula = `CFT = ($${cuotasTotal.toLocaleString()} - $${contado.toLocaleString()}) / $${contado.toLocaleString()} = ${cftPorcentaje.toFixed(2)}%`;
-  const explicacion = `Contado: $${contado.toLocaleString()}. Cuotas: ${cuotas} × $${Math.round(valorCuota).toLocaleString()} = $${cuotasTotal.toLocaleString()}. Costo financiero: $${Math.round(costoFinanciero).toLocaleString()} (${cftPorcentaje.toFixed(2)}%, TNA equiv. ${tnaEquivalente.toFixed(1)}%).${inflaMensual > 0 ? ` Con inflación de ${inflaMensual}% mensual, el valor real de las cuotas es $${Math.round(valorPresenteCuotas).toLocaleString()}.` : ''} ${convieneCuotas}.`;
+  const explicacion = `Contado: $${contado.toLocaleString()}. Cuotas: ${cuotas} × $${Math.round(valorCuota).toLocaleString()} = $${cuotasTotal.toLocaleString()}. Costo financiero: $${Math.round(costoFinanciero).toLocaleString()} (${cftPorcentaje.toFixed(2)}%, TNA implícita ${tnaEquivalente.toFixed(1)}%, TEA ${teaImplicita.toFixed(1)}%).${tasaDescuento > 0 ? ` Con una tasa de descuento de ${tasaDescuento}% mensual, el valor presente de las cuotas es $${Math.round(valorPresenteCuotas).toLocaleString()}.` : ''} ${convieneCuotas}.`;
 
   const cuotasGanan = ahorroReal > 0;
   const _insight = {
     title: cuotasGanan ? 'Pagá en cuotas' : 'Conviene el contado',
     text: cuotasGanan
-      ? `Aunque las cuotas tienen un recargo nominal de **$${Math.round(costoFinanciero).toLocaleString('es-AR')}** (${cftPorcentaje.toFixed(1)}%), con una inflación de **${inflaMensual}% mensual** el valor real de pagar en ${cuotas} cuotas es **$${Math.round(valorPresenteCuotas).toLocaleString('es-AR')}** — menos que los $${contado.toLocaleString('es-AR')} de contado. Financiarte te ahorra **$${Math.round(ahorroReal).toLocaleString('es-AR')}** en plata de hoy.`
-      : `Pagar en ${cuotas} cuotas suma **$${cuotasTotal.toLocaleString('es-AR')}** (recargo de $${Math.round(costoFinanciero).toLocaleString('es-AR')}, CFT ${cftPorcentaje.toFixed(1)}%). ${inflaMensual > 0 ? `Ni con la inflación de ${inflaMensual}% mensual` : 'Sin inflación que licúe la deuda,'} las cuotas compensan: pagando de contado ahorrás **$${Math.round(Math.abs(ahorroReal)).toLocaleString('es-AR')}** en valor real.`,
+      ? `Aunque las cuotas tienen un recargo nominal de **$${Math.round(costoFinanciero).toLocaleString('es-AR')}** (${cftPorcentaje.toFixed(1)}%), con una tasa de descuento de **${tasaDescuento}% mensual** su valor presente es **$${Math.round(valorPresenteCuotas).toLocaleString('es-AR')}**. Financiarte conserva **$${Math.round(ahorroReal).toLocaleString('es-AR')}** de valor hoy.`
+      : `Pagar en ${cuotas} cuotas suma **$${cuotasTotal.toLocaleString('es-AR')}** y equivale a una **TEA implícita de ${teaImplicita.toFixed(1)}%**. Con la tasa de descuento cargada no compensa: el contado ahorra **$${Math.round(Math.abs(ahorroReal)).toLocaleString('es-AR')}** en valor presente.`,
     tone: cuotasGanan ? 'good' : 'warn',
     icon: '💳',
   };
@@ -82,6 +98,7 @@ export function costoRealCuotasSinInteres(i: Inputs): Outputs {
     costoFinanciero: Math.round(costoFinanciero),
     cftPorcentaje: Number(cftPorcentaje.toFixed(2)),
     tnaEquivalente: Number(tnaEquivalente.toFixed(2)),
+    teaImplicita: Number(teaImplicita.toFixed(2)),
     valorPresenteCuotas: Math.round(valorPresenteCuotas),
     ahorroReal: Math.round(ahorroReal),
     convieneCuotas,

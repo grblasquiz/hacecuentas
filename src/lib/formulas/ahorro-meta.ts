@@ -1,7 +1,9 @@
 /** Cuánto ahorrar por mes para llegar a una meta */
-export interface Inputs { montoMeta: number; plazoMeses: number; tasaAnual: number; ahorroInicial?: number; }
+export interface Inputs { montoMeta: number; plazoMeses: number; tasaAnual: number; ahorroInicial?: number; frecuenciaAporte?: string; }
 export interface Outputs {
   aporteMensual: number;
+  aportePorPeriodo: number;
+  frecuencia: string;
   totalAportado: number;
   interesesGanados: number;
   montoFinal: number;
@@ -15,31 +17,38 @@ export function ahorroMeta(i: Inputs): Outputs {
   const meses = Number(i.plazoMeses);
   const tasaAnual = Number(i.tasaAnual);
   const inicial = Number(i.ahorroInicial) || 0;
+  const frecuencia = i.frecuenciaAporte || 'mensual';
+  const periodosPorAnio: Record<string, number> = { diario: 365, semanal: 52, quincenal: 24, mensual: 12 };
+  const ppy = periodosPorAnio[frecuencia] || 12;
   if (!meta || meta <= 0) throw new Error('Ingresá la meta de ahorro');
   if (!meses || meses <= 0) throw new Error('Ingresá el plazo en meses');
   if (tasaAnual < 0) throw new Error('La tasa no puede ser negativa');
 
   // Tasa mensual efectiva a partir de la TNA (capitalización mensual)
+  const tasaPeriodo = tasaAnual / 100 / ppy;
+  const periodos = Math.max(1, Math.round(meses * ppy / 12));
   const tasaMensual = tasaAnual / 100 / 12;
 
   // Valor futuro del capital inicial
-  const vfInicial = inicial * Math.pow(1 + tasaMensual, meses);
+  const vfInicial = inicial * Math.pow(1 + tasaPeriodo, periodos);
 
   // Monto que falta acumular con aportes mensuales
   const faltante = meta - vfInicial;
 
   let aporteMensual = 0;
   if (faltante > 0) {
-    if (tasaMensual === 0) {
-      aporteMensual = faltante / meses;
+    if (tasaPeriodo === 0) {
+      aporteMensual = faltante / periodos;
     } else {
       // VF serie de aportes = aporte × [((1+i)^n - 1) / i]
-      const factor = (Math.pow(1 + tasaMensual, meses) - 1) / tasaMensual;
+      const factor = (Math.pow(1 + tasaPeriodo, periodos) - 1) / tasaPeriodo;
       aporteMensual = faltante / factor;
     }
   }
 
-  const totalAportado = aporteMensual * meses;
+  const aportePorPeriodo = aporteMensual;
+  const totalAportado = aportePorPeriodo * periodos;
+  aporteMensual = aportePorPeriodo * ppy / 12;
   const intereses = meta - totalAportado - inicial;
 
   const totalAportadoR = Math.round(totalAportado);
@@ -73,6 +82,8 @@ export function ahorroMeta(i: Inputs): Outputs {
 
   return {
     aporteMensual: Math.round(aporteMensual),
+    aportePorPeriodo: Math.round(aportePorPeriodo),
+    frecuencia,
     totalAportado: totalAportadoR,
     interesesGanados: interesesR,
     montoFinal: Math.round(meta),

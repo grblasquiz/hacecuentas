@@ -35,9 +35,9 @@ export function vacaciones(inputs: VacacionesInputs): VacacionesOutputs {
   if (!sueldoBruto || sueldoBruto <= 0) throw new Error('Ingresá el sueldo bruto');
 
   let diasTotalesAnual: number;
-  if (antiguedad < 5) diasTotalesAnual = 14;
-  else if (antiguedad < 10) diasTotalesAnual = 21;
-  else if (antiguedad < 20) diasTotalesAnual = 28;
+  if (antiguedad <= 5) diasTotalesAnual = 14;
+  else if (antiguedad <= 10) diasTotalesAnual = 21;
+  else if (antiguedad <= 20) diasTotalesAnual = 28;
   else diasTotalesAnual = 35;
 
   const diasCorridos = Math.round((diasTotalesAnual * meses) / 12);

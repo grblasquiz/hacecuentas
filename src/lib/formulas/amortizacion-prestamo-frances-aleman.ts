@@ -1,5 +1,5 @@
 /**
- * Calculadora de amortización de préstamo — sistema francés y alemán
+ * Calculadora de amortización de préstamo — sistemas francés, alemán y americano
  * Francés: cuota = M × i × (1+i)^n / ((1+i)^n − 1)
  * Alemán: amortización fija = M/n, cuota decreciente
  */
@@ -8,7 +8,7 @@ export interface AmortizacionPrestamoFrancesAlemanInputs {
   monto: number;
   tna: number;
   plazoMeses: number;
-  sistema: string; // 'frances' | 'aleman'
+  sistema: string; // 'frances' | 'aleman' | 'americano'
 }
 
 export interface AmortizacionPrestamoFrancesAlemanOutputs {
@@ -42,14 +42,14 @@ function buildDonut(capital: number, intereses: number, totalPagado: number) {
 
 // Insight narrativo: qué proporción del total a pagar son intereses.
 function buildInsight(
-  sistema: 'frances' | 'aleman',
+  sistema: 'frances' | 'aleman' | 'americano',
   monto: number,
   intereses: number,
   totalPagado: number,
 ) {
   const pctInteresesSobreTotal = (intereses / totalPagado) * 100;
   const pctInteresesSobreCapital = (intereses / monto) * 100;
-  const sistemaNombre = sistema === 'frances' ? 'francés' : 'alemán';
+  const sistemaNombre = sistema === 'frances' ? 'francés' : sistema === 'aleman' ? 'alemán' : 'americano';
   const tone = pctInteresesSobreCapital >= 50 ? 'warn' : pctInteresesSobreCapital >= 25 ? 'neutral' : 'good';
   let text: string;
   if (pctInteresesSobreCapital >= 50) {
@@ -67,7 +67,7 @@ function buildInsight(
 
 // Cronograma cuota a cuota para el sistema elegido.
 function buildSchedule(
-  sistema: 'frances' | 'aleman',
+  sistema: 'frances' | 'aleman' | 'americano',
   monto: number,
   i: number,
   plazo: number,
@@ -83,9 +83,12 @@ function buildSchedule(
     if (sistema === 'frances') {
       cuotaMes = cuotaFrances;
       capitalMes = cuotaMes - interesMes;
-    } else {
+    } else if (sistema === 'aleman') {
       capitalMes = amortCapital;
       cuotaMes = amortCapital + interesMes;
+    } else {
+      capitalMes = m === plazo ? monto : 0;
+      cuotaMes = interesMes + capitalMes;
     }
     saldo -= capitalMes;
     if (saldo < 0.005) saldo = 0;
@@ -95,14 +98,14 @@ function buildSchedule(
 }
 
 function buildTable(
-  sistema: 'frances' | 'aleman',
+  sistema: 'frances' | 'aleman' | 'americano',
   rows: Array<Array<string | number>>,
   totalPagado: number,
   totalIntereses: number,
   monto: number,
 ) {
   return {
-    title: `Cuota a cuota (sistema ${sistema === 'frances' ? 'francés' : 'alemán'})`,
+    title: `Cuota a cuota (sistema ${sistema === 'frances' ? 'francés' : sistema === 'aleman' ? 'alemán' : 'americano'})`,
     headers: ['Cuota', 'Pago', 'Interés', 'Capital', 'Saldo'],
     align: ['left', 'right', 'right', 'right', 'right'],
     rows,
@@ -111,7 +114,9 @@ function buildTable(
     footer: ['Totales', fmtMoney(totalPagado), fmtMoney(totalIntereses), fmtMoney(monto), '0'],
     note: sistema === 'frances'
       ? 'Sistema francés: la cuota es fija; el interés baja y el capital sube cuota a cuota.'
-      : 'Sistema alemán: la amortización de capital es fija; la cuota arranca más alta y decrece.',
+      : sistema === 'aleman'
+        ? 'Sistema alemán: la amortización de capital es fija; la cuota arranca más alta y decrece.'
+        : 'Sistema americano: pagás solo intereses durante el plazo y devolvés todo el capital en la última cuota.',
   };
 }
 
@@ -126,8 +131,8 @@ export function amortizacionPrestamoFrancesAleman(
   if (!monto || monto <= 0) throw new Error('Ingresá el monto del préstamo');
   if (!tna || tna <= 0) throw new Error('Ingresá la TNA del préstamo');
   if (!plazo || plazo <= 0) throw new Error('Ingresá el plazo en meses');
-  if (sistema !== 'frances' && sistema !== 'aleman')
-    throw new Error('Seleccioná sistema francés o alemán');
+  if (sistema !== 'frances' && sistema !== 'aleman' && sistema !== 'americano')
+    throw new Error('Seleccioná sistema francés, alemán o americano');
 
   const i = tna / 100 / 12;
 
@@ -146,6 +151,22 @@ export function amortizacionPrestamoFrancesAleman(
       _chart: buildDonut(monto, totalIntereses, totalPagado),
       _insight: buildInsight('frances', monto, totalIntereses, totalPagado),
       _table: buildTable('frances', rows, totalPagado, totalIntereses, monto),
+    };
+  }
+
+  if (sistema === 'americano') {
+    const cuotaInteres = monto * i;
+    const totalIntereses = cuotaInteres * plazo;
+    const totalPagado = monto + totalIntereses;
+    const rows = buildSchedule('americano', monto, i, plazo, 0);
+    return {
+      cuotaInicial: Math.round(cuotaInteres),
+      totalIntereses: Math.round(totalIntereses),
+      totalPagado: Math.round(totalPagado),
+      detalle: `Sistema americano: ${plazo - 1} pagos de intereses de $${fmtMoney(cuotaInteres)} y una última cuota de $${fmtMoney(cuotaInteres + monto)} que devuelve el capital. Total intereses: $${fmtMoney(totalIntereses)} (${((totalIntereses / monto) * 100).toFixed(1)}% del capital).`,
+      _chart: buildDonut(monto, totalIntereses, totalPagado),
+      _insight: buildInsight('americano', monto, totalIntereses, totalPagado),
+      _table: buildTable('americano', rows, totalPagado, totalIntereses, monto),
     };
   }
 

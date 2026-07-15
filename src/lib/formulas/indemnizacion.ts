@@ -23,6 +23,7 @@ export interface IndemnizacionInputs {
   topeConvenio: number; // 3 × promedio convencional; 0 = sin tope (override manual)
   diaDespido: number; // 1-31, día del mes del despido
   mesDespido?: number | string; // 1-12, mes del despido. Define SAC proporcional y vacaciones exactas; opcional (compat links viejos)
+  periodoPrueba?: string; // 'si' | 'no'. Desde Ley 27.802 no hay preaviso durante prueba.
   __lang?: string;
 }
 
@@ -103,6 +104,7 @@ export function indemnizacion(inputs: IndemnizacionInputs): IndemnizacionOutputs
   const mesRaw = Number(inputs.mesDespido);
   const tieneMes = Number.isFinite(mesRaw) && mesRaw >= 1 && mesRaw <= 12;
   const mesDespido = tieneMes ? Math.round(mesRaw) : 0;
+  const enPeriodoPrueba = String(inputs.periodoPrueba || 'no') === 'si';
 
   if (!sueldo || sueldo <= 0) {
     throw new Error(T.errSueldo);
@@ -114,7 +116,7 @@ export function indemnizacion(inputs: IndemnizacionInputs): IndemnizacionOutputs
   const antiguedadTotalMeses = anios * 12 + meses;
 
   // Art. 245: años trabajados + fracción > 3 meses = +1 año
-  const aniosComputables = meses > 3 ? anios + 1 : anios;
+  const aniosComputables = enPeriodoPrueba ? 0 : (meses > 3 ? anios + 1 : anios);
 
   // Base para Art. 245 (mejor remuneración), con posible tope de convenio
   // Fallo Vizzoti: si tope < 67% de la base, tomar 67% de la base
@@ -134,7 +136,7 @@ export function indemnizacion(inputs: IndemnizacionInputs): IndemnizacionOutputs
 
   // Preaviso LCT Art. 231: 15 días (<3 meses) / 1 mes (3m a 5a inclusive) / 2 meses (>5a)
   let mesesPreaviso = 0;
-  if (antiguedadTotalMeses < 3) mesesPreaviso = 0.5; // 15 días = medio mes
+  if (enPeriodoPrueba) mesesPreaviso = 0;
   else if (antiguedadTotalMeses <= 12 * 5) mesesPreaviso = 1;
   else mesesPreaviso = 2;
 
@@ -144,7 +146,7 @@ export function indemnizacion(inputs: IndemnizacionInputs): IndemnizacionOutputs
   // Integración mes de despido: días que faltan hasta fin de mes
   const diasMes = 30; // promedio
   const diasFaltantes = Math.max(0, diasMes - diaDespido);
-  const integracionMes = (sueldo / diasMes) * diasFaltantes;
+  const integracionMes = enPeriodoPrueba ? 0 : (sueldo / diasMes) * diasFaltantes;
   const sacIntegracion = integracionMes / 12;
 
   // SAC proporcional al semestre en curso (Art. 123): (mejor sueldo / 2) × (días trabajados
@@ -202,7 +204,9 @@ export function indemnizacion(inputs: IndemnizacionInputs): IndemnizacionOutputs
       }
     : {
         title: T.insTitle,
-        text: T.insText(totalFmt, antFmt, aniosComputables, sueldosTotal),
+        text: enPeriodoPrueba
+          ? `Durante el período de prueba vigente no se suman indemnización por antigüedad, preaviso ni integración del mes. El total estimado de conceptos proporcionales es **${totalFmt}**.`
+          : T.insText(totalFmt, antFmt, aniosComputables, sueldosTotal),
         tone: 'neutral',
         icon: '💼',
       };

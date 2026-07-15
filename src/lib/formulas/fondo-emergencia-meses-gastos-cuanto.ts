@@ -6,6 +6,9 @@ export function fondoEmergenciaMesesGastosCuanto(i: Inputs): Outputs {
   const plazo = Number(i.plazo) || 6;
   const annualRate = (Number(i.tasa) || 0) / 100;
   const monthlyRate = annualRate / 12;
+  const inflacionAnual = Math.max(0, Number(i.inflacionAnual) || 0) / 100;
+  const ahorroInicial = Math.max(0, Number(i.ahorroInicial) || 0);
+  const perfil = String(i.perfil || 'empleado');
 
   const fmt = (n: number) =>
     __lang === 'en'
@@ -44,26 +47,31 @@ export function fondoEmergenciaMesesGastosCuanto(i: Inputs): Outputs {
   } else {
     // ES: val = objetivo del fondo (target amount), plazo = meses para armarlo
     // Monthly savings needed (PMT formula) to reach the target in plazo months
+    const objetivoAjustado = val * Math.pow(1 + inflacionAnual, plazo / 12);
+    const valorFuturoInicial = ahorroInicial * Math.pow(1 + monthlyRate, plazo);
+    const faltante = Math.max(0, objetivoAjustado - valorFuturoInicial);
     const r = monthlyRate === 0
-      ? val / plazo
-      : val * monthlyRate * Math.pow(1 + monthlyRate, plazo) / (Math.pow(1 + monthlyRate, plazo) - 1);
+      ? faltante / plazo
+      : faltante * monthlyRate / (Math.pow(1 + monthlyRate, plazo) - 1);
 
     const resultado = '$' + fmt(r);
     const totalAportado = r * plazo;
-    const interes = Math.max(0, val - totalAportado);
+    const interes = Math.max(0, objetivoAjustado - totalAportado - ahorroInicial);
+    const recomendacionMeses = perfil === 'independiente' ? '6 a 12 meses' : perfil === 'familia' ? '6 a 9 meses' : perfil === 'ingreso-variable' ? '6 a 9 meses' : '3 a 6 meses';
 
     const resumen =
-      `Monto $${fmt(val)} × ${plazo} meses: $${fmt(r)}/mes.` +
+      `Objetivo ajustado $${fmt(objetivoAjustado)} en ${plazo} meses: $${fmt(r)}/mes.` +
       (monthlyRate > 0 ? ` El interés aporta unos $${fmt(interes)}, así que ponés menos de tu bolsillo.` : '');
 
     const _insight = {
       title: 'Tu cuota mensual',
-      text: `Apartá **$${fmt(r)}/mes** durante **${plazo} meses** para llegar a $${fmt(val)}.` +
-        (monthlyRate > 0 ? ` El interés acumulado aporta unos $${fmt(interes)}, así que ponés menos de tu bolsillo.` : ''),
+      text: `Apartá **$${fmt(r)}/mes** durante **${plazo} meses** para llegar a $${fmt(objetivoAjustado)}.` +
+        (monthlyRate > 0 ? ` El rendimiento estimado aporta unos $${fmt(interes)}.` : '') +
+        ` Para tu perfil, una referencia prudente es cubrir **${recomendacionMeses} de gastos esenciales**.`,
       tone: 'neutral',
       icon: '🐷',
     };
 
-    return { resultado, resumen, _insight };
+    return { resultado, objetivoAjustado: '$' + fmt(objetivoAjustado), faltante: '$' + fmt(faltante), recomendacionMeses, resumen, _insight };
   }
 }

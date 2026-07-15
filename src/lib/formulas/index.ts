@@ -478,6 +478,7 @@ import { compute as compute__canasta_basica_peru_inei } from './canasta-basica-p
 import { compute as compute__canasta_familiar_colombia_dane_mes } from './canasta-familiar-colombia-dane-mes';
 import { compute as compute__canasta_mascota_perro_gato_chile_mensual } from './canasta-mascota-perro-gato-chile-mensual';
 import { compute as compute__canasta_mercado_tienda_vs_supermercado_colombia } from './canasta-mercado-tienda-vs-supermercado-colombia';
+import { cancelacionAnticipadaPrestamo } from './cancelacion-anticipada-prestamo';
 import { canoAguaDiametroCaudal } from './cano-agua-diametro-caudal';
 import { canoEstructuralPesoMl } from './cano-estructural-peso-ml';
 import { compute as compute__canon_arrendamiento_comercial_colombia_comerciante } from './canon-arrendamiento-comercial-colombia-comerciante';
@@ -2426,6 +2427,7 @@ import { recuperacionMuscularHoras } from './recuperacion-muscular-horas';
 import { redshiftVelocidadRadial } from './redshift-velocidad-radial';
 import { compute as compute__reduccion_jornada_42_horas_colombia_2026 } from './reduccion-jornada-42-horas-colombia-2026';
 import { compute as compute__reduccion_jornada_hijo_espana_salario_cotizacion } from './reduccion-jornada-hijo-espana-salario-cotizacion';
+import { refinanciacionPrestamo } from './refinanciacion-prestamo';
 import { compute as compute__reforma_pensional_colombia_2025_pilares_ahorro } from './reforma-pensional-colombia-2025-pilares-ahorro';
 import { regaliaPascualProporcionalRepublicaDominicana } from './regalia-pascual-proporcional-republica-dominicana';
 import { regaliaPascualRepublicaDominicana } from './regalia-pascual-republica-dominicana';
@@ -2820,6 +2822,7 @@ import { tiempoLecturaPaginasEstudio } from './tiempo-lectura-paginas-estudio';
 import { tiempoMarinadoCarnePescado } from './tiempo-marinado-carne-pescado';
 import { tiempoMetaMaraton } from './tiempo-meta-maraton';
 import { tiempoPantallaIdealEdad } from './tiempo-pantalla-ideal-edad';
+import { tiempoParaAhorrar } from './tiempo-para-ahorrar';
 import { tiempoSecadoRopaAire } from './tiempo-secado-ropa-aire';
 import { tiempoSoldaduraTipoEstano } from './tiempo-soldadura-tipo-estano';
 import { tiempoSuperarRupturaRelacionMeses } from './tiempo-superar-ruptura-relacion-meses';
@@ -3505,6 +3508,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'canasta-familiar-colombia-dane-mes': compute__canasta_familiar_colombia_dane_mes,
   'canasta-mascota-perro-gato-chile-mensual': compute__canasta_mascota_perro_gato_chile_mensual,
   'canasta-mercado-tienda-vs-supermercado-colombia': compute__canasta_mercado_tienda_vs_supermercado_colombia,
+  'cancelacion-anticipada-prestamo': cancelacionAnticipadaPrestamo,
   'cano-agua-diametro-caudal': canoAguaDiametroCaudal,
   'cano-estructural-peso-ml': canoEstructuralPesoMl,
   'canon-arrendamiento-comercial-colombia-comerciante': compute__canon_arrendamiento_comercial_colombia_comerciante,
@@ -5453,6 +5457,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'redshift-velocidad-radial': redshiftVelocidadRadial,
   'reduccion-jornada-42-horas-colombia-2026': compute__reduccion_jornada_42_horas_colombia_2026,
   'reduccion-jornada-hijo-espana-salario-cotizacion': compute__reduccion_jornada_hijo_espana_salario_cotizacion,
+  'refinanciacion-prestamo': refinanciacionPrestamo,
   'reforma-pensional-colombia-2025-pilares-ahorro': compute__reforma_pensional_colombia_2025_pilares_ahorro,
   'regalia-pascual-proporcional-republica-dominicana': regaliaPascualProporcionalRepublicaDominicana,
   'regalia-pascual-republica-dominicana': regaliaPascualRepublicaDominicana,
@@ -5847,6 +5852,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'tiempo-marinado-carne-pescado': tiempoMarinadoCarnePescado,
   'tiempo-meta-maraton': tiempoMetaMaraton,
   'tiempo-pantalla-ideal-edad': tiempoPantallaIdealEdad,
+  'tiempo-para-ahorrar': tiempoParaAhorrar,
   'tiempo-secado-ropa-aire': tiempoSecadoRopaAire,
   'tiempo-soldadura-tipo-estano': tiempoSoldaduraTipoEstano,
   'tiempo-superar-ruptura-relacion-meses': tiempoSuperarRupturaRelacionMeses,

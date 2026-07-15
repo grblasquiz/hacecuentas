@@ -12,6 +12,7 @@ export interface PorcentajeInputs {
   modo: string;
   valor1: number;
   valor2: number;
+  valor3?: number;
   __lang?: string;
 }
 
@@ -27,6 +28,7 @@ export function porcentaje(inputs: PorcentajeInputs): PorcentajeOutputs {
   const modo = inputs.modo || 'simple';
   const v1 = Number(inputs.valor1);
   const v2 = Number(inputs.valor2);
+  const v3 = Number(inputs.valor3) || 0;
 
   if (isNaN(v1) || isNaN(v2)) throw new Error(__lang === 'en' ? 'Enter valid numeric values' : 'Ingresá valores numéricos válidos');
 
@@ -125,6 +127,36 @@ export function porcentaje(inputs: PorcentajeInputs): PorcentajeOutputs {
           tone: 'neutral',
           icon: subio ? '📈' : '📉',
         },
+      };
+    }
+    case 'inverso': {
+      if (v2 <= -100) throw new Error('El porcentaje debe ser mayor que -100%');
+      const original = v1 / (1 + v2 / 100);
+      return {
+        resultado: fmt(original),
+        formula: `${v1} ÷ (1 + ${v2}/100) = ${fmt(original)}`,
+        explicacion: `Si ${fmt(v1)} es el valor después de variar ${fmt(v2)}%, el valor original era ${fmt(original)}.`,
+        _insight: { title: 'Valor original recuperado', text: `Antes de la variación del **${fmt(v2)}%**, el monto era **${fmt(original)}**. No alcanza con restar ${fmt(v2)}% al valor final porque la base cambió.`, tone: 'neutral', icon: '↩️' },
+      };
+    }
+    case 'descuentos-sucesivos': {
+      const final = v1 * (1 - v2 / 100) * (1 - v3 / 100);
+      const pctTotal = (1 - final / v1) * 100;
+      return {
+        resultado: fmt(final),
+        formula: `${v1} × (1 − ${v2}/100) × (1 − ${v3}/100) = ${fmt(final)}`,
+        explicacion: `Los descuentos de ${fmt(v2)}% y ${fmt(v3)}% equivalen a un descuento acumulado de ${pctTotal.toFixed(2)}%.`,
+        _insight: { title: `Descuento real: ${pctTotal.toFixed(2)}%`, text: `Aplicados uno después del otro, **${fmt(v2)}% + ${fmt(v3)}%** dejan el precio en **${fmt(final)}**. No se suman directamente.`, tone: 'good', icon: '🏷️' },
+      };
+    }
+    case 'aumentos-sucesivos': {
+      const final = v1 * (1 + v2 / 100) * (1 + v3 / 100);
+      const pctTotal = (final / v1 - 1) * 100;
+      return {
+        resultado: fmt(final),
+        formula: `${v1} × (1 + ${v2}/100) × (1 + ${v3}/100) = ${fmt(final)}`,
+        explicacion: `Los aumentos de ${fmt(v2)}% y ${fmt(v3)}% equivalen a una suba acumulada de ${pctTotal.toFixed(2)}%.`,
+        _insight: { title: `Aumento real: ${pctTotal.toFixed(2)}%`, text: `Los aumentos sucesivos llevan **${fmt(v1)}** a **${fmt(final)}** porque el segundo se aplica sobre una base mayor.`, tone: 'warn', icon: '📈' },
       };
     }
     default:
