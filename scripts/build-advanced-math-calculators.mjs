@@ -41,7 +41,7 @@ const rows = [
     ["funcion", "punto"],
     [
       text("funcion", "Función f(x)", "(x^2-1)/(x-1)"),
-      num("punto", "x tiende a", 1),
+      text("punto", "x tiende a", "1 (o inf, -inf)"),
       select("direccion", "Dirección", [
         ["ambos", "Ambos lados"],
         ["izquierda", "Izquierda"],
@@ -74,10 +74,22 @@ const rows = [
     "inecuaciones",
     "Calculadora de Inecuaciones Paso a Paso con Intervalos",
     "Calculadora de inecuaciones",
-    "Resuelve inecuaciones polinómicas con tabla de signos y notación de intervalos.",
+    "Resuelve inecuaciones polinómicas, racionales y con valor absoluto mediante tabla de signos y notación de intervalos.",
     ["coeficientes", "operador"],
     [
+      select("tipo", "Tipo de inecuación", [
+        ["polinomica", "Polinómica"],
+        ["racional", "Racional P(x)/Q(x)"],
+        ["absoluta", "Valor absoluto |P(x)|"],
+      ]),
       text("coeficientes", "Coeficientes de P(x)", "1 -5 6"),
+      text(
+        "denominador",
+        "Coeficientes de Q(x) (solo racional)",
+        "1 -1",
+        false,
+      ),
+      num("limiteAbs", "Límite del valor absoluto (solo |P(x)|)", 1, false),
       select("operador", "Operador", [
         [">=", "≥ 0"],
         [">", "> 0"],
@@ -203,7 +215,10 @@ const rows = [
         ["resta", "Resta"],
         ["multiplicacion", "Multiplicación"],
         ["division", "División"],
+        ["potencia", "Potencia entera de z₁"],
+        ["raiz", "Raíces n-ésimas de z₁"],
       ]),
+      num("exponente", "Exponente o índice n", 2, false),
     ],
     [
       O("resultado", "Resultado", true),
@@ -211,6 +226,7 @@ const rows = [
       O("argumento", "Argumento", false, "number"),
       O("conjugado", "Conjugado"),
       O("formaPolar", "Forma polar"),
+      O("raices", "Todas las raíces n-ésimas"),
     ],
   ],
   [
@@ -276,6 +292,8 @@ const rows = [
       O("primeraDerivada", "Primera derivada"),
       O("segundaDerivada", "Segunda derivada"),
       O("intervalo", "Intervalo"),
+      O("crecimiento", "Crecimiento y decrecimiento"),
+      O("concavidad", "Concavidad"),
     ],
   ],
   [
@@ -299,6 +317,7 @@ const rows = [
       O("primera", "Primera parcial", true),
       O("segunda", "Segunda parcial"),
       O("gradiente", "Gradiente"),
+      O("mixtas", "Derivadas mixtas"),
       O("evaluacion", "Valor en el punto", false, "number"),
     ],
   ],
@@ -379,6 +398,7 @@ const rows = [
       O("valorReal", "Valor real", false, "number"),
       O("errorAbsoluto", "Error absoluto", false, "number"),
       O("orden", "Orden", false, "number"),
+      O("derivadas", "Derivadas utilizadas"),
     ],
   ],
   [
@@ -411,7 +431,7 @@ for (const [id, title, h1, description, keywords, fields, outputs] of rows) {
     description,
     category: "matematica",
     icon: "🧮",
-    audience: "LATAM",
+    audience: "global",
     formulaId: id,
     fields,
     outputs,

@@ -215,7 +215,12 @@ const table = (m: number[][]) => m.map((r) => r.map(fmt).join("\t")).join("\n");
 const insight = (title: string, text: string) => ({
   _insight: { title, text, tone: "neutral", icon: "🧮" },
 });
-function lineChart(expressions: Array<{ label: string; expression: string }>, min: number, max: number, ariaLabel: string) {
+function lineChart(
+  expressions: Array<{ label: string; expression: string }>,
+  min: number,
+  max: number,
+  ariaLabel: string,
+) {
   const labels: string[] = [];
   const series = expressions.map(() => [] as Array<number | null>);
   for (let k = 0; k <= 80; k++) {
@@ -223,10 +228,24 @@ function lineChart(expressions: Array<{ label: string; expression: string }>, mi
     labels.push(fmt(x));
     expressions.forEach((item, j) => {
       const y = val(item.expression, { x });
-      series[j].push(Number.isFinite(y) && Math.abs(y) < 1e6 ? Number(y.toFixed(6)) : null);
+      series[j].push(
+        Number.isFinite(y) && Math.abs(y) < 1e6 ? Number(y.toFixed(6)) : null,
+      );
     });
   }
-  return { type: "line", data: { labels, datasets: expressions.map((item, j) => ({ label: item.label, data: series[j], fill: false, tension: 0.15 })) }, ariaLabel };
+  return {
+    type: "line",
+    data: {
+      labels,
+      datasets: expressions.map((item, j) => ({
+        label: item.label,
+        data: series[j],
+        fill: false,
+        tension: 0.15,
+      })),
+    },
+    ariaLabel,
+  };
 }
 
 export function limitesPasoAPaso(i: I) {
@@ -244,7 +263,15 @@ export function limitesPasoAPaso(i: I) {
     left = l.at(-1)!,
     right = r.at(-1)!;
   let result: string;
-  if (infinite) result = Math.abs(direct) > 1e8 ? (direct > 0 ? "+∞" : "−∞") : `≈ ${fmt(direct)}`;
+  if (infinite)
+    result =
+      Math.abs(direct) > 1e8
+        ? direct > 0
+          ? "+∞"
+          : "−∞"
+        : Math.abs(direct) < 1e-6
+          ? "≈ 0"
+          : `≈ ${fmt(direct)}`;
   else if (dir === "izquierda") result = fmt(left);
   else if (dir === "derecha") result = fmt(right);
   else if (Number.isFinite(direct)) result = fmt(direct);
@@ -263,7 +290,12 @@ export function limitesPasoAPaso(i: I) {
     limiteIzquierdo: fmt(left),
     limiteDerecho: fmt(right),
     pasos: `Sustitución directa: ${Number.isFinite(direct) ? fmt(direct) : "indeterminada"}\nAproximación izquierda: ${l.map(fmt).join(" → ")}\nAproximación derecha: ${r.map(fmt).join(" → ")}`,
-    _chart: lineChart([{ label: "f(x)", expression: e }], infinite ? (negativeInfinity ? -100 : 0) : a - 2, infinite ? (negativeInfinity ? 0 : 100) : a + 2, `Gráfico de la función cerca de ${rawPoint}`),
+    _chart: lineChart(
+      [{ label: "f(x)", expression: e }],
+      infinite ? (negativeInfinity ? -100 : 0) : a - 2,
+      infinite ? (negativeInfinity ? 0 : 100) : a + 2,
+      `Gráfico de la función cerca de ${rawPoint}`,
+    ),
     ...insight(
       `Límite ${result}`,
       `Se compararon sustitución directa y aproximaciones laterales alrededor de x = ${a}.`,
@@ -294,26 +326,48 @@ export function factorizacionPolinomios(i: I) {
 }
 export function inecuaciones(i: I) {
   const c = coeffs(i.coeficientes),
-    op = String(i.operador || ">=");
-  const rs = roots(c)
-    .filter((z) => z.im === 0)
-    .map((z) => z.re)
-    .sort((a, b) => a - b);
+    op = String(i.operador || ">="),
+    tipo = String(i.tipo || "polinomica"),
+    den = tipo === "racional" ? coeffs(i.denominador) : null,
+    limiteAbs = Math.max(0, n(i.limiteAbs, 1));
+  const realRoots = (p: number[]) =>
+    roots(p)
+      .filter((z) => z.im === 0)
+      .map((z) => z.re);
+  const absRoots =
+    tipo === "absoluta"
+      ? [
+          ...realRoots(
+            c.map((v, k) => (k === c.length - 1 ? v - limiteAbs : v)),
+          ),
+          ...realRoots(
+            c.map((v, k) => (k === c.length - 1 ? v + limiteAbs : v)),
+          ),
+        ]
+      : [];
+  const excluded = den ? realRoots(den) : [];
+  const rs = [...realRoots(c), ...absRoots, ...excluded]
+    .sort((a, b) => a - b)
+    .filter((x, k, a) => k === 0 || Math.abs(x - a[k - 1]) > 1e-7);
   const cuts = [-Infinity, ...rs, Infinity],
     ok: (number | boolean)[] = [];
   const test = (x: number) => {
-    const y = poly(c, x);
+    const base = poly(c, x);
+    const y =
+      tipo === "racional" && den
+        ? base / poly(den, x)
+        : tipo === "absoluta"
+          ? Math.abs(base) - limiteAbs
+          : base;
     return op === ">"
       ? y > 0
       : op === "<"
         ? y < 0
         : op === "<= "
           ? y <= 0
-          : op === "<= "
+          : op === "<="
             ? y <= 0
-            : op === "<="
-              ? y <= 0
-              : y >= 0;
+            : y >= 0;
   };
   for (let k = 0; k < cuts.length - 1; k++) {
     const x = !Number.isFinite(cuts[k])
@@ -327,7 +381,7 @@ export function inecuaciones(i: I) {
   ok.forEach((yes, k) => {
     if (yes)
       intervals.push(
-        `${op.includes("=") ? "[" : "("}${Number.isFinite(cuts[k]) ? fmt(cuts[k]) : "−∞"}, ${Number.isFinite(cuts[k + 1]) ? fmt(cuts[k + 1]) : "+∞"}${op.includes("=") ? "]" : ")"}`,
+        `${op.includes("=") && !excluded.some((x) => Math.abs(x - cuts[k]) < 1e-7) ? "[" : "("}${Number.isFinite(cuts[k]) ? fmt(cuts[k]) : "−∞"}, ${Number.isFinite(cuts[k + 1]) ? fmt(cuts[k + 1]) : "+∞"}${op.includes("=") && !excluded.some((x) => Math.abs(x - cuts[k + 1]) < 1e-7) ? "]" : ")"}`,
       );
   });
   return {
@@ -482,6 +536,7 @@ export function numerosComplejos(i: I) {
   const a = complex(String(i.z1 || "0")),
     b = complex(String(i.z2 || "0")),
     op = String(i.operacion || "suma");
+  const exponent = Math.max(1, Math.floor(n(i.exponente, 2)));
   let r: any =
     op === "resta"
       ? a.sub(b)
@@ -489,17 +544,30 @@ export function numerosComplejos(i: I) {
         ? a.mul(b)
         : op === "division"
           ? a.div(b)
-          : a.add(b);
+          : op === "potencia"
+            ? a.pow(exponent)
+            : op === "raiz"
+              ? a.pow(1 / exponent)
+              : a.add(b);
   const re = Number(r.re),
     im = Number(r.im),
     mod = Math.hypot(re, im),
     arg = Math.atan2(im, re);
+  const nthRoots =
+    op === "raiz"
+      ? Array.from({ length: exponent }, (_, k) => {
+          const angle = (Math.atan2(a.im, a.re) + 2 * Math.PI * k) / exponent;
+          const radius = Math.pow(Math.hypot(a.re, a.im), 1 / exponent);
+          return `${fmt(radius * Math.cos(angle))} ${Math.sin(angle) >= 0 ? "+" : "−"} ${fmt(Math.abs(radius * Math.sin(angle)))}i`;
+        }).join(", ")
+      : "No corresponde a la operación elegida";
   return {
     resultado: `${fmt(re)} ${im >= 0 ? "+" : "−"} ${fmt(Math.abs(im))}i`,
     modulo: mod,
     argumento: arg,
     conjugado: `${fmt(re)} ${im <= 0 ? "+" : "−"} ${fmt(Math.abs(im))}i`,
     formaPolar: `${fmt(mod)} ∠ ${fmt(arg)} rad`,
+    raices: nthRoots,
     ...insight(
       "Resultado complejo",
       `Módulo ${fmt(mod)} y argumento ${fmt(arg)} rad.`,
@@ -528,7 +596,12 @@ export function dominioRangoFuncion(i: I) {
     restricciones: restrictions.join("\n") || "Ninguna detectada",
     aviso:
       "El rango es numérico estimado salvo funciones elementales evidentes.",
-    _chart: lineChart([{ label: "f(x)", expression: e }], -10, 10, "Gráfico exploratorio para estimar dominio y rango"),
+    _chart: lineChart(
+      [{ label: "f(x)", expression: e }],
+      -10,
+      10,
+      "Gráfico exploratorio para estimar dominio y rango",
+    ),
     ...insight(
       "Dominio y rango",
       restrictions.join("; ") || "Dominio real sin restricciones detectadas.",
@@ -580,7 +653,15 @@ export function rectaTangenteNormal(i: I) {
       normal === "vertical"
         ? `x = ${fmt(a)}`
         : `y = ${normal}(x − ${fmt(a)}) + ${fmt(y)}`,
-    _chart: lineChart([{ label: "f(x)", expression: e }, { label: "Tangente", expression: `${m}*(x-${a})+${y}` }], a - 4, a + 4, "Curva y recta tangente en el punto elegido"),
+    _chart: lineChart(
+      [
+        { label: "f(x)", expression: e },
+        { label: "Tangente", expression: `${m}*(x-${a})+${y}` },
+      ],
+      a - 4,
+      a + 4,
+      "Curva y recta tangente en el punto elegido",
+    ),
     ...insight("Tangente y normal", `La pendiente tangente es ${fmt(m)}.`),
   };
 }
@@ -602,9 +683,18 @@ export function maximosMinimosFuncion(i: I) {
       infl.map((x) => `(${fmt(x)}, ${fmt(val(e, { x }))})`).join(", ") ||
       "ninguna detectada",
     intervalo: `[${n(i.min, -10)}, ${n(i.max, 10)}]`,
-    crecimiento: rs.length ? `Analizá el signo de f'(x) en los intervalos separados por ${rs.map(fmt).join(", ")}.` : "El signo de f'(x) no cambia en el intervalo explorado.",
-    concavidad: infl.length ? `La concavidad puede cambiar en ${infl.map(fmt).join(", ")}.` : "No se detectaron cambios de concavidad.",
-    _chart: lineChart([{ label: "f(x)", expression: e }], n(i.min, -10), n(i.max, 10), "Gráfico de la función para visualizar extremos e inflexiones"),
+    crecimiento: rs.length
+      ? `Analizá el signo de f'(x) en los intervalos separados por ${rs.map(fmt).join(", ")}.`
+      : "El signo de f'(x) no cambia en el intervalo explorado.",
+    concavidad: infl.length
+      ? `La concavidad puede cambiar en ${infl.map(fmt).join(", ")}.`
+      : "No se detectaron cambios de concavidad.",
+    _chart: lineChart(
+      [{ label: "f(x)", expression: e }],
+      n(i.min, -10),
+      n(i.max, 10),
+      "Gráfico de la función para visualizar extremos e inflexiones",
+    ),
     ...insight(
       "Análisis de extremos",
       `${pts.length} puntos críticos detectados numéricamente.`,
@@ -621,6 +711,7 @@ export function derivadasParciales(i: I) {
     primera: d1,
     segunda: d2,
     gradiente: `(${["x", "y", "z"].map((q) => simplify(derivative(e, q)).toString()).join(", ")})`,
+    mixtas: `∂²f/∂x∂y = ${simplify(derivative(derivative(e, "x").toString(), "y")).toString()}; ∂²f/∂y∂x = ${simplify(derivative(derivative(e, "y").toString(), "x")).toString()}`,
     evaluacion: val(d1, scope),
     ...insight(`∂f/∂${v}`, d1),
   };
@@ -669,7 +760,15 @@ export function areaEntreCurvas(i: I) {
     areaTotal: Number(area.toFixed(8)),
     tramos: tramos.join("\n"),
     metodo: "Intersecciones numéricas + Simpson por tramos",
-    _chart: lineChart([{ label: "f(x)", expression: f }, { label: "g(x)", expression: g }], a, b, "Las dos curvas en el intervalo de integración"),
+    _chart: lineChart(
+      [
+        { label: "f(x)", expression: f },
+        { label: "g(x)", expression: g },
+      ],
+      a,
+      b,
+      "Las dos curvas en el intervalo de integración",
+    ),
     ...insight("Área total", fmt(area)),
   };
 }
@@ -732,7 +831,9 @@ export function serieTaylorMaclaurin(i: I) {
     d = derivative(d, "x").toString();
   }
   const exact = val(e, { x: xv });
-  const polynomialExpression = terms.map((term) => term.replace(/−/g, "-")).join("+");
+  const polynomialExpression = terms
+    .map((term) => term.replace(/−/g, "-"))
+    .join("+");
   return {
     polinomio: terms.join(" + "),
     aproximacion: Number(sum.toFixed(10)),
@@ -740,7 +841,15 @@ export function serieTaylorMaclaurin(i: I) {
     errorAbsoluto: Number(Math.abs(exact - sum).toFixed(10)),
     orden: order,
     derivadas: `Se calcularon y evaluaron las derivadas de orden 0 a ${order} en x = ${fmt(a)}.`,
-    _chart: lineChart([{ label: "f(x)", expression: e }, { label: `Taylor orden ${order}`, expression: polynomialExpression }], a - 3, a + 3, "Comparación entre la función y su polinomio de Taylor"),
+    _chart: lineChart(
+      [
+        { label: "f(x)", expression: e },
+        { label: `Taylor orden ${order}`, expression: polynomialExpression },
+      ],
+      a - 3,
+      a + 3,
+      "Comparación entre la función y su polinomio de Taylor",
+    ),
     ...insight(
       "Aproximación de Taylor",
       `En x=${fmt(xv)}, el error absoluto es ${fmt(Math.abs(exact - sum))}.`,
@@ -761,13 +870,26 @@ export function transformadaLaplace(i: I) {
     }
     m = t.match(/^(-?\d*\.?\d*)\*?exp\(([-\d.]+)\*?t\)$/);
     if (m) return `${m[1] || 1}/(s−${m[2]})`;
-    m = t.match(/^(-?\d*\.?\d*)\*?(sin|cos)\(([-\d.]+)\*?t\)$/);
+    m = t.match(
+      /^(-?\d*\.?\d*)\*?exp\(([-\d.]+)\*?t\)\*?(sin|cos)\(([-\d.]+)\*?t\)$/,
+    );
+    if (m) {
+      const c = m[1] === "" ? 1 : m[1] === "-" ? -1 : Number(m[1]),
+        a = Number(m[2]),
+        w = Number(m[4]),
+        shifted = `(s−${fmt(a)})`;
+      return m[3] === "sin"
+        ? `${fmt(c * w)}/(${shifted}^2+${fmt(w * w)})`
+        : `${fmt(c)}${shifted}/(${shifted}^2+${fmt(w * w)})`;
+    }
+    m = t.match(/^(-?\d*\.?\d*)\*?(sin|cos|sinh|cosh)\(([-\d.]+)\*?t\)$/);
     if (m) {
       const a = m[1] === "" ? 1 : m[1] === "-" ? -1 : Number(m[1]),
         w = Number(m[3]);
-      return m[2] === "sin"
-        ? `${fmt(a * w)}/(s^2+${fmt(w * w)})`
-        : `${fmt(a)}s/(s^2+${fmt(w * w)})`;
+      if (m[2] === "sin") return `${fmt(a * w)}/(s^2+${fmt(w * w)})`;
+      if (m[2] === "cos") return `${fmt(a)}s/(s^2+${fmt(w * w)})`;
+      if (m[2] === "sinh") return `${fmt(a * w)}/(s^2−${fmt(w * w)})`;
+      return `${fmt(a)}s/(s^2−${fmt(w * w)})`;
     }
     if (/^[-\d.]+$/.test(t)) return `${t}/s`;
     throw new Error(`Término todavía no soportado: ${t}`);
@@ -775,7 +897,7 @@ export function transformadaLaplace(i: I) {
   return {
     resultado: out.join(" + "),
     tabla:
-      "1 → 1/s\nt^n → n!/s^(n+1)\ne^(at) → 1/(s−a)\nsin(wt) → w/(s²+w²)\ncos(wt) → s/(s²+w²)",
+      "1 → 1/s\nt^n → n!/s^(n+1)\ne^(at) → 1/(s−a)\nsin(wt) → w/(s²+w²)\ncos(wt) → s/(s²+w²)\nsinh(wt) → w/(s²−w²)\ncosh(wt) → s/(s²−w²)\ne^(at)f(t) → F(s−a)",
     pasos: terms.map((t, k) => `${t} → ${out[k]}`).join("\n"),
     ...insight("Transformada de Laplace", out.join(" + ")),
   };
