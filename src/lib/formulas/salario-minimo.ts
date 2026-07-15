@@ -25,9 +25,9 @@ export interface Outputs {
 }
 
 // Valores oficiales abril 2026 — Res 9/2025 CNEPySMVyM
-const SMVM_MENSUAL = 357_800;
-const SMVM_HORA = 1_789;
-const FECHA = 'abril 2026 (Res 9/2025)';
+const SMVM_MENSUAL = 372_400;
+const SMVM_HORA = 1_862;
+const FECHA = 'julio 2026';
 // Jornada legal completa: 48h/sem × 52 sem / 12 meses ≈ 208h. La resolución
 // oficial redondea a 200h (8h × 25 días hábiles) al fijar el valor hora.
 const HORAS_MES_LEGAL = 200;

@@ -63,15 +63,15 @@ export interface TramoEscala {
  * Fuente: Art. 94 LIG · RG 4003 · actualización IPC primer semestre 2026.
  */
 export const ESCALA: TramoEscala[] = [
-  { hasta: 166_669, tasa: 0.05, acumulado: 0 },
-  { hasta: 333_338, tasa: 0.09, acumulado: 8_333 },
-  { hasta: 500_008, tasa: 0.12, acumulado: 23_334 },
-  { hasta: 750_011, tasa: 0.15, acumulado: 43_334 },
-  { hasta: 1_500_023, tasa: 0.19, acumulado: 80_835 },
-  { hasta: 2_250_034, tasa: 0.23, acumulado: 223_337 },
-  { hasta: 3_375_051, tasa: 0.27, acumulado: 395_839 },
-  { hasta: 5_062_576, tasa: 0.31, acumulado: 699_594 },
-  { hasta: Infinity, tasa: 0.35, acumulado: 1_222_727 },
+  { hasta: 166669.17, tasa: 0.05, acumulado: 0 },
+  { hasta: 333338.35, tasa: 0.09, acumulado: 8333.46 },
+  { hasta: 500007.52, tasa: 0.12, acumulado: 23333.68 },
+  { hasta: 750011.28, tasa: 0.15, acumulado: 43333.99 },
+  { hasta: 1500022.57, tasa: 0.19, acumulado: 80834.55 },
+  { hasta: 2250033.85, tasa: 0.23, acumulado: 223336.69 },
+  { hasta: 3375050.77, tasa: 0.27, acumulado: 395839.29 },
+  { hasta: 5062576.16, tasa: 0.31, acumulado: 699593.86 },
+  { hasta: Infinity, tasa: 0.35, acumulado: 1222726.73 },
 ];
 
 /** Aplica la escala mensual y devuelve {impuesto liquidado, alícuota marginal}. */
