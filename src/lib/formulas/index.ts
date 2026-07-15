@@ -506,7 +506,6 @@ import { cargaCapacitorConstanteRc } from './carga-capacitor-constante-rc';
 import { cargaGlucemicaComida } from './carga-glucemica-comida';
 import { cargaSemanalRunningRegla10 } from './carga-semanal-running-regla-10';
 import { carneAsadoKgPorPersona } from './carne-asado-kg-por-persona';
-import { cartaNatalBasica } from './carta-natal-basica';
 import { castracionEdadIdealPerroGato } from './castracion-edad-ideal-perro-gato';
 import { castracionPerraGataEdadIdeal } from './castracion-perra-gata-edad-ideal';
 import { catTarjetaCreditoMexico } from './cat-tarjeta-credito-mexico';
@@ -3552,7 +3551,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'carga-glucemica-comida': cargaGlucemicaComida,
   'carga-semanal-running-regla-10': cargaSemanalRunningRegla10,
   'carne-asado-kg-por-persona': carneAsadoKgPorPersona,
-  'carta-natal-basica': cartaNatalBasica,
   'castracion-edad-ideal-perro-gato': castracionEdadIdealPerroGato,
   'castracion-perra-gata-edad-ideal': castracionPerraGataEdadIdeal,
   'cat-tarjeta-credito-mexico': catTarjetaCreditoMexico,
