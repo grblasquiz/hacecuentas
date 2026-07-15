@@ -492,8 +492,10 @@ import { cantidadPlantasSetoMetros } from './cantidad-plantas-seto-metros';
 import { cantidadVentanasLuzNaturalM2 } from './cantidad-ventanas-luz-natural-m2';
 import { capacidadCargaCamionetaPesoUtil } from './capacidad-carga-camioneta-peso-util';
 import { capacidadCreditoHipotecario } from './capacidad-credito-hipotecario';
+import { capacidadEndeudamiento } from './capacidad-endeudamiento';
 import { capacidadTanqueCisterna } from './capacidad-tanque-cisterna';
 import { capacitorCargaDescargaRc } from './capacitor-carga-descarga-rc';
+import { capitalTrabajo } from './capital-trabajo';
 import { captacionAguaLluviaTecho } from './captacion-agua-lluvia-techo';
 import { compute as compute__car_loan_monthly_payment_calculator } from './car-loan-monthly-payment-calculator';
 import { carbohidratosDuranteEjercicio } from './carbohidratos-durante-ejercicio';
@@ -600,6 +602,8 @@ import { compute as compute__comision_uber_driver_ganancia_real_argentina_2026 }
 import { comisionUberEatsGlovoRider } from './comision-uber-eats-glovo-rider';
 import { comisionVenta } from './comision-venta';
 import { compute as compute__comparador_comisiones_afp_peru } from './comparador-comisiones-afp-peru';
+import { comparadorPrecios } from './comparador-precios';
+import { comparadorPrestamos } from './comparador-prestamos';
 import { compute as compute__comparador_tarjeta_debito_colombia_2026_comisiones } from './comparador-tarjeta-debito-colombia-2026-comisiones';
 import { compararInversiones } from './comparar-inversiones';
 import { compararNaftaVsGncAhorro } from './comparar-nafta-vs-gnc-ahorro';
@@ -848,6 +852,7 @@ import { costoVeterinarioConsultaPromedio } from './costo-veterinario-consulta-p
 import { costoViajeCombustibleKilometros } from './costo-viaje-combustible-kilometros';
 import { compute as compute__costo_vida_mensual_ecuador } from './costo-vida-mensual-ecuador';
 import { compute as compute__costo_vida_mensual_peru } from './costo-vida-mensual-peru';
+import { costosFijosVariables } from './costos-fijos-variables';
 import { cotillonCumplePersonas } from './cotillon-cumple-personas';
 import { cpa } from './cpa';
 import { cpmCpcConversionAds } from './cpm-cpc-conversion-ads';
@@ -939,6 +944,7 @@ import { cuotaAlimentariaHijos } from './cuota-alimentaria-hijos';
 import { cuotaAlimentosPorcentajeSueldoHijo } from './cuota-alimentos-porcentaje-sueldo-hijo';
 import { cuotaCreditoHipotecarioUvaBancoNacion } from './cuota-credito-hipotecario-uva-banco-nacion';
 import { compute as compute__cuota_jardin_maternal_cama_cuna_mensual_2026 } from './cuota-jardin-maternal-cama-cuna-mensual-2026';
+import { cuotaMaximaSegunIngreso } from './cuota-maxima-segun-ingreso';
 import { compute as compute__cuota_moderadora_copago_eps_colombia_2026 } from './cuota-moderadora-copago-eps-colombia-2026';
 import { cuotaPrestamoAutoFrancesArgentino } from './cuota-prestamo-auto-frances-argentino';
 import { cuotaPrestamoParaguay } from './cuota-prestamo-paraguay';
@@ -1471,6 +1477,7 @@ import { horasExtrasVenezuela } from './horas-extras-venezuela';
 import { horasFacturablesEmpleadoVsFreelanceComparativa } from './horas-facturables-empleado-vs-freelance-comparativa';
 import { horasLuzDiaFechaLatitud } from './horas-luz-dia-fecha-latitud';
 import { horasMaestriaCurvaAprendizaje8020 } from './horas-maestria-curva-aprendizaje-80-20';
+import { horasNocturnas } from './horas-nocturnas';
 import { horasPantallaEdadOmsRecomendadoNino } from './horas-pantalla-edad-oms-recomendado-nino';
 import { horasPeliculasSerieInmersionIdioma } from './horas-peliculas-serie-inmersion-idioma';
 import { horasPractica10000MaestriaGladwell } from './horas-practica-10000-maestria-gladwell';
@@ -2256,6 +2263,7 @@ import { precioIva } from './precio-iva';
 import { precioM2Zona } from './precio-m2-zona';
 import { precioMinimoVenta } from './precio-minimo-venta';
 import { precioPorKiloLitro } from './precio-por-kilo-litro';
+import { precioPorUnidad } from './precio-por-unidad';
 import { precioPromedioCompraCripto } from './precio-promedio-compra-cripto';
 import { compute as compute__precio_remis_por_km_argentina_2026_cordoba_rosario_buenos_aires } from './precio-remis-por-km-argentina-2026-cordoba-rosario-buenos-aires';
 import { compute as compute__precio_uber_cabify_didi_comparador_argentina_2026 } from './precio-uber-cabify-didi-comparador-argentina-2026';
@@ -2323,6 +2331,7 @@ import { probabilidadBinomial } from './probabilidad-binomial';
 import { probabilidadBinomialEnsayosExitos } from './probabilidad-binomial-ensayos-exitos';
 import { probabilidadConocerPareja } from './probabilidad-conocer-pareja';
 import { probabilidadDropLoot } from './probabilidad-drop-loot';
+import { probabilidadEvento } from './probabilidad-evento';
 import { probabilidadLluvia24h } from './probabilidad-lluvia-24h';
 import { probabilidadLoteriaPremio } from './probabilidad-loteria-premio';
 import { probioticoDosisUfcDiariaBebeAdulto } from './probiotico-dosis-ufc-diaria-bebe-adulto';
@@ -2473,6 +2482,7 @@ import { rentabilidadAlquilerInmuebleCabaNetoBruto } from './rentabilidad-alquil
 import { rentabilidadAlquilerVsVenta } from './rentabilidad-alquiler-vs-venta';
 import { compute as compute__rentabilidad_finca_raiz_colombia_renta_fija_comparada } from './rentabilidad-finca-raiz-colombia-renta-fija-comparada';
 import { compute as compute__rentabilidad_fondo_inversion_colectiva_fic_colombia } from './rentabilidad-fondo-inversion-colectiva-fic-colombia';
+import { rentabilidadMensual } from './rentabilidad-mensual';
 import { compute as compute__rentabilidade_cdb_poupanca_tesouro } from './rentabilidade-cdb-poupanca-tesouro';
 import { compute as compute__renting_leasing_compra_coche_espana_tco } from './renting-leasing-compra-coche-espana-tco';
 import { repasoOptimoExamen } from './repaso-optimo-examen';
@@ -2550,6 +2560,7 @@ import { rugbyHandicapPuntosDescensoPromedio } from './rugby-handicap-puntos-des
 import { runwayStartupCashBurnRateMeses } from './runway-startup-cash-burn-rate-meses';
 import { compute as compute__rural_rentabilidad_hectarea_soja_maiz_trigo_2026 } from './rural-rentabilidad-hectarea-soja-maiz-trigo-2026';
 import { compute as compute__rus_nuevo_regimen_unico_simplificado_peru } from './rus-nuevo-regimen-unico-simplificado-peru';
+import { sacProporcional } from './sac-proporcional';
 import { sakalechesProduccion } from './sacaleches-produccion';
 import { salAguaPasta } from './sal-agua-pasta';
 import { compute as compute__salario_aprendiz_sena_2026 } from './salario-aprendiz-sena-2026';
@@ -3522,8 +3533,10 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cantidad-ventanas-luz-natural-m2': cantidadVentanasLuzNaturalM2,
   'capacidad-carga-camioneta-peso-util': capacidadCargaCamionetaPesoUtil,
   'capacidad-credito-hipotecario': capacidadCreditoHipotecario,
+  'capacidad-endeudamiento': capacidadEndeudamiento,
   'capacidad-tanque-cisterna': capacidadTanqueCisterna,
   'capacitor-carga-descarga-rc': capacitorCargaDescargaRc,
+  'capital-trabajo': capitalTrabajo,
   'captacion-agua-lluvia-techo': captacionAguaLluviaTecho,
   'car-loan-monthly-payment-calculator': compute__car_loan_monthly_payment_calculator,
   'carbohidratos-durante-ejercicio': carbohidratosDuranteEjercicio,
@@ -3630,6 +3643,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'comision-uber-eats-glovo-rider': comisionUberEatsGlovoRider,
   'comision-venta': comisionVenta,
   'comparador-comisiones-afp-peru': compute__comparador_comisiones_afp_peru,
+  'comparador-precios': comparadorPrecios,
+  'comparador-prestamos': comparadorPrestamos,
   'comparador-tarjeta-debito-colombia-2026-comisiones': compute__comparador_tarjeta_debito_colombia_2026_comisiones,
   'comparar-inversiones': compararInversiones,
   'comparar-nafta-vs-gnc-ahorro': compararNaftaVsGncAhorro,
@@ -3878,6 +3893,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'costo-viaje-combustible-kilometros': costoViajeCombustibleKilometros,
   'costo-vida-mensual-ecuador': compute__costo_vida_mensual_ecuador,
   'costo-vida-mensual-peru': compute__costo_vida_mensual_peru,
+  'costos-fijos-variables': costosFijosVariables,
   'cotillon-cumple-personas': cotillonCumplePersonas,
   'cpa': cpa,
   'cpm-cpc-conversion-ads': cpmCpcConversionAds,
@@ -3969,6 +3985,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cuota-alimentos-porcentaje-sueldo-hijo': cuotaAlimentosPorcentajeSueldoHijo,
   'cuota-credito-hipotecario-uva-banco-nacion': cuotaCreditoHipotecarioUvaBancoNacion,
   'cuota-jardin-maternal-cama-cuna-mensual-2026': compute__cuota_jardin_maternal_cama_cuna_mensual_2026,
+  'cuota-maxima-segun-ingreso': cuotaMaximaSegunIngreso,
   'cuota-moderadora-copago-eps-colombia-2026': compute__cuota_moderadora_copago_eps_colombia_2026,
   'cuota-prestamo-auto-frances-argentino': cuotaPrestamoAutoFrancesArgentino,
   'cuota-prestamo-paraguay': cuotaPrestamoParaguay,
@@ -4501,6 +4518,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'horas-facturables-empleado-vs-freelance-comparativa': horasFacturablesEmpleadoVsFreelanceComparativa,
   'horas-luz-dia-fecha-latitud': horasLuzDiaFechaLatitud,
   'horas-maestria-curva-aprendizaje-80-20': horasMaestriaCurvaAprendizaje8020,
+  'horas-nocturnas': horasNocturnas,
   'horas-pantalla-edad-oms-recomendado-nino': horasPantallaEdadOmsRecomendadoNino,
   'horas-peliculas-serie-inmersion-idioma': horasPeliculasSerieInmersionIdioma,
   'horas-practica-10000-maestria-gladwell': horasPractica10000MaestriaGladwell,
@@ -5286,6 +5304,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'precio-m2-zona': precioM2Zona,
   'precio-minimo-venta': precioMinimoVenta,
   'precio-por-kilo-litro': precioPorKiloLitro,
+  'precio-por-unidad': precioPorUnidad,
   'precio-promedio-compra-cripto': precioPromedioCompraCripto,
   'precio-remis-por-km-argentina-2026-cordoba-rosario-buenos-aires': compute__precio_remis_por_km_argentina_2026_cordoba_rosario_buenos_aires,
   'precio-uber-cabify-didi-comparador-argentina-2026': compute__precio_uber_cabify_didi_comparador_argentina_2026,
@@ -5353,6 +5372,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'probabilidad-binomial-ensayos-exitos': probabilidadBinomialEnsayosExitos,
   'probabilidad-conocer-pareja': probabilidadConocerPareja,
   'probabilidad-drop-loot': probabilidadDropLoot,
+  'probabilidad-evento': probabilidadEvento,
   'probabilidad-lluvia-24h': probabilidadLluvia24h,
   'probabilidad-loteria-premio': probabilidadLoteriaPremio,
   'probiotico-dosis-ufc-diaria-bebe-adulto': probioticoDosisUfcDiariaBebeAdulto,
@@ -5503,6 +5523,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'rentabilidad-alquiler-vs-venta': rentabilidadAlquilerVsVenta,
   'rentabilidad-finca-raiz-colombia-renta-fija-comparada': compute__rentabilidad_finca_raiz_colombia_renta_fija_comparada,
   'rentabilidad-fondo-inversion-colectiva-fic-colombia': compute__rentabilidad_fondo_inversion_colectiva_fic_colombia,
+  'rentabilidad-mensual': rentabilidadMensual,
   'rentabilidade-cdb-poupanca-tesouro': compute__rentabilidade_cdb_poupanca_tesouro,
   'renting-leasing-compra-coche-espana-tco': compute__renting_leasing_compra_coche_espana_tco,
   'repaso-optimo-examen': repasoOptimoExamen,
@@ -5580,6 +5601,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'runway-startup-cash-burn-rate-meses': runwayStartupCashBurnRateMeses,
   'rural-rentabilidad-hectarea-soja-maiz-trigo-2026': compute__rural_rentabilidad_hectarea_soja_maiz_trigo_2026,
   'rus-nuevo-regimen-unico-simplificado-peru': compute__rus_nuevo_regimen_unico_simplificado_peru,
+  'sac-proporcional': sacProporcional,
   'sacaleches-produccion': sakalechesProduccion,
   'sal-agua-pasta': salAguaPasta,
   'salario-aprendiz-sena-2026': compute__salario_aprendiz_sena_2026,
