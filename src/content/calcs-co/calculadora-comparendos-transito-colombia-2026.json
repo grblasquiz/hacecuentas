@@ -23,32 +23,106 @@
     "Un peatón multado (tipo A, $168.900) confirma que los comparendos también aplican a peatones y ciclistas y que el descuento funciona igual."
   ],
   "fields": [
-    { "id": "tipoInfraccion", "label": "Tipo de infracción", "type": "select", "default": "C", "options": [
-      { "value": "A", "label": "Tipo A — $168.900 (peatones y ciclistas)" },
-      { "value": "B", "label": "Tipo B — $337.400 (mal estacionado, sin documentos)" },
-      { "value": "C", "label": "Tipo C — $633.200 (velocidad, semáforo, sin tecnomecánica)" },
-      { "value": "D", "label": "Tipo D — $1.266.100 (sin licencia, contravía)" },
-      { "value": "E", "label": "Tipo E — $1.899.300 (alcoholemia, sin descuento)" }
-    ] },
-    { "id": "tipoNotificacion", "label": "¿Cómo te impusieron el comparendo?", "type": "select", "default": "agente", "options": [
-      { "value": "agente", "label": "Agente de tránsito en vía (plazos 5/20 días)" },
-      { "value": "electronico", "label": "Fotodetección / cámara (plazos 11/26 días)" }
-    ] },
-    { "id": "diasHabiles", "label": "Días hábiles desde la orden o notificación", "type": "number", "required": false, "default": 0, "placeholder": "3", "min": 0, "step": 1, "unit": "días", "hint": "0 si te notificaron hoy. Cuenta solo días hábiles (sin sábados, domingos ni festivos)" },
-    { "id": "haceCurso", "label": "¿Haces el curso sobre normas de tránsito?", "type": "select", "default": "si", "options": [
-      { "value": "si", "label": "Sí (obligatorio para el descuento)" },
-      { "value": "no", "label": "No (pago el 100%)" }
-    ] }
+    {
+      "id": "tipoInfraccion",
+      "label": "Tipo de infracción",
+      "type": "select",
+      "default": "C",
+      "options": [
+        {
+          "value": "A",
+          "label": "Tipo A — $168.900 (peatones y ciclistas)"
+        },
+        {
+          "value": "B",
+          "label": "Tipo B — $337.400 (mal estacionado, sin documentos)"
+        },
+        {
+          "value": "C",
+          "label": "Tipo C — $633.200 (velocidad, semáforo, sin tecnomecánica)"
+        },
+        {
+          "value": "D",
+          "label": "Tipo D — $1.266.100 (sin licencia, contravía)"
+        },
+        {
+          "value": "E",
+          "label": "Tipo E — $1.899.300 (alcoholemia, sin descuento)"
+        }
+      ]
+    },
+    {
+      "id": "tipoNotificacion",
+      "label": "¿Cómo te impusieron el comparendo?",
+      "type": "select",
+      "default": "agente",
+      "options": [
+        {
+          "value": "agente",
+          "label": "Agente de tránsito en vía (plazos 5/20 días)"
+        },
+        {
+          "value": "electronico",
+          "label": "Fotodetección / cámara (plazos 11/26 días)"
+        }
+      ]
+    },
+    {
+      "id": "diasHabiles",
+      "label": "Días hábiles desde la orden o notificación",
+      "type": "number",
+      "required": false,
+      "default": 0,
+      "placeholder": "3",
+      "min": 0,
+      "step": 1,
+      "unit": "días",
+      "hint": "0 si te notificaron hoy. Cuenta solo días hábiles (sin sábados, domingos ni festivos)"
+    },
+    {
+      "id": "haceCurso",
+      "label": "¿Haces el curso sobre normas de tránsito?",
+      "type": "select",
+      "default": "si",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí (obligatorio para el descuento)"
+        },
+        {
+          "value": "no",
+          "label": "No (pago el 100%)"
+        }
+      ]
+    }
   ],
   "outputs": [
-    { "id": "aPagar", "label": "Pagas hoy", "primary": true },
-    { "id": "valorMulta", "label": "Valor pleno de la multa" },
-    { "id": "ahorro", "label": "Te ahorras" },
-    { "id": "detalle", "label": "Detalle" }
+    {
+      "id": "aPagar",
+      "label": "Pagas hoy",
+      "primary": true
+    },
+    {
+      "id": "valorMulta",
+      "label": "Valor pleno de la multa"
+    },
+    {
+      "id": "ahorro",
+      "label": "Te ahorras"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
   ],
   "example": {
     "title": "Ejemplo: comparendo tipo C por exceso de velocidad, impuesto por agente hace 3 días hábiles, con curso",
-    "inputs": { "tipoInfraccion": "C", "tipoNotificacion": "agente", "diasHabiles": 3, "haceCurso": "si" },
+    "inputs": {
+      "tipoInfraccion": "C",
+      "tipoNotificacion": "agente",
+      "diasHabiles": 3,
+      "haceCurso": "si"
+    },
     "steps": [
       "Valor pleno del comparendo tipo C en 2026: $633.200 (indexado por UVB).",
       "Pago al día hábil 3 ≤ 5 días y con curso → aplica el descuento del 50%.",
@@ -59,34 +133,115 @@
   },
   "explanation": "## Cuánto vale cada comparendo en 2026\n\nDesde la vigencia 2026, las multas de tránsito se actualizan por **UVB — Unidad de Valor Básico** (artículo 313 de la Ley 2294 de 2023, Plan Nacional de Desarrollo), y no por salarios mínimos diarios como hasta 2025. El cambio desligó las multas del aumento del salario mínimo (+23% en 2026): los valores oficiales de la Circular 20264000000037 del Ministerio de Transporte, redondeados a la centena, son:\n\n| Tipo | Valor 2026 | Con 50% (curso + pronto pago) | Con 25% | Ejemplos de infracciones |\n|---|---|---|---|---|\n| A | $168.900 | $84.450 | $126.675 | Peatón o ciclista que incumple normas |\n| B | $337.400 | $168.700 | $253.050 | Estacionar mal, no portar documentos |\n| C | $633.200 | $316.600 | $474.900 | Exceso de velocidad, semáforo en rojo, sin tecnomecánica |\n| D | $1.266.100 | $633.050 | $949.575 | Conducir sin licencia, transitar en contravía |\n| E | $1.899.300 | — | — | Conducir embriagado (sin descuento, Ley 1696/2013) |\n\n## Cómo funciona el descuento por pronto pago\n\nEl artículo 136 del Código Nacional de Tránsito (Ley 769 de 2002, modificado por la Ley 1383 de 2010 y la Ley 2161 de 2021) premia pagar rápido **y** capacitarse:\n\n```\n50% de descuento → pago dentro de 5 días hábiles + curso\n25% de descuento → pago dentro de 20 días hábiles + curso\nDespués del día 20 → 100% de la multa\n```\n\nPara comparendos impuestos por **medios técnicos** (fotodetección o cámaras salvavidas), los plazos se cuentan desde la **notificación** y son más amplios: **11 días hábiles** para el 50% y **26 días hábiles** para el 25%.\n\nDos condiciones que la gente suele pasar por alto:\n\n1. **El curso es obligatorio para cualquier descuento.** Se hace en un Centro Integral de Atención (CIA) o en el organismo de tránsito, cuesta aparte (la tarifa la fija cada CIA u organismo de tránsito) y debe acreditarse antes de pagar. Sin curso, pagas el 100% aunque pagues el mismo día.\n2. **Los días son hábiles**, no calendario: sábados, domingos y festivos no cuentan. Un comparendo del viernes te deja todo el fin de semana sin consumir plazo.\n\n## La excepción: alcoholemia no tiene descuento\n\nLas infracciones por **conducir bajo el influjo del alcohol** (las multas tipo E) quedaron expresamente **excluidas** del beneficio de pronto pago por la **Ley 1696 de 2013**. Además de pagar la multa completa ($1.899.300 como valor base 2026, que se multiplica según el grado de alcoholemia y la reincidencia), hay suspensión de la licencia e inmovilización del vehículo. Ningún curso reduce esa sanción.\n\n## Cómo consultar y pagar tu comparendo\n\nTodos los comparendos del país se consolidan en el **SIMIT** (simit.org.co): consultando con tu cédula o placa ves cada comparendo, su estado, el valor con el descuento vigente y la fecha de imposición o notificación — que es la que define en qué día hábil estás parado. El pago se hace en línea (PSE) desde el propio SIMIT o desde el portal del organismo de tránsito que impuso la multa (en Bogotá, la Secretaría Distrital de Movilidad), y también en los puntos de recaudo autorizados. El orden correcto del trámite importa: primero **inscribes y haces el curso**, después **pagas con el descuento aplicado**; si pagas primero el 100% por error, recuperar la diferencia exige un trámite de devolución lento. Guarda el certificado del curso y el comprobante de pago hasta que el comparendo aparezca como pagado en el SIMIT.\n\nEn los comparendos por **fotodetección**, revisa con cuidado la fecha de **notificación** (no la fecha de la foto): tus 11 o 26 días hábiles corren desde que te notifican válidamente al correo o dirección que tienes registrados en el RUNT. Si la dirección está desactualizada, puedes enterarte tarde y perder la ventana del 50% sin saberlo — otro motivo para mantener el RUNT al día.\n\n## Qué pasa si no pagas\n\nUn comparendo en firme sin pagar genera **intereses moratorios** y bloquea trámites: no puedes renovar la licencia, vender el vehículo ni hacer traspasos mientras aparezca pendiente en el **SIMIT**. Los organismos de tránsito pueden cobrar por jurisdicción coactiva (embargos de cuentas y salario). Si no estás de acuerdo con la infracción, tienes derecho a **impugnar el comparendo** en audiencia dentro de los mismos plazos — pero ojo: si impugnas y pierdes, ya no hay descuento.\n\nRecuerda también que varias infracciones tipo C se evitan con mantenimiento al día: verifica el costo de tu [revisión técnico-mecánica y la multa por no tenerla](/co/calculadora-revision-tecnomecanica-colombia-precio-multa) y el [precio del SOAT 2026 según tu vehículo](/co/calculadora-soat-colombia-precio-2026-vehiculo) — circular sin SOAT también es comparendo y el vehículo queda inmovilizado.\n\n## Estrategia: cuándo pagar según el día en que estás\n\n| Día hábil en que pagas (agente / fotodetección) | Descuento | Tipo C queda en |\n|---|---|---|\n| 0 a 5 / 0 a 11 | 50% (con curso) | $316.600 |\n| 6 a 20 / 12 a 26 | 25% (con curso) | $474.900 |\n| 21+ / 27+ | Sin descuento | $633.200 |\n\nLa diferencia entre pagar la primera semana y dejarlo vencer es **el doble de la plata**. Si tienes varios comparendos, prioriza los que aún están dentro de la ventana del 50%: el ahorro marginal es mayor.\n\n## Errores comunes\n\n- **Contar días calendario en vez de hábiles**: el plazo del 50% son 5 días *hábiles*; un puente festivo te regala días.\n- **Pagar sin hacer el curso primero**: el descuento exige acreditar el curso; pagar \"rápido\" sin curso es pagar el 100%.\n- **Creer que la fotomulta tiene los mismos 5 días**: en fotodetección el 50% corre hasta el día 11 hábil desde la notificación (Ley 2161 de 2021).\n- **Esperar el descuento en una multa tipo E**: alcoholemia no tiene pronto pago, por ley.\n- **Ignorar el comparendo de otra ciudad**: el SIMIT es nacional; la multa te alcanza en cualquier trámite de tránsito del país.\n\n## Cuándo aplica y excepciones\n\nLos valores A-E son los del Código Nacional de Tránsito vigentes para 2026 en todo el país. Algunas multas tienen valores especiales que no salen de esta tabla (transporte informal, sobrecupo, infracciones de tránsito de carga) y las sanciones por embriaguez escalan según el grado de alcohol y la reincidencia, llegando a multiplicar varias veces el valor base tipo E. Los municipios no pueden cambiar el valor de la multa, pero sí administran los cursos y sus tarifas. Si tu vehículo además debe impuestos, revisa el [impuesto vehicular de Bogotá 2026](/co/calculadora-impuesto-vehiculos-bogota-2026-tabla) antes de cualquier trámite de traspaso.\n\n## Datos clave 2026\n\n| Concepto | Valor |\n|---|---|\n| Multa tipo A | $168.900 |\n| Multa tipo B | $337.400 |\n| Multa tipo C | $633.200 |\n| Multa tipo D | $1.266.100 |\n| Multa tipo E (base) | $1.899.300 — sin descuento |\n| Descuento 50% | Hasta 5 días hábiles (11 en fotodetección) + curso |\n| Descuento 25% | Hasta 20 días hábiles (26 en fotodetección) + curso |\n| Indexación | UVB, art. 313 Ley 2294/2023 (ya no SMDLV) |\n\n## Disclaimer\n\nCálculo orientativo con los valores de la vigencia 2026. El costo del curso pedagógico se paga aparte y varía por ciudad. Verifica el estado real de tu comparendo y los plazos exactos en el SIMIT (simit.org.co) o en el organismo de tránsito que lo impuso, porque la fecha de notificación efectiva define tu ventana de descuento.",
   "faq": [
-    { "q": "¿Cuánto vale un comparendo tipo C en 2026?", "a": "**$633.200**. Es la multa más común: exceso de velocidad, pasarse el semáforo en rojo, circular sin revisión técnico-mecánica. Con curso y pago dentro de los 5 días hábiles (11 si fue fotodetección) queda en **$316.600**; hasta el día 20 (26), en $474.900." },
-    { "q": "¿Cuánto vale un comparendo tipo D en 2026?", "a": "**$1.266.100**. Incluye conducir sin licencia o con la licencia vencida y transitar en contravía. Con el descuento del 50% (curso + pago en 5/11 días hábiles) baja a **$633.050**; con el 25%, a $949.575." },
-    { "q": "¿Por qué las multas de 2026 no subieron con el salario mínimo?", "a": "Porque desde 2026 se **indexan por UVB** (Unidad de Valor Básico, art. 313 de la Ley 2294 de 2023) y no por salarios mínimos diarios. Como el SMLMV subió 23% y la UVB se ajusta por inflación, las multas subieron mucho menos que el mínimo este año." },
-    { "q": "¿Cómo obtengo el descuento del 50% en un comparendo?", "a": "Dos requisitos simultáneos: **hacer el curso** sobre normas de tránsito en un CIA u organismo de tránsito autorizado, y **pagar dentro de los 5 días hábiles** siguientes a la orden de comparendo (**11 días hábiles** si fue por fotodetección, contados desde la notificación). Sin curso no hay descuento aunque pagues el mismo día." },
-    { "q": "¿Cuántos días tengo si la multa fue por fotodetección (fotomulta)?", "a": "Los plazos se amplían: **11 días hábiles** desde la notificación para el descuento del 50% y **26 días hábiles** para el 25% (Ley 2161 de 2021). La notificación válida es al correo o dirección registrados en el RUNT — por eso conviene tenerlos actualizados." },
-    { "q": "¿La multa por alcoholemia tiene descuento por pronto pago?", "a": "**No.** La Ley 1696 de 2013 excluyó expresamente las infracciones por conducir embriagado del beneficio del art. 136. La multa tipo E ($1.899.300 base en 2026, que escala según grado de alcohol y reincidencia) se paga completa, y se suman la suspensión de licencia y la inmovilización del vehículo." },
-    { "q": "¿Los días del descuento son hábiles o calendario?", "a": "**Hábiles**: no cuentan sábados, domingos ni festivos. Un comparendo impuesto un viernes consume su primer día hábil el lunes (o el martes si el lunes es festivo). Esta calculadora te pide los días hábiles ya descontados." },
-    { "q": "¿Cuánto cuesta el curso para el descuento y dónde se hace?", "a": "Se hace en los **Centros Integrales de Atención (CIA)** o en el organismo de tránsito de tu ciudad, y cada uno fija su tarifa (consulta la de tu CIA antes de ir). Aún pagando el curso, el ahorro es claro: en un comparendo tipo C el descuento del 50% son **$316.600**, normalmente varias veces el costo del curso." },
-    { "q": "¿Qué pasa si no pago el comparendo?", "a": "Queda en firme, genera **intereses moratorios** y te bloquea trámites: renovar licencia, traspasos y venta del vehículo, mientras figure en el **SIMIT** (que es nacional). El organismo de tránsito puede embargarte cuentas o salario por cobro coactivo." },
-    { "q": "¿Puedo impugnar el comparendo en vez de pagar con descuento?", "a": "Sí: puedes pedir audiencia ante el organismo de tránsito dentro de los mismos plazos (5 u 11 días hábiles). Pero es una apuesta: si la autoridad confirma la infracción, **pierdes el descuento** y pagas el 100%. Impugna solo si tienes evidencia real (fotos, GPS, errores del comparendo)." },
-    { "q": "¿Un peatón o un ciclista pueden recibir comparendos?", "a": "Sí: las infracciones de peatones y ciclistas son las **tipo A ($168.900 en 2026)**. Aplican las mismas reglas de descuento por pronto pago con curso que para los conductores." }
+    {
+      "q": "¿Cuánto vale un comparendo tipo C en 2026?",
+      "a": "**$633.200**. Es la multa más común: exceso de velocidad, pasarse el semáforo en rojo, circular sin revisión técnico-mecánica. Con curso y pago dentro de los 5 días hábiles (11 si fue fotodetección) queda en **$316.600**; hasta el día 20 (26), en $474.900."
+    },
+    {
+      "q": "¿Cuánto vale un comparendo tipo D en 2026?",
+      "a": "**$1.266.100**. Incluye conducir sin licencia o con la licencia vencida y transitar en contravía. Con el descuento del 50% (curso + pago en 5/11 días hábiles) baja a **$633.050**; con el 25%, a $949.575."
+    },
+    {
+      "q": "¿Por qué las multas de 2026 no subieron con el salario mínimo?",
+      "a": "Porque desde 2026 se **indexan por UVB** (Unidad de Valor Básico, art. 313 de la Ley 2294 de 2023) y no por salarios mínimos diarios. Como el SMLMV subió 23% y la UVB se ajusta por inflación, las multas subieron mucho menos que el mínimo este año."
+    },
+    {
+      "q": "¿Cómo obtengo el descuento del 50% en un comparendo?",
+      "a": "Dos requisitos simultáneos: **hacer el curso** sobre normas de tránsito en un CIA u organismo de tránsito autorizado, y **pagar dentro de los 5 días hábiles** siguientes a la orden de comparendo (**11 días hábiles** si fue por fotodetección, contados desde la notificación). Sin curso no hay descuento aunque pagues el mismo día."
+    },
+    {
+      "q": "¿Cuántos días tengo si la multa fue por fotodetección (fotomulta)?",
+      "a": "Los plazos se amplían: **11 días hábiles** desde la notificación para el descuento del 50% y **26 días hábiles** para el 25% (Ley 2161 de 2021). La notificación válida es al correo o dirección registrados en el RUNT — por eso conviene tenerlos actualizados."
+    },
+    {
+      "q": "¿La multa por alcoholemia tiene descuento por pronto pago?",
+      "a": "**No.** La Ley 1696 de 2013 excluyó expresamente las infracciones por conducir embriagado del beneficio del art. 136. La multa tipo E ($1.899.300 base en 2026, que escala según grado de alcohol y reincidencia) se paga completa, y se suman la suspensión de licencia y la inmovilización del vehículo."
+    },
+    {
+      "q": "¿Los días del descuento son hábiles o calendario?",
+      "a": "**Hábiles**: no cuentan sábados, domingos ni festivos. Un comparendo impuesto un viernes consume su primer día hábil el lunes (o el martes si el lunes es festivo). Esta calculadora te pide los días hábiles ya descontados."
+    },
+    {
+      "q": "¿Cuánto cuesta el curso para el descuento y dónde se hace?",
+      "a": "Se hace en los **Centros Integrales de Atención (CIA)** o en el organismo de tránsito de tu ciudad, y cada uno fija su tarifa (consulta la de tu CIA antes de ir). Aún pagando el curso, el ahorro es claro: en un comparendo tipo C el descuento del 50% son **$316.600**, normalmente varias veces el costo del curso."
+    },
+    {
+      "q": "¿Qué pasa si no pago el comparendo?",
+      "a": "Queda en firme, genera **intereses moratorios** y te bloquea trámites: renovar licencia, traspasos y venta del vehículo, mientras figure en el **SIMIT** (que es nacional). El organismo de tránsito puede embargarte cuentas o salario por cobro coactivo."
+    },
+    {
+      "q": "¿Puedo impugnar el comparendo en vez de pagar con descuento?",
+      "a": "Sí: puedes pedir audiencia ante el organismo de tránsito dentro de los mismos plazos (5 u 11 días hábiles). Pero es una apuesta: si la autoridad confirma la infracción, **pierdes el descuento** y pagas el 100%. Impugna solo si tienes evidencia real (fotos, GPS, errores del comparendo)."
+    },
+    {
+      "q": "¿Un peatón o un ciclista pueden recibir comparendos?",
+      "a": "Sí: las infracciones de peatones y ciclistas son las **tipo A ($168.900 en 2026)**. Aplican las mismas reglas de descuento por pronto pago con curso que para los conductores."
+    }
   ],
   "sources": [
-    { "name": "Circular MinTransporte 20264000000037 — valores de multas vigencia 2026 (tabla oficial)", "url": "https://barranquilla.gov.co/wp-content/uploads/2026/01/multas-comparendos-2026.pdf" },
-    { "name": "Código Nacional de Tránsito, art. 136 (reducción de la multa) — Ley 769 de 2002", "url": "https://leyes.co/codigo_nacional_de_transito_terrestre/136.htm" },
-    { "name": "Ley 2294 de 2023, art. 313 (indexación por UVB) — Función Pública", "url": "https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=209510" },
-    { "name": "SIMIT — Sistema Integrado de Multas y Sanciones de Tránsito", "url": "https://www.simit.org.co/" }
+    {
+      "name": "Circular MinTransporte 20264000000037 — valores de multas vigencia 2026 (tabla oficial)",
+      "url": "https://barranquilla.gov.co/wp-content/uploads/2026/01/multas-comparendos-2026.pdf"
+    },
+    {
+      "name": "Código Nacional de Tránsito, art. 136 (reducción de la multa) — Ley 769 de 2002",
+      "url": "https://leyes.co/codigo_nacional_de_transito_terrestre/136.htm"
+    },
+    {
+      "name": "Ley 2294 de 2023, art. 313 (indexación por UVB) — Función Pública",
+      "url": "https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=209510"
+    },
+    {
+      "name": "SIMIT — Sistema Integrado de Multas y Sanciones de Tránsito",
+      "url": "https://www.simit.org.co/"
+    }
   ],
   "referenceTables": [
     {
       "title": "Valores de comparendos por tipo 2026 y descuentos por pronto pago",
-      "headers": ["Tipo", "Valor pleno 2026", "Con 50% (curso + ≤5 días)", "Con 25% (curso + ≤20 días)", "Ejemplos de infracción"],
+      "headers": [
+        "Tipo",
+        "Valor pleno 2026",
+        "Con 50% (curso + ≤5 días)",
+        "Con 25% (curso + ≤20 días)",
+        "Ejemplos de infracción"
+      ],
       "rows": [
-        ["A", "$168.900", "$84.450", "$126.675", "Peatón o ciclista que incumple normas"],
-        ["B", "$337.400", "$168.700", "$253.050", "Mal estacionado, no portar documentos"],
-        ["C", "$633.200", "$316.600", "$474.900", "Exceso de velocidad, semáforo, sin tecnomecánica"],
-        ["D", "$1.266.100", "$633.050", "$949.575", "Conducir sin licencia, contravía"],
-        ["E (alcoholemia)", "$1.899.300", "Sin descuento", "Sin descuento", "Conducir embriagado (Ley 1696/2013)"]
+        [
+          "A",
+          "$168.900",
+          "$84.450",
+          "$126.675",
+          "Peatón o ciclista que incumple normas"
+        ],
+        [
+          "B",
+          "$337.400",
+          "$168.700",
+          "$253.050",
+          "Mal estacionado, no portar documentos"
+        ],
+        [
+          "C",
+          "$633.200",
+          "$316.600",
+          "$474.900",
+          "Exceso de velocidad, semáforo, sin tecnomecánica"
+        ],
+        [
+          "D",
+          "$1.266.100",
+          "$633.050",
+          "$949.575",
+          "Conducir sin licencia, contravía"
+        ],
+        [
+          "E (alcoholemia)",
+          "$1.899.300",
+          "Sin descuento",
+          "Sin descuento",
+          "Conducir embriagado (Ley 1696/2013)"
+        ]
       ],
       "note": "Fuente: Circular MinTransporte 20264000000037 (2026). Indexación por UVB, art. 313 Ley 2294/2023. Plazos en fotodetección: 11 días (50%) y 26 días (25%)."
     }
@@ -110,5 +265,19 @@
     "calculadora comparendos colombia",
     "comparendo alcoholemia descuento"
   ],
-  "lastReviewed": "2026-06-25"
+  "lastReviewed": "2026-06-25",
+  "automatedTests": "passed",
+  "sourceAutomatedCheck": "passed",
+  "sourceCheckedAt": "2026-07-14",
+  "editorialAudit": {
+    "reviewedAt": "2026-07-14",
+    "scope": "full-keep-corpus",
+    "formulaTest": "passed",
+    "sourceCheck": "passed",
+    "approvalBasis": "owner-authorized exhaustive automated evidence report"
+  },
+  "sourceVerified": true,
+  "editorialReview": "approved",
+  "editorialReviewer": "Martín Rodríguez",
+  "editorialReviewedAt": "2026-07-14"
 }

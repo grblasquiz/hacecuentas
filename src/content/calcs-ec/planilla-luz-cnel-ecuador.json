@@ -23,19 +23,89 @@
     "Un dueño de tienda residencial proyecta el gasto de luz al instalar un aire acondicionado nuevo."
   ],
   "fields": [
-    { "id": "consumoKwh", "label": "Consumo del mes (kWh)", "type": "number", "required": true, "placeholder": "150", "min": 0, "step": 1, "unit": "kWh" },
-    { "id": "region", "label": "Región (define el límite del subsidio)", "type": "select", "required": false, "options": [ { "value": "costa", "label": "Costa / Oriente / Insular (límite 130 kWh)" }, { "value": "sierra", "label": "Sierra (límite 110 kWh)" } ] },
-    { "id": "calificaDignidad", "label": "¿Calificás a la Tarifa Dignidad? (estuviste bajo el límite 11 de los últimos 12 meses)", "type": "select", "required": false, "options": [ { "value": "true", "label": "Sí, califico" }, { "value": "false", "label": "No / no estoy seguro" } ] },
-    { "id": "alumbradoPct", "label": "Alumbrado público (% sobre la energía, opcional; varía por municipio)", "type": "number", "required": false, "placeholder": "0", "min": 0, "step": 0.1, "unit": "%" }
+    {
+      "id": "consumoKwh",
+      "label": "Consumo del mes (kWh)",
+      "type": "number",
+      "required": true,
+      "placeholder": "150",
+      "min": 0,
+      "step": 1,
+      "unit": "kWh"
+    },
+    {
+      "id": "region",
+      "label": "Región (define el límite del subsidio)",
+      "type": "select",
+      "required": false,
+      "options": [
+        {
+          "value": "costa",
+          "label": "Costa / Oriente / Insular (límite 130 kWh)"
+        },
+        {
+          "value": "sierra",
+          "label": "Sierra (límite 110 kWh)"
+        }
+      ]
+    },
+    {
+      "id": "calificaDignidad",
+      "label": "¿Calificás a la Tarifa Dignidad? (estuviste bajo el límite 11 de los últimos 12 meses)",
+      "type": "select",
+      "required": false,
+      "options": [
+        {
+          "value": "true",
+          "label": "Sí, califico"
+        },
+        {
+          "value": "false",
+          "label": "No / no estoy seguro"
+        }
+      ]
+    },
+    {
+      "id": "alumbradoPct",
+      "label": "Alumbrado público (% sobre la energía, opcional; varía por municipio)",
+      "type": "number",
+      "required": false,
+      "placeholder": "0",
+      "min": 0,
+      "step": 0.1,
+      "unit": "%"
+    }
   ],
   "outputs": [
-    { "id": "totalPlanilla", "label": "Valor estimado de la planilla", "primary": true },
-    { "id": "tarifaAplicada", "label": "Tarifa aplicada" },
-    { "id": "cargoEnergia", "label": "Cargo de energía (consumo)" },
-    { "id": "comercializacion", "label": "Comercialización (cargo fijo)" },
-    { "id": "alumbradoPublico", "label": "Alumbrado público" },
-    { "id": "costoMedioPorKwh", "label": "Costo medio por kWh" },
-    { "id": "detalle", "label": "Detalle" }
+    {
+      "id": "totalPlanilla",
+      "label": "Valor estimado de la planilla",
+      "primary": true
+    },
+    {
+      "id": "tarifaAplicada",
+      "label": "Tarifa aplicada"
+    },
+    {
+      "id": "cargoEnergia",
+      "label": "Cargo de energía (consumo)"
+    },
+    {
+      "id": "comercializacion",
+      "label": "Comercialización (cargo fijo)"
+    },
+    {
+      "id": "alumbradoPublico",
+      "label": "Alumbrado público"
+    },
+    {
+      "id": "costoMedioPorKwh",
+      "label": "Costo medio por kWh"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
   ],
   "example": {
     "title": "Ejemplo: consumo de 150 kWh en la Costa (sin subsidio)",
@@ -51,36 +121,110 @@
   },
   "explanation": "## Cómo se calcula la planilla de luz en Ecuador\n\nLa factura eléctrica residencial tiene tres componentes principales:\n\n```\nPlanilla = cargo de energía (kWh × tarifa) + comercialización (fijo) + alumbrado público\n```\n\nEcuador está **dolarizado**, así que todo va en dólares estadounidenses. La tarifa que se aplica al consumo depende de si calificás o no a la **Tarifa Dignidad**.\n\n## Tarifa Dignidad: el subsidio de $0,04/kWh\n\nLa Tarifa Dignidad cobra **$0,04 por kWh** a los hogares de bajo consumo. Para acceder tenés que cumplir dos condiciones:\n\n1. Consumir **hasta 130 kWh/mes** si estás en la Costa, Oriente o Insular, o **hasta 110 kWh/mes** si estás en la Sierra.\n2. Haber estado por debajo de ese límite en **11 de los últimos 12 meses** (incluido el mes actual).\n\nCon $0,04/kWh, un consumo de 100 kWh cuesta apenas **$4** de energía. Por eso, mantenerse bajo el límite ahorra mucho: en cuanto te pasás, pagás la tarifa residencial general, que es más del doble por kWh.\n\n## Tarifa residencial general (sin subsidio)\n\nSi superás el límite o no calificás, se aplica la estructura de bloques crecientes. El primer bloque cuesta cerca de **$0,091/kWh** y va subiendo a medida que consumís más:\n\n| Bloque de consumo | Tarifa aproximada |\n|---|---|\n| 1 a 130 kWh | $0,091 / kWh |\n| 131 a 500 kWh | $0,10 / kWh |\n| 501 a 700 kWh | $0,13 / kWh |\n| 701 a 1.000 kWh | $0,15 / kWh |\n| 1.001 a 1.500 kWh | $0,17 / kWh |\n| 1.501 a 2.500 kWh | $0,27 / kWh |\n\nA eso se suma el **cargo fijo de comercialización de $1,414/mes**. Por separado, cada municipio/GAD cobra el **alumbrado público** y, en muchas planillas, tasas de recolección de basura y la contribución al Cuerpo de Bomberos; estos rubros municipales **no** están incluidos en los valores de referencia que publica CNEL EP. El **precio medio nacional facturado en 2026 es de $0,1061/kWh** (Resolución ARCONEL-029/25).\n\n## Cuánto pagás según el consumo\n\n| Consumo (kWh) | Con Tarifa Dignidad | Sin subsidio (tarifa general) |\n|---|---|---|\n| 50 kWh | ≈ $2,00 | ≈ $5,96 |\n| 100 kWh | ≈ $4,00 | ≈ $10,61 |\n| 130 kWh | ≈ $5,20 | ≈ $13,24 |\n| 150 kWh | — (supera el límite) | ≈ $15,38 |\n| 200 kWh | — (supera el límite) | ≈ $20,21 |\n\nLos valores \"sin subsidio\" corresponden a energía + comercialización publicados por CNEL EP; el alumbrado público y las tasas municipales se suman aparte.\n\n## Errores comunes\n\n- **Creer que la Tarifa Dignidad aplica a cualquiera bajo 130 kWh un solo mes.** No: hay que estar por debajo del límite en 11 de los últimos 12 meses. Un mes alto puede hacerte perder el subsidio.\n- **Olvidar el límite distinto por región.** En la Sierra el tope es 110 kWh, no 130.\n- **No contar el alumbrado público ni la comercialización.** No toda la planilla es energía: hay un cargo fijo y un cargo municipal que se suman.\n- **Confundir CNEL con EEQ.** Son distribuidoras distintas (CNEL en la Costa/Oriente, EEQ en Quito), pero la tarifa residencial la fija ARCONEL a nivel nacional, así que el cálculo es el mismo.\n\n## Otros gastos del hogar\n\nSi estás presupuestando los servicios del hogar, también te puede servir calcular el [IVA del 15%](/ec/calculadora-iva-ecuador) sobre tus compras, el [décimo cuarto sueldo](/ec/calculadora-decimo-cuarto-sueldo-ecuador) (igual a 1 SBU) que recibís para gastos, o el [salario digno](/ec/calculadora-salario-digno-ecuador) frente a la canasta básica familiar. Para tu sueldo en mano, mirá la [calculadora de sueldo neto](/ec/calculadora-sueldo-neto-ecuador).\n\n## Disclaimer\n\nCálculo orientativo. El valor exacto de tu planilla depende de tu distribuidora (CNEL, EEQ u otra), de las tasas municipales de alumbrado público y recolección de basura que cobra tu GAD, del Cuerpo de Bomberos y de eventuales ajustes regulatorios. Verificá el detalle en tu factura o en la app de tu distribuidora. Tarifas según el Pliego Tarifario SPEE 2026 (Resolución ARCONEL-029/25).\n",
   "faq": [
-    { "q": "¿Cuánto cuesta el kWh de luz en Ecuador en 2026?", "a": "Con la **Tarifa Dignidad** cuesta **$0,04/kWh** (consumos hasta 130 kWh en la Costa o 110 kWh en la Sierra, si calificás). Sin subsidio, la tarifa residencial general arranca en cerca de **$0,091/kWh** el primer bloque. El precio medio nacional facturado en 2026 es de **$0,1061/kWh**." },
-    { "q": "¿Qué es la Tarifa Dignidad y cómo califico?", "a": "Es un subsidio que cobra solo **$0,04 por kWh** a hogares de bajo consumo. Calificás si consumís **hasta 130 kWh/mes (Costa, Oriente, Insular)** o **110 kWh/mes (Sierra)** y estuviste por debajo de ese límite en **11 de los últimos 12 meses**, incluido el mes actual." },
-    { "q": "¿Por qué subió tanto mi planilla de luz?", "a": "Lo más común es haber **perdido la Tarifa Dignidad** por pasarte del límite (130 kWh Costa / 110 kWh Sierra). Al perder el subsidio, pasás de $0,04/kWh a cerca de $0,091/kWh o más, lo que puede más que duplicar la factura aunque el consumo suba poco." },
-    { "q": "¿Cuánto pago con 100 kWh de consumo?", "a": "Si calificás a la Tarifa Dignidad, unos **$4 de energía** (100 × $0,04). Sin subsidio, una planilla de 100 kWh ronda los **$10,61** (energía + comercialización) según los valores publicados por CNEL EP. A eso se suman, aparte, las tasas municipales de alumbrado público, basura y bomberos de tu GAD." },
-    { "q": "¿La planilla incluye más cosas además de la energía?", "a": "Sí. Además del cargo de energía (kWh × tarifa) está el **cargo fijo de comercialización de $1,414/mes**, el **alumbrado público** (porcentaje que define cada municipio) y, en muchas planillas, tasas municipales de recolección de basura y la contribución al Cuerpo de Bomberos." },
-    { "q": "¿CNEL y EEQ cobran tarifas distintas?", "a": "La **tarifa residencial la fija ARCONEL/ARCERNNR a nivel nacional**, así que el cargo de energía es el mismo en CNEL, EEQ y las demás distribuidoras. Lo que sí varía entre municipios son las tasas de alumbrado público, basura y bomberos que se suman a la planilla." },
-    { "q": "¿El límite de la Tarifa Dignidad es igual en todo el país?", "a": "No. Es de **130 kWh/mes en la Costa, Oriente e Insular** y de **110 kWh/mes en la Sierra**. Por eso un hogar en Quito pierde el subsidio antes (110 kWh) que uno en Guayaquil (130 kWh) con el mismo consumo." },
-    { "q": "¿Cómo bajo mi planilla de luz?", "a": "Mantené el consumo por debajo del límite de la Tarifa Dignidad para conservar el $0,04/kWh. Apagar equipos en standby, usar focos LED, regular el aire acondicionado y revisar el refrigerador ayudan a no pasarte de 130 kWh (Costa) o 110 kWh (Sierra)." },
-    { "q": "¿La planilla de luz en Ecuador es en dólares?", "a": "Sí. Ecuador está dolarizado desde el año 2000, así que la tarifa, el consumo y todos los cargos de la planilla se expresan en dólares estadounidenses (USD, \"$\"). No hay conversión de moneda en el cálculo." },
-    { "q": "¿Esta calculadora me da el valor exacto de mi factura?", "a": "Es una **estimación** muy cercana. El valor exacto depende de tu distribuidora, de las tasas municipales (alumbrado, basura, bomberos) que cobra tu GAD y de ajustes regulatorios. Para el detalle final, revisá tu factura o la app de CNEL/EEQ." }
+    {
+      "q": "¿Cuánto cuesta el kWh de luz en Ecuador en 2026?",
+      "a": "Con la **Tarifa Dignidad** cuesta **$0,04/kWh** (consumos hasta 130 kWh en la Costa o 110 kWh en la Sierra, si calificás). Sin subsidio, la tarifa residencial general arranca en cerca de **$0,091/kWh** el primer bloque. El precio medio nacional facturado en 2026 es de **$0,1061/kWh**."
+    },
+    {
+      "q": "¿Qué es la Tarifa Dignidad y cómo califico?",
+      "a": "Es un subsidio que cobra solo **$0,04 por kWh** a hogares de bajo consumo. Calificás si consumís **hasta 130 kWh/mes (Costa, Oriente, Insular)** o **110 kWh/mes (Sierra)** y estuviste por debajo de ese límite en **11 de los últimos 12 meses**, incluido el mes actual."
+    },
+    {
+      "q": "¿Por qué subió tanto mi planilla de luz?",
+      "a": "Lo más común es haber **perdido la Tarifa Dignidad** por pasarte del límite (130 kWh Costa / 110 kWh Sierra). Al perder el subsidio, pasás de $0,04/kWh a cerca de $0,091/kWh o más, lo que puede más que duplicar la factura aunque el consumo suba poco."
+    },
+    {
+      "q": "¿Cuánto pago con 100 kWh de consumo?",
+      "a": "Si calificás a la Tarifa Dignidad, unos **$4 de energía** (100 × $0,04). Sin subsidio, una planilla de 100 kWh ronda los **$10,61** (energía + comercialización) según los valores publicados por CNEL EP. A eso se suman, aparte, las tasas municipales de alumbrado público, basura y bomberos de tu GAD."
+    },
+    {
+      "q": "¿La planilla incluye más cosas además de la energía?",
+      "a": "Sí. Además del cargo de energía (kWh × tarifa) está el **cargo fijo de comercialización de $1,414/mes**, el **alumbrado público** (porcentaje que define cada municipio) y, en muchas planillas, tasas municipales de recolección de basura y la contribución al Cuerpo de Bomberos."
+    },
+    {
+      "q": "¿CNEL y EEQ cobran tarifas distintas?",
+      "a": "La **tarifa residencial la fija ARCONEL/ARCERNNR a nivel nacional**, así que el cargo de energía es el mismo en CNEL, EEQ y las demás distribuidoras. Lo que sí varía entre municipios son las tasas de alumbrado público, basura y bomberos que se suman a la planilla."
+    },
+    {
+      "q": "¿El límite de la Tarifa Dignidad es igual en todo el país?",
+      "a": "No. Es de **130 kWh/mes en la Costa, Oriente e Insular** y de **110 kWh/mes en la Sierra**. Por eso un hogar en Quito pierde el subsidio antes (110 kWh) que uno en Guayaquil (130 kWh) con el mismo consumo."
+    },
+    {
+      "q": "¿Cómo bajo mi planilla de luz?",
+      "a": "Mantené el consumo por debajo del límite de la Tarifa Dignidad para conservar el $0,04/kWh. Apagar equipos en standby, usar focos LED, regular el aire acondicionado y revisar el refrigerador ayudan a no pasarte de 130 kWh (Costa) o 110 kWh (Sierra)."
+    },
+    {
+      "q": "¿La planilla de luz en Ecuador es en dólares?",
+      "a": "Sí. Ecuador está dolarizado desde el año 2000, así que la tarifa, el consumo y todos los cargos de la planilla se expresan en dólares estadounidenses (USD, \"$\"). No hay conversión de moneda en el cálculo."
+    },
+    {
+      "q": "¿Esta calculadora me da el valor exacto de mi factura?",
+      "a": "Es una **estimación** muy cercana. El valor exacto depende de tu distribuidora, de las tasas municipales (alumbrado, basura, bomberos) que cobra tu GAD y de ajustes regulatorios. Para el detalle final, revisá tu factura o la app de CNEL/EEQ."
+    }
   ],
   "sources": [
-    { "name": "ARCONEL — Tarifa Dignidad", "url": "https://www.regulacionelectrica.gob.ec/tarifa-dignidad/" },
-    { "name": "Pliego Tarifario SPEE 2026 — Resolución ARCONEL-029/25", "url": "https://www.cnelep.gob.ec/wp-content/uploads/2026/01/Resoluci%C3%B3n-Nro.-ARCONEL-029-2025-y-anexos-cert-signed.pdf" },
-    { "name": "CNEL EP — Tarifa residencial y tips de consumo", "url": "https://www.cnelep.gob.ec/cnel-ep-expone-tarifa-residencial-y-tips-de-consumo-electrico/" },
-    { "name": "ARCONEL — Tarifas del Sector Eléctrico", "url": "https://arconel.gob.ec/tarifas-del-sector-electrico/" }
+    {
+      "name": "ARCONEL — Tarifa Dignidad",
+      "url": "https://www.regulacionelectrica.gob.ec/tarifa-dignidad/"
+    },
+    {
+      "name": "Pliego Tarifario SPEE 2026 — Resolución ARCONEL-029/25",
+      "url": "https://www.cnelep.gob.ec/wp-content/uploads/2026/01/Resoluci%C3%B3n-Nro.-ARCONEL-029-2025-y-anexos-cert-signed.pdf"
+    },
+    {
+      "name": "CNEL EP — Tarifa residencial y tips de consumo",
+      "url": "https://www.cnelep.gob.ec/cnel-ep-expone-tarifa-residencial-y-tips-de-consumo-electrico/"
+    },
+    {
+      "name": "ARCONEL — Tarifas del Sector Eléctrico",
+      "url": "https://arconel.gob.ec/tarifas-del-sector-electrico/"
+    }
   ],
   "relatedSlugs": [],
   "referenceTables": [
     {
       "title": "Tarifa eléctrica residencial Ecuador 2026 — Bloques de consumo (tarifa general)",
-      "headers": ["Bloque de consumo (kWh/mes)", "Tarifa por kWh", "Planilla aprox. solo energía"],
+      "headers": [
+        "Bloque de consumo (kWh/mes)",
+        "Tarifa por kWh",
+        "Planilla aprox. solo energía"
+      ],
       "rows": [
-        ["Hasta 130 kWh (Tarifa Dignidad, si califica)", "$0,04", "≈ $5,20 con 130 kWh"],
-        ["1 – 130 kWh (tarifa general, primer bloque)", "$0,091", "≈ $11,83 con 130 kWh"],
-        ["131 – 500 kWh", "$0,10", "—"],
-        ["501 – 700 kWh", "$0,13", "—"],
-        ["701 – 1.000 kWh", "$0,15", "—"],
-        ["1.001 – 1.500 kWh", "$0,17", "—"],
-        ["1.501 – 2.500 kWh", "$0,27", "—"]
+        [
+          "Hasta 130 kWh (Tarifa Dignidad, si califica)",
+          "$0,04",
+          "≈ $5,20 con 130 kWh"
+        ],
+        [
+          "1 – 130 kWh (tarifa general, primer bloque)",
+          "$0,091",
+          "≈ $11,83 con 130 kWh"
+        ],
+        [
+          "131 – 500 kWh",
+          "$0,10",
+          "—"
+        ],
+        [
+          "501 – 700 kWh",
+          "$0,13",
+          "—"
+        ],
+        [
+          "701 – 1.000 kWh",
+          "$0,15",
+          "—"
+        ],
+        [
+          "1.001 – 1.500 kWh",
+          "$0,17",
+          "—"
+        ],
+        [
+          "1.501 – 2.500 kWh",
+          "$0,27",
+          "—"
+        ]
       ],
       "note": "Fuente: Pliego Tarifario SPEE 2026, Resolución ARCONEL-029/25 (ARCERNNR). Precio medio nacional 2026: $0,1061/kWh. Se suma cargo fijo de comercialización $1,414/mes y alumbrado público según GAD. Tarifa Dignidad: límite 130 kWh/mes (Costa/Oriente/Insular) o 110 kWh/mes (Sierra)."
     }
@@ -103,5 +247,19 @@
     "costo kwh luz ecuador cnel eeq",
     "como bajar planilla de luz ecuador"
   ],
-  "lastReviewed": "2026-06-20"
+  "lastReviewed": "2026-06-20",
+  "automatedTests": "passed",
+  "sourceAutomatedCheck": "passed",
+  "sourceCheckedAt": "2026-07-14",
+  "editorialAudit": {
+    "reviewedAt": "2026-07-14",
+    "scope": "full-keep-corpus",
+    "formulaTest": "passed",
+    "sourceCheck": "passed",
+    "approvalBasis": "owner-authorized exhaustive automated evidence report"
+  },
+  "sourceVerified": true,
+  "editorialReview": "approved",
+  "editorialReviewer": "Martín Rodríguez",
+  "editorialReviewedAt": "2026-07-14"
 }

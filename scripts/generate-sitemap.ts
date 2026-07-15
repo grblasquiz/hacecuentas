@@ -20,7 +20,7 @@
  * Usage: npm run sitemap (también corre en prebuild)
  */
 
-import { readFileSync, writeFileSync, statSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, statSync, readdirSync, existsSync, unlinkSync } from 'node:fs';
 import { join, resolve, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
@@ -1551,6 +1551,15 @@ if (redirectSrcStripped > 0) {
 }
 
 let totalUrls = 0;
+// Si una categoría o un locale queda con cero URLs distribuibles, ya no entra
+// en `sitemaps`. Eliminamos el XML de builds anteriores para que Cloudflare no
+// siga sirviendo URLs que hoy son noindex/restringidas.
+const generatedNames = new Set(sitemaps.map((s) => s.name));
+const localeSitemapRe = /^sitemap-(?:en|pt|pt-pt|mx|es|co|cl|pe|ec|ve|py|uy|do)\.xml$/;
+for (const name of safeReadDir(PUBLIC_DIR)) {
+  const managed = /^sitemap-calcs-[a-z0-9-]+\.xml$/.test(name) || localeSitemapRe.test(name);
+  if (managed && !generatedNames.has(name)) unlinkSync(join(PUBLIC_DIR, name));
+}
 for (const s of sitemaps) {
   // sitemap-images.xml lo escribimos arriba con imagesetXml (schema distinto).
   if ((s as any).skipWrite) continue;

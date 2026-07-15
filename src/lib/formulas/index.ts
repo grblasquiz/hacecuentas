@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-07-13
+// Generated: 2026-07-15
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { rmPesoMaximo } from './1rm-peso-maximo';
@@ -2290,7 +2290,7 @@ import { prestamoPersonalMensualidadCatMexico } from './prestamo-personal-mensua
 import { prestamoPersonalRepublicaDominicana } from './prestamo-personal-republica-dominicana';
 import { compute as compute__prestamo_personal_tae_tin_comparador_espana } from './prestamo-personal-tae-tin-comparador-espana';
 import { compute as compute__prestamo_personal_tcea_peru } from './prestamo-personal-tcea-peru';
-import { tasaBiessPorPlazo } from './prestamo-quirografario-iess-ecuador';
+import { compute as compute__prestamo_quirografario_iess_ecuador } from './prestamo-quirografario-iess-ecuador';
 import { presupuesto503020 } from './presupuesto-50-30-20';
 import { presupuesto503020FamiliarSueldo } from './presupuesto-50-30-20-familiar-sueldo';
 import { presupuestoCasamientoPorInvitado } from './presupuesto-casamiento-por-invitado';
@@ -5317,7 +5317,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'prestamo-personal-republica-dominicana': prestamoPersonalRepublicaDominicana,
   'prestamo-personal-tae-tin-comparador-espana': compute__prestamo_personal_tae_tin_comparador_espana,
   'prestamo-personal-tcea-peru': compute__prestamo_personal_tcea_peru,
-  'prestamo-quirografario-iess-ecuador': tasaBiessPorPlazo,
+  'prestamo-quirografario-iess-ecuador': compute__prestamo_quirografario_iess_ecuador,
   'presupuesto-50-30-20': presupuesto503020,
   'presupuesto-50-30-20-familiar-sueldo': presupuesto503020FamiliarSueldo,
   'presupuesto-casamiento-por-invitado': presupuestoCasamientoPorInvitado,

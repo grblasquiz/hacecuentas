@@ -23,19 +23,71 @@
     "Emprendedor que financió un equipo en la tarjeta calcula el costo real de los intereses antes de refinanciar."
   ],
   "fields": [
-    { "id": "saldo", "label": "Saldo / deuda actual de la tarjeta ($)", "type": "number", "required": true, "placeholder": "3000", "min": 0, "step": 0.01, "unit": "$" },
-    { "id": "tasaAnual", "label": "Tasa de interés anual (%) — si no la sabés, dejá vacío y usamos 16,77% (máxima de consumo BCE)", "type": "number", "required": false, "placeholder": "16.77", "min": 0, "step": 0.01, "unit": "%" },
-    { "id": "pagoMensual", "label": "Cuánto pagás por mes ($)", "type": "number", "required": true, "placeholder": "200", "min": 0, "step": 0.01, "unit": "$" }
+    {
+      "id": "saldo",
+      "label": "Saldo / deuda actual de la tarjeta ($)",
+      "type": "number",
+      "required": true,
+      "placeholder": "3000",
+      "min": 0,
+      "step": 0.01,
+      "unit": "$"
+    },
+    {
+      "id": "tasaAnual",
+      "label": "Tasa de interés anual (%) — si no la sabés, dejá vacío y usamos 16,77% (máxima de consumo BCE)",
+      "type": "number",
+      "required": false,
+      "placeholder": "16.77",
+      "min": 0,
+      "step": 0.01,
+      "unit": "%"
+    },
+    {
+      "id": "pagoMensual",
+      "label": "Cuánto pagás por mes ($)",
+      "type": "number",
+      "required": true,
+      "placeholder": "200",
+      "min": 0,
+      "step": 0.01,
+      "unit": "$"
+    }
   ],
   "outputs": [
-    { "id": "meses", "label": "Tiempo para pagar la deuda", "primary": true },
-    { "id": "anios", "label": "Equivale a (años)" },
-    { "id": "interesesTotales", "label": "Intereses totales que pagás" },
-    { "id": "totalPagado", "label": "Total pagado (capital + intereses)" },
-    { "id": "sobrecosto", "label": "Sobrecosto sobre el saldo" },
-    { "id": "tasaUsada", "label": "Tasa anual usada" },
-    { "id": "pagoMinimoTrampa", "label": "Si pagaras solo el mínimo (5%)" },
-    { "id": "detalle", "label": "Detalle" }
+    {
+      "id": "meses",
+      "label": "Tiempo para pagar la deuda",
+      "primary": true
+    },
+    {
+      "id": "anios",
+      "label": "Equivale a (años)"
+    },
+    {
+      "id": "interesesTotales",
+      "label": "Intereses totales que pagás"
+    },
+    {
+      "id": "totalPagado",
+      "label": "Total pagado (capital + intereses)"
+    },
+    {
+      "id": "sobrecosto",
+      "label": "Sobrecosto sobre el saldo"
+    },
+    {
+      "id": "tasaUsada",
+      "label": "Tasa anual usada"
+    },
+    {
+      "id": "pagoMinimoTrampa",
+      "label": "Si pagaras solo el mínimo (5%)"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
   ],
   "example": {
     "title": "Ejemplo: saldo $3.000 al 16,77%, pagando $75/mes (cerca del mínimo)",
@@ -51,36 +103,112 @@
   },
   "explanation": "## Cómo se calcula el pago de una tarjeta de crédito en Ecuador\n\nLa deuda de tarjeta se amortiza **mes a mes**: cada mes te cobran interés sobre el saldo pendiente, y lo que pagás por encima de ese interés es lo que realmente baja tu deuda (el capital).\n\n```\nTasa mensual = (1 + TEA)^(1/12) − 1\nInterés del mes = saldo × tasa mensual\nCapital pagado = pago mensual − interés del mes\nSaldo nuevo = saldo − capital pagado\n```\n\nLa tasa que publica el BCE es **efectiva anual (TEA)**, así que la tasa mensual correcta es la raíz doceava de (1 + TEA), no TEA ÷ 12. Para el 16,77% anual, la mensual efectiva es **≈ 1,30%**.\n\nEcuador está **dolarizado**, de modo que saldos, intereses y pagos van en dólares estadounidenses, sin conversión de moneda.\n\n## La tasa máxima de consumo del BCE (2026)\n\nEn Ecuador la tasa de la tarjeta es de **libre contratación**, pero ninguna entidad puede superar la **tasa efectiva máxima del segmento consumo** que fija el Banco Central del Ecuador. Para 2026 es del **16,77% anual** (nominal 15,60%). Si tu estado de cuenta muestra una tasa mayor, reclamá: es ilegal.\n\n| Concepto | Valor 2026 |\n|---|---|\n| Tasa efectiva máxima de consumo (techo de tarjetas) | **16,77% anual** |\n| Tasa nominal de consumo | 15,60% anual |\n| Tasa mensual efectiva equivalente | ≈ 1,30% |\n| Pago mínimo típico | ~5% del saldo + intereses |\n\n## La trampa del pago mínimo\n\nEl pago mínimo es el monto más bajo que acepta el banco para no reportarte en mora. Es cómodo, pero carísimo: la mayor parte se va en intereses y el capital baja muy lento. Mirá el mismo saldo de **$3.000 al 16,77%** según cuánto pagues por mes:\n\n| Pago mensual | Meses para pagar | Intereses totales | Sobrecosto |\n|---|---|---|---|\n| $75 (≈ mínimo) | 57 meses (4,8 años) | $1.262,52 | 42% |\n| $150 | 24 meses (2,0 años) | $497,19 | 17% |\n| $300 | 11 meses (0,9 años) | $234,98 | 8% |\n| $500 | 7 meses (0,6 años) | $144,43 | 5% |\n\nCada dólar extra que abonás por encima del interés ataca directo el capital, así que **subir la cuota recorta el plazo y los intereses de forma desproporcionada**.\n\n## Cuándo el pago no cubre ni los intereses\n\nSi pagás menos que el interés del mes, la deuda **crece** en vez de bajar. Con un saldo de $1.500 al 16,77%, el interés del primer mes es ≈ $19,51; pagar menos que eso significa que el saldo aumenta cada mes. Por eso siempre conviene pagar, como mínimo, bastante más que el interés mensual.\n\n## Cómo salir más rápido\n\n- **Pagá el total cada mes** si podés: si cancelás el consumo del mes dentro del período de gracia, no pagás intereses. Es la forma más barata de usar la tarjeta.\n- **Fijá una cuota mayor al mínimo** y mantenela aunque baje el saldo: pagar un monto fijo es mucho más rápido que el mínimo decreciente.\n- **Consolidá o refinanciá** a una tasa más baja si arrastrás varios saldos. Compará con un [crédito de consumo](/ec/calculadora-credito-vehicular-ecuador) o un [préstamo quirografario del IESS](/ec/calculadora-prestamo-quirografario-iess-ecuador), que suelen tener tasas menores al techo de tarjetas.\n- **Atacá primero la tarjeta de tasa más alta** (método avalancha): es la que más intereses te genera.\n\n## Errores comunes\n\n- **Creer que el mínimo \"paga\" la deuda.** El mínimo evita la mora, pero apenas mueve el capital. Podés pagar años y seguir debiendo casi lo mismo.\n- **Usar TEA ÷ 12 como tasa mensual.** Lo correcto es la raíz doceava: subestima los intereses.\n- **No revisar la tasa.** Verificá que no supere el 16,77% efectivo del BCE. Para otros impuestos y costos del consumo, mirá el [IVA en Ecuador](/ec/calculadora-iva-ecuador) y el [ISD por compras en el exterior](/ec/calculadora-impuesto-salida-divisas-isd-ecuador).\n- **Ignorar los consumos diferidos.** Si seguís comprando a meses mientras pagás el mínimo, la deuda se renueva sola y nunca termina.\n\n## Disclaimer\n\nCálculo orientativo. El pago mínimo, los intereses, las comisiones y los seguros varían según tu banco y tu contrato; consultá tu estado de cuenta. La tasa efectiva máxima de consumo la fija el Banco Central del Ecuador y puede actualizarse. Esta herramienta no es asesoría financiera.",
   "faq": [
-    { "q": "¿Cuál es la tasa máxima de las tarjetas de crédito en Ecuador en 2026?", "a": "La **tasa efectiva máxima del segmento consumo del Banco Central del Ecuador es 16,77% anual** (nominal 15,60%). Es el techo legal de las tarjetas: la tasa es de libre contratación, pero ningún banco puede cobrar por encima de esa máxima efectiva." },
-    { "q": "¿Qué es el pago mínimo de la tarjeta y cómo se calcula?", "a": "Es el monto más bajo que acepta tu banco para no reportarte en mora. No hay una fórmula única en Ecuador: cada entidad lo fija, pero suele ser alrededor del **5% del saldo más los intereses y cargos del período**. Lo encontrás en tu estado de cuenta." },
-    { "q": "¿Por qué pagar solo el mínimo es tan caro?", "a": "Porque casi todo el pago se va en intereses y el capital baja muy lento. Con $3.000 al 16,77% pagando ~$75/mes (el mínimo), tardás **57 meses (4,8 años)** y pagás **$1.262 de intereses**: un 42% extra sobre lo que debías." },
-    { "q": "¿Cuánto me conviene pagar por mes?", "a": "Lo más que puedas por encima del interés mensual. Con $3.000 al 16,77%: pagando $150/mes saldás en ~24 meses con ~$497 de intereses; pagando $300/mes, en ~11 meses con ~$235. Cada dólar extra ataca el capital y recorta el plazo." },
-    { "q": "¿Qué pasa si pago menos que los intereses del mes?", "a": "La deuda **crece** en vez de bajar. Con un saldo de $1.500 al 16,77%, el interés del primer mes es ≈ $19,51; si pagás menos que eso, el saldo aumenta cada mes y nunca cancelás la tarjeta." },
-    { "q": "¿Cómo se pasa la tasa anual a mensual?", "a": "La tasa que publica el BCE es **efectiva anual (TEA)**. La mensual correcta es (1 + TEA)^(1/12) − 1, no TEA ÷ 12. Para el 16,77% anual, la mensual efectiva es ≈ **1,30%**." },
-    { "q": "¿Los montos de la tarjeta en Ecuador son en dólares?", "a": "Sí. Ecuador está dolarizado desde el año 2000, así que saldos, intereses, pagos y la tasa máxima del BCE se expresan en dólares estadounidenses (USD, \"$\"). No hay conversión de moneda." },
-    { "q": "¿Conviene pagar el total de la tarjeta cada mes?", "a": "Sí, es lo más barato. Si cancelás el consumo del mes dentro del período de gracia, no pagás intereses. Solo pagás intereses cuando arrastrás saldo al mes siguiente o financiás compras a cuotas." },
-    { "q": "¿Cómo salgo más rápido de la deuda de tarjeta?", "a": "Pagá una cuota fija mayor al mínimo, atacá primero la tarjeta de tasa más alta y evitá nuevos consumos a cuotas. Si arrastrás varios saldos, evaluá consolidar con un crédito de menor tasa que el techo de consumo del 16,77%." },
-    { "q": "¿La calculadora sirve si no sé la tasa de mi tarjeta?", "a": "Sí. Si dejás el campo de tasa vacío, la calculadora usa el 16,77% efectivo anual, la tasa máxima de consumo del BCE 2026. Para un cálculo exacto, fijate la tasa que figura en tu estado de cuenta." }
+    {
+      "q": "¿Cuál es la tasa máxima de las tarjetas de crédito en Ecuador en 2026?",
+      "a": "La **tasa efectiva máxima del segmento consumo del Banco Central del Ecuador es 16,77% anual** (nominal 15,60%). Es el techo legal de las tarjetas: la tasa es de libre contratación, pero ningún banco puede cobrar por encima de esa máxima efectiva."
+    },
+    {
+      "q": "¿Qué es el pago mínimo de la tarjeta y cómo se calcula?",
+      "a": "Es el monto más bajo que acepta tu banco para no reportarte en mora. No hay una fórmula única en Ecuador: cada entidad lo fija, pero suele ser alrededor del **5% del saldo más los intereses y cargos del período**. Lo encontrás en tu estado de cuenta."
+    },
+    {
+      "q": "¿Por qué pagar solo el mínimo es tan caro?",
+      "a": "Porque casi todo el pago se va en intereses y el capital baja muy lento. Con $3.000 al 16,77% pagando ~$75/mes (el mínimo), tardás **57 meses (4,8 años)** y pagás **$1.262 de intereses**: un 42% extra sobre lo que debías."
+    },
+    {
+      "q": "¿Cuánto me conviene pagar por mes?",
+      "a": "Lo más que puedas por encima del interés mensual. Con $3.000 al 16,77%: pagando $150/mes saldás en ~24 meses con ~$497 de intereses; pagando $300/mes, en ~11 meses con ~$235. Cada dólar extra ataca el capital y recorta el plazo."
+    },
+    {
+      "q": "¿Qué pasa si pago menos que los intereses del mes?",
+      "a": "La deuda **crece** en vez de bajar. Con un saldo de $1.500 al 16,77%, el interés del primer mes es ≈ $19,51; si pagás menos que eso, el saldo aumenta cada mes y nunca cancelás la tarjeta."
+    },
+    {
+      "q": "¿Cómo se pasa la tasa anual a mensual?",
+      "a": "La tasa que publica el BCE es **efectiva anual (TEA)**. La mensual correcta es (1 + TEA)^(1/12) − 1, no TEA ÷ 12. Para el 16,77% anual, la mensual efectiva es ≈ **1,30%**."
+    },
+    {
+      "q": "¿Los montos de la tarjeta en Ecuador son en dólares?",
+      "a": "Sí. Ecuador está dolarizado desde el año 2000, así que saldos, intereses, pagos y la tasa máxima del BCE se expresan en dólares estadounidenses (USD, \"$\"). No hay conversión de moneda."
+    },
+    {
+      "q": "¿Conviene pagar el total de la tarjeta cada mes?",
+      "a": "Sí, es lo más barato. Si cancelás el consumo del mes dentro del período de gracia, no pagás intereses. Solo pagás intereses cuando arrastrás saldo al mes siguiente o financiás compras a cuotas."
+    },
+    {
+      "q": "¿Cómo salgo más rápido de la deuda de tarjeta?",
+      "a": "Pagá una cuota fija mayor al mínimo, atacá primero la tarjeta de tasa más alta y evitá nuevos consumos a cuotas. Si arrastrás varios saldos, evaluá consolidar con un crédito de menor tasa que el techo de consumo del 16,77%."
+    },
+    {
+      "q": "¿La calculadora sirve si no sé la tasa de mi tarjeta?",
+      "a": "Sí. Si dejás el campo de tasa vacío, la calculadora usa el 16,77% efectivo anual, la tasa máxima de consumo del BCE 2026. Para un cálculo exacto, fijate la tasa que figura en tu estado de cuenta."
+    }
   ],
   "sources": [
-    { "name": "Banco Central del Ecuador — Tasas de Interés Vigentes", "url": "https://contenido.bce.fin.ec/documentos/Estadisticas/SectorMonFin/TasasInteres/Indice.htm" },
-    { "name": "Superintendencia de Bancos del Ecuador", "url": "https://www.superbancos.gob.ec/bancos/" }
+    {
+      "name": "Banco Central del Ecuador — Tasas de Interés Vigentes",
+      "url": "https://contenido.bce.fin.ec/documentos/Estadisticas/SectorMonFin/TasasInteres/Indice.htm"
+    },
+    {
+      "name": "Superintendencia de Bancos del Ecuador",
+      "url": "https://www.superbancos.gob.ec/bancos/"
+    }
   ],
   "relatedSlugs": [],
   "referenceTables": [
     {
       "title": "Tasas de interés máximas por segmento — BCE Ecuador 2026",
-      "headers": ["Segmento de crédito", "Tasa nominal máxima", "Tasa efectiva máxima (TEA)"],
+      "headers": [
+        "Segmento de crédito",
+        "Tasa nominal máxima",
+        "Tasa efectiva máxima (TEA)"
+      ],
       "rows": [
-        ["Consumo (tarjetas de crédito)", "15,60%", "16,77%"],
-        ["Microcrédito minorista", "27,50%", "30,50%"],
-        ["Microcrédito de acumulación simple", "25,50%", "28,50%"],
-        ["Microcrédito de acumulación ampliada", "22,44%", "25,00%"],
-        ["PYMES", "11,83%", "12,50%"],
-        ["Productivo corporativo", "9,33%", "9,76%"],
-        ["Productivo empresarial", "10,21%", "10,72%"],
-        ["Vivienda de interés público", "4,99%", "5,11%"],
-        ["Inmobiliario", "11,33%", "11,93%"]
+        [
+          "Consumo (tarjetas de crédito)",
+          "15,60%",
+          "16,77%"
+        ],
+        [
+          "Microcrédito minorista",
+          "27,50%",
+          "30,50%"
+        ],
+        [
+          "Microcrédito de acumulación simple",
+          "25,50%",
+          "28,50%"
+        ],
+        [
+          "Microcrédito de acumulación ampliada",
+          "22,44%",
+          "25,00%"
+        ],
+        [
+          "PYMES",
+          "11,83%",
+          "12,50%"
+        ],
+        [
+          "Productivo corporativo",
+          "9,33%",
+          "9,76%"
+        ],
+        [
+          "Productivo empresarial",
+          "10,21%",
+          "10,72%"
+        ],
+        [
+          "Vivienda de interés público",
+          "4,99%",
+          "5,11%"
+        ],
+        [
+          "Inmobiliario",
+          "11,33%",
+          "11,93%"
+        ]
       ],
       "note": "Fuente: Banco Central del Ecuador — Tasas de Interés Vigentes (2026). La tasa del segmento consumo es el techo legal de las tarjetas de crédito."
     }
@@ -102,5 +230,19 @@
     "trampa del pago minimo tarjeta",
     "interes tarjeta de credito ecuador 2026"
   ],
-  "lastReviewed": "2026-06-20"
+  "lastReviewed": "2026-06-20",
+  "automatedTests": "passed",
+  "sourceAutomatedCheck": "passed",
+  "sourceCheckedAt": "2026-07-14",
+  "editorialAudit": {
+    "reviewedAt": "2026-07-14",
+    "scope": "full-keep-corpus",
+    "formulaTest": "passed",
+    "sourceCheck": "passed",
+    "approvalBasis": "owner-authorized exhaustive automated evidence report"
+  },
+  "sourceVerified": true,
+  "editorialReview": "approved",
+  "editorialReviewer": "Martín Rodríguez",
+  "editorialReviewedAt": "2026-07-14"
 }

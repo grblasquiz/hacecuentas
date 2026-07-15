@@ -63,7 +63,7 @@ const GENERIC_TOKEN = [
   /:\s*"undefined"/,          // un campo con valor literal "undefined"
   /:\s*"null"/,               // valor literal "null" (string)
   /\bNaN\b/,                  // NaN suelto
-  /"[^"]*\bTODO\b[^"]*"/,     // TODO como marcador dentro de un string
+  /"\s*(?:TODO|FIXME)(?:\s*[:\-—][^"]*)?"/i, // marcador técnico como valor; no confundir el español «TODO»
 ];
 
 type Decision = 'KEEP' | 'IMPROVE' | 'MERGE_301' | 'DRAFT';

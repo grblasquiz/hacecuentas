@@ -25,6 +25,7 @@ const INDEX_PATH = join(FORMULAS_DIR, 'index.ts');
 // Unicode-aware: algunos nombres tienen ñ (ej. caloriasSkiSnowboardMontaña).
 const IDENT = String.raw`[\p{L}\p{N}_$]+`;
 const EXPORT_FN_RE = new RegExp(String.raw`^export\s+function\s+(${IDENT})\s*\(`, 'mu');
+const EXPORT_FN_ALL_RE = new RegExp(String.raw`^export\s+function\s+(${IDENT})\s*\(`, 'gmu');
 // Soporta re-exports con rename: `export { foo as bar } from './other';`
 // y sin rename: `export { bar } from './other';`. El nombre visible es el
 // último (después de `as`, o el único si no hay `as`).
@@ -53,8 +54,12 @@ function scanFormulas(): Array<{ slug: string; fn: string }> {
   for (const file of files) {
     const slug = file.replace(/\.ts$/, '');
     const content = readFileSync(join(FORMULAS_DIR, file), 'utf8');
+    const exportedFunctions = [...content.matchAll(EXPORT_FN_ALL_RE)].map((item) => item[1]);
+    // Los módulos nuevos exponen `compute` como entrypoint y a veces helpers
+    // exportados antes. El índice debe registrar la calculadora, no el helper.
+    const preferredFunction = exportedFunctions.includes('compute') ? 'compute' : exportedFunctions[0];
     const match =
-      content.match(EXPORT_FN_RE) ||
+      (preferredFunction ? [preferredFunction, preferredFunction] : content.match(EXPORT_FN_RE)) ||
       content.match(EXPORT_RENAME_RE) ||
       content.match(EXPORT_RE);
     if (!match) {
