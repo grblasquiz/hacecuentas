@@ -26,6 +26,7 @@ describe('locale isolation', () => {
 
     expect(layout).toContain('`${linkPrefix}/calculadoras`');
     expect(calculator).toContain('neutralizeOutputSpanish');
+    expect(calculator).toContain(".replace(/verificá/gi, 'verifica')");
     expect(footer).toContain('neutralSpanishLocales');
     expect(footer).toContain('`${localePrefix}/calculadoras`');
   });
