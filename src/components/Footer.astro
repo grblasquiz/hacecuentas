@@ -20,6 +20,10 @@ const { lang = 'es' } = Astro.props;
 const year = new Date().getFullYear();
 const isEn = lang === 'en';
 const isPt = lang === 'pt';
+const localeSegment = Astro.url.pathname.split('/').filter(Boolean)[0] || '';
+const neutralSpanishLocales = new Set(['mx', 'es', 'cl', 'co', 'pe', 'ec', 've', 'py', 'uy', 'do']);
+const isNeutralSpanish = lang === 'es' && neutralSpanishLocales.has(localeSegment);
+const localePrefix = isNeutralSpanish ? `/${localeSegment}` : '';
 const P = lang === 'es' ? '' : `/${lang}`; // prefijo de locale para links internos
 
 // Logos de marca oficiales (simple-icons, single-path, fill: currentColor).
@@ -33,7 +37,7 @@ const SOCIAL_ICONS: Record<string, string> = {
 };
 
 // i18n de las etiquetas de columnas + tagline + dots.
-const T = {
+const T_BASE = {
   es: {
     tagline: 'Calculadoras online gratuitas y precisas, explicadas en español para todo el mundo.',
     dots: ['Sin registro', '100% gratuito', 'Datos privados'],
@@ -56,18 +60,25 @@ const T = {
     green: 'Hospedagem verde (Cloudflare — 100% energia renovável)',
   },
 }[lang];
+const T = isNeutralSpanish ? {
+  ...T_BASE,
+  start: 'Empieza por aquí',
+  follow: 'Síguenos',
+} : T_BASE;
 
 // Columna "Empezá por acá": pilares + superficies de flujo (ES). EN/PT usan su índice.
 const startLinks = isEn ? [
   ['/en', 'All calculators'], ['/en/bmi-calculator', 'BMI'], ['/en/compound-interest-calculator', 'Compound interest'], ['/en/percentage-calculator', 'Percentages'], ['/guias', 'Guides'],
 ] : isPt ? [
   ['/pt', 'Todas as calculadoras'], ['/pt/calculadora-imc-tabela-oms-classificacao', 'IMC'], ['/pt/salario-liquido-clt-inss-irrf-2026', 'Salário líquido'], ['/pt/calculadora-juros-compostos-investimento-mensal', 'Juros compostos'], ['/guias', 'Guias'],
+] : isNeutralSpanish ? [
+  [localePrefix, 'Todas las calculadoras'], [`${localePrefix}/calculadoras`, 'Catálogo completo'], [`${localePrefix}/decidir`, 'Salas de decisión'], ['/guias', 'Guías'],
 ] : [
   ['/sueldos-y-trabajo', 'Sueldos y trabajo'], ['/impuestos-argentina', 'Impuestos'], ['/finanzas-personales', 'Finanzas'], ['/negocios-e-independientes', 'Negocios'], ['/decidir', 'Salas de decisión'],
 ];
 // Explorar
 const exploreLinks = [
-  [isEn ? '/en' : isPt ? '/pt' : '/calculadoras', isEn ? 'Calculators' : 'Calculadoras'],
+  [isEn ? '/en' : isPt ? '/pt' : isNeutralSpanish ? `${localePrefix}/calculadoras` : '/calculadoras', isEn ? 'Calculators' : 'Calculadoras'],
   ['/guias', isEn ? 'Guides' : isPt ? 'Guias' : 'Guías'],
   ['/blog', 'Blog'],
   ['/glosario', isEn ? 'Glossary' : isPt ? 'Glossário' : 'Glosario'],
@@ -75,7 +86,7 @@ const exploreLinks = [
 ];
 // Comunidad
 const communityLinks = [
-  ['/enlazanos', isEn ? 'Link to us' : isPt ? 'Divulgue-nos' : 'Enlazanos'],
+  ['/enlazanos', isEn ? 'Link to us' : isPt ? 'Divulgue-nos' : isNeutralSpanish ? 'Enlázanos' : 'Enlazanos'],
   ['/simulador-jubilacion-anses', isEn ? 'Retirement simulator' : isPt ? 'Simulador de aposentadoria' : 'Simulador de jubilación'],
   ['/sugerir', isEn ? 'Suggest a calc' : isPt ? 'Sugerir uma calc' : 'Sugerir una calc'],
   ['/sugerencias', isEn ? 'Vote suggestions' : isPt ? 'Votar sugestões' : 'Votar sugerencias'],
@@ -155,6 +166,8 @@ const socialLinks = [
         <p><strong>Disclaimer:</strong> Hacé Cuentas provides mathematical tools and educational content. <strong>We are not financial advisors, accountants, doctors, or lawyers.</strong> For important decisions, consult a licensed professional. Read the <a href="/aviso-legal">full disclaimer</a>.</p>
       ) : isPt ? (
         <p><strong>Aviso legal:</strong> Hacé Cuentas oferece ferramentas matemáticas e conteúdo educativo. <strong>Não somos consultores financeiros, contadores, médicos ou advogados.</strong> Para decisões importantes, consulte um profissional habilitado. Leia o <a href="/aviso-legal">aviso legal completo</a>.</p>
+      ) : isNeutralSpanish ? (
+        <p><strong>Aviso legal:</strong> Hacé Cuentas provee herramientas matemáticas y contenido educativo. Los resultados son orientativos y no reemplazan asesoramiento profesional cuando corresponda. Lee el <a href="/aviso-legal">aviso legal completo</a>.</p>
       ) : (
         <p><strong>Aviso legal:</strong> Hacé Cuentas provee herramientas matemáticas y contenido educativo. Los resultados son orientativos y no reemplazan asesoramiento profesional cuando corresponda. Leé el <a href="/aviso-legal">aviso legal completo</a>.</p>
       )}

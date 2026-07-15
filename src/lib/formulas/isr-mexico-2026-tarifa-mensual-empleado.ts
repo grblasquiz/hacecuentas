@@ -56,10 +56,10 @@ export function compute(i: Inputs): Outputs {
   const _insight = {
     title: salario <= 0 ? 'Ingresá tu salario' : 'Tu neto en mano',
     text: salario <= 0
-      ? 'Cargá tu salario bruto mensual para estimar el ISR, el IMSS y el neto que cobrás.'
+      ? 'Ingresa tu salario bruto mensual para estimar el ISR, el IMSS y el neto que recibes.'
       : subsidioOut > 0
       ? `De un bruto de **${fmtMXN(salario)}** te descuentan **${fmtMXN(isrNetoOut)}** de ISR (ya con subsidio de ${fmtMXN(subsidioOut)}) y **${fmtMXN(imssOut)}** de IMSS: te quedan **${fmtMXN(netoOut)}** en mano, el **${pctNeto}%**.`
-      : `De un bruto de **${fmtMXN(salario)}** te descuentan **${fmtMXN(isrNetoOut)}** de ISR (tasa marginal ${Math.round(tramo_aplicado * 100) / 100}%) y **${fmtMXN(imssOut)}** de IMSS: cobrás **${fmtMXN(netoOut)}** netos, el **${pctNeto}%**.`,
+      : `De un bruto de **${fmtMXN(salario)}** te descuentan **${fmtMXN(isrNetoOut)}** de ISR (tasa marginal ${Math.round(tramo_aplicado * 100) / 100}%) y **${fmtMXN(imssOut)}** de IMSS: recibes **${fmtMXN(netoOut)}** netos, el **${pctNeto}%**.`,
     tone: salario <= 0 ? 'neutral' : pctNeto >= 85 ? 'good' : pctNeto < 70 ? 'warn' : 'neutral',
     icon: '💵',
   };

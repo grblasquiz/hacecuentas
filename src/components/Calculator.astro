@@ -404,7 +404,13 @@ const t = isNeutralSpanish ? {
 
 // Clasificación por riesgo real: una licencia, una receta, pintura o un
 // documento no heredan referencias financieras de una categoría amplia.
-const disclaimer = getCalculatorDisclaimer(config, lang as 'es' | 'en' | 'pt');
+const neutralizeSpanish = (value: string) => value
+  .replace(/\bverificá\b/gi, 'verifica')
+  .replace(/\bconsultá\b/gi, 'consulta')
+  .replace(/\busá\b/gi, 'usa')
+  .replace(/\brevisá\b/gi, 'revisa');
+const rawDisclaimer = getCalculatorDisclaimer(config, lang as 'es' | 'en' | 'pt');
+const disclaimer = isNeutralSpanish ? neutralizeSpanish(rawDisclaimer) : rawDisclaimer;
 
 const basicFields = config.fields.filter((f) => !f.advanced);
 const advancedFields = config.fields.filter((f) => f.advanced);
@@ -1057,7 +1063,7 @@ const formatFreshnessDate = (iso: string): string => {
     <div class="share">
       <!-- 1. Guardar resultado — PRINCIPAL. Snapshot a localStorage (historial). -->
       <button type="button" class="btn-share btn-share--primary" data-action="save-result"
-        title={lang === 'en' ? 'Save this result to your history' : lang === 'pt' ? 'Salvar este resultado no seu histórico' : 'Guardá este resultado en tu historial'}>
+        title={lang === 'en' ? 'Save this result to your history' : lang === 'pt' ? 'Salvar este resultado no seu histórico' : isNeutralSpanish ? 'Guarda este resultado en tu historial' : 'Guardá este resultado en tu historial'}>
         <svg class="ic-save" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
         <span data-save-label>{lang === 'en' ? 'Save result' : lang === 'pt' ? 'Salvar resultado' : 'Guardar resultado'}</span>
       </button>
@@ -1181,8 +1187,8 @@ const formatFreshnessDate = (iso: string): string => {
     {alertEligible && (
       <!-- Alerta de cambio normativo: "avisame cuando este resultado cambie" -->
       <div class="alert-capture" data-alert-capture style="display:none">
-        <p class="alert-heading"><strong><svg class="alert-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg> Guardá este resultado</strong></p>
-        <p class="alert-sub">Te lo mandamos por mail y te avisamos si una <strong>actualización oficial</strong> (un nuevo salario mínimo, un cambio de impuesto o de tabla) cambia <em>{alertHeadlineLabel || 'este número'}</em>. Reejecutamos tu cálculo y te mostramos cuánto pasó a ser.</p>
+        <p class="alert-heading"><strong><svg class="alert-ico" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg> {isNeutralSpanish ? 'Guarda este resultado' : 'Guardá este resultado'}</strong></p>
+        <p class="alert-sub">{isNeutralSpanish ? 'Te lo enviamos por email y te avisamos si una' : 'Te lo mandamos por mail y te avisamos si una'} <strong>actualización oficial</strong> (un nuevo salario mínimo, un cambio de impuesto o de tabla) cambia <em>{alertHeadlineLabel || 'este número'}</em>. Reejecutamos tu cálculo y te mostramos cuánto pasó a ser.</p>
         <form class="alert-form" data-alert-form>
           <input type="email" placeholder="tu@email.com" autocomplete="email" data-alert-email>
           <button type="submit" data-label-sending="Guardando…">Guardar y avisarme</button>
@@ -4605,8 +4611,31 @@ const formatFreshnessDate = (iso: string): string => {
     [/¡/g, ''],
   ];
 
+  function neutralizeOutputSpanish(s: string): string {
+    if (!IS_NEUTRAL_ES || !s) return s;
+    const rules: Array<[RegExp, string]> = [
+      [/\bCargá\b/g, 'Ingresa'], [/\bcargá\b/g, 'ingresa'],
+      [/\bGuardá\b/g, 'Guarda'], [/\bguardá\b/g, 'guarda'],
+      [/\bVerificá\b/g, 'Verifica'], [/\bverificá\b/g, 'verifica'],
+      [/\bConsultá\b/g, 'Consulta'], [/\bconsultá\b/g, 'consulta'],
+      [/\bRevisá\b/g, 'Revisa'], [/\brevisá\b/g, 'revisa'],
+      [/\bUsá\b/g, 'Usa'], [/\busá\b/g, 'usa'],
+      [/\bLeé\b/g, 'Lee'], [/\bleé\b/g, 'lee'],
+      [/\bMirá\b/g, 'Mira'], [/\bmirá\b/g, 'mira'],
+      [/\bCobrás\b/g, 'Recibes'], [/\bcobrás\b/g, 'recibes'],
+      [/\bRecibís\b/g, 'Recibes'], [/\brecibís\b/g, 'recibes'],
+      [/\bTenés\b/g, 'Tienes'], [/\btenés\b/g, 'tienes'],
+      [/\bPodés\b/g, 'Puedes'], [/\bpodés\b/g, 'puedes'],
+      [/\bQuerés\b/g, 'Quieres'], [/\bquerés\b/g, 'quieres'],
+      [/\bSos\b/g, 'Eres'], [/\bsos\b/g, 'eres'],
+    ];
+    let out = s;
+    for (const [re, repl] of rules) out = out.replace(re, repl);
+    return out;
+  }
+
   function translateOutputStr(s: string): string {
-    if (CALC_LANG === 'es' || !s) return s;
+    if (CALC_LANG === 'es' || !s) return neutralizeOutputSpanish(s);
     // 1. Lookup exacto en dict por-fórmula (traducciones Haiku-generadas, calidad nativa)
     if (CALC_TRANSLATIONS[s]) return CALC_TRANSLATIONS[s];
     // 2. Fallback regex solo para EN (el dict PT debería cubrir ~95%, sin regex EN-centric)
