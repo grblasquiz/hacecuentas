@@ -1044,7 +1044,6 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/calculadora-superficie-corporal-du-bois': '/categoria/salud',
   '/calculadora-superficie-quemadura-regla-nueves': '/categoria/salud',
   '/calculadora-sushiswap-lp-rewards': '/categoria/finanzas',
-  '/calculadora-talla-sosten-corpino': '/categoria/salud',
   '/calculadora-tamano-bebe-semana': '/categoria/salud',
   '/calculadora-tamano-colchon-ideal-medidas': '/categoria/vida',
   '/calculadora-tamano-repo-git-commits-branches': '/categoria/tecnologia',
