@@ -10,6 +10,7 @@ import { capitalTrabajo } from '../src/lib/formulas/capital-trabajo';
 import { rentabilidadMensual } from '../src/lib/formulas/rentabilidad-mensual';
 import { costosFijosVariables } from '../src/lib/formulas/costos-fijos-variables';
 import { probabilidadEvento } from '../src/lib/formulas/probabilidad-evento';
+import { percepcionesImpositivas } from '../src/lib/formulas/percepciones-impositivas';
 
 describe('clusters corregidos semanas 4 a 13', () => {
   it('calcula cuota disponible y ratio deuda/ingreso', () => {
@@ -42,9 +43,16 @@ describe('clusters corregidos semanas 4 a 13', () => {
     expect(r.probabilidad).toBe(16.67);
     expect(r.probabilidadAlguna).toBe(51.77);
   });
+  it('calcula percepciones con alícuota informada', () => {
+    const r = percepcionesImpositivas({ baseImponible:100_000, alicuota:3, otrasPercepciones:1_500 });
+    expect(r.percepcionCalculada).toBe(3_000);
+    expect(r.percepcionesTotales).toBe(4_500);
+    expect(r.totalConPercepciones).toBe(104_500);
+  });
   it('rechaza entradas imposibles', () => {
     expect(() => comparadorPrecios({ precioA:0, cantidadA:1, precioB:1, cantidadB:1 })).toThrow();
     expect(() => sacProporcional({ mejorRemuneracion:100, diasTrabajados:200, diasSemestre:181 })).toThrow();
     expect(() => probabilidadEvento({ casosFavorables:7, casosPosibles:6 })).toThrow();
+    expect(() => percepcionesImpositivas({ baseImponible:100, alicuota:101 })).toThrow();
   });
 });

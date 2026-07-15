@@ -2132,6 +2132,7 @@ import { percentilEcografia } from './percentil-ecografia';
 import { percentilPediatrico } from './percentil-pediatrico';
 import { percentilPesoBebeOmsEdadMeses } from './percentil-peso-bebe-oms-edad-meses';
 import { percepcionDolarTarjetaImpuestoPais } from './percepcion-dolar-tarjeta-impuesto-pais';
+import { percepcionesImpositivas } from './percepciones-impositivas';
 import { perfilAluminioMetrosLinealesVentana } from './perfil-aluminio-metros-lineales-ventana';
 import { perimetroAbdominalRiesgoCardiovascular } from './perimetro-abdominal-riesgo-cardiovascular';
 import { periodizacionEntrenamiento } from './periodizacion-entrenamiento';
@@ -5173,6 +5174,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'percentil-pediatrico': percentilPediatrico,
   'percentil-peso-bebe-oms-edad-meses': percentilPesoBebeOmsEdadMeses,
   'percepcion-dolar-tarjeta-impuesto-pais': percepcionDolarTarjetaImpuestoPais,
+  'percepciones-impositivas': percepcionesImpositivas,
   'perfil-aluminio-metros-lineales-ventana': perfilAluminioMetrosLinealesVentana,
   'perimetro-abdominal-riesgo-cardiovascular': perimetroAbdominalRiesgoCardiovascular,
   'periodizacion-entrenamiento': periodizacionEntrenamiento,
