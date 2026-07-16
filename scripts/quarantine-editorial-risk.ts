@@ -21,9 +21,12 @@ const GENERIC_SOURCE_HOSTS = new Set([
   'argentina.gob.ar', 'boletinoficial.gob.ar', 'enargas.gob.ar', 'sii.cl',
   'bcentral.cl', 'dian.gov.co', 'banrep.gov.co', 'sat.gob.mx', 'datos.gov.co',
 ]);
-const BCRA_TOPIC_RE = /(banco|bcra|tasa|inter[eé]s|cr[eé]dito|pr[eé]stamo|uva|moneda|d[oó]lar|cambio|inflaci[oó]n|plazo-fijo|cbu|cvu|financ|bono|mercado|ahorro|alquiler|hipoteca|bitcoin)/i;
+const BCRA_TOPIC_RE = /(banco|bcra|tasa|inter[eé]s|cr[eé]dito|pr[eé]stamo|uva|moneda|d[oó]lar|cambio|inflaci[oó]n|plazo-fijo|cbu|cvu|financ|bono|mercado|ahorro|alquiler|hipoteca|bitcoin|tna|tea|tem|cft|deuda|tarjeta|monetary|policy|rate|saving)/i;
 // Los límites por guion evitan falsos positivos como "suspensión" → "pensión".
 const HIGH_STAKES_RE = /(?:^|-)(?:fertil[^-]*|vitrific[^-]*|ovulo[^-]*|embarazo-riesgo|sintoma[^-]*|diagnost[^-]*|dosis|medicament[^-]*|insulina|control-esfinter|quitar-panal|indemniz[^-]*|liquidacion|jubilacion|pension|impuesto|ganancias|losa|viga|columna|cimiento|estructural|potencia-electrica|cable-seccion)(?:-|$)/i;
+const EXPLICIT_HIGH_STAKES_SLUGS = new Set([
+  'calculadora-horas-extra-suplementarias-ecuador',
+]);
 
 function genericDataSource(value: unknown): boolean {
   if (typeof value !== 'string' || !value) return false;
@@ -42,11 +45,22 @@ function hasProfessionalReviewer(calc: Record<string, any>): boolean {
     .every((key) => typeof reviewer[key] === 'string' && reviewer[key].trim().length > 0);
 }
 
+function textualChars(value: unknown): number {
+  if (typeof value === 'string') return value.length;
+  if (Array.isArray(value)) return value.reduce((total, item) => total + textualChars(item), 0);
+  if (value && typeof value === 'object') {
+    return Object.values(value as Record<string, unknown>)
+      .reduce((total, item) => total + textualChars(item), 0);
+  }
+  return 0;
+}
+
 interface Finding {
   file: string;
   slug: string;
   locale: string;
   explanationChars: number;
+  editorialChars: number;
   previousStatus: string;
   reasons: string[];
   changed: boolean;
@@ -77,8 +91,16 @@ for (const dir of dirs) {
     let calc: Record<string, any>;
     try { calc = JSON.parse(readFileSync(file, 'utf8')); } catch { continue; }
     const explanationChars = typeof calc.explanation === 'string' ? calc.explanation.length : 0;
+    // El contenido editorial se reparte entre varias superficies visibles del
+    // template. Medir sólo `explanation` puso en cuarentena páginas con intros,
+    // respuestas directas y conclusiones extensas aunque el HTML total fuera
+    // claramente sustantivo.
+    const editorialChars = [
+      'intro', 'explanation', 'answerSnippet', 'keyTakeaway',
+      'useCases', 'faq', 'referenceTables', 'howToSteps',
+    ].reduce((total, key) => total + textualChars(calc[key]), 0);
     const reasons: string[] = [];
-    if (explanationChars < MIN_EXPLANATION) reasons.push(`explanation-under-${MIN_EXPLANATION}`);
+    if (editorialChars < MIN_EXPLANATION) reasons.push(`editorial-content-under-${MIN_EXPLANATION}`);
     if (!Array.isArray(calc.sources) || calc.sources.length === 0) reasons.push('missing-source');
     if (!calc.example && !calc.solvedExample && !(Array.isArray(calc.solvedExamples) && calc.solvedExamples.length > 0)) reasons.push('missing-solved-example');
     if (genericDataSource(calc.dataUpdate?.sourceUrl)) reasons.push('generic-data-source');
@@ -89,7 +111,9 @@ for (const dir of dirs) {
       reasons.push('source-topic-mismatch-bcra');
     }
     const slug = String(calc.slug || '');
-    if (HIGH_STAKES_RE.test(slug) && !hasProfessionalReviewer(calc)) reasons.push('high-stakes-without-professional-review');
+    if ((HIGH_STAKES_RE.test(slug) || EXPLICIT_HIGH_STAKES_SLUGS.has(slug)) && !hasProfessionalReviewer(calc)) {
+      reasons.push('high-stakes-without-professional-review');
+    }
     if (/adsense.*rpm|rpm.*adsense/i.test(slug) && !(calc.sourceVerified === true && calc.editorialReview === 'approved')) {
       reasons.push('adsense-benchmark-unverified');
     }
@@ -104,6 +128,7 @@ for (const dir of dirs) {
       slug: String(calc.slug || name.replace(/\.json$/, '')),
       locale: dir.replace(/^calcs-?/, '') || 'es-AR',
       explanationChars,
+      editorialChars,
       previousStatus: alreadyRestricted ? 'restricted' : 'indexable',
       reasons,
       changed: WRITE && !alreadyRestricted,
@@ -134,8 +159,8 @@ const summary = {
 };
 writeFileSync(join(REPORTS, 'editorial-quarantine.json'), JSON.stringify({ summary, findings }, null, 2) + '\n');
 writeFileSync(join(REPORTS, 'editorial-quarantine.csv'), [
-  'file,slug,locale,explanation_chars,previous_status,reasons,changed',
-  ...findings.map((item) => [item.file, item.slug, item.locale, item.explanationChars, item.previousStatus, item.reasons.join('|'), item.changed]
+  'file,slug,locale,explanation_chars,editorial_chars,previous_status,reasons,changed',
+  ...findings.map((item) => [item.file, item.slug, item.locale, item.explanationChars, item.editorialChars, item.previousStatus, item.reasons.join('|'), item.changed]
     .map((value) => `"${String(value).replace(/"/g, '""')}"`).join(',')),
 ].join('\n') + '\n');
 console.log(JSON.stringify(summary, null, 2));

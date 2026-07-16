@@ -3772,6 +3772,8 @@ const formatFreshnessDate = (iso: string): string => {
 </style>
 
 <script>
+  import { isCalculatorInputError } from '../lib/calculator-errors';
+
   // Lazy loading por fórmula — Vite genera 1 chunk por archivo (.ts), cargado on-demand.
   // El MAPA de loaders (~3.400 dynamic imports) vive en su propio chunk
   // (src/lib/formula-loader-map.ts): tenerlo inline acá inflaba ESTE bundle de
@@ -6079,7 +6081,11 @@ const formatFreshnessDate = (iso: string): string => {
           //  (a) error de validación/input → mensaje accionable, sin reintento.
           //  (b) excepción de la fórmula → mensaje genérico + botón Reintentar.
           hideSkeleton();
-          const isInputErr = err && (err.name === 'InputError' || err.code === 'INPUT' || /\b(input|inválid|invalid|dato|valor)\b/i.test(String(err.message || '')));
+          // Muchas fórmulas históricas lanzan Error con un mensaje accionable
+          // ("Ingresá...", "elegí...", "debe ser...") en vez de usar
+          // InputError. Clasificarlas como runtime_error inflaba GA4 y, peor,
+          // ocultaba al usuario la indicación concreta para corregir el campo.
+          const isInputErr = isCalculatorInputError(err);
           productTrack(isInputErr ? 'hc_calculator_validation_error' : 'hc_calculator_runtime_error', {
             error_type: isInputErr ? 'formula_input' : (_formulaLoaded ? 'formula_runtime' : 'formula_load'),
           });
