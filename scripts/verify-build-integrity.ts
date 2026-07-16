@@ -6,6 +6,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { GONE_410_URLS } from '../src/lib/gone-410.ts';
 import { PRUNING_REDIRECTS } from '../src/lib/pruning-redirects.ts';
+import { SEO_TITLE_MAX_LENGTH } from '../src/lib/seo-title.ts';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const DIST = resolve(ROOT, 'dist/client');
@@ -41,6 +42,21 @@ function htmlFiles(dir: string): string[] {
   return out;
 }
 
+function decodeHtmlText(value: string): string {
+  const named: Record<string, string> = {
+    amp: '&',
+    apos: "'",
+    gt: '>',
+    lt: '<',
+    nbsp: ' ',
+    quot: '"',
+  };
+  return value
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, decimal) => String.fromCodePoint(Number.parseInt(decimal, 10)))
+    .replace(/&([a-z]+);/gi, (entity, name) => named[name.toLowerCase()] ?? entity);
+}
+
 if (!existsSync(API_FILE)) throw new Error(`[integrity] falta ${API_FILE}`);
 if (!existsSync(WRAPPER)) throw new Error(`[integrity] falta ${WRAPPER}`);
 
@@ -48,6 +64,7 @@ const api = JSON.parse(readFileSync(API_FILE, 'utf8'));
 const entries: Array<{ url: string; slug: string }> = api.calculators || [];
 const errors: string[] = [];
 const seen = new Set<string>();
+const compiledHtmlFiles = htmlFiles(DIST);
 
 for (const entry of entries) {
   let url: URL;
@@ -83,7 +100,7 @@ for (const entry of entries) {
 // Ninguna página compilada puede seguir enlazando aliases 301 o retiradas 410.
 // Este gate cubre catálogos, relacionadas, rails y links editoriales completos.
 let internalHrefCount = 0;
-for (const file of htmlFiles(DIST)) {
+for (const file of compiledHtmlFiles) {
   const html = readFileSync(file, 'utf8').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
   for (const match of html.matchAll(/href=["'](\/[^"'?#\s]*)/gi)) {
     const path = match[1].replace(/\.html$/, '').replace(/\/$/, '') || '/';
@@ -93,6 +110,39 @@ for (const file of htmlFiles(DIST)) {
     if (STATIC_REDIRECT_PATHS.has(path)) errors.push(`href interno a _redirects: ${path} (${file.replace(`${DIST}/`, '')})`);
     if (errors.length >= 50) break;
   }
+  if (errors.length >= 50) break;
+}
+
+// Guardrails para los tres warnings recurrentes del auditor de Bing (2026-07):
+// title largo, imágenes de categoría con alt vacío y doble H1 en Mi Hacé Cuentas.
+for (const file of compiledHtmlFiles) {
+  const html = readFileSync(file, 'utf8');
+  const relative = file.replace(`${DIST}/`, '');
+  const robots = html.match(/<meta\s+[^>]*name=["']robots["'][^>]*content=["']([^"']+)/i)?.[1] || '';
+  const titleRaw = html.match(/<title>([\s\S]*?)<\/title>/i)?.[1] || '';
+  const title = decodeHtmlText(titleRaw)
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (title && !/\bnoindex\b/i.test(robots) && title.length > SEO_TITLE_MAX_LENGTH) {
+    errors.push(`title largo (${title.length}): ${relative}`);
+  }
+
+  if (/^categoria\/[^/]+(?:\/\d+)?\.html$/.test(relative)) {
+    for (const image of html.match(/<img\b[^>]*>/gi) || []) {
+      if (!/\balt=["'][^"']+["']/i.test(image)) {
+        errors.push(`imagen de categoría sin alt descriptivo: ${relative}`);
+        break;
+      }
+    }
+  }
+
+  if (relative === 'mi-hacecuentas.html') {
+    const h1Count = (html.match(/<h1\b/gi) || []).length;
+    if (h1Count !== 1) errors.push(`mi-hacecuentas debe tener 1 H1, tiene ${h1Count}`);
+  }
+
   if (errors.length >= 50) break;
 }
 
