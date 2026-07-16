@@ -5,6 +5,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
+import PillarHub from '../../components/PillarHub.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
 
 // Cargar todas las calcs y filtrar a las que aplican globalmente (no AR-specific)
@@ -56,6 +57,52 @@ const popularSlugs = [
 const popular = popularSlugs.map((s) => calcs.find((c) => c.slug === s)).filter(Boolean);
 
 const totalGlobal = calcs.length;
+
+// /global era la única portada de catálogo que todavía conservaba el hero y
+// las tarjetas de la primera versión del sitio. La data sigue siendo propia de
+// este índice, pero se presenta con el mismo recorrido de decisión que el
+// resto de hubs: contexto → tema → herramienta concreta.
+const cardFor = (c: any) => ({
+  href: `/${c.slug}`,
+  icon: c.icon || '🧮',
+  badge: categoryMeta[c.category]?.label || 'Calculadora',
+  title: c.h1,
+  blurb: c.description || 'Resultado inmediato, gratis y sin registro.',
+  meta: 'Disponible en cualquier país',
+  cta: 'Abrir calculadora →',
+});
+
+const globalHubConfig = {
+  color: '#2563eb',
+  nav: 'versión global',
+  h1: 'Calculadoras online globales',
+  seoTail: `${totalGlobal} calculadoras gratis`,
+  breadcrumb: [{ label: 'Inicio', href: '/' }, { label: 'Versión global' }],
+  eyebrow: '🌎 Herramientas sin fronteras',
+  titleLines: ['Calculadoras que', 'funcionan en cualquier país'],
+  lead: 'Herramientas universales para salud, finanzas, matemática y vida cotidiana. Sin registro, privadas y listas para usar estés donde estés.',
+  trust: [`${totalGlobal} calculadoras globales`, 'Sin datos personales', 'Resultado al instante'],
+  quick: { tag: '¿Necesitás algo local?', title: 'Versión Argentina', desc: 'Sueldos, impuestos y datos actualizados para Argentina.', cta: 'Ir a Argentina →', href: '/', variant: 'cta' as const },
+  needsKicker: 'Empezá por el tema',
+  needsTitle: '¿Qué querés resolver?',
+  needsSub: 'Elegí una categoría y encontrá la herramienta adecuada sin buscar por nombre.',
+  needs: categoryOrder.filter((cat) => byCategory[cat]?.length > 0).slice(0, 6).map((cat, i) => ({
+    icon: categoryMeta[cat].icon,
+    tone: ['i1', 'i2', 'i3', 'i4', 'i5', 'i6'][i],
+    title: categoryMeta[cat].label,
+    desc: `${byCategory[cat].length} calculadoras`,
+    href: `#cat-${cat}`,
+  })),
+  featuredKicker: 'Las más elegidas',
+  featuredTitle: 'Herramientas globales populares',
+  featuredSub: 'Las cuentas que podés resolver ahora, sin depender de normas o datos de un país.',
+  showFeaturedSearch: false,
+  filterBadges: [] as string[],
+  primary: popular[0] ? cardFor(popular[0]) : undefined,
+  cards: popular.slice(1).map(cardFor),
+  roomsKicker: '', roomsTitle: '', roomsSub: '', rooms: [],
+  factsTitle: '', facts: [],
+};
 ---
 
 <Layout
@@ -67,44 +114,20 @@ const totalGlobal = calcs.length;
 >
   <Header lang="es" />
 
+  <PillarHub config={globalHubConfig} />
+
   <main id="main">
-    <section class="hero">
-      <div class="hero-inner">
-        <p class="eyebrow">🌎 Versión global · Español neutro</p>
-        <h1 class="hero-title">Calculadoras <span class="accent">universales</span>.</h1>
-        <p class="hero-subtitle">{totalGlobal}+ calculadoras que funcionan en cualquier país: salud, conversores, matemática, finanzas globales, embarazo, mascotas, cocina. Sin localización a Argentina.</p>
-        <div class="hero-actions">
-          <a href="#categorias" class="btn-primary">Ver categorías</a>
-          <a href="/" class="btn-secondary">Versión Argentina →</a>
-        </div>
-      </div>
-    </section>
-
-    {popular.length > 0 && (
-      <section class="popular-rail">
-        <div class="container">
-          <h2 class="section-title">Más usadas</h2>
-          <div class="popular-grid">
-            {popular.map((c: any) => (
-              <a href={`/${c.slug}`} class="popular-card">
-                <span class="popular-icon">{c.icon || '🧮'}</span>
-                <span class="popular-label">{c.h1}</span>
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
-    )}
-
     <section id="categorias" class="categories">
       <div class="container">
-        <h2 class="section-title">Categorías</h2>
+        <p class="section-kicker">DIRECTORIO GLOBAL</p>
+        <h2 class="section-title">Explorá por categoría</h2>
+        <p class="section-subtitle">Todas las herramientas de esta versión usan fórmulas que no dependen de tu país.</p>
         <div class="cat-grid">
           {categoryOrder.filter((cat) => byCategory[cat]?.length > 0).map((cat) => {
             const meta = categoryMeta[cat] || { label: cat, desc: '', color: '#6b7280', icon: '📁' };
             const list = (byCategory[cat] || []).slice(0, 5);
             return (
-              <article class="cat-card" style={`--cat-color: ${meta.color};`}>
+              <article id={`cat-${cat}`} class="cat-card" style={`--cat-color: ${meta.color};`}>
                 <div class="cat-header">
                   <span class="cat-icon">{meta.icon}</span>
                   <div>
@@ -146,42 +169,19 @@ const totalGlobal = calcs.length;
 </Layout>
 
 <style>
-  .hero {
-    background: linear-gradient(135deg, var(--accent-soft) 0%, transparent 100%);
-    padding: 3rem 1.25rem 2.5rem;
-    border-bottom: 1px solid var(--border);
-  }
-  .hero-inner { max-width: 900px; margin: 0 auto; text-align: center; }
-  .eyebrow { color: var(--text-muted); font-size: 0.875rem; margin: 0 0 0.5rem; }
-  .hero-title { font-size: clamp(2rem, 5vw, 3.25rem); font-weight: 700; margin: 0 0 1rem; line-height: 1.1; }
-  .accent { color: var(--accent); }
-  .hero-subtitle { color: var(--text-muted); font-size: 1.125rem; max-width: 700px; margin: 0 auto 1.5rem; line-height: 1.5; }
-  .hero-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
-  .btn-primary, .btn-secondary { padding: 0.75rem 1.25rem; border-radius: var(--radius-sm); font-weight: 600; text-decoration: none; }
-  .btn-primary { background: var(--accent); color: white; }
-  .btn-secondary { background: var(--bg-muted); color: var(--text); border: 1px solid var(--border); }
-
   .container { max-width: 1100px; margin: 0 auto; padding: 0 1.25rem; }
-  .section-title { font-size: 1.5rem; font-weight: 700; margin: 0 0 1rem; }
-
-  .popular-rail { padding: 2rem 0 0.5rem; }
-  .popular-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }
-  .popular-card {
-    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
-    padding: 1.25rem 0.75rem; background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); text-decoration: none; color: var(--text);
-    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s, color 0.15s; text-align: center;
-  }
-  .popular-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-  .popular-icon { font-size: 1.75rem; line-height: 1; }
-  .popular-label { font-size: 0.8125rem; font-weight: 600; line-height: 1.3; }
-
-  .categories { padding: 2.5rem 0; }
+  .section-kicker { margin: 0 0 .5rem; color: var(--accent); font-size: .75rem; font-weight: 800; letter-spacing: .09em; }
+  .section-title { font-size: clamp(1.7rem, 3vw, 2.25rem); letter-spacing: -.035em; font-weight: 800; margin: 0; }
+  .section-subtitle { max-width: 620px; margin: .65rem 0 1.65rem; color: var(--text-muted); line-height: 1.55; }
+  .categories { padding: 4rem 0 2.5rem; }
   .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
   .cat-card {
+    scroll-margin-top: 6rem;
     padding: 1.25rem; background: var(--bg-card); border: 1px solid var(--border);
-    border-top: 3px solid var(--cat-color); border-radius: var(--radius-sm);
+    border-top: 3px solid var(--cat-color); border-radius: 1rem;
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
   }
+  .cat-card:hover { transform: translateY(-2px); box-shadow: 0 12px 24px color-mix(in srgb, var(--cat-color) 12%, transparent); }
   .cat-header { display: flex; gap: 0.75rem; margin-bottom: 0.75rem; }
   .cat-header h3 { margin: 0; font-size: 1rem; }
   .cat-header p { margin: 0.125rem 0 0; font-size: 0.8125rem; color: var(--text-muted); }
@@ -192,7 +192,7 @@ const totalGlobal = calcs.length;
   .cat-list a:hover { color: var(--accent); }
   .cat-count { margin: 0; font-size: 0.75rem; color: var(--text-muted); }
 
-  .other-versions { padding: 2rem 0 4rem; }
+  .other-versions { padding: 2.5rem 0 4rem; }
   .versions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; }
   .version-card {
     display: flex; align-items: center; gap: 0.75rem;
