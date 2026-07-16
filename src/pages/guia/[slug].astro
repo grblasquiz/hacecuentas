@@ -23,7 +23,13 @@ export async function getStaticPaths() {
     // Otras guías (siblings) para interlinking
     const otherGuides = allGuides
       .filter((og: any) => og.slug !== g.slug)
-      .map((og: any) => ({ slug: og.slug, h1: og.h1, icon: og.icon }));
+      .map((og: any) => ({
+        slug: og.slug,
+        h1: og.h1,
+        icon: og.icon,
+        category: og.category,
+        description: og.description,
+      }));
     return {
       params: { slug: g.slug },
       props: { guia: g, calcMap: Array.from(calcMap.entries()), otherGuides },
@@ -34,6 +40,21 @@ export async function getStaticPaths() {
 const { guia, calcMap, otherGuides } = Astro.props;
 const calcLookup = new Map(calcMap);
 const relatedCategories = GUIDE_TO_CATEGORIES[guia.slug] || [];
+const guideCalcSlugs = Array.from(new Set((guia.sections || []).flatMap((section: any) => section.calcs || []))) as string[];
+const guideCalcCount = guideCalcSlugs.filter((slug: string) => calcLookup.has(slug)).length;
+const firstCalcSlug = guideCalcSlugs.find((slug: string) => calcLookup.has(slug));
+const firstCalc: any = firstCalcSlug ? calcLookup.get(firstCalcSlug) : null;
+const readingText = [
+  guia.intro,
+  guia.answerSnippet,
+  ...(guia.sections || []).map((section: any) => `${section.heading} ${section.content}`),
+  ...(guia.faq || []).map((item: any) => `${item.q} ${item.a}`),
+].join(' ').replace(/[#*`|\[\]()_-]/g, ' ');
+const readingMinutes = Math.max(4, Math.ceil(readingText.split(/\s+/).filter(Boolean).length / 210));
+const relatedGuides = [
+  ...otherGuides.filter((og: any) => og.category && og.category === guia.category),
+  ...otherGuides.filter((og: any) => !og.category || og.category !== guia.category),
+].slice(0, 6);
 
 const schema = {
   '@context': 'https://schema.org',
@@ -114,68 +135,138 @@ const schema = {
 <Layout title={guia.title} description={guia.description} image={`/og/guia-${guia.slug}.png`} schema={schema} domain="knowledge">
   <Header slot="header" />
 
-  <article class="pillar-page">
+  <div class="reading-progress" aria-hidden="true"><span id="guide-progress"></span></div>
+
+  <article class="guide-page">
     <nav class="breadcrumbs" aria-label="Ruta de navegación">
       <a href="/">Inicio</a>
-      <span class="sep" aria-hidden="true">/</span>
+      <span aria-hidden="true">›</span>
       <a href="/guias">Guías</a>
-      <span class="sep" aria-hidden="true">/</span>
+      <span aria-hidden="true">›</span>
       <span class="current">{guia.h1}</span>
     </nav>
 
-    <header class="pillar-header">
-      <span class="pillar-icon">{guia.icon}</span>
-      <h1>{guia.h1}</h1>
-      <p class="lead" set:html={md(guia.intro)}></p>
-      <div class="pillar-meta">
-        <span>Por <a href="/autores/martin-rodriguez">Martín Rodríguez</a></span>
-        <span>·</span>
-        <span>Última actualización: {new Date((guia.lastReviewed ? guia.lastReviewed + 'T00:00:00' : new Date())).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
+    <header class="guide-hero">
+      <div class="hero-main">
+        <div class="hero-kicker">
+          <span class="hero-icon" aria-hidden="true">{guia.icon}</span>
+          <span>Guía práctica de Hacé Cuentas</span>
+        </div>
+        <h1>{guia.h1}</h1>
+        <p class="hero-lead">{guia.description}</p>
+        <div class="hero-actions">
+          <a href="#overview" class="primary-action">Empezar la guía <span aria-hidden="true">↓</span></a>
+          {firstCalc && (
+            <a href={`/${firstCalc._prefix || ''}${firstCalc.slug}`} class="secondary-action">
+              Ir directo a una calculadora <span aria-hidden="true">→</span>
+            </a>
+          )}
+        </div>
       </div>
+
+      <aside class="guide-facts" aria-label="Datos de la guía">
+        <span class="facts-label">En esta guía</span>
+        <div class="facts-grid">
+          <div><strong>{guia.sections.length}</strong><span>capítulos</span></div>
+          <div><strong>{guideCalcCount}</strong><span>calculadoras</span></div>
+          <div><strong>{readingMinutes} min</strong><span>de lectura</span></div>
+          <div><strong>Gratis</strong><span>sin registro</span></div>
+        </div>
+        <div class="reviewed-by">
+          <span class="review-check" aria-hidden="true">✓</span>
+          <p>
+            Revisada por <a href="/autores/martin-rodriguez">Martín Rodríguez</a><br />
+            <small>{new Date((guia.lastReviewed ? guia.lastReviewed + 'T00:00:00' : new Date())).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}</small>
+          </p>
+        </div>
+      </aside>
     </header>
 
     {guia.answerSnippet && (
-      <div class="guide-answer" set:html={md(guia.answerSnippet)}></div>
+      <aside class="quick-answer" aria-label="Respuesta rápida">
+        <span class="quick-answer-label">En pocas palabras</span>
+        <div set:html={md(guia.answerSnippet)}></div>
+      </aside>
     )}
 
-    <div class="pillar-body">
-      <aside class="toc" id="guide-toc">
-        <h2>Contenidos</h2>
-        <ul class="toc-list">
+    <details class="mobile-toc">
+      <summary><span>Ver contenidos</span><span>{guia.sections.length + 3} temas</span></summary>
+      <nav aria-label="Contenidos de la guía">
+        <a href="#overview">Antes de empezar</a>
+        {guia.sections.map((s: any, i: number) => <a href={`#sec-${i}`}>{s.heading}</a>)}
+        <a href="#faq">Preguntas frecuentes</a>
+        <a href="#sources">Fuentes y referencias</a>
+      </nav>
+    </details>
+
+    <div class="guide-layout">
+      <aside class="guide-nav" id="guide-toc">
+        <div class="nav-heading">
+          <span>Tu recorrido</span>
+          <small>{readingMinutes} min</small>
+        </div>
+        <div class="nav-progress" aria-hidden="true"><span id="nav-progress"></span></div>
+        <ol class="toc-list">
+          <li class="toc-item" data-toc-target="overview"><a href="#overview"><span>00</span>Antes de empezar</a></li>
           {guia.sections.map((s: any, i: number) => (
-            <li class="toc-item" data-toc-target={`sec-${i}`}><a href={`#sec-${i}`}>{s.heading}</a></li>
+            <li class="toc-item" data-toc-target={`sec-${i}`}><a href={`#sec-${i}`}><span>{String(i + 1).padStart(2, '0')}</span>{s.heading}</a></li>
           ))}
-          <li class="toc-item" data-toc-target="faq"><a href="#faq">Preguntas frecuentes</a></li>
-          <li class="toc-item" data-toc-target="sources"><a href="#sources">Fuentes</a></li>
-        </ul>
+          <li class="toc-item" data-toc-target="faq"><a href="#faq"><span>?</span>Preguntas frecuentes</a></li>
+          <li class="toc-item" data-toc-target="sources"><a href="#sources"><span>↗</span>Fuentes</a></li>
+        </ol>
       </aside>
 
-      <div class="pillar-content">
+      <main class="guide-content">
+        <section class="guide-intro guide-section" id="overview">
+          <span class="section-eyebrow">Antes de empezar</span>
+          <h2>Qué vas a poder resolver</h2>
+          <div class="intro-content" set:html={md(guia.intro)}></div>
+        </section>
+
         {guia.sections.map((s: any, i: number) => (
-          <section class="pillar-section" id={`sec-${i}`}>
-            <h2>{s.heading}</h2>
-            <div class="section-content" set:html={`<p>${md(s.content)}</p>`}></div>
-            {s.calcs && s.calcs.length > 0 && (
-              <div class="calcs-grid">
-                {s.calcs.map((slug: string) => {
-                  const c: any = calcLookup.get(slug);
-                  if (!c) return null;
-                  return (
-                    <a href={`/${c._prefix || ''}${c.slug}`} class="calc-card">
-                      <span class="calc-icon">{c.icon || '🧮'}</span>
-                      <div>
-                        <span class="calc-title">{c.h1}</span>
-                        <span class="calc-desc">{(c.description || '').slice(0, 100)}...</span>
-                      </div>
-                    </a>
-                  );
-                })}
+          <section class="guide-section" id={`sec-${i}`}>
+            <header class="section-header">
+              <span class="section-number">{String(i + 1).padStart(2, '0')}</span>
+              <div>
+                <span class="section-eyebrow">Capítulo {i + 1} de {guia.sections.length}</span>
+                <h2>{s.heading}</h2>
+              </div>
+            </header>
+            <div class="section-content" set:html={md(s.content)}></div>
+
+            {s.calcs && s.calcs.some((slug: string) => calcLookup.has(slug)) && (
+              <div class="section-tools">
+                <div class="tools-heading">
+                  <div>
+                    <span class="section-eyebrow">Pasá a la acción</span>
+                    <h3>Calculadoras para este capítulo</h3>
+                  </div>
+                  <span>{s.calcs.filter((slug: string) => calcLookup.has(slug)).length} herramientas</span>
+                </div>
+                <div class="calcs-grid">
+                  {s.calcs.map((slug: string) => {
+                    const c: any = calcLookup.get(slug);
+                    if (!c) return null;
+                    return (
+                      <a href={`/${c._prefix || ''}${c.slug}`} class="calc-card">
+                        <span class="calc-icon" aria-hidden="true">{c.icon || '🧮'}</span>
+                        <span class="calc-copy">
+                          <span class="calc-label">Calculadora</span>
+                          <strong class="calc-title">{c.h1}</strong>
+                          <span class="calc-desc">{c.description || 'Hacé la cuenta con tus propios datos.'}</span>
+                        </span>
+                        <span class="calc-arrow" aria-hidden="true">→</span>
+                      </a>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </section>
         ))}
 
-        <section class="pillar-section" id="faq">
+        <section class="guide-section faq-section" id="faq">
+          <span class="section-eyebrow">Dudas comunes</span>
           <h2>Preguntas frecuentes</h2>
           <div class="faq-list">
             {guia.faq.map((f: any) => (
@@ -187,29 +278,28 @@ const schema = {
           </div>
         </section>
 
-        <section class="pillar-section" id="sources">
+        <section class="guide-section sources-section" id="sources">
+          <span class="section-eyebrow">Transparencia</span>
           <h2>Fuentes y referencias</h2>
+          <p>Estas son las fuentes principales que usamos para revisar datos, criterios y fórmulas.</p>
           <ul class="sources">
             {guia.sources.map((s: any) => (
-              <li><a href={s.url} rel="noopener nofollow" target="_blank">{s.name}</a></li>
+              <li><a href={s.url} rel="noopener nofollow" target="_blank"><span>{s.name}</span><span aria-hidden="true">↗</span></a></li>
             ))}
           </ul>
         </section>
-      </div>
+      </main>
     </div>
 
-    <button type="button" class="toc-fab" id="toc-fab" aria-label="Mostrar tabla de contenidos" aria-expanded="false" hidden>
-      <span aria-hidden="true">☰</span>
-      <span class="toc-fab-label">Contenidos</span>
-    </button>
-
     {relatedCategories.length > 0 && (
-      <section class="pillar-section related-cats">
-        <h2>Explorá calculadoras por categoría</h2>
+      <section class="related-cats related-section">
+        <div class="related-heading">
+          <div><span class="section-eyebrow">Seguí resolviendo</span><h2>Explorá por categoría</h2></div>
+        </div>
         <div class="cats-grid">
           {relatedCategories.map((cat: string) => (
             <a href={`/categoria/${cat}`} class="cat-card">
-              <span class="cat-icon">{CATEGORY_ICONS[cat] || '🧮'}</span>
+              <span class="cat-icon" aria-hidden="true">{CATEGORY_ICONS[cat] || '🧮'}</span>
               <span class="cat-name">{CATEGORY_TITLES[cat] || cat}</span>
               <span class="cat-arrow" aria-hidden="true">→</span>
             </a>
@@ -218,26 +308,30 @@ const schema = {
       </section>
     )}
 
-    <section class="pillar-section other-guides">
-      <h2>Otras guías útiles</h2>
+    <section class="other-guides related-section">
+      <div class="related-heading">
+        <div><span class="section-eyebrow">También te puede servir</span><h2>Otras guías útiles</h2></div>
+        <a href="/guias">Ver todas <span aria-hidden="true">→</span></a>
+      </div>
       <div class="guides-grid">
-        {otherGuides.map((og: any) => (
+        {relatedGuides.map((og: any) => (
           <a href={`/guia/${og.slug}`} class="guide-card">
-            <span class="guide-icon">{og.icon}</span>
-            <span class="guide-name">{og.h1}</span>
+            <span class="guide-icon" aria-hidden="true">{og.icon}</span>
+            <span class="guide-card-copy">
+              <strong>{og.h1}</strong>
+              <span>{og.description}</span>
+            </span>
+            <span class="guide-arrow" aria-hidden="true">→</span>
           </a>
         ))}
       </div>
-      <p class="guides-index-link">
-        <a href="/guias">Ver todas las guías →</a>
-      </p>
     </section>
   </article>
 
   <Footer slot="footer" />
 </Layout>
 
-<style is:global>
+<style is:global media="not all">
   .pillar-page {
     max-width: 1080px;
     margin: 0 auto;
@@ -572,38 +666,212 @@ const schema = {
   }
 </style>
 
+<style is:global>
+  .reading-progress {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 100;
+    height: 3px;
+    background: transparent;
+    pointer-events: none;
+  }
+  .reading-progress span { display: block; width: 0; height: 100%; background: linear-gradient(90deg, var(--accent), #06b6d4); }
+
+  .guide-page { max-width: 1180px; margin: 0 auto; padding: 1rem 1.25rem 5rem; color: var(--text); }
+  .guide-page .breadcrumbs { display: flex; align-items: center; gap: .5rem; min-width: 0; margin-bottom: 1.25rem; color: var(--text-subtle); font-size: .82rem; }
+  .guide-page .breadcrumbs a { color: var(--accent); text-decoration: none; }
+  .guide-page .breadcrumbs .current { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .guide-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 310px;
+    gap: clamp(2rem, 6vw, 5.5rem);
+    align-items: center;
+    padding: clamp(2rem, 5vw, 4.25rem);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    background:
+      radial-gradient(circle at 90% 10%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 36%),
+      linear-gradient(145deg, var(--bg-card), var(--bg-soft));
+    overflow: hidden;
+  }
+  .hero-kicker { display: flex; align-items: center; gap: .65rem; margin-bottom: 1.15rem; color: var(--accent); font-size: .74rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+  .hero-icon { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid var(--border); border-radius: 13px; background: var(--bg-card); font-size: 1.45rem; box-shadow: var(--shadow-sm); }
+  .hero-main h1 { max-width: 760px; margin: 0; font-size: clamp(2.35rem, 5vw, 4.35rem); font-weight: 850; line-height: 1.02; letter-spacing: -.052em; overflow-wrap: anywhere; }
+  .hero-lead { max-width: 710px; margin: 1.25rem 0 0; color: var(--text-muted); font-size: clamp(1rem, 1.8vw, 1.14rem); line-height: 1.62; }
+  .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem 1.1rem; margin-top: 1.65rem; }
+  .primary-action, .secondary-action { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 46px; border-radius: 999px; font-size: .88rem; font-weight: 750; text-decoration: none; }
+  .primary-action { padding: 0 1.1rem; background: var(--accent); color: #fff; box-shadow: 0 8px 22px color-mix(in srgb, var(--accent) 23%, transparent); }
+  .secondary-action { color: var(--accent); }
+  .primary-action:hover { filter: brightness(1.05); transform: translateY(-1px); }
+  .secondary-action:hover { text-decoration: underline; }
+
+  .guide-facts { position: relative; z-index: 1; padding: 1.2rem; border: 1px solid var(--border); border-radius: 20px; background: color-mix(in srgb, var(--bg-card) 94%, transparent); box-shadow: var(--shadow-lg); }
+  .facts-label { display: block; margin-bottom: .8rem; color: var(--text-subtle); font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+  .facts-grid { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .facts-grid div { display: flex; min-height: 76px; flex-direction: column; justify-content: center; padding: .75rem; background: var(--bg-card); }
+  .facts-grid div:nth-child(odd) { border-right: 1px solid var(--border); }
+  .facts-grid div:nth-child(-n+2) { border-bottom: 1px solid var(--border); }
+  .facts-grid strong { font-size: 1.05rem; letter-spacing: -.02em; }
+  .facts-grid span { margin-top: .18rem; color: var(--text-subtle); font-size: .72rem; }
+  .reviewed-by { display: flex; align-items: center; gap: .7rem; margin-top: 1rem; }
+  .review-check { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 900; }
+  .reviewed-by p { margin: 0; color: var(--text-muted); font-size: .78rem; line-height: 1.45; }
+  .reviewed-by a { color: var(--text); font-weight: 700; text-decoration: none; }
+  .reviewed-by small { color: var(--text-subtle); }
+
+  .quick-answer { display: grid; grid-template-columns: 145px 1fr; gap: 1.25rem; align-items: start; max-width: 940px; margin: 1.5rem auto 0; padding: 1.15rem 1.35rem; border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 14px; background: var(--accent-soft); }
+  .quick-answer-label { padding-top: .14rem; color: var(--accent-strong); font-size: .72rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+  .quick-answer div { color: var(--text); font-size: .94rem; line-height: 1.65; }
+  .quick-answer p { margin: 0; }
+
+  .mobile-toc { display: none; }
+  .guide-layout { display: grid; grid-template-columns: 250px minmax(0, 760px); justify-content: center; gap: clamp(2.5rem, 6vw, 5rem); align-items: start; margin-top: clamp(3rem, 7vw, 5.5rem); }
+  .guide-nav { position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow: auto; padding: .9rem; border: 1px solid var(--border); border-radius: 18px; background: var(--bg-card); scrollbar-width: thin; }
+  .nav-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; padding: .35rem .45rem .7rem; }
+  .nav-heading span { font-size: .8rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+  .nav-heading small { color: var(--text-subtle); font-size: .72rem; }
+  .nav-progress { height: 3px; margin: 0 .45rem .8rem; border-radius: 999px; background: var(--bg-soft); overflow: hidden; }
+  .nav-progress span { display: block; width: 0; height: 100%; background: var(--accent); }
+  .toc-list { display: grid; gap: .12rem; margin: 0; padding: 0; list-style: none; }
+  .toc-item a { display: grid; grid-template-columns: 24px 1fr; gap: .45rem; align-items: start; padding: .48rem .52rem; border-radius: 9px; color: var(--text-muted); font-size: .77rem; line-height: 1.38; text-decoration: none; transition: background .16s, color .16s; }
+  .toc-item a > span { color: var(--text-subtle); font-size: .65rem; font-variant-numeric: tabular-nums; line-height: 1.65; }
+  .toc-item a:hover { background: var(--bg-soft); color: var(--text); }
+  .toc-item.is-active a { background: var(--accent-soft); color: var(--text); font-weight: 700; }
+  .toc-item.is-active a > span { color: var(--accent); }
+
+  .guide-content { min-width: 0; }
+  .guide-section { scroll-margin-top: 72px; margin: 0 0 clamp(4rem, 8vw, 6.5rem); }
+  .guide-section:last-child { margin-bottom: 0; }
+  .section-eyebrow { display: block; margin-bottom: .5rem; color: var(--accent); font-size: .7rem; font-weight: 850; letter-spacing: .11em; text-transform: uppercase; }
+  .guide-section > h2, .section-header h2 { margin: 0; font-size: clamp(1.75rem, 3.3vw, 2.45rem); line-height: 1.12; letter-spacing: -.036em; }
+  .guide-intro { padding-bottom: 2.25rem; border-bottom: 1px solid var(--border); }
+  .intro-content { margin-top: 1.25rem; color: var(--text-muted); font-size: 1.04rem; line-height: 1.78; }
+  .intro-content p { margin: 0; }
+  .intro-content strong { color: var(--text); }
+  .section-header { display: grid; grid-template-columns: 50px 1fr; gap: 1rem; align-items: start; margin-bottom: 1.55rem; }
+  .section-number { display: grid; width: 46px; height: 46px; place-items: center; border: 1px solid var(--border); border-radius: 14px; background: var(--bg-soft); color: var(--accent); font-size: .78rem; font-weight: 850; font-variant-numeric: tabular-nums; }
+  .section-content { color: var(--text); font-size: 1.02rem; line-height: 1.8; }
+  .section-content > :first-child { margin-top: 0; }
+  .section-content > :last-child { margin-bottom: 0; }
+  .section-content p { margin: 0 0 1.15rem; }
+  .section-content h3 { margin: 2rem 0 .8rem; font-size: 1.25rem; letter-spacing: -.02em; }
+  .section-content ul, .section-content ol { margin: 0 0 1.2rem; padding-left: 1.3rem; }
+  .section-content li { margin: .4rem 0; padding-left: .2rem; }
+  .section-content strong { color: var(--text); font-weight: 750; }
+  .section-content code { padding: .15rem .35rem; border: 1px solid var(--border); border-radius: 5px; background: var(--bg-soft); font-size: .88em; overflow-wrap: anywhere; }
+  .section-content blockquote { margin: 1.35rem 0; padding: .9rem 1.1rem; border-left: 4px solid var(--accent); background: var(--accent-soft); color: var(--text-muted); }
+  .section-content table { display: block; width: 100%; max-width: 100%; margin: 1.4rem 0; border: 1px solid var(--border); border-radius: 12px; border-collapse: separate; border-spacing: 0; background: var(--bg-card); overflow-x: auto; }
+  .section-content thead, .section-content tbody { white-space: nowrap; }
+  .section-content th { padding: .7rem .85rem; border-bottom: 1px solid var(--border); background: var(--bg-soft); color: var(--text); font-size: .8rem; text-align: left; }
+  .section-content td { padding: .7rem .85rem; border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: .86rem; }
+  .section-content tr:last-child td { border-bottom: 0; }
+
+  .section-tools { margin-top: 2rem; padding: 1.15rem; border: 1px solid var(--border); border-radius: 18px; background: var(--bg-soft); }
+  .tools-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: .9rem; padding: 0 .1rem; }
+  .tools-heading h3 { margin: 0; font-size: 1.05rem; }
+  .tools-heading > span { color: var(--text-subtle); font-size: .72rem; white-space: nowrap; }
+  .calcs-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
+  .calc-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .7rem; align-items: start; min-width: 0; padding: .9rem; border: 1px solid var(--border); border-radius: 13px; background: var(--bg-card); color: var(--text); text-decoration: none; transition: transform .16s, border-color .16s, box-shadow .16s; }
+  .calc-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: var(--shadow-sm); }
+  .calc-icon { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 10px; background: var(--accent-soft); font-size: 1.1rem; }
+  .calc-copy { display: flex; min-width: 0; flex-direction: column; }
+  .calc-label { color: var(--accent); font-size: .62rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+  .calc-title { margin-top: .18rem; font-size: .84rem; line-height: 1.3; }
+  .calc-desc { display: -webkit-box; margin-top: .25rem; overflow: hidden; color: var(--text-subtle); font-size: .7rem; line-height: 1.4; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .calc-arrow { color: var(--accent); font-weight: 850; }
+
+  .faq-list { display: grid; gap: .55rem; margin-top: 1.35rem; }
+  .faq-list details { border: 1px solid var(--border); border-radius: 13px; background: var(--bg-card); overflow: hidden; }
+  .faq-list summary { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem 1.1rem; color: var(--text); font-size: .94rem; font-weight: 700; line-height: 1.45; list-style: none; cursor: pointer; }
+  .faq-list summary::-webkit-details-marker { display: none; }
+  .faq-list summary::after { content: '+'; flex: 0 0 auto; color: var(--accent); font-size: 1.2rem; font-weight: 500; }
+  .faq-list details[open] summary::after { content: '−'; }
+  .faq-answer { padding: 0 1.1rem 1.1rem; color: var(--text-muted); font-size: .9rem; line-height: 1.7; }
+  .faq-answer p { margin: 0; }
+
+  .sources-section > p { margin: .8rem 0 1.2rem; color: var(--text-muted); }
+  .sources { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; margin: 0; padding: 0; list-style: none; }
+  .sources a { display: flex; min-height: 56px; align-items: center; justify-content: space-between; gap: .8rem; padding: .7rem .85rem; border: 1px solid var(--border); border-radius: 11px; background: var(--bg-soft); color: var(--text); font-size: .78rem; line-height: 1.35; text-decoration: none; }
+  .sources a span:last-child { color: var(--accent); }
+  .sources a:hover { border-color: var(--accent); }
+
+  .related-section { margin-top: clamp(4rem, 9vw, 7rem); padding-top: clamp(2.5rem, 5vw, 4rem); border-top: 1px solid var(--border); }
+  .related-heading { display: flex; align-items: end; justify-content: space-between; gap: 1.5rem; margin-bottom: 1.3rem; }
+  .related-heading h2 { margin: 0; font-size: clamp(1.55rem, 3vw, 2rem); letter-spacing: -.03em; }
+  .related-heading > a { color: var(--accent); font-size: .85rem; font-weight: 750; text-decoration: none; }
+  .cats-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .7rem; }
+  .cat-card { display: flex; align-items: center; gap: .7rem; padding: .9rem 1rem; border: 1px solid var(--border); border-radius: 13px; background: var(--bg-card); color: var(--text); text-decoration: none; transition: transform .16s, border-color .16s; }
+  .cat-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .cat-icon { font-size: 1.25rem; }
+  .cat-name { min-width: 0; flex: 1; font-size: .84rem; font-weight: 700; }
+  .cat-arrow { color: var(--accent); }
+  .other-guides .guides-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
+  .guide-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .75rem; align-items: center; min-width: 0; padding: 1rem; border: 1px solid var(--border); border-radius: 14px; background: var(--bg-card); color: var(--text); text-decoration: none; transition: transform .16s, border-color .16s, box-shadow .16s; }
+  .guide-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: var(--shadow-sm); }
+  .guide-icon { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 12px; background: var(--bg-soft); font-size: 1.3rem; }
+  .guide-card-copy { display: flex; min-width: 0; flex-direction: column; }
+  .guide-card-copy strong { font-size: .84rem; line-height: 1.35; }
+  .guide-card-copy > span { display: -webkit-box; margin-top: .25rem; overflow: hidden; color: var(--text-subtle); font-size: .7rem; line-height: 1.4; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .guide-arrow { color: var(--accent); font-weight: 850; }
+
+  @media (max-width: 900px) {
+    .guide-hero { grid-template-columns: 1fr; gap: 1.8rem; }
+    .guide-facts { max-width: 560px; }
+    .guide-layout { grid-template-columns: 210px minmax(0, 1fr); gap: 2rem; }
+    .calcs-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 720px) {
+    .guide-page { padding: .6rem .8rem 4rem; }
+    .guide-page .breadcrumbs { margin-bottom: .85rem; }
+    .guide-hero { gap: 1.15rem; padding: 1.15rem; border-radius: 20px; }
+    .hero-kicker { margin-bottom: .85rem; }
+    .hero-main h1 { font-size: clamp(2.1rem, 10.2vw, 2.75rem); }
+    .hero-lead { margin-top: .9rem; font-size: .97rem; line-height: 1.55; }
+    .hero-actions { margin-top: 1.1rem; }
+    .hero-actions { align-items: stretch; flex-direction: column; }
+    .primary-action { width: 100%; }
+    .secondary-action { justify-content: flex-start; }
+    .guide-facts { padding: .8rem; border-radius: 16px; box-shadow: var(--shadow-sm); }
+    .facts-label { margin-bottom: .55rem; }
+    .facts-grid div { min-height: 62px; padding: .6rem; }
+    .reviewed-by { margin-top: .7rem; }
+    .quick-answer { grid-template-columns: 1fr; gap: .35rem; padding: 1rem; }
+    .mobile-toc { display: block; margin-top: 1rem; border: 1px solid var(--border); border-radius: 13px; background: var(--bg-card); }
+    .mobile-toc summary { display: flex; justify-content: space-between; gap: 1rem; padding: .9rem 1rem; font-size: .84rem; font-weight: 750; list-style: none; cursor: pointer; }
+    .mobile-toc summary::-webkit-details-marker { display: none; }
+    .mobile-toc summary span:last-child { color: var(--text-subtle); font-size: .72rem; font-weight: 500; }
+    .mobile-toc nav { display: grid; gap: .1rem; max-height: 55vh; padding: 0 .55rem .65rem; overflow: auto; }
+    .mobile-toc nav a { padding: .55rem .5rem; border-radius: 8px; color: var(--text-muted); font-size: .78rem; line-height: 1.35; text-decoration: none; }
+    .mobile-toc nav a:hover { background: var(--accent-soft); color: var(--text); }
+    .guide-layout { display: block; margin-top: 3.5rem; }
+    .guide-nav { display: none; }
+    .guide-section { margin-bottom: 4.5rem; }
+    .section-header { grid-template-columns: 40px 1fr; gap: .75rem; }
+    .section-number { width: 38px; height: 38px; border-radius: 11px; }
+    .section-content { font-size: .98rem; }
+    .section-tools { margin-right: -.2rem; margin-left: -.2rem; padding: .8rem; border-radius: 15px; }
+    .tools-heading { align-items: start; }
+    .sources { grid-template-columns: 1fr; }
+    .cats-grid, .other-guides .guides-grid { grid-template-columns: 1fr; }
+    .related-heading { align-items: start; flex-direction: column; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .primary-action, .calc-card, .cat-card, .guide-card { transition: none; }
+  }
+</style>
+
 <script is:inline>
 (() => {
   const toc = document.getElementById('guide-toc');
-  if (!toc) return;
-  const list = toc.querySelector('.toc-list');
-  if (!list) return;
-  // Inject H3 sub-items under their parent section
-  document.querySelectorAll('.pillar-section').forEach((sec) => {
-    const id = sec.id;
-    if (!id) return;
-    const parent = list.querySelector('[data-toc-target="' + id + '"]');
-    if (!parent) return;
-    const h3s = sec.querySelectorAll('.section-content h3');
-    h3s.forEach((h3, idx) => {
-      if (!h3.id) h3.id = id + '-h3-' + idx;
-      const li = document.createElement('li');
-      li.className = 'toc-item is-h3';
-      li.dataset.tocTarget = h3.id;
-      const a = document.createElement('a');
-      a.href = '#' + h3.id;
-      a.textContent = h3.textContent || '';
-      li.appendChild(a);
-      parent.insertAdjacentElement('afterend', li);
-    });
-  });
-  // Scroll-spy via IntersectionObserver
+  const list = toc?.querySelector('.toc-list');
   const targets = [];
-  list.querySelectorAll('.toc-item').forEach((li) => {
+  list?.querySelectorAll('.toc-item').forEach((li) => {
     const id = li.getAttribute('data-toc-target');
     const el = id ? document.getElementById(id) : null;
     if (el) targets.push({ id, el, li });
   });
+
   if (targets.length && 'IntersectionObserver' in window) {
     const visible = new Set();
     const io = new IntersectionObserver((entries) => {
@@ -611,13 +879,11 @@ const schema = {
         if (e.isIntersecting) visible.add(e.target.id);
         else visible.delete(e.target.id);
       });
-      // Pick the first target (top-most) that's visible
       let activeId = null;
       for (const t of targets) {
         if (visible.has(t.id)) { activeId = t.id; break; }
       }
       if (!activeId) {
-        // fallback: last one above viewport
         for (const t of targets) {
           const r = t.el.getBoundingClientRect();
           if (r.top < 120) activeId = t.id;
@@ -627,25 +893,28 @@ const schema = {
     }, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
     targets.forEach((t) => io.observe(t.el));
   }
-  // Mobile FAB toggle
-  const fab = document.getElementById('toc-fab');
-  if (fab) {
-    fab.hidden = false;
-    fab.classList.add('is-ready');
-    const close = () => {
-      document.body.classList.remove('toc-open');
-      fab.setAttribute('aria-expanded', 'false');
-    };
-    fab.addEventListener('click', () => {
-      const open = document.body.classList.toggle('toc-open');
-      fab.setAttribute('aria-expanded', open ? 'true' : 'false');
-    });
-    list.addEventListener('click', (e) => {
-      if (e.target && e.target.tagName === 'A') close();
-    });
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') close();
-    });
-  }
+
+  const topProgress = document.getElementById('guide-progress');
+  const navProgress = document.getElementById('nav-progress');
+  let ticking = false;
+  const updateProgress = () => {
+    const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    const percent = Math.min(100, Math.max(0, (window.scrollY / max) * 100));
+    if (topProgress) topProgress.style.width = percent + '%';
+    if (navProgress) navProgress.style.width = percent + '%';
+    ticking = false;
+  };
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      window.requestAnimationFrame(updateProgress);
+      ticking = true;
+    }
+  }, { passive: true });
+  updateProgress();
+
+  const mobileToc = document.querySelector('.mobile-toc');
+  mobileToc?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
+    mobileToc.removeAttribute('open');
+  }));
 })();
 </script>
