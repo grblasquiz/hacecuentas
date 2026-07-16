@@ -1,0 +1,157 @@
+{
+  "slug": "calculadora-cuota-plan-ahorro-auto-circulo-cerrado",
+  "title": "Cuota de plan de ahorro de auto (círculo cerrado)",
+  "h1": "Calculadora de cuota de plan de ahorro de auto",
+  "description": "Calculá la cuota de un plan de ahorro de auto (círculo cerrado): ingresá el valor móvil del 0 km y la cantidad de cuotas y obtené la cuota pura, los gastos administrativos, el seguro de vida y el IVA que forman la cuota mensual.",
+  "category": "automotor",
+  "audience": "AR",
+  "icon": "🚗",
+  "formulaId": "cuota-plan-ahorro-auto-circulo-cerrado",
+  "answerSnippet": "En un plan de ahorro de auto la cuota no amortiza un préstamo con interés: pagás una fracción del valor del 0 km (la cuota pura = valor del auto ÷ cantidad de cuotas) más los gastos del plan. Sobre la cuota pura se suman el gasto administrativo de la administradora (típico 2%), el seguro de vida y el IVA sobre esos cargos. Para un auto de $25.000.000 en 84 cuotas, la cuota pura es unos $297.619 y la cuota total ronda $305.000 hoy; como el valor móvil sube con la lista de la terminal, la cuota se actualiza mes a mes.",
+  "intro": "El **plan de ahorro** (o círculo cerrado) tiene una mecánica propia, distinta del crédito prendario: no pagás capital + interés, sino una **fracción del valor del 0 km** cada mes, más los gastos del plan. Por eso la cuota se mueve cada vez que la terminal (Renault, Volkswagen, Chevrolet, Toyota, etc.) actualiza la lista de precios.\n\nEsta calculadora descompone la cuota en sus partes reales: la **cuota pura** (el valor del auto dividido por la cantidad de cuotas del plan), el **gasto administrativo** que cobra la administradora, el **seguro de vida** del suscriptor y el **IVA** que se aplica sobre esos cargos. Así ves cuánto de tu cuota va al auto y cuánto a gastos.\n\nLa usan quienes están por suscribir un plan y quieren dimensionar la cuota, quienes ya están adentro y no entienden por qué la cuota sube todos los meses, y quienes comparan un plan de ahorro contra un prendario. **Todos los porcentajes son editables** porque cambian según la administradora y el plan; los valores por defecto son referenciales.",
+  "keyTakeaway": "La cuota de un plan de ahorro = **cuota pura (valor del auto ÷ cuotas)** + **gasto administrativo** (~2%) + **seguro de vida** + **IVA** sobre esos cargos. La cuota pura sube cada vez que la terminal actualiza el **valor móvil**, así que la cuota se ajusta mes a mes.",
+  "useCases": [
+    "Estimar la cuota mensual de un plan de ahorro de 84 cuotas para un 0 km determinado.",
+    "Entender por qué la cuota del plan de ahorro sube todos los meses (actualización del valor móvil).",
+    "Separar cuánto de la cuota va al auto (cuota pura) y cuánto a gastos administrativos y seguros.",
+    "Comparar la cuota de un plan de ahorro contra la de un crédito prendario.",
+    "Ver el impacto de elegir un plan de 60, 84 o 120 cuotas sobre la cuota mensual.",
+    "Calcular la alícuota mensual (la fracción del auto que pagás cada mes).",
+    "Dimensionar cuánto pesa el gasto administrativo de la administradora en la cuota.",
+    "Proyectar cuánto pagarías en total si el valor móvil se mantuviera (piso teórico).",
+    "Chequear si el gasto administrativo que te cobran está dentro de lo habitual (~2%).",
+    "Decidir si te conviene suscribir un plan de ahorro según la cuota inicial estimada."
+  ],
+  "fields": [
+    {
+      "id": "valorMovil",
+      "label": "Valor móvil del auto (precio de lista del 0 km)",
+      "type": "number",
+      "required": true,
+      "placeholder": "25000000",
+      "min": 0,
+      "step": 10000,
+      "unit": "$"
+    },
+    {
+      "id": "cantidadCuotas",
+      "label": "Cantidad de cuotas del plan",
+      "type": "number",
+      "default": 84,
+      "min": 1,
+      "step": 1
+    },
+    {
+      "id": "porcentajeAdmin",
+      "label": "Gasto administrativo (% de la cuota pura)",
+      "type": "number",
+      "default": 2,
+      "min": 0,
+      "step": 0.1,
+      "unit": "%"
+    },
+    {
+      "id": "porcentajeSeguro",
+      "label": "Seguro de vida (% de la cuota pura)",
+      "type": "number",
+      "default": 0.15,
+      "min": 0,
+      "step": 0.05,
+      "unit": "%"
+    }
+  ],
+  "outputs": [
+    { "id": "cuotaMensual", "label": "Cuota mensual estimada", "primary": true },
+    { "id": "cuotaPura", "label": "Cuota pura (fracción del auto)" },
+    { "id": "gastoAdmin", "label": "Gasto administrativo" },
+    { "id": "seguroVida", "label": "Seguro de vida" },
+    { "id": "iva", "label": "IVA sobre gastos" },
+    { "id": "alicuota", "label": "Alícuota mensual" },
+    { "id": "totalPlanAprox", "label": "Total del plan (valor constante)" },
+    { "id": "detalle", "label": "Detalle" }
+  ],
+  "example": {
+    "title": "Ejemplo: auto de $25.000.000 en 84 cuotas",
+    "steps": [
+      "Alícuota mensual = 100 ÷ 84 = 1,19%. Cuota pura = 25.000.000 ÷ 84 = $297.619.",
+      "Gasto administrativo (2%) = $5.952. Seguro de vida (0,15%) = $446.",
+      "IVA (21%) sobre gastos + seguro = $1.344.",
+      "Cuota mensual = 297.619 + 5.952 + 446 + 1.344 = $305.362."
+    ],
+    "result": "Cuota mensual estimada: $305.362 (cuota pura $297.619 + gastos)"
+  },
+  "explanation": "## Cómo se forma la cuota de un plan de ahorro\n\n```\nAlícuota mensual = 100 / cantidad de cuotas      (84 cuotas → 1,19%/mes)\nCuota pura       = valor móvil × alícuota  = valor móvil / cuotas\nGasto admin      = cuota pura × % administrativo\nSeguro de vida   = cuota pura × % seguro\nIVA (21%)        = (gasto admin + seguro) × 21%\nCuota mensual    = cuota pura + gasto admin + seguro + IVA\n```\n\nLa **cuota pura** es la parte que efectivamente destinás a juntar el valor del auto. El resto son gastos del plan.\n\n## Por qué la cuota sube todos los meses\n\nEl **valor móvil** es el precio de lista del 0 km, y lo actualiza la terminal cada vez que sube los precios. Como la cuota pura se calcula sobre ese valor, **cada aumento de lista sube tu cuota**, aunque no cambie ni la administradora ni el plan. No es un interés: es la actualización del bien.\n\n## Ejemplo resuelto por cantidad de cuotas\n\nPara un auto de **$25.000.000**, con 2% de gasto administrativo y 0,15% de seguro:\n\n| Plan | Alícuota | Cuota pura | Cuota total aprox. |\n|---|---|---|---|\n| 60 cuotas | 1,67% | $416.667 | ~$427.500 |\n| 84 cuotas | 1,19% | $297.619 | ~$305.400 |\n| 120 cuotas | 0,83% | $208.333 | ~$213.750 |\n\nA más cuotas, menor cuota mensual, pero más tiempo dentro del plan (y más meses expuesto a la actualización del valor móvil).\n\n## Plan de ahorro vs prendario\n\n| Aspecto | Plan de ahorro | Crédito prendario |\n|---|---|---|\n| Qué pagás | Fracción del valor del auto + gastos | Capital + interés (sistema francés) |\n| Entrega del auto | Por sorteo o licitación (adjudicación) | Inmediata |\n| Qué mueve la cuota | Actualización del valor de lista | Tasa fija/variable pactada |\n| Costo \"oculto\" | Gastos administrativos + seguros + IVA | Interés + seguros + gastos |\n\n## Errores comunes\n\n- **Creer que la cuota es fija:** sube con cada actualización de lista de la terminal.\n- **Ignorar los gastos administrativos:** parecen chicos por mes, pero se pagan durante todo el plan.\n- **Confundir cuota pura con cuota total:** la cuota que pagás incluye gastos y seguros por encima de la cuota pura.\n- **Suponer adjudicación inmediata:** en el plan de ahorro el auto se entrega por sorteo o licitación, no al firmar.\n\n## Nota\n\nEs una estimación de la mecánica del plan. Los porcentajes de gasto administrativo, seguro y el esquema de adjudicación los define cada administradora en el contrato; verificá las condiciones específicas de tu plan.",
+  "faq": [
+    {
+      "q": "¿Cómo se calcula la cuota de un plan de ahorro de auto?",
+      "a": "La cuota pura es el **valor del auto dividido por la cantidad de cuotas** del plan. A eso se le suman el gasto administrativo (típico 2%), el seguro de vida y el IVA sobre esos cargos. Ingresá el valor móvil y las cuotas y la calculadora arma la cuota mensual completa."
+    },
+    {
+      "q": "¿Por qué me sube la cuota del plan de ahorro todos los meses?",
+      "a": "Porque la cuota pura se calcula sobre el **valor móvil**, que es el precio de lista del 0 km, y la terminal lo actualiza cuando suben los precios. No es un interés: cada aumento de lista se traslada a tu cuota. Por eso el plan de ahorro sigue la inflación del auto."
+    },
+    {
+      "q": "¿Qué es la cuota pura y qué es la alícuota?",
+      "a": "La **alícuota** es la fracción del auto que pagás cada mes (100 ÷ cantidad de cuotas: en un plan de 84, 1,19%). La **cuota pura** es esa alícuota aplicada al valor del auto (valor ÷ cuotas). Es la parte de la cuota que va a juntar el valor del bien, sin contar gastos."
+    },
+    {
+      "q": "¿El plan de ahorro tiene interés?",
+      "a": "No en el sentido de un préstamo. No pagás una tasa de interés sobre capital, sino una fracción del valor del auto más **gastos administrativos, seguros e IVA**. El costo real está en esos gastos y en que el valor del auto se actualiza mes a mes."
+    },
+    {
+      "q": "¿Cuándo me entregan el auto en un plan de ahorro?",
+      "a": "El auto se **adjudica** por sorteo o por licitación (ofreciendo adelantar cuotas), no al firmar. Podés seguir pagando muchos meses antes de que te toque, salvo que licites y ganes la adjudicación anticipada. Esto es distinto del prendario, donde el auto es tuyo desde el inicio."
+    },
+    {
+      "q": "¿Conviene más un plan de ahorro o un prendario?",
+      "a": "Depende. El plan de ahorro suele tener cuota inicial más baja y sigue la inflación del auto, pero la entrega no es inmediata. El prendario te da el auto ya, con una tasa de interés. Compará la cuota estimada de cada uno y tu urgencia por tener el vehículo."
+    },
+    {
+      "q": "¿Qué pasa si dejo de pagar el plan de ahorro?",
+      "a": "Podés perder tu lugar en el grupo y enfrentar penalidades según el contrato; si ya estabas adjudicado, el auto queda en garantía (prenda). Recuperar lo pagado suele implicar esperar a que termine el grupo y descuentos por gastos. Revisá las condiciones de rescisión de tu administradora."
+    },
+    {
+      "q": "¿El gasto administrativo del 2% es fijo?",
+      "a": "No, cambia según la administradora y el plan; el 2% es un valor referencial habitual. Por eso la calculadora lo deja editable: cargá el porcentaje que figura en tu contrato para obtener la cuota exacta."
+    }
+  ],
+  "sources": [
+    { "name": "IGJ — Sistemas de capitalización y ahorro (círculos cerrados)", "url": "https://www.argentina.gob.ar/justicia/igj" },
+    { "name": "AAECA — Asociación de administradoras de planes de ahorro", "url": "https://www.aaeca.org.ar/" }
+  ],
+  "relatedSlugs": [],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-07-16",
+    "updateType": "manual",
+    "notes": "Mecánica del plan de ahorro: la cuota depende del valor móvil (input del usuario) y de porcentajes editables. No usa un dataset fiscal que se actualice periódicamente.",
+    "source": "IGJ — Sistemas de capitalización y ahorro",
+    "sourceUrl": "https://www.argentina.gob.ar/justicia/igj"
+  },
+  "seoKeywords": [
+    "cuota plan de ahorro auto",
+    "calcular cuota plan de ahorro 0km",
+    "plan de ahorro auto circulo cerrado",
+    "cuota pura plan de ahorro",
+    "valor movil plan de ahorro",
+    "gasto administrativo plan de ahorro",
+    "plan de ahorro vs prendario",
+    "alicuota plan de ahorro auto",
+    "por que sube la cuota del plan de ahorro"
+  ],
+  "lastReviewed": "2026-07-16",
+  "referenceTables": [
+    {
+      "title": "Componentes de la cuota de un plan de ahorro",
+      "headers": ["Componente", "Cómo se calcula", "Ejemplo (auto $25M, 84 cuotas)"],
+      "rows": [
+        ["Cuota pura", "Valor móvil ÷ cantidad de cuotas", "$297.619"],
+        ["Gasto administrativo", "Cuota pura × % admin (~2%)", "$5.952"],
+        ["Seguro de vida", "Cuota pura × % seguro (~0,15%)", "$446"],
+        ["IVA", "(gastos + seguro) × 21%", "$1.344"],
+        ["Cuota mensual", "Suma de todo lo anterior", "$305.362"]
+      ],
+      "note": "Valores referenciales. El gasto administrativo, el seguro y el esquema de adjudicación los define cada administradora. La cuota pura sube con cada actualización del valor móvil de la terminal."
+    }
+  ]
+}

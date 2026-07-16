@@ -1,0 +1,154 @@
+{
+  "slug": "calculadora-fecha-cobro-anses-cronograma-dni",
+  "title": "Cuándo cobro ANSES: cronograma por terminación de DNI",
+  "h1": "Calculadora de fecha de cobro ANSES por DNI",
+  "description": "Calculá qué día cobrás en ANSES según la terminación de tu DNI: elegí el beneficio (jubilación, AUH, SUAF, desempleo) y la fecha de inicio de pagos del mes y obtené tu día exacto, salteando fines de semana y feriados.",
+  "category": "finanzas",
+  "audience": "AR",
+  "icon": "🗓️",
+  "formulaId": "fecha-cobro-anses-cronograma-dni",
+  "answerSnippet": "ANSES paga por terminación de DNI: el 0 cobra primero y el 9 último, un dígito por día hábil. Si tu DNI termina en 0 cobrás el primer día de pago del grupo; si termina en 5, cinco días hábiles después (salteando sábados, domingos y feriados). La fecha de inicio de cada grupo (jubilados con haber mínimo, jubilados con haber superior, AUH, asignaciones, desempleo) la publica ANSES cada mes, así que hay que mirar el cronograma oficial y contar desde ahí.",
+  "intro": "ANSES no paga a todos el mismo día: organiza los pagos por la **terminación del DNI**. Dentro de cada grupo de beneficiarios (jubilados y pensionados con haber mínimo, con haber superior, AUH, asignaciones familiares SUAF, prestación por desempleo, PNC), la terminación **0 cobra primero** y la **9 última**, un dígito por día hábil.\n\nEsta calculadora toma tu DNI, extrae la terminación, y calcula **qué día te toca** contando los días hábiles desde el inicio de pagos del grupo —salteando automáticamente sábados, domingos y feriados nacionales—. Así evitás el error clásico de contar días corridos y caer un feriado.\n\nEl **orden por terminación es fijo y determinístico**; lo que cambia cada mes es la **fecha de arranque**, que ANSES publica en su cronograma oficial. Por eso la calculadora te pide esa fecha de inicio: cargá la que anuncia ANSES para tu grupo y el mes, y obtenés tu día exacto. **Siempre confirmá el cronograma oficial de ANSES** antes de ir al cajero.",
+  "keyTakeaway": "ANSES paga por **terminación de DNI**: el 0 primero, el 9 último, **un dígito por día hábil**. Cargá la **fecha de inicio de pagos** del grupo (la publica ANSES cada mes) y la calculadora te da tu día exacto salteando fines de semana y feriados.",
+  "useCases": [
+    "Saber qué día cobrás la jubilación mínima según la terminación de tu DNI.",
+    "Calcular la fecha de cobro de la AUH contando desde el inicio de pagos del mes.",
+    "Estimar cuándo se acredita la asignación familiar (SUAF) por tu terminación de DNI.",
+    "Ver qué día te toca la prestación por desempleo dentro del cronograma de ANSES.",
+    "Contar los días hábiles hasta tu cobro sin equivocarte con un feriado en el medio.",
+    "Comparar cuánto antes cobra una terminación 0 respecto de una terminación 9.",
+    "Planificar un pago o una compra sabiendo el día aproximado en que entra la plata.",
+    "Ayudar a un familiar mayor a ubicar su día de cobro en el cronograma mensual.",
+    "Chequear si tu día de cobro cae pegado a un fin de semana largo.",
+    "Entender por qué dos personas del mismo beneficio cobran en días distintos."
+  ],
+  "fields": [
+    {
+      "id": "dni",
+      "label": "Tu número de DNI",
+      "type": "number",
+      "required": true,
+      "placeholder": "30123456",
+      "min": 1,
+      "step": 1
+    },
+    {
+      "id": "tipoBeneficio",
+      "label": "Beneficio",
+      "type": "select",
+      "default": "jubilado-minima",
+      "options": [
+        { "value": "jubilado-minima", "label": "Jubilación/pensión con haber mínimo" },
+        { "value": "jubilado-superior", "label": "Jubilación/pensión con haber superior al mínimo" },
+        { "value": "auh", "label": "Asignación Universal por Hijo (AUH)" },
+        { "value": "suaf", "label": "Asignaciones Familiares (SUAF)" },
+        { "value": "desempleo", "label": "Prestación por Desempleo" },
+        { "value": "pnc", "label": "Pensiones No Contributivas (PNC)" }
+      ]
+    },
+    {
+      "id": "fechaInicio",
+      "label": "Fecha de inicio de pagos del grupo (la publica ANSES)",
+      "type": "date",
+      "required": true,
+      "default": "2026-08-10"
+    }
+  ],
+  "outputs": [
+    { "id": "fechaCobroLegible", "label": "Tu día de cobro", "primary": true },
+    { "id": "terminacion", "label": "Terminación de tu DNI" },
+    { "id": "orden", "label": "Orden de cobro (1° a 10°)" },
+    { "id": "diaSemana", "label": "Día de la semana" },
+    { "id": "tipoBeneficio", "label": "Grupo de beneficio" },
+    { "id": "detalle", "label": "Detalle" }
+  ],
+  "example": {
+    "title": "Ejemplo: DNI terminado en 6, jubilación mínima, inicio 10/8/2026",
+    "steps": [
+      "Terminación del DNI: 6 → sos el 7° en el orden de cobro (el 0 es el 1°).",
+      "Arranco el conteo el lunes 10/8 y sumo 6 días hábiles.",
+      "Salteo el fin de semana (15 y 16) y el feriado del 17 de agosto (San Martín).",
+      "Tu día de cobro cae el miércoles 19 de agosto de 2026."
+    ],
+    "result": "Cobrás el miércoles 19 de agosto de 2026"
+  },
+  "explanation": "## Cómo asigna ANSES los días de cobro\n\n```\nOrden = terminación del DNI + 1   (0 → 1°, 9 → 10°)\nTu día = inicio de pagos + (terminación) días hábiles\n         (salteando sábados, domingos y feriados nacionales)\n```\n\nCada **grupo de beneficiarios** tiene su propia ventana de pagos en el mes, con su fecha de arranque. Dentro del grupo, el orden por terminación de DNI es siempre el mismo: 0, 1, 2, …, 9.\n\n## Orden de cobro por terminación\n\n| Terminación del DNI | Orden de cobro |\n|---|---|\n| 0 | 1° (primer día hábil) |\n| 1 | 2° |\n| 2 | 3° |\n| 3 | 4° |\n| 4 | 5° |\n| 5 | 6° |\n| 6 | 7° |\n| 7 | 8° |\n| 8 | 9° |\n| 9 | 10° (último) |\n\n## Por qué importa saltear feriados\n\nEl error más común es contar **días corridos**: si el inicio es un jueves y contás 5 días, caés un martes… salvo que en el medio haya un fin de semana o un feriado, en cuyo caso el día real se corre. ANSES paga solo en **días hábiles bancarios**, así que la calculadora usa el calendario oficial de feriados nacionales para darte la fecha correcta.\n\n## Ejemplo resuelto\n\n**Jubilado con haber mínimo, DNI terminado en 3, inicio de pagos el 10/8/2026:**\n1. Terminación 3 → 4° en el orden.\n2. Desde el lunes 10/8, sumo 3 días hábiles: 11, 12 y 13.\n3. No hay feriados en esos días → cobra el **jueves 13 de agosto**.\n\nSi en cambio la terminación fuera 6, el conteo cruza el fin de semana del 15-16 y el feriado del 17 (San Martín), por lo que el día se corre al **miércoles 19**.\n\n## Grupos que se pagan por separado\n\n| Grupo | Nota |\n|---|---|\n| Jubilados/pensionados con haber mínimo | Suelen cobrar primero en el mes |\n| Jubilados/pensionados con haber superior | Ventana posterior |\n| AUH | Ventana propia por terminación |\n| Asignaciones familiares (SUAF) | Ventana propia |\n| Prestación por desempleo | Ventana propia |\n| PNC | Ventana propia |\n\n## Aviso importante\n\nLa **fecha de inicio de cada grupo la fija ANSES mes a mes** y puede variar. Esta calculadora aplica el orden por terminación de DNI (que es fijo) sobre la fecha que vos cargás. Antes de ir a cobrar, **confirmá siempre el cronograma oficial de ANSES** del mes correspondiente.",
+  "faq": [
+    {
+      "q": "¿Cómo sé qué día cobro en ANSES según mi DNI?",
+      "a": "ANSES ordena los pagos por la **terminación de tu DNI**: el 0 cobra primero y el 9 último, un dígito por día hábil. Cargá tu DNI y la fecha de inicio de pagos que ANSES publica para tu grupo, y la calculadora te da tu día exacto salteando fines de semana y feriados."
+    },
+    {
+      "q": "¿Por qué la calculadora me pide la fecha de inicio de pagos?",
+      "a": "Porque esa fecha **cambia cada mes** y la fija ANSES según el grupo (jubilados, AUH, SUAF, desempleo). El orden por terminación de DNI es fijo, pero el punto de arranque no: por eso hay que cargar la fecha del cronograma oficial del mes."
+    },
+    {
+      "q": "¿ANSES paga los fines de semana o feriados?",
+      "a": "No. Los pagos se hacen en **días hábiles bancarios**. Si tu día calculado cayera un sábado, domingo o feriado, se corre al siguiente hábil. La calculadora ya descuenta los feriados nacionales para darte la fecha correcta."
+    },
+    {
+      "q": "¿Los jubilados con haber mínimo y los de haber superior cobran juntos?",
+      "a": "No necesariamente. ANSES suele abrir **ventanas separadas**: primero los jubilados y pensionados con haber mínimo y después los de haber superior al mínimo, cada uno con su propia fecha de inicio y su orden por terminación de DNI."
+    },
+    {
+      "q": "¿Puedo cobrar antes de mi día asignado?",
+      "a": "Si el pago se acredita en tu cuenta bancaria, en general el dinero queda disponible **desde tu día** y podés usarlo cuando quieras (no necesitás ir a una fecha exacta). Si cobrás por ventanilla, tenés que respetar tu día por terminación. Confirmá la modalidad con ANSES."
+    },
+    {
+      "q": "¿Qué terminación de DNI cobra primero?",
+      "a": "La terminación **0** cobra primero (primer día hábil de la ventana del grupo), y la **9** cobra última (10° día hábil). El resto se ordena en el medio: 1, 2, 3… hasta 9."
+    },
+    {
+      "q": "¿Sirve para la AUH y las asignaciones familiares?",
+      "a": "Sí. La AUH y las asignaciones familiares (SUAF) también se pagan por terminación de DNI, cada una con su propia fecha de inicio. Elegí el beneficio en la calculadora y cargá la fecha de arranque que publica ANSES para ese grupo."
+    },
+    {
+      "q": "¿La fecha que me da es oficial?",
+      "a": "Es una **estimación** basada en el orden por terminación de DNI aplicado sobre la fecha de inicio que cargaste. La fecha oficial siempre es la del cronograma que publica ANSES cada mes: confirmala ahí antes de ir a cobrar."
+    }
+  ],
+  "sources": [
+    { "name": "ANSES — Fechas y lugares de cobro", "url": "https://www.anses.gob.ar/consultas/fechas-y-lugares-de-cobro" },
+    { "name": "ANSES — Cronograma de pagos", "url": "https://www.anses.gob.ar/" }
+  ],
+  "relatedSlugs": [],
+  "dataUpdate": {
+    "frequency": "monthly",
+    "lastUpdated": "2026-07-16",
+    "updateType": "manual",
+    "notes": "El orden por terminación de DNI es fijo; la fecha de inicio de pagos la publica ANSES cada mes y la carga el usuario. Los feriados salen de la fuente única feriados-ar-2026.ts.",
+    "source": "ANSES — Fechas y lugares de cobro",
+    "sourceUrl": "https://www.anses.gob.ar/consultas/fechas-y-lugares-de-cobro"
+  },
+  "seoKeywords": [
+    "cuando cobro anses",
+    "fechas de pago anses 2026",
+    "cronograma de pago anses por dni",
+    "cuando cobro la jubilacion por terminacion de dni",
+    "fecha de cobro auh",
+    "calendario de pagos anses",
+    "cuando cobro desempleo anses",
+    "cobro anses terminacion dni",
+    "cronograma suaf anses"
+  ],
+  "lastReviewed": "2026-07-16",
+  "referenceTables": [
+    {
+      "title": "Orden de cobro por terminación de DNI",
+      "headers": ["Terminación de DNI", "Orden de cobro", "Días hábiles desde el inicio"],
+      "rows": [
+        ["0", "1°", "0"],
+        ["1", "2°", "1"],
+        ["2", "3°", "2"],
+        ["3", "4°", "3"],
+        ["4", "5°", "4"],
+        ["5", "6°", "5"],
+        ["6", "7°", "6"],
+        ["7", "8°", "7"],
+        ["8", "9°", "8"],
+        ["9", "10°", "9"]
+      ],
+      "note": "El orden por terminación es fijo. La fecha real depende del día de inicio que ANSES publica cada mes para cada grupo de beneficio, más el salteo de fines de semana y feriados nacionales."
+    }
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "slug": "calculadora-cuil-cuit-desde-dni-argentina",
+  "title": "Calcular CUIL/CUIT desde el DNI — Argentina",
+  "h1": "Calculadora de CUIL/CUIT desde el DNI",
+  "description": "Calculá tu CUIL o CUIT a partir del DNI en segundos: ingresá el número y el género y obtené el prefijo (20/23/27), el DNI y el dígito verificador con el algoritmo real de ANSES/ARCA (módulo 11).",
+  "category": "finanzas",
+  "audience": "AR",
+  "icon": "🪪",
+  "formulaId": "cuil-cuit-desde-dni-argentina",
+  "answerSnippet": "El CUIL se arma con un prefijo de 2 dígitos (20 para varones, 27 para mujeres; 23 si el verificador daría 10), tu DNI completado a 8 dígitos con ceros a la izquierda, y un dígito verificador que se calcula por módulo 11 sobre esos 10 números. Por ejemplo, el DNI 12.345.678 de un varón da CUIL 20-12345678-6. Para una persona física el CUIT es el mismo número que el CUIL: solo cambia el nombre según el trámite (CUIL para lo laboral/previsional, CUIT para lo impositivo).",
+  "intro": "El **CUIL** (Código Único de Identificación Laboral) y el **CUIT** (Clave Única de Identificación Tributaria) no son números al azar: se **derivan de tu DNI** con un algoritmo público de ANSES/ARCA. Por eso podés calcularlos vos mismo sin esperar la constancia: alcanza con tu número de documento y tu género.\n\nEsta calculadora aplica el **algoritmo real**: toma un prefijo (**20** para varones, **27** para mujeres, **23** como alternativo), le pega tu DNI completado a 8 dígitos con ceros a la izquierda, y calcula el **dígito verificador por módulo 11**. El resultado es tu CUIL/CUIT exacto, el mismo que figura en la constancia de ANSES.\n\nSirve cuando arrancás un trabajo y te piden el CUIL, cuando querés verificar que el número que tenés anotado es correcto, o cuando necesitás el CUIT para una factura o un trámite y no tenés la constancia a mano. **Importante:** para una persona física el CUIT es idéntico al CUIL; el prefijo 30/33/34 corresponde a empresas y no se deriva de un DNI.",
+  "keyTakeaway": "El CUIL/CUIT = **prefijo (20 varón, 27 mujer, 23 alternativo)** + **DNI a 8 dígitos** + **dígito verificador (módulo 11)**. Para personas físicas, **CUIT = CUIL** (mismo número). El prefijo 30/33/34 es de empresas, no sale del DNI.",
+  "useCases": [
+    "Calcular tu CUIL para dárselo al empleador cuando entrás a un trabajo nuevo.",
+    "Obtener el CUIT para emitir una factura o inscribirte en el monotributo sin tener la constancia a mano.",
+    "Verificar si el CUIL que tenés anotado corresponde realmente a tu DNI (control del dígito verificador).",
+    "Sacar el CUIL de un hijo o familiar a partir de su DNI para un trámite de ANSES.",
+    "Comprobar por qué una persona con DNI parecido tiene un prefijo distinto (20, 23 o 27).",
+    "Recuperar tu número cuando la web de ANSES/ARCA está caída y necesitás el CUIL urgente.",
+    "Entender la diferencia entre CUIL (laboral/previsional) y CUIT (impositivo) siendo el mismo número.",
+    "Confirmar el dígito verificador de un CUIL que te pasaron por si hubo un error de tipeo.",
+    "Armar el CUIL de una persona no binaria eligiendo el prefijo (por defecto 20).",
+    "Chequear el CUIT de un monotributista antes de cargarlo en un sistema de facturación."
+  ],
+  "fields": [
+    {
+      "id": "dni",
+      "label": "Número de DNI",
+      "type": "number",
+      "required": true,
+      "placeholder": "12345678",
+      "min": 1,
+      "step": 1
+    },
+    {
+      "id": "sexo",
+      "label": "Género (define el prefijo)",
+      "type": "select",
+      "default": "M",
+      "options": [
+        { "value": "M", "label": "Masculino (prefijo 20)" },
+        { "value": "F", "label": "Femenino (prefijo 27)" },
+        { "value": "X", "label": "No binario / otro (usa 20)" }
+      ]
+    }
+  ],
+  "outputs": [
+    { "id": "cuil", "label": "CUIL", "primary": true },
+    { "id": "cuit", "label": "CUIT (igual al CUIL en personas físicas)" },
+    { "id": "prefijo", "label": "Prefijo" },
+    { "id": "digitoVerificador", "label": "Dígito verificador" },
+    { "id": "dniNormalizado", "label": "DNI (8 dígitos)" },
+    { "id": "detalle", "label": "Detalle del cálculo" }
+  ],
+  "example": {
+    "title": "Ejemplo: DNI 12.345.678, varón",
+    "steps": [
+      "Prefijo por género: varón → 20. Base = 20 + 12345678 = 2012345678 (10 dígitos).",
+      "Multiplico cada dígito por la serie [5,4,3,2,7,6,5,4,3,2] y sumo: total 148.",
+      "Resto de 148 ÷ 11 = 5. Dígito verificador = 11 − 5 = 6.",
+      "CUIL/CUIT = 20-12345678-6."
+    ],
+    "result": "CUIL/CUIT = 20-12345678-6"
+  },
+  "explanation": "## Cómo se arma el CUIL/CUIT\n\n```\nCUIL = prefijo(2) + DNI(8, con ceros a la izquierda) + dígito verificador(1)\n```\n\nEl **prefijo** identifica el tipo de persona:\n\n| Prefijo | A quién corresponde |\n|---|---|\n| 20 | Personas físicas — masculino |\n| 27 | Personas físicas — femenino |\n| 23 / 24 / 25 | Alternativos, cuando el dígito verificador daría 10 |\n| 30 / 33 / 34 | Personas jurídicas (empresas) — **no** salen de un DNI |\n\n## El dígito verificador (módulo 11) paso a paso\n\n1. Armá la base de 10 dígitos: prefijo + DNI completado a 8 con ceros a la izquierda.\n2. Multiplicá cada dígito por la serie fija **[5, 4, 3, 2, 7, 6, 5, 4, 3, 2]**.\n3. Sumá todos los productos.\n4. Calculá el **resto** de dividir esa suma por 11.\n5. El dígito verificador es **11 − resto**, con dos excepciones: si el resto es **0**, el dígito es **0**; si el resto es **1** (el dígito daría 10), se usa el **prefijo 23** y se recalcula.\n\n## Ejemplos resueltos\n\n**Ejemplo 1 — DNI 12.345.678, femenino:**\n1. Base = 27 + 12345678 = 2712345678.\n2. Suma ponderada y resto → dígito verificador **0**.\n3. CUIL/CUIT = **27-12345678-0**.\n\n**Ejemplo 2 — DNI 3.971, masculino (DNI corto):**\n1. Se completa a 8 dígitos: 00003971. Base = 2000003971.\n2. Cálculo del módulo 11 → dígito **4**.\n3. CUIL/CUIT = **20-00003971-4**.\n\n## CUIL vs CUIT: ¿son lo mismo?\n\n| | CUIL | CUIT |\n|---|---|---|\n| Qué significa | Código Único de Identificación **Laboral** | Clave Única de Identificación **Tributaria** |\n| Lo asigna | ANSES | ARCA (ex AFIP) |\n| Para qué se usa | Empleo, aportes, jubilación | Impuestos, facturación, monotributo |\n| Para una persona física | **Es el mismo número** que el CUIT | **Es el mismo número** que el CUIL |\n\nEn la práctica, si sos empleado tenés CUIL; si además facturás (monotributo, autónomo), ese mismo número pasa a llamarse CUIT. No hay que \"sacar\" un CUIT distinto.\n\n## Errores comunes\n\n- **Escribir el DNI con puntos:** la calculadora los ignora, pero al cargarlo en un sistema conviene ponerlo sin puntos.\n- **Confundir el prefijo con la edad o la provincia:** el prefijo solo depende del género y del dígito verificador, nada más.\n- **Buscar un CUIT \"de empresa\" para una persona física:** no existe; el CUIT de una persona es su CUIL.\n- **Suponer que un número inventado con prefijo 20 es válido:** solo lo es si el dígito verificador cierra por módulo 11.\n\n## Nota\n\nEs una utilidad de cálculo determinística: no depende de ningún dato que cambie en el tiempo. El número oficial siempre lo podés confirmar en la constancia de CUIL de ANSES o en la constancia de inscripción de ARCA.",
+  "faq": [
+    {
+      "q": "¿El CUIT es lo mismo que el CUIL?",
+      "a": "Para una persona física, **sí: es el mismo número**. Cambia el nombre según el trámite: se llama CUIL en lo laboral y previsional (lo asigna ANSES) y CUIT en lo impositivo (lo usa ARCA). No tenés que tramitar un CUIT distinto de tu CUIL."
+    },
+    {
+      "q": "¿Por qué mi CUIL empieza con 20 y el de otra persona con 23?",
+      "a": "El prefijo por defecto es 20 (varones) o 27 (mujeres). Cuando el dígito verificador calculado daría 10 (que no es un solo dígito), ANSES asigna el **prefijo alternativo 23** y recalcula. Por eso algunas personas tienen 23 en lugar de 20/27."
+    },
+    {
+      "q": "¿Cómo se calcula el dígito verificador del CUIL?",
+      "a": "Se multiplican los 10 dígitos del prefijo + DNI por la serie [5,4,3,2,7,6,5,4,3,2], se suman, y se toma el resto de dividir por 11. El dígito es 11 − resto (si el resto es 0, el dígito es 0; si es 1, se usa el prefijo 23). Es el **algoritmo módulo 11**."
+    },
+    {
+      "q": "¿Sirve para calcular el CUIT de una empresa?",
+      "a": "No. El CUIT de una empresa usa los prefijos 30, 33 o 34 y **no se deriva de un DNI**, sino que lo asigna ARCA al inscribirla. Esta calculadora sirve para el CUIL/CUIT de personas físicas, que sí sale del DNI."
+    },
+    {
+      "q": "¿Qué pasa si mi DNI tiene 7 dígitos o menos?",
+      "a": "Se completa con ceros a la izquierda hasta llegar a 8 dígitos. Por ejemplo, el DNI 3.971 se toma como 00003971 para el cálculo. La calculadora lo hace automáticamente."
+    },
+    {
+      "q": "¿Puedo saber el género de una persona por su CUIL?",
+      "a": "El prefijo da una pista (20 suele ser masculino, 27 femenino), pero no es infalible: el prefijo 23 se usa para ambos géneros cuando el verificador lo requiere, y hay personas no binarias. El prefijo indica cómo se generó el número, no una identidad."
+    },
+    {
+      "q": "¿El CUIL cambia si me caso o cambio de apellido?",
+      "a": "No. El CUIL/CUIT se deriva del DNI y no cambia por matrimonio, cambio de apellido ni de domicilio. Solo cambiaría si cambiara tu número de DNI, algo excepcional."
+    },
+    {
+      "q": "¿Es seguro calcular el CUIL así en vez de ir a ANSES?",
+      "a": "El algoritmo es el oficial y el número que da es exacto. Igual, para trámites formales conviene tener la **constancia de CUIL de ANSES** o la constancia de ARCA, que es el documento que acredita el número ante terceros."
+    },
+    {
+      "q": "¿Por qué a veces piden CUIL y a veces CUIT si es el mismo número?",
+      "a": "Por el contexto del trámite: un empleador o ANSES te pide el CUIL; ARCA, un cliente que necesita tu factura o el sistema de monotributo te piden el CUIT. El número que ingresás es el mismo en ambos casos."
+    }
+  ],
+  "sources": [
+    { "name": "ANSES — Constancia de CUIL", "url": "https://www.anses.gob.ar/consultas/constancia-de-cuil" },
+    { "name": "ARCA (ex AFIP) — Constancia de inscripción / CUIT", "url": "https://www.afip.gob.ar/" }
+  ],
+  "relatedSlugs": [],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-07-16",
+    "updateType": "manual",
+    "notes": "Algoritmo determinístico (módulo 11). No depende de datos que cambien: no requiere actualización periódica.",
+    "source": "ANSES — Constancia de CUIL",
+    "sourceUrl": "https://www.anses.gob.ar/consultas/constancia-de-cuil"
+  },
+  "seoKeywords": [
+    "calcular cuil por dni",
+    "cuil desde dni",
+    "mi cuil",
+    "como sacar el cuil con el dni",
+    "cuit desde dni argentina",
+    "digito verificador cuil modulo 11",
+    "prefijo cuil 20 23 27",
+    "calcular cuit persona fisica",
+    "cuil online sin anses"
+  ],
+  "lastReviewed": "2026-07-16",
+  "referenceTables": [
+    {
+      "title": "Prefijos del CUIL/CUIT",
+      "headers": ["Prefijo", "Corresponde a", "¿Sale del DNI?"],
+      "rows": [
+        ["20", "Persona física masculino", "Sí"],
+        ["27", "Persona física femenino", "Sí"],
+        ["23 / 24 / 25", "Alternativo (cuando el verificador daría 10)", "Sí"],
+        ["30 / 33 / 34", "Persona jurídica (empresa)", "No — lo asigna ARCA"]
+      ],
+      "note": "Fuente: ANSES (Constancia de CUIL) y ARCA. El dígito verificador se calcula por módulo 11 con la serie [5,4,3,2,7,6,5,4,3,2]."
+    }
+  ]
+}

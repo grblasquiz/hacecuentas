@@ -1,0 +1,204 @@
+{
+  "slug": "calculadora-validar-cbu-cvu-identificar-banco",
+  "title": "Validar CBU/CVU e identificar el banco — Argentina",
+  "h1": "Validador de CBU/CVU: ¿de qué banco es?",
+  "description": "Pegá un CBU o CVU de 22 dígitos y verificá si es válido (dígitos verificadores del BCRA) e identificá el banco o la billetera virtual por su código de entidad. Herramienta antifraude para chequear antes de transferir.",
+  "category": "finanzas",
+  "audience": "AR",
+  "icon": "🏦",
+  "formulaId": "validar-cbu-cvu-identificar-banco",
+  "answerSnippet": "Un CBU/CVU válido tiene 22 dígitos y dos dígitos verificadores que tienen que cerrar: uno en el primer bloque (entidad + sucursal) y otro en el segundo (número de cuenta). Los 3 primeros dígitos son el código de entidad del BCRA e identifican el banco (007 Galicia, 011 Nación, 014 Provincia, 017 BBVA, 072 Santander, 285 Macro, 143 Brubank) o la billetera virtual (Mercado Pago empieza con 0000003). Si un verificador no cierra, casi siempre es un error de tipeo: no transfieras y pedí que te reenvíen el CBU completo.",
+  "intro": "El **CBU** (Clave Bancaria Uniforme) y el **CVU** (Clave Virtual Uniforme, de las billeteras como Mercado Pago o Ualá) son números de **22 dígitos** que no son azarosos: incluyen **dos dígitos verificadores** calculados por una fórmula del BCRA. Eso permite detectar al instante si un CBU está mal tipeado, antes de mandar plata al lugar equivocado.\n\nEsta herramienta hace dos cosas. Primero, **valida** los dos dígitos verificadores con el algoritmo oficial: si no cierran, el número tiene un error. Segundo, **identifica la entidad** a partir de los 3 primeros dígitos (el código de entidad del BCRA), diciéndote si es un banco conocido o una billetera virtual.\n\nEs una utilidad antifraude evergreen: usala cuando te pasan un CBU por WhatsApp para pagar algo, cuando querés confirmar de qué banco es una cuenta antes de transferir, o cuando cargás un CBU nuevo en tu home banking y querés estar seguro de no haberte equivocado en un número. **Recordá:** que el CBU sea válido no garantiza que el titular sea quien decís; confirmá siempre el nombre.",
+  "keyTakeaway": "Un CBU/CVU válido tiene **22 dígitos** y sus **dos dígitos verificadores** (bloque 1 y bloque 2) cierran. Los **3 primeros dígitos** son el código de entidad e identifican el banco o la billetera. Un verificador que no cierra = **error de tipeo**: no transfieras.",
+  "useCases": [
+    "Chequear un CBU que te pasaron por WhatsApp antes de transferirle plata a un desconocido.",
+    "Identificar de qué banco es una cuenta a partir del CBU (código de entidad).",
+    "Detectar un error de tipeo en un CBU largo antes de cargarlo en el home banking.",
+    "Saber si un número de 22 dígitos es un CBU de banco o un CVU de billetera virtual (Mercado Pago, Ualá).",
+    "Verificar que el CVU de Mercado Pago que te dieron es válido (empieza con 0000003).",
+    "Confirmar la sucursal y la entidad de una cuenta para una transferencia interbancaria.",
+    "Controlar que el CBU de un proveedor coincide con el banco que dice tener.",
+    "Validar el CBU antes de adherir un débito automático o cargar un alias.",
+    "Descartar una estafa cuando el CBU no cierra los dígitos verificadores.",
+    "Enseñar a un familiar mayor a chequear un CBU antes de mandar una transferencia."
+  ],
+  "fields": [
+    {
+      "id": "cbu",
+      "label": "CBU o CVU (22 dígitos)",
+      "type": "text",
+      "required": true,
+      "placeholder": "0110599520000012345676"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "estado",
+      "label": "Resultado",
+      "primary": true
+    },
+    {
+      "id": "entidad",
+      "label": "Banco / billetera"
+    },
+    {
+      "id": "codigoEntidad",
+      "label": "Código de entidad"
+    },
+    {
+      "id": "sucursal",
+      "label": "Sucursal"
+    },
+    {
+      "id": "tipo",
+      "label": "Tipo (CBU / CVU)"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle de la validación"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: 0110599520000012345676",
+    "steps": [
+      "Tiene 22 dígitos: cumple el largo del CBU.",
+      "Bloque 1 = 01105995: código de entidad 011 → Banco de la Nación Argentina; sucursal 0599; dígito verificador 5 (cierra).",
+      "Bloque 2 = 20000012345676: 13 dígitos de cuenta + dígito verificador 6 (cierra).",
+      "Ambos verificadores cierran → CBU válido del Banco de la Nación."
+    ],
+    "result": "CBU válido — Banco de la Nación Argentina (entidad 011)"
+  },
+  "explanation": "## Estructura de un CBU/CVU (22 dígitos)\n\n```\nCBU = Bloque 1 (8 dígitos) + Bloque 2 (14 dígitos)\nBloque 1: 3 entidad + 4 sucursal + 1 dígito verificador (DV1)\nBloque 2: 13 número de cuenta + 1 dígito verificador (DV2)\n```\n\n## Cómo se validan los dígitos verificadores\n\n**DV1 (bloque 1):** se ponderan los 7 primeros dígitos por **[7, 1, 3, 9, 7, 1, 3]**, se suman, y el dígito es **(10 − (suma mod 10)) mod 10**. Tiene que coincidir con el 8° dígito.\n\n**DV2 (bloque 2):** se ponderan los 13 primeros dígitos por **[3, 9, 7, 1, 3, 9, 7, 1, 3, 9, 7, 1, 3]** y se aplica la misma fórmula. Tiene que coincidir con el 14° dígito del bloque.\n\nSi cualquiera de los dos no coincide, el CBU es inválido: hay un número cambiado.\n\n## CBU vs CVU\n\n| | CBU | CVU |\n|---|---|---|\n| Qué identifica | Cuenta en un **banco** | Cuenta en una **billetera virtual** (PSP) |\n| Ejemplos | Galicia, Nación, Santander, BBVA | Mercado Pago, Ualá, Naranja X, Personal Pay |\n| Largo | 22 dígitos | 22 dígitos |\n| Validación | Misma fórmula BCRA | Misma fórmula BCRA |\n| Código de entidad | Código del banco | Suele empezar con 000 / prefijo del PSP |\n\nEl CVU usa **exactamente el mismo esquema** de 22 dígitos y los mismos dígitos verificadores; lo que cambia es que la entidad es un proveedor de servicios de pago y no un banco.\n\n## Códigos de entidad más comunes\n\n| Código | Entidad |\n|---|---|\n| 007 | Banco de Galicia |\n| 011 | Banco de la Nación Argentina |\n| 014 | Banco de la Provincia de Buenos Aires |\n| 017 | BBVA Argentina |\n| 072 | Banco Santander Argentina |\n| 285 | Banco Macro |\n| 143 | Brubank |\n| 191 | Banco Credicoop |\n| 0000003… (CVU) | Mercado Pago |\n\n## Por qué importa para no ser estafado\n\nUn CBU mal tipeado puede mandar la plata a otra cuenta. Validar los dígitos verificadores atrapa el error **antes** de transferir. Pero atención: un CBU **válido** solo significa que el número está bien formado y pertenece a una cuenta real; **no** garantiza que el titular sea quien te dice. Por eso, ante una compra o un desconocido, confirmá también el **nombre del titular** (aparece al cargar el CBU en tu banco) y desconfiá si no coincide.\n\n## Errores comunes\n\n- **Contar mal los dígitos:** un CBU tiene 22; si te pasan 20 o 23, hubo un error de copia.\n- **Confundir CBU con alias:** el alias son palabras (ej. `mi.alias.mp`); el CBU son 22 números.\n- **Transferir a un CBU válido de un desconocido sin verificar el nombre:** la validez del número no valida al titular.\n- **Suponer que un CVU no se puede validar:** se valida igual que un CBU.\n\n## Nota\n\nEs una utilidad determinística basada en la norma del BCRA: la validación de los dígitos verificadores no cambia en el tiempo. La tabla de códigos de entidad puede incorporar nuevas entidades; se listan solo las de identificación segura.",
+  "faq": [
+    {
+      "q": "¿Cómo sé de qué banco es un CBU?",
+      "a": "Los **3 primeros dígitos** del CBU son el código de entidad del BCRA e identifican el banco. Por ejemplo, 007 es Galicia, 011 Nación, 014 Provincia, 017 BBVA, 072 Santander, 285 Macro y 143 Brubank. Pegá el CBU y la calculadora te dice la entidad."
+    },
+    {
+      "q": "¿Un CBU válido significa que es seguro transferir?",
+      "a": "No del todo. Que sea válido quiere decir que el número está bien formado y pertenece a una cuenta real, pero **no** garantiza que el titular sea quien decís. Confirmá siempre el **nombre del titular** (te aparece al cargar el CBU en tu banco) antes de transferir a un desconocido."
+    },
+    {
+      "q": "¿Se puede validar un CVU de Mercado Pago o Ualá igual que un CBU?",
+      "a": "Sí. El CVU de las billeteras virtuales tiene también 22 dígitos y usa los **mismos dígitos verificadores** del BCRA. La calculadora lo valida igual y detecta si es de Mercado Pago (empieza con 0000003), Ualá (0000058) u otra."
+    },
+    {
+      "q": "¿Qué pasa si el CBU no cierra los dígitos verificadores?",
+      "a": "Casi siempre es un **error de tipeo**: un número cambiado o de más. No transfieras: pedí que te reenvíen el CBU completo y volvé a validarlo. Un CBU con verificador incorrecto no corresponde a una cuenta válida tal como está escrito."
+    },
+    {
+      "q": "¿Cuál es la diferencia entre CBU y alias?",
+      "a": "El **CBU** son 22 dígitos; el **alias** es una combinación de palabras (por ejemplo, `luna.sol.pago`) que apunta al mismo CBU y es más fácil de recordar. Esta herramienta valida el CBU/CVU numérico, no el alias."
+    },
+    {
+      "q": "¿Cuántos dígitos tiene que tener un CBU?",
+      "a": "Exactamente **22 dígitos**. Si el número que te pasaron tiene 20, 21 o 23, hubo un error al copiarlo. La calculadora te avisa si el largo no es 22."
+    },
+    {
+      "q": "¿Qué significan los dos dígitos verificadores del CBU?",
+      "a": "Son dos números de control calculados por una fórmula del BCRA: uno protege el bloque de entidad y sucursal, y el otro el número de cuenta. Sirven para detectar errores de tipeo. Si alguno no coincide con lo esperado, el CBU está mal."
+    },
+    {
+      "q": "¿Puedo saber el nombre del titular con esta calculadora?",
+      "a": "No. Por privacidad, ninguna herramienta pública muestra el titular a partir del CBU. El nombre del titular te lo muestra **tu propio banco o billetera** al cargar el CBU para transferir. Esta calculadora solo valida el número e identifica la entidad."
+    },
+    {
+      "q": "¿El código de entidad 000 de qué es?",
+      "a": "El prefijo 000 corresponde a billeteras virtuales (CVU). Si además empieza con 0000003 es Mercado Pago; 0000058, Ualá; 0000168, Naranja X. Otros casos se muestran como billetera virtual genérica."
+    }
+  ],
+  "sources": [
+    {
+      "name": "BCRA — Comunicación sobre CBU (Clave Bancaria Uniforme)",
+      "url": "https://www.bcra.gob.ar/"
+    },
+    {
+      "name": "BCRA — CVU y proveedores de servicios de pago (PSP)",
+      "url": "https://www.bcra.gob.ar/SistemasFinancierosYdePagos/Proveedores-de-servicios-de-pago.asp"
+    }
+  ],
+  "relatedSlugs": [],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-07-16",
+    "updateType": "manual",
+    "notes": "Algoritmo de validación de dígitos verificadores del BCRA: determinístico, no cambia. La tabla de códigos de entidad se amplía puntualmente pero no rompe el cálculo.",
+    "source": null,
+    "sourceUrl": null
+  },
+  "seoKeywords": [
+    "validar cbu",
+    "de que banco es el cbu",
+    "identificar banco por cbu",
+    "verificar cbu antes de transferir",
+    "cbu codigo de entidad",
+    "validar cvu mercado pago",
+    "cbu 22 digitos verificador",
+    "como saber de que banco es una cuenta",
+    "cbu valido o invalido"
+  ],
+  "lastReviewed": "2026-07-16",
+  "referenceTables": [
+    {
+      "title": "Códigos de entidad — bancos y billeteras más usados",
+      "headers": [
+        "Código",
+        "Entidad",
+        "Tipo"
+      ],
+      "rows": [
+        [
+          "007",
+          "Banco de Galicia",
+          "Banco"
+        ],
+        [
+          "011",
+          "Banco de la Nación Argentina",
+          "Banco"
+        ],
+        [
+          "014",
+          "Banco de la Provincia de Buenos Aires",
+          "Banco"
+        ],
+        [
+          "017",
+          "BBVA Argentina",
+          "Banco"
+        ],
+        [
+          "072",
+          "Banco Santander Argentina",
+          "Banco"
+        ],
+        [
+          "143",
+          "Brubank",
+          "Banco"
+        ],
+        [
+          "191",
+          "Banco Credicoop",
+          "Banco"
+        ],
+        [
+          "285",
+          "Banco Macro",
+          "Banco"
+        ],
+        [
+          "0000003…",
+          "Mercado Pago",
+          "Billetera (CVU)"
+        ],
+        [
+          "0000058…",
+          "Ualá",
+          "Billetera (CVU)"
+        ]
+      ],
+      "note": "Fuente: BCRA — tabla de códigos de entidad. Se listan las entidades de identificación segura; un código no reconocido se muestra como \"entidad no identificada\", sin afectar la validación de los dígitos verificadores."
+    }
+  ]
+}
