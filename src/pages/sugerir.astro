@@ -33,14 +33,30 @@ const categories = [
   <Header slot="header" />
 
   <article class="legal">
-    <h1>Sugerí una calculadora nueva</h1>
-    <p class="intro">
-      ¿Hay un cálculo que no encontrás? Contanos qué necesitás.
-      Otros usuarios votan tu idea — las más votadas las construimos.
-      Si dejás tu email te avisamos cuando esté lista.
-    </p>
+    <header class="suggest-hero">
+      <div>
+        <p class="eyebrow">✦ Construimos con la comunidad</p>
+        <h1>Sugerí una calculadora nueva</h1>
+        <p class="intro">
+          ¿Hay un cálculo que no encontrás? Contanos qué necesitás.
+          Otros usuarios votan tu idea y las más útiles pasan al roadmap.
+        </p>
+        <div class="hero-trust" aria-label="Cómo funciona">
+          <span>✓ Sin registro</span><span>✓ Revisión humana</span><span>✓ Votación pública</span>
+        </div>
+      </div>
+      <aside class="hero-card" aria-label="Tu aporte">
+        <span class="hero-card-icon" aria-hidden="true">💡</span>
+        <strong>Una buena idea se convierte en una herramienta para todos.</strong>
+        <span>Te lleva menos de 2 minutos.</span>
+      </aside>
+    </header>
 
     <form id="hc-suggest-form" class="suggest-form" novalidate>
+      <div class="form-heading">
+        <span class="step">01</span>
+        <div><h2>Contanos tu idea</h2><p>Con estos datos podemos evaluar si ya existe y cómo construirla.</p></div>
+      </div>
       <div class="form-row">
         <label for="sg-title">Título de la calculadora <span class="req">*</span></label>
         <input
@@ -102,21 +118,25 @@ const categories = [
       <p class="sg-msg" id="sg-msg" role="status" aria-live="polite"></p>
     </form>
 
-    <div class="cta-listado">
-      <h2>¿Querés ver las ideas de otros?</h2>
-      <p>
-        En <a href="/sugerencias">la lista pública de sugerencias</a> podés votar
-        las que más te interesan. Las más votadas las construimos primero.
-      </p>
-    </div>
+    <aside class="suggest-aside">
+      <div class="cta-listado">
+        <span class="aside-kicker">Ideas de la comunidad</span>
+        <h2>¿Querés ver las propuestas activas?</h2>
+        <p>Podés votar las ideas que más te interesan. Las más votadas las construimos primero.</p>
+        <a class="aside-link" href="/sugerencias">Explorar y votar ideas →</a>
+      </div>
 
-    <h2>Cómo funciona</h2>
-    <ol class="how-it-works">
-      <li><strong>Proponés:</strong> llenás este form en 30 segundos.</li>
-      <li><strong>Revisamos:</strong> validamos que sea factible y no esté duplicada (24-48h).</li>
-      <li><strong>Comunidad vota:</strong> aparece en <a href="/sugerencias">/sugerencias</a>.</li>
-      <li><strong>Construimos:</strong> las más votadas pasan a roadmap. Si dejaste email, te avisamos.</li>
-    </ol>
+      <div class="how-card">
+        <p class="aside-kicker">Qué pasa después</p>
+        <h2>De idea a calculadora</h2>
+        <ol class="how-it-works">
+          <li><strong>Proponés</strong><span>Contanos la cuenta que necesitás.</span></li>
+          <li><strong>Revisamos</strong><span>Chequeamos factibilidad y duplicados.</span></li>
+          <li><strong>La comunidad vota</strong><span>La idea aparece en la lista pública.</span></li>
+          <li><strong>Construimos</strong><span>Priorizamos las que más ayudan.</span></li>
+        </ol>
+      </div>
+    </aside>
   </article>
 
   <script is:inline>
@@ -173,23 +193,36 @@ const categories = [
 </Layout>
 
 <style>
-  .legal { max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
-  .legal h1 { margin-bottom: 1rem; }
-  .intro { color: var(--text-muted); font-size: 1.0625rem; margin-bottom: 2rem; line-height: 1.6; }
-  .legal h2 { margin-top: 3rem; color: var(--text); }
-  .legal p { color: var(--text-muted); line-height: 1.7; }
+  .legal { max-width: 1120px; margin: 0 auto; padding: 2rem 1.25rem 4.5rem; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(270px, .65fr); gap: 2rem; }
+  .suggest-hero { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 2rem; align-items: end; padding: 2.75rem; border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border)); border-radius: 1.5rem; background: linear-gradient(125deg, color-mix(in srgb, var(--accent) 10%, var(--bg-card)), var(--bg-card) 65%); }
+  .eyebrow, .aside-kicker { margin: 0 0 .55rem; color: var(--accent); font-size: .75rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+  .legal h1 { margin: 0 0 .8rem; color: var(--text); font-size: clamp(2.2rem, 5vw, 3.65rem); line-height: 1.03; letter-spacing: -.055em; }
+  .intro { max-width: 680px; color: var(--text-muted); font-size: 1.08rem; margin: 0; line-height: 1.6; }
+  .hero-trust { display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; margin-top: 1.35rem; color: var(--text-muted); font-size: .84rem; font-weight: 600; }
+  .hero-trust span::first-letter { color: #059669; }
+  .hero-card { display: flex; flex-direction: column; gap: .6rem; padding: 1.35rem; border-radius: 1rem; color: #eef2ff; background: #111a33; box-shadow: 0 15px 30px rgba(15, 23, 42, .12); }
+  .hero-card-icon { font-size: 1.6rem; }
+  .hero-card strong { font-size: 1.02rem; line-height: 1.35; }
+  .hero-card span:last-child { color: #b8c5e0; font-size: .85rem; }
+  .legal h2 { color: var(--text); }
+  .legal p { color: var(--text-muted); line-height: 1.6; }
   .legal a { color: var(--accent); }
 
   .suggest-form {
-    margin: 1.5rem 0 2rem;
+    margin: 0;
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    padding: 1.5rem;
-    background: var(--bg-soft);
+    padding: 1.75rem;
+    background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: 1.25rem;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, .04);
   }
+  .form-heading { display: flex; gap: .85rem; align-items: flex-start; padding-bottom: .5rem; }
+  .step { display: grid; place-items: center; flex: 0 0 2rem; width: 2rem; height: 2rem; border-radius: 50%; background: var(--accent); color: #fff; font-family: 'JetBrains Mono', monospace; font-size: .7rem; font-weight: 700; }
+  .form-heading h2 { margin: 0; font-size: 1.18rem; }
+  .form-heading p { margin: .2rem 0 0; font-size: .87rem; }
   .form-row { display: flex; flex-direction: column; gap: 0.375rem; }
   .form-row label {
     font-size: 0.8125rem;
@@ -200,7 +233,7 @@ const categories = [
   .form-row input,
   .form-row select,
   .form-row textarea {
-    padding: 0.625rem 0.75rem;
+    padding: .74rem .82rem;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     background: var(--bg);
@@ -230,7 +263,7 @@ const categories = [
 
   .sg-submit {
     align-self: flex-start;
-    padding: 0.625rem 1.25rem;
+    padding: .78rem 1.3rem;
     background: var(--accent);
     color: #ffffff;
     border: none;
@@ -248,16 +281,20 @@ const categories = [
   .sg-msg-ok { color: var(--success, #166534); }
   .sg-msg-err { color: var(--danger, #b91c1c); }
 
-  .cta-listado {
-    margin-top: 2.5rem;
-    padding: 1.25rem 1.5rem;
-    background: var(--bg-soft);
+  .suggest-aside { display: flex; flex-direction: column; gap: 1rem; }
+  .cta-listado, .how-card {
+    padding: 1.35rem;
+    background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: 1.1rem;
   }
-  .cta-listado h2 { margin: 0 0 0.5rem; font-size: 1.0625rem; }
-  .cta-listado p { margin: 0; }
-
-  .how-it-works { padding-left: 1.25rem; line-height: 1.8; color: var(--text-muted); }
+  .cta-listado h2, .how-card h2 { margin: 0 0 .55rem; font-size: 1.15rem; line-height: 1.25; }
+  .cta-listado p { margin: 0; font-size: .9rem; }
+  .aside-link { display: inline-flex; margin-top: 1rem; font-size: .88rem; font-weight: 700; text-decoration: none; }
+  .how-it-works { list-style: none; counter-reset: steps; margin: 1rem 0 0; padding: 0; display: grid; gap: .8rem; }
+  .how-it-works li { counter-increment: steps; display: grid; grid-template-columns: 1.75rem 1fr; column-gap: .65rem; font-size: .86rem; }
+  .how-it-works li::before { content: counter(steps); grid-row: span 2; display: grid; place-items: center; width: 1.55rem; height: 1.55rem; border-radius: 50%; color: var(--accent); background: var(--accent-soft); font-size: .7rem; font-weight: 800; }
   .how-it-works strong { color: var(--text); }
+  .how-it-works span { color: var(--text-muted); font-size: .8rem; line-height: 1.4; }
+  @media (max-width: 760px) { .legal { display: block; padding: 1rem 1rem 3rem; } .suggest-hero { grid-template-columns: 1fr; padding: 1.6rem; margin-bottom: 1rem; } .hero-card { display: none; } .suggest-form { padding: 1.2rem; } .suggest-aside { margin-top: 1rem; } }
 </style>
