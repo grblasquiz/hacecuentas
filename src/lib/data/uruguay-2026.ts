@@ -187,6 +187,21 @@ export const URUGUAY_2026 = {
     fuente: 'INE/DGI',
   },
 
+  // ── Unidad Reajustable (UR) ──
+  // SNAPSHOT — ACTUALIZAR: la UR se ajusta MENSUALMENTE por la variación del
+  // Índice Medio de Salarios (IMS) del mes anterior. La publica el INE y la
+  // difunde la DGI. Regla oficial: "el valor de la UR de cada mes es el que se
+  // aplica durante el mes siguiente". A diferencia de la UI (que sigue el IPC),
+  // la UR sigue los salarios. Se usa para reajuste de alquileres, arrendamientos
+  // rurales, créditos del BHU/ANV y algunas multas/sanciones.
+  // Valor DGI/INE de junio-2026 = $1.922,68 (rige durante julio-2026).
+  unidadReajustable: {
+    valor: 1922.68,            // $U por 1 UR (INE/DGI, junio-2026; rige julio-2026)
+    fecha: '2026-06',
+    mesValor: 'junio 2026 (rige en julio 2026)',
+    fuente: 'INE/DGI',
+  },
+
   // ── FONASA: devolución de aportes (reintegro de cuota mutual) ──
   // SNAPSHOT — ACTUALIZAR cada año: el CPE (Costo Promedio Equivalente) lo fija el Poder Ejecutivo por decreto.
   // El tope anual de aportes a la salud por beneficiario = CPE mensual × 12 × 1,25 (incremento del 25%).

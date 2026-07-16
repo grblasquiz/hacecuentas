@@ -1,0 +1,197 @@
+{
+  "slug": "calculadora-retencion-iva-venezuela",
+  "title": "Calcular Retención de IVA (75% / 100%) | Venezuela SENIAT",
+  "h1": "Calculadora de retención de IVA (SENIAT) — 75% o 100%",
+  "description": "Calculá la retención de IVA que aplican los sujetos pasivos especiales en Venezuela: 75% o 100% del IVA facturado. Ingresá la base imponible y la alícuota para el detalle.",
+  "category": "impuestos",
+  "audience": "VE",
+  "icon": "🧾",
+  "formulaId": "retencion-iva-venezuela",
+  "answerSnippet": "Los sujetos pasivos especiales designados como agentes de retención retienen el 75% del IVA facturado por sus proveedores en el caso general, y el 100% en supuestos específicos (proveedor no inscrito en el RIF, factura que no cumple requisitos, o IVA que no coincide con la alícuota). Sobre una base de 100.000 bolívares con IVA del 16%, el IVA es de 16.000 y la retención del 75% es de 12.000 bolívares.",
+  "intro": "En Venezuela, las empresas designadas por el SENIAT como **sujetos pasivos especiales** actúan como **agentes de retención** del IVA: cuando le compran a un proveedor, no le pagan el IVA completo, sino que **retienen una parte** y la enteran directamente al fisco. Esa retención es del **75%** del IVA en el caso general, y sube al **100%** en supuestos específicos.\n\nEsta calculadora te da el detalle completo de la operación: a partir de la **base imponible** (el monto neto sin IVA), la **alícuota** (16% general u 8% reducida) y el **porcentaje de retención** (75% o 100%), calcula el IVA, la retención, el IVA no retenido, el total de la factura y cuánto le pagás efectivamente al proveedor después de retener.\n\nLa usan contadores y administradores que emiten comprobantes de retención, proveedores que quieren saber cuánto les van a retener, y empresas que necesitan enterar el IVA retenido al SENIAT. Ingresá la base y la alícuota para ver el desglose.",
+  "keyTakeaway": "Retención = IVA × 75% (general) o × 100% (casos especiales). El IVA se calcula sobre la base imponible a la alícuota vigente (16% general / 8% reducida). El agente le paga al proveedor el total menos la retención, y entera la retención al SENIAT con el comprobante.",
+  "useCases": [
+    "Calcular la retención del 75% sobre una factura con IVA del 16%.",
+    "Estimar la retención del 100% cuando el proveedor no está inscrito en el RIF.",
+    "Saber cuánto le pagás al proveedor después de retener el IVA.",
+    "Calcular el IVA y su retención sobre una base imponible dada.",
+    "Ver el IVA no retenido que el proveedor declara por su cuenta.",
+    "Emitir el comprobante de retención con el monto exacto a enterar.",
+    "Comparar la retención del 75% frente al 100% sobre la misma factura.",
+    "Calcular la retención con la alícuota reducida del 8%.",
+    "Estimar cuánto IVA retenés en un mes sumando varias facturas.",
+    "Verificar la retención que te aplicaron como proveedor en una compra."
+  ],
+  "fields": [
+    {
+      "id": "baseImponible",
+      "label": "Base imponible (Bs., sin IVA)",
+      "type": "number",
+      "format": "thousands",
+      "placeholder": "Ej: 100000",
+      "min": 0,
+      "max": 100000000000,
+      "step": 0.01,
+      "hint": "Monto neto de la factura, antes del IVA."
+    },
+    {
+      "id": "alicuota",
+      "label": "Alícuota de IVA",
+      "type": "select",
+      "options": [
+        { "value": "general", "label": "General (16%)" },
+        { "value": "reducida", "label": "Reducida (8%)" }
+      ],
+      "hint": "Alícuota del IVA que aplica el bien o servicio."
+    },
+    {
+      "id": "porcentajeRetencion",
+      "label": "Porcentaje de retención",
+      "type": "select",
+      "options": [
+        { "value": "75", "label": "75% (caso general)" },
+        { "value": "100", "label": "100% (casos especiales)" }
+      ],
+      "hint": "75% general; 100% si el proveedor no está en el RIF o la factura no cumple requisitos."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "retencionIva",
+      "label": "IVA retenido",
+      "format": "currency",
+      "prefix": "Bs.",
+      "primary": true,
+      "description": "Monto del IVA que retiene el agente y entera al SENIAT."
+    },
+    {
+      "id": "iva",
+      "label": "IVA de la factura",
+      "format": "currency",
+      "prefix": "Bs.",
+      "description": "IVA total sobre la base imponible."
+    },
+    {
+      "id": "ivaNoRetenido",
+      "label": "IVA no retenido",
+      "format": "currency",
+      "prefix": "Bs.",
+      "description": "Parte del IVA que el proveedor declara por su cuenta."
+    },
+    {
+      "id": "totalFactura",
+      "label": "Total de la factura",
+      "format": "currency",
+      "prefix": "Bs.",
+      "description": "Base imponible más el IVA."
+    },
+    {
+      "id": "aPagarProveedor",
+      "label": "A pagar al proveedor",
+      "format": "currency",
+      "prefix": "Bs.",
+      "description": "Total de la factura menos la retención."
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: base Bs. 100.000, IVA 16%, retención 75%",
+    "inputs": {
+      "baseImponible": 100000,
+      "alicuota": "general",
+      "porcentajeRetencion": "75"
+    },
+    "steps": [
+      "**IVA (16%)**: 100.000 × 16% = Bs. 16.000.",
+      "**Retención (75%)**: 16.000 × 75% = Bs. 12.000.",
+      "**Total factura**: 100.000 + 16.000 = Bs. 116.000.",
+      "**A pagar al proveedor**: 116.000 − 12.000 = Bs. 104.000."
+    ],
+    "result": "**Retención: Bs. 12.000.** Le pagás Bs. 104.000 al proveedor y enterás Bs. 12.000 al SENIAT."
+  },
+  "explanation": "## Cómo se calcula la retención de IVA\n\nEl agente de retención (sujeto pasivo especial) retiene una parte del IVA facturado:\n\n```\nIVA             = base imponible × alícuota (16% u 8%)\nRetención       = IVA × (75% o 100%)\nTotal factura   = base imponible + IVA\nA pagar proveedor = Total factura − Retención\n```\n\nEl agente le paga al proveedor el total **menos la retención**, y entera esa retención directamente al SENIAT, emitiendo el **comprobante de retención** correspondiente. El proveedor descuenta esa retención como crédito en su declaración.\n\n## Cuándo se retiene 75% y cuándo 100%\n\nLa retención general es del **75%** del IVA. Sube al **100%** en supuestos específicos, entre ellos:\n\n- El proveedor **no está inscrito** en el RIF o su inscripción no está vigente.\n- La factura **no cumple** los requisitos formales de la normativa.\n- El **monto del IVA** facturado no coincide con la alícuota que corresponde.\n- El proveedor no es sujeto pasivo formal del IVA en los casos que la normativa indica.\n\n## Ejemplos resueltos\n\n**Ejemplo 1 — retención 100% con IVA 16%:**\n- Base Bs. 200.000. IVA = 200.000 × 16% = Bs. 32.000.\n- Retención 100% = **Bs. 32.000**. A pagar al proveedor = 232.000 − 32.000 = **Bs. 200.000**.\n\n**Ejemplo 2 — alícuota reducida 8%, retención 75%:**\n- Base Bs. 100.000. IVA = 100.000 × 8% = Bs. 8.000.\n- Retención 75% = **Bs. 6.000**. A pagar = 108.000 − 6.000 = **Bs. 102.000**.\n\n## Desglose comparado (base Bs. 100.000, IVA 16%)\n\n| Concepto | Retención 75% | Retención 100% |\n|---|---|---|\n| IVA (16%) | Bs. 16.000 | Bs. 16.000 |\n| IVA retenido | Bs. 12.000 | Bs. 16.000 |\n| IVA no retenido | Bs. 4.000 | Bs. 0 |\n| A pagar al proveedor | Bs. 104.000 | Bs. 100.000 |\n\n## Cosas a tener en cuenta\n\n- **Solo retienen los agentes designados.** La obligación de retener recae sobre los sujetos pasivos especiales designados por el SENIAT, no sobre cualquier comprador.\n- **Comprobante obligatorio.** El agente debe emitir el comprobante de retención dentro de los plazos, para que el proveedor use la retención como crédito.\n- **Enterar en plazo.** El IVA retenido se entera al SENIAT según el calendario de sujetos pasivos especiales; el pago tardío genera sanciones.\n- Para calcular solo el IVA de una operación, usá la [calculadora de IVA Venezuela (16%)](/ve/calculadora-iva-venezuela-16). Para la retención de ISLR, mirá la [calculadora de retención de ISLR](/ve/calculadora-retencion-islr-venezuela).\n\n## Disclaimer\n\nCálculo orientativo según la Providencia del SENIAT sobre retenciones de IVA de sujetos pasivos especiales. Los supuestos de retención del 100% y los plazos de enteramiento están regulados; consultá la normativa vigente o a un contador antes de aplicar la retención.",
+  "faq": [
+    {
+      "q": "¿Cuánto es la retención de IVA en Venezuela?",
+      "a": "Es del 75% del IVA facturado en el caso general y del 100% en supuestos específicos. Se calcula sobre el IVA (base imponible por la alícuota). Por ejemplo, con una base de 100.000 bolívares e IVA del 16%, la retención del 75% es de 12.000 bolívares."
+    },
+    {
+      "q": "¿Cuándo se retiene el 100% del IVA?",
+      "a": "Cuando el proveedor no está inscrito en el RIF o su inscripción no está vigente, cuando la factura no cumple los requisitos formales, o cuando el IVA facturado no coincide con la alícuota que corresponde. En esos casos se retiene el total del IVA."
+    },
+    {
+      "q": "¿Quién debe retener el IVA?",
+      "a": "Los sujetos pasivos especiales designados por el SENIAT como agentes de retención. No cualquier comprador retiene: la obligación recae sobre los contribuyentes especiales al pagar a sus proveedores."
+    },
+    {
+      "q": "¿La retención se calcula sobre la base o sobre el IVA?",
+      "a": "Sobre el IVA, no sobre la base. Primero se calcula el IVA (base por la alícuota) y luego se le aplica el porcentaje de retención (75% o 100%). El resultado es el monto que se retiene y se entera al fisco."
+    },
+    {
+      "q": "¿Qué pasa con el IVA no retenido?",
+      "a": "El IVA no retenido (el 25% en el caso del 75%) lo declara y paga el proveedor por su cuenta en su declaración de IVA. La retención que le hicieron la usa como crédito fiscal contra su IVA a pagar."
+    },
+    {
+      "q": "¿Cuánto le pago al proveedor después de retener?",
+      "a": "El total de la factura (base más IVA) menos la retención. Por ejemplo, sobre una factura de 116.000 bolívares con una retención de 12.000, le pagás 104.000 al proveedor y enterás 12.000 al SENIAT."
+    },
+    {
+      "q": "¿La retención aplica con IVA reducido del 8%?",
+      "a": "Sí. El porcentaje de retención (75% o 100%) se aplica sobre el IVA que corresponda, sea la alícuota general del 16% o la reducida del 8%. La calculadora te permite elegir la alícuota."
+    },
+    {
+      "q": "¿Debo emitir un comprobante de retención?",
+      "a": "Sí. El agente de retención está obligado a emitir el comprobante dentro de los plazos que fija la normativa, para que el proveedor pueda descontar la retención como crédito en su declaración de IVA."
+    }
+  ],
+  "sources": [
+    {
+      "name": "SENIAT — Providencia sobre retenciones de IVA (sujetos pasivos especiales)",
+      "url": "https://www.seniat.gob.ve/portal/page/portal/PORTAL_SENIAT"
+    },
+    {
+      "name": "SENIAT — Ley del IVA",
+      "url": "https://www.seniat.gob.ve/portal/page/portal/MANEJADOR_CONTENIDO_SENIAT/02NORMATIVA_LEGAL"
+    }
+  ],
+  "relatedSlugs": [],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-07-16",
+    "updateType": "manual",
+    "source": "SENIAT — Providencia sobre retenciones de IVA",
+    "sourceUrl": "https://www.seniat.gob.ve/portal/page/portal/PORTAL_SENIAT",
+    "notes": "Retención 75% general / 100% en casos especiales; alícuota de IVA (16% / 8%) del módulo venezuela-2026. Verificar la providencia vigente."
+  },
+  "seoKeywords": [
+    "retencion de iva venezuela",
+    "como calcular la retencion de iva",
+    "retencion 75 iva seniat",
+    "retencion 100 iva venezuela",
+    "calculadora retencion iva",
+    "agente de retencion iva venezuela",
+    "comprobante de retencion iva",
+    "sujeto pasivo especial retencion iva"
+  ],
+  "lastReviewed": "2026-07-16",
+  "referenceTables": [
+    {
+      "title": "Retención de IVA — 75% vs 100% (base Bs. 100.000, IVA 16%)",
+      "headers": [
+        "Concepto",
+        "Retención 75%",
+        "Retención 100%"
+      ],
+      "rows": [
+        ["IVA (16%)", "Bs. 16.000", "Bs. 16.000"],
+        ["IVA retenido", "Bs. 12.000", "Bs. 16.000"],
+        ["IVA no retenido", "Bs. 4.000", "Bs. 0"],
+        ["A pagar al proveedor", "Bs. 104.000", "Bs. 100.000"]
+      ],
+      "note": "El 75% es la retención general; el 100% aplica cuando el proveedor no está en el RIF, la factura no cumple requisitos o el IVA no coincide con la alícuota. Fuente: SENIAT, Providencia de retenciones de IVA."
+    }
+  ]
+}

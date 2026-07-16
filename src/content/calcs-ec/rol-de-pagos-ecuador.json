@@ -1,0 +1,180 @@
+{
+  "slug": "calculadora-rol-de-pagos-ecuador",
+  "title": "Calculadora de Rol de Pagos Ecuador 2026: ingresos y egresos",
+  "h1": "Calculadora de Rol de Pagos — Ecuador 2026",
+  "description": "Armá el rol de pagos mensual de un trabajador en Ecuador 2026: sumá sueldo, horas extra y comisiones, restá el aporte al IESS (9,45%) y descuentos, y obtené el neto a recibir.",
+  "category": "laboral",
+  "audience": "EC",
+  "icon": "📄",
+  "formulaId": "rol-de-pagos-ecuador",
+  "answerSnippet": "El rol de pagos en Ecuador es el detalle mensual de ingresos y egresos de un trabajador. Los ingresos son el sueldo más horas extra, comisiones y bonos remunerativos; si el trabajador optó por los décimos mensualizados, se suma 1/12 del décimo tercero y 1/12 del décimo cuarto (SBU/12 = $40,17). El principal egreso es el aporte personal al IESS (9,45% de la materia gravada), más préstamos, anticipos y la retención del impuesto a la renta si corresponde. Para un sueldo de $800 con $50 de horas extra y décimos mensualizados, los ingresos son $961, el IESS descuenta $80,33 y el neto a recibir ronda los $880,67 (sin otros descuentos).",
+  "intro": "El **rol de pagos** (o rol de pagos individual) es el documento mensual que todo empleador en Ecuador arma para cada trabajador: detalla lo que ingresa (sueldo y otros haberes) y lo que se descuenta (aportes, préstamos, impuestos), y termina en el **neto a recibir**. Es distinto de una simple calculadora de sueldo neto porque contempla todos los rubros de una nómina real: horas extra, comisiones, décimos mensualizados y descuentos varios.\n\nEsta calculadora te deja armar ese rol paso a paso. Sumás el **sueldo base**, las **horas extra y suplementarias**, las **comisiones o bonos**, y si el trabajador cobra los **décimos mensualizados** (repartidos mes a mes en vez de en diciembre y agosto). Del lado de los egresos, resta el **aporte personal al IESS (9,45%)**, los **otros descuentos** (préstamos del IESS, anticipos) y la **retención del impuesto a la renta** si el trabajador supera la base exenta.\n\nEl punto que más errores genera es la **base del aporte al IESS**: se calcula sobre la *materia gravada* (sueldo + horas extra + comisiones), **no** sobre los décimos ni los fondos de reserva, que están exentos de aporte. La usan contadores, dueños de negocios que arman su nómina, y trabajadores que quieren verificar que su rol esté bien calculado.",
+  "keyTakeaway": "Rol de pagos = **total ingresos − total egresos**. Ingresos: sueldo + horas extra + comisiones (+ décimos mensualizados si aplica). Egresos: **IESS 9,45%** sobre la materia gravada + préstamos/anticipos + retención de renta. Los **décimos y fondos de reserva no aportan** al IESS.",
+  "useCases": [
+    "Armar el rol de pagos de un empleado con sueldo $800 y $50 de horas extra.",
+    "Calcular el neto a recibir con décimos mensualizados incluidos.",
+    "Verificar que el aporte al IESS de tu rol sea el 9,45% de la materia gravada.",
+    "Descontar un préstamo quirografario del IESS del rol del mes.",
+    "Ver cuánto queda en mano si además hay retención de impuesto a la renta.",
+    "Comparar el neto de un vendedor con comisiones variables mes a mes.",
+    "Confirmar que los décimos no suman a la base del aporte al IESS.",
+    "Estimar el rol de un trabajador que cobra los décimos acumulados (no mensualizados).",
+    "Calcular el ingreso total del mes sumando sueldo, horas extra y bonos.",
+    "Chequear el descuento total del rol para un sueldo con anticipo de $100."
+  ],
+  "fields": [
+    {
+      "id": "sueldo",
+      "label": "Sueldo base mensual ($)",
+      "type": "number",
+      "required": true,
+      "placeholder": "800",
+      "min": 0,
+      "step": 0.01,
+      "unit": "$"
+    },
+    {
+      "id": "horasExtra",
+      "label": "Horas extra / suplementarias del mes ($)",
+      "type": "number",
+      "required": false,
+      "placeholder": "0",
+      "min": 0,
+      "step": 0.01,
+      "unit": "$"
+    },
+    {
+      "id": "comisionesBonos",
+      "label": "Comisiones y bonos remunerativos ($)",
+      "type": "number",
+      "required": false,
+      "placeholder": "0",
+      "min": 0,
+      "step": 0.01,
+      "unit": "$"
+    },
+    {
+      "id": "decimosMensualizados",
+      "label": "¿Cobra los décimos mensualizados?",
+      "type": "select",
+      "default": "no",
+      "options": [
+        { "value": "no", "label": "No (los cobra acumulados en dic/ago)" },
+        { "value": "si", "label": "Sí (repartidos mes a mes)" }
+      ]
+    },
+    {
+      "id": "otrosDescuentos",
+      "label": "Otros descuentos: préstamos, anticipos ($)",
+      "type": "number",
+      "required": false,
+      "placeholder": "0",
+      "min": 0,
+      "step": 0.01,
+      "unit": "$"
+    },
+    {
+      "id": "retencionIR",
+      "label": "Retención de impuesto a la renta del mes ($)",
+      "type": "number",
+      "required": false,
+      "placeholder": "0",
+      "min": 0,
+      "step": 0.01,
+      "unit": "$"
+    }
+  ],
+  "outputs": [
+    { "id": "netoRecibir", "label": "Neto a recibir", "primary": true },
+    { "id": "totalIngresos", "label": "Total ingresos" },
+    { "id": "aporteIESS", "label": "Aporte personal IESS (9,45%)" },
+    { "id": "totalEgresos", "label": "Total egresos" },
+    { "id": "detalle", "label": "Detalle" }
+  ],
+  "example": {
+    "title": "Ejemplo: sueldo $800 + $50 horas extra, décimos mensualizados",
+    "steps": [
+      "Materia gravada: $800 + $50 = $850.",
+      "Aporte IESS: $850 × 9,45% = $80,33.",
+      "Décimos mensualizados: $850 ÷ 12 = $70,83 (13.º) + $482 ÷ 12 = $40,17 (14.º).",
+      "Total ingresos: $850 + $70,83 + $40,17 = $961,00; egresos: $80,33; neto = $880,67."
+    ],
+    "result": "Total ingresos $961,00 · Neto a recibir $880,67 (sin otros descuentos)"
+  },
+  "explanation": "## Cómo se arma el rol de pagos\n\n```\nMateria gravada = sueldo + horas extra + comisiones/bonos\nAporte IESS     = materia gravada × 9,45%\nDécimo 13 mens. = materia gravada ÷ 12   (solo si se mensualiza)\nDécimo 14 mens. = SBU ÷ 12 = 482 ÷ 12    (solo si se mensualiza)\nTotal ingresos  = materia gravada + décimos mensualizados\nTotal egresos   = aporte IESS + otros descuentos + retención de renta\nNeto a recibir  = total ingresos − total egresos\n```\n\n## Estructura de un rol de pagos\n\n| Sección | Rubros típicos |\n|---|---|\n| Ingresos | Sueldo, horas extra (25%/50%), horas suplementarias (100%), comisiones, bonos, décimos mensualizados |\n| Egresos | Aporte personal IESS 9,45%, préstamos IESS (quirografario/hipotecario), anticipos, retención de renta, pensiones alimenticias |\n| Resultado | Neto a recibir = ingresos − egresos |\n\n## Ejemplos resueltos\n\n**1) Sueldo $600, sin extras, sin mensualizar décimos:** materia gravada = $600; IESS = $56,70; sin décimos en el rol; neto = **$543,30**.\n\n**2) Sueldo $1.200 + $200 de comisiones, con préstamo IESS de $80:** materia gravada = $1.400; IESS = $132,30; egresos = $132,30 + $80 = $212,30; neto (sin décimos mensualizados) = $1.400 − $212,30 = **$1.187,70**.\n\n**3) Sueldo $800 con décimos mensualizados:** ingresos = $800 + $66,67 (13.º) + $40,17 (14.º) = $906,84; IESS = $75,60; neto = **$831,24**.\n\n## Qué aporta al IESS y qué no\n\n| Rubro | ¿Entra en la base del IESS 9,45%? |\n|---|---|\n| Sueldo | Sí |\n| Horas extra y suplementarias | Sí |\n| Comisiones y bonos remunerativos | Sí |\n| Décimo tercero y décimo cuarto | No |\n| Fondos de reserva | No |\n| Viáticos justificados | No |\n\n## Décimos: mensualizados vs. acumulados\n\nEl trabajador puede elegir cobrar los décimos **mensualizados** (una doceava parte cada mes, sumada al rol) o **acumulados** (el 13.º hasta el 24 de diciembre y el 14.º en la fecha según la región). Si los cobra acumulados, no aparecen en el rol mensual. La calculadora te deja ver ambos escenarios.\n\n## Errores comunes\n\n- **Calcular el IESS sobre el total con décimos:** el 9,45% va solo sobre la materia gravada.\n- **Olvidar las horas suplementarias:** las nocturnas o de fin de semana se pagan con recargo y también aportan.\n- **Mezclar egresos que no van en el rol:** el aporte patronal (11,15%) lo paga la empresa aparte; no se descuenta del trabajador.\n\n## Disclaimer\n\nCálculo **orientativo** para relación de dependencia del sector privado. La retención del impuesto a la renta depende de la proyección anual de ingresos y gastos personales. Verificá tu rol con tu empleador o contador.\n",
+  "faq": [
+    {
+      "q": "¿Qué es un rol de pagos en Ecuador?",
+      "a": "Es el documento mensual que detalla los **ingresos** de un trabajador (sueldo, horas extra, comisiones, décimos si se mensualizan) y sus **egresos** (aporte al IESS, préstamos, retenciones), y termina en el neto a recibir."
+    },
+    {
+      "q": "¿Sobre qué se calcula el aporte al IESS en el rol?",
+      "a": "Sobre la **materia gravada**: sueldo + horas extra y suplementarias + comisiones y bonos remunerativos. Los décimos, fondos de reserva y viáticos no entran en esa base."
+    },
+    {
+      "q": "¿Cuánto es el aporte personal al IESS?",
+      "a": "El **9,45%** de la materia gravada, y se descuenta directamente del rol. El aporte patronal (11,15%) lo paga la empresa aparte y no se descuenta del trabajador."
+    },
+    {
+      "q": "¿Qué son los décimos mensualizados?",
+      "a": "Es cobrar el décimo tercero y el décimo cuarto repartidos en doceavas partes cada mes, en vez de acumulados. Si el trabajador optó por esa modalidad, se suman al rol: 1/12 del sueldo y 1/12 del SBU ($40,17)."
+    },
+    {
+      "q": "¿El décimo cuarto cuánto suma por mes si se mensualiza?",
+      "a": "El décimo cuarto equivale a un SBU al año ($482 en 2026). Mensualizado son $482 ÷ 12 = **$40,17** por mes, igual para todos los trabajadores sin importar el sueldo."
+    },
+    {
+      "q": "¿Los préstamos del IESS se descuentan en el rol?",
+      "a": "Sí. Los préstamos quirografarios o hipotecarios del IESS se descuentan como **egreso** del rol, además del aporte del 9,45%. También los anticipos de sueldo y las pensiones alimenticias, si aplican."
+    },
+    {
+      "q": "¿Por qué mi neto es menor si tengo retención de renta?",
+      "a": "Porque la retención del impuesto a la renta es un egreso adicional. Aplica cuando la proyección anual de tu ingreso supera la fracción básica desgravada ($12.208 en 2026), menos tus gastos personales deducibles."
+    },
+    {
+      "q": "¿El rol de pagos incluye el aporte patronal?",
+      "a": "No en el neto del trabajador: el aporte patronal (11,15%) es un costo de la empresa. Se registra en la contabilidad del empleador, pero no se descuenta del sueldo del trabajador."
+    }
+  ],
+  "sources": [
+    { "name": "Ministerio del Trabajo — Código del Trabajo", "url": "https://www.gob.ec/regulaciones/codigo-trabajo" },
+    { "name": "IESS — aportes y servicios al afiliado", "url": "https://www.iess.gob.ec/es/web/afiliado/servicios-y-prestaciones" }
+  ],
+  "relatedSlugs": [],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-07-16",
+    "updateType": "manual",
+    "notes": "Aporte personal IESS 9,45%. SBU 2026 = $482 (décimo cuarto mensualizado $40,17). Décimos y fondos de reserva no aportan al IESS.",
+    "source": "Ministerio del Trabajo — Código del Trabajo",
+    "sourceUrl": "https://www.gob.ec/regulaciones/codigo-trabajo"
+  },
+  "seoKeywords": [
+    "calculadora rol de pagos ecuador",
+    "rol de pagos ecuador 2026",
+    "como hacer un rol de pagos ecuador",
+    "ingresos y egresos rol de pagos",
+    "calcular neto rol de pagos iess",
+    "decimos mensualizados rol de pagos",
+    "aporte iess rol de pagos 9.45",
+    "modelo rol de pagos ecuador"
+  ],
+  "lastReviewed": "2026-07-16",
+  "referenceTables": [
+    {
+      "title": "Rubros del rol de pagos y su tratamiento",
+      "headers": ["Rubro", "¿Ingreso o egreso?", "¿Aporta al IESS?"],
+      "rows": [
+        ["Sueldo base", "Ingreso", "Sí"],
+        ["Horas extra y suplementarias", "Ingreso", "Sí"],
+        ["Comisiones y bonos", "Ingreso", "Sí"],
+        ["Décimo tercero / cuarto (mensualizado)", "Ingreso", "No"],
+        ["Aporte personal IESS (9,45%)", "Egreso", "—"],
+        ["Préstamos IESS y anticipos", "Egreso", "—"],
+        ["Retención de impuesto a la renta", "Egreso", "—"]
+      ],
+      "note": "Fuente: Código del Trabajo (Ministerio del Trabajo) e IESS. El aporte del 9,45% se calcula solo sobre la materia gravada (sueldo + horas extra + comisiones); los décimos y fondos de reserva quedan fuera de esa base.",
+      "caption": "Qué suma, qué resta y qué entra en la base del aporte al IESS dentro del rol de pagos."
+    }
+  ]
+}

@@ -1,0 +1,215 @@
+{
+  "slug": "tax-refund-calculator-usa",
+  "title": "Tax Refund Calculator 2026 (Federal): Estimate Your IRS Refund",
+  "h1": "Tax Refund Calculator — 2026 Federal (USA)",
+  "description": "Estimate your 2026 federal tax refund or balance due. Enter income, filing status, withholding, and dependents to see your IRS refund with the 2026 brackets, standard deduction, and $2,200 Child Tax Credit.",
+  "category": "finanzas",
+  "audience": "US",
+  "icon": "💰",
+  "formulaId": "tax-refund-calculator-usa",
+  "answerSnippet": "Your federal tax refund is your total withholding (W-2 Box 2) minus the actual tax you owe on your taxable income. For 2026, taxable income equals your income minus the standard deduction ($16,100 single, $32,200 married filing jointly) — then the seven tax brackets (10% to 37%) apply, and credits like the $2,200 Child Tax Credit reduce the tax. If you had more withheld than you owe, the difference is your refund; if less, it is a balance due. A single filer earning $75,000 with $9,000 withheld and one child would get roughly a $3,530 refund.",
+  "intro": "A **tax refund** is not a bonus from the government — it is your own money coming back because your employer withheld **more** federal tax during the year than you actually owed. This calculator estimates your **2026 federal refund (or balance due)** by comparing what you owe against what was already withheld from your paychecks.\n\nEnter your **total income**, **filing status**, the **federal tax withheld** (Box 2 of your W-2), and your **dependents**. The tool subtracts the **2026 standard deduction**, runs your taxable income through the **2026 IRS tax brackets**, applies the **Child Tax Credit** (up to $2,200 per qualifying child, with the refundable Additional CTC), and compares the result to your withholding.\n\nThe **most common mistake** is confusing a big refund with paying less tax. A large refund just means you gave the IRS an interest-free loan all year; a balance due means you under-withheld. Use this estimate to check whether your W-4 is set correctly and to plan for filing season (returns are due **April 15, 2027** for tax year 2026).",
+  "keyTakeaway": "Refund = **federal tax withheld − tax actually owed**. For 2026 the standard deduction is **$16,100** (single) / **$32,200** (married filing jointly), brackets run **10%–37%**, and each qualifying child under 17 is worth a **$2,200 Child Tax Credit** (up to $1,700 refundable). More withheld than owed → refund; less → balance due.",
+  "useCases": [
+    "Estimate your 2026 federal refund before filing your return in early 2027.",
+    "Check whether a single filer earning $60,000 with $7,000 withheld gets a refund.",
+    "See how much bigger your refund is with one, two, or three qualifying children.",
+    "Compare standard deduction vs itemizing to see which lowers your tax more.",
+    "Find out if you will owe a balance due because you did not withhold enough.",
+    "Estimate a married-filing-jointly refund on a combined $130,000 income.",
+    "See how a $6,000 IRA or HSA adjustment lowers your taxable income and tax.",
+    "Understand why a raise shrank your refund even though you earned more.",
+    "Check the refund impact of the refundable Additional Child Tax Credit at low income.",
+    "Decide whether to adjust your W-4 so next year's refund is closer to zero."
+  ],
+  "fields": [
+    {
+      "id": "filing_status",
+      "label": "Filing status",
+      "type": "select",
+      "default": "single",
+      "options": [
+        { "value": "single", "label": "Single" },
+        { "value": "mfj", "label": "Married filing jointly" },
+        { "value": "mfs", "label": "Married filing separately" },
+        { "value": "hoh", "label": "Head of household" }
+      ]
+    },
+    {
+      "id": "annual_income",
+      "label": "Total annual income (W-2 wages + other)",
+      "type": "number",
+      "required": true,
+      "placeholder": "75000",
+      "min": 0,
+      "step": 100,
+      "unit": "$"
+    },
+    {
+      "id": "adjustments",
+      "label": "Above-the-line adjustments (IRA, HSA, student-loan interest)",
+      "type": "number",
+      "required": false,
+      "placeholder": "0",
+      "min": 0,
+      "step": 100,
+      "unit": "$"
+    },
+    {
+      "id": "deduction_type",
+      "label": "Deduction",
+      "type": "select",
+      "default": "standard",
+      "options": [
+        { "value": "standard", "label": "Standard deduction (2026)" },
+        { "value": "itemized", "label": "Itemized" }
+      ]
+    },
+    {
+      "id": "itemized_amount",
+      "label": "Itemized deductions total (if itemizing)",
+      "type": "number",
+      "required": false,
+      "placeholder": "0",
+      "min": 0,
+      "step": 100,
+      "unit": "$"
+    },
+    {
+      "id": "federal_withheld",
+      "label": "Federal tax withheld (W-2 Box 2)",
+      "type": "number",
+      "required": true,
+      "placeholder": "9000",
+      "min": 0,
+      "step": 50,
+      "unit": "$"
+    },
+    {
+      "id": "qualifying_children",
+      "label": "Qualifying children under 17",
+      "type": "number",
+      "required": false,
+      "placeholder": "0",
+      "min": 0,
+      "step": 1
+    },
+    {
+      "id": "other_dependents",
+      "label": "Other dependents ($500 credit each)",
+      "type": "number",
+      "required": false,
+      "placeholder": "0",
+      "min": 0,
+      "step": 1
+    },
+    {
+      "id": "other_credits",
+      "label": "Other tax credits (education, etc.)",
+      "type": "number",
+      "required": false,
+      "placeholder": "0",
+      "min": 0,
+      "step": 50,
+      "unit": "$"
+    }
+  ],
+  "outputs": [
+    { "id": "refund_or_owed", "label": "Refund (−) balance due", "primary": true },
+    { "id": "refund_status", "label": "Result" },
+    { "id": "tax_after_credits", "label": "Federal tax owed (after credits)" },
+    { "id": "tax_before_credits", "label": "Tax before credits" },
+    { "id": "child_tax_credit", "label": "Child / dependent credit" },
+    { "id": "taxable_income", "label": "Taxable income" },
+    { "id": "effective_rate", "label": "Effective tax rate" },
+    { "id": "breakdown", "label": "How it was calculated" }
+  ],
+  "example": {
+    "title": "Example: single filer, $75,000 income, $9,000 withheld, one child",
+    "steps": [
+      "Taxable income: $75,000 − $16,100 standard deduction = $58,900.",
+      "2026 tax on $58,900 (single): 10% + 12% + 22% brackets = $7,670.",
+      "Child Tax Credit: 1 child × $2,200 = $2,200 → tax owed $7,670 − $2,200 = $5,470.",
+      "Refund: $9,000 withheld − $5,470 owed = $3,530 refund."
+    ],
+    "result": "Estimated federal refund of $3,530"
+  },
+  "explanation": "## How a federal refund is calculated\n\n```\nTaxable income = Total income − adjustments − deduction (standard or itemized)\nTax = 2026 brackets applied to taxable income\nTax after credits = Tax − credits (Child Tax Credit, etc.)\nRefund or balance = Federal tax withheld − Tax after credits (+ refundable ACTC)\n```\n\nA refund happens when your **withholding exceeds your actual tax**. It is a return of your own money, not free cash — a very large refund means you over-withheld all year.\n\n## 2026 standard deduction and brackets\n\n| Filing status | Standard deduction 2026 | 37% top bracket starts at |\n|---|---|---|\n| Single | $16,100 | $640,600 |\n| Married filing jointly | $32,200 | $768,700 |\n| Married filing separately | $16,100 | $384,350 |\n| Head of household | $24,150 | $640,600 |\n\nThe seven 2026 rates are **10%, 12%, 22%, 24%, 32%, 35% and 37%**, each applied only to the income that falls inside that bracket.\n\n## Worked example — married filing jointly, $130,000, two children\n\n1. Taxable income: $130,000 − $32,200 = **$97,800**.\n2. 2026 MFJ tax: 10% on $24,800 + 12% on $73,000 + 22% on $0… = **$11,240**.\n3. Child Tax Credit: 2 × $2,200 = **$4,400** → tax owed **$6,840**.\n4. If **$12,000** was withheld → refund of **$5,160**.\n\n## Child Tax Credit 2026\n\n| Item | 2026 value |\n|---|---|\n| Credit per qualifying child (under 17) | $2,200 |\n| Refundable portion (Additional CTC) | up to $1,700 per child |\n| Credit for other dependents | $500 (non-refundable) |\n| Phase-out begins (single / HoH) | $200,000 |\n| Phase-out begins (married filing jointly) | $400,000 |\n\nAbove the phase-out income, the credit drops **$50 for every $1,000** over the threshold.\n\n## Why your refund changes year to year\n\n- **You updated your W-4** — more allowances/credits claimed means less withheld and a smaller refund.\n- **A raise or bonus** pushed part of your income into a higher bracket.\n- **A child turned 17** — they no longer qualify for the $2,200 CTC (only the $500 other-dependent credit).\n- **Side income with no withholding** (1099 work) raised your tax without raising withholding.\n\n## When this estimate is only a starting point\n\nThis tool covers the most common situation: wage income, the standard (or a flat itemized) deduction, and the Child Tax Credit. It does **not** model every credit and deduction — the Earned Income Tax Credit, education credits, the QBI deduction, capital gains stacking, the Saver's Credit, or state income tax. Your actual refund on **Form 1040** may differ. For an authoritative figure, use the IRS Tax Withholding Estimator or tax-preparation software, and always keep your W-2s and 1099s.\n\n## Disclaimer\n\nThis is an educational estimate of federal income tax only, not tax advice or a guarantee of your refund. 2026 figures are from IRS Rev. Proc. 2025-32 and the One Big Beautiful Bill Act. Consult the IRS or a licensed tax professional before filing.",
+  "faq": [
+    {
+      "q": "How is a tax refund calculated?",
+      "a": "A refund is your **federal tax withheld minus the tax you actually owe**. Your tax comes from applying the 2026 brackets to your taxable income (income minus the standard or itemized deduction), then subtracting credits. If your withholding was higher than that tax, the difference is refunded to you."
+    },
+    {
+      "q": "What is the 2026 standard deduction?",
+      "a": "For tax year 2026 the standard deduction is **$16,100** for single filers and married filing separately, **$32,200** for married filing jointly, and **$24,150** for head of household. Most filers take the standard deduction rather than itemizing."
+    },
+    {
+      "q": "How much is the Child Tax Credit in 2026?",
+      "a": "The Child Tax Credit is **$2,200 per qualifying child under 17** for 2026, with up to **$1,700 per child refundable** as the Additional Child Tax Credit. The credit phases out above $200,000 of income ($400,000 for married filing jointly)."
+    },
+    {
+      "q": "Does a bigger refund mean I paid less tax?",
+      "a": "No. A big refund only means you **over-withheld** — you lent the IRS your money interest-free all year. Two people with identical income and tax can have very different refunds depending on how much was withheld from each paycheck."
+    },
+    {
+      "q": "Why do I owe money instead of getting a refund?",
+      "a": "You owe a balance when your **withholding was less than your tax**. Common causes are claiming too many credits on your W-4, a second job, side/1099 income with no withholding, or a spouse's income pushing you into a higher bracket on a joint return."
+    },
+    {
+      "q": "When is the tax deadline for 2026 income?",
+      "a": "Federal returns for tax year 2026 are generally due **April 15, 2027**. Filing electronically with direct deposit is the fastest way to get a refund — the IRS typically issues most refunds within about 21 days of accepting an e-filed return."
+    },
+    {
+      "q": "Should I aim for a large refund?",
+      "a": "Financially, aiming for a refund near **zero** is usually best: it means your withholding matched your tax and you kept your money during the year instead of waiting for it. If you consistently get a large refund, consider adjusting your W-4 to reduce withholding."
+    },
+    {
+      "q": "Does this include state tax refunds?",
+      "a": "No. This calculator estimates only your **federal** refund. State income tax is separate, has its own brackets and rules, and nine states (like Texas and Florida) have no state income tax at all. Check your state's revenue department for a state estimate."
+    },
+    {
+      "q": "What income should I enter?",
+      "a": "Enter your **total taxable income** — mainly W-2 Box 1 wages plus any other taxable income (interest, taxable side income). Use the 'adjustments' field for above-the-line items like deductible IRA or HSA contributions and student-loan interest, which lower your taxable income."
+    }
+  ],
+  "sources": [
+    { "name": "IRS — Tax inflation adjustments for tax year 2026 (Rev. Proc. 2025-32)", "url": "https://www.irs.gov/newsroom/irs-releases-tax-inflation-adjustments-for-tax-year-2026-including-amendments-from-the-one-big-beautiful-bill" },
+    { "name": "IRS — Refunds (Tax season refund FAQs)", "url": "https://www.irs.gov/refunds/tax-season-refund-frequently-asked-questions" }
+  ],
+  "relatedSlugs": [],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-07-16",
+    "dataAsOf": "2026-07-16",
+    "updateType": "manual",
+    "notes": "Tax year 2026: standard deduction 16,100/32,200/24,150; brackets 10-37%; Child Tax Credit $2,200 (refundable up to $1,700). Source IRS Rev. Proc. 2025-32 + OBBBA.",
+    "source": "IRS — Tax inflation adjustments for tax year 2026",
+    "sourceUrl": "https://www.irs.gov/newsroom/irs-releases-tax-inflation-adjustments-for-tax-year-2026-including-amendments-from-the-one-big-beautiful-bill"
+  },
+  "seoKeywords": [
+    "tax refund calculator",
+    "2026 tax refund calculator",
+    "federal tax refund estimator",
+    "irs refund calculator 2026",
+    "how much will my tax refund be",
+    "estimate tax refund 2026",
+    "tax refund calculator with dependents",
+    "child tax credit refund 2026",
+    "will i get a tax refund or owe"
+  ],
+  "lastReviewed": "2026-07-16",
+  "referenceTables": [
+    {
+      "title": "2026 federal standard deduction and top bracket by filing status",
+      "headers": ["Filing status", "Standard deduction", "12% bracket up to", "22% bracket up to", "37% starts at"],
+      "rows": [
+        ["Single", "$16,100", "$50,400", "$105,700", "$640,600"],
+        ["Married filing jointly", "$32,200", "$100,800", "$211,400", "$768,700"],
+        ["Married filing separately", "$16,100", "$50,400", "$105,700", "$384,350"],
+        ["Head of household", "$24,150", "$67,450", "$105,700", "$640,600"]
+      ],
+      "note": "Source: IRS Rev. Proc. 2025-32 (2026 inflation adjustments). The seven 2026 rates are 10%, 12%, 22%, 24%, 32%, 35% and 37%."
+    }
+  ]
+}
