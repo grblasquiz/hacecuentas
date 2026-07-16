@@ -149,6 +149,10 @@ if (recentPosts.length) {
     .approved-home-v7 .moment p,
     .approved-home-v7 .moment .go,
     .approved-home-v7 .moment > .eyebrow { z-index: 3; }
+    /* La home conserva el acceso a todas las guías, pero en móvil adelanta la
+       decisión principal y evita una pared de tarjetas antes del siguiente paso. */
+    .approved-home-v7 .contentFull .guideFull:nth-child(n+5),
+    .approved-home-v7 .contentFull .blogFull:nth-child(n+4) { display: none; }
   }
   /* Fallback: input simple si HeroSearch no está disponible. */
   .approved-home-v7 .askLine .askInput {
@@ -199,6 +203,21 @@ if (recentPosts.length) {
     }
     const contentFull = root.querySelector('.contentFull');
     root.querySelector('.stories')?.after(contentFull);
+
+    // La maqueta del tablero parecía una funcionalidad cerrada. Aclara el
+    // beneficio y deja un paso explícito, sin obligar a registrarse para usar
+    // las calculadoras.
+    const journeyCopy = root.querySelector('.journey > div:first-child');
+    if (journeyCopy && !journeyCopy.querySelector('[data-home-planner-cta]')) {
+      const intro = journeyCopy.querySelector('.sub');
+      if (intro) intro.textContent = 'Guardá resultados, compará escenarios y volvé cuando cambie un dato. Podés probarlo gratis; crear una cuenta sólo sirve para recuperar tu tablero en otro dispositivo.';
+      const cta = document.createElement('a');
+      cta.className = 'action';
+      cta.href = '/mi-hacecuentas';
+      cta.dataset.homePlannerCta = 'true';
+      cta.textContent = 'Crear mi tablero gratis →';
+      journeyCopy.insertBefore(cta, journeyCopy.querySelector('.steps'));
+    }
     const newsletterFull = root.querySelector('.newsletterFull');
     if (newsletterFull) root.querySelector('.finalCta')?.after(newsletterFull);
 
@@ -369,7 +388,17 @@ if (recentPosts.length) {
     function setHref(el, url) {
       if (!el || !url) return;
       el.dataset.href = url;
-      if (el.tagName === 'A') el.setAttribute('href', url);
+      if (el.tagName === 'A') {
+        el.setAttribute('href', url);
+      } else {
+        // El mockup usa tarjetas y chips como disparadores. Exponerlos como
+        // enlaces reales a lectores de pantalla y teclado evita CTAs mudos.
+        el.setAttribute('role', 'link');
+        el.tabIndex = 0;
+        if (!el.getAttribute('aria-label')) {
+          el.setAttribute('aria-label', `Abrir ${labelOf(el).trim() || 'esta sección'}`);
+        }
+      }
     }
     const labelOf = (el) => {
       // Preferir <b> sobre <strong>: en .rankCard el <strong> es el número de
@@ -558,6 +587,14 @@ if (recentPosts.length) {
       if (t.tagName === 'A' && (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1)) return;
       e.preventDefault();
       window.location.href = url;
+    });
+    root.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const t = e.target.closest('[data-href]');
+      if (!t || !root.contains(t) || t.tagName === 'A') return;
+      e.preventDefault();
+      const url = t.dataset.href;
+      if (url) window.location.href = url;
     });
   }
 

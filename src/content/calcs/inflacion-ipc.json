@@ -18,8 +18,8 @@
     "CER UVA inflacion"
   ],
   "intro": "La **[inflación](/inflacion-argentina) argentina** es una de las más altas del mundo y licúa el valor de cualquier cifra rápido. ¿Cuánto valen hoy los **$100.000** que te prestaron en 2022? ¿Cuál debería ser la cuota actualizada de un contrato firmado hace 6 meses? ¿Qué poder adquisitivo tiene tu sueldo comparado con un año atrás? Esta calculadora actualiza cualquier monto por **inflación acumulada** (IPC INDEC) y te muestra el **valor equivalente a hoy**, el **incremento nominal**, el **factor de actualización** y la **pérdida de poder adquisitivo real**. Se usa para actualizar **sueldos**, **alquileres con ajuste [IPC](/inflacion-argentina)**, **contratos**, **deudas en juicio**, **indemnizaciones laborales**, **honorarios profesionales**, **cuotas alimentarias** y **reclamos ante ARCA**. La fuente oficial es el **IPC del INDEC** (Decreto 762/2019), publicado el tercer martes de cada mes. Valores 2026 basados en IPC INDEC.",
-  "answerSnippet": "El IPC del INDEC mide la inflación mensual oficial de Argentina: en 2026 acumula +14,7% de enero a mayo (mayo +2,1%, abril +2,6%, marzo +3,4%), un factor de 1,147. Con esta calculadora actualizás cualquier monto entre dos meses y obtenés el valor a hoy, el factor de ajuste y la pérdida real de poder adquisitivo, con datos IPC 2026 al día.",
-  "keyTakeaway": "**Fórmula**: Monto × (1 + inflación/100). **Factor 1,147** (14,7% YTD 2026). **Poder adquisitivo**: $100 viejo = $114,70 hoy. Inverso: $100 hoy = $87,17 de hace 5 meses.",
+  "answerSnippet": "El IPC del INDEC mide la inflación mensual oficial de Argentina: en 2026 acumula +16,9% de enero a junio (junio +1,9%, mayo +2,1%, abril +2,6%), un factor de 1,169. Con esta calculadora actualizás cualquier monto entre dos meses y obtenés el valor a hoy, el factor de ajuste y la pérdida real de poder adquisitivo, con datos IPC 2026 al día.",
+  "keyTakeaway": "**Fórmula**: Monto × (1 + inflación/100). **Factor 1,169** (16,9% YTD 2026). **Poder adquisitivo**: $100 viejo = $116,90 hoy. Inverso: $100 hoy = $85,54 de hace 6 meses.",
   "useCases": [
     "Actualizás tu **sueldo del año pasado** para saber si ganaste o perdiste contra la inflación real INDEC.",
     "Calculás la **cuota actualizada de un alquiler con ajuste IPC** trimestral o semestral (contratos post-DNU 70/2023 que derogó la Ley 27.551).",
@@ -28,7 +28,7 @@
     "Liquidás una **indemnización laboral** por despido con actualización por CER hasta la fecha efectiva de pago.",
     "Sos abogado y necesitás **actualizar honorarios** por UMA o IPC entre la regulación y el cobro.",
     "Calculás cuánto valen hoy **$100 de hace 5 años** para reclamos retroactivos, restituciones o convenios de pago.",
-    "Actualizar una cuota de alquiler, deuda o préstamo familiar eligiendo enero-mayo 2026 sin buscar el porcentaje acumulado afuera."
+    "Actualizar una cuota de alquiler, deuda o préstamo familiar eligiendo enero-junio 2026 sin buscar el porcentaje acumulado afuera."
   ],
   "fields": [
     {
@@ -503,6 +503,10 @@
         {
           "value": "2026-05",
           "label": "Mayo 2026 (+2,1%)"
+        },
+        {
+          "value": "2026-06",
+          "label": "Junio 2026 (+1,9%)"
         }
       ],
       "required": false,
@@ -512,7 +516,7 @@
       "id": "mesHasta",
       "label": "Mes final IPC",
       "type": "select",
-      "default": "2026-05",
+      "default": "2026-06",
       "options": [
         {
           "value": "manual",
@@ -969,10 +973,14 @@
         {
           "value": "2026-05",
           "label": "Mayo 2026 (+2,1%)"
+        },
+        {
+          "value": "2026-06",
+          "label": "Junio 2026 (+1,9%)"
         }
       ],
       "required": false,
-      "help": "Último dato cargado: mayo 2026 (+2,1%). Verificá en indec.gob.ar si ya salió un mes más reciente; el IPC de cada mes se publica a mediados del mes siguiente."
+      "help": "Último dato publicado: junio 2026 (+1,9%). La serie se actualiza cuando INDEC publica el IPC mensual, habitualmente a mediados del mes siguiente."
     },
     {
       "id": "inflacionAcumulada",
@@ -992,12 +1000,12 @@
     "source": "INDEC (IPC)",
     "sourceUrl": "https://www.indec.gob.ar/indec/web/Nivel4-Tema-3-5-31",
     "updateType": "auto-api",
-    "notes": "INDEC publica el IPC mensual alrededor del día 15 de cada mes. Serie mensual completa 2017-01 a 2026-05 tomada de la planilla oficial sh_ipc del INDEC; los últimos 12 meses se refrescan con el cron de datos (live/inflacion.json)."
+    "notes": "INDEC publica el IPC mensual alrededor del día 15 de cada mes. Serie mensual completa 2017-01 a 2026-06 tomada de la planilla oficial sh_ipc del INDEC; los últimos 12 meses se refrescan con el cron de datos (live/inflacion.json)."
   },
   "outputs": [
     {
       "id": "montoActualizado",
-      "label": "Monto actualizado hoy",
+      "label": "Monto actualizado para el período elegido",
       "format": "currency",
       "primary": true
     },
@@ -1034,11 +1042,11 @@
   "faq": [
     {
       "q": "¿Cuál fue el IPC mensual de 2026?",
-      "a": "**El IPC mensual de Argentina en 2026 (INDEC) fue: enero +2,9%, febrero +2,9%, marzo +3,4%, abril +2,6% y mayo +2,1%**, que es el último dato publicado. El **acumulado enero-mayo 2026 es 14,7%** (componiendo los factores: `1,029 × 1,029 × 1,034 × 1,026 × 1,021 − 1`). El dato de **junio 2026 todavía no se publicó**: el INDEC difunde cada mes la variación del mes anterior alrededor del **día 13** (tercer martes), así que el IPC de junio sale recién a **mediados de julio 2026**. Tenés el detalle completo en la tabla **IPC mes a mes 2026** de esta página."
+      "a": "**El IPC mensual de Argentina en 2026 (INDEC) fue: enero +2,9%, febrero +2,9%, marzo +3,4%, abril +2,6%, mayo +2,1% y junio +1,9%**, último dato publicado. El **acumulado enero-junio 2026 es 16,9%** (componiendo los factores mensuales). Tenés el detalle completo en la tabla **IPC mes a mes 2026** de esta página."
     },
     {
       "q": "¿Dónde veo el IPC mes a mes 2026?",
-      "a": "**Acá mismo**: la tabla **\"IPC mes a mes 2026\"** de esta página lista la variación de cada mes (enero 2,9% … mayo 2,1%) y el acumulado del año mes a mes, con el último dato publicado por el INDEC. La fuente oficial es **[indec.gob.ar](https://www.indec.gob.ar)**, sección IPC, donde también figura la apertura por división (alimentos, vivienda, transporte) y por región (GBA, Pampeana, Noreste, Noroeste, Cuyo, Patagonia). Para **actualizar un monto** entre dos meses concretos, poné el acumulado del período en la calculadora de arriba."
+      "a": "**Acá mismo**: la tabla **\"IPC mes a mes 2026\"** de esta página lista la variación de cada mes (enero 2,9% … junio 1,9%) y el acumulado del año mes a mes, con el último dato publicado por el INDEC. La fuente oficial es **[indec.gob.ar](https://www.indec.gob.ar)**, sección IPC, donde también figura la apertura por división (alimentos, vivienda, transporte) y por región (GBA, Pampeana, Noreste, Noroeste, Cuyo, Patagonia). Para **actualizar un monto** entre dos meses concretos, elegilos en la calculadora de arriba."
     },
     {
       "q": "¿Dónde consulto la inflación acumulada oficial?",
@@ -1086,7 +1094,7 @@
     },
     {
       "q": "¿La inflación interanual y la acumulada son lo mismo?",
-      "a": "**No son lo mismo**. La **inflación interanual** mide la variación de precios entre un mes y el mismo mes del año anterior (ej: abril 2026 vs abril 2025 = +35%). La **inflación acumulada** se refiere a la suma de variaciones desde una fecha base hasta hoy (ej: enero 2026 a mayo 2026 = +14,7% acumulado en 5 meses). Para **actualizar contratos del año pasado**, usás la interanual. Para **calcular pérdida de poder adquisitivo desde el inicio del año**, usás la acumulada anual (YTD). Para períodos personalizados (ej: marzo 2024 a noviembre 2025), tenés que **multiplicar los factores mensuales del período exacto**, no podés usar ni una ni otra directamente."
+      "a": "**No son lo mismo**. La **inflación interanual** mide la variación de precios entre un mes y el mismo mes del año anterior. La **inflación acumulada** reúne las variaciones desde una fecha base hasta otra (ej: enero 2026 a junio 2026 = +16,9% acumulado en 6 meses). Para **actualizar contratos del año pasado**, usás la interanual. Para **calcular pérdida de poder adquisitivo desde el inicio del año**, usás la acumulada anual (YTD). Para períodos personalizados (ej: marzo 2024 a noviembre 2025), tenés que **multiplicar los factores mensuales del período exacto**, no podés usar ni una ni otra directamente."
     },
     {
       "q": "¿Cómo paso de IPC mensual a IPC acumulado?",
@@ -1094,7 +1102,7 @@
     },
     {
       "q": "¿Puedo actualizar un monto eligiendo mes de origen y mes de destino?",
-      "a": "Sí. Elegí el mes inicial y el mes final entre enero 2017 y el último dato publicado (mayo 2026) y la calculadora compone los IPC mensuales oficiales del INDEC (nivel general nacional). Si necesitás un período anterior a 2017 o todavía no publicado, elegí \"Otro período\" e ingresá la inflación acumulada manual."
+      "a": "Sí. Elegí el mes inicial y el mes final entre enero 2017 y el último dato publicado (junio 2026) y la calculadora compone los IPC mensuales oficiales del INDEC (nivel general nacional). Si necesitás un período anterior a 2017 o todavía no publicado, elegí \"Otro período\" e ingresá la inflación acumulada manual."
     }
   ],
   "solvedExamples": [
@@ -1128,7 +1136,7 @@
       "publisher": "Boletín Oficial (Argentina)"
     },
     {
-      "name": "INDEC — Serie histórica IPC Nacional: variaciones mensuales enero 2017 a mayo 2026 (planilla oficial sh_ipc)",
+      "name": "INDEC — Serie histórica IPC Nacional: variaciones mensuales enero 2017 a junio 2026 (planilla oficial sh_ipc)",
       "url": "https://www.indec.gob.ar/ftp/cuadros/economia/sh_ipc_06_26.xls",
       "publisher": "INDEC",
       "date": "2026-06"
@@ -1146,8 +1154,8 @@
     {
       "label": "Inflación 3 puntos mayor",
       "overrides": {
-        "inflacionAcumulada": {
-          "add": 3
+        "ajusteEscenario": {
+          "set": 3
         }
       },
       "detail": "Escenario de sensibilidad para comparar el valor actualizado si el período acumulara 3 puntos porcentuales más."
@@ -1155,8 +1163,8 @@
     {
       "label": "Inflación 3 puntos menor",
       "overrides": {
-        "inflacionAcumulada": {
-          "add": -3
+        "ajusteEscenario": {
+          "set": -3
         }
       },
       "detail": "Escenario comparativo; para cálculos oficiales usá siempre el IPC publicado por INDEC."
@@ -1181,8 +1189,12 @@
       "text": "Revisá los resultados que aparecen debajo del formulario. Podés modificar cualquier dato y volver a calcular."
     }
   ],
-  "lastReviewed": "2026-07-12",
+  "lastReviewed": "2026-07-16",
   "changelog": [
+    {
+      "date": "2026-07-16",
+      "change": "Se incorporó el IPC de junio de 2026 (+1,9%), se actualizó el selector al último dato publicado y los escenarios ahora ajustan correctamente el IPC del período elegido."
+    },
     {
       "date": "2026-07-12",
       "change": "Rediseño visual de la calculadora: resultado con monto actualizado destacado y equivalente en dólar, métricas en tarjetas, barra de contexto económico en vivo y panel de resultado más claro. El cálculo, la fórmula y la serie IPC no cambiaron."
@@ -1204,7 +1216,7 @@
   "referenceTables": [
     {
       "title": "IPC mes a mes 2026 (Argentina, INDEC)",
-      "caption": "Variación mensual del IPC Nacional y acumulado del año, mes a mes. Último dato publicado: mayo 2026 (2,1%).",
+      "caption": "Variación mensual del IPC Nacional y acumulado del año, mes a mes. Último dato publicado: junio 2026 (1,9%).",
       "headers": [
         "Mes 2026",
         "IPC mensual",
@@ -1238,11 +1250,11 @@
         ],
         [
           "Junio",
-          "Se publica mediados de julio",
-          "—"
+          "1,9%",
+          "16,9%"
         ]
       ],
-      "note": "Fuente: IPC INDEC (Decreto 762/2019). El INDEC publica cada mes el dato del mes anterior alrededor del día 13 (tercer martes), por eso el IPC de junio 2026 todavía no está disponible. El acumulado se calcula componiendo los factores mensuales (no sumando). Para actualizar un monto entre dos meses cualquiera, usá la calculadora de arriba con el acumulado del período."
+      "note": "Fuente: IPC INDEC (Decreto 762/2019). El INDEC publica cada mes el dato del mes anterior, habitualmente a mediados del mes siguiente. El acumulado se calcula componiendo los factores mensuales (no sumando). Para actualizar un monto entre dos meses cualquiera, elegilos en la calculadora de arriba."
     },
     {
       "title": "Inflación anual en Argentina por año (IPC INDEC)",

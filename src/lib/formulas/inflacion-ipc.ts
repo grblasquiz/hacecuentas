@@ -5,6 +5,8 @@ import inflacionLive from '../../data/live/inflacion.json';
 export interface Inputs {
   montoOriginal: number;
   inflacionAcumulada?: number;
+  /** Variación en puntos porcentuales para escenarios comparativos. */
+  ajusteEscenario?: number;
   mesDesde?: string;
   mesHasta?: string;
 }
@@ -52,7 +54,12 @@ function inflationFromPeriod(mesDesde?: string, mesHasta?: string): { pct: numbe
 export function inflacionIpc(i: Inputs): Outputs {
   const monto = Number(i.montoOriginal);
   const periodo = inflationFromPeriod(i.mesDesde, i.mesHasta);
-  const inflacion = periodo ? periodo.pct : Number(i.inflacionAcumulada);
+  const inflacionBase = periodo ? periodo.pct : Number(i.inflacionAcumulada);
+  // Los escenarios tienen que partir del IPC del período seleccionado. Antes
+  // modificaban `inflacionAcumulada`, un campo que se ignora cuando hay meses,
+  // por lo que las tres tarjetas mostraban exactamente el mismo resultado.
+  const ajusteEscenario = Number(i.ajusteEscenario || 0);
+  const inflacion = inflacionBase + ajusteEscenario;
   if (!monto || monto <= 0) throw new Error('Ingresá el monto original');
   if (i.mesDesde && i.mesHasta && i.mesDesde !== 'manual' && i.mesHasta !== 'manual' && !periodo) {
     throw new Error('El mes final tiene que ser igual o posterior al mes inicial');
@@ -65,7 +72,7 @@ export function inflacionIpc(i: Inputs): Outputs {
 
   const _insight = {
     title: periodo ? `IPC acumulado: ${periodo.label}` : 'Cuánto valen hoy esos pesos',
-    text: `Para igualar el poder de compra de **$${Math.round(monto).toLocaleString('es')}**, hoy necesitás **$${Math.round(actualizado).toLocaleString('es')}** (×${factor.toFixed(2)}). ${periodo ? `El período seleccionado (${periodo.meses} ${periodo.meses === 1 ? 'mes' : 'meses'}) acumula **${inflacion.toFixed(1)}%** de IPC INDEC (nivel general nacional).` : 'Usá el IPC acumulado del período que querés medir.'} Quien guardó la plata en el colchón perdió **${perdida.toFixed(1)}%** de poder adquisitivo.`,
+    text: `Para igualar el poder de compra de **$${Math.round(monto).toLocaleString('es')}**, hoy necesitás **$${Math.round(actualizado).toLocaleString('es')}** (×${factor.toFixed(2)}). ${periodo ? (ajusteEscenario ? `El IPC INDEC del período seleccionado (${periodo.meses} ${periodo.meses === 1 ? 'mes' : 'meses'}) es **${inflacionBase.toFixed(1)}%**; este escenario aplica ${ajusteEscenario > 0 ? '+' : ''}${ajusteEscenario.toFixed(1)} puntos para comparar.` : `El período seleccionado (${periodo.meses} ${periodo.meses === 1 ? 'mes' : 'meses'}) acumula **${inflacion.toFixed(1)}%** de IPC INDEC (nivel general nacional).`) : 'Usá el IPC acumulado del período que querés medir.'} Quien guardó la plata en el colchón perdió **${perdida.toFixed(1)}%** de poder adquisitivo.`,
     tone: perdida >= 30 ? 'warn' : perdida >= 10 ? 'neutral' : 'good',
     icon: '💸',
   };

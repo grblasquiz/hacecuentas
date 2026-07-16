@@ -398,7 +398,9 @@ const MONEY_CATS = new Set(['finanzas', 'impuestos', 'negocios']);
 const showLiveEcon: boolean = !lang && audience === 'AR' && MONEY_CATS.has(calc.category);
 // El equivalente en USD (blue) bajo el resultado sería circular en conversores de
 // moneda/dólar/cripto → se desactiva ahí (la línea de contexto igual se muestra).
-const _usdDenylist = /d[oó]lar|dolar|\busd\b|u\$s|blue\b|\bmep\b|\bccl\b|cripto|bitcoin|\bbtc\b|euro|conversor-moneda|cambio-divisa|peso-a-|-a-dolar|-a-usd/i;
+// En actualización por IPC el equivalente en dólar blue agrega otra métrica
+// que no forma parte del ajuste contractual y distrae del resultado principal.
+const _usdDenylist = /d[oó]lar|dolar|\busd\b|u\$s|blue\b|\bmep\b|\bccl\b|cripto|bitcoin|\bbtc\b|euro|conversor-moneda|cambio-divisa|peso-a-|-a-dolar|-a-usd|inflacion-ipc/i;
 const enableUsdEquiv: boolean = showLiveEcon && !_usdDenylist.test(calc.slug);
 
 const relatedSlugs: string[] = calc.relatedSlugs || [];
