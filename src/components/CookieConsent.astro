@@ -233,13 +233,6 @@ const t = COPY[lang] || COPY.es;
   // Limpiar clave v1 vieja (usuarios legacy con analytics:false quedaban silenciados).
   try { localStorage.removeItem('hc-consent-v1'); } catch (e) {}
 
-  // Ezoic activo → su CMP gatekeeper certificado posee el consent de
-  // la UE. No auto-mostramos el banner casero ni disparamos consent update acá:
-  // Ezoic maneja Consent Mode vía su integración (activar "Google Consent Mode"
-  // en el panel). hcOpenCookieSettings ya quedó definido arriba por si el footer
-  // lo invoca. En LATAM/AR esto es no-op igual (no estaban en REQUIRES_CONSENT).
-  if (window.__hcEzoicCmp) return;
-
   // Boot: detectar país vía Cloudflare trace (gratis, sin config). Sólo aplicar
   // consent update / mostrar banner si el país está en REQUIRES_CONSENT. Fuera
   // de ahí el default del Layout ('granted' para analytics, 'denied' para ads)
