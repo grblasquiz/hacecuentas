@@ -1,12 +1,12 @@
-# 🧮 Hacé Cuentas — Calculadoras Online Gratuitas (1.200+)
+# 🧮 Hacé Cuentas — Calculadoras Online Gratuitas (1.300+)
 
 [![Deploy](https://img.shields.io/badge/deploy-Cloudflare%20Workers-orange?logo=cloudflare)](https://hacecuentas.com)
 [![Astro](https://img.shields.io/badge/Astro-6.x-blueviolet?logo=astro)](https://astro.build)
-[![Calculadoras](https://img.shields.io/badge/calculadoras-1200%2B-brightgreen)](https://hacecuentas.com)
+[![Calculadoras](https://img.shields.io/badge/calculadoras-1300%2B-brightgreen)](https://hacecuentas.com)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Sitio](https://img.shields.io/badge/sitio-hacecuentas.com-success)](https://hacecuentas.com)
 
-**1.200+ calculadoras gratuitas, precisas y privadas en español, inglés y portugués.** **[hacecuentas.com](https://hacecuentas.com)**
+**1.300+ calculadoras gratuitas, precisas y privadas en español, inglés y portugués.** **[hacecuentas.com](https://hacecuentas.com)**
 
 El repositorio público más grande de calculadoras fiscales, de salud, finanzas, construcción, deportes y vida cotidiana con foco en Argentina y cobertura para todo el mundo hispanohablante + Brasil.
 
@@ -17,7 +17,7 @@ El repositorio público más grande de calculadoras fiscales, de salud, finanzas
 **[Hacé Cuentas](https://hacecuentas.com)** es un proyecto open-source de calculadoras online gratuitas desarrollado desde Argentina. Cada calculadora usa fórmulas oficiales verificables (ARCA, ANSES, BCRA, INDEC, OMS, ACOG, FIFA…) y se actualiza cuando cambia la normativa.
 
 - **Sin registro · Sin muros de pago · Sin tracking invasivo**
-- **1.200+ calcs** entre AR, ES, MX, CL, BR, Portugal y versión EN
+- **1.300+ calcs** entre AR, ES, MX, CL, BR, Portugal y versión EN
 - **Fuentes declaradas** en cada calculadora — ver [política editorial](https://hacecuentas.com/politica-editorial), [metodología](https://hacecuentas.com/metodologia), [quiénes somos](https://hacecuentas.com/sobre-nosotros)
 
 ---
@@ -339,7 +339,7 @@ Las contribuciones son bienvenidas:
 | 📋 [Tablas de referencia](https://hacecuentas.com/tabla/tabla-imc-peso-altura) | IMC, monotributo, ganancias, patentes |
 | ⚖️ [Comparadores](https://hacecuentas.com/comparar/plazo-fijo-vs-fci-vs-dolar) | Plazo fijo vs FCI vs dólar, monotributo vs RI |
 | 🇦🇷 [Páginas por provincia](https://hacecuentas.com/argentina/buenos-aires/ingresos-brutos) | IIBB, patente, sellos, costo m² |
-| 🔍 [Buscador](https://hacecuentas.com/buscar) | 1.200+ calcs indexadas |
+| 🔍 [Buscador](https://hacecuentas.com/buscar) | 1.300+ calcs indexadas |
 | 💰 [Presupuesto familiar](https://hacecuentas.com/presupuesto-familiar) | Herramienta planificación 50/30/20 |
 | 🏛️ [Simulador jubilación ANSES](https://hacecuentas.com/simulador-jubilacion-anses) | Regla de 30+60 AR |
 | 🌍 [Inflación Argentina INDEC](https://hacecuentas.com/inflacion-argentina) | Serie histórica mensual |
