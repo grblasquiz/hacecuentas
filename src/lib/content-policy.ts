@@ -124,12 +124,17 @@ export const RESTRICTED_DOSE_NOTICE =
 
 /**
  * Subgrupo de restricción (spec Fase 5):
- *   - 'dose'   → medicamentos, suplementos y dosis veterinarias (A)
- *   - 'injury' → lesiones y retorno deportivo (B)
- *   - 'baby'   → alimentación de bebés (C)
- * Determina el aviso y la lista de "qué evalúa un profesional".
+ *   - 'dose'      → medicamentos, suplementos y dosis veterinarias (A)
+ *   - 'injury'    → lesiones y retorno deportivo (B)
+ *   - 'baby'      → alimentación de bebés (C)
+ *   - 'clinical'  → interpretación de valores de salud
+ *   - 'editorial' → NO es salud: la calc está en revisión de datos/fuentes
+ *                   (impuestos, finanzas, laboral…). YMYL cubre "Money or Life":
+ *                   una calc de plata puede ser ymylRisk:'high' y NO tener nada
+ *                   que ver con dosis. Este es el default de no-salud.
+ * Determina el aviso y la lista de factores.
  */
-export type RestrictedMode = 'dose' | 'injury' | 'baby' | 'clinical';
+export type RestrictedMode = 'dose' | 'injury' | 'baby' | 'clinical' | 'editorial';
 
 export const RESTRICTED_NOTICES: Record<RestrictedMode, string> = {
   dose: RESTRICTED_DOSE_NOTICE,
@@ -149,6 +154,32 @@ export const RESTRICTED_NOTICES: Record<RestrictedMode, string> = {
     'de tu historia médica, síntomas y otros estudios. Consultá con un ' +
     'profesional de la salud matriculado; no uses este resultado para ' +
     'autodiagnosticarte ni para decidir un tratamiento.',
+  editorial:
+    'Esta herramienta está temporalmente limitada porque estamos verificando ' +
+    'los datos oficiales que usa. Montos, topes, alícuotas y fechas cambian ' +
+    'seguido, y preferimos no darte un número antes que darte uno ' +
+    'desactualizado. Volvé en unos días o consultá la fuente oficial.',
+};
+
+/** Encabezado de la lista de factores. No toda restricción es médica. */
+export const RESTRICTED_FACTORS_HEADING: Record<RestrictedMode, string> = {
+  dose: 'Qué evalúa un profesional matriculado:',
+  injury: 'Qué evalúa un profesional matriculado:',
+  baby: 'Qué evalúa un profesional matriculado:',
+  clinical: 'Qué evalúa un profesional matriculado:',
+  editorial: 'Qué estamos verificando:',
+};
+
+/**
+ * Cierre del aviso. El texto de dosis NO puede aparecer en una calc de
+ * impuestos: para 'editorial' el cierre habla de datos, no de pautas clínicas.
+ */
+export const RESTRICTED_FOOTNOTES: Record<RestrictedMode, string> = {
+  dose: 'Mantenemos esta página como referencia general; no entrega dosis, cantidades ni pautas individuales.',
+  injury: 'Mantenemos esta página como referencia general; no entrega plazos ni pautas individuales.',
+  baby: 'Mantenemos esta página como referencia general; no entrega cantidades ni pautas individuales.',
+  clinical: 'Mantenemos esta página como referencia general; no entrega diagnósticos ni pautas individuales.',
+  editorial: 'Mantenemos esta página como referencia general mientras validamos los datos con la fuente oficial.',
 };
 
 /** Factores generales que evalúa un profesional (sin números ni dosis). */
@@ -181,12 +212,30 @@ export const RESTRICTED_PRO_FACTORS: Record<RestrictedMode, string[]> = {
     'Edad, sexo y factores de riesgo',
     'Seguimiento profesional individual',
   ],
+  editorial: [
+    'Que los montos y topes sean los vigentes',
+    'Que la fuente oficial esté enlazada y al día',
+    'Que la fórmula refleje la norma actual',
+    'Que las fechas de vigencia sean correctas',
+  ],
 };
 
-/** Subgrupo de restricción declarado por la calc (default 'dose'). */
+/**
+ * Subgrupo de restricción declarado por la calc.
+ *
+ * Si la calc NO lo declara, el default depende del TEMA:
+ *   - tema sensible (salud/mascotas/bebés/lesión…) → 'dose'  (comportamiento previo)
+ *   - cualquier otro tema                          → 'editorial'
+ *
+ * El default ciego a 'dose' hacía que una calc de liquidación laboral o de
+ * impuestos mostrara "tu dosis depende de tu función renal": `distribution:
+ * 'restricted'` y `ymylRisk:'high'` también aplican a calcs de plata (YMYL =
+ * Money **or** Life), y ninguna de ellas declara `restrictedMode`.
+ */
 export function restrictedMode(calc: CalcPolicyInput | null | undefined): RestrictedMode {
   const m = calc?.restrictedMode;
-  return m === 'injury' || m === 'baby' || m === 'clinical' ? m : 'dose';
+  if (m === 'injury' || m === 'baby' || m === 'clinical' || m === 'dose' || m === 'editorial') return m;
+  return isSensitiveCalc(calc) ? 'dose' : 'editorial';
 }
 
 // ---- Helpers de normalización ----

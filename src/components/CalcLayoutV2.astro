@@ -55,7 +55,7 @@ import { getJourneySteps } from '../lib/journeys';
 import { getRoomsForCalc } from '../lib/decisions/calc-backlinks';
 import { getPriorityDecisionCta, sortDecisionLinksByPriority } from '../lib/decisions/priority';
 import converterTables from '../lib/converter-tables.json';
-import { hasValidProfessionalReviewer, isRestrictedCalc } from '../lib/content-policy';
+import { hasValidProfessionalReviewer, isRestrictedCalc, restrictedMode } from '../lib/content-policy';
 import { isBespokeTop } from '../lib/redesign-exclude';
 import { getCalculatorDisclaimer } from '../lib/disclaimers';
 import RestrictedNotice from './RestrictedNotice.astro';
@@ -108,6 +108,9 @@ const decisionPostResult = calc.postResult ?? getPriorityDecisionCta(calc.slug, 
 // profesional): se reemplaza el widget por un aviso y se suprimen los bloques
 // con números/dosis (tablas, ejemplos, explicación, FAQ, respuesta rápida).
 const calcIsRestricted = isRestrictedCalc(calc);
+// Una calc de impuestos/laboral restringida NO es una calc de dosis: el copy del
+// panel "Cómo funciona" tiene que seguir el mismo modo que el aviso de arriba.
+const calcRestrictedIsEditorial = calcIsRestricted && restrictedMode(calc) === 'editorial';
 const proReviewer = hasValidProfessionalReviewer(calc) ? calc.professionalReviewer : null;
 const proReviewerCred = proReviewer
   ? [proReviewer.profession, proReviewer.credential].filter(Boolean).join(', ')
@@ -138,6 +141,7 @@ const TRANSLATIONS = {
     caseLbl: 'Caso', introFallback: 'Completá los datos arriba y obtené el resultado al instante. Abajo tenés cómo funciona el cálculo, ejemplos y preguntas frecuentes.',
     howFallback: 'Esta calculadora aplica la fórmula directa sobre los datos que ingresás. Cargá los valores arriba para ver el resultado.',
     restrictedTxt: 'Esta herramienta no entrega dosis, cantidades ni pautas individuales. Una recomendación personalizada depende de factores clínicos que sólo un profesional matriculado puede evaluar. Usá el aviso de arriba como guía y consultá con un profesional.',
+    restrictedTxtEditorial: 'Estamos verificando los datos oficiales que usa esta calculadora antes de mostrarte un resultado. Mientras tanto no entrega números, para no darte un valor desactualizado. Usá el aviso de arriba como guía y revisá la fuente oficial.',
     noFaqQ: '¿Tenés una duda sobre esta calculadora? Escribinos a', noFaqPost: 'y la sumamos.',
     convTitle: 'Tabla de conversiones de', convTo: 'a', convRefNote: 'Valores de referencia para convertir rápido.',
     convRevQ: '¿Al revés?', convRevLink: 'Convertir de',
@@ -167,6 +171,7 @@ const TRANSLATIONS = {
     caseLbl: 'Case', introFallback: 'Fill in your details above and get the result instantly. Below you will find how the calculation works, examples and frequently asked questions.',
     howFallback: 'This calculator applies the formula directly to the data you enter. Fill in the values above to see the result.',
     restrictedTxt: 'This tool does not provide doses, quantities or individual guidelines. A personalized recommendation depends on clinical factors that only a licensed professional can assess. Use the notice above as guidance and consult a professional.',
+    restrictedTxtEditorial: 'We are verifying the official data this calculator relies on before showing a result. In the meantime it does not return numbers, so we do not give you an outdated figure. Use the notice above as guidance and check the official source.',
     noFaqQ: 'Have a question about this calculator? Write to us at', noFaqPost: 'and we will add it.',
     convTitle: 'Conversion table from', convTo: 'to', convRefNote: 'Reference values for quick conversions.',
     convRevQ: 'Need it the other way?', convRevLink: 'Convert from',
@@ -196,6 +201,7 @@ const TRANSLATIONS = {
     caseLbl: 'Caso', introFallback: 'Preencha os dados acima e veja o resultado na hora. Abaixo você encontra como o cálculo funciona, exemplos e perguntas frequentes.',
     howFallback: 'Esta calculadora aplica a fórmula diretamente sobre os dados que você informa. Preencha os valores acima para ver o resultado.',
     restrictedTxt: 'Esta ferramenta não fornece doses, quantidades nem orientações individuais. Uma recomendação personalizada depende de fatores clínicos que só um profissional habilitado pode avaliar. Use o aviso acima como guia e consulte um profissional.',
+    restrictedTxtEditorial: 'Estamos a verificar os dados oficiais que esta calculadora utiliza antes de mostrar um resultado. Entretanto não devolve números, para não lhe dar um valor desatualizado. Use o aviso acima como guia e consulte a fonte oficial.',
     noFaqQ: 'Tem uma dúvida sobre esta calculadora? Escreva para', noFaqPost: 'e nós a adicionamos.',
     convTitle: 'Tabela de conversões de', convTo: 'para', convRefNote: 'Valores de referência para converter rápido.',
     convRevQ: 'Precisa do contrário?', convRevLink: 'Converter de',
@@ -214,6 +220,7 @@ const L = isNeutralSpanish ? {
   introFallback: 'Completa los datos de arriba y obtén el resultado al instante. Debajo encontrarás cómo funciona el cálculo, ejemplos y preguntas frecuentes.',
   howFallback: 'Esta calculadora aplica la fórmula directa sobre los datos que ingresas. Completa los valores para ver el resultado.',
   restrictedTxt: 'Esta herramienta no entrega dosis, cantidades ni pautas individuales. Una recomendación personalizada depende de factores clínicos que sólo un profesional habilitado puede evaluar. Usa el aviso de arriba como guía y consulta con un profesional.',
+  restrictedTxtEditorial: 'Estamos verificando los datos oficiales que usa esta calculadora antes de mostrarte un resultado. Mientras tanto no entrega números, para no darte un valor desactualizado. Usa el aviso de arriba como guía y revisa la fuente oficial.',
 } : baseL;
 
 // ── Copy + datos del rediseño v3 (mockup) ───────────────────────────────────
@@ -769,7 +776,7 @@ const editorialHtml = _isReviewed
       {calcIsRestricted && (
         <div class="v2-block">
           <h2>{L.howWorks}</h2>
-          <p>{L.restrictedTxt}</p>
+          <p>{calcRestrictedIsEditorial ? (L.restrictedTxtEditorial ?? L.restrictedTxt) : L.restrictedTxt}</p>
         </div>
       )}
 

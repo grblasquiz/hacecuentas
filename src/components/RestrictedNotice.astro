@@ -10,7 +10,13 @@
  * Todo el bloque va con data-nosnippet para que Google no lo levante como
  * respuesta, y la página igual queda accesible por su URL (noindex,follow).
  */
-import { restrictedMode, RESTRICTED_NOTICES, RESTRICTED_PRO_FACTORS } from '../lib/content-policy';
+import {
+  restrictedMode,
+  RESTRICTED_NOTICES,
+  RESTRICTED_PRO_FACTORS,
+  RESTRICTED_FACTORS_HEADING,
+  RESTRICTED_FOOTNOTES,
+} from '../lib/content-policy';
 
 interface Props {
   calc: any;
@@ -20,6 +26,8 @@ const { calc } = Astro.props as Props;
 const mode = restrictedMode(calc);
 const notice = RESTRICTED_NOTICES[mode];
 const factors = RESTRICTED_PRO_FACTORS[mode];
+const factorsHeading = RESTRICTED_FACTORS_HEADING[mode];
+const footnote = RESTRICTED_FOOTNOTES[mode];
 const reportSubject = encodeURIComponent(`Reporte: ${calc.h1 || calc.slug}`);
 ---
 
@@ -31,15 +39,14 @@ const reportSubject = encodeURIComponent(`Reporte: ${calc.h1 || calc.slug}`);
   <p class="rt-notice">{notice}</p>
 
   <div class="rt-factors">
-    <p class="rt-factors-h">Qué evalúa un profesional matriculado:</p>
+    <p class="rt-factors-h">{factorsHeading}</p>
     <ul>
       {factors.map((f) => <li>{f}</li>)}
     </ul>
   </div>
 
   <p class="rt-foot">
-    Mantenemos esta página como referencia general; no entrega dosis, cantidades
-    ni pautas individuales.
+    {footnote}{' '}
     <a href={`mailto:ideas@hacecuentas.com?subject=${reportSubject}`}>Reportar un error</a>.
   </p>
 </div>

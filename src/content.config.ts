@@ -141,7 +141,7 @@ const makeCalcSchema = (strictDataUpdate: boolean) => z.object({
   ymylRisk: ymylRiskEnum.optional(),          // default conceptual: 'low'
   reviewType: reviewTypeEnum.optional(),      // default conceptual: 'editorial'
   distribution: distributionEnum.optional(),  // 'restricted' fuerza restricción manual
-  restrictedMode: z.enum(['dose', 'injury', 'baby', 'clinical']).optional(),  // subgrupo del aviso
+  restrictedMode: z.enum(['dose', 'injury', 'baby', 'clinical', 'editorial']).optional(),  // subgrupo del aviso
   noindex: z.boolean().optional(),
   // ---- Estados editoriales (plan AdSense: 4 flags independientes) ----
   status: z.enum(['draft', 'reviewed']).optional(),  // 'draft' = incompleta/sin revisar → oculta (noindex + fuera de nav/sitemap)
