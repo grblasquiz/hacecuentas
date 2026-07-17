@@ -1,0 +1,231 @@
+{
+  "slug": "calculadora-preaviso-indemnizacion-sustitutiva-lct",
+  "title": "Indemnización sustitutiva de preaviso (LCT 231/232)",
+  "h1": "Calculadora de preaviso e indemnización sustitutiva",
+  "description": "Calculá la indemnización sustitutiva de preaviso según la LCT (arts. 231 y 232): ingresá tu sueldo y antigüedad y obtené el plazo de preaviso (15 días, 1 o 2 meses), el monto y el SAC sobre el preaviso.",
+  "category": "finanzas",
+  "audience": "AR",
+  "icon": "📄",
+  "formulaId": "preaviso-indemnizacion-sustitutiva-lct",
+  "ymylRisk": "high",
+  "answerSnippet": "Si el empleador despide sin dar el preaviso, debe pagarte la indemnización sustitutiva del art. 232 de la LCT: los salarios del plazo omitido más el SAC. El plazo de preaviso depende de la antigüedad: 15 días durante el período de prueba, 1 mes de 3 meses a 5 años, y 2 meses con más de 5 años. Con un sueldo de $900.000 y 7 años de antigüedad, el preaviso es de 2 meses ($1.800.000) más SAC ($150.000). Es una estimación orientativa: la liquidación real la define el convenio y el caso.",
+  "intro": "Cuando un empleador despide sin causa, la ley lo obliga a **avisar con anticipación** (el preaviso). Si no da ese aviso, tiene que compensarlo pagando la **indemnización sustitutiva de preaviso**, regulada en los **artículos 231 y 232 de la Ley de Contrato de Trabajo (LCT, Ley 20.744)**: los salarios que corresponderían al plazo omitido, más el SAC (aguinaldo) proporcional sobre ese monto.\n\nEsta calculadora estima ese componente: a partir de tu **sueldo** y tu **antigüedad**, determina el **plazo de preaviso** que te corresponde (15 días, 1 mes o 2 meses), el **monto de la indemnización sustitutiva** y el **SAC sobre el preaviso**. Opcionalmente suma la **integración del mes de despido** (art. 233), cuando el despido no cae a fin de mes.\n\nEs solo **una parte** de la liquidación por despido: se agrega a la indemnización por antigüedad (art. 245), a las vacaciones no gozadas y al SAC proporcional. La usan trabajadores que quieren dimensionar cuánto les corresponde de preaviso. **Es una estimación orientativa; la liquidación real la define el convenio colectivo, la jurisprudencia y el caso concreto: consultá con un abogado laboralista.**",
+  "keyTakeaway": "El preaviso (LCT art. 231) es de **15 días** en período de prueba, **1 mes** de 3 meses a 5 años de antigüedad y **2 meses** con más de 5 años. La **indemnización sustitutiva** (art. 232) = sueldo × meses de preaviso **+ SAC**. Es un componente de la liquidación por despido, no la indemnización por antigüedad (art. 245).",
+  "useCases": [
+    "Calcular la indemnización sustitutiva de preaviso con 7 años de antigüedad y sueldo conocido.",
+    "Saber si te corresponde 15 días, 1 mes o 2 meses de preaviso según tu antigüedad.",
+    "Estimar el SAC (aguinaldo) que se suma sobre el monto del preaviso.",
+    "Sumar la integración del mes de despido cuando el despido no cae a fin de mes.",
+    "Ver por qué durante el período de prueba el preaviso es más corto (15 días).",
+    "Dimensionar el preaviso como parte de la liquidación total por despido.",
+    "Comparar el preaviso de un empleado con menos de 5 años contra uno con más de 5.",
+    "Chequear si el monto de preaviso que te liquidaron coincide con la ley.",
+    "Entender qué se paga si el empleador no avisó el despido con anticipación.",
+    "Calcular el preaviso antes de negociar un retiro o un acuerdo de desvinculación."
+  ],
+  "fields": [
+    {
+      "id": "sueldoBruto",
+      "label": "Sueldo bruto mensual (mejor remuneración)",
+      "type": "number",
+      "required": true,
+      "placeholder": "900000",
+      "min": 0,
+      "step": 1000,
+      "unit": "$"
+    },
+    {
+      "id": "antiguedadAnios",
+      "label": "Antigüedad (años completos)",
+      "type": "number",
+      "required": true,
+      "placeholder": "7",
+      "min": 0,
+      "step": 1
+    },
+    {
+      "id": "antiguedadMeses",
+      "label": "Meses adicionales (0-11)",
+      "type": "number",
+      "default": 0,
+      "min": 0,
+      "step": 1
+    },
+    {
+      "id": "periodoPrueba",
+      "label": "¿Estás en período de prueba? (primeros 3 meses)",
+      "type": "select",
+      "default": "no",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí (período de prueba)"
+        }
+      ]
+    },
+    {
+      "id": "incluirIntegracion",
+      "label": "¿Sumar integración del mes de despido? (art. 233)",
+      "type": "select",
+      "default": "no",
+      "options": [
+        {
+          "value": "no",
+          "label": "No, solo el preaviso"
+        },
+        {
+          "value": "si",
+          "label": "Sí, incluir integración del mes"
+        }
+      ]
+    },
+    {
+      "id": "diaDespido",
+      "label": "Día del mes del despido (para la integración)",
+      "type": "number",
+      "default": 15,
+      "min": 1,
+      "max": 31,
+      "step": 1
+    }
+  ],
+  "outputs": [
+    {
+      "id": "total",
+      "label": "Total del preaviso",
+      "primary": true
+    },
+    {
+      "id": "indemnizacionSustitutiva",
+      "label": "Indemnización sustitutiva"
+    },
+    {
+      "id": "sacPreaviso",
+      "label": "SAC sobre preaviso"
+    },
+    {
+      "id": "integracionMes",
+      "label": "Integración del mes"
+    },
+    {
+      "id": "sacIntegracion",
+      "label": "SAC integración"
+    },
+    {
+      "id": "plazoPreaviso",
+      "label": "Plazo de preaviso"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: sueldo $900.000, 7 años y 3 meses, con integración (despido día 12)",
+    "steps": [
+      "Antigüedad mayor a 5 años → preaviso de 2 meses.",
+      "Indemnización sustitutiva = 2 × $900.000 = $1.800.000.",
+      "SAC sobre preaviso = $1.800.000 ÷ 12 = $150.000.",
+      "Integración del mes (días 13 a 30 = 18 días): (900.000 ÷ 30) × 18 = $540.000 + SAC $45.000. Total = $2.535.000."
+    ],
+    "result": "Total del preaviso: $2.535.000 (sustitutiva $1.800.000 + SAC + integración)"
+  },
+  "explanation": "## Qué es la indemnización sustitutiva de preaviso\n\nEl empleador que despide sin causa debe **avisar con anticipación** (art. 231 LCT). Si no lo hace, paga los salarios de ese plazo como **indemnización sustitutiva** (art. 232), más el SAC proporcional.\n\n```\nIndemnización sustitutiva = mejor remuneración mensual × meses de preaviso\nSAC sobre preaviso = indemnización sustitutiva ÷ 12\n```\n\n## Plazos de preaviso (art. 231)\n\n| Antigüedad | Plazo de preaviso | En meses de sueldo |\n|---|---|---|\n| Período de prueba (primeros 3 meses) | 15 días | 0,5 |\n| De 3 meses a 5 años | 1 mes | 1 |\n| Más de 5 años | 2 meses | 2 |\n\n## Integración del mes de despido (art. 233)\n\nSi el despido **no cae el último día del mes**, se pagan además los días que faltan hasta fin de mes (integración), más su SAC:\n\n```\nIntegración = (sueldo ÷ 30) × días que faltan hasta fin de mes\nSAC integración = integración ÷ 12\n```\n\n## Ejemplo resuelto\n\n**Sueldo $900.000, antigüedad 7 años:**\n1. Más de 5 años → preaviso de 2 meses.\n2. Sustitutiva = 2 × $900.000 = **$1.800.000**.\n3. SAC = 1.800.000 ÷ 12 = **$150.000**.\n4. Sin integración, el preaviso suma **$1.950.000**.\n\n## Dónde encaja en la liquidación por despido\n\n| Componente | Norma | ¿Lo calcula esta calc? |\n|---|---|---|\n| Indemnización por antigüedad | Art. 245 | No |\n| Indemnización sustitutiva de preaviso | Art. 232 | **Sí** |\n| SAC sobre preaviso | Art. 232 | **Sí** |\n| Integración del mes | Art. 233 | Sí (opcional) |\n| SAC proporcional del semestre | Art. 123 | No |\n| Vacaciones no gozadas | Art. 156 | No |\n\nEsta calculadora estima **solo el preaviso**. Para la liquidación total hay que sumar el resto de los rubros.\n\n## Errores comunes\n\n- **Confundir preaviso con indemnización por antigüedad:** son rubros distintos; el 245 es aparte.\n- **Olvidar el SAC sobre el preaviso:** siempre se suma (1/12 del preaviso).\n- **No considerar el período de prueba:** en los primeros 3 meses el preaviso es de 15 días.\n- **Usar un sueldo que no es el mejor:** se toma la mejor remuneración mensual, normal y habitual.\n\n## Aviso importante\n\nEs una **estimación orientativa**. El monto real depende del **convenio colectivo** aplicable, de la correcta determinación de la mejor remuneración, de la jurisprudencia y del caso concreto. Ante un despido, **consultá con un abogado laboralista o el Ministerio de Trabajo** antes de aceptar una liquidación.",
+  "faq": [
+    {
+      "q": "¿Cuánto es el preaviso según la antigüedad?",
+      "a": "Según el art. 231 de la LCT: **15 días** durante el período de prueba (primeros 3 meses), **1 mes** de 3 meses a 5 años de antigüedad, y **2 meses** con más de 5 años. La indemnización sustitutiva es el sueldo por esos meses más el SAC."
+    },
+    {
+      "q": "¿Qué es la indemnización sustitutiva de preaviso?",
+      "a": "Es lo que paga el empleador cuando despide **sin avisar con la anticipación** que exige la ley (art. 232 LCT): los salarios del plazo de preaviso que omitió, más el SAC proporcional sobre ese monto. Reemplaza en dinero el aviso que no dio."
+    },
+    {
+      "q": "¿El preaviso incluye aguinaldo (SAC)?",
+      "a": "Sí. Sobre la indemnización sustitutiva de preaviso se calcula el **SAC proporcional (1/12)**. Por ejemplo, si el preaviso es de $1.800.000, el SAC agrega $150.000. La calculadora lo suma automáticamente."
+    },
+    {
+      "q": "¿El preaviso es lo mismo que la indemnización por despido?",
+      "a": "No. La **indemnización por antigüedad (art. 245)** es un rubro distinto y suele ser el más importante. El preaviso (art. 232) es **otro componente** que se suma. Esta calculadora estima solo el preaviso; para la liquidación total hay que sumar antigüedad, vacaciones y SAC proporcional."
+    },
+    {
+      "q": "¿Qué es la integración del mes de despido?",
+      "a": "Cuando el despido **no cae el último día del mes**, el art. 233 obliga a pagar los días que faltan hasta fin de mes (más su SAC). Es opcional en la calculadora: activala e ingresá el día del despido para incluirla."
+    },
+    {
+      "q": "¿Hay preaviso durante el período de prueba?",
+      "a": "Sí, pero más corto: **15 días**. Durante los primeros 3 meses (período de prueba) la relación puede extinguirse con un preaviso de 15 días; si no se da, se paga la sustitutiva equivalente a medio mes de sueldo."
+    },
+    {
+      "q": "¿Qué sueldo se usa para calcular el preaviso?",
+      "a": "La **mejor remuneración mensual, normal y habitual** del último año, el mismo criterio que para la indemnización por antigüedad. Incluye conceptos remunerativos habituales, no premios extraordinarios de una sola vez."
+    },
+    {
+      "q": "¿El resultado es un cálculo legal definitivo?",
+      "a": "No. Es una **estimación orientativa**. El monto real depende del convenio colectivo, de la correcta base de cálculo y de la interpretación del caso. Ante un despido, consultá con un abogado laboralista o el Ministerio de Trabajo antes de aceptar una liquidación."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Ley de Contrato de Trabajo (Ley 20.744), arts. 231-233",
+      "url": "https://www.argentina.gob.ar/normativa/nacional/ley-20744-25552"
+    },
+    {
+      "name": "Ministerio de Trabajo — Extinción del contrato de trabajo",
+      "url": "https://www.argentina.gob.ar/trabajo"
+    }
+  ],
+  "relatedSlugs": [],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "lastUpdated": "2026-07-16",
+    "updateType": "manual",
+    "notes": "Plazos y fórmula de preaviso según LCT arts. 231-233 (norma estable). El monto depende del sueldo (input). Estimación orientativa; la base salarial y el convenio los define el caso.",
+    "source": "Ley de Contrato de Trabajo (Ley 20.744), arts. 231-233",
+    "sourceUrl": "https://www.argentina.gob.ar/normativa/nacional/ley-20744-25552"
+  },
+  "seoKeywords": [
+    "calculo de preaviso",
+    "indemnizacion sustitutiva de preaviso",
+    "preaviso lct 231 232",
+    "cuanto es el preaviso por despido",
+    "preaviso 1 mes o 2 meses antiguedad",
+    "sac sobre preaviso",
+    "integracion mes de despido",
+    "preaviso periodo de prueba 15 dias",
+    "calculadora preaviso argentina"
+  ],
+  "lastReviewed": "2026-07-16",
+  "referenceTables": [
+    {
+      "title": "Plazo de preaviso según antigüedad (LCT art. 231)",
+      "headers": [
+        "Antigüedad",
+        "Plazo de preaviso",
+        "Meses de sueldo"
+      ],
+      "rows": [
+        [
+          "Período de prueba (0-3 meses)",
+          "15 días",
+          "0,5"
+        ],
+        [
+          "De 3 meses a 5 años",
+          "1 mes",
+          "1"
+        ],
+        [
+          "Más de 5 años",
+          "2 meses",
+          "2"
+        ]
+      ],
+      "note": "La indemnización sustitutiva = sueldo × meses de preaviso + SAC (1/12). Fuente: Ley 20.744 (LCT), arts. 231-233. Estimación orientativa; consultá con un abogado laboralista."
+    }
+  ]
+}

@@ -1068,6 +1068,7 @@ import { descuentoPensionAlimenticiaNominaMexico } from './descuento-pension-ali
 import { descuentoPorcentajePrecio } from './descuento-porcentaje-precio';
 import { compute as compute__descuento_tardanzas_faltas_peru } from './descuento-tardanzas-faltas-peru';
 import { descuentoVueloMillasVsCash } from './descuento-vuelo-millas-vs-cash';
+import { compute as compute__desglose_precio_bencina_impuesto_especifico_chile } from './desglose-precio-bencina-impuesto-especifico-chile';
 import { desintegracionRadioactivaVidaMedia } from './desintegracion-radioactiva-vida-media';
 import { despidoEnfermedadInculpableArt211 } from './despido-enfermedad-inculpable-art-211';
 import { despidoInjustificadoRepublicaDominicana } from './despido-injustificado-republica-dominicana';
@@ -1370,6 +1371,7 @@ import { compute as compute__finiquito_mexico_completo_rescision_relacion } from
 import { finiquitoRenunciaChile } from './finiquito-renuncia-chile';
 import { finiquitoRenunciaParaguay } from './finiquito-renuncia-paraguay';
 import { compute as compute__finiquito_renuncia_voluntaria_chile } from './finiquito-renuncia-voluntaria-chile';
+import { finiquitoVsLiquidacionComparadorMexico } from './finiquito-vs-liquidacion-comparador-mexico';
 import { compute as compute__fire_retirement_number_calculator } from './fire-retirement-number-calculator';
 import { fireRetiroTemprano } from './fire-retiro-temprano';
 import { flashNumeroGuiaDistancia } from './flash-numero-guia-distancia';
@@ -1615,6 +1617,7 @@ import { compute as compute__impuesto_bienes_personales_2026_cripto_cedears } fr
 import { compute as compute__impuesto_cardo_tarjeta_credito_internacional_colombia } from './impuesto-cardo-tarjeta-credito-internacional-colombia';
 import { compute as compute__impuesto_cedular_arrendamiento_mexico } from './impuesto-cedular-arrendamiento-mexico';
 import { compute as compute__impuesto_cervezas_licores_tabaco_colombia_2026 } from './impuesto-cervezas-licores-tabaco-colombia-2026';
+import { compute as compute__impuesto_cheques_transferencias_republica_dominicana } from './impuesto-cheques-transferencias-republica-dominicana';
 import { compute as compute__impuesto_circulacion_vehiculo_electrico_colombia } from './impuesto-circulacion-vehiculo-electrico-colombia';
 import { compute as compute__impuesto_circulacion_vehiculos_espana_municipio } from './impuesto-circulacion-vehiculos-espana-municipio';
 import { compute as compute__impuesto_consumo_licores_colombia_cerveza_vino } from './impuesto-consumo-licores-colombia-cerveza-vino';
@@ -1625,15 +1628,19 @@ import { impuestoGananciaCriptoArgentina } from './impuesto-ganancia-cripto-arge
 import { compute as compute__impuesto_herencias_donaciones_chile_tabla } from './impuesto-herencias-donaciones-chile-tabla';
 import { compute as compute__impuesto_herencias_legados_donaciones_ecuador } from './impuesto-herencias-legados-donaciones-ecuador';
 import { compute as compute__impuesto_industria_comercio_ica_colombia_municipios } from './impuesto-industria-comercio-ica-colombia-municipios';
+import { compute as compute__impuesto_inmobiliario_paraguay } from './impuesto-inmobiliario-paraguay';
 import { compute as compute__impuesto_loterias_juegos_azar_colombia_2026 } from './impuesto-loterias-juegos-azar-colombia-2026';
 import { compute as compute__impuesto_matriculacion_iedmt_coche_espana } from './impuesto-matriculacion-iedmt-coche-espana';
+import { compute as compute__impuesto_mayor_valor_venta_propiedad_chile_8000_uf } from './impuesto-mayor-valor-venta-propiedad-chile-8000-uf';
 import { impuestoPaisPasajeAvionInternacional } from './impuesto-pais-pasaje-avion-internacional';
 import { compute as compute__impuesto_patrimonio_colombia_personas_naturales_2026 } from './impuesto-patrimonio-colombia-personas-naturales-2026';
 import { compute as compute__impuesto_patrimonio_espana_ccaa_2026 } from './impuesto-patrimonio-espana-ccaa-2026';
 import { compute as compute__impuesto_plusvalia_inmueble_ecuador } from './impuesto-plusvalia-inmueble-ecuador';
 import { compute as compute__impuesto_predial_bogota_2026 } from './impuesto-predial-bogota-2026';
 import { compute as compute__impuesto_predial_ecuador } from './impuesto-predial-ecuador';
+import { compute as compute__impuesto_predial_medellin_2026 } from './impuesto-predial-medellin-2026';
 import { compute as compute__impuesto_predial_peru } from './impuesto-predial-peru';
+import { compute as compute__impuesto_primaria_uruguay } from './impuesto-primaria-uruguay';
 import { compute as compute__impuesto_primera_categoria_chile_empresas_2026 } from './impuesto-primera-categoria-chile-empresas-2026';
 import { compute as compute__impuesto_renta_arrendamiento_arrendador_chile } from './impuesto-renta-arrendamiento-arrendador-chile';
 import { compute as compute__impuesto_renta_ecuador } from './impuesto-renta-ecuador';
@@ -1648,6 +1655,8 @@ import { compute as compute__impuesto_segunda_categoria_anual_chile_rentas_altas
 import { impuestoSellosInmuebleContrato } from './impuesto-sellos-inmueble-contrato';
 import { compute as compute__impuesto_sucesiones_donaciones_espana_ccaa_2026 } from './impuesto-sucesiones-donaciones-espana-ccaa-2026';
 import { compute as compute__impuesto_sucesiones_herencia_colombia_2026 } from './impuesto-sucesiones-herencia-colombia-2026';
+import { compute as compute__impuesto_sucesiones_herencia_republica_dominicana } from './impuesto-sucesiones-herencia-republica-dominicana';
+import { compute as compute__impuesto_sucesoral_herencia_venezuela } from './impuesto-sucesoral-herencia-venezuela';
 import { compute as compute__impuesto_territorial_contribuciones_bienes_raices_chile } from './impuesto-territorial-contribuciones-bienes-raices-chile';
 import { compute as compute__impuesto_timbre_nacional_colombia_2026 } from './impuesto-timbre-nacional-colombia-2026';
 import { compute as compute__impuesto_timbres_estampillas_chile_credito_hipotecario } from './impuesto-timbres-estampillas-chile-credito-hipotecario';
@@ -1656,6 +1665,7 @@ import { impuestoTransferenciaItuItiInmueble } from './impuesto-transferencia-it
 import { compute as compute__impuesto_vehicular_peru } from './impuesto-vehicular-peru';
 import { compute as compute__impuesto_vehiculos_bogota_2026_tabla } from './impuesto-vehiculos-bogota-2026-tabla';
 import { compute as compute__impuesto_vehiculos_colombia_2026_departamento } from './impuesto-vehiculos-colombia-2026-departamento';
+import { compute as compute__impuesto_venta_inmueble_renta_segunda_peru } from './impuesto-venta-inmueble-renta-segunda-peru';
 import { compute as compute__impuesto_verde_vehiculo_nuevo_chile } from './impuesto-verde-vehiculo-nuevo-chile';
 import { compute as compute__impuestos_aerolineas_tasa_aeropuerto_colombia_internacional } from './impuestos-aerolineas-tasa-aeropuerto-colombia-internacional';
 import { impuestosAutonomoEspana } from './impuestos-autonomo-espana';
@@ -1684,6 +1694,7 @@ import { indemnizacionDespidoObjetivoEspana } from './indemnizacion-despido-obje
 import { indemnizacionDespidoParaguay } from './indemnizacion-despido-paraguay';
 import { compute as compute__indemnizacion_despido_sin_justa_causa_colombia } from './indemnizacion-despido-sin-justa-causa-colombia';
 import { indemnizacionEmpleadaCasaParticularLey26844 } from './indemnizacion-empleada-casa-particular-ley-26844';
+import { compute as compute__indemnizacion_sustitutiva_colpensiones_colombia_2026 } from './indemnizacion-sustitutiva-colpensiones-colombia-2026';
 import { independenciaFinancieraFireMovimiento } from './independencia-financiera-fire-movimiento';
 import { indiceAsistenciaFaltas } from './indice-asistencia-faltas';
 import { indiceBienestarWho5 } from './indice-bienestar-who5';
@@ -1835,6 +1846,7 @@ import { jetLagRecuperacionHorasDiferenciaDias } from './jet-lag-recuperacion-ho
 import { jetLagZonasHorariasAdaptacionDias } from './jet-lag-zonas-horarias-adaptacion-dias';
 import { jpgCalidadTamanoWebOptimizacion } from './jpg-calidad-tamano-web-optimizacion';
 import { jubilacionAnsesMontoMinimoMaxima2026 } from './jubilacion-anses-monto-minimo-maxima-2026';
+import { compute as compute__jubilacion_anticipada_coeficientes_reductores_espana_2026 } from './jubilacion-anticipada-coeficientes-reductores-espana-2026';
 import { jubilacionCuantoNecesito } from './jubilacion-cuanto-necesito';
 import { jubilacionDocenteCaba } from './jubilacion-docente-caba';
 import { jubilacionDocenteIpsBa } from './jubilacion-docente-ips-ba';
@@ -2219,6 +2231,7 @@ import { compute as compute__pension_invalidez_anses_no_contributiva_2026_cuanti
 import { compute as compute__pension_invalidez_imss_mexico } from './pension-invalidez-imss-mexico';
 import { compute as compute__pension_issste_decimo_transitorio_mexico_2026 } from './pension-issste-decimo-transitorio-mexico-2026';
 import { compute as compute__pension_jubilacion_chile_edad_aportes_2026 } from './pension-jubilacion-chile-edad-aportes-2026';
+import { compute as compute__pension_montepio_viudez_iess_ecuador } from './pension-montepio-viudez-iess-ecuador';
 import { compute as compute__pension_no_contributiva_jubilacion_invalidez_espana } from './pension-no-contributiva-jubilacion-invalidez-espana';
 import { compute as compute__pension_rais_vs_prima_media_colombia } from './pension-rais-vs-prima-media-colombia';
 import { compute as compute__pension_viudez_imss_90_porcentaje_mexico } from './pension-viudez-imss-90-porcentaje-mexico';
@@ -2274,6 +2287,7 @@ import { pesoMochilaTrekking } from './peso-mochila-trekking';
 import { pesoObjetivoCompeticion } from './peso-objetivo-competicion';
 import { pesoPlaAbsPetgVolumen } from './peso-pla-abs-petg-volumen';
 import { pesoPosparto } from './peso-posparto';
+import { compute as compute__pgu_pension_garantizada_universal_chile_monto_requisitos } from './pgu-pension-garantizada-universal-chile-monto-requisitos';
 import { phConcentracionHPlus } from './ph-concentracion-h-plus';
 import { phConcentracionHidrogeno } from './ph-concentracion-hidrogeno';
 import { phSueloCorreccion } from './ph-suelo-correccion';
@@ -2358,6 +2372,7 @@ import { potenciaCiclismoWattsKg } from './potencia-ciclismo-watts-kg';
 import { potenciaElectricaWatts } from './potencia-electrica-watts';
 import { potenciaHpKwCv } from './potencia-hp-kw-cv';
 import { potenciasRaices } from './potencias-raices';
+import { compute as compute__preaviso_indemnizacion_sustitutiva_lct } from './preaviso-indemnizacion-sustitutiva-lct';
 import { precioDolarProducto } from './precio-dolar-producto';
 import { precioDolaresABolivaresBcvVenezuela } from './precio-dolares-a-bolivares-bcv-venezuela';
 import { compute as compute__precio_gasolina_acpm_galon_colombia_2026 } from './precio-gasolina-acpm-galon-colombia-2026';
@@ -2641,6 +2656,7 @@ import { retrasoAmanecerAtardecer } from './retraso-amanecer-atardecer';
 import { retroactivoAumentoSueldoVenezuela } from './retroactivo-aumento-sueldo-venezuela';
 import { compute as compute__reunificacion_deudas_espana_cuota_unificada } from './reunificacion-deudas-espana-cuota-unificada';
 import { reunionesCostoTiempoPersonasEmpresa } from './reuniones-costo-tiempo-personas-empresa';
+import { compute as compute__revalorizacion_pension_2026_ipc_espana } from './revalorizacion-pension-2026-ipc-espana';
 import { compute as compute__revision_tecnica_chile_precio_vencimiento } from './revision-tecnica-chile-precio-vencimiento';
 import { compute as compute__revision_tecnica_vehicular_ecuador } from './revision-tecnica-vehicular-ecuador';
 import { compute as compute__revision_tecnica_vehicular_peru } from './revision-tecnica-vehicular-peru';
@@ -2717,6 +2733,7 @@ import { salesTaxCalculator } from './sales-tax-calculator';
 import { compute as compute__sancion_correccion_declaracion_dian_colombia_2026 } from './sancion-correccion-declaracion-dian-colombia-2026';
 import { compute as compute__sancion_extemporaneidad_dian_2026 } from './sancion-extemporaneidad-dian-2026';
 import { compute as compute__sancion_minima_dian_colombia_2026 } from './sancion-minima-dian-colombia-2026';
+import { compute as compute__sancion_moratoria_no_pago_liquidacion_colombia } from './sancion-moratoria-no-pago-liquidacion-colombia';
 import { sandwichesMigaPorPersona } from './sandwiches-miga-por-persona';
 import { satIeltsToeflEquivalenciasPuntajeConvertidor } from './sat-ielts-toefl-equivalencias-puntaje-convertidor';
 import { saturacionOxigenoSpo2AltitudNormal } from './saturacion-oxigeno-spo2-altitud-normal';
@@ -2740,6 +2757,7 @@ import { seguroHogarEstimacionCobertura } from './seguro-hogar-estimacion-cobert
 import { compute as compute__self_employment_tax_calculator_1099 } from './self-employment-tax-calculator-1099';
 import { sellosCompraInmuebleCabaPba } from './sellos-compra-inmueble-caba-pba';
 import { compute as compute__semana_corrida_chile } from './semana-corrida-chile';
+import { compute as compute__semanas_cotizadas_pension_ivss_venezuela } from './semanas-cotizadas-pension-ivss-venezuela';
 import { semanasEmbarazo } from './semanas-embarazo';
 import { semanasGestacionEcografia } from './semanas-gestacion-ecografia';
 import { semanasGestacionHoyBebeTrimestre } from './semanas-gestacion-hoy-bebe-trimestre';
@@ -4252,6 +4270,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'descuento-porcentaje-precio': descuentoPorcentajePrecio,
   'descuento-tardanzas-faltas-peru': compute__descuento_tardanzas_faltas_peru,
   'descuento-vuelo-millas-vs-cash': descuentoVueloMillasVsCash,
+  'desglose-precio-bencina-impuesto-especifico-chile': compute__desglose_precio_bencina_impuesto_especifico_chile,
   'desintegracion-radioactiva-vida-media': desintegracionRadioactivaVidaMedia,
   'despido-enfermedad-inculpable-art-211': despidoEnfermedadInculpableArt211,
   'despido-injustificado-republica-dominicana': despidoInjustificadoRepublicaDominicana,
@@ -4554,6 +4573,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'finiquito-renuncia-chile': finiquitoRenunciaChile,
   'finiquito-renuncia-paraguay': finiquitoRenunciaParaguay,
   'finiquito-renuncia-voluntaria-chile': compute__finiquito_renuncia_voluntaria_chile,
+  'finiquito-vs-liquidacion-comparador-mexico': finiquitoVsLiquidacionComparadorMexico,
   'fire-retirement-number-calculator': compute__fire_retirement_number_calculator,
   'fire-retiro-temprano': fireRetiroTemprano,
   'flash-numero-guia-distancia': flashNumeroGuiaDistancia,
@@ -4799,6 +4819,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'impuesto-cardo-tarjeta-credito-internacional-colombia': compute__impuesto_cardo_tarjeta_credito_internacional_colombia,
   'impuesto-cedular-arrendamiento-mexico': compute__impuesto_cedular_arrendamiento_mexico,
   'impuesto-cervezas-licores-tabaco-colombia-2026': compute__impuesto_cervezas_licores_tabaco_colombia_2026,
+  'impuesto-cheques-transferencias-republica-dominicana': compute__impuesto_cheques_transferencias_republica_dominicana,
   'impuesto-circulacion-vehiculo-electrico-colombia': compute__impuesto_circulacion_vehiculo_electrico_colombia,
   'impuesto-circulacion-vehiculos-espana-municipio': compute__impuesto_circulacion_vehiculos_espana_municipio,
   'impuesto-consumo-licores-colombia-cerveza-vino': compute__impuesto_consumo_licores_colombia_cerveza_vino,
@@ -4809,15 +4830,19 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'impuesto-herencias-donaciones-chile-tabla': compute__impuesto_herencias_donaciones_chile_tabla,
   'impuesto-herencias-legados-donaciones-ecuador': compute__impuesto_herencias_legados_donaciones_ecuador,
   'impuesto-industria-comercio-ica-colombia-municipios': compute__impuesto_industria_comercio_ica_colombia_municipios,
+  'impuesto-inmobiliario-paraguay': compute__impuesto_inmobiliario_paraguay,
   'impuesto-loterias-juegos-azar-colombia-2026': compute__impuesto_loterias_juegos_azar_colombia_2026,
   'impuesto-matriculacion-iedmt-coche-espana': compute__impuesto_matriculacion_iedmt_coche_espana,
+  'impuesto-mayor-valor-venta-propiedad-chile-8000-uf': compute__impuesto_mayor_valor_venta_propiedad_chile_8000_uf,
   'impuesto-pais-pasaje-avion-internacional': impuestoPaisPasajeAvionInternacional,
   'impuesto-patrimonio-colombia-personas-naturales-2026': compute__impuesto_patrimonio_colombia_personas_naturales_2026,
   'impuesto-patrimonio-espana-ccaa-2026': compute__impuesto_patrimonio_espana_ccaa_2026,
   'impuesto-plusvalia-inmueble-ecuador': compute__impuesto_plusvalia_inmueble_ecuador,
   'impuesto-predial-bogota-2026': compute__impuesto_predial_bogota_2026,
   'impuesto-predial-ecuador': compute__impuesto_predial_ecuador,
+  'impuesto-predial-medellin-2026': compute__impuesto_predial_medellin_2026,
   'impuesto-predial-peru': compute__impuesto_predial_peru,
+  'impuesto-primaria-uruguay': compute__impuesto_primaria_uruguay,
   'impuesto-primera-categoria-chile-empresas-2026': compute__impuesto_primera_categoria_chile_empresas_2026,
   'impuesto-renta-arrendamiento-arrendador-chile': compute__impuesto_renta_arrendamiento_arrendador_chile,
   'impuesto-renta-ecuador': compute__impuesto_renta_ecuador,
@@ -4832,6 +4857,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'impuesto-sellos-inmueble-contrato': impuestoSellosInmuebleContrato,
   'impuesto-sucesiones-donaciones-espana-ccaa-2026': compute__impuesto_sucesiones_donaciones_espana_ccaa_2026,
   'impuesto-sucesiones-herencia-colombia-2026': compute__impuesto_sucesiones_herencia_colombia_2026,
+  'impuesto-sucesiones-herencia-republica-dominicana': compute__impuesto_sucesiones_herencia_republica_dominicana,
+  'impuesto-sucesoral-herencia-venezuela': compute__impuesto_sucesoral_herencia_venezuela,
   'impuesto-territorial-contribuciones-bienes-raices-chile': compute__impuesto_territorial_contribuciones_bienes_raices_chile,
   'impuesto-timbre-nacional-colombia-2026': compute__impuesto_timbre_nacional_colombia_2026,
   'impuesto-timbres-estampillas-chile-credito-hipotecario': compute__impuesto_timbres_estampillas_chile_credito_hipotecario,
@@ -4840,6 +4867,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'impuesto-vehicular-peru': compute__impuesto_vehicular_peru,
   'impuesto-vehiculos-bogota-2026-tabla': compute__impuesto_vehiculos_bogota_2026_tabla,
   'impuesto-vehiculos-colombia-2026-departamento': compute__impuesto_vehiculos_colombia_2026_departamento,
+  'impuesto-venta-inmueble-renta-segunda-peru': compute__impuesto_venta_inmueble_renta_segunda_peru,
   'impuesto-verde-vehiculo-nuevo-chile': compute__impuesto_verde_vehiculo_nuevo_chile,
   'impuestos-aerolineas-tasa-aeropuerto-colombia-internacional': compute__impuestos_aerolineas_tasa_aeropuerto_colombia_internacional,
   'impuestos-autonomo-espana': impuestosAutonomoEspana,
@@ -4868,6 +4896,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'indemnizacion-despido-paraguay': indemnizacionDespidoParaguay,
   'indemnizacion-despido-sin-justa-causa-colombia': compute__indemnizacion_despido_sin_justa_causa_colombia,
   'indemnizacion-empleada-casa-particular-ley-26844': indemnizacionEmpleadaCasaParticularLey26844,
+  'indemnizacion-sustitutiva-colpensiones-colombia-2026': compute__indemnizacion_sustitutiva_colpensiones_colombia_2026,
   'independencia-financiera-fire-movimiento': independenciaFinancieraFireMovimiento,
   'indice-asistencia-faltas': indiceAsistenciaFaltas,
   'indice-bienestar-who5': indiceBienestarWho5,
@@ -5019,6 +5048,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'jet-lag-zonas-horarias-adaptacion-dias': jetLagZonasHorariasAdaptacionDias,
   'jpg-calidad-tamano-web-optimizacion': jpgCalidadTamanoWebOptimizacion,
   'jubilacion-anses-monto-minimo-maxima-2026': jubilacionAnsesMontoMinimoMaxima2026,
+  'jubilacion-anticipada-coeficientes-reductores-espana-2026': compute__jubilacion_anticipada_coeficientes_reductores_espana_2026,
   'jubilacion-cuanto-necesito': jubilacionCuantoNecesito,
   'jubilacion-docente-caba': jubilacionDocenteCaba,
   'jubilacion-docente-ips-ba': jubilacionDocenteIpsBa,
@@ -5403,6 +5433,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'pension-invalidez-imss-mexico': compute__pension_invalidez_imss_mexico,
   'pension-issste-decimo-transitorio-mexico-2026': compute__pension_issste_decimo_transitorio_mexico_2026,
   'pension-jubilacion-chile-edad-aportes-2026': compute__pension_jubilacion_chile_edad_aportes_2026,
+  'pension-montepio-viudez-iess-ecuador': compute__pension_montepio_viudez_iess_ecuador,
   'pension-no-contributiva-jubilacion-invalidez-espana': compute__pension_no_contributiva_jubilacion_invalidez_espana,
   'pension-rais-vs-prima-media-colombia': compute__pension_rais_vs_prima_media_colombia,
   'pension-viudez-imss-90-porcentaje-mexico': compute__pension_viudez_imss_90_porcentaje_mexico,
@@ -5458,6 +5489,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'peso-objetivo-competicion': pesoObjetivoCompeticion,
   'peso-pla-abs-petg-volumen': pesoPlaAbsPetgVolumen,
   'peso-posparto': pesoPosparto,
+  'pgu-pension-garantizada-universal-chile-monto-requisitos': compute__pgu_pension_garantizada_universal_chile_monto_requisitos,
   'ph-concentracion-h-plus': phConcentracionHPlus,
   'ph-concentracion-hidrogeno': phConcentracionHidrogeno,
   'ph-suelo-correccion': phSueloCorreccion,
@@ -5542,6 +5574,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'potencia-electrica-watts': potenciaElectricaWatts,
   'potencia-hp-kw-cv': potenciaHpKwCv,
   'potencias-raices': potenciasRaices,
+  'preaviso-indemnizacion-sustitutiva-lct': compute__preaviso_indemnizacion_sustitutiva_lct,
   'precio-dolar-producto': precioDolarProducto,
   'precio-dolares-a-bolivares-bcv-venezuela': precioDolaresABolivaresBcvVenezuela,
   'precio-gasolina-acpm-galon-colombia-2026': compute__precio_gasolina_acpm_galon_colombia_2026,
@@ -5825,6 +5858,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'retroactivo-aumento-sueldo-venezuela': retroactivoAumentoSueldoVenezuela,
   'reunificacion-deudas-espana-cuota-unificada': compute__reunificacion_deudas_espana_cuota_unificada,
   'reuniones-costo-tiempo-personas-empresa': reunionesCostoTiempoPersonasEmpresa,
+  'revalorizacion-pension-2026-ipc-espana': compute__revalorizacion_pension_2026_ipc_espana,
   'revision-tecnica-chile-precio-vencimiento': compute__revision_tecnica_chile_precio_vencimiento,
   'revision-tecnica-vehicular-ecuador': compute__revision_tecnica_vehicular_ecuador,
   'revision-tecnica-vehicular-peru': compute__revision_tecnica_vehicular_peru,
@@ -5901,6 +5935,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'sancion-correccion-declaracion-dian-colombia-2026': compute__sancion_correccion_declaracion_dian_colombia_2026,
   'sancion-extemporaneidad-dian-2026': compute__sancion_extemporaneidad_dian_2026,
   'sancion-minima-dian-colombia-2026': compute__sancion_minima_dian_colombia_2026,
+  'sancion-moratoria-no-pago-liquidacion-colombia': compute__sancion_moratoria_no_pago_liquidacion_colombia,
   'sandwiches-miga-por-persona': sandwichesMigaPorPersona,
   'sat-ielts-toefl-equivalencias-puntaje-convertidor': satIeltsToeflEquivalenciasPuntajeConvertidor,
   'saturacion-oxigeno-spo2-altitud-normal': saturacionOxigenoSpo2AltitudNormal,
@@ -5924,6 +5959,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'self-employment-tax-calculator-1099': compute__self_employment_tax_calculator_1099,
   'sellos-compra-inmueble-caba-pba': sellosCompraInmuebleCabaPba,
   'semana-corrida-chile': compute__semana_corrida_chile,
+  'semanas-cotizadas-pension-ivss-venezuela': compute__semanas_cotizadas_pension_ivss_venezuela,
   'semanas-embarazo': semanasEmbarazo,
   'semanas-gestacion-ecografia': semanasGestacionEcografia,
   'semanas-gestacion-hoy-bebe-trimestre': semanasGestacionHoyBebeTrimestre,
