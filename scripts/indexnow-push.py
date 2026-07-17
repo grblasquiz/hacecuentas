@@ -80,14 +80,19 @@ def urls_from_git_diff(before: str, after: str) -> list:
     en el sitemap se descarta y se LOGUEA (nunca en silencio): o es un 301/noindex
     correcto, o el sitemap quedó viejo → `npm run audit:sitemap`.
     """
+    # `git log` (no `git diff`) para que los archivos salgan en orden de RECENCIA
+    # (commit más nuevo primero). Mismo set que `git diff A..B --diff-filter=AMR`,
+    # pero ordenado: así un `--max` posterior conserva lo último que tocó Martin y
+    # descarta el bulk viejo. El dedupe preserva ese orden (dict.fromkeys).
     try:
         out = subprocess.run(
-            ['git', 'diff', '--name-only', '--diff-filter=AMR', f'{before}..{after}', '--',
+            ['git', 'log', '--name-only', '--diff-filter=AMR', '--pretty=format:',
+             f'{before}..{after}', '--',
              *(f'src/content/{d}/*.json' for d in LOCALE_PREFIX)],
             cwd=ROOT, capture_output=True, text=True, check=True,
         ).stdout
     except subprocess.CalledProcessError as e:
-        print(f'❌ git diff falló ({before}..{after}): {e.stderr.strip()[:200]}')
+        print(f'❌ git log falló ({before}..{after}): {e.stderr.strip()[:200]}')
         return []
 
     candidates = []
@@ -159,6 +164,20 @@ def main():
     args = sys.argv[1:]
     dry_run = '--dry-run' in args
     args = [a for a in args if a != '--dry-run']
+    # --max N: tope de URLs por corrida (protección de quota Bing ~1700/mes). Los
+    # días de campaña masiva (activar ads en 183 calcs, etc.) pueden generar 200+
+    # URLs de una y desalojar meses de presupuesto. Con las URLs ordenadas por
+    # recencia, el tope conserva lo más nuevo y LOGUEA lo descartado (Bing igual
+    # lo recrawlea). Sólo aplica al drip local; el CI sin --max manda todo.
+    max_urls = None
+    if '--max' in args:
+        i = args.index('--max')
+        try:
+            max_urls = int(args[i + 1])
+            del args[i:i + 2]
+        except (IndexError, ValueError):
+            print('Uso: --max <N> (entero)')
+            return 1
     batch = 10000
     if args and args[0] == '--git-changed':
         # Modo STREAMING (CI): sólo las URLs tocadas en este push. Cubre los 14
@@ -195,6 +214,16 @@ def main():
     if not urls:
         print('No hay URLs para pushear')
         return 0 if (args and args[0] == '--changed') else 1
+
+    if max_urls is not None and len(urls) > max_urls:
+        dropped = urls[max_urls:]
+        urls = urls[:max_urls]
+        print(f'⚠️ --max {max_urls}: {len(urls)} URLs (las más recientes) se envían, '
+              f'{len(dropped)} descartadas por tope de quota (Bing las recrawlea):')
+        for u in dropped[:20]:
+            print(f'  ↩ tope: {u}')
+        if len(dropped) > 20:
+            print(f'  ↩ … y {len(dropped) - 20} más')
 
     # IndexNow: lotes (500 en los modos por cambios, 10000 en el resto)
     BATCH = batch
