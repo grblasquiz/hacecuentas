@@ -397,6 +397,7 @@ import { calculadoraLiquidacionFiniquitoVenezuela } from './calculadora-liquidac
 import { calculadoraLiquidacionRepublicaDominicana } from './calculadora-liquidacion-republica-dominicana';
 import { compute as compute__calculadora_mais_valias_acoes_cripto_irs_portugal } from './calculadora-mais-valias-acoes-cripto-irs-portugal';
 import { calculadoraMaisValiasVendaImovelPortugal } from './calculadora-mais-valias-venda-imovel-portugal';
+import { compute as compute__calculadora_materiales_construccion } from './calculadora-materiales-construccion';
 import { metrosCuadradosPorPersona } from './calculadora-metros-cuadrados-vivienda-por-persona';
 import { mezcla2TiemposNaftaAceite } from './calculadora-mezcla-2-tiempos-nafta-aceite';
 import { pasosAKilometros } from './calculadora-pasos-a-kilometros';
@@ -2128,7 +2129,6 @@ import { compute as compute__nomina_vs_prestacion_servicios_colombia_2026 } from
 import { notaMinimaAprobarFinalParcialPromedio } from './nota-minima-aprobar-final-parcial-promedio';
 import { notaNecesariaAprobar } from './nota-necesaria-aprobar';
 import { notaParcialRecuperatorioPromocion } from './nota-parcial-recuperatorio-promocion';
-import { promedioNotasColombia } from './promedio-notas-colombia';
 import { notaPromedioBachilleratoSecundarioMaterias } from './nota-promedio-bachillerato-secundario-materias';
 import { notacionCientifica } from './notacion-cientifica';
 import { nps } from './nps';
@@ -2478,6 +2478,7 @@ import { progresionAritmetica } from './progresion-aritmetica';
 import { progresionAritmeticaSumaTermino } from './progresion-aritmetica-suma-termino';
 import { progresionGeometricaSumaTermino } from './progresion-geometrica-suma-termino';
 import { promedioMediana } from './promedio-mediana';
+import { promedioNotasColombia } from './promedio-notas-colombia';
 import { promedioNotasUniversidad } from './promedio-notas-universidad';
 import { promedioPonderadoMateriasCreditosUniversidad } from './promedio-ponderado-materias-creditos-universidad';
 import { promedioPonderadoUniversidad } from './promedio-ponderado-universidad';
@@ -3612,6 +3613,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calculadora-liquidacion-republica-dominicana': calculadoraLiquidacionRepublicaDominicana,
   'calculadora-mais-valias-acoes-cripto-irs-portugal': compute__calculadora_mais_valias_acoes_cripto_irs_portugal,
   'calculadora-mais-valias-venda-imovel-portugal': calculadoraMaisValiasVendaImovelPortugal,
+  'calculadora-materiales-construccion': compute__calculadora_materiales_construccion,
   'calculadora-metros-cuadrados-vivienda-por-persona': metrosCuadradosPorPersona,
   'calculadora-mezcla-2-tiempos-nafta-aceite': mezcla2TiemposNaftaAceite,
   'calculadora-pasos-a-kilometros': pasosAKilometros,
@@ -5343,7 +5345,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'nota-minima-aprobar-final-parcial-promedio': notaMinimaAprobarFinalParcialPromedio,
   'nota-necesaria-aprobar': notaNecesariaAprobar,
   'nota-parcial-recuperatorio-promocion': notaParcialRecuperatorioPromocion,
-  'promedio-notas-colombia': promedioNotasColombia,
   'nota-promedio-bachillerato-secundario-materias': notaPromedioBachilleratoSecundarioMaterias,
   'notacion-cientifica': notacionCientifica,
   'nps': nps,
@@ -5693,6 +5694,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'progresion-aritmetica-suma-termino': progresionAritmeticaSumaTermino,
   'progresion-geometrica-suma-termino': progresionGeometricaSumaTermino,
   'promedio-mediana': promedioMediana,
+  'promedio-notas-colombia': promedioNotasColombia,
   'promedio-notas-universidad': promedioNotasUniversidad,
   'promedio-ponderado-materias-creditos-universidad': promedioPonderadoMateriasCreditosUniversidad,
   'promedio-ponderado-universidad': promedioPonderadoUniversidad,
