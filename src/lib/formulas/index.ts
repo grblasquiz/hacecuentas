@@ -913,6 +913,7 @@ import { compute as compute__credito_hipotecario_bancario_mexico_2026 } from './
 import { compute as compute__credito_hipotecario_biess_ecuador } from './credito-hipotecario-biess-ecuador';
 import { compute as compute__credito_hipotecario_chile_uf_cmf_2026 } from './credito-hipotecario-chile-uf-cmf-2026';
 import { compute as compute__credito_hipotecario_colombia_2026_uvr_pesos } from './credito-hipotecario-colombia-2026-uvr-pesos';
+import { compute as compute__credito_hipotecario_davivienda_cuota } from './credito-hipotecario-davivienda-cuota';
 import { compute as compute__credito_hipotecario_peru } from './credito-hipotecario-peru';
 import { compute as compute__credito_leasing_habitacional_colombia_vs_hipoteca } from './credito-leasing-habitacional-colombia-vs-hipoteca';
 import { compute as compute__credito_libranza_colombia_empleado_cuota_tasa } from './credito-libranza-colombia-empleado-cuota-tasa';
@@ -1196,6 +1197,7 @@ import { edadConversarTemasDificilesHijo } from './edad-conversar-temas-dificile
 import { edadCorregidaPrematuro } from './edad-corregida-prematuro';
 import { edadEnDias } from './edad-en-dias';
 import { edadEnSemanas } from './edad-en-semanas';
+import { compute as compute__edad_escolar_simat_colombia } from './edad-escolar-simat-colombia';
 import { edadExacta } from './edad-exacta';
 import { edadExactaAnosMesesDiasSegundos } from './edad-exacta-anos-meses-dias-segundos';
 import { edadGato } from './edad-gato';
@@ -1330,6 +1332,7 @@ import { compute as compute__fecha_cobro_anses_cronograma_dni } from './fecha-co
 import { fechaConcepcion } from './fecha-concepcion';
 import { compute as compute__fecha_concepcion_desde_fpp } from './fecha-concepcion-desde-fpp';
 import { fechaExactaSumarRestarDiasHabiles } from './fecha-exacta-sumar-restar-dias-habiles';
+import { compute as compute__fecha_limite_secop_dias_habiles } from './fecha-limite-secop-dias-habiles';
 import { fechaParto } from './fecha-parto';
 import { compute as compute__fecha_parto_fum_naegele } from './fecha-parto-fum-naegele';
 import { fechaProbablePartoCalcularSemanas } from './fecha-probable-parto-calcular-semanas';
@@ -1540,6 +1543,7 @@ import { honorariosPersonaFisicaMexico } from './honorarios-persona-fisica-mexic
 import { compute as compute__honorarios_prestacion_servicios_colombia_retencion } from './honorarios-prestacion-servicios-colombia-retencion';
 import { compute as compute__honorarios_vs_contrato_chile_conveniencia_tributaria } from './honorarios-vs-contrato-chile-conveniencia-tributaria';
 import { horaCheckInAeropuertoAnticipacion } from './hora-check-in-aeropuerto-anticipacion';
+import { compute as compute__hora_fin_programa_rcn } from './hora-fin-programa-rcn';
 import { horaFreelancePorPaisMercado } from './hora-freelance-por-pais-mercado';
 import { horaMundoZonaHoraria } from './hora-mundo-zona-horaria';
 import { horaTrabajoJornalParaguay } from './hora-trabajo-jornal-paraguay';
@@ -1923,6 +1927,7 @@ import { licenciaPorMaternidadPaternidadDias } from './licencia-por-maternidad-p
 import { compute as compute__licencia_vacaciones_cct_comercio_empleados_comercio_argentina_2026 } from './licencia-vacaciones-cct-comercio-empleados-comercio-argentina-2026';
 import { licenciamentoVeiculos } from './licenciamento-veiculos';
 import { compute as compute__limites_paso_a_paso } from './limites-paso-a-paso';
+import { compute as compute__limites_retiro_recarga_nequi } from './limites-retiro-recarga-nequi';
 import { limpiezaFrecuenciaAmbiente } from './limpieza-frecuencia-ambiente';
 import { limpiezaHogarTiempoMetrosFrecuenciaTotal } from './limpieza-hogar-tiempo-metros-frecuencia-total';
 import { lineasCodigoProyectoComplejidadKloc } from './lineas-codigo-proyecto-complejidad-kloc';
@@ -2506,6 +2511,7 @@ import { proyeccion21kDesde10kCameron } from './proyeccion-21k-desde-10k-cameron
 import { proyeccionCrecimientoSeguidoresMeses } from './proyeccion-crecimiento-seguidores-meses';
 import { proyeccionVentas } from './proyeccion-ventas';
 import { proyectosHogar } from './proyectos-hogar';
+import { compute as compute__pse_comision_ventas_colombia } from './pse-comision-ventas-colombia';
 import { ptuMexico } from './ptu-mexico';
 import { compute as compute__ptu_reparto_utilidades_mexico_10_porcentaje } from './ptu-reparto-utilidades-mexico-10-porcentaje';
 import { compute as compute__puam_pension_universal_adulto_mayor_anses_2026 } from './puam-pension-universal-adulto-mayor-anses-2026';
@@ -2573,6 +2579,7 @@ import { recordMessiCompetencia } from './record-messi-competencia';
 import { compute as compute__recta_tangente_normal } from './recta-tangente-normal';
 import { recuperacionIsquiotibial } from './recuperacion-isquiotibial';
 import { recuperacionMuscularHoras } from './recuperacion-muscular-horas';
+import { compute as compute__redam_cuotas_alimentarias_mora } from './redam-cuotas-alimentarias-mora';
 import { redshiftVelocidadRadial } from './redshift-velocidad-radial';
 import { compute as compute__reduccion_jornada_42_horas_colombia_2026 } from './reduccion-jornada-42-horas-colombia-2026';
 import { compute as compute__reduccion_jornada_hijo_espana_salario_cotizacion } from './reduccion-jornada-hijo-espana-salario-cotizacion';
@@ -2667,6 +2674,7 @@ import { compute as compute__retencion_salarios_procedimiento_1_colombia_2026 } 
 import { compute as compute__retiro_afore_desempleo_mexico } from './retiro-afore-desempleo-mexico';
 import { compute as compute__retiro_afp_jubilacion_peru } from './retiro-afp-jubilacion-peru';
 import { compute as compute__retiro_cesantia_cic_afc_chile } from './retiro-cesantia-cic-afc-chile';
+import { compute as compute__retiro_cesantias_porvenir } from './retiro-cesantias-porvenir';
 import { compute as compute__retiro_cts_desempleo_peru } from './retiro-cts-desempleo-peru';
 import { retrasoAmanecerAtardecer } from './retraso-amanecer-atardecer';
 import { retroactivoAumentoSueldoVenezuela } from './retroactivo-aumento-sueldo-venezuela';
@@ -4132,6 +4140,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'credito-hipotecario-biess-ecuador': compute__credito_hipotecario_biess_ecuador,
   'credito-hipotecario-chile-uf-cmf-2026': compute__credito_hipotecario_chile_uf_cmf_2026,
   'credito-hipotecario-colombia-2026-uvr-pesos': compute__credito_hipotecario_colombia_2026_uvr_pesos,
+  'credito-hipotecario-davivienda-cuota': compute__credito_hipotecario_davivienda_cuota,
   'credito-hipotecario-peru': compute__credito_hipotecario_peru,
   'credito-leasing-habitacional-colombia-vs-hipoteca': compute__credito_leasing_habitacional_colombia_vs_hipoteca,
   'credito-libranza-colombia-empleado-cuota-tasa': compute__credito_libranza_colombia_empleado_cuota_tasa,
@@ -4415,6 +4424,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'edad-corregida-prematuro': edadCorregidaPrematuro,
   'edad-en-dias': edadEnDias,
   'edad-en-semanas': edadEnSemanas,
+  'edad-escolar-simat-colombia': compute__edad_escolar_simat_colombia,
   'edad-exacta': edadExacta,
   'edad-exacta-anos-meses-dias-segundos': edadExactaAnosMesesDiasSegundos,
   'edad-gato': edadGato,
@@ -4549,6 +4559,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'fecha-concepcion': fechaConcepcion,
   'fecha-concepcion-desde-fpp': compute__fecha_concepcion_desde_fpp,
   'fecha-exacta-sumar-restar-dias-habiles': fechaExactaSumarRestarDiasHabiles,
+  'fecha-limite-secop-dias-habiles': compute__fecha_limite_secop_dias_habiles,
   'fecha-parto': fechaParto,
   'fecha-parto-fum-naegele': compute__fecha_parto_fum_naegele,
   'fecha-probable-parto-calcular-semanas': fechaProbablePartoCalcularSemanas,
@@ -4759,6 +4770,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'honorarios-prestacion-servicios-colombia-retencion': compute__honorarios_prestacion_servicios_colombia_retencion,
   'honorarios-vs-contrato-chile-conveniencia-tributaria': compute__honorarios_vs_contrato_chile_conveniencia_tributaria,
   'hora-check-in-aeropuerto-anticipacion': horaCheckInAeropuertoAnticipacion,
+  'hora-fin-programa-rcn': compute__hora_fin_programa_rcn,
   'hora-freelance-por-pais-mercado': horaFreelancePorPaisMercado,
   'hora-mundo-zona-horaria': horaMundoZonaHoraria,
   'hora-trabajo-jornal-paraguay': horaTrabajoJornalParaguay,
@@ -5142,6 +5154,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'licencia-vacaciones-cct-comercio-empleados-comercio-argentina-2026': compute__licencia_vacaciones_cct_comercio_empleados_comercio_argentina_2026,
   'licenciamento-veiculos': licenciamentoVeiculos,
   'limites-paso-a-paso': compute__limites_paso_a_paso,
+  'limites-retiro-recarga-nequi': compute__limites_retiro_recarga_nequi,
   'limpieza-frecuencia-ambiente': limpiezaFrecuenciaAmbiente,
   'limpieza-hogar-tiempo-metros-frecuencia-total': limpiezaHogarTiempoMetrosFrecuenciaTotal,
   'lineas-codigo-proyecto-complejidad-kloc': lineasCodigoProyectoComplejidadKloc,
@@ -5725,6 +5738,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'proyeccion-crecimiento-seguidores-meses': proyeccionCrecimientoSeguidoresMeses,
   'proyeccion-ventas': proyeccionVentas,
   'proyectos-hogar': proyectosHogar,
+  'pse-comision-ventas-colombia': compute__pse_comision_ventas_colombia,
   'ptu-mexico': ptuMexico,
   'ptu-reparto-utilidades-mexico-10-porcentaje': compute__ptu_reparto_utilidades_mexico_10_porcentaje,
   'puam-pension-universal-adulto-mayor-anses-2026': compute__puam_pension_universal_adulto_mayor_anses_2026,
@@ -5792,6 +5806,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'recta-tangente-normal': compute__recta_tangente_normal,
   'recuperacion-isquiotibial': recuperacionIsquiotibial,
   'recuperacion-muscular-horas': recuperacionMuscularHoras,
+  'redam-cuotas-alimentarias-mora': compute__redam_cuotas_alimentarias_mora,
   'redshift-velocidad-radial': redshiftVelocidadRadial,
   'reduccion-jornada-42-horas-colombia-2026': compute__reduccion_jornada_42_horas_colombia_2026,
   'reduccion-jornada-hijo-espana-salario-cotizacion': compute__reduccion_jornada_hijo_espana_salario_cotizacion,
@@ -5886,6 +5901,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'retiro-afore-desempleo-mexico': compute__retiro_afore_desempleo_mexico,
   'retiro-afp-jubilacion-peru': compute__retiro_afp_jubilacion_peru,
   'retiro-cesantia-cic-afc-chile': compute__retiro_cesantia_cic_afc_chile,
+  'retiro-cesantias-porvenir': compute__retiro_cesantias_porvenir,
   'retiro-cts-desempleo-peru': compute__retiro_cts_desempleo_peru,
   'retraso-amanecer-atardecer': retrasoAmanecerAtardecer,
   'retroactivo-aumento-sueldo-venezuela': retroactivoAumentoSueldoVenezuela,
