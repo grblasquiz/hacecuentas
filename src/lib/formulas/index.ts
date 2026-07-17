@@ -1307,6 +1307,7 @@ import { exposicionRuido } from './exposicion-ruido';
 import { exposicionSolVitaminaD } from './exposicion-sol-vitamina-d';
 import { exposicionTriangulo } from './exposicion-triangulo';
 import { f1PuntosRestantes } from './f1-puntos-restantes';
+import { facebookIngresosVideos } from './facebook-ingresos-videos';
 import { facebookReelsBonusPagos } from './facebook-reels-bonus-pagos';
 import { factorPotenciaCorregir } from './factor-potencia-corregir';
 import { factorialCalc } from './factorial';
@@ -2313,6 +2314,7 @@ import { piletaCloroLitrosVolumenDosificacion } from './pileta-cloro-litros-volu
 import { piletaNatacionLitrosM3 } from './pileta-natacion-litros-m3';
 import { pingLatenciaDistancia } from './ping-latencia-distancia';
 import { pingLatenciaGamingAceptable } from './ping-latencia-gaming-aceptable';
+import { pinterestCalendarioPines } from './pinterest-calendario-pines';
 import { pinturaLitrosM2Manos } from './pintura-litros-m2-manos';
 import { pinturaM2 } from './pintura-m2';
 import { pinturaMueblesBarnizLataCobertura } from './pintura-muebles-barniz-lata-cobertura';
@@ -2474,6 +2476,7 @@ import { profitLossCriptoTrade } from './profit-loss-cripto-trade';
 import { profundidadCampoDofLente } from './profundidad-campo-dof-lente';
 import { profundidadSiembraSemilla } from './profundidad-siembra-semilla';
 import { progresarBecaMontoRequisitos2026 } from './progresar-beca-monto-requisitos-2026';
+import { progresarRetencion2026 } from './progresar-retencion-2026';
 import { progresionAritmetica } from './progresion-aritmetica';
 import { progresionAritmeticaSumaTermino } from './progresion-aritmetica-suma-termino';
 import { progresionGeometricaSumaTermino } from './progresion-geometrica-suma-termino';
@@ -4523,6 +4526,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'exposicion-sol-vitamina-d': exposicionSolVitaminaD,
   'exposicion-triangulo': exposicionTriangulo,
   'f1-puntos-restantes': f1PuntosRestantes,
+  'facebook-ingresos-videos': facebookIngresosVideos,
   'facebook-reels-bonus-pagos': facebookReelsBonusPagos,
   'factor-potencia-corregir': factorPotenciaCorregir,
   'factorial': factorialCalc,
@@ -5529,6 +5533,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'pileta-natacion-litros-m3': piletaNatacionLitrosM3,
   'ping-latencia-distancia': pingLatenciaDistancia,
   'ping-latencia-gaming-aceptable': pingLatenciaGamingAceptable,
+  'pinterest-calendario-pines': pinterestCalendarioPines,
   'pintura-litros-m2-manos': pinturaLitrosM2Manos,
   'pintura-m2': pinturaM2,
   'pintura-muebles-barniz-lata-cobertura': pinturaMueblesBarnizLataCobertura,
@@ -5690,6 +5695,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'profundidad-campo-dof-lente': profundidadCampoDofLente,
   'profundidad-siembra-semilla': profundidadSiembraSemilla,
   'progresar-beca-monto-requisitos-2026': progresarBecaMontoRequisitos2026,
+  'progresar-retencion-2026': progresarRetencion2026,
   'progresion-aritmetica': progresionAritmetica,
   'progresion-aritmetica-suma-termino': progresionAritmeticaSumaTermino,
   'progresion-geometrica-suma-termino': progresionGeometricaSumaTermino,
