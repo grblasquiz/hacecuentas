@@ -8,7 +8,7 @@ import Footer from '../components/Footer.astro';
 
 const title = 'Calculadora Científica Online Gratis 2026 | Hacé Cuentas';
 const description =
-  'Calculadora científica online gratis para la compu y el celular: seno, coseno, tangente, logaritmos (ln, log, log₂), raíces, potencias, factorial, combinaciones (nCr) y notación científica. Modo grados/radianes, memoria y teclado. Para secundaria, CBC y facultad, sin descargar ni registrarte.';
+  'Calculadora científica online gratis para la compu y el celular: seno, coseno, tangente, logaritmos (ln, log, log₂), raíces, potencias, factorial, combinaciones (nCr) y notación científica. Con modo calculadora común para cuentas simples, grados/radianes, memoria y teclado. Para secundaria, CBC y facultad, sin descargar ni registrarte.';
 
 // Teclado. Cada tecla: append (texto a insertar) o act (acción).
 // li/ai = etiqueta y append cuando INV está activo (funciones inversas).
@@ -92,6 +92,10 @@ const faqs = [
   {
     q: '¿Cómo se usa esta calculadora científica online?',
     a: 'Escribí la expresión tocando los botones (o usando el teclado de tu compu) y presioná <strong>=</strong> para ver el resultado. Podés encadenar funciones, paréntesis y operaciones como en una calculadora física: por ejemplo <code>2×sin(30)+√(16)</code>. Si vas a usar trigonometría, fijate antes si el modo está en <strong>Rad</strong> o <strong>Deg</strong>.',
+  },
+  {
+    q: '¿Puedo usarla como calculadora común (normal o básica)?',
+    a: 'Sí. Arriba de la pantalla tenés un selector <strong>Común / Científica</strong>. En modo <strong>Común</strong> se muestra un teclado simple con las cuatro operaciones (+, −, ×, ÷), el punto decimal, el porcentaje y el igual — ideal para una cuenta rápida del día a día. Cuando necesites senos, logaritmos o potencias, volvés a <strong>Científica</strong> en un toque. Es la misma calculadora: no cambia de página ni pierde lo que estabas calculando.',
   },
   {
     q: '¿Cuál es la diferencia entre grados (DEG) y radianes (RAD)?',
@@ -205,6 +209,7 @@ const schema = {
   isAccessibleForFree: true,
   offers: freeOfferSchema({ priceCurrency: 'ARS' }),
   featureList: [
+    'Modo calculadora común (básica) y científica en un toque',
     'Funciones trigonométricas, inversas e hiperbólicas',
     'Logaritmo natural, base 10 y base 2',
     'Raíces (cuadrada y cúbica) y potencias',
@@ -265,8 +270,10 @@ const schemaHowTo = {
     <h1>Calculadora científica online</h1>
     <p class="lead">
       Calculadora científica <strong>gratis</strong> con funciones trigonométricas, logaritmos, raíces, potencias,
-      factorial y constantes π y e. Cambiá entre <strong>grados y radianes</strong>, escribí con los botones o con el
-      teclado, y presioná <strong>=</strong> para ver el resultado. Todo corre en tu navegador, sin instalar nada.
+      factorial y constantes π y e. ¿Necesitás algo más simple? Con el botón de arriba pasás a
+      <strong>calculadora común</strong> (las cuatro operaciones) en un toque. Cambiá entre <strong>grados y radianes</strong>,
+      escribí con los botones o con el teclado, y presioná <strong>=</strong> para ver el resultado. Todo corre en tu
+      navegador, sin instalar nada.
     </p>
 
     <div class="sci-answer">
@@ -280,7 +287,16 @@ const schemaHowTo = {
       </p>
     </div>
 
-    <div class="sci-card">
+    <div class="sci-card" id="sciCard">
+      <div class="calc-modes" role="tablist" aria-label="Tipo de calculadora">
+        <button type="button" class="calc-mode-btn" id="modeBasic" data-view="basic" role="tab" aria-selected="false">
+          <span class="calc-mode-ico" aria-hidden="true">🔢</span> Común
+        </button>
+        <button type="button" class="calc-mode-btn is-active" id="modeSci" data-view="sci" role="tab" aria-selected="true">
+          <span class="calc-mode-ico" aria-hidden="true">🧪</span> Científica
+        </button>
+      </div>
+
       <div class="sci-display" id="sciDisplay">
         <span class="sci-mode-ind" id="sciModeInd" aria-label="Modo de ángulo">RAD</span>
         <span class="sci-mem-ind" id="sciMemInd" aria-label="Hay un valor guardado en memoria" hidden>M</span>
@@ -304,6 +320,32 @@ const schemaHowTo = {
             aria-pressed={k.act === 'mode' || k.act === 'inv' ? 'false' : undefined}
           >{k.l}</button>
         ))}
+      </div>
+
+      <div class="basic-pad" id="basicPad" role="group" aria-label="Teclado de la calculadora común">
+        <button type="button" class="sci-key k-ctrl k-clear" data-action="clear" title="Borrar todo">AC</button>
+        <button type="button" class="sci-key k-ctrl" data-action="back" title="Borrar el último carácter">⌫</button>
+        <button type="button" class="sci-key k-fn" data-append="%" title="Porcentaje">%</button>
+        <button type="button" class="sci-key k-op" data-append="÷">÷</button>
+
+        <button type="button" class="sci-key k-num" data-append="7">7</button>
+        <button type="button" class="sci-key k-num" data-append="8">8</button>
+        <button type="button" class="sci-key k-num" data-append="9">9</button>
+        <button type="button" class="sci-key k-op" data-append="×">×</button>
+
+        <button type="button" class="sci-key k-num" data-append="4">4</button>
+        <button type="button" class="sci-key k-num" data-append="5">5</button>
+        <button type="button" class="sci-key k-num" data-append="6">6</button>
+        <button type="button" class="sci-key k-op" data-append="−">−</button>
+
+        <button type="button" class="sci-key k-num" data-append="1">1</button>
+        <button type="button" class="sci-key k-num" data-append="2">2</button>
+        <button type="button" class="sci-key k-num" data-append="3">3</button>
+        <button type="button" class="sci-key k-op" data-append="+">+</button>
+
+        <button type="button" class="sci-key k-num k-zero" data-append="0">0</button>
+        <button type="button" class="sci-key k-num" data-append=".">.</button>
+        <button type="button" class="sci-key k-eq" data-action="equals" title="Calcular">=</button>
       </div>
 
       <p class="sci-hint">
@@ -916,7 +958,9 @@ const schemaHowTo = {
     memIndicator();
   }
 
-  pad.addEventListener('click', (ev) => {
+  // Handler compartido por AMBOS teclados (científico y común): así el modo
+  // común reusa el mismo motor de cálculo sin duplicar lógica.
+  const handlePadClick = (ev: Event) => {
     const btn = (ev.target as HTMLElement).closest('button.sci-key') as HTMLButtonElement | null;
     if (!btn) return;
     const action = btn.getAttribute('data-action');
@@ -931,7 +975,32 @@ const schemaHowTo = {
     if (action === 'mc') return memClear();
     const ap = btn.getAttribute('data-append');
     if (ap != null) append(ap);
-  });
+  };
+  pad.addEventListener('click', handlePadClick);
+  const basicPad = document.getElementById('basicPad');
+  if (basicPad) basicPad.addEventListener('click', handlePadClick);
+
+  // ── Toggle Común / Científica ─────────────────────────────────────────────
+  // Cambia qué teclado se muestra (client-side, sin navegar). La preferencia
+  // se recuerda en localStorage. El bot indexa la página científica completa.
+  const card = document.getElementById('sciCard') as HTMLElement | null;
+  const modeBasicBtn = document.getElementById('modeBasic') as HTMLButtonElement | null;
+  const modeSciBtn = document.getElementById('modeSci') as HTMLButtonElement | null;
+  const VIEW_KEY = 'hc-calc-view';
+  function applyView(view: 'basic' | 'sci') {
+    if (!card || !modeBasicBtn || !modeSciBtn) return;
+    const basic = view === 'basic';
+    card.classList.toggle('is-basic', basic);
+    modeBasicBtn.classList.toggle('is-active', basic);
+    modeSciBtn.classList.toggle('is-active', !basic);
+    modeBasicBtn.setAttribute('aria-selected', basic ? 'true' : 'false');
+    modeSciBtn.setAttribute('aria-selected', basic ? 'false' : 'true');
+  }
+  let view: 'basic' | 'sci' = 'sci';
+  try { const s = localStorage.getItem(VIEW_KEY); if (s === 'basic' || s === 'sci') view = s; } catch {}
+  applyView(view);
+  modeBasicBtn?.addEventListener('click', () => { view = 'basic'; try { localStorage.setItem(VIEW_KEY, view); } catch {} applyView(view); });
+  modeSciBtn?.addEventListener('click', () => { view = 'sci'; try { localStorage.setItem(VIEW_KEY, view); } catch {} applyView(view); });
 
   clearHistBtn.addEventListener('click', () => {
     history = [];
@@ -1056,6 +1125,53 @@ const schemaHowTo = {
   }
   .sci-out.is-result { color: var(--accent-strong); }
   .sci-out.is-error { color: var(--danger, #dc2626); font-size: 1.0625rem; font-weight: 500; }
+
+  /* Control segmentado Común / Científica */
+  .calc-modes {
+    display: flex;
+    gap: 0.25rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.25rem;
+    margin-bottom: 1rem;
+    width: fit-content;
+  }
+  .calc-mode-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    padding: 0.5rem 1.1rem;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .calc-mode-btn:hover { color: var(--text); }
+  .calc-mode-btn.is-active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.12));
+  }
+  .calc-mode-ico { font-size: 0.95em; }
+
+  /* Alternancia de teclados: por defecto se ve el científico */
+  .basic-pad { display: none; }
+  .sci-card.is-basic #sciPad { display: none; }
+  .sci-card.is-basic .basic-pad { display: grid; }
+  .sci-card.is-basic .sci-mode-ind { display: none; }
+
+  .basic-pad {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+  }
+  .basic-pad .k-zero { grid-column: span 2; }
 
   .sci-pad {
     display: grid;
