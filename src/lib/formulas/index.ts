@@ -772,6 +772,7 @@ import { convertirMayusculasMinusculas } from './convertir-mayusculas-minusculas
 import { coolingFan3dMaterial } from './cooling-fan-3d-material';
 import { compute as compute__cooperativas_prestamo_colombia_tasa_interes } from './cooperativas-prestamo-colombia-tasa-interes';
 import { compute as compute__copago_bonificacion_fonasa_chile } from './copago-bonificacion-fonasa-chile';
+import { compute as compute__copec_costo_viaje_bencina_chile } from './copec-costo-viaje-bencina-chile';
 import { copomTasaReferenciaBancoCentralImpacto } from './copom-tasa-referencia-banco-central-impacto';
 import { correaDistribucionCambioIntervaloKm } from './correa-distribucion-cambio-intervalo-km';
 import { correlacionBtcNasdaqSp500Matriz } from './correlacion-btc-nasdaq-sp500-matriz';
@@ -1236,6 +1237,7 @@ import { compute as compute__emigrar_espana_presupuesto_primer_ano_familia } fro
 import { emisionCo2AutoCombustible } from './emision-co2-auto-combustible';
 import { emisionesCo2AutoGKmAnual } from './emisiones-co2-auto-g-km-anual';
 import { emisionesEnviarEmailAdjuntos } from './emisiones-enviar-email-adjuntos';
+import { compute as compute__emol_uf_pesos_chile } from './emol-uf-pesos-chile';
 import { compute as compute__empanadas_docena_por_invitado_evento_estimacion } from './empanadas-docena-por-invitado-evento-estimacion';
 import { compute as compute__empanadas_por_persona_evento_asado_cumple } from './empanadas-por-persona-evento-asado-cumple';
 import { compute as compute__empleada_domestica_dias_colombia_2026 } from './empleada-domestica-dias-colombia-2026';
@@ -1753,6 +1755,7 @@ import { inssPatronalEmpresa } from './inss-patronal-empresa';
 import { instagramCarrouselSlidesOptimas } from './instagram-carrousel-slides-optimas';
 import { instagramInfluencerPagoHistoria } from './instagram-influencer-pago-historia';
 import { instagramRateCardPorFollowers } from './instagram-rate-card-por-followers';
+import { compute as compute__inta_calorias_diarias_chile } from './inta-calorias-diarias-chile';
 import { integralDefinidaBasica } from './integral-definida-basica';
 import { integralIndefinidaPolinomioCoefs } from './integral-indefinida-polinomio-coefs';
 import { interesAcumuladoTarjeta } from './interes-acumulado-tarjeta';
@@ -2791,11 +2794,13 @@ import { semillasPorM2Huerta } from './semillas-por-m2-huerta';
 import { senoCosenoTangenteAnguloTriangulo } from './seno-coseno-tangente-angulo-triangulo';
 import { sensibilidadMouseDpiJuego } from './sensibilidad-mouse-dpi-juego';
 import { compute as compute__serie_taylor_maclaurin } from './serie-taylor-maclaurin';
+import { compute as compute__servel_edad_votar_chile } from './servel-edad-votar-chile';
 import { servoPwmAngulo } from './servo-pwm-angulo';
 import { shareOfVoiceMarketing } from './share-of-voice-marketing';
 import { sharpeRatioPortafolio } from './sharpe-ratio-portafolio';
 import { compute as compute__side_hustle_tax_savings_calculator } from './side-hustle-tax-savings-calculator';
 import { siembraCalendarioArgentina } from './siembra-calendario-argentina';
+import { compute as compute__sii_boleta_honorarios_2026 } from './sii-boleta-honorarios-2026';
 import { sillasMesasInvitados } from './sillas-mesas-invitados';
 import { compute as compute__simple_interest_vs_compound_comparison } from './simple-interest-vs-compound-comparison';
 import { simplesAnexoI } from './simples-anexo-i';
@@ -3999,6 +4004,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cooling-fan-3d-material': coolingFan3dMaterial,
   'cooperativas-prestamo-colombia-tasa-interes': compute__cooperativas_prestamo_colombia_tasa_interes,
   'copago-bonificacion-fonasa-chile': compute__copago_bonificacion_fonasa_chile,
+  'copec-costo-viaje-bencina-chile': compute__copec_costo_viaje_bencina_chile,
   'copom-tasa-referencia-banco-central-impacto': copomTasaReferenciaBancoCentralImpacto,
   'correa-distribucion-cambio-intervalo-km': correaDistribucionCambioIntervaloKm,
   'correlacion-btc-nasdaq-sp500-matriz': correlacionBtcNasdaqSp500Matriz,
@@ -4463,6 +4469,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'emision-co2-auto-combustible': emisionCo2AutoCombustible,
   'emisiones-co2-auto-g-km-anual': emisionesCo2AutoGKmAnual,
   'emisiones-enviar-email-adjuntos': emisionesEnviarEmailAdjuntos,
+  'emol-uf-pesos-chile': compute__emol_uf_pesos_chile,
   'empanadas-docena-por-invitado-evento-estimacion': compute__empanadas_docena_por_invitado_evento_estimacion,
   'empanadas-por-persona-evento-asado-cumple': compute__empanadas_por_persona_evento_asado_cumple,
   'empleada-domestica-dias-colombia-2026': compute__empleada_domestica_dias_colombia_2026,
@@ -4980,6 +4987,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'instagram-carrousel-slides-optimas': instagramCarrouselSlidesOptimas,
   'instagram-influencer-pago-historia': instagramInfluencerPagoHistoria,
   'instagram-rate-card-por-followers': instagramRateCardPorFollowers,
+  'inta-calorias-diarias-chile': compute__inta_calorias_diarias_chile,
   'integral-definida-basica': integralDefinidaBasica,
   'integral-indefinida-polinomio-coefs': integralIndefinidaPolinomioCoefs,
   'interes-acumulado-tarjeta': interesAcumuladoTarjeta,
@@ -6018,11 +6026,13 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'seno-coseno-tangente-angulo-triangulo': senoCosenoTangenteAnguloTriangulo,
   'sensibilidad-mouse-dpi-juego': sensibilidadMouseDpiJuego,
   'serie-taylor-maclaurin': compute__serie_taylor_maclaurin,
+  'servel-edad-votar-chile': compute__servel_edad_votar_chile,
   'servo-pwm-angulo': servoPwmAngulo,
   'share-of-voice-marketing': shareOfVoiceMarketing,
   'sharpe-ratio-portafolio': sharpeRatioPortafolio,
   'side-hustle-tax-savings-calculator': compute__side_hustle_tax_savings_calculator,
   'siembra-calendario-argentina': siembraCalendarioArgentina,
+  'sii-boleta-honorarios-2026': compute__sii_boleta_honorarios_2026,
   'sillas-mesas-invitados': sillasMesasInvitados,
   'simple-interest-vs-compound-comparison': compute__simple_interest_vs_compound_comparison,
   'simples-anexo-i': simplesAnexoI,
