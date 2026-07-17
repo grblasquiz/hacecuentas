@@ -511,21 +511,4 @@ export const GONE_410_URLS: ReadonlySet<string> = new Set<string>([
   "/uy/calculadora-jubilacion-bps-uruguay",
 
   // 7-17: newborns 7-16 con 0 tráfico + contenido incompleto (thin/sin-fuente) → 410 hasta mejorar
-  "/calculadora-costo-balneario-playa-argentina",
-  "/calculadora-costo-camping-escapada-argentina",
-  "/calculadora-costo-cine-familia-argentina",
-  "/calculadora-costo-colonia-vacaciones-argentina",
-  "/calculadora-costo-parque-diversiones-salida-infantil",
-  "/calculadora-costo-previa-boliche-argentina",
-  "/calculadora-costo-recital-festival-argentina",
-  "/calculadora-cuanto-voy-a-cobrar-jubilacion-haber-estimado",
-  "/calculadora-de-propinas",
-  "/calculadora-devolucion-ganancias-4ta-saldo-favor",
-  "/calculadora-hotel-vs-alquiler-temporario-escapada",
-  "/calculadora-vacaciones-invierno-chicos-argentina",
-  "/cl/calculadora-de-propinas-chile",
-  "/co/calculadora-de-propinas-colombia",
-  "/es/calculadora-de-propinas-espana",
-  "/mx/calculadora-de-propinas-mexico",
-  "/pe/calculadora-de-propinas-peru",
 ]);

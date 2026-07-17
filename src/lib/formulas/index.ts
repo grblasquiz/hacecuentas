@@ -795,12 +795,16 @@ import { compute as compute__coste_vida_mensual_mexico_soltero_pareja_familia } 
 import { compute as compute__coste_vida_mensual_soltero_pareja_espana_ccaa } from './coste-vida-mensual-soltero-pareja-espana-ccaa';
 import { costoAireAcondicionadoHora } from './costo-aire-acondicionado-hora';
 import { costoAlmacenamientoInventario } from './costo-almacenamiento-inventario';
+import { costoBalnearioPlayaArgentina } from './costo-balneario-playa-argentina';
 import { costoBodaArgentina } from './costo-boda-argentina';
 import { costoCalefaccionInvierno } from './costo-calefaccion-invierno';
+import { costoCampingEscapadaArgentina } from './costo-camping-escapada-argentina';
 import { costoCarreraTotal } from './costo-carrera-total';
 import { costoCarreraUniversitaria } from './costo-carrera-universitaria';
+import { costoCineFamiliaArgentina } from './costo-cine-familia-argentina';
 import { compute as compute__costo_ciudadania_italiana_argentina } from './costo-ciudadania-italiana-argentina';
 import { costoCloudServidorMensual } from './costo-cloud-servidor-mensual';
+import { costoColoniaVacacionesArgentina } from './costo-colonia-vacaciones-argentina';
 import { compute as compute__costo_constitucion_empresa_peru } from './costo-constitucion-empresa-peru';
 import { compute as compute__costo_construccion_m2_chile } from './costo-construccion-m2-chile';
 import { compute as compute__costo_construccion_m2_ecuador } from './costo-construccion-m2-ecuador';
@@ -853,6 +857,7 @@ import { costoMensualAireAcondicionado } from './costo-mensual-aire-acondicionad
 import { costoMensualAprenderIdiomaOpciones } from './costo-mensual-aprender-idioma-opciones';
 import { costoMensualRazaGato } from './costo-mensual-raza-gato';
 import { costoMudanza } from './costo-mudanza';
+import { costoParqueDiversionesSalidaInfantil } from './costo-parque-diversiones-salida-infantil';
 import { compute as compute__costo_pasaporte_mexicano_2026 } from './costo-pasaporte-mexicano-2026';
 import { compute as compute__costo_pasaporte_saime_venezuela } from './costo-pasaporte-saime-venezuela';
 import { costoPeajeRuta } from './costo-peaje-ruta';
@@ -860,9 +865,11 @@ import { costoPorKilometroAuto } from './costo-por-kilometro-auto';
 import { costoPorLead } from './costo-por-lead';
 import { costoPorUnidad } from './costo-por-unidad';
 import { costoPorViewCpvVideo } from './costo-por-view-cpv-video';
+import { costoPreviaBolicheArgentina } from './costo-previa-boliche-argentina';
 import { costoRealCuotas } from './costo-real-cuotas';
 import { costoRealCuotasSinInteres } from './costo-real-cuotas-sin-interes';
 import { costoRecetaPrecioPorPorcion } from './costo-receta-precio-por-porcion';
+import { costoRecitalFestivalArgentina } from './costo-recital-festival-argentina';
 import { costoRoamingDatosExterior } from './costo-roaming-datos-exterior';
 import { costoSalidaCanchaArgentina } from './costo-salida-cancha-argentina';
 import { costoServidorCloudAwsEc2Mensual } from './costo-servidor-cloud-aws-ec2-mensual';
@@ -959,6 +966,7 @@ import { cuantoNecesitoGanarParaMantenerUnaFamilia } from './cuanto-necesito-gan
 import { cuantoValeMiSueldoEnDolaresVenezuela } from './cuanto-vale-mi-sueldo-en-dolares-venezuela';
 import { cuantoValeMiTiempo } from './cuanto-vale-mi-tiempo';
 import { compute as compute__cuanto_vale_mi_tiempo_hora_anual_salario } from './cuanto-vale-mi-tiempo-hora-anual-salario';
+import { compute as compute__cuanto_voy_a_cobrar_jubilacion_haber_estimado } from './cuanto-voy-a-cobrar-jubilacion-haber-estimado';
 import { cuantosDiasFaltanFecha } from './cuantos-dias-faltan-fecha';
 import { cuantosDiasVacacionesLaboralesAntiguedad } from './cuantos-dias-vacaciones-laborales-antiguedad';
 import { cuantosFeriadosRestanAnoArgentina } from './cuantos-feriados-restan-ano-argentina';
@@ -1084,6 +1092,7 @@ import { compute as compute__deuda_mes_tarjeta_credito_colombia_pago_tope } from
 import { deudaTarjetaPagoMinimoMeses } from './deuda-tarjeta-pago-minimo-meses';
 import { compute as compute__devolucion_ahorro_infonavit_subcuenta_vivienda_mexico } from './devolucion-ahorro-infonavit-subcuenta-vivienda-mexico';
 import { devolucionFonasaUruguay } from './devolucion-fonasa-uruguay';
+import { compute as compute__devolucion_ganancias_4ta_saldo_favor } from './devolucion-ganancias-4ta-saldo-favor';
 import { compute as compute__devolucion_impuestos_operacion_renta_chile_2026 } from './devolucion-impuestos-operacion-renta-chile-2026';
 import { devolucionIsrAnualMexico } from './devolucion-isr-anual-mexico';
 import { compute as compute__devolucion_iva_tercera_edad_discapacidad_ecuador } from './devolucion-iva-tercera-edad-discapacidad-ecuador';
@@ -1567,6 +1576,7 @@ import { horasTrabajadasSemanal } from './horas-trabajadas-semanal';
 import { horasTrabajoComprar } from './horas-trabajo-comprar';
 import { horasVidaRestantes } from './horas-vida-restantes';
 import { compute as compute__hotel_split_cost_calculator } from './hotel-split-cost-calculator';
+import { hotelVsAlquilerTemporarioEscapada } from './hotel-vs-alquiler-temporario-escapada';
 import { compute as compute__hours_between_times_calculator } from './hours-between-times-calculator';
 import { huellaCarbonoAlimentacionSemanal } from './huella-carbono-alimentacion-semanal';
 import { huellaCarbonoAutoAnual } from './huella-carbono-auto-anual';
@@ -2477,6 +2487,7 @@ import { propina } from './propina';
 import { propinaDividirCuenta } from './propina-dividir-cuenta';
 import { propinaRestaurante } from './propina-restaurante';
 import { propinaViaje } from './propina-viaje';
+import { propinasCompleta } from './propinas-completa';
 import { protectorSolarSpf } from './protector-solar-spf';
 import { proteinaDiaria } from './proteina-diaria';
 import { proteinaDiariaFisicoculturismoGanarMusculo } from './proteina-diaria-fisicoculturismo-ganar-musculo';
@@ -3072,6 +3083,7 @@ import { compute as compute__vacaciones_colombia_15_dias_habiles_laborales } fro
 import { vacacionesDiasAntiguedadMexico } from './vacaciones-dias-antiguedad-mexico';
 import { compute as compute__vacaciones_ecuador } from './vacaciones-ecuador';
 import { vacacionesEmpleadaCasaParticular } from './vacaciones-empleada-casa-particular';
+import { vacacionesInviernoChicosArgentina } from './vacaciones-invierno-chicos-argentina';
 import { compute as compute__vacaciones_mexico_2024_reforma_12_dias_incremento } from './vacaciones-mexico-2024-reforma-12-dias-incremento';
 import { vacacionesNoTomadasIndemnizacionFormula } from './vacaciones-no-tomadas-indemnizacion-formula';
 import { compute as compute__vacaciones_pagadas_espana_22_dias_laborables } from './vacaciones-pagadas-espana-22-dias-laborables';
@@ -3997,12 +4009,16 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'coste-vida-mensual-soltero-pareja-espana-ccaa': compute__coste_vida_mensual_soltero_pareja_espana_ccaa,
   'costo-aire-acondicionado-hora': costoAireAcondicionadoHora,
   'costo-almacenamiento-inventario': costoAlmacenamientoInventario,
+  'costo-balneario-playa-argentina': costoBalnearioPlayaArgentina,
   'costo-boda-argentina': costoBodaArgentina,
   'costo-calefaccion-invierno': costoCalefaccionInvierno,
+  'costo-camping-escapada-argentina': costoCampingEscapadaArgentina,
   'costo-carrera-total': costoCarreraTotal,
   'costo-carrera-universitaria': costoCarreraUniversitaria,
+  'costo-cine-familia-argentina': costoCineFamiliaArgentina,
   'costo-ciudadania-italiana-argentina': compute__costo_ciudadania_italiana_argentina,
   'costo-cloud-servidor-mensual': costoCloudServidorMensual,
+  'costo-colonia-vacaciones-argentina': costoColoniaVacacionesArgentina,
   'costo-constitucion-empresa-peru': compute__costo_constitucion_empresa_peru,
   'costo-construccion-m2-chile': compute__costo_construccion_m2_chile,
   'costo-construccion-m2-ecuador': compute__costo_construccion_m2_ecuador,
@@ -4055,6 +4071,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'costo-mensual-aprender-idioma-opciones': costoMensualAprenderIdiomaOpciones,
   'costo-mensual-raza-gato': costoMensualRazaGato,
   'costo-mudanza': costoMudanza,
+  'costo-parque-diversiones-salida-infantil': costoParqueDiversionesSalidaInfantil,
   'costo-pasaporte-mexicano-2026': compute__costo_pasaporte_mexicano_2026,
   'costo-pasaporte-saime-venezuela': compute__costo_pasaporte_saime_venezuela,
   'costo-peaje-ruta': costoPeajeRuta,
@@ -4062,9 +4079,11 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'costo-por-lead': costoPorLead,
   'costo-por-unidad': costoPorUnidad,
   'costo-por-view-cpv-video': costoPorViewCpvVideo,
+  'costo-previa-boliche-argentina': costoPreviaBolicheArgentina,
   'costo-real-cuotas': costoRealCuotas,
   'costo-real-cuotas-sin-interes': costoRealCuotasSinInteres,
   'costo-receta-precio-por-porcion': costoRecetaPrecioPorPorcion,
+  'costo-recital-festival-argentina': costoRecitalFestivalArgentina,
   'costo-roaming-datos-exterior': costoRoamingDatosExterior,
   'costo-salida-cancha-argentina': costoSalidaCanchaArgentina,
   'costo-servidor-cloud-aws-ec2-mensual': costoServidorCloudAwsEc2Mensual,
@@ -4161,6 +4180,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'cuanto-vale-mi-sueldo-en-dolares-venezuela': cuantoValeMiSueldoEnDolaresVenezuela,
   'cuanto-vale-mi-tiempo': cuantoValeMiTiempo,
   'cuanto-vale-mi-tiempo-hora-anual-salario': compute__cuanto_vale_mi_tiempo_hora_anual_salario,
+  'cuanto-voy-a-cobrar-jubilacion-haber-estimado': compute__cuanto_voy_a_cobrar_jubilacion_haber_estimado,
   'cuantos-dias-faltan-fecha': cuantosDiasFaltanFecha,
   'cuantos-dias-vacaciones-laborales-antiguedad': cuantosDiasVacacionesLaboralesAntiguedad,
   'cuantos-feriados-restan-ano-argentina': cuantosFeriadosRestanAnoArgentina,
@@ -4286,6 +4306,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'deuda-tarjeta-pago-minimo-meses': deudaTarjetaPagoMinimoMeses,
   'devolucion-ahorro-infonavit-subcuenta-vivienda-mexico': compute__devolucion_ahorro_infonavit_subcuenta_vivienda_mexico,
   'devolucion-fonasa-uruguay': devolucionFonasaUruguay,
+  'devolucion-ganancias-4ta-saldo-favor': compute__devolucion_ganancias_4ta_saldo_favor,
   'devolucion-impuestos-operacion-renta-chile-2026': compute__devolucion_impuestos_operacion_renta_chile_2026,
   'devolucion-isr-anual-mexico': devolucionIsrAnualMexico,
   'devolucion-iva-tercera-edad-discapacidad-ecuador': compute__devolucion_iva_tercera_edad_discapacidad_ecuador,
@@ -4769,6 +4790,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'horas-trabajo-comprar': horasTrabajoComprar,
   'horas-vida-restantes': horasVidaRestantes,
   'hotel-split-cost-calculator': compute__hotel_split_cost_calculator,
+  'hotel-vs-alquiler-temporario-escapada': hotelVsAlquilerTemporarioEscapada,
   'hours-between-times-calculator': compute__hours_between_times_calculator,
   'huella-carbono-alimentacion-semanal': huellaCarbonoAlimentacionSemanal,
   'huella-carbono-auto-anual': huellaCarbonoAutoAnual,
@@ -5679,6 +5701,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'propina-dividir-cuenta': propinaDividirCuenta,
   'propina-restaurante': propinaRestaurante,
   'propina-viaje': propinaViaje,
+  'propinas-completa': propinasCompleta,
   'protector-solar-spf': protectorSolarSpf,
   'proteina-diaria': proteinaDiaria,
   'proteina-diaria-fisicoculturismo-ganar-musculo': proteinaDiariaFisicoculturismoGanarMusculo,
@@ -6274,6 +6297,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'vacaciones-dias-antiguedad-mexico': vacacionesDiasAntiguedadMexico,
   'vacaciones-ecuador': compute__vacaciones_ecuador,
   'vacaciones-empleada-casa-particular': vacacionesEmpleadaCasaParticular,
+  'vacaciones-invierno-chicos-argentina': vacacionesInviernoChicosArgentina,
   'vacaciones-mexico-2024-reforma-12-dias-incremento': compute__vacaciones_mexico_2024_reforma_12_dias_incremento,
   'vacaciones-no-tomadas-indemnizacion-formula': vacacionesNoTomadasIndemnizacionFormula,
   'vacaciones-pagadas-espana-22-dias-laborables': compute__vacaciones_pagadas_espana_22_dias_laborables,
