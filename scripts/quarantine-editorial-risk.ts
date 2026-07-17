@@ -22,8 +22,16 @@ const GENERIC_SOURCE_HOSTS = new Set([
   'bcentral.cl', 'dian.gov.co', 'banrep.gov.co', 'sat.gob.mx', 'datos.gov.co',
 ]);
 const BCRA_TOPIC_RE = /(banco|bcra|tasa|inter[eé]s|cr[eé]dito|pr[eé]stamo|uva|moneda|d[oó]lar|cambio|inflaci[oó]n|plazo-fijo|cbu|cvu|financ|bono|mercado|ahorro|alquiler|hipoteca|bitcoin|tna|tea|tem|cft|deuda|tarjeta|monetary|policy|rate|saving)/i;
+// Sólo temas MÉDICO-PRESCRIPTIVOS (la mitad "Life" de YMYL) exigen revisor
+// matriculado: dar una dosis, una pauta clínica o de fertilidad sin profesional
+// es peligroso. NO incluye la mitad "Money" (indemnización, liquidación,
+// jubilación, pensión, impuesto, ganancias) ni los estimadores de materiales
+// (losa, viga, potencia eléctrica): esas calcs no requieren un profesional
+// matriculado —igual que las ~1500 calcs de plata del catálogo que nunca lo
+// tuvieron—, sólo datos correctos. Meterlas acá apagaba 145 calcs de plata con
+// tráfico y les pintaba el aviso de dosis médica. Ver content-policy.ts.
 // Los límites por guion evitan falsos positivos como "suspensión" → "pensión".
-const HIGH_STAKES_RE = /(?:^|-)(?:fertil[^-]*|vitrific[^-]*|ovulo[^-]*|embarazo-riesgo|sintoma[^-]*|diagnost[^-]*|dosis|medicament[^-]*|insulina|control-esfinter|quitar-panal|indemniz[^-]*|liquidacion|jubilacion|pension|impuesto|ganancias|losa|viga|columna|cimiento|estructural|potencia-electrica|cable-seccion)(?:-|$)/i;
+const HIGH_STAKES_RE = /(?:^|-)(?:fertil[^-]*|vitrific[^-]*|ovulo[^-]*|embarazo-riesgo|sintoma[^-]*|diagnost[^-]*|dosis|medicament[^-]*|insulina|control-esfinter|quitar-panal)(?:-|$)/i;
 const EXPLICIT_HIGH_STAKES_SLUGS = new Set([
   'calculadora-horas-extra-suplementarias-ecuador',
 ]);
@@ -34,7 +42,11 @@ function genericDataSource(value: unknown): boolean {
     const url = new URL(value);
     const host = url.hostname.replace(/^www\./, '');
     const depth = url.pathname.split('/').filter(Boolean).length;
-    if (depth === 0 && !url.search) return true;
+    // Sólo exigimos deep-link a los ORGANISMOS OFICIALES (citar el home de ARCA
+    // o INDEC sin la página del dato concreto sí degrada E-E-A-T). Citar el
+    // dominio de una fuente no-oficial (una marca, un blog técnico, un estándar)
+    // es aceptable y NO justifica desindexar una calc completa con tráfico. La
+    // regla universal `depth===0` de antes barría who.int, IRAM, Prusa, etc.
     return GENERIC_SOURCE_HOSTS.has(host) && depth <= 1 && !url.search;
   } catch { return true; }
 }
