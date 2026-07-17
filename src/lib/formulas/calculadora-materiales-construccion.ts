@@ -12,6 +12,8 @@
  *
  *  · Ladrillo común 24×12×6 cm, pared de 15 cm (de canto): 63 ladrillos/m² · mortero 0,04 m³/m²
  *      (repo ladrillos-m2.ts; web lacaleramateriales: 50–63/m²).
+ *  · Ladrillo común, pared de 30 cm (muro doble/portante): 126 ladrillos/m² · mortero 0,08 m³/m²
+ *      (el doble de la pared de 15 cm + junta central; fuentes AR: 126–134/m²).
  *  · Ladrillo hueco 8/12/18 (cara vista 18×33 cm): ~16 ladrillos/m². La CARA es la misma en
  *      los tres → la cantidad por m² NO cambia; lo que cambia es el espesor del muro y el
  *      volumen de mortero. Mortero 0,02 / 0,025 / 0,03 m³/m² para 8 / 12 / 18
@@ -59,7 +61,8 @@ export interface Outputs {
 
 // Ladrillos por m² y mortero de asiento (m³ por m² de pared).
 const LADRILLOS: Record<string, { porM2: number; morteroM3PorM2: number; label: string; muro: string }> = {
-  pared_comun:   { porM2: 63, morteroM3PorM2: 0.040, label: 'Ladrillo común 24×12×6 cm',   muro: 'pared de 15 cm' },
+  pared_comun:    { porM2: 63,  morteroM3PorM2: 0.040, label: 'Ladrillo común 24×12×6 cm', muro: 'pared de 15 cm' },
+  pared_comun_30: { porM2: 126, morteroM3PorM2: 0.080, label: 'Ladrillo común 24×12×6 cm', muro: 'pared de 30 cm (muro doble)' },
   pared_hueco8:  { porM2: 16, morteroM3PorM2: 0.020, label: 'Ladrillo hueco 8×18×33 cm',    muro: 'tabique de 8 cm' },
   pared_hueco12: { porM2: 16, morteroM3PorM2: 0.025, label: 'Ladrillo hueco 12×18×33 cm',   muro: 'pared de 12 cm' },
   pared_hueco18: { porM2: 16, morteroM3PorM2: 0.030, label: 'Ladrillo hueco 18×18×33 cm',   muro: 'pared de 18 cm' },
