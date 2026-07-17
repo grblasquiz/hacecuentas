@@ -1,3 +1,5 @@
+import { MEXICO_2026 } from '../data/mexico-2026';
+
 export interface Inputs {
   ingresos_mensuales_brutos: number;
   numero_hijos: string;
@@ -29,8 +31,8 @@ export function compute(i: Inputs): Outputs {
     "5": 0.50    // 5+ hijos: 50% (máximo CCDF)
   };
 
-  // Salario mínimo nacional 2026 aprox $248 MXN/día = $7,440 MXN/mes
-  const SALARIO_MINIMO_MENSUAL = 7440;
+  // Salario mínimo nacional 2026: $315.04/día ≈ $9,577.22/mes (CONASAMI/DOF Res. 09-dic-2025, vigente 01-ene-2026)
+  const SALARIO_MINIMO_MENSUAL = MEXICO_2026.salarioMinimo.generalMensual;
   // Margen subsistencia deudor: salario mínimo + 30% gastos propios
   const MINIMO_SUBSISTENCIA = SALARIO_MINIMO_MENSUAL * 1.3;
   // Máximo porcentaje pensión (CCDF límite): 50%
