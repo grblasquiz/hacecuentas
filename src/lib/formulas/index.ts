@@ -2128,6 +2128,7 @@ import { compute as compute__nomina_vs_prestacion_servicios_colombia_2026 } from
 import { notaMinimaAprobarFinalParcialPromedio } from './nota-minima-aprobar-final-parcial-promedio';
 import { notaNecesariaAprobar } from './nota-necesaria-aprobar';
 import { notaParcialRecuperatorioPromocion } from './nota-parcial-recuperatorio-promocion';
+import { promedioNotasColombia } from './promedio-notas-colombia';
 import { notaPromedioBachilleratoSecundarioMaterias } from './nota-promedio-bachillerato-secundario-materias';
 import { notacionCientifica } from './notacion-cientifica';
 import { nps } from './nps';
@@ -5342,6 +5343,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'nota-minima-aprobar-final-parcial-promedio': notaMinimaAprobarFinalParcialPromedio,
   'nota-necesaria-aprobar': notaNecesariaAprobar,
   'nota-parcial-recuperatorio-promocion': notaParcialRecuperatorioPromocion,
+  'promedio-notas-colombia': promedioNotasColombia,
   'nota-promedio-bachillerato-secundario-materias': notaPromedioBachilleratoSecundarioMaterias,
   'notacion-cientifica': notacionCientifica,
   'nps': nps,
