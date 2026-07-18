@@ -1,0 +1,207 @@
+{
+  "slug": "calculadora-promedio-escolaridad-udelar-uruguay",
+  "title": "Calculadora de promedio de escolaridad UdelaR (Uruguay)",
+  "h1": "Calculadora de promedio de escolaridad — UdelaR (Uruguay)",
+  "description": "Calculá tu promedio de escolaridad en la UdelaR: ponderá tus notas por créditos en la escala 0 a 12, con solo las actividades aprobadas. También estima qué nota necesitás en lo que te falta para llegar a un objetivo.",
+  "category": "educacion",
+  "audience": "UY",
+  "icon": "🎓",
+  "formulaId": "calculadora-promedio-escolaridad-udelar-uruguay",
+  "answerSnippet": "El promedio de escolaridad UdelaR pondera por créditos tus actividades aprobadas: Σ(nota × créditos) ÷ Σ créditos, en la escala 0 a 12. Ej.: notas 10, 8, 12, 6 y créditos 12, 8, 10, 6 → 9,44 (Muy bueno).",
+  "intro": "**¿Cómo calcular tu promedio de escolaridad en la UdelaR?** La escolaridad no es un promedio simple: es el **promedio ponderado por créditos** de tus actividades **aprobadas**. Las materias que valen más créditos pesan más en el promedio.\n\nLa fórmula es **Σ(nota × créditos) ÷ Σ créditos**, en la **escala 0 a 12** vigente desde el 27 de enero de 2025. Solo entran las actividades **aprobadas** (nota **≥ 3**); las no aprobadas no computan.\n\nIngresá tus **notas** y los **créditos** de cada actividad, en el mismo orden. Con el modo **¿qué nota necesito?** también podés estimar qué promedio te hace falta en los créditos que te quedan para llegar a un objetivo (por ejemplo, el requisito de una beca del **Fondo de Solidaridad**).",
+  "keyTakeaway": "La **escolaridad UdelaR** es el promedio **ponderado por créditos** de las actividades **aprobadas** (nota ≥ 3): **Σ(nota × créditos) ÷ Σ créditos**, en la **escala 0 a 12**. Las materias de más créditos pesan más. Sirve para becas del **Fondo de Solidaridad** y requisitos académicos.",
+  "seoKeywords": [
+    "como calcular promedio escolaridad",
+    "promedio escolaridad udelar",
+    "calcular escolaridad universidad uruguay",
+    "promedio ponderado creditos udelar",
+    "escala calificaciones udelar 0 a 12",
+    "escolaridad fondo de solidaridad beca",
+    "que nota necesito para promedio escolaridad"
+  ],
+  "useCases": [
+    "Calcular tu promedio de escolaridad ponderado por créditos en la UdelaR.",
+    "Ver en qué categoría conceptual cae tu escolaridad (Bueno, Muy bueno, Excelente).",
+    "Saber qué nota necesitás en lo que te falta para llegar a un objetivo de escolaridad.",
+    "Chequear si alcanzás el promedio que pide una beca del Fondo de Solidaridad.",
+    "Entender por qué las materias de más créditos pesan más que las de menos.",
+    "Excluir del promedio las actividades no aprobadas (nota menor a 3).",
+    "Convertir tu promedio numérico a la equivalencia conceptual de la nueva escala UdelaR.",
+    "Planificar cuántos créditos te quedan y con qué notas cerrás tu escolaridad."
+  ],
+  "fields": [
+    {
+      "id": "notas",
+      "label": "Notas (separadas por coma)",
+      "type": "text",
+      "required": true,
+      "placeholder": "10, 8, 12, 6",
+      "help": "Notas en la escala UdelaR 0 a 12, en el mismo orden que los créditos. Solo cuentan las aprobadas (≥ 3)."
+    },
+    {
+      "id": "creditos",
+      "label": "Créditos por actividad (separados por coma)",
+      "type": "text",
+      "required": true,
+      "placeholder": "12, 8, 10, 6",
+      "help": "Los créditos de cada actividad, en el mismo orden que las notas."
+    },
+    {
+      "id": "modo",
+      "label": "¿Qué querés calcular?",
+      "type": "select",
+      "default": "promedio",
+      "options": [
+        {
+          "value": "promedio",
+          "label": "Mi promedio de escolaridad"
+        },
+        {
+          "value": "que-necesito",
+          "label": "¿Qué nota necesito para un objetivo?"
+        }
+      ]
+    },
+    {
+      "id": "objetivoPromedio",
+      "label": "Objetivo de promedio (0 a 12)",
+      "type": "number",
+      "required": false,
+      "placeholder": "9",
+      "min": 0,
+      "max": 12,
+      "step": 0.1,
+      "help": "Solo para el modo «¿Qué nota necesito?»: el promedio de escolaridad que querés alcanzar."
+    },
+    {
+      "id": "creditosRestantes",
+      "label": "Créditos que te faltan por cursar",
+      "type": "number",
+      "required": false,
+      "placeholder": "20",
+      "min": 0,
+      "step": 1,
+      "help": "Solo para el modo «¿Qué nota necesito?»: los créditos de las actividades que todavía te quedan."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "promedio",
+      "label": "Promedio de escolaridad",
+      "format": "text",
+      "primary": true
+    },
+    {
+      "id": "notaNecesaria",
+      "label": "Nota promedio necesaria en lo restante",
+      "format": "text",
+      "hideWhenEmpty": true
+    },
+    {
+      "id": "categoria",
+      "label": "Categoría conceptual",
+      "format": "text"
+    },
+    {
+      "id": "totalCreditos",
+      "label": "Créditos aprobados",
+      "format": "number"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: notas 10, 8, 12, 6 con créditos 12, 8, 10, 6",
+    "steps": [
+      "Todas las notas están aprobadas (≥ 3), así que entran las 4 actividades.",
+      "Σ(nota × créditos) = 10×12 + 8×8 + 12×10 + 6×6 = 120 + 64 + 120 + 36 = 340.",
+      "Σ créditos = 12 + 8 + 10 + 6 = 36.",
+      "Promedio de escolaridad = 340 ÷ 36 = 9,44.",
+      "9,44 redondea a 9 → categoría conceptual «Muy bueno»."
+    ],
+    "result": "Promedio de escolaridad = 9,44 (Muy bueno)"
+  },
+  "explanation": "## Cómo se calcula la escolaridad en la UdelaR\n\n```\nEscolaridad = Σ(nota × créditos) ÷ Σ créditos   (solo actividades aprobadas, nota ≥ 3)\n```\n\nLa escolaridad es un **promedio ponderado por créditos**: cada nota se multiplica por los créditos de esa actividad, se suman todos y se divide por el total de créditos. Así, una materia de 12 créditos influye más que una de 6.\n\nSolo entran las actividades **aprobadas** (nota **≥ 3**). Las no aprobadas no computan en la escolaridad de egresados.\n\n## La escala UdelaR (vigente desde 2025)\n\nDesde el **27 de enero de 2025** la UdelaR usa una escala de **0 a 12** con una equivalencia conceptual:\n\n| Nota | Categoría |\n|---|---|\n| 0 | Muy insuficiente |\n| 1 – 2 | Insuficiente |\n| 3 – 4 | Aceptable |\n| 5 – 6 – 7 | Bueno |\n| 8 – 9 | Muy bueno |\n| 10 – 11 – 12 | Excelente |\n\nLa **aprobación** es con nota **3 o más** (Aceptable). El promedio de escolaridad también se expresa en esa escala.\n\n## Modo «¿qué nota necesito?»\n\nSi elegís ese modo, la calculadora estima la **nota promedio** que necesitás en los créditos que te faltan para llegar a un objetivo:\n\n```\nnotaNecesaria = ( objetivo × (créditosActuales + créditosRestantes) − Σ(nota × créditos actuales) ) ÷ créditosRestantes\n```\n\nSi el resultado es **mayor a 12**, el objetivo no es alcanzable solo con esas actividades. Si es **0 o menos**, ya lográs el objetivo con lo que tenés.\n\n## Para qué sirve la escolaridad\n\n- **Becas del Fondo de Solidaridad** y otras ayudas económicas suelen exigir una escolaridad mínima.\n- **Requisitos académicos**: cupos, pasantías, ingreso a posgrados y órdenes de mérito se ordenan por escolaridad.\n- **Certificado de escolaridad**: el promedio que figura en tu historia académica es este ponderado por créditos.\n\n## Qué NO hace esta calculadora\n\n- **No incluye las actividades no aprobadas** (nota < 3): no computan en la escolaridad.\n- **No reemplaza el certificado oficial** de escolaridad de tu servicio (facultad).\n- **No aplica reglas particulares** de planes de estudio con criterios propios de ponderación.\n\n## Disclaimer\n\nEl cálculo sigue el criterio general de escolaridad ponderada por créditos y la nueva escala 0 a 12. Cada servicio (facultad) puede tener particularidades en su plan de estudios. El promedio oficial es el que emite tu servicio en el certificado de escolaridad.",
+  "faq": [
+    {
+      "q": "¿Cómo se calcula el promedio de escolaridad en la UdelaR?",
+      "a": "Es un **promedio ponderado por créditos** de las actividades aprobadas: multiplicás cada nota por sus créditos, sumás todo y dividís por el total de créditos. Fórmula: **Σ(nota × créditos) ÷ Σ créditos**, en la escala 0 a 12."
+    },
+    {
+      "q": "¿Qué notas cuentan para la escolaridad?",
+      "a": "Solo las **aprobadas**, es decir con nota **3 o más** (Aceptable) en la escala 0 a 12. Las actividades no aprobadas (nota menor a 3) **no computan** en el promedio de escolaridad."
+    },
+    {
+      "q": "¿Cuál es la escala de calificaciones de la UdelaR desde 2025?",
+      "a": "Una escala de **0 a 12**: 0 Muy insuficiente, 1–2 Insuficiente, 3–4 Aceptable, 5–6–7 Bueno, 8–9 Muy bueno y 10–11–12 Excelente. Rige desde el 27 de enero de 2025 y la aprobación es con 3 o más."
+    },
+    {
+      "q": "¿Por qué el promedio ponderado da distinto al promedio simple?",
+      "a": "Porque la escolaridad **pondera por créditos**: las materias de más créditos pesan más. Si tus mejores notas están en actividades de muchos créditos, el ponderado te sube respecto del promedio simple; si están en las de pocos créditos, te baja."
+    },
+    {
+      "q": "¿Qué nota necesito para llegar a un promedio objetivo?",
+      "a": "Con el modo «¿qué nota necesito?» ingresás tu objetivo y los créditos que te faltan. La calculadora aplica **notaNecesaria = (objetivo × (créditos actuales + restantes) − Σ(nota × créditos actuales)) ÷ créditos restantes** y te avisa si el objetivo es imposible (más de 12) o si ya lo lográs."
+    },
+    {
+      "q": "¿La escolaridad sirve para las becas del Fondo de Solidaridad?",
+      "a": "Sí. Las becas del **Fondo de Solidaridad** y otras ayudas suelen exigir una **escolaridad mínima** y cierto avance en créditos. Este promedio ponderado por créditos es el que se usa para esos requisitos; verificá el mínimo exacto en las bases de la beca."
+    },
+    {
+      "q": "¿Cómo ingreso las notas y los créditos?",
+      "a": "Separados por coma y en el **mismo orden**: por ejemplo notas «10, 8, 12, 6» y créditos «12, 8, 10, 6». La cantidad de notas y de créditos tiene que coincidir; podés usar coma o punto para los decimales."
+    },
+    {
+      "q": "¿Este promedio es el oficial de mi facultad?",
+      "a": "Es una **estimación** con el criterio general de escolaridad ponderada por créditos. El promedio **oficial** lo emite tu servicio (facultad) en el certificado de escolaridad, que puede tener reglas propias según el plan de estudios."
+    }
+  ],
+  "sources": [
+    {
+      "name": "UdelaR — Nueva escala de calificaciones",
+      "url": "https://udelar.edu.uy/portal/nueva-escala-de-calificaciones/"
+    },
+    {
+      "name": "UdelaR (Gestión) — Nueva escala de calificaciones en la escolaridad de egresados",
+      "url": "https://gestion.udelar.edu.uy/noticias/nueva-escala-de-calificaciones-en-la-escolaridad-de-egresados"
+    }
+  ],
+  "relatedSlugs": [],
+  "dataUpdate": {
+    "frequency": "yearly",
+    "updateType": "manual",
+    "lastUpdated": "2026-07-18",
+    "source": "UdelaR — Nueva escala de calificaciones",
+    "sourceUrl": "https://udelar.edu.uy/portal/nueva-escala-de-calificaciones/",
+    "notes": "Escolaridad = promedio ponderado por créditos de las actividades aprobadas (nota ≥ 3): Σ(nota × créditos) ÷ Σ créditos. Escala 0 a 12 vigente desde 27-ene-2025 (0 Muy insuficiente; 1-2 Insuficiente; 3-4 Aceptable; 5-7 Bueno; 8-9 Muy bueno; 10-12 Excelente). Cálculo puro, sin datos fiscales."
+  },
+  "lastReviewed": "2026-07-18",
+  "datePublished": "2026-07-18",
+  "referenceTables": [
+    {
+      "title": "Escala de calificaciones UdelaR (desde 2025)",
+      "headers": ["Nota (0 a 12)", "Categoría conceptual"],
+      "rows": [
+        ["0", "Muy insuficiente"],
+        ["1 – 2", "Insuficiente"],
+        ["3 – 4", "Aceptable (aprobado)"],
+        ["5 – 6 – 7", "Bueno"],
+        ["8 – 9", "Muy bueno"],
+        ["10 – 11 – 12", "Excelente"]
+      ],
+      "note": "Escala vigente desde el 27-ene-2025. La aprobación es con nota 3 o más. El promedio de escolaridad se expresa en la misma escala y solo pondera actividades aprobadas."
+    }
+  ],
+  "_insight": {
+    "type": "highlight",
+    "icon": "🎓",
+    "tone": "info",
+    "text": "La escolaridad no es un promedio simple: pondera por créditos y solo cuenta las actividades aprobadas (nota ≥ 3). Con notas 10, 8, 12, 6 y créditos 12, 8, 10, 6 el resultado es 9,44 (Muy bueno). Una materia de 12 créditos pesa el doble que una de 6."
+  },
+  "sourceVerified": true,
+  "editorialReview": "approved",
+  "automatedTests": "passed"
+}

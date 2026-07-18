@@ -177,3 +177,107 @@ export function fmtUSD(n: number): string {
 export function fmtUSD0(n: number): string {
   return '$' + Math.round(Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OBBBA — deducciones temporales 2025-2028 (One Big Beautiful Bill Act, P.L. 119-21).
+// Verificado 2026-07-18 con IRS newsroom + Q&A oficiales. Todas rigen tax years
+// 2025 a 2028 con los MISMOS montos (no hay cifra 2026-específica distinta).
+//   https://www.irs.gov/newsroom/one-big-beautiful-bill-act-tax-deductions-for-working-americans-and-seniors
+//   https://www.irs.gov/newsroom/questions-and-answers-about-the-new-deduction-for-qualified-overtime-compensation
+// ─────────────────────────────────────────────────────────────────────────────
+export const OBBBA_2026 = {
+  // No Tax on Overtime — SOLO la porción "premium" (la mitad de time-and-a-half)
+  // que exige la FLSA, no el pago total de horas extra.
+  overtime: {
+    capSingle: 12500,
+    capMFJ: 25000,             // el tope duplicado solo aplica a MFJ
+    phaseoutStart: { single: 150000, mfj: 300000, mfs: 150000, hoh: 150000 } as Record<FilingStatus, number>,
+    reductionPer1000: 100,     // $100 menos de deducción por cada $1.000 de MAGI sobre el umbral
+  },
+  // No Tax on Tips — propinas calificadas; cap único $25.000 para todos los estados civiles.
+  tips: {
+    cap: 25000,
+    phaseoutStart: { single: 150000, mfj: 300000, mfs: 150000, hoh: 150000 } as Record<FilingStatus, number>,
+    reductionPer1000: 100,
+  },
+  // Senior "bonus" deduction 65+ — $6.000 por persona elegible; phase-out 6% del exceso.
+  senior: {
+    perPerson: 6000,           // hasta $12.000 si ambos cónyuges MFJ tienen 65+
+    phaseoutStart: { single: 75000, mfj: 150000, mfs: 75000, hoh: 75000 } as Record<FilingStatus, number>,
+    phaseoutRate: 0.06,        // 6% del MAGI sobre el umbral ($60 por cada $1.000). Se agota en +$100k/+$100k.
+  },
+  // Car loan interest — hasta $10.000 de interés de préstamo de auto nuevo ensamblado en EE.UU.
+  carLoan: {
+    cap: 10000,
+    phaseoutStart: { single: 100000, mfj: 200000, mfs: 100000, hoh: 100000 } as Record<FilingStatus, number>,
+    reductionPer1000: 200,     // $200 menos por cada $1.000 sobre el umbral. Se agota en $150k/$250k.
+  },
+} as const;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Medicare IRMAA 2026 — recargos por ingresos altos (basados en el MAGI 2024).
+// Prima base Part B 2026 = $202.90. Fuente CMS (nov-2025), verificado 2026-07-18.
+//   https://www.currentfederaltaxdevelopments.com/blog/2025/11/17/2026-adjustments-to-medicare-parts-a-b-and-d-a-technical-review-of-premiums-and-irmaa-calculations
+// ─────────────────────────────────────────────────────────────────────────────
+export const IRMAA_2026 = {
+  partBBase: 202.90,
+  /** Cada tier: prima total mensual Part B + recargo mensual Part D (IRMAA). tier[0] = sin recargo. */
+  tiers: [
+    { partB: 202.90, partD: 0 },
+    { partB: 284.10, partD: 14.50 },
+    { partB: 405.80, partD: 37.50 },
+    { partB: 527.50, partD: 60.40 },
+    { partB: 649.20, partD: 83.30 },
+    { partB: 689.90, partD: 91.00 },
+  ],
+  /**
+   * Umbrales SUPERIORES de MAGI por estado civil. El tier es el índice del primer
+   * umbral que el MAGI NO supera. single/hoh y mfj tienen 5 umbrales (6 tiers).
+   * mfs es especial: <109k base, 109k-391k = tier 4, >391k = tier 5.
+   */
+  thresholds: {
+    single: [109000, 137000, 171000, 205000, 500000],
+    mfj: [218000, 274000, 342000, 410000, 750000],
+    mfsBase: 109000,   // por debajo → tier 0
+    mfsHigh: 391000,   // 109k-391k → tier 4; por encima → tier 5
+  },
+} as const;
+
+// ── HSA / HDHP 2026 (IRS Rev. Proc. 2025-19) — verificado 2026-07-18 ──
+//   https://www.irs.gov/pub/irs-drop/rp-25-19.pdf
+export const HSA_2026 = {
+  contribSelfOnly: 4400,
+  contribFamily: 8750,
+  catchUp55: 1000,            // aporte extra por titular de 55+ (por cónyuge, cada uno en su propia cuenta)
+  hdhpMinDeductible: { selfOnly: 1700, family: 3400 },
+  hdhpMaxOutOfPocket: { selfOnly: 8500, family: 17000 },
+} as const;
+
+// ── Virginia — car tax (personal property tax de vehículos) 2026 ──
+// Tasa fijada por cada localidad ($/$100 de valor tasado). PPTRA: el estado
+// subsidia un % del impuesto sobre los primeros $20.000 de valor tasado de
+// vehículos de uso personal. Tasas verificadas 2026-07-18 (localidades oficiales).
+export const VA_CAR_TAX_2026 = {
+  pptraReliefCap: 20000,       // primeros $20.000 de valor tasado reciben alivio PPTRA
+  defaultRatePer100: 4.57,     // Fairfax County 2026
+  defaultReliefPct: 49,        // Fairfax County 2026
+  /** Tasas de referencia 2026 ($/$100 de valor tasado) + % de alivio PPTRA. */
+  localities: [
+    { name: 'Arlington County', rate: 5.00, relief: 0 },
+    { name: 'Alexandria City', rate: 5.00, relief: 0 },
+    { name: 'Fairfax County', rate: 4.57, relief: 49 },
+    { name: 'Virginia Beach', rate: 4.00, relief: 0 },
+    { name: 'Prince William County', rate: 3.70, relief: 0 },
+    { name: 'Richmond City', rate: 3.70, relief: 0 },
+    { name: 'Loudoun County', rate: 3.09, relief: 41 },
+  ],
+} as const;
+
+// ── Missouri — personal property tax de vehículos 2026 ──
+// Valor tasado = 33⅓% del valor de mercado (RSMo 137.115, subclase de propiedad
+// personal). El impuesto = valor tasado ÷ 100 × levy total ($/$100), y el levy lo
+// fija cada distrito/condado. Ratio estatutario verificado 2026-07-18.
+export const MO_PROPERTY_TAX_2026 = {
+  assessmentRatio: 1 / 3,      // 33⅓% del valor de mercado
+  defaultLevyPer100: 7.00,     // levy de EJEMPLO ($/$100); reemplazar por el del condado
+} as const;

@@ -313,3 +313,119 @@ export function valorHoraOrdinaria(salarioMensual: number, fecha: Date = new Dat
 export function fmtCOP(n: number): string {
   return '$' + new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(Math.round(n));
 }
+
+// ═══════════════════ Datos verificados jul-2026 (fábrica calcs CO) ═══════════════════
+
+/**
+ * Tarifas de taxi Bogotá 2026 — Decreto Distrital 042 de 2026 (en firme 12-feb-2026).
+ * Verificado 2026-07-18: movilidadbogota.gov.co + La República + alcaldiabogota.gov.co (Norma1.jsp?i=192138).
+ * La unidad vale por cada 100 m de recorrido o cada 24 s de espera. Valores en pesos ya redondeados por el decreto.
+ * "experiencial" = taxis con factor de excelencia operacional (alta calidad).
+ */
+export const TAXI_BOGOTA_2026 = {
+  decreto: 'Decreto Distrital 042 de 2026',
+  vigenciaDesde: '2026-02-12',
+  metrosPorUnidad: 100,
+  segundosEsperaPorUnidad: 24,
+  unidadPesos: { basico: 159, experiencial: 172 },
+  banderazoUnidades: 28,
+  banderazoPesos: { basico: 4_500, experiencial: 4_800 },
+  carreraMinimaPesos: { basico: 8_000, experiencial: 8_600 },      // ≈ 50 unidades
+  recargoNocturnoDominicalPesos: { basico: 3_800, experiencial: 4_100 }, // 20:00–05:00, domingos y festivos (24 unidades)
+  recargoAeropuertoPesos: { basico: 8_000, experiencial: 8_600 },  // desde/hacia El Dorado y Puente Aéreo (50 unidades)
+  recargoPuertaAPuertaPesos: { basico: 1_400, experiencial: 1_500 }, // 9 unidades
+} as const;
+
+/**
+ * Préstamos Nequi — tasas vigentes verificadas 2026-07-18 (nequi.com.co simulador Bajo Monto + prensa jul-2026).
+ * Salvavidas: 3,50% EM (≈51,1% EA), plazo 1 mes, + seguro de vida (≈$1.450 por millón según prensa).
+ * Bajo Monto: 1,79%–4,13% EM (hasta 62,56% EA) + seguro $2.000/mes por millón + comisión FGA 0–4%.
+ * Propulsor (libre inversión): 1,49%–1,85% EM, hasta 60 meses, + fianza 0–17,8% del total.
+ */
+export const NEQUI_PRESTAMOS_2026 = {
+  salvavidas: { emPct: 3.5, min: 100_000, max: 500_000, plazoMeses: 1 },
+  bajoMonto: { emMinPct: 1.79, emMaxPct: 4.13, eaMaxPct: 62.56, min: 100_000, max: 5_550_000, plazoMesesMax: 48 },
+  propulsor: { emMinPct: 1.49, emMaxPct: 1.85, min: 100_000, max: 25_000_000, plazoMesesMax: 60 },
+} as const;
+
+/**
+ * Devolución del IVA (Prosperidad Social) 2026 — verificado 2026-07-18.
+ * Giros bimestrales (6 ciclos/año). Monto por ciclo varía por hogar: $90.000–$110.000; el primer ciclo 2026 giró $99.100.
+ * Focalización automática: Sisbén IV grupos A (A1–A5) y B (B1–B4).
+ */
+export const DEVOLUCION_IVA_2026 = {
+  ciclosPorAnio: 6,
+  montoCicloReferencia: 99_100,
+  montoRango: { min: 90_000, max: 110_000 },
+} as const;
+
+/**
+ * Cuota de compensación militar (libreta militar) 2026 — % del SMLMV según situación económica.
+ * Verificado 2026-07-18 (colombiatramita.co + Infobae ene-2026). Exentos: víctimas RUV, Sisbén en
+ * pobreza extrema y personas con discapacidad permanente (pueden pagar solo la impresión del carné).
+ */
+export const LIBRETA_MILITAR_2026 = {
+  sinIngresos: 0.05,     // $87.545
+  hasta2Smlmv: 0.15,     // $262.636
+  de2a4Smlmv: 0.25,      // $437.726
+  mas4Smlmv: 0.50,       // $875.453
+} as const;
+
+/**
+ * Pasaporte colombiano 2026 — Resolución 03969 del 26-mar-2026 (rige desde el 06-abr-2026), Cancillería.
+ * Bogotá: libreta + impuesto de timbre. Departamentos suman estampillas propias (ej. Valle del Cauca).
+ */
+export const PASAPORTE_2026 = {
+  bogota: { ordinario: 111_000, ejecutivo: 244_000, impuestoTimbre: 79_000 }, // totales: $190.000 y $323.000
+  valleDelCauca: { ordinarioTotal: 343_700, ejecutivoTotal: 476_700 },
+} as const;
+
+/** Ahorro digital 2026 — Cajitas Nu 11,25% EA (desde 09-abr-2026) vs Nequi 0,1% EA (verificado 2026-07-18). */
+export const AHORRO_DIGITAL_2026 = {
+  nuCajitasEaPct: 11.25,
+  nequiEaPct: 0.1,
+} as const;
+
+/**
+ * Reajuste pensional 2026 (Colpensiones, nómina de enero): mesadas > 1 SMLMV suben IPC 2025 = 5,1%;
+ * mesadas de 1 SMLMV suben con el salario mínimo (+23%). Piso: ninguna mesada < SMLMV 2026.
+ */
+export const REAJUSTE_PENSIONAL_2026 = {
+  ipc2025Pct: 5.1,
+  smlmv2025: 1_423_500,
+} as const;
+
+/** IBUA 2026 — Resolución DIAN 000247 del 30-dic-2025: $/100 ml según gramos de azúcar añadido por 100 ml. */
+export const IBUA_2026 = [
+  { desdeG: 0, hastaG: 5, tarifaPor100ml: 0 },
+  { desdeG: 5, hastaG: 9, tarifaPor100ml: 40 },
+  { desdeG: 9, hastaG: Infinity, tarifaPor100ml: 68 },
+] as const;
+
+/** SOAT motos 2026 — tarifas máximas vigentes desde 01-ene-2026 (Superfinanciera; verificado El Tiempo + R5). */
+export const SOAT_MOTO_2026 = {
+  ciclomotor: 124_100,
+  menos100cc: 256_200,
+  de100a200cc: 343_300,
+  mas200cc: 761_400,
+  motocarro: 386_900,
+} as const;
+
+/** Tecnomecánica motos 2026: $217.781–$247.490 según antigüedad y CDA (El Tiempo/Infobae feb-2026). */
+export const TECNOMECANICA_MOTO_2026 = { min: 217_781, max: 247_490, tipico: 235_000 } as const;
+
+/**
+ * Bre-B (pagos inmediatos, Banco de la República): gratis para personas naturales durante los primeros
+ * años (cobro recién desde sep-2029; valor definido $6,46/operación). Tope 1.000 UVB = $12.110.000 por transacción.
+ */
+export const BRE_B_2026 = {
+  costoFuturoPorOperacion: 6.46,
+  topePorTransaccion: 12_110_000,
+} as const;
+
+/** Crédito de vivienda 2026 — Superfinanciera (corte 19-jun-2026): promedio no VIS 15,18% EA; VIS desde ~10,6% EA. */
+export const CREDITO_VIVIENDA_2026 = {
+  tasaPromedioNoVisEaPct: 15.18,
+  tasaMinVisEaPct: 10.6,
+  cuotaMaxPctIngreso: 30, // primera cuota ≤ 30% de los ingresos familiares (Ley 546/1999, art. 17)
+} as const;

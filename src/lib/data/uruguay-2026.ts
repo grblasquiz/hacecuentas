@@ -323,3 +323,140 @@ export function salarioLiquido(
 export function fmtUYU(n: number): string {
   return '$U ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(Math.round(n * 100) / 100);
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AGREGADOS — tanda de calculadoras UY (jul-2026). Datos verificados con fuente
+// oficial 2026 (BPS, DGI, UTE, ANCAP/URSEA, CVU/MTOP, AEU, UdelaR).
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Reforma jubilatoria — Ley N° 20.130 (Sistema Previsional Común).
+ * La ley eleva la edad mínima de 60 a 65 años en forma gradual según el año de
+ * nacimiento (transición). La causal común exige 30 años de servicios. Con menos
+ * años se accede por la causal de edad avanzada (65/25 … 70/15). La tasa de
+ * reemplazo (sobre el SBJ) corresponde al régimen anterior/transición (causal
+ * posterior al 1/7/2009), que rige para quienes se jubilan hasta que empiece a
+ * otorgarse la causal común del nuevo sistema (2033).
+ * Fuente: BPS + IMPO Ley 20.130.
+ */
+export const JUBILACION_UY = {
+  aniosServicioComun: 30,
+  minAniosContributivo: 15,
+  // Edad mínima de la causal común según año de nacimiento (transición Ley 20.130).
+  edadMinimaPorNacimiento: [
+    { nacidoHasta: 1972, edad: 60 },
+    { nacidoHasta: 1973, edad: 61 },
+    { nacidoHasta: 1974, edad: 62 },
+    { nacidoHasta: 1975, edad: 63 },
+    { nacidoHasta: 1976, edad: 64 },
+    { nacidoHasta: Infinity, edad: 65 }, // 1977 en adelante
+  ] as ReadonlyArray<{ nacidoHasta: number; edad: number }>,
+  // Jubilación por edad avanzada: edad → años de servicio mínimos.
+  edadAvanzada: [
+    { edad: 65, aniosServicio: 25 },
+    { edad: 66, aniosServicio: 23 },
+    { edad: 67, aniosServicio: 21 },
+    { edad: 68, aniosServicio: 19 },
+    { edad: 69, aniosServicio: 17 },
+    { edad: 70, aniosServicio: 15 },
+  ] as ReadonlyArray<{ edad: number; aniosServicio: number }>,
+  // Tasa de reemplazo sobre el SBJ (régimen anterior/transición, BPS).
+  tasaReemplazo: {
+    base: 0.45,               // 45% por 30 años de servicio
+    adicServicio30a35: 0.01,  // +1% por año de servicio entre 30 y 35
+    adicServicio35a40: 0.005, // +0,5% por año de servicio entre 35 y 40
+    adicEdadPorAnio: 0.02,    // +2% por año trabajado luego de los 60 (hasta la causal)
+    topeAdicEdad: 0.30,       // tope combinado de los adicionales por edad
+    maxTasa: 0.825,           // tope global 82,5%
+  },
+} as const;
+
+/**
+ * UTE — Tarifa Residencial Simple (TRS), Pliego Tarifario vigente 2026.
+ * El precio del kWh sube por escalones de consumo mensual. El cargo fijo está
+ * exento de IVA; sobre la energía se aplica IVA del 22%.
+ * Fuente: UTE — Pliego Tarifario 2026.
+ */
+export const UTE_TRS_2026 = {
+  cargoFijoMensual: 324.9, // $U/mes (exento de IVA)
+  iva: 0.22,               // 22% sobre la energía
+  escalones: [
+    { hastaKwh: 100, precio: 6.744 },       // 1–100 kWh
+    { hastaKwh: 600, precio: 8.452 },       // 101–600 kWh
+    { hastaKwh: Infinity, precio: 10.539 }, // 601 kWh en adelante
+  ] as ReadonlyArray<{ hastaKwh: number; precio: number }>,
+  fecha: '2026',
+  fuente: 'UTE — Pliego Tarifario 2026',
+} as const;
+
+/**
+ * ANCAP/URSEA — precios de combustibles (venta al público). SNAPSHOT: se ajustan
+ * periódicamente por decreto. Valores de julio 2026.
+ */
+export const COMBUSTIBLE_UY = {
+  super95: 88.67,   // $U/L Nafta Súper 95
+  gasoil50s: 58.68, // $U/L Gasoil 50S
+  fecha: '2026-07',
+  fuente: 'ANCAP/URSEA (jul-2026)',
+} as const;
+
+/**
+ * Peajes de rutas nacionales (CVU/MTOP) — categoría 1 (auto y camioneta 2 ejes).
+ * Se ajustan semestralmente (1-jun y 1-dic). El Telepeaje tiene descuento sobre
+ * la tarifa de efectivo.
+ */
+export const PEAJE_UY_2026 = {
+  autoEfectivo: 196.57, // $U por pasada, efectivo/SUCIVE (categoría 1)
+  autoTelepeaje: 167,   // $U por pasada con Telepeaje
+  fecha: '2026-06-01',
+  fuente: 'CVU/MTOP',
+} as const;
+
+/**
+ * IRPF por incremento patrimonial en venta de inmuebles (Cat. I) — DGI.
+ * Tasa 12% sobre la renta. Criterio ficto (inmuebles adquiridos antes del
+ * 1/7/2007): renta = 15% del precio → impuesto efectivo 1,8% del precio.
+ * Criterio real (obligatorio para adquiridos después): renta = precio − costo
+ * actualizado − ITP − mejoras.
+ */
+export const IRPF_INMUEBLE_UY = {
+  tasa: 0.12,
+  fictoPorcentaje: 0.15,
+  fechaCorte: '2007-07-01',
+} as const;
+
+/**
+ * Gastos de compraventa de inmuebles: ITP (DGI) + honorarios del escribano (AEU).
+ * ITP: 2% por parte (comprador y vendedor) sobre el valor catastral.
+ * Escribano: honorario base 3% (arancel referencial AEU) sobre el mayor entre
+ * precio y valor catastral, + aporte a la Caja Notarial (15% del honorario) +
+ * IVA (22%). El costo efectivo del escribano ronda el 4,2% del precio.
+ */
+export const COMPRAVENTA_UY = {
+  itpPorParte: 0.02,
+  escribanoHonorario: 0.03,
+  cajaNotarialSobreHonorario: 0.15,
+  ivaHonorario: 0.22,
+} as const;
+
+/**
+ * Impuesto al Patrimonio de personas físicas — DGI (patrimonio al 31/12).
+ * Mínimo no imponible (MNI) 2026 = $6.653.000 por persona; $13.306.000 si se
+ * liquida por núcleo familiar. Para RESIDENTES, tras la reducción gradual (Ley
+ * 19.438), la tasa es única del 0,10% sobre el excedente del MNI. Los NO
+ * residentes (que no tributan IRNR) mantienen la escala progresiva 0,7%–1,5%.
+ * Vivienda del contribuyente: se deduce el 50% de su valor (tope = MNI).
+ * Fuente: DGI (tasas del Impuesto al Patrimonio personas físicas).
+ */
+export const IP_PATRIMONIO_UY = {
+  mniPersonaFisica: 6653000,
+  mniNucleoFamiliar: 13306000,
+  tasaResidente: 0.001, // 0,10% sobre el excedente del MNI (residentes)
+} as const;
+
+/** Formatea una cantidad de Unidades Indexadas: "1.234,56 UI". */
+export function fmtUI(n: number): string {
+  return new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
+    Math.round(n * 100) / 100,
+  ) + ' UI';
+}

@@ -162,3 +162,100 @@ export const DAS_MEI = {
   get comercioServicos() { return Math.round((this.inss5 + this.icms + this.iss) * 100) / 100; }, // 87.05
   get transportador() { return Math.round((this.inss12 + this.icms) * 100) / 100; }, // 195.52
 } as const;
+
+/* ───────────── Empregado doméstico — eSocial / DAE 2026 ───────────── */
+// Encargos patronais recolhidos mensalmente no DAE (Simples Doméstico, LC 150/2015),
+// somam ~20% sobre a remuneração, além do salário e do INSS retido do empregado.
+// Fontes:
+//  - LC 150/2015, art. 34 (composição do DAE) —
+//    https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp150.htm
+//  - eSocial Doméstico (gov.br) —
+//    https://www.gov.br/esocial/pt-br/domestico
+/** Encargos patronais do empregador doméstico (percentuais sobre a remuneração, 2026). */
+export const DOMESTICA_ENCARGOS = {
+  /** INSS patronal (contribuição do empregador). */
+  inssPatronal: 0.08,
+  /** FGTS mensal (depósito). */
+  fgts: 0.08,
+  /** FGTS compensatório (antecipação da multa rescisória de 40% — art. 22 LC 150). */
+  fgtsCompensatorio: 0.032,
+  /** GILRAT / seguro de acidente de trabalho. */
+  gilrat: 0.008,
+  /** Soma dos encargos patronais recolhidos no DAE = 20%. */
+  get patronalTotal() {
+    return Math.round((this.inssPatronal + this.fgts + this.fgtsCompensatorio + this.gilrat) * 1000) / 1000;
+  },
+} as const;
+
+/** INSS do empregado doméstico retido no DAE (mesma tabela progressiva do CLT — usa calcINSS). */
+
+/* ───────────── Salário-família 2026 (INSS) ───────────── */
+// Portaria Interministerial MPS/MF nº 13/2026: cota de R$ 67,54 por filho de até
+// 14 anos (ou inválido de qualquer idade), para quem recebe até o teto de remuneração.
+// Fontes:
+//  - INSS — Salário-família (valor limite) —
+//    https://www.gov.br/inss/pt-br/direitos-e-deveres/salario-familia/valor-limite-para-direito-ao-salario-familia
+/** Valor da cota mensal do salário-família por filho (2026). */
+export const SALARIO_FAMILIA_COTA = 67.54;
+/** Teto de remuneração mensal para ter direito ao salário-família (2026). */
+export const SALARIO_FAMILIA_TETO = 1980.38;
+
+/* ───────────── Bandeiras tarifárias 2026 (ANEEL) ───────────── */
+// Acréscimo na conta de luz por 100 kWh consumidos, conforme a bandeira vigente.
+// Valores de referência para 2026. Fonte:
+//  - ANEEL — Bandeiras tarifárias —
+//    https://www.gov.br/aneel/pt-br/assuntos/tarifas/bandeiras-tarifarias
+/** Acréscimo por kWh de cada bandeira tarifária (R$/kWh, 2026). */
+export const BANDEIRAS_TARIFARIAS = {
+  verde: 0,
+  amarela: 1.88 / 100,      // R$ 1,88 por 100 kWh
+  vermelha1: 4.46 / 100,    // R$ 4,46 por 100 kWh (patamar 1)
+  vermelha2: 7.87 / 100,    // R$ 7,87 por 100 kWh (patamar 2)
+} as const;
+
+/* ───────────── UFESP e ITCMD São Paulo 2026 ───────────── */
+// UFESP 2026 = R$ 38,42 (Comunicado DA SEFAZ-SP, DOE 18/12/2025). ITCMD-SP: alíquota
+// fixa de 4% (Lei 10.705/2000), mantida em 2026 (progressividade até 8% depende de
+// lei estadual ainda não aprovada). Isenções expressas em UFESP.
+// Fontes:
+//  - UFESP 2026 — https://portal.fazenda.sp.gov.br/Noticias/Paginas/ufesp2026.aspx
+//  - Lei 10.705/2000 (ITCMD-SP, alíquota e isenções) —
+//    https://legislacao.fazenda.sp.gov.br/Paginas/lei10705.aspx
+/** Valor da UFESP para 2026 (R$). */
+export const UFESP_2026 = 38.42;
+/** ITCMD São Paulo 2026: alíquota fixa e faixas de isenção (em UFESP). */
+export const ITCMD_SP = {
+  aliquota: 0.04,
+  /** Doação isenta até 2.500 UFESPs por ano (por doador/donatário). */
+  isencaoDoacaoUfesp: 2500,
+  /** Herança: imóvel único de até 2.500 UFESPs é isento. */
+  isencaoHerancaImovelUnicoUfesp: 2500,
+  get isencaoDoacaoReais() { return Math.round(this.isencaoDoacaoUfesp * UFESP_2026 * 100) / 100; }, // 96.050
+  get isencaoHerancaReais() { return Math.round(this.isencaoHerancaImovelUnicoUfesp * UFESP_2026 * 100) / 100; }, // 96.050
+} as const;
+
+/* ───────────── IPVA 2026 — Paraná e Santa Catarina ───────────── */
+// Base de cálculo: valor venal (tabela FIPE). Alíquotas confirmadas para 2026.
+// PARANÁ: redução de 45% — de 3,5% para 1,9% sobre autos (menor alíquota do Brasil).
+//   Fonte: Governo do Paraná / DETRAN-PR —
+//   https://www.parana.pr.gov.br/aen/Noticia/Com-reducao-de-45-Parana-tera-menor-aliquota-de-IPVA-do-Brasil-em-2026
+// SANTA CATARINA: 2% autos de passeio/utilitários; 1% motos, caminhões, ônibus,
+//   micro-ônibus, veículos de carga e locadoras.
+//   Fonte: SEF-SC — https://www.sef.sc.gov.br/servicos-orgao/25/IPVA
+/** Alíquotas do IPVA Paraná 2026 (% sobre o valor venal FIPE). */
+export const IPVA_PR_ALIQUOTAS: Record<string, number> = {
+  auto: 1.9,
+  moto: 1.0,
+  caminhao: 1.0,
+  onibus: 1.0,
+  locadora: 0.5,
+};
+/** Alíquotas do IPVA Santa Catarina 2026 (% sobre o valor venal FIPE). */
+export const IPVA_SC_ALIQUOTAS: Record<string, number> = {
+  auto: 2.0,
+  utilitario: 2.0,
+  moto: 1.0,
+  caminhao: 1.0,
+  onibus: 1.0,
+  locadora: 1.0,
+};

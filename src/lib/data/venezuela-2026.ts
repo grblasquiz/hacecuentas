@@ -197,3 +197,121 @@ export function usdToVes(usd: number, tasa: 'bcv' | 'paralelo' = 'bcv'): number 
 export function vesToUsd(ves: number, tasa: 'bcv' | 'paralelo' = 'bcv'): number {
   return ves / VENEZUELA_2026.fx[tasa];
 }
+
+// ═════════════════════════════════════════════════════════════════════════
+//  EXPORTS ADICIONALES (jul-2026) — valores oficiales verificados usados por
+//  calcs nuevas. Se agregan al final para no tocar la tabla maestra de arriba.
+// ═════════════════════════════════════════════════════════════════════════
+
+/**
+ * IVSS — Indemnización diaria por incapacidad temporal (reposo médico).
+ * Ley del Seguro Social, Art. 9 y Reglamento.
+ *   - Días 1 a 3: los paga el PATRONO al 100% del salario.
+ *   - Desde el día 4 y hasta 52 semanas máx.: el IVSS paga 2/3 (66,66%) del
+ *     salario normal; el patrono suele completar el 33,33% restante (según
+ *     contrato/convención). Requiere validar el reposo ante el IVSS ≤72 h.
+ * Fuente: Ley del Seguro Social (Justia VE), IVSS — Base Legal Indemnizaciones.
+ */
+export const IVSS_REPOSO = {
+  porcentajeIvss: 0.6666,       // 2/3 del salario desde el día 4
+  porcentajePatronoComplemento: 0.3334, // complemento habitual hasta el 100%
+  diasEmpleador100: 3,          // primeros 3 días: patrono paga 100%
+  desdeDia: 4,                  // el subsidio del IVSS arranca el día 4
+  maxSemanas: 52,               // tope de 52 semanas por un mismo caso
+} as const;
+
+/**
+ * IVSS — Prestación dineraria por Pérdida Involuntaria del Empleo ("paro forzoso").
+ * Ley del Régimen Prestacional de Empleo, Art. 31 y ss.
+ *   - Monto = 60% del salario mensual promedio cotizado al IVSS en los últimos
+ *     12 meses, pagado por hasta 5 meses (5 cuotas mensuales).
+ *   - Requisito: haber cotizado al menos 52 semanas en los últimos 24 meses y
+ *     haber perdido el empleo de forma involuntaria. Solicitud ≤60 días.
+ * Fuente: Ley de Régimen Prestacional de Empleo (Asamblea Nacional), Venelogía.
+ */
+export const PARO_FORZOSO_IVSS = {
+  porcentaje: 0.60,             // 60% del salario promedio cotizado
+  maxMeses: 5,                  // hasta 5 cuotas mensuales
+  meses: 12,                    // promedio de los últimos 12 meses cotizados
+  cotizacionesMinSemanas: 52,   // 52 semanas cotizadas mínimo
+  ventanaMeses: 24,             // dentro de los últimos 24 meses
+  plazoSolicitudDias: 60,       // plazo para solicitar tras el despido
+} as const;
+
+/**
+ * LOTTT — Recargo por día feriado / día de descanso trabajado (Art. 119 y 120).
+ *   - El día feriado o de descanso trabajado se paga con un RECARGO del 50%
+ *     sobre el salario normal, además del salario del día.
+ *   - Si se trabaja el día de descanso (feriado o no), nace además el derecho
+ *     a un día de descanso compensatorio remunerado (no sustituible por dinero).
+ * Fuente: LOTTT Art. 119-120 (ley.com.ve), Acceso a la Justicia.
+ */
+export const FERIADO_LOTTT = {
+  recargo: 0.50,                // 50% de recargo sobre el salario normal
+  horasParaCompensatorioCompleto: 4, // ≥4 h → día compensatorio completo
+} as const;
+
+/**
+ * FAOV / BANAVIH — Fondo de Ahorro Obligatorio para la Vivienda.
+ * Decreto con Rango, Valor y Fuerza de Ley del Régimen Prestacional de Vivienda
+ * y Hábitat (Reforma Decreto Nº 9.048), Art. 30.
+ *   - Aporte total 3% del SALARIO INTEGRAL mensual: 1% trabajador + 2% patrono.
+ *   - Lo entera el patrono los primeros 5 días de cada mes ante BANAVIH.
+ * Fuente: BANAVIH, Decreto Nº 9.048 (Asamblea Nacional), Acceso a la Justicia.
+ */
+export const FAOV_BANAVIH = {
+  trabajador: 0.01,             // 1% retenido al trabajador
+  patrono: 0.02,                // 2% aporte patronal
+  total: 0.03,                  // 3% del salario integral
+  baseEsSalarioIntegral: true,
+} as const;
+
+/**
+ * LOTTT Art. 154 — Límite legal de amortización de deudas por nómina.
+ * Las deudas del trabajador con el patrono se amortizan en cuotas que NO pueden
+ * exceder 1/3 (≈33,33%) del salario semanal o mensual, según el período.
+ * Se usa como tope prudencial de capacidad de pago para créditos por nómina.
+ * Fuente: LOTTT Art. 154 (Justia VE), Nayma Consultores.
+ */
+export const DEDUCCION_MAXIMA_NOMINA_LOTTT = 1 / 3; // ≈ 0,3333
+
+/**
+ * Reconversiones monetarias del bolívar (factores fijos históricos).
+ * Cada reconversión eliminó ceros dividiendo todo importe por un factor fijo.
+ * En total se eliminaron 14 ceros (2008: 3, 2018: 5, 2021: 6).
+ * Para pasar de una moneda vieja a la ACTUAL (bolívar digital, VED) se aplican
+ * en cadena los factores de las reconversiones posteriores a esa moneda.
+ * Fuente: BCV, Decreto de nueva expresión monetaria 01/10/2021 (Acceso a la
+ * Justicia), Prodavinci, El Diario.
+ */
+export const RECONVERSIONES_VES = [
+  {
+    id: 'original',
+    nombre: 'Bolívar (Bs., antes de 2008)',
+    anio: null as number | null,
+    ceros: 0,
+    // Factor acumulado para llegar al bolívar ACTUAL (÷1.000 ÷100.000 ÷1.000.000).
+    factorAActual: 1_000 * 100_000 * 1_000_000, // 1e14
+  },
+  {
+    id: 'fuerte',
+    nombre: 'Bolívar Fuerte (Bs.F, 2008)',
+    anio: 2008,
+    ceros: 3,
+    factorAActual: 100_000 * 1_000_000, // 1e11
+  },
+  {
+    id: 'soberano',
+    nombre: 'Bolívar Soberano (Bs.S, 2018)',
+    anio: 2018,
+    ceros: 5,
+    factorAActual: 1_000_000, // 1e6
+  },
+  {
+    id: 'digital',
+    nombre: 'Bolívar Digital (Bs.D / VED, 2021)',
+    anio: 2021,
+    ceros: 6,
+    factorAActual: 1, // ya es la moneda actual
+  },
+] as const;

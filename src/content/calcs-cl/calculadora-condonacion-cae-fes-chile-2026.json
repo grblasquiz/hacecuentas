@@ -1,0 +1,251 @@
+{
+  "slug": "calculadora-condonacion-cae-fes-chile-2026",
+  "title": "Calculadora condonación CAE 2026: cuánto te condonan con el FES",
+  "h1": "Calculadora de condonación del CAE — plan FES 2026",
+  "description": "Estimá tu condonación inicial del CAE con la fórmula oficial del Mineduc: base de 20, 30, 40 o 60 UF según tu perfil, multiplicada por tus cuotas pagadas sobre las pactadas más 1. Incluye la opción de pago anticipado con 25% extra.",
+  "answerSnippet": "La condonación del CAE (fórmula Mineduc) = base por perfil × (cuotas pagadas ÷ pactadas + 1). Bases: 20 UF sin título al día, 30 UF titulado al día, 40 UF en mora sin título, 60 UF titulado en mora.",
+  "category": "educacion",
+  "audience": "CL",
+  "icon": "🎓",
+  "formulaId": "condonacion-cae-fes-chile-2026",
+  "ymylRisk": "medium",
+  "intro": "El proyecto de ley que **pone fin al CAE** y crea el nuevo **FES (Financiamiento Público para la Educación Superior)** incluye un plan de reorganización y condonación de las deudas educativas. La condonación inicial no es igual para todos: depende de tu **perfil** (si te titulaste o no, y si estás al día o en mora) y de **cuántas cuotas pagaste** respecto del total pactado.\n\nEsta calculadora aplica la **fórmula oficial publicada por el Mineduc** en fes.mineduc.cl: un monto base en UF según tu perfil (20, 30, 40 o 60 UF), multiplicado por tus cuotas pagadas divididas por las cuotas totales, más 1. El resultado se descuenta de tu saldo de deuda; si lo cubre completo, la deuda se extingue.\n\nImportante: el proyecto de ley **sigue en tramitación en el Congreso** durante 2026, así que los montos definitivos dependen del texto que finalmente se apruebe. Usá el resultado como referencia para entender cuánto podrías descontar de tu deuda, no como un derecho ya vigente.",
+  "keyTakeaway": "Condonación inicial = base por perfil (**20/30/40/60 UF**) × (**cuotas pagadas ÷ cuotas pactadas + 1**). Quien más pagó, más condonación recibe. Sobre el saldo restante hay un **25% adicional** si pagás el 75% en hasta 12 cuotas. El proyecto FES sigue en tramitación.",
+  "useCases": [
+    "Estimar cuánto te condonarían del CAE si te titulaste y estás al día con las cuotas.",
+    "Ver el efecto de estar en mora: la base sube a 40 o 60 UF porque la deuda es más antigua.",
+    "Calcular si la condonación inicial extingue por completo una deuda chica.",
+    "Comparar el descuento entre haber pagado 30, 60 o 90 cuotas del mismo crédito.",
+    "Evaluar la opción de pago anticipado: 25% extra condonado pagando el 75% en hasta 12 cuotas.",
+    "Dimensionar el saldo que quedaría para pagar de forma contingente al ingreso (7-8%).",
+    "Entender por qué dos deudores con la misma deuda reciben condonaciones distintas."
+  ],
+  "fields": [
+    {
+      "id": "titulado",
+      "label": "¿Te titulaste?",
+      "type": "select",
+      "default": "si",
+      "options": [
+        {
+          "value": "si",
+          "label": "Sí, tengo título"
+        },
+        {
+          "value": "no",
+          "label": "No me titulé"
+        }
+      ]
+    },
+    {
+      "id": "situacionPago",
+      "label": "Situación de pago del CAE",
+      "type": "select",
+      "default": "al_dia",
+      "options": [
+        {
+          "value": "al_dia",
+          "label": "Al día"
+        },
+        {
+          "value": "moroso",
+          "label": "En mora"
+        }
+      ]
+    },
+    {
+      "id": "cuotasPagadas",
+      "label": "Cuotas pagadas",
+      "type": "number",
+      "required": true,
+      "placeholder": "60",
+      "min": 0,
+      "max": 500,
+      "step": 1,
+      "hint": "Cuántas cuotas del crédito ya pagaste (las ves en tu comprobante o portal de pago)."
+    },
+    {
+      "id": "cuotasTotales",
+      "label": "Cuotas totales pactadas",
+      "type": "number",
+      "required": true,
+      "placeholder": "120",
+      "min": 1,
+      "max": 500,
+      "step": 1,
+      "hint": "Total de cuotas del crédito (por ejemplo, 120 en un crédito a 10 años o 240 a 20 años)."
+    },
+    {
+      "id": "deudaTotal",
+      "label": "Saldo actual de tu deuda CAE (CLP)",
+      "type": "number",
+      "required": true,
+      "placeholder": "3000000",
+      "min": 1,
+      "step": 100000,
+      "unit": "$"
+    }
+  ],
+  "outputs": [
+    {
+      "id": "condonacionInicialClp",
+      "label": "Condonación inicial estimada",
+      "primary": true
+    },
+    {
+      "id": "condonacionInicialUf",
+      "label": "Condonación en UF"
+    },
+    {
+      "id": "deudaRestante",
+      "label": "Deuda restante"
+    },
+    {
+      "id": "perfilAplicado",
+      "label": "Perfil aplicado"
+    },
+    {
+      "id": "opcionPagoAnticipado",
+      "label": "Opción de pago anticipado"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: titulado al día, 60 de 120 cuotas pagadas, deuda $3.000.000",
+    "inputs": {
+      "titulado": "si",
+      "situacionPago": "al_dia",
+      "cuotasPagadas": 60,
+      "cuotasTotales": 120,
+      "deudaTotal": 3000000
+    },
+    "steps": [
+      "Perfil titulado y al día → monto base de **30 UF**.",
+      "Factor de cuotas: 60 ÷ 120 + 1 = **1,5**.",
+      "Condonación inicial: 30 UF × 1,5 = **45 UF** ≈ $1.838.016 (UF de julio 2026: $40.845).",
+      "Deuda restante: $3.000.000 − $1.838.016 = **$1.161.984**.",
+      "Pago anticipado: pagando $871.488 (75%) en hasta 12 cuotas, se condonan $290.496 (25%)."
+    ],
+    "result": "Condonación inicial de 45 UF ≈ $1.838.016 (61,3% de la deuda) y saldo restante de $1.161.984"
+  },
+  "explanation": "## La fórmula oficial del Mineduc\n\n```\nCondonación inicial (UF) = base según perfil × (cuotas pagadas ÷ cuotas pactadas + 1)\n```\n\nEl monto base depende de dos cosas: si te **titulaste** y si estás **al día o en mora**:\n\n| Perfil | Base de condonación |\n|---|---|\n| Sin título, al día | 20 UF |\n| Titulado/a, al día | 30 UF |\n| Sin título, en mora | 40 UF |\n| Titulado/a, en mora | 60 UF |\n\nEl factor de cuotas premia el esfuerzo de pago: quien pagó la mitad de sus cuotas multiplica por 1,5; quien pagó todas, por 2. El resultado se resta del saldo de deuda y, si lo cubre completo, **la deuda se extingue**.\n\n## Qué pasa con el saldo restante\n\nPara lo que quede después de la condonación inicial hay dos caminos:\n\n- **Pago anticipado:** si pagás el **75%** del saldo en hasta **12 cuotas**, se condona el **25%** restante.\n- **Pago contingente al ingreso:** el saldo se paga como un porcentaje del sueldo (en torno al 7-8% según el proyecto), con condonaciones progresivas mensuales.\n\n## Ejemplo resuelto completo\n\nDeudor **sin título y en mora**, 24 de 240 cuotas pagadas, deuda de $8.000.000:\n\n1. Base: 40 UF (sin título, en mora).\n2. Factor: 24 ÷ 240 + 1 = 1,1.\n3. Condonación: 40 × 1,1 = **44 UF** ≈ $1.797.171.\n4. Saldo restante: $8.000.000 − $1.797.171 = **$6.202.829**.\n\n## Errores comunes\n\n- **Creer que la condonación ya rige:** el proyecto FES sigue en tramitación en el Congreso; la fórmula es la propuesta oficial del Mineduc, no una ley promulgada.\n- **Confundir cuotas pagadas con años:** la fórmula usa cuotas (generalmente mensuales), no años de pago.\n- **Pensar que la mora elimina el beneficio:** es al revés, los perfiles en mora tienen bases más altas (40 y 60 UF) porque suelen arrastrar deudas más antiguas e infladas por intereses.\n- **Olvidar el descuento por pago anticipado:** el 25% adicional sobre el saldo puede ser mayor que la condonación inicial en deudas grandes.\n\n## Disclaimer\n\nEsta es una estimación basada en la fórmula publicada por el Mineduc en fes.mineduc.cl para el plan de reorganización de deudas educativas. Los montos, perfiles y condiciones definitivos dependen de la ley que apruebe el Congreso y de la reglamentación posterior. No constituye un derecho exigible ni asesoría financiera.",
+  "faq": [
+    {
+      "q": "¿Cuánto me condonan del CAE con el FES?",
+      "a": "La condonación inicial es tu **base de perfil** (20 UF sin título al día, 30 UF titulado al día, 40 UF sin título en mora, 60 UF titulado en mora) multiplicada por **(cuotas pagadas ÷ cuotas pactadas + 1)**. Por ejemplo, un titulado al día con la mitad de las cuotas pagadas recibe 30 × 1,5 = 45 UF, unos $1,8 millones."
+    },
+    {
+      "q": "¿La condonación del CAE ya está vigente en 2026?",
+      "a": "No. El proyecto de ley que crea el FES y el plan de condonación **sigue en tramitación** en el Congreso durante 2026. La fórmula de esta calculadora es la publicada oficialmente por el Mineduc, pero los montos definitivos dependen del texto que se apruebe y su reglamentación."
+    },
+    {
+      "q": "¿Por qué los morosos tienen una base de condonación más alta?",
+      "a": "Porque las bases de 40 UF (sin título) y 60 UF (titulado) buscan hacer viable la reorganización de deudas que crecieron con intereses y sanciones. Aun así, el factor de cuotas premia a quien pagó más: un moroso con pocas cuotas pagadas multiplica su base por un factor cercano a 1."
+    },
+    {
+      "q": "¿Qué pasa si la condonación es mayor que mi deuda?",
+      "a": "La deuda se **extingue**: el descuento se aplica hasta dejar el saldo en cero. Pasa sobre todo con deudas chicas de quienes pagaron muchas cuotas, porque el factor (pagadas ÷ pactadas + 1) se acerca a 2 y duplica la base."
+    },
+    {
+      "q": "¿Cómo funciona el descuento por pago anticipado del saldo?",
+      "a": "Sobre el saldo que queda después de la condonación inicial, si pagás el **75% en hasta 12 cuotas**, el **25% restante se condona**. En el ejemplo de la calculadora, un saldo de $1.161.984 se cierra pagando $871.488, con $290.496 condonados."
+    },
+    {
+      "q": "¿Y si no puedo pagar el saldo de una vez?",
+      "a": "El proyecto contempla un **pago contingente al ingreso**: el saldo reorganizado se paga como un porcentaje del sueldo (en torno al 7-8%), con condonaciones progresivas mensuales mientras cumplas. Quien no tiene ingresos o gana poco paga poco o nada."
+    },
+    {
+      "q": "¿Esto aplica también al Fondo Solidario y a los créditos Corfo?",
+      "a": "El plan de reorganización del proyecto FES está pensado para las **deudas educativas** en general, con foco en el CAE. Los detalles finos por tipo de crédito (CAE, Fondo Solidario, Corfo) quedan definidos en la ley y su reglamento, así que revisá tu caso en fes.mineduc.cl cuando se promulgue."
+    },
+    {
+      "q": "¿Dónde veo mis cuotas pagadas y pactadas?",
+      "a": "En el portal de pago de tu crédito (Comisión Ingresa / banco administrador) o en los certificados de deuda. Necesitás dos números: cuántas cuotas pagaste y cuántas se pactaron en total. Con eso y tu saldo, la calculadora estima la condonación."
+    },
+    {
+      "q": "¿La condonación depende de mi ingreso o del quintil?",
+      "a": "La **condonación inicial** no: depende solo del perfil (título y mora) y de las cuotas pagadas sobre las pactadas. El ingreso importa después, en el pago contingente del saldo restante, donde el porcentaje del sueldo y las condonaciones progresivas sí se ajustan a cuánto ganás."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Mineduc — Plan de reorganización y condonación de deudas educativas (FES)",
+      "url": "https://fes.mineduc.cl/plan-de-reorganizacion.html",
+      "publisher": "Ministerio de Educación de Chile",
+      "date": "2026"
+    },
+    {
+      "name": "Mineduc — Este es el plan de condonación del Gobierno para las deudas educativas",
+      "url": "https://www.mineduc.cl/este-es-el-plan-de-condonacion-del-gobierno-para-las-deudas-educativas/",
+      "publisher": "Ministerio de Educación de Chile",
+      "date": "2026"
+    },
+    {
+      "name": "Gob.cl — Fin al CAE: así funcionará el nuevo FES",
+      "url": "https://www.gob.cl/noticias/fin-cae-financiamiento-publico-educacion-superior-fes-funcionamiento-opciones-condonacion/",
+      "publisher": "Gobierno de Chile",
+      "date": "2026"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "quarterly",
+    "lastUpdated": "2026-07-18",
+    "updateType": "manual",
+    "notes": "Fórmula oficial Mineduc del plan de reorganización FES: base 20/30/40/60 UF × (cuotas pagadas ÷ pactadas + 1); pago anticipado 25% extra pagando 75% en hasta 12 cuotas. Proyecto de ley en tramitación durante 2026: revisar al promulgarse.",
+    "source": "Mineduc — Plan de reorganización FES",
+    "sourceUrl": "https://fes.mineduc.cl/plan-de-reorganizacion.html"
+  },
+  "seoKeywords": [
+    "condonacion cae 2026",
+    "calculadora condonacion cae",
+    "fes mineduc condonacion",
+    "cuanto me condonan del cae",
+    "fin del cae fes",
+    "condonacion deuda educativa chile",
+    "cae condonacion titulados morosos",
+    "reorganizacion deuda cae fes",
+    "20 30 40 60 uf condonacion cae"
+  ],
+  "lastReviewed": "2026-07-18",
+  "referenceTables": [
+    {
+      "title": "Condonación inicial del CAE según perfil (plan FES, Mineduc)",
+      "headers": [
+        "Perfil del deudor",
+        "Base de condonación",
+        "Con 50% de cuotas pagadas (×1,5)",
+        "Con 100% pagado (×2)"
+      ],
+      "rows": [
+        [
+          "Sin título, al día",
+          "20 UF",
+          "30 UF",
+          "40 UF"
+        ],
+        [
+          "Titulado/a, al día",
+          "30 UF",
+          "45 UF",
+          "60 UF"
+        ],
+        [
+          "Sin título, en mora",
+          "40 UF",
+          "60 UF",
+          "80 UF"
+        ],
+        [
+          "Titulado/a, en mora",
+          "60 UF",
+          "90 UF",
+          "120 UF"
+        ]
+      ],
+      "note": "Fórmula oficial Mineduc (fes.mineduc.cl): base × (cuotas pagadas ÷ cuotas pactadas + 1). Proyecto de ley en tramitación 2026; montos referenciales en UF."
+    }
+  ]
+}

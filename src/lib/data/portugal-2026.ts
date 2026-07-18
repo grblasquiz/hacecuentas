@@ -457,3 +457,223 @@ export function subsidioDesemprego(remuneracaoReferenciaMensal: number): number 
 export function fmtEUR(n: number): string {
   return new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(Math.round(n * 100) / 100) + ' €';
 }
+
+// ============================================================================
+// EXTENSÕES 2026 — tanda de calculadoras PT (jul-2026). Só ACRESCENTA exports;
+// não altera o objeto PORTUGAL_2026 nem as funções acima.
+// Fontes verificadas 2026-07-18 (deep-links nos JSONs de cada calculadora).
+// ============================================================================
+
+// ── Abono de família para crianças e jovens 2026 ──
+// Portaria n.º 60/2026/1. Escalões = múltiplos de (IAS × 14). Para PEDIDOS NOVOS feitos
+// em 2026 usa-se o IAS de 2025 (522,50 €) → limites 3.657,50 / 7.315 / 12.435,50 / 18.287,50 €.
+// (Para quem JÁ recebia, o escalão de 2026 usa o IAS de 2024 = 509,26 €.)
+// Rendimento de referência = rendimentos anuais do agregado ÷ (n.º de titulares do abono + 1).
+export const ABONO_FAMILIA_2026 = {
+  iasBaseNovosPedidos: 522.50,   // IAS 2025 — base dos escalões para pedidos feitos em 2026
+  // Limites superiores do rendimento de referência ANUAL por escalão (1.º a 4.º).
+  // Acima de 18.287,50 € = 5.º escalão (sem direito a abono).
+  escaloesLimite: [3657.50, 7315.00, 12435.50, 18287.50] as const,
+  escaloesMultiploIas: [0.5, 1, 1.7, 2.5] as const, // × IAS × 14
+  // Montante mensal base por escalão (índices 0..3 = 1.º..4.º) e faixa etária.
+  montante: {
+    ate36meses: [190.98, 161.65, 132.07, 88.43] as const,  // ≤ 36 meses
+    de36a72meses: [75.13, 75.13, 59.33, 44.77] as const,   // 36 a 72 meses
+    mais72meses: [75.13, 75.13, 54.35, 0.00] as const,     // > 72 meses (4.º escalão: 0 €)
+  },
+  majoracaoMonoparentalPct: 0.50,  // +50 % sobre o valor do abono (famílias monoparentais)
+} as const;
+
+/**
+ * Escalão de abono de família (1..5) a partir do rendimento de referência anual do agregado.
+ * 5 = sem direito (rendimento de referência > 18.287,50 €).
+ */
+export function abonoFamiliaEscalao(rendimentoReferenciaAnual: number): number {
+  const lim = ABONO_FAMILIA_2026.escaloesLimite;
+  for (let i = 0; i < lim.length; i++) if (rendimentoReferenciaAnual <= lim[i]) return i + 1;
+  return 5;
+}
+
+/** Rendimento de referência do agregado = rendimentos anuais ÷ (n.º de titulares/filhos com direito + 1). */
+export function abonoFamiliaRendimentoReferencia(rendimentoAnualAgregado: number, nTitulares: number): number {
+  const n = Math.max(1, Math.floor(nTitulares || 1));
+  return Math.max(0, rendimentoAnualAgregado) / (n + 1);
+}
+
+// ── IMT Jovem (isenção de IMT + Imposto do Selo na 1.ª habitação, ≤ 35 anos) 2026 ──
+// Decreto-Lei n.º 48-A/2024. Isenção TOTAL até 330.539 €; PARCIAL entre 330.539 e 660.982 €
+// (paga só sobre o excedente, ao escalão dos 8 %); acima de 660.982 € não há benefício.
+export const IMT_JOVEM_2026 = {
+  isencaoTotalAte: 330539,
+  isencaoParcialAte: 660982,
+  taxaExcedente: 0.08,       // 8 % de IMT sobre a parte acima de 330.539 € (banda parcial)
+  seloAquisicao: 0.008,      // 0,8 % Imposto do Selo (verba 1.1 TGIS)
+  idadeMaxima: 35,
+} as const;
+
+/**
+ * IMT + Imposto do Selo com o benefício IMT Jovem (habitação própria e permanente, ≤ 35 anos).
+ * Devolve o imposto pago com benefício, o imposto normal (sem benefício) e a poupança.
+ */
+export function imtJovem(valor: number): {
+  imt: number; selo: number; imtNormal: number; seloNormal: number; poupanca: number; tipoIsencao: 'total' | 'parcial' | 'nenhuma';
+} {
+  const v = Math.max(0, valor);
+  const j = IMT_JOVEM_2026;
+  const imtNormal = imt(v, true);            // HPP, tabela do continente
+  const seloNormal = v * j.seloAquisicao;
+  let imtJ: number, seloJ: number, tipo: 'total' | 'parcial' | 'nenhuma';
+  if (v <= j.isencaoTotalAte) {
+    imtJ = 0; seloJ = 0; tipo = 'total';
+  } else if (v <= j.isencaoParcialAte) {
+    const excedente = v - j.isencaoTotalAte;
+    imtJ = excedente * j.taxaExcedente;      // 8 % sobre o excedente
+    seloJ = excedente * j.seloAquisicao;     // 0,8 % sobre o excedente
+    tipo = 'parcial';
+  } else {
+    imtJ = imtNormal; seloJ = seloNormal; tipo = 'nenhuma';
+  }
+  return { imt: imtJ, selo: seloJ, imtNormal, seloNormal, poupanca: (imtNormal + seloNormal) - (imtJ + seloJ), tipoIsencao: tipo };
+}
+
+// ── AIMI — Adicional ao IMI 2026 (pessoas singulares e heranças indivisas) ──
+// Art. 135.º-F CIMI. Dedução 600.000 € (1.200.000 € casal c/ tributação conjunta).
+// Bandas marginais sobre o valor tributável: 0,7 % até 1 M€, 1 % de 1–2 M€, 1,5 % acima de 2 M€.
+// No casal com tributação conjunta os LIMITES dos escalões duplicam (2 M€ / 4 M€).
+export const AIMI_2026 = {
+  deducaoSingular: 600000,
+  deducaoCasal: 1200000,
+  banda1Ate: 1000000, taxa1: 0.007,
+  banda2Ate: 2000000, taxa2: 0.010,
+  taxa3: 0.015,   // acima de 2 M€ (singular) / 4 M€ (casal)
+} as const;
+
+/**
+ * AIMI anual de pessoa singular / herança indivisa sobre o somatório do VPT de prédios
+ * habitacionais e terrenos para construção. `tributacaoConjunta` duplica dedução e escalões.
+ */
+export function aimiPessoaSingular(vptTotalHabitacional: number, tributacaoConjunta = false): number {
+  const ded = tributacaoConjunta ? AIMI_2026.deducaoCasal : AIMI_2026.deducaoSingular;
+  const base = Math.max(0, vptTotalHabitacional - ded);
+  if (base <= 0) return 0;
+  const f = tributacaoConjunta ? 2 : 1;
+  return impostoPorEscaloes(base, [
+    { ateEuros: AIMI_2026.banda1Ate * f, taxa: AIMI_2026.taxa1 },
+    { ateEuros: AIMI_2026.banda2Ate * f, taxa: AIMI_2026.taxa2 },
+    { ateEuros: Infinity, taxa: AIMI_2026.taxa3 },
+  ]);
+}
+
+// ── RSI — Rendimento Social de Inserção 2026 ──
+// Valor de referência atualizado para 247,56 € (46,09 % do IAS). Escala de equivalência:
+// 1.º adulto 100 %; cada adulto adicional 70 % (173,29 €); cada criança/jovem < 18 anos 50 % (123,78 €).
+// Prestação = valor de referência do agregado − rendimentos mensais do agregado (prestação diferencial).
+export const RSI_2026 = {
+  titular: 247.56,
+  adultoAdicional: 173.29,   // 70 % do titular
+  crianca: 123.78,           // 50 % do titular (< 18 anos)
+} as const;
+
+/** Valor de referência mensal do agregado para o RSI (soma da escala de equivalência). */
+export function rsiValorReferencia(nAdultos: number, nCriancas: number): number {
+  const adultos = Math.max(1, Math.floor(nAdultos || 1));
+  const criancas = Math.max(0, Math.floor(nCriancas || 0));
+  return RSI_2026.titular + RSI_2026.adultoAdicional * (adultos - 1) + RSI_2026.crianca * criancas;
+}
+
+// ── CSI — Complemento Solidário para Idosos 2026 ──
+// Valor de referência 8.040 €/ano (≈ 670 €/mês) — casal 14.070 €/ano.
+// Complemento mensal = (valor de referência − rendimentos anuais) ÷ 12 (prestação diferencial).
+export const CSI_2026 = {
+  referenciaIsoladoAnual: 8040,
+  referenciaCasalAnual: 14070,
+} as const;
+
+// ── Layoff / suspensão do contrato 2026 (art. 305.º CT) ──
+// Compensação retributiva = 2/3 da retribuição normal ilíquida, com piso na RMMG (920 €)
+// e teto em 3 × RMMG (2.760 €).
+export const LAYOFF_2026 = {
+  fracao: 2 / 3,
+  piso: 920,          // RMMG 2026
+  teto: 2760,         // 3 × RMMG
+} as const;
+
+// ── Ajudas de custo e deslocação em viatura própria 2026 (Portaria 1553-D/2008 + atual.) ──
+// Limites isentos de IRS/SS. Nacional 62,75 €/dia; estrangeiro 148,91 €/dia; km viatura própria 0,40 €.
+export const AJUDAS_CUSTO_2026 = {
+  nacionalDia: 62.75,
+  estrangeiroDia: 148.91,
+  kmViaturaPropria: 0.40,
+} as const;
+
+// ── Propinas do ensino superior 2026/2027 ──
+// Descongelamento: máximo público (TeSP, licenciatura, mestrado integrado) 710 € (era 697 €).
+export const PROPINAS_2026_27 = {
+  maxPublicoAnual: 710,
+  anteriorAnual: 697,
+  prestacoesPadrao: 10,   // pagamento em 10 prestações (regra comum das IES públicas)
+} as const;
+
+// ── Imposto do Selo em transmissões gratuitas (heranças / doações) — verba 1.2 TGIS ──
+// Taxa 10 % sobre o valor transmitido. ISENTOS: cônjuge/unido de facto, descendentes e ascendentes.
+export const SELO_TRANSMISSAO_GRATUITA_2026 = {
+  taxa: 0.10,
+} as const;
+
+// ── Pré-aviso de denúncia do contrato pelo trabalhador 2026 (art. 400.º CT) ──
+// Contrato sem termo: 30 dias (antiguidade ≤ 2 anos) ou 60 dias (> 2 anos). Dias de calendário.
+// Contrato a termo: 30 dias (duração ≥ 6 meses) ou 15 dias (< 6 meses).
+export const PRE_AVISO_DEMISSAO_2026 = {
+  semTermoAte2anos: 30,
+  semTermoMais2anos: 60,
+  termo6mesesOuMais: 30,
+  termoMenos6meses: 15,
+} as const;
+
+// ── Feriados nacionais obrigatórios de Portugal em 2026 ──
+// (Páscoa 05-abr → Sexta-feira Santa 03-abr; Corpo de Deus 04-jun.)
+export const FERIADOS_2026: ReadonlyArray<{ data: string; nome: string }> = [
+  { data: '2026-01-01', nome: 'Ano Novo' },
+  { data: '2026-04-03', nome: 'Sexta-feira Santa' },
+  { data: '2026-04-05', nome: 'Domingo de Páscoa' },
+  { data: '2026-04-25', nome: 'Dia da Liberdade' },
+  { data: '2026-05-01', nome: 'Dia do Trabalhador' },
+  { data: '2026-06-04', nome: 'Corpo de Deus' },
+  { data: '2026-06-10', nome: 'Dia de Portugal' },
+  { data: '2026-08-15', nome: 'Assunção de Nossa Senhora' },
+  { data: '2026-10-05', nome: 'Implantação da República' },
+  { data: '2026-11-01', nome: 'Dia de Todos os Santos' },
+  { data: '2026-12-01', nome: 'Restauração da Independência' },
+  { data: '2026-12-08', nome: 'Imaculada Conceição' },
+  { data: '2026-12-25', nome: 'Natal' },
+];
+
+/**
+ * Conta dias corridos e dias úteis entre duas datas ISO (YYYY-MM-DD), INCLUSIVE ambos os extremos.
+ * Dias úteis = segunda a sexta, excluindo os feriados fornecidos. Usa UTC para evitar erros de fuso.
+ */
+export function diasUteisPortugal(
+  inicioISO: string,
+  fimISO: string,
+  feriados: ReadonlyArray<{ data: string }> = FERIADOS_2026,
+): { corridos: number; uteis: number; feriadosNoIntervalo: number; fimDeSemana: number } {
+  const p = (s: string) => { const [y, m, d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d); };
+  let cur = p(inicioISO);
+  const end = p(fimISO);
+  if (Number.isNaN(cur) || Number.isNaN(end) || end < cur) throw new Error('Datas inválidas: o fim tem de ser igual ou posterior ao início');
+  const fset = new Set(feriados.map((f) => f.data));
+  const DAY = 86400000;
+  let corridos = 0, uteis = 0, feriadosNoIntervalo = 0, fimDeSemana = 0;
+  for (; cur <= end; cur += DAY) {
+    corridos++;
+    const dt = new Date(cur);
+    const dow = dt.getUTCDay(); // 0 domingo … 6 sábado
+    const iso = `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
+    const wknd = dow === 0 || dow === 6;
+    const fer = fset.has(iso);
+    if (wknd) fimDeSemana++;
+    if (fer && !wknd) feriadosNoIntervalo++;
+    if (!wknd && !fer) uteis++;
+  }
+  return { corridos, uteis, feriadosNoIntervalo, fimDeSemana };
+}

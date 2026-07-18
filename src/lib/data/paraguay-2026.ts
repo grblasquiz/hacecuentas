@@ -183,3 +183,118 @@ export function bonificacionFamiliar(hijos: number, salarioBruto: number): numbe
 export function fmtPYG(n: number): string {
   return 'Gs. ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(Math.round(n));
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TABLAS ADICIONALES 2026 (fábrica jul-2026). Verificadas con fuentes oficiales.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Petropar — precios de combustibles vigentes (Gs./litro).
+ * Snapshot al 1-jul-2026: Petropar bajó el diésel (−2,6%) y mantuvo las naftas.
+ * Fuente: Petropar, precios vigentes (https://www.petropar.gov.py/?page_id=4460);
+ * ABC Color, 1-jul-2026. Cambian por resolución: son defaults editables.
+ */
+export const PETROPAR_2026 = {
+  asOf: '2026-07-01',
+  nafta88: 6690,        // Nafta Kape (88 octanos)
+  nafta93: 7170,        // Nafta Oikoite (93 octanos)
+  nafta97: 8540,        // Nafta Aratiri (97 octanos)
+  dieselPora: 7990,     // Diésel Porã (reducido desde Gs. 8.200 el 1-jul-2026)
+  dieselMbarete: 10000, // Diésel Mbarete (premium)
+  fuente: 'Petropar — Precios vigentes',
+  fuenteUrl: 'https://www.petropar.gov.py/?page_id=4460',
+} as const;
+
+/**
+ * ANDE — Pliego de Tarifas N° 21 (residencial baja tensión, Categoría 142).
+ * REGLA CLAVE: todo el consumo del mes se factura a UN SOLO precio, el de la faja
+ * que corresponde al consumo TOTAL del mes (NO es tarifa marginal por bloques).
+ * Los precios son la tarifa (sin IVA); la factura agrega IVA 10% (Ley 6380/19).
+ * Tarifa social (Ley 3480/2008): el usuario familiar paga un % de la tarifa normal
+ * según su banda de consumo (25% / 50% / 75%), es decir 75% / 50% / 25% de descuento.
+ * Fuente: ANDE, Pliego de Tarifas N° 21 (act. 27-11-2024),
+ * https://www.ande.gov.py/docs/tarifas/PLIEGO21.pdf
+ */
+export const ANDE_PLIEGO21 = {
+  vigencia: 'Pliego N° 21',
+  // Faja tarifaria residencial: { hasta kWh/mes, precio Gs./kWh }.
+  fajasResidencial: [
+    { hasta: 50,       precio: 311.55 },
+    { hasta: 150,      precio: 349.89 },
+    { hasta: 300,      precio: 365.45 },
+    { hasta: 500,      precio: 403.82 },
+    { hasta: 1000,     precio: 420.27 },
+    { hasta: Infinity, precio: 435.51 },
+  ],
+  iva: 0.10, // IVA general Ley 6380/19; se suma sobre el importe de energía.
+  // Tarifa social (Ley 3480/2008) — pagaPct = fracción de la tarifa normal que abona
+  // el usuario familiar habilitado; descuentoPct = subsidio (1 − pagaPct).
+  tarifaSocial: [
+    { hasta: 100, pagaPct: 0.25, descuentoPct: 0.75 }, // 0–100 kWh/mes
+    { hasta: 200, pagaPct: 0.50, descuentoPct: 0.50 }, // 101–200 kWh/mes
+    { hasta: 300, pagaPct: 0.75, descuentoPct: 0.25 }, // 201–300 kWh/mes
+  ],
+  fuente: 'ANDE — Pliego de Tarifas N° 21',
+  fuenteUrl: 'https://www.ande.gov.py/docs/tarifas/PLIEGO21.pdf',
+} as const;
+
+/**
+ * Feriados nacionales de Paraguay 2026 (13 en total) — FECHAS OBSERVADAS.
+ * Traslados confirmados por resolución del Ejecutivo (La Nación, 2-ene-2026):
+ * Héroes (1/3 dom) → lun 2/3; Jura de la Constitución (20/6 sáb, nuevo feriado) →
+ * lun 22/6. Boquerón (29/9) se deja en su fecha legal (martes); es movible por
+ * decreto (puede observarse el lun 28/9). Fundación de Asunción (15/8) cae sábado.
+ * Fuente: Ley de feriados + resoluciones del Poder Ejecutivo 2026.
+ */
+export const FERIADOS_PY_2026 = [
+  { fecha: '2026-01-01', nombre: 'Año Nuevo' },
+  { fecha: '2026-03-02', nombre: 'Día de los Héroes de la Patria (trasladado del 1/3)' },
+  { fecha: '2026-04-02', nombre: 'Jueves Santo' },
+  { fecha: '2026-04-03', nombre: 'Viernes Santo' },
+  { fecha: '2026-05-01', nombre: 'Día del Trabajador' },
+  { fecha: '2026-05-14', nombre: 'Día de la Independencia Nacional' },
+  { fecha: '2026-05-15', nombre: 'Independencia Nacional / Día de la Madre' },
+  { fecha: '2026-06-12', nombre: 'Día de la Paz del Chaco' },
+  { fecha: '2026-06-22', nombre: 'Jura de la Constitución Nacional (trasladado del 20/6)' },
+  { fecha: '2026-08-15', nombre: 'Fundación de Asunción' },
+  { fecha: '2026-09-29', nombre: 'Victoria de Boquerón' },
+  { fecha: '2026-12-08', nombre: 'Día de la Virgen de Caacupé' },
+  { fecha: '2026-12-25', nombre: 'Navidad' },
+] as const;
+
+/**
+ * Che Róga Porã 3.0 (2026) — crédito para la primera vivienda (MUVH / AFD).
+ * Tasas: 6,5% anual para 1–6 salarios mínimos (segmento 2.0) y 9,9% para el nuevo
+ * segmento de 6–9 SM (3.0). Plazo de hasta 30 años. La cuota no puede superar el 40%
+ * del ingreso familiar. Tope de ingreso: 9 salarios mínimos. Monto máximo de crédito:
+ * Gs. 792.000.000 en Asunción y Central; Gs. 652.000.000 en el interior.
+ * Fuente: MUVH (Che Róga Porã 3.0) y AFD; Última Hora / ABC Color (jul-2026).
+ */
+export const CHE_ROGA_PORA_2026 = {
+  version: '3.0',
+  plazoMaxAnios: 30,
+  plazoMinAnios: 20,
+  cuotaMaxPctIngreso: 0.40,
+  ingresoMaxSalarios: 9,
+  ingresoMinSalarios: 1,
+  tasaHasta6SM: 0.065,   // 1 a 6 salarios mínimos
+  tasa6a9SM: 0.099,      // 6 a 9 salarios mínimos (segmento 3.0)
+  umbralTasaSalarios: 6, // hasta 6 SM → 6,5%; más de 6 SM → 9,9%
+  montoMaxCentral: 792000000,  // Asunción y Dpto. Central
+  montoMaxInterior: 652000000, // resto del país
+  fuente: 'MUVH / AFD — Che Róga Porã 3.0',
+  fuenteUrl: 'https://www.cherogapora.gov.py/',
+} as const;
+
+/**
+ * Embargo de salario — art. 245 del Código del Trabajo (Ley 213/93).
+ * Límites máximos del salario embargable según el tipo de deuda. El aguinaldo es
+ * inembargable en todos los casos. Fuente: Código del Trabajo (Ley 213/93), art. 245.
+ */
+export const EMBARGO_SALARIO_PY = {
+  pensionAlimenticia: 0.50, // hasta 50%
+  viviendaAlimentos: 0.40,  // hasta 40% (habitación o artículos alimenticios propios/familiares)
+  otrasDeudas: 0.25,        // hasta 25% (los demás casos)
+  aguinaldoInembargable: true,
+  fuente: 'Código del Trabajo (Ley 213/93), art. 245',
+} as const;

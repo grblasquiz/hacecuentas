@@ -295,3 +295,100 @@ export function usdToDop(usd: number): number {
 export function dopToUsd(dop: number): number {
   return dop / REPUBLICA_DOMINICANA_2026.fx.usdMid;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EXPORTS ADICIONALES (tanda jul-2026) — NO modifican la tabla maestra de arriba.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * EUR ↔ DOP — cotización de referencia del euro frente al peso dominicano.
+ * Snapshot 18-jul-2026 (mercado spot; Investing/Wise). CAMBIA A DIARIO: la calc
+ * de euro deja la tasa editable por el usuario y usa `mid` sólo como default.
+ * Fuentes: BCRD (mercado cambiario) e Investing.com (EUR/DOP).
+ */
+export const EUR_DOP_2026 = {
+  mid: 66.71,      // RD$ por 1 EUR — promedio de referencia
+  compra: 65.91,   // RD$ por 1 EUR — precio de compra
+  venta: 67.51,    // RD$ por 1 EUR — precio de venta
+  fecha: '2026-07-18',
+} as const;
+
+/**
+ * Retención de ISR sobre PREMIOS de loterías, bancas de apuestas y juegos de
+ * azar (Art. 309, Código Tributario Ley 11-92, modificado por Ley 253-12 de
+ * Sostenibilidad Fiscal). La retención es PAGO ÚNICO Y DEFINITIVO del ISR y la
+ * hace el agente que paga el premio. Es un impuesto AL PREMIO, no una promoción
+ * de juego. Fuente: DGII, Guía del Contribuyente No. 11.
+ *
+ *  - Bancas de lotería y apuestas deportivas: escala por tramos (10/15/25%),
+ *    aplicada al MONTO TOTAL del premio según el tramo en que cae (no marginal).
+ *    Premios de hasta RD$100.000 quedan exentos.
+ *  - Loterías nacionales, fracatanes, lotos, premios electrónicos y premios de
+ *    campañas promocionales/publicitarias: 25% fijo sobre el premio.
+ */
+export const PREMIOS_LOTERIA_DO = {
+  // Escala de bancas de apuestas (premio → tasa aplicada al total).
+  exentoHasta: 100_000,
+  bancas: [
+    { desde: 100_001,   hasta: 500_000,    tasa: 0.10 },
+    { desde: 500_001,   hasta: 1_000_000,  tasa: 0.15 },
+    { desde: 1_000_001, hasta: Infinity,   tasa: 0.25 },
+  ],
+  // Tasa fija de loterías/promociones/juegos de azar (párrafo c, Art. 309).
+  tasaFijaLoteria: 0.25,
+} as const;
+
+/**
+ * Programa social SUPÉRATE (antes Progresando con Solidaridad) — montos
+ * mensuales 2026 de las transferencias monetarias a la tarjeta Supérate,
+ * administradas por la ADESS. Aliméntate y Bonogás Hogar son montos fijos;
+ * Bonoluz VARÍA según el consumo eléctrico del hogar (se descuenta de la
+ * factura, tope por hogar) — la calc lo deja editable.
+ * Fuente: Supérate (superate.gob.do) / ADESS, calendarios de pago 2026.
+ */
+export const SUPERATE_2026 = {
+  alimentate: 1_600,     // RD$/mes por hogar — subsidio de alimentos
+  bonogasHogar: 470,     // RD$/mes — compra de GLP (gas de cocina)
+  bonoluzReferencia: 444, // RD$/mes — referencia orientativa (VARÍA por consumo)
+} as const;
+
+/**
+ * Impuesto sobre la GANANCIA DE CAPITAL por venta de inmuebles (Art. 289,
+ * Código Tributario). Ganancia = precio de venta − costo de adquisición
+ * ajustado por inflación (multiplicador anual que publica la DGII por
+ * resolución, según el IPC del BCRD). Distinto del 3% de transferencia
+ * inmobiliaria. Fuente: DGII (resoluciones anuales de ajuste por inflación).
+ */
+export const GANANCIA_CAPITAL_DO = {
+  tasaPersonaJuridica: 0.27, // 27% fijo para personas jurídicas (empresas)
+  // Persona física: la ganancia se integra a la renta y tributa por la escala
+  // progresiva del ISR (usar isrAnual()). Tasa marginal máxima 25%.
+} as const;
+
+/**
+ * ANTICIPOS del ISR para personas jurídicas (Norma de anticipos, DGII). El
+ * método depende de la Tasa Efectiva de Tributación (TET = ISR liquidado ÷
+ * ingresos brutos del año anterior):
+ *   - TET > 1,5%  → anticipo mensual = ISR liquidado ÷ 12 (menos saldo a favor).
+ *   - TET ≤ 1,5%  → anticipo mensual = (1,5% × ingresos brutos) ÷ 12.
+ * Fuente: DGII, Guía 12 (Liquidación y Pago de Anticipos del ISR).
+ */
+export const ANTICIPOS_ISR_DO = {
+  umbralTet: 0.015, // 1,5%
+  cuotas: 12,
+} as const;
+
+/**
+ * Pensión por vejez del régimen contributivo (Ley 87-01, SIPEN/AFP).
+ * Requisitos: 60 años de edad y 360 meses (30 años) cotizados. Del 9,97% de
+ * aporte a pensiones, 8,4% del salario cotizable se deposita en la Cuenta de
+ * Capitalización Individual (CCI); el resto financia seguro de discapacidad y
+ * sobrevivencia, comisión, TSS, SIPEN, DIDA y el Fondo de Solidaridad Social.
+ * Fuente: DIDA (ABC del SDSS No. 20) / SIPEN.
+ */
+export const AFP_PENSION_DO = {
+  aportePctCci: 0.084,       // 8,4% del salario cotizable va a la CCI
+  aporteTotalPensiones: 0.0997, // 9,97% aporte total a pensiones (2,87% + 7,10%)
+  edadJubilacionVejez: 60,   // años
+  mesesMinimos: 360,         // 30 años de cotización
+} as const;

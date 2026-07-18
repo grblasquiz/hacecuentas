@@ -438,3 +438,85 @@ export function factorIntegracion(aniosAntiguedad: number): number {
 export function fmtMXN(n: number): string {
   return '$' + new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 }).format(Math.round(n * 100) / 100);
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Agregados jul-2026 (fábrica calcs MX) — cada bloque verificado 2026-07-18
+// contra la fuente citada en su comentario.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Jóvenes Construyendo el Futuro 2026 — programasparaelbienestar.gob.mx
+ * ("Jóvenes Construyendo el Futuro elevará su apoyo mensual a 9,582 pesos en 2026").
+ * El apoyo está LIGADO al salario mínimo general: subió 13% igual que el SM 2026.
+ * Incluye seguro médico IMSS (enfermedades, maternidad y riesgos de trabajo).
+ */
+export const JCF_2026 = {
+  apoyoMensual: 9582.47,     // 2026 (en 2025 era $8,480)
+  apoyoMensual2025: 8480,
+  duracionMaxMeses: 12,      // capacitación de hasta 12 meses, apoyo por mes activo
+  edadMin: 18,
+  edadMax: 29,
+} as const;
+
+/**
+ * Reforma de jornada laboral 40 horas — reforma constitucional publicada en el
+ * DOF el 03-mar-2026 y adecuaciones a la LFT publicadas el 01-may-2026.
+ * Reducción GRADUAL desde el 1 de enero del año indicado. EN 2026 SIGUEN LAS 48 h
+ * (año de transición); las 40 h recién rigen en 2030. Fuente: STPS, preguntas
+ * frecuentes "Reducción de la jornada laboral a 40 horas" (gob.mx/stps).
+ */
+export const JORNADA_40H_CALENDARIO: Record<number, number> = {
+  2026: 48,
+  2027: 46,
+  2028: 44,
+  2029: 42,
+  2030: 40,
+};
+
+/**
+ * Comisiones AFORE 2026 — CONSAR, Junta de Gobierno (comunicado nov-2025,
+ * gob.mx/consar "…autoriza comisiones de las Afore para 2026").
+ * Nueve afores cobran 0.54% anual sobre saldo administrado; PENSIONISSSTE 0.52%.
+ * Promedio del sistema: 0.538% (baja desde 0.547% en 2025).
+ */
+export const AFORE_COMISIONES_2026 = {
+  promedioSistema: 0.00538,
+  pensionissste: 0.0052,
+  // Azteca, Banamex, Coppel, Inbursa, Invercap, Principal, Profuturo, SURA y XXI Banorte
+  restoAfores: 0.0054,
+} as const;
+
+/**
+ * Gas LP — precio máximo CNE para CDMX, semana del 12 al 18 de julio de 2026
+ * (gob.mx/cne "Precios máximos aplicables de Gas LP"; la CNE lo publica CADA SEMANA,
+ * por eso las calcs lo exponen como campo editable con este default).
+ * Los tanques estacionarios se cargan como máximo a ~85% de su capacidad por seguridad.
+ */
+export const GAS_LP_CDMX_JUL_2026 = {
+  precioKg: 19.56,
+  precioLitro: 10.56,
+  llenadoMaxEstacionario: 0.85,
+  dataAsOf: '2026-07-12',
+} as const;
+
+/**
+ * Gasolina magna (regular) — promedio nacional ~$23.80/litro en julio 2026
+ * (seguimiento diario de prensa sobre datos CRE/PROFECO; default editable).
+ */
+export const GASOLINA_MAGNA_LITRO_JUL_2026 = 23.8;
+
+/**
+ * Préstamos personales ISSSTE 2026 — esqueleto verificado en gob.mx/issste
+ * (comunicado "Aprueba Junta Directiva del ISSSTE incremento en el Programa Anual
+ * de Préstamos Personales 2026"): desde 2026 NO hay sorteos (asignación directa
+ * semanal, cada lunes, vía SIAEPP/ASISSSTE), montos de $30,000 a ~$275,000 según
+ * modalidad y el descuento quincenal NO puede exceder el 50% del sueldo básico o
+ * de la pensión. Tasas por modalidad (ordinario ~10%) = referenciales editables.
+ */
+export const PRESTAMOS_ISSSTE_2026 = {
+  montoMinPrograma: 30000,
+  montoMaxPrograma: 275000,
+  topeDescuentoSueldo: 0.5,
+  tasaOrdinarioAnualRef: 0.10,
+  quincenasPorAnio: 24,
+} as const;
