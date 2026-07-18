@@ -1,0 +1,67 @@
+---
+export const prerender = true;
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import data from '../data/live/formula-1-2026.json';
+
+const AR = 'America/Argentina/Buenos_Aires';
+const now = new Date();
+const races = data.races || [];
+const next = races.find((r: any) => !r.cancelled && new Date(r.end) >= now) || races[races.length - 1];
+const last = [...races].reverse().find((r: any) => !r.cancelled && new Date(r.end) < now);
+const done = races.filter((r: any) => !r.cancelled && new Date(r.end) < now).length;
+const date = (iso: string, options: Intl.DateTimeFormatOptions = {}) => new Intl.DateTimeFormat('es-AR', { timeZone: AR, ...options }).format(new Date(iso));
+const fullDate = (iso: string) => date(iso, { weekday: 'long', day: 'numeric', month: 'long' });
+const time = (iso: string) => date(iso, { hour: '2-digit', minute: '2-digit', hour12: false });
+const flag = (code: string) => ({ AUS:'🇦🇺', CHN:'🇨🇳', JPN:'🇯🇵', BRN:'🇧🇭', KSA:'🇸🇦', USA:'🇺🇸', CAN:'🇨🇦', MON:'🇲🇨', ESP:'🇪🇸', AUT:'🇦🇹', GBR:'🇬🇧', BEL:'🇧🇪', HUN:'🇭🇺', NED:'🇳🇱', ITA:'🇮🇹', AZE:'🇦🇿', SGP:'🇸🇬', MEX:'🇲🇽', BRA:'🇧🇷', QAT:'🇶🇦', ARE:'🇦🇪' } as Record<string, string>)[code] || '🏁';
+const title = 'Fórmula 1 2026: calendario, próximos GP y resultados | Hacé Cuentas';
+const description = 'Calendario de Fórmula 1 2026 con el próximo Gran Premio, horarios en Argentina, resultados y tabla de pilotos actualizada.';
+const faq = [
+  ['¿Cuándo es el próximo Gran Premio de Fórmula 1?', next ? `El próximo GP es el de ${next.country}, en ${next.circuit}, el ${fullDate(next.start)} a las ${time(next.start)} (hora argentina).` : 'El calendario se actualiza automáticamente.'],
+  ['¿A qué hora son las carreras de F1 en Argentina?', 'Esta página muestra todas las largadas en hora de Argentina (UTC−3). Podés elegir otra zona horaria desde el selector.'],
+  ['¿De dónde salen los resultados?', 'Los horarios, resultados de carrera y puntos provienen de OpenF1, una API pública de datos de Fórmula 1. La página conserva un snapshot indexable y refresca el calendario al abrirla.'],
+];
+const schema = { '@context':'https://schema.org', '@graph': [
+  { '@type':'BreadcrumbList', itemListElement:[{ '@type':'ListItem', position:1, name:'Inicio', item:'https://hacecuentas.com/' }, { '@type':'ListItem', position:2, name:'Fórmula 1 2026', item:'https://hacecuentas.com/formula-1-2026' }] },
+  { '@type':'SportsEvent', name:'Campeonato Mundial de Fórmula 1 2026', sport:'Formula 1', startDate:races[0]?.start, endDate:races.at(-1)?.end, organizer:{'@type':'Organization',name:'FIA'}, url:'https://hacecuentas.com/formula-1-2026' },
+  { '@type':'Dataset', name:'Calendario y resultados Fórmula 1 2026', creator:{'@type':'Organization',name:'Hacé Cuentas'}, isBasedOn:'https://openf1.org/', dateModified:data.fetchedAt, url:'https://hacecuentas.com/formula-1-2026' },
+  { '@type':'FAQPage', mainEntity:faq.map(([name, text]) => ({ '@type':'Question', name, acceptedAnswer:{'@type':'Answer',text} })) },
+] };
+---
+<Layout title={title} description={description} canonical="/formula-1-2026" audience="global" schema={schema} domain="life">
+  <Header />
+  <main class="article-main"><article class="f1fx" data-f1fx>
+    <header class="f1fx-hero">
+      <span class="f1fx-live"><i></i> Fórmula 1 en vivo</span>
+      <h1>Fórmula 1 2026</h1><p>Calendario, próximos Grandes Premios, resultados y campeonato</p>
+      <div class="f1fx-meta"><span><b>{races.length}</b> Grandes Premios</span><span><b>{done}</b> disputados</span><span>Actualizado {date(data.fetchedAt, { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:false })}</span></div>
+    </header>
+    <div class="f1fx-bar"><div class="f1fx-tabs" role="tablist"><button class="active" data-tab="proximo">Próximo GP</button><button data-tab="calendario">Calendario</button><button data-tab="resultados">Resultados</button><button data-tab="pilotos">Pilotos</button></div><label>🕐 <select data-zone><option value="America/Argentina/Buenos_Aires">Hora de Argentina</option><option value="America/Mexico_City">Hora de México</option><option value="America/Bogota">Hora de Colombia</option><option value="America/Santiago">Hora de Chile</option><option value="Europe/Madrid">Hora de España</option></select></label></div>
+    <section data-panel="proximo" class="f1fx-panel">
+      {next && <><p class="eyebrow">{new Date(next.start).toDateString() === new Date().toDateString() ? 'HOY CORREN' : 'PRÓXIMA CARRERA'}</p><div class="f1fx-next" data-session={next.sessionKey}><div class="f1fx-flag">{flag(next.countryCode)}</div><div><h2>GP de {next.country}</h2><p>{next.circuit} · {next.location}</p><strong data-datetime={next.start}>{fullDate(next.start)} · {time(next.start)}</strong></div><div class="f1fx-count" data-countdown={next.start}></div></div></>}
+      {last?.results && <div class="f1fx-last"><h2>Último resultado: GP de {last.country}</h2><ol>{last.results.slice(0,3).map((r: any) => <li><b>{r.position}.</b> {data.drivers[r.driverNumber]?.name || `Piloto #${r.driverNumber}`} <span>{r.points} pts</span></li>)}</ol></div>}
+      <a class="f1fx-cta" href="/calculadora-formula-1">Calculá los puntos y las chances de campeonato →</a>
+    </section>
+    <section data-panel="calendario" class="f1fx-panel" hidden><h2>Calendario F1 2026</h2><div class="f1fx-list">{races.map((r: any, i: number) => <article data-session={r.sessionKey} class:list={['f1fx-race', { cancelled:r.cancelled, done:new Date(r.end) < now }]}><b class="round">{i+1}</b><span class="flag">{flag(r.countryCode)}</span><div><strong>GP de {r.country}</strong><small>{r.circuit} · {r.location}</small></div><time data-datetime={r.start}>{fullDate(r.start)} · {time(r.start)}</time><em>{r.cancelled ? 'Cancelado' : new Date(r.end) < now ? 'Finalizado' : 'Próximo'}</em></article>)}</div></section>
+    <section data-panel="resultados" class="f1fx-panel" hidden><h2>Resultados, clasificaciones y sprints</h2>{[...(data.sessions || [])].reverse().map((s: any) => { const race = races.find((r: any) => r.meetingKey === s.meetingKey); return <details><summary>{flag(race?.countryCode)} {s.name} · GP de {race?.country || 'F1'} <span>{fullDate(s.start)}</span></summary><ol class="f1fx-results">{s.results.map((x: any) => <li><b>{x.position}</b><span>{data.drivers[x.driverNumber]?.name || `#${x.driverNumber}`}</span><em>{x.dnf ? 'DNF' : x.dsq ? 'DSQ' : s.name === 'Qualifying' || s.name === 'Sprint Qualifying' ? 'Clasificación' : `${x.points} pts`}</em></li>)}</ol></details>})}</section>
+    <section data-panel="pilotos" class="f1fx-panel" hidden><h2>Campeonato de pilotos</h2><p class="f1fx-note">Puntos acumulados de las carreras disputadas disponibles en OpenF1.</p><div class="f1fx-standing"><div class="head"><span>#</span><span>Piloto</span><span>Equipo</span><span>Pts</span></div>{data.standings.map((r: any, i: number) => <div><span>{i+1}</span><b>{r.name || `#${r.driverNumber}`}</b><small>{r.team}</small><strong>{r.points}</strong></div>)}</div></section>
+    <section class="f1fx-info"><h2>Fórmula 1 2026: todo el calendario, en tu hora</h2><p>SeguÍ la temporada carrera por carrera: el próximo GP, la hora de largada, los resultados y la tabla de pilotos. El horario se adapta a tu país sin esconder el contenido principal que necesitan los buscadores.</p><h2>Preguntas frecuentes</h2>{faq.map(([q,a]) => <details><summary>{q}</summary><p>{a}</p></details>)}</section>
+    <script type="application/json" id="f1fx-data" set:html={JSON.stringify({ source:data.source, races })} />
+  </article></main>
+  <Footer />
+</Layout>
+<script is:inline>
+  const root = document.querySelector('[data-f1fx]'); if (root) {
+    const zone = root.querySelector('[data-zone]'); let tz = 'America/Argentina/Buenos_Aires';
+    const fmt = () => root.querySelectorAll('[data-datetime]').forEach(el => { const d = new Date(el.dataset.datetime); el.textContent = new Intl.DateTimeFormat('es-AR',{timeZone:tz,weekday:'long',day:'numeric',month:'long',hour:'2-digit',minute:'2-digit',hour12:false}).format(d); });
+    zone?.addEventListener('change', () => { tz = zone.value; fmt(); });
+    root.querySelectorAll('[data-tab]').forEach(btn => btn.addEventListener('click', () => { root.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===btn)); root.querySelectorAll('[data-panel]').forEach(x=>x.hidden=x.dataset.panel!==btn.dataset.tab); history.replaceState(null,'','#'+btn.dataset.tab); }));
+    root.querySelectorAll('[data-countdown]').forEach(el => { const tick=()=>{const s=Math.max(0,new Date(el.dataset.countdown)-Date.now()); const d=Math.floor(s/864e5),h=Math.floor(s%864e5/36e5),m=Math.floor(s%36e5/6e4);el.textContent=s?'Faltan '+d+'d '+h+'h '+m+'m':'En curso';}; tick(); setInterval(tick,60000); });
+    if (['proximo','calendario','resultados','pilotos'].includes(location.hash.slice(1))) root.querySelector('[data-tab="'+location.hash.slice(1)+'"]')?.click(); fmt();
+    fetch('https://api.openf1.org/v1/sessions?year=2026&session_name=Race').then(r=>r.ok?r.json():[]).then(live=>live.forEach(r=>{const card=root.querySelectorAll('[data-session="'+r.session_key+'"]');card.forEach(c=>c.querySelectorAll('[data-datetime]').forEach(el=>{el.dataset.datetime=r.date_start;}));})).then(fmt).catch(()=>{});
+  }
+</script>
+<style>
+  .f1fx{max-width:1000px;margin:auto;padding:0 16px 52px;color:#172033}.f1fx-hero{background:linear-gradient(125deg,#111827,#7f1d1d 62%,#dc2626);color:#fff;border-radius:0 0 22px 22px;padding:38px 28px 25px;margin:0 -16px 20px}.f1fx-hero h1{font-size:clamp(2rem,5vw,3.4rem);margin:10px 0 4px;letter-spacing:-.04em}.f1fx-hero p{margin:0;color:#fee2e2;font-size:1.05rem}.f1fx-live,.eyebrow{font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.f1fx-live i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#4ade80;margin-right:6px}.f1fx-meta{display:flex;gap:20px;flex-wrap:wrap;margin-top:24px;font-size:.88rem;color:#fecaca}.f1fx-meta b{color:white}.f1fx-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid #e5e7eb;padding-bottom:12px}.f1fx-tabs{display:flex;gap:4px;overflow:auto}.f1fx-tabs button{border:0;background:#f1f5f9;border-radius:9px;padding:9px 12px;font-weight:700;white-space:nowrap;cursor:pointer}.f1fx-tabs button.active{background:#dc2626;color:#fff}.f1fx-bar select{border:0;background:transparent;font:inherit}.f1fx-panel{padding:26px 0}.f1fx-panel h2,.f1fx-info h2{font-size:1.3rem;margin:0 0 14px}.f1fx-next{display:flex;align-items:center;gap:18px;background:#111827;color:white;border-radius:18px;padding:22px}.f1fx-flag{font-size:3rem}.f1fx-next h2{margin:0 0 4px}.f1fx-next p{color:#cbd5e1;margin:0 0 10px}.f1fx-count{margin-left:auto;text-align:right;color:#fca5a5;font-weight:800}.f1fx-last{margin:22px 0;background:#f8fafc;border-radius:14px;padding:18px}.f1fx-last h2{font-size:1rem}.f1fx-last ol{margin:0;padding:0;list-style:none}.f1fx-last li{padding:7px 0;border-top:1px solid #e2e8f0}.f1fx-last li span{float:right;font-weight:700}.f1fx-cta{display:block;background:#dc2626;color:#fff;padding:14px 16px;text-align:center;border-radius:10px;text-decoration:none;font-weight:800}.f1fx-list{display:grid;gap:7px}.f1fx-race{display:grid;grid-template-columns:32px 30px 1fr auto 84px;align-items:center;gap:10px;border:1px solid #e5e7eb;border-radius:10px;padding:12px}.f1fx-race .flag{font-size:1.35rem}.f1fx-race small{display:block;color:#64748b;margin-top:3px}.f1fx-race time{font-weight:600;font-size:.88rem}.f1fx-race em{font-style:normal;font-size:.73rem;font-weight:800;color:#dc2626;text-align:right}.f1fx-race.done em{color:#64748b}.f1fx-race.cancelled{opacity:.52}.f1fx-results{margin:10px 0 0;padding:0;list-style:none}.f1fx-results li{display:flex;gap:12px;padding:8px;border-top:1px solid #eee}.f1fx-results b{width:25px}.f1fx-results em{margin-left:auto;font-style:normal;font-weight:bold}.f1fx-panel details,.f1fx-info details{border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin:8px 0}.f1fx-panel summary,.f1fx-info summary{cursor:pointer;font-weight:700}.f1fx-panel summary span{float:right;color:#64748b;font-weight:400}.f1fx-standing{border:1px solid #e5e7eb;border-radius:10px;overflow:hidden}.f1fx-standing>div{display:grid;grid-template-columns:40px 1fr 1fr 58px;gap:8px;padding:10px 13px;border-top:1px solid #e5e7eb;align-items:center}.f1fx-standing .head{background:#f8fafc;border:0;font-size:.78rem;font-weight:800;text-transform:uppercase;color:#64748b}.f1fx-standing small{color:#64748b}.f1fx-standing strong{text-align:right}.f1fx-note{color:#64748b;font-size:.9rem}.f1fx-info{border-top:1px solid #e5e7eb;padding-top:28px;line-height:1.65}.f1fx-info p{color:#475569}@media(max-width:650px){.f1fx-bar{align-items:flex-start;flex-direction:column}.f1fx-next{align-items:flex-start}.f1fx-count{margin:0;text-align:left}.f1fx-race{grid-template-columns:25px 28px 1fr 56px}.f1fx-race time{display:none}.f1fx-standing>div{grid-template-columns:28px 1fr 76px}.f1fx-standing small{display:none}}
+</style>

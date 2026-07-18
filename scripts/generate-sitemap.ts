@@ -537,6 +537,7 @@ const priorityUrls: Url[] = [
   prio('/simplificar-expresiones',           '0.85', 'monthly'),
   prio('/convertir-imagen-a-pdf',            '0.85', 'monthly'),
   prio('/calculadora-formula-1',             '0.85', 'weekly'),
+  prio('/formula-1-2026',                    '0.95', 'daily',  true),
   prio('/alertas',                           '0.8',  'monthly'),
   prio('/valores-bcra',                      '0.9',  'daily',  true),
   prio('/cuanto-perdio-tu-sueldo',           '0.95', 'daily',  true),
