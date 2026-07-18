@@ -295,3 +295,14 @@ textarea.hc-input { height: auto; min-height: 96px; padding: 12px 14px; line-hei
 @media (max-width: 640px) {
   .ui-grid--2, .ui-grid--3 { grid-template-columns: 1fr; }
 }
+
+/* ── Guard iOS: auto-zoom en foco (red de seguridad global) ───────────
+   Un input/select/textarea con font-size < 16px hace que Safari iOS
+   zoomee y la página quede corrida horizontalmente. Mínimo 16px en
+   táctiles; los controles que ya son ≥16px no cambian (max()).
+   Las reglas con clase de cada componente siguen pudiendo pisar esto. */
+@media (hover: none) and (pointer: coarse) {
+  :where(input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  select,
+  textarea) { font-size: max(16px, 1em); }
+}
