@@ -9,23 +9,21 @@ describe('compactSeoTitle', () => {
   });
 
   it('quita la marca final antes de recortar contenido útil', () => {
-    expect(
-      compactSeoTitle(
-        'Calculadora de Consumo de Electrodomésticos: cuánto gastan por mes | Hacé Cuentas',
-      ),
-    ).toBe(
-      'Calculadora de Consumo de Electrodomésticos: cuánto gastan por mes',
+    const result = compactSeoTitle(
+      'Calculadora de consumo de electrodomésticos por mes | Hacé Cuentas',
     );
+    // Al soltar la marca el título ya entra en el límite: el contenido útil sobrevive.
+    expect(result).toBe('Calculadora de consumo de electrodomésticos por mes');
+    expect(result.length).toBeLessThanOrEqual(SEO_TITLE_MAX_LENGTH);
   });
 
   it('descarta una cláusula secundaria larga desde la derecha', () => {
-    expect(
-      compactSeoTitle(
-        'Calculadora IMSS e INFONAVIT para trabajadoras del hogar México 2026: cuota mensual del patrón',
-      ),
-    ).toBe(
-      'Calculadora IMSS e INFONAVIT para trabajadoras del hogar México 2026',
+    const result = compactSeoTitle(
+      'Calculadora de finiquito y liquidación en México: cuánto te corresponde',
     );
+    // Suelta la cláusula tras ":" y conserva el título principal (con la geo).
+    expect(result).toBe('Calculadora de finiquito y liquidación en México');
+    expect(result.length).toBeLessThanOrEqual(SEO_TITLE_MAX_LENGTH);
   });
 
   it('corta por palabra como último recurso y nunca supera el máximo', () => {
