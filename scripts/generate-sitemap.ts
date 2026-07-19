@@ -872,6 +872,7 @@ sitemaps.push({
     core('/cuando-juega-espana-mundial-2026',    '0.86', 'daily',   true),
     core('/llave-mundial-2026',                  '0.85', 'daily',   true),
     core('/campeon-mundial-2026',                '0.9',  'daily',   true),
+    core('/balon-de-oro-mundial-2026',           '0.86', 'daily',   true),
     core('/mundial-2026',                        '0.85', 'weekly'),
     core('/guias',                               '0.9',  'weekly'),
     core('/guia/sueldos-argentina-2026',         '0.85', 'weekly'),

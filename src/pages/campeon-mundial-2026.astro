@@ -4,6 +4,7 @@ export const prerender = true;
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import MundialFinalLive from '../components/MundialFinalLive.astro';
 import { fixture, LIVE_FIXTURE_URL, teamLabel, artDayLabel, artTime, kickoffUTC } from '../lib/data/mundial-2026';
 import { topScorers } from '../lib/mundial-live';
 import type { RawMatch } from '../lib/data/mundial-2026';
@@ -115,6 +116,16 @@ const liveConfig = {
   finalNum: final?.num ?? null,
   kickoff: finalKickoff ? finalKickoff.toISOString() : null,
 };
+
+// Config del motor EN VIVO (ESPN) — la final se actualiza al minuto client-side
+// (ver public/mundial-live-espn.js). Solo los finalistas reales (Spain/Argentina).
+const finalistNames = [final?.team1, final?.team2].filter((n): n is string => !!n && !teamLabel(n).tbd);
+const espnCfg = {
+  date: (final?.date || '2026-07-19').replace(/-/g, ''),
+  finalTeams: finalistNames,
+  teams: Object.fromEntries(finalistNames.map((n) => [n, { es: teamLabel(n).es, flag: teamLabel(n).flag }])),
+  pollMs: 60000,
+};
 ---
 
 <Layout title={title} description={description} canonical="/campeon-mundial-2026" schema={schema} audience="AR" domain="life">
@@ -129,30 +140,13 @@ const liveConfig = {
     </p>
     <p class="updated">Última actualización: <span data-live-updated>{updated}</span> · Datos: <a href="https://github.com/openfootball/worldcup.json" rel="noopener" target="_blank">openfootball</a></p>
 
-    <section class="champ-box" data-champ-box>
-      {campeon ? (
-        <div class="champ known">
-          <div class="champ-flag">{campeon.flag}</div>
-          <div class="champ-name" data-champ-name>{campeon.es}</div>
-          <div class="champ-sub">CAMPEÓN DEL MUNDO 2026</div>
-          <div class="champ-score" data-champ-score>{final ? `Final: ${teamLabel(final.team1).es} ${final.score?.ft?.[0]} - ${final.score?.ft?.[1]} ${teamLabel(final.team2).es}` : ''}</div>
-        </div>
-      ) : (
-        <div class="champ pending">
-          <div class="pending-title">La final</div>
-          <div class="pending-cross" data-final-cross>
-            <span>{t1 ? `${t1.flag} ${t1.tbd ? 'Por definir' : t1.es}` : 'Por definir'}</span>
-            <span class="vs">vs</span>
-            <span>{t2 ? `${t2.flag} ${t2.tbd ? 'Por definir' : t2.es}` : 'Por definir'}</span>
-          </div>
-          <div class="pending-when">{final?.date ? `${artDayLabel(final.date, final.time)} · ${artTime(final.date, final.time)} · MetLife Stadium` : 'Fecha por confirmar'}</div>
-          <div class="countdown" data-countdown hidden>
-            Faltan <b data-cd-d>–</b> días, <b data-cd-h>–</b> horas y <b data-cd-m>–</b> minutos
-          </div>
-          {!finalistasDefinidos && <p class="pending-note">Los finalistas se definen en las semifinales (14 y 15 de julio). Esta página se actualiza sola.</p>}
-        </div>
-      )}
-    </section>
+    <MundialFinalLive
+      cfg={espnCfg}
+      team1={t1 && !t1.tbd ? { es: t1.es, flag: t1.flag } : null}
+      team2={t2 && !t2.tbd ? { es: t2.es, flag: t2.flag } : null}
+      kickoffLabel={final?.date ? `${artDayLabel(final.date, final.time)} · ${artTime(final.date, final.time)} · MetLife Stadium` : ''}
+      champion={campeon && final ? { es: campeon.es, flag: campeon.flag, homeName: teamLabel(final.team1).es, homeScore: final.score?.ft?.[0], awayName: teamLabel(final.team2).es, awayScore: final.score?.ft?.[1], pens: !!final.score?.p } : null}
+    />
 
     {tercero && (
       <section class="tercero">
@@ -165,6 +159,21 @@ const liveConfig = {
         </p>
       </section>
     )}
+
+    <section class="premios" data-espn-mvp-root>
+      <h2>🏅 Balón de Oro y Bota de Oro del Mundial 2026</h2>
+      <div class="premios-grid">
+        <div class="premio">
+          <span class="premio-label">Balón de Oro · mejor jugador</span>
+          <span class="premio-value" data-espn-mvp>Se anuncia al terminar la final</span>
+        </div>
+        <div class="premio">
+          <span class="premio-label">Bota de Oro · máximo goleador</span>
+          <span class="premio-value">{botin ? `${botin.name} — ${botin.goles} goles` : 'Se define en la final'}</span>
+        </div>
+      </div>
+      <p class="note"><a href="/balon-de-oro-mundial-2026">Ver el Balón de Oro del Mundial 2026 en detalle →</a></p>
+    </section>
 
     {goleadores.length > 0 && (
       <section class="botin">
@@ -344,4 +353,14 @@ const liveConfig = {
   .faq details { border-bottom: 1px solid var(--border); padding: 0.75rem 0; }
   .faq summary { font-weight: 600; cursor: pointer; }
   .faq details p { margin-top: 0.5rem; color: var(--text-muted); line-height: 1.6; }
+
+  .premios { margin: 2rem 0; }
+  .premios-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+  .premio { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.1rem; }
+  .premio-label { display: block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-subtle); margin-bottom: 0.35rem; }
+  .premio-value { display: block; font-size: 1.05rem; font-weight: 700; }
+  [data-espn-mvp-root].is-known .premio-value[data-espn-mvp] { color: var(--accent); }
+  .premios .note { margin-top: 0.8rem; }
+  .premios .note a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  @media (max-width: 520px) { .premios-grid { grid-template-columns: 1fr; } }
 </style>

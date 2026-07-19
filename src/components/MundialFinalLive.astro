@@ -1,0 +1,272 @@
+---
+/* Tarjeta EN VIVO de la final del Mundial 2026 — lenguaje visual de la home v7
+   (azul eléctrico #3157ff, acento lima #c8ff3d, titulares serif, radios grandes,
+   sombra suave, gráfico de cancha). Actualiza al minuto contra ESPN client-side
+   (ver más abajo). Todo en try/catch: si ESPN falla, queda el estado SSR.
+
+   Props:
+     cfg          config del motor { date, finalTeams, teams, pollMs }
+     team1/team2  { es, flag } de cada finalista (para el SSR)
+     kickoffLabel "domingo 19 de julio · 16:00 · MetLife Stadium"
+     champion     { es, flag, homeName, homeScore, awayName, awayScore, pens? }
+                  si ya se conoce el campeón en SSR (post-partido). */
+interface TeamLite { es: string; flag: string }
+interface Champ { es: string; flag: string; homeName?: string; homeScore?: string | number; awayName?: string; awayScore?: string | number; pens?: boolean }
+interface Props {
+  cfg: unknown;
+  team1?: TeamLite | null;
+  team2?: TeamLite | null;
+  kickoffLabel?: string;
+  champion?: Champ | null;
+}
+const { cfg, team1 = null, team2 = null, kickoffLabel = '', champion = null } = Astro.props;
+const champScore = champion
+  ? `Final: ${champion.homeName ?? ''} ${champion.homeScore ?? ''} - ${champion.awayScore ?? ''} ${champion.awayName ?? ''}${champion.pens ? ' (por penales)' : ''}`
+  : '';
+---
+<section class={`hcf${champion ? ' is-final' : ''}`} data-espn-root>
+  <span class="hcf__pitch" aria-hidden="true"></span>
+  <span class="hcf__glow" aria-hidden="true"></span>
+
+  <div class="hcf__head">
+    <span class="hcf__eyebrow"><span class="hcf__dot"></span><span data-espn-status>Final del Mundial · hoy 16:00</span></span>
+    <span class="hcf__upd">act. <span data-espn-updated>—</span></span>
+  </div>
+
+  <div class="hcf__match">
+    <div class="hcf__team">
+      <span class="hcf__flag">{team1?.flag}</span>
+      <span class="hcf__name">{team1?.es ?? 'Por definir'}</span>
+    </div>
+    <div class="hcf__score"><b data-espn-home-score>–</b><i>-</i><b data-espn-away-score>–</b></div>
+    <div class="hcf__team">
+      <span class="hcf__flag">{team2?.flag}</span>
+      <span class="hcf__name">{team2?.es ?? 'Por definir'}</span>
+    </div>
+  </div>
+
+  {kickoffLabel && <div class="hcf__when">{kickoffLabel}</div>}
+
+  <div class="hcf__goals" data-espn-goals hidden></div>
+
+  <div class="hcf__champion" data-espn-champion-html>
+    {champion && (
+      <div class="hcf__champ">
+        <span class="hcf__champ-flag">{champion.flag}</span>
+        <div>
+          <span class="hcf__champ-name">{champion.es}</span>
+          <span class="hcf__champ-sub">Campeón del mundo 2026</span>
+        </div>
+        <span class="hcf__champ-score">{champScore}</span>
+      </div>
+    )}
+  </div>
+
+  <script type="application/json" id="espn-live-cfg" set:html={JSON.stringify(cfg)} />
+  <script is:inline>
+  (function () {
+    'use strict';
+    var cfgEl = document.getElementById('espn-live-cfg');
+    if (!cfgEl) return;
+    var cfg;
+    try { cfg = JSON.parse(cfgEl.textContent || '{}'); } catch (e) { return; }
+    if (!cfg || !cfg.date) return;
+
+    var ENDPOINT = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=' + encodeURIComponent(cfg.date);
+    var POLL = Math.max(20000, cfg.pollMs || 60000);
+    var TEAMS = cfg.teams || {};
+    var WANT = (cfg.finalTeams || []).map(function (s) { return String(s).toLowerCase(); });
+
+    function esName(n) { return (TEAMS[n] && TEAMS[n].es) || n || ''; }
+    function flagOf(n) { return (TEAMS[n] && TEAMS[n].flag) || ''; }
+    function labeled(n) { var f = flagOf(n); return (f ? f + ' ' : '') + esName(n); }
+    function $(s) { return document.querySelector(s); }
+    function setText(s, t) { var el = $(s); if (el) el.textContent = t; }
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+
+    function pickEvent(events) {
+      if (!Array.isArray(events) || !events.length) return null;
+      if (WANT.length === 2) {
+        var m = events.find(function (e) {
+          var names = ((e.competitions && e.competitions[0] && e.competitions[0].competitors) || [])
+            .map(function (c) { return String((c.team && c.team.displayName) || '').toLowerCase(); });
+          return WANT.every(function (w) { return names.some(function (n) { return n.indexOf(w) >= 0 || w.indexOf(n) >= 0; }); });
+        });
+        if (m) return m;
+      }
+      return events.length === 1 ? events[0] : null;
+    }
+
+    function parse(ev) {
+      var c = (ev.competitions && ev.competitions[0]) || {};
+      var st = (c.status && c.status.type) || {};
+      var comps = c.competitors || [];
+      var home = comps.find(function (x) { return x.homeAway === 'home'; }) || comps[0] || {};
+      var away = comps.find(function (x) { return x.homeAway === 'away'; }) || comps[1] || {};
+      function team(t) {
+        return { name: (t.team && t.team.displayName) || '', id: (t.team && t.team.id) || '', score: (t.score != null ? String(t.score) : null), winner: !!t.winner };
+      }
+      var goals = (c.details || [])
+        .filter(function (d) { return d.scoringPlay && /goal/i.test((d.type && d.type.text) || ''); })
+        .map(function (d) {
+          return {
+            who: ((d.athletesInvolved || []).map(function (a) { return a.displayName; }).filter(Boolean).join(', ')) || '',
+            minute: (d.clock && d.clock.displayValue) || '',
+            teamId: (d.team && d.team.id) || '',
+            own: /own/i.test((d.type && d.type.text) || ''),
+            pen: /penal/i.test((d.type && d.type.text) || ''),
+          };
+        });
+      return { state: st.state || 'pre', completed: !!st.completed, detail: st.shortDetail || st.detail || '', home: team(home), away: team(away), goals: goals };
+    }
+
+    function statusLabel(m) {
+      if (m.completed) return /pen/i.test(m.detail) ? 'Final · por penales' : 'Final terminada';
+      if (m.state === 'in') return 'En vivo · ' + (m.detail || 'en juego');
+      return 'Final del Mundial · hoy 16:00';
+    }
+
+    function render(m) {
+      var root = $('[data-espn-root]');
+      setText('[data-espn-status]', statusLabel(m));
+      var show = m.state !== 'pre';
+      setText('[data-espn-home-score]', show && m.home.score != null ? m.home.score : '–');
+      setText('[data-espn-away-score]', show && m.away.score != null ? m.away.score : '–');
+      setText('[data-espn-updated]', stamp());
+
+      if (root) { root.classList.toggle('is-live', m.state === 'in' && !m.completed); }
+
+      var gb = $('[data-espn-goals]');
+      if (gb) {
+        if (m.goals.length) {
+          var rows = m.goals.map(function (g) {
+            var side = g.teamId && String(g.teamId) === String(m.home.id) ? 'h' : 'a';
+            var tag = g.own ? ' <i>e.c.</i>' : g.pen ? ' <i>pen.</i>' : '';
+            return '<li class="hcf__goal ' + side + '"><b>' + esc(g.minute) + '</b> ' + esc(g.who) + tag + '</li>';
+          });
+          gb.innerHTML = '<div class="hcf__goals-t">Goles</div><ul>' + rows.join('') + '</ul>';
+          gb.hidden = false;
+        } else if (m.state !== 'pre') {
+          gb.innerHTML = '<div class="hcf__goals-t">Goles</div><p class="hcf__nogoal">Todav&iacute;a 0-0.</p>';
+          gb.hidden = false;
+        }
+      }
+
+      if (m.completed) {
+        var champ = m.home.winner ? m.home : m.away.winner ? m.away : null;
+        if (!champ && m.home.score != null && m.away.score != null && m.home.score !== m.away.score) {
+          champ = Number(m.home.score) > Number(m.away.score) ? m.home : m.away;
+        }
+        if (champ) {
+          var box = $('[data-espn-champion-html]');
+          if (box) {
+            box.innerHTML =
+              '<div class="hcf__champ"><span class="hcf__champ-flag">' + esc(flagOf(champ.name)) + '</span>' +
+              '<div><span class="hcf__champ-name">' + esc(esName(champ.name)) + '</span>' +
+              '<span class="hcf__champ-sub">Campe&oacute;n del mundo 2026</span></div>' +
+              '<span class="hcf__champ-score">Final: ' + esc(esName(m.home.name)) + ' ' + esc(m.home.score) + ' - ' + esc(m.away.score) + ' ' + esc(esName(m.away.name)) + (/pen/i.test(m.detail) ? ' (por penales)' : '') + '</span></div>';
+          }
+          if (root) root.classList.add('is-final');
+          setText('[data-champ-cell]', labeled(champ.name));
+          setText('[data-sub-cell]', esName(champ === m.home ? m.away.name : m.home.name));
+          setText('[data-res-cell]', (m.home.score || '') + '-' + (m.away.score || ''));
+        }
+      }
+    }
+
+    function stamp() {
+      try { return new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date()) + ' hs'; }
+      catch (e) { return ''; }
+    }
+
+    function tryMvp(id) {
+      var box = $('[data-espn-mvp]');
+      if (!box || !id) return;
+      fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary?event=' + encodeURIComponent(id), { cache: 'no-store' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          if (!j) return;
+          var txt = JSON.stringify(j.gameInfo || {}) + JSON.stringify(j.header || {});
+          var mm = txt.match(/"(?:playerOfTheMatch|manOfTheMatch)"\s*:\s*\{[^}]*"displayName"\s*:\s*"([^"]+)"/i);
+          if (mm && mm[1]) { box.textContent = mm[1]; var r = $('[data-espn-mvp-root]'); if (r) r.classList.add('is-known'); }
+        })
+        .catch(function () {});
+    }
+
+    var timer = null, tail = 0, eid = null;
+    function poll() {
+      fetch(ENDPOINT, { cache: 'no-store' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+          if (!data) return;
+          var ev = pickEvent(data.events || []);
+          if (!ev) return;
+          eid = ev.id || eid;
+          var m = parse(ev);
+          render(m);
+          if (m.completed) { tryMvp(eid); tail += 1; if (tail >= 3 && timer) { clearInterval(timer); timer = null; } }
+        })
+        .catch(function () {});
+    }
+    poll();
+    timer = setInterval(poll, POLL);
+  })();
+  </script>
+</section>
+
+<style is:global>
+  .hcf {
+    position: relative; overflow: hidden; isolation: isolate;
+    border-radius: 26px; padding: 26px 30px 28px; color: #fff;
+    background: linear-gradient(135deg, #3157ff 0%, #244bd6 55%, #1a3aa8 100%);
+    box-shadow: 0 26px 60px rgba(31, 55, 130, 0.30);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  .hcf__pitch {
+    position: absolute; right: -8%; top: 50%; transform: translateY(-50%);
+    width: 52%; aspect-ratio: 1.5; z-index: -1;
+    border: 2px solid rgba(255, 255, 255, 0.16); border-radius: 14px;
+    background: linear-gradient(90deg, transparent 49%, rgba(255, 255, 255, 0.16) 50%, transparent 51%);
+  }
+  .hcf__pitch::before {
+    content: ""; position: absolute; width: 34%; aspect-ratio: 1; left: 50%; top: 50%;
+    transform: translate(-50%, -50%); border: 2px solid rgba(255, 255, 255, 0.16); border-radius: 50%;
+  }
+  .hcf__glow { position: absolute; z-index: -1; width: 220px; height: 220px; border-radius: 50%; left: -60px; bottom: -80px; background: radial-gradient(circle, rgba(200, 255, 61, 0.28), transparent 70%); }
+  .hcf__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .hcf__eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 850; letter-spacing: 0.11em; text-transform: uppercase; color: #c8ff3d; }
+  .hcf__dot { width: 9px; height: 9px; border-radius: 50%; background: #c8ff3d; flex: none; }
+  .hcf.is-live .hcf__dot { background: #ff5a4d; box-shadow: 0 0 0 0 rgba(255, 90, 77, 0.7); animation: hcfpulse 1.5s infinite; }
+  .hcf.is-live .hcf__eyebrow { color: #ffd0cb; }
+  @keyframes hcfpulse { 70% { box-shadow: 0 0 0 9px rgba(255, 90, 77, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 90, 77, 0); } }
+  .hcf__upd { font-size: 11px; color: rgba(255, 255, 255, 0.62); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .hcf__match { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 14px; margin: 20px 0 6px; }
+  .hcf__team { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+  .hcf__flag { font-size: 46px; line-height: 1; filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.25)); }
+  .hcf__name { font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.05rem, 3.4vw, 1.5rem); font-weight: 700; letter-spacing: -0.02em; }
+  .hcf__score { display: flex; align-items: baseline; gap: 6px; font-family: Georgia, 'Times New Roman', serif; font-weight: 700; }
+  .hcf__score b { font-size: clamp(2.6rem, 11vw, 4.2rem); line-height: 0.9; font-variant-numeric: tabular-nums; min-width: 0.7em; text-align: center; }
+  .hcf__score i { font-size: clamp(1.4rem, 5vw, 2.2rem); font-style: normal; color: rgba(255, 255, 255, 0.5); }
+  .hcf__when { text-align: center; font-size: 12.5px; color: rgba(255, 255, 255, 0.7); margin-top: 4px; }
+  .hcf__goals { margin-top: 18px; border-top: 1px solid rgba(255, 255, 255, 0.16); padding-top: 14px; }
+  .hcf__goals-t { font-size: 10px; font-weight: 850; letter-spacing: 0.11em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); margin-bottom: 8px; }
+  .hcf__goals ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .hcf__goal { font-size: 13.5px; }
+  .hcf__goal b { display: inline-block; min-width: 2.6em; font-variant-numeric: tabular-nums; color: #c8ff3d; font-weight: 800; }
+  .hcf__goal i { font-style: normal; font-size: 10px; opacity: 0.7; text-transform: uppercase; }
+  .hcf__goal.a { text-align: right; }
+  .hcf__nogoal { margin: 0; font-size: 13px; color: rgba(255, 255, 255, 0.7); }
+  .hcf__champion { display: none; }
+  .hcf.is-final .hcf__champion { display: block; margin-top: 18px; }
+  .hcf.is-final .hcf__score i, .hcf.is-final .hcf__when { opacity: 0.85; }
+  .hcf__champ { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 10px 14px; background: #c8ff3d; color: #071a3d; border-radius: 18px; padding: 16px 18px; }
+  .hcf__champ-flag { font-size: 40px; line-height: 1; grid-row: span 2; }
+  .hcf__champ-name { display: block; font-family: Georgia, 'Times New Roman', serif; font-size: 1.5rem; font-weight: 700; line-height: 1; }
+  .hcf__champ-sub { display: block; font-size: 11px; font-weight: 850; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.72; margin-top: 3px; }
+  .hcf__champ-score { grid-column: 1 / -1; font-size: 13px; font-weight: 700; border-top: 1px solid rgba(7, 26, 61, 0.18); padding-top: 10px; }
+  @media (max-width: 520px) {
+    .hcf { padding: 22px 18px 24px; border-radius: 22px; }
+    .hcf__flag { font-size: 36px; }
+    .hcf__match { gap: 6px; }
+  }
+</style>

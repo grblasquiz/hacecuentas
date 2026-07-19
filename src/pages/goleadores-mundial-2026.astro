@@ -4,6 +4,7 @@ export const prerender = true;
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import MundialFinalLive from '../components/MundialFinalLive.astro';
 import '../styles/calc-flagship.css';
 import { fixture, LIVE_FIXTURE_URL, TEAMS } from '../lib/data/mundial-2026';
 import { topScorers } from '../lib/mundial-live';
@@ -136,6 +137,17 @@ const schema = { '@context': 'https://schema.org', '@graph': [
 ] };
 
 const liveConfig = { url: LIVE_FIXTURE_URL };
+
+// Motor EN VIVO (ESPN) para los goles de la final — ver MundialFinalLive.astro.
+const finalMatch = fixture.matches.find((m) => /^final$/i.test((m.round || '').trim())) || null;
+const espnFinalTeams = [finalMatch?.team1, finalMatch?.team2].filter((n): n is string => !!n && !!TEAMS[n]);
+const espnCfg = {
+  date: (finalMatch?.date || '2026-07-19').replace(/-/g, ''),
+  finalTeams: espnFinalTeams,
+  teams: Object.fromEntries(espnFinalTeams.map((n) => [n, { es: TEAMS[n].es, flag: TEAMS[n].flag }])),
+  pollMs: 60000,
+};
+const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS[n].es}` : 'Por definir');
 ---
 
 <Layout title={title} description={description} canonical="/goleadores-mundial-2026" schema={schema} audience="AR" domain="data">
@@ -184,6 +196,16 @@ const liveConfig = { url: LIVE_FIXTURE_URL };
           </div>
         </div>
       </header>
+
+      <div class="gol-final-wrap">
+        <MundialFinalLive
+          cfg={espnCfg}
+          team1={finalMatch && TEAMS[finalMatch.team1] ? { es: TEAMS[finalMatch.team1].es, flag: TEAMS[finalMatch.team1].flag } : null}
+          team2={finalMatch && TEAMS[finalMatch.team2] ? { es: TEAMS[finalMatch.team2].es, flag: TEAMS[finalMatch.team2].flag } : null}
+          kickoffLabel="Final del Mundial · hoy 16:00 · MetLife Stadium"
+        />
+        <p class="gol-final-note">Los goles de la final se suman a la tabla de goleadores del torneo al confirmarse cada uno.</p>
+      </div>
 
       <p class="answer-snippet cf-sr" data-snippet>
         {leader
@@ -868,4 +890,6 @@ const liveConfig = { url: LIVE_FIXTURE_URL };
   .cf-band .gol-src__item strong { display: block; font-size: 0.82rem; font-weight: 700; color: #fff; }
   .cf-band .gol-src__item span { font-size: 0.72rem; color: #8592a6; }
   .cf-band .gol-src__foot { font-size: 0.72rem; color: color-mix(in srgb, var(--accent-2) 60%, #fff); margin: 0.9rem 0 0; }
+  .gol-final-wrap { margin: 1.4rem 0 0.5rem; }
+  .gol-final-note { font-size: 0.75rem; color: var(--muted); text-align: center; margin: 0.6rem 0 0; }
 </style>
