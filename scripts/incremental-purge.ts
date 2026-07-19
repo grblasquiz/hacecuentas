@@ -38,6 +38,7 @@ interface Changes {
   glosario?: ContentChanges;
   argentina?: ContentChanges;
   iibb?: boolean;
+  standalone?: { paths: string[] };
   categories?: string[];
   provincias?: string[];
 }
@@ -111,6 +112,13 @@ function buildUrls(changes: Changes): string[] {
       set.add(`${BASE}/${path.replace(/^public\//, '')}`);
     }
     if (MODE === 'assets') return Array.from(set);
+  }
+
+  // Páginas estáticas aisladas cuyos datos viven en src/lib. Astro las vuelve
+  // a generar en un build incremental; purgamos sólo esas URLs, no toda la
+  // caché. Ver ISOLATED_DATA_DEPENDENCIES en detect-changes.ts.
+  for (const path of changes.standalone?.paths || []) {
+    set.add(`${BASE}${path.startsWith('/') ? path : `/${path}`}`);
   }
 
   // Sitemaps + feeds + search-index siempre cambian al editar contenido

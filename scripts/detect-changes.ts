@@ -21,6 +21,7 @@
  *     "glosario":      { "slugs": [...] },
  *     "argentina":     { "slugs": [...] },
  *     "iibb":          true | false,
+ *     "standalone":    { "paths": [...] }, // páginas estáticas aisladas
  *     "categories":    [...],   // derivado leyendo c.category de calcs cambiados
  *     "provincias":    [...]    // derivado de calcs en content/argentina/
  *   }
@@ -189,12 +190,35 @@ interface DetectResult {
     glosario?: { slugs: string[] };
     argentina?: { slugs: string[] };
     iibb?: boolean;
+    standalone?: { paths: string[] };
     categories?: string[];
     provincias?: string[];
   };
   reason: string;
   filesAnalyzed: number;
 }
+
+// Datos generados que se importan desde una superficie estática acotada. No
+// son "shared" aunque vivan en src/lib: forzar un full por un refresh diario
+// de BCRA o del fixture del Mundial hacía que el camino incremental casi nunca
+// se usara. La lista es explícita a propósito: cualquier lib no incluida acá
+// mantiene el fallback full defensivo.
+//
+// `formulaIds` cubre las calculadoras que importan estos datos en el bundle
+// cliente. `pages` son rutas estáticas que Astro vuelve a prerenderizar en un
+// incremental y que necesitamos purgar selectivamente después del deploy.
+const ISOLATED_DATA_DEPENDENCIES: Record<string, {
+  pages: string[];
+  formulaIds?: string[];
+}> = {
+  'src/lib/bcra-indices.json': {
+    pages: ['/valores-bcra'],
+  },
+  'src/lib/data/mundial-2026-fixture.json': {
+    pages: ['/fixture-mundial-2026', '/mundial-2026'],
+    formulaIds: ['mundial-2026-dias-debut'],
+  },
+};
 
 function readSlugFromJson(filePath: string): string | null {
   if (!existsSync(filePath)) return null;
@@ -393,10 +417,27 @@ function detect(baseSha: string): DetectResult {
   const argentina: ContentChanges = { slugs: new Set() };
   const provincias = new Set<string>();
   const categories = new Set<string>();
+  const standalone = new Set<string>();
   let iibb = false;
 
   for (const file of files) {
     if (IGNORE_PATTERNS.some((p) => p.test(file))) continue;
+
+    // Un dato de una página/s fórmula aislada: regeneramos únicamente las
+    // superficies declaradas y las calcs consumidoras, sin convertir el
+    // refresh de datos en un full rebuild de todo el sitio.
+    const isolated = ISOLATED_DATA_DEPENDENCIES[file];
+    if (isolated) {
+      for (const page of isolated.pages) standalone.add(page);
+      for (const formulaId of isolated.formulaIds || []) {
+        const matched = readSlugsFromFormulaId(formulaId);
+        if (matched.length === 0) {
+          return fullResult(`dato aislado sin calcs asociadas: ${file}`, files.length);
+        }
+        for (const m of matched) calcsByLocale[m.locale as Locale].add(m.slug);
+      }
+      continue;
+    }
 
     // Calcs JSON
     const calcM = file.match(CALC_RE);
@@ -537,7 +578,8 @@ function detect(baseSha: string): DetectResult {
     comparaciones.slugs.size > 0 ||
     glosario.slugs.size > 0 ||
     argentina.slugs.size > 0 ||
-    iibb;
+    iibb ||
+    standalone.size > 0;
 
   if (!anyChange) {
     // Solo cambios en archivos ignore (tooling, docs, etc.). No hay nada
@@ -570,6 +612,7 @@ function detect(baseSha: string): DetectResult {
   if (glosario.slugs.size > 0) changes.glosario = { slugs: Array.from(glosario.slugs).sort() };
   if (argentina.slugs.size > 0) changes.argentina = { slugs: Array.from(argentina.slugs).sort() };
   if (iibb) changes.iibb = true;
+  if (standalone.size > 0) changes.standalone = { paths: Array.from(standalone).sort() };
   if (categories.size > 0) changes.categories = Array.from(categories).sort();
   if (provincias.size > 0) changes.provincias = Array.from(provincias).sort();
 
