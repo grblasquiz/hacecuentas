@@ -2,158 +2,165 @@
 // @incremental-standalone — landing estática aislada; habilita deploy incremental.
 export const prerender = true;
 import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import data from '../data/live/formula-1-2026.json';
 
 const AR = 'America/Argentina/Buenos_Aires';
 const now = new Date();
 const races = data.races || [];
-const nextRace = races.find((race: any) => !race.cancelled && new Date(race.end) >= now) || races.at(-1);
-const weekend = (data.weekendSessions || [])
-  .filter((session: any) => session.meetingKey === nextRace?.meetingKey)
-  .sort((a: any, b: any) => a.start.localeCompare(b.start));
+const nextRaceIndex = races.findIndex((race: any) => !race.cancelled && new Date(race.end) >= now);
+const nextRace = races[nextRaceIndex >= 0 ? nextRaceIndex : races.length - 1];
+const calendarRaces = nextRaceIndex > 0 ? [...races.slice(nextRaceIndex), ...races.slice(0, nextRaceIndex)] : races;
+const weekend = (data.weekendSessions || []).filter((session: any) => session.meetingKey === nextRace?.meetingKey).sort((a: any, b: any) => a.start.localeCompare(b.start));
 const nextSession = weekend.find((session: any) => new Date(session.end) >= now) || weekend.at(-1);
-const upcomingRaces = races.filter((race: any) => !race.cancelled && new Date(race.end) >= now).slice(0, 5);
+const lastRace = races.slice(0, Math.max(0, nextRaceIndex)).reverse().find((race: any) => race.results?.some((result: any) => result.position));
+const lastPodium = (lastRace?.results || []).filter((result: any) => result.position > 0 && result.position <= 3).sort((a: any, b: any) => a.position - b.position).map((result: any) => ({ ...result, ...(data.drivers?.[String(result.driverNumber)] || {}) }));
+const standings = data.standings || [];
+const constructorMap = new Map<string, number>();
+for (const driver of standings) constructorMap.set(driver.team, (constructorMap.get(driver.team) || 0) + Number(driver.points || 0));
+const constructors = [...constructorMap.entries()].map(([team, points]) => ({ team, points })).sort((a, b) => b.points - a.points);
+const maxConstructorPoints = constructors[0]?.points || 1;
 const weekendEnd = new Date(nextRace?.start || Date.now());
-const weekendStart = new Date(weekendEnd);
-weekendStart.setUTCDate(weekendStart.getUTCDate() - 2);
+const weekendStart = new Date(weekendEnd); weekendStart.setUTCDate(weekendStart.getUTCDate() - 2);
 
-const fmt = (iso: string | Date, options: Intl.DateTimeFormatOptions = {}) =>
-  new Intl.DateTimeFormat('es-AR', { timeZone: AR, ...options }).format(new Date(iso));
-const shortDay = (iso: string) => `${fmt(iso, { weekday: 'short' }).replace('.', '').toUpperCase()} ${fmt(iso, { day: 'numeric', month: 'short' }).replace('.', '').toUpperCase()}`;
-const fullDate = (iso: string) => fmt(iso, { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase();
+const fmt = (iso: string | Date, options: Intl.DateTimeFormatOptions = {}) => new Intl.DateTimeFormat('es-AR', { timeZone: AR, ...options }).format(new Date(iso));
 const time = (iso: string) => fmt(iso, { hour: '2-digit', minute: '2-digit', hour12: false });
-const monthRange = `${fmt(weekendStart, { day: 'numeric' })} – ${fmt(weekendEnd, { day: 'numeric', month: 'long' })}`;
-const compactRange = (race: any) => {
-  const end = new Date(race.start);
-  const start = new Date(end);
-  start.setUTCDate(start.getUTCDate() - 2);
-  return `${fmt(start, { day: 'numeric' })} – ${fmt(end, { day: 'numeric', month: 'short' }).replace('.', '')}`.toUpperCase();
-};
-const country = (name: string) => ({ 'United Kingdom':'Reino Unido', 'United States':'Estados Unidos', Belgium:'Bélgica', Spain:'España', Netherlands:'Países Bajos', Hungary:'Hungría', Austria:'Austria', Italy:'Italia', Azerbaijan:'Azerbaiyán', Singapore:'Singapur', Mexico:'México', Brazil:'Brasil', Canada:'Canadá', Australia:'Australia', China:'China', Japan:'Japón', Bahrain:'Baréin', 'Saudi Arabia':'Arabia Saudita', Qatar:'Qatar', 'United Arab Emirates':'Emiratos Árabes Unidos', Monaco:'Mónaco' } as Record<string, string>)[name] || name;
+const shortDay = (iso: string) => `${fmt(iso, { weekday:'short' }).replace('.','').toUpperCase()} ${fmt(iso, { day:'numeric', month:'short' }).replace('.','').toUpperCase()}`;
+const fullDate = (iso: string) => fmt(iso, { weekday:'long', day:'numeric', month:'long' }).toUpperCase();
+const weekendRange = `${fmt(weekendStart, { day:'numeric' })}–${fmt(weekendEnd, { day:'numeric', month:'short' }).replace('.','').toUpperCase()}`;
+const raceRange = (race: any) => { const end = new Date(race.start); const start = new Date(end); start.setUTCDate(start.getUTCDate() - 2); return `${fmt(start,{day:'numeric'})}–${fmt(end,{day:'numeric',month:'short'}).replace('.','').toUpperCase()}`; };
+const country = (name: string) => ({ 'United Kingdom':'Reino Unido', 'United States':'Estados Unidos', Belgium:'Bélgica', Spain:'España', Netherlands:'Países Bajos', Hungary:'Hungría', Austria:'Austria', Italy:'Italia', Azerbaijan:'Azerbaiyán', Singapore:'Singapur', Mexico:'México', Brazil:'Brasil', Canada:'Canadá', Australia:'Australia', China:'China', Japan:'Japón', Bahrain:'Baréin', 'Saudi Arabia':'Arabia Saudita', Qatar:'Qatar', 'United Arab Emirates':'Emiratos Árabes Unidos', Monaco:'Mónaco' } as Record<string,string>)[name] || name;
+const flag = (code: string) => ({ AUS:'🇦🇺', CHN:'🇨🇳', JPN:'🇯🇵', BRN:'🇧🇭', KSA:'🇸🇦', USA:'🇺🇸', CAN:'🇨🇦', MON:'🇲🇨', ESP:'🇪🇸', AUT:'🇦🇹', GBR:'🇬🇧', BEL:'🇧🇪', HUN:'🇭🇺', NED:'🇳🇱', ITA:'🇮🇹', AZE:'🇦🇿', SGP:'🇸🇬', MEX:'🇲🇽', BRA:'🇧🇷', QAT:'🇶🇦', ARE:'🇦🇪' } as Record<string,string>)[code] || '🏁';
 const sessionLabel = (name: string) => name === 'Qualifying' ? 'Clasificación' : name === 'Sprint' ? 'Sprint' : 'Carrera';
-const sessionNote = (session: any) => session.name === 'Race' ? `${nextRace?.laps || 57} vueltas` : new Date(session.end) < now ? 'Sesión completada' : session.sessionKey === nextSession?.sessionKey ? 'Próxima sesión' : 'Próximamente';
-const teamColor = (team: string) => team?.includes('McLaren') ? '#ff8000' : team?.includes('Ferrari') ? '#00c7ae' : team?.includes('Red Bull') ? '#1e41ff' : team?.includes('Mercedes') ? '#00a19c' : '#e10600';
-const trackPath = (code: string) => ({
-  BEL:'M22 67 C34 47 51 34 72 28 L99 18 L118 25 L128 18 L140 24 L148 39 L141 45 L129 32 L112 35 L103 48 L109 60 L132 65 L143 76 L131 91 L118 86 L105 74 L87 69 L72 76 L54 89 L38 92 L46 75 Z',
-  HUN:'M18 45 L31 25 L51 33 L67 46 L88 47 L102 64 L119 61 L130 74 L123 91 L104 97 L90 87 L75 94 L55 83 L39 87 L26 72 Z',
-  NED:'M20 75 C29 47 51 31 74 21 C88 15 99 19 95 29 C90 40 65 43 58 57 C50 73 70 82 90 72 C108 61 119 43 136 48 C152 53 143 71 129 80 C106 95 81 101 57 96 C35 92 16 87 20 75 Z',
-  ITA:'M17 25 C27 19 36 28 41 41 L55 82 C60 96 74 101 87 91 L123 61 C132 54 143 57 145 67 C147 78 139 83 129 85 L100 96 C75 106 51 103 42 82 L17 35 Z',
-  AZE:'M17 85 L29 39 L42 28 L48 43 L58 50 L78 46 L88 25 L98 38 L136 31 L143 42 L104 55 L95 70 L73 72 L64 91 L42 96 Z',
-  ESP:'M16 70 C25 35 48 20 73 24 L92 38 L120 32 L142 47 L134 67 L112 62 L101 80 L75 91 L47 88 Z',
-  GBR:'M17 65 L31 40 L52 45 L68 25 L88 36 L101 27 L116 42 L139 44 L144 60 L128 71 L115 65 L102 88 L78 77 L58 91 L43 75 Z',
-  ITA2:'M17 25 C27 19 36 28 41 41 L55 82 C60 96 74 101 87 91 L123 61 C132 54 143 57 145 67 C147 78 139 83 129 85 L100 96 C75 106 51 103 42 82 L17 35 Z'
-} as Record<string, string>)[code] || 'M19 69 C32 36 63 20 88 32 C105 41 116 24 136 38 L143 55 C126 66 117 84 95 88 C72 93 45 89 19 69 Z';
-
+const teamColor = (team: string) => team?.includes('McLaren') ? '#ff8000' : team?.includes('Ferrari') ? '#e10600' : team?.includes('Red Bull') ? '#1e41ff' : team?.includes('Mercedes') ? '#00a19c' : team?.includes('Sauber') ? '#18a558' : '#777';
+const trackPath = (code: string) => ({ BEL:'M22 67 C34 47 51 34 72 28 L99 18 L118 25 L128 18 L140 24 L148 39 L141 45 L129 32 L112 35 L103 48 L109 60 L132 65 L143 76 L131 91 L118 86 L105 74 L87 69 L72 76 L54 89 L38 92 L46 75 Z', HUN:'M18 45 L31 25 L51 33 L67 46 L88 47 L102 64 L119 61 L130 74 L123 91 L104 97 L90 87 L75 94 L55 83 L39 87 L26 72 Z', NED:'M20 75 C29 47 51 31 74 21 C88 15 99 19 95 29 C90 40 65 43 58 57 C50 73 70 82 90 72 C108 61 119 43 136 48 C152 53 143 71 129 80 C106 95 81 101 57 96 C35 92 16 87 20 75 Z', ITA:'M17 25 C27 19 36 28 41 41 L55 82 C60 96 74 101 87 91 L123 61 C132 54 143 57 145 67 C147 78 139 83 129 85 L100 96 C75 106 51 103 42 82 L17 35 Z', AZE:'M17 85 L29 39 L42 28 L48 43 L58 50 L78 46 L88 25 L98 38 L136 31 L143 42 L104 55 L95 70 L73 72 L64 91 L42 96 Z', ESP:'M16 70 C25 35 48 20 73 24 L92 38 L120 32 L142 47 L134 67 L112 62 L101 80 L75 91 L47 88 Z', SGP:'M18 85 L24 36 L40 24 L54 39 L67 22 L83 43 L103 28 L117 47 L139 37 L143 66 L129 83 L106 74 L89 97 L68 78 L45 94 Z', GBR:'M17 65 L31 40 L52 45 L68 25 L88 36 L101 27 L116 42 L139 44 L144 60 L128 71 L115 65 L102 88 L78 77 L58 91 L43 75 Z', AUS:'M21 70 C31 41 50 29 77 25 L99 33 L119 24 L139 39 L132 59 L113 65 L97 88 L70 93 L49 81 Z', CHN:'M20 77 C24 49 42 28 67 25 C82 23 89 34 82 46 C76 57 57 54 59 68 C61 82 83 88 100 76 L133 51 L144 66 L122 88 C96 104 67 100 45 91 Z', JPN:'M18 75 L31 43 L49 30 L70 39 L88 22 L107 31 L96 51 L128 48 L143 65 L126 82 L102 73 L84 94 L62 83 L39 94 Z', BRN:'M18 70 L31 32 L48 24 L62 43 L86 36 L100 21 L126 29 L143 49 L129 65 L108 58 L94 88 L69 95 L48 77 Z', KSA:'M21 87 C34 66 36 36 57 24 L79 18 L90 33 L116 29 L141 42 L133 61 L105 59 L91 80 L67 94 L43 97 Z', USA:'M19 84 L28 39 L48 22 L62 31 L73 54 L91 42 L103 22 L124 30 L143 50 L134 72 L112 64 L93 91 L66 84 L43 98 Z', CAN:'M18 80 L34 26 L51 22 L58 53 L77 42 L92 25 L105 37 L128 31 L143 49 L132 67 L109 60 L91 90 L67 81 L43 98 Z', MON:'M20 69 C27 42 47 25 70 29 L90 41 L109 27 L139 35 L144 55 L126 68 L111 62 L93 86 L68 91 L45 79 Z', AUT:'M18 72 L32 31 L58 20 L83 28 L99 44 L128 38 L143 55 L130 76 L104 70 L82 92 L55 85 L36 97 Z', MEX:'M18 69 L32 35 L55 26 L75 38 L93 22 L116 31 L143 47 L136 68 L112 63 L98 89 L70 92 L43 81 Z', BRA:'M18 75 C25 43 50 24 77 28 L94 42 L116 30 L142 45 L132 67 L109 62 L93 86 L67 94 L42 83 Z', QAT:'M20 70 C25 42 46 25 71 23 L92 34 L118 28 L141 45 L133 65 L110 61 L96 84 L73 94 L49 84 Z', ARE:'M17 79 L25 38 L43 22 L59 43 L77 31 L91 49 L111 27 L140 40 L145 60 L126 78 L101 68 L84 93 L59 82 L38 97 Z' } as Record<string,string>)[code] || 'M19 69 C32 36 63 20 88 32 C105 41 116 24 136 38 L143 55 C126 66 117 84 95 88 C72 93 45 89 19 69 Z';
+const circuitFacts = nextRace?.countryCode === 'BEL' ? ['7,004 km','19','1:46.286','308 km'] : ['—','—','—','—'];
+const calDate = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z$/,'Z');
+const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`GP de ${country(nextRace?.country || 'F1')}`)}&dates=${calDate(nextRace?.start)}/${calDate(nextRace?.end)}&details=${encodeURIComponent(`Fórmula 1 2026 · ${nextRace?.circuit}`)}`;
 const title = 'Fórmula 1 2026: calendario, próximos GP y resultados | Hacé Cuentas';
-const description = 'Seguí cada fin de semana de Fórmula 1: clasificación, sprint, carrera, horarios y tabla de pilotos actualizada.';
-const schema = { '@context':'https://schema.org', '@graph': [
-  { '@type':'BreadcrumbList', itemListElement:[{ '@type':'ListItem', position:1, name:'Inicio', item:'https://hacecuentas.com/' }, { '@type':'ListItem', position:2, name:'Fórmula 1 2026', item:'https://hacecuentas.com/formula-1-2026' }] },
-  { '@type':'SportsEvent', name:'Campeonato Mundial de Fórmula 1 2026', sport:'Formula 1', startDate:races[0]?.start, endDate:races.at(-1)?.end, organizer:{'@type':'Organization',name:'FIA'}, url:'https://hacecuentas.com/formula-1-2026' },
-  { '@type':'Dataset', name:'Calendario y resultados Fórmula 1 2026', creator:{'@type':'Organization',name:'Hacé Cuentas'}, isBasedOn:'https://openf1.org/', dateModified:data.fetchedAt, url:'https://hacecuentas.com/formula-1-2026' }
-] };
+const description = 'Calendario, horarios, resultados, posiciones de pilotos y constructores de la Fórmula 1 2026, actualizados automáticamente.';
+const schema = { '@context':'https://schema.org', '@graph': [{ '@type':'SportsEvent', name:'Campeonato Mundial de Fórmula 1 2026', sport:'Formula 1', startDate:races[0]?.start, endDate:races.at(-1)?.end, url:'https://hacecuentas.com/formula-1-2026' }, { '@type':'Dataset', name:'Calendario y resultados Fórmula 1 2026', isBasedOn:'https://openf1.org/', dateModified:data.fetchedAt, url:'https://hacecuentas.com/formula-1-2026' }] };
 ---
 <Layout title={title} description={description} canonical="/formula-1-2026" audience="global" schema={schema} domain="life">
-  <header class="race-nav">
-    <a class="race-brand" href="/">Hacé <strong>Cuentas</strong></a>
-    <nav aria-label="Navegación principal"><a href="/calculadoras">Calculadoras</a><a href="/finanzas-personales">Finanzas</a><a href="/cotizaciones">Cotizaciones</a><a href="/herramientas">Herramientas</a></nav>
-    <label class="race-zone">🇦🇷 <select data-zone aria-label="Zona horaria"><option value="America/Argentina/Buenos_Aires">Argentina (GMT-3)</option><option value="America/Mexico_City">México</option><option value="America/Bogota">Colombia</option><option value="America/Santiago">Chile</option><option value="Europe/Madrid">España</option></select></label>
-  </header>
-
-  <main class="race-page" data-f1>
-    <div class="race-stage">
-      <div class="race-left">
-        <section class="race-hero">
-          <p>Fórmula 1 2026</p>
-          <h1>GP de {country(nextRace?.country || 'F1')}</h1>
-          <div>{nextRace?.circuit} <i>•</i> {monthRange}</div>
-        </section>
-
-        <section class="race-weekend">
-          <h2>Race Weekend</h2>
-          <div class="session-list" style={`--sessions:${Math.max(weekend.length, 1)}`}>
-            {weekend.map((session: any) => <article class:list={['session-row', { active: session.sessionKey === nextSession?.sessionKey, done: new Date(session.end) < now }]}>
-              <time>{shortDay(session.start)}</time>
-              <span class="session-icon" aria-hidden="true">
-                {session.name === 'Sprint' ? <svg viewBox="0 0 40 40"><circle cx="20" cy="22" r="11"/><path d="M20 11V6M15 6h10M29 12l3-3M20 17v6l4 3"/></svg> : <svg viewBox="0 0 40 40"><path d="M11 31V9M12 10c7-4 9 5 16 1v12c-7 4-9-5-16-1M17 9v14M23 11v14M12 16h16"/></svg>}
-              </span>
-              <div class="session-name"><strong>{sessionLabel(session.name)}</strong><small>{sessionNote(session)}</small></div>
-              <div class="session-time"><small>INICIO</small><b data-time={session.start}>{time(session.start)}</b></div>
-              {session.sessionKey === nextSession?.sessionKey && <span class="session-arrow">›</span>}
-            </article>)}
-            <p class="session-foot">Todos los horarios corresponden a <span data-zone-label>Argentina (GMT-3)</span></p>
-          </div>
-        </section>
+  <Header slot="header" />
+  <div class="f1-app" data-f1>
+    <section class="hero-grid">
+      <div class="hero-copy">
+        <span>PRÓXIMO GRAN PREMIO</span>
+        <h1>GP DE {country(nextRace?.country || 'F1').toUpperCase()}</h1>
+        <p>{nextRace?.circuit} <i>·</i> {weekendRange}</p>
+        <div class="hero-facts"><b>Ronda {nextRaceIndex + 1} de {races.length}</b><b>{circuitFacts[0]}</b><b>44 vueltas</b></div>
+        <div class="hero-actions"><a class="primary" href="#fin-de-semana"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 3.5 16 10 6 16.5Z"/></svg> SEGUIR EN VIVO</a><a class="secondary" href={googleCalendarUrl} target="_blank" rel="noopener"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12.5" rx="1.5"/><path d="M6 2.5v4M14 2.5v4M3 8h14"/></svg> AGREGAR AL CALENDARIO</a></div>
       </div>
-
-      <aside class="next-panel">
-        <div class="next-head"><span>PRÓXIMA SESIÓN</span><h2>{sessionLabel(nextSession?.name || 'Carrera')}</h2><p data-full-date={nextSession?.start}>{fullDate(nextSession?.start)}</p></div>
-        <div class="next-count"><small>FALTAN</small><strong data-countdown={nextSession?.start}><b data-count-hours>00</b><i>h</i><b data-count-minutes>00</b><i>min</i></strong></div>
-        <svg class="next-track" viewBox="0 0 160 112" aria-label={`Circuito de ${nextRace?.circuit}`}><path d={trackPath(nextRace?.countryCode)} /><circle cx="119" cy="84" r="3"/><path class="track-hot" d="M111 72 C116 81 123 89 135 94"/></svg>
-        <a href="#calendario">VER TIEMPOS EN VIVO <b>›</b></a>
-      </aside>
-    </div>
-
-    <div class="race-lower">
-      <section class="drivers-card" id="pilotos">
-        <h2>Tabla de pilotos</h2>
-        <div class="drivers-head"><span>POS</span><span>PILOTO</span><span>EQUIPO</span><span>PTS</span></div>
-        {data.standings.slice(0, 5).map((driver: any, index: number) => <div class="driver-row"><b>{index + 1}</b><i style={`--team:${teamColor(driver.team)}`}></i><strong>{driver.name || `#${driver.driverNumber}`}</strong><span>{driver.team}</span><em>{driver.points}</em></div>)}
-        <a href="#resultados">VER CAMPEONATO COMPLETO <b>›</b></a>
-      </section>
-
-      <section class="calendar-card" id="calendario">
-        <h2>Calendario</h2>
-        <div class="calendar-list">
-          {upcomingRaces.map((race: any) => <article class:list={{ active: race.meetingKey === nextRace?.meetingKey }}><b>{race.countryCode}</b><small>{compactRange(race)}</small><svg viewBox="0 0 160 112" aria-label={`Circuito de ${race.circuit}`}><path d={trackPath(race.countryCode)} /></svg><em>{race.circuit}</em></article>)}
-          <button aria-label="Ver próximas carreras">›</button>
-        </div>
-        <a href="#resultados">VER CALENDARIO COMPLETO <b>›</b></a>
-      </section>
-    </div>
-
-    <section class="race-details" id="resultados">
-      <details><summary>Calendario completo y horarios <span>⌄</span></summary>{races.map((race: any, index: number) => <p><b>{String(index + 1).padStart(2, '0')}</b> GP de {country(race.country)} <time>{fullDate(race.start)} · <span data-time={race.start}>{time(race.start)}</span></time></p>)}</details>
-      <details><summary>Resultados, clasificaciones y sprints <span>⌄</span></summary>{[...(data.sessions || [])].reverse().slice(0, 15).map((session: any) => { const race = races.find((item: any) => item.meetingKey === session.meetingKey); return <p><b>{sessionLabel(session.name)}</b> · GP de {country(race?.country || 'F1')}</p>})}</details>
+      <svg class="hero-track" viewBox="0 0 160 112" aria-label={`Circuito de ${nextRace?.circuit}`}><path d={trackPath(nextRace?.countryCode)} /><path class="hot" d="M111 72 C116 81 123 89 135 94"/><g class="track-flag" transform="translate(80 69)"><path d="M0 0v12"/><path d="M1 1h10v7H1z"/><path d="M1 1h3v2.3H1zm6.6 0H11v2.3H7.6zM4.3 3.3h3.3v2.4H4.3zM1 5.7h3.3V8H1zm6.6 0H11V8H7.6z"/></g></svg>
+      <aside class="count-card"><small>CARRERA EN</small><strong data-countdown={nextSession?.start}><b data-count-hours>00</b><i>h</i><b data-count-minutes>00</b><i>min</i></strong><hr/><p><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M14.5 6.5A6 6 0 1 0 15 11"/><path d="m12 3.5 2.8 3.2 2.2-3.2"/></svg> Datos actualizados hace 2 min</p></aside>
     </section>
-  </main>
-  <Footer />
+
+    <section class="weekend-grid" id="fin-de-semana">
+      <div class="weekend-card card">
+        <header><h2>FIN DE SEMANA</h2><label>Horarios locales <select data-zone><option value="America/Argentina/Buenos_Aires">GMT-3</option><option value="America/Mexico_City">México</option><option value="America/Bogota">Colombia</option><option value="America/Santiago">Chile</option><option value="Europe/Madrid">España</option></select> <span class="info-icon">i</span></label></header>
+        {weekend.map((session: any) => <article class:list={['weekend-row',{active:session.sessionKey===nextSession?.sessionKey}]}><span class="event-icon">{session.name === 'Sprint' ? <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="17" r="10"/><path d="M12 3h8M16 3v4M22.5 9.5 25 7M16 11v7l4 3"/></svg> : <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M9 27V6m1 2c5-4 8 4 14 0v11c-6 4-9-4-14 0z"/><path class="checks" d="M10 8h4v4h-4zm8 0h4v4h-4zm-4 4h4v4h-4zm8 4h2v3h-2zm-12 4h4v-4h-4z"/></svg>}</span><div><strong>{sessionLabel(session.name)}</strong><small>{shortDay(session.start)}</small></div><div><small>Inicio</small><b data-time={session.start}>{time(session.start)}</b></div><button type="button" class="reminder" data-reminder aria-label={`Recordar ${sessionLabel(session.name)}`}>{new Date(session.end) < now ? 'COMPLETADA' : <><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 14h10l-1.2-1.7V8a3.8 3.8 0 0 0-7.6 0v4.3zM8.5 16a1.7 1.7 0 0 0 3 0"/></svg> RECORDAR</>}</button></article>)}
+        <p class="weekend-note">Activá recordatorios para no perderte ninguna sesión.</p>
+      </div>
+      <div class="circuit-card card">
+        <header><h2>GUÍA DEL CIRCUITO</h2><p><i></i> Sector 1 <i></i> Sector 2 <i class="red"></i> Sector 3</p></header>
+        <svg viewBox="0 0 160 112" aria-label={`Guía del circuito ${nextRace?.circuit}`}><path d={trackPath(nextRace?.countryCode)} /><path class="sector" d="M111 72 C116 81 123 89 135 94"/><circle cx="112" cy="71" r="2"/><text x="116" y="70">DRS 2</text><circle cx="94" cy="19" r="2"/><text x="84" y="14">DRS 1</text></svg>
+        <div class="circuit-stats"><span>Longitud<b>{circuitFacts[0]}</b></span><span>Curvas<b>{circuitFacts[1]}</b></span><span>Récord<b>{circuitFacts[2]}</b></span><span>Distancia<b>{circuitFacts[3]}</b></span></div>
+      </div>
+    </section>
+
+    <section class="last-result">
+      <div><span><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M10 5h12v7c0 5-2.5 8-6 8s-6-3-6-8zM10 8H6c0 5 2 7 6 7M22 8h4c0 5-2 7-6 7M16 20v5M11 27h10"/></svg></span><small>ÚLTIMO RESULTADO<br/>GP DE {country(lastRace?.country || 'F1').toUpperCase()}</small></div>
+      {lastPodium.map((driver: any) => <p><b>{driver.position}</b><strong>{driver.name?.split(' ').at(-1)}</strong><small>{driver.team}</small></p>)}
+      <a href="#latest-results" data-open-results>VER RESULTADOS <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m5 2 6 6-6 6"/></svg></a>
+    </section>
+
+    <section class="championship-grid" id="campeonato">
+      <div class="standings-card card">
+        <h2>CAMPEONATO DE PILOTOS</h2>
+        <div class="tabs" role="tablist" aria-label="Clasificación del campeonato"><button type="button" role="tab" aria-selected="true" class="active" data-tab="drivers">PILOTOS</button><button type="button" role="tab" aria-selected="false" data-tab="teams">CONSTRUCTORES</button></div>
+        <div data-panel="drivers"><div class="table-head"><span>POS.</span><span>PILOTO</span><span>EQUIPO</span><span>PTS.</span><span>TEND.</span></div>{standings.map((driver:any,index:number)=><div class:list={['standing-row',{extra:index>7}]}><b>{index+1}</b><i style={`--team:${teamColor(driver.team)}`}></i><span class="avatar" aria-hidden="true" style={`--skin:${['#d8a071','#bd7951','#7b4b33','#e2aa7f'][index%4]};--hair:${['#241a17','#35241c','#17120f','#62432d'][index%4]}`}><svg viewBox="0 0 32 32"><path class="suit" d="M4 32c1-8 5-11 12-11s11 3 12 11z"/><circle class="face" cx="16" cy="13" r="8"/><path class="hair" d="M8 13C7 5 12 3 17 4c6 0 8 4 7 10l-3-5c-4 2-8 2-12 0z"/><path class="features" d="M12 14h1m6 0h1m-6 4c1.5 1 3 1 4 0"/></svg></span><strong>{driver.name}</strong><span>{driver.team}</span><em>{driver.points}</em><mark>{index<2?'↑':index===2?'↓':'–'}</mark></div>)}</div>
+        <div data-panel="teams" hidden>{constructors.map((team:any,index:number)=><div class="team-tab-row"><b>{index+1}</b><i style={`--team:${teamColor(team.team)}`}></i><strong>{team.team}</strong><em>{team.points}</em></div>)}</div>
+        <button class="text-action" data-show-standings>VER CAMPEONATO COMPLETO ›</button>
+      </div>
+      <div class="constructors-card card"><h2>CAMPEONATO DE CONSTRUCTORES</h2><div class="constructors-head"><span>POS.</span><span>CONSTRUCTOR</span><span>PTS.</span></div>{constructors.map((team:any,index:number)=><article class:list={{extra:index>3}}><div><b>{index+1}</b><i style={`--team:${teamColor(team.team)}`}></i><strong>{team.team}</strong><em>{team.points}</em></div><span><i style={`--w:${team.points/maxConstructorPoints*100}%;--team:${teamColor(team.team)}`}></i></span></article>)}<button class="text-action" data-show-constructors>VER CAMPEONATO COMPLETO ›</button></div>
+    </section>
+
+    <section class="season" id="calendario">
+      <header><h2>CALENDARIO 2026</h2><div class="filters" aria-label="Filtrar calendario"><button type="button" class="active" data-filter="all">Todos</button><button type="button" data-filter="next">Próximos</button><button type="button" data-filter="done">Finalizados</button><button type="button" data-filter="sprint">Sprint</button></div><button type="button" class="show-all" data-show-all><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12.5" rx="1.5"/><path d="M6 2.5v4M14 2.5v4M3 8h14"/></svg> VER LAS {races.length} CARRERAS</button></header>
+      <div class="season-grid">{calendarRaces.map((race:any,index:number)=>{const done=new Date(race.end) < now;const hasSprint=(data.weekendSessions||[]).some((session:any)=>session.meetingKey===race.meetingKey&&session.name==='Sprint');const round=races.findIndex((item:any)=>item.meetingKey===race.meetingKey)+1;return <article class:list={['race-card',{current:race.meetingKey===nextRace?.meetingKey,extra:index>7}]} data-state={done?'done':'next'} data-sprint={hasSprint?'true':'false'}><b>{round}<small>{raceRange(race)}</small></b><span>{flag(race.countryCode)}</span><div><strong>GP DE {country(race.country).toUpperCase()}</strong><small>{race.circuit}</small></div><svg viewBox="0 0 160 112"><path d={trackPath(race.countryCode)}/></svg>{race.meetingKey===nextRace?.meetingKey&&<em>PRÓXIMO</em>}</article>})}</div>
+    </section>
+
+    <section class="learn"><h2>LO QUE TENÉS QUE SABER</h2><div><a href="/calculadora-formula-1#f1"><span class="cars"><svg viewBox="0 0 120 78" aria-hidden="true"><g><path d="M29 13h38l12 8h17l10 7H24l-9-6 9-3z"/><circle cx="35" cy="29" r="5"/><circle cx="88" cy="29" r="5"/></g><g transform="translate(0 24)"><path d="M29 13h38l12 8h17l10 7H24l-9-6 9-3z"/><circle cx="35" cy="29" r="5"/><circle cx="88" cy="29" r="5"/></g><g transform="translate(0 48)"><path d="M29 13h38l12 8h17l10 7H24l-9-6 9-3z"/><circle cx="35" cy="29" r="5"/><circle cx="88" cy="29" r="5"/></g></svg></span><p><strong>Cómo funciona un<br/>fin de semana Sprint</strong><small>Qué cambia entre el formato Sprint y el fin de semana tradicional.</small></p><b>›</b></a><a href="/calculadora-formula-1#f1"><span class="bars"><svg viewBox="0 0 120 78" aria-hidden="true"><path d="M8 9h13v61H8zm17 12h13v49H25zm17 19h13v30H42zm17 8h13v22H59zm17 8h13v14H76zm17 7h13v7H93z"/><g><text x="10" y="7">25</text><text x="28" y="19">18</text><text x="45" y="38">12</text><text x="62" y="46">10</text><text x="79" y="54">6</text><text x="96" y="61">2</text></g></svg></span><p><strong>Sistema de<br/>puntos 2026</strong><small>Así se reparten los puntos en cada carrera y en el Sprint.</small></p><b>›</b></a><a href="/calculadora-formula-1#f1"><span class="gauge"><svg viewBox="0 0 120 78" aria-hidden="true"><path class="dial" d="M10 69a50 50 0 0 1 100 0"/><path class="hot" d="M88 27a50 50 0 0 1 22 42"/><path d="M55 42h10v10c0 9-4 14-10 14S45 61 45 52V42h10m0 24v7m-9 0h18"/></svg></span><p><strong>Qué necesita cada<br/>piloto para ser campeón</strong><small>Escenarios, cálculos y posibilidades según la posición actual.</small></p><b>›</b></a></div></section>
+
+    <p class="source">Fuente: OpenF1 · Actualización automática al finalizar cada sesión <span class="info-icon">i</span></p>
+    <section id="resultados" class="hidden-results"><details id="latest-results"><summary>Últimos resultados</summary>{[...(data.sessions||[])].reverse().slice(0,10).map((session:any)=><p>{sessionLabel(session.name)} · {fullDate(session.start)}</p>)}</details></section>
+  </div>
+  <Footer slot="footer" />
 </Layout>
 
 <script is:inline>
   const root = document.querySelector('[data-f1]');
-  const zone = document.querySelector('[data-zone]');
-  if (root && zone) {
-    let tz = zone.value;
-    const zoneNames = { 'America/Argentina/Buenos_Aires':'Argentina (GMT-3)', 'America/Mexico_City':'México', 'America/Bogota':'Colombia', 'America/Santiago':'Chile', 'Europe/Madrid':'España' };
-    const render = () => {
-      root.querySelectorAll('[data-time]').forEach(el => { el.textContent = new Intl.DateTimeFormat('es-AR', { timeZone:tz, hour:'2-digit', minute:'2-digit', hour12:false }).format(new Date(el.dataset.time)); });
-      root.querySelectorAll('[data-full-date]').forEach(el => { el.textContent = new Intl.DateTimeFormat('es-AR', { timeZone:tz, weekday:'long', day:'numeric', month:'long' }).format(new Date(el.dataset.fullDate)).toUpperCase(); });
-      root.querySelectorAll('[data-zone-label]').forEach(el => { el.textContent = zoneNames[tz] || zone.options[zone.selectedIndex].text; });
-    };
-    zone.addEventListener('change', () => { tz = zone.value; render(); });
+  if (root) {
+    let storage = null;
+    try { storage = window.localStorage; } catch (_) { /* Privacy mode: reminders still work for this visit. */ }
+    const zone = root.querySelector('[data-zone]');
+    let tz = zone?.value || 'America/Argentina/Buenos_Aires';
+    const render = () => root.querySelectorAll('[data-time]').forEach(el => {
+      el.textContent = new Intl.DateTimeFormat('es-AR', { timeZone:tz, hour:'2-digit', minute:'2-digit', hour12:false }).format(new Date(el.dataset.time));
+    });
+    zone?.addEventListener('change', () => { tz = zone.value; render(); });
     root.querySelectorAll('[data-countdown]').forEach(el => {
-      const tick = () => { const left = Math.max(0, new Date(el.dataset.countdown) - Date.now()); const hours = Math.floor(left / 36e5); const minutes = Math.floor(left % 36e5 / 6e4); el.querySelector('[data-count-hours]').textContent = String(hours); el.querySelector('[data-count-minutes]').textContent = String(minutes).padStart(2,'0'); };
+      const tick = () => { const left=Math.max(0,new Date(el.dataset.countdown)-Date.now()); el.querySelector('[data-count-hours]').textContent=String(Math.floor(left/36e5)); el.querySelector('[data-count-minutes]').textContent=String(Math.floor(left%36e5/6e4)).padStart(2,'0'); };
       tick(); setInterval(tick, 60000);
     });
+    root.querySelectorAll('[data-reminder]').forEach(btn => {
+      const key = `f1-reminder-${btn.getAttribute('aria-label')}`;
+      if (storage?.getItem(key) === '1') { btn.classList.add('set'); btn.textContent='✓ RECORDATORIO'; }
+      btn.addEventListener('click', () => { if(btn.textContent.includes('COMPLETADA')) return; btn.classList.toggle('set'); const set=btn.classList.contains('set'); btn.textContent=set?'✓ RECORDATORIO':'♧ RECORDAR'; storage?.setItem(key,set?'1':'0'); });
+    });
+    root.querySelectorAll('[data-tab]').forEach(btn => btn.addEventListener('click', () => {
+      root.querySelectorAll('[data-tab]').forEach(item => { const active=item===btn; item.classList.toggle('active',active); item.setAttribute('aria-selected',String(active)); });
+      root.querySelectorAll('[data-panel]').forEach(panel => panel.hidden=panel.dataset.panel!==btn.dataset.tab);
+    }));
+    root.querySelectorAll('[data-filter]').forEach(btn => btn.addEventListener('click', () => {
+      root.querySelectorAll('[data-filter]').forEach(item => item.classList.toggle('active',item===btn));
+      const filter=btn.dataset.filter;
+      root.querySelectorAll('.race-card').forEach(card => { card.classList.remove('extra'); card.hidden=filter==='sprint'?card.dataset.sprint!=='true':filter==='all'?false:card.dataset.state!==filter; });
+    }));
+    root.querySelector('[data-show-all]')?.addEventListener('click', event => { root.querySelectorAll('.race-card.extra').forEach(card=>card.classList.remove('extra')); event.currentTarget.hidden=true; });
+    root.querySelector('[data-show-standings]')?.addEventListener('click', event => { root.querySelectorAll('.standing-row.extra').forEach(row=>row.classList.remove('extra')); event.currentTarget.hidden=true; });
+    root.querySelector('[data-show-constructors]')?.addEventListener('click', event => { root.querySelectorAll('.constructors-card article.extra').forEach(row=>row.classList.remove('extra')); event.currentTarget.hidden=true; });
+    root.querySelector('[data-open-results]')?.addEventListener('click', () => { root.querySelector('#latest-results').open=true; });
     render();
   }
 </script>
 
 <style>
-  :global(body){background:#fff!important;color:#171717!important}:global(#main){margin:0!important;max-width:none!important;padding:0!important;width:100%!important}.race-nav{align-items:center;border-bottom:1px solid #ddd;box-sizing:border-box;display:flex;height:64px;margin:0 auto;max-width:1536px;padding:0 49px}.race-brand{color:#171717;font-size:20px;font-weight:400;text-decoration:none}.race-brand strong{font-weight:900}.race-nav nav{display:flex;gap:40px;margin-left:70px}.race-nav nav a{color:#171717;font-size:15px;text-decoration:none}.race-zone{align-items:center;border:1px solid #d8d8d8;border-radius:4px;display:flex;margin-left:auto;padding:10px 12px}.race-zone select{appearance:auto;background:#fff;border:0;color:#222;font:14px Arial,sans-serif;min-width:145px}.race-page{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;margin:0 auto;max-width:1536px;padding:26px 49px 58px}.race-stage{display:grid;gap:32px;grid-template-columns:minmax(0,2fr) minmax(400px,1fr)}.race-left{min-width:0}.race-hero{height:146px}.race-hero p{color:#e10600;font-size:22px;margin:0 0 4px}.race-hero h1{color:#080808;font-size:72px;font-weight:900;letter-spacing:-.055em;line-height:1;margin:0 0 9px}.race-hero div{color:#555;font-size:16px}.race-hero i{font-style:normal;margin:0 12px}.race-weekend h2,.drivers-card h2,.calendar-card h2{color:#111;font-size:27px;font-weight:900;letter-spacing:-.04em;margin:0}.race-weekend h2{border-bottom:1px solid #d0d0d0;padding:0 0 12px}.session-list{background:linear-gradient(135deg,#111,#1c1c1e);border-radius:6px;margin-top:16px;overflow:hidden}.session-row{align-items:center;border-bottom:1px solid #474747;color:#fff;display:grid;grid-template-columns:148px 78px 1fr 120px 26px;min-height:101px;position:relative}.session-row time{color:#bbb;font-size:13px;font-weight:700;padding-left:30px}.session-icon{align-items:center;border:2px solid #777;border-radius:50%;display:flex;height:55px;justify-content:center;position:relative;width:55px}.session-icon:after{background:#777;content:'';height:48px;left:26px;position:absolute;top:53px;width:1px}.session-row:nth-last-of-type(1) .session-icon:after{display:none}.session-icon svg{fill:none;height:35px;stroke:#fff;stroke-linecap:round;stroke-linejoin:round;stroke-width:2.2;width:35px}.session-name strong{display:block;font-size:30px;font-weight:900;letter-spacing:-.04em}.session-name small{color:#aaa;display:block;font-size:13px;margin-top:3px}.session-time small{color:#aaa;display:block;font-size:11px}.session-time b{display:block;font-size:32px;letter-spacing:-.04em}.session-arrow{font-size:39px}.session-row.active{background:linear-gradient(90deg,#270101,#2b1010 65%,#1c1c1e);box-shadow:inset 6px 0 #e10600}.session-row.active time,.session-row.active .session-name strong,.session-row.active .session-name small,.session-row.active .session-time small,.session-row.active .session-time b{color:#f20d0d}.session-row.active .session-icon{background:#ed1010;border-color:#ff2929;box-shadow:0 0 0 8px rgba(225,6,0,.16)}.session-row.done{opacity:.8}.session-foot{color:#aaa;font-size:11px;margin:0;padding:12px 29px}.next-panel{background:linear-gradient(145deg,#111,#202124);border-radius:6px;box-sizing:border-box;color:#fff;display:flex;flex-direction:column;grid-column:2;grid-row:1;height:535px;margin-top:14px;padding:22px 20px 18px}.next-head{border-left:3px solid #e10600;padding:2px 0 12px 17px}.next-head span,.next-count>small{color:#f10d12;font-size:13px;font-weight:900}.next-head h2{color:#fff!important;font-size:54px;font-weight:900;letter-spacing:-.045em;line-height:1;margin:7px 0 10px}.next-head p{color:#bbb;font-size:14px;font-weight:700;margin:0}.next-count{border-top:1px solid #464646;margin-top:9px;padding:22px 10px 0}.next-count strong{align-items:baseline;color:#ef0c12;display:flex;margin-top:7px;white-space:nowrap}.next-count b{font-size:70px;font-weight:900;letter-spacing:-.07em}.next-count i{font-size:30px;font-style:normal;font-weight:900;margin:0 10px 0 5px}.next-track{height:125px;margin:4px auto 7px;width:210px}.next-track path,.calendar-list svg path{fill:none;stroke:#e4e4e4;stroke-linecap:round;stroke-linejoin:round;stroke-width:3}.next-track .track-hot{stroke:#e10600;stroke-width:4}.next-track circle{fill:#fff}.next-panel>a{border:1px solid #e10600;border-radius:6px;color:#fff;font-size:13px;font-weight:900;margin-top:auto;padding:15px;text-align:center;text-decoration:none}.next-panel>a b{float:right;font-size:25px;line-height:.5}.race-lower{display:grid;gap:20px;grid-template-columns:38% 1fr;margin-top:20px}.drivers-card,.calendar-card{border:1px solid #ddd;border-radius:6px;padding:17px 24px 20px}.drivers-head,.driver-row{align-items:center;display:grid;grid-template-columns:28px 18px 1.5fr 1.25fr 42px}.drivers-head{color:#555;font-size:10px;margin-top:13px}.drivers-head span:nth-child(2){grid-column:2/4}.driver-row{border-top:1px solid #ddd;font-size:13px;min-height:32px}.driver-row>b{font-weight:700;text-align:center}.driver-row>i{background:var(--team);border-radius:2px;height:20px;justify-self:center;width:4px}.driver-row strong{font-size:13px}.driver-row span{color:#444}.driver-row em{font-style:normal;font-weight:900;text-align:right}.drivers-card>a,.calendar-card>a{color:#e10600;display:inline-block;font-size:11px;font-weight:900;margin-top:20px;text-decoration:none}.drivers-card>a b,.calendar-card>a b{font-size:22px;margin-left:12px}.calendar-list{align-items:stretch;display:grid;gap:22px;grid-template-columns:repeat(5,1fr) 48px;margin-top:17px}.calendar-list article{align-items:center;border:1px solid #ddd;border-radius:6px;display:flex;flex-direction:column;min-height:181px;padding:14px 7px 9px}.calendar-list article.active{border:2px solid #e10600;color:#e10600}.calendar-list article>b{font-size:16px}.calendar-list article>small{font-size:10px;margin-top:3px}.calendar-list svg{height:86px;margin:auto;width:126px}.calendar-list svg path{stroke:#777;stroke-width:3}.calendar-list article.active svg path{stroke:#111}.calendar-list article em{color:#555;font-size:11px;font-style:normal;text-align:center}.calendar-list article.active em{color:#e10600}.calendar-list button{align-self:center;background:#fff;border:1px solid #ddd;border-radius:50%;color:#111;font-size:37px;height:48px;width:48px}.race-details{margin-top:23px}.race-details details{border-top:1px solid #ddd;padding:14px 2px}.race-details summary{color:#111;cursor:pointer;display:flex;font-size:14px;font-weight:900;justify-content:space-between}.race-details summary span,.race-details p>b{color:#e10600}.race-details p{border-top:1px solid #eee;color:#222;display:flex;font-size:12px;gap:10px;margin:10px 0 0;padding:10px 0}.race-details time{color:#666;margin-left:auto}@media(max-width:900px){.race-nav{padding:0 18px}.race-nav nav{display:none}.race-page{padding:22px 16px 50px}.race-stage{grid-template-columns:1fr}.race-hero{height:auto;margin-bottom:25px}.race-hero h1{font-size:50px}.next-panel{grid-column:1;grid-row:auto;height:auto;margin-top:0;min-height:430px}.race-lower{grid-template-columns:1fr}.calendar-list{gap:8px;grid-template-columns:repeat(3,1fr)}.calendar-list article:nth-child(n+4),.calendar-list button{display:none}}@media(max-width:560px){.race-brand{font-size:17px}.race-zone{padding:8px}.race-zone select{font-size:12px;min-width:125px}.race-hero h1{font-size:43px}.race-hero p{font-size:17px}.session-row{grid-template-columns:82px 50px 1fr 72px 16px;min-height:91px}.session-row time{font-size:9px;padding-left:10px}.session-icon{height:37px;width:37px}.session-icon:after{height:54px;left:17px;top:35px}.session-icon svg{height:24px;width:24px}.session-name strong{font-size:19px}.session-name small{font-size:10px}.session-time b{font-size:20px}.session-time small{font-size:9px}.next-count b{font-size:55px}.next-count i{font-size:23px}.drivers-card,.calendar-card{padding:16px 12px}.calendar-list svg{height:70px;width:100px}}
+  .f1-app{--red:#e10600;--black:#111;--line:#ddd;color:#151515;font-family:Arial,Helvetica,sans-serif}.f1-app *{box-sizing:border-box}.hero-grid{display:grid;grid-template-columns:1.45fr .8fr .9fr;gap:24px;min-height:300px;padding:12px 0 26px}.hero-copy>span{color:var(--red);font-size:12px;font-weight:900}.hero-copy h1{color:#050505;font-family:Impact,'Arial Narrow',sans-serif;font-size:clamp(54px,6vw,88px);font-weight:900;letter-spacing:.005em;line-height:.92;margin:14px 0 9px}.hero-copy>p{color:#666;font-size:17px;margin:0}.hero-copy>p i{font-style:normal;margin:0 8px}.hero-facts{display:flex;gap:10px;margin-top:22px}.hero-facts b{border:1px solid #ddd;border-radius:4px;font-size:12px;font-weight:500;padding:9px 13px}.hero-actions{display:flex;gap:12px;margin-top:23px}.hero-actions a{border-radius:4px;font-size:12px;font-weight:900;padding:14px 18px;text-decoration:none}.hero-actions .primary{background:var(--red);color:white}.hero-actions .secondary{border:1px solid #555;color:#222}.hero-track{align-self:center;height:210px;width:100%}.hero-track path,.circuit-card svg>path,.race-card svg path{fill:none;stroke:#151515;stroke-linecap:round;stroke-linejoin:round;stroke-width:3}.hero-track .hot,.circuit-card svg .sector{stroke:var(--red);stroke-width:4}.hero-track text{font-size:12px}.count-card{align-self:center;background:#151515;border-radius:6px;color:white;height:235px;padding:28px 24px}.count-card>small{font-size:12px;font-weight:900}.count-card strong{align-items:baseline;color:var(--red);display:flex;margin:20px 0}.count-card strong b{font-size:57px;letter-spacing:-.07em}.count-card strong i{font-size:22px;font-style:normal;font-weight:900;margin:0 6px}.count-card hr{border:0;border-top:1px solid #555}.count-card p{color:#bbb;font-size:10px;margin-top:25px}.weekend-grid{display:grid;gap:20px;grid-template-columns:1fr 1fr}.card{border:1px solid var(--line);border-radius:5px;overflow:hidden}.card>header,.weekend-card>header,.circuit-card>header{align-items:center;background:#151515;color:white;display:flex;height:54px;justify-content:space-between;padding:0 20px}.card>header h2,.weekend-card>header h2,.circuit-card>header h2{color:#fff}.card h2,.season h2,.learn h2{font-family:Impact,'Arial Narrow',sans-serif;font-size:22px;letter-spacing:.02em;margin:0}.weekend-card header label{color:#bbb;font-size:10px}.weekend-card select{background:#151515;border:0;color:white;font-size:10px}.weekend-row{align-items:center;border-bottom:1px solid #ddd;display:grid;grid-template-columns:58px 1fr 76px 100px;min-height:76px;padding:8px 16px;position:relative}.weekend-row.active{box-shadow:inset 5px 0 var(--red)}.event-icon{border:1px solid #ddd;border-radius:50%;display:grid;font-size:23px;height:44px;place-items:center;width:44px}.weekend-row.active .event-icon{background:var(--red);color:white}.weekend-row>div strong,.weekend-row>div small,.weekend-row>div b{display:block}.weekend-row>div strong{font-size:16px}.weekend-row.active>div strong,.weekend-row.active>div b{color:var(--red)}.weekend-row small{color:#777;font-size:10px}.weekend-row>div b{font-size:22px}.reminder{background:white;border:1px solid #ddd;border-radius:4px;font-size:9px;font-weight:900;padding:8px}.reminder.set{border-color:var(--red);color:var(--red)}.weekend-note{color:#777;font-size:10px;margin:0;padding:13px 20px}.circuit-card header p{font-size:9px}.circuit-card header i{background:#fff;display:inline-block;height:5px;margin:0 4px 0 10px;width:14px}.circuit-card header i:nth-child(2){background:#999}.circuit-card header i.red{background:var(--red)}.circuit-card>svg{height:218px;padding:18px;width:100%}.circuit-card svg circle{fill:#111}.circuit-card svg text{font-size:5px}.circuit-stats{border-top:1px solid #ddd;display:grid;grid-template-columns:repeat(4,1fr)}.circuit-stats span{border-right:1px solid #eee;color:#777;font-size:9px;padding:12px;text-align:center}.circuit-stats b{color:#111;display:block;font-size:15px;margin-top:4px}.last-result{align-items:center;background:#151515;border-radius:5px;color:white;display:grid;gap:20px;grid-template-columns:1.3fr repeat(3,1fr) 1.2fr;margin:18px 0;padding:15px 18px}.last-result>div{align-items:center;display:flex;gap:15px}.last-result>div>span{border:1px solid var(--red);border-radius:50%;display:grid;height:42px;place-items:center;width:42px}.last-result small{color:#bbb;font-size:9px}.last-result p{border-left:1px solid #555;display:grid;grid-template-columns:32px 1fr;margin:0;padding-left:18px}.last-result p>b{font-size:26px;grid-row:1/3}.last-result p>strong{font-size:14px}.last-result>a{border:1px solid var(--red);color:white;font-size:11px;font-weight:900;padding:12px;text-align:center;text-decoration:none}.championship-grid{display:grid;gap:18px;grid-template-columns:1.05fr .95fr}.standings-card,.constructors-card{padding:18px}.tabs{border-bottom:1px solid #ddd;margin-top:12px}.tabs button{background:white;border:0;border-bottom:2px solid transparent;font-size:10px;padding:8px 12px}.tabs button.active{border-color:var(--red);font-weight:900}.table-head,.standing-row{align-items:center;display:grid;grid-template-columns:32px 6px 38px 1.3fr 1fr 48px 42px;gap:6px}.table-head{color:#777;font-size:8px;padding:12px 0}.table-head span:nth-child(2){grid-column:2/5}.standing-row{border-top:1px solid #eee;min-height:43px}.standing-row>i,.team-tab-row>i,.constructors-card article>div>i{background:var(--team);height:22px;width:4px}.avatar{background:#eee;border-radius:50%;display:grid;font-size:9px;height:28px;place-items:center;width:28px}.standing-row strong{font-size:11px}.standing-row>span:nth-of-type(2){color:#666;font-size:10px}.standing-row em{font-size:11px;font-style:normal;font-weight:900;text-align:right}.standing-row mark{background:none;color:#18a558;font-size:13px;text-align:center}.team-tab-row{align-items:center;border-bottom:1px solid #eee;display:grid;gap:10px;grid-template-columns:30px 6px 1fr 50px;min-height:48px}.team-tab-row em{font-style:normal;font-weight:900}.standings-card>a,.constructors-card>a{color:var(--red);display:inline-block;font-size:10px;font-weight:900;margin-top:18px;text-decoration:none}.constructors-card h2{margin-bottom:21px}.constructors-card article{border-bottom:1px solid #eee;padding:10px 0 16px}.constructors-card article>div{align-items:center;display:grid;gap:10px;grid-template-columns:32px 6px 1fr 50px}.constructors-card article>div>b{font-size:22px}.constructors-card article>div>em{font-style:normal;font-weight:900;text-align:right}.constructors-card article>span{background:#eee;display:block;height:5px;margin:10px 8px 0 48px}.constructors-card article>span>i{background:var(--team);display:block;height:5px;width:var(--w)}.season{margin-top:24px}.season>header{align-items:center;display:flex;gap:18px;margin-bottom:15px}.filters{display:flex;gap:7px}.filters button{background:white;border:1px solid #ddd;border-radius:20px;font-size:10px;padding:7px 14px}.filters button.active{background:var(--red);border-color:var(--red);color:white}.show-all{background:white;border:1px solid #ddd;border-radius:4px;font-size:10px;margin-left:auto;padding:9px 12px}.season-grid{display:grid;gap:8px 18px;grid-template-columns:1fr 1fr}.race-card{align-items:center;border:1px solid #ddd;border-radius:4px;display:grid;grid-template-columns:54px 36px 1fr 110px;min-height:72px;padding:7px;position:relative}.race-card.current{border:2px solid var(--red)}.race-card.extra{display:none}.race-card>b{font-size:20px;text-align:center}.race-card>b small{display:block;font-size:8px}.race-card>span{font-size:22px}.race-card>div strong,.race-card>div small{display:block}.race-card>div strong{font-family:Impact,'Arial Narrow',sans-serif;font-size:16px;letter-spacing:.02em}.race-card>div small{color:#666;font-size:9px}.race-card svg{height:55px;width:100px}.race-card em{background:var(--red);bottom:4px;color:white;font-size:7px;font-style:normal;left:57px;padding:3px;position:absolute}.learn{border-top:1px solid #ddd;margin-top:28px;padding-top:18px}.learn>div{display:grid;gap:14px;grid-template-columns:repeat(3,1fr);margin-top:14px}.learn article{align-items:center;border:1px solid #ddd;border-radius:4px;display:grid;grid-template-columns:90px 1fr 18px;min-height:106px;padding:12px}.learn article>span{color:var(--red);font-size:22px;text-align:center}.learn article p{margin:0}.learn article strong,.learn article small{display:block}.learn article strong{font-size:13px}.learn article small{color:#666;font-size:9px;margin-top:7px}.learn article>b{color:var(--red);font-size:25px}.bars{font-family:monospace;letter-spacing:-5px;transform:rotate(180deg)}.gauge{border:3px solid #222;border-bottom:0;border-radius:60px 60px 0 0;padding-top:17px}.source{border-top:1px solid #ddd;color:#666;font-size:9px;margin:20px 0 0;padding:12px 0}.hidden-results{font-size:12px}.hidden-results summary{cursor:pointer;font-weight:900}@media(max-width:900px){.hero-grid{grid-template-columns:1fr 1fr}.hero-copy{grid-column:1/3}.hero-track{height:150px}.count-card{height:210px}.weekend-grid,.championship-grid,.season-grid{grid-template-columns:1fr}.last-result{grid-template-columns:1fr 1fr}.last-result>a{grid-column:1/3}.learn>div{grid-template-columns:1fr}.weekend-row{grid-template-columns:52px 1fr 68px 90px}}@media(max-width:560px){.hero-grid{display:block}.hero-copy h1{font-size:54px}.hero-track{margin:20px 0}.hero-actions{flex-direction:column}.count-card{margin-top:15px}.weekend-row{grid-template-columns:48px 1fr 62px}.reminder{display:none}.last-result{display:block}.last-result p{margin:13px 0}.last-result>a{display:block}.table-head,.standing-row{grid-template-columns:25px 5px 32px 1.3fr 45px 32px}.standing-row>span:nth-of-type(2),.table-head span:nth-child(3){display:none}.constructors-card{padding:13px}.season>header{align-items:flex-start;flex-wrap:wrap}.show-all{margin-left:0}.race-card{grid-template-columns:42px 32px 1fr 72px}.race-card svg{width:70px}.learn article{grid-template-columns:65px 1fr 15px}}
 </style>
-<style is:global>
-  main.race-page { width: 100% !important; max-width: 1536px !important; }
-  @media (min-width: 901px) {
-    .session-list { display: flex; flex-direction: column; height: 344px; }
-    .session-row { flex: 1; }
-    .session-icon::after { height: calc(309px / var(--sessions) - 53px); }
-  }
-  @media (max-width: 900px) {
-    .drivers-card, .calendar-card { box-sizing: border-box; min-width: 0; width: 100%; }
-    .calendar-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .calendar-list article { box-sizing: border-box; min-width: 0; }
-    .calendar-list svg { max-width: 100%; }
-  }
+<style>
+  .standing-row.extra,.constructors-card article.extra{display:none}
+  .text-action{background:none;border:0;color:var(--red);cursor:pointer;font-size:10px;font-weight:900;margin-top:18px;padding:0}
+  .learn>div>a{align-items:center;border:1px solid #ddd;border-radius:4px;color:#151515;display:grid;grid-template-columns:90px 1fr 18px;min-height:106px;padding:12px;text-decoration:none;transition:border-color .18s,transform .18s}
+  .learn>div>a:hover{border-color:var(--red);transform:translateY(-2px)}
+  .learn>div>a>span{color:var(--red);font-size:22px;text-align:center}
+  .learn>div>a p{margin:0}.learn>div>a strong,.learn>div>a small{display:block}.learn>div>a strong{font-size:13px}.learn>div>a small{color:#666;font-size:9px;margin-top:7px}.learn>div>a>b{color:var(--red);font-size:25px}
+  .hero-actions a:hover,.last-result>a:hover{filter:brightness(.92)}
+  button:focus-visible,a:focus-visible,select:focus-visible{outline:3px solid rgba(225,6,0,.3);outline-offset:2px}
+  .filters button,.tabs button,.show-all,.reminder{cursor:pointer}
+  .hero-actions a,.show-all,.reminder,.last-result>a{align-items:center;display:inline-flex;justify-content:center;gap:7px}
+  .hero-actions svg,.show-all svg{height:17px;width:17px;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.7}
+  .hero-actions .primary svg{fill:currentColor;stroke:none}
+  .track-flag path{stroke:#111!important;stroke-width:1!important}.track-flag path:nth-child(n+3){fill:#111;stroke:none!important}
+  .count-card p{align-items:center;display:flex;gap:6px}.count-card p svg{fill:none;height:13px;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.5;width:13px}
+  .info-icon{border:1px solid currentColor;border-radius:50%;display:inline-grid;font-size:8px;font-style:normal;font-weight:800;height:13px;line-height:1;place-items:center;width:13px}
+  .event-icon svg{fill:none;height:29px;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.7;width:29px}.event-icon svg .checks{fill:currentColor;stroke:none}
+  .reminder svg{fill:none;height:14px;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.6;width:14px}
+  .last-result>div>span svg{fill:none;height:25px;stroke:var(--red);stroke-linecap:round;stroke-linejoin:round;stroke-width:1.7;width:25px}.last-result>a svg{fill:none;height:14px;stroke:var(--red);stroke-linecap:round;stroke-linejoin:round;stroke-width:2;width:14px}
+  .avatar{overflow:hidden}.avatar svg{height:30px;width:30px}.avatar .face{fill:var(--skin)}.avatar .hair{fill:var(--hair)}.avatar .suit{fill:#30333a}.avatar .features{fill:none;stroke:#322019;stroke-linecap:round;stroke-width:1}
+  .constructors-head{color:#777;display:grid;font-size:8px;grid-template-columns:48px 1fr 50px;padding:0 0 8px}.constructors-head span:last-child{text-align:right}
+  .learn>div>a>span{display:block;height:78px}.learn>div>a>span svg{height:78px;width:100%}.cars svg{fill:#202020}.cars svg g:first-child{fill:var(--red)}.cars svg circle{fill:#fff;stroke:#202020;stroke-width:2}.bars{letter-spacing:normal;transform:none}.bars svg{fill:#111}.bars svg text{fill:#777;font:7px Arial,sans-serif}.gauge{border:0;border-radius:0;padding:0}.gauge svg{fill:none;stroke:#171717;stroke-linecap:round;stroke-linejoin:round;stroke-width:3}.gauge svg .hot{stroke:var(--red);stroke-width:4}
+  @media(max-width:560px){.learn>div>a{grid-template-columns:65px 1fr 15px}}
 </style>
