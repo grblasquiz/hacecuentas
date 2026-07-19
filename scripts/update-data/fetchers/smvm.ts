@@ -1,8 +1,9 @@
 /**
- * SMVM (biannual) — auto-llm vía Claude + WebSearch en Ministerio de Trabajo.
+ * SMVM (monthly) — auto-llm vía Claude + WebSearch en Ministerio de Trabajo.
  *
  * El Consejo del Salario (CNEPySMVyM) actualiza el Salario Mínimo Vital y Móvil
- * por resolución, usualmente 1-2 veces por año. Fuente oficial:
+ * por resolución, con cronograma escalonado casi mensual (alta inflación) — por
+ * eso el fetcher corre monthly, no biannual. Fuente oficial:
  * argentina.gob.ar/trabajo/consejodelsalario.
  *
  * Patchea 3 constantes en `src/lib/data/smvm-ar-2026.ts` (fuente única):

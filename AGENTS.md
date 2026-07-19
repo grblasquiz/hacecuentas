@@ -78,7 +78,9 @@ bash scripts/cf-purge-cache.sh
 
 - `skip`: si sólo cambiaron docs/tooling o no hay cambios desde el último deploy, sale sin build ni Cloudflare.
 - `assets`: si sólo cambiaron assets públicos seguros (`public/.well-known/*`, imágenes, txt, etc.), copia esos archivos a `dist/client`, salta Astro y hace `wrangler deploy` delta. Objetivo: ~1 minuto.
-- `incremental`: para contenido puro de calculadoras/blog/guías/tablas/comparaciones/glosario/argentina.
+- `incremental`: para contenido puro de calculadoras/blog/guías/tablas/comparaciones/glosario/argentina, datos aislados declarados y páginas estáticas con el marcador `@incremental-standalone` + `export const prerender = true`.
 - `full`: para código compartido, pages/components/layouts/lib, config, `_redirects`, sitemap, service worker, deletes/renames riesgosos.
 
 No usar `--force-full` salvo que haya cambio compartido real, sospecha de manifest roto o se necesite clean slate. El incidente de 404 masivo se evita con los gates actuales: verificación de HTML count, wrapper, páginas rotas y smoke test root-level.
+
+Una página nueva **no requiere full por sí sola**: si es una ruta plana estática (`src/pages/<slug>.astro`), no modifica componentes/layouts/estilos compartidos y lleva los dos marcadores anteriores, el detector la despliega incremental. Rutas dinámicas, cambios en `src/components`, `src/layouts`, `src/styles` o infraestructura siguen siendo full.

@@ -1,7 +1,8 @@
 /**
  * check-stale-data.ts
  *
- * Recorre todos los calcs en src/content/calcs/, lee su `dataUpdate.frequency`
+ * Recorre todos los calcs en src/content/calcs* (el dir base + un dir por
+ * vertical país: calcs-cl, calcs-co, calcs-mx, …), lee su `dataUpdate.frequency`
  * + `dataUpdate.lastUpdated` y detecta cuáles están vencidos (excedieron la
  * frequency esperada con cierto margen de gracia).
  *
@@ -21,20 +22,39 @@
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const CALCS_DIR = join(process.cwd(), 'src/content/calcs');
+const CONTENT_DIR = join(process.cwd(), 'src/content');
+// El catálogo vive en varios directorios: el base `calcs/` + un dir por vertical
+// país (`calcs-cl`, `calcs-co`, `calcs-mx`, …). Se recorren TODOS. Antes miraba
+// sólo `calcs/` y era ciego al ~53% del catálogo (los verticales país, justo
+// donde viven los datos que cambian a mitad de año: salarios mínimos, tarifas).
+const CALCS_DIRS = readdirSync(CONTENT_DIR, { withFileTypes: true })
+  .filter((d) => d.isDirectory() && /^calcs(-|$)/.test(d.name))
+  .map((d) => join(CONTENT_DIR, d.name));
 
-type Frequency = 'never' | 'daily' | 'weekly' | 'monthly' | 'biannual' | 'yearly';
+type Frequency =
+  | 'never'
+  | 'daily'
+  | 'weekly'
+  | 'monthly'
+  | 'quarterly'
+  | 'biannual'
+  | 'yearly'
+  | 'annual';
 
 // Días de gracia por frequency. Más permisivos que freshness.ts del pipeline
 // porque acá el objetivo es alertar sólo cuando realmente se atrasó (no en
 // el límite exacto). Ej: monthly real-world = 45 días sin update.
+// `annual` es alias de `yearly` y `quarterly` = trimestral: ambos se usan en las
+// calcs país; sin ellos el umbral daba undefined → overdue NaN + falsos positivos.
 const STALE_THRESHOLD_DAYS: Record<Frequency, number> = {
   never: Infinity,
   daily: 3, // tolerancia de 3 días por feriados / fines de semana
   weekly: 14,
   monthly: 45, // ~6 semanas
+  quarterly: 120, // trimestral (~4 meses de gracia)
   biannual: 200, // ~6.5 meses
   yearly: 400, // ~13 meses
+  annual: 400, // alias de yearly
 };
 
 interface CalcInfo {
@@ -76,39 +96,42 @@ function daysBetween(a: Date, b: Date): number {
 
 function loadCalcs(): CalcInfo[] {
   const now = new Date();
-  const files = readdirSync(CALCS_DIR).filter((f) => f.endsWith('.json'));
   const out: CalcInfo[] = [];
-  for (const file of files) {
-    let raw: any;
-    try {
-      raw = JSON.parse(readFileSync(join(CALCS_DIR, file), 'utf8'));
-    } catch (err) {
-      console.error(`[check-stale-data] ✗ ${file}: JSON inválido — ${(err as Error).message}`);
-      continue;
+  for (const dir of CALCS_DIRS) {
+    const dirName = dir.split('/').pop() ?? 'calcs';
+    const files = readdirSync(dir).filter((f) => f.endsWith('.json'));
+    for (const file of files) {
+      let raw: any;
+      try {
+        raw = JSON.parse(readFileSync(join(dir, file), 'utf8'));
+      } catch (err) {
+        console.error(`[check-stale-data] ✗ ${dirName}/${file}: JSON inválido — ${(err as Error).message}`);
+        continue;
+      }
+      const du = raw?.dataUpdate;
+      if (!du || !du.frequency || !du.lastUpdated) continue;
+      const freq = du.frequency as Frequency;
+      if (freq === 'never') continue;
+      const lastUpdated = du.lastUpdated as string;
+      const last = new Date(`${lastUpdated}T00:00:00Z`);
+      if (Number.isNaN(last.getTime())) continue;
+      const daysSince = daysBetween(now, last);
+      const threshold = STALE_THRESHOLD_DAYS[freq];
+      if (daysSince <= threshold) continue;
+      out.push({
+        slug: raw.slug,
+        file: `${dirName}/${file}`,
+        category: raw.category ?? 'sin-categoria',
+        frequency: freq,
+        updateType: du.updateType ?? 'manual',
+        lastUpdated,
+        daysSinceUpdate: daysSince,
+        thresholdDays: threshold,
+        source: du.source,
+        sourceUrl: du.sourceUrl,
+        notes: du.notes,
+      });
     }
-    const du = raw?.dataUpdate;
-    if (!du || !du.frequency || !du.lastUpdated) continue;
-    const freq = du.frequency as Frequency;
-    if (freq === 'never') continue;
-    const lastUpdated = du.lastUpdated as string;
-    const last = new Date(`${lastUpdated}T00:00:00Z`);
-    if (Number.isNaN(last.getTime())) continue;
-    const daysSince = daysBetween(now, last);
-    const threshold = STALE_THRESHOLD_DAYS[freq];
-    if (daysSince <= threshold) continue;
-    out.push({
-      slug: raw.slug,
-      file,
-      category: raw.category ?? 'sin-categoria',
-      frequency: freq,
-      updateType: du.updateType ?? 'manual',
-      lastUpdated,
-      daysSinceUpdate: daysSince,
-      thresholdDays: threshold,
-      source: du.source,
-      sourceUrl: du.sourceUrl,
-      notes: du.notes,
-    });
   }
   return out;
 }

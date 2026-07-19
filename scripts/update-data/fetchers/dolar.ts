@@ -17,6 +17,11 @@ import { createLogger } from '../utils/logger.ts';
 const DOLAR_TS = join(process.cwd(), 'src/lib/formulas/dolar-ar.ts');
 const SLUG = 'conversor-dolar-argentina';
 const SLUG_EURO = 'conversor-dolar-euro-pesos-argentinos';
+// conversor-moneda-dolar-peso-real-latam lee el dólar de src/data/live/dolar.json
+// (una de sus monedas base). Se refresca solo client-side, pero su lastUpdated
+// declarado no lo tocaba ningún fetcher → el sitemap/validador lo veía viejo.
+// El dólar cambia casi todos los días hábiles, así que este bump lo mantiene fresco.
+const SLUG_LATAM = 'conversor-moneda-dolar-peso-real-latam';
 
 const log = createLogger('dolar');
 
@@ -77,7 +82,7 @@ export async function fetchDolar({ dry = false }: { dry?: boolean }): Promise<bo
   // Marcar ambas calcs (USD y USD/EUR) como actualizadas hoy
   if (!dry) {
     const today = new Date().toISOString().slice(0, 10);
-    for (const slug of [SLUG, SLUG_EURO]) {
+    for (const slug of [SLUG, SLUG_EURO, SLUG_LATAM]) {
       if (touchLastUpdated(slug, today)) {
         log.info(`lastUpdated actualizado en ${slug}`);
       }

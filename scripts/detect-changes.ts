@@ -210,6 +210,7 @@ interface DetectResult {
 const ISOLATED_DATA_DEPENDENCIES: Record<string, {
   pages: string[];
   formulaIds?: string[];
+  formulaModuleNeedles?: string[];
 }> = {
   'src/lib/bcra-indices.json': {
     pages: ['/valores-bcra'],
@@ -217,6 +218,15 @@ const ISOLATED_DATA_DEPENDENCIES: Record<string, {
   'src/lib/data/mundial-2026-fixture.json': {
     pages: ['/fixture-mundial-2026', '/mundial-2026'],
     formulaIds: ['mundial-2026-dias-debut'],
+  },
+  'src/data/live/formula-1-2026.json': {
+    pages: ['/formula-1-2026'],
+  },
+  // Tabla fiscal/laboral única: sus consumidores son fórmulas de calcs CL,
+  // no toda la app. Resolverlas por imports evita mantener una lista manual.
+  'src/lib/data/chile-2026.ts': {
+    pages: [],
+    formulaModuleNeedles: ['data/chile-2026'],
   },
 };
 
@@ -284,6 +294,43 @@ function formulaImporters(helperId: string): string[] {
     }
   }
   return out;
+}
+
+function formulaImportersByModule(needles: string[]): string[] {
+  let files: string[];
+  try {
+    files = readdirSync('src/lib/formulas').filter((f) => f.endsWith('.ts'));
+  } catch {
+    return [];
+  }
+  const out: string[] = [];
+  for (const f of files) {
+    try {
+      const src = readFileSync(`src/lib/formulas/${f}`, 'utf8');
+      if (needles.some((needle) => src.includes(needle))) out.push(f.slice(0, -3));
+    } catch {
+      // archivo ilegible → la validación posterior cae a full defensivo
+    }
+  }
+  return out;
+}
+
+// Una página estática puede declararse aislada con este marcador. Es una
+// excepción explícita a src/pages/** => full: la página debe tener prerender
+// y no se puede usar en rutas dinámicas, catch-all ni index anidado. Así una
+// landing nueva no obliga a reconstruir miles de calcs, sin asumir que toda
+// página nueva es segura por defecto.
+function incrementalStandalonePath(file: string): string | null {
+  const match = file.match(/^src\/pages\/([A-Za-z0-9-]+)\.astro$/);
+  if (!match) return null;
+  try {
+    const source = readFileSync(file, 'utf8');
+    if (!source.includes('@incremental-standalone')) return null;
+    if (!/export\s+const\s+prerender\s*=\s*true/.test(source)) return null;
+    return `/${match[1]}`;
+  } catch {
+    return null;
+  }
 }
 
 // Resuelve un helper compartido a los slugs de las calcs afectadas, recursando
@@ -429,13 +476,23 @@ function detect(baseSha: string): DetectResult {
     const isolated = ISOLATED_DATA_DEPENDENCIES[file];
     if (isolated) {
       for (const page of isolated.pages) standalone.add(page);
-      for (const formulaId of isolated.formulaIds || []) {
+      const formulaIds = [
+        ...(isolated.formulaIds || []),
+        ...formulaImportersByModule(isolated.formulaModuleNeedles || []),
+      ];
+      for (const formulaId of formulaIds) {
         const matched = readSlugsFromFormulaId(formulaId);
         if (matched.length === 0) {
           return fullResult(`dato aislado sin calcs asociadas: ${file}`, files.length);
         }
         for (const m of matched) calcsByLocale[m.locale as Locale].add(m.slug);
       }
+      continue;
+    }
+
+    const standalonePage = incrementalStandalonePath(file);
+    if (standalonePage) {
+      standalone.add(standalonePage);
       continue;
     }
 

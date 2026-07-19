@@ -40,7 +40,11 @@ export interface FetcherEntry {
 export const REGISTRY: FetcherEntry[] = [
   {
     name: 'dolar',
-    slugs: ['conversor-dolar-argentina', 'conversor-dolar-euro-pesos-argentinos'],
+    slugs: [
+      'conversor-dolar-argentina',
+      'conversor-dolar-euro-pesos-argentinos',
+      'conversor-moneda-dolar-peso-real-latam',
+    ],
     frequency: 'daily',
     run: fetchDolar,
   },
@@ -115,8 +119,11 @@ export const REGISTRY: FetcherEntry[] = [
   },
   {
     name: 'smvm',
+    // El SMVM argentino se reajusta CASI TODOS LOS MESES (cronograma del Consejo
+    // del Salario, alta inflación). Estaba en 'biannual' → quedaba viejo hasta 6
+    // meses (ej. jul-2026 $372.400 → ago-2026 $376.600 no se capturaba). monthly.
     slugs: ['salario-minimo-vital-movil-argentina'],
-    frequency: 'biannual',
+    frequency: 'monthly',
     run: fetchSmvm,
   },
   {
