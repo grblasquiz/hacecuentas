@@ -27,9 +27,12 @@ const CONTENT_DIR = join(process.cwd(), 'src/content');
 // país (`calcs-cl`, `calcs-co`, `calcs-mx`, …). Se recorren TODOS. Antes miraba
 // sólo `calcs/` y era ciego al ~53% del catálogo (los verticales país, justo
 // donde viven los datos que cambian a mitad de año: salarios mínimos, tarifas).
-const CALCS_DIRS = readdirSync(CONTENT_DIR, { withFileTypes: true })
-  .filter((d) => d.isDirectory() && /^calcs(-|$)/.test(d.name))
-  .map((d) => join(CONTENT_DIR, d.name));
+// Lazy: sólo se toca el filesystem en modo local; el modo --from-url no lo llama.
+function calcsDirs(): string[] {
+  return readdirSync(CONTENT_DIR, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && /^calcs(-|$)/.test(d.name))
+    .map((d) => join(CONTENT_DIR, d.name));
+}
 
 type Frequency =
   | 'never'
@@ -79,6 +82,14 @@ function parseArgs() {
     // build) en lugar del 2 informativo. Usar en prebuild si querés bloquear
     // deploys cuando hay datos muy desactualizados.
     strict: args.includes('--strict'),
+    // Fuente remota: en vez de leer el filesystem local, fetchea el índice de
+    // frescura publicado en prod (public/api/freshness.json). Lo usa el workflow
+    // de GitHub Actions para no depender del checkout de origin (forkeado) ni de
+    // la máquina de Martin. Ej: --from-url=https://hacecuentas.com/api/freshness.json
+    fromUrl: (() => {
+      const arg = args.find((a) => a.startsWith('--from-url='));
+      return arg ? arg.split('=').slice(1).join('=') : null;
+    })(),
     threshold: (() => {
       const arg = args.find((a) => a.startsWith('--threshold='));
       return arg ? Number.parseInt(arg.split('=')[1] ?? '5', 10) : 5;
@@ -94,13 +105,45 @@ function daysBetween(a: Date, b: Date): number {
   return Math.floor((a.getTime() - b.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-function loadCalcs(): CalcInfo[] {
+/** Evalúa una calc (frequency + lastUpdated) contra su umbral de gracia.
+ *  Devuelve el CalcInfo si está vencida, o null si está fresca / sin cadencia. */
+function evaluate(
+  f: {
+    slug: string; file: string; category?: string; frequency?: string;
+    lastUpdated?: string; updateType?: string; source?: string; sourceUrl?: string; notes?: string;
+  },
+  now: Date
+): CalcInfo | null {
+  if (!f.frequency || !f.lastUpdated) return null;
+  const freq = f.frequency as Frequency;
+  if (freq === 'never') return null;
+  const last = new Date(`${f.lastUpdated}T00:00:00Z`);
+  if (Number.isNaN(last.getTime())) return null;
+  const daysSince = daysBetween(now, last);
+  const threshold = STALE_THRESHOLD_DAYS[freq];
+  if (threshold === undefined || daysSince <= threshold) return null;
+  return {
+    slug: f.slug,
+    file: f.file,
+    category: f.category ?? 'sin-categoria',
+    frequency: freq,
+    updateType: f.updateType ?? 'manual',
+    lastUpdated: f.lastUpdated,
+    daysSinceUpdate: daysSince,
+    thresholdDays: threshold,
+    source: f.source,
+    sourceUrl: f.sourceUrl,
+    notes: f.notes,
+  };
+}
+
+/** Lee el catálogo del filesystem local (todos los dirs calcs*). */
+function loadCalcsFromFs(): CalcInfo[] {
   const now = new Date();
   const out: CalcInfo[] = [];
-  for (const dir of CALCS_DIRS) {
+  for (const dir of calcsDirs()) {
     const dirName = dir.split('/').pop() ?? 'calcs';
-    const files = readdirSync(dir).filter((f) => f.endsWith('.json'));
-    for (const file of files) {
+    for (const file of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
       let raw: any;
       try {
         raw = JSON.parse(readFileSync(join(dir, file), 'utf8'));
@@ -109,29 +152,35 @@ function loadCalcs(): CalcInfo[] {
         continue;
       }
       const du = raw?.dataUpdate;
-      if (!du || !du.frequency || !du.lastUpdated) continue;
-      const freq = du.frequency as Frequency;
-      if (freq === 'never') continue;
-      const lastUpdated = du.lastUpdated as string;
-      const last = new Date(`${lastUpdated}T00:00:00Z`);
-      if (Number.isNaN(last.getTime())) continue;
-      const daysSince = daysBetween(now, last);
-      const threshold = STALE_THRESHOLD_DAYS[freq];
-      if (daysSince <= threshold) continue;
-      out.push({
-        slug: raw.slug,
-        file: `${dirName}/${file}`,
-        category: raw.category ?? 'sin-categoria',
-        frequency: freq,
-        updateType: du.updateType ?? 'manual',
-        lastUpdated,
-        daysSinceUpdate: daysSince,
-        thresholdDays: threshold,
-        source: du.source,
-        sourceUrl: du.sourceUrl,
-        notes: du.notes,
-      });
+      if (!du) continue;
+      const info = evaluate(
+        { slug: raw.slug, file: `${dirName}/${file}`, category: raw.category, frequency: du.frequency,
+          lastUpdated: du.lastUpdated, updateType: du.updateType, source: du.source, sourceUrl: du.sourceUrl, notes: du.notes },
+        now
+      );
+      if (info) out.push(info);
     }
+  }
+  return out;
+}
+
+/** Fetchea el índice de frescura publicado en prod (public/api/freshness.json).
+ *  Modo usado por el workflow de GitHub Actions — no depende del filesystem ni
+ *  del checkout de origin (forkeado): la verdad vive en prod (deploy local). */
+async function loadCalcsFromUrl(url: string): Promise<CalcInfo[]> {
+  const res = await fetch(url, { headers: { 'cache-control': 'no-cache' } });
+  if (!res.ok) throw new Error(`fetch ${url} → HTTP ${res.status}`);
+  const data: any = await res.json();
+  const entries: any[] = Array.isArray(data) ? data : (data.calcs ?? []);
+  const now = new Date();
+  const out: CalcInfo[] = [];
+  for (const e of entries) {
+    const info = evaluate(
+      { slug: e.slug, file: `${e.locale ?? '?'}/${e.slug}`, category: e.category, frequency: e.frequency,
+        lastUpdated: e.lastUpdated, updateType: e.updateType, source: e.source, sourceUrl: e.sourceUrl, notes: e.notes },
+      now
+    );
+    if (info) out.push(info);
   }
   return out;
 }
@@ -186,9 +235,9 @@ function renderMarkdown(stale: CalcInfo[]): string {
   return lines.join('\n');
 }
 
-function main() {
+async function main() {
   const opts = parseArgs();
-  const stale = loadCalcs();
+  const stale = opts.fromUrl ? await loadCalcsFromUrl(opts.fromUrl) : loadCalcsFromFs();
 
   if (opts.json) {
     const out = JSON.stringify({ count: stale.length, threshold: opts.threshold, items: stale }, null, 2);
@@ -211,9 +260,7 @@ function main() {
   if (stale.length > opts.threshold) process.exit(opts.strict ? 1 : 2);
 }
 
-try {
-  main();
-} catch (err) {
+main().catch((err) => {
   console.error(err);
   process.exit(1);
-}
+});

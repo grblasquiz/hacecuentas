@@ -115,6 +115,10 @@ async function main() {
     // el endpoint SSR /api/calc/[slug]/compute.ts. Ambos fs-only y rápidos.
     // compute-index DEBE existir antes del build de Vite (lo importa el Worker).
     task('calcs-api', 'generate-calc-api-index'),
+    // Índice de frescura /api/freshness.json — lo consume el workflow de GitHub
+    // Actions (check-stale-data --from-url) para detectar datos vencidos leyendo
+    // de PROD, sin depender del checkout de origin (forkeado) ni de la Mac.
+    task('freshness-index', 'generate-freshness-index'),
     task('monotributo-data', 'generate-monotributo-dataset'),
     task('compute-index', 'generate-compute-index'),
     // Índice inverso profileKey → calcs que lo usan, para /mi-hacecuentas.
