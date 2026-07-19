@@ -111,6 +111,7 @@ const champScore = champion
         .map(function (d) {
           return {
             who: ((d.athletesInvolved || []).map(function (a) { return a.displayName; }).filter(Boolean).join(', ')) || '',
+            scorer: (((d.athletesInvolved || [])[0] || {}).displayName) || '',
             minute: (d.clock && d.clock.displayValue) || '',
             teamId: (d.team && d.team.id) || '',
             own: /own/i.test((d.type && d.type.text) || ''),
@@ -193,6 +194,20 @@ const champScore = champion
         .catch(function () {});
     }
 
+    // Publica los goleadores de la final a un global para que la tabla de
+    // /goleadores-mundial-2026 sume los goles de la final EN VIVO (la tabla los
+    // toma de acá y NO de openfootball → real-time y sin doble conteo).
+    function publishScorers(m) {
+      try {
+        var goals = (m.goals || []).map(function (g) {
+          var teamName = g.teamId && String(g.teamId) === String(m.home.id) ? m.home.name : m.away.name;
+          return { name: g.scorer || g.who, team: teamName, own: g.own, pen: g.pen };
+        }).filter(function (g) { return g.name && !g.own; });
+        window.hcFinalLive = { state: m.state, completed: m.completed, goals: goals };
+        if (typeof window.hcRefreshScorers === 'function') window.hcRefreshScorers();
+      } catch (e) {}
+    }
+
     var timer = null, tail = 0, eid = null;
     function poll() {
       fetch(ENDPOINT, { cache: 'no-store' })
@@ -204,6 +219,7 @@ const champScore = champion
           eid = ev.id || eid;
           var m = parse(ev);
           render(m);
+          publishScorers(m);
           if (m.completed) { tryMvp(eid); tail += 1; if (tail >= 3 && timer) { clearInterval(timer); timer = null; } }
         })
         .catch(function () {});

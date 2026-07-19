@@ -620,12 +620,14 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
         };
         for (var i = 0; i < data.matches.length; i++) {
           var m = data.matches[i];
+          if (/^final$/i.test((m.round || '').trim())) continue; // la final la trae ESPN en vivo (abajo)
           add(m.team1, m.goals1);
           add(m.team2, m.goals2);
         }
         // Recorrido por fase (para las 4 cards del líder).
         for (var i2 = 0; i2 < data.matches.length; i2++) {
           var m2 = data.matches[i2];
+          if (/^final$/i.test((m2.round || '').trim())) continue; // final excluida (viene de ESPN)
           var sides = [[m2.team1, m2.goals1], [m2.team2, m2.goals2]];
           for (var s2 = 0; s2 < sides.length; s2++) {
             var team = sides[s2][0], goals = sides[s2][1] || [];
@@ -636,6 +638,26 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
               if (m2.group) row.grupos++; else row.ko++;
               row.partidos[m2.num] = 1;
             }
+          }
+        }
+
+        // Goles de la FINAL en vivo desde ESPN (los publica MundialFinalLive en
+        // window.hcFinalLive). Se suman acá, NO desde openfootball → real-time,
+        // sin doble conteo. Match difuso por nombre normalizado + misma selección
+        // para no duplicar a un goleador que ya marcó antes (ej. Messi).
+        var fl = window.hcFinalLive;
+        if (fl && fl.goals && fl.goals.length) {
+          var normName = function (s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim(); };
+          for (var fi = 0; fi < fl.goals.length; fi++) {
+            var fg = fl.goals[fi];
+            if (fg.own || !fg.name) continue;
+            var fk = null;
+            for (var mk in map) { if (map[mk].team === fg.team && normName(map[mk].name) === normName(fg.name)) { fk = mk; break; } }
+            if (!fk) { fk = fg.name + '|' + fg.team; if (!map[fk]) map[fk] = { name: fg.name, team: fg.team, goles: 0, penales: 0, partidos: { final: 1 }, grupos: 0, ko: 0 }; }
+            map[fk].goles++;
+            if (fg.pen) map[fk].penales++;
+            map[fk].ko++;
+            totalGoles++;
           }
         }
 
@@ -783,7 +805,12 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
       } catch (e) {}
     }
 
+    // Exponer para que MundialFinalLive dispare un refresh al toque cuando entra
+    // un gol de la final por ESPN; + auto-refresh cada 60s (la página #1 del día
+    // tiene que estar viva sí o sí, no sólo al cargar).
+    window.hcRefreshScorers = refresh;
     refresh();
+    setInterval(refresh, 60000);
   })();
 </script>
 
