@@ -68,8 +68,8 @@ export const CATEGORY_HUBS: CategoryHubData[] = [
             "slug": "calculadora-ahorro-meta-mensual"
           },
           {
-            "label": "Plazo fijo UVA",
-            "slug": "calculadora-plazo-fijo-uva-precancelable-rendimiento"
+            "label": "Plazo fijo tradicional",
+            "slug": "calculadora-plazo-fijo"
           }
         ]
       },
@@ -120,7 +120,7 @@ export const CATEGORY_HUBS: CategoryHubData[] = [
     ]
   },
   {
-    "anchorSlug": "calculadora-monotributo-categoria-2026-recategorizacion-julio",
+    "anchorSlug": "calculadora-monotributo-2026",
     "title": "📋 Impuestos y obligaciones",
     "subtitle": "Monotributo, ganancias, y más en un lugar",
     "sections": [
@@ -128,6 +128,10 @@ export const CATEGORY_HUBS: CategoryHubData[] = [
         "title": "Monotributo",
         "icon": "📋",
         "calcs": [
+          {
+            "label": "Categoría, cuota y topes",
+            "slug": "calculadora-monotributo-2026"
+          },
           {
             "label": "Recategorización 2026",
             "slug": "calculadora-monotributo-categoria-2026-recategorizacion-julio"
@@ -139,10 +143,6 @@ export const CATEGORY_HUBS: CategoryHubData[] = [
           {
             "label": "Facturación máxima",
             "slug": "calculadora-facturacion-maxima-monotributo-vs-ri"
-          },
-          {
-            "label": "Alta monotributo",
-            "slug": "calculadora-monotributo-alta-afip-tramite-zero"
           }
         ]
       },
@@ -834,7 +834,7 @@ export const CATEGORY_HUBS: CategoryHubData[] = [
     ]
   },
   {
-    "anchorSlug": "calculadora-porcentaje-aumento-disminucion",
+    "anchorSlug": "calculadora-porcentajes",
     "title": "📊 Matemática esencial",
     "subtitle": "Porcentajes, geometría, álgebra y estadística",
     "sections": [
@@ -842,6 +842,10 @@ export const CATEGORY_HUBS: CategoryHubData[] = [
         "title": "Porcentajes",
         "icon": "🔢",
         "calcs": [
+          {
+            "label": "Porcentajes (todos los cálculos)",
+            "slug": "calculadora-porcentajes"
+          },
           {
             "label": "Aumento/Disminución",
             "slug": "calculadora-porcentaje-aumento-disminucion"
@@ -852,7 +856,7 @@ export const CATEGORY_HUBS: CategoryHubData[] = [
           },
           {
             "label": "Descuento",
-            "slug": "calculadora-descuento-porcentaje-precio"
+            "slug": "calculadora-descuento-precio-final"
           }
         ]
       },

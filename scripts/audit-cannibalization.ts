@@ -29,15 +29,67 @@ const REPORTS_DIR = join(ROOT, 'reports');
 
 // Temas prioritarios (spec Fase 9): se marcan para revisión primero.
 const PRIORITY_TOPICS: Record<string, string[]> = {
+  sueldo_neto: ['sueldo-neto', 'sueldo-en-mano', 'bruto-desde-neto'],
+  aguinaldo: ['aguinaldo', 'sac-proporcional'],
+  monotributo: ['monotributo'],
   agua_diaria: ['agua', 'hidratacion', 'litros'],
   bmr_tdee: ['bmr', 'tmb', 'tdee', 'metabolismo', 'basal', 'calorias-mantenimiento'],
   calorias: ['calorias', 'deficit', 'calorico'],
   embarazo_parto: ['semanas-embarazo', 'fecha-probable-parto', 'gestacion', 'fpp'],
   pintura_m2: ['pintura', 'litros-pintura', 'metros-cuadrados-pintar'],
   porcentajes: ['porcentaje', 'porciento', 'descuento-porcentaje'],
+  plazo_fijo: ['plazo-fijo'],
   regla_de_tres: ['regla-de-tres', 'proporcion'],
   conversiones: ['conversor', 'convertir', 'a-metros', 'a-kg', 'a-litros'],
 };
+
+// Intenciones genéricas donde ya se tomó una decisión arquitectónica. Las
+// páginas de soporte conservan su URL porque resuelven subintenciones distintas,
+// pero deben enlazar de vuelta a la flagship para no competir como puerta de
+// entrada genérica. Este bloque vuelve auditable esa decisión.
+const FLAGSHIP_INTENTS = {
+  sueldo_neto: {
+    canonical: 'sueldo-en-mano-argentina',
+    supports: [
+      'calculadora-sueldo-bruto-desde-neto',
+      'calculadora-impuesto-ganancias-sueldo',
+      'calculadora-sueldo-neto-autonomo-monotributista',
+    ],
+  },
+  aguinaldo: {
+    canonical: 'calculadora-aguinaldo-sac',
+    supports: [
+      'calculadora-sac-proporcional',
+      'calculadora-ganancias-aguinaldo-sac-retencion',
+      'calculadora-cuanto-falta-aguinaldo-junio-diciembre',
+    ],
+  },
+  monotributo: {
+    canonical: 'calculadora-monotributo-2026',
+    supports: [
+      'calculadora-monotributo-categoria-2026-recategorizacion-julio',
+      'calculadora-cuanto-tengo-que-facturar-para-ganar-x-neto',
+      'calculadora-ganancias-monotributista-pase-regimen-general',
+      'calculadora-obra-social-monotributo-2026',
+    ],
+  },
+  porcentajes: {
+    canonical: 'calculadora-porcentajes',
+    supports: [
+      'calculadora-porcentaje-aumento-disminucion',
+      'calculadora-porcentaje-de-numero-calculadora',
+      'calculadora-que-porcentaje-es-un-numero-de-otro',
+      'calculadora-descuento-precio-final',
+    ],
+  },
+  plazo_fijo: {
+    canonical: 'calculadora-plazo-fijo',
+    supports: [
+      'calculadora-ahorro-uva-vs-pesos-vs-dolar-12-meses',
+      'calculadora-spread-tasas-arbitraje-bancos-plazo-fijo',
+    ],
+  },
+} as const;
 
 const STOP = new Set([
   'calculadora', 'calcular', 'calculo', 'de', 'la', 'el', 'en', 'y', 'a', 'los', 'del',
@@ -72,12 +124,32 @@ function priorityTopic(slug: string, title: string): string | null {
 }
 
 interface Calc { slug: string; title?: string; h1?: string; category?: string; formulaId?: string;
-  fields?: any[]; outputs?: any[]; explanation?: string; canonicalSlug?: string; seoKeywords?: string[]; }
+  fields?: any[]; outputs?: any[]; explanation?: string; canonicalSlug?: string; seoKeywords?: string[];
+  relatedSlugs?: string[]; }
 
 const files = readdirSync(AR_DIR).filter((f) => f.endsWith('.json'));
 const calcs: Calc[] = files.map((f) => {
   try { return JSON.parse(readFileSync(join(AR_DIR, f), 'utf8')); } catch { return null; }
 }).filter(Boolean) as Calc[];
+const calcBySlug = new Map(calcs.map((c) => [c.slug, c]));
+
+const flagshipAudit = Object.entries(FLAGSHIP_INTENTS).map(([intent, rule]) => {
+  const canonicalExists = calcBySlug.has(rule.canonical);
+  const missingSupports = rule.supports.filter((slug) => !calcBySlug.has(slug));
+  const missingBacklinks = rule.supports.filter((slug) => {
+    const calc = calcBySlug.get(slug);
+    return calc && !(calc.relatedSlugs || []).includes(rule.canonical);
+  });
+  return {
+    intent,
+    canonical: rule.canonical,
+    canonicalExists,
+    supports: rule.supports,
+    missingSupports,
+    missingBacklinks,
+    status: canonicalExists && missingSupports.length === 0 && missingBacklinks.length === 0 ? 'ok' : 'review',
+  };
+});
 
 // Firma de intención por calc.
 const sig = new Map<string, { c: Calc; titleTok: Set<string>; intentTok: Set<string>; fields: string; outputs: string; topic: string | null }>();
@@ -175,6 +247,7 @@ const summary = {
   same_intent: pairs.filter((p) => p.classification === 'same_intent').length,
   complementary: pairs.filter((p) => p.classification === 'complementary').length,
   priorityPairs: pairs.filter((p) => p.topic).length,
+  flagshipIntents: flagshipAudit,
   note: 'REPORT-ONLY. No se aplicaron redirecciones. Los "exact" son candidatos a 301, requieren confirmación humana.',
 };
 
@@ -193,3 +266,4 @@ writeFileSync(join(REPORTS_DIR, 'cannibalization-report.csv'), lines.join('\n') 
 
 console.log('[cannibalization] reports/cannibalization-report.{json,csv}');
 console.log(`[cannibalization] pares=${summary.pairs} exact=${summary.exact} same_intent=${summary.same_intent} complementary=${summary.complementary} prioritarios=${summary.priorityPairs}`);
+console.log(`[cannibalization] flagships=${flagshipAudit.length} review=${flagshipAudit.filter((x) => x.status !== 'ok').length}`);

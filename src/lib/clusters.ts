@@ -211,8 +211,8 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🎯"
       },
       {
-        "slug": "calculadora-plazo-fijo-uva-precancelable-rendimiento",
-        "label": "Plazo fijo UVA",
+        "slug": "calculadora-ahorro-uva-vs-pesos-vs-dolar-12-meses",
+        "label": "UVA vs pesos vs dólar",
         "icon": "📈"
       },
       {
@@ -227,8 +227,8 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "Monotributo",
     "items": [
       {
-        "slug": "calculadora-monotributo-categoria-2026-recategorizacion-julio",
-        "label": "Recategorización 2026",
+        "slug": "calculadora-monotributo-2026",
+        "label": "Categoría, cuota y topes",
         "icon": "📋"
       },
       {
@@ -1133,7 +1133,7 @@ export const CLUSTERS: Record<string, Cluster> = {
         "icon": "🔢"
       },
       {
-        "slug": "calculadora-descuento-porcentaje-precio",
+        "slug": "calculadora-descuento-precio-final",
         "label": "Descuento y precio",
         "icon": "🏷️"
       },
