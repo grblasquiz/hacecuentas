@@ -2,62 +2,158 @@
 // @incremental-standalone — landing estática aislada; habilita deploy incremental.
 export const prerender = true;
 import Layout from '../layouts/Layout.astro';
-import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import data from '../data/live/formula-1-2026.json';
 
 const AR = 'America/Argentina/Buenos_Aires';
 const now = new Date();
 const races = data.races || [];
-const nextRace = races.find((r: any) => !r.cancelled && new Date(r.end) >= now) || races[races.length - 1];
-const weekend = (data.weekendSessions || []).filter((s: any) => s.meetingKey === nextRace?.meetingKey).sort((a: any, b: any) => a.start.localeCompare(b.start));
-const nextSession = weekend.find((s: any) => new Date(s.end) >= now) || weekend[weekend.length - 1];
-const upcomingRaces = races.filter((r: any) => !r.cancelled && new Date(r.end) >= now).slice(0, 5);
-const fmt = (iso: string, options: Intl.DateTimeFormatOptions = {}) => new Intl.DateTimeFormat('es-AR', { timeZone: AR, ...options }).format(new Date(iso));
-const day = (iso: string) => fmt(iso, { weekday: 'short', day: 'numeric', month: 'short' }).replace('.', '').toUpperCase();
-const fullDate = (iso: string) => fmt(iso, { weekday: 'long', day: 'numeric', month: 'long' });
+const nextRace = races.find((race: any) => !race.cancelled && new Date(race.end) >= now) || races.at(-1);
+const weekend = (data.weekendSessions || [])
+  .filter((session: any) => session.meetingKey === nextRace?.meetingKey)
+  .sort((a: any, b: any) => a.start.localeCompare(b.start));
+const nextSession = weekend.find((session: any) => new Date(session.end) >= now) || weekend.at(-1);
+const upcomingRaces = races.filter((race: any) => !race.cancelled && new Date(race.end) >= now).slice(0, 5);
+const weekendEnd = new Date(nextRace?.start || Date.now());
+const weekendStart = new Date(weekendEnd);
+weekendStart.setUTCDate(weekendStart.getUTCDate() - 2);
+
+const fmt = (iso: string | Date, options: Intl.DateTimeFormatOptions = {}) =>
+  new Intl.DateTimeFormat('es-AR', { timeZone: AR, ...options }).format(new Date(iso));
+const shortDay = (iso: string) => `${fmt(iso, { weekday: 'short' }).replace('.', '').toUpperCase()} ${fmt(iso, { day: 'numeric', month: 'short' }).replace('.', '').toUpperCase()}`;
+const fullDate = (iso: string) => fmt(iso, { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase();
 const time = (iso: string) => fmt(iso, { hour: '2-digit', minute: '2-digit', hour12: false });
-const flag = (code: string) => ({ AUS:'🇦🇺', CHN:'🇨🇳', JPN:'🇯🇵', BRN:'🇧🇭', KSA:'🇸🇦', USA:'🇺🇸', CAN:'🇨🇦', MON:'🇲🇨', ESP:'🇪🇸', AUT:'🇦🇹', GBR:'🇬🇧', BEL:'🇧🇪', HUN:'🇭🇺', NED:'🇳🇱', ITA:'🇮🇹', AZE:'🇦🇿', SGP:'🇸🇬', MEX:'🇲🇽', BRA:'🇧🇷', QAT:'🇶🇦', ARE:'🇦🇪' } as Record<string, string>)[code] || '🏁';
+const monthRange = `${fmt(weekendStart, { day: 'numeric' })} – ${fmt(weekendEnd, { day: 'numeric', month: 'long' })}`;
+const compactRange = (race: any) => {
+  const end = new Date(race.start);
+  const start = new Date(end);
+  start.setUTCDate(start.getUTCDate() - 2);
+  return `${fmt(start, { day: 'numeric' })} – ${fmt(end, { day: 'numeric', month: 'short' }).replace('.', '')}`.toUpperCase();
+};
 const country = (name: string) => ({ 'United Kingdom':'Reino Unido', 'United States':'Estados Unidos', Belgium:'Bélgica', Spain:'España', Netherlands:'Países Bajos', Hungary:'Hungría', Austria:'Austria', Italy:'Italia', Azerbaijan:'Azerbaiyán', Singapore:'Singapur', Mexico:'México', Brazil:'Brasil', Canada:'Canadá', Australia:'Australia', China:'China', Japan:'Japón', Bahrain:'Baréin', 'Saudi Arabia':'Arabia Saudita', Qatar:'Qatar', 'United Arab Emirates':'Emiratos Árabes Unidos', Monaco:'Mónaco' } as Record<string, string>)[name] || name;
 const sessionLabel = (name: string) => name === 'Qualifying' ? 'Clasificación' : name === 'Sprint' ? 'Sprint' : 'Carrera';
-const sessionIcon = (name: string) => name === 'Qualifying' ? '⌁' : name === 'Sprint' ? '◉' : '⚑';
+const sessionNote = (session: any) => session.name === 'Race' ? `${nextRace?.laps || 57} vueltas` : new Date(session.end) < now ? 'Sesión completada' : session.sessionKey === nextSession?.sessionKey ? 'Próxima sesión' : 'Próximamente';
+const teamColor = (team: string) => team?.includes('McLaren') ? '#ff8000' : team?.includes('Ferrari') ? '#00c7ae' : team?.includes('Red Bull') ? '#1e41ff' : team?.includes('Mercedes') ? '#00a19c' : '#e10600';
+const trackPath = (code: string) => ({
+  BEL:'M22 67 C34 47 51 34 72 28 L99 18 L118 25 L128 18 L140 24 L148 39 L141 45 L129 32 L112 35 L103 48 L109 60 L132 65 L143 76 L131 91 L118 86 L105 74 L87 69 L72 76 L54 89 L38 92 L46 75 Z',
+  HUN:'M18 45 L31 25 L51 33 L67 46 L88 47 L102 64 L119 61 L130 74 L123 91 L104 97 L90 87 L75 94 L55 83 L39 87 L26 72 Z',
+  NED:'M20 75 C29 47 51 31 74 21 C88 15 99 19 95 29 C90 40 65 43 58 57 C50 73 70 82 90 72 C108 61 119 43 136 48 C152 53 143 71 129 80 C106 95 81 101 57 96 C35 92 16 87 20 75 Z',
+  ITA:'M17 25 C27 19 36 28 41 41 L55 82 C60 96 74 101 87 91 L123 61 C132 54 143 57 145 67 C147 78 139 83 129 85 L100 96 C75 106 51 103 42 82 L17 35 Z',
+  AZE:'M17 85 L29 39 L42 28 L48 43 L58 50 L78 46 L88 25 L98 38 L136 31 L143 42 L104 55 L95 70 L73 72 L64 91 L42 96 Z',
+  ESP:'M16 70 C25 35 48 20 73 24 L92 38 L120 32 L142 47 L134 67 L112 62 L101 80 L75 91 L47 88 Z',
+  GBR:'M17 65 L31 40 L52 45 L68 25 L88 36 L101 27 L116 42 L139 44 L144 60 L128 71 L115 65 L102 88 L78 77 L58 91 L43 75 Z',
+  ITA2:'M17 25 C27 19 36 28 41 41 L55 82 C60 96 74 101 87 91 L123 61 C132 54 143 57 145 67 C147 78 139 83 129 85 L100 96 C75 106 51 103 42 82 L17 35 Z'
+} as Record<string, string>)[code] || 'M19 69 C32 36 63 20 88 32 C105 41 116 24 136 38 L143 55 C126 66 117 84 95 88 C72 93 45 89 19 69 Z';
+
 const title = 'Fórmula 1 2026: calendario, próximos GP y resultados | Hacé Cuentas';
-const description = 'SeguÍ cada fin de semana de Fórmula 1: clasificación, sprint, carrera, horarios y tabla de pilotos actualizada.';
+const description = 'Seguí cada fin de semana de Fórmula 1: clasificación, sprint, carrera, horarios y tabla de pilotos actualizada.';
 const schema = { '@context':'https://schema.org', '@graph': [
   { '@type':'BreadcrumbList', itemListElement:[{ '@type':'ListItem', position:1, name:'Inicio', item:'https://hacecuentas.com/' }, { '@type':'ListItem', position:2, name:'Fórmula 1 2026', item:'https://hacecuentas.com/formula-1-2026' }] },
   { '@type':'SportsEvent', name:'Campeonato Mundial de Fórmula 1 2026', sport:'Formula 1', startDate:races[0]?.start, endDate:races.at(-1)?.end, organizer:{'@type':'Organization',name:'FIA'}, url:'https://hacecuentas.com/formula-1-2026' },
-  { '@type':'Dataset', name:'Calendario y resultados Fórmula 1 2026', creator:{'@type':'Organization',name:'Hacé Cuentas'}, isBasedOn:'https://openf1.org/', dateModified:data.fetchedAt, url:'https://hacecuentas.com/formula-1-2026' },
+  { '@type':'Dataset', name:'Calendario y resultados Fórmula 1 2026', creator:{'@type':'Organization',name:'Hacé Cuentas'}, isBasedOn:'https://openf1.org/', dateModified:data.fetchedAt, url:'https://hacecuentas.com/formula-1-2026' }
 ] };
 ---
 <Layout title={title} description={description} canonical="/formula-1-2026" audience="global" schema={schema} domain="life">
-  <Header />
-  <main class="article-main"><article class="f1" data-f1>
-    <header class="f1-head"><a href="/formula-1-2026" class="f1-kicker"><i></i> Fórmula 1 2026</a><div class="f1-head-row"><div><h1>GP de {country(nextRace?.country || 'F1')}</h1><p>{nextRace?.circuit} <span>•</span> {fmt(nextRace?.start, { day:'numeric', month:'long' })} al {fmt(nextRace?.end, { day:'numeric', month:'long' })}</p></div><label class="f1-zone"><span>HORARIO</span> 🇦🇷 <select data-zone><option value="America/Argentina/Buenos_Aires">Argentina (GMT-3)</option><option value="America/Mexico_City">México</option><option value="America/Bogota">Colombia</option><option value="America/Santiago">Chile</option><option value="Europe/Madrid">España</option></select></label></div></header>
+  <header class="race-nav">
+    <a class="race-brand" href="/">Hacé <strong>Cuentas</strong></a>
+    <nav aria-label="Navegación principal"><a href="/calculadoras">Calculadoras</a><a href="/finanzas-personales">Finanzas</a><a href="/cotizaciones">Cotizaciones</a><a href="/herramientas">Herramientas</a></nav>
+    <label class="race-zone">🇦🇷 <select data-zone aria-label="Zona horaria"><option value="America/Argentina/Buenos_Aires">Argentina (GMT-3)</option><option value="America/Mexico_City">México</option><option value="America/Bogota">Colombia</option><option value="America/Santiago">Chile</option><option value="Europe/Madrid">España</option></select></label>
+  </header>
 
-    <div class="f1-grid">
-      <section class="f1-weekend"><div class="f1-title"><h2>Race Weekend</h2><span>Todos los horarios en tu zona</span></div><div class="f1-track">{weekend.map((s: any) => <article class:list={['f1-session', { active: s.sessionKey === nextSession?.sessionKey, done: new Date(s.end) < now }]}><time>{day(s.start)}</time><span class="f1-dot">{sessionIcon(s.name)}</span><div><strong>{sessionLabel(s.name)}</strong><small>{s.sessionKey === nextSession?.sessionKey ? 'Próxima sesión' : new Date(s.end) < now ? 'Sesión completada' : 'Próximamente'}</small></div><div class="f1-session-time"><small>INICIO</small><b data-datetime={s.start}>{time(s.start)}</b></div></article>)}</div></section>
-      <aside class="f1-next" data-session={nextSession?.sessionKey}><span>PRÓXIMA SESIÓN</span><h2>{sessionLabel(nextSession?.name || 'Carrera')}</h2><p data-datetime={nextSession?.start}>{fullDate(nextSession?.start)} · {time(nextSession?.start)}</p><hr /><small>FALTAN</small><strong data-countdown={nextSession?.start}></strong><div class="f1-circuit" aria-hidden="true"><i></i><i></i><i></i></div><a href="#calendario">Ver calendario completo <b>→</b></a></aside>
+  <main class="race-page" data-f1>
+    <div class="race-stage">
+      <div class="race-left">
+        <section class="race-hero">
+          <p>Fórmula 1 2026</p>
+          <h1>GP de {country(nextRace?.country || 'F1')}</h1>
+          <div>{nextRace?.circuit} <i>•</i> {monthRange}</div>
+        </section>
+
+        <section class="race-weekend">
+          <h2>Race Weekend</h2>
+          <div class="session-list" style={`--sessions:${Math.max(weekend.length, 1)}`}>
+            {weekend.map((session: any) => <article class:list={['session-row', { active: session.sessionKey === nextSession?.sessionKey, done: new Date(session.end) < now }]}>
+              <time>{shortDay(session.start)}</time>
+              <span class="session-icon" aria-hidden="true">
+                {session.name === 'Sprint' ? <svg viewBox="0 0 40 40"><circle cx="20" cy="22" r="11"/><path d="M20 11V6M15 6h10M29 12l3-3M20 17v6l4 3"/></svg> : <svg viewBox="0 0 40 40"><path d="M11 31V9M12 10c7-4 9 5 16 1v12c-7 4-9-5-16-1M17 9v14M23 11v14M12 16h16"/></svg>}
+              </span>
+              <div class="session-name"><strong>{sessionLabel(session.name)}</strong><small>{sessionNote(session)}</small></div>
+              <div class="session-time"><small>INICIO</small><b data-time={session.start}>{time(session.start)}</b></div>
+              {session.sessionKey === nextSession?.sessionKey && <span class="session-arrow">›</span>}
+            </article>)}
+            <p class="session-foot">Todos los horarios corresponden a <span data-zone-label>Argentina (GMT-3)</span></p>
+          </div>
+        </section>
+      </div>
+
+      <aside class="next-panel">
+        <div class="next-head"><span>PRÓXIMA SESIÓN</span><h2>{sessionLabel(nextSession?.name || 'Carrera')}</h2><p data-full-date={nextSession?.start}>{fullDate(nextSession?.start)}</p></div>
+        <div class="next-count"><small>FALTAN</small><strong data-countdown={nextSession?.start}><b data-count-hours>00</b><i>h</i><b data-count-minutes>00</b><i>min</i></strong></div>
+        <svg class="next-track" viewBox="0 0 160 112" aria-label={`Circuito de ${nextRace?.circuit}`}><path d={trackPath(nextRace?.countryCode)} /><circle cx="119" cy="84" r="3"/><path class="track-hot" d="M111 72 C116 81 123 89 135 94"/></svg>
+        <a href="#calendario">VER TIEMPOS EN VIVO <b>›</b></a>
+      </aside>
     </div>
 
-    <div class="f1-lower">
-      <section class="f1-table"><div class="f1-title"><h2>Tabla de pilotos</h2><a href="#pilotos">Ver campeonato completo <b>→</b></a></div><div class="f1-table-head"><span>POS</span><span>PILOTO</span><span>EQUIPO</span><span>PTS</span></div>{data.standings.slice(0,5).map((r: any, i: number) => <div class="f1-driver"><b>{i+1}</b><strong>{r.name || `#${r.driverNumber}`}</strong><span>{r.team}</span><em>{r.points}</em></div>)}</section>
-      <section id="calendario" class="f1-calendar"><div class="f1-title"><h2>Calendario</h2><button data-show-calendar>Ver calendario completo <b>→</b></button></div><div class="f1-calendar-list">{upcomingRaces.map((r: any) => <article class:list={{active:r.meetingKey === nextRace?.meetingKey}}><b>{r.countryCode}</b><small>{fmt(r.start,{day:'numeric',month:'short'}).replace('.','')} – {fmt(r.end,{day:'numeric',month:'short'}).replace('.','')}</small><span>{flag(r.countryCode)}</span><em>{r.circuit}</em></article>)}</div></section>
+    <div class="race-lower">
+      <section class="drivers-card" id="pilotos">
+        <h2>Tabla de pilotos</h2>
+        <div class="drivers-head"><span>POS</span><span>PILOTO</span><span>EQUIPO</span><span>PTS</span></div>
+        {data.standings.slice(0, 5).map((driver: any, index: number) => <div class="driver-row"><b>{index + 1}</b><i style={`--team:${teamColor(driver.team)}`}></i><strong>{driver.name || `#${driver.driverNumber}`}</strong><span>{driver.team}</span><em>{driver.points}</em></div>)}
+        <a href="#resultados">VER CAMPEONATO COMPLETO <b>›</b></a>
+      </section>
+
+      <section class="calendar-card" id="calendario">
+        <h2>Calendario</h2>
+        <div class="calendar-list">
+          {upcomingRaces.map((race: any) => <article class:list={{ active: race.meetingKey === nextRace?.meetingKey }}><b>{race.countryCode}</b><small>{compactRange(race)}</small><svg viewBox="0 0 160 112" aria-label={`Circuito de ${race.circuit}`}><path d={trackPath(race.countryCode)} /></svg><em>{race.circuit}</em></article>)}
+          <button aria-label="Ver próximas carreras">›</button>
+        </div>
+        <a href="#resultados">VER CALENDARIO COMPLETO <b>›</b></a>
+      </section>
     </div>
 
-    <section id="pilotos" class="f1-details"><details><summary>Calendario completo y horarios <span>⌄</span></summary>{races.map((r: any, i: number) => <p><b>{String(i+1).padStart(2,'0')}</b> {flag(r.countryCode)} GP de {country(r.country)} <time data-datetime={r.start}>{fullDate(r.start)} · {time(r.start)}</time></p>)}</details><details><summary>Resultados, clasificaciones y sprints <span>⌄</span></summary>{[...(data.sessions || [])].reverse().slice(0,15).map((s: any) => { const r = races.find((x: any) => x.meetingKey === s.meetingKey); return <p>{flag(r?.countryCode)} <b>{sessionLabel(s.name)}</b> · GP de {country(r?.country || 'F1')}</p>})}</details></section>
-  </article></main>
+    <section class="race-details" id="resultados">
+      <details><summary>Calendario completo y horarios <span>⌄</span></summary>{races.map((race: any, index: number) => <p><b>{String(index + 1).padStart(2, '0')}</b> GP de {country(race.country)} <time>{fullDate(race.start)} · <span data-time={race.start}>{time(race.start)}</span></time></p>)}</details>
+      <details><summary>Resultados, clasificaciones y sprints <span>⌄</span></summary>{[...(data.sessions || [])].reverse().slice(0, 15).map((session: any) => { const race = races.find((item: any) => item.meetingKey === session.meetingKey); return <p><b>{sessionLabel(session.name)}</b> · GP de {country(race?.country || 'F1')}</p>})}</details>
+    </section>
+  </main>
   <Footer />
 </Layout>
+
 <script is:inline>
-  const root = document.querySelector('[data-f1]'); if (root) {
-    let tz = 'America/Argentina/Buenos_Aires'; const zone = root.querySelector('[data-zone]');
-    const renderDates = () => root.querySelectorAll('[data-datetime]').forEach(el => { const d = new Date(el.dataset.datetime); el.textContent = new Intl.DateTimeFormat('es-AR',{timeZone:tz,weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hour12:false}).format(d).replace('.',''); });
-    zone?.addEventListener('change', () => { tz = zone.value; renderDates(); });
-    root.querySelectorAll('[data-countdown]').forEach(el => { const tick=()=>{ const x=Math.max(0,new Date(el.dataset.countdown)-Date.now()), d=Math.floor(x/864e5),h=Math.floor(x%864e5/36e5),m=Math.floor(x%36e5/6e4); el.textContent=x?d+' d '+h+' h '+m+' min':'En curso'; }; tick(); setInterval(tick,60000); });
-    root.querySelector('[data-show-calendar]')?.addEventListener('click', () => root.querySelector('#pilotos details')?.setAttribute('open',''));
-    renderDates();
+  const root = document.querySelector('[data-f1]');
+  const zone = document.querySelector('[data-zone]');
+  if (root && zone) {
+    let tz = zone.value;
+    const zoneNames = { 'America/Argentina/Buenos_Aires':'Argentina (GMT-3)', 'America/Mexico_City':'México', 'America/Bogota':'Colombia', 'America/Santiago':'Chile', 'Europe/Madrid':'España' };
+    const render = () => {
+      root.querySelectorAll('[data-time]').forEach(el => { el.textContent = new Intl.DateTimeFormat('es-AR', { timeZone:tz, hour:'2-digit', minute:'2-digit', hour12:false }).format(new Date(el.dataset.time)); });
+      root.querySelectorAll('[data-full-date]').forEach(el => { el.textContent = new Intl.DateTimeFormat('es-AR', { timeZone:tz, weekday:'long', day:'numeric', month:'long' }).format(new Date(el.dataset.fullDate)).toUpperCase(); });
+      root.querySelectorAll('[data-zone-label]').forEach(el => { el.textContent = zoneNames[tz] || zone.options[zone.selectedIndex].text; });
+    };
+    zone.addEventListener('change', () => { tz = zone.value; render(); });
+    root.querySelectorAll('[data-countdown]').forEach(el => {
+      const tick = () => { const left = Math.max(0, new Date(el.dataset.countdown) - Date.now()); const hours = Math.floor(left / 36e5); const minutes = Math.floor(left % 36e5 / 6e4); el.querySelector('[data-count-hours]').textContent = String(hours); el.querySelector('[data-count-minutes]').textContent = String(minutes).padStart(2,'0'); };
+      tick(); setInterval(tick, 60000);
+    });
+    render();
   }
 </script>
+
 <style>
-  .f1{max-width:1180px;margin:auto;padding:34px 20px 76px;color:#141414;font-family:Arial,sans-serif}.f1-head{border-bottom:1px solid #d4d4d4;padding-bottom:27px}.f1-kicker{align-items:center;color:#e10600;display:inline-flex;font-size:12px;font-weight:900;gap:8px;letter-spacing:.08em;text-decoration:none;text-transform:uppercase}.f1-kicker i{background:#e10600;border-radius:50%;height:8px;width:8px}.f1-head-row{align-items:end;display:flex;gap:24px;justify-content:space-between}.f1 h1{font-size:clamp(48px,6vw,78px);font-weight:900;letter-spacing:-.075em;line-height:.86;margin:13px 0 13px}.f1-head p{color:#676767;font-size:16px;margin:0}.f1-head p span{color:#aaa;padding:0 9px}.f1-zone{align-items:center;border:1px solid #d6d6d6;display:flex;font-size:13px;gap:7px;padding:11px 12px;white-space:nowrap}.f1-zone span{color:#8a8a8a;font-size:9px;font-weight:900;letter-spacing:.08em}.f1-zone select{appearance:none;background:transparent;border:0;font:700 13px Arial,sans-serif;max-width:160px}.f1-grid{display:grid;gap:30px;grid-template-columns:minmax(0,1.72fr) minmax(310px,.88fr);padding-top:31px}.f1-title{align-items:end;border-bottom:1px solid #d8d8d8;display:flex;gap:14px;justify-content:space-between;padding-bottom:11px}.f1-title h2{font-size:22px;font-weight:900;letter-spacing:-.05em;margin:0}.f1-title span{color:#777;font-size:11px}.f1-title a,.f1-title button{background:none;border:0;color:#e10600;cursor:pointer;font:900 10px Arial,sans-serif;letter-spacing:.06em;text-decoration:none;text-transform:uppercase;white-space:nowrap}.f1-title b{font-size:16px;margin-left:5px}.f1-track{background:#181818;margin-top:18px;overflow:hidden}.f1-session{align-items:center;border-bottom:1px solid #414141;color:#fff;display:grid;grid-template-columns:112px 78px 1fr 100px;min-height:107px;position:relative}.f1-session:last-child{border:0}.f1-session time{color:#bfbfbf;font-size:11px;font-weight:900;padding-left:21px}.f1-dot{border:2px solid #7b7b7b;border-radius:50%;color:#ddd;display:grid;font-size:21px;height:50px;place-items:center;position:relative;width:50px}.f1-dot:after{background:#777;content:'';height:57px;left:23px;position:absolute;top:48px;width:1px}.f1-session:last-child .f1-dot:after{display:none}.f1-session strong{display:block;font-size:27px;font-weight:900;letter-spacing:-.055em;line-height:1}.f1-session small{color:#aaa;display:block;font-size:11px;margin-top:6px}.f1-session-time{padding-right:21px;text-align:right}.f1-session-time small{font-size:9px;font-weight:900;letter-spacing:.08em;margin:0}.f1-session-time b{font-size:25px;letter-spacing:-.06em}.f1-session.active{background:linear-gradient(90deg,#4a0808 0%,#251212 45%,#1b1b1b 100%);box-shadow:inset 6px 0 #e10600}.f1-session.active time,.f1-session.active strong,.f1-session.active .f1-session-time b{color:#ff312a}.f1-session.active .f1-dot{background:#e10600;border-color:#f53730;box-shadow:0 0 0 8px rgba(225,6,0,.19);color:#fff}.f1-session.done{opacity:.62}.f1-next{background:#181818;border-left:6px solid #e10600;color:white;display:flex;flex-direction:column;min-height:408px;padding:28px 27px 24px}.f1-next>span,.f1-next>small{color:#ff302a;font-size:10px;font-weight:900;letter-spacing:.12em}.f1-next h2{font-size:54px;font-weight:900;letter-spacing:-.08em;line-height:.85;margin:15px 0 14px}.f1-next p{color:#bbb;font-size:12px;font-weight:700;margin:0;text-transform:uppercase}.f1-next hr{border:0;border-top:1px solid #484848;margin:31px 0 22px;width:100%}.f1-next>strong{color:#f12620;font-size:43px;font-weight:900;letter-spacing:-.09em;line-height:.95;margin-top:10px;white-space:nowrap}.f1-circuit{height:92px;margin:auto 0 17px;position:relative;width:190px}.f1-circuit:before,.f1-circuit:after,.f1-circuit i{border:2px solid #ededed;border-radius:50%;content:'';display:block;opacity:.9;position:absolute}.f1-circuit:before{height:35px;left:17px;top:29px;width:118px}.f1-circuit:after{border-left:0;border-top:0;height:49px;left:90px;top:10px;width:71px}.f1-circuit i:nth-child(1){border-right:0;height:20px;left:0;top:42px;width:29px}.f1-circuit i:nth-child(2){border-bottom:0;height:25px;left:133px;top:48px;width:41px}.f1-circuit i:nth-child(3){border-left:0;height:21px;left:38px;top:9px;width:41px}.f1-next a{border:1px solid #e10600;color:#fff;font-size:10px;font-weight:900;letter-spacing:.07em;padding:15px;text-align:left;text-decoration:none;text-transform:uppercase}.f1-next a b{float:right;font-size:17px;line-height:.5}.f1-lower{display:grid;gap:20px;grid-template-columns:.94fr 1.5fr;margin-top:29px}.f1-table,.f1-calendar{border:1px solid #d8d8d8;padding:20px}.f1-table-head,.f1-driver{align-items:center;display:grid;gap:8px;grid-template-columns:39px 1.5fr 1.1fr 38px}.f1-table-head{color:#818181;font-size:9px;font-weight:900;letter-spacing:.06em;padding:17px 0 8px}.f1-driver{border-top:1px solid #e8e8e8;font-size:12px;padding:12px 0}.f1-driver>b{border-left:3px solid #e10600;font-size:13px;padding-left:8px}.f1-driver strong{font-size:12px}.f1-driver span{color:#656565}.f1-driver em{font-size:13px;font-style:normal;font-weight:900;text-align:right}.f1-calendar-list{display:grid;gap:8px;grid-template-columns:repeat(5,1fr);margin-top:19px}.f1-calendar-list article{border:1px solid #dcdcdc;display:flex;flex-direction:column;min-height:153px;padding:12px 7px;text-align:center}.f1-calendar-list article.active{border:2px solid #e10600;box-shadow:inset 0 0 0 1px #e10600;color:#e10600}.f1-calendar-list b{font-size:13px;font-weight:900}.f1-calendar-list small{font-size:9px;margin:4px 0}.f1-calendar-list span{font-size:28px;line-height:1;margin:auto 0 9px}.f1-calendar-list em{color:#555;font-size:9px;font-style:normal;line-height:1.2}.f1-calendar-list article.active em{color:#e10600}.f1-details{margin-top:24px}.f1-details details{border-top:1px solid #d8d8d8;padding:16px 2px}.f1-details summary{cursor:pointer;display:flex;font-size:14px;font-weight:900;justify-content:space-between}.f1-details p{align-items:center;border-top:1px solid #eee;display:flex;font-size:12px;gap:10px;margin:12px 0 0;padding:10px 0}.f1-details p>b,.f1-details span{color:#e10600}.f1-details time{color:#666;font-size:11px;margin-left:auto}@media(max-width:800px){.f1-head-row{align-items:start;flex-direction:column}.f1-grid,.f1-lower{grid-template-columns:1fr}.f1-next{min-height:375px}.f1-calendar-list{grid-template-columns:repeat(3,1fr)}.f1-calendar-list article:nth-child(n+4){display:none}}@media(max-width:540px){.f1{padding:24px 14px 55px}.f1 h1{font-size:47px}.f1-head p{font-size:13px}.f1-session{grid-template-columns:71px 51px 1fr 64px;min-height:92px}.f1-session time{font-size:9px;padding-left:10px}.f1-dot{font-size:15px;height:38px;width:38px}.f1-dot:after{height:54px;left:17px;top:36px}.f1-session strong{font-size:18px}.f1-session small{font-size:9px}.f1-session-time{padding-right:9px}.f1-session-time b{font-size:17px}.f1-next h2{font-size:48px}.f1-table-head,.f1-driver{font-size:10px;grid-template-columns:30px 1.4fr .85fr 30px}.f1-driver strong{font-size:10px}.f1-calendar{padding:15px}.f1-details time{display:none}}
+  :global(body){background:#fff!important;color:#171717!important}:global(#main){margin:0!important;max-width:none!important;padding:0!important;width:100%!important}.race-nav{align-items:center;border-bottom:1px solid #ddd;box-sizing:border-box;display:flex;height:64px;margin:0 auto;max-width:1536px;padding:0 49px}.race-brand{color:#171717;font-size:20px;font-weight:400;text-decoration:none}.race-brand strong{font-weight:900}.race-nav nav{display:flex;gap:40px;margin-left:70px}.race-nav nav a{color:#171717;font-size:15px;text-decoration:none}.race-zone{align-items:center;border:1px solid #d8d8d8;border-radius:4px;display:flex;margin-left:auto;padding:10px 12px}.race-zone select{appearance:auto;background:#fff;border:0;color:#222;font:14px Arial,sans-serif;min-width:145px}.race-page{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;margin:0 auto;max-width:1536px;padding:26px 49px 58px}.race-stage{display:grid;gap:32px;grid-template-columns:minmax(0,2fr) minmax(400px,1fr)}.race-left{min-width:0}.race-hero{height:146px}.race-hero p{color:#e10600;font-size:22px;margin:0 0 4px}.race-hero h1{color:#080808;font-size:72px;font-weight:900;letter-spacing:-.055em;line-height:1;margin:0 0 9px}.race-hero div{color:#555;font-size:16px}.race-hero i{font-style:normal;margin:0 12px}.race-weekend h2,.drivers-card h2,.calendar-card h2{color:#111;font-size:27px;font-weight:900;letter-spacing:-.04em;margin:0}.race-weekend h2{border-bottom:1px solid #d0d0d0;padding:0 0 12px}.session-list{background:linear-gradient(135deg,#111,#1c1c1e);border-radius:6px;margin-top:16px;overflow:hidden}.session-row{align-items:center;border-bottom:1px solid #474747;color:#fff;display:grid;grid-template-columns:148px 78px 1fr 120px 26px;min-height:101px;position:relative}.session-row time{color:#bbb;font-size:13px;font-weight:700;padding-left:30px}.session-icon{align-items:center;border:2px solid #777;border-radius:50%;display:flex;height:55px;justify-content:center;position:relative;width:55px}.session-icon:after{background:#777;content:'';height:48px;left:26px;position:absolute;top:53px;width:1px}.session-row:nth-last-of-type(1) .session-icon:after{display:none}.session-icon svg{fill:none;height:35px;stroke:#fff;stroke-linecap:round;stroke-linejoin:round;stroke-width:2.2;width:35px}.session-name strong{display:block;font-size:30px;font-weight:900;letter-spacing:-.04em}.session-name small{color:#aaa;display:block;font-size:13px;margin-top:3px}.session-time small{color:#aaa;display:block;font-size:11px}.session-time b{display:block;font-size:32px;letter-spacing:-.04em}.session-arrow{font-size:39px}.session-row.active{background:linear-gradient(90deg,#270101,#2b1010 65%,#1c1c1e);box-shadow:inset 6px 0 #e10600}.session-row.active time,.session-row.active .session-name strong,.session-row.active .session-name small,.session-row.active .session-time small,.session-row.active .session-time b{color:#f20d0d}.session-row.active .session-icon{background:#ed1010;border-color:#ff2929;box-shadow:0 0 0 8px rgba(225,6,0,.16)}.session-row.done{opacity:.8}.session-foot{color:#aaa;font-size:11px;margin:0;padding:12px 29px}.next-panel{background:linear-gradient(145deg,#111,#202124);border-radius:6px;box-sizing:border-box;color:#fff;display:flex;flex-direction:column;grid-column:2;grid-row:1;height:535px;margin-top:14px;padding:22px 20px 18px}.next-head{border-left:3px solid #e10600;padding:2px 0 12px 17px}.next-head span,.next-count>small{color:#f10d12;font-size:13px;font-weight:900}.next-head h2{color:#fff!important;font-size:54px;font-weight:900;letter-spacing:-.045em;line-height:1;margin:7px 0 10px}.next-head p{color:#bbb;font-size:14px;font-weight:700;margin:0}.next-count{border-top:1px solid #464646;margin-top:9px;padding:22px 10px 0}.next-count strong{align-items:baseline;color:#ef0c12;display:flex;margin-top:7px;white-space:nowrap}.next-count b{font-size:70px;font-weight:900;letter-spacing:-.07em}.next-count i{font-size:30px;font-style:normal;font-weight:900;margin:0 10px 0 5px}.next-track{height:125px;margin:4px auto 7px;width:210px}.next-track path,.calendar-list svg path{fill:none;stroke:#e4e4e4;stroke-linecap:round;stroke-linejoin:round;stroke-width:3}.next-track .track-hot{stroke:#e10600;stroke-width:4}.next-track circle{fill:#fff}.next-panel>a{border:1px solid #e10600;border-radius:6px;color:#fff;font-size:13px;font-weight:900;margin-top:auto;padding:15px;text-align:center;text-decoration:none}.next-panel>a b{float:right;font-size:25px;line-height:.5}.race-lower{display:grid;gap:20px;grid-template-columns:38% 1fr;margin-top:20px}.drivers-card,.calendar-card{border:1px solid #ddd;border-radius:6px;padding:17px 24px 20px}.drivers-head,.driver-row{align-items:center;display:grid;grid-template-columns:28px 18px 1.5fr 1.25fr 42px}.drivers-head{color:#555;font-size:10px;margin-top:13px}.drivers-head span:nth-child(2){grid-column:2/4}.driver-row{border-top:1px solid #ddd;font-size:13px;min-height:32px}.driver-row>b{font-weight:700;text-align:center}.driver-row>i{background:var(--team);border-radius:2px;height:20px;justify-self:center;width:4px}.driver-row strong{font-size:13px}.driver-row span{color:#444}.driver-row em{font-style:normal;font-weight:900;text-align:right}.drivers-card>a,.calendar-card>a{color:#e10600;display:inline-block;font-size:11px;font-weight:900;margin-top:20px;text-decoration:none}.drivers-card>a b,.calendar-card>a b{font-size:22px;margin-left:12px}.calendar-list{align-items:stretch;display:grid;gap:22px;grid-template-columns:repeat(5,1fr) 48px;margin-top:17px}.calendar-list article{align-items:center;border:1px solid #ddd;border-radius:6px;display:flex;flex-direction:column;min-height:181px;padding:14px 7px 9px}.calendar-list article.active{border:2px solid #e10600;color:#e10600}.calendar-list article>b{font-size:16px}.calendar-list article>small{font-size:10px;margin-top:3px}.calendar-list svg{height:86px;margin:auto;width:126px}.calendar-list svg path{stroke:#777;stroke-width:3}.calendar-list article.active svg path{stroke:#111}.calendar-list article em{color:#555;font-size:11px;font-style:normal;text-align:center}.calendar-list article.active em{color:#e10600}.calendar-list button{align-self:center;background:#fff;border:1px solid #ddd;border-radius:50%;color:#111;font-size:37px;height:48px;width:48px}.race-details{margin-top:23px}.race-details details{border-top:1px solid #ddd;padding:14px 2px}.race-details summary{color:#111;cursor:pointer;display:flex;font-size:14px;font-weight:900;justify-content:space-between}.race-details summary span,.race-details p>b{color:#e10600}.race-details p{border-top:1px solid #eee;color:#222;display:flex;font-size:12px;gap:10px;margin:10px 0 0;padding:10px 0}.race-details time{color:#666;margin-left:auto}@media(max-width:900px){.race-nav{padding:0 18px}.race-nav nav{display:none}.race-page{padding:22px 16px 50px}.race-stage{grid-template-columns:1fr}.race-hero{height:auto;margin-bottom:25px}.race-hero h1{font-size:50px}.next-panel{grid-column:1;grid-row:auto;height:auto;margin-top:0;min-height:430px}.race-lower{grid-template-columns:1fr}.calendar-list{gap:8px;grid-template-columns:repeat(3,1fr)}.calendar-list article:nth-child(n+4),.calendar-list button{display:none}}@media(max-width:560px){.race-brand{font-size:17px}.race-zone{padding:8px}.race-zone select{font-size:12px;min-width:125px}.race-hero h1{font-size:43px}.race-hero p{font-size:17px}.session-row{grid-template-columns:82px 50px 1fr 72px 16px;min-height:91px}.session-row time{font-size:9px;padding-left:10px}.session-icon{height:37px;width:37px}.session-icon:after{height:54px;left:17px;top:35px}.session-icon svg{height:24px;width:24px}.session-name strong{font-size:19px}.session-name small{font-size:10px}.session-time b{font-size:20px}.session-time small{font-size:9px}.next-count b{font-size:55px}.next-count i{font-size:23px}.drivers-card,.calendar-card{padding:16px 12px}.calendar-list svg{height:70px;width:100px}}
+</style>
+<style is:global>
+  main.race-page { width: 100% !important; max-width: 1536px !important; }
+  @media (min-width: 901px) {
+    .session-list { display: flex; flex-direction: column; height: 344px; }
+    .session-row { flex: 1; }
+    .session-icon::after { height: calc(309px / var(--sessions) - 53px); }
+  }
+  @media (max-width: 900px) {
+    .drivers-card, .calendar-card { box-sizing: border-box; min-width: 0; width: 100%; }
+    .calendar-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .calendar-list article { box-sizing: border-box; min-width: 0; }
+    .calendar-list svg { max-width: 100%; }
+  }
 </style>
