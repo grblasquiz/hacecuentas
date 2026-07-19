@@ -4,6 +4,7 @@
 # mapea /ruta a public/_fast-pages/archivo.html.
 set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
+T0=$(date +%s)
 [ -f .env ] || { echo '[fast-pages] falta .env'; exit 1; }
 set -a; source .env; set +a
 for var in CLOUDFLARE_API_TOKEN CLOUDFLARE_ZONE_ID; do [ -n "${!var:-}" ] || { echo "[fast-pages] falta $var"; exit 1; }; done
@@ -14,7 +15,12 @@ node scripts/prepare-fast-pages.mjs
 node scripts/generate-worker-wrapper.mjs
 rm -rf .wrangler/deploy
 echo '[fast-pages] subiendo delta a Cloudflare (sin Astro)...'
-( cd dist/server && npx wrangler@latest deploy )
+DEPLOY_LOG=$(mktemp -t hc-fast-pages.XXXXXX)
+if ! ( cd dist/server && npx wrangler@latest deploy ) >"$DEPLOY_LOG" 2>&1; then
+  tail -40 "$DEPLOY_LOG"; rm -f "$DEPLOY_LOG"; exit 1
+fi
+grep -E 'No updated asset|Uploaded hacecuentas|Deployed hacecuentas|Current Version|Total Upload' "$DEPLOY_LOG" || true
+rm -f "$DEPLOY_LOG"
 
 echo '[fast-pages] purgando rutas fast...'
 node --input-type=module <<'NODE'
@@ -32,4 +38,8 @@ const data = await res.json();
 if (!data.success) throw new Error(JSON.stringify(data.errors));
 console.log(`[fast-pages] purgadas ${files.length} ruta(s)`);
 NODE
-echo '[fast-pages] OK — deploy sin Astro terminado'
+for path in $(node -e "for (const p of Object.keys(require('./public/fast-pages.json'))) console.log(p)"); do
+  code=$(/usr/bin/curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "https://hacecuentas.com${path}" || true)
+  [ "$code" = 200 ] || { echo "[fast-pages] smoke falló: $path HTTP $code"; exit 1; }
+done
+echo "[fast-pages] OK — deploy sin Astro terminado en $(( $(date +%s) - T0 ))s"
