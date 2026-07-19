@@ -24,6 +24,10 @@ const races = (await get('/sessions?year=2026&session_name=Race'))
   .sort((a, b) => a.start.localeCompare(b.start));
 
 const allSessions = await get('/sessions?year=2026');
+const weekendSessions = allSessions
+  .filter((s) => ['Race', 'Sprint', 'Qualifying'].includes(s.session_name) && !s.is_cancelled)
+  .map((s) => ({ sessionKey: s.session_key, meetingKey: s.meeting_key, name: s.session_name, start: s.date_start, end: s.date_end }))
+  .sort((a, b) => a.start.localeCompare(b.start));
 const completed = races.filter((r) => new Date(r.end) < new Date() && !r.cancelled);
 // Además de la carrera, incluimos sprint y clasificación: son los tres momentos
 // que cambian esta superficie. La quali sprint también se guarda como referencia.
@@ -60,6 +64,6 @@ for (const session of resultSessions) {
 const drivers = Object.fromEntries(driverMap);
 const table = [...standings.values()].map((r) => ({ ...r, ...drivers[r.driverNumber] }))
   .sort((a, b) => b.points - a.points || b.wins - a.wins || String(a.name).localeCompare(String(b.name)));
-const output = { fetchedAt: new Date().toISOString(), source: `${API}/sessions?year=2026`, races, sessions: sessionResults, drivers, standings: table };
+const output = { fetchedAt: new Date().toISOString(), source: `${API}/sessions?year=2026`, races, weekendSessions, sessions: sessionResults, drivers, standings: table };
 await writeFile(new URL('../src/data/live/formula-1-2026.json', import.meta.url), `${JSON.stringify(output, null, 2)}\n`);
 console.log(`F1 snapshot: ${races.length} GPs, ${completed.length} carreras; ${sessionResults.length} sesiones con resultados.`);
