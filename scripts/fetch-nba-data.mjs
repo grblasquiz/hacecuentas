@@ -13,16 +13,24 @@ const game = (event) => {
 };
 async function main() {
   try {
-    const [past, today, next, standings] = await Promise.all([json(api(`scoreboard?dates=${day(-1)}`)), json(api(`scoreboard?dates=${day()}`)), json(api(`scoreboard?dates=${day(1)}`)), json('https://site.api.espn.com/apis/v2/sports/basketball/nba/standings?region=us&lang=en&contentorigin=espn&season=2026')]);
+    const [past, today, next, standings, leaderData] = await Promise.all([json(api(`scoreboard?dates=${day(-1)}`)), json(api(`scoreboard?dates=${day()}`)), json(api(`scoreboard?dates=${day(1)}`)), json('https://site.api.espn.com/apis/v2/sports/basketball/nba/standings?region=us&lang=en&contentorigin=espn&season=2026'), json('https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/seasons/2026/types/2/leaders?lang=en&region=us')]);
     const events = [...(past.events || []), ...(today.events || []), ...(next.events || [])].map(game);
     const groups = standings.children || [];
-    const table = groups.flatMap((group) => group.standings?.entries || []).map((entry) => ({
+    const table = groups.flatMap((group) => (group.standings?.entries || []).map((entry) => ({ entry, conference: group.abbreviation || group.name }))).map(({ entry, conference }) => ({
       rank: entry.stats?.find((s) => s.name === 'playoffSeed')?.value || entry.stats?.find((s) => s.name === 'rank')?.value || 0,
-      team: entry.team?.displayName, abbr: entry.team?.abbreviation, logo: entry.team?.logos?.[0]?.href, wins: entry.stats?.find((s) => s.name === 'wins')?.value || 0, losses: entry.stats?.find((s) => s.name === 'losses')?.value || 0, pct: entry.stats?.find((s) => s.name === 'winPercent')?.displayValue || '—'
+      conference, team: entry.team?.displayName, abbr: entry.team?.abbreviation, logo: entry.team?.logos?.[0]?.href, wins: entry.stats?.find((s) => s.name === 'wins')?.value || 0, losses: entry.stats?.find((s) => s.name === 'losses')?.value || 0, pct: entry.stats?.find((s) => s.name === 'winPercent')?.displayValue || '—'
     })).filter((x) => x.team);
+    const requestedLeaders = [['pointsPerGame', 'Pts'], ['reboundsPerGame', 'Reb'], ['assistsPerGame', 'Ast']];
+    const leaders = await Promise.all(requestedLeaders.map(async ([categoryName, label]) => {
+      const category = leaderData.categories?.find((item) => item.name === categoryName);
+      const first = category?.leaders?.[0];
+      if (!first) return null;
+      const [athlete, team] = await Promise.all([json(first.athlete.$ref.replace('http://', 'https://')), json(first.team.$ref.replace('http://', 'https://'))]);
+      return { label, value: first.displayValue, name: athlete.shortName || athlete.displayName, fullName: athlete.displayName, headshot: athlete.headshot?.href, team: team.displayName, teamAbbr: team.abbreviation };
+    }));
     mkdirSync(join(process.cwd(), 'src/data/live'), { recursive: true });
-    writeFileSync(OUT, JSON.stringify({ fetchedAt: new Date().toISOString(), source: 'ESPN NBA scoreboard + standings', games: events, standings: table }, null, 2));
-    console.log(`[nba] ${events.length} partidos y ${table.length} equipos`);
+    writeFileSync(OUT, JSON.stringify({ fetchedAt: new Date().toISOString(), source: 'ESPN NBA scoreboard + standings + season leaders', games: events, standings: table, leaders: leaders.filter(Boolean) }, null, 2));
+    console.log(`[nba] ${events.length} partidos, ${table.length} equipos y ${leaders.filter(Boolean).length} líderes`);
   } catch (error) { if (existsSync(OUT)) console.log('[nba] fuente no disponible; se conserva snapshot previo'); else throw error; }
 }
 await main();
