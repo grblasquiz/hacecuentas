@@ -34,7 +34,7 @@ const PACK_LINKS = [
     emoji: '🍻',
     title: 'Bebidas para una juntada',
     text: 'Cerveza, vino y bebidas sin alcohol según invitados y duración.',
-    slug: 'calculadora-bebidas-evento-cerveza-vino-refresco-calculadora',
+    slug: 'calculadora-bebidas-evento-litros-por-persona',
   },
   {
     emoji: '🧾',
