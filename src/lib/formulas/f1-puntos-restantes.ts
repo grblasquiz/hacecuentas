@@ -4,7 +4,7 @@ export interface Inputs {
   puntosRival: number;
   carrerasRestantes: number;
   sprintsRestantes: number;
-  incluirVueltaRapida: string; // 'si' | 'no'
+  incluirVueltaRapida?: string; // legado 2019-2024; desde 2025 no suma puntos
 }
 
 export interface Outputs {
@@ -23,14 +23,13 @@ export function f1PuntosRestantes(i: Inputs): Outputs {
   const rival = Number(i.puntosRival);
   const gps = Number(i.carrerasRestantes || 0);
   const sprints = Number(i.sprintsRestantes || 0);
-  const vr = String(i.incluirVueltaRapida || 'si').toLowerCase() === 'si' ? 1 : 0;
 
   if (!isFinite(lider) || !isFinite(rival)) throw new Error('Ingresá los puntos de líder y rival');
   if (gps < 0 || sprints < 0) throw new Error('Carreras restantes no pueden ser negativas');
 
   const diff = lider - rival;
-  // Max: GP 25 + VR 1, Sprint 8
-  const maxPuntos = gps * (25 + vr) + sprints * 8;
+  // Sistema vigente desde 2025: GP 25 y Sprint 8; sin punto por vuelta rápida.
+  const maxPuntos = gps * 25 + sprints * 8;
   const maxRival = rival + maxPuntos;
 
   let asegurado = '';
@@ -63,7 +62,7 @@ export function f1PuntosRestantes(i: Inputs): Outputs {
     puntosMaxRival: maxRival,
     matematicaAsegurada: asegurado,
     escenarioEmpate: empate,
-    resumen: `Líder ${lider} pts, rival ${rival} pts (diff ${diff}). Quedan ${gps} GPs (×${25 + vr}) + ${sprints} sprints (×8) = **${maxPuntos} pts máx posibles**. ${asegurado}.`,
+    resumen: `Líder ${lider} pts, rival ${rival} pts (diff ${diff}). Quedan ${gps} GPs (×25) + ${sprints} sprints (×8) = **${maxPuntos} pts máx posibles**. ${asegurado}.`,
     _insight: {
       title: 'Lectura del campeonato',
       text: insightText,

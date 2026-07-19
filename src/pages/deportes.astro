@@ -1,0 +1,229 @@
+---
+// @incremental-standalone — hub editorial aislado; habilita deploy incremental.
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const site = 'https://hacecuentas.com';
+const title = 'Deportes hoy: Mundial 2026, NBA, F1 y calculadoras | Hacé Cuentas';
+const description = 'Mundial 2026, NBA y Fórmula 1 en un solo lugar: fixture, resultados, posiciones, calendario y calculadoras deportivas gratis.';
+
+const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+const calcBySlug = new Map<string, any>();
+for (const mod of Object.values(calcModules)) {
+  const calc = (mod as any).default || mod;
+  if (calc?.slug && calc?.h1 && !calc.noindex) calcBySlug.set(calc.slug, calc);
+}
+
+const groups = [
+  {
+    id: 'torneos',
+    eyebrow: 'Para mirar el partido con otra cabeza',
+    title: 'Calculadoras de torneos y competencia',
+    description: 'Probabilidades, puntos y escenarios para entender qué puede pasar antes de que empiece el juego.',
+    items: [
+      'calculadora-mundial-2026-predictor-campeon-ranking',
+      'calculadora-mundial-2026-probabilidad-ganar-penales',
+      'calculadora-fantasy-mundial-2026-mejor-once',
+      'calculadora-mundial-2026-diferencia-gol-desempate',
+      'calculadora-f1-puntos-campeonato-mundial-quedan',
+    ],
+  },
+  {
+    id: 'rendimiento',
+    eyebrow: 'Para hacer tus propios números',
+    title: 'Rendimiento, entrenamiento y resistencia',
+    description: 'Herramientas simples para correr, pedalear, entrenar fuerza y medir tu progreso con fórmulas verificadas.',
+    items: [
+      'calculadora-calorias-quemadas-deporte',
+      'calculadora-pace-ritmo-running',
+      'calculadora-1rm-peso-maximo-levantamiento',
+      'calculadora-vo2max-predecir-carrera-cooper-12min',
+      'calculadora-calorias-ciclismo-watts',
+    ],
+  },
+].map((group) => ({
+  ...group,
+  calcs: group.items.map((slug) => calcBySlug.get(slug)).filter(Boolean),
+}));
+
+const promoted = [
+  { name: 'Mundial 2026', href: '/mundial-2026', label: 'El torneo más grande', description: 'Fixture, resultados, posiciones, llave y goleadores.', className: 'world' },
+  { name: 'NBA', href: '/nba-2026', label: 'Básquet en tiempo real', description: 'Partidos de hoy, calendario, resultados y posiciones.', className: 'nba' },
+  { name: 'Fórmula 1', href: '/formula-1-2026', label: 'Cada vuelta cuenta', description: 'Próxima carrera, horarios, pilotos y campeonato 2026.', className: 'f1' },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'CollectionPage',
+      name: 'Deportes — Mundial 2026, NBA, Fórmula 1 y calculadoras',
+      description,
+      url: `${site}/deportes`,
+      mainEntity: {
+        '@type': 'ItemList',
+        itemListElement: promoted.map((item, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          name: item.name,
+          url: `${site}${item.href}`,
+        })),
+      },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${site}/` },
+        { '@type': 'ListItem', position: 2, name: 'Deportes', item: `${site}/deportes` },
+      ],
+    },
+  ],
+};
+
+const trimDescription = (text = '') => text.replace(/^[^\p{L}\p{N}]+/u, '').replace(/\s+/g, ' ').trim();
+---
+
+<Layout
+  title={title}
+  description={description}
+  canonical="/deportes"
+  image="/og/deportes.png"
+  audience="AR"
+  domain="life"
+  pageType="hub"
+  schema={schema}
+  noAds={true}
+>
+  <Header slot="header" />
+
+  <main class="sports-hub">
+    <section class="sports-hero">
+      <div class="hero-shell">
+        <nav class="breadcrumbs" aria-label="Ruta de navegación">
+          <a href="/">Inicio</a><span aria-hidden="true">/</span><span>Deportes</span>
+        </nav>
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <span class="hero-kicker"><i></i> Mundial · NBA · F1</span>
+            <h1>El deporte,<br/><em>explicado con datos.</em></h1>
+            <p>Seguí los grandes eventos y hacé tus propias cuentas. Resultados, posiciones, calendarios y calculadoras en un solo lugar.</p>
+            <div class="hero-actions">
+              <a class="hero-primary" href="#imperdibles">Ver lo imperdible <span>↓</span></a>
+              <a class="hero-secondary" href="#calculadoras">Ir a calculadoras</a>
+            </div>
+          </div>
+          <div class="score-wall" aria-label="Tres grandes coberturas">
+            <a href="/mundial-2026" class="score score-world"><small>MUNDIAL</small><strong>2026</strong><span>Fixture y resultados →</span></a>
+            <a href="/nba-2026" class="score score-nba"><small>NBA</small><strong>HOY</strong><span>Partidos y posiciones →</span></a>
+            <a href="/formula-1-2026" class="score score-f1"><small>FÓRMULA 1</small><strong>F1</strong><span>Calendario y pilotos →</span></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <nav class="sports-nav" aria-label="Secciones de deportes">
+      <div>
+        <a href="#imperdibles">Grandes eventos</a>
+        <a href="#calculadoras">Calculadoras</a>
+        <a href="/categoria/deportes">Todas las herramientas</a>
+        <a href="/guia/deportes-fitness">Guía de deportes</a>
+      </div>
+    </nav>
+
+    <section class="promoted" id="imperdibles">
+      <div class="section-head">
+        <div><span class="kicker">Ahora en Hacé Cuentas</span><h2>Los tres grandes, bien arriba</h2></div>
+        <p>Entrá directo a la cobertura que buscás. Cada página reúne la información clave sin obligarte a saltar entre diez sitios.</p>
+      </div>
+
+      <div class="cover-grid">
+        <a class="cover world" href="/mundial-2026">
+          <img src="/blog-img/mundial-2026-lo-que-tenes-que-saber-hoy-portrait.jpg" alt="" loading="eager" decoding="async" />
+          <span class="shade"></span>
+          <span class="cover-top"><b>01</b><i>EN VIVO</i></span>
+          <span class="cover-copy"><small>EL TORNEO MÁS GRANDE</small><strong>Mundial<br/>2026</strong><em>Fixture · Posiciones · Llave · Goleadores</em><b class="cover-cta">Entrar al Mundial <span>↗</span></b></span>
+        </a>
+
+        <a class="cover nba" href="/nba-2026">
+          <img src="/nba-2026/hero-arena-v3.jpg" alt="" loading="lazy" decoding="async" />
+          <span class="shade"></span>
+          <span class="cover-top"><b>02</b><i>ACTUALIZADO</i></span>
+          <span class="cover-copy"><small>BÁSQUET EN TIEMPO REAL</small><strong>NBA<br/>hoy</strong><em>Partidos · Resultados · Posiciones</em><b class="cover-cta">Seguir la NBA <span>↗</span></b></span>
+        </a>
+
+        <a class="cover f1" href="/formula-1-2026">
+          <span class="speed-lines" aria-hidden="true"></span>
+          <img src="/f1-2026/sprint-cars.png" alt="" loading="lazy" decoding="async" />
+          <span class="cover-top"><b>03</b><i>TEMPORADA 2026</i></span>
+          <span class="cover-copy"><small>CADA VUELTA CUENTA</small><strong>Fórmula<br/>1</strong><em>Carreras · Horarios · Pilotos · Campeonato</em><b class="cover-cta">Entrar a boxes <span>↗</span></b></span>
+        </a>
+      </div>
+    </section>
+
+    <section class="calculators" id="calculadoras">
+      <div class="calculator-shell">
+        <div class="section-head inverse">
+          <div><span class="kicker">Después del resultado, viene la cuenta</span><h2>Calculadoras para vivir el deporte</h2></div>
+          <p>De la probabilidad de un penal al ritmo de tu próximo 10K. Elegí una herramienta y obtené una respuesta clara.</p>
+        </div>
+
+        {groups.map((group) => (
+          <section class="calc-group" id={group.id}>
+            <header><div><span>{group.eyebrow}</span><h3>{group.title}</h3></div><p>{group.description}</p></header>
+            <div class="calc-grid">
+              {group.calcs.map((calc: any, index: number) => (
+                <a class="calc-card" href={`/${calc.slug}`}>
+                  <span class="calc-number">{String(index + 1).padStart(2, '0')}</span>
+                  <span class="calc-icon" aria-hidden="true">{calc.icon || '🧮'}</span>
+                  <strong>{calc.h1}</strong>
+                  <p>{trimDescription(calc.description)}</p>
+                  <span class="calc-cta">Calcular ahora <b>→</b></span>
+                </a>
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <div class="all-tools">
+          <div><span>+ herramientas</span><h3>Running, fútbol, ciclismo, fuerza y mucho más</h3><p>Explorá la colección completa de calculadoras deportivas, ordenadas por disciplina.</p></div>
+          <a href="/categoria/deportes">Ver todas las calculadoras <span>→</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="sports-method">
+      <div>
+        <span class="kicker">Datos que se pueden seguir</span>
+        <h2>Una portada deportiva hecha para volver</h2>
+      </div>
+      <div class="method-grid">
+        <article><b>01</b><h3>Información útil</h3><p>Calendarios, resultados y tablas priorizados para llegar rápido a lo que querés saber.</p></article>
+        <article><b>02</b><h3>Cuentas transparentes</h3><p>Las calculadoras explican la fórmula, los supuestos y las fuentes detrás de cada resultado.</p></article>
+        <article><b>03</b><h3>Un ecosistema conectado</h3><p>Cada cobertura enlaza sus herramientas y las demás competencias, sin callejones sin salida.</p></article>
+      </div>
+      <a class="guide-link" href="/guia/deportes-fitness"><span>Guía completa de deportes y fitness</span><b>Entrenar y entender mejor →</b></a>
+    </section>
+  </main>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style is:global>
+  body[data-page-type='hub'] > main#main { width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; overflow-x: clip; }
+</style>
+
+<style>
+  .sports-hub{--night:#07131f;--paper:#f5f2ea;--ink:#0a1520;--lime:#c8ff3d;--orange:#ff7417;--red:#e10600;background:var(--paper);color:var(--ink);font-family:'Inter Variable',Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+  .sports-hub a{text-decoration:none}.hero-shell,.promoted,.calculator-shell,.sports-method{width:min(1240px,calc(100% - 40px));margin-inline:auto}
+  .sports-hero{background:var(--night);color:#fff;overflow:hidden;position:relative}.sports-hero:before{background:radial-gradient(circle at 76% 24%,rgba(200,255,61,.13),transparent 26%),linear-gradient(115deg,transparent 50%,rgba(255,255,255,.035) 50% 51%,transparent 51%);content:"";inset:0;position:absolute}.hero-shell{padding:34px 0 76px;position:relative}.breadcrumbs{align-items:center;color:#8fa2b3;display:flex;font-size:12px;gap:9px;margin-bottom:58px}.breadcrumbs a{color:#d6e1e8}.hero-grid{align-items:center;display:grid;gap:70px;grid-template-columns:1.08fr .92fr}.hero-kicker{align-items:center;color:var(--lime);display:flex;font-size:12px;font-weight:800;gap:10px;letter-spacing:.16em;margin-bottom:22px;text-transform:uppercase}.hero-kicker i{background:var(--lime);border-radius:99px;box-shadow:0 0 0 5px rgba(200,255,61,.12);height:7px;width:7px}.hero-copy h1{color:#fff;font-size:clamp(48px,6.2vw,86px);font-weight:850;letter-spacing:-.065em;line-height:.94;margin:0;max-width:800px}.hero-copy h1 em{color:var(--lime);font-style:normal}.hero-copy>p{color:#b8c5ce;font-size:18px;line-height:1.65;margin:28px 0 34px;max-width:630px}.hero-actions{align-items:center;display:flex;flex-wrap:wrap;gap:20px}.hero-primary{align-items:center;background:var(--lime);border-radius:3px;color:#06111b;display:inline-flex;font-size:13px;font-weight:850;gap:24px;letter-spacing:.04em;padding:15px 18px;text-transform:uppercase}.hero-primary span{font-size:18px}.hero-secondary{border-bottom:1px solid #5f707d;color:#fff;font-size:13px;font-weight:750;padding:10px 0}.score-wall{display:grid;gap:12px;grid-template-columns:1fr 1fr;transform:rotate(-2deg)}.score{border:1px solid rgba(255,255,255,.12);color:#fff;display:flex;flex-direction:column;justify-content:flex-end;min-height:160px;padding:22px;position:relative;transition:transform .2s ease,border-color .2s ease}.score:hover{border-color:var(--lime);transform:translateY(-4px)}.score:first-child{grid-column:1/-1;min-height:174px}.score small{font-size:10px;font-weight:850;letter-spacing:.18em}.score strong{font-size:48px;letter-spacing:-.055em;line-height:1;margin:8px 0}.score span{color:#c4d0d8;font-size:12px}.score-world{background:linear-gradient(120deg,#173a29,#0b2118)}.score-nba{background:linear-gradient(135deg,#073563,#0c1c32)}.score-f1{background:linear-gradient(135deg,#450d0b,#170b0b)}
+  .sports-nav{background:#fff;border-bottom:1px solid #deddd7;position:relative;z-index:3}.sports-nav>div{display:flex;gap:28px;margin:auto;overflow-x:auto;padding:0 20px;scrollbar-width:none;width:min(1240px,100%)}.sports-nav a{border-bottom:2px solid transparent;color:#57616a;flex:0 0 auto;font-size:12px;font-weight:750;padding:18px 0}.sports-nav a:hover{border-color:var(--orange);color:var(--ink)}
+  .promoted{padding:88px 0 96px}.section-head{align-items:end;display:grid;gap:70px;grid-template-columns:1fr .7fr;margin-bottom:34px}.kicker{color:#66717a;display:block;font-size:11px;font-weight:850;letter-spacing:.16em;margin-bottom:12px;text-transform:uppercase}.section-head h2,.sports-method h2{font-size:clamp(34px,4vw,56px);letter-spacing:-.05em;line-height:1.02;margin:0}.section-head>p{color:#616a72;font-size:15px;line-height:1.65;margin:0}.cover-grid{display:grid;gap:16px;grid-template-columns:1.25fr .75fr;grid-template-rows:repeat(2,330px)}.cover{color:#fff;display:block;overflow:hidden;position:relative}.cover.world{grid-row:1/3}.cover>img{height:100%;inset:0;object-fit:cover;position:absolute;transition:transform .55s ease;width:100%}.cover:hover>img{transform:scale(1.035)}.cover .shade{background:linear-gradient(180deg,rgba(3,9,14,.08),rgba(3,9,14,.88));inset:0;position:absolute}.cover-top{align-items:center;display:flex;justify-content:space-between;left:24px;position:absolute;right:24px;top:22px}.cover-top>b{font-size:12px}.cover-top>i{background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.36);border-radius:99px;font-size:9px;font-style:normal;font-weight:850;letter-spacing:.12em;padding:7px 9px}.cover-copy{bottom:28px;display:flex;flex-direction:column;left:28px;position:absolute;right:28px}.cover-copy>small{color:var(--lime);font-size:10px;font-weight:900;letter-spacing:.15em;margin-bottom:9px}.cover-copy>strong{font-size:clamp(38px,5vw,68px);letter-spacing:-.055em;line-height:.82}.cover:not(.world) .cover-copy>strong{font-size:44px}.cover-copy>em{color:#dbe2e5;font-size:12px;font-style:normal;margin-top:15px}.cover-cta{align-items:center;border-top:1px solid rgba(255,255,255,.25);display:flex;font-size:12px;justify-content:space-between;margin-top:20px;padding-top:14px}.cover.nba{background:#0b3c6d}.cover.nba>img{filter:saturate(.8) contrast(1.1)}.cover.f1{background:linear-gradient(120deg,#210807,#750b08)}.cover.f1>img{height:auto;left:auto;object-fit:contain;right:-30px;top:52px;width:62%;z-index:1}.cover.f1 .cover-copy,.cover.f1 .cover-top{z-index:2}.speed-lines{background:repeating-linear-gradient(-14deg,transparent 0 16px,rgba(255,70,25,.18) 17px 19px);inset:0;position:absolute}
+  .calculators{background:var(--night);color:#fff;padding:92px 0}.section-head.inverse h2{color:#fff}.section-head.inverse .kicker{color:var(--lime)}.section-head.inverse>p{color:#9badba}.calc-group{border-top:1px solid #243441;margin-top:54px;padding-top:32px}.calc-group>header{align-items:start;display:grid;gap:60px;grid-template-columns:1fr .8fr;margin-bottom:24px}.calc-group>header span{color:var(--orange);font-size:10px;font-weight:850;letter-spacing:.13em;text-transform:uppercase}.calc-group>header h3{color:#fff;font-size:27px;letter-spacing:-.035em;margin:8px 0 0}.calc-group>header p{color:#93a5b2;font-size:13px;line-height:1.6;margin:0}.calc-grid{display:grid;gap:1px;grid-template-columns:repeat(5,1fr)}.calc-card{background:#0d1d2a;color:#fff;display:flex;flex-direction:column;min-height:310px;padding:22px;position:relative;transition:background .2s ease,transform .2s ease}.calc-card:hover{background:#142936;transform:translateY(-4px);z-index:1}.calc-number{color:#6e818f;font-size:10px;font-weight:800;position:absolute;right:18px;top:18px}.calc-icon{font-size:25px;margin:14px 0 28px}.calc-card strong{font-size:16px;letter-spacing:-.02em;line-height:1.25}.calc-card p{color:#91a4b2;display:-webkit-box;font-size:12px;line-height:1.55;margin:12px 0 22px;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:4}.calc-cta{color:var(--lime);font-size:11px;font-weight:800;margin-top:auto}.calc-cta b{font-size:15px;margin-left:5px}.all-tools{align-items:center;background:var(--lime);color:#07131f;display:flex;gap:40px;justify-content:space-between;margin-top:54px;padding:34px}.all-tools>div>span{font-size:10px;font-weight:900;letter-spacing:.15em;text-transform:uppercase}.all-tools h3{font-size:25px;letter-spacing:-.035em;margin:8px 0}.all-tools p{font-size:13px;margin:0;opacity:.72}.all-tools>a{align-items:center;border:2px solid #07131f;color:#07131f;display:flex;flex:0 0 auto;font-size:12px;font-weight:850;gap:32px;padding:14px 16px;text-transform:uppercase}
+  .sports-method{padding:90px 0 100px}.sports-method>div:first-child{max-width:680px}.method-grid{border-bottom:1px solid #cfd0ca;border-top:1px solid #cfd0ca;display:grid;grid-template-columns:repeat(3,1fr);margin-top:42px}.method-grid article{padding:34px 34px 38px 0}.method-grid article+article{border-left:1px solid #cfd0ca;padding-left:34px}.method-grid b{color:var(--orange);font-size:11px}.method-grid h3{font-size:20px;letter-spacing:-.03em;margin:34px 0 10px}.method-grid p{color:#626c73;font-size:13px;line-height:1.65;margin:0}.guide-link{align-items:center;background:#fff;color:var(--ink);display:flex;justify-content:space-between;margin-top:34px;padding:24px 28px}.guide-link span{font-size:14px;font-weight:800}.guide-link b{color:#e65300;font-size:12px}
+  @media(max-width:900px){.hero-grid,.section-head,.calc-group>header{gap:34px;grid-template-columns:1fr}.score-wall{margin-top:15px;transform:none}.cover-grid{grid-template-columns:1fr 1fr;grid-template-rows:420px 330px}.cover.world{grid-column:1/-1;grid-row:auto}.calc-grid{grid-template-columns:repeat(2,1fr)}.method-grid{grid-template-columns:1fr}.method-grid article+article{border-left:0;border-top:1px solid #cfd0ca;padding-left:0}.all-tools{align-items:flex-start;flex-direction:column}}
+  @media(max-width:600px){.hero-shell,.promoted,.calculator-shell,.sports-method{width:min(100% - 28px,1240px)}.hero-shell{padding-bottom:54px}.breadcrumbs{margin-bottom:40px}.hero-copy h1{font-size:48px}.hero-copy>p{font-size:16px}.score-wall{grid-template-columns:1fr}.score:first-child{grid-column:auto}.score{min-height:132px!important}.score strong{font-size:38px}.sports-nav>div{padding-inline:14px}.promoted{padding:64px 0}.cover-grid{display:flex;flex-direction:column}.cover{height:430px}.cover:not(.world){height:330px}.cover.f1>img{right:-38px;width:78%}.calculators{padding:68px 0}.calc-grid{grid-template-columns:1fr}.calc-card{min-height:245px}.all-tools{padding:26px}.all-tools>a{justify-content:space-between;width:100%}.method-grid article{padding:28px 0}.guide-link{align-items:flex-start;flex-direction:column;gap:10px;padding:22px}}
+  @media(prefers-reduced-motion:reduce){.cover>img,.score,.calc-card{transition:none!important}}
+</style>
