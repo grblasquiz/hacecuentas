@@ -1,9 +1,12 @@
 name: Check stale data
 
-# Corre todos los días ~10:38 UTC (después de update-data-daily que arranca
-# ~09:23-09:53 UTC + jitter). Detecta calcs cuyos datos están vencidos según
-# `dataUpdate.frequency` + `lastUpdated`. Si hay más de THRESHOLD vencidos,
-# abre una issue automática (y opcionalmente pinguea Slack).
+# Corre todos los días ~10:38 UTC. Detecta calcs cuyos datos están vencidos según
+# `dataUpdate.frequency` + `lastUpdated`, leyendo el índice de frescura publicado
+# en PROD (https://hacecuentas.com/api/freshness.json) — NO el checkout de origin,
+# que está forkeado (~1300 commits) con el catálogo viejo/incompleto. Así la
+# detección refleja el deploy local más reciente (la fuente de verdad real) sin
+# depender de la máquina de Martin. Si hay más de THRESHOLD vencidos, abre/actualiza
+# una issue automática (y opcionalmente pinguea Slack).
 
 on:
   schedule:
@@ -34,16 +37,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
 
-      - name: Install deps
-        run: npm ci
-
+      # Sin `npm ci`: el validador sólo usa builtins de Node (fs/path/fetch) y lee
+      # el catálogo de PROD vía --from-url, no del filesystem del checkout. Evita
+      # depender de que las deps de origin (viejo) instalen bien.
       - name: Run check-stale-data
         id: check
         run: |
           set +e
           node --experimental-strip-types scripts/check-stale-data.ts \
+            --from-url=https://hacecuentas.com/api/freshness.json \
             --threshold=$THRESHOLD \
             --out=/tmp/stale.md | tee /tmp/stale.log
           EXIT=$?
