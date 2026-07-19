@@ -16,16 +16,89 @@ const dateKey = (value: string | Date) => new Intl.DateTimeFormat('en-CA', { tim
 const scheduleGames = games.filter((game: any) => dateKey(game.date) === dateKey(new Date()));
 const standings = (data.standings || []).filter((team: any) => team.conference === 'West' || team.conference === 'Western Conference').sort((a: any, b: any) => Number(a.rank) - Number(b.rank)).slice(0, 8);
 const leaders = data.leaders || [];
+// ── SEO ──────────────────────────────────────────────────────────────────────
+const PAGE_URL = 'https://hacecuentas.com/nba-2026';
 const title = 'NBA hoy: partidos, resultados, posiciones y calendario | Hacé Cuentas';
-const description = 'Partidos NBA de hoy, resultados en vivo, calendario y posiciones. Datos actualizados automáticamente al terminar cada partido.';
-const schema = { '@context':'https://schema.org', '@graph': [{ '@type':'SportsEvent', name:'NBA 2025-26', sport:'Basketball', url:'https://hacecuentas.com/nba-2026' }, { '@type':'Dataset', name:'NBA: resultados, calendario y posiciones', isBasedOn:'https://www.espn.com/nba/', dateModified:data.fetchedAt, url:'https://hacecuentas.com/nba-2026' }] };
+const description = 'Partidos de la NBA de hoy, resultados en vivo, calendario y tabla de posiciones (Conferencia Este y Oeste), con los líderes de la temporada y horarios en tu hora local. Se actualiza automáticamente al terminar cada partido.';
+const ogTitle = 'NBA hoy: partidos en vivo, resultados y posiciones';
+const keywords = ['nba hoy','partidos nba hoy','resultados nba','posiciones nba','tabla nba','calendario nba','nba 2026','nba en vivo','conferencia oeste nba','líderes nba'];
+const newsKeywords = ['NBA','partidos NBA','resultados NBA','posiciones NBA','NBA hoy'];
+const leadersLabel = leaders.length ? leaders.map((l: any) => `${l.name} en ${l.label} (${l.value})`).join(', ') : '';
+
+const faqs = [
+  {
+    q: '¿Qué partidos de la NBA hay hoy?',
+    a: 'Arriba, en "Calendario de hoy", ves todos los partidos del día con su horario en hora argentina y su estado (programado, en vivo o final). Se actualiza solo cada 60 segundos. En pretemporada o durante el verano puede no haber partidos de temporada regular; en ese caso mostramos la Summer League y los últimos resultados.',
+  },
+  {
+    q: '¿A qué hora se juegan los partidos de la NBA en Argentina y Latinoamérica?',
+    a: 'Los horarios se muestran en hora de Argentina (GMT-3). Como la mayoría de los partidos se juegan de noche en Estados Unidos, en Sudamérica suelen caer entre la noche y la madrugada. Fijate el horario exacto de cada cruce en el calendario y la lista de próximos partidos.',
+  },
+  {
+    q: '¿Cómo funcionan las posiciones y las conferencias en la NBA?',
+    a: 'La NBA tiene 30 equipos divididos en dos conferencias de 15: Este (East) y Oeste (West). Cada equipo juega 82 partidos en la temporada regular. Los 6 mejores de cada conferencia clasifican directo a playoffs; los que terminan del 7.º al 10.º disputan el play-in por los dos lugares restantes. Arriba mostramos la tabla del Oeste; con "Tabla completa" ves las dos conferencias.',
+  },
+  {
+    q: '¿Qué jugadores lideran la temporada de la NBA?',
+    a: leadersLabel
+      ? `Según las estadísticas más recientes, los líderes de la temporada son ${leadersLabel}. El módulo "Líderes de la temporada" se actualiza junto con el resto de los datos.`
+      : 'En el módulo "Líderes de la temporada" mostramos a los jugadores que encabezan puntos, rebotes y asistencias, actualizados con las estadísticas más recientes.',
+  },
+  {
+    q: '¿Cuándo empieza la temporada 2026-27 de la NBA?',
+    a: 'La temporada regular de la NBA suele arrancar a mediados de octubre y terminar en abril; después vienen el play-in, los playoffs y las Finales en junio. Durante el verano boreal (julio) se juega la Summer League en Las Vegas, donde debutan rookies y jóvenes promesas.',
+  },
+  {
+    q: '¿Qué es la Summer League de la NBA?',
+    a: 'La Summer League es un torneo de pretemporada que se juega en julio, sobre todo en Las Vegas. Ahí los equipos prueban a los novatos elegidos en el draft y a jugadores jóvenes. No cuenta para la temporada regular, pero es la primera vista oficial de las promesas del año.',
+  },
+  {
+    q: '¿De dónde salen los datos y cada cuánto se actualizan?',
+    a: 'Los partidos, las posiciones y los líderes vienen de ESPN. El marcador en vivo se refresca cada 60 segundos mientras hay partidos; la tabla de posiciones y las estadísticas se actualizan al cierre de cada jornada. La página siempre muestra el último estado disponible sin que tengas que recargar.',
+  },
+];
+
+const breadcrumb = {
+  '@type':'BreadcrumbList',
+  itemListElement: [
+    { '@type':'ListItem', position:1, name:'Inicio', item:'https://hacecuentas.com/' },
+    { '@type':'ListItem', position:2, name:'Deportes', item:'https://hacecuentas.com/deportes' },
+    { '@type':'ListItem', position:3, name:'NBA 2026', item:PAGE_URL },
+  ],
+};
+const sportsEvent = {
+  '@type':'SportsEvent',
+  name:'Temporada de la NBA 2025-26',
+  sport:'Basketball',
+  description:'Partidos, resultados, calendario y posiciones de la NBA (National Basketball Association), con las conferencias Este y Oeste y los líderes estadísticos de la temporada.',
+  eventStatus:'https://schema.org/EventScheduled',
+  organizer:{ '@type':'Organization', name:'NBA', url:'https://www.nba.com' },
+  location:{ '@type':'Place', name:'Estados Unidos y Canadá', address:{ '@type':'PostalAddress', addressCountry:'US' } },
+  url:PAGE_URL,
+};
+const dataset = {
+  '@type':'Dataset',
+  name:'NBA: resultados, calendario y posiciones',
+  description:'Resultados en vivo, calendario, tabla de posiciones (Este y Oeste) y líderes de la temporada de la NBA, actualizados automáticamente.',
+  license:'https://creativecommons.org/licenses/by/4.0/',
+  creator:{ '@type':'Organization', name:'Hacé Cuentas', url:'https://hacecuentas.com' },
+  isBasedOn:'https://www.espn.com/nba/',
+  dateModified:data.fetchedAt,
+  url:PAGE_URL,
+};
+const faqSchema = {
+  '@type':'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type':'Question', name:f.q, acceptedAnswer:{ '@type':'Answer', text:f.a } })),
+};
+const schema = { '@context':'https://schema.org', '@graph':[breadcrumb, sportsEvent, dataset, faqSchema] };
 ---
-<Layout title={title} description={description} canonical="/nba-2026" audience="AR" domain="life" pageType="data" schema={schema} noAds={true}>
+<Layout title={title} description={description} canonical="/nba-2026" audience="AR" domain="life" pageType="data" schema={schema} keywords={keywords} newsKeywords={newsKeywords} ogTitle={ogTitle} noAds={true}>
   <Header slot="header" />
   <main class="nba" data-nba data-api="https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard" data-summer-api="https://site.api.espn.com/apis/site/v2/sports/basketball/nba-summer-las-vegas/scoreboard" data-standings-api="https://site.api.espn.com/apis/v2/sports/basketball/nba/standings?region=us&amp;lang=en&amp;contentorigin=espn&amp;season=2026">
+    <nav class="nba-crumbs" aria-label="Ruta de navegación"><a href="/">Inicio</a><span>/</span><a href="/deportes">Deportes</a><span>/</span><strong>NBA</strong></nav>
     <nav class="nba-nav" aria-label="Navegación NBA">
       <a class="brand" href="/nba-2026" aria-label="NBA Hoy, inicio"><svg aria-hidden="true" viewBox="0 0 36 36"><circle cx="18" cy="18" r="17" fill="currentColor"/><path d="M2 18h32M18 1c-7 7-7 27 0 34M18 1c7 7 7 27 0 34M5 8c8 3 18 3 26 0M5 28c8-3 18-3 26 0" fill="none" stroke="#07111d" stroke-width="1.8"/></svg> NBA HOY</a>
-      <div class="nav-links"><a class="active" href="#partidos">Partidos</a><a href="#calendario">Calendario</a><a href="#posiciones">Posiciones</a><a href="https://www.espn.com/nba/teams" target="_blank" rel="noopener">Equipos</a><a href="#noticias">Noticias</a></div>
+      <div class="nav-links"><a class="active" href="#partidos">Partidos</a><a href="#calendario">Calendario</a><a href="#posiciones">Posiciones</a><a href="#noticias">Noticias</a><a href="/deportes">Deportes</a></div>
       <div class="nav-actions"><a class="nba-search" href="https://www.nba.com/search" target="_blank" rel="noopener" aria-label="Buscar en NBA"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg></a><a class="follow" href="#seguir-nba"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span>Seguir NBA</span></a></div>
     </nav>
 
@@ -53,6 +126,20 @@ const schema = { '@context':'https://schema.org', '@graph': [{ '@type':'SportsEv
     <section class="section data-grid" id="posiciones"><article class="standings"><header><h2>Conferencia Oeste</h2><a href="https://www.espn.com/nba/standings" target="_blank" rel="noopener">Tabla completa ›</a></header><div class="table-head"><span>#</span><span>Equipo</span><span>P</span><span>G</span><span>PCT</span></div><div data-standings>{standings.length ? standings.map((team:any, i:number) => <a href={`https://www.espn.com/nba/team/_/name/${team.abbr?.toLowerCase()}`} target="_blank" rel="noopener" class="standing"><b>{team.rank || i + 1}</b><span><img src={team.logo} alt=""/>{team.team}</span><em>{Number(team.wins) + Number(team.losses)}</em><em>{team.wins}</em><em>{team.pct}</em></a>) : <p class="muted">La tabla se carga al iniciar la temporada.</p>}</div></article><article class="leaders"><header><h2>Líderes de la temporada</h2><a href="https://www.espn.com/nba/stats" target="_blank" rel="noopener">Estadísticas ›</a></header>{leaders.length ? <div class="leader-list">{leaders.map((leader:any) => <a class="leader-row" href="https://www.espn.com/nba/stats" target="_blank" rel="noopener"><img src={leader.headshot} alt={leader.fullName}/><span><small>{leader.label}</small><strong>{leader.value}</strong></span><b>{leader.name}<em>{leader.team}</em></b><i>›</i></a>)}</div> : <div class="leaders-empty"><span>★</span><h3>Las figuras del día aparecerán acá</h3><p>Este módulo se actualiza junto con el scoreboard cuando hay partidos en curso.</p></div>}</article></section>
 
     <section class="section schedule" id="calendario"><header><div><h2>Calendario de hoy</h2><p data-date-label>{fmtDay(new Date().toISOString())}</p></div><a href="https://www.espn.com/nba-summer-league/schedule" target="_blank" rel="noopener">Ver calendario completo <b>›</b></a></header><div class="schedule-list" data-schedule>{scheduleGames.length ? scheduleGames.map((game:any) => <a href={game.href} target="_blank" rel="noopener" class="schedule-row"><span class:list={{playing:game.state === 'in'}}>{game.state === 'in' ? 'EN VIVO' : game.state === 'post' ? 'FINAL' : fmtTime(game.date)}<small>{game.league || 'NBA'} · {game.state === 'pre' ? 'Programado' : game.state === 'in' ? game.clock : game.detail}</small></span><b><img src={game.away.logo} alt=""/>{game.away.name}</b><strong>{game.state === 'pre' ? <i>vs</i> : <>{game.away.score ?? '—'} <i>—</i> {game.home.score ?? '—'}</>}</strong><b><img src={game.home.logo} alt=""/>{game.home.name}</b><em>{game.state === 'pre' ? 'Ver previa' : 'Ver detalles'} ›</em></a>) : <div class="empty-schedule"><strong>No hay partidos programados para hoy.</strong><span>La agenda se actualiza automáticamente cuando ESPN publica nuevos cruces.</span></div>}</div></section>
+    <section class="nba-network" aria-labelledby="nba-network-title"><header><div><span>SEGUÍ HACIENDO CUENTAS</span><h2 id="nba-network-title">Más deporte, sin salir de Hacé Cuentas</h2></div><p>Saltá a otra cobertura o usá una calculadora para llevar los números a tu propio entrenamiento.</p></header><div><a class="featured" href="/deportes"><small>PORTADA</small><strong>Mundial, NBA y F1</strong><span>Ver todos los deportes →</span></a><a href="/formula-1-2026"><small>FÓRMULA 1</small><strong>Próximo GP y campeonato</strong><span>Seguir la temporada →</span></a><a href="/mundial-2026"><small>MUNDIAL 2026</small><strong>Fixture, llave y resultados</strong><span>Entrar al Mundial →</span></a><a href="/calculadora-calorias-quemadas-deporte"><small>CALCULADORA</small><strong>Calorías por actividad deportiva</strong><span>Hacer la cuenta →</span></a></div></section>
+    <section class="nba-seo" aria-label="NBA: resumen y preguntas frecuentes">
+      <p class="nba-answer">Acá seguís la <strong>NBA</strong> al día: los <strong>partidos de hoy</strong> con horario en tu país, los <strong>resultados en vivo</strong>, la <strong>tabla de posiciones</strong> del Este y el Oeste, el <strong>calendario</strong> y los <strong>líderes de la temporada</strong>. Todo se actualiza solo al terminar cada partido, sin que tengas que recargar.</p>
+      <section class="nba-faq" aria-labelledby="nba-faq-title">
+        <h2 id="nba-faq-title">Preguntas frecuentes sobre la NBA</h2>
+        {faqs.map((f) => (
+          <details class="nba-faq-item">
+            <summary>{f.q}</summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </section>
+    </section>
+
     <section class="follow-banner" id="seguir-nba"><div><span>◒</span><h2>Seguí la NBA sin perderte nada</h2><p>Guardá esta página: el fixture, resultados y tabla se refrescan en cada jornada.</p></div><a class="orange-button" href="/nba-2026">Actualizar ahora</a></section>
     <p class="source">Fuente de partidos, posiciones y líderes: ESPN. Última sincronización: <time datetime={data.fetchedAt}>{new Date(data.fetchedAt).toLocaleString('es-AR', { timeZone: AR })}</time>. Resultados consultados cada 60 segundos. Foto de hero: <a href="https://unsplash.com/photos/ayQEv3R6sPE" target="_blank" rel="noopener">Taylor Smith / Unsplash</a>.</p>
   </main>
@@ -92,7 +179,19 @@ const schema = { '@context':'https://schema.org', '@graph': [{ '@type':'SportsEv
 .section{margin-top:34px}.section>header{align-items:center;display:flex;justify-content:space-between;margin-bottom:15px}.section>header>a{margin:0}.story-grid{display:grid;gap:16px;grid-template-columns:repeat(4,1fr)}.story{background-image:linear-gradient(0deg,#07111d 3%,rgba(7,17,29,.05) 72%),url('/nba-2026/editorial-triptych.png');background-size:300% auto;border:1px solid var(--line);border-radius:8px;display:flex;flex-direction:column;height:310px;justify-content:flex-end;overflow:hidden;padding:18px;text-decoration:none}.s1{background-position:0 center}.s2{background-position:50% center}.s3{background-position:100% center}.s4{background-image:linear-gradient(0deg,#07111d 4%,rgba(7,17,29,.02) 72%),url('/nba-2026/hero-arena-v3.jpg');background-position:center 53%;background-size:cover}.story span{align-self:flex-start;background:#18293a;border-radius:3px;color:#ff8a53;font-size:10px;font-weight:900;margin-bottom:10px;padding:3px 5px}.s2 span{color:#55a4ff}.s3 span{color:#dc73f8}.s4 span{color:#42d887}.story strong{color:#fff;font-size:17px;line-height:1.22}.story small{color:#b5c0cf;margin-top:12px}
 .data-grid{display:grid;gap:18px;grid-template-columns:1fr 1fr}.standings header,.leaders header{align-items:center;display:flex;justify-content:space-between;margin-bottom:20px}.standings header a,.leaders header a{color:var(--blue)!important;font-size:12px;text-decoration:none}.table-head,.standing{align-items:center;border-bottom:1px solid #29394c;display:grid;grid-template-columns:32px 1fr 34px 34px 46px;min-height:40px}.table-head{color:var(--muted);font-size:11px;text-transform:uppercase}.standing{text-decoration:none}.standing>b{font-size:13px}.standing span{align-items:center;display:flex;font-size:14px;font-weight:700;gap:9px}.standing em{font-size:13px;font-style:normal;text-align:right}.leader-list{display:grid;gap:8px}.leader-row{align-items:center;background:#0c1827;border:1px solid #29394c;border-radius:8px;display:grid;grid-template-columns:112px 70px 1fr 16px;min-height:90px;overflow:hidden;padding:0 15px 0 0;text-decoration:none}.leader-row>img{align-self:end;height:88px;object-fit:contain;width:112px}.leader-row>span{display:flex;flex-direction:column}.leader-row small{color:var(--orange);font-size:11px;font-weight:800}.leader-row strong{font-size:30px;line-height:1}.leader-row>b{font-size:16px}.leader-row b em{color:var(--muted);display:block;font-size:10px;font-style:normal;font-weight:500;margin-top:5px;text-transform:uppercase}.leader-row>i{font-size:26px;font-style:normal}.leaders-empty{align-items:center;border:1px dashed #3a506a;border-radius:8px;color:var(--muted);display:flex;flex-direction:column;justify-content:center;min-height:280px;padding:30px;text-align:center}.leaders-empty span{color:var(--orange);font-size:36px}.leaders-empty h3{color:var(--ink)!important;font-size:18px;margin:12px 0 0}.leaders-empty p{font-size:13px;line-height:1.5;margin:7px 0}
 .schedule{scroll-margin-top:18px}.schedule header>div p{color:var(--muted);font-size:14px;margin:5px 0 0;text-transform:capitalize}.schedule-list{border:1px solid var(--line);border-radius:9px;overflow:hidden}.schedule-row{align-items:center;border-bottom:1px solid var(--line);display:grid;gap:12px;grid-template-columns:100px 1fr 120px 1fr 100px;min-height:64px;padding:10px 16px;text-decoration:none}.schedule-row:last-child{border:0}.schedule-row>span{font-size:14px;font-weight:800}.schedule-row>span small{color:var(--muted);display:block;font-size:10px;font-weight:500;margin-top:3px}.schedule-row>span.playing{color:var(--orange)}.schedule-row>b{align-items:center;display:flex;font-size:14px;gap:8px}.schedule-row strong{text-align:center}.schedule-row strong i{color:var(--muted);font-style:normal;padding:0 6px}.schedule-row em{border:1px solid #42566e;border-radius:5px;color:var(--blue);font-size:12px;font-style:normal;padding:8px;text-align:center}.nba .empty-schedule{color:var(--muted);display:grid;gap:5px;padding:30px;text-align:center}.nba .empty-schedule strong{color:var(--ink)}
-.follow-banner{align-items:center;background:linear-gradient(100deg,#1b2e47,#0c1624);border:1px solid var(--line);border-radius:9px;display:flex;justify-content:space-between;margin-top:35px;padding:25px}.follow-banner>div{padding-left:44px;position:relative}.follow-banner span{color:var(--orange);font-size:32px;left:0;position:absolute;top:0}.follow-banner h2{color:var(--ink)!important;font-size:21px;margin:0}.follow-banner p{color:var(--muted);font-size:14px;margin:6px 0 0}.source{color:#8796a9!important;font-size:11px;margin:22px auto 0!important;text-align:center}.source time{font-variant-numeric:tabular-nums}
+.nba-crumbs{align-items:center;color:#728398;display:flex;font-size:11px;gap:8px;padding-top:14px}.nba-crumbs a{color:#a9b8c7!important;text-decoration:none}.nba-crumbs a:hover{color:var(--orange)!important}.nba-crumbs strong{color:#fff}
+.nba-network{border-top:1px solid var(--line);margin-top:42px;padding-top:30px}.nba-network>header{align-items:end;display:grid;gap:50px;grid-template-columns:1fr .7fr;margin-bottom:20px}.nba-network>header span{color:var(--orange);font-size:10px;font-weight:900;letter-spacing:.14em}.nba-network>header h2{color:var(--ink)!important;font-size:27px;letter-spacing:-.8px;margin:8px 0 0}.nba-network>header p{color:var(--muted);font-size:13px;line-height:1.55;margin:0}.nba-network>div{display:grid;gap:2px;grid-template-columns:1.2fr repeat(3,1fr)}.nba-network a{background:#101d2c;color:#fff;display:flex;flex-direction:column;min-height:165px;padding:22px;text-decoration:none;transition:background .18s,transform .18s}.nba-network a:hover{background:#172b40;transform:translateY(-3px)}.nba-network a.featured{background:var(--orange)}.nba-network a small{font-size:9px;font-weight:900;letter-spacing:.1em}.nba-network a strong{color:#fff;font-size:17px;line-height:1.25;margin:20px 0}.nba-network a span{color:#c5d1dc;font-size:11px;font-weight:750;margin-top:auto}.nba-network a.featured span{color:#fff}.follow-banner{align-items:center;background:linear-gradient(100deg,#1b2e47,#0c1624);border:1px solid var(--line);border-radius:9px;display:flex;justify-content:space-between;margin-top:35px;padding:25px}.follow-banner>div{padding-left:44px;position:relative}.follow-banner span{color:var(--orange);font-size:32px;left:0;position:absolute;top:0}.follow-banner h2{color:var(--ink)!important;font-size:21px;margin:0}.follow-banner p{color:var(--muted);font-size:14px;margin:6px 0 0}.source{color:#8796a9!important;font-size:11px;margin:22px auto 0!important;text-align:center}.source time{font-variant-numeric:tabular-nums}
 @media(max-width:900px){.nav-links{gap:16px}.nav-links a{font-size:12px}.story-grid{gap:12px}.story{height:280px;padding:14px}.story strong{font-size:15px}.leader-row{grid-template-columns:88px 60px 1fr 14px}.leader-row>img{width:88px}.leader-row strong{font-size:25px}}
-@media(max-width:760px){.nba{padding-bottom:45px}.nba>*{width:calc(100% - 28px)}.nba-nav{height:62px}.brand{font-size:20px}.brand svg{height:28px;width:28px}.nav-links{display:none}.nba-search{display:none}.follow{padding:9px 11px}.hero{background-position:95% center;background-size:auto 100%;min-height:250px;padding:34px 0}.hero h1{font-size:36px;letter-spacing:-1.5px;max-width:92%}.top-grid,.data-grid{grid-template-columns:1fr}.game-hero,.next-card{min-height:auto}.next-card{padding:20px}.story-grid{grid-auto-columns:minmax(230px,80vw);grid-auto-flow:column;grid-template-columns:none;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x mandatory}.story{height:300px;scroll-snap-align:start}.duel{grid-template-columns:1fr 75px 1fr}.team img{height:54px;width:54px}.team strong{font-size:12px}.team em{font-size:42px}.schedule-row{gap:7px;grid-template-columns:64px 1fr 65px;padding:10px}.schedule-row>b:nth-of-type(2),.schedule-row em{display:none}.schedule-row>b{font-size:12px}.schedule-row strong{font-size:13px}.follow-banner{align-items:flex-start;flex-direction:column;gap:16px}.follow-banner .orange-button{margin:0}.section>header{align-items:flex-start}.section>header>a{max-width:120px;text-align:right}.follow span{display:none}}
+@media(max-width:760px){.nba{padding-bottom:45px}.nba>*{width:calc(100% - 28px)}.nba-nav{height:62px}.brand{font-size:20px}.brand svg{height:28px;width:28px}.nav-links{display:none}.nba-search{display:none}.follow{padding:9px 11px}.hero{background-position:95% center;background-size:auto 100%;min-height:250px;padding:34px 0}.hero h1{font-size:36px;letter-spacing:-1.5px;max-width:92%}.top-grid,.data-grid{grid-template-columns:1fr}.game-hero,.next-card{min-height:auto}.next-card{padding:20px}.story-grid{grid-auto-columns:minmax(230px,80vw);grid-auto-flow:column;grid-template-columns:none;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x mandatory}.story{height:300px;scroll-snap-align:start}.duel{grid-template-columns:1fr 75px 1fr}.team img{height:54px;width:54px}.team strong{font-size:12px}.team em{font-size:42px}.schedule-row{gap:7px;grid-template-columns:64px 1fr 65px;padding:10px}.schedule-row>b:nth-of-type(2),.schedule-row em{display:none}.schedule-row>b{font-size:12px}.schedule-row strong{font-size:13px}.nba-network>header{align-items:start;gap:12px;grid-template-columns:1fr}.nba-network>div{grid-template-columns:1fr 1fr}.nba-network a.featured{grid-column:1/-1}.follow-banner{align-items:flex-start;flex-direction:column;gap:16px}.follow-banner .orange-button{margin:0}.section>header{align-items:flex-start}.section>header>a{max-width:120px;text-align:right}.follow span{display:none}}
+@media(max-width:480px){.nba-network>div{grid-template-columns:1fr}.nba-network a.featured{grid-column:auto}}
+.nba-seo{border-top:1px solid var(--line);margin-top:38px;padding-top:28px}
+.nba-answer{color:var(--muted);font-size:14px;line-height:1.7;margin:0 0 26px;max-width:75ch}
+.nba-answer strong{color:var(--ink)}
+.nba-faq h2{color:var(--ink)!important;font-size:22px;letter-spacing:-.6px;margin:0 0 12px}
+.nba-faq-item{border-bottom:1px solid var(--line)}
+.nba-faq-item summary{color:var(--ink);cursor:pointer;font-size:15px;font-weight:700;list-style:none;padding:15px 26px 15px 0;position:relative}
+.nba-faq-item summary::-webkit-details-marker{display:none}
+.nba-faq-item summary::after{color:var(--orange);content:'+';font-size:18px;font-weight:900;position:absolute;right:4px;top:13px}
+.nba-faq-item[open] summary::after{content:'–'}
+.nba-faq-item p{color:var(--muted);font-size:13.5px;line-height:1.65;margin:0 0 16px;max-width:75ch}
 </style>
