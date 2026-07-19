@@ -224,6 +224,9 @@ const ISOLATED_DATA_DEPENDENCIES: Record<string, {
   'src/data/live/formula-1-2026.json': {
     pages: ['/formula-1-2026'],
   },
+  'src/data/live/nfl-2026.json': {
+    pages: ['/en/nfl-2026'],
+  },
   // Tabla fiscal/laboral única: sus consumidores son fórmulas de calcs CL,
   // no toda la app. Resolverlas por imports evita mantener una lista manual.
   'src/lib/data/chile-2026.ts': {

@@ -102,6 +102,7 @@ async function main() {
     run(mjsTask('bcra-indices', 'fetch-bcra-indices')),
     run(mjsTask('mundial-fixture', 'fetch-mundial-fixture')),
     run(mjsTask('nba-data', 'fetch-nba-data')),
+    run(mjsTask('nfl-data', 'fetch-nfl-data')),
   ]);
 
   const phase2Tasks: Task[] = [
