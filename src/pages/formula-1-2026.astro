@@ -172,8 +172,8 @@ const schema = { '@context':'https://schema.org', '@graph':[breadcrumb, sportsEv
         <div class="hero-facts"><b>Ronda {nextRaceIndex + 1} de {races.length}</b><b>{circuitFacts[0]}</b><b>{nextLaps ? `${nextLaps} vueltas` : `${races.length} carreras`}</b></div>
         <div class="hero-actions"><a class="primary" href="#fin-de-semana"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 3.5 16 10 6 16.5Z"/></svg> SEGUIR EN VIVO</a><a class="secondary" href={googleCalendarUrl} target="_blank" rel="noopener"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12.5" rx="1.5"/><path d="M6 2.5v4M14 2.5v4M3 8h14"/></svg> AGREGAR AL CALENDARIO</a></div>
       </div>
-      <figure class="hero-track" aria-label={`Circuito de ${nextRace?.circuit}`}><img src={trackAsset(nextRace)} alt=""/><img class="track-sector" src={trackAsset(nextRace)} alt=""/><span class="finish-flag" aria-hidden="true"><i></i><i></i><i></i><i></i></span></figure>
-      <aside class="count-card"><small>CARRERA EN</small><strong data-countdown={nextSession?.start}><b data-count-hours>00</b><i>h</i><b data-count-minutes>00</b><i>min</i></strong><hr/><p><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M14.5 6.5A6 6 0 1 0 15 11"/><path d="m12 3.5 2.8 3.2 2.2-3.2"/></svg> Actualizado {updatedShort}</p></aside>
+      <figure class="hero-track" aria-label={`Trazado del circuito ${nextRace?.circuit}`}><img src={trackAsset(nextRace)} alt={`Trazado del circuito ${nextRace?.circuit}`} loading="lazy"/></figure>
+      <aside class="count-card"><small>CARRERA EN</small><strong data-countdown={nextSession?.start}><span data-days-unit hidden><b data-count-days>0</b><i>d</i></span><b data-count-hours>00</b><i>h</i><b data-count-minutes>00</b><i>m</i></strong><hr/><p><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M14.5 6.5A6 6 0 1 0 15 11"/><path d="m12 3.5 2.8 3.2 2.2-3.2"/></svg> Actualizado {updatedShort}</p></aside>
     </section>
 
     <section class="weekend-grid" id="fin-de-semana">
@@ -183,8 +183,8 @@ const schema = { '@context':'https://schema.org', '@graph':[breadcrumb, sportsEv
         <p class="weekend-note">Activá recordatorios para no perderte ninguna sesión.</p>
       </div>
       <div class="circuit-card card">
-        <header><h2>GUÍA DEL CIRCUITO</h2><p><i></i> Sector 1 <i></i> Sector 2 <i class="red"></i> Sector 3</p></header>
-        <figure class="circuit-visual" aria-label={`Guía del circuito ${nextRace?.circuit}`}><img src={trackAsset(nextRace)} alt=""/><img class="track-sector" src={trackAsset(nextRace)} alt=""/><span class="drs drs-one"><i></i>DRS 1</span><span class="drs drs-two"><i></i>DRS 2</span><span class="finish-flag" aria-hidden="true"><i></i><i></i><i></i><i></i></span></figure>
+        <header><h2>GUÍA DEL CIRCUITO</h2><p class="circuit-loc">{flag(nextRace?.countryCode)} {country(nextRace?.country || '')}</p></header>
+        <figure class="circuit-visual" aria-label={`Trazado del circuito ${nextRace?.circuit}`}><img src={trackAsset(nextRace)} alt={`Trazado del circuito ${nextRace?.circuit}`} loading="lazy"/><figcaption>{nextRace?.circuit}</figcaption></figure>
         <div class="circuit-stats"><span>Longitud<b>{circuitFacts[0]}</b></span><span>Curvas<b>{circuitFacts[1]}</b></span><span>Vueltas<b>{circuitFacts[2]}</b></span><span>Distancia<b>{circuitFacts[3]}</b></span></div>
       </div>
     </section>
@@ -199,7 +199,7 @@ const schema = { '@context':'https://schema.org', '@graph':[breadcrumb, sportsEv
       <div class="standings-card card">
         <h2>CAMPEONATO DE PILOTOS</h2>
         <div class="tabs" role="tablist" aria-label="Clasificación del campeonato"><button type="button" role="tab" aria-selected="true" class="active" data-tab="drivers">PILOTOS</button><button type="button" role="tab" aria-selected="false" data-tab="teams">CONSTRUCTORES</button></div>
-        <div data-panel="drivers"><div class="table-head"><span>POS.</span><span>PILOTO</span><span>EQUIPO</span><span>PTS.</span><span>TEND.</span></div>{standings.map((driver:any,index:number)=><div class:list={['standing-row',{extra:index>7}]}><b>{index+1}</b><i style={`--team:${teamColor(driver.team)}`}></i><span class="avatar" aria-hidden="true" style={`background-position:${portraitPosition(index)}`}></span><strong>{driver.name}</strong><span>{driver.team}</span><em>{driver.points}</em><mark>{index<2?'↑':index===2?'↓':'–'}</mark></div>)}</div>
+        <div data-panel="drivers"><div class="table-head"><span>POS.</span><span>PILOTO</span><span>EQUIPO</span><span>PTS.</span></div>{standings.map((driver:any,index:number)=><div class:list={['standing-row',{extra:index>7}]}><b>{index+1}</b><i style={`--team:${teamColor(driver.team)}`}></i><span class="avatar" aria-hidden="true" style={`background-position:${portraitPosition(index)}`}></span><strong>{driver.name}</strong><span>{driver.team}</span><em>{driver.points}</em></div>)}</div>
         <div data-panel="teams" hidden>{constructors.map((team:any,index:number)=><div class="team-tab-row"><b>{index+1}</b><i style={`--team:${teamColor(team.team)}`}></i><strong>{team.team}</strong><em>{team.points}</em></div>)}</div>
         <button class="text-action" data-show-standings>VER CAMPEONATO COMPLETO ›</button>
       </div>
@@ -254,7 +254,7 @@ const schema = { '@context':'https://schema.org', '@graph':[breadcrumb, sportsEv
     });
     zone?.addEventListener('change', () => { tz = zone.value; render(); });
     root.querySelectorAll('[data-countdown]').forEach(el => {
-      const tick = () => { const left=Math.max(0,new Date(el.dataset.countdown)-Date.now()); el.querySelector('[data-count-hours]').textContent=String(Math.floor(left/36e5)); el.querySelector('[data-count-minutes]').textContent=String(Math.floor(left%36e5/6e4)).padStart(2,'0'); };
+      const tick = () => { const left=Math.max(0,new Date(el.dataset.countdown)-Date.now()); const d=Math.floor(left/864e5); const du=el.querySelector('[data-days-unit]'); if(du){ if(d>0){el.querySelector('[data-count-days]').textContent=String(d);du.hidden=false;} else {du.hidden=true;} } el.querySelector('[data-count-hours]').textContent=String(Math.floor(left%864e5/36e5)).padStart(2,'0'); el.querySelector('[data-count-minutes]').textContent=String(Math.floor(left%36e5/6e4)).padStart(2,'0'); };
       tick(); setInterval(tick, 60000);
     });
     root.querySelectorAll('[data-reminder]').forEach(btn => {
@@ -302,9 +302,21 @@ const schema = { '@context':'https://schema.org', '@graph':[breadcrumb, sportsEv
   .hero-actions a,.show-all,.reminder,.last-result>a{align-items:center;display:inline-flex;justify-content:center;gap:7px}
   .hero-actions svg,.show-all svg{height:17px;width:17px;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.7}
   .hero-actions .primary svg{fill:currentColor;stroke:none}
-  .hero-track{margin:0;overflow:hidden;position:relative}.hero-track img,.circuit-visual>img{height:100%;inset:0;object-fit:contain;position:absolute;width:100%}.hero-track img{transform:rotate(-68deg) scale(1.08)}.track-sector{clip-path:polygon(0 66%,38% 66%,38% 100%,0 100%);filter:brightness(0) saturate(100%) invert(11%) sepia(99%) saturate(6659%) hue-rotate(359deg) brightness(104%) contrast(114%)}
-  .finish-flag{display:grid;grid-template-columns:repeat(2,5px);height:10px;position:absolute;width:10px}.finish-flag i{background:#111}.finish-flag i:nth-child(2),.finish-flag i:nth-child(3){background:#fff;border:1px solid #111}.hero-track .finish-flag{left:49%;top:57%}
-  .circuit-visual{height:218px;margin:0;overflow:hidden;padding:18px;position:relative}.circuit-visual>img{filter:opacity(.58);transform:rotate(-68deg) scale(.98)}.circuit-visual>.track-sector{clip-path:polygon(0 58%,45% 58%,45% 100%,0 100%);filter:brightness(0) saturate(100%) invert(11%) sepia(99%) saturate(6659%) hue-rotate(359deg) brightness(104%) contrast(114%);opacity:1}.circuit-visual .finish-flag{left:48%;top:62%}.drs{font-size:8px;font-weight:800;position:absolute}.drs i{background:#111;border:2px solid white;border-radius:50%;display:inline-block;height:8px;margin-right:4px;vertical-align:middle;width:8px}.drs-one{left:52%;top:18%}.drs-two{left:54%;top:60%}
+  /* Circuito: trazado real limpio (antes: rotado -68° + opacity .58 + clips fijos
+     → se veía roto/invisible en cada circuito menos uno). Ahora se muestra
+     centrado, nítido y con sombra suave. Se ocultan overlays con posición fija
+     (sectores/DRS/bandera) que NO coincidían con el circuito real. */
+  .hero-track,.circuit-visual{margin:0;position:relative;display:grid;place-items:center}
+  .hero-track img,.circuit-visual img:not(.track-sector){display:block;height:100%;width:100%;object-fit:contain;filter:drop-shadow(0 6px 16px rgba(0,0,0,.14))}
+  .hero-track img{padding:6px}
+  .track-sector,.finish-flag,.drs{display:none!important}
+  .circuit-visual{height:218px;overflow:hidden;padding:16px 16px 24px}
+  .circuit-visual figcaption{position:absolute;bottom:7px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em}
+  .count-card strong b{font-size:clamp(30px,5vw,40px)}
+  .count-card strong i{margin:0 3px}
+  .circuit-card header .circuit-loc{font-size:12px;font-weight:700}
+  .table-head,.standing-row{grid-template-columns:32px 6px 38px 1.3fr 1fr 48px}
+  @media(max-width:560px){.table-head,.standing-row{grid-template-columns:25px 5px 32px 1.3fr 45px}}
   .count-card p{align-items:center;display:flex;gap:6px}.count-card p svg{fill:none;height:13px;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.5;width:13px}
   .info-icon{border:1px solid currentColor;border-radius:50%;display:inline-grid;font-size:8px;font-style:normal;font-weight:800;height:13px;line-height:1;place-items:center;width:13px}
   .event-icon svg{fill:none;height:29px;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.7;width:29px}.event-icon svg .checks{fill:currentColor;stroke:none}
