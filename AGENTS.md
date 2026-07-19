@@ -84,3 +84,9 @@ bash scripts/cf-purge-cache.sh
 No usar `--force-full` salvo que haya cambio compartido real, sospecha de manifest roto o se necesite clean slate. El incidente de 404 masivo se evita con los gates actuales: verificación de HTML count, wrapper, páginas rotas y smoke test root-level.
 
 Una página nueva **no requiere full por sí sola**: si es una ruta plana estática (`src/pages/<slug>.astro`), no modifica componentes/layouts/estilos compartidos y lleva los dos marcadores anteriores, el detector la despliega incremental. Rutas dinámicas, cambios en `src/components`, `src/layouts`, `src/styles` o infraestructura siguen siendo full.
+
+## 9. SLA 1 minuto: fast pages sin Astro
+
+Para una landing/editorial aislada que tenga que salir en ~1 minuto, usar `public/_fast-pages/<slug>.html` y registrar `"/<slug>": "<slug>.html"` en `public/fast-pages.json`. Luego: `npm run deploy:fast-page`.
+
+Ese comando no ejecuta Astro: actualiza sólo el asset HTML, el mapa mínimo del Worker y la caché de esa URL. Es para páginas autónomas; calculadoras, rutas dinámicas y cualquier cambio de componentes/layouts siguen por el deploy normal.

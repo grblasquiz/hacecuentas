@@ -26,6 +26,26 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(__dirname, '..');
 const DIST_SERVER = join(REPO_ROOT, 'dist', 'server');
 
+// Fast pages: HTMLs autónomos que se suben como assets sin ejecutar Astro.
+// El manifest conserva el mapping URL pública → archivo dentro de
+// public/_fast-pages/. Se inyecta en el wrapper para que run_worker_first no
+// mande esas rutas a Astro (que no conoce la ruta y devolvería 404).
+const fastPagesPath = join(REPO_ROOT, 'public', 'fast-pages.json');
+let fastPageRoutes = {};
+try {
+  const parsed = JSON.parse(readFileSync(fastPagesPath, 'utf8'));
+  if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+    for (const [route, asset] of Object.entries(parsed)) {
+      if (
+        typeof route === 'string' && /^\/[A-Za-z0-9-]+$/.test(route) &&
+        typeof asset === 'string' && /^[A-Za-z0-9-]+\.html$/.test(asset)
+      ) fastPageRoutes[route] = asset;
+    }
+  }
+} catch {
+  // Sin manifest = no hay fast pages. Es opcional para builds normales.
+}
+
 // ---- Parse public/_redirects (full file: pruning + general redirects) ------
 // Formato CF: `<source>  <destination>  <status>` (whitespace-separated).
 // Lineas vacias o que empiezan con # se ignoran. Comodines (`*`/`/:splat`)
@@ -115,6 +135,7 @@ import astroHandler from './entry.mjs';
 
 const REDIRECT_MAP = Object.freeze(${JSON.stringify(redirectMap)});
 const GONE_410_URLS = new Set(${JSON.stringify(goneEntries)});
+const FAST_PAGE_ROUTES = Object.freeze(${JSON.stringify(fastPageRoutes)});
 
 const APEX_HOSTS = new Set(['hacecuentas.com', 'www.hacecuentas.com']);
 
@@ -174,8 +195,14 @@ export default {
       }
     }
 
-    // 5) Delegate to Astro (assets + SSR + middleware)
-    const response = await astroHandler.fetch(request, env, ctx);
+    // 5) Fast pages: assets HTML aislados, sin bundle/prerender de Astro.
+    // El mapa se genera desde public/fast-pages.json y se despliega junto con
+    // el HTML vía deploy:fast-page. Va antes de Astro porque run_worker_first
+    // está activo y Astro no tiene estas rutas en su manifest.
+    const fastAsset = FAST_PAGE_ROUTES[url.pathname];
+    const response = fastAsset && (request.method === 'GET' || request.method === 'HEAD')
+      ? await env.ASSETS.fetch(new Request(new URL('/_fast-pages/' + fastAsset, url), request))
+      : await astroHandler.fetch(request, env, ctx);
 
     // 6) Embed widgets: override de headers para habilitar carga cross-origin.
     //    Ver nota en EMBED_CSP arriba. Mutamos una copia (los headers de la
