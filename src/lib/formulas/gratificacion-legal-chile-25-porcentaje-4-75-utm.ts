@@ -25,9 +25,9 @@ export interface Outputs {
 
 export function compute(i: Inputs): Outputs {
   // Art. 50 CT: la gratificación no excede 4,75 ingresos mínimos mensuales (IMM) AL AÑO.
-  const IMM_2026 = CHILE_2026.imm; // $539.000 (Ley 21.751)
-  const TOPE_GRATIFICACION_ANUAL = CHILE_2026.gratificacionArt50.topeImmAnual * IMM_2026; // 4,75 × IMM = $2.560.250 al año
-  const TOPE_GRATIFICACION = TOPE_GRATIFICACION_ANUAL / 12; // tope mensual equivalente = $213.354
+  const IMM_2026 = CHILE_2026.imm; // $553.553 (Ley 21.830, desde may-2026)
+  const TOPE_GRATIFICACION_ANUAL = CHILE_2026.gratificacionArt50.topeImmAnual * IMM_2026; // 4,75 × IMM = $2.629.377 al año
+  const TOPE_GRATIFICACION = TOPE_GRATIFICACION_ANUAL / 12; // tope mensual equivalente = $219.115
 
   // Tasas IUSC por región — Fuente: SII 2026
   const iusc_rates: { [key in Inputs['region']]: number } = {

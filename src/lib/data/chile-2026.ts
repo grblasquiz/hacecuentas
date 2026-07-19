@@ -1,9 +1,9 @@
 /**
  * Datos fiscales y laborales de CHILE 2026 — tabla maestra única.
  * Patrón hermano de peru-2026.ts / ecuador-2026.ts / colombia-2026.ts / mexico-2026.ts.
- * Verificado 2026-06-10 vía fuentes oficiales:
- * - IMM 2026: Ley 21.751 (D.O. 2025) → $539.000 desde 01-ene-2026 (antes $529.000 desde may-2025).
- *   Próximo reajuste: proyecto de ley a más tardar abril 2026, para regir desde 01-may-2026.
+ * Verificado 2026-07-18 vía fuentes oficiales:
+ * - IMM 2026: Ley 21.830 (D.O. 22-06-2026) → $553.553 desde 01-may-2026
+ *   (histórico: $539.000 ene–abr 2026 Ley 21.751; $529.000 may-2025).
  * - Topes imponibles 2026: Superintendencia de Pensiones (definitivos desde remuneraciones de feb-2026):
  *   AFP/salud/Ley de accidentes 90,0 UF; seguro de cesantía 135,2 UF.
  * - Cotizaciones legales: DL 3.500 (AFP 10%), Ley 18.469/18.933 (salud 7%), Ley 19.728 (AFC).
@@ -14,15 +14,18 @@
  */
 
 /** Vigencia del dato (YYYY-MM-DD) — usada por el sello de frescura a nivel dato (src/lib/data-freshness.ts). */
-export const DATA_AS_OF = '2026-06-10';
+export const DATA_AS_OF = '2026-07-18';
 
 export const CHILE_2026 = {
   anio: 2026,
 
-  // ── Ingreso mínimo mensual — Ley 21.751, vigente desde 01-ene-2026 ──
-  imm: 539_000,                 // trabajadores de 18 a 65 años
-  immMenores18Mayores65: 402_082,
-  immNoRemuneracional: 347_434, // para fines no remuneracionales
+  // ── Ingreso mínimo mensual — Ley 21.830, vigente desde 01-may-2026 ──
+  // Mismo valor que IMM_MAYO_2026.general; esta es la fuente vigente para las fórmulas.
+  // Histórico ene–abr 2026 ($539.000, Ley 21.751) → immHistoricoEneAbr2026.
+  imm: 553_553,                 // trabajadores de 18 a 65 años (Ley 21.830)
+  immMenores18Mayores65: 412_938,
+  immNoRemuneracional: 356_815, // para fines no remuneracionales
+  immHistoricoEneAbr2026: 539_000, // valor previo (Ley 21.751), ene–abr 2026
 
   // ── Topes imponibles 2026 — Superintendencia de Pensiones (desde feb-2026, en UF) ──
   topeImponibleAfpUf: 90.0,     // AFP, salud e ISL/mutual (era 87,8 UF en 2025)
@@ -67,7 +70,8 @@ export function fmtCLP(n: number): string {
 /**
  * Ingreso mínimo mensual VIGENTE desde 01-may-2026 — Ley 21.830 (D.O. 22-jun-2026).
  * Fuente: Dirección del Trabajo — https://www.dt.gob.cl/portal/1628/w3-article-60141.html
- * OJO: CHILE_2026.imm ($539.000) quedó como valor histórico ene–abr 2026.
+ * Nota: desde 2026-07-18 CHILE_2026.imm también apunta a este valor ($553.553);
+ * este objeto conserva `anteriorGeneral` para la calc de reajuste salarial.
  */
 export const IMM_MAYO_2026 = {
   general: 553_553,             // trabajadores de 18 a 65 años, desde 01-may-2026

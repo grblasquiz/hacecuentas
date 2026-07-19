@@ -22,7 +22,7 @@ export interface Outputs {
 
 // Constantes 2026 Chile
 const VALOR_UF_2026 = (clLive as any)?.uf?.valor ?? 40610.69; // CLP, live mindicador.cl con fallback verificado
-const SMI_MENSUAL_2026 = CHILE_2026.imm; // CLP, ingreso mínimo mensual 2026 ($539.000, Ley 21.751)
+const SMI_MENSUAL_2026 = CHILE_2026.imm; // CLP, ingreso mínimo mensual 2026 ($553.553, Ley 21.830, desde may-2026)
 const HORAS_SEMANA_SMI = 40; // jornada estándar
 
 export function compute(i: Inputs): Outputs {
