@@ -3,18 +3,18 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 const OUT = join(process.cwd(), 'src/data/live/nba.json');
 const day = (offset = 0) => { const d = new Date(); d.setUTCDate(d.getUTCDate() + offset); return d.toISOString().slice(0, 10).replaceAll('-', ''); };
-const api = (path) => `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/${path}`;
+const api = (path, league = 'nba') => `https://site.api.espn.com/apis/site/v2/sports/basketball/${league}/${path}`;
 const json = async (url) => { const r = await fetch(url, { headers: { 'User-Agent': 'hacecuentas.com NBA hub' }, signal: AbortSignal.timeout(12000) }); if (!r.ok) throw new Error(String(r.status)); return r.json(); };
-const game = (event) => {
+const game = (event, league = 'NBA') => {
   const c = event.competitions?.[0] || {}; const teams = c.competitors || [];
   const away = teams.find((t) => t.homeAway === 'away') || teams[0] || {}; const home = teams.find((t) => t.homeAway === 'home') || teams[1] || {};
   const side = (t) => ({ name: t.team?.displayName || 'Por confirmar', abbr: t.team?.abbreviation || '—', score: t.score ?? null, logo: t.team?.logo || `https://a.espncdn.com/i/teamlogos/nba/500/${t.team?.abbreviation?.toLowerCase()}.png`, color: `#${t.team?.color || '52657a'}` });
-  return { id: event.id, date: event.date, status: c.status?.type?.name || 'Programado', detail: c.status?.type?.detail || '', state: c.status?.type?.state || 'pre', period: c.status?.period || 0, clock: c.status?.displayClock || '', away: side(away), home: side(home), venue: c.venue?.fullName || '', href: `https://www.espn.com/nba/game/_/gameId/${event.id}` };
+  return { id: event.id, league, date: event.date, status: c.status?.type?.name || 'Programado', detail: c.status?.type?.detail || '', state: c.status?.type?.state || 'pre', period: c.status?.period || 0, clock: c.status?.displayClock || '', away: side(away), home: side(home), venue: c.venue?.fullName || '', href: event.links?.find((link) => link.text === 'Gamecast')?.href || `https://www.espn.com/nba/game/_/gameId/${event.id}` };
 };
 async function main() {
   try {
-    const [past, today, next, standings, leaderData] = await Promise.all([json(api(`scoreboard?dates=${day(-1)}`)), json(api(`scoreboard?dates=${day()}`)), json(api(`scoreboard?dates=${day(1)}`)), json('https://site.api.espn.com/apis/v2/sports/basketball/nba/standings?region=us&lang=en&contentorigin=espn&season=2026'), json('https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/seasons/2026/types/2/leaders?lang=en&region=us')]);
-    const events = [...(past.events || []), ...(today.events || []), ...(next.events || [])].map(game);
+    const [past, today, next, summerPast, summerToday, summerNext, standings, leaderData] = await Promise.all([json(api(`scoreboard?dates=${day(-1)}`)), json(api(`scoreboard?dates=${day()}`)), json(api(`scoreboard?dates=${day(1)}`)), json(api(`scoreboard?dates=${day(-1)}`, 'nba-summer-las-vegas')), json(api(`scoreboard?dates=${day()}`, 'nba-summer-las-vegas')), json(api(`scoreboard?dates=${day(1)}`, 'nba-summer-las-vegas')), json('https://site.api.espn.com/apis/v2/sports/basketball/nba/standings?region=us&lang=en&contentorigin=espn&season=2026'), json('https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/seasons/2026/types/2/leaders?lang=en&region=us')]);
+    const events = [...(past.events || []).map((event) => game(event, 'NBA')), ...(today.events || []).map((event) => game(event, 'NBA')), ...(next.events || []).map((event) => game(event, 'NBA')), ...(summerPast.events || []).map((event) => game(event, 'Summer League')), ...(summerToday.events || []).map((event) => game(event, 'Summer League')), ...(summerNext.events || []).map((event) => game(event, 'Summer League'))].filter((event, index, all) => all.findIndex((item) => item.id === event.id) === index).sort((a, b) => new Date(a.date) - new Date(b.date));
     const groups = standings.children || [];
     const table = groups.flatMap((group) => (group.standings?.entries || []).map((entry) => ({ entry, conference: group.abbreviation || group.name }))).map(({ entry, conference }) => ({
       rank: entry.stats?.find((s) => s.name === 'playoffSeed')?.value || entry.stats?.find((s) => s.name === 'rank')?.value || 0,
