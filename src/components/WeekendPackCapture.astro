@@ -1,0 +1,388 @@
+---
+/**
+ * Captura evergreen para el tráfico estacional del Mundial.
+ *
+ * El contenido principal sigue abierto: este bloque ofrece un pack de
+ * calculadoras de fin de semana y suscribe únicamente a la edición de los
+ * viernes. La banda fija aparece sólo después de una señal de interés y nunca
+ * tapa la llegada desde Google.
+ */
+interface Props {
+  source: string;
+}
+
+const { source } = Astro.props as Props;
+const safeSource = String(source || 'mundial')
+  .toLowerCase()
+  .replace(/[^a-z0-9-]/g, '-')
+  .slice(0, 24) || 'mundial';
+const headingId = `wpc-title-${safeSource}`;
+---
+
+<section class="wpc" data-weekend-pack data-source={safeSource} data-nosnippet aria-labelledby={headingId}>
+  <div class="wpc-card">
+    <div class="wpc-copy">
+      <span class="wpc-kicker">🎁 Gratis · Una cuenta útil cada viernes</span>
+      <h2 id={headingId}>El Mundial termina. Las cuentas del finde no.</h2>
+      <p>
+        Llevate el <strong>Pack salvavidas del finde</strong>: asado, bebidas, gastos entre
+        amigos, combustible y próximos feriados. Te lo mandamos ahora y después recibís
+        sólo un mail útil cada viernes.
+      </p>
+      <ul aria-label="Contenido del pack">
+        <li>🥩 Asado</li>
+        <li>🍻 Bebidas</li>
+        <li>🧾 Dividir gastos</li>
+        <li>🚗 Combustible</li>
+        <li>📅 Feriados</li>
+      </ul>
+    </div>
+
+    <form class="wpc-form" data-wpc-form novalidate>
+      <label for={`wpc-email-${safeSource}`}>¿A qué mail te lo mandamos?</label>
+      <div class="wpc-row">
+        <input
+          id={`wpc-email-${safeSource}`}
+          data-wpc-email
+          type="email"
+          name="email"
+          placeholder="tu@email.com"
+          autocomplete="email"
+          inputmode="email"
+          enterkeyhint="send"
+          required
+        />
+        <button type="submit" data-wpc-submit>Mandame el pack</button>
+      </div>
+      <p class="wpc-consent">
+        Al pedirlo aceptás recibir el mail de los viernes. Sin spam · Baja en un clic.
+      </p>
+      <p class="wpc-msg" data-wpc-msg role="status" aria-live="polite" hidden></p>
+      <div class="wpc-links" data-wpc-links hidden>
+        <a href="/calculadora-asado-kg-por-persona-cortes-tira-vacio-pollo">Asado</a>
+        <a href="/calculadora-bebidas-evento-cerveza-vino-refresco-calculadora">Bebidas</a>
+        <a href="/calculadora-split-gastos-grupo-amigos">Dividir gastos</a>
+        <a href="/calculadora-combustible-viaje-auto">Combustible</a>
+        <a href="/calculadora-feriados-argentina-2026-calendario">Feriados</a>
+      </div>
+    </form>
+  </div>
+
+  <aside class="wpc-stick" data-wpc-stick hidden aria-label="Pack salvavidas del finde">
+    <button type="button" class="wpc-close" data-wpc-close aria-label="Cerrar">×</button>
+    <div class="wpc-stick-copy">
+      <strong>🎁 Pack salvavidas del finde</strong>
+      <span>5 calculadoras útiles + un mail cada viernes.</span>
+    </div>
+    <form class="wpc-stick-form" data-wpc-stick-form novalidate>
+      <label class="wpc-vh" for={`wpc-stick-email-${safeSource}`}>Tu email</label>
+      <input id={`wpc-stick-email-${safeSource}`} data-wpc-stick-email type="email" name="email" placeholder="tu@email.com" autocomplete="email" inputmode="email" required />
+      <button type="submit" data-wpc-stick-submit>Quiero el pack</button>
+    </form>
+  </aside>
+</section>
+
+<style>
+  .wpc {
+    --wpc-blue: #1d4ed8;
+    --wpc-dark: #0b1b3a;
+    max-width: 1080px;
+    margin: 1.5rem auto 2rem;
+    padding: 0 1rem;
+  }
+  .wpc[hidden], .wpc-stick[hidden], .wpc-links[hidden], .wpc-msg[hidden] { display: none !important; }
+  .wpc-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(260px, .75fr);
+    gap: 1.5rem;
+    align-items: center;
+    padding: 1.45rem 1.6rem;
+    border: 1px solid #cbdcfb;
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 96% 8%, rgba(147, 197, 253, .42), transparent 34%),
+      linear-gradient(135deg, #f8fbff 0%, #eef5ff 100%);
+    box-shadow: 0 12px 30px rgba(15, 43, 91, .08);
+  }
+  .wpc-kicker {
+    display: inline-block;
+    margin-bottom: .35rem;
+    color: var(--wpc-blue);
+    font-size: .75rem;
+    font-weight: 800;
+    letter-spacing: .045em;
+    text-transform: uppercase;
+  }
+  .wpc h2 {
+    margin: 0 0 .45rem;
+    color: var(--wpc-dark);
+    font-size: clamp(1.3rem, 2.4vw, 1.75rem);
+    line-height: 1.15;
+  }
+  .wpc-copy > p {
+    margin: 0;
+    color: #40516f;
+    font-size: .94rem;
+    line-height: 1.55;
+  }
+  .wpc ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+    margin: .85rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .wpc li {
+    padding: .32rem .58rem;
+    border: 1px solid rgba(37, 99, 235, .14);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .78);
+    color: #334155;
+    font-size: .76rem;
+    font-weight: 650;
+  }
+  .wpc-form label {
+    display: block;
+    margin-bottom: .45rem;
+    color: var(--wpc-dark);
+    font-size: .9rem;
+    font-weight: 750;
+  }
+  .wpc-row { display: flex; gap: .5rem; }
+  .wpc input {
+    min-width: 0;
+    border: 1px solid #b8c8e4;
+    border-radius: 10px;
+    background: #fff;
+    color: #0f172a;
+    font: inherit;
+    font-size: 1rem;
+  }
+  .wpc-row input { flex: 1; padding: .76rem .82rem; }
+  .wpc input:focus { outline: 3px solid rgba(37, 99, 235, .18); border-color: #2563eb; }
+  .wpc button[type="submit"] {
+    border: 0;
+    border-radius: 10px;
+    background: var(--wpc-blue);
+    color: #fff;
+    font: inherit;
+    font-size: .9rem;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .wpc-row button { padding: .76rem .9rem; }
+  .wpc button[type="submit"]:hover { background: #1e40af; }
+  .wpc button[type="submit"]:disabled { opacity: .6; cursor: wait; }
+  .wpc-consent, .wpc-msg {
+    margin: .48rem 0 0;
+    color: #64748b;
+    font-size: .72rem;
+    line-height: 1.4;
+  }
+  .wpc-msg.is-ok { color: #166534; font-weight: 700; }
+  .wpc-msg.is-err { color: #b91c1c; }
+  .wpc-links { display: flex; flex-wrap: wrap; gap: .45rem .75rem; margin-top: .65rem; }
+  .wpc-links a { color: #1d4ed8; font-size: .78rem; font-weight: 700; }
+  .wpc-stick {
+    position: fixed;
+    z-index: 60;
+    left: 50%;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: min(760px, calc(100vw - 24px));
+    padding: .72rem 2.6rem .72rem .9rem;
+    border: 1px solid rgba(255, 255, 255, .2);
+    border-radius: 15px;
+    background: rgba(11, 27, 58, .97);
+    color: #fff;
+    box-shadow: 0 16px 45px rgba(2, 8, 23, .32);
+  }
+  .wpc-stick-copy { flex: 1 1 220px; min-width: 0; }
+  .wpc-stick-copy strong, .wpc-stick-copy span { display: block; }
+  .wpc-stick-copy strong { font-size: .9rem; }
+  .wpc-stick-copy span { margin-top: .12rem; color: #cbd5e1; font-size: .72rem; }
+  .wpc-stick-form { display: flex; gap: .4rem; flex: 1 1 320px; }
+  .wpc-stick-form input { flex: 1; padding: .62rem .7rem; }
+  .wpc-stick-form button { padding: .62rem .82rem; }
+  .wpc-close {
+    position: absolute;
+    top: .2rem;
+    right: .35rem;
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    background: transparent;
+    color: #cbd5e1;
+    font-size: 1.35rem;
+    cursor: pointer;
+  }
+  .wpc-vh {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  @media (max-width: 760px) {
+    .wpc { padding: 0 .75rem; }
+    .wpc-card { grid-template-columns: 1fr; gap: 1rem; padding: 1.15rem; }
+    .wpc-row { flex-direction: column; }
+    .wpc-row button { width: 100%; }
+    .wpc-stick { gap: .55rem; padding: .62rem 2rem .62rem .7rem; }
+    .wpc-stick-copy span { display: none; }
+    .wpc-stick-form input { width: 100%; font-size: 1rem; }
+    .wpc-stick-form button { font-size: .78rem; }
+  }
+  @media (max-width: 520px) {
+    .wpc-stick { align-items: stretch; flex-direction: column; }
+    .wpc-stick-copy { flex: none; }
+    .wpc-stick-form { flex: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wpc-stick { scroll-behavior: auto; }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.currentScript && document.currentScript.previousElementSibling;
+    while (root && !root.matches('[data-weekend-pack]')) root = root.previousElementSibling;
+    if (!root || root.dataset.wpcReady === '1') return;
+    root.dataset.wpcReady = '1';
+
+    var DONE_KEY = 'hc-weekend-pack';
+    var DISMISS_KEY = 'hc-weekend-pack-dismiss';
+    var source = root.dataset.source || 'mundial';
+    var sticky = root.querySelector('[data-wpc-stick]');
+    var inlineForm = root.querySelector('[data-wpc-form]');
+    var stickyForm = root.querySelector('[data-wpc-stick-form]');
+    var msg = root.querySelector('[data-wpc-msg]');
+    var links = root.querySelector('[data-wpc-links]');
+
+    function stored(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+    function store(key, value) { try { localStorage.setItem(key, value); } catch (e) {} }
+    function track(eventName, placement) {
+      try {
+        if (typeof window.hcTrack === 'function') {
+          window.hcTrack(eventName, { source_page: source, cta_placement: placement });
+        }
+      } catch (e) {}
+    }
+    function hideSticky() { if (sticky) sticky.hidden = true; }
+    function markDone() {
+      store(DONE_KEY, '1');
+      hideSticky();
+      try { document.dispatchEvent(new CustomEvent('hc:subscribed')); } catch (e) {}
+    }
+    function showMessage(text, ok) {
+      if (!msg) return;
+      msg.hidden = false;
+      msg.textContent = text;
+      msg.className = 'wpc-msg ' + (ok ? 'is-ok' : 'is-err');
+      if (ok && links) links.hidden = false;
+    }
+    function valid(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email); }
+
+    if (stored(DONE_KEY) === '1') {
+      root.hidden = true;
+      return;
+    }
+
+    if ('IntersectionObserver' in window) {
+      var seen = false;
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!seen && entry.isIntersecting && entry.intersectionRatio >= .35) {
+            seen = true;
+            track('hc_weekend_pack_view', 'inline');
+            io.disconnect();
+          }
+        });
+      }, { threshold: .35 });
+      io.observe(root.querySelector('.wpc-card'));
+    }
+
+    function revealSticky() {
+      if (!sticky || stored(DONE_KEY) === '1') return;
+      var dismissedAt = Number(stored(DISMISS_KEY) || 0);
+      if (dismissedAt && Date.now() - dismissedAt < 6 * 3600 * 1000) return;
+      sticky.hidden = false;
+      track('hc_weekend_pack_view', 'sticky');
+    }
+    var timer = setTimeout(revealSticky, 12000);
+    function onScroll() {
+      var max = document.documentElement.scrollHeight - innerHeight;
+      if (max > 0 && scrollY / max >= .25) {
+        clearTimeout(timer);
+        revealSticky();
+        removeEventListener('scroll', onScroll);
+      }
+    }
+    addEventListener('scroll', onScroll, { passive: true });
+
+    var close = root.querySelector('[data-wpc-close]');
+    if (close) close.addEventListener('click', function () {
+      store(DISMISS_KEY, String(Date.now()));
+      hideSticky();
+      track('hc_weekend_pack_dismiss', 'sticky');
+    });
+
+    async function subscribe(form, placement) {
+      var input = form.querySelector('input[type="email"]');
+      var button = form.querySelector('button[type="submit"]');
+      var email = input ? input.value.trim().toLowerCase() : '';
+      if (!valid(email)) {
+        if (placement === 'inline') showMessage('Ingresá un email válido.', false);
+        else if (input) { input.setCustomValidity('Ingresá un email válido.'); input.reportValidity(); }
+        track('hc_weekend_pack_error', placement);
+        return;
+      }
+      if (input) input.setCustomValidity('');
+      if (button) button.disabled = true;
+      track('hc_weekend_pack_submit', placement);
+      try {
+        var response = await fetch('/api/weekend-pack', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ email: email, source: source }),
+        });
+        var data = await response.json().catch(function () { return {}; });
+        if (!response.ok) throw new Error(data.error || 'No se pudo guardar.');
+        markDone();
+        if (inlineForm) inlineForm.hidden = false;
+        showMessage(data.sent === false
+          ? '¡Listo! Ya quedaste anotado. Mientras llega el mail, acá tenés el pack.'
+          : '¡Listo! Te mandamos el pack y ya quedaste anotado para los viernes.', true);
+        if (input) input.value = '';
+        track('hc_weekend_pack_success', placement);
+        if (typeof window.gtag === 'function') {
+          window.gtag('event', 'newsletter_signup', { method: 'mundial-weekend-pack' });
+        }
+      } catch (e) {
+        if (placement === 'inline') showMessage(e.message || 'No se pudo guardar. Probá de nuevo.', false);
+        else if (input) { input.setCustomValidity(e.message || 'No se pudo guardar.'); input.reportValidity(); }
+        track('hc_weekend_pack_error', placement);
+      } finally {
+        if (button) button.disabled = false;
+      }
+    }
+
+    if (inlineForm) inlineForm.addEventListener('submit', function (event) {
+      event.preventDefault();
+      subscribe(inlineForm, 'inline');
+    });
+    if (stickyForm) stickyForm.addEventListener('submit', function (event) {
+      event.preventDefault();
+      subscribe(stickyForm, 'sticky');
+    });
+  })();
+</script>

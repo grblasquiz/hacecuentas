@@ -18,6 +18,23 @@ CREATE TABLE IF NOT EXISTS newsletter_subs (
 );
 CREATE INDEX IF NOT EXISTS idx_newsletter_created ON newsletter_subs(created_at DESC);
 
+-- Intereses/cadencias de newsletter. Se separan de newsletter_subs porque una
+-- misma identidad puede pedir distintos productos sin perder el origen del alta.
+CREATE TABLE IF NOT EXISTS newsletter_interests (
+  email TEXT NOT NULL,
+  topic TEXT NOT NULL,                   -- 'fin-de-semana', etc.
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  source TEXT,
+  referer TEXT,
+  country TEXT,
+  consent_version TEXT NOT NULL,
+  active INTEGER NOT NULL DEFAULT 1,
+  PRIMARY KEY (email, topic)
+);
+CREATE INDEX IF NOT EXISTS idx_newsletter_interests_topic
+  ON newsletter_interests(topic, active, updated_at DESC);
+
 -- Votos 👍/👎 por calculadora.
 -- Sin UNIQUE en slug — queremos agregar todos los votos, el frontend ya
 -- bloquea re-voto por localStorage; si alguien burla eso queremos saberlo.

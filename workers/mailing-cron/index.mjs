@@ -110,11 +110,17 @@ async function pickWeekendCalcs(env, n = 2) {
   return picked.slice(0, n);
 }
 
-async function getRecipients(env) {
+async function getRecipients(env, { weekend = false } = {}) {
+  // Los contactos captados desde el último partido del Mundial pidieron el
+  // producto evergreen de fin de semana. Reciben la edición del viernes, pero
+  // NO las ediciones generales de martes/jueves. Los suscriptores históricos
+  // conservan su frecuencia actual.
+  const cadenceFilter = weekend ? '' : "AND source NOT LIKE 'mundial-finde:%'";
   const rows = await env.DB.prepare(
     `SELECT email FROM newsletter_subs
      WHERE (unsubscribed IS NULL OR unsubscribed = 0)
        AND source NOT IN ('${TEST_SOURCES.join("','")}')
+       ${cadenceFilter}
        AND email LIKE '%_@_%_.__%'
      ORDER BY created_at ASC`,
   ).all();
@@ -248,7 +254,7 @@ async function runEdition(env, { dryRun = false, testTo = null, weekend = false 
   if (!env.EMAIL) return { ok: false, reason: 'falta binding EMAIL (Cloudflare Email Service no onboardeado)' };
 
   // Destinatarios: prueba (1) o lista real.
-  const recipients = testTo ? [testTo] : await getRecipients(env);
+  const recipients = testTo ? [testTo] : await getRecipients(env, { weekend });
   if (!recipients.length) return { ok: false, reason: 'sin destinatarios' };
 
   const { sent, failed, ids, errors } = await sendAll(env, recipients, { from, subject, calcs, unsubBase, secret });
@@ -286,6 +292,11 @@ async function handleUnsubscribe(env, url) {
   await env.DB.prepare(
     `UPDATE newsletter_subs SET unsubscribed = 1, unsub_at = ? WHERE email = ?`,
   ).bind(Date.now(), email).run();
+  // La baja global también apaga sus intereses específicos. El link histórico
+  // sigue funcionando igual y no deja segmentos activos huérfanos.
+  await env.DB.prepare(
+    `UPDATE newsletter_interests SET active = 0, updated_at = ? WHERE email = ?`,
+  ).bind(Date.now(), email).run();
   return page('Listo', `Listo, diste de baja a <strong>${esc(email)}</strong>. No vas a recibir más estos mails. 👋`);
 }
 
@@ -297,12 +308,17 @@ async function status(env) {
     `SELECT COUNT(*) n FROM newsletter_subs WHERE (unsubscribed IS NULL OR unsubscribed = 0)
        AND source NOT IN ('${TEST_SOURCES.join("','")}') AND email LIKE '%_@_%_.__%'`,
   ).first();
+  const weekendOnly = await env.DB.prepare(
+    `SELECT COUNT(*) n FROM newsletter_subs WHERE (unsubscribed IS NULL OR unsubscribed = 0)
+       AND source LIKE 'mundial-finde:%' AND email LIKE '%_@_%_.__%'`,
+  ).first();
   const last = await env.DB.prepare('SELECT MAX(edition_at) t FROM mailing_log').first();
   return {
     pool_size: pool?.n ?? 0,
     enviadas: sent?.n ?? 0,
     restantes_sin_repetir: Math.max(0, (pool?.n ?? 0) - (sent?.n ?? 0)),
     suscriptores_activos: subs?.n ?? 0,
+    suscriptores_solo_viernes: weekendOnly?.n ?? 0,
     ultima_edicion: last?.t ? new Date(last.t).toISOString() : null,
     tiene_email_binding: !!env.EMAIL,
   };
