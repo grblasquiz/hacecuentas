@@ -31,7 +31,7 @@
  * Bucketizar por locale evita falsos positivos en el filter incremental.
  *
  * Outputs:
- *   - $GITHUB_OUTPUT: `mode=full|incremental`, `changes_json=...` (compact)
+ *   - $GITHUB_OUTPUT: `mode=fast|assets|full|incremental|skip`, `changes_json=...` (compact)
  *   - stdout (para uso local sin GH)
  *
  * Fallbacks defensivos:
@@ -72,6 +72,8 @@ const SHARED_PATTERNS: RegExp[] = [
 // a dist/client y wrangler sube el delta de assets. Excluimos rutas que afectan
 // wrapper, routing, sitemap o service worker.
 const PUBLIC_ASSET_RE = /^public\/(.+)$/;
+const FAST_PAGE_RE = /^public\/_fast-pages\/[A-Za-z0-9-]+\.html$/;
+const FAST_PAGE_MANIFEST = 'public/fast-pages.json';
 const UNSAFE_PUBLIC_ASSET_PATTERNS: RegExp[] = [
   /^public\/_redirects$/,
   /^public\/_headers$/,
@@ -166,7 +168,7 @@ interface ContentChanges {
 }
 
 interface DetectResult {
-  mode: 'assets' | 'full' | 'incremental' | 'skip';
+  mode: 'assets' | 'fast' | 'full' | 'incremental' | 'skip';
   changes?: {
     assets?: { paths: string[] };
     calcs?: { slugs: string[] };
@@ -427,6 +429,16 @@ function detect(baseSha: string): DetectResult {
   const files = entries.map((e) => e.path);
 
   const hasRename = entries.some((e) => e.status.startsWith('R'));
+  const onlyFastPages = !hasRename && files.length > 0 && files.every(
+    (file) => file === FAST_PAGE_MANIFEST || FAST_PAGE_RE.test(file),
+  );
+  if (onlyFastPages) {
+    return {
+      mode: 'fast',
+      reason: `${files.length} cambio(s) de fast page`,
+      filesAnalyzed: files.length,
+    };
+  }
   const publicAssetFiles = files.filter((file) => {
     if (!PUBLIC_ASSET_RE.test(file)) return false;
     return !UNSAFE_PUBLIC_ASSET_PATTERNS.some((p) => p.test(file));
@@ -705,7 +717,9 @@ function main(): void {
 
   console.log(`[detect-changes] mode=${result.mode} files=${result.filesAnalyzed} reason="${result.reason}"`);
 
-  if (result.mode === 'assets' && result.changes) {
+  if (result.mode === 'fast') {
+    writeOutput(['mode=fast', 'changes_json=', `reason=${result.reason}`]);
+  } else if (result.mode === 'assets' && result.changes) {
     console.log('[detect-changes] assets:', JSON.stringify(result.changes, null, 2));
     writeOutput([
       'mode=assets',

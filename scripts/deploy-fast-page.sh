@@ -9,7 +9,9 @@ T0=$(date +%s)
 set -a; source .env; set +a
 for var in CLOUDFLARE_API_TOKEN CLOUDFLARE_ZONE_ID; do [ -n "${!var:-}" ] || { echo "[fast-pages] falta $var"; exit 1; }; done
 [ -f dist/server/wrangler.json ] || { echo '[fast-pages] falta dist sano: corré un deploy normal una vez'; exit 1; }
-[ ! -f .deploy.lock ] || { echo '[fast-pages] hay otro deploy en curso; reintentá al terminar'; exit 1; }
+if [ "${HC_DEPLOY_LOCK_HELD:-}" != 1 ] && [ -f .deploy.lock ]; then
+  echo '[fast-pages] hay otro deploy en curso; reintentá al terminar'; exit 1
+fi
 
 node scripts/prepare-fast-pages.mjs
 node scripts/generate-worker-wrapper.mjs

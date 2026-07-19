@@ -87,6 +87,6 @@ Una página nueva **no requiere full por sí sola**: si es una ruta plana estát
 
 ## 9. SLA 1 minuto: fast pages sin Astro
 
-Para una landing/editorial aislada que tenga que salir en ~1 minuto, usar `public/_fast-pages/<slug>.html` y registrar `"/<slug>": "<slug>.html"` en `public/fast-pages.json`. Luego: `npm run deploy:fast-page`.
+Para una landing/editorial aislada que tenga que salir en ~1 minuto, usar `public/_fast-pages/<slug>.html` y registrar `"/<slug>": "<slug>.html"` en `public/fast-pages.json`. Luego usar el comando normal: `npm run deploy`.
 
-Ese comando no ejecuta Astro: actualiza sólo el asset HTML, el mapa mínimo del Worker y la caché de esa URL. Es para páginas autónomas; calculadoras, rutas dinámicas y cualquier cambio de componentes/layouts siguen por el deploy normal.
+El detector elige automáticamente el modo `fast` si el commit sólo modifica esos archivos; no ejecuta Astro y actualiza sólo el asset HTML, el mapa mínimo del Worker y la caché de esa URL. `npm run deploy:fast-page` queda disponible sólo para pruebas/manual. Es para páginas autónomas; calculadoras, rutas dinámicas y cualquier cambio de componentes/layouts siguen por el deploy normal.

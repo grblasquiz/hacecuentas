@@ -247,6 +247,10 @@ else
       echo "Solo cambios en tooling/docs. Nada que deployar. Saliendo en $(($(date +%s) - T_START))s."
       echo "$CURRENT_SHA" > .last-deploy-sha
       exit 0
+    elif echo "$DETECT_OUT" | grep -q "^mode=fast"; then
+      MODE=fast
+      REASON=$(echo "$DETECT_OUT" | grep "^reason=" | sed 's/^reason=//')
+      ok "modo FAST PAGE — $REASON"
     elif echo "$DETECT_OUT" | grep -q "^mode=assets"; then
       MODE=assets
       INCREMENTAL_CHANGES=$(echo "$DETECT_OUT" | grep "^changes_json=" | sed 's/^changes_json=//')
@@ -277,6 +281,12 @@ if [ "${BUILD_SPLIT_DEPLOY:-}" = "1" ]; then
   SPLIT_BUILD=true; MODE=full
   log "build SPLIT (Node static + worker cacheado)..."
   bash scripts/build-split.sh 2>&1 | grep -E "\[split\]|FALLÓ|✗ " | tail -16
+fi
+if [ "$MODE" = "fast" ]; then
+  # Sin Astro: assets HTML + wrapper delta + purge + smoke. El lock ya está
+  # tomado por este script, por eso se lo informamos al subcomando.
+  HC_DEPLOY_LOCK_HELD=1 bash scripts/deploy-fast-page.sh
+  exit 0
 fi
 if [ "$SPLIT_BUILD" = false ] && [ "$MODE" = "assets" ]; then
   log "deploy ASSETS (sin Astro build)..."
