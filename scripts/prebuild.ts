@@ -101,6 +101,7 @@ async function main() {
     run(mjsTask('converter-tables', 'generate-converter-tables')),
     run(mjsTask('bcra-indices', 'fetch-bcra-indices')),
     run(mjsTask('mundial-fixture', 'fetch-mundial-fixture')),
+    run(mjsTask('nba-data', 'fetch-nba-data')),
   ]);
 
   const phase2Tasks: Task[] = [

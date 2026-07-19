@@ -1,0 +1,28 @@
+// Snapshot NBA para render estático + SEO. ESPN se vuelve a consultar en el cliente.
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+const OUT = join(process.cwd(), 'src/data/live/nba.json');
+const day = (offset = 0) => { const d = new Date(); d.setUTCDate(d.getUTCDate() + offset); return d.toISOString().slice(0, 10).replaceAll('-', ''); };
+const api = (path) => `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/${path}`;
+const json = async (url) => { const r = await fetch(url, { headers: { 'User-Agent': 'hacecuentas.com NBA hub' }, signal: AbortSignal.timeout(12000) }); if (!r.ok) throw new Error(String(r.status)); return r.json(); };
+const game = (event) => {
+  const c = event.competitions?.[0] || {}; const teams = c.competitors || [];
+  const away = teams.find((t) => t.homeAway === 'away') || teams[0] || {}; const home = teams.find((t) => t.homeAway === 'home') || teams[1] || {};
+  const side = (t) => ({ name: t.team?.displayName || 'Por confirmar', abbr: t.team?.abbreviation || '—', score: t.score ?? null, logo: t.team?.logo || `https://a.espncdn.com/i/teamlogos/nba/500/${t.team?.abbreviation?.toLowerCase()}.png`, color: `#${t.team?.color || '52657a'}` });
+  return { id: event.id, date: event.date, status: c.status?.type?.name || 'Programado', detail: c.status?.type?.detail || '', state: c.status?.type?.state || 'pre', period: c.status?.period || 0, clock: c.status?.displayClock || '', away: side(away), home: side(home), venue: c.venue?.fullName || '', href: `https://www.espn.com/nba/game/_/gameId/${event.id}` };
+};
+async function main() {
+  try {
+    const [past, today, next, standings] = await Promise.all([json(api(`scoreboard?dates=${day(-1)}`)), json(api(`scoreboard?dates=${day()}`)), json(api(`scoreboard?dates=${day(1)}`)), json('https://site.api.espn.com/apis/v2/sports/basketball/nba/standings?region=us&lang=en&contentorigin=espn&season=2026')]);
+    const events = [...(past.events || []), ...(today.events || []), ...(next.events || [])].map(game);
+    const groups = standings.children || [];
+    const table = groups.flatMap((group) => group.standings?.entries || []).map((entry) => ({
+      rank: entry.stats?.find((s) => s.name === 'playoffSeed')?.value || entry.stats?.find((s) => s.name === 'rank')?.value || 0,
+      team: entry.team?.displayName, abbr: entry.team?.abbreviation, logo: entry.team?.logos?.[0]?.href, wins: entry.stats?.find((s) => s.name === 'wins')?.value || 0, losses: entry.stats?.find((s) => s.name === 'losses')?.value || 0, pct: entry.stats?.find((s) => s.name === 'winPercent')?.displayValue || '—'
+    })).filter((x) => x.team);
+    mkdirSync(join(process.cwd(), 'src/data/live'), { recursive: true });
+    writeFileSync(OUT, JSON.stringify({ fetchedAt: new Date().toISOString(), source: 'ESPN NBA scoreboard + standings', games: events, standings: table }, null, 2));
+    console.log(`[nba] ${events.length} partidos y ${table.length} equipos`);
+  } catch (error) { if (existsSync(OUT)) console.log('[nba] fuente no disponible; se conserva snapshot previo'); else throw error; }
+}
+await main();
