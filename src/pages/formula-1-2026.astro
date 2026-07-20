@@ -5,6 +5,7 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import data from '../data/live/formula-1-2026.json';
+import { eventTicketOffer } from '../lib/offer-schema';
 
 const AR = 'America/Argentina/Buenos_Aires';
 const now = new Date();
@@ -126,6 +127,14 @@ const breadcrumb = {
     { '@type':'ListItem', position:3, name:'Fórmula 1 2026', item:PAGE_URL },
   ],
 };
+// Nodos compartidos por el evento padre y cada Gran Premio (subEvent). Search
+// Console marcaba "Event" sin offers/image/performer/description/organizer en los
+// 25 nodos SportsEvent (el padre + 24 GP). performer = las 11 escuderías reales
+// del campeonato (derivadas de standings, no hardcodeadas).
+const F1_ORGANIZER = { '@type':'Organization', name:'FIA — Formula 1', url:'https://www.formula1.com' };
+const F1_TICKETS = 'https://www.formula1.com/en/tickets';
+const EVENT_IMAGE = ['https://hacecuentas.com/og-default.png'];
+const f1Performers = constructors.map((c: any) => ({ '@type':'SportsTeam', name:c.team }));
 const sportsEvent = {
   '@type':'SportsEvent',
   name:'Campeonato Mundial de Fórmula 1 2026',
@@ -134,15 +143,26 @@ const sportsEvent = {
   startDate:races[0]?.start, endDate:races.at(-1)?.end,
   eventStatus:'https://schema.org/EventScheduled',
   eventAttendanceMode:'https://schema.org/OfflineEventAttendanceMode',
-  organizer:{ '@type':'Organization', name:'FIA — Formula 1', url:'https://www.formula1.com' },
+  image:EVENT_IMAGE,
+  organizer:F1_ORGANIZER,
+  performer:f1Performers,
+  offers:eventTicketOffer({ url:F1_TICKETS }),
   url:PAGE_URL,
-  subEvent: races.map((race: any) => ({
-    '@type':'SportsEvent',
-    name:`GP de ${country(race.country)} 2026`,
-    startDate:race.start, endDate:race.end,
-    eventStatus:'https://schema.org/EventScheduled',
-    location:{ '@type':'Place', name:race.circuit, address:{ '@type':'PostalAddress', addressCountry:country(race.country) } },
-  })),
+  subEvent: races.map((race: any) => {
+    const gpName = `GP de ${country(race.country)} 2026`;
+    return {
+      '@type':'SportsEvent',
+      name:gpName,
+      description:`${gpName} del Campeonato Mundial de Fórmula 1, disputado en el circuito ${race.circuit}.`,
+      startDate:race.start, endDate:race.end,
+      eventStatus:'https://schema.org/EventScheduled',
+      image:EVENT_IMAGE,
+      location:{ '@type':'Place', name:race.circuit, address:{ '@type':'PostalAddress', addressCountry:country(race.country) } },
+      organizer:F1_ORGANIZER,
+      performer:f1Performers,
+      offers:eventTicketOffer({ url:F1_TICKETS }),
+    };
+  }),
 };
 const dataset = {
   '@type':'Dataset',

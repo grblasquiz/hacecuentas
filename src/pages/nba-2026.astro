@@ -6,6 +6,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import data from '../data/live/nba.json';
 import weekClient from '../scripts/nba-week-client.js?raw';
+import { eventTicketOffer } from '../lib/offer-schema';
 
 const AR = 'America/Argentina/Buenos_Aires';
 const fmtDay = (iso: string) => new Intl.DateTimeFormat('es-AR', { timeZone: AR, weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(iso));
@@ -76,14 +77,22 @@ const breadcrumb = {
     { '@type':'ListItem', position:3, name:'NBA 2026', item:PAGE_URL },
   ],
 };
+// performer = los 30 equipos reales (de standings, no hardcodeados); image +
+// offers para que el nodo SportsEvent no quede sin los campos recomendados que
+// Search Console marca en el resto de las páginas de deportes.
+const nbaPerformers = (data.standings || []).map((t: any) => ({ '@type':'SportsTeam', name:t.team }));
 const sportsEvent = {
   '@type':'SportsEvent',
   name:'Temporada de la NBA 2025-26',
   sport:'Basketball',
   description:'Partidos, resultados, calendario y posiciones de la NBA (National Basketball Association), con las conferencias Este y Oeste y los líderes estadísticos de la temporada.',
+  startDate:'2025-10-21', endDate:'2026-06-21',
   eventStatus:'https://schema.org/EventScheduled',
+  image:['https://hacecuentas.com/og-default.png'],
   organizer:{ '@type':'Organization', name:'NBA', url:'https://www.nba.com' },
   location:{ '@type':'Place', name:'Estados Unidos y Canadá', address:{ '@type':'PostalAddress', addressCountry:'US' } },
+  performer:nbaPerformers,
+  offers:eventTicketOffer({ url:'https://www.nba.com/tickets' }),
   url:PAGE_URL,
 };
 const dataset = {

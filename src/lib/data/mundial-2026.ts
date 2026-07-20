@@ -6,6 +6,7 @@
 // conversión a hora argentina y los helpers de resultados/etiquetas.
 // ────────────────────────────────────────────────────────────────────────────
 import fixtureRaw from './mundial-2026-fixture.json';
+import { eventTicketOffer } from '../offer-schema';
 
 export interface RawMatch {
   num: number;
@@ -253,12 +254,10 @@ export const WORLD_CUP_EVENT = {
     { '@type': 'Place', name: 'Canadá', address: { '@type': 'PostalAddress', addressCountry: 'CA' } },
   ],
   organizer: { '@type': 'Organization', name: 'FIFA', url: 'https://www.fifa.com' },
-  offers: {
-    '@type': 'AggregateOffer',
-    url: 'https://www.fifa.com/en/tickets',
-    priceCurrency: 'USD',
-    lowPrice: '60',
-    availability: 'https://schema.org/InStock',
-  },
+  // Antes era un AggregateOffer con lowPrice: '60' pero sin highPrice ni validFrom,
+  // así que Search Console marcaba ambos como "falta campo (en offers)". Sin un
+  // highPrice verificable (no inventamos precios), pasamos a un Offer simple con
+  // la venta oficial + validFrom: limpia las dos advertencias sin markup dudoso.
+  offers: eventTicketOffer({ url: 'https://www.fifa.com/en/tickets', priceCurrency: 'USD' }),
   performer: WORLD_CUP_PERFORMERS,
 };

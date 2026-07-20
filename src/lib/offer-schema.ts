@@ -25,3 +25,27 @@ export function freeOfferSchema(
   if (opts.priceCurrency) offer.priceCurrency = opts.priceCurrency;
   return offer;
 }
+
+// Offer para las ENTRADAS de un evento deportivo (SportsEvent: Mundial, F1, NBA,
+// NFL). A diferencia de las calcs (gratis, price 0), acá el `offers` son los
+// tickets del evento, que NO vendemos: enlazamos la venta oficial. Search Console
+// marcaba "Falta offers" en cada nodo SportsEvent; con esto el campo queda
+// presente y válido. Incluimos url + availability + validFrom (recomendados por
+// Google). NO ponemos price/lowPrice/highPrice a propósito: no fijamos ni
+// inventamos el valor de la entrada (varía por evento, categoría y fecha) y un
+// precio inventado sería markup engañoso. Al ser un Offer simple (no
+// AggregateOffer) tampoco aplica la advertencia de highPrice/lowPrice.
+export function eventTicketOffer(
+  opts: { url: string; priceCurrency?: string; validFrom?: string },
+): Record<string, unknown> {
+  const offer: Record<string, unknown> = {
+    '@type': 'Offer',
+    url: opts.url,
+    availability: 'https://schema.org/InStock',
+    // validFrom: fecha desde la que el offer es válido. El deploy re-buildea a
+    // diario, así que la ventana se renueva sola (mismo criterio que freeOfferSchema).
+    validFrom: opts.validFrom || new Date().toISOString().slice(0, 10),
+  };
+  if (opts.priceCurrency) offer.priceCurrency = opts.priceCurrency;
+  return offer;
+}
