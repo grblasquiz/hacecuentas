@@ -1,0 +1,98 @@
+---
+/**
+ * CountryVariants — bloque "Esta calculadora en otros países".
+ *
+ * Enlaces internos CROSS-LOCALE hacia la misma calculadora publicada para otros
+ * países de habla hispana. related-auto se computa POR locale, así que no puede
+ * generar estos enlaces: una calc de /pe/ nunca se relaciona con la de /co/ ni
+ * con la raíz AR. Este bloque rompe eso — bidireccional por construcción, con lo
+ * que la autoridad de la variante fuerte fluye a las huérfanas y todas quedan
+ * enlazadas (fin del huérfano-fuera-de-descubribilidad).
+ *
+ * Data: src/lib/country-families.json (generado por `npm run families`, keyed por
+ * el path canónico `${lang?'/'+lang:''}/${slug}`). Sin glob de contenido: solo
+ * lee el mapa y rendea. No-op si la calc no pertenece a una familia.
+ */
+import families from '../lib/country-families.json';
+
+interface Sib { url: string; country: string; flag: string; label: string }
+interface Entry { topic: string; siblings: Sib[] }
+interface Props { calc: any; lang?: string }
+
+const { calc, lang = '' } = Astro.props as Props;
+const here = (((lang ? '/' + lang : '') + '/' + (calc?.slug || '')).replace(/\/+$/, '')) || '/';
+const entry = (families as Record<string, Entry>)[here];
+const siblings = entry?.siblings ?? [];
+---
+{siblings.length > 0 && (
+  <section class="cv" aria-labelledby="cv-heading">
+    <div class="cv__head">
+      <span class="cv__globe" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z"/></svg>
+      </span>
+      <div>
+        <h2 id="cv-heading" class="cv__title">Esta calculadora en otros países</h2>
+        <p class="cv__sub">La misma calculadora, adaptada a la normativa de cada país.</p>
+      </div>
+    </div>
+    <ul class="cv__list">
+      {siblings.map((s) => (
+        <li class="cv__item">
+          <a class="cv__link" href={s.url}>
+            <span class="cv__flag" aria-hidden="true">{s.flag}</span>
+            <span class="cv__txt">{s.label}</span>
+            <span class="cv__arrow" aria-hidden="true">→</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+)}
+
+<style>
+  .cv {
+    margin: 1.75rem auto;
+    max-width: 1080px;
+    padding: 1.1rem 1.25rem 1.25rem;
+    border: 1px solid var(--cv-border, #e6e8ee);
+    border-radius: 16px;
+    background: var(--cv-bg, #fbfcff);
+  }
+  .cv__head { display: flex; align-items: flex-start; gap: .7rem; margin-bottom: .9rem; }
+  .cv__globe {
+    flex: none; display: grid; place-items: center;
+    width: 34px; height: 34px; border-radius: 10px;
+    color: #3157ff; background: rgba(49,87,255,.10);
+  }
+  .cv__globe svg { width: 20px; height: 20px; }
+  .cv__title { margin: 0; font-size: 1.06rem; font-weight: 700; line-height: 1.25; color: var(--cv-fg, #10131a); }
+  .cv__sub { margin: .12rem 0 0; font-size: .84rem; color: var(--cv-muted, #5b6472); }
+  .cv__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: .55rem; }
+  .cv__item { margin: 0; }
+  .cv__link {
+    display: flex; align-items: center; gap: .6rem;
+    padding: .6rem .75rem;
+    border: 1px solid var(--cv-border, #e6e8ee);
+    border-radius: 11px;
+    background: var(--cv-card, #fff);
+    color: var(--cv-fg, #1a2130);
+    text-decoration: none;
+    font-size: .9rem; line-height: 1.25;
+    transition: border-color .12s ease, background .12s ease, transform .12s ease;
+  }
+  .cv__link:hover { border-color: #3157ff; background: rgba(49,87,255,.05); transform: translateY(-1px); }
+  .cv__flag { flex: none; font-size: 1.15rem; }
+  .cv__txt { flex: 1 1 auto; min-width: 0; }
+  .cv__arrow { flex: none; color: #3157ff; font-weight: 700; opacity: .55; }
+  .cv__link:hover .cv__arrow { opacity: 1; }
+
+  @media (prefers-color-scheme: dark) {
+    .cv {
+      --cv-border: #262b36; --cv-bg: #14171e; --cv-card: #1b1f28;
+      --cv-fg: #e8ebf2; --cv-muted: #9aa3b2;
+    }
+    .cv__globe { background: rgba(90,120,255,.16); color: #8aa1ff; }
+    .cv__link:hover { border-color: #5a78ff; background: rgba(90,120,255,.10); }
+    .cv__arrow { color: #8aa1ff; }
+  }
+</style>
