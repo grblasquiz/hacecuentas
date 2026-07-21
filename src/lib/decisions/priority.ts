@@ -256,6 +256,93 @@ const CTA_BY_CALC: Record<string, PriorityDecisionCta> = {
   },
 };
 
+// ── Tanda 2 (2026-07-21): donantes por tráfico GA4 30d + afinidad temática.
+// Sin prefill: el mapeo de campos se agrega si el funnel demuestra clicks.
+const CTA_BY_CALC_T2: Record<string, PriorityDecisionCta> = {
+  'calculadora-aguinaldo-sac': {
+    lead: 'Tu aguinaldo estimado es {value}.',
+    meaning: 'El aguinaldo es una de las cosas que perdés si pasás a facturar: compará el paquete completo antes de decidir.',
+    room: {
+      slug: 'relacion-dependencia-o-facturar',
+      hook: '¿Te tienta facturar? El aguinaldo es parte de la cuenta.',
+      label: 'Comparar relación de dependencia contra facturar →',
+    },
+  },
+  'calculadora-actualizacion-inflacion-ipc': {
+    lead: 'El monto actualizado por IPC da {value}.',
+    meaning: 'Si lo que actualizaste es tu alquiler, el paso siguiente es decidir si a ese precio conviene renovar o mudarte.',
+    room: {
+      slug: 'renovar-alquiler-o-mudarme',
+      hook: '¿La actualización hace que mudarte empiece a convenir?',
+      label: 'Comparar renovar contra mudarte →',
+    },
+  },
+  'calculadora-sueldo-bruto-desde-neto': {
+    lead: 'El bruto equivalente es {value}.',
+    meaning: 'Con el bruto en mano podés comparar tu trabajo actual contra una oferta por lo que realmente te queda.',
+    room: {
+      slug: 'aceptar-oferta-laboral',
+      hook: 'Una oferta se compara por el neto real, no por el bruto.',
+      label: 'Comparar trabajo actual y oferta →',
+    },
+  },
+  'sueldo-en-mano-argentina': {
+    lead: 'Tu sueldo en mano estimado es {value}.',
+    meaning: 'Si estás evaluando un cambio de trabajo, cruzá ese neto con bono, beneficios y costos de presencialidad.',
+    room: {
+      slug: 'aceptar-oferta-laboral',
+      hook: '¿Te hicieron una oferta? Compará lo que realmente te queda.',
+      label: 'Comparar trabajo actual y oferta →',
+    },
+  },
+  'calculadora-art-indemnizacion-tabla-incapacidad-laboral-permanente': {
+    lead: 'La indemnización ART estimada es {value}.',
+    meaning: 'Si además perdiste el trabajo, cruzá ese monto con tus gastos, ahorros y deudas para saber cuántos meses te cubre.',
+    room: {
+      slug: 'me-despidieron',
+      hook: 'El monto es la mitad de la decisión: la otra es cuánto te dura.',
+      label: 'Calcular cuánto tiempo podés sostenerte →',
+    },
+  },
+  'calculadora-fondo-desempleo-anses-monto-tiempo': {
+    lead: 'Tu prestación por desempleo estimada es {value}.',
+    meaning: 'Sumale indemnización, ahorros y gastos para saber cuántos meses reales de cobertura tenés antes del próximo trabajo.',
+    room: {
+      slug: 'me-despidieron',
+      hook: 'La prestación es un ingreso más: armá la cuenta completa.',
+      label: 'Abrir la sala de despido →',
+    },
+  },
+  'calculadora-antiguedad-laboral': {
+    lead: 'Tu antigüedad computada es {value}.',
+    meaning: 'La antigüedad define la indemnización. Si tu salida está en juego, calculá cuánto deberían pagarte y cuánto te dura.',
+    room: {
+      slug: 'me-despidieron',
+      hook: '¿La antigüedad es por un despido? Hacé la cuenta completa.',
+      label: 'Calcular indemnización y meses de sostén →',
+    },
+  },
+  'calculadora-cuanto-voy-a-cobrar-jubilacion-haber-estimado': {
+    lead: 'Tu haber jubilatorio estimado es {value}.',
+    meaning: 'El haber solo no decide: cruzalo con tus gastos, otros ingresos y ahorros para saber si ya podés dar el paso.',
+    room: {
+      slug: 'estoy-listo-para-jubilarme',
+      hook: '¿Ese haber te alcanza para tu nivel de vida?',
+      label: 'Ver si estoy listo para jubilarme →',
+    },
+  },
+  'calculadora-edad-jubilacion-anos-aporte': {
+    lead: 'Tu situación de edad y aportes da {value}.',
+    meaning: 'Cumplir los requisitos es el primer paso; el segundo es saber si el haber más tus ahorros sostienen tus gastos.',
+    room: {
+      slug: 'estoy-listo-para-jubilarme',
+      hook: 'Poder jubilarte y convenirte jubilarte son dos cuentas distintas.',
+      label: 'Ver si estoy listo para jubilarme →',
+    },
+  },
+};
+Object.assign(CTA_BY_CALC, CTA_BY_CALC_T2);
+
 export function getPriorityDecisionCta(calcSlug: string, lang = ''): PriorityDecisionCta | undefined {
   if (lang) return undefined;
   return CTA_BY_CALC[calcSlug];
