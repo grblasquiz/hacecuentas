@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-07-18
+// Generated: 2026-07-21
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { rmPesoMaximo } from './1rm-peso-maximo';
@@ -38,7 +38,6 @@ import { compute as compute__afp_pension_chile_2026_tabla_comisiones } from './a
 import { compute as compute__afp_vs_onp_peru } from './afp-vs-onp-peru';
 import { aguaCafeTeHidratacionRealMitos } from './agua-cafe-te-hidratacion-real-mitos';
 import { aguaConsumoHogarAhorro } from './agua-consumo-hogar-ahorro';
-import { aguaDiariaDeportista } from './agua-diaria-deportista';
 import { aguaDiariaNecesaria } from './agua-diaria-necesaria';
 import { aguaJardinMensual } from './agua-jardin-mensual';
 import { aguaMineralizacionCafe } from './agua-mineralizacion-cafe';
@@ -122,7 +121,6 @@ import { compute as compute__anime_tiempo_bingear_temporadas_episodios_horas } f
 import { aniversarioPareja } from './aniversario-pareja';
 import { ankiFlashcardsDiaAprenderPalabras } from './anki-flashcards-dia-aprender-palabras';
 import { ankiTarjetasDiariasMemorizacionVocabulario } from './anki-tarjetas-diarias-memorizacion-vocabulario';
-import { compute as compute__annual_salary_to_hourly_rate_converter } from './annual-salary-to-hourly-rate-converter';
 import { compute as compute__annuity_payout_monthly_calculator } from './annuity-payout-monthly-calculator';
 import { anosFluidezIdioma } from './anos-fluidez-idioma';
 import { anosLuzDistanciaConversion } from './anos-luz-distancia-conversion';
@@ -731,7 +729,6 @@ import { compute as compute__conversion_atmosferas_pascales_bar } from './conver
 import { conversionBaseDecimalBinarioHexa } from './conversion-base-decimal-binario-hexa';
 import { conversionBtuKcalAireAcondicionado } from './conversion-btu-kcal-aire-acondicionado';
 import { conversionBytesKbMbGbTb } from './conversion-bytes-kb-mb-gb-tb';
-import { conversionCelsiusFahrenheitKelvin } from './conversion-celsius-fahrenheit-kelvin';
 import { compute as compute__conversion_celsius_fahrenheit_kelvin_rankine_temperatura } from './conversion-celsius-fahrenheit-kelvin-rankine-temperatura';
 import { conversionColesterolMgMmol } from './conversion-colesterol-mg-mmol';
 import { conversionCucharaditasGramosEspeciasSal } from './conversion-cucharaditas-gramos-especias-sal';
@@ -1587,10 +1584,8 @@ import { compute as compute__helado_litros_por_evento_invitados_tipos } from './
 import { compute as compute__heloc_home_equity_line_payment_calculator } from './heloc-home-equity-line-payment-calculator';
 import { hemoglobinaGlicosiladaA1cDiabetes } from './hemoglobina-glicosilada-a1c-diabetes';
 import { herenciaLegitima } from './herencia-legitima';
-import { hidratacionClimaCalurosoActividadDiaria } from './hidratacion-clima-caluroso-actividad-diaria';
 import { hidratacionCorredor } from './hidratacion-corredor';
 import { hidratacionEjercicioElectrolitosIsotonica } from './hidratacion-ejercicio-electrolitos-isotonica';
-import { hidratacionEjercicioMl } from './hidratacion-ejercicio-ml';
 import { hidrometroCorreccionTemperatura } from './hidrometro-correccion-temperatura';
 import { hidromielProporcionesMielAgua } from './hidromiel-proporciones-miel-agua';
 import { hidroponiaNutrientesEcPpm } from './hidroponia-nutrientes-ec-ppm';
@@ -1792,7 +1787,6 @@ import { indemnizacionDespidoParaguay } from './indemnizacion-despido-paraguay';
 import { compute as compute__indemnizacion_despido_sin_justa_causa_colombia } from './indemnizacion-despido-sin-justa-causa-colombia';
 import { indemnizacionEmpleadaCasaParticularLey26844 } from './indemnizacion-empleada-casa-particular-ley-26844';
 import { compute as compute__indemnizacion_sustitutiva_colpensiones_colombia_2026 } from './indemnizacion-sustitutiva-colpensiones-colombia-2026';
-import { independenciaFinancieraFireMovimiento } from './independencia-financiera-fire-movimiento';
 import { indiceAsistenciaFaltas } from './indice-asistencia-faltas';
 import { indiceBienestarWho5 } from './indice-bienestar-who5';
 import { indiceCinturaCadera } from './indice-cintura-cadera';
@@ -2722,7 +2716,6 @@ import { reglaDeTresSimple } from './regla-de-tres-simple';
 import { reglaDeTresSimpleDirectaInversa } from './regla-de-tres-simple-directa-inversa';
 import { reglaNumeroDunbar150ContactosRed } from './regla-numero-dunbar-150-contactos-red';
 import { compute as compute__regla_ruffini } from './regla-ruffini';
-import { reglaTres } from './regla-tres';
 import { reglaTresCompuesta } from './regla-tres-compuesta';
 import { reglaTresInversa } from './regla-tres-inversa';
 import { compute as compute__regra_de_tres_simples_composta_direta_inversa } from './regra-de-tres-simples-composta-direta-inversa';
@@ -3426,7 +3419,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'afp-vs-onp-peru': compute__afp_vs_onp_peru,
   'agua-cafe-te-hidratacion-real-mitos': aguaCafeTeHidratacionRealMitos,
   'agua-consumo-hogar-ahorro': aguaConsumoHogarAhorro,
-  'agua-diaria-deportista': aguaDiariaDeportista,
   'agua-diaria-necesaria': aguaDiariaNecesaria,
   'agua-jardin-mensual': aguaJardinMensual,
   'agua-mineralizacion-cafe': aguaMineralizacionCafe,
@@ -3510,7 +3502,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'aniversario-pareja': aniversarioPareja,
   'anki-flashcards-dia-aprender-palabras': ankiFlashcardsDiaAprenderPalabras,
   'anki-tarjetas-diarias-memorizacion-vocabulario': ankiTarjetasDiariasMemorizacionVocabulario,
-  'annual-salary-to-hourly-rate-converter': compute__annual_salary_to_hourly_rate_converter,
   'annuity-payout-monthly-calculator': compute__annuity_payout_monthly_calculator,
   'anos-fluidez-idioma': anosFluidezIdioma,
   'anos-luz-distancia-conversion': anosLuzDistanciaConversion,
@@ -4119,7 +4110,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'conversion-base-decimal-binario-hexa': conversionBaseDecimalBinarioHexa,
   'conversion-btu-kcal-aire-acondicionado': conversionBtuKcalAireAcondicionado,
   'conversion-bytes-kb-mb-gb-tb': conversionBytesKbMbGbTb,
-  'conversion-celsius-fahrenheit-kelvin': conversionCelsiusFahrenheitKelvin,
   'conversion-celsius-fahrenheit-kelvin-rankine-temperatura': compute__conversion_celsius_fahrenheit_kelvin_rankine_temperatura,
   'conversion-colesterol-mg-mmol': conversionColesterolMgMmol,
   'conversion-cucharaditas-gramos-especias-sal': conversionCucharaditasGramosEspeciasSal,
@@ -4975,10 +4965,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'heloc-home-equity-line-payment-calculator': compute__heloc_home_equity_line_payment_calculator,
   'hemoglobina-glicosilada-a1c-diabetes': hemoglobinaGlicosiladaA1cDiabetes,
   'herencia-legitima': herenciaLegitima,
-  'hidratacion-clima-caluroso-actividad-diaria': hidratacionClimaCalurosoActividadDiaria,
   'hidratacion-corredor': hidratacionCorredor,
   'hidratacion-ejercicio-electrolitos-isotonica': hidratacionEjercicioElectrolitosIsotonica,
-  'hidratacion-ejercicio-ml': hidratacionEjercicioMl,
   'hidrometro-correccion-temperatura': hidrometroCorreccionTemperatura,
   'hidromiel-proporciones-miel-agua': hidromielProporcionesMielAgua,
   'hidroponia-nutrientes-ec-ppm': hidroponiaNutrientesEcPpm,
@@ -5180,7 +5168,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'indemnizacion-despido-sin-justa-causa-colombia': compute__indemnizacion_despido_sin_justa_causa_colombia,
   'indemnizacion-empleada-casa-particular-ley-26844': indemnizacionEmpleadaCasaParticularLey26844,
   'indemnizacion-sustitutiva-colpensiones-colombia-2026': compute__indemnizacion_sustitutiva_colpensiones_colombia_2026,
-  'independencia-financiera-fire-movimiento': independenciaFinancieraFireMovimiento,
   'indice-asistencia-faltas': indiceAsistenciaFaltas,
   'indice-bienestar-who5': indiceBienestarWho5,
   'indice-cintura-cadera': indiceCinturaCadera,
@@ -6110,7 +6097,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'regla-de-tres-simple-directa-inversa': reglaDeTresSimpleDirectaInversa,
   'regla-numero-dunbar-150-contactos-red': reglaNumeroDunbar150ContactosRed,
   'regla-ruffini': compute__regla_ruffini,
-  'regla-tres': reglaTres,
   'regla-tres-compuesta': reglaTresCompuesta,
   'regla-tres-inversa': reglaTresInversa,
   'regra-de-tres-simples-composta-direta-inversa': compute__regra_de_tres_simples_composta_direta_inversa,
