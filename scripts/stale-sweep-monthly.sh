@@ -36,7 +36,12 @@ if [ "$COUNT" = "0" ]; then
   echo "$MONTH" > "$MARKER"; log "0 stale → nada que hacer"; exit 0
 fi
 
-# Claude Code headless (timeout 2h). Key/tokens: usa la sesión logueada del CLI.
+# Claude Code headless. Auth: ANTHROPIC_API_KEY de .env (la sesión OAuth del
+# CLI 2.1.76 está vencida — 401 el 7-22 — y el re-login es interactivo).
+if [ -f "$REPO/.env" ]; then
+  ANTHROPIC_API_KEY=$(grep -E '^ANTHROPIC_API_KEY=' "$REPO/.env" | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")
+  export ANTHROPIC_API_KEY
+fi
 if claude -p "$(cat scripts/stale-sweep-prompt.md)" \
     --dangerously-skip-permissions \
     >> "$LOG" 2>&1; then
