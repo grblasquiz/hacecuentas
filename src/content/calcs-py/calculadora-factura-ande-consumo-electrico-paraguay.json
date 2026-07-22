@@ -23,22 +23,92 @@
     "Comparar el gasto eléctrico de invierno versus verano."
   ],
   "fields": [
-    { "id": "consumo", "label": "Consumo del mes (kWh)", "type": "number", "required": true, "placeholder": "250", "min": 0, "step": 1, "unit": "kWh" },
-    { "id": "tarifaSocial", "label": "¿Tenés tarifa social (usuario familiar)?", "type": "select", "default": "no", "options": [
-      { "value": "no", "label": "No" },
-      { "value": "si", "label": "Sí, tarifa social habilitada" }
-    ] },
-    { "id": "acWatts", "label": "Potencia del aire acondicionado (W) — opcional", "type": "number", "required": false, "default": 0, "min": 0, "step": 100, "unit": "W" },
-    { "id": "acHoras", "label": "Horas de uso del aire por día — opcional", "type": "number", "required": false, "default": 0, "min": 0, "max": 24, "step": 1, "unit": "h" },
-    { "id": "acDias", "label": "Días de uso del aire en el mes — opcional", "type": "number", "required": false, "default": 30, "min": 0, "max": 31, "step": 1, "unit": "días" }
+    {
+      "id": "consumo",
+      "label": "Consumo del mes (kWh)",
+      "type": "number",
+      "required": true,
+      "placeholder": "250",
+      "min": 0,
+      "step": 1,
+      "unit": "kWh",
+      "default": 250
+    },
+    {
+      "id": "tarifaSocial",
+      "label": "¿Tenés tarifa social (usuario familiar)?",
+      "type": "select",
+      "default": "no",
+      "options": [
+        {
+          "value": "no",
+          "label": "No"
+        },
+        {
+          "value": "si",
+          "label": "Sí, tarifa social habilitada"
+        }
+      ]
+    },
+    {
+      "id": "acWatts",
+      "label": "Potencia del aire acondicionado (W) — opcional",
+      "type": "number",
+      "required": false,
+      "default": 0,
+      "min": 0,
+      "step": 100,
+      "unit": "W"
+    },
+    {
+      "id": "acHoras",
+      "label": "Horas de uso del aire por día — opcional",
+      "type": "number",
+      "required": false,
+      "default": 0,
+      "min": 0,
+      "max": 24,
+      "step": 1,
+      "unit": "h"
+    },
+    {
+      "id": "acDias",
+      "label": "Días de uso del aire en el mes — opcional",
+      "type": "number",
+      "required": false,
+      "default": 30,
+      "min": 0,
+      "max": 31,
+      "step": 1,
+      "unit": "días"
+    }
   ],
   "outputs": [
-    { "id": "total", "label": "Total estimado (energía + IVA)", "primary": true },
-    { "id": "energia", "label": "Costo de energía" },
-    { "id": "iva", "label": "IVA 10%" },
-    { "id": "precioKwh", "label": "Precio de la faja aplicada" },
-    { "id": "descuentoSocial", "label": "Descuento por tarifa social" },
-    { "id": "detalle", "label": "Detalle" }
+    {
+      "id": "total",
+      "label": "Total estimado (energía + IVA)",
+      "primary": true
+    },
+    {
+      "id": "energia",
+      "label": "Costo de energía"
+    },
+    {
+      "id": "iva",
+      "label": "IVA 10%"
+    },
+    {
+      "id": "precioKwh",
+      "label": "Precio de la faja aplicada"
+    },
+    {
+      "id": "descuentoSocial",
+      "label": "Descuento por tarifa social"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
   ],
   "example": {
     "title": "Ejemplo: consumo de 250 kWh, sin tarifa social",
@@ -52,21 +122,61 @@
   },
   "explanation": "## Cómo factura la ANDE (Pliego 21, residencial)\n\n```\nEnergía = consumo total del mes × precio de la faja del total\nTotal   = energía + IVA 10%\n```\n\nLa regla clave, textual del Pliego 21: *el consumo total registrado del mes será facturado aplicando un solo precio de la faja tarifaria que corresponda a la totalidad del consumo*. Es decir, **no** se cobra por tramos: se mira el **total** de kWh, se busca su faja y ese precio se aplica a **cada** kWh del mes.\n\n## Fajas tarifarias residenciales (Categoría 142)\n\n| Consumo del mes | Precio (aplica a todo el consumo) |\n|---|---|\n| 0 – 50 kWh | 311,55 Gs./kWh |\n| 51 – 150 kWh | 349,89 Gs./kWh |\n| 151 – 300 kWh | 365,45 Gs./kWh |\n| 301 – 500 kWh | 403,82 Gs./kWh |\n| 501 – 1.000 kWh | 420,27 Gs./kWh |\n| Más de 1.000 kWh | 435,51 Gs./kWh |\n\n## Por qué el aire acondicionado dispara la factura\n\nComo el precio se aplica a todo el consumo, **cruzar una faja es caro**. Ejemplo: 300 kWh a 365,45 = Gs. 109.635 de energía; pero 320 kWh ya caen en la faja de 403,82 y cuestan 320 × 403,82 = Gs. 129.222. Sumaste 20 kWh y la energía subió casi Gs. 20.000, porque el precio saltó para el mes entero. Un aire de 1.200 W usado 6 horas por día 30 días agrega unos **216 kWh**: suficiente para cambiar de faja.\n\n## Tarifa social (Ley 3480/2008)\n\nLos **usuarios familiares** habilitados que consumen hasta 300 kWh/mes pagan solo una parte de la tarifa normal:\n\n| Consumo del mes | Paga | Descuento |\n|---|---|---|\n| 0 – 100 kWh | 25% de la tarifa | 75% |\n| 101 – 200 kWh | 50% de la tarifa | 50% |\n| 201 – 300 kWh | 75% de la tarifa | 25% |\n\n## Qué NO incluye este cálculo\n\n- **Alumbrado público municipal** y otras tasas que aparecen en la boleta.\n- **Cargos por potencia** o mínimos de facturación según la carga contratada.\n- Tarifas de **tramos horarios** (opcionales) ni categorías no residenciales.\n\n## Disclaimer\n\nEstimación orientativa con el Pliego de Tarifas N° 21 (residencial baja tensión) más IVA 10% (Ley 6380/19). La boleta real puede incluir alumbrado público, tasas municipales, mínimos de facturación y ajustes. Verificá tu consumo en kWh y el importe en la boleta de la ANDE.",
   "faq": [
-    { "q": "¿Cómo cobra la ANDE el consumo residencial?", "a": "Con el Pliego 21: todo el consumo del mes se factura a **un solo precio**, el de la faja que corresponde al total de kWh. No es una tarifa por bloques, sino un precio único según el consumo total." },
-    { "q": "¿Cuánto cuesta el kWh en Paraguay?", "a": "Depende de tu consumo total del mes: 311,55 Gs./kWh hasta 50 kWh, 349,89 hasta 150, 365,45 hasta 300, 403,82 hasta 500, 420,27 hasta 1.000 y 435,51 por encima. A todo se le suma IVA 10%." },
-    { "q": "¿Por qué el aire acondicionado sube tanto la factura?", "a": "Porque el precio se aplica a **todo** el consumo. Si el aire te empuja a la faja siguiente, ese precio más alto se cobra por cada kWh del mes, no solo por los kWh extra." },
-    { "q": "¿Cuánto gasta un aire acondicionado por mes?", "a": "Aproximadamente potencia (kW) × horas por día × días. Un equipo de 1.200 W usado 6 horas diarias durante 30 días suma unos 216 kWh, que pueden hacerte cambiar de faja." },
-    { "q": "¿Qué es la tarifa social de la ANDE?", "a": "Un subsidio (Ley 3480/2008) para usuarios familiares habilitados que consumen hasta 300 kWh/mes: pagan 25%, 50% o 75% de la tarifa normal según su banda, es decir un descuento de hasta el 75%." },
-    { "q": "¿La factura incluye IVA?", "a": "Sí. Sobre el importe de energía se agrega el **IVA del 10%** (Ley 6380/19). Esta calculadora ya lo suma en el total estimado." },
-    { "q": "¿La calculadora incluye el alumbrado público?", "a": "No. Estima solo la energía más IVA. El alumbrado público y otras tasas municipales aparecen en la boleta pero se liquidan aparte y no están en este cálculo." },
-    { "q": "¿Dónde veo mis kWh consumidos?", "a": "En la boleta de la ANDE figura el consumo del período en kWh (diferencia entre la lectura actual y la anterior del medidor). Ese número es el que cargás en la calculadora." },
-    { "q": "¿Conviene bajar el consumo para no cambiar de faja?", "a": "Sí. Como el precio se aplica a todo el mes, mantenerte debajo del límite de una faja puede ahorrarte bastante. Reducir consumo justo cuando estás cerca de un salto rinde mucho." }
+    {
+      "q": "¿Cómo cobra la ANDE el consumo residencial?",
+      "a": "Con el Pliego 21: todo el consumo del mes se factura a **un solo precio**, el de la faja que corresponde al total de kWh. No es una tarifa por bloques, sino un precio único según el consumo total."
+    },
+    {
+      "q": "¿Cuánto cuesta el kWh en Paraguay?",
+      "a": "Depende de tu consumo total del mes: 311,55 Gs./kWh hasta 50 kWh, 349,89 hasta 150, 365,45 hasta 300, 403,82 hasta 500, 420,27 hasta 1.000 y 435,51 por encima. A todo se le suma IVA 10%."
+    },
+    {
+      "q": "¿Por qué el aire acondicionado sube tanto la factura?",
+      "a": "Porque el precio se aplica a **todo** el consumo. Si el aire te empuja a la faja siguiente, ese precio más alto se cobra por cada kWh del mes, no solo por los kWh extra."
+    },
+    {
+      "q": "¿Cuánto gasta un aire acondicionado por mes?",
+      "a": "Aproximadamente potencia (kW) × horas por día × días. Un equipo de 1.200 W usado 6 horas diarias durante 30 días suma unos 216 kWh, que pueden hacerte cambiar de faja."
+    },
+    {
+      "q": "¿Qué es la tarifa social de la ANDE?",
+      "a": "Un subsidio (Ley 3480/2008) para usuarios familiares habilitados que consumen hasta 300 kWh/mes: pagan 25%, 50% o 75% de la tarifa normal según su banda, es decir un descuento de hasta el 75%."
+    },
+    {
+      "q": "¿La factura incluye IVA?",
+      "a": "Sí. Sobre el importe de energía se agrega el **IVA del 10%** (Ley 6380/19). Esta calculadora ya lo suma en el total estimado."
+    },
+    {
+      "q": "¿La calculadora incluye el alumbrado público?",
+      "a": "No. Estima solo la energía más IVA. El alumbrado público y otras tasas municipales aparecen en la boleta pero se liquidan aparte y no están en este cálculo."
+    },
+    {
+      "q": "¿Dónde veo mis kWh consumidos?",
+      "a": "En la boleta de la ANDE figura el consumo del período en kWh (diferencia entre la lectura actual y la anterior del medidor). Ese número es el que cargás en la calculadora."
+    },
+    {
+      "q": "¿Conviene bajar el consumo para no cambiar de faja?",
+      "a": "Sí. Como el precio se aplica a todo el mes, mantenerte debajo del límite de una faja puede ahorrarte bastante. Reducir consumo justo cuando estás cerca de un salto rinde mucho."
+    }
   ],
   "sources": [
-    { "name": "ANDE — Pliego de Tarifas N° 21", "url": "https://www.ande.gov.py/docs/tarifas/PLIEGO21.pdf", "publisher": "Administración Nacional de Electricidad", "date": "2026" },
-    { "name": "ANDE — Beneficios de la Tarifa Social", "url": "https://www.ande.gov.py/infodata.php?catid=6", "publisher": "Administración Nacional de Electricidad", "date": "2026" }
+    {
+      "name": "ANDE — Pliego de Tarifas N° 21",
+      "url": "https://www.ande.gov.py/docs/tarifas/PLIEGO21.pdf",
+      "publisher": "Administración Nacional de Electricidad",
+      "date": "2026"
+    },
+    {
+      "name": "ANDE — Beneficios de la Tarifa Social",
+      "url": "https://www.ande.gov.py/infodata.php?catid=6",
+      "publisher": "Administración Nacional de Electricidad",
+      "date": "2026"
+    }
   ],
-  "relatedSlugs": ["calculadora-iva-paraguay", "calculadora-costo-vida-paraguay"],
+  "relatedSlugs": [
+    "calculadora-iva-paraguay",
+    "calculadora-costo-vida-paraguay"
+  ],
   "dataUpdate": {
     "frequency": "yearly",
     "lastUpdated": "2026-07-18",
@@ -90,13 +200,49 @@
   "referenceTables": [
     {
       "title": "Costo estimado de energía por consumo mensual (Pliego 21, sin tarifa social)",
-      "headers": ["Consumo", "Faja (Gs./kWh)", "Energía", "IVA 10%", "Total estimado"],
+      "headers": [
+        "Consumo",
+        "Faja (Gs./kWh)",
+        "Energía",
+        "IVA 10%",
+        "Total estimado"
+      ],
       "rows": [
-        ["50 kWh", "311,55", "Gs. 15.578", "Gs. 1.558", "Gs. 17.136"],
-        ["120 kWh", "349,89", "Gs. 41.987", "Gs. 4.199", "Gs. 46.186"],
-        ["250 kWh", "365,45", "Gs. 91.363", "Gs. 9.136", "Gs. 100.499"],
-        ["400 kWh", "403,82", "Gs. 161.528", "Gs. 16.153", "Gs. 177.681"],
-        ["700 kWh", "420,27", "Gs. 294.189", "Gs. 29.419", "Gs. 323.608"]
+        [
+          "50 kWh",
+          "311,55",
+          "Gs. 15.578",
+          "Gs. 1.558",
+          "Gs. 17.136"
+        ],
+        [
+          "120 kWh",
+          "349,89",
+          "Gs. 41.987",
+          "Gs. 4.199",
+          "Gs. 46.186"
+        ],
+        [
+          "250 kWh",
+          "365,45",
+          "Gs. 91.363",
+          "Gs. 9.136",
+          "Gs. 100.499"
+        ],
+        [
+          "400 kWh",
+          "403,82",
+          "Gs. 161.528",
+          "Gs. 16.153",
+          "Gs. 177.681"
+        ],
+        [
+          "700 kWh",
+          "420,27",
+          "Gs. 294.189",
+          "Gs. 29.419",
+          "Gs. 323.608"
+        ]
       ],
       "note": "La ANDE factura todo el consumo del mes a un solo precio: el de la faja que corresponde al consumo total. Al superar una faja, el precio salta para TODO el consumo. No incluye alumbrado público ni otras tasas municipales."
     }

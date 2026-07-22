@@ -8,8 +8,7 @@
   "icon": "💶",
   "formulaId": "paga-extra-prorrateo-espana",
   "answerSnippet": "En España el Estatuto de los Trabajadores reconoce como mínimo dos pagas extraordinarias al año, habitualmente en verano y Navidad, y cada una suele equivaler a una mensualidad de salario base más los complementos que fije el convenio. La paga se devenga poco a poco: si no has trabajado todo el periodo de devengo (semestral o anual), cobras la parte proporcional. El prorrateo mensual reparte el importe de las pagas en las 12 mensualidades, sumando cada mes una parte en lugar de cobrarlas de golpe. Con una paga de 1.500 € y 4 de los 6 meses de devengo trabajados, te corresponden 1.000 €.",
-  "intro": "En España tienes derecho, como **mínimo**, a **dos pagas extraordinarias** al año: la de **verano** y la de **Navidad** (el convenio puede mejorar el número o el importe). Cada paga suele equivaler a una **mensualidad de salario base** más los complementos que marque el convenio. La duda habitual es cuánto te corresponde si **no has trabajado todo el periodo** o cómo funciona el **prorrateo**.\n\nEsta calculadora te dice dos cosas: el **importe devengado** de la paga extra según los **meses trabajados** en su periodo de devengo, y el **prorrateo mensual** (cuánto se sumaría a cada nómina si las pagas se reparten en las 12 mensualidades en lugar de cobrarse enteras). Es útil cuando entras o sales de una empresa a mitad de año, cuando quieres comprobar tu finiquito o cuando tu empresa prorratea las extras.\n\nLa **paga se devenga poco a poco**: si el devengo es **semestral**, cada paga se genera a lo largo de 6 meses; si es **anual**, a lo largo de 12. Trabajando solo una parte de ese periodo, cobras la **parte proporcional**. Introduce el importe de una paga completa, los meses trabajados y el tipo de devengo de tu convenio."
-  ,
+  "intro": "En España tienes derecho, como **mínimo**, a **dos pagas extraordinarias** al año: la de **verano** y la de **Navidad** (el convenio puede mejorar el número o el importe). Cada paga suele equivaler a una **mensualidad de salario base** más los complementos que marque el convenio. La duda habitual es cuánto te corresponde si **no has trabajado todo el periodo** o cómo funciona el **prorrateo**.\n\nEsta calculadora te dice dos cosas: el **importe devengado** de la paga extra según los **meses trabajados** en su periodo de devengo, y el **prorrateo mensual** (cuánto se sumaría a cada nómina si las pagas se reparten en las 12 mensualidades en lugar de cobrarse enteras). Es útil cuando entras o sales de una empresa a mitad de año, cuando quieres comprobar tu finiquito o cuando tu empresa prorratea las extras.\n\nLa **paga se devenga poco a poco**: si el devengo es **semestral**, cada paga se genera a lo largo de 6 meses; si es **anual**, a lo largo de 12. Trabajando solo una parte de ese periodo, cobras la **parte proporcional**. Introduce el importe de una paga completa, los meses trabajados y el tipo de devengo de tu convenio.",
   "keyTakeaway": "El Estatuto reconoce **2 pagas extra** al año (verano y Navidad), cada una ≈ 1 mensualidad. Se **devengan de forma proporcional**: paga devengada = paga completa × (meses trabajados ÷ meses de devengo). El **prorrateo mensual** reparte el importe de las pagas entre las 12 mensualidades.",
   "useCases": [
     "Calcular la paga extra proporcional si entraste a la empresa a mitad de semestre.",
@@ -33,7 +32,8 @@
       "min": 0,
       "step": 10,
       "unit": "€",
-      "helpText": "Normalmente equivale a una mensualidad de salario base más los complementos del convenio."
+      "help": "Normalmente equivale a una mensualidad de salario base más los complementos del convenio.",
+      "default": 1500
     },
     {
       "id": "numeroPagas",
@@ -43,8 +43,8 @@
       "placeholder": "2",
       "min": 1,
       "step": 1,
-      "defaultValue": 2,
-      "helpText": "El mínimo legal es 2 (verano y Navidad). Tu convenio puede reconocer más."
+      "help": "El mínimo legal es 2 (verano y Navidad). Tu convenio puede reconocer más.",
+      "default": 2
     },
     {
       "id": "mesesTrabajados",
@@ -56,30 +56,62 @@
       "max": 12,
       "step": 1,
       "unit": "meses",
-      "helpText": "Meses trabajados dentro del periodo que genera la paga. Déjalo completo para la paga entera."
+      "help": "Meses trabajados dentro del periodo que genera la paga. Déjalo completo para la paga entera.",
+      "default": 6
     },
     {
       "id": "tipoDevengo",
       "label": "Periodo de devengo",
       "type": "select",
-      "defaultValue": "semestral",
       "options": [
-        { "value": "semestral", "label": "Semestral (6 meses)" },
-        { "value": "anual", "label": "Anual (12 meses)" }
+        {
+          "value": "semestral",
+          "label": "Semestral (6 meses)"
+        },
+        {
+          "value": "anual",
+          "label": "Anual (12 meses)"
+        }
       ],
-      "helpText": "Según tu convenio, cada paga se devenga en 6 o en 12 meses."
+      "help": "Según tu convenio, cada paga se devenga en 6 o en 12 meses.",
+      "default": "semestral"
     }
   ],
   "outputs": [
-    { "id": "pagaDevengada", "label": "Paga extra devengada", "type": "currency", "primary": true },
-    { "id": "prorrateoMensual", "label": "Prorrateo mensual", "type": "currency" },
-    { "id": "totalAnualPagas", "label": "Total anual de pagas extra", "type": "currency" },
-    { "id": "salarioAnualTotal", "label": "Salario anual total (12 + extras)", "type": "currency" },
-    { "id": "detalle", "label": "Detalle" }
+    {
+      "id": "pagaDevengada",
+      "label": "Paga extra devengada",
+      "type": "currency",
+      "primary": true
+    },
+    {
+      "id": "prorrateoMensual",
+      "label": "Prorrateo mensual",
+      "type": "currency"
+    },
+    {
+      "id": "totalAnualPagas",
+      "label": "Total anual de pagas extra",
+      "type": "currency"
+    },
+    {
+      "id": "salarioAnualTotal",
+      "label": "Salario anual total (12 + extras)",
+      "type": "currency"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
   ],
   "example": {
     "title": "Ejemplo: paga de 1.500 €, 4 meses trabajados, devengo semestral",
-    "inputs": { "importePagaCompleta": 1500, "numeroPagas": 2, "mesesTrabajados": 4, "tipoDevengo": "semestral" },
+    "inputs": {
+      "importePagaCompleta": 1500,
+      "numeroPagas": 2,
+      "mesesTrabajados": 4,
+      "tipoDevengo": "semestral"
+    },
     "steps": [
       "**Devengo**: semestral = 6 meses de generación de la paga.",
       "**Proporción**: 4 meses de 6 = 4/6.",
@@ -170,13 +202,43 @@
   "referenceTables": [
     {
       "title": "Paga extra devengada según meses trabajados — ejemplos",
-      "headers": ["Paga completa", "Meses trabajados", "Periodo de devengo", "Paga devengada"],
+      "headers": [
+        "Paga completa",
+        "Meses trabajados",
+        "Periodo de devengo",
+        "Paga devengada"
+      ],
       "rows": [
-        ["1.500 €", "6 de 6", "Semestral", "1.500 €"],
-        ["1.500 €", "4 de 6", "Semestral", "1.000 €"],
-        ["1.500 €", "3 de 6", "Semestral", "750 €"],
-        ["1.200 €", "6 de 12", "Anual", "600 €"],
-        ["1.200 €", "3 de 12", "Anual", "300 €"]
+        [
+          "1.500 €",
+          "6 de 6",
+          "Semestral",
+          "1.500 €"
+        ],
+        [
+          "1.500 €",
+          "4 de 6",
+          "Semestral",
+          "1.000 €"
+        ],
+        [
+          "1.500 €",
+          "3 de 6",
+          "Semestral",
+          "750 €"
+        ],
+        [
+          "1.200 €",
+          "6 de 12",
+          "Anual",
+          "600 €"
+        ],
+        [
+          "1.200 €",
+          "3 de 12",
+          "Anual",
+          "300 €"
+        ]
       ],
       "note": "Fuente: art. 31 del Estatuto de los Trabajadores. La cuantía y el periodo de devengo dependen del convenio colectivo."
     }

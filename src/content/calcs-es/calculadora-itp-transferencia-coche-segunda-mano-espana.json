@@ -8,8 +8,7 @@
   "icon": "🚗",
   "formulaId": "itp-transferencia-coche-segunda-mano-espana",
   "answerSnippet": "Cambiar el nombre de un coche de segunda mano comprado a un particular en España tiene tres costes: el Impuesto de Transmisiones Patrimoniales (ITP), autonómico y habitualmente del 4% sobre el valor del vehículo; la tasa de la DGT por el cambio de titularidad (unos 55,70 € para turismos y 27,85 € para motos); y, si contratas gestoría, sus honorarios. El ITP se calcula sobre el mayor entre el precio de compra y el valor fiscal según las tablas de precios medios de Hacienda. Para un coche valorado en 8.000 €: 320 € de ITP (4%) + 55,70 € de tasa DGT.",
-  "intro": "Comprar un coche usado a un particular en España obliga a pagar el **Impuesto de Transmisiones Patrimoniales (ITP)**, un tributo **autonómico** cuyo tipo habitual es del **4%** sobre el valor del vehículo (aunque varía entre comunidades, del 4% al 8%). A eso se suma la **tasa de la DGT** por el cambio de titularidad y, si no haces el trámite tú mismo, los honorarios de la **gestoría**.\n\nEsta calculadora estima el **coste total del cambio de nombre**: ITP + tasa DGT + gestoría. El **ITP** se calcula sobre el **mayor** entre el precio que pagaste y el **valor fiscal** del vehículo (según las tablas de precios medios de venta que publica el Ministerio de Hacienda, con una reducción por antigüedad). La **tasa de la DGT** es un importe fijo que depende de si es coche o moto.\n\nAjusta el **tipo de ITP** al de tu comunidad autónoma (algunas aplican tipos reducidos o cuotas fijas para vehículos antiguos o de baja cilindrada) y añade la gestoría solo si vas a contratarla. Los valores de la tasa DGT son referenciales del ejercicio: confírmalos en la sede de la DGT antes de hacer el trámite."
-  ,
+  "intro": "Comprar un coche usado a un particular en España obliga a pagar el **Impuesto de Transmisiones Patrimoniales (ITP)**, un tributo **autonómico** cuyo tipo habitual es del **4%** sobre el valor del vehículo (aunque varía entre comunidades, del 4% al 8%). A eso se suma la **tasa de la DGT** por el cambio de titularidad y, si no haces el trámite tú mismo, los honorarios de la **gestoría**.\n\nEsta calculadora estima el **coste total del cambio de nombre**: ITP + tasa DGT + gestoría. El **ITP** se calcula sobre el **mayor** entre el precio que pagaste y el **valor fiscal** del vehículo (según las tablas de precios medios de venta que publica el Ministerio de Hacienda, con una reducción por antigüedad). La **tasa de la DGT** es un importe fijo que depende de si es coche o moto.\n\nAjusta el **tipo de ITP** al de tu comunidad autónoma (algunas aplican tipos reducidos o cuotas fijas para vehículos antiguos o de baja cilindrada) y añade la gestoría solo si vas a contratarla. Los valores de la tasa DGT son referenciales del ejercicio: confírmalos en la sede de la DGT antes de hacer el trámite.",
   "keyTakeaway": "El cambio de nombre de un coche usado cuesta **ITP + tasa DGT (+ gestoría)**. El **ITP** es autonómico, habitualmente **4%** sobre el valor del vehículo (el mayor entre precio y valor fiscal). La **tasa DGT** ronda **55,70 €** (turismos) y **27,85 €** (motos). El tipo de ITP varía por comunidad autónoma.",
   "useCases": [
     "Calcular cuánto cuesta cambiar el nombre de un coche de 8.000 €.",
@@ -33,7 +32,8 @@
       "min": 0,
       "step": 100,
       "unit": "€",
-      "helpText": "Base del ITP: el mayor entre el precio de compra y el valor fiscal (tablas de precios medios de Hacienda)."
+      "help": "Base del ITP: el mayor entre el precio de compra y el valor fiscal (tablas de precios medios de Hacienda).",
+      "default": 8000
     },
     {
       "id": "tipoITP",
@@ -43,20 +43,26 @@
       "placeholder": "4",
       "min": 0,
       "step": 0.5,
-      "defaultValue": 4,
       "unit": "%",
-      "helpText": "El tipo de transmisión de vehículos varía por comunidad autónoma; el habitual es el 4%."
+      "help": "El tipo de transmisión de vehículos varía por comunidad autónoma; el habitual es el 4%.",
+      "default": 4
     },
     {
       "id": "tipoVehiculo",
       "label": "Tipo de vehículo",
       "type": "select",
-      "defaultValue": "coche",
       "options": [
-        { "value": "coche", "label": "Coche / turismo (tasa DGT ~55,70 €)" },
-        { "value": "moto", "label": "Moto (tasa DGT ~27,85 €)" }
+        {
+          "value": "coche",
+          "label": "Coche / turismo (tasa DGT ~55,70 €)"
+        },
+        {
+          "value": "moto",
+          "label": "Moto (tasa DGT ~27,85 €)"
+        }
       ],
-      "helpText": "La tasa de la DGT por cambio de titularidad depende del tipo de vehículo."
+      "help": "La tasa de la DGT por cambio de titularidad depende del tipo de vehículo.",
+      "default": "coche"
     },
     {
       "id": "costeGestoria",
@@ -66,22 +72,51 @@
       "placeholder": "0",
       "min": 0,
       "step": 10,
-      "defaultValue": 0,
       "unit": "€",
-      "helpText": "Honorarios de la gestoría si delegas el trámite. Déjalo en 0 si lo haces tú."
+      "help": "Honorarios de la gestoría si delegas el trámite. Déjalo en 0 si lo haces tú.",
+      "default": 0
     }
   ],
   "outputs": [
-    { "id": "totalCambioNombre", "label": "Coste total del cambio de nombre", "type": "currency", "primary": true },
-    { "id": "itp", "label": "ITP", "type": "currency" },
-    { "id": "tasaDGT", "label": "Tasa DGT", "type": "currency" },
-    { "id": "gestoria", "label": "Gestoría", "type": "currency" },
-    { "id": "totalConCompra", "label": "Total con el precio del coche", "type": "currency" },
-    { "id": "detalle", "label": "Detalle" }
+    {
+      "id": "totalCambioNombre",
+      "label": "Coste total del cambio de nombre",
+      "type": "currency",
+      "primary": true
+    },
+    {
+      "id": "itp",
+      "label": "ITP",
+      "type": "currency"
+    },
+    {
+      "id": "tasaDGT",
+      "label": "Tasa DGT",
+      "type": "currency"
+    },
+    {
+      "id": "gestoria",
+      "label": "Gestoría",
+      "type": "currency"
+    },
+    {
+      "id": "totalConCompra",
+      "label": "Total con el precio del coche",
+      "type": "currency"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
   ],
   "example": {
     "title": "Ejemplo: coche valorado en 8.000 €, ITP 4%, gestoría 80 €",
-    "inputs": { "valorVehiculo": 8000, "tipoITP": 4, "tipoVehiculo": "coche", "costeGestoria": 80 },
+    "inputs": {
+      "valorVehiculo": 8000,
+      "tipoITP": 4,
+      "tipoVehiculo": "coche",
+      "costeGestoria": 80
+    },
     "steps": [
       "**ITP**: 4% de 8.000 € = **320 €**.",
       "**Tasa DGT** (turismo): **55,70 €**.",
@@ -168,12 +203,37 @@
   "referenceTables": [
     {
       "title": "Coste del cambio de nombre por tipo de ITP — vehículo de 8.000 €",
-      "headers": ["Tipo ITP", "ITP", "Tasa DGT (turismo)", "Total sin gestoría"],
+      "headers": [
+        "Tipo ITP",
+        "ITP",
+        "Tasa DGT (turismo)",
+        "Total sin gestoría"
+      ],
       "rows": [
-        ["4%", "320 €", "55,70 €", "375,70 €"],
-        ["5%", "400 €", "55,70 €", "455,70 €"],
-        ["6%", "480 €", "55,70 €", "535,70 €"],
-        ["8%", "640 €", "55,70 €", "695,70 €"]
+        [
+          "4%",
+          "320 €",
+          "55,70 €",
+          "375,70 €"
+        ],
+        [
+          "5%",
+          "400 €",
+          "55,70 €",
+          "455,70 €"
+        ],
+        [
+          "6%",
+          "480 €",
+          "55,70 €",
+          "535,70 €"
+        ],
+        [
+          "8%",
+          "640 €",
+          "55,70 €",
+          "695,70 €"
+        ]
       ],
       "note": "Fuente: RDL 1/1993 (ITP y AJD) y DGT. El tipo de ITP lo fija cada comunidad autónoma; la tasa DGT es referencial 2026."
     }

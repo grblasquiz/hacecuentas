@@ -8,8 +8,7 @@
   "icon": "🏢",
   "formulaId": "coste-trabajador-empresa-seguridad-social-espana",
   "answerSnippet": "Un trabajador le cuesta a la empresa bastante más que su salario bruto: hay que sumar la cotización empresarial a la Seguridad Social, que en 2026 ronda el 30-32% del bruto. Sobre la base de contingencias comunes, la empresa paga el 23,60% por contingencias comunes, el 5,50% por desempleo (indefinido), el 0,20% de FOGASA, el 0,60% de formación, en torno al 0,75% del MEI y un porcentaje variable de accidentes de trabajo. Para un bruto de 30.000 € anuales, el coste total ronda los 39.600 € al año.",
-  "intro": "Cuando ofreces un sueldo de, por ejemplo, **30.000 € brutos**, ese no es el coste real del empleado para la empresa: encima del bruto hay que pagar la **cotización empresarial a la Seguridad Social**, que en España ronda el **30-32%**. Es la diferencia entre lo que el trabajador ve en su contrato y lo que la empresa desembolsa cada mes.\n\nEsta calculadora estima el **coste total anual y mensual** de un empleado sumando al salario bruto todas las cotizaciones a cargo de la empresa: contingencias comunes, desempleo, FOGASA, formación profesional, el MEI y los accidentes de trabajo (AT y EP). La usan empresarios que van a contratar, autónomos que valoran su primer empleado, y también trabajadores que quieren entender el 'coste empresa' de su nómina.\n\nLos **tipos de cotización** son los del Régimen General 2026 sobre la base de contingencias comunes. El porcentaje de **AT y EP varía según la actividad** (una oficina cotiza menos que la construcción), por eso lo puedes ajustar. El **MEI** y la **base máxima de cotización** son referenciales del ejercicio: revisa las tablas oficiales de la Seguridad Social para cerrar el cálculo exacto de tu caso."
-  ,
+  "intro": "Cuando ofreces un sueldo de, por ejemplo, **30.000 € brutos**, ese no es el coste real del empleado para la empresa: encima del bruto hay que pagar la **cotización empresarial a la Seguridad Social**, que en España ronda el **30-32%**. Es la diferencia entre lo que el trabajador ve en su contrato y lo que la empresa desembolsa cada mes.\n\nEsta calculadora estima el **coste total anual y mensual** de un empleado sumando al salario bruto todas las cotizaciones a cargo de la empresa: contingencias comunes, desempleo, FOGASA, formación profesional, el MEI y los accidentes de trabajo (AT y EP). La usan empresarios que van a contratar, autónomos que valoran su primer empleado, y también trabajadores que quieren entender el 'coste empresa' de su nómina.\n\nLos **tipos de cotización** son los del Régimen General 2026 sobre la base de contingencias comunes. El porcentaje de **AT y EP varía según la actividad** (una oficina cotiza menos que la construcción), por eso lo puedes ajustar. El **MEI** y la **base máxima de cotización** son referenciales del ejercicio: revisa las tablas oficiales de la Seguridad Social para cerrar el cálculo exacto de tu caso.",
   "keyTakeaway": "El coste de un trabajador es su **salario bruto + ~30-32% de cotización empresarial** a la Seguridad Social. Sobre la base cotizan: contingencias comunes 23,60%, desempleo 5,50% (indefinido) o 6,70% (temporal), FOGASA 0,20%, formación 0,60%, MEI ~0,75% y AT/EP variable. La base tiene un tope (base máxima).",
   "useCases": [
     "Saber cuánto le cuesta a la empresa un empleado de 30.000 € brutos al año.",
@@ -33,29 +32,42 @@
       "min": 0,
       "step": 100,
       "unit": "€",
-      "helpText": "Salario bruto anual pactado con el trabajador (incluye pagas extra)."
+      "help": "Salario bruto anual pactado con el trabajador (incluye pagas extra).",
+      "default": 30000
     },
     {
       "id": "tipoContrato",
       "label": "Tipo de contrato",
       "type": "select",
-      "defaultValue": "indefinido",
       "options": [
-        { "value": "indefinido", "label": "Indefinido (desempleo 5,50%)" },
-        { "value": "temporal", "label": "Temporal (desempleo 6,70%)" }
+        {
+          "value": "indefinido",
+          "label": "Indefinido (desempleo 5,50%)"
+        },
+        {
+          "value": "temporal",
+          "label": "Temporal (desempleo 6,70%)"
+        }
       ],
-      "helpText": "El tipo de desempleo a cargo de la empresa es mayor en los contratos temporales."
+      "help": "El tipo de desempleo a cargo de la empresa es mayor en los contratos temporales.",
+      "default": "indefinido"
     },
     {
       "id": "numeroPagas",
       "label": "Número de pagas",
       "type": "select",
-      "defaultValue": "14",
       "options": [
-        { "value": "12", "label": "12 pagas" },
-        { "value": "14", "label": "14 pagas" }
+        {
+          "value": "12",
+          "label": "12 pagas"
+        },
+        {
+          "value": "14",
+          "label": "14 pagas"
+        }
       ],
-      "helpText": "Solo afecta al reparto del coste mensual; el coste anual no cambia."
+      "help": "Solo afecta al reparto del coste mensual; el coste anual no cambia.",
+      "default": "14"
     },
     {
       "id": "tipoATEP",
@@ -65,22 +77,51 @@
       "placeholder": "1.5",
       "min": 0,
       "step": 0.1,
-      "defaultValue": 1.5,
       "unit": "%",
-      "helpText": "Depende de la actividad (CNAE). Oficinas ~1%, otras actividades más. 1,5% es un valor indicativo."
+      "help": "Depende de la actividad (CNAE). Oficinas ~1%, otras actividades más. 1,5% es un valor indicativo.",
+      "default": 1.5
     }
   ],
   "outputs": [
-    { "id": "costeTotalAnual", "label": "Coste total anual para la empresa", "type": "currency", "primary": true },
-    { "id": "costeTotalMensual", "label": "Coste mensual (por paga)", "type": "currency" },
-    { "id": "cotizacionAnual", "label": "Cotización empresa (año)", "type": "currency" },
-    { "id": "cotizacionMensual", "label": "Cotización empresa (mes)", "type": "currency" },
-    { "id": "sobrecostePct", "label": "Sobrecoste sobre el bruto", "type": "percentage" },
-    { "id": "detalle", "label": "Detalle" }
+    {
+      "id": "costeTotalAnual",
+      "label": "Coste total anual para la empresa",
+      "type": "currency",
+      "primary": true
+    },
+    {
+      "id": "costeTotalMensual",
+      "label": "Coste mensual (por paga)",
+      "type": "currency"
+    },
+    {
+      "id": "cotizacionAnual",
+      "label": "Cotización empresa (año)",
+      "type": "currency"
+    },
+    {
+      "id": "cotizacionMensual",
+      "label": "Cotización empresa (mes)",
+      "type": "currency"
+    },
+    {
+      "id": "sobrecostePct",
+      "label": "Sobrecoste sobre el bruto",
+      "type": "percentage"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
   ],
   "example": {
     "title": "Ejemplo: 30.000 € brutos, indefinido, AT/EP 1,5%",
-    "inputs": { "salarioBrutoAnual": 30000, "tipoContrato": "indefinido", "numeroPagas": 14, "tipoATEP": 1.5 },
+    "inputs": {
+      "salarioBrutoAnual": 30000,
+      "tipoContrato": "indefinido",
+      "numeroPagas": 14,
+      "tipoATEP": 1.5
+    },
     "steps": [
       "**Tipo empresa total**: 23,60 + 5,50 + 0,20 + 0,60 + 0,75 + 1,50 = **32,15%**.",
       "**Base anual cotizable**: 30.000 € (por debajo de la base máxima).",
@@ -171,15 +212,39 @@
   "referenceTables": [
     {
       "title": "Tipos de cotización a cargo de la empresa — Régimen General 2026",
-      "headers": ["Concepto", "Tipo empresa"],
+      "headers": [
+        "Concepto",
+        "Tipo empresa"
+      ],
       "rows": [
-        ["Contingencias comunes", "23,60%"],
-        ["Desempleo (indefinido)", "5,50%"],
-        ["Desempleo (temporal)", "6,70%"],
-        ["FOGASA", "0,20%"],
-        ["Formación profesional", "0,60%"],
-        ["MEI (referencial 2026)", "~0,75%"],
-        ["AT y EP (según actividad)", "variable (~1,5%)"]
+        [
+          "Contingencias comunes",
+          "23,60%"
+        ],
+        [
+          "Desempleo (indefinido)",
+          "5,50%"
+        ],
+        [
+          "Desempleo (temporal)",
+          "6,70%"
+        ],
+        [
+          "FOGASA",
+          "0,20%"
+        ],
+        [
+          "Formación profesional",
+          "0,60%"
+        ],
+        [
+          "MEI (referencial 2026)",
+          "~0,75%"
+        ],
+        [
+          "AT y EP (según actividad)",
+          "variable (~1,5%)"
+        ]
       ],
       "note": "Fuente: Seguridad Social — Tipos de cotización 2026. El MEI y el AT/EP son referenciales; el AT/EP depende del CNAE de la actividad."
     }

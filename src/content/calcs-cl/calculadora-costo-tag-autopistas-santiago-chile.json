@@ -23,17 +23,83 @@
     "Evaluar si conviene una ruta alternativa sin peaje según el gasto mensual."
   ],
   "fields": [
-    { "id": "kmDiarios", "label": "Kilómetros por día en autopista (km)", "type": "number", "required": true, "placeholder": "20", "min": 0, "step": 1, "unit": "km" },
-    { "id": "tipoTarifa", "label": "Tipo de tarifa (horario)", "type": "select", "default": "punta", "options": [ { "value": "fuera_punta", "label": "Base Fuera de Punta (TBFP)" }, { "value": "punta", "label": "Base Punta (TBP)" }, { "value": "saturacion", "label": "Saturación (TS)" } ] },
-    { "id": "diasMes", "label": "Días al mes que usás la autopista (días)", "type": "number", "required": true, "placeholder": "22", "min": 0, "max": 31, "step": 1, "unit": "días" },
-    { "id": "arriendoTag", "label": "Arriendo mensual del dispositivo TAG (CLP)", "type": "number", "required": false, "placeholder": "4000", "min": 0, "step": 500, "unit": "$" }
+    {
+      "id": "kmDiarios",
+      "label": "Kilómetros por día en autopista (km)",
+      "type": "number",
+      "required": true,
+      "placeholder": "20",
+      "min": 0,
+      "step": 1,
+      "unit": "km",
+      "default": 20
+    },
+    {
+      "id": "tipoTarifa",
+      "label": "Tipo de tarifa (horario)",
+      "type": "select",
+      "default": "punta",
+      "options": [
+        {
+          "value": "fuera_punta",
+          "label": "Base Fuera de Punta (TBFP)"
+        },
+        {
+          "value": "punta",
+          "label": "Base Punta (TBP)"
+        },
+        {
+          "value": "saturacion",
+          "label": "Saturación (TS)"
+        }
+      ]
+    },
+    {
+      "id": "diasMes",
+      "label": "Días al mes que usás la autopista (días)",
+      "type": "number",
+      "required": true,
+      "placeholder": "22",
+      "min": 0,
+      "max": 31,
+      "step": 1,
+      "unit": "días",
+      "default": 22
+    },
+    {
+      "id": "arriendoTag",
+      "label": "Arriendo mensual del dispositivo TAG (CLP)",
+      "type": "number",
+      "required": false,
+      "placeholder": "4000",
+      "min": 0,
+      "step": 500,
+      "unit": "$",
+      "default": 4000
+    }
   ],
   "outputs": [
-    { "id": "costoMensual", "label": "Costo mensual de TAG", "primary": true },
-    { "id": "costoDiario", "label": "Costo diario" },
-    { "id": "costoAnual", "label": "Costo anual" },
-    { "id": "tarifaKm", "label": "Tarifa por km aplicada" },
-    { "id": "detalle", "label": "Detalle" }
+    {
+      "id": "costoMensual",
+      "label": "Costo mensual de TAG",
+      "primary": true
+    },
+    {
+      "id": "costoDiario",
+      "label": "Costo diario"
+    },
+    {
+      "id": "costoAnual",
+      "label": "Costo anual"
+    },
+    {
+      "id": "tarifaKm",
+      "label": "Tarifa por km aplicada"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
   ],
   "example": {
     "title": "Ejemplo: 20 km/día en punta, 22 días, arriendo $4.000",
@@ -47,18 +113,48 @@
   },
   "explanation": "## Cómo se calcula el gasto de TAG\n\n```\nCosto diario   = Km por día × Tarifa por km\nCosto mensual  = Costo diario × Días de uso + Arriendo del dispositivo\nCosto anual    = Costo mensual × 12\n```\n\nEl valor por kilómetro depende del **horario** en que circulás: fuera de punta, punta o saturación.\n\n## Tarifas por kilómetro (Costanera Norte 2026, autos)\n\n| Tarifa | Cuándo aplica | Valor por km |\n|---|---|---|\n| TBFP — Base Fuera de Punta | Horarios de menor flujo; domingos y festivos todo el día | $107 |\n| TBP — Base Punta | Horas de alto flujo | $206 |\n| TS — Saturación | Horas de máxima congestión | $312 |\n\nCada concesionaria (Costanera Norte, Vespucio Norte, Vespucio Sur, Autopista Central, entre otras) fija sus propias tarifas, que se reajustan cada enero por IPC. Estos valores son referenciales de Costanera Norte para vehículos livianos.\n\n## Ejemplos resueltos\n\n**Ejemplo 1 — Uso moderado fuera de punta:**\n1. 15 km/día en TBFP ($107), 20 días.\n2. Diario = 15 × $107 = $1.605; mensual = $32.100.\n3. Anual ≈ $385.200.\n\n**Ejemplo 2 — Uso intenso en saturación:**\n1. 30 km/día en TS ($312), 22 días.\n2. Diario = 30 × $312 = $9.360; mensual = $205.920.\n3. Anual ≈ $2.471.040.\n\nLa diferencia entre circular en TBFP y en TS puede triplicar el gasto por el mismo recorrido.\n\n## Cómo bajar el gasto de TAG\n\n- **Evitá la hora punta y de saturación** cuando puedas: la tarifa por km es mucho más alta.\n- **Aprovechá domingos y festivos**, que suelen cobrar TBFP todo el día.\n- **Revisá rutas alternativas** sin peaje para trayectos cortos.\n- **Controlá el arriendo del dispositivo:** varía según la concesionaria.\n\n## Errores comunes\n\n- **Olvidar el arriendo del dispositivo:** se suma todos los meses, además de los peajes.\n- **Suponer una sola tarifa:** el mismo tramo cuesta distinto según el horario.\n- **No contar los pasos de vuelta:** los km diarios deben incluir ida y regreso.\n\n## Disclaimer\n\nEstimación referencial. Las tarifas por kilómetro varían por concesionaria, tramo y horario, y se reajustan cada enero. Consultá los valores vigentes de tu autopista y tu estado de cuenta TAG para el monto exacto.",
   "faq": [
-    { "q": "¿Cuánto se paga de TAG al mes en Santiago?", "a": "Depende de los kilómetros diarios, el horario y los días de uso. Por ejemplo, 20 km al día en hora punta ($206/km) durante 22 días son unos $90.640 en peajes, más el arriendo del dispositivo." },
-    { "q": "¿Qué significan TBFP, TBP y TS?", "a": "Son las tres tarifas de las autopistas urbanas: **TBFP** (Base Fuera de Punta), **TBP** (Base Punta) y **TS** (Saturación), que se aplica en las horas de mayor congestión y es la más cara por kilómetro." },
-    { "q": "¿Las autopistas cobran por kilómetro?", "a": "Sí, las autopistas urbanas de Santiago cobran por kilómetro recorrido, con una tarifa que cambia según el horario. Algunas cobran por tramo, pero el criterio general es el kilometraje." },
-    { "q": "¿Cuánto cuesta el TAG los domingos?", "a": "Los domingos y festivos suele aplicarse la **Tarifa Base Fuera de Punta (TBFP)** durante todo el día, que es la más barata por kilómetro." },
-    { "q": "¿El arriendo del dispositivo se suma al gasto?", "a": "Sí. Además de los peajes, la mayoría de las concesionarias cobra un **arriendo mensual del dispositivo TAG**. Esta calculadora lo suma al costo mensual si lo ingresás." },
-    { "q": "¿Las tarifas son iguales en todas las autopistas?", "a": "No. Cada concesionaria fija sus propias tarifas por kilómetro. Los valores de esta calculadora son referenciales de Costanera Norte 2026 para autos; verificá los de tu autopista." },
-    { "q": "¿Cuándo suben las tarifas del TAG?", "a": "Se reajustan cada **enero** según el IPC (más un factor real en algunos contratos). En 2026 el alza fue cercana al 3,4%." },
-    { "q": "¿Cómo puedo gastar menos en TAG?", "a": "Evitando las horas de punta y saturación, aprovechando la tarifa de domingos y festivos, y evaluando rutas alternativas sin peaje para trayectos cortos." }
+    {
+      "q": "¿Cuánto se paga de TAG al mes en Santiago?",
+      "a": "Depende de los kilómetros diarios, el horario y los días de uso. Por ejemplo, 20 km al día en hora punta ($206/km) durante 22 días son unos $90.640 en peajes, más el arriendo del dispositivo."
+    },
+    {
+      "q": "¿Qué significan TBFP, TBP y TS?",
+      "a": "Son las tres tarifas de las autopistas urbanas: **TBFP** (Base Fuera de Punta), **TBP** (Base Punta) y **TS** (Saturación), que se aplica en las horas de mayor congestión y es la más cara por kilómetro."
+    },
+    {
+      "q": "¿Las autopistas cobran por kilómetro?",
+      "a": "Sí, las autopistas urbanas de Santiago cobran por kilómetro recorrido, con una tarifa que cambia según el horario. Algunas cobran por tramo, pero el criterio general es el kilometraje."
+    },
+    {
+      "q": "¿Cuánto cuesta el TAG los domingos?",
+      "a": "Los domingos y festivos suele aplicarse la **Tarifa Base Fuera de Punta (TBFP)** durante todo el día, que es la más barata por kilómetro."
+    },
+    {
+      "q": "¿El arriendo del dispositivo se suma al gasto?",
+      "a": "Sí. Además de los peajes, la mayoría de las concesionarias cobra un **arriendo mensual del dispositivo TAG**. Esta calculadora lo suma al costo mensual si lo ingresás."
+    },
+    {
+      "q": "¿Las tarifas son iguales en todas las autopistas?",
+      "a": "No. Cada concesionaria fija sus propias tarifas por kilómetro. Los valores de esta calculadora son referenciales de Costanera Norte 2026 para autos; verificá los de tu autopista."
+    },
+    {
+      "q": "¿Cuándo suben las tarifas del TAG?",
+      "a": "Se reajustan cada **enero** según el IPC (más un factor real en algunos contratos). En 2026 el alza fue cercana al 3,4%."
+    },
+    {
+      "q": "¿Cómo puedo gastar menos en TAG?",
+      "a": "Evitando las horas de punta y saturación, aprovechando la tarifa de domingos y festivos, y evaluando rutas alternativas sin peaje para trayectos cortos."
+    }
   ],
   "sources": [
-    { "name": "Costanera Norte — Tarifas TAG 2026", "url": "https://web.costaneranorte.cl/tarifas/" },
-    { "name": "MOP — Concesiones y autopistas urbanas", "url": "https://www.concesiones.cl/proyectos/Paginas/default.aspx" }
+    {
+      "name": "Costanera Norte — Tarifas TAG 2026",
+      "url": "https://web.costaneranorte.cl/tarifas/"
+    },
+    {
+      "name": "MOP — Concesiones y autopistas urbanas",
+      "url": "https://www.concesiones.cl/proyectos/Paginas/default.aspx"
+    }
   ],
   "relatedSlugs": [],
   "dataUpdate": {
@@ -83,11 +179,27 @@
   "referenceTables": [
     {
       "title": "Tarifas TAG por kilómetro — Costanera Norte 2026 (autos)",
-      "headers": ["Tarifa", "Cuándo aplica", "Valor por km"],
+      "headers": [
+        "Tarifa",
+        "Cuándo aplica",
+        "Valor por km"
+      ],
       "rows": [
-        ["TBFP — Base Fuera de Punta", "Menor flujo; domingos y festivos", "$107"],
-        ["TBP — Base Punta", "Horas de alto flujo", "$206"],
-        ["TS — Saturación", "Máxima congestión", "$312"]
+        [
+          "TBFP — Base Fuera de Punta",
+          "Menor flujo; domingos y festivos",
+          "$107"
+        ],
+        [
+          "TBP — Base Punta",
+          "Horas de alto flujo",
+          "$206"
+        ],
+        [
+          "TS — Saturación",
+          "Máxima congestión",
+          "$312"
+        ]
       ],
       "note": "Fuente: Costanera Norte, tarifas 2026 para vehículos categoría 1 (autos). Referenciales; cada concesionaria fija sus tarifas y se reajustan cada enero."
     }

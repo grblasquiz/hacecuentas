@@ -23,19 +23,83 @@
     "Simular un crédito sin interés (CAE 0%) para ver la cuota base."
   ],
   "fields": [
-    { "id": "valorAuto", "label": "Valor del auto (CLP)", "type": "number", "required": true, "placeholder": "12000000", "min": 0, "step": 100000, "unit": "$" },
-    { "id": "pie", "label": "Pie / cuota inicial (CLP)", "type": "number", "required": false, "placeholder": "2000000", "min": 0, "step": 100000, "unit": "$" },
-    { "id": "plazoMeses", "label": "Plazo (meses)", "type": "number", "required": true, "placeholder": "48", "min": 1, "max": 84, "step": 1, "unit": "meses" },
-    { "id": "caeAnual", "label": "CAE — Carga Anual Equivalente (%)", "type": "number", "required": true, "placeholder": "14", "min": 0, "max": 60, "step": 0.1, "unit": "%" }
+    {
+      "id": "valorAuto",
+      "label": "Valor del auto (CLP)",
+      "type": "number",
+      "required": true,
+      "placeholder": "12000000",
+      "min": 0,
+      "step": 100000,
+      "unit": "$",
+      "default": 12000000
+    },
+    {
+      "id": "pie",
+      "label": "Pie / cuota inicial (CLP)",
+      "type": "number",
+      "required": false,
+      "placeholder": "2000000",
+      "min": 0,
+      "step": 100000,
+      "unit": "$",
+      "default": 2000000
+    },
+    {
+      "id": "plazoMeses",
+      "label": "Plazo (meses)",
+      "type": "number",
+      "required": true,
+      "placeholder": "48",
+      "min": 1,
+      "max": 84,
+      "step": 1,
+      "unit": "meses",
+      "default": 48
+    },
+    {
+      "id": "caeAnual",
+      "label": "CAE — Carga Anual Equivalente (%)",
+      "type": "number",
+      "required": true,
+      "placeholder": "14",
+      "min": 0,
+      "max": 60,
+      "step": 0.1,
+      "unit": "%",
+      "default": 14
+    }
   ],
   "outputs": [
-    { "id": "cuotaMensual", "label": "Cuota mensual", "primary": true },
-    { "id": "montoFinanciar", "label": "Monto a financiar" },
-    { "id": "totalCuotas", "label": "Total en cuotas" },
-    { "id": "totalIntereses", "label": "Total intereses" },
-    { "id": "costoTotal", "label": "Costo total del auto (pie + cuotas)" },
-    { "id": "excedeTasaMaxima", "label": "¿Supera la tasa máxima CMF?" },
-    { "id": "detalle", "label": "Detalle" }
+    {
+      "id": "cuotaMensual",
+      "label": "Cuota mensual",
+      "primary": true
+    },
+    {
+      "id": "montoFinanciar",
+      "label": "Monto a financiar"
+    },
+    {
+      "id": "totalCuotas",
+      "label": "Total en cuotas"
+    },
+    {
+      "id": "totalIntereses",
+      "label": "Total intereses"
+    },
+    {
+      "id": "costoTotal",
+      "label": "Costo total del auto (pie + cuotas)"
+    },
+    {
+      "id": "excedeTasaMaxima",
+      "label": "¿Supera la tasa máxima CMF?"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
   ],
   "example": {
     "title": "Ejemplo: auto $12.000.000, pie $2.000.000, 48 meses, CAE 14%",
@@ -49,18 +113,48 @@
   },
   "explanation": "## Cómo se calcula la cuota\n\nSe usa la fórmula de **anualidad de cuota fija**:\n\n```\nMonto a financiar = Valor del auto − Pie\nTasa mensual (r)  = CAE ÷ 100 ÷ 12\nCuota = Monto × [ r × (1+r)^n ] ÷ [ (1+r)^n − 1 ]\n```\n\ndonde `n` es el número de cuotas. Los intereses totales son la suma de las cuotas menos el monto financiado.\n\n## Ejemplos resueltos\n\n**Ejemplo 1 — Más pie, menos crédito:**\n1. Auto $12.000.000, pie $4.000.000 → financiás $8.000.000.\n2. A 48 meses con CAE 14% → cuota ≈ **$218.612**.\n3. Intereses ≈ $2.493.367.\n\n**Ejemplo 2 — Plazo más largo:**\n1. Mismo monto $10.000.000, CAE 14%, pero a 60 meses.\n2. Cuota baja a ≈ **$232.683**, pero pagás ≈ **$3.960.951** de intereses (más que a 48 meses).\n\nEl plazo largo alivia la cuota mensual, pero encarece el crédito.\n\n## Cómo cambia el crédito según el plazo (monto $10.000.000, CAE 14%)\n\n| Plazo | Cuota mensual | Intereses totales |\n|---|---|---|\n| 24 meses | $480.129 | $1.523.092 |\n| 36 meses | $341.776 | $2.303.947 |\n| 48 meses | $273.265 | $3.116.709 |\n| 60 meses | $232.683 | $3.960.951 |\n\n## Por qué mirar la CAE\n\nLa **Carga Anual Equivalente (CAE)** resume en un solo porcentaje anual la tasa de interés, las comisiones, los seguros y los gastos del crédito. Por eso es el número correcto para comparar: dos créditos con la misma tasa pueden tener CAE distinta si uno cobra más seguros o comisiones.\n\n## Tasa máxima convencional\n\nLa **CMF** publica la tasa máxima convencional, el techo legal que ningún crédito puede superar según su monto y plazo. Si la CAE ofrecida se acerca o supera ese límite, conviene revisar la oferta.\n\n## Errores comunes\n\n- **Mirar solo la cuota:** una cuota baja con plazo largo puede esconder muchos más intereses.\n- **Comparar por tasa y no por CAE:** la CAE incluye todos los costos; la tasa sola, no.\n- **Olvidar los seguros obligatorios:** el seguro de desgravamen y el del vehículo se suman al costo real.\n\n## Disclaimer\n\nSimulación referencial. La cuota real depende de la CAE final que te ofrezca cada banco o automotora, los seguros y comisiones. Compará al menos dos ofertas por su CAE antes de firmar.",
   "faq": [
-    { "q": "¿Cómo se calcula la cuota de un crédito automotriz?", "a": "Con la fórmula de cuota fija: sobre el monto financiado (valor del auto menos el pie) se aplica la tasa mensual (la CAE dividida por 12) durante el número de cuotas. La calculadora entrega la cuota, los intereses y el costo total." },
-    { "q": "¿Qué es la CAE de un crédito?", "a": "La **Carga Anual Equivalente** es un porcentaje que resume la tasa de interés más las comisiones, seguros y gastos del crédito. Es el mejor indicador para comparar ofertas de distintos bancos o automotoras." },
-    { "q": "¿Conviene un plazo más largo?", "a": "Un plazo más largo baja la cuota mensual, pero aumenta el total de intereses que pagás. Conviene elegir el plazo más corto que tu presupuesto tolere." },
-    { "q": "¿Cuánto pie debería poner?", "a": "Cuanto mayor sea el pie, menor es el monto financiado y menores los intereses. Muchas automotoras piden un pie mínimo (a menudo 20%), pero poner más reduce el costo total del crédito." },
-    { "q": "¿Qué es la tasa máxima convencional?", "a": "Es el techo legal de tasa que fija la CMF según el monto y plazo del crédito. Ningún crédito puede cobrar una tasa por encima de ese límite; si la CAE se le acerca, la oferta es cara." },
-    { "q": "¿La cuota incluye los seguros?", "a": "La cuota que calcula esta herramienta se basa en la CAE, que ya considera los seguros y comisiones si están incluidos en ese número. Verificá con el banco qué seguros están dentro de la CAE y cuáles se cobran aparte." },
-    { "q": "¿Puedo prepagar el crédito?", "a": "Sí. En Chile podés prepagar total o parcialmente el crédito; la ley regula la comisión de prepago. Prepagar reduce los intereses que quedan por pagar." },
-    { "q": "¿Este cálculo sirve para autos usados?", "a": "Sí. La fórmula es la misma para autos nuevos y usados; solo cambian el valor, la CAE ofrecida y el plazo. Los créditos para usados suelen tener CAE algo más alta." }
+    {
+      "q": "¿Cómo se calcula la cuota de un crédito automotriz?",
+      "a": "Con la fórmula de cuota fija: sobre el monto financiado (valor del auto menos el pie) se aplica la tasa mensual (la CAE dividida por 12) durante el número de cuotas. La calculadora entrega la cuota, los intereses y el costo total."
+    },
+    {
+      "q": "¿Qué es la CAE de un crédito?",
+      "a": "La **Carga Anual Equivalente** es un porcentaje que resume la tasa de interés más las comisiones, seguros y gastos del crédito. Es el mejor indicador para comparar ofertas de distintos bancos o automotoras."
+    },
+    {
+      "q": "¿Conviene un plazo más largo?",
+      "a": "Un plazo más largo baja la cuota mensual, pero aumenta el total de intereses que pagás. Conviene elegir el plazo más corto que tu presupuesto tolere."
+    },
+    {
+      "q": "¿Cuánto pie debería poner?",
+      "a": "Cuanto mayor sea el pie, menor es el monto financiado y menores los intereses. Muchas automotoras piden un pie mínimo (a menudo 20%), pero poner más reduce el costo total del crédito."
+    },
+    {
+      "q": "¿Qué es la tasa máxima convencional?",
+      "a": "Es el techo legal de tasa que fija la CMF según el monto y plazo del crédito. Ningún crédito puede cobrar una tasa por encima de ese límite; si la CAE se le acerca, la oferta es cara."
+    },
+    {
+      "q": "¿La cuota incluye los seguros?",
+      "a": "La cuota que calcula esta herramienta se basa en la CAE, que ya considera los seguros y comisiones si están incluidos en ese número. Verificá con el banco qué seguros están dentro de la CAE y cuáles se cobran aparte."
+    },
+    {
+      "q": "¿Puedo prepagar el crédito?",
+      "a": "Sí. En Chile podés prepagar total o parcialmente el crédito; la ley regula la comisión de prepago. Prepagar reduce los intereses que quedan por pagar."
+    },
+    {
+      "q": "¿Este cálculo sirve para autos usados?",
+      "a": "Sí. La fórmula es la misma para autos nuevos y usados; solo cambian el valor, la CAE ofrecida y el plazo. Los créditos para usados suelen tener CAE algo más alta."
+    }
   ],
   "sources": [
-    { "name": "CMF Educa — Créditos y Carga Anual Equivalente (CAE)", "url": "https://www.cmfeduca.cl/educa/600/w3-propertyname-808.html" },
-    { "name": "SERNAC — Créditos de consumo y automotrices", "url": "https://www.sernac.cl/portal/604/w3-channel.html" }
+    {
+      "name": "CMF Educa — Créditos y Carga Anual Equivalente (CAE)",
+      "url": "https://www.cmfeduca.cl/educa/600/w3-propertyname-808.html"
+    },
+    {
+      "name": "SERNAC — Créditos de consumo y automotrices",
+      "url": "https://www.sernac.cl/portal/604/w3-channel.html"
+    }
   ],
   "relatedSlugs": [],
   "dataUpdate": {
@@ -85,12 +179,32 @@
   "referenceTables": [
     {
       "title": "Crédito de $10.000.000 con CAE 14% — cuota e intereses por plazo",
-      "headers": ["Plazo", "Cuota mensual", "Intereses totales"],
+      "headers": [
+        "Plazo",
+        "Cuota mensual",
+        "Intereses totales"
+      ],
       "rows": [
-        ["24 meses", "$480.129", "$1.523.092"],
-        ["36 meses", "$341.776", "$2.303.947"],
-        ["48 meses", "$273.265", "$3.116.709"],
-        ["60 meses", "$232.683", "$3.960.951"]
+        [
+          "24 meses",
+          "$480.129",
+          "$1.523.092"
+        ],
+        [
+          "36 meses",
+          "$341.776",
+          "$2.303.947"
+        ],
+        [
+          "48 meses",
+          "$273.265",
+          "$3.116.709"
+        ],
+        [
+          "60 meses",
+          "$232.683",
+          "$3.960.951"
+        ]
       ],
       "note": "Fuente: cálculo propio con fórmula de cuota fija (CAE 14% anual). Valores referenciales; la CAE real la define cada banco o automotora."
     }

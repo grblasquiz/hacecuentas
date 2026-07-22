@@ -32,7 +32,8 @@
       "placeholder": "1000",
       "min": 0,
       "step": 0.01,
-      "hint": "Precio oficial de la licencia en tu estado (ver tabla de referencia; verifica el vigente)."
+      "help": "Precio oficial de la licencia en tu estado (ver tabla de referencia; verifica el vigente).",
+      "default": 1000
     },
     {
       "id": "tipoVigencia",
@@ -41,10 +42,16 @@
       "required": true,
       "default": "temporal",
       "options": [
-        { "value": "temporal", "label": "Temporal (con vigencia)" },
-        { "value": "permanente", "label": "Permanente (pago único)" }
+        {
+          "value": "temporal",
+          "label": "Temporal (con vigencia)"
+        },
+        {
+          "value": "permanente",
+          "label": "Permanente (pago único)"
+        }
       ],
-      "hint": "Elige si tu estado emite licencia permanente o temporal a renovar."
+      "help": "Elige si tu estado emite licencia permanente o temporal a renovar."
     },
     {
       "id": "aniosVigencia",
@@ -56,7 +63,7 @@
       "default": 4,
       "min": 1,
       "step": 1,
-      "hint": "Años que dura la licencia temporal antes de renovar (2, 3, 4 o 5 según el estado)."
+      "help": "Años que dura la licencia temporal antes de renovar (2, 3, 4 o 5 según el estado)."
     },
     {
       "id": "aniosManejo",
@@ -68,7 +75,7 @@
       "default": 20,
       "min": 1,
       "step": 1,
-      "hint": "Horizonte para proyectar renovaciones y costo total."
+      "help": "Horizonte para proyectar renovaciones y costo total."
     },
     {
       "id": "costoExamenMedico",
@@ -80,7 +87,7 @@
       "default": 0,
       "min": 0,
       "step": 0.01,
-      "hint": "Solo si tu estado lo exige (0 si no aplica o va incluido)."
+      "help": "Solo si tu estado lo exige (0 si no aplica o va incluido)."
     },
     {
       "id": "costoTramiteExtra",
@@ -92,19 +99,52 @@
       "default": 0,
       "min": 0,
       "step": 0.01,
-      "hint": "Extras que cobre tu estado además del trámite base."
+      "help": "Extras que cobre tu estado además del trámite base."
     }
   ],
   "outputs": [
-    { "id": "costoTotalTramite", "label": "Costo total del trámite", "unit": "$", "precision": 2, "primary": true },
-    { "id": "costoAnual", "label": "Costo por año", "unit": "$", "precision": 2 },
-    { "id": "renovacionesProyectadas", "label": "Renovaciones proyectadas", "unit": "", "precision": 0 },
-    { "id": "costoProyectado", "label": "Costo proyectado total", "unit": "$", "precision": 2 },
-    { "id": "resumen", "label": "Resumen", "unit": "texto", "precision": 0 }
+    {
+      "id": "costoTotalTramite",
+      "label": "Costo total del trámite",
+      "unit": "$",
+      "precision": 2,
+      "primary": true
+    },
+    {
+      "id": "costoAnual",
+      "label": "Costo por año",
+      "unit": "$",
+      "precision": 2
+    },
+    {
+      "id": "renovacionesProyectadas",
+      "label": "Renovaciones proyectadas",
+      "unit": "",
+      "precision": 0
+    },
+    {
+      "id": "costoProyectado",
+      "label": "Costo proyectado total",
+      "unit": "$",
+      "precision": 2
+    },
+    {
+      "id": "resumen",
+      "label": "Resumen",
+      "unit": "texto",
+      "precision": 0
+    }
   ],
   "example": {
     "title": "Ejemplo: licencia temporal de $1,000 con vigencia de 4 años, 20 años manejando",
-    "inputs": { "costoLicencia": 1000, "tipoVigencia": "temporal", "aniosVigencia": 4, "aniosManejo": 20, "costoExamenMedico": 0, "costoTramiteExtra": 0 },
+    "inputs": {
+      "costoLicencia": 1000,
+      "tipoVigencia": "temporal",
+      "aniosVigencia": 4,
+      "aniosManejo": 20,
+      "costoExamenMedico": 0,
+      "costoTramiteExtra": 0
+    },
     "steps": [
       "**Costo del trámite**: $1,000 (sin examen ni extras).",
       "**Costo por año**: $1,000 ÷ 4 años de vigencia = **$250 por año**.",
@@ -149,8 +189,14 @@
     }
   ],
   "sources": [
-    { "name": "Gobierno de la CDMX — SEMOVI, Licencia de conducir permanente", "url": "https://www.semovi.cdmx.gob.mx/tramites-y-servicios/licencia-de-conducir-permanente" },
-    { "name": "Secretaría de Movilidad del Estado de México — Licencias de conducir", "url": "https://semov.edomex.gob.mx/licencias-de-conducir" }
+    {
+      "name": "Gobierno de la CDMX — SEMOVI, Licencia de conducir permanente",
+      "url": "https://www.semovi.cdmx.gob.mx/tramites-y-servicios/licencia-de-conducir-permanente"
+    },
+    {
+      "name": "Secretaría de Movilidad del Estado de México — Licencias de conducir",
+      "url": "https://semov.edomex.gob.mx/licencias-de-conducir"
+    }
   ],
   "relatedSlugs": [],
   "dataUpdate": {
@@ -175,14 +221,49 @@
   "referenceTables": [
     {
       "title": "Costo referencial de la licencia de conducir por estado — México 2026",
-      "headers": ["Estado", "Modalidad típica", "Costo referencial", "Costo por año aprox."],
+      "headers": [
+        "Estado",
+        "Modalidad típica",
+        "Costo referencial",
+        "Costo por año aprox."
+      ],
       "rows": [
-        ["CDMX", "Permanente", "$1,500", "Único"],
-        ["Nuevo León", "Permanente", "$1,285", "Único"],
-        ["Michoacán", "Permanente", "$1,900", "Único"],
-        ["Estado de México", "Temporal 3 años", "$970", "$323"],
-        ["Jalisco", "Temporal 5 años", "$1,170", "$234"],
-        ["Puebla", "Temporal 3 años", "$600", "$200"]
+        [
+          "CDMX",
+          "Permanente",
+          "$1,500",
+          "Único"
+        ],
+        [
+          "Nuevo León",
+          "Permanente",
+          "$1,285",
+          "Único"
+        ],
+        [
+          "Michoacán",
+          "Permanente",
+          "$1,900",
+          "Único"
+        ],
+        [
+          "Estado de México",
+          "Temporal 3 años",
+          "$970",
+          "$323"
+        ],
+        [
+          "Jalisco",
+          "Temporal 5 años",
+          "$1,170",
+          "$234"
+        ],
+        [
+          "Puebla",
+          "Temporal 3 años",
+          "$600",
+          "$200"
+        ]
       ],
       "note": "Montos referenciales 2026, sujetos a la ley de ingresos de cada estado y al tipo de licencia. Verifica el vigente en la Secretaría de Movilidad o Finanzas de tu entidad."
     }

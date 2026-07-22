@@ -22,17 +22,75 @@
     "Decidir dónde estacionar la plata del mes sin perder liquidez."
   ],
   "fields": [
-    { "id": "monto", "label": "Saldo en la billetera", "type": "number", "prefix": "$", "required": true, "placeholder": "1000000", "min": 0, "max": 10000000000, "step": 1000 },
-    { "id": "dias", "label": "Días que dejás la plata", "type": "number", "required": false, "default": 30, "min": 1, "max": 365, "step": 1 },
-    { "id": "tna", "label": "TNA de la billetera (%)", "type": "number", "suffix": "%", "required": false, "default": 27.71, "min": 0, "max": 200, "step": 0.01, "help": "Mercado Pago: 27,71% desde el 3-jul-2026. Verificala en la app: cambia seguido." },
-    { "id": "tnaPlazoFijo", "label": "TNA de plazo fijo para comparar (%)", "type": "number", "suffix": "%", "required": false, "default": 19, "min": 0, "max": 200, "step": 0.25, "help": "BNA paga 19% a 30 días (jul-2026); el rango de bancos va de 16% a 23%." }
+    {
+      "id": "monto",
+      "label": "Saldo en la billetera",
+      "type": "number",
+      "prefix": "$",
+      "required": true,
+      "placeholder": "1000000",
+      "min": 0,
+      "max": 10000000000,
+      "step": 1000,
+      "default": 1000000
+    },
+    {
+      "id": "dias",
+      "label": "Días que dejás la plata",
+      "type": "number",
+      "required": false,
+      "default": 30,
+      "min": 1,
+      "max": 365,
+      "step": 1
+    },
+    {
+      "id": "tna",
+      "label": "TNA de la billetera (%)",
+      "type": "number",
+      "suffix": "%",
+      "required": false,
+      "default": 27.71,
+      "min": 0,
+      "max": 200,
+      "step": 0.01,
+      "help": "Mercado Pago: 27,71% desde el 3-jul-2026. Verificala en la app: cambia seguido."
+    },
+    {
+      "id": "tnaPlazoFijo",
+      "label": "TNA de plazo fijo para comparar (%)",
+      "type": "number",
+      "suffix": "%",
+      "required": false,
+      "default": 19,
+      "min": 0,
+      "max": 200,
+      "step": 0.25,
+      "help": "BNA paga 19% a 30 días (jul-2026); el rango de bancos va de 16% a 23%."
+    }
   ],
   "outputs": [
-    { "id": "rendimientoGanado", "label": "Rendimiento en el período", "primary": true },
-    { "id": "saldoFinal", "label": "Saldo final" },
-    { "id": "rendimientoPrimerDia", "label": "Rendimiento del primer día" },
-    { "id": "teaEfectiva", "label": "TEA (efecto compuesto)" },
-    { "id": "vsPlazoFijo", "label": "Diferencia vs plazo fijo" }
+    {
+      "id": "rendimientoGanado",
+      "label": "Rendimiento en el período",
+      "primary": true
+    },
+    {
+      "id": "saldoFinal",
+      "label": "Saldo final"
+    },
+    {
+      "id": "rendimientoPrimerDia",
+      "label": "Rendimiento del primer día"
+    },
+    {
+      "id": "teaEfectiva",
+      "label": "TEA (efecto compuesto)"
+    },
+    {
+      "id": "vsPlazoFijo",
+      "label": "Diferencia vs plazo fijo"
+    }
   ],
   "example": {
     "title": "$1.000.000 durante 30 días a TNA 27,71% vs plazo fijo al 19%",
@@ -47,19 +105,58 @@
   },
   "explanation": "## Cómo genera rendimientos Mercado Pago\n\nEl saldo disponible se suscribe a **Mercado Fondo**, un fondo común de inversión *money market* administrado por Mercado Fondos SGFCIA, que invierte en plazos fijos mayoristas, cauciones y cuentas remuneradas. El rendimiento se acredita **todos los días hábiles** sobre tu saldo, y como el saldo crece, al día siguiente rinde sobre la nueva base:\n\n```\nrendimiento diario = saldo × TNA ÷ 365\nsaldo final = saldo × (1 + TNA/365)^días\n```\n\nEsa capitalización diaria hace que una TNA de 27,71% equivalga a una **TEA de 31,92%**.\n\n## Billetera vs plazo fijo en julio 2026\n\n| Opción | TNA | $1.000.000 × 30 días | Liquidez |\n|---|---|---|---|\n| Cocos | 27,93% | ~$23.217 | Inmediata |\n| **Mercado Pago** | **27,71%** | **~$23.028** | Inmediata |\n| Ualá | 26,00% | ~$21.559 | Inmediata |\n| Plazo fijo Provincia | 21% | $17.260 | Al vencimiento |\n| Plazo fijo BNA | 19% | $15.616 | Al vencimiento |\n| Plazo fijo Santander | 16% | $13.151 | Al vencimiento |\n\nEn este momento las billeteras pagan **más que la mayoría de los plazos fijos** y sin inmovilizar la plata. No siempre fue así: cuando las tasas de plazo fijo superan a las billeteras, el orden se invierte. Por eso ambas tasas son editables.\n\n## Lo que tenés que saber antes de decidir\n\n- **El rendimiento no está garantizado**: es un fondo de inversión, la TNA varía a diario y Mercado Pago la cambia sin previo aviso (27,71% rige desde el 3-jul-2026).\n- **No es un plazo fijo**: no hay tasa asegurada a 30 días. La proyección asume que la TNA se mantiene, cosa que nunca es exacta.\n- **El saldo que rinde puede tener tope** según las condiciones vigentes del fondo; verificalo en la app.\n- **Impuestos**: los rendimientos de FCI money market están alcanzados por normas propias; para montos grandes consultá a un contador.\n- Contra la **inflación**, una TNA del 27,71% puede ganar o perder según el mes: compará la tasa mensual (~2,3%) con el IPC.",
   "faq": [
-    { "q": "¿Cuánto rinde la plata en Mercado Pago hoy?", "a": "La TNA es 27,71% desde el 3 de julio de 2026. En plata: $100.000 generan unos $76 por día, y cerca de $2.303 en 30 días con la capitalización diaria. La tasa cambia seguido: verificá el número en la app." },
-    { "q": "¿Cuánto genera $1.000.000 en Mercado Pago en 30 días?", "a": "A TNA 27,71% con acreditación diaria compuesta: unos $23.028. Un plazo fijo al 19% por el mismo monto y plazo paga $15.616." },
-    { "q": "¿Conviene Mercado Pago o plazo fijo en 2026?", "a": "En julio 2026 las billeteras (26-28% TNA) pagan más que los plazos fijos (16-23%) y con liquidez inmediata. La cuenta puede cambiar si el BCRA mueve las tasas: compará siempre las dos con esta calculadora." },
-    { "q": "¿El rendimiento de Mercado Pago es seguro?", "a": "Es un fondo money market: invierte en instrumentos de corto plazo y bajo riesgo, pero no es un depósito garantizado ni tiene tasa asegurada. El rendimiento pasado no garantiza el futuro." },
-    { "q": "¿Qué TEA equivale a la TNA 27,71%?", "a": "Con capitalización diaria, TNA 27,71% equivale a una TEA del 31,92%. Esa es la ganancia efectiva anual si la tasa se mantuviera todo el año." },
-    { "q": "¿La calculadora sirve para Ualá, Cocos o Personal Pay?", "a": "Sí. La TNA es editable: cargá 26% para Ualá, 27,93% para Cocos o la tasa del día de cualquier billetera con acreditación diaria y el cálculo es el mismo." },
-    { "q": "¿Los rendimientos pagan impuestos?", "a": "Para personas humanas los resultados de FCI en pesos tienen tratamiento impositivo propio y en general no sufren retenciones automáticas, pero pueden impactar en Ganancias o Bienes Personales según tu situación. Consultá a un contador si movés montos grandes." },
-    { "q": "¿Hay un tope de saldo que genera rendimientos?", "a": "Las condiciones del fondo pueden establecer topes o requisitos por usuario y cambian con el tiempo. Revisá los términos vigentes en la sección Rendimientos de la app antes de mover saldos grandes." }
+    {
+      "q": "¿Cuánto rinde la plata en Mercado Pago hoy?",
+      "a": "La TNA es 27,71% desde el 3 de julio de 2026. En plata: $100.000 generan unos $76 por día, y cerca de $2.303 en 30 días con la capitalización diaria. La tasa cambia seguido: verificá el número en la app."
+    },
+    {
+      "q": "¿Cuánto genera $1.000.000 en Mercado Pago en 30 días?",
+      "a": "A TNA 27,71% con acreditación diaria compuesta: unos $23.028. Un plazo fijo al 19% por el mismo monto y plazo paga $15.616."
+    },
+    {
+      "q": "¿Conviene Mercado Pago o plazo fijo en 2026?",
+      "a": "En julio 2026 las billeteras (26-28% TNA) pagan más que los plazos fijos (16-23%) y con liquidez inmediata. La cuenta puede cambiar si el BCRA mueve las tasas: compará siempre las dos con esta calculadora."
+    },
+    {
+      "q": "¿El rendimiento de Mercado Pago es seguro?",
+      "a": "Es un fondo money market: invierte en instrumentos de corto plazo y bajo riesgo, pero no es un depósito garantizado ni tiene tasa asegurada. El rendimiento pasado no garantiza el futuro."
+    },
+    {
+      "q": "¿Qué TEA equivale a la TNA 27,71%?",
+      "a": "Con capitalización diaria, TNA 27,71% equivale a una TEA del 31,92%. Esa es la ganancia efectiva anual si la tasa se mantuviera todo el año."
+    },
+    {
+      "q": "¿La calculadora sirve para Ualá, Cocos o Personal Pay?",
+      "a": "Sí. La TNA es editable: cargá 26% para Ualá, 27,93% para Cocos o la tasa del día de cualquier billetera con acreditación diaria y el cálculo es el mismo."
+    },
+    {
+      "q": "¿Los rendimientos pagan impuestos?",
+      "a": "Para personas humanas los resultados de FCI en pesos tienen tratamiento impositivo propio y en general no sufren retenciones automáticas, pero pueden impactar en Ganancias o Bienes Personales según tu situación. Consultá a un contador si movés montos grandes."
+    },
+    {
+      "q": "¿Hay un tope de saldo que genera rendimientos?",
+      "a": "Las condiciones del fondo pueden establecer topes o requisitos por usuario y cambian con el tiempo. Revisá los términos vigentes en la sección Rendimientos de la app antes de mover saldos grandes."
+    }
   ],
   "sources": [
-    { "name": "Cocos, Ualá o Mercado Pago: cuál paga más en julio 2026", "url": "https://www.iprofesional.com/finanzas/459510-cocos-uala-o-mercado-pago-cual-es-la-billetera-virtual-que-mas-paga-en-julio-2026", "publisher": "iProfesional", "date": "2026" },
-    { "name": "Mercado Pago — cómo se calcula el rendimiento", "url": "https://www.mercadopago.com.ar/ayuda/como-calcular-porcentaje-rendimiento-dinero_35649", "publisher": "Mercado Pago", "date": "2026" },
-    { "name": "Calculadora del plazo fijo en julio 2026, banco por banco", "url": "https://www.infobae.com/economia/2026/07/02/calculadora-del-plazo-fijo-en-julio-2026-cuanto-gano-en-cada-banco-si-invierto-300000/", "publisher": "Infobae", "date": "2026" }
+    {
+      "name": "Cocos, Ualá o Mercado Pago: cuál paga más en julio 2026",
+      "url": "https://www.iprofesional.com/finanzas/459510-cocos-uala-o-mercado-pago-cual-es-la-billetera-virtual-que-mas-paga-en-julio-2026",
+      "publisher": "iProfesional",
+      "date": "2026"
+    },
+    {
+      "name": "Mercado Pago — cómo se calcula el rendimiento",
+      "url": "https://www.mercadopago.com.ar/ayuda/como-calcular-porcentaje-rendimiento-dinero_35649",
+      "publisher": "Mercado Pago",
+      "date": "2026"
+    },
+    {
+      "name": "Calculadora del plazo fijo en julio 2026, banco por banco",
+      "url": "https://www.infobae.com/economia/2026/07/02/calculadora-del-plazo-fijo-en-julio-2026-cuanto-gano-en-cada-banco-si-invierto-300000/",
+      "publisher": "Infobae",
+      "date": "2026"
+    }
   ],
   "dataUpdate": {
     "frequency": "monthly",
@@ -69,5 +166,14 @@
     "sourceUrl": "https://www.iprofesional.com/finanzas/459510-cocos-uala-o-mercado-pago-cual-es-la-billetera-virtual-que-mas-paga-en-julio-2026",
     "notes": "Actualizar TNA default de Mercado Pago (27,71% al 3-jul-2026) y referencia de plazo fijo BNA (19%) cuando cambien; la tabla comparativa del explanation también."
   },
-  "seoKeywords": ["cuanto rinde mercado pago", "rendimiento mercado pago 2026", "tna mercado pago hoy", "calculadora rendimiento billetera", "mercado pago vs plazo fijo", "cuanto genera 1000000 mercado pago", "mercado fondo rendimiento diario", "billeteras virtuales que mas pagan"]
+  "seoKeywords": [
+    "cuanto rinde mercado pago",
+    "rendimiento mercado pago 2026",
+    "tna mercado pago hoy",
+    "calculadora rendimiento billetera",
+    "mercado pago vs plazo fijo",
+    "cuanto genera 1000000 mercado pago",
+    "mercado fondo rendimiento diario",
+    "billeteras virtuales que mas pagan"
+  ]
 }

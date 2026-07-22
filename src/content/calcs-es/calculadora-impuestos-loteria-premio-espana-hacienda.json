@@ -8,8 +8,7 @@
   "icon": "🎫",
   "formulaId": "impuestos-loteria-premio-espana-hacienda",
   "answerSnippet": "En España los premios de loterías (Lotería Nacional, El Gordo de Navidad, Primitiva, Euromillones, ONCE, Bonoloto…) tienen un gravamen especial: están exentos los primeros 40.000 € de cada décimo o boleto premiado y el resto tributa al 20%. La entidad pagadora (SELAE, ONCE) retiene ese 20% en el momento del cobro, así que ya recibes el dinero con el impuesto descontado y no tienes que declararlo en la renta. Por ejemplo, de un premio de 100.000 €: 40.000 € exentos, 60.000 € gravados al 20% (12.000 €) y cobras 88.000 € limpios.",
-  "intro": "Si te toca la lotería en España, **Hacienda se lleva una parte** mediante un gravamen especial sobre los premios. La regla es sencilla: los primeros **40.000 €** de cada décimo o boleto premiado están **exentos**, y solo tributa el exceso a un tipo fijo del **20%**. No importa si el premio viene de la **Lotería Nacional**, **El Gordo de Navidad**, la **Primitiva**, **Euromillones**, la **ONCE** o la **Bonoloto**: todos siguen el mismo esquema.\n\nEsta calculadora te dice, a partir del importe del premio, cuánto **retiene Hacienda** y cuánto **cobras limpio**. Además, si compartes el décimo con familiares o amigos, reparte el resultado entre los partícipes (el mínimo exento se prorratea entre todos, de modo que el impuesto total del premio no cambia por compartirlo).\n\nEl **error más común** es pensar que la lotería tributa como el resto de la renta, sumándose al sueldo y subiendo tu tipo de IRPF. No es así: es un **impuesto independiente y definitivo** que la entidad pagadora ya te retiene al cobrar, por lo que el premio **no se incluye** en la declaración de la renta. Introduce el importe y comprueba tu premio neto."
-  ,
+  "intro": "Si te toca la lotería en España, **Hacienda se lleva una parte** mediante un gravamen especial sobre los premios. La regla es sencilla: los primeros **40.000 €** de cada décimo o boleto premiado están **exentos**, y solo tributa el exceso a un tipo fijo del **20%**. No importa si el premio viene de la **Lotería Nacional**, **El Gordo de Navidad**, la **Primitiva**, **Euromillones**, la **ONCE** o la **Bonoloto**: todos siguen el mismo esquema.\n\nEsta calculadora te dice, a partir del importe del premio, cuánto **retiene Hacienda** y cuánto **cobras limpio**. Además, si compartes el décimo con familiares o amigos, reparte el resultado entre los partícipes (el mínimo exento se prorratea entre todos, de modo que el impuesto total del premio no cambia por compartirlo).\n\nEl **error más común** es pensar que la lotería tributa como el resto de la renta, sumándose al sueldo y subiendo tu tipo de IRPF. No es así: es un **impuesto independiente y definitivo** que la entidad pagadora ya te retiene al cobrar, por lo que el premio **no se incluye** en la declaración de la renta. Introduce el importe y comprueba tu premio neto.",
   "keyTakeaway": "Los premios de lotería en España están **exentos hasta 40.000 €**; el exceso tributa a un **20% fijo** que la entidad pagadora **retiene al cobrar**. El premio no se declara en la renta. Si el décimo es compartido, la exención de 40.000 € se reparte entre los partícipes y el impuesto total no cambia.",
   "useCases": [
     "Calcular cuánto cobras limpio de un décimo premiado en El Gordo de Navidad.",
@@ -33,7 +32,8 @@
       "min": 0,
       "step": 100,
       "unit": "€",
-      "helpText": "Importe íntegro del premio del décimo o boleto premiado, antes de retención."
+      "help": "Importe íntegro del premio del décimo o boleto premiado, antes de retención.",
+      "default": 100000
     },
     {
       "id": "participantes",
@@ -43,22 +43,53 @@
       "placeholder": "1",
       "min": 1,
       "step": 1,
-      "defaultValue": 1,
-      "helpText": "Si el décimo es compartido, indica cuántos partícipes lo cobran a partes iguales."
+      "help": "Si el décimo es compartido, indica cuántos partícipes lo cobran a partes iguales.",
+      "default": 1
     }
   ],
   "outputs": [
-    { "id": "neto", "label": "Cobras limpio (neto)", "type": "currency", "primary": true },
-    { "id": "impuesto", "label": "Retiene Hacienda (20%)", "type": "currency" },
-    { "id": "parteExenta", "label": "Parte exenta", "type": "currency" },
-    { "id": "baseGravable", "label": "Parte que tributa", "type": "currency" },
-    { "id": "tipoEfectivo", "label": "Tipo efectivo sobre el premio", "type": "percentage" },
-    { "id": "netoPorPersona", "label": "Neto por persona", "type": "currency" },
-    { "id": "detalle", "label": "Detalle" }
+    {
+      "id": "neto",
+      "label": "Cobras limpio (neto)",
+      "type": "currency",
+      "primary": true
+    },
+    {
+      "id": "impuesto",
+      "label": "Retiene Hacienda (20%)",
+      "type": "currency"
+    },
+    {
+      "id": "parteExenta",
+      "label": "Parte exenta",
+      "type": "currency"
+    },
+    {
+      "id": "baseGravable",
+      "label": "Parte que tributa",
+      "type": "currency"
+    },
+    {
+      "id": "tipoEfectivo",
+      "label": "Tipo efectivo sobre el premio",
+      "type": "percentage"
+    },
+    {
+      "id": "netoPorPersona",
+      "label": "Neto por persona",
+      "type": "currency"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
   ],
   "example": {
     "title": "Ejemplo: premio de 100.000 €",
-    "inputs": { "premio": 100000, "participantes": 1 },
+    "inputs": {
+      "premio": 100000,
+      "participantes": 1
+    },
     "steps": [
       "**Parte exenta**: los primeros 40.000 € no tributan.",
       "**Base gravable**: 100.000 − 40.000 = **60.000 €**.",
@@ -148,13 +179,49 @@
   "referenceTables": [
     {
       "title": "Premio neto de lotería tras impuestos — España 2026",
-      "headers": ["Premio bruto", "Exento (40.000 €)", "Tributa al 20%", "Impuesto", "Cobras limpio"],
+      "headers": [
+        "Premio bruto",
+        "Exento (40.000 €)",
+        "Tributa al 20%",
+        "Impuesto",
+        "Cobras limpio"
+      ],
       "rows": [
-        ["20.000 €", "20.000 €", "0 €", "0 €", "20.000 €"],
-        ["40.000 €", "40.000 €", "0 €", "0 €", "40.000 €"],
-        ["100.000 €", "40.000 €", "60.000 €", "12.000 €", "88.000 €"],
-        ["400.000 € (El Gordo)", "40.000 €", "360.000 €", "72.000 €", "328.000 €"],
-        ["4.000.000 €", "40.000 €", "3.960.000 €", "792.000 €", "3.208.000 €"]
+        [
+          "20.000 €",
+          "20.000 €",
+          "0 €",
+          "0 €",
+          "20.000 €"
+        ],
+        [
+          "40.000 €",
+          "40.000 €",
+          "0 €",
+          "0 €",
+          "40.000 €"
+        ],
+        [
+          "100.000 €",
+          "40.000 €",
+          "60.000 €",
+          "12.000 €",
+          "88.000 €"
+        ],
+        [
+          "400.000 € (El Gordo)",
+          "40.000 €",
+          "360.000 €",
+          "72.000 €",
+          "328.000 €"
+        ],
+        [
+          "4.000.000 €",
+          "40.000 €",
+          "3.960.000 €",
+          "792.000 €",
+          "3.208.000 €"
+        ]
       ],
       "note": "Fuente: gravamen especial sobre premios (Ley 35/2006 del IRPF, DA 33ª). Mínimo exento 40.000 € por décimo/boleto y tipo del 20% sobre el exceso, vigentes en 2026."
     }

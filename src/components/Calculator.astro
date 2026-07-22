@@ -227,6 +227,7 @@ const v3Head = {
   ready: lang === 'en' ? 'Ready' : lang === 'pt' ? 'Pronto' : 'Listo',
   idle: lang === 'en' ? 'Not calculated' : lang === 'pt' ? 'Sem cálculo' : 'Sin calcular',
   done: lang === 'en' ? 'Calculated' : lang === 'pt' ? 'Calculado' : 'Calculado',
+  stale: lang === 'en' ? 'Recalculate →' : lang === 'pt' ? 'Recalcule →' : isNeutralSpanish ? 'Recalcula →' : 'Recalculá →',
 };
 
 // Alerta "avisame cuando este resultado cambie": solo en calcs AR fiscales
@@ -668,6 +669,7 @@ const formatFreshnessDate = (iso: string): string => {
       <span class="lbl">{v3Head.result}</span>
       <span class="v3-pill v3-pill--idle"><i></i>{v3Head.idle}</span>
       <span class="v3-pill v3-pill--done"><i></i>{v3Head.done}</span>
+      <span class="v3-pill v3-pill--stale"><i></i>{v3Head.stale}</span>
     </div>
   )}
 
@@ -774,6 +776,7 @@ const formatFreshnessDate = (iso: string): string => {
       <span class="lbl">{v3Head.result}</span>
       <span class="v3-pill v3-pill--idle"><i></i>{v3Head.idle}</span>
       <span class="v3-pill v3-pill--done"><i></i>{v3Head.done}</span>
+      <span class="v3-pill v3-pill--stale"><i></i>{v3Head.stale}</span>
     </div>
   )}
 
@@ -1910,6 +1913,11 @@ const formatFreshnessDate = (iso: string): string => {
     from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
   }
+
+  /* Resultado obsoleto: el usuario editó un input tras calcular → atenuar los
+     números hasta que recalcule (el JS quita .is-stale en el próximo OK). */
+  .calc-results .results-grid { transition: opacity 0.25s ease; }
+  .calc-results.is-stale .results-grid { opacity: 0.55; }
 
   @media (prefers-reduced-motion: reduce) {
     .calc-results { animation: none; }
@@ -4717,6 +4725,30 @@ const formatFreshnessDate = (iso: string): string => {
     return Number(v.replace(/\./g, '').replace(/,/g, '.'));
   }
 
+  // Parse de campos numéricos LIBRES (type=text + inputmode=decimal): acepta
+  // coma o punto como separador decimal y tolera separadores de miles en
+  // ambas convenciones. "30,5"→30.5 · "1.234,56"→1234.56 · "1,234.56"→1234.56.
+  function parseDecimalInput(v: string): number {
+    const s = String(v).trim();
+    if (s === '') return NaN;
+    const lastComma = s.lastIndexOf(',');
+    const lastDot = s.lastIndexOf('.');
+    if (lastComma !== -1 && lastDot !== -1) {
+      // Ambos presentes: el ÚLTIMO separador es el decimal, el otro es miles.
+      return lastComma > lastDot
+        ? Number(s.replace(/\./g, '').replace(',', '.'))   // 1.234,56
+        : Number(s.replace(/,/g, ''));                     // 1,234.56
+    }
+    if (lastComma !== -1) {
+      const parts = s.split(',');
+      // Varias comas = miles estilo en ("1,234,567"); una sola = decimal ("30,5").
+      return parts.length > 2 ? Number(s.replace(/,/g, '')) : Number(s.replace(',', '.'));
+    }
+    // Solo puntos: varios = miles estilo es ("1.234.567"); uno = decimal nativo.
+    if (lastDot !== -1 && s.indexOf('.') !== lastDot) return Number(s.replace(/\./g, ''));
+    return Number(s);
+  }
+
   function formatThousands(v: string): string {
     // Preservar el signo menos inicial: hay ~8 calcs con min<0 (GMT offset,
     // semitonos, déficit) donde tragarse el '-' daba un resultado al revés.
@@ -5366,7 +5398,7 @@ const formatFreshnessDate = (iso: string): string => {
       if (!el) return NaN;
       const raw = el.value || (el as HTMLInputElement).placeholder || '';
       if (el.dataset.format === 'thousands' && raw) return parseThousands(raw);
-      const n = Number(raw);
+      const n = el.dataset.type === 'number' ? parseDecimalInput(raw) : Number(raw);
       return isNaN(n) ? NaN : n;
     }
 
@@ -5381,6 +5413,11 @@ const formatFreshnessDate = (iso: string): string => {
         let raw = v as string;
         if (el?.dataset.format === 'thousands' && raw) {
           inputs[k] = parseThousands(raw);
+        } else if (el?.dataset.type === 'number' && raw) {
+          // Campos numéricos libres (type=text inputmode=decimal): normalizar
+          // coma decimal / miles antes de pasar a la fórmula.
+          const num = parseDecimalInput(raw);
+          inputs[k] = isFinite(num) ? num : raw;
         } else {
           const num = Number(raw);
           inputs[k] = !isNaN(num) && raw !== '' ? num : raw;
@@ -5554,7 +5591,9 @@ const formatFreshnessDate = (iso: string): string => {
     }
     // Devuelve el error num/min/max de un input con valor (o '' si OK).
     function numericError(el: any, raw: string): string {
-      const num = el.dataset.format === 'thousands' ? parseThousands(raw) : Number(raw);
+      const num = el.dataset.format === 'thousands'
+        ? parseThousands(raw)
+        : (el.dataset.type === 'number' ? parseDecimalInput(raw) : Number(raw));
       if (!isFinite(num)) return VMSG.num;
       const min = el.getAttribute('min');
       const max = el.getAttribute('max');
@@ -5630,6 +5669,11 @@ const formatFreshnessDate = (iso: string): string => {
       const el = e.target as any;
       if (el && typeof el.matches === 'function' && el.matches('input, select, textarea')) {
         clearFieldError(el);
+        // Resultado obsoleto: si ya hay un resultado visible y el usuario
+        // edita cualquier input, lo marcamos stale (atenuado + pill
+        // "Recalculá" vía CSS). Se limpia al recalcular OK. No tocamos
+        // aria-live acá: el anuncio SR solo ocurre en cálculo nuevo.
+        if (!results.hidden) results.classList.add('is-stale');
       }
     });
 
@@ -5660,6 +5704,13 @@ const formatFreshnessDate = (iso: string): string => {
         errorBox.appendChild(btn);
       }
       errorBox.hidden = false;
+      // El banner de error vive al FINAL del container: sin scroll el usuario
+      // no ve nada y cree que el botón "no hizo nada". Scrolleamos + foco
+      // accesible (tabindex=-1 para poder enfocar un div no-interactivo).
+      const _errReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      errorBox.setAttribute('tabindex', '-1');
+      try { errorBox.focus({ preventScroll: true }); } catch {}
+      errorBox.scrollIntoView({ behavior: _errReduce ? 'auto' : 'smooth', block: 'center' });
     }
 
     form.addEventListener('submit', (e) => {
@@ -5686,6 +5737,11 @@ const formatFreshnessDate = (iso: string): string => {
         let raw = v as string;
         if (el?.dataset.format === 'thousands' && raw) {
           inputs[k] = parseThousands(raw);
+        } else if (el?.dataset.type === 'number' && raw) {
+          // Campos numéricos libres (type=text inputmode=decimal): normalizar
+          // coma decimal / miles antes de pasar a la fórmula.
+          const num = parseDecimalInput(raw);
+          inputs[k] = isFinite(num) ? num : raw;
         } else {
           const num = Number(raw);
           inputs[k] = !isNaN(num) && raw !== '' ? num : raw;
@@ -5786,6 +5842,7 @@ const formatFreshnessDate = (iso: string): string => {
           if (_newPrimary) _prevPrimary = _newPrimary;
 
           results.hidden = false;
+          results.classList.remove('is-stale');
           funnelSuccess = true;
           productTrack('hc_calculator_success');
           // Anunciar el resultado a lectores de pantalla UNA sola vez (texto

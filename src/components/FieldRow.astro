@@ -131,6 +131,11 @@ const displayPlaceholder = (useThousands && field.placeholder && /^\d+$/.test(St
 //  - miles (enteros, el formatter borra coma/punto): numeric.
 //  - resto de números (tasas/decimales): decimal.
 const _isNegativeCapable = typeof field.min === "number" && field.min < 0;
+// number→text SIEMPRE (no solo thousands): type=number rechaza la coma decimal
+// ("30,5" deja value='' con badInput). Con text + inputmode el teclado móvil no
+// cambia y el parse en Calculator.astro (parseDecimalInput/parseThousands)
+// normaliza coma/punto; min/max/num se validan en JS (numericError) porque
+// type=text no valida nativo (el form ya era novalidate igual).
 const inputMode = field.type !== "number"
   ? undefined
   : _isNegativeCapable
@@ -183,7 +188,7 @@ const inputMode = field.type !== "number"
       <input
         id={field.id}
         name={field.id}
-        type={field.type === "number" && useThousands ? "text" : field.type}
+        type={field.type === "number" ? "text" : field.type}
         placeholder={displayPlaceholder}
         min={field.min}
         max={field.max}

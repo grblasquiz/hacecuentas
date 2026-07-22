@@ -23,18 +23,78 @@
     "Entender por qué un año con menos meses trabajados suele dar más devolución."
   ],
   "fields": [
-    { "id": "honorariosAnuales", "label": "Honorarios brutos del año (CLP)", "type": "number", "required": true, "placeholder": "9000000", "min": 0, "step": 100000, "unit": "$" },
-    { "id": "tasaRetencion", "label": "% de retención de las boletas", "type": "number", "required": true, "placeholder": "14.5", "min": 0, "max": 30, "step": 0.25, "unit": "%" },
-    { "id": "rebajas", "label": "Rebajas a la base: APV, intereses hipotecarios (CLP)", "type": "number", "required": false, "placeholder": "0", "min": 0, "step": 100000, "unit": "$" },
-    { "id": "valorUTA", "label": "Valor de la UTA anual (CLP)", "type": "number", "required": true, "placeholder": "859788", "min": 600000, "max": 1200000, "step": 1, "unit": "$" }
+    {
+      "id": "honorariosAnuales",
+      "label": "Honorarios brutos del año (CLP)",
+      "type": "number",
+      "required": true,
+      "placeholder": "9000000",
+      "min": 0,
+      "step": 100000,
+      "unit": "$",
+      "default": 9000000
+    },
+    {
+      "id": "tasaRetencion",
+      "label": "% de retención de las boletas",
+      "type": "number",
+      "required": true,
+      "placeholder": "14.5",
+      "min": 0,
+      "max": 30,
+      "step": 0.25,
+      "unit": "%",
+      "default": 14.5
+    },
+    {
+      "id": "rebajas",
+      "label": "Rebajas a la base: APV, intereses hipotecarios (CLP)",
+      "type": "number",
+      "required": false,
+      "placeholder": "0",
+      "min": 0,
+      "step": 100000,
+      "unit": "$"
+    },
+    {
+      "id": "valorUTA",
+      "label": "Valor de la UTA anual (CLP)",
+      "type": "number",
+      "required": true,
+      "placeholder": "859788",
+      "min": 600000,
+      "max": 1200000,
+      "step": 1,
+      "unit": "$",
+      "default": 859788
+    }
   ],
   "outputs": [
-    { "id": "devolucion", "label": "Devolución estimada", "primary": true },
-    { "id": "resultado", "label": "Resultado" },
-    { "id": "retencionTotal", "label": "Total retenido en el año" },
-    { "id": "impuestoAnual", "label": "Impuesto Global Complementario anual" },
-    { "id": "baseImponible", "label": "Base imponible" },
-    { "id": "detalle", "label": "Detalle" }
+    {
+      "id": "devolucion",
+      "label": "Devolución estimada",
+      "primary": true
+    },
+    {
+      "id": "resultado",
+      "label": "Resultado"
+    },
+    {
+      "id": "retencionTotal",
+      "label": "Total retenido en el año"
+    },
+    {
+      "id": "impuestoAnual",
+      "label": "Impuesto Global Complementario anual"
+    },
+    {
+      "id": "baseImponible",
+      "label": "Base imponible"
+    },
+    {
+      "id": "detalle",
+      "label": "Detalle"
+    }
   ],
   "example": {
     "title": "Ejemplo: honorarios $9.000.000, retención 14,5%",
@@ -48,18 +108,48 @@
   },
   "explanation": "## Cómo se estima la devolución\n\n```\nRetención del año  = honorarios brutos × % retención\nBase imponible     = honorarios − rebajas (APV, intereses hipotecarios)\nImpuesto anual     = tabla del Impuesto Global Complementario (en UTA)\nDevolución         = Retención del año − Impuesto anual\n```\n\nSi el resultado es **positivo**, te devuelven; si es **negativo**, tenés un saldo por pagar. Parte de la retención financia tus cotizaciones obligatorias, así que este cálculo estima la base de la devolución.\n\n## Tabla del Impuesto Global Complementario (anual, en UTA)\n\n| Renta anual (UTA) | Factor | Rebaja (UTA) |\n|---|---|---|\n| Hasta 13,5 | Exento | 0 |\n| 13,5 a 30 | 4% | 0,54 |\n| 30 a 50 | 8% | 1,74 |\n| 50 a 70 | 13,5% | 4,49 |\n| 70 a 90 | 23% | 11,14 |\n| 90 a 120 | 30,4% | 17,80 |\n| 120 a 310 | 35% | 23,32 |\n| Más de 310 | 40% | 38,82 |\n\nEl impuesto se calcula como `base × factor − rebaja × UTA`. La UTA (Unidad Tributaria Anual) es 12 veces la UTM del mes.\n\n## Ejemplos resueltos\n\n**Ejemplo 1 — Ingreso bajo el tramo exento:**\n1. Honorarios $8.000.000, retención 14,5% → retenido $1.160.000.\n2. $8.000.000 ÷ UTA $859.788 = 9,3 UTA < 13,5 → impuesto $0.\n3. Devolución ≈ **$1.160.000**.\n\n**Ejemplo 2 — Ingreso más alto:**\n1. Honorarios $30.000.000, retención 14,5% → retenido $4.350.000.\n2. Base 34,9 UTA → tramo 8%: impuesto = $30.000.000 × 8% − 1,74 × $859.788 ≈ $903.988.\n3. Devolución ≈ $4.350.000 − $903.988 = **$3.446.012**.\n\n## Retención de honorarios por año\n\n| Año de la boleta | % de retención |\n|---|---|\n| 2024 | 13,75% |\n| 2025 (Operación Renta 2026) | 14,5% |\n| 2026 (Operación Renta 2027) | 15,25% |\n\nLa tasa sube de forma gradual por la Ley 21.133 hasta llegar al 17% en 2028.\n\n## Errores comunes\n\n- **Confundir el año de la boleta con el de la declaración:** la Operación Renta 2026 declara las boletas emitidas en 2025 (retención 14,5%).\n- **Olvidar las rebajas:** el APV y los intereses hipotecarios reducen la base y aumentan la devolución.\n- **Creer que toda la retención vuelve como efectivo:** parte financia tus cotizaciones de AFP y salud.\n\n## Disclaimer\n\nEstimación orientativa para trabajadores a honorarios. La devolución real depende de tus cotizaciones, créditos, otras rentas y de la propuesta del SII. Confirmá tu situación en la Operación Renta del SII.",
   "faq": [
-    { "q": "¿Cómo se calcula la devolución de impuestos en Chile?", "a": "A grandes rasgos, es la diferencia entre lo que te **retuvieron** en el año y el **Impuesto Global Complementario** que te corresponde según tu renta anual. Si te retuvieron más de lo que debías, te devuelven la diferencia." },
-    { "q": "¿Qué retención se aplica a las boletas de honorarios?", "a": "Para las boletas emitidas en **2025** (Operación Renta 2026) la retención es del **14,5%**. Sube gradualmente por la Ley 21.133: 15,25% en 2026 y hasta 17% en 2028." },
-    { "q": "¿Cuál es el tramo exento del impuesto anual?", "a": "Las rentas anuales de hasta **13,5 UTA** (unos $11,6 millones con la UTA de 2026) están exentas del Impuesto Global Complementario. Bajo ese monto recuperás prácticamente toda la retención." },
-    { "q": "¿Por qué me devuelven casi todo si trabajo a honorarios?", "a": "Porque la retención (14,5%) suele ser mayor que el impuesto efectivo que te corresponde, sobre todo si tu renta anual es baja o media. La diferencia se te devuelve, descontando lo que va a cotizaciones." },
-    { "q": "¿El APV aumenta mi devolución?", "a": "Sí. El Ahorro Previsional Voluntario y los intereses de un crédito hipotecario reducen la base imponible, lo que baja el impuesto anual y aumenta la devolución estimada." },
-    { "q": "¿Qué pasa si trabajé pocos meses en el año?", "a": "Si tuviste meses sin ingresos, tu renta anual es más baja y probablemente caés en un tramo con menor o nula tasa, mientras que igual te retuvieron en cada boleta: por eso suele haber más devolución." },
-    { "q": "¿La devolución que estima la calculadora es exacta?", "a": "Es una **estimación**. El monto final depende de tus cotizaciones obligatorias, créditos, otras rentas y de la propuesta del SII. Usala como referencia, no como cifra definitiva." },
-    { "q": "¿Los trabajadores con sueldo también reciben devolución?", "a": "Pueden recibirla si les retuvieron Impuesto Único de más (por ejemplo, por rentas variables o APV). Esta calculadora está pensada para el caso de honorarios, que es el de devolución más frecuente." }
+    {
+      "q": "¿Cómo se calcula la devolución de impuestos en Chile?",
+      "a": "A grandes rasgos, es la diferencia entre lo que te **retuvieron** en el año y el **Impuesto Global Complementario** que te corresponde según tu renta anual. Si te retuvieron más de lo que debías, te devuelven la diferencia."
+    },
+    {
+      "q": "¿Qué retención se aplica a las boletas de honorarios?",
+      "a": "Para las boletas emitidas en **2025** (Operación Renta 2026) la retención es del **14,5%**. Sube gradualmente por la Ley 21.133: 15,25% en 2026 y hasta 17% en 2028."
+    },
+    {
+      "q": "¿Cuál es el tramo exento del impuesto anual?",
+      "a": "Las rentas anuales de hasta **13,5 UTA** (unos $11,6 millones con la UTA de 2026) están exentas del Impuesto Global Complementario. Bajo ese monto recuperás prácticamente toda la retención."
+    },
+    {
+      "q": "¿Por qué me devuelven casi todo si trabajo a honorarios?",
+      "a": "Porque la retención (14,5%) suele ser mayor que el impuesto efectivo que te corresponde, sobre todo si tu renta anual es baja o media. La diferencia se te devuelve, descontando lo que va a cotizaciones."
+    },
+    {
+      "q": "¿El APV aumenta mi devolución?",
+      "a": "Sí. El Ahorro Previsional Voluntario y los intereses de un crédito hipotecario reducen la base imponible, lo que baja el impuesto anual y aumenta la devolución estimada."
+    },
+    {
+      "q": "¿Qué pasa si trabajé pocos meses en el año?",
+      "a": "Si tuviste meses sin ingresos, tu renta anual es más baja y probablemente caés en un tramo con menor o nula tasa, mientras que igual te retuvieron en cada boleta: por eso suele haber más devolución."
+    },
+    {
+      "q": "¿La devolución que estima la calculadora es exacta?",
+      "a": "Es una **estimación**. El monto final depende de tus cotizaciones obligatorias, créditos, otras rentas y de la propuesta del SII. Usala como referencia, no como cifra definitiva."
+    },
+    {
+      "q": "¿Los trabajadores con sueldo también reciben devolución?",
+      "a": "Pueden recibirla si les retuvieron Impuesto Único de más (por ejemplo, por rentas variables o APV). Esta calculadora está pensada para el caso de honorarios, que es el de devolución más frecuente."
+    }
   ],
   "sources": [
-    { "name": "ChileAtiende — Operación Renta 2026", "url": "https://www.chileatiende.gob.cl/fichas/10199-operacion-renta-2026" },
-    { "name": "SII — Boletas de honorarios (retención)", "url": "https://www.sii.cl/destacados/boletas_honorarios/" }
+    {
+      "name": "ChileAtiende — Operación Renta 2026",
+      "url": "https://www.chileatiende.gob.cl/fichas/10199-operacion-renta-2026"
+    },
+    {
+      "name": "SII — Boletas de honorarios (retención)",
+      "url": "https://www.sii.cl/destacados/boletas_honorarios/"
+    }
   ],
   "relatedSlugs": [],
   "dataUpdate": {
@@ -84,13 +174,37 @@
   "referenceTables": [
     {
       "title": "Retención de honorarios por año (Ley 21.133)",
-      "headers": ["Año de la boleta", "Retención", "Se declara en"],
+      "headers": [
+        "Año de la boleta",
+        "Retención",
+        "Se declara en"
+      ],
       "rows": [
-        ["2024", "13,75%", "Operación Renta 2025"],
-        ["2025", "14,5%", "Operación Renta 2026"],
-        ["2026", "15,25%", "Operación Renta 2027"],
-        ["2027", "16%", "Operación Renta 2028"],
-        ["2028", "17%", "Operación Renta 2029"]
+        [
+          "2024",
+          "13,75%",
+          "Operación Renta 2025"
+        ],
+        [
+          "2025",
+          "14,5%",
+          "Operación Renta 2026"
+        ],
+        [
+          "2026",
+          "15,25%",
+          "Operación Renta 2027"
+        ],
+        [
+          "2027",
+          "16%",
+          "Operación Renta 2028"
+        ],
+        [
+          "2028",
+          "17%",
+          "Operación Renta 2029"
+        ]
       ],
       "note": "Fuente: SII, Ley 21.133 de modernización tributaria. La retención sube de forma gradual hasta el 17% en 2028."
     }

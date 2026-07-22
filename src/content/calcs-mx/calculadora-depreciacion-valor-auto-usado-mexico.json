@@ -32,7 +32,8 @@
       "placeholder": "350000",
       "min": 0,
       "step": 0.01,
-      "hint": "Precio de lista cuando el auto era nuevo (o precio de compra original)."
+      "help": "Precio de lista cuando el auto era nuevo (o precio de compra original).",
+      "default": 350000
     },
     {
       "id": "antiguedadAnios",
@@ -43,7 +44,8 @@
       "placeholder": "5",
       "min": 0,
       "step": 1,
-      "hint": "Años desde que el auto es modelo nuevo (0 = auto del año)."
+      "help": "Años desde que el auto es modelo nuevo (0 = auto del año).",
+      "default": 5
     },
     {
       "id": "kmRecorridos",
@@ -54,7 +56,8 @@
       "placeholder": "90000",
       "min": 0,
       "step": 1000,
-      "hint": "Kilómetros marcados en el odómetro. Se penaliza el exceso sobre ~15,000 km/año."
+      "help": "Kilómetros marcados en el odómetro. Se penaliza el exceso sobre ~15,000 km/año.",
+      "default": 90000
     },
     {
       "id": "tasaDepreciacionAnual",
@@ -66,7 +69,7 @@
       "default": 15,
       "min": 0,
       "step": 1,
-      "hint": "Depreciación anual tras el primer año. 10-12% para marcas que conservan valor; 15-18% para las que caen más."
+      "help": "Depreciación anual tras el primer año. 10-12% para marcas que conservan valor; 15-18% para las que caen más."
     },
     {
       "id": "primerAnioMayor",
@@ -75,22 +78,60 @@
       "required": false,
       "default": "si",
       "options": [
-        { "value": "si", "label": "Sí (~20% el primer año)" },
-        { "value": "no", "label": "No, misma tasa todos los años" }
+        {
+          "value": "si",
+          "label": "Sí (~20% el primer año)"
+        },
+        {
+          "value": "no",
+          "label": "No, misma tasa todos los años"
+        }
       ],
-      "hint": "El primer año suele caer más (~20%) al pasar de nuevo a usado."
+      "help": "El primer año suele caer más (~20%) al pasar de nuevo a usado."
     }
   ],
   "outputs": [
-    { "id": "valorEstimado", "label": "Valor estimado hoy", "unit": "$", "precision": 2, "primary": true },
-    { "id": "depreciacionTotal", "label": "Depreciación total", "unit": "$", "precision": 2 },
-    { "id": "porcentajeDepreciacion", "label": "% de depreciación", "unit": "%", "precision": 1 },
-    { "id": "penalizacionKm", "label": "Castigo por kilometraje", "unit": "$", "precision": 2 },
-    { "id": "depreciacionAnualPromedio", "label": "Pérdida promedio por año", "unit": "$", "precision": 2 }
+    {
+      "id": "valorEstimado",
+      "label": "Valor estimado hoy",
+      "unit": "$",
+      "precision": 2,
+      "primary": true
+    },
+    {
+      "id": "depreciacionTotal",
+      "label": "Depreciación total",
+      "unit": "$",
+      "precision": 2
+    },
+    {
+      "id": "porcentajeDepreciacion",
+      "label": "% de depreciación",
+      "unit": "%",
+      "precision": 1
+    },
+    {
+      "id": "penalizacionKm",
+      "label": "Castigo por kilometraje",
+      "unit": "$",
+      "precision": 2
+    },
+    {
+      "id": "depreciacionAnualPromedio",
+      "label": "Pérdida promedio por año",
+      "unit": "$",
+      "precision": 2
+    }
   ],
   "example": {
     "title": "Ejemplo: auto de $350,000 nuevo, 5 años, 90,000 km, depreciación 15%",
-    "inputs": { "precioNuevo": 350000, "antiguedadAnios": 5, "kmRecorridos": 90000, "tasaDepreciacionAnual": 15, "primerAnioMayor": "si" },
+    "inputs": {
+      "precioNuevo": 350000,
+      "antiguedadAnios": 5,
+      "kmRecorridos": 90000,
+      "tasaDepreciacionAnual": 15,
+      "primerAnioMayor": "si"
+    },
     "steps": [
       "**Primer año (−20%)**: $350,000 × 0.80 = $280,000.",
       "**Años 2 a 5 (−15% anual)**: $280,000 × 0.85⁴ ≈ $146,200.",
@@ -135,8 +176,14 @@
     }
   ],
   "sources": [
-    { "name": "PROFECO — Qué debes saber al comprar un auto usado", "url": "https://www.gob.mx/profeco/articulos/que-debes-saber-al-comprar-un-auto-usado" },
-    { "name": "CONDUSEF — Seguro de automóvil y valor factura", "url": "https://www.gob.mx/condusef/articulos/seguro-de-automovil-lo-que-debes-saber" }
+    {
+      "name": "PROFECO — Qué debes saber al comprar un auto usado",
+      "url": "https://www.gob.mx/profeco/articulos/que-debes-saber-al-comprar-un-auto-usado"
+    },
+    {
+      "name": "CONDUSEF — Seguro de automóvil y valor factura",
+      "url": "https://www.gob.mx/condusef/articulos/seguro-de-automovil-lo-que-debes-saber"
+    }
   ],
   "relatedSlugs": [],
   "dataUpdate": {
@@ -161,13 +208,37 @@
   "referenceTables": [
     {
       "title": "Depreciación típica de un auto por antigüedad — México (auto de $350,000)",
-      "headers": ["Antigüedad", "Valor estimado aprox.", "Pérdida acumulada"],
+      "headers": [
+        "Antigüedad",
+        "Valor estimado aprox.",
+        "Pérdida acumulada"
+      ],
       "rows": [
-        ["Nuevo", "$350,000", "0%"],
-        ["1 año", "$280,000", "~20%"],
-        ["3 años", "$202,300", "~42%"],
-        ["5 años", "$146,200", "~58%"],
-        ["8 años", "$89,700", "~74%"]
+        [
+          "Nuevo",
+          "$350,000",
+          "0%"
+        ],
+        [
+          "1 año",
+          "$280,000",
+          "~20%"
+        ],
+        [
+          "3 años",
+          "$202,300",
+          "~42%"
+        ],
+        [
+          "5 años",
+          "$146,200",
+          "~58%"
+        ],
+        [
+          "8 años",
+          "$89,700",
+          "~74%"
+        ]
       ],
       "note": "Estimación con 20% el primer año y 15% anual después, sin ajuste por kilometraje. El valor real depende del modelo, estado y mercado (Libro Azul / Guía EBC)."
     }
