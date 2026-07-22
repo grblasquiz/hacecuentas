@@ -340,6 +340,24 @@ const CTA_BY_CALC_T2: Record<string, PriorityDecisionCta> = {
       label: 'Ver si estoy listo para jubilarme →',
     },
   },
+  'calculadora-dias-vacaciones-ley': {
+    lead: 'Tus días de vacaciones por ley son {value}.',
+    meaning: 'Las vacaciones pagas son parte del paquete que perdés si pasás a facturar: compará el régimen completo.',
+    room: {
+      slug: 'relacion-dependencia-o-facturar',
+      hook: '¿Pensás pasarte a facturar? Las vacaciones pagas entran en la cuenta.',
+      label: 'Comparar relación de dependencia contra facturar →',
+    },
+  },
+  'calculadora-sac-proporcional': {
+    lead: 'Tu SAC proporcional estimado es {value}.',
+    meaning: 'Si el proporcional es por una salida, calculá la liquidación completa y cuántos meses te cubre.',
+    room: {
+      slug: 'me-despidieron',
+      hook: '¿El SAC proporcional es por un despido? Hacé la cuenta completa.',
+      label: 'Calcular indemnización y meses de sostén →',
+    },
+  },
 };
 Object.assign(CTA_BY_CALC, CTA_BY_CALC_T2);
 
