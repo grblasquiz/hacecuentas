@@ -175,10 +175,20 @@ function evaluate(
   };
 }
 
+/** Slugs podados (301 en pruning-redirects.ts): sin URL viva, no cuentan como stale. */
+function prunedSlugs(): Set<string> {
+  const out = new Set<string>();
+  const file = join(process.cwd(), 'src/lib/pruning-redirects.ts');
+  if (!existsSync(file)) return out;
+  for (const m of readFileSync(file, 'utf8').matchAll(/'\/(?:[a-z-]+\/)?([^'/]+)':/g)) out.add(m[1]);
+  return out;
+}
+
 /** Lee el catálogo del filesystem local (todos los dirs calcs*). */
 function loadCalcsFromFs(): CalcInfo[] {
   const now = new Date();
   const out: CalcInfo[] = [];
+  const pruned = prunedSlugs();
   for (const dir of calcsDirs()) {
     const dirName = dir.split('/').pop() ?? 'calcs';
     for (const file of readdirSync(dir).filter((f) => f.endsWith('.json'))) {
@@ -191,6 +201,7 @@ function loadCalcsFromFs(): CalcInfo[] {
       }
       const du = raw?.dataUpdate;
       if (!du) continue;
+      if (pruned.has(raw?.slug) || pruned.has(file.replace(/\.json$/, ''))) continue; // podada → 301, sin URL viva
       // auto-live: la frescura se mide contra el snapshot del cron, no contra
       // el lastUpdated del calc JSON (que solo marca la última edición editorial).
       let effectiveLastUpdated: string | undefined = du.lastUpdated;

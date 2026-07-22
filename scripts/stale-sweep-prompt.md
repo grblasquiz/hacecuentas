@@ -6,6 +6,7 @@ Sos una sesión autónoma mensual de hacecuentas. Tu único trabajo: que NINGÚN
 
 1. Corré `npx tsx scripts/check-stale-data.ts` y quedate con la lista de stale (el resumen final `STALE_SUMMARY::`).
 2. Para cada calc stale de `updateType: manual` (procesalos TODOS, priorizando los de más días vencidos):
+   - ANTES de laburar, verificá que la URL viva dé 200: `curl -s -o /dev/null -w "%{http_code}" https://hacecuentas.com/<ruta>` (vertical = `/<cc>/<slug>`). Si da 301/404 está podada → saltéala y anotala en el reporte (el checker ya excluye podadas, esto es doble red).
    - Leé su JSON (está en `src/content/calcs*/`) y su fórmula si hardcodea el dato (`src/lib/formulas/`, a veces `src/lib/data/<pais>-2026.ts`).
    - Investigá el valor vigente HOY con WebSearch/WebFetch en la fuente oficial que ya cita el calc (`dataUpdate.source/sourceUrl`). NO inventes: si no confirmás el dato en una fuente confiable, NO lo cambies — anotalo en el reporte como "sin fuente verificable".
    - Si el dato cambió: actualizá fórmula/data + el contenido del JSON (tablas, ejemplos, answerSnippet si menciona el número) + `dataUpdate.lastUpdated` y `lastReviewed` a hoy + `notes` con lo verificado.
