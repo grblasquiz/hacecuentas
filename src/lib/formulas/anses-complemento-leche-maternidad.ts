@@ -2,7 +2,7 @@ export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; }
 export function ansesComplementoLecheMaternidad(i: Inputs): Outputs {
   const s=String(i.situacion||'emb');
-  const m: Record<string,number> = { emb:54665, lact:54665, h5:54665 };
+  const m: Record<string,number> = { emb:55841, lact:55841, h5:55841 };
   const monto = m[s] || 0;
   const anual = monto * 12;
   const etiqueta: Record<string,string> = { emb:'embarazo', lact:'lactancia', h5:'hijo menor de 5 años' };

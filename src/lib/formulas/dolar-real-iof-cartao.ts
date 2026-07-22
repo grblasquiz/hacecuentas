@@ -1,6 +1,6 @@
 /**
  * Conversão USD → BRL para compras no cartão de crédito internacional.
- * IOF 3,38% (Decreto 11.156/2022, alterações Decreto 10.997/2022) + spread banco.
+ * IOF 3,50% (unificado em 2025 — vigente 2026, alterações Decreto 10.997/2022) + spread banco.
  */
 
 export interface Inputs {
@@ -30,7 +30,7 @@ export function dolarRealIofCartao(i: Inputs): Outputs {
   const usd = Number(i.valorUsd) || 0;
   const cot = Number(i.cotacaoDolar) || 0;
   const spread = Number(i.spreadBanco ?? 4) || 0;
-  const iofPct = Number(i.iofPct ?? 3.38) || 0;
+  const iofPct = Number(i.iofPct ?? 3.50) || 0;
 
   if (usd <= 0) throw new Error('Informe o valor em USD.');
   if (cot <= 0) throw new Error('Informe a cotação do dólar.');
@@ -68,7 +68,7 @@ export function dolarRealIofCartao(i: Inputs): Outputs {
     cotacaoEfetiva: brl(cotEfet) + '/USD',
     valorFinalReais: brl(brlFinal),
     custoExtraPct: custoExtra.toFixed(2) + '%',
-    resumen: `Compra de US$ ${usd.toFixed(2)} a ${brl(cot)}/USD = ${brl(brlFinal)} no cartão (IOF 3,38% + spread ${spread}% = ${custoExtra.toFixed(2)}% acima da cotação).`,
+    resumen: `Compra de US$ ${usd.toFixed(2)} a ${brl(cot)}/USD = ${brl(brlFinal)} no cartão (IOF 3,50% + spread ${spread}% = ${custoExtra.toFixed(2)}% acima da cotação).`,
     _insight,
     _chart,
   };

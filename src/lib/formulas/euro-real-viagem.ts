@@ -1,7 +1,7 @@
 /**
  * Conversão EUR → BRL para viagem (espécie ou cartão pré-pago).
  * IOF espécie/pré-pago 1,1% em 2026 (redução gradual até 0% em 2028).
- * Cartão de crédito tem IOF 3,38%.
+ * Cartão de crédito tem IOF 3,50%.
  */
 
 export interface Inputs {
@@ -44,7 +44,7 @@ export function euroRealViagem(i: Inputs): Outputs {
   if (eur <= 0) throw new Error('Informe o valor em euros.');
   if (cot <= 0) throw new Error('Informe a cotação do euro.');
 
-  const iofPct = tipo === 'credito' ? 3.38 : iofEspecie(ano);
+  const iofPct = tipo === 'credito' ? 3.50 : iofEspecie(ano);
   const brlBase = eur * cot;
   const spreadValor = brlBase * (spread / 100);
   const brlComSpread = brlBase + spreadValor;
@@ -59,7 +59,7 @@ export function euroRealViagem(i: Inputs): Outputs {
     if (tipo === 'credito') {
       return {
         title: 'Cartão de crédito custa mais caro',
-        text: `No **${tipoLabel}** o IOF é de **3,38%**: você paga **${brl(extra)}** a mais (**${extraPct.toFixed(1)}%**) sobre a conversão. Em espécie ou pré-pago o IOF cai para ${iofEspecie(ano).toFixed(2)}% e a viagem sai bem mais barata.`,
+        text: `No **${tipoLabel}** o IOF é de **3,50%**: você paga **${brl(extra)}** a mais (**${extraPct.toFixed(1)}%**) sobre a conversão. Em espécie ou pré-pago o IOF cai para ${iofEspecie(ano).toFixed(2)}% e a viagem sai bem mais barata.`,
         tone: 'warn',
         icon: '💳',
       };
