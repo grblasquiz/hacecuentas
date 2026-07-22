@@ -516,37 +516,38 @@ const editorialHtml = _isReviewed
       privacidad) en UNA línea. El detalle completo (fuentes, revisor, changelog,
       metodología, disclaimer) sigue en la pestaña Fuentes — indexable, pero ya no
       compite visualmente con el formulario. "Ver fuentes" salta a esa pestaña. */}
+  {/* Colapsado (fix mobile above-the-fold): UNA línea compacta con las señales
+      clave (datos+fecha · autor) + un <details> "Más info" con el resto.
+      "Editado por" y "Proponer mejora" ya NO van acá: quedaron solo en el
+      bloque de metadata del widget (Calculator: reviewer-block +
+      editorial-suggest-btn) — antes aparecían DUPLICADOS. */}
   <div class="v2-trust-strip">
     <ul class="v2-trust-list">
-      {updatedLabel && (
-        <li><span class="tck" aria-hidden="true">✓</span>{(() => {
-          // Org corto: "InfoLEG — Ministerio de Justicia (Argentina)" → "InfoLEG".
-          const pubRaw = (sources.find((s: any) => s.publisher)?.publisher || '');
-          const pub = pubRaw.split(/[—(]/)[0].trim();
-          return lang === 'en'
+      <li><span class="tck" aria-hidden="true">✓</span>{(() => {
+        // Org corto: "InfoLEG — Ministerio de Justicia (Argentina)" → "InfoLEG".
+        const pubRaw = (sources.find((s: any) => s.publisher)?.publisher || '');
+        const pub = pubRaw.split(/[—(]/)[0].trim();
+        const dataPart = updatedLabel
+          ? (lang === 'en'
             ? (pub ? `${pub} data · ${updatedLabel}` : `Data verified · ${updatedLabel}`)
             : lang === 'pt'
             ? (pub ? `Dados ${pub} · ${updatedLabel}` : `Dados verificados · ${updatedLabel}`)
-            : (pub ? `Datos ${pub} · ${updatedLabel}` : `Datos verificados · ${updatedLabel}`);
-        })()}</li>
-      )}
-      {/* Martín = autor/editor en TODA la web (nunca "revisor"). Sin distinción
-          por categoría: ninguna calc debe decir "Fórmula revisada por Martín". */}
-      <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Edited by' : 'Editado por'} <a href="/autores/martin-rodriguez" rel="author">Martín Rodríguez</a></li>
-      {!proReviewer && <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Formula verified by automated tests' : lang === 'pt' ? 'Fórmula verificada por testes automatizados' : 'Fórmula verificada con pruebas automatizadas'}</li>}
+            : (pub ? `Datos ${pub} · ${updatedLabel}` : `Datos verificados · ${updatedLabel}`))
+          : (lang === 'en' ? 'Data verified' : lang === 'pt' ? 'Dados verificados' : 'Datos verificados');
+        return dataPart;
+      })()} · <a href="/autores/martin-rodriguez" rel="author">Martín Rodríguez</a></li>
       {proReviewer && (
         <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Professional review by' : 'Revisión profesional por'} <a href={proReviewer.profileUrl} target="_blank" rel="noopener noreferrer">{proReviewer.name}</a>{proReviewerCred && <span>, {proReviewerCred}</span>}{proReviewedAtLabel && <span> · {proReviewedAtLabel}</span>}</li>
       )}
-      <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Private — runs on your device' : lang === 'pt' ? 'Cálculo privado no seu dispositivo' : 'Cálculo privado en tu dispositivo'}</li>
     </ul>
+    <details class="v2-trust-details">
+      <summary>{lang === 'en' ? 'More info' : lang === 'pt' ? 'Mais informações' : 'Más info'}</summary>
+      <ul class="v2-trust-list">
+        {!proReviewer && <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Formula verified by automated tests' : lang === 'pt' ? 'Fórmula verificada por testes automatizados' : 'Fórmula verificada con pruebas automatizadas'}</li>}
+        <li><span class="tck" aria-hidden="true">✓</span>{lang === 'en' ? 'Private — runs on your device' : lang === 'pt' ? 'Cálculo privado no seu dispositivo' : 'Cálculo privado en tu dispositivo'}</li>
+      </ul>
+    </details>
     <div class="v2-trust-actions">
-      <a class="v2-suggest-edit" href={suggestHref} title={L.suggestEditTitle} data-nosnippet>
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M12 20h9" />
-          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-        </svg>
-        <span>{L.suggestEdit}</span>
-      </a>
       <button type="button" class="v2-trust-more" data-goto-tab="v2-fuentes">{lang === 'en' ? 'See sources & methodology →' : lang === 'pt' ? 'Ver fontes e metodologia →' : 'Ver fuentes y metodología →'}</button>
       <FavoriteStar slug={calc.slug} title={calc.h1} langPrefix="" labelSave={L.saveLabel} />
     </div>
@@ -699,14 +700,14 @@ const editorialHtml = _isReviewed
   <!-- ===== TABS (4 fijas) ===== -->
   <div class="v2-tabs">
     <div class="v2-tabnav" role="tablist" aria-label={L.ariaSections}>
-      <button class="v2-tab" role="tab" aria-selected="true"  data-panel="v2-resumen"><span class="ti">📋</span> {L.tabSummary}</button>
-      <button class="v2-tab" role="tab" aria-selected="false" data-panel="v2-como"><span class="ti">⚙️</span> {L.tabHow}</button>
-      <button class="v2-tab" role="tab" aria-selected="false" data-panel="v2-faq"><span class="ti">💬</span> {L.tabFaq}</button>
-      <button class="v2-tab" role="tab" aria-selected="false" data-panel="v2-fuentes"><span class="ti">📚</span> {L.tabSources}</button>
+      <button class="v2-tab" role="tab" id="tab-v2-resumen" aria-controls="v2-resumen" aria-selected="true"  data-panel="v2-resumen"><span class="ti">📋</span> {L.tabSummary}</button>
+      <button class="v2-tab" role="tab" id="tab-v2-como" aria-controls="v2-como" aria-selected="false" tabindex="-1" data-panel="v2-como"><span class="ti">⚙️</span> {L.tabHow}</button>
+      <button class="v2-tab" role="tab" id="tab-v2-faq" aria-controls="v2-faq" aria-selected="false" tabindex="-1" data-panel="v2-faq"><span class="ti">💬</span> {L.tabFaq}</button>
+      <button class="v2-tab" role="tab" id="tab-v2-fuentes" aria-controls="v2-fuentes" aria-selected="false" tabindex="-1" data-panel="v2-fuentes"><span class="ti">📚</span> {L.tabSources}</button>
     </div>
 
     <!-- Panel Resumen -->
-    <section class="v2-panel active" id="v2-resumen" role="tabpanel">
+    <section class="v2-panel active" id="v2-resumen" role="tabpanel" aria-labelledby="tab-v2-resumen">
       {audienceRedirect && (
         <aside class="v2-block" role="note" style="display:flex;gap:11px;background:#fff7ed;border:1px solid #fad9b3;border-radius:12px;padding:13px 15px;">
           <span aria-hidden="true" style="font-size:20px;">{audienceRedirect.icon}</span>
@@ -777,7 +778,7 @@ const editorialHtml = _isReviewed
     </section>
 
     <!-- Panel Cómo funciona -->
-    <section class="v2-panel" id="v2-como" role="tabpanel">
+    <section class="v2-panel" id="v2-como" role="tabpanel" aria-labelledby="tab-v2-como">
       {calcIsRestricted && (
         <div class="v2-block">
           <h2>{L.howWorks}</h2>
@@ -836,7 +837,7 @@ const editorialHtml = _isReviewed
     </section>
 
     <!-- Panel Preguntas -->
-    <section class="v2-panel" id="v2-faq" role="tabpanel">
+    <section class="v2-panel" id="v2-faq" role="tabpanel" aria-labelledby="tab-v2-faq">
       {!calcIsRestricted && calc.faq && calc.faq.length > 0 ? (
         <div class="v2-block v2-faq" id="faq">
           <h2>{L.faq}</h2>
@@ -853,7 +854,7 @@ const editorialHtml = _isReviewed
     </section>
 
     <!-- Panel Fuentes -->
-    <section class="v2-panel" id="v2-fuentes" role="tabpanel">
+    <section class="v2-panel" id="v2-fuentes" role="tabpanel" aria-labelledby="tab-v2-fuentes">
       {datosSource && (
         <div class="v2-block" id="datos-fuente">
           <h2>{L.datosTitle}</h2>
@@ -1008,24 +1009,108 @@ const editorialHtml = _isReviewed
 
 {hasMath && (
   <Fragment>
-    <link rel="preload" as="style" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'" />
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.querySelector('#como-funciona'), {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false});"></script>
+    <script is:inline>
+      // Fallback si el CDN de KaTeX falla (script o CSS): en vez de dejar los
+      // delimitadores $$...$$ crudos, los quitamos y queda el texto plano.
+      window.hcKatexFallback = function () {
+        var el = document.querySelector('#como-funciona');
+        if (!el || el.dataset.kxFallback === '1') return;
+        el.dataset.kxFallback = '1';
+        var w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        var n;
+        while ((n = w.nextNode())) {
+          if (n.nodeValue.indexOf('$$') !== -1) n.nodeValue = n.nodeValue.replace(/\$\$/g, ' ');
+        }
+      };
+    </script>
+    <link rel="preload" as="style" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'" onerror="window.__kxNoCss=1;window.hcKatexFallback&&window.hcKatexFallback()" />
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous" onerror="window.hcKatexFallback&&window.hcKatexFallback()"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onerror="window.hcKatexFallback&&window.hcKatexFallback()" onload="if(window.__kxNoCss||typeof renderMathInElement!=='function'){window.hcKatexFallback&&window.hcKatexFallback();}else{renderMathInElement(document.querySelector('#como-funciona'), {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false});}"></script>
   </Fragment>
 )}
 
 <script is:inline>
-// Tabs v2 (delegación, sirve para cualquier instancia)
-document.querySelectorAll('.calc-v2 .v2-tabnav').forEach((nav) => {
-  nav.addEventListener('click', (e) => {
-    const btn = e.target.closest('.v2-tab'); if (!btn) return;
-    const wrap = nav.closest('.v2-tabs');
-    wrap.querySelectorAll('.v2-tab').forEach((t) => t.setAttribute('aria-selected', 'false'));
-    wrap.querySelectorAll('.v2-panel').forEach((p) => p.classList.remove('active'));
-    btn.setAttribute('aria-selected', 'true');
-    wrap.querySelector('#' + btn.dataset.panel)?.classList.add('active');
+// Tabs v2 — patrón ARIA tabs: aria-selected + roving tabindex + flechas.
+// Soporta hidden="until-found" (Ctrl+F encuentra contenido de tabs ocultas) y
+// deep-links por hash (#faq, #como-funciona, #fuentes, #historial, …).
+(() => {
+  // ¿El browser soporta hidden="until-found"? Si no, seguimos con el
+  // comportamiento viejo (solo display:none vía .active de calc-redesign.css).
+  const untilFound = 'onbeforematch' in document.body;
+
+  const activateTab = (btn, focus) => {
+    const wrap = btn.closest('.v2-tabs'); if (!wrap) return;
+    wrap.querySelectorAll('.v2-tab').forEach((t) => {
+      const sel = t === btn;
+      t.setAttribute('aria-selected', sel ? 'true' : 'false');
+      t.setAttribute('tabindex', sel ? '0' : '-1');
+    });
+    wrap.querySelectorAll('.v2-panel').forEach((p) => {
+      const active = p.id === btn.dataset.panel;
+      p.classList.toggle('active', active);
+      if (untilFound) {
+        if (active) p.removeAttribute('hidden');
+        else p.setAttribute('hidden', 'until-found');
+      }
+    });
+    if (focus) btn.focus();
+  };
+
+  document.querySelectorAll('.calc-v2 .v2-tabnav').forEach((nav) => {
+    nav.addEventListener('click', (e) => {
+      const btn = e.target.closest('.v2-tab'); if (!btn) return;
+      activateTab(btn, false);
+    });
+    // Navegación con flechas ←/→ (+ Home/End) en el tablist.
+    nav.addEventListener('keydown', (e) => {
+      const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+      if (!keys.includes(e.key)) return;
+      const tabs = Array.from(nav.querySelectorAll('.v2-tab'));
+      const cur = tabs.indexOf(document.activeElement);
+      if (cur === -1) return;
+      e.preventDefault();
+      let next = cur;
+      if (e.key === 'ArrowLeft') next = (cur - 1 + tabs.length) % tabs.length;
+      else if (e.key === 'ArrowRight') next = (cur + 1) % tabs.length;
+      else if (e.key === 'Home') next = 0;
+      else next = tabs.length - 1;
+      activateTab(tabs[next], true);
+    });
   });
-});
+
+  // Panels inactivos → hidden="until-found": Ctrl+F revela el contenido; el
+  // evento beforematch activa la pestaña correspondiente. La CSS del layout
+  // (abajo) hace display:block SOLO cuando el attr está presente (que solo
+  // ocurre en browsers con soporte), y la UA aplica content-visibility:hidden.
+  if (untilFound) {
+    document.querySelectorAll('.calc-v2 .v2-panel:not(.active)').forEach((p) => {
+      p.setAttribute('hidden', 'until-found');
+      p.addEventListener('beforematch', () => {
+        const tabBtn = document.querySelector('.v2-tab[data-panel="' + p.id + '"]');
+        if (tabBtn) activateTab(tabBtn, false);
+      });
+    });
+  }
+
+  // Deep-links: si el hash apunta a un id que vive dentro de un panel oculto,
+  // activamos esa pestaña y scrolleamos al elemento.
+  const openFromHash = () => {
+    const id = decodeURIComponent((location.hash || '').slice(1));
+    if (!id) return;
+    let el = null;
+    try { el = document.getElementById(id); } catch (e) { return; }
+    if (!el) return;
+    const panel = el.closest('.v2-panel');
+    if (!panel) return;
+    if (!panel.classList.contains('active')) {
+      const tabBtn = document.querySelector('.v2-tab[data-panel="' + panel.id + '"]');
+      if (tabBtn) activateTab(tabBtn, false);
+    }
+    requestAnimationFrame(() => el.scrollIntoView({ block: 'start' }));
+  };
+  openFromHash();
+  window.addEventListener('hashchange', openFromHash);
+})();
 
 // "Ver fuentes y metodología" (Trust Strip) → activa esa pestaña y scrollea a ella.
 document.querySelectorAll('.calc-v2 [data-goto-tab]').forEach((link) => {
@@ -1108,5 +1193,36 @@ document.querySelectorAll('.calc-v2 .v2-cite-copy').forEach((btn) => {
   }
   @media (prefers-reduced-motion: reduce) {
     .calc-v2 .v2-cite-rich > summary::after { transition: none; }
+  }
+
+  /* ── Trust strip colapsado: línea compacta + <details> "Más info" ── */
+  .calc-v2 .v2-trust-details { font-size: 13px; }
+  .calc-v2 .v2-trust-details > summary {
+    cursor: pointer; color: var(--v2-muted); font-weight: 600;
+    list-style: none; display: inline-flex; align-items: center; gap: 4px;
+  }
+  .calc-v2 .v2-trust-details > summary::-webkit-details-marker { display: none; }
+  .calc-v2 .v2-trust-details > summary::after { content: '⌄'; font-size: 13px; transition: transform .15s ease; }
+  .calc-v2 .v2-trust-details[open] > summary::after { transform: rotate(180deg); }
+  .calc-v2 .v2-trust-details > .v2-trust-list { margin-top: 6px; }
+  @media (prefers-reduced-motion: reduce) {
+    .calc-v2 .v2-trust-details > summary::after { transition: none; }
+  }
+
+  /* ── Panels con hidden="until-found" (solo browsers con soporte; el attr lo
+       agrega el JS tras detectar onbeforematch). display:block le gana al
+       display:none de calc-redesign.css para que la UA aplique
+       content-visibility:hidden → Ctrl+F encuentra el contenido. ── */
+  .calc-v2 .v2-panel[hidden='until-found'] { display: block; }
+</style>
+
+<style is:global>
+  /* "Tus últimos cálculos" (widget .calc-history de Calculator, localStorage):
+     en mobile empujaba el primer input ~1 pantalla. Lo mandamos DEBAJO del
+     widget de cálculo vía order (flex column solo en mobile: en desktop el
+     container es grid de calc-redesign.css y no se toca). */
+  @media (max-width: 860px) {
+    .calc-v2 .calc-container { display: flex; flex-direction: column; }
+    .calc-v2 .calc-container > .calc-history { order: 99; }
   }
 </style>

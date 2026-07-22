@@ -124,13 +124,19 @@ const lead = neutralSpanish
       if (alreadySubscribed()) { card.hidden = true; return; }
       document.addEventListener('hc:subscribed', function () { if (!subscribedHere) card.hidden = true; });
 
-      // Dedupe con la alerta personalizada del widget: si el calc es elegible y
-      // el usuario calcula, aparece alert-capture ("Guardá este resultado", que
-      // guarda inputs + resultado vía /api/alerts/subscribe) — superficie
-      // superior a esta. Ocultamos esta card para no pedir el mail dos veces.
+      // Dedupe con las capturas del widget post-resultado: al calcular, el
+      // Calculator muestra [data-alert-capture] ("Guardá este resultado") o el
+      // email-capture "a secas" ([data-email-capture]). Cualquiera de las dos
+      // VISIBLE = ya hay un pedido de mail en pantalla → esta card se oculta
+      // (antes solo chequeaba que el nodo alert-capture EXISTIERA, y el
+      // email-capture ni se miraba: podían convivir dos pedidos de email).
+      function isShown(el) { return !!(el && el.offsetParent !== null); }
       document.querySelectorAll('.calc-container').forEach(function (c) {
         c.addEventListener('hc-calc-result', function () {
-          if (document.querySelector('[data-alert-capture]')) card.hidden = true;
+          // El widget togglea display DESPUÉS de despachar el evento → diferimos.
+          setTimeout(function () {
+            if (isShown(c.querySelector('[data-alert-capture]')) || isShown(c.querySelector('[data-email-capture]'))) card.hidden = true;
+          }, 0);
         });
       });
 

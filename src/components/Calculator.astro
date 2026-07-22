@@ -3453,6 +3453,9 @@ const formatFreshnessDate = (iso: string): string => {
       position: static;
       box-shadow: var(--shadow-sm);
     }
+    /* Separar "Borrar datos" del CTA sticky en mobile: pegados invitan al
+       mis-tap (borrar cuando querías calcular). */
+    .btn-clear-form { margin-top: 1.125rem; }
     .email-form {
       flex-direction: column;
     }
@@ -3491,6 +3494,33 @@ const formatFreshnessDate = (iso: string): string => {
     border-color: var(--text-subtle);
   }
   .btn-clear-form svg { flex-shrink: 0; }
+
+  /* Toast "Deshacer" post-borrado (5s, no bloqueante) */
+  .clear-undo-toast {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    padding: 0.55rem 0.875rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+  .clear-undo-btn {
+    background: transparent;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    color: var(--accent, #2563eb);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+    border-radius: var(--radius);
+  }
+  .clear-undo-btn:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: 2px; }
 
   /* ── #20 Skeleton del resultado ──────────────────────────────── */
   .result-skeleton {
@@ -4319,12 +4349,19 @@ const formatFreshnessDate = (iso: string): string => {
     }
     var start = 0;
     var startTime: number | null = null;
+    // Throttle: pintar ~12 veces en total (antes ~36 @60fps) → menos style/layout
+    // en el hot path del INP. El frame final (progress===1) pinta SIEMPRE.
+    var minPaintGap = duration / 12;
+    var lastPaint = -Infinity;
     function step(ts: number) {
       if (!startTime) startTime = ts;
       var progress = Math.min((ts - startTime) / duration, 1);
-      var eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
-      var current = start + (end - start) * eased;
-      el.textContent = (el as any)._formatter ? (el as any)._formatter(current) : current.toLocaleString('es-AR', {maximumFractionDigits: 2});
+      if (progress >= 1 || ts - lastPaint >= minPaintGap) {
+        lastPaint = ts;
+        var eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+        var current = start + (end - start) * eased;
+        el.textContent = (el as any)._formatter ? (el as any)._formatter(current) : current.toLocaleString('es-AR', {maximumFractionDigits: 2});
+      }
       if (progress < 1) requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
@@ -4809,24 +4846,11 @@ const formatFreshnessDate = (iso: string): string => {
       return token ? base + '?d=' + token : base;
     } catch { return base; }
   }
-  // Refleja el estado en la barra de direcciones sin recargar ni empujar
-  // historial. Silencioso si algo falla (nunca romper el cálculo por la URL).
-  function syncUrlState(form: HTMLFormElement): void {
-    if (typeof history === 'undefined' || !history.replaceState) return;
-    try {
-      const state = collectStateInputs(form);
-      const keys = Object.keys(state);
-      const path = window.location.pathname;
-      let target = path;
-      if (keys.length > 0) {
-        const token = _b64urlEncode(JSON.stringify(state));
-        if (token) target = path + '?d=' + token;
-      }
-      if (path + window.location.search !== target) {
-        history.replaceState(history.state, '', target + window.location.hash);
-      }
-    } catch { /* noop */ }
-  }
+  // Privacidad 2026-07-22: se eliminó syncUrlState (auto-escribía ?d= con los
+  // inputs del usuario en la barra tras cada cálculo → copiar la URL compartía
+  // el sueldo sin saberlo). El token ?d= ahora vive SOLO en los botones de
+  // compartir/copiar link (buildStateUrl on-demand). El restore por ?d=
+  // entrante sigue funcionando igual.
 
   // Copia robusta reutilizable: Clipboard API → fallback textarea+execCommand
   // (webviews in-app / doc sin foco donde navigator.clipboard falla en
@@ -5508,6 +5532,53 @@ const formatFreshnessDate = (iso: string): string => {
       });
     });
 
+    // ── Persistencia de inputs (sessionStorage, key por slug) ────────────
+    // Antes el estado solo sobrevivía si el usuario CALCULABA (?d= post-cálculo).
+    // Navegar a una related y volver sin calcular borraba todo lo tipeado.
+    // Ahora: snapshot debounced (~800ms) del form en sessionStorage al tipear;
+    // al iniciar, si NO hay ?d= en la URL, se restauran los valores (sin
+    // auto-calcular). ?d= explícito siempre tiene prioridad. Best-effort:
+    // sessionStorage bloqueado (Safari private) → no-op silencioso.
+    const PERSIST_KEY = 'hc-form-' + slug;
+    let _persistTimer: ReturnType<typeof setTimeout> | undefined;
+    function persistFormNow() {
+      try {
+        const state = collectStateInputs(form);
+        if (Object.keys(state).length === 0) sessionStorage.removeItem(PERSIST_KEY);
+        else sessionStorage.setItem(PERSIST_KEY, JSON.stringify(state));
+      } catch { /* noop */ }
+    }
+    function schedulePersist() {
+      if (_persistTimer) clearTimeout(_persistTimer);
+      _persistTimer = setTimeout(persistFormNow, 800);
+    }
+    function clearPersistedForm() {
+      if (_persistTimer) clearTimeout(_persistTimer);
+      _persistTimer = undefined;
+      try { sessionStorage.removeItem(PERSIST_KEY); } catch { /* noop */ }
+    }
+    // Aplica un snapshot {name: value} al form. Si onlyDefaults=true, NO pisa
+    // campos que el usuario ya tocó (value !== defaultValue — cubre tipeo
+    // pre-hidratación con el guard data-hc-queued).
+    function applyFormSnapshot(state: Record<string, string>, onlyDefaults: boolean) {
+      Object.keys(state).forEach((name) => {
+        let el: HTMLInputElement | HTMLSelectElement | null = null;
+        try { el = form.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"]`); } catch { el = null; }
+        if (!el) return;
+        if (onlyDefaults) {
+          if (el.tagName === 'SELECT') {
+            const opt = (el as HTMLSelectElement).options[(el as HTMLSelectElement).selectedIndex];
+            if (!(opt && opt.defaultSelected)) return;
+          } else if ((el as HTMLInputElement).value !== (el as HTMLInputElement).defaultValue) {
+            return;
+          }
+        }
+        const val = String(state[name]);
+        if ((el as HTMLInputElement).dataset?.format === 'thousands') el.value = formatThousands(val);
+        else el.value = val;
+      });
+    }
+
     // Precargar fields desde querystring (viralización: link con datos precargados)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.size > 0) {
@@ -5552,6 +5623,18 @@ const formatFreshnessDate = (iso: string): string => {
       if (filled > 0 && allRequiredFilled) {
         setTimeout(() => form.requestSubmit(), 120);
       }
+    } else {
+      // Sin querystring: restaurar el snapshot de sessionStorage si existe
+      // (sin auto-calcular — el usuario decide cuándo apretar Calcular).
+      try {
+        const raw = sessionStorage.getItem(PERSIST_KEY);
+        if (raw) {
+          const saved = JSON.parse(raw);
+          if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+            applyFormSnapshot(saved as Record<string, string>, true);
+          }
+        }
+      } catch { /* snapshot corrupto/bloqueado → ignorar */ }
     }
 
     // Auto-calcular al cargar si el JSON tiene autoCalculate: true y todos los
@@ -5674,6 +5757,14 @@ const formatFreshnessDate = (iso: string): string => {
         // "Recalculá" vía CSS). Se limpia al recalcular OK. No tocamos
         // aria-live acá: el anuncio SR solo ocurre en cálculo nuevo.
         if (!results.hidden) results.classList.add('is-stale');
+        // El usuario editó a mano → el preset activo ya no refleja el form:
+        // limpiar active + aria-pressed (si no, el botón "miente" al SR).
+        container.querySelectorAll('.preset-btn[aria-pressed="true"]').forEach((b) => {
+          b.classList.remove('active');
+          b.setAttribute('aria-pressed', 'false');
+        });
+        // Persistencia liviana: snapshot del form en sessionStorage (debounce).
+        schedulePersist();
       }
     });
 
@@ -5698,7 +5789,10 @@ const formatFreshnessDate = (iso: string): string => {
         btn.className = 'calc-retry-btn';
         btn.textContent = CALC_LANG === 'en' ? '↻ Retry' : CALC_LANG === 'pt' ? '↻ Tentar de novo' : '↻ Reintentar';
         btn.addEventListener('click', () => {
-          if (_lastInputs) executeFormula({ ..._lastInputs });
+          // Re-submit del FORM (no _lastInputs): si el usuario corrigió un
+          // campo después del error, el retry debe usar los valores frescos
+          // (y pasar por la validación inline de nuevo).
+          form.requestSubmit();
         });
         errorBox.appendChild(document.createElement('br'));
         errorBox.appendChild(btn);
@@ -6081,9 +6175,9 @@ const formatFreshnessDate = (iso: string): string => {
             }
           } catch {}
 
-          // A1: reflejar el estado en la URL (permalink) sin recargar. El
-          // canonical apunta a la URL limpia → sin riesgo SEO. Silencioso.
-          syncUrlState(form);
+          // A1/privacidad: ya NO reflejamos el estado en la barra de direcciones
+          // (?d= con datos del usuario). El permalink con estado se genera
+          // on-demand en "Copiar link" / compartir (buildStateUrl).
 
           // Captura de email UNIFICADA (no pedir el correo dos veces):
           // si el calc es alertEligible, la alerta es el módulo único (su submit
@@ -6185,6 +6279,8 @@ const formatFreshnessDate = (iso: string): string => {
           container.querySelectorAll('.preset-btn').forEach((b) => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
           btn.classList.add('active');
           btn.setAttribute('aria-pressed', 'true');
+          // Set programático de values NO dispara 'input' → persistir a mano.
+          persistFormNow();
           if (typeof (window as any).gtag === 'function') {
             (window as any).gtag('event', 'preset_click', { calc_slug: slug, preset: btn.textContent?.trim() });
           }
@@ -6194,8 +6290,60 @@ const formatFreshnessDate = (iso: string): string => {
     });
 
     // ── #15 Botón "Borrar datos": resetea el form actual (no el historial) ──
-    container.querySelector<HTMLButtonElement>('[data-clear-form]')?.addEventListener('click', () => {
+    // Con UNDO: guardamos snapshot antes de borrar y ofrecemos "Deshacer" 5s
+    // (toast accesible role=status, no bloqueante).
+    let _undoSnapshot: { state: Record<string, string>; lastInputs: typeof _lastInputs; prevPrimary: typeof _prevPrimary; hadResult: boolean } | null = null;
+    let _undoTimer: ReturnType<typeof setTimeout> | undefined;
+    let _undoToast: HTMLElement | null = null;
+    function dismissUndoToast() {
+      if (_undoTimer) { clearTimeout(_undoTimer); _undoTimer = undefined; }
+      if (_undoToast) { _undoToast.remove(); _undoToast = null; }
+    }
+    function showUndoToast(clearBtn: HTMLElement) {
+      dismissUndoToast();
+      const toast = document.createElement('div');
+      toast.className = 'clear-undo-toast';
+      toast.setAttribute('role', 'status');
+      const msg = document.createElement('span');
+      msg.textContent = CALC_LANG === 'en' ? 'Data cleared.' : CALC_LANG === 'pt' ? 'Dados limpos.' : 'Datos borrados.';
+      const undoBtn = document.createElement('button');
+      undoBtn.type = 'button';
+      undoBtn.className = 'clear-undo-btn';
+      undoBtn.textContent = CALC_LANG === 'en' ? 'Undo' : CALC_LANG === 'pt' ? 'Desfazer' : 'Deshacer';
+      undoBtn.addEventListener('click', () => {
+        const snap = _undoSnapshot;
+        dismissUndoToast();
+        if (!snap) return;
+        _undoSnapshot = null;
+        applyFormSnapshot(snap.state, false);
+        _lastInputs = snap.lastInputs;
+        _prevPrimary = snap.prevPrimary;
+        persistFormNow();
+        if (emptyPreviewEl) emptyPreviewEl.hidden = false;
+        // Si había un resultado a la vista, recalcular con los inputs restaurados.
+        if (snap.hadResult) form.requestSubmit();
+      });
+      toast.appendChild(msg);
+      toast.appendChild(undoBtn);
+      clearBtn.insertAdjacentElement('afterend', toast);
+      _undoToast = toast;
+      _undoTimer = setTimeout(() => { _undoSnapshot = null; dismissUndoToast(); }, 5000);
+    }
+    container.querySelector<HTMLButtonElement>('[data-clear-form]')?.addEventListener('click', (ev) => {
+      // Snapshot ANTES de resetear (para Deshacer).
+      try {
+        _undoSnapshot = {
+          state: collectStateInputs(form) as Record<string, string>,
+          lastInputs: _lastInputs,
+          prevPrimary: _prevPrimary,
+          hadResult: !results.hidden,
+        };
+      } catch { _undoSnapshot = null; }
       form.reset();
+      clearPersistedForm();
+      if (_undoSnapshot && Object.keys(_undoSnapshot.state).length > 0) {
+        showUndoToast(ev.currentTarget as HTMLElement);
+      }
       // Limpiar estados de validación y de "completo" en todos los campos.
       form.querySelectorAll<HTMLElement>('.input-wrap').forEach((w) => {
         w.classList.remove('is-invalid', 'is-complete');
@@ -6213,8 +6361,13 @@ const formatFreshnessDate = (iso: string): string => {
       if (comparePrevEl) comparePrevEl.hidden = true;
       _prevPrimary = null;
       _lastInputs = null;
-      // A1: limpiar el ?d= de la URL (el form volvió a los defaults).
-      syncUrlState(form);
+      // A1: si la URL traía ?d= (link entrante), limpiarlo — el form volvió a
+      // los defaults y dejar el token viejo en la barra filtra datos ajenos.
+      try {
+        if (window.location.search && history.replaceState) {
+          history.replaceState(history.state, '', window.location.pathname + window.location.hash);
+        }
+      } catch { /* noop */ }
       // Foco al primer campo para seguir cargando.
       const first = form.querySelector<HTMLInputElement | HTMLSelectElement>('input:not([type=hidden]), select');
       try { first?.focus(); } catch {}
