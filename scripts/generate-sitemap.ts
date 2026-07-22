@@ -931,6 +931,8 @@ sitemaps.push({
     core('/datos-topes-sipa-2026',               '0.7',  'monthly'),
     core('/datos-aguinaldo-2026',                '0.7',  'monthly'),
     core('/aumento-jubilaciones',                '0.9',  'daily',   true),
+    core('/calendario-pagos-anses-agosto-2026',  '0.8',  'weekly'),
+    core('/dia-del-nino-2026-cuando-es',         '0.8',  'weekly'),
     core('/aguinaldo-diciembre-2026',            '0.85', 'weekly'),
     core('/datos-salario-minimo-latam-2026',     '0.7',  'monthly'),
     core('/pt/dados-inss-irrf-2026',             '0.7',  'monthly'),

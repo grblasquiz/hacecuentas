@@ -54,13 +54,14 @@ export const CUENTA_DNI_JUL_2026: Record<string, RubroCuentaDni> = {
   farmacias:     { label: 'Farmacias y perfumerías', pct: 10, tope: null, periodo: 'semana', dias: 'miércoles y jueves' },
 };
 
-// ── AUH julio 2026 (ANSES, movilidad) ──
-// Fuente: Infobae/Ámbito 06-jul-2026. General por hijo; se acredita 80% y se retiene 20% (Libreta AUH).
+// ── AUH agosto 2026 (ANSES, movilidad +1,89% = IPC junio) ──
+// Fuente: ANSES/Infobae 17-jul-2026. General por hijo; se acredita 80% y se retiene 20% (Libreta AUH).
+// (El nombre del export se mantiene por compatibilidad; el valor es el vigente ago-2026.)
 export const AUH_JUL_2026 = {
-  montoGeneral: 148049,      // bruto por hijo
-  pctRetenido: 0.2,          // se libera al presentar la Libreta AUH
-  cobroMensual: 118439.2,    // 80%
-  retenidoMensual: 29609.8,  // 20%
+  montoGeneral: 150861.9,     // bruto por hijo (ago-2026)
+  pctRetenido: 0.2,           // se libera al presentar la Libreta AUH
+  cobroMensual: 120689.52,    // 80%
+  retenidoMensual: 30172.38,  // 20%
 } as const;
 
 // ── Préstamos personales Banco Nación (jul-2026) ──

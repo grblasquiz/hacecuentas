@@ -32,7 +32,7 @@ export function ctsPeru(i: Inputs): Outputs {
 
   if (!rem || rem <= 0) throw new Error('Ingresá tu remuneración mensual');
 
-  // RMV 2026 estimada
+  // RMV 2026 verificada (D.S. 006-2024-TR): S/ 1.130
   const RMV = 1_130;
 
   // Asignación familiar: 10% de la RMV

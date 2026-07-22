@@ -2,9 +2,10 @@
 // MONOTRIBUTO 2026 — FUENTE ÚNICA DE VERDAD
 // ────────────────────────────────────────────────────────────────────────────
 // Fuente: ARCA oficial — https://www.afip.gob.ar/monotributo/categorias.asp
-// Vigencia: desde 2026-02-01. Recategorización SEMESTRAL (enero y julio);
-//   la de julio 2026 cierra el 5/8/2026.
-// Validado x3 (topes): ARCA + c5n + Estudio Bertora Brown. Cuotas: ARCA + c5n.
+// Vigencia: desde 2026-08-01 (semestre ago-2026 / ene-2027, ajuste +16,8% por
+//   IPC 1er semestre). Recategorización SEMESTRAL (enero y julio); la de
+//   julio 2026 cierra el 5/8/2026 y el primer pago con valores nuevos es el 20/8.
+// Validado (topes+cuotas): ARCA + Perfil + Infobae + calcularsueldo (2026-07-22).
 //
 // ⚠️ CAMBIO 2026 (reforma): "Locaciones y prestaciones de SERVICIOS" YA NO topea
 //    en H — alcanza hasta K. Las categorías I, J y K aplican a servicios Y a venta
@@ -15,7 +16,7 @@
 // ────────────────────────────────────────────────────────────────────────────
 
 /** Vigencia del dato (YYYY-MM-DD): escala vigente desde 2026-02-01 (recategorización semestral). Usada por src/lib/data-freshness.ts. */
-export const DATA_AS_OF = '2026-02-01';
+export const DATA_AS_OF = '2026-08-01';
 
 export type Cat = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K';
 export type Actividad = 'servicios' | 'bienes';
@@ -23,22 +24,22 @@ export const CATEGORIAS: Cat[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', '
 
 // Tope de ingresos brutos anuales (igual para servicios y bienes).
 export const TOPES: Record<Cat, number> = {
-  A: 10277988.13, B: 15058447.71, C: 21113696.52, D: 26212853.42,
-  E: 30833964.37, F: 38642048.36, G: 46211109.37, H: 70113407.33,
-  I: 78479211.62, J: 89872640.30, K: 108357084.05,
+  A: 12009410.45, B: 17595182.74, C: 24670494.31, D: 30628651.43,
+  E: 36028231.33, F: 45151659.41, G: 53995798.87, H: 81924660.37,
+  I: 91699761.90, J: 105012519.20, K: 126610838.75,
 };
 
 // Cuota mensual TOTAL (impuesto integrado + SIPA + obra social).
 export const CUOTA_SERVICIOS: Record<Cat, number> = {
-  A: 42386.74, B: 48250.78, C: 56501.85, D: 72414.10,
-  E: 102537.97, F: 129045.32, G: 197108.23, H: 447346.93,
-  I: 824802.26, J: 999007.65, K: 1381687.90,
+  A: 49527.18, B: 56379.00, C: 66020.00, D: 84614.00,
+  E: 119811.00, F: 150784.00, G: 230612.00, H: 522706.00,
+  I: 963747.00, J: 1167299.00, K: 1614446.02,
 };
 
 export const CUOTA_BIENES: Record<Cat, number> = {
-  A: 42386.74, B: 48250.78, C: 55227.06, D: 70661.26,
-  E: 92658.35, F: 111198.27, G: 135918.34, H: 272063.40,
-  I: 406512.05, J: 497059.41, K: 600879.51,
+  A: 49527.18, B: 56379.00, C: 64539.00, D: 82564.00,
+  E: 108267.00, F: 129930.00, G: 158815.00, H: 317895.00,
+  I: 474994.00, J: 580793.00, K: 702103.00,
 };
 
 // Proporción ilustrativa integrado / SIPA / obra social (para el donut).
@@ -79,7 +80,7 @@ export function categoriaPorIngresos(anual: number): Cat | null {
 }
 
 export const META = {
-  vigencia: '2026-02-01',
+  vigencia: '2026-08-01',
   fuente: 'ARCA',
   fuenteUrl: 'https://www.afip.gob.ar/monotributo/categorias.asp',
   recategorizacion: 'semestral (enero y julio)',

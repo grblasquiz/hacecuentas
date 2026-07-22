@@ -18,7 +18,7 @@
  */
 
 /** Vigencia del dato (YYYY-MM-DD) — usada por el sello de frescura a nivel dato (src/lib/data-freshness.ts). */
-export const DATA_AS_OF = '2026-06-21';
+export const DATA_AS_OF = '2026-07-22';
 
 export const PARAGUAY_2026 = {
   anio: 2026,

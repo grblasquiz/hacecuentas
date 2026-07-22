@@ -38,8 +38,8 @@ export function calculadoraJornalUruguay(
   const jornal = mensual / divJornal;
   const hora = mensual / divHora;
 
-  // Comparación contra el SMN (ene-jun 2026).
-  const smnMensual = URUGUAY_2026.smn.mensualEnero;
+  // Comparación contra el SMN vigente (jul-dic 2026, Decreto N° 319/025).
+  const smnMensual = URUGUAY_2026.smn.mensualJulio;
   const pctSmn = smnMensual > 0 ? (mensual / smnMensual) * 100 : 0;
   const vecesSmn = smnMensual > 0 ? mensual / smnMensual : 0;
 

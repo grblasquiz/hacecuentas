@@ -115,7 +115,7 @@ export function compute(i: Inputs): Outputs {
 
   // --- Excluido del régimen: facturación supera el tope máximo (cat. K) ---
   if (idxPorIngresos === -1) {
-    const topeMax = "$108.357.084 (Categoría K, igual para servicios y comercio desde la reforma 2026)";
+    const topeMax = "$126.610.839 (Categoría K, escala vigente desde agosto 2026, igual para servicios y comercio)";
     return {
       categoriaNueva: "EXCLUIDO",
       cuotaMensual: 0,
@@ -192,7 +192,7 @@ export function compute(i: Inputs): Outputs {
     const idxActual = indicePorNombre(categoriaActual);
     const idxNuevo = indicePorNombre(categoriaResultante.nombre);
     if (idxNuevo > idxActual) {
-      alerta = `⬆️ Debés subir de categoría ${categoriaActual} a ${categoriaResultante.nombre} antes del 20 de julio.`;
+      alerta = `⬆️ Debés subir de categoría ${categoriaActual} a ${categoriaResultante.nombre} antes del 5 de agosto.`;
     } else if (idxNuevo < idxActual) {
       alerta = `⬇️ Podés bajar de categoría ${categoriaActual} a ${categoriaResultante.nombre} y pagar menos cuota.`;
     } else {
@@ -211,7 +211,7 @@ export function compute(i: Inputs): Outputs {
     insightText = `Te corresponde la **categoría ${categoriaResultante.nombre}**, con una cuota mensual de **$${cuotaNueva.toLocaleString("es-AR")}**. El parámetro que define tu categoría es **${limitante.toLowerCase()}**.`;
     insightTone = "neutral";
   } else if (sube) {
-    insightText = `Tenés que **subir de ${categoriaActual} a ${categoriaResultante.nombre}**: la cuota pasa a **$${cuotaNueva.toLocaleString("es-AR")}** (**+$${Math.abs(diferencia).toLocaleString("es-AR")}/mes**). Recategorizate antes del 20 de julio para no quedar excluido. Te empuja el parámetro **${limitante.toLowerCase()}**.`;
+    insightText = `Tenés que **subir de ${categoriaActual} a ${categoriaResultante.nombre}**: la cuota pasa a **$${cuotaNueva.toLocaleString("es-AR")}** (**+$${Math.abs(diferencia).toLocaleString("es-AR")}/mes**). Recategorizate antes del 5 de agosto para no quedar excluido; la cuota nueva se paga por primera vez el 20 de agosto. Te empuja el parámetro **${limitante.toLowerCase()}**.`;
     insightTone = "warn";
   } else if (baja) {
     insightText = `Podés **bajar de ${categoriaActual} a ${categoriaResultante.nombre}** y ahorrar **$${Math.abs(diferencia).toLocaleString("es-AR")}/mes**: tu cuota quedaría en **$${cuotaNueva.toLocaleString("es-AR")}**. No es obligatorio, pero conviene recategorizarte.`;

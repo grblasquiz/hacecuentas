@@ -72,11 +72,12 @@ const historial = Array.from({ length: 6 }, (_, i) => ymShift(mesMostrado, -(5 -
   .filter((h) => h.pct !== null) as { ym: Ym; pct: number; ipcDe: Ym }[];
 
 // ---- Haber mínimo ----
-// Ancla oficial: junio 2026 = $403.317,99 (ANSES; misma fuente que
-// src/lib/formulas/jubilacion-minima.ts). Encadenamos hacia adelante SOLO con IPC ya
-// publicado: haber(M) = haber(M-1) × (1 + IPC(M-2)/100).
-const ANCLA_HABER_MIN: { ym: Ym; valor: number } = { ym: { y: 2026, m0: 5 }, valor: 403318 };
+// Ancla oficial: agosto 2026 = $419.734,71 bruta (ANSES, aumento +1,89% = IPC junio).
+// Con bono de $70.000: $489.734,71. Haber máximo agosto 2026: $2.824.695.
+// Encadenamos hacia adelante SOLO con IPC ya publicado: haber(M) = haber(M-1) × (1 + IPC(M-2)/100).
+const ANCLA_HABER_MIN: { ym: Ym; valor: number } = { ym: { y: 2026, m0: 7 }, valor: 419735 };
 const BONO_MINIMA = 70000; // bono por decreto para haberes hasta la mínima (se renueva mes a mes)
+const HABER_MAXIMO_AGO = 2824695; // haber máximo agosto 2026 (ANSES)
 
 let haberMinMes: Ym = ANCLA_HABER_MIN.ym;
 let haberMin = ANCLA_HABER_MIN.valor;
@@ -122,6 +123,14 @@ const faqItems = [
   {
     q: '¿Por qué el aumento usa la inflación de dos meses atrás?',
     a: 'Porque INDEC publica el IPC de cada mes a mediados del mes siguiente, y ANSES necesita ese dato con anticipación para liquidar los haberes. Por eso el aumento de cada mes replica la inflación de dos meses antes: es el último dato disponible al momento de liquidar.'
+  },
+  {
+    q: '¿Cuánto cobra un jubilado con la mínima en agosto 2026?',
+    a: 'En agosto 2026, con el aumento del 1,89% (IPC de junio), la jubilación mínima queda en $419.734,71 bruta. Sumando el bono de $70.000 que se renueva por decreto, el ingreso llega a $489.734,71. El haber máximo del sistema es de $2.824.695 y la PUAM, equivalente al 80% de la mínima, ronda los $335.788 más el bono.'
+  },
+  {
+    q: '¿Cuándo cobran los jubilados en agosto 2026?',
+    a: 'ANSES paga a los jubilados que cobran hasta la mínima desde la segunda semana de agosto: del lunes 10 al lunes 24, según la terminación del DNI (el feriado del 17 de agosto corre el cronograma). Quienes superan la mínima cobran del martes 25 al lunes 31. La AUH se paga entre el 10 y el 21 de agosto.'
   },
   {
     q: '¿Qué hago si mi jubilación no refleja el aumento?',
@@ -208,11 +217,32 @@ const description = `Las jubilaciones aumentan ${fmtPct(aumentoMes ?? 0)} en ${y
             <span class="hl-label">Mínima + bono de {fmtAr(BONO_MINIMA)}</span>
             <span class="hl-value">{fmtAr(haberMin + BONO_MINIMA)}</span>
           </div>
+          <div class="highlight-item">
+            <span class="hl-label">Haber máximo (agosto 2026)</span>
+            <span class="hl-value">{fmtAr(HABER_MAXIMO_AGO)}</span>
+          </div>
         </div>
       </div>
       <p class="table-note">
-        Valores brutos estimados aplicando la movilidad sobre el haber mínimo oficial de junio 2026 ($403.318, ANSES).
+        Valores brutos oficiales: en agosto 2026 el aumento es del 1,89% (IPC de junio) y la mínima queda en $419.734,71 bruta
+        ($489.734,71 con el bono de $70.000); el haber máximo llega a $2.824.695. La PUAM equivale al 80% de la mínima.
         El monto exacto lo confirma ANSES en cada liquidación; el bono se renueva mes a mes por decreto.
+      </p>
+    </section>
+
+    <!-- FECHAS DE PAGO AGOSTO 2026 -->
+    <section class="section">
+      <h2>Cuándo se cobra: fechas de pago de agosto 2026</h2>
+      <div class="next-box">
+        <p>
+          ⏳ <strong>Pago próximo:</strong> los jubilados y pensionados que cobran <strong>hasta la mínima</strong> cobran en agosto
+          desde el <strong>lunes 10 al lunes 24</strong> según la terminación del DNI (el feriado del 17 corre el cronograma);
+          quienes <strong>superan la mínima</strong> cobran del <strong>martes 25 al lunes 31</strong>. La AUH se paga del 10 al 21 de agosto.
+        </p>
+      </div>
+      <p>
+        Mirá el detalle día por día según tu DNI en el
+        <a href="/calendario-pagos-anses-agosto-2026">calendario de pagos de ANSES de agosto 2026</a>.
       </p>
     </section>
 

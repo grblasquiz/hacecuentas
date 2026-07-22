@@ -1,0 +1,394 @@
+---
+// Página de DATO estacional: calendario de pagos ANSES agosto 2026 por terminación
+// de DNI, con lookup interactivo simple (JS inline). Datos: ANSES / prensa (jul-2026).
+// Aumento agosto: +1,89% (IPC junio). Mínima $419.734,71 + bono $70.000.
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import Newsletter from '../components/Newsletter.astro';
+import ActionCard from '../components/ui/ActionCard.astro';
+
+const siteUrl = 'https://hacecuentas.com';
+const URL_PAGE = `${siteUrl}/calendario-pagos-anses-agosto-2026`;
+
+const title = 'Calendario de pagos ANSES agosto 2026: cuándo cobro según mi DNI | Hacé Cuentas';
+const description = 'Calendario de pagos de ANSES de agosto 2026 por terminación de DNI: jubilados hasta la mínima (10 al 24), superan la mínima (25 al 31), AUH y SUAF (10 al 21) y PNC (10 al 14). Con aumento del 1,89% y buscador por DNI.';
+
+// Cronogramas por terminación de DNI (agosto 2026)
+const minima = [
+  ['0', 'Lunes 10 de agosto'], ['1', 'Martes 11 de agosto'], ['2', 'Miércoles 12 de agosto'],
+  ['3', 'Jueves 13 de agosto'], ['4', 'Viernes 14 de agosto'], ['5', 'Martes 18 de agosto'],
+  ['6', 'Miércoles 19 de agosto'], ['7', 'Jueves 20 de agosto'], ['8', 'Viernes 21 de agosto'],
+  ['9', 'Lunes 24 de agosto'],
+];
+const superan = [
+  ['0 y 1', 'Martes 25 de agosto'], ['2 y 3', 'Miércoles 26 de agosto'],
+  ['4 y 5', 'Jueves 27 de agosto'], ['6 y 7', 'Viernes 28 de agosto'],
+  ['8 y 9', 'Lunes 31 de agosto'],
+];
+const auh = [
+  ['0', 'Lunes 10 de agosto'], ['1', 'Martes 11 de agosto'], ['2', 'Miércoles 12 de agosto'],
+  ['3', 'Jueves 13 de agosto'], ['4', 'Viernes 14 de agosto'], ['5', 'Lunes 17 de agosto*'],
+  ['6', 'Martes 18 de agosto'], ['7', 'Miércoles 19 de agosto'], ['8', 'Jueves 20 de agosto'],
+  ['9', 'Viernes 21 de agosto'],
+];
+const pnc = [
+  ['0 y 1', 'Lunes 10 de agosto'], ['2 y 3', 'Martes 11 de agosto'],
+  ['4 y 5', 'Miércoles 12 de agosto'], ['6 y 7', 'Jueves 13 de agosto'],
+  ['8 y 9', 'Viernes 14 de agosto'],
+];
+
+const faqItems = [
+  {
+    q: '¿Cuándo cobran los jubilados en agosto 2026?',
+    a: 'Los jubilados y pensionados que cobran hasta el haber mínimo cobran entre el lunes 10 y el lunes 24 de agosto según la terminación del DNI (el feriado del 17 de agosto corre el cronograma). Quienes superan el haber mínimo cobran del martes 25 al lunes 31 de agosto, con DNI agrupados de a dos terminaciones por día.'
+  },
+  {
+    q: '¿Cuándo se cobra la AUH en agosto 2026?',
+    a: 'La AUH de agosto 2026 se paga entre el 10 y el 21 de agosto según la terminación del DNI: del 10 al 14 los DNI terminados en 0 a 4, y a partir del 17 los terminados en 5 a 9. Verificá tu fecha exacta en Mi ANSES, porque si el feriado del 17 afecta la acreditación, el pago se corre al día hábil siguiente.'
+  },
+  {
+    q: '¿Cuánto cobra un jubilado con la mínima en agosto 2026?',
+    a: 'Con el aumento del 1,89% (igual al IPC de junio), la jubilación mínima de agosto 2026 es de $419.734,71 bruta. Sumando el bono de $70.000 que se renueva por decreto para los haberes más bajos, el ingreso llega a $489.734,71. El haber máximo es de $2.824.695.'
+  },
+  {
+    q: '¿Cuánto cobra la AUH en agosto 2026?',
+    a: 'La AUH de agosto 2026 es de $150.861,90 por hijo. Como ANSES retiene el 20% hasta la presentación de la Libreta AUH, el cobro en mano es de $120.689,52 por hijo. La AUH por discapacidad es de aproximadamente $491.173.'
+  },
+  {
+    q: '¿Cuándo cobran las Pensiones No Contributivas (PNC) en agosto 2026?',
+    a: 'Las PNC (invalidez, vejez y madres de 7 hijos) se pagan en la primera semana del cronograma: del lunes 10 al viernes 14 de agosto, con DNI agrupados de a dos terminaciones por día. El monto de agosto ronda los $293.843 más el bono de $70.000 para quienes corresponde.'
+  },
+  {
+    q: '¿Por qué el calendario de agosto arranca en la segunda semana?',
+    a: 'ANSES suele iniciar el cronograma mensual en los primeros días hábiles, pero en agosto 2026 los pagos comienzan el lunes 10. Además, el feriado del lunes 17 de agosto (Paso a la Inmortalidad del Gral. San Martín, fin de semana largo del 15 al 17) corre parte del cronograma de jubilados de la mínima.'
+  },
+  {
+    q: '¿Qué pasa si no retiro la plata el día que me toca?',
+    a: 'Nada: la fecha del calendario es el día en que ANSES acredita el pago en tu cuenta. El dinero queda depositado y podés extraerlo cuando quieras con tu tarjeta de débito, sin vencimiento inmediato. Solo los pagos por ventanilla sin acreditación bancaria tienen fecha límite de cobro.'
+  },
+  {
+    q: '¿Dónde verifico mi fecha y lugar de cobro exactos?',
+    a: 'En la app o web Mi ANSES (mi.anses.gob.ar), sección "Mis cobros", con CUIL y Clave de la Seguridad Social. Ahí figura la fecha, el banco y el monto exacto de tu liquidación de agosto 2026.'
+  }
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': URL_PAGE,
+      url: URL_PAGE,
+      name: 'Calendario de pagos ANSES agosto 2026 por terminación de DNI',
+      description,
+      isPartOf: { '@id': `${siteUrl}/#website` },
+      inLanguage: 'es-AR',
+      datePublished: '2026-07-22',
+      dateModified: '2026-07-22',
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: siteUrl },
+        { '@type': 'ListItem', position: 2, name: 'Finanzas', item: `${siteUrl}/categoria/finanzas` },
+        { '@type': 'ListItem', position: 3, name: 'Calendario pagos ANSES agosto 2026' },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map((item) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    },
+  ],
+};
+---
+<Layout title={title} description={description} canonical="/calendario-pagos-anses-agosto-2026" schema={schema} audience="AR">
+  <Header slot="header" />
+
+  <article class="landing">
+    <nav class="breadcrumbs" aria-label="Ruta de navegación">
+      <a href="/">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/categoria/finanzas">Finanzas</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="current">Calendario pagos ANSES agosto 2026</span>
+    </nav>
+
+    <!-- HERO -->
+    <header class="hero">
+      <h1>Calendario de pagos ANSES agosto 2026: cuándo cobro según mi DNI</h1>
+      <p class="lead">
+        ANSES paga en agosto 2026 con un <strong>aumento del 1,89%</strong> (movilidad por el IPC de junio).
+        Los <strong>jubilados que cobran hasta la mínima</strong> cobran del <strong>10 al 24 de agosto</strong>,
+        los que <strong>superan la mínima</strong> del <strong>25 al 31</strong>, la <strong>AUH y el SUAF</strong> del
+        <strong>10 al 21</strong> y las <strong>PNC</strong> del <strong>10 al 14</strong>, siempre según la terminación del DNI.
+        El feriado del <strong>lunes 17 (San Martín)</strong> corre parte del cronograma.
+      </p>
+      <div class="hero-meta">
+        <span>Actualizado: 22 de julio 2026</span>
+        <span>Fuente: ANSES / movilidad DNU 274/2024</span>
+      </div>
+    </header>
+
+    <!-- BUSCADOR POR DNI -->
+    <section class="section">
+      <div class="lookup-box">
+        <h2>¿Cuándo cobro? Buscá tu fecha</h2>
+        <div class="lookup-controls">
+          <label>
+            ¿Qué cobrás?
+            <select id="grupo">
+              <option value="minima">Jubilación/pensión hasta la mínima</option>
+              <option value="superan">Jubilación/pensión que supera la mínima</option>
+              <option value="auh">AUH / Asignaciones Familiares (SUAF)</option>
+              <option value="pnc">Pensión No Contributiva (PNC)</option>
+            </select>
+          </label>
+          <label>
+            Último número de tu DNI
+            <select id="digito">
+              <option value="0">0</option><option value="1">1</option><option value="2">2</option>
+              <option value="3">3</option><option value="4">4</option><option value="5">5</option>
+              <option value="6">6</option><option value="7">7</option><option value="8">8</option>
+              <option value="9">9</option>
+            </select>
+          </label>
+        </div>
+        <div id="resultado" class="lookup-result" aria-live="polite">Cobrás el <strong>lunes 10 de agosto de 2026</strong>.</div>
+      </div>
+    </section>
+
+    <!-- MONTOS -->
+    <section class="section">
+      <h2>Montos de agosto 2026 (aumento 1,89%)</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Prestación</th><th>Monto agosto 2026</th></tr></thead>
+          <tbody>
+            <tr><td class="concepto">Jubilación mínima (bruta)</td><td class="highlight">$419.734,71</td></tr>
+            <tr><td class="concepto">Mínima + bono de $70.000</td><td class="highlight">$489.734,71</td></tr>
+            <tr><td class="concepto">Jubilación máxima</td><td>$2.824.695</td></tr>
+            <tr><td class="concepto">PUAM (80% de la mínima)</td><td>≈ $335.788 + bono</td></tr>
+            <tr><td class="concepto">PNC invalidez / vejez</td><td>≈ $293.843 + bono</td></tr>
+            <tr><td class="concepto">AUH por hijo (bruta)</td><td>$150.861,90</td></tr>
+            <tr><td class="concepto">AUH en mano (80%)</td><td>$120.689,52</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">
+        Movilidad mensual por IPC (DNU 274/2024): agosto replica la inflación de junio (+1,89%). El bono se renueva por decreto
+        para los haberes más bajos. Más detalle en <a href="/aumento-jubilaciones">aumento de jubilaciones</a>.
+      </p>
+    </section>
+
+    <!-- TABLAS POR GRUPO -->
+    <section class="section">
+      <h2>Jubilados y pensionados que cobran hasta la mínima</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>DNI terminado en</th><th>Fecha de cobro</th></tr></thead>
+          <tbody>{minima.map(([d, f]) => <tr><td class="concepto">{d}</td><td>{f}</td></tr>)}</tbody>
+        </table>
+      </div>
+      <p class="table-note">El lunes 17 de agosto es feriado (San Martín): el cronograma salta al martes 18.</p>
+    </section>
+
+    <section class="section">
+      <h2>Jubilados y pensionados que superan la mínima</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>DNI terminado en</th><th>Fecha de cobro</th></tr></thead>
+          <tbody>{superan.map(([d, f]) => <tr><td class="concepto">{d}</td><td>{f}</td></tr>)}</tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>AUH y Asignaciones Familiares (SUAF)</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>DNI terminado en</th><th>Fecha de cobro</th></tr></thead>
+          <tbody>{auh.map(([d, f]) => <tr><td class="concepto">{d}</td><td>{f}</td></tr>)}</tbody>
+        </table>
+      </div>
+      <p class="table-note">
+        * El lunes 17 de agosto es feriado nacional: si tu banco no acredita ese día, el pago del DNI terminado en 5
+        se corre al día hábil siguiente. Verificá la fecha exacta en Mi ANSES.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2>Pensiones No Contributivas (PNC)</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>DNI terminado en</th><th>Fecha de cobro</th></tr></thead>
+          <tbody>{pnc.map(([d, f]) => <tr><td class="concepto">{d}</td><td>{f}</td></tr>)}</tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <div class="cta-box">
+      <h3>Calculá cuánto te corresponde</h3>
+      <p>Simulá tu jubilación o el monto de tu AUH con los valores de agosto 2026.</p>
+      <div class="cta-links">
+        <a href="/simulador-jubilacion-anses" class="cta-btn">Simulador de jubilación ANSES</a>
+        <a href="/calculadora-asignacion-universal-hijo-auh-2026-monto" class="cta-btn secondary">Calculadora AUH 2026</a>
+      </div>
+    </div>
+
+    <!-- LINKS RELACIONADOS -->
+    <section class="section">
+      <h2>Herramientas relacionadas</h2>
+      <div class="link-grid">
+        <ActionCard href="/aumento-jubilaciones" title="Aumento de jubilaciones" desc="Cuánto suben los haberes este mes por movilidad" icon='<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>' />
+        <ActionCard href="/calculadora-jubilacion-minima-anses" title="Jubilación mínima + bono" desc="Haber mínimo actualizado con y sin bono" icon='<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>' />
+        <ActionCard href="/calculadora-asignacion-universal-hijo-auh-2026-monto" title="Calculadora AUH 2026" desc="Cuánto cobrás por hijo con el monto de agosto" icon='<path d="M9 12h.01"/><path d="M15 12h.01"/><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/><circle cx="12" cy="12" r="10"/>' />
+        <ActionCard href="/calculadora-auh-libreta-20-por-ciento-retenido-cobro" title="Libreta AUH: 20% retenido" desc="Cuánto acumulaste y cuánto cobrás al presentarla" icon='<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>' />
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section faq-section">
+      <h2>Preguntas frecuentes sobre los pagos de ANSES en agosto 2026</h2>
+      <div class="faq-list">
+        {faqItems.map((item) => (
+          <details class="faq-item">
+            <summary>{item.q}</summary>
+            <p>{item.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <Newsletter />
+  </article>
+
+  <Footer slot="footer" />
+</Layout>
+
+<script is:inline>
+  (function () {
+    const FECHAS = {
+      minima: ['lunes 10', 'martes 11', 'miércoles 12', 'jueves 13', 'viernes 14', 'martes 18', 'miércoles 19', 'jueves 20', 'viernes 21', 'lunes 24'],
+      superan: ['martes 25', 'martes 25', 'miércoles 26', 'miércoles 26', 'jueves 27', 'jueves 27', 'viernes 28', 'viernes 28', 'lunes 31', 'lunes 31'],
+      auh: ['lunes 10', 'martes 11', 'miércoles 12', 'jueves 13', 'viernes 14', 'lunes 17', 'martes 18', 'miércoles 19', 'jueves 20', 'viernes 21'],
+      pnc: ['lunes 10', 'lunes 10', 'martes 11', 'martes 11', 'miércoles 12', 'miércoles 12', 'jueves 13', 'jueves 13', 'viernes 14', 'viernes 14'],
+    };
+    const grupo = document.getElementById('grupo');
+    const digito = document.getElementById('digito');
+    const resultado = document.getElementById('resultado');
+    function actualizar() {
+      const g = grupo.value;
+      const d = parseInt(digito.value, 10);
+      const fecha = FECHAS[g][d];
+      let extra = '';
+      if (g === 'auh' && d === 5) extra = ' (el 17 es feriado: si el banco no acredita ese día, pasa al hábil siguiente)';
+      resultado.innerHTML = 'Cobrás el <strong>' + fecha + ' de agosto de 2026</strong>.' + extra;
+    }
+    grupo.addEventListener('change', actualizar);
+    digito.addEventListener('change', actualizar);
+    actualizar();
+  })();
+</script>
+
+<style>
+  .landing { max-width: 860px; margin: 0 auto; padding: 0 0 3rem; }
+  .breadcrumbs { font-size: 0.875rem; color: var(--text-subtle); margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .breadcrumbs a { color: var(--text-muted); }
+  .breadcrumbs .current { color: var(--text); font-weight: 500; }
+  .breadcrumbs .sep { color: var(--border-strong); }
+
+  .hero { margin-bottom: 2.5rem; }
+  .hero h1 { margin-bottom: 1rem; }
+  .lead { font-size: 1.0625rem; color: var(--text-muted); margin-bottom: 1rem; max-width: 760px; line-height: 1.65; }
+  .hero-meta { display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.8125rem; color: var(--text-subtle); }
+
+  .section { margin-bottom: 2.5rem; }
+  .section h2 { margin-bottom: 0.75rem; }
+  .section p { margin-bottom: 0.75rem; color: var(--text-muted); line-height: 1.65; }
+
+  /* Lookup */
+  .lookup-box {
+    background: linear-gradient(135deg, var(--accent-soft) 0%, var(--bg-soft) 100%);
+    border: 1px solid var(--accent); border-radius: var(--radius-lg); padding: 1.5rem;
+  }
+  .lookup-box h2 { color: var(--accent-strong); margin-bottom: 1rem; }
+  .lookup-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  .lookup-controls label { display: flex; flex-direction: column; gap: 0.375rem; font-size: 0.875rem; font-weight: 600; color: var(--text-muted); }
+  .lookup-controls select {
+    padding: 0.625rem 0.75rem; border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    background: var(--bg-card); color: var(--text); font-size: max(16px, 1em); font-weight: 500;
+  }
+  .lookup-result {
+    padding: 1rem 1.25rem; background: var(--bg-card); border-left: 3px solid var(--success, #059669);
+    border-radius: var(--radius-sm); font-size: 1.0625rem; color: var(--text);
+  }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; margin: 1rem 0; border-radius: var(--radius-lg); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; font-feature-settings: 'tnum'; }
+  thead { background: var(--bg-soft); }
+  th {
+    padding: 0.75rem 1rem; text-align: left; font-size: 0.8125rem; font-weight: 600;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); color: var(--text-muted); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg-soft); }
+  .concepto { font-weight: 500; color: var(--text); }
+  .highlight { font-weight: 700; color: var(--success); }
+  .table-note { font-size: 0.8125rem; color: var(--text-subtle); margin-top: 0.5rem; }
+
+  /* CTA */
+  .cta-box {
+    text-align: center; padding: 2rem 1.5rem; margin: 2rem 0;
+    background: linear-gradient(135deg, var(--accent-soft) 0%, var(--bg-soft) 100%);
+    border: 1px solid var(--accent); border-radius: var(--radius-lg);
+  }
+  .cta-box h3 { color: var(--accent-strong); margin-bottom: 0.5rem; }
+  .cta-box p { margin-bottom: 1rem; }
+  .cta-links { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+  .cta-btn {
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    padding: 0.75rem 1.5rem; background: var(--accent); color: #fff;
+    border-radius: var(--radius-sm); font-weight: 600; font-size: 0.9375rem;
+    transition: background 0.15s, transform 0.15s;
+  }
+  .cta-btn:hover { background: var(--accent-strong); transform: translateY(-1px); color: #fff; }
+  .cta-btn.secondary { background: var(--bg-card); color: var(--accent); border: 1px solid var(--accent); }
+  .cta-btn.secondary:hover { background: var(--accent-soft); color: var(--accent-strong); }
+
+  /* Link grid */
+  .link-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 1rem; }
+
+  /* FAQ */
+  .faq-section { padding-top: 1rem; border-top: 1px solid var(--border); }
+  .faq-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; }
+  .faq-item {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; transition: border-color 0.15s;
+  }
+  .faq-item[open] { border-color: var(--accent); }
+  .faq-item summary {
+    padding: 1rem 1.25rem; font-weight: 600; font-size: 0.9375rem;
+    cursor: pointer; list-style: none; display: flex; align-items: center; gap: 0.75rem;
+    color: var(--text);
+  }
+  .faq-item summary::before { content: '+'; font-size: 1.25rem; font-weight: 700; color: var(--accent); flex-shrink: 0; width: 1.25rem; text-align: center; }
+  .faq-item[open] summary::before { content: '\2212'; }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item p { padding: 0 1.25rem 1rem; font-size: 0.9375rem; color: var(--text-muted); line-height: 1.65; }
+
+  @media (max-width: 640px) {
+    .lookup-controls { grid-template-columns: 1fr; }
+    th, td { padding: 0.5rem 0.625rem; font-size: 0.8125rem; }
+  }
+</style>
