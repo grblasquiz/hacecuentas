@@ -147,8 +147,8 @@ function compute(inputs: Record<string, any>): DecisionResult {
 
 export const room: DecisionRoom = {
   slug: 'cuanto-cobrar-por-hora-freelance',
-  title: '¿Cuánto cobrar por hora como freelance? Calculadora de tarifa 2026',
-  h1: '¿Cuánto tengo que cobrar por hora como freelance?',
+  title: 'Tarifa freelance Argentina: cuánto cobrar por hora para cubrir costos e impuestos (2026)',
+  h1: 'Cuánto cobrar por hora como freelance: la tarifa que cubre todo',
   description:
     'Calculá tu tarifa por hora freelance partiendo del ingreso neto que querés ganar. Descuenta impuestos, equipamiento, clientes que no pagan y tiempo comercial no facturable para darte la hora real que tenés que cobrar.',
   intro:
@@ -156,7 +156,7 @@ export const room: DecisionRoom = {
   icon: '⏱️',
   category: 'finanzas',
   audience: 'AR',
-  lastReviewed: '2026-06-29',
+  lastReviewed: '2026-07-21',
   example: {
     ingresoNetoObjetivo: 1_500_000,
     horasFacturablesMes: 120,

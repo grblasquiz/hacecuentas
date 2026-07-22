@@ -229,8 +229,8 @@ function compute(inputs: Record<string, any>): DecisionResult {
 
 export const room: DecisionRoom = {
   slug: 'aceptar-oferta-laboral',
-  title: '¿Me conviene aceptar esta oferta laboral? Comparador real 2026',
-  h1: '¿Me conviene aceptar esta oferta laboral?',
+  title: 'Cambiar de trabajo: comparador de oferta laboral vs sueldo actual 2026',
+  h1: '¿Conviene cambiar de trabajo? Compará tu sueldo y la oferta',
   description:
     'Compará tu trabajo actual contra una oferta nueva con números reales: sueldo neto, Ganancias, traslado, comidas, tiempo de viaje, bono y beneficios. Te decimos cuánto mejora de verdad y el sueldo mínimo que deberías pedir.',
   intro:
@@ -239,7 +239,7 @@ export const room: DecisionRoom = {
   category: 'finanzas',
   audience: 'AR',
   answer: 'Conviene aceptar cuando la oferta te deja al menos un **20% más en el bolsillo real** —ya descontados Ganancias, aportes, traslado, comida y el tiempo de viaje no pago—, no cuando el sueldo bruto es más alto. Un aumento nominal del 22% puede achicarse a menos del 8% real si además pasás de trabajo remoto a presencial. Mirá el ingreso neto ajustado, no el número que te dicen en la entrevista.',
-  lastReviewed: '2026-07-11',
+  lastReviewed: '2026-07-21',
   example: {
     brutoActual: 1500000,
     brutoOferta: 1950000,

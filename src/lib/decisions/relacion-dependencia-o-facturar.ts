@@ -147,8 +147,8 @@ function compute(inputs: Record<string, any>): DecisionResult {
 
 export const room: DecisionRoom = {
   slug: 'relacion-dependencia-o-facturar',
-  title: '¿Relación de dependencia o facturar? Comparador real 2026',
-  h1: '¿Me conviene relación de dependencia o facturar?',
+  title: 'Relación de dependencia o monotributo: cuánto facturar para igualar tu sueldo (2026)',
+  h1: '¿Relación de dependencia o facturar? Cuánto necesitás facturar para igualar tu sueldo',
   description:
     'Compará trabajar en relación de dependencia contra facturar como monotributista con números reales: neto en mano, aguinaldo, vacaciones, indemnización, cuota y contador. Te decimos cuánto tenés que facturar para igualar el sueldo en blanco.',
   intro:
@@ -156,7 +156,7 @@ export const room: DecisionRoom = {
   icon: '🧾',
   category: 'finanzas',
   audience: 'AR',
-  lastReviewed: '2026-06-29',
+  lastReviewed: '2026-07-21',
   example: {
     sueldoBrutoRD: 1500000,
     montoFacturaMonotributo: 1800000,

@@ -145,8 +145,8 @@ function compute(inputs: Record<string, any>): DecisionResult {
 
 export const room: DecisionRoom = {
   slug: 'estoy-listo-para-jubilarme',
-  title: '¿Estoy preparado para jubilarme? Test de retiro 2026',
-  h1: '¿Estoy preparado para jubilarme?',
+  title: '¿Puedo jubilarme? Edad, aportes y si el haber te alcanza (simulador 2026)',
+  h1: '¿Puedo jubilarme ya? Edad, aportes y si te alcanza',
   description:
     'Verificá si estás listo para jubilarte: edad y años de aportes requeridos, la brecha entre tu jubilación estimada y tus gastos, y cuánto te cubre tu ahorro. Incluye la moratoria si te faltan aportes.',
   intro:
@@ -154,7 +154,7 @@ export const room: DecisionRoom = {
   icon: '👵',
   category: 'finanzas',
   audience: 'AR',
-  lastReviewed: '2026-06-29',
+  lastReviewed: '2026-07-21',
   example: {
     edad: 63,
     aniosAportados: 27,

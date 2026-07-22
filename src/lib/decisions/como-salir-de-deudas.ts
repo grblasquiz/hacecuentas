@@ -228,8 +228,8 @@ function compute(inputs: Record<string, any>): DecisionResult {
 
 export const room: DecisionRoom = {
   slug: 'como-salir-de-deudas',
-  title: '¿Cómo salgo de mis deudas? Plan avalancha vs bola de nieve 2026',
-  h1: '¿Cómo salgo de mis deudas?',
+  title: 'Cómo salir de deudas: simulador avalancha vs bola de nieve 2026',
+  h1: 'Cómo salir de deudas: armá tu plan (avalancha o bola de nieve)',
   description:
     'Cargá tus deudas y cuánto podés pagar por mes: te decimos en cuánto tiempo te liberás y cuánto ahorrás con el método avalancha (la más cara primero) frente a la bola de nieve. Plan de pago ordenado.',
   intro:
@@ -238,7 +238,7 @@ export const room: DecisionRoom = {
   category: 'finanzas',
   audience: 'AR',
   answer: 'Hay dos métodos que funcionan: **avalancha** (pagás primero la deuda de mayor tasa, es el que menos intereses te cuesta) y **bola de nieve** (pagás primero la más chica, para ganar impulso). Matemáticamente gana avalancha; si necesitás ver progreso para no abandonar, elegí bola de nieve. En ambos pagás el mínimo de todas las deudas y volcás cada peso extra a UNA sola por vez.',
-  lastReviewed: '2026-07-11',
+  lastReviewed: '2026-07-21',
   example: {
     deuda1Monto: 800000,
     deuda1Tna: 110,

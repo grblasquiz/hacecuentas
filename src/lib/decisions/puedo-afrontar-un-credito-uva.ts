@@ -158,8 +158,8 @@ function compute(inputs: Record<string, any>): DecisionResult {
 
 export const room: DecisionRoom = {
   slug: 'puedo-afrontar-un-credito-uva',
-  title: '¿Puedo afrontar un crédito UVA? Test de cuota e ingreso 2026',
-  h1: '¿Puedo afrontar un crédito UVA?',
+  title: 'Crédito UVA: simulador de cuota, ingreso mínimo y estrés 2026',
+  h1: 'Crédito UVA: ¿podés pagar la cuota si sube?',
   description:
     'Calculá la cuota inicial de tu crédito UVA, la relación cuota/ingreso que exigen los bancos (≤25%) y un stress que proyecta cómo evoluciona la cuota frente a tu salario. Te decimos si podés, con qué colchón y cuánto se deteriora.',
   intro:
@@ -167,7 +167,7 @@ export const room: DecisionRoom = {
   icon: '🏦',
   category: 'finanzas',
   audience: 'AR',
-  lastReviewed: '2026-06-29',
+  lastReviewed: '2026-07-21',
   example: {
     valorPropiedad: 120000000,
     anticipo: 36000000,

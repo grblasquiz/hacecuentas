@@ -154,8 +154,8 @@ function compute(inputs: Record<string, any>): DecisionResult {
 
 export const room: DecisionRoom = {
   slug: 'me-despidieron',
-  title: 'Me despidieron: ¿cuánto me corresponde y cuánto aguanto? 2026',
-  h1: 'Me despidieron: ¿cuánto deberían pagarme y cuánto tiempo puedo sostenerme?',
+  title: 'Me despidieron: cuánto me corresponde y cuántos meses me cubre (2026)',
+  h1: 'Me despidieron: ¿cuánto me corresponde y cuánto me dura?',
   description:
     'Estimá tu liquidación por despido sin causa (indemnización, preaviso, integración, SAC y vacaciones) y cruzala con tus gastos, ahorros y deudas para saber cuántos meses podés sostenerte. Con seguro de desempleo.',
   intro:
@@ -164,7 +164,7 @@ export const room: DecisionRoom = {
   category: 'finanzas',
   audience: 'AR',
   answer: 'Si el despido es sin causa, te corresponde la **indemnización por antigüedad (un sueldo por año trabajado), el preaviso, las vacaciones no gozadas y el aguinaldo proporcional**. Con esa cifra en mano, la regla sana es estirar el finiquito para cubrir entre 3 y 6 meses de tus gastos mientras buscás trabajo. Revisá la liquidación número por número antes de firmar y cobrá todo por transferencia.',
-  lastReviewed: '2026-07-11',
+  lastReviewed: '2026-07-21',
   example: {
     sueldoBruto: 1500000,
     antiguedadAnios: 6,

@@ -172,8 +172,8 @@ function compute(inputs: Record<string, any>): DecisionResult {
 
 export const room: DecisionRoom = {
   slug: 'renovar-alquiler-o-mudarme',
-  title: '¿Renuevo el alquiler o me mudo? Comparador 2026',
-  h1: '¿Me conviene renovar el alquiler o mudarme?',
+  title: 'Renovar alquiler o mudarse: qué conviene en 2026 (comparador de costos)',
+  h1: '¿Renovar el alquiler o mudarse? Compará el costo real',
   description:
     'Compará el costo del primer año de renovar el alquiler contra mudarte a otra zona, incluyendo depósito, comisión, mudanza, arreglos y tiempo de viaje. Te decimos cuánto tenés que ahorrar por mes para que mudarte valga la pena.',
   intro:
@@ -181,7 +181,7 @@ export const room: DecisionRoom = {
   icon: '📦',
   category: 'finanzas',
   audience: 'AR',
-  lastReviewed: '2026-06-29',
+  lastReviewed: '2026-07-21',
   example: {
     alquilerActual: 450000,
     nuevoAlquiler: 600000,

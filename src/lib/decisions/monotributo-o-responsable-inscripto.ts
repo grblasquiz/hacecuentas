@@ -175,8 +175,8 @@ function compute(inputs: Record<string, any>): DecisionResult {
 
 export const room: DecisionRoom = {
   slug: 'monotributo-o-responsable-inscripto',
-  title: '¿Monotributo o Responsable Inscripto? Comparador 2026',
-  h1: '¿Me conviene monotributo o responsable inscripto?',
+  title: 'Monotributo vs Responsable Inscripto 2026: cuál conviene según tu facturación',
+  h1: 'Monotributo o Responsable Inscripto: ¿cuál te conviene?',
   description:
     'Compará la carga impositiva del monotributo contra Responsable Inscripto sobre tu facturación: cuota fija vs IVA, Ganancias, IIBB y contador. Te decimos cuál te deja más neto según a quién le vendas.',
   intro:
@@ -185,7 +185,7 @@ export const room: DecisionRoom = {
   category: 'finanzas',
   audience: 'AR',
   answer: 'Monotributo conviene mientras **tu facturación entre en la categoría y tus gastos con IVA sean bajos**: pagás una cuota fija y la contabilidad es simple. Responsable Inscripto conviene cuando superás los topes, tus clientes son empresas que descuentan tu IVA, o tenés muchos gastos con crédito fiscal para computar. El quiebre no es solo cuánto facturás: pesa quién es tu cliente y cuánto IVA podés descargar.',
-  lastReviewed: '2026-07-11',
+  lastReviewed: '2026-07-21',
   example: {
     facturacionMensual: 4_500_000,
     comprasConIVA: 1_800_000,

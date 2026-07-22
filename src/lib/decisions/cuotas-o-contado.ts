@@ -134,8 +134,8 @@ function compute(inputs: Record<string, any>): DecisionResult {
 
 export const room: DecisionRoom = {
   slug: 'cuotas-o-contado',
-  title: '¿Cuotas o contado? Cuál te conviene de verdad en 2026',
-  h1: '¿Me conviene pagar en cuotas o al contado?',
+  title: 'Cuotas o contado con inflación: qué conviene en 2026 (calculadora)',
+  h1: 'Cuotas o contado: ¿qué conviene con esta inflación?',
   description:
     'Compará el precio de contado con descuento contra el valor presente de las cuotas, descontando inflación y rendimiento. Con cuotas sin interés e inflación alta, financiar suele ganar. Te decimos cuál sale más barato hoy.',
   intro:
@@ -144,7 +144,7 @@ export const room: DecisionRoom = {
   category: 'finanzas',
   audience: 'AR',
   answer: 'Las cuotas convienen cuando **son sin interés y podés poner el dinero del contado a rendir** (plazo fijo o inversión): en contexto inflacionario, pagar en cuotas fijas licúa el costo real. Contado conviene si hay descuento por pago único o si las cuotas tienen un CFT mayor a lo que rinde tu plata. Compará el precio de contado contra el valor presente de las cuotas, no contra el total nominal.',
-  lastReviewed: '2026-07-11',
+  lastReviewed: '2026-07-21',
   example: {
     precioContado: 1200000,
     descuentoContado: 5,

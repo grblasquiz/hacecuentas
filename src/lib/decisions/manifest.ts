@@ -11,13 +11,13 @@ export interface DecisionRoomMeta {
 export const DECISION_MANIFEST: DecisionRoomMeta[] = [
   {
     "slug": "aceptar-oferta-laboral",
-    "title": "¿Me conviene aceptar esta oferta laboral? Comparador real 2026",
-    "h1": "¿Me conviene aceptar esta oferta laboral?",
+    "title": "Cambiar de trabajo: comparador de oferta laboral vs sueldo actual 2026",
+    "h1": "¿Conviene cambiar de trabajo? Compará tu sueldo y la oferta",
     "description": "Compará tu trabajo actual contra una oferta nueva con números reales: sueldo neto, Ganancias, traslado, comidas, tiempo de viaje, bono y beneficios. Te decimos cuánto mejora de verdad y el sueldo mínimo que deberías pedir.",
     "intro": "No alcanza con mirar el sueldo bruto. Esta sala compara tu trabajo actual contra la oferta corriendo por dentro el sueldo neto, Ganancias, los costos de traslado y comida, el valor real de tu hora y el punto de indiferencia. El resultado no es \"ganás $X más\", sino cuánto mejora REALMENTE tu ingreso y cuál es el mínimo que deberías pedir para que convenga.",
     "icon": "💼",
     "category": "finanzas",
-    "lastReviewed": "2026-07-11",
+    "lastReviewed": "2026-07-21",
     "componentCalcs": [
       {
         "slug": "sueldo-en-mano-argentina",
@@ -175,13 +175,13 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
   },
   {
     "slug": "como-salir-de-deudas",
-    "title": "¿Cómo salgo de mis deudas? Plan avalancha vs bola de nieve 2026",
-    "h1": "¿Cómo salgo de mis deudas?",
+    "title": "Cómo salir de deudas: simulador avalancha vs bola de nieve 2026",
+    "h1": "Cómo salir de deudas: armá tu plan (avalancha o bola de nieve)",
     "description": "Cargá tus deudas y cuánto podés pagar por mes: te decimos en cuánto tiempo te liberás y cuánto ahorrás con el método avalancha (la más cara primero) frente a la bola de nieve. Plan de pago ordenado.",
     "intro": "Tenés varias deudas y no sabés por cuál empezar. Esta sala simula tu salida con los dos métodos probados: avalancha (pagás primero la de mayor tasa, minimiza intereses) y bola de nieve (la más chica primero, da victorias rápidas). Te dice en cuántos meses te librás, cuánto pagás de intereses y en qué orden conviene atacar cada deuda.",
     "icon": "🪜",
     "category": "finanzas",
-    "lastReviewed": "2026-07-11",
+    "lastReviewed": "2026-07-21",
     "componentCalcs": [
       {
         "slug": "calculadora-cuota-prestamo",
@@ -475,13 +475,13 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
   },
   {
     "slug": "cuanto-cobrar-por-hora-freelance",
-    "title": "¿Cuánto cobrar por hora como freelance? Calculadora de tarifa 2026",
-    "h1": "¿Cuánto tengo que cobrar por hora como freelance?",
+    "title": "Tarifa freelance Argentina: cuánto cobrar por hora para cubrir costos e impuestos (2026)",
+    "h1": "Cuánto cobrar por hora como freelance: la tarifa que cubre todo",
     "description": "Calculá tu tarifa por hora freelance partiendo del ingreso neto que querés ganar. Descuenta impuestos, equipamiento, clientes que no pagan y tiempo comercial no facturable para darte la hora real que tenés que cobrar.",
     "intro": "La tarifa por hora no es tu objetivo dividido tus horas: hay que cubrir impuestos, gastos, los clientes que no pagan y todo el tiempo que trabajás sin facturar (propuestas, reuniones, administración). Esta sala parte de cuánto querés que te quede neto y reconstruye hacia atrás la hora bruta que necesitás cobrar para llegar de verdad.",
     "icon": "⏱️",
     "category": "finanzas",
-    "lastReviewed": "2026-06-29",
+    "lastReviewed": "2026-07-21",
     "componentCalcs": [
       {
         "slug": "calculadora-punto-equilibrio-break-even",
@@ -863,13 +863,13 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
   },
   {
     "slug": "cuotas-o-contado",
-    "title": "¿Cuotas o contado? Cuál te conviene de verdad en 2026",
-    "h1": "¿Me conviene pagar en cuotas o al contado?",
+    "title": "Cuotas o contado con inflación: qué conviene en 2026 (calculadora)",
+    "h1": "Cuotas o contado: ¿qué conviene con esta inflación?",
     "description": "Compará el precio de contado con descuento contra el valor presente de las cuotas, descontando inflación y rendimiento. Con cuotas sin interés e inflación alta, financiar suele ganar. Te decimos cuál sale más barato hoy.",
     "intro": "Pagar en cuotas no es \"más caro\" automáticamente: con inflación, una cuota que pagás dentro de 10 meses vale mucho menos que hoy. Esta sala compara el contado con descuento contra el valor presente real de las cuotas, descontando inflación y el rendimiento que podrías sacarle a ese dinero, y te dice cuál sale más barato en pesos de hoy.",
     "icon": "💳",
     "category": "finanzas",
-    "lastReviewed": "2026-07-11",
+    "lastReviewed": "2026-07-21",
     "componentCalcs": [
       {
         "slug": "calculadora-inflacion-acumulada-periodo",
@@ -891,13 +891,13 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
   },
   {
     "slug": "estoy-listo-para-jubilarme",
-    "title": "¿Estoy preparado para jubilarme? Test de retiro 2026",
-    "h1": "¿Estoy preparado para jubilarme?",
+    "title": "¿Puedo jubilarme? Edad, aportes y si el haber te alcanza (simulador 2026)",
+    "h1": "¿Puedo jubilarme ya? Edad, aportes y si te alcanza",
     "description": "Verificá si estás listo para jubilarte: edad y años de aportes requeridos, la brecha entre tu jubilación estimada y tus gastos, y cuánto te cubre tu ahorro. Incluye la moratoria si te faltan aportes.",
     "intro": "Jubilarte no es solo llegar a la edad: hay que ver si tenés los aportes, si la jubilación te alcanza para vivir y cuánto te cubre tu ahorro si queda una brecha. Esta sala cruza las tres cosas y te dice si estás listo, ajustado o con riesgo, y qué hacer en cada caso, incluida la moratoria si te faltan años de aportes.",
     "icon": "👵",
     "category": "finanzas",
-    "lastReviewed": "2026-06-29",
+    "lastReviewed": "2026-07-21",
     "componentCalcs": [
       {
         "slug": "calculadora-fire-retiro-temprano",
@@ -1139,13 +1139,13 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
   },
   {
     "slug": "me-despidieron",
-    "title": "Me despidieron: ¿cuánto me corresponde y cuánto aguanto? 2026",
-    "h1": "Me despidieron: ¿cuánto deberían pagarme y cuánto tiempo puedo sostenerme?",
+    "title": "Me despidieron: cuánto me corresponde y cuántos meses me cubre (2026)",
+    "h1": "Me despidieron: ¿cuánto me corresponde y cuánto me dura?",
     "description": "Estimá tu liquidación por despido sin causa (indemnización, preaviso, integración, SAC y vacaciones) y cruzala con tus gastos, ahorros y deudas para saber cuántos meses podés sostenerte. Con seguro de desempleo.",
     "intro": "El día que te echan necesitás dos números: cuánta plata te tienen que pagar y cuánto tiempo te da. Esta sala calcula tu liquidación completa (antigüedad, preaviso, integración del mes, aguinaldo y vacaciones) y la cruza con tus gastos, ahorros y deudas para decirte cuántos meses de aire tenés y qué hacer primero.",
     "icon": "📄",
     "category": "finanzas",
-    "lastReviewed": "2026-07-11",
+    "lastReviewed": "2026-07-21",
     "componentCalcs": [
       {
         "slug": "calculadora-indemnizacion-despido",
@@ -1195,13 +1195,13 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
   },
   {
     "slug": "monotributo-o-responsable-inscripto",
-    "title": "¿Monotributo o Responsable Inscripto? Comparador 2026",
-    "h1": "¿Me conviene monotributo o responsable inscripto?",
+    "title": "Monotributo vs Responsable Inscripto 2026: cuál conviene según tu facturación",
+    "h1": "Monotributo o Responsable Inscripto: ¿cuál te conviene?",
     "description": "Compará la carga impositiva del monotributo contra Responsable Inscripto sobre tu facturación: cuota fija vs IVA, Ganancias, IIBB y contador. Te decimos cuál te deja más neto según a quién le vendas.",
     "intro": "La elección entre monotributo y Responsable Inscripto cambia mucho según cuánto factures, cuánto compres con IVA y a quién le vendas. El monotributo es una cuota fija simple pero te hace perder el IVA de tus compras; Responsable Inscripto te deja computar ese IVA pero suma Ganancias, IIBB y contador. Esta sala estima la carga de cada uno y te dice cuál te deja más en el bolsillo.",
     "icon": "⚖️",
     "category": "finanzas",
-    "lastReviewed": "2026-07-11",
+    "lastReviewed": "2026-07-21",
     "componentCalcs": [
       {
         "slug": "calculadora-monotributo-vs-responsable-inscripto",
@@ -1303,13 +1303,13 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
   },
   {
     "slug": "puedo-afrontar-un-credito-uva",
-    "title": "¿Puedo afrontar un crédito UVA? Test de cuota e ingreso 2026",
-    "h1": "¿Puedo afrontar un crédito UVA?",
+    "title": "Crédito UVA: simulador de cuota, ingreso mínimo y estrés 2026",
+    "h1": "Crédito UVA: ¿podés pagar la cuota si sube?",
     "description": "Calculá la cuota inicial de tu crédito UVA, la relación cuota/ingreso que exigen los bancos (≤25%) y un stress que proyecta cómo evoluciona la cuota frente a tu salario. Te decimos si podés, con qué colchón y cuánto se deteriora.",
     "intro": "El crédito UVA tiene una trampa: la cuota arranca accesible pero ajusta por inflación. Si tu salario no le sigue el ritmo, la cuota se va comiendo tu ingreso. Esta sala calcula la cuota inicial, la relación cuota/ingreso que miran los bancos (tope 25%) y corre un stress que proyecta cómo evoluciona la cuota frente a tu salario a 12 y 24 meses, para decirte si de verdad podés afrontarlo.",
     "icon": "🏦",
     "category": "finanzas",
-    "lastReviewed": "2026-06-29",
+    "lastReviewed": "2026-07-21",
     "componentCalcs": [
       {
         "slug": "calculadora-ingreso-minimo-credito-hipotecario-uva-banco-nacion",
@@ -1583,13 +1583,13 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
   },
   {
     "slug": "relacion-dependencia-o-facturar",
-    "title": "¿Relación de dependencia o facturar? Comparador real 2026",
-    "h1": "¿Me conviene relación de dependencia o facturar?",
+    "title": "Relación de dependencia o monotributo: cuánto facturar para igualar tu sueldo (2026)",
+    "h1": "¿Relación de dependencia o facturar? Cuánto necesitás facturar para igualar tu sueldo",
     "description": "Compará trabajar en relación de dependencia contra facturar como monotributista con números reales: neto en mano, aguinaldo, vacaciones, indemnización, cuota y contador. Te decimos cuánto tenés que facturar para igualar el sueldo en blanco.",
     "intro": "Comparar el sueldo bruto contra el monto a facturar engaña: la relación de dependencia trae aguinaldo, vacaciones pagas, aportes e indemnización que el monotributista no tiene. Esta sala calcula el ingreso real de cada opción y te da el número que de verdad importa: cuánto tenés que facturar para igualar la posición en blanco.",
     "icon": "🧾",
     "category": "finanzas",
-    "lastReviewed": "2026-06-29",
+    "lastReviewed": "2026-07-21",
     "componentCalcs": [
       {
         "slug": "calculadora-monotributo-2026",
@@ -1611,13 +1611,13 @@ export const DECISION_MANIFEST: DecisionRoomMeta[] = [
   },
   {
     "slug": "renovar-alquiler-o-mudarme",
-    "title": "¿Renuevo el alquiler o me mudo? Comparador 2026",
-    "h1": "¿Me conviene renovar el alquiler o mudarme?",
+    "title": "Renovar alquiler o mudarse: qué conviene en 2026 (comparador de costos)",
+    "h1": "¿Renovar el alquiler o mudarse? Compará el costo real",
     "description": "Compará el costo del primer año de renovar el alquiler contra mudarte a otra zona, incluyendo depósito, comisión, mudanza, arreglos y tiempo de viaje. Te decimos cuánto tenés que ahorrar por mes para que mudarte valga la pena.",
     "intro": "Te llega la renovación con un aumento y pensás: ¿aguanto o me mudo a una zona más barata? Mudarte parece tentador, pero arranca con depósito, comisión, mudanza y arreglos, y muchas veces suma tiempo de viaje. Esta sala compara el costo del primer año de cada opción y te dice cuánto tenés que ahorrar de alquiler por mes para que mudarte realmente convenga.",
     "icon": "📦",
     "category": "finanzas",
-    "lastReviewed": "2026-06-29",
+    "lastReviewed": "2026-07-21",
     "componentCalcs": [
       {
         "slug": "calculadora-aumento-alquiler-trimestral-cuatrimestral-semestral",
