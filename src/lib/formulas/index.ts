@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-07-21
+// Generated: 2026-07-22
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { rmPesoMaximo } from './1rm-peso-maximo';
@@ -248,6 +248,7 @@ import { azucaresAnadidosDiariosOmsMgGramos } from './azucares-anadidos-diarios-
 import { azulejosBaldosasMetrosCuadradosCantidad } from './azulejos-baldosas-metros-cuadrados-cantidad';
 import { compute as compute__baby_feeding_amount_by_age_calculator } from './baby-feeding-amount-by-age-calculator';
 import { compute as compute__baby_shower_budget_guests_food_decoration } from './baby-shower-budget-guests-food-decoration';
+import { compute as compute__back_to_school_budget_calculator } from './back-to-school-budget-calculator';
 import { backtestEstrategiaTradingSharpeRatio } from './backtest-estrategia-trading-sharpe-ratio';
 import { bajaAutoDesarmeChatarraFinVida } from './baja-auto-desarme-chatarra-fin-vida';
 import { compute as compute__baja_laboral_incapacidad_temporal_espana_cuantia } from './baja-laboral-incapacidad-temporal-espana-cuantia';
@@ -426,6 +427,8 @@ import { compute as compute__calculadora_materiales_construccion } from './calcu
 import { metrosCuadradosPorPersona } from './calculadora-metros-cuadrados-vivienda-por-persona';
 import { mezcla2TiemposNaftaAceite } from './calculadora-mezcla-2-tiempos-nafta-aceite';
 import { compute as compute__calculadora_monto_jubilacion_bps_uruguay } from './calculadora-monto-jubilacion-bps-uruguay';
+import { compute as compute__calculadora_orcamento_presente_dia_dos_pais } from './calculadora-orcamento-presente-dia-dos-pais';
+import { calculadoraOrcamentoRegressoAsAulas2026 } from './calculadora-orcamento-regresso-as-aulas-2026';
 import { compute as compute__calculadora_pago_reposo_ivss_venezuela } from './calculadora-pago-reposo-ivss-venezuela';
 import { compute as compute__calculadora_paro_forzoso_ivss_venezuela } from './calculadora-paro-forzoso-ivss-venezuela';
 import { pasosAKilometros } from './calculadora-pasos-a-kilometros';
@@ -437,6 +440,7 @@ import { calculadoraPreavisoRepublicaDominicana } from './calculadora-preaviso-r
 import { calculadoraPreavisoVenezuela } from './calculadora-preaviso-venezuela';
 import { calculadoraPrestacaoCreditoHabitacaoPortugal } from './calculadora-prestacao-credito-habitacao-portugal';
 import { calculadoraPrestacionesSocialesVenezuela } from './calculadora-prestaciones-sociales-venezuela';
+import { compute as compute__calculadora_presupuesto_utiles_escolares_republica_dominicana } from './calculadora-presupuesto-utiles-escolares-republica-dominicana';
 import { primerMillonAhorroInteres } from './calculadora-primer-millon-ahorro-interes';
 import { compute as compute__calculadora_promedio_escolaridad_udelar_uruguay } from './calculadora-promedio-escolaridad-udelar-uruguay';
 import { compute as compute__calculadora_promedio_notas_20_puntos_venezuela } from './calculadora-promedio-notas-20-puntos-venezuela';
@@ -448,9 +452,11 @@ import { queGeneracionSos } from './calculadora-que-generacion-sos';
 import { compute as compute__calculadora_recibo_nomina_percepciones_deducciones_mexico_2026 } from './calculadora-recibo-nomina-percepciones-deducciones-mexico-2026';
 import { calculadoraRecibosVerdesTrabalhadorIndependentePortugal } from './calculadora-recibos-verdes-trabalhador-independente-portugal';
 import { compute as compute__calculadora_reconversion_bolivares_viejos_actuales_venezuela } from './calculadora-reconversion-bolivares-viejos-actuales-venezuela';
+import { calculadoraReembolsoIrs2026QuandoRecebo } from './calculadora-reembolso-irs-2026-quando-recebo';
 import { calculadoraRelacionDeAspecto } from './calculadora-relacion-de-aspecto';
 import { calculadoraRemesaZelleBolivaresVenezuela } from './calculadora-remesa-zelle-bolivares-venezuela';
 import { calculadoraRemesasEstadosUnidosRepublicaDominicana } from './calculadora-remesas-estados-unidos-republica-dominicana';
+import { compute as compute__calculadora_restituicao_imposto_renda_2026_lotes } from './calculadora-restituicao-imposto-renda-2026-lotes';
 import { compute as compute__calculadora_retencao_na_fonte_irs_portugal } from './calculadora-retencao-na-fonte-irs-portugal';
 import { calculadoraRetencionIslrVenezuela } from './calculadora-retencion-islr-venezuela';
 import { calculadoraRetencionIsrSalarioRepublicaDominicana } from './calculadora-retencion-isr-salario-republica-dominicana';
@@ -835,6 +841,7 @@ import { compute as compute__coste_vida_mensual_chile_soltero_pareja_familia } f
 import { compute as compute__coste_vida_mensual_colombia_soltero_pareja } from './coste-vida-mensual-colombia-soltero-pareja';
 import { compute as compute__coste_vida_mensual_mexico_soltero_pareja_familia } from './coste-vida-mensual-mexico-soltero-pareja-familia';
 import { compute as compute__coste_vida_mensual_soltero_pareja_espana_ccaa } from './coste-vida-mensual-soltero-pareja-espana-ccaa';
+import { compute as compute__coste_vuelta_al_cole_2026 } from './coste-vuelta-al-cole-2026';
 import { costoAireAcondicionadoHora } from './costo-aire-acondicionado-hora';
 import { costoAlmacenamientoInventario } from './costo-almacenamiento-inventario';
 import { compute as compute__costo_anual_moto_colombia_2026 } from './costo-anual-moto-colombia-2026';
@@ -1158,6 +1165,7 @@ import { compute as compute__devolucion_impuestos_operacion_renta_chile_2026 } f
 import { devolucionIsrAnualMexico } from './devolucion-isr-anual-mexico';
 import { compute as compute__devolucion_iva_dps_colombia } from './devolucion-iva-dps-colombia';
 import { compute as compute__devolucion_iva_tercera_edad_discapacidad_ecuador } from './devolucion-iva-tercera-edad-discapacidad-ecuador';
+import { compute as compute__devolucion_renta_2025_cuanto_tarda } from './devolucion-renta-2025-cuanto-tarda';
 import { compute as compute__devolucion_renta_quinta_categoria_peru } from './devolucion-renta-quinta-categoria-peru';
 import { diaNacimientoSemana } from './dia-nacimiento-semana';
 import { diametroCaneria } from './diametro-caneria';
@@ -1397,6 +1405,7 @@ import { fechaCeloPerra } from './fecha-celo-perra';
 import { compute as compute__fecha_cobro_anses_cronograma_dni } from './fecha-cobro-anses-cronograma-dni';
 import { fechaConcepcion } from './fecha-concepcion';
 import { compute as compute__fecha_concepcion_desde_fpp } from './fecha-concepcion-desde-fpp';
+import { compute as compute__fecha_declaracion_renta_2026_colombia_cedula } from './fecha-declaracion-renta-2026-colombia-cedula';
 import { fechaExactaSumarRestarDiasHabiles } from './fecha-exacta-sumar-restar-dias-habiles';
 import { compute as compute__fecha_limite_secop_dias_habiles } from './fecha-limite-secop-dias-habiles';
 import { fechaParto } from './fecha-parto';
@@ -1532,6 +1541,7 @@ import { compute as compute__gasolina_rendimiento_km_litro_vs_gas_lp_mexico } fr
 import { gastoAguaMensualHogar } from './gasto-agua-mensual-hogar';
 import { compute as compute__gasto_gasolina_viaje_republica_dominicana } from './gasto-gasolina-viaje-republica-dominicana';
 import { compute as compute__gasto_mensual_transporte_publico_paraguay } from './gasto-mensual-transporte-publico-paraguay';
+import { compute as compute__gasto_regreso_clases_2026_mexico } from './gasto-regreso-clases-2026-mexico';
 import { compute as compute__gastos_cierre_compra_vivienda_republica_dominicana } from './gastos-cierre-compra-vivienda-republica-dominicana';
 import { gastosEscrituraCompraInmueble } from './gastos-escritura-compra-inmueble';
 import { gastosEscrituraCompraventa } from './gastos-escritura-compraventa';
@@ -2543,6 +2553,7 @@ import { compute as compute__prestamo_vehiculo_cuota_republica_dominicana } from
 import { compute as compute__presuncion_costos_ugpp_colombia_2026 } from './presuncion-costos-ugpp-colombia-2026';
 import { presupuesto503020 } from './presupuesto-50-30-20';
 import { presupuesto503020FamiliarSueldo } from './presupuesto-50-30-20-familiar-sueldo';
+import { compute as compute__presupuesto_asado_18_fiestas_patrias_chile } from './presupuesto-asado-18-fiestas-patrias-chile';
 import { presupuestoCasamientoPorInvitado } from './presupuesto-casamiento-por-invitado';
 import { presupuestoCumple15Quinceanera } from './presupuesto-cumple-15-quinceanera';
 import { presupuestoCumpleanos } from './presupuesto-cumpleanos';
@@ -2872,6 +2883,7 @@ import { compute as compute__saldo_afp_rentabilidad_multifondos_chile_2026 } fro
 import { saldoCriptoValorMonedaLocalMulti } from './saldo-cripto-valor-moneda-local-multi';
 import { saldoSalarioRescisao } from './saldo-salario-rescisao';
 import { salesTaxCalculator } from './sales-tax-calculator';
+import { compute as compute__sales_tax_holiday_2026_savings_calculator } from './sales-tax-holiday-2026-savings-calculator';
 import { compute as compute__san_ahorro_rotativo_republica_dominicana } from './san-ahorro-rotativo-republica-dominicana';
 import { compute as compute__sancion_correccion_declaracion_dian_colombia_2026 } from './sancion-correccion-declaracion-dian-colombia-2026';
 import { compute as compute__sancion_extemporaneidad_dian_2026 } from './sancion-extemporaneidad-dian-2026';
@@ -3625,6 +3637,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'azulejos-baldosas-metros-cuadrados-cantidad': azulejosBaldosasMetrosCuadradosCantidad,
   'baby-feeding-amount-by-age-calculator': compute__baby_feeding_amount_by_age_calculator,
   'baby-shower-budget-guests-food-decoration': compute__baby_shower_budget_guests_food_decoration,
+  'back-to-school-budget-calculator': compute__back_to_school_budget_calculator,
   'backtest-estrategia-trading-sharpe-ratio': backtestEstrategiaTradingSharpeRatio,
   'baja-auto-desarme-chatarra-fin-vida': bajaAutoDesarmeChatarraFinVida,
   'baja-laboral-incapacidad-temporal-espana-cuantia': compute__baja_laboral_incapacidad_temporal_espana_cuantia,
@@ -3803,6 +3816,8 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calculadora-metros-cuadrados-vivienda-por-persona': metrosCuadradosPorPersona,
   'calculadora-mezcla-2-tiempos-nafta-aceite': mezcla2TiemposNaftaAceite,
   'calculadora-monto-jubilacion-bps-uruguay': compute__calculadora_monto_jubilacion_bps_uruguay,
+  'calculadora-orcamento-presente-dia-dos-pais': compute__calculadora_orcamento_presente_dia_dos_pais,
+  'calculadora-orcamento-regresso-as-aulas-2026': calculadoraOrcamentoRegressoAsAulas2026,
   'calculadora-pago-reposo-ivss-venezuela': compute__calculadora_pago_reposo_ivss_venezuela,
   'calculadora-paro-forzoso-ivss-venezuela': compute__calculadora_paro_forzoso_ivss_venezuela,
   'calculadora-pasos-a-kilometros': pasosAKilometros,
@@ -3814,6 +3829,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calculadora-preaviso-venezuela': calculadoraPreavisoVenezuela,
   'calculadora-prestacao-credito-habitacao-portugal': calculadoraPrestacaoCreditoHabitacaoPortugal,
   'calculadora-prestaciones-sociales-venezuela': calculadoraPrestacionesSocialesVenezuela,
+  'calculadora-presupuesto-utiles-escolares-republica-dominicana': compute__calculadora_presupuesto_utiles_escolares_republica_dominicana,
   'calculadora-primer-millon-ahorro-interes': primerMillonAhorroInteres,
   'calculadora-promedio-escolaridad-udelar-uruguay': compute__calculadora_promedio_escolaridad_udelar_uruguay,
   'calculadora-promedio-notas-20-puntos-venezuela': compute__calculadora_promedio_notas_20_puntos_venezuela,
@@ -3825,9 +3841,11 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calculadora-recibo-nomina-percepciones-deducciones-mexico-2026': compute__calculadora_recibo_nomina_percepciones_deducciones_mexico_2026,
   'calculadora-recibos-verdes-trabalhador-independente-portugal': calculadoraRecibosVerdesTrabalhadorIndependentePortugal,
   'calculadora-reconversion-bolivares-viejos-actuales-venezuela': compute__calculadora_reconversion_bolivares_viejos_actuales_venezuela,
+  'calculadora-reembolso-irs-2026-quando-recebo': calculadoraReembolsoIrs2026QuandoRecebo,
   'calculadora-relacion-de-aspecto': calculadoraRelacionDeAspecto,
   'calculadora-remesa-zelle-bolivares-venezuela': calculadoraRemesaZelleBolivaresVenezuela,
   'calculadora-remesas-estados-unidos-republica-dominicana': calculadoraRemesasEstadosUnidosRepublicaDominicana,
+  'calculadora-restituicao-imposto-renda-2026-lotes': compute__calculadora_restituicao_imposto_renda_2026_lotes,
   'calculadora-retencao-na-fonte-irs-portugal': compute__calculadora_retencao_na_fonte_irs_portugal,
   'calculadora-retencion-islr-venezuela': calculadoraRetencionIslrVenezuela,
   'calculadora-retencion-isr-salario-republica-dominicana': calculadoraRetencionIsrSalarioRepublicaDominicana,
@@ -4212,6 +4230,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'coste-vida-mensual-colombia-soltero-pareja': compute__coste_vida_mensual_colombia_soltero_pareja,
   'coste-vida-mensual-mexico-soltero-pareja-familia': compute__coste_vida_mensual_mexico_soltero_pareja_familia,
   'coste-vida-mensual-soltero-pareja-espana-ccaa': compute__coste_vida_mensual_soltero_pareja_espana_ccaa,
+  'coste-vuelta-al-cole-2026': compute__coste_vuelta_al_cole_2026,
   'costo-aire-acondicionado-hora': costoAireAcondicionadoHora,
   'costo-almacenamiento-inventario': costoAlmacenamientoInventario,
   'costo-anual-moto-colombia-2026': compute__costo_anual_moto_colombia_2026,
@@ -4535,6 +4554,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'devolucion-isr-anual-mexico': devolucionIsrAnualMexico,
   'devolucion-iva-dps-colombia': compute__devolucion_iva_dps_colombia,
   'devolucion-iva-tercera-edad-discapacidad-ecuador': compute__devolucion_iva_tercera_edad_discapacidad_ecuador,
+  'devolucion-renta-2025-cuanto-tarda': compute__devolucion_renta_2025_cuanto_tarda,
   'devolucion-renta-quinta-categoria-peru': compute__devolucion_renta_quinta_categoria_peru,
   'dia-nacimiento-semana': diaNacimientoSemana,
   'diametro-caneria': diametroCaneria,
@@ -4774,6 +4794,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'fecha-cobro-anses-cronograma-dni': compute__fecha_cobro_anses_cronograma_dni,
   'fecha-concepcion': fechaConcepcion,
   'fecha-concepcion-desde-fpp': compute__fecha_concepcion_desde_fpp,
+  'fecha-declaracion-renta-2026-colombia-cedula': compute__fecha_declaracion_renta_2026_colombia_cedula,
   'fecha-exacta-sumar-restar-dias-habiles': fechaExactaSumarRestarDiasHabiles,
   'fecha-limite-secop-dias-habiles': compute__fecha_limite_secop_dias_habiles,
   'fecha-parto': fechaParto,
@@ -4909,6 +4930,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'gasto-agua-mensual-hogar': gastoAguaMensualHogar,
   'gasto-gasolina-viaje-republica-dominicana': compute__gasto_gasolina_viaje_republica_dominicana,
   'gasto-mensual-transporte-publico-paraguay': compute__gasto_mensual_transporte_publico_paraguay,
+  'gasto-regreso-clases-2026-mexico': compute__gasto_regreso_clases_2026_mexico,
   'gastos-cierre-compra-vivienda-republica-dominicana': compute__gastos_cierre_compra_vivienda_republica_dominicana,
   'gastos-escritura-compra-inmueble': gastosEscrituraCompraInmueble,
   'gastos-escritura-compraventa': gastosEscrituraCompraventa,
@@ -5920,6 +5942,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'presuncion-costos-ugpp-colombia-2026': compute__presuncion_costos_ugpp_colombia_2026,
   'presupuesto-50-30-20': presupuesto503020,
   'presupuesto-50-30-20-familiar-sueldo': presupuesto503020FamiliarSueldo,
+  'presupuesto-asado-18-fiestas-patrias-chile': compute__presupuesto_asado_18_fiestas_patrias_chile,
   'presupuesto-casamiento-por-invitado': presupuestoCasamientoPorInvitado,
   'presupuesto-cumple-15-quinceanera': presupuestoCumple15Quinceanera,
   'presupuesto-cumpleanos': presupuestoCumpleanos,
@@ -6249,6 +6272,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'saldo-cripto-valor-moneda-local-multi': saldoCriptoValorMonedaLocalMulti,
   'saldo-salario-rescisao': saldoSalarioRescisao,
   'sales-tax-calculator': salesTaxCalculator,
+  'sales-tax-holiday-2026-savings-calculator': compute__sales_tax_holiday_2026_savings_calculator,
   'san-ahorro-rotativo-republica-dominicana': compute__san_ahorro_rotativo_republica_dominicana,
   'sancion-correccion-declaracion-dian-colombia-2026': compute__sancion_correccion_declaracion_dian_colombia_2026,
   'sancion-extemporaneidad-dian-2026': compute__sancion_extemporaneidad_dian_2026,

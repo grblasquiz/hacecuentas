@@ -1,18 +1,27 @@
 /**
- * Jubilación mínima ANSES (monthly) — auto-llm vía Claude + WebSearch en ANSES.
+ * Jubilación mínima ANSES (monthly) — DETERMINÍSTICO por movilidad DNU 274/2024.
  *
- * ANSES actualiza el haber jubilatorio mínimo mensualmente por movilidad IPC
- * (Ley 27.609 post-Milei: actualización mensual por inflación). El bono extra
- * para haberes mínimos lo anuncia el gobierno de nación discrecionalmente.
+ * La movilidad post-marzo-2024 es 100% mecánica: el haber del mes m se ajusta
+ * por el IPC de dos meses antes (m-2), que INDEC publica a mitad de mes. O sea:
  *
- * Fuente: anses.gob.ar/informacion/haberes-previsionales o las gacetillas
- * mensuales de ANSES.
+ *   haber_mínimo(m) = haber_mínimo(m-1) × (1 + IPC(m-2)/100)
+ *
+ * Anclamos con el valor oficial de AGOSTO 2026: $419.734,71 (haber mínimo puro,
+ * +1,9% por IPC de junio) + bono complementario $70.000 (decreto, se renueva
+ * mes a mes desde 2024 — sin señal de cambio). Verificado 22-07-2026 (Ámbito,
+ * Infobae, Canal 26). Desde el ancla se encadena hacia adelante (o atrás) con
+ * la serie IPC de api.argentinadatos.com (misma fuente que el fetcher `ipc`).
+ *
+ * LLM: solo cross-check opcional. Si hay ANTHROPIC_API_KEY se le pregunta a
+ * Claude el valor vigente y se loguea la discrepancia (>0,5% = WARN); el valor
+ * que se escribe SIEMPRE es el determinístico. Sin key, corre igual.
  *
  * Patchea `src/lib/formulas/jubilacion-minima.ts` (HABER_MINIMO + BONO_EXTRA).
  */
 
 import { join } from 'node:path';
 import { askClaudeStructured } from '../utils/ask-claude.ts';
+import { reportMode, reportWarn, hasAnthropicKey } from '../utils/run-status.ts';
 import { replaceNumericConst } from '../patchers/ts-constant.ts';
 import { touchLastUpdated } from '../patchers/data-update-date.ts';
 import { createLogger } from '../utils/logger.ts';
@@ -20,83 +29,145 @@ import { createLogger } from '../utils/logger.ts';
 const log = createLogger('jubilacion-anses');
 const FILE = join(process.cwd(), 'src/lib/formulas/jubilacion-minima.ts');
 
-interface JubilacionData {
-  fechaVigencia: string;
-  fuenteUrl: string;
-  haberMinimo: number;
-  bonoExtra: number;
-  tieneBonoEsteMes: boolean;
+// ── Ancla oficial (verificar/actualizar cuando haya un valor confirmado nuevo) ──
+// Agosto 2026: haber mínimo $419.734,71 (+1,9% = IPC jun-2026) + bono $70.000.
+const ANCLA = { periodo: '2026-08', haber: 419734.71 };
+const BONO_EXTRA = 70000;
+
+interface InflacionItem {
+  fecha: string; // YYYY-MM-DD
+  valor: number; // % mensual
+}
+
+/** '2026-08' + n meses */
+function addMonths(periodo: string, n: number): string {
+  const [y, m] = periodo.split('-').map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + n, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+/**
+ * Haber mínimo del período pedido, encadenando IPC desde el ancla.
+ * Devuelve null si falta algún IPC intermedio (aún no publicado).
+ */
+function haberPara(periodo: string, ipcByMes: Map<string, number>): number | null {
+  let haber = ANCLA.haber;
+  let cursor = ANCLA.periodo;
+  // hacia adelante: haber(m) = haber(m-1) × (1 + IPC(m-2))
+  while (cursor < periodo) {
+    const next = addMonths(cursor, 1);
+    const ipc = ipcByMes.get(addMonths(next, -2));
+    if (ipc === undefined) return null;
+    haber = haber * (1 + ipc / 100);
+    cursor = next;
+  }
+  // hacia atrás (por si el ancla queda en el futuro respecto del mes vigente)
+  while (cursor > periodo) {
+    const ipc = ipcByMes.get(addMonths(cursor, -2));
+    if (ipc === undefined) return null;
+    haber = haber / (1 + ipc / 100);
+    cursor = addMonths(cursor, -1);
+  }
+  return Math.round(haber * 100) / 100;
+}
+
+async function crossCheckLLM(mesLegible: string, haberDeterministico: number): Promise<void> {
+  const result = await askClaudeStructured<{ haberMinimo: number; fuenteUrl: string }>({
+    task:
+      `Buscá en anses.gob.ar o notas oficiales recientes el HABER JUBILATORIO MÍNIMO puro (sin bonos) vigente en Argentina en ${mesLegible}. ` +
+      `Devolvé haberMinimo (número en pesos) y fuenteUrl.`,
+    schema: {
+      type: 'object',
+      required: ['haberMinimo', 'fuenteUrl'],
+      properties: {
+        haberMinimo: { type: 'number', minimum: 100000, maximum: 5000000 },
+        fuenteUrl: { type: 'string' },
+      },
+    },
+  });
+  if (!result) {
+    log.info('cross-check LLM no disponible — sigo con el valor determinístico');
+    return;
+  }
+  const delta = Math.abs(result.haberMinimo - haberDeterministico) / haberDeterministico;
+  if (delta > 0.005) {
+    reportWarn(
+      'jubilacion-anses',
+      `cross-check LLM discrepa ${(delta * 100).toFixed(2)}%: determinístico $${haberDeterministico} vs LLM $${result.haberMinimo} (${result.fuenteUrl}) — se usa el determinístico; revisar ancla`,
+    );
+  } else {
+    log.success(`cross-check LLM OK (delta ${(delta * 100).toFixed(2)}%, fuente ${result.fuenteUrl})`);
+  }
 }
 
 export async function fetchJubilacionAnses({ dry = false }: { dry?: boolean }): Promise<boolean> {
   const today = new Date();
-  const mesActual = today.toLocaleString('es-AR', { month: 'long', year: 'numeric' });
-  log.info(`consultando Claude para haber jubilatorio mínimo ${mesActual}`);
+  const periodo = today.toISOString().slice(0, 7); // mes vigente
+  const mesLegible = today.toLocaleString('es-AR', { month: 'long', year: 'numeric' });
+  log.info(`calculando haber mínimo ${mesLegible} por movilidad DNU 274/2024 (ancla ${ANCLA.periodo} = $${ANCLA.haber})`);
 
-  const result = await askClaudeStructured<JubilacionData>({
-    task:
-      `Buscá en anses.gob.ar o en notas oficiales recientes el HABER JUBILATORIO MÍNIMO vigente en Argentina este mes (${mesActual}).\n\n` +
-      `Necesito:\n` +
-      `- haberMinimo: monto del haber mínimo mensual puro (sin bonos).\n` +
-      `- bonoExtra: si ANSES anunció bono complementario para haberes mínimos ESTE mes, cuánto es. Si no hay anuncio vigente, poner 0.\n` +
-      `- tieneBonoEsteMes: boolean. True si hay bono anunciado que se paga este mes o el próximo.\n` +
-      `- fechaVigencia: YYYY-MM-DD cuándo empezó a regir este haber.\n` +
-      `- fuenteUrl: URL oficial (anses.gob.ar idealmente).\n\n` +
-      `Contexto: en abril 2026 el haber mínimo ronda los $280.000 y el bono (cuando se anuncia) suele ser $70.000.\n` +
-      `Ley 27.609 establece actualización mensual por IPC desde marzo 2024.`,
-    schema: {
-      type: 'object',
-      required: ['fechaVigencia', 'haberMinimo', 'bonoExtra', 'tieneBonoEsteMes', 'fuenteUrl'],
-      properties: {
-        fechaVigencia: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
-        fuenteUrl: { type: 'string' },
-        haberMinimo: { type: 'number', minimum: 100000, maximum: 5000000 },
-        bonoExtra: { type: 'number', minimum: 0, maximum: 2000000 },
-        tieneBonoEsteMes: { type: 'boolean' },
-      },
-    },
-    validate: (data) => {
-      // Sanity: bono debería ser <= haber (si es mayor, algo raro)
-      if (data.bonoExtra > data.haberMinimo) {
-        return { ok: false, reason: 'bono mayor que haber — poco probable' };
-      }
-      return { ok: true };
-    },
-  });
+  // Serie IPC (misma fuente que el fetcher `ipc`)
+  let ipcByMes: Map<string, number>;
+  try {
+    const res = await fetch('https://api.argentinadatos.com/v1/finanzas/indices/inflacion');
+    if (!res.ok) throw new Error(`argentinadatos respondió ${res.status}`);
+    const data: InflacionItem[] = await res.json();
+    ipcByMes = new Map(data.map((d) => [d.fecha.slice(0, 7), d.valor]));
+  } catch (err) {
+    reportWarn('jubilacion-anses', `no pude traer la serie IPC (${(err as Error).message}) — sin update este run`);
+    reportMode('jubilacion-anses', 'pending');
+    return false;
+  }
 
-  if (!result) return false;
+  let haber = haberPara(periodo, ipcByMes);
+  let periodoEfectivo = periodo;
+  if (haber === null) {
+    // IPC(m-2) todavía no publicado para el mes pedido: usar el último mes computable.
+    for (let back = 1; back <= 3 && haber === null; back++) {
+      periodoEfectivo = addMonths(periodo, -back);
+      haber = haberPara(periodoEfectivo, ipcByMes);
+    }
+  }
+  if (haber === null) {
+    reportWarn('jubilacion-anses', 'no pude computar el haber: faltan IPC intermedios entre el ancla y el mes vigente');
+    reportMode('jubilacion-anses', 'pending');
+    return false;
+  }
 
-  log.info(`vigencia ${result.fechaVigencia}`);
-  log.info(`fuente: ${result.fuenteUrl}`);
-  log.info(`haber mínimo: $${result.haberMinimo.toLocaleString('es-AR')}`);
-  log.info(`bono extra: $${result.bonoExtra.toLocaleString('es-AR')} (anunciado: ${result.tieneBonoEsteMes ? 'sí' : 'no'})`);
+  reportMode('jubilacion-anses', 'deterministic');
+  log.info(`haber mínimo ${periodoEfectivo}: $${haber.toLocaleString('es-AR')} · bono: $${BONO_EXTRA.toLocaleString('es-AR')}`);
 
-  const todayStr = today.toISOString().slice(0, 10);
+  // Cross-check LLM opcional (nunca bloquea ni cambia el valor escrito)
+  if (hasAnthropicKey()) {
+    try {
+      await crossCheckLLM(mesLegible, haber);
+    } catch (err) {
+      log.warn(`cross-check LLM falló: ${(err as Error).message}`);
+    }
+  } else {
+    log.info('sin ANTHROPIC_API_KEY — cross-check LLM omitido (no hace falta: camino determinístico)');
+  }
 
   if (dry) {
-    log.info(`would patch HABER_MINIMO = ${result.haberMinimo}`);
-    if (result.tieneBonoEsteMes) log.info(`would patch BONO_EXTRA = ${result.bonoExtra}`);
+    log.info(`would patch HABER_MINIMO = ${haber}`);
+    log.info(`would patch BONO_EXTRA = ${BONO_EXTRA}`);
     return true;
   }
 
   let anyChanged = false;
-  const hRes = replaceNumericConst(FILE, 'HABER_MINIMO', result.haberMinimo);
+  const hRes = replaceNumericConst(FILE, 'HABER_MINIMO', haber);
   if (hRes.changed) {
-    log.success(`HABER_MINIMO: ${hRes.oldValue} → ${result.haberMinimo}`);
+    log.success(`HABER_MINIMO: ${hRes.oldValue} → ${haber}`);
     anyChanged = true;
   }
-  // Solo patchear el bono si hay uno vigente — si no, dejamos el valor anterior
-  // como referencia histórica (el usuario puede togglearlo en el calc).
-  if (result.tieneBonoEsteMes && result.bonoExtra > 0) {
-    const bRes = replaceNumericConst(FILE, 'BONO_EXTRA', result.bonoExtra);
-    if (bRes.changed) {
-      log.success(`BONO_EXTRA: ${bRes.oldValue} → ${result.bonoExtra}`);
-      anyChanged = true;
-    }
+  const bRes = replaceNumericConst(FILE, 'BONO_EXTRA', BONO_EXTRA);
+  if (bRes.changed) {
+    log.success(`BONO_EXTRA: ${bRes.oldValue} → ${BONO_EXTRA}`);
+    anyChanged = true;
   }
 
   if (anyChanged) {
-    touchLastUpdated('calculadora-jubilacion-minima-anses', todayStr);
+    touchLastUpdated('calculadora-jubilacion-minima-anses', today.toISOString().slice(0, 10));
     return true;
   }
   log.skip('sin cambios');

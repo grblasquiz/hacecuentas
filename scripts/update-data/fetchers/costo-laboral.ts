@@ -1,4 +1,8 @@
 /**
+ * DETERMINÍSTICO: no viable hoy — las alícuotas patronales (Dec. 814/2001) son
+ * estables (podrían hardcodearse con vigencia), pero el ART promedio no tiene
+ * fuente estructurada (surge de relevamiento de mercado/SRT sin API). Sigue LLM.
+ *
  * Costo laboral empleador (yearly) — auto-llm vía Claude + WebSearch en ARCA/SRT.
  *
  * ARCA define las contribuciones patronales (Ley 24.241 + Ley 27.541 + DNU

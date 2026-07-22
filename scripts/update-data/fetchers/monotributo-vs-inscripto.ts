@@ -1,4 +1,8 @@
 /**
+ * DETERMINÍSTICO: parcial — misma fuente que monotributo.ts (escalas ARCA
+ * semestrales sin cronograma futuro); viable como tabla con vigencia manual pero
+ * no trivial (11 categorías). Sigue LLM.
+ *
  * Monotributo vs Responsable Inscripto (biannual) — auto-llm vía Claude.
  *
  * La calc `monotributo-vs-inscripto.ts` usa una tabla DISTINTA a la del fetcher

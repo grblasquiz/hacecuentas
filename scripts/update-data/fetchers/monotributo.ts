@@ -1,4 +1,9 @@
 /**
+ * DETERMINÍSTICO: parcial — ARCA publica las escalas semestralmente (ene/jul) en
+ * arca.gob.ar/monotributo, sin cronograma futuro: viable como tabla con vigencia
+ * cargada a mano al salir cada actualización (11 categorías × 4 campos: no trivial
+ * de mantener sin errores). Sigue LLM con validaciones estructurales.
+ *
  * Monotributo (biannual) — auto-llm vía Claude + WebSearch en AFIP/ARCA.
  *
  * AFIP / ARCA publica los topes y cuotas del monotributo en resoluciones

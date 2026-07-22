@@ -1,4 +1,7 @@
 /**
+ * DETERMINÍSTICO: no viable — los cuadros tarifarios ENARGAS son PDFs por
+ * distribuidora sin API ni cronograma; scrape HTML sería frágil. Sigue LLM.
+ *
  * Gas natural residencial (yearly) — auto-llm vía Claude + WebSearch.
  *
  * ENARGAS publica cuadros tarifarios por distribuidora (Metrogas, Naturgy,

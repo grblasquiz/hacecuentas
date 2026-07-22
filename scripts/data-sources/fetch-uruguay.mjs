@@ -45,6 +45,16 @@ async function main() {
     brluyu: brl ? { valor: r4(uyu / brl) } : { valor: null },
   };
 
+  // IPC (INE, base Oct.2022=100): NO hay endpoint estructurado público.
+  // TODO(ipc-uy): el INE publica la serie solo en xls con URL que cambia por mes
+  // (www5.ine.gub.uy) y el BCU expone SOAP sin CORS; catalogodatos.gub.uy no
+  // tiene el dataset IPC. Hasta encontrar endpoint estable, el bloque `ipc` del
+  // json se actualiza a mano (ver src/data/live/uruguay.json) y acá se preserva.
+  try {
+    const prev = JSON.parse(await fs.readFile(OUT, "utf8"));
+    if (prev?.ipc) out.ipc = prev.ipc;
+  } catch { /* primer run */ }
+
   await fs.mkdir(path.dirname(OUT), { recursive: true });
   await fs.writeFile(OUT, JSON.stringify(out, null, 2) + "\n");
   console.log(`[uruguay] wrote ${OUT} — usduyu=${out.usduyu.valor} eurouyu=${out.eurouyu.valor} brluyu=${out.brluyu.valor}`);

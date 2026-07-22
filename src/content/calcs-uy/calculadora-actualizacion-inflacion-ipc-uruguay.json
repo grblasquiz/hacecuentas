@@ -39,7 +39,7 @@
       "min": 0,
       "step": 0.01,
       "required": true,
-      "hint": "Consultá el IPC acumulado del período en ine.gub.uy. En 2025 la inflación anual fue 3,65%."
+      "hint": "Consultá el IPC acumulado del período en ine.gub.uy. En 2025 la inflación anual fue 3,65%. Últimos 12 meses a jun 2026: 4,25%."
     }
   ],
   "outputs": [
@@ -118,11 +118,12 @@
   ],
   "dataUpdate": {
     "frequency": "monthly",
-    "lastUpdated": "2026-01-05",
+    "lastUpdated": "2026-07-22",
     "source": "INE (IPC)",
     "sourceUrl": "https://www.gub.uy/instituto-nacional-estadistica/tematica/ipc-indice-precios-del-consumo",
-    "updateType": "manual",
-    "notes": "El INE publica el IPC los primeros días de cada mes con el dato del mes anterior. Inflación anual 2025: 3,65%, dentro del rango meta del BCU (3% a 6%)."
+    "updateType": "auto-live",
+    "notes": "La fórmula lee el bloque ipc de src/data/live/uruguay.json. Carga manual (INE no expone API ni URL estable de la serie; BCU solo SOAP) — ver TODO en scripts/data-sources/fetch-uruguay.mjs. A jun 2026 (INE): interanual 4,25%, mensual 0,37%, acumulada 2026 3,33%.",
+    "liveSource": "uruguay"
   },
   "referenceTables": [
     {
@@ -153,12 +154,17 @@
           "2025",
           "3,65%",
           "1,0365"
+        ],
+        [
+          "2026 (12 m a jun)",
+          "4,25%",
+          "1,0425"
         ]
       ],
-      "note": "Fuente: INE (IPC, variación diciembre a diciembre). En 2025 la inflación de 3,65% entró de lleno en el rango meta del BCU (3% a 6%). Para actualizar un monto entre dos fechas, multiplicá los factores del período."
+      "note": "Fuente: INE (IPC, variación diciembre a diciembre). En 2025 la inflación de 3,65% entró de lleno en el rango meta del BCU (3% a 6%). Para actualizar un monto entre dos fechas, multiplicá los factores del período. Última fila: variación de los últimos 12 meses a junio 2026 (dato vivo)."
     }
   ],
-  "lastReviewed": "2026-07-06",
+  "lastReviewed": "2026-07-22",
   "example": {
     "title": "Ejemplo: actualizar $U 10.000 con la inflación anual 2025 (3,65%)",
     "inputs": {

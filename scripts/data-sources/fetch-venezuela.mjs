@@ -45,6 +45,15 @@ async function main() {
 
   if (!out.bcv.valor) throw new Error("respuesta sin tasa BCV");
 
+
+  // INPC (BCV): NO hay API confiable. ve.dolarapi.com solo trae FX, el BCV
+  // publica el INPC en notas de prensa/xls sin endpoint estructurado.
+  // TODO(inpc-ve): bloque `ipc` manual, se preserva entre corridas.
+  try {
+    const prev = JSON.parse(await fs.readFile(OUT, "utf8"));
+    if (prev?.ipc) out.ipc = prev.ipc;
+  } catch { /* primer run */ }
+
   await fs.mkdir(path.dirname(OUT), { recursive: true });
   await fs.writeFile(OUT, JSON.stringify(out, null, 2) + "\n");
   console.log(`[venezuela] wrote ${OUT} — bcv=${out.bcv.valor} paralelo=${out.paralelo.valor}`);

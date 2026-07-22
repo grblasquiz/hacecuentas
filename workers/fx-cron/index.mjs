@@ -11,14 +11,20 @@
  * (prod se deploya desde local; este cron escribe datos, no rebuildea el sitio).
  *
  * Endpoints (workers.dev):
- *   GET /            → status (qué países y cuándo se actualizaron)
- *   GET /?run=TOKEN  → fuerza un refresh manual (para seed/test)
+ *   GET /             → status (qué países/series y cuándo se actualizaron)
+ *   GET /?run=TOKEN   → fuerza un refresh manual (para seed/test)
+ *   GET /live/<pais>  → JSON público con los valores frescos de D1 (CORS para
+ *                       hacecuentas.com, cache corto) — fuente de hidratación
+ *                       client-side. Incluye `series` (p. ej. IPC AR).
  */
 
 const MINDICADOR = 'https://mindicador.cl/api';
 const SOCRATA = 'https://www.datos.gov.co/resource/32sa-8pi3.json?$order=vigenciadesde%20DESC&$limit=1';
 const ERAPI = 'https://open.er-api.com/v6/latest/USD';
 const VE_DOLARAPI = 'https://ve.dolarapi.com/v1/dolares';
+const AR_DOLARAPI = 'https://dolarapi.com/v1/dolares';
+// Misma serie que scripts/update-data/fetchers/ipc.ts (INDEC vía ArgentinaDatos)
+const AR_IPC = 'https://api.argentinadatos.com/v1/finanzas/indices/inflacion';
 const UA = { 'User-Agent': 'hacecuentas-fx-cron/1.0' };
 
 // Token simple para el run manual (no es dato sensible: solo dispara un refetch).
@@ -34,6 +40,9 @@ const BOUNDS = {
   'uruguay.usduyu': [20, 100],
   'paraguay.usdpyg': [3000, 15000],
   'venezuela.bcv': [100, 20000],
+  'argentina.oficial': [500, 20000], 'argentina.blue': [500, 30000],
+  // IPC AR mensual en % — si sale de acá, algo está roto en la fuente.
+  'ar.ipc.mensual': [-5, 60],
 };
 const ok = (key, v) => {
   const b = BOUNDS[key];
@@ -128,28 +137,121 @@ async function buildSnapshots(now) {
     }
   } catch (e) { console.error('[venezuela]', e.message); }
 
+  // Argentina — dolarapi.com (blue/oficial/MEP/CCL/tarjeta/cripto/mayorista).
+  // Misma forma que src/data/live/dolar.json ({ quotes: { casa: {...} } }).
+  try {
+    const rows = await fetchJson(AR_DOLARAPI);
+    if (Array.isArray(rows) && rows.length) {
+      const quotes = {};
+      for (const q of rows) {
+        if (!q?.casa) continue;
+        quotes[q.casa] = {
+          compra: Number(q.compra) || null,
+          venta: Number(q.venta) || null,
+          nombre: q.nombre ?? q.casa,
+          fechaActualizacion: q.fechaActualizacion ?? null,
+        };
+      }
+      if (ok('argentina.oficial', quotes.oficial?.venta) && ok('argentina.blue', quotes.blue?.venta)) {
+        out.argentina = { quotes, _meta: { source: 'DolarAPI', fetchedAt: now } };
+      }
+    }
+  } catch (e) { console.error('[argentina]', e.message); }
+
+  return out;
+}
+
+// Series (no-FX) → tabla series_live. Clave = '<pais>.<serie>' para que
+// /live/<pais> las pueda juntar con un LIKE.
+async function buildSeries(now) {
+  const out = {};
+
+  // IPC AR — INDEC vía ArgentinaDatos (misma fuente/forma que
+  // scripts/update-data/fetchers/ipc.ts y src/data/live/inflacion.json).
+  try {
+    const data = await fetchJson(AR_IPC);
+    if (Array.isArray(data) && data.length) {
+      const latest = data[data.length - 1];
+      const last12 = data.slice(-12).map((m) => ({ fecha: m.fecha, valor: m.valor }));
+      const acum12 = last12.reduce((acc, m) => acc * (1 + m.valor / 100), 1) * 100 - 100;
+      if (ok('ar.ipc.mensual', Number(latest?.valor))) {
+        out['ar.ipc'] = {
+          last_month: { fecha: latest.fecha, valor: latest.valor },
+          last_12_months: last12,
+          acumulado_12m: Math.round(acum12 * 10) / 10,
+          _meta: { source: 'INDEC (vía ArgentinaDatos)', sourceUrl: AR_IPC, fetchedAt: now },
+        };
+      }
+    }
+  } catch (e) { console.error('[ar.ipc]', e.message); }
+
   return out;
 }
 
 async function refresh(env) {
   if (!env.DB) throw new Error('no DB binding');
+  // Defensivo — la migración canónica está en workers/fx-cron/migrations.sql.
   await env.DB.prepare(
     'CREATE TABLE IF NOT EXISTS fx_live (pais TEXT PRIMARY KEY, data TEXT NOT NULL, updated_at TEXT NOT NULL)'
   ).run();
+  await env.DB.prepare(
+    'CREATE TABLE IF NOT EXISTS series_live (serie TEXT PRIMARY KEY, data TEXT NOT NULL, updated_at TEXT NOT NULL)'
+  ).run();
 
   const now = new Date().toISOString();
-  const snaps = await buildSnapshots(now);
+  const [snaps, series] = [await buildSnapshots(now), await buildSeries(now)];
   const entries = Object.entries(snaps);
-  if (entries.length) {
-    const stmts = entries.map(([pais, data]) =>
+  const sEntries = Object.entries(series);
+  const stmts = [
+    ...entries.map(([pais, data]) =>
       env.DB.prepare(
         'INSERT INTO fx_live (pais, data, updated_at) VALUES (?, ?, ?) ' +
         'ON CONFLICT(pais) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at'
       ).bind(pais, JSON.stringify(data), now)
-    );
-    await env.DB.batch(stmts);
+    ),
+    ...sEntries.map(([serie, data]) =>
+      env.DB.prepare(
+        'INSERT INTO series_live (serie, data, updated_at) VALUES (?, ?, ?) ' +
+        'ON CONFLICT(serie) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at'
+      ).bind(serie, JSON.stringify(data), now)
+    ),
+  ];
+  if (stmts.length) await env.DB.batch(stmts);
+  return { updated: entries.map(([p]) => p), series: sEntries.map(([s]) => s), at: now };
+}
+
+// Prefijo de series por país para /live/<pais> (fx_live usa nombre completo,
+// series_live usa código corto).
+const SERIES_PREFIX = { argentina: 'ar' };
+
+const CORS_OK = /^https:\/\/([a-z0-9-]+\.)?hacecuentas\.com$|^http:\/\/localhost(:\d+)?$/;
+
+async function liveEndpoint(env, pais, origin) {
+  const headers = {
+    'content-type': 'application/json; charset=utf-8',
+    // Cache corto en edge/navegador: el cron corre 1x/día, 5 min es de sobra.
+    'cache-control': 'public, max-age=300',
+    'access-control-allow-origin': CORS_OK.test(origin || '') ? origin : 'https://hacecuentas.com',
+    'vary': 'Origin',
+  };
+  const row = await env.DB.prepare('SELECT data, updated_at FROM fx_live WHERE pais = ?').bind(pais).first();
+  const prefix = SERIES_PREFIX[pais];
+  let series = null;
+  if (prefix) {
+    const sRows = await env.DB.prepare("SELECT serie, data, updated_at FROM series_live WHERE serie LIKE ?")
+      .bind(prefix + '.%').all();
+    for (const r of sRows.results || []) {
+      series = series || {};
+      try { series[r.serie.slice(prefix.length + 1)] = { ...JSON.parse(r.data), updated_at: r.updated_at }; } catch {}
+    }
   }
-  return { updated: entries.map(([p]) => p), at: now };
+  if (!row && !series) {
+    return new Response(JSON.stringify({ ok: false, error: 'pais desconocido o sin datos' }), { status: 404, headers });
+  }
+  let data = null;
+  try { data = row ? JSON.parse(row.data) : null; } catch {}
+  const body = { ok: true, pais, updated_at: row?.updated_at ?? null, data, series };
+  return new Response(JSON.stringify(body), { headers });
 }
 
 export default {
@@ -160,12 +262,19 @@ export default {
     const url = new URL(req.url);
     const headers = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
     try {
+      const mLive = url.pathname.match(/^\/live\/([a-z-]+)\/?$/);
+      if (mLive) return await liveEndpoint(env, mLive[1], req.headers.get('origin'));
       if (url.searchParams.get('run') === RUN_TOKEN) {
         const r = await refresh(env);
         return new Response(JSON.stringify({ ok: true, ...r }), { headers });
       }
       const rows = await env.DB.prepare('SELECT pais, updated_at FROM fx_live ORDER BY pais').all();
-      return new Response(JSON.stringify({ ok: true, rows: rows.results || [] }), { headers });
+      let series = [];
+      try {
+        const s = await env.DB.prepare('SELECT serie, updated_at FROM series_live ORDER BY serie').all();
+        series = s.results || [];
+      } catch {} // tabla aún no migrada
+      return new Response(JSON.stringify({ ok: true, rows: rows.results || [], series }), { headers });
     } catch (e) {
       return new Response(JSON.stringify({ ok: false, error: String(e) }), { status: 500, headers });
     }

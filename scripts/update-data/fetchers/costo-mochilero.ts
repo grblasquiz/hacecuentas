@@ -1,4 +1,7 @@
 /**
+ * DETERMINÍSTICO: no viable — presupuestos editoriales multi-fuente (Nomadic Matt,
+ * Budget Your Trip) sin API estable. LLM-only por naturaleza (yearly).
+ *
  * Costo mochilero por país (yearly) — auto-llm vía Claude + WebSearch.
  *
  * El presupuesto diario base (USD/día, estilo mochilero) para 29 países

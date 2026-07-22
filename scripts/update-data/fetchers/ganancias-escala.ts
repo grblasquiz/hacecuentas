@@ -1,4 +1,9 @@
 /**
+ * DETERMINÍSTICO: parcialmente viable — ARCA publica la escala/deducciones 2x/año
+ * (RG semestral por RIPTE) SIN cronograma futuro: se podría cargar como tabla con
+ * vigencia al salir cada RG, pero son 9 tramos + 3 deducciones (no trivial, alto
+ * riesgo de tipeo). Queda LLM con guard monotónico; candidato a tabla manual.
+ *
  * Ganancias escala (biannual) — auto-llm vía Claude + WebSearch en ARCA.
  *
  * ARCA (ex-AFIP) actualiza los valores del MNI y la escala progresiva del

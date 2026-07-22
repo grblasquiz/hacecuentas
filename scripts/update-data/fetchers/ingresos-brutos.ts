@@ -1,4 +1,7 @@
 /**
+ * DETERMINÍSTICO: no viable — 5 leyes tarifarias provinciales anuales, cada una en
+ * formato distinto (PDF/BO provincial) sin API común. Sigue LLM (yearly).
+ *
  * Ingresos Brutos provincial (yearly) — auto-llm vía Claude + WebSearch.
  *
  * Cada jurisdicción publica su código fiscal y planilla anexa con alícuotas

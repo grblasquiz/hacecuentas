@@ -1,4 +1,9 @@
 /**
+ * DETERMINÍSTICO: parcial — las ALÍCUOTAS 2024→2027 ya están fijadas por Ley 27.743
+ * (tabla con vigencia viable para eso), pero el MNI y los tramos de la escala se
+ * actualizan por IPC anual vía RG ARCA sin cronograma futuro publicado → esa parte
+ * sigue LLM. No trivial: queda LLM-only por ahora.
+ *
  * Bienes Personales (yearly) — auto-llm vía Claude + WebSearch en ARCA/Ley 27.743.
  *
  * ARCA actualiza anualmente el Mínimo No Imponible (MNI), la deducción por

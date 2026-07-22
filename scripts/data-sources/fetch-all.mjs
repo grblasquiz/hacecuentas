@@ -14,12 +14,14 @@ const sources = [
   "scripts/data-sources/fetch-uruguay.mjs",
   "scripts/data-sources/fetch-paraguay.mjs",
   "scripts/data-sources/fetch-venezuela.mjs",
+  "scripts/data-sources/fetch-dominicana.py",
   "scripts/data-sources/generate-datasets.mjs",
 ];
 
 async function run(script) {
   return new Promise((resolve) => {
-    const p = spawn("node", [script], { stdio: "inherit" });
+    const bin = script.endsWith(".py") ? "python3" : "node";
+    const p = spawn(bin, [script], { stdio: "inherit" });
     p.on("close", (code) => resolve({ script, code }));
   });
 }

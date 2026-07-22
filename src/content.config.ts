@@ -36,6 +36,9 @@ const updateType = z.enum([
   'auto-api',
   'auto-scrape',
   'auto-llm',
+  // El dato real vive en src/data/live/<liveSource>.json (cron diario, re-bundle
+  // en cada build). La frescura se mide contra ese snapshot, no contra lastUpdated.
+  'auto-live',
 ]);
 
 // Audiences detectadas en src/content/calcs*/*.json (incluye lowercase legacy)
@@ -87,6 +90,9 @@ const dataUpdateBase = z.object({
   // con lastUpdated) — es solo honestidad de cara al usuario / E-E-A-T.
   dataAsOf: dateString.optional(),
   updateType: updateType,
+  // Solo para updateType 'auto-live': nombre(s) del snapshot en src/data/live/
+  // (sin extensión; varios separados por coma, ej. "venezuela,colombia").
+  liveSource: z.string().optional(),
   source: z.string().nullable().optional(),
   sourceUrl: z.string().nullable().optional(),
   notes: z.string().optional(),

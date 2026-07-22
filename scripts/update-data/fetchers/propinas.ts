@@ -1,4 +1,7 @@
 /**
+ * DETERMINÍSTICO: no viable — dato editorial (costumbres de propina por país) sin
+ * fuente estructurada; es research puro. LLM-only por naturaleza (yearly).
+ *
  * Propinas por país (yearly) — auto-llm vía Claude + WebSearch.
  *
  * Costumbres de propina cambian lentamente (pueden pasar años sin moverse),

@@ -1,0 +1,76 @@
+---
+/**
+ * Hidratación client-side desde el Worker fx-cron (D1 → /live/<pais>).
+ *
+ * Patrón: el HTML server-rendered trae el snapshot (crawleable); este script
+ * al cargar fetchea `GET <worker>/live/<pais>` y pisa los valores mostrados
+ * SOLO si el dato del worker es más nuevo que el snapshot SSR.
+ *
+ * Uso:
+ *   <span data-live-pais="argentina" data-live-field="data.quotes.blue.venta"
+ *         data-live-decimals="0" data-live-prefix="$">$1.545</span>
+ *   <LiveWorkerHydrate pais="argentina" snapshotISO={fetchedAt} locale="es-AR" />
+ *
+ * - `data-live-field` es un dot-path dentro del JSON de /live/<pais>
+ *   (raíz: { data: {...fx_live...}, series: { ipc: {...} }, updated_at }).
+ *   Ej. IPC: "series.ipc.last_month.valor".
+ * - Un elemento con [data-live-updated] (opcional) recibe la hora del refresh.
+ *
+ * NOTA: las 8 landings dolar-hoy YA refrescan client-side contra sus fuentes
+ * primarias (dolarapi/mindicador/socrata/erapi vía EconomiaLanding o script
+ * propio) — este componente es para páginas/datos que NO tienen fuente
+ * CORS-open directa (p. ej. IPC AR) o como fuente única cuando la Mac de
+ * Martin está apagada y el snapshot de build quedó viejo.
+ */
+interface Props {
+  pais: string;
+  /** fetchedAt del snapshot SSR — si el worker no es más nuevo, no pisa nada */
+  snapshotISO?: string | null;
+  locale?: string;
+  /** override para tests; default el worker prod */
+  base?: string;
+}
+const { pais, snapshotISO = null, locale = 'es-AR', base = 'https://hacecuentas-fx-cron.rodriguezb-martin.workers.dev' } = Astro.props as Props;
+const cfg = { pais, snapshotISO, locale, url: `${base}/live/${pais}` };
+---
+
+<script type="application/json" data-live-worker-cfg set:html={JSON.stringify(cfg)} />
+<script>
+  (function () {
+    const el = document.querySelector('script[data-live-worker-cfg]');
+    let cfg: any = {};
+    try { cfg = JSON.parse(el?.textContent || '{}'); } catch { return; }
+    if (!cfg.url) return;
+    const get = (obj: any, path: string) => path.split('.').reduce((o, k) => (o == null ? o : o[k]), obj);
+    async function refresh() {
+      try {
+        const res = await fetch(cfg.url, { cache: 'no-store' });
+        if (!res.ok) return;
+        const body = await res.json();
+        if (!body || body.ok === false) return;
+        // Solo pisar si el worker tiene dato más nuevo que el snapshot SSR.
+        if (cfg.snapshotISO && body.updated_at && new Date(body.updated_at) <= new Date(cfg.snapshotISO)) return;
+        let any = false;
+        document.querySelectorAll('[data-live-pais="' + cfg.pais + '"][data-live-field]').forEach((node) => {
+          const v = get(body, node.getAttribute('data-live-field') || '');
+          if (v == null || (typeof v === 'number' && !isFinite(v))) return;
+          if (typeof v === 'number') {
+            const dec = Number(node.getAttribute('data-live-decimals') ?? 0);
+            node.textContent =
+              (node.getAttribute('data-live-prefix') || '') +
+              v.toLocaleString(cfg.locale, { minimumFractionDigits: dec, maximumFractionDigits: dec }) +
+              (node.getAttribute('data-live-suffix') || '');
+          } else {
+            node.textContent = String(v);
+          }
+          any = true;
+        });
+        if (any && body.updated_at) {
+          const u = document.querySelector('[data-live-updated]');
+          if (u) u.textContent = new Intl.DateTimeFormat(cfg.locale, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(body.updated_at));
+        }
+      } catch {}
+    }
+    refresh();
+  })();
+</script>

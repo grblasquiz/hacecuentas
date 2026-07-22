@@ -1,4 +1,8 @@
 /**
+ * DETERMINÍSTICO: no viable limpio — la CAC publica índice mensual pero solo como
+ * página HTML/PDF sin API (scrape frágil); las tipologías USD/m² son elaboración
+ * editorial multi-fuente. Sigue LLM.
+ *
  * Costo de construcción por m² (yearly) — auto-llm vía Claude + WebSearch.
  *
  * La CAC (Cámara Argentina de la Construcción) y el CPIC (Colegio Profesional

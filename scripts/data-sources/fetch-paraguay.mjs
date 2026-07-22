@@ -42,6 +42,17 @@ async function main() {
     arspyg1000: ars ? { valor: r2((pyg / ars) * 1000) } : { valor: null },
   };
 
+
+  // IPC (BCP, base Dic.2017=100): NO hay endpoint JSON público.
+  // TODO(ipc-py): www.bcp.gov.py devuelve 403 a clientes no-browser (bot-block)
+  // y la serie solo vive en el xlsx del Anexo Estadístico del Informe Económico
+  // (URL dateada por mes). Hasta encontrar endpoint estable, el bloque `ipc`
+  // del json se actualiza a mano y acá se preserva.
+  try {
+    const prev = JSON.parse(await fs.readFile(OUT, "utf8"));
+    if (prev?.ipc) out.ipc = prev.ipc;
+  } catch { /* primer run */ }
+
   await fs.mkdir(path.dirname(OUT), { recursive: true });
   await fs.writeFile(OUT, JSON.stringify(out, null, 2) + "\n");
   console.log(`[paraguay] wrote ${OUT} — usdpyg=${out.usdpyg.valor} brlpyg=${out.brlpyg.valor} arspyg1000=${out.arspyg1000.valor}`);

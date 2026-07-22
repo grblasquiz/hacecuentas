@@ -1,4 +1,8 @@
 /**
+ * DETERMINÍSTICO: parcial — el Anexo VIII RG 830 se actualiza por RG semestral sin
+ * cronograma futuro; viable como tabla con vigencia cargada a mano al salir cada RG
+ * (escala + MNI por concepto: no trivial). Sigue LLM con validación.
+ *
  * Retenciones Ganancias RG 830 (biannual) — auto-llm vía Claude + WebSearch.
  *
  * ARCA (ex-AFIP) actualiza el Anexo VIII de la RG 830/2000 periódicamente —

@@ -19,8 +19,46 @@
  * normal, código 1 sólo si hay error fatal.
  */
 
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync, statSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+
+// Dir de snapshots "live" refrescados por el cron de datos (fetch-*.mjs → 1x/día).
+const LIVE_DIR = join(process.cwd(), 'src/data/live');
+
+/**
+ * updateType `auto-live`: el dato real del calc NO vive en su JSON de contenido
+ * sino en un snapshot de src/data/live/<liveSource>.json que un cron refresca a
+ * diario y el build re-bundlea. Para estos calcs `dataUpdate.lastUpdated` es
+ * irrelevante para la frescura: lo que importa es qué tan fresco está el live file.
+ * `liveSource` acepta varios nombres separados por coma (ej. "venezuela,colombia");
+ * se evalúa el MÁS VIEJO de todos.
+ * Devuelve la fecha efectiva de frescura (ISO YYYY-MM-DD) o null si no se pudo
+ * resolver ningún source (en ese caso se cae al lastUpdated del calc).
+ */
+function resolveLiveFreshness(liveSource: string): { date: string; oldest: string } | null {
+  let oldestMs = Infinity;
+  let oldestName = '';
+  for (const name of liveSource.split(',').map((s) => s.trim()).filter(Boolean)) {
+    const file = join(LIVE_DIR, `${name}.json`);
+    if (!existsSync(file)) continue;
+    let ms = statSync(file).mtimeMs;
+    try {
+      const fetchedAt = JSON.parse(readFileSync(file, 'utf8'))?._meta?.fetchedAt;
+      if (fetchedAt) {
+        const t = new Date(fetchedAt).getTime();
+        if (!Number.isNaN(t)) ms = t;
+      }
+    } catch {
+      /* mtime como fallback */
+    }
+    if (ms < oldestMs) {
+      oldestMs = ms;
+      oldestName = name;
+    }
+  }
+  if (!Number.isFinite(oldestMs)) return null;
+  return { date: new Date(oldestMs).toISOString().slice(0, 10), oldest: oldestName };
+}
 
 const CONTENT_DIR = join(process.cwd(), 'src/content');
 // El catálogo vive en varios directorios: el base `calcs/` + un dir por vertical
@@ -153,9 +191,21 @@ function loadCalcsFromFs(): CalcInfo[] {
       }
       const du = raw?.dataUpdate;
       if (!du) continue;
+      // auto-live: la frescura se mide contra el snapshot del cron, no contra
+      // el lastUpdated del calc JSON (que solo marca la última edición editorial).
+      let effectiveLastUpdated: string | undefined = du.lastUpdated;
+      let liveNote: string | undefined;
+      if (du.updateType === 'auto-live' && typeof du.liveSource === 'string') {
+        const live = resolveLiveFreshness(du.liveSource);
+        if (live) {
+          effectiveLastUpdated = live.date;
+          liveNote = `live source stale: src/data/live/${live.oldest}.json (fetchedAt/mtime ${live.date})`;
+        }
+      }
       const info = evaluate(
         { slug: raw.slug, file: `${dirName}/${file}`, category: raw.category, frequency: du.frequency,
-          lastUpdated: du.lastUpdated, updateType: du.updateType, source: du.source, sourceUrl: du.sourceUrl, notes: du.notes },
+          lastUpdated: effectiveLastUpdated, updateType: du.updateType, source: du.source, sourceUrl: du.sourceUrl,
+          notes: liveNote ?? du.notes },
         now
       );
       if (info) out.push(info);

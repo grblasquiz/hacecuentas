@@ -18,6 +18,7 @@
 import { REGISTRY, IMPLEMENTED_SLUGS } from './registry.ts';
 import { listAllCalcs, filterByFrequency, isStale, type Frequency } from './utils/freshness.ts';
 import { createLogger } from './utils/logger.ts';
+import { getRunStatus, reportWarn, hasAnthropicKey, type RunMode } from './utils/run-status.ts';
 
 const log = createLogger('update-data');
 
@@ -114,13 +115,51 @@ async function main() {
   const errors = results.filter((r) => r.error).length;
   log.info(`terminado · ${changed}/${results.length} con cambios · ${errors} errores`);
 
+  // Modo efectivo por fetcher: lo que reportó el fetcher vía run-status gana;
+  // si no reportó, se infiere de la metadata `path` del registry. Un fetcher
+  // 'llm' sin ANTHROPIC_API_KEY queda 'pending' con WARN visible — la falta
+  // de key NUNCA deshabilita en silencio.
+  const status = getRunStatus();
+  const keyPresent = hasAnthropicKey();
+  const modeOf = (name: string): RunMode => {
+    if (status.modes[name]) return status.modes[name];
+    const entry = REGISTRY.find((e) => e.name === name)!;
+    if (entry.path === 'llm') return keyPresent ? 'llm' : 'pending';
+    return 'deterministic';
+  };
+  const modes = new Map(results.map((r) => [r.name, modeOf(r.name)]));
+  for (const [name, mode] of modes) {
+    if (mode === 'pending' && !status.warns.some((w) => w.name === name)) {
+      reportWarn(name, 'requiere LLM y no hay ANTHROPIC_API_KEY (sin camino determinístico) — quedó pendiente');
+    }
+  }
+  const warns = getRunStatus().warns;
+
+  console.log('\n=== Modos de ejecución ===');
+  for (const mode of ['deterministic', 'llm', 'pending'] as const) {
+    const names = results.filter((r) => modes.get(r.name) === mode).map((r) => r.name);
+    if (names.length) console.log(`  ${mode}: ${names.join(', ')}`);
+  }
+  if (warns.length) {
+    console.log(`  ⚠ warnings (${warns.length}):`);
+    for (const w of warns) console.log(`    · [${w.name}] ${w.msg}`);
+  }
+  console.log('');
+
   // Summary machine-readable para que el workflow lo parsee
   const summary = {
     ran: results.length,
     changed,
     errors,
+    warns: warns.length,
     dry: opts.dry,
-    details: results.map((r) => ({ name: r.name, changed: r.changed, error: r.error ?? null })),
+    details: results.map((r) => ({
+      name: r.name,
+      changed: r.changed,
+      error: r.error ?? null,
+      mode: modes.get(r.name),
+    })),
+    warnings: warns,
   };
   console.log(`SUMMARY::${JSON.stringify(summary)}`);
 }

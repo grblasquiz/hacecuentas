@@ -13,7 +13,7 @@ import { join } from 'node:path';
 const CALCS_DIR = join(process.cwd(), 'src/content/calcs');
 
 const VALID_FREQUENCIES = new Set(['never', 'daily', 'weekly', 'monthly', 'biannual', 'yearly']);
-const VALID_UPDATE_TYPES = new Set(['manual', 'auto-api', 'auto-scrape', 'auto-llm']);
+const VALID_UPDATE_TYPES = new Set(['manual', 'auto-api', 'auto-scrape', 'auto-llm', 'auto-live']);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 interface Issue {
@@ -68,7 +68,7 @@ function main() {
     console.error(`    "lastUpdated": "${new Date().toISOString().slice(0, 10)}",`);
     console.error(`    "source": null,             // requerido si frequency != never`);
     console.error(`    "sourceUrl": null,          // requerido si frequency != never`);
-    console.error(`    "updateType": "manual | auto-api | auto-scrape | auto-llm",`);
+    console.error(`    "updateType": "manual | auto-api | auto-scrape | auto-llm | auto-live",`);
     console.error(`    "notes": "opcional"`);
     console.error(`  }\n`);
     process.exit(1);

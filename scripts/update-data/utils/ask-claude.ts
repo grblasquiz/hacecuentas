@@ -44,7 +44,10 @@ export interface AskClaudeOpts<T> {
 export async function askClaudeStructured<T = unknown>(opts: AskClaudeOpts<T>): Promise<T | null> {
   const apiKey = opts.apiKey || process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    log.error('ANTHROPIC_API_KEY no está definida — auto-llm deshabilitado');
+    // No es un error del fetcher: es una limitación del entorno. El fetcher
+    // que llama debe reportar 'pending' vía run-status para que el summary
+    // lo liste como WARN visible (nunca deshabilitado en silencio).
+    log.warn('sin ANTHROPIC_API_KEY — paso LLM omitido (el fetcher decide fallback)');
     return null;
   }
   const model = opts.model || DEFAULT_MODEL;
