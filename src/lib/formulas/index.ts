@@ -520,7 +520,6 @@ import { caloriasQuemadasRunningKmPeso } from './calorias-quemadas-running-km-pe
 import { caloriasReceta } from './calorias-receta';
 import { caloriasRemo } from './calorias-remo';
 import { caloriasSexoRelacionIntimaDuracion } from './calorias-sexo-relacion-intima-duracion';
-import { caloriasSkiSnowboardMontaña } from './calorias-ski-snowboard-montana';
 import { caloriasTareasHogar } from './calorias-tareas-hogar';
 import { caloriasTDEE } from './calorias-tdee';
 import { caloriasYoga } from './calorias-yoga';
@@ -1425,7 +1424,6 @@ import { ffmi } from './ffmi';
 import { fgtsCompraImovel } from './fgts-compra-imovel';
 import { fgtsRendimentoAnual } from './fgts-rendimento-anual';
 import { fgtsSaqueAniversario } from './fgts-saque-aniversario';
-import { fgtsSaqueRescisao } from './fgts-saque-rescisao';
 import { fiambreQuesoPorInvitadoPicada } from './fiambre-queso-por-invitado-picada';
 import { fibonacci } from './fibonacci';
 import { fibraDiariaEdadSexo } from './fibra-diaria-edad-sexo';
@@ -1541,7 +1539,6 @@ import { compute as compute__gastos_escritura_compraventa_inmueble_paraguay } fr
 import { compute as compute__gastos_escrituracion_isai_mexico_2026 } from './gastos-escrituracion-isai-mexico-2026';
 import { gastosEscriturarViviendaPrimeraCasa } from './gastos-escriturar-vivienda-primera-casa';
 import { compute as compute__gastos_notariales_registro_compraventa_2026 } from './gastos-notariales-registro-compraventa-2026';
-import { compute as compute__gato_persa_grooming_baño_frecuencia_costo } from './gato-persa-grooming-baño-frecuencia-costo';
 import { compute as compute__gauss_jordan } from './gauss-jordan';
 import { gelEnergeticoCarreraCuantos } from './gel-energetico-carrera-cuantos';
 import { generacionPerteneces } from './generacion-perteneces';
@@ -3335,7 +3332,6 @@ import { vocabularioIdiomaPalabrasNivelConocido } from './vocabulario-idioma-pal
 import { vocabularioNivelMcerA1C2Palabras } from './vocabulario-nivel-mcer-a1-c2-palabras';
 import { vocabularioPalabrasActivasNivelIdioma } from './vocabulario-palabras-activas-nivel-idioma';
 import { vodkaInfusionFrutasTiempo } from './vodka-infusion-frutas-tiempo';
-import { volatilidadImplicitaOpciones } from './volatilidad-implicita-opciones';
 import { volumenCilindroRadioAltura } from './volumen-cilindro-radio-altura';
 import { volumenConoRadioAltura } from './volumen-cono-radio-altura';
 import { volumenExcavacion } from './volumen-excavacion';
@@ -3901,7 +3897,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'calorias-receta': caloriasReceta,
   'calorias-remo': caloriasRemo,
   'calorias-sexo-relacion-intima-duracion': caloriasSexoRelacionIntimaDuracion,
-  'calorias-ski-snowboard-montana': caloriasSkiSnowboardMontaña,
   'calorias-tareas-hogar': caloriasTareasHogar,
   'calorias-tdee': caloriasTDEE,
   'calorias-yoga': caloriasYoga,
@@ -4806,7 +4801,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'fgts-compra-imovel': fgtsCompraImovel,
   'fgts-rendimento-anual': fgtsRendimentoAnual,
   'fgts-saque-aniversario': fgtsSaqueAniversario,
-  'fgts-saque-rescisao': fgtsSaqueRescisao,
   'fiambre-queso-por-invitado-picada': fiambreQuesoPorInvitadoPicada,
   'fibonacci': fibonacci,
   'fibra-diaria-edad-sexo': fibraDiariaEdadSexo,
@@ -4922,7 +4916,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'gastos-escrituracion-isai-mexico-2026': compute__gastos_escrituracion_isai_mexico_2026,
   'gastos-escriturar-vivienda-primera-casa': gastosEscriturarViviendaPrimeraCasa,
   'gastos-notariales-registro-compraventa-2026': compute__gastos_notariales_registro_compraventa_2026,
-  'gato-persa-grooming-baño-frecuencia-costo': compute__gato_persa_grooming_baño_frecuencia_costo,
   'gauss-jordan': compute__gauss_jordan,
   'gel-energetico-carrera-cuantos': gelEnergeticoCarreraCuantos,
   'generacion-perteneces': generacionPerteneces,
@@ -6716,7 +6709,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'vocabulario-nivel-mcer-a1-c2-palabras': vocabularioNivelMcerA1C2Palabras,
   'vocabulario-palabras-activas-nivel-idioma': vocabularioPalabrasActivasNivelIdioma,
   'vodka-infusion-frutas-tiempo': vodkaInfusionFrutasTiempo,
-  'volatilidad-implicita-opciones': volatilidadImplicitaOpciones,
   'volumen-cilindro-radio-altura': volumenCilindroRadioAltura,
   'volumen-cono-radio-altura': volumenConoRadioAltura,
   'volumen-excavacion': volumenExcavacion,
