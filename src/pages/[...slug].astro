@@ -26,6 +26,7 @@ import PorcentajesFlagship from '../components/PorcentajesFlagship.astro';
 import TemperaturaHornoFlagship from '../components/TemperaturaHornoFlagship.astro';
 import MetrosLinealesFlagship from '../components/MetrosLinealesFlagship.astro';
 import Impresion3dFlagship from '../components/Impresion3dFlagship.astro';
+import PesoIdealPerroFlagship from '../components/PesoIdealPerroFlagship.astro';
 import CombustibleViajeFlagship from '../components/CombustibleViajeFlagship.astro';
 import GananciasCuartaCat from '../components/GananciasCuartaCat.astro';
 import IvaAgregarDiscriminar from '../components/IvaAgregarDiscriminar.astro';
@@ -1198,6 +1199,15 @@ const mtlRelated = isMetrosLineales
   ? ['calculadora-cortinas-medir-tela-ventana-anchotelaje', 'calculadora-rollos-empapelado-papel-pared', 'calculadora-deck-madera-tablas-tornillos']
       .map((s) => allCalcs.find((c: any) => c.slug === s)).filter(Boolean)
   : [];
+const PESO_PERRO_FLAGSHIP = new Set([
+  'calculadora-peso-ideal-pitbull',
+  'calculadora-peso-ideal-rottweiler',
+  'calculadora-peso-ideal-yorkshire-terrier',
+]);
+const isPesoPerro = PESO_PERRO_FLAGSHIP.has(calc.slug);
+const ppRelated = isPesoPerro
+  ? (calc.relatedSlugs || []).map((s: string) => allCalcs.find((c: any) => c.slug === s)).filter(Boolean)
+  : [];
 const isImpresion3d = calc.slug === 'calculadora-costo-impresion-3d-pieza';
 const i3Related = isImpresion3d
   ? ['calculadora-filamento-3d-necesario-modelo', 'calculadora-precio-hora-servicio-3d', 'calculadora-tiempo-impresion-3d-layer']
@@ -1288,7 +1298,8 @@ const flagshipBespoke = isDiasEntreFechas || isAguinaldoSac || isLifeMiles || is
   || isFondoDesempleo || isArtIndemnizacion || isParitariaUocra
   || isIndemDespido || isSueldoBrutoNeto || isLiqRenuncia || isAguinaldoCasa
   || isGananciasCuarta || isIvaAgregarDisc || isInteresJudicial || isAportesPatronales
-  || isTempHorno || isMetrosLineales || isImpresion3d || isCombustibleViaje;
+  || isTempHorno || isMetrosLineales || isImpresion3d || isCombustibleViaje
+  || isPesoPerro;
 // El mockup no usa el color de la categoría (viajes→life/cian): va rosa coral.
 // Número a letras ya coincide (matematica→knowledge), no hace falta forzarlo.
 // Porcentajes: el mockup va violeta, pero la categoría es vida→life (cian).
@@ -1344,6 +1355,7 @@ const flagshipDomain: 'money' | 'data' | 'health' | 'home' | 'knowledge' | 'life
   {isTempHorno && <TemperaturaHornoFlagship calc={calc} related={thRelated} />}
   {isMetrosLineales && <MetrosLinealesFlagship calc={calc} related={mtlRelated} />}
   {isImpresion3d && <Impresion3dFlagship calc={calc} related={i3Related} />}
+  {isPesoPerro && <PesoIdealPerroFlagship calc={calc} related={ppRelated} />}
   {isCombustibleViaje && <CombustibleViajeFlagship calc={calc} related={vcRelated} />}
   {isConversorLatam && <ConversorMonedaLatam calc={calc} related={cmRelated} />}
   {isMillasLatam && <MillasLatamDestino calc={calc} related={mlatamRelated} />}
