@@ -35,8 +35,8 @@ export function canoEstructuralPesoMl(inputs: CanoEstructuralInputs): CanoEstruc
   let descripcion: string;
 
   if (tipo === 'redondo') {
-    // Peso = π × D × e × densidad / 10^6
-    pesoMl = Math.PI * medida * espesor * DENSIDAD_ACERO / 1_000_000;
+    // Peso = π × (D − e) × e × densidad / 10^6  (diámetro medio, como las tablas de acero)
+    pesoMl = Math.PI * (medida - espesor) * espesor * DENSIDAD_ACERO / 1_000_000;
     descripcion = `Caño redondo Ø${medida} mm × ${espesor} mm`;
   } else {
     // Cuadrado/rectangular
