@@ -1,0 +1,137 @@
+---
+/**
+ * Flagship "Duración de batería" — mockup del batch 23-07-2026, calcado.
+ * SSR con duracion-bateria-mah-consumo.ts; el inline replica la misma cuenta.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { duracionBateriaMahConsumo } from '../../lib/formulas/duracion-bateria-mah-consumo';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const D = { capacidadMah: 5000, consumoMa: 500, eficiencia: 85 };
+const init = duracionBateriaMahConsumo(D);
+const teorico = D.capacidadMah / D.consumoMa;
+const nf = (x: number, d = 1) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: d }).format(x);
+---
+
+<main class="page hcm bat">
+  <div class="crumb">Inicio / <a href="/categoria/tecnologia">Tecnología</a> / <b>Duración de batería</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🔋 AUTONOMÍA REALISTA</span>
+      <h1>¿Cuánto va a durar esta batería?</h1>
+      <p>Calculá horas de uso con capacidad, consumo y eficiencia. Sumá un escenario realista para no quedarte sólo con el máximo teórico.</p>
+    </div>
+    <div class="hero-art">
+      <div class="battery"><i style="width:85%"></i></div>
+      <div class="hero-stat"><span>{nf(D.capacidadMah, 0)} mAh · {D.consumoMa} mA</span><b>≈ {nf(init.horasEstimadas)} horas</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="bat-form">
+      <h2>Datos de tu equipo</h2>
+      <p class="sub">Usá consumo promedio, no el máximo de la etiqueta.</p>
+      <div class="grid2">
+        <div class="field">
+          <label>Capacidad</label>
+          <div class="control"><input id="bat-mah" type="number" min="1" step="1" value={D.capacidadMah} /><span>mAh</span></div>
+        </div>
+        <div class="field">
+          <label>Consumo promedio</label>
+          <div class="control"><input id="bat-ma" type="number" min="1" step="1" value={D.consumoMa} /><span>mA</span></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Eficiencia útil <small id="bat-eff-txt">{D.eficiencia}%</small></label>
+        <div class="control"><input id="bat-eff" type="range" min="50" max="100" value={D.eficiencia} /></div>
+      </div>
+      <div class="chips">
+        <button type="button" data-ma="200">Sensor</button>
+        <button type="button" data-ma="500">Pantalla activa</button>
+        <button type="button" data-ma="1200">Carga intensa</button>
+      </div>
+      <button class="cta" type="submit">Calcular autonomía →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Duración realista</div>
+        <div class="big" id="bat-hours">{nf(init.horasEstimadas)} <small>horas</small></div>
+        <p class="answer">Estimación con pérdidas, temperatura y margen de seguridad.</p>
+        <div class="result-box">
+          <span>Máximo teórico</span>
+          <b id="bat-theory">{nf(teorico)} horas</b>
+          <small id="bat-days">Equivale a {nf(init.horasEstimadas / 24)} días de uso continuo.</small>
+        </div>
+      </div>
+      <div class="equation"><b>capacidad ÷ consumo × eficiencia</b></div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Qué puede acortar la autonomía</h2>
+      <p>La ficha técnica no cuenta toda la historia.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>❄️</i><h3>Temperatura</h3><p>El frío y el calor extremo reducen capacidad y rendimiento.</p></article>
+      <article class="mini"><i>📶</i><h3>Picos de consumo</h3><p>Radio, pantalla, motor o procesador pueden multiplicar el promedio.</p></article>
+      <article class="mini"><i>🧓</i><h3>Desgaste</h3><p>Una batería usada ya no conserva el 100% de su capacidad nominal.</p></article>
+    </div>
+    <div class="notice">
+      <span>⚡</span>
+      <div><b>mAh sólo se compara al mismo voltaje.</b>Para sistemas con tensiones distintas, convertí primero a Wh.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🔋" />
+
+  <footer class="sources">
+    <div><b>Fórmula</b><br />Horas = capacidad (mAh) ÷ consumo (mA) × eficiencia.</div>
+    <div>Estimación orientativa · Verificá especificaciones</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.bat{--brand:#213f39;--accent:#89ef8d;--soft:#edf7ed}
+  .hcm.bat .hero{background:linear-gradient(135deg,#17342f,#315b52)}
+  .hcm.bat .control input[type="range"]{padding:12px 14px;accent-color:var(--brand)}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.bat');
+    if (!root) return;
+    var mah = document.getElementById('bat-mah'), ma = document.getElementById('bat-ma'), eff = document.getElementById('bat-eff');
+    var nf = function (x, d) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: d === undefined ? 1 : d }).format(x); };
+
+    function render() {
+      // Réplica de duracion-bateria-mah-consumo.ts
+      var cap = Number(mah.value) || 0, con = Number(ma.value) || 1, e = Number(eff.value) / 100;
+      var teorico = cap / con, horas = teorico * e;
+      document.getElementById('bat-eff-txt').textContent = eff.value + '%';
+      document.getElementById('bat-hours').innerHTML = nf(horas) + ' <small>horas</small>';
+      document.getElementById('bat-theory').textContent = nf(teorico) + ' horas';
+      document.getElementById('bat-days').textContent = 'Equivale a ' + nf(horas / 24) + ' días de uso continuo.';
+      var bar = root.querySelector('.battery i');
+      if (bar) bar.style.width = Math.min(100, Math.max(4, Number(eff.value))) + '%';
+    }
+
+    mah.addEventListener('input', render);
+    ma.addEventListener('input', render);
+    eff.addEventListener('input', render);
+    root.querySelectorAll('.chips button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        ma.value = b.getAttribute('data-ma');
+        root.querySelectorAll('.chips button').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+        render();
+      });
+    });
+    document.getElementById('bat-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+  })();
+</script>

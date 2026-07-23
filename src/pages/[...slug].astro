@@ -24,9 +24,16 @@ import ConversorMonedaLatam from '../components/ConversorMonedaLatam.astro';
 import MillasLatamDestino from '../components/MillasLatamDestino.astro';
 import PorcentajesFlagship from '../components/PorcentajesFlagship.astro';
 import TemperaturaHornoFlagship from '../components/TemperaturaHornoFlagship.astro';
-import MetrosLinealesFlagship from '../components/MetrosLinealesFlagship.astro';
 import Impresion3dFlagship from '../components/Impresion3dFlagship.astro';
 import PesoIdealPerroFlagship from '../components/PesoIdealPerroFlagship.astro';
+import BitsABytesMockup from '../components/mockups/BitsABytesMockup.astro';
+import MetrosLinealesM2Mockup from '../components/mockups/MetrosLinealesM2Mockup.astro';
+import DuracionBateriaMockup from '../components/mockups/DuracionBateriaMockup.astro';
+import PalabrasPaginasMockup from '../components/mockups/PalabrasPaginasMockup.astro';
+import NavidadMockup from '../components/mockups/NavidadMockup.astro';
+import EdadConejoMockup from '../components/mockups/EdadConejoMockup.astro';
+import MundialDebutMockup from '../components/mockups/MundialDebutMockup.astro';
+import VacunasBebeMockup from '../components/mockups/VacunasBebeMockup.astro';
 import CombustibleViajeFlagship from '../components/CombustibleViajeFlagship.astro';
 import GananciasCuartaCat from '../components/GananciasCuartaCat.astro';
 import IvaAgregarDiscriminar from '../components/IvaAgregarDiscriminar.astro';
@@ -1199,6 +1206,21 @@ const mtlRelated = isMetrosLineales
   ? ['calculadora-cortinas-medir-tela-ventana-anchotelaje', 'calculadora-rollos-empapelado-papel-pared', 'calculadora-deck-madera-tablas-tornillos']
       .map((s) => allCalcs.find((c: any) => c.slug === s)).filter(Boolean)
   : [];
+// Batch de mockups 23-07-2026: slug → componente bespoke
+const MOCKUP_BATCH: Record<string, string> = {
+  'calculadora-conversor-bits-a-bytes': 'bits',
+  'calculadora-conversor-metros-lineales-a-metros-cuadrados': 'metros-lineales',
+  'calculadora-duracion-bateria-mah-consumo': 'bateria',
+  'calculadora-palabras-paginas-conversor': 'palabras',
+  'calculadora-cuantos-dias-faltan-Navidad-2026': 'navidad',
+  'calculadora-edad-humana-conejo-anos': 'conejo',
+  'calculadora-mundial-2026-dias-hasta-debut-seleccion': 'mundial',
+  'calculadora-vacunas-bebe-calendario-2026-argentina-edad': 'vacunas',
+};
+const mockupBatch = MOCKUP_BATCH[calc.slug] || null;
+const mbRelated = mockupBatch
+  ? (calc.relatedSlugs || []).map((s: string) => allCalcs.find((c: any) => c.slug === s)).filter(Boolean)
+  : [];
 const PESO_PERRO_FLAGSHIP = new Set([
   'calculadora-peso-ideal-pitbull',
   'calculadora-peso-ideal-rottweiler',
@@ -1299,7 +1321,7 @@ const flagshipBespoke = isDiasEntreFechas || isAguinaldoSac || isLifeMiles || is
   || isIndemDespido || isSueldoBrutoNeto || isLiqRenuncia || isAguinaldoCasa
   || isGananciasCuarta || isIvaAgregarDisc || isInteresJudicial || isAportesPatronales
   || isTempHorno || isMetrosLineales || isImpresion3d || isCombustibleViaje
-  || isPesoPerro;
+  || isPesoPerro || !!mockupBatch;
 // El mockup no usa el color de la categoría (viajes→life/cian): va rosa coral.
 // Número a letras ya coincide (matematica→knowledge), no hace falta forzarlo.
 // Porcentajes: el mockup va violeta, pero la categoría es vida→life (cian).
@@ -1353,9 +1375,16 @@ const flagshipDomain: 'money' | 'data' | 'health' | 'home' | 'knowledge' | 'life
   {isNumeroALetras && <NumeroALetras calc={calc} related={nlRelated} />}
   {isPorcentajes && <PorcentajesFlagship calc={calc} related={pjRelated} />}
   {isTempHorno && <TemperaturaHornoFlagship calc={calc} related={thRelated} />}
-  {isMetrosLineales && <MetrosLinealesFlagship calc={calc} related={mtlRelated} />}
   {isImpresion3d && <Impresion3dFlagship calc={calc} related={i3Related} />}
   {isPesoPerro && <PesoIdealPerroFlagship calc={calc} related={ppRelated} />}
+  {mockupBatch === 'bits' && <BitsABytesMockup calc={calc} related={mbRelated} />}
+  {mockupBatch === 'metros-lineales' && <MetrosLinealesM2Mockup calc={calc} related={mtlRelated} />}
+  {mockupBatch === 'bateria' && <DuracionBateriaMockup calc={calc} related={mbRelated} />}
+  {mockupBatch === 'palabras' && <PalabrasPaginasMockup calc={calc} related={mbRelated} />}
+  {mockupBatch === 'navidad' && <NavidadMockup calc={calc} related={mbRelated} />}
+  {mockupBatch === 'conejo' && <EdadConejoMockup calc={calc} related={mbRelated} />}
+  {mockupBatch === 'mundial' && <MundialDebutMockup calc={calc} related={mbRelated} />}
+  {mockupBatch === 'vacunas' && <VacunasBebeMockup calc={calc} related={mbRelated} />}
   {isCombustibleViaje && <CombustibleViajeFlagship calc={calc} related={vcRelated} />}
   {isConversorLatam && <ConversorMonedaLatam calc={calc} related={cmRelated} />}
   {isMillasLatam && <MillasLatamDestino calc={calc} related={mlatamRelated} />}

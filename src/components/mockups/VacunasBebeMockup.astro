@@ -1,0 +1,174 @@
+---
+/**
+ * Flagship "Vacunas del bebé — Argentina" — mockup del batch, calcado.
+ * YMYL: la calc ORDENA fechas, no indica ni prescribe. La advertencia médica
+ * del mockup se mantiene tal cual y el disclaimer del motor sigue visible.
+ * Hitos y calendario: vacunas-bebe-calendario-2026-argentina-edad.ts.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const hoy = new Date();
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+// Caso por defecto del mockup: bebé de 6 meses
+const nac = new Date(hoy.getFullYear(), hoy.getMonth() - 6, hoy.getDate());
+
+// Hitos del Calendario Nacional que muestra el mockup (mismos offsets del motor)
+const HITOS = [
+  { m: 0, t: 'Al nacer', d: 'BCG y Hepatitis B según el registro de la maternidad' },
+  { m: 2, t: '2 meses', d: 'Pentavalente, Salk IPV, Rotavirus, Neumococo y Meningococo B (1ª)' },
+  { m: 4, t: '4 meses', d: 'Segundas dosis del esquema de los 2 meses' },
+  { m: 6, t: '6 meses', d: 'Pentavalente y Salk (3ª), Meningococo ACWY e Influenza' },
+  { m: 12, t: '12 meses', d: 'Triple Viral (1ª) y refuerzos de Neumococo y Meningococo B' },
+];
+const addMonths = (d: Date, m: number) => { const x = new Date(d); x.setMonth(x.getMonth() + m); return x; };
+const fmt = (d: Date, year = false) =>
+  d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short', ...(year ? { year: 'numeric' } : {}) }).replace('.', '');
+
+const mesesInit = 6;
+const diaMes = hoy.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+
+<main class="page hcm vac">
+  <div class="crumb">Inicio / <a href="/categoria/salud">Salud familiar</a> / Argentina / <b>Vacunas del bebé</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🇦🇷 AGENDA ORIENTATIVA 2026</span>
+      <h1>Calendario de vacunas según la edad del bebé</h1>
+      <p>Ingresá su fecha de nacimiento para ordenar hitos y próximas consultas. Confirmá siempre las indicaciones en su carnet y con el equipo de salud.</p>
+    </div>
+    <div class="hero-art">
+      <div class="calendar">
+        <span>Próximo hito</span>
+        <b id="vac-hito">6 meses</b>
+        <div class="days">
+          <i>L</i><i>M</i><i>M</i><i>J</i><i>V</i><i>S</i><i>D</i>
+          <i></i><i></i><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i>
+          <i>6</i><i class="hot">7</i><i>8</i><i>9</i><i>10</i><i>11</i><i>12</i>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="vac-form">
+      <h2>Armá su agenda</h2>
+      <p class="sub">No pedimos nombre ni guardamos datos.</p>
+      <div class="field">
+        <label>Fecha de nacimiento</label>
+        <div class="control"><input id="vac-birth" type="date" value={iso(nac)} max={iso(hoy)} /></div>
+      </div>
+      <div class="field">
+        <label>Prematurez <small>ajuste sólo informativo</small></label>
+        <div class="seg">
+          <button type="button" class="active" data-prem="no">No</button>
+          <button type="button" data-prem="si">Sí</button>
+        </div>
+      </div>
+      <button class="cta" type="submit">Ver hitos por edad →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over" id="vac-over">Edad al {diaMes}</div>
+        <div class="big" id="vac-age">{mesesInit} <small>meses</small></div>
+        <p class="answer">El próximo control debe verificarse con el carnet y el vacunatorio.</p>
+        <div class="result-box">
+          <span>Próximo paso sugerido</span>
+          <b id="vac-next">Revisar hito de 12 meses</b>
+          <small>La herramienta organiza fechas; no indica ni prescribe vacunas.</small>
+        </div>
+      </div>
+      <div class="equation">Llevá siempre el <b>carnet de vacunación</b>.</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Agenda por hitos</h2>
+      <p>Fechas calculadas desde el nacimiento.</p>
+    </div>
+    <div class="vaccine-list">
+      {HITOS.map((h) => (
+        <article class="dose">
+          <span class="dot"></span>
+          <div><b>{h.t}</b><small>{h.d}</small></div>
+          <time data-m={h.m}>{fmt(addMonths(nac, h.m), h.m >= 12)}</time>
+        </article>
+      ))}
+    </div>
+    <div class="notice medical">
+      <span>🩺</span>
+      <div><b>Esto no reemplaza el calendario oficial ni la consulta médica.</b>Las indicaciones pueden variar por antecedentes, campañas, prematurez, condiciones clínicas o actualizaciones sanitarias.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="💉" />
+
+  <footer class="sources">
+    <div><b>Fuente</b><br />Calendario Nacional de Vacunación · Ministerio de Salud de la Nación.</div>
+    <div>Agenda orientativa · No es indicación médica</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.vac{--brand:#215369;--accent:#9ce4c5;--soft:#edf8f3}
+  .hcm.vac .hero{background:linear-gradient(135deg,#194559,#3e7486)}
+  .hcm.vac .result{background:#194d62}
+  .hcm.vac .notice.medical{background:#fff7dc;border-color:#ead995;color:#594b19}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.vac');
+    if (!root) return;
+    var birth = document.getElementById('vac-birth');
+    var HITOS = [0, 2, 4, 6, 12];
+
+    function add(d, m) { var x = new Date(d); x.setMonth(x.getMonth() + m); return x; }
+    function fmt(d, year) {
+      var o = { day: 'numeric', month: 'short' };
+      if (year) o.year = 'numeric';
+      return d.toLocaleDateString('es-AR', o).replace('.', '');
+    }
+
+    function render() {
+      var p = String(birth.value || '').split('-').map(Number);
+      if (p.length !== 3 || p.some(isNaN)) return;
+      var b = new Date(p[0], p[1] - 1, p[2]);
+      var now = new Date(); now.setHours(0, 0, 0, 0);
+      var meses = Math.max(0,
+        (now.getFullYear() - b.getFullYear()) * 12 + now.getMonth() - b.getMonth() - (now.getDate() < b.getDate() ? 1 : 0));
+
+      document.getElementById('vac-over').textContent =
+        'Edad al ' + now.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+      document.getElementById('vac-age').innerHTML = meses + ' <small>' + (meses === 1 ? 'mes' : 'meses') + '</small>';
+
+      // Próximo hito = el primero que todavía no cumplió
+      var next = null;
+      for (var i = 0; i < HITOS.length; i++) { if (HITOS[i] > meses) { next = HITOS[i]; break; } }
+      var nextTxt = next === null ? 'Consultar esquema de 15 y 18 meses' : 'Revisar hito de ' + next + ' meses';
+      document.getElementById('vac-next').textContent = nextTxt;
+      document.getElementById('vac-hito').textContent = next === null ? '15+ meses' : next + ' meses';
+
+      root.querySelectorAll('.vaccine-list time').forEach(function (t) {
+        var m = Number(t.getAttribute('data-m'));
+        t.textContent = fmt(add(b, m), m >= 12);
+      });
+    }
+
+    birth.addEventListener('change', render);
+    root.querySelectorAll('.seg button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        root.querySelectorAll('.seg button').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+      });
+    });
+    document.getElementById('vac-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

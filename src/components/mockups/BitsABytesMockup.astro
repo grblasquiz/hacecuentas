@@ -1,0 +1,156 @@
+---
+/**
+ * Flagship "Bits a bytes" — mockup del batch 23-07-2026, calcado.
+ * SSR con el motor real (conversor-bits-a-bytes.ts); el script inline replica
+ * la misma cuenta (1 byte = 8 bits) porque no puede importar.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Caso por defecto del mockup: 100 Mb → MB
+const D = { qty: 100, dir: 'bits' as const, escala: 'Mega' };
+const init = D.qty / 8;
+const nf = (x: number) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 4 }).format(x);
+---
+
+<main class="page hcm bb">
+  <div class="crumb">Inicio / <a href="/categoria/tecnologia">Tecnología</a> / <b>Bits a bytes</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">💾 CONVERSIÓN DIGITAL</span>
+      <h1>Bits y bytes, sin confusiones</h1>
+      <p>Convertí unidades de datos y velocidad. Entendé por qué 100 Mbps de internet no descargan a 100 MB/s.</p>
+    </div>
+    <div class="hero-art">
+      <div class="bits">01001000 01100001 01100011 11000011 10101001</div>
+      <div class="hero-stat"><span>Regla clave</span><b>8 bits = 1 byte</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="bb-form">
+      <h2>Convertí cualquier cantidad</h2>
+      <p class="sub">Mayúscula B = bytes; minúscula b = bits.</p>
+      <div class="seg">
+        <button type="button" class="active" data-dir="bits">Bits → bytes</button>
+        <button type="button" data-dir="bytes">Bytes → bits</button>
+      </div>
+      <div class="field">
+        <label>Cantidad</label>
+        <div class="control"><input id="bb-qty" type="number" min="0" step="any" value={D.qty} /><span id="bb-unit">Mb</span></div>
+      </div>
+      <div class="field">
+        <label>Escala</label>
+        <div class="chips">
+          <button type="button" data-esc="">Base</button>
+          <button type="button" class="active" data-esc="Mega">Mega</button>
+          <button type="button" data-esc="Giga">Giga</button>
+          <button type="button" data-esc="Tera">Tera</button>
+        </div>
+      </div>
+      <button class="cta" type="submit">Convertir →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Resultado</div>
+        <div class="big" id="bb-result">{nf(init)} <small>MB</small></div>
+        <p class="answer" id="bb-explain">100 megabits equivalen a 12,5 megabytes.</p>
+        <div class="result-box">
+          <span>Velocidad de descarga ideal</span>
+          <b id="bb-speed">≈ {nf(init)} MB/s</b>
+          <small id="bb-speed-note">Para una conexión anunciada como 100 Mbps.</small>
+        </div>
+      </div>
+      <div class="equation" id="bb-eq"><b>100 ÷ 8 = {nf(init)}</b></div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>La diferencia que importa</h2>
+      <p>Marketing de internet vs tamaño de archivos.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>🌐</i><h3>Mbps · velocidad</h3><p>Los proveedores suelen anunciar la conexión en megabits por segundo.</p></article>
+      <article class="mini"><i>📁</i><h3>MB · archivos</h3><p>El sistema muestra descargas y almacenamiento en megabytes.</p></article>
+      <article class="mini"><i>➗</i><h3>Dividí por 8</h3><p>100 Mbps dan hasta 12,5 MB/s antes de pérdidas y sobrecarga.</p></article>
+    </div>
+    <div class="notice">
+      <span>🔤</span>
+      <div><b>Una letra cambia todo.</b>MB y Mb no son lo mismo: la B mayúscula representa bytes.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="💾" />
+
+  <footer class="sources">
+    <div><b>Conversión exacta</b><br />1 byte = 8 bits. Prefijos decimales para redes.</div>
+    <div>Sin redondeos ocultos</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.bb{--brand:#172d50;--accent:#6ee7ff;--soft:#edf4fb}
+  .hcm.bb .hero{background:linear-gradient(135deg,#132644,#254d7c)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.bb');
+    if (!root) return;
+    var dir = 'bits', esc = 'Mega';
+    var PREF = { '': ['b', 'B', ''], Mega: ['Mb', 'MB', 'mega'], Giga: ['Gb', 'GB', 'giga'], Tera: ['Tb', 'TB', 'tera'] };
+    var qty = document.getElementById('bb-qty');
+    var nf = function (x) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: 4 }).format(x); };
+
+    function render() {
+      var q = Number(qty.value) || 0;
+      // 1 byte = 8 bits (mismo factor que conversor-bits-a-bytes.ts)
+      var r = dir === 'bits' ? q / 8 : q * 8;
+      var p = PREF[esc];
+      var uIn = dir === 'bits' ? p[0] : p[1];
+      var uOut = dir === 'bits' ? p[1] : p[0];
+      var nomIn = (p[2] ? p[2] : '') + (dir === 'bits' ? 'bits' : 'bytes');
+      var nomOut = (p[2] ? p[2] : '') + (dir === 'bits' ? 'bytes' : 'bits');
+      document.getElementById('bb-unit').textContent = uIn;
+      document.getElementById('bb-result').innerHTML = nf(r) + ' <small>' + uOut + '</small>';
+      document.getElementById('bb-explain').textContent = nf(q) + ' ' + nomIn + ' equivalen a ' + nf(r) + ' ' + nomOut + '.';
+      var speed = document.getElementById('bb-speed');
+      var note = document.getElementById('bb-speed-note');
+      if (dir === 'bits') {
+        speed.textContent = '≈ ' + nf(r) + ' ' + uOut + '/s';
+        note.textContent = 'Para una conexión anunciada como ' + nf(q) + ' ' + uIn + 'ps.';
+      } else {
+        speed.textContent = 'No aplica a velocidad';
+        note.textContent = 'La velocidad de los planes se anuncia en bits por segundo.';
+      }
+      document.getElementById('bb-eq').innerHTML = '<b>' + nf(q) + ' ' + (dir === 'bits' ? '÷' : '×') + ' 8 = ' + nf(r) + '</b>';
+    }
+
+    root.querySelectorAll('.seg button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        dir = b.getAttribute('data-dir');
+        root.querySelectorAll('.seg button').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+        render();
+      });
+    });
+    root.querySelectorAll('.chips button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        esc = b.getAttribute('data-esc');
+        root.querySelectorAll('.chips button').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+        render();
+      });
+    });
+    qty.addEventListener('input', render);
+    document.getElementById('bb-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+  })();
+</script>

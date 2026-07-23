@@ -1,0 +1,142 @@
+---
+/**
+ * Flagship "Edad humana del conejo" — mockup del batch 23-07-2026, calcado.
+ * SSR con edad-conejo.ts (1er año = 21 humanos; después +6/8/10 según tamaño).
+ * Ojo: el mockup traía otra curva (20/8/4); manda el motor.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { edadConejo } from '../../lib/formulas/edad-conejo';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const D = { edadConejo: 3, raza: 'mediano' };
+const init = edadConejo(D);
+---
+
+<main class="page hcm rab">
+  <div class="crumb">Inicio / <a href="/categoria/mascotas">Mascotas</a> / <b>Edad humana del conejo</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🐇 EDAD Y ETAPA DE VIDA</span>
+      <h1>La edad de tu conejo en años humanos</h1>
+      <p>Convertí su edad y entendé en qué etapa está. La raza y el tamaño cambian la expectativa de vida, no sólo el número.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🐇</div>
+      <div class="hero-stat"><span>3 años de conejo</span><b>≈ {init.edadHumana} humanos</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="rab-form">
+      <h2>Contanos sobre tu conejo</h2>
+      <p class="sub">Edad exacta y tamaño adulto.</p>
+      <div class="grid2">
+        <div class="field">
+          <label>Edad <small>años</small></label>
+          <div class="control"><input id="rab-age" type="number" min="0.1" max="15" step="0.1" value={D.edadConejo} /><span>años</span></div>
+        </div>
+        <div class="field">
+          <label>Tamaño adulto</label>
+          <div class="control">
+            <select id="rab-size">
+              <option value="enano">Enano · menos de 2 kg</option>
+              <option value="mediano" selected>Mediano · 2 a 5 kg</option>
+              <option value="gigante">Gigante · más de 5 kg</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <button class="cta" type="submit">Conocer su etapa →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Equivale aproximadamente a</div>
+        <div class="big" id="rab-human">{init.edadHumana} <small>años humanos</small></div>
+        <p class="answer" id="rab-stage">Está en etapa adulta: actividad diaria y controles veterinarios regulares.</p>
+        <div class="result-box">
+          <span>Etapa de vida</span>
+          <b id="rab-stage-name">{init.etapaVida}</b>
+          <small id="rab-life">Esperanza de vida promedio: {init.esperanzaVida}. La equivalencia es orientativa, no una fórmula clínica.</small>
+        </div>
+      </div>
+      <div class="equation">El primer año equivale a <b>21 años humanos</b>; después el ritmo baja.</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Qué cambia en cada etapa</h2>
+      <p>Más útil que memorizar una equivalencia.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>🌱</i><h3>0–1 año · Crecimiento</h3><p>Socialización, alimentación específica y seguimiento dental temprano.</p></article>
+      <article class="mini"><i>⚡</i><h3>1–5 años · Adulto</h3><p>Actividad regular, heno como base y chequeo anual.</p></article>
+      <article class="mini"><i>🩺</i><h3>6+ años · Senior</h3><p>Controles más frecuentes, peso, dientes y movilidad bajo observación.</p></article>
+    </div>
+    <div class="notice">
+      <span>🐰</span>
+      <div><b>No multipliques por siete.</b>Los conejos maduran muy rápido el primer año y después envejecen de forma más gradual.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🐇" />
+
+  <footer class="sources">
+    <div><b>Uso orientativo</b><br />Etapas de vida y longevidad varían según genética, tamaño y cuidados.</div>
+    <div>Consultá a un veterinario de animales exóticos</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.rab{--brand:#5a3b64;--accent:#f2d87c;--soft:#f4edf6}
+  .hcm.rab .hero{background:linear-gradient(135deg,#4d3157,#795a84)}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.rab');
+    if (!root) return;
+    var age = document.getElementById('rab-age'), size = document.getElementById('rab-size');
+
+    function render() {
+      // Réplica de edad-conejo.ts
+      var a = Number(age.value) || 0, raza = size.value;
+      if (a <= 0) return;
+      var factor = raza === 'enano' ? 6 : raza === 'gigante' ? 10 : 8;
+      var esperanza = raza === 'enano' ? '10-12 años' : raza === 'gigante' ? '5-7 años' : '8-10 años';
+      var humana = a <= 1 ? a * 21 : 21 + (a - 1) * factor;
+
+      var etapa;
+      if (a < 0.5) etapa = 'Cachorro (bebé)';
+      else if (a < 1) etapa = 'Adolescente';
+      else if (a < 3) etapa = 'Adulto joven';
+      else if (a < 5) etapa = 'Adulto maduro';
+      else if (a < 7) etapa = 'Senior';
+      else etapa = 'Senior avanzado (geriátrico)';
+      if (raza === 'gigante') {
+        if (a >= 3 && a < 4) etapa = 'Adulto maduro';
+        else if (a >= 4 && a < 5) etapa = 'Senior';
+        else if (a >= 5) etapa = 'Senior avanzado (geriátrico)';
+      }
+
+      document.getElementById('rab-human').innerHTML = Math.round(humana) + ' <small>años humanos</small>';
+      document.getElementById('rab-stage-name').textContent = etapa;
+      document.getElementById('rab-life').textContent =
+        'Esperanza de vida promedio: ' + esperanza + '. La equivalencia es orientativa, no una fórmula clínica.';
+      document.getElementById('rab-stage').textContent = /Senior/.test(etapa)
+        ? 'Está en etapa senior: conviene reforzar controles de dientes, peso y movilidad.'
+        : (a < 1
+          ? 'Está creciendo: alimentación, socialización y controles tempranos son clave.'
+          : 'Está en etapa adulta: actividad diaria y controles veterinarios regulares.');
+    }
+
+    age.addEventListener('input', render);
+    size.addEventListener('change', render);
+    document.getElementById('rab-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+  })();
+</script>

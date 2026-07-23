@@ -1,0 +1,156 @@
+---
+/**
+ * Flagship "Mundial 2026 — debut de tu selección" — mockup del batch, calcado.
+ * El torneo ya terminó (19-jul-2026): el mockup pide UX sensible al tiempo, así
+ * que el estado (cuenta regresiva / hoy / histórico) se decide en el cliente
+ * contra la fecha real, no contra el día del build.
+ * Datos: mundial-2026-dias-debut.ts (fechas, rival con resultado, sede, hora).
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { mundial2026DiasDebut } from '../../lib/formulas/mundial-2026-dias-debut';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const seleccionField = (calc.fields || []).find((f: any) => f.id === 'seleccion');
+const opciones: Array<{ value: string; label: string }> = seleccionField?.options || [];
+
+const FLAGS: Record<string, string> = {
+  argentina: '🇦🇷', brasil: '🇧🇷', uruguay: '🇺🇾', mexico: '🇲🇽', usa: '🇺🇸', canada: '🇨🇦',
+  francia: '🇫🇷', inglaterra: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', espana: '🇪🇸', portugal: '🇵🇹', alemania: '🇩🇪',
+  'paises-bajos': '🇳🇱', belgica: '🇧🇪', croacia: '🇭🇷', colombia: '🇨🇴', ecuador: '🇪🇨',
+  paraguay: '🇵🇾', marruecos: '🇲🇦', japon: '🇯🇵', 'corea-del-sur': '🇰🇷',
+};
+
+// Ficha de cada selección, del motor real, embebida para el cliente
+const DATA = Object.fromEntries(opciones.map((o) => {
+  const r = mundial2026DiasDebut({ seleccion: o.value, fechaHoy: '2026-06-01' });
+  return [o.value, { n: o.label, fecha: r.fechaDebut, rival: r.rivalDebut, sede: r.sede, hora: r.horarioBsAs }];
+}));
+
+const hoy = new Date();
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const arg = mundial2026DiasDebut({ seleccion: 'argentina', fechaHoy: iso(hoy) });
+const diasArg = Math.abs(arg.dias);
+const fArg = new Date(arg.fechaDebut + 'T00:00:00');
+const fmtLargo = (d: Date) => d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+const fmtCorto = (d: Date) => d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' }).replace('.', '').toUpperCase();
+const finalizado = hoy > new Date('2026-07-19T23:59:59');
+---
+
+<main class="page hcm wc" data-teams={JSON.stringify(DATA)}>
+  <div class="crumb">Inicio / <a href="/deportes">Deportes</a> / Mundial 2026 / <b>Debut de selección</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag" id="wc-tag">🏆 MUNDIAL 2026 · {finalizado ? 'FINALIZADO' : 'EN CURSO'}</span>
+      <h1>El debut de cada selección</h1>
+      <p>El torneo se jugó del 11 de junio al 19 de julio de 2026. Consultá cuándo debutó tu selección y reviví su punto de partida en la fase de grupos.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">⚽</div>
+      <div class="hero-stat"><span>Estado actual</span><b id="wc-estado">{finalizado ? 'Evento finalizado' : 'Torneo en curso'}</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="wc-form">
+      <h2>Elegí tu selección</h2>
+      <p class="sub">Mostramos la fecha histórica, sin cuentas regresivas negativas.</p>
+      <div class="field">
+        <label>Selección</label>
+        <div class="control">
+          <select id="wc-team">
+            {opciones.map((o) => (
+              <option value={o.value} selected={o.value === 'argentina'}>{FLAGS[o.value] ? FLAGS[o.value] + ' ' : ''}{o.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <button class="cta" type="submit">Ver su debut →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over" id="wc-over">Argentina debutó</div>
+        <div class="big" id="wc-ago">hace {diasArg} <small>días</small></div>
+        <p class="answer" id="wc-match">El {fmtLargo(fArg)} ante {arg.rivalDebut}.</p>
+        <div class="result-box">
+          <span>Contexto</span>
+          <b id="wc-date">{fmtCorto(fArg)} · Fase de grupos</b>
+          <small id="wc-ctx">{arg.sede} · {arg.horarioBsAs}. El Mundial se disputó del 11 de junio al 19 de julio de 2026.</small>
+        </div>
+      </div>
+      <div class="equation">Consulta histórica actualizada al <b id="wc-today">{hoy.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })}</b></div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Fechas clave del torneo</h2>
+      <p>Una línea de tiempo ya cerrada.</p>
+    </div>
+    <div class="timeline">
+      <article class="step"><span>Inicio</span><b>11 jun</b><em>Primer partido</em></article>
+      <article class="step"><span id="wc-tl-team">Argentina</span><b id="wc-tl-date">{fmtCorto(fArg).toLowerCase()}</b><em>Debut</em></article>
+      <article class="step"><span>Eliminatorias</span><b>28 jun</b><em>Octavos</em></article>
+      <article class="step"><span>Final</span><b>19 jul</b><em>Cierre del torneo</em></article>
+    </div>
+    <div class="notice">
+      <span>✅</span>
+      <div><b>La cuenta se ajusta sola.</b>Antes del debut muestra cuenta regresiva; el día del partido, "debuta hoy"; después, la fecha histórica con el resultado.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="⚽" />
+
+  <footer class="sources">
+    <div><b>Datos del torneo</b><br />Calendario FIFA 2026 · Fechas en horario local del partido.</div>
+    <div id="wc-foot">Estado: {finalizado ? 'evento finalizado' : 'torneo en curso'}</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.wc{--brand:#163b63;--accent:#f6d450;--soft:#edf3f9}
+  .hcm.wc .hero{background:linear-gradient(135deg,#112f52,#2c5b8c)}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.wc');
+    if (!root) return;
+    var TEAMS = JSON.parse(root.getAttribute('data-teams') || '{}');
+    var sel = document.getElementById('wc-team');
+
+    function render() {
+      var t = TEAMS[sel.value];
+      if (!t) return;
+      var now = new Date(); now.setHours(0, 0, 0, 0);
+      var d = new Date(t.fecha + 'T00:00:00');
+      var dias = Math.round((d.getTime() - now.getTime()) / 86400000);
+
+      document.getElementById('wc-over').textContent =
+        dias > 0 ? t.n + ' debuta en' : dias === 0 ? t.n + ' debuta' : t.n + ' debutó';
+      document.getElementById('wc-ago').innerHTML =
+        dias > 0 ? dias + ' <small>' + (dias === 1 ? 'día' : 'días') + '</small>'
+        : dias === 0 ? 'hoy'
+        : 'hace ' + Math.abs(dias) + ' <small>' + (Math.abs(dias) === 1 ? 'día' : 'días') + '</small>';
+      document.getElementById('wc-match').textContent =
+        'El ' + d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ' ante ' + t.rival + '.';
+      document.getElementById('wc-date').textContent =
+        d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' }).replace('.', '').toUpperCase() + ' · Fase de grupos';
+      document.getElementById('wc-ctx').textContent =
+        t.sede + ' · ' + t.hora + '. El Mundial se disputó del 11 de junio al 19 de julio de 2026.';
+      document.getElementById('wc-today').textContent =
+        new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+      document.getElementById('wc-tl-team').textContent = t.n;
+      document.getElementById('wc-tl-date').textContent =
+        d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }).replace('.', '');
+    }
+
+    sel.addEventListener('change', render);
+    document.getElementById('wc-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

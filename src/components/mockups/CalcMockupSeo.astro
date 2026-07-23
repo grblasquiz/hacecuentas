@@ -1,0 +1,64 @@
+---
+/**
+ * Bloque SEO compartido por los flagships del batch de mockups (23-07-2026).
+ * El mockup termina en su última sección; esto agrega debajo el contenido que
+ * rankea (tablas de referencia, explicación, FAQ, relacionadas) con el mismo
+ * sistema visual (.hcm). Va DENTRO del <main class="page hcm"> del componente.
+ */
+import { md } from '../../lib/markdown';
+
+interface Props { calc: any; related?: any[]; icon?: string; }
+const { calc, related = [], icon = '🧮' } = Astro.props;
+
+const tablas = calc.referenceTables || [];
+const faq = calc.faq || [];
+---
+
+{tablas.map((t: any) => (
+  <section class="section">
+    <div class="section-head">
+      <h2>{t.title}</h2>
+      {t.caption && <p>{t.caption}</p>}
+    </div>
+    <div class="tablewrap">
+      <table class="datatable">
+        <thead><tr>{t.headers.map((h: string) => <th>{h}</th>)}</tr></thead>
+        <tbody>{t.rows.map((r: string[]) => <tr>{r.map((c) => <td>{c}</td>)}</tr>)}</tbody>
+      </table>
+    </div>
+    {t.note && <p class="tnote">{t.note}</p>}
+  </section>
+))}
+
+{calc.explanation && (
+  <section class="section prose" set:html={md(calc.explanation)} />
+)}
+
+{faq.length > 0 && (
+  <section class="section" id="preguntas">
+    <div class="section-head"><h2>Preguntas frecuentes</h2><p>Lo que más se consulta.</p></div>
+    <div class="faq">
+      {faq.map((f: any, idx: number) => (
+        <details open={idx === 0}>
+          <summary><span>{f.q}</span><i aria-hidden="true">⌄</i></summary>
+          <div class="a" set:html={md(f.a)} />
+        </details>
+      ))}
+    </div>
+  </section>
+)}
+
+{related.length > 0 && (
+  <section class="section">
+    <div class="section-head"><h2>Seguí calculando</h2><p>Herramientas relacionadas.</p></div>
+    <div class="rel">
+      {related.slice(0, 3).map((c: any) => (
+        <a href={`/${c.slug}`}>
+          <i aria-hidden="true">{c.icon || icon}</i>
+          <b>{String(c.h1 || c.title || '').split('|')[0].split('(')[0].trim()}</b>
+          <span>Calcular →</span>
+        </a>
+      ))}
+    </div>
+  </section>
+)}

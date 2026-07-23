@@ -1,0 +1,177 @@
+---
+/**
+ * Flagship "Cuánto falta para Navidad" — mockup del batch 23-07-2026, calcado.
+ * SSR con cuanto-falta-para-navidad.ts. El conteo se recalcula en el cliente
+ * contra la fecha real del navegador (la página es estática: el SSR congela el
+ * día del build, así que el inline pisa el número al cargar).
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { cuantoFaltaParaNavidad } from '../../lib/formulas/cuanto-falta-para-navidad';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const hoy = new Date();
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const init = cuantoFaltaParaNavidad({ fechaHoy: iso(hoy) });
+const anio = hoy.getMonth() === 11 && hoy.getDate() > 25 ? hoy.getFullYear() + 1 : hoy.getFullYear();
+const navidad = new Date(anio, 11, 25);
+const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const fmtLargo = (d: Date) => d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
+const restoSemana = init.diasFaltan % 7;
+
+// Hitos del mockup: fechas reales contando hacia atrás desde el 25/12
+const hito = (dias: number) => {
+  const d = new Date(navidad.getTime() - dias * 86400000);
+  return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }).replace('.', '');
+};
+const HITOS = [
+  { label: 'Faltan 100 días', fecha: hito(100), que: 'Empezar presupuesto' },
+  { label: 'Faltan 50 días', fecha: hito(50), que: 'Comprar regalos' },
+  { label: 'Faltan 30 días', fecha: hito(30), que: 'Definir la cena' },
+  { label: 'Falta 1 semana', fecha: hito(7), que: 'Últimos detalles' },
+];
+---
+
+<main class="page hcm xmas" data-year={anio}>
+  <div class="crumb">Inicio / <a href="/categoria/vida">Fechas</a> / <b>Navidad {anio}</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🎄 CUENTA REGRESIVA</span>
+      <h1>¿Cuánto falta para Navidad?</h1>
+      <p>Días, semanas y fines de semana hasta el {DIAS[navidad.getDay()]} 25 de diciembre de {anio}. Elegí una fecha para planificar desde cualquier día.</p>
+    </div>
+    <div class="hero-art">
+      <div class="ornaments">🎄🎁</div>
+      <div class="hero-stat"><span>Navidad cae</span><b>{DIAS[navidad.getDay()]}</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="xm-form">
+      <h2>Contá desde una fecha</h2>
+      <p class="sub">Usamos hoy por defecto.</p>
+      <div class="field">
+        <label>Fecha de inicio <small>hasta 25/12/{anio}</small></label>
+        <div class="control"><input id="xm-date" type="date" value={iso(hoy)} /></div>
+      </div>
+      <div class="chips">
+        <button type="button" class="active" data-preset="hoy">Hoy</button>
+        <button type="button" data-preset={`${anio}-09-01`}>1 de septiembre</button>
+        <button type="button" data-preset={`${anio}-12-01`}>1 de diciembre</button>
+      </div>
+      <button class="cta" type="submit">Actualizar cuenta regresiva →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Faltan</div>
+        <div class="big" id="xm-days">{init.diasFaltan} <small>días</small></div>
+        <p class="answer" id="xm-copy">Desde el {fmtLargo(hoy)} hasta Navidad.</p>
+        <div class="result-box">
+          <span>También son</span>
+          <b id="xm-weeks">{init.semanas} semanas{restoSemana ? ` y ${restoSemana} ${restoSemana === 1 ? 'día' : 'días'}` : ''}</b>
+          <small id="xm-weekends">{init.domingos} domingos hasta Navidad</small>
+        </div>
+      </div>
+      <div class="equation">Destino: <b>{DIAS[navidad.getDay()]} 25 de diciembre de {anio}</b></div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>La cuenta, en hitos</h2>
+      <p>Para organizar regalos, viaje y cena.</p>
+    </div>
+    <div class="timeline">
+      {HITOS.map((h) => (
+        <article class="step"><span>{h.label}</span><b>{h.fecha}</b><em>{h.que}</em></article>
+      ))}
+    </div>
+    <div class="notice">
+      <span>✨</span>
+      <div><b>Respuesta rápida</b>La cuenta excluye el día inicial e incluye el tiempo completo hasta el comienzo del 25 de diciembre.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🎄" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Diferencia calendario entre dos fechas, contemplando años bisiestos.</div>
+    <div>Resultado en tu navegador · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.xmas{--brand:#174b3b;--accent:#f7db63;--soft:#edf4ef}
+  .hcm.xmas .hero{background:linear-gradient(135deg,#123f32,#7f2430)}
+  .hcm.xmas .ornaments{font-size:90px;letter-spacing:18px}
+  @media(max-width:760px){.hcm.xmas .ornaments{font-size:64px;letter-spacing:10px}}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.xmas');
+    if (!root) return;
+    var input = document.getElementById('xm-date');
+    var DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+    function hoyLocal() {
+      var n = new Date();
+      return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+    }
+
+    function render() {
+      // Réplica de cuanto-falta-para-navidad.ts
+      var p = String(input.value || '').split('-').map(Number);
+      if (p.length !== 3 || p.some(isNaN)) return;
+      var desde = new Date(p[0], p[1] - 1, p[2]);
+      var year = desde.getMonth() === 11 && desde.getDate() > 25 ? desde.getFullYear() + 1 : desde.getFullYear();
+      var navidad = new Date(year, 11, 25);
+      var ms = navidad.getTime() - desde.getTime();
+      var dias = Math.max(0, Math.ceil(ms / 86400000));
+      var semanas = Math.floor(dias / 7), resto = dias % 7;
+
+      // domingos que faltan (mismo conteo día-por-día que el motor)
+      var domingos = 0, cur = new Date(desde.getTime());
+      cur.setDate(cur.getDate() + 1);
+      while (cur.getTime() <= navidad.getTime()) {
+        if (cur.getDay() === 0) domingos++;
+        cur.setDate(cur.getDate() + 1);
+      }
+
+      document.getElementById('xm-days').innerHTML = dias + ' <small>' + (dias === 1 ? 'día' : 'días') + '</small>';
+      document.getElementById('xm-weeks').textContent =
+        semanas + ' semanas' + (resto ? ' y ' + resto + ' ' + (resto === 1 ? 'día' : 'días') : '');
+      document.getElementById('xm-weekends').textContent = domingos + ' domingos hasta Navidad';
+      document.getElementById('xm-copy').textContent = dias === 0
+        ? '¡Hoy es Navidad! 🎄'
+        : 'Desde el ' + desde.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }) + ' hasta Navidad.';
+      var eq = root.querySelector('.equation');
+      if (eq) eq.innerHTML = 'Destino: <b>' + DIAS[navidad.getDay()] + ' 25 de diciembre de ' + year + '</b>';
+    }
+
+    root.querySelectorAll('.chips button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var v = b.getAttribute('data-preset');
+        if (v === 'hoy') {
+          var h = hoyLocal();
+          v = h.getFullYear() + '-' + String(h.getMonth() + 1).padStart(2, '0') + '-' + String(h.getDate()).padStart(2, '0');
+        }
+        input.value = v;
+        root.querySelectorAll('.chips button').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+        render();
+      });
+    });
+    input.addEventListener('change', render);
+    document.getElementById('xm-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+
+    // La página es estática: el SSR congela el día del build → recalculo al cargar.
+    var h = hoyLocal();
+    input.value = h.getFullYear() + '-' + String(h.getMonth() + 1).padStart(2, '0') + '-' + String(h.getDate()).padStart(2, '0');
+    render();
+  })();
+</script>

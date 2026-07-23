@@ -1,0 +1,173 @@
+---
+/**
+ * Flagship "Palabras a páginas" — mockup del batch 23-07-2026, calcado.
+ * SSR con palabras-por-pagina.ts (500/375/250 pal-pág ajustado por tamaño de
+ * fuente); el inline replica la misma cuenta.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { palabrasPorPagina } from '../../lib/formulas/palabras-por-pagina';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const D = { cantidad: 2000, unidadEntrada: 'palabras', interlineado: 'doble', fuente: 'times', tamanoFuente: 12 };
+const init = palabrasPorPagina(D);
+const nf = (x: number, d = 1) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: d }).format(x);
+
+// Referencia rápida del mockup, corrida por el motor real
+const REF = [
+  { w: 500, il: 'simple', txt: 'Interlineado simple' },
+  { w: 500, il: 'doble', txt: 'Interlineado doble' },
+  { w: 1000, il: 'doble', txt: 'Interlineado doble' },
+  { w: 2500, il: 'doble', txt: 'Interlineado doble' },
+].map((r) => ({
+  ...r,
+  pag: palabrasPorPagina({ ...D, cantidad: r.w, interlineado: r.il }).paginas,
+}));
+---
+
+<main class="page hcm wp">
+  <div class="crumb">Inicio / <a href="/categoria/educacion">Educación</a> / <b>Palabras a páginas</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">✍️ CONVERSOR DE EXTENSIÓN</span>
+      <h1>¿Cuántas páginas son tus palabras?</h1>
+      <p>Estimá la extensión real según interlineado, tipografía y tamaño. Ideal para trabajos, ensayos y manuscritos.</p>
+    </div>
+    <div class="hero-art">
+      <div class="doc-preview"><b>Trabajo práctico</b><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="hero-stat"><span>2.000 palabras</span><b>≈ {nf(init.paginas)} páginas</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="wp-form">
+      <h2>Configurá tu documento</h2>
+      <p class="sub">Los detalles de formato cambian el resultado.</p>
+      <div class="seg">
+        <button type="button" class="active" data-u="palabras">Palabras → páginas</button>
+        <button type="button" data-u="paginas">Páginas → palabras</button>
+      </div>
+      <div class="field">
+        <label id="wp-qty-lbl">Cantidad de palabras</label>
+        <div class="control"><input id="wp-qty" type="number" min="1" step="1" value={D.cantidad} /><span id="wp-qty-unit">palabras</span></div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Interlineado</label>
+          <div class="control">
+            <select id="wp-il">
+              <option value="simple">Simple</option>
+              <option value="1.5">1,5 líneas</option>
+              <option value="doble" selected>Doble</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Tipografía</label>
+          <div class="control">
+            <select id="wp-font">
+              <option value="12" selected>Times New Roman 12</option>
+              <option value="12.5">Arial 12</option>
+              <option value="13">Calibri 11</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <button class="cta" type="submit">Estimar páginas →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Extensión estimada</div>
+        <div class="big" id="wp-out">{nf(init.paginas)} <small>páginas</small></div>
+        <p class="answer" id="wp-desc">Con interlineado doble, Times New Roman 12 y márgenes estándar.</p>
+        <div class="result-box">
+          <span>Tiempo de lectura</span>
+          <b id="wp-read">≈ {init.tiempoLectura} minutos</b>
+          <small>A un ritmo medio de 200 palabras por minuto.</small>
+        </div>
+      </div>
+      <div class="equation"><b id="wp-ppp">250 palabras</b> por página</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Referencia rápida</h2>
+      <p>Mismo texto, distinto formato.</p>
+    </div>
+    <div class="timeline">
+      {REF.map((r) => (
+        <article class="step">
+          <span>{nf(r.w, 0)} palabras</span>
+          <b>{nf(r.pag)} {r.pag === 1 ? 'pág.' : 'págs.'}</b>
+          <em>{r.txt}</em>
+        </article>
+      ))}
+    </div>
+    <div class="notice">
+      <span>📄</span>
+      <div><b>Una estimación, no un límite exacto.</b>Títulos, citas, tablas, notas al pie y saltos de sección pueden sumar páginas.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="✍️" />
+
+  <footer class="sources">
+    <div><b>Supuesto base</b><br />Página A4/carta, márgenes estándar y texto corrido.</div>
+    <div>Resultado instantáneo · Sin subir tu documento</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.wp{--brand:#273b69;--accent:#90d7ff;--soft:#eef3fb}
+  .hcm.wp .hero{background:linear-gradient(135deg,#22345f,#4968a2)}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.wp');
+    if (!root) return;
+    var unidad = 'palabras';
+    var qty = document.getElementById('wp-qty'), il = document.getElementById('wp-il'), font = document.getElementById('wp-font');
+    var nf = function (x, d) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: d === undefined ? 1 : d }).format(x); };
+
+    function render() {
+      // Réplica de palabras-por-pagina.ts
+      var base = il.value === 'simple' ? 500 : il.value === '1.5' ? 375 : 250;
+      var tam = Number(font.value) || 12;
+      var ppg = base * (12 / tam);
+      var cant = Number(qty.value) || 0;
+      var palabras = unidad === 'palabras' ? cant : cant * ppg;
+      var paginas = unidad === 'palabras' ? cant / ppg : cant;
+      var out = unidad === 'palabras' ? paginas : palabras;
+      document.getElementById('wp-out').innerHTML =
+        nf(out, unidad === 'palabras' ? 1 : 0) + ' <small>' + (unidad === 'palabras' ? 'páginas' : 'palabras') + '</small>';
+      document.getElementById('wp-read').textContent = '≈ ' + Math.ceil(palabras / 200) + ' minutos';
+      document.getElementById('wp-ppp').textContent = Math.round(ppg) + ' palabras';
+      document.getElementById('wp-desc').textContent =
+        'Con interlineado ' + il.options[il.selectedIndex].text.toLowerCase() + ', ' +
+        font.options[font.selectedIndex].text + ' y márgenes estándar.';
+    }
+
+    root.querySelectorAll('.seg button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        unidad = b.getAttribute('data-u');
+        root.querySelectorAll('.seg button').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+        document.getElementById('wp-qty-lbl').textContent = unidad === 'palabras' ? 'Cantidad de palabras' : 'Cantidad de páginas';
+        document.getElementById('wp-qty-unit').textContent = unidad === 'palabras' ? 'palabras' : 'páginas';
+        if (unidad === 'paginas' && Number(qty.value) > 500) qty.value = 8;
+        if (unidad === 'palabras' && Number(qty.value) < 100) qty.value = 2000;
+        render();
+      });
+    });
+    qty.addEventListener('input', render);
+    il.addEventListener('change', render);
+    font.addEventListener('change', render);
+    document.getElementById('wp-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+  })();
+</script>

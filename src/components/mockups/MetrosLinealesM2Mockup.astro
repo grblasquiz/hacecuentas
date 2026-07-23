@@ -1,0 +1,308 @@
+---
+/**
+ * Flagship "Metros lineales a m²" — mockup 23-07-2026, calcado.
+ * Reemplaza al MetrosLinealesFlagship anterior.
+ * Cuenta: m² = metros lineales × ancho (y la inversa), + margen por cortes.
+ * Mismo criterio que conversor-metros-lineales-a-metros-cuadrados.ts.
+ * CSS propio del mockup, scopeado en .mlm para no chocar con el global.
+ */
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import '../../styles/calc-batch-mockup.css';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const D = { qty: 10, width: 1.4, waste: 10 };
+const area = D.qty * D.width;
+const compra = area * (1 + D.waste / 100);
+const n = (v: number, d = 1) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: d }).format(v);
+
+const MATERIALES = [
+  { ico: '🧵', label: 'Tela', w: 1.4 },
+  { ico: '🧱', label: 'Membrana', w: 1 },
+  { ico: '🌱', label: 'Pasto', w: 4 },
+  { ico: '🪄', label: 'Papel', w: 0.53 },
+  { ico: '🏠', label: 'Chapa', w: 0.9 },
+];
+const COMPARA = [
+  { n: 'Papel tapiz', d: 'Rollo europeo', w: 0.53 },
+  { n: 'Tela estándar', d: 'Algodón / poliéster', w: 1.4 },
+  { n: 'Membrana', d: 'Sin traslape', w: 1 },
+  { n: 'Pasto sintético', d: 'Rollo ancho', w: 4 },
+];
+---
+
+<main class="wrap mlm hcm">
+  <div class="crumb">Inicio / <a href="/categoria/construccion">Construcción</a> / <b>Metros lineales a m²</b></div>
+
+  <section class="mlhero">
+    <div>
+      <span class="mltag">📐 CONVERSOR PARA COMPRAR MEJOR</span>
+      <h1>De metros lineales a metros cuadrados</h1>
+      <p>Convertí largo en superficie usando el ancho real del material. Sumá desperdicio y llevate una cantidad lista para pedir.</p>
+      <div class="formula"><strong>m²</strong>&nbsp; = metros lineales × ancho</div>
+    </div>
+    <div class="diagram">
+      <div class="roll"></div>
+      <span class="measure w" id="ml-mw">1,40 m</span>
+      <span class="measure l" id="ml-ml">10 metros lineales</span>
+    </div>
+  </section>
+
+  <section class="mltool" id="calc">
+    <form class="panel" id="ml-form">
+      <h2>Hacé la conversión</h2>
+      <p class="mlsub">Elegí un material o cargá su ancho exacto.</p>
+      <div class="switch">
+        <button type="button" class="active" data-dir="toArea">Lineales → m²</button>
+        <button type="button" data-dir="toLinear">m² → lineales</button>
+      </div>
+      <div class="materials">
+        {MATERIALES.map((m, i) => (
+          <button type="button" class={`material${i === 0 ? ' active' : ''}`} data-width={m.w}>
+            <span>{m.ico}</span>{m.label}
+          </button>
+        ))}
+      </div>
+      <div class="inputs">
+        <div class="field">
+          <label><span id="ml-qty-lbl">Metros lineales</span><small id="ml-qty-hint">largo</small></label>
+          <div class="input"><input id="ml-qty" type="number" min="0" step="0.1" value={D.qty} /><span id="ml-qty-unit">ml</span></div>
+        </div>
+        <div class="field">
+          <label>Ancho útil <small>no nominal</small></label>
+          <div class="input"><input id="ml-width" type="number" min="0.01" max="5" step="0.01" value={D.width} /><span>m</span></div>
+          <p class="help">Descontá encastres o traslapes.</p>
+        </div>
+      </div>
+      <div class="waste">
+        <div class="waste-head"><span>Margen por cortes</span><span id="ml-waste-txt">{D.waste}%</span></div>
+        <input id="ml-waste" type="range" min="0" max="20" step="5" value={D.waste} />
+        <div class="waste-labels"><span>0%</span><span>10% recomendado</span><span>20%</span></div>
+      </div>
+      <button class="mlcta" type="submit">Calcular cuánto comprar →</button>
+    </form>
+
+    <article class="panel mlresult" aria-live="polite">
+      <div>
+        <div class="over">Superficie que cubrís</div>
+        <div class="big" id="ml-area">{n(area, 2)} <small>m²</small></div>
+        <p class="answer" id="ml-answer">Con {n(D.qty)} metros lineales de tela de {n(D.width, 2)} m de ancho.</p>
+        <div class="buy">
+          <span id="ml-buy-lbl">Para comprar con {D.waste}% extra</span>
+          <strong id="ml-buy">{n(compra, 2)} m²</strong>
+          <small>Redondeá según la unidad de venta del proveedor.</small>
+        </div>
+      </div>
+      <div class="equation" id="ml-eq"><b>{n(D.qty)} ml</b> × {n(D.width, 2)} m = <b>{n(area, 2)} m²</b></div>
+    </article>
+  </section>
+
+  <section class="insight">
+    <article class="why">
+      <h2>Un metro lineal no siempre cubre lo mismo</h2>
+      <p class="mlsub">El ancho transforma largo en superficie.</p>
+      <div class="mini-diagram">
+        <div class="strip">Papel<br />0,53 m²</div>
+        <div class="strip">Tela<br />1,40 m²</div>
+        <div class="strip">Pasto<br />4 m²</div>
+      </div>
+    </article>
+    <article class="compare">
+      <h2>Compará anchos habituales</h2>
+      <p class="mlsub">Rendimiento para 10 metros lineales.</p>
+      <div class="rows">
+        {COMPARA.map((c) => (
+          <div class="mlrow">
+            <div><b>{c.n}</b><small>{c.d}</small></div>
+            <span>{n(c.w, 2)} m</span>
+            <span class="yield">{n(c.w * 10, 1)} m²</span>
+          </div>
+        ))}
+      </div>
+    </article>
+  </section>
+
+  <section class="tips">
+    <div class="section-head">
+      <h2>Antes de hacer el pedido</h2>
+      <p>Tres controles que evitan compras dobles.</p>
+    </div>
+    <div class="tipgrid">
+      <article class="tip"><i>📏</i><h3>Pedí el ancho útil</h3><p>En chapas y machimbres, el encastre o traslape reduce la cobertura real.</p></article>
+      <article class="tip"><i>✂️</i><h3>Sumá desperdicio</h3><p>Usá 10% para cortes rectos y hasta 15–20% para diagonales o dibujos.</p></article>
+      <article class="tip"><i>⬆️</i><h3>Redondeá hacia arriba</h3><p>Conservá decimales durante la cuenta y redondeá sólo al elegir la unidad de compra.</p></article>
+    </div>
+    <div class="warning">
+      <span>⚠️</span>
+      <div><b>El error más caro es asumir el ancho.</b>Confirmalo en la ficha técnica o con el proveedor antes de cerrar el pedido.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="📐" />
+
+  <footer class="sources">
+    <div><b>Fórmula y metodología</b><br />Sistema Internacional de Unidades · NIST SP 811 · BIPM</div>
+    <div>Revisado: julio de 2026 · Cálculo privado</div>
+  </footer>
+</main>
+
+<style is:global>
+  /* Mockup metros lineales → m². Scopeado en .mlm. */
+  .mlm{--ink:#17231f;--muted:#68736e;--blue:#135c66;--aqua:#7de0d2;--cream:#f7f5ee;--card:#fff;--line:#dce3df;--orange:#f6ad68;
+       color-scheme:light;background:var(--cream);color:var(--ink);font-family:"DM Sans",system-ui,sans-serif}
+  .mlm.wrap{max-width:1160px;margin:auto;padding:28px 24px 80px}
+  .mlm .crumb{font-size:14px;color:var(--muted);margin-bottom:20px}
+  .mlm .crumb b{color:var(--blue)}
+  .mlm h1,.mlm h2,.mlm h3{font-family:Manrope,system-ui,sans-serif;letter-spacing:-.035em;margin:0}
+  .mlm .mlhero{background:var(--blue);color:#fff;border-radius:28px;padding:45px;display:grid;grid-template-columns:1.05fr .95fr;gap:36px;align-items:center;overflow:hidden;position:relative}
+  .mlm .mltag{display:inline-flex;background:var(--aqua);color:#143f43;border-radius:50px;padding:8px 12px;font-weight:800;font-size:13px}
+  .mlm .mlhero h1{font-size:52px;line-height:1.04;margin:17px 0 15px;color:#fff}
+  .mlm .mlhero p{font-size:18px;line-height:1.55;color:#d4e9e8;max-width:600px;margin:0}
+  .mlm .formula{margin-top:24px;display:inline-flex;border:1px solid #4b8187;border-radius:13px;padding:12px 15px;font-weight:700}
+  .mlm .formula strong{color:var(--aqua)}
+  .mlm .diagram{height:290px;position:relative;display:grid;place-items:center}
+  .mlm .roll{width:340px;height:190px;background:repeating-linear-gradient(90deg,#73c9be 0 24px,#68bdb3 24px 48px);border-radius:18px;transform:skewY(-4deg);box-shadow:20px 22px 0 rgba(7,39,42,.28);position:relative}
+  .mlm .roll:before{content:"";position:absolute;width:74px;height:190px;border-radius:50%;left:-36px;background:#a3ebe1;border:10px solid #4ca99f}
+  .mlm .roll:after{content:"ANCHO × LARGO";position:absolute;inset:0;display:grid;place-items:center;color:#123e42;font:800 23px Manrope,system-ui,sans-serif;letter-spacing:.06em}
+  .mlm .measure{position:absolute;background:#fff;color:var(--blue);font-weight:800;font-size:13px;padding:7px 10px;border-radius:10px}
+  .mlm .measure.w{left:6px;top:48%;transform:rotate(-90deg)}
+  .mlm .measure.l{bottom:8px;left:42%}
+  .mlm .mltool{display:grid;grid-template-columns:1fr .92fr;gap:22px;margin-top:24px}
+  .mlm .panel{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:30px;box-shadow:0 12px 35px rgba(15,48,43,.05)}
+  .mlm .panel h2{font-size:28px}
+  .mlm .mlsub{color:var(--muted);margin:8px 0 23px}
+  .mlm .switch{display:grid;grid-template-columns:1fr 1fr;background:#eef3f1;padding:4px;border-radius:13px;margin-bottom:20px}
+  .mlm .switch button{border:0;background:transparent;padding:12px;border-radius:10px;color:var(--muted);font:inherit;font-weight:700;cursor:pointer}
+  .mlm .switch button.active{background:#fff;color:var(--blue);box-shadow:0 3px 12px #cdd8d3}
+  .mlm .materials{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:22px}
+  .mlm .material{border:1px solid var(--line);background:#fafbfa;border-radius:12px;padding:10px 4px;color:#59645f;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+  .mlm .material span{display:block;font-size:20px;margin-bottom:4px}
+  .mlm .material.active{border-color:var(--blue);background:#e6f5f2;color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue)}
+  .mlm .inputs{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .mlm .field label{display:flex;justify-content:space-between;font-weight:700;margin-bottom:8px}
+  .mlm .field label small{color:var(--muted);font-weight:500}
+  .mlm .input{display:flex;border:1px solid #cbd5d0;border-radius:12px;overflow:hidden;background:#fff}
+  .mlm .input input{border:0;min-width:0;width:100%;padding:14px;outline:0;font:inherit;font-size:max(16px,1em);background:#fff;color:var(--ink)}
+  .mlm .input span{display:grid;place-items:center;background:#f0f4f2;padding:0 13px;color:var(--muted);font-weight:700}
+  .mlm .help{color:var(--muted);font-size:12px;margin:8px 0 0}
+  .mlm .waste{margin-top:18px}
+  .mlm .waste-head{display:flex;justify-content:space-between;font-weight:700}
+  .mlm .waste input{width:100%;accent-color:var(--blue)}
+  .mlm .waste-labels{display:flex;justify-content:space-between;color:var(--muted);font-size:11px}
+  .mlm .mlcta{border:0;background:var(--aqua);color:#123f43;width:100%;padding:16px;border-radius:13px;font:inherit;font-weight:800;margin-top:18px;cursor:pointer}
+  .mlm .mlresult{background:#153f44;color:#fff;display:flex;flex-direction:column;justify-content:space-between;border-color:#153f44}
+  .mlm .mlresult .over{color:#9bbdbd;text-transform:uppercase;font-size:12px;font-weight:800;letter-spacing:.12em}
+  .mlm .big{font:800 64px/1 Manrope,system-ui,sans-serif;color:var(--aqua);margin:18px 0 8px}
+  .mlm .big small{font-size:28px}
+  .mlm .answer{color:#d7e8e7;line-height:1.5;margin:0}
+  .mlm .buy{background:#fff;color:var(--ink);border-radius:16px;padding:18px;margin:23px 0}
+  .mlm .buy span{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase}
+  .mlm .buy strong{font:800 29px Manrope,system-ui,sans-serif;display:block;color:var(--blue);margin-top:4px}
+  .mlm .equation{border-top:1px solid #3e696c;padding-top:17px;color:#bcd2d1;font-size:14px}
+  .mlm .equation b{color:#fff}
+  .mlm .insight{display:grid;grid-template-columns:.85fr 1.15fr;gap:22px;margin-top:22px}
+  .mlm .why,.mlm .compare{background:#fff;border:1px solid var(--line);border-radius:24px;padding:30px}
+  .mlm .why h2,.mlm .compare h2{font-size:28px}
+  .mlm .mini-diagram{display:flex;align-items:end;gap:10px;height:160px;margin-top:18px}
+  .mlm .strip{flex:1;background:#d6e5e1;border:1px solid #bfd2cd;border-radius:9px 9px 3px 3px;display:grid;place-items:center;text-align:center;color:#527069;font-size:12px;font-weight:700}
+  .mlm .strip:nth-child(1){height:31%}
+  .mlm .strip:nth-child(2){height:58%;background:#a9ddd6}
+  .mlm .strip:nth-child(3){height:100%;background:var(--aqua);color:#17494c}
+  .mlm .rows{margin-top:17px}
+  .mlm .mlrow{display:grid;grid-template-columns:1.2fr .6fr .8fr;align-items:center;padding:14px 0;border-top:1px solid #edf0ee}
+  .mlm .mlrow b{display:block}
+  .mlm .mlrow small{color:var(--muted)}
+  .mlm .mlrow .yield{text-align:right;font:700 20px Manrope,system-ui,sans-serif;color:var(--blue)}
+  .mlm .tips{margin-top:56px}
+  .mlm .section-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}
+  .mlm .tips h2{font-size:34px}
+  .mlm .section-head p{color:var(--muted);margin:0}
+  .mlm .tipgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+  .mlm .tip{background:#fff;border:1px solid var(--line);border-radius:17px;padding:22px}
+  .mlm .tip i{font-style:normal;font-size:24px}
+  .mlm .tip h3{font-size:18px;margin:13px 0 7px}
+  .mlm .tip p{color:var(--muted);line-height:1.45;margin:0;font-size:14px}
+  .mlm .warning{margin-top:18px;background:#fff1e3;border:1px solid #f2cfad;border-radius:18px;padding:19px;display:flex;gap:13px;color:#673c20}
+  .mlm .warning b{display:block}
+  .mlm .sources{margin-top:54px;padding-top:24px;border-top:1px solid #d9dfdb;display:flex;justify-content:space-between;color:var(--muted);font-size:13px}
+  .mlm .sources b{color:var(--ink)}
+  /* el bloque SEO compartido usa el sistema .hcm: le paso el color de esta calc */
+  .mlm.hcm{--brand:#135c66;--accent:#7de0d2;--soft:#e6f5f2;--bg:#f7f5ee}
+  @media(max-width:760px){
+    .mlm.wrap{padding:15px 12px 50px}
+    .mlm .mlhero{grid-template-columns:1fr;padding:28px 21px;border-radius:22px}
+    .mlm .mlhero h1{font-size:38px}
+    .mlm .mlhero p{font-size:16px}
+    .mlm .diagram{height:220px}
+    .mlm .roll{width:260px;height:145px}
+    .mlm .roll:before{height:145px}
+    .mlm .mltool,.mlm .insight{grid-template-columns:1fr}
+    .mlm .panel,.mlm .why,.mlm .compare{padding:21px}
+    .mlm .materials{grid-template-columns:repeat(3,1fr)}
+    .mlm .inputs{grid-template-columns:1fr}
+    .mlm .big{font-size:55px}
+    .mlm .section-head{display:block}
+    .mlm .section-head p{margin-top:7px}
+    .mlm .tipgrid{grid-template-columns:1fr}
+    .mlm .sources{display:block}
+    .mlm .mlrow{grid-template-columns:1.2fr .55fr .7fr}
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.mlm');
+    if (!root) return;
+    var dir = 'toArea';
+    var NAMES = { '1.4': 'tela', '1': 'membrana', '4': 'pasto sintético', '0.53': 'papel tapiz', '0.9': 'chapa' };
+    var qty = document.getElementById('ml-qty'), width = document.getElementById('ml-width'), waste = document.getElementById('ml-waste');
+    var n = function (v, d) { return v.toLocaleString('es-AR', { maximumFractionDigits: d === undefined ? 1 : d }); };
+
+    function render() {
+      var q = Number(qty.value) || 0, w = Number(width.value) || 1, p = Number(waste.value);
+      var nombre = NAMES[String(w)] || 'material';
+      document.getElementById('ml-waste-txt').textContent = p + '%';
+      document.getElementById('ml-buy-lbl').textContent = 'Para comprar con ' + p + '% extra';
+      if (dir === 'toArea') {
+        var a = q * w, b = a * (1 + p / 100);
+        document.getElementById('ml-area').innerHTML = n(a, 2) + ' <small>m²</small>';
+        document.getElementById('ml-buy').textContent = n(b, 2) + ' m²';
+        document.getElementById('ml-answer').textContent = 'Con ' + n(q) + ' metros lineales de ' + nombre + ' de ' + n(w, 2) + ' m de ancho.';
+        document.getElementById('ml-eq').innerHTML = '<b>' + n(q) + ' ml</b> × ' + n(w, 2) + ' m = <b>' + n(a, 2) + ' m²</b>';
+        root.querySelector('.mlresult .over').textContent = 'Superficie que cubrís';
+      } else {
+        var ml = q / w, b2 = ml * (1 + p / 100);
+        document.getElementById('ml-area').innerHTML = n(ml, 2) + ' <small>ml</small>';
+        document.getElementById('ml-buy').textContent = n(b2, 2) + ' ml';
+        document.getElementById('ml-answer').textContent = 'Para cubrir ' + n(q) + ' m² con ' + nombre + ' de ' + n(w, 2) + ' m de ancho.';
+        document.getElementById('ml-eq').innerHTML = '<b>' + n(q) + ' m²</b> ÷ ' + n(w, 2) + ' m = <b>' + n(ml, 2) + ' ml</b>';
+        root.querySelector('.mlresult .over').textContent = 'Metros lineales que necesitás';
+      }
+      document.getElementById('ml-mw').textContent = n(w, 2) + ' m';
+      document.getElementById('ml-ml').textContent = dir === 'toArea' ? n(q) + ' metros lineales' : n(q) + ' m²';
+    }
+
+    root.querySelectorAll('.switch button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        root.querySelectorAll('.switch button').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+        dir = b.getAttribute('data-dir');
+        document.getElementById('ml-qty-lbl').textContent = dir === 'toArea' ? 'Metros lineales' : 'Metros cuadrados';
+        document.getElementById('ml-qty-hint').textContent = dir === 'toArea' ? 'largo' : 'superficie';
+        document.getElementById('ml-qty-unit').textContent = dir === 'toArea' ? 'ml' : 'm²';
+        render();
+      });
+    });
+    root.querySelectorAll('.material').forEach(function (b) {
+      b.addEventListener('click', function () {
+        root.querySelectorAll('.material').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+        width.value = b.getAttribute('data-width');
+        render();
+      });
+    });
+    [qty, width, waste].forEach(function (el) { el.addEventListener('input', render); });
+    document.getElementById('ml-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+  })();
+</script>
