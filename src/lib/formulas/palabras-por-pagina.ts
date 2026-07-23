@@ -60,12 +60,20 @@ export function palabrasPorPagina(i: Inputs): Outputs {
       title: `Tu texto en páginas (interlineado ${interlineado}, ${tamano}pt)`,
       headers: ['Palabras', 'Páginas', 'Lectura', 'Escritura'],
       align: ['left', 'right', 'right', 'right'],
-      rows: [250, 500, 750, 1000, 1500, 2000, 2500, 3000, 5000].map((wc) => {
-        const lm = Math.ceil(wc / 200);
-        const wm = Math.ceil(wc / 40);
+      rows: (() => {
+        // Escalones que la gente busca literalmente ("30000 palabras cuántas
+        // páginas son", "50 mil palabras en paginas") + el valor del usuario.
+        const base = [250, 500, 750, 1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000, 8000, 10000, 15000, 20000, 30000, 50000, 80000];
+        const propio = Math.round(palabras);
+        const escalones = base.includes(propio) ? base : [...base, propio].sort((a, b) => a - b);
         const fmt = (m: number) => (m < 60 ? `${m} min` : `${Math.floor(m / 60)}h ${m % 60}min`);
-        return [wc.toLocaleString('es-AR'), (wc / ppg).toFixed(1), fmt(lm), fmt(wm)];
-      }),
+        return escalones.map((wc) => {
+          const lm = Math.ceil(wc / 200);
+          const wm = Math.ceil(wc / 40);
+          const etiqueta = wc.toLocaleString('es-AR') + (wc === propio ? ' (tu texto)' : '');
+          return [etiqueta, (wc / ppg).toFixed(1), fmt(lm), fmt(wm)];
+        });
+      })(),
       note: `Páginas recalculadas para tu formato actual (interlineado ${interlineado}, fuente ${tamano}pt). La lectura (~200 palabras/min) y la escritura (~40 palabras/min) no dependen del interlineado.`,
     },
     _insight: {

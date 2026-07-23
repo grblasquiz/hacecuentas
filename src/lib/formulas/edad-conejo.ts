@@ -10,6 +10,7 @@ export interface Outputs {
   esperanzaVida: string;
   detalle: string;
   _insight?: any;
+  _chart?: any;
 }
 
 export function edadConejo(i: Inputs): Outputs {
@@ -100,10 +101,34 @@ export function edadConejo(i: Inputs): Outputs {
     icon: '🐰',
   };
 
+  // Curva de equivalencia año a año, hasta la esperanza de vida de la raza.
+  const topAnios = raza === 'gigante' ? 7 : raza === 'enano' ? 12 : 10;
+  const anios: number[] = [];
+  for (let a = 1; a <= topAnios; a++) anios.push(a);
+  const _chart = {
+    type: 'line',
+    label: __lang === 'en' ? 'Rabbit years vs human years' : 'Años de conejo vs años humanos',
+    data: {
+      labels: anios.map((a) => (__lang === 'en' ? `${a} yr` : `${a} año${a > 1 ? 's' : ''}`)),
+      datasets: [
+        {
+          label: __lang === 'en' ? 'Human years' : 'Años humanos',
+          data: anios.map((a) => Math.round(a <= 1 ? a * 21 : 21 + (a - 1) * factorAnual)),
+          suffix: __lang === 'en' ? ' yr' : ' años',
+          fill: true,
+        },
+      ],
+    },
+    ariaLabel: __lang === 'en'
+      ? `Equivalence curve: a 1-year-old rabbit equals 21 human years, and each extra year adds ${factorAnual}`
+      : `Curva de equivalencia: un conejo de 1 año equivale a 21 años humanos y cada año extra suma ${factorAnual}`,
+  };
+
   return {
     edadHumana: Math.round(edadHumana),
     etapaVida: etapa,
     esperanzaVida: esperanza,
+    _chart,
     detalle: __lang === 'en'
       ? `Your rabbit (${raza}) aged ${edad} years is equivalent to ~${fmt.format(edadHumana)} human years. Life stage: ${etapa}. Average life expectancy: ${esperanza}.`
       : `Tu conejo (${raza}) de ${edad} años equivale a ~${fmt.format(edadHumana)} años humanos. Etapa: ${etapa}. Esperanza de vida promedio: ${esperanza}.`,

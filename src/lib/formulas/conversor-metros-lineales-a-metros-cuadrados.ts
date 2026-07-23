@@ -23,6 +23,8 @@ export interface Outputs {
   metrosCuadrados: number;
   anchoUsado: number;
   _insight?: any;
+  _table?: any;
+  _chart?: any;
 }
 
 export function conversorMetrosLinealesAMetrosCuadrados(i: Inputs): Outputs {
@@ -72,6 +74,42 @@ export function conversorMetrosLinealesAMetrosCuadrados(i: Inputs): Outputs {
     icon: '📐',
   };
 
+  // Tabla viva: los metros lineales que la gente busca, con TU ancho aplicado.
+  const escalonesBase = [1, 2, 3, 5, 10, 15, 20, 25, 30, 50, 100];
+  const mlPropio = Number(ml.toFixed(2));
+  const escalones = escalonesBase.includes(mlPropio)
+    ? escalonesBase
+    : [...escalonesBase, mlPropio].sort((a, b) => a - b);
+  const n2 = (x: number) => x.toFixed(2).replace(/\.?0+$/, '').replace('.', ',');
+  const _table = {
+    title: `Metros lineales a m² con ancho ${n2(ancho)} m`,
+    headers: ['Metros lineales', 'Metros cuadrados'],
+    align: ['left', 'right'],
+    rows: escalones.map((x) => [
+      `${n2(x)} ml${x === mlPropio ? ' (tu medida)' : ''}`,
+      `${n2(x * ancho)} m²`,
+    ]),
+    note: `Recalculada con el ancho que elegiste (${n2(ancho)} m). Si cambiás el ancho del material, toda la tabla cambia: m² = metros lineales × ancho.`,
+  };
+
+  // Comparación visual: el mismo metraje según los anchos más habituales.
+  const anchosTipicos = [0.8, 1, 1.4, 1.5, 2];
+  const _chart = {
+    type: 'bar',
+    label: 'Según el ancho del material',
+    data: {
+      labels: anchosTipicos.map((a) => `${n2(a)} m`),
+      datasets: [
+        {
+          label: `m² con ${n2(ml)} metros lineales`,
+          data: anchosTipicos.map((a) => Number((ml * a).toFixed(2))),
+          suffix: ' m²',
+        },
+      ],
+    },
+    ariaLabel: `Con ${n2(ml)} metros lineales obtenés ${anchosTipicos.map((a) => `${n2(ml * a)} metros cuadrados si el ancho es ${n2(a)} metros`).join(', ')}`,
+  };
+
   return {
     resultado,
     resumen,
@@ -79,5 +117,7 @@ export function conversorMetrosLinealesAMetrosCuadrados(i: Inputs): Outputs {
     metrosCuadrados: Number(m2.toFixed(4)),
     anchoUsado: ancho,
     _insight,
+    _table,
+    _chart,
   };
 }
