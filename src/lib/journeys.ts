@@ -23,7 +23,7 @@ const CURATED_JOURNEYS: Record<string, string[]> = {
     'calculadora-peso-ideal',
     'calculadora-calorias-diarias-tdee',
     'calculadora-porcentaje-grasa-corporal',
-    'calculadora-indice-cintura-altura-whtr-riesgo',
+    'calculadora-semanas-gestacion-ecografia',
   ],
   'calculadora-indemnizacion-despido': [
     'calculadora-liquidacion-final-renuncia',
