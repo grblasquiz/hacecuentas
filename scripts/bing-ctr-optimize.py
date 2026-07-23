@@ -24,7 +24,8 @@ MAXCTR = arg('--maxctr', 3.0)
 MINIMPR = arg('--minimpr', 300, int)
 LIMIT = arg('--limit', 100000, int)
 DRY = '--dry' in sys.argv
-TODAY = '2026-07-02'
+from datetime import date as _date
+TODAY = _date.today().isoformat()
 P_IN, P_OUT, P_CR, P_CW = 3/1e6, 15/1e6, 0.30/1e6, 3.75/1e6
 
 key = None
@@ -132,7 +133,7 @@ def process(item):
             if t and d and a and len(t) > 10 and 80 <= len(d) <= 175 and len(a) > 40:
                 if not DRY:
                     j["title"] = t.strip(); j["description"] = d.strip(); j["answerSnippet"] = a.strip()
-                    j["lastReviewed"] = TODAY
+                    j["lastReviewed"] = max(j.get("lastReviewed") or "", TODAY)
                     Path(fp).write_text(json.dumps(j, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
                 action = "upd"
             else:
