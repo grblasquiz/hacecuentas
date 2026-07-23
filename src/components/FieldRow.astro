@@ -105,7 +105,14 @@ const useThousands = field.format === "thousands" || autoThousands;
 // se descartaba → 19 calcs required+default-0 bloqueaban con "Completá este campo".
 // En OPCIONALES dejamos ver el placeholder (no prellenamos 0) salvo que sea required.
 const _hasDefault = field.default !== undefined && field.default !== null && field.default !== "";
-const effectiveDefault = (field.default === 0 && !isRequired)
+// default:"today" en campos date → la fecha de build (y el cliente la corrige a
+// la real al cargar, ver el script de abajo). Sin esto una cuenta regresiva abre
+// vacía y no cuenta nada hasta que el usuario tipea qué día es hoy.
+const _isToday = field.type === "date" && field.default === "today";
+const _todayISO = new Date().toISOString().slice(0, 10);
+const effectiveDefault = _isToday
+  ? _todayISO
+  : (field.default === 0 && !isRequired)
   ? undefined
   : (_hasDefault ? field.default : undefined);
 
@@ -202,6 +209,7 @@ const inputMode = field.type !== "number"
         data-format={useThousands ? "thousands" : field.format}
         data-type={field.type}
         data-profile-key={field.profileKey}
+        data-default-today={_isToday ? "" : undefined}
         data-unit={hasUnits ? units![0] : undefined}
         data-current-unit={hasUnits ? units![0] : undefined}
       />

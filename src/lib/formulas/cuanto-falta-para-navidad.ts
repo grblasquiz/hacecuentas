@@ -38,7 +38,7 @@ export function cuantoFaltaParaNavidad(i: Inputs): Outputs {
   if (diasFaltan <= 0) mensaje = '🎄 ¡Feliz Navidad!';
   else if (diasFaltan <= 7) mensaje = `¡Quedan solo ${diasFaltan} días para Navidad! Últimos preparativos.`;
   else if (diasFaltan <= 30) mensaje = `Faltan ${diasFaltan} días (${semanas} semanas, ${domingos} domingos). ¡Hora de comprar regalos!`;
-  else mensaje = `Faltan ${diasFaltan} días (${semanas} semanas y ${diasFaltan % 7} días, ${domingos} domingos) para Navidad ${year}.`;
+  else mensaje = `Faltan ${diasFaltan} días (${semanas} semanas y ${diasFaltan % 7} ${diasFaltan % 7 === 1 ? 'día' : 'días'}, ${domingos} domingos) para Navidad ${year}.`;
 
   let _insight;
   if (diasFaltan <= 0) {

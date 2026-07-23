@@ -1245,7 +1245,6 @@ import { dolarHoyUruguay } from './dolar-hoy-uruguay';
 import { dolarMepPasoAPasoCostoOperacion } from './dolar-mep-paso-a-paso-costo-operacion';
 import { dolarRealIofCartao } from './dolar-real-iof-cartao';
 import { dolarRealIofRemessa } from './dolar-real-iof-remessa';
-import { compute as compute__domingos_restantes_navidad_2026_fin_de_año } from './domingos-restantes-navidad-2026-fin-de-año';
 import { compute as compute__dominio_rango_funcion } from './dominio-rango-funcion';
 import { dosisAntiparasitario } from './dosis-antiparasitario';
 import { dosisAntipulgasPesoMascota } from './dosis-antipulgas-peso-mascota';
@@ -4659,7 +4658,6 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'dolar-mep-paso-a-paso-costo-operacion': dolarMepPasoAPasoCostoOperacion,
   'dolar-real-iof-cartao': dolarRealIofCartao,
   'dolar-real-iof-remessa': dolarRealIofRemessa,
-  'domingos-restantes-navidad-2026-fin-de-año': compute__domingos_restantes_navidad_2026_fin_de_año,
   'dominio-rango-funcion': compute__dominio_rango_funcion,
   'dosis-antiparasitario': dosisAntiparasitario,
   'dosis-antipulgas-peso-mascota': dosisAntipulgasPesoMascota,

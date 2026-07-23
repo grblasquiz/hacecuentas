@@ -5637,6 +5637,20 @@ const formatFreshnessDate = (iso: string): string => {
       } catch { /* snapshot corrupto/bloqueado → ignorar */ }
     }
 
+    // Campos date con default:"today": el HTML es estático y cacheado, así que
+    // trae la fecha del BUILD. Corregirla a la fecha real del cliente antes de
+    // auto-calcular — si no, una cuenta regresiva miente por los días que pasaron
+    // desde el último deploy. Respeta ?d= y lo que el usuario ya haya tipeado.
+    if (urlParams.size === 0) {
+      const hoyISO = (() => {
+        const n = new Date();
+        return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+      })();
+      form.querySelectorAll<HTMLInputElement>('input[data-default-today]').forEach((el) => {
+        if (!el.dataset.userEdited) el.value = hoyISO;
+      });
+    }
+
     // Auto-calcular al cargar si el JSON tiene autoCalculate: true y todos los
     // required tienen default o placeholder válido. Útil para calcs-dashboard
     // como "Feriados 2026" donde queremos mostrar resultado inmediato.
