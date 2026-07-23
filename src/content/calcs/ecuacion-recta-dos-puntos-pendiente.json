@@ -1,0 +1,337 @@
+{
+  "slug": "ecuacion-recta-dos-puntos-pendiente",
+  "lastReviewed": "2026-07-23",
+  "title": "Ecuación de la recta: por dos puntos o con pendiente",
+  "h1": "Ecuación de la recta: dos puntos o punto y pendiente",
+  "description": "Hallá la ecuación de la recta y = mx + b por dos puntos o por punto y pendiente: forma general, intersecciones con los ejes y paso a paso. Gratis.",
+  "category": "matematica",
+  "icon": "📈",
+  "formulaId": "ecuacion-recta-dos-puntos-pendiente",
+  "seoKeywords": [
+    "ecuacion de la recta",
+    "ecuacion de la recta que pasa por dos puntos",
+    "pendiente y ordenada al origen",
+    "y = mx + b",
+    "forma general de la recta",
+    "calculadora ecuacion de la recta",
+    "pendiente de una recta",
+    "ordenada al origen",
+    "recta punto pendiente",
+    "interseccion con los ejes",
+    "funcion lineal"
+  ],
+  "intro": "La **ecuación de la recta** es el objeto central de la geometría analítica y de las funciones lineales: la forma **explícita** `y = mx + b` describe cualquier recta no vertical con solo dos números, la **pendiente m** (cuánto sube o baja y por cada unidad de x) y la **ordenada al origen b** (dónde corta al eje Y). Esta calculadora arma la ecuación de dos maneras: **por dos puntos** — calcula `m = (y₂−y₁)/(x₂−x₁)` y despeja b — o **por un punto y la pendiente** — aplica la forma punto-pendiente `y − y₁ = m(x − x₁)`. En ambos casos te devuelve la pendiente, la ordenada, la ecuación explícita lista para copiar, la **forma general Ax + By + C = 0** (con coeficientes enteros reducidos cuando los datos lo permiten) y las **intersecciones con los ejes**: el punto (0, b) donde cruza el eje Y y la raíz (−b/m, 0) donde cruza el eje X. Además maneja los dos casos especiales que hacen tropezar a todo el mundo: la **recta horizontal** (m = 0, que no corta al eje X salvo que sea el propio eje) y la **recta vertical** (x = k), que no tiene pendiente definida ni puede escribirse como y = mx + b.",
+  "keyTakeaway": "Pendiente: **m = (y₂−y₁)/(x₂−x₁)**. Ordenada: **b = y₁ − m·x₁**. Ecuación: **y = mx + b**. Si los dos puntos tienen igual x, la recta es **vertical**: x = k, sin pendiente.",
+  "useCases": [
+    "Resolver ejercicios de función lineal y geometría analítica con el desarrollo completo.",
+    "Pasar de dos puntos de una tabla a la fórmula y = mx + b del modelo lineal.",
+    "Convertir entre forma explícita y forma general Ax + By + C = 0.",
+    "Encontrar dónde una recta corta a los ejes (raíz y ordenada al origen).",
+    "Armar la ecuación de una tendencia conociendo un punto y la tasa de cambio (pendiente)."
+  ],
+  "fields": [
+    {
+      "id": "modo",
+      "label": "Qué datos tenés",
+      "type": "select",
+      "default": "dos-puntos",
+      "options": [
+        {
+          "value": "dos-puntos",
+          "label": "Dos puntos: (x₁, y₁) y (x₂, y₂)"
+        },
+        {
+          "value": "punto-pendiente",
+          "label": "Un punto (x₁, y₁) y la pendiente m"
+        }
+      ]
+    },
+    {
+      "id": "x1",
+      "label": "x₁",
+      "type": "number",
+      "placeholder": "1",
+      "step": 0.001,
+      "default": 1
+    },
+    {
+      "id": "y1",
+      "label": "y₁",
+      "type": "number",
+      "placeholder": "3",
+      "step": 0.001,
+      "default": 3
+    },
+    {
+      "id": "x2",
+      "label": "x₂ — solo modo dos puntos",
+      "type": "number",
+      "placeholder": "4",
+      "step": 0.001,
+      "default": 4
+    },
+    {
+      "id": "y2",
+      "label": "y₂ — solo modo dos puntos",
+      "type": "number",
+      "placeholder": "9",
+      "step": 0.001,
+      "default": 9
+    },
+    {
+      "id": "m",
+      "label": "Pendiente m — solo modo punto y pendiente",
+      "type": "number",
+      "placeholder": "3",
+      "step": 0.001,
+      "default": 3
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-07-23",
+    "source": "Khan Academy — Formas de ecuaciones lineales",
+    "sourceUrl": "https://es.khanacademy.org/math/algebra/x2f8bb11595b61c86:forms-of-linear-equations",
+    "updateType": "manual",
+    "notes": "Ecuación de la recta y = mx + b: álgebra elemental inmutable, sin datos externos."
+  },
+  "outputs": [
+    {
+      "id": "ecuacion",
+      "label": "Ecuación de la recta",
+      "format": "text",
+      "primary": true
+    },
+    {
+      "id": "pendiente",
+      "label": "Pendiente (m)",
+      "format": "text"
+    },
+    {
+      "id": "ordenada",
+      "label": "Ordenada al origen (b)",
+      "format": "text"
+    },
+    {
+      "id": "general",
+      "label": "Forma general",
+      "format": "text"
+    },
+    {
+      "id": "interseccionX",
+      "label": "Intersección con el eje X (raíz)",
+      "format": "text"
+    },
+    {
+      "id": "interseccionY",
+      "label": "Intersección con el eje Y",
+      "format": "text"
+    }
+  ],
+  "example": {
+    "title": "Ejemplo: recta que pasa por (1, 3) y (4, 9)",
+    "inputs": {
+      "modo": "dos-puntos",
+      "x1": 1,
+      "y1": 3,
+      "x2": 4,
+      "y2": 9
+    },
+    "steps": [
+      "**Puntos**: A = (1, 3) y B = (4, 9).",
+      "**Pendiente**: `m = (y₂ − y₁) / (x₂ − x₁) = (9 − 3) / (4 − 1) = 6/3 = 2`.",
+      "**Ordenada al origen**: `b = y₁ − m·x₁ = 3 − 2 × 1 = 1`.",
+      "**Ecuación explícita**: `y = 2x + 1`.",
+      "**Forma general**: `2x − y + 1 = 0`.",
+      "**Intersección con eje Y**: x = 0 → y = 1 → punto `(0, 1)`.",
+      "**Intersección con eje X**: y = 0 → 0 = 2x + 1 → x = −0.5 → punto `(−0.5, 0)`.",
+      "**Verificación**: con x = 4: y = 2×4 + 1 = 9 ✓ (pasa por B)."
+    ],
+    "result": "La recta es **y = 2x + 1**: pendiente 2 (sube 2 por cada unidad de x), corta al eje Y en (0, 1) y al eje X en (−0.5, 0). Forma general: 2x − y + 1 = 0."
+  },
+  "explanation": "## Las formas de la ecuación de una recta\n\n| Forma | Expresión | Cuándo conviene |\n|-------|-----------|------------------|\n| Explícita | `y = mx + b` | leer pendiente y ordenada de un vistazo |\n| Punto-pendiente | `y − y₁ = m(x − x₁)` | conocés un punto y la pendiente |\n| General | `Ax + By + C = 0` | incluye verticales; estándar en geometría |\n| Segmentaria | `x/p + y/q = 1` | conocés los cortes con los ejes |\n\nTodas describen la misma recta; esta calculadora te da la explícita y la general.\n\n## Por dos puntos\n\n```\nm = (y₂ − y₁) / (x₂ − x₁)\nb = y₁ − m · x₁\n→ y = mx + b\n```\n\n**Ejemplo**: (1, 3) y (4, 9) → `m = 6/3 = 2`, `b = 3 − 2 = 1` → **y = 2x + 1**.\n\nSi `x₁ = x₂`, la división por Δx = 0 es imposible: la recta es **vertical** y su ecuación es simplemente `x = k` (por ejemplo, x = 2 para los puntos (2, 1) y (2, 7)). No tiene forma explícita.\n\n## Por punto y pendiente\n\n```\ny − y₁ = m(x − x₁)\n→ y = mx + (y₁ − m·x₁)\n```\n\n**Ejemplo**: punto (2, 5) con m = 3 → `b = 5 − 3×2 = −1` → **y = 3x − 1**.\n\n## Qué significa cada parámetro\n\n### La pendiente m\n\n```\nm = Δy / Δx = cuánto cambia y por cada unidad de x\n```\n\n- `m > 0`: la recta **sube** (función creciente).\n- `m < 0`: la recta **baja** (función decreciente).\n- `m = 0`: recta **horizontal** (y = b constante).\n- Cuanto mayor |m|, más empinada: m = 5 sube 5 por paso; m = 0.1 casi plana.\n- La pendiente conecta con la trigonometría: `m = tan θ`, donde θ es el ángulo de la recta con el eje X. Para m = 1, θ = 45°.\n\n### La ordenada al origen b\n\nEs el valor de y cuando x = 0: la recta siempre pasa por el punto **(0, b)**. En un modelo real es el 'valor inicial': el costo fijo, la posición de partida, la tarifa base del taxi.\n\n## Intersecciones con los ejes\n\n```\nEje Y: x = 0 → (0, b)\nEje X: y = 0 → mx + b = 0 → x = −b/m → (−b/m, 0)\n```\n\nLa intersección con el eje X es la **raíz** de la función lineal. Caso especial: una recta horizontal (m = 0) con b ≠ 0 **nunca corta al eje X**.\n\n## Forma general Ax + By + C = 0\n\nPasar de `y = 2x + 1` a general: mover todo a un lado → `2x − y + 1 = 0`. La ventaja de la forma general es que **también representa rectas verticales** (x − 2 = 0), cosa que y = mx + b no puede. Cuando los puntos de entrada son enteros, la calculadora entrega coeficientes **enteros reducidos** (divididos por su MCD): por (1, 1) y (3, 2) devuelve `x − 2y + 1 = 0` en lugar de `0.5x − y + 0.5 = 0`.\n\n## Rectas paralelas y perpendiculares\n\n```\nParalelas:        m₁ = m₂\nPerpendiculares:  m₁ · m₂ = −1  →  m₂ = −1/m₁\n```\n\n**Ejemplo**: la perpendicular a y = 2x + 1 tiene pendiente −1/2. Si además pasa por (4, 9): b = 9 − (−0.5)×4 = 11 → y = −0.5x + 11.\n\n## Aplicaciones reales\n\n- **Modelos de costo**: un flete cobra $500 fijos + $200 por km → `y = 200x + 500`. La pendiente es el costo variable, b el fijo.\n- **Física**: movimiento rectilíneo uniforme: `posición = velocidad × tiempo + posición inicial` — la misma estructura.\n- **Tendencias**: con dos mediciones (mes 1: 120 ventas, mes 4: 180 ventas) la recta que las une estima el ritmo: m = 20 ventas/mes.\n- **Conversión de unidades**: Celsius a Fahrenheit es una recta: `F = 1.8·C + 32` (pendiente 1.8, ordenada 32).\n\n## Errores comunes\n\n1. **Restar cruzado en la pendiente**: es `(y₂−y₁)/(x₂−x₁)`, respetando el orden de los puntos en ambas restas.\n2. **Confundir m con b**: en y = 3x − 1, la pendiente es 3 y la ordenada −1 (con su signo).\n3. **Intentar y = mx + b con una recta vertical**: no existe; la vertical es x = k y su pendiente es indefinida, no 'infinita' ni 0.\n4. **Olvidar el signo en la raíz**: x = −b/m. Para y = 2x + 1 la raíz es −0.5, no +0.5.\n5. **Creer que pendiente negativa es 'sin pendiente'**: m = −2 es una pendiente perfectamente válida (recta que baja).\n",
+  "faq": [
+    {
+      "q": "¿Cómo hallo la ecuación de la recta que pasa por dos puntos?",
+      "a": "En dos pasos: **1)** pendiente `m = (y₂−y₁)/(x₂−x₁)`; **2)** ordenada `b = y₁ − m·x₁`, y la ecuación queda y = mx + b. Ejemplo con (1, 3) y (4, 9): m = 6/3 = 2, b = 3 − 2×1 = 1 → **y = 2x + 1**. Verificá siempre reemplazando el otro punto: 2×4 + 1 = 9 ✓. Si los dos puntos tienen la misma x, no hay pendiente: la recta es vertical, x = k."
+    },
+    {
+      "q": "¿Qué significan m y b en y = mx + b?",
+      "a": "**m es la pendiente**: cuánto cambia y por cada unidad que aumenta x (m = 2 significa que sube 2 por paso; m = −0.5, que baja medio). **b es la ordenada al origen**: el valor de y cuando x = 0, o sea el punto (0, b) donde la recta cruza el eje Y. En un modelo real, m es la tasa (precio por km, velocidad, costo unitario) y b el valor inicial (tarifa base, posición de partida, costo fijo)."
+    },
+    {
+      "q": "¿Qué pasa si los dos puntos tienen la misma coordenada x?",
+      "a": "La recta es **vertical** y no puede escribirse como y = mx + b: al calcular la pendiente aparecería una división por cero (Δx = 0). Su ecuación es simplemente **x = k**: por (2, 1) y (2, 7) pasa la recta x = 2, cuya forma general es x − 2 = 0. Corta al eje X en (2, 0) y — salvo que k = 0 — no corta nunca al eje Y. La pendiente es **indefinida**, que no es lo mismo que pendiente 0 (esa es la horizontal)."
+    },
+    {
+      "q": "¿Cómo paso de y = mx + b a la forma general Ax + By + C = 0?",
+      "a": "Pasando todo al mismo lado: y = 2x + 1 → **2x − y + 1 = 0** (A = 2, B = −1, C = 1). Si m es fraccionaria conviene multiplicar para eliminar denominadores: y = 0.5x + 0.5 → multiplicás por 2 → x − 2y + 1 = 0. La forma general es más 'universal' porque también cubre las rectas verticales (x − 2 = 0), y por convención se escribe con el primer coeficiente positivo y los tres coeficientes enteros sin divisor común."
+    },
+    {
+      "q": "¿Cómo encuentro dónde la recta corta a los ejes?",
+      "a": "**Eje Y**: hacés x = 0 y queda y = b → el punto es (0, b), directo de la ecuación. **Eje X**: hacés y = 0 y despejás: 0 = mx + b → **x = −b/m** → el punto es (−b/m, 0), llamado raíz. Para y = 2x + 1: corta al eje Y en (0, 1) y al eje X en (−0.5, 0). Caso especial: una recta horizontal como y = 4 nunca corta al eje X, porque y vale 4 para cualquier x."
+    },
+    {
+      "q": "¿Cómo armo la recta si tengo un punto y la pendiente?",
+      "a": "Con la **forma punto-pendiente**: `y − y₁ = m(x − x₁)`. Distribuís y despejás y: la ordenada resulta b = y₁ − m·x₁. Ejemplo: punto (2, 5) y m = 3 → b = 5 − 3×2 = −1 → **y = 3x − 1**. Es el modo típico de los problemas de modelado: 'un taxi cobra $300 por km (pendiente) y un viaje de 2 km costó $1.400 (punto)' → bajada de bandera = 1400 − 300×2 = $800."
+    },
+    {
+      "q": "¿Cuándo dos rectas son paralelas o perpendiculares?",
+      "a": "**Paralelas**: misma pendiente (m₁ = m₂) y distinta ordenada — nunca se cruzan. y = 2x + 1 e y = 2x − 3 son paralelas. **Perpendiculares**: pendientes que multiplicadas dan −1 (m₂ = −1/m₁) — se cruzan a 90°. La perpendicular a y = 2x + 1 tiene pendiente −0.5. Casos límite: la perpendicular a una horizontal (m = 0) es una vertical (pendiente indefinida), y viceversa; ahí la regla del producto no aplica pero la geometría sí."
+    },
+    {
+      "q": "¿Qué relación hay entre la pendiente y el ángulo de la recta?",
+      "a": "La pendiente es la **tangente del ángulo de inclinación**: `m = tan θ`, con θ medido desde el eje X positivo. Ejemplos: m = 1 → θ = 45°; m = 2 → θ = arctan(2) = 63.43°; m = 0.5774 → θ = 30°; m = −1 → θ = 135°. Por eso la recta vertical no tiene pendiente: sería tan 90°, que es indefinida. Esta conexión permite pasar de porcentaje de pendiente (rutas, techos) a grados y viceversa."
+    },
+    {
+      "q": "¿La ecuación de la recta sirve para hacer estimaciones con datos reales?",
+      "a": "**Sí, es el modelo lineal más simple**. Con dos observaciones armás la recta y podés interpolar o extrapolar. Ejemplo: una planta medía 12 cm el día 5 y 27 cm el día 10 → m = (27−12)/(10−5) = 3 cm/día, b = 12 − 3×5 = −3 → y = 3x − 3; el día 8 estimás 3×8 − 3 = 21 cm. Ojo: dos puntos definen la recta exacta que pasa por ellos; con más de dos puntos que no están alineados se usa regresión lineal (mínimos cuadrados), que busca la recta que mejor aproxima."
+    },
+    {
+      "q": "¿Cómo verifico si un punto pertenece a una recta?",
+      "a": "**Reemplazando sus coordenadas en la ecuación**: si la igualdad se cumple, pertenece. ¿(3, 7) está en y = 2x + 1? → 2×3 + 1 = 7 ✓ sí. ¿(5, 10)? → 2×5 + 1 = 11 ≠ 10 ✗ no (está 1 unidad por debajo de la recta). En forma general es igual: reemplazás y comprobás si Ax + By + C da 0. Este chequeo es la mejor forma de verificar que armaste bien la ecuación: los dos puntos originales tienen que cumplirla exacto."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Khan Academy — Formas de ecuaciones lineales",
+      "url": "https://es.khanacademy.org/math/algebra/x2f8bb11595b61c86:forms-of-linear-equations"
+    },
+    {
+      "name": "Wolfram MathWorld — Line",
+      "url": "https://mathworld.wolfram.com/Line.html"
+    },
+    {
+      "name": "Wolfram MathWorld — Slope",
+      "url": "https://mathworld.wolfram.com/Slope.html"
+    }
+  ],
+  "relatedSlugs": [
+    "distancia-punto-medio-dos-puntos",
+    "calculadora-area-triangulo-vertices-coordenadas",
+    "calculadora-recta-tangente-normal",
+    "calculadora-teorema-pitagoras-hipotenusa-cateto"
+  ],
+  "howToSteps": [
+    {
+      "name": "Elegí el modo",
+      "text": "Seleccioná \"Dos puntos\" si conocés dos puntos de la recta, o \"Un punto y la pendiente\" si tenés un punto y la tasa de cambio m."
+    },
+    {
+      "name": "Ingresá el primer punto",
+      "text": "Cargá x₁ e y₁ (ej: 1 y 3 para el punto (1, 3)). Se aceptan negativos y decimales."
+    },
+    {
+      "name": "Completá el dato del modo elegido",
+      "text": "En modo dos puntos, cargá x₂ e y₂ (ej: 4 y 9); en modo punto y pendiente, cargá m (ej: 3). Los campos del otro modo se ignoran."
+    },
+    {
+      "name": "Hacé click en Calcular",
+      "text": "Presioná el botón \"Calcular\". Si los dos puntos comparten la x, la calculadora te devuelve la recta vertical x = k."
+    },
+    {
+      "name": "Leé la ecuación y sus parámetros",
+      "text": "Obtenés y = mx + b lista para copiar, con la pendiente y la ordenada al origen por separado, más la forma general Ax + By + C = 0."
+    },
+    {
+      "name": "Revisá las intersecciones",
+      "text": "Al final tenés los puntos exactos donde la recta corta al eje X (raíz) y al eje Y. Verificá reemplazando tus puntos en la ecuación."
+    }
+  ],
+  "audience": "global",
+  "answerSnippet": "Para hallar la ecuación de la recta por dos puntos: pendiente m = (y₂−y₁)/(x₂−x₁) y ordenada b = y₁ − m·x₁, quedando y = mx + b. Ejemplo: por (1, 3) y (4, 9), m = 6/3 = 2 y b = 1, así que y = 2x + 1 (forma general: 2x − y + 1 = 0), que corta al eje Y en (0, 1) y al eje X en (−0.5, 0). Si conocés un punto y la pendiente, usá y − y₁ = m(x − x₁). Si los dos puntos comparten la x, la recta es vertical: x = k, sin pendiente definida.",
+  "referenceTables": [
+    {
+      "title": "Ecuaciones de rectas resueltas por dos puntos",
+      "caption": "Pendiente, ecuación explícita, forma general e intersecciones, calculadas con m = Δy/Δx y b = y₁ − m·x₁.",
+      "headers": [
+        "Puntos",
+        "Pendiente",
+        "Ecuación",
+        "Forma general",
+        "Corte eje X",
+        "Corte eje Y"
+      ],
+      "rows": [
+        [
+          "(1, 3) y (4, 9)",
+          2,
+          "y = 2x + 1",
+          "2x − y + 1 = 0",
+          "(-0.5, 0)",
+          "(0, 1)"
+        ],
+        [
+          "(0, 0) y (2, 4)",
+          2,
+          "y = 2x",
+          "2x − y = 0",
+          "(0, 0)",
+          "(0, 0)"
+        ],
+        [
+          "(1, 1) y (3, 2)",
+          0.5,
+          "y = 0.5x + 0.5",
+          "x − 2y + 1 = 0",
+          "(-1, 0)",
+          "(0, 0.5)"
+        ],
+        [
+          "(0, 4) y (5, 4)",
+          0,
+          "y = 4",
+          "y − 4 = 0",
+          "No corta (horizontal)",
+          "(0, 4)"
+        ],
+        [
+          "(2, 1) y (2, 7)",
+          "Indefinida",
+          "x = 2",
+          "x − 2 = 0",
+          "(2, 0)",
+          "No corta (vertical)"
+        ]
+      ],
+      "note": "La fila (0,0)-(2,4) pasa por el origen: b = 0 y ambos cortes coinciden en (0, 0). Las dos últimas filas son los casos especiales: horizontal (m = 0) y vertical (sin pendiente)."
+    },
+    {
+      "title": "Modo punto y pendiente: ejemplos resueltos",
+      "caption": "b = y₁ − m·x₁ aplicado a un punto conocido y una pendiente dada.",
+      "headers": [
+        "Punto",
+        "Pendiente m",
+        "Ordenada b",
+        "Ecuación resultante"
+      ],
+      "rows": [
+        [
+          "(2, 5)",
+          3,
+          -1,
+          "y = 3x − 1"
+        ],
+        [
+          "(1, 2)",
+          -0.5,
+          2.5,
+          "y = −0.5x + 2.5"
+        ],
+        [
+          "(0, 7)",
+          2,
+          7,
+          "y = 2x + 7"
+        ],
+        [
+          "(4, 4)",
+          1,
+          0,
+          "y = x"
+        ]
+      ],
+      "note": "Verificación de la primera fila: b = 5 − 3×2 = −1, y con x = 2: y = 3×2 − 1 = 5 ✓. Si el punto está sobre el eje Y (x₁ = 0), b es directamente y₁."
+    }
+  ]
+}
