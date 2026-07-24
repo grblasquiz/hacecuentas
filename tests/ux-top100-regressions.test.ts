@@ -14,6 +14,8 @@ describe('regresiones UX del top 100', () => {
     expect(css).toMatch(/\.cf-tablewrap\s*\{[\s\S]*?max-width:\s*100%/);
     expect(css).toMatch(/\.cf-2col\s*>\s*\*/);
     expect(css).toMatch(/\.cf-formula\s*\{[\s\S]*?overflow-x:\s*auto/);
+    expect(css).toMatch(/\.cf-page pre\s*\{[\s\S]*?overflow-x:\s*auto/);
+    expect(css).toMatch(/\.cf-dates\s*\{\s*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
   });
 
   it('limita contenido V2, código y contexto económico en mobile', () => {
