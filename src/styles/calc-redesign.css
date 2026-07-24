@@ -44,7 +44,7 @@ body[data-domain] .calc-v2 .calc-form .btn-primary { color:#fff; }
    quedar fijo y angosto con márgenes gigantes en pantallas grandes. El máximo se
    alinea con el contenido de la home (~1080px). En el contexto aislado (preview/
    mockup) donde no hay <main>, este max-width evita que el h1 desborde. */
-.calc-v2{ color:var(--v2-body); max-width:1080px; margin:0 auto; padding:24px 20px 96px; overflow-wrap:break-word; }
+.calc-v2{ color:var(--v2-body); width:100%; min-width:0; max-width:1080px; margin:0 auto; padding:24px 20px 96px; overflow-wrap:break-word; }
 /* Medida de lectura: aunque el contenedor sea ancho como la home, la prosa larga
    (respuesta rápida + paneles de contenido) se limita a un ancho legible y se
    alinea a la izquierda; la card, el contexto y las tablas usan todo el ancho. */
@@ -113,7 +113,7 @@ body[data-domain] .calc-v2 .calc-form .btn-primary { color:#fff; }
 .calc-v2 .v2-trust-more:hover{ text-decoration:underline; }
 
 /* ===== Bloques de contenido ===== */
-.calc-v2 .v2-block{ margin-bottom:26px; }
+.calc-v2 .v2-block{ min-width:0; max-width:100%; margin-bottom:26px; }
 .calc-v2 .v2-block h2{ font-size:23px; font-weight:800; margin:0 0 14px; }
 .calc-v2 .v2-block h3{ font-size:18px; font-weight:700; margin:22px 0 8px; }
 .calc-v2 .v2-block p{ margin:0 0 13px; font-size:15.5px; }
@@ -145,8 +145,8 @@ body[data-domain] .calc-v2 .calc-form .btn-primary { color:#fff; }
 .calc-v2 .v2-block :where(li){ margin-bottom:5px; font-size:15.5px; }
 .calc-v2 .v2-block :where(a){ color:var(--v2-accent); font-weight:600; }
 .calc-v2 .v2-block :where(blockquote){ border-left:3px solid var(--v2-accent); padding:10px 14px; background:var(--v2-accent-soft); border-radius:0 10px 10px 0; color:var(--v2-body); margin:0 0 14px; font-size:14.5px; }
-.calc-v2 .v2-block :where(code){ font-family:var(--v2-mono); background:var(--v2-line-soft); padding:1px 5px; border-radius:5px; font-size:.9em; }
-.calc-v2 .v2-block :where(pre){ background:#0f172a; color:#cfe0fb; padding:14px 16px; border-radius:12px; overflow-x:auto; margin:0 0 14px; }
+.calc-v2 .v2-block :where(code){ max-width:100%; font-family:var(--v2-mono); background:var(--v2-line-soft); padding:1px 5px; border-radius:5px; font-size:.9em; overflow-wrap:anywhere; word-break:break-word; }
+.calc-v2 .v2-block :where(pre){ width:100%; min-width:0; max-width:100%; background:#0f172a; color:#cfe0fb; padding:14px 16px; border-radius:12px; overflow-x:auto; overscroll-behavior-inline:contain; margin:0 0 14px; }
 .calc-v2 .v2-block :where(pre) code{ background:none; padding:0; color:inherit; }
 /* tablas markdown (sin wrapper): scroll propio para no desbordar mobile */
 .calc-v2 .v2-block :where(table){ display:block; overflow-x:auto; max-width:100%; border-collapse:collapse; font-size:14px; border:1px solid var(--v2-line); border-radius:12px; margin:0 0 14px; }
@@ -331,6 +331,18 @@ body[data-domain] .calc-v2 .calc-form .btn-primary { color:#fff; }
    partía letra por letra. Apilamos: label en la 1ª línea (ancho completo), valor
    en la 2ª alineado bajo el label. Nunca se rompe el nombre. */
 @media (max-width:560px){
+  .calc-v2,
+  .calc-v2 > *,
+  .calc-v2 .v2-panel,
+  .calc-v2 .v2-block,
+  .calc-v2 .calc-container,
+  .calc-v2 .calc-container > * { min-width:0; max-width:100%; }
+  .calc-v2 .live-econ {
+    width:100%;
+    min-width:0;
+    max-width:100%;
+    overscroll-behavior-inline:contain;
+  }
   .calc-v2 .v2-donut-lg{ flex-wrap:wrap; row-gap:2px; }
   .calc-v2 .v2-donut-lg .nm{ flex:1 1 auto; }
   .calc-v2 .v2-donut-lg .vl{ flex:1 0 100%; padding-left:20px; }

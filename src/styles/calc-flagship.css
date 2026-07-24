@@ -297,7 +297,16 @@
 :root[data-theme="dark"] .cf-cmp__col--warn li::before { color: #fbbf24; }
 
 /* ── Tabla de referencia ────────────────────────────────────────────────── */
-.cf-tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-lg); }
+.cf-tablewrap {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
 .cf-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.9rem; }
 .cf-table thead { background: var(--accent-soft); }
 .cf-table th { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); padding: 0.75rem 0.95rem; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--border); }
@@ -330,7 +339,7 @@
 .cf-relcard__link { margin-top: auto; font-size: 0.8rem; font-weight: 700; color: var(--accent); display: inline-flex; gap: 0.3rem; align-items: center; }
 
 /* ── Prose (explanation SEO) ────────────────────────────────────────────── */
-.cf-prose { font-size: 0.95rem; line-height: 1.7; color: var(--text-muted); }
+.cf-prose { min-width: 0; max-width: 100%; font-size: 0.95rem; line-height: 1.7; color: var(--text-muted); overflow-wrap: anywhere; }
 .cf-prose :global(h2), .cf-prose :global(h3) { color: var(--text); font-weight: 700; margin: 1.5rem 0 0.6rem; font-size: 1.05rem; }
 .cf-prose :global(p) { margin: 0 0 0.9rem; }
 .cf-prose :global(a) { color: var(--accent); }
@@ -339,7 +348,7 @@
 .cf-prose :global(table) { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.85rem; display: block; overflow-x: auto; }
 .cf-prose :global(th), .cf-prose :global(td) { border: 1px solid var(--border); padding: 0.5rem 0.7rem; text-align: left; }
 .cf-prose :global(th) { background: var(--bg-soft); }
-.cf-prose :global(code) { font-family: var(--font-mono); font-size: 0.85em; background: var(--bg-muted); padding: 0.1em 0.35em; border-radius: 4px; }
+.cf-prose :global(code) { max-width: 100%; font-family: var(--font-mono); font-size: 0.85em; background: var(--bg-muted); padding: 0.1em 0.35em; border-radius: 4px; overflow-wrap: anywhere; }
 
 /* ── CTA bar (abajo, oscura) ────────────────────────────────────────────── */
 .cf-ctabar {
@@ -409,6 +418,25 @@
 /* ── util ───────────────────────────────────────────────────────────────── */
 .cf-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 @media (max-width: 560px) {
+  /* Los wrappers tenían overflow propio, pero sus padres grid conservaban
+     min-width:auto y ensanchaban todo el documento según la tabla/fórmula. */
+  .cf-page,
+  .cf-page > *,
+  .cf-section,
+  .cf-section > *,
+  .cf-band,
+  .cf-band__inner,
+  .cf-2col > *,
+  .cf-steps > *,
+  .cf-card > * { min-width: 0; max-width: 100%; }
+  .cf-tablewrap { display: block; }
+  .cf-formula {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    white-space: nowrap;
+  }
   .cf-result__actions { grid-template-columns: 1fr; }
   .cf-tiles { grid-template-columns: 1fr; }
   .cf-tiles--2 { grid-template-columns: repeat(2, 1fr); }

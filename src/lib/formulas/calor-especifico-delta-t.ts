@@ -28,5 +28,7 @@ export function calorEspecificoDeltaT(i: Inputs): Outputs {
         tone: 'neutral',
         icon: '🌡️',
       };
-  return { calor: Q.toFixed(0) + ' J', kcal: (Q/4184).toFixed(1) + ' kcal', resumen, _insight };
+  // La unidad del output la agrega Calculator desde `suffix: "J"`.
+  // Devolverla también acá producía el texto visible "334880 J J".
+  return { calor: Q.toFixed(0), kcal: (Q/4184).toFixed(1) + ' kcal', resumen, _insight };
 }
