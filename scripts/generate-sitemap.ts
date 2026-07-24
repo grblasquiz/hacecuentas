@@ -32,6 +32,8 @@ import { DECISION_MANIFEST_LOCALES } from '../src/lib/decisions/manifest-locales
 import { DECISION_HUBS } from '../src/lib/decisions/hubs.ts';
 import { PRIORITY_DECISIONS } from '../src/lib/decisions/priority.ts';
 import { PRODUCTS } from '../src/lib/products/manifest.ts';
+import { INFORMES } from '../src/lib/informes/registry.ts';
+import { VERTICALES } from '../src/lib/partners/verticales.ts';
 
 const PRUNED_SLUGS = new Set(Object.keys(PRUNING_REDIRECTS).map((p) => p.replace(/^\//, '')));
 
@@ -86,7 +88,13 @@ function readJSONs(dir: string, pathPrefix = ''): any[] {
     // Cuando alguien des-noindexa una calc, regenerar sitemap la incluye de nuevo.
     // canDistributeCalc = !noindex && !restringida (YMYL). No confiamos sólo en
     // noindex manual: una calc ymylRisk:high sin revisor queda fuera igual.
-    .filter((d: any) => canDistributeCalc(d))
+    // OJO: `canDistributeCalc` también consulta PRUNING_REDIRECTS, así que hay que
+    // pasarle el `pathPrefix`. Sin él comparaba el slug PELADO contra las claves de
+    // pruning y tiraba páginas 200 legítimas por colisión de nombre: `/glosario/iva`
+    // caía por la redirección raíz `/iva` → calc, y `/py/calculadora-aguinaldo-
+    // paraguay` por la ES `/calculadora-aguinaldo-paraguay`. Mismo bug que el filtro
+    // path-aware de abajo, que sólo cubría la mitad del camino (audit 2026-07-24).
+    .filter((d: any) => canDistributeCalc(d, pathPrefix))
     // Excluimos páginas con `canonicalSlug`: son duplicados que canonicalizan a
     // OTRA URL (vienen de la unificación de similares). Listarlas en el sitemap
     // es "non-canonical page in sitemap" (Ahrefs) y desperdicia crawl budget.
@@ -722,6 +730,17 @@ const topPrioritySlugs = [
   'calculadora-seguro-auto-estimado',
 ];
 const calcBySlug = new Map((calcs as any[]).map((c: any) => [c.slug, c]));
+// Todos los slugs de src/content/calcs SIN filtrar por distribución. Sirve para
+// distinguir "raíz retirada del sitemap" (existe pero noindex/podada) de "raíz
+// que nunca existió" — ver el gate de las páginas provinciales más abajo.
+const allCalcSlugs = new Set<string>(
+  safeReadDir(CALCS_DIR)
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => {
+      try { return JSON.parse(readFileSync(join(CALCS_DIR, f), 'utf8')).slug as string; } catch { return ''; }
+    })
+    .filter(Boolean),
+);
 const seenInPriority = new Set<string>(topPrioritySlugs);
 for (const slug of topPrioritySlugs) {
   const c = calcBySlug.get(slug);
@@ -1287,7 +1306,13 @@ for (const calc of argCalcs as any[]) {
   // Las páginas provinciales son vistas derivadas de una calculadora raíz.
   // Si la raíz quedó noindex/restringida, ninguna variante provincial puede
   // permanecer en sitemap. `calcBySlug` contiene sólo calcs distribuibles.
-  if (!calcBySlug.has(calc.calcSlug)) continue;
+  //
+  // Pero "raíz retirada" ≠ "raíz que nunca existió": hay familias provinciales
+  // sin calc raíz en src/content/calcs (ej. impuesto-inmobiliario). Ahí las 24
+  // páginas de provincia SÍ son 200 indexables y quedaban fuera de todo sitemap
+  // por este gate (audit 2026-07-24). Sólo las excluimos si la raíz existe pero
+  // no es distribuible, o si la propia URL está podada/410.
+  if (!calcBySlug.has(calc.calcSlug) && allCalcSlugs.has(calc.calcSlug)) continue;
   // Buscar el archivo JSON en argentina/ que corresponda
   const argFile = safeReadDir(ARGENTINA_DIR).find(f => {
     if (f === 'provincias.json') return false;
@@ -1321,6 +1346,30 @@ for (const p of provincias) {
 }
 if (argUrls.length > 0) {
   sitemaps.push({ name: 'sitemap-argentina.xml', urls: argUrls });
+}
+
+// 8b. Informes (/informes/<slug>) y verticales de partners (/partners/<vertical>).
+// Los hubs /informes y /partners ya estaban en core(), pero sus hijos —páginas 200
+// indexables generadas desde registries— no estaban en ningún sitemap (audit
+// 2026-07-24). Se derivan del MISMO registry que usa getStaticPaths para que no se
+// desincronicen cuando alguien agrega un informe o una vertical.
+const registryUrls: Url[] = [
+  ...INFORMES.map((i: any) => ({
+    loc: `${site}/informes/${i.slug}`,
+    priority: '0.6',
+    changefreq: 'monthly',
+    // El informe declara su propia fecha: usarla evita mover el lastmod en cada build.
+    lastmod: clampToToday(i.fechaActualizacion || i.fechaPublicacion || buildDate),
+  })),
+  ...VERTICALES.map((v: any) => ({
+    loc: `${site}/partners/${v.slug}`,
+    priority: '0.6',
+    changefreq: 'monthly',
+    lastmod: getLastMod(join(ROOT, 'src', 'lib', 'partners', 'verticales.ts'), buildDate),
+  })),
+];
+if (registryUrls.length > 0) {
+  sitemaps.push({ name: 'sitemap-registries.xml', urls: registryUrls });
 }
 
 // --------------------------------------------------------------------------

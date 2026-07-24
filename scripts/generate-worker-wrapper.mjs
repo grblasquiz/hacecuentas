@@ -104,6 +104,29 @@ if (redirectEntries.length === 0 || goneEntries.length === 0 || pruningEntries.l
   process.exit(1);
 }
 
+// Guard del límite duro de CF: public/_redirects admite 2000 reglas. Pasarse
+// hace que CF RECHACE el deploy entero (no degrada: falla). Cortamos acá, en
+// build, en vez de descubrirlo cuando wrangler ya subió todo lo demás.
+// Reglas nuevas que no entren van por src/lib/pruning-redirects.ts, que se
+// inlinea en el wrapper y no consume cupo de _redirects.
+const REDIRECTS_HARD_LIMIT = 2000;
+const REDIRECTS_WARN_AT = 1900;
+if (redirectEntries.length > REDIRECTS_HARD_LIMIT) {
+  console.error(
+    `[wrap-worker] public/_redirects tiene ${redirectEntries.length} reglas — ` +
+      `supera el límite duro de CF (${REDIRECTS_HARD_LIMIT}). CF rechazaría el deploy. ` +
+      `Movés reglas a src/lib/pruning-redirects.ts (se inlinean acá, sin cupo).`,
+  );
+  process.exit(1);
+}
+if (redirectEntries.length >= REDIRECTS_WARN_AT) {
+  console.warn(
+    `[wrap-worker] ⚠ public/_redirects: ${redirectEntries.length}/${REDIRECTS_HARD_LIMIT} reglas ` +
+      `(quedan ${REDIRECTS_HARD_LIMIT - redirectEntries.length}). Empezá a mandar las nuevas ` +
+      `a src/lib/pruning-redirects.ts.`,
+  );
+}
+
 // ---- CSP principal ----------------------------------------------------------
 // Vive en src/lib/csp-main.txt y se sirve desde el wrapper (no desde _headers):
 // CF Workers Static Assets corta lineas de _headers a 2000 chars y la politica

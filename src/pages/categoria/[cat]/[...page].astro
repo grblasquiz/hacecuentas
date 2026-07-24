@@ -1475,7 +1475,10 @@ const pageTitle = isFirstPage
   : `${m.label} — Página ${currentPage} de ${totalPages} | Hacé Cuentas`;
 const pageDesc = isFirstPage
   ? m.desc
-  : `Página ${currentPage} de ${totalPages} de calculadoras de ${m.label.toLowerCase()}. ${totalCalcs} calculadoras en total.`;
+  // Las paginadas quedaban en ~66 chars: desaprovechaban la mitad del ancho que
+  // muestra el SERP. Se agrega el rango de resultados y el CTA sin repetir el
+  // texto editorial de la página 1 (que es lo que no queremos duplicar).
+  : `Calculadoras de ${m.label.toLowerCase()} ${(currentPage - 1) * 60 + 1} a ${Math.min(currentPage * 60, totalCalcs)} de ${totalCalcs}. Página ${currentPage} de ${totalPages} del listado completo: gratis, sin registro y con los valores actualizados a 2026.`;
 
 // Schemas combinados: CollectionPage + BreadcrumbList + FAQPage
 // ItemList top-level (standalone) — Google lo prefiere así para rich results
@@ -1582,7 +1585,7 @@ function md(text: string): string {
 }
 ---
 
-<Layout title={pageTitle} description={pageDesc} canonical={pagePath} image={`/og/categoria-${cat}.png`} schema={schema} domain={categoryDomain(cat)} pageType={isFirstPage ? 'hub' : 'category'}>
+<Layout title={pageTitle} description={pageDesc} canonical={pagePath} image={`/og/categoria-${cat}.png`} schema={schema} domain={categoryDomain(cat)} pageType={isFirstPage ? 'hub' : 'category'} noindex={totalCalcs === 0}>
   <Header slot="header" />
 
   {isFirstPage && cat === 'deportes' && (

@@ -5,6 +5,7 @@ import ProfileStore from '../components/ProfileStore.astro';
 import { ADSENSE_SERVING_ENABLED, isAdsenseExcludedPath } from '../lib/adsense';
 import { HC_ALLOWED_PARAMS } from '../lib/analytics';
 import { compactSeoTitle } from '../lib/seo-title';
+import { compactSeoDescription } from '../lib/seo-description';
 
 // Self-hosted fonts (subset latin) — elimina render-blocking de Google Fonts.
 // Antes (5 weights estáticos): 5 woff2 × ~17 KB = ~85 KB de Inter.
@@ -98,6 +99,9 @@ const socialTitle = ogTitle || title;
 // <title> de más de 70 caracteres. Compactamos sólo la etiqueta de SERP: H1,
 // schema y títulos sociales conservan el texto completo.
 const seoTitle = compactSeoTitle(title);
+// La meta description se compacta al ancho que Google muestra (~160). og:/twitter:
+// siguen con el texto completo: esas plataformas cortan con sus propias reglas.
+const seoDescription = compactSeoDescription(description);
 
 const siteUrl = 'https://hacecuentas.com';
 // Cloudflare Pages sirve /foo.html en /foo — canonical sin .html para matchear sitemap
@@ -370,7 +374,7 @@ const globalSchema = {
     </script>
 
     <title>{seoTitle}</title>
-    <meta name="description" content={description} />
+    <meta name="description" content={seoDescription} />
     {keywordsArr && keywordsArr.length > 0 && (
       <meta name="keywords" content={keywordsArr.slice(0, 10).join(', ')} />
     )}
