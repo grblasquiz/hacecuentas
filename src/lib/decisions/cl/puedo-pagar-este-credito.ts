@@ -189,7 +189,7 @@ export const room: DecisionRoom = {
   ],
   sources: [
     { name: 'CMF — CAE y costo total del crédito (educación financiera)', url: 'https://www.cmfchile.cl/' },
-    { name: 'CMF — Informe de endeudamiento (carga financiera)', url: 'https://www.cmfchile.cl/portal/estadisticas/617/w3-propertyvalue-29135.html' },
+    { name: 'CMF — Informe de endeudamiento (carga financiera)', url: 'https://www.cmfchile.cl/portal/estadisticas/617/w3-propertyvalue-30179.html' },
     { name: 'SERNAC — Comparador de créditos de consumo', url: 'https://www.sernac.cl/' },
   ],
 };

@@ -170,7 +170,7 @@ export const DAS_MEI = {
 //  - LC 150/2015, art. 34 (composição do DAE) —
 //    https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp150.htm
 //  - eSocial Doméstico (gov.br) —
-//    https://www.gov.br/esocial/pt-br/domestico
+//    https://www.gov.br/esocial/pt-br/empregador-domestico
 /** Encargos patronais do empregador doméstico (percentuais sobre a remuneração, 2026). */
 export const DOMESTICA_ENCARGOS = {
   /** INSS patronal (contribuição do empregador). */
@@ -218,7 +218,7 @@ export const BANDEIRAS_TARIFARIAS = {
 // fixa de 4% (Lei 10.705/2000), mantida em 2026 (progressividade até 8% depende de
 // lei estadual ainda não aprovada). Isenções expressas em UFESP.
 // Fontes:
-//  - UFESP 2026 — https://portal.fazenda.sp.gov.br/Noticias/Paginas/ufesp2026.aspx
+//  - UFESP 2026 — https://legislacao.fazenda.sp.gov.br/Paginas/Comunicado-DICAR-88-de-2025.aspx
 //  - Lei 10.705/2000 (ITCMD-SP, alíquota e isenções) —
 //    https://legislacao.fazenda.sp.gov.br/Paginas/lei10705.aspx
 /** Valor da UFESP para 2026 (R$). */
@@ -238,10 +238,10 @@ export const ITCMD_SP = {
 // Base de cálculo: valor venal (tabela FIPE). Alíquotas confirmadas para 2026.
 // PARANÁ: redução de 45% — de 3,5% para 1,9% sobre autos (menor alíquota do Brasil).
 //   Fonte: Governo do Paraná / DETRAN-PR —
-//   https://www.parana.pr.gov.br/aen/Noticia/Com-reducao-de-45-Parana-tera-menor-aliquota-de-IPVA-do-Brasil-em-2026
+//   https://www.detran.pr.gov.br/Noticia/Com-reducao-de-45-Parana-tera-menor-aliquota-de-IPVA-do-Brasil-em-2026
 // SANTA CATARINA: 2% autos de passeio/utilitários; 1% motos, caminhões, ônibus,
 //   micro-ônibus, veículos de carga e locadoras.
-//   Fonte: SEF-SC — https://www.sef.sc.gov.br/servicos-orgao/25/IPVA
+//   Fonte: SEF-SC — https://www.sef.sc.gov.br/servicos/servico/25/IPVA
 /** Alíquotas do IPVA Paraná 2026 (% sobre o valor venal FIPE). */
 export const IPVA_PR_ALIQUOTAS: Record<string, number> = {
   auto: 1.9,

@@ -178,7 +178,7 @@ export const room: DecisionRoom = {
   ],
   sources: [
     { name: 'SII — Boletas de honorarios y retención vigente', url: 'https://www.sii.cl/' },
-    { name: 'SII — Operación Renta: cotizaciones de independientes', url: 'https://www.sii.cl/destacados/renta/' },
+    { name: 'SII — Operación Renta: cotizaciones de independientes', url: 'https://www.sii.cl/destacados/renta/2026/index.html' },
     { name: 'CMF — Educación financiera para independientes', url: 'https://www.cmfchile.cl/educa/' },
   ],
 };

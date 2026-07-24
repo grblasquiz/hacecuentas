@@ -65,7 +65,7 @@ export const META = {
   anio: 2026,
   dataAsOf: '2026-06-07',
   fuente: 'Boletín Oficial — Ley 27.399 + Decreto 1584/2010 + Resolución 164/2025',
-  fuenteUrl: 'https://www.argentina.gob.ar/interior/feriados-nacionales-2026',
+  fuenteUrl: 'https://www.argentina.gob.ar/feriados',
   /** Recordatorio: reverificar y regenerar para el año siguiente cada enero. */
   revisarEn: '2027-01',
 } as const;

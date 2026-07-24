@@ -186,6 +186,6 @@ export const room: DecisionRoom = {
   ],
   sources: [
     { name: 'BCRA — Costo Financiero Total (CFT)', url: 'https://www.bcra.gob.ar/' },
-    { name: 'BCRA — Préstamos y sistema francés', url: 'https://www.bcra.gob.ar/BCRAyVos/default.asp' },
+    { name: 'BCRA — Préstamos y sistema francés', url: 'https://www.bcra.gob.ar/herramientas-conocimientos/' },
   ],
 };

@@ -198,6 +198,6 @@ export const room: DecisionRoom = {
   ],
   sources: [
     { name: 'CNV — Educación financiera', url: 'https://www.argentina.gob.ar/cnv' },
-    { name: 'BCRA — Información para usuarios financieros', url: 'https://www.bcra.gob.ar/BCRAyVos/default.asp' },
+    { name: 'BCRA — Información para usuarios financieros', url: 'https://www.bcra.gob.ar/herramientas-conocimientos/' },
   ],
 };

@@ -187,6 +187,6 @@ export const room: DecisionRoom = {
   ],
   sources: [
     { name: 'INDEC — Índice de Precios al Consumidor (IPC)', url: 'https://www.indec.gob.ar/' },
-    { name: 'BCRA — Información para usuarios financieros', url: 'https://www.bcra.gob.ar/BCRAyVos/default.asp' },
+    { name: 'BCRA — Información para usuarios financieros', url: 'https://www.bcra.gob.ar/herramientas-conocimientos/' },
   ],
 };

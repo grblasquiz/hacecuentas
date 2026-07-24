@@ -59,4 +59,34 @@ describe('regresiones UX del top 100', () => {
       expect(layout).toContain(`'${slug}'`);
     }
   });
+
+  it('activa focus en la tanda de calculadoras con más de 100 sesiones', () => {
+    const layout = readFileSync('src/components/CalcLayoutV2.astro', 'utf8');
+    for (const slug of [
+      'calculadora-gastos-notariales-registro-compraventa-2026',
+      'calculadora-impuesto-ganancias-sueldo',
+      'calculadora-prima-antiguedad-mexico',
+      'calculadora-antiguedad-laboral',
+      'calculadora-generacion-perteneces',
+      'calculadora-horas-extras-colombia-2026',
+      'calculadora-millas-latam-destino',
+      'calculadora-impuesto-renta-colombia-persona-natural-2026',
+      'calculadora-combustible-viaje-auto',
+      'calculadora-soat-peru-precio',
+      'calculadora-impuesto-industria-comercio-ica-colombia-municipios',
+      'calculadora-presion-atmosferica-altitud-barometrica',
+      'calculadora-convenio-hosteleria-espana-sueldo-2026-categoria',
+      'calculadora-retencion-ganancias-rg-830',
+      'calculadora-credito-infonavit-descuento',
+      'calculadora-sancion-extemporaneidad-dian-2026',
+      'calculadora-recibo-luz-codensa-epm-colombia-estrato',
+      'calculadora-liquidacion-empleada-domestica-por-dias-colombia-2026',
+      'calculadora-placas-auto-costo-mexico',
+      'calculadora-isn-impuesto-sobre-nominas-estado',
+      'calculadora-sueldo-por-hora',
+      'calculadora-empleada-domestica-dias-colombia-2026',
+    ]) {
+      expect(layout).toContain(`'${slug}'`);
+    }
+  });
 });
