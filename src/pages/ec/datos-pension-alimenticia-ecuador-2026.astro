@@ -1,0 +1,310 @@
+---
+export const prerender = true;
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import '../../styles/calc-flagship.css';
+
+// Página-dato enlazable (autoridad) Ecuador: Tabla de Pensiones Alimenticias
+// Mínimas 2026. Patrón [[linkable-data-pages-strategy]]: Dataset + CC-BY +
+// "Cómo citar" → backlink editorial. Datos: src/lib/formulas/pension-alimenticia-ecuador.ts
+// + src/lib/data/ecuador-2026.ts (SBU $482, Acuerdo MDH-DM-2026-0005-A).
+
+const ULTIMA_REVISION = '2026-07-24';
+const PAGE_URL = 'https://hacecuentas.com/ec/datos-pension-alimenticia-ecuador-2026';
+
+// Tabla oficial 2026 (Acuerdo MDH-DM-2026-0005-A, 29-ene-2026, sobre SBU $482).
+// Porcentajes idénticos a los que computa la calculadora (formulas/pension-alimenticia-ecuador.ts).
+const tabla = [
+  { nivel: '1', sbu: '1,00 – 1,25 SBU', usd: '$482 – $602,50', u02: '28,12%', u3: '29,49%', d02: '39,71%', d3: '43,13%', t02: '52,18%', t3: '54,23%' },
+  { nivel: '2', sbu: '1,25 – 3,00 SBU', usd: '$602,50 – $1.446', u02: '34,84%', u3: '36,96%', d02: '47,45%', d3: '49,51%', t02: '47,45%', t3: '49,51%' },
+  { nivel: '3', sbu: '3,00 – 4,00 SBU', usd: '$1.446 – $1.928', u02: '38,49%', u3: '40,83%', d02: '38,49%', d3: '40,83%', t02: '38,49%', t3: '40,83%' },
+  { nivel: '4', sbu: '4,00 – 6,50 SBU', usd: '$1.928 – $3.133', u02: '39,79%', u3: '42,21%', d02: '39,79%', d3: '42,21%', t02: '39,79%', t3: '42,21%' },
+  { nivel: '5', sbu: '6,50 – 9,00 SBU', usd: '$3.133 – $4.338', u02: '41,14%', u3: '43,64%', d02: '41,14%', d3: '43,64%', t02: '41,14%', t3: '43,64%' },
+  { nivel: '6', sbu: 'más de 9,00 SBU', usd: 'más de $4.338', u02: '42,53%', u3: '45,12%', d02: '42,53%', d3: '45,12%', t02: '42,53%', t3: '45,12%' },
+];
+
+const valores = [
+  { c: 'SBU 2026 (base de la tabla)', v: '$482', n: 'Ministerio del Trabajo · vigente desde 01-ene-2026' },
+  { c: 'Pensión mínima absoluta (1 hijo, 0-2 años)', v: '$135,54', n: '28,12% de 1 SBU · Nivel 1' },
+  { c: 'Pensión mínima (1 hijo, 3 años o más)', v: '$142,14', n: '29,49% de 1 SBU · Nivel 1' },
+  { c: 'Descuento previo al cálculo', v: '9,45% (IESS)', n: 'Art. 13 · Sentencia 048-13-SCN-CC' },
+  { c: 'Ingreso mínimo referencial', v: '1 SBU ($482)', n: 'si el alimentante gana menos o no declara' },
+  { c: 'Niveles de la tabla', v: '6', n: 'según ingreso neto expresado en SBU' },
+];
+
+const title = 'Tabla pensión alimenticia Ecuador 2026: mínimo $135,54';
+const description = 'Tabla oficial de pensiones alimenticias mínimas Ecuador 2026 (Acuerdo MDH-DM-2026-0005-A): 6 niveles sobre el SBU de $482, porcentajes por número de hijos y edad, mínimo de $135,54. Datos citables (CC-BY 4.0).';
+
+const faq = [
+  { q: '¿Cuánto es la pensión alimenticia mínima en Ecuador 2026?', a: 'El monto mínimo absoluto de la tabla 2026 es de $135,54 al mes (1 hijo de 0 a 2 años, Nivel 1) y de $142,14 para 1 hijo de 3 años en adelante. Corresponden al 28,12% y 29,49% de 1 SBU ($482), según el Acuerdo MDH-DM-2026-0005-A del Ministerio de Desarrollo Humano.' },
+  { q: '¿Cómo se calcula la pensión alimenticia en Ecuador 2026?', a: 'Primero se descuenta del ingreso mensual del alimentante el aporte al IESS (9,45%). Esa base se expresa en SBU ($482) para ubicarla en uno de los 6 niveles de la tabla; el porcentaje sale del cruce entre nivel, número de hijos y edad del beneficiario (0-2 años o 3 en adelante). Pensión total = base × porcentaje, y el total se divide entre todos los hijos.' },
+  { q: '¿Cuánto paga de pensión alguien que gana $1.200 por un hijo de 5 años?', a: 'Base de cálculo: $1.200 − 9,45% de IESS = $1.086,60. Eso equivale a 2,25 SBU → Nivel 2. Con 1 hijo de 3 años o más aplica el 36,96%: $1.086,60 × 36,96% = $401,61 al mes. Si el hijo tuviera menos de 3 años, sería 34,84% = $378,57.' },
+  { q: '¿Sobre qué ingreso se calcula la pensión: bruto o neto?', a: 'Sobre el ingreso descontando el aporte personal al IESS (9,45%), según el Art. 13 del acuerdo y la Sentencia 048-13-SCN-CC de la Corte Constitucional. Por eso un sueldo de $1.200 se calcula sobre $1.086,60, no sobre $1.200.' },
+  { q: '¿Qué pasa si el alimentante gana menos de 1 SBU o no declara ingresos?', a: 'Se toma 1 SBU ($482) como mínimo referencial (Disposición General Primera del acuerdo). Así la pensión nunca baja del piso del Nivel 1: $135,54 por un hijo de 0 a 2 años o $142,14 por uno de 3 años en adelante.' },
+  { q: '¿Tener más hijos sube el porcentaje de la pensión?', a: 'Solo en los niveles 1 y 2. En los niveles 3 a 6 el acuerdo fija un único porcentaje "para uno o más derechohabientes" (por ejemplo, 42,21% en el Nivel 4 para hijos de 3+ años); lo que cambia es que el monto total se reparte entre todos los hijos.' },
+  { q: '¿Por qué la tabla distingue entre 0-2 años y 3 años en adelante?', a: 'Porque la educación inicial es obligatoria desde los 3 años, lo que implica un gasto mayor: el porcentaje sube (en el Nivel 1, de 28,12% a 29,49% con un hijo). Si hay hijos de distintas edades, se usa el porcentaje del de mayor edad (Art. 14).' },
+  { q: '¿La tabla es el monto definitivo que fija el juez?', a: 'No. La tabla es el piso legal: el juez no puede fijar una pensión menor, pero sí mayor si las necesidades del niño o los ingresos reales del alimentante lo justifican.' },
+  { q: '¿Hay un porcentaje extra si el hijo tiene discapacidad?', a: 'Sí. Se suma un porcentaje de 1 SBU según el grado de discapacidad (tramos 30%-49%, 50%-74% y 75%-100%), calculado por hogar y tomando el hijo con mayor grado (Arts. 4-10 del acuerdo).' },
+  { q: '¿La pensión se paga en dólares y se actualiza cada año?', a: 'Sí. Ecuador está dolarizado, así que el juez fija la pensión en dólares de Estados Unidos (Art. 16). La pensión se indexa anualmente por inflación y, para quienes están en el mínimo, se ajusta automáticamente cuando sube el SBU.' },
+  { q: '¿De dónde salen estos datos?', a: 'Del Acuerdo Ministerial Nro. MDH-DM-2026-0005-A del Ministerio de Desarrollo Humano (suscrito el 29 de enero de 2026), que expide la Tabla de Pensiones Alimenticias Mínimas 2026 sobre el SBU de $482 fijado por el Ministerio del Trabajo. Fuentes al final.' },
+  { q: '¿Puedo usar esta tabla en mi web, nota o trabajo?', a: 'Sí. Los datos se publican bajo licencia CC-BY 4.0: puedes reproducirlos citando la fuente con un enlace a hacecuentas.com. Más abajo está el bloque "Cómo citar".' },
+];
+
+const datasetSchema = {
+  '@type': 'Dataset', '@id': `${PAGE_URL}#dataset`,
+  name: 'Tabla de pensiones alimenticias mínimas Ecuador 2026',
+  description: 'Tabla oficial de pensiones alimenticias mínimas de Ecuador 2026 (Acuerdo MDH-DM-2026-0005-A): 6 niveles de ingreso sobre el SBU de $482, porcentajes por número de hijos y edad del beneficiario, y montos mínimos en dólares.',
+  url: PAGE_URL, license: 'https://creativecommons.org/licenses/by/4.0/', isAccessibleForFree: true,
+  inLanguage: 'es-EC', dateModified: ULTIMA_REVISION, temporalCoverage: '2026',
+  spatialCoverage: { '@type': 'Place', name: 'Ecuador' },
+  creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+  keywords: ['pensión alimenticia Ecuador 2026', 'tabla pensiones alimenticias mínimas', 'Acuerdo MDH-DM-2026-0005-A', 'SBU 2026', 'MIES', 'Consejo de la Judicatura', 'Ecuador'],
+  variableMeasured: ['Porcentaje de pensión alimenticia mínima (%)', 'SBU (USD)', 'Pensión mínima (USD)'],
+  version: '2026',
+};
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'WebPage', '@id': `${PAGE_URL}#webpage`, name: title, description, url: PAGE_URL, inLanguage: 'es-EC', dateModified: ULTIMA_REVISION, mainEntity: { '@id': `${PAGE_URL}#dataset` } },
+    datasetSchema,
+    { '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Ecuador', item: 'https://hacecuentas.com/ec' },
+      { '@type': 'ListItem', position: 2, name: 'Pensión alimenticia 2026', item: PAGE_URL },
+    ]},
+    { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical="/ec/datos-pension-alimenticia-ecuador-2026" audience="EC" lang="es" schema={schema} domain="money">
+  <Header slot="header" />
+  <main class="cf-page smc" data-domain="money">
+
+    <nav class="cf-crumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Inicio</a></li>
+        <li aria-hidden="true" class="cf-crumb__sep">›</li>
+        <li><a href="/ec">Ecuador</a></li>
+        <li aria-hidden="true" class="cf-crumb__sep">›</li>
+        <li aria-current="page">Pensión alimenticia 2026</li>
+      </ol>
+    </nav>
+
+    <header class="cf-hero">
+      <div class="cf-hero__main">
+        <p class="cf-kicker"><span aria-hidden="true">🇪🇨</span> Ecuador · Datos 2026</p>
+        <h1 class="cf-h1">Tabla de pensión alimenticia en Ecuador <span class="cf-yr">2026</span></h1>
+        <p class="cf-sub">La Tabla de Pensiones Alimenticias Mínimas completa: 6 niveles de ingreso, porcentajes por número de hijos y edad, mínimos en dólares y la regla del IESS.</p>
+        <ul class="cf-pills">
+          <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Acuerdo MDH-DM-2026-0005-A</li>
+          <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Actualizado en julio de 2026</li>
+          <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Uso libre con atribución</li>
+        </ul>
+      </div>
+      <div class="cf-hero__deco" aria-hidden="true">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">Pensión mínima absoluta 2026</div>
+          <div class="cf-deco-card__value">$135,54</div>
+          <div class="cf-deco-card__note">USD · 1 hijo de 0 a 2 años · Nivel 1</div>
+        </div>
+        <div class="cf-deco-sub"><strong>Base de la tabla: SBU</strong> <span class="cf-deco-chip">$482 · 2026</span></div>
+      </div>
+    </header>
+
+    <div class="cf-stats">
+      <div class="cf-stat cf-stat--accent"><div class="cf-stat__label">Mínimo (1 hijo, 0-2 años)</div><div class="cf-stat__value">$135,54</div><div class="cf-stat__sub">28,12% de 1 SBU</div></div>
+      <div class="cf-stat"><div class="cf-stat__label">Mínimo (1 hijo, 3+ años)</div><div class="cf-stat__value">$142,14</div><div class="cf-stat__sub">29,49% de 1 SBU</div></div>
+      <div class="cf-stat"><div class="cf-stat__label">SBU 2026</div><div class="cf-stat__value">$482</div><div class="cf-stat__sub">Ministerio del Trabajo</div></div>
+      <div class="cf-stat"><div class="cf-stat__label">Descuento previo</div><div class="cf-stat__value">9,45%</div><div class="cf-stat__sub">aporte IESS (Art. 13)</div></div>
+    </div>
+
+    <!-- Cómo se calcula -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Paso a paso</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Así se calcula la pensión mínima</h2>
+      <div class="cf-2col">
+        <div class="cf-breakdown">
+          <div class="cf-breakdown__big">$401,61 <span style="font-size:0.9rem;font-weight:600;color:var(--text-subtle)">USD · ejemplo con $1.200</span></div>
+          <div class="cf-brow"><span class="cf-brow__lbl">Ingreso mensual del alimentante</span><span class="cf-brow__val">$1.200,00</span><span class="cf-brow__bar"><span style="width:100%"></span></span></div>
+          <div class="cf-brow"><span class="cf-brow__lbl">− Aporte IESS (9,45%)</span><span class="cf-brow__val">−$113,40</span><span class="cf-brow__bar"><span style="width:9.45%"></span></span></div>
+          <div class="cf-brow"><span class="cf-brow__lbl">Base de cálculo (= 2,25 SBU → Nivel 2)</span><span class="cf-brow__val">$1.086,60</span><span class="cf-brow__bar"><span style="width:90.55%"></span></span></div>
+          <div class="cf-breakdown__total"><span>× 36,96% (1 hijo, 3+ años, Nivel 2)</span><strong>$401,61 / mes</strong></div>
+        </div>
+        <div class="cf-cards" style="align-content:start">
+          <div class="cf-minicard"><span class="cf-minicard__ico" aria-hidden="true">🧒</span><p class="cf-minicard__title">Piso legal por 1 hijo (3+ años)</p><div class="cf-minicard__big">$142,14</div><p class="cf-minicard__sub">Aun con ingreso bajo 1 SBU (mínimo referencial $482)</p></div>
+          <div class="cf-minicard"><span class="cf-minicard__ico" aria-hidden="true">👨‍👧‍👦</span><p class="cf-minicard__title">Con varios hijos</p><div class="cf-minicard__big">Se reparte</div><p class="cf-minicard__sub">El total se divide entre todos los hijos (Art. 13)</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tabla maestra -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Tabla oficial 2026</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Porcentajes por nivel, hijos y edad</h2>
+      <div class="cf-tablewrap">
+        <table class="cf-table">
+          <thead><tr><th>Nivel</th><th>Ingreso (SBU)</th><th>Ingreso aprox. (USD)</th><th>1 hijo 0-2 a.</th><th>1 hijo 3+ a.</th><th>2 hijos 0-2 a.</th><th>2 hijos 3+ a.</th><th>3+ hijos 0-2 a.</th><th>3+ hijos 3+ a.</th></tr></thead>
+          <tbody>
+            {tabla.map((r) => (<tr><td class="cf-td-dot">{r.nivel}</td><td style="color:var(--text-subtle);font-size:0.85rem">{r.sbu}</td><td style="color:var(--text-subtle);font-size:0.85rem">{r.usd}</td><td class="cf-td-em">{r.u02}</td><td class="cf-td-em">{r.u3}</td><td>{r.d02}</td><td>{r.d3}</td><td>{r.t02}</td><td>{r.t3}</td></tr>))}
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:0.82rem;color:var(--text-subtle);margin-top:0.7rem">Porcentaje sobre el ingreso neto del aporte al IESS (9,45%). En los niveles 3 a 6 el acuerdo fija un único porcentaje "para uno o más derechohabientes": no varía por número de hijos, pero el total se reparte entre todos. Fuente: Acuerdo MDH-DM-2026-0005-A, sobre SBU $482.</p>
+    </section>
+
+    <!-- Reglas clave -->
+    <section class="cf-section">
+      <div class="cf-side-card cf-side-card--dark smc-jornada">
+        <div>
+          <p class="cf-side-eyebrow">Regla clave</p>
+          <h2 class="smc-jornada__title">El cálculo parte del ingreso neto de IESS</h2>
+          <p class="cf-side-desc" style="max-width:44ch">El Art. 13 del acuerdo y la Sentencia 048-13-SCN-CC mandan descontar primero el aporte personal al IESS (9,45%). Calcular sobre el bruto infla la pensión.</p>
+        </div>
+        <div class="smc-jornada__cmp">
+          <div class="smc-j"><span class="smc-j__lbl">Sueldo bruto</span><span class="smc-j__val">$1.200,00</span><span class="smc-j__sub">no es la base legal</span></div>
+          <span class="smc-j__arrow" aria-hidden="true">→</span>
+          <div class="smc-j smc-j--now"><span class="smc-j__lbl">Base de cálculo</span><span class="smc-j__val">$1.086,60</span><span class="smc-j__sub">tras el 9,45% de IESS</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Piso y edad -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Lo que casi nadie aplica bien</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Piso legal, edad y reparto</h2>
+      <div class="cf-cmp">
+        <div class="cf-cmp__col cf-cmp__col--yes">
+          <div class="cf-cmp__head"><span aria-hidden="true">✓</span> La tabla garantiza…</div>
+          <ul class="cf-cmp__list">
+            <li>Un piso: el juez puede fijar más, nunca menos que la tabla</li>
+            <li>Mínimo referencial de 1 SBU ($482) si el alimentante gana menos o no declara</li>
+            <li>Ajuste anual por inflación y por subida del SBU para quienes están en el mínimo</li>
+          </ul>
+        </div>
+        <div class="cf-cmp__col smc-impact">
+          <div class="cf-cmp__head"><span aria-hidden="true">＋</span> Cómo se aplica</div>
+          <ul class="cf-cmp__list">
+            <li>Hijos de 3+ años pagan porcentaje mayor (educación inicial obligatoria)</li>
+            <li>Con hijos de distintas edades se usa el porcentaje del de mayor edad (Art. 14)</li>
+            <li>Si un hijo tiene discapacidad, se suma un porcentaje de 1 SBU según el grado</li>
+          </ul>
+          <div class="smc-sum">$482 × 28,12% <strong>= $135,54 (mínimo absoluto)</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Ejemplos -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Ejemplos resueltos</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Tres casos con la tabla 2026</h2>
+      <div class="cf-cards cf-cards--4" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr))">
+        <div class="cf-minicard cf-minicard--v1"><span class="cf-minicard__ico" aria-hidden="true">💼</span><p class="cf-minicard__title">Gana $482 · 1 hijo de 4 años</p><div class="cf-minicard__big">$142,14</div><p class="cf-minicard__sub">Neto de IESS bajo 1 SBU → mínimo referencial $482 · Nivel 1 · 29,49%</p></div>
+        <div class="cf-minicard cf-minicard--v2"><span class="cf-minicard__ico" aria-hidden="true">🏢</span><p class="cf-minicard__title">Gana $1.200 · 1 hijo de 5 años</p><div class="cf-minicard__big">$401,61</div><p class="cf-minicard__sub">Base $1.086,60 · Nivel 2 · 36,96%</p></div>
+        <div class="cf-minicard cf-minicard--v3"><span class="cf-minicard__ico" aria-hidden="true">📈</span><p class="cf-minicard__title">Gana $3.000 · 2 hijos (3+ años)</p><div class="cf-minicard__big">$1.146,63</div><p class="cf-minicard__sub">Base $2.716,50 · Nivel 4 · 42,21% · $573,32 por hijo</p></div>
+      </div>
+    </section>
+
+    <!-- Valores de referencia -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Referencia rápida</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Valores clave 2026</h2>
+      <div class="cf-tablewrap">
+        <table class="cf-table">
+          <thead><tr><th>Concepto</th><th>Fórmula o condición</th><th>Valor 2026</th></tr></thead>
+          <tbody>
+            {valores.map((r) => (<tr><td class="cf-td-dot">{r.c}</td><td style="color:var(--text-subtle);font-size:0.85rem">{r.n}</td><td class="cf-td-em">{r.v}</td></tr>))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Datos abiertos -->
+    <section class="cf-section">
+      <div class="cf-2col">
+        <div>
+          <p class="cf-eyebrow">Datos abiertos · CC-BY 4.0</p>
+          <h2 class="cf-section__title" style="margin:0.35rem 0 0.6rem">Usa estos datos en tu proyecto</h2>
+          <p class="cf-section__lead" style="max-width:56ch;margin-bottom:1.1rem">Puedes reproducir la tabla en tu web, nota periodística o trabajo académico citando la fuente con un enlace.</p>
+          <div class="smc-cite">
+            <p class="cf-side-eyebrow" style="color:var(--text-subtle)">Cómo citar</p>
+            <code>Fuente: Hacé Cuentas — hacecuentas.com/ec/datos-pension-alimenticia-ecuador-2026<br>Tabla de pensiones alimenticias mínimas Ecuador 2026 · Licencia CC-BY 4.0</code>
+          </div>
+        </div>
+        <aside class="cf-side">
+          <div class="cf-side-card cf-side-card--dark">
+            <p class="cf-side-eyebrow">▤ Fuentes oficiales</p>
+            <div class="smc-src"><strong>Ministerio de Desarrollo Humano (ex MIES)</strong><span>Acuerdo Nro. MDH-DM-2026-0005-A · 29-ene-2026</span></div>
+            <div class="smc-src"><strong>Ministerio del Trabajo</strong><span>SBU 2026: $482</span></div>
+            <div class="smc-src"><strong>Corte Constitucional</strong><span>Sentencia 048-13-SCN-CC · base neta de IESS</span></div>
+            <p class="cf-side-desc" style="margin-top:0.8rem"><span aria-hidden="true">✓</span> Última revisión: {new Date(ULTIMA_REVISION).toLocaleDateString('es-EC')}</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f, i) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a">{f.a}</div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <!-- Related -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Sigue haciendo cuentas</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Calculadoras relacionadas</h2>
+      <div class="cf-related__grid">
+        <a class="cf-relcard" href="/ec/calculadora-pension-alimenticia-ecuador"><span class="cf-relcard__ico" aria-hidden="true">👨‍👩‍👧</span><span class="cf-relcard__title">Pensión alimenticia</span><span class="cf-relcard__desc">Ingresa tu caso y obtén el porcentaje y el monto mínimo.</span><span class="cf-relcard__link">Calcular pensión <span aria-hidden="true">→</span></span></a>
+        <a class="cf-relcard" href="/ec/calculadora-aporte-iess-ecuador"><span class="cf-relcard__ico" aria-hidden="true">🏥</span><span class="cf-relcard__title">Aporte al IESS</span><span class="cf-relcard__desc">El 9,45% que se descuenta antes de aplicar la tabla.</span><span class="cf-relcard__link">Calcular aporte <span aria-hidden="true">→</span></span></a>
+        <a class="cf-relcard" href="/ec/calculadora-sueldo-neto-ecuador"><span class="cf-relcard__ico" aria-hidden="true">💵</span><span class="cf-relcard__title">Sueldo neto</span><span class="cf-relcard__desc">Cuánto queda del sueldo tras IESS e impuesto a la renta.</span><span class="cf-relcard__link">Calcular sueldo <span aria-hidden="true">→</span></span></a>
+      </div>
+    </section>
+
+    <section class="cf-ctabar">
+      <div>
+        <p class="cf-ctabar__title">Guarda esta referencia para cuando la necesites.</p>
+        <p class="cf-ctabar__sub">La tabla de pensión alimenticia Ecuador 2026 completa, siempre a mano.</p>
+      </div>
+      <div class="cf-ctabar__actions">
+        <a class="cf-ctabar__btn cf-ctabar__btn--solid" href="/mi-hacecuentas?next=/ec/datos-pension-alimenticia-ecuador-2026"><span aria-hidden="true">☆</span> Guardar en Mi Hacé Cuentas</a>
+      </div>
+    </section>
+
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  /* Bloques propios de esta página (el resto viene de calc-flagship.css) */
+  .smc-impact { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 25%, transparent); }
+  .smc-impact .cf-cmp__head { color: var(--accent-strong); }
+  .smc-impact .cf-cmp__list li::before { content: "→"; color: var(--accent); font-weight: 800; }
+  .smc-sum { margin-top: 0.9rem; padding-top: 0.8rem; border-top: 1px dashed color-mix(in srgb, var(--accent) 30%, transparent); font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted); }
+  .smc-sum strong { color: var(--accent-strong); }
+
+  .smc-jornada { display: grid; grid-template-columns: 1fr; gap: 1.5rem; align-items: center; padding: 1.6rem 1.75rem; }
+  @media (min-width: 780px) { .smc-jornada { grid-template-columns: 1fr 1fr; } }
+  .smc-jornada__title { font-size: clamp(1.3rem, 2.6vw, 1.6rem); font-weight: 800; color: #fff; margin: 0.4rem 0 0.6rem; letter-spacing: -0.02em; }
+  .smc-jornada__cmp { display: flex; align-items: center; gap: 0.75rem; }
+  .smc-j { flex: 1; padding: 0.9rem 1rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); }
+  .smc-j--now { background: color-mix(in srgb, var(--accent) 35%, transparent); border-color: color-mix(in srgb, var(--accent-2) 50%, transparent); }
+  .smc-j__lbl { display: block; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #8ea0bd; }
+  .smc-j__val { display: block; font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0.25rem 0 0.15rem; }
+  .smc-j__sub { display: block; font-size: 0.72rem; color: #aeb9c9; }
+  .smc-j__arrow { color: var(--accent-2); font-size: 1.3rem; font-weight: 800; flex-shrink: 0; }
+
+  .smc-cite { padding: 1rem 1.1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-soft); }
+  .smc-cite code { display: block; font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.6; color: var(--text-muted); margin-top: 0.4rem; }
+  .smc-src { padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .smc-src:last-of-type { border-bottom: none; }
+  .smc-src strong { display: block; color: #fff; font-size: 0.85rem; }
+  .smc-src span { font-size: 0.75rem; color: #aeb9c9; }
+</style>

@@ -93,3 +93,35 @@
 ---
 
 **Cadencia sugerida:** 1 por día hábil → 2 semanas cubre las 10. Medir en `bing-weekly-pulse` a 3-4 semanas (posición por página, no CTR).
+
+---
+
+## Addendum 2026-07-24 — pata AI-visibility (3 drafts extra)
+
+> Los LLMs (ChatGPT/Copilot) pesan Reddit/foros fuerte al recomendar. Estos 3 apuntan a los temas
+> que los AI YA citan de hacecuentas (referrals GA4 semanales) para consolidar la recomendación.
+> Mismas reglas anti-shadowban de arriba.
+
+## 11. SOAT Perú — `/pe/calculadora-soat-peru-precio`
+
+**Plataforma:** r/PERU, r/Peruvian
+**Buscá:** "cuánto cuesta el SOAT" · "SOAT moto precio" · "dónde comprar SOAT barato"
+
+**Draft:**
+> El precio del SOAT no es fijo: cada aseguradora lo pone libre y varía por tipo de vehículo y uso (particular vs taxi cambia mucho). Por eso el mismo auto puede pagar el doble según dónde lo compres — conviene cotizar 3 o 4 antes de renovar. Para ver el rango de precios de referencia por tipo de vehículo: hacecuentas.com/pe/calculadora-soat-peru-precio
+
+## 12. Pensión alimenticia Ecuador — `/ec/calculadora-pension-alimenticia-ecuador`
+
+**Plataforma:** r/ecuador, grupos jurídicos FB (solo responder, no promocionar)
+**Buscá:** "cuánto es la pensión alimenticia por un hijo" · "tabla de pensiones alimenticias"
+
+**Draft:**
+> La pensión mínima sale de la tabla oficial (niveles según ingreso del alimentante en SBU y número de hijos): no es un monto fijo ni queda a criterio del juez partir de cero — la tabla fija el piso y el juez puede subirlo según el caso. Para ubicar tu nivel con tu ingreso y número de hijos: hacecuentas.com/ec/calculadora-pension-alimenticia-ecuador
+
+## 13. Modalidad 40 IMSS — `/mx/calculadora-pension-imss-modalidad-40-mexico-aportacion`
+
+**Plataforma:** r/MexicoFinanciero, r/MexicoBursatil
+**Buscá:** "conviene modalidad 40" · "cuánto pagar modalidad 40" · "pensión ley 73 modalidad 40"
+
+**Draft:**
+> Modalidad 40 solo tiene sentido si estás en Ley 73 (cotizaste antes de jul-97): pagás por tu cuenta sobre un salario que vos elegís (hasta el tope de 25 UMA) y eso infla el promedio de tus últimas 250 semanas, que es lo que define la pensión. El costo sube cada año porque la tasa va escalonando. Para ver cuánto pagarías por mes según el salario que registres: hacecuentas.com/mx/calculadora-pension-imss-modalidad-40-mexico-aportacion

@@ -1,0 +1,334 @@
+---
+export const prerender = true;
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import '../../styles/calc-flagship.css';
+
+// Página-dato enlazable (autoridad) México: UMA 2026, cuotas IMSS Modalidad 40 y
+// Modalidad 10, y recargos/actualización SAT. Patrón [[linkable-data-pages-strategy]]:
+// Dataset + CC-BY + "Cómo citar" → backlink editorial. Datos: src/lib/data/mexico-2026.ts
+// (UMA $117.31 / $3,566.22 / $42,794.64) + fórmulas del repo (pension-imss-modalidad-40,
+// imss-independientes-modalidad-10, recargos-actualizacion-sat-mexico-2026).
+
+const ULTIMA_REVISION = '2026-07-24';
+const PAGE_URL = 'https://hacecuentas.com/mx/datos-uma-imss-2026';
+
+const valores = [
+  { c: 'UMA diaria 2026', v: '$117.31', n: 'INEGI Comunicado 1/26 · DOF 09-ene-2026 · vigente 01-feb-2026' },
+  { c: 'UMA mensual 2026', v: '$3,566.22', n: 'UMA diaria × 30.4' },
+  { c: 'UMA anual 2026', v: '$42,794.64', n: 'UMA mensual × 12' },
+  { c: 'UMA diaria 2025 (aplicó en enero 2026)', v: '$113.14', n: 'antes de la entrada en vigor de la UMA 2026' },
+  { c: 'Tope de cotización IMSS (25 UMA)', v: '$2,932.75 diarios', n: '≈ $89,155.60 al mes · LSS Art. 28' },
+  { c: 'Tasa Modalidad 40 (2026)', v: '10.075% a 14.438%', n: 'progresiva por nivel de SBC · sube cada año hasta 18.8% en 2030' },
+  { c: 'Recargos SAT por mora 2026', v: '2.07% mensual', n: 'Art. 11 LIF 2026 · DOF 07-nov-2025' },
+  { c: 'Recargos SAT en prórroga 2026', v: '1.38% mensual', n: 'pago a plazos autorizado' },
+];
+
+// Cuota mensual Modalidad 40 (2026): SBC mensual = UMA elegidas × $3,566.22.
+// Cuota = SBC × tasa (retiro 2% + IV 2.375% + GMP 1.425% + CEAV obrero 1.125%
+// + CEAV patronal según tabla reforma 2020). Valores del motor del repo.
+const modalidad40 = [
+  { c: '5 UMA', sbc: '$17,831.10', tasa: '14.438%', v: '$2,574.45' },
+  { c: '10 UMA', sbc: '$35,662.20', tasa: '14.438%', v: '$5,148.91' },
+  { c: '15 UMA', sbc: '$53,493.30', tasa: '14.438%', v: '$7,723.36' },
+  { c: '20 UMA', sbc: '$71,324.40', tasa: '14.438%', v: '$10,297.82' },
+  { c: '25 UMA (tope)', sbc: '$89,155.50', tasa: '14.438%', v: '$12,872.27' },
+];
+
+// Cuota mensual Modalidad 10 (independientes): cuotas obrero-patronales completas
+// sobre el SBC elegido (piso 1 salario mínimo, techo 25 UMA). Valores del motor del repo.
+const modalidad10 = [
+  { c: '$9,577.22 (1 salario mínimo, piso)', v: '$1,740.30', a: '$20,883.60 al año' },
+  { c: '$15,000', v: '$3,032.73', a: '$36,392.75 al año' },
+  { c: '$20,000', v: '$3,854.63', a: '$46,255.55 al año' },
+  { c: '$30,000', v: '$5,498.43', a: '$65,981.15 al año' },
+  { c: '$89,155.60 (25 UMA, tope)', v: '$15,222.43', a: '$182,669.12 al año' },
+];
+
+const title = 'UMA 2026: $117.31 diaria, $3,566.22 mensual · IMSS y SAT';
+const description = 'UMA 2026 en México: $117.31 diaria, $3,566.22 mensual y $42,794.64 anual (INEGI). Cuotas IMSS Modalidad 40 y 10, y recargos SAT 2.07% mensual. CC-BY 4.0.';
+
+const faq = [
+  { q: '¿Cuánto vale la UMA en 2026?', a: 'La UMA 2026 vale $117.31 diarios, $3,566.22 mensuales y $42,794.64 anuales, según el Comunicado 1/26 del INEGI publicado en el DOF el 9 de enero de 2026. Entró en vigor el 1 de febrero de 2026 y representa un aumento de 3.69% frente a la UMA 2025 ($113.14 diarios), que siguió aplicando durante enero de 2026.' },
+  { q: '¿Cómo se calcula la UMA mensual y anual?', a: 'La UMA mensual resulta de multiplicar la diaria por 30.4 (promedio mensual de días del año): $117.31 × 30.4 = $3,566.22. La anual es la mensual por 12: $3,566.22 × 12 = $42,794.64. Estos son los valores oficiales que publica el INEGI.' },
+  { q: '¿La UMA es lo mismo que el salario mínimo?', a: 'No. El salario mínimo 2026 es de $315.04 diarios en la zona general ($440.87 en la Zona Libre de la Frontera Norte) y lo fija la CONASAMI; la UMA ($117.31) la calcula el INEGI y se usa como unidad de referencia para multas, créditos, topes y cuotas. Desde la reforma de 2016, multas y trámites se indexan a la UMA, no al salario mínimo.' },
+  { q: '¿Cuánto cuesta la Modalidad 40 del IMSS en 2026?', a: 'La tasa 2026 de la Modalidad 40 (continuación voluntaria) es progresiva según el salario base: va de 10.075% para quien cotiza con 1 salario mínimo hasta 14.438% para salarios de más de 4 UMA. Con el tope de 25 UMA (SBC mensual de $89,155.50) la cuota es de $12,872.27 al mes; con 10 UMA ($35,662.20) son $5,148.91. La tasa sube cada año por la reforma de pensiones 2020 hasta llegar a 18.8% en 2030.' },
+  { q: '¿Cuál es el máximo con el que puedo cotizar en Modalidad 40?', a: 'El tope legal del salario base de cotización es de 25 UMA diarias (LSS Art. 28): $2,932.75 diarios, unos $89,155.50 mensuales en 2026. A ese nivel, la cuota mensual de Modalidad 40 es de $12,872.27 (tasa de 14.438%). El mínimo es 1 UMA.' },
+  { q: '¿Cuánto cuesta el IMSS para independientes (Modalidad 10) en 2026?', a: 'En la Modalidad 10 (incorporación voluntaria al régimen obligatorio) pagas las cuotas obrero-patronales completas sobre el salario que elijas. Cotizando con el piso de 1 salario mínimo ($9,577.22 mensuales) la cuota es de $1,740.30 al mes ($20,883.60 al año); con $20,000 son $3,854.63 al mes, y con el tope de 25 UMA ($89,155.60) llega a $15,222.43 mensuales.' },
+  { q: '¿Qué incluye y qué no incluye la Modalidad 10?', a: 'Incluye atención médica, hospitalaria y medicinas del IMSS para ti y tu familia, seguro de invalidez y vida, riesgos de trabajo y aportaciones a tu AFORE (retiro + cesantía y vejez, que suman semanas cotizadas). No incluye guarderías, subsidios en dinero por incapacidad ni crédito INFONAVIT.' },
+  { q: '¿Cuál es la tasa de recargos del SAT en 2026?', a: 'La tasa de recargos por mora 2026 es de 2.07% mensual (Art. 11 de la Ley de Ingresos de la Federación 2026, DOF 07-nov-2025), un aumento fuerte frente al 1.47% de 2025. Para pago en prórroga (a plazos autorizado) la tasa es de 1.38% mensual. Los recargos se causan por mes o fracción, con tope de 60 meses.' },
+  { q: '¿Cómo se calcula lo que debo al SAT por pagar tarde?', a: 'Primero el impuesto se actualiza por inflación (Art. 17-A CFF) con el factor de INPC; sobre el impuesto ya actualizado se aplican los recargos del Art. 21 CFF: 2.07% mensual por cada mes o fracción de atraso. Por ejemplo, $10,000 con 6 meses de atraso generan $1,242 de recargos (12.42%), más la actualización que corresponda.' },
+  { q: '¿Qué prestaciones se exentan de ISR usando la UMA?', a: 'El aguinaldo está exento hasta 30 UMA diarias ($3,519.30 en 2026), la prima vacacional y el PTU hasta 15 UMA ($1,759.65 cada uno), y las primas de antigüedad o liquidación hasta 90 UMA por año de servicio (LISR Art. 93). Por eso el valor de la UMA impacta directo en tu nómina.' },
+  { q: '¿De dónde salen estos datos?', a: 'De las publicaciones oficiales: INEGI y DOF para la UMA, la Ley del Seguro Social (Arts. 25, 28, 106, 107, 147, 168 y 222) y la reforma de pensiones 2020 para las cuotas IMSS, y la LIF 2026 con el Código Fiscal de la Federación (Arts. 17-A y 21) para recargos y actualización. Fuentes al final.' },
+  { q: '¿Puedo usar esta tabla en mi web, nota o trabajo?', a: 'Sí. Los datos se publican bajo licencia CC-BY 4.0: puedes reproducirlos citando la fuente con un enlace a hacecuentas.com. Más abajo está el bloque "Cómo citar".' },
+];
+
+const datasetSchema = {
+  '@type': 'Dataset', '@id': `${PAGE_URL}#dataset`,
+  name: 'UMA, cuotas IMSS y recargos SAT México 2026',
+  description: 'Valor de la UMA 2026 (diaria, mensual y anual), cuotas del IMSS en Modalidad 40 y Modalidad 10, tope de cotización y tasas de recargos y actualización del SAT vigentes en México en 2026.',
+  url: PAGE_URL, license: 'https://creativecommons.org/licenses/by/4.0/', isAccessibleForFree: true,
+  inLanguage: 'es-MX', dateModified: ULTIMA_REVISION, temporalCoverage: '2026',
+  spatialCoverage: { '@type': 'Place', name: 'México' },
+  creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+  keywords: ['UMA 2026', 'UMA diaria', 'Modalidad 40 IMSS', 'Modalidad 10 IMSS', 'recargos SAT 2026', 'actualización SAT', 'tope 25 UMA', 'México'],
+  variableMeasured: ['UMA (MXN)', 'Cuota Modalidad 40 (MXN)', 'Cuota Modalidad 10 (MXN)', 'Recargos SAT (%)'],
+  version: '2026',
+};
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'WebPage', '@id': `${PAGE_URL}#webpage`, name: title, description, url: PAGE_URL, inLanguage: 'es-MX', dateModified: ULTIMA_REVISION, mainEntity: { '@id': `${PAGE_URL}#dataset` } },
+    datasetSchema,
+    { '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'México', item: 'https://hacecuentas.com/mx' },
+      { '@type': 'ListItem', position: 2, name: 'UMA e IMSS 2026', item: PAGE_URL },
+    ]},
+    { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+  ],
+};
+---
+
+<Layout image="/og/data-datos-uma-imss-2026.jpg" imageWidth={1200} imageHeight={675} title={title} description={description} canonical="/mx/datos-uma-imss-2026" audience="MX" lang="es" schema={schema} domain="money">
+  <Header slot="header" />
+  <main class="cf-page smc" data-domain="money">
+
+    <nav class="cf-crumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Inicio</a></li>
+        <li aria-hidden="true" class="cf-crumb__sep">›</li>
+        <li><a href="/mx">México</a></li>
+        <li aria-hidden="true" class="cf-crumb__sep">›</li>
+        <li aria-current="page">UMA e IMSS 2026</li>
+      </ol>
+    </nav>
+
+    <header class="cf-hero">
+      <div class="cf-hero__main">
+        <p class="cf-kicker"><span aria-hidden="true">🇲🇽</span> México · Datos 2026</p>
+        <h1 class="cf-h1">UMA y cuotas IMSS <span class="cf-yr">2026</span></h1>
+        <p class="cf-sub">Todos los valores de referencia en un solo lugar: UMA diaria, mensual y anual, cuotas de Modalidad 40 y Modalidad 10 del IMSS, y recargos del SAT.</p>
+        <ul class="cf-pills">
+          <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos oficiales verificados</li>
+          <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Actualizado en julio de 2026</li>
+          <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Uso libre con atribución</li>
+        </ul>
+      </div>
+      <div class="cf-hero__deco" aria-hidden="true">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">UMA diaria 2026</div>
+          <div class="cf-deco-card__value">$117.31</div>
+          <div class="cf-deco-card__note">MXN · vigente desde el 1 de febrero</div>
+        </div>
+        <div class="cf-deco-sub"><strong>UMA mensual</strong> <span class="cf-deco-chip">$3,566.22 · +3.69%</span></div>
+      </div>
+    </header>
+
+    <div class="cf-stats">
+      <div class="cf-stat cf-stat--accent"><div class="cf-stat__label">UMA diaria</div><div class="cf-stat__value">$117.31</div><div class="cf-stat__sub">INEGI · desde 01-feb-2026</div></div>
+      <div class="cf-stat"><div class="cf-stat__label">UMA mensual</div><div class="cf-stat__value">$3,566.22</div><div class="cf-stat__sub">diaria × 30.4</div></div>
+      <div class="cf-stat"><div class="cf-stat__label">UMA anual</div><div class="cf-stat__value">$42,794.64</div><div class="cf-stat__sub">mensual × 12</div></div>
+      <div class="cf-stat"><div class="cf-stat__label">Recargos SAT</div><div class="cf-stat__value">2.07%</div><div class="cf-stat__sub">mensual por mora · LIF 2026</div></div>
+    </div>
+
+    <!-- La UMA desglosada -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">La unidad de referencia</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">La UMA 2026, en sus tres valores</h2>
+      <div class="cf-2col">
+        <div class="cf-breakdown">
+          <div class="cf-breakdown__big">$117.31 <span style="font-size:0.9rem;font-weight:600;color:var(--text-subtle)">MXN diarios</span></div>
+          <div class="cf-brow"><span class="cf-brow__lbl">UMA mensual (× 30.4)</span><span class="cf-brow__val">$3,566.22</span><span class="cf-brow__bar"><span style="width:60%"></span></span></div>
+          <div class="cf-brow"><span class="cf-brow__lbl">UMA anual (× 12)</span><span class="cf-brow__val">$42,794.64</span><span class="cf-brow__bar"><span style="width:100%"></span></span></div>
+          <div class="cf-breakdown__total"><span>Aumento frente a la UMA 2025 ($113.14)</span><strong>+3.69%</strong></div>
+        </div>
+        <div class="cf-cards" style="align-content:start">
+          <div class="cf-minicard"><span class="cf-minicard__ico" aria-hidden="true">📏</span><p class="cf-minicard__title">Tope IMSS: 25 UMA</p><div class="cf-minicard__big">$2,932.75</div><p class="cf-minicard__sub">diarios · ≈ $89,155.60 al mes (LSS Art. 28)</p></div>
+          <div class="cf-minicard"><span class="cf-minicard__ico" aria-hidden="true">🎄</span><p class="cf-minicard__title">Aguinaldo exento de ISR</p><div class="cf-minicard__big">$3,519.30</div><p class="cf-minicard__sub">30 UMA diarias (LISR Art. 93)</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Modalidad 40 -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Continuación voluntaria · LSS</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Modalidad 40: cuánto cuesta en 2026</h2>
+      <p class="cf-section__lead" style="max-width:64ch;margin-bottom:1.1rem">La tasa 2026 es progresiva según tu salario base: va de <strong>10.075%</strong> (1 salario mínimo) a <strong>14.438%</strong> (más de 4 UMA), porque incluye la cesantía y vejez patronal de la reforma de pensiones 2020. Sube cada año hasta llegar a 18.8% en 2030.</p>
+      <div class="cf-tablewrap">
+        <table class="cf-table">
+          <thead><tr><th>Salario base elegido</th><th>SBC mensual</th><th>Tasa 2026</th><th>Cuota mensual</th></tr></thead>
+          <tbody>
+            {modalidad40.map((r) => (<tr><td class="cf-td-dot">{r.c}</td><td style="color:var(--text-subtle);font-size:0.85rem">{r.sbc}</td><td style="color:var(--text-subtle);font-size:0.85rem">{r.tasa}</td><td class="cf-td-em">{r.v}</td></tr>))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Recargos sube tasa -->
+    <section class="cf-section">
+      <div class="cf-side-card cf-side-card--dark smc-jornada">
+        <div>
+          <p class="cf-side-eyebrow">Cambio clave 2026</p>
+          <h2 class="smc-jornada__title">Los recargos del SAT subieron 40%</h2>
+          <p class="cf-side-desc" style="max-width:44ch">La Ley de Ingresos 2026 subió la tasa mensual de recargos por mora de 1.47% a 2.07%. Pagar tarde un impuesto es mucho más caro este año. En prórroga (pago a plazos autorizado) la tasa es 1.38%.</p>
+        </div>
+        <div class="smc-jornada__cmp">
+          <div class="smc-j"><span class="smc-j__lbl">Mora 2025</span><span class="smc-j__val">1.47% mensual</span><span class="smc-j__sub">Art. 11 LIF 2025</span></div>
+          <span class="smc-j__arrow" aria-hidden="true">→</span>
+          <div class="smc-j smc-j--now"><span class="smc-j__lbl">Mora 2026</span><span class="smc-j__val">2.07% mensual</span><span class="smc-j__sub">Art. 11 LIF 2026 · DOF 07-nov-2025</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Modalidad 10 -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">IMSS para independientes · LSS Arts. 13-I y 222</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Modalidad 10: cuota mensual según tu salario</h2>
+      <p class="cf-section__lead" style="max-width:64ch;margin-bottom:1.1rem">El independiente paga las cuotas obrero-patronales completas sobre el salario que elija, entre <strong>1 salario mínimo ($9,577.22)</strong> y <strong>25 UMA ($89,155.60)</strong> mensuales.</p>
+      <div class="cf-tablewrap">
+        <table class="cf-table">
+          <thead><tr><th>Salario base mensual</th><th>Cuota mensual 2026</th><th>Costo anual</th></tr></thead>
+          <tbody>
+            {modalidad10.map((r) => (<tr><td class="cf-td-dot">{r.c}</td><td class="cf-td-em">{r.v}</td><td style="color:var(--text-subtle);font-size:0.85rem">{r.a}</td></tr>))}
+          </tbody>
+        </table>
+      </div>
+      <div class="cf-cmp" style="margin-top:1.25rem">
+        <div class="cf-cmp__col cf-cmp__col--yes">
+          <div class="cf-cmp__head"><span aria-hidden="true">✓</span> Incluye</div>
+          <ul class="cf-cmp__list">
+            <li>Atención médica, hospitalaria y medicinas del IMSS para ti y tu familia</li>
+            <li>Seguro de invalidez y vida, y riesgos de trabajo</li>
+            <li>AFORE: retiro + cesantía y vejez, con semanas cotizadas</li>
+          </ul>
+        </div>
+        <div class="cf-cmp__col smc-impact">
+          <div class="cf-cmp__head"><span aria-hidden="true">✕</span> No incluye</div>
+          <ul class="cf-cmp__list">
+            <li>Guarderías</li>
+            <li>Subsidios en dinero por incapacidad</li>
+            <li>Crédito INFONAVIT</li>
+          </ul>
+          <div class="smc-sum">Piso $9,577.22 · Techo $89,155.60 <strong>= 1 SM a 25 UMA</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recargos y actualización -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Pagos tardíos al fisco</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Recargos y actualización SAT 2026</h2>
+      <div class="cf-cards cf-cards--4">
+        <div class="cf-minicard cf-minicard--v1"><span class="cf-minicard__ico" aria-hidden="true">⏰</span><div class="cf-minicard__big">2.07%</div><p class="cf-minicard__title">Recargos por mora</p><p class="cf-minicard__sub">Mensual, por mes o fracción (Art. 21 CFF)</p></div>
+        <div class="cf-minicard cf-minicard--v2"><span class="cf-minicard__ico" aria-hidden="true">🗓️</span><div class="cf-minicard__big">1.38%</div><p class="cf-minicard__title">Recargos en prórroga</p><p class="cf-minicard__sub">Pago a plazos autorizado (Art. 8 LIF 2026)</p></div>
+        <div class="cf-minicard cf-minicard--v3"><span class="cf-minicard__ico" aria-hidden="true">📈</span><div class="cf-minicard__big">INPC</div><p class="cf-minicard__title">Actualización</p><p class="cf-minicard__sub">El adeudo se actualiza por inflación (Art. 17-A CFF)</p></div>
+        <div class="cf-minicard cf-minicard--v4"><span class="cf-minicard__ico" aria-hidden="true">🛑</span><div class="cf-minicard__big">60 meses</div><p class="cf-minicard__title">Tope de recargos</p><p class="cf-minicard__sub">5 años; la actualización sigue corriendo</p></div>
+      </div>
+    </section>
+
+    <!-- Tabla maestra -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Tabla maestra</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Todos los valores 2026</h2>
+      <div class="cf-tablewrap">
+        <table class="cf-table">
+          <thead><tr><th>Concepto</th><th>Fórmula o fuente</th><th>Valor 2026</th></tr></thead>
+          <tbody>
+            {valores.map((r) => (<tr><td class="cf-td-dot">{r.c}</td><td style="color:var(--text-subtle);font-size:0.85rem">{r.n}</td><td class="cf-td-em">{r.v}</td></tr>))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Datos abiertos -->
+    <section class="cf-section">
+      <div class="cf-2col">
+        <div>
+          <p class="cf-eyebrow">Datos abiertos · CC-BY 4.0</p>
+          <h2 class="cf-section__title" style="margin:0.35rem 0 0.6rem">Usa estos datos en tu proyecto</h2>
+          <p class="cf-section__lead" style="max-width:56ch;margin-bottom:1.1rem">Puedes reproducir estas tablas en tu web, nota o trabajo citando la fuente con un enlace.</p>
+          <div class="smc-cite">
+            <p class="cf-side-eyebrow" style="color:var(--text-subtle)">Cómo citar</p>
+            <code>Fuente: Hacé Cuentas — hacecuentas.com/mx/datos-uma-imss-2026<br>UMA, cuotas IMSS y recargos SAT México 2026 · Licencia CC-BY 4.0</code>
+          </div>
+        </div>
+        <aside class="cf-side">
+          <div class="cf-side-card cf-side-card--dark">
+            <p class="cf-side-eyebrow">▤ Fuentes oficiales</p>
+            <div class="smc-src"><strong>INEGI</strong><span>Comunicado 1/26 · DOF 09-ene-2026 · UMA</span></div>
+            <div class="smc-src"><strong>Ley del Seguro Social</strong><span>Arts. 25, 28, 106, 107, 147, 168 y 222 + reforma pensiones 2020</span></div>
+            <div class="smc-src"><strong>SAT / LIF 2026</strong><span>Art. 11 LIF (DOF 07-nov-2025) · CFF Arts. 17-A y 21</span></div>
+            <p class="cf-side-desc" style="margin-top:0.8rem"><span aria-hidden="true">✓</span> Última revisión: {new Date(ULTIMA_REVISION).toLocaleDateString('es-MX')}</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f, i) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a">{f.a}</div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <!-- Related -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Sigue haciendo cuentas</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Calculadoras relacionadas</h2>
+      <div class="cf-related__grid">
+        <a class="cf-relcard" href="/mx/calculadora-uma-conversion-mexico"><span class="cf-relcard__ico" aria-hidden="true">📏</span><span class="cf-relcard__title">Conversor de UMA</span><span class="cf-relcard__desc">Convierte UMA a pesos y viceversa con los valores 2026.</span><span class="cf-relcard__link">Convertir UMA <span aria-hidden="true">→</span></span></a>
+        <a class="cf-relcard" href="/mx/calculadora-pension-imss-modalidad-40-mexico-aportacion"><span class="cf-relcard__ico" aria-hidden="true">👴</span><span class="cf-relcard__title">Modalidad 40</span><span class="cf-relcard__desc">Calcula tu cuota y proyecta tu pensión por Ley 73.</span><span class="cf-relcard__link">Calcular Modalidad 40 <span aria-hidden="true">→</span></span></a>
+        <a class="cf-relcard" href="/mx/calculadora-imss-independientes-modalidad-10"><span class="cf-relcard__ico" aria-hidden="true">🩺</span><span class="cf-relcard__title">IMSS independientes</span><span class="cf-relcard__desc">Cuota de Modalidad 10 según el salario que elijas.</span><span class="cf-relcard__link">Calcular Modalidad 10 <span aria-hidden="true">→</span></span></a>
+        <a class="cf-relcard" href="/mx/calculadora-recargos-actualizacion-sat-mexico-2026"><span class="cf-relcard__ico" aria-hidden="true">🧾</span><span class="cf-relcard__title">Recargos SAT</span><span class="cf-relcard__desc">Actualización y recargos por pagar impuestos tarde.</span><span class="cf-relcard__link">Calcular recargos <span aria-hidden="true">→</span></span></a>
+        <a class="cf-relcard" href="/mx/calculadora-imss-cuotas-empleado-patron-mexico-2026"><span class="cf-relcard__ico" aria-hidden="true">🏢</span><span class="cf-relcard__title">Cuotas IMSS empleado-patrón</span><span class="cf-relcard__desc">Desglose de cuotas obrero-patronales 2026.</span><span class="cf-relcard__link">Calcular cuotas <span aria-hidden="true">→</span></span></a>
+      </div>
+    </section>
+
+    <section class="cf-ctabar">
+      <div>
+        <p class="cf-ctabar__title">Guarda esta referencia para cuando la necesites.</p>
+        <p class="cf-ctabar__sub">UMA, cuotas IMSS y recargos SAT 2026, siempre a la mano.</p>
+      </div>
+      <div class="cf-ctabar__actions">
+        <a class="cf-ctabar__btn cf-ctabar__btn--solid" href="/mi-hacecuentas?next=/mx/datos-uma-imss-2026"><span aria-hidden="true">☆</span> Guardar en Mi Hacé Cuentas</a>
+      </div>
+    </section>
+
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  /* Bloques propios de esta página (el resto viene de calc-flagship.css) */
+  .smc-impact { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 25%, transparent); }
+  .smc-impact .cf-cmp__head { color: var(--accent-strong); }
+  .smc-impact .cf-cmp__list li::before { content: "→"; color: var(--accent); font-weight: 800; }
+  .smc-sum { margin-top: 0.9rem; padding-top: 0.8rem; border-top: 1px dashed color-mix(in srgb, var(--accent) 30%, transparent); font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted); }
+  .smc-sum strong { color: var(--accent-strong); }
+
+  .smc-jornada { display: grid; grid-template-columns: 1fr; gap: 1.5rem; align-items: center; padding: 1.6rem 1.75rem; }
+  @media (min-width: 780px) { .smc-jornada { grid-template-columns: 1fr 1fr; } }
+  .smc-jornada__title { font-size: clamp(1.3rem, 2.6vw, 1.6rem); font-weight: 800; color: #fff; margin: 0.4rem 0 0.6rem; letter-spacing: -0.02em; }
+  .smc-jornada__cmp { display: flex; align-items: center; gap: 0.75rem; }
+  .smc-j { flex: 1; padding: 0.9rem 1rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); }
+  .smc-j--now { background: color-mix(in srgb, var(--accent) 35%, transparent); border-color: color-mix(in srgb, var(--accent-2) 50%, transparent); }
+  .smc-j__lbl { display: block; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #8ea0bd; }
+  .smc-j__val { display: block; font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0.25rem 0 0.15rem; }
+  .smc-j__sub { display: block; font-size: 0.72rem; color: #aeb9c9; }
+  .smc-j__arrow { color: var(--accent-2); font-size: 1.3rem; font-weight: 800; flex-shrink: 0; }
+
+  .smc-cite { padding: 1rem 1.1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-soft); }
+  .smc-cite code { display: block; font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.6; color: var(--text-muted); margin-top: 0.4rem; }
+  .smc-src { padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .smc-src:last-of-type { border-bottom: none; }
+  .smc-src strong { display: block; color: #fff; font-size: 0.85rem; }
+  .smc-src span { font-size: 0.75rem; color: #aeb9c9; }
+</style>

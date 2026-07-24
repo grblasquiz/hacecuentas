@@ -1,0 +1,322 @@
+---
+export const prerender = true;
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import '../../styles/calc-flagship.css';
+
+// Página-dato enlazable (autoridad) Perú: SOAT 2026 por tipo de vehículo, UIT,
+// ITF y costo del brevete. Patrón [[linkable-data-pages-strategy]]: Dataset +
+// CC-BY + "Cómo citar" → backlink editorial. Datos: src/lib/data/peru-2026.ts
+// (UIT S/ 5.500, BREVETE_PERU_2026) + src/lib/formulas/soat-peru-precio.ts
+// (rangos de mercado 2026) + itf-peru.ts (0,005%, Ley 28194).
+
+const ULTIMA_REVISION = '2026-07-24';
+const PAGE_URL = 'https://hacecuentas.com/pe/datos-soat-uit-peru-2026';
+
+// Rangos de prima ANUAL de mercado del SOAT por categoría (S/), 2026.
+// Mismos valores que soat-peru-precio.ts (NeoAuto/Comparabien/TrámitesPerú, dic-2025/jun-2026).
+const soat = [
+  { c: 'Auto particular', v: 'S/ 34 – S/ 200', n: 'pólizas virtuales desde ~S/ 34–50' },
+  { c: 'Moto / mototaxi particular', v: 'S/ 33 – S/ 336', n: 'uso delivery/comercial encarece la prima' },
+  { c: 'Taxi / auto de servicio', v: 'S/ 80 – S/ 250', n: 'uso comercial de pasajeros' },
+  { c: 'Transporte público de pasajeros', v: 'S/ 200 – S/ 500+', n: 'combi, bus, colectivo' },
+  { c: 'Vehículo de carga', v: 'S/ 100 – S/ 350', n: 'según tonelaje y zona' },
+];
+
+// Coberturas legales del SOAT (DS 024-2002-MTC), fijas para toda póliza. UIT 2026 = S/ 5.500.
+const coberturas = [
+  { c: 'Muerte', v: 'S/ 22.000', n: '4 UIT por persona' },
+  { c: 'Invalidez permanente', v: 'hasta S/ 22.000', n: 'hasta 4 UIT por persona' },
+  { c: 'Gastos médicos', v: 'hasta S/ 27.500', n: 'hasta 5 UIT por persona' },
+  { c: 'Incapacidad temporal', v: 'hasta S/ 5.500', n: 'hasta 1 UIT por persona' },
+  { c: 'Gastos de sepelio', v: 'hasta S/ 5.500', n: 'hasta 1 UIT por persona' },
+];
+
+// Tabla maestra: SOAT + UIT + ITF + brevete, con norma de respaldo.
+const valores = [
+  { c: 'UIT 2026', v: 'S/ 5.500', n: 'DS 301-2025-EF (MEF / SUNAT)' },
+  { c: 'ITF (Impuesto a las Transacciones Financieras)', v: '0,005%', n: 'Ley 28194 · lo retiene el banco (SUNAT)' },
+  { c: 'SOAT auto particular (rango anual)', v: 'S/ 34 – S/ 200', n: 'prima libre · Ley 27181 y DS 024-2002-MTC' },
+  { c: 'SOAT moto (rango anual)', v: 'S/ 33 – S/ 336', n: 'prima libre por aseguradora' },
+  { c: 'SOAT taxi (rango anual)', v: 'S/ 80 – S/ 250', n: 'prima libre por aseguradora' },
+  { c: 'Cobertura por muerte del SOAT', v: 'S/ 22.000 (4 UIT)', n: 'DS 024-2002-MTC · fija por ley' },
+  { c: 'Cobertura de gastos médicos del SOAT', v: 'S/ 27.500 (5 UIT)', n: 'DS 024-2002-MTC · fija por ley' },
+  { c: 'Brevete A-I: emisión física', v: 'S/ 14,70', n: 'código 1602 (MTC / MML)' },
+  { c: 'Brevete A-I: emisión electrónica', v: 'S/ 6,70', n: 'código 1601 · suspendida temporalmente' },
+  { c: 'Brevete A-I: evaluación de conocimientos (Lima-MML)', v: 'S/ 24,80', n: 'desde abr-2026 lo emite la MML' },
+  { c: 'Brevete A-I: evaluación de manejo (Lima-MML)', v: 'S/ 45', n: 'Municipalidad Metropolitana de Lima' },
+  { c: 'Brevete A-I: pago único Touring', v: 'S/ 67,32', n: '2 oportunidades por cada evaluación' },
+];
+
+const title = 'SOAT Perú 2026: precios por vehículo, UIT S/ 5.500 e ITF';
+const description = 'Precios del SOAT 2026 en Perú: auto S/ 34-200, moto S/ 33-336, taxi S/ 80-250. Coberturas en UIT (S/ 5.500), ITF 0,005% y costo del brevete. CC-BY 4.0.';
+
+const faq = [
+  { q: '¿Cuánto cuesta el SOAT 2026 en Perú?', a: 'El SOAT no tiene tarifa fija: cada aseguradora define su prima. En 2026 un auto particular paga entre S/ 34 y S/ 200 al año (las pólizas virtuales arrancan en ~S/ 34–50), una moto entre S/ 33 y más de S/ 336, un taxi entre S/ 80 y S/ 250, el transporte público entre S/ 200 y S/ 500+ y un vehículo de carga entre S/ 100 y S/ 350.' },
+  { q: '¿Por qué el SOAT no tiene un precio único?', a: 'Porque la ley (Ley 27181 y DS 024-2002-MTC) obliga a tener el seguro pero deja la prima libre: cada aseguradora (Rímac, La Positiva, Pacífico, Mapfre, Interseguro) la fija según tipo de vehículo, uso, antigüedad y zona de registro. Lo que sí es fijo por ley son las coberturas.' },
+  { q: '¿Cuánto cubre el SOAT en 2026?', a: 'Las coberturas son fijas y se expresan en UIT (S/ 5.500 en 2026): muerte 4 UIT (S/ 22.000), invalidez permanente hasta 4 UIT (S/ 22.000), gastos médicos hasta 5 UIT (S/ 27.500), incapacidad temporal hasta 1 UIT (S/ 5.500) y gastos de sepelio hasta 1 UIT (S/ 5.500), por cada persona afectada y sin importar quién tuvo la culpa.' },
+  { q: '¿Cuánto cuesta el SOAT para moto en 2026?', a: 'Una moto lineal o scooter de uso particular paga desde ~S/ 33 al año; si se usa para delivery u otro uso comercial, la prima sube y puede superar los S/ 336. En provincias, las mototaxis de servicio pueden optar por un CAT de AFOCAT, generalmente más barato pero con cobertura solo regional.' },
+  { q: '¿Qué es el CAT de AFOCAT y en qué se diferencia del SOAT?', a: 'El CAT (Certificado contra Accidentes de Tránsito) lo emiten las AFOCAT según la Ley 28839 y es una alternativa al SOAT para el transporte público de ámbito regional o provincial. Suele ser más barato, pero solo cubre dentro de la región; el SOAT cubre en todo el Perú.' },
+  { q: '¿Cuánto vale la UIT 2026 en Perú?', a: 'La UIT (Unidad Impositiva Tributaria) 2026 es de S/ 5.500, fijada por el DS 301-2025-EF del MEF. Se usa como referencia para las coberturas del SOAT, multas, impuestos (renta, predial, vehicular) y trámites.' },
+  { q: '¿Cuánto es el ITF en 2026 y quién lo paga?', a: 'El ITF (Impuesto a las Transacciones Financieras, Ley 28194) es de 0,005% sobre cada depósito o retiro en cuentas afectas: S/ 0,50 por cada S/ 10.000 movidos. El banco lo retiene automáticamente. Están exoneradas la cuenta sueldo, la CTS, los aportes AFP y las transferencias entre cuentas del mismo titular.' },
+  { q: '¿Cuánto cuesta sacar el brevete A-I en 2026?', a: 'El total típico va de S/ 300 a S/ 500: examen médico S/ 200–400 (el rubro más caro y variable), evaluaciones de conocimientos (S/ 24,80) y de manejo (S/ 45) en Lima-MML, y emisión de la licencia física S/ 14,70 (código 1602). En los centros del Touring hay un pago único de S/ 67,32 con dos oportunidades por evaluación.' },
+  { q: '¿Quién emite el brevete en Lima desde 2026?', a: 'Desde abril de 2026 las licencias clase A en Lima las emite la Municipalidad Metropolitana de Lima (MML), ya no el MTC. Las tasas MML son S/ 24,80 la evaluación de conocimientos y S/ 45 la de manejo; la emisión electrónica (S/ 6,70, código 1601) está temporalmente suspendida por la transición.' },
+  { q: '¿El SOAT es obligatorio para todos los vehículos?', a: 'Sí. La Ley 27181 (Ley General de Transporte y Tránsito Terrestre) obliga a todo vehículo que circule por vías públicas del Perú a contar con SOAT vigente (o CAT de AFOCAT en los casos permitidos). Circular sin él genera multa y retención del vehículo.' },
+  { q: '¿De dónde salen estos datos?', a: 'La UIT sale del DS 301-2025-EF (MEF/SUNAT); el ITF de la Ley 28194 y la tabla de tasas de SUNAT; las coberturas del SOAT del DS 024-2002-MTC (reglamento del SOAT); las tasas del brevete del tarifario MTC/MML y Touring; y los rangos de prima del mercado asegurador 2026 (relevamiento dic-2025/jun-2026). Fuentes al final.' },
+  { q: '¿Puedo usar esta tabla en mi web, nota o trabajo?', a: 'Sí. Los datos se publican bajo licencia CC-BY 4.0: puedes reproducirlos citando la fuente con un enlace a hacecuentas.com. Más abajo está el bloque "Cómo citar".' },
+];
+
+const datasetSchema = {
+  '@type': 'Dataset', '@id': `${PAGE_URL}#dataset`,
+  name: 'SOAT, UIT, ITF y brevete Perú 2026',
+  description: 'Precios de referencia del SOAT 2026 por tipo de vehículo, coberturas legales en UIT, valor de la UIT (S/ 5.500), alícuota del ITF (0,005%) y tasas del brevete A-I vigentes en el Perú en 2026.',
+  url: PAGE_URL, license: 'https://creativecommons.org/licenses/by/4.0/', isAccessibleForFree: true,
+  inLanguage: 'es-PE', dateModified: ULTIMA_REVISION, temporalCoverage: '2026',
+  spatialCoverage: { '@type': 'Place', name: 'Perú' },
+  creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
+  keywords: ['SOAT Perú 2026', 'precio SOAT', 'UIT 2026', 'ITF', 'brevete', 'licencia de conducir A-I', 'AFOCAT', 'Perú'],
+  variableMeasured: ['Prima anual SOAT (PEN)', 'Coberturas SOAT (UIT)', 'UIT (PEN)', 'ITF (%)', 'Tasas brevete A-I (PEN)'],
+  version: '2026',
+};
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    { '@type': 'WebPage', '@id': `${PAGE_URL}#webpage`, name: title, description, url: PAGE_URL, inLanguage: 'es-PE', dateModified: ULTIMA_REVISION, mainEntity: { '@id': `${PAGE_URL}#dataset` } },
+    datasetSchema,
+    { '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Perú', item: 'https://hacecuentas.com/pe' },
+      { '@type': 'ListItem', position: 2, name: 'SOAT y UIT 2026', item: PAGE_URL },
+    ]},
+    { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+  ],
+};
+---
+
+<Layout title={title} description={description} canonical="/pe/datos-soat-uit-peru-2026" audience="PE" lang="es" schema={schema} domain="money">
+  <Header slot="header" />
+  <main class="cf-page smc" data-domain="money">
+
+    <nav class="cf-crumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Inicio</a></li>
+        <li aria-hidden="true" class="cf-crumb__sep">›</li>
+        <li><a href="/pe">Perú</a></li>
+        <li aria-hidden="true" class="cf-crumb__sep">›</li>
+        <li aria-current="page">SOAT y UIT 2026</li>
+      </ol>
+    </nav>
+
+    <header class="cf-hero">
+      <div class="cf-hero__main">
+        <p class="cf-kicker"><span aria-hidden="true">🇵🇪</span> Perú · Datos 2026</p>
+        <h1 class="cf-h1">SOAT, UIT e ITF en Perú <span class="cf-yr">2026</span></h1>
+        <p class="cf-sub">Todos los valores en un solo lugar: precio de referencia del SOAT por tipo de vehículo, coberturas legales en UIT, valor de la UIT, alícuota del ITF y costo del brevete.</p>
+        <ul class="cf-pills">
+          <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos oficiales verificados</li>
+          <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Actualizado en julio de 2026</li>
+          <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Uso libre con atribución</li>
+        </ul>
+      </div>
+      <div class="cf-hero__deco" aria-hidden="true">
+        <div class="cf-deco-card">
+          <div class="cf-deco-card__label">SOAT auto particular 2026</div>
+          <div class="cf-deco-card__value">S/ 34 – 200</div>
+          <div class="cf-deco-card__note">prima anual · libre por aseguradora</div>
+        </div>
+        <div class="cf-deco-sub"><strong>UIT 2026</strong> <span class="cf-deco-chip">S/ 5.500 · DS 301-2025-EF</span></div>
+      </div>
+    </header>
+
+    <div class="cf-stats">
+      <div class="cf-stat cf-stat--accent"><div class="cf-stat__label">SOAT auto particular</div><div class="cf-stat__value">S/ 34–200</div><div class="cf-stat__sub">prima anual 2026</div></div>
+      <div class="cf-stat"><div class="cf-stat__label">UIT 2026</div><div class="cf-stat__value">S/ 5.500</div><div class="cf-stat__sub">DS 301-2025-EF</div></div>
+      <div class="cf-stat"><div class="cf-stat__label">ITF</div><div class="cf-stat__value">0,005%</div><div class="cf-stat__sub">Ley 28194</div></div>
+      <div class="cf-stat"><div class="cf-stat__label">Brevete A-I (total típico)</div><div class="cf-stat__value">S/ 300–500</div><div class="cf-stat__sub">médico + evaluaciones + emisión</div></div>
+    </div>
+
+    <!-- SOAT por tipo de vehículo -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Precios de referencia</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">SOAT 2026 por tipo de vehículo</h2>
+      <p class="cf-section__lead" style="max-width:64ch;margin-bottom:1.1rem">El SOAT es obligatorio (Ley 27181) pero la prima es libre: cada aseguradora la fija según tipo de vehículo, uso, antigüedad y zona. Estos son los rangos de mercado 2026.</p>
+      <div class="cf-tablewrap">
+        <table class="cf-table">
+          <thead><tr><th>Tipo de vehículo</th><th>Nota</th><th>Prima anual 2026</th></tr></thead>
+          <tbody>
+            {soat.map((r) => (<tr><td class="cf-td-dot">{r.c}</td><td style="color:var(--text-subtle);font-size:0.85rem">{r.n}</td><td class="cf-td-em">{r.v}</td></tr>))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Coberturas -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Fijas por ley · DS 024-2002-MTC</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que cubre toda póliza SOAT</h2>
+      <div class="cf-cards cf-cards--4" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+        <div class="cf-minicard cf-minicard--v1"><span class="cf-minicard__ico" aria-hidden="true">🕊️</span><div class="cf-minicard__big">S/ 22.000</div><p class="cf-minicard__title">Muerte</p><p class="cf-minicard__sub">4 UIT por persona</p></div>
+        <div class="cf-minicard cf-minicard--v2"><span class="cf-minicard__ico" aria-hidden="true">♿</span><div class="cf-minicard__big">S/ 22.000</div><p class="cf-minicard__title">Invalidez permanente</p><p class="cf-minicard__sub">hasta 4 UIT</p></div>
+        <div class="cf-minicard cf-minicard--v3"><span class="cf-minicard__ico" aria-hidden="true">🏥</span><div class="cf-minicard__big">S/ 27.500</div><p class="cf-minicard__title">Gastos médicos</p><p class="cf-minicard__sub">hasta 5 UIT</p></div>
+        <div class="cf-minicard cf-minicard--v4"><span class="cf-minicard__ico" aria-hidden="true">🩹</span><div class="cf-minicard__big">S/ 5.500</div><p class="cf-minicard__title">Incapacidad temporal</p><p class="cf-minicard__sub">hasta 1 UIT</p></div>
+        <div class="cf-minicard cf-minicard--v1"><span class="cf-minicard__ico" aria-hidden="true">⚱️</span><div class="cf-minicard__big">S/ 5.500</div><p class="cf-minicard__title">Gastos de sepelio</p><p class="cf-minicard__sub">hasta 1 UIT</p></div>
+      </div>
+    </section>
+
+    <!-- SOAT vs AFOCAT -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">SOAT vs CAT (AFOCAT)</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">La alternativa en provincias</h2>
+      <div class="cf-cmp">
+        <div class="cf-cmp__col cf-cmp__col--yes">
+          <div class="cf-cmp__head"><span aria-hidden="true">✓</span> SOAT</div>
+          <ul class="cf-cmp__list">
+            <li>Cubre en todo el Perú</li>
+            <li>Lo emiten aseguradoras (Rímac, La Positiva, Pacífico, Mapfre, Interseguro)</li>
+            <li>Obligatorio para todo vehículo · Ley 27181</li>
+          </ul>
+        </div>
+        <div class="cf-cmp__col smc-impact">
+          <div class="cf-cmp__head"><span aria-hidden="true">＋</span> CAT de AFOCAT</div>
+          <ul class="cf-cmp__list">
+            <li>Solo para transporte público regional o provincial · Ley 28839</li>
+            <li>Suele ser más barato que el SOAT</li>
+            <li>Cobertura limitada a la región o provincia</li>
+          </ul>
+          <div class="smc-sum">Mismas coberturas mínimas en UIT <strong>· ámbito distinto</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- UIT + ITF -->
+    <section class="cf-section">
+      <div class="cf-side-card cf-side-card--dark smc-jornada">
+        <div>
+          <p class="cf-side-eyebrow">Referencias tributarias 2026</p>
+          <h2 class="smc-jornada__title">UIT e ITF: los dos números que aparecen en todo</h2>
+          <p class="cf-side-desc" style="max-width:44ch">La UIT define coberturas, multas e impuestos; el ITF grava cada movimiento bancario en cuentas afectas y lo retiene el banco automáticamente.</p>
+        </div>
+        <div class="smc-jornada__cmp">
+          <div class="smc-j"><span class="smc-j__lbl">UIT 2026 · DS 301-2025-EF</span><span class="smc-j__val">S/ 5.500</span><span class="smc-j__sub">base de coberturas, multas e impuestos</span></div>
+          <div class="smc-j smc-j--now"><span class="smc-j__lbl">ITF · Ley 28194</span><span class="smc-j__val">0,005%</span><span class="smc-j__sub">S/ 0,50 por cada S/ 10.000 movidos</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Brevete -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Licencia de conducir A-I</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Cuánto cuesta el brevete en 2026</h2>
+      <div class="cf-cards cf-cards--4">
+        <div class="cf-minicard cf-minicard--v1"><span class="cf-minicard__ico" aria-hidden="true">🩺</span><div class="cf-minicard__big">S/ 200–400</div><p class="cf-minicard__title">Examen médico</p><p class="cf-minicard__sub">Varía por clínica autorizada</p></div>
+        <div class="cf-minicard cf-minicard--v2"><span class="cf-minicard__ico" aria-hidden="true">📝</span><div class="cf-minicard__big">S/ 24,80</div><p class="cf-minicard__title">Conocimientos</p><p class="cf-minicard__sub">Lima-MML · manejo S/ 45</p></div>
+        <div class="cf-minicard cf-minicard--v3"><span class="cf-minicard__ico" aria-hidden="true">🏁</span><div class="cf-minicard__big">S/ 67,32</div><p class="cf-minicard__title">Touring (pago único)</p><p class="cf-minicard__sub">2 oportunidades por evaluación</p></div>
+        <div class="cf-minicard cf-minicard--v4"><span class="cf-minicard__ico" aria-hidden="true">🪪</span><div class="cf-minicard__big">S/ 14,70</div><p class="cf-minicard__title">Emisión física</p><p class="cf-minicard__sub">cód. 1602 · electrónica S/ 6,70 (susp.)</p></div>
+      </div>
+    </section>
+
+    <!-- Tabla maestra -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Tabla maestra</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Todos los valores 2026</h2>
+      <div class="cf-tablewrap">
+        <table class="cf-table">
+          <thead><tr><th>Concepto</th><th>Norma o condición</th><th>Valor 2026</th></tr></thead>
+          <tbody>
+            {valores.map((r) => (<tr><td class="cf-td-dot">{r.c}</td><td style="color:var(--text-subtle);font-size:0.85rem">{r.n}</td><td class="cf-td-em">{r.v}</td></tr>))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Datos abiertos -->
+    <section class="cf-section">
+      <div class="cf-2col">
+        <div>
+          <p class="cf-eyebrow">Datos abiertos · CC-BY 4.0</p>
+          <h2 class="cf-section__title" style="margin:0.35rem 0 0.6rem">Usa estos datos en tu proyecto</h2>
+          <p class="cf-section__lead" style="max-width:56ch;margin-bottom:1.1rem">Puedes reproducir estas tablas en tu web, nota o trabajo citando la fuente con un enlace.</p>
+          <div class="smc-cite">
+            <p class="cf-side-eyebrow" style="color:var(--text-subtle)">Cómo citar</p>
+            <code>Fuente: Hacé Cuentas — hacecuentas.com/pe/datos-soat-uit-peru-2026<br>SOAT, UIT, ITF y brevete Perú 2026 · Licencia CC-BY 4.0</code>
+          </div>
+        </div>
+        <aside class="cf-side">
+          <div class="cf-side-card cf-side-card--dark">
+            <p class="cf-side-eyebrow">▤ Fuentes oficiales</p>
+            <div class="smc-src"><strong>MEF / SUNAT</strong><span>DS 301-2025-EF · UIT 2026 · Ley 28194 · ITF</span></div>
+            <div class="smc-src"><strong>MTC / SBS</strong><span>Ley 27181 · DS 024-2002-MTC (reglamento SOAT) · Ley 28839 (AFOCAT)</span></div>
+            <div class="smc-src"><strong>MTC / MML / Touring</strong><span>Tarifario brevete A-I (códigos 1601 y 1602)</span></div>
+            <p class="cf-side-desc" style="margin-top:0.8rem"><span aria-hidden="true">✓</span> Última revisión: {new Date(ULTIMA_REVISION).toLocaleDateString('es-PE')}</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Preguntas frecuentes</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Lo que más se consulta</h2>
+      <div class="cf-faq">
+        {faq.map((f, i) => (
+          <details class="cf-faq__item" open={i === 0}>
+            <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <div class="cf-faq__a">{f.a}</div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <!-- Related -->
+    <section class="cf-section">
+      <p class="cf-eyebrow">Sigue haciendo cuentas</p>
+      <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Calculadoras relacionadas</h2>
+      <div class="cf-related__grid">
+        <a class="cf-relcard" href="/pe/calculadora-soat-peru-precio"><span class="cf-relcard__ico" aria-hidden="true">🚗</span><span class="cf-relcard__title">Precio del SOAT</span><span class="cf-relcard__desc">Estima tu prima 2026 según vehículo, uso y región.</span><span class="cf-relcard__link">Calcular SOAT <span aria-hidden="true">→</span></span></a>
+        <a class="cf-relcard" href="/pe/calculadora-costo-brevete-licencia-conducir-peru-2026"><span class="cf-relcard__ico" aria-hidden="true">🪪</span><span class="cf-relcard__title">Costo del brevete</span><span class="cf-relcard__desc">Suma médico, evaluaciones y emisión de la licencia A-I.</span><span class="cf-relcard__link">Calcular brevete <span aria-hidden="true">→</span></span></a>
+        <a class="cf-relcard" href="/pe/calculadora-itf-peru"><span class="cf-relcard__ico" aria-hidden="true">🏦</span><span class="cf-relcard__title">ITF bancario</span><span class="cf-relcard__desc">Cuánto te retiene el banco por cada movimiento.</span><span class="cf-relcard__link">Calcular ITF <span aria-hidden="true">→</span></span></a>
+        <a class="cf-relcard" href="/pe/calculadora-uit-2026-soles-peru-conversor"><span class="cf-relcard__ico" aria-hidden="true">🔢</span><span class="cf-relcard__title">Conversor UIT ↔ soles</span><span class="cf-relcard__desc">Convierte UIT a soles con el valor 2026 (S/ 5.500).</span><span class="cf-relcard__link">Convertir UIT <span aria-hidden="true">→</span></span></a>
+        <a class="cf-relcard" href="/pe/calculadora-revision-tecnica-vehicular-peru"><span class="cf-relcard__ico" aria-hidden="true">🔧</span><span class="cf-relcard__title">Revisión técnica</span><span class="cf-relcard__desc">Costo y vencimiento de la inspección vehicular.</span><span class="cf-relcard__link">Calcular revisión <span aria-hidden="true">→</span></span></a>
+        <a class="cf-relcard" href="/pe/calculadora-impuesto-vehicular-peru"><span class="cf-relcard__ico" aria-hidden="true">🧾</span><span class="cf-relcard__title">Impuesto vehicular</span><span class="cf-relcard__desc">Calcula el impuesto al patrimonio vehicular.</span><span class="cf-relcard__link">Calcular impuesto <span aria-hidden="true">→</span></span></a>
+      </div>
+    </section>
+
+    <section class="cf-ctabar">
+      <div>
+        <p class="cf-ctabar__title">Guarda esta referencia para cuando la necesites.</p>
+        <p class="cf-ctabar__sub">SOAT, UIT, ITF y brevete Perú 2026, siempre a mano.</p>
+      </div>
+      <div class="cf-ctabar__actions">
+        <a class="cf-ctabar__btn cf-ctabar__btn--solid" href="/mi-hacecuentas?next=/pe/datos-soat-uit-peru-2026"><span aria-hidden="true">☆</span> Guardar en Mi Hacé Cuentas</a>
+      </div>
+    </section>
+
+  </main>
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  /* Bloques propios de esta página (el resto viene de calc-flagship.css) */
+  .smc-impact { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 25%, transparent); }
+  .smc-impact .cf-cmp__head { color: var(--accent-strong); }
+  .smc-impact .cf-cmp__list li::before { content: "→"; color: var(--accent); font-weight: 800; }
+  .smc-sum { margin-top: 0.9rem; padding-top: 0.8rem; border-top: 1px dashed color-mix(in srgb, var(--accent) 30%, transparent); font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted); }
+  .smc-sum strong { color: var(--accent-strong); }
+
+  .smc-jornada { display: grid; grid-template-columns: 1fr; gap: 1.5rem; align-items: center; padding: 1.6rem 1.75rem; }
+  @media (min-width: 780px) { .smc-jornada { grid-template-columns: 1fr 1fr; } }
+  .smc-jornada__title { font-size: clamp(1.3rem, 2.6vw, 1.6rem); font-weight: 800; color: #fff; margin: 0.4rem 0 0.6rem; letter-spacing: -0.02em; }
+  .smc-jornada__cmp { display: flex; align-items: center; gap: 0.75rem; }
+  .smc-j { flex: 1; padding: 0.9rem 1rem; border-radius: var(--radius); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); }
+  .smc-j--now { background: color-mix(in srgb, var(--accent) 35%, transparent); border-color: color-mix(in srgb, var(--accent-2) 50%, transparent); }
+  .smc-j__lbl { display: block; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #8ea0bd; }
+  .smc-j__val { display: block; font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0.25rem 0 0.15rem; }
+  .smc-j__sub { display: block; font-size: 0.72rem; color: #aeb9c9; }
+
+  .smc-cite { padding: 1rem 1.1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-soft); }
+  .smc-cite code { display: block; font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.6; color: var(--text-muted); margin-top: 0.4rem; }
+  .smc-src { padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .smc-src:last-of-type { border-bottom: none; }
+  .smc-src strong { display: block; color: #fff; font-size: 0.85rem; }
+  .smc-src span { font-size: 0.75rem; color: #aeb9c9; }
+</style>
