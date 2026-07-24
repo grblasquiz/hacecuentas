@@ -416,10 +416,11 @@ const categoryLabels: Record<string, string> = {
 
     function itemHtml(e, i, isTop) {
       const cat = categoryLabels[e.c] || e.c || '';
+      const country = e.a && e.a !== preferredAudience ? ' · ' + e.a : '';
       return '<a href="/' + escapeHtml(e.s) + '" class="hsx-item' + (isTop ? ' hsx-top' : '') + '" role="option" data-i="' + i + '">'
         + '<span class="hsx-ico">' + escapeHtml(e.i || '🔢') + '</span>'
         + '<span class="hsx-body"><span class="hsx-name">' + escapeHtml(e.h) + '</span>'
-        + '<span class="hsx-cat">' + escapeHtml(cat) + '</span></span>'
+        + '<span class="hsx-cat">' + escapeHtml(cat + country) + '</span></span>'
         + '<span class="hsx-go">' + (isTop ? 'Abrir' : '') + arrow + '</span>'
         + '</a>';
     }
@@ -470,8 +471,16 @@ const categoryLabels: Record<string, string> = {
         if (sc >= 22 && POPULAR_SET.has(e.s)) sc += 30;
         scored.push({ e, sc });
       }
-      scored.sort((a, b) => b.sc - a.sc || a.e.h.length - b.e.h.length);
-      const top = scored.slice(0, 7).map((x) => x.e);
+      // El país actual domina el ranking. Otros países sólo completan cuando
+      // no hay suficientes coincidencias locales y quedan rotulados.
+      scored.sort((a, b) => {
+        const al = a.e.a === preferredAudience ? 1 : 0;
+        const bl = b.e.a === preferredAudience ? 1 : 0;
+        return bl - al || b.sc - a.sc || a.e.h.length - b.e.h.length;
+      });
+      // Una respuesta principal + tres alternativas reduce ruido y mantiene el
+      // resto detrás de "Ver todas las coincidencias".
+      const top = scored.slice(0, 4).map((x) => x.e);
 
       if (!top.length) {
         if (raw && norm(raw) !== lastNoResultQ) {

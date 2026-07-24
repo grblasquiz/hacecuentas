@@ -39,6 +39,10 @@ body = body
   .replace(/Más de [\d.]+\+? herramientas/g, `Más de ${TOTAL_PLAIN} herramientas`)
   .replace(/(<strong>)[\d.]+\+?(<\/strong><small>herramientas disponibles)/g, `$1${TOTAL_DISPLAY}$2`)
   .replace(/(<strong>)\d+(<\/strong><small>categorías)/g, `$1${CATEGORY_COUNT}$2`);
+body = body
+  .replace('<h2>Top 10 calculadoras.</h2>', '<h2>Las calculadoras más usadas.</h2>')
+  .replace('<b>Indemnización por despido</b><small>Finanzas</small>', '<b>Indemnización por despido</b><small>Sueldos y trabajo</small>')
+  .replace('<b>Calculadora de Aguinaldo (SAC)</b><small>Finanzas</small>', '<b>Calculadora de Aguinaldo (SAC)</b><small>Sueldos y trabajo</small>');
 // Las seis cards de decisión de portada concentran la cohorte P0. El texto se
 // reemplaza sobre la fuente aprobada para conservar exactamente su layout.
 body = body
@@ -58,8 +62,9 @@ body = body
 // las notas reales más recientes que ya computa la home (recentPosts, ordenadas
 // por fecha y filtradas de 410-gone). Si aparece una nota del Mundial ahora es un
 // post real con su fecha, no un titular fabricado que envejece en la portada.
-const { recentPosts = [] } = Astro.props as {
+const { recentPosts = [], popular = [] } = Astro.props as {
   recentPosts?: Array<{ slug: string; title: string; emoji?: string; date?: string }>;
+  popular?: Array<{ slug: string; h1?: string; title?: string }>;
 };
 if (recentPosts.length) {
   const esc = (s: string) =>
@@ -72,6 +77,18 @@ if (recentPosts.length) {
     )
     .join('');
   body = body.replace(/<div class="blogGridFull">[\s\S]*?<\/div>/, `<div class="blogGridFull">${blogCards}</div>`);
+}
+// Los atajos del hero siguen la curación alimentada por popularidad real en vez
+// de cuatro labels fijos. Se actualizan junto con popular-curated.json.
+if (popular.length) {
+  const esc = (s: string) =>
+    String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const quick = popular.slice(0, 4).map((c) => {
+    const label = String(c.h1 || c.title || c.slug)
+      .replace(/^Calculadora (de |del )?/i, '').replace(/\s*\|.*$/, '').trim();
+    return `<a class="chip" href="/${esc(c.slug)}">${esc(label)}</a>`;
+  }).join('');
+  body = body.replace(/<div class="askBottom">[\s\S]*?<\/div>/, `<div class="askBottom" aria-label="Más usadas hoy">${quick}</div>`);
 }
 ---
 
@@ -152,6 +169,14 @@ if (recentPosts.length) {
       align-items: center;
     }
     .approved-home-v7 .ask-real :where(input, button) { min-height: 44px; }
+    .approved-home-v7 :where(.link, .converterMore, .dir a, .footCol a, .newCard p) {
+      font-size: max(14px, 0.875rem);
+      line-height: 1.45;
+    }
+    /* En listados densos el nombre ya identifica la herramienta; quitamos el
+       emoji redundante para bajar ruido sin perder los de categorías. */
+    .approved-home-v7 .rankCard i,
+    .approved-home-v7 .simpleCalc i { display: none; }
     /* Mundial: el marcador vuelve al flujo, debajo del subtítulo. */
     .approved-home-v7 .world .score {
       position: relative;
@@ -192,6 +217,18 @@ if (recentPosts.length) {
   /* Ícono de "Monedas": SVG en blanco (el emoji 💱 salía monocromo/oscuro). */
   .approved-home-v7 .converterCard .ico-monedas { display: inline-flex; color: #fff; }
   .approved-home-v7 .converterCard .ico-monedas svg { display: block; }
+  /* La home argentina ya ofrece el selector completo en su riel de países. En
+     portada se libera espacio del header para búsqueda y tablero. */
+  body[data-page-type="home"] .site-header .country-selector { display: none; }
+  /* Jerarquía: hero, búsqueda y tarea conservan protagonismo; los bloques de
+     exploración bajan contraste para que no todas las tarjetas compitan igual. */
+  .approved-home-v7 :where(.catalogFull, .contentFull) {
+    background: #f4f6fb;
+  }
+  .approved-home-v7 :where(.guideFull, .blogFull, .simpleCalc) {
+    box-shadow: none;
+    border-color: #e3e7ef;
+  }
 </style>
 
 <script>
@@ -204,6 +241,11 @@ if (recentPosts.length) {
     const root = document.querySelector('.approved-home-v7');
     if (!root || root.dataset.wired) return;
     root.dataset.wired = '1';
+
+    // Las calculadoras no requieren cuenta. El tablero se presenta después,
+    // como beneficio opcional para guardar y sincronizar.
+    const heroSub = root.querySelector('.heroGrid > div:first-child > .sub');
+    if (heroSub) heroSub.textContent = 'Buscá y calculá gratis, sin crear una cuenta. Si después querés guardar o sincronizar resultados, podés usar Mi tablero.';
 
     /* ---------- 1) Reordenar + inyectar (portado del mockup) ---------- */
     const moments = root.querySelector('.mock-main > .section');
@@ -243,6 +285,9 @@ if (recentPosts.length) {
 
     root.querySelector('.ticker')?.insertAdjacentHTML('afterend', '<div class="countryRail"><span>🇦🇷 Argentina</span><span>🌎 Global</span><span>🇪🇸 España</span><span>🇲🇽 México</span><span>🇨🇴 Colombia</span><span>🇨🇱 Chile</span><span>🇵🇪 Perú</span><span>🇪🇨 Ecuador</span><span>🇧🇷 Brasil</span><span>English</span></div>');
     root.querySelector('.cases')?.insertAdjacentHTML('beforeend', '<article class="case"><span class="badge">Compras</span><h3>¿Me conviene pagar en cuotas o al contado?</h3><p>Descuento, inflación y rendimiento en pesos de hoy.</p><span class="go">Comparar →</span></article><article class="case"><span class="badge">Trabajo</span><h3>Me despidieron: ¿cuánto deberían pagarme?</h3><p>Indemnización y tiempo de sostén.</p><span class="go">Calcular →</span></article><article class="case"><span class="badge">Vivienda</span><h3>¿Puedo afrontar un crédito UVA?</h3><p>Cuota, inflación e ingresos futuros.</p><span class="go">Evaluar →</span></article>');
+    // Vocabulario de acciones consistente por tipo de destino.
+    root.querySelectorAll('.moment .go').forEach((el) => { el.textContent = 'Explorar →'; });
+    root.querySelectorAll('.tool em, .rankCard em, .simpleCalc em').forEach((el) => { el.textContent = 'Calcular →'; });
     root.querySelector('.questions')?.insertAdjacentHTML('beforeend', '<div class="q"><span>¿Las calculadoras reemplazan a un profesional?</span><b>＋</b></div><div class="q"><span>¿Qué hago si encuentro un error?</span><b>＋</b></div>');
     const footerBrand = root.querySelector('.footer .brand');
     if (footerBrand) footerBrand.innerHTML = '<img src="/logo-64.png" alt=""><span>Hacé Cuentas</span>';
@@ -542,6 +587,14 @@ if (recentPosts.length) {
     root.querySelectorAll('.live .tax').forEach((el) => setHref(el, '/recategorizacion-monotributo-julio-2026'));
     // Links "ver todo" y CTAs secundarias (por texto)
     root.querySelectorAll('.link, .converterMore, .action').forEach((el) => {
+      // La tarjeta completa ya es el enlace. El CTA interno queda como texto
+      // visual para evitar controles interactivos anidados.
+      if (el.parentElement?.closest('[data-href]')) {
+        el.removeAttribute('href');
+        el.removeAttribute('role');
+        el.removeAttribute('tabindex');
+        return;
+      }
       const t = el.textContent.toLowerCase();
       let u = null;
       if (/populares/.test(t)) u = '/populares';

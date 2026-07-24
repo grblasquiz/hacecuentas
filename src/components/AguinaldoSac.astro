@@ -75,6 +75,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       <div class="cf-field">
         <div class="cf-field__row"><label class="cf-label" for="ag-sueldo">Mejor sueldo bruto del semestre</label><span class="cf-hint">Básico + remunerativos</span></div>
         <div class="ag-money"><span class="ag-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="ag-sueldo" placeholder="Ej.: 1.200.000" autocomplete="off" /></div>
+        <p class="ag-field-error" id="ag-sueldo-error" role="alert" hidden></p>
         <p class="cf-help">Usá el mes con mayor remuneración bruta, no el promedio ni necesariamente el último.</p>
       </div>
 
@@ -121,7 +122,8 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       <div class="ag-result-content" id="ag-result-content" hidden>
       <p class="cf-result__eyebrow">Resultado estimado</p>
       <div class="cf-result__big" id="ag-big">{fmtAr(init.neto)}</div>
-      <div class="cf-result__biglabel" id="ag-biglabel">Aguinaldo neto aproximado</div>
+      <div class="cf-result__biglabel" id="ag-biglabel">Neto estimado · sin Ganancias</div>
+      <p class="ag-assumption" id="ag-assumption">Supuesto: 17% de aportes habituales. Tu recibo puede variar por topes, convenio y Ganancias.</p>
       <p class="cf-result__sub" id="ag-sub">Semestre completo · 6 de 6 meses</p>
       <div class="cf-tiles">
         <div class="cf-tile"><div class="cf-tile__value" id="ag-t-bruto">{fmtAr(init.bruto)}</div><div class="cf-tile__label">SAC bruto</div></div>
@@ -277,7 +279,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
           <a class="cf-relcard" href={`/${c.slug}`}>
             <span class="cf-relcard__ico" aria-hidden="true">{c.icon || '🧮'}</span>
             <span class="cf-relcard__title">{String(c.h1 || c.title || '').split('|')[0].trim()}</span>
-            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim().slice(0, 80)}</span>}
+            {c.description && <span class="cf-relcard__desc">{String(c.description).split('|')[0].trim()}</span>}
             <span class="cf-relcard__link">Abrir calculadora <span aria-hidden="true">→</span></span>
           </a>
         ))}
@@ -302,10 +304,28 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
 
     function sac(m, mm) { const bruto = (m / 2) * (mm / 6); const desc = Math.min(bruto, CAP / 2) * 0.17; return { bruto, desc, neto: bruto - desc, prop: Math.round((mm / 6) * 100) }; }
 
-    function render() {
+    function revealResult() {
+      $('ag-result').setAttribute('data-calculated', 'true');
+      $('ag-result-empty').hidden = true;
+      $('ag-result-content').hidden = false;
+      const note = $('ag-deco-note'); if (note) note.textContent = 'Estimación neta con tus datos';
+    }
+    function render(reveal = false) {
       const m = rawSueldo(); const s = sac(m, meses); const neto = netoEl.checked;
+      const err = $('ag-sueldo-error');
+      if (!m || m > 100000000) {
+        sueldoEl.setAttribute('aria-invalid', 'true');
+        err.textContent = !m ? 'Ingresá un sueldo mayor que cero.' : 'Revisá el monto: el máximo admitido es $100.000.000.';
+        err.hidden = false;
+        sueldoEl.focus();
+        return;
+      }
+      sueldoEl.removeAttribute('aria-invalid');
+      err.hidden = true;
+      if (reveal) revealResult();
       $('ag-big').textContent = fmt(neto ? s.neto : s.bruto);
-      $('ag-biglabel').textContent = neto ? 'Aguinaldo neto aproximado' : 'Aguinaldo bruto';
+      $('ag-biglabel').textContent = neto ? 'Neto estimado · sin Ganancias' : 'Aguinaldo bruto';
+      $('ag-assumption').hidden = !neto;
       $('ag-sub').textContent = meses === 6 ? 'Semestre completo · 6 de 6 meses' : `Proporcional · ${meses} de 6 meses`;
       $('ag-t-bruto').textContent = fmt(s.bruto);
       $('ag-t-aportes').textContent = fmt(s.desc);
@@ -325,33 +345,45 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       $('ag-prox-sem').textContent = jun ? '· Semestre enero-junio' : '· Semestre julio-diciembre';
     }
 
-    sueldoEl.addEventListener('input', () => { const p = sueldoEl.selectionStart; sueldoEl.value = fmtThousands(sueldoEl.value); render(); });
-    netoEl.addEventListener('change', render);
-    $('ag-calc-btn').addEventListener('click', render);
+    sueldoEl.addEventListener('input', () => {
+      sueldoEl.value = fmtThousands(sueldoEl.value);
+      sueldoEl.removeAttribute('aria-invalid');
+      $('ag-sueldo-error').hidden = true;
+    });
+    netoEl.addEventListener('change', () => { if ($('ag-result').dataset.calculated === 'true') render(); });
+    $('ag-calc-btn').addEventListener('click', () => {
+      render(true);
+      if ($('ag-result').dataset.calculated === 'true' && matchMedia('(max-width: 760px)').matches) {
+        $('ag-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
     document.querySelectorAll('.cf-chip[data-meses]').forEach((b) => b.addEventListener('click', () => {
       meses = Number(b.getAttribute('data-meses'));
       document.querySelectorAll('.cf-chip[data-meses]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-      render();
+      if ($('ag-result').dataset.calculated === 'true') render();
     }));
     document.querySelectorAll('[data-cuota]').forEach((b) => b.addEventListener('click', () => {
       cuota = b.getAttribute('data-cuota');
       document.querySelectorAll('[data-cuota]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
       renderCuota();
     }));
-    document.querySelectorAll('[data-ej]').forEach((b) => b.addEventListener('click', () => { sueldoEl.value = fmtThousands(b.getAttribute('data-ej')); render(); }));
+    document.querySelectorAll('[data-ej]').forEach((b) => b.addEventListener('click', () => { sueldoEl.value = fmtThousands(b.getAttribute('data-ej')); render(true); }));
 
     function summary() { const m = rawSueldo(); const s = sac(m, meses); return `Aguinaldo (SAC) con mejor sueldo ${fmt(m)}: bruto ${fmt(s.bruto)}, aportes ${fmt(s.desc)}, neto aprox. ${fmt(s.neto)}. — hacecuentas.com`; }
     function shareUrl() { return `${location.origin}${location.pathname}?sueldo=${rawSueldo()}&meses=${meses}`; }
     function copy(t, btn) { navigator.clipboard?.writeText(t).then(() => { const o = btn.innerHTML; btn.innerHTML = '✓ Copiado'; setTimeout(() => btn.innerHTML = o, 1500); }); }
     $('ag-copy').addEventListener('click', (e) => copy(summary(), e.currentTarget));
     $('ag-share').addEventListener('click', (e) => { if (navigator.share) navigator.share({ title: 'Aguinaldo SAC', text: summary(), url: shareUrl() }).catch(() => {}); else copy(shareUrl(), e.currentTarget); });
-    $('ag-detail').addEventListener('click', () => { document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' }); });
-    const s2 = $('ag-share2'); if (s2) s2.addEventListener('click', (e) => copy(shareUrl(), e.currentTarget));
+    $('ag-detail').addEventListener('click', () => {
+      const more = $('ag-more');
+      if (more) more.open = true;
+      document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' });
+    });
 
     const q = new URLSearchParams(location.search);
     if (q.get('sueldo')) sueldoEl.value = fmtThousands(q.get('sueldo'));
     if (q.get('meses')) { const b = document.querySelector(`.cf-chip[data-meses="${q.get('meses')}"]`); if (b) b.click(); }
-    render();
+    if (q.get('sueldo')) render(true);
   })();
 </script>
 
@@ -359,4 +391,42 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
   .ag .ag-money { position: relative; display: flex; align-items: center; }
   .ag .ag-money__sign { position: absolute; left: 0.85rem; font-weight: 700; color: var(--text-subtle); pointer-events: none; }
   .ag .ag-money .cf-input { padding-left: 1.7rem; }
+  .ag .ag-money .cf-input[aria-invalid="true"] { border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,.12); }
+  .ag .ag-field-error { margin: .45rem 0 0; color: #b91c1c; font-size: .82rem; font-weight: 650; }
+  .ag .ag-result-empty {
+    min-height: 360px; display: grid; place-content: center; justify-items: center;
+    text-align: center; gap: .65rem; color: #dce5f5; padding: 2rem;
+  }
+  .ag .ag-result-empty > span { font-size: 2rem; color: #dafa67; }
+  .ag .ag-result-empty strong { color: #fff; font-size: 1.2rem; }
+  .ag .ag-result-empty p { margin: 0; max-width: 30ch; color: #b8c5da; line-height: 1.55; }
+  .ag .ag-result-content[hidden] { display: none; }
+  .ag .ag-primary-action {
+    flex-basis: 100%; min-height: 46px; justify-content: center;
+    background: #dafa67; color: #173c31; border-color: transparent;
+    font-weight: 800; text-decoration: none;
+  }
+  .ag .ag-assumption {
+    margin: .65rem 0 0; padding: .65rem .75rem; border-radius: .65rem;
+    background: rgba(255,255,255,.08); color: #d7e0ee; font-size: .78rem; line-height: 1.45;
+  }
+  .ag .ag-more {
+    margin-top: 1.5rem; border: 1px solid var(--border); border-radius: var(--radius-lg);
+    background: var(--bg-card); overflow: clip;
+  }
+  .ag .ag-more > summary {
+    min-height: 72px; padding: 1rem 1.25rem; cursor: pointer; list-style: none;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  }
+  .ag .ag-more > summary::-webkit-details-marker { display: none; }
+  .ag .ag-more > summary span:first-child { display: grid; gap: .2rem; }
+  .ag .ag-more > summary small { color: var(--text-subtle); font-weight: 400; line-height: 1.4; }
+  .ag .ag-more__chev { font-size: 1.35rem; transition: transform .2s ease; }
+  .ag .ag-more[open] .ag-more__chev { transform: rotate(180deg); }
+  .ag .ag-more__content { padding: 0 1.25rem 1.25rem; }
+  @media (max-width: 760px) {
+    .ag :where(button, a.cf-rbtn, .cf-chip, .cf-sc, summary) { min-height: 44px; }
+    .ag .cf-result__actions { display: flex; flex-wrap: wrap; }
+    .ag .ag-more__content { padding-inline: .75rem; }
+  }
 </style>
