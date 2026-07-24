@@ -7,6 +7,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Calculator from '../components/Calculator.astro';
 import CalcLayoutV2 from '../components/CalcLayoutV2.astro';
+import CalcContextLinks from '../components/CalcContextLinks.astro';
 import DiasEntreFechas from '../components/DiasEntreFechas.astro';
 import AguinaldoSac from '../components/AguinaldoSac.astro';
 import NumeroALetras from '../components/NumeroALetras.astro';
@@ -1459,6 +1460,10 @@ const flagshipDomain: 'money' | 'data' | 'health' | 'home' | 'knowledge' | 'life
   {isInteresJudicial && <InteresJudicialTasa calc={calc} related={ijRelated} />}
   {isAportesPatronales && <AportesPatronales calc={calc} related={apRelated} />}
   {!flagshipBespoke && <CalcLayoutV2 calc={calc} dataAsOf={_dataAsOf ?? undefined} />}
+  {/* Los bloques de linking contextual (blog / tabla / Web Story) viven dentro
+      de CalcLayoutV2; las bespoke no pasan por ahí y perdían el link. Un solo
+      punto de montaje: cualquier mockup nuevo lo hereda. */}
+  {flagshipBespoke && <CalcContextLinks calc={calc} />}
 
   {isMundialCalc && <WeekendPackCapture source="calculadora-mundial" />}
 
