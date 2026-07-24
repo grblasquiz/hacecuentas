@@ -6,6 +6,7 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import PreferredSourceCta from '../../components/PreferredSourceCta.astro';
 import { filterByIncremental } from '../../lib/incremental';
+import { getHistoriaForArticle } from '../../lib/historias-map';
 
 export async function getStaticPaths() {
   const posts = import.meta.glob<any>('../../content/blog/*.json', { eager: true });
@@ -56,6 +57,9 @@ for (const [mods, prefix] of calcSources) {
 const relatedCalcs = (post.relatedCalcs || [])
   .map((s: string) => calcBySlug.get(s))
   .filter(Boolean);
+
+// Web Story asociada (reverso del campo `article` de src/content/historias/*).
+const historia = getHistoriaForArticle(`/blog/${post.slug}`);
 
 // ─── Category labels ─────────────────────────────────────────────────────────
 const categoryLabels: Record<string, string> = {
@@ -553,6 +557,17 @@ const isYmylBottom = ['finanzas', 'negocios'].includes(post.category);
       </section>
     )}
 
+    {/* Web Story del post. El campo `webStory` del JSON existía pero NADIE lo
+        renderizaba, así que las /historias vivían con 1 solo link entrante. */}
+    {historia && (
+      <section class="bp-story">
+        <p class="bp-eyebrow">Versión rápida</p>
+        <h2 class="bp-related__title">{historia.title}</h2>
+        <p class="bp-story__desc">Los números de esta nota en 6 pantallas, para leer en el celular.</p>
+        <a class="bp-story__cta" href={`/historias/${historia.slug}`}>Ver la historia <span aria-hidden="true">→</span></a>
+      </section>
+    )}
+
     <!-- Newsletter -->
     <section class="bp-news" data-nosnippet aria-labelledby="bp-news-title">
       <div class="bp-news__text">
@@ -672,6 +687,18 @@ const isYmylBottom = ['finanzas', 'negocios'].includes(post.category);
     letter-spacing: 0.09em;
     color: var(--accent);
   }
+
+  /* ── Web Story (bloque "Versión rápida") ────────────────────────────────── */
+  .bp-story {
+    margin: 2.5rem 0 0;
+    padding: 1.25rem 1.4rem;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--bg-soft);
+  }
+  .bp-story__desc { color: var(--text-muted); font-size: 0.95rem; margin: 0.35rem 0 0.9rem; }
+  .bp-story__cta { color: var(--accent); font-weight: 700; text-decoration: none; }
+  .bp-story__cta:hover { text-decoration: underline; }
 
   /* ── Breadcrumb ─────────────────────────────────────────────────────────── */
   .bp-crumb ol {

@@ -16,6 +16,9 @@
 import Calculator from './Calculator.astro';
 import FinancialClusterCalculator from './FinancialClusterCalculator.astro';
 import { getDatosSource } from '../lib/datos-source-map';
+import { getTablaForCalc } from '../lib/tablas-map';
+import blogBacklinks from '../lib/blog-backlinks.json';
+import { getHistoriaForArticle } from '../lib/historias-map';
 import { shouldShowReviewDate } from '../lib/review-dates';
 import { sourceRel } from '../lib/source-rel';
 import RelatedCalcs from './RelatedCalcs.astro';
@@ -378,6 +381,22 @@ const sources: Array<{ name:string; url?:string; publisher?:string; date?:string
 // renderiza como enlace interno DOFOLLOW en el panel Fuentes → concentra
 // autoridad en las /datos-* (grounding Gemini/AIO). Ver datos-source-map.ts.
 const datosSource = getDatosSource(calc);
+// Tabla de referencia /tabla/* asociada (sólo AR). Cierra el link inverso: las
+// tablas declaraban `relatedCalcs` pero nadie las enlazaba de vuelta → 5 de 7
+// estaban huérfanas estando en el sitemap. Ver tablas-map.ts.
+const tablaRef = getTablaForCalc(calc.slug, lang);
+// Posts del blog que declaran este calc en `relatedCalcs` (mapa invertido,
+// scripts/compute-blog-backlinks.mjs). El blog emitía 1.684 links a calcs y
+// recibía ~80: este bloque devuelve el flujo. Sólo AR/CO/MX (los locales que
+// el blog resuelve). Máx 2 para no diluir.
+const blogPosts: Array<{ slug: string; title: string }> =
+  (lang === '' || lang === 'co' || lang === 'mx')
+    ? ((blogBacklinks as Record<string, Array<{ slug: string; title: string }>>)[lang ? `${lang}/${calc.slug}` : calc.slug] || []).slice(0, 2)
+    : [];
+const capitalize = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+// Web Story de este calc, si existe. Las /historias declaraban su artículo de
+// origen pero el artículo no linkeaba de vuelta (1 solo inlink cada una).
+const historia = lang ? null : getHistoriaForArticle(`/${calc.slug}`);
 const useCases: Array<string | {title?:string;description?:string}> = calc.useCases || [];
 const example = calc.example || null;
 const solvedExamples = Array.isArray(calc.solvedExamples) ? calc.solvedExamples : [];
@@ -904,6 +923,12 @@ const editorialHtml = _isReviewed
           <p style="margin:0;">{L.datosLead} <a href={datosSource.url}>📊 {datosSource.label}</a>.</p>
         </div>
       )}
+      {tablaRef && (
+        <div class="v2-block" id="tabla-referencia">
+          <h2>Tabla de referencia</h2>
+          <p style="margin:0;">Todos los valores de esta calculadora, en formato tabla para consultar de un vistazo: <a href={`/tabla/${tablaRef.slug}`}>📋 {tablaRef.label}</a>.</p>
+        </div>
+      )}
       {sources.length > 0 && (
         <div class="v2-block" id="fuentes">
           <h2>{L.sources}</h2>
@@ -1008,6 +1033,33 @@ const editorialHtml = _isReviewed
         <span class="gd">Contexto, conceptos y cómo combinar calculadoras del tema.</span>
       </div>
       <a class="gb" href={`/guia/${pillarGuideSlug}`}>{L.guideOpen}</a>
+    </aside>
+  )}
+
+  {blogPosts.length > 0 && (
+    <aside class="v2-guide v2-guide-blog">
+      <div class="gc-text">
+        <span class="eb">📰 Para seguir leyendo</span>
+        <strong>{capitalize(blogPosts[0].title)}</strong>
+        {blogPosts.length > 1 && (
+          <span class="gd">También: <a href={`/blog/${blogPosts[1].slug}`}>{capitalize(blogPosts[1].title)}</a></span>
+        )}
+        {blogPosts.length === 1 && (
+          <span class="gd">El análisis completo del tema, con ejemplos y números reales.</span>
+        )}
+      </div>
+      <a class="gb" href={`/blog/${blogPosts[0].slug}`}>Leer la nota →</a>
+    </aside>
+  )}
+
+  {historia && (
+    <aside class="v2-guide">
+      <div class="gc-text">
+        <span class="eb">📱 Versión rápida, en 6 pantallas</span>
+        <strong>{historia.title}</strong>
+        <span class="gd">La historia visual del tema: los números clave, sin scrollear.</span>
+      </div>
+      <a class="gb" href={`/historias/${historia.slug}`}>Ver la historia →</a>
     </aside>
   )}
 

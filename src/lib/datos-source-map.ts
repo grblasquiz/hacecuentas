@@ -132,6 +132,30 @@ const RULES: Rule[] = [
     source: { url: '/datos-topes-sipa-2026', label: 'Topes y aportes SIPA 2026 (base imponible máxima)' },
   },
 
+  // ── Páginas-dato de país que estaban HUÉRFANAS (0 links entrantes en todo el
+  //    sitio, auditoría de internal linking 2026-07-24). Van ANTES de las reglas
+  //    genéricas de salario mínimo del mismo país para ganar el match. ──
+  {
+    // UMA/IMSS México: base de casi todo cálculo fiscal y de seguridad social MX.
+    test: (h, a) => a === 'MX' && /(\buma\b|\bimss\b|infonavit|cuota obrero|cuotas patronales|\bisr\b|prima de antiguedad)/.test(h),
+    source: { url: '/mx/datos-uma-imss-2026', label: 'UMA 2026 y cuotas IMSS (valores diario, mensual y anual)' },
+  },
+  {
+    // SOAT / UIT / ITF Perú.
+    test: (h, a) => a === 'PE' && /(\bsoat\b|\buit\b|\bitf\b|multa|papeleta|revision tecnica|impuesto)/.test(h),
+    source: { url: '/pe/datos-soat-uit-peru-2026', label: 'SOAT, UIT e ITF en Perú 2026 (valores oficiales)' },
+  },
+  {
+    // Tabla de pensión alimenticia Ecuador (tabla oficial del CNJ).
+    test: (h, a) => a === 'EC' && /(pension alimenticia|pension de alimentos|manutencion|alimentos.{0,15}hijo)/.test(h),
+    source: { url: '/ec/datos-pension-alimenticia-ecuador-2026', label: 'Tabla de pensión alimenticia Ecuador 2026' },
+  },
+  {
+    // IPCA Brasil (serie histórica) — inflación de referencia para calcs BR.
+    test: (h, a) => a === 'BR' && /(ipca|inflacao|inflacion|correcao monetaria|reajuste|poder de compra|aluguel)/.test(h),
+    source: { url: '/pt/dados-ipca-brasil-historico', label: 'IPCA Brasil: série histórica mensal e acumulado' },
+  },
+
   // ── Salario mínimo por país (audience-scoped) ──
   {
     test: (h, a) => a === 'CO' && /(sueldo|salario|smmlv|minimo|nomina)/.test(h),

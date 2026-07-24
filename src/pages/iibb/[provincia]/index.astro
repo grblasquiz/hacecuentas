@@ -14,6 +14,13 @@ export async function getStaticPaths() {
 }
 
 const { provincia } = Astro.props;
+// Cluster de 24 provincias: sin este bloque cada página tenía UN solo link
+// entrante (el hub /iibb) y ninguno entre hermanas — un hub&spoke sin radios.
+// Convenio Multilateral hace que el cruce entre jurisdicciones sea, además,
+// la navegación que el usuario realmente necesita.
+const provinciasAllMod = await import('../../../content/argentina/provincias.json');
+const provinciasAll: any[] = (provinciasAllMod.default || provinciasAllMod) as any[];
+const otrasProvincias = provinciasAll.filter((p: any) => p.slug !== provincia.slug);
 const actividadesMod = await import('../../../content/iibb/actividades.json');
 const actividades: any[] = actividadesMod.default || actividadesMod;
 const ibMod = await import('../../../content/argentina/ingresos-brutos.json');
@@ -152,6 +159,20 @@ const schema = {
         es común tramitar exención o reducción de retenciones.
       </p>
     </section>
+
+    <section class="otras-prov">
+      <h2>Ingresos Brutos en las otras provincias</h2>
+      <p>
+        Si trabajás con Convenio Multilateral o facturás fuera de {provincia.name},
+        acá están las alícuotas 2026 de cada jurisdicción:
+      </p>
+      <ul class="prov-links">
+        {otrasProvincias.map((p: any) => (
+          <li><a href={`/iibb/${p.slug}`}>Ingresos Brutos {p.name}</a></li>
+        ))}
+      </ul>
+      <p><a href="/iibb">Ver el panorama de IIBB en todo el país →</a></p>
+    </section>
   </article>
 
   <Footer slot="footer" />
@@ -165,6 +186,10 @@ const schema = {
   .lead { color: #475569; font-size: 17px; }
   .local-notes { background: #fef3c7; border-radius: 10px; padding: 16px 22px; margin: 18px 0; }
   .local-notes h2 { font-size: 18px; margin: 0 0 6px; color: #92400e; }
+  .otras-prov { margin: 32px 0 0; }
+  .prov-links { list-style: none; padding: 0; margin: 14px 0 18px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px 16px; }
+  .prov-links a { color: var(--accent, #3157ff); text-decoration: none; font-size: 15px; }
+  .prov-links a:hover { text-decoration: underline; }
   .prov-details { margin: 24px 0; }
   .prov-details p { color: #475569; font-size: 16px; }
   .metrics-table {

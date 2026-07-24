@@ -137,7 +137,15 @@ const categoryLabelsPt: Record<string, string> = {
 
 const categoryLabels = lang === 'en' ? categoryLabelsEn : lang === 'pt' ? categoryLabelsPt : categoryLabelsEs;
 const headerTitle = lang === 'en' ? 'Related calculators' : lang === 'pt' ? 'Calculadoras relacionadas' : 'Calculadoras relacionadas';
-const seeAllLabel = lang === 'en' ? 'See all →' : lang === 'pt' ? 'Ver todas →' : 'Ver todas →';
+// Anchor keyword-first: "Ver todas →" era el anchor interno más repetido del
+// sitio (744 apariciones) y no llevaba keyword. Con el nombre de la categoría
+// cada link le pasa al hub la señal de anchor que antes se tiraba.
+const catLabelForAnchor = categoryLabels[category] || '';
+const seeAllLabel = lang === 'en'
+  ? (catLabelForAnchor ? `All ${catLabelForAnchor.toLowerCase()} calculators →` : 'See all →')
+  : lang === 'pt'
+    ? (catLabelForAnchor ? `Todas as calculadoras de ${catLabelForAnchor.toLowerCase()} →` : 'Ver todas →')
+    : (catLabelForAnchor ? `Ver todas las calculadoras de ${catLabelForAnchor.toLowerCase()} →` : 'Ver todas →');
 // "Ver todas" apunta al hub de la categoría del calc actual. Los hubs
 // /categoria/<cat> sólo existen en el sitio ES root (EN/PT no tienen páginas de
 // categoría), así que sólo enrutamos ahí para es/es-ES; EN/PT caen a su home.
@@ -180,6 +188,9 @@ const seeAllHref = hasCategoryHubs && category ? `/categoria/${category}` : home
     justify-content: space-between;
     margin-bottom: 1.25rem;
     gap: 1rem;
+    /* el anchor keyword-first es largo ("…calculadoras de medio ambiente →"):
+       sin wrap desbordaba el header en 390px */
+    flex-wrap: wrap;
   }
 
   .related h2 {
@@ -193,7 +204,7 @@ const seeAllHref = hasCategoryHubs && category ? `/categoria/${category}` : home
     color: var(--accent);
     text-decoration: none;
     font-weight: 500;
-    white-space: nowrap;
+    max-width: 100%;
   }
 
   .see-all:hover { text-decoration: underline; }

@@ -24,6 +24,11 @@ const localeSegment = Astro.url.pathname.split('/').filter(Boolean)[0] || '';
 const neutralSpanishLocales = new Set(['mx', 'es', 'cl', 'co', 'pe', 'ec', 've', 'py', 'uy', 'do']);
 const isNeutralSpanish = lang === 'es' && neutralSpanishLocales.has(localeSegment);
 const localePrefix = isNeutralSpanish ? `/${localeSegment}` : '';
+// Salas de decisión: sólo AR + los 4 locales con ruta /<cc>/decidir. El resto
+// (es, ec, ve, py, uy, do) NO tiene la ruta → linkearla mandaba 430 links
+// internos a un 404 duro (uno por página de esos locales).
+const decisionRoomLocales = new Set(['mx', 'co', 'cl', 'pe']);
+const hasDecisionRooms = decisionRoomLocales.has(localeSegment);
 const P = lang === 'es' ? '' : `/${lang}`; // prefijo de locale para links internos
 
 // Logos de marca oficiales (simple-icons, single-path, fill: currentColor).
@@ -72,17 +77,30 @@ const startLinks = isEn ? [
 ] : isPt ? [
   ['/pt', 'Todas as calculadoras'], ['/pt/calculadora-imc-tabela-oms-classificacao', 'IMC'], ['/pt/salario-liquido-clt-inss-irrf-2026', 'Salário líquido'], ['/pt/calculadora-juros-compostos-investimento-mensal', 'Juros compostos'], ['/guias', 'Guias'],
 ] : isNeutralSpanish ? [
-  [localePrefix, 'Todas las calculadoras'], [`${localePrefix}/calculadoras`, 'Catálogo completo'], [`${localePrefix}/decidir`, 'Salas de decisión'], ['/guias', 'Guías'],
+  [localePrefix, 'Todas las calculadoras'], [`${localePrefix}/calculadoras`, 'Catálogo completo'],
+  ...(hasDecisionRooms ? [[`${localePrefix}/decidir`, 'Salas de decisión']] : [['/glosario', 'Glosario financiero']]),
+  ['/guias', 'Guías'],
 ] : [
   ['/sueldos-y-trabajo', 'Sueldos y trabajo'], ['/impuestos-argentina', 'Impuestos'], ['/finanzas-personales', 'Finanzas'], ['/negocios-e-independientes', 'Negocios'], ['/decidir', 'Salas de decisión'],
 ];
 // Explorar
+// Las 4 últimas (sólo AR root) rescatan páginas que estaban 100% huérfanas:
+// /calculadora (head term "calculadora online"), /top (listados curados),
+// /fin-de-semana y /calendarios. No se muestran en locales de país porque son
+// superficies del root AR/ES.
+const isArRoot = !isEn && !isPt && !isNeutralSpanish;
 const exploreLinks = [
   [isEn ? '/en' : isPt ? '/pt' : isNeutralSpanish ? `${localePrefix}/calculadoras` : '/calculadoras', isEn ? 'Calculators' : 'Calculadoras'],
   ['/guias', isEn ? 'Guides' : isPt ? 'Guias' : 'Guías'],
   ['/blog', 'Blog'],
   ['/glosario', isEn ? 'Glossary' : isPt ? 'Glossário' : 'Glosario'],
   ['/historias', isEn ? 'Stories' : isPt ? 'Histórias' : 'Historias'],
+  ...(isArRoot ? [
+    ['/calculadora', 'Calculadora online'],
+    ['/top', 'Listados top'],
+    ['/fin-de-semana', 'Calculadoras de fin de semana'],
+    ['/calendarios', 'Calendarios 2026'],
+  ] : []),
 ];
 // Comunidad
 const communityLinks = [
@@ -90,6 +108,10 @@ const communityLinks = [
   ['/simulador-jubilacion-anses', isEn ? 'Retirement simulator' : isPt ? 'Simulador de aposentadoria' : 'Simulador de jubilación'],
   ['/sugerir', isEn ? 'Suggest a calc' : isPt ? 'Sugerir uma calc' : 'Sugerir una calc'],
   ['/sugerencias', isEn ? 'Vote suggestions' : isPt ? 'Votar sugestões' : 'Votar sugerencias'],
+  // /desarrolladores y /wordpress estaban huérfanas (0 links entrantes) pese a
+  // estar en el sitemap: son las superficies de embed/API, público dev.
+  ['/desarrolladores', isEn ? 'For developers' : isPt ? 'Para desenvolvedores' : 'Para desarrolladores'],
+  ['/wordpress', isEn ? 'WordPress plugin' : isPt ? 'Plugin WordPress' : 'Plugin de WordPress'],
 ];
 // Legal (Contacto vive acá también)
 const legalLinks = [
