@@ -8,7 +8,7 @@
  *   Fuente: SUPERCIAS / Guía Oficial gob.ec — https://www.gob.ec/scvs/tramites/constitucion-sociedades-acciones-simplificadas
  * - Capital mínimo: SAS $1 · Cía. Ltda. $400 · S.A. $800.
  *   Fuente: Ley de Compañías / SUPERCIAS — https://www.supercias.gob.ec/
- * - RUC en el SRI: gratuito. Fuente: SRI — https://www.sri.gob.ec/ruc
+ * - RUC en el SRI: gratuito. Fuente: SRI — https://www.sri.gob.ec/registro-unico-de-contribuyentes-ruc
  * - Firma electrónica (archivo .p12), persona natural, 1 año: ~$18 (uno por cada socio/accionista
  *   y por el representante legal en la constitución electrónica). Fuente: proveedores acreditados ARCOTEL
  *   (FirmaOK $18,05/año) — https://firmaok.com.ec/blog/cuanto-cuesta-firma-electronica-ecuador
