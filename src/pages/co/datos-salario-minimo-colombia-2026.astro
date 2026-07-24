@@ -10,7 +10,7 @@ import '../../styles/calc-flagship.css';
 // CC-BY + "Cómo citar" → backlink editorial. Datos: src/lib/data/colombia-2026.ts
 // (SMLMV $1.750.905, auxilio $249.095, UVT $52.374) + CST/leyes citadas.
 
-const ULTIMA_REVISION = '2026-07-09';
+const ULTIMA_REVISION = '2026-07-24';
 const PAGE_URL = 'https://hacecuentas.com/co/datos-salario-minimo-colombia-2026';
 
 const valores = [
@@ -49,12 +49,12 @@ const recargos = [
 const title = 'Salario mínimo Colombia 2026: $1.750.905 (con auxilio, $2.000.000) | Hacé Cuentas';
 const description = 'Salario mínimo Colombia 2026: $1.750.905 al mes; con el auxilio de transporte de $249.095 llega a $2.000.000. Tabla con UVT $52.374, jornada de 42 h y recargos nocturno y dominical (+90% desde julio). Datos oficiales, descargables (CC-BY 4.0).';
 
-const faq = [
+const faq: Array<{ q: string; a: string; link?: { href: string; text: string } }> = [
   { q: '¿Cuál es el salario mínimo en Colombia 2026?', a: 'El salario mínimo legal mensual vigente (SMLMV) en 2026 es de $1.750.905 (Decreto 1469/2025), vigente desde el 1 de enero de 2026. Sumado al auxilio de transporte de $249.095, el ingreso mínimo llega a $2.000.000.' },
   { q: '¿Cuánto es el salario mínimo por hora en Colombia 2026?', a: 'Hasta el 14 de julio la hora ordinaria del salario mínimo vale $7.958,66 ($1.750.905 ÷ 220). Desde el 15 de julio, con la jornada máxima de 42 horas, pasa a $8.337,64 ($1.750.905 ÷ 210). Ese divisor legal es la base para calcular horas extra y recargos.' },
   { q: '¿Cuánto es el salario mínimo por día en Colombia 2026?', a: 'El salario mínimo diario 2026 es de $58.363,50, que resulta de dividir el SMLMV mensual de $1.750.905 entre 30 días. Es el valor antes de sumar el auxilio de transporte; con el auxilio proporcional, el día mínimo ronda los $66.666,67.' },
   { q: '¿Cuánto es el salario mínimo por quincena en 2026?', a: 'La quincena mínima 2026 es de $875.452,50, es decir la mitad del SMLMV mensual ($1.750.905 ÷ 2). Si además te corresponde el auxilio de transporte, se suma la mitad ($124.547,50) y la quincena llega a $1.000.000.' },
-  { q: '¿A quién le corresponde el auxilio de transporte?', a: 'El auxilio de transporte ($249.095 en 2026) lo recibe quien gana hasta 2 SMLMV (es decir, hasta $3.501.810). No se recibe si el empleador pone el transporte.' },
+  { q: '¿A quién le corresponde el auxilio de transporte?', a: 'El auxilio de transporte ($249.095 en 2026) lo recibe quien gana hasta 2 SMLMV (es decir, hasta $3.501.810). No se recibe si el empleador pone el transporte. Si trabajaste menos de un mes completo, se paga proporcional a los días trabajados (÷30).', link: { href: '/co/calculadora-auxilio-transporte-colombia-2026', text: 'Calculá tu auxilio de transporte proporcional' } },
   { q: '¿El auxilio de transporte se suma al salario mínimo?', a: 'Sí, pero se paga por fuera del salario. El auxilio de $249.095 se suma al SMLMV de $1.750.905 para dar un ingreso mínimo de $2.000.000, siempre que ganes hasta 2 SMLMV. Cuenta como base para liquidar la prima de servicios y las cesantías, pero no para los aportes a salud y pensión, y no se paga si la empresa suministra el transporte.' },
   { q: '¿El salario mínimo aplica para trabajo de medio tiempo o por días?', a: 'Sí, de forma proporcional al tiempo trabajado. La hora ordinaria mínima vale $7.958,66 hasta el 14 de julio y $8.337,64 desde el 15 de julio de 2026; el día mínimo es $58.363,50. El auxilio de transporte también se reconoce proporcionalmente.' },
   { q: '¿Cuánto vale la UVT en 2026?', a: 'La UVT (Unidad de Valor Tributario) 2026 es de $52.374, según la Resolución DIAN 000238 de 2025. Se usa para topes de retención, sanciones y declaración de renta.' },
@@ -129,6 +129,12 @@ const schema = {
         <div class="cf-deco-sub"><strong>Con auxilio de transporte</strong> <span class="cf-deco-chip">$2.000.000 · +23%</span></div>
       </div>
     </header>
+
+    <p class="smc-otropais">
+      <span aria-hidden="true">🌎</span> ¿Buscabas el salario mínimo de <strong>otro país</strong>?
+      Mirá la <a href="/datos-salario-minimo-latam-2026">tabla del salario mínimo 2026 en toda LATAM</a>
+      (Argentina, México, Chile, Brasil, Perú y 6 más, con norma y vigencia).
+    </p>
 
     <div class="cf-stats">
       <div class="cf-stat cf-stat--accent"><div class="cf-stat__label">Ingreso mínimo total</div><div class="cf-stat__value">$2.000.000</div><div class="cf-stat__sub">SMLMV + auxilio</div></div>
@@ -283,7 +289,10 @@ const schema = {
         {faq.map((f, i) => (
           <details class="cf-faq__item" open={i === 0}>
             <summary class="cf-faq__q"><span>{f.q}</span><svg class="cf-faq__chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></summary>
-            <div class="cf-faq__a">{f.a}</div>
+            <div class="cf-faq__a">
+              {f.a}
+              {f.link && <> <a href={f.link.href}>{f.link.text}</a>.</>}
+            </div>
           </details>
         ))}
       </div>
@@ -295,8 +304,10 @@ const schema = {
       <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Calculadoras relacionadas</h2>
       <div class="cf-related__grid">
         <a class="cf-relcard" href="/co/calculadora-salario-minimo-colombia-2026-auxilio-transporte"><span class="cf-relcard__ico" aria-hidden="true">💵</span><span class="cf-relcard__title">Salario y prestaciones</span><span class="cf-relcard__desc">Calculá tu salario, auxilio y neto laboral.</span><span class="cf-relcard__link">Calcular salario <span aria-hidden="true">→</span></span></a>
+        <a class="cf-relcard" href="/co/calculadora-auxilio-transporte-colombia-2026"><span class="cf-relcard__ico" aria-hidden="true">🚌</span><span class="cf-relcard__title">Auxilio de transporte</span><span class="cf-relcard__desc">Cuánto te corresponde y el proporcional por días.</span><span class="cf-relcard__link">Calcular auxilio <span aria-hidden="true">→</span></span></a>
         <a class="cf-relcard" href="/co/calculadora-horas-extras-colombia-2026"><span class="cf-relcard__ico" aria-hidden="true">⏱️</span><span class="cf-relcard__title">Horas extra y recargos</span><span class="cf-relcard__desc">Aplicá el divisor correcto antes o después del 15 de julio.</span><span class="cf-relcard__link">Calcular horas <span aria-hidden="true">→</span></span></a>
         <a class="cf-relcard" href="/co/calculadora-liquidacion-laboral-colombia-completa-cesantias"><span class="cf-relcard__ico" aria-hidden="true">🧾</span><span class="cf-relcard__title">Liquidación laboral</span><span class="cf-relcard__desc">Cesantías, prima, intereses y vacaciones.</span><span class="cf-relcard__link">Calcular liquidación <span aria-hidden="true">→</span></span></a>
+        <a class="cf-relcard" href="/datos-salario-minimo-latam-2026"><span class="cf-relcard__ico" aria-hidden="true">🌎</span><span class="cf-relcard__title">Salario mínimo en LATAM</span><span class="cf-relcard__desc">Los 11 países de la región, con norma y vigencia.</span><span class="cf-relcard__link">Ver tabla <span aria-hidden="true">→</span></span></a>
       </div>
     </section>
 
@@ -316,6 +327,19 @@ const schema = {
 
 <style>
   /* Bloques propios de esta página (el resto viene de calc-flagship.css) */
+
+  /* Desambiguador de país: esta página capta buena parte de las búsquedas
+     genéricas de "salario mínimo 2026" (sin país), así que ofrecemos la salida
+     al hub LATAM antes de que el lector rebote. */
+  .smc-otropais {
+    margin: 0 0 1rem; padding: 0.75rem 1rem;
+    border: 1px dashed color-mix(in srgb, var(--accent) 35%, transparent);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+    font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;
+  }
+  .smc-otropais a { color: var(--accent-strong); font-weight: 700; }
+
   .smc-impact { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 25%, transparent); }
   .smc-impact .cf-cmp__head { color: var(--accent-strong); }
   .smc-impact .cf-cmp__list li::before { content: "→"; color: var(--accent); font-weight: 800; }

@@ -12,6 +12,9 @@ import { COLOMBIA_2026 } from '../lib/data/colombia-2026';
 import { MEXICO_2026 } from '../lib/data/mexico-2026';
 import { PARAGUAY_2026 } from '../lib/data/paraguay-2026';
 import { URUGUAY_2026 } from '../lib/data/uruguay-2026';
+import { CHILE_2026 } from '../lib/data/chile-2026';
+import { REPUBLICA_DOMINICANA_2026 } from '../lib/data/republica-dominicana-2026';
+import { VENEZUELA_2026 } from '../lib/data/venezuela-2026';
 
 // Página-dato enlazable: salario mínimo comparado en LATAM 2026.
 // Cada valor sale de la fuente única verificada de su país en este repo
@@ -21,7 +24,7 @@ import { URUGUAY_2026 } from '../lib/data/uruguay-2026';
 // Patrón espejado de /datos-monotributo-2026: tabla server-rendered + schema
 // Dataset + CC-BY 4.0 + bloque "Cómo citar".
 
-const ULTIMA_REVISION = '2026-07-12';
+const ULTIMA_REVISION = '2026-07-24';
 
 // AR — el SMVM vive en la fórmula oficial (el fetcher de CNEPySMVyM la patchea).
 const ar = salarioMinimo({ horasSemana: 48 });
@@ -82,7 +85,7 @@ const PAISES = [
     valor: `$ ${fmtNum(COLOMBIA_2026.smlmv, 'es-CO')} COP`,
     norma: 'Decreto 1469 de 2025',
     vigencia: 'enero 2026',
-    nota: `+ auxilio de transporte $ ${fmtNum(COLOMBIA_2026.auxilioTransporte, 'es-CO')} (Dto 1470/2025) = $ 2.000.000`,
+    nota: `+ auxilio de transporte $ ${fmtNum(COLOMBIA_2026.auxilioTransporte, 'es-CO')} (Dto 1470/2025) = $ ${fmtNum(COLOMBIA_2026.smlmv + COLOMBIA_2026.auxilioTransporte, 'es-CO')}`,
   },
   {
     pais: 'Paraguay',
@@ -102,12 +105,39 @@ const PAISES = [
     vigencia: 'desde julio 2026',
     nota: `$ ${fmtNum(URUGUAY_2026.smn.mensualEnero, 'es-UY')} de enero a junio · jornal $ ${fmtNum(URUGUAY_2026.smn.jornalJulio, 'es-UY')}`,
   },
+  {
+    pais: 'Chile',
+    bandera: '🇨🇱',
+    instrumento: 'Ingreso Mínimo Mensual (IMM)',
+    valor: `$ ${fmtNum(CHILE_2026.imm, 'es-CL')} CLP`,
+    norma: 'Ley 21.830',
+    vigencia: 'desde mayo 2026',
+    nota: `$ ${fmtNum(CHILE_2026.immHistoricoEneAbr2026, 'es-CL')} de enero a abril (Ley 21.751) · menores de 18 y mayores de 65: $ ${fmtNum(CHILE_2026.immMenores18Mayores65, 'es-CL')}`,
+  },
+  {
+    pais: 'República Dominicana',
+    bandera: '🇩🇴',
+    instrumento: 'Salario mínimo por sector y tamaño de empresa (CNS)',
+    valor: `RD$ ${fmtNum(REPUBLICA_DOMINICANA_2026.salarioMinimo.noSectorizado.grande, 'es-DO', 2)} DOP`,
+    norma: 'Resolución CNS-01-2025',
+    vigencia: 'desde febrero 2026 (2ª fase)',
+    nota: `No hay un mínimo único: el valor mostrado es el del sector privado no sectorizado en empresas grandes. Mediana RD$ ${fmtNum(REPUBLICA_DOMINICANA_2026.salarioMinimo.noSectorizado.mediana, 'es-DO', 2)} · pequeña RD$ ${fmtNum(REPUBLICA_DOMINICANA_2026.salarioMinimo.noSectorizado.pequena, 'es-DO', 2)} · micro RD$ ${fmtNum(REPUBLICA_DOMINICANA_2026.salarioMinimo.noSectorizado.micro, 'es-DO', 2)}`,
+  },
+  {
+    pais: 'Venezuela',
+    bandera: '🇻🇪',
+    instrumento: 'Salario mínimo legal (LOTTT)',
+    valor: `Bs. ${fmtNum(VENEZUELA_2026.salarioMinimoVes, 'es-VE')} VES`,
+    norma: 'LOTTT — último ajuste marzo 2022',
+    vigencia: 'sin modificar desde 2022',
+    nota: `El mínimo legal quedó congelado y hoy es nominal: el grueso del ingreso llega por el cestaticket (US$ ${fmtNum(VENEZUELA_2026.cestaticketUsd)} indexado a tasa BCV) y bonos no salariales, que no computan para prestaciones`,
+  },
 ];
 
 const title =
-  'Salario Mínimo 2026 por país: tabla LATAM (Argentina, México, Colombia, Brasil, Perú, Uruguay…) | Hacé Cuentas';
+  'Salario Mínimo 2026: cuánto es en cada país de LATAM (tabla oficial) | Hacé Cuentas';
 const description =
-  `Salario mínimo 2026 en América Latina, país por país, con norma legal y vigencia: Argentina $ ${fmtNum(ar.smvmMensual)} ARS · México $ ${fmtNum(MEXICO_2026.salarioMinimo.generalDiario, 'es-MX', 2)}/día · Colombia $ ${fmtNum(COLOMBIA_2026.smlmv, 'es-CO')} COP · Brasil R$ ${fmtNum(SM_BR, 'pt-BR', 0)} · Perú S/ ${fmtNum(PERU_2026.rmv, 'es-PE')} · Paraguay Gs. ${fmtNum(PARAGUAY_2026.salarioMinimo, 'es-PY')} · Uruguay $ ${fmtNum(URUGUAY_2026.smn.mensualJulio, 'es-UY')} · Ecuador US$ ${fmtNum(ECUADOR_2026.sbu)}. Fuentes oficiales. Uso libre (CC-BY 4.0).`;
+  `¿Cuánto es el salario mínimo 2026? Argentina $ ${fmtNum(ar.smvmMensual)} ARS · Colombia $ ${fmtNum(COLOMBIA_2026.smlmv, 'es-CO')} COP · México $ ${fmtNum(MEXICO_2026.salarioMinimo.generalDiario, 'es-MX', 2)}/día · Chile $ ${fmtNum(CHILE_2026.imm, 'es-CL')} CLP · Brasil R$ ${fmtNum(SM_BR, 'pt-BR', 0)} · Perú S/ ${fmtNum(PERU_2026.rmv, 'es-PE')} y 5 países más, con norma legal y vigencia. Fuentes oficiales, uso libre (CC-BY 4.0).`;
 
 const PAGE_URL = 'https://hacecuentas.com/datos-salario-minimo-latam-2026';
 
@@ -125,6 +155,9 @@ const chartPaises = [
   { pais: 'Colombia', bandera: '🇨🇴', moneda: 'COP', simbolo: '$', valor: COLOMBIA_2026.smlmv, locale: 'es-CO' },
   { pais: 'Paraguay', bandera: '🇵🇾', moneda: 'PYG', simbolo: 'Gs.', valor: PARAGUAY_2026.salarioMinimo, locale: 'es-PY' },
   { pais: 'Uruguay', bandera: '🇺🇾', moneda: 'UYU', simbolo: '$', valor: URUGUAY_2026.smn.mensualJulio, locale: 'es-UY' },
+  { pais: 'Chile', bandera: '🇨🇱', moneda: 'CLP', simbolo: '$', valor: CHILE_2026.imm, locale: 'es-CL' },
+  { pais: 'Rep. Dominicana', bandera: '🇩🇴', moneda: 'DOP', simbolo: 'RD$', valor: REPUBLICA_DOMINICANA_2026.salarioMinimo.noSectorizado.grande, locale: 'es-DO' },
+  { pais: 'Venezuela', bandera: '🇻🇪', moneda: 'VES', simbolo: 'Bs.', valor: VENEZUELA_2026.salarioMinimoVes, locale: 'es-VE' },
 ];
 // Geometría del SVG (barras horizontales: una fila por país).
 const VB_W = 760;
@@ -173,8 +206,24 @@ const faq = [
     a: 'Porque el tipo de cambio cambia todos los días (y en Argentina, según el dólar que uses). Publicar una conversión fija dejaría la tabla desactualizada en una semana. Los valores en moneda local con su norma legal son el dato estable y citable; la conversión la hacés al día con el conversor.',
   },
   {
-    q: '¿Por qué no aparece Chile (u otros países)?',
-    a: 'La tabla incluye los países para los que consolidamos una fuente única verificada (norma y valor oficial): Argentina, México, Colombia, Brasil, Perú, Paraguay, Uruguay y Ecuador. Chile y el resto los sumamos a medida que verificamos su fuente oficial con el mismo estándar; preferimos una tabla exacta antes que completa con valores sin verificar.',
+    q: '¿Cuál es el salario mínimo de Chile en 2026?',
+    a: `$ ${fmtNum(CHILE_2026.imm, 'es-CL')} mensuales (Ingreso Mínimo Mensual, Ley 21.830) desde mayo 2026. De enero a abril rigió $ ${fmtNum(CHILE_2026.immHistoricoEneAbr2026, 'es-CL')} (Ley 21.751). Chile tiene además montos diferenciados: $ ${fmtNum(CHILE_2026.immMenores18Mayores65, 'es-CL')} para menores de 18 y mayores de 65 años, y $ ${fmtNum(CHILE_2026.immNoRemuneracional, 'es-CL')} para fines no remuneracionales.`,
+  },
+  {
+    q: '¿Cuál es el salario mínimo de Colombia en 2026?',
+    a: `$ ${fmtNum(COLOMBIA_2026.smlmv, 'es-CO')} COP mensuales (SMLMV). A eso se le suma el auxilio de transporte, que se paga a quien gana hasta 2 salarios mínimos y no es salario a todos los efectos, pero sí entra en la base de prestaciones sociales.`,
+  },
+  {
+    q: '¿Por qué Venezuela aparece con un valor tan bajo?',
+    a: `Porque el salario mínimo legal venezolano (Bs. ${fmtNum(VENEZUELA_2026.salarioMinimoVes, 'es-VE')} según la LOTTT) no se ajusta desde marzo de 2022 y hoy es prácticamente nominal. El ingreso real de un trabajador llega por el cestaticket (US$ ${fmtNum(VENEZUELA_2026.cestaticketUsd)} indexado a la tasa BCV) y bonos de guerra económica que, por definición legal, no son salario y no computan para prestaciones, vacaciones ni utilidades. Publicamos el valor legal porque es la base de cálculo de los pasivos laborales, no porque describa lo que alguien cobra.`,
+  },
+  {
+    q: '¿Por qué República Dominicana tiene varios salarios mínimos?',
+    a: `Porque no existe un mínimo único: el Comité Nacional de Salarios (CNS) lo fija por sector y por tamaño de empresa. En el sector privado no sectorizado va de RD$ ${fmtNum(REPUBLICA_DOMINICANA_2026.salarioMinimo.noSectorizado.micro, 'es-DO', 2)} (microempresa) a RD$ ${fmtNum(REPUBLICA_DOMINICANA_2026.salarioMinimo.noSectorizado.grande, 'es-DO', 2)} (empresa grande), y hay resoluciones aparte para zonas francas y hotelería. La tabla muestra el de empresa grande como referencia.`,
+  },
+  {
+    q: '¿Por qué no aparece mi país?',
+    a: 'La tabla incluye los países para los que consolidamos una fuente única verificada (norma y valor oficial). Sumamos el resto a medida que verificamos su fuente con el mismo estándar; preferimos una tabla exacta antes que completa con valores sin verificar.',
   },
   {
     q: '¿Cada cuánto cambian estos valores?',
@@ -189,23 +238,18 @@ const faq = [
 const datasetSchema = {
   '@type': 'Dataset',
   '@id': `${PAGE_URL}#dataset`,
-  name: 'Salario mínimo en América Latina 2026 — Argentina, México, Colombia, Brasil, Perú, Paraguay, Uruguay y Ecuador',
+  name: 'Salario mínimo en América Latina 2026 — Argentina, México, Colombia, Chile, Brasil, Perú, Paraguay, Uruguay, Ecuador, República Dominicana y Venezuela',
   description:
-    'Tabla comparativa del salario mínimo legal 2026 en moneda local, con instrumento legal, norma y vigencia por país: SMVM (Argentina), Salario Mínimo General (México), SMLMV (Colombia), salário mínimo (Brasil), RMV (Perú), SMVM (Paraguay), SMN (Uruguay) y SBU (Ecuador). Fuentes oficiales de cada país.',
+    'Tabla comparativa del salario mínimo legal 2026 en moneda local, con instrumento legal, norma y vigencia por país: SMVM (Argentina), Salario Mínimo General (México), SMLMV (Colombia), IMM (Chile), salário mínimo (Brasil), RMV (Perú), SMVM (Paraguay), SMN (Uruguay), SBU (Ecuador), salario mínimo por sector del CNS (República Dominicana) y mínimo LOTTT (Venezuela). Fuentes oficiales de cada país.',
   url: PAGE_URL,
   license: 'https://creativecommons.org/licenses/by/4.0/',
   isAccessibleForFree: true,
   inLanguage: 'es-419',
   dateModified: ULTIMA_REVISION,
   temporalCoverage: '2026',
-  spatialCoverage: [
-    { '@type': 'Place', name: 'Argentina' },
-    { '@type': 'Place', name: 'Brasil' },
-    { '@type': 'Place', name: 'Perú' },
-    { '@type': 'Place', name: 'Ecuador' },
-  ],
+  spatialCoverage: PAISES.map((p) => ({ '@type': 'Place', name: p.pais })),
   creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
-  keywords: ['Salario mínimo', 'SMVM', 'Salário mínimo', 'RMV', 'SBU', 'América Latina', 'LATAM', '2026'],
+  keywords: ['Salario mínimo', 'salario mínimo 2026', 'sueldo mínimo', 'SMVM', 'SMLMV', 'IMM', 'Salário mínimo', 'RMV', 'SBU', 'América Latina', 'LATAM', '2026'],
   variableMeasured: [
     'Salario mínimo mensual (moneda local)', 'Norma legal vigente', 'Fecha de vigencia',
   ],
@@ -268,12 +312,12 @@ const schema = {
         <nav class="crumbs" aria-label="Migas de pan">
           <a href="/">Inicio</a> <span>›</span> <span>Salario mínimo LATAM 2026</span>
         </nav>
-        <h1>Salario mínimo 2026 por país: tabla comparativa de LATAM con fuentes</h1>
+        <h1>Salario mínimo 2026: cuánto es en cada país de LATAM</h1>
         <p class="lede">
-          El salario mínimo legal vigente en 2026 en <strong>Argentina, México, Colombia,
-          Brasil, Perú, Paraguay, Uruguay y Ecuador</strong>, en moneda local y con la norma que
-          lo fija. Cada valor sale de la fuente oficial de su país y es el mismo que usan las
-          calculadoras de sueldo de este sitio.
+          El salario mínimo legal vigente en 2026 en <strong>Argentina, México, Colombia, Chile,
+          Brasil, Perú, Paraguay, Uruguay, Ecuador, República Dominicana y Venezuela</strong>, en
+          moneda local y con la norma que lo fija. Cada valor sale de la fuente oficial de su país
+          y es el mismo que usan las calculadoras de sueldo de este sitio.
         </p>
         <p class="updated">
           Última revisión: <time datetime={ULTIMA_REVISION}>{new Date(ULTIMA_REVISION).toLocaleDateString('es-AR')}</time> ·
@@ -336,8 +380,8 @@ const schema = {
         </div>
         <p class="note">
           Valores en moneda local, no comparables entre sí sin convertir al tipo de cambio del día
-          (ver <a href="/cambio-de-monedas">conversor de monedas</a>). Chile, Colombia y México se
-          sumarán cuando consolidemos su fuente única verificada.
+          (ver <a href="/cambio-de-monedas">conversor de monedas</a>). Sumamos un país nuevo cuando
+          consolidamos su fuente única verificada: preferimos una tabla exacta antes que completa.
         </p>
       </section>
 
@@ -410,7 +454,10 @@ const schema = {
         <ul class="calc-links">
           <li><a href="/co/datos-salario-minimo-colombia-2026">Salario mínimo Colombia 2026</a></li>
           <li><a href="/mx/datos-salario-minimo-mexico-2026">Salario mínimo México 2026</a></li>
+          <li><a href="/py/salario-minimo-paraguay-2026">Salario mínimo Paraguay 2026</a></li>
           <li><a href="/datos-salario-basico-ecuador-2026">Salario básico Ecuador 2026</a></li>
+          <li><a href="/ve/cuanto-es-salario-minimo-venezuela-2026">Salario mínimo Venezuela 2026</a></li>
+          <li><a href="/do/calculadora-salario-minimo-republica-dominicana">Salario mínimo República Dominicana</a></li>
         </ul>
       </section>
 

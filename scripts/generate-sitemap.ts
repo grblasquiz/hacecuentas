@@ -1188,7 +1188,13 @@ if (blogPosts.length > 0) {
 
 // 5. Comparaciones, tablas, glosario — mtime del JSON (no del build)
 function sitemapForContent(items: any[], dir: string, pathPrefix: string, priority: string): Url[] {
-  return items.map((it: any) => {
+  // Una página que canonicaliza a otra URL no va al sitemap: pedirle a Google/Bing
+  // que crawlee algo que después le decimos que no es el original quema crawl budget
+  // y manda una señal contradictoria. `canonicalUrl` lo setea el JSON cuando la
+  // página queda como contenido de apoyo de otra (ver canonicalReason).
+  return items
+    .filter((it: any) => !it.canonicalUrl)
+    .map((it: any) => {
     const fp = join(dir, `${it.slug}.json`);
     return {
       loc: `${site}/${pathPrefix}/${it.slug}`,
