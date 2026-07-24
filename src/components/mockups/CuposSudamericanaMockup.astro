@@ -1,0 +1,179 @@
+---
+/**
+ * Flagship "Cupos Copa Sudamericana" — mockup del batch 23-07-2026 (ola 3),
+ * calcado. El script inline replica cupos-sudamericana-pais.ts:
+ *   campeón vigente → fase de grupos (cupo extra)
+ *   3º de grupo en Libertadores → 16avos de final
+ *   AR/BR: pos 9-12 → grupos · 13-14 → fase previa · ≤8 → ya va a Libertadores
+ *   Resto CONMEBOL: pos 2-5 → fase de grupos
+ * Cupos del país: 6 en AR/BR, 4 en el resto.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+const du = calc.dataUpdate || {};
+---
+
+<main class="page hcm cs">
+  <div class="crumb">Inicio / <a href="/categoria/deportes">Deportes</a> / <b>Cupos Sudamericana</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🏆 SIMULADOR CONMEBOL</span>
+      <h1>¿Tu equipo entra a la Sudamericana?</h1>
+      <p>Probá posición, país y cupos especiales para entender el camino de clasificación.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🏆</div>
+      <div class="hero-stat"><span>También llegan</span><b>equipos desde Libertadores</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="cs-form">
+      <h2>Situación del equipo</h2>
+      <p class="sub">Simulación simple y explicada.</p>
+      <div class="grid2">
+        <div class="field">
+          <label for="cs-pais">País</label>
+          <div class="control">
+            <select id="cs-pais">
+              <option value="argentina" selected>Argentina</option>
+              <option value="brasil">Brasil</option>
+              <option value="otro">Otro país CONMEBOL</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="cs-pos">Posición en la liga</label>
+          <div class="control"><input id="cs-pos" type="number" min="1" max="30" step="1" value="10" /></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="cs-lib">¿Terminó 3º en grupo de Libertadores?</label>
+          <div class="control"><select id="cs-lib"><option value="false" selected>No</option><option value="true">Sí</option></select></div>
+        </div>
+        <div class="field">
+          <label for="cs-camp">¿Campeón vigente de Sudamericana?</label>
+          <div class="control"><select id="cs-camp"><option value="false" selected>No</option><option value="true">Sí</option></select></div>
+        </div>
+      </div>
+      <button class="cta" type="submit">Simular clasificación →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Resultado</div>
+        <div class="big" id="cs-big">—</div>
+        <p class="answer" id="cs-answer">Elegí país y posición para simular.</p>
+        <div class="result-box">
+          <span>Vía de clasificación</span>
+          <b id="cs-via">—</b>
+          <small id="cs-note">Cupos Sudamericana del país.</small>
+        </div>
+      </div>
+      <div class="equation" id="cs-eq">Reparto de cupos CONMEBOL</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Cómo se arma el cuadro</h2>
+      <p>Liga, copas y transferencias.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>📊</i><h3>Tabla local</h3><p>Cada asociación define sus clasificados.</p></article>
+      <article class="mini"><i>🔻</i><h3>Desde Libertadores</h3><p>Los 8 terceros de grupo entran directo en 16avos.</p></article>
+      <article class="mini"><i>🥇</i><h3>Campeón vigente</h3><p>Puede tener cupo propio según reglamento.</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>La posición exacta cambia por país.</b>Consultá el reglamento específico y la temporada correspondiente antes de darlo por firme.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🏆" />
+
+  <footer class="sources">
+    <div><b>Fuente</b><br />{du.source || 'CONMEBOL — Copa Sudamericana'}{du.lastUpdated ? ` · actualizado ${du.lastUpdated}` : ''}. {du.sourceUrl && <a href={du.sourceUrl} target="_blank" rel="noopener nofollow">Ver reglamento</a>}</div>
+    <div>Simulación orientativa · Datos actualizables</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.cs{--brand:#572d67;--accent:#f3d867;--soft:#f3eef6}
+  .hcm.cs .hero{background:linear-gradient(135deg,#572d67,#814e92)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+  .hcm .sources a{color:inherit;text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.cs');
+    if (!root) return;
+    var P = document.getElementById('cs-pais'), POS = document.getElementById('cs-pos');
+    var L = document.getElementById('cs-lib'), C = document.getElementById('cs-camp');
+
+    function render() {
+      var pais = P.value;
+      var pos = Math.max(1, Math.floor(Number(POS.value) || 20));
+      var vieneLib = L.value === 'true', campeonSuda = C.value === 'true';
+      var big = document.getElementById('cs-big'), ans = document.getElementById('cs-answer');
+      var via = document.getElementById('cs-via'), note = document.getElementById('cs-note'), eq = document.getElementById('cs-eq');
+
+      var grande = pais === 'argentina' || pais === 'brasil';
+      var cuposPaisSuda = grande ? 6 : 4;   // igual que cupos-sudamericana-pais.ts
+
+      var fase, viaTxt, detalle, clasifica;
+      if (campeonSuda) {
+        clasifica = true; fase = 'Fase de grupos'; viaTxt = 'Campeón vigente de Sudamericana';
+        detalle = 'El campeón vigente obtiene cupo extra a fase de grupos (aunque también puede migrar a Libertadores).';
+      } else if (vieneLib) {
+        clasifica = true; fase = '16avos de final'; viaTxt = 'Tercero de grupo en Libertadores';
+        detalle = 'Los 8 equipos que terminan 3º en la fase de grupos de Libertadores pasan directo a 16avos de Sudamericana.';
+      } else if (grande) {
+        if (pos >= 9 && pos <= 14) {
+          clasifica = true;
+          var esRepechaje = pos >= 13;
+          fase = esRepechaje ? 'Fase previa (repechaje)' : 'Fase de grupos';
+          viaTxt = 'Posición ' + pos + ' — cupo Sudamericana';
+          detalle = esRepechaje
+            ? 'Las posiciones 13 y 14 van a fase previa; las 9 a 12 entran directo a grupos.'
+            : 'Las posiciones 9 a 12 clasifican directo a fase de grupos de Sudamericana.';
+        } else if (pos <= 8) {
+          clasifica = false; fase = 'Copa Libertadores'; viaTxt = 'Posición ' + pos + ' — ya clasifica a Libertadores';
+          detalle = 'Con esta posición clasifica a Libertadores: no necesita cupo Sudamericana.';
+        } else {
+          clasifica = false; fase = 'No clasifica'; viaTxt = 'Posición ' + pos + ' — fuera de cupos internacionales';
+          detalle = 'Quedó afuera de los cupos Sudamericana del país (en AR/BR típicamente hasta el puesto 14).';
+        }
+      } else {
+        if (pos >= 2 && pos <= 5) {
+          clasifica = true; fase = 'Fase de grupos'; viaTxt = 'Posición ' + pos + ' — cupo Sudamericana';
+          detalle = 'Las posiciones 2 a 5 de la liga (según cupos del país por ranking CONMEBOL) clasifican a Sudamericana.';
+        } else {
+          clasifica = false; fase = 'No clasifica'; viaTxt = 'Posición ' + pos + ' — fuera de cupos';
+          detalle = 'No alcanzó la zona de cupos internacionales del país.';
+        }
+      }
+
+      big.innerHTML = fase === 'Copa Libertadores' ? 'Va a Libertadores'
+        : !clasifica ? 'No clasifica'
+        : fase === 'Fase previa (repechaje)' ? 'Repechaje'
+        : fase === '16avos de final' ? '16avos' : 'Clasifica';
+      ans.textContent = detalle;
+      via.textContent = viaTxt;
+      note.textContent = 'El país reparte ' + cuposPaisSuda + ' cupos a la Sudamericana.';
+      eq.innerHTML = 'Fase resultante: <b>' + fase + '</b>';
+    }
+
+    [P, L, C].forEach(function (el) { el.addEventListener('change', render); });
+    POS.addEventListener('input', render);
+    document.getElementById('cs-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

@@ -1,0 +1,190 @@
+---
+/**
+ * Flagship "Avianca LifeMiles" — mockup del batch 23-07-2026 (ola 3), calcado.
+ * Reemplaza al flagship anterior (MillasLifeMiles.astro).
+ * El script inline replica millas-avianca-lifemiles.ts: tabla DEST_MILES
+ * [ida, ida-vuelta, business], referencia editorial de 1,6¢/milla y tasas por
+ * defecto USD 220.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const DEST = {
+  'bogota': { label: 'Bogotá', m: [7500, 15000, 30000] },
+  'buenos-aires': { label: 'Buenos Aires', m: [20000, 40000, 70000] },
+  'miami': { label: 'Miami', m: [15000, 30000, 55000] },
+  'madrid': { label: 'Madrid', m: [30000, 60000, 100000] },
+  'são-paulo': { label: 'São Paulo', m: [17500, 35000, 60000] },
+  'lima': { label: 'Lima', m: [10000, 20000, 40000] },
+};
+const REF_CENT = 1.6;
+const TASAS_DEFAULT = 220;
+const du = calc.dataUpdate || {};
+const nf = (x: number) => new Intl.NumberFormat('es-AR').format(x);
+---
+
+<main class="page hcm lm" data-dest={JSON.stringify(DEST)} data-ref={REF_CENT} data-tasas={TASAS_DEFAULT}>
+  <div class="crumb">Inicio / <a href="/categoria/viajes">Viajes</a> / <b>Avianca LifeMiles</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">✈️ CANJE LIFEMILES</span>
+      <h1>¿Conviene usar tus LifeMiles?</h1>
+      <p>Estimá millas por destino y medí el valor real del canje después de impuestos y tasas.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🛫</div>
+      <div class="hero-stat"><span>Valor de referencia</span><b>≈ 1,6¢ por milla</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="lm-form">
+      <h2>Compará el canje</h2>
+      <p class="sub">Cotización de millas frente a precio cash.</p>
+      <div class="grid2">
+        <div class="field">
+          <label for="lm-dest">Destino</label>
+          <div class="control">
+            <select id="lm-dest">
+              <option value="bogota" selected>Bogotá</option>
+              <option value="buenos-aires">Buenos Aires</option>
+              <option value="miami">Miami</option>
+              <option value="madrid">Madrid</option>
+              <option value="são-paulo">São Paulo</option>
+              <option value="lima">Lima</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="lm-cabin">Cabina</label>
+          <div class="control">
+            <select id="lm-cabin"><option value="economy" selected>Economy</option><option value="business">Business</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="lm-trip">Viaje</label>
+        <div class="control">
+          <select id="lm-trip"><option value="ida-vuelta" selected>Ida y vuelta</option><option value="ida">Sólo ida</option></select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="lm-cash">Precio cash <small>opcional</small></label>
+          <div class="control"><input id="lm-cash" type="number" min="0" step="any" value="650" /><span>USD</span></div>
+        </div>
+        <div class="field">
+          <label for="lm-tax">Tasas del canje</label>
+          <div class="control"><input id="lm-tax" type="number" min="0" step="any" value="220" /><span>USD</span></div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="lm-quoted">Millas que te cotiza el programa <small>opcional</small></label>
+        <div class="control"><input id="lm-quoted" type="number" min="0" step="1000" placeholder="Dejalo vacío para usar la tabla" /></div>
+      </div>
+      <button class="cta" type="submit">Evaluar canje →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Millas estimadas</div>
+        <div class="big" id="lm-big">{nf(15000)} <small>millas</small></div>
+        <p class="answer" id="lm-answer">Referencia para Bogotá, economy ida y vuelta.</p>
+        <div class="result-box">
+          <span>Valor obtenido por milla</span>
+          <b id="lm-cpm">—</b>
+          <small id="lm-note">Ingresá el precio cash del pasaje para comparar.</small>
+        </div>
+      </div>
+      <div class="equation" id="lm-eq">(precio cash − tasas) ÷ millas</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Miralo como una compra</h2>
+      <p>Las millas también tienen costo de oportunidad.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>💳</i><h3>Restá las tasas</h3><p>El canje rara vez es completamente gratuito.</p></article>
+      <article class="mini"><i>🛫</i><h3>Compará socios</h3><p>LifeMiles puede rendir distinto en aerolíneas asociadas.</p></article>
+      <article class="mini"><i>📆</i><h3>Probá otros días</h3><p>La disponibilidad define gran parte del valor.</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>Cotización orientativa.</b>La pantalla final de Avianca es la fuente válida para disponibilidad, millas y tasas. El umbral de ~1,6¢ por milla es una referencia editorial, no un dato oficial del programa.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🛫" />
+
+  <footer class="sources">
+    <div><b>Fuente</b><br />{du.source || 'Avianca — Programa LifeMiles'}{du.lastUpdated ? ` · actualizado ${du.lastUpdated}` : ''}. Rangos orientativos; la cotización final la define el programa.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.lm{--brand:#8a2028;--accent:#ffe06b;--soft:#f8eeee}
+  .hcm.lm .hero{background:linear-gradient(135deg,#8a2028,#c63e3c)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.lm');
+    if (!root) return;
+    var DEST = JSON.parse(root.dataset.dest);
+    var REF = Number(root.dataset.ref), TASAS_DEFAULT = Number(root.dataset.tasas);
+    var D = document.getElementById('lm-dest'), CB = document.getElementById('lm-cabin'), TR = document.getElementById('lm-trip');
+    var CA = document.getElementById('lm-cash'), TX = document.getElementById('lm-tax'), Q = document.getElementById('lm-quoted');
+    var nf = function (x) { return new Intl.NumberFormat('es-AR').format(x); };
+    var d2 = function (x) { return new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(x); };
+
+    function render() {
+      var e = DEST[D.value];
+      var big = document.getElementById('lm-big'), ans = document.getElementById('lm-answer');
+      var cpmEl = document.getElementById('lm-cpm'), note = document.getElementById('lm-note'), eq = document.getElementById('lm-eq');
+      if (!e) { big.innerHTML = '—'; ans.textContent = 'Destino inválido.'; return; }
+
+      var cab = CB.value, viaje = TR.value;
+      var tabla = cab === 'business' ? e.m[2] : viaje === 'ida-vuelta' ? e.m[1] : e.m[0];
+      var cotizadas = Number(Q.value) || 0;
+      var millas = cotizadas > 0 ? cotizadas : tabla;
+      var tasas = TX.value === '' || Number(TX.value) < 0 ? TASAS_DEFAULT : Number(TX.value);
+      var cash = Number(CA.value) || 0;
+
+      big.innerHTML = nf(millas) + ' <small>millas</small>';
+      ans.textContent = 'Referencia para ' + e.label + ', ' + (cab === 'business' ? 'business' : 'economy') + ' '
+        + (viaje === 'ida-vuelta' ? 'ida y vuelta' : 'sólo ida')
+        + (cotizadas > 0 ? ' (usando las millas que te cotizaron).' : ' (según la tabla de referencia por destino).')
+        + ' Las tasas (USD ' + nf(tasas) + ') se pagan aparte, en plata.';
+
+      if (cash > 0) {
+        var ahorro = cash - tasas;
+        var cpm = (ahorro / millas) * 100;
+        cpmEl.textContent = d2(cpm) + ' ¢USD/milla';
+        note.textContent = ahorro <= 0
+          ? 'No conviene canjear: las tasas (USD ' + nf(tasas) + ') igualan o superan el precio cash (USD ' + nf(cash) + ').'
+          : cpm >= REF
+            ? 'Conviene canjear: estás por encima de la referencia de ~' + d2(REF) + '¢/milla (referencia editorial, no oficial).'
+            : 'Conviene pagar cash o esperar mejor canje: estás por debajo de ~' + d2(REF) + '¢/milla (referencia editorial, no oficial).';
+        eq.innerHTML = '(USD ' + nf(cash) + ' − USD ' + nf(tasas) + ') ÷ ' + nf(millas) + ' millas = <b>' + d2(cpm) + '¢</b>';
+      } else {
+        cpmEl.textContent = '—';
+        note.textContent = 'Ingresá el precio cash del pasaje para comparar canje contra plata.';
+        eq.innerHTML = '(precio cash − tasas) ÷ millas';
+      }
+    }
+
+    [D, CB, TR].forEach(function (el) { el.addEventListener('change', render); });
+    [CA, TX, Q].forEach(function (el) { el.addEventListener('input', render); });
+    document.getElementById('lm-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

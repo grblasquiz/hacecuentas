@@ -1,0 +1,205 @@
+---
+/**
+ * Flagship "Sueldo docente" — mockup del batch 23-07-2026 (ola 3), calcado.
+ * El script inline replica sueldo-docente-argentina-cargo-antiguedad.ts:
+ *   básico = piso nacional × factorCargo × (horas / 20)
+ *   antigüedad = 10% del básico por año · bruto = básico + antigüedad
+ *   aportes 11% + 3% + 3% sobre la base topeada (Ley 24.241 art. 9)
+ *   Ganancias por la escala mensual real (art. 94 LIG · RG 4003)
+ * Las constantes fiscales NO se hardcodean: se serializan desde
+ * _ganancias-escala.ts y sueldo-ar.ts, que es donde las actualiza el fetcher.
+ *
+ * DIFERENCIA DELIBERADA con el mockup: éste incluía un selector de jurisdicción
+ * con importes por provincia inventados para la demo. No se implementa: no hay
+ * grilla provincial verificada en el repo y el handoff prohíbe publicar
+ * importes salariales sin fuente vigente. El resultado se rotula como PISO
+ * nacional y se aclara que los básicos provinciales son mayores.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { ESCALA, MNI_MENSUAL_BASE } from '../../lib/formulas/_ganancias-escala';
+import { BASE_IMPONIBLE_MAXIMA_APORTES } from '../../lib/formulas/sueldo-ar';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const PISO_NACIONAL_JORNADA_SIMPLE = 500_000;
+const FACTOR_CARGO = { 'maestro-pri': 1, 'prof-sec': 1, preceptor: 1, vice: 1.2, director: 1.35 };
+const HORAS_JORNADA_SIMPLE = 20;
+// Infinity no sobrevive a JSON.stringify: se serializa como null y el cliente
+// lo vuelve a tratar como "sin tope".
+const ESCALA_JSON = ESCALA.map((t) => ({ hasta: Number.isFinite(t.hasta) ? t.hasta : null, tasa: t.tasa, acumulado: t.acumulado }));
+const du = calc.dataUpdate || {};
+const money = (x: number) => '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(x);
+---
+
+<main
+  class="page hcm sd"
+  data-escala={JSON.stringify(ESCALA_JSON)}
+  data-mni={MNI_MENSUAL_BASE}
+  data-tope={BASE_IMPONIBLE_MAXIMA_APORTES}
+  data-piso={PISO_NACIONAL_JORNADA_SIMPLE}
+  data-cargos={JSON.stringify(FACTOR_CARGO)}
+  data-horas-base={HORAS_JORNADA_SIMPLE}
+>
+  <div class="crumb">Inicio / <a href="/categoria/finanzas">Sueldos</a> / <b>Sueldo docente</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🍎 ESTIMADOR DOCENTE</span>
+      <h1>Estimá tu sueldo docente por cargo y antigüedad</h1>
+      <p>Partimos del piso salarial garantizado por la paritaria nacional y le sumamos cargo, horas y años de antigüedad.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🍎</div>
+      <div class="hero-stat"><span>Clave del cálculo</span><b>la provincia cambia todo</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="sd-form">
+      <h2>Tu situación docente</h2>
+      <p class="sub">El resultado es un piso de referencia nacional, no la grilla de tu provincia.</p>
+      <div class="field">
+        <label for="sd-cargo">Cargo</label>
+        <div class="control">
+          <select id="sd-cargo">
+            <option value="maestro-pri" selected>Maestro/a de grado (primaria)</option>
+            <option value="prof-sec">Profesor/a secundario</option>
+            <option value="preceptor">Preceptor/a</option>
+            <option value="vice">Vicedirector/a</option>
+            <option value="director">Director/a</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="sd-antig">Antigüedad</label>
+          <div class="control"><input id="sd-antig" type="number" min="0" max="50" step="1" value="10" /><span>años</span></div>
+        </div>
+        <div class="field">
+          <label for="sd-horas">Horas cátedra <small>vacío = jornada simple</small></label>
+          <div class="control"><input id="sd-horas" type="number" min="0" max="60" step="1" value="20" /><span>h</span></div>
+        </div>
+      </div>
+      <button class="cta" type="submit">Estimar sueldo →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Bruto mensual estimado</div>
+        <div class="big" id="sd-big">—</div>
+        <p class="answer" id="sd-answer">Estimación sobre el piso nacional de referencia.</p>
+        <div class="result-box">
+          <span>Neto de bolsillo</span>
+          <b id="sd-neto">—</b>
+          <small id="sd-note">Descuentos de ley aplicados.</small>
+        </div>
+      </div>
+      <div class="equation" id="sd-eq">piso nacional × cargo × horas + antigüedad</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Un recibo tiene más capas</h2>
+      <p>El básico no es el bolsillo.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>📍</i><h3>Jurisdicción</h3><p>Paritarias y adicionales varían por provincia: los básicos provinciales suelen superar el piso nacional.</p></article>
+      <article class="mini"><i>📚</i><h3>Cargo y horas</h3><p>Un cargo no se compara directo con horas cátedra.</p></article>
+      <article class="mini"><i>🧾</i><h3>Descuentos</h3><p>Jubilación, obra social, PAMI y Ganancias afectan el neto.</p></article>
+    </div>
+    <div class="notice">
+      <span>⚖️</span>
+      <div><b>Es el piso nacional, no tu grilla provincial.</b>El mockup incluía un selector de jurisdicción con importes de demostración: no se publicó porque no hay grilla provincial verificada. Consultá la paritaria de tu provincia para el número exacto.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🍎" />
+
+  <footer class="sources">
+    <div><b>Fuente</b><br />{du.source || 'Paritaria nacional docente'}{du.lastUpdated ? ` · actualizado ${du.lastUpdated}` : ''}. Escala de Ganancias: art. 94 LIG · RG 4003. {du.sourceUrl && <a href={du.sourceUrl} target="_blank" rel="noopener nofollow">Ver fuente</a>}</div>
+    <div>Estimación orientativa · No es un recibo de sueldo</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.sd{--brand:#244c73;--accent:#f4d965;--soft:#eef3f8}
+  .hcm.sd .hero{background:linear-gradient(135deg,#244c73,#4a77a0)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+  .hcm .sources a{color:inherit;text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.sd');
+    if (!root) return;
+    var ESCALA = JSON.parse(root.dataset.escala).map(function (t) {
+      return { hasta: t.hasta === null ? Infinity : t.hasta, tasa: t.tasa, acumulado: t.acumulado };
+    });
+    var MNI = Number(root.dataset.mni);
+    var TOPE = Number(root.dataset.tope);
+    var PISO = Number(root.dataset.piso);
+    var CARGOS = JSON.parse(root.dataset.cargos);
+    var HORAS_BASE = Number(root.dataset.horasBase);
+    var C = document.getElementById('sd-cargo'), A = document.getElementById('sd-antig'), H = document.getElementById('sd-horas');
+    var money = function (x) { return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(Math.round(x)); };
+
+    // Misma implementación que aplicarEscalaMensual() en _ganancias-escala.ts
+    function escalaMensual(base) {
+      if (base <= 0) return 0;
+      var anterior = 0;
+      for (var i = 0; i < ESCALA.length; i++) {
+        var t = ESCALA[i];
+        if (base <= t.hasta) return t.acumulado + (base - anterior) * t.tasa;
+        anterior = t.hasta;
+      }
+      var u = ESCALA[ESCALA.length - 1];
+      return u.acumulado + (base - anterior) * u.tasa;
+    }
+
+    function render() {
+      var antig = Number(A.value) || 0;
+      var horas = Number(H.value) || 0;
+      var cargo = C.value;
+      var big = document.getElementById('sd-big'), ans = document.getElementById('sd-answer');
+      var netoEl = document.getElementById('sd-neto'), note = document.getElementById('sd-note'), eq = document.getElementById('sd-eq');
+
+      if (antig < 0 || horas < 0) {
+        big.innerHTML = '—';
+        ans.textContent = 'La antigüedad y las horas no pueden ser negativas.';
+        netoEl.textContent = '—'; note.textContent = '';
+        eq.innerHTML = 'piso nacional × cargo × horas + antigüedad';
+        return;
+      }
+
+      var propHoras = horas > 0 ? horas / HORAS_BASE : 1;
+      var basico = PISO * (CARGOS[cargo] != null ? CARGOS[cargo] : 1) * propHoras;
+      var plusAntig = basico * 0.1 * antig;
+      var bruto = basico + plusAntig;
+      var baseAp = Math.min(bruto, TOPE);
+      var jubilacion = baseAp * 0.11, obraSocial = baseAp * 0.03, pami = baseAp * 0.03;
+      var baseGan = Math.max(0, bruto - jubilacion - obraSocial - pami - MNI);
+      var ganancias = escalaMensual(baseGan);
+      var neto = bruto - jubilacion - obraSocial - pami - ganancias;
+      var descTotal = jubilacion + obraSocial + pami + ganancias;
+      var pctDesc = bruto > 0 ? (descTotal / bruto) * 100 : 0;
+
+      big.innerHTML = money(bruto);
+      ans.textContent = 'Básico ' + money(basico) + ' + ' + (antig * 10) + '% de antigüedad ('
+        + money(plusAntig) + ')' + (horas > 0 && horas !== HORAS_BASE ? ', prorrateado a ' + horas + ' horas cátedra' : '') + '.';
+      netoEl.textContent = money(neto);
+      note.textContent = 'Tras ' + money(descTotal) + ' (' + Math.round(pctDesc) + '%) de descuentos'
+        + (ganancias > 0 ? ', incluidos ' + money(ganancias) + ' de Ganancias.' : '. No pagás Ganancias: quedás bajo el mínimo no imponible.');
+      eq.innerHTML = money(PISO) + ' × ' + String(CARGOS[cargo]).replace('.', ',') + ' × '
+        + (horas > 0 ? (horas + '/' + HORAS_BASE) : '1') + ' + antigüedad = <b>' + money(bruto) + ' bruto</b>';
+    }
+
+    C.addEventListener('change', render);
+    [A, H].forEach(function (el) { el.addEventListener('input', render); });
+    document.getElementById('sd-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

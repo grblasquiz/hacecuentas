@@ -1,0 +1,180 @@
+---
+/**
+ * Flagship "AAdvantage" — mockup del batch 23-07-2026 (ola 3), calcado.
+ * El script inline replica millas-american-aa-destino.ts: tabla DEST_MILES
+ * [ida, ida-vuelta, business] y valuación a 1,4¢ por milla.
+ * El comparador contra cash (campos "precio cash" y "tasas" del mockup) se
+ * agrega como bloque secundario: la fórmula real no lo trae, y se rotula como
+ * referencia editorial para no presentarlo como dato del programa.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const DEST = {
+  'miami': { label: 'Miami', m: [7500, 15000, 30000] },
+  'nyc': { label: 'Nueva York', m: [12500, 25000, 50000] },
+  'la': { label: 'Los Ángeles', m: [12500, 25000, 50000] },
+  'madrid': { label: 'Madrid', m: [30000, 60000, 100000] },
+  'londres': { label: 'Londres', m: [30000, 60000, 100000] },
+  'tokio': { label: 'Tokio', m: [35000, 70000, 120000] },
+};
+const CENT_POR_MILLA = 1.4;
+const du = calc.dataUpdate || {};
+const nf = (x: number) => new Intl.NumberFormat('es-AR').format(x);
+---
+
+<main class="page hcm aa" data-dest={JSON.stringify(DEST)} data-cent={CENT_POR_MILLA}>
+  <div class="crumb">Inicio / <a href="/categoria/viajes">Viajes</a> / <b>AAdvantage</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🦅 MILLAS AMERICAN AIRLINES</span>
+      <h1>Planeá tu próximo canje AAdvantage</h1>
+      <p>Estimá millas por destino, cabina y tramo antes de buscar disponibilidad.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🛫</div>
+      <div class="hero-stat"><span>Miami</span><b>desde {nf(7500)} por tramo</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="aa-form">
+      <h2>Elegí el viaje</h2>
+      <p class="sub">Referencia rápida por zona y cabina.</p>
+      <div class="grid2">
+        <div class="field">
+          <label for="aa-dest">Destino</label>
+          <div class="control">
+            <select id="aa-dest">
+              <option value="miami" selected>Miami</option>
+              <option value="nyc">Nueva York</option>
+              <option value="la">Los Ángeles</option>
+              <option value="madrid">Madrid</option>
+              <option value="londres">Londres</option>
+              <option value="tokio">Tokio</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="aa-cabin">Cabina</label>
+          <div class="control">
+            <select id="aa-cabin"><option value="economy" selected>Economy</option><option value="business">Business</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="aa-trip">Viaje</label>
+        <div class="control">
+          <select id="aa-trip"><option value="ida-vuelta" selected>Ida y vuelta</option><option value="ida">Sólo ida</option></select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="aa-cash">Precio cash <small>opcional</small></label>
+          <div class="control"><input id="aa-cash" type="number" min="0" step="any" value="900" /><span>USD</span></div>
+        </div>
+        <div class="field">
+          <label for="aa-tax">Tasas</label>
+          <div class="control"><input id="aa-tax" type="number" min="0" step="any" value="170" /><span>USD</span></div>
+        </div>
+      </div>
+      <button class="cta" type="submit">Estimar millas →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Millas estimadas</div>
+        <div class="big" id="aa-big">{nf(15000)} <small>millas</small></div>
+        <p class="answer" id="aa-answer">Referencia para Miami, economy ida y vuelta.</p>
+        <div class="result-box">
+          <span>Valor del canje</span>
+          <b id="aa-val">USD 210</b>
+          <small id="aa-note">Valuado a 1,4¢ por milla (referencia editorial).</small>
+        </div>
+      </div>
+      <div class="equation" id="aa-eq">millas × 1,4¢</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Cómo leer la estimación</h2>
+      <p>AAdvantage usa precios dinámicos.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>📊</i><h3>No es una tabla fija</h3><p>La demanda puede mover el precio del premio.</p></article>
+      <article class="mini"><i>🌎</i><h3>Revisá socios</h3><p>Los canjes asociados pueden tener otra lógica.</p></article>
+      <article class="mini"><i>💺</i><h3>Cabina real</h3><p>Confirmá producto, escalas y equipaje.</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>El valor final aparece al buscar.</b>Esta página orienta y compara; no promete disponibilidad. Sumá USD 150-300 de tasas y fees según ruta.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🛫" />
+
+  <footer class="sources">
+    <div><b>Fuente</b><br />{du.source || 'American Airlines — Programa AAdvantage'}{du.lastUpdated ? ` · actualizado ${du.lastUpdated}` : ''}. Rangos orientativos; AAdvantage usa precios dinámicos.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.aa{--brand:#173e68;--accent:#ffcf5d;--soft:#eef2f7}
+  .hcm.aa .hero{background:linear-gradient(135deg,#173e68,#5b6f8d)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.aa');
+    if (!root) return;
+    var DEST = JSON.parse(root.dataset.dest);
+    var CENT = Number(root.dataset.cent);
+    var D = document.getElementById('aa-dest'), CB = document.getElementById('aa-cabin'), TR = document.getElementById('aa-trip');
+    var CA = document.getElementById('aa-cash'), TX = document.getElementById('aa-tax');
+    var nf = function (x) { return new Intl.NumberFormat('es-AR').format(x); };
+    var d2 = function (x) { return new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(x); };
+
+    function render() {
+      var e = DEST[D.value];
+      var big = document.getElementById('aa-big'), ans = document.getElementById('aa-answer');
+      var val = document.getElementById('aa-val'), note = document.getElementById('aa-note'), eq = document.getElementById('aa-eq');
+      if (!e) { big.innerHTML = '—'; ans.textContent = 'Destino inválido.'; return; }
+
+      var cab = CB.value, viaje = TR.value;
+      var millas = cab === 'business' ? e.m[2] : viaje === 'ida-vuelta' ? e.m[1] : e.m[0];
+      var valor = millas * CENT / 100;      // idéntico a millas-american-aa-destino.ts
+      var cash = Number(CA.value) || 0;
+      var tasas = Number(TX.value) || 0;
+
+      big.innerHTML = nf(millas) + ' <small>millas</small>';
+      ans.textContent = cab === 'business'
+        ? 'Volar a ' + e.label + ' en business cuesta ' + nf(millas) + ' millas. Los canjes premium suelen exprimir más valor por milla.'
+        : 'Llegar a ' + e.label + ' en económica ' + (viaje === 'ida-vuelta' ? 'ida y vuelta' : 'sólo ida') + ' sale ' + nf(millas) + ' millas.';
+      val.textContent = 'USD ' + nf(Math.round(valor));
+      eq.innerHTML = nf(millas) + ' × ' + d2(CENT) + '¢ = <b>USD ' + nf(Math.round(valor)) + '</b>';
+
+      if (cash > 0) {
+        var ahorro = cash - tasas;
+        var cpm = (ahorro / millas) * 100;
+        note.textContent = ahorro <= 0
+          ? 'Con ese precio cash el canje no rinde: las tasas se comen el ahorro.'
+          : 'Contra el precio cash que cargaste, cada milla te rinde ' + d2(cpm) + '¢. Valuación de referencia: ' + d2(CENT) + '¢ por milla (editorial, no oficial).';
+      } else {
+        note.textContent = 'Valuado a ' + d2(CENT) + '¢ por milla (referencia editorial). Cargá el precio cash para comparar.';
+      }
+    }
+
+    [D, CB, TR].forEach(function (el) { el.addEventListener('change', render); });
+    [CA, TX].forEach(function (el) { el.addEventListener('input', render); });
+    document.getElementById('aa-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

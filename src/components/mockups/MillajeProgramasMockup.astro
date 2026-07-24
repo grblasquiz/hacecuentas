@@ -1,0 +1,186 @@
+---
+/**
+ * Flagship "Comparador de programas de millaje" — mockup del batch 23-07-2026
+ * (ola 3), calcado. El script inline replica
+ * millaje-frecuente-aerolineas-argentinas-programas.ts:
+ *   millas = km × factorPrograma × factorCabina (business 2,5×)
+ *   valor  = millas × 0,015 USD
+ * Mejora sobre el mockup: además del programa elegido, la tabla compara los
+ * cuatro programas para la misma ruta — que es la pregunta del título.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const PROGRAMAS = {
+  aerolineas_plus: { label: 'Aerolíneas Plus', f: 0.5 },
+  smiles: { label: 'Smiles', f: 0.5 },
+  latam_pass: { label: 'LATAM Pass', f: 0.6 },
+  american: { label: 'AAdvantage', f: 0.7 },
+};
+const USD_POR_MILLA = 0.015;
+const du = calc.dataUpdate || {};
+const nf = (x: number) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(x);
+---
+
+<main class="page hcm mp" data-prog={JSON.stringify(PROGRAMAS)} data-usd={USD_POR_MILLA}>
+  <div class="crumb">Inicio / <a href="/categoria/viajes">Viajes</a> / <b>Programas de millaje</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🌎 COMPARADOR DE ACUMULACIÓN</span>
+      <h1>¿En qué programa acreditás más millas?</h1>
+      <p>Compará una misma distancia y cabina entre programas frecuentes usados desde Argentina.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🌎</div>
+      <div class="hero-stat"><span>Misma ruta</span><b>distinta acreditación</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="mp-form">
+      <h2>Datos del vuelo</h2>
+      <p class="sub">La tarifa final puede cambiar el factor.</p>
+      <div class="field">
+        <label for="mp-prog">Programa</label>
+        <div class="control">
+          <select id="mp-prog">
+            <option value="aerolineas_plus" selected>Aerolíneas Plus</option>
+            <option value="smiles">Smiles</option>
+            <option value="latam_pass">LATAM Pass</option>
+            <option value="american">AAdvantage</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="mp-km">Distancia del vuelo</label>
+          <div class="control"><input id="mp-km" type="number" min="1" step="100" value="10000" /><span>km</span></div>
+        </div>
+        <div class="field">
+          <label for="mp-class">Cabina</label>
+          <div class="control">
+            <select id="mp-class"><option value="economica" selected>Economy</option><option value="business">Business</option></select>
+          </div>
+        </div>
+      </div>
+      <button class="cta" type="submit">Comparar acumulación →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Acumulación estimada</div>
+        <div class="big" id="mp-big">{nf(5000)} <small>millas</small></div>
+        <p class="answer" id="mp-answer">Acumulación estimada por distancia y cabina.</p>
+        <div class="result-box">
+          <span>Mejor programa para esta ruta</span>
+          <b id="mp-best">AAdvantage</b>
+          <small id="mp-note">Comparación entre los cuatro programas.</small>
+        </div>
+      </div>
+      <div class="equation" id="mp-eq">distancia × factor del programa × factor de cabina</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>La misma ruta en los cuatro programas</h2>
+      <p>Ordenados de mayor a menor acreditación.</p>
+    </div>
+    <div class="tablewrap">
+      <table class="datatable">
+        <thead><tr><th>Programa</th><th>Millas acreditadas</th><th>Valor estimado</th></tr></thead>
+        <tbody id="mp-tbody"></tbody>
+      </table>
+    </div>
+    <p class="tnote">Valuación de referencia: USD 0,015 por milla. No es un precio oficial de los programas.</p>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>No mires sólo cuántas sumás</h2>
+      <p>También importa cómo las usás.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>🎟️</i><h3>Tarifa elegible</h3><p>Las tarifas más baratas pueden acreditar menos o cero.</p></article>
+      <article class="mini"><i>⏳</i><h3>Vencimiento</h3><p>Revisá cuándo expiran y cómo extenderlas.</p></article>
+      <article class="mini"><i>🔁</i><h3>Transferencias</h3><p>Mover puntos puede tener costo o promociones.</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>Es una comparación orientativa.</b>La acreditación oficial depende de aerolínea operadora, comercializadora y clase tarifaria.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🌎" />
+
+  <footer class="sources">
+    <div><b>Fuente</b><br />{du.source || 'Términos y condiciones de cada programa'}{du.lastUpdated ? ` · actualizado ${du.lastUpdated}` : ''}.{du.sourceUrl ? ' ' : ''}{du.sourceUrl && <a href={du.sourceUrl} target="_blank" rel="noopener nofollow">Ver fuente</a>}</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.mp{--brand:#174969;--accent:#8ee6f5;--soft:#eaf4f8}
+  .hcm.mp .hero{background:linear-gradient(135deg,#174969,#357aa1)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+  .hcm .sources a{color:inherit;text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.mp');
+    if (!root) return;
+    var P = JSON.parse(root.dataset.prog);
+    var USD = Number(root.dataset.usd);
+    var PR = document.getElementById('mp-prog'), K = document.getElementById('mp-km'), C = document.getElementById('mp-class');
+    var nf = function (x) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(x); };
+
+    function render() {
+      var km = Number(K.value), clase = C.value;
+      var big = document.getElementById('mp-big'), ans = document.getElementById('mp-answer');
+      var best = document.getElementById('mp-best'), note = document.getElementById('mp-note');
+      var eq = document.getElementById('mp-eq'), tb = document.getElementById('mp-tbody');
+
+      if (!(km > 0)) {
+        big.innerHTML = '—';
+        ans.textContent = 'Ingresá una distancia mayor a cero.';
+        best.textContent = '—'; note.textContent = '';
+        eq.innerHTML = 'distancia × factor del programa × factor de cabina';
+        tb.innerHTML = '';
+        return;
+      }
+
+      var multClase = clase === 'business' ? 2.5 : 1;   // igual que la fórmula real
+      var filas = Object.keys(P).map(function (k) {
+        var millas = km * P[k].f * multClase;
+        return { key: k, label: P[k].label, millas: millas, usd: millas * USD };
+      }).sort(function (a, b) { return b.millas - a.millas; });
+
+      var elegido = filas.filter(function (f) { return f.key === PR.value; })[0];
+      big.innerHTML = nf(Math.round(elegido.millas)) + ' <small>millas</small>';
+      ans.textContent = 'Con ' + elegido.label + ' en ' + (clase === 'business' ? 'business (2,5×)' : 'económica')
+        + ' acreditás ' + nf(Math.round(elegido.millas)) + ' millas por estos ' + nf(km) + ' km (~USD ' + nf(Math.round(elegido.usd)) + ' de valor).';
+      best.textContent = filas[0].label;
+      note.textContent = filas[0].key === elegido.key
+        ? 'Es el que más acredita para esta ruta.'
+        : 'Acredita ' + nf(Math.round(filas[0].millas - elegido.millas)) + ' millas más que ' + elegido.label + '.';
+      eq.innerHTML = nf(km) + ' km × ' + String(P[PR.value].f).replace('.', ',') + ' × ' + String(multClase).replace('.', ',')
+        + ' = <b>' + nf(Math.round(elegido.millas)) + ' millas</b>';
+
+      tb.innerHTML = filas.map(function (f) {
+        var mark = f.key === elegido.key ? ' <strong>(elegido)</strong>' : '';
+        return '<tr><td>' + f.label + mark + '</td><td>' + nf(Math.round(f.millas)) + '</td><td>USD ' + nf(Math.round(f.usd)) + '</td></tr>';
+      }).join('');
+    }
+
+    [PR, C].forEach(function (el) { el.addEventListener('change', render); });
+    K.addEventListener('input', render);
+    document.getElementById('mp-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

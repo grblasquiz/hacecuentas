@@ -1,0 +1,184 @@
+---
+/**
+ * Flagship "Cupos Copa Libertadores" — mockup del batch 23-07-2026 (ola 3),
+ * calcado. El script inline replica cupos-libertadores-pais.ts:
+ *   AR/BR: 6 directos a grupos + 2 a repechaje (top 6 → grupos, 7-8 → previa)
+ *   Resto CONMEBOL: 1 directo (campeón) + 3 a fase previa (pos 2-4)
+ *   Campeón vigente de Libertadores o Sudamericana y campeón de copa nacional
+ *   (AR/BR) → cupo directo a fase de grupos.
+ * Diferencia con el mockup: éste tenía un único selector "título con cupo"; la
+ * fórmula real distingue tres títulos con reglas distintas y se conservan.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+const du = calc.dataUpdate || {};
+---
+
+<main class="page hcm cl">
+  <div class="crumb">Inicio / <a href="/categoria/deportes">Deportes</a> / <b>Cupos Libertadores</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🏆 SIMULADOR CONMEBOL</span>
+      <h1>¿Tu equipo entra a la Libertadores?</h1>
+      <p>Simulá cupos por país, posición en la liga y clasificación especial.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🏆</div>
+      <div class="hero-stat"><span>Resultado claro</span><b>directo · previa · afuera</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="cl-form">
+      <h2>Situación del equipo</h2>
+      <p class="sub">Una lectura rápida del sistema de cupos.</p>
+      <div class="grid2">
+        <div class="field">
+          <label for="cl-pais">País</label>
+          <div class="control">
+            <select id="cl-pais">
+              <option value="argentina" selected>Argentina</option>
+              <option value="brasil">Brasil</option>
+              <option value="otro">Otro país CONMEBOL</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="cl-pos">Posición en la liga</label>
+          <div class="control"><input id="cl-pos" type="number" min="1" max="30" step="1" value="5" /></div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="cl-copa">¿Ganó la Copa Nacional?</label>
+        <div class="control"><select id="cl-copa"><option value="false" selected>No</option><option value="true">Sí</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="cl-lib">¿Campeón vigente de Libertadores?</label>
+          <div class="control"><select id="cl-lib"><option value="false" selected>No</option><option value="true">Sí</option></select></div>
+        </div>
+        <div class="field">
+          <label for="cl-suda">¿Campeón vigente de Sudamericana?</label>
+          <div class="control"><select id="cl-suda"><option value="false" selected>No</option><option value="true">Sí</option></select></div>
+        </div>
+      </div>
+      <button class="cta" type="submit">Simular clasificación →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Resultado</div>
+        <div class="big" id="cl-big">—</div>
+        <p class="answer" id="cl-answer">Elegí país y posición para simular.</p>
+        <div class="result-box">
+          <span>Vía de clasificación</span>
+          <b id="cl-via">—</b>
+          <small id="cl-note">Cupos del país.</small>
+        </div>
+      </div>
+      <div class="equation" id="cl-eq">Reparto de cupos CONMEBOL</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Tres caminos posibles</h2>
+      <p>La posición no cuenta toda la historia.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>🥇</i><h3>Campeón</h3><p>Los títulos pueden otorgar cupo adicional directo a grupos.</p></article>
+      <article class="mini"><i>📊</i><h3>Tabla anual</h3><p>Argentina y Brasil distribuyen más plazas que el resto.</p></article>
+      <article class="mini"><i>🎟️</i><h3>Fase previa</h3><p>Clasificar no siempre significa entrar a grupos.</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>El reglamento manda.</b>Los cupos y criterios cambian por edición y por asociación: validá siempre el reglamento oficial de la temporada.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🏆" />
+
+  <footer class="sources">
+    <div><b>Fuente</b><br />{du.source || 'CONMEBOL — Reglamento Copa Libertadores'}{du.lastUpdated ? ` · actualizado ${du.lastUpdated}` : ''}. {du.sourceUrl && <a href={du.sourceUrl} target="_blank" rel="noopener nofollow">Ver reglamento</a>}</div>
+    <div>Simulación orientativa · Datos sujetos a actualización</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.cl{--brand:#172f57;--accent:#f5cf55;--soft:#eef1f7}
+  .hcm.cl .hero{background:linear-gradient(135deg,#172f57,#385d8c)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+  .hcm .sources a{color:inherit;text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.cl');
+    if (!root) return;
+    var P = document.getElementById('cl-pais'), POS = document.getElementById('cl-pos');
+    var CN = document.getElementById('cl-copa'), LIB = document.getElementById('cl-lib'), SUD = document.getElementById('cl-suda');
+
+    function render() {
+      var pais = P.value;
+      var pos = Math.max(1, Math.floor(Number(POS.value) || 20));
+      var campeonCopa = CN.value === 'true', campeonLib = LIB.value === 'true', campeonSuda = SUD.value === 'true';
+      var big = document.getElementById('cl-big'), ans = document.getElementById('cl-answer');
+      var via = document.getElementById('cl-via'), note = document.getElementById('cl-note'), eq = document.getElementById('cl-eq');
+
+      // Reparto de cupos, idéntico a cupos-libertadores-pais.ts
+      var grande = pais === 'argentina' || pais === 'brasil';
+      var cuposDirectos = grande ? 6 : 1;
+      var cuposRepechaje = grande ? 2 : 3;
+      var cuposPais = grande ? 8 : 4;
+
+      var fase, viaTxt, detalle;
+      if (campeonLib || campeonSuda) {
+        fase = 'Fase de grupos';
+        viaTxt = campeonLib ? 'Campeón vigente de Libertadores (cupo extra)' : 'Campeón vigente de Sudamericana (cupo extra)';
+        detalle = 'Los campeones vigentes clasifican directo a fase de grupos, sin importar su posición en la liga local.';
+      } else if (campeonCopa && grande) {
+        fase = 'Fase de grupos';
+        viaTxt = 'Campeón de Copa Nacional';
+        detalle = 'El ganador de la Copa Argentina (o Copa de Brasil) obtiene cupo directo a fase de grupos.';
+      } else if (grande) {
+        if (pos <= 6) {
+          fase = 'Fase de grupos'; viaTxt = 'Top 6 de la liga (posición ' + pos + ')';
+          detalle = 'Los 6 primeros de la liga local clasifican directo a fase de grupos.';
+        } else if (pos <= 8) {
+          fase = 'Fase previa (repechaje)'; viaTxt = 'Posición ' + pos + ' — repechaje Libertadores';
+          detalle = 'Las posiciones 7 y 8 juegan la fase previa (1 o 2 rondas) para entrar a grupos.';
+        } else {
+          fase = 'No clasifica'; viaTxt = 'Posición ' + pos + ' — fuera de zona Libertadores';
+          detalle = 'Quedó fuera de los cupos Libertadores. Puede competir por cupos de Sudamericana.';
+        }
+      } else {
+        if (pos === 1) {
+          fase = 'Fase de grupos'; viaTxt = 'Campeón de liga';
+          detalle = 'El campeón de la liga local clasifica directo a fase de grupos.';
+        } else if (pos <= 4) {
+          fase = 'Fase previa (repechaje)'; viaTxt = 'Posición ' + pos + ' — repechaje';
+          detalle = 'Posiciones 2 a 4 de ligas medianas de CONMEBOL van a fase previa (2 o 3 rondas).';
+        } else {
+          fase = 'No clasifica'; viaTxt = 'Posición ' + pos + ' — fuera de zona Libertadores';
+          detalle = 'Quedó fuera de los cupos Libertadores. Puede intentar vía Sudamericana.';
+        }
+      }
+
+      big.innerHTML = fase === 'Fase de grupos' ? 'Clasifica' : fase === 'No clasifica' ? 'No clasifica' : 'Repechaje';
+      ans.textContent = detalle;
+      via.textContent = viaTxt;
+      note.textContent = 'El país reparte ' + cuposPais + ' cupos: ' + cuposDirectos + (cuposDirectos === 1 ? ' directo' : ' directos') + ' a grupos y ' + cuposRepechaje + ' a fase previa.';
+      eq.innerHTML = 'Fase resultante: <b>' + fase + '</b>';
+    }
+
+    [P, CN, LIB, SUD].forEach(function (el) { el.addEventListener('change', render); });
+    POS.addEventListener('input', render);
+    document.getElementById('cl-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

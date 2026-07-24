@@ -1,0 +1,191 @@
+---
+/**
+ * Flagship "Costo veterinario" — mockup del batch 23-07-2026 (ola 3), calcado.
+ * El script inline replica costo-veterinario-consulta-promedio.ts: la tabla
+ * PRECIOS (rangos por tipo de consulta y zona), el promedio del rango y el
+ * ajuste por especie (gato 0,9× · exóticos 1,2×).
+ * La tabla se serializa desde el módulo real: una sola fuente de verdad.
+ * Diferencia con el mockup: éste tenía 4 tipos de consulta; la fórmula real
+ * tiene 6 (suma cirugía mayor y castración) y agrega el selector de especie.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const PRECIOS = {
+  general: { caba: [18000, 25000], gba: [12000, 18000], interior: [10000, 15000] },
+  urgencia: { caba: [35000, 55000], gba: [25000, 40000], interior: [20000, 30000] },
+  especialista: { caba: [35000, 65000], gba: [25000, 45000], interior: [20000, 35000] },
+  cirugiaMenor: { caba: [80000, 150000], gba: [60000, 120000], interior: [50000, 100000] },
+  cirugiaMayor: { caba: [150000, 400000], gba: [120000, 300000], interior: [80000, 250000] },
+  castracion: { caba: [60000, 120000], gba: [45000, 90000], interior: [35000, 70000] },
+};
+const NOMBRES = {
+  general: 'Consulta general / control',
+  urgencia: 'Urgencia / guardia nocturna',
+  especialista: 'Especialista',
+  cirugiaMenor: 'Cirugía menor',
+  cirugiaMayor: 'Cirugía mayor',
+  castracion: 'Castración / esterilización',
+};
+const du = calc.dataUpdate || {};
+---
+
+<main class="page hcm vt" data-precios={JSON.stringify(PRECIOS)} data-nombres={JSON.stringify(NOMBRES)}>
+  <div class="crumb">Inicio / <a href="/categoria/mascotas">Mascotas</a> / <b>Costo veterinario</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🐾 PRESUPUESTO DE CUIDADO</span>
+      <h1>Estimá el costo de las consultas veterinarias</h1>
+      <p>Armá un presupuesto anual según tipo de atención, zona, especie y cantidad de visitas.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🐾</div>
+      <div class="hero-stat"><span>Planificar ayuda</span><b>consulta + estudios + medicación</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="vt-form">
+      <h2>Tipo de atención</h2>
+      <p class="sub">Rangos de mercado relevados; el valor final lo fija cada clínica.</p>
+      <div class="field">
+        <label for="vt-tipo">Consulta</label>
+        <div class="control">
+          <select id="vt-tipo">
+            <option value="general" selected>Consulta general / control</option>
+            <option value="urgencia">Urgencia / guardia nocturna</option>
+            <option value="especialista">Especialista (cardio, derma, traumato)</option>
+            <option value="cirugiaMenor">Cirugía menor (extracción, sutura)</option>
+            <option value="cirugiaMayor">Cirugía mayor (traumatología, tumor)</option>
+            <option value="castracion">Castración / esterilización</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="vt-zona">Zona</label>
+          <div class="control">
+            <select id="vt-zona">
+              <option value="caba" selected>CABA / GBA zona norte</option>
+              <option value="gba">GBA zona sur / oeste</option>
+              <option value="interior">Interior del país</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="vt-especie">Especie</label>
+          <div class="control">
+            <select id="vt-especie">
+              <option value="perro" selected>Perro</option>
+              <option value="gato">Gato</option>
+              <option value="otro">Otro (conejo, ave, etc.)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="vt-visitas">Visitas al año <small>1 a 52</small></label>
+        <div class="control"><input id="vt-visitas" type="number" min="1" max="52" step="1" value="4" /></div>
+      </div>
+      <button class="cta" type="submit">Estimar presupuesto →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Presupuesto orientativo</div>
+        <div class="big" id="vt-big">—</div>
+        <p class="answer" id="vt-answer">Costo anual estimado para las visitas configuradas.</p>
+        <div class="result-box">
+          <span>Por consulta</span>
+          <b id="vt-consulta">—</b>
+          <small id="vt-note">Rango relevado para esa zona y tipo de atención.</small>
+        </div>
+      </div>
+      <div class="equation" id="vt-eq">promedio del rango × ajuste por especie × visitas</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Qué puede sumarse</h2>
+      <p>La consulta es sólo una parte.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>🧪</i><h3>Estudios</h3><p>Laboratorio e imágenes se cobran por separado.</p></article>
+      <article class="mini"><i>💊</i><h3>Tratamiento</h3><p>Medicamentos y curaciones dependen del diagnóstico.</p></article>
+      <article class="mini"><i>🚑</i><h3>Urgencia</h3><p>Horario y complejidad aumentan el valor.</p></article>
+    </div>
+    <div class="notice">
+      <span>🩺</span>
+      <div><b>Son rangos de mercado, no precios publicados.</b>Cada clínica fija su propio arancel. Esta estimación no reemplaza un presupuesto veterinario ni una consulta profesional.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🐾" />
+
+  <footer class="sources">
+    <div><b>Fuente</b><br />Rangos de mercado relevados{du.lastUpdated ? ` · actualizado ${du.lastUpdated}` : ''}. Los valores se revisan periódicamente y varían por clínica y complejidad.</div>
+    <div>No reemplaza presupuesto veterinario</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.vt{--brand:#28594f;--accent:#d9ef72;--soft:#eef4f2}
+  .hcm.vt .hero{background:linear-gradient(135deg,#28594f,#4c8276)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.vt');
+    if (!root) return;
+    var PRECIOS = JSON.parse(root.dataset.precios);
+    var NOMBRES = JSON.parse(root.dataset.nombres);
+    var T = document.getElementById('vt-tipo'), Z = document.getElementById('vt-zona');
+    var E = document.getElementById('vt-especie'), V = document.getElementById('vt-visitas');
+    var money = function (x) { return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(Math.round(x)); };
+
+    function render() {
+      var tipo = T.value, zona = Z.value, especie = E.value, visitas = Number(V.value);
+      var big = document.getElementById('vt-big'), ans = document.getElementById('vt-answer');
+      var cons = document.getElementById('vt-consulta'), note = document.getElementById('vt-note'), eq = document.getElementById('vt-eq');
+
+      // Mismas guardas que costo-veterinario-consulta-promedio.ts
+      if (!visitas || visitas < 1 || visitas > 52) {
+        big.innerHTML = '—';
+        ans.textContent = 'Ingresá la cantidad de visitas por año (entre 1 y 52).';
+        cons.textContent = '—'; note.textContent = '';
+        eq.innerHTML = 'promedio del rango × ajuste por especie × visitas';
+        return;
+      }
+      if (!PRECIOS[tipo]) { big.innerHTML = '—'; ans.textContent = 'Tipo de consulta no válido.'; return; }
+
+      var rango = PRECIOS[tipo][zona] || PRECIOS[tipo].caba;
+      var promedio = Math.round((rango[0] + rango[1]) / 2);
+      var ajuste = especie === 'gato' ? 0.9 : especie === 'otro' ? 1.2 : 1.0;
+      var costoConsulta = Math.round(promedio * ajuste);
+      var costoAnual = costoConsulta * visitas;
+      var costoMensual = Math.round(costoAnual / 12);
+      var zonaLabel = zona === 'caba' ? 'CABA/GBA norte' : zona === 'gba' ? 'GBA sur/oeste' : 'Interior';
+
+      big.innerHTML = money(costoAnual) + ' <small>/año</small>';
+      ans.textContent = (NOMBRES[tipo] || tipo) + ' para tu ' + especie + ' en ' + zonaLabel + ': '
+        + visitas + (visitas === 1 ? ' visita' : ' visitas') + ' al año, equivalente a ' + money(costoMensual) + ' por mes.';
+      cons.textContent = money(costoConsulta);
+      note.textContent = 'Rango relevado ' + money(rango[0]) + ' a ' + money(rango[1])
+        + (ajuste !== 1 ? ' · ajuste por especie ×' + String(ajuste).replace('.', ',') : '') + '.';
+      eq.innerHTML = money(promedio) + ' × ' + String(ajuste).replace('.', ',') + ' × ' + visitas
+        + ' = <b>' + money(costoAnual) + '/año</b>';
+    }
+
+    [T, Z, E].forEach(function (el) { el.addEventListener('change', render); });
+    V.addEventListener('input', render);
+    document.getElementById('vt-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

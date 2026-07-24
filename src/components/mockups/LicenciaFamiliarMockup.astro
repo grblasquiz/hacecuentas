@@ -1,0 +1,173 @@
+---
+/**
+ * Flagship "Licencia por maternidad y paternidad" — mockup del batch
+ * 23-07-2026 (ola 3), calcado. El script inline replica
+ * licencia-maternidad-paternidad.ts (LCT arts. 177-179, Ley 20.744):
+ *   maternidad → 90 días corridos, 45+45 o 30+60 alrededor de la fecha de parto
+ *   paternidad → 2 días corridos con goce de sueldo (mínimo LCT)
+ * YMYL legal: el resultado se rotula como orientativo y remite al convenio.
+ * Diferencia con el mockup: éste pedía "fecha de inicio"; la fórmula real usa
+ * la fecha probable de parto, que es lo que fija el período.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const du = calc.dataUpdate || {};
+const DEMO = '2026-08-15';
+---
+
+<main class="page hcm lc">
+  <div class="crumb">Inicio / <a href="/categoria/vida">Trabajo</a> / <b>Licencia familiar</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">👶 FECHAS ORIENTATIVAS</span>
+      <h1>Calculá tu licencia por nacimiento</h1>
+      <p>Visualizá la duración base y las fechas estimadas de inicio y regreso según el tipo de licencia.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">👶</div>
+      <div class="hero-stat"><span>Argentina · régimen base</span><b>verificá tu convenio</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="lc-form">
+      <h2>Datos de la licencia</h2>
+      <p class="sub">La situación laboral y el convenio pueden ampliar estos plazos.</p>
+      <div class="field">
+        <label for="lc-kind">Tipo</label>
+        <div class="control">
+          <select id="lc-kind">
+            <option value="maternidad" selected>Maternidad (persona gestante)</option>
+            <option value="paternidad">Paternidad (persona no gestante)</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="lc-date">Fecha probable de parto</label>
+        <div class="control"><input id="lc-date" type="date" value={DEMO} /></div>
+      </div>
+      <div class="field" id="lc-f-opt">
+        <label for="lc-opt">Distribución de los 90 días</label>
+        <div class="control">
+          <select id="lc-opt">
+            <option value="45-45" selected>45 días antes + 45 después</option>
+            <option value="30-60">30 días antes + 60 después</option>
+          </select>
+        </div>
+      </div>
+      <button class="cta" type="submit">Ver período →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Duración base</div>
+        <div class="big" id="lc-big">90 <small>días</small></div>
+        <p class="answer" id="lc-answer">Período legal base para la persona gestante.</p>
+        <div class="result-box">
+          <span>Período estimado</span>
+          <b id="lc-range">—</b>
+          <small id="lc-note">Quién paga el sueldo durante la licencia.</small>
+        </div>
+      </div>
+      <div class="equation" id="lc-eq">LCT arts. 177-179 (Ley 20.744)</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Qué revisar además</h2>
+      <p>La ley general no cubre todos los casos.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>📄</i><h3>Convenio colectivo</h3><p>Puede otorgar más días que el régimen base.</p></article>
+      <article class="mini"><i>🏛️</i><h3>Empleo público</h3><p>Cada jurisdicción tiene reglas propias.</p></article>
+      <article class="mini"><i>🩺</i><h3>Situaciones especiales</h3><p>Prematurez o complicaciones requieren análisis específico.</p></article>
+    </div>
+    <div class="notice">
+      <span>⚖️</span>
+      <div><b>Resultado legal orientativo.</b>Confirmá fechas con RR.HH., ANSES, el convenio aplicable o asesoramiento profesional. Esta calculadora no reemplaza asesoramiento laboral.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="👶" />
+
+  <footer class="sources">
+    <div><b>Fuente</b><br />{du.source || 'LCT arts. 177-179 (Ley 20.744)'}{du.lastUpdated ? ` · actualizado ${du.lastUpdated}` : ''}. {du.sourceUrl && <a href={du.sourceUrl} target="_blank" rel="noopener nofollow">Ver norma</a>}</div>
+    <div>No reemplaza asesoramiento laboral</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.lc{--brand:#61445f;--accent:#f4d486;--soft:#f4eff4}
+  .hcm.lc .hero{background:linear-gradient(135deg,#61445f,#94708f)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+  .hcm .sources a{color:inherit;text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.lc');
+    if (!root) return;
+    var K = document.getElementById('lc-kind'), F = document.getElementById('lc-date'), O = document.getElementById('lc-opt');
+    var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    var fmt = function (d) { return d.getDate() + ' de ' + MESES[d.getMonth()] + ' de ' + d.getFullYear(); };
+    var addDays = function (d, n) { var r = new Date(d.getTime()); r.setDate(r.getDate() + n); return r; };
+
+    function render() {
+      var tipo = K.value;
+      document.getElementById('lc-f-opt').hidden = tipo !== 'maternidad';
+
+      var big = document.getElementById('lc-big'), ans = document.getElementById('lc-answer');
+      var range = document.getElementById('lc-range'), note = document.getElementById('lc-note'), eq = document.getElementById('lc-eq');
+      var parts = String(F.value || '').split('-').map(Number);
+      if (parts.length !== 3 || parts.some(isNaN)) {
+        big.innerHTML = '—';
+        ans.textContent = 'Ingresá una fecha probable de parto válida.';
+        range.textContent = '—'; note.textContent = '';
+        eq.innerHTML = 'LCT arts. 177-179 (Ley 20.744)';
+        return;
+      }
+      var parto = new Date(parts[0], parts[1] - 1, parts[2]);
+      if (isNaN(parto.getTime())) {
+        big.innerHTML = '—';
+        ans.textContent = 'Ingresá una fecha probable de parto válida.';
+        range.textContent = '—'; note.textContent = '';
+        return;
+      }
+
+      if (tipo === 'paternidad') {
+        // LCT: 2 días corridos con goce de sueldo
+        var fin = addDays(parto, 1);
+        big.innerHTML = '2 <small>días</small>';
+        ans.textContent = 'La LCT garantiza apenas 2 días corridos con goce de sueldo. Muchos convenios (bancarios, sanidad, camioneros) otorgan entre 5 y 15 días: revisá el tuyo.';
+        range.textContent = fmt(parto) + ' → ' + fmt(fin);
+        note.textContent = 'Los paga el empleador (son días con goce de sueldo).';
+        eq.innerHTML = 'Mínimo LCT: <b>2 días corridos</b>';
+        return;
+      }
+
+      // Maternidad: 90 días corridos
+      var antes = O.value === '30-60' ? 30 : 45;
+      var despues = O.value === '30-60' ? 60 : 45;
+      var inicio = addDays(parto, -antes);
+      var finM = addDays(parto, despues - 1);
+      big.innerHTML = '90 <small>días</small>';
+      ans.textContent = 'Te corresponden 90 días corridos: ' + antes + ' antes y ' + despues + ' después de la fecha probable de parto. El reintegro está previsto para el ' + fmt(addDays(finM, 1)) + '.';
+      range.textContent = fmt(inicio) + ' → ' + fmt(finM);
+      note.textContent = 'Los paga ANSES (asignación por maternidad, equivalente al sueldo bruto).';
+      eq.innerHTML = fmt(parto) + ' − ' + antes + ' días / + ' + (despues - 1) + ' días = <b>90 días corridos</b>';
+    }
+
+    [K, O].forEach(function (el) { el.addEventListener('change', render); });
+    F.addEventListener('input', render);
+    F.addEventListener('change', render);
+    document.getElementById('lc-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>
