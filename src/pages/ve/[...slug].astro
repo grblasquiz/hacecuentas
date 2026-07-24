@@ -5,6 +5,7 @@ import Layout from '../../layouts/Layout.astro';
 import { isRestrictedCalc, canAdvertiseCalc } from '../../lib/content-policy';
 import { categoryDomain } from '../../lib/category-colors';
 import { freeOfferSchema } from '../../lib/offer-schema';
+import { applicationCategoryFor, SPEAKABLE_SELECTORS, FAQ_SPEAKABLE_SELECTORS, buildSchemaDescription, citationNodes, localeBreadcrumb } from '../../lib/calc-schema';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import Calculator from '../../components/Calculator.astro';
@@ -86,29 +87,15 @@ const datePublished: string | undefined = typeof _rawDatePub === 'string' && /^\
 // audience: 'VE' (país-específico) o 'global' (aplica a cualquier país).
 const audience: 'VE' | 'global' = calc.audience === 'VE' ? 'VE' : 'global';
 
-const schemaHowTo = {
-  '@context': 'https://schema.org',
-  '@type': 'HowTo',
-  name: calc.h1,
-  description: calc.description,
-  totalTime: 'PT1M',
-  inLanguage: 'es-VE',
-  step: calc.fields.map((f: any, i: number) => ({
-    '@type': 'HowToStep',
-    position: i + 1,
-    name: f.label,
-    text: f.help || `Enter ${f.label.toLowerCase()}`,
-    url: `https://hacecuentas.com/ve/${calc.slug}#paso-${i + 1}`,
-    ...(ogImage !== '/og-default.png' ? { image: `https://hacecuentas.com${ogImage}` } : {}),
-  })),
-};
+// description ≥50 chars para structured data (Search Console rechaza las cortas).
+const schemaDescriptionSafe = buildSchemaDescription(calc, categoryLabels);
 
 const schemaFAQ = calc.faq && calc.faq.length > 0 ? {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
   speakable: {
     '@type': 'SpeakableSpecification',
-    cssSelector: ['.faq-list summary', '.faq-list details > div'],
+    cssSelector: FAQ_SPEAKABLE_SELECTORS,
   },
   mainEntity: calc.faq.map((f: any) => ({
     '@type': 'Question',
@@ -120,25 +107,17 @@ const schemaFAQ = calc.faq && calc.faq.length > 0 ? {
   })),
 } : null;
 
-const schemaBreadcrumb = {
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/ve/' },
-    { '@type': 'ListItem', position: 2, name: categoryLabels[calc.category] || calc.category, item: 'https://hacecuentas.com/ve/' },
-    { '@type': 'ListItem', position: 3, name: calc.h1 },
-  ],
-};
+const schemaBreadcrumb = localeBreadcrumb('ve', calc.h1);
 
 // SoftwareApplication + WebApplication
 const schemaApp = {
   '@context': 'https://schema.org',
   '@type': ['SoftwareApplication', 'WebApplication'],
   name: calc.h1,
-  description: calc.description,
+  description: schemaDescriptionSafe,
   url: `https://hacecuentas.com/ve/${calc.slug}`,
   mainEntityOfPage: `https://hacecuentas.com/ve/${calc.slug}`,
-  applicationCategory: 'UtilitiesApplication',
+  applicationCategory: applicationCategoryFor(calc.category),
   applicationSubCategory: 'Calculator',
   operatingSystem: 'Any (Web)',
   browserRequirements: 'Requires JavaScript. Requires HTML5.',
@@ -146,7 +125,7 @@ const schemaApp = {
   isAccessibleForFree: true,
   datePublished,
   dateModified,
-  offers: freeOfferSchema({ priceCurrency: 'USD', validFrom: datePublished || dateModified }),
+  offers: freeOfferSchema({ priceCurrency: 'VES', validFrom: datePublished || dateModified }),
   image: {
     '@type': 'ImageObject',
     url: `https://hacecuentas.com${ogImage}`,
@@ -163,15 +142,9 @@ const schemaApp = {
   ...(findPrimaryAbout(calc.h1 || '') ? { about: findPrimaryAbout(calc.h1 || '') } : {}),
   speakable: {
     '@type': 'SpeakableSpecification',
-    cssSelector: [
-      '.answer-snippet',
-      '.aeo-quick-answer', '.calc-intro', '.calc-key-takeaway',
-      '#como-funciona p:first-of-type',
-      '#faq dt', '#faq dd',
-      '.use-cases li', '#cuando-usar p',
-    ],
+    cssSelector: SPEAKABLE_SELECTORS,
   },
-  citation: calc.sources?.map((s: any) => s.url || s.name).filter(Boolean) || [],
+  ...(citationNodes(calc.sources) ? { citation: citationNodes(calc.sources) } : {}),
 };
 
 // Article schema for YMYL categories
@@ -180,7 +153,7 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: calc.h1,
-  description: calc.description,
+  description: schemaDescriptionSafe,
   url: `https://hacecuentas.com/ve/${calc.slug}`,
   mainEntityOfPage: `https://hacecuentas.com/ve/${calc.slug}`,
   image: `https://hacecuentas.com${ogImage}`,
@@ -204,9 +177,9 @@ const schemaArticle = (isYMYL || (calc.explanation && calc.explanation.length > 
   },
   about: categoryLabels[calc.category] || calc.category,
   articleSection: categoryLabels[calc.category] || calc.category,
-  wordCount: calc.explanation ? calc.explanation.split(/\s+/).filter(Boolean).length : 0,
+  ...(calc.explanation ? { wordCount: calc.explanation.split(/\s+/).filter(Boolean).length } : {}),
   isAccessibleForFree: true,
-  citation: calc.sources?.map((s: any) => s.url || s.name).filter(Boolean) || [],
+  ...(citationNodes(calc.sources) ? { citation: citationNodes(calc.sources) } : {}),
 } : null;
 
 // HowTo deprecado por Google (2023, sin rich results) → dejó de emitirse (ahorra ~22KB/página en flagships).
@@ -217,7 +190,7 @@ if (schemaArticle) schemaGraph.push(schemaArticle);
 // MedicalWebPage / LearningResource — categoría 'salud' / 'educacion'.
 // Bing y Copilot priorizan schema médico/educativo para esos queries.
 
-const schemaDescription = (calc.description || calc.h1 || '').slice(0, 500);
+const schemaDescription = schemaDescriptionSafe;
 
 if (calc.category === 'medio-ambiente') {
   schemaGraph.push({

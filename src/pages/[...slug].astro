@@ -3,6 +3,7 @@ export const prerender = true;
 
 import Layout from '../layouts/Layout.astro';
 import { freeOfferSchema } from '../lib/offer-schema';
+import { SPEAKABLE_SELECTORS, FAQ_SPEAKABLE_SELECTORS, applicationCategoryFor } from '../lib/calc-schema';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import Calculator from '../components/Calculator.astro';
@@ -331,78 +332,9 @@ const snippetDescription = (() => {
   return (stripped.length >= 50 ? stripped : schemaDescription).slice(0, 500);
 })();
 
-// Prioridad: 1) howToSteps explícitos en JSON, 2) extraídos del explanation
-// (líneas tipo "1. ...", "Paso 1: ..."), 3) fallback a los fields.
-function extractStepsFromExplanation(text: string): Array<{name: string, text: string}> {
-  if (!text) return [];
-  const steps: Array<{name: string, text: string}> = [];
-  // Match "1. Texto" o "Paso 1: Texto" en líneas separadas
-  const re = /^(?:Paso\s+)?(\d+)\.\s+(.+?)(?:\n(?!\d+\.|\n)[^\n]+)*/gim;
-  for (const m of text.matchAll(re)) {
-    const body = m[2].trim();
-    if (body.length < 8 || body.length > 280) continue;
-    const colon = body.indexOf(':');
-    if (colon > 4 && colon < 60) {
-      steps.push({ name: body.slice(0, colon).trim(), text: body.slice(colon + 1).trim() });
-    } else {
-      const head = body.split(/[.!?]\s/)[0].slice(0, 70);
-      steps.push({ name: head, text: body });
-    }
-    if (steps.length >= 8) break; // Cap razonable para HowTo
-  }
-  return steps;
-}
-
-const howToSteps = calc.howToSteps && calc.howToSteps.length > 0
-  ? calc.howToSteps
-  : (() => {
-      const fromText = extractStepsFromExplanation(calc.explanation || '');
-      if (fromText.length >= 3) return fromText;
-      return calc.fields.map((f: any) => ({
-        name: f.label,
-        text: f.help || `Ingresá ${f.label.toLowerCase()}`,
-      }));
-    })();
-
-// ¿Hay pasos REALES para el HowTo? (explícitos en JSON o extraídos de la
-// explanation). Si caemos al fallback de fields ("Ingresá X"), NO emitimos el
-// HowTo schema: un HowTo de relleno sobre "cómo usar la UI" es schema padding
-// (señal de scaled content / HCU). El render visible no depende de esto.
-const hasRealHowToSteps =
-  (Array.isArray(calc.howToSteps) && calc.howToSteps.length >= 2) ||
-  extractStepsFromExplanation(calc.explanation || '').length >= 3;
-
-// HowTo schema: además de los steps, declaramos `tool` con los inputs del
-// calc (cada field es algo que el usuario "necesita aportar"). Boost al
-// rich result + ayuda a Google a entender qué datos requiere la calc.
-const schemaHowTo: any = {
-  '@context': 'https://schema.org',
-  '@type': 'HowTo',
-  name: `Cómo usar la ${calc.h1}`,
-  description: schemaDescription,
-  totalTime: 'PT1M',
-  inLanguage: schemaLang,
-  step: howToSteps.map((s: any, i: number) => ({
-    '@type': 'HowToStep',
-    position: i + 1,
-    name: s.name,
-    text: s.text,
-    url: `https://hacecuentas.com/${calc.slug}#paso-${i + 1}`,
-    ...(ogImage !== '/og-default.png' ? { image: `https://hacecuentas.com${ogImage}` } : {}),
-  })),
-};
-if (Array.isArray(calc.fields) && calc.fields.length > 0) {
-  schemaHowTo.tool = calc.fields.slice(0, 8).map((f: any) => ({
-    '@type': 'HowToTool',
-    name: f.label,
-  }));
-}
-if (Array.isArray(calc.supplies) && calc.supplies.length > 0) {
-  schemaHowTo.supply = calc.supplies.map((s: any) => ({
-    '@type': 'HowToSupply',
-    name: typeof s === 'string' ? s : s.name,
-  }));
-}
+// HowTo schema: dejó de emitirse (Google lo deprecó en 2023, sin rich results).
+// Se removieron también la extracción de pasos y el fallback de fields que sólo
+// lo alimentaban a él.
 
 const schemaFAQ = calc.faq && calc.faq.length > 0 ? {
   '@context': 'https://schema.org',
@@ -417,7 +349,7 @@ const schemaFAQ = calc.faq && calc.faq.length > 0 ? {
   publisher: { '@id': 'https://hacecuentas.com/#organization' },
   speakable: {
     '@type': 'SpeakableSpecification',
-    cssSelector: ['.faq-list summary', '.faq-list details > div'],
+    cssSelector: FAQ_SPEAKABLE_SELECTORS,
   },
   mainEntity: calc.faq.map((f: any, i: number) => ({
     '@type': 'Question',
@@ -476,38 +408,15 @@ const schemaBreadcrumb = {
   }),
 };
 
-// Mapeo categoría → schema.org applicationCategory. Google usa esto para
-// clasificar la app en Rich Results. Las categorías sin match natural
-// (cocina, juegos, etc.) caen a UtilitiesApplication.
-const APPLICATION_CATEGORY_MAP: Record<string, string> = {
-  finanzas: 'FinanceApplication',
-  impuestos: 'FinanceApplication',
-  negocios: 'BusinessApplication',
-  marketing: 'BusinessApplication',
-  salud: 'HealthApplication',
-  mascotas: 'HealthApplication',
-  familia: 'LifestyleApplication',
-  vida: 'LifestyleApplication',
-  hogar: 'LifestyleApplication',
-  jardineria: 'LifestyleApplication',
-  cocina: 'LifestyleApplication',
-  viajes: 'TravelApplication',
-  deportes: 'HealthApplication',
-  educacion: 'EducationalApplication',
-  idiomas: 'EducationalApplication',
-  matematica: 'EducationalApplication',
-  ciencia: 'EducationalApplication',
-  astronomia: 'EducationalApplication',
-  clima: 'UtilitiesApplication',
-  'medio-ambiente': 'UtilitiesApplication',
-  construccion: 'UtilitiesApplication',
-  automotor: 'UtilitiesApplication',
-  tecnologia: 'UtilitiesApplication',
-  electronica: 'UtilitiesApplication',
-  entretenimiento: 'GameApplication',
-  juegos: 'GameApplication',
-};
-const applicationCategory = APPLICATION_CATEGORY_MAP[calc.category] || 'UtilitiesApplication';
+// Mapeo categoría → schema.org applicationCategory: fuente única en
+// src/lib/calc-schema.ts (la compartimos con las rutas por locale).
+const applicationCategory = applicationCategoryFor(calc.category);
+
+// Entidades Wikidata detectadas en h1/title/keywords. Se calcula una vez y sólo
+// se inyecta si hay match: `mentions: []` es ruido en cada página sin entidades.
+const _mentions = findMentions(
+  `${calc.h1 || ''} ${calc.title || ''} ${(calc.seoKeywords || []).join(' ')}`
+);
 
 // SoftwareApplication + WebApplication — Google las usa para web apps / calculadoras
 const schemaApp = {
@@ -550,34 +459,22 @@ const schemaApp = {
   // Selectores ampliados 2026-05-11 para incluir FAQ y primer párrafo de explicación.
   speakable: {
     '@type': 'SpeakableSpecification',
-    // Solo selectores que EXISTEN de verdad en el DOM renderizado (verificado
-    // 2026-05-29). Se removieron los fantasma (.aeo-direct-answer, .calc-summary,
-    // .calc-result-output, #faq dt, #faq dd, #cuando-usar p) que nunca matcheaban:
-    // Speakable con selectores rotos a escala es señal de markup auto-generado.
-    cssSelector: [
-      '[data-speakable]',            // hook universal (answer-snippet + key-takeaway lo llevan)
-      '.answer-snippet',            // Featured Snippet block (Position 0 Google)
-      '.aeo-quick-answer',          // Respuesta rápida (TOP para AEO/voice)
-      '.calc-intro',                 // intro
-      '.calc-key-takeaway',          // en pocas palabras
-      'h1',                          // título principal (siempre voice-relevant)
-      '#como-funciona p:first-of-type',  // primer párrafo de explicación
-      '#faq details > div p:first-of-type',  // 1er párrafo respuesta FAQ enfocado
-      '.use-cases li',               // casos de uso (alta densidad de intent)
-    ],
+    // Lista canonica verificada contra CalcLayoutV2 (src/lib/calc-schema.ts).
+    // La tanda anterior (.answer-snippet, .aeo-quick-answer, .calc-intro,
+    // .calc-key-takeaway, .use-cases li) eran clases de paginas sueltas, no del
+    // layout de calcs: no matcheaban nada.
+    cssSelector: SPEAKABLE_SELECTORS,
   },
   // Citation: fuentes verificables externas (mismo array que Article schema cuando aplica).
   // Bing/Copilot priorizan citation para citar en answer cards y AI Overviews.
   // Importante incluirlo en SoftwareApplication (que se renderiza siempre) y no
   // solo en Article (que solo aplica a YMYL o explanation > 1500).
-  citation: citationLd,
+  ...(citationLd.length ? { citation: citationLd } : {}),
   // Mentions: entidades Wikidata reconocidas en h1/seoKeywords. Le da a LLMs
   // (ChatGPT/Claude/Perplexity/Gemini) entity disambiguation gratis vía
   // knowledge graph de Wikidata. Ej: si la calc menciona "ANSES" → linkea a
   // https://www.wikidata.org/wiki/Q830348.
-  mentions: findMentions(
-    `${calc.h1 || ''} ${calc.title || ''} ${(calc.seoKeywords || []).join(' ')}`
-  ),
+  ...(_mentions.length ? { mentions: _mentions } : {}),
   // About: primary topic de la página. Más fuerte que `mentions` para entity
   // resolution en Google/Bing/LLMs. Solo si matcheamos en el H1 (conservador).
   // Si no hay match en H1, no inyectamos `about` (mejor vacío que erróneo).
@@ -681,13 +578,11 @@ const schemaArticle = {
   wordCount: _articleWordCount,
   isAccessibleForFree: true,
   license: 'https://creativecommons.org/licenses/by/4.0/',
-  citation: citationLd,
+  ...(citationLd.length ? { citation: citationLd } : {}),
   // mentions: entidades Wikidata reconocidas en h1/seoKeywords (mismo helper que
   // usamos en SoftwareApplication). LLMs (ChatGPT/Claude/Perplexity/Copilot)
   // reciben entity disambiguation cross-schema → más probabilidades de ser citado.
-  mentions: findMentions(
-    `${calc.h1 || ''} ${calc.title || ''} ${(calc.seoKeywords || []).join(' ')}`
-  ),
+  ...(_mentions.length ? { mentions: _mentions } : {}),
   // keywords: refuerza tema para Bing AI y AI Overviews. Concat de seoKeywords
   // (top 5 para no inflar).
   keywords: (calc.seoKeywords || []).slice(0, 5).join(', '),
@@ -743,7 +638,7 @@ if (calc.category === 'salud') {
         ...(medicalCondition.sameAs ? { sameAs: medicalCondition.sameAs } : {}),
       },
     } : {}),
-    citation: citationLd,
+    ...(citationLd.length ? { citation: citationLd } : {}),
     publisher: {
       '@type': 'Organization',
       name: 'Hacé Cuentas',

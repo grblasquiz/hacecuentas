@@ -23,6 +23,13 @@ function task(name: string, script: string): Task {
   return { name, cmd: NODE, args: [...FLAGS, `scripts/${script}.ts`] };
 }
 
+// Scripts que importan módulos de `src/` con imports SIN extensión: node
+// --experimental-strip-types no los resuelve (ERR_MODULE_NOT_FOUND) y tumba el
+// prebuild entero. tsx sí resuelve la cadena completa.
+function tsxTask(name: string, script: string): Task {
+  return { name, cmd: 'npx', args: ['tsx', `scripts/${script}.ts`] };
+}
+
 // .mjs no necesita --experimental-strip-types
 function mjsTask(name: string, script: string): Task {
   return { name, cmd: NODE, args: [`scripts/${script}.mjs`] };
@@ -107,7 +114,7 @@ async function main() {
 
   const phase2Tasks: Task[] = [
     task('og', 'generate-og-images'),
-    task('sitemap', 'generate-sitemap'),
+    tsxTask('sitemap', 'generate-sitemap'),
     task('search-index', 'generate-search-index'),
     // Índice slim {slug, esSlug} por locale para el hreflang de [...slug].astro
     // (reemplaza 6 import.meta.glob eager de ~18 MB). DEBE existir antes del build.

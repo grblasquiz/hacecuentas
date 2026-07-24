@@ -5,6 +5,7 @@ import Layout from '../../layouts/Layout.astro';
 import { isRestrictedCalc, canAdvertiseCalc } from '../../lib/content-policy';
 import { categoryDomain } from '../../lib/category-colors';
 import { freeOfferSchema } from '../../lib/offer-schema';
+import { applicationCategoryFor, SPEAKABLE_SELECTORS, FAQ_SPEAKABLE_SELECTORS, buildSchemaDescription, citationNodes, localeBreadcrumb } from '../../lib/calc-schema';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import Calculator from '../../components/Calculator.astro';
@@ -93,72 +94,17 @@ const audience: 'AR' | 'US' | 'global' = calc.audience === 'AR'
   : 'US';
 const enLocale = 'en-US';
 
-// HowTo steps: prioridad a howToSteps explícitos, fallback a extracción del
-// explanation. Solo emitimos HowTo schema si hay pasos REALES — un HowTo de
-// relleno sobre "cómo usar la UI" (Enter X / Click Calculate) es schema padding
-// que Google penaliza. Mismo criterio que la página AR.
-const _stepRegex = /(?:^|\n)\s*(?:\d+\.|[-*])\s+(.+)/g;
-const _extractedSteps: string[] = [];
-if (calc.explanation) {
-  let m;
-  while ((m = _stepRegex.exec(calc.explanation)) !== null) {
-    const clean = m[1].replace(/\*\*/g, '').replace(/`/g, '').trim();
-    if (clean.length > 10 && clean.length < 200) _extractedSteps.push(clean);
-    if (_extractedSteps.length >= 8) break;
-  }
-}
-const _fallbackSteps = [
-  `Enter your data into the ${calc.h1}.`,
-  'Double-check that the values are correct.',
-  'Click Calculate to see the result.',
-];
-const howToSteps =
-    calc.howToSteps && calc.howToSteps.length > 0
-        ? calc.howToSteps
-        : _extractedSteps.length >= 3
-        ? _extractedSteps
-        : _fallbackSteps;
-const hasRealHowToSteps =
-    (Array.isArray(calc.howToSteps) && calc.howToSteps.length >= 2) ||
-    _extractedSteps.length >= 3;
+// HowTo schema: dejó de emitirse (Google lo deprecó en 2023, sin rich results).
 
-const schemaHowTo: any = {
-  '@context': 'https://schema.org',
-  '@type': 'HowTo',
-  name: `How to use the ${calc.h1}`,
-  description: calc.description,
-  totalTime: 'PT1M',
-  inLanguage: enLocale,
-  step: howToSteps.map((s: any, i: number) => ({
-    '@type': 'HowToStep',
-    position: i + 1,
-    name: typeof s === 'string' ? s.slice(0, 60) : s.name,
-    text: typeof s === 'string' ? s : s.text,
-    url: `https://hacecuentas.com/en/${calc.slug}#paso-${i + 1}`,
-    ...(ogImage !== '/og-default.png' ? { image: `https://hacecuentas.com${ogImage}` } : {}),
-  })),
-};
-if (hasRealHowToSteps) {
-  if (Array.isArray(calc.fields) && calc.fields.length > 0) {
-    schemaHowTo.tool = calc.fields.slice(0, 8).map((f: any) => ({
-      '@type': 'HowToTool',
-      name: f.label,
-    }));
-  }
-  if (Array.isArray(calc.supplies) && calc.supplies.length > 0) {
-    schemaHowTo.supply = calc.supplies.map((s: any) => ({
-      '@type': 'HowToSupply',
-      name: s,
-    }));
-  }
-}
+// description ≥50 chars para structured data (Search Console rechaza las cortas).
+const schemaDescriptionSafe = buildSchemaDescription(calc, categoryLabels);
 
 const schemaFAQ = calc.faq && calc.faq.length > 0 ? {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
   speakable: {
     '@type': 'SpeakableSpecification',
-    cssSelector: ['.faq-list summary', '.faq-list details > div'],
+    cssSelector: FAQ_SPEAKABLE_SELECTORS,
   },
   mainEntity: calc.faq.map((f: any) => ({
     '@type': 'Question',
@@ -170,25 +116,17 @@ const schemaFAQ = calc.faq && calc.faq.length > 0 ? {
   })),
 } : null;
 
-const schemaBreadcrumb = {
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en/' },
-    { '@type': 'ListItem', position: 2, name: categoryLabels[calc.category] || calc.category, item: 'https://hacecuentas.com/en/' },
-    { '@type': 'ListItem', position: 3, name: calc.h1 },
-  ],
-};
+const schemaBreadcrumb = localeBreadcrumb('en', calc.h1);
 
 // SoftwareApplication + WebApplication
 const schemaApp = {
   '@context': 'https://schema.org',
   '@type': ['SoftwareApplication', 'WebApplication'],
   name: calc.h1,
-  description: calc.description,
+  description: schemaDescriptionSafe,
   url: `https://hacecuentas.com/en/${calc.slug}`,
   mainEntityOfPage: `https://hacecuentas.com/en/${calc.slug}`,
-  applicationCategory: 'UtilitiesApplication',
+  applicationCategory: applicationCategoryFor(calc.category),
   applicationSubCategory: 'Calculator',
   operatingSystem: 'Any (Web)',
   browserRequirements: 'Requires JavaScript. Requires HTML5.',
@@ -218,19 +156,9 @@ const schemaApp = {
   // responder queries de voz/AI.
   speakable: {
     '@type': 'SpeakableSpecification',
-    cssSelector: [
-      '[data-speakable]',
-      '.answer-snippet',
-      '.aeo-quick-answer', '.aeo-direct-answer',
-      '.calc-intro', '.calc-key-takeaway', '.calc-summary',
-      '.calc-result', '.calc-result-output',
-      'h1',
-      '#how-it-works p:first-of-type',
-      '#faq dt', '#faq dd', '#faq details > div p:first-of-type',
-      '.use-cases li', '#when-to-use p',
-    ],
+    cssSelector: SPEAKABLE_SELECTORS,
   },
-  citation: calc.sources?.map((s: any) => s.url || s.name).filter(Boolean) || [],
+  ...(citationNodes(calc.sources) ? { citation: citationNodes(calc.sources) } : {}),
 };
 
 // Article schema for YMYL categories
@@ -297,7 +225,7 @@ const schemaArticle = {
   // wordCount: señal de profundidad para E-E-A-T (recomendado por Article schema).
   wordCount: _articleWordCount,
   isAccessibleForFree: true,
-  citation: calc.sources?.map((s: any) => s.url || s.name).filter(Boolean) || [],
+  ...(citationNodes(calc.sources) ? { citation: citationNodes(calc.sources) } : {}),
 };
 
 const schemaGraph: any[] = [schemaBreadcrumb, schemaApp, schemaArticle];
@@ -307,7 +235,7 @@ if (schemaFAQ) schemaGraph.push(schemaFAQ);
 // MedicalWebPage / LearningResource — categoría 'salud' / 'educacion'.
 // Bing y Copilot priorizan schema médico/educativo para esos queries.
 
-const schemaDescription = (calc.description || calc.h1 || '').slice(0, 500);
+const schemaDescription = schemaDescriptionSafe;
 
 if (calc.category === 'medio-ambiente') {
   schemaGraph.push({
@@ -357,7 +285,7 @@ if (calc.category === 'salud') {
         ...(medicalCondition.sameAs ? { sameAs: medicalCondition.sameAs } : {}),
       },
     } : {}),
-    citation: calc.sources?.map((s: any) => s.url || s.name).filter(Boolean) || [],
+    ...(citationNodes(calc.sources) ? { citation: citationNodes(calc.sources) } : {}),
     publisher: { '@type': 'Organization', name: 'Hacé Cuentas', url: 'https://hacecuentas.com' },
   });
 }
