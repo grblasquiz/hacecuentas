@@ -1,0 +1,185 @@
+---
+/**
+ * Flagship "Rendimiento de masa para empanadas" — mockup del batch 23-07-2026
+ * (ola 2), calcado. El script inline replica
+ * rendimiento-masa-empanadas-cantidad.ts:
+ *   g de harina por tapa = 28 (frita) / 30 (criolla y compradas)
+ *   relleno = 40 g por empanada
+ *   masa: grasa = harina × 0,20 (frita) ó 0,30 · agua = harina × 0,40 · sal = harina × 0,02
+ * Diferencia deliberada con el mockup: éste modelaba "masa y relleno
+ * disponibles → mínimo". La fórmula real es más completa (dos direcciones de
+ * cálculo, tipo de tapa y lista de ingredientes) y es la que manda; el bloque
+ * de resultado igual muestra qué ingrediente limita la tanda.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const D = { cantidad: 24, gr: 30 };
+const nf = (x: number, d = 0) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: d }).format(x);
+---
+
+<main class="page hcm ep">
+  <div class="crumb">Inicio / <a href="/categoria/cocina">Cocina</a> / <b>Rendimiento de masa</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🥟 PLANIFICADOR DE TANDA</span>
+      <h1>¿Cuántas empanadas te rinde la masa?</h1>
+      <p>Calculá tapas, ingredientes y relleno en una sola cuenta para saber cuántas unidades reales podés armar.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🥟</div>
+      <div class="hero-stat"><span>Tanda ejemplo</span><b>≈ {D.cantidad} empanadas</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="ep-form">
+      <h2>Medí tu preparación</h2>
+      <p class="sub">Podés partir de las empanadas que querés o de la harina que tenés.</p>
+      <div class="field">
+        <label for="ep-modo">¿Qué querés calcular?</label>
+        <div class="control">
+          <select id="ep-modo">
+            <option value="empanadas_deseadas" selected>Sé cuántas empanadas quiero</option>
+            <option value="harina_disponible">Sé cuánta harina tengo</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="ep-cant" id="ep-lcant">Cantidad de empanadas</label>
+          <div class="control"><input id="ep-cant" type="number" min="1" step="1" value={D.cantidad} /><span id="ep-ucant">u</span></div>
+        </div>
+        <div class="field">
+          <label for="ep-tipo">Tipo de tapa</label>
+          <div class="control">
+            <select id="ep-tipo">
+              <option value="casera_criolla" selected>Casera criolla (horno)</option>
+              <option value="casera_frita">Casera para freír</option>
+              <option value="comprada">Tapas compradas</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <button class="cta" type="submit">Calcular rendimiento →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Podés preparar</div>
+        <div class="big" id="ep-big">{D.cantidad} <small>empanadas</small></div>
+        <p class="answer" id="ep-answer">Rendimiento de la tanda con el tipo de tapa elegido.</p>
+        <div class="result-box">
+          <span>Ingredientes de la masa</span>
+          <b id="ep-ing">{nf(D.cantidad * D.gr)} g de harina</b>
+          <small id="ep-note">Relleno necesario: {nf(D.cantidad * 40 / 1000, 1)} kg (40 g por unidad).</small>
+        </div>
+      </div>
+      <div class="equation" id="ep-eq">empanadas × gramos de harina por tapa</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Una tanda pareja</h2>
+      <p>Menos improvisación, mejor cocción.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>⚖️</i><h3>Pesá una tapa</h3><p>El tamaño real cambia mucho entre caseras y compradas.</p></article>
+      <article class="mini"><i>🥄</i><h3>Porcioná el relleno</h3><p>Usá la misma cuchara para que todas cierren bien.</p></article>
+      <article class="mini"><i>🔥</i><h3>No las sobrecargues</h3><p>Más relleno suele significar pérdidas en el horno.</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>El sobrante también cuenta.</b>Mostramos harina y relleno necesarios para que puedas ajustar la compra antes de empezar.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🥟" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />30 g de harina por tapa criolla (28 g si es para freír) y 40 g de relleno por empanada.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.ep{--brand:#874424;--accent:#ffd276;--soft:#f7efe7}
+  .hcm.ep .hero{background:linear-gradient(135deg,#874424,#b96d35)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.ep');
+    if (!root) return;
+    var M = document.getElementById('ep-modo'), C = document.getElementById('ep-cant'), TP = document.getElementById('ep-tipo');
+    var nf = function (x, d) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: d == null ? 0 : d }).format(x); };
+
+    function render() {
+      var modo = M.value, cantidad = Number(C.value), tipo = TP.value;
+      var big = document.getElementById('ep-big');
+      var ans = document.getElementById('ep-answer');
+      var ing = document.getElementById('ep-ing');
+      var note = document.getElementById('ep-note');
+      var eq = document.getElementById('ep-eq');
+
+      // La etiqueta del campo depende del modo
+      var esHarina = modo === 'harina_disponible';
+      document.getElementById('ep-lcant').textContent = esHarina ? 'Harina disponible' : 'Cantidad de empanadas';
+      document.getElementById('ep-ucant').textContent = esHarina ? 'g' : 'u';
+
+      if (!cantidad || cantidad <= 0) {
+        big.innerHTML = '—';
+        ans.textContent = 'Ingresá una cantidad mayor a cero.';
+        ing.textContent = '—'; note.textContent = '';
+        eq.innerHTML = 'empanadas × gramos de harina por tapa';
+        return;
+      }
+
+      // Mismas constantes que rendimiento-masa-empanadas-cantidad.ts
+      var gPorTapa = tipo === 'casera_frita' ? 28 : 30;
+      var rellenoPorUnidad = 40;
+      var empanadas, harina;
+      if (esHarina) { harina = cantidad; empanadas = Math.floor(harina / gPorTapa); }
+      else { empanadas = cantidad; harina = empanadas * gPorTapa; }
+
+      var grasa = Math.round(harina * (tipo === 'casera_frita' ? 0.20 : 0.30));
+      var agua = Math.round(harina * 0.40);
+      var sal = Math.round(harina * 0.02);
+      var relleno = (empanadas * rellenoPorUnidad) / 1000;
+      var tipoNombre = tipo === 'casera_criolla' ? 'criollas (horno)' : tipo === 'casera_frita' ? 'para freír' : 'con tapas compradas';
+
+      var ingredientes;
+      if (tipo === 'comprada') {
+        ingredientes = Math.ceil(empanadas / 12) + ' paquete(s) de 12 tapas';
+      } else {
+        ingredientes = nf(Math.round(harina)) + ' g harina, ' + nf(grasa) + ' g grasa'
+          + (tipo === 'casera_frita' ? ', 1 huevo' : '') + ', ' + nf(agua) + ' ml agua, ' + nf(sal) + ' g sal';
+      }
+
+      big.innerHTML = nf(empanadas) + ' <small>' + (empanadas === 1 ? 'empanada' : 'empanadas') + '</small>';
+      ans.textContent = esHarina
+        ? 'Con ' + nf(Math.round(harina)) + ' g de harina te salen ' + nf(empanadas) + ' empanadas ' + tipoNombre + '.'
+        : 'Para ' + nf(empanadas) + ' empanadas ' + tipoNombre + ' necesitás ' + nf(Math.round(harina)) + ' g de harina.';
+      ing.textContent = ingredientes;
+      // Bajo 1 kg mostramos gramos: "0 kg" no le sirve a nadie.
+      var rellenoTxt = relleno >= 1 ? nf(relleno, 1) + ' kg' : nf(empanadas * rellenoPorUnidad) + ' g';
+      note.textContent = 'Relleno necesario: ' + rellenoTxt + ' (' + rellenoPorUnidad + ' g por unidad).';
+      eq.innerHTML = esHarina
+        ? nf(Math.round(harina)) + ' g ÷ ' + gPorTapa + ' g por tapa = <b>' + nf(empanadas) + ' empanadas</b>'
+        : nf(empanadas) + ' × ' + gPorTapa + ' g por tapa = <b>' + nf(Math.round(harina)) + ' g de harina</b>';
+    }
+
+    M.addEventListener('change', render);
+    TP.addEventListener('change', render);
+    C.addEventListener('input', render);
+    document.getElementById('ep-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

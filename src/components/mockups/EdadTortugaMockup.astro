@@ -1,0 +1,171 @@
+---
+/**
+ * Flagship "Edad humana de tortuga" — mockup del batch 23-07-2026 (ola 2),
+ * calcado. El script inline replica edad-humana-tortuga.ts con su tabla de
+ * factores por especie (ratio de los primeros 5 años, ratio adulto,
+ * expectativa y madurez sexual).
+ * Diferencia deliberada con el mockup: éste agrupaba en 3 especies; la fórmula
+ * real distingue 7 y es la que manda.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// mediterranea a los 20: 5×1,6 + 15×1,1 = 24,5 → 25
+const humana0 = Math.round(5 * 1.6 + 15 * 1.1);
+---
+
+<main class="page hcm tg">
+  <div class="crumb">Inicio / <a href="/categoria/mascotas">Mascotas</a> / <b>Edad humana de tortuga</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🐢 EDAD Y LONGEVIDAD</span>
+      <h1>¿Qué edad humana tiene tu tortuga?</h1>
+      <p>Una equivalencia orientativa que respeta la enorme diferencia entre especies terrestres y acuáticas.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🐢</div>
+      <div class="hero-stat"><span>Una tortuga de 20 años</span><b>todavía puede ser joven</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="tg-form">
+      <h2>Datos de tu tortuga</h2>
+      <p class="sub">La especie define el ritmo y la longevidad.</p>
+      <div class="grid2">
+        <div class="field">
+          <label for="tg-age">Edad</label>
+          <div class="control"><input id="tg-age" type="number" min="0" step="0.5" value="20" /><span>años</span></div>
+        </div>
+        <div class="field">
+          <label for="tg-sp">Especie</label>
+          <div class="control">
+            <select id="tg-sp">
+              <option value="mediterranea" selected>Mediterránea (griega, mora)</option>
+              <option value="rusa">Rusa (Horsfield)</option>
+              <option value="sulcata">Sulcata</option>
+              <option value="leopardo">Leopardo</option>
+              <option value="trachemys">Trachemys (orejas rojas)</option>
+              <option value="matamata">Matamata</option>
+              <option value="otra-acuatica">Otra acuática</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <button class="cta" type="submit">Conocer su etapa →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Equivalencia aproximada</div>
+        <div class="big" id="tg-big">≈ {humana0} <small>años humanos</small></div>
+        <p class="answer" id="tg-answer">Equivalencia orientativa según el ritmo de maduración de la especie.</p>
+        <div class="result-box">
+          <span>Etapa vital</span>
+          <b id="tg-stage">Adulto joven</b>
+          <small id="tg-note">Expectativa aproximada: 70 años si está bien cuidada.</small>
+        </div>
+      </div>
+      <div class="equation" id="tg-eq">ritmo de maduración por especie</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>La etapa importa más</h2>
+      <p>No todas envejecen a la misma velocidad.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>🌱</i><h3>Juvenil</h3><p>Crecimiento, hábitat y nutrición son determinantes.</p></article>
+      <article class="mini"><i>☀️</i><h3>Adulta</h3><p>UVB, temperatura y dieta sostienen décadas de salud.</p></article>
+      <article class="mini"><i>🩺</i><h3>Madura</h3><p>Cambios de peso, caparazón o actividad requieren revisión.</p></article>
+    </div>
+    <div class="notice">
+      <span>⚖️</span>
+      <div><b>No existe una conversión clínica exacta.</b>Usá la equivalencia para entender etapas, no para diagnosticar salud. Ante dudas, consultá a un veterinario de exóticos.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🐢" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Rangos de maduración y longevidad por grupos de especies.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.tg{--brand:#315744;--accent:#d9e878;--soft:#eef4ee}
+  .hcm.tg .hero{background:linear-gradient(135deg,#315744,#607b4e)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.tg');
+    if (!root) return;
+    var E = document.getElementById('tg-age'), S = document.getElementById('tg-sp');
+    // Tabla idéntica a edad-humana-tortuga.ts
+    var F = {
+      'mediterranea': { primerosAnios: 5, ratioPrimeros: 1.6, ratioAdulto: 1.1, expectativa: 70, madurez: 8 },
+      'rusa': { primerosAnios: 5, ratioPrimeros: 1.8, ratioAdulto: 1.3, expectativa: 50, madurez: 7 },
+      'sulcata': { primerosAnios: 5, ratioPrimeros: 1.2, ratioAdulto: 1.05, expectativa: 85, madurez: 17 },
+      'leopardo': { primerosAnios: 5, ratioPrimeros: 1.2, ratioAdulto: 1.05, expectativa: 70, madurez: 12 },
+      'trachemys': { primerosAnios: 5, ratioPrimeros: 2.0, ratioAdulto: 1.6, expectativa: 25, madurez: 4 },
+      'matamata': { primerosAnios: 5, ratioPrimeros: 1.6, ratioAdulto: 1.3, expectativa: 30, madurez: 7 },
+      'otra-acuatica': { primerosAnios: 5, ratioPrimeros: 1.8, ratioAdulto: 1.4, expectativa: 30, madurez: 5 },
+    };
+    var nf = function (x, d) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: d == null ? 1 : d }).format(x); };
+
+    function render() {
+      var raw = Number(E.value);
+      var big = document.getElementById('tg-big');
+      var ans = document.getElementById('tg-answer');
+      var stage = document.getElementById('tg-stage');
+      var note = document.getElementById('tg-note');
+      var eq = document.getElementById('tg-eq');
+
+      if (isNaN(raw) || E.value === '') {
+        big.innerHTML = '—';
+        ans.textContent = 'Ingresá la edad de tu tortuga en años.';
+        stage.textContent = '—'; note.textContent = '';
+        eq.innerHTML = 'ritmo de maduración por especie';
+        return;
+      }
+      var e = Math.max(0, raw);           // igual que la fórmula real
+      var f = F[S.value] || F['mediterranea'];
+      var humana = e <= f.primerosAnios
+        ? e * f.ratioPrimeros
+        : f.primerosAnios * f.ratioPrimeros + (e - f.primerosAnios) * f.ratioAdulto;
+
+      var pctVida = e / f.expectativa;
+      var etapa = e < 2 ? 'Cría'
+        : e < f.madurez ? 'Juvenil'
+        : pctVida < 0.3 ? 'Adulto joven'
+        : pctVida < 0.7 ? 'Adulto'
+        : pctVida < 0.9 ? 'Adulto mayor' : 'Anciano';
+      var madurez = e >= f.madurez
+        ? 'Ya alcanzó la madurez sexual'
+        : '~' + Math.round(f.madurez - e) + ' años hasta la madurez sexual';
+
+      big.innerHTML = '≈ ' + Math.round(humana) + ' <small>años humanos</small>';
+      ans.textContent = 'Una tortuga de ' + nf(e) + (e === 1 ? ' año' : ' años') + ' de esta especie está en etapa '
+        + etapa.toLowerCase() + '. ' + madurez + '.';
+      stage.textContent = etapa;
+      note.textContent = 'Expectativa aproximada: ' + f.expectativa + ' años si está bien cuidada.';
+      eq.innerHTML = e <= f.primerosAnios
+        ? nf(e) + ' × ' + nf(f.ratioPrimeros, 2) + ' = <b>' + Math.round(humana) + ' años humanos</b>'
+        : '5 × ' + nf(f.ratioPrimeros, 2) + ' + ' + nf(e - 5) + ' × ' + nf(f.ratioAdulto, 2) + ' = <b>' + Math.round(humana) + ' años humanos</b>';
+    }
+
+    E.addEventListener('input', render);
+    S.addEventListener('change', render);
+    document.getElementById('tg-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

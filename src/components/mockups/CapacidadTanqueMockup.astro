@@ -1,0 +1,192 @@
+---
+/**
+ * Flagship "Capacidad de tanque / cisterna" — mockup del batch 23-07-2026
+ * (ola 2), calcado. El script inline replica capacidad-tanque-cisterna.ts:
+ *   cilíndrico  → π × (diámetro/2)² × alto  (cm³) ÷ 1000 = litros
+ *   rectangular → largo × ancho × alto      (cm³) ÷ 1000 = litros
+ *   útil = litros × llenado%   ·   autonomía a 200 L/persona/día
+ * El mockup pedía explícitamente ocultar largo/ancho al elegir cilíndrico:
+ * implementado.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const D = { diam: 130, largo: 200, ancho: 150, alto: 120, fill: 90 };
+const lit0 = (Math.PI * Math.pow(D.diam / 2, 2) * D.alto) / 1000;
+const nf = (x: number, d = 0) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: d }).format(x);
+---
+
+<main class="page hcm tk">
+  <div class="crumb">Inicio / <a href="/categoria/construccion">Construcción</a> / <b>Capacidad de tanque</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">💧 VOLUMEN ÚTIL</span>
+      <h1>¿Cuántos litros entran en tu tanque?</h1>
+      <p>Calculá la capacidad geométrica y el volumen útil según forma, medidas y nivel de llenado.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">💧</div>
+      <div class="hero-stat"><span>Tanque doméstico</span><b>litros y autonomía</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="tk-form">
+      <h2>Medidas interiores</h2>
+      <p class="sub">Usá centímetros y dimensiones útiles.</p>
+      <div class="field">
+        <label for="tk-shape">Forma</label>
+        <div class="control">
+          <select id="tk-shape">
+            <option value="cilindrico" selected>Cilíndrico</option>
+            <option value="rectangular">Rectangular</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" id="tk-f-diam">
+        <label for="tk-diam">Diámetro</label>
+        <div class="control"><input id="tk-diam" type="number" min="1" step="1" value={D.diam} /><span>cm</span></div>
+      </div>
+      <div class="grid2" id="tk-f-rect" hidden>
+        <div class="field">
+          <label for="tk-largo">Largo</label>
+          <div class="control"><input id="tk-largo" type="number" min="1" step="1" value={D.largo} /><span>cm</span></div>
+        </div>
+        <div class="field">
+          <label for="tk-ancho">Ancho</label>
+          <div class="control"><input id="tk-ancho" type="number" min="1" step="1" value={D.ancho} /><span>cm</span></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="tk-alto">Alto</label>
+          <div class="control"><input id="tk-alto" type="number" min="1" step="1" value={D.alto} /><span>cm</span></div>
+        </div>
+        <div class="field">
+          <label for="tk-fill">Nivel de llenado</label>
+          <div class="control"><input id="tk-fill" type="number" min="1" max="100" step="1" value={D.fill} /><span>%</span></div>
+        </div>
+      </div>
+      <button class="cta" type="submit">Calcular litros →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Capacidad útil</div>
+        <div class="big" id="tk-big">{nf(lit0 * 0.9)} <small>litros</small></div>
+        <p class="answer" id="tk-answer">Capacidad útil al 90% de llenado.</p>
+        <div class="result-box">
+          <span>Capacidad geométrica</span>
+          <b id="tk-geo">{nf(lit0)} litros</b>
+          <small id="tk-note">Antes del margen de llenado.</small>
+        </div>
+      </div>
+      <div class="equation" id="tk-eq">π × radio² × alto</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Medí bien antes de calcular</h2>
+      <p>La capacidad nominal puede diferir.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>📐</i><h3>Dimensión interior</h3><p>El espesor de la pared no almacena agua.</p></article>
+      <article class="mini"><i>⭕</i><h3>Radio, no diámetro</h3><p>La fórmula cilíndrica usa la mitad del diámetro.</p></article>
+      <article class="mini"><i>⬇️</i><h3>Dejá margen</h3><p>No cuentes el tanque lleno hasta el borde.</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>El formulario cambia según la forma.</b>Al elegir tanque cilíndrico ocultamos largo y ancho, y sólo pedimos diámetro y alto.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="💧" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Cilindro: π × radio² × alto. Prisma: largo × ancho × alto. 1.000 cm³ = 1 litro. Autonomía a 200 L por persona y día.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.tk{--brand:#15576a;--accent:#84e4e9;--soft:#eaf5f6}
+  .hcm.tk .hero{background:linear-gradient(135deg,#15576a,#25849a)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.tk');
+    if (!root) return;
+    var S = document.getElementById('tk-shape');
+    var n = function (id) { return Number(document.getElementById(id).value); };
+    var nf = function (x, d) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: d == null ? 0 : d }).format(x); };
+
+    function render() {
+      var forma = S.value;
+      // El mockup pide ocultar los campos que no aplican a la forma elegida
+      document.getElementById('tk-f-diam').hidden = forma !== 'cilindrico';
+      document.getElementById('tk-f-rect').hidden = forma !== 'rectangular';
+
+      var big = document.getElementById('tk-big');
+      var ans = document.getElementById('tk-answer');
+      var geo = document.getElementById('tk-geo');
+      var note = document.getElementById('tk-note');
+      var eq = document.getElementById('tk-eq');
+      // Igual que la fórmula real: vacío o 0 cae al 90% por defecto.
+      var llenadoRaw = n('tk-fill');
+      var llenado = llenadoRaw || 90;
+      var llenadoPorDefecto = !llenadoRaw;
+      var alto = n('tk-alto');
+
+      function fail(msg) {
+        big.innerHTML = '—'; ans.textContent = msg;
+        geo.textContent = '—'; note.textContent = '';
+        eq.innerHTML = forma === 'cilindrico' ? 'π × radio² × alto' : 'largo × ancho × alto';
+      }
+      if (llenadoRaw < 0 || llenado > 100) return fail('El nivel de llenado debe estar entre 1% y 100%.');
+
+      var litros, formula;
+      // Mismas cuentas y guardas que capacidad-tanque-cisterna.ts
+      if (forma === 'cilindrico') {
+        var d = n('tk-diam');
+        if (!d || d <= 0) return fail('Ingresá el diámetro en cm.');
+        if (!alto || alto <= 0) return fail('Ingresá la altura en cm.');
+        var r = d / 2;
+        litros = (Math.PI * r * r * alto) / 1000;
+        formula = 'π × ' + nf(r, 1) + '² × ' + nf(alto) + ' ÷ 1.000';
+      } else {
+        var l = n('tk-largo'), a = n('tk-ancho');
+        if (!l || !a || !alto) return fail('Ingresá largo, ancho y alto en cm.');
+        litros = (l * a * alto) / 1000;
+        formula = nf(l) + ' × ' + nf(a) + ' × ' + nf(alto) + ' ÷ 1.000';
+      }
+
+      var util = litros * (llenado / 100);
+      var diasFam4 = util / (4 * 200);
+      var diasFam2 = util / (2 * 200);
+      var noUsado = litros - util;
+
+      big.innerHTML = nf(util) + ' <small>litros</small>';
+      ans.textContent = 'Capacidad útil al ' + nf(llenado) + '% de llenado'
+        + (llenadoPorDefecto ? ' (valor por defecto)' : '') + '. Una familia de 4 aguanta ' + nf(diasFam4, 1)
+        + ' días sin reposición; siendo 2 personas, ' + nf(diasFam2, 1) + ' días.';
+      geo.textContent = nf(litros) + ' litros';
+      note.textContent = 'Antes del margen de llenado · ' + nf(litros / 1000, 3) + ' m³ · quedan ' + nf(noUsado) + ' L sin aprovechar.';
+      eq.innerHTML = formula + ' = <b>' + nf(litros) + ' L</b>';
+    }
+
+    S.addEventListener('change', render);
+    ['tk-diam', 'tk-largo', 'tk-ancho', 'tk-alto', 'tk-fill'].forEach(function (id) {
+      document.getElementById(id).addEventListener('input', render);
+    });
+    document.getElementById('tk-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

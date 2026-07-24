@@ -1,0 +1,173 @@
+---
+/**
+ * Flagship "Costo por kilómetro" — mockup del batch 23-07-2026 (ola 2), calcado.
+ * El script inline replica costo-por-kilometro-auto.ts:
+ *   naftaAnual = km × consumo/100 × precio
+ *   costoAnual = naftaAnual + seguro + patente + service + depreciación
+ *   costoPorKm = costoAnual ÷ km   ·   naftaPorKm = consumo/100 × precio
+ * Diferencia deliberada con el mockup: éste juntaba seguro+patente+service en
+ * un solo campo; la fórmula real los tiene separados y se conservan así.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const D = { km: 15000, cons: 10, fuel: 1200, seguro: 1200000, patente: 400000, service: 600000, depr: 3000000 };
+const anual0 = (D.km * D.cons / 100) * D.fuel + D.seguro + D.patente + D.service + D.depr;
+const money = (x: number) => '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(x);
+---
+
+<main class="page hcm ck">
+  <div class="crumb">Inicio / <a href="/categoria/automotor">Automotor</a> / <b>Costo por kilómetro</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🚗 COSTO TOTAL DEL AUTO</span>
+      <h1>¿Cuánto te cuesta realmente cada kilómetro?</h1>
+      <p>Sumá combustible, gastos fijos y depreciación para comparar viajes, trabajo o alternativas de movilidad.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🚗</div>
+      <div class="hero-stat"><span>No es sólo nafta</span><b>incluye depreciación</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="ck-form">
+      <h2>Costos anuales</h2>
+      <p class="sub">Una estimación completa en pocos datos.</p>
+      <div class="grid2">
+        <div class="field">
+          <label for="ck-km">Kilómetros al año</label>
+          <div class="control"><input id="ck-km" type="number" min="1000" step="100" value={D.km} /><span>km</span></div>
+        </div>
+        <div class="field">
+          <label for="ck-cons">Consumo</label>
+          <div class="control"><input id="ck-cons" type="number" min="0.1" step="0.1" value={D.cons} /><span>L/100 km</span></div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="ck-fuel">Precio del litro</label>
+        <div class="control"><span>$</span><input id="ck-fuel" type="number" min="1" step="any" value={D.fuel} /></div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="ck-seguro">Seguro anual</label>
+          <div class="control"><span>$</span><input id="ck-seguro" type="number" min="0" step="any" value={D.seguro} /></div>
+        </div>
+        <div class="field">
+          <label for="ck-patente">Patente anual</label>
+          <div class="control"><span>$</span><input id="ck-patente" type="number" min="0" step="any" value={D.patente} /></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="ck-service">Mantenimiento anual</label>
+          <div class="control"><span>$</span><input id="ck-service" type="number" min="0" step="any" value={D.service} /></div>
+        </div>
+        <div class="field">
+          <label for="ck-depr">Depreciación anual</label>
+          <div class="control"><span>$</span><input id="ck-depr" type="number" min="0" step="any" value={D.depr} /></div>
+        </div>
+      </div>
+      <button class="cta" type="submit">Calcular costo por km →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Costo estimado</div>
+        <div class="big" id="ck-big">{money(anual0 / D.km)} <small>/km</small></div>
+        <p class="answer" id="ck-answer">Costo total estimado, incluyendo uso y costos fijos anuales.</p>
+        <div class="result-box">
+          <span>Costo anual</span>
+          <b id="ck-anual">{money(anual0)}</b>
+          <small id="ck-note">Equivale a {money(anual0 / 12)} por mes.</small>
+        </div>
+      </div>
+      <div class="equation" id="ck-eq">(combustible + fijos + depreciación) ÷ km</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Los tres bloques del costo</h2>
+      <p>Para no subestimar el uso del auto.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>⛽</i><h3>Variable</h3><p>La nafta crece directamente con los kilómetros.</p></article>
+      <article class="mini"><i>🧾</i><h3>Fijo</h3><p>Seguro y patente se pagan aunque uses poco el auto.</p></article>
+      <article class="mini"><i>📉</i><h3>Invisible</h3><p>La depreciación suele ser el componente más grande.</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>Más kilómetros diluyen los costos fijos.</b>Eso no significa que viajar sea gratis: combustible y desgaste siguen creciendo.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🚗" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Costo/km = combustible anual + costos fijos + depreciación, dividido por km anuales.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.ck{--brand:#243b36;--accent:#d8f066;--soft:#eef3ee}
+  .hcm.ck .hero{background:linear-gradient(135deg,#243b36,#46645b)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.ck');
+    if (!root) return;
+    var ids = ['ck-km', 'ck-cons', 'ck-fuel', 'ck-seguro', 'ck-patente', 'ck-service', 'ck-depr'];
+    var money = function (x) { return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(x); };
+    var n = function (id) { return Number(document.getElementById(id).value); };
+
+    function render() {
+      var km = n('ck-km'), cons = n('ck-cons'), precio = n('ck-fuel');
+      var seguro = n('ck-seguro') || 0, patente = n('ck-patente') || 0;
+      var service = n('ck-service') || 0, depr = n('ck-depr') || 0;
+      var big = document.getElementById('ck-big');
+      var ans = document.getElementById('ck-answer');
+      var anualEl = document.getElementById('ck-anual');
+      var note = document.getElementById('ck-note');
+      var eq = document.getElementById('ck-eq');
+
+      function fail(msg) {
+        big.innerHTML = '—'; ans.textContent = msg;
+        anualEl.textContent = '—'; note.textContent = '';
+        eq.innerHTML = '(combustible + fijos + depreciación) ÷ km';
+      }
+      // Mismas guardas que costo-por-kilometro-auto.ts
+      if (!km || km < 1000) return fail('Ingresá los km anuales (mínimo 1.000).');
+      if (!cons || cons <= 0) return fail('Ingresá el consumo en L/100 km.');
+      if (!precio || precio <= 0) return fail('Ingresá el precio del litro de nafta.');
+
+      var naftaAnual = (km * cons / 100) * precio;
+      var costoAnual = naftaAnual + seguro + patente + service + depr;
+      var costoPorKm = costoAnual / km;
+      var costoMensual = costoAnual / 12;
+      var naftaPorKm = (cons / 100) * precio;
+      var pctNafta = costoAnual > 0 ? (naftaAnual / costoAnual) * 100 : 0;
+      var pctFijos = 100 - pctNafta;
+
+      big.innerHTML = money(costoPorKm) + ' <small>/km</small>';
+      ans.textContent = pctFijos >= pctNafta
+        ? 'Sólo ' + money(naftaPorKm) + '/km es nafta: el ' + Math.round(pctFijos) + '% son gastos fijos que pagás manejes o no.'
+        : 'El ' + Math.round(pctNafta) + '% del costo es nafta (' + money(naftaPorKm) + '/km): el combustible domina tu gasto.';
+      anualEl.textContent = money(costoAnual);
+      note.textContent = 'Equivale a ' + money(costoMensual) + ' por mes · nafta: ' + money(naftaAnual) + ' al año.';
+      eq.innerHTML = '(' + money(naftaAnual) + ' + ' + money(seguro + patente + service + depr) + ') ÷ ' + new Intl.NumberFormat('es-AR').format(km) + ' km = <b>' + money(costoPorKm) + '/km</b>';
+    }
+
+    ids.forEach(function (id) { document.getElementById(id).addEventListener('input', render); });
+    document.getElementById('ck-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

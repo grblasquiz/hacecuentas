@@ -1,0 +1,150 @@
+---
+/**
+ * Flagship "Dividir gastos en pareja" — mockup del batch 23-07-2026 (ola 2),
+ * calcado. El script inline replica split-gastos-pareja.ts:
+ *   pagoA = gasto × ingresoA ÷ (ingresoA + ingresoB)   ·   pagoB = resto
+ *   porcentajes con 2 decimales, montos redondeados a peso.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const D = { total: 600000, a: 800000, b: 400000 };
+const pagoA0 = Math.round(D.total * (D.a / (D.a + D.b)));
+const money = (x: number) => '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(x);
+---
+
+<main class="page hcm gp">
+  <div class="crumb">Inicio / <a href="/categoria/finanzas">Finanzas personales</a> / <b>Gastos en pareja</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🤝 REPARTO PROPORCIONAL</span>
+      <h1>Dividan los gastos sin que pesen distinto</h1>
+      <p>Calculá cuánto aporta cada persona según sus ingresos netos, con porcentajes transparentes.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🤝</div>
+      <div class="hero-stat"><span>Regla</span><b>mismo esfuerzo, no mismo monto</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="gp-form">
+      <h2>Ingresos y gasto común</h2>
+      <p class="sub">Usá ingresos mensuales comparables.</p>
+      <div class="field">
+        <label for="gp-total">Gasto a dividir</label>
+        <div class="control"><span>$</span><input id="gp-total" type="number" min="1" step="any" value={D.total} /></div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="gp-a">Ingreso Persona A</label>
+          <div class="control"><span>$</span><input id="gp-a" type="number" min="0" step="any" value={D.a} /></div>
+        </div>
+        <div class="field">
+          <label for="gp-b">Ingreso Persona B</label>
+          <div class="control"><span>$</span><input id="gp-b" type="number" min="0" step="any" value={D.b} /></div>
+        </div>
+      </div>
+      <button class="cta" type="submit">Calcular aportes →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Aporte de Persona A</div>
+        <div class="big" id="gp-big">{money(pagoA0)}</div>
+        <p class="answer" id="gp-answer">Reparto proporcional según ingresos netos.</p>
+        <div class="result-box">
+          <span>Aporte de Persona B</span>
+          <b id="gp-b-out">{money(D.total - pagoA0)}</b>
+          <small id="gp-note">A aporta 66,67% · B 33,33%.</small>
+        </div>
+        <div class="progress"><i id="gp-bar" style={`width:${(D.a / (D.a + D.b)) * 100}%`}></i></div>
+      </div>
+      <div class="equation" id="gp-eq">gasto × ingreso individual ÷ ingresos totales</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Una conversación, no una sentencia</h2>
+      <p>El cálculo ayuda a acordar.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>⚖️</i><h3>Proporcional</h3><p>Cada persona aporta el mismo porcentaje de su ingreso.</p></article>
+      <article class="mini"><i>🧾</i><h3>Definan qué es común</h3><p>Alquiler puede ser compartido; gastos personales no necesariamente.</p></article>
+      <article class="mini"><i>🔄</i><h3>Revisen cambios</h3><p>Actualicen si varían ingresos o responsabilidades.</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>Justo no siempre significa idéntico.</b>También pueden incorporar tareas de cuidado, deudas u objetivos compartidos.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🤝" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Aporte individual = gasto común × ingreso individual ÷ ingresos totales.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.gp{--brand:#5c3d55;--accent:#ffd477;--soft:#f5eef3}
+  .hcm.gp .hero{background:linear-gradient(135deg,#5c3d55,#8e6076)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.gp');
+    if (!root) return;
+    var T = document.getElementById('gp-total'), A = document.getElementById('gp-a'), B = document.getElementById('gp-b');
+    var money = function (x) { return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(x); };
+    var pct = function (x) { return new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(x); };
+
+    function render() {
+      var gasto = Number(T.value), ia = Number(A.value), ib = Number(B.value);
+      var big = document.getElementById('gp-big');
+      var ans = document.getElementById('gp-answer');
+      var out = document.getElementById('gp-b-out');
+      var note = document.getElementById('gp-note');
+      var eq = document.getElementById('gp-eq');
+      var bar = document.getElementById('gp-bar');
+
+      function fail(msg) {
+        big.innerHTML = '—'; ans.textContent = msg;
+        out.textContent = '—'; note.textContent = '';
+        bar.style.width = '0%';
+        eq.innerHTML = 'gasto × ingreso individual ÷ ingresos totales';
+      }
+      // Mismas guardas que split-gastos-pareja.ts
+      if (isNaN(ia) || ia < 0) return fail('Ingresá un ingreso válido para Persona A.');
+      if (isNaN(ib) || ib < 0) return fail('Ingresá un ingreso válido para Persona B.');
+      if (!gasto || gasto <= 0) return fail('Ingresá el gasto total a dividir.');
+      var total = ia + ib;
+      if (total <= 0) return fail('Al menos una persona debe tener ingreso mayor a 0.');
+
+      var pctA = (ia / total) * 100, pctB = (ib / total) * 100;
+      var pagoA = Math.round(gasto * (ia / total));
+      var pagoB = Math.round(gasto * (ib / total));
+
+      big.innerHTML = money(pagoA);
+      ans.textContent = ia === ib
+        ? 'Como ganan lo mismo, el gasto se parte por la mitad.'
+        : 'Persona ' + (ia > ib ? 'A' : 'B') + ', que gana más, aporta la parte mayor.';
+      out.textContent = money(pagoB);
+      note.textContent = 'A aporta ' + pct(pctA) + '% · B ' + pct(pctB) + '% de sus ingresos combinados.';
+      bar.style.width = Math.max(0, Math.min(100, pctA)) + '%';
+      eq.innerHTML = money(gasto) + ' × ' + money(ia) + ' ÷ ' + money(total) + ' = <b>' + money(pagoA) + '</b>';
+    }
+
+    [T, A, B].forEach(function (el) { el.addEventListener('input', render); });
+    document.getElementById('gp-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

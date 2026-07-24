@@ -1,0 +1,157 @@
+---
+/**
+ * Flagship "Índice de asistencia" — mockup del batch 23-07-2026 (ola 2), calcado.
+ * El script inline replica indice-asistencia-faltas.ts:
+ *   % = asistidas ÷ totales × 100
+ *   clasesMinimas = ceil(totales × mínimo/100)
+ *   faltasMáximas = totales − clasesMinimas
+ *   faltasDisponibles = max(0, faltasMáximas − faltasUsadas)
+ * Guardas reales: totales ≥ 1, asistidas ≥ 0 y ≤ totales, mínimo entre 50 y 100.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const D = { total: 32, att: 26, min: 75 };
+const pct0 = (D.att / D.total) * 100;
+const nf = (x: number, d = 1) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: d }).format(x);
+---
+
+<main class="page hcm as">
+  <div class="crumb">Inicio / <a href="/categoria/educacion">Educación</a> / <b>Índice de asistencia</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🎓 ASISTENCIAS Y FALTAS</span>
+      <h1>¿Cuántas faltas podés tener?</h1>
+      <p>Conocé tu porcentaje actual y cuántas ausencias más admite el mínimo de la materia.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🎓</div>
+      <div class="hero-stat"><span>Ejemplo</span><b>{nf(pct0)}% de asistencia</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="as-form">
+      <h2>Cargá tu cursada</h2>
+      <p class="sub">Usá clases dictadas hasta hoy.</p>
+      <div class="grid2">
+        <div class="field">
+          <label for="as-total">Clases dictadas</label>
+          <div class="control"><input id="as-total" type="number" min="1" step="1" value={D.total} /></div>
+        </div>
+        <div class="field">
+          <label for="as-att">Clases asistidas</label>
+          <div class="control"><input id="as-att" type="number" min="0" step="1" value={D.att} /></div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="as-min">Mínimo requerido <small>entre 50 y 100</small></label>
+        <div class="control"><input id="as-min" type="number" min="50" max="100" step="1" value={D.min} /><span>%</span></div>
+      </div>
+      <button class="cta" type="submit">Revisar mi asistencia →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Asistencia actual</div>
+        <div class="big" id="as-big">{nf(pct0)} <small>%</small></div>
+        <p class="answer" id="as-answer">Dentro del mínimo requerido.</p>
+        <div class="result-box">
+          <span>Faltas que te quedan</span>
+          <b id="as-left">2 faltas</b>
+          <small id="as-note">Ya usaste 6 de 8 permitidas.</small>
+        </div>
+        <div class="progress"><i id="as-bar" style={`width:${Math.min(100, pct0)}%`}></i></div>
+      </div>
+      <div class="equation" id="as-eq">asistidas ÷ dictadas × 100</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Controlá el riesgo antes</h2>
+      <p>No esperes al cierre de la cursada.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>📅</i><h3>Actualizá cada semana</h3><p>El margen cambia cada vez que se dicta una clase.</p></article>
+      <article class="mini"><i>📋</i><h3>Consultá el reglamento</h3><p>Justificadas y no justificadas pueden contar distinto.</p></article>
+      <article class="mini"><i>⚠️</i><h3>No uses el total anual</h3><p>Calculá sobre clases efectivamente dictadas.</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>El porcentaje no reemplaza el reglamento.</b>Mesas, recuperatorios y condiciones de regularidad pueden tener requisitos adicionales.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🎓" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Asistencia = clases asistidas ÷ clases dictadas × 100.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.as{--brand:#244f78;--accent:#9edfff;--soft:#eef4fa}
+  .hcm.as .hero{background:linear-gradient(135deg,#244f78,#3f78a8)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.as');
+    if (!root) return;
+    var T = document.getElementById('as-total'), A = document.getElementById('as-att'), M = document.getElementById('as-min');
+    var nf = function (x, d) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: d == null ? 1 : d }).format(x); };
+
+    function render() {
+      var totales = Number(T.value), asistidas = Number(A.value), minimo = Number(M.value);
+      var big = document.getElementById('as-big');
+      var ans = document.getElementById('as-answer');
+      var left = document.getElementById('as-left');
+      var note = document.getElementById('as-note');
+      var eq = document.getElementById('as-eq');
+      var bar = document.getElementById('as-bar');
+
+      function fail(msg) {
+        big.innerHTML = '—'; ans.textContent = msg;
+        left.textContent = '—'; note.textContent = '';
+        bar.style.width = '0%';
+        eq.innerHTML = 'asistidas ÷ dictadas × 100';
+      }
+      // Mismas guardas que indice-asistencia-faltas.ts
+      if (isNaN(totales) || totales < 1) return fail('Ingresá la cantidad total de clases (mínimo 1).');
+      if (isNaN(asistidas) || asistidas < 0) return fail('Las clases asistidas no pueden ser negativas.');
+      if (asistidas > totales) return fail('Las clases asistidas no pueden superar el total de clases.');
+      if (isNaN(minimo) || minimo < 50 || minimo > 100) return fail('El porcentaje mínimo debe estar entre 50% y 100%.');
+
+      var faltasUsadas = totales - asistidas;
+      var clasesMinimas = Math.ceil(totales * (minimo / 100));
+      var faltasMaximas = totales - clasesMinimas;
+      var faltasDisponibles = Math.max(0, faltasMaximas - faltasUsadas);
+      var pct = (asistidas / totales) * 100;
+
+      big.innerHTML = nf(pct, 1) + ' <small>%</small>';
+      if (pct >= minimo) {
+        ans.textContent = faltasDisponibles === 0
+          ? 'Estás justo en el límite: no podés faltar más.'
+          : 'Dentro del mínimo. Podés faltar ' + faltasDisponibles + (faltasDisponibles === 1 ? ' vez más.' : ' veces más.');
+      } else {
+        ans.textContent = 'Quedaste libre: tu asistencia está por debajo del mínimo requerido.';
+      }
+      left.textContent = faltasDisponibles + (faltasDisponibles === 1 ? ' falta' : ' faltas');
+      note.textContent = 'Ya usaste ' + faltasUsadas + ' de ' + faltasMaximas + ' permitidas con un mínimo del ' + nf(minimo, 0) + '%.';
+      bar.style.width = Math.max(0, Math.min(100, pct)) + '%';
+      eq.innerHTML = asistidas + ' ÷ ' + totales + ' × 100 = <b>' + nf(pct, 1) + '%</b>';
+    }
+
+    [T, A, M].forEach(function (el) { el.addEventListener('input', render); });
+    document.getElementById('as-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>
