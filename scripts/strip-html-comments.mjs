@@ -24,10 +24,29 @@ const DIST_CLIENT = join(__dirname, '..', 'dist', 'client');
 
 const PRESERVE = /^<!--(\[if|astro|#)|^<!\[endif\]/i;
 
+// `walk` es perezoso: entre el readdir de un directorio y el momento en que
+// realmente tocamos el archivo pueden pasar minutos. En ese hueco el HTML puede
+// haber desaparecido — strip-pruned-html borra ~870 archivos justo antes, y con
+// varias sesiones buildeando a la vez dist/ se reescribe debajo nuestro. Un
+// archivo que ya no existe no se publica, así que saltearlo es lo correcto;
+// hacer explotar el build entero por un ENOENT no (bug 2026-07-24).
 function* walk(dir) {
-  for (const entry of readdirSync(dir)) {
+  let entries;
+  try {
+    entries = readdirSync(dir);
+  } catch (err) {
+    if (err.code === 'ENOENT') return;
+    throw err;
+  }
+  for (const entry of entries) {
     const full = join(dir, entry);
-    const st = statSync(full);
+    let st;
+    try {
+      st = statSync(full);
+    } catch (err) {
+      if (err.code === 'ENOENT') continue;
+      throw err;
+    }
     if (st.isDirectory()) yield* walk(full);
     else if (entry.endsWith('.html')) yield full;
   }
@@ -83,16 +102,35 @@ function stripComments(html) {
 
 let files = 0;
 let bytes = 0;
+let vanished = 0;
 
 for (const file of walk(DIST_CLIENT)) {
-  const html = readFileSync(file, 'utf8');
+  let html;
+  try {
+    html = readFileSync(file, 'utf8');
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      vanished += 1;
+      continue;
+    }
+    throw err;
+  }
   const stripped = stripComments(html);
   if (stripped === html) continue;
+  try {
+    writeFileSync(file, stripped);
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      vanished += 1;
+      continue;
+    }
+    throw err;
+  }
   bytes += html.length - stripped.length;
   files += 1;
-  writeFileSync(file, stripped);
 }
 
 console.log(
-  `[strip-html-comments] ${files} HTML limpiados, ${(bytes / 1024).toFixed(0)}KB de comentarios eliminados`,
+  `[strip-html-comments] ${files} HTML limpiados, ${(bytes / 1024).toFixed(0)}KB de comentarios eliminados` +
+    (vanished ? ` (${vanished} desaparecidos durante el barrido — omitidos)` : ''),
 );
