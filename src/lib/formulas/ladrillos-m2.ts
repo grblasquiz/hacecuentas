@@ -26,7 +26,8 @@ const TIPOS: Record<string, { nombre: string; porM2: number; morteroM3: number }
 export function ladrillosM2(i: Inputs): Outputs {
   const m2 = Number(i.m2);
   const tipo = String(i.tipo || 'comun');
-  const desperd = Number(i.desperdicio) || 10; // % por defecto 10 %
+  const desperdRaw = Number(i.desperdicio);
+  const desperd = Number.isFinite(desperdRaw) ? desperdRaw : 10;
   if (!m2 || m2 <= 0) throw new Error('Ingresá los m² de pared');
   if (!TIPOS[tipo]) throw new Error('Tipo de ladrillo no válido');
 

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { calorEspecificoDeltaT } from '../src/lib/formulas/calor-especifico-delta-t';
+import { ladrillosM2 } from '../src/lib/formulas/ladrillos-m2';
 
 describe('regresiones UX del top 100', () => {
   it('no duplica la unidad Joule entre fórmula y output', () => {
@@ -32,5 +33,11 @@ describe('regresiones UX del top 100', () => {
     expect(layout).toContain("focusRedesign && 'calc-focus'");
     expect(css).toMatch(/\.calc-focus\s+\.calc-form\s+\.fields-grid/);
     expect(excluded).not.toMatch(/'calculadora-edad-exacta'/);
+  });
+
+  it('respeta 0% de desperdicio en la calculadora de ladrillos', () => {
+    const result = ladrillosM2({ m2: 10, tipo: 'hueco_12', desperdicio: 0 });
+    expect(result.ladrillos).toBe(160);
+    expect(result.desperdicio).toBe(0);
   });
 });
