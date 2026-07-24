@@ -31,6 +31,7 @@ REPO="/Users/marrod/hacecuentas"
 PY="/Library/Frameworks/Python.framework/Versions/3.13/bin/python3"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/hacecuentas"
 STATE_FILE="$STATE_DIR/indexnow-last-run"   # una línea: "<epoch> <sha_HEAD_enviado>"
+BACKLOG_FILE="$STATE_DIR/indexnow-backlog.txt"  # URLs recortadas por --max, pendientes de envío
 MIN_GAP_HOURS=11                            # ~2 corridas/día; slack vs granularidad del tick
 cd "$REPO" || { echo "❌ no pude cd a $REPO"; exit 1; }
 mkdir -p "$STATE_DIR"
@@ -64,15 +65,21 @@ else
 fi
 
 if [ -z "$BEFORE" ] || [ "$BEFORE" = "$HEAD_SHA" ]; then
-  echo "Sin commits nuevos desde el último envío — nada que enviar."
-  printf '%s %s\n' "$now" "$HEAD_SHA" > "$STATE_FILE"   # marca el intento igual (respeta cadencia)
-  exit 0
+  # Sin commits nuevos — pero si hay backlog pendiente (recortes de --max de
+  # corridas previas) igual hay que drenarlo. Si tampoco hay backlog, no-op.
+  if [ ! -s "$BACKLOG_FILE" ]; then
+    echo "Sin commits nuevos desde el último envío — nada que enviar."
+    printf '%s %s\n' "$now" "$HEAD_SHA" > "$STATE_FILE"   # marca el intento igual (respeta cadencia)
+    exit 0
+  fi
+  echo "Sin commits nuevos, pero hay backlog pendiente → drenando."
+  BEFORE="$HEAD_SHA"   # ventana vacía; el push solo drena el backlog
 fi
 
 echo "Ventana: ${BEFORE:0:8}..${HEAD_SHA:0:8}"
-# --max 40: tope por corrida (protección quota Bing ~1700/mes). En días de campaña
-# masiva el resto queda a merced del recrawl orgánico de Bing (por diseño).
-if "$PY" scripts/indexnow-push.py --git-changed "$BEFORE" "$HEAD_SHA" --max 40; then
+# --max 40: tope por corrida (protección quota Bing ~1700/mes). El excedente NO se
+# pierde: queda en $BACKLOG_FILE y las corridas siguientes lo drenan primero.
+if "$PY" scripts/indexnow-push.py --git-changed "$BEFORE" "$HEAD_SHA" --max 40 --backlog "$BACKLOG_FILE"; then
   printf '%s %s\n' "$now" "$HEAD_SHA" > "$STATE_FILE"
 else
   rc=$?

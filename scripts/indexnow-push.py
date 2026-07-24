@@ -18,6 +18,9 @@ Uso:
   python3 scripts/indexnow-push.py --all                # TODO el sitemap (sitewide, manual)
   python3 scripts/indexnow-push.py /url1 /url2          # URLs específicas
   ... --dry-run                                         # imprime sin enviar
+  ... --max N                                           # tope de URLs por corrida
+  ... --backlog <file>                                  # cola persistente: drena primero,
+                                                        # y lo recortado por --max se guarda ahí
 """
 import json
 import os
@@ -178,6 +181,29 @@ def main():
         except (IndexError, ValueError):
             print('Uso: --max <N> (entero)')
             return 1
+    # --backlog FILE: cola persistente de URLs que quedaron afuera por --max en
+    # corridas anteriores. Se drena PRIMERO (son las más viejas sin avisar) y lo
+    # que esta corrida recorte se persiste ahí — antes se perdía para siempre
+    # (reporte Bing 7-24: 32 URLs nunca enviadas).
+    backlog_file = None
+    if '--backlog' in args:
+        i = args.index('--backlog')
+        try:
+            backlog_file = Path(args[i + 1])
+            del args[i:i + 2]
+        except IndexError:
+            print('Uso: --backlog <archivo>')
+            return 1
+    # Parseo ESTRICTO: cualquier flag desconocido aborta con usage. Antes un arg
+    # tipo `--help` caía en el modo drip default y pusheaba 254 URLs (quema quota).
+    KNOWN_MODES = ('--git-changed', '--changed', '--all')
+    unknown = [a for a in args if a.startswith('-') and a not in KNOWN_MODES]
+    if unknown or (args and args[0].startswith('-') and args[0] not in KNOWN_MODES):
+        print(f'❌ flag desconocido: {" ".join(unknown) or args[0]}')
+        print(__doc__.split('Uso:')[1] if 'Uso:' in (__doc__ or '') else
+              'Uso: indexnow-push.py [--git-changed A B | --changed | --all | /url ...] '
+              '[--max N] [--backlog FILE] [--dry-run]')
+        return 2
     batch = 10000
     if args and args[0] == '--git-changed':
         # Modo STREAMING (CI): sólo las URLs tocadas en este push. Cubre los 14
@@ -187,9 +213,10 @@ def main():
             return 1
         urls = urls_from_git_diff(args[1], args[2])
         batch = 500
-        if not urls:
+        if not urls and backlog_file is None:
             print('Sin cambios de contenido indexable en este push — nada que enviar.')
             return 0
+        # con --backlog NO se corta acá: puede haber URLs pendientes que drenar
     elif args and args[0] == '--changed':
         # Modo por CAMBIOS (§27): lee el change-set producido por
         # scripts/bing-growth/indexnow-manifest.mjs (solo CREATED/UPDATED/DELETED).
@@ -211,15 +238,29 @@ def main():
     else:
         urls = urls_from_sitemap('sitemap-priority.xml')
 
+    # Drenar backlog PRIMERO (URLs recortadas en corridas previas, aún sin avisar).
+    # Se filtran contra el sitemap por si alguna se podó/301eó desde que se encoló.
+    backlog_urls = []
+    if backlog_file is not None and backlog_file.exists():
+        raw = [ln.strip() for ln in backlog_file.read_text(encoding='utf-8').splitlines() if ln.strip()]
+        if raw:
+            indexable = all_sitemap_urls()
+            backlog_urls = [u for u in dict.fromkeys(raw) if u.rstrip('/') in indexable]
+            stale = len(raw) - len(backlog_urls)
+            print(f'[backlog] {len(backlog_urls)} URLs pendientes de corridas previas'
+                  + (f' ({stale} descartadas: ya no están en el sitemap)' if stale else ''))
+    urls = list(dict.fromkeys(backlog_urls + urls))
+
     if not urls:
         print('No hay URLs para pushear')
-        return 0 if (args and args[0] == '--changed') else 1
+        return 0 if (args and args[0] in ('--changed', '--git-changed')) else 1
 
+    dropped = []
     if max_urls is not None and len(urls) > max_urls:
         dropped = urls[max_urls:]
         urls = urls[:max_urls]
-        print(f'⚠️ --max {max_urls}: {len(urls)} URLs (las más recientes) se envían, '
-              f'{len(dropped)} descartadas por tope de quota (Bing las recrawlea):')
+        dest = f'quedan en backlog ({backlog_file})' if backlog_file else 'descartadas (Bing las recrawlea)'
+        print(f'⚠️ --max {max_urls}: {len(urls)} URLs se envían, {len(dropped)} {dest}:')
         for u in dropped[:20]:
             print(f'  ↩ tope: {u}')
         if len(dropped) > 20:
@@ -227,6 +268,7 @@ def main():
 
     # IndexNow: lotes (500 en los modos por cambios, 10000 en el resto)
     BATCH = batch
+    all_ok = True
     for i in range(0, len(urls), BATCH):
         chunk = urls[i:i + BATCH]
         if dry_run:
@@ -235,8 +277,18 @@ def main():
                 print(f'  {u}')
             continue
         print(f'Pusheando {len(chunk)} URLs...')
-        push(chunk)
-    return 0
+        if not push(chunk):
+            all_ok = False
+
+    # Persistir backlog: si el push falló, se re-encola TODO (enviadas + recortadas)
+    # para no perder nada; si salió bien, queda solo lo recortado.
+    if backlog_file is not None and not dry_run:
+        pending = dropped if all_ok else list(dict.fromkeys(urls + dropped))
+        backlog_file.parent.mkdir(parents=True, exist_ok=True)
+        backlog_file.write_text('\n'.join(pending) + ('\n' if pending else ''), encoding='utf-8')
+        if pending:
+            print(f'[backlog] {len(pending)} URLs encoladas en {backlog_file}')
+    return 0 if all_ok else 1
 
 
 if __name__ == '__main__':
