@@ -1,0 +1,334 @@
+<script is:inline>
+  (() => {
+    const container = document.querySelector('.calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"]');
+    if (!container || container.dataset.subeUxReady === 'true') return;
+    container.dataset.subeUxReady = 'true';
+
+    const form = container.querySelector('.calc-form');
+    if (!form) return;
+
+    const groups = form.querySelectorAll('.input-group');
+    groups.forEach((group, index) => {
+      group.classList.add(`sube-step-${index + 1}`);
+    });
+
+    const overview = document.createElement('section');
+    overview.className = 'sube-route-overview';
+    overview.setAttribute('aria-live', 'polite');
+    overview.innerHTML = `
+      <div class="sube-route-head">
+        <span><strong>Tu viaje en un vistazo</strong><small>Un recorrido; la calculadora lo repite por día y por mes.</small></span>
+        <span class="sube-live-dot">En vivo</span>
+      </div>
+      <div class="sube-route-line" data-sube-route></div>
+      <div class="sube-route-meta">
+        <span data-sube-frequency></span>
+        <span data-sube-benefit></span>
+      </div>
+    `;
+    form.prepend(overview);
+
+    const compactLabel = (select) => {
+      if (!select || select.value === 'ninguno') return null;
+      const raw = select.options[select.selectedIndex]?.textContent || '';
+      return raw
+        .replace(/\s*\([^)]*\)\s*$/, '')
+        .replace('Colectivo nacional · ', 'Nacional · ')
+        .replace('Colectivo CABA · ', 'CABA · ')
+        .replace('Colectivo PBA · ', 'PBA · ')
+        .replace('Tren AMBA · ', 'Tren · ')
+        .replace('tarifa progresiva por cantidad de viajes', 'tarifa progresiva')
+        .trim();
+    };
+    const transportIcon = (value) => {
+      if (value.startsWith('tren')) return '🚆';
+      if (value === 'subte' || value === 'premetro') return '🚇';
+      return '🚌';
+    };
+
+    const update = () => {
+      const route = overview.querySelector('[data-sube-route]');
+      const frequency = overview.querySelector('[data-sube-frequency]');
+      const benefit = overview.querySelector('[data-sube-benefit]');
+      const selects = ['tramo1', 'tramo2', 'tramo3']
+        .map((id) => form.querySelector(`#${id}`))
+        .filter(Boolean);
+      const active = selects
+        .map((select) => ({ select, label: compactLabel(select) }))
+        .filter((item) => item.label);
+
+      route.innerHTML = active.map((item, index) => `
+        ${index ? '<span class="sube-route-arrow" aria-hidden="true">→</span>' : ''}
+        <span class="sube-route-stop">
+          <i aria-hidden="true">${transportIcon(item.select.value)}</i>
+          <b>${item.label}</b>
+        </span>
+      `).join('');
+
+      const days = form.querySelector('#diasViajeMes')?.value || '—';
+      const routes = form.querySelector('#recorridosPorDia')?.value || '—';
+      frequency.textContent = `📅 ${routes} recorridos por día · ${days} días`;
+
+      const profile = form.querySelector('#perfilTarifario');
+      const red = form.querySelector('#usarRedSube');
+      const profileText = profile?.options[profile.selectedIndex]?.textContent || 'SUBE registrada';
+      const redText = red && !red.closest('.field')?.hidden && red.value === 'si' && active.length > 1
+        ? ' · RED SUBE activa'
+        : '';
+      benefit.textContent = `💳 ${profileText}${redText}`;
+    };
+
+    form.addEventListener('input', update);
+    form.addEventListener('change', update);
+    container.querySelectorAll('.preset-btn').forEach((button) => {
+      button.addEventListener('click', () => requestAnimationFrame(update));
+    });
+    update();
+
+    const submitText = form.querySelector('.btn-primary .btn-content');
+    if (submitText) {
+      const textNode = Array.from(submitText.childNodes).find((node) => node.nodeType === Node.TEXT_NODE);
+      if (textNode) textNode.textContent = ' Actualizar cálculo';
+    }
+  })();
+</script>
+
+<style is:global>
+  .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] {
+    --sube-blue: #1473e6;
+    --sube-sky: #eaf5ff;
+    --sube-green: #0b8f67;
+  }
+
+  .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] > .presets {
+    margin-bottom: 0;
+    padding: 1.25rem 1.75rem 1rem;
+    border-bottom: 0;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--sube-blue) 8%, var(--bg-card)), var(--bg-card));
+  }
+
+  .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] .presets-title {
+    color: var(--text);
+    font-weight: 750;
+    font-size: 0.875rem;
+  }
+
+  .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] .preset-btn {
+    background: var(--bg-card);
+    border-color: color-mix(in srgb, var(--sube-blue) 24%, var(--border));
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+  }
+
+  .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] .preset-btn:hover,
+  .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] .preset-btn.active {
+    background: var(--sube-blue);
+    border-color: var(--sube-blue);
+    color: #fff;
+  }
+
+  .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] > .calc-form {
+    padding-top: 1rem;
+  }
+
+  .sube-route-overview {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid color-mix(in srgb, var(--sube-blue) 28%, var(--border));
+    border-radius: 16px;
+    background:
+      radial-gradient(circle at 100% 0, color-mix(in srgb, var(--sube-blue) 13%, transparent), transparent 38%),
+      color-mix(in srgb, var(--sube-blue) 5%, var(--bg-card));
+  }
+
+  .sube-route-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.875rem;
+  }
+
+  .sube-route-head strong,
+  .sube-route-head small {
+    display: block;
+  }
+
+  .sube-route-head strong {
+    color: var(--text);
+    font-size: 0.9375rem;
+  }
+
+  .sube-route-head small {
+    margin-top: 0.2rem;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    line-height: 1.35;
+  }
+
+  .sube-live-dot {
+    flex: 0 0 auto;
+    padding: 0.25rem 0.55rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--sube-green) 12%, var(--bg-card));
+    color: var(--sube-green);
+    font-size: 0.6875rem;
+    font-weight: 750;
+  }
+
+  .sube-route-line {
+    display: flex;
+    align-items: stretch;
+    gap: 0.45rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .sube-route-line::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sube-route-stop {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: max-content;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--sube-blue) 22%, var(--border));
+    border-radius: 12px;
+    background: var(--bg-card);
+  }
+
+  .sube-route-stop i {
+    display: grid;
+    place-items: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 9px;
+    background: var(--sube-sky);
+    font-style: normal;
+  }
+
+  .sube-route-stop b {
+    width: 10.5rem;
+    overflow: hidden;
+    color: var(--text);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sube-route-arrow {
+    align-self: center;
+    color: var(--sube-blue);
+    font-weight: 800;
+  }
+
+  .sube-route-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+  }
+
+  .sube-route-meta span {
+    padding: 0.32rem 0.55rem;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--text) 5%, var(--bg-card));
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] .input-group {
+    position: relative;
+    overflow: hidden;
+    padding: 1.1rem 1.1rem 0.55rem;
+    border-radius: 16px;
+  }
+
+  .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] .input-group::after {
+    position: absolute;
+    top: -0.4rem;
+    right: 0.7rem;
+    color: color-mix(in srgb, var(--sube-blue) 8%, transparent);
+    font-size: 4.5rem;
+    font-weight: 900;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] .sube-step-1::after { content: "1"; }
+  .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] .sube-step-2::after { content: "2"; }
+  .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] .sube-step-3::after { content: "3"; }
+
+  .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] .sube-step-2 {
+    border-color: color-mix(in srgb, var(--sube-blue) 30%, var(--border));
+    background: color-mix(in srgb, var(--sube-blue) 3.5%, var(--bg-card));
+  }
+
+  .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] .sube-step-3 {
+    border-color: color-mix(in srgb, var(--sube-green) 25%, var(--border));
+    background: color-mix(in srgb, var(--sube-green) 3%, var(--bg-card));
+  }
+
+  .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] .input-group-header {
+    color: var(--text);
+    font-size: 0.78rem;
+  }
+
+  .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] .input-group-header::before {
+    display: none;
+  }
+
+  .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] select {
+    min-height: 48px;
+  }
+
+  .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] .advanced-toggle {
+    margin-top: 0.25rem;
+  }
+
+  @media (max-width: 640px) {
+    .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] > .presets {
+      margin-left: -1.25rem;
+      margin-right: -1.25rem;
+      padding-left: 1.25rem;
+      padding-right: 1.25rem;
+    }
+
+    .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] .presets-list {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      margin-right: -1.25rem;
+      padding-right: 1.25rem;
+      padding-bottom: 0.25rem;
+      scrollbar-width: none;
+    }
+
+    .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] .presets-list::-webkit-scrollbar {
+      display: none;
+    }
+
+    .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] .preset-btn {
+      flex: 0 0 auto;
+    }
+
+    .sube-route-head small {
+      max-width: 16rem;
+    }
+
+    .sube-route-line {
+      margin-right: -1rem;
+      padding-right: 1rem;
+    }
+
+    .sube-route-stop b {
+      width: 7.5rem;
+    }
+
+    .calc-container[data-slug="calculadora-gasto-tarjeta-sube-mensual"] .input-group {
+      padding: 1rem 0.875rem 0.4rem;
+    }
+  }
+</style>

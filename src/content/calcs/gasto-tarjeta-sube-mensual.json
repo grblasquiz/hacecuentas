@@ -9,6 +9,7 @@
   "audience": "AR",
   "icon": "💳",
   "formulaId": "gasto-tarjeta-sube-mensual",
+  "autoCalculate": true,
   "seoKeywords": [
     "calculadora SUBE",
     "cuanto cargar SUBE",
@@ -32,6 +33,66 @@
     "Calcular la tarifa progresiva del subte según la cantidad mensual de viajes.",
     "Ver qué tramos nacionales quedan cubiertos por el beneficio asociado al CUD."
   ],
+  "presets": {
+    "title": "Elegí un viaje frecuente o armá el tuyo",
+    "items": [
+      {
+        "label": "🚌 Solo colectivo",
+        "values": {
+          "tramo1": "nacional_0_3",
+          "tramo2": "ninguno",
+          "tramo3": "ninguno",
+          "perfilTarifario": "registrada",
+          "usarRedSube": "no"
+        },
+        "note": "Colectivo nacional mínimo, ida y vuelta, sin combinación."
+      },
+      {
+        "label": "🚌 + 🚆 Colectivo y tren",
+        "values": {
+          "tramo1": "nacional_0_3",
+          "tramo2": "tren_1",
+          "tramo3": "ninguno",
+          "perfilTarifario": "registrada",
+          "usarRedSube": "si"
+        },
+        "note": "Aplica 50% de RED SUBE al segundo tramo."
+      },
+      {
+        "label": "🚇 Solo subte",
+        "values": {
+          "tramo1": "subte",
+          "tramo2": "ninguno",
+          "tramo3": "ninguno",
+          "perfilTarifario": "registrada",
+          "usarRedSube": "no"
+        },
+        "note": "La tarifa baja automáticamente según los viajes del mes."
+      },
+      {
+        "label": "🚆 + 🚇 Tren y subte",
+        "values": {
+          "tramo1": "tren_1",
+          "tramo2": "subte",
+          "tramo3": "ninguno",
+          "perfilTarifario": "registrada",
+          "usarRedSube": "si"
+        },
+        "note": "Recorrido combinado dentro de las dos horas."
+      },
+      {
+        "label": "💙 Tarifa Social",
+        "values": {
+          "tramo1": "nacional_0_3",
+          "tramo2": "tren_1",
+          "tramo3": "ninguno",
+          "perfilTarifario": "tarifa_social",
+          "usarRedSube": "si"
+        },
+        "note": "Tarifa Social Federal acumulada con RED SUBE."
+      }
+    ]
+  },
   "fields": [
     {
       "id": "diasViajeMes",
@@ -43,7 +104,9 @@
       "max": 31,
       "step": 1,
       "required": true,
-      "help": "Un mes laboral típico tiene 20 a 23 días."
+      "help": "Un mes laboral típico tiene 20 a 23 días.",
+      "group": "1 · Tu rutina",
+      "groupIcon": "📅"
     },
     {
       "id": "recorridosPorDia",
@@ -55,7 +118,8 @@
       "max": 10,
       "step": 1,
       "required": true,
-      "help": "Usá 2 para ida y vuelta. Cada recorrido puede incluir hasta 3 transportes."
+      "help": "Usá 2 para ida y vuelta. Cada recorrido puede incluir hasta 3 transportes.",
+      "group": "1 · Tu rutina"
     },
     {
       "id": "tramo1",
@@ -63,6 +127,8 @@
       "type": "select",
       "default": "nacional_0_3",
       "required": true,
+      "group": "2 · Armá un recorrido",
+      "groupIcon": "📍",
       "options": [
         { "value": "nacional_0_3", "label": "Colectivo nacional · 0 a 3 km ($742,81)" },
         { "value": "nacional_3_6", "label": "Colectivo nacional · 3 a 6 km ($861,66)" },
@@ -89,8 +155,9 @@
       "id": "tramo2",
       "label": "Segundo transporte / combinación",
       "type": "select",
-      "default": "tren_1",
+      "default": "ninguno",
       "required": true,
+      "group": "2 · Armá un recorrido",
       "options": [
         { "value": "ninguno", "label": "No hago combinación" },
         { "value": "nacional_0_3", "label": "Colectivo nacional · 0 a 3 km ($742,81)" },
@@ -120,6 +187,31 @@
       "type": "select",
       "default": "ninguno",
       "required": true,
+      "group": "2 · Armá un recorrido",
+      "showWhen": {
+        "field": "tramo2",
+        "in": [
+          "nacional_0_3",
+          "nacional_3_6",
+          "nacional_6_12",
+          "nacional_12_27",
+          "nacional_27_mas",
+          "caba_0_3",
+          "caba_3_6",
+          "caba_6_12",
+          "caba_12_27",
+          "pba_0_3",
+          "pba_3_6",
+          "pba_6_12",
+          "pba_12_27",
+          "pba_27_mas",
+          "tren_1",
+          "tren_2",
+          "tren_3",
+          "subte",
+          "premetro"
+        ]
+      },
       "options": [
         { "value": "ninguno", "label": "No tengo un tercer tramo" },
         { "value": "nacional_0_3", "label": "Colectivo nacional · 0 a 3 km ($742,81)" },
@@ -149,6 +241,8 @@
       "type": "select",
       "default": "registrada",
       "required": true,
+      "group": "3 · Beneficios y saldo",
+      "groupIcon": "💳",
       "options": [
         { "value": "registrada", "label": "SUBE registrada a mi nombre" },
         { "value": "sin_registrar", "label": "SUBE sin registrar" },
@@ -163,6 +257,15 @@
       "type": "select",
       "default": "si",
       "required": true,
+      "group": "3 · Beneficios y saldo",
+      "showWhen": {
+        "field": "perfilTarifario",
+        "in": [
+          "registrada",
+          "tarifa_social",
+          "cud"
+        ]
+      },
       "options": [
         { "value": "si", "label": "Sí, combino dentro de las 2 horas" },
         { "value": "no", "label": "No / pasan más de 2 horas" }
@@ -178,7 +281,9 @@
       "min": 0,
       "max": 40000,
       "step": 100,
-      "required": true
+      "required": true,
+      "group": "3 · Beneficios y saldo",
+      "prefix": "$"
     },
     {
       "id": "margenExtra",
@@ -190,11 +295,33 @@
       "max": 100,
       "step": 5,
       "required": true,
-      "help": "10% suele cubrir uno o dos días adicionales."
+      "help": "10% suele cubrir uno o dos días adicionales.",
+      "advanced": true,
+      "group": "Ajuste fino",
+      "groupIcon": "⚙️",
+      "suffix": "%"
     }
   ],
   "outputs": [
-    { "id": "cargaRecomendada", "label": "Cuánto cargar ahora", "format": "currency", "primary": true },
+    {
+      "id": "cargaRecomendada",
+      "label": "Cargá para cubrir todo el mes",
+      "format": "currency",
+      "primary": true,
+      "contextChip": "Carga recomendada",
+      "ctas": [
+        {
+          "label": "Registrar mi SUBE",
+          "icon": "✓",
+          "href": "https://www.argentina.gob.ar/sube"
+        },
+        {
+          "label": "Ver guía completa",
+          "icon": "📘",
+          "href": "/blog/tarjeta-sube-guia-completa-2026"
+        }
+      ]
+    },
     { "id": "gastoMensual", "label": "Gasto mensual estimado", "format": "currency" },
     { "id": "costoPorRecorrido", "label": "Costo por recorrido completo", "format": "currency" },
     { "id": "gastoDiario", "label": "Gasto por día", "format": "currency" },
@@ -224,8 +351,33 @@
       "En 22 días: $1.865,62 × 22 = **$41.043,64**.",
       "Con 10% de margen: $45.148,00. Menos $5.000 de saldo = **$40.148 para cargar**."
     ],
-    "result": "La carga recomendada es de aproximadamente **$40.148**. Como cada carga electrónica admite hasta $30.000, tendrías que dividirla en dos operaciones."
+    "result": "La carga recomendada es de aproximadamente **$40.148**. Como cada carga electrónica admite hasta $30.000, tendrías que dividirla en dos operaciones.",
+    "primaryValue": "$40.148"
   },
+  "dynamicScenarios": [
+    {
+      "label": "Sin registrar",
+      "overrides": {
+        "perfilTarifario": "sin_registrar",
+        "usarRedSube": "no"
+      },
+      "detail": "Lo que necesitarías cargar si la tarjeta no estuviera registrada."
+    },
+    {
+      "label": "Con Tarifa Social",
+      "overrides": {
+        "perfilTarifario": "tarifa_social",
+        "usarRedSube": "si"
+      },
+      "detail": "Estimación acumulando Tarifa Social Federal y RED SUBE."
+    }
+  ],
+  "changelog": [
+    {
+      "date": "2026-07-24",
+      "change": "Nuevo flujo por pasos, viajes frecuentes, mapa del recorrido y comparación de beneficios."
+    }
+  ],
   "explanation": "## Qué calcula esta herramienta\n\nLa calculadora arma un recorrido de hasta tres transportes y lo repite la cantidad de veces que indicás por día y por mes. Usa los cuadros tarifarios oficiales del AMBA vigentes desde julio de 2026.\n\n```text\nCosto del recorrido = tramo 1 + tramo 2 + tramo 3\nGasto diario = costo del recorrido × recorridos diarios\nGasto mensual = gasto diario × días de viaje\nCarga recomendada = gasto mensual × (1 + margen %) − saldo actual\n```\n\n## Tarifas base de julio 2026\n\n| Transporte | Tramo | SUBE registrada | Sin registrar |\n|---|---:|---:|---:|\n| Colectivo nacional | 0-3 km | $742,81 | $1.485,62 |\n| Colectivo nacional | más de 27 km | $1.337,06 | $2.674,12 |\n| Colectivo CABA | 0-3 km | $820,99 | $1.305,37 |\n| Colectivo PBA | 0-3 km | $1.063,98 | $2.127,96 |\n| Tren AMBA | sección 1 | $380 | $760 |\n| Tren AMBA | sección 3 | $660 | $1.320 |\n| Subte | viajes 1-20 | $1.621 | $2.528,76 |\n| Premetro | tarifa general | $567,35 | $885,07 |\n\nLa lista desplegable incluye todos los tramos oficiales, no sólo los mínimos y máximos de esta tabla.\n\n## Cómo funciona RED SUBE\n\nSi combinás servicios adheridos dentro de las dos horas, usando la misma SUBE registrada o medio de pago habilitado:\n\n1. Primer viaje: tarifa completa.\n2. Segundo viaje: 50% de descuento.\n3. Tercer viaje y siguientes: 75% de descuento.\n\nEl descuento máximo por combinación equivale a la tarifa mínima del colectivo nacional: **$714** según la información oficial vigente. Los colectivos provinciales de Buenos Aires no reciben el descuento RED SUBE, aunque pueden formar parte de una secuencia mixta. Dos viajes consecutivos en subte tampoco se consideran combinación.\n\n## Tarifa Social Federal\n\nLa Tarifa Social aplica un **55% de descuento** sobre la tarifa de referencia en los servicios donde el beneficio está vigente. Cuando también corresponde RED SUBE, primero se calcula el descuento por combinación y después la Tarifa Social. Por eso, en servicios elegibles, el ahorro acumulado llega a 77,5% en la primera combinación y 88,75% desde la segunda.\n\n## Beneficio asociado al CUD\n\nDesde el 19 de junio de 2026, las personas con CUD pueden asociarlo voluntariamente a la SUBE para tener **100% de descuento en colectivos de jurisdicción nacional y trenes**. El CUD físico continúa siendo válido. La calculadora pone en cero sólo esos servicios: los transportes locales mantienen sus propias reglas.\n\n## Descuento progresivo del subte\n\nLa tarifa del subte baja según la cantidad de viajes acumulados en el mes:\n\n| Viajes mensuales | SUBE registrada |\n|---:|---:|\n| 1 a 20 | $1.621,00 |\n| 21 a 30 | $1.296,80 |\n| 31 a 40 | $1.134,70 |\n| 41 o más | $972,60 |\n\nLa herramienta cuenta cuántas veces elegiste subte dentro del recorrido mensual y aplica automáticamente el escalón correspondiente.\n\n## Límites de carga y saldo\n\nLa SUBE admite hasta **$40.000 de saldo**. Cada carga electrónica puede ser de hasta **$30.000**; si necesitás más, hacé varias operaciones. En la tarjeta física, una carga electrónica debe acreditarse desde la app SUBE, una Terminal Automática o Carga a Bordo. La SUBE Digital no necesita acreditación.\n\n## Alcance del resultado\n\nEs una estimación para planificar gastos. Las tarifas locales, boletos estudiantiles, gratuidades provinciales y recorridos fuera del AMBA pueden tener otros valores. Verificá el precio y los beneficios en el sitio oficial antes de cargar.",
   "faq": [
     {
