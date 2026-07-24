@@ -4,6 +4,7 @@ export const prerender = true;
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
+import { createLocaleCalcUrl } from '../../lib/locale-calc-url';
 
 // Catálogo completo de España (paridad con /calculadoras de AR). Lista TODAS las
 // calcs que se sirven en /es/* — las localizadas (calcs-es/) + las de calcs/ con
@@ -15,15 +16,12 @@ const mainModules = import.meta.glob<any>('../../content/calcs/*.json', { eager:
 const localeCalcs = Object.values(localeModules)
   .map((m: any) => m.default || m)
   .filter((c: any) => c && c.slug && c.h1 && !c.noindex);
-const localeSlugs = new Set(localeCalcs.map((c: any) => c.slug));
 const audienceCalcs = Object.values(mainModules)
   .map((m: any) => m.default || m)
   .filter((c: any) => c && c.slug && c.h1 && !c.noindex && c.audience === 'ES');
 const allCalcs = [...localeCalcs, ...audienceCalcs];
 
-function calcUrl(c: any): string {
-  return localeSlugs.has(c.slug) ? `/es/${c.slug}` : `/${c.slug}`;
-}
+const calcUrl = createLocaleCalcUrl('es', localeCalcs);
 
 const CAT: Record<string, { label: string; color: string; icon: string }> = {
   impuestos:        { label: 'Impuestos',      color: '#7c3aed', icon: '🧾' },

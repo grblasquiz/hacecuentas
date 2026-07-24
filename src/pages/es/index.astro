@@ -8,6 +8,7 @@ import ScrollToTop from '../../components/ScrollToTop.astro';
 import PillarHub from '../../components/PillarHub.astro';
 import { HOME_HREFLANG } from '../../lib/hreflang';
 import { canDistributeCalc } from '../../lib/content-policy';
+import { createLocaleCalcUrl } from '../../lib/locale-calc-url';
 
 // calcs-es/ + calcs/ con audience=ES
 const localeModules = import.meta.glob<any>('../../content/calcs-es/*.json', { eager: true });
@@ -19,10 +20,7 @@ const audienceFiltered = Object.values(mainModules)
 const calcs = [...localeCalcs, ...audienceFiltered];
 
 // Detectar si una calc viene del bucket locale (calcs-es/) o de calcs/ → URL distinto
-const localeSlugs = new Set(localeCalcs.map((c: any) => c.slug));
-function calcUrl(c: any): string {
-  return localeSlugs.has(c.slug) ? `/es/${c.slug}` : `/${c.slug}`;
-}
+const calcUrl = createLocaleCalcUrl('es', localeCalcs);
 
 const byCategory: Record<string, any[]> = {};
 calcs.forEach((c) => {
