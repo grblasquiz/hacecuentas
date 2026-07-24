@@ -24,4 +24,13 @@ describe('regresiones UX del top 100', () => {
     expect(css).toMatch(/\.calc-v2\s+\.live-econ\s*\{[\s\S]*?max-width:\s*100%/);
     expect(css).toMatch(/:where\(pre\)\s*\{[^}]*max-width:\s*100%/);
   });
+
+  it('activa el rediseño focus sin excluir edad exacta', () => {
+    const layout = readFileSync('src/components/CalcLayoutV2.astro', 'utf8');
+    const css = readFileSync('src/styles/calc-redesign.css', 'utf8');
+    const excluded = readFileSync('src/lib/redesign-exclude.ts', 'utf8');
+    expect(layout).toContain("focusRedesign && 'calc-focus'");
+    expect(css).toMatch(/\.calc-focus\s+\.calc-form\s+\.fields-grid/);
+    expect(excluded).not.toMatch(/'calculadora-edad-exacta'/);
+  });
 });

@@ -76,6 +76,18 @@ const { calc, dataAsOf, lang = '' } = Astro.props as Props;
 // flagship-top que se harán bespoke a mano (ver redesign-exclude.ts). El widget
 // y el CSS se activan con la clase `.calc-v3` en el <article> + el prop redesign.
 const redesign = !isBespokeTop(calc.slug);
+const focusRedesign = new Set([
+  'calculadora-edad-exacta',
+  'calculadora-interes-compuesto',
+  'calculadora-conversor-fahrenheit-a-celsius-horno',
+  'calculadora-resistencia-codigo-colores-4-5-bandas',
+  'calculadora-edad-perro-anos-humanos',
+  'calculadora-edad-gato-humano-formula-anos',
+  'calculadora-fecha-probable-parto',
+  'calculadora-pintura-paredes-habitacion-litros',
+  'calculadora-contador-de-palabras-y-caracteres',
+  'calculadora-talla-sosten-corpino',
+]).has(calc.slug);
 const hasFinancialClusterUX = [
   'calculadora-tiempo-para-ahorrar-meta',
   'calculadora-cancelacion-anticipada-prestamo',
@@ -500,7 +512,10 @@ const editorialHtml = _isReviewed
     : `Calculadora de ${catLabel.toLowerCase()} con fórmula verificada automáticamente${_firstSourceName ? ` contra ${_firstSourceName}` : ' contra las fuentes citadas'}, según nuestra ${_polLink} y ${_metLink}.`);
 ---
 
-<article class:list={['calc-page', 'calc-v2', redesign && 'calc-v3']}>
+<article
+  class:list={['calc-page', 'calc-v2', redesign && 'calc-v3', focusRedesign && 'calc-focus']}
+  data-calc-slug={calc.slug}
+>
   <!-- Breadcrumb -->
   <nav class="v2-breadcrumb" aria-label={L.ariaBreadcrumb} style="font-size:13px;color:var(--v2-muted);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
     <a href={linkPrefix || "/"} style="color:inherit;">{L.home}</a><span aria-hidden="true" style="color:#cbd5e1;">/</span>

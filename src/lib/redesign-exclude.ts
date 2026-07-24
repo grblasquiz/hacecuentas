@@ -23,7 +23,7 @@ export const BESPOKE_TOP_SLUGS: ReadonlySet<string> = new Set([
   'calculadora-actualizacion-alquiler-icl',
   'calculadora-actualizacion-inflacion-ipc',
   'calculadora-impuesto-ganancias-sueldo',
-  'dias-entre-dos-fechas',  'calculadora-edad-exacta',
+  'dias-entre-dos-fechas',
   'calculadora-liquidacion-final-renuncia',
   'calculadora-art-indemnizacion-tabla-incapacidad-laboral-permanente',
   'calculadora-costo-impresion-3d-pieza',
