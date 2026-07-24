@@ -55,8 +55,8 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       <div class="cf-deco-card">
         <span class="cf-deco-badge">$</span>
         <div class="cf-deco-card__label">Medio aguinaldo</div>
-        <div class="cf-deco-card__value" id="ag-deco-val">{fmtAr(init.neto)}</div>
-        <div class="cf-deco-card__note">Estimación neta con tus datos</div>
+        <div class="cf-deco-card__value" id="ag-deco-val">—</div>
+        <div class="cf-deco-card__note" id="ag-deco-note">Completá tus datos para calcular</div>
       </div>
       <div class="cf-deco-sub"><strong>Próxima cuota</strong> <span class="cf-deco-chip" id="ag-deco-cuota">18 diciembre</span></div>
     </div>
@@ -74,7 +74,7 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
 
       <div class="cf-field">
         <div class="cf-field__row"><label class="cf-label" for="ag-sueldo">Mejor sueldo bruto del semestre</label><span class="cf-hint">Básico + remunerativos</span></div>
-        <div class="ag-money"><span class="ag-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="ag-sueldo" value="1.200.000" /></div>
+        <div class="ag-money"><span class="ag-money__sign">$</span><input class="cf-input cf-input--money" type="text" inputmode="numeric" id="ag-sueldo" placeholder="Ej.: 1.200.000" autocomplete="off" /></div>
         <p class="cf-help">Usá el mes con mayor remuneración bruta, no el promedio ni necesariamente el último.</p>
       </div>
 
@@ -112,7 +112,13 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       </div>
     </div>
 
-    <div class="cf-result" id="ag-result">
+    <div class="cf-result" id="ag-result" data-calculated="false" aria-live="polite">
+      <div class="ag-result-empty" id="ag-result-empty">
+        <span aria-hidden="true">↗</span>
+        <strong>Tu resultado va a aparecer acá</strong>
+        <p>Ingresá tu mejor sueldo y tocá “Calcular mi aguinaldo”.</p>
+      </div>
+      <div class="ag-result-content" id="ag-result-content" hidden>
       <p class="cf-result__eyebrow">Resultado estimado</p>
       <div class="cf-result__big" id="ag-big">{fmtAr(init.neto)}</div>
       <div class="cf-result__biglabel" id="ag-biglabel">Aguinaldo neto aproximado</div>
@@ -129,9 +135,11 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       </div>
       <div class="cf-result__formula" id="ag-formula">{fmtAr(INIT_M)} ÷ 2 = {fmtAr(init.bruto)}</div>
       <div class="cf-result__actions">
+        <a class="cf-rbtn ag-primary-action" href="/mi-hacecuentas?next=/calculadora-aguinaldo-sac"><span aria-hidden="true">☆</span> Guardar para comparar mi recibo</a>
         <button class="cf-rbtn" type="button" id="ag-copy"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar resultado</button>
         <button class="cf-rbtn" type="button" id="ag-share"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg> Compartir</button>
         <button class="cf-rbtn" type="button" id="ag-detail"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Ver detalle</button>
+      </div>
       </div>
     </div>
   </section>
@@ -142,6 +150,12 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
     <span class="cf-formula">mejor sueldo ÷ 2 × meses/6</span>
   </div>
 
+  <details class="ag-more" id="ag-more">
+    <summary>
+      <span><strong>Ver explicación completa</strong><small>Fórmula, conceptos incluidos, ejemplos, fechas y preguntas frecuentes</small></span>
+      <span class="ag-more__chev" aria-hidden="true">⌄</span>
+    </summary>
+    <div class="ag-more__content">
   <!-- Cómo se calcula -->
   <section class="cf-section">
     <div class="cf-2col">
@@ -251,6 +265,8 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
       </div>
     </section>
   )}
+    </div>
+  </details>
 
   {related.length > 0 && (
     <section class="cf-section">
@@ -269,16 +285,6 @@ const explanationHtml = calc.explanation ? md(calc.explanation) : '';
     </section>
   )}
 
-  <section class="cf-ctabar">
-    <div>
-      <p class="cf-ctabar__title">Guardá el resultado para comparar tu recibo.</p>
-      <p class="cf-ctabar__sub">Copiá un enlace con tus datos o guardalo en Mi Hacé Cuentas.</p>
-    </div>
-    <div class="cf-ctabar__actions">
-      <a class="cf-ctabar__btn" href="/mi-hacecuentas?next=/calculadora-aguinaldo-sac"><span aria-hidden="true">☆</span> Guardar cálculo</a>
-      <button class="cf-ctabar__btn cf-ctabar__btn--solid" type="button" id="ag-share2">Copiar enlace</button>
-    </div>
-  </section>
 </div>
 
 <script is:inline>

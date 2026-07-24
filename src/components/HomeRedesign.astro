@@ -27,6 +27,9 @@ body = body.replace(/<script[\s\S]*?<\/script>/i, '');
 body = body
   .replace(/<header class="top">[\s\S]*?<\/header>/i, '')
   .replace(/<footer class="footer">[\s\S]*?<\/footer>/i, '');
+// Este bloque repetía los mismos tres destinos que la biblioteca completa de
+// guías posterior. Conservamos la biblioteca y retiramos sólo el duplicado.
+body = body.replace(/<section class="stories">[\s\S]*?<\/section>/i, '');
 // Contador de calculadoras: el mockup traía cifras hardcodeadas ("4.100") que
 // quedaron viejas tras la poda de calcs. Las sincronizamos con calc-counts
 // (fuente única, dinámica) para que la home muestre el MISMO número que
@@ -77,6 +80,7 @@ if (recentPosts.length) {
 <style is:global>
   body[data-page-type="home"] {
     background: #f6f7f2 !important;
+    overflow-x: hidden;
   }
   body[data-page-type="home"] > main#main {
     width: 100% !important;
@@ -86,6 +90,9 @@ if (recentPosts.length) {
     overflow-x: clip;
   }
   .approved-home-v7 { color: #071a3d !important; }
+  .approved-home-v7,
+  .approved-home-v7 .mock-main,
+  .approved-home-v7 .wrap { max-width: 100%; min-width: 0; }
   .approved-home-v7 h1,
   .approved-home-v7 h2,
   .approved-home-v7 h3,
@@ -131,6 +138,20 @@ if (recentPosts.length) {
      texto en pantallas chicas: el marcador del card "Mundial" (.score) y el
      gráfico decorativo de los "momentos" (.scene). */
   @media (max-width: 700px) {
+    .approved-home-v7 { width: 100%; overflow-x: clip; }
+    .approved-home-v7 :where(.countryRail, .filters, .categoryCloud) {
+      max-width: 100%;
+      overflow-x: auto;
+      overscroll-behavior-inline: contain;
+    }
+    .approved-home-v7 :where(
+      [data-href], a, button, .chip, .q, .finder, .converterMore, .link, .action
+    ) { min-height: 44px; }
+    .approved-home-v7 :where(.link, .converterMore) {
+      display: inline-flex;
+      align-items: center;
+    }
+    .approved-home-v7 .ask-real :where(input, button) { min-height: 44px; }
     /* Mundial: el marcador vuelve al flujo, debajo del subtítulo. */
     .approved-home-v7 .world .score {
       position: relative;

@@ -77,7 +77,18 @@
 .hcm .tool{grid-template-columns:minmax(0,1fr) minmax(0,.94fr)}
 .hcm .grid2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 .hcm .card,.hcm .field,.hcm .control{min-width:0}
-.hcm .control select{max-width:100%;text-overflow:ellipsis}
+/* Los <select> del batch quedaban con el widget nativo del SO (flechita doble
+   tipo spinner) → parecía un control roto. Se normalizan igual que el resto del
+   sitio (FieldRow/Calculator): appearance:none + un chevron SVG propio, con
+   padding a la derecha para que el texto no lo pise. Mismo ícono y color. */
+.hcm .control select{
+  max-width:100%;text-overflow:ellipsis;cursor:pointer;
+  appearance:none;-webkit-appearance:none;-moz-appearance:none;
+  background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:38px;
+}
+/* Safari ignora appearance:none en el spinner de fecha/hora, no en select: ok. */
+.hcm .control select::-ms-expand{display:none}
 @media (max-width:760px){
   .hcm .tool{grid-template-columns:minmax(0,1fr)}
   .hcm .grid2{grid-template-columns:minmax(0,1fr)}
