@@ -27,6 +27,32 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BLOG_DIR = path.join(ROOT, 'src/content/blog');
 const OUT = path.join(ROOT, 'src/lib/blog-backlinks.json');
 
+// Slugs podados: el JSON sigue vivo en la colección pero la URL responde 410
+// (gone-410.ts) o 301 (pruning-redirects.ts). Linkearlos manda a Google a una
+// URL muerta — el gotcha de siempre en este repo. Se parsean por regex porque
+// son módulos TS y este script corre en node pelado.
+const gone = new Set(); // 410: no hay reemplazo, se descarta el link
+const redirect = new Map(); // 301: se reemplaza por el destino vivo
+const gone410 = path.join(ROOT, 'src/lib/gone-410.ts');
+if (fs.existsSync(gone410)) {
+  const src = fs.readFileSync(gone410, 'utf8');
+  for (const m of src.matchAll(/["'](\/[^"']+)["']\s*,/g)) gone.add(m[1]);
+}
+const pruning = path.join(ROOT, 'src/lib/pruning-redirects.ts');
+if (fs.existsSync(pruning)) {
+  const src = fs.readFileSync(pruning, 'utf8');
+  for (const m of src.matchAll(/["'](\/[^"']+)["']\s*:\s*["'](\/[^"']+)["']/g)) redirect.set(m[1], m[2]);
+}
+/** Resuelve un slug de calc a su URL final: null si es 410, el destino si es 301. */
+function liveSlug(slug) {
+  const url = `/${slug}`;
+  if (gone.has(url)) return null;
+  const to = redirect.get(url);
+  if (!to) return slug;
+  if (gone.has(to)) return null;
+  return to.replace(/^\//, '');
+}
+
 // Mismas colecciones que resuelve src/pages/blog/[slug].astro.
 const CALC_DIRS = [
   ['src/content/calcs', ''],
@@ -52,8 +78,17 @@ for (const f of fs.readdirSync(BLOG_DIR).sort()) {
   if (!f.endsWith('.json')) continue;
   const p = JSON.parse(fs.readFileSync(path.join(BLOG_DIR, f), 'utf8'));
   if (p.noindex === true) continue;
+  // El JSON del post puede seguir vivo con la URL podada (410/301). Ya pasó:
+  // /blog/guia-imc-peso-saludable responde 410 y el JSON sigue en la colección.
+  const postUrl = `/blog/${p.slug}`;
+  if (gone.has(postUrl) || redirect.has(postUrl)) {
+    console.warn(`  ⚠️  post podado, se omite: ${postUrl}`);
+    continue;
+  }
   const keys = [];
-  for (const slug of p.relatedCalcs || []) {
+  for (const rawSlug of p.relatedCalcs || []) {
+    const slug = liveSlug(rawSlug);
+    if (!slug) { dropped++; console.warn(`  ⚠️  ${p.slug}: calc "${rawSlug}" está en 410`); continue; }
     const key = calcKey.get(slug);
     if (!key) {
       dropped++;
