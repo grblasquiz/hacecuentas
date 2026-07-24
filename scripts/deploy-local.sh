@@ -66,6 +66,18 @@ run_with_timeout() {   # $1=segundos · resto=comando…
   return $rc
 }
 
+# Igual que run_with_timeout pero mata el GRUPO de procesos entero (npm → astro
+# → node hijos). Sin esto, matar solo npm deja un `astro build` HUÉRFANO que
+# cuelga el próximo build ~1h (incidente 2026-07: deploy de 1h30 sin salida).
+run_with_timeout_grp() {   # $1=segundos · resto=comando…
+  local secs=$1; shift
+  perl -e 'setpgrp(0,0); exec @ARGV or die "exec: $!"' -- "$@" & local pid=$!
+  ( sleep "$secs"; kill -0 "$pid" 2>/dev/null && { kill -TERM -- -"$pid" 2>/dev/null; sleep 5; kill -KILL -- -"$pid" 2>/dev/null; } ) >/dev/null 2>&1 & local watcher=$!
+  local rc=0; wait "$pid" || rc=$?
+  kill "$watcher" 2>/dev/null || true; wait "$watcher" 2>/dev/null || true
+  return $rc
+}
+
 # Parse args
 PURGE=true
 SMOKE=true
@@ -81,6 +93,24 @@ for arg in "$@"; do
 done
 
 T_START=$(date +%s)
+
+# ─── 0. Log persistente + aviso de contención ─────────────────────────────
+# Cada deploy deja un log completo en disco para poder autopsiar fallos
+# (antes el output moría con la sesión y "tardó 1h30 y falló" era inauditable).
+DEPLOY_LOG_DIR="$HOME/.local/state/hacecuentas/deploy-logs"
+mkdir -p "$DEPLOY_LOG_DIR"
+DEPLOY_RUN_LOG="$DEPLOY_LOG_DIR/deploy-$(date +%Y%m%d-%H%M%S)-$$.log"
+exec > >(tee -a "$DEPLOY_RUN_LOG") 2>&1
+log "log de este deploy: $DEPLOY_RUN_LOG"
+ls -t "$DEPLOY_LOG_DIR"/deploy-*.log 2>/dev/null | tail -n +31 | xargs rm -f 2>/dev/null || true
+
+# Si OTRO proceso (otra sesión Claude, Codex, cron) ya está corriendo un astro
+# build en esta Mac, este build va a competir por CPU/RAM y puede tardar MUCHO.
+OTHER_BUILDS=$(pgrep -f 'astro build' | wc -l | tr -d ' ')
+if [ "$OTHER_BUILDS" -gt 0 ]; then
+  warn "hay $OTHER_BUILDS proceso(s) 'astro build' de OTRA sesión corriendo — contención de CPU/RAM, este deploy va a tardar más."
+  pgrep -fl 'astro build' | head -3 || true
+fi
 
 # ─── 1. Validación ────────────────────────────────────────────────────────
 log "validando estado del repo..."
@@ -319,16 +349,33 @@ fi
 if [ "$SPLIT_BUILD" = true ] || [ "$MODE" = "assets" ]; then
   :
 elif [ "$MODE" = "incremental" ]; then
-  log "build INCREMENTAL (estimado ~60-90s)..."
+  BUILD_TIMEOUT="${BUILD_TIMEOUT:-900}"
+  log "build INCREMENTAL (estimado ~60-90s · timeout duro ${BUILD_TIMEOUT}s)..."
   # NO limpiamos dist — emptyOutDir:false en astro.config.mjs preserva los
   # HTMLs cacheados; Astro solo regenera los slugs cambiados.
   export INCREMENTAL_CHANGES
-  npm run build 2>&1 | grep -E "(\[(prebuild|incremental|build|vite|wrap-worker|strip-pruned|optimize-css)\]|Server built|Completed in|✓ built in|EXIT|Files processed)" | tail -25
+  BUILD_LOG=$(mktemp -t hc-build.XXXXXX); BUILD_RC=0
+  run_with_timeout_grp "$BUILD_TIMEOUT" npm run build >"$BUILD_LOG" 2>&1 || BUILD_RC=$?
+  grep -E "(\[(prebuild|incremental|build|vite|wrap-worker|strip-pruned|optimize-css)\]|Server built|Completed in|✓ built in|EXIT|Files processed)" "$BUILD_LOG" | tail -25
 else
-  log "build FULL (estimado ~3-5min)..."
+  BUILD_TIMEOUT="${BUILD_TIMEOUT:-1800}"
+  log "build FULL (estimado ~3-5min · timeout duro ${BUILD_TIMEOUT}s)..."
   rm -rf dist
   unset INCREMENTAL_CHANGES
-  npm run build 2>&1 | grep -E "(\[(prebuild|build|vite|wrap-worker|strip-pruned|optimize-css)\]|Server built|Completed in|✓ built in|EXIT|Files processed)" | tail -20
+  BUILD_LOG=$(mktemp -t hc-build.XXXXXX); BUILD_RC=0
+  run_with_timeout_grp "$BUILD_TIMEOUT" npm run build >"$BUILD_LOG" 2>&1 || BUILD_RC=$?
+  grep -E "(\[(prebuild|build|vite|wrap-worker|strip-pruned|optimize-css)\]|Server built|Completed in|✓ built in|EXIT|Files processed)" "$BUILD_LOG" | tail -20
+fi
+if [ "${BUILD_RC:-0}" = 137 ] || [ "${BUILD_RC:-0}" = 143 ]; then
+  err "build EXCEDIÓ el timeout de ${BUILD_TIMEOUT}s y fue matado (grupo entero, sin huérfanos)."
+  err "Causas típicas: otro astro build en paralelo (Codex/otra sesión), OOM-thrash, huérfano previo."
+  err "Log completo: $BUILD_LOG · reintentá con: BUILD_TIMEOUT=3600 npm run deploy"
+  exit 1
+elif [ "${BUILD_RC:-0}" != 0 ]; then
+  err "build FALLÓ (rc=$BUILD_RC). Últimas líneas:"
+  tail -20 "$BUILD_LOG"
+  err "Log completo: $BUILD_LOG"
+  exit 1
 fi
 T_BUILD=$(($(date +%s) - T_BUILD_START))
 if [ "$MODE" = "assets" ]; then
