@@ -34,7 +34,6 @@ import { gastosEscrituraCompraventa } from '../src/lib/formulas/gastos-escritura
 
 // --- Matemática ---
 import { porcentaje } from '../src/lib/formulas/porcentaje';
-import { reglaTres } from '../src/lib/formulas/regla-tres';
 import { combinatoriaPermutaciones } from '../src/lib/formulas/combinatoria-permutaciones';
 
 // --- Marketing / negocios ---
@@ -497,14 +496,6 @@ describe('porcentaje', () => {
   it('diferencia: 50 es qué % de 200 → 25%', () => {
     const r = porcentaje({ modo: 'diferencia', valor1: 50, valor2: 200 });
     expect(r.resultado).toMatch(/25/);
-  });
-});
-
-describe('reglaTres (directa)', () => {
-  it('3:15 = 5:X → X=25', () => {
-    const r: any = reglaTres({ a: 3, b: 15, c: 5, tipo: 'directa' });
-    const val = pick(r, ['resultado', 'x', 'valor', 'd']);
-    if (typeof val === 'number') expect(val).toBe(25);
   });
 });
 

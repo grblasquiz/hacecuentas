@@ -891,7 +891,8 @@ if (calcRatings && calcRatings.count >= 5) {
 // VideoObject…). Google no debe generar rich snippets de una herramienta que le
 // pedimos no indexar, y evitamos claims de MedicalAudience/diagnóstico sin
 // revisor. Conservamos sólo BreadcrumbList (navegación básica).
-const effectiveNoindex = calc.noindex === true || isRestrictedCalc(calc);
+const calcIsRestricted = isRestrictedCalc(calc);
+const effectiveNoindex = calc.noindex === true || calcIsRestricted;
 const finalGraph = effectiveNoindex
   ? schemaGraph.filter((n: any) => n['@type'] === 'BreadcrumbList')
   : schemaGraph;
@@ -1249,13 +1250,13 @@ const isAportesPatronales = calc.slug === 'calculadora-aportes-patronales-emplea
 const apRelated = isAportesPatronales
   ? (calc.relatedSlugs || []).map((s: string) => allCalcs.find((c: any) => c.slug === s)).filter(Boolean)
   : [];
-const flagshipBespoke = isDiasEntreFechas || isAguinaldoSac || isLifeMiles || isNumeroALetras || isPorcentajes
+const flagshipBespoke = !calcIsRestricted && (isDiasEntreFechas || isAguinaldoSac || isLifeMiles || isNumeroALetras || isPorcentajes
   || isConversorLatam || isMillasLatam || isImcPediatrico || isCaloriasTdee
   || isFondoDesempleo || isArtIndemnizacion || isParitariaUocra
   || isIndemDespido || isSueldoBrutoNeto || isLiqRenuncia || isAguinaldoCasa
   || isGananciasCuarta || isIvaAgregarDisc || isInteresJudicial || isAportesPatronales
   || isTempHorno || isMetrosLineales || isImpresion3d || isCombustibleViaje
-  || isPesoPerro || !!mockupBatch;
+  || isPesoPerro || !!mockupBatch);
 // El mockup no usa el color de la categoría (viajes→life/cian): va rosa coral.
 // Número a letras ya coincide (matematica→knowledge), no hace falta forzarlo.
 // Porcentajes: el mockup va violeta, pero la categoría es vida→life (cian).
@@ -1303,6 +1304,7 @@ const flagshipDomain: 'money' | 'data' | 'health' | 'home' | 'knowledge' | 'life
 >
   <Header slot="header" />
 
+  {!calcIsRestricted && <Fragment>
   {isDiasEntreFechas && <DiasEntreFechas calc={calc} related={diasRelated} />}
   {isAguinaldoSac && <AguinaldoSac calc={calc} related={agRelated} />}
   {isLifeMiles && <MillasLifeMilesMockup calc={calc} related={lmRelated} />}
@@ -1354,6 +1356,7 @@ const flagshipDomain: 'money' | 'data' | 'health' | 'home' | 'knowledge' | 'life
   {isIvaAgregarDisc && <IvaAgregarDiscriminarMockup calc={calc} related={ivRelated} />}
   {isInteresJudicial && <InteresJudicialTasa calc={calc} related={ijRelated} />}
   {isAportesPatronales && <AportesPatronales calc={calc} related={apRelated} />}
+  </Fragment>}
   {!flagshipBespoke && <CalcLayoutV2 calc={calc} dataAsOf={_dataAsOf ?? undefined} />}
   {/* Los bloques de linking contextual (blog / tabla / Web Story) viven dentro
       de CalcLayoutV2; las bespoke no pasan por ahí y perdían el link. Un solo

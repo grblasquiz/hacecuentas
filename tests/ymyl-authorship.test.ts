@@ -75,7 +75,8 @@ describe('Fase 3 — autoría vs revisión clínica', () => {
 
   it('Fase 6 — [...slug].astro usa effectiveNoindex y filtra schemas a BreadcrumbList', () => {
     const src = readFileSync(join(ROOT, 'src/pages/[...slug].astro'), 'utf8');
-    expect(src).toMatch(/const effectiveNoindex\s*=\s*calc\.noindex === true \|\| isRestrictedCalc\(calc\)/);
+    expect(src).toMatch(/const calcIsRestricted\s*=\s*isRestrictedCalc\(calc\)/);
+    expect(src).toMatch(/const effectiveNoindex\s*=\s*calc\.noindex === true \|\| calcIsRestricted/);
     expect(src).toMatch(/noindex=\{effectiveNoindex\}/);
     // Con effectiveNoindex, el @graph se filtra dejando sólo BreadcrumbList.
     expect(src).toMatch(/effectiveNoindex\s*\?[\s\S]{0,160}?BreadcrumbList/);
