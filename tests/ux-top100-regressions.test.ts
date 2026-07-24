@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { calorEspecificoDeltaT } from '../src/lib/formulas/calor-especifico-delta-t';
 import { ladrillosM2 } from '../src/lib/formulas/ladrillos-m2';
+import { salarioMinimoParaguay2026 } from '../src/lib/formulas/salario-minimo-paraguay-2026';
 
 describe('regresiones UX del top 100', () => {
   it('no duplica la unidad Joule entre fórmula y output', () => {
@@ -39,5 +40,23 @@ describe('regresiones UX del top 100', () => {
     const result = ladrillosM2({ m2: 10, tipo: 'hueco_12', desperdicio: 0 });
     expect(result.ladrillos).toBe(160);
     expect(result.desperdicio).toBe(0);
+  });
+
+  it('respeta una liquidación de 0 días en salario mínimo Paraguay', () => {
+    const result = salarioMinimoParaguay2026({ jornada: 'diurna', dias: 0 });
+    expect(result.proporcional).toBe(0);
+  });
+
+  it('activa el rediseño focus en la nueva tanda orgánica', () => {
+    const layout = readFileSync('src/components/CalcLayoutV2.astro', 'utf8');
+    for (const slug of [
+      'calculadora-aportes-arl-colombia-empleador-empleado-riesgo',
+      'calculadora-salario-diario-integrado-sdi-mexico',
+      'conversor-numero-a-letras-cantidad',
+      'calculadora-interes-judicial-tasa',
+      'salario-minimo-paraguay-2026',
+    ]) {
+      expect(layout).toContain(`'${slug}'`);
+    }
   });
 });

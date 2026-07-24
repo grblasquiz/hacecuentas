@@ -2,7 +2,7 @@
   "slug": "calculadora-interes-judicial-tasa",
   "title": "Interés Judicial 2026: tasa activa BNA, pasiva o manual",
   "h1": "Calculadora de Interés Judicial (Tasa Activa BNA)",
-  "description": "Calculá intereses judiciales por fecha con tasa activa BNA (33% anual): $1M en 365 días suma $330.000 de interés. Presets por fuero, gratis y al instante.",
+  "description": "Ingresá capital, fuero y fechas para estimar intereses simples y ver el total actualizado con la tasa judicial elegida.",
   "category": "finanzas",
   "icon": "🏛️",
   "formulaId": "interes-judicial-tasa",
@@ -40,12 +40,12 @@
       "step": 10000,
       "required": true,
       "format": "thousands",
-      "help": "Monto inicial del que partís. Ej: $100.000 de ahorro.",
+      "help": "Monto original de la deuda, sin intereses.",
       "default": 5000000
     },
     {
       "id": "jurisdiccion",
-      "label": "Jurisdicción (preselecciona la tasa del fuero)",
+      "label": "Fuero o jurisdicción",
       "type": "select",
       "default": "ninguna",
       "options": [
@@ -66,11 +66,11 @@
           "label": "CABA — plenario \"Eiben\" (promedio activa BNA y pasiva BCRA)"
         }
       ],
-      "help": "Preselecciona la tasa según la doctrina vigente de cada fuero (Samudio / Barrios / Eiben). Es una referencia orientativa: la tasa real varía mes a mes y cada juzgado puede ordenar otra — verificá la tasa que aplica tu juzgado."
+      "help": "Sugiere la tasa de referencia; verificá siempre lo ordenado por el juzgado."
     },
     {
       "id": "tasaPreset",
-      "label": "Tasa a usar",
+      "label": "Tasa de referencia",
       "type": "select",
       "default": "activa_bna_33",
       "options": [
@@ -95,7 +95,7 @@
           "label": "Ingresar tasa manual"
         }
       ],
-      "help": "La sentencia o juzgado puede ordenar otra tasa. Si elegís manual, completá el campo de abajo.",
+      "help": "Si la sentencia indica otra tasa, elegí la opción manual.",
       "showWhen": {
         "field": "jurisdiccion",
         "in": [
@@ -105,7 +105,7 @@
     },
     {
       "id": "tasaAnual",
-      "label": "Tasa manual anual (%)",
+      "label": "Tasa anual manual",
       "type": "number",
       "suffix": "%",
       "placeholder": "75",
@@ -124,17 +124,17 @@
     },
     {
       "id": "fechaDesde",
-      "label": "Fecha desde (mora)",
+      "label": "Inicio de la mora",
       "type": "date",
       "required": true,
-      "help": "Formato YYYY-MM-DD (año-mes-día)."
+      "help": "Fecha desde la que comienzan a correr los intereses."
     },
     {
       "id": "fechaHasta",
-      "label": "Fecha hasta",
+      "label": "Fecha de liquidación",
       "type": "date",
       "required": false,
-      "help": "Dejá en blanco para usar la fecha de hoy"
+      "help": "Dejala vacía para calcular hasta hoy."
     }
   ],
   "dataUpdate": {
@@ -148,9 +148,10 @@
   "outputs": [
     {
       "id": "totalConIntereses",
-      "label": "Total con intereses",
+      "label": "Total actualizado",
       "format": "currency",
-      "primary": true
+      "primary": true,
+      "contextChip": "Capital + intereses"
     },
     {
       "id": "interesesGenerados",
@@ -278,7 +279,7 @@
     "calculadora-actualizacion-inflacion-ipc"
   ],
   "audience": "global",
-  "lastReviewed": "2026-07-21",
+  "lastReviewed": "2026-07-24",
   "changelog": [
     {
       "date": "2026-07-11",

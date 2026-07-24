@@ -24,7 +24,10 @@ export interface Outputs {
 export function salarioMinimoParaguay2026(i: Inputs): Outputs {
   const p = PARAGUAY_2026;
   const jornada = i.jornada === 'nocturna' ? 'nocturna' : 'diurna';
-  const dias = Math.min(31, Math.max(0, Number(i.dias ?? p.diasMes) || p.diasMes));
+  const diasRaw = i.dias === '' || i.dias === null || i.dias === undefined
+    ? p.diasMes
+    : Number(i.dias);
+  const dias = Math.min(31, Math.max(0, Number.isFinite(diasRaw) ? diasRaw : p.diasMes));
 
   const smvmMes = p.salarioMinimo;          // 3.044.000
   const jornalMin = smvmMes / p.diasMes;    // salario mínimo diario base (mensual/30)
