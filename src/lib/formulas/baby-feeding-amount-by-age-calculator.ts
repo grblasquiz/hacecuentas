@@ -14,7 +14,7 @@ export interface Outputs {
 }
 
 // AAP/CDC 2024 age-based feeding stage data
-// Source: https://www.healthychildren.org/English/ages-stages/baby/formula-feeding/Pages/How-Much-and-How-Often-to-Feed-Infant-Formula.aspx
+// Source: https://www.healthychildren.org/English/ages-stages/baby/formula-feeding/Pages/amount-and-schedule-of-formula-feedings.aspx
 interface Stage {
   label: string;
   minOzPerFeed: number;
