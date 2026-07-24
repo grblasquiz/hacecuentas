@@ -104,12 +104,16 @@ exec > >(tee -a "$DEPLOY_RUN_LOG") 2>&1
 log "log de este deploy: $DEPLOY_RUN_LOG"
 ls -t "$DEPLOY_LOG_DIR"/deploy-*.log 2>/dev/null | tail -n +31 | xargs rm -f 2>/dev/null || true
 
-# Si OTRO proceso (otra sesión Claude, Codex, cron) ya está corriendo un astro
-# build en esta Mac, este build va a competir por CPU/RAM y puede tardar MUCHO.
+# Si OTRO proceso (otra sesión Claude, Codex, cron o un `npx astro build`
+# directo que salteó build-guard.sh) ya está escribiendo dist/, abortamos.
+# Continuar con una advertencia no alcanza: esta colisión ya produjo un manifest
+# incompleto y un outage total en 2026-05-31.
 OTHER_BUILDS=$(pgrep -f 'astro build' | wc -l | tr -d ' ')
 if [ "$OTHER_BUILDS" -gt 0 ]; then
-  warn "hay $OTHER_BUILDS proceso(s) 'astro build' de OTRA sesión corriendo — contención de CPU/RAM, este deploy va a tardar más."
-  pgrep -fl 'astro build' | head -3 || true
+  err "hay $OTHER_BUILDS proceso(s) 'astro build' externo(s) escribiendo dist/."
+  pgrep -fl 'astro build' | head -5 || true
+  err "Deploy abortado sin tocar producción. Esperá a que terminen y reintentá."
+  exit 75
 fi
 
 # ─── 1. Validación ────────────────────────────────────────────────────────

@@ -14,20 +14,24 @@
 import { canDistributeCalc } from './content-policy';
 import { PRUNING_REDIRECTS } from './pruning-redirects.ts';
 
-const arGlob = import.meta.glob('../content/calcs/*.json');
-const enGlob = import.meta.glob('../content/calcs-en/*.json');
-const ptGlob = import.meta.glob('../content/calcs-pt/*.json');
-const ptPtGlob = import.meta.glob('../content/calcs-pt-pt/*.json');
-const mxGlob = import.meta.glob('../content/calcs-mx/*.json');
-const esGlob = import.meta.glob('../content/calcs-es/*.json');
-const coGlob = import.meta.glob('../content/calcs-co/*.json');
-const clGlob = import.meta.glob('../content/calcs-cl/*.json');
-const peGlob = import.meta.glob('../content/calcs-pe/*.json');
-const ecGlob = import.meta.glob('../content/calcs-ec/*.json');
-const veGlob = import.meta.glob('../content/calcs-ve/*.json');
-const pyGlob = import.meta.glob('../content/calcs-py/*.json');
-const uyGlob = import.meta.glob('../content/calcs-uy/*.json');
-const doGlob = import.meta.glob('../content/calcs-do/*.json');
+// Un único glob eager por colección sirve tanto para contar archivos como para
+// calcular métricas distribuibles. Antes había además un glob lazy por cada
+// colección: Vite veía cada JSON importado estática y dinámicamente, emitía
+// miles de warnings y generaba chunks dinámicos que nunca se usaban.
+const arGlob = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
+const enGlob = import.meta.glob<any>('../content/calcs-en/*.json', { eager: true });
+const ptGlob = import.meta.glob<any>('../content/calcs-pt/*.json', { eager: true });
+const ptPtGlob = import.meta.glob<any>('../content/calcs-pt-pt/*.json', { eager: true });
+const mxGlob = import.meta.glob<any>('../content/calcs-mx/*.json', { eager: true });
+const esGlob = import.meta.glob<any>('../content/calcs-es/*.json', { eager: true });
+const coGlob = import.meta.glob<any>('../content/calcs-co/*.json', { eager: true });
+const clGlob = import.meta.glob<any>('../content/calcs-cl/*.json', { eager: true });
+const peGlob = import.meta.glob<any>('../content/calcs-pe/*.json', { eager: true });
+const ecGlob = import.meta.glob<any>('../content/calcs-ec/*.json', { eager: true });
+const veGlob = import.meta.glob<any>('../content/calcs-ve/*.json', { eager: true });
+const pyGlob = import.meta.glob<any>('../content/calcs-py/*.json', { eager: true });
+const uyGlob = import.meta.glob<any>('../content/calcs-uy/*.json', { eager: true });
+const doGlob = import.meta.glob<any>('../content/calcs-do/*.json', { eager: true });
 
 const AR = Object.keys(arGlob).length;
 const EN = Object.keys(enGlob).length;
@@ -73,9 +77,8 @@ function formatES(n: number): string {
 // Categorías reales del catálogo AR (ES-root), computadas de la data — la misma
 // fuente que alimenta la home y /categoria/*. NUNCA hardcodear "N categorías" en
 // páginas (sobre-nosotros decía 19 mientras la home mostraba 26).
-const arEager = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
 export const CATEGORY_COUNT = new Set(
-  Object.values(arEager)
+  Object.values(arGlob)
     .map((m: any) => (m.default || m).category)
     .filter(Boolean)
 ).size;
@@ -90,20 +93,6 @@ export const CATEGORY_COUNT = new Set(
 // noindex y contaba en crudo los 13 locales, incluyendo cientos de URLs
 // EN/PT/… que redirigen (301, en PRUNING_REDIRECTS con clave prefijada
 // `/en/…`) o son noindex → sobre-conteo (3.100+ vs ~2.400 reales del sitemap).
-const enEager = import.meta.glob<any>('../content/calcs-en/*.json', { eager: true });
-const ptEager = import.meta.glob<any>('../content/calcs-pt/*.json', { eager: true });
-const ptPtEager = import.meta.glob<any>('../content/calcs-pt-pt/*.json', { eager: true });
-const mxEager = import.meta.glob<any>('../content/calcs-mx/*.json', { eager: true });
-const esEager = import.meta.glob<any>('../content/calcs-es/*.json', { eager: true });
-const coEager = import.meta.glob<any>('../content/calcs-co/*.json', { eager: true });
-const clEager = import.meta.glob<any>('../content/calcs-cl/*.json', { eager: true });
-const peEager = import.meta.glob<any>('../content/calcs-pe/*.json', { eager: true });
-const ecEager = import.meta.glob<any>('../content/calcs-ec/*.json', { eager: true });
-const veEager = import.meta.glob<any>('../content/calcs-ve/*.json', { eager: true });
-const pyEager = import.meta.glob<any>('../content/calcs-py/*.json', { eager: true });
-const uyEager = import.meta.glob<any>('../content/calcs-uy/*.json', { eager: true });
-const doEager = import.meta.glob<any>('../content/calcs-do/*.json', { eager: true });
-
 // Espeja PRUNED_SLUGS de content-policy / generate-sitemap: claves de
 // PRUNING_REDIRECTS sin la barra inicial (para locales vienen prefijadas: `en/…`).
 const PRUNED_SLUGS: ReadonlySet<string> = new Set(
@@ -122,20 +111,20 @@ function countDistributable(glob: Record<string, any>, prefix: string): number {
 }
 
 const DIST = {
-  ar: countDistributable(arEager, ''),
-  en: countDistributable(enEager, 'en'),
-  pt: countDistributable(ptEager, 'pt'),
-  ptPt: countDistributable(ptPtEager, 'pt-pt'),
-  mx: countDistributable(mxEager, 'mx'),
-  es: countDistributable(esEager, 'es'),
-  co: countDistributable(coEager, 'co'),
-  cl: countDistributable(clEager, 'cl'),
-  pe: countDistributable(peEager, 'pe'),
-  ec: countDistributable(ecEager, 'ec'),
-  ve: countDistributable(veEager, 've'),
-  py: countDistributable(pyEager, 'py'),
-  uy: countDistributable(uyEager, 'uy'),
-  do: countDistributable(doEager, 'do'),
+  ar: countDistributable(arGlob, ''),
+  en: countDistributable(enGlob, 'en'),
+  pt: countDistributable(ptGlob, 'pt'),
+  ptPt: countDistributable(ptPtGlob, 'pt-pt'),
+  mx: countDistributable(mxGlob, 'mx'),
+  es: countDistributable(esGlob, 'es'),
+  co: countDistributable(coGlob, 'co'),
+  cl: countDistributable(clGlob, 'cl'),
+  pe: countDistributable(peGlob, 'pe'),
+  ec: countDistributable(ecGlob, 'ec'),
+  ve: countDistributable(veGlob, 've'),
+  py: countDistributable(pyGlob, 'py'),
+  uy: countDistributable(uyGlob, 'uy'),
+  do: countDistributable(doGlob, 'do'),
 } as const;
 
 const AR_INDEXABLE = DIST.ar;

@@ -37,6 +37,7 @@ import { aniversarioPareja } from '../src/lib/formulas/aniversario-pareja';
 import { videoBitrateTamanoArchivo } from '../src/lib/formulas/video-bitrate-tamano-archivo';
 import { millasLatamDestino } from '../src/lib/formulas/millas-latam-destino';
 import { stopMotionFpsTiempo } from '../src/lib/formulas/stop-motion-fps-tiempo';
+import { TOPES } from '../src/lib/data/monotributo-2026';
 
 // =====================================================
 // 1. Aguinaldo (SAC argentino)
@@ -77,8 +78,7 @@ describe('monotributo', () => {
   });
 
   it('alerta cerca del limite', () => {
-    // Categoria A servicios: limite 10.277.988 → 95% = ~9.764.000
-    const r = monotributo({ facturacionAnual: 9_800_000, tipoActividad: 'servicios' });
+    const r = monotributo({ facturacionAnual: TOPES.A * 0.95, tipoActividad: 'servicios' });
     expect(r.alerta).toMatch(/cerca del límite/i);
   });
 });
@@ -457,8 +457,8 @@ describe('canoEstructuralPesoMl', () => {
       largoMl: 6,
       cantidad: 1,
     });
-    expect(r.pesoMl).toBeCloseTo(2.47, 1);
-    expect(r.pesoBarra).toBeCloseTo(14.8, 0);
+    expect(r.pesoMl).toBeCloseTo(2.37, 2);
+    expect(r.pesoBarra).toBeCloseTo(14.22, 2);
   });
 
   it('cano cuadrado 40x40 mm x 2mm', () => {

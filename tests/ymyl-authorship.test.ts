@@ -60,11 +60,10 @@ describe('Fase 3 — autoría vs revisión clínica', () => {
     expect(src).toMatch(/contributor:/);
   });
 
-  it('CalcLayoutV2 usa "Editado por" en TODA la web y nunca "Fórmula revisada por"', () => {
+  it('CalcLayoutV2 conserva la autoría editorial sin fingir revisión clínica', () => {
     const src = readFileSync(join(ROOT, 'src/components/CalcLayoutV2.astro'), 'utf8');
-    // Byline único e incondicional: "Editado por" / "Edited by".
-    expect(src).toMatch(/'Edited by'\s*:\s*'Editado por'\}\s*<a href="\/autores\/martin-rodriguez"/);
-    // Ya NO existe el literal "Fórmula revisada por" / "Formula reviewed by" en el markup.
+    expect(src).toMatch(/<a href="\/autores\/martin-rodriguez" rel="author">Martín Rodríguez<\/a>/);
+    expect(src).toMatch(/Fórmula verificada con pruebas automatizadas/);
     expect(src).not.toMatch(/'Formula reviewed by'\s*:\s*'Fórmula revisada por'/);
   });
 

@@ -71,8 +71,8 @@ describe('páginas prioritarias de Bing', () => {
   });
 
   it('mantiene la tabla de Monotributo vinculada a la fuente única', () => {
-    expect(TOPES.K).toBe(108_357_084.05);
-    expect(CUOTA_SERVICIOS.K).toBe(1_381_687.9);
-    expect(CUOTA_BIENES.K).toBe(600_879.51);
+    expect(TOPES.K).toBe(126_610_838.75);
+    expect(CUOTA_SERVICIOS.K).toBe(1_614_446.02);
+    expect(CUOTA_BIENES.K).toBe(702_103);
   });
 });

@@ -15,6 +15,13 @@ import { isAlertEligible, getAlertConfig } from "../lib/alerts/eligible";
 import { getCoopSource, getDataset } from "../lib/coop/datasets";
 import { canEmbedCalc } from '../lib/content-policy';
 import { getCalculatorDisclaimer } from '../lib/disclaimers';
+import {
+  calculatorColumnCopy,
+  groupCalculatorFields,
+  initialHiddenFieldIds,
+  isNeutralSpanishPath,
+  neutralizeSpanish,
+} from '../lib/calculator-view-model';
 export interface Field {
   id: string;
   label: string;
@@ -219,16 +226,9 @@ export interface Props {
 }
 
 const { config, lang = 'es', dataAsOf: dataAsOfProp, redesign = false } = Astro.props;
-const isNeutralSpanish = lang === 'es' && /^\/(mx|es|cl|co|pe|ec|ve|py|uy|do)(\/|$)/.test(Astro.url.pathname);
+const isNeutralSpanish = isNeutralSpanishPath(lang, Astro.url.pathname);
 // Copy de los headers de columna del mockup v3 (i18n).
-const v3Head = {
-  input: lang === 'en' ? 'Enter your data' : lang === 'pt' ? 'Informe os dados' : isNeutralSpanish ? 'Ingresa tus datos' : 'Ingresá tus datos',
-  result: lang === 'en' ? 'Your result' : lang === 'pt' ? 'Seu resultado' : 'Tu resultado',
-  ready: lang === 'en' ? 'Ready' : lang === 'pt' ? 'Pronto' : 'Listo',
-  idle: lang === 'en' ? 'Not calculated' : lang === 'pt' ? 'Sem cálculo' : 'Sin calcular',
-  done: lang === 'en' ? 'Calculated' : lang === 'pt' ? 'Calculado' : 'Calculado',
-  stale: lang === 'en' ? 'Recalculate →' : lang === 'pt' ? 'Recalcule →' : isNeutralSpanish ? 'Recalcula →' : 'Recalculá →',
-};
+const v3Head = calculatorColumnCopy(lang, isNeutralSpanish);
 
 // Alerta "avisame cuando este resultado cambie": solo en calcs AR fiscales
 // elegibles (data-driven) y nunca en embeds. La UI se rellena con JS.
@@ -405,11 +405,6 @@ const t = isNeutralSpanish ? {
 
 // Clasificación por riesgo real: una licencia, una receta, pintura o un
 // documento no heredan referencias financieras de una categoría amplia.
-const neutralizeSpanish = (value: string) => value
-  .replace(/verificá/gi, 'verifica')
-  .replace(/consultá/gi, 'consulta')
-  .replace(/usá/gi, 'usa')
-  .replace(/revisá/gi, 'revisa');
 const rawDisclaimer = getCalculatorDisclaimer(config, lang as 'es' | 'en' | 'pt');
 const disclaimer = isNeutralSpanish ? neutralizeSpanish(rawDisclaimer) : rawDisclaimer;
 
@@ -420,17 +415,7 @@ const advancedFields = config.fields.filter((f) => f.advanced);
 // correcto (según el `default` del campo controlador) para evitar flash/CLS —
 // el JS de initCalculator luego lo mantiene en sync. Un campo con showWhen
 // arranca oculto sólo si el default de su controlador NO está en `in`.
-const _fieldDefaults = new Map<string, string>(
-  (config.fields || []).map((f) => [f.id, f.default !== undefined && f.default !== null ? String(f.default) : ''])
-);
-const _initHiddenIds = new Set<string>();
-for (const f of config.fields) {
-  const sw = (f as any).showWhen as { field?: string; in?: string[] } | undefined;
-  if (sw && sw.field && Array.isArray(sw.in) && sw.in.length) {
-    const ctrlDefault = _fieldDefaults.get(sw.field) ?? '';
-    if (sw.in.indexOf(ctrlDefault) === -1) _initHiddenIds.add(f.id);
-  }
-}
+const _initHiddenIds = initialHiddenFieldIds(config.fields);
 
 // Alerta por dato (opcional): si el calc declara config.alertableFields
 // (array de strings), ofrecemos suscripción a "avisame cuando cambie X".
@@ -446,24 +431,8 @@ const alertSource = ('alert:' + alertableFields.join(',')).slice(0, 40);
 // Smart Input Groups: agrupa fields con la misma key `group` para reducir
 // carga cognitiva en calcs con muchos campos. Backwards-compatible:
 // si ningún field tiene `group`, renderiza el grid plano como siempre.
-type FieldGroup = { name?: string; icon?: string; fields: Field[] };
-function groupFields(fields: Field[]): FieldGroup[] {
-  const result: FieldGroup[] = [];
-  const map = new Map<string, FieldGroup>();
-  for (const f of fields) {
-    const key = f.group || '__default__';
-    let entry = map.get(key);
-    if (!entry) {
-      entry = { name: f.group, icon: f.groupIcon, fields: [] };
-      map.set(key, entry);
-      result.push(entry);
-    }
-    entry.fields.push(f);
-  }
-  return result;
-}
-const basicGroups = groupFields(basicFields);
-const advancedGroups = groupFields(advancedFields);
+const basicGroups = groupCalculatorFields(basicFields);
+const advancedGroups = groupCalculatorFields(advancedFields);
 const useGroupsBasic = basicGroups.some((g) => Boolean(g.name));
 const useGroupsAdvanced = advancedGroups.some((g) => Boolean(g.name));
 

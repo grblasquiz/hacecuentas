@@ -96,8 +96,12 @@ function buildInputs(fields: CalcField[] | undefined): Record<string, any> {
     const t = f.type ?? 'number';
 
     // 1) Si tiene `default`, usar tal cual (la fuente de verdad para el formulario).
+    // `today` es un sentinel que el frontend convierte a YYYY-MM-DD; el smoke
+    // debe reproducir esa conversión en vez de pasarlo literalmente a la fórmula.
     if (f.default !== undefined && f.default !== null && f.default !== '') {
-      inputs[f.id] = f.default;
+      inputs[f.id] = (t === 'date' || t === 'datetime-local') && f.default === 'today'
+        ? (t === 'date' ? new Date().toISOString().slice(0, 10) : new Date().toISOString().slice(0, 16))
+        : f.default;
       continue;
     }
 

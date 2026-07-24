@@ -10,8 +10,9 @@
 #
 # Reentrancia: deploy-local.sh ya tiene el lock y exporta HC_DEPLOY_LOCK_HELD=1 →
 # acá NO re-lockeamos (correríamos build:raw directo). En CI tampoco hay deploys
-# locales concurrentes → sin lock. Fail-open: si el lock se traba, buildeamos igual
-# (nunca bloqueamos un build para siempre).
+# locales concurrentes → sin lock. El lock es fail-closed: ante contención
+# prolongada abortamos; jamás aceptamos dos writers sobre dist/ porque esa
+# condición ya causó un outage en producción.
 #
 # El build real vive en el script `build:raw` de package.json. Este wrapper sólo
 # agrega el lock. HC_BUILD_CMD permite override (para tests).
@@ -50,8 +51,9 @@ else
     sleep 5; W=$((W + 5))
     if acquire; then GOT_LOCK=1; break; fi
     if [ "$W" -ge 1200 ]; then
-      echo "[build] 20min esperando el lock — buildeo igual (fail-open) para no bloquearte. Holder PID ${H:-?}."
-      break
+      echo "[build] ERROR: 20min esperando el lock (holder PID ${H:-?})."
+      echo "[build] Aborto sin tocar dist/: revisá el proceso holder y reintentá."
+      exit 75
     fi
   done
 fi

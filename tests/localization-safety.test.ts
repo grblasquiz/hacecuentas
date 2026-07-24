@@ -22,11 +22,13 @@ describe('locale isolation', () => {
   it('mantiene navegación y salida dinámica dentro del locale', () => {
     const layout = readFileSync(join(ROOT, 'src/components/CalcLayoutV2.astro'), 'utf8');
     const calculator = readFileSync(join(ROOT, 'src/components/Calculator.astro'), 'utf8');
+    const viewModel = readFileSync(join(ROOT, 'src/lib/calculator-view-model.ts'), 'utf8');
     const footer = readFileSync(join(ROOT, 'src/components/Footer.astro'), 'utf8');
 
     expect(layout).toContain('`${linkPrefix}/calculadoras`');
     expect(calculator).toContain('neutralizeOutputSpanish');
-    expect(calculator).toContain(".replace(/verificá/gi, 'verifica')");
+    expect(calculator).toContain('neutralizeSpanish(rawDisclaimer)');
+    expect(viewModel).toContain(".replace(/verificá/gi, 'verifica')");
     expect(footer).toContain('neutralSpanishLocales');
     expect(footer).toContain('`${localePrefix}/calculadoras`');
   });
