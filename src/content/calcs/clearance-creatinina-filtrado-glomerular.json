@@ -1,0 +1,224 @@
+{
+  "slug": "calculadora-clearance-creatinina-filtrado-glomerular",
+  "title": "Clearance de Creatinina y Filtrado Glomerular (Cockcroft-Gault y CKD-EPI)",
+  "h1": "Calculadora de clearance de creatinina y filtrado glomerular",
+  "description": "Calculá el clearance de creatinina por Cockcroft-Gault y la TFG estimada por CKD-EPI 2021, con estadificación KDIGO. Incluye peso ideal y ajustado para dosificación en obesidad.",
+  "answerSnippet": "Cockcroft-Gault estima el clearance de creatinina en mL/min y es la referencia de los prospectos para ajustar dosis. CKD-EPI 2021 estima la TFG en mL/min/1,73 m² y es la que usa KDIGO para clasificar enfermedad renal crónica. No son intercambiables: esta calculadora devuelve las dos.",
+  "category": "salud",
+  "icon": "🫘",
+  "formulaId": "clearance-creatinina-filtrado-glomerular",
+  "audience": "global",
+  "seoKeywords": [
+    "clearance de creatinina",
+    "calculadora de clearance de creatinina",
+    "calculadora filtrado glomerular",
+    "depuracion de creatinina",
+    "CKD-EPI 2021",
+    "Cockcroft-Gault",
+    "tasa de filtrado glomerular estimada",
+    "estadio KDIGO"
+  ],
+  "intro": "<p>Dos ecuaciones distintas responden dos preguntas distintas. <strong>Cockcroft-Gault</strong> estima el clearance de creatinina en mL/min y es la que citan históricamente los prospectos y las tablas de ajuste de dosis. <strong>CKD-EPI 2021</strong> estima la tasa de filtrado glomerular en mL/min/1,73 m² y es la que recomienda KDIGO para clasificar enfermedad renal crónica. Esta calculadora devuelve las dos y explica cuándo usar cada una.</p>",
+  "keyTakeaway": "Para ajustar la dosis de un fármaco, mirá Cockcroft-Gault. Para clasificar el estadio renal, mirá la TFG de CKD-EPI. Ninguna de las dos sirve si la creatinina no está estable.",
+  "fields": [
+    {
+      "id": "creatinina",
+      "label": "Creatinina sérica",
+      "type": "number",
+      "suffix": "mg/dL",
+      "required": true,
+      "placeholder": "0,9",
+      "default": 0.9,
+      "min": 0.1,
+      "max": 20,
+      "step": 0.01,
+      "help": "Valor del laboratorio en mg/dL. Si tu informe está en µmol/L, dividí por 88,4."
+    },
+    {
+      "id": "edad",
+      "label": "Edad",
+      "type": "number",
+      "suffix": "años",
+      "required": true,
+      "placeholder": "60",
+      "default": 60,
+      "min": 18,
+      "max": 110,
+      "step": 1,
+      "help": "Sólo adultos. En menores de 18 años se usa la ecuación de Schwartz, que no está en esta calculadora."
+    },
+    {
+      "id": "sexo",
+      "label": "Sexo",
+      "type": "select",
+      "required": true,
+      "default": "hombre",
+      "options": [
+        {
+          "value": "hombre",
+          "label": "Hombre"
+        },
+        {
+          "value": "mujer",
+          "label": "Mujer"
+        }
+      ],
+      "help": "Ambas ecuaciones aplican un coeficiente distinto por sexo, por la diferencia media de masa muscular."
+    },
+    {
+      "id": "peso",
+      "label": "Peso",
+      "type": "number",
+      "suffix": "kg",
+      "required": true,
+      "placeholder": "70",
+      "default": 70,
+      "min": 25,
+      "max": 300,
+      "step": 0.5,
+      "help": "Peso corporal real. Sólo lo usa Cockcroft-Gault: CKD-EPI no depende del peso."
+    },
+    {
+      "id": "altura",
+      "label": "Altura (opcional)",
+      "type": "number",
+      "suffix": "cm",
+      "required": false,
+      "placeholder": "170",
+      "default": 170,
+      "min": 120,
+      "max": 220,
+      "step": 1,
+      "advanced": true,
+      "help": "Necesaria para estimar el peso ideal y el ajustado, y para avisarte si el IMC desaconseja usar el peso real."
+    },
+    {
+      "id": "pesoUsado",
+      "label": "Peso a usar en Cockcroft-Gault",
+      "type": "select",
+      "required": false,
+      "default": "real",
+      "advanced": true,
+      "options": [
+        {
+          "value": "real",
+          "label": "Peso real"
+        },
+        {
+          "value": "ideal",
+          "label": "Peso ideal (Devine)"
+        },
+        {
+          "value": "ajustado",
+          "label": "Peso ajustado (obesidad)"
+        }
+      ],
+      "help": "En obesidad el peso real sobreestima el clearance. Farmacia clínica suele usar el peso ajustado; en bajo peso se usa siempre el real."
+    }
+  ],
+  "outputs": [
+    {
+      "id": "clearanceCockcroftGault",
+      "label": "Clearance de creatinina (Cockcroft-Gault)",
+      "suffix": " mL/min",
+      "primary": true
+    },
+    {
+      "id": "tfgCkdEpi",
+      "label": "TFG estimada (CKD-EPI 2021)",
+      "suffix": " mL/min/1,73 m²"
+    },
+    {
+      "id": "estadioKdigo",
+      "label": "Estadio KDIGO",
+      "format": "text"
+    },
+    {
+      "id": "pesoAplicado",
+      "label": "Peso aplicado en Cockcroft-Gault",
+      "suffix": " kg"
+    },
+    {
+      "id": "interpretacion",
+      "label": "Interpretación",
+      "format": "text"
+    },
+    {
+      "id": "advertencia",
+      "label": "Advertencias",
+      "format": "text"
+    }
+  ],
+  "dataUpdate": {
+    "frequency": "never",
+    "lastUpdated": "2026-07-24",
+    "source": "KDIGO 2024 Clinical Practice Guideline for CKD",
+    "sourceUrl": "https://kdigo.org/guidelines/ckd-evaluation-and-management/",
+    "updateType": "manual",
+    "notes": "Ecuaciones fijas: Cockcroft-Gault (1976), CKD-EPI 2021 sin coeficiente de raza, estadios KDIGO. No cambian con el calendario; se revisan si KDIGO publica una guia nueva."
+  },
+  "faq": [
+    {
+      "q": "¿Cuál es la diferencia entre clearance de creatinina y filtrado glomerular?",
+      "a": "El clearance de creatinina (Cockcroft-Gault) estima cuántos mL de plasma por minuto quedan libres de creatinina, sin normalizar por el tamaño corporal. La tasa de filtrado glomerular estimada (CKD-EPI) se expresa por 1,73 m² de superficie corporal, que es la superficie de un adulto de referencia. Por eso los dos números no coinciden, y la brecha se agranda en personas muy delgadas o con obesidad."
+    },
+    {
+      "q": "¿Cuál de las dos ecuaciones tengo que usar?",
+      "a": "Depende de para qué. Si la pregunta es cómo ajustar la dosis de un fármaco, la referencia histórica de los prospectos y de las agencias regulatorias es Cockcroft-Gault. Si la pregunta es en qué estadio de enfermedad renal crónica está la persona, se usa la TFG de CKD-EPI, que es la que adopta KDIGO."
+    },
+    {
+      "q": "¿Por qué CKD-EPI 2021 no pregunta la raza?",
+      "a": "Porque la revisión de 2021 eliminó deliberadamente el coeficiente por raza que tenía la versión de 2009. Se quitó porque la raza es una categoría social, no una variable biológica, y el coeficiente sobreestimaba la función renal en pacientes negros, retrasando derivaciones y trasplantes. No preguntarla no es un olvido de esta calculadora: es la ecuación vigente."
+    },
+    {
+      "q": "¿Qué significa el estadio KDIGO que me devuelve?",
+      "a": "Los estadios G1 a G5 clasifican la TFG: G1 es 90 o más, G2 entre 60 y 89, G3a entre 45 y 59, G3b entre 30 y 44, G4 entre 15 y 29 y G5 por debajo de 15. Pero el estadio no se define con un solo análisis: KDIGO exige que la alteración persista al menos 3 meses y se complementa con la albuminuria, que esta calculadora no mide."
+    },
+    {
+      "q": "¿Por qué cambia el resultado si elijo peso ideal o ajustado?",
+      "a": "Porque Cockcroft-Gault multiplica por el peso, así que en obesidad el peso real infla el resultado y puede llevar a sobredosificar. La práctica habitual en farmacia clínica es usar el peso ajustado (peso ideal más el 40% de la diferencia con el real) cuando hay obesidad, y el peso real cuando hay bajo peso. CKD-EPI no se mueve, porque no usa el peso."
+    },
+    {
+      "q": "¿Sirve si mi creatinina está subiendo?",
+      "a": "No. Las dos ecuaciones asumen que la creatinina está en estado estable. En una falla renal aguda, con la creatinina en movimiento, el resultado subestima o sobreestima la función real según la dirección del cambio. En ese escenario ninguna ecuación estimativa reemplaza la evaluación clínica."
+    },
+    {
+      "q": "¿Por qué una creatinina normal puede engañar en personas mayores?",
+      "a": "Porque la creatinina proviene del músculo. Una persona mayor con poca masa muscular puede tener una creatinina dentro del rango de referencia y aun así una función renal reducida. Es justamente el motivo por el que se estima la TFG en lugar de leer la creatinina sola, y por el que en casos dudosos se recurre a la cistatina C."
+    },
+    {
+      "q": "¿Cómo convierto la creatinina de µmol/L a mg/dL?",
+      "a": "Dividí el valor en µmol/L por 88,4. Por ejemplo, 90 µmol/L equivalen a 1,02 mg/dL. Los laboratorios de América Latina informan en mg/dL casi siempre; el sistema µmol/L es más común en Europa."
+    },
+    {
+      "q": "¿Esta calculadora reemplaza al médico?",
+      "a": "No. Es una herramienta de cálculo que aplica ecuaciones publicadas y no conoce tu contexto clínico, tu medicación ni tus antecedentes. Cualquier decisión sobre dosis, derivación o diagnóstico la toma un profesional de la salud con el estudio completo delante."
+    }
+  ],
+  "sources": [
+    {
+      "name": "KDIGO — Clinical Practice Guideline for the Evaluation and Management of CKD",
+      "url": "https://kdigo.org/guidelines/ckd-evaluation-and-management/"
+    },
+    {
+      "name": "Inker LA et al. — New Creatinine- and Cystatin C-Based Equations (CKD-EPI 2021), NEJM",
+      "url": "https://www.nejm.org/doi/full/10.1056/NEJMoa2102953"
+    },
+    {
+      "name": "Cockcroft DW, Gault MH — Prediction of creatinine clearance from serum creatinine (1976)",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/1244564/"
+    }
+  ],
+  "relatedSlugs": [
+    "calculadora-imc",
+    "homa-ir-quicki",
+    "perimetro-abdominal-riesgo-cardiovascular"
+  ],
+  "datePublished": "2026-07-24",
+  "lastReviewed": "2026-07-24",
+  "ymylRisk": "high",
+  "reviewType": "editorial",
+  "restrictedMode": "clinical",
+  "status": "draft",
+  "editorialNote": "BLOQUEADA POR POLITICA, NO POR CONTENIDO. content-policy.ts restringe (noindex) toda calc con ymylRisk='high' sin professionalReviewer valido, y hoy el catalogo entero tiene CERO revisores profesionales. La calc esta completa y su formula validada contra calculo manual. Para publicarla: cargar professionalReviewer (medico/a con matricula y profileUrl), poner reviewType='professional' y sacar status='draft'. Demanda medida en Bing: 229 impresiones en el cluster de funcion renal, con 0 clicks en las dos queries cabeza porque no existe la pagina."
+}

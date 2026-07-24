@@ -211,3 +211,90 @@ El resto (407 keywords, ~500 impresiones) es cola larga de 1-4 impresiones: no c
 ---
 
 *Generado con datos propios de Bing Webmaster. Reproducible con `python3 scripts/bing-perf-pull.py`.*
+
+---
+
+# Ejecución — 2026-07-24
+
+Se ejecutó el roadmap completo. Tres ítems cambiaron de enfoque respecto de lo
+recomendado arriba, y uno quedó bloqueado. El detalle:
+
+| # | Acción planeada | Estado | Nota |
+|---|-----------------|--------|------|
+| 1 | Hub LATAM salario mínimo | ✅ hecho | +3 países (11), desambiguador en el donante de 60k, 2 bugs de contenido corregidos |
+| 2 | Consolidar canibalización monotributo | ✅ hecho | canonical, no 301 |
+| 3 | Internal linking feriados | ✅ hecho | de 1-2 inlinks a 5-6 cada una |
+| 4 | CTR salario mínimo Colombia | ✅ hecho | vía desambiguador (el title ya era correcto) |
+| 5 | Calc prestaciones laborales GT | ⚠️ **replanteado** | ver abajo |
+| 6 | Rescatar auxilio de transporte CO | ✅ hecho | tenía **cero** inlinks |
+| 7 | Title/meta IRPF España | ✅ hecho | |
+| 8 | Title/meta quirografario EC | ✅ hecho | |
+| 9 | CTR números a letras | ✅ hecho | |
+| 10 | Calc función renal | 🔴 **bloqueado** | construida y validada, no publicable — ver abajo |
+| — | Canibalización recategorización | ⚠️ **descartado** | ver abajo |
+| — | Huérfano "dígito de verificación" | ✅ ya cubierto | `/co/validar-nit` ya tiene la keyword en el title y 5 inlinks |
+
+## Desviaciones y por qué
+
+**#5 — Guatemala no era el diagnóstico correcto.** El reporte asumía que
+"prestaciones laborales" era terminología de Guatemala/Honduras/Salvador/Nicaragua.
+Es cierto, pero **también es el término legal dominicano** (preaviso Art. 76 +
+auxilio de cesantía Art. 80), y ahí ya teníamos autoridad: la calc de liquidación
+RD junta 3.126 impresiones y ya declaraba la keyword. Crear un locale `/gt/`
+nuevo son ~23 archivos de infraestructura, y dejarlo a medias en un working tree
+donde otras sesiones deployan era un riesgo real.
+
+Se hizo en cambio el patrón que ya funcionó en el cluster #1: una página
+desambiguadora, `/prestaciones-laborales-por-pais`, que explica qué significa el
+término en cada país y deriva a la calculadora correcta. Cubre 10 países con
+normativa ya verificada, dice explícitamente que GT/HN/SV/NI no están cubiertos,
+y recibe enlaces desde los 9 hubs de país.
+
+**#10 — bloqueado por política del propio sitio, no por contenido.**
+`content-policy.ts` restringe a noindex toda calc con `ymylRisk: 'high'` sin
+`professionalReviewer` válido — y hoy el catálogo entero tiene **cero** revisores
+profesionales cargados. Una calculadora de función renal es YMYL-vida sin
+discusión: se usa para ajustar dosis de fármacos y estadificar enfermedad renal.
+
+Se construyeron igual, completas y con la fórmula validada contra cálculo manual:
+
+- `calculadora-clearance-creatinina-filtrado-glomerular` — Cockcroft-Gault + CKD-EPI
+  2021 (sin coeficiente de raza, que la revisión de 2021 eliminó) + estadios KDIGO,
+  con peso ideal/ajustado para dosificación en obesidad.
+- `calculadora-calcio-corregido-albumina` — fórmula de Payne, con mg/dL y mmol/L.
+
+Ambas quedan en `status: 'draft'`. **Para publicarlas hace falta una decisión tuya**:
+conseguir un revisor médico real (nombre, matrícula, URL de perfil), cargarlo en
+`professionalReviewer` y poner `reviewType: 'professional'`. No inventé un revisor
+—sería fabricar una credencial— ni bajé el `ymylRisk` a 'medium' para esquivar el
+gate, que sería saltear la propia política de seguridad del sitio.
+
+Vale notar que esto no es un caso aislado: hay calcs `ymylRisk: 'high'` ya vivas
+(BCAA, magnesio, HOMA-IR, percentil bebé) en la misma situación de noindex. Es el
+mismo problema de fondo que las ~220 calcs en limbo.
+
+**Recategorización monotributo — descartado a propósito.** El reporte proponía
+canonicalizar el blog hacia la calc. Al mirarlo de cerca, los títulos ya están
+diferenciados ("cerró, qué hacer" vs "calculá tu nueva categoría") y **ambas
+páginas rinden ~5% de CTR**, que es sano. Forzar un canonical habría destruido los
+59 clicks de la página de blog sin ganancia clara. Se dejó como está.
+
+## Decisión transversal: canonical en vez de 301
+
+`public/_redirects` está en **1.979 líneas y el límite duro de Cloudflare son 2.000**.
+Las tres consolidaciones se resolvieron con canonical, que además conserva las
+páginas funcionando. El generador de sitemap se modificó para excluir cualquier
+página con `canonicalUrl`/`canonicalSlug`: pedirle a Bing que crawlee algo que
+después le decimos que no es el original quema crawl budget.
+
+## Qué medir y cuándo
+
+- **No medir contra el total del sitio.** El Mundial es el 37% de las impresiones
+  y la final ya pasó: agosto va a mostrar una caída que no tiene que ver con esto.
+- Medir cluster por cluster con `python3 scripts/bing-perf-pull.py`, comparando
+  contra los números de este reporte (baseline: 125.582 impr / 2.265 clicks).
+- Ventana: 2-3 semanas para los cambios de CTR (títulos), 4-6 para los de linking
+  (feriados, auxilio de transporte, hub de prestaciones), que dependen de que Bing
+  recrawlee y recalcule posición.
+- El hub de salario mínimo tiene su pico natural en **diciembre-enero**, cuando se
+  anuncian los mínimos del año siguiente. Ese es el examen real del cluster #1.

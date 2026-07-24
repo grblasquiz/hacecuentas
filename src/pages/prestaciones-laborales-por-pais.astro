@@ -1,0 +1,296 @@
+---
+export const prerender = true;
+
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+// Hub desambiguador de "prestaciones laborales".
+//
+// Por qué existe: la query genérica "prestaciones laborales" junta 1.000 impresiones
+// en Bing con 4 clicks (CTR 0,40%) y NO tiene página propia. El término significa
+// cosas distintas en cada país — en RD es preaviso + auxilio de cesantía, en Colombia
+// y Venezuela son las prestaciones sociales, en México el finiquito — así que quien
+// busca sin decir el país cae en una calculadora de otro país y rebota.
+//
+// Mismo patrón que /datos-salario-minimo-latam-2026: una página que desambigua por
+// país y deriva a la calculadora correcta. NO calcula nada por su cuenta y NO publica
+// montos: cada valor vive en la calc de su país, con su fuente única verificada.
+// Regla del sitio: preferimos cubrir bien los países que tenemos verificados antes
+// que inventar los que no.
+
+const ULTIMA_REVISION = '2026-07-24';
+const PAGE_URL = 'https://hacecuentas.com/prestaciones-laborales-por-pais';
+
+const PAISES = [
+  {
+    pais: 'República Dominicana',
+    bandera: '🇩🇴',
+    termino: 'Prestaciones laborales',
+    que: 'Es el término del Código de Trabajo dominicano y agrupa dos conceptos: el preaviso (Art. 76) y el auxilio de cesantía (Art. 80). Se liquidan distinto según sea despido, desahucio o renuncia.',
+    href: '/do/calculadora-liquidacion-republica-dominicana',
+    cta: 'Calcular prestaciones laborales RD',
+  },
+  {
+    pais: 'Venezuela',
+    bandera: '🇻🇪',
+    termino: 'Prestaciones sociales',
+    que: 'La LOTTT las define como una garantía que se acumula por trimestre, más días adicionales por antigüedad. Se compara contra el cálculo retroactivo y se paga el monto mayor.',
+    href: '/ve/calculadora-prestaciones-sociales-venezuela',
+    cta: 'Calcular prestaciones sociales Venezuela',
+  },
+  {
+    pais: 'Colombia',
+    bandera: '🇨🇴',
+    termino: 'Prestaciones sociales',
+    que: 'Son cuatro conceptos que corren durante la relación laboral, no solo al final: cesantías, intereses sobre cesantías, prima de servicios y vacaciones.',
+    href: '/co/calculadora-pcs-prestaciones-sociales-colombia-percent-salario',
+    cta: 'Calcular prestaciones sociales Colombia',
+  },
+  {
+    pais: 'México',
+    bandera: '🇲🇽',
+    termino: 'Finiquito y liquidación',
+    que: 'Las "prestaciones" son lo que se acumula durante el año (aguinaldo, vacaciones, prima vacacional). Al terminar la relación se paga finiquito o liquidación según la causa de la baja.',
+    href: '/mx/calculadora-finiquito-liquidacion-mexico',
+    cta: 'Calcular finiquito y liquidación México',
+  },
+  {
+    pais: 'Perú',
+    bandera: '🇵🇪',
+    termino: 'Beneficios sociales',
+    que: 'Incluye la CTS, las gratificaciones de julio y diciembre y las vacaciones truncas, que se liquidan al cerrar el vínculo.',
+    href: '/pe/calculadora-liquidacion-beneficios-sociales-peru',
+    cta: 'Calcular beneficios sociales Perú',
+  },
+  {
+    pais: 'Ecuador',
+    bandera: '🇪🇨',
+    termino: 'Liquidación y finiquito',
+    que: 'El acta de finiquito reúne los décimos proporcionales, las vacaciones no gozadas y —según la causa— el desahucio o la indemnización por despido intempestivo.',
+    href: '/ec/calculadora-liquidacion-finiquito-ecuador',
+    cta: 'Calcular liquidación Ecuador',
+  },
+  {
+    pais: 'Chile',
+    bandera: '🇨🇱',
+    termino: 'Finiquito',
+    que: 'Lo que se paga depende de la causal invocada: la indemnización por años de servicio y la sustitutiva del aviso previo solo corren en algunas causales, las vacaciones proporcionales siempre.',
+    href: '/cl/calculadora-finiquito-chile-completo-causal-despido',
+    cta: 'Calcular finiquito Chile',
+  },
+  {
+    pais: 'Argentina',
+    bandera: '🇦🇷',
+    termino: 'Liquidación final',
+    que: 'Reúne días trabajados, SAC proporcional y vacaciones no gozadas; si hubo despido sin causa se suman la indemnización por antigüedad y el preaviso.',
+    href: '/calculadora-liquidacion-final-renuncia',
+    cta: 'Calcular liquidación final Argentina',
+  },
+  {
+    pais: 'Paraguay',
+    bandera: '🇵🇾',
+    termino: 'Liquidación final',
+    que: 'Junta el aguinaldo proporcional, las vacaciones y —cuando corresponde— el preaviso y la indemnización por despido injustificado.',
+    href: '/py/calculadora-liquidacion-final-paraguay',
+    cta: 'Calcular liquidación final Paraguay',
+  },
+  {
+    pais: 'Uruguay',
+    bandera: '🇺🇾',
+    termino: 'Despido e IPD',
+    que: 'La indemnización por despido (IPD) se cuenta en mensualidades por año trabajado, aparte del aguinaldo, la licencia y el salario vacacional pendientes.',
+    href: '/uy/calculadora-despido-uruguay',
+    cta: 'Calcular despido Uruguay',
+  },
+];
+
+const title = 'Prestaciones Laborales: qué son y cómo se calculan en cada país | Hacé Cuentas';
+const description =
+  'Prestaciones laborales significa algo distinto en cada país: en República Dominicana es preaviso más auxilio de cesantía, en Colombia y Venezuela son las prestaciones sociales, en México el finiquito. Elegí tu país y calculá lo que te corresponde.';
+
+const faq = [
+  {
+    q: '¿Qué son las prestaciones laborales?',
+    a: 'Son los pagos que le corresponden a un trabajador por encima del sueldo mensual, ya sea durante la relación laboral o al terminarla. El problema es que el término no significa lo mismo en todos lados: en República Dominicana nombra específicamente el preaviso y el auxilio de cesantía, en Colombia y Venezuela se habla de prestaciones sociales, en México de finiquito y liquidación, y en Perú de beneficios sociales.',
+  },
+  {
+    q: '¿Prestaciones laborales y liquidación son lo mismo?',
+    a: 'No siempre. En República Dominicana las prestaciones laborales (preaviso y cesantía) son una parte de la liquidación, que además incluye vacaciones, regalía pascual y salario pendiente. En Colombia, en cambio, las prestaciones sociales corren durante toda la relación laboral y no solo al final: la prima se paga en junio y diciembre, y las cesantías se consignan cada febrero.',
+  },
+  {
+    q: '¿Cómo se calculan las prestaciones laborales en República Dominicana?',
+    a: 'El preaviso (Art. 76) y el auxilio de cesantía (Art. 80) se cuentan en días de salario según la antigüedad, sobre el salario diario, que sale de dividir el sueldo mensual entre 23,83. Cuántos días te tocan depende del tiempo trabajado y de si la salida fue despido, desahucio o renuncia.',
+  },
+  {
+    q: '¿Las prestaciones se pagan si renuncio?',
+    a: 'Depende del país y de la causa de la salida. Como regla general, lo ya devengado (vacaciones proporcionales, aguinaldo o su equivalente, días trabajados) se paga siempre; las indemnizaciones por despido normalmente no corren si la salida fue voluntaria. Cada calculadora de esta página te deja elegir la causal, que es lo que cambia el resultado.',
+  },
+  {
+    q: '¿El aguinaldo entra en las prestaciones laborales?',
+    a: 'En la mayoría de los países el aguinaldo (o su equivalente local: regalía pascual en República Dominicana, prima de servicios en Colombia, gratificaciones en Perú, décimo tercero en Ecuador) se liquida proporcionalmente al cerrar el vínculo, así que sí forma parte de lo que cobrás al final, aunque técnicamente no siempre se lo clasifique como "prestación".',
+  },
+  {
+    q: '¿Sobre qué salario se calculan?',
+    a: 'Casi siempre sobre un salario diario o promedio derivado del sueldo, no sobre el sueldo mensual pelado, y el divisor cambia por país (República Dominicana usa 23,83; otros usan 30). Además, varios países mandan promediar los últimos meses cuando hay comisiones o variables. Cada calculadora aplica el divisor y el promedio de su propia legislación.',
+  },
+  {
+    q: '¿Cuánto tiempo tiene el empleador para pagarlas?',
+    a: 'Los plazos son cortos y por lo general están fijados por ley en cada país, con recargos o indemnizaciones si se incumplen. Como el plazo y la sanción varían mucho, conviene verificarlos en la fuente oficial del país que te toque: cada calculadora enlaza la norma que aplica.',
+  },
+  {
+    q: '¿Por qué no está mi país en la lista?',
+    a: 'Publicamos un país cuando tenemos su normativa verificada y una calculadora que la aplica. Guatemala, Honduras, El Salvador y Nicaragua usan mucho el término "prestaciones laborales" y todavía no están cubiertos: preferimos no publicarlos antes que estimar montos o plazos sin fuente oficial.',
+  },
+];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${PAGE_URL}#webpage`,
+      name: title,
+      description,
+      url: PAGE_URL,
+      inLanguage: 'es-419',
+      dateModified: ULTIMA_REVISION,
+      isPartOf: { '@id': 'https://hacecuentas.com/#website' },
+      publisher: { '@id': 'https://hacecuentas.com/#organization' },
+    },
+    {
+      '@type': 'ItemList',
+      '@id': `${PAGE_URL}#lista`,
+      name: 'Prestaciones laborales por país',
+      itemListElement: PAISES.map((p, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: `${p.termino} — ${p.pais}`,
+        url: `https://hacecuentas.com${p.href}`,
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Prestaciones laborales por país', item: PAGE_URL },
+      ],
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+  ],
+};
+---
+
+<Layout
+  title={title}
+  description={description}
+  canonical="/prestaciones-laborales-por-pais"
+  audience="global"
+  schema={schema}
+  keywords={[
+    'prestaciones laborales',
+    'cálculo de prestaciones laborales',
+    'prestaciones laborales cálculo',
+    'qué son las prestaciones laborales',
+    'prestaciones sociales',
+    'liquidación laboral por país',
+  ]}
+>
+  <Header slot="header" />
+
+  <main class="article-main">
+    <article class="page-content datos-page">
+      <header class="article-header">
+        <nav class="crumbs" aria-label="Migas de pan">
+          <a href="/">Inicio</a> <span>›</span> <span>Prestaciones laborales por país</span>
+        </nav>
+        <h1>Prestaciones laborales: qué son y cómo se calculan en cada país</h1>
+        <p class="lede">
+          <strong>«Prestaciones laborales» no significa lo mismo en todos lados.</strong> En
+          República Dominicana nombra el preaviso y el auxilio de cesantía; en Colombia y Venezuela
+          se habla de prestaciones sociales; en México, de finiquito y liquidación. Elegí tu país
+          para ir a la calculadora que aplica tu legislación.
+        </p>
+        <p class="updated">
+          Última revisión: <time datetime={ULTIMA_REVISION}>{new Date(ULTIMA_REVISION).toLocaleDateString('es-AR')}</time>
+        </p>
+      </header>
+
+      <p class="answer-snippet">
+        <strong>En una línea:</strong> las prestaciones laborales son lo que cobrás por encima del
+        sueldo, durante la relación laboral o al terminarla. Qué entra exactamente y cómo se
+        calcula lo define la ley de cada país — por eso acá no hay una fórmula única, sino la
+        calculadora de cada legislación.
+      </p>
+
+      <section>
+        <h2>Elegí tu país</h2>
+        <ul class="pais-list">
+          {PAISES.map((p) => (
+            <li class="pais-item">
+              <p class="pais-head">
+                <span class="pais-flag" aria-hidden="true">{p.bandera}</span>
+                <strong>{p.pais}</strong>
+                <span class="pais-term">{p.termino}</span>
+              </p>
+              <p class="pais-que">{p.que}</p>
+              <p><a class="pais-cta" href={p.href}>{p.cta} →</a></p>
+            </li>
+          ))}
+        </ul>
+        <p class="note">
+          Guatemala, Honduras, El Salvador y Nicaragua también usan el término «prestaciones
+          laborales» y todavía no están cubiertos. Sumamos un país cuando tenemos su normativa
+          verificada: preferimos no publicarlo antes que estimar montos o plazos sin fuente oficial.
+        </p>
+      </section>
+
+      <section>
+        <h2>Preguntas frecuentes</h2>
+        <div class="faq-list">
+          {faq.map((f) => (
+            <details class="faq-item">
+              <summary>{f.q}</summary>
+              <p>{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+    </article>
+  </main>
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .pais-list { list-style: none; padding: 0; margin: 1.25rem 0; display: grid; gap: 0.9rem; }
+  .pais-item {
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 12px;
+    background: var(--surface, #fff);
+  }
+  .pais-head { display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap; margin: 0 0 0.4rem; }
+  .pais-flag { font-size: 1.25rem; line-height: 1; }
+  .pais-term {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    padding: 0.15rem 0.5rem; border-radius: 999px;
+    background: color-mix(in srgb, currentColor 8%, transparent);
+    color: var(--text-muted, #64748b);
+  }
+  .pais-que { margin: 0 0 0.6rem; font-size: 0.93rem; line-height: 1.55; color: var(--text-muted, #475569); }
+  .pais-cta { font-weight: 700; text-decoration: none; }
+  .pais-cta:hover { text-decoration: underline; }
+
+  .faq-list { display: grid; gap: 0.5rem; margin-top: 1rem; }
+  .faq-item { border: 1px solid var(--border, #e2e8f0); border-radius: 10px; padding: 0.75rem 1rem; }
+  .faq-item summary { cursor: pointer; font-weight: 700; }
+  .faq-item p { margin: 0.6rem 0 0; line-height: 1.6; color: var(--text-muted, #475569); }
+</style>

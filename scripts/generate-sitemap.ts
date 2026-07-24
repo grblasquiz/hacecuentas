@@ -938,6 +938,7 @@ sitemaps.push({
     core('/dia-del-nino-2026-cuando-es',         '0.8',  'weekly'),
     core('/aguinaldo-diciembre-2026',            '0.85', 'weekly'),
     core('/datos-salario-minimo-latam-2026',     '0.7',  'monthly'),
+    core('/prestaciones-laborales-por-pais',     '0.7',  'monthly'),
     core('/pt/dados-inss-irrf-2026',             '0.7',  'monthly'),
     core('/pt/validar-cnpj',                     '0.8',  'monthly'),
     core('/pt/validar-cpf',                      '0.8',  'monthly'),
