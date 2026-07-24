@@ -1,0 +1,148 @@
+---
+/**
+ * Flagship "Tiempo de descarga" — mockup del batch 23-07-2026 (ola 1), calcado.
+ * El script inline replica ancho-banda-descarga-tiempo.ts:
+ *   velocidadReal = Mbps × eficiencia   ·   MB/s = velocidadReal ÷ 8
+ *   segundos = tamañoMB ÷ (MB/s)
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const D = { size: 5000, speed: 100, eff: 85 };
+const seg0 = D.size / ((D.speed * (D.eff / 100)) / 8);
+const nf = (x: number, d = 1) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: d }).format(x);
+---
+
+<main class="page hcm ab">
+  <div class="crumb">Inicio / <a href="/categoria/tecnologia">Tecnología</a> / <b>Tiempo de descarga</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">⬇️ VELOCIDAD REAL</span>
+      <h1>¿Cuánto tarda en descargarse un archivo?</h1>
+      <p>Convertí tamaño y Mbps en tiempo realista agregando la eficiencia de tu conexión.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">⬇️</div>
+      <div class="hero-stat"><span>5 GB con 100 Mbps</span><b>≈ {nf(seg0 / 60, 0)} minutos</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="ab-form">
+      <h2>Datos de la descarga</h2>
+      <p class="sub">No confundas megabytes con megabits.</p>
+      <div class="grid2">
+        <div class="field">
+          <label for="ab-size">Tamaño del archivo</label>
+          <div class="control"><input id="ab-size" type="number" min="0.1" step="any" value={D.size} /><span>MB</span></div>
+        </div>
+        <div class="field">
+          <label for="ab-speed">Velocidad contratada</label>
+          <div class="control"><input id="ab-speed" type="number" min="0.1" step="any" value={D.speed} /><span>Mbps</span></div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="ab-eff">Eficiencia real <small>Wi-Fi, servidor y protocolo</small></label>
+        <div class="control"><input id="ab-eff" type="number" min="1" max="100" step="1" value={D.eff} /><span>%</span></div>
+      </div>
+      <button class="cta" type="submit">Estimar tiempo →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Tiempo estimado</div>
+        <div class="big" id="ab-big">{nf(seg0 / 60)} <small>minutos</small></div>
+        <p class="answer" id="ab-answer">Tiempo estimado con la eficiencia real de la conexión.</p>
+        <div class="result-box">
+          <span>Velocidad efectiva</span>
+          <b id="ab-speed-out">{nf((D.speed * D.eff) / 100)} Mbps</b>
+          <small id="ab-note">Equivale a {nf((D.speed * D.eff) / 100 / 8, 2)} MB/s.</small>
+        </div>
+      </div>
+      <div class="equation" id="ab-eq">tamaño × 8 ÷ velocidad efectiva</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Por qué tarda más</h2>
+      <p>La velocidad anunciada es el techo.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>📶</i><h3>Wi-Fi</h3><p>Distancia, paredes e interferencia reducen el rendimiento.</p></article>
+      <article class="mini"><i>🌐</i><h3>Servidor</h3><p>El origen del archivo también limita la transferencia.</p></article>
+      <article class="mini"><i>👥</i><h3>Uso compartido</h3><p>Otros dispositivos consumen parte del ancho de banda.</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>8 bits forman 1 byte.</b>Por eso una conexión de 100 Mbps no descarga 100 MB cada segundo.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="⬇️" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Tiempo = tamaño en megabytes × 8 ÷ velocidad efectiva en megabits/s.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.ab{--brand:#173f6b;--accent:#70e4ff;--soft:#eaf4fb}
+  .hcm.ab .hero{background:linear-gradient(135deg,#173f6b,#286f9f)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.ab');
+    if (!root) return;
+    var S = document.getElementById('ab-size'), V = document.getElementById('ab-speed'), E = document.getElementById('ab-eff');
+    var nf = function (x, d) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: d == null ? 1 : d }).format(x); };
+
+    function render() {
+      var size = Number(S.value), speed = Number(V.value), effPct = Number(E.value);
+      var big = document.getElementById('ab-big');
+      var ans = document.getElementById('ab-answer');
+      var out = document.getElementById('ab-speed-out');
+      var note = document.getElementById('ab-note');
+      var eq = document.getElementById('ab-eq');
+      var eff = effPct / 100;
+      // Mismas guardas que ancho-banda-descarga-tiempo.ts
+      if (!(size > 0) || !(speed > 0) || !(eff > 0) || eff > 1) {
+        big.innerHTML = '—';
+        ans.textContent = 'Revisá los datos: tamaño y velocidad mayores a cero, eficiencia entre 1 y 100.';
+        out.textContent = '—';
+        note.textContent = 'Faltan datos para estimar el tiempo.';
+        eq.innerHTML = 'tamaño × 8 ÷ velocidad efectiva';
+        return;
+      }
+      var realMbps = speed * eff;
+      var mbs = realMbps / 8;
+      var segundos = size / mbs;
+      var minutos = segundos / 60;
+      var horas = minutos / 60;
+      var val, unidad;
+      if (segundos < 60) { val = segundos; unidad = 'segundos'; }
+      else if (minutos < 60) { val = minutos; unidad = 'minutos'; }
+      else { val = horas; unidad = 'horas'; }
+      var nota = minutos < 2 ? 'Descarga prácticamente instantánea para ese archivo.'
+        : minutos < 15 ? 'Una espera razonable: podés arrancar otra cosa mientras tanto.'
+        : 'Es una descarga larga: conviene dejarla corriendo o buscar una conexión más rápida.';
+      big.innerHTML = nf(val, unidad === 'horas' ? 2 : 1) + ' <small>' + unidad + '</small>';
+      ans.textContent = nota;
+      out.textContent = nf(realMbps, 1) + ' Mbps';
+      note.textContent = 'Equivale a ' + nf(mbs, 2) + ' MB/s — ' + nf(100 - effPct, 0) + '% se pierde en overhead.';
+      eq.innerHTML = nf(size, 0) + ' MB × 8 ÷ ' + nf(realMbps, 1) + ' Mbps = <b>' + nf(segundos, 1) + ' s</b>';
+    }
+
+    [S, V, E].forEach(function (el) { el.addEventListener('input', render); });
+    document.getElementById('ab-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

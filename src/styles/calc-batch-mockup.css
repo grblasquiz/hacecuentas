@@ -43,3 +43,28 @@
 .hcm .rel b{font-size:15px;line-height:1.35}
 .hcm .rel span{font-size:13px;font-weight:700;color:var(--brand)}
 @media(max-width:760px){.hcm .rel{grid-template-columns:1fr}.hcm .prose h2{font-size:24px}}
+
+/* ── Fix overflow horizontal en 390px ─────────────────────────────────────
+   Dos culpables dentro de .prose (markdown de `explanation`), presentes desde
+   el batch anterior: los <code> con fórmulas largas no cortaban, y las tablas
+   del markdown no van envueltas en .tablewrap (a diferencia de las de
+   referenceTables) así que empujaban el ancho del documento. Scopeado a .hcm. */
+.hcm .prose{overflow-wrap:anywhere}
+.hcm .prose code,.hcm .prose kbd,.hcm .prose samp{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
+.hcm .prose pre{overflow-x:auto;max-width:100%}
+.hcm .prose table{display:block;max-width:100%;overflow-x:auto}
+.hcm .tablewrap{max-width:100%}
+
+/* ── Fallbacks tipográficos y color del hero ──────────────────────────────
+   1) El sistema declaraba `font:800 26px Manrope` (shorthand SIN familia de
+      respaldo). El sitio no carga Manrope ni DM Sans, así que esos números
+      caían al serif por defecto del navegador. Se re-declara la familia con
+      stack completo — afecta también a los mockups del batch anterior.
+   2) Un `h1{color:#0f172a}` global le ganaba a la herencia de `.hero{color:#fff}`
+      y el título quedaba oscuro sobre el fondo oscuro del hero. */
+.hcm h1,.hcm h2,.hcm h3,
+.hcm .hero-stat b,.hcm .big,.hcm .step b,.hcm .calendar b,.hcm .result-box b{
+  font-family:Manrope,"DM Sans",Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+.hcm .hero h1{color:#fff}
+.hcm .hero p{color:#dbe8e3}

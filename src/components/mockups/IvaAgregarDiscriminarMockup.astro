@@ -1,0 +1,175 @@
+---
+/**
+ * Flagship "Agregar o discriminar IVA" — mockup del batch 23-07-2026 (ola 1),
+ * calcado. Reemplaza al flagship anterior (IvaAgregarDiscriminar.astro).
+ * El script inline replica precio-iva.ts:
+ *   agregar     → iva = neto × alícuota;  total = neto + iva
+ *   discriminar → neto = total ÷ (1 + alícuota);  iva = total − neto
+ * Redondeo a peso entero, igual que la fórmula real.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const D = { amount: 100000, rate: 21 };
+const iva0 = Math.round(D.amount * (D.rate / 100));
+const money = (x: number) => '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(x);
+---
+
+<main class="page hcm iv">
+  <div class="crumb">Inicio / <a href="/categoria/negocios">Impuestos</a> / <b>Agregar o discriminar IVA</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🧾 NETO · IVA · TOTAL</span>
+      <h1>Agregá o discriminá IVA sin confundir la base</h1>
+      <p>Elegí si partís de un precio neto o de un total final y obtené los tres componentes.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🧾</div>
+      <div class="hero-stat"><span>Alícuota general</span><b>21%</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="iv-form">
+      <h2>Datos de la operación</h2>
+      <p class="sub">La dirección cambia la fórmula.</p>
+      <div class="field">
+        <span class="pseudolabel" id="iv-mode-label">Quiero</span>
+        <div class="seg" role="group" aria-labelledby="iv-mode-label">
+          <button type="button" class="active" data-mode="agregar">Agregar IVA a un neto</button>
+          <button type="button" data-mode="discriminar">Discriminar IVA de un total</button>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="iv-amount">Monto</label>
+          <div class="control"><span>$</span><input id="iv-amount" type="number" min="0" step="any" value={D.amount} /></div>
+        </div>
+        <div class="field">
+          <label for="iv-rate">Alícuota</label>
+          <div class="control">
+            <select id="iv-rate">
+              <option value="21" selected>21%</option>
+              <option value="10.5">10,5%</option>
+              <option value="27">27%</option>
+              <option value="5">5%</option>
+              <option value="2.5">2,5%</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <button class="cta" type="submit">Calcular IVA →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over" id="iv-over">Total</div>
+        <div class="big" id="iv-big">{money(D.amount + iva0)}</div>
+        <p class="answer" id="iv-answer">Precio final con IVA agregado.</p>
+        <div class="result-box">
+          <span>IVA</span>
+          <b id="iv-tax">{money(iva0)}</b>
+          <small id="iv-note">Neto: {money(D.amount)}.</small>
+        </div>
+      </div>
+      <div class="equation" id="iv-eq">neto × (1 + alícuota)</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>La base correcta</h2>
+      <p>Agregar y discriminar no son operaciones inversas simples.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>➕</i><h3>Agregar</h3><p>Multiplicá el neto por 1 + alícuota.</p></article>
+      <article class="mini"><i>➗</i><h3>Discriminar</h3><p>Dividí el total por 1 + alícuota.</p></article>
+      <article class="mini"><i>📄</i><h3>Comprobante</h3><p>Verificá tratamiento fiscal y alícuota aplicable.</p></article>
+    </div>
+    <div class="notice">
+      <span>⚖️</span>
+      <div><b>Cálculo matemático, no asesoramiento fiscal.</b>La condición impositiva y el tipo de operación pueden cambiar el tratamiento.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🧾" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />IVA = neto × alícuota; neto desde total = total ÷ (1 + alícuota).</div>
+    <div>Resultado orientativo · Argentina</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.iv{--brand:#244d46;--accent:#d9ef70;--soft:#edf4ef}
+  .hcm.iv .hero{background:linear-gradient(135deg,#244d46,#47796c)}
+  .hcm .field .pseudolabel{display:block;font-weight:700;margin-bottom:8px}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.iv');
+    if (!root) return;
+    var A = document.getElementById('iv-amount'), R = document.getElementById('iv-rate');
+    var modo = 'agregar';
+    var money = function (x) { return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(x); };
+
+    function render() {
+      var monto = Number(A.value), alicPct = Number(R.value), alic = alicPct / 100;
+      var over = document.getElementById('iv-over');
+      var big = document.getElementById('iv-big');
+      var ans = document.getElementById('iv-answer');
+      var tax = document.getElementById('iv-tax');
+      var note = document.getElementById('iv-note');
+      var eq = document.getElementById('iv-eq');
+      if (!(monto > 0) || !(alic >= 0)) {
+        over.textContent = 'Total';
+        big.innerHTML = '—';
+        ans.textContent = 'Ingresá un monto mayor a cero.';
+        tax.textContent = '—'; note.textContent = '';
+        eq.innerHTML = 'neto × (1 + alícuota)';
+        return;
+      }
+      var neto, iva, total;
+      if (modo === 'agregar') {
+        neto = Math.round(monto);
+        iva = Math.round(monto * alic);
+        total = Math.round(monto + monto * alic);
+      } else {
+        var n = monto / (1 + alic);
+        neto = Math.round(n);
+        iva = Math.round(monto - n);
+        total = Math.round(monto);
+      }
+      over.textContent = 'Total';
+      big.innerHTML = money(total);
+      ans.textContent = modo === 'agregar'
+        ? 'Precio final con IVA agregado sobre un neto de ' + money(neto) + '.'
+        : 'Total discriminado: ' + money(neto) + ' de neto más ' + money(iva) + ' de IVA.';
+      tax.textContent = money(iva);
+      note.textContent = 'Neto: ' + money(neto) + ' · alícuota ' + String(alicPct).replace('.', ',') + '%.';
+      eq.innerHTML = modo === 'agregar'
+        ? money(neto) + ' × (1 + ' + String(alicPct).replace('.', ',') + '/100) = <b>' + money(total) + '</b>'
+        : money(total) + ' ÷ (1 + ' + String(alicPct).replace('.', ',') + '/100) = <b>' + money(neto) + '</b>';
+    }
+
+    root.querySelectorAll('.seg button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        modo = b.getAttribute('data-mode');
+        root.querySelectorAll('.seg button').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+        render();
+      });
+    });
+    A.addEventListener('input', render);
+    R.addEventListener('change', render);
+    document.getElementById('iv-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

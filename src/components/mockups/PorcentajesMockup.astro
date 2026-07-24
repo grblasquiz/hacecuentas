@@ -1,0 +1,246 @@
+---
+/**
+ * Flagship "Porcentajes" — mockup del batch 23-07-2026 (ola 1), calcado.
+ * Reemplaza al flagship anterior (PorcentajesFlagship.astro).
+ * El script inline replica porcentaje.ts con sus OCHO modos (el mockup traía
+ * sólo 3; la fórmula real es más completa y es la que manda, tal como pide el
+ * handoff). Fórmulas idénticas a src/lib/formulas/porcentaje.ts.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const nf = (x: number) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(x);
+---
+
+<main class="page hcm pc">
+  <div class="crumb">Inicio / <a href="/categoria/vida">Matemática</a> / <b>Porcentajes</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">% OCHO OPERACIONES, UNA HERRAMIENTA</span>
+      <h1>Porcentajes sin elegir la fórmula equivocada</h1>
+      <p>Elegí qué querés calcular: una parte, un aumento, un descuento o una variación. El resultado explica la cuenta.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">%</div>
+      <div class="hero-stat"><span>Ejemplo</span><b>15% de 100 = 15</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="pc-form">
+      <h2>¿Qué querés hacer?</h2>
+      <p class="sub">La pregunta correcta define la fórmula.</p>
+      <div class="field">
+        <label for="pc-mode">Operación</label>
+        <div class="control">
+          <select id="pc-mode">
+            <option value="simple" selected>¿Cuánto es X% de Y?</option>
+            <option value="descuento">Precio con descuento</option>
+            <option value="aumento">Precio con aumento</option>
+            <option value="diferencia">¿Qué % es X de Y?</option>
+            <option value="variacion">Variación % entre dos valores</option>
+            <option value="inverso">Valor original antes de un aumento</option>
+            <option value="descuentos-sucesivos">Dos descuentos sucesivos</option>
+            <option value="aumentos-sucesivos">Dos aumentos sucesivos</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="pc-a" id="pc-la">Valor base</label>
+          <div class="control"><input id="pc-a" type="number" step="any" value="100" /></div>
+        </div>
+        <div class="field">
+          <label for="pc-b" id="pc-lb">Porcentaje</label>
+          <div class="control"><input id="pc-b" type="number" step="any" value="15" /><span id="pc-ub">%</span></div>
+        </div>
+      </div>
+      <div class="field" id="pc-f3" hidden>
+        <label for="pc-c">Segundo porcentaje</label>
+        <div class="control"><input id="pc-c" type="number" step="any" value="10" /><span>%</span></div>
+      </div>
+      <button class="cta" type="submit">Calcular porcentaje →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Resultado</div>
+        <div class="big" id="pc-big">{nf(15)}</div>
+        <p class="answer" id="pc-answer">El 15% de 100 es 15.</p>
+        <div class="result-box">
+          <span>Diferencia respecto de la base</span>
+          <b id="pc-diff">−85</b>
+          <small id="pc-note">Conservamos decimales hasta el final.</small>
+        </div>
+      </div>
+      <div class="equation" id="pc-eq">100 × 15 ÷ 100 = <b>15</b></div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Tres errores comunes</h2>
+      <p>Pequeñas diferencias, resultados muy distintos.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>➕</i><h3>Aumento</h3><p>El resultado incluye el valor original más el porcentaje.</p></article>
+      <article class="mini"><i>🏷️</i><h3>Descuento</h3><p>Se resta el porcentaje del precio base.</p></article>
+      <article class="mini"><i>🔁</i><h3>Variación</h3><p>Comparar dos valores requiere otra fórmula.</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>Mostrá siempre la fórmula.</b>La transparencia reduce errores y permite verificar el resultado a mano.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="📊" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Operaciones porcentuales elementales con cálculo paso a paso.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.pc{--brand:#263d72;--accent:#8ee3ff;--soft:#eef3fb}
+  .hcm.pc .hero{background:linear-gradient(135deg,#263d72,#4f6eaa)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.pc');
+    if (!root) return;
+    var M = document.getElementById('pc-mode');
+    var A = document.getElementById('pc-a'), B = document.getElementById('pc-b'), C = document.getElementById('pc-c');
+    var fmt = function (n) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(n); };
+    // Porcentajes con coma decimal es-AR (toFixed devolvía punto y se mezclaban
+    // las dos convenciones en la misma tarjeta).
+    var pct = function (n) { return new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n); };
+
+    // Etiquetas por modo (los tres campos son los valor1/valor2/valor3 reales)
+    var LBL = {
+      simple: ['Valor base', 'Porcentaje', '%'],
+      descuento: ['Precio original', 'Descuento', '%'],
+      aumento: ['Precio original', 'Aumento', '%'],
+      diferencia: ['Valor parcial (X)', 'Valor total (Y)', ''],
+      variacion: ['Valor inicial', 'Valor final', ''],
+      inverso: ['Valor después del cambio', 'Variación aplicada', '%'],
+      'descuentos-sucesivos': ['Precio original', 'Primer descuento', '%'],
+      'aumentos-sucesivos': ['Precio original', 'Primer aumento', '%'],
+    };
+
+    function render() {
+      var modo = M.value;
+      var v1 = Number(A.value), v2 = Number(B.value), v3 = Number(C.value) || 0;
+      var big = document.getElementById('pc-big');
+      var ans = document.getElementById('pc-answer');
+      var diff = document.getElementById('pc-diff');
+      var note = document.getElementById('pc-note');
+      var eq = document.getElementById('pc-eq');
+      var boxLabel = root.querySelector('.result-box span');
+
+      var lbl = LBL[modo] || LBL.simple;
+      document.getElementById('pc-la').textContent = lbl[0];
+      document.getElementById('pc-lb').textContent = lbl[1];
+      document.getElementById('pc-ub').textContent = lbl[2];
+      document.getElementById('pc-ub').hidden = !lbl[2];
+      var sucesivos = modo === 'descuentos-sucesivos' || modo === 'aumentos-sucesivos';
+      document.getElementById('pc-f3').hidden = !sucesivos;
+      document.querySelector('label[for="pc-c"]').textContent = modo === 'aumentos-sucesivos' ? 'Segundo aumento' : 'Segundo descuento';
+
+      function fail(msg) {
+        big.innerHTML = '—'; ans.textContent = msg;
+        diff.textContent = '—'; note.textContent = '';
+        eq.innerHTML = '&nbsp;';
+      }
+      if (isNaN(v1) || isNaN(v2)) return fail('Ingresá valores numéricos válidos.');
+
+      var res, texto, formula, boxTitle, boxValue, boxNote;
+      // ── Mismas cuentas que src/lib/formulas/porcentaje.ts ──────────────
+      if (modo === 'simple') {
+        res = (v1 * v2) / 100;
+        texto = 'El ' + fmt(v2) + '% de ' + fmt(v1) + ' es ' + fmt(res) + ', es decir ' + fmt(v2) + ' de cada 100.';
+        formula = fmt(v1) + ' × ' + fmt(v2) + ' ÷ 100 = <b>' + fmt(res) + '</b>';
+        boxTitle = 'Cuánto queda fuera'; boxValue = fmt(v1 - res);
+        boxNote = 'El resto del valor base después de tomar esa parte.';
+        big.innerHTML = fmt(res);
+      } else if (modo === 'descuento') {
+        var desc = (v1 * v2) / 100; res = v1 - desc;
+        texto = fmt(v1) + ' con ' + fmt(v2) + '% de descuento: ahorrás ' + fmt(desc) + ' y pagás ' + fmt(res) + '.';
+        formula = fmt(v1) + ' − (' + fmt(v1) + ' × ' + fmt(v2) + '%) = <b>' + fmt(res) + '</b>';
+        boxTitle = 'Te ahorrás'; boxValue = fmt(desc);
+        boxNote = 'Sobre un precio original de ' + fmt(v1) + '.';
+        big.innerHTML = fmt(res);
+      } else if (modo === 'aumento') {
+        var aum = (v1 * v2) / 100; res = v1 + aum;
+        texto = fmt(v1) + ' con ' + fmt(v2) + '% de aumento: sumás ' + fmt(aum) + ' y pagás ' + fmt(res) + '.';
+        formula = fmt(v1) + ' + (' + fmt(v1) + ' × ' + fmt(v2) + '%) = <b>' + fmt(res) + '</b>';
+        boxTitle = 'Cuánto sube'; boxValue = fmt(aum);
+        boxNote = 'Sobre un precio original de ' + fmt(v1) + '.';
+        big.innerHTML = fmt(res);
+      } else if (modo === 'diferencia') {
+        if (v2 === 0) return fail('El valor total no puede ser cero.');
+        var prop = (v1 / v2) * 100;
+        texto = fmt(v1) + ' es el ' + pct(prop) + '% de ' + fmt(v2) + (prop > 100 ? ' — es mayor que el total.' : '.');
+        formula = '(' + fmt(v1) + ' ÷ ' + fmt(v2) + ') × 100 = <b>' + pct(prop) + '%</b>';
+        boxTitle = 'Diferencia absoluta'; boxValue = fmt(v2 - v1);
+        boxNote = 'Lo que falta para llegar al total.';
+        big.innerHTML = pct(prop) + ' <small>%</small>';
+      } else if (modo === 'variacion') {
+        if (v1 === 0) return fail('El valor inicial no puede ser cero.');
+        var vari = ((v2 - v1) / v1) * 100;
+        var signo = vari >= 0 ? '+' : '';
+        texto = vari >= 0
+          ? 'Aumentó ' + pct(vari) + '% de ' + fmt(v1) + ' a ' + fmt(v2) + '.'
+          : 'Disminuyó ' + pct(Math.abs(vari)) + '% de ' + fmt(v1) + ' a ' + fmt(v2) + '.';
+        formula = '((' + fmt(v2) + ' − ' + fmt(v1) + ') ÷ ' + fmt(v1) + ') × 100 = <b>' + signo + pct(vari) + '%</b>';
+        boxTitle = 'Diferencia absoluta'; boxValue = fmt(v2 - v1);
+        boxNote = 'La variación en unidades, no en porcentaje.';
+        big.innerHTML = signo + pct(vari) + ' <small>%</small>';
+      } else if (modo === 'inverso') {
+        if (v2 <= -100) return fail('El porcentaje debe ser mayor que −100%.');
+        res = v1 / (1 + v2 / 100);
+        texto = 'Si ' + fmt(v1) + ' es el valor después de variar ' + fmt(v2) + '%, el original era ' + fmt(res) + '.';
+        formula = fmt(v1) + ' ÷ (1 + ' + fmt(v2) + '/100) = <b>' + fmt(res) + '</b>';
+        boxTitle = 'Cuánto cambió'; boxValue = fmt(v1 - res);
+        boxNote = 'No alcanza con restar el porcentaje: la base es distinta.';
+        big.innerHTML = fmt(res);
+      } else if (modo === 'descuentos-sucesivos') {
+        res = v1 * (1 - v2 / 100) * (1 - v3 / 100);
+        var pctT = v1 !== 0 ? (1 - res / v1) * 100 : 0;
+        texto = 'Los descuentos de ' + fmt(v2) + '% y ' + fmt(v3) + '% equivalen a un descuento acumulado de ' + pct(pctT) + '%.';
+        formula = fmt(v1) + ' × (1 − ' + fmt(v2) + '/100) × (1 − ' + fmt(v3) + '/100) = <b>' + fmt(res) + '</b>';
+        boxTitle = 'Descuento real acumulado'; boxValue = pct(pctT) + '%';
+        boxNote = 'Los porcentajes sucesivos no se suman directamente.';
+        big.innerHTML = fmt(res);
+      } else if (modo === 'aumentos-sucesivos') {
+        res = v1 * (1 + v2 / 100) * (1 + v3 / 100);
+        var pctA = v1 !== 0 ? (res / v1 - 1) * 100 : 0;
+        texto = 'Los aumentos de ' + fmt(v2) + '% y ' + fmt(v3) + '% equivalen a una suba acumulada de ' + pct(pctA) + '%.';
+        formula = fmt(v1) + ' × (1 + ' + fmt(v2) + '/100) × (1 + ' + fmt(v3) + '/100) = <b>' + fmt(res) + '</b>';
+        boxTitle = 'Aumento real acumulado'; boxValue = pct(pctA) + '%';
+        boxNote = 'El segundo aumento se aplica sobre una base mayor.';
+        big.innerHTML = fmt(res);
+      } else {
+        return fail('Modo no reconocido.');
+      }
+
+      ans.textContent = texto;
+      boxLabel.textContent = boxTitle;
+      diff.textContent = boxValue;
+      note.textContent = boxNote;
+      eq.innerHTML = formula;
+    }
+
+    M.addEventListener('change', render);
+    [A, B, C].forEach(function (el) { el.addEventListener('input', render); });
+    document.getElementById('pc-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

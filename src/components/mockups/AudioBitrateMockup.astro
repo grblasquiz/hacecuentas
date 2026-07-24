@@ -1,0 +1,146 @@
+---
+/**
+ * Flagship "Bitrate y tamaño MP3" — mockup del batch 23-07-2026 (ola 1), calcado.
+ * El script inline replica audio-bitrate-tamano-mp3.ts:
+ *   KB = bitrate × (min × 60) ÷ 8   ·   MB = KB ÷ 1000
+ *   cancionesEn1gb = floor(1000 ÷ MB)
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const D = { minutes: 4, bitrate: 320 };
+const mb0 = (D.bitrate * D.minutes * 60) / 8 / 1000;
+const nf = (x: number, d = 1) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: d }).format(x);
+---
+
+<main class="page hcm au">
+  <div class="crumb">Inicio / <a href="/categoria/tecnologia">Audio</a> / <b>Bitrate y tamaño MP3</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🎧 CALIDAD VS PESO</span>
+      <h1>¿Cuánto va a pesar tu archivo de audio?</h1>
+      <p>Calculá el tamaño según duración y bitrate antes de exportar, enviar o publicar.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🎧</div>
+      <div class="hero-stat"><span>4 min · 320 kbps</span><b>≈ {nf(mb0)} MB</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="au-form">
+      <h2>Configurá el audio</h2>
+      <p class="sub">Más bitrate suele significar más detalle y peso.</p>
+      <div class="grid2">
+        <div class="field">
+          <label for="au-min">Duración</label>
+          <div class="control"><input id="au-min" type="number" min="0.1" step="0.1" value={D.minutes} /><span>min</span></div>
+        </div>
+        <div class="field">
+          <label for="au-br">Bitrate</label>
+          <div class="control">
+            <select id="au-br">
+              <option value="96">96 kbps · voz</option>
+              <option value="128">128 kbps</option>
+              <option value="192">192 kbps</option>
+              <option value="256">256 kbps</option>
+              <option value="320" selected>320 kbps · alta calidad</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <button class="cta" type="submit">Calcular tamaño →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Tamaño aproximado</div>
+        <div class="big" id="au-big">{nf(mb0, 2)} <small>MB</small></div>
+        <p class="answer" id="au-answer">Tamaño estimado del archivo comprimido.</p>
+        <div class="result-box">
+          <span>Cuántos entran en 1 GB</span>
+          <b id="au-gb">{Math.floor(1000 / mb0)} archivos</b>
+          <small id="au-note">De esta misma duración y bitrate.</small>
+        </div>
+      </div>
+      <div class="equation" id="au-eq">duración × bitrate ÷ 8</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Elegí según el uso</h2>
+      <p>No todo necesita 320 kbps.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>🎙️</i><h3>Voz</h3><p>96–128 kbps puede ser suficiente para conversación.</p></article>
+      <article class="mini"><i>🎵</i><h3>Música</h3><p>192–320 kbps conserva más detalle.</p></article>
+      <article class="mini"><i>📦</i><h3>Archivo</h3><p>Duplicar bitrate duplica aproximadamente el tamaño.</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>Es una estimación.</b>Metadatos, portada y contenedor pueden agregar una pequeña diferencia.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🎧" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Tamaño = duración en segundos × kbps ÷ 8 ÷ 1.000.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.au{--brand:#46306b;--accent:#d8a6ff;--soft:#f2ecfa}
+  .hcm.au .hero{background:linear-gradient(135deg,#46306b,#704d9c)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.au');
+    if (!root) return;
+    var M = document.getElementById('au-min'), B = document.getElementById('au-br');
+    var nf = function (x, d) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: d == null ? 1 : d }).format(x); };
+
+    function render() {
+      var min = Number(M.value), br = Number(B.value);
+      var big = document.getElementById('au-big');
+      var ans = document.getElementById('au-answer');
+      var gb = document.getElementById('au-gb');
+      var note = document.getElementById('au-note');
+      var eq = document.getElementById('au-eq');
+      if (!(min > 0) || !(br > 0)) {
+        big.innerHTML = '—';
+        ans.textContent = 'Ingresá una duración y un bitrate mayores a cero.';
+        gb.textContent = '—';
+        note.textContent = 'Faltan datos para estimar el tamaño.';
+        eq.innerHTML = 'duración × bitrate ÷ 8';
+        return;
+      }
+      var seg = min * 60;
+      var kb = (br * seg) / 8;        // idéntico a audio-bitrate-tamano-mp3.ts
+      var mb = kb / 1000;
+      var enGb = mb > 0 ? Math.floor(1000 / mb) : 0;
+      var calidad = br <= 96 ? 'compresión fuerte (voz/podcast)'
+        : br < 192 ? 'calidad estándar de streaming'
+        : br < 320 ? 'alta calidad' : 'máxima calidad MP3';
+      big.innerHTML = nf(mb, 2) + ' <small>MB</small>';
+      ans.textContent = 'A ' + br + ' kbps (' + calidad + '), ' + nf(min, 2) + ' min ocupan ' + nf(mb, 2) + ' MB (' + nf(Math.round(kb), 0) + ' KB).';
+      gb.textContent = nf(enGb, 0) + ' archivos';
+      note.textContent = 'De esta misma duración y bitrate.';
+      eq.innerHTML = nf(seg, 0) + ' s × ' + br + ' kbps ÷ 8 ÷ 1.000 = <b>' + nf(mb, 2) + ' MB</b>';
+    }
+
+    M.addEventListener('input', render);
+    B.addEventListener('change', render);
+    document.getElementById('au-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

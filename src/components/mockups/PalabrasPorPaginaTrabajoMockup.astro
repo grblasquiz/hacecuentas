@@ -1,0 +1,144 @@
+---
+/**
+ * Flagship "Palabras por página (trabajos)" — mockup del batch 23-07-2026
+ * (ola 1), calcado. El script inline replica palabras-por-pagina-trabajo.ts:
+ *   páginas = palabras ÷ palabrasPorPágina (redondeo a 1 decimal)
+ *   completas = floor(páginas) · restantes = palabras − completas × porPágina
+ * Guarda real de la fórmula: porPágina mínimo 150.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const D = { words: 3000, rate: 275 };
+const pag0 = Math.round((D.words / D.rate) * 10) / 10;
+const nf = (x: number, d = 1) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: d }).format(x);
+---
+
+<main class="page hcm pp">
+  <div class="crumb">Inicio / <a href="/categoria/educacion">Educación</a> / <b>Palabras por página</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">📝 EXTENSIÓN DEL TRABAJO</span>
+      <h1>Convertí palabras en páginas de trabajo</h1>
+      <p>Usá la densidad indicada por tu formato y obtené una extensión verificable.</p>
+    </div>
+    <div class="hero-art">
+      <div class="doc-preview"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="hero-stat"><span>3.000 palabras</span><b>≈ {nf(pag0)} páginas</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="pp-form">
+      <h2>Datos del trabajo</h2>
+      <p class="sub">Podés usar la densidad que te pidió la institución.</p>
+      <div class="grid2">
+        <div class="field">
+          <label for="pp-words">Cantidad de palabras</label>
+          <div class="control"><input id="pp-words" type="number" min="1" step="1" value={D.words} /></div>
+        </div>
+        <div class="field">
+          <label for="pp-rate">Palabras por página</label>
+          <div class="control"><input id="pp-rate" type="number" min="150" step="5" value={D.rate} /><span>pal/pág</span></div>
+        </div>
+      </div>
+      <button class="cta" type="submit">Estimar extensión →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Extensión</div>
+        <div class="big" id="pp-big">{nf(pag0)} <small>páginas</small></div>
+        <p class="answer" id="pp-answer">Extensión estimada con la densidad configurada.</p>
+        <div class="result-box">
+          <span>Desglose</span>
+          <b id="pp-split">{Math.floor(D.words / D.rate)} páginas completas</b>
+          <small id="pp-note">Más {nf(D.words - Math.floor(D.words / D.rate) * D.rate, 0)} palabras en la última.</small>
+        </div>
+      </div>
+      <div class="equation" id="pp-eq">palabras ÷ palabras por página</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Qué cambia la densidad</h2>
+      <p>Una página no es una unidad fija.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>↕️</i><h3>Interlineado</h3><p>Doble espacio reduce las palabras por página.</p></article>
+      <article class="mini"><i>🔤</i><h3>Tipografía</h3><p>Tamaño y familia cambian el ancho de cada línea.</p></article>
+      <article class="mini"><i>📚</i><h3>Elementos extra</h3><p>Citas, tablas y títulos ocupan espacio.</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>Usá el criterio de entrega.</b>Si la consigna define páginas y formato, respetá esa combinación antes que cualquier promedio.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="📝" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Páginas = cantidad de palabras ÷ palabras promedio por página.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.pp{--brand:#33456e;--accent:#a5dcff;--soft:#eff4fb}
+  .hcm.pp .hero{background:linear-gradient(135deg,#33456e,#6378a4)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.pp');
+    if (!root) return;
+    var W = document.getElementById('pp-words'), R = document.getElementById('pp-rate');
+    var nf = function (x, d) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: d == null ? 1 : d }).format(x); };
+
+    function render() {
+      var words = Number(W.value), rate = Number(R.value);
+      var big = document.getElementById('pp-big');
+      var ans = document.getElementById('pp-answer');
+      var split = document.getElementById('pp-split');
+      var note = document.getElementById('pp-note');
+      var eq = document.getElementById('pp-eq');
+      // Mismas guardas que palabras-por-pagina-trabajo.ts
+      if (isNaN(words) || words < 1) {
+        big.innerHTML = '—';
+        ans.textContent = 'Ingresá la cantidad de palabras (mínimo 1).';
+        split.textContent = '—'; note.textContent = '';
+        eq.innerHTML = 'palabras ÷ palabras por página';
+        return;
+      }
+      if (isNaN(rate) || rate < 150) {
+        big.innerHTML = '—';
+        ans.textContent = 'Las palabras por página deben ser al menos 150.';
+        split.textContent = '—'; note.textContent = '';
+        eq.innerHTML = 'palabras ÷ palabras por página';
+        return;
+      }
+      var exactas = words / rate;
+      var completas = Math.floor(exactas);
+      var restantes = words - completas * rate;
+      var pag = Math.round(exactas * 10) / 10;
+      big.innerHTML = nf(pag, 1) + ' <small>' + (pag === 1 ? 'página' : 'páginas') + '</small>';
+      ans.textContent = nf(words, 0) + ' palabras a ' + nf(rate, 0) + ' por página.';
+      split.textContent = nf(completas, 0) + (completas === 1 ? ' página completa' : ' páginas completas');
+      note.textContent = restantes > 0
+        ? 'Más ' + nf(restantes, 0) + ' palabras en la última.'
+        : 'La última página cierra justa, sin sobrante.';
+      eq.innerHTML = nf(words, 0) + ' ÷ ' + nf(rate, 0) + ' = <b>' + nf(pag, 1) + ' páginas</b>';
+    }
+
+    [W, R].forEach(function (el) { el.addEventListener('input', render); });
+    document.getElementById('pp-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

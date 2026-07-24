@@ -1,0 +1,147 @@
+---
+/**
+ * Flagship "Resolución y PPI" — mockup del batch 23-07-2026 (ola 1), calcado.
+ * El script inline replica EXACTAMENTE resolucion-pantalla-ppi.ts:
+ *   ppi = √(w² + h²) ÷ diagonal   ·   distanciaIdeal = (3438 / ppi) × 2,54 cm
+ * Los cortes de "calidad" son los mismos umbrales de la fórmula real.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Caso por defecto del mockup: 2560 × 1440 en 27″
+const D = { w: 2560, h: 1440, diag: 27 };
+const ppi0 = Math.sqrt(D.w * D.w + D.h * D.h) / D.diag;
+const nf = (x: number, d = 0) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: d }).format(x);
+---
+
+<main class="page hcm ppi">
+  <div class="crumb">Inicio / <a href="/categoria/entretenimiento">Tecnología</a> / <b>Resolución y PPI</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🖥️ DENSIDAD DE PÍXELES</span>
+      <h1>¿Qué tan nítida es esta pantalla?</h1>
+      <p>Calculá PPI con resolución y diagonal para comparar monitores, notebooks, celulares o televisores.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🖥️</div>
+      <div class="hero-stat"><span>27″ QHD</span><b>≈ {nf(ppi0)} ppi</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="ppi-form">
+      <h2>Especificaciones</h2>
+      <p class="sub">La resolución sola no determina la nitidez.</p>
+      <div class="grid2">
+        <div class="field">
+          <label for="ppi-w">Ancho</label>
+          <div class="control"><input id="ppi-w" type="number" min="1" step="1" value={D.w} /><span>px</span></div>
+        </div>
+        <div class="field">
+          <label for="ppi-h">Alto</label>
+          <div class="control"><input id="ppi-h" type="number" min="1" step="1" value={D.h} /><span>px</span></div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="ppi-d">Diagonal</label>
+        <div class="control"><input id="ppi-d" type="number" min="0.1" step="0.1" value={D.diag} /><span>pulg</span></div>
+      </div>
+      <button class="cta" type="submit">Calcular PPI →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Densidad</div>
+        <div class="big" id="ppi-big">{nf(ppi0)} <small>ppi</small></div>
+        <p class="answer" id="ppi-answer">Densidad de píxeles de la pantalla.</p>
+        <div class="result-box">
+          <span>Clasificación orientativa</span>
+          <b id="ppi-class">Buena</b>
+          <small id="ppi-note">Resolución {nf(D.w)} × {nf(D.h)} en {D.diag}″.</small>
+        </div>
+      </div>
+      <div class="equation" id="ppi-eq">√(ancho² + alto²) ÷ diagonal</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Cómo interpretar PPI</h2>
+      <p>La distancia de uso también importa.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>🖥️</i><h3>Monitor</h3><p>100–140 ppi suele verse nítido a distancia de escritorio.</p></article>
+      <article class="mini"><i>📱</i><h3>Celular</h3><p>Más de 300 ppi es habitual por la cercanía.</p></article>
+      <article class="mini"><i>📺</i><h3>TV</h3><p>Puede tener PPI bajo y verse bien desde lejos.</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>Más PPI no siempre significa mejor compra.</b>Tamaño, distancia, escalado, panel y sistema operativo también afectan la experiencia.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🖥️" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />PPI = diagonal en píxeles ÷ diagonal física en pulgadas.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.ppi{--brand:#20345e;--accent:#70e7ff;--soft:#eef3fb}
+  .hcm.ppi .hero{background:linear-gradient(135deg,#20345e,#4a63a0)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.ppi');
+    if (!root) return;
+    var W = document.getElementById('ppi-w'), H = document.getElementById('ppi-h'), Dg = document.getElementById('ppi-d');
+    var nf = function (x, d) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: d == null ? 0 : d }).format(x); };
+
+    function render() {
+      var w = Number(W.value), h = Number(H.value), d = Number(Dg.value);
+      var big = document.getElementById('ppi-big');
+      var ans = document.getElementById('ppi-answer');
+      var cls = document.getElementById('ppi-class');
+      var note = document.getElementById('ppi-note');
+      var eq = document.getElementById('ppi-eq');
+      // Mismas validaciones que resolucion-pantalla-ppi.ts
+      if (!(w > 0) || !(h > 0) || !(d > 0)) {
+        big.innerHTML = '—';
+        ans.textContent = 'Completá resolución y diagonal con valores mayores a cero.';
+        cls.textContent = '—';
+        note.textContent = 'Faltan datos para calcular la densidad.';
+        eq.innerHTML = '√(ancho² + alto²) ÷ diagonal';
+        return;
+      }
+      var diagPx = Math.sqrt(w * w + h * h);
+      var ppi = diagPx / d;
+      var dist = (3438 / ppi) * 2.54;
+      var mp = (w * h) / 1e6;
+      // Umbrales idénticos a la fórmula real
+      var clase = ppi >= 300 ? 'Retina' : ppi >= 200 ? 'Muy alta' : ppi >= 110 ? 'Alta' : ppi >= 90 ? 'Aceptable' : 'Baja';
+      var frase = ppi >= 300 ? 'No se distinguen píxeles a ninguna distancia normal.'
+        : ppi >= 200 ? 'Ideal para diseño y lectura prolongada.'
+        : ppi >= 110 ? 'Suficiente para uso de escritorio a 60+ cm.'
+        : ppi >= 90 ? 'Se notan píxeles en texto pequeño de cerca.'
+        : 'Los píxeles son visibles: conviene más resolución o menos pulgadas.';
+      big.innerHTML = nf(ppi, 1) + ' <small>ppi</small>';
+      ans.textContent = frase;
+      cls.textContent = clase;
+      note.textContent = 'Resolución ' + nf(w) + ' × ' + nf(h) + ' (' + nf(mp, 1) + ' MP) en ' + nf(d, 1) + '″. Desde ~' + nf(dist) + ' cm el ojo ya no distingue píxeles.';
+      eq.innerHTML = '√(' + nf(w) + '² + ' + nf(h) + '²) ÷ ' + nf(d, 1) + ' = <b>' + nf(ppi, 1) + ' ppi</b>';
+    }
+
+    [W, H, Dg].forEach(function (el) { el.addEventListener('input', render); });
+    document.getElementById('ppi-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

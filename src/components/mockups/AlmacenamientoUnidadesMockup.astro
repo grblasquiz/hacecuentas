@@ -1,0 +1,154 @@
+---
+/**
+ * Flagship "Bytes, KB, MB, GB y TB" — mockup del batch 23-07-2026 (ola 1), calcado.
+ * El script inline replica almacenamiento-bytes-kb-mb-gb-tb.ts: factores
+ * decimales (1e3/1e6/1e9/1e12) y el contraste con el GiB binario (2^30).
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const D = { value: 500, unit: 'gb' };
+const bytes0 = D.value * 1e9;
+const nf = (x: number, d = 2) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: d }).format(x);
+---
+
+<main class="page hcm al">
+  <div class="crumb">Inicio / <a href="/categoria/tecnologia">Tecnología</a> / <b>Bytes, KB, MB, GB y TB</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">💽 CONVERSOR DE ALMACENAMIENTO</span>
+      <h1>Pasá entre bytes, KB, MB, GB y TB</h1>
+      <p>Convertí una cantidad a todas las unidades y entendé la diferencia entre decimal y binario.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">💽</div>
+      <div class="hero-stat"><span>Fabricantes</span><b>usan base 1.000</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="al-form">
+      <h2>Cantidad original</h2>
+      <p class="sub">Mostramos la equivalencia decimal de forma predeterminada.</p>
+      <div class="grid2">
+        <div class="field">
+          <label for="al-val">Valor</label>
+          <div class="control"><input id="al-val" type="number" min="0" step="any" value={D.value} /></div>
+        </div>
+        <div class="field">
+          <label for="al-unit">Unidad</label>
+          <div class="control">
+            <select id="al-unit">
+              <option value="bytes">Bytes</option>
+              <option value="kb">KB</option>
+              <option value="mb">MB</option>
+              <option value="gb" selected>GB</option>
+              <option value="tb">TB</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <button class="cta" type="submit">Convertir unidades →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Equivale a</div>
+        <div class="big" id="al-big">{nf(bytes0 / 1e9, 4)} <small>GB</small></div>
+        <p class="answer" id="al-answer">Equivalencia decimal, la que usan los fabricantes.</p>
+        <div class="result-box">
+          <span>En megabytes</span>
+          <b id="al-mb">{nf(bytes0 / 1e6)} MB</b>
+          <small id="al-note">{nf(bytes0, 0)} bytes.</small>
+        </div>
+      </div>
+      <div class="equation" id="al-eq">Cada unidad decimal multiplica por 1.000</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Decimal vs binario</h2>
+      <p>Por eso el disco parece tener menos.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>🏷️</i><h3>Fabricante</h3><p>1 GB = 1.000 MB en especificaciones comerciales.</p></article>
+      <article class="mini"><i>💻</i><h3>Sistema</h3><p>Algunos sistemas muestran unidades binarias aunque digan GB.</p></article>
+      <article class="mini"><i>☁️</i><h3>Transferencia</h3><p>Servicios y redes pueden usar convenciones distintas.</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>Indicá siempre la convención.</b>Priorizamos la base decimal (1.000) y mostramos el equivalente binario en GiB debajo del resultado.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="💽" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Sistema decimal: cada salto multiplica o divide por 1.000. Binario: 1 GiB = 1.073.741.824 bytes.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.al{--brand:#253d65;--accent:#80e1ff;--soft:#eef3fb}
+  .hcm.al .hero{background:linear-gradient(135deg,#253d65,#4c6e9d)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.al');
+    if (!root) return;
+    var V = document.getElementById('al-val'), U = document.getElementById('al-unit');
+    var F = { bytes: 1, kb: 1e3, mb: 1e6, gb: 1e9, tb: 1e12 };
+    var nf = function (x, d) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: d == null ? 2 : d }).format(x); };
+
+    function render() {
+      var v = Number(V.value), u = U.value;
+      var big = document.getElementById('al-big');
+      var ans = document.getElementById('al-answer');
+      var mbEl = document.getElementById('al-mb');
+      var note = document.getElementById('al-note');
+      var eq = document.getElementById('al-eq');
+      if (isNaN(v) || v < 0 || !F[u]) {
+        big.innerHTML = '—';
+        ans.textContent = 'Ingresá un valor mayor o igual a 0.';
+        mbEl.textContent = '—';
+        note.textContent = 'Faltan datos para convertir.';
+        eq.innerHTML = 'Cada unidad decimal multiplica por 1.000';
+        return;
+      }
+      var bytes = v * F[u];
+      var gb = bytes / 1e9, mb = bytes / 1e6, tb = bytes / 1e12, kb = bytes / 1e3;
+      var gib = bytes / 1073741824;
+      var gap = gb > 0 ? (1 - gib / gb) * 100 : 0;
+      // La unidad "grande" que se muestra arriba se elige por magnitud
+      var unidad, valor, dec;
+      if (bytes >= 1e12) { unidad = 'TB'; valor = tb; dec = 4; }
+      else if (bytes >= 1e9) { unidad = 'GB'; valor = gb; dec = 4; }
+      else if (bytes >= 1e6) { unidad = 'MB'; valor = mb; dec = 4; }
+      else if (bytes >= 1e3) { unidad = 'KB'; valor = kb; dec = 4; }
+      else { unidad = 'bytes'; valor = bytes; dec = 0; }
+      big.innerHTML = nf(valor, dec) + ' <small>' + unidad + '</small>';
+      ans.textContent = 'Equivalencia decimal usada por fabricantes: ' + nf(kb, 2) + ' KB · ' + nf(mb, 2) + ' MB · ' + nf(gb, 4) + ' GB · ' + nf(tb, 6) + ' TB.';
+      // Decimales adaptativos: con valores chicos, 2 decimales mostraban "0 MB".
+      var decMb = mb === 0 ? 0 : mb >= 1 ? 2 : 6;
+      var decGib = gib === 0 ? 0 : gib >= 1 ? 2 : 6;
+      mbEl.textContent = nf(mb, decMb) + ' MB';
+      note.textContent = nf(bytes, 0) + ' bytes = ' + nf(gib, decGib) + ' GiB binarios'
+        + (gb > 0 ? ' (' + nf(gap, 1) + '% menos que los GB decimales).' : '.');
+      eq.innerHTML = nf(v, 4) + ' ' + (u === 'bytes' ? 'bytes' : u.toUpperCase()) + ' × ' + nf(F[u], 0) + ' = <b>' + nf(bytes, 0) + ' bytes</b>';
+    }
+
+    V.addEventListener('input', render);
+    U.addEventListener('change', render);
+    document.getElementById('al-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>
