@@ -23,6 +23,10 @@ const HITOS = [
   { m: 4, t: '4 meses', d: 'Segundas dosis del esquema de los 2 meses' },
   { m: 6, t: '6 meses', d: 'Pentavalente y Salk (3ª), Meningococo ACWY e Influenza' },
   { m: 12, t: '12 meses', d: 'Triple Viral (1ª) y refuerzos de Neumococo y Meningococo B' },
+  { m: 15, t: '15 meses', d: 'Varicela (1ª) y Meningococo ACWY (2ª)' },
+  { m: 18, t: '18 meses', d: 'Refuerzos de Pentavalente, Sabin OPV y Triple Bacteriana' },
+  { m: 24, t: '24 meses', d: 'Hepatitis A (dosis única)' },
+  { m: 60, t: '5 años', d: 'Ingreso escolar: Triple Viral (2ª), dTpa, Sabin y Varicela (2ª)' },
 ];
 const addMonths = (d: Date, m: number) => { const x = new Date(d); x.setMonth(x.getMonth() + m); return x; };
 const fmt = (d: Date, year = false) =>
@@ -69,6 +73,11 @@ const diaMes = hoy.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', 
           <button type="button" data-prem="si">Sí</button>
         </div>
       </div>
+      <p class="premnote" id="vac-prem-note" hidden>
+        En bebés prematuros el Calendario Nacional se aplica por <strong>edad cronológica</strong>
+        (desde el nacimiento), no por edad corregida — salvo indicación del equipo de salud.
+        Las fechas de abajo no cambian; confirmá el esquema con el neonatólogo o pediatra.
+      </p>
       <button class="cta" type="submit">Ver hitos por edad →</button>
     </form>
 
@@ -120,6 +129,7 @@ const diaMes = hoy.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', 
   .hcm.vac .hero{background:linear-gradient(135deg,#194559,#3e7486)}
   .hcm.vac .result{background:#194d62}
   .hcm.vac .notice.medical{background:#fff7dc;border-color:#ead995;color:#594b19}
+  .hcm.vac .premnote{margin:12px 0 0;padding:12px 14px;border-radius:12px;background:#fff7dc;border:1px solid #ead995;color:#594b19;font-size:13px;line-height:1.5}
 </style>
 
 <script is:inline>
@@ -127,7 +137,7 @@ const diaMes = hoy.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', 
     var root = document.querySelector('.hcm.vac');
     if (!root) return;
     var birth = document.getElementById('vac-birth');
-    var HITOS = [0, 2, 4, 6, 12];
+    var HITOS = [0, 2, 4, 6, 12, 15, 18, 24, 60];
 
     function add(d, m) { var x = new Date(d); x.setMonth(x.getMonth() + m); return x; }
     function fmt(d, year) {
@@ -151,9 +161,10 @@ const diaMes = hoy.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', 
       // Próximo hito = el primero que todavía no cumplió
       var next = null;
       for (var i = 0; i < HITOS.length; i++) { if (HITOS[i] > meses) { next = HITOS[i]; break; } }
-      var nextTxt = next === null ? 'Consultar esquema de 15 y 18 meses' : 'Revisar hito de ' + next + ' meses';
+      var label = function (m) { return m >= 60 ? '5 años (ingreso escolar)' : m + ' meses'; };
+      var nextTxt = next === null ? 'Refuerzos de los 11 años: consultá el carnet' : 'Revisar hito de ' + label(next);
       document.getElementById('vac-next').textContent = nextTxt;
-      document.getElementById('vac-hito').textContent = next === null ? '15+ meses' : next + ' meses';
+      document.getElementById('vac-hito').textContent = next === null ? '11 años' : label(next);
 
       root.querySelectorAll('.vaccine-list time').forEach(function (t) {
         var m = Number(t.getAttribute('data-m'));
@@ -166,6 +177,11 @@ const diaMes = hoy.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', 
       b.addEventListener('click', function () {
         root.querySelectorAll('.seg button').forEach(function (x) { x.classList.remove('active'); });
         b.classList.add('active');
+        // Prematurez: no recalcula el esquema (se aplica por edad cronológica),
+        // pero el aviso tiene que aparecer — es la duda #1 de quien lo marca.
+        var nota = document.getElementById('vac-prem-note');
+        if (nota) nota.hidden = b.getAttribute('data-prem') !== 'si';
+        render();
       });
     });
     document.getElementById('vac-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
