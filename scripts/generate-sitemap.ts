@@ -1032,7 +1032,16 @@ for (const [cat, items] of Object.entries(byCat).sort()) {
       lastmod: catLastmod,
     });
   }
-  sitemaps.push({ name: `sitemap-calcs-${cat}.xml`, urls: [catUrl, ...pagerUrls, ...calcUrls] });
+  // /categoria/<cat>/top — ranking por uso real (intent distinto al listado:
+  // "las más usadas de X"). Existía indexable pero fuera del sitemap y sin un
+  // solo link entrante; ahora la enlaza el hub de categoría.
+  const topUrl: Url = {
+    loc: `${site}/categoria/${cat}/top`,
+    priority: '0.6',
+    changefreq: 'weekly',
+    lastmod: catLastmod,
+  };
+  sitemaps.push({ name: `sitemap-calcs-${cat}.xml`, urls: [catUrl, ...pagerUrls, topUrl, ...calcUrls] });
 }
 
 // 3. Calcs por locale (EN, PT, MX, ES, CO, CL).
