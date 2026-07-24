@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-07-23
+// Generated: 2026-07-24
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { rmPesoMaximo } from './1rm-peso-maximo';
@@ -347,6 +347,7 @@ import { compute as compute__cafeteria_cuanto_cobrar_pais_cafe_medialuna_margen 
 import { caidaLibreTiempoAltura } from './caida-libre-tiempo-altura';
 import { caidaTensionCableDistancia } from './caida-tension-cable-distancia';
 import { cajaSeguridadBancoComparativaMensual } from './caja-seguridad-banco-comparativa-mensual';
+import { calcioCorregidoAlbumina } from './calcio-corregido-albumina';
 import { calcioDiarioEdadLactanciaMenopausia } from './calcio-diario-edad-lactancia-menopausia';
 import { calcioDietaDiariaOsteoporosisMujer } from './calcio-dieta-diaria-osteoporosis-mujer';
 import { calculadoraAguinaldoParaguay } from './calculadora-aguinaldo-paraguay';
@@ -634,6 +635,7 @@ import { claudeGeminiTokensComparativaPrecioUso } from './claude-gemini-tokens-c
 import { clausulaFormacionFifa } from './clausula-formacion-fifa';
 import { clausulaRescisionValor } from './clausula-rescision-valor';
 import { clearanceCreatininaCockcroft } from './clearance-creatinina-cockcroft';
+import { clearanceCreatininaFiltradoGlomerular } from './clearance-creatinina-filtrado-glomerular';
 import { cloudAwsGcpAzureEc2MesOndemand } from './cloud-aws-gcp-azure-ec2-mes-ondemand';
 import { cobayoVitaminaCDosisDiaria } from './cobayo-vitamina-c-dosis-diaria';
 import { compute as compute__cobre_precio_bolsa_chile_impacto_fiscal_codelco } from './cobre-precio-bolsa-chile-impacto-fiscal-codelco';
@@ -1552,6 +1554,7 @@ import { gastoAguaMensualHogar } from './gasto-agua-mensual-hogar';
 import { compute as compute__gasto_gasolina_viaje_republica_dominicana } from './gasto-gasolina-viaje-republica-dominicana';
 import { compute as compute__gasto_mensual_transporte_publico_paraguay } from './gasto-mensual-transporte-publico-paraguay';
 import { compute as compute__gasto_regreso_clases_2026_mexico } from './gasto-regreso-clases-2026-mexico';
+import { gastoTarjetaSubeMensual } from './gasto-tarjeta-sube-mensual';
 import { compute as compute__gastos_cierre_compra_vivienda_republica_dominicana } from './gastos-cierre-compra-vivienda-republica-dominicana';
 import { gastosEscrituraCompraInmueble } from './gastos-escritura-compra-inmueble';
 import { gastosEscrituraCompraventa } from './gastos-escritura-compraventa';
@@ -3760,6 +3763,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'caida-libre-tiempo-altura': caidaLibreTiempoAltura,
   'caida-tension-cable-distancia': caidaTensionCableDistancia,
   'caja-seguridad-banco-comparativa-mensual': cajaSeguridadBancoComparativaMensual,
+  'calcio-corregido-albumina': calcioCorregidoAlbumina,
   'calcio-diario-edad-lactancia-menopausia': calcioDiarioEdadLactanciaMenopausia,
   'calcio-dieta-diaria-osteoporosis-mujer': calcioDietaDiariaOsteoporosisMujer,
   'calculadora-aguinaldo-paraguay': calculadoraAguinaldoParaguay,
@@ -4047,6 +4051,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'clausula-formacion-fifa': clausulaFormacionFifa,
   'clausula-rescision-valor': clausulaRescisionValor,
   'clearance-creatinina-cockcroft': clearanceCreatininaCockcroft,
+  'clearance-creatinina-filtrado-glomerular': clearanceCreatininaFiltradoGlomerular,
   'cloud-aws-gcp-azure-ec2-mes-ondemand': cloudAwsGcpAzureEc2MesOndemand,
   'cobayo-vitamina-c-dosis-diaria': cobayoVitaminaCDosisDiaria,
   'cobre-precio-bolsa-chile-impacto-fiscal-codelco': compute__cobre_precio_bolsa_chile_impacto_fiscal_codelco,
@@ -4965,6 +4970,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'gasto-gasolina-viaje-republica-dominicana': compute__gasto_gasolina_viaje_republica_dominicana,
   'gasto-mensual-transporte-publico-paraguay': compute__gasto_mensual_transporte_publico_paraguay,
   'gasto-regreso-clases-2026-mexico': compute__gasto_regreso_clases_2026_mexico,
+  'gasto-tarjeta-sube-mensual': gastoTarjetaSubeMensual,
   'gastos-cierre-compra-vivienda-republica-dominicana': compute__gastos_cierre_compra_vivienda_republica_dominicana,
   'gastos-escritura-compra-inmueble': gastosEscrituraCompraInmueble,
   'gastos-escritura-compraventa': gastosEscrituraCompraventa,
