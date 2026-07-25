@@ -127,6 +127,52 @@ if len(complete) >= 8:
     l4 = statistics.mean(complete[-4:])
     print(f'  tendencia (sem. completas): media primeras 4 {f4:,.0f} → últimas 4 {l4:,.0f} = {((l4 - f4) / f4 * 100):+.0f}%')
 
+# ---- SECCIÓN 1a: directo LIMPIO (sin bot-noise) y ENGAGED ----
+# Auditoría 2026-07-25: el directo crudo viene inflado por tráfico automatizado.
+# Criterio para entrar a BOT_NOISE (medido sobre 12 semanas de directo):
+#   engagementRate < 20%  Y  duración media < 10 s  Y  ~1 pageview por sesión.
+# Ejemplos que lo cumplían: China (3% eng, 3 s), Singapur (30%, 2 s), Rusia (6%, 2 s),
+# Hong Kong (13%, 3 s), Vietnam (24%, 7 s, 0,66 pv). Argentina, en contraste: 63% y 304 s.
+# 'engaged' (engagedSessions) es la métrica honesta: sesión de >10 s, 2+ vistas o conversión.
+BOT_NOISE = {
+    'China', 'Singapore', 'Hong Kong', 'Vietnam', 'Russia', 'Bangladesh',
+    'Iraq', 'Saudi Arabia', 'Pakistan', 'Ukraine', 'Türkiye', 'Iran', 'Indonesia'}
+wk_ses = defaultdict(int)
+wk_eng = defaultdict(int)
+wk_bot = defaultdict(int)
+wk_bot_eng = defaultdict(int)
+for r in run(['date', 'country'], ['sessions', 'engagedSessions'], filt=DIRECT):
+    w = week_of(r.dimension_values[0].value)
+    if w is None:
+        continue
+    country = r.dimension_values[1].value
+    s, e = int(r.metric_values[0].value), int(r.metric_values[1].value)
+    wk_ses[w] += s
+    wk_eng[w] += e
+    if country in BOT_NOISE:
+        wk_bot[w] += s
+        wk_bot_eng[w] += e
+
+print(f'\nDIRECTO LIMPIO (crudo − bot-noise) y ENGAGED')
+print(f'{"semana":<17}{"crudo":>8}{"bot":>7}{"limpio":>9}{"engaged":>9}{"%eng":>7}')
+print('-' * 57)
+clean_weeks, eng_weeks = [], []
+for w in range(WEEKS - 1, -1, -1):
+    crudo = wk_ses.get(w, 0)
+    if crudo == 0:
+        continue
+    bot = wk_bot.get(w, 0)
+    limpio = crudo - bot
+    engaged = wk_eng.get(w, 0) - wk_bot_eng.get(w, 0)
+    tag = ' *' if w == 0 else ''
+    pct = (engaged / limpio * 100) if limpio else 0
+    print(f'{wk_label(w) + tag:<17}{crudo:>8,}{bot:>7,}{limpio:>9,}{engaged:>9,}{pct:>6.0f}%')
+    clean_weeks.append(limpio)
+    eng_weeks.append(engaged)
+if len(clean_weeks) >= 2:
+    inflado = (sum(wk_bot.values()) / sum(wk_ses.values()) * 100) if sum(wk_ses.values()) else 0
+    print(f'  bot-noise = {inflado:.0f}% del directo crudo en el período · países: {", ".join(sorted(BOT_NOISE))}')
+
 # ---- SECCIÓN 1b: directo HUMANO (países target; excluye el ruido bot US/China/Singapur) ----
 # KPI del plan de tráfico directo (2026-07-08): baseline ~15/día AR.
 HUMAN_COUNTRIES = {

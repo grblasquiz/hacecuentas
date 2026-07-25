@@ -2,28 +2,22 @@ export interface Inputs { [k: string]: number | string; __lang?: string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; }
 export function energiaPotencialGravitatoria(i: Inputs): Outputs {
   const __lang = i.__lang === 'en' ? 'en' : 'es';
-  const T = ({
-    es: {
-      error: 'Completá',
-      resumen: (Ep: number, m: number, h: number) => `Ep = ${Ep.toFixed(1)} J con m=${m}kg a altura ${h}m.`,
-      insightTitle: 'Energía potencial',
-      insightText: (Ep: number, m: number, h: number) => `Una masa de **${m} kg** a **${h} m** de altura almacena **${Ep.toFixed(1)} J** de energía potencial, lista para convertirse en cinética si cae.`,
-    },
-    en: {
-      error: 'Fill in the fields',
-      resumen: (Ep: number, m: number, h: number) => `Ep = ${Ep.toFixed(1)} J with m=${m}kg at height ${h}m.`,
-      insightTitle: 'Potential energy',
-      insightText: (Ep: number, m: number, h: number) => `A **${m} kg** mass at **${h} m** high stores **${Ep.toFixed(1)} J** of potential energy, ready to turn into kinetic energy if it falls.`,
-    },
-  } as const)[__lang];
-  const m = Number(i.masa); const h = Number(i.h); const g = Number(i.g) || 9.81;
-  if (!m || h === undefined) throw new Error(T.error);
-  const Ep = m * g * h;
+  const m = Number(i.m); const h = Number(i.h); const g = Number(i.g) || 9.81;
+  if (!m || h === undefined || Number.isNaN(h)) throw new Error(__lang === 'en' ? 'Fill in all fields' : 'Completá todos los campos');
+  const ep = m * g * h;
+  const v = Math.sqrt(2 * g * Math.abs(h));
+  const kmh = v * 3.6;
+  const kcal = ep / 4184;
+  const resumen = __lang === 'en'
+    ? `Ep = ${ep.toFixed(1)} J (${kcal.toFixed(3)} kcal). Dropped from ${h} m it would hit the ground at ${v.toFixed(2)} m/s (${kmh.toFixed(1)} km/h).`
+    : `Ep = ${ep.toFixed(1)} J (${kcal.toFixed(3)} kcal). Soltado desde ${h} m llegaría al suelo a ${v.toFixed(2)} m/s (${kmh.toFixed(1)} km/h).`;
   const _insight = {
-    title: T.insightTitle,
-    text: T.insightText(Ep, m, h),
+    title: __lang === 'en' ? 'Stored energy and impact speed' : 'Energía almacenada y velocidad de impacto',
+    text: __lang === 'en'
+      ? `**${ep.toFixed(1)} J** are stored at ${h} m. The impact speed of ${v.toFixed(2)} m/s does **not** depend on the mass — a heavier object arrives just as fast, only with more energy behind it.`
+      : `Hay **${ep.toFixed(1)} J** almacenados a ${h} m. La velocidad de impacto de ${v.toFixed(2)} m/s **no** depende de la masa: un objeto más pesado llega igual de rápido, solo que con más energía detrás.`,
     tone: 'neutral',
     icon: '⛰️',
   };
-  return { energia: Ep.toFixed(2) + ' J', resumen: T.resumen(Ep, m, h), _insight };
+  return { ep: ep.toFixed(1), velocidad: v.toFixed(2) + ' m/s (' + kmh.toFixed(1) + ' km/h)', kcal: kcal.toFixed(3) + ' kcal', resumen, _insight };
 }
