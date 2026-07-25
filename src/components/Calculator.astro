@@ -1279,7 +1279,10 @@ const formatFreshnessDate = (iso: string): string => {
           data-label={lang === 'en' ? 'Copy code' : 'Copiar código'}
           data-copied={lang === 'en' ? 'Copied!' : lang === 'pt' ? 'Copiado!' : '¡Copiado!'}
           data-manual={lang === 'en' ? 'Select & press Ctrl+C' : lang === 'pt' ? 'Selecione e Ctrl+C' : 'Seleccioná y Ctrl+C'}>{lang === 'en' ? 'Copy code' : 'Copiar código'}</button>
-        <a href={embedSrc} target="_blank" rel="noopener" class="embed-preview-link">{lang === 'en' ? 'Preview →' : lang === 'pt' ? 'Pré-visualizar →' : 'Ver preview →'}</a>
+        {/* nofollow: /embed/* está en Disallow del robots.txt. Sin esto, cada calc
+            encola su /embed/<slug> y Bing acumula ~2.500 URLs "BlockedByRobotsTxt"
+            (medido 2026-07-25: 2.563 y creciendo) = crawl budget tirado. */}
+        <a href={embedSrc} target="_blank" rel="noopener nofollow" class="embed-preview-link">{lang === 'en' ? 'Preview →' : lang === 'pt' ? 'Pré-visualizar →' : 'Ver preview →'}</a>
       </div>
       <p class="embed-panel-note">{lang === 'en' ? 'Paste it on your site. Keep the credit link — thanks for sharing.' : lang === 'pt' ? 'Cole no seu site. Mantenha o link de crédito — obrigado por compartilhar.' : 'Pegalo en tu sitio. Dejá el link de crédito — gracias por compartir.'} <a href={`${embedOrigin}/embeber`} target="_blank" rel="noopener">{lang === 'en' ? 'More widgets →' : lang === 'pt' ? 'Mais widgets →' : 'Más widgets →'}</a></p>
     </div>

@@ -537,6 +537,8 @@ const priorityUrls: Url[] = [
   prio('/fin-de-semana/escapadas',           '0.8',  'monthly'),
   prio('/fin-de-semana/proyectos-en-casa',   '0.8',  'monthly'),
   // Landings de feriados LATAM 2026 (evergreen del año, alta intención)
+  // Hub desambiguador para «feriados 2026» / «calendario 2026» (queries sin país)
+  prio('/feriados-2026',                     '0.85', 'weekly'),
   prio('/feriados-mexico-2026',              '0.85', 'weekly'),
   prio('/feriados-colombia-2026',            '0.85', 'weekly'),
   prio('/feriados-chile-2026',               '0.85', 'weekly'),
@@ -966,6 +968,7 @@ sitemaps.push({
     core('/pt/dados-salario-minimo-brasil-2026', '0.7',  'monthly'),
     core('/pt/quando-joga-brasil-copa-2026',     '0.9',  'daily',   true),
     core('/datos-salario-basico-ecuador-2026',   '0.7',  'monthly'),
+    core('/feriados-2026',                       '0.8',  'weekly'),
     core('/feriados-mexico-2026',                '0.8',  'weekly'),
     core('/feriados-colombia-2026',              '0.8',  'weekly'),
     core('/feriados-chile-2026',                 '0.8',  'weekly'),
