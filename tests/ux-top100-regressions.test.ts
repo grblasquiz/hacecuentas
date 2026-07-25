@@ -117,10 +117,10 @@ describe('regresiones UX del top 100', () => {
     }
   });
 
-  it('personaliza el recorrido de las 19 calculadoras en vez de sólo compartir estilos', () => {
+  it('personaliza el recorrido de las 57 calculadoras compartidas en vez de sólo compartir estilos', () => {
     const ux = readFileSync('src/lib/personalized-calc-ux.ts', 'utf8');
     const widget = readFileSync('src/components/Calculator.astro', 'utf8');
-    expect((ux.match(/'calculadora-[^']+': \{/g) || []).length).toBe(19);
+    expect((ux.match(/eyebrow: '/g) || []).length).toBe(57);
     expect(widget).toContain('calc-journey');
     expect(widget).toContain('ux?.calculateLabel');
     expect(widget).toContain('ux?.inputLabel');
