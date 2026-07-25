@@ -244,6 +244,12 @@ for (const { dir, pathPrefix, locale } of LOCALES) {
 // path completo como slug — los consumidores arman la URL como /{slug}.
 const CC_LOCALE: Record<string, string> = { co: 'es-CO', mx: 'es-MX', cl: 'es-CL', pe: 'es-PE' };
 for (const r of DECISION_MANIFEST) {
+  const path = `/decidir/${r.slug}`;
+  if (isDeadPath(path)) {
+    skipped++;
+    skippedDead++;
+    continue;
+  }
   out.push({
     slug: `decidir/${r.slug}`,
     url: `https://hacecuentas.com/decidir/${r.slug}`,
@@ -255,6 +261,12 @@ for (const r of DECISION_MANIFEST) {
   included++;
 }
 for (const r of DECISION_MANIFEST_LOCALES) {
+  const path = `/${r.country}/decidir/${r.slug}`;
+  if (isDeadPath(path)) {
+    skipped++;
+    skippedDead++;
+    continue;
+  }
   out.push({
     slug: `${r.country}/decidir/${r.slug}`,
     url: `https://hacecuentas.com/${r.country}/decidir/${r.slug}`,
