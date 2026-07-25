@@ -41,64 +41,14 @@ interface ConceptoConfig {
 // Valores oficiales Anexo VIII RG 830 (últimos publicados por RG 5423/2023).
 // Vigentes en 2026 — ARCA no los actualizó.
 const conceptos: Record<string, ConceptoConfig> = {
-  'honorarios-profesionales': {
-    nombre: 'Honorarios profesionales, profesiones liberales, oficios (cód. 119)',
-    codigo: '119',
-    mniInscripto: 160_000,
-    alicuotaInscripto: 0,
-    alicuotaNoInscripto: 28,
-    escalaTipo: 'profesionales',
-  },
-  'locacion-obras-servicios': {
-    nombre: 'Locación obras y servicios no personales (cód. 94)',
-    codigo: '94',
-    mniInscripto: 67_170,
-    alicuotaInscripto: 2,
-    alicuotaNoInscripto: 28,
-  },
-  'alquileres-urbanos': {
-    nombre: 'Alquiler de inmuebles urbanos (cód. 31)',
-    codigo: '31',
-    mniInscripto: 11_200,
-    alicuotaInscripto: 6,
-    alicuotaNoInscripto: 28,
-  },
-  'alquileres-rurales': {
-    nombre: 'Alquiler de inmuebles rurales (cód. 32)',
-    codigo: '32',
-    mniInscripto: 11_200,
-    alicuotaInscripto: 6,
-    alicuotaNoInscripto: 28,
-  },
-  comisiones: {
-    nombre: 'Comisiones / intermediación (cód. 25)',
-    codigo: '25',
-    mniInscripto: 16_830,
-    alicuotaInscripto: 0,
-    alicuotaNoInscripto: 28,
-    escalaTipo: 'general',
-  },
-  intereses: {
-    nombre: 'Intereses no financieros (cód. 21)',
-    codigo: '21',
-    mniInscripto: 7_870,
-    alicuotaInscripto: 6,
-    alicuotaNoInscripto: 28,
-  },
-  'enajenacion-bienes': {
-    nombre: 'Enajenación de bienes muebles y bienes de cambio (cód. 78)',
-    codigo: '78',
-    mniInscripto: 224_000,
-    alicuotaInscripto: 2,
-    alicuotaNoInscripto: 10,
-  },
-  transporte: {
-    nombre: 'Transporte de cargas (cód. 95)',
-    codigo: '95',
-    mniInscripto: 67_170,
-    alicuotaInscripto: 0.25,
-    alicuotaNoInscripto: 28,
-  },
+  'honorarios-profesionales': { nombre: 'Honorarios profesionales (cód. 119)', mniInscripto: 160_000, alicuotaInscripto: 10, alicuotaNoInscripto: 28, escalaProgresiva: true },
+  'locacion-obras-servicios': { nombre: 'Locación obras y servicios no personales (cód. 111/112)', mniInscripto: 67_170, alicuotaInscripto: 2, alicuotaNoInscripto: 28 },
+  'alquileres-urbanos': { nombre: 'Alquiler de inmuebles urbanos (cód. 128)', mniInscripto: 11_200, alicuotaInscripto: 6, alicuotaNoInscripto: 28 },
+  'alquileres-rurales': { nombre: 'Alquiler de inmuebles rurales (cód. 129)', mniInscripto: 11_200, alicuotaInscripto: 6, alicuotaNoInscripto: 28 },
+  comisiones: { nombre: 'Comisiones / Intermediación (cód. 127)', mniInscripto: 16_830, alicuotaInscripto: 2, alicuotaNoInscripto: 28 },
+  intereses: { nombre: 'Intereses (cód. 131)', mniInscripto: 7_870, alicuotaInscripto: 6, alicuotaNoInscripto: 28 },
+  'enajenacion-bienes': { nombre: 'Enajenación de bienes muebles (cód. 114)', mniInscripto: 224_000, alicuotaInscripto: 2, alicuotaNoInscripto: 10 },
+  transporte: { nombre: 'Transporte de cargas (cód. 125)', mniInscripto: 67_170, alicuotaInscripto: 0.25, alicuotaNoInscripto: 28 },
 };
 
 /**
@@ -127,14 +77,14 @@ const ESCALA_GENERAL: TramoEscala[] = [
  * Valores oficiales Anexo VIII RG 830 vía RG 5423/2023.
  */
 const ESCALA_PROFESIONALES: TramoEscala[] = [
-  { desde: 0,        hasta: 71_000,  fijo: 0,        alicuota: 0.05 },
-  { desde: 71_000,   hasta: 142_000, fijo: 3_550,    alicuota: 0.09 },
-  { desde: 142_000,  hasta: 213_000, fijo: 9_940,    alicuota: 0.12 },
-  { desde: 213_000,  hasta: 284_000, fijo: 18_460,   alicuota: 0.15 },
-  { desde: 284_000,  hasta: 426_000, fijo: 29_110,   alicuota: 0.19 },
-  { desde: 426_000,  hasta: 568_000, fijo: 56_090,   alicuota: 0.23 },
-  { desde: 568_000,  hasta: 852_000, fijo: 88_750,   alicuota: 0.27 },
-  { desde: 852_000,  hasta: Infinity, fijo: 165_430, alicuota: 0.31 },
+  { desde: 0, hasta: 71_000, fijo: 0, alicuota: 0.05 },
+  { desde: 71_000, hasta: 142_000, fijo: 3_550, alicuota: 0.09 },
+  { desde: 142_000, hasta: 213_000, fijo: 9_940, alicuota: 0.12 },
+  { desde: 213_000, hasta: 284_000, fijo: 18_460, alicuota: 0.15 },
+  { desde: 284_000, hasta: 426_000, fijo: 29_110, alicuota: 0.19 },
+  { desde: 426_000, hasta: 568_000, fijo: 56_090, alicuota: 0.23 },
+  { desde: 568_000, hasta: 852_000, fijo: 88_750, alicuota: 0.27 },
+  { desde: 852_000, hasta: Infinity, fijo: 165_430, alicuota: 0.31 },
 ];
 
 function aplicarEscala(base: number, escala: TramoEscala[]): number {
