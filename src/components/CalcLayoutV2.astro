@@ -63,6 +63,7 @@ import converterTables from '../lib/converter-tables.json';
 import { hasValidProfessionalReviewer, isRestrictedCalc, restrictedMode } from '../lib/content-policy';
 import { isBespokeTop } from '../lib/redesign-exclude';
 import { getCalculatorDisclaimer } from '../lib/disclaimers';
+import { getPersonalizedCalcUx } from '../lib/personalized-calc-ux';
 import RestrictedNotice from './RestrictedNotice.astro';
 import DataAlertCta from './DataAlertCta.astro';
 import '../styles/calc-redesign.css';
@@ -163,6 +164,10 @@ const decisionRooms = sortDecisionLinksByPriority(getRoomsForCalc(calc.slug, lan
 // la cohorte P0 aporta un CTA contextual centralizado sin tocar decenas de JSON
 // (varios se actualizan por automatizaciones y no deben divergir).
 const decisionPostResult = calc.postResult ?? getPriorityDecisionCta(calc.slug, lang);
+const personalizedUx = getPersonalizedCalcUx(calc.slug);
+const calculatorConfig = personalizedUx && !calc.presets
+  ? { ...calc, presets: personalizedUx.presets }
+  : calc;
 
 // ---- Autoría / revisión (política YMYL, ver src/lib/content-policy.ts) ----
 // Martín Rodríguez es autor/editor en TODA la web, NO revisor clínico. Ninguna
@@ -649,7 +654,7 @@ const editorialHtml = _isReviewed
     ) : hasFinancialClusterUX ? (
       <FinancialClusterCalculator calc={calc} />
     ) : (
-      <Calculator config={calc} dataAsOf={dataAsOf ?? undefined} lang={calcWidgetLang} redesign={redesign}>
+      <Calculator config={calculatorConfig} ux={personalizedUx} dataAsOf={dataAsOf ?? undefined} lang={calcWidgetLang} redesign={redesign}>
         {/* Bloque de decisión post-resultado (copy propio o cohorte P0): el
             número se vuelve el principio de una segunda acción. Va PRIMERO en el
             slot para quedar arriba del "seguí calculando". */}

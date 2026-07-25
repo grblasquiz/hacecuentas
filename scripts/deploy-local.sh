@@ -262,7 +262,11 @@ fi
 # ─── 2. Detect changes ────────────────────────────────────────────────────
 MODE=full
 INCREMENTAL_CHANGES=""
-if [ "$FORCE_FULL" = true ]; then
+if [ -n "${HC_INCREMENTAL_CHANGES_OVERRIDE:-}" ]; then
+  MODE=incremental
+  INCREMENTAL_CHANGES="$HC_INCREMENTAL_CHANGES_OVERRIDE"
+  log "modo INCREMENTAL explícito — lote provisto por HC_INCREMENTAL_CHANGES_OVERRIDE"
+elif [ "$FORCE_FULL" = true ]; then
   log "modo forzado: FULL build"
 elif [ ! -f .last-deploy-sha ]; then
   log "sin .last-deploy-sha previo → FULL build"

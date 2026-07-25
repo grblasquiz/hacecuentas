@@ -116,4 +116,14 @@ describe('regresiones UX del top 100', () => {
       expect(layout).toContain(`'${slug}'`);
     }
   });
+
+  it('personaliza el recorrido de las 19 calculadoras en vez de sólo compartir estilos', () => {
+    const ux = readFileSync('src/lib/personalized-calc-ux.ts', 'utf8');
+    const widget = readFileSync('src/components/Calculator.astro', 'utf8');
+    expect((ux.match(/'calculadora-[^']+': \{/g) || []).length).toBe(19);
+    expect(widget).toContain('calc-journey');
+    expect(widget).toContain('ux?.calculateLabel');
+    expect(widget).toContain('ux?.inputLabel');
+    expect(widget).toContain('ux?.resultLabel');
+  });
 });
