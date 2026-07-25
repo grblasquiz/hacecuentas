@@ -2891,6 +2891,7 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/roi-aprender-habilidad-nueva': '/categoria/finanzas',
   '/sha256-velocidad-hash': '/categoria/tecnologia',
   '/sueldo': '/sueldo-en-mano-argentina',
+  '/tabla/tabla-categorias-monotributo-2026': '/datos-monotributo-2026',
   '/tabla/tabla-peso-ideal-perros-por-raza': '/tabla',
   '/tiempo-fuerza-bruta-contrasena': '/categoria/vida',
   '/uy/calculadora-antiguedad-laboral-uruguay': '/uy/calculadora-aportes-empleada-domestica-uruguay',
