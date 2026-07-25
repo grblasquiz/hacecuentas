@@ -3221,6 +3221,7 @@ import { compute as compute__tipo_cambio_dolar_peso_chile_clp_banco_central } fr
 import { compute as compute__tipo_de_cambio_sunat_dolar_soles_peru } from './tipo-de-cambio-sunat-dolar-soles-peru';
 import { compute as compute__tipo_marginal_irpf_espana_2026_tramos_rapido } from './tipo-marginal-irpf-espana-2026-tramos-rapido';
 import { tirVan } from './tir-van';
+import { tiroParabolicoAlcanceAltura } from './tiro-parabolico-alcance-altura';
 import { titulacionAcidoBase } from './titulacion-acido-base';
 import { titularidadCaratularAutoTrasladarProvincia } from './titularidad-caratular-auto-trasladar-provincia';
 import { compute as compute__titulos_tes_colombia_rendimiento_vencimiento } from './titulos-tes-colombia-rendimiento-vencimiento';
@@ -6646,6 +6647,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'tipo-de-cambio-sunat-dolar-soles-peru': compute__tipo_de_cambio_sunat_dolar_soles_peru,
   'tipo-marginal-irpf-espana-2026-tramos-rapido': compute__tipo_marginal_irpf_espana_2026_tramos_rapido,
   'tir-van': tirVan,
+  'tiro-parabolico-alcance-altura': tiroParabolicoAlcanceAltura,
   'titulacion-acido-base': titulacionAcidoBase,
   'titularidad-caratular-auto-trasladar-provincia': titularidadCaratularAutoTrasladarProvincia,
   'titulos-tes-colombia-rendimiento-vencimiento': compute__titulos_tes_colombia_rendimiento_vencimiento,

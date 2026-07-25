@@ -89,4 +89,31 @@ describe('regresiones UX del top 100', () => {
       expect(layout).toContain(`'${slug}'`);
     }
   });
+
+  it('activa focus en la tanda de 70 a 89 sesiones orgánicas', () => {
+    const layout = readFileSync('src/components/CalcLayoutV2.astro', 'utf8');
+    for (const slug of [
+      'calculadora-patente-municipal-ecuador',
+      'calculadora-recargo-nocturno-colombia-2026',
+      'calculadora-reduccion-jornada-42-horas-colombia-2026',
+      'calculadora-incapacidad-medica-eps-colombia',
+      'calculadora-pension-alimenticia-ecuador',
+      'calculadora-impuesto-timbre-nacional-colombia-2026',
+      'calculadora-isr-honorarios-persona-fisica',
+      'calculadora-porcion-arroz-gramos-personas',
+      'calculadora-bebidas-evento-litros-por-persona',
+      'calculadora-semanas-embarazo',
+      'calculadora-horario-llegada-zona-horaria',
+      'calculadora-tarifa-electrica-distribuidoras-chile-bt1-bt2-bt3',
+      'calculadora-duracion-bateria-mah-consumo',
+      'calculadora-tabla-impuesto-renta-personas-naturales-colombia-2026',
+      'calculadora-canasta-basica-mexico-costo-mensual-familia',
+      'calculadora-imss-cuotas-empleado-patron-mexico-2026',
+      'calculadora-consumo-nafta-litros-100km',
+      'calculadora-impuesto-sellos-inmueble-contrato',
+      'calculadora-pago-provisional-isr-arrendamiento-mexico-2026',
+    ]) {
+      expect(layout).toContain(`'${slug}'`);
+    }
+  });
 });
