@@ -23,11 +23,18 @@ export interface TablaRef {
 
 export const CALC_TO_TABLA: Record<string, TablaRef> = {
   'calculadora-prestamo-personal-cuota-mensual': { slug: 'tabla-amortizacion-prestamo', label: 'Tabla de amortización de préstamo (francés y alemán)' },
+  'calculadora-cuota-prestamo': { slug: 'tabla-amortizacion-prestamo', label: 'Tabla de amortización de préstamo (francés y alemán)' },
+  'calculadora-hipoteca-uva-santander-argentina': { slug: 'tabla-amortizacion-prestamo', label: 'Tabla de amortización de préstamo (francés y alemán)' },
+  'calculadora-prestamo-personal-galicia-vs-santander-cuota': { slug: 'tabla-amortizacion-prestamo', label: 'Tabla de amortización de préstamo (francés y alemán)' },
   'calculadora-amortizacion-prestamo-frances-aleman': { slug: 'tabla-amortizacion-prestamo', label: 'Tabla de amortización de préstamo (francés y alemán)' },
   'calculadora-calorias-diarias-tdee': { slug: 'tabla-calorias-alimentos', label: 'Tabla de calorías por alimento 2026' },
   'calculadora-deficit-calorico-perder-peso': { slug: 'tabla-calorias-alimentos', label: 'Tabla de calorías por alimento 2026' },
+  'calculadora-macros-distribucion-proteina-carbos-grasas': { slug: 'tabla-calorias-alimentos', label: 'Tabla de calorías por alimento 2026' },
+  'calculadora-calorias-quemadas-deporte': { slug: 'tabla-calorias-alimentos', label: 'Tabla de calorías por alimento 2026' },
   'conversor-unidades-longitud-peso-volumen-temperatura': { slug: 'tabla-conversion-medidas', label: 'Tabla de conversión de medidas 2026' },
   'conversor-tazas-gramos-cocina-recetas': { slug: 'tabla-conversion-medidas', label: 'Tabla de conversión de medidas 2026' },
+  'calculadora-conversor-metros-lineales-a-metros-cuadrados': { slug: 'tabla-conversion-medidas', label: 'Tabla de conversión de medidas 2026' },
+  'calculadora-conversor-psi-a-bar': { slug: 'tabla-conversion-medidas', label: 'Tabla de conversión de medidas 2026' },
   'calculadora-impuesto-ganancias-sueldo': { slug: 'tabla-escalas-ganancias-2026', label: 'Tabla de escalas del impuesto a las Ganancias 2026' },
   'sueldo-en-mano-argentina': { slug: 'tabla-escalas-ganancias-2026', label: 'Tabla de escalas del impuesto a las Ganancias 2026' },
   'calculadora-imc': { slug: 'tabla-imc-peso-altura', label: 'Tabla de IMC y peso ideal según altura (OMS)' },
