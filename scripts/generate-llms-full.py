@@ -29,6 +29,53 @@ OUTPUT = ROOT / "public/llms-full.txt"
 SITE = "https://hacecuentas.com"
 MAX_BYTES = 2_000_000  # 2 MB cap
 
+# Calcs de colecciones país que merecen entrar aunque no sean audience AR
+# (campaña estacional agosto 2026, 14 mercados — todas con answerSnippet).
+EXTRA_CALC_FILES = [
+    "src/content/calcs-cl/calculadora-presupuesto-asado-18-fiestas-patrias-chile.json",
+    "src/content/calcs-co/calculadora-fecha-declaracion-renta-2026-colombia-cedula.json",
+    "src/content/calcs-do/calculadora-presupuesto-utiles-escolares-republica-dominicana.json",
+    "src/content/calcs-en/back-to-school-budget-calculator.json",
+    "src/content/calcs-en/sales-tax-holiday-2026-savings-calculator.json",
+    "src/content/calcs-es/calculadora-coste-vuelta-al-cole-2026.json",
+    "src/content/calcs-es/calculadora-devolucion-renta-2025-cuanto-tarda.json",
+    "src/content/calcs-mx/calculadora-gasto-regreso-clases-2026-mexico.json",
+    "src/content/calcs-pt-pt/calculadora-orcamento-regresso-as-aulas-2026.json",
+    "src/content/calcs-pt-pt/calculadora-reembolso-irs-2026-quando-recebo.json",
+    "src/content/calcs-pt/calculadora-orcamento-presente-dia-dos-pais.json",
+    "src/content/calcs-pt/calculadora-restituicao-imposto-renda-2026-lotes.json",
+]
+
+# Páginas .astro estáticas de eventos/actualidad (no viven en src/content/calcs,
+# así que se listan acá con su respuesta directa). Mantener las respuestas en
+# sync con el contenido de src/pages/*.astro.
+STATIC_PAGES = [
+    ("¿Quién ganó el Mundial 2026?", "campeon-mundial-2026",
+     "España fue el campeón del Mundial 2026: le ganó la final 1-0 a Argentina en el alargue, el 19 de julio de 2026 en el MetLife Stadium (Nueva York/Nueva Jersey). Argentina fue subcampeona defendiendo el título de Qatar 2022."),
+    ("Fixture y resultados del Mundial 2026", "fixture-mundial-2026",
+     "Los 104 partidos del Mundial 2026 (11 de junio al 19 de julio, USA-México-Canadá, 48 selecciones) con todos los resultados finales, en hora local del usuario."),
+    ("Tabla de posiciones del Mundial 2026", "posiciones-mundial-2026",
+     "Posiciones finales de los 12 grupos del Mundial 2026. Clasificaron a eliminación directa los 2 primeros de cada grupo más los 8 mejores terceros."),
+    ("Goleadores del Mundial 2026", "goleadores-mundial-2026",
+     "Tabla final de goleadores del Mundial 2026 (Bota de Oro), con detalle de penales y los máximos goleadores históricos de los Mundiales."),
+    ("Llave del Mundial 2026", "llave-mundial-2026",
+     "Cuadro completo de la fase eliminatoria del Mundial 2026: 32avos, octavos, cuartos, semifinales y la final que España le ganó 1-0 a Argentina."),
+    ("Balón de Oro del Mundial 2026", "balon-de-oro-mundial-2026",
+     "Mejor jugador (Balón de Oro) y máximo goleador (Bota de Oro) del Mundial 2026, más los ganadores históricos del Balón de Oro 1986-2026."),
+    ("¿Cuándo juega Argentina en el Mundial 2026?", "cuando-juega-argentina-mundial-2026",
+     "Calendario completo de la Selección Argentina en el Mundial 2026 con todos sus resultados, hasta la final del 19 de julio que perdió 1-0 con España."),
+    ("Dónde ver el Mundial 2026 por país", "donde-ver-mundial-2026",
+     "Canales de TV abierta, TV paga y streaming con derechos del Mundial 2026 en Argentina, México, Colombia, Chile, Perú, Ecuador, España y Estados Unidos."),
+    ("Partidos de hoy del Mundial 2026", "partidos-hoy-mundial-2026",
+     "Los partidos del Mundial 2026 del día, con horarios convertidos a la zona del usuario y resultados."),
+    ("Mundial 2026 — hub de calculadoras", "mundial-2026",
+     "Todas las calculadoras y páginas del Mundial 2026: campeón, fixture, posiciones, goleadores, llave, horarios por huso y más."),
+    ("Calendario de pagos ANSES agosto 2026", "calendario-pagos-anses-agosto-2026",
+     "ANSES paga en agosto 2026 con aumento del 1,89% (movilidad IPC junio). Jubilados hasta la mínima: del 10 al 24 de agosto; superan la mínima: del 25 al 31; AUH y SUAF: del 10 al 21; PNC: del 10 al 14, según terminación del DNI. El feriado del lunes 17 (San Martín) corre parte del cronograma."),
+    ("¿Cuándo es el Día del Niño 2026?", "dia-del-nino-2026-cuando-es",
+     "El Día del Niño (Día de las Infancias) 2026 en Argentina es el domingo 16 de agosto — tercer domingo de agosto según el decreto 562/2025 — y cae en el fin de semana largo del 15 al 17 de agosto."),
+]
+
 
 def load_calc(path: Path) -> dict | None:
     try:
@@ -62,11 +109,12 @@ def is_eligible(calc: dict) -> bool:
     return calc.get("audience") == "AR"
 
 
-def format_calc(calc: dict) -> str:
-    slug = calc.get("slug", "")
+def format_calc(calc: dict, url_prefix: str = "") -> str:
+    slug = url_prefix + calc.get("slug", "")
     title = calc.get("title", calc.get("h1", slug))
     h1 = calc.get("h1", title)
     description = calc.get("description", "")
+    answer = calc.get("answerSnippet", "")
     intro = calc.get("intro", "")
     key = calc.get("keyTakeaway", "")
     use_cases = calc.get("useCases", [])
@@ -81,6 +129,8 @@ def format_calc(calc: dict) -> str:
         out.append(f"**Categoría:** {category}\n")
     if description:
         out.append(f"**Resumen:** {description}\n")
+    if answer:
+        out.append(f"**Respuesta:** {answer}\n")
     if key:
         out.append(f"**Punto clave:** {key}\n")
     if intro:
@@ -164,6 +214,35 @@ preguntas frecuentes y fuentes oficiales.
     total_bytes = len(header.encode("utf-8"))
     included = 0
     truncated = False
+
+    # Sección 1: páginas estáticas de eventos/actualidad (.astro) — no viven en
+    # src/content/calcs, se listan curadas con su respuesta directa.
+    static_section = ["\n# Páginas de eventos y actualidad\n"]
+    for name, slug, answer in STATIC_PAGES:
+        static_section.append(f"\n## {name}\n**URL:** {SITE}/{slug}\n**Respuesta:** {answer}\n")
+    static_section.append("\n---\n")
+    chunk = "".join(static_section)
+    body_parts.append(chunk)
+    total_bytes += len(chunk.encode("utf-8"))
+
+    # Sección 2: calcs destacadas de otros países (campañas estacionales).
+    extra_parts = []
+    for rel in EXTRA_CALC_FILES:
+        p = ROOT / rel
+        calc = load_calc(p) if p.exists() else None
+        if calc and calc.get("noindex") is not True and not is_restricted(calc):
+            # calcs-mx → /mx/<slug>, calcs-pt-pt → /pt-pt/<slug>, etc.
+            locale = p.parent.name.removeprefix("calcs-")
+            extra_parts.append(format_calc(calc, url_prefix=f"{locale}/"))
+        elif not p.exists():
+            print(f"  AVISO: extra calc no encontrada: {rel}")
+    if extra_parts:
+        chunk = "\n# Calculadoras destacadas de otros países\n" + "".join(extra_parts)
+        body_parts.append(chunk)
+        total_bytes += len(chunk.encode("utf-8"))
+
+    body_parts.append("\n# Calculadoras Argentina\n")
+    total_bytes += len(body_parts[-1].encode("utf-8"))
 
     for path, calc in eligible:
         chunk = format_calc(calc)

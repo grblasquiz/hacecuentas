@@ -107,9 +107,7 @@ export const WEEKEND_CLUSTERS: WeekendCluster[] = [
     'calculadora-presupuesto-viaje-rio-janeiro',
     'calculadora-presupuesto-viaje-dubai',
     'calculadora-presupuesto-viaje-lima-peru',
-    'calculadora-presupuesto-viaje-santiago-chile',
     'calculadora-vacaciones-bariloche-presupuesto-7-dias-familia',
-    'calculadora-presupuesto-diario-mochilero-ciudad',
     'calculadora-dias-ideales-viaje-destino',
   ] },
   { key: 'hogar-proyectos', master: 'calculadora-proyectos-hogar', members: [

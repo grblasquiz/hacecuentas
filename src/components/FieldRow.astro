@@ -53,6 +53,19 @@ const units: string[] | undefined = Array.isArray((field as any).units)
   : undefined;
 const hasUnits = !!units && units.length > 0;
 
+// `unit` (string singular) — clave presente en ~1.400 campos de 575 calcs que
+// FieldRow no leía (clave muerta del audit UX 7-22). La cableamos como
+// prefix/suffix SOLO si el campo no declara ya prefix/suffix/units:
+// símbolos de moneda → prefix ("$ 1.000"); el resto ("%", "meses", "kg") → suffix.
+const _unit = typeof (field as any).unit === "string" && (field as any).unit.trim().length > 0
+  ? (field as any).unit.trim()
+  : undefined;
+const CURRENCY_UNIT_RE = /^(\$|US\$|U\$S|R\$|S\/\.?|Gs\.?|€|£|¥|₡|₲|₱|Bs\.?|Q|L|C\$|RD\$|MXN|COP|CLP|ARS|PEN|UYU|USD|EUR|BRL|BOB|PYG|GTQ|HNL|NIO|CRC|DOP|VES)$/i;
+const _unitAsPrefix = !!_unit && !field.prefix && !hasUnits && CURRENCY_UNIT_RE.test(_unit);
+const _unitAsSuffix = !!_unit && !field.suffix && !hasUnits && !_unitAsPrefix;
+const effPrefix = field.prefix || (_unitAsPrefix ? _unit : undefined);
+const effSuffix = field.suffix || (_unitAsSuffix ? _unit : undefined);
+
 /**
  * Separador de miles AUTOMÁTICO.
  *
@@ -88,7 +101,9 @@ function isYearLike(f: Field): boolean {
 const RATE_RE =
   /%|tasa|porcentaje|\brate\b|inter[eé]s|rendimiento|rentabilidad|inflaci[oó]n|\bt[ei]r\b|\btna\b|\btea\b|\bea\b|marginal|densidad|cup[oó]n|alcohol|grado/i;
 function isRateLike(f: Field): boolean {
-  return RATE_RE.test(`${f.label || ""} ${f.suffix || ""} ${f.id || ""}`);
+  // Incluye effSuffix (unit cableada): un campo con unit:"%" es tasa aunque no
+  // declare suffix propio.
+  return RATE_RE.test(`${f.label || ""} ${effSuffix || ""} ${f.id || ""}`);
 }
 const autoThousands =
   field.type === "number" &&
@@ -164,7 +179,7 @@ const inputMode = field.type !== "number"
   </label>
   {showRecommended && <span class="recommended-hint">Opcional · mejora la precisión</span>}
   <div class="input-wrap" data-required={isRequired ? "true" : undefined}>
-    {field.prefix && <span class="prefix">{field.prefix}</span>}
+    {effPrefix && <span class="prefix">{effPrefix}</span>}
     {field.type === "select" ? (
       <select id={field.id} name={field.id} required={field.required} data-profile-key={field.profileKey}>
         {field.options?.map((opt) => {
@@ -221,7 +236,7 @@ const inputMode = field.type !== "number"
         ))}
       </select>
     ) : (
-      field.suffix && <span class="suffix">{field.suffix}</span>
+      effSuffix && <span class="suffix">{effSuffix}</span>
     )}
     {isRequired && <span class="complete-check" aria-hidden="true">✓</span>}
   </div>

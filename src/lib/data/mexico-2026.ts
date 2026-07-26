@@ -315,8 +315,8 @@ export const MEXICO_2026 = {
   ventaCasaHabitacion: {
     exencionUdis: 700000,           // exento hasta 700.000 UDIS si no usaste la exención en 3 años
     aniosEntreExenciones: 3,
-    valorUdi: 8.8308,               // Banxico, 2026-06-09 (dataAsOf — la UDI cambia a diario)
-    udiDataAsOf: '2026-06-09',
+    valorUdi: 8.791887,             // Banxico/DOF, 2026-07-26 (dataAsOf — la UDI cambia a diario)
+    udiDataAsOf: '2026-07-26',
   },
 
   // ── ISR por ganancia en bolsa (acciones) — LISR Art. 129 ──

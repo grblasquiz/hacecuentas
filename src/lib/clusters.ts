@@ -1533,9 +1533,9 @@ export const CLUSTERS: Record<string, Cluster> = {
     "title": "Presupuesto de viaje",
     "items": [
       {
-        "slug": "calculadora-presupuesto-diario-mochilero-ciudad",
-        "label": "Presupuesto mochilero",
-        "icon": "🌎"
+        "slug": "calculadora-presupuesto-viaje-madrid",
+        "label": "Presupuesto para Madrid",
+        "icon": "🇪🇸"
       },
       {
         "slug": "calculadora-emigrar-espana-presupuesto-primer-ano-familia",

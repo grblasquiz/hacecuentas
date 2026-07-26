@@ -20,9 +20,13 @@ export interface Outputs {
 }
 
 export function compute(i: Inputs): Outputs {
-  // Costos base 2026 (INEGI, perfil equilibrado, región Centro)
-  const costo_adulto_base = 1475; // MXN/mes
-  const costo_nino_base = 1000;   // MXN/mes
+  // Costos base 2026 (perfil equilibrado, región Centro) — reconstruidos jul-2026.
+  // Ancla: canasta alimentaria urbana INEGI (Líneas de Pobreza, boletín jun-2026) =
+  // $2.553,37 MXN/persona/mes; se descuenta ~24% de alimentos consumidos fuera del
+  // hogar (~$1.940 en el hogar) y se suma limpieza/higiene básica (~$150) ≈ $2.100
+  // por adulto. Niño ≈ 0,7× adulto (adulto-equivalente ENIGH).
+  const costo_adulto_base = 2100; // MXN/mes
+  const costo_nino_base = 1450;   // MXN/mes
 
   // Factores de perfil (multiplicadores)
   const factores_perfil: Record<string, number> = {
@@ -71,22 +75,22 @@ export function compute(i: Inputs): Outputs {
   const porcentaje_salario = salario_minimo_mes > 0 ? Math.round((costo_mensual / salario_minimo_mes) * 10000) / 100 : 0;
 
   // Productos clave con cantidades estimadas (mes, familia 4 personas, perfil equilibrado)
-  const productos_clave_texto = `Canasta básica estimada (mes):\n\n` +
-    `• Arroz blanco: 4 kg ($60)\n` +
-    `• Frijoles secos: 3 kg ($54)\n` +
-    `• Pan de caja: 6 piezas ($180)\n` +
-    `• Aceite vegetal: 2 L ($80)\n` +
-    `• Huevos: 60 piezas ($180)\n` +
-    `• Leche fresca: 16 L ($320)\n` +
-    `• Carne de res: 2 kg ($400)\n` +
-    `• Pollo: 2 kg ($240)\n` +
-    `• Jitomate: 4 kg ($120)\n` +
-    `• Cebolla: 2 kg ($40)\n` +
-    `• Papas: 3 kg ($45)\n` +
-    `• Plátano: 4 kg ($60)\n` +
-    `• Azúcar: 1 kg ($20)\n` +
+  const productos_clave_texto = `Canasta básica estimada (mes, precios Profeco/INEGI jul-2026):\n\n` +
+    `• Arroz blanco: 4 kg ($110)\n` +
+    `• Frijoles secos: 3 kg ($100)\n` +
+    `• Pan de caja: 6 piezas ($280)\n` +
+    `• Aceite vegetal: 2 L ($100)\n` +
+    `• Huevos: 60 piezas ($178)\n` +
+    `• Leche fresca: 16 L ($384)\n` +
+    `• Carne de res: 2 kg ($480)\n` +
+    `• Pollo: 2 kg ($230)\n` +
+    `• Jitomate: 4 kg ($72)\n` +
+    `• Cebolla: 2 kg ($56)\n` +
+    `• Papas: 3 kg ($75)\n` +
+    `• Plátano: 4 kg ($88)\n` +
+    `• Azúcar: 1 kg ($30)\n` +
     `• Sal: 1 kg ($15)\n` +
-    `• Detergente/Jabón: 3 L ($180)\n\n` +
+    `• Detergente/Jabón: 3 L ($190)\n\n` +
     `(Nota: cantidades se ajustan según número de personas y perfil)`;
 
   // Comparativa de cadenas

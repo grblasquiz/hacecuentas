@@ -74,6 +74,12 @@ export interface CalcPolicyInput {
   professionalReviewer?: ProfessionalReviewer | null;
   /** Aprobación humana explícita; nunca se infiere de tests o longitud. */
   editorialReview?: 'pending' | 'approved' | 'rejected' | string;
+  /** Cómo se obtuvo la revisión. Sólo `human` habilita monetización. */
+  editorialReviewMethod?: 'human' | 'automated' | string;
+  /** Persona que realizó la revisión editorial humana. */
+  editorialReviewer?: string;
+  /** Fecha de revisión editorial humana, formato YYYY-MM-DD. */
+  editorialReviewedAt?: string;
   /** La fuente fue abierta y contrastada por una persona con el dato usado. */
   sourceVerified?: boolean;
   /** La fórmula aprobó casos automatizados documentados. */
@@ -111,7 +117,31 @@ const SENSITIVE_SLUG_HINTS: readonly string[] = [
   'ibuprofeno', 'antibiotic', 'magnesio', 'creatinina', 'filtrado-glomerular',
   'imc', 'grasa-corporal', 'calorias', 'macros', 'nutricion',
   'lesion', 'pubalgia', 'isquiotibial', 'rehabilitacion', 'antipulgas',
+  // Equivalentes EN/PT: la política debe seguir al concepto, no al idioma.
+  'pregnancy', 'pregnant', 'gestation', 'fertility', 'baby', 'breastfeeding',
+  'pediatric', 'dose', 'dosage', 'medication', 'medicine', 'supplement',
+  'creatine', 'caffeine', 'magnesium', 'insulin', 'sunscreen', 'spf-',
+  'symptom', 'diagnos', 'injury', 'rehab', 'cardiovascular', 'cpr-', 'heimlich',
+  'gravidez', 'gestacao', 'fertilidade', 'bebe', 'amamentacao', 'pediatr',
+  'dose', 'medicamento', 'suplemento', 'creatina', 'cafeina', 'magnesio',
+  'protetor-solar', 'sintoma', 'diagnostico', 'lesao', 'reabilitacao',
 ];
+
+/** Temas prescriptivos/de emergencia que nunca deben monetizarse sin revisor profesional. */
+const HIGH_RISK_AD_HINTS: readonly string[] = [
+  'dosis', 'medicament', 'medicacion', 'insulina', 'paracetamol', 'ibuprofeno',
+  'antibiot', 'antiparasit', 'antipulga', 'ivermectina', 'fertilidad-clinica',
+  'embarazo-riesgo', 'sintomas-diagnos', 'spf-proteccion',
+  'dose', 'dosage', 'medication', 'medicine', 'insulin', 'sunscreen', 'spf-',
+  'symptom', 'diagnos', 'cpr-', 'heimlich', 'choking',
+  'medicamento', 'protetor-solar', 'sintoma', 'diagnostico',
+];
+
+function hasHighRiskAdTopic(calc: CalcPolicyInput | null | undefined): boolean {
+  const slug = normalizeSlug(calc?.slug);
+  const equivalent = normalizeSlug(calc?.esSlug);
+  return HIGH_RISK_AD_HINTS.some((hint) => slug.includes(hint) || equivalent.includes(hint));
+}
 
 /**
  * Aviso estándar para herramientas restringidas cuyo cálculo prescriptivo
@@ -270,6 +300,25 @@ export function hasValidProfessionalReviewer(calc: CalcPolicyInput | null | unde
 }
 
 /**
+ * ¿Existe una revisión editorial HUMANA, explícita y auditable?
+ *
+ * Los tests, validaciones de fuentes y reportes automáticos son evidencia útil,
+ * pero no equivalen a una revisión editorial. Históricamente un script podía
+ * escribir `editorialReview:"approved"` en masa; exigir método, persona y fecha
+ * evita que esa marca heredada habilite anuncios por accidente.
+ */
+export function hasValidHumanEditorialReview(calc: CalcPolicyInput | null | undefined): boolean {
+  if (!calc) return false;
+  return (
+    calc.editorialReview === 'approved' &&
+    calc.editorialReviewMethod === 'human' &&
+    nonEmpty(calc.editorialReviewer) &&
+    nonEmpty(calc.editorialReviewedAt) &&
+    DATE_RE.test(calc.editorialReviewedAt)
+  );
+}
+
+/**
  * ¿La calculadora está RESTRINGIDA?
  * Es restringida cuando:
  *   - `ymylRisk === 'high'` y NO tiene revisor profesional válido, O
@@ -381,10 +430,13 @@ export function canAdvertiseCalc(calc: CalcPolicyInput | null | undefined): bool
   if (calc && calc.adsenseEligible === false) return false;
   // Restringidas YMYL (dosis/medicación/tratamiento sin revisor válido) → sin ads.
   if (isRestrictedCalc(calc)) return false;
+  // Defensa cross-locale: si el concepto es prescriptivo o de emergencia,
+  // una traducción no puede esquivar la revisión profesional.
+  if (hasHighRiskAdTopic(calc) && !hasValidProfessionalReviewer(calc)) return false;
   // Monetización opt-in: un test verde no equivale a revisión editorial.
   // Hasta que los tres estados sean explícitos, la página permanece sin ads.
   if (calc?.sourceVerified !== true) return false;
-  if (calc?.editorialReview !== 'approved') return false;
+  if (!hasValidHumanEditorialReview(calc)) return false;
   if (calc?.automatedTests !== 'passed') return false;
   // Review AdSense 2026-07: sólo se monetiza contenido de calidad comprobable.
   return isAdWorthy(calc);

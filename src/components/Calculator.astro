@@ -123,6 +123,9 @@ export interface CalcConfig {
      * en modo inverso). Sin la flag, el comportamiento es el de siempre.
      */
     hideWhenEmpty?: boolean;
+    /** Nota de ayuda discreta bajo el valor (ej. "100% = igual al SMI"). Clave
+     *  presente en 207 outputs del catálogo que antes no se renderizaba. */
+    hint?: string;
     /** Result Hero opcional: chip de contexto que aparece arriba del label en el output primary. */
     contextChip?: string;
     /** Result Hero opcional: barra comparativa visual debajo del valor (vs. mínimo/promedio/meta). */
@@ -829,6 +832,7 @@ const formatFreshnessDate = (iso: string): string => {
           )}
           <div class="result-label">{out.label}</div>
           <div class="result-value" data-value>{out.primary ? exampleBaseline : ''}</div>
+          {out.hint && <div class="result-hint">{out.hint}</div>}
           {out.primary && (
             <div class="result-tap-hint" data-tap-hint aria-hidden="true">{lang === 'en' ? 'Tap to copy' : lang === 'pt' ? 'Toque para copiar' : isNeutralSpanish ? 'Toca para copiar' : 'Tocá para copiar'}</div>
           )}
@@ -2025,6 +2029,14 @@ const formatFreshnessDate = (iso: string): string => {
     color: var(--accent-strong);
     font-weight: 700;
     font-size: 0.75rem;
+  }
+
+  /* Nota de ayuda del output (outputs[].hint del JSON): discreta, bajo el valor. */
+  .result-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin-top: 0.25rem;
   }
 
   .result-value {

@@ -3,6 +3,9 @@
  * No genera ni rellena texto: sólo cambia su estado de publicación de forma
  * reversible y deja un manifiesto auditable para revisión humana.
  *
+ * IMPORTANTE: este audit gobierna MONETIZACIÓN, no indexación. `--write`
+ * puede desactivar anuncios, pero nunca escribe draft/noindex/restricted.
+ *
  * Uso:
  *   node --experimental-strip-types scripts/quarantine-editorial-risk.ts
  *   node --experimental-strip-types scripts/quarantine-editorial-risk.ts --write
@@ -147,12 +150,9 @@ for (const dir of dirs) {
     });
 
     if (WRITE && !alreadyRestricted) {
-      calc.status = 'draft';
-      calc.noindex = true;
-      calc.distribution = 'restricted';
       calc.adsenseEligible = false;
       calc.editorialReview = 'pending';
-      calc.sourceVerified = false;
+      calc.editorialReviewMethod = 'automated';
       calc.quarantineReasons = [...new Set([...(Array.isArray(calc.quarantineReasons) ? calc.quarantineReasons : []), ...reasons])];
       writeFileSync(file, `${JSON.stringify(calc, null, 2)}\n`, 'utf8');
     }

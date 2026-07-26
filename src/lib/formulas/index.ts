@@ -1,5 +1,5 @@
 // Auto-generated formula index — do not edit manually
-// Generated: 2026-07-25
+// Generated: 2026-07-26
 
 import { compute as compute__13_salario_liquido_bruto_clt } from './13-salario-liquido-bruto-clt';
 import { rmPesoMaximo } from './1rm-peso-maximo';
@@ -50,8 +50,10 @@ import { aguinaldoEmpleadaCasaParticular } from './aguinaldo-empleada-casa-parti
 import { compute as compute__aguinaldo_empleado_mensual_quincenal_vs_quincena } from './aguinaldo-empleado-mensual-quincenal-vs-quincena';
 import { compute as compute__aguinaldo_fiestas_patrias_navidad_chile_2026 } from './aguinaldo-fiestas-patrias-navidad-chile-2026';
 import { compute as compute__aguinaldo_fiestas_patrias_sector_publico_peru } from './aguinaldo-fiestas-patrias-sector-publico-peru';
+import { compute as compute__aguinaldo_jubilados_anses_diciembre } from './aguinaldo-jubilados-anses-diciembre';
 import { aguinaldoMexico } from './aguinaldo-mexico';
 import { compute as compute__aguinaldo_mexico_2026_15_dias_tope_30 } from './aguinaldo-mexico-2026-15-dias-tope-30';
+import { compute as compute__aguinaldo_navidad_sector_publico_peru } from './aguinaldo-navidad-sector-publico-peru';
 import { aguinaldoProporcionalParaguay } from './aguinaldo-proporcional-paraguay';
 import { aguinaldoProporcionalRenunciaMexico } from './aguinaldo-proporcional-renuncia-mexico';
 import { aguinaldoUruguay } from './aguinaldo-uruguay';
@@ -1183,6 +1185,7 @@ import { diametroCaneria } from './diametro-caneria';
 import { diasEntreFechas } from './dias-entre-fechas';
 import { diasEntreFechasLaboralesHabilesCorridos } from './dias-entre-fechas-laborales-habiles-corridos';
 import { compute as compute__dias_habiles_feriados_paraguay_2026 } from './dias-habiles-feriados-paraguay-2026';
+import { feriadosDePais } from './dias-habiles-restantes-2026';
 import { diasIdealesViaje } from './dias-ideales-viaje';
 import { diasJuntosPareja } from './dias-juntos-pareja';
 import { diasLaborablesEntreFechas } from './dias-laborables-entre-fechas';
@@ -1409,6 +1412,7 @@ import { facturaLuzEstimada } from './factura-luz-estimada';
 import { compute as compute__factura_luz_pvpc_vs_mercado_libre_espana_2026 } from './factura-luz-pvpc-vs-mercado-libre-espana-2026';
 import { facturacionMaximaMonotributo } from './facturacion-maxima-monotributo';
 import { facturasPorPersonaDesayuno } from './facturas-por-persona-desayuno';
+import { compute as compute__fantasy_football_auction_budget_split } from './fantasy-football-auction-budget-split';
 import { fantasyMundial } from './fantasy-mundial';
 import { faseLunarProximaLunaLlena } from './fase-lunar-proxima-luna-llena';
 import { fatorRSimples } from './fator-r-simples';
@@ -2297,6 +2301,7 @@ import { compute as compute__pagare_bancario_vs_cete_rendimiento_mexico } from '
 import { compute as compute__pago_anticipado_credito_hipotecario_chile_ahorro_uf } from './pago-anticipado-credito-hipotecario-chile-ahorro-uf';
 import { compute as compute__pago_anticipado_credito_hipotecario_colombia_ahorro_intereses } from './pago-anticipado-credito-hipotecario-colombia-ahorro-intereses';
 import { compute as compute__pago_electronico_chile_transbank_comisiones_onepay_mach } from './pago-electronico-chile-transbank-comisiones-onepay-mach';
+import { compute as compute__pago_feriado_irrenunciable_18_19_septiembre_chile } from './pago-feriado-irrenunciable-18-19-septiembre-chile';
 import { compute as compute__pago_feriado_trabajado_triple_peru } from './pago-feriado-trabajado-triple-peru';
 import { compute as compute__pago_proporcional_pareja_ingreso_gastos_compartidos } from './pago-proporcional-pareja-ingreso-gastos-compartidos';
 import { pagoProvisionalIsrArrendamientoMexico2026 } from './pago-provisional-isr-arrendamiento-mexico-2026';
@@ -2584,7 +2589,10 @@ import { presupuestoDespedidaSoltera } from './presupuesto-despedida-soltera';
 import { presupuestoDiarioMochileroCiudad } from './presupuesto-diario-mochilero-ciudad';
 import { presupuestoEquipoMusica } from './presupuesto-equipo-musica';
 import { presupuestoEstudiarExteriorUniversidad } from './presupuesto-estudiar-exterior-universidad';
+import { compute as compute__presupuesto_fiesta_noche_mexicana_mexico } from './presupuesto-fiesta-noche-mexicana-mexico';
 import { presupuestoGraduacion } from './presupuesto-graduacion';
+import { compute as compute__presupuesto_navidad_regalos_cena } from './presupuesto-navidad-regalos-cena';
+import { compute as compute__presupuesto_utiles_escolares_sierra_ecuador } from './presupuesto-utiles-escolares-sierra-ecuador';
 import { presupuestoViaje } from './presupuesto-viaje';
 import { presupuestoViajeDubai } from './presupuesto-viaje-dubai';
 import { presupuestoViajeLimaPeru } from './presupuesto-viaje-lima-peru';
@@ -2661,6 +2669,7 @@ import { ptuMexico } from './ptu-mexico';
 import { compute as compute__ptu_reparto_utilidades_mexico_10_porcentaje } from './ptu-reparto-utilidades-mexico-10-porcentaje';
 import { compute as compute__puam_pension_universal_adulto_mayor_anses_2026 } from './puam-pension-universal-adulto-mayor-anses-2026';
 import { pubalgiaRecuperacion } from './pubalgia-recuperacion';
+import { puenteOptimoVacaciones2026 } from './puente-optimo-vacaciones-2026';
 import { pulgadasACentimetros } from './pulgadas-a-centimetros';
 import { pulsoArterialOximetriaSaturacionNormal } from './pulso-arterial-oximetria-saturacion-normal';
 import { puntajeDeleSpanish } from './puntaje-dele-spanish';
@@ -3476,8 +3485,10 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'aguinaldo-empleado-mensual-quincenal-vs-quincena': compute__aguinaldo_empleado_mensual_quincenal_vs_quincena,
   'aguinaldo-fiestas-patrias-navidad-chile-2026': compute__aguinaldo_fiestas_patrias_navidad_chile_2026,
   'aguinaldo-fiestas-patrias-sector-publico-peru': compute__aguinaldo_fiestas_patrias_sector_publico_peru,
+  'aguinaldo-jubilados-anses-diciembre': compute__aguinaldo_jubilados_anses_diciembre,
   'aguinaldo-mexico': aguinaldoMexico,
   'aguinaldo-mexico-2026-15-dias-tope-30': compute__aguinaldo_mexico_2026_15_dias_tope_30,
+  'aguinaldo-navidad-sector-publico-peru': compute__aguinaldo_navidad_sector_publico_peru,
   'aguinaldo-proporcional-paraguay': aguinaldoProporcionalParaguay,
   'aguinaldo-proporcional-renuncia-mexico': aguinaldoProporcionalRenunciaMexico,
   'aguinaldo-uruguay': aguinaldoUruguay,
@@ -4609,6 +4620,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'dias-entre-fechas': diasEntreFechas,
   'dias-entre-fechas-laborales-habiles-corridos': diasEntreFechasLaboralesHabilesCorridos,
   'dias-habiles-feriados-paraguay-2026': compute__dias_habiles_feriados_paraguay_2026,
+  'dias-habiles-restantes-2026': feriadosDePais,
   'dias-ideales-viaje': diasIdealesViaje,
   'dias-juntos-pareja': diasJuntosPareja,
   'dias-laborables-entre-fechas': diasLaborablesEntreFechas,
@@ -4835,6 +4847,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'factura-luz-pvpc-vs-mercado-libre-espana-2026': compute__factura_luz_pvpc_vs_mercado_libre_espana_2026,
   'facturacion-maxima-monotributo': facturacionMaximaMonotributo,
   'facturas-por-persona-desayuno': facturasPorPersonaDesayuno,
+  'fantasy-football-auction-budget-split': compute__fantasy_football_auction_budget_split,
   'fantasy-mundial': fantasyMundial,
   'fase-lunar-proxima-luna-llena': faseLunarProximaLunaLlena,
   'fator-r-simples': fatorRSimples,
@@ -5723,6 +5736,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'pago-anticipado-credito-hipotecario-chile-ahorro-uf': compute__pago_anticipado_credito_hipotecario_chile_ahorro_uf,
   'pago-anticipado-credito-hipotecario-colombia-ahorro-intereses': compute__pago_anticipado_credito_hipotecario_colombia_ahorro_intereses,
   'pago-electronico-chile-transbank-comisiones-onepay-mach': compute__pago_electronico_chile_transbank_comisiones_onepay_mach,
+  'pago-feriado-irrenunciable-18-19-septiembre-chile': compute__pago_feriado_irrenunciable_18_19_septiembre_chile,
   'pago-feriado-trabajado-triple-peru': compute__pago_feriado_trabajado_triple_peru,
   'pago-proporcional-pareja-ingreso-gastos-compartidos': compute__pago_proporcional_pareja_ingreso_gastos_compartidos,
   'pago-provisional-isr-arrendamiento-mexico-2026': pagoProvisionalIsrArrendamientoMexico2026,
@@ -6010,7 +6024,10 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'presupuesto-diario-mochilero-ciudad': presupuestoDiarioMochileroCiudad,
   'presupuesto-equipo-musica': presupuestoEquipoMusica,
   'presupuesto-estudiar-exterior-universidad': presupuestoEstudiarExteriorUniversidad,
+  'presupuesto-fiesta-noche-mexicana-mexico': compute__presupuesto_fiesta_noche_mexicana_mexico,
   'presupuesto-graduacion': presupuestoGraduacion,
+  'presupuesto-navidad-regalos-cena': compute__presupuesto_navidad_regalos_cena,
+  'presupuesto-utiles-escolares-sierra-ecuador': compute__presupuesto_utiles_escolares_sierra_ecuador,
   'presupuesto-viaje': presupuestoViaje,
   'presupuesto-viaje-dubai': presupuestoViajeDubai,
   'presupuesto-viaje-lima-peru': presupuestoViajeLimaPeru,
@@ -6087,6 +6104,7 @@ export const formulas: Record<string, (inputs: any) => any> = {
   'ptu-reparto-utilidades-mexico-10-porcentaje': compute__ptu_reparto_utilidades_mexico_10_porcentaje,
   'puam-pension-universal-adulto-mayor-anses-2026': compute__puam_pension_universal_adulto_mayor_anses_2026,
   'pubalgia-recuperacion': pubalgiaRecuperacion,
+  'puente-optimo-vacaciones-2026': puenteOptimoVacaciones2026,
   'pulgadas-a-centimetros': pulgadasACentimetros,
   'pulso-arterial-oximetria-saturacion-normal': pulsoArterialOximetriaSaturacionNormal,
   'puntaje-dele-spanish': puntajeDeleSpanish,

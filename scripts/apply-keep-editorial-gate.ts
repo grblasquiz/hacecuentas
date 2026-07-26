@@ -2,10 +2,10 @@
  * Aplica el resultado de la auditoría exhaustiva KEEP.
  *
  * Regla de seguridad:
- * - fórmula + fuentes automáticas OK: aprobación editorial autorizada por el
- *   propietario a partir del informe completo;
- * - cualquier evidencia pendiente: la página se conserva, pero queda noindex
- *   y sin anuncios hasta una revisión posterior.
+ * - fórmula + fuentes automáticas OK: registra evidencia automática;
+ * - NUNCA convierte evidencia automática en aprobación editorial humana;
+ * - la página se conserva indexable, pero sin anuncios hasta una revisión
+ *   humana explícita y auditable.
  *
  * El script aborta si el informe no cubre las 1.844 KEEP o si alguna fórmula
  * falla, para impedir aprobaciones parciales o accidentales.
@@ -39,19 +39,20 @@ for (const row of REPORT.rows) {
     scope: 'full-keep-corpus',
     formulaTest: 'passed',
     sourceCheck: row.sourceAutomatedReady ? 'passed' : 'needs-review',
-    approvalBasis: 'owner-authorized exhaustive automated evidence report',
+    approvalBasis: 'automated-evidence-only-not-human-editorial-approval',
   };
 
   if (row.sourceAutomatedReady) {
     calc.sourceAutomatedCheck = 'passed';
     calc.sourceVerified = true;
-    calc.editorialReview = 'approved';
-    calc.editorialReviewer = 'Martín Rodríguez';
-    calc.editorialReviewedAt = REVIEW_DATE;
-    // Sólo quitamos la cuarentena creada por este mismo gate.
+    calc.editorialReview = 'pending';
+    calc.editorialReviewMethod = 'automated';
+    delete calc.editorialReviewer;
+    delete calc.editorialReviewedAt;
+    calc.adsenseEligible = false;
+    // Una comprobación automática nunca decide indexación.
     if (calc.editorialGateQuarantine === true) {
       delete calc.noindex;
-      delete calc.adsenseEligible;
       delete calc.editorialGateQuarantine;
     }
     approved++;
@@ -59,9 +60,8 @@ for (const row of REPORT.rows) {
     calc.sourceAutomatedCheck = 'needs-review';
     calc.sourceVerified = false;
     calc.editorialReview = 'pending';
-    calc.noindex = true;
+    calc.editorialReviewMethod = 'automated';
     calc.adsenseEligible = false;
-    calc.editorialGateQuarantine = true;
     quarantined++;
   }
 

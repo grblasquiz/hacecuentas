@@ -131,9 +131,24 @@ export default defineConfig({
             // y se precargaba en cada página hidratada. Sin la regla, una calc solo
             // baja los módulos de lib que su código client realmente importa; Vite
             // igual crea chunks compartidos para lo que usan 2+ entries.
-            // Componentes compartidos (Calculator, Layout, Header, etc.)
-            if (id.includes('/src/components/') || id.includes('/src/layouts/')) {
+            // Chrome global (Layout + Header/Footer/etc.): presente en TODAS las
+            // páginas → un solo chunk estable 'components-shared'.
+            // El RESTO de /src/components (Calculator, flagships, hubs, mockups,
+            // one-offs) → chunking automático de Vite por el grafo real, igual que
+            // se hizo con src/lib en Batch B 2026-07-10. Antes el catch-all metía
+            // el CSS de LOS 77 componentes en un components-shared.css de 528KB
+            // (79KB gzip) render-blocking en 4.907/4.921 páginas — un post de blog
+            // pagaba el CSS de Calculator (69KB), PillarHub, flagships y mockups
+            // que jamás renderiza. Con el split, cada ruta linkea solo el CSS de
+            // los componentes que su entry realmente importa (2026-07-26).
+            if (
+              id.includes('/src/layouts/') ||
+              /\/src\/components\/(Header|Footer|CookieConsent|InstallPrompt|ProfileStore)\.astro/.test(id)
+            ) {
               return 'components-shared';
+            }
+            if (id.includes('/src/components/')) {
+              return undefined;
             }
             // El resto → chunks automáticos de Vite (uno por entrypoint)
             return undefined;

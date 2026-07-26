@@ -22,6 +22,7 @@ import {
   isAdWorthy,
   canAdvertiseCalc,
   hasValidProfessionalReviewer,
+  hasValidHumanEditorialReview,
 } from '../src/lib/content-policy.ts';
 
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -66,7 +67,7 @@ const GENERIC_TOKEN = [
   /"\s*(?:TODO|FIXME)(?:\s*[:\-—][^"]*)?"\s*[,}]/, // marcador técnico en mayúsculas; no el español «todo»
 ];
 
-type Decision = 'KEEP' | 'IMPROVE' | 'MERGE_301' | 'DRAFT';
+type Decision = 'MONETIZE' | 'KEEP_NO_ADS' | 'ENRICH' | 'REVIEW' | 'RETIRED';
 type EditorialState =
   | 'draft'
   | 'automated_tested'
@@ -138,6 +139,7 @@ function editorialState(c: any): EditorialState {
   if (c.status === 'draft' || c.distribution === 'restricted') return 'draft';
   if (isRestrictedCalc(c)) return 'draft';                        // YMYL high sin revisor
   if (hasValidProfessionalReviewer(c)) return 'professionally_reviewed';
+  if (hasValidHumanEditorialReview(c)) return 'editorially_reviewed';
   return 'automated_tested'; // pasó validate:data pero sin revisión editorial individual persistida
 }
 
@@ -200,7 +202,7 @@ for (const [folder, meta] of Object.entries(LOCALES)) {
       adsEligible: canAdvertiseCalc(c),
       quarantineReasons: Array.isArray(c.quarantineReasons) ? c.quarantineReasons : [],
       hasTests: c.automatedTests === 'passed',
-      ymyl, genericHits: generic, blocks: [], decision: 'KEEP',
+      ymyl, genericHits: generic, blocks: [], decision: 'KEEP_NO_ADS',
     };
 
     // ---- quality gate (#7) ----
@@ -246,29 +248,30 @@ for (const [, g] of bySignature) {
   const vivos = g.filter((r) => r.editorialState !== 'draft' && !prunedSet.has(r.slug));
   if (vivos.length > 1) dupGroups.push(vivos);
 }
-// marcar perdedores (los no-ganadores) como MERGE_301. Ganador = más palabras + fuentes.
+// Los grupos parecidos se reportan para revisión, nunca como orden destructiva.
+// El audit no tiene autoridad para borrar, podar ni redirigir URLs.
 for (const g of dupGroups) {
   const winner = [...g].sort((a, b) =>
     (b.words + b.sources * 200 + b.officialSources * 300) - (a.words + a.sources * 200 + a.officialSources * 300))[0];
-  for (const r of g) if (r !== winner) r.blocks.push('P1:duplicado-de:' + winner.slug);
+  for (const r of g) if (r !== winner) r.blocks.push('P1:revisar-solapamiento-con:' + winner.slug);
 }
 
 // ---- decisión final por URL ----
 for (const r of rows) {
-  // Podadas: ya responden 301 hacia su destino, no son URLs públicas.
-  if (prunedSet.has(r.slug)) { r.decision = 'MERGE_301'; r.editorialState = 'draft'; r.indexable = false; continue; }
+  // Retiradas por una decisión previa: el audit sólo describe el estado actual.
+  if (prunedSet.has(r.slug)) { r.decision = 'RETIRED'; r.editorialState = 'draft'; r.indexable = false; continue; }
   const hasP0 = r.blocks.some((b) => b.startsWith('P0'));
-  const isDup = r.blocks.some((b) => b.startsWith('P1:duplicado-de'));
+  const needsOverlapReview = r.blocks.some((b) => b.startsWith('P1:revisar-solapamiento-con'));
   const hasP1 = r.blocks.some((b) => b.startsWith('P1') && !b.startsWith('P1:duplicado-de'));
-  if (r.editorialState === 'draft' || hasP0) r.decision = 'DRAFT';
-  else if (isDup) r.decision = 'MERGE_301';
-  else if (hasP1) r.decision = 'IMPROVE';
-  else r.decision = 'KEEP';
+  if (r.editorialState === 'draft' || hasP0 || needsOverlapReview) r.decision = 'REVIEW';
+  else if (hasP1) r.decision = 'ENRICH';
+  else if (r.adsEligible) r.decision = 'MONETIZE';
+  else r.decision = 'KEEP_NO_ADS';
 }
 
 // ---------- reports ----------
 if (!existsSync(REPORTS)) mkdirSync(REPORTS, { recursive: true });
-const publishable = rows.filter((r) => r.decision === 'KEEP');
+const publishable = rows.filter((r) => r.decision === 'MONETIZE');
 // El gate debe mirar la superficie realmente distribuida, no sólo KEEP.
 // KEEP ya excluye P0 por definición, por lo que auditar P0 dentro de KEEP era
 // una tautología incapaz de fallar.
@@ -327,8 +330,8 @@ const blockingInDistributed = distributed.filter((r) =>
 console.log('=== AUDIT:ADSENSE ===');
 console.log('Total URLs auditadas:', rows.length);
 console.log('Por decisión:', JSON.stringify(byDec));
-console.log('KEEP (published):', byDec.KEEP || 0, '| IMPROVE:', byDec.IMPROVE || 0,
-  '| MERGE_301:', byDec.MERGE_301 || 0, '| DRAFT:', byDec.DRAFT || 0);
+console.log('MONETIZE:', byDec.MONETIZE || 0, '| KEEP_NO_ADS:', byDec.KEEP_NO_ADS || 0,
+  '| ENRICH:', byDec.ENRICH || 0, '| REVIEW:', byDec.REVIEW || 0, '| RETIRED:', byDec.RETIRED || 0);
 console.log('Grupos duplicados:', dupGroups.length, '| Sensibles (MODERATE+HIGH):',
   rows.filter((r) => r.ymyl !== 'LOW').length, '| HIGH sin revisor:',
   rows.filter((r) => r.ymyl === 'HIGH' && !r.professionalReviewer).length);

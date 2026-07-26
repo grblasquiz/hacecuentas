@@ -1,5 +1,5 @@
 // Aguinaldo de Fiestas Patrias 2026 en Chile (sector público y pensionados IPS/PGU) + Navidad.
-// Sector público FP 2026: $88.667 si la remuneración líquida es ≤ $1.025.622, $61.552 si la supera.
+// Sector público FP 2026: $91.682 si la remuneración líquida es ≤ $1.060.493, $63.645 si la supera.
 // Pensionados IPS/PGU FP 2026: base $25.280 + $12.969 por cada carga familiar acreditada.
 // Navidad: los montos 2026 se confirman con la ley de reajuste de fin de año (valores referenciales).
 export interface Inputs {
@@ -16,9 +16,9 @@ export interface Outputs {
   _chart?: any;
 }
 
-const UMBRAL_PUBLICO = 1_025_622; // remuneración líquida que separa el tramo alto del bajo (FP 2026)
+const UMBRAL_PUBLICO = 1_060_493; // remuneración líquida que separa el tramo alto del bajo (FP 2026)
 
-const FP_PUBLICO = { bajo: 88_667, alto: 61_552 };
+const FP_PUBLICO = { bajo: 91_682, alto: 63_645 };
 const FP_PENSIONADO_BASE = 25_280;
 const FP_PENSIONADO_POR_CARGA = 12_969;
 // Navidad 2026: montos referenciales (la ley de reajuste de diciembre los confirma).
