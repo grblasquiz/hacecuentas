@@ -215,7 +215,12 @@ function getCalcLastMod(calc: any, filepath: string, fallback: string): string {
   // significaba que cualquier commit que tocara el JSON (aún para agregar
   // un campo SEO sin cambiar contenido editorial) movía el sitemap. Eso
   // viola la rule #3 de CLAUDE.md (no inflar crawl budget de Google).
-  const lr = pickIfValid(calc?.lastReviewed);
+  // Una comprobación automática puede actualizar metadata, pero no prueba que
+  // una persona haya vuelto a revisar el contenido. Si el origen está marcado
+  // como automatizado, no usamos `lastReviewed` como señal editorial.
+  const lr = calc?.editorialReviewMethod === 'automated'
+    ? null
+    : pickIfValid(calc?.lastReviewed);
   const du = pickIfValid(calc?.dataUpdate?.lastUpdated);
 
   if (lr) {
@@ -350,6 +355,13 @@ const MAX_LASTMOD_UPDATES = (() => {
   return Number.isFinite(n) && n >= 0 ? n : 250;
 })();
 const ALLOW_MASS_LASTMOD = process.env.SITEMAP_ALLOW_MASS_LASTMOD === '1';
+const MAX_NEW_URLS = (() => {
+  const raw = process.env.SITEMAP_MAX_NEW_URLS;
+  if (!raw) return 100;
+  const n = Number.parseInt(raw, 10);
+  return Number.isFinite(n) && n >= 0 ? n : 100;
+})();
+const ALLOW_MASS_NEW_URLS = process.env.SITEMAP_ALLOW_MASS_NEW_URLS === '1';
 
 interface SitemapState {
   // ISO timestamp del último guardado, útil para auditoría.
@@ -956,6 +968,7 @@ sitemaps.push({
     core('/datos-aguinaldo-2026',                '0.7',  'monthly'),
     core('/aumento-jubilaciones',                '0.9',  'daily',   true),
     core('/calendario-pagos-anses-agosto-2026',  '0.8',  'weekly'),
+    core('/calendario-pagos-anses-septiembre-2026', '0.8', 'weekly'),
     core('/dia-del-nino-2026-cuando-es',         '0.8',  'weekly'),
     core('/aguinaldo-diciembre-2026',            '0.85', 'weekly'),
     core('/datos-salario-minimo-latam-2026',     '0.7',  'monthly'),
@@ -1552,6 +1565,13 @@ if (stateSource !== 'fresh' && raisedLocs.size > MAX_LASTMOD_UPDATES && !ALLOW_M
     `y deliberado, ejecutá con SITEMAP_ALLOW_MASS_LASTMOD=1.\n  - ${sample}`,
   );
 }
+if (stateSource !== 'fresh' && newCount > MAX_NEW_URLS && !ALLOW_MASS_NEW_URLS) {
+  throw new Error(
+    `[sitemap] abortado: ${newCount} URLs nuevas entrarían al sitemap ` +
+    `(máximo ${MAX_NEW_URLS}). Publicá en lotes editoriales más chicos o, si ` +
+    `la tanda fue revisada deliberadamente, ejecutá con SITEMAP_ALLOW_MASS_NEW_URLS=1.`,
+  );
+}
 
 // --------------------------------------------------------------------------
 // Write files
@@ -1649,7 +1669,7 @@ writeFileSync(join(PUBLIC_DIR, 'sitemap.xml'), indexContent, 'utf8');
 saveState(usedLastmods);
 
 console.log(`✓ sitemap index → ${indexableSitemaps.length} sitemaps (${sitemaps.length - indexableSitemaps.length} operativo fuera del índice), ${totalUrls} URLs generadas`);
-console.log(`  lastmod tripwire: max=${MAX_LASTMOD_UPDATES} · state=${stateSource} · new=${newCount} · raised=${raisedLocs.size} · unchanged=${unchangedCount}`);
+console.log(`  sitemap tripwire: maxLastmod=${MAX_LASTMOD_UPDATES} · maxNew=${MAX_NEW_URLS} · state=${stateSource} · new=${newCount} · raised=${raisedLocs.size} · unchanged=${unchangedCount}`);
 for (const s of sitemaps) {
   console.log(`  · ${s.name.padEnd(40)} ${String(s.urls.length).padStart(5)} URLs`);
 }
