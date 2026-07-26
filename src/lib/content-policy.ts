@@ -62,6 +62,8 @@ export interface ProfessionalReviewer {
  */
 export interface CalcPolicyInput {
   slug?: string;
+  /** Slug canónico cuando este JSON conserva una variante/alias histórica. */
+  canonicalSlug?: string;
   category?: string;
   ymylRisk?: YmylRisk | string;
   reviewType?: ReviewType | string;
@@ -379,8 +381,23 @@ export function isPrunedCalc(calc: CalcPolicyInput | null | undefined, routePref
   return PRUNED_SLUGS.has(prefix ? `${prefix}/${calc.slug}` : calc.slug);
 }
 
-export function canDistributeCalc(calc: CalcPolicyInput | null | undefined, routePrefix = ''): boolean {
+/**
+ * ¿La calculadora puede seguir sirviéndose directamente?
+ *
+ * A diferencia de `canDistributeCalc`, permite aliases con `canonicalSlug` para
+ * no romper consumidores existentes de la API de cómputo/spec. Esos aliases
+ * siguen siendo 200 + rel=canonical, pero no deben promocionarse en superficies
+ * de descubrimiento.
+ */
+export function canServeCalc(calc: CalcPolicyInput | null | undefined, routePrefix = ''): boolean {
   return isIndexableCalc(calc) && !isPrunedCalc(calc, routePrefix);
+}
+
+export function canDistributeCalc(calc: CalcPolicyInput | null | undefined, routePrefix = ''): boolean {
+  if (!canServeCalc(calc, routePrefix)) return false;
+  const slug = calc?.slug?.trim();
+  const canonicalSlug = calc?.canonicalSlug?.trim();
+  return !canonicalSlug || canonicalSlug === slug;
 }
 
 /** ¿Una ruta pública concreta evita aliases 301 y URLs retiradas 410? */

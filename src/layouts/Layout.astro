@@ -6,6 +6,7 @@ import { ADSENSE_SERVING_ENABLED, isAdsenseExcludedPath } from '../lib/adsense';
 import { HC_ALLOWED_PARAMS } from '../lib/analytics';
 import { compactSeoTitle } from '../lib/seo-title';
 import { compactSeoDescription } from '../lib/seo-description';
+import { isSelfCanonicalUrl } from '../lib/hreflang';
 
 // Self-hosted fonts (subset latin) — elimina render-blocking de Google Fonts.
 // Antes (5 weights estáticos): 5 woff2 × ~17 KB = ~85 KB de Inter.
@@ -112,6 +113,7 @@ const effectiveNoAds = noAds || noindex || isAdsenseExcludedPath(cleanPath);
 const fullCanonical = canonical
   ? (canonical.startsWith('http') ? canonical : `${siteUrl}${canonical}`)
   : `${siteUrl}${cleanPath}`;
+const isSelfCanonical = isSelfCanonicalUrl(cleanPath, fullCanonical, siteUrl);
 const fullImage = image.startsWith('http') ? image : `${siteUrl}${image}`;
 
 // Lang/locale dinámicos según audience y lang.
@@ -431,32 +433,37 @@ const globalSchema = {
       <meta name="bingbot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     )}
     <link rel="canonical" href={fullCanonical} />
-    {hreflang ? (
-      hreflang.map(h => <link rel="alternate" hreflang={h.lang} href={h.href} />)
-    ) : lang === 'en' ? (
-      /* Página inglés sin alternates conocidos. */
-      <>
-        <link rel="alternate" hreflang="en" href={fullCanonical} />
-        <link rel="alternate" hreflang="x-default" href={fullCanonical} />
-      </>
-    ) : lang === 'pt' ? (
-      /* Página portugués sin alternates conocidos. pt-PT (Portugal) vs pt-BR (Brasil). */
-      <>
-        <link rel="alternate" hreflang={audience === 'PT' ? 'pt-PT' : 'pt-BR'} href={fullCanonical} />
-        <link rel="alternate" hreflang="x-default" href={fullCanonical} />
-      </>
-    ) : audience !== 'global' ? (
-      /* País-específico (AR/MX/ES/CL/CO/...): hreflang con código país completo. */
-      <>
-        <link rel="alternate" hreflang={_audByLocale[0]} href={fullCanonical} />
-        <link rel="alternate" hreflang="x-default" href={fullCanonical} />
-      </>
-    ) : (
-      /* Página global (sin variante por país): solo es + x-default. */
-      <>
-        <link rel="alternate" hreflang="es" href={fullCanonical} />
-        <link rel="alternate" hreflang="x-default" href={fullCanonical} />
-      </>
+    {/* Una URL noindex o no-autocanónica no es elegible como alternate, ni
+        siquiera de sí misma. El guard central cubre también páginas no-calc
+        que usan el fallback. */}
+    {!noindex && isSelfCanonical && (
+      hreflang ? (
+        hreflang.map(h => <link rel="alternate" hreflang={h.lang} href={h.href} />)
+      ) : lang === 'en' ? (
+        /* Página inglés sin alternates conocidos. */
+        <>
+          <link rel="alternate" hreflang="en" href={fullCanonical} />
+          <link rel="alternate" hreflang="x-default" href={fullCanonical} />
+        </>
+      ) : lang === 'pt' ? (
+        /* Página portugués sin alternates conocidos. pt-PT (Portugal) vs pt-BR (Brasil). */
+        <>
+          <link rel="alternate" hreflang={audience === 'PT' ? 'pt-PT' : 'pt-BR'} href={fullCanonical} />
+          <link rel="alternate" hreflang="x-default" href={fullCanonical} />
+        </>
+      ) : audience !== 'global' ? (
+        /* País-específico (AR/MX/ES/CL/CO/...): hreflang con código país completo. */
+        <>
+          <link rel="alternate" hreflang={_audByLocale[0]} href={fullCanonical} />
+          <link rel="alternate" hreflang="x-default" href={fullCanonical} />
+        </>
+      ) : (
+        /* Página global (sin variante por país): solo es + x-default. */
+        <>
+          <link rel="alternate" hreflang="es" href={fullCanonical} />
+          <link rel="alternate" hreflang="x-default" href={fullCanonical} />
+        </>
+      )
     )}
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
     <link rel="alternate" type="application/rss+xml" title="Hacé Cuentas — Calculadoras actualizadas" href="/rss.xml" />

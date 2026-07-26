@@ -7,14 +7,22 @@ import { join, resolve } from 'node:path';
 import { GONE_410_URLS } from '../src/lib/gone-410.ts';
 import { PRUNING_REDIRECTS } from '../src/lib/pruning-redirects.ts';
 import { SEO_TITLE_MAX_LENGTH } from '../src/lib/seo-title.ts';
+import {
+  combineRedirectEntries,
+  flattenRedirectGraph,
+  parseCloudflareRedirects,
+  parsePruningRedirects,
+  toWorkerRedirectMap,
+} from './lib/redirect-graph.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const DIST = resolve(ROOT, 'dist/client');
 const API_FILE = resolve(DIST, 'api/calcs-index.json');
 const WRAPPER = resolve(ROOT, 'dist/server/wrapper.mjs');
 const ORIGIN = 'https://hacecuentas.com';
+const STATIC_REDIRECTS_TEXT = readFileSync(resolve(ROOT, 'public/_redirects'), 'utf8');
 const STATIC_REDIRECT_PATHS = new Set(
-  readFileSync(resolve(ROOT, 'public/_redirects'), 'utf8')
+  STATIC_REDIRECTS_TEXT
     .split(/\r?\n/)
     .map((line) => line.trim().split(/\s+/))
     .filter((parts) => parts.length >= 3 && /^30[1278]$/.test(parts.at(-1) || ''))
@@ -146,14 +154,25 @@ for (const file of compiledHtmlFiles) {
   if (errors.length >= 50) break;
 }
 
-// El wrapper debe contener el mapa completo: los HTML retirados se borran del
-// build, por lo que este código es quien garantiza su 301/410 en producción.
+// El wrapper debe contener el mapa combinado EXACTO y aplanado. Buscar `from`
+// y `to` como strings sueltos no alcanza: un target intermedio también aparece
+// como source y ocultaba regresiones A→B→C. Esta comparación garantiza que cada
+// request responde A→C en un solo salto.
 const wrapper = readFileSync(WRAPPER, 'utf8');
-for (const [from, to] of Object.entries(PRUNING_REDIRECTS)) {
-  if (!wrapper.includes(JSON.stringify(from)) || !wrapper.includes(JSON.stringify(to))) {
-    errors.push(`redirect ausente del wrapper: ${from} -> ${to}`);
-    if (errors.length >= 50) break;
-  }
+const pruningEntries = parsePruningRedirects(
+  readFileSync(resolve(ROOT, 'src/lib/pruning-redirects.ts'), 'utf8'),
+);
+const staticEntries = parseCloudflareRedirects(STATIC_REDIRECTS_TEXT).entries;
+const { map: rawRedirectMap } = combineRedirectEntries(pruningEntries, staticEntries);
+const { flattened: expectedRedirects } = flattenRedirectGraph(rawRedirectMap);
+const expectedRedirectMap = toWorkerRedirectMap(expectedRedirects);
+const expectedRedirectDeclaration =
+  `const REDIRECT_MAP = Object.freeze(${JSON.stringify(expectedRedirectMap)});`;
+if (!wrapper.includes(expectedRedirectDeclaration)) {
+  errors.push(
+    `REDIRECT_MAP del wrapper no coincide con el grafo combinado aplanado ` +
+      `(${Object.keys(expectedRedirectMap).length} sources)`,
+  );
 }
 if (errors.length < 50) {
   for (const path of GONE_410_URLS) {

@@ -27,8 +27,8 @@
  * Usage: npm run page-feed (corre en prebuild fase 3, tras el sitemap)
  */
 
-import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
-import { join, resolve, dirname } from 'node:path';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { basename, join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -36,20 +36,22 @@ const ROOT = resolve(__dirname, '..');
 const PUBLIC_DIR = join(ROOT, 'public');
 const OUT_FILE = join(PUBLIC_DIR, 'google-page-feed.csv');
 
-// sitemap.xml (el index) ya queda fuera: el filtro pide prefijo `sitemap-`.
-// Estos otros sí empiezan con `sitemap-` pero no aportan páginas únicas:
-//   sitemap-priority.xml → subconjunto curado (dupes)
-//   sitemap-images.xml   → mismas páginas que calcs (dupes) + archivo grande
-//   sitemap-news.xml     → subconjunto fresco (dupes), efímero
+// El índice es la única fuente de verdad: no leer por glob evita que un XML
+// viejo, ya retirado de sitemap.xml pero todavía presente en public/, vuelva a
+// colarse en Google Ads. Los sets deduplican solapamientos entre sitemaps.
+//
+// Estos sitemaps referenciados no aportan páginas únicas al feed:
+//   sitemap-images.xml → mismas páginas que calcs (dupes) + archivo grande
+//   sitemap-news.xml   → subconjunto fresco (dupes), efímero
 const SKIP = new Set([
-  'sitemap-priority.xml',
   'sitemap-images.xml',
   'sitemap-news.xml',
 ]);
 
 // Primer segmento del path que identifica una sección/mercado con prefijo propio.
 const SECTION_PREFIXES = new Set([
-  'en', 'pt', 'mx', 'es', 'co', 'cl', 'global', // locales / mercados
+  'en', 'pt', 'pt-pt', 'mx', 'es', 'co', 'cl', 'pe', 'ec', 've', 'py', 'uy', 'do', 'global',
+  // locales / mercados
   'blog', 'tabla', 'comparar', 'glosario',       // contenido editorial
   'argentina', 'iibb', 'categoria', 'guia', 'top', // hubs y programáticas
 ]);
@@ -76,9 +78,20 @@ function labelFromUrl(url: string): string {
 const LOC_RX = /<loc>([^<]+)<\/loc>/g;
 
 const urls = new Set<string>();
-const files = readdirSync(PUBLIC_DIR).filter(
-  (f) => f.startsWith('sitemap-') && f.endsWith('.xml') && !SKIP.has(f),
-);
+const indexXml = readFileSync(join(PUBLIC_DIR, 'sitemap.xml'), 'utf8');
+const files = [...indexXml.matchAll(LOC_RX)]
+  .map((m) => {
+    try {
+      const url = new URL(m[1].trim());
+      if (url.origin !== 'https://hacecuentas.com') return null;
+      return basename(url.pathname);
+    } catch {
+      return null;
+    }
+  })
+  .filter((file): file is string =>
+    Boolean(file && /^sitemap-[a-z0-9-]+\.xml$/i.test(file) && !SKIP.has(file)),
+  );
 
 for (const file of files) {
   let xml: string;

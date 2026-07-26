@@ -1,4 +1,5 @@
 import type { APIRoute, GetStaticPaths } from 'astro';
+import { canServeCalc } from '../../../lib/content-policy';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CALC SPEC API — GET /api/calc/{slug}.json  (estático, prerender)
@@ -8,8 +9,8 @@ import type { APIRoute, GetStaticPaths } from 'astro';
 // para que LLMs (Grok, ChatGPT, Claude, Gemini) y agentes descubran, citen y
 // sepan exactamente cómo invocar cada calc vía /api/calc/{slug}/compute.
 //
-// Multi-locale: cubre las 7 colecciones (calcs, calcs-en, -es, -co, -mx, -cl,
-// -pt). Los slugs son globalmente únicos entre colecciones (verificado, 0
+// Multi-locale: cubre las 14 colecciones (AR + EN + 9 mercados ES + BR/PT).
+// Los slugs son globalmente únicos entre colecciones (verificado, 0
 // colisiones), así que la ruta sigue siendo /api/calc/{slug}.json y el prefijo
 // (en/, mx/, ...) sólo reconstruye la URL pública canónica.
 //
@@ -30,10 +31,17 @@ const COLLECTIONS: Record<string, { prefix: string; locale: string }> = {
   'calcs-co': { prefix: 'co/', locale: 'es-CO' },
   'calcs-mx': { prefix: 'mx/', locale: 'es-MX' },
   'calcs-cl': { prefix: 'cl/', locale: 'es-CL' },
+  'calcs-pe': { prefix: 'pe/', locale: 'es-PE' },
+  'calcs-ec': { prefix: 'ec/', locale: 'es-EC' },
+  'calcs-ve': { prefix: 've/', locale: 'es-VE' },
+  'calcs-py': { prefix: 'py/', locale: 'es-PY' },
+  'calcs-uy': { prefix: 'uy/', locale: 'es-UY' },
+  'calcs-do': { prefix: 'do/', locale: 'es-DO' },
   'calcs-pt': { prefix: 'pt/', locale: 'pt-BR' },
+  'calcs-pt-pt': { prefix: 'pt-pt/', locale: 'pt-PT' },
 };
 
-// calcs* matchea las 7 colecciones. El prefijo/locale sale del nombre del dir.
+// calcs* matchea las 14 colecciones. El prefijo/locale sale del nombre del dir.
 const calcModules = import.meta.glob<any>('../../../content/calcs*/*.json', { eager: true });
 
 const bySlug = new Map<string, { calc: any; prefix: string; locale: string }>();
@@ -42,7 +50,7 @@ for (const [path, mod] of Object.entries(calcModules)) {
   const dir = path.match(/content\/(calcs[^/]*)\//)?.[1];
   const col = dir ? COLLECTIONS[dir] : undefined;
   if (!col) continue; // colección desconocida → ignorar
-  if (!data || !data.slug || !data.formulaId || data.noindex === true) continue;
+  if (!data || !data.slug || !data.formulaId || !canServeCalc(data, col.prefix)) continue;
   // Slugs únicos entre colecciones; si hubiera drift, gana la primera (orden de glob).
   if (!bySlug.has(data.slug)) bySlug.set(data.slug, { calc: data, prefix: col.prefix, locale: col.locale });
 }

@@ -25,7 +25,7 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { canDistributeCalc } from '../src/lib/content-policy.ts';
+import { canServeCalc } from '../src/lib/content-policy.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const FORMULAS_DIR = join(ROOT, 'src/lib/formulas');
@@ -106,9 +106,10 @@ for (const { dir, pathPrefix, locale } of LOCALES) {
     } catch {
       continue;
     }
-    // noindex/restringida: no la exponemos en la API de cómputo. canDistributeCalc
-    // cubre noindex manual + restricción YMYL (dosis/tratamiento sin revisor).
-    if (!canDistributeCalc(d)) {
+    // noindex/restringida: no la exponemos en la API de cómputo. Los aliases
+    // canónicos sí siguen sirviéndose para no romper integraciones existentes;
+    // `canDistributeCalc` los excluye sólo de superficies de descubrimiento.
+    if (!canServeCalc(d, pathPrefix)) {
       skippedNoindex++;
       continue;
     }

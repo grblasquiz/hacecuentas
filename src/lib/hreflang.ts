@@ -15,6 +15,8 @@
 // exista (en > pt > vertical). Cluster de 1 miembro → undefined y la página
 // cae en el fallback de Layout.astro (self + x-default self).
 
+import { canDistributeCalc, type CalcPolicyInput } from './content-policy.ts';
+
 const BASE = 'https://hacecuentas.com';
 
 export interface HreflangClusterMembers {
@@ -42,8 +44,95 @@ export interface HreflangTag {
   href: string;
 }
 
+export type HreflangLocale = keyof HreflangClusterMembers;
+
+export interface HreflangIndexEntry {
+  slug: string;
+  /**
+   * Identidad común del cluster. Normalmente es el slug de la versión ES raíz.
+   * Puede existir aunque la raíz no sea distribuible: las traducciones vivas
+   * siguen pudiendo relacionarse entre sí sin apuntar a la URL retirada.
+   */
+  clusterKey?: string;
+}
+
+export type HreflangIndex = Partial<Record<HreflangLocale, HreflangIndexEntry[]>>;
+
+export interface ResolvedHreflangRoute {
+  members: HreflangClusterMembers;
+  /**
+   * `undefined` = página distribuible sin alternates (Layout emite self).
+   * `[]` = página no distribuible/ambigua (Layout no debe emitir hreflang).
+   */
+  tags: HreflangTag[] | undefined;
+}
+
+export const HREFLANG_LOCALES: readonly HreflangLocale[] = [
+  'es',
+  'en',
+  'pt',
+  'mx',
+  'esEs',
+  'co',
+  'cl',
+  'pe',
+  'ec',
+  've',
+  'py',
+  'uy',
+  'do',
+  'ptPt',
+] as const;
+
 const strip = (slug?: string): string | undefined =>
   slug ? slug.replace(/^\/+/, '') : undefined;
+
+type HreflangCalcInput = CalcPolicyInput & { canonicalSlug?: string };
+
+const normalizePagePath = (pathname: string): string => {
+  let path = pathname.replace(/\.html$/, '').replace(/\/index$/, '/');
+  if (!path.startsWith('/')) path = `/${path}`;
+  if (path.length > 1) path = path.replace(/\/+$/, '');
+  return path || '/';
+};
+
+/**
+ * El fallback de Layout sólo puede emitir hreflang self en una página
+ * autocanónica. Los aliases con rel=canonical a otra URL no son alternates
+ * válidos, aunque sigan sirviéndose con 200 por compatibilidad.
+ */
+export function isSelfCanonicalUrl(
+  pathname: string,
+  canonical: string,
+  site = BASE,
+): boolean {
+  try {
+    const canonicalUrl = new URL(canonical, site);
+    const siteUrl = new URL(site);
+    return (
+      canonicalUrl.origin === siteUrl.origin &&
+      normalizePagePath(canonicalUrl.pathname) === normalizePagePath(pathname)
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Fuente única de elegibilidad para hreflang.
+ *
+ * Además de la política normal de distribución, excluye aliases cuyo canonical
+ * apunta a otro slug. Un alternate debe resolver directamente a una URL 200,
+ * indexable y autocanónica; nunca a un salto intermedio.
+ */
+export function isHreflangEligibleCalc(
+  calc: HreflangCalcInput | null | undefined,
+  routePrefix = ''
+): boolean {
+  if (!calc?.slug || !canDistributeCalc(calc, routePrefix)) return false;
+  const canonicalSlug = strip(calc.canonicalSlug);
+  return !canonicalSlug || canonicalSlug === strip(calc.slug);
+}
 
 /**
  * Devuelve el set hreflang COMPLETO e IDÉNTICO para todos los miembros del
@@ -127,6 +216,53 @@ export function buildHreflangCluster(
   tags.push({ lang: 'x-default', href: xDefault! });
 
   return tags;
+}
+
+/**
+ * Resuelve un cluster desde el índice generado en prebuild.
+ *
+ * Todos los routes llaman a esta misma función y consumen el mismo índice,
+ * por lo que cada miembro recibe exactamente el mismo set. Si un locale tiene
+ * dos candidatos para el mismo cluster se lo omite: elegir uno arbitrariamente
+ * produciría un cluster no recíproco. La página duplicada queda standalone
+ * hasta que se resuelva la ambigüedad editorial.
+ */
+export function resolveHreflangRoute(
+  index: HreflangIndex,
+  locale: HreflangLocale,
+  rawSlug: string
+): ResolvedHreflangRoute {
+  const slug = strip(rawSlug);
+  if (!slug) return { members: {}, tags: [] };
+
+  const currentMatches = (index[locale] || []).filter((entry) => strip(entry.slug) === slug);
+  if (currentMatches.length !== 1) {
+    // No está en el índice: noindex, podada, 410, alias canónico o dato ambiguo.
+    return { members: {}, tags: [] };
+  }
+
+  const current = currentMatches[0];
+  if (!current.clusterKey) {
+    return { members: { [locale]: slug }, tags: undefined };
+  }
+
+  const members: HreflangClusterMembers = {};
+  for (const candidateLocale of HREFLANG_LOCALES) {
+    const candidates = (index[candidateLocale] || []).filter(
+      (entry) => entry.clusterKey === current.clusterKey
+    );
+    if (candidates.length === 1) {
+      members[candidateLocale] = strip(candidates[0].slug);
+    }
+  }
+
+  // Si este locale es ambiguo dentro del cluster, no lo vinculamos a un set
+  // que no puede declarar su propia URL.
+  if (members[locale] !== slug) {
+    return { members: { [locale]: slug }, tags: undefined };
+  }
+
+  return { members, tags: buildHreflangCluster(members) };
 }
 
 /**

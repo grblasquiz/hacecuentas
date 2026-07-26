@@ -24,6 +24,7 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+from threading import local
 from xml.etree import ElementTree as ET
 
 try:
@@ -42,11 +43,19 @@ SITE_URL = "sc-domain:hacecuentas.com"
 SCOPES = ["https://www.googleapis.com/auth/webmasters.readonly"]
 OUT_FILE = ROOT / "scripts" / "gsc-coverage-report.json"
 NS = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
+THREAD_LOCAL = local()
 
 
 def get_service():
     creds = service_account.Credentials.from_service_account_file(CREDS_PATH, scopes=SCOPES)
     return build("searchconsole", "v1", credentials=creds, cache_discovery=False)
+
+
+def get_thread_service():
+    """googleapiclient/httplib2 clients are not thread-safe."""
+    if not hasattr(THREAD_LOCAL, "service"):
+        THREAD_LOCAL.service = get_service()
+    return THREAD_LOCAL.service
 
 
 def inspect_url(svc, full_url: str, retries: int = 2) -> dict | None:
@@ -81,6 +90,10 @@ def inspect_url(svc, full_url: str, retries: int = 2) -> dict | None:
     return {"url": full_url, "error": last_err}
 
 
+def inspect_url_threadsafe(full_url: str) -> dict | None:
+    return inspect_url(get_thread_service(), full_url)
+
+
 def urls_from_priority_sitemap() -> list[str]:
     p = ROOT / "public" / "sitemap-priority.xml"
     tree = ET.parse(p)
@@ -103,11 +116,9 @@ def main():
             urls = urls[: args.top]
 
     print(f"[gsc] Inspeccionando {len(urls)} URLs (concurrency={args.concurrency})", file=sys.stderr)
-    svc = get_service()
-
     results = []
     with ThreadPoolExecutor(max_workers=args.concurrency) as ex:
-        futures = {ex.submit(inspect_url, svc, u): u for u in urls}
+        futures = {ex.submit(inspect_url_threadsafe, u): u for u in urls}
         for i, fut in enumerate(as_completed(futures), 1):
             r = fut.result()
             results.append(r)
@@ -137,6 +148,7 @@ def main():
         "total": len(results),
         "indexed_count": len(indexed),
         "not_indexed_count": len(not_indexed),
+        "indexed": sorted(indexed, key=lambda r: r.get("url", "")),
         "not_indexed": not_indexed,
         "errors": errors,
     }, indent=2, ensure_ascii=False))

@@ -115,7 +115,8 @@ import { getComparatorForCalc } from '../lib/comparators';
 import { findMentions, findPrimaryAbout } from '../lib/wikidata-entities';
 import { datasetSchemasForCalc } from '../lib/calc-datasets';
 import { filterByIncremental } from '../lib/incremental';
-import { buildHreflangCluster, findVersionByEsSlug } from '../lib/hreflang';
+import { resolveHreflangRoute } from '../lib/hreflang';
+import hreflangIndex from '../lib/hreflang-index.json';
 import { getDataAsOf } from '../lib/data-freshness';
 import { hasValidProfessionalReviewer, isRestrictedCalc, canAdvertiseCalc } from '../lib/content-policy';
 
@@ -129,24 +130,6 @@ export async function getStaticPaths() {
 }
 
 const { calc } = Astro.props;
-
-// Cargar calcs de otros locales para hreflang bidireccional
-const enCalcModules = import.meta.glob<any>('../content/calcs-en/*.json', { eager: true });
-const enCalcs = Object.values(enCalcModules).map((m: any) => m.default || m);
-const ptCalcModules = import.meta.glob<any>('../content/calcs-pt/*.json', { eager: true });
-const ptCalcs = Object.values(ptCalcModules).map((m: any) => m.default || m);
-const mxCalcModules = import.meta.glob<any>('../content/calcs-mx/*.json', { eager: true });
-const mxCalcs = Object.values(mxCalcModules).map((m: any) => m.default || m);
-const esCalcModules = import.meta.glob<any>('../content/calcs-es/*.json', { eager: true });
-const esCalcs = Object.values(esCalcModules).map((m: any) => m.default || m);
-const coCalcModules = import.meta.glob<any>('../content/calcs-co/*.json', { eager: true });
-const coCalcs = Object.values(coCalcModules).map((m: any) => m.default || m);
-const clCalcModules = import.meta.glob<any>('../content/calcs-cl/*.json', { eager: true });
-const clCalcs = Object.values(clCalcModules).map((m: any) => m.default || m);
-const peCalcModules = import.meta.glob<any>('../content/calcs-pe/*.json', { eager: true });
-const peCalcs = Object.values(peCalcModules).map((m: any) => m.default || m);
-const ecCalcModules = import.meta.glob<any>('../content/calcs-ec/*.json', { eager: true });
-const ecCalcs = Object.values(ecCalcModules).map((m: any) => m.default || m);
 
 // Markdown simple → HTML
 // Escape HTML antes de inyectar en templates. Defense-in-depth por si un JSON
@@ -1068,30 +1051,22 @@ const reportBody = encodeURIComponent(
   `Hola Equipo Hacé Cuentas,\n\nEncontré un error en la calculadora "${calc.h1}":\n\nURL: https://hacecuentas.com/${calc.slug}\nDatos que ingresé: \nResultado esperado: \nResultado obtenido: \nFuente / referencia: \n\nGracias.`
 );
 
-// hreflang bidireccional: detectar versiones en otros locales por slug similar o matching explícito
-const enVersion = findVersionByEsSlug(enCalcs, calc.slug);
-const ptVersion = findVersionByEsSlug(ptCalcs, calc.slug);
-const mxVersion = findVersionByEsSlug(mxCalcs, calc.slug, true);
-const esVersion = findVersionByEsSlug(esCalcs, calc.slug, true);
-const coVersion = findVersionByEsSlug(coCalcs, calc.slug, true);
-const clVersion = findVersionByEsSlug(clCalcs, calc.slug, true);
-const peVersion = findVersionByEsSlug(peCalcs, calc.slug);
-const ecVersion = findVersionByEsSlug(ecCalcs, calc.slug);
-
-// Set hreflang unificado: todos los miembros del cluster declaran el MISMO
-// set con UN solo x-default (la versión ES raíz). Ver src/lib/hreflang.ts.
-// Cluster de 1 miembro → undefined → fallback del Layout (self + x-default).
-const hreflangTags = buildHreflangCluster({
-  es: calc.slug,
-  en: enVersion?.slug,
-  pt: ptVersion?.slug,
-  mx: mxVersion?.slug,
-  esEs: esVersion?.slug,
-  co: coVersion?.slug,
-  cl: clVersion?.slug,
-  pe: peVersion?.slug,
-  ec: ecVersion?.slug,
-});
+// Índice único y filtrado: sólo URLs 200 + indexables + autocanónicas.
+// Todos los routes resuelven desde el mismo cluster, garantizando reciprocidad.
+const resolvedHreflang = resolveHreflangRoute(hreflangIndex, 'es', calc.slug);
+const hreflangTags = resolvedHreflang.tags;
+const enVersion = resolvedHreflang.members.en
+  ? { slug: resolvedHreflang.members.en }
+  : undefined;
+const ptVersion = resolvedHreflang.members.pt
+  ? { slug: resolvedHreflang.members.pt }
+  : undefined;
+const mxVersion = resolvedHreflang.members.mx
+  ? { slug: resolvedHreflang.members.mx }
+  : undefined;
+const esVersion = resolvedHreflang.members.esEs
+  ? { slug: resolvedHreflang.members.esEs }
+  : undefined;
 
 // Pills del lang-switch. Se renderizan en DOS navs (desktop arriba del grid /
 // mobile abajo de la calculadora — ver "AD-FIRST MOBILE" en el CSS); el array

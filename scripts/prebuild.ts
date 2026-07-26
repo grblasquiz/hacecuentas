@@ -116,8 +116,9 @@ async function main() {
     task('og', 'generate-og-images'),
     tsxTask('sitemap', 'generate-sitemap'),
     task('search-index', 'generate-search-index'),
-    // Índice slim {slug, esSlug} por locale para el hreflang de [...slug].astro
-    // (reemplaza 6 import.meta.glob eager de ~18 MB). DEBE existir antes del build.
+    // Índice slim {slug, clusterKey} de los 14 locales para hreflang recíproco.
+    // Reemplaza los import.meta.glob eager y excluye URLs no distribuibles.
+    // DEBE existir antes del build.
     task('hreflang-index', 'generate-hreflang-index'),
     task('stamp-sw', 'stamp-sw'),
     // API para LLMs: catálogo /api/calcs-index.json + índice slim que consume

@@ -925,6 +925,7 @@ sitemaps.push({
     // filtro de _redirects los borraba de los dos lados (bug del trailing slash).
     core('/calculadora',                         '0.75', 'monthly'),
     core('/embeber',                             '0.6',  'monthly'),
+    core('/embeds',                              '0.6',  'monthly'),
     core('/enlazanos',                           '0.5',  'monthly'),
     core('/partners',                            '0.7',  'monthly'),
     core('/wordpress',                           '0.75', 'weekly'),
@@ -1444,17 +1445,30 @@ function escapeXml(s: string): string {
 }
 
 function imagesetXml(entries: ImageEntry[]): string {
+  // El protocolo permite múltiples <image:image> dentro de una misma <url>.
+  // Una calc puede tener OG + infografía; emitir dos bloques <url> con el mismo
+  // <loc> agrega duplicados innecesarios y algunos validadores los reportan como
+  // URLs repetidas. Agrupamos por página y deduplicamos la imagen dentro de ella.
+  const byPage = new Map<string, ImageEntry[]>();
+  for (const entry of entries) {
+    const pageImages = byPage.get(entry.loc) || [];
+    if (!pageImages.some((image) => image.image === entry.image)) {
+      pageImages.push(entry);
+    }
+    byPage.set(entry.loc, pageImages);
+  }
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
-${entries.map((e) => `  <url>
-    <loc>${e.loc}</loc>
-    <image:image>
-      <image:loc>${e.image}</image:loc>
+${[...byPage.entries()].map(([loc, images]) => `  <url>
+    <loc>${escapeXml(loc)}</loc>
+${images.map((e) => `    <image:image>
+      <image:loc>${escapeXml(e.image)}</image:loc>
       <image:title>${escapeXml(e.title)}</image:title>
       <image:caption>${escapeXml(e.caption)}</image:caption>
       <image:license>https://creativecommons.org/licenses/by/4.0/</image:license>
-    </image:image>
+    </image:image>`).join('\n')}
   </url>`).join('\n')}
 </urlset>`;
 }
@@ -1650,12 +1664,13 @@ for (const s of sitemaps) {
   writeFileSync(join(PUBLIC_DIR, s.name), urlsetXml(s.urls), 'utf8');
   totalUrls += s.urls.length;
 }
-totalUrls += imageEntries.length;
+totalUrls += imageEntriesClean.length;
 
-// Index principal. sitemap-priority.xml se conserva como lista operativa para
-// Bing/IndexNow/scripts internos, pero no se incluye acá: todas sus URLs ya
-// viven en core/categorías/etc. y sumarlo al índice duplicaba cientos de señales.
-const indexableSitemaps = sitemaps.filter((s) => s.name !== 'sitemap-priority.xml');
+// Index principal. sitemap-priority.xml también entra: además de ser la cohorte
+// de recrawl para Bing/IndexNow, contiene landings editoriales que no pertenecen
+// a los sitemaps de calcs/core. Los solapamientos entre sitemaps son válidos en
+// el protocolo y los consumidores internos deduplican por URL.
+const indexableSitemaps = sitemaps;
 const indexEntries = indexableSitemaps.map((s) => {
   const loc = `${site}/${s.name}`;
   const desired = maxLastmod(s.urls, buildDate);
@@ -1668,7 +1683,7 @@ writeFileSync(join(PUBLIC_DIR, 'sitemap.xml'), indexContent, 'utf8');
 
 saveState(usedLastmods);
 
-console.log(`✓ sitemap index → ${indexableSitemaps.length} sitemaps (${sitemaps.length - indexableSitemaps.length} operativo fuera del índice), ${totalUrls} URLs generadas`);
+console.log(`✓ sitemap index → ${indexableSitemaps.length} sitemaps, ${totalUrls} URLs generadas`);
 console.log(`  sitemap tripwire: maxLastmod=${MAX_LASTMOD_UPDATES} · maxNew=${MAX_NEW_URLS} · state=${stateSource} · new=${newCount} · raised=${raisedLocs.size} · unchanged=${unchangedCount}`);
 for (const s of sitemaps) {
   console.log(`  · ${s.name.padEnd(40)} ${String(s.urls.length).padStart(5)} URLs`);

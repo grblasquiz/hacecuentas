@@ -19,7 +19,8 @@ import { md, mdInline } from '../../lib/markdown';
 import ogManifest from '../../lib/og-manifest.json';
 import { findMentions, findPrimaryAbout } from '../../lib/wikidata-entities';
 import { filterByIncremental } from '../../lib/incremental';
-import { buildHreflangCluster, findVersionByEsSlug } from '../../lib/hreflang';
+import { resolveHreflangRoute } from '../../lib/hreflang';
+import hreflangIndex from '../../lib/hreflang-index.json';
 
 export async function getStaticPaths() {
   const calcs = import.meta.glob<any>('../../content/calcs-py/*.json', { eager: true });
@@ -291,36 +292,8 @@ const reportBody = encodeURIComponent(
   `Hi Martín,\n\nI found an error in the calculator "${calc.h1}":\n\nURL: https://hacecuentas.com/py/${calc.slug}\nInput data: \nExpected result: \nActual result: \nSource / reference: \n\nThank you.`
 );
 
-// hreflang unificado: resolver TODO el cluster vía esSlug compartido
-// (ES raíz + EN + PT + verticales) para declarar un set IDÉNTICO al de la
-// página ES raíz, con UN solo x-default → versión ES. Ver src/lib/hreflang.ts.
-// Calc EC-specific (sin esSlug) → undefined → fallback del Layout (es-PY + x-default self).
-const esSlug = calc.esSlug;
-const enModulesHreflang = import.meta.glob<any>('../../content/calcs-en/*.json', { eager: true });
-const enCalcHreflang: any = findVersionByEsSlug(Object.values(enModulesHreflang).map((m: any) => m.default || m), esSlug);
-const ptModulesHreflang = import.meta.glob<any>('../../content/calcs-pt/*.json', { eager: true });
-const ptCalcHreflang: any = findVersionByEsSlug(Object.values(ptModulesHreflang).map((m: any) => m.default || m), esSlug);
-const mxModulesHreflang = import.meta.glob<any>('../../content/calcs-mx/*.json', { eager: true });
-const mxCalcHreflang: any = findVersionByEsSlug(Object.values(mxModulesHreflang).map((m: any) => m.default || m), esSlug, true);
-const esModulesHreflang = import.meta.glob<any>('../../content/calcs-es/*.json', { eager: true });
-const esCalcHreflang: any = findVersionByEsSlug(Object.values(esModulesHreflang).map((m: any) => m.default || m), esSlug, true);
-const coModulesHreflang = import.meta.glob<any>('../../content/calcs-co/*.json', { eager: true });
-const coCalcHreflang: any = findVersionByEsSlug(Object.values(coModulesHreflang).map((m: any) => m.default || m), esSlug, true);
-const clModulesHreflang = import.meta.glob<any>('../../content/calcs-cl/*.json', { eager: true });
-const clCalcHreflang: any = findVersionByEsSlug(Object.values(clModulesHreflang).map((m: any) => m.default || m), esSlug, true);
-const peModulesHreflang = import.meta.glob<any>('../../content/calcs-pe/*.json', { eager: true });
-const peCalcHreflang: any = findVersionByEsSlug(Object.values(peModulesHreflang).map((m: any) => m.default || m), esSlug);
-const hreflangTags = buildHreflangCluster({
-  es: esSlug,
-  en: enCalcHreflang?.slug,
-  pt: ptCalcHreflang?.slug,
-  mx: mxCalcHreflang?.slug,
-  esEs: esCalcHreflang?.slug,
-  co: coCalcHreflang?.slug,
-  cl: clCalcHreflang?.slug,
-  pe: peCalcHreflang?.slug,
-  py: calc.slug,
-});
+// Un único índice distribuible hace que todos los miembros emitan el mismo set.
+const hreflangTags = resolveHreflangRoute(hreflangIndex, 'py', calc.slug).tags;
 
 // ── Flagship bespoke por-slug (mockups Martin) ───────────────────────────────
 // Cada una reemplaza a CalcLayoutV2 y trae su propio data-domain.

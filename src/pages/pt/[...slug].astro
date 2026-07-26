@@ -17,7 +17,8 @@ import { md, mdInline } from '../../lib/markdown';
 import ogManifest from '../../lib/og-manifest.json';
 import { findMentions, findPrimaryAbout } from '../../lib/wikidata-entities';
 import { filterByIncremental } from '../../lib/incremental';
-import { buildHreflangCluster, findVersionByEsSlug } from '../../lib/hreflang';
+import { resolveHreflangRoute } from '../../lib/hreflang';
+import hreflangIndex from '../../lib/hreflang-index.json';
 
 export async function getStaticPaths() {
   const calcs = import.meta.glob<any>('../../content/calcs-pt/*.json', { eager: true });
@@ -307,36 +308,8 @@ const reportBody = encodeURIComponent(
   `Olá Martín,\n\nEncontrei um erro na calculadora "${calc.h1}":\n\nURL: https://hacecuentas.com/pt/${calc.slug}\nDados de entrada: \nResultado esperado: \nResultado real: \nFonte / referência: \n\nObrigado.`
 );
 
-// hreflang unificado: resolver TODO el cluster vía esSlug compartido
-// (EN + 6 verticales) para declarar un set IDÉNTICO al de la página ES raíz,
-// con UN solo x-default → versión ES. Ver src/lib/hreflang.ts.
-// Calc PT-only (sin esSlug) → undefined → fallback del Layout (pt-BR + x-default self).
-const esSlug = calc.esSlug;
-const enModulesHreflang = import.meta.glob<any>('../../content/calcs-en/*.json', { eager: true });
-const enCalcHreflang: any = findVersionByEsSlug(Object.values(enModulesHreflang).map((m: any) => m.default || m), esSlug);
-const mxModulesHreflang = import.meta.glob<any>('../../content/calcs-mx/*.json', { eager: true });
-const mxCalcHreflang: any = findVersionByEsSlug(Object.values(mxModulesHreflang).map((m: any) => m.default || m), esSlug, true);
-const esEsModulesHreflang = import.meta.glob<any>('../../content/calcs-es/*.json', { eager: true });
-const esEsCalcHreflang: any = findVersionByEsSlug(Object.values(esEsModulesHreflang).map((m: any) => m.default || m), esSlug, true);
-const coModulesHreflang = import.meta.glob<any>('../../content/calcs-co/*.json', { eager: true });
-const coCalcHreflang: any = findVersionByEsSlug(Object.values(coModulesHreflang).map((m: any) => m.default || m), esSlug, true);
-const clModulesHreflang = import.meta.glob<any>('../../content/calcs-cl/*.json', { eager: true });
-const clCalcHreflang: any = findVersionByEsSlug(Object.values(clModulesHreflang).map((m: any) => m.default || m), esSlug, true);
-const peModulesHreflang = import.meta.glob<any>('../../content/calcs-pe/*.json', { eager: true });
-const peCalcHreflang: any = findVersionByEsSlug(Object.values(peModulesHreflang).map((m: any) => m.default || m), esSlug);
-const ecModulesHreflang = import.meta.glob<any>('../../content/calcs-ec/*.json', { eager: true });
-const ecCalcHreflang: any = findVersionByEsSlug(Object.values(ecModulesHreflang).map((m: any) => m.default || m), esSlug);
-const hreflangTags = buildHreflangCluster({
-  es: esSlug,
-  en: enCalcHreflang?.slug,
-  pt: calc.slug,
-  mx: mxCalcHreflang?.slug,
-  esEs: esEsCalcHreflang?.slug,
-  co: coCalcHreflang?.slug,
-  cl: clCalcHreflang?.slug,
-  pe: peCalcHreflang?.slug,
-  ec: ecCalcHreflang?.slug,
-});
+// Un único índice distribuible hace que todos los miembros emitan el mismo set.
+const hreflangTags = resolveHreflangRoute(hreflangIndex, 'pt', calc.slug).tags;
 ---
 
 <Layout

@@ -14,6 +14,7 @@ if [ "${HC_DEPLOY_LOCK_HELD:-}" != 1 ] && [ -f .deploy.lock ]; then
 fi
 
 node scripts/prepare-fast-pages.mjs
+node scripts/audit-redirect-graph.mjs --check --build-dir=dist/client
 node scripts/generate-worker-wrapper.mjs
 rm -rf .wrangler/deploy
 echo '[fast-pages] subiendo delta a Cloudflare (sin Astro)...'

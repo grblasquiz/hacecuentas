@@ -39,7 +39,35 @@ const calcModulesMX = import.meta.glob<any>('../content/calcs-mx/*.json', { eage
 const calcModulesES = import.meta.glob<any>('../content/calcs-es/*.json', { eager: true });
 const calcModulesCO = import.meta.glob<any>('../content/calcs-co/*.json', { eager: true });
 const calcModulesCL = import.meta.glob<any>('../content/calcs-cl/*.json', { eager: true });
+const calcModulesPE = import.meta.glob<any>('../content/calcs-pe/*.json', { eager: true });
+const calcModulesEC = import.meta.glob<any>('../content/calcs-ec/*.json', { eager: true });
+const calcModulesVE = import.meta.glob<any>('../content/calcs-ve/*.json', { eager: true });
+const calcModulesPY = import.meta.glob<any>('../content/calcs-py/*.json', { eager: true });
+const calcModulesUY = import.meta.glob<any>('../content/calcs-uy/*.json', { eager: true });
+const calcModulesDO = import.meta.glob<any>('../content/calcs-do/*.json', { eager: true });
+const calcModulesPTPT = import.meta.glob<any>('../content/calcs-pt-pt/*.json', { eager: true });
 const blogModules = import.meta.glob<any>('../content/blog/*.json', { eager: true });
+
+const calcSources: Array<{ modules: Record<string, any>; prefix: string }> = [
+  { modules: calcModulesAR, prefix: '/' },
+  { modules: calcModulesEN, prefix: '/en/' },
+  { modules: calcModulesPT, prefix: '/pt/' },
+  { modules: calcModulesMX, prefix: '/mx/' },
+  { modules: calcModulesES, prefix: '/es/' },
+  { modules: calcModulesCO, prefix: '/co/' },
+  { modules: calcModulesCL, prefix: '/cl/' },
+  { modules: calcModulesPE, prefix: '/pe/' },
+  { modules: calcModulesEC, prefix: '/ec/' },
+  { modules: calcModulesVE, prefix: '/ve/' },
+  { modules: calcModulesPY, prefix: '/py/' },
+  { modules: calcModulesUY, prefix: '/uy/' },
+  { modules: calcModulesDO, prefix: '/do/' },
+  { modules: calcModulesPTPT, prefix: '/pt-pt/' },
+];
+
+// Export estable para que el test de cobertura detecte si un mercado deja de
+// participar del feed, aun cuando temporalmente no tenga datos actualizados.
+export const FRESH_MARKET_PREFIXES = calcSources.map(({ prefix }) => prefix);
 
 const FOURTEEN_DAYS_MS = 14 * 24 * 3600 * 1000;
 const SITE = 'https://hacecuentas.com';
@@ -62,7 +90,9 @@ function buildEntries(modules: Record<string, any>, prefix: string): Entry[] {
   const out: Entry[] = [];
   for (const m of Object.values(modules)) {
     const calc = m.default || m;
-    if (!canDistributeCalc(calc)) continue;
+    // Path-aware: un slug local no debe quedar afuera por colisionar con una
+    // redirección del mismo slug en la raíz u otro mercado.
+    if (!canDistributeCalc(calc, prefix)) continue;
     // Solo dataUpdate.lastUpdated cuenta para freshness signal.
     // lastReviewed se bumpea con backfills metadata y NO refleja
     // cambio editorial real — incluirlo infla el fresh con falsos positivos.
@@ -82,15 +112,9 @@ function buildEntries(modules: Record<string, any>, prefix: string): Entry[] {
 }
 
 export const GET: APIRoute = () => {
-  const entries: Entry[] = [
-    ...buildEntries(calcModulesAR, '/'),
-    ...buildEntries(calcModulesEN, '/en/'),
-    ...buildEntries(calcModulesPT, '/pt/'),
-    ...buildEntries(calcModulesMX, '/mx/'),
-    ...buildEntries(calcModulesES, '/es/'),
-    ...buildEntries(calcModulesCO, '/co/'),
-    ...buildEntries(calcModulesCL, '/cl/'),
-  ];
+  const entries: Entry[] = calcSources.flatMap(({ modules, prefix }) =>
+    buildEntries(modules, prefix),
+  );
 
   // Blog posts modified <14d
   const now = Date.now();
