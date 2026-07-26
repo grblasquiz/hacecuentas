@@ -29,7 +29,10 @@ const campeonName = winnerName(final);
 const campeon = campeonName ? teamLabel(campeonName) : null;
 const subcampeonName = campeonName && final ? (campeonName === final.team1 ? final.team2 : final.team1) : null;
 const subcampeon = subcampeonName ? teamLabel(subcampeonName) : null;
-const finalScore = final?.score?.ft ? `${final.score.ft[0]}-${final.score.ft[1]}` : null;
+// Marcador decisivo: penales > alargue > 90' (la final 2026 se definió en el alargue).
+const finalPair: [number, number] | null = final?.score?.ft ? (((final.score as any).p || (final.score as any).et || final.score.ft) as [number, number]) : null;
+const finalSuffix = final?.score ? ((final.score as any).p ? ' (pen.)' : (final.score as any).et ? ' (pr.)' : '') : '';
+const finalScore = finalPair ? `${finalPair[0]}-${finalPair[1]}${finalSuffix}` : null;
 const finalKickoff = final ? kickoffUTC(final.date, final.time) : null;
 
 const t1 = final ? teamLabel(final.team1) : null;
@@ -44,7 +47,7 @@ const title = campeon
   : '¿Quién ganó el Mundial 2026? Final, campeón y palmarés | Hacé Cuentas';
 const description = campeon
   ? `${campeon.es} es el campeón del Mundial 2026: le ganó la final a ${subcampeon?.es} (${finalScore}). Resultado, botín de oro y la tabla histórica de campeones del mundo.`
-  : 'La final del Mundial 2026 se juega el domingo 19 de julio en el MetLife Stadium (Nueva York/Nueva Jersey). Quién ganó, resultado en vivo, botín de oro y todos los campeones de la historia.';
+  : 'La final del Mundial 2026 se jugó el domingo 19 de julio en el MetLife Stadium (Nueva York/Nueva Jersey). Quién ganó, el resultado de la final, el botín de oro y todos los campeones de la historia.';
 
 const updated = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(fixture.fetchedAt));
 
@@ -89,18 +92,23 @@ const faq = [
     q: '¿Quién ganó el Mundial 2026?',
     a: campeon
       ? `${campeon.es} ganó el Mundial 2026: venció a ${subcampeon?.es} en la final (${finalScore}) jugada el 19 de julio en el MetLife Stadium de Nueva York/Nueva Jersey.`
-      : 'La final del Mundial 2026 se juega el domingo 19 de julio a las 16:00 (hora argentina) en el MetLife Stadium de Nueva York/Nueva Jersey. Esta página muestra el campeón apenas termine el partido, con actualización automática.',
+      : 'La final del Mundial 2026 se jugó el domingo 19 de julio a las 16:00 (hora argentina) en el MetLife Stadium de Nueva York/Nueva Jersey. El resultado figura arriba, tomado del feed oficial del torneo.',
   },
-  { q: '¿Cuándo y dónde es la final del Mundial 2026?', a: 'El domingo 19 de julio de 2026 a las 16:00 hora argentina (15:00 hora local), en el MetLife Stadium de East Rutherford, Nueva York/Nueva Jersey, Estados Unidos.' },
+  { q: '¿Cuándo y dónde fue la final del Mundial 2026?', a: 'Se jugó el domingo 19 de julio de 2026 a las 16:00 hora argentina (15:00 hora local), en el MetLife Stadium de East Rutherford, Nueva York/Nueva Jersey, Estados Unidos.' },
   { q: '¿Qué país tiene más mundiales ganados?', a: 'Brasil es el máximo campeón con 5 títulos (1958, 1962, 1970, 1994 y 2002). Lo siguen Alemania e Italia con 4 cada uno, y Argentina con 3 (1978, 1986 y 2022).' },
   { q: '¿Cuántos mundiales tiene Argentina?', a: 'Argentina tiene 3 títulos mundiales: 1978 (local), 1986 (México) y 2022 (Qatar). Además fue subcampeona en 1930, 1990 y 2014.' },
   { q: '¿Quién ganó el Mundial anterior?', a: 'Argentina ganó el Mundial de Qatar 2022: empató 3-3 con Francia en la final y se impuso 4-2 en los penales, con Lionel Messi como figura del torneo.' },
-  { q: '¿Hay partido por el tercer puesto?', a: 'Sí. Se juega el sábado 18 de julio de 2026 en Miami, entre los perdedores de las dos semifinales.' },
   {
-    q: '¿Quién es el botín de oro del Mundial 2026?',
+    q: '¿Quién salió tercero en el Mundial 2026?',
+    a: tercero?.score?.ft
+      ? `${teamLabel(winnerName(tercero) || '').es} se quedó con el tercer puesto: le ganó ${Math.max(...tercero.score.ft)}-${Math.min(...tercero.score.ft)} a ${teamLabel(winnerName(tercero) === tercero.team1 ? tercero.team2 : tercero.team1).es} el 18 de julio en Miami.`
+      : 'El partido por el tercer puesto se jugó el sábado 18 de julio de 2026 en Miami, entre los perdedores de las dos semifinales.',
+  },
+  {
+    q: '¿Quién fue el botín de oro del Mundial 2026?',
     a: botin
-      ? `Hasta ahora el máximo goleador del torneo es ${botin.es} (${botin.team}) con ${botin.goles} goles. El botín de oro se define al terminar la final.`
-      : 'El botín de oro se otorga al máximo goleador del torneo y se define al terminar la final. Mirá la tabla de goleadores actualizada en vivo.',
+      ? `El máximo goleador del torneo fue ${botin.name} (${botin.flag} ${botin.es}) con ${botin.goles} goles.`
+      : 'El botín de oro se otorga al máximo goleador del torneo. Mirá la tabla completa de goleadores.',
   },
 ];
 
@@ -137,7 +145,7 @@ const espnCfg = {
     <p class="lede">
       {campeon
         ? `${campeon.flag} ${campeon.es} es el campeón del mundo: le ganó la final a ${subcampeon?.es} ${finalScore}.`
-        : 'La final se juega el domingo 19 de julio en el MetLife Stadium (Nueva York/Nueva Jersey). Acá vas a ver al campeón apenas termine, con el resultado en vivo, el botín de oro y el palmarés histórico.'}
+        : 'La final se jugó el domingo 19 de julio en el MetLife Stadium (Nueva York/Nueva Jersey). Acá está el resultado de la final, el botín de oro y el palmarés histórico.'}
     </p>
     <p class="updated">Última actualización: <span data-live-updated>{updated}</span> · Datos: <a href="https://github.com/openfootball/worldcup.json" rel="noopener" target="_blank">openfootball</a></p>
 
@@ -146,7 +154,7 @@ const espnCfg = {
       team1={t1 && !t1.tbd ? { es: t1.es, flag: t1.flag } : null}
       team2={t2 && !t2.tbd ? { es: t2.es, flag: t2.flag } : null}
       kickoffLabel={final?.date ? `${artDayLabel(final.date, final.time)} · ${artTime(final.date, final.time)} · MetLife Stadium` : ''}
-      champion={campeon && final ? { es: campeon.es, flag: campeon.flag, homeName: teamLabel(final.team1).es, homeScore: final.score?.ft?.[0], awayName: teamLabel(final.team2).es, awayScore: final.score?.ft?.[1], pens: !!final.score?.p } : null}
+      champion={campeon && final && finalPair ? { es: campeon.es, flag: campeon.flag, homeName: teamLabel(final.team1).es, homeScore: finalPair[0], awayName: teamLabel(final.team2).es, awayScore: finalPair[1], pens: !!(final.score as any)?.p } : null}
     />
 
     <WeekendPackCapture source="campeon" />
@@ -168,11 +176,11 @@ const espnCfg = {
       <div class="premios-grid">
         <div class="premio">
           <span class="premio-label">Balón de Oro · mejor jugador</span>
-          <span class="premio-value" data-espn-mvp>Se anuncia al terminar la final</span>
+          <span class="premio-value" data-espn-mvp>Ver el detalle del premio</span>
         </div>
         <div class="premio">
           <span class="premio-label">Bota de Oro · máximo goleador</span>
-          <span class="premio-value">{botin ? `${botin.name} — ${botin.goles} goles` : 'Se define en la final'}</span>
+          <span class="premio-value">{botin ? `${botin.name} — ${botin.goles} goles` : '—'}</span>
         </div>
       </div>
       <p class="note"><a href="/balon-de-oro-mundial-2026">Ver el Balón de Oro del Mundial 2026 en detalle →</a></p>
@@ -180,7 +188,7 @@ const espnCfg = {
 
     {goleadores.length > 0 && (
       <section class="botin">
-        <h2>⚽ La pelea por el botín de oro</h2>
+        <h2>⚽ Goleadores del Mundial 2026 — así terminó el botín de oro</h2>
         <table>
           <thead><tr><th>#</th><th>Jugador</th><th>Selección</th><th>Goles</th></tr></thead>
           <tbody>
@@ -229,14 +237,25 @@ const espnCfg = {
     </section>
 
     <section class="links">
-      <h2>Seguí el Mundial</h2>
+      <h2>El Mundial 2026, partido por partido</h2>
       <ul>
-        <li><a href="/llave-mundial-2026">🗂️ Llave de eliminación directa</a></li>
-        <li><a href="/fixture-mundial-2026">📅 Fixture y resultados</a></li>
-        <li><a href="/goleadores-mundial-2026">⚽ Goleadores</a></li>
-        <li><a href="/cuando-juega-argentina-mundial-2026">🇦🇷 ¿Cuándo juega Argentina?</a></li>
-        <li><a href="/donde-ver-mundial-2026">📺 Dónde ver los partidos</a></li>
-        <li><a href="/partidos-hoy-mundial-2026">🔴 Partidos de hoy</a></li>
+        <li><a href="/llave-mundial-2026">🗂️ Cómo quedó la llave de eliminación</a></li>
+        <li><a href="/fixture-mundial-2026">📅 Todos los resultados, fecha por fecha</a></li>
+        <li><a href="/goleadores-mundial-2026">⚽ Tabla final de goleadores</a></li>
+        <li><a href="/balon-de-oro-mundial-2026">🏅 Balón de Oro y Bota de Oro</a></li>
+        <li><a href="/posiciones-mundial-2026">🏆 Así quedaron los grupos</a></li>
+      </ul>
+    </section>
+
+    <section class="links">
+      <h2>Ahora que terminó el Mundial</h2>
+      <ul>
+        <li><a href="/feriados-2026">📅 Feriados 2026: cuántos quedan y cuándo caen</a></li>
+        <li><a href="/sueldos-y-trabajo">💼 Sueldos y trabajo: aguinaldo, neto y más</a></li>
+        <li><a href="/calculadora-top-10-goleadores-historico-mundial-fifa">⚽ Top 10 goleadores históricos de los Mundiales</a></li>
+        <li><a href="/calculadora-f1-puntos-campeonato-mundial-quedan">🏎️ F1 2026: qué puntos quedan en juego</a></li>
+        <li><a href="/calculadora-calorias-futbol-5-7-11">🔥 Calorías que quemás jugando al fútbol</a></li>
+        <li><a href="/calculadora-distancia-recorrida-futbolista-por-posicion">🏃 Distancia recorrida por posición</a></li>
       </ul>
     </section>
 

@@ -108,24 +108,28 @@ const ROUND_ES: Record<string, string> = {
 
 const SITE = 'https://hacecuentas.com';
 const URL = `${SITE}/goleadores-mundial-2026`;
-const title = 'Goleadores del Mundial 2026 EN VIVO — tabla del Botín de Oro | Hacé Cuentas';
-const description = 'Goleadores del Mundial 2026 en vivo (carrera por el Botín de Oro) + el ranking histórico de todos los Mundiales: Messi ya es el máximo goleador de la historia. Se actualiza con cada gol.';
+const title = leader
+  ? `Goleadores del Mundial 2026 — ${leader.name} Botín de Oro con ${leader.goles} goles | Hacé Cuentas`
+  : 'Goleadores del Mundial 2026 — tabla final del Botín de Oro | Hacé Cuentas';
+const description = leader
+  ? `Tabla final de goleadores del Mundial 2026: ${leader.name} (${leader.es}) ganó el Botín de Oro con ${leader.goles} goles. Ranking completo del torneo y máximos goleadores históricos de los Mundiales.`
+  : 'Tabla final de goleadores del Mundial 2026 (Botín de Oro) + el ranking histórico de todos los Mundiales.';
 const updated = new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(fixture.fetchedAt));
 
 const plural = (n: number, s: string, p: string) => (n === 1 ? s : p);
 
 const faq = [
-  { q: '¿Quién es el goleador del Mundial 2026?', a: scorers.length ? (tied.length > 1
-      ? `Por ahora comparten la punta ${tied.map((s) => `${s.es === 'Argentina' ? '' : ''}${s.name} (${s.flag})`).join(' y ')} con ${leader!.goles} goles cada uno. La tabla se actualiza con cada partido.`
-      : `Por ahora va puntero ${scorers[0].name} (${scorers[0].flag} ${scorers[0].es}) con ${scorers[0].goles} ${plural(scorers[0].goles, 'gol', 'goles')}. La tabla se actualiza con cada partido.`) : 'Todavía no se jugaron partidos con goles; la tabla se completa a medida que avanza el torneo.' },
+  { q: '¿Quién fue el goleador del Mundial 2026?', a: scorers.length ? (tied.length > 1
+      ? `Terminaron empatados en la punta ${tied.map((s) => `${s.name} (${s.flag})`).join(' y ')} con ${leader!.goles} goles cada uno.`
+      : `El máximo goleador del Mundial 2026 fue ${scorers[0].name} (${scorers[0].flag} ${scorers[0].es}) con ${scorers[0].goles} ${plural(scorers[0].goles, 'gol', 'goles')}.`) : 'La tabla se arma con los goles registrados en el feed del torneo.' },
   { q: '¿Quién es el máximo goleador en la historia de los Mundiales?', a: `${allTime[0].name} (${allTime[0].flag}) es el máximo goleador histórico de los Mundiales con ${allTime[0].total} goles${allTime[0].en2026 > 0 ? `, sumando ${allTime[0].en2026} en el Mundial 2026` : ''}. Lo escoltan ${allTime[1].name} con ${allTime[1].total} y ${allTime[2].name} con ${allTime[2].total}. El récord venía siendo de ${preRecord.name} con ${preRecord.pre2026}.` },
   { q: '¿Qué es el Botín de Oro?', a: 'Es el premio al máximo goleador del Mundial. Si hay empate en goles, se define por asistencias y luego por menos minutos jugados. Los autogoles no cuentan para el goleador.' },
   { q: '¿Los penales cuentan para el Botín de Oro?', a: 'Sí, los goles de penal en el desarrollo del partido cuentan. No cuentan los goles en las definiciones por penales (tandas), que son un desempate aparte.' },
-  { q: '¿Cuántos goles lleva el Mundial 2026?', a: `Van ${totalGoles} goles en ${jugados} ${plural(jugados, 'partido jugado', 'partidos jugados')}, repartidos entre ${scorers.length} ${plural(scorers.length, 'goleador', 'goleadores')} distintos${totalPenales > 0 ? ` (${totalPenales} de penal)` : ''}. No se cuentan los autogoles, que no se le adjudican a ningún goleador.` },
+  { q: '¿Cuántos goles hubo en el Mundial 2026?', a: `Hubo ${totalGoles} goles en ${jugados} ${plural(jugados, 'partido jugado', 'partidos jugados')}, repartidos entre ${scorers.length} ${plural(scorers.length, 'goleador', 'goleadores')} distintos${totalPenales > 0 ? ` (${totalPenales} de penal)` : ''}. No se cuentan los autogoles, que no se le adjudican a ningún goleador.` },
   { q: '¿Qué argentinos marcaron en el Mundial 2026?', a: argentinos.length
       ? `${argentinos.map((s) => `${s.name} (${s.goles})`).join(', ')}. En total, ${argentinos.reduce((n, s) => n + s.goles, 0)} goles de jugadores de la Selección Argentina.`
-      : 'Todavía no hay goles de jugadores argentinos registrados en el feed.' },
-  { q: '¿De dónde salen estos datos y cada cuánto se actualizan?', a: 'Del feed abierto de openfootball (worldcup.json), el mismo que alimenta el fixture y las posiciones. Al abrir la página se recalcula con los goles más recientes, así que no depende de que publiquemos un cambio.' },
+      : 'No quedaron goles de jugadores argentinos registrados en el feed.' },
+  { q: '¿De dónde salen estos datos?', a: 'Del feed abierto de openfootball (worldcup.json), el mismo que alimentó el fixture y las posiciones durante el torneo. Con el Mundial terminado, los 104 partidos están cargados y la tabla es definitiva.' },
 ];
 
 const schema = { '@context': 'https://schema.org', '@graph': [
@@ -149,6 +153,14 @@ const espnCfg = {
   pollMs: 60000,
 };
 const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS[n].es}` : 'Por definir');
+
+// Campeón derivado del feed (penales > alargue > 90'), para el bloque estático de la final.
+const fScore: any = finalMatch?.score || null;
+const fPair: [number, number] | null = fScore?.ft ? ((fScore.p || fScore.et || fScore.ft) as [number, number]) : null;
+const fWinner = fPair && fPair[0] !== fPair[1] ? (fPair[0] > fPair[1] ? finalMatch!.team1 : finalMatch!.team2) : null;
+const champProp = fWinner && finalMatch && TEAMS[fWinner] && fPair
+  ? { es: TEAMS[fWinner].es, flag: TEAMS[fWinner].flag, homeName: TEAMS[finalMatch.team1]?.es ?? finalMatch.team1, homeScore: fPair[0], awayName: TEAMS[finalMatch.team2]?.es ?? finalMatch.team2, awayScore: fPair[1], pens: !!fScore?.p }
+  : null;
 ---
 
 <Layout title={title} description={description} canonical="/goleadores-mundial-2026" schema={schema} audience="AR" domain="data">
@@ -168,11 +180,11 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
 
       <header class="cf-hero">
         <div class="cf-hero__main">
-          <p class="cf-kicker"><span aria-hidden="true">⚽</span> Carrera por el Botín de Oro · 2026</p>
-          <h1 class="cf-h1">Goleadores del <span class="cf-yr">Mundial 2026</span></h1>
-          <p class="cf-sub">Quién va puntero, cuántos goles lleva y cuántos fueron de penal. Se recalcula con cada partido.</p>
+          <p class="cf-kicker"><span aria-hidden="true">⚽</span> Botín de Oro · Mundial 2026</p>
+          <h1 class="cf-h1">Goleadores del <span class="cf-yr">Mundial 2026</span>: la tabla final</h1>
+          <p class="cf-sub">{leader ? `${leader.name} (${leader.es}) se quedó con el Botín de Oro con ${leader.goles} goles. ` : ''}El ranking completo del torneo, quién marcó de penal y los máximos goleadores históricos de los Mundiales.</p>
           <ul class="cf-pills">
-            <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Datos en vivo openfootball</li>
+            <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Torneo completo: {jugados} partidos</li>
             <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Autogoles excluidos</li>
             <li class="cf-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Histórico incluido</li>
           </ul>
@@ -184,7 +196,7 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
         <div class="cf-hero__deco" aria-hidden="true">
           <div class="gol-deco-wrap">
             <div class="cf-deco-card">
-              <div class="cf-deco-card__label">Dato principal · puntero</div>
+              <div class="cf-deco-card__label">Dato final · Botín de Oro</div>
               <div class="cf-deco-card__value" data-deco-val>{leader ? `${leader.goles} ${plural(leader.goles, 'gol', 'goles')}` : '—'}</div>
               <div class="cf-deco-card__note" data-deco-note>{leader ? (tied.length > 1 ? `${tied.map((s) => s.name).join(' y ')} — empatados` : `${leader.flag} ${leader.name}`) : 'Sin goles registrados'}</div>
             </div>
@@ -203,9 +215,10 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
           cfg={espnCfg}
           team1={finalMatch && TEAMS[finalMatch.team1] ? { es: TEAMS[finalMatch.team1].es, flag: TEAMS[finalMatch.team1].flag } : null}
           team2={finalMatch && TEAMS[finalMatch.team2] ? { es: TEAMS[finalMatch.team2].es, flag: TEAMS[finalMatch.team2].flag } : null}
-          kickoffLabel="Final del Mundial · hoy 16:00 · MetLife Stadium"
+          kickoffLabel="Final del Mundial · 19 de julio de 2026 · MetLife Stadium"
+          champion={champProp}
         />
-        <p class="gol-final-note">Los goles de la final se suman a la tabla de goleadores del torneo al confirmarse cada uno.</p>
+        <p class="gol-final-note">La tabla incluye los goles de los 104 partidos del torneo, final incluida.</p>
       </div>
 
       <WeekendPackCapture source="goleadores" />
@@ -213,9 +226,9 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
       <p class="answer-snippet cf-sr" data-snippet>
         {leader
           ? (tied.length > 1
-              ? `Goleadores del Mundial 2026: ${tied.map((s) => `${s.name} (${s.es})`).join(' y ')} comparten la punta con ${leader.goles} goles. Van ${totalGoles} goles en ${jugados} partidos.`
-              : `Goleador del Mundial 2026: ${leader.name} (${leader.es}) con ${leader.goles} ${plural(leader.goles, 'gol', 'goles')}. Van ${totalGoles} goles en ${jugados} partidos.`)
-          : 'Todavía no hay goles registrados en el Mundial 2026.'}
+              ? `Goleadores del Mundial 2026: ${tied.map((s) => `${s.name} (${s.es})`).join(' y ')} terminaron empatados en la punta con ${leader.goles} goles. Hubo ${totalGoles} goles en ${jugados} partidos.`
+              : `El goleador del Mundial 2026 fue ${leader.name} (${leader.es}) con ${leader.goles} ${plural(leader.goles, 'gol', 'goles')}. Hubo ${totalGoles} goles en ${jugados} partidos.`)
+          : 'No hay goles registrados del Mundial 2026.'}
       </p>
 
       {scorers.length === 0 ? (
@@ -227,7 +240,7 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
         <>
           <div class="cf-stats">
             <div class="cf-stat cf-stat--accent">
-              <div class="cf-stat__label">Puntero</div>
+              <div class="cf-stat__label">Botín de Oro</div>
               <div class="cf-stat__value" data-stat-leader>{leader!.goles} {plural(leader!.goles, 'gol', 'goles')}</div>
               <div class="cf-stat__sub" data-stat-leader-sub>{tied.length > 1 ? `${tied.length} empatados` : `${leader!.flag} ${leader!.name}`}</div>
             </div>
@@ -252,8 +265,8 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
             <span class="cf-quick__ico" aria-hidden="true">⚡</span>
             <span class="cf-quick__txt" data-quick>
               <strong>Respuesta rápida.</strong> {tied.length > 1
-                ? `${tied.map((s) => s.name).join(' y ')} comparten la punta con ${leader!.goles} goles cada uno.`
-                : `${leader!.name} va puntero con ${leader!.goles} ${plural(leader!.goles, 'gol', 'goles')}.`}
+                ? `${tied.map((s) => s.name).join(' y ')} terminaron empatados en la punta con ${leader!.goles} goles cada uno.`
+                : `${leader!.name} fue el goleador del torneo con ${leader!.goles} ${plural(leader!.goles, 'gol', 'goles')}.`}
             </span>
             <span class="cf-formula">goles − autogoles</span>
           </p>
@@ -288,12 +301,11 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
                 <p class="cf-eyebrow">Ranking completo</p>
                 <h2 class="cf-section__title">Tabla de goleadores</h2>
               </div>
-              <p class="cf-section__lead" data-rank-lead>Los {scorers.length} goleadores del torneo, sin recortar. Filtrá por los que siguen en competencia, por Argentina, o mirá el total agrupado por selección.</p>
+              <p class="cf-section__lead" data-rank-lead>Los {scorers.length} goleadores del torneo, sin recortar. Filtrá por Argentina o mirá el total agrupado por selección.</p>
             </div>
 
             <div class="cf-seg gol-seg" role="group" aria-label="Filtro de goleadores">
               <button type="button" data-tab="todos" aria-pressed="true">Todos</button>
-              <button type="button" data-tab="vivos" aria-pressed="false">Siguen en competencia</button>
               <button type="button" data-tab="arg" aria-pressed="false">Argentina</button>
               <button type="button" data-tab="sel" aria-pressed="false">Por selección</button>
             </div>
@@ -388,7 +400,7 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
             <p class="cf-eyebrow">Todos los Mundiales</p>
             <h2 class="cf-section__title">Máximos goleadores históricos</h2>
           </div>
-          <p class="cf-section__lead">Goles en Mundiales hasta Qatar 2022 (FIFA / RSSSF) más los del 2026 sumando en vivo. Los jugadores en actividad suben solos.</p>
+          <p class="cf-section__lead">Goles en Mundiales hasta Qatar 2022 (FIFA / RSSSF) más los que cada jugador sumó en el Mundial 2026.</p>
         </div>
         <div class="cf-tablewrap">
           <table class="cf-table gol-table">
@@ -420,7 +432,7 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
             {leader && (
               <>
                 <div class="gol-hl__big" data-hl-big>{leader.goles}</div>
-                <p class="gol-hl__desc" data-hl-note>{tied.length > 1 ? `goles — ${tied.length} jugadores empatados en la punta` : `goles — ${leader.name} al frente`}</p>
+                <p class="gol-hl__desc" data-hl-note>{tied.length > 1 ? `goles — ${tied.length} jugadores empatados en la punta` : `goles — ${leader.name}, Botín de Oro 2026`}</p>
               </>
             )}
           </div>
@@ -458,11 +470,11 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
       <div class="cf-band__inner">
         <div class="gol-2col">
           <div>
-            <p class="cf-eyebrow">Actualización partido a partido</p>
-            <h2 class="gol-card__title">La tabla se rehace sola con cada gol</h2>
+            <p class="cf-eyebrow">Torneo finalizado</p>
+            <h2 class="gol-card__title">La tabla es definitiva: se jugaron los {jugados} partidos</h2>
             <p class="cf-side-desc">
-              No esperamos a publicar un cambio: al abrir la página se pide el JSON vivo de openfootball y se recalculan
-              el podio, el ranking y el histórico con los goles más recientes. Si el feed todavía no cargó un gol, acá tampoco aparece.
+              El Mundial 2026 terminó el 19 de julio con la final en el MetLife Stadium. El podio, el ranking y el
+              histórico de esta página se calculan directamente sobre el feed completo de openfootball, con los {totalGoles} goles del torneo cargados.
             </p>
             <div class="cf-callout cf-callout--warn" style="margin-top:1rem">
               <span class="cf-callout__ico" aria-hidden="true">🕐</span>
@@ -473,7 +485,7 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
             <p class="cf-side-eyebrow">Fuente de los datos</p>
             <p class="gol-src__title">Feed abierto, verificable</p>
             <div class="gol-src">
-              <div class="gol-src__item"><strong>openfootball / worldcup.json</strong><span>Fixture, resultados y goleadores del Mundial 2026</span></div>
+              <div class="gol-src__item"><strong>openfootball / worldcup.json</strong><span>Fixture, resultados y goleadores completos del Mundial 2026</span></div>
               <div class="gol-src__item"><strong>FIFA / RSSSF</strong><span>Goles en Mundiales hasta Qatar 2022 (base del histórico)</span></div>
               <div class="gol-src__item"><strong>Reglamento FIFA</strong><span>Criterios del Botín de Oro y desempates</span></div>
             </div>
@@ -485,8 +497,8 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
 
     <div class="cf-page gol" data-domain="data">
       <section class="cf-section">
-        <p class="cf-eyebrow">Seguí el Mundial</p>
-        <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Herramientas relacionadas</h2>
+        <p class="cf-eyebrow">Así quedó el Mundial</p>
+        <h2 class="cf-section__title" style="margin:0.35rem 0 1.25rem">Todo el torneo, archivado</h2>
         <div class="cf-related__grid">
           <a class="cf-relcard" href="/balon-de-oro-mundial-2026">
             <span class="cf-relcard__ico" aria-hidden="true">🏅</span>
@@ -497,36 +509,41 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
           <a class="cf-relcard" href="/fixture-mundial-2026">
             <span class="cf-relcard__ico" aria-hidden="true">📅</span>
             <span class="cf-relcard__title">Fixture y resultados</span>
-            <span class="cf-relcard__desc">Todos los partidos del Mundial, con resultados en vivo.</span>
+            <span class="cf-relcard__desc">Los 104 partidos del Mundial, con todos los resultados.</span>
             <span class="cf-relcard__link">Ver el fixture <span aria-hidden="true">→</span></span>
           </a>
           <a class="cf-relcard" href="/posiciones-mundial-2026">
             <span class="cf-relcard__ico" aria-hidden="true">🏆</span>
             <span class="cf-relcard__title">Tabla de posiciones</span>
-            <span class="cf-relcard__desc">Cómo va cada grupo, puntos y diferencia de gol.</span>
+            <span class="cf-relcard__desc">Cómo quedó cada grupo, puntos y diferencia de gol.</span>
             <span class="cf-relcard__link">Ver posiciones <span aria-hidden="true">→</span></span>
           </a>
           <a class="cf-relcard" href="/llave-mundial-2026">
             <span class="cf-relcard__ico" aria-hidden="true">🗂️</span>
             <span class="cf-relcard__title">Llave de eliminación</span>
-            <span class="cf-relcard__desc">El camino de cada selección hasta la final.</span>
+            <span class="cf-relcard__desc">El camino que hizo cada selección hasta la final.</span>
             <span class="cf-relcard__link">Ver la llave <span aria-hidden="true">→</span></span>
           </a>
         </div>
         <p class="gol-more">
           También: <a href="/campeon-mundial-2026">¿Quién ganó? Campeón y palmarés</a> ·
-          <a href="/cuando-juega-argentina-mundial-2026">¿Cuándo juega Argentina?</a> ·
           <a href="/calculadora-top-10-goleadores-historico-mundial-fifa">Top 10 goleadores históricos</a>
+        </p>
+        <p class="gol-more">
+          Ahora que terminó el Mundial: <a href="/feriados-2026">Feriados 2026</a> ·
+          <a href="/sueldos-y-trabajo">Sueldos y trabajo</a> ·
+          <a href="/calculadora-f1-puntos-campeonato-mundial-quedan">F1 2026: puntos en juego</a> ·
+          <a href="/calculadora-calorias-futbol-5-7-11">Calorías jugando al fútbol</a>
         </p>
       </section>
 
       <section class="cf-ctabar">
         <div>
-          <p class="cf-ctabar__title">Guardá esta tabla.</p>
-          <p class="cf-ctabar__sub">Volvé después de cada partido: se actualiza con cada gol.</p>
+          <p class="cf-ctabar__title">El Mundial 2026, completo y verificado.</p>
+          <p class="cf-ctabar__sub">Campeón, final, goleadores y los 104 resultados quedan acá, para siempre.</p>
         </div>
         <div class="cf-ctabar__actions">
-          <a class="cf-ctabar__btn cf-ctabar__btn--solid" href="/fixture-mundial-2026">Ver el fixture</a>
+          <a class="cf-ctabar__btn cf-ctabar__btn--solid" href="/campeon-mundial-2026">Ver el campeón</a>
         </div>
       </section>
     </div>
@@ -626,14 +643,13 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
         };
         for (var i = 0; i < data.matches.length; i++) {
           var m = data.matches[i];
-          if (/^final$/i.test((m.round || '').trim())) continue; // la final la trae ESPN en vivo (abajo)
+          // Torneo terminado: la final ya está completa en el feed, se cuenta como cualquier partido.
           add(m.team1, m.goals1);
           add(m.team2, m.goals2);
         }
         // Recorrido por fase (para las 4 cards del líder).
         for (var i2 = 0; i2 < data.matches.length; i2++) {
           var m2 = data.matches[i2];
-          if (/^final$/i.test((m2.round || '').trim())) continue; // final excluida (viene de ESPN)
           var sides = [[m2.team1, m2.goals1], [m2.team2, m2.goals2]];
           for (var s2 = 0; s2 < sides.length; s2++) {
             var team = sides[s2][0], goals = sides[s2][1] || [];
@@ -651,7 +667,7 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
         // window.hcFinalLive). Se suman acá, NO desde openfootball → real-time,
         // sin doble conteo. Match difuso por nombre normalizado + misma selección
         // para no duplicar a un goleador que ya marcó antes (ej. Messi).
-        var fl = window.hcFinalLive;
+        var fl = null; // final ya incluida desde el feed (torneo terminado); ESPN desactivado para no duplicar
         if (fl && fl.goals && fl.goals.length) {
           var normName = function (s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim(); };
           for (var fi = 0; fi < fl.goals.length; fi++) {
@@ -751,7 +767,7 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
         setText('[data-stat-total]', String(totalGoles));
         setText('[data-stat-total-sub]', 'en ' + jugados + ' ' + plural(jugados, 'partido', 'partidos'));
         setText('[data-stat-count]', String(rows.length));
-        setText('[data-rank-lead]', 'Los ' + rows.length + ' goleadores del torneo, sin recortar. Filtrá por los que siguen en competencia, por Argentina, o mirá el total agrupado por selección.');
+        setText('[data-rank-lead]', 'Los ' + rows.length + ' goleadores del torneo, sin recortar. Filtrá por Argentina o mirá el total agrupado por selección.');
         setText('[data-stat-pen]', String(totalPen));
         setText('[data-deco-val]', leader.goles + ' ' + plural(leader.goles, 'gol', 'goles'));
         setText('[data-deco-note]', tied.length > 1
@@ -762,13 +778,13 @@ const fLabel = (n?: string | null) => (n && TEAMS[n] ? `${TEAMS[n].flag} ${TEAMS
         var quick = document.querySelector('[data-quick]');
         if (quick) {
           quick.innerHTML = '<strong>Respuesta rápida.</strong> ' + (tied.length > 1
-            ? esc(tied.map(function (s) { return s.name; }).join(' y ')) + ' comparten la punta con ' + leader.goles + ' goles cada uno.'
-            : esc(leader.name) + ' va puntero con ' + leader.goles + ' ' + plural(leader.goles, 'gol', 'goles') + '.');
+            ? esc(tied.map(function (s) { return s.name; }).join(' y ')) + ' terminaron empatados en la punta con ' + leader.goles + ' goles cada uno.'
+            : esc(leader.name) + ' fue el goleador del torneo con ' + leader.goles + ' ' + plural(leader.goles, 'gol', 'goles') + '.');
         }
         setText('[data-hl-big]', String(leader.goles));
         setText('[data-hl-note]', tied.length > 1
           ? 'goles — ' + tied.length + ' jugadores empatados en la punta'
-          : 'goles — ' + leader.name + ' al frente');
+          : 'goles — ' + leader.name + ', Botín de Oro 2026');
 
         // 7. Cards del recorrido del líder.
         setText('[data-route-title]', 'Cómo ' + (tied.length > 1 ? 'llegaron' : 'llegó') + ' a los ' + leader.goles + ' goles');

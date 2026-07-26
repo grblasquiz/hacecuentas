@@ -124,10 +124,10 @@ export const PARAGUAY_2026 = {
  * sólo como fallback citable. 1 unidad de moneda extranjera = X guaraníes (PYG).
  */
 export const TIPO_CAMBIO_PY = {
-  asOf: '2026-06-19',
-  usdPyg: 6093.69,   // 1 USD = Gs. 6.093,69 (dólar estadounidense)
-  brlPyg: 1185.77,   // 1 BRL = Gs. 1.185,77 (real brasileño — frontera Ciudad del Este)
-  arsPyg: 4.18,      // 1 ARS = Gs. 4,18 (peso argentino — frontera Encarnación)
+  asOf: '2026-07-24',
+  usdPyg: 6050.25,   // 1 USD = Gs. 6.050,25 (dólar estadounidense)
+  brlPyg: 1195.65,   // 1 BRL = Gs. 1.195,65 (real brasileño — frontera Ciudad del Este)
+  arsPyg: 4.05,      // 1 ARS = Gs. 4,05 (peso argentino — frontera Encarnación)
   fuente: 'BCP — Cotización Referencial de Monedas',
   // NOTA: en zonas de frontera las casas de cambio operan con spread propio (compra/venta)
   // que se aparta de la referencia del BCP. El snapshot es la cotización oficial de referencia.

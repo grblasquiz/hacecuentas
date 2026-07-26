@@ -40,11 +40,11 @@ export const REPUBLICA_DOMINICANA_2026 = {
   // p. ej. dolarapi tiene DOP, o InfoDolar.com.do que agrega bancos).
   // Fuentes: BCRD (https://www.bancentral.gov.do/a/d/2538-mercado-cambiario), InfoDolar RD.
   fx: {
-    usdCompra: 58.18,          // RD$/USD — snapshot 22-jun-2026 (BCRD spot). ⚠️ ACTUALIZAR
-    usdVenta: 58.70,           // RD$/USD — snapshot 22-jun-2026 (BCRD spot). ⚠️ ACTUALIZAR
-    usdMid: 58.44,             // promedio compra/venta — para conversiones. ⚠️ ACTUALIZAR
-    eurMid: 67.1,              // RD$/EUR — snapshot 22-jun-2026. ⚠️ ESTIMADO/VERIFICAR + ACTUALIZAR
-    fecha: '2026-06-22',
+    usdCompra: 58.07,          // RD$/USD — cierre 24-jul-2026 (BCRD spot). ⚠️ ACTUALIZAR
+    usdVenta: 58.51,           // RD$/USD — cierre 24-jul-2026 (BCRD spot). ⚠️ ACTUALIZAR
+    usdMid: 58.29,             // promedio compra/venta — para conversiones. ⚠️ ACTUALIZAR
+    eurMid: 65.86,             // RD$/EUR — cierre mercado 24-jul-2026. ⚠️ ACTUALIZAR
+    fecha: '2026-07-24',
     // Tendencia: el DOP se deprecia ~8% interanual de forma ordenada (sin saltos).
   },
 
@@ -302,15 +302,15 @@ export function dopToUsd(dop: number): number {
 
 /**
  * EUR ↔ DOP — cotización de referencia del euro frente al peso dominicano.
- * Snapshot 18-jul-2026 (mercado spot; Investing/Wise). CAMBIA A DIARIO: la calc
+ * Snapshot 24-jul-2026 (cierre mercado spot; ref. BCRD/prensa financiera). CAMBIA A DIARIO: la calc
  * de euro deja la tasa editable por el usuario y usa `mid` sólo como default.
  * Fuentes: BCRD (mercado cambiario) e Investing.com (EUR/DOP).
  */
 export const EUR_DOP_2026 = {
-  mid: 66.71,      // RD$ por 1 EUR — promedio de referencia
-  compra: 65.91,   // RD$ por 1 EUR — precio de compra
-  venta: 67.51,    // RD$ por 1 EUR — precio de venta
-  fecha: '2026-07-18',
+  mid: 65.86,      // RD$ por 1 EUR — promedio de referencia (cierre 24-jul)
+  compra: 65.06,   // RD$ por 1 EUR — precio de compra (estimado: mid − 0,80)
+  venta: 66.66,    // RD$ por 1 EUR — precio de venta (estimado: mid + 0,80)
+  fecha: '2026-07-24',
 } as const;
 
 /**

@@ -13,7 +13,7 @@
 import { fmtPYG } from '../data/paraguay-2026.ts';
 
 // EUR/PYG de referencia — mismo snapshot que la calc euro-a-guarani (BCP, 19-jun-2026).
-const EUR_PYG_REF = 7044.31;
+const EUR_PYG_REF = 6884.58;
 
 export interface Inputs {
   montoEur?: number;    // monto enviado (EUR)

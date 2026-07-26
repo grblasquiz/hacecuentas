@@ -12,9 +12,9 @@
 import { fmtPYG, TIPO_CAMBIO_PY } from '../data/paraguay-2026.ts';
 
 // EUR/PYG referencial — snapshot al 2026-06-19 (misma fecha que TIPO_CAMBIO_PY).
-// Derivado del cruce EUR/USD (~1,156) × USD/PYG (6.093,69). Cambia a diario:
+// Referencia BCP 24-jul-2026 (USD/PYG 6.050,25). Cambia a diario:
 // para producción conviene servir el valor en vivo del BCP y dejar esto como fallback.
-const EUR_PYG = 7044.31; // 1 EUR = Gs. 7.044,31 (referencia BCP, 19-jun-2026)
+const EUR_PYG = 6884.58; // 1 EUR = Gs. 6.884,58 (referencia BCP, 24-jul-2026)
 
 export interface Inputs {
   monto?: number;

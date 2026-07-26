@@ -182,8 +182,8 @@ export const URUGUAY_2026 = {
   // Se usa para alquileres, créditos hipotecarios, ahorro indexado y algunos tributos.
   // Valor oficial DGI al 22-jun-2026 = $6,5888 (jun-2026 abrió en $6,5583 y cerró cerca de $6,6011).
   unidadIndexada: {
-    valor: 6.5888,             // $U por 1 UI (DGI, 22-jun-2026)
-    fecha: '2026-06-22',
+    valor: 6.6253,             // $U por 1 UI (DGI tabla diaria, 26-jul-2026)
+    fecha: '2026-07-26',
     fuente: 'INE/DGI',
   },
 
