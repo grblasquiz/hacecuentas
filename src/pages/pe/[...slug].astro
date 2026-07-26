@@ -12,6 +12,8 @@ import Calculator from '../../components/Calculator.astro';
 import RelatedCalcs from '../../components/RelatedCalcs.astro';
 import CalcLayoutV2 from '../../components/CalcLayoutV2.astro';
 import ReferenceTables from '../../components/ReferenceTables.astro';
+import SoatPeMockup from '../../components/mockups/SoatPeMockup.astro';
+import CalcContextLinks from '../../components/CalcContextLinks.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
 import LiveData from '../../components/LiveData.astro';
 import { md, mdInline } from '../../lib/markdown';
@@ -266,6 +268,13 @@ const relatedSlugs: string[] = calc.relatedSlugs || [];
 // Lookup for related links — cargar calcs mexicanas
 const allCalcsModules = import.meta.glob<any>('../../content/calcs-pe/*.json', { eager: true });
 const allCalcs = Object.values(allCalcsModules).map((m: any) => m.default || m);
+// ── Flagship bespoke (mockups Martin) ────────────────────────────────────
+// Reemplaza a CalcLayoutV2; el bloque de linking contextual vive dentro de
+// CalcLayoutV2, así que las bespoke lo montan aparte con CalcContextLinks.
+const isSoatPe = calc.slug === 'calculadora-soat-peru-precio';
+const flagshipDomainPe: 'money' | 'data' | 'health' | 'home' | 'knowledge' | 'life' | null =
+  isSoatPe ? 'money' : null;
+
 const relatedContextual = relatedSlugs
   .map((s) => allCalcs.find((c) => c.slug === s))
   .filter(Boolean);
@@ -332,11 +341,13 @@ const hreflangTags = buildHreflangCluster({
   hreflang={hreflangTags}
   noindex={effectiveNoindex}
   noAds={!canAdvertiseCalc(calc)}
-  domain={categoryDomain(calc.category)}
+  domain={flagshipDomainPe || categoryDomain(calc.category)}
 >
   <Header slot="header" />
 
-  <CalcLayoutV2 calc={calc} lang="pe" />
+  {isSoatPe && <SoatPeMockup calc={calc} related={relatedContextual} />}
+  {!isSoatPe && <CalcLayoutV2 calc={calc} lang="pe" />}
+  {isSoatPe && <CalcContextLinks calc={calc} lang="pe" />}
 
   <ScrollToTop />
 

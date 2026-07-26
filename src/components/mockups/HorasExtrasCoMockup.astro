@@ -1,0 +1,279 @@
+---
+/**
+ * Flagship "Horas extras Colombia 2026" — mockup bespoke, locale CO (/co/<slug>).
+ * El script inline replica EXACTAMENTE horas-extras-colombia-2026.ts:
+ *   valorHora = salario ÷ divisor   (220 hasta 14-jul-2026 · 210 desde 15-jul-2026)
+ *   extra diurna = valorHora × (1 + 0,25)   ·   extra nocturna = valorHora × (1 + 0,75)
+ *   total = hd × extraDiurna + hn × extraNocturna
+ *   guarda: salario <= 0 → "Ingresá tu salario mensual"  ·  tope 52 h/mes → aviso
+ * Todas las constantes se serializan desde src/lib/data/colombia-2026.ts.
+ * Eje visual propio: grilla de tipos de hora con su recargo legal, donde las dos
+ * categorías que la fórmula liquida llevan input y el resto muestra su valor unitario.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { COLOMBIA_2026 } from '../../lib/data/colombia-2026.ts';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const C = COLOMBIA_2026;
+const K = {
+  div220: C.jornada.divisorMensualHasta14Jul2026,
+  div210: C.jornada.divisorMensualDesde15Jul2026,
+  hs44: C.jornada.horasSemanaHasta14Jul2026,
+  hs42: C.jornada.horasSemanaDesde15Jul2026,
+  extraDiurna: C.recargos.extraDiurna,
+  extraNocturna: C.recargos.extraNocturna,
+  nocturno: C.recargos.nocturno,
+  dominical: C.recargos.dominicalFestivoDesde01Jul2026,
+  inicioNocturna: C.recargos.horaInicioNocturna,
+  smlmv: C.smlmv,
+  topeMes: 52,
+};
+
+const D = { salario: 2_000_000, hd: 10, hn: 4 };
+const cop = (n: number) => '$' + new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(Math.round(n));
+const pct = (x: number) => new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(x * 100) + '%';
+
+const h0 = D.salario / K.div220;
+const dia0 = h0 * (1 + K.extraDiurna);
+const noc0 = h0 * (1 + K.extraNocturna);
+const total0 = D.hd * dia0 + D.hn * noc0;
+const salto = (K.div220 / K.div210 - 1) * 100;
+const saltoTxt = salto.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+---
+
+<main class="page hcm hx">
+  <div class="crumb">Inicio / <a href="/categoria/finanzas">Finanzas</a> / <b>Horas extras Colombia 2026</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">⏰ TRABAJO SUPLEMENTARIO · CO 2026</span>
+      <h1>Cada hora extra tiene su recargo. ¿Te las están pagando?</h1>
+      <p>Diurna +{pct(K.extraDiurna)}, nocturna +{pct(K.extraNocturna)} desde las {K.inicioNocturna} horas. Y desde el 15 de julio el divisor bajó de {K.div220} a {K.div210}: la misma hora vale {saltoTxt}% más.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">⏰</div>
+      <div class="hero-stat"><span>Jornada legal 2026</span><b>{K.hs44} h → {K.hs42} h</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="hx-form">
+      <h2>Tus horas del mes</h2>
+      <p class="sub">Cargá el salario y las horas de cada tipo. La grilla de abajo te muestra cuánto vale cada categoría con tu sueldo.</p>
+
+      <div class="field">
+        <label for="hx-salario">Salario mensual <small>sin auxilio de transporte</small></label>
+        <div class="control"><span>$</span><input id="hx-salario" type="number" min="0" step="1000" value={D.salario} /></div>
+      </div>
+
+      <div class="field">
+        <label for="hx-periodo">¿Cuándo trabajaste las horas?</label>
+        <div class="seg">
+          <button type="button" class="active" id="hx-p220" data-p="hasta-14-jul">Hasta 14-jul<br /><small>÷{K.div220}</small></button>
+          <button type="button" id="hx-p210" data-p="desde-15-jul">Desde 15-jul<br /><small>÷{K.div210}</small></button>
+        </div>
+        <input type="hidden" id="hx-periodo" value="hasta-14-jul" />
+      </div>
+
+      <div class="table" style="margin-top:16px">
+        <div class="row">
+          <div><b>Hora ordinaria</b><br /><small>salario ÷ divisor del período</small></div>
+          <small>base</small>
+          <strong id="hx-v-ord">{cop(h0)}</strong>
+        </div>
+        <div class="row">
+          <div>
+            <b>Extra diurna +{pct(K.extraDiurna)}</b><br /><small>6 a.m. a {K.inicioNocturna % 12} p.m., fuera de jornada</small>
+            <div class="control" style="margin-top:8px"><input id="hx-hd" type="number" min="0" step="0.5" value={D.hd} /><span>h</span></div>
+          </div>
+          <small id="hx-v-dia">{cop(dia0)} /h</small>
+          <strong id="hx-t-dia">{cop(D.hd * dia0)}</strong>
+        </div>
+        <div class="row">
+          <div>
+            <b>Extra nocturna +{pct(K.extraNocturna)}</b><br /><small>{K.inicioNocturna % 12} p.m. a 6 a.m., fuera de jornada</small>
+            <div class="control" style="margin-top:8px"><input id="hx-hn" type="number" min="0" step="0.5" value={D.hn} /><span>h</span></div>
+          </div>
+          <small id="hx-v-noc">{cop(noc0)} /h</small>
+          <strong id="hx-t-noc">{cop(D.hn * noc0)}</strong>
+        </div>
+        <div class="row">
+          <div><b>Recargo nocturno {pct(K.nocturno)}</b><br /><small>noche DENTRO de la jornada — no es extra</small></div>
+          <small>× {(1 + K.nocturno).toLocaleString('es-CO', { minimumFractionDigits: 2 })}</small>
+          <strong id="hx-v-rn">{cop(h0 * (1 + K.nocturno))}</strong>
+        </div>
+        <div class="row">
+          <div><b>Dominical o festivo {pct(K.dominical)}</b><br /><small>desde el 1-jul-2026 (antes 80%)</small></div>
+          <small>× {(1 + K.dominical).toLocaleString('es-CO', { minimumFractionDigits: 2 })}</small>
+          <strong id="hx-v-dom">{cop(h0 * (1 + K.dominical))}</strong>
+        </div>
+        <div class="row">
+          <div><b>Extra diurna dominical</b><br /><small>{pct(K.extraDiurna)} + {pct(K.dominical)}, los recargos se suman</small></div>
+          <small>× {(1 + K.extraDiurna + K.dominical).toLocaleString('es-CO', { minimumFractionDigits: 2 })}</small>
+          <strong id="hx-v-dd">{cop(h0 * (1 + K.extraDiurna + K.dominical))}</strong>
+        </div>
+        <div class="row">
+          <div><b>Extra nocturna dominical</b><br /><small>{pct(K.extraNocturna)} + {pct(K.dominical)}</small></div>
+          <small>× {(1 + K.extraNocturna + K.dominical).toLocaleString('es-CO', { minimumFractionDigits: 2 })}</small>
+          <strong id="hx-v-dn">{cop(h0 * (1 + K.extraNocturna + K.dominical))}</strong>
+        </div>
+      </div>
+      <p class="tnote">Las cuatro últimas filas son de referencia: muestran cuánto vale esa hora con tu salario, pero no entran en el total (para eso están las calculadoras de recargo nocturno y dominical).</p>
+
+      <button class="cta" type="submit">Calcular mis horas extras →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Total a pagar por horas extras</div>
+        <div class="big" id="hx-big">{cop(total0)}</div>
+        <p class="answer" id="hx-answer">Por {D.hd + D.hn} horas extras del mes, aparte de tu salario.</p>
+        <div class="result-box">
+          <span>Valor de tu hora ordinaria</span>
+          <b id="hx-hora">{cop(h0)}</b>
+          <small id="hx-note">Salario ÷ {K.div220} (jornada de {K.hs44} horas). Desde el 15-jul-2026 el divisor pasa a {K.div210} y la hora sube {saltoTxt}%.</small>
+        </div>
+      </div>
+      <div class="equation" id="hx-eq">{D.hd} × {cop(dia0)} + {D.hn} × {cop(noc0)} = <b>{cop(total0)}</b></div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Los tres errores que te bajan el pago</h2>
+      <p>Todos aparecen en desprendibles reales.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>➗</i><h3>Divisor 240</h3><p>Murió con la jornada de 48 horas. En 2026 es {K.div220}, y {K.div210} desde el 15 de julio: con 240 cada extra te sale ~9% más barata al empleador.</p></article>
+      <article class="mini"><i>🌙</i><h3>Extras de las 7 p.m. al 25%</h3><p>Desde la Ley 2466 de 2025 la noche laboral arranca a las {K.inicioNocturna}:00. Lo trabajado después de esa hora fuera de jornada va al {pct(K.extraNocturna)}, no al {pct(K.extraDiurna)}.</p></article>
+      <article class="mini"><i>✖️</i><h3>Multiplicar recargos</h3><p>La extra nocturna dominical es {pct(K.extraNocturna)} + {pct(K.dominical)} sobre la misma hora ordinaria (× {(1 + K.extraNocturna + K.dominical).toLocaleString('es-CO', { minimumFractionDigits: 2 })}), no 1,75 × 1,90.</p></article>
+    </div>
+    <div class="notice">
+      <span>⚖️</span>
+      <div><b>Tope legal: 2 horas extras al día y 12 a la semana.</b>Son unas {K.topeMes} al mes, y para hacerlas habituales la empresa necesita autorización del Ministerio de Trabajo. Superar el tope no borra la obligación de pagarlas.</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Julio de 2026: dos cambios, no uno</h2>
+      <p>Por eso una extra de agosto no vale lo mismo que la de junio.</p>
+    </div>
+    <div class="timeline">
+      <div class="step"><span>25-dic-2025</span><b>7 p.m.</b><em>Ley 2466: empieza la noche laboral dos horas antes</em></div>
+      <div class="step"><span>1-jul-2026</span><b>{pct(K.dominical)}</b><em>El recargo dominical y festivo sube del 80% al {pct(K.dominical)}</em></div>
+      <div class="step"><span>15-jul-2026</span><b>÷{K.div210}</b><em>Jornada de {K.hs42} h: el divisor baja de {K.div220} a {K.div210}</em></div>
+      <div class="step"><span>Efecto</span><b>+{saltoTxt}%</b><em>Sube cada hora ordinaria, extra y con recargo, sin aumento de sueldo</em></div>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>Con el salario mínimo de 2026 ({cop(K.smlmv)}) la cuenta es directa.</b>Hora ordinaria {cop(K.smlmv / K.div220)} hasta el 14 de julio y {cop(K.smlmv / K.div210)} después; la extra nocturna pasa de {cop((K.smlmv / K.div220) * (1 + K.extraNocturna))} a {cop((K.smlmv / K.div210) * (1 + K.extraNocturna))}.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="⏰" base="/co" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Hora ordinaria = salario ÷ {K.div220} (hasta 14-jul-2026) o ÷ {K.div210} (desde 15-jul-2026); extra diurna × {(1 + K.extraDiurna).toLocaleString('es-CO', { minimumFractionDigits: 2 })} y nocturna × {(1 + K.extraNocturna).toLocaleString('es-CO', { minimumFractionDigits: 2 })} — CST, Ley 2101/2021 y Ley 2466/2025.</div>
+    <div>Cálculo orientativo · Sin registro</div>
+  </footer>
+
+  <script type="application/json" id="hx-const" set:html={JSON.stringify(K)}></script>
+</main>
+
+<style is:global>
+  .hcm.hx{--brand:#1b2450;--accent:#ffc247;--soft:#eef0fb}
+  .hcm.hx .hero{background:linear-gradient(135deg,#141b3f,#3b4483)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.hx');
+    if (!root) return;
+
+    // Constantes serializadas desde src/lib/data/colombia-2026.ts
+    var K = JSON.parse(document.getElementById('hx-const').textContent);
+
+    var cop = function (x) { return '$' + new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(Math.round(x)); };
+    var el = function (id) { return document.getElementById(id); };
+    // Mismo helper `num` de la fórmula: ''/null → default, nunca pisa un 0 válido.
+    var num = function (v, def) {
+      if (v === '' || v === null || v === undefined) return def;
+      var n = Number(v);
+      return isFinite(n) ? n : def;
+    };
+    var saltoPct = (K.div220 / K.div210 - 1) * 100;
+    var saltoTxt = saltoPct.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    var refs = [
+      ['hx-v-rn', 1 + K.nocturno],
+      ['hx-v-dom', 1 + K.dominical],
+      ['hx-v-dd', 1 + K.extraDiurna + K.dominical],
+      ['hx-v-dn', 1 + K.extraNocturna + K.dominical],
+    ];
+
+    function render() {
+      var salario = num(el('hx-salario').value, 0);
+      var hd = Math.max(0, num(el('hx-hd').value, 0));
+      var hn = Math.max(0, num(el('hx-hn').value, 0));
+      var desde15Jul = el('hx-periodo').value === 'desde-15-jul';
+      var divisor = desde15Jul ? K.div210 : K.div220;
+
+      var big = el('hx-big'), ans = el('hx-answer'), hora = el('hx-hora'), note = el('hx-note'), eq = el('hx-eq');
+
+      // Misma guarda que compute(): salario <= 0 → error
+      if (!(salario > 0)) {
+        big.textContent = '—';
+        ans.textContent = 'Ingresá tu salario mensual';
+        hora.textContent = '—'; note.textContent = '';
+        eq.innerHTML = 'salario ÷ divisor × recargo';
+        ['hx-v-ord', 'hx-t-dia', 'hx-t-noc'].forEach(function (id) { el(id).textContent = '—'; });
+        el('hx-v-dia').textContent = '—'; el('hx-v-noc').textContent = '—';
+        refs.forEach(function (r) { el(r[0]).textContent = '—'; });
+        return;
+      }
+
+      var valorHora = salario / divisor;
+      var vDia = valorHora * (1 + K.extraDiurna);
+      var vNoc = valorHora * (1 + K.extraNocturna);
+      var totalDiurnas = hd * vDia;
+      var totalNocturnas = hn * vNoc;
+      var total = totalDiurnas + totalNocturnas;
+      var excedeTope = hd + hn > K.topeMes;
+
+      big.textContent = cop(total);
+      ans.textContent = (hd + hn > 0
+        ? 'Por ' + (hd + hn) + ' horas extras del mes (' + hd + ' diurnas y ' + hn + ' nocturnas), aparte de tu salario.'
+        : 'Cargá tus horas: la extra diurna se paga a ' + cop(vDia) + ' y la nocturna a ' + cop(vNoc) + '.')
+        + (excedeTope ? ' ⚠️ Superás el tope legal de 2 extras diarias y 12 semanales (≈' + K.topeMes + ' al mes).' : '');
+      hora.textContent = cop(valorHora);
+      note.textContent = desde15Jul
+        ? 'Salario ÷ ' + K.div210 + ' (jornada de ' + K.hs42 + ' horas). Ya estás en el divisor nuevo: la hora vale ' + saltoTxt + '% más que con ' + K.div220 + '.'
+        : 'Salario ÷ ' + K.div220 + ' (jornada de ' + K.hs44 + ' horas). Desde el 15-jul-2026 el divisor pasa a ' + K.div210 + ' y la hora sube ' + saltoTxt + '%.';
+      eq.innerHTML = hd + ' × ' + cop(vDia) + ' + ' + hn + ' × ' + cop(vNoc) + ' = <b>' + cop(total) + '</b>';
+
+      el('hx-v-ord').textContent = cop(valorHora);
+      el('hx-v-dia').textContent = cop(vDia) + ' /h';
+      el('hx-v-noc').textContent = cop(vNoc) + ' /h';
+      el('hx-t-dia').textContent = cop(totalDiurnas);
+      el('hx-t-noc').textContent = cop(totalNocturnas);
+      refs.forEach(function (r) { el(r[0]).textContent = cop(valorHora * r[1]); });
+    }
+
+    ['hx-salario', 'hx-hd', 'hx-hn'].forEach(function (id) { el(id).addEventListener('input', render); });
+    ['hx-p220', 'hx-p210'].forEach(function (id) {
+      el(id).addEventListener('click', function () {
+        el('hx-p220').classList.toggle('active', id === 'hx-p220');
+        el('hx-p210').classList.toggle('active', id === 'hx-p210');
+        el('hx-periodo').value = this.getAttribute('data-p');
+        render();
+      });
+    });
+    el('hx-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

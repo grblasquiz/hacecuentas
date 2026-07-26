@@ -1,0 +1,283 @@
+---
+/**
+ * Flagship "Bebidas para evento" — mockup bespoke.
+ * El script inline replica EXACTAMENTE bebidas-evento-litros-por-persona.ts:
+ *   ft = {verano:1.20, intermedia:1, invierno:0.85}
+ *   horasEfectivas = h<=4 ? h : 4 + (h-4)*0.7
+ *   totalAlcohol = personas * 0.35*ft * horasEfectivas
+ *   totalNoAlc   = personas * 0.25*ft * horasEfectivas
+ *   reparto por tipo (cerveza .85/.15 · vino .80/.20 · mixto .40/.30/.30 · sin alcohol 0)
+ *   botellasVino = ceil(vino/0.75)
+ *   litrosGaseosa = sin_alcohol ? ceil(alc+noAlc) : ceil(noAlc + destilado*2.5)
+ *   litrosTotales = ceil(cerveza + vino + destilado + gaseosa)
+ * La traducción a unidades de compra (latas 473 ml, cajón de 12, botellas 750 ml,
+ * botellas 2,25 L, bolsas de hielo) usa los formatos y la regla de hielo que ya
+ * están documentados en el propio calc (FAQ y tabla de formatos).
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const D = { personas: 30, horas: 5, tipo: 'mixto', temporada: 'intermedia' };
+
+function calcular(personas: number, horas: number, tipo: string, temporada: string) {
+  const ft = temporada === 'verano' ? 1.2 : temporada === 'invierno' ? 0.85 : 1.0;
+  const horasEfectivas = horas <= 4 ? horas : 4 + (horas - 4) * 0.7;
+  const totalAlcohol = personas * (0.35 * ft) * horasEfectivas;
+  const totalNoAlc = personas * (0.25 * ft) * horasEfectivas;
+  let litrosCerveza = 0, litrosVino = 0, litrosDestilado = 0;
+  if (tipo === 'cerveza') { litrosCerveza = totalAlcohol * 0.85; litrosVino = totalAlcohol * 0.15; }
+  else if (tipo === 'vino') { litrosVino = totalAlcohol * 0.80; litrosCerveza = totalAlcohol * 0.20; }
+  else if (tipo === 'mixto') { litrosCerveza = totalAlcohol * 0.40; litrosVino = totalAlcohol * 0.30; litrosDestilado = totalAlcohol * 0.30; }
+  const botellasVino = Math.ceil(litrosVino / 0.75);
+  const litrosGaseosa = tipo === 'sin_alcohol'
+    ? Math.ceil(totalAlcohol + totalNoAlc)
+    : Math.ceil(totalNoAlc + litrosDestilado * 2.5);
+  const litrosTotales = Math.ceil(litrosCerveza + litrosVino + litrosDestilado + litrosGaseosa);
+  return { litrosCerveza, litrosVino, litrosDestilado, botellasVino, litrosGaseosa, litrosTotales };
+}
+
+const r0 = calcular(D.personas, D.horas, D.tipo, D.temporada);
+const nf = (x: number, d = 0) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: d }).format(x);
+const latas0 = Math.ceil(r0.litrosCerveza / 0.473);
+const cajones0 = Math.floor(latas0 / 12);
+const botDest0 = Math.ceil(r0.litrosDestilado / 0.75);
+const botGas0 = Math.ceil(r0.litrosGaseosa / 2.25);
+const hielo0 = Math.ceil(D.personas / 10);
+const porCabeza0 = r0.litrosTotales / D.personas;
+---
+
+<main class="page hcm bv">
+  <div class="crumb">Inicio / <a href="/categoria/cocina">Cocina</a> / <b>Bebidas para evento</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🍻 LISTA DE COMPRAS CERRADA</span>
+      <h1>¿Cuánta bebida comprar para tu fiesta?</h1>
+      <p>Decinos cuántos son, cuántas horas dura y en qué época del año: te devolvemos los litros y —lo importante— cuántas latas, cajones y botellas poner en el changuito.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🍻</div>
+      <div class="hero-stat"><span>Base de cálculo</span><b>0,35 L + 0,25 L</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="bv-form">
+      <h2>Datos del evento</h2>
+      <p class="sub">Cuatro datos y salís con la lista para el mayorista.</p>
+      <div class="grid2">
+        <div class="field">
+          <label for="bv-personas">Invitados</label>
+          <div class="control"><input id="bv-personas" type="number" min="1" step="1" value={D.personas} /><span>pers.</span></div>
+        </div>
+        <div class="field">
+          <label for="bv-horas">Duración</label>
+          <div class="control"><input id="bv-horas" type="number" min="1" max="12" step="0.5" value={D.horas} /><span>horas</span></div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="bv-tipo">Tipo principal de bebida</label>
+        <div class="control">
+          <select id="bv-tipo">
+            <option value="cerveza">Cerveza (mayormente)</option>
+            <option value="vino">Vino (mayormente)</option>
+            <option value="mixto" selected>Mixto (cerveza + vino + tragos)</option>
+            <option value="sin_alcohol">Solo sin alcohol</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="bv-temp">Temporada <small>ajusta el total</small></label>
+        <div class="seg three" id="bv-temp" role="group" aria-label="Temporada">
+          <button type="button" data-t="verano">Verano</button>
+          <button type="button" data-t="intermedia" class="active">Primavera/Otoño</button>
+          <button type="button" data-t="invierno">Invierno</button>
+        </div>
+      </div>
+      <button class="cta" type="submit">Armar la lista de compras →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Compra total estimada</div>
+        <div class="big" id="bv-big">{nf(r0.litrosTotales)} <small>litros</small></div>
+        <p class="answer" id="bv-answer">Son {nf(porCabeza0, 1)} L por cabeza para {D.personas} personas en {nf(D.horas, 1)} horas. Comprá un 10% de más para no quedarte corto.</p>
+        <div class="result-box">
+          <span>Lo que no puede faltar</span>
+          <b id="bv-key">{nf(latas0)} latas + {r0.botellasVino} botellas de vino</b>
+          <small id="bv-note">Más {botGas0} botellas de gaseosa/agua de 2,25 L y {hielo0} bolsas de hielo de 5 kg.</small>
+        </div>
+      </div>
+      <div class="equation" id="bv-eq">{D.personas} pers. × 4,7 h efectivas × 0,60 L = <b>{nf(r0.litrosTotales)} L</b></div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Tu lista de compras</h2>
+      <p>Litros traducidos a lo que se vende en la góndola.</p>
+    </div>
+    <div class="vaccine-list" id="bv-list">
+      <div class="dose" data-k="cerveza">
+        <span class="dot"></span>
+        <div><b>Cerveza</b><small id="bv-cerveza-sub">{nf(latas0)} latas de 473 ml · {cajones0} cajones de 12 + sueltas</small></div>
+        <time id="bv-cerveza-l">{nf(Math.ceil(r0.litrosCerveza))} L</time>
+      </div>
+      <div class="dose" data-k="vino">
+        <span class="dot"></span>
+        <div><b>Vino</b><small id="bv-vino-sub">{r0.botellasVino} botellas de 750 ml</small></div>
+        <time id="bv-vino-l">{nf(Math.ceil(r0.litrosVino))} L</time>
+      </div>
+      <div class="dose" data-k="destilado">
+        <span class="dot"></span>
+        <div><b>Fernet y destilados</b><small id="bv-dest-sub">{botDest0} botellas de 750 ml (fernet, gin, vodka)</small></div>
+        <time id="bv-dest-l">{nf(Math.ceil(r0.litrosDestilado))} L</time>
+      </div>
+      <div class="dose" data-k="gaseosa">
+        <span class="dot"></span>
+        <div><b>Gaseosa y agua</b><small id="bv-gas-sub">{botGas0} botellas de 2,25 L (incluye la coca del fernet)</small></div>
+        <time id="bv-gas-l">{nf(r0.litrosGaseosa)} L</time>
+      </div>
+      <div class="dose" data-k="hielo">
+        <span class="dot"></span>
+        <div><b>Hielo</b><small id="bv-hielo-sub">{hielo0} bolsas de 5 kg</small></div>
+        <time id="bv-hielo-l">{nf(hielo0 * 5)} kg</time>
+      </div>
+    </div>
+    <div class="notice">
+      <span>🧊</span>
+      <div><b>No alcanza con tenerla: hay que poder enfriarla.</b>Un cajón de latas necesita unas 6 horas de heladera. Con 5 kg de hielo en una conservadora lo enfriás en 30 minutos.</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Cómo se llega a ese número</h2>
+      <p>Las tres perillas que mueven el total.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>⏱️</i><h3>Las horas no suman parejo</h3><p>Hasta la cuarta hora se toma al ritmo pleno; a partir de ahí cada hora cuenta sólo el 70%. Por eso 8 horas no consumen el doble que 4.</p></article>
+      <article class="mini"><i>🌡️</i><h3>La temporada manda</h3><p>Verano multiplica todo por 1,20 y el invierno por 0,85: el calor da sed y la cerveza helada vuela.</p></article>
+      <article class="mini"><i>🥤</i><h3>El fernet arrastra gaseosa</h3><p>Cada litro de destilado suma 2,5 litros de gaseosa para la mezcla. Si elegís mixto, la coca es media compra aparte.</p></article>
+    </div>
+    <div class="table" style="margin-top:13px">
+      <div class="row"><b>Formato</b><small>Contenido</small><strong>Equivale a</strong></div>
+      <div class="row"><span>Lata de cerveza</span><small>473 ml</small><strong>1 vaso</strong></div>
+      <div class="row"><span>Cajón de 12 latas</span><small>5,676 L</small><strong>12 vasos</strong></div>
+      <div class="row"><span>Botella de vino</span><small>750 ml</small><strong>4-5 copas</strong></div>
+      <div class="row"><span>Botella de fernet</span><small>750 ml</small><strong>~10 vasos con coca</strong></div>
+      <div class="row"><span>Barril (keg)</span><small>30 L</small><strong>~60 vasos</strong></div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🍻" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />0,35 L de alcohol + 0,25 L sin alcohol por persona y por hora, ajustado por temporada; desde la 5.ª hora el consumo cae al 70%.</div>
+    <div>Estimación de compra · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.bv{--brand:#3a1f52;--accent:#7ce0d3;--soft:#f1ecf7}
+  .hcm.bv .hero{background:linear-gradient(135deg,#3a1f52,#6b3d86)}
+  .hcm.bv .dose .dot{background:var(--accent);box-shadow:0 0 0 5px var(--soft)}
+  .hcm.bv .dose time{color:var(--brand);font:800 17px Manrope,system-ui,sans-serif}
+  .hcm.bv .dose small{margin-top:3px}
+  .hcm.bv .dose b{font-size:16px}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.bv');
+    if (!root) return;
+    var nf = function (x, d) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: d || 0 }).format(x); };
+    var $ = function (id) { return document.getElementById(id); };
+    var temporada = 'intermedia';
+
+    function render() {
+      var personas = Number($('bv-personas').value);
+      var horas = Number($('bv-horas').value);
+      var tipo = $('bv-tipo').value;
+      var big = $('bv-big'), ans = $('bv-answer'), key = $('bv-key'), note = $('bv-note'), eq = $('bv-eq');
+
+      function fail(msg) {
+        big.innerHTML = '—';
+        ans.textContent = msg;
+        key.textContent = '—'; note.textContent = '';
+        eq.innerHTML = 'personas × horas efectivas × 0,60 L';
+      }
+      // Mismas guardas que bebidas-evento-litros-por-persona.ts
+      if (!personas || personas <= 0) return fail('Ingresá la cantidad de personas');
+      if (!horas || horas <= 0) return fail('Ingresá la duración del evento');
+
+      var ft = temporada === 'verano' ? 1.2 : temporada === 'invierno' ? 0.85 : 1.0;
+      var horasEfectivas = horas <= 4 ? horas : 4 + (horas - 4) * 0.7;
+      var totalAlcohol = personas * (0.35 * ft) * horasEfectivas;
+      var totalNoAlc = personas * (0.25 * ft) * horasEfectivas;
+      var cerveza = 0, vino = 0, destilado = 0;
+      if (tipo === 'cerveza') { cerveza = totalAlcohol * 0.85; vino = totalAlcohol * 0.15; }
+      else if (tipo === 'vino') { vino = totalAlcohol * 0.80; cerveza = totalAlcohol * 0.20; }
+      else if (tipo === 'mixto') { cerveza = totalAlcohol * 0.40; vino = totalAlcohol * 0.30; destilado = totalAlcohol * 0.30; }
+      var botellasVino = Math.ceil(vino / 0.75);
+      var litrosGaseosa = tipo === 'sin_alcohol'
+        ? Math.ceil(totalAlcohol + totalNoAlc)
+        : Math.ceil(totalNoAlc + destilado * 2.5);
+      var litrosTotales = Math.ceil(cerveza + vino + destilado + litrosGaseosa);
+
+      // Unidades de compra
+      var latas = Math.ceil(cerveza / 0.473);
+      var cajones = Math.floor(latas / 12);
+      var sueltas = latas - cajones * 12;
+      var botDest = Math.ceil(destilado / 0.75);
+      var botGas = Math.ceil(litrosGaseosa / 2.25);
+      var hielo = Math.ceil(personas / 10) * (temporada === 'verano' ? 2 : 1);
+      var porCabeza = litrosTotales / personas;
+
+      big.innerHTML = nf(litrosTotales) + ' <small>litros</small>';
+      ans.textContent = 'Son ' + nf(porCabeza, 1) + ' L por cabeza para ' + nf(personas) + ' personas en ' + nf(horas, 1) + ' horas. Comprá un 10% de más para no quedarte corto.';
+      key.textContent = tipo === 'sin_alcohol'
+        ? botGas + ' botellas de gaseosa/agua de 2,25 L'
+        : nf(latas) + ' latas + ' + botellasVino + ' botellas de vino';
+      note.textContent = tipo === 'sin_alcohol'
+        ? 'Más ' + hielo + ' bolsas de hielo de 5 kg. Sin alcohol, todo el volumen va a gaseosa, agua y jugos.'
+        : 'Más ' + botGas + ' botellas de gaseosa/agua de 2,25 L y ' + hielo + ' bolsas de hielo de 5 kg.';
+      eq.innerHTML = nf(personas) + ' pers. × ' + nf(horasEfectivas, 1) + ' h efectivas × ' + nf(0.6 * ft, 2) + ' L = <b>' + nf(litrosTotales) + ' L</b>';
+
+      function fila(k, sub, val) {
+        var row = root.querySelector('.dose[data-k="' + k + '"]');
+        if (!row) return;
+        row.style.display = val === null ? 'none' : '';
+        if (val === null) return;
+        row.querySelector('small').textContent = sub;
+        row.querySelector('time').textContent = val;
+      }
+      fila('cerveza', cerveza > 0 ? nf(latas) + ' latas de 473 ml · ' + cajones + ' cajones de 12' + (sueltas ? ' + ' + sueltas + ' sueltas' : '') : '',
+        cerveza > 0 ? nf(Math.ceil(cerveza)) + ' L' : null);
+      fila('vino', botellasVino + ' botellas de 750 ml', vino > 0 ? nf(Math.ceil(vino)) + ' L' : null);
+      fila('destilado', botDest + ' botellas de 750 ml (fernet, gin, vodka)', destilado > 0 ? nf(Math.ceil(destilado)) + ' L' : null);
+      fila('gaseosa', botGas + ' botellas de 2,25 L' + (destilado > 0 ? ' (incluye la coca del fernet)' : ''), nf(litrosGaseosa) + ' L');
+      fila('hielo', hielo + ' bolsas de 5 kg' + (temporada === 'verano' ? ' (verano: el doble)' : ''), nf(hielo * 5) + ' kg');
+    }
+
+    ['bv-personas', 'bv-horas', 'bv-tipo'].forEach(function (id) {
+      $(id).addEventListener('input', render);
+      $(id).addEventListener('change', render);
+    });
+    Array.prototype.forEach.call($('bv-temp').querySelectorAll('button'), function (b) {
+      b.addEventListener('click', function () {
+        temporada = b.getAttribute('data-t');
+        Array.prototype.forEach.call($('bv-temp').querySelectorAll('button'), function (o) { o.classList.remove('active'); });
+        b.classList.add('active');
+        render();
+      });
+    });
+    $('bv-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

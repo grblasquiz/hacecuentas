@@ -1,0 +1,245 @@
+---
+/**
+ * Flagship "¿A qué generación pertenecés?" — mockup bespoke.
+ *
+ * Los rangos, nombres, características y contexto NO se escriben a mano: se
+ * derivan sondeando la fórmula real `generacionPerteneces()` año por año
+ * (1928 → 2026) y agrupando los tramos consecutivos. Así el componente no puede
+ * desincronizarse del motor: si mañana cambia un límite en el .ts, cambia acá.
+ *
+ * El script inline replica la misma clasificación por intervalo y la misma
+ * guarda de validación ('Ingresá un año entre 1928 y 2026').
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { generacionPerteneces } from '../../lib/formulas/generacion-perteneces';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const MIN = 1928, MAX = 2026;
+
+type Seg = { nombre: string; desde: number; hasta: number; rango: string; caract: string; ctx: string };
+const SEGS: Seg[] = [];
+for (let y = MIN; y <= MAX; y++) {
+  const o = generacionPerteneces({ anioNacimiento: y });
+  const last = SEGS[SEGS.length - 1];
+  if (last && last.nombre === o.generacion) { last.hasta = y; continue; }
+  SEGS.push({ nombre: o.generacion, desde: y, hasta: y, rango: o.rango, caract: o.caracteristicas, ctx: o.mensaje });
+}
+
+/* Etiqueta corta para la franja (decorativa, no es dato) */
+const SHORT = ['Silenciosa', 'Boomer', 'X', 'Y', 'Z', 'Alpha', 'Beta'];
+const BAND = SEGS.map((s, i) => ({
+  ...s,
+  short: SHORT[i] || s.nombre,
+  w: ((s.hasta - s.desde + 1) / (MAX - MIN + 1)) * 100,
+}));
+
+const HOY = new Date().getFullYear();
+const DEF = 1990;
+const d0 = generacionPerteneces({ anioNacimiento: DEF });
+const idx0 = SEGS.findIndex((s) => s.nombre === d0.generacion);
+const pos0 = ((DEF - MIN + 0.5) / (MAX - MIN + 1)) * 100;
+const edad0 = HOY - DEF;
+const DATA = JSON.stringify(SEGS);
+---
+
+<main class="page hcm gen">
+  <div class="crumb">Inicio / <a href="/categoria/vida">Vida</a> / <b>Tu generación</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">👥 COHORTES DEMOGRÁFICAS</span>
+      <h1>¿A qué generación pertenecés?</h1>
+      <p>Poné tu año de nacimiento y ubicate en la línea de tiempo: nombre de la cohorte, rango oficial, tu edad hoy y qué pasaba en la Argentina cuando naciste.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🎂</div>
+      <div class="hero-stat"><span>Rangos Pew Research</span><b>{SEGS.length} cohortes</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="gn-form">
+      <h2>Tu año de nacimiento</h2>
+      <p class="sub">Un solo dato. La cohorte se define por intervalo, no por edad.</p>
+      <div class="field">
+        <label for="gn-anio">Año de nacimiento</label>
+        <div class="control"><input id="gn-anio" type="number" min={MIN} max={MAX} step="1" value={DEF} /><span>año</span></div>
+      </div>
+      <div class="chips" id="gn-chips">
+        <button type="button" data-y="1958">1958</button>
+        <button type="button" data-y="1975">1975</button>
+        <button type="button" data-y="1990">1990</button>
+        <button type="button" data-y="2000">2000</button>
+        <button type="button" data-y="2015">2015</button>
+      </div>
+      <button class="cta" type="submit">Ver mi generación →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Sos</div>
+        <div class="big gn-name" id="gn-big">{d0.generacion}</div>
+        <p class="answer" id="gn-answer">{d0.caracteristicas}</p>
+        <div class="result-box">
+          <span>Rango de la cohorte</span>
+          <b id="gn-rango">{d0.rango}</b>
+          <small id="gn-note">Nacido/a en {DEF} tenés {edad0} años en {HOY}.</small>
+        </div>
+      </div>
+      <div class="equation" id="gn-eq">Cuando naciste: <b>{d0.mensaje}</b></div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Dónde caés en la línea de tiempo</h2>
+      <p>De {MIN} a {MAX}, cada tramo es una cohorte.</p>
+    </div>
+    <div class="gn-band-wrap">
+      <div class="gn-band" id="gn-band">
+        {BAND.map((b, i) => (
+          <div class={'gn-seg' + (i === idx0 ? ' on' : '')} data-i={i} style={`width:${b.w}%`}>
+            <em>{b.short}</em>
+            <span>{b.desde}</span>
+          </div>
+        ))}
+        <div class="gn-marker" id="gn-marker" style={`left:${pos0}%`}><i></i><b id="gn-marker-lbl">{DEF}</b></div>
+      </div>
+    </div>
+    <div class="notice">
+      <span>🧭</span>
+      <div><b>Las fronteras son porosas.</b>Quien nace en 1996 es Millennial y quien nace en 1997 es Gen Z, aunque hayan ido al mismo curso. A esos años de borde se los llama <i>cuspers</i>.</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Las cohortes, una por una</h2>
+      <p>Rango, edad hoy y contexto argentino.</p>
+    </div>
+    <div class="table">
+      {SEGS.map((s) => (
+        <div class="row gn-row">
+          <div><strong>{s.nombre}</strong><br /><small>{s.ctx}</small></div>
+          <div><small>Rango</small><br /><strong>{s.rango}</strong></div>
+          <div><small>Edad en {HOY}</small><br /><strong>{Math.max(0, HOY - s.hasta)}–{HOY - s.desde}</strong></div>
+        </div>
+      ))}
+    </div>
+    <p class="tnote">Edad = {HOY} − año de nacimiento, sin ajustar por mes. Rangos del Pew Research Center; Generación Alpha según McCrindle.</p>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Por qué importa la cohorte</h2>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>🧾</i><h3>No es determinismo</h3><p>Son tendencias estadísticas de grupo: clase social, educación y región pesan tanto o más que el año.</p></article>
+      <article class="mini"><i>🇦🇷</i><h3>Tiene matiz local</h3><p>Un Boomer argentino vivió la dictadura y el 89; uno estadounidense, no. Los hitos nacionales moldean la cohorte.</p></article>
+      <article class="mini"><i>📅</i><h3>El corte lo fijó Pew</h3><p>En 2018 el Pew Research Center cerró a los Millennials en 1996. Fuentes viejas los estiraban hasta 2004.</p></article>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="👥" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Clasificación por intervalo del año de nacimiento sobre los rangos del Pew Research Center (Alpha según McCrindle). Edad = año actual − año de nacimiento.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.gen{--brand:#2c1d52;--accent:#ffcf5c;--soft:#efeafc}
+  .hcm.gen .hero{background:linear-gradient(135deg,#2c1d52,#6b4ac0)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+
+  /* Franja de generaciones — pieza propia de este mockup */
+  .hcm.gen .big.gn-name{font-size:40px;line-height:1.08}
+  .hcm.gen .gn-band-wrap{overflow-x:auto;padding-top:34px}
+  .hcm.gen .gn-band{position:relative;display:flex;min-width:520px;border-radius:16px;overflow:visible}
+  .hcm.gen .gn-seg{position:relative;min-width:0;padding:16px 6px 14px;text-align:center;background:#e5def7;color:#5b4b86;transition:background .2s,color .2s}
+  .hcm.gen .gn-seg:first-child{border-radius:14px 0 0 14px}
+  .hcm.gen .gn-seg:last-child{border-radius:0 14px 14px 0}
+  .hcm.gen .gn-seg+.gn-seg{border-left:2px solid #fff}
+  .hcm.gen .gn-seg em{display:block;font-style:normal;font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hcm.gen .gn-seg span{display:block;font-size:11px;opacity:.75;margin-top:3px}
+  .hcm.gen .gn-seg.on{background:var(--brand);color:#fff}
+  .hcm.gen .gn-seg.on em{color:var(--accent)}
+  .hcm.gen .gn-marker{position:absolute;top:-30px;bottom:-6px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;pointer-events:none}
+  .hcm.gen .gn-marker b{background:var(--accent);color:#3a2a0a;font:800 12px/1 Manrope,system-ui,sans-serif;padding:6px 9px;border-radius:8px}
+  .hcm.gen .gn-marker i{order:2;flex:1;width:2px;background:var(--accent);margin-top:4px}
+  .hcm.gen .gn-row{grid-template-columns:minmax(0,1.6fr) minmax(0,.7fr) minmax(0,.7fr)}
+  .hcm.gen .gn-row small{font-size:12px}
+  @media(max-width:640px){
+    .hcm.gen .big.gn-name{font-size:31px}
+    .hcm.gen .gn-row{grid-template-columns:minmax(0,1fr)}
+    .hcm.gen .gn-row strong:last-child{text-align:left}
+  }
+</style>
+
+<script is:inline define:vars={{ DATA, MIN, MAX }}>
+  (function () {
+    var root = document.querySelector(".hcm.gen");
+    if (!root) return;
+    var SEGS = JSON.parse(DATA);
+    var HOY = new Date().getFullYear();
+    var input = document.getElementById('gn-anio');
+    var big = document.getElementById('gn-big');
+    var ans = document.getElementById('gn-answer');
+    var rango = document.getElementById('gn-rango');
+    var note = document.getElementById('gn-note');
+    var eq = document.getElementById('gn-eq');
+    var marker = document.getElementById('gn-marker');
+    var mlbl = document.getElementById('gn-marker-lbl');
+    var segEls = root.querySelectorAll('.gn-seg');
+
+    function fail(msg) {
+      big.textContent = '—';
+      ans.textContent = msg;
+      rango.textContent = '—';
+      note.textContent = '';
+      eq.innerHTML = 'Clasificación por intervalo del año de nacimiento.';
+      marker.style.opacity = '0';
+      for (var k = 0; k < segEls.length; k++) segEls[k].classList.remove('on');
+    }
+
+    function render() {
+      var anio = Math.round(Number(input.value));
+      // Misma guarda que generacion-perteneces.ts
+      if (!anio || anio < MIN || anio > MAX) return fail('Ingresá un año entre ' + MIN + ' y ' + MAX);
+
+      var idx = -1;
+      for (var i = 0; i < SEGS.length; i++) {
+        if (anio >= SEGS[i].desde && anio <= SEGS[i].hasta) { idx = i; break; }
+      }
+      if (idx < 0) return fail('Ingresá un año entre ' + MIN + ' y ' + MAX);
+      var g = SEGS[idx];
+      var edad = HOY - anio;
+
+      big.textContent = g.nombre;
+      ans.textContent = g.caract;
+      rango.textContent = g.rango;
+      note.textContent = 'Nacido/a en ' + anio + ' ' + (edad === 1 ? 'tenés 1 año' : 'tenés ' + edad + ' años') + ' en ' + HOY + '.';
+      eq.innerHTML = 'Cuando naciste: <b>' + g.ctx + '</b>';
+
+      for (var j = 0; j < segEls.length; j++) segEls[j].classList.toggle('on', j === idx);
+      marker.style.opacity = '1';
+      marker.style.left = (((anio - MIN + 0.5) / (MAX - MIN + 1)) * 100) + '%';
+      mlbl.textContent = String(anio);
+
+      var chips = root.querySelectorAll('#gn-chips button');
+      for (var c = 0; c < chips.length; c++) chips[c].classList.toggle('active', Number(chips[c].dataset.y) === anio);
+    }
+
+    input.addEventListener('input', render);
+    root.querySelectorAll('#gn-chips button').forEach(function (b) {
+      b.addEventListener('click', function () { input.value = b.dataset.y; render(); });
+    });
+    document.getElementById('gn-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

@@ -1,0 +1,288 @@
+---
+/**
+ * Flagship "Actualización por inflación (IPC INDEC)" — mockup bespoke.
+ * El script inline replica src/lib/formulas/inflacion-ipc.ts:
+ *   inflación del período = Π(1 + IPC_mes/100) − 1   (ambos meses INCLUIDOS)
+ *   factor = 1 + inflación/100
+ *   montoActualizado = monto × factor
+ *   incremento = actualizado − monto
+ *   pérdida poder adquisitivo = (1 − 1/factor) × 100
+ * La serie IPC NO se re-tipea: se arma acá con el mismo merge que la fórmula
+ * (ipc-indec-serie.json + los últimos 12 meses de live/inflacion.json) y se
+ * serializa al cliente por data-attribute.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import ipcSerieData from '../../data/ipc-indec-serie.json';
+import inflacionLive from '../../data/live/inflacion.json';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// ── Serie IPC: mismo armado que inflacion-ipc.ts ──────────────────────────
+const IPC_SERIE: Record<string, number> = {};
+for (const r of (ipcSerieData as any).serie as Array<{ mes: string; pct: number }>) {
+  if (r && typeof r.mes === 'string' && Number.isFinite(Number(r.pct))) IPC_SERIE[r.mes] = Number(r.pct);
+}
+for (const r of (((inflacionLive as any).last_12_months as Array<{ fecha: string; valor: number }>) || [])) {
+  const key = String(r.fecha).slice(0, 7);
+  if (/^\d{4}-\d{2}$/.test(key) && Number.isFinite(Number(r.valor))) IPC_SERIE[key] = Number(r.valor);
+}
+const IPC_KEYS = Object.keys(IPC_SERIE).sort();
+const LAST_KEY = IPC_KEYS[IPC_KEYS.length - 1];
+const FIRST_KEY = IPC_KEYS[0];
+
+const MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const labelMes = (k: string) => { const [y, m] = k.split('-').map(Number); return `${MESES_ES[(m || 1) - 1]} ${y}`; };
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const pct = (x: number, d = 1) => new Intl.NumberFormat('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d }).format(x) + '%';
+const money = (x: number, d = 0) => '$' + new Intl.NumberFormat('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d }).format(x);
+
+function factorEntre(desde: string, hasta: string): number {
+  const from = IPC_KEYS.indexOf(desde), to = IPC_KEYS.indexOf(hasta);
+  if (from === -1 || to === -1 || to < from) return NaN;
+  return IPC_KEYS.slice(from, to + 1).reduce((a, k) => a * (1 + IPC_SERIE[k] / 100), 1);
+}
+
+// Defaults = los del JSON del calc
+const D = { monto: 100000, desde: '2026-01', hasta: LAST_KEY, manual: 14.7 };
+const f0 = factorEntre(D.desde, D.hasta);
+const act0 = D.monto * f0;
+const perd0 = (1 - 1 / f0) * 100;
+const ytdPct = (f0 - 1) * 100;
+
+// Arte del hero: qué compra hoy un billete de $100 de cada enero (real, serie INDEC)
+const ANIOS = [2018, 2020, 2022, 2024, 2025, 2026].filter((y) => IPC_KEYS.includes(`${y}-01`));
+const ESCALERA = ANIOS.map((y) => {
+  const f = factorEntre(`${y}-01`, LAST_KEY);
+  const pp = 100 / f;
+  return { y, pp, alto: Math.max(6, Math.round(pp)) };
+});
+
+// Tabla IPC mes a mes del año en curso (acumulado compuesto, no sumado)
+const ANIO_ACT = LAST_KEY.slice(0, 4);
+let acum = 1;
+const FILAS_ANIO = IPC_KEYS.filter((k) => k.startsWith(ANIO_ACT)).map((k) => {
+  acum *= 1 + IPC_SERIE[k] / 100;
+  return { mes: cap(labelMes(k).split(' ')[0]), m: IPC_SERIE[k], a: (acum - 1) * 100 };
+});
+
+const OPCIONES = IPC_KEYS.map((k) => ({ v: k, l: `${cap(labelMes(k))} (+${pct(IPC_SERIE[k], 1)})` })).reverse();
+---
+
+<main class="page hcm ipc" data-serie={JSON.stringify(IPC_SERIE)}>
+  <div class="crumb">Inicio / <a href="/categoria/finanzas">Finanzas</a> / <b>Actualización por inflación (IPC)</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">📈 IPC INDEC · SERIE OFICIAL</span>
+      <h1>¿Cuánto vale hoy un monto de otro año?</h1>
+      <p>Actualizá sueldos, alquileres, deudas o préstamos componiendo el IPC Nacional del INDEC mes a mes, desde {cap(labelMes(FIRST_KEY))} hasta {labelMes(LAST_KEY)}.</p>
+    </div>
+    <div class="hero-art">
+      <div class="melt">
+        <div class="melt-bars">
+          {ESCALERA.map((b) => (
+            <div class="melt-col">
+              <em>{b.pp >= 10 ? money(b.pp, 0) : money(b.pp, 2)}</em>
+              <i style={`height:${b.alto}%`}></i>
+              <span>{b.y}</span>
+            </div>
+          ))}
+        </div>
+        <p class="melt-cap">Qué compra hoy un billete de $100 de cada enero</p>
+      </div>
+      <div class="hero-stat"><span>IPC {ANIO_ACT} acumulado</span><b>+{pct(ytdPct, 1)}</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="ipc-form">
+      <h2>Actualizar un monto</h2>
+      <p class="sub">Elegí el período y la calculadora compone los IPC mensuales oficiales. El mes inicial y el final se incluyen en el acumulado.</p>
+
+      <div class="field">
+        <label for="ipc-monto">Monto original</label>
+        <div class="control"><span>$</span><input id="ipc-monto" type="number" min="0" step="1000" value={D.monto} /></div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="ipc-desde">Mes inicial</label>
+          <div class="control">
+            <select id="ipc-desde">
+              <option value="manual">Otro período (inflación manual)</option>
+              {OPCIONES.map((o) => <option value={o.v} selected={o.v === D.desde}>{o.l}</option>)}
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="ipc-hasta">Mes final</label>
+          <div class="control">
+            <select id="ipc-hasta">
+              <option value="manual">Otro período (inflación manual)</option>
+              {OPCIONES.map((o) => <option value={o.v} selected={o.v === D.hasta}>{o.l}</option>)}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="ipc-manual">Inflación manual del período <small>sólo si elegís "Otro período"</small></label>
+        <div class="control"><input id="ipc-manual" type="number" min="0" step="0.1" value={D.manual} /><span>%</span></div>
+      </div>
+
+      <button class="cta" type="submit">Actualizar por IPC →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Valor equivalente hoy</div>
+        <div class="big" id="ipc-big">{money(Math.round(act0))}</div>
+        <p class="answer" id="ipc-answer">Para igualar el poder de compra de {money(D.monto)} de {labelMes(D.desde)} necesitás {money(Math.round(act0))} a {labelMes(D.hasta)}.</p>
+        <div class="grid2">
+          <div class="result-box">
+            <span>Factor de actualización</span>
+            <b id="ipc-factor">×{new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(f0)}</b>
+            <small id="ipc-inc">Incremento: {money(Math.round(act0 - D.monto))}</small>
+          </div>
+          <div class="result-box">
+            <span>Pérdida de poder adquisitivo</span>
+            <b id="ipc-perdida">{pct(perd0, 1)}</b>
+            <small id="ipc-perdida-note">Guardar {money(D.monto)} en el colchón durante el período costó eso.</small>
+          </div>
+        </div>
+        <div class="progress"><i id="ipc-bar" style={`width:${Math.min(100, Math.max(4, Math.round(perd0)))}%`}></i></div>
+      </div>
+      <div class="equation" id="ipc-eq">{money(D.monto)} × {new Intl.NumberFormat('es-AR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(f0)} = <b>{money(Math.round(act0))}</b></div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>IPC mes a mes {ANIO_ACT}</h2>
+      <p>Variación mensual y acumulado del año, compuesto.</p>
+    </div>
+    <div class="table">
+      {FILAS_ANIO.map((r) => (
+        <div class="row">
+          <div><b>{r.mes}</b><br /><small>IPC Nacional, nivel general</small></div>
+          <div>{'+' + pct(r.m, 1)}</div>
+          <strong>{'+' + pct(r.a, 1)}</strong>
+        </div>
+      ))}
+    </div>
+    <div class="notice">
+      <span>⚠️</span>
+      <div><b>Las inflaciones mensuales no se suman: se multiplican.</b>Si tres meses dieron 5%, 4% y 3%, el acumulado no es 12% sino 1,05 × 1,04 × 1,03 − 1 = 12,48%. Por eso el acumulado de la columna derecha compone factores.</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Antes de aplicar el ajuste</h2>
+      <p>Tres cosas que cambian el número.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>🏠</i><h3>Alquileres</h3><p>Tras el DNU 70/2023, que derogó la Ley 27.551, el índice es libre: lo más común es IPC trimestral. Usá el último IPC publicado, no el del mes en curso.</p></article>
+      <article class="mini"><i>🧮</i><h3>IPC, CER y UVA</h3><p>El CER prorratea diariamente el IPC del mes anterior y la UVA es CER × 14,05 (base abril 2016). Con desfasaje chico, los tres siguen la misma inflación.</p></article>
+      <article class="mini"><i>🗓️</i><h3>Cuándo sale el dato</h3><p>El INDEC publica el IPC del mes anterior a mediados de mes (tercer martes). Último dato disponible acá: {labelMes(LAST_KEY)} (+{pct(IPC_SERIE[LAST_KEY], 1)}).</p></article>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="📈" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Monto actualizado = monto × Π(1 + IPC mensual/100) del período, con ambos meses incluidos. Serie IPC Nacional (nivel general), INDEC.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.ipc{--brand:#3d1f2e;--accent:#ff9d5c;--soft:#fbeee6}
+  .hcm.ipc .hero{background:linear-gradient(135deg,#3d1f2e,#7c3a4d)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+  /* Arte del hero: la escalera de licuación (bloques puros, sin imágenes) */
+  .hcm.ipc .melt{width:100%;max-width:360px}
+  .hcm.ipc .melt-bars{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;align-items:end;height:190px}
+  .hcm.ipc .melt-col{display:flex;flex-direction:column;justify-content:flex-end;height:100%;min-width:0;text-align:center}
+  .hcm.ipc .melt-col em{font-style:normal;font-size:11px;font-weight:800;color:var(--accent);margin-bottom:5px}
+  .hcm.ipc .melt-col i{display:block;border-radius:7px 7px 3px 3px;background:linear-gradient(180deg,var(--accent),#ffd7b8);box-shadow:0 6px 14px rgba(0,0,0,.22)}
+  .hcm.ipc .melt-col span{font-size:11px;color:#e7d3d9;margin-top:6px}
+  .hcm.ipc .melt-cap{font-size:12px;color:#e0c9d1;margin:14px 0 0;text-align:center}
+  .hcm.ipc .progress{background:#ffffff2e}
+  @media(max-width:760px){.hcm.ipc .melt-bars{height:150px;gap:5px}.hcm.ipc .melt-col em{font-size:10px}}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.ipc');
+    if (!root) return;
+    var SERIE = JSON.parse(root.getAttribute('data-serie') || '{}');
+    var KEYS = Object.keys(SERIE).sort();
+    var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    function labelMes(k) { var p = k.split('-'); return MESES[(Number(p[1]) || 1) - 1] + ' ' + p[0]; }
+    function money(x, d) { d = d || 0; return '$' + new Intl.NumberFormat('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d }).format(x); }
+    function pct(x, d) { return new Intl.NumberFormat('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d }).format(x) + '%'; }
+    var el = function (id) { return document.getElementById(id); };
+
+    // Misma semántica que inflationFromPeriod() en inflacion-ipc.ts
+    function periodo(desde, hasta) {
+      if (!desde || !hasta) return null;
+      var from = KEYS.indexOf(desde), to = KEYS.indexOf(hasta);
+      if (from === -1 || to === -1 || to < from) return null;
+      var keys = KEYS.slice(from, to + 1);
+      var factor = keys.reduce(function (a, k) { return a * (1 + SERIE[k] / 100); }, 1);
+      return { pct: (factor - 1) * 100, label: labelMes(desde) + ' a ' + labelMes(hasta), meses: keys.length };
+    }
+
+    function render() {
+      var monto = Number(el('ipc-monto').value);
+      var desde = el('ipc-desde').value, hasta = el('ipc-hasta').value;
+      var manual = Number(el('ipc-manual').value);
+      var p = periodo(desde, hasta);
+      var inflacion = p ? p.pct : manual;
+
+      var big = el('ipc-big'), ans = el('ipc-answer'), fac = el('ipc-factor');
+      var inc = el('ipc-inc'), per = el('ipc-perdida'), pnote = el('ipc-perdida-note');
+      var bar = el('ipc-bar'), eq = el('ipc-eq');
+
+      function fail(msg) {
+        big.textContent = '—'; ans.textContent = msg;
+        fac.textContent = '—'; inc.textContent = '';
+        per.textContent = '—'; pnote.textContent = '';
+        bar.style.width = '0%'; eq.textContent = 'Monto × (1 + inflación acumulada / 100)';
+      }
+      // Mismas guardas y mensajes que inflacion-ipc.ts
+      if (!monto || monto <= 0) return fail('Ingresá el monto original');
+      if (desde && hasta && desde !== 'manual' && hasta !== 'manual' && !p) {
+        return fail('El mes final tiene que ser igual o posterior al mes inicial');
+      }
+      if (!isFinite(inflacion) || inflacion < 0) return fail('Ingresá la inflación acumulada o elegí un período válido');
+
+      var factor = 1 + inflacion / 100;
+      var actualizado = monto * factor;
+      var incremento = actualizado - monto;
+      var perdida = (1 - 1 / factor) * 100;
+
+      big.textContent = money(Math.round(actualizado));
+      ans.textContent = p
+        ? 'Para igualar el poder de compra de ' + money(monto) + ' de ' + labelMes(desde) + ' necesitás ' + money(Math.round(actualizado)) + ' a ' + labelMes(hasta) + ': ' + p.meses + (p.meses === 1 ? ' mes' : ' meses') + ' que acumulan ' + pct(inflacion, 1) + ' de IPC INDEC.'
+        : 'Con ' + pct(inflacion, 1) + ' de inflación acumulada, ' + money(monto) + ' equivalen a ' + money(Math.round(actualizado)) + '.';
+      fac.textContent = '×' + new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(factor);
+      inc.textContent = 'Incremento: ' + money(Math.round(incremento));
+      per.textContent = pct(perdida, 1);
+      pnote.textContent = 'Guardar ' + money(monto) + ' en el colchón durante el período costó eso.';
+      bar.style.width = Math.min(100, Math.max(4, Math.round(perdida))) + '%';
+      eq.innerHTML = money(monto) + ' × ' + new Intl.NumberFormat('es-AR', { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(factor) + ' = <b>' + money(Math.round(actualizado)) + '</b>';
+    }
+
+    ['ipc-monto', 'ipc-desde', 'ipc-hasta', 'ipc-manual'].forEach(function (id) {
+      el(id).addEventListener('input', render);
+      el(id).addEventListener('change', render);
+    });
+    el('ipc-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

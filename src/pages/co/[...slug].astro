@@ -15,6 +15,9 @@ import CalcContextLinks from '../../components/CalcContextLinks.astro';
 import GastosNotarialesCo from '../../components/GastosNotarialesCo.astro';
 import RecargoDominicalCo from '../../components/RecargoDominicalCo.astro';
 import ReferenceTables from '../../components/ReferenceTables.astro';
+import AportesArlCoMockup from '../../components/mockups/AportesArlCoMockup.astro';
+import HorasExtrasCoMockup from '../../components/mockups/HorasExtrasCoMockup.astro';
+import SalarioMinimoCoMockup from '../../components/mockups/SalarioMinimoCoMockup.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
 import LiveData from '../../components/LiveData.astro';
 import { md, mdInline } from '../../lib/markdown';
@@ -279,9 +282,14 @@ const relatedContextual = relatedSlugs
 // el domain del Layout para que header/footer globales matcheen la página.
 const isGastosNotariales = calc.slug === 'calculadora-gastos-notariales-registro-compraventa-2026';
 const isRecargoDominical = calc.slug === 'calculadora-recargo-dominical-festivo-colombia-2026';
-const flagshipBespoke = isGastosNotariales || isRecargoDominical;
+const isAportesArl = calc.slug === 'calculadora-aportes-arl-colombia-empleador-empleado-riesgo';
+const isHorasExtrasCo = calc.slug === 'calculadora-horas-extras-colombia-2026';
+const isSmmlvCo = calc.slug === 'calculadora-salario-minimo-colombia-2026-auxilio-transporte';
+const flagshipBespoke = isGastosNotariales || isRecargoDominical
+  || isAportesArl || isHorasExtrasCo || isSmmlvCo;
 const flagshipDomain: 'money' | 'data' | 'health' | 'home' | 'knowledge' | 'life' | null =
-  isGastosNotariales ? 'data' : isRecargoDominical ? 'knowledge' : null;
+  isGastosNotariales ? 'data' : isRecargoDominical ? 'knowledge'
+  : isAportesArl ? 'money' : isHorasExtrasCo ? 'money' : isSmmlvCo ? 'money' : null;
 
 // TOC: top-level rendered sections (in order of appearance)
 const tocSections: Array<{ id: string; label: string }> = [
@@ -351,6 +359,9 @@ const hreflangTags = buildHreflangCluster({
 
   {isGastosNotariales && <GastosNotarialesCo calc={calc} related={relatedContextual} />}
   {isRecargoDominical && <RecargoDominicalCo calc={calc} related={relatedContextual} />}
+  {isAportesArl && <AportesArlCoMockup calc={calc} related={relatedContextual} />}
+  {isHorasExtrasCo && <HorasExtrasCoMockup calc={calc} related={relatedContextual} />}
+  {isSmmlvCo && <SalarioMinimoCoMockup calc={calc} related={relatedContextual} />}
   {!flagshipBespoke && <CalcLayoutV2 calc={calc} lang="co" />}
   {/* Ver CalcContextLinks.astro: las bespoke no pasan por CalcLayoutV2 y
       perdían el link contextual al blog. */}

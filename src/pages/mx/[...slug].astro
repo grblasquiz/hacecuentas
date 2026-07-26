@@ -15,6 +15,7 @@ import CalcContextLinks from '../../components/CalcContextLinks.astro';
 import SdiMexico from '../../components/SdiMexico.astro';
 import ReferenceTables from '../../components/ReferenceTables.astro';
 import CalcInfographic from '../../components/CalcInfographic.astro';
+import FiniquitoMxMockup from '../../components/mockups/FiniquitoMxMockup.astro';
 import ScrollToTop from '../../components/ScrollToTop.astro';
 import { md, mdInline } from '../../lib/markdown';
 import ogManifest from '../../lib/og-manifest.json';
@@ -277,9 +278,10 @@ const relatedContextual = relatedSlugs
 // siempre coincide con el de la categoría). Forzamos también el del Layout para
 // que header/footer globales matcheen la página.
 const isSdiMexico = calc.slug === 'calculadora-salario-diario-integrado-sdi-mexico';
-const flagshipBespoke = isSdiMexico;
+const isFiniquitoMx = calc.slug === 'calculadora-finiquito-liquidacion-mexico';
+const flagshipBespoke = isSdiMexico || isFiniquitoMx;
 const flagshipDomain: 'money' | 'data' | 'health' | 'home' | 'knowledge' | 'life' | null =
-  isSdiMexico ? 'data' : null;
+  isFiniquitoMx ? 'money' : isSdiMexico ? 'data' : null;
 
 // TOC: top-level rendered sections (in order of appearance)
 const tocSections: Array<{ id: string; label: string }> = [
@@ -348,6 +350,7 @@ const hreflangTags = buildHreflangCluster({
   <Header slot="header" />
 
   {isSdiMexico && <SdiMexico calc={calc} related={relatedContextual} />}
+  {isFiniquitoMx && <FiniquitoMxMockup calc={calc} related={relatedContextual} />}
   {!flagshipBespoke && <CalcLayoutV2 calc={calc} lang="mx" />}
   {/* Ver CalcContextLinks.astro: las bespoke no pasan por CalcLayoutV2. */}
   {flagshipBespoke && <CalcContextLinks calc={calc} lang="mx" />}

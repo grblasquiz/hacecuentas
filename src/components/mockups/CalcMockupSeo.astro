@@ -7,8 +7,10 @@
  */
 import { md } from '../../lib/markdown';
 
-interface Props { calc: any; related?: any[]; icon?: string; }
-const { calc, related = [], icon = '🧮' } = Astro.props;
+// `base` prefija las relacionadas para los mockups de locales país
+// (/co, /mx, /pe…), donde el slug vive bajo su carpeta y no en la raíz.
+interface Props { calc: any; related?: any[]; icon?: string; base?: string; }
+const { calc, related = [], icon = '🧮', base = '' } = Astro.props;
 
 const tablas = calc.referenceTables || [];
 const faq = calc.faq || [];
@@ -53,7 +55,7 @@ const faq = calc.faq || [];
     <div class="section-head"><h2>Seguí calculando</h2><p>Herramientas relacionadas.</p></div>
     <div class="rel">
       {related.slice(0, 3).map((c: any) => (
-        <a href={`/${c.slug}`}>
+        <a href={`${base}/${c.slug}`}>
           <i aria-hidden="true">{c.icon || icon}</i>
           <b>{String(c.h1 || c.title || '').split('|')[0].split('(')[0].trim()}</b>
           <span>Calcular →</span>

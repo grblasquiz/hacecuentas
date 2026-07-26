@@ -1,0 +1,330 @@
+---
+/**
+ * Flagship "Ladrillos por m²" — mockup bespoke.
+ * El script inline replica EXACTAMENTE src/lib/formulas/ladrillos-m2.ts:
+ *   base      = m2 × porM2
+ *   ladrillos = ceil(base × (1 + desperdicio/100))
+ *   netos     = ceil(base)
+ *   mortero   = m2 × morteroM3   (3 decimales)
+ * Mismas guardas: m2 > 0 ("Ingresá los m² de pared") y tipo válido.
+ *
+ * Las constantes (porM2, morteroM3, nombre) NO se duplican: se sondean del
+ * módulo real llamando ladrillosM2({ m2: 1, tipo, desperdicio: 0 }), donde
+ * ladrillosPorM2 = porM2 y mortero = morteroM3 por definición.
+ *
+ * Diferencial visual: un muro dibujado con divs a escala real de 1 m²
+ * (medidas de cara en cm del propio JSON) que cambia de aparejo y de tamaño
+ * de pieza según el tipo elegido, + el desglose de mortero (cemento/cal/arena).
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { ladrillosM2 } from '../../lib/formulas/ladrillos-m2';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const ORDEN = ['comun', 'hueco_18', 'hueco_12', 'hueco_8', 'visto', 'bloque'];
+// Medidas de la CARA vista (cm) — de la tabla de referencia del propio calc.
+const CARA: Record<string, { w: number; h: number; espesor: string; uso: string }> = {
+  comun: { w: 24, h: 6, espesor: '15 cm', uso: 'Muro portante, cimientos, divisorias' },
+  hueco_18: { w: 33, h: 18, espesor: '18 cm', uso: 'Exterior, muro perimetral' },
+  hueco_12: { w: 33, h: 18, espesor: '12 cm', uso: 'Interior no portante' },
+  hueco_8: { w: 33, h: 18, espesor: '8 cm', uso: 'Tabique divisorio fino' },
+  visto: { w: 24, h: 5, espesor: '12 cm (panderete)', uso: 'Fachada decorativa, loft' },
+  bloque: { w: 39, h: 19, espesor: '20 cm', uso: 'Muro portante, galpones' },
+};
+
+// Constantes serializadas desde el módulo real (no hardcodeadas).
+const TIPOS = ORDEN.map((tipo) => {
+  const probe = ladrillosM2({ m2: 1, tipo, desperdicio: 0 });
+  return {
+    id: tipo,
+    nombre: probe.tipo,
+    porM2: probe.ladrillosPorM2,
+    morteroM3: probe.mortero,
+    ...CARA[tipo],
+  };
+});
+const TIPOS_MAP: Record<string, any> = Object.fromEntries(TIPOS.map((t) => [t.id, t]));
+
+const D = { m2: 20, tipo: 'comun', desp: 10 };
+const nf = (x: number, d = 0) => new Intl.NumberFormat('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d }).format(x);
+
+const r0 = ladrillosM2({ m2: D.m2, tipo: D.tipo, desperdicio: D.desp });
+const netos0 = Math.ceil(D.m2 * TIPOS_MAP[D.tipo].porM2);
+
+/** Muro de 1 m² a escala: junta de 1 cm incluida en la celda. */
+function muro(w: number, h: number) {
+  const cw = w + 1, ch = h + 1;
+  const filas = Math.ceil(100 / ch);
+  const porFila = Math.ceil(100 / cw) + 1;
+  return Array.from({ length: filas }, (_, i) => ({
+    top: (i * ch),
+    h,
+    left: i % 2 ? -(cw / 2) : 0,
+    w,
+    n: porFila,
+  }));
+}
+const muro0 = muro(CARA[D.tipo].w, CARA[D.tipo].h);
+
+// Dosaje 1:3 para el primer paint (mismos números que el script).
+const cem0 = r0.mortero * 350;
+---
+
+<main class="page hcm lad">
+  <div class="crumb">Inicio / <a href="/categoria/construccion">Construcción</a> / <b>Ladrillos por m²</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🧱 LISTA PARA EL CORRALÓN</span>
+      <h1>¿Cuántos ladrillos necesito por m²?</h1>
+      <p>Elegí el tipo de pieza, cargá los m² netos de pared y llevate la cantidad a comprar con desperdicio y el mortero que hace falta para pegarlos.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🧱</div>
+      <div class="hero-stat"><span>Hueco 18×18×33</span><b>16 por m²</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="lm-form">
+      <h2>Tu pared</h2>
+      <p class="sub">Cargá la superficie neta: ancho × alto menos puertas y ventanas.</p>
+      <div class="field">
+        <label for="lm-m2">m² de pared <small>superficie neta</small></label>
+        <div class="control"><input id="lm-m2" type="number" min="0" step="0.1" value={D.m2} /><span>m²</span></div>
+      </div>
+      <div class="field">
+        <label for="lm-tipo">Tipo de ladrillo</label>
+        <div class="control">
+          <select id="lm-tipo">
+            {TIPOS.map((t) => (
+              <option value={t.id} selected={t.id === D.tipo}>{t.nombre} — {nf(t.porM2, t.porM2 % 1 ? 1 : 0)}/m²</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="lm-desp">Desperdicio <small>10% habitual · 15% con muchos cortes</small></label>
+        <div class="control"><input id="lm-desp" type="number" min="0" max="30" step="1" value={D.desp} /><span>%</span></div>
+      </div>
+      <button class="cta" type="submit">Calcular ladrillos →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Total a comprar</div>
+        <div class="big" id="lm-big">{nf(r0.ladrillos)} <small>ladrillos</small></div>
+        <p class="answer" id="lm-answer">{netos0.toLocaleString('es-AR')} netos + {(r0.ladrillos - netos0).toLocaleString('es-AR')} por el {D.desp}% de desperdicio.</p>
+        <div class="result-box">
+          <span>Mortero de asiento</span>
+          <b id="lm-mortero">{nf(r0.mortero, 2)} m³</b>
+          <small id="lm-mortero-note">Equivale a {nf(r0.mortero * 1000)} litros de mezcla.</small>
+        </div>
+      </div>
+      <div class="equation" id="lm-eq">{nf(D.m2, 0)} m² × {nf(r0.ladrillosPorM2)} /m² × 1,{String(D.desp).padStart(2, '0')} = <b>{nf(r0.ladrillos)} ladrillos</b></div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>1 m² de tu pared, a escala</h2>
+      <p id="lm-wall-cap">Cada pieza dibujada con su medida real de cara y junta de 1 cm.</p>
+    </div>
+    <div class="lm-split">
+      <div class="lm-wallbox">
+        <div class="lm-wall" id="lm-wall" aria-hidden="true">
+          {muro0.map((f) => (
+            <div class="lm-row" style={`top:${f.top}%;height:${f.h}%;left:${f.left}%`}>
+              {Array.from({ length: f.n }).map(() => <i style={`width:${f.w}%`}></i>)}
+            </div>
+          ))}
+        </div>
+        <div class="lm-scale"><span>1 metro</span></div>
+      </div>
+      <div class="table lm-facts">
+        <div class="row"><div><b id="lm-f-nombre">{TIPOS_MAP[D.tipo].nombre}</b><br /><small id="lm-f-uso">{TIPOS_MAP[D.tipo].uso}</small></div><small>Unidades/m²</small><strong id="lm-f-porm2">{nf(TIPOS_MAP[D.tipo].porM2, TIPOS_MAP[D.tipo].porM2 % 1 ? 1 : 0)}</strong></div>
+        <div class="row"><div>Cara vista</div><small>cm</small><strong id="lm-f-cara">{CARA[D.tipo].w} × {CARA[D.tipo].h}</strong></div>
+        <div class="row"><div>Espesor de pared</div><small>terminada</small><strong id="lm-f-esp">{CARA[D.tipo].espesor}</strong></div>
+        <div class="row"><div>Mortero por m²</div><small>junta 1–1,5 cm</small><strong id="lm-f-mm">{nf(TIPOS_MAP[D.tipo].morteroM3, 3)} m³</strong></div>
+        <div class="row"><div>Hiladas en 1 m de alto</div><small>aprox.</small><strong id="lm-f-hiladas">{Math.round(100 / (CARA[D.tipo].h + 1))}</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>El mortero que te falta pedir</h2>
+      <p>La mezcla también se compra: elegí la receta y mirá las bolsas.</p>
+    </div>
+    <div class="lm-split">
+      <div class="card">
+        <div class="seg" id="lm-seg">
+          <button type="button" class="active" data-r="13">Dosaje 1:3</button>
+          <button type="button" data-r="116">Dosaje 1:1:6</button>
+        </div>
+        <p class="sub" id="lm-receta-sub" style="margin-top:16px">1 m³ de mortero 1:3 lleva 350 kg de cemento (7 bolsas de 50 kg), 1 m³ de arena y 180–200 L de agua.</p>
+        <div class="row"><div>Cemento Portland</div><small id="lm-mc-kg">{nf(cem0)} kg</small><strong id="lm-mc">{Math.ceil(cem0 / 50)} bolsas de 50 kg</strong></div>
+        <div class="row" id="lm-mcal-row" style="display:none"><div>Cal aérea hidratada</div><small id="lm-mcal-kg">—</small><strong id="lm-mcal">—</strong></div>
+        <div class="row"><div>Arena fina o mediana</div><small>1 m³ por m³ de mezcla</small><strong id="lm-marena">{nf(r0.mortero, 2)} m³</strong></div>
+        <div class="row"><div>Agua</div><small>según humedad de la arena</small><strong id="lm-magua">{nf(r0.mortero * 190)} L</strong></div>
+      </div>
+      <div>
+        <div class="cards lm-cards3">
+          <article class="mini"><i>🪣</i><h3>Con cal pega mejor</h3><p>La receta 1:1:6 es más trabajable y fisura menos: la misma mezcla te sirve para el revoque grueso.</p></article>
+          <article class="mini"><i>💧</i><h3>Mojá el ladrillo</h3><p>El común absorbe el agua del mortero y debilita la junta. El hueco cerámico también agradece un baldazo previo.</p></article>
+          <article class="mini"><i>📐</i><h3>Junta de 1 a 1,5 cm</h3><p>Más fina sólo con pieza grande o ladrillo visto. Aplomá cada 4-5 hiladas con nivel largo.</p></article>
+        </div>
+        <div class="notice">
+          <span>⚠️</span>
+          <div><b>Restá las aberturas antes de calcular.</b>Una puerta de entrada son 1,89 m² y una ventana de habitación 1,20 m². Si la pared tiene varias, subí el desperdicio a 12-15%: más cortes, más roturas.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🧱" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />ladrillos = m² × unidades/m² × (1 + desperdicio%), redondeado hacia arriba. Unidades/m² y mortero/m² según IRAM 12566 y CIRSOC.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.lad{--brand:#7b2d26;--accent:#f2b8a2;--soft:#fbf0ec}
+  .hcm.lad .hero{background:linear-gradient(135deg,#7b2d26,#a8543f 62%,#c07a5e)}
+  .hcm.lad .tag{color:#5c1f19}
+  .hcm.lad .cta{color:#5c1f19}
+  .hcm.lad .over{color:#e8bdae}
+  .hcm.lad .answer{color:#f3ded7}
+  .hcm.lad .equation{color:#e6c4b8}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+  .hcm.lad .lm-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start}
+  .hcm.lad .lm-wallbox{background:#fff;border:1px solid var(--line);border-radius:24px;padding:22px}
+  .hcm.lad .lm-wall{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;border-radius:10px;background:#cfc3b6}
+  .hcm.lad .lm-row{position:absolute;width:100%;display:flex;gap:1%}
+  .hcm.lad .lm-row i{display:block;height:100%;flex:0 0 auto;border-radius:2px;background:linear-gradient(160deg,#b5563c,#8c3a24);box-shadow:inset 0 -2px 0 rgba(0,0,0,.16)}
+  .hcm.lad .lm-row:nth-child(odd) i:nth-child(3n){background:linear-gradient(160deg,#a94b33,#7d3220)}
+  .hcm.lad .lm-row:nth-child(even) i:nth-child(2n){background:linear-gradient(160deg,#bd6047,#93402a)}
+  .hcm.lad .lm-scale{margin-top:12px;border-top:2px solid var(--line);position:relative;text-align:center}
+  .hcm.lad .lm-scale span{display:inline-block;background:#fff;color:var(--muted);font-size:12px;font-weight:700;padding:0 8px;transform:translateY(-9px)}
+  .hcm.lad .lm-facts .row div b{color:var(--brand)}
+  .hcm.lad .lm-cards3{grid-template-columns:minmax(0,1fr)}
+  @media(max-width:760px){
+    .hcm.lad .lm-split{grid-template-columns:minmax(0,1fr)}
+  }
+</style>
+
+<script is:inline define:vars={{ TIPOS_MAP }}>
+  (function () {
+    var root = document.querySelector('.hcm.lad');
+    if (!root) return;
+    var T = TIPOS_MAP;
+    var nf = function (x, d) { return new Intl.NumberFormat('es-AR', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 }).format(x); };
+    var $ = function (id) { return document.getElementById(id); };
+    var receta = '13';
+
+    function muro(w, h) {
+      var cw = w + 1, ch = h + 1;
+      var filas = Math.ceil(100 / ch), porFila = Math.ceil(100 / cw) + 1, out = '';
+      for (var i = 0; i < filas; i++) {
+        var left = i % 2 ? -(cw / 2) : 0;
+        out += '<div class="lm-row" style="top:' + (i * ch) + '%;height:' + h + '%;left:' + left + '%">';
+        for (var j = 0; j < porFila; j++) out += '<i style="width:' + w + '%"></i>';
+        out += '</div>';
+      }
+      return out;
+    }
+
+    function mortero(m3) {
+      var cem = $('lm-mc'), cemKg = $('lm-mc-kg'), cal = $('lm-mcal'), calKg = $('lm-mcal-kg');
+      var calRow = $('lm-mcal-row'), arena = $('lm-marena'), agua = $('lm-magua'), sub = $('lm-receta-sub');
+      // Dosajes de la tabla del calc: 1:3 → 350 kg cemento + 1 m³ arena + 190 L agua.
+      //                               1:1:6 → 200 kg cemento + 100 kg cal + 1 m³ arena + 210 L agua.
+      var kgCem = receta === '13' ? 350 : 200;
+      var kgCal = receta === '13' ? 0 : 100;
+      var lAgua = receta === '13' ? 190 : 210;
+      var c = m3 * kgCem;
+      cemKg.textContent = nf(c) + ' kg';
+      cem.textContent = Math.ceil(c / 50) + ' bolsas de 50 kg';
+      if (kgCal) {
+        calRow.style.display = '';
+        calKg.textContent = nf(m3 * kgCal) + ' kg';
+        cal.textContent = Math.ceil((m3 * kgCal) / 50) + ' bolsas de 50 kg';
+      } else {
+        calRow.style.display = 'none';
+      }
+      arena.textContent = nf(m3, 2) + ' m³';
+      agua.textContent = nf(m3 * lAgua) + ' L';
+      sub.textContent = receta === '13'
+        ? '1 m³ de mortero 1:3 lleva 350 kg de cemento (7 bolsas de 50 kg), 1 m³ de arena y 180–200 L de agua.'
+        : '1 m³ de mortero 1:1:6 lleva 200 kg de cemento (4 bolsas), 100 kg de cal (2 bolsas), 1 m³ de arena y 200–220 L de agua.';
+    }
+
+    function render() {
+      var m2 = Number($('lm-m2').value);
+      var tipo = String($('lm-tipo').value || 'comun');
+      var despRaw = Number($('lm-desp').value);
+      var desp = isFinite(despRaw) && $('lm-desp').value !== '' ? despRaw : 10;
+      var big = $('lm-big'), ans = $('lm-answer'), eq = $('lm-eq');
+      var mEl = $('lm-mortero'), mNote = $('lm-mortero-note');
+
+      var t = T[tipo];
+      // Ficha + muro: dependen sólo del tipo, se actualizan siempre.
+      if (t) {
+        $('lm-wall').innerHTML = muro(t.w, t.h);
+        $('lm-wall-cap').textContent = 'Aparejo de ' + t.nombre.toLowerCase() + ': cara de ' + t.w + ' × ' + t.h + ' cm con junta de 1 cm.';
+        $('lm-f-nombre').textContent = t.nombre;
+        $('lm-f-uso').textContent = t.uso;
+        $('lm-f-porm2').textContent = nf(t.porM2, t.porM2 % 1 ? 1 : 0);
+        $('lm-f-cara').textContent = t.w + ' × ' + t.h;
+        $('lm-f-esp').textContent = t.espesor;
+        $('lm-f-mm').textContent = nf(t.morteroM3, 3) + ' m³';
+        $('lm-f-hiladas').textContent = String(Math.round(100 / (t.h + 1)));
+      }
+
+      function fail(msg) {
+        big.innerHTML = '—';
+        ans.textContent = msg;
+        mEl.textContent = '—';
+        mNote.textContent = '';
+        eq.innerHTML = 'm² × unidades/m² × (1 + desperdicio%)';
+        mortero(0);
+      }
+      // Mismas guardas que ladrillos-m2.ts
+      if (!m2 || m2 <= 0) return fail('Ingresá los m² de pared');
+      if (!t) return fail('Tipo de ladrillo no válido');
+
+      var base = m2 * t.porM2;
+      var totalLadrillos = Math.ceil(base * (1 + desp / 100));
+      var netos = Math.ceil(base);
+      var extra = Math.max(0, totalLadrillos - netos);
+      var m3 = Number((m2 * t.morteroM3).toFixed(3));
+
+      big.innerHTML = nf(totalLadrillos) + ' <small>ladrillos</small>';
+      ans.textContent = nf(netos) + ' netos + ' + nf(extra) + ' por el ' + nf(desp) + '% de desperdicio.';
+      mEl.textContent = nf(m3, 2) + ' m³';
+      mNote.textContent = 'Equivale a ' + nf(m3 * 1000) + ' litros de mezcla para ' + nf(m2, m2 % 1 ? 1 : 0) + ' m² de pared.';
+      eq.innerHTML = nf(m2, m2 % 1 ? 1 : 0) + ' m² × ' + nf(t.porM2, t.porM2 % 1 ? 1 : 0) + ' /m² × ' + nf(1 + desp / 100, 2) + ' = <b>' + nf(totalLadrillos) + ' ladrillos</b>';
+      mortero(m3);
+    }
+
+    ['lm-m2', 'lm-tipo', 'lm-desp'].forEach(function (id) {
+      $(id).addEventListener('input', render);
+      $(id).addEventListener('change', render);
+    });
+    $('lm-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    Array.prototype.forEach.call($('lm-seg').querySelectorAll('button'), function (b) {
+      b.addEventListener('click', function () {
+        Array.prototype.forEach.call($('lm-seg').querySelectorAll('button'), function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+        receta = b.getAttribute('data-r');
+        render();
+      });
+    });
+    render();
+  })();
+</script>

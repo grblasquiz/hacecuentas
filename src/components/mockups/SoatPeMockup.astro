@@ -1,0 +1,268 @@
+---
+/**
+ * Flagship "SOAT Perú — precio por tipo de vehículo" (locale /pe).
+ * El script inline replica EXACTAMENTE src/lib/formulas/soat-peru-precio.ts:
+ *   factorAntiguedad = min(antiguedad,20)/20
+ *   techoEstimado    = min + (max-min)*0.6
+ *   estimado         = (min + (techoEstimado-min)*factorAntiguedad) * ajusteRegion
+ *   ajusteRegion     = 0.9 en provincia, 1.0 en Lima/ciudad
+ *   minRegion/maxRegion = min/max * ajusteRegion
+ *   usaAfocat        = provincia && categoria ∈ {moto, taxi, transporte}
+ * Coberturas legales = múltiplos de la UIT, tomada del módulo real (PERU_2026.uit).
+ * RANGOS se replica tal cual del .ts (allí es un const de módulo, no exportado);
+ * si cambian los rangos de mercado hay que tocar los dos lugares.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { PERU_2026, fmtPEN } from '../../lib/data/peru-2026.ts';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Espejo de RANGOS en src/lib/formulas/soat-peru-precio.ts
+const RANGOS = {
+  auto:       { min: 34,  max: 200, etiqueta: 'Auto particular', icon: '🚗' },
+  moto:       { min: 33,  max: 336, etiqueta: 'Moto / mototaxi particular', icon: '🏍️' },
+  taxi:       { min: 80,  max: 250, etiqueta: 'Taxi / auto de servicio', icon: '🚕' },
+  transporte: { min: 200, max: 500, etiqueta: 'Transporte público de pasajeros', icon: '🚐' },
+  carga:      { min: 100, max: 350, etiqueta: 'Vehículo de carga', icon: '🚚' },
+} as const;
+const ELEGIBLE_AFOCAT = ['moto', 'taxi', 'transporte'];
+const ORDEN = ['auto', 'moto', 'taxi', 'transporte', 'carga'] as const;
+
+const uit = PERU_2026.uit;
+const cob = {
+  muerte: fmtPEN(4 * uit),
+  invalidez: fmtPEN(4 * uit),
+  medicos: fmtPEN(5 * uit),
+  temporal: fmtPEN(1 * uit),
+  sepelio: fmtPEN(1 * uit),
+};
+
+// Primer paint (SSR): auto particular, Lima, 0 años → estimado = mínimo del rango.
+const d = RANGOS.auto;
+const estimado0 = d.min;
+const escalaMax = Math.max(...ORDEN.map((k) => RANGOS[k].max));
+
+const SERIAL = { rangos: RANGOS, afocat: ELEGIBLE_AFOCAT, orden: ORDEN, uit, escalaMax };
+---
+
+<main class="page hcm sp">
+  <div class="crumb">Inicio / <a href="/pe/categoria/automotor">Automotor</a> / <b>Precio del SOAT</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🚗 SOAT PERÚ 2026</span>
+      <h1>¿Cuánto deberías pagar por tu SOAT?</h1>
+      <p>El SOAT no tiene tarifa fija: cada aseguradora pone su prima. Mirá el rango de mercado para tu tipo de vehículo antes de cotizar.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🚗</div>
+      <div class="hero-stat"><span>Coberturas fijadas por ley</span><b>4 UIT por muerte</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="sp-form">
+      <h2>Tu vehículo</h2>
+      <p class="sub">Tipo de uso, región y antigüedad: los tres factores que mueven la prima.</p>
+
+      <div class="field">
+        <label for="sp-categoria">Tipo de vehículo / uso</label>
+        <div class="control">
+          <select id="sp-categoria">
+            {ORDEN.map((k) => <option value={k} selected={k === 'auto'}>{RANGOS[k].etiqueta}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="sp-region">Región</label>
+        <div class="control">
+          <select id="sp-region">
+            <option value="lima" selected>Lima / ciudad principal (SOAT aseguradora)</option>
+            <option value="provincia">Provincia (SOAT o AFOCAT/CAT)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="sp-antiguedad">Antigüedad del vehículo <small>a más años, prima más alta</small></label>
+        <div class="control"><input id="sp-antiguedad" type="number" min="0" step="1" value="0" /><span>años</span></div>
+      </div>
+
+      <button class="cta" type="submit">Estimar precio del SOAT →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Precio estimado al año</div>
+        <div class="big" id="sp-big">{fmtPEN(estimado0)}</div>
+        <p class="answer" id="sp-answer">Auto particular en Lima, 0 años: la prima arranca en el piso del rango de mercado.</p>
+        <div class="result-box">
+          <span>Rango de mercado</span>
+          <b id="sp-rango">{fmtPEN(d.min)} – {fmtPEN(d.max)}</b>
+          <small id="sp-note">Seguro aplicable: SOAT (cobertura en todo el Perú).</small>
+        </div>
+      </div>
+      <div class="equation" id="sp-eq">
+        Coberturas por ley: muerte <b>{cob.muerte}</b> · gastos médicos <b>{cob.medicos}</b>
+      </div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Precio del SOAT por tipo de vehículo</h2>
+      <p>Rango anual de mercado 2026, ajustado a tu región y antigüedad.</p>
+    </div>
+    <div class="table" id="sp-comp">
+      {ORDEN.map((k) => (
+        <div class="row sp-crow" data-k={k}>
+          <div>
+            <strong>{RANGOS[k].icon} {RANGOS[k].etiqueta}</strong>
+            <div class="bar"><i data-role="fill" style={`left:${(RANGOS[k].min / escalaMax) * 100}%;width:${((RANGOS[k].max - RANGOS[k].min) / escalaMax) * 100}%`}><em data-role="dot" style={`left:0%`}></em></i></div>
+          </div>
+          <small data-role="rango">{fmtPEN(RANGOS[k].min)} – {fmtPEN(RANGOS[k].max)}</small>
+          <strong data-role="est">{fmtPEN(RANGOS[k].min)}</strong>
+        </div>
+      ))}
+    </div>
+    <p class="tnote">La barra muestra el rango completo de la categoría sobre una misma escala; el punto marca el estimado con los datos que cargaste. Fuente: rangos de mercado 2026 (NeoAuto / Comparabien / TrámitesPerú).</p>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Qué cubre y qué no cubre el SOAT</h2>
+      <p>Las indemnizaciones son idénticas en toda póliza (DS 024-2002-MTC, UIT {fmtPEN(uit)}).</p>
+    </div>
+    <div class="cards">
+      <article class="mini cover-yes"><i>🩺</i><h3>Sí cubre personas</h3><p>Gastos médicos hasta {cob.medicos}, muerte {cob.muerte}, invalidez permanente hasta {cob.invalidez}, incapacidad temporal y sepelio hasta {cob.temporal} cada uno.</p></article>
+      <article class="mini cover-yes"><i>⚖️</i><h3>Sin importar la culpa</h3><p>Paga a ocupantes y terceros aunque el accidente haya sido responsabilidad del conductor asegurado.</p></article>
+      <article class="mini cover-no"><i>🚫</i><h3>No cubre tu vehículo</h3><p>Los daños materiales de tu auto o los de terceros quedan afuera: eso es un seguro vehicular voluntario, un producto distinto.</p></article>
+    </div>
+    <div class="notice">
+      <span>📍</span>
+      <div><b>SOAT vs CAT de AFOCAT.</b>El SOAT cubre en todo el Perú. El CAT (Ley 28839) lo emiten las AFOCAT, suele ser más barato y solo aplica a transporte público —moto, taxi, combi— dentro de tu región o provincia.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🚗" base="/pe" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Rango de mercado por categoría posicionado según antigüedad (tope 20 años) y ajuste regional del 10% en provincia. Coberturas: DS 024-2002-MTC sobre UIT {fmtPEN(uit)}.</div>
+    <div>Estimación orientativa · Cotizá con aseguradoras SBS</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.sp{--brand:#7c1230;--accent:#ffcf4d;--soft:#fdeef1}
+  .hcm.sp .hero{background:linear-gradient(135deg,#7c1230,#b32a45)}
+  .hcm.sp .tag{color:#5c0c22}
+  .hcm.sp .cta{color:#5c0c22}
+  .hcm.sp .over{color:#eec0cb}
+  .hcm.sp .answer{color:#f6dde3}
+  .hcm.sp .equation{color:#eec0cb}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+  .hcm.sp .bar{position:relative;height:9px;border-radius:20px;background:#f0e2e6;margin-top:9px;overflow:visible}
+  .hcm.sp .bar i{position:absolute;top:0;height:100%;border-radius:20px;background:linear-gradient(90deg,#e8a7b6,#7c1230);display:block}
+  .hcm.sp .bar em{position:absolute;top:50%;width:13px;height:13px;margin:-6.5px 0 0 -6.5px;border-radius:50%;background:var(--accent);border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.28)}
+  .hcm.sp .sp-crow{grid-template-columns:minmax(0,1.5fr) minmax(0,.9fr) minmax(0,.6fr)}
+  .hcm.sp .sp-crow.on strong:first-child{color:var(--brand)}
+  .hcm.sp .mini.cover-yes{border-left:4px solid var(--brand)}
+  .hcm.sp .mini.cover-no{border-left:4px solid #b9482c;background:#fff7f4}
+  @media(max-width:760px){.hcm.sp .sp-crow{grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr) minmax(0,.6fr)}.hcm.sp .sp-crow small{font-size:12px}}
+</style>
+
+<script is:inline define:vars={{ SERIAL }}>
+  (function () {
+    var root = document.querySelector('.hcm.sp');
+    if (!root) return;
+    var R = SERIAL.rangos, AF = SERIAL.afocat, ORDEN = SERIAL.orden, ESC = SERIAL.escalaMax, UIT = SERIAL.uit;
+
+    function fmtPEN(n) {
+      return 'S/ ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(Math.round(n * 100) / 100);
+    }
+    var cobMuerte = fmtPEN(4 * UIT), cobMedicos = fmtPEN(5 * UIT);
+
+    var big = document.getElementById('sp-big');
+    var ans = document.getElementById('sp-answer');
+    var rangoEl = document.getElementById('sp-rango');
+    var note = document.getElementById('sp-note');
+    var eq = document.getElementById('sp-eq');
+
+    function estimar(cat, region, antiguedad) {
+      var base = R[cat];
+      var factor = Math.min(antiguedad, 20) / 20;
+      var piso = base.min;
+      var techo = base.min + (base.max - base.min) * 0.6;
+      var ajuste = region === 'provincia' ? 0.9 : 1.0;
+      return {
+        estimado: (piso + (techo - piso) * factor) * ajuste,
+        minRegion: base.min * ajuste,
+        maxRegion: base.max * ajuste,
+        ajuste: ajuste,
+      };
+    }
+
+    function fail(msg) {
+      big.textContent = '—';
+      ans.textContent = msg;
+      rangoEl.textContent = '—';
+      note.textContent = '';
+      eq.innerHTML = 'Coberturas por ley: muerte <b>' + cobMuerte + '</b> · gastos médicos <b>' + cobMedicos + '</b>';
+    }
+
+    function render() {
+      var cat = document.getElementById('sp-categoria').value;
+      var region = document.getElementById('sp-region').value === 'provincia' ? 'provincia' : 'lima';
+      var raw = document.getElementById('sp-antiguedad').value;
+      var antiguedad = raw === '' ? 0 : Number(raw);
+
+      // Mismas guardas que soat-peru-precio.ts
+      if (!R[cat]) return fail('Elegí el tipo de vehículo');
+      if (!isFinite(antiguedad) || antiguedad < 0) return fail('La antigüedad debe ser 0 o más años');
+
+      var base = R[cat];
+      var r = estimar(cat, region, antiguedad);
+      var usaAfocat = region === 'provincia' && AF.indexOf(cat) !== -1;
+      var tipoSeguro = usaAfocat ? 'SOAT o AFOCAT (CAT)' : 'SOAT';
+
+      big.textContent = fmtPEN(r.estimado);
+      ans.textContent = usaAfocat
+        ? 'Un ' + base.etiqueta.toLowerCase() + ' en provincia: el SOAT ronda ' + fmtPEN(r.estimado) + ' al año, y al ser transporte público regional también podés sacar un CAT de AFOCAT, más barato pero solo válido en tu región.'
+        : 'Un ' + base.etiqueta.toLowerCase() + (region === 'provincia' ? ' en provincia' : ' en Lima/ciudad') + ' con ' + antiguedad + ' año(s): conviene comparar entre Rímac, La Positiva, Pacífico, Mapfre e Interseguro, porque no hay tarifa fija.';
+      rangoEl.textContent = fmtPEN(r.minRegion) + ' – ' + fmtPEN(r.maxRegion);
+      note.textContent = 'Seguro aplicable: ' + tipoSeguro + (usaAfocat ? ' · el CAT solo cubre dentro de tu región.' : ' · cobertura en todo el Perú.');
+      eq.innerHTML = 'Coberturas por ley: muerte <b>' + cobMuerte + '</b> · gastos médicos <b>' + cobMedicos + '</b>';
+
+      // Comparación por tipo de vehículo, con los mismos region/antigüedad
+      var filas = root.querySelectorAll('.sp-crow');
+      for (var i = 0; i < filas.length; i++) {
+        var f = filas[i];
+        var k = f.getAttribute('data-k');
+        var b = R[k];
+        var rk = estimar(k, region, antiguedad);
+        f.className = 'row sp-crow' + (k === cat ? ' on' : '');
+        f.querySelector('[data-role="rango"]').textContent = fmtPEN(rk.minRegion) + ' – ' + fmtPEN(rk.maxRegion);
+        f.querySelector('[data-role="est"]').textContent = fmtPEN(rk.estimado);
+        var escala = ESC * rk.ajuste;
+        var fill = f.querySelector('[data-role="fill"]');
+        fill.style.left = (rk.minRegion / escala) * 100 + '%';
+        fill.style.width = ((rk.maxRegion - rk.minRegion) / escala) * 100 + '%';
+        var span = rk.maxRegion - rk.minRegion;
+        var pos = span > 0 ? ((rk.estimado - rk.minRegion) / span) * 100 : 0;
+        f.querySelector('[data-role="dot"]').style.left = Math.max(0, Math.min(100, pos)) + '%';
+      }
+    }
+
+    ['sp-categoria', 'sp-region', 'sp-antiguedad'].forEach(function (id) {
+      var el = document.getElementById(id);
+      el.addEventListener('input', render);
+      el.addEventListener('change', render);
+    });
+    document.getElementById('sp-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

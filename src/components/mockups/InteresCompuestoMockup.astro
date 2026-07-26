@@ -1,0 +1,388 @@
+---
+/**
+ * Flagship "Interés compuesto" — mockup bespoke.
+ * El script inline replica src/lib/formulas/interes-compuesto.ts:
+ *   i = (1 + (tasa/100 - comision/100)/m)^(m/12) - 1   ·   n = años × 12
+ *   VF = capital·(1+i)^n + aporte·((1+i)^n − 1)/i   (+ extras, − impuesto)
+ * El formulario expone los campos principales (capital, aporte, TNA, plazo,
+ * frecuencia) + inflación opcional; los avanzados quedan en 0, que es
+ * exactamente el camino por defecto de la fórmula.
+ * Diferencial visual: gráfico de barras apiladas hecho con divs (aporte vs
+ * interés, año por año) + tabla de evolución.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { interesCompuesto } from '../../lib/formulas/interes-compuesto';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Opciones y períodos por año: salen del JSON del calc (labels "(12 veces/año)"),
+// no se duplican a mano.
+const freqField = (calc?.fields || []).find((f: any) => f.id === 'frecuenciaCapitalizacion');
+const freqOptions: { value: string; label: string }[] = freqField?.options || [{ value: 'mensual', label: 'Mensual (12 veces/año)' }];
+const PERIODOS: Record<string, number> = {};
+for (const o of freqOptions) {
+  const mm = /(\d+)\s*ve(?:ces|z)\s*\/\s*año/.exec(o.label || '');
+  PERIODOS[o.value] = mm ? Number(mm[1]) : 12;
+}
+
+const D = { capital: 100000, aporte: 50000, tasa: 30, anios: 20, freq: 'mensual', infl: 0 };
+
+const money = (x: number) => '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(Math.round(x));
+
+function simular(capital: number, aporte: number, tasaAnual: number, anios: number, freq: string) {
+  const m = PERIODOS[freq] ?? 12;
+  const r = Math.max(-0.99, tasaAnual / 100);
+  const i = Math.pow(1 + r / m, m / 12) - 1;
+  const n = anios * 12;
+  const factor = Math.pow(1 + i, n);
+  const valorFinal = capital * factor + (i === 0 ? aporte * n : aporte * ((factor - 1) / i));
+  const totalAportado = capital + aporte * n;
+  const serie: { k: number; vf: number; ap: number }[] = [];
+  let prevVf = capital;
+  let cross = 0;
+  const aporteAnual = aporte * 12;
+  for (let k = 0; k <= anios; k++) {
+    const nK = k * 12;
+    const fK = Math.pow(1 + i, nK);
+    const vfK = capital * fK + (i === 0 ? aporte * nK : aporte * ((fK - 1) / i));
+    const apK = capital + aporte * nK;
+    serie.push({ k, vf: vfK, ap: apK });
+    if (k >= 1) {
+      const interesK = vfK - prevVf - aporteAnual;
+      if (cross === 0 && aporteAnual > 0 && interesK > aporteAnual) cross = k;
+    }
+    prevVf = vfK;
+  }
+  return { i, valorFinal, totalAportado, ganancia: valorFinal - totalAportado, serie, cross };
+}
+
+const S0 = simular(D.capital, D.aporte, D.tasa, D.anios, D.freq);
+// Los números del encabezado salen del motor real.
+const R0 = interesCompuesto({
+  capitalInicial: D.capital, aporteMensual: D.aporte, tasaAnual: D.tasa,
+  plazoAnios: D.anios, frecuenciaCapitalizacion: D.freq,
+});
+const max0 = Math.max(...S0.serie.map((p) => p.vf), 1);
+const pctInteres0 = Math.round((R0.gananciaIntereses / R0.valorFinal) * 100);
+const step0 = D.anios <= 12 ? 2 : 5;
+// Filas de la tabla SSR: primeros 10 años + cada 5 + final.
+const filas0 = S0.serie.filter((p) => p.k > 0 && (p.k <= 10 || p.k % 5 === 0 || p.k === D.anios));
+---
+
+<main class="page hcm ic" data-periodos={JSON.stringify(PERIODOS)}>
+  <div class="crumb">Inicio / <a href="/categoria/finanzas">Finanzas</a> / <b>Interés compuesto</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">📈 LA BOLA DE NIEVE</span>
+      <h1>¿Cuánto crece tu plata con interés compuesto?</h1>
+      <p>Poné capital inicial, aporte mensual y tasa: vas a ver año por año cuánto pusiste vos y cuánto puso el interés.</p>
+    </div>
+    <div class="hero-art">
+      <div class="ic-snow">
+        <i style="--d:34px"></i><i style="--d:56px"></i><i style="--d:86px"></i><i style="--d:128px"></i>
+      </div>
+      <div class="hero-stat"><span>El interés representa</span><b id="ic-heropct">{pctInteres0}%</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="ic-form">
+      <h2>Tu proyección</h2>
+      <p class="sub">Aporte mensual constante y tasa nominal anual (TNA).</p>
+      <div class="grid2">
+        <div class="field">
+          <label for="ic-capital">Capital inicial</label>
+          <div class="control"><span>$</span><input id="ic-capital" type="number" min="0" step="1000" value={D.capital} /></div>
+        </div>
+        <div class="field">
+          <label for="ic-aporte">Aporte mensual</label>
+          <div class="control"><span>$</span><input id="ic-aporte" type="number" min="0" step="1000" value={D.aporte} /></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="ic-tasa">Tasa anual (TNA)</label>
+          <div class="control"><input id="ic-tasa" type="number" min="0" step="0.1" value={D.tasa} /><span>%</span></div>
+        </div>
+        <div class="field">
+          <label for="ic-anios">Plazo</label>
+          <div class="control"><input id="ic-anios" type="number" min="1" max="60" step="1" value={D.anios} /><span>años</span></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="ic-freq">Capitalización</label>
+          <div class="control">
+            <select id="ic-freq">
+              {freqOptions.map((o) => (
+                <option value={o.value} selected={o.value === D.freq}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="ic-infl">Inflación anual <small>opcional</small></label>
+          <div class="control"><input id="ic-infl" type="number" min="0" max="300" step="1" placeholder="0" /><span>%</span></div>
+        </div>
+      </div>
+      <button class="cta" type="submit">Proyectar →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Valor final estimado</div>
+        <div class="big" id="ic-big">{money(R0.valorFinal)}</div>
+        <p class="answer" id="ic-answer">De cada $100 que terminás teniendo, ${pctInteres0} son interés y solo ${100 - pctInteres0} salieron de tu bolsillo.</p>
+        <div class="ic-split">
+          <div class="ic-chip ap"><span>Total aportado</span><b id="ic-aportado">{money(R0.totalAportado)}</b></div>
+          <div class="ic-chip in"><span>Ganancia por intereses</span><b id="ic-ganancia">{money(R0.gananciaIntereses)}</b></div>
+        </div>
+      </div>
+      <div class="equation" id="ic-eq">
+        Tasa mensual equivalente <b>{R0.tasaMensual}</b> · {D.anios * 12} meses · VF = C(1+i)<sup>n</sup> + PMT·((1+i)<sup>n</sup>−1)/i
+      </div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Año por año: tu plata vs el interés</h2>
+      <p>Cada barra es el saldo al cierre de ese año.</p>
+    </div>
+
+    <div class="ic-chartcard">
+      <div class="ic-legend">
+        <span><i class="sw ap"></i> Lo que aportaste vos</span>
+        <span><i class="sw in"></i> Interés compuesto</span>
+      </div>
+      <div class="ic-chart" id="ic-chart">
+        {S0.serie.filter((p) => p.k > 0).map((p) => (
+          <div class="ic-col" title={`Año ${p.k}: ${money(p.vf)}`}>
+            <div class="ic-stack" style={`height:${Math.max(2, (p.vf / max0) * 100)}%`}>
+              <div class="ic-seg in" style={`height:${Math.max(0, ((p.vf - p.ap) / p.vf) * 100)}%`}></div>
+              <div class="ic-seg ap" style={`height:${Math.min(100, (p.ap / p.vf) * 100)}%`}></div>
+            </div>
+            <span class="ic-lab">{p.k % step0 === 0 ? p.k : ''}</span>
+          </div>
+        ))}
+      </div>
+      <p class="ic-cross" id="ic-cross">
+        {S0.cross > 0
+          ? `A partir del año ${S0.cross}, lo que ganás en intereses cada año supera lo que aportás.`
+          : 'Con estos números el interés anual todavía no supera a tu aporte anual: probá alargar el plazo o subir la tasa.'}
+      </p>
+    </div>
+
+    <div class="notice">
+      <span>💡</span>
+      <div><b>El tiempo pesa más que el monto.</b>Duplicar el plazo más que duplica el resultado: la parte dorada de las barras crece exponencialmente mientras tu aporte crece en línea recta.</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Evolución del saldo</h2>
+      <p>Valores nominales, sin ajustar por inflación.</p>
+    </div>
+    <div class="tablewrap">
+      <table class="datatable">
+        <thead>
+          <tr><th>Año</th><th>Valor acumulado</th><th>Total aportado</th><th>Interés ganado</th></tr>
+        </thead>
+        <tbody id="ic-tbody">
+          {filas0.map((p) => (
+            <tr><td>{p.k}</td><td>{money(p.vf)}</td><td>{money(p.ap)}</td><td>{money(Math.max(0, p.vf - p.ap))}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="tnote">Proyección con aporte mensual constante. Se muestran los primeros 10 años y luego cada 5.</p>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Tres cosas que cambian el resultado</h2>
+      <p>Antes de creerle al número final.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>🧮</i><h3>TNA no es TEA</h3><p>Una TNA del 25% con capitalización mensual equivale a una TEA de 28,07%. Si tu tasa ya es efectiva anual (acciones, S&P 500), elegí capitalización <b>Anual</b> para no sobrestimar.</p></article>
+      <article class="mini"><i>🔥</i><h3>La tasa real manda</h3><p>Con tasa nominal 80% e inflación 100%, la tasa real es −10%: el saldo sube pero perdés poder de compra. En Argentina proyectá en dólares o UVA.</p></article>
+      <article class="mini"><i>⏳</i><h3>Regla del 72</h3><p>Tu capital se duplica cada <b>72 ÷ tasa anual</b> años: al 10% son 7,2 años; al 30%, 2,4 años. Sirve para comparar instrumentos de memoria.</p></article>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="📈" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />VF = capital × (1+i)^n + aporte × ((1+i)^n − 1) / i, con i = tasa mensual equivalente a la frecuencia elegida. Fuente de tasas de referencia: BCRA.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.ic{--brand:#241b47;--accent:#f4c04f;--soft:#efecf9}
+  .hcm.ic .hero{background:linear-gradient(135deg,#241b47,#4b3a86 60%,#6b5cc4)}
+  .hcm.ic .cta{color:#2a1f52}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+
+  /* Arte del hero: bola de nieve creciendo */
+  .hcm.ic .ic-snow{display:flex;align-items:flex-end;gap:10px;justify-content:center}
+  .hcm.ic .ic-snow i{display:block;width:var(--d);height:var(--d);border-radius:50%;
+    background:radial-gradient(circle at 32% 30%,#fff7e0,var(--accent));
+    box-shadow:0 12px 22px rgba(0,0,0,.25)}
+
+  /* Tarjeta de resultado: dos chips (aporte vs interés) */
+  .hcm.ic .ic-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin:22px 0}
+  .hcm.ic .ic-chip{border-radius:16px;padding:14px;min-width:0}
+  .hcm.ic .ic-chip span{display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+  .hcm.ic .ic-chip b{display:block;font:800 21px Manrope,system-ui,sans-serif;margin-top:5px;overflow-wrap:anywhere}
+  .hcm.ic .ic-chip.ap{background:#ffffff14;border:1px solid #ffffff30;color:#e6e1f7}
+  .hcm.ic .ic-chip.ap b{color:#fff}
+  .hcm.ic .ic-chip.in{background:var(--accent);color:#5a4413}
+  .hcm.ic .ic-chip.in b{color:#2a1f52}
+  .hcm.ic .equation sup{font-size:.7em}
+
+  /* Gráfico de barras apiladas hecho con divs */
+  .hcm.ic .ic-chartcard{background:#fff;border:1px solid var(--line);border-radius:22px;padding:22px}
+  .hcm.ic .ic-legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--muted);font-weight:700;margin-bottom:14px}
+  .hcm.ic .ic-legend .sw{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-1px;margin-right:5px}
+  .hcm.ic .sw.ap,.hcm.ic .ic-seg.ap{background:#6b5cc4}
+  .hcm.ic .sw.in,.hcm.ic .ic-seg.in{background:var(--accent)}
+  .hcm.ic .ic-chart{display:flex;align-items:flex-end;gap:3px;height:250px;
+    border-bottom:1px solid var(--line);padding-bottom:0}
+  .hcm.ic .ic-col{flex:1 1 0;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:4px}
+  .hcm.ic .ic-stack{display:flex;flex-direction:column;justify-content:flex-end;border-radius:4px 4px 0 0;overflow:hidden;min-height:2px}
+  .hcm.ic .ic-seg{width:100%;flex:0 0 auto}
+  .hcm.ic .ic-lab{font-size:10px;color:var(--muted);text-align:center;height:12px;line-height:12px}
+  .hcm.ic .ic-cross{margin:14px 0 0;font-size:14px;line-height:1.5;color:#4b3a86;font-weight:700}
+  @media(max-width:760px){
+    .hcm.ic .ic-chart{height:190px;gap:2px}
+    .hcm.ic .ic-split{grid-template-columns:minmax(0,1fr)}
+    .hcm.ic .ic-lab{font-size:9px}
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.ic');
+    if (!root) return;
+    var PERIODOS = { mensual: 12 };
+    try { PERIODOS = JSON.parse(root.getAttribute('data-periodos') || '{}'); } catch (e) {}
+    var ids = ['ic-capital', 'ic-aporte', 'ic-tasa', 'ic-anios', 'ic-freq', 'ic-infl'];
+    var nf = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+    var money = function (x) { return '$' + nf.format(Math.round(x)); };
+    var el = function (id) { return document.getElementById(id); };
+    var n = function (id) { return Number(el(id).value); };
+
+    function render() {
+      var capital = n('ic-capital') || 0;
+      var aporte = n('ic-aporte') || 0;
+      var tasaAnual = n('ic-tasa');
+      var anios = n('ic-anios');
+      var freq = el('ic-freq').value || 'mensual';
+      var inflRaw = el('ic-infl').value;
+      var inflacion = inflRaw === '' ? 0 : Number(inflRaw) || 0;
+
+      var big = el('ic-big'), ans = el('ic-answer'), eq = el('ic-eq');
+      var chart = el('ic-chart'), tbody = el('ic-tbody');
+      var cross = el('ic-cross'), heropct = el('ic-heropct');
+
+      function fail(msg) {
+        big.textContent = '—';
+        ans.textContent = msg;
+        el('ic-aportado').textContent = '—';
+        el('ic-ganancia').textContent = '—';
+        eq.innerHTML = 'VF = C(1+i)<sup>n</sup> + PMT·((1+i)<sup>n</sup>−1)/i';
+        chart.innerHTML = ''; tbody.innerHTML = ''; cross.textContent = ''; heropct.textContent = '—';
+      }
+      // Mismas guardas y mensajes que interes-compuesto.ts
+      if (capital < 0) return fail('El capital inicial no puede ser negativo');
+      if (capital === 0 && aporte === 0) return fail('Ingresá un capital inicial o un aporte mensual');
+      if (!tasaAnual || tasaAnual <= 0) return fail('Ingresá una tasa anual positiva');
+      if (!anios || anios <= 0) return fail('Ingresá un plazo en años');
+      anios = Math.min(60, Math.round(anios));
+
+      var m = PERIODOS[freq] || 12;
+      var r = Math.max(-0.99, tasaAnual / 100);
+      var i = Math.pow(1 + r / m, m / 12) - 1;
+      var N = anios * 12;
+      var factor = Math.pow(1 + i, N);
+      var valorFinal = capital * factor + (i === 0 ? aporte * N : aporte * ((factor - 1) / i));
+      var totalAportado = capital + aporte * N;
+      var ganancia = valorFinal - totalAportado;
+      var pctInteres = valorFinal > 0 ? Math.round((ganancia / valorFinal) * 100) : 0;
+
+      var serie = [], prevVf = capital, crossYear = 0, aporteAnual = aporte * 12, max = 1;
+      for (var k = 0; k <= anios; k++) {
+        var nK = k * 12;
+        var fK = Math.pow(1 + i, nK);
+        var vfK = capital * fK + (i === 0 ? aporte * nK : aporte * ((fK - 1) / i));
+        var apK = capital + aporte * nK;
+        serie.push({ k: k, vf: vfK, ap: apK });
+        if (vfK > max) max = vfK;
+        if (k >= 1) {
+          var interesK = vfK - prevVf - aporteAnual;
+          if (crossYear === 0 && aporteAnual > 0 && interesK > aporteAnual) crossYear = k;
+        }
+        prevVf = vfK;
+      }
+
+      big.textContent = money(valorFinal);
+      heropct.textContent = pctInteres + '%';
+      ans.textContent = pctInteres >= 50
+        ? 'De cada $100 que terminás teniendo, $' + pctInteres + ' son interés y solo $' + (100 - pctInteres) + ' salieron de tu bolsillo.'
+        : 'El interés representa el ' + pctInteres + '% del valor final — el resto es lo que vos pusiste.';
+      el('ic-aportado').textContent = money(totalAportado);
+      el('ic-ganancia').textContent = money(ganancia);
+
+      var eqHtml = 'Tasa mensual equivalente <b>' + (i * 100).toFixed(2) + '%</b> · ' + N +
+        ' meses · VF = C(1+i)<sup>n</sup> + PMT·((1+i)<sup>n</sup>−1)/i';
+      if (inflacion > 0) {
+        var valorReal = valorFinal / Math.pow(1 + inflacion / 100, anios);
+        var tasaReal = ((1 + r) / (1 + inflacion / 100) - 1) * 100;
+        eqHtml += '<br />En pesos de hoy: <b>' + money(valorReal) + '</b> · tasa real ' +
+          (tasaReal >= 0 ? '+' : '') + tasaReal.toFixed(1) + '%';
+      }
+      eq.innerHTML = eqHtml;
+
+      var step = anios <= 12 ? 2 : 5;
+      var bars = '';
+      for (var b = 1; b <= anios; b++) {
+        var p = serie[b];
+        var hStack = Math.max(2, (p.vf / max) * 100);
+        var hInt = p.vf > 0 ? Math.max(0, ((p.vf - p.ap) / p.vf) * 100) : 0;
+        var hAp = p.vf > 0 ? Math.min(100, (p.ap / p.vf) * 100) : 100;
+        bars += '<div class="ic-col" title="Año ' + p.k + ': ' + money(p.vf) + '">' +
+          '<div class="ic-stack" style="height:' + hStack.toFixed(2) + '%">' +
+          '<div class="ic-seg in" style="height:' + hInt.toFixed(2) + '%"></div>' +
+          '<div class="ic-seg ap" style="height:' + hAp.toFixed(2) + '%"></div>' +
+          '</div><span class="ic-lab">' + (p.k % step === 0 ? p.k : '') + '</span></div>';
+      }
+      chart.innerHTML = bars;
+
+      cross.textContent = crossYear > 0
+        ? 'A partir del año ' + crossYear + ', lo que ganás en intereses cada año supera lo que aportás.'
+        : 'Con estos números el interés anual todavía no supera a tu aporte anual: probá alargar el plazo o subir la tasa.';
+
+      var rows = '';
+      for (var t = 1; t <= anios; t++) {
+        if (!(t <= 10 || t % 5 === 0 || t === anios)) continue;
+        var q = serie[t];
+        rows += '<tr><td>' + q.k + '</td><td>' + money(q.vf) + '</td><td>' + money(q.ap) +
+          '</td><td>' + money(Math.max(0, q.vf - q.ap)) + '</td></tr>';
+      }
+      tbody.innerHTML = rows;
+    }
+
+    ids.forEach(function (id) {
+      var node = el(id);
+      if (node) { node.addEventListener('input', render); node.addEventListener('change', render); }
+    });
+    el('ic-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

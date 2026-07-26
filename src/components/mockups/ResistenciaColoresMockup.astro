@@ -1,0 +1,309 @@
+---
+/**
+ * Flagship "Resistencia por código de colores" — mockup bespoke.
+ * El script inline replica resistencia-codigo-colores-4-5-bandas.ts:
+ *   4 bandas: v = (DIG[b1]*10 + DIG[b2]) * MULT[b3]   ·  tol = TOL[b4] ?? 20
+ *   5 bandas: v = (DIG[b1]*100 + DIG[b2]*10 + DIG[b3]) * MULT[b4]  ·  tol = TOL[b5] ?? 1
+ *   min = v*(1-tol/100)  ·  max = v*(1+tol/100)  ·  fmt: MΩ/kΩ/Ω con 2 decimales
+ * Las tablas DIG/MULT/TOL NO se duplican: se importan del propio .ts y se
+ * serializan al cliente, así el mockup no puede desincronizarse del motor.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { resistenciaCodigoColores45Bandas, DIG, MULT, TOL } from '../../lib/formulas/resistencia-codigo-colores-4-5-bandas';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// DIG/MULT/TOL se importan del motor real: son la misma referencia, no una copia.
+
+// paleta física de cada color de banda (sólo presentación)
+const HEX: Record<string, string> = {
+  negro: '#12151a', marron: '#7b4a1e', rojo: '#d92b2b', naranja: '#f07a1a',
+  amarillo: '#f2ca19', verde: '#1f9d55', azul: '#1f6fd4', violeta: '#8a3fd1',
+  gris: '#9aa3ad', blanco: '#f2f2ee', dorado: '#c9a227', plateado: '#c3c9cf',
+};
+const NOMBRE: Record<string, string> = {
+  negro: 'Negro', marron: 'Marrón', rojo: 'Rojo', naranja: 'Naranja', amarillo: 'Amarillo',
+  verde: 'Verde', azul: 'Azul', violeta: 'Violeta', gris: 'Gris', blanco: 'Blanco',
+  dorado: 'Dorado', plateado: 'Plateado',
+};
+const digitos = Object.keys(DIG);
+const multiplicadores = Object.keys(MULT);
+const tolerancias = Object.keys(TOL);
+const opts4 = digitos;                       // banda 1 y 2: sólo dígitos
+const optsMult = multiplicadores;            // banda multiplicadora
+const optsTol = tolerancias;                 // banda de tolerancia
+
+const fmtMult = (x: number) => x >= 1 ? '×' + new Intl.NumberFormat('es-AR').format(x) : '×' + String(x).replace('.', ',');
+
+// defaults = los del JSON del calc
+const D = { tipo: '4', banda1: 'rojo', banda2: 'rojo', banda3: 'marron', banda4: 'dorado', banda5: 'marron' };
+const r0 = resistenciaCodigoColores45Bandas(D);
+const bandas0 = [D.banda1, D.banda2, D.banda3, D.banda4];
+---
+
+<main class="page hcm rc">
+  <div class="crumb">Inicio / <a href="/categoria/electronica">Electrónica</a> / <b>Código de colores</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">⚡ IEC 60062 · 4 y 5 BANDAS</span>
+      <h1>Leé una resistencia por sus bandas de colores</h1>
+      <p>Elegí los colores y mirá la resistencia dibujarse en vivo: valor nominal, tolerancia y el rango real que puede medir el componente.</p>
+    </div>
+    <div class="hero-art">
+      <div class="rc-scope">
+        <div class="rc-lead"></div>
+        <div class="rc-body" id="rc-art">
+          {bandas0.map((c) => <i style={`--b:${HEX[c]}`}></i>)}
+        </div>
+        <div class="rc-lead"></div>
+      </div>
+      <div class="hero-stat"><span>Lectura en vivo</span><b id="rc-artval">{r0.valor} {r0.tolerancia}</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="rc-form">
+      <h2>Bandas del componente</h2>
+      <p class="sub">Leé de izquierda a derecha, empezando por la banda más pegada al extremo.</p>
+
+      <div class="field">
+        <label for="rc-tipo">Tipo de resistencia</label>
+        <div class="control">
+          <select id="rc-tipo">
+            <option value="4" selected>4 bandas (carbón, ±5% / ±10%)</option>
+            <option value="5">5 bandas (película metálica, precisión)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="rc-b1">Banda 1 · 1er dígito</label>
+          <div class="control">
+            <select id="rc-b1">
+              {opts4.map((c) => <option value={c} selected={c === D.banda1}>{NOMBRE[c]} — {DIG[c]}</option>)}
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="rc-b2">Banda 2 · 2º dígito</label>
+          <div class="control">
+            <select id="rc-b2">
+              {opts4.map((c) => <option value={c} selected={c === D.banda2}>{NOMBRE[c]} — {DIG[c]}</option>)}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="rc-b3"><span id="rc-l3">Banda 3 · multiplicador</span></label>
+          <div class="control">
+            <select id="rc-b3">
+              {optsMult.map((c) => <option value={c} selected={c === D.banda3}>{NOMBRE[c]} — {fmtMult(MULT[c])}</option>)}
+            </select>
+          </div>
+          <small id="rc-h3">En 4 bandas ésta es la potencia de 10.</small>
+        </div>
+        <div class="field">
+          <label for="rc-b4"><span id="rc-l4">Banda 4 · tolerancia</span></label>
+          <div class="control">
+            <select id="rc-b4">
+              {optsTol.map((c) => <option value={c} selected={c === D.banda4}>{NOMBRE[c]} — ±{String(TOL[c]).replace('.', ',')}%</option>)}
+            </select>
+          </div>
+          <small id="rc-h4">Dorado ±5% y plateado ±10% son las más comunes.</small>
+        </div>
+      </div>
+
+      <div class="field" id="rc-f5" hidden>
+        <label for="rc-b5">Banda 5 · tolerancia</label>
+        <div class="control">
+          <select id="rc-b5">
+            {optsTol.map((c) => <option value={c} selected={c === D.banda5}>{NOMBRE[c]} — ±{String(TOL[c]).replace('.', ',')}%</option>)}
+          </select>
+        </div>
+        <small>Sólo en resistencias de 5 bandas (series E96 / E192).</small>
+      </div>
+
+      <button class="cta" type="submit">Decodificar resistencia →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Valor nominal</div>
+        <div class="big" id="rc-big">{r0.valor}</div>
+        <p class="answer" id="rc-answer">{r0.resumen}</p>
+
+        <div class="rc-scope big-scope">
+          <div class="rc-lead"></div>
+          <div class="rc-body" id="rc-draw">
+            {bandas0.map((c) => <i style={`--b:${HEX[c]}`}></i>)}
+          </div>
+          <div class="rc-lead"></div>
+        </div>
+        <div class="rc-legend" id="rc-legend">
+          {bandas0.map((c, k) => <span><i style={`--b:${HEX[c]}`}></i>{NOMBRE[c]}<em>B{k + 1}</em></span>)}
+        </div>
+
+        <div class="result-box">
+          <span>Rango real garantizado</span>
+          <b id="rc-rango">{r0.minimo} — {r0.maximo}</b>
+          <small id="rc-note">Tolerancia {r0.tolerancia} sobre el valor nominal.</small>
+        </div>
+      </div>
+      <div class="equation" id="rc-eq">(2×10 + 2) × 10 = <b>220.00 Ω</b></div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Tabla de referencia IEC 60062</h2>
+      <p>El mismo mapa color → número que usa el motor de esta calculadora.</p>
+    </div>
+    <div class="tablewrap">
+      <table class="datatable rc-table">
+        <thead><tr><th>Color</th><th>Dígito</th><th>Multiplicador</th><th>Tolerancia</th></tr></thead>
+        <tbody>
+          {Object.keys(NOMBRE).map((c) => (
+            <tr>
+              <td><span class="rc-sw" style={`--b:${HEX[c]}`}></span>{NOMBRE[c]}</td>
+              <td>{c in DIG ? DIG[c] : '—'}</td>
+              <td>{c in MULT ? fmtMult(MULT[c]) : '—'}</td>
+              <td>{c in TOL ? '±' + String(TOL[c]).replace('.', ',') + '%' : '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="tnote">Sin banda de tolerancia el componente se asume ±20%: es lo que aplica esta calculadora cuando la banda 4 no corresponde a ningún color de tolerancia.</p>
+
+    <div class="cards">
+      <article class="mini"><i>🔍</i><h3>¿Desde qué lado?</h3><p>La banda de tolerancia (dorado, plateado o marrón) va última y suele estar más separada del grupo.</p></article>
+      <article class="mini"><i>🎯</i><h3>4 vs 5 bandas</h3><p>La de 5 agrega un tercer dígito significativo: series E96 y E192, tolerancias de ±1% o mejores.</p></article>
+      <article class="mini"><i>📐</i><h3>El rango importa</h3><p>Una de 1 kΩ ±5% puede medir entre 950 y 1.050 Ω. En un divisor o un filtro RC, esa diferencia se nota.</p></article>
+    </div>
+
+    <div class="notice">
+      <span>💡</span>
+      <div><b>El dorado nunca es un dígito.</b>Sólo aparece como multiplicador (×0,1) o como tolerancia (±5%). Si lo leés como primer dígito, la resistencia está al revés.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="⚡" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />4 bandas: (díg1×10 + díg2) × multiplicador. 5 bandas: (díg1×100 + díg2×10 + díg3) × multiplicador. Rango = valor × (1 ∓ tolerancia/100). Estándar IEC 60062.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.rc{--brand:#0d1524;--accent:#4cc9f0;--soft:#e7f1f8}
+  .hcm.rc .hero{background:linear-gradient(135deg,#0d1524 0%,#16324f 55%,#0e4a5b 100%)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+
+  .hcm.rc .rc-scope{display:flex;align-items:center;width:100%;max-width:100%;gap:0}
+  .hcm.rc .rc-lead{flex:1 1 0;min-width:10px;height:4px;border-radius:2px;background:linear-gradient(180deg,#e6e8ea,#9aa3ad)}
+  .hcm.rc .rc-body{position:relative;flex:0 0 auto;width:min(220px,58%);height:64px;display:flex;align-items:stretch;justify-content:center;gap:9px;padding:0 14px;border-radius:34px/50%;background:linear-gradient(180deg,#f0dcb4,#d8bd8c 55%,#b99a68);box-shadow:inset 0 -8px 14px rgba(0,0,0,.22),inset 0 6px 10px rgba(255,255,255,.5),0 4px 10px rgba(0,0,0,.25)}
+  .hcm.rc .rc-body i{display:block;width:11px;border-radius:2px;background:var(--b,#333);box-shadow:inset -2px 0 4px rgba(0,0,0,.35)}
+  .hcm.rc .rc-body i:last-child{margin-left:auto}
+  .hcm.rc .big-scope{margin:14px 0 10px}
+  .hcm.rc .big-scope .rc-body{height:78px;width:min(260px,62%)}
+  .hcm.rc .hero-art .rc-body{height:52px}
+
+  .hcm.rc .rc-legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .hcm.rc .rc-legend span{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:4px 9px;border-radius:999px;background:rgba(13,21,36,.06)}
+  .hcm.rc .rc-legend i{width:9px;height:14px;border-radius:2px;background:var(--b);box-shadow:inset -1px 0 3px rgba(0,0,0,.35)}
+  .hcm.rc .rc-legend em{font-style:normal;opacity:.55;font-size:11px}
+  .hcm.rc .rc-sw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:-2px;background:var(--b);border:1px solid rgba(0,0,0,.18)}
+  .hcm.rc .rc-table td:first-child{white-space:nowrap;font-weight:700}
+</style>
+
+<script is:inline define:vars={{ RC: { DIG, MULT, TOL, HEX, NOMBRE } }}>
+  (function () {
+    var root = document.querySelector('.hcm.rc');
+    if (!root) return;
+    var DIG = RC.DIG, MULT = RC.MULT, TOL = RC.TOL, HEX = RC.HEX, NOMBRE = RC.NOMBRE;
+
+    // fmt() idéntico al del módulo real
+    function fmt(ohms) {
+      if (ohms >= 1e6) return (ohms / 1e6).toFixed(2) + ' MΩ';
+      if (ohms >= 1e3) return (ohms / 1e3).toFixed(2) + ' kΩ';
+      return ohms.toFixed(2) + ' Ω';
+    }
+    function val(id) { return document.getElementById(id).value; }
+    function num(x, alt) { return (x === undefined || x === null) ? alt : x; }
+
+    var f5 = document.getElementById('rc-f5');
+    var l3 = document.getElementById('rc-l3'), h3 = document.getElementById('rc-h3');
+    var l4 = document.getElementById('rc-l4'), h4 = document.getElementById('rc-h4');
+
+    function pintar(el, colores) {
+      el.innerHTML = '';
+      colores.forEach(function (c) {
+        var i = document.createElement('i');
+        i.style.setProperty('--b', HEX[c] || '#333');
+        el.appendChild(i);
+      });
+    }
+
+    function render() {
+      var tipo = String(val('rc-tipo'));
+      var b1 = val('rc-b1'), b2 = val('rc-b2'), b3 = val('rc-b3'), b4 = val('rc-b4'), b5 = val('rc-b5');
+      var cinco = tipo === '5';
+
+      f5.hidden = !cinco;
+      l3.textContent = cinco ? 'Banda 3 · 3er dígito' : 'Banda 3 · multiplicador';
+      h3.textContent = cinco ? 'En 5 bandas ésta es el tercer dígito significativo.' : 'En 4 bandas ésta es la potencia de 10.';
+      l4.textContent = cinco ? 'Banda 4 · multiplicador' : 'Banda 4 · tolerancia';
+      h4.textContent = cinco ? 'En 5 bandas la potencia de 10 se corre a la banda 4.' : 'Dorado ±5% y plateado ±10% son las más comunes.';
+
+      var v, tol, eq;
+      if (cinco) {
+        v = (num(DIG[b1], 0) * 100 + num(DIG[b2], 0) * 10 + num(DIG[b3], 0)) * num(MULT[b4], 1);
+        tol = num(TOL[b5], 1);
+        eq = '(' + num(DIG[b1], 0) + '×100 + ' + num(DIG[b2], 0) + '×10 + ' + num(DIG[b3], 0) + ') × ' + num(MULT[b4], 1);
+      } else {
+        v = (num(DIG[b1], 0) * 10 + num(DIG[b2], 0)) * num(MULT[b3], 1);
+        tol = num(TOL[b4], 20);
+        eq = '(' + num(DIG[b1], 0) + '×10 + ' + num(DIG[b2], 0) + ') × ' + num(MULT[b3], 1);
+      }
+      var mn = v * (1 - tol / 100), mx = v * (1 + tol / 100);
+      var tolTexto = tol <= 1 ? 'es de precisión' : tol >= 10 ? 'es amplia, no apta para circuitos sensibles' : 'es estándar';
+      var tolStr = '±' + String(tol).replace('.', ',') + '%';
+
+      var colores = cinco ? [b1, b2, b3, b4, b5] : [b1, b2, b3, b4];
+      pintar(document.getElementById('rc-draw'), colores);
+      pintar(document.getElementById('rc-art'), colores);
+
+      var leg = document.getElementById('rc-legend');
+      leg.innerHTML = '';
+      colores.forEach(function (c, k) {
+        var s = document.createElement('span');
+        s.innerHTML = '<i style="--b:' + (HEX[c] || '#333') + '"></i>' + (NOMBRE[c] || c) + '<em>B' + (k + 1) + '</em>';
+        leg.appendChild(s);
+      });
+
+      document.getElementById('rc-big').textContent = fmt(v);
+      document.getElementById('rc-artval').textContent = fmt(v) + ' ' + tolStr;
+      document.getElementById('rc-answer').textContent =
+        'Resistencia ' + fmt(v) + ' con tolerancia ' + tolStr + '. Rango real: ' + fmt(mn) + ' a ' + fmt(mx) + '. Esa tolerancia ' + tolTexto + '.';
+      document.getElementById('rc-rango').textContent = fmt(mn) + ' — ' + fmt(mx);
+      document.getElementById('rc-note').textContent = 'Tolerancia ' + tolStr + ' sobre el valor nominal.';
+      document.getElementById('rc-eq').innerHTML = eq + ' = <b>' + fmt(v) + '</b> ' + tolStr;
+    }
+
+    ['rc-tipo', 'rc-b1', 'rc-b2', 'rc-b3', 'rc-b4', 'rc-b5'].forEach(function (id) {
+      var el = document.getElementById(id);
+      el.addEventListener('input', render);
+      el.addEventListener('change', render);
+    });
+    document.getElementById('rc-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

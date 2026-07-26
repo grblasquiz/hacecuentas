@@ -1,0 +1,295 @@
+---
+/**
+ * Flagship "Impuesto a las Ganancias sobre el sueldo" — mockup bespoke.
+ * El script inline replica EXACTAMENTE ganancias-sueldo.ts:
+ *   aportes      = min(bruto, BASE_IMPONIBLE_MAXIMA_APORTES) × 0.17
+ *   deducciones  = MNI_MENSUAL_BASE + cónyuge + hijos×hijo + otras (SIRADIG)
+ *   base         = max(0, bruto − aportes − deducciones)
+ *   retención    = escala progresiva mensual (art. 94 LIG) sobre la base
+ *   umbral       = deducciones / 0,83
+ * La escala y las deducciones NO se re-tipean: se importan de
+ * `_ganancias-escala.ts` y `sueldo-ar.ts` y se serializan al script.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import {
+  ESCALA,
+  MNI_MENSUAL_BASE,
+  INCREMENTO_CONYUGE_MENSUAL,
+  INCREMENTO_HIJO_MENSUAL,
+} from '../../lib/formulas/_ganancias-escala';
+import { BASE_IMPONIBLE_MAXIMA_APORTES } from '../../lib/formulas/sueldo-ar';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Infinity no sobrevive a JSON: el último tramo viaja como null y el script lo trata como techo abierto.
+const ESCALA_SER = ESCALA.map((t) => ({
+  hasta: Number.isFinite(t.hasta) ? t.hasta : null,
+  tasa: t.tasa,
+  acumulado: t.acumulado,
+}));
+
+const money = (x: number) => '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(x);
+
+// Etiquetas de los tramos, derivadas de la escala real (nunca escritas a mano).
+const tramos = ESCALA_SER.map((t, i) => {
+  const desde = i === 0 ? 0 : (ESCALA_SER[i - 1].hasta as number);
+  return {
+    label: t.hasta === null ? `Más de ${money(desde)}` : i === 0 ? `Hasta ${money(t.hasta)}` : `${money(desde)} – ${money(t.hasta)}`,
+    tasa: Math.round(t.tasa * 100) + '%',
+    fijo: money(t.acumulado),
+  };
+});
+
+// Cálculo SSR con los valores por defecto (caso documentado en el JSON: soltero, $4.000.000).
+const D = { bruto: 4_000_000, conyuge: 'no', hijos: 0, otras: 0 };
+function calcular(bruto: number, conyuge: boolean, hijos: number, otras: number) {
+  const aportes = Math.min(bruto, BASE_IMPONIBLE_MAXIMA_APORTES) * 0.17;
+  const neto = bruto - aportes;
+  const familia = (conyuge ? INCREMENTO_CONYUGE_MENSUAL : 0) + hijos * INCREMENTO_HIJO_MENSUAL;
+  const deducciones = MNI_MENSUAL_BASE + familia + otras;
+  const base = Math.max(0, neto - deducciones);
+  let anterior = 0;
+  let impuesto = 0;
+  let marginal = 0;
+  if (base > 0) {
+    for (const t of ESCALA_SER) {
+      if (t.hasta === null || base <= t.hasta) {
+        impuesto = t.acumulado + (base - anterior) * t.tasa;
+        marginal = t.tasa;
+        break;
+      }
+      anterior = t.hasta;
+    }
+  }
+  const retencion = Math.round(impuesto);
+  const brutoAnual = bruto * 13;
+  return {
+    aportes: Math.round(aportes),
+    neto: Math.round(neto),
+    deducciones: Math.round(deducciones),
+    base: Math.round(base),
+    retencion,
+    marginal,
+    efectiva: brutoAnual > 0 ? (retencion * 12) / brutoAnual * 100 : 0,
+    enMano: Math.max(0, Math.round(neto) - retencion),
+    umbral: Math.round(deducciones / 0.83),
+  };
+}
+const R0 = calcular(D.bruto, false, 0, 0);
+const pct = (x: number) => new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(x) + '%';
+---
+
+<main class="page hcm gn">
+  <div class="crumb">Inicio / <a href="/categoria/impuestos">Impuestos</a> / <b>Ganancias sobre el sueldo</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">💼 4ª CATEGORÍA · ARCA</span>
+      <h1>¿Cuánto te retienen de Ganancias sobre el sueldo?</h1>
+      <p>El empleador descuenta el impuesto todos los meses. Acá ves la retención, el bolsillo real y en qué tramo de la escala progresiva caés.</p>
+    </div>
+    <div class="hero-art">
+      <div class="doc-preview">
+        <b>Recibo de sueldo</b>
+        <i></i><i></i><i></i><i></i><i></i><i></i>
+      </div>
+      <div class="hero-stat"><span>Mínimo no imponible 2026</span><b>{money(MNI_MENSUAL_BASE)}</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="gn-form">
+      <h2>Tu situación</h2>
+      <p class="sub">Valores ARCA del primer semestre 2026 (Ley 27.743).</p>
+      <div class="field">
+        <label for="gn-bruto">Sueldo bruto mensual</label>
+        <div class="control"><span>$</span><input id="gn-bruto" type="number" min="0" step="10000" value={D.bruto} /></div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="gn-conyuge">Cónyuge a cargo</label>
+          <div class="control">
+            <select id="gn-conyuge">
+              <option value="no" selected>No</option>
+              <option value="si">Sí</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="gn-hijos">Hijos a cargo</label>
+          <div class="control"><input id="gn-hijos" type="number" min="0" max="10" step="1" value={D.hijos} /></div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="gn-otras">Deducciones SIRADIG mensuales <small>alquiler, prepaga, doméstico</small></label>
+        <div class="control"><span>$</span><input id="gn-otras" type="number" min="0" step="1000" value={D.otras} /></div>
+      </div>
+      <button class="cta" type="submit">Calcular retención →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Retención mensual</div>
+        <div class="big" id="gn-big">{money(R0.retencion)} <small>/mes</small></div>
+        <p class="answer" id="gn-answer">Te retienen {money(R0.retencion)} por mes. Tu sueldo en mano se reduce en esa cifra por Ganancias.</p>
+        <div class="result-box">
+          <span>Sueldo de bolsillo</span>
+          <b id="gn-mano">{money(R0.enMano)}</b>
+          <small id="gn-note">Bruto {money(D.bruto)} − aportes {money(R0.aportes)} − Ganancias {money(R0.retencion)}.</small>
+        </div>
+        <div class="rates">
+          <div><span>Alícuota efectiva</span><b id="gn-efec">{pct(R0.efectiva)}</b></div>
+          <div><span>Alícuota marginal</span><b id="gn-marg">{Math.round(R0.marginal * 100)}%</b></div>
+        </div>
+      </div>
+      <div class="equation" id="gn-eq">(neto de aportes − deducciones) → escala art. 94</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>La escala progresiva, tramo por tramo</h2>
+      <p>Marcamos dónde cae tu base imponible mensual.</p>
+    </div>
+    <div class="table" id="gn-table">
+      <div class="row head"><small>Base imponible mensual</small><small>Alícuota</small><small>Fijo acumulado</small></div>
+      {tramos.map((t, i) => (
+        <div class={`row tramo${R0.base > 0 && R0.marginal === ESCALA_SER[i].tasa && (ESCALA_SER[i].hasta === null || R0.base <= (ESCALA_SER[i].hasta as number)) && (i === 0 || R0.base > (ESCALA_SER[i - 1].hasta as number)) ? ' on' : ''}`} data-i={i}>
+          <span>{t.label}</span>
+          <strong class="rate">{t.tasa}</strong>
+          <strong>{t.fijo}</strong>
+        </div>
+      ))}
+    </div>
+    <p class="foot" id="gn-basefoot">Tu base imponible es {money(R0.base)}: el impuesto no se cobra sobre el sueldo entero, sino sólo sobre lo que excede tus deducciones.</p>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Qué baja la retención</h2>
+      <p>Todo lo que descontás antes de la escala.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>🧾</i><h3>Aportes 17%</h3><p>Jubilación 11% + obra social 3% + PAMI 3%, topeados en la base máxima de {money(BASE_IMPONIBLE_MAXIMA_APORTES)}.</p></article>
+      <article class="mini"><i>👨‍👩‍👧</i><h3>Familia a cargo</h3><p>Cónyuge suma {money(INCREMENTO_CONYUGE_MENSUAL)} por mes y cada hijo {money(INCREMENTO_HIJO_MENSUAL)}.</p></article>
+      <article class="mini"><i>📄</i><h3>SIRADIG</h3><p>Alquiler (40% con tope), prepaga, servicio doméstico y donaciones: si no los cargás, no existen para el empleador.</p></article>
+    </div>
+    <div class="notice">
+      <span>⚠️</span>
+      <div><b>Tu umbral, no el del vecino.</b>Con los datos cargados empezás a pagar Ganancias recién desde <span id="gn-umbral">{money(R0.umbral)}</span> de bruto mensual. Cada deducción informada corre ese piso hacia arriba.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="💼" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Bruto − aportes (17%) − deducciones (MNI, familia, SIRADIG) = base imponible; escala art. 94 LIG, tabla ene–jun 2026 de ARCA.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.gn{--brand:#1d2444;--accent:#f2c14e;--soft:#eef0f7}
+  .hcm.gn .hero{background:linear-gradient(135deg,#1d2444,#414a7d)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+  .hcm.gn .doc-preview{color:#8a90ab}
+  .hcm.gn .doc-preview b{font:800 17px Manrope,system-ui,sans-serif;color:#1d2444;display:block}
+  .hcm.gn .rates{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-top:6px}
+  .hcm.gn .rates span{display:block;color:#aab0cd;font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:800}
+  .hcm.gn .rates b{font:800 24px Manrope,system-ui,sans-serif;color:#fff}
+  .hcm.gn .row.head small{text-transform:uppercase;letter-spacing:.06em;font-size:11px;font-weight:800}
+  .hcm.gn .row.head small:not(:first-child),.hcm.gn .row .rate{text-align:right}
+  .hcm.gn .row.tramo span{color:#4b5163}
+  .hcm.gn .row.on{background:var(--soft);border-radius:12px;box-shadow:inset 3px 0 0 var(--accent)}
+  .hcm.gn .row.on span,.hcm.gn .row.on strong{color:var(--brand);font-weight:800}
+  .hcm.gn .row span,.hcm.gn .row strong{min-width:0;overflow-wrap:anywhere}
+  @media(max-width:760px){
+    .hcm.gn #gn-table{padding:16px}
+    .hcm.gn .row{grid-template-columns:minmax(0,1.25fr) minmax(0,.5fr) minmax(0,.75fr);font-size:13px;gap:8px}
+    .hcm.gn .rates b{font-size:21px}
+  }
+  .hcm.gn .foot{color:#6b7080;font-size:14px;margin:14px 2px 0;line-height:1.5}
+</style>
+
+<script is:inline define:vars={{ ESCALA_JS: ESCALA_SER, MNI: MNI_MENSUAL_BASE, CONY: INCREMENTO_CONYUGE_MENSUAL, HIJO: INCREMENTO_HIJO_MENSUAL, TOPE: BASE_IMPONIBLE_MAXIMA_APORTES }}>
+  (function () {
+    var root = document.querySelector('.hcm.gn');
+    if (!root) return;
+    var money = function (x) { return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(x); };
+    var pct = function (x) { return new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(x) + '%'; };
+    var el = function (id) { return document.getElementById(id); };
+    var rows = root.querySelectorAll('#gn-table .row.tramo');
+
+    function render() {
+      var bruto = Number(el('gn-bruto').value);
+      var conyuge = el('gn-conyuge').value === 'si';
+      var hijos = Math.max(0, Math.min(10, Number(el('gn-hijos').value) || 0));
+      var otras = Math.max(0, Number(el('gn-otras').value) || 0);
+      var big = el('gn-big'), ans = el('gn-answer'), mano = el('gn-mano'), note = el('gn-note');
+      var eq = el('gn-eq'), efec = el('gn-efec'), marg = el('gn-marg');
+      var foot = el('gn-basefoot'), umb = el('gn-umbral');
+
+      // Misma guarda que ganancias-sueldo.ts
+      if (!bruto || bruto <= 0) {
+        big.innerHTML = '—';
+        ans.textContent = 'Ingresá un sueldo bruto mensual válido';
+        mano.textContent = '—'; note.textContent = '';
+        efec.textContent = '—'; marg.textContent = '—';
+        eq.innerHTML = '(neto de aportes − deducciones) → escala art. 94';
+        for (var k = 0; k < rows.length; k++) rows[k].classList.remove('on');
+        return;
+      }
+
+      var aportes = Math.min(bruto, TOPE) * 0.17;
+      var neto = bruto - aportes;
+      var familia = (conyuge ? CONY : 0) + hijos * HIJO;
+      var deducciones = MNI + familia + otras;
+      var base = Math.max(0, neto - deducciones);
+
+      var impuesto = 0, marginal = 0, idx = -1, anterior = 0;
+      if (base > 0) {
+        for (var i = 0; i < ESCALA_JS.length; i++) {
+          var t = ESCALA_JS[i];
+          if (t.hasta === null || base <= t.hasta) {
+            impuesto = t.acumulado + (base - anterior) * t.tasa;
+            marginal = t.tasa; idx = i;
+            break;
+          }
+          anterior = t.hasta;
+        }
+      }
+      var retencion = Math.round(impuesto);
+      var brutoAnual = bruto * 13;
+      var efectiva = brutoAnual > 0 ? (retencion * 12) / brutoAnual * 100 : 0;
+      var enMano = Math.max(0, Math.round(neto) - retencion);
+      var umbral = Math.round(deducciones / 0.83);
+
+      big.innerHTML = money(retencion) + ' <small>/mes</small>';
+      ans.textContent = retencion > 0
+        ? 'Te retienen aproximadamente ' + money(retencion) + ' por mes. Tu sueldo en mano se reduce en esa cifra por Ganancias.'
+        : 'Tu sueldo no supera el mínimo no imponible (~' + money(umbral) + '/mes en tu caso) — no pagás Ganancias.';
+      mano.textContent = money(enMano);
+      note.textContent = 'Bruto ' + money(bruto) + ' − aportes ' + money(Math.round(aportes)) + ' − Ganancias ' + money(retencion) + '.';
+      efec.textContent = retencion > 0 ? pct(efectiva) : '0,00%';
+      marg.textContent = retencion > 0 ? Math.round(marginal * 100) + '%' : '—';
+      eq.innerHTML = '(' + money(Math.round(neto)) + ' − ' + money(Math.round(deducciones)) + ') = base ' + money(Math.round(base)) + ' → <b>' + money(retencion) + '/mes</b>';
+      foot.textContent = base > 0
+        ? 'Tu base imponible es ' + money(Math.round(base)) + ': el impuesto no se cobra sobre el sueldo entero, sino sólo sobre lo que excede tus deducciones.'
+        : 'Tu base imponible es $0: las deducciones (' + money(Math.round(deducciones)) + '/mes) se comen todo el neto de aportes, así que ningún tramo de la escala te toca.';
+      if (umb) umb.textContent = money(umbral);
+
+      for (var j = 0; j < rows.length; j++) rows[j].classList.toggle('on', j === idx);
+    }
+
+    ['gn-bruto', 'gn-conyuge', 'gn-hijos', 'gn-otras'].forEach(function (id) {
+      var node = el(id);
+      node.addEventListener('input', render);
+      node.addEventListener('change', render);
+    });
+    el('gn-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

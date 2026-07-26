@@ -1,0 +1,319 @@
+---
+/**
+ * Flagship "Actualización de alquiler por ICL" — mockup bespoke.
+ * El script inline replica alquiler-icl.ts:
+ *   coeficiente = ICL(fecha ajuste) / ICL(fecha inicio)
+ *   nuevo = round(valor × coeficiente) · aumento = nuevo − round(valor)
+ *   porcentaje = (coeficiente − 1) × 100
+ * Mismas guardas y mismos mensajes de error (locale es) que la fórmula real,
+ * incluido el aviso de período largo (>= 25 meses → doble conteo de inflación).
+ * La serie ICL se serializa desde el módulo real `_bcra-icl.ts`: como las fechas
+ * son diarias y contiguas desde ICL_FECHAS[0], sólo mandamos los valores y la
+ * fecha base; el índice del array = días transcurridos desde esa base.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { ICL_FECHAS, ICL_VALORES, ICL_LAST_UPDATED } from '../../lib/formulas/_bcra-icl';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const ICL_BASE = ICL_FECHAS[0];
+const SERIE = ICL_VALORES.slice();
+const ICL_HOY = SERIE[SERIE.length - 1];
+
+const DAY = 86400000;
+const idxOf = (iso: string) =>
+  Math.round((Date.parse(iso + 'T00:00:00Z') - Date.parse(ICL_BASE + 'T00:00:00Z')) / DAY);
+const valorEn = (iso: string) => SERIE[Math.min(Math.max(idxOf(iso), 0), SERIE.length - 1)];
+
+const money = (x: number) => '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(x);
+const dec = (x: number, d = 2) =>
+  x.toLocaleString('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtFecha = (iso: string) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso); return m ? `${m[3]}/${m[2]}/${m[1]}` : iso; };
+
+// Últimos 6 meses del índice (día 1 de cada mes), calculados sobre la serie real.
+const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const ultimo = new Date(ICL_LAST_UPDATED + 'T00:00:00Z');
+const linea: { label: string; valor: number; var: number | null }[] = [];
+for (let k = 5; k >= 0; k--) {
+  const d = new Date(Date.UTC(ultimo.getUTCFullYear(), ultimo.getUTCMonth() - k, 1));
+  const iso = d.toISOString().slice(0, 10);
+  const prevIso = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - 1, 1)).toISOString().slice(0, 10);
+  const v = valorEn(iso);
+  const p = valorEn(prevIso);
+  linea.push({ label: `${MESES[d.getUTCMonth()].slice(0, 3)} ${String(d.getUTCFullYear()).slice(2)}`, valor: v, var: p ? (v / p - 1) * 100 : null });
+}
+
+// Defaults del primer paint: ajuste anual jul-2025 → jul-2026 sobre $500.000.
+const D = { valor: 500000, di: '1', mi: '7', ai: '2025', da: '1', ma: '7', aa: '2026' };
+const iso0i = `${D.ai}-${String(D.mi).padStart(2, '0')}-0${D.di}`;
+const iso0a = `${D.aa}-${String(D.ma).padStart(2, '0')}-0${D.da}`;
+const icl0i = valorEn(iso0i);
+const icl0a = valorEn(iso0a);
+const coef0 = icl0a / icl0i;
+const nuevo0 = Math.round(D.valor * coef0);
+const inc0 = nuevo0 - D.valor;
+
+const dias = Array.from({ length: 31 }, (_, i) => String(i + 1));
+const mesesOpt = MESES.map((m, i) => ({ v: String(i + 1), l: m[0].toUpperCase() + m.slice(1) }));
+const anios = ['2026', '2025', '2024', '2023', '2022', '2021', '2020'];
+---
+
+<main class="page hcm aq">
+  <div class="crumb">Inicio / <a href="/categoria/finanzas">Finanzas</a> / <b>Actualización de alquiler por ICL</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🔑 AJUSTE DE ALQUILER · ICL BCRA</span>
+      <h1>¿Cuánto vas a pagar cuando te toque el ajuste?</h1>
+      <p>Poné lo que pagás hoy y las dos fechas de tu contrato. Buscamos el ICL oficial del BCRA de cada día y te mostramos el alquiler nuevo, cuánto sube en pesos y en porcentaje.</p>
+    </div>
+    <div class="hero-art">
+      <div class="doc-preview">
+        <div class="doc-key">🔑</div>
+        <b>CONTRATO</b>
+        <i></i><i></i><i></i><i></i><i></i>
+        <div class="doc-stamp">AJUSTE ICL</div>
+      </div>
+      <div class="hero-stat"><span>ICL al {fmtFecha(ICL_LAST_UPDATED)}</span><b>{dec(ICL_HOY, 2)}</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="aq-form">
+      <h2>Tu ajuste, paso a paso</h2>
+      <p class="sub">Tres datos: el alquiler de hoy, desde cuándo lo pagás y para qué fecha se ajusta.</p>
+
+      <div class="field">
+        <label for="aq-valor">¿Cuánto pagás de alquiler hoy?</label>
+        <div class="control"><span>$</span><input id="aq-valor" type="number" min="0" step="1000" value={D.valor} /></div>
+        <small class="hint">Es el monto que salió de tu último ajuste, no el de la firma original.</small>
+      </div>
+
+      <fieldset class="datebox">
+        <legend>🗓️ Desde cuándo pagás ese monto</legend>
+        <div class="grid3">
+          <div class="field"><label for="aq-di">Día</label><div class="control"><select id="aq-di">{dias.map(d => <option value={d} selected={d === D.di}>{d}</option>)}</select></div></div>
+          <div class="field"><label for="aq-mi">Mes</label><div class="control"><select id="aq-mi">{mesesOpt.map(m => <option value={m.v} selected={m.v === D.mi}>{m.l}</option>)}</select></div></div>
+          <div class="field"><label for="aq-ai">Año</label><div class="control"><select id="aq-ai">{anios.map(a => <option value={a} selected={a === D.ai}>{a}</option>)}</select></div></div>
+        </div>
+      </fieldset>
+
+      <fieldset class="datebox">
+        <legend>📅 Fecha del nuevo ajuste</legend>
+        <div class="grid3">
+          <div class="field"><label for="aq-da">Día</label><div class="control"><select id="aq-da">{dias.map(d => <option value={d} selected={d === D.da}>{d}</option>)}</select></div></div>
+          <div class="field"><label for="aq-ma">Mes</label><div class="control"><select id="aq-ma">{mesesOpt.map(m => <option value={m.v} selected={m.v === D.ma}>{m.l}</option>)}</select></div></div>
+          <div class="field"><label for="aq-aa">Año</label><div class="control"><select id="aq-aa">{anios.map(a => <option value={a} selected={a === D.aa}>{a}</option>)}</select></div></div>
+        </div>
+      </fieldset>
+
+      <details class="adv">
+        <summary>Ya tengo el coeficiente ICL (avanzado)</summary>
+        <div class="field">
+          <label for="aq-coef">Coeficiente ICL</label>
+          <div class="control"><input id="aq-coef" type="number" min="0" step="0.0001" placeholder="Ej: 1.3389" /></div>
+          <small class="hint">Si lo cargás, pisa el cálculo por fechas.</small>
+        </div>
+      </details>
+
+      <button class="cta" type="submit">Calcular el alquiler nuevo →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Pasás a pagar</div>
+        <div class="big" id="aq-big">{money(nuevo0)}<small> /mes</small></div>
+        <div class="deltas">
+          <div class="delta"><span>Aumenta</span><b id="aq-inc">{money(inc0)}</b></div>
+          <div class="delta"><span>Suba</span><b id="aq-pct">{dec((coef0 - 1) * 100, 2)} %</b></div>
+        </div>
+        <p class="answer" id="aq-answer">Tu alquiler pasa de {money(D.valor)} a {money(nuevo0)} entre el {fmtFecha(iso0i)} y el {fmtFecha(iso0a)}.</p>
+
+        <div class="strip" id="aq-strip">
+          <div class="pin"><span>{fmtFecha(iso0i)}</span><b>ICL {dec(icl0i, 2)}</b></div>
+          <div class="arrow">×{dec(coef0, 4)}</div>
+          <div class="pin end"><span>{fmtFecha(iso0a)}</span><b>ICL {dec(icl0a, 2)}</b></div>
+        </div>
+      </div>
+      <div class="equation" id="aq-eq">{money(D.valor)} × ({dec(icl0a, 4)} ÷ {dec(icl0i, 4)}) = <b>{money(nuevo0)}</b></div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>El índice, mes a mes</h2>
+      <p>Valores del ICL al 1º de cada mes (BCRA, base 30/6/2020 = 1).</p>
+    </div>
+    <div class="timeline six">
+      {linea.map(p => (
+        <div class="step">
+          <span>{p.label}</span>
+          <b>{dec(p.valor, 2)}</b>
+          <em>{p.var === null ? '—' : (p.var >= 0 ? '+' : '') + dec(p.var, 1) + '%'}</em>
+        </div>
+      ))}
+    </div>
+    <div class="notice">
+      <span>🔑</span>
+      <div><b>Usá la fecha de tu último ajuste, no la de la firma.</b>El ICL se re-aplica en cada ajuste (cada 6 o 12 meses). Si el alquiler que pagás hoy ya venía ajustado y lo anclás a la firma original, contás la misma inflación dos veces y el número se dispara.</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Antes de firmar el ajuste</h2>
+      <p>Tres cosas que conviene tener claras.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>⚖️</i><h3>Qué ley te rige</h3><p>Contratos de julio 2020 a octubre 2023 (Ley 27.551) ajustan por ICL una vez al año. Después del DNU 70/2023 el índice y la frecuencia se pactan libremente.</p></article>
+      <article class="mini"><i>📊</i><h3>Qué mide el ICL</h3><p>Mitad inflación (IPC del INDEC) y mitad salarios (RIPTE). Por eso suele ajustar más suave que el IPC puro cuando los sueldos van atrás.</p></article>
+      <article class="mini"><i>🧾</i><h3>Qué no incluye</h3><p>Expensas, ABL y servicios van aparte y se actualizan por su cuenta: el ICL sólo ajusta el alquiler.</p></article>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🏠" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Nuevo alquiler = alquiler actual × (ICL del día del ajuste ÷ ICL del día de inicio). Serie diaria del BCRA, último dato: {fmtFecha(ICL_LAST_UPDATED)} = {dec(ICL_HOY, 2)}.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.aq{--brand:#5d3227;--accent:#f4c48a;--soft:#f7ece2}
+  .hcm.aq .hero{background:linear-gradient(135deg,#5d3227,#96543c 62%,#b8734d)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+  .hcm.aq .doc-preview{position:relative;transform:rotate(-3deg);color:#a5897a;max-width:100%}
+  .hcm.aq .doc-preview b{font:800 15px Manrope,system-ui,sans-serif;letter-spacing:.16em;color:#5d3227}
+  .hcm.aq .doc-preview i{background:#ecdfd5}
+  .hcm.aq .doc-key{position:absolute;top:-20px;left:-20px;width:52px;height:52px;border-radius:50%;background:var(--accent);display:grid;place-items:center;font-size:25px;box-shadow:0 8px 18px rgba(0,0,0,.22)}
+  .hcm.aq .doc-stamp{position:absolute;right:14px;bottom:18px;transform:rotate(-9deg);border:2px solid #b8734d;color:#b8734d;border-radius:7px;padding:4px 9px;font:800 11px Manrope,system-ui,sans-serif;letter-spacing:.1em;opacity:.85}
+  .hcm.aq .hint{display:block;color:var(--muted);font-size:13px;margin-top:7px;line-height:1.4}
+  .hcm.aq .datebox{border:1px solid var(--line);border-radius:16px;padding:6px 15px 13px;margin:18px 0 0;min-width:0}
+  .hcm.aq .datebox legend{font-weight:800;font-size:14px;color:var(--brand);padding:0 7px}
+  .hcm.aq .grid3{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr) minmax(0,1fr);gap:10px}
+  .hcm.aq .grid3 .field{margin:9px 0 0}
+  .hcm.aq .grid3 label{font-size:13px;font-weight:600;color:var(--muted)}
+  .hcm.aq .adv{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+  .hcm.aq .adv summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--brand)}
+  .hcm.aq .big{font-size:56px}
+  .hcm.aq .big small{font-size:22px;color:#e6cdb9}
+  .hcm.aq .deltas{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin:14px 0 16px}
+  .hcm.aq .delta{background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:12px 14px}
+  .hcm.aq .delta span{display:block;font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:#e3c6b3;font-weight:800}
+  .hcm.aq .delta b{display:block;font:800 23px Manrope,system-ui,sans-serif;color:#fff;margin-top:4px}
+  .hcm.aq .strip{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:9px;background:#fff;color:var(--ink);border-radius:16px;padding:14px;margin-top:18px}
+  .hcm.aq .pin span{display:block;font-size:11px;color:var(--muted);font-weight:700}
+  .hcm.aq .pin b{display:block;font:800 17px Manrope,system-ui,sans-serif;color:var(--brand);margin-top:3px}
+  .hcm.aq .pin.end{text-align:right}
+  .hcm.aq .arrow{background:var(--soft);border-radius:20px;padding:6px 11px;font:800 13px Manrope,system-ui,sans-serif;color:#96543c;white-space:nowrap}
+  .hcm.aq .timeline.six{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .hcm.aq .step em{color:#96543c}
+  @media(max-width:900px){.hcm.aq .timeline.six{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media(max-width:560px){.hcm.aq .timeline.six{grid-template-columns:repeat(2,minmax(0,1fr))}.hcm.aq .big{font-size:44px}.hcm.aq .grid3{grid-template-columns:minmax(0,1fr)}.hcm.aq .strip{grid-template-columns:minmax(0,1fr);text-align:left}.hcm.aq .pin.end{text-align:left}.hcm.aq .arrow{justify-self:start}}
+</style>
+
+<script is:inline define:vars={{ SERIE, ICL_BASE, ICL_LAST_UPDATED }}>
+  (function () {
+    var root = document.querySelector('.hcm.aq');
+    if (!root) return;
+    var DAY = 86400000;
+    var BASE = Date.parse(ICL_BASE + 'T00:00:00Z');
+    var LAST_I = SERIE.length - 1;
+    var g = function (id) { return document.getElementById(id); };
+    var money = function (x) { return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(x); };
+    var dec = function (x, d) { return x.toLocaleString('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d }); };
+    var fmt = function (iso) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso); return m ? m[3] + '/' + m[2] + '/' + m[1] : iso; };
+    var isoAt = function (i) { return new Date(BASE + i * DAY).toISOString().slice(0, 10); };
+
+    // Mismo lookup que _bcra-icl / alquiler-icl.ts: fechas diarias contiguas,
+    // fuera de rango por abajo = error, por arriba = último dato publicado.
+    function lookupICL(iso) {
+      var i = Math.round((Date.parse(iso + 'T00:00:00Z') - BASE) / DAY);
+      if (i < 0) throw new Error('No hay datos de ICL antes del ' + ICL_BASE + ' (el índice arranca el 01/07/2020)');
+      if (i > LAST_I) return { fecha: ICL_LAST_UPDATED, valor: SERIE[LAST_I] };
+      return { fecha: isoAt(i), valor: SERIE[i] };
+    }
+    // buildIso de la fórmula: clampea el día al último del mes (31/02 → 28/02).
+    function buildIso(d, m, y) {
+      y = parseInt(y, 10); m = parseInt(m, 10);
+      if (!isFinite(y) || !isFinite(m) || y < 2000 || m < 1 || m > 12) return '';
+      d = parseInt(d, 10); if (!isFinite(d) || d < 1) d = 1;
+      var dim = new Date(y, m, 0).getDate(); if (d > dim) d = dim;
+      return y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    }
+
+    var big = g('aq-big'), inc = g('aq-inc'), pct = g('aq-pct'),
+        ans = g('aq-answer'), strip = g('aq-strip'), eq = g('aq-eq');
+
+    function fail(msg) {
+      big.innerHTML = '—';
+      inc.textContent = '—'; pct.textContent = '—';
+      ans.textContent = msg;
+      strip.style.display = 'none';
+      eq.innerHTML = 'alquiler actual × (ICL del ajuste ÷ ICL del inicio)';
+    }
+
+    function render() {
+      var valor = Number(g('aq-valor').value);
+      if (!valor || valor <= 0) return fail('Ingresá el valor actual del alquiler');
+
+      var fi = buildIso(g('aq-di').value, g('aq-mi').value, g('aq-ai').value);
+      var fa = buildIso(g('aq-da').value, g('aq-ma').value, g('aq-aa').value);
+      var raw = String(g('aq-coef').value || '').trim();
+      var cm = Number(raw);
+      var manual = raw !== '' && isFinite(cm) && cm > 0;
+
+      var coef, iclI = 0, iclA = 0, fiU = '', faU = '';
+      if (manual) {
+        coef = cm;
+        if (coef < 0.5 || coef > 50) return fail('El coeficiente ICL se ve fuera de rango. Debería estar entre 1 y 5 (ratio ICL_actualización / ICL_inicio). No ingreses una tasa mensual ni el valor bruto del ICL.');
+      } else if (fi && fa) {
+        if (fi > fa) return fail('La fecha de actualización debe ser posterior a la de inicio del contrato');
+        var a, b;
+        try { a = lookupICL(fi); b = lookupICL(fa); } catch (e) { return fail(e.message); }
+        iclI = a.valor; iclA = b.valor; fiU = a.fecha; faU = b.fecha;
+        coef = b.valor / a.valor;
+      } else {
+        return fail('Ingresá las dos fechas (firma y actualización) o, en opciones avanzadas, el coeficiente ICL.');
+      }
+
+      var vR = Math.round(valor);
+      var nuevo = Math.round(valor * coef);
+      var aumento = nuevo - vR;
+      var porc = (coef - 1) * 100;
+
+      big.innerHTML = money(nuevo) + '<small> /mes</small>';
+      inc.textContent = money(aumento);
+      pct.textContent = dec(porc, 2) + ' %';
+
+      if (manual) {
+        strip.style.display = 'none';
+        ans.textContent = 'Con el coeficiente ' + dec(coef, 4) + ' que cargaste, tu alquiler pasa de ' + money(vR) + ' a ' + money(nuevo) + '.';
+        eq.innerHTML = money(vR) + ' × ' + dec(coef, 4) + ' = <b>' + money(nuevo) + '</b>';
+      } else {
+        strip.style.display = '';
+        strip.innerHTML =
+          '<div class="pin"><span>' + fmt(fiU) + '</span><b>ICL ' + dec(iclI, 2) + '</b></div>' +
+          '<div class="arrow">×' + dec(coef, 4) + '</div>' +
+          '<div class="pin end"><span>' + fmt(faU) + '</span><b>ICL ' + dec(iclA, 2) + '</b></div>';
+        var texto = 'Tu alquiler pasa de ' + money(vR) + ' a ' + money(nuevo) + ' entre el ' + fmt(fiU) + ' y el ' + fmt(faU) + '.';
+        // Mismo guard de la fórmula: >= 25 meses = probable doble conteo.
+        var pi = fi.split('-'), pa = fa.split('-');
+        var span = (Number(pa[0]) - Number(pi[0])) * 12 + (Number(pa[1]) - Number(pi[1]));
+        if (span >= 25) texto += ' ⚠️ Ojo: el período supera los 2 años. El ICL se re-aplica en cada ajuste, no de una sola vez: como inicio poné la fecha de tu último ajuste, no la de la firma.';
+        ans.textContent = texto;
+        eq.innerHTML = money(vR) + ' × (' + dec(iclA, 4) + ' ÷ ' + dec(iclI, 4) + ') = <b>' + money(nuevo) + '</b>';
+      }
+    }
+
+    ['aq-valor','aq-di','aq-mi','aq-ai','aq-da','aq-ma','aq-aa','aq-coef'].forEach(function (id) {
+      var el = g(id); if (el) { el.addEventListener('input', render); el.addEventListener('change', render); }
+    });
+    g('aq-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

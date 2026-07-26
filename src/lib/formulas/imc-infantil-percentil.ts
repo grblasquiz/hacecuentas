@@ -3,7 +3,7 @@ export interface Inputs { pesoNinoIMC: number; tallaNinoIMC: number; edadNinoIMC
 export interface Outputs { imc: string; percentilIMC: string; clasificacion: string; recomendacion: string; _chart?: any; _insight?: any; }
 
 // P5, P50, P85, P97 de IMC por edad (simplificado, varones)
-const imcVaron: Record<number, number[]> = {
+export const imcVaron: Record<number, number[]> = {
   2: [14.8, 16.4, 18.0, 19.4], 3: [14.3, 15.7, 17.2, 18.5],
   4: [13.9, 15.3, 16.9, 18.2], 5: [13.8, 15.2, 16.9, 18.3],
   6: [13.7, 15.3, 17.1, 18.8], 7: [13.7, 15.5, 17.5, 19.6],
@@ -12,7 +12,7 @@ const imcVaron: Record<number, number[]> = {
   14: [16.0, 19.0, 22.6, 26.2], 16: [17.0, 20.2, 24.0, 27.5],
   18: [17.8, 21.1, 25.0, 28.5],
 };
-const imcMujer: Record<number, number[]> = {
+export const imcMujer: Record<number, number[]> = {
   2: [14.4, 16.0, 17.7, 19.1], 3: [13.9, 15.4, 17.1, 18.5],
   4: [13.6, 15.1, 16.9, 18.4], 5: [13.4, 15.0, 17.0, 18.7],
   6: [13.3, 15.1, 17.2, 19.2], 7: [13.4, 15.4, 17.7, 20.0],

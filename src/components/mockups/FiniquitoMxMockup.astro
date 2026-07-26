@@ -1,0 +1,323 @@
+---
+/**
+ * Flagship "Finiquito y liquidación México" — mockup bespoke.
+ * El script inline replica EXACTAMENTE finiquito-liquidacion-mexico.ts:
+ *   finiquitoPartes = sd*diasMes + sd*diasVac + primaVac% + aguinaldo prop (base 365)
+ *   despido injustificado: + sd*90 + sd*20*años + 12*años*min(sd, 2×SMG)
+ *   renuncia con 15+ años: + prima de antigüedad
+ * El tope de la prima (2 salarios mínimos generales) se serializa desde
+ * src/lib/data/mexico-2026.ts, no se duplica a mano.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { MEXICO_2026 } from '../../lib/data/mexico-2026';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const SMG = MEXICO_2026.salarioMinimo.generalDiario; // $/día, CONASAMI 2026
+const TOPE_PRIMA = SMG * 2;
+
+// LFT 2023 — días de vacaciones por antigüedad (idéntica al .ts)
+function diasVacacionesLFT(anios: number): number {
+  if (anios < 1) return 0;
+  if (anios < 2) return 12;
+  if (anios < 3) return 14;
+  if (anios < 4) return 16;
+  if (anios < 5) return 18;
+  if (anios < 10) return 20;
+  if (anios < 15) return 22;
+  if (anios < 20) return 24;
+  return 26;
+}
+
+const D = { sd: 1000, anios: 5, tipo: 'despido-injustificado', aguinaldo: 15, diasMes: 10, primaVacPct: 25 };
+
+const diasVac0 = diasVacacionesLFT(D.anios);
+const sueldoPend0 = D.sd * D.diasMes;
+const vac0 = D.sd * diasVac0;
+const primaVac0 = vac0 * (D.primaVacPct / 100);
+const aguinaldo0 = (D.sd * D.aguinaldo * Math.min(365, D.diasMes + 30)) / 365;
+const finiquito0 = sueldoPend0 + vac0 + primaVac0 + aguinaldo0;
+const tresMeses0 = D.sd * 90;
+const veinteDias0 = D.sd * 20 * D.anios;
+const prima0 = 12 * D.anios * Math.min(D.sd, TOPE_PRIMA);
+const total0 = finiquito0 + tresMeses0 + veinteDias0 + prima0;
+
+const m0 = (x: number) => '$' + new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 }).format(x);
+const m2 = (x: number) => '$' + new Intl.NumberFormat('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(x);
+---
+
+<main class="page hcm fq" data-tope={String(TOPE_PRIMA)}>
+  <div class="crumb">Inicio / <a href="/mx">México</a> / <b>Finiquito y liquidación</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">📋 LEY FEDERAL DEL TRABAJO</span>
+      <h1>¿Te toca finiquito o liquidación?</h1>
+      <p>No es lo mismo renunciar que ser despedido sin causa. Cambia el tipo de terminación y mira cómo se mueve cada concepto de tu pago final.</p>
+    </div>
+    <div class="hero-art">
+      <div class="doc-preview">
+        <b>FINIQUITO</b>
+        <i></i><i></i><i></i><i></i><i></i><i></i>
+        <span class="doc-total" id="fq-doc">{m0(total0)}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="fq-form">
+      <h2>Tus datos</h2>
+      <p class="sub">Con el salario diario integrado (SDI) y tu antigüedad alcanza para estimar el pago.</p>
+
+      <div class="field">
+        <label for="fq-tipo">Tipo de terminación</label>
+        <div class="seg" id="fq-seg" role="group" aria-label="Tipo de terminación">
+          <button type="button" data-v="renuncia">Renuncia</button>
+          <button type="button" data-v="despido-justificado">Despido justificado</button>
+          <button type="button" data-v="despido-injustificado" class="active">Despido injustificado</button>
+          <button type="button" data-v="acuerdo">Mutuo acuerdo</button>
+        </div>
+        <select id="fq-tipo" class="sr-select" aria-label="Tipo de terminación">
+          <option value="renuncia">Renuncia voluntaria</option>
+          <option value="despido-justificado">Despido justificado</option>
+          <option value="despido-injustificado" selected>Despido injustificado</option>
+          <option value="acuerdo">Terminación por mutuo acuerdo</option>
+        </select>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="fq-sd">Salario diario integrado</label>
+          <div class="control"><span>$</span><input id="fq-sd" type="number" min="0" step="50" value={D.sd} /></div>
+        </div>
+        <div class="field">
+          <label for="fq-anios">Años de antigüedad</label>
+          <div class="control"><input id="fq-anios" type="number" min="0" max="50" step="0.1" value={D.anios} /><span>años</span></div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="fq-agui">Días de aguinaldo</label>
+          <div class="control"><input id="fq-agui" type="number" min="15" max="90" step="1" value={D.aguinaldo} /><span>días</span></div>
+        </div>
+        <div class="field">
+          <label for="fq-mes">Días del mes pendientes</label>
+          <div class="control"><input id="fq-mes" type="number" min="0" max="31" step="1" value={D.diasMes} /><span>días</span></div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="fq-vac">Vacaciones no gozadas <small>LFT</small></label>
+          <div class="control"><input id="fq-vac" type="number" min="0" max="60" step="1" value={diasVac0} /><span>días</span></div>
+        </div>
+        <div class="field">
+          <label for="fq-pv">Prima vacacional</label>
+          <div class="control"><input id="fq-pv" type="number" min="0" max="100" step="5" value={D.primaVacPct} /><span>%</span></div>
+        </div>
+      </div>
+
+      <button class="cta" type="submit">Calcular mi pago final →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over" id="fq-kind">Liquidación (despido injustificado)</div>
+        <div class="big" id="fq-big">{m0(total0)}</div>
+        <p class="answer" id="fq-answer">Al finiquito base se le suman 3 meses de salario, 20 días por año y la prima de antigüedad.</p>
+        <div class="result-box">
+          <span>Finiquito (proporcionales)</span>
+          <b id="fq-fin">{m0(finiquito0)}</b>
+          <small id="fq-note">Indemnización adicional: {m0(tresMeses0 + veinteDias0 + prima0)}.</small>
+        </div>
+      </div>
+      <div class="equation" id="fq-eq">proporcionales + 3 meses + 20 días/año + prima de antigüedad</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Desglose concepto por concepto</h2>
+      <p>Así se arma el total, peso por peso.</p>
+    </div>
+    <div class="table" id="fq-table">
+      <div class="row"><span>Sueldo pendiente<br /><small id="fq-d1s">10 días × $1,000</small></span><small>Finiquito</small><strong id="fq-d1">{m2(sueldoPend0)}</strong></div>
+      <div class="row"><span>Vacaciones no gozadas<br /><small id="fq-d2s">20 días × $1,000</small></span><small>Finiquito</small><strong id="fq-d2">{m2(vac0)}</strong></div>
+      <div class="row"><span>Prima vacacional<br /><small id="fq-d3s">25% sobre vacaciones</small></span><small>Finiquito</small><strong id="fq-d3">{m2(primaVac0)}</strong></div>
+      <div class="row"><span>Aguinaldo proporcional<br /><small id="fq-d4s">15 días × parte del año</small></span><small>Finiquito</small><strong id="fq-d4">{m2(aguinaldo0)}</strong></div>
+      <div class="row" id="fq-r5"><span>Indemnización 3 meses<br /><small>90 días de salario · Art. 48</small></span><small>Liquidación</small><strong id="fq-d5">{m2(tresMeses0)}</strong></div>
+      <div class="row" id="fq-r6"><span>20 días por año<br /><small id="fq-d6s">20 × 5 años</small></span><small>Liquidación</small><strong id="fq-d6">{m2(veinteDias0)}</strong></div>
+      <div class="row" id="fq-r7"><span>Prima de antigüedad<br /><small id="fq-d7s">12 días/año, tope 2 SMG</small></span><small>Art. 162</small><strong id="fq-d7">{m2(prima0)}</strong></div>
+      <div class="row total"><span><b>Total bruto estimado</b></span><small>MXN</small><strong id="fq-dt">{m2(total0)}</strong></div>
+    </div>
+    <div class="notice">
+      <span>⚖️</span>
+      <div><b>El tope de la prima de antigüedad es real.</b>Aunque ganes más, la prima se calcula con {m2(TOPE_PRIMA)} diarios (2 salarios mínimos generales, {m2(SMG)} en 2026). Es el error más común al revisar un convenio.</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Qué cambia según cómo sales</h2>
+      <p>La misma antigüedad, cuatro resultados distintos.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>✍️</i><h3>Renuncia</h3><p>Solo proporcionales. La prima de antigüedad únicamente si acumulaste 15 años o más.</p></article>
+      <article class="mini"><i>📄</i><h3>Despido justificado</h3><p>El patrón acredita causa del Art. 47: se paga el finiquito, sin los 3 meses ni los 20 días por año.</p></article>
+      <article class="mini"><i>💼</i><h3>Despido injustificado</h3><p>Finiquito + 3 meses + 20 días por año + prima de antigüedad. Tienes 2 meses para demandar (Art. 518).</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>Antes de firmar, revisa el número.</b>Los montos de la LFT son mínimos y son negociables al alza; la asesoría de PROFEDET es gratuita. Este total es bruto: la indemnización está exenta de ISR hasta 90 UMA por año de servicio y el excedente retiene impuesto.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="📋" base="/mx" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Ley Federal del Trabajo, Arts. 48, 50, 80, 87 y 162 · SMG 2026 CONASAMI {m2(SMG)}/día.</div>
+    <div>Estimación bruta · No sustituye asesoría legal</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.fq{--brand:#2a2350;--accent:#ffc857;--soft:#efedf8;--warn:#fff4e0}
+  .hcm.fq .hero{background:linear-gradient(135deg,#2a2350 0%,#4a3a7d 62%,#7c5ea8 100%)}
+  .hcm.fq .cta{color:#2a2350}
+  .hcm.fq .tag{color:#2a2350}
+  .hcm.fq .seg{grid-template-columns:repeat(2,minmax(0,1fr));background:#efedf8}
+  .hcm.fq .seg button{font-size:14px;line-height:1.25}
+  .hcm.fq .seg button.active{color:#2a2350;box-shadow:0 3px 10px #d3cdea}
+  .hcm.fq .sr-select{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .hcm.fq .doc-preview{position:relative;color:#8d86ad}
+  .hcm.fq .doc-preview b{font:800 15px/1 Manrope,system-ui,sans-serif;letter-spacing:.14em;color:#2a2350}
+  .hcm.fq .doc-preview i{background:#e3dff2}
+  .hcm.fq .doc-total{position:absolute;left:24px;right:24px;bottom:22px;display:block;font:800 27px/1 Manrope,system-ui,sans-serif;color:#2a2350}
+  .hcm.fq .row.total{border-top:2px solid var(--brand);margin-top:4px}
+  .hcm.fq .row.hidden{display:none}
+  .hcm.fq .row small{color:#6b6588}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.fq');
+    if (!root) return;
+    var TOPE_PRIMA = Number(root.getAttribute('data-tope'));
+    var nf0 = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 });
+    var nf2 = new Intl.NumberFormat('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    var m0 = function (x) { return '$' + nf0.format(x); };
+    var m2 = function (x) { return '$' + nf2.format(x); };
+    var el = function (id) { return document.getElementById(id); };
+    var num = function (id) { return Number(el(id).value); };
+
+    var ids = ['fq-sd', 'fq-anios', 'fq-agui', 'fq-mes', 'fq-vac', 'fq-pv'];
+    var seg = el('fq-seg');
+    var sel = el('fq-tipo');
+
+    function fail(msg) {
+      el('fq-big').textContent = '—';
+      el('fq-answer').textContent = msg;
+      el('fq-fin').textContent = '—';
+      el('fq-note').textContent = '';
+      el('fq-doc').textContent = '—';
+      el('fq-eq').textContent = 'proporcionales + indemnización según el tipo de terminación';
+      ['fq-d1', 'fq-d2', 'fq-d3', 'fq-d4', 'fq-d5', 'fq-d6', 'fq-d7', 'fq-dt'].forEach(function (i) { el(i).textContent = '—'; });
+    }
+
+    function render() {
+      var sd = num('fq-sd');
+      var anios = num('fq-anios');
+      var tipo = sel.value;
+      var aguinaldoDias = num('fq-agui');
+      var diasMes = num('fq-mes');
+      var diasVac = num('fq-vac');
+      var primaVacPct = num('fq-pv');
+
+      // Mismas guardas que finiquito-liquidacion-mexico.ts
+      if (!sd || sd <= 0) return fail('Ingresa el salario diario integrado.');
+      if (isNaN(anios) || anios < 0) return fail('Ingresa los años de antigüedad.');
+
+      var sueldoPendiente = sd * diasMes;
+      var vacacionesProp = sd * diasVac;
+      var primaVacacional = vacacionesProp * (primaVacPct / 100);
+      var aguinaldoProp = (sd * aguinaldoDias * Math.min(365, diasMes + 30)) / 365;
+      var finiquitoPartes = sueldoPendiente + vacacionesProp + primaVacacional + aguinaldoProp;
+
+      var tresMeses = 0, veinteDias = 0, primaAntiguedad = 0;
+      var tipoCalculado = 'Finiquito';
+
+      if (tipo === 'despido-injustificado') {
+        tresMeses = sd * 90;
+        veinteDias = sd * 20 * anios;
+        primaAntiguedad = 12 * anios * Math.min(sd, TOPE_PRIMA);
+        tipoCalculado = 'Liquidación (despido injustificado)';
+      } else if (tipo === 'renuncia' && anios >= 15) {
+        primaAntiguedad = 12 * anios * Math.min(sd, TOPE_PRIMA);
+      }
+
+      var total = finiquitoPartes + tresMeses + veinteDias + primaAntiguedad;
+      var extra = tresMeses + veinteDias + primaAntiguedad;
+
+      el('fq-kind').textContent = tipoCalculado;
+      el('fq-big').textContent = m0(total);
+      el('fq-doc').textContent = m0(total);
+      el('fq-fin').textContent = m0(finiquitoPartes);
+      el('fq-note').textContent = extra > 0
+        ? 'Indemnización adicional: ' + m0(extra) + '.'
+        : 'Sin indemnización: en esta salida solo corren los proporcionales.';
+
+      if (tipo === 'despido-injustificado') {
+        var pct = total > 0 ? Math.round((extra / total) * 100) : 0;
+        el('fq-answer').textContent = 'Al finiquito base se le suman 3 meses, 20 días por año y prima de antigüedad: ' + m0(extra) + ' extra, el ' + pct + '% del total.';
+        el('fq-eq').innerHTML = m0(finiquitoPartes) + ' + ' + m0(tresMeses) + ' + ' + m0(veinteDias) + ' + ' + m0(primaAntiguedad) + ' = <b>' + m0(total) + '</b>';
+      } else if (tipo === 'renuncia' && anios >= 15) {
+        el('fq-answer').textContent = 'Por renunciar con ' + anios + ' años de antigüedad te corresponde prima de antigüedad (Art. 162 LFT): ' + m0(primaAntiguedad) + ' sumados al finiquito.';
+        el('fq-eq').innerHTML = m0(finiquitoPartes) + ' + prima ' + m0(primaAntiguedad) + ' = <b>' + m0(total) + '</b>';
+      } else {
+        el('fq-answer').textContent = 'Solo corresponde el finiquito de partes proporcionales: sueldo pendiente, vacaciones, prima vacacional y aguinaldo. No hay indemnización por despido.';
+        el('fq-eq').innerHTML = 'sueldo + vacaciones + prima vacacional + aguinaldo = <b>' + m0(total) + '</b>';
+      }
+
+      el('fq-d1').textContent = m2(sueldoPendiente);
+      el('fq-d2').textContent = m2(vacacionesProp);
+      el('fq-d3').textContent = m2(primaVacacional);
+      el('fq-d4').textContent = m2(aguinaldoProp);
+      el('fq-d5').textContent = m2(tresMeses);
+      el('fq-d6').textContent = m2(veinteDias);
+      el('fq-d7').textContent = m2(primaAntiguedad);
+      el('fq-dt').textContent = m2(total);
+
+      el('fq-d1s').textContent = diasMes + ' días × ' + m0(sd);
+      el('fq-d2s').textContent = diasVac + ' días × ' + m0(sd);
+      el('fq-d3s').textContent = primaVacPct + '% sobre vacaciones';
+      el('fq-d4s').textContent = aguinaldoDias + ' días × parte del año';
+      el('fq-d6s').textContent = '20 × ' + anios + ' años';
+      el('fq-d7s').textContent = sd > TOPE_PRIMA
+        ? '12 días/año con tope ' + m2(TOPE_PRIMA) + '/día'
+        : '12 días/año × ' + m0(sd);
+
+      var showInd = tipo === 'despido-injustificado';
+      el('fq-r5').classList.toggle('hidden', !showInd);
+      el('fq-r6').classList.toggle('hidden', !showInd);
+      el('fq-r7').classList.toggle('hidden', primaAntiguedad <= 0);
+    }
+
+    ids.forEach(function (id) { el(id).addEventListener('input', render); });
+    sel.addEventListener('change', render);
+    seg.addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-v]');
+      if (!b) return;
+      Array.prototype.forEach.call(seg.querySelectorAll('button'), function (x) { x.classList.remove('active'); });
+      b.classList.add('active');
+      sel.value = b.getAttribute('data-v');
+      render();
+    });
+    el('fq-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

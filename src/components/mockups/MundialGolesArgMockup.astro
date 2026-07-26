@@ -1,0 +1,219 @@
+---
+/**
+ * Flagship "Goles de Argentina para repetir el título" — mockup bespoke.
+ * El Mundial 2026 ya terminó (19-jul-2026, campeón España): todo el copy va en
+ * pasado y la herramienta se presenta como ejercicio retrospectivo/hipotético.
+ *
+ * El script inline replica mundial-2026-goles-argentina.ts:
+ *   tridente = messi + alvarez + lautaro
+ *   otros    = round(tridente × 0.35)
+ *   total    = tridente + otros   ·   prom = total ÷ partidos
+ *   comparación vs 15/7 (Qatar 2022) con umbral ±0.30
+ *   chance por tramos: <7 partidos / >=15 / >=11 / resto
+ * Diferencial visual: barras comparativas contra los campeones 1998-2022,
+ * serializadas desde `referenceTables` del propio JSON del calc.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Campeones 1998–2022 desde la referenceTable del JSON (nada hardcodeado a mano)
+const tabla = (calc.referenceTables || []).find((t: any) => /campeones/i.test(t.title || ''));
+const CAMPEONES = (tabla?.rows || []).map((r: string[]) => ({
+  anio: r[0], pais: r[1], partidos: Number(r[2]), goles: Number(r[3]), prom: r[4],
+}));
+const ESCALA = 20; // techo de la barra: 20 goles = 100%
+const pct = (g: number) => Math.max(4, Math.min(100, (g / ESCALA) * 100));
+
+// Defaults = los del JSON
+const F = (id: string) => Number((calc.fields || []).find((f: any) => f.id === id)?.default);
+const D = {
+  partidos: F('partidosProyectados') || 7,
+  messi: F('golesMessi') || 5,
+  alvarez: F('golesAlvarez') || 4,
+  lautaro: F('golesLautaro') || 3,
+};
+const tridente0 = D.messi + D.alvarez + D.lautaro;
+const otros0 = Math.round(tridente0 * 0.35);
+const total0 = tridente0 + otros0;
+const prom0 = total0 / D.partidos;
+const PROM2022 = 15 / 7;
+---
+
+<main class="page hcm gam">
+  <div class="crumb">Inicio / <a href="/categoria/deportes">Deportes</a> / Mundial 2026 / <b>Goles de Argentina</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🏆 MUNDIAL 2026 · TORNEO FINALIZADO</span>
+      <h1>¿Cuántos goles hacían falta para repetir el título?</h1>
+      <p>El Mundial de Canadá, México y Estados Unidos terminó el 19 de julio de 2026 y lo ganó España: Argentina no pudo ser bicampeona. Este simulador reconstruye la cuenta ofensiva que hacía falta y la mide contra los campeones desde 1998.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">⚽</div>
+      <div class="hero-stat"><span>Qatar 2022 · Argentina campeón</span><b>15 goles en 7</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="gam-form">
+      <h2>Armá tu escenario</h2>
+      <p class="sub">Estimá el aporte del tridente y cuántos partidos jugaba el equipo. El resto del plantel suma un 35% adicional, como en Qatar.</p>
+      <div class="field">
+        <label for="gam-partidos">Partidos proyectados <small>3 = grupos · 7 = campeón</small></label>
+        <div class="control"><input id="gam-partidos" type="number" min="3" max="7" step="1" value={D.partidos} /><span>PJ</span></div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label for="gam-messi">Messi</label>
+          <div class="control"><input id="gam-messi" type="number" min="0" max="15" step="1" value={D.messi} /><span>goles</span></div>
+        </div>
+        <div class="field">
+          <label for="gam-alvarez">Julián Álvarez</label>
+          <div class="control"><input id="gam-alvarez" type="number" min="0" max="15" step="1" value={D.alvarez} /><span>goles</span></div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="gam-lautaro">Lautaro Martínez</label>
+        <div class="control"><input id="gam-lautaro" type="number" min="0" max="15" step="1" value={D.lautaro} /><span>goles</span></div>
+      </div>
+      <button class="cta" type="submit">Calcular goles proyectados →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Goles totales del escenario</div>
+        <div class="big" id="gam-big">{total0} <small>goles</small></div>
+        <p class="answer" id="gam-answer">{tridente0} del tridente más {otros0} del resto del plantel en {D.partidos} partidos.</p>
+        <div class="result-box">
+          <span>Promedio por partido</span>
+          <b id="gam-prom">{prom0.toFixed(2)} goles</b>
+          <small id="gam-comp">Similar a Qatar 2022 ({PROM2022.toFixed(2)}/partido). Promedio campeón.</small>
+        </div>
+        <p class="answer" id="gam-chance">65-70%: goles suficientes históricamente para ganar el Mundial.</p>
+      </div>
+      <div class="equation" id="gam-eq">({tridente0} del tridente + 35%) ÷ {D.partidos} partidos = <b>{prom0.toFixed(2)}/partido</b></div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Tu escenario contra los campeones</h2>
+      <p>Goles en el torneo, 1998–2022. Escala: 20 goles.</p>
+    </div>
+    <div class="table">
+      <div class="row">
+        <div><b>Tu escenario 2026</b><small id="gam-bar-label">{prom0.toFixed(2)} por partido</small></div>
+        <div class="progress"><i id="gam-bar" style={`width:${pct(total0)}%`}></i></div>
+        <strong id="gam-bar-goles">{total0}</strong>
+      </div>
+      {CAMPEONES.map((c) => (
+        <div class="row">
+          <div><b>{c.pais} {c.anio}</b><small>{c.prom} por partido · {c.partidos} PJ</small></div>
+          <div class="progress"><i style={`width:${pct(c.goles)}%`}></i></div>
+          <strong>{c.goles}</strong>
+        </div>
+      ))}
+    </div>
+    <p class="tnote">{tabla?.note || 'Fuente: FIFA — Estadísticas históricas de Mundiales.'}</p>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Las tres reglas de la cuenta</h2>
+      <p>Por qué el número no es antojadizo.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>🎯</i><h3>El tridente manda</h3><p>En Qatar 2022 Messi y Álvarez explicaron 11 de los 15 goles. Lautaro no convirtió y aun así el equipo fue campeón.</p></article>
+      <article class="mini"><i>➕</i><h3>El 35% del resto</h3><p>Mac Allister, Enzo, Molina y Otamendi aportaron 4 goles sobre 15 en Qatar (27%). El modelo lo lleva a 35%.</p></article>
+      <article class="mini"><i>📏</i><h3>Siete partidos</h3><p>Con 48 equipos el campeón seguía jugando 7 partidos: tres de grupos, octavos, cuartos, semi y final.</p></article>
+    </div>
+    <div class="notice">
+      <span>🧮</span>
+      <div><b>Los penales no cuentan.</b>Los goles de las tandas quedan fuera de las estadísticas oficiales de FIFA. Argentina definió dos series así en Qatar 2022 y ninguno de esos goles entra en los 15 del torneo.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🏆" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Goles = (Messi + Álvarez + Lautaro) × 1,35 redondeado · Promedio = goles ÷ partidos · Referencia: 15 goles en 7 partidos (Qatar 2022).</div>
+    <div>Ejercicio retrospectivo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.gam{--brand:#2b1d5c;--accent:#ff9a58;--soft:#efecf8}
+  .hcm.gam .hero{background:linear-gradient(135deg,#241751,#4b3b93)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.gam');
+    if (!root) return;
+    var ids = ['gam-partidos', 'gam-messi', 'gam-alvarez', 'gam-lautaro'];
+    var n = function (id) { return Number(document.getElementById(id).value); };
+    var PROM2022 = 15 / 7;
+    var ESCALA = 20;
+
+    function render() {
+      var big = document.getElementById('gam-big');
+      var ans = document.getElementById('gam-answer');
+      var promEl = document.getElementById('gam-prom');
+      var compEl = document.getElementById('gam-comp');
+      var chanceEl = document.getElementById('gam-chance');
+      var eq = document.getElementById('gam-eq');
+      var bar = document.getElementById('gam-bar');
+      var barGoles = document.getElementById('gam-bar-goles');
+      var barLabel = document.getElementById('gam-bar-label');
+
+      var partidos = Number(document.getElementById('gam-partidos').value);
+      var m = n('gam-messi') || 0, a = n('gam-alvarez') || 0, l = n('gam-lautaro') || 0;
+
+      // Misma guarda que mundial-2026-goles-argentina.ts
+      if (!partidos || partidos < 3 || partidos > 7) {
+        big.innerHTML = '—';
+        ans.textContent = 'Partidos fuera de rango (3-7)';
+        promEl.textContent = '—'; compEl.textContent = ''; chanceEl.textContent = '';
+        eq.innerHTML = 'Ingresá entre 3 y 7 partidos.';
+        bar.style.width = '4%'; barGoles.textContent = '—'; barLabel.textContent = 'sin dato';
+        return;
+      }
+
+      var tridente = m + a + l;
+      var otros = Math.round(tridente * 0.35);
+      var total = tridente + otros;
+      var prom = total / partidos;
+      var diff = prom - PROM2022;
+
+      var comp;
+      if (diff > 0.3) comp = 'Mejor que Qatar 2022 (' + PROM2022.toFixed(2) + '/partido). Ofensiva récord.';
+      else if (Math.abs(diff) <= 0.3) comp = 'Similar a Qatar 2022 (' + PROM2022.toFixed(2) + '/partido). Promedio campeón.';
+      else comp = 'Por debajo de Qatar 2022 (' + PROM2022.toFixed(2) + '/partido). Hay margen para subir.';
+
+      var chance;
+      if (partidos < 7) chance = 'Para ser campeón hay que jugar 7 partidos. Proyectados: ' + partidos + '.';
+      else if (total >= 15) chance = '65-70%: goles suficientes históricamente para ganar el Mundial.';
+      else if (total >= 11) chance = '40-50%: en zona de campeones recientes (España 2010 con 8, Francia 2018 con 14).';
+      else chance = '<30%: ningún campeón del S.XXI ganó con menos de 11 goles (excepto España 2010).';
+
+      big.innerHTML = total + ' <small>goles</small>';
+      ans.textContent = tridente + ' del tridente más ' + otros + ' del resto del plantel en ' + partidos + (partidos === 1 ? ' partido.' : ' partidos.');
+      promEl.textContent = prom.toFixed(2) + ' goles';
+      compEl.textContent = comp;
+      chanceEl.textContent = chance;
+      eq.innerHTML = '(' + tridente + ' del tridente + 35%) ÷ ' + partidos + ' partidos = <b>' + prom.toFixed(2) + '/partido</b>';
+      bar.style.width = Math.max(4, Math.min(100, (total / ESCALA) * 100)) + '%';
+      barGoles.textContent = String(total);
+      barLabel.textContent = prom.toFixed(2) + ' por partido';
+    }
+
+    ids.forEach(function (id) { document.getElementById(id).addEventListener('input', render); });
+    document.getElementById('gam-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

@@ -1,0 +1,312 @@
+---
+/**
+ * Flagship "Contador de palabras y caracteres" — mockup bespoke.
+ *
+ * Layout deliberadamente distinto al resto del batch: el input es un <textarea>
+ * a ancho completo (no un form de campos numéricos), y los resultados van en una
+ * fila de tarjetas-contador debajo, más un panel de límites con barras.
+ *
+ * El script inline replica EXACTAMENTE contador-de-palabras-y-caracteres.ts:
+ *   palabras            = texto.trim() ? texto.trim().split(/\s+/).filter(Boolean).length : 0
+ *   caracteresConEsp    = texto.length
+ *   caracteresSinEsp    = texto.replace(/\s/g,'').length
+ *   oraciones           = split(/[.!?…]+/) trim/filter; 0 → 1 si hay texto
+ *   parrafos            = split(/\n\s*\n/) si hay línea en blanco; si no, líneas no vacías
+ *   tiempoLectura       = formatTiempo(palabras / 200)
+ * incluida la narrativa de _insight con sus avisos de 280 / 120-160 caracteres.
+ * El primer paint se renderiza en SSR llamando a la fórmula real.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { contadorDePalabrasYCaracteres } from '../../lib/formulas/contador-de-palabras-y-caracteres';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const DEMO = 'Pegá acá tu texto y mirá cómo se mueven los números mientras escribís. Contamos palabras, caracteres con y sin espacios, oraciones y párrafos. El tiempo de lectura sale de dividir las palabras por 200, la velocidad de lectura silenciosa de un adulto promedio.';
+
+// Primer paint: números del motor real, no hardcodeados.
+const r0 = contadorDePalabrasYCaracteres({ texto: DEMO });
+const nf = (n: number) => n.toLocaleString('es-AR');
+
+// Límites de la tabla de referencia del calc (referenceTables[0]).
+const LIMITES = [
+  { id: 'title', label: 'Título SEO', max: 60, hint: 'Google trunca pasado eso' },
+  { id: 'ig', label: 'Bio de Instagram', max: 150, hint: 'No deja guardar si te pasás' },
+  { id: 'sms', label: 'SMS (1 segmento)', max: 160, hint: 'Se parte en varios mensajes' },
+  { id: 'meta', label: 'Meta description', max: 160, hint: 'Rango ideal 120-160' },
+  { id: 'tuit', label: 'Tuit / X (gratis)', max: 280, hint: 'No publica hasta acortar' },
+];
+const pct0 = (max: number) => Math.min(100, (r0.caracteresConEspacios / max) * 100);
+---
+
+<main class="page hcm txt">
+  <div class="crumb">Inicio / <a href="/categoria/educacion">Educación</a> / <b>Contador de palabras y caracteres</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🔤 CONTEO EN VIVO</span>
+      <h1>Contador de palabras y caracteres</h1>
+      <p>Pegá el texto y los números se actualizan mientras tipeás: palabras, caracteres con y sin espacios, oraciones, párrafos y tiempo de lectura. Todo en tu navegador, sin subir nada.</p>
+    </div>
+    <div class="hero-art">
+      <div class="doc-preview" aria-hidden="true">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </div>
+      <div class="hero-stat"><span>Lectura silenciosa</span><b>200 ppm</b></div>
+    </div>
+  </section>
+
+  <form class="editor" id="txt-form">
+    <div class="card pad">
+      <label for="txt-input"><b>Pegá o escribí tu texto</b><small id="txt-live">Se cuenta al instante · no se guarda nada</small></label>
+      <textarea id="txt-input" rows="9" spellcheck="false" placeholder="Pegá acá el texto que querés analizar…">{DEMO}</textarea>
+      <div class="editor-bar">
+        <button class="cta slim" type="submit">Recontar</button>
+        <button class="ghost" type="button" id="txt-clear">Borrar texto</button>
+      </div>
+    </div>
+
+    <div class="counters">
+      <article class="count hi">
+        <span>Tiempo de lectura</span>
+        <b id="txt-tiempo">{r0.tiempoLectura}</b>
+        <small>a 200 palabras/min</small>
+      </article>
+      <article class="count">
+        <span>Palabras</span>
+        <b id="txt-palabras">{nf(r0.palabras)}</b>
+        <small>separadas por espacios</small>
+      </article>
+      <article class="count">
+        <span>Caracteres</span>
+        <b id="txt-cce">{nf(r0.caracteresConEspacios)}</b>
+        <small>con espacios</small>
+      </article>
+      <article class="count">
+        <span>Caracteres</span>
+        <b id="txt-cse">{nf(r0.caracteresSinEspacios)}</b>
+        <small>sin espacios</small>
+      </article>
+      <article class="count">
+        <span>Oraciones</span>
+        <b id="txt-oraciones">{nf(r0.oraciones)}</b>
+        <small>cortadas por . ! ?</small>
+      </article>
+      <article class="count">
+        <span>Párrafos</span>
+        <b id="txt-parrafos">{nf(r0.parrafos)}</b>
+        <small>bloques de texto</small>
+      </article>
+    </div>
+
+    <p class="insight" id="txt-insight">{r0._insight.text}</p>
+  </form>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>¿Entra donde lo querés publicar?</h2>
+      <p>Sobre los caracteres <b>con</b> espacios de tu texto.</p>
+    </div>
+    <div class="limits">
+      {LIMITES.map((l) => (
+        <article class="lim" id={`txt-lim-${l.id}`} data-max={l.max}>
+          <div class="lim-head">
+            <b>{l.label}</b>
+            <em class="lim-num">{nf(r0.caracteresConEspacios)} / {nf(l.max)}</em>
+          </div>
+          <div class="progress"><i style={`width:${pct0(l.max)}%`}></i></div>
+          <small class="lim-msg">{l.hint}</small>
+        </article>
+      ))}
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>El ancho de un título en Google se mide en píxeles (~600 px), no en letras.</b>Por eso 60 caracteres es una referencia segura: con muchas mayúsculas o "M" el título se corta antes.</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Cómo contamos cada cosa</h2>
+      <p>El criterio, explícito, para que puedas reproducirlo.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>🔡</i><h3>Palabras</h3><p>Cortamos por cualquier espacio, tab o salto de línea y descartamos los huecos. "Hola&nbsp;&nbsp;&nbsp;mundo" cuenta 2, no 4.</p></article>
+      <article class="mini"><i>␣</i><h3>Caracteres</h3><p>Con espacios es el largo total tal cual (lo que miran X y los SMS). Sin espacios descuenta espacios, tabs y saltos.</p></article>
+      <article class="mini"><i>⏱️</i><h3>Lectura</h3><p>Minutos = palabras ÷ 200. Abajo del minuto mostramos segundos; arriba de la hora, horas y minutos.</p></article>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🔤" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Palabras separadas por espacios · oraciones cortadas por . ! ? … · párrafos por línea en blanco · lectura a 200 palabras por minuto.</div>
+    <div>Se cuenta en tu navegador · No guardamos el texto</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.txt{--brand:#2c2350;--accent:#ffc94d;--soft:#f1eefb}
+  .hcm.txt .hero{background:linear-gradient(135deg,#2c2350,#57457f)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+
+  /* Layout propio: el input manda a ancho completo, los contadores debajo. */
+  .hcm.txt .editor{margin-top:24px;display:grid;gap:14px}
+  .hcm.txt .card.pad{padding:24px}
+  .hcm.txt .editor label{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+  .hcm.txt .editor label b{font-size:17px}
+  .hcm.txt .editor label small{color:var(--muted);font-weight:500;font-size:13px}
+  .hcm.txt textarea{width:100%;max-width:100%;min-width:0;display:block;resize:vertical;
+    border:1px solid #cdc7e0;border-radius:14px;padding:16px;line-height:1.6;
+    font-size:max(16px,1em);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    background:#fdfcff;color:var(--ink);outline:none}
+  .hcm.txt textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px #2c235022}
+  .hcm.txt .editor-bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .hcm.txt .cta.slim{width:auto;margin:0;padding:12px 22px}
+  .hcm.txt .ghost{border:1px solid var(--line);background:#fff;color:var(--muted);
+    border-radius:13px;padding:12px 18px;font-weight:700;cursor:pointer}
+  .hcm.txt .ghost:hover{border-color:var(--brand);color:var(--brand)}
+
+  .hcm.txt .counters{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+  .hcm.txt .count{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;min-width:0}
+  .hcm.txt .count span{display:block;color:var(--muted);font-size:11px;font-weight:800;
+    text-transform:uppercase;letter-spacing:.08em}
+  .hcm.txt .count b{display:block;margin:6px 0 3px;font:800 30px/1 Manrope,"DM Sans",system-ui,sans-serif;
+    color:var(--brand);overflow-wrap:anywhere}
+  .hcm.txt .count small{color:var(--muted);font-size:12px;line-height:1.35;display:block}
+  .hcm.txt .count.hi{background:var(--brand);border-color:var(--brand)}
+  .hcm.txt .count.hi span,.hcm.txt .count.hi small{color:#c9c0e4}
+  .hcm.txt .count.hi b{color:var(--accent);font-size:27px}
+
+  .hcm.txt .insight{margin:0;background:var(--soft);border:1px solid #ded5f2;border-radius:18px;
+    padding:16px 18px;line-height:1.55;color:#3a3160;font-size:15px}
+
+  .hcm.txt .limits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .hcm.txt .lim{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;min-width:0}
+  .hcm.txt .lim-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .hcm.txt .lim-head b{font-size:15px}
+  .hcm.txt .lim-num{font-style:normal;font-weight:800;font-size:13px;color:var(--brand);white-space:nowrap}
+  .hcm.txt .lim .progress{margin:12px 0 8px;background:#e6e1f2}
+  .hcm.txt .lim-msg{display:block;color:var(--muted);font-size:12.5px;line-height:1.4}
+  .hcm.txt .lim.ok .progress i{background:#37b27a}
+  .hcm.txt .lim.ok .lim-msg{color:#237a52;font-weight:700}
+  .hcm.txt .lim.over .progress i{background:#e0554b}
+  .hcm.txt .lim.over .lim-num,.hcm.txt .lim.over .lim-msg{color:#c0392f;font-weight:700}
+  .hcm.txt .mini i{font-size:26px}
+
+  @media(max-width:900px){.hcm.txt .counters{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .hcm.txt .limits{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:520px){.hcm.txt .counters{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .hcm.txt .limits{grid-template-columns:minmax(0,1fr)}
+    .hcm.txt .count b{font-size:26px}.hcm.txt .count.hi b{font-size:24px}
+    .hcm.txt .editor-bar .cta.slim,.hcm.txt .editor-bar .ghost{flex:1 1 100%}}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.txt');
+    if (!root) return;
+    var ta = document.getElementById('txt-input');
+    if (!ta) return;
+    var nf = function (n) { return n.toLocaleString('es-AR'); };
+
+    // formatTiempo() de contador-de-palabras-y-caracteres.ts, tal cual.
+    function formatTiempo(min) {
+      if (min <= 0) return '0 min';
+      if (min < 1) {
+        var seg = Math.max(1, Math.round(min * 60));
+        return seg === 1 ? '1 seg' : seg + ' seg';
+      }
+      var totalMin = Math.round(min);
+      if (totalMin < 60) return totalMin + ' min';
+      var h = Math.floor(totalMin / 60), m = totalMin % 60;
+      return m === 0 ? h + ' h' : h + ' h ' + m + ' min';
+    }
+
+    function contar(texto) {
+      texto = texto == null ? '' : String(texto);
+      var palabras = texto.trim() === '' ? 0 : texto.trim().split(/\s+/).filter(Boolean).length;
+      var cce = texto.length;
+      var cse = texto.replace(/\s/g, '').length;
+      var trozos = texto.split(/[.!?…]+/).map(function (s) { return s.trim(); }).filter(Boolean);
+      var oraciones = trozos.length;
+      if (oraciones === 0 && texto.trim() !== '') oraciones = 1;
+      var parrafos;
+      if (texto.trim() === '') parrafos = 0;
+      else if (/\n\s*\n/.test(texto)) parrafos = texto.split(/\n\s*\n/).map(function (p) { return p.trim(); }).filter(Boolean).length;
+      else parrafos = texto.split(/\n/).map(function (l) { return l.trim(); }).filter(Boolean).length || 1;
+      return {
+        palabras: palabras, cce: cce, cse: cse, oraciones: oraciones, parrafos: parrafos,
+        tiempo: formatTiempo(palabras / 200)
+      };
+    }
+
+    // Narrativa de _insight, misma lógica y mismos umbrales que el .ts.
+    function narrar(r) {
+      if (r.palabras === 0) {
+        return 'Pegá o escribí un texto arriba y te muestro al instante las palabras, los caracteres (con y sin espacios), las oraciones, los párrafos y el tiempo de lectura.';
+      }
+      var t = 'Tu texto tiene ' + nf(r.palabras) + ' palabra' + (r.palabras === 1 ? '' : 's') +
+        ' y ' + nf(r.cce) + ' caracteres con espacios (' + nf(r.cse) + ' sin espacios), repartidos en ' +
+        nf(r.oraciones) + ' ' + (r.oraciones === 1 ? 'oración' : 'oraciones') + ' y ' +
+        nf(r.parrafos) + ' párrafo' + (r.parrafos === 1 ? '' : 's') +
+        '. Se lee en aproximadamente ' + r.tiempo + ' a 200 palabras por minuto.';
+      var avisos = [];
+      if (r.cce > 280) avisos.push('te pasás del límite de 280 caracteres de un tuit por ' + nf(r.cce - 280));
+      if (r.cce > 160) avisos.push('superás los ~160 caracteres recomendados para una meta description');
+      else if (r.cce >= 120 && r.cce <= 160) avisos.push('estás en el rango ideal (120-160) para una meta description');
+      if (avisos.length) t += ' ' + avisos.join('; ') + '.';
+      return t;
+    }
+
+    var set = function (id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
+    var HINTS = {
+      title: 'Google trunca pasado eso',
+      ig: 'No deja guardar si te pasás',
+      sms: 'Se parte en varios mensajes',
+      meta: 'Rango ideal 120-160',
+      tuit: 'No publica hasta acortar'
+    };
+
+    function render() {
+      var r = contar(ta.value);
+      set('txt-tiempo', r.tiempo);
+      set('txt-palabras', nf(r.palabras));
+      set('txt-cce', nf(r.cce));
+      set('txt-cse', nf(r.cse));
+      set('txt-oraciones', nf(r.oraciones));
+      set('txt-parrafos', nf(r.parrafos));
+      set('txt-insight', narrar(r));
+
+      Object.keys(HINTS).forEach(function (k) {
+        var box = document.getElementById('txt-lim-' + k);
+        if (!box) return;
+        var max = Number(box.getAttribute('data-max'));
+        var bar = box.querySelector('.progress i');
+        var num = box.querySelector('.lim-num');
+        var msg = box.querySelector('.lim-msg');
+        bar.style.width = Math.min(100, (r.cce / max) * 100) + '%';
+        num.textContent = nf(r.cce) + ' / ' + nf(max);
+        box.classList.remove('ok', 'over');
+        if (r.cce > max) {
+          box.classList.add('over');
+          msg.textContent = 'Te pasás por ' + nf(r.cce - max) + ' caracteres. ' + HINTS[k];
+        } else if (r.cce === 0) {
+          msg.textContent = HINTS[k];
+        } else {
+          box.classList.add('ok');
+          msg.textContent = 'Te quedan ' + nf(max - r.cce) + ' caracteres.';
+        }
+      });
+    }
+
+    ta.addEventListener('input', render);
+    var form = document.getElementById('txt-form');
+    if (form) form.addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    var clear = document.getElementById('txt-clear');
+    if (clear) clear.addEventListener('click', function () { ta.value = ''; ta.focus(); render(); });
+    render();
+  })();
+</script>

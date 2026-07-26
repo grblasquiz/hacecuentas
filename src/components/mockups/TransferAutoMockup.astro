@@ -1,0 +1,227 @@
+---
+/**
+ * Flagship "Costo de transferencia de auto" — mockup bespoke.
+ * El script inline replica EXACTAMENTE transfer-auto-costo-registro.ts:
+ *   arancel = valuación × 0,015 · sellado = valuación × 0,01
+ *   fijos = 35.000 + 15.000 + 10.000 · extra radicación = 50.000 si misma === 2
+ *   total = redondeo de la suma (los parciales se muestran con Math.round, igual que el motor)
+ * Guardas y mensajes de error idénticos a los del .ts.
+ * El reparto comprador/vendedor es una vista sobre el mismo total (costumbre 50/50),
+ * no altera ningún número del motor.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Constantes serializadas desde la fórmula real (mismos valores que el .ts)
+const K = { arancelPct: 0.015, selladoPct: 0.01, verificacion: 35000, formularios: 15000, informe: 10000, extraRadicacion: 50000 };
+const D = { valuacion: 12000000, misma: 1 };
+
+const money = (x: number) => '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(x);
+const arancel0 = Math.round(D.valuacion * K.arancelPct);
+const sellado0 = Math.round(D.valuacion * K.selladoPct);
+const fijos0 = K.verificacion + K.formularios + K.informe;
+const total0 = Math.round(D.valuacion * K.arancelPct + D.valuacion * K.selladoPct + fijos0);
+---
+
+<main class="page hcm tf">
+  <div class="crumb">Inicio / <a href="/categoria/automotor">Automotor</a> / <b>Transferencia de auto</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">📄 REGISTRO AUTOMOTOR</span>
+      <h1>¿Cuánto sale transferir el auto?</h1>
+      <p>Arancel DNRPA, sellado provincial, verificación policial y formulario 08 — desglosado ítem por ítem sobre la valuación fiscal.</p>
+    </div>
+    <div class="hero-art">
+      <div class="doc-preview">
+        <b style="font:800 20px Manrope;color:#2b2350">FORMULARIO 08</b>
+        <i></i><i></i><i></i><i></i><i></i><i></i>
+        <div style="margin-top:14px;font-size:12px;color:#7a86a8">Transferencia · firma de ambas partes</div>
+      </div>
+      <div class="hero-stat"><span>Plazo legal</span><b>10 días</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="tf-form">
+      <h2>Datos del trámite</h2>
+      <p class="sub">Con la valuación fiscal del vehículo alcanza. No uses el precio de venta.</p>
+
+      <div class="field">
+        <label for="tf-val">Valuación fiscal del vehículo <small>mínimo $500.000</small></label>
+        <div class="control"><span>$</span><input id="tf-val" type="number" min="500000" step="500000" value={D.valuacion} /></div>
+      </div>
+
+      <div class="field">
+        <label>¿Cambia de provincia?</label>
+        <div class="seg" id="tf-seg">
+          <button type="button" data-v="1" class="active">Misma jurisdicción</button>
+          <button type="button" data-v="2">Cambio de radicación</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>¿Cómo reparten los gastos?</label>
+        <div class="chips" id="tf-split">
+          <button type="button" data-s="50" class="active">50/50 (costumbre)</button>
+          <button type="button" data-s="100">Paga el comprador</button>
+          <button type="button" data-s="0">Paga el vendedor</button>
+        </div>
+      </div>
+
+      <button class="cta" type="submit">Calcular costo de transferencia →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Costo total estimado</div>
+        <div class="big" id="tf-big">{money(total0)}</div>
+        <p class="answer" id="tf-answer">Arancel del registro y sellado se calculan sobre la valuación fiscal; el resto son montos fijos.</p>
+        <div class="result-box">
+          <span>Reparto 50/50</span>
+          <b id="tf-split-b">{money(Math.round(total0 / 2))} cada uno</b>
+          <small id="tf-split-note">Comprador {money(Math.round(total0 / 2))} · vendedor {money(total0 - Math.round(total0 / 2))}.</small>
+        </div>
+      </div>
+      <div class="equation" id="tf-eq">
+        {money(arancel0)} + {money(sellado0)} + {money(fijos0)} = <b>{money(total0)}</b>
+      </div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>El desglose, peso por peso</h2>
+      <p>Los dos primeros ítems son porcentuales; el resto, fijos.</p>
+    </div>
+    <div class="table" id="tf-table">
+      <div class="row"><div><b>Arancel Registro Automotor</b><br /><small>1,5 % de la valuación · DNRPA, nacional</small></div><small id="tf-r1-base">sobre {money(D.valuacion)}</small><strong id="tf-r1">{money(arancel0)}</strong></div>
+      <div class="row"><div><b>Sellado provincial</b><br /><small>1 % de la valuación · CABA y Córdoba ≈1,5 %, PBA 1–2 %</small></div><small id="tf-r2-base">sobre {money(D.valuacion)}</small><strong id="tf-r2">{money(sellado0)}</strong></div>
+      <div class="row"><div><b>Verificación policial</b><br /><small>Control de VIN, motor y chasis · vigencia 90 días</small></div><small>fijo</small><strong>{money(K.verificacion)}</strong></div>
+      <div class="row"><div><b>Formulario 08 y varios</b><br /><small>Firma de ambas partes ante escribano o registro</small></div><small>fijo</small><strong>{money(K.formularios)}</strong></div>
+      <div class="row"><div><b>Informe de dominio</b><br /><small>Prenda, embargo, inhibición o pedido de secuestro</small></div><small>fijo</small><strong>{money(K.informe)}</strong></div>
+      <div class="row" id="tf-row-rad" style="display:none"><div><b>Cambio de radicación</b><br /><small>Trámite en el registro de origen y en el de destino</small></div><small>solo si cambia provincia</small><strong>{money(K.extraRadicacion)}</strong></div>
+      <div class="row"><div><b>Total del trámite</b><br /><small>Sin gestor (sumaría $50.000–$100.000)</small></div><small id="tf-total-note">misma jurisdicción</small><strong id="tf-total">{money(total0)}</strong></div>
+    </div>
+    <div class="notice">
+      <span>⚠️</span>
+      <div><b>El libre deuda es condición, no trámite opcional.</b>Sin libre deuda de patentes y multas el registro no toma la transferencia. Negociá que el vendedor la cancele antes o descontala del precio.</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Quién hace qué</h2>
+      <p>La ley no reparte los gastos: los reparte el boleto de compraventa.</p>
+    </div>
+    <div class="timeline">
+      <div class="step"><span>Vendedor</span><b>08 + libre deuda</b><em>Firma su parte del formulario, cancela patentes y multas y entrega título y cédula verde.</em></div>
+      <div class="step"><span>Comprador</span><b>Verificación</b><em>Lleva el auto a la planta verificadora y saca el informe de dominio antes de pagar.</em></div>
+      <div class="step"><span>Ambos</span><b>Registro</b><em>Presentan el 08 certificado. Con todo en regla, 1 a 3 días hábiles.</em></div>
+      <div class="step"><span>Después</span><b>Nuevo título</b><em>Si hubo cambio de provincia, sumá 5 a 15 días hábiles entre registros.</em></div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🚗" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Arancel 1,5 % + sellado 1 % sobre valuación fiscal + $60.000 de gastos fijos (+$50.000 si cambia de radicación). Aranceles orientativos DNRPA 2026.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.tf{--brand:#2b2350;--accent:#ffc94d;--soft:#efedf8}
+  .hcm.tf .hero{background:linear-gradient(135deg,#2b2350,#57407e)}
+  .hcm.tf .hero p{color:#ddd8f0}
+  .hcm.tf .over{color:#b5abd8}
+  .hcm.tf .answer{color:#e0dbf1}
+  .hcm.tf .equation{color:#c5bce4}
+  .hcm.tf .tag{color:#3a2a17}
+  .hcm.tf .cta{color:#3a2a17}
+  .hcm.tf .doc-preview{color:#98a0c0}
+  .hcm.tf .doc-preview i{background:#e0e0ee}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+  .hcm.tf .table .row strong{white-space:nowrap}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.tf');
+    if (!root) return;
+    // Constantes tomadas de src/lib/formulas/transfer-auto-costo-registro.ts
+    var ARANCEL_PCT = 0.015, SELLADO_PCT = 0.01;
+    var VERIFICACION = 35000, FORMULARIOS = 15000, INFORME = 10000, EXTRA_RADICACION = 50000;
+
+    var misma = 1, split = 50;
+    var money = function (x) { return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(x); };
+    var $ = function (id) { return document.getElementById(id); };
+
+    function render() {
+      var valuacion = Number($('tf-val').value);
+      var big = $('tf-big'), ans = $('tf-answer'), eq = $('tf-eq');
+
+      function fail(msg) {
+        big.textContent = '—'; ans.textContent = msg;
+        $('tf-split-b').textContent = '—'; $('tf-split-note').textContent = '';
+        eq.innerHTML = 'valuación × 1,5 % + valuación × 1 % + gastos fijos';
+      }
+      // Mismas guardas y mensajes que transfer-auto-costo-registro.ts
+      if (!valuacion || valuacion < 500000) return fail('Ingresá la valuación fiscal del vehículo (mínimo $500.000)');
+      if (misma < 1 || misma > 2) return fail('Indicá 1 (misma jurisdicción) o 2 (cambio de radicación)');
+
+      var arancelRegistro = valuacion * ARANCEL_PCT;
+      var selladoProvincial = valuacion * SELLADO_PCT;
+      var extraRadicacion = misma === 2 ? EXTRA_RADICACION : 0;
+      var costoTotal = arancelRegistro + selladoProvincial + VERIFICACION + FORMULARIOS + INFORME + extraRadicacion;
+      var arancelR = Math.round(arancelRegistro);
+      var selladoR = Math.round(selladoProvincial);
+      var fijos = VERIFICACION + FORMULARIOS + INFORME;
+      var total = Math.round(costoTotal);
+
+      big.textContent = money(total);
+      var pctImpuestos = Math.round(((arancelR + selladoR) / total) * 100);
+      ans.textContent = 'Arancel $' + arancelR.toLocaleString('es-AR') + ' + sellado $' + selladoR.toLocaleString('es-AR')
+        + ': el ' + pctImpuestos + '% del trámite son impuestos sobre la valuación'
+        + (extraRadicacion > 0 ? '. Incluye $50.000 por el cambio de radicación.' : '.');
+
+      var comprador = split === 50 ? Math.round(total / 2) : (split === 100 ? total : 0);
+      var vendedor = total - comprador;
+      $('tf-split-b').textContent = split === 50
+        ? money(comprador) + ' cada uno'
+        : (split === 100 ? money(total) + ' el comprador' : money(total) + ' el vendedor');
+      $('tf-split-note').textContent = 'Comprador ' + money(comprador) + ' · vendedor ' + money(vendedor) + '.';
+      $('tf-split-b').previousElementSibling.textContent = split === 50 ? 'Reparto 50/50' : 'Reparto acordado';
+
+      eq.innerHTML = money(arancelR) + ' + ' + money(selladoR) + ' + ' + money(fijos + extraRadicacion) + ' = <b>' + money(total) + '</b>';
+
+      $('tf-r1').textContent = money(arancelR);
+      $('tf-r2').textContent = money(selladoR);
+      $('tf-r1-base').textContent = 'sobre ' + money(valuacion);
+      $('tf-r2-base').textContent = 'sobre ' + money(valuacion);
+      $('tf-row-rad').style.display = extraRadicacion > 0 ? '' : 'none';
+      $('tf-total').textContent = money(total);
+      $('tf-total-note').textContent = extraRadicacion > 0 ? 'con cambio de radicación' : 'misma jurisdicción';
+    }
+
+    $('tf-val').addEventListener('input', render);
+    $('tf-seg').addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-v]'); if (!b) return;
+      misma = Number(b.getAttribute('data-v'));
+      Array.prototype.forEach.call(this.querySelectorAll('button'), function (x) { x.classList.toggle('active', x === b); });
+      render();
+    });
+    $('tf-split').addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-s]'); if (!b) return;
+      split = Number(b.getAttribute('data-s'));
+      Array.prototype.forEach.call(this.querySelectorAll('button'), function (x) { x.classList.toggle('active', x === b); });
+      render();
+    });
+    $('tf-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

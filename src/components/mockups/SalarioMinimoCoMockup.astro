@@ -1,0 +1,232 @@
+---
+/**
+ * Flagship CO "Salario mínimo 2026 + auxilio de transporte" — mockup bespoke.
+ * El script inline replica salario-minimo-colombia-2026-auxilio-transporte.ts:
+ *   auxilio = (aplica && salario < 2×SMLMV) ? AUXILIO : 0
+ *   devengado = salario + auxilio
+ *   hora = salario ÷ 220 · día = salario ÷ 30 · semana = salario × 12 ÷ 52
+ * Extensión (no contradice la fórmula): muestra los descuentos de ley del
+ * trabajador — salud 4% + pensión 4% sobre el IBC (el auxilio NO es base),
+ * tasas tomadas de COLOMBIA_2026.aportes, tal como documenta el propio calc.
+ * Con salario = SMLMV los números coinciden exactos con el motor:
+ * $1.750.905 + $249.095 = $2.000.000 bruto y $1.859.928 neto.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { COLOMBIA_2026 } from '../../lib/data/colombia-2026';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const SMLMV = COLOMBIA_2026.smlmv;
+const AUXILIO = COLOMBIA_2026.auxilioTransporte;
+const TOPE = COLOMBIA_2026.topeAuxilioSmlmv * SMLMV;
+const HORAS = COLOMBIA_2026.jornada.divisorMensualHasta14Jul2026;
+const HORAS_42 = COLOMBIA_2026.jornada.divisorMensualDesde15Jul2026;
+const SALUD = COLOMBIA_2026.aportes.saludEmpleado;
+const PENSION = COLOMBIA_2026.aportes.pensionEmpleado;
+
+const CFG = { SMLMV, AUXILIO, TOPE, HORAS, HORAS_42, SALUD, PENSION };
+
+const cop = (x: number) => '$' + new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(Math.round(x));
+const cop2 = (x: number) =>
+  '$' + new Intl.NumberFormat('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(x);
+
+// Primer paint (SSR): caso base = salario mínimo con auxilio.
+const bruto0 = SMLMV + AUXILIO;
+const salud0 = SMLMV * SALUD;
+const pension0 = SMLMV * PENSION;
+const neto0 = bruto0 - salud0 - pension0;
+---
+
+<main class="page hcm smc">
+  <div class="crumb">Inicio / <a href="/categoria/finanzas">Finanzas</a> / <b>Salario mínimo Colombia 2026</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">💵 SMMLV 2026 · COLOMBIA</span>
+      <h1>Del devengado al neto: qué te queda con el mínimo</h1>
+      <p>Salario mínimo de {cop(SMLMV)} más auxilio de transporte de {cop(AUXILIO)}. Mirá cuánto suma en nómina y cuánto queda después de salud y pensión.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🚌</div>
+      <div class="hero-stat"><span>Mínimo + auxilio</span><b>{cop(bruto0)}</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="sm-form">
+      <h2>Tu nómina mensual</h2>
+      <p class="sub">El auxilio de transporte se reconoce solo si el salario es inferior a 2 SMMLV ({cop(TOPE)}).</p>
+
+      <div class="field">
+        <label for="sm-salario">Salario mensual <small>mínimo: {cop(SMLMV)}</small></label>
+        <div class="control"><span>$</span><input id="sm-salario" type="number" min={SMLMV} step="1000" value={SMLMV} /></div>
+      </div>
+
+      <div class="field">
+        <label for="sm-aux-si">¿El empleador reconoce el auxilio de transporte?</label>
+        <div class="seg" id="sm-seg">
+          <button type="button" id="sm-aux-si" class="active" data-v="true">Sí</button>
+          <button type="button" id="sm-aux-no" data-v="false">No</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="sm-jornada">Jornada legal</label>
+        <div class="control">
+          <select id="sm-jornada">
+            <option value={HORAS}>44 h/semana — hasta el 14-jul-2026 (divisor 220)</option>
+            <option value={HORAS_42}>42 h/semana — desde el 15-jul-2026 (divisor 210)</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="cta" type="submit">Calcular devengado y neto →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Te queda en el bolsillo</div>
+        <div class="big" id="sm-big">{cop(neto0)}</div>
+        <p class="answer" id="sm-answer">Devengado de {cop(bruto0)} menos {cop(salud0 + pension0)} de salud y pensión. El auxilio no paga aportes.</p>
+        <div class="result-box">
+          <span>Devengado bruto</span>
+          <b id="sm-bruto">{cop(bruto0)}</b>
+          <small id="sm-note">{cop(SMLMV)} de salario + {cop(AUXILIO)} de auxilio de transporte.</small>
+        </div>
+      </div>
+      <div class="equation" id="sm-eq">({cop(SMLMV)} + {cop(AUXILIO)}) − 8% sobre el IBC = <b>{cop(neto0)}</b></div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>El recorrido del sueldo</h2>
+      <p>De lo que firma el empleador a lo que llega a tu cuenta.</p>
+    </div>
+    <div class="table">
+      <div class="row"><b>Salario base (IBC)</b><small>Base de aportes</small><strong id="sm-r-salario">{cop(SMLMV)}</strong></div>
+      <div class="row"><b>+ Auxilio de transporte</b><small>No es base de aportes</small><strong id="sm-r-aux">{cop(AUXILIO)}</strong></div>
+      <div class="row"><b>= Devengado</b><small>Lo que aparece arriba en el desprendible</small><strong id="sm-r-bruto">{cop(bruto0)}</strong></div>
+      <div class="row"><b>− Salud (4%)</b><small>EPS, sobre el IBC</small><strong id="sm-r-salud">−{cop(salud0)}</strong></div>
+      <div class="row"><b>− Pensión (4%)</b><small>Colpensiones o AFP, sobre el IBC</small><strong id="sm-r-pension">−{cop(pension0)}</strong></div>
+      <div class="row"><b>= Neto a pagar</b><small>Antes de otros descuentos (libranzas, embargos)</small><strong id="sm-r-neto">{cop(neto0)}</strong></div>
+    </div>
+    <div class="notice">
+      <span>🚌</span>
+      <div><b>El auxilio se pierde desde 2 SMMLV.</b>Si ganás {cop(TOPE)} o más, el empleador no está obligado a reconocerlo. Sí sigue contando para liquidar cesantías, intereses y prima, aunque no para vacaciones ni para el IBC.</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>El mínimo por período</h2>
+      <p>Calculado sobre el salario, sin el auxilio.</p>
+    </div>
+    <div class="timeline">
+      <div class="step"><span>Por hora ordinaria</span><b id="sm-hora">{cop2(SMLMV / HORAS)}</b><em>Divisor 220 h</em></div>
+      <div class="step"><span>Por día (SMDLV)</span><b id="sm-dia">{cop2(SMLMV / 30)}</b><em>Convención CST: ÷ 30</em></div>
+      <div class="step"><span>Por semana</span><b id="sm-semana">{cop(SMLMV * 12 / 52)}</b><em>× 12 ÷ 52</em></div>
+      <div class="step"><span>Al año (12 meses)</span><b id="sm-anio">{cop(SMLMV * 12)}</b><em>Sin prima ni cesantías</em></div>
+    </div>
+    <div class="cards" style="margin-top:13px">
+      <article class="mini"><i>⚖️</i><h3>Único y nacional</h3><p>No hay mínimos departamentales: el SMMLV rige igual en Bogotá, Medellín o San Andrés.</p></article>
+      <article class="mini"><i>⏱️</i><h3>15 de julio de 2026</h3><p>La jornada baja de 44 a 42 horas. El mensual no cambia; la hora ordinaria sube a {cop2(SMLMV / HORAS_42)}.</p></article>
+      <article class="mini"><i>🧾</i><h3>Aparte del devengado</h3><p>Prima, cesantías, horas extras y recargos se liquidan por fuera de esta cuenta.</p></article>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="💵" base="/co" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />SMMLV Decreto 0159/2026 (transitorio) y auxilio Decreto 1470/2025. Neto = devengado − 4% salud − 4% pensión sobre el IBC (Ley 100/1993).</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.smc{--brand:#5c1b33;--accent:#7ef0bc;--soft:#f7ecf0;--warn:#fdf0e6}
+  .hcm.smc .hero{background:linear-gradient(135deg,#5c1b33,#8d3350)}
+  .hcm.smc .tag{color:#4a1428}
+  .hcm.smc .cta{color:#123a2c}
+  .hcm.smc .over{color:#e3bccb}
+  .hcm.smc .answer{color:#f0dae2}
+  .hcm.smc .equation{color:#e0bfcc}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+  .hcm.smc .row{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,.8fr)}
+  @media(max-width:760px){.hcm.smc .row{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr)}.hcm.smc .row small{grid-column:1/-1;margin-top:-6px}}
+</style>
+
+<script is:inline define:vars={{ CFG }}>
+  (function () {
+    var root = document.querySelector('.hcm.smc');
+    if (!root) return;
+    var cop = function (x) { return '$' + new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(Math.round(x)); };
+    var cop2 = function (x) { return '$' + new Intl.NumberFormat('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(x); };
+    var $ = function (id) { return document.getElementById(id); };
+    var aplica = true;
+
+    function set(id, v) { var el = $(id); if (el) el.textContent = v; }
+
+    function render() {
+      var salario = Number($('sm-salario').value);
+      var horas = Number($('sm-jornada').value) || CFG.HORAS;
+      var big = $('sm-big'), ans = $('sm-answer'), eq = $('sm-eq');
+
+      if (!salario || salario < CFG.SMLMV) {
+        big.textContent = '—';
+        ans.textContent = 'El salario no puede ser inferior al SMMLV 2026 (' + cop(CFG.SMLMV) + ').';
+        set('sm-bruto', '—'); set('sm-note', '');
+        eq.textContent = 'Ingresá un salario igual o mayor al mínimo legal.';
+        return;
+      }
+
+      // Misma regla que la fórmula: el auxilio solo si el salario es inferior a 2 SMLMV.
+      var elegible = salario < CFG.TOPE;
+      var auxilio = (aplica && elegible) ? CFG.AUXILIO : 0;
+      var bruto = salario + auxilio;
+      var salud = salario * CFG.SALUD;
+      var pension = salario * CFG.PENSION;
+      var neto = bruto - salud - pension;
+
+      big.textContent = cop(neto);
+      ans.textContent = auxilio > 0
+        ? 'Devengado de ' + cop(bruto) + ' menos ' + cop(salud + pension) + ' de salud y pensión. El auxilio no paga aportes.'
+        : (elegible
+          ? 'Sin auxilio de transporte: todo tu devengado (' + cop(bruto) + ') es salario y paga el 8% de aportes.'
+          : 'Ganás ' + cop(salario) + ', desde 2 SMMLV (' + cop(CFG.TOPE) + ') se pierde el derecho al auxilio de transporte.');
+      set('sm-bruto', cop(bruto));
+      set('sm-note', auxilio > 0
+        ? cop(salario) + ' de salario + ' + cop(auxilio) + ' de auxilio de transporte.'
+        : cop(salario) + ' de salario, sin auxilio de transporte.');
+      eq.innerHTML = '(' + cop(salario) + ' + ' + cop(auxilio) + ') − 8% sobre el IBC = <b>' + cop(neto) + '</b>';
+
+      set('sm-r-salario', cop(salario));
+      set('sm-r-aux', cop(auxilio));
+      set('sm-r-bruto', cop(bruto));
+      set('sm-r-salud', '−' + cop(salud));
+      set('sm-r-pension', '−' + cop(pension));
+      set('sm-r-neto', cop(neto));
+
+      set('sm-hora', cop2(Math.round((salario / horas) * 100) / 100));
+      set('sm-dia', cop2(Math.round((salario / 30) * 100) / 100));
+      set('sm-semana', cop(Math.round(((salario * 12) / 52) * 100) / 100));
+      set('sm-anio', cop(salario * 12));
+    }
+
+    var btns = [$('sm-aux-si'), $('sm-aux-no')];
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        aplica = b.getAttribute('data-v') === 'true';
+        btns.forEach(function (o) { o.classList.toggle('active', o === b); });
+        render();
+      });
+    });
+    $('sm-salario').addEventListener('input', render);
+    $('sm-jornada').addEventListener('change', render);
+    $('sm-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

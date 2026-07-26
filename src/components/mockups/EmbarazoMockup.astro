@@ -1,0 +1,309 @@
+---
+/**
+ * Flagship "Calculadora de embarazo" — mockup bespoke, tema salud (YMYL).
+ * El script inline replica src/lib/formulas/embarazo.ts:
+ *   dias = floor((hoy − FUM)/86400000)   ·   semanas = floor(dias/7), extra = dias % 7
+ *   FPP = FUM + 280 días  ·  diasRestantes = max(0, 280 − dias)
+ *   trimestre ACOG: 1º sem 0–13 · 2º sem 14–27 · 3º sem 28+
+ *   progreso = min(100, dias/280*100).toFixed(1)
+ *   concepción = FUM + 14 · 2º trim = FUM + 98 · 3er trim = FUM + 196
+ * Mismas guardas y mismos mensajes de error que la fórmula real.
+ * Los datos semana a semana (fruta/longitud/peso/desarrollo/síntomas) se
+ * SERIALIZAN desde src/lib/data/embarazo-semana-a-semana.ts, no se duplican.
+ * HITOS obstétricos: la fórmula los tiene como const local no exportada, así que
+ * se replican textualmente (versión es) para que `proximoControl` coincida.
+ * El primer paint sale de llamar a la fórmula real en el frontmatter.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { SEMANAS_EMBARAZO } from '../../lib/data/embarazo-semana-a-semana.ts';
+import { embarazo } from '../../lib/formulas/embarazo.ts';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Datos semana a semana serializados (sólo campos es, para el script inline).
+const SEM_DATA: Record<string, any> = {};
+for (const k of Object.keys(SEMANAS_EMBARAZO)) {
+  const s = (SEMANAS_EMBARAZO as any)[k];
+  SEM_DATA[k] = { longitudCm: s.longitudCm, pesoG: s.pesoG, fruta: s.fruta, desarrollo: s.desarrollo, sintomas: s.sintomas };
+}
+
+const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const nice = (s: string) => { const [y, m, d] = s.split('-').map(Number); return `${d} de ${MESES[m - 1]} de ${y}`; };
+
+// Primer paint: FUM por defecto = hoy − 84 días (12 semanas). El script la
+// recalcula contra la fecha real del visitante al cargar.
+const hoy0 = new Date(); hoy0.setHours(0, 0, 0, 0);
+const fumDef = new Date(hoy0.getTime()); fumDef.setDate(fumDef.getDate() - 84);
+const fumDefIso = iso(fumDef);
+const r0 = embarazo({ fum: fumDefIso });
+const semTotal0 = 12, extra0 = 0;
+const pct0 = parseFloat(r0.progreso);
+const marker0 = Math.min(98, Math.max(2, pct0));
+---
+
+<main class="page hcm eb">
+  <div class="crumb">Inicio / <a href="/categoria/salud">Salud</a> / <b>Calculadora de embarazo</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🤰 SEMANAS Y FECHA DE PARTO</span>
+      <h1>¿En qué semana de embarazo estás?</h1>
+      <p>Con el primer día de tu última menstruación calculamos tu semana y día exactos, el trimestre y la fecha probable de parto (regla de Naegele). Es una estimación: el control obstétrico manda.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🤰</div>
+      <div class="hero-stat"><span>Regla de Naegele</span><b>FUM + 280 días</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="eb-form">
+      <h2>Tu última menstruación</h2>
+      <p class="sub">Un solo dato: el <b>primer día</b> de tu último período. Todo lo demás se deduce de ahí.</p>
+      <div class="field">
+        <label for="eb-fum">Fecha de última menstruación <small>primer día del período</small></label>
+        <div class="control"><span>📅</span><input id="eb-fum" type="date" value={fumDefIso} data-auto="1" /></div>
+      </div>
+      <div class="eb-hint">
+        <b>¿No la recordás?</b> La ecografía del primer trimestre (semanas 8 a 12) data el embarazo con un margen de ±5 días y es la que vale como dato oficial.
+      </div>
+      <button class="cta" type="submit">Calcular semana y FPP →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Estás de</div>
+        <div class="big" id="eb-big">{semTotal0} <small>semanas</small> {extra0} <small>días</small></div>
+        <p class="answer" id="eb-answer">{`${r0.trimestre === 1 ? '1er' : r0.trimestre === 2 ? '2º' : '3er'} trimestre · ${r0.progreso} del camino recorrido · faltan ${r0.diasRestantes} días.`}</p>
+        <div class="result-box">
+          <span>Fecha probable de parto</span>
+          <b id="eb-fpp">{nice(r0.fpp)}</b>
+          <small id="eb-fppnote">Sólo el 5% de los bebés nace ese día exacto: entre las semanas 37 y 42 el parto es a término.</small>
+        </div>
+      </div>
+      <div class="equation" id="eb-eq">{fumDefIso.split('-').reverse().join('/')} + 280 días = <b>{nice(r0.fpp)}</b></div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Dónde estás en los tres trimestres</h2>
+      <p>División ACOG: 1º hasta el día 97, 2º del 98 al 195, 3º del 196 en adelante.</p>
+    </div>
+
+    <div class="eb-tri">
+      <div class="eb-mark" id="eb-mark" style={`left:${marker0}%`}>
+        <span id="eb-marklabel">{`Semana ${semTotal0}+${extra0}`}</span>
+        <i></i>
+      </div>
+      <div class="eb-bar">
+        <div class="eb-seg s1"><b>1er trimestre</b><em>semanas 0 – 13</em></div>
+        <div class="eb-seg s2"><b>2º trimestre</b><em>semanas 14 – 27</em></div>
+        <div class="eb-seg s3"><b>3er trimestre</b><em>semanas 28 – 40</em></div>
+      </div>
+      <div class="eb-scale"><span>FUM · día 0</span><span id="eb-day">{`día ${84}`}</span><span>día 280 · FPP</span></div>
+    </div>
+
+    <div class="progress"><i id="eb-prog" style={`width:${pct0}%`}></i></div>
+
+    <div class="timeline">
+      <div class="step"><span>Concepción estimada</span><b id="eb-conc">{nice(r0.fechaConcepcion)}</b><em>FUM + 14 días (ovulación en ciclo de 28)</em></div>
+      <div class="step"><span>Arranca el 2º trimestre</span><b id="eb-t2">{nice(r0.inicioSegundoTrimestre)}</b><em>semana 14 0/7 · día 98</em></div>
+      <div class="step"><span>Arranca el 3er trimestre</span><b id="eb-t3">{nice(r0.inicioTercerTrimestre)}</b><em>semana 28 0/7 · día 196</em></div>
+      <div class="step"><span>Días restantes</span><b id="eb-rest">{r0.diasRestantes}</b><em>hasta completar las 40 semanas</em></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Tu bebé esta semana</h2>
+      <p>Promedios estándar ACOG / Mayo Clinic. Cada bebé crece a su ritmo.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>🍋</i><h3>Tamaño</h3><p id="eb-tam">{r0.tamanoBebe}</p></article>
+      <article class="mini"><i>📏</i><h3>Longitud y peso</h3><p id="eb-med">{r0.medidasBebe}</p></article>
+      <article class="mini"><i>🌱</i><h3>Qué se desarrolla</h3><p id="eb-des">{r0.desarrolloSemana}</p></article>
+    </div>
+
+    <div class="eb-two">
+      <div class="table">
+        <div class="row"><b>Qué podés sentir</b><small id="eb-sint">{r0.sintomasSemana}</small></div>
+        <div class="row"><b>Próximo control</b><small id="eb-ctrl">{r0.proximoControl}</small></div>
+      </div>
+    </div>
+
+    <div class="notice">
+      <span>⚕️</span>
+      <div><b>Las fechas son estimativas, no un diagnóstico.</b>La regla de Naegele asume ciclos regulares de 28 días. Si tu ciclo es más largo o más corto, si hubo fertilización asistida o si no recordás bien la FUM, la ecografía del primer trimestre reemplaza este cálculo. Ante sangrado, dolor o cualquier duda, consultá con tu obstetra: esta calculadora no sustituye el control prenatal.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🤰" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Regla de Naegele (FPP = FUM + 280 días) y trimestres según convención ACOG. Desarrollo fetal: promedios ACOG / Mayo Clinic.</div>
+    <div>Resultado orientativo · No reemplaza el control obstétrico</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.eb{--brand:#4a3159;--accent:#f7c9dd;--soft:#f5eefa}
+  .hcm.eb .hero{background:linear-gradient(135deg,#4a3159,#8a6a9b)}
+  .hcm.eb .hero p{color:#ece2f2}
+  .hcm.eb .tag{color:#4a3159}
+  .hcm.eb .cta{color:#4a3159}
+  .hcm.eb .over{color:#d3bede}
+  .hcm.eb .answer{color:#ece2f2}
+  .hcm.eb .equation{color:#d3bede}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+  /* Línea de tiempo de trimestres con marcador — pieza propia de este calc */
+  .hcm.eb .eb-tri{position:relative;padding-top:46px;margin-bottom:6px}
+  .hcm.eb .eb-bar{display:grid;grid-template-columns:minmax(0,98fr) minmax(0,98fr) minmax(0,85fr);gap:5px}
+  .hcm.eb .eb-seg{border-radius:14px;padding:14px 12px;min-width:0;color:#42305a}
+  .hcm.eb .eb-seg b{display:block;font-size:14px}
+  .hcm.eb .eb-seg em{font-style:normal;font-size:12px;opacity:.75}
+  .hcm.eb .eb-seg.s1{background:#f6ecf9}
+  .hcm.eb .eb-seg.s2{background:#e6d4ef}
+  .hcm.eb .eb-seg.s3{background:#cdb2dd}
+  .hcm.eb .eb-mark{position:absolute;top:0;transform:translateX(-50%);text-align:center;transition:left .2s ease}
+  .hcm.eb .eb-mark span{display:inline-block;background:var(--brand);color:#fff;font-weight:800;font-size:12px;padding:6px 10px;border-radius:50px;white-space:nowrap}
+  .hcm.eb .eb-mark i{display:block;width:2px;height:20px;margin:2px auto 0;background:var(--brand)}
+  .hcm.eb .eb-scale{display:flex;justify-content:space-between;gap:8px;margin-top:8px;color:var(--muted);font-size:12px}
+  .hcm.eb .eb-two{margin-top:13px}
+  .hcm.eb .eb-two .row{grid-template-columns:minmax(0,.6fr) minmax(0,1.4fr)}
+  .hcm.eb .eb-hint{background:var(--soft);border-radius:14px;padding:14px;font-size:14px;line-height:1.45;color:#4a3f52}
+  @media(max-width:760px){
+    .hcm.eb .eb-seg{padding:11px 9px}
+    .hcm.eb .eb-seg b{font-size:12px}
+    .hcm.eb .eb-seg em{display:none}
+    .hcm.eb .eb-two .row{grid-template-columns:minmax(0,1fr)}
+  }
+</style>
+
+<script is:inline define:vars={{ SEM_DATA }}>
+  (function () {
+    var root = document.querySelector('.hcm.eb');
+    if (!root) return;
+    var MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    var input = document.getElementById('eb-fum');
+
+    // HITOS: copia textual (es) de la const no exportada de embarazo.ts
+    var HITOS = [
+      { a: 8,  b: 12, ev: 'primera ecografía (confirma edad gestacional y viabilidad)' },
+      { a: 11, b: 13, ev: 'ecografía de tamiz del 1º trimestre (translucencia nucal)' },
+      { a: 16, b: 20, ev: 'estudios de laboratorio (hemograma, orina, VDRL, HIV)' },
+      { a: 20, b: 22, ev: 'ecografía scan morfológica (se ve el sexo del bebé)' },
+      { a: 24, b: 28, ev: "test de O'Sullivan (diabetes gestacional)" },
+      { a: 27, b: 28, ev: 'vacuna dTpa (triple bacteriana acelular)' },
+      { a: 32, b: 34, ev: 'ecografía de crecimiento' },
+      { a: 35, b: 37, ev: 'cultivo estreptococo B vaginal/rectal' },
+      { a: 37, b: 41, ev: 'controles semanales + monitoreo fetal' }
+    ];
+    function proximoHito(sem) {
+      if (sem >= 41) return 'Embarazo postérmino — control inmediato con tu obstetra.';
+      for (var i = 0; i < HITOS.length; i++) {
+        var h = HITOS[i];
+        if (sem < h.b) {
+          if (sem >= h.a) return 'Ahora (semanas ' + h.a + '–' + h.b + '): ' + h.ev + '.';
+          var falta = h.a - sem;
+          return 'En ' + falta + ' semana' + (falta === 1 ? '' : 's') + ' (semana ' + h.a + '): ' + h.ev + '.';
+        }
+      }
+      return 'Seguí con controles semanales hasta el parto.';
+    }
+    function fmtLongitud(cm) {
+      if (cm <= 0) return 'unos mm';
+      if (cm < 1) return Math.round(cm * 10) + ' mm';
+      return cm.toFixed(1).replace('.', ',') + ' cm';
+    }
+    function fmtPeso(g) {
+      if (g <= 0) return 'menos de 1 g';
+      if (g >= 1000) return (g / 1000).toFixed(2).replace('.', ',') + ' kg';
+      return g + ' g';
+    }
+    function notaMedida(s) { return s < 20 ? 'de la coronilla a la rabadilla' : 'de la cabeza a los pies'; }
+    function datosSemana(s) {
+      if (!isFinite(s) || s < 4) return null;
+      var k = Math.min(40, Math.max(4, Math.floor(s)));
+      return SEM_DATA[k] || null;
+    }
+    function iso(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+    function nice(d) { return d.getDate() + ' de ' + MESES[d.getMonth()] + ' de ' + d.getFullYear(); }
+    function addDays(d, n) { var o = new Date(d.getTime()); o.setDate(o.getDate() + n); return o; }
+    function set(id, txt) { var el = document.getElementById(id); if (el) el.textContent = txt; }
+
+    function fail(msg) {
+      document.getElementById('eb-big').innerHTML = '—';
+      set('eb-answer', msg);
+      set('eb-fpp', '—');
+      set('eb-fppnote', 'Revisá la fecha ingresada para poder estimar la FPP.');
+      document.getElementById('eb-eq').innerHTML = 'FUM + 280 días = fecha probable de parto';
+      set('eb-conc', '—'); set('eb-t2', '—'); set('eb-t3', '—'); set('eb-rest', '—');
+      set('eb-tam', '—'); set('eb-med', '—'); set('eb-des', '—'); set('eb-sint', '—'); set('eb-ctrl', '—');
+      set('eb-marklabel', '—'); set('eb-day', 'día —');
+      document.getElementById('eb-mark').style.left = '2%';
+      document.getElementById('eb-prog').style.width = '0%';
+    }
+
+    function render() {
+      var val = input.value;
+      // Mismas guardas y mensajes que embarazo.ts
+      if (!val) return fail('Ingresá la fecha de tu última menstruación');
+      var p = String(val).split('-').map(Number);
+      if (p.length !== 3 || p.some(isNaN)) return fail('Fecha inválida');
+      var fum = new Date(p[0], p[1] - 1, p[2]);
+      if (isNaN(fum.getTime())) return fail('Fecha inválida');
+      var hoy = new Date(); hoy.setHours(0, 0, 0, 0); fum.setHours(0, 0, 0, 0);
+      if (fum > hoy) return fail('La fecha no puede ser futura');
+      var dias = Math.floor((hoy.getTime() - fum.getTime()) / 86400000);
+      if (dias > 300) return fail('Fecha demasiado antigua (más de 300 días). Revisá la FUM ingresada.');
+
+      var semanas = Math.floor(dias / 7);
+      var extra = dias % 7;
+      var fpp = addDays(fum, 280);
+      var restantes = Math.max(0, 280 - dias);
+      var trimestre = semanas >= 28 ? 3 : (semanas >= 14 ? 2 : 1);
+      var progreso = Math.min(100, (dias / 280) * 100).toFixed(1);
+      var trimNombre = trimestre === 1 ? '1er trimestre' : (trimestre === 2 ? '2º trimestre' : '3er trimestre');
+
+      document.getElementById('eb-big').innerHTML =
+        semanas + ' <small>semanas</small> ' + extra + ' <small>días</small>';
+      set('eb-answer', trimNombre + ' · ' + progreso + '% del camino recorrido · faltan ' + restantes + ' días.');
+      set('eb-fpp', nice(fpp));
+      set('eb-fppnote', 'Sólo el 5% de los bebés nace ese día exacto: entre las semanas 37 y 42 el parto es a término.');
+      document.getElementById('eb-eq').innerHTML =
+        p[2] + '/' + p[1] + '/' + p[0] + ' + 280 días = <b>' + nice(fpp) + '</b>';
+
+      set('eb-conc', nice(addDays(fum, 14)));
+      set('eb-t2', nice(addDays(fum, 98)));
+      set('eb-t3', nice(addDays(fum, 196)));
+      set('eb-rest', String(restantes));
+
+      var pct = Math.min(100, (dias / 280) * 100);
+      document.getElementById('eb-prog').style.width = pct + '%';
+      document.getElementById('eb-mark').style.left = Math.min(98, Math.max(2, pct)) + '%';
+      set('eb-marklabel', 'Semana ' + semanas + '+' + extra);
+      set('eb-day', 'día ' + dias);
+
+      var sem = datosSemana(semanas);
+      set('eb-tam', sem ? 'Del tamaño de ' + sem.fruta : 'Demasiado temprano para estimar el tamaño');
+      set('eb-med', sem ? '~' + fmtLongitud(sem.longitudCm) + ' (' + notaMedida(semanas) + ') · ~' + fmtPeso(sem.pesoG) : '—');
+      set('eb-des', sem ? sem.desarrollo : 'El embrión recién empieza a formarse.');
+      set('eb-sint', sem ? sem.sintomas : 'Quizá notes los primeros signos del embarazo.');
+      set('eb-ctrl', proximoHito(semanas));
+    }
+
+    // Default vivo: 12 semanas contra la fecha real del visitante, salvo que la toque.
+    if (input.dataset.auto === '1') {
+      var h = new Date(); h.setHours(0, 0, 0, 0); h.setDate(h.getDate() - 84);
+      input.value = iso(h);
+    }
+    input.addEventListener('input', function () { input.dataset.auto = '0'; render(); });
+    document.getElementById('eb-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

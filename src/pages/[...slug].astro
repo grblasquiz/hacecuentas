@@ -56,6 +56,26 @@ import CuposLibertadoresMockup from '../components/mockups/CuposLibertadoresMock
 import CuposSudamericanaMockup from '../components/mockups/CuposSudamericanaMockup.astro';
 import PorcentajesMockup from '../components/mockups/PorcentajesMockup.astro';
 import IvaAgregarDiscriminarMockup from '../components/mockups/IvaAgregarDiscriminarMockup.astro';
+import InflacionIpcMockup from '../components/mockups/InflacionIpcMockup.astro';
+import AlquilerIclMockup from '../components/mockups/AlquilerIclMockup.astro';
+import EdadExactaMockup from '../components/mockups/EdadExactaMockup.astro';
+import GananciasSueldoMockup from '../components/mockups/GananciasSueldoMockup.astro';
+import ContadorPalabrasMockup from '../components/mockups/ContadorPalabrasMockup.astro';
+import FahrenheitHornoMockup from '../components/mockups/FahrenheitHornoMockup.astro';
+import MundialBonusJugadorMockup from '../components/mockups/MundialBonusJugadorMockup.astro';
+import GeneracionMockup from '../components/mockups/GeneracionMockup.astro';
+import TransferAutoMockup from '../components/mockups/TransferAutoMockup.astro';
+import CostoM2ConstruccionMockup from '../components/mockups/CostoM2ConstruccionMockup.astro';
+import MonotributoMockup from '../components/mockups/MonotributoMockup.astro';
+import SueldoEnManoMockup from '../components/mockups/SueldoEnManoMockup.astro';
+import ImcInfantilPercentilMockup from '../components/mockups/ImcInfantilPercentilMockup.astro';
+import EmbarazoMockup from '../components/mockups/EmbarazoMockup.astro';
+import BebidasEventoMockup from '../components/mockups/BebidasEventoMockup.astro';
+import ResistenciaColoresMockup from '../components/mockups/ResistenciaColoresMockup.astro';
+import MundialGolesArgMockup from '../components/mockups/MundialGolesArgMockup.astro';
+import InteresCompuestoMockup from '../components/mockups/InteresCompuestoMockup.astro';
+import LadrillosM2Mockup from '../components/mockups/LadrillosM2Mockup.astro';
+import PlazoFijoMockup from '../components/mockups/PlazoFijoMockup.astro';
 import CombustibleViajeFlagship from '../components/CombustibleViajeFlagship.astro';
 import GananciasCuartaCat from '../components/GananciasCuartaCat.astro';
 import InteresJudicialTasa from '../components/InteresJudicialTasa.astro';
@@ -1151,11 +1171,87 @@ const MOCKUP_BATCH: Record<string, string> = {
   'calculadora-costo-veterinario-consulta-promedio': 'veterinario',
   'calculadora-cupos-copa-libertadores-pais-conmebol': 'libertadores',
   'calculadora-cupos-copa-sudamericana-pais-conmebol': 'sudamericana',
+  'calculadora-actualizacion-inflacion-ipc': 'ipc',
+  'calculadora-actualizacion-alquiler-icl': 'icl',
+  'calculadora-edad-exacta': 'edad-exacta',
+  'calculadora-impuesto-ganancias-sueldo': 'ganancias-sueldo',
+  'calculadora-contador-de-palabras-y-caracteres': 'contador-palabras',
+  'calculadora-conversor-fahrenheit-a-celsius-horno': 'fahrenheit-horno',
+  'calculadora-mundial-2026-bonus-jugador-fase': 'mundial-bonus',
+  'calculadora-generacion-perteneces': 'generacion',
+  'calculadora-transfer-auto-costo-registro': 'transfer-auto',
+  'calculadora-costo-m2-construccion-argentina': 'costo-m2',
+  'calculadora-monotributo-2026': 'monotributo',
+  'sueldo-en-mano-argentina': 'sueldo-mano',
+  'calculadora-imc-infantil-percentil': 'imc-infantil',
+  'calculadora-embarazo': 'embarazo',
+  'calculadora-bebidas-evento-litros-por-persona': 'bebidas',
+  'calculadora-resistencia-codigo-colores-4-5-bandas': 'resistencia',
+  'calculadora-mundial-2026-goles-argentina-repetir-titulo': 'mundial-goles',
+  'calculadora-interes-compuesto': 'interes-compuesto',
+  'calculadora-ladrillos-por-m2-construccion': 'ladrillos',
+  'calculadora-plazo-fijo': 'plazo-fijo',
 };
 const mockupBatch = MOCKUP_BATCH[calc.slug] || null;
 const mbRelated = mockupBatch
   ? (calc.relatedSlugs || []).map((s: string) => allCalcs.find((c: any) => c.slug === s)).filter(Boolean)
   : [];
+// Mapa key → componente. Antes eran N líneas `{mockupBatch === 'x' && <X/>}`
+// en el template; con 100+ mockups eso es inmantenible. Un solo punto de
+// montaje: agregar mockup = una entrada en MOCKUP_BATCH y otra acá.
+const MOCKUP_COMPONENTS: Record<string, any> = {
+  'bits': BitsABytesMockup,
+  'metros-lineales': MetrosLinealesM2Mockup,
+  'bateria': DuracionBateriaMockup,
+  'palabras': PalabrasPaginasMockup,
+  'navidad': NavidadMockup,
+  'conejo': EdadConejoMockup,
+  'mundial': MundialDebutMockup,
+  'vacunas': VacunasBebeMockup,
+  'ppi': ResolucionPpiMockup,
+  'audio': AudioBitrateMockup,
+  'ancho-banda': AnchoBandaDescargaMockup,
+  'almacenamiento': AlmacenamientoUnidadesMockup,
+  'palabras-trabajo': PalabrasPorPaginaTrabajoMockup,
+  'fecha10000': Fecha10000DiasMockup,
+  'asistencia': IndiceAsistenciaMockup,
+  'costo-km': CostoPorKilometroMockup,
+  'cisterna': CapacidadTanqueMockup,
+  'pareja': DividirGastosParejaMockup,
+  'tortuga': EdadTortugaMockup,
+  'empanadas': RendimientoEmpanadasMockup,
+  'aadvantage': MillasAAdvantageMockup,
+  'millaje': MillajeProgramasMockup,
+  'licencia': LicenciaFamiliarMockup,
+  'docente': SueldoDocenteMockup,
+  'veterinario': CostoVeterinarioMockup,
+  'libertadores': CuposLibertadoresMockup,
+  'sudamericana': CuposSudamericanaMockup,
+  'ipc': InflacionIpcMockup,
+  'icl': AlquilerIclMockup,
+  'edad-exacta': EdadExactaMockup,
+  'ganancias-sueldo': GananciasSueldoMockup,
+  'contador-palabras': ContadorPalabrasMockup,
+  'fahrenheit-horno': FahrenheitHornoMockup,
+  'mundial-bonus': MundialBonusJugadorMockup,
+  'generacion': GeneracionMockup,
+  'transfer-auto': TransferAutoMockup,
+  'costo-m2': CostoM2ConstruccionMockup,
+  'monotributo': MonotributoMockup,
+  'sueldo-mano': SueldoEnManoMockup,
+  'imc-infantil': ImcInfantilPercentilMockup,
+  'embarazo': EmbarazoMockup,
+  'bebidas': BebidasEventoMockup,
+  'resistencia': ResistenciaColoresMockup,
+  'mundial-goles': MundialGolesArgMockup,
+  'interes-compuesto': InteresCompuestoMockup,
+  'ladrillos': LadrillosM2Mockup,
+  'plazo-fijo': PlazoFijoMockup,
+};
+const MockupComp = mockupBatch ? MOCKUP_COMPONENTS[mockupBatch] : null;
+// metros-lineales usa una lista de relacionadas curada, no la del JSON.
+const mockupRelated = mockupBatch === 'metros-lineales' ? mtlRelated : mbRelated;
+
 const PESO_PERRO_FLAGSHIP = new Set([
   'calculadora-peso-ideal-pitbull',
   'calculadora-peso-ideal-rottweiler',
@@ -1313,33 +1409,7 @@ const flagshipDomain: 'money' | 'data' | 'health' | 'home' | 'knowledge' | 'life
   {isTempHorno && <TemperaturaHornoFlagship calc={calc} related={thRelated} />}
   {isImpresion3d && <Impresion3dFlagship calc={calc} related={i3Related} />}
   {isPesoPerro && <PesoIdealPerroFlagship calc={calc} related={ppRelated} />}
-  {mockupBatch === 'bits' && <BitsABytesMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'metros-lineales' && <MetrosLinealesM2Mockup calc={calc} related={mtlRelated} />}
-  {mockupBatch === 'bateria' && <DuracionBateriaMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'palabras' && <PalabrasPaginasMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'navidad' && <NavidadMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'conejo' && <EdadConejoMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'mundial' && <MundialDebutMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'vacunas' && <VacunasBebeMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'ppi' && <ResolucionPpiMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'audio' && <AudioBitrateMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'ancho-banda' && <AnchoBandaDescargaMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'almacenamiento' && <AlmacenamientoUnidadesMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'palabras-trabajo' && <PalabrasPorPaginaTrabajoMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'fecha10000' && <Fecha10000DiasMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'asistencia' && <IndiceAsistenciaMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'costo-km' && <CostoPorKilometroMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'cisterna' && <CapacidadTanqueMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'pareja' && <DividirGastosParejaMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'tortuga' && <EdadTortugaMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'empanadas' && <RendimientoEmpanadasMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'aadvantage' && <MillasAAdvantageMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'millaje' && <MillajeProgramasMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'licencia' && <LicenciaFamiliarMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'docente' && <SueldoDocenteMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'veterinario' && <CostoVeterinarioMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'libertadores' && <CuposLibertadoresMockup calc={calc} related={mbRelated} />}
-  {mockupBatch === 'sudamericana' && <CuposSudamericanaMockup calc={calc} related={mbRelated} />}
+  {MockupComp && <MockupComp calc={calc} related={mockupRelated} />}
   {isCombustibleViaje && <CombustibleViajeFlagship calc={calc} related={vcRelated} />}
   {isConversorLatam && <ConversorMonedaLatam calc={calc} related={cmRelated} />}
   {isMillasLatam && <MillasLatamMockup calc={calc} related={mlatamRelated} />}

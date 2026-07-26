@@ -1,0 +1,252 @@
+---
+/**
+ * Flagship "Edad exacta" — mockup bespoke.
+ * El script inline replica EXACTAMENTE src/lib/formulas/edad.ts:
+ *   anios/meses/dias con ajuste por día negativo (días del mes anterior) y mes
+ *   negativo (+12), diasTotal = floor((hoy - nac)/86.400.000), mesesTotal =
+ *   anios*12 + meses, horasTotal = diasTotal*24, próximo cumpleaños y días
+ *   hasta el cumple. Mismas guardas y mismos mensajes de error.
+ * Extras derivados del calendario (no inventados): día de la semana del
+ * nacimiento y avance del año personal (barra al próximo cumple).
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const DEMO = '1990-03-15';
+
+// ── Réplica de edad.ts para el primer paint (SSR) ──────────────────────────
+const [yy, mm, dd] = DEMO.split('-').map(Number);
+const nacimiento = new Date(yy, mm - 1, dd);
+const hoy = new Date();
+hoy.setHours(0, 0, 0, 0);
+nacimiento.setHours(0, 0, 0, 0);
+
+let anios = hoy.getFullYear() - nacimiento.getFullYear();
+let meses = hoy.getMonth() - nacimiento.getMonth();
+let dias = hoy.getDate() - nacimiento.getDate();
+if (dias < 0) {
+  meses--;
+  dias += new Date(hoy.getFullYear(), hoy.getMonth(), 0).getDate();
+}
+if (meses < 0) { anios--; meses += 12; }
+
+const msPerDay = 86400000;
+const diasTotal = Math.floor((hoy.getTime() - nacimiento.getTime()) / msPerDay);
+const mesesTotal = anios * 12 + meses;
+const horasTotal = (diasTotal * 24).toLocaleString('es-AR');
+
+let proxCumple = new Date(hoy.getFullYear(), nacimiento.getMonth(), nacimiento.getDate());
+if (proxCumple <= hoy) proxCumple = new Date(hoy.getFullYear() + 1, nacimiento.getMonth(), nacimiento.getDate());
+const diasHastaCumple = Math.round((proxCumple.getTime() - hoy.getTime()) / msPerDay);
+
+const ultimoCumple = new Date(proxCumple.getFullYear() - 1, proxCumple.getMonth(), proxCumple.getDate());
+const cicloDias = Math.round((proxCumple.getTime() - ultimoCumple.getTime()) / msPerDay);
+const avance = Math.max(0, Math.min(100, Math.round(((cicloDias - diasHastaCumple) / cicloDias) * 100)));
+
+const nf = (x: number) => new Intl.NumberFormat('es-AR').format(x);
+const largo = (d: Date) => d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
+const diaSemana = nacimiento.toLocaleDateString('es-AR', { weekday: 'long' });
+const mesNac = nacimiento.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+const diasDelMesNac = new Date(yy, mm, 0).getDate();
+const offsetNac = new Date(yy, mm - 1, 1).getDay(); // 0 = domingo
+const celdasNac = [
+  ...Array.from({ length: offsetNac }, () => 0),
+  ...Array.from({ length: diasDelMesNac }, (_, i) => i + 1),
+];
+---
+
+<main class="page hcm ex">
+  <div class="crumb">Inicio / <a href="/categoria/vida">Vida</a> / <b>Edad exacta</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🎂 AÑOS, MESES Y DÍAS</span>
+      <h1>Tu edad exacta, hasta el último día</h1>
+      <p>Poné tu fecha de nacimiento y mirá el desglose completo: días vividos, horas, el día de la semana en que naciste y cuánto falta para el próximo cumple.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🕯️</div>
+      <div class="calendar">
+        <span id="ex-cal-month">{mesNac}</span>
+        <b id="ex-cal-day">{dd}</b>
+        <div class="days" id="ex-cal-days">
+          {celdasNac.map((d) => (
+            <i class={d === dd ? 'hot' : ''}>{d === 0 ? '' : d}</i>
+          ))}
+        </div>
+      </div>
+      <div class="hero-stat"><span>Días vividos</span><b id="ex-hero-dias">{nf(diasTotal)}</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="ex-form">
+      <h2>Fecha de nacimiento</h2>
+      <p class="sub">Se calcula contra el día de hoy, con años bisiestos y meses de distinto largo incluidos. Todo pasa en tu navegador.</p>
+      <div class="field">
+        <label for="ex-birth">Nacimiento <small>YYYY-MM-DD</small></label>
+        <div class="control"><input id="ex-birth" type="date" value={DEMO} max="2100-12-31" /></div>
+      </div>
+      <button class="cta" type="submit">Calcular mi edad exacta →</button>
+      <div class="notice" style="margin-top:18px">
+        <span>🎈</span>
+        <div><b id="ex-count-title">Faltan {nf(diasHastaCumple)} días para tu cumple</b>Vas {avance}% del camino desde tu último cumpleaños.</div>
+      </div>
+      <div class="progress"><i id="ex-bar" style={`width:${avance}%`}></i></div>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Tu edad exacta</div>
+        <div class="big" id="ex-big">{anios} <small>años</small></div>
+        <p class="answer" id="ex-answer">{anios} años, {meses} meses y {dias} días desde el {largo(nacimiento)}.</p>
+        <div class="result-box">
+          <span>Días vividos</span>
+          <b id="ex-dias">{nf(diasTotal)}</b>
+          <small id="ex-note">≈ {horasTotal} horas · {nf(mesesTotal)} meses completos.</small>
+        </div>
+      </div>
+      <div class="equation" id="ex-eq">hoy − fecha de nacimiento, ajustando meses y días</div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Tu vida en otras unidades</h2>
+      <p>El mismo intervalo, medido distinto.</p>
+    </div>
+    <div class="timeline">
+      <article class="step"><span>Días vividos</span><b id="ex-t-dias">{nf(diasTotal)}</b><em>desde el nacimiento</em></article>
+      <article class="step"><span>Meses completos</span><b id="ex-t-meses">{nf(mesesTotal)}</b><em>años × 12 + meses</em></article>
+      <article class="step"><span>Horas vividas</span><b id="ex-t-horas">{horasTotal}</b><em>días × 24</em></article>
+      <article class="step"><span>Naciste un</span><b id="ex-t-dow">{diaSemana}</b><em>calendario gregoriano</em></article>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Por qué el desglose no es una simple resta</h2>
+      <p>Tres detalles que cambian el resultado.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>📅</i><h3>Meses desparejos</h3><p>Enero tiene 31 días y febrero 28 o 29. Cuando el día de hoy es anterior al de tu nacimiento, los días que faltan se toman del mes anterior real, no de un promedio.</p></article>
+      <article class="mini"><i>🌀</i><h3>Bisiestos</h3><p>Un año es bisiesto si es divisible por 4, salvo los divisibles por 100 que no lo sean por 400. Por eso 2000 lo fue y 1900 no. Multiplicar por 365 te deja corto un día cada cuatro años.</p></article>
+      <article class="mini"><i>🕛</i><h3>Cambiás de edad a las 00:00</h3><p>Legalmente sumás un año el mismo día de tu cumpleaños, apenas empieza. Si naciste un 29 de febrero, en Argentina se toma el 1° de marzo los años no bisiestos.</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>Para bebés se cuenta en meses, no en años.</b>Hasta los 24 meses la pediatría usa meses completos: años × 12 + meses, restando uno si el día de hoy es anterior al de nacimiento. El campo "meses completos" de arriba ya es ese número.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🎂" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Diferencia entre la fecha de nacimiento y hoy con aritmética del calendario gregoriano (bisiestos incluidos). Fuente contextual: INDEC — Estadísticas Vitales.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.ex{--brand:#78243f;--accent:#ffb26b;--soft:#fbeef1}
+  .hcm.ex .hero{background:linear-gradient(135deg,#78243f,#b0576a)}
+  .hcm.ex .hero-art{position:relative}
+  .hcm.ex .art-icon{position:absolute;top:0;left:8px;font-size:58px;z-index:2}
+  .hcm.ex .calendar span{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:#8a7d80;font-weight:800}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.ex');
+    if (!root) return;
+    var B = document.getElementById('ex-birth');
+    var nf = function (x) { return new Intl.NumberFormat('es-AR').format(x); };
+    var largo = function (d) { return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }); };
+    var $ = function (id) { return document.getElementById(id); };
+    var MS = 86400000;
+
+    function fail(msg) {
+      $('ex-big').innerHTML = '—';
+      $('ex-answer').textContent = msg;
+      $('ex-dias').textContent = '—';
+      $('ex-note').textContent = '';
+      $('ex-eq').innerHTML = 'hoy − fecha de nacimiento, ajustando meses y días';
+      $('ex-count-title').textContent = 'Sin fecha válida no hay cuenta regresiva';
+      $('ex-bar').style.width = '0%';
+      ['ex-t-dias', 'ex-t-meses', 'ex-t-horas', 'ex-t-dow', 'ex-hero-dias'].forEach(function (id) { $(id).textContent = '—'; });
+    }
+
+    function render() {
+      // Mismas guardas y mensajes que src/lib/formulas/edad.ts
+      var raw = String(B.value || '');
+      if (!raw) return fail('Ingresá tu fecha de nacimiento');
+      var parts = raw.split('-').map(Number);
+      if (parts.length !== 3 || parts.some(isNaN)) return fail('Fecha inválida');
+      var nac = new Date(parts[0], parts[1] - 1, parts[2]);
+      if (isNaN(nac.getTime())) return fail('Fecha inválida');
+
+      var hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      nac.setHours(0, 0, 0, 0);
+      if (nac > hoy) return fail('La fecha no puede ser futura');
+
+      var anios = hoy.getFullYear() - nac.getFullYear();
+      var meses = hoy.getMonth() - nac.getMonth();
+      var dias = hoy.getDate() - nac.getDate();
+      if (dias < 0) {
+        meses--;
+        dias += new Date(hoy.getFullYear(), hoy.getMonth(), 0).getDate();
+      }
+      if (meses < 0) { anios--; meses += 12; }
+
+      var diasTotal = Math.floor((hoy.getTime() - nac.getTime()) / MS);
+      var mesesTotal = anios * 12 + meses;
+      var horasTotal = (diasTotal * 24).toLocaleString('es-AR');
+
+      var prox = new Date(hoy.getFullYear(), nac.getMonth(), nac.getDate());
+      if (prox <= hoy) prox = new Date(hoy.getFullYear() + 1, nac.getMonth(), nac.getDate());
+      var diasHastaCumple = Math.round((prox.getTime() - hoy.getTime()) / MS);
+
+      $('ex-big').innerHTML = anios + ' <small>años</small>';
+      $('ex-answer').textContent = anios + ' años, ' + meses + ' meses y ' + dias + ' días desde el ' + largo(nac) + '.';
+      $('ex-dias').textContent = nf(diasTotal);
+      $('ex-note').textContent = '≈ ' + horasTotal + ' horas · ' + nf(mesesTotal) + ' meses completos.';
+      $('ex-eq').innerHTML = largo(nac) + ' → hoy = <b>' + anios + ' años, ' + meses + ' meses y ' + dias + ' días</b>';
+
+      $('ex-t-dias').textContent = nf(diasTotal);
+      $('ex-t-meses').textContent = nf(mesesTotal);
+      $('ex-t-horas').textContent = horasTotal;
+      $('ex-t-dow').textContent = nac.toLocaleDateString('es-AR', { weekday: 'long' });
+      $('ex-hero-dias').textContent = nf(diasTotal);
+
+      // Cuenta regresiva al próximo cumple
+      var ultimo = new Date(prox.getFullYear() - 1, prox.getMonth(), prox.getDate());
+      var ciclo = Math.round((prox.getTime() - ultimo.getTime()) / MS);
+      var avance = Math.max(0, Math.min(100, Math.round(((ciclo - diasHastaCumple) / ciclo) * 100)));
+      $('ex-count-title').textContent = diasHastaCumple === 0
+        ? '¡Hoy es tu cumpleaños! 🎉'
+        : 'Faltan ' + nf(diasHastaCumple) + ' días para cumplir ' + (anios + 1) + ' (' + largo(prox) + ')';
+      $('ex-bar').style.width = avance + '%';
+
+      // Calendario del hero: mes de nacimiento con el día resaltado
+      $('ex-cal-month').textContent = nac.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+      $('ex-cal-day').textContent = String(nac.getDate());
+      var offset = new Date(nac.getFullYear(), nac.getMonth(), 1).getDay();
+      var total = new Date(nac.getFullYear(), nac.getMonth() + 1, 0).getDate();
+      var html = '';
+      for (var i = 0; i < offset; i++) html += '<i></i>';
+      for (var d = 1; d <= total; d++) html += '<i class="' + (d === nac.getDate() ? 'hot' : '') + '">' + d + '</i>';
+      $('ex-cal-days').innerHTML = html;
+    }
+
+    B.addEventListener('input', render);
+    B.addEventListener('change', render);
+    $('ex-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

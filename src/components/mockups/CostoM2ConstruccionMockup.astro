@@ -1,0 +1,251 @@
+---
+/**
+ * Flagship "Costo m² de construcción (Argentina)" — mockup bespoke.
+ * El script inline replica src/lib/formulas/costo-m2-construccion.ts:
+ *   usd  = TIPOS[tipo].usd × AJUSTE[provincia]
+ *   ars  = usd × 1200
+ *   totalUSD = round(usd × m2) · totalARS = round(ars × m2)
+ *   desglose: materiales 50% · mano de obra 30% · dirección 10% · permisos 10%
+ * Las constantes NO se duplican a mano: se derivan del motor real llamándolo
+ * con m2 = 1 (los USD/m² salen con provincia base gba_sur = factor 1,00 y los
+ * factores zonales salen del tipo "estandar", cuyo base es 1.000 USD/m²).
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { costoM2Construccion } from '../../lib/formulas/costo-m2-construccion';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+const tipoField = (calc?.fields || []).find((f: any) => f.id === 'tipo');
+const provField = (calc?.fields || []).find((f: any) => f.id === 'provincia');
+
+// USD/m² base de cada tipología, leído del motor (provincia base = factor 1,00)
+const TIPOS = (tipoField?.options || []).map((o: any) => {
+  const r = costoM2Construccion({ m2: 1, tipo: o.value, provincia: 'gba_sur' });
+  return { value: o.value, label: o.label, nombre: r.tipo, usd: r.costoPorM2USD };
+});
+// Factor zonal derivado del motor: estandar = 1.000 USD/m² ⇒ usd/1000 = factor
+const ZONAS = (provField?.options || []).map((o: any) => {
+  const r = costoM2Construccion({ m2: 1, tipo: 'estandar', provincia: o.value });
+  return { value: o.value, label: o.label, factor: r.costoPorM2USD / 1000 };
+});
+// Cotización implícita del motor (ars = usd × N)
+const base = costoM2Construccion({ m2: 1, tipo: 'estandar', provincia: 'gba_sur' });
+const DOLAR = base.costoPorM2ARS / base.costoPorM2USD;
+
+const DEF = { m2: 100, tipo: 'estandar', prov: 'gba_sur' };
+const r0 = costoM2Construccion({ m2: DEF.m2, tipo: DEF.tipo, provincia: DEF.prov });
+const nf = (x: number) => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(x);
+const usdF = (x: number) => 'US$' + nf(x);
+const arsF = (x: number) => '$' + nf(x);
+
+// Comparador de categorías (mismos m² y misma zona que el default)
+const COMPARA = ['economico', 'estandar', 'premium'];
+const cmp0 = COMPARA.map((t) => costoM2Construccion({ m2: DEF.m2, tipo: t, provincia: DEF.prov }));
+---
+
+<main class="page hcm cm">
+  <div class="crumb">Inicio / <a href="/categoria/construccion">Construcción</a> / <b>Costo por m²</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🧱 PRESUPUESTO DE OBRA</span>
+      <h1>¿Cuánto sale el m² de construcción hoy?</h1>
+      <p>Elegí superficie, tipología y zona. Te damos el costo en dólares y en pesos, con el desglose entre materiales y mano de obra.</p>
+    </div>
+    <div class="hero-art">
+      <div class="art-icon">🏗️</div>
+      <div class="hero-stat"><span>Estándar urbano · GBA base</span><b>{usdF(1000)}/m²</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="cm-form">
+      <h2>Tu obra</h2>
+      <p class="sub">Valores de referencia CAC / CPIC (abril 2026). No incluye el terreno.</p>
+      <div class="field">
+        <label for="cm-m2">Superficie a construir</label>
+        <div class="control"><input id="cm-m2" type="number" min="1" step="1" value={DEF.m2} /><span>m²</span></div>
+      </div>
+      <div class="field">
+        <label for="cm-tipo">Tipo de construcción</label>
+        <div class="control">
+          <select id="cm-tipo">
+            {TIPOS.map((t: any) => <option value={t.value} selected={t.value === DEF.tipo}>{t.label}</option>)}
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="cm-prov">Ubicación de la obra</label>
+        <div class="control">
+          <select id="cm-prov">
+            {ZONAS.map((z: any) => <option value={z.value} selected={z.value === DEF.prov}>{z.label}</option>)}
+          </select>
+        </div>
+      </div>
+      <button class="cta" type="submit">Calcular costo de obra →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Costo total de obra</div>
+        <div class="big" id="cm-big">{usdF(r0.costoTotalUSD)}</div>
+        <p class="answer" id="cm-answer">{r0.tipo} en zona base: {usdF(r0.costoPorM2USD)}/m² por {DEF.m2} m².</p>
+        <div class="result-box">
+          <span>En pesos</span>
+          <b id="cm-ars">{arsF(r0.costoTotalARS)}</b>
+          <small id="cm-note">{arsF(r0.costoPorM2ARS)} por m² · dólar de referencia {arsF(DOLAR)}.</small>
+        </div>
+      </div>
+      <div class="equation" id="cm-eq">{DEF.m2} m² × {usdF(1000)}/m² × factor 1,00 = <b>{usdF(r0.costoTotalUSD)}</b></div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Adónde se va la plata</h2>
+      <p>{r0.desglose}</p>
+    </div>
+    <div class="table">
+      <div class="row"><div><b>Materiales</b><br /><small>Cemento, ladrillos, hierro, aberturas, pisos</small></div><small>50%</small><strong id="cm-mat">{usdF(Math.round(r0.costoTotalUSD * 0.5))}</strong></div>
+      <div class="progress"><i style="width:50%"></i></div>
+      <div class="row"><div><b>Mano de obra</b><br /><small>Albañiles, electricistas, plomeros, gasistas</small></div><small>30%</small><strong id="cm-mo">{usdF(Math.round(r0.costoTotalUSD * 0.3))}</strong></div>
+      <div class="progress"><i style="width:30%"></i></div>
+      <div class="row"><div><b>Dirección y honorarios</b><br /><small>Arquitecto o ingeniero, 6-8% típico</small></div><small>10%</small><strong id="cm-dir">{usdF(Math.round(r0.costoTotalUSD * 0.1))}</strong></div>
+      <div class="progress"><i style="width:10%"></i></div>
+      <div class="row"><div><b>Permisos y contingencias</b><br /><small>Final de obra, catastro, imprevistos</small></div><small>10%</small><strong id="cm-perm">{usdF(r0.costoTotalUSD - Math.round(r0.costoTotalUSD * 0.5) - Math.round(r0.costoTotalUSD * 0.3) - Math.round(r0.costoTotalUSD * 0.1))}</strong></div>
+      <div class="progress"><i style="width:10%"></i></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Económica, estándar o premium</h2>
+      <p>La misma superficie y la misma zona, cambiando sólo el nivel de terminación.</p>
+    </div>
+    <div class="cards">
+      {cmp0.map((c, idx) => (
+        <article class="mini">
+          <i>{['🧰', '🏠', '💎'][idx]}</i>
+          <h3>{['Económica', 'Estándar', 'Premium'][idx]}</h3>
+          <p><b id={'cm-cmp' + idx}>{usdF(c.costoTotalUSD)}</b><br /><span id={'cm-cmpm2' + idx}>{usdF(c.costoPorM2USD)}/m²</span></p>
+          <p>{['Planta básica, terminaciones mínimas (IPV, ProCreAr).', 'Casa media: ladrillo hueco, piso cerámico común.', 'Casa de autor: materiales importados, domótica.'][idx]}</p>
+        </article>
+      ))}
+    </div>
+    <div class="notice">
+      <span>🔎</span>
+      <div><b>La terminación pesa más que la provincia.</b>Pasar de económica a premium multiplica el costo por 3,6; el salto de zona más grande (interior a Tierra del Fuego) lo multiplica por 1,6.</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Etapas de una casa estándar</h2>
+      <p>Porcentajes orientativos sobre el total de tu obra.</p>
+    </div>
+    <div class="timeline">
+      <div class="step"><span>1 · Cimientos y platea</span><b id="cm-e1">{usdF(Math.round(r0.costoTotalUSD * 0.12))}</b><em>12% · 2-3 semanas</em></div>
+      <div class="step"><span>2 · Estructura y losas</span><b id="cm-e2">{usdF(Math.round(r0.costoTotalUSD * 0.18))}</b><em>18% · 4-6 semanas</em></div>
+      <div class="step"><span>3 · Instalaciones</span><b id="cm-e3">{usdF(Math.round(r0.costoTotalUSD * 0.12))}</b><em>12% · 4-5 semanas</em></div>
+      <div class="step"><span>4 · Pisos y terminaciones</span><b id="cm-e4">{usdF(Math.round(r0.costoTotalUSD * 0.16))}</b><em>16% · 5 semanas</em></div>
+    </div>
+    <div class="notice">
+      <span>⚠️</span>
+      <div><b>Valores de referencia, no un presupuesto.</b>El costo se mueve con el dólar y la inflación de materiales: contrastá con el índice CAC del mes en curso. No incluye terreno, mobiliario ni paisajismo.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🏠" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Costo total = m² × USD/m² de la tipología × factor zonal. Pesos a cotización de referencia {arsF(DOLAR)}.</div>
+    <div>CAC · CPIC · INDEC ICC · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.cm{--brand:#3d322a;--accent:#f5b32d;--soft:#f6efe3}
+  .hcm.cm .hero{background:linear-gradient(135deg,#3d322a,#7a6248)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline define:vars={{ TIPOS, ZONAS, DOLAR }}>
+  (function () {
+    var root = document.querySelector('.hcm.cm');
+    if (!root) return;
+    var tipos = {}, zonas = {};
+    TIPOS.forEach(function (t) { tipos[t.value] = t; });
+    ZONAS.forEach(function (z) { zonas[z.value] = z; });
+
+    var nf = function (x) { return new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(x); };
+    var usdF = function (x) { return 'US$' + nf(x); };
+    var arsF = function (x) { return '$' + nf(x); };
+    var el = function (id) { return document.getElementById(id); };
+    var set = function (id, txt) { var e = el(id); if (e) e.textContent = txt; };
+
+    // Mismo cálculo que costo-m2-construccion.ts
+    function calc(m2, tipo, prov) {
+      if (!m2 || m2 <= 0) throw new Error('Ingresá los m²');
+      if (!tipos[tipo]) throw new Error('Tipo no válido');
+      var usd = tipos[tipo].usd * (zonas[prov] ? zonas[prov].factor : 1);
+      var ars = usd * DOLAR;
+      var totalUSD = Math.round(usd * m2);
+      var mat = Math.round(totalUSD * 0.5);
+      var mo = Math.round(totalUSD * 0.3);
+      var dir = Math.round(totalUSD * 0.1);
+      return {
+        usdM2: Math.round(usd), arsM2: Math.round(ars),
+        totalUSD: totalUSD, totalARS: Math.round(ars * m2),
+        mat: mat, mo: mo, dir: dir, perm: totalUSD - mat - mo - dir,
+        nombre: tipos[tipo].nombre,
+      };
+    }
+
+    function fail(msg) {
+      el('cm-big').textContent = '—';
+      el('cm-answer').textContent = msg;
+      set('cm-ars', '—'); set('cm-note', '');
+      el('cm-eq').innerHTML = 'm² × USD/m² × factor de zona';
+      ['cm-mat', 'cm-mo', 'cm-dir', 'cm-perm', 'cm-e1', 'cm-e2', 'cm-e3', 'cm-e4'].forEach(function (id) { set(id, '—'); });
+    }
+
+    function render() {
+      var m2 = Number(el('cm-m2').value);
+      var tipo = el('cm-tipo').value, prov = el('cm-prov').value;
+      var r;
+      try { r = calc(m2, tipo, prov); } catch (e) { return fail(e.message); }
+      var z = zonas[prov], factor = z ? z.factor : 1;
+
+      el('cm-big').textContent = usdF(r.totalUSD);
+      el('cm-answer').textContent = r.nombre + ': ' + usdF(r.usdM2) + '/m² por ' + nf(m2) + ' m².';
+      set('cm-ars', arsF(r.totalARS));
+      set('cm-note', arsF(r.arsM2) + ' por m² · dólar de referencia ' + arsF(DOLAR) + '.');
+      el('cm-eq').innerHTML = nf(m2) + ' m² × ' + usdF(tipos[tipo].usd) + '/m² × factor ' +
+        factor.toFixed(2).replace('.', ',') + ' = <b>' + usdF(r.totalUSD) + '</b>';
+
+      set('cm-mat', usdF(r.mat)); set('cm-mo', usdF(r.mo));
+      set('cm-dir', usdF(r.dir)); set('cm-perm', usdF(r.perm));
+
+      ['economico', 'estandar', 'premium'].forEach(function (t, i) {
+        var c = calc(m2, t, prov);
+        set('cm-cmp' + i, usdF(c.totalUSD));
+        set('cm-cmpm2' + i, usdF(c.usdM2) + '/m²');
+      });
+
+      [['cm-e1', 0.12], ['cm-e2', 0.18], ['cm-e3', 0.12], ['cm-e4', 0.16]].forEach(function (p) {
+        set(p[0], usdF(Math.round(r.totalUSD * p[1])));
+      });
+    }
+
+    ['cm-m2', 'cm-tipo', 'cm-prov'].forEach(function (id) {
+      var e = el(id);
+      e.addEventListener('input', render);
+      e.addEventListener('change', render);
+    });
+    el('cm-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

@@ -1,0 +1,311 @@
+---
+/**
+ * Flagship "Conversor °F → °C para horno" — mockup bespoke.
+ * El script inline replica EXACTAMENTE src/lib/formulas/conversor-fahrenheit-a-celsius-horno.ts:
+ *   ida:    °C = °F × 0.5556 + (-17.778)
+ *   vuelta: °F = (°C - (-17.778)) / 0.5556
+ * y sus mismas zonas de horno (<120 suave · <180 moderado · <220 fuerte · ≥220 muy fuerte).
+ * Las constantes slope/offset y la tabla gas-mark NO se duplican a mano: salen de los
+ * módulos reales (conversor-fahrenheit-a-celsius-horno.ts y temperatura-horno-conversion.ts)
+ * y viajan al inline por data-attr.
+ * Identidad visual: perilla de horno construida con divs + tabla de zonas de cocción.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { conversorFahrenheitACelsiusHorno } from '../../lib/formulas/conversor-fahrenheit-a-celsius-horno';
+import { temperaturaHornoConversion } from '../../lib/formulas/temperatura-horno-conversion';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Constantes reales del motor, derivadas (no copiadas): dos corridas resuelven la recta.
+const c0 = Number(conversorFahrenheitACelsiusHorno({ valor: 0, direccion: 'ida' }).resultado.split(' ')[0]);
+const c1 = Number(conversorFahrenheitACelsiusHorno({ valor: 1, direccion: 'ida' }).resultado.split(' ')[0]);
+const OFFSET = Number(c0.toFixed(4));
+const SLOPE = Number((c1 - c0).toFixed(4));
+
+// Tabla gas mark → °C tomada del motor hermano (gas 1..9)
+const GAS: Record<number, number> = {};
+for (let g = 1; g <= 9; g++) GAS[g] = temperaturaHornoConversion({ valor: g, unidadOrigen: 'gas' }).celsius;
+
+// Caso por defecto: 350 °F, la consulta estrella del calc.
+const F0 = 350;
+const init = conversorFahrenheitACelsiusHorno({ valor: F0, direccion: 'ida' });
+const cel0 = Number(init.resultado.split(' ')[0]);
+const insight0: any = init._insight || {};
+const gas0 = temperaturaHornoConversion({ valor: cel0, unidadOrigen: 'celsius' }).gas;
+
+// Escala del dial: mismo rango que el gauge del motor (50 → 280 °C)
+const DIAL_MIN = 50, DIAL_MAX = 280;
+const ang = (c: number) => Math.max(-135, Math.min(135, ((c - DIAL_MIN) / (DIAL_MAX - DIAL_MIN)) * 270 - 135));
+
+// Filas de referencia: cada una es una corrida real de los dos motores.
+const REF_F = [225, 300, 325, 350, 375, 400, 425, 450, 500];
+const rows = REF_F.map((f) => {
+  const c = Number(conversorFahrenheitACelsiusHorno({ valor: f, direccion: 'ida' }).resultado.split(' ')[0]);
+  return { f, c, gas: temperaturaHornoConversion({ valor: c, unidadOrigen: 'celsius' }).gas };
+});
+const zonaNombre = (c: number) => (c < 120 ? 'Suave' : c < 180 ? 'Moderado' : c < 220 ? 'Fuerte' : 'Muy fuerte');
+---
+
+<main
+  class="page hcm fh"
+  data-slope={SLOPE}
+  data-offset={OFFSET}
+  data-gas={JSON.stringify(GAS)}
+  data-dmin={DIAL_MIN}
+  data-dmax={DIAL_MAX}
+>
+  <div class="crumb">Inicio / <a href="/categoria/cocina">Cocina</a> / <b>Fahrenheit a Celsius para horno</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">🍳 RECETAS AMERICANAS</span>
+      <h1>De °F a °C sin quemar la receta</h1>
+      <p>La receta dice 350 °F y tu horno está en Celsius. Convertí el valor exacto y mirá en qué zona de cocción cae, con el número de gas equivalente.</p>
+    </div>
+    <div class="hero-art">
+      <div class="fh-knob" aria-hidden="true">
+        <div class="fh-ticks">
+          <i style="--a:-135deg"></i><i style="--a:-90deg"></i><i style="--a:-45deg"></i>
+          <i style="--a:0deg"></i><i style="--a:45deg"></i><i style="--a:90deg"></i><i style="--a:135deg"></i>
+        </div>
+        <div class="fh-dial">
+          <div class="fh-needle" id="fh-needle" style={`transform:rotate(${ang(cel0)}deg)`}></div>
+          <div class="fh-hub"><b id="fh-knob-val">{cel0.toFixed(0)}</b><span>°C</span></div>
+        </div>
+        <div class="fh-flame" id="fh-flame">🔥</div>
+      </div>
+      <div class="hero-stat"><span>350 °F de receta</span><b>{cel0.toFixed(0)} °C</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="fh-form">
+      <h2>Convertir temperatura</h2>
+      <p class="sub">Fórmula del motor: <code>°C = °F × {SLOPE} + ({OFFSET})</code></p>
+
+      <div class="field">
+        <label for="fh-dir">Dirección de conversión</label>
+        <div class="seg">
+          <button type="button" class="active" data-dir="ida" id="fh-dir">°F → °C</button>
+          <button type="button" data-dir="vuelta">°C → °F</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="fh-valor">Valor a convertir <small id="fh-unit">grados Fahrenheit</small></label>
+        <div class="control">
+          <input id="fh-valor" type="number" step="0.001" value={F0} inputmode="decimal" />
+          <span id="fh-suffix">°F</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Temperaturas típicas de receta</label>
+        <div class="chips" id="fh-chips">
+          <button type="button" data-v="325">325 °F</button>
+          <button type="button" data-v="350" class="active">350 °F</button>
+          <button type="button" data-v="375">375 °F</button>
+          <button type="button" data-v="400">400 °F</button>
+          <button type="button" data-v="450">450 °F</button>
+        </div>
+      </div>
+
+      <button class="cta" type="submit">Convertir →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over">Temperatura del horno</div>
+        <div class="big" id="fh-big">{cel0.toFixed(2)} <small>°C</small></div>
+        <p class="answer" id="fh-answer">{String(insight0.text || '').replace(/\*\*/g, '')}</p>
+        <div class="result-box">
+          <span id="fh-box-label">Redondeo práctico · número de gas</span>
+          <b id="fh-round">{Math.round(cel0 / 5) * 5} °C · gas {gas0}</b>
+          <small id="fh-note">Zona {zonaNombre(cel0).toLowerCase()}. Un horno hogareño fluctúa ±10-15 °C, así que redondear está bien.</small>
+        </div>
+      </div>
+      <div class="equation" id="fh-eq">{F0} × {SLOPE} + ({OFFSET}) = <b>{cel0.toFixed(2)} °C</b></div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Las cuatro zonas del horno</h2>
+      <p>Los mismos cortes que usa el conversor para interpretar el resultado.</p>
+    </div>
+    <div class="cards fh-zonas">
+      <article class="mini"><i>🌡️</i><h3>Suave · &lt; 120 °C</h3><p>Secar merengues, deshidratar o mantener caliente.</p></article>
+      <article class="mini"><i>🍰</i><h3>Moderado · 120-179 °C</h3><p>Bizcochuelos, budines y tartas. Acá cae el clásico 350 °F.</p></article>
+      <article class="mini"><i>🍕</i><h3>Fuerte · 180-219 °C</h3><p>Panes, pizzas y la mayoría de los asados.</p></article>
+      <article class="mini"><i>🔥</i><h3>Muy fuerte · ≥ 220 °C</h3><p>Gratinar, dorar rápido o pizza a la piedra.</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>Si tu horno tiene turbo, bajá 15-20 °C.</b>La convección cocina más rápido que el calor estático: la temperatura de la receta es para horno convencional.</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Equivalencias de receta: °F, °C y número de gas</h2>
+      <p>°C calculados con el mismo motor; el gas mark sale de la tabla del conversor de horno.</p>
+    </div>
+    <div class="table fh-table">
+      <div class="row fh-head"><strong>°F (receta)</strong><strong>°C exacto</strong><strong>Gas</strong><strong>Zona</strong></div>
+      {rows.map((r) => (
+        <div class="row">
+          <strong>{r.f} °F</strong>
+          <span>{r.c.toFixed(1)} °C</span>
+          <span>{r.gas === 0 ? '—' : 'gas ' + r.gas}</span>
+          <strong>{zonaNombre(r.c)}</strong>
+        </div>
+      ))}
+    </div>
+    <div class="notice">
+      <span>⚠️</span>
+      <div><b>No sirve la regla de tres.</b>Hay que restar 32 primero: dividir 350 ÷ 1.8 da 194 °C en vez de los 177 °C correctos, y esos 17 grados son la diferencia entre galletitas doradas y galletitas quemadas.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="🍳" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Conversión afín °F ↔ °C (BIPM/NIST) con las constantes del motor: slope {SLOPE}, offset {OFFSET}.</div>
+    <div>Resultado orientativo · Sin registro</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.fh{--brand:#6b2413;--accent:#ffb020;--soft:#fdf0e2;--warn:#fff2e0}
+  .hcm.fh .hero{background:linear-gradient(140deg,#6b2413 0%,#a83c17 55%,#d1631d 100%)}
+  .hcm.fh .crumb a{color:inherit;text-decoration:none}
+  .hcm.fh .crumb a:hover{text-decoration:underline}
+  .hcm.fh .tag{color:#4a1608}
+  .hcm.fh .cta{color:#4a1608}
+  .hcm.fh .sub code{background:#fdf0e2;border-radius:6px;padding:2px 6px;font-size:13px}
+  /* Perilla de horno hecha con divs */
+  .hcm.fh .fh-knob{position:relative;width:230px;height:230px;max-width:70vw;display:grid;place-items:center}
+  .hcm.fh .fh-ticks{position:absolute;inset:0}
+  .hcm.fh .fh-ticks i{position:absolute;left:50%;top:50%;width:3px;height:105px;margin-left:-1.5px;background:#ffffff55;border-radius:2px;transform-origin:50% 0;transform:rotate(var(--a)) translateY(6px)}
+  .hcm.fh .fh-dial{position:relative;width:172px;height:172px;border-radius:50%;background:radial-gradient(circle at 34% 28%,#3c1409,#1d0904);border:7px solid #ffb02055;box-shadow:0 16px 30px rgba(0,0,0,.35),inset 0 2px 10px #ffffff22;display:grid;place-items:center}
+  .hcm.fh .fh-needle{position:absolute;left:50%;top:14px;width:5px;height:64px;margin-left:-2.5px;background:#ffb020;border-radius:3px;transform-origin:50% 100%;transition:transform .25s ease;box-shadow:0 0 12px #ffb02099}
+  .hcm.fh .fh-hub{text-align:center;color:#fff;line-height:1}
+  .hcm.fh .fh-hub b{display:block;font:800 42px/1 Manrope,system-ui,sans-serif;color:#ffb020}
+  .hcm.fh .fh-hub span{font-size:13px;color:#e9c9b6;font-weight:700}
+  .hcm.fh .fh-flame{position:absolute;left:6px;bottom:8px;font-size:30px;opacity:.85;transition:opacity .25s ease}
+  .hcm.fh .fh-zonas{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .hcm.fh .fh-table .row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,.7fr) minmax(0,1.1fr)}
+  .hcm.fh .fh-table .fh-head{color:#8a6a5c;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+  .hcm.fh .fh-table .fh-head strong{color:#8a6a5c}
+  .hcm.fh .fh-table .row strong:last-child{text-align:right}
+  @media(max-width:760px){
+    .hcm.fh .fh-zonas{grid-template-columns:minmax(0,1fr)}
+    .hcm.fh .fh-knob{width:190px;height:190px}
+    .hcm.fh .fh-dial{width:142px;height:142px}
+    .hcm.fh .fh-hub b{font-size:34px}
+    .hcm.fh .fh-ticks i{height:88px}
+    .hcm.fh .fh-table .row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);row-gap:2px}
+    .hcm.fh .fh-table .row strong:last-child{text-align:right}
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector('.hcm.fh');
+    if (!root) return;
+    var SLOPE = Number(root.dataset.slope);
+    var OFFSET = Number(root.dataset.offset);
+    var GAS = JSON.parse(root.dataset.gas);
+    var DMIN = Number(root.dataset.dmin), DMAX = Number(root.dataset.dmax);
+
+    var input = document.getElementById('fh-valor');
+    var big = document.getElementById('fh-big');
+    var ans = document.getElementById('fh-answer');
+    var round = document.getElementById('fh-round');
+    var note = document.getElementById('fh-note');
+    var eq = document.getElementById('fh-eq');
+    var needle = document.getElementById('fh-needle');
+    var knobVal = document.getElementById('fh-knob-val');
+    var flame = document.getElementById('fh-flame');
+    var suffix = document.getElementById('fh-suffix');
+    var unit = document.getElementById('fh-unit');
+    var segBtns = root.querySelectorAll('.seg button');
+    var chipBtns = root.querySelectorAll('#fh-chips button');
+    var dir = 'ida';
+
+    // Mismo criterio que celsiusAGas() del motor de horno.
+    function gasDe(c) {
+      if (c < GAS[1]) return 0;
+      if (c >= GAS[9]) return 9;
+      var mejor = 1, min = Infinity;
+      for (var g in GAS) { var d = Math.abs(c - GAS[g]); if (d < min) { min = d; mejor = Number(g); } }
+      return mejor;
+    }
+    function zona(c) {
+      if (c < 120) return { n: 'Suave', t: 'horno suave: secar merengues, deshidratar o mantener caliente', i: '🌡️' };
+      if (c < 180) return { n: 'Moderado', t: 'horno moderado: bizcochuelos, budines y tartas', i: '🍰' };
+      if (c < 220) return { n: 'Fuerte', t: 'horno fuerte: panes, pizzas y la mayoría de los asados', i: '🍕' };
+      return { n: 'Muy fuerte', t: 'horno muy fuerte: gratinar, dorar rápido o pizza a la piedra', i: '🔥' };
+    }
+
+    function render() {
+      var raw = input.value.trim();
+      var v = Number(raw);
+      // Misma guarda que el motor: valor no numérico → '—' + mensaje.
+      if (raw === '' || isNaN(v)) {
+        big.innerHTML = '—';
+        ans.textContent = 'Ingresá un valor numérico.';
+        round.textContent = '—'; note.textContent = ''; eq.innerHTML = '';
+        return;
+      }
+      var r = dir === 'ida' ? v * SLOPE + OFFSET : (v - OFFSET) / SLOPE;
+      var celsius = dir === 'ida' ? r : v;
+      var fahrenheit = dir === 'ida' ? v : r;
+      var z = zona(celsius);
+      var g = gasDe(celsius);
+
+      big.innerHTML = r.toFixed(2) + ' <small>' + (dir === 'ida' ? '°C' : '°F') + '</small>';
+      ans.textContent = fahrenheit.toFixed(0) + ' °F son ' + celsius.toFixed(0) + ' °C: cae en zona de ' + z.t + '.';
+      round.textContent = (Math.round(celsius / 5) * 5) + ' °C' + (g ? ' · gas ' + g : ' · sin gas mark');
+      note.textContent = 'Zona ' + z.n.toLowerCase() + '. Un horno hogareño fluctúa ±10-15 °C, así que redondear está bien.';
+      eq.innerHTML = dir === 'ida'
+        ? v + ' × ' + SLOPE + ' + (' + OFFSET + ') = <b>' + r.toFixed(2) + ' °C</b>'
+        : '(' + v + ' − (' + OFFSET + ')) ÷ ' + SLOPE + ' = <b>' + r.toFixed(2) + ' °F</b>';
+
+      var pct = (celsius - DMIN) / (DMAX - DMIN);
+      var a = Math.max(-135, Math.min(135, pct * 270 - 135));
+      needle.style.transform = 'rotate(' + a + 'deg)';
+      knobVal.textContent = celsius.toFixed(0);
+      flame.textContent = z.i;
+      flame.style.opacity = celsius >= 180 ? '1' : '.6';
+    }
+
+    segBtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        segBtns.forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+        dir = b.dataset.dir;
+        suffix.textContent = dir === 'ida' ? '°F' : '°C';
+        unit.textContent = dir === 'ida' ? 'grados Fahrenheit' : 'grados Celsius';
+        render();
+      });
+    });
+    chipBtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        chipBtns.forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+        if (dir !== 'ida') { segBtns[0].click(); }
+        input.value = b.dataset.v;
+        render();
+      });
+    });
+    input.addEventListener('input', function () {
+      chipBtns.forEach(function (x) { x.classList.remove('active'); });
+      render();
+    });
+    document.getElementById('fh-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>

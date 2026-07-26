@@ -54,6 +54,20 @@
 .hcm .prose pre{overflow-x:auto;max-width:100%}
 .hcm .prose table{display:block;max-width:100%;overflow-x:auto}
 .hcm .tablewrap{max-width:100%}
+/* Las respuestas de FAQ también son markdown y pueden traer tablas: mismo
+   tratamiento que .prose, si no el <details> se estira y empuja el documento
+   (se vio en el mockup de alquiler ICL, 538px de ancho en un viewport de 390). */
+.hcm .faq details,.hcm .faq .a{min-width:0;max-width:100%}
+.hcm .faq .a{overflow-wrap:anywhere}
+.hcm .faq .a table{display:block;max-width:100%;overflow-x:auto}
+.hcm .faq .a pre{overflow-x:auto;max-width:100%}
+/* Red de seguridad del sistema: ningún mockup puede hacer scrollear el
+   documento en horizontal. `clip` (no `hidden`) no crea contenedor de scroll,
+   así que los .tablewrap y demás piezas internas siguen scrolleando solas.
+   Cubre también lo que no se ve en el DOM — pseudo-elementos decorativos con
+   offsets negativos, que fue el caso del gráfico de interés compuesto.
+   No hay `position:sticky` dentro de .hcm, así que clip no rompe nada. */
+.hcm.page{overflow-x:clip}
 
 /* ── Fallbacks tipográficos y color del hero ──────────────────────────────
    1) El sistema declaraba `font:800 26px Manrope` (shorthand SIN familia de

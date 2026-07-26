@@ -1,0 +1,328 @@
+---
+/**
+ * Flagship "Sueldo en mano Argentina" — mockup bespoke.
+ * El script inline replica EXACTAMENTE src/lib/formulas/sueldo-ar.ts:
+ *   baseAportes = min(bruto, BASE_IMPONIBLE_MAXIMA_APORTES)
+ *   jubilación 11% · obra social 3% · PAMI 3%  (todos sobre baseAportes)
+ *   baseGanancias = max(0, bruto − aportes − (MNI + cónyuge + hijos))
+ *   ganancias = aplicarEscalaMensual(baseGanancias)
+ *   neto = bruto − aportes − ganancias
+ * Modo inverso (neto→bruto): misma búsqueda binaria (convergencia $100).
+ * Las constantes (tope, MNI, deducciones, escala de 9 tramos) se SERIALIZAN
+ * desde los módulos reales — no hay ningún número tipeado a mano acá.
+ * Diferencia deliberada con el JSON: no se incluye el comparador de inflación
+ * (campos avanzados `compararAnterior`/`sueldoAnterior`/`mesAnterior`); esta
+ * página se enfoca en el recibo bruto→neto.
+ */
+import '../../styles/calc-batch-mockup.css';
+import CalcMockupSeo from './CalcMockupSeo.astro';
+import { sueldoAR, BASE_IMPONIBLE_MAXIMA_APORTES } from '../../lib/formulas/sueldo-ar';
+import {
+  MNI_MENSUAL_BASE,
+  INCREMENTO_CONYUGE_MENSUAL,
+  INCREMENTO_HIJO_MENSUAL,
+  ESCALA,
+} from '../../lib/formulas/_ganancias-escala';
+
+interface Props { calc: any; related?: any[]; }
+const { calc, related = [] } = Astro.props;
+
+// Constantes serializadas desde los módulos reales (Infinity no sobrevive a JSON).
+const CONST = {
+  tope: BASE_IMPONIBLE_MAXIMA_APORTES,
+  mni: MNI_MENSUAL_BASE,
+  conyuge: INCREMENTO_CONYUGE_MENSUAL,
+  hijo: INCREMENTO_HIJO_MENSUAL,
+  escala: ESCALA.map((t) => ({
+    hasta: Number.isFinite(t.hasta) ? t.hasta : null,
+    tasa: t.tasa,
+    acumulado: t.acumulado,
+  })),
+};
+
+const money = (x: number) => '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(Math.round(x));
+const D = { bruto: 1_500_000, neto: 1_200_000 };
+
+// Primer paint (SSR) calculado con el motor real.
+const r0 = sueldoAR({ bruto: D.bruto, conyuge: false, hijos: 0 });
+const quedan0 = 100 - r0.porcentajeDescuento;
+---
+
+<main class="page hcm sm">
+  <div class="crumb">Inicio / <a href="/categoria/finanzas">Finanzas</a> / <b>Sueldo en mano</b></div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">💵 DEL BRUTO AL BOLSILLO</span>
+      <h1>Tu recibo de sueldo, línea por línea</h1>
+      <p>Mirá cómo el bruto pierde jubilación, obra social, PAMI y Ganancias hasta quedar en lo que realmente entra a tu cuenta.</p>
+    </div>
+    <div class="hero-art">
+      <div class="doc-preview">
+        <i></i><i></i><i></i><i></i><i></i><i></i>
+      </div>
+      <div class="hero-stat"><span>De cada $100 brutos te quedan</span><b id="sm-hero-pct">{quedan0.toFixed(1)}%</b></div>
+    </div>
+  </section>
+
+  <section class="tool" id="calc">
+    <form class="card" id="sm-form">
+      <h2>Tu sueldo</h2>
+      <p class="sub">Escala ARCA y tope de aportes vigentes cargados en el sitio.</p>
+
+      <div class="field">
+        <label for="sm-modo">¿Qué querés calcular?</label>
+        <div class="control">
+          <select id="sm-modo">
+            <option value="bruto-a-neto">Tengo el bruto → cuánto cobro en mano</option>
+            <option value="neto-a-bruto">Quiero cobrar X en mano → cuánto bruto necesito</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field" id="sm-f-bruto">
+        <label for="sm-bruto">Sueldo bruto mensual <small>antes de descuentos</small></label>
+        <div class="control"><span>$</span><input id="sm-bruto" type="number" min="0" step="1000" value={D.bruto} /></div>
+      </div>
+
+      <div class="field" id="sm-f-neto" style="display:none">
+        <label for="sm-neto">Neto en mano que querés cobrar</label>
+        <div class="control"><span>$</span><input id="sm-neto" type="number" min="0" step="1000" value={D.neto} /></div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label for="sm-conyuge">Cónyuge a cargo</label>
+          <div class="control">
+            <select id="sm-conyuge">
+              <option value="false">No</option>
+              <option value="true">Sí</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="sm-hijos">Hijos a cargo</label>
+          <div class="control">
+            <select id="sm-hijos">
+              <option value="0">Ninguno</option>
+              <option value="1">1 hijo</option>
+              <option value="2">2 hijos</option>
+              <option value="3">3 hijos</option>
+              <option value="4">4 hijos</option>
+              <option value="5">5 o más</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <button class="cta" type="submit">Ver mi sueldo en mano →</button>
+    </form>
+
+    <article class="card result">
+      <div>
+        <div class="over" id="sm-over">Sueldo en mano</div>
+        <div class="big" id="sm-big">{money(r0.neto)}</div>
+        <p class="answer" id="sm-answer">
+          De {money(D.bruto)} brutos te descuentan {r0.porcentajeDescuento.toFixed(1)}% ({money(r0.descuentoTotal)}) entre aportes y Ganancias.
+        </p>
+        <div class="progress"><i id="sm-bar" style={`width:${quedan0.toFixed(1)}%`}></i></div>
+        <div class="result-box">
+          <span id="sm-box-label">Se te va en descuentos</span>
+          <b id="sm-box-value">{money(r0.descuentoTotal)}</b>
+          <small id="sm-box-note">Aportes {money(r0.aportes)} · Ganancias {money(r0.ganancias)}.</small>
+        </div>
+      </div>
+      <div class="equation" id="sm-eq">
+        {money(D.bruto)} − {money(r0.aportes)} − {money(r0.ganancias)} = <b>{money(r0.neto)}</b>
+      </div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>El recibo, descuento por descuento</h2>
+      <p>Cada línea se resta del bruto hasta llegar al neto.</p>
+    </div>
+    <div class="table">
+      <div class="row"><span><b>Sueldo bruto</b></span><small>Lo pactado con el empleador</small><strong id="sm-r-bruto">{money(D.bruto)}</strong></div>
+      <div class="row"><span>Jubilación (SIPA)</span><small>11% sobre base con tope</small><strong id="sm-r-jub">− {money(r0.jubilacion)}</strong></div>
+      <div class="row"><span>Obra social</span><small>3% sobre base con tope</small><strong id="sm-r-os">− {money(r0.obraSocial)}</strong></div>
+      <div class="row"><span>PAMI (INSSJP)</span><small>3% sobre base con tope</small><strong id="sm-r-pami">− {money(r0.pami)}</strong></div>
+      <div class="row"><span>Impuesto a las Ganancias</span><small id="sm-r-gan-note">4ta categoría, escala ARCA</small><strong id="sm-r-gan">− {money(r0.ganancias)}</strong></div>
+      <div class="row"><span><b>Sueldo en mano</b></span><small id="sm-r-pct">Te queda el {quedan0.toFixed(1)}% del bruto</small><strong id="sm-r-neto">{money(r0.neto)}</strong></div>
+    </div>
+    <p class="tnote" id="sm-tope-note">
+      Los aportes se calculan sobre una base con tope de {money(CONST.tope)} por mes (Ley 24.241, Res. ANSES 139/2026):
+      arriba de ese bruto el descuento se congela y el porcentaje efectivo baja del 17%.
+    </p>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Por qué tu descuento no es siempre 17%</h2>
+      <p>Tres cosas mueven el número final.</p>
+    </div>
+    <div class="cards">
+      <article class="mini"><i>🏦</i><h3>Aportes topeados</h3><p>Jubilación 11% + obra social 3% + PAMI 3%, pero sobre un máximo de {money(CONST.tope)} mensuales. Con brutos más altos el aporte queda fijo.</p></article>
+      <article class="mini"><i>🧾</i><h3>Ganancias 4ta</h3><p>Recién aparece cuando el bruto menos aportes supera el mínimo no imponible de {money(CONST.mni)} por mes (soltero sin cargas).</p></article>
+      <article class="mini"><i>👨‍👩‍👧</i><h3>Familia declarada</h3><p>Cada cónyuge baja la base de Ganancias {money(CONST.conyuge)} por mes y cada hijo {money(CONST.hijo)}, siempre que los cargues en el SiRADIG F.572.</p></article>
+    </div>
+    <div class="notice">
+      <span>💡</span>
+      <div><b>Tu recibo real puede tener más líneas.</b>Cuota sindical según convenio, seguro de sepelio, préstamos internos o embargos no entran en este cálculo: el 17% son sólo los aportes de ley.</div>
+    </div>
+  </section>
+
+  <CalcMockupSeo calc={calc} related={related} icon="💰" />
+
+  <footer class="sources">
+    <div><b>Metodología</b><br />Neto = bruto − (11% + 3% + 3% sobre base topeada) − Ganancias 4ta cat. según escala ARCA vigente.</div>
+    <div>Estimación mensual · Contrastá con tu recibo y SiRADIG</div>
+  </footer>
+</main>
+
+<style is:global>
+  .hcm.sm{--brand:#0d4f57;--accent:#ffa08c;--soft:#eaf3f3}
+  .hcm.sm .hero{background:linear-gradient(135deg,#0d4f57,#2b7a7e)}
+  .hcm .crumb a{color:inherit;text-decoration:none}
+  .hcm .crumb a:hover{text-decoration:underline}
+</style>
+
+<script is:inline define:vars={{ CONST }}>
+  (function () {
+    var root = document.querySelector('.hcm.sm');
+    if (!root) return;
+    var TOPE = CONST.tope, MNI = CONST.mni;
+    var DED_CONY = CONST.conyuge, DED_HIJO = CONST.hijo;
+    var ESCALA = CONST.escala.map(function (t) {
+      return { hasta: t.hasta === null ? Infinity : t.hasta, tasa: t.tasa, acumulado: t.acumulado };
+    });
+
+    var money = function (x) { return '$' + new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(Math.round(x)); };
+    var el = function (id) { return document.getElementById(id); };
+    var n = function (id) { return Number(el(id).value); };
+
+    // aplicarEscalaMensual(), idéntica a _ganancias-escala.ts
+    function escala(base) {
+      if (base <= 0) return 0;
+      var anterior = 0;
+      for (var i = 0; i < ESCALA.length; i++) {
+        var t = ESCALA[i];
+        if (base <= t.hasta) return t.acumulado + (base - anterior) * t.tasa;
+        anterior = t.hasta;
+      }
+      var u = ESCALA[ESCALA.length - 1];
+      return u.acumulado + (base - anterior) * u.tasa;
+    }
+
+    // desglose(), idéntica a sueldo-ar.ts
+    function desglose(bruto, conyuge, hijos) {
+      var baseAportes = Math.min(bruto, TOPE);
+      var jubilacion = baseAportes * 0.11;
+      var obraSocial = baseAportes * 0.03;
+      var pami = baseAportes * 0.03;
+      var aportes = jubilacion + obraSocial + pami;
+      var mni = MNI + (conyuge ? DED_CONY : 0) + hijos * DED_HIJO;
+      var baseGanancias = Math.max(0, bruto - aportes - mni);
+      var ganancias = escala(baseGanancias);
+      var descuentoTotal = aportes + ganancias;
+      return {
+        bruto: bruto, jubilacion: jubilacion, obraSocial: obraSocial, pami: pami,
+        aportes: aportes, ganancias: ganancias, descuentoTotal: descuentoTotal,
+        neto: bruto - descuentoTotal,
+        porcentajeDescuento: (descuentoTotal / bruto) * 100,
+        topeAplicado: bruto > TOPE
+      };
+    }
+
+    // brutoDesdeNeto(), misma búsqueda binaria (convergencia $100)
+    function brutoDesdeNeto(objetivo, conyuge, hijos) {
+      var lo = objetivo, hi = objetivo * 2, guard = 0;
+      while (desglose(hi, conyuge, hijos).neto < objetivo && guard < 40) { hi *= 2; guard++; }
+      var mid = hi;
+      for (var i = 0; i < 60; i++) {
+        mid = (lo + hi) / 2;
+        var v = desglose(mid, conyuge, hijos).neto;
+        if (Math.abs(v - objetivo) <= 100) break;
+        if (v < objetivo) lo = mid; else hi = mid;
+        if (hi - lo <= 1) break;
+      }
+      return desglose(Math.round(mid), conyuge, hijos);
+    }
+
+    function fail(msg) {
+      el('sm-big').textContent = '—';
+      el('sm-answer').textContent = msg;
+      el('sm-bar').style.width = '0%';
+      el('sm-hero-pct').textContent = '—';
+      el('sm-box-value').textContent = '—';
+      el('sm-box-note').textContent = '';
+      ['sm-r-bruto', 'sm-r-jub', 'sm-r-os', 'sm-r-pami', 'sm-r-gan', 'sm-r-neto'].forEach(function (id) {
+        el(id).textContent = '—';
+      });
+      el('sm-eq').innerHTML = 'bruto − aportes − Ganancias = <b>neto</b>';
+    }
+
+    function render() {
+      var inverso = el('sm-modo').value === 'neto-a-bruto';
+      el('sm-f-bruto').style.display = inverso ? 'none' : '';
+      el('sm-f-neto').style.display = inverso ? '' : 'none';
+
+      var conyuge = el('sm-conyuge').value === 'true';
+      var hijos = Math.max(0, Math.min(10, Number(el('sm-hijos').value) || 0));
+
+      var d;
+      if (inverso) {
+        var objetivo = n('sm-neto');
+        // Misma guarda y mismo mensaje que sueldo-ar.ts
+        if (!objetivo || objetivo <= 0) return fail('Ingresá el neto en mano que querés cobrar');
+        d = brutoDesdeNeto(objetivo, conyuge, hijos);
+      } else {
+        var bruto = n('sm-bruto');
+        if (!bruto || bruto <= 0) return fail('Ingresá un sueldo bruto válido');
+        d = desglose(bruto, conyuge, hijos);
+      }
+
+      var pct = d.porcentajeDescuento;
+      var quedan = 100 - pct;
+      var topeTxt = d.topeAplicado
+        ? ' Tus aportes están topeados: se calculan sobre la base máxima de ' + money(TOPE) + ', no sobre todo tu bruto (Ley 24.241).'
+        : '';
+
+      el('sm-over').textContent = inverso ? 'Sueldo bruto necesario' : 'Sueldo en mano';
+      el('sm-big').textContent = money(inverso ? d.bruto : d.neto);
+      el('sm-answer').textContent = inverso
+        ? 'Para cobrar ' + money(d.neto) + ' en mano necesitás un bruto de ' + money(d.bruto) + ': te descuentan el ' + pct.toFixed(1) + '%.' + topeTxt
+        : (d.ganancias > 0
+            ? 'De ' + money(d.bruto) + ' brutos te descuentan ' + pct.toFixed(1) + '% (' + money(d.descuentoTotal) + '): ' + money(d.aportes) + ' de aportes y ' + money(d.ganancias) + ' de Ganancias.' + topeTxt
+            : 'De ' + money(d.bruto) + ' brutos sólo se descuenta el ' + pct.toFixed(1) + '% de aportes (' + money(d.aportes) + '): con tu situación familiar no pagás Ganancias.' + topeTxt);
+
+      el('sm-bar').style.width = Math.max(0, Math.min(100, quedan)).toFixed(1) + '%';
+      el('sm-hero-pct').textContent = quedan.toFixed(1) + '%';
+
+      el('sm-box-label').textContent = inverso ? 'Neto en mano resultante' : 'Se te va en descuentos';
+      el('sm-box-value').textContent = money(inverso ? d.neto : d.descuentoTotal);
+      el('sm-box-note').textContent = 'Aportes ' + money(d.aportes) + ' · Ganancias ' + money(d.ganancias) + '.';
+
+      el('sm-r-bruto').textContent = money(d.bruto);
+      el('sm-r-jub').textContent = '− ' + money(d.jubilacion);
+      el('sm-r-os').textContent = '− ' + money(d.obraSocial);
+      el('sm-r-pami').textContent = '− ' + money(d.pami);
+      el('sm-r-gan').textContent = '− ' + money(d.ganancias);
+      el('sm-r-gan-note').textContent = d.ganancias > 0
+        ? 'Base imponible sobre el MNI de ' + money(MNI + (conyuge ? DED_CONY : 0) + hijos * DED_HIJO)
+        : 'No llegás al MNI de ' + money(MNI + (conyuge ? DED_CONY : 0) + hijos * DED_HIJO) + ': no tributás';
+      el('sm-r-neto').textContent = money(d.neto);
+      el('sm-r-pct').textContent = 'Te queda el ' + quedan.toFixed(1) + '% del bruto';
+
+      el('sm-eq').innerHTML = money(d.bruto) + ' − ' + money(d.aportes) + ' − ' + money(d.ganancias) + ' = <b>' + money(d.neto) + '</b>';
+    }
+
+    ['sm-modo', 'sm-bruto', 'sm-neto', 'sm-conyuge', 'sm-hijos'].forEach(function (id) {
+      el(id).addEventListener('input', render);
+      el(id).addEventListener('change', render);
+    });
+    el('sm-form').addEventListener('submit', function (e) { e.preventDefault(); render(); });
+    render();
+  })();
+</script>
