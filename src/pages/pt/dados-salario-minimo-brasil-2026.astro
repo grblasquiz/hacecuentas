@@ -13,8 +13,11 @@ const fmt = (n) => 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2 
 const SM = SALARIO_MINIMO;
 const diario = SM / 30;
 const hora = SM / 220; // jornada 220h/mês
+const semanal = (SM * 12) / 52;
+const anual = SM * 12;
 const SITE = 'https://hacecuentas.com';
 const URL = `${SITE}/pt/dados-salario-minimo-brasil-2026`;
+const OFFICIAL_SOURCE = 'https://www.presidencia.gov.br/ccivil_03/_ato2023-2026/2025/decreto/d12797.htm';
 
 const title = `Salário mínimo 2026 no Brasil: ${fmt(SM)} (mensal, diário e por hora) | Hacé Cuentas`;
 const description = `Salário mínimo 2026 no Brasil: ${fmt(SM)} por mês, ${fmt(diario)} por dia e ${fmt(hora)} por hora. O que ele reajusta (INSS, FGTS, seguro-desemprego). Dados oficiais. Uso livre com atribuição (CC-BY 4.0).`;
@@ -29,6 +32,8 @@ const reajusta = [
 
 const faq = [
   { q: 'Qual é o salário mínimo de 2026 no Brasil?', a: `O salário mínimo nacional de 2026 é de ${fmt(SM)} por mês, o que equivale a aproximadamente ${fmt(diario)} por dia e ${fmt(hora)} por hora (jornada de 220 horas mensais).` },
+  { q: 'Qual o valor do salário mínimo 2026?', a: `O valor oficial é ${fmt(SM)} por mês desde 1º de janeiro de 2026, conforme o Decreto nº 12.797/2025. Em 12 meses, sem incluir o 13º salário, corresponde a ${fmt(anual)}.` },
+  { q: 'Quanto aumentou o salário mínimo em 2026?', a: `O salário mínimo passou de R$ 1.518,00 em 2025 para ${fmt(SM)} em 2026: aumento nominal de R$ 103,00, ou aproximadamente 6,79%.` },
   { q: 'Quanto é o salário mínimo por hora em 2026?', a: `Cerca de ${fmt(hora)} por hora, considerando a jornada padrão de 220 horas por mês. Para jornadas diferentes, divida ${fmt(SM)} pelas horas mensais do seu contrato.` },
   { q: 'O que o salário mínimo reajusta?', a: 'É a referência para o piso de benefícios do INSS, a base do FGTS, o piso do seguro-desemprego, o salário-família e o abono salarial (PIS/Pasep), entre outros. Quando sobe, vários valores acompanham.' },
   { q: 'Quando o salário mínimo é reajustado?', a: 'O reajuste é anual, em janeiro, definido pelo governo federal e considerando a inflação (INPC) mais, em alguns anos, um ganho real.' },
@@ -42,6 +47,7 @@ const datasetSchema = {
   url: URL, license: 'https://creativecommons.org/licenses/by/4.0/', isAccessibleForFree: true,
   inLanguage: 'pt-BR', dateModified: DATA_AS_OF, temporalCoverage: '2026', spatialCoverage: { '@type': 'Place', name: 'Brasil' },
   creator: { '@type': 'Organization', name: 'Hacé Cuentas', url: SITE },
+  citation: OFFICIAL_SOURCE,
   keywords: ['salário mínimo', 'salário mínimo 2026', 'Brasil', 'INSS', 'FGTS', 'piso salarial'],
   variableMeasured: ['Salário mínimo mensal (BRL)', 'Salário mínimo diário (BRL)', 'Salário mínimo por hora (BRL)'],
 };
@@ -73,6 +79,23 @@ const schema = { '@context': 'https://schema.org', '@graph': [
       </section>
 
       <section>
+        <h2>Valor do salário mínimo 2026 por período</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th class="l">Período</th><th class="l">Valor de referência</th><th class="l">Cálculo</th></tr></thead>
+            <tbody>
+              <tr><td class="l">Por hora</td><td class="l period-value">{fmt(hora)}</td><td class="l">{fmt(SM)} ÷ 220 horas</td></tr>
+              <tr><td class="l">Por dia</td><td class="l period-value">{fmt(diario)}</td><td class="l">{fmt(SM)} ÷ 30 dias</td></tr>
+              <tr><td class="l">Por semana</td><td class="l period-value">{fmt(semanal)}</td><td class="l">12 salários ÷ 52 semanas</td></tr>
+              <tr><td class="l">Por mês</td><td class="l period-value">{fmt(SM)}</td><td class="l">valor oficial</td></tr>
+              <tr><td class="l">Por ano</td><td class="l period-value">{fmt(anual)}</td><td class="l">12 salários, sem 13º</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">O valor mensal oficial vigora desde 1º de janeiro de 2026. Os demais períodos são equivalências de referência; jornada, adicionais e convenções coletivas podem mudar o valor efetivamente recebido.</p>
+      </section>
+
+      <section>
         <h2>O que o salário mínimo reajusta em 2026</h2>
         <div class="table-wrap">
           <table>
@@ -93,6 +116,8 @@ const schema = { '@context': 'https://schema.org', '@graph': [
       </section>
 
       <section class="cite-instructions">
+        <h2>Fonte oficial</h2>
+        <p>Valor fixado pelo <a href={OFFICIAL_SOURCE} rel="noopener" target="_blank">Decreto nº 12.797, de 23 de dezembro de 2025</a>, com vigência a partir de 1º de janeiro de 2026.</p>
         <h2>Como citar</h2>
         <pre><code>Fonte: Hacé Cuentas — https://hacecuentas.com/pt/dados-salario-minimo-brasil-2026
 Salário mínimo 2026 · Licença CC-BY 4.0</code></pre>
@@ -124,6 +149,7 @@ Salário mínimo 2026 · Licença CC-BY 4.0</code></pre>
   table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
   th, td { padding: 0.6rem 0.7rem; text-align: left; border-bottom: 1px solid var(--border); }
   th { background: var(--bg-soft); font-weight: 600; }
+  .period-value { font-weight: 700; }
   .note { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; }
   .calc-links li { line-height: 1.7; margin-bottom: 0.5rem; }
   .calc-links { margin-left: 1.25rem; }
