@@ -16,8 +16,8 @@
     "cuanto me prestan infonavit",
     "simulador infonavit"
   ],
-  "intro": "El **crédito hipotecario Infonavit** se paga con una mensualidad que combina **capital + intereses + seguros + gastos administrativos**, descontada directamente del sueldo del trabajador. La tasa depende del **Salario Base de Cotización (SBC)**: mientras más ganas, mayor tasa (de 1.91% a 10.45% anual). Esta calculadora estima la mensualidad, el pago total y cuánto vas a pagar en intereses a lo largo del crédito.",
-  "keyTakeaway": "**Mensualidad Infonavit** = capital + intereses (tasa según SBC) + seguros. Plazo máximo **30 años**. Tasa 2026: 1.91% a 10.45%.",
+  "intro": "El **crédito hipotecario Infonavit** se paga con una mensualidad que combina **capital + intereses + seguros + gastos administrativos**, descontada directamente del sueldo del trabajador vía nómina. La tasa depende del **Salario Base de Cotización (SBC)**: mientras más ganas, mayor tasa (de 1.91% a 10.45% anual en créditos en pesos 2026). Esta calculadora aplica la fórmula de amortización francesa —la misma que usa cualquier hipoteca de cuota fija— y le suma los gastos administrativos anuales, para estimar tu mensualidad, el total que pagarás durante todo el plazo y cuánto de ese total son intereses y costos. Así puedes comparar plazos (20 vs 30 años) o evaluar si te conviene más un crédito bancario antes de firmar.",
+  "keyTakeaway": "**Mensualidad Infonavit** = cuota francesa (capital + intereses según tu tasa por SBC) + gastos administrativos + seguros. Plazo máximo **30 años**; tasa 2026 entre **1.91% y 10.45%** anual. A mayor plazo, menor mensualidad pero mucho más interés total: en 20 años a 8% puedes terminar pagando más del doble del monto prestado.",
   "useCases": [
     "Vas a solicitar tu Infonavit y quieres estimar mensualidad.",
     "Comparas distintos plazos (20 vs 30 años).",
@@ -97,47 +97,54 @@
     }
   ],
   "example": {
-    "title": "Ejemplo: $800,000 MXN, tasa 8%, 20 años",
+    "title": "Ejemplo: $800,000 MXN, tasa 8%, 20 años, gastos admin 2.5%",
     "steps": [
-      "**Monto**: $800,000.",
-      "**Tasa mensual**: 8%/12 = 0.667%.",
-      "**Cuotas**: 240.",
-      "**Mensualidad** (fórmula francesa): ~$6,690 MXN.",
-      "**Con gastos admin 2.5% anual**: ~$8,350 MXN.",
-      "**Total pagado**: $8,350 × 240 = $2,004,000.",
-      "**Intereses y costos**: $1,204,000."
+      "**Monto**: $800,000. **Tasa mensual**: 8% / 12 = 0.667%. **Cuotas**: 20 × 12 = 240.",
+      "**Cuota base (fórmula francesa)**: 800,000 × [0.00667 × (1.00667)^240] / [(1.00667)^240 − 1] ≈ **$6,691 MXN**.",
+      "**Gastos administrativos**: 800,000 × 2.5% / 12 ≈ **$1,667 MXN** al mes.",
+      "**Mensualidad total**: 6,691 + 1,667 ≈ **$8,358 MXN**.",
+      "**Total pagado**: 8,358 × 240 ≈ **$2,005,900**.",
+      "**Sobrecosto (intereses + gastos)**: 2,005,900 − 800,000 ≈ **$1,205,900**."
     ],
-    "result": "Mensualidad aproximada **$8,350 MXN** durante 20 años, pagando $1.2M en intereses."
+    "result": "Mensualidad aproximada **$8,358 MXN** durante 20 años; el sobrecosto total (~$1.2M) supera al capital prestado."
   },
-  "explanation": "## Crédito Infonavit 2026\n\n### Tasa según SBC\n\nInfonavit cobra tasa diferenciada según el salario del trabajador. Para créditos en Pesos 2026, la tasa va desde 1.91% hasta 10.45% según el SBC. Para saber primero cuántos puntos tienes acumulados y cuánto te puede prestar Infonavit, la [calculadora de crédito Infonavit puntaje y monto 2026](/mx/calculadora-infonavit-credito-mexico-puntaje-monto-2026) estima el monto máximo de crédito antes de simular la mensualidad.\n\n| SBC mensual | Tasa anual |\n|---|---|\n| Hasta $8,893 | 1.91% |\n| $8,894 - $11,857 | 4.50% |\n| $11,858 - $17,786 | 6.50% |\n| $17,787 - $26,679 | 8.50% |\n| $26,680 - $35,572 | 9.50% |\n| Más de $35,573 | 10.45% |\n\n### Productos 2026\n\n- **Infonavit Total**: hasta $2.8M MXN, 30 años\n- **Infonavit Unamos Créditos**: 2 acreditados juntan salario\n- **Infonavit Mejoravit**: remodelación hasta $172k\n- **Crédito Seguro**: para compra de vivienda existente\n\n### Mensualidad\n\n```\nPago = Capital + Intereses + Gastos admin + Seguros\nFórmula capital+intereses: P × [r(1+r)^n] / [(1+r)^n − 1]\n```\n\n### Seguros incluidos\n\n- Seguro de daños\n- Seguro por muerte\n- Seguro de calidad\n\nSe cobran dentro de la mensualidad (~0.5-1% anual del saldo).\n\n### Aportación 5%\n\nAdemás, el patrón aporta **5% del SBC** a tu subcuenta de vivienda (no es parte de la mensualidad, es aportación adicional del IMSS-Infonavit). Si estás evaluando si conviene destinar el saldo de la subcuenta al crédito o retirarlo por desempleo, la [calculadora de retiro AFORE por desempleo](/mx/calculadora-retiro-afore-desempleo-mexico) muestra las condiciones de retiro parcial.",
+  "explanation": "## Crédito Infonavit 2026\n\n### Cómo funciona esta calculadora\n\nLa mensualidad se estima con la **fórmula de amortización francesa** (cuota fija de capital + intereses) y se le suma un cargo mensual por **gastos administrativos**:\n\n```\nCuota base = P × [r(1+r)^n] / [(1+r)^n − 1]\nGastos admin mensuales = P × (% admin anual) / 12\nMensualidad = Cuota base + Gastos admin\n```\n\nDonde **P** es el monto del crédito, **r** la tasa mensual (tasa anual ÷ 12) y **n** el número de mensualidades (años × 12). El total a pagar es la mensualidad × n, y el sobrecosto es todo lo que pagas por encima del capital.\n\n### Ejemplo resuelto paso a paso\n\nCrédito de **$800,000** a **8% anual**, **20 años**, gastos administrativos **2.5% anual**:\n\n1. Tasa mensual: 8% ÷ 12 = 0.667%. Mensualidades: 240.\n2. Factor (1.00667)^240 ≈ 4.93.\n3. Cuota base: 800,000 × (0.00667 × 4.93) ÷ (4.93 − 1) ≈ **$6,691**.\n4. Gastos admin: 800,000 × 2.5% ÷ 12 ≈ **$1,667** mensuales.\n5. Mensualidad: **≈ $8,358**.\n6. Total pagado: 8,358 × 240 ≈ **$2,005,900** → pagas **≈ $1,205,900** por encima del capital, más que el propio préstamo.\n\nEse último punto es la lección clave de cualquier hipoteca a plazo largo: los intereses y gastos acumulados pueden superar el monto que te prestaron.\n\n### Tasa según SBC\n\nInfonavit cobra tasa diferenciada según el salario del trabajador. Para créditos en Pesos 2026, la tasa va desde 1.91% hasta 10.45% según el SBC. Para saber primero cuántos puntos tienes acumulados y cuánto te puede prestar Infonavit, la [calculadora de crédito Infonavit puntaje y monto 2026](/mx/calculadora-infonavit-credito-mexico-puntaje-monto-2026) estima el monto máximo de crédito antes de simular la mensualidad.\n\n| SBC mensual | Tasa anual |\n|---|---|\n| Hasta $8,893 | 1.91% |\n| $8,894 - $11,857 | 4.50% |\n| $11,858 - $17,786 | 6.50% |\n| $17,787 - $26,679 | 8.50% |\n| $26,680 - $35,572 | 9.50% |\n| Más de $35,573 | 10.45% |\n\n### Errores comunes\n\n- **Usar una tasa que no corresponde a tu SBC.** La tasa no la eliges tú: la fija Infonavit según tu salario cotizado. Ubica tu rango en la tabla antes de simular.\n- **Comparar solo la cuota base contra un banco.** La mensualidad real incluye gastos administrativos y seguros; en el ejemplo, ignorarlos te haría subestimar el pago en ~$1,667 al mes.\n- **Elegir el plazo más largo \"porque la mensualidad es más baja\".** A 30 años pagas menos por mes, pero el interés acumulado crece muchísimo. Simula 20 vs 30 años y compara el campo \"Total intereses\".\n- **Confundir monto de crédito con precio de la vivienda.** Al precio hay que sumarle gastos de escrituración y, en muchos casos, un enganche que el crédito no cubre.\n\n### Cuándo NO usar este resultado\n\n- Si tu crédito es **antiguo y está denominado en VSM** (Veces Salario Mínimo): esos saldos se actualizan con reglas distintas y esta simulación en pesos no aplica.\n- Si vas a **cofinanciar** (Infonavit + banco): cada parte tiene su propia tasa y esquema; simula cada tramo por separado.\n- Esta herramienta es una **estimación educativa**: la mensualidad definitiva la determina Infonavit en tu precalificación oficial de [Mi Cuenta Infonavit](https://micuenta.infonavit.org.mx/).\n\n### Productos 2026\n\n- **Infonavit Total**: hasta $2.8M MXN, 30 años\n- **Infonavit Unamos Créditos**: 2 acreditados juntan salario\n- **Infonavit Mejoravit**: remodelación hasta $172k\n- **Crédito Seguro**: para compra de vivienda existente\n\n### Seguros incluidos\n\n- Seguro de daños\n- Seguro por muerte\n- Seguro de calidad\n\nSe cobran dentro de la mensualidad (~0.5-1% anual del saldo).\n\n### Aportación 5%\n\nAdemás, el patrón aporta **5% del SBC** a tu subcuenta de vivienda (no es parte de la mensualidad, es aportación adicional del IMSS-Infonavit). Si estás evaluando si conviene destinar el saldo de la subcuenta al crédito o retirarlo por desempleo, la [calculadora de retiro AFORE por desempleo](/mx/calculadora-retiro-afore-desempleo-mexico) muestra las condiciones de retiro parcial.",
   "faq": [
     {
       "q": "¿Cuánto me presta Infonavit?",
-      "a": "Depende de **puntos** (edad, salario, semanas), con tope 2026 de **~$2.8 millones MXN**. Consulta tu [precalificación en Mi Cuenta](https://micuenta.infonavit.org.mx/)."
+      "a": "Depende de tu sistema de **puntos** (edad, salario, semanas cotizadas y saldo de subcuenta), con tope 2026 de **~$2.8 millones MXN** para Infonavit Total. El monto exacto solo lo da tu precalificación oficial en [Mi Cuenta](https://micuenta.infonavit.org.mx/). Esta calculadora entra después: cuando ya sabes cuánto te prestan, te dice cuánto pagarías al mes y cuánto costará el crédito completo."
     },
     {
       "q": "¿Qué tasa me cobran?",
-      "a": "Entre **1.91% y 10.45% anual** según tu SBC. Tasas inferiores para salarios bajos (subsidio) y superiores para salarios altos."
+      "a": "Entre **1.91% y 10.45% anual** según tu Salario Base de Cotización. El esquema es progresivo: los salarios más bajos (hasta ~$8,893 de SBC mensual) reciben la tasa subsidiada de 1.91%, y los ingresos altos (más de $35,573) pagan la tasa tope de 10.45%. Una vez asignada, la tasa de tu crédito en pesos es fija durante toda la vida del préstamo."
+    },
+    {
+      "q": "¿Qué incluye la mensualidad de Infonavit?",
+      "a": "Cuatro componentes: **amortización de capital**, **intereses** según tu tasa, **gastos administrativos** (en esta calculadora los modelas como % anual, típicamente ~2.5%) y **seguros** (daños, vida y calidad, ~0.5-1% anual). Todo se descuenta junto vía nómina. Por eso al comparar con un banco debes mirar el pago total, no solo la cuota de capital e intereses."
     },
     {
       "q": "¿Cuál es el plazo máximo?",
-      "a": "**30 años**. Pero te conviene el menor posible: el plazo más largo implica mucho más interés acumulado."
+      "a": "**30 años**. Pero conviene el menor plazo que tu ingreso aguante: con el mismo monto y tasa, alargar el plazo baja la mensualidad pero dispara el interés acumulado. Simula 15, 20 y 30 años en esta calculadora y compara el campo \"Total intereses\": la diferencia entre plazos suele ser de cientos de miles de pesos."
     },
     {
       "q": "¿Puedo pagar por adelantado?",
-      "a": "Sí, **sin penalidades**. Aportaciones extras reducen plazo o mensualidad (tú eliges). Hacelo desde Mi Cuenta Infonavit."
+      "a": "Sí, **sin penalidades**. Las aportaciones extraordinarias se aplican directo a capital y tú eliges si reducen el plazo o la mensualidad. Reducir plazo es lo que más interés te ahorra, porque cortas meses completos de la tabla de amortización. Hazlo desde Mi Cuenta Infonavit; después puedes volver a simular aquí con el nuevo saldo para ver el efecto."
     },
     {
       "q": "¿Qué pasa si pierdo el empleo?",
-      "a": "Infonavit otorga **prórrogas de hasta 12 meses** (acumulables hasta 24 en la vida del crédito) sin pago, pero los intereses se acumulan."
+      "a": "Infonavit otorga **prórrogas de hasta 12 meses** (acumulables hasta 24 en la vida del crédito) en las que no pagas mensualidad, pero los intereses se siguen acumulando y el saldo crece. Al perder la relación laboral también dejas de recibir la aportación patronal del 5% que abonaba a tu subcuenta, así que el costo total del crédito termina siendo mayor."
     },
     {
-      "q": "¿Me conviene Infonavit o banco?",
-      "a": "**Infonavit**: tasas bajas para SBC bajos, descuento automático, menor burocracia. **Banco**: permite propiedades más caras, sin descuento nómina, pero tasa similar o mayor (9-11%)."
+      "q": "¿Me conviene Infonavit o un banco?",
+      "a": "**Infonavit** gana casi siempre con SBC bajos: tasas desde 1.91%, descuento automático vía nómina y menos requisitos. **El banco** puede convenir con ingresos altos, porque la tasa Infonavit tope (10.45%) es similar o mayor a la bancaria (9-11%) y el banco financia propiedades más caras. Simula ambos escenarios cambiando la tasa en esta calculadora y compara el total pagado."
     },
     {
-      "q": "¿Los intereses son deducibles?",
-      "a": "Sí, los **intereses reales** (inflación descontada) del crédito hipotecario son deducibles en tu declaración anual (Art. 151 LISR fracción IV)."
+      "q": "¿Los intereses son deducibles de impuestos?",
+      "a": "Sí. Los **intereses reales** (los que exceden a la inflación) de tu crédito hipotecario son deducción personal en la declaración anual, según el Art. 151 fracción IV de la LISR. Infonavit emite cada año la constancia de intereses para que la incluyas. En créditos con tasa baja e inflación alta, el interés real deducible puede ser pequeño o incluso nulo."
+    },
+    {
+      "q": "¿Qué diferencia hay entre crédito en pesos y en VSM?",
+      "a": "Los créditos recientes son **en pesos con tasa fija**: tu mensualidad y saldo no se indexan, que es lo que simula esta calculadora. Los créditos antiguos denominados en **VSM** (Veces Salario Mínimo) actualizaban el saldo cada año, por lo que la deuda podía crecer aunque pagaras puntualmente. Si tu crédito viejo es VSM, este resultado no aplica: consulta tu esquema en Mi Cuenta Infonavit."
     }
   ],
   "sources": [
@@ -219,6 +226,6 @@
     "updateType": "manual",
     "notes": "Fuente oficial; la precalificación definitiva se consulta en Mi Cuenta Infonavit."
   },
-  "lastReviewed": "2026-06-28",
+  "lastReviewed": "2026-07-26",
   "_formulaNote": "reusa formulaId prestamo-cuota-mexico (variante con gastos admin)"
 }

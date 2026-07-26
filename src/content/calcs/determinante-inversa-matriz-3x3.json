@@ -43,10 +43,10 @@
       "primary": false
     }
   ],
-  "intro": "Calcula determinante, inversa y verificación de una matriz 3×3.",
-  "keyTakeaway": "Determinante e inversa 3×3: resultado verificable con desarrollo y advertencia cuando la respuesta es aproximada.",
+  "intro": "Cargá una matriz 3×3 (filas separadas por punto y coma, columnas por espacios) y esta calculadora te devuelve el determinante por cofactores, la matriz inversa completa —obtenida por eliminación de Gauss-Jordan sobre la matriz aumentada [A | I]— y la verificación A × A⁻¹ = I. Si el determinante da cero, te avisa que la matriz es singular y no tiene inversa. Es la herramienta típica para controlar ejercicios de Álgebra Lineal antes de un parcial: ves el valor, el método y la comprobación, no solo el número final.",
+  "keyTakeaway": "**La inversa existe solo si det(A) ≠ 0. Ej.: para A = [1 2 3; 0 1 4; 5 6 0], det(A) = 1 y A⁻¹ = [−24 18 5; 20 −15 −4; −5 4 1].**",
   "answerSnippet": "Calcula determinante, inversa y verificación de una matriz 3×3.",
-  "explanation": "## Qué resuelve esta calculadora\n\nCalcula determinante, inversa y verificación de una matriz 3×3. La herramienta muestra el resultado y conserva el procedimiento necesario para revisarlo. Está pensada para estudiar, comprobar ejercicios y detectar errores de planteo, no solamente para copiar un valor final.\n\n## Cómo ingresar los datos\n\nUsá punto para decimales, el símbolo ^ para potencias y * cuando quieras hacer explícita una multiplicación. En polinomios por coeficientes, escribí los números desde el término de mayor grado hasta el independiente e incluí ceros cuando falte una potencia. En matrices, separá columnas con espacios y filas con punto y coma. Esta convención evita ambigüedades y hace que el cálculo sea reproducible.\n\n## Método aplicado\n\nLa resolución combina álgebra simbólica para simplificar y derivar expresiones con algoritmos numéricos controlados para raíces, intersecciones, integrales y aproximaciones. Los resultados numéricos se redondean solo al mostrarse; los pasos intermedios conservan más precisión. Cuando el problema admite una solución exacta elemental, se presenta en forma algebraica. Cuando no, el texto indica que se trata de una aproximación.\n\n## Cómo verificar el resultado\n\nVolvé a sustituir el resultado en la expresión original o compará la identidad que muestra la herramienta. En una raíz, el residuo debe quedar cerca de cero. En una matriz inversa, el producto con la matriz original debe aproximar la identidad. En cálculo diferencial, una evaluación numérica cercana permite controlar el signo y la magnitud. Esta verificación es parte del resultado y no un detalle opcional.\n\n## Límites del procedimiento\n\nNingún motor automático reemplaza una demostración cuando el ejercicio la exige. Las funciones con discontinuidades muy juntas, dominios complejos, parámetros simbólicos o identidades especiales pueden necesitar análisis adicional. El rango de una función y los puntos críticos se exploran dentro del intervalo informado; fuera de ese intervalo puede haber otros comportamientos. Los métodos iterativos también dependen de tolerancias numéricas, por eso la página diferencia valores exactos de aproximados.\n\n## Uso responsable en estudio\n\nLeé cada paso y tratá de anticipar el siguiente antes de desplegar el resultado. Si el valor no coincide con tu ejercicio, revisá primero la sintaxis, el orden de coeficientes, las unidades y el intervalo. Una calculadora matemática es más útil como instrumento de control que como sustituto del razonamiento.",
+  "explanation": "## Cómo se calcula el determinante\n\nPara una matriz 3×3, el determinante se expande por cofactores a lo largo de la primera fila:\n\n```\n| a b c |\n| d e f |  →  det = a(ei − fh) − b(di − fg) + c(dh − eg)\n| g h i |\n```\n\nCada paréntesis es el determinante 2×2 (\"menor\") que queda al tachar la fila y la columna del elemento, y los signos alternan + − +.\n\n## Ejemplo resuelto paso a paso\n\nCon la matriz del formulario, **A = [1 2 3; 0 1 4; 5 6 0]**:\n\n1. Menor de 1: (1·0 − 4·6) = −24 → aporta 1·(−24) = −24.\n2. Menor de 2: (0·0 − 4·5) = −20 → aporta −2·(−20) = +40.\n3. Menor de 3: (0·6 − 1·5) = −5 → aporta 3·(−5) = −15.\n4. Suma: det(A) = −24 + 40 − 15 = **1**.\n\nComo det(A) = 1 ≠ 0, la matriz es invertible. La calculadora obtiene la inversa aplicando Gauss-Jordan a la matriz aumentada [A | I]: cuando el lado izquierdo se transforma en la identidad, el derecho es A⁻¹. Para este ejemplo:\n\n```\nA⁻¹ = | −24  18   5 |\n      |  20 −15  −4 |\n      |  −5   4   1 |\n```\n\nVerificación rápida con la primera fila de A y la primera columna de A⁻¹: 1·(−24) + 2·20 + 3·(−5) = −24 + 40 − 15 = 1 ✓ (elemento (1,1) de la identidad). El resto de los productos da 0 y 1 donde corresponde.\n\n## Errores comunes\n\n1. **Olvidar la alternancia de signos** en la expansión por cofactores: el segundo término va con signo menos. Es la fuente número uno de determinantes \"corridos\".\n2. **Restar los menores al revés**: cada menor 2×2 es (diagonal principal − diagonal secundaria); invertirlo cambia el signo del resultado.\n3. **Ingresar la matriz traspuesta sin querer**: las filas van separadas por punto y coma y las columnas por espacio. `1 2 3; 0 1 4; 5 6 0` tiene primera FILA 1 2 3. Con el determinante no lo vas a notar (det(A) = det(Aᵀ)), pero la inversa te va a dar traspuesta.\n4. **Confundir la inversa con \"1 dividido cada elemento\"**: A⁻¹ no se obtiene invirtiendo elemento a elemento; sale del proceso completo de Gauss-Jordan o de la adjunta dividida por el determinante.\n5. **Dividir por un determinante casi cero**: si det(A) es minúsculo (por ejemplo 0,0000001 por redondeo de datos), la inversa numérica existe pero está mal condicionada y amplifica errores; tratala con cautela.\n\n## Cuándo NO existe la inversa\n\nSi det(A) = 0 la matriz es **singular**: sus filas (o columnas) son linealmente dependientes —una fila es combinación de las otras— y no hay ninguna matriz B tal que A·B = I. La calculadora lo informa en lugar de mostrar una inversa. En un sistema de ecuaciones A·x = b, eso significa que el sistema no tiene solución única: puede ser incompatible o tener infinitas soluciones, y hay que analizarlo por rango (Gauss), no por inversa.\n\n## Sintaxis de entrada\n\nEscribí las 9 entradas separando columnas con espacios y filas con punto y coma: `1 2 3; 0 1 4; 5 6 0`. Se admiten decimales con punto y números negativos. Todo el cálculo corre en tu navegador.",
   "seoKeywords": [
     "determinante e inversa 3×3",
     "matriz",
@@ -73,41 +73,40 @@
   },
   "faq": [
     {
-      "q": "¿Qué resuelve determinante e inversa 3×3?",
-      "a": "Calcula determinante, inversa y verificación de una matriz 3×3."
+      "q": "¿Cómo ingreso la matriz 3×3?",
+      "a": "Separá las columnas con espacios y las filas con punto y coma. Por ejemplo, `1 2 3; 0 1 4; 5 6 0` representa la matriz cuya primera fila es (1, 2, 3), la segunda (0, 1, 4) y la tercera (5, 6, 0). Podés usar decimales con punto (2.5) y negativos (-3). Si ingresás más o menos de 9 valores, la calculadora te avisa que la matriz no es 3×3."
     },
     {
-      "q": "¿El resultado es exacto?",
-      "a": "La página identifica las aproximaciones numéricas. Cuando presenta decimales obtenidos por iteración o muestreo, debés interpretarlos con la tolerancia indicada."
+      "q": "¿Qué significa que el determinante dé cero?",
+      "a": "Que la matriz es singular: sus filas o columnas son linealmente dependientes (alguna es combinación de las otras) y **no existe la inversa**. Geométricamente, la transformación aplasta el espacio en un plano, una recta o un punto (volumen cero). Si esa matriz es la de coeficientes de un sistema 3×3, el sistema no tiene solución única: será incompatible o con infinitas soluciones."
     },
     {
-      "q": "¿Cómo escribo una potencia?",
-      "a": "Usá ^: por ejemplo x^3. Para multiplicar, podés usar *; escribir 2*x evita cualquier ambigüedad."
+      "q": "¿Cómo calcula la inversa la herramienta?",
+      "a": "Por eliminación de Gauss-Jordan: arma la matriz aumentada [A | I] de 3×6, y aplica operaciones elementales de fila hasta transformar el lado izquierdo en la identidad. Lo que queda del lado derecho es exactamente A⁻¹. Es el mismo procedimiento que se enseña en Álgebra Lineal y es más eficiente y menos propenso a errores de signo que el método de la adjunta con los nueve cofactores."
     },
     {
-      "q": "¿Cómo ingreso coeficientes faltantes?",
-      "a": "Incluí un cero. x³ − 4x + 3 se ingresa como 1 0 -4 3."
+      "q": "¿Cómo verifico que la inversa está bien?",
+      "a": "Multiplicá A × A⁻¹: tiene que dar la matriz identidad (unos en la diagonal, ceros afuera). La calculadora ya hace esa comprobación e informa \"A × A⁻¹ = I\" dentro del redondeo numérico. Si multiplicás a mano, basta chequear dos o tres elementos: por ejemplo, fila 1 de A por columna 1 de A⁻¹ debe dar 1, y por la columna 2 debe dar 0."
     },
     {
-      "q": "¿Puedo usar el resultado en una tarea?",
-      "a": "Sí, pero conservá los pasos y verificá la consigna. Si se pide demostración, el valor automático no la reemplaza."
+      "q": "¿Qué relación hay entre el determinante y la inversa?",
+      "a": "La inversa existe si y solo si det(A) ≠ 0. Además, cada elemento de A⁻¹ lleva el determinante como divisor: A⁻¹ = adj(A)/det(A). Por eso, si det(A) = 1 —como en el ejemplo del formulario— la inversa tiene exactamente los cofactores traspuestos, sin fracciones. Y vale det(A⁻¹) = 1/det(A): un buen chequeo extra de consistencia."
     },
     {
-      "q": "¿Por qué puede cambiar el último decimal?",
-      "a": "Los métodos numéricos usan tolerancias y redondeo de presentación. Una diferencia muy pequeña no implica que el procedimiento sea distinto."
+      "q": "¿Por qué mi inversa da con fracciones o decimales largos?",
+      "a": "Es lo normal cuando det(A) no es ±1: cada entrada de la inversa es un cofactor dividido por el determinante. Si det(A) = 7, vas a ver múltiplos de 1/7 que en decimal se muestran redondeados. Una diferencia en el último decimal respecto de tu resolución manual es solo redondeo de presentación, no un procedimiento distinto. Para la respuesta \"exacta\" del ejercicio, expresá las entradas como fracciones."
     },
     {
-      "q": "¿Qué sintaxis de funciones admite?",
-      "a": "Admite operaciones con +, −, *, / y ^, además de funciones usuales como sin, cos, exp, log y sqrt cuando corresponda."
+      "q": "¿Sirve para resolver un sistema de 3 ecuaciones con 3 incógnitas?",
+      "a": "Sí, indirectamente: si A·x = b y det(A) ≠ 0, la solución es x = A⁻¹·b. Calculá la inversa acá y multiplicala por el vector de términos independientes. Ojo: si el sistema es lo único que te interesa, la eliminación gaussiana directa suele ser más corta que calcular toda la inversa; la inversa conviene cuando tenés que resolver varios sistemas con la misma A y distintos b."
     },
     {
-      "q": "¿Mis expresiones se envían a un servidor?",
-      "a": "No. El cálculo se ejecuta en el navegador y no requiere crear una cuenta ni guardar la expresión."
+      "q": "¿Puedo usar el resultado en una tarea o examen?",
+      "a": "Como control, sí: compará tu determinante, tu inversa y la verificación con lo que muestra la página. Pero si la consigna pide el desarrollo (expansión por cofactores o los pasos de Gauss-Jordan), tenés que escribirlos: el valor final confirma tu trabajo, no lo reemplaza. Todo el cálculo corre en tu navegador, sin registro y sin enviar la matriz a ningún servidor."
     }
   ],
   "relatedSlugs": [
     "calculadora-derivada-funcion-basica",
-    "calculadora-integral-definida-basica",
     "calculadora-ecuacion-cuadratica-raices-discriminante",
     "calculadora-determinante-inversa-matriz-2x2"
   ],
@@ -129,7 +128,7 @@
     "updateType": "manual",
     "notes": "Metodología matemática estable; revisar al modificar el motor."
   },
-  "lastReviewed": "2026-07-15",
+  "lastReviewed": "2026-07-26",
   "sourceVerified": true,
   "automatedTests": "passed",
   "adsenseEligible": true

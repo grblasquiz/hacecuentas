@@ -8,8 +8,8 @@
   "icon": "⏱️",
   "formulaId": "horas-trabajadas-semanal",
   "answerSnippet": "Calculá entrada, salida, descansos, turnos nocturnos, horas normales, extras y sueldo semanal. Convierte horas y minutos a decimal.",
-  "intro": "Cargá la entrada, la salida y los descansos de cada día. La herramienta reconoce turnos que cruzan medianoche, suma la semana, convierte a horas decimales y separa horas normales de extras según un límite configurable.",
-  "keyTakeaway": "Los recargos y límites legales varían por país, convenio y jornada. El usuario debe ingresar el porcentaje y el límite aplicables.",
+  "intro": "Cargá la entrada, la salida y los minutos de descanso de cada día de la semana y obtené el total trabajado en formato HH:MM y en horas decimales, listo para pasar a una planilla o liquidación. La herramienta reconoce turnos que cruzan medianoche (si la salida es anterior a la entrada, suma 24 horas), descuenta los descansos de cada jornada, acumula los siete días y separa horas normales de extras según el límite semanal que configures (40 horas por defecto). Si además cargás tu valor por hora y el recargo de extras de tu convenio, te devuelve el sueldo normal, el pago por extras y el total semanal, junto con una tabla día por día para copiar.",
+  "keyTakeaway": "**Minutos por día = salida − entrada − descanso (con +24 h si el turno cruza medianoche); el total semanal se compara con tu límite: lo que excede es hora extra pagada a valor hora × (1 + recargo). Ej.: 45 h con límite 40, valor $5.000 y recargo 50% → $200.000 normales + $37.500 de extras = $237.500.** Los recargos y límites legales varían por país, convenio y jornada: ingresá el porcentaje y el límite que aplican a tu caso.",
   "useCases": [
     "Resolver calculadora de horas trabajadas por semana con datos propios.",
     "Comparar dos escenarios antes de decidir.",
@@ -272,39 +272,47 @@
     ],
     "result": "El resultado muestra el valor principal y las conversiones necesarias para verificarlo."
   },
-  "explanation": "## Cómo funciona Calculadora de horas trabajadas por semana\n\n`minutos trabajados = salida − entrada − descansos`. Si la salida es anterior a la entrada se suman 24 horas. Luego se acumulan los siete días y se compara el total con el límite semanal.\n\nLa calculadora separa **datos ingresados**, **conversiones** y **resultado**. Esa separación permite revisar la cuenta: primero normaliza unidades, después aplica la regla indicada y recién al final redondea lo que se muestra. Si cambiás un dato, todo el resultado se vuelve a calcular; no se reutilizan valores anteriores ni promedios ocultos.\n\n## Cómo obtener un resultado confiable\n\n1. Medí o copiá los datos desde una fuente verificable.\n2. Elegí la unidad correcta antes de calcular.\n3. No mezcles valores de períodos, prendas, laboratorios o sistemas distintos.\n4. Probá un segundo escenario si algún valor está cerca de un límite.\n5. Conservá el detalle: sirve para detectar si una diferencia viene del dato o de la fórmula.\n\nLos recargos y límites legales varían por país, convenio y jornada. El usuario debe ingresar el porcentaje y el límite aplicables.\n\n## Qué significa el redondeo\n\nLos resultados continuos pueden caer entre dos opciones comerciales o categorías. La página muestra una recomendación, pero también conserva las medidas o valores intermedios para que puedas compararlos con la fuente final. Redondear al principio acumula error; por eso la herramienta redondea solamente al presentar cada salida.\n\n## Ejemplo de control\n\nHacé una prueba con números simples cuyo resultado puedas calcular a mano. Si coincide, reemplazalos por tus datos reales. Este control es especialmente útil cuando hay horarios que cruzan medianoche, pulgadas convertidas a centímetros, talles de distintos países o valores de laboratorio expresados en unidades diferentes.\n\n## Alcance\n\nLos recargos y límites legales varían por país, convenio y jornada. El usuario debe ingresar el porcentaje y el límite aplicables. La herramienta informa el método, las fuentes y sus supuestos para que el resultado sea auditable. No presenta una estimación como certeza ni reemplaza la tabla, norma o evaluación profesional que corresponda.",
+  "explanation": "## Cómo funciona la calculadora de horas trabajadas por semana\n\nLa regla base es una por día:\n\n```\nminutos trabajados = salida − entrada − descanso\n```\n\nSi la salida es anterior a la entrada (turno nocturno que cruza medianoche, por ejemplo 22:00 a 06:00), se suman 24 horas al tramo. Luego se acumulan los siete días, el total se convierte a horas decimales (minutos ÷ 60) y se compara con el límite semanal configurado:\n\n```\nhoras normales = mínimo(total, límite semanal)\nhoras extra    = máximo(0, total − límite semanal)\nsueldo normal  = horas normales × valor hora\npago extras    = horas extra × valor hora × (1 + recargo %)\n```\n\nLa calculadora separa **datos ingresados**, **conversiones** y **resultado**. Si cambiás un dato, todo se recalcula; no se reutilizan valores anteriores ni promedios ocultos, y el redondeo se aplica solamente al mostrar cada salida.\n\n## Ejemplo resuelto paso a paso\n\nSemana típica de oficina más un sábado corto:\n\n1. Lunes a viernes: entrada 09:00, salida 18:00, descanso 60 min → 9 h − 1 h = **8 h por día** = 40 h.\n2. Sábado: 09:00 a 14:00 sin descanso → **5 h**.\n3. Total semanal: 45 h (45,00 en decimal; en HH:MM, 45:00).\n4. Con límite de 40 h: **40 h normales y 5 h extra**.\n5. Con valor hora $5.000 y recargo del 50%: sueldo normal 40 × 5.000 = **$200.000**; extras 5 × 5.000 × 1,5 = **$37.500**; total **$237.500**.\n\n**Control con turno nocturno:** entrada 22:00, salida 06:00, descanso 30 min → 06:00 − 22:00 = −16 h → +24 = 8 h − 0,5 = **7,5 h**. Si el resultado de un día te da raro, casi siempre es un descanso cargado en horas en vez de minutos.\n\n## Por qué convertir a horas decimales\n\nLas planillas y liquidaciones multiplican horas por tarifas, y para eso 7:30 debe ser 7,50 (no 7,30). La conversión es minutos ÷ 60: 45 minutos = 0,75. Este es uno de los errores más caros en liquidaciones manuales: pagar 7,30 en vez de 7,50 descuenta 12 minutos por día sin que nadie lo note.\n\n## Errores comunes\n\n- **Cargar el descanso en horas**: el campo es en minutos. Poner “1” en vez de “60” infla el día casi una hora.\n- **Confundir 7:30 con 7,30 decimal**: 7 horas y media son 7,50 decimales.\n- **Aplicar el recargo sobre el total**: el recargo de extras corre solo sobre las horas que exceden el límite, no sobre toda la semana.\n- **Usar el límite equivocado**: 40 h es el valor por defecto, pero tu convenio puede fijar 44, 45 o 48 h semanales, o límites diarios que esta herramienta no controla.\n- **Mezclar semanas**: cargar días de dos semanas distintas rompe la comparación contra el límite semanal.\n\n## Cuándo NO usar este resultado\n\nEl corte normal/extra es puramente **semanal**: no detecta extras por exceso diario, ni distingue recargos diferenciados (50% día hábil vs. 100% sábado tarde/domingo/feriado, como rige en Argentina), ni nocturnidad ni feriados. Para liquidaciones con esas reglas, calculá cada tipo de hora por separado o usá las calculadoras específicas relacionadas. Los recargos y límites legales varían por país, convenio y jornada: la herramienta informa el método y sus supuestos para que el resultado sea auditable, pero no reemplaza la norma ni la liquidación profesional que corresponda.\n",
   "faq": [
     {
-      "q": "¿Qué calcula Calculadora de horas trabajadas por semana?",
-      "a": "Los recargos y límites legales varían por país, convenio y jornada. El usuario debe ingresar el porcentaje y el límite aplicables."
+      "q": "¿Qué calcula exactamente esta herramienta?",
+      "a": "Suma los minutos trabajados de cada día (salida − entrada − descanso, con ajuste de +24 h si el turno cruza medianoche), convierte el total a horas decimales y lo divide en horas normales y extras según el límite semanal que definas. Si cargás valor hora y recargo, calcula además sueldo normal, pago por extras y total. También genera una tabla día por día en HH:MM y decimal para copiar a una planilla."
+    },
+    {
+      "q": "¿Cómo maneja los turnos nocturnos que cruzan medianoche?",
+      "a": "Automáticamente: si la salida es un horario anterior a la entrada, la calculadora asume que terminaste al día siguiente y suma 24 horas al tramo. Un turno de 22:00 a 06:00 con 30 minutos de descanso da 7,5 horas, no un número negativo. Cargá cada turno en el día en que empieza, así la tabla semanal queda ordenada y no duplicás jornadas."
+    },
+    {
+      "q": "¿Cómo convierto horas y minutos a decimal?",
+      "a": "Dividiendo los minutos por 60: 15 minutos = 0,25; 30 = 0,50; 45 = 0,75. Así, 42:45 semanales son 42,75 horas decimales. La calculadora hace la conversión sola y muestra ambos formatos, porque las tarifas se multiplican sobre el decimal. El error clásico es tratar 7:30 como 7,30: son 7,50, y la diferencia acumulada en un mes puede superar las 4 horas mal pagadas."
+    },
+    {
+      "q": "¿Qué límite semanal de horas normales debería usar?",
+      "a": "El de tu ley o convenio. El campo viene con 40 h por defecto (estándar común internacional), pero en Argentina la Ley 11.544 fija 48 h semanales como tope general, y muchos convenios pactan 44 o 45. El límite que elijas define cuántas horas se pagan con recargo, así que conviene sacarlo de tu CCT o contrato antes que dejar el valor por defecto."
+    },
+    {
+      "q": "¿Qué recargo de hora extra cargo?",
+      "a": "El que fije tu legislación o convenio para tu caso. El campo por defecto trae 50%, el recargo típico de días hábiles en varios países (en Argentina, 50% en jornada común y 100% después de las 13 del sábado, domingos y feriados). Como esta calculadora aplica un único porcentaje a todas las extras de la semana, si tuviste extras al 50% y al 100% conviene calcular cada grupo por separado."
     },
     {
       "q": "¿El resultado es exacto?",
-      "a": "Es una estimación reproducible basada en los datos ingresados y la metodología explicada. Medidas, redondeos, reglas locales o tablas comerciales pueden cambiar el resultado final."
+      "a": "Es una estimación reproducible: exacta para los horarios, el límite y el recargo que ingresaste, con redondeo solo al mostrar (dos decimales). Puede diferir de tu liquidación real si tu convenio computa extras por exceso diario, aplica recargos escalonados, adicionales de nocturnidad o presentismo, o si el empleador redondea fichadas. Usala para controlar la planilla, no como liquidación definitiva."
     },
     {
-      "q": "¿Qué hago si quedo entre dos resultados?",
-      "a": "Conservá ambos escenarios y elegí el más prudente. En talles, verificá la tabla de la marca; en dinero o salud, confirmá la regla o fuente aplicable."
-    },
-    {
-      "q": "¿Puedo usar decimales?",
-      "a": "Sí. Usá punto o coma según admita tu navegador y mantené la misma unidad en todos los campos."
+      "q": "¿Puedo dejar días sin completar?",
+      "a": "Sí: los días libres se dejan vacíos y aparecen con “—” en la tabla. Lo que no podés es cargar solo la entrada o solo la salida de un día: la calculadora pide ambas para poder computar el tramo. El descanso es opcional y se asume 0 si no lo indicás, aunque el campo sugiere 60 minutos como valor típico de almuerzo."
     },
     {
       "q": "¿Se guardan mis datos?",
-      "a": "No hace falta crear una cuenta. El cálculo se procesa en el navegador y podés copiar el resumen."
+      "a": "No. El cálculo se procesa por completo en tu navegador: horarios, valor hora y resultados no se envían a ningún servidor ni requieren cuenta. Si necesitás documentar la semana, copiá la tabla semanal que genera la herramienta y pegala en tu planilla o correo; incluye cada día en HH:MM y en horas decimales."
     },
     {
       "q": "¿Funciona desde el celular?",
-      "a": "Sí. El formulario y los resultados se adaptan a pantallas móviles."
-    },
-    {
-      "q": "¿Cada cuánto debo recalcular?",
-      "a": "Repetí el cálculo cuando cambie una medida, un horario, un valor por hora, una tabla o cualquier supuesto relevante."
+      "a": "Sí. El formulario y los resultados se adaptan a pantallas móviles, así que podés fichar tu semana desde el teléfono al terminar cada turno. Un método práctico: cargá entrada y salida reales cada día y al cierre de la semana compará el total contra lo que liquida tu empleador; cualquier diferencia se rastrea día por día con la tabla."
     },
     {
       "q": "¿Cuál es la principal limitación?",
-      "a": "Una calculadora aplica una regla general. No puede conocer excepciones contractuales, variaciones entre marcas ni el contexto individual completo."
+      "a": "Que aplica una regla general puramente semanal: no conoce excepciones contractuales, límites diarios, francos compensatorios, nocturnidad ni feriados. Tampoco distingue recargos múltiples en la misma semana. Para casos con esas reglas, dividí el cálculo (una pasada por tipo de hora) o consultá la norma aplicable; la herramienta te da la base auditable de horas para esa conversación."
     }
   ],
   "sources": [
@@ -339,7 +347,7 @@
     "y",
     "extras"
   ],
-  "lastReviewed": "2026-07-15",
+  "lastReviewed": "2026-07-26",
   "howToSteps": [
     {
       "name": "Ingresá los datos",

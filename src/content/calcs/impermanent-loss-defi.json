@@ -1,7 +1,7 @@
 {
   "slug": "calculadora-impermanent-loss-defi-2026",
   "answerSnippet": "La pérdida impermanente (Impermanent Loss) ocurre cuando provees liquidez en un pool DeFi y el precio de uno de los tokens cambia respecto al otro. Esta calculadora te muestra cuánto perdés vs simplemente holdear, y si las fees del pool compensan esa pérdida.",
-  "lastReviewed": "2026-06-22",
+  "lastReviewed": "2026-07-26",
   "title": "Impermanent Loss Calculator DeFi 2026 | Hacé Cuentas",
   "h1": "Impermanent Loss en Pools de Liquidez DeFi",
   "description": "💰 Calculá la pérdida impermanente en pools de liquidez DeFi. Compará HODL vs proveer liquidez con APY incluido. IL = 2×√(ratio) / (1 + ratio) - 1.",
@@ -16,8 +16,8 @@
     "LP token perdida",
     "DeFi yield farming"
   ],
-  "intro": "La **pérdida impermanente** (Impermanent Loss) ocurre cuando provees liquidez en un pool DeFi y el precio de uno de los tokens cambia respecto al otro. Esta calculadora te muestra cuánto perdés vs simplemente holdear, y si las **fees del pool** compensan esa pérdida.",
-  "keyTakeaway": "**IL = 2×√(ratio) / (1 + ratio) - 1**. Si un token sube 2x, la IL es ~5.7%. Si sube 5x, la IL es ~25.5%. Las fees del pool deben superar la IL para que sea rentable.",
+  "intro": "La **pérdida impermanente** (Impermanent Loss, IL) ocurre cuando provees liquidez en un pool DeFi de dos tokens y el precio de uno cambia respecto al otro: el pool rebalancea automáticamente y al salir terminás con menos valor que si hubieras holdeado. Esta calculadora aplica la fórmula exacta del modelo AMM de Uniswap v2 —IL = 2×√(ratio) / (1 + ratio) − 1— para mostrarte la pérdida en porcentaje y en dólares, compararla contra el escenario HODL y sumar la **ganancia por fees** del pool (APY proporcional al período) para saber si proveer liquidez te conviene o no. Cargás el monto invertido, el precio inicial y final del token volátil, el APY del pool y los meses de permanencia, y obtenés el resultado neto completo.",
+  "keyTakeaway": "**IL = 2×√(ratio) / (1 + ratio) − 1. Si un token sube 1,5x, la IL es ~2%; con 2x, ~5,7%; con 5x, ~25,5%: crece de forma no lineal. Las fees del pool deben superar la IL para que proveer liquidez le gane al HODL. Ej.: $10.000 en ETH/USDC con ETH de $3.000 a $4.500 → IL de $252 sobre un HODL de $12.500; con 30% APY, 6 meses suman $1.500 en fees y el pool termina ganando.**",
   "useCases": [
     "Proveés liquidez en Uniswap, PancakeSwap o Raydium.",
     "Querés saber cuánto perdés si el precio cambia.",
@@ -129,31 +129,43 @@
   "faq": [
     {
       "q": "¿Qué es la pérdida impermanente?",
-      "a": "Es la diferencia entre holdear tokens y proveer liquidez en un pool. Cuando el precio cambia, el pool rebalancea y terminás con menos valor que si hubieras holdeado."
+      "a": "Es la diferencia entre holdear tus tokens y proveer liquidez con ellos en un pool AMM. Cuando el precio relativo de los dos activos cambia, el pool rebalancea automáticamente (vende el que sube, compra el que baja) y al retirar terminás con menos valor del que tendrías holdeando. No es una comisión ni un hackeo: es una consecuencia matemática de la curva x·y=k con la que operan los pools."
     },
     {
       "q": "¿Por qué se llama 'impermanente'?",
-      "a": "Porque si el precio vuelve al original, la pérdida desaparece. Solo se materializa cuando retirás liquidez con precios distintos a los de entrada."
+      "a": "Porque mientras no retires, la pérdida es solo contable: si el ratio de precios vuelve al que había cuando entraste, la IL se reduce a cero y te quedás con todas las fees cobradas en el medio. Solo se vuelve permanente cuando sacás la liquidez con precios distintos a los de entrada. Por eso el período importa: más tiempo en el pool acumula más fees que amortiguan una IL que puede revertirse."
     },
     {
       "q": "¿Cuánto es la IL con un 2x de precio?",
-      "a": "~5.7%. Con 3x: ~13.4%. Con 5x: ~25.5%. La pérdida crece de forma no lineal con el cambio de precio."
+      "a": "Un 5,7%: con ratio 2, la fórmula da 2×√2/3 − 1 = −5,72%. Con 1,5x es ~2%, con 3x ~13,4%, con 5x ~25,5% y con 10x llega al 42,3%. La progresión no es lineal: duplicar el movimiento de precio mucho más que duplica la pérdida. Ese porcentaje se aplica sobre el valor que tendría tu posición holdeada, no sobre el monto que invertiste originalmente."
     },
     {
-      "q": "¿Pools de stablecoins tienen IL?",
-      "a": "Muy poca, porque ambos tokens mantienen paridad ~1:1. USDC/USDT tiene IL prácticamente cero. Son los pools más seguros para LPs."
+      "q": "¿La IL también aparece si el token baja de precio?",
+      "a": "Sí, y con la misma magnitud en términos de ratio: una caída a la mitad (ratio 0,5) genera la misma IL de 5,7% que una duplicación (ratio 2), porque la fórmula depende de √(ratio)/(1+ratio), simétrica en ese sentido. En una baja sufrís doble: el valor de tu mitad volátil cae y encima el pool te deja peor que el HODL. Las fees son lo único que juega a favor."
+    },
+    {
+      "q": "¿Los pools de stablecoins tienen IL?",
+      "a": "Prácticamente nula mientras ambos mantengan la paridad: si USDC/USDT se mueve 0,1%, la IL es despreciable. Por eso son los pools preferidos para perfiles conservadores, aunque pagan APYs menores. El riesgo real ahí no es la IL sino un de-peg: si uno de los stablecoins pierde la paridad, el pool te deja cargado del stablecoin que se hunde, exactamente lo que no querés."
     },
     {
       "q": "¿Las fees compensan la IL?",
-      "a": "A veces sí. Si el APY es suficientemente alto y el cambio de precio moderado, las fees superan la IL. Pools volátiles necesitan APY más alto para compensar."
+      "a": "Depende de tres variables que esta calculadora cruza: APY, tiempo en el pool y magnitud del movimiento de precio. En el ejemplo de la página, un 30% APY durante 6 meses genera $1.500 de fees contra $252 de IL por un movimiento de 1,5x: el pool gana. Pero si el token hace 5x en ese mismo lapso, la IL salta a ~25% y el mismo APY ya no alcanza. Pools volátiles necesitan APYs mucho más altos para justificarse."
     },
     {
       "q": "¿Uniswap V3 tiene más o menos IL?",
-      "a": "En V3 (liquidez concentrada) la IL es mayor si el precio se mueve fuera de tu rango, pero ganás más fees cuando está en rango. Es más eficiente pero más riesgoso."
+      "a": "Más, si el precio se escapa de tu rango: la liquidez concentrada amplifica tanto las fees como la IL. Mientras el precio queda dentro del rango elegido, cobrás muchas más fees por dólar depositado que en V2; si sale del rango, tu posición queda 100% en el token menos valioso y dejás de cobrar fees. Es una herramienta más eficiente pero más riesgosa, pensada para LPs que gestionan activamente sus rangos."
     },
     {
-      "q": "¿Cómo minimizo la IL?",
-      "a": "Elegí pares con tokens correlacionados (ej: ETH/stETH), pools de stablecoins, o rangos amplios en Uniswap V3. Evitá pares con alta volatilidad relativa."
+      "q": "¿Cómo minimizo la pérdida impermanente?",
+      "a": "Cuatro estrategias probadas: pools de stablecoins (IL ≈ 0), pares altamente correlacionados como ETH/stETH que se mueven casi juntos, rangos amplios en V3 para reducir la probabilidad de salirte, y elegir pools cuyo APY histórico supere con margen la IL esperable para la volatilidad del par. Evitá pares donde un token puede hacer un movimiento explosivo contra el otro: ahí la IL es máxima."
+    },
+    {
+      "q": "¿La IL se calcula sobre lo que invertí o sobre el valor actual?",
+      "a": "Sobre el **valor HODL actual**, que es la comparación económicamente correcta. En el ejemplo: invertiste $10.000, el HODL valdría $12.500 y el pool sin fees $12.247. La IL es $252 (el 2,02% de 12.500), aunque contra tu inversión inicial sigas ganando $2.247. Ese matiz explica por qué podés tener resultado neto positivo y aun así haber perdido plata contra la alternativa de no hacer nada."
+    },
+    {
+      "q": "¿Qué riesgos no captura esta calculadora?",
+      "a": "Los que están fuera de la matemática del AMM: vulnerabilidades del contrato inteligente, rug pulls, de-peg de stablecoins, caída del APY por dilución de liquidez, costos de gas para entrar y salir, e impuestos sobre las ganancias según tu jurisdicción. También asume APY constante y pool 50/50 estilo Uniswap v2. Tomá el resultado como una comparación estructural HODL vs. pool, no como proyección garantizada."
     }
   ],
   "howToSteps": [
@@ -174,19 +186,18 @@
       "text": "Mirá si las fees compensan la pérdida impermanente."
     }
   ],
-  "explanation": "## Qué es la pérdida impermanente\n\nCuando provees liquidez en un **pool AMM** (Uniswap, PancakeSwap, Raydium), depositás dos tokens en proporción 50/50 por valor. Si el precio relativo cambia, el pool rebalancea automáticamente vendiendo el token que sube y comprando el que baja. Al retirar terminás con **menos valor que si simplemente hubieras holdeado** ambos tokens — esa diferencia es la **Impermanent Loss (IL)**. Se llama \"impermanente\" porque si el precio vuelve al original, desaparece. Si retirás con precios distintos, se materializa.\n\n## IL según cambio de precio\n\n| Cambio del token | Impermanent Loss |\n|---|---|\n| 1,25× (25% arriba) | −0,6% |\n| 1,5× | −2,0% |\n| 2× | −5,7% |\n| 3× | −13,4% |\n| 5× | −25,5% |\n| 10× | −42,3% |\n\nLa pérdida crece de forma **no lineal**: chica en movimientos leves, brutal en pumps grandes.\n\n## Cuándo usar / Errores comunes\n\nUsala **antes** de entrar a un pool, para saber si el APY compensa la IL esperada. **Errores comunes**: mirar solo el APY (un pool que paga 100% APR pero con IL del 30% puede rendir menos que holdear); proveer liquidez en pares con **alta correlación negativa**; ignorar que Uniswap V3 (liquidez concentrada) amplifica la IL si el precio sale de tu rango. Estrategias con IL baja: pools de **stablecoins** (USDC/USDT ≈ IL 0), pares correlacionados (ETH/stETH), o rangos amplios en V3. Complementala con nuestra [calculadora de liquidación por apalancamiento](/calculadora-apalancamiento-liquidacion) para dimensionar otros riesgos cripto.\n\nPara estimar el impermanent loss con datos reales, consultá primero la [cotización en vivo de las criptomonedas](/cotizacion-cripto) de los dos tokens del pool antes de comparar contra hacer HODL.",
+  "explanation": "## Qué es la pérdida impermanente\n\nCuando provees liquidez en un **pool AMM** (Uniswap, PancakeSwap, Raydium), depositás dos tokens en proporción 50/50 por valor. Si el precio relativo cambia, el pool rebalancea automáticamente vendiendo el token que sube y comprando el que baja. Al retirar terminás con **menos valor que si simplemente hubieras holdeado** ambos tokens — esa diferencia es la **Impermanent Loss (IL)**. Se llama \"impermanente\" porque si el precio vuelve al original, desaparece. Si retirás con precios distintos, se materializa.\n\n## Cómo funciona el cálculo\n\nLa calculadora encadena cuatro pasos:\n\n```\nratio      = precio final ÷ precio inicial\nIL %       = 2×√(ratio) / (1 + ratio) − 1\nValor HODL = (monto/2) × ratio + monto/2\nIL USD     = Valor HODL − Valor HODL × (1 + IL%)\nFees       = monto × APY% × (meses ÷ 12)\n```\n\nEl resultado neto compara el valor final en el pool (con IL descontada y fees sumadas) contra tu inversión inicial.\n\n### Ejemplo resuelto paso a paso\n\n**$10.000 en un pool ETH/USDC, ETH pasa de $3.000 a $4.500, APY 30%, 6 meses:**\n\n1. Ratio: 4.500 ÷ 3.000 = **1,5**.\n2. IL: 2×√1,5 / 2,5 − 1 = **−2,02%**.\n3. Valor HODL: 5.000 × 1,5 + 5.000 = **$12.500**.\n4. Valor en pool sin fees: 12.500 × (1 − 0,0202) ≈ **$12.247** → IL en dólares ≈ **$252**.\n5. Fees: 10.000 × 30% × 0,5 = **$1.500**.\n6. Valor final en pool: 12.247 + 1.500 ≈ **$13.747** → neto **+$3.747** sobre lo invertido y ~$1.247 mejor que holdear.\n\nSin fees, el mismo movimiento de precio te habría dejado $252 abajo del HODL.\n\n## IL según cambio de precio\n\n| Cambio del token | Impermanent Loss |\n|---|---|\n| 1,25× (25% arriba) | −0,6% |\n| 1,5× | −2,0% |\n| 2× | −5,7% |\n| 3× | −13,4% |\n| 5× | −25,5% |\n| 10× | −42,3% |\n\nLa pérdida crece de forma **no lineal**: chica en movimientos leves, brutal en pumps grandes. Y es simétrica en ratio: una caída a 0,5× (la mitad del precio) genera la misma IL que una suba a 2×.\n\n## Errores comunes\n\n- **Mirar solo el APY**: un pool que paga 100% APR pero con IL del 30% puede rendir menos que holdear. La comparación correcta es siempre neto vs. HODL.\n- **Medir la IL contra el monto invertido**: se mide contra el valor HODL al momento de salir, que es tu costo de oportunidad real.\n- **Ignorar la liquidez concentrada**: en Uniswap V3, si el precio sale de tu rango la IL se amplifica y dejás de cobrar fees al mismo tiempo.\n- **Asumir el APY constante**: el APY de los dashboards es una foto; cae cuando entra más liquidez o baja el volumen.\n- **Olvidar que la caída también genera IL**: proveer liquidez no te protege de un mercado bajista; sufrís la baja del token más la IL.\n\n## Cuándo NO usar este resultado\n\nEsta fórmula vale para **pools 50/50 con liquidez no concentrada** (estilo Uniswap v2). No aplica tal cual a pools con pesos distintos (80/20 de Balancer), a posiciones concentradas de V3 con rangos, ni a pools de stableswap (Curve) que usan otra curva. Tampoco contempla el riesgo de contrato inteligente, el de-peg de un stablecoin ni impuestos. Usala **antes** de entrar a un pool, para saber si el APY compensa la IL esperada, y complementala con la [calculadora de liquidación por apalancamiento](/calculadora-apalancamiento-liquidacion) para dimensionar otros riesgos cripto.\n\nPara estimar el impermanent loss con datos reales, consultá primero la [cotización en vivo de las criptomonedas](/cotizacion-cripto) de los dos tokens del pool antes de comparar contra hacer HODL.\n",
   "example": {
     "title": "Ejemplo real: USD 10.000 en pool ETH/USDC, ETH sube 50%",
     "steps": [
-      "**Datos**: inversión 10.000 USD, precio inicial ETH 3.000, precio final 4.500 (1,5×), APY pool 30%, 6 meses.",
-      "**Fórmula IL**: 2×√1,5 / (1+1,5) − 1 = −2,0%.",
-      "**Pérdida IL USD**: 10.000 × 0,02 = **−200 USD**.",
+      "**Datos**: inversión 10.000 USD, precio inicial ETH 3.000, precio final 4.500 (ratio 1,5), APY pool 30%, 6 meses.",
+      "**Fórmula IL**: 2×√1,5 / (1+1,5) − 1 = **−2,02%**.",
+      "**Valor HODL**: 5.000 × 1,5 + 5.000 = **12.500 USD**.",
+      "**Valor pool sin fees**: 12.500 × (1 − 0,0202) ≈ **12.247 USD** → IL ≈ **−252 USD**.",
       "**Ganancia por fees**: 10.000 × 30% × 0,5 años = **+1.500 USD**.",
-      "**Valor HODL**: habría valido 10.000 + (5.000 en ETH × 50%) = **12.500 USD**.",
-      "**Valor pool**: ~12.300 USD (12.500 − IL 200 + algo menos de exposición a ETH).",
-      "**Resultado neto con fees**: ~13.800 USD — supera al HODL porque las fees compensaron la IL."
+      "**Valor final en pool**: 12.247 + 1.500 ≈ **13.747 USD** → resultado neto **+3.747 USD**."
     ],
-    "result": "Con fees del 30% APY, el pool rindió +200 USD más que holdear. Sin fees, hubiera perdido −200 USD."
+    "result": "Con fees del 30% APY, el pool rindió ~1.247 USD más que holdear. Sin fees, hubiera quedado 252 USD abajo del HODL."
   },
   "referenceTables": [
     {

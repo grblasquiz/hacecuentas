@@ -1,7 +1,7 @@
 {
   "slug": "calculadora-rankeo-elo-puntos",
   "answerSnippet": "El sistema ELO, inventado por Arpad Elo para ajedrez, es usado en League of Legends, CS2, Valorant, Dota 2 y muchos más. La idea es simple: si le ganás a alguien con mayor rating que vos, ganás más puntos. Si perdés contra alguien peor, perdés más.",
-  "lastReviewed": "2026-06-17",
+  "lastReviewed": "2026-07-26",
   "title": "Calculadora de Puntos ELO después de Partida 2026",
   "h1": "Calculadora de Puntos ELO después de Partida",
   "description": "Calculá cuántos puntos ELO ganás o perdés después de una partida según tu rating, el del rival y el resultado. Sistema ELO estándar de ajedrez y gaming.",
@@ -16,7 +16,7 @@
     "cuantos puntos elo subo"
   ],
   "intro": "El sistema ELO, inventado por Arpad Elo para ajedrez, es usado en **League of Legends, CS2, Valorant, Dota 2** y muchos más. La idea es simple: si le ganás a alguien con mayor rating que vos, ganás más puntos. Si perdés contra alguien peor, perdés más. Esta calculadora usa la **fórmula ELO oficial** para calcular tu nuevo rating después de una partida.",
-  "keyTakeaway": "**Nuevo ELO = ELO_actual + K × (resultado - esperado).** Con K=32, ganarle a un rival 200 pts arriba te da +24 puntos.",
+  "keyTakeaway": "**Nuevo ELO = ELO_actual + K × (resultado - esperado)**, donde esperado = 1 / (1 + 10^((ELO_rival − ELO_propio)/400)). Con K=32, ganarle a un rival 200 pts arriba te da +24 puntos; ganarle a uno 200 abajo, apenas +8. El sistema paga por sorprender, no por cumplir.",
   "useCases": [
     "Querés saber cuántos puntos ganás si le ganás a un rival específico.",
     "Evaluás cuánto te cuesta recuperar puntos perdidos.",
@@ -113,31 +113,35 @@
   "faq": [
     {
       "q": "¿Qué es el Factor K?",
-      "a": "Determina cuánto peso tiene cada partida. **K=32** es estándar. K=40 para principiantes (cambios más rápidos), K=16 para masters (más estable). En FIDE, K varía según rating."
+      "a": "Es el multiplicador que determina cuánto peso tiene cada partida sobre tu rating: cambio = K × (resultado − expectativa). **K=32** es el estándar para jugadores activos. K=40 se usa con principiantes (menos de 30 partidas) para que su rating converja rápido a su nivel real; K=20 con jugadores de más de 2400 y K=10 con la élite FIDE, donde se busca estabilidad. Con la misma victoria, K=40 te da un 25% más de puntos que K=32."
     },
     {
       "q": "¿Por qué gané pero subí pocos puntos?",
-      "a": "Porque tu ELO era **mayor** que el del rival. El sistema esperaba que ganaras. Ganar te da pocos puntos, perder te quitaría muchos."
+      "a": "Porque tu ELO era **mayor** que el del rival y el sistema ya esperaba que ganaras. La fórmula paga la diferencia entre lo que hiciste y lo que se esperaba: si tenías 76% de probabilidad (rival 200 puntos abajo), ganar te da 32 × (1 − 0,76) = +8 puntos, mientras que perder te habría costado −24. Contra rivales muy inferiores, la victoria puede valer +3 o menos."
     },
     {
       "q": "¿Cómo funciona el ELO en juegos en equipo?",
-      "a": "Cada juego tiene su variante. Algunos usan ELO individual, otros como TrueSkill de Microsoft consideran el equipo completo. La base matemática es la misma."
+      "a": "Cada juego tiene su variante. Algunos comparan tu rating contra el promedio del equipo rival y reparten los puntos entre los integrantes; otros, como TrueSkill de Microsoft, modelan la habilidad de cada jugador con su propia incertidumbre y la actualizan según el resultado del equipo completo. La base matemática es la misma que el ELO clásico: la magnitud del cambio depende de cuán sorprendente fue el resultado."
     },
     {
       "q": "¿Qué rating de ELO se considera bueno?",
-      "a": "En ajedrez: <1200 principiante, 1200-1600 intermedio, 1600-2000 avanzado, 2000+ experto, 2200+ master. En juegos varía según la escala."
+      "a": "En ajedrez, la referencia habitual es: menos de 1200 principiante, 1200-1600 intermedio, 1600-2000 avanzado, 2000+ experto y 2200+ nivel master (los grandes maestros superan 2500). En videojuegos la escala cambia por completo según el juego y la plataforma, así que no compares números entre sistemas: lo que importa es tu percentil dentro del pool de jugadores, no la cifra absoluta."
     },
     {
       "q": "¿El ELO puede bajar de 0?",
-      "a": "Depende del sistema. En ajedrez FIDE el mínimo es ~1000. En juegos suele haber un piso. La fórmula matemática puede dar valores negativos pero se limita."
+      "a": "Depende del sistema. La fórmula matemática en sí permite valores negativos, pero en la práctica todas las implementaciones ponen un piso: en FIDE el rating mínimo publicado ronda los 1400 (históricamente 1000), y las plataformas online y los videojuegos definen su propio mínimo. Además, cuanto más bajás, más baja tu expectativa contra cualquier rival, así que perdés cada vez menos puntos por derrota: el sistema se frena solo."
     },
     {
       "q": "¿El sistema ELO es justo?",
-      "a": "Es justo a largo plazo. A corto plazo puede haber varianza alta. Después de 30-50 partidas tu ELO converge a tu nivel real."
+      "a": "Es justo a largo plazo: como el cambio depende de la expectativa, no podés inflar tu rating ganándole siempre a rivales débiles, y las sorpresas se pagan caras en ambos sentidos. A corto plazo hay varianza alta: una mala racha de 5 partidas puede moverte 50-100 puntos sin que tu nivel real haya cambiado. Después de 30-50 partidas contra rivales variados, tu ELO converge a tu fuerza real."
     },
     {
       "q": "¿LoL y Valorant usan ELO puro?",
-      "a": "No, usan variantes como Glicko-2 o TrueSkill modificado. Pero la base conceptual es la misma: ganan más puntos los que vencen a rivales superiores."
+      "a": "No. Usan variantes propietarias derivadas de Glicko-2 o TrueSkill, que agregan un factor de incertidumbre por jugador, ajustes por rachas y a veces performance individual dentro de la partida. Encima, lo que ves en pantalla (LP, RR, rangos con nombres) es una capa cosmética sobre el MMR interno. La base conceptual sigue siendo la de Elo: vencer a rivales superiores rinde más que vencer a inferiores."
+    },
+    {
+      "q": "¿Cuántas partidas necesito para recuperar los puntos de una derrota?",
+      "a": "Depende de contra quién juegues después. Si perdiste −16 contra un par (misma expectativa 50%), una sola victoria contra otro par te devuelve +16. Pero si después enfrentás rivales más débiles, cada triunfo rinde menos (+8 contra alguien 200 abajo) y necesitás dos victorias para compensar. Por eso las derrotas de favorito son tan costosas: se pierden puntos \"caros\" que se recuperan de a poco."
     }
   ],
   "howToSteps": [
@@ -158,7 +162,7 @@
       "text": "Revisá tu nuevo ELO y cuántos puntos ganaste o perdiste."
     }
   ],
-  "explanation": "## Qué es el sistema ELO\n\nEl **sistema ELO**, inventado por Arpad Elo para rankear ajedrecistas (adoptado por FIDE en 1970), hoy se usa en **League of Legends, CS2, Valorant, Dota 2, Fortnite** y casi cualquier juego competitivo. La idea es simple: **ganarle a un rival más fuerte te da más puntos que ganarle a uno más débil**.\n\n## Fórmula\n\n**Nuevo ELO = ELO actual + K × (Resultado - Expectativa)**\n\nDonde:\n- **K** = factor de variación (32 estándar FIDE, 40 para novatos, 10 para elite).\n- **Resultado** = 1 (victoria), 0.5 (empate), 0 (derrota).\n- **Expectativa** = 1 / (1 + 10^((ELO_rival - ELO_propio) / 400)).\n\n## Tabla de intercambio según diferencia\n\n| Diferencia ELO | Prob. victoria | Puntos si ganás (K=32) |\n|---|---|---|\n| +400 | 91% | +3 |\n| +200 | 76% | +8 |\n| 0 | 50% | +16 |\n| -200 | 24% | +24 |\n| -400 | 9% | +29 |\n\n## Cuándo usar y errores comunes\n\n- **K alto para novatos**: permiten subir rápido cuando son mejores de lo que su ELO sugiere.\n- **Empates** dan puntos al jugador más bajo, quitan al más alto.\n- **ELO inicial 1200-1500** en la mayoría de sistemas.\n- Videojuegos modernos usan **MMR** (Match Making Rating) que es ELO tuneado con factores adicionales como streaks y performance individual.",
+  "explanation": "## Qué es el sistema ELO\n\nEl **sistema ELO**, inventado por Arpad Elo para rankear ajedrecistas (adoptado por FIDE en 1970), hoy se usa en **League of Legends, CS2, Valorant, Dota 2, Fortnite** y casi cualquier juego competitivo. La idea es simple: **ganarle a un rival más fuerte te da más puntos que ganarle a uno más débil**.\n\n## Fórmula\n\n**Nuevo ELO = ELO actual + K × (Resultado - Expectativa)**\n\nDonde:\n- **K** = factor de variación (32 estándar FIDE, 40 para novatos, 10 para elite).\n- **Resultado** = 1 (victoria), 0.5 (empate), 0 (derrota).\n- **Expectativa** = 1 / (1 + 10^((ELO_rival - ELO_propio) / 400)).\n\n## Tabla de intercambio según diferencia\n\n| Diferencia ELO | Prob. victoria | Puntos si ganás (K=32) |\n|---|---|---|\n| +400 | 91% | +3 |\n| +200 | 76% | +8 |\n| 0 | 50% | +16 |\n| -200 | 24% | +24 |\n| -400 | 9% | +29 |\n\n## Ejemplo resuelto paso a paso\n\nSupongamos que tenés **1200 de ELO** y le ganás a un rival de **1350** con K=32:\n\n1. **Diferencia**: 1350 − 1200 = 150 puntos en contra.\n2. **Expectativa**: E = 1 / (1 + 10^(150/400)) = 1 / (1 + 10^0,375) = 1 / 3,371 = **0,296** → el sistema te daba 29,6% de chances.\n3. **Cambio**: 32 × (1 − 0,296) = 32 × 0,704 = **+22,5 puntos**.\n4. **Nuevo ELO**: 1200 + 22,5 ≈ **1223**.\n\nSi en cambio perdías, el cambio era 32 × (0 − 0,296) = **−9,5 puntos** (1191). Fijate la asimetría: como underdog arriesgás poco (−9) y podés ganar mucho (+22). Para el rival de 1350 es exactamente al revés: la suma de lo que gana uno y pierde el otro siempre es cero.\n\nCon un empate contra ese mismo rival: 32 × (0,5 − 0,296) = **+6,5 puntos** para vos, porque el empate vale media victoria y vos \"debías\" menos que eso.\n\n## Cuándo usar y errores comunes\n\n- **Comparar ratings de sistemas distintos**: 1500 en Lichess no equivale a 1500 FIDE ni al MMR de un shooter. Cada pool de jugadores tiene su propia escala; usá la calculadora dentro de un mismo sistema.\n- **Usar el K equivocado**: con K=40 (novato) el mismo triunfo del ejemplo daría +28 en vez de +22,5. Si tu plataforma usa K=20, todos los cambios se achican proporcionalmente.\n- **Esperar puntos fijos por victoria**: no existen \"los 25 puntos por ganar\". El premio depende solo de la diferencia de rating y de K.\n- **Empates**: dan puntos al jugador más bajo y se los quitan al más alto. Empatar de favorito es perder terreno.\n- **ELO inicial 1200-1500** en la mayoría de sistemas: las primeras partidas son las más volátiles porque tu rating todavía no converge.\n\n## Cuándo NO usar este resultado\n\nEsta calculadora aplica el ELO clásico de dos jugadores. No reproduce exactamente lo que ves en **LoL, Valorant o Dota 2**: los videojuegos modernos usan **MMR** (Match Making Rating), variantes tipo Glicko-2 o TrueSkill que agregan incertidumbre por jugador, rachas y performance individual, y encima muestran \"LP\" o rangos que no son el número interno. Tampoco sirve para torneos por equipos donde el rating se promedia. Usala para ajedrez (FIDE, Chess.com, Lichess con K equivalente), para entender la mecánica de cualquier ranking competitivo, o para administrar tu propio torneo con ELO puro.",
   "example": {
     "title": "Ejemplo real: ELO 1200 vs rival 1350, perdés",
     "steps": [

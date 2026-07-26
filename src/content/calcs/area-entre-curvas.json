@@ -70,10 +70,10 @@
       "primary": false
     }
   ],
-  "intro": "Encuentra intersecciones y suma el área positiva entre dos funciones por tramos.",
-  "keyTakeaway": "Área entre dos curvas: resultado verificable con desarrollo y advertencia cuando la respuesta es aproximada.",
+  "intro": "Esta calculadora encuentra las intersecciones entre dos funciones y suma el área positiva encerrada entre ellas por tramos, dentro del intervalo que elijas. Ingresás f(x) y g(x) con sintaxis simple (por ejemplo `x^2` y `2*x`), definís desde dónde y hasta dónde integrar, y obtenés el área total, la lista de intersecciones interiores, el área de cada tramo y el método usado. A diferencia de una integral definida común, acá el signo no cancela: si las curvas se cruzan dentro del intervalo, cada tramo se integra por separado y se toma en valor absoluto, que es lo que pide el ejercicio típico de \"área entre curvas\".",
+  "keyTakeaway": "**Área entre curvas = suma de |∫(f−g)| en cada tramo delimitado por las intersecciones.** Ej.: entre f(x)=x² y g(x)=2x en [0,2], el área es ∫(2x−x²)dx = 4 − 8/3 = **4/3 ≈ 1,3333**. Si hay cruces interiores, la calculadora parte el intervalo y suma los valores absolutos.",
   "answerSnippet": "Encuentra intersecciones y suma el área positiva entre dos funciones por tramos.",
-  "explanation": "## Qué resuelve esta calculadora\n\nEncuentra intersecciones y suma el área positiva entre dos funciones por tramos. La herramienta muestra el resultado y conserva el procedimiento necesario para revisarlo. Está pensada para estudiar, comprobar ejercicios y detectar errores de planteo, no solamente para copiar un valor final.\n\n## Cómo ingresar los datos\n\nUsá punto para decimales, el símbolo ^ para potencias y * cuando quieras hacer explícita una multiplicación. En polinomios por coeficientes, escribí los números desde el término de mayor grado hasta el independiente e incluí ceros cuando falte una potencia. En matrices, separá columnas con espacios y filas con punto y coma. Esta convención evita ambigüedades y hace que el cálculo sea reproducible.\n\n## Método aplicado\n\nLa resolución combina álgebra simbólica para simplificar y derivar expresiones con algoritmos numéricos controlados para raíces, intersecciones, integrales y aproximaciones. Los resultados numéricos se redondean solo al mostrarse; los pasos intermedios conservan más precisión. Cuando el problema admite una solución exacta elemental, se presenta en forma algebraica. Cuando no, el texto indica que se trata de una aproximación.\n\n## Cómo verificar el resultado\n\nVolvé a sustituir el resultado en la expresión original o compará la identidad que muestra la herramienta. En una raíz, el residuo debe quedar cerca de cero. En una matriz inversa, el producto con la matriz original debe aproximar la identidad. En cálculo diferencial, una evaluación numérica cercana permite controlar el signo y la magnitud. Esta verificación es parte del resultado y no un detalle opcional.\n\n## Límites del procedimiento\n\nNingún motor automático reemplaza una demostración cuando el ejercicio la exige. Las funciones con discontinuidades muy juntas, dominios complejos, parámetros simbólicos o identidades especiales pueden necesitar análisis adicional. El rango de una función y los puntos críticos se exploran dentro del intervalo informado; fuera de ese intervalo puede haber otros comportamientos. Los métodos iterativos también dependen de tolerancias numéricas, por eso la página diferencia valores exactos de aproximados.\n\n## Uso responsable en estudio\n\nLeé cada paso y tratá de anticipar el siguiente antes de desplegar el resultado. Si el valor no coincide con tu ejercicio, revisá primero la sintaxis, el orden de coeficientes, las unidades y el intervalo. Una calculadora matemática es más útil como instrumento de control que como sustituto del razonamiento.",
+  "explanation": "## Qué resuelve esta calculadora\n\nCalcula el área geométrica encerrada entre dos funciones f(x) y g(x) en un intervalo [a, b]. El detalle clave: el área entre curvas **no** es simplemente ∫(f−g) de a a b. Si las curvas se cruzan dentro del intervalo, la diferencia cambia de signo y la integral directa cancela partes del área. Por eso la herramienta primero localiza las intersecciones interiores, después integra cada tramo por separado y suma los valores absolutos.\n\n## Cómo funciona el cálculo\n\n1. **Forma la diferencia** d(x) = f(x) − g(x).\n2. **Busca las raíces** de d(x) dentro de (a, b): esos son los puntos donde las curvas se cruzan.\n3. **Parte el intervalo** en tramos delimitados por a, las intersecciones y b.\n4. **Integra cada tramo** con la regla de Simpson (integración numérica de alta precisión para funciones suaves).\n5. **Suma los valores absolutos** de cada tramo: eso da el área total, siempre positiva.\n\nLa salida \"Método\" lo resume: intersecciones numéricas + Simpson por tramos.\n\n## Ejemplo resuelto paso a paso\n\nTomemos f(x) = x² y g(x) = 2x en el intervalo [0, 2] (los valores del formulario):\n\n1. Diferencia: d(x) = x² − 2x = x(x − 2). Sus raíces son x = 0 y x = 2, que coinciden con los bordes: **no hay intersecciones interiores**, es un solo tramo.\n2. En (0, 2), 2x ≥ x² (probá x = 1: 2 > 1), así que el área es ∫₀² (2x − x²) dx.\n3. Antiderivada: x² − x³/3. Evaluando: (4 − 8/3) − 0 = **4/3 ≈ 1,3333**.\n\nAhora extendé el intervalo a [0, 3]: aparece la intersección interior x = 2 y el cálculo se parte en dos tramos:\n\n- Tramo [0, 2]: |∫(x² − 2x)| = 4/3\n- Tramo [2, 3]: ∫(x² − 2x) = (9 − 9) − (8/3 − 4) = 4/3\n- **Área total: 4/3 + 4/3 = 8/3 ≈ 2,6667**\n\nSi hubieras integrado directo ∫₀³(x² − 2x) dx obtendrías 0: los dos tramos se cancelan. Ese es exactamente el error que la calculadora evita.\n\n## Cómo ingresar los datos\n\nUsá punto para decimales, `^` para potencias y `*` para hacer explícita la multiplicación: `x^2`, `2*x`, `sin(x)`, `exp(x)`, `sqrt(x)`. El límite superior debe ser mayor que el inferior. Los resultados numéricos se redondean solo al mostrarse; los pasos intermedios conservan más precisión.\n\n## Errores comunes\n\n1. **Integrar f − g directo sin buscar cruces**: si las curvas se intersecan dentro del intervalo, el resultado con signo subestima (o anula) el área real.\n2. **Elegir mal cuál función va arriba**: para el área no importa el orden (se toma valor absoluto), pero si estás copiando el desarrollo a mano, verificá con un punto de prueba cuál función es mayor en cada tramo.\n3. **Olvidar el `*` en productos**: escribir `2x` en vez de `2*x` puede fallar o interpretarse mal según el parser. Explicitá siempre.\n4. **Confundir área con integral definida**: la integral puede dar negativa o cero; el área geométrica nunca. Son preguntas distintas del mismo ejercicio.\n\n## Cuándo NO usar el resultado\n\n- Si la consigna pide el **desarrollo analítico exacto** (antiderivadas, fracciones), el valor numérico sirve para verificar pero no reemplaza la demostración.\n- Con funciones que tienen **discontinuidades o asíntotas dentro del intervalo** (por ejemplo 1/x cerca de 0), la integración numérica puede fallar o dar resultados sin sentido: analizá la función antes.\n- Si el ejercicio está planteado **respecto de y** (curvas x = f(y)), tenés que reescribirlo en términos de x o intercambiar variables antes de usar la herramienta.\n\n## Cómo verificar el resultado\n\nCompará el área total con la suma de los tramos que muestra la salida, y controlá que las intersecciones listadas anulen f − g al sustituirlas. Para un chequeo rápido de magnitud, estimá el área como base × altura promedio del recinto: si el número de la calculadora está en otro orden de magnitud, revisá la sintaxis o el intervalo.",
   "seoKeywords": [
     "área entre dos curvas",
     "funcion1",
@@ -91,51 +91,54 @@
     "Calculá y revisá el resultado junto con los pasos y la verificación."
   ],
   "example": {
-    "title": "Ejemplo resuelto",
+    "title": "Ejemplo resuelto: x² y 2x entre 0 y 2",
     "steps": [
-      "Usá los datos precargados del formulario.",
-      "Ejecutá el cálculo.",
-      "Comprobá el resultado con el detalle mostrado."
+      "Ingresá f(x) = x^2, g(x) = 2*x, desde 0 hasta 2.",
+      "La diferencia x² − 2x solo se anula en los bordes (0 y 2): un único tramo.",
+      "∫₀² (2x − x²) dx = 4 − 8/3 = 4/3."
     ],
-    "result": "La salida incluye el valor principal, el método y una comprobación numérica o algebraica."
+    "result": "Área total ≈ 1,3333 (= 4/3), sin intersecciones interiores, método Simpson por tramos."
   },
   "faq": [
     {
-      "q": "¿Qué resuelve área entre dos curvas?",
-      "a": "Encuentra intersecciones y suma el área positiva entre dos funciones por tramos."
+      "q": "¿Qué resuelve la calculadora de área entre dos curvas?",
+      "a": "Calcula el área geométrica encerrada entre dos funciones f(x) y g(x) en un intervalo [a, b]. Primero localiza numéricamente las intersecciones interiores, después integra la diferencia f − g en cada tramo con la regla de Simpson y suma los valores absolutos. Devuelve el área total, las intersecciones encontradas, el área de cada tramo y el método aplicado, para que puedas reconstruir el desarrollo."
+    },
+    {
+      "q": "¿Por qué la calculadora divide el intervalo en tramos?",
+      "a": "Porque cuando las curvas se cruzan, la diferencia f − g cambia de signo y una integral directa cancela áreas. Ejemplo: x² y 2x en [0, 3] se cruzan en x = 2; la integral directa da 0, pero el área real es 8/3. Integrar cada tramo por separado y tomar valor absoluto es la única forma de obtener el área geométrica correcta."
     },
     {
       "q": "¿El resultado es exacto?",
-      "a": "La página identifica las aproximaciones numéricas. Cuando presenta decimales obtenidos por iteración o muestreo, debés interpretarlos con la tolerancia indicada."
+      "a": "Es una aproximación numérica de alta precisión: las intersecciones se buscan por métodos iterativos y las integrales se calculan con la regla de Simpson. Para polinomios y funciones suaves el error es despreciable frente a lo que pide cualquier ejercicio. Si tu consigna exige el valor exacto en fracciones (como 4/3), usá el número de la calculadora para verificar tu desarrollo analítico."
     },
     {
-      "q": "¿Cómo escribo una potencia?",
-      "a": "Usá ^: por ejemplo x^3. Para multiplicar, podés usar *; escribir 2*x evita cualquier ambigüedad."
+      "q": "¿Cómo escribo las funciones?",
+      "a": "Con sintaxis estándar: `^` para potencias (x^2), `*` explícito para productos (2*x), punto para decimales (0.5*x^3) y funciones usuales como sin, cos, exp, log y sqrt. Escribir `2x` sin el asterisco puede fallar. También admite combinaciones: `x^2 - 3*x + 1` o `sin(x)*x` son válidas."
     },
     {
-      "q": "¿Cómo ingreso coeficientes faltantes?",
-      "a": "Incluí un cero. x³ − 4x + 3 se ingresa como 1 0 -4 3."
+      "q": "¿Importa cuál función pongo primera y cuál segunda?",
+      "a": "Para el área total, no: la calculadora trabaja con |f − g| por tramos, así que el resultado es el mismo en cualquier orden. Donde sí importa el orden es si estás escribiendo el desarrollo a mano para entregar: ahí la convención es integrar (función de arriba − función de abajo) en cada tramo, verificando con un punto de prueba cuál es mayor."
     },
     {
-      "q": "¿Puedo usar el resultado en una tarea?",
-      "a": "Sí, pero conservá los pasos y verificá la consigna. Si se pide demostración, el valor automático no la reemplaza."
+      "q": "¿Qué pasa si las curvas no se cruzan en el intervalo?",
+      "a": "Es el caso más simple: hay un solo tramo y el área es |∫(f − g)| entre los límites. La salida \"Intersecciones\" dirá \"ninguna interior\". Ojo: que no se crucen dentro del intervalo no significa que no se crucen nunca; la búsqueda de raíces se limita al intervalo [desde, hasta] que ingresaste."
     },
     {
-      "q": "¿Por qué puede cambiar el último decimal?",
-      "a": "Los métodos numéricos usan tolerancias y redondeo de presentación. Una diferencia muy pequeña no implica que el procedimiento sea distinto."
+      "q": "¿Funciona con funciones que tienen asíntotas o discontinuidades?",
+      "a": "Con cuidado. Si la discontinuidad queda dentro del intervalo de integración (por ejemplo 1/x en un intervalo que incluye 0), el método numérico puede arrojar valores enormes o inconsistentes, porque el área puede ser directamente infinita. Verificá primero que ambas funciones sean continuas en todo [a, b]; si no lo son, partí el problema en intervalos donde sí lo sean."
     },
     {
-      "q": "¿Qué sintaxis de funciones admite?",
-      "a": "Admite operaciones con +, −, *, / y ^, además de funciones usuales como sin, cos, exp, log y sqrt cuando corresponda."
+      "q": "¿Puedo usar el resultado en una tarea o examen?",
+      "a": "Sí, como verificación: conservá los pasos, escribí las antiderivadas y comprobá que tu resultado analítico coincide con el numérico. Si la consigna pide demostración o desarrollo, el valor automático no la reemplaza. La forma más útil de usar la herramienta es resolver primero a mano y contrastar: si difieren, casi siempre el error está en una intersección no detectada o un signo."
     },
     {
       "q": "¿Mis expresiones se envían a un servidor?",
-      "a": "No. El cálculo se ejecuta en el navegador y no requiere crear una cuenta ni guardar la expresión."
+      "a": "No. Todo el cálculo (búsqueda de intersecciones, integración de Simpson y armado de tramos) se ejecuta localmente en tu navegador. No hace falta crear cuenta, no se guarda la expresión y podés usar la calculadora sin conexión una vez cargada la página."
     }
   ],
   "relatedSlugs": [
     "calculadora-derivada-funcion-basica",
-    "calculadora-integral-definida-basica",
     "calculadora-ecuacion-cuadratica-raices-discriminante",
     "calculadora-determinante-inversa-matriz-2x2"
   ],
@@ -157,7 +160,7 @@
     "updateType": "manual",
     "notes": "Metodología matemática estable; revisar al modificar el motor."
   },
-  "lastReviewed": "2026-07-15",
+  "lastReviewed": "2026-07-26",
   "sourceVerified": true,
   "automatedTests": "passed",
   "adsenseEligible": true

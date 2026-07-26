@@ -84,10 +84,10 @@
       "primary": false
     }
   ],
-  "intro": "Construye el polinomio de Taylor, aproxima un valor y compara el error con la función original.",
-  "keyTakeaway": "Series de Taylor y Maclaurin: resultado verificable con desarrollo y advertencia cuando la respuesta es aproximada.",
+  "intro": "Ingresá una función f(x), un centro a, un orden n y un valor a aproximar, y esta calculadora construye el **polinomio de Taylor** término a término: calcula las derivadas sucesivas, las evalúa en el centro, arma los coeficientes f⁽ᵏ⁾(a)/k! y te muestra el polinomio completo. Después evalúa ese polinomio en el punto pedido, lo compara contra el valor real de la función y te informa el **error absoluto** de la aproximación, más un gráfico donde ves cómo el polinomio se \"pega\" a la curva cerca del centro y se despega lejos. Cuando el centro es a = 0, el desarrollo se llama serie de Maclaurin.",
+  "keyTakeaway": "Polinomio de Taylor de orden n en a: **Pₙ(x) = Σ f⁽ᵏ⁾(a)/k! · (x−a)ᵏ**, con k de 0 a n. Ej. clásico (Maclaurin de sin x, orden 5): P₅(x) = x − x³/6 + x⁵/120 → P₅(1) = 0,841667 contra sin(1) = 0,841471: error ≈ 0,0002. Más orden y más cerca del centro = menos error.",
   "answerSnippet": "Construye el polinomio de Taylor, aproxima un valor y compara el error con la función original.",
-  "explanation": "## Qué resuelve esta calculadora\n\nConstruye el polinomio de Taylor, aproxima un valor y compara el error con la función original. La herramienta muestra el resultado y conserva el procedimiento necesario para revisarlo. Está pensada para estudiar, comprobar ejercicios y detectar errores de planteo, no solamente para copiar un valor final.\n\n## Cómo ingresar los datos\n\nUsá punto para decimales, el símbolo ^ para potencias y * cuando quieras hacer explícita una multiplicación. En polinomios por coeficientes, escribí los números desde el término de mayor grado hasta el independiente e incluí ceros cuando falte una potencia. En matrices, separá columnas con espacios y filas con punto y coma. Esta convención evita ambigüedades y hace que el cálculo sea reproducible.\n\n## Método aplicado\n\nLa resolución combina álgebra simbólica para simplificar y derivar expresiones con algoritmos numéricos controlados para raíces, intersecciones, integrales y aproximaciones. Los resultados numéricos se redondean solo al mostrarse; los pasos intermedios conservan más precisión. Cuando el problema admite una solución exacta elemental, se presenta en forma algebraica. Cuando no, el texto indica que se trata de una aproximación.\n\n## Cómo verificar el resultado\n\nVolvé a sustituir el resultado en la expresión original o compará la identidad que muestra la herramienta. En una raíz, el residuo debe quedar cerca de cero. En una matriz inversa, el producto con la matriz original debe aproximar la identidad. En cálculo diferencial, una evaluación numérica cercana permite controlar el signo y la magnitud. Esta verificación es parte del resultado y no un detalle opcional.\n\n## Límites del procedimiento\n\nNingún motor automático reemplaza una demostración cuando el ejercicio la exige. Las funciones con discontinuidades muy juntas, dominios complejos, parámetros simbólicos o identidades especiales pueden necesitar análisis adicional. El rango de una función y los puntos críticos se exploran dentro del intervalo informado; fuera de ese intervalo puede haber otros comportamientos. Los métodos iterativos también dependen de tolerancias numéricas, por eso la página diferencia valores exactos de aproximados.\n\n## Uso responsable en estudio\n\nLeé cada paso y tratá de anticipar el siguiente antes de desplegar el resultado. Si el valor no coincide con tu ejercicio, revisá primero la sintaxis, el orden de coeficientes, las unidades y el intervalo. Una calculadora matemática es más útil como instrumento de control que como sustituto del razonamiento.",
+  "explanation": "## Qué resuelve esta calculadora\n\nConstruye el polinomio de Taylor de orden n de una función f(x) centrado en un punto a, lo evalúa en el valor que elijas y compara esa aproximación contra el valor real de la función, informando el error absoluto. La idea de fondo: cerca del centro, cualquier función suave se puede imitar con un polinomio, y cuantos más términos uses, mejor es la imitación. Si el centro es a = 0, el desarrollo se llama serie de **Maclaurin**; con cualquier otro centro, de **Taylor**.\n\n## Cómo funciona el cálculo\n\nLa fórmula del polinomio de Taylor de orden n es:\n\n```\nPₙ(x) = f(a) + f'(a)(x−a) + f''(a)/2!·(x−a)² + ... + f⁽ⁿ⁾(a)/n!·(x−a)ⁿ\n```\n\nLa calculadora repite n+1 veces el mismo ciclo: evalúa la derivada k-ésima en el centro, la divide por k! para obtener el coeficiente, y agrega el término coeficiente·(x−a)ᵏ. Después evalúa la suma en el valor pedido y calcula |f(x) − Pₙ(x)| como error absoluto. El orden se limita a 10 porque los factoriales y las derivadas sucesivas crecen rápido y más allá el aporte numérico suele ser despreciable.\n\n## Ejemplo resuelto paso a paso\n\nMaclaurin de f(x) = sin(x), centro a = 0, orden 5, aproximando en x = 1:\n\n1. **Derivadas en 0**: sin(0)=0, cos(0)=1, −sin(0)=0, −cos(0)=−1, sin(0)=0, cos(0)=1.\n2. **Coeficientes** (dividiendo por k!): 0, 1, 0, −1/6, 0, 1/120.\n3. **Polinomio**: P₅(x) = x − x³/6 + x⁵/120 (los términos pares se anulan: el seno es impar).\n4. **Aproximación en x = 1**: 1 − 0,166667 + 0,008333 = **0,841667**.\n5. **Valor real**: sin(1) = 0,841471.\n6. **Error absoluto**: |0,841471 − 0,841667| ≈ **0,0002** — con solo tres términos no nulos, cuatro decimales correctos.\n\nSi aproximás en x = 3 con el mismo polinomio, el error salta a más de 0,1: la aproximación es local, se degrada al alejarse del centro.\n\n## Errores comunes\n\n- **Olvidar el factorial**: el coeficiente es f⁽ᵏ⁾(a)/k!, no f⁽ᵏ⁾(a). Sin el k! el polinomio explota.\n- **Confundir orden con cantidad de términos no nulos**: el polinomio de orden 5 de sin(x) tiene solo 3 términos porque los pares se anulan. Eso no es un error, es la paridad de la función.\n- **Evaluar las derivadas en x en vez de en a**: todas las derivadas se evalúan en el centro; la variable queda solo en los (x−a)ᵏ.\n- **Usar el polinomio lejos del centro**: Taylor es una aproximación local. Elegí como centro un punto cercano al valor que querés aproximar, donde la función y sus derivadas sean fáciles de evaluar.\n\n## Cuándo NO usar este resultado\n\nEl desarrollo requiere que la función sea derivable n veces en el centro: no hay Taylor de |x| en 0 ni de ln(x) centrado en 0 (fuera de dominio). Algunas funciones tienen radio de convergencia finito: la serie de ln(1+x) en 0 solo converge para |x| < 1 aunque puedas calcular el polinomio; fuera de ese rango, más términos empeoran el resultado en lugar de mejorarlo. Y si tu ejercicio pide la **expresión del resto** (Lagrange) o demostrar la convergencia, eso es trabajo analítico que el valor numérico del error no reemplaza.",
   "seoKeywords": [
     "series de taylor y maclaurin",
     "funcion",
@@ -116,20 +116,20 @@
   },
   "faq": [
     {
-      "q": "¿Qué resuelve series de taylor y maclaurin?",
-      "a": "Construye el polinomio de Taylor, aproxima un valor y compara el error con la función original."
+      "q": "¿Qué diferencia hay entre serie de Taylor y de Maclaurin?",
+      "a": "Solo el centro del desarrollo. La serie de Taylor se construye alrededor de un punto a cualquiera, con potencias de (x − a); la de Maclaurin es el caso particular a = 0, con potencias de x. Se usa Maclaurin cuando la función y sus derivadas son fáciles de evaluar en 0 (sin, cos, eˣ), y Taylor con otro centro cuando querés aproximar cerca de un punto distinto, por ejemplo ln(x) centrado en a = 1."
     },
     {
-      "q": "¿El resultado es exacto?",
-      "a": "La página identifica las aproximaciones numéricas. Cuando presenta decimales obtenidos por iteración o muestreo, debés interpretarlos con la tolerancia indicada."
+      "q": "¿Qué orden me conviene elegir?",
+      "a": "Depende de qué tan lejos del centro esté el valor a aproximar y de la precisión que necesites. Para valores cercanos al centro, orden 3 a 5 suele dar varios decimales correctos; para valores más lejanos hace falta subir el orden. Una forma práctica de decidir: calculá con orden n y n+2, y si la aproximación casi no cambia, ya convergiste a la precisión útil. La herramienta admite hasta orden 10."
     },
     {
-      "q": "¿Cómo escribo una potencia?",
-      "a": "Usá ^: por ejemplo x^3. Para multiplicar, podés usar *; escribir 2*x evita cualquier ambigüedad."
+      "q": "¿Qué significa el error absoluto que muestra el resultado?",
+      "a": "Es |f(x) − Pₙ(x)|: la distancia entre el valor real de la función y el que da el polinomio en el punto que pediste. Sirve como control directo de la calidad de la aproximación. En un ejercicio teórico, ese error corresponde al resto Rₙ(x) del desarrollo; si tu consigna pide acotarlo con la fórmula de Lagrange, el número que ves acá te sirve para verificar que tu cota sea coherente (el error real debe quedar por debajo)."
     },
     {
-      "q": "¿Cómo ingreso coeficientes faltantes?",
-      "a": "Incluí un cero. x³ − 4x + 3 se ingresa como 1 0 -4 3."
+      "q": "¿Por qué mi polinomio tiene menos términos que el orden pedido?",
+      "a": "Porque algunas derivadas se anulan en el centro y sus términos desaparecen. Es lo normal en funciones con paridad: el seno es impar y su Maclaurin solo tiene potencias impares (x, x³, x⁵...); el coseno es par y solo tiene pares (1, x², x⁴...). El polinomio de orden 5 de sin(x) tiene apenas 3 términos no nulos y está perfecto así: los coeficientes nulos también son parte del desarrollo."
     },
     {
       "q": "¿Puedo usar el resultado en una tarea?",
@@ -150,7 +150,6 @@
   ],
   "relatedSlugs": [
     "calculadora-derivada-funcion-basica",
-    "calculadora-integral-definida-basica",
     "calculadora-ecuacion-cuadratica-raices-discriminante",
     "calculadora-determinante-inversa-matriz-2x2"
   ],
@@ -172,7 +171,7 @@
     "updateType": "manual",
     "notes": "Metodología matemática estable; revisar al modificar el motor."
   },
-  "lastReviewed": "2026-07-15",
+  "lastReviewed": "2026-07-26",
   "sourceVerified": true,
   "automatedTests": "passed",
   "adsenseEligible": true

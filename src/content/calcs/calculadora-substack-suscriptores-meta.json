@@ -15,8 +15,8 @@
     "substack creator income",
     "newsletter ingreso"
   ],
-  "intro": "**Substack** cobra una comisión del **10%** sobre suscripciones pagas + 2.9% + 0.30 USD por transacción de Stripe. Para saber cuántos suscriptores pagos necesitás para una meta mensual, tenés que definir el precio mensual o anual y aplicar los descuentos. Esta calculadora hace el cálculo: ingresás meta + precio y te devuelve el número exacto de suscriptores y el ingreso bruto/neto. Ideal si estás pensando transformar tu newsletter gratuito en un negocio de lectura paga.",
-  "keyTakeaway": "Substack: **10% comisión** + 2.9% + 0.30 USD Stripe. Precio mínimo: 5 USD/mes o 30 USD/año.",
+  "intro": "**Substack** cobra una comisión del **10%** sobre las suscripciones pagas, y a eso se suma el fee de **Stripe** (2,9% + 0,30 USD por transacción), el procesador de pagos obligatorio de la plataforma. Entre las dos mordidas, de cada dólar que pagan tus lectores te llegan aproximadamente 86-87 centavos. Para saber cuántos suscriptores pagos necesitás para llegar a una meta mensual de ingresos netos, no alcanza con dividir la meta por el precio: hay que descontar las comisiones y ponderar el mix entre suscriptores mensuales y anuales, porque los anuales pagan con un descuento del 16% (el default de Substack) que baja tu ingreso mensualizado por suscriptor. Esta calculadora hace exactamente esa cuenta: ingresás tu meta neta, el precio mensual y el porcentaje de suscriptores anuales, y te devuelve el número de suscriptores pagos necesarios junto con el bruto, las comisiones y el neto final. Ideal si estás evaluando pasar tu newsletter de gratuita a paga y querés saber si la meta es alcanzable con tu audiencia actual.",
+  "keyTakeaway": "Substack se queda con el **10%** y Stripe con **2,9% + 0,30 USD** por transacción: de tu precio de tapa te llega ~87%. Con precio de USD 8/mes y 40% de suscriptores anuales (que pagan 16% menos), cada suscriptor te deja **~USD 6,50 netos/mes** — para embolsar USD 3.000 mensuales necesitás **~462 suscriptores pagos**, no los 375 que sugiere la división ingenua 3.000/8.",
   "useCases": [
     "Pasás tu newsletter de free a paid.",
     "Definís precio de sub (mensual vs anual).",
@@ -102,27 +102,27 @@
     ],
     "result": "Necesitás ~460 subs pagos para 3000 USD netos/mes."
   },
-  "explanation": "## Cómo cobra Substack\n\n- **Plan Standard**: 10% de comisión sobre ingresos.\n- **Plan Pro (recently 2024+)**: menor comisión con volume discount.\n- **Fees de pago (Stripe)**: 2.9% + 0.30 USD por transacción mensual.\n- **Suscripción anual**: Substack da descuento 16% default (12 meses × precio × 0.84).\n\n## Fórmula\n\n```\nprecio_efectivo = (precio_mensual × pct_mensuales) + (precio_anual_mensualizado × pct_anuales)\nneto_por_sub = precio_efectivo − comision − fees\nsubs_necesarios = meta / neto_por_sub\n```\n\n## Precio típico por tipo de newsletter\n\n| Tipo | Precio mensual |\n|---|---|\n| Lifestyle / hobby | 5-8 USD |\n| Política / análisis | 8-15 USD |\n| Finanzas / inversiones | 15-30 USD |\n| Tech deep-dives | 15-25 USD |\n| B2B / industry | 30-99 USD |\n\n## Benchmarks de conversion\n\n| Métrica | Promedio |\n|---|---|\n| Free → paid | 2-5% |\n| Open rate | 30-45% |\n| Churn anual | 20-30% |\n\n## Estrategias\n\n### 1. Free-to-paid funnel\n- 3-4 posts/mes gratis.\n- 1-2 posts pagos/mes exclusivos.\n- Paywall a mitad de post premium.\n\n### 2. Todo paid con trial\n- 7-14 días free trial.\n- Mejor retención pero menor alcance inicial.\n\n### 3. Founding Members\n- Tier premium (50-100 USD/mes) con call trimestral.\n- 1-5% de tu audiencia paga puede entrar.\n\n## Tips para subir retención\n\n- **Consistencia**: mismo día/semana.\n- **Engagement**: encuestas, comentarios.\n- **Valor tangible**: data propia, research original.\n- **Community**: Discord o chat Substack para paid.",
+  "explanation": "## Cómo cobra Substack\n\n- **Plan Standard**: 10% de comisión sobre ingresos.\n- **Plan Pro (recently 2024+)**: menor comisión con volume discount.\n- **Fees de pago (Stripe)**: 2.9% + 0.30 USD por transacción mensual.\n- **Suscripción anual**: Substack da descuento 16% default (12 meses × precio × 0.84).\n\n## Fórmula\n\n```\nprecio_anual_mensualizado = precio_mensual × 0,84\nprecio_efectivo = (precio_mensual × %mensuales) + (precio_anual_mensualizado × %anuales)\nneto_por_sub = precio_efectivo × 0,90 − (precio_efectivo × 0,029 + 0,30/12)\nsubs_necesarios = ⌈meta / neto_por_sub⌉\n```\n\n## Ejemplo resuelto paso a paso\n\nMeta: **USD 3.000 netos/mes**, precio **USD 8/mes**, **40% de suscriptores anuales**.\n\n1. **Precio anual mensualizado**: 8 × 0,84 = **USD 6,72** (el suscriptor anual paga el equivalente a 6,72 por mes por el descuento del 16%).\n2. **Precio efectivo del mix**: 8 × 0,60 + 6,72 × 0,40 = 4,80 + 2,69 = **USD 7,49** por suscriptor promedio.\n3. **Neto por suscriptor**: 7,49 × 0,90 (sale el 10% de Substack) − (7,49 × 0,029 + 0,025 de fee fijo prorrateado) = 6,74 − 0,24 = **USD 6,50**.\n4. **Suscriptores necesarios**: 3.000 / 6,50 = 461,7 → se redondea hacia arriba: **462 suscriptores pagos**.\n5. Verificación: 462 subs facturan USD 3.459 brutos; las comisiones se llevan USD 458 (13,2%) y te quedan **USD 3.002 netos**.\n\nFijate el efecto compuesto: entre el descuento anual y las comisiones, necesitás un 23% más de suscriptores que los 375 de la cuenta ingenua (3.000 ÷ 8).\n\n## Precio típico por tipo de newsletter\n\n| Tipo | Precio mensual |\n|---|---|\n| Lifestyle / hobby | 5-8 USD |\n| Política / análisis | 8-15 USD |\n| Finanzas / inversiones | 15-30 USD |\n| Tech deep-dives | 15-25 USD |\n| B2B / industry | 30-99 USD |\n\n## Benchmarks de conversion\n\n| Métrica | Promedio |\n|---|---|\n| Free → paid | 2-5% |\n| Open rate | 30-45% |\n| Churn anual | 20-30% |\n\n## Errores comunes al proyectar\n\n1. **Dividir meta por precio de tapa.** Ignora el 13% de comisiones y el descuento anual: te da una meta de suscriptores 20-25% más baja que la real.\n2. **Ignorar el churn.** Con un churn anual del 20-30%, para *mantener* 462 suscriptores necesitás sumar 8-12 nuevos por mes solo para reponer bajas.\n3. **Poner 100% de anuales \"porque cobro todo junto\".** El anual mejora el cashflow y la retención, pero baja el ingreso mensualizado un 16%: el mix realista de un newsletter maduro está entre 30% y 50% de anuales.\n4. **Olvidar que la meta es neta.** Si tu meta mensual es para reemplazar un sueldo, acordate de que sobre ese neto de Substack todavía pagás tus impuestos locales.\n\n## Cuándo NO usar este resultado\n\nLa calculadora asume el plan estándar de Substack (10%) y el descuento anual default del 16%: si negociaste condiciones distintas, definiste otro descuento anual o usás precios de founding member, los números cambian. Tampoco aplica tal cual a otras plataformas — Beehiiv y Ghost no cobran comisión porcentual pero tienen costo fijo de suscripción o hosting — ni contempla reembolsos, impuestos sobre ventas (VAT/sales tax que Stripe puede retener según el país del lector) ni el tipo de cambio si vivís fuera de EE.UU.\n\n## Estrategias\n\n### 1. Free-to-paid funnel\n- 3-4 posts/mes gratis.\n- 1-2 posts pagos/mes exclusivos.\n- Paywall a mitad de post premium.\n\n### 2. Todo paid con trial\n- 7-14 días free trial.\n- Mejor retención pero menor alcance inicial.\n\n### 3. Founding Members\n- Tier premium (50-100 USD/mes) con call trimestral.\n- 1-5% de tu audiencia paga puede entrar.\n\n## Tips para subir retención\n\n- **Consistencia**: mismo día/semana.\n- **Engagement**: encuestas, comentarios.\n- **Valor tangible**: data propia, research original.\n- **Community**: Discord o chat Substack para paid.",
   "faq": [
     {
-      "q": "¿Cuánto cobra Substack?",
-      "a": "10% comisión sobre ingresos + 2.9% + 0.30 USD por transacción de Stripe."
+      "q": "¿Cuánto cobra Substack en total?",
+      "a": "Substack retiene el 10% de todo lo que facturás por suscripciones pagas, y Stripe —el procesador de pagos obligatorio— suma 2,9% + 0,30 USD por cada transacción. En la práctica, de cada suscripción te llega entre el 84% y el 87% según el precio: el fee fijo de 0,30 pesa más en precios bajos. Publicar y enviar la newsletter gratuita, en cambio, no cuesta nada: Substack solo gana cuando vos cobrás."
     },
     {
       "q": "¿Substack o Ghost?",
-      "a": "Substack es más simple y barato al inicio. Ghost es más flexible pero requiere hosting propio."
+      "a": "Substack es más simple y no tiene costo fijo: pagás solo el 10% cuando facturás, ideal para validar si tu newsletter puede monetizar. Ghost no cobra comisión sobre suscripciones pero tiene costo de hosting (propio o Ghost Pro), así que conviene recién con volumen: el punto de cruce ronda los USD 300-500 de facturación mensual, donde el 10% de Substack empieza a superar el costo fijo de Ghost. Si recién empezás, la fricción cero de Substack suele ganar."
     },
     {
       "q": "¿Cuál es un precio recomendado para empezar?",
-      "a": "5-8 USD/mes. Subí cuando tengas >500 subs pagos."
+      "a": "Entre 5 y 8 USD mensuales para newsletters de interés general, que es donde se concentra la mayoría de los lanzamientos exitosos. El mínimo que permite Substack es 5 USD/mes o 30 USD/año. Los nichos con valor económico directo (finanzas, inversiones, B2B) soportan 15-30 USD sin resistencia. La señal para subir precio: superar los 500 suscriptores pagos con churn bajo — los nuevos entran al precio nuevo y los existentes pueden mantener el viejo."
     },
     {
-      "q": "¿Se puede migrar a otra plataforma?",
-      "a": "Sí. Substack permite exportar lista y pagos. Beehiiv y Ghost son alternativas comunes."
+      "q": "¿Se puede migrar a otra plataforma después?",
+      "a": "Sí, y es una de las razones por las que Substack sigue siendo una apuesta razonable: podés exportar tu lista de emails completa y, como los pagos corren por Stripe, las suscripciones activas se migran conectando tu cuenta de Stripe en la plataforma nueva (Beehiiv y Ghost tienen procesos guiados para esto). Lo que no se lleva es el descubrimiento interno de Substack (recomendaciones entre newsletters y la app), que para muchos autores genera 20-40% de los suscriptores nuevos."
     },
     {
-      "q": "¿Vale la pena el descuento anual?",
-      "a": "Sí. Reduce churn 40-50% y mejora cashflow. Default Substack es 16% off."
+      "q": "¿Vale la pena ofrecer el descuento anual?",
+      "a": "Sí, casi siempre. El plan anual con 16% de descuento (el default de Substack) reduce el churn efectivo 40-50% —el suscriptor decide una vez al año en vez de doce— y te adelanta 12 meses de cashflow. El costo es que el ingreso mensualizado por suscriptor baja: a USD 8/mes, el anual te deja 6,72 en vez de 8 antes de comisiones. Por eso la calculadora pide el porcentaje de anuales: con 40% de mix anual necesitás ~8% más suscriptores para la misma meta neta."
     },
     {
       "q": "¿Qué conversión free → paid es realista en Substack?",
@@ -131,6 +131,14 @@
     {
       "q": "¿Substack se lleva 10% o más cuando sumo Stripe?",
       "a": "Substack: **10% comisión**. **Stripe** (procesador): **2.9% + $0.30 USD** por transacción. Para suscripción de **$10/mes**: Stripe se lleva **$0.59**, Substack $1.00, vos recibís **$8.41 netos (~84%)**. Anual $100: Stripe $3.20, Substack $10, te quedan **$86.80 (~87%)**. En AR: Stripe paga a **Payoneer o cuenta USA** — convertir a MEP ahorra ~30% vs dólar oficial. Tenés que facturar exportación de servicios (monotributo exento o régimen simplificado)."
+    },
+    {
+      "q": "¿Cuántos suscriptores gratuitos necesito para llegar a mi meta?",
+      "a": "Aplicá la conversión free-to-paid sobre el resultado de la calculadora. Ejemplo con la meta de USD 3.000 netos a USD 8/mes y 40% de anuales: necesitás 462 suscriptores pagos; con una conversión del 5% (buena para un nicho definido) eso implica una lista gratuita de unas 9.200 personas, y con el 2-3% típico del primer año, entre 15.000 y 23.000. Por eso la recomendación estándar es construir la lista gratuita primero y activar los pagos cuando la base ya tiene masa crítica."
+    },
+    {
+      "q": "¿Cómo afecta el churn a la meta de suscriptores?",
+      "a": "El número que te da la calculadora es una foto: cuántos suscriptores activos necesitás en un mes dado. Pero con un churn anual del 20-30% (el rango típico en newsletters pagas), sostener 462 suscriptores implica reponer entre 92 y 139 bajas por año, unos 8-12 suscriptores nuevos por mes solo para no retroceder. Si tu captación mensual apenas iguala tus bajas, tu ingreso queda estancado: para crecer, la entrada de pagos nuevos tiene que superar el churn con margen."
     }
   ],
   "sources": [
@@ -202,5 +210,5 @@
       "text": "Revisá los resultados que aparecen debajo del formulario. Podés modificar cualquier dato y volver a calcular."
     }
   ],
-  "lastReviewed": "2026-07-16"
+  "lastReviewed": "2026-07-26"
 }
