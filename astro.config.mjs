@@ -94,6 +94,17 @@ export default defineConfig({
       // Preserva el dist cacheado en builds incrementales. En full build
       // (default) limpia como siempre.
       emptyOutDir: !IS_INCREMENTAL,
+      // modulePreload OFF (2026-07-27). El helper `__vitePreload` que Vite
+      // inyecta para los import() dinámicos terminaba viviendo DENTRO del chunk
+      // `formula-map` (~93KB brotli). Resultado: el <script> de Calculator lo
+      // importaba de forma ESTÁTICA (`import{_}from"./formula-map.js"`) y el
+      // navegador bajaba y ejecutaba el mapa entero en cada page load, aunque
+      // el import() real fuera diferido — 64% sin usar, dentro de la ventana de
+      // LCP. Sin helper, Rollup emite `import()` pelado y el mapa baja recién
+      // en el warm-up idle de Calculator.astro. Los browsers que soportan
+      // <script type="module"> (los únicos que reciben este bundle) soportan
+      // import() dinámico nativo, así que no hace falta el polyfill.
+      modulePreload: false,
       // Chunks estables: agrupa deps de node_modules en `vendor` y código
       // compartido de src/lib y src/components en chunks propios. Esto evita
       // que cada incremental regenere ~3000 chunks JS con hashes nuevos por
@@ -107,6 +118,17 @@ export default defineConfig({
             // Todas las deps de node_modules → 1 sólo vendor chunk
             // (super estable: solo cambia si actualizamos package.json)
             if (id.includes('node_modules')) {
+              // EXCEPCIÓN mathjs (2026-07-27). `vendor` lo importa `page.js`
+              // (runtime de prefetch de Astro) de forma ESTÁTICA → está en
+              // TODAS las páginas. mathjs entra a vendor por un único archivo
+              // (src/lib/formulas/matematica-avanzada.ts) y se lleva puestos
+              // ~673KB crudos / 190KB brotli en cada una de las ~3.500 URLs,
+              // con 57% del bundle sin usar (PSI 2026-07-27: era el asset
+              // same-origin más pesado de una calc). Aislado en su propio
+              // chunk, baja SOLO cuando esa fórmula se importa dinámicamente.
+              if (/node_modules\/(mathjs|decimal\.js|complex\.js|fraction\.js|typed-function|escape-latex|javascript-natural-sort|seedrandom|tiny-emitter|@babel\/runtime)\//.test(id)) {
+                return 'mathjs';
+              }
               return 'vendor';
             }
             // Per-component <script> blocks de Astro (entries `?astro&type=script`)

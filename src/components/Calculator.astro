@@ -3803,9 +3803,27 @@ const formatFreshnessDate = (iso: string): string => {
   // Lazy loading por fórmula — Vite genera 1 chunk por archivo (.ts), cargado on-demand.
   // El MAPA de loaders (~3.400 dynamic imports) vive en su propio chunk
   // (src/lib/formula-loader-map.ts): tenerlo inline acá inflaba ESTE bundle de
-  // ~48KB a 664KB raw. Fire-eager: el chunk del mapa baja en paralelo mientras
-  // el usuario completa el form; loadFormula() recién lo espera al usarlo.
-  const _loaderMapPromise = import('../lib/formula-loader-map');
+  // ~48KB a 664KB raw.
+  //
+  // Warm-up diferido (2026-07-27): antes el import() se disparaba al evaluar el
+  // módulo, o sea DENTRO de la ventana de LCP — los ~93KB (brotli) del mapa
+  // competían por ancho de banda con el CSS render-blocking y empujaban el
+  // "element render delay" (PSI mobile: LCP 8,3s en /calculadora-imc).
+  // Ahora arranca con lo que pase primero: window.load + idle, o el primer
+  // contacto del usuario con el form. Así el click en "Calcular" sigue siendo
+  // instantáneo (el chunk ya bajó mientras completa los campos) pero el LCP
+  // pinta sin competencia.
+  let _loaderMapPromise: Promise<typeof import('../lib/formula-loader-map')> | null = null;
+  const loaderMap = () => (_loaderMapPromise ??= import('../lib/formula-loader-map'));
+  {
+    const warm = () => { loaderMap(); };
+    const onLoad = () => (window.requestIdleCallback || ((f: any) => setTimeout(f, 300)))(warm);
+    if (document.readyState === 'complete') onLoad();
+    else window.addEventListener('load', onLoad, { once: true });
+    for (const ev of ['pointerdown', 'keydown', 'focusin'] as const) {
+      document.addEventListener(ev, warm, { once: true, passive: true, capture: true });
+    }
+  }
   const formulaCache = new Map<string, Function>();
   // A4: hooks opcionales que exporta el MÓDULO de la fórmula (no la función de
   // cómputo). Se cachean por formulaId junto con la función. Ver contrato A4
@@ -3836,7 +3854,7 @@ const formatFreshnessDate = (iso: string): string => {
     if (formulaCache.has(formulaId)) return formulaCache.get(formulaId)!;
     let formulaLoaders: Record<string, () => Promise<any>>;
     try {
-      ({ formulaLoaders } = await _loaderMapPromise);
+      ({ formulaLoaders } = await loaderMap());
     } catch {
       // El chunk del mapa no bajó (red caída) → mismo flujo que "fórmula no
       // encontrada": executeFormula muestra el error con Reintentar.
