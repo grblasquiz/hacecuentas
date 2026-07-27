@@ -1794,7 +1794,6 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/ec/horas-extra-suplementarias-ecuador': '/ec/calculadora-horas-extra-suplementarias-ecuador',
   '/eclipse-solar-12-agosto-2026': '/categoria/ciencia',
   '/edad': '/fechas/edad-exacta',
-  '/embarazo': '/embarazo/semanas',
   '/en/10000-hours-mastery-gladwell': '/en/duolingo-time-cefr-level-progress',
   '/en/10k-projection-from-5k-riegel': '/en/body-fat-skinfolds-jackson-pollock',
   '/en/10k-training-plan-weeks': '/en',
