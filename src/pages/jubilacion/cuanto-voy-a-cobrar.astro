@@ -1,35 +1,21 @@
 ---
-/**
- * Hub de decisión — "¿Cuánto voy a cobrar de jubilación?"
- * Reemplaza 11 URLs de calculadora suelta (ver hub.replaces).
- *
- * Arquetipo: ramificado (4 ramas, `cases`).
- * El haber mínimo, el bono y la movilidad NO están acá: se derivan de las
- * fórmulas reales y de la serie viva de IPC dentro de
- * src/lib/hubs/cuanto-voy-a-cobrar.ts.
- */
 export const prerender = true;
 
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import DecisionHub from '../../components/hub/DecisionHub.astro';
+import JubilacionExperience from '../../components/JubilacionExperience.astro';
 import {
   hub,
   HABER_MINIMO,
-  HABER_MEDIO,
   HABER_MAXIMO,
   BONO_REFUERZO,
   PBU,
   COEF_ANUAL,
   TOPE_ANIOS,
-  DOCENTE,
-  MOVILIDAD,
-  TASA_RETIRO_SOSTENIBLE,
 } from '../../lib/hubs/cuanto-voy-a-cobrar';
 
 const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
-
 const schema = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -64,232 +50,14 @@ const schema = {
   articleSection={hub.silo}
 >
   <Header />
-  <DecisionHub data={hub} />
+  <JubilacionExperience
+    data={hub}
+    minimo={HABER_MINIMO}
+    maximo={HABER_MAXIMO}
+    bono={BONO_REFUERZO}
+    pbu={PBU}
+    coefAnual={COEF_ANUAL}
+    topeAnios={TOPE_ANIOS}
+  />
   <Footer />
 </Layout>
-
-<script
-  is:inline
-  define:vars={{
-    HABER_MINIMO,
-    HABER_MEDIO,
-    HABER_MAXIMO,
-    BONO_REFUERZO,
-    PBU,
-    COEF_ANUAL,
-    TOPE_ANIOS,
-    DOCENTE,
-    MOVILIDAD,
-    TASA_RETIRO_SOSTENIBLE,
-  }}
->
-  (function () {
-    const H = window.HC_HUB;
-
-    // El hub es de plata, así que el formato base es 'ars'. Las filas que NO son
-    // pesos (años, porcentajes) declaran su propio `format`: el runtime hace
-    // Object.assign y la fila que no lo declara cae a pesos.
-    const U = (v, unit, decimals) => ({ v: v, format: 'unit', unit: unit, decimals: decimals || 0 });
-    const n = (x, d) =>
-      Number(x || 0).toLocaleString('es-AR', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
-
-    /** Piso, tope y bono del régimen general (Ley 24.241 + decreto del bono). */
-    function aplicarPisoYTope(haberBruto) {
-      const conTope = Math.min(haberBruto, HABER_MAXIMO);
-      const haber = Math.max(HABER_MINIMO, conTope);
-      const bono = haber <= HABER_MINIMO ? BONO_REFUERZO : 0;
-      return {
-        haber: haber,
-        bono: bono,
-        aplicaPiso: haberBruto < HABER_MINIMO,
-        aplicaTope: haberBruto > HABER_MAXIMO,
-      };
-    }
-
-    /** Componentes del régimen general: PBU + prestación compensatoria + PAP. */
-    function componentesGenerales(promedio, anios, aniosAntes) {
-      const computables = Math.min(anios, TOPE_ANIOS);
-      const antes = Math.min(Math.max(0, aniosAntes), computables);
-      const despues = Math.max(0, computables - antes);
-      return {
-        computables: computables,
-        antes: antes,
-        despues: despues,
-        pbu: PBU,
-        pc: COEF_ANUAL * antes * promedio,
-        pap: COEF_ANUAL * despues * promedio,
-      };
-    }
-
-    H.onCompute(function (v, kase) {
-      const rama = (kase && kase.id) || 'general';
-      const promedio = Math.max(0, v.promedio || 0);
-      const anios = Math.max(0, Math.min(50, v.anios || 0));
-      const aniosAntes = Math.max(0, Math.min(50, v.aniosAntes1994 || 0));
-
-      const movilidadTxt =
-        'movilidad ' + n(MOVILIDAD.pct, 1) + '% (IPC ' + MOVILIDAD.label + ')';
-
-      // ── Haber mínimo y bono ──────────────────────────────────────────────
-      if (rama === 'minimo') {
-        const total = HABER_MINIMO + BONO_REFUERZO;
-        const proximo = HABER_MINIMO * (1 + MOVILIDAD.pct / 100);
-        return {
-          total: H.ars(total),
-          sub:
-            'haber mínimo ' + H.ars(HABER_MINIMO) + ' + bono ' + H.ars(BONO_REFUERZO) + ' · ' + movilidadTxt,
-          rows: [
-            { k: 'Haber mínimo garantizado', ref: 'Ley 24.241 art. 125', v: HABER_MINIMO, format: 'ars', extra: true },
-            { k: 'Bono de refuerzo (no remunerativo)', ref: 'decreto vigente', v: BONO_REFUERZO, format: 'ars' },
-            { k: 'Total a cobrar en el mes', ref: 'haber + bono', v: total, format: 'ars', extra: true },
-            { k: 'Aguinaldo (medio haber, el bono no cuenta)', ref: 'SAC previsional', v: HABER_MINIMO / 2, format: 'ars' },
-            { k: 'Descuento de PAMI (3% sobre el haber)', ref: 'INSSJP', v: HABER_MINIMO * 0.03, format: 'ars' },
-            { k: 'PUAM (80% del haber mínimo)', ref: 'Ley 27.260', v: HABER_MINIMO * 0.8, format: 'ars' },
-            { k: 'Movilidad del mes', ref: 'IPC ' + MOVILIDAD.label, ...U(MOVILIDAD.pct, '%', 1) },
-            { k: 'Haber mínimo tras el próximo ajuste', ref: 'DNU 274/2024', v: proximo, format: 'ars' },
-          ],
-          chart: [
-            { label: 'Haber mínimo', value: HABER_MINIMO, tone: 'main' },
-            { label: 'Bono de refuerzo', value: BONO_REFUERZO, tone: 'prop' },
-          ],
-        };
-      }
-
-      // ── Régimen docente ──────────────────────────────────────────────────
-      if (rama === 'docente') {
-        const d = DOCENTE[v.regimen] || DOCENTE.caba;
-        const bruto = promedio * d.pct;
-        const r = aplicarPisoYTope(bruto);
-        const total = r.haber + r.bono;
-        const rows = [
-          { k: 'Promedio de remuneraciones docentes', ref: 'dato tuyo', v: promedio, format: 'ars' },
-          { k: 'Porcentaje del régimen', ref: d.norma, ...U(d.pct * 100, '%', 1) },
-          { k: 'Haber docente calculado', ref: d.detalle, v: bruto, format: 'ars', extra: true },
-        ];
-        if (r.aplicaPiso) {
-          rows.push({ k: 'Piso: haber mínimo garantizado', ref: 'Ley 24.241', v: HABER_MINIMO, format: 'ars' });
-        }
-        if (r.bono > 0) {
-          rows.push({ k: 'Bono de refuerzo', ref: 'decreto vigente', v: r.bono, format: 'ars' });
-        }
-        rows.push({ k: 'Años de servicio exigidos', ref: d.norma, ...U(d.servicios, 'años') });
-        rows.push({
-          k: 'Años de servicio si estás frente al aula',
-          ref: 'descuento de 5 años',
-          ...U(Math.max(0, d.servicios - 5), 'años'),
-        });
-        rows.push({ k: 'Total mensual estimado', ref: d.norma, v: total, format: 'ars', extra: true });
-
-        return {
-          total: H.ars(total),
-          sub:
-            n(d.pct * 100, 1) + '% del promedio de ' + H.ars(promedio) + ' · ' +
-            d.servicios + ' años de servicio · ' + movilidadTxt,
-          rows: rows,
-          chart: [
-            { label: 'Haber docente', value: r.haber, tone: 'main' },
-            { label: 'Bono de refuerzo', value: r.bono, tone: 'prop' },
-          ],
-        };
-      }
-
-      // ── Ahorro complementario ────────────────────────────────────────────
-      if (rama === 'ahorro') {
-        const c = componentesGenerales(promedio, anios, aniosAntes);
-        const r = aplicarPisoYTope(c.pbu + c.pc + c.pap);
-        const haberEstimado = r.haber + r.bono;
-
-        const gasto = Math.max(0, v.gasto || 0);
-        const brecha = Math.max(0, gasto - haberEstimado);
-        const capital = brecha * 12 * (1 / TASA_RETIRO_SOSTENIBLE);
-        const aniosRetiro = Math.max(1, Math.min(50, v.aniosParaRetiro || 1));
-        const tasa = Math.max(0, Math.min(20, v.tasa || 0)) / 100;
-        const ahorroActual = Math.max(0, v.ahorroActual || 0);
-
-        const meses = aniosRetiro * 12;
-        const m = Math.pow(1 + tasa, 1 / 12) - 1;
-        const vfActual = m === 0 ? ahorroActual : ahorroActual * Math.pow(1 + m, meses);
-        const faltante = Math.max(0, capital - vfActual);
-        const factor = m === 0 ? meses : (Math.pow(1 + m, meses) - 1) / m;
-        const aporteMensual = faltante > 0 ? faltante / factor : 0;
-        const totalAportado = aporteMensual * meses + ahorroActual;
-        const rendimiento = Math.max(0, capital - totalAportado);
-
-        return {
-          total: H.ars(aporteMensual),
-          sub:
-            'a guardar por mes durante ' + aniosRetiro + ' años · brecha de ' + H.ars(brecha) + '/mes · ' +
-            'capital objetivo ' + H.ars(capital) + ' (regla del 4%)',
-          rows: [
-            { k: 'Haber estimado de ANSES', ref: 'Ley 24.241', v: haberEstimado, format: 'ars' },
-            { k: 'Lo que querés gastar por mes', ref: 'dato tuyo', v: gasto, format: 'ars' },
-            { k: 'Brecha mensual a cubrir', ref: 'gasto − haber', v: brecha, format: 'ars', extra: true },
-            { k: 'Capital objetivo', ref: 'brecha × 12 × 25', v: capital, format: 'ars', extra: true },
-            { k: 'Lo que ya tenés ahorrado, capitalizado', ref: n(tasa * 100, 1) + '% real anual', v: vfActual, format: 'ars' },
-            { k: 'Capital que todavía falta juntar', ref: 'objetivo − capitalizado', v: faltante, format: 'ars' },
-            { k: 'Aporte mensual necesario', ref: n(aniosRetiro, 0) + ' años por delante', v: aporteMensual, format: 'ars', extra: true },
-            { k: 'Total que ponés de tu bolsillo', ref: 'aportes + ahorro inicial', v: totalAportado, format: 'ars' },
-            { k: 'Lo que suma el rendimiento', ref: 'interés compuesto', v: rendimiento, format: 'ars' },
-            { k: 'Años de aporte al plan', ref: 'horizonte', ...U(aniosRetiro, 'años') },
-          ],
-          chart: [
-            { label: 'Lo que ponés vos', value: totalAportado, tone: 'main' },
-            { label: 'Lo que suma el rendimiento', value: rendimiento, tone: 'good' },
-          ],
-        };
-      }
-
-      // ── Régimen general ANSES (default) ──────────────────────────────────
-      const c = componentesGenerales(promedio, anios, aniosAntes);
-      const bruto = c.pbu + c.pc + c.pap;
-      const r = aplicarPisoYTope(bruto);
-      const total = r.haber + r.bono;
-      const sustitucion = promedio > 0 ? (r.haber / promedio) * 100 : 0;
-
-      const rows = [
-        { k: 'Promedio de remuneraciones actualizadas', ref: 'dato tuyo', v: promedio, format: 'ars' },
-        { k: 'Años computables (tope 35)', ref: 'art. 24 inc. a', ...U(c.computables, 'años') },
-        { k: 'PBU — Prestación Básica Universal', ref: 'art. 20', v: c.pbu, format: 'ars' },
-        { k: 'Prestación compensatoria (aportes hasta 1994)', ref: 'art. 24 · 1,5%/año', v: c.pc, format: 'ars' },
-        { k: 'PAP — Prestación Adicional por Permanencia', ref: 'art. 30 · 1,5%/año', v: c.pap, format: 'ars' },
-        { k: 'Haber calculado', ref: 'PBU + PC + PAP', v: bruto, format: 'ars', extra: true },
-      ];
-      if (r.aplicaPiso) {
-        rows.push({ k: 'Piso: haber mínimo garantizado', ref: 'cobrás el mínimo', v: HABER_MINIMO, format: 'ars' });
-      }
-      if (r.aplicaTope) {
-        rows.push({ k: 'Tope: haber máximo del sistema', ref: 'base imponible máxima', v: HABER_MAXIMO, format: 'ars' });
-      }
-      if (r.bono > 0) {
-        rows.push({ k: 'Bono de refuerzo (no genera aguinaldo)', ref: 'decreto vigente', v: r.bono, format: 'ars' });
-      }
-      rows.push({ k: 'Descuento de PAMI (3%)', ref: 'INSSJP', v: r.haber * 0.03, format: 'ars' });
-      rows.push({ k: 'Aguinaldo (medio haber)', ref: 'SAC previsional', v: r.haber / 2, format: 'ars' });
-      rows.push({ k: 'Tasa de sustitución de tu sueldo', ref: 'haber ÷ promedio', ...U(sustitucion, '%', 0) });
-      rows.push({ k: 'Total a cobrar en el mes', ref: 'haber + bono', v: total, format: 'ars', extra: true });
-
-      return {
-        total: H.ars(total),
-        sub:
-          c.computables + ' años computables (' + c.antes + ' antes de 1994) · ' +
-          'sustitución ' + n(sustitucion, 0) + '% · ' + movilidadTxt,
-        rows: rows,
-        chart: (function () {
-          // Los tres componentes tienen que sumar el haber que se muestra: si el
-          // piso o el tope pisan la cuenta, el gráfico lo dice en vez de mentir.
-          const escala = bruto > 0 ? Math.min(1, HABER_MAXIMO / bruto) : 0;
-          const segs = [
-            { label: 'PBU (suma fija)', value: c.pbu * escala, tone: 'main' },
-            { label: 'Prestación compensatoria', value: c.pc * escala, tone: 'exit' },
-            { label: 'PAP', value: c.pap * escala, tone: 'good' },
-          ];
-          if (r.aplicaPiso) {
-            segs.push({ label: 'Complemento hasta el haber mínimo', value: Math.max(0, HABER_MINIMO - bruto), tone: 'warn' });
-          }
-          segs.push({ label: 'Bono de refuerzo', value: r.bono, tone: 'prop' });
-          return segs;
-        })(),
-      };
-    });
-  })();
-</script>
