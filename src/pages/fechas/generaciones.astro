@@ -1,0 +1,178 @@
+---
+/**
+ * Hub de decisión — "¿De qué generación soy?"
+ * Reemplaza 17 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo CÁLCULO DOMINANTE: sin `cases`, con `answer`.
+ * En el compute() sólo entra lo verificable —tramo generacional, edad,
+ * esperanza de vida, porcentaje de vida transcurrido, tiempo restante y edad
+ * orbital—. Las URLs lúdicas que absorbe (nombre de elfo, love calculator,
+ * piedra de nacimiento, ángel guardián, biorritmos, número del camino de vida)
+ * se redirigen pero NO se reimplementan: no son cálculo, son juguetes.
+ *
+ * OJO formato: nada de esto es plata. Todas las filas declaran `format`
+ * ('unit' o 'plain') porque el runtime hace Object.assign y una fila sin
+ * formato propio saldría con "$" adelante.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  ANIO_ACTUAL,
+  GENERACIONES,
+  ESPERANZA_VIDA,
+  PERIODO_MARTE,
+  PERIODO_MERCURIO,
+  FRACCION_DESPIERTO,
+} from '../../lib/hubs/generaciones';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    ANIO_ACTUAL,
+    GENS: GENERACIONES,
+    EV: ESPERANZA_VIDA,
+    MARTE: PERIODO_MARTE,
+    MERCURIO: PERIODO_MERCURIO,
+    DESPIERTO: FRACCION_DESPIERTO,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    const U = function (k, unit, v, decimals, ref, extra) {
+      return { k: k, v: v, format: 'unit', unit: unit, decimals: decimals || 0, ref: ref, extra: !!extra };
+    };
+    const P = function (k, v, ref) {
+      return { k: k, v: v, format: 'plain', decimals: 0, ref: ref };
+    };
+
+    H.onCompute(function (v) {
+      const anio = Math.round(v.anio || 0);
+      const primero = GENS[0].desde;
+      const ultimo = GENS[GENS.length - 1].hasta;
+
+      if (!anio || anio < 1900 || anio > ANIO_ACTUAL) {
+        return {
+          total: '—',
+          sub: 'Poné un año de nacimiento entre 1900 y ' + ANIO_ACTUAL + '.',
+          rows: [],
+          chart: [],
+          format: 'plain',
+        };
+      }
+
+      // --- tramo generacional -------------------------------------------------
+      // Antes de 1928 no hay tramo con nombre consensuado: se informa como tal.
+      let gen = null;
+      for (let i = 0; i < GENS.length; i++) {
+        if (anio >= GENS[i].desde && anio <= GENS[i].hasta) { gen = GENS[i]; break; }
+      }
+      const previa = anio < primero;
+      const nombre = gen ? gen.nombre : 'Anterior a la Generación Silenciosa';
+      const rango = gen ? gen.desde + '–' + gen.hasta : 'antes de ' + primero;
+
+      // --- edad y tiempo ------------------------------------------------------
+      const edad = ANIO_ACTUAL - anio;
+      const sexo = v.sexo === 'm' ? 'm' : 'f';
+      const datos = EV[v.pais] || EV.argentina;
+      const esperanza = datos[sexo];
+      const pctVivido = Math.min(100, (edad / esperanza) * 100);
+      const aniosRestantes = Math.max(0, esperanza - edad);
+      const diasRestantes = Math.round(aniosRestantes * 365.25);
+      const horasRestantes = diasRestantes * 24;
+      const horasDespierto = Math.round(horasRestantes * DESPIERTO);
+      const semanasRestantes = Math.round(diasRestantes / 7);
+
+      // --- posición en la línea de generaciones -------------------------------
+      const span = ultimo - primero;
+      const pos = Math.min(100, Math.max(0, ((anio - primero) / span) * 100));
+
+      const rows = [
+        P('Año de nacimiento', anio, 'Tu dato'),
+        U('Edad que cumplís en ' + ANIO_ACTUAL, 'años', edad, 0, 'Año calendario', true),
+      ];
+      if (gen) {
+        rows.push(P('Primer año de tu generación', gen.desde, 'Pew / McCrindle'));
+        rows.push(P('Último año de tu generación', gen.hasta, 'Pew / McCrindle'));
+        rows.push(U('Años que dura tu tramo', 'años', gen.hasta - gen.desde + 1, 0, 'Pew / McCrindle'));
+      }
+      rows.push(U('Esperanza de vida de tu país y sexo', 'años', esperanza, 1, 'INDEC / Banco Mundial'));
+      rows.push(U('Vida transcurrida', '%', pctVivido, 1, 'Edad ÷ esperanza', true));
+      rows.push(U('Años que te quedarían por delante', 'años', aniosRestantes, 1, 'Promedio poblacional'));
+      rows.push(U('Semanas restantes estimadas', 'semanas', semanasRestantes, 0, 'Promedio poblacional'));
+      rows.push(U('Horas restantes estimadas', 'horas', horasRestantes, 0, 'Promedio poblacional'));
+      rows.push(U('De esas horas, despierto', 'horas', horasDespierto, 0, '~16 h de cada 24'));
+      rows.push(U('Tu edad en Marte', 'años marcianos', edad / MARTE, 1, 'NASA · órbita 1,88 años'));
+      rows.push(U('Tu edad en Mercurio', 'años mercurianos', edad / MERCURIO, 0, 'NASA · órbita 88 días'));
+
+      const chart = GENS.map(function (g, i) {
+        return {
+          label: g.corto,
+          value: g.hasta - g.desde + 1,
+          from: g.desde,
+          to: g.hasta,
+          tone: gen && g.desde === gen.desde ? 'main' : i % 2 === 0 ? 'prop' : 'good',
+        };
+      });
+
+      return {
+        total: gen ? gen.corto : 'Pre-1928',
+        sub:
+          nombre + ' (' + rango + ') · ' + edad + ' años en ' + ANIO_ACTUAL + ' · ' +
+          pctVivido.toFixed(1).replace('.', ',') + '% de vida transcurrida sobre una esperanza de ' +
+          esperanza.toFixed(1).replace('.', ',') + ' años',
+        rows: rows,
+        chart: chart,
+        format: 'plain',
+        decimals: 0,
+        position: previa ? 0 : pos,
+        positionLabel: nombre + ' · nacidos ' + rango + ' · vos, ' + anio,
+      };
+    });
+  })();
+</script>

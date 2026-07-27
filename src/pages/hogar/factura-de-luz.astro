@@ -1,0 +1,333 @@
+---
+/**
+ * Hub de decisión — "¿Por qué me vino tan cara la luz?"
+ * Reemplaza 11 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/factura-de-luz.ts) y su
+ * compute(). Todo el chrome, el CSS y el runtime viven en DecisionHub.astro.
+ *
+ * Las tarifas vienen del módulo real del repo
+ * (src/lib/formulas/tarifa-electrica-edenor-edesur-segmentacion-n1-n2-n3.ts),
+ * replicadas en el hub para poder serializarlas con define:vars.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  TARIFAS_2026,
+  TARIFA_PARAMS,
+  MIX_HOGAR,
+  HORAS_STANDBY,
+  LM_POR_WATT,
+  DIAS_MES,
+} from '../../lib/hubs/factura-de-luz';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ TARIFAS: TARIFAS_2026, P: TARIFA_PARAMS, MIX: MIX_HOGAR, HORAS_STANDBY, LM: LM_POR_WATT, DIAS_MES }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Formatos de fila. OJO: el runtime hace Object.assign y una fila sin
+    // `format` propio cae a pesos con "$". Se declara en TODAS.
+    const ARS = { format: 'ars', decimals: 0 };
+    const KWH = { format: 'unit', unit: 'kWh', decimals: 1 };
+    const KWH0 = { format: 'unit', unit: 'kWh', decimals: 0 };
+    const W = { format: 'unit', unit: 'W', decimals: 0 };
+    const HS = { format: 'unit', unit: 'h', decimals: 1 };
+    const PCT = { format: 'unit', unit: '%', decimals: 1 };
+    const LMN = { format: 'unit', unit: 'lm', decimals: 0 };
+    const row = (k, v, fmt, extra, ref) =>
+      Object.assign({ k: k, v: v, extra: !!extra, ref: ref }, fmt);
+
+    const dec = (n, d) =>
+      Number(n || 0).toLocaleString('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+    /**
+     * Factura del período con el esquema SEF (Decreto 943/2025):
+     * cargo fijo + energía (bloque bonificado 50% + excedente a precio pleno)
+     * + alumbrado 8% + IVA 27% + Ley 25.413 (0,6%).
+     */
+    function factura(kwh, dist, cond, temp) {
+      const t = TARIFAS[dist] || TARIFAS.edenor;
+      const bloque = temp === 'templado' ? P.bloqueTemplado : P.bloqueAltaDemanda;
+      const conSub = cond === 'con_subsidio';
+      let kwhSub = 0;
+      let exc = kwh;
+      let energia = 0;
+      let ahorro = 0;
+      if (conSub) {
+        kwhSub = Math.min(kwh, bloque);
+        exc = Math.max(0, kwh - bloque);
+        energia = kwhSub * t.kwhPleno * (1 - P.bonificacionBase) + exc * t.kwhPleno;
+        ahorro = kwhSub * t.kwhPleno * P.bonificacionBase;
+      } else {
+        energia = kwh * t.kwhPleno;
+      }
+      const subtotal = t.cargoFijo + energia;
+      const alumbrado = subtotal * P.alumbrado;
+      const base = subtotal + alumbrado;
+      const iva = base * P.iva;
+      const ley = subtotal * P.ley25413;
+      const impuestos = alumbrado + iva + ley;
+      const total = base + iva + ley;
+      return {
+        tarifa: t,
+        bloque: bloque,
+        conSub: conSub,
+        kwhSub: kwhSub,
+        exc: exc,
+        energia: energia,
+        cargoFijo: t.cargoFijo,
+        alumbrado: alumbrado,
+        iva: iva,
+        ley: ley,
+        impuestos: impuestos,
+        total: total,
+        ahorro: ahorro,
+        // Precio efectivo: lo que realmente te sale cada kWh, impuestos adentro.
+        precioEfectivo: kwh > 0 ? total / kwh : t.kwhPleno,
+      };
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'factura';
+      const kwh = Math.max(0, v.consumo_kwh || 0);
+      const dist = String(v.distribuidora || 'edenor');
+      const cond = String(v.condicion || 'con_subsidio');
+      const temp = String(v.temporada || 'alta_demanda');
+      const f = factura(kwh, dist, cond, temp);
+      const precio = f.precioEfectivo;
+
+      // Base del resultado: el gráfico siempre está en kWh.
+      const BASE = { format: 'unit', unit: 'kWh', decimals: 1 };
+
+      // ── Rama 1: estimar la factura del mes ────────────────────────────────
+      if (id === 'factura') {
+        if (!kwh) {
+          return { total: '$0', sub: 'Ingresá los kWh del período para estimar la factura.', rows: [], chart: [] };
+        }
+        const rows = [
+          row('Consumo del período', kwh, KWH0, false, 'Medidor'),
+          row('Cargo fijo ' + f.tarifa.label, f.cargoFijo, ARS, false, 'ENRE'),
+        ];
+        if (f.conSub) {
+          rows.push(
+            row('Bloque bonificado 50% (' + f.bloque + ' kWh)', f.kwhSub, KWH0, false, 'Dto. 943/2025'),
+            row('Excedente a precio pleno', f.exc, KWH0, false, 'Dto. 943/2025'),
+          );
+        }
+        rows.push(
+          row('Energía consumida', f.energia, ARS, false, '$' + dec(f.tarifa.kwhPleno, 0) + '/kWh pleno'),
+          row('Alumbrado público (8%)', f.alumbrado, ARS, false, 'Tasa municipal'),
+          row('IVA 27%', f.iva, ARS, false, 'Ley 23.349 art. 28'),
+          row('Ley 25.413 (0,6%)', f.ley, ARS),
+          row('Impuestos y tasas', f.impuestos, ARS, true),
+          row('Total estimado de la factura', f.total, ARS, true),
+          row('Precio efectivo del kWh', precio, ARS, false, 'total ÷ kWh'),
+        );
+        if (f.conSub && f.ahorro > 0) {
+          rows.push(row('Ahorro por el subsidio', f.ahorro, ARS, false, 'SEF'));
+        }
+
+        const chart = MIX.map(function (m) {
+          return { label: m.label, value: Math.round((kwh * m.pct) / 100 * 10) / 10, tone: m.tone };
+        });
+
+        const pctImp = Math.round((f.impuestos / f.total) * 100);
+        const subPartes = [
+          f.tarifa.label,
+          f.conSub ? 'con subsidio (SEF)' : 'sin subsidio (tarifa plena)',
+          kwh + ' kWh',
+          'precio efectivo ' + H.ars(precio) + '/kWh',
+          pctImp + '% son impuestos y tasas',
+        ];
+        if (f.conSub && f.exc > 0) subPartes.push(f.exc + ' kWh excedentes a precio pleno');
+
+        return {
+          total: H.ars(f.total),
+          sub: subPartes.join(' · '),
+          rows: rows,
+          chart: chart,
+          format: BASE.format,
+          unit: BASE.unit,
+          decimals: BASE.decimals,
+        };
+      }
+
+      // ── Rama 2: cuánto consume un electrodoméstico ────────────────────────
+      if (id === 'aparato') {
+        const w = Math.max(0, v.potencia_w || 0);
+        const horas = Math.max(0, Math.min(24, v.horas_dia || 0));
+        if (!w || !horas) {
+          return { total: '$0', sub: 'Ingresá la potencia en watts y las horas de uso.', rows: [], chart: [] };
+        }
+        const kwhDia = (w * horas) / 1000;
+        const kwhMes = kwhDia * DIAS_MES;
+        const kwhAnual = kwhMes * 12;
+        const costoMes = kwhMes * precio;
+        const share = kwh > 0 ? Math.min(100, (kwhMes / kwh) * 100) : 0;
+        const resto = Math.max(0, kwh - kwhMes);
+
+        const rows = [
+          row('Potencia del aparato', w, W, false, 'Etiqueta'),
+          row('Horas de uso por día', horas, HS),
+          row('Consumo diario', kwhDia, KWH, false, 'W × h ÷ 1.000'),
+          row('Consumo mensual (30 días)', kwhMes, KWH, true),
+          row('Consumo anual', kwhAnual, KWH0),
+          row('Precio efectivo del kWh', precio, ARS, false, 'de tu factura'),
+          row('Costo mensual', costoMes, ARS, true),
+          row('Costo anual', costoMes * 12, ARS),
+          row('Peso sobre tu consumo del mes', share, PCT, false, kwh + ' kWh totales'),
+        ];
+
+        return {
+          total: H.ars(costoMes),
+          sub:
+            w + ' W × ' + dec(horas, 1) + ' h/día · ' + dec(kwhMes, 1) + ' kWh/mes · ' +
+            dec(share, 1) + '% de tu consumo · ' + H.ars(costoMes * 12) + ' al año',
+          rows: rows,
+          chart: [
+            { label: 'Este aparato', value: Math.round(kwhMes * 10) / 10, tone: 'bad' },
+            { label: 'Resto de la casa', value: Math.round(resto * 10) / 10, tone: 'main' },
+          ],
+          format: BASE.format,
+          unit: BASE.unit,
+          decimals: BASE.decimals,
+        };
+      }
+
+      // ── Rama 3: cuánto cuesta el standby ─────────────────────────────────
+      if (id === 'standby') {
+        const cant = Math.max(0, v.aparatos_standby || 0);
+        const wStb = Math.max(0, v.watts_standby || 0);
+        if (!cant || !wStb) {
+          return { total: '$0', sub: 'Ingresá cuántos aparatos quedan enchufados y sus watts.', rows: [], chart: [] };
+        }
+        const kwhAnual = ((cant * wStb) / 1000) * HORAS_STANDBY * 365;
+        const kwhMes = kwhAnual / 12;
+        const costoAnual = kwhAnual * precio;
+        const costoMes = costoAnual / 12;
+        const share = kwh > 0 ? Math.min(100, (kwhMes / kwh) * 100) : 0;
+        const resto = Math.max(0, kwh - kwhMes);
+
+        const rows = [
+          row('Aparatos enchufados sin usarse', cant, { format: 'plain', decimals: 0 }),
+          row('Consumo en standby por aparato', wStb, W),
+          row('Potencia fantasma total', cant * wStb, W, true),
+          row('Horas por día en standby', HORAS_STANDBY, HS),
+          row('Consumo mensual desperdiciado', kwhMes, KWH),
+          row('Consumo anual desperdiciado', kwhAnual, KWH0, true),
+          row('Costo mensual', costoMes, ARS),
+          row('Costo anual', costoAnual, ARS, true),
+          row('Peso sobre tu consumo del mes', share, PCT, false, kwh + ' kWh totales'),
+        ];
+
+        return {
+          total: H.ars(costoAnual),
+          sub:
+            cant + ' aparatos × ' + dec(wStb, 1) + ' W × ' + HORAS_STANDBY + ' h/día · ' +
+            dec(kwhAnual, 0) + ' kWh al año · ' + H.ars(costoMes) + ' por mes que pagás por nada',
+          rows: rows,
+          chart: [
+            { label: 'Standby', value: Math.round(kwhMes * 10) / 10, tone: 'bad' },
+            { label: 'Consumo útil', value: Math.round(resto * 10) / 10, tone: 'main' },
+          ],
+          format: BASE.format,
+          unit: BASE.unit,
+          decimals: BASE.decimals,
+        };
+      }
+
+      // ── Rama 4: cambiar a LED ────────────────────────────────────────────
+      const wFoco = Math.max(0, v.watts_foco || 0);
+      const tipo = String(v.tipo_foco || 'incandescente');
+      const cantFocos = Math.max(1, v.cantidad_focos || 1);
+      const horasLuz = Math.max(0, Math.min(24, v.horas_dia || 0));
+      if (!wFoco) {
+        return { total: '$0', sub: 'Ingresá los watts de la lámpara vieja.', rows: [], chart: [] };
+      }
+      const lmw = LM[tipo] || LM.incandescente;
+      const lumenes = wFoco * lmw;
+      const wLed = Math.max(3, Math.round(lumenes / LM.led));
+      const ahorroW = Math.max(0, (wFoco - wLed) * cantFocos);
+      const kwhOriginal = (wFoco * cantFocos * horasLuz * 365) / 1000;
+      const kwhLed = (wLed * cantFocos * horasLuz * 365) / 1000;
+      const kwhAhorro = Math.max(0, kwhOriginal - kwhLed);
+      const ahorroAnual = kwhAhorro * precio;
+
+      const rowsLed = [
+        row('Watts de la lámpara vieja', wFoco, W),
+        row('Luz que entrega', lumenes, LMN, false, dec(lmw, 0) + ' lm/W'),
+        row('LED equivalente', wLed, W, true, LM.led + ' lm/W'),
+        row('Lámparas a cambiar', cantFocos, { format: 'plain', decimals: 0 }),
+        row('Potencia que dejás de usar', ahorroW, W),
+        row('Consumo anual actual', kwhOriginal, KWH0),
+        row('Consumo anual con LED', kwhLed, KWH0),
+        row('Energía ahorrada por año', kwhAhorro, KWH0, true),
+        row('Ahorro mensual', ahorroAnual / 12, ARS),
+        row('Ahorro anual', ahorroAnual, ARS, true),
+      ];
+
+      return {
+        total: H.ars(ahorroAnual),
+        sub:
+          cantFocos + ' lámparas de ' + wFoco + ' W → LED de ' + wLed + ' W (mismos ' + dec(lumenes, 0) +
+          ' lm) · ' + dec(kwhAhorro, 0) + ' kWh menos al año · ' + H.ars(ahorroAnual / 12) + ' por mes',
+        rows: rowsLed,
+        chart: [
+          { label: 'Consumo del LED', value: Math.round(kwhLed * 10) / 10, tone: 'main' },
+          { label: 'Ahorro anual', value: Math.round(kwhAhorro * 10) / 10, tone: 'good' },
+        ],
+        format: BASE.format,
+        unit: BASE.unit,
+        decimals: BASE.decimals,
+      };
+    });
+  })();
+</script>

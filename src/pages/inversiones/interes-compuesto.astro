@@ -1,0 +1,235 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto crece mi plata con interés compuesto?"
+ * Reemplaza 13 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo ramificado: la rama activa llega como segundo argumento de
+ * compute().
+ *
+ * OJO CON EL FORMATO: el resultado base es 'ars' porque la mayoría de las
+ * filas son plata, pero las tasas van en % y los plazos en años. Toda fila que
+ * no sea plata declara su propio `format` + `unit`; el runtime hace
+ * Object.assign y sin eso caería a pesos.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, TASAS } from '../../lib/hubs/interes-compuesto';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ TASAS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const pct = (n) => Number(n || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+    const anios = (n) => Number(n || 0).toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const TASA = { format: 'unit', unit: '%', decimals: 2 };
+    const ANIOS = { format: 'unit', unit: 'años', decimals: 1 };
+
+    /** Tasa MENSUAL equivalente a una TNA con m capitalizaciones por año. */
+    function mensual(tna, m) {
+      return Math.pow(1 + tna / 100 / m, m / 12) - 1;
+    }
+    /** TEA (en %) de una TNA con m capitalizaciones por año. */
+    function tea(tna, m) {
+      return (Math.pow(1 + tna / 100 / m, m) - 1) * 100;
+    }
+    /** Valor futuro con capital + aporte mensual constante. */
+    function futuro(capital, aporte, i, n) {
+      const f = Math.pow(1 + i, n);
+      return capital * f + (i === 0 ? aporte * n : aporte * ((f - 1) / i));
+    }
+
+    H.onCompute(function (v, caso) {
+      const rama = (caso && caso.id) || 'futuro';
+      const capital = v.capital || 0;
+      const aporte = v.aporte || 0;
+      const tna = v.tasa || 0;
+      const años = v.anios || 0;
+      const m = Number(v.capitalizaciones) || 12;
+      const tnaB = v.tasaB || 0;
+
+      if (tna <= 0) {
+        return { total: '$0', sub: 'Ingresá una tasa anual positiva.', rows: [], chart: [] };
+      }
+
+      const i = mensual(tna, m);
+      const teaPct = tea(tna, m);
+      const temPct = i * 100;
+      const n = Math.round(años * 12);
+
+      // ── Rama: pasar de TNA a TEA ──
+      if (rama === 'tasas') {
+        const spread = teaPct - tna;
+        const rows = [
+          Object.assign({ k: 'TNA — tasa nominal anual', v: Number(tna.toFixed(2)) }, TASA),
+          Object.assign({ k: 'TEM — tasa efectiva mensual', v: Number(temPct.toFixed(2)) }, TASA),
+          Object.assign({ k: 'TEA — tasa efectiva anual', v: Number(teaPct.toFixed(2)), extra: true }, TASA),
+          Object.assign({ k: 'Lo que agrega la capitalización', ref: 'TEA − TNA', v: Number(spread.toFixed(2)) }, TASA),
+        ];
+        // Sobre un año: cuánto de tu plata es capital y cuánto interés.
+        const interesAnio = capital * (teaPct / 100);
+        rows.push({ k: 'Capital de referencia', v: Math.round(capital) });
+        rows.push({ k: 'Interés de un año a esa TEA', v: Math.round(interesAnio), extra: true });
+        return {
+          total: 'TEA ' + pct(teaPct),
+          sub: 'Una TNA de ' + pct(tna) + ' con ' + m + ' capitalizaciones por año equivale a TEM ' + pct(temPct) +
+            ' y TEA ' + pct(teaPct) + ' · la capitalización agrega ' + pct(spread),
+          rows: rows,
+          chart: [
+            { label: 'Capital', value: Math.round(capital), tone: 'main' },
+            { label: 'Interés de un año', value: Math.round(interesAnio), tone: 'good' },
+          ],
+          format: 'ars',
+          decimals: 0,
+        };
+      }
+
+      // ── Rama: cuánto tarda en duplicarse ──
+      if (rama === 'duplicar') {
+        const regla = TASAS.REGLA / teaPct;
+        const exacto = Math.log(2) / Math.log(1 + teaPct / 100);
+        const triplicar = Math.log(3) / Math.log(1 + teaPct / 100);
+        const cuadruplicar = exacto * 2;
+        const rows = [
+          Object.assign({ k: 'Años para duplicar — regla del 72', ref: '72 ÷ TEA', v: Number(regla.toFixed(2)) }, ANIOS),
+          Object.assign({ k: 'Años para duplicar — cálculo exacto', ref: 'ln 2 ÷ ln(1+TEA)', v: Number(exacto.toFixed(2)), extra: true }, ANIOS),
+          Object.assign({ k: 'Años para triplicar', ref: 'ln 3 ÷ ln(1+TEA)', v: Number(triplicar.toFixed(2)) }, ANIOS),
+          Object.assign({ k: 'Años para cuadruplicar', ref: 'duplicar dos veces', v: Number(cuadruplicar.toFixed(2)) }, ANIOS),
+          Object.assign({ k: 'TEA aplicada', v: Number(teaPct.toFixed(2)) }, TASA),
+          { k: 'Capital de partida', v: Math.round(capital) },
+          { k: 'Capital al duplicarse', v: Math.round(capital * 2), extra: true },
+        ];
+        return {
+          total: anios(exacto) + ' años',
+          sub: 'A una TEA de ' + pct(teaPct) + ' tu capital se duplica en ' + anios(exacto) +
+            ' años (la regla del 72 estima ' + anios(regla) + ') y se triplica en ' + anios(triplicar),
+          rows: rows,
+          chart: [
+            { label: 'Capital aportado', value: Math.round(capital), tone: 'main' },
+            { label: 'Interés ganado', value: Math.round(capital), tone: 'good' },
+          ],
+          format: 'ars',
+          decimals: 0,
+        };
+      }
+
+      if (!años || años <= 0) {
+        return { total: '$0', sub: 'Ingresá un plazo en años.', rows: [], chart: [] };
+      }
+
+      // ── Rama: comparar dos inversiones ──
+      if (rama === 'comparar') {
+        const iB = mensual(tnaB, m);
+        const teaB = tea(tnaB, m);
+        const vfA = futuro(capital, aporte, i, n);
+        const vfB = futuro(capital, aporte, iB, n);
+        const aportado = capital + aporte * n;
+        const intA = vfA - aportado;
+        const intB = vfB - aportado;
+        const dif = Math.abs(vfA - vfB);
+        const ganaA = vfA >= vfB;
+        const rows = [
+          { k: 'Capital aportado en total', v: Math.round(aportado) },
+          Object.assign({ k: 'Opción A — TEA', v: Number(teaPct.toFixed(2)) }, TASA),
+          { k: 'Opción A — valor final', v: Math.round(vfA), extra: ganaA },
+          Object.assign({ k: 'Opción B — TEA', v: Number(teaB.toFixed(2)) }, TASA),
+          { k: 'Opción B — valor final', v: Math.round(vfB), extra: !ganaA },
+          { k: 'Diferencia a favor de la mejor', v: Math.round(dif), extra: true },
+        ];
+        return {
+          total: H.ars(Math.max(vfA, vfB)),
+          sub: (ganaA ? 'Gana la opción A' : 'Gana la opción B') + ' por ' + H.ars(dif) + ' en ' + años +
+            ' años · TEA ' + pct(ganaA ? teaPct : teaB) + ' contra ' + pct(ganaA ? teaB : teaPct),
+          rows: rows,
+          chart: [
+            { label: 'Capital aportado', value: Math.round(aportado), tone: 'main' },
+            { label: 'Interés opción A', value: Math.round(Math.max(0, intA)), tone: 'good' },
+            { label: 'Interés opción B', value: Math.round(Math.max(0, intB)), tone: 'prop' },
+          ],
+          format: 'ars',
+          decimals: 0,
+        };
+      }
+
+      // ── Rama por defecto: cuánto tengo en X años ──
+      const f = Math.pow(1 + i, n);
+      const vfCapital = capital * f;
+      const vfAportes = i === 0 ? aporte * n : aporte * ((f - 1) / i);
+      const vf = vfCapital + vfAportes;
+      const aportado = capital + aporte * n;
+      const interes = vf - aportado;
+      const multiplo = aportado > 0 ? vf / aportado : 0;
+      const cagr = aportado > 0 ? (Math.pow(vf / aportado, 1 / años) - 1) * 100 : 0;
+      const roi = aportado > 0 ? (interes / aportado) * 100 : 0;
+
+      const rows = [
+        { k: 'Capital inicial', v: Math.round(capital) },
+        { k: 'Aportes durante el plazo', ref: n + ' meses', v: Math.round(aporte * n) },
+        { k: 'Total que pusiste vos', v: Math.round(aportado) },
+        { k: 'Interés ganado', v: Math.round(interes), extra: true },
+        { k: 'Valor final', v: Math.round(vf), extra: true },
+        Object.assign({ k: 'TEA aplicada', v: Number(teaPct.toFixed(2)) }, TASA),
+        Object.assign({ k: 'ROI sobre lo aportado', v: Number(roi.toFixed(2)) }, TASA),
+        Object.assign({ k: 'CAGR del total aportado', v: Number(cagr.toFixed(2)) }, TASA),
+      ];
+
+      return {
+        total: H.ars(vf),
+        sub: 'De ' + H.ars(vf) + ', ' + H.ars(aportado) + ' los pusiste vos y ' + H.ars(interes) +
+          ' los generó el interés · TEA ' + pct(teaPct) + ' · multiplicaste por ' +
+          multiplo.toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }),
+        rows: rows,
+        chart: [
+          { label: 'Capital inicial', value: Math.round(capital), tone: 'main' },
+          { label: 'Aportes', value: Math.round(aporte * n), tone: 'prop' },
+          { label: 'Interés compuesto', value: Math.round(Math.max(0, interes)), tone: 'good' },
+        ],
+        format: 'ars',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

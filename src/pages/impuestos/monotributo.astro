@@ -1,0 +1,365 @@
+---
+/**
+ * Hub de decisión — "¿Qué categoría de monotributo me toca?"
+ * Reemplaza 14 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * ⚠️ Las escalas y cuotas NO viven acá: salen de src/lib/data/monotributo-2026.ts
+ * a través de src/lib/hubs/monotributo.ts, que es lo que patchea el fetcher en
+ * cada recategorización semestral. Nunca hardcodear topes ni cuotas en esta página.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, ESCALA, BASE_AUTONOMO, TASAS, VIGENCIA } from '../../lib/hubs/monotributo';
+import { ESCALA as ESCALA_GANANCIAS, MNI_MENSUAL_BASE, INCREMENTO_HIJO_MENSUAL } from '../../lib/formulas/_ganancias-escala';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+// `Infinity` no sobrevive a la serialización de define:vars (sale como null):
+// el último tramo viaja con un tope numérico enorme, equivalente en la práctica.
+const GAN_TRAMOS = ESCALA_GANANCIAS.map((t) => ({
+  hasta: Number.isFinite(t.hasta) ? t.hasta : Number.MAX_SAFE_INTEGER,
+  tasa: t.tasa,
+  acumulado: t.acumulado,
+}));
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    ESCALA,
+    BASE_AUTONOMO,
+    TASAS,
+    VIGENCIA,
+    GAN_TRAMOS,
+    MNI: MNI_MENSUAL_BASE,
+    INCREMENTO_HIJO: INCREMENTO_HIJO_MENSUAL,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const ULTIMA = ESCALA[ESCALA.length - 1];
+
+    /** Cuota mensual de una categoría según la actividad. */
+    function cuotaDe(cat, actividad) {
+      return actividad === 'bienes' ? cat.cuotaBienes : cat.cuotaServicios;
+    }
+
+    /** Índice de la categoría mínima cuyo tope cubre `anual`; -1 si excede K. */
+    function idxPorIngresos(anual) {
+      for (let i = 0; i < ESCALA.length; i++) if (anual <= ESCALA[i].tope) return i;
+      return -1;
+    }
+
+    /** Índice por un parámetro físico (superficie o energía); -1 si lo supera todo. */
+    function idxPorParametro(valor, campo) {
+      if (valor <= 0) return -1;
+      for (let i = 0; i < ESCALA.length; i++) if (valor <= ESCALA[i][campo]) return i;
+      return -1;
+    }
+
+    /** Escala de Ganancias 4ª categoría, mensual (art. 94 LIG). */
+    function ganancias(base) {
+      if (base <= 0) return 0;
+      let anterior = 0;
+      for (const t of GAN_TRAMOS) {
+        if (base <= t.hasta) return t.acumulado + (base - anterior) * t.tasa;
+        anterior = t.hasta;
+      }
+      const u = GAN_TRAMOS[GAN_TRAMOS.length - 1];
+      return u.acumulado + (base - anterior) * u.tasa;
+    }
+
+    /** Escalera A–K: cada escalón ocupa su tramo real de facturación, en millones. */
+    function escalera(idxActual) {
+      let desde = 0;
+      return ESCALA.map(function (c, i) {
+        const from = Math.round(desde / 1e6);
+        const to = Math.round(c.tope / 1e6);
+        desde = c.tope;
+        return {
+          label: 'Cat. ' + c.letra,
+          value: c.tope,
+          from: from,
+          to: to,
+          tone: i === idxActual ? 'bad' : i < idxActual ? 'good' : 'warn',
+        };
+      });
+    }
+
+    const pctDelTope = (anual) => Math.max(0, Math.min(100, (anual / ULTIMA.tope) * 100));
+
+    H.onCompute(function (v, kase) {
+      const id = kase && kase.id ? kase.id : 'categoria';
+      const anual = Math.max(0, v.facturacion || 0);
+      const actividad = String(v.actividad || 'servicios') === 'bienes' ? 'bienes' : 'servicios';
+      const superficie = Math.max(0, v.superficie || 0);
+      const energia = Math.max(0, v.energia || 0);
+      const actLabel = actividad === 'bienes' ? 'venta de bienes' : 'servicios';
+
+      if (anual <= 0) {
+        return {
+          total: '—',
+          sub: 'Ingresá tus ingresos brutos de los últimos 12 meses.',
+          rows: [],
+          chart: escalera(-1),
+        };
+      }
+
+      // ── Categoría que corresponde: manda el parámetro más alto ────────────
+      const iIng = idxPorIngresos(anual);
+      const iSup = idxPorParametro(superficie, 'superficie');
+      const iEne = idxPorParametro(energia, 'energia');
+
+      const excedeIngresos = iIng === -1;
+      const excedeSup = superficie > 0 && iSup === -1;
+      const excedeEne = energia > 0 && iEne === -1;
+
+      if (excedeIngresos || excedeSup || excedeEne) {
+        const motivo = excedeIngresos
+          ? 'tus ingresos superan el tope de la categoría ' + ULTIMA.letra + ' (' + H.ars(ULTIMA.tope) + ')'
+          : excedeSup
+            ? 'la superficie afectada supera los ' + ULTIMA.superficie + ' m² del régimen'
+            : 'el consumo de energía supera los ' + ULTIMA.energia.toLocaleString('es-AR') + ' kWh/año del régimen';
+        return {
+          total: 'Excluido',
+          sub: 'Quedás fuera del monotributo: ' + motivo + '. Corresponde inscribirte como responsable inscripto.',
+          rows: [
+            { k: 'Ingresos brutos declarados (12 meses)', ref: '12 meses', v: anual },
+            { k: 'Tope máximo del régimen (categoría ' + ULTIMA.letra + ')', ref: 'ARCA', v: ULTIMA.tope, extra: true },
+            { k: 'Excedente sobre el tope', ref: 'ARCA', v: Math.max(0, anual - ULTIMA.tope) },
+          ],
+          chart: escalera(ESCALA.length - 1),
+          position: 100,
+          positionLabel: 'Excluido del régimen — por encima de la categoría ' + ULTIMA.letra,
+        };
+      }
+
+      let idx = iIng;
+      let limitante = 'Ingresos brutos';
+      if (iSup > idx) { idx = iSup; limitante = 'Superficie afectada'; }
+      if (iEne > idx) { idx = iEne; limitante = 'Energía eléctrica'; }
+
+      const cat = ESCALA[idx];
+      const cuota = cuotaDe(cat, actividad);
+      const pos = pctDelTope(anual);
+      const posLabel = 'Categoría ' + cat.letra + ' — hasta ' + H.ars(cat.tope) + ' de facturación anual';
+      const chart = escalera(idx);
+
+      // Componentes de la cuota, con la proporción integrado / SIPA / obra social.
+      const prop = cat.prop;
+      const sumProp = prop[0] + prop[1] + prop[2];
+      const integrado = Math.round((cuota * prop[0]) / sumProp);
+      const sipa = Math.round((cuota * prop[1]) / sumProp);
+      const obraSocial = cuota - integrado - sipa;
+
+      // ── Rama: recategorización ────────────────────────────────────────────
+      if (id === 'recategorizar') {
+        const actualLetra = String(v.categoriaActual || 'ninguna');
+        const catActual = ESCALA.find(function (c) { return c.letra === actualLetra; });
+        const cuotaActual = catActual ? cuotaDe(catActual, actividad) : 0;
+        const diferencia = cuota - cuotaActual;
+
+        const rows = [
+          { k: 'Ingresos brutos de los últimos 12 meses', ref: '12 meses', v: anual },
+          { k: 'Tope de la categoría ' + cat.letra, ref: 'ARCA', v: cat.tope },
+        ];
+        if (catActual) {
+          rows.push({ k: 'Cuota que venías pagando (categoría ' + catActual.letra + ')', ref: 'ARCA', v: cuotaActual });
+        }
+        rows.push({ k: 'Cuota nueva (categoría ' + cat.letra + ')', ref: 'ARCA', v: cuota, extra: true });
+        if (catActual) {
+          rows.push({
+            k: diferencia >= 0 ? 'Cuánto más vas a pagar por mes' : 'Cuánto menos vas a pagar por mes',
+            ref: 'Diferencia',
+            v: Math.abs(diferencia),
+            extra: true,
+          });
+          rows.push({ k: 'Impacto anual del cambio', ref: 'Diferencia', v: Math.abs(diferencia) * 12 });
+        }
+        rows.push({ k: 'Margen que te queda hasta el tope', ref: 'ARCA', v: Math.max(0, cat.tope - anual) });
+
+        const movimiento = !catActual
+          ? 'alta nueva en categoría ' + cat.letra
+          : cat.letra === catActual.letra
+            ? 'te quedás en la categoría ' + cat.letra
+            : diferencia > 0
+              ? 'subís de ' + catActual.letra + ' a ' + cat.letra
+              : 'bajás de ' + catActual.letra + ' a ' + cat.letra;
+
+        return {
+          total: H.ars(cuota),
+          sub:
+            movimiento + ' · ' + actLabel + ' · limitante: ' + limitante +
+            ' · escala vigente desde ' + VIGENCIA.vigencia + ' · vence el 5 de agosto',
+          rows: rows,
+          chart: chart,
+          position: pos,
+          positionLabel: posLabel,
+        };
+      }
+
+      // ── Rama: monotributo vs responsable inscripto ────────────────────────
+      if (id === 'vs-ri') {
+        const gastos = Math.max(0, v.gastos || 0);
+        const monoAnual = cuota * 12;
+
+        const ivaDebito = anual * TASAS.iva;
+        const ivaCredito = gastos * TASAS.iva;
+        const ivaNeto = Math.max(0, ivaDebito - ivaCredito);
+        const baseGan = Math.max(0, anual - gastos - TASAS.mniAnualRI);
+        const gananciasRI = baseGan * TASAS.gananciasRI;
+        const iibb = anual * TASAS.iibbRI;
+        const riAnual = ivaNeto + gananciasRI + iibb;
+        const diferencia = riAnual - monoAnual;
+
+        return {
+          total: H.ars(cuota),
+          sub:
+            'Monotributo ' + cat.letra + ': ' + H.ars(monoAnual) + '/año vs responsable inscripto ' +
+            H.ars(riAnual) + '/año · ' +
+            (diferencia > 0
+              ? 'el monotributo te ahorra ' + H.ars(diferencia) + ' al año'
+              : 'ser responsable inscripto te ahorra ' + H.ars(-diferencia) + ' al año'),
+          rows: [
+            { k: 'Cuota mensual de monotributo (cat. ' + cat.letra + ')', ref: 'ARCA', v: cuota, extra: true },
+            { k: 'Monotributo — costo anual', ref: 'ARCA', v: Math.round(monoAnual), extra: true },
+            { k: 'Responsable inscripto — IVA neto', ref: '21%', v: Math.round(ivaNeto) },
+            { k: 'Responsable inscripto — Ganancias', ref: 'estimado 25%', v: Math.round(gananciasRI) },
+            { k: 'Responsable inscripto — Ingresos Brutos', ref: 'estimado 3,5%', v: Math.round(iibb) },
+            { k: 'Responsable inscripto — costo anual', ref: 'Total', v: Math.round(riAnual), extra: true },
+            {
+              k: diferencia > 0 ? 'Ahorro anual del monotributo' : 'Ahorro anual del responsable inscripto',
+              ref: 'Diferencia',
+              v: Math.round(Math.abs(diferencia)),
+              extra: true,
+            },
+          ],
+          chart: chart,
+          position: pos,
+          positionLabel: posLabel,
+        };
+      }
+
+      // ── Rama: monotributo vs autónomo vs empleado ─────────────────────────
+      if (id === 'vs-autonomo') {
+        const bruto = anual / 12;
+        const tieneHijos = String(v.hijos || 'no') === 'si';
+        const mni = MNI + (tieneHijos ? INCREMENTO_HIJO : 0);
+
+        // Monotributo: sólo la cuota fija de la categoría.
+        const netoMono = bruto - cuota;
+
+        // Autónomo: aportes sobre la base de su categoría + IVA débito + Ganancias.
+        const catAut = String(v.catAutonomo || 'IV').toUpperCase();
+        const baseAut = BASE_AUTONOMO[catAut] != null ? BASE_AUTONOMO[catAut] : BASE_AUTONOMO.IV;
+        const sipaAut = baseAut * TASAS.sipaAutonomo;
+        const osAut = baseAut * TASAS.osAutonomo;
+        const ivaDebito = (bruto / (1 + TASAS.iva)) * TASAS.iva;
+        const baseGanAut = Math.max(0, bruto - ivaDebito - (sipaAut + osAut + mni));
+        const ganAut = ganancias(baseGanAut);
+        const cargaAut = sipaAut + osAut + ivaDebito + ganAut;
+        const netoAut = bruto - cargaAut;
+
+        // Empleado: 19% de aportes personales + Ganancias de 4ª categoría.
+        const aportesEmp = bruto * TASAS.aportesEmpleado;
+        const ganEmp = ganancias(Math.max(0, bruto - aportesEmp - mni));
+        const cargaEmp = aportesEmp + ganEmp;
+        const netoEmp = bruto - cargaEmp;
+
+        const mejor =
+          netoMono >= netoAut && netoMono >= netoEmp
+            ? 'monotributo'
+            : netoAut >= netoEmp
+              ? 'autónomo'
+              : 'empleado';
+
+        return {
+          total: H.ars(netoMono),
+          sub:
+            'Sobre ' + H.ars(bruto) + ' brutos por mes · monotributo ' + H.ars(netoMono) + ' · autónomo ' +
+            H.ars(netoAut) + ' · empleado ' + H.ars(netoEmp) + ' · gana el ' + mejor,
+          rows: [
+            { k: 'Ingreso bruto mensual', ref: 'Base', v: Math.round(bruto) },
+            { k: 'Monotributo — cuota de la categoría ' + cat.letra, ref: 'ARCA', v: cuota },
+            { k: 'Monotributo — neto en mano', ref: 'Neto', v: Math.round(netoMono), extra: true },
+            { k: 'Autónomo — aportes SIPA y obra social (cat. ' + catAut + ')', ref: '27% + 10%', v: Math.round(sipaAut + osAut) },
+            { k: 'Autónomo — IVA débito', ref: '21%', v: Math.round(ivaDebito) },
+            { k: 'Autónomo — Ganancias', ref: 'Art. 94 LIG', v: Math.round(ganAut) },
+            { k: 'Autónomo — neto en mano', ref: 'Neto', v: Math.round(netoAut), extra: true },
+            { k: 'Empleado — aportes personales (19%)', ref: 'Ley 24.241', v: Math.round(aportesEmp) },
+            { k: 'Empleado — retención de Ganancias', ref: 'Art. 94 LIG', v: Math.round(ganEmp) },
+            { k: 'Empleado — neto en mano', ref: 'Neto', v: Math.round(netoEmp), extra: true },
+          ],
+          chart: chart,
+          position: pos,
+          positionLabel: posLabel,
+        };
+      }
+
+      // ── Rama por defecto: en qué categoría caigo ──────────────────────────
+      const usoPct = Math.round((anual / cat.tope) * 100);
+      const estado = usoPct > 90 ? 'al borde del tope' : usoPct > 75 ? 'con poco margen' : 'holgado';
+
+      return {
+        total: H.ars(cuota),
+        sub:
+          'Categoría ' + cat.letra + ' · ' + actLabel + ' · usás el ' + usoPct + '% del tope (' + estado +
+          ') · limitante: ' + limitante + ' · escala vigente desde ' + VIGENCIA.vigencia,
+        rows: [
+          { k: 'Ingresos brutos de los últimos 12 meses', ref: '12 meses', v: anual },
+          { k: 'Tope anual de la categoría ' + cat.letra, ref: 'ARCA', v: cat.tope },
+          { k: 'Margen que te queda hasta el tope', ref: 'ARCA', v: Math.max(0, cat.tope - anual) },
+          { k: 'Impuesto integrado', ref: 'Ley 24.977', v: integrado },
+          { k: 'Aporte jubilatorio SIPA', ref: 'Ley 24.241', v: sipa },
+          { k: 'Aporte a obra social', ref: 'Ley 23.660', v: obraSocial },
+          { k: 'Cuota mensual total', ref: 'ARCA', v: cuota, extra: true },
+          { k: 'Costo anual del monotributo', ref: 'ARCA', v: cuota * 12, extra: true },
+        ],
+        chart: chart,
+        position: pos,
+        positionLabel: posLabel,
+      };
+    });
+  })();
+</script>

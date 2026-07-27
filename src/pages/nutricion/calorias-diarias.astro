@@ -1,0 +1,180 @@
+---
+/**
+ * Hub de decisión — "¿Cuántas calorías necesito por día?"
+ * Reemplaza 5 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo ramificado: la rama activa llega como segundo argumento de
+ * compute() (el objeto HubCase que expone DecisionHub).
+ *
+ * OJO CON EL FORMATO: acá no hay pesos. El resultado declara
+ * format 'unit' + unit 'kcal', y cada fila que no sea energía (ml, kg, g, %)
+ * pisa el formato con el suyo. Una fila sin `format` cae a pesos.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, ACTIVIDAD, CLIMA, NUTRI } from '../../lib/hubs/calorias-diarias';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ ACTIVIDAD, CLIMA, NUTRI }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const nf = (n, d) => Number(n || 0).toLocaleString('es-AR', {
+      minimumFractionDigits: d || 0, maximumFractionDigits: d || 0,
+    });
+    const kcal = { format: 'unit', unit: 'kcal', decimals: 0 };
+
+    H.onCompute(function (v, caso) {
+      const rama = (caso && caso.id) || 'mantener';
+      const peso = v.peso, altura = v.altura, edad = v.edad;
+      const sexo = String(v.sexo || 'm');
+      const actKey = String(v.actividad || 'moderado');
+      const act = ACTIVIDAD[actKey] || ACTIVIDAD.moderado;
+
+      if (!peso || !altura || !edad) {
+        return { total: '—', sub: 'Ingresá peso, altura y edad.', rows: [], chart: [] };
+      }
+
+      // ── Metabolismo basal — Mifflin-St Jeor (1990) ──
+      const bmr = 10 * peso + 6.25 * altura - 5 * edad + (sexo === 'f' ? -161 : 5);
+      // ── Gasto total diario = basal × factor de actividad ──
+      const tdee = bmr * act.factor;
+      // El TDEE ya incluye el efecto térmico: lo separamos para el gráfico.
+      const tef = tdee * NUTRI.TEF;
+      const gastoActividad = tdee - bmr - tef;
+
+      // ── Meta de agua: 35 ml/kg ajustada por actividad y clima ──
+      const aguaMl = peso * NUTRI.AGUA_ML_KG * act.agua * (CLIMA[String(v.clima || 'templado')] ?? 1);
+      const vasos = Math.round(aguaMl / 250);
+
+      const piso = sexo === 'f' ? NUTRI.PISO_F : NUTRI.PISO_M;
+
+      const rows = [
+        Object.assign({ k: 'Metabolismo basal (BMR)', ref: 'Mifflin-St Jeor', v: Math.round(bmr) }, kcal),
+        Object.assign({ k: 'Gasto por actividad', ref: '×' + String(act.factor).replace('.', ','), v: Math.round(gastoActividad) }, kcal),
+        Object.assign({ k: 'Efecto térmico de los alimentos', ref: '10%', v: Math.round(tef) }, kcal),
+        Object.assign({ k: 'Gasto total diario (TDEE)', v: Math.round(tdee), extra: true }, kcal),
+      ];
+
+      let objetivo = Math.round(tdee);
+      let sub = '';
+      let extraSegs = [];
+
+      if (rama === 'bajar') {
+        const bruto = tdee - NUTRI.DEFICIT_ESTANDAR;
+        const clamp = bruto < piso;
+        objetivo = Math.round(Math.max(bruto, piso));
+        const deficitReal = Math.round(tdee) - objetivo;
+        const kgSemana = (deficitReal * 7) / NUTRI.KCAL_POR_KG;
+        rows.push(Object.assign({ k: 'Déficit diario aplicado', v: deficitReal }, kcal));
+        rows.push(Object.assign({ k: 'Calorías objetivo para bajar', v: objetivo, extra: true }, kcal));
+        rows.push({ k: 'Pérdida estimada por semana', v: Number(kgSemana.toFixed(2)), format: 'unit', unit: 'kg', decimals: 2 });
+        rows.push({ k: 'Proteína recomendada (1,8 g/kg)', v: Math.round(peso * NUTRI.PROTEINA_G_KG), format: 'unit', unit: 'g', decimals: 0 });
+        sub = 'Déficit de ' + nf(deficitReal) + ' kcal/día · unos ' + nf(kgSemana, 2) + ' kg por semana' +
+          (clamp ? ' · el déficit se frenó en el piso de ' + nf(piso) + ' kcal' : '');
+        extraSegs = [{ label: 'Déficit', value: deficitReal, tone: 'warn' }];
+      } else if (rama === 'ganar') {
+        const superavit = Math.max(0, v.superavit || 0);
+        objetivo = Math.round(tdee + superavit);
+        const kgMes = (superavit * 30) / NUTRI.KCAL_POR_KG;
+        const proteina = Math.round(peso * NUTRI.PROTEINA_G_KG);
+        rows.push(Object.assign({ k: 'Superávit diario', v: Math.round(superavit) }, kcal));
+        rows.push(Object.assign({ k: 'Calorías objetivo para ganar músculo', v: objetivo, extra: true }, kcal));
+        rows.push({ k: 'Ganancia estimada por mes', v: Number(kgMes.toFixed(2)), format: 'unit', unit: 'kg', decimals: 2 });
+        rows.push({ k: 'Proteína mínima (1,8 g/kg)', v: proteina, format: 'unit', unit: 'g', decimals: 0 });
+        sub = 'Superávit de ' + nf(superavit) + ' kcal/día · unos ' + nf(kgMes, 2) + ' kg por mes · ' +
+          nf(proteina) + ' g de proteína' + (superavit > 500 ? ' · superávit agresivo: suma más grasa que músculo' : '');
+        extraSegs = [{ label: 'Superávit', value: Math.round(superavit), tone: 'good' }];
+      } else if (rama === 'objetivo') {
+        const objPeso = v.pesoObjetivo || 0;
+        const semanas = v.semanas || 0;
+        if (!objPeso || !semanas || objPeso >= peso) {
+          sub = 'Para esta rama poné un peso objetivo menor al actual y un plazo en semanas.';
+        } else {
+          const kgPerder = peso - objPeso;
+          const deficitDiario = Math.round((kgPerder * NUTRI.KCAL_POR_KG) / (semanas * 7));
+          const bruto = Math.round(tdee) - deficitDiario;
+          const clamp = bruto < piso;
+          objetivo = Math.max(bruto, piso);
+          const kgSemana = (deficitDiario * 7) / NUTRI.KCAL_POR_KG;
+          rows.push({ k: 'Kilos a perder', v: Number(kgPerder.toFixed(1)), format: 'unit', unit: 'kg', decimals: 1 });
+          rows.push(Object.assign({ k: 'Déficit diario necesario', v: deficitDiario }, kcal));
+          rows.push(Object.assign({ k: 'Calorías objetivo del plan', v: objetivo, extra: true }, kcal));
+          rows.push({ k: 'Ritmo del plan', v: Number(kgSemana.toFixed(2)), format: 'unit', unit: 'kg', decimals: 2 });
+          rows.push({ k: 'Proteína recomendada (1,8 g/kg)', v: Math.round(peso * NUTRI.PROTEINA_G_KG), format: 'unit', unit: 'g', decimals: 0 });
+          sub = 'Bajar ' + nf(kgPerder, 1) + ' kg en ' + nf(semanas) + ' semanas pide ' + nf(deficitDiario) +
+            ' kcal/día de déficit (' + nf(kgSemana, 2) + ' kg por semana)' +
+            (clamp ? ' · queda bajo el piso de ' + nf(piso) + ' kcal: estirá el plazo' : '');
+          extraSegs = [{ label: 'Déficit', value: Math.round(tdee) - objetivo, tone: 'warn' }];
+        }
+      } else {
+        rows.push(Object.assign({ k: 'Calorías de mantenimiento', v: objetivo, extra: true }, kcal));
+        sub = 'Actividad ' + act.label + ' · comiendo ' + nf(objetivo) + ' kcal/día tu peso no debería moverse';
+      }
+
+      // Meta de agua: va siempre, en ml (no en kcal ni en pesos).
+      rows.push({ k: 'Meta de agua por día', v: Math.round(aguaMl), format: 'unit', unit: 'ml', decimals: 0 });
+      rows.push({ k: 'Equivale a vasos de 250 ml', v: vasos, format: 'plain', decimals: 0 });
+
+      // Barra apilada: de dónde sale el gasto total.
+      const chart = [
+        { label: 'Metabolismo basal', value: Math.round(bmr), tone: 'main' },
+        { label: 'Actividad', value: Math.round(gastoActividad), tone: 'exit' },
+        { label: 'Efecto térmico', value: Math.round(tef), tone: 'prop' },
+      ].concat(extraSegs);
+
+      return {
+        total: nf(objetivo) + ' kcal',
+        sub: sub + ' · agua: ' + nf(aguaMl) + ' ml (' + vasos + ' vasos)',
+        rows: rows,
+        chart: chart,
+        format: 'unit',
+        unit: 'kcal',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

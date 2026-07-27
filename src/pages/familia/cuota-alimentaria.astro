@@ -1,0 +1,161 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto es la cuota alimentaria?"
+ * Reemplaza 4 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo ramificado: la respuesta de cada rama vive en hub.cases.
+ * La página sólo aporta datos (src/lib/hubs/cuota-alimentaria.ts) y su compute().
+ *
+ * Tema sensible: el resultado es orientativo y el copy lo dice en el lede, en el
+ * fineprint, en las advertencias de cada rama y en la FAQ. No hay tabla oficial
+ * de porcentajes en la Argentina: los rangos son de jurisprudencia.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  RANGOS,
+  AJUSTE_EDAD,
+  CASE_MATH,
+  TOPE_PRACTICO,
+  PARTE_EXTRAORDINARIOS,
+} from '../../lib/hubs/cuota-alimentaria';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ RANGOS, AJUSTE_EDAD, CASE_MATH, TOPE_PRACTICO, PARTE_EXTRAORDINARIOS }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Casi todo el hub es plata, pero el runtime hace Object.assign: una fila sin
+    // `format` propio cae a pesos. Se declara igual en todas para no depender de eso.
+    const ARS = { format: 'ars', decimals: 0 };
+    const PCT = { format: 'unit', unit: '%', decimals: 1 };
+    const dec1 = (n) => (Math.round(n * 10) / 10).toFixed(1).replace('.', ',');
+
+    H.onCompute(function (v, kase) {
+      const m = CASE_MATH[kase && kase.id] || CASE_MATH['un-hijo'];
+      const ingreso = Math.max(0, v.ingreso || 0);
+      const hijos = Math.max(m.hijosMin, Math.min(m.hijosMax, Math.round(v.hijos || 1)));
+      const edad = String(v.edadMayor || '6-12');
+      const obraSocial = Math.max(0, v.obraSocial || 0);
+      const extraordinarios = Math.max(0, v.extraordinarios || 0);
+
+      // Rango de la jurisprudencia por cantidad de hijos, ajustado por edad.
+      const rango = RANGOS[Math.min(hijos, 5)] || RANGOS[1];
+      const ajuste = AJUSTE_EDAD[edad] || 0;
+      const pctMin = Math.max(5, rango[0] + ajuste);
+      const pctMax = Math.min(TOPE_PRACTICO + 5, rango[1] + ajuste);
+      // Los juzgados no suelen pasar del 50% del ingreso neto.
+      const pctPunto = Math.min(TOPE_PRACTICO, m.punto === 'alto' ? pctMax : (pctMin + pctMax) / 2);
+
+      const cuotaEscala = ingreso * (pctPunto / 100);
+      const pisoRango = ingreso * (pctMin / 100);
+      const techoRango = ingreso * (Math.min(TOPE_PRACTICO + 5, pctMax) / 100);
+
+      // Rama "ya hay sentencia": manda la cuota fijada, actualizada por el índice.
+      const cuotaVigente = Math.max(0, v.cuotaVigente || 0);
+      const indice = Math.max(0, v.ajuste || 0);
+      const cuotaActualizada = cuotaVigente * (1 + indice / 100);
+      const cuota = m.actualiza && cuotaVigente > 0 ? cuotaActualizada : cuotaEscala;
+
+      // Los gastos extraordinarios se dividen entre ambos progenitores.
+      const parteExtra = extraordinarios * PARTE_EXTRAORDINARIOS;
+      const total = cuota + obraSocial + parteExtra;
+      const pctSobreIngreso = ingreso > 0 ? (cuota / ingreso) * 100 : 0;
+
+      const rows = [];
+      rows.push(Object.assign({ k: 'Ingreso neto mensual del alimentante', ref: 'base de cálculo', v: ingreso }, ARS));
+      rows.push(Object.assign({ k: 'Piso del rango (' + dec1(pctMin) + '% para ' + hijos + ' hijo' + (hijos > 1 ? 's' : '') + ')', ref: 'jurisprudencia', v: pisoRango }, ARS));
+      rows.push(Object.assign({ k: 'Techo del rango (' + dec1(Math.min(TOPE_PRACTICO + 5, pctMax)) + '%)', ref: 'jurisprudencia', v: techoRango }, ARS));
+
+      if (m.actualiza && cuotaVigente > 0) {
+        rows.push(Object.assign({ k: 'Cuota fijada en la sentencia', ref: 'monto vigente', v: cuotaVigente }, ARS));
+        rows.push(Object.assign({ k: 'Ajuste por el índice (' + dec1(indice) + '%)', ref: 'IPC / RIPTE', v: cuotaActualizada - cuotaVigente }, ARS));
+        rows.push(Object.assign({ k: 'Cuota actualizada', ref: m.norma, v: cuotaActualizada, extra: true }, ARS));
+        rows.push(Object.assign({ k: 'Lo que daría hoy la escala (' + dec1(pctPunto) + '%)', ref: 'comparación', v: cuotaEscala }, ARS));
+      } else {
+        rows.push(Object.assign({ k: 'Cuota alimentaria estimada (' + dec1(pctPunto) + '% del ingreso)', ref: m.norma, v: cuota, extra: true }, ARS));
+      }
+
+      rows.push(Object.assign({ k: 'Cobertura de salud del hijo', ref: 'CCyCN art. 659', v: obraSocial }, ARS));
+      rows.push(Object.assign({ k: 'Gastos extraordinarios: mitad a cargo del alimentante', ref: 'se dividen', v: parteExtra }, ARS));
+      rows.push(Object.assign({ k: 'Aporte mensual total estimado', ref: 'orientativo', v: total, extra: true }, ARS));
+      rows.push(Object.assign({ k: 'La cuota como porcentaje del ingreso neto', v: Number(pctSobreIngreso.toFixed(1)) }, PCT));
+
+      const subPartes = [];
+      if (m.actualiza && cuotaVigente > 0) {
+        const brecha = cuotaEscala - cuotaActualizada;
+        subPartes.push('cuota vigente ' + H.ars(cuotaVigente) + ' actualizada un ' + dec1(indice) + '%');
+        subPartes.push(
+          brecha > 0
+            ? 'aun así queda ' + H.ars(brecha) + ' por debajo de lo que daría la escala hoy'
+            : 'ya está en línea con lo que daría la escala hoy'
+        );
+      } else {
+        subPartes.push(hijos + ' hijo' + (hijos > 1 ? 's' : '') + ' · rango ' + dec1(pctMin) + '% a ' + dec1(Math.min(TOPE_PRACTICO + 5, pctMax)) + '%');
+        subPartes.push(m.nota);
+      }
+      subPartes.push('la cuota se lleva el ' + dec1(pctSobreIngreso) + '% del ingreso neto');
+      subPartes.push('orientativo: el monto lo fija el juez');
+
+      return {
+        total: H.ars(total),
+        sub: subPartes.join(' · '),
+        rows: rows,
+        chart: [
+          { label: 'Cuota alimentaria', value: Math.round(cuota), tone: 'main' },
+          { label: 'Cobertura de salud', value: Math.round(obraSocial), tone: 'good' },
+          { label: 'Gastos extraordinarios (mitad)', value: Math.round(parteExtra), tone: 'prop' },
+        ],
+        format: 'ars',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

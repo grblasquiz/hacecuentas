@@ -38,7 +38,7 @@ export interface Outputs {
 }
 
 // Escala horaria CNTCP vigente jun-2026 (misma fuente que sueldo-empleada-domestica-horas-retiro.ts).
-const ESCALA_HORA: Record<string, { conRetiro: number; sinRetiro: number }> = {
+export const ESCALA_HORA: Record<string, { conRetiro: number; sinRetiro: number }> = {
   supervisor: { conRetiro: 4297.33, sinRetiro: 4683.64 },
   cocinera: { conRetiro: 4223.25, sinRetiro: 4597.18 },
   caseros: { conRetiro: 3996.45, sinRetiro: 3996.45 },
@@ -48,9 +48,9 @@ const ESCALA_HORA: Record<string, { conRetiro: number; sinRetiro: number }> = {
 
 // Aportes+contribuciones a AFIP (obra social + SIPA) por tramo de horas — REFERENCIAL 2026.
 // Editable por el usuario; verificar importe vigente en AFIP.
-const AFIP_POR_TRAMO = { menos12: 1900, de12a16: 3100, mas16: 4500 };
+export const AFIP_POR_TRAMO = { menos12: 1900, de12a16: 3100, mas16: 4500 };
 // Cuota ART referencial mensual (varía por aseguradora) — REFERENCIAL 2026, editable.
-const ART_REFERENCIAL = 3500;
+export const ART_REFERENCIAL = 3500;
 
 const fmt = (n: number): string => '$' + Math.round(n).toLocaleString('es-AR');
 

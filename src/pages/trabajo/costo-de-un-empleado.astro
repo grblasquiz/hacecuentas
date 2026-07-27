@@ -1,0 +1,224 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto me cuesta realmente un empleado?"
+ * Reemplaza 8 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Las alícuotas patronales y la ART por riesgo se importan del módulo real
+ * (src/lib/formulas/aportes-patronales-cargas-sociales.ts). Acá no se
+ * hardcodea ningún porcentaje de la norma.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  CASE_MATH,
+  INCISO_A,
+  DIAS_VACACIONES_BASE,
+  DIVISOR_VACACIONES,
+  SEGURO_VIDA_MENSUAL,
+} from '../../lib/hubs/costo-de-un-empleado';
+import {
+  ALICUOTAS_DEC_814,
+  ART_POR_RIESGO,
+  APORTE_OBRA_SOCIAL_EMPLEADOR,
+} from '../../lib/formulas/aportes-patronales-cargas-sociales';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    MATH: CASE_MATH,
+    ALIC: ALICUOTAS_DEC_814,
+    ART_RIESGO: ART_POR_RIESGO,
+    OS_EMPLEADOR: APORTE_OBRA_SOCIAL_EMPLEADOR,
+    INCISO_A,
+    DIAS_VACACIONES_BASE,
+    DIVISOR_VACACIONES,
+    SEGURO_VIDA_MENSUAL,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const pct = (n) => n.toFixed(1).replace('.', ',') + '%';
+
+    H.onCompute(function (v, kase) {
+      const m = MATH[kase?.id] || MATH.mensual;
+      const bruto = Math.max(0, v.bruto || 0);
+      const actividad = String(v.actividad || 'comercio');
+      const riesgo = String(v.riesgo || 'medio');
+      const horasMes = Math.max(1, v.horasMes || 176);
+      const margen = Math.min(100, Math.max(1, v.margen || 30)) / 100;
+
+      // Alícuota patronal del dec. 814/01: inciso a (comercio y servicios
+      // grandes) o inciso b (PyME, industria, agro).
+      const alic = ALIC[INCISO_A.indexOf(actividad) >= 0 ? 'a' : 'b'];
+      const sipa = bruto * alic.sipa;
+      const inssjp = bruto * alic.inssjp;
+      const fne = bruto * alic.fne;
+      const aaff = bruto * alic.aaff;
+      const contribuciones = sipa + inssjp + fne + aaff;
+      const obraSocial = bruto * OS_EMPLEADOR;
+      const artPct = ART_RIESGO[riesgo] ?? ART_RIESGO.medio;
+      const art = bruto * artPct;
+
+      // Provisiones: el SAC devenga contribuciones, así que se provisiona sobre
+      // bruto + cargas. Las vacaciones, a sueldo ÷ 25 por día, prorrateadas.
+      const provSac = (bruto + contribuciones + obraSocial) / 12;
+      const provVac = ((bruto / DIVISOR_VACACIONES) * DIAS_VACACIONES_BASE) / 12;
+
+      const costoMensual =
+        bruto + contribuciones + obraSocial + art + SEGURO_VIDA_MENSUAL + provSac + provVac;
+      const mochila = costoMensual - bruto;
+      const sobrecosto = bruto > 0 ? (mochila / bruto) * 100 : 0;
+      const costoHora = costoMensual / horasMes;
+      const horaBruta = bruto / horasMes;
+      const facturacion = costoMensual / margen;
+
+      const alicTotal = (alic.sipa + alic.inssjp + alic.fne + alic.aaff) * 100;
+      const incisoLabel = INCISO_A.indexOf(actividad) >= 0 ? 'Inciso a' : 'Inciso b';
+
+      // --- rama capacitación (modelo Phillips) ---
+      const costoCurso = Math.max(0, v.costoCurso || 0);
+      const horasCurso = Math.max(0, v.horasCurso || 0);
+      const beneficio = Math.max(0, v.beneficioCurso || 0);
+      const horasNoProd = horasCurso * costoHora;
+      const costoCapacitacion = costoCurso + horasNoProd;
+      const beneficioNeto = beneficio - costoCapacitacion;
+      const roi = costoCapacitacion > 0 ? (beneficioNeto / costoCapacitacion) * 100 : 0;
+      const payback = beneficio > 0 ? (costoCapacitacion / beneficio) * 12 : 0;
+
+      const base = [
+        { k: 'Sueldo bruto del empleado', ref: 'Base de cálculo', v: bruto, extra: true },
+        { k: 'Contribuciones patronales (' + incisoLabel + ', ' + pct(alicTotal) + ')', ref: 'Dec. 814/01', v: contribuciones },
+        { k: 'Obra social a cargo del empleador (6%)', ref: 'Ley 23.660', v: obraSocial },
+        { k: 'ART — riesgo ' + riesgo + ' (' + pct(artPct * 100) + ')', ref: 'Ley 24.557', v: art },
+        { k: 'Seguro colectivo de vida obligatorio', ref: 'Dec. 1567/74', v: SEGURO_VIDA_MENSUAL },
+        { k: 'Provisión de aguinaldo (1/12 con cargas)', ref: 'Art. 121 LCT', v: provSac },
+        { k: 'Provisión de vacaciones (' + DIAS_VACACIONES_BASE + ' días a sueldo ÷ 25)', ref: 'Art. 155 LCT', v: provVac },
+      ];
+
+      const chart = [
+        { label: 'Sueldo bruto', value: Math.round(bruto), tone: 'main' },
+        { label: 'Contribuciones patronales + obra social', value: Math.round(contribuciones + obraSocial), tone: 'warn' },
+        { label: 'ART y seguro de vida', value: Math.round(art + SEGURO_VIDA_MENSUAL), tone: 'bad' },
+        { label: 'Provisión de aguinaldo y vacaciones', value: Math.round(provSac + provVac), tone: 'prop' },
+      ];
+
+      if (m.foco === 'hora') {
+        const rows = base.concat([
+          { k: 'Costo mensual total', ref: 'Suma', v: costoMensual, extra: true },
+          { k: 'Horas trabajadas por mes', ref: 'Ley 11.544', v: horasMes, format: 'unit', unit: 'horas' },
+          { k: 'Costo hora sobre el bruto (engañoso)', ref: 'Referencia', v: horaBruta, format: 'ars', decimals: 0 },
+          { k: 'Costo hora REAL', ref: 'Costo ÷ horas', v: costoHora, format: 'ars', decimals: 0, extra: true },
+          { k: 'Sobrecosto sobre el bruto', ref: 'Mochila', v: sobrecosto, format: 'unit', unit: '%', decimals: 1 },
+        ]);
+        return {
+          total: H.ars(costoHora),
+          sub: 'la hora bruta es ' + H.ars(horaBruta) + ', la real ' + H.ars(costoHora) + ' (+' + pct(sobrecosto) + ') · ' + horasMes + ' horas al mes',
+          rows: rows,
+          chart: chart,
+        };
+      }
+
+      if (m.foco === 'facturar') {
+        const rows = base.concat([
+          { k: 'Costo mensual total', ref: 'Suma', v: costoMensual, extra: true },
+          { k: 'Margen bruto de tu negocio', ref: 'Dato tuyo', v: margen * 100, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Facturación mensual necesaria (neta)', ref: 'Costo ÷ margen', v: facturacion, extra: true },
+          { k: 'Facturación necesaria por hora trabajada', ref: 'Punto de equilibrio', v: facturacion / horasMes },
+          { k: 'Facturación anual necesaria', ref: '12 meses', v: facturacion * 12 },
+        ]);
+        return {
+          total: H.ars(facturacion),
+          sub: 'con margen bruto del ' + Math.round(margen * 100) + '% necesitás facturar ' + H.ars(facturacion) + ' por mes sólo para cubrir un costo de ' + H.ars(costoMensual),
+          rows: rows,
+          chart: chart,
+        };
+      }
+
+      if (m.foco === 'capacitacion') {
+        const rows = [
+          { k: 'Costo del programa', ref: 'Dato tuyo', v: costoCurso },
+          { k: 'Horas de capacitación', ref: 'Pagas', v: horasCurso, format: 'unit', unit: 'horas' },
+          { k: 'Horas no productivas al costo hora real', ref: H.ars(costoHora) + '/h', v: horasNoProd },
+          { k: 'Costo total de capacitar', ref: 'Programa + horas', v: costoCapacitacion, extra: true },
+          { k: 'Beneficio anual esperado', ref: 'Estimación tuya', v: beneficio },
+          { k: 'Beneficio neto', ref: 'Beneficio − costo', v: beneficioNeto, extra: true },
+          { k: 'ROI de la capacitación', ref: 'Modelo Phillips', v: roi, format: 'unit', unit: '%', decimals: 1 },
+          { k: 'Payback', ref: 'Meses para recuperarla', v: payback, format: 'unit', unit: 'meses', decimals: 1 },
+        ];
+        return {
+          total: roi.toFixed(1).replace('.', ',') + '%',
+          sub:
+            (roi > 0 ? 'ROI positivo' : 'ROI negativo') +
+            ' · costo total ' + H.ars(costoCapacitacion) +
+            ' contra un beneficio de ' + H.ars(beneficio) +
+            (payback > 0 ? ' · se recupera en ' + payback.toFixed(1).replace('.', ',') + ' meses' : ''),
+          rows: rows,
+          chart: [
+            { label: 'Costo del programa', value: Math.round(costoCurso), tone: 'warn' },
+            { label: 'Horas no productivas', value: Math.round(horasNoProd), tone: 'bad' },
+            { label: 'Beneficio neto', value: Math.max(0, Math.round(beneficioNeto)), tone: 'good' },
+          ],
+        };
+      }
+
+      const rows = base.concat([
+        { k: 'Costo mensual total para la empresa', ref: 'Suma', v: costoMensual, extra: true },
+        { k: 'Sobrecosto sobre el bruto', ref: 'Mochila', v: sobrecosto, format: 'unit', unit: '%', decimals: 1 },
+        { k: 'Costo anual (12 meses)', ref: 'Proyección', v: costoMensual * 12 },
+      ]);
+      return {
+        total: H.ars(costoMensual),
+        sub:
+          'por un bruto de ' + H.ars(bruto) + ' desembolsás ' + H.ars(costoMensual) +
+          ': ' + H.ars(mochila) + ' extra (+' + pct(sobrecosto) + ') · ' + m.nota,
+        rows: rows,
+        chart: chart,
+      };
+    });
+  })();
+</script>

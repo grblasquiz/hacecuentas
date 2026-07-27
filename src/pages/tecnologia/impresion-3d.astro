@@ -1,0 +1,207 @@
+---
+/**
+ * Hub de decisión — "Impresión 3D: ¿cuánto sale la pieza?"
+ * Reemplaza 9 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo cálculo dominante: sin `cases`, la respuesta fija va en hub.answer
+ * y el material se elige en un select.
+ * La página sólo aporta datos (src/lib/hubs/impresion-3d.ts) y su compute().
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, MATERIALES, PARAMS } from '../../lib/hubs/impresion-3d';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ MAT: MATERIALES, P: PARAMS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Filas que NO son plata. El runtime hace Object.assign: sin `format`
+    // propio, la fila cae a pesos.
+    const G = { format: 'unit', unit: 'g', decimals: 1 };
+    const M = { format: 'unit', unit: 'm', decimals: 2 };
+    const ML = { format: 'unit', unit: 'mL', decimals: 1 };
+    const CM3 = { format: 'unit', unit: 'cm³', decimals: 1 };
+    const HS = { format: 'unit', unit: 'h', decimals: 2 };
+    const KWH = { format: 'unit', unit: 'kWh', decimals: 2 };
+    const SEG = { format: 'unit', unit: 's', decimals: 1 };
+    const PCT = { format: 'unit', unit: '%', decimals: 0 };
+    const NUM = { format: 'plain', decimals: 0 };
+
+    H.onCompute(function (v) {
+      const mat = MAT[String(v.material || 'pla')] || MAT.pla;
+      const volumen = Math.max(0, v.volumen || 0);
+      const infill = Math.min(100, Math.max(0, v.infill || 0));
+      const precioKg = Math.max(0, v.precioKg || 0);
+      const pared = Math.max(0, v.paredHollow || 0);
+      const soportes = Math.max(0, v.soportes || 0);
+      const altura = Math.max(0, v.altura || 0);
+      const layer = Math.max(0.02, v.layer || 0.2);
+      const velocidad = Math.max(1, v.velocidad || 80);
+      const watts = Math.max(0, v.watts || 0);
+      const kwh = Math.max(0, v.kwh || 0);
+      const precioImpresora = Math.max(0, v.precioImpresora || 0);
+      const amortMeses = Math.max(1, v.amortizacionMeses || 36);
+      const horasMesImp = Math.max(1, v.horasMesImpresora || 120);
+      const tiempoHumano = Math.max(0, v.tiempoHumano || 0);
+      const tarifaHumana = Math.max(0, v.tarifaHumana || 0);
+      const margen = Math.max(0, v.margen || 0);
+
+      if (!volumen || !precioKg) {
+        return { total: '$0', sub: 'Ingresá el volumen del modelo y el precio del material.', rows: [], chart: [] };
+      }
+
+      const rows = [];
+      let costoMaterial = 0;
+      let subMaterial = '';
+
+      if (mat.resina) {
+        // ── Resina: mililitros. Vaciado por espesor de pared + soportes ──
+        let factorHollow = 1;
+        if (pared > 0) {
+          if (pared <= 1.5) factorHollow = 0.12;
+          else if (pared <= 2) factorHollow = 0.2;
+          else if (pared <= 3) factorHollow = 0.3;
+          else factorHollow = 0.42;
+        }
+        const volPieza = volumen * factorHollow;
+        const volSop = volPieza * (soportes / 100);
+        const mlTotal = volPieza + volSop;
+        const printsLitro = mlTotal > 0 ? Math.floor(1000 / mlTotal) : 0;
+        // El campo de precio se lee como precio por LITRO cuando el material es resina.
+        costoMaterial = mlTotal * (precioKg / 1000);
+
+        rows.push(Object.assign({ k: 'Resina de la pieza', v: volPieza }, ML));
+        rows.push(Object.assign({ k: 'Resina de los soportes (' + soportes + '%)', v: volSop }, ML));
+        rows.push(Object.assign({ k: 'Resina total por copia', v: mlTotal, extra: true }, ML));
+        rows.push(Object.assign({ k: 'Piezas que salen de 1 litro', v: printsLitro }, NUM));
+        subMaterial = mlTotal.toFixed(1).replace('.', ',') + ' mL de resina';
+      } else {
+        // ── Filamento: volumen efectivo = perímetros (30%) + relleno ──
+        const volEf = volumen * (P.PISO_PERIMETROS + (infill / 100) * (1 - P.PISO_PERIMETROS));
+        const gramos = volEf * mat.dens;
+        const seccion = Math.PI * Math.pow(P.DIAMETRO / 2, 2);
+        const metros = (volEf * 1000) / seccion / 1000;
+        const pctBobina = (gramos / 1000) * 100;
+        costoMaterial = (gramos / 1000) * precioKg;
+
+        rows.push(Object.assign({ k: 'Volumen efectivo con ' + infill + '% de relleno', v: volEf }, CM3));
+        rows.push(Object.assign({ k: 'Filamento de ' + mat.nombre + ' (densidad ' + String(mat.dens).replace('.', ',') + ' g/cm³)', v: gramos, extra: true }, G));
+        rows.push(Object.assign({ k: 'Filamento en metros (Ø ' + String(P.DIAMETRO).replace('.', ',') + ' mm)', v: metros }, M));
+        rows.push(Object.assign({ k: 'Porcentaje de una bobina de 1 kg', v: pctBobina }, PCT));
+        subMaterial = gramos.toFixed(1).replace('.', ',') + ' g de ' + mat.nombre;
+      }
+
+      // ── Tiempo de impresión por altura de capa ──
+      // Área de capa promedio derivada del modelo: volumen / altura.
+      const areaCapa = altura > 0 ? volumen / (altura / 10) : 0;
+      const capas = Math.ceil(altura / layer);
+      const extrusion = (areaCapa * 100) / (P.NOZZLE * layer);
+      const segCapa = (extrusion / velocidad) * P.FACTOR_TIEMPO;
+      const horas = (capas * segCapa) / 3600;
+      const hEnteras = Math.floor(horas);
+      const minutos = Math.round((horas - hEnteras) * 60);
+
+      rows.push(Object.assign({ k: 'Capas a imprimir', v: capas }, NUM));
+      rows.push(Object.assign({ k: 'Tiempo por capa', v: segCapa }, SEG));
+      rows.push(Object.assign({ k: 'Tiempo de impresión estimado', v: horas, extra: true }, HS));
+
+      // ── Electricidad ──
+      const kwhPrint = horas * (watts / 1000);
+      const costoLuz = kwhPrint * kwh;
+      rows.push(Object.assign({ k: 'Energía consumida', v: kwhPrint }, KWH));
+
+      // ── Costos ──
+      const desgaste = (costoMaterial + costoLuz) * P.DESGASTE;
+      const amortHora = precioImpresora / amortMeses / horasMesImp;
+      const amortizacion = amortHora * horas;
+      const manoObra = (tiempoHumano / 60) * tarifaHumana;
+      const costoTotal = costoMaterial + costoLuz + desgaste + amortizacion + manoObra;
+      const precioFinal = costoTotal * (1 + margen / 100);
+      const ganancia = precioFinal - costoTotal;
+
+      rows.push({ k: 'Costo del material', v: costoMaterial, extra: true });
+      rows.push({ k: 'Costo de la electricidad', v: costoLuz });
+      rows.push({ k: 'Desgaste de la máquina (10%)', v: desgaste });
+      rows.push({ k: 'Amortización de la impresora', ref: amortMeses + ' meses', v: amortizacion });
+      const elecHora = (watts / 1000) * kwh;
+      rows.push({
+        k: 'Costo por hora de máquina',
+        ref: 'amortización + luz + desgaste',
+        v: (amortHora + elecHora) * (1 + P.DESGASTE),
+      });
+      rows.push({ k: 'Tu mano de obra (' + tiempoHumano + ' min)', v: manoObra });
+      rows.push({ k: 'Costo total de la pieza', v: costoTotal, extra: true });
+      rows.push({ k: 'Ganancia con margen del ' + margen + '%', v: ganancia });
+      rows.push({ k: 'Precio de venta', v: precioFinal, extra: true });
+
+      // ── Cooling recomendado para el material elegido ──
+      if (!mat.resina) {
+        rows.push(Object.assign({ k: 'Ventilador recomendado para ' + mat.nombre, v: mat.fan }, PCT));
+        rows.push(Object.assign({ k: 'Tiempo mínimo por capa', v: mat.capaMin }, SEG, { decimals: 0 }));
+        rows.push(Object.assign({ k: 'Ventilador en puentes (bridges)', v: mat.bridge }, PCT));
+      }
+
+      const pctMaterial = costoTotal > 0 ? Math.round((costoMaterial / costoTotal) * 100) : 0;
+
+      return {
+        total: H.ars(precioFinal),
+        sub:
+          subMaterial + ' · ' + hEnteras + ' h ' + minutos + ' min de impresión · costo ' + H.ars(costoTotal) +
+          ' (material ' + pctMaterial + '%) · margen ' + margen + '% · ' + mat.tip,
+        rows: rows,
+        chart: [
+          { label: 'Material', value: costoMaterial, tone: 'main' },
+          { label: 'Electricidad', value: costoLuz, tone: 'warn' },
+          { label: 'Desgaste y amortización', value: desgaste + amortizacion, tone: 'prop' },
+          { label: 'Tu hora de trabajo', value: manoObra, tone: 'good' },
+        ].filter(function (s) {
+          return s.value > 0;
+        }),
+      };
+    });
+  })();
+</script>

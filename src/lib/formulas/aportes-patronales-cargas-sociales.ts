@@ -59,7 +59,7 @@ export interface AportesPatronalesOutputs {
   _insight?: any;
 }
 
-const ALICUOTAS_DEC_814 = {
+export const ALICUOTAS_DEC_814 = {
   // Inciso a: comercio y servicios grandes - 20,4% total
   a: {
     sipa: 0.1271,
@@ -76,14 +76,14 @@ const ALICUOTAS_DEC_814 = {
   },
 } as const;
 
-const ART_POR_RIESGO: Record<RiesgoART, number> = {
+export const ART_POR_RIESGO: Record<RiesgoART, number> = {
   bajo: 0.01,
   medio: 0.025,
   alto: 0.05,
 };
 
-const APORTE_OBRA_SOCIAL_EMPLEADOR = 0.06;
-const APORTES_EMPLEADO_TOTAL = 0.17; // 11% SIPA + 3% PAMI + 3% OS
+export const APORTE_OBRA_SOCIAL_EMPLEADOR = 0.06;
+export const APORTES_EMPLEADO_TOTAL = 0.17; // 11% SIPA + 3% PAMI + 3% OS
 
 export function aportesPatronalesCargasSociales(
   inputs: AportesPatronalesInputs

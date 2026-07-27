@@ -1,0 +1,213 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto me tienen que pagar las horas extra?"
+ * Reemplaza 10 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/horas-extra.ts) y su compute().
+ * Todo el chrome, el CSS y el runtime viven en DecisionHub.astro y no se tocan.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, CASE_MATH, PARAMS } from '../../lib/hubs/horas-extra';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ MATH: CASE_MATH, P: PARAMS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Cantidades que NO son plata (horas, minutos, %). El runtime hace
+    // Object.assign sobre la fila: una fila sin `format` propio cae a pesos.
+    const HS = { format: 'unit', unit: 'h', decimals: 2 };
+    const MIN = { format: 'unit', unit: 'min', decimals: 0 };
+    const PCT = { format: 'unit', unit: '%', decimals: 2 };
+
+    H.onCompute(function (v, kase) {
+      const m = MATH[kase && kase.id] || MATH.extra50;
+      const sueldo = Math.max(0, v.sueldo || 0);
+      const horasMes = Math.max(1, v.horasMes || 200);
+      const h50 = Math.max(0, v.horas50 || 0);
+      const h100 = Math.max(0, v.horas100 || 0);
+      const hNoct = Math.max(0, v.horasNoct || 0);
+      const pctNoct = Math.max(0, v.pctNocturno || 0);
+      const diasMes = Math.max(1, v.diasMes || 22);
+      const anios = Math.max(0, v.anios || 0);
+      const pctAnt = Math.max(0, v.pctAntiguedad || 0);
+      const pctPres = Math.max(0, v.pctPresentismo || 0);
+      const faltas = Math.max(0, v.faltas || 0);
+      const pctSind = Math.max(0, v.pctSindical || 0);
+
+      if (!sueldo) {
+        return { total: '$0', sub: 'Ingresá tu sueldo bruto mensual.', rows: [], chart: [] };
+      }
+
+      // ── Valor hora normal: la base de todo (sueldo bruto ÷ horas del mes) ──
+      const vh = sueldo / horasMes;
+      const vh50 = vh * P.RECARGO_50;
+      const vh100 = vh * P.RECARGO_100;
+      const valorDia = sueldo / diasMes;
+      const valorSemana = valorDia * 5;
+
+      // ── Horas extra (art. 201 LCT) ──
+      const monto50 = h50 * vh50;
+      const monto100 = h100 * vh100;
+      const totalExtras = monto50 + monto100;
+
+      // ── Nocturnas (art. 200 LCT): 8 minutos por hora al CÓMPUTO de jornada.
+      // No es un recargo del 50%: se pagan las horas trabajadas y, si el CCT lo
+      // prevé, un plus porcentual encima.
+      const minutosNoct = hNoct * P.MINUTOS_NOCTURNOS;
+      const horasEquivNoct = hNoct + minutosNoct / 60;
+      const pagoNoctBase = hNoct * vh;
+      const adicionalNoct = pagoNoctBase * (pctNoct / 100);
+      const pagoNoct = pagoNoctBase + adicionalNoct;
+      // Los 8 minutos por hora, si te hacen cumplir la jornada de 8 h igual, se
+      // pagan como tiempo extra al 50%.
+      const compensacionNoct = (minutosNoct / 60) * vh50;
+
+      // ── Plus por antigüedad ──
+      const pctAntTotal = anios * pctAnt;
+      const plusAntiguedad = sueldo * (pctAntTotal / 100);
+
+      // ── Presentismo, con el descuento escalonado por faltas ──
+      const presentismoPleno = sueldo * (pctPres / 100);
+      let descPct = 0;
+      if (faltas >= 3) descPct = 100;
+      else if (faltas === 2) descPct = 67;
+      else if (faltas === 1) descPct = 33;
+      const descPresentismo = presentismoPleno * (descPct / 100);
+      const presentismo = presentismoPleno - descPresentismo;
+
+      // ── Bruto del mes y descuentos ──
+      const bruto = sueldo + totalExtras + pagoNoct + plusAntiguedad + presentismo;
+      const aportes = bruto * P.APORTES;
+      const sindical = bruto * (pctSind / 100);
+      const descuentos = aportes + sindical;
+      const neto = bruto - descuentos;
+
+      // ── Filas del desglose ──
+      const rows = [];
+      rows.push({ k: 'Valor de tu hora normal', ref: 'Art. 196 LCT', v: vh });
+      rows.push({ k: 'Valor de la hora al 50%', ref: 'Art. 201 LCT', v: vh50 });
+      rows.push({ k: 'Valor de la hora al 100%', ref: 'Art. 201 LCT', v: vh100 });
+      if (m.focus === 'hora') {
+        rows.push({ k: 'Valor de tu día de trabajo', ref: `${diasMes} días`, v: valorDia });
+        rows.push({ k: 'Valor de tu semana', v: valorSemana });
+        rows.push(Object.assign({ k: 'Horas que trabajás al mes', v: horasMes }, HS));
+      }
+      if (h50 > 0) rows.push({ k: `Extras al 50% (${h50} h)`, ref: 'Art. 201 LCT', v: monto50, extra: m.focus === 'e50' });
+      if (h100 > 0)
+        rows.push({ k: `Extras al 100% (${h100} h)`, ref: 'Art. 201 LCT', v: monto100, extra: m.focus === 'e100' });
+      if (hNoct > 0) {
+        rows.push(Object.assign({ k: 'Minutos que suman tus horas nocturnas', ref: 'Art. 200 LCT', v: minutosNoct }, MIN));
+        rows.push(
+          Object.assign({ k: 'Horas equivalentes de jornada nocturna', ref: 'Art. 200 LCT', v: horasEquivNoct }, HS)
+        );
+        rows.push({ k: `Pago de las ${hNoct} horas nocturnas`, ref: 'Art. 200 LCT', v: pagoNoctBase });
+        if (adicionalNoct > 0) rows.push({ k: `Plus nocturno de convenio (${pctNoct}%)`, ref: 'CCT', v: adicionalNoct });
+        rows.push({
+          k: 'Si te hacen cumplir 8 h igual: esos minutos al 50%',
+          ref: 'Art. 200 y 201 LCT',
+          v: compensacionNoct,
+          extra: m.focus === 'noct',
+        });
+      }
+      if (plusAntiguedad > 0)
+        rows.push({ k: `Plus por antigüedad (${pctAntTotal.toFixed(1).replace('.', ',')}%)`, ref: 'CCT', v: plusAntiguedad });
+      if (presentismoPleno > 0) {
+        rows.push({ k: 'Presentismo pleno', ref: 'CCT', v: presentismoPleno });
+        if (descPresentismo > 0)
+          rows.push(Object.assign({ k: `Se pierde por ${faltas} falta(s)`, v: descPct }, PCT, { decimals: 0 }));
+      }
+      rows.push({ k: 'Bruto total del mes', ref: 'Suma de conceptos', v: bruto, extra: true });
+      rows.push({ k: 'Aportes personales (17%)', ref: 'Ley 24.241', v: aportes });
+      if (sindical > 0) rows.push({ k: `Cuota sindical y solidario (${pctSind}%)`, ref: 'Ley 23.551', v: sindical });
+      rows.push({ k: 'Neto estimado en mano', v: neto, extra: true });
+
+      // ── Panel de resultado: qué número manda según la rama ──
+      let total, sub;
+      if (m.focus === 'hora') {
+        total = H.ars(vh);
+        sub =
+          'Hora normal · día ' + H.ars(valorDia) + ' · semana ' + H.ars(valorSemana) +
+          ' · divisor ' + horasMes + ' h/mes · bruto del mes ' + H.ars(bruto);
+      } else if (m.focus === 'noct') {
+        total = H.ars(pagoNoct + compensacionNoct);
+        sub =
+          hNoct + ' horas nocturnas: ' + minutosNoct + ' min de más al cómputo (art. 200) · ' +
+          (pctNoct > 0 ? 'plus de convenio ' + pctNoct + '%' : 'sin plus de convenio') +
+          ' · NO es un recargo del 50% · bruto del mes ' + H.ars(bruto);
+      } else if (m.focus === 'e100') {
+        total = H.ars(monto100);
+        sub =
+          h100 + ' horas al 100% × ' + H.ars(vh100) + ' · hora normal ' + H.ars(vh) +
+          ' · extras totales ' + H.ars(totalExtras) + ' · neto del mes ' + H.ars(neto);
+      } else {
+        total = H.ars(monto50);
+        sub =
+          h50 + ' horas al 50% × ' + H.ars(vh50) + ' · hora normal ' + H.ars(vh) +
+          ' · extras totales ' + H.ars(totalExtras) + ' · neto del mes ' + H.ars(neto);
+      }
+      if (h50 + h100 > P.TOPE_MENSUAL) {
+        sub += ' · ojo: superás el tope de ' + P.TOPE_MENSUAL + ' horas extra por mes';
+      }
+
+      // ── Gráfico stacked: el recibo partido ──
+      const chart = [
+        { label: 'Sueldo base', value: sueldo, tone: 'main' },
+        { label: 'Extras al 50%', value: monto50, tone: 'good' },
+        { label: 'Extras al 100%', value: monto100, tone: 'exit' },
+        { label: 'Nocturnas', value: pagoNoct, tone: 'prop' },
+        { label: 'Plus por antigüedad', value: plusAntiguedad, tone: 'prop' },
+        { label: 'Presentismo', value: presentismo, tone: 'good' },
+        { label: 'Descuentos', value: descuentos, tone: 'bad' },
+      ].filter(function (s) {
+        return s.value > 0;
+      });
+
+      return { total: total, sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>
