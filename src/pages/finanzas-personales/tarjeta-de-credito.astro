@@ -1,0 +1,438 @@
+---
+/**
+ * Hub de decisión — "Pago el mínimo de la tarjeta: ¿cuánto me cuesta?"
+ * Reemplaza 8 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/tarjeta.ts) y su compute().
+ * Todo el chrome, el CSS y el runtime viven en DecisionHub.astro y no se tocan.
+ *
+ * OJO: el índice del silo lo sirve src/pages/finanzas-personales.astro (pillar
+ * page). Acá NO va un index.astro: sería una ruta duplicada.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, SIM } from '../../lib/hubs/tarjeta';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ SIM }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const nf = (n, d) =>
+      Number(n || 0).toLocaleString('es-AR', {
+        minimumFractionDigits: d || 0,
+        maximumFractionDigits: d || 0,
+      });
+    const pct = (n) => nf(n, 1) + '%';
+
+    /**
+     * Simulación mes a mes del saldo rotativo. Espejo de
+     * src/lib/formulas/tarjeta-credito-minimo-costo.ts: el interés del período
+     * se capitaliza sobre el saldo y RECIÉN DESPUÉS se calcula el mínimo sobre
+     * ese saldo nuevo, que es lo que hace un resumen real.
+     */
+    function simularMinimo(saldo, tnaPct, minPct, piso) {
+      const i = tnaPct / 100 / 12;
+      let s = saldo;
+      let meses = 0;
+      let interesTotal = 0;
+      let pagado = 0;
+      let primerPago = 0;
+      let primerInteres = 0;
+
+      while (s > 1 && meses < SIM.MAX_MESES) {
+        meses++;
+        const interes = s * i;
+        interesTotal += interes;
+        s += interes;
+        const minimo = Math.max(s * (minPct / 100), piso, SIM.PISO_ABSOLUTO);
+        const pago = Math.min(minimo, s);
+        if (meses === 1) {
+          primerPago = pago;
+          primerInteres = interes;
+        }
+        s -= pago;
+        pagado += pago;
+      }
+
+      return {
+        meses: meses,
+        interesTotal: interesTotal,
+        pagado: pagado,
+        primerPago: primerPago,
+        primerInteres: primerInteres,
+        perpetua: s > 1,
+        saldoFinal: s,
+      };
+    }
+
+    /**
+     * Meses hasta cancelar con un pago mensual constante.
+     * Espejo de src/lib/formulas/interes-acumulado-tarjeta.ts:
+     *   n = −ln(1 − i·S/P) ÷ ln(1+i)
+     */
+    function mesesConPagoFijo(saldo, tnaPct, pago) {
+      const i = tnaPct / 100 / 12;
+      if (i === 0) return { meses: saldo / pago, viable: pago > 0 };
+      const interesPrimerMes = saldo * i;
+      if (pago <= interesPrimerMes) return { meses: Infinity, viable: false, interesPrimerMes: interesPrimerMes };
+      const meses = -Math.log(1 - (i * saldo) / pago) / Math.log(1 + i);
+      return { meses: meses, viable: true, interesPrimerMes: interesPrimerMes };
+    }
+
+    /** Cuota fija que cancela el saldo en n meses (sistema francés). */
+    function cuotaFrances(saldo, tnaPct, n) {
+      const i = tnaPct / 100 / 12;
+      if (i === 0) return saldo / n;
+      const f = Math.pow(1 + i, n);
+      return (saldo * i * f) / (f - 1);
+    }
+
+    /** Valor presente de n cuotas iguales descontadas a `tasaPct` mensual. */
+    function valorPresente(cuota, n, tasaPct) {
+      const r = tasaPct / 100;
+      let vp = 0;
+      for (let m = 1; m <= n; m++) vp += cuota / Math.pow(1 + r, m);
+      return vp;
+    }
+
+    /**
+     * Tasa mensual implícita del plan de cuotas: la r que hace que el valor
+     * presente de las cuotas iguale el precio de contado. Bisección, igual que
+     * src/lib/formulas/costo-real-cuotas-sin-interes.ts.
+     */
+    function tasaImplicita(contado, cuota, n) {
+      if (cuota * n <= contado) return 0;
+      let low = 0;
+      let high = 10;
+      for (let k = 0; k < 100; k++) {
+        const mid = (low + high) / 2;
+        let vp = 0;
+        for (let m = 1; m <= n; m++) vp += cuota / Math.pow(1 + mid, m);
+        if (vp > contado) low = mid;
+        else high = mid;
+      }
+      return (low + high) / 2;
+    }
+
+    H.onCompute(function (v, caso) {
+      const rama = (caso && caso.id) || 'minimo';
+
+      const saldo = Math.max(0, Number(v.saldo) || 0);
+      const tna = Math.max(0, Number(v.tna) || 0);
+      const minimoPct = Math.min(100, Math.max(0.5, Number(v.minimoPct) || 5));
+      const minimoFijo = Math.max(0, Number(v.minimoFijo) || 0);
+      const pagoFijo = Math.max(0, Number(v.pagoFijo) || 0);
+      const mesesObjetivo = Math.min(120, Math.max(1, Math.round(Number(v.mesesObjetivo) || 1)));
+      const precioContado = Math.max(0, Number(v.precioContado) || 0);
+      const descuento = Math.min(100, Math.max(0, Number(v.descuentoContado) || 0));
+      const precioCuotas = Math.max(0, Number(v.precioCuotas) || 0);
+      const cuotas = Math.min(48, Math.max(1, Math.round(Number(v.cantidadCuotas) || 1)));
+      const inflacion = Math.max(0, Number(v.inflacion) || 0);
+
+      // ─────────────── CUOTAS "SIN INTERÉS" VS CONTADO ───────────────
+      if (rama === 'sin-interes' || rama === 'recargo') {
+        if (!precioContado || !precioCuotas) {
+          return {
+            total: '—',
+            sub: 'Cargá el precio de lista y el precio total financiado para comparar.',
+            rows: [],
+            chart: [],
+          };
+        }
+
+        const valorCuota = precioCuotas / cuotas;
+        const contadoNeto = precioContado * (1 - descuento / 100);
+        const vpCuotas = valorPresente(valorCuota, cuotas, inflacion);
+        const recargo = precioCuotas - precioContado;
+        const recargoPct = precioContado > 0 ? (recargo / precioContado) * 100 : 0;
+        const rMensual = tasaImplicita(precioContado, valorCuota, cuotas);
+        const tnaImplicita = rMensual * 12 * 100;
+        const teaImplicita = (Math.pow(1 + rMensual, 12) - 1) * 100;
+        const diferencia = contadoNeto - vpCuotas;
+        const gananCuotas = diferencia > 0;
+
+        if (rama === 'recargo') {
+          const rows = [
+            { k: 'Precio de contado', v: Math.round(precioContado) },
+            { k: 'Precio total financiado', ref: cuotas + ' cuotas de ' + H.ars(Math.round(valorCuota)), v: Math.round(precioCuotas), extra: true },
+            { k: 'Recargo por financiar', ref: '+' + nf(recargoPct, 1) + '% sobre el contado', v: Math.round(recargo) },
+            { k: 'Valor presente de las cuotas', ref: 'descontadas al ' + pct(inflacion) + ' mensual', v: Math.round(vpCuotas) },
+            { k: 'Recargo real en plata de hoy', v: Math.round(vpCuotas - precioContado) },
+            { k: 'Tasa mensual implícita', v: Number((rMensual * 100).toFixed(2)), format: 'unit', unit: '%', decimals: 2 },
+            { k: 'TNA implícita', ref: 'mensual × 12', v: Number(tnaImplicita.toFixed(1)), format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Tasa efectiva anual equivalente', ref: 'sin IVA ni sellos: el CFT es mayor', v: Number(teaImplicita.toFixed(1)), format: 'unit', unit: '%', decimals: 1, extra: true },
+          ];
+
+          return {
+            total: H.ars(Math.round(precioCuotas)),
+            sub:
+              'Financiar ' + H.ars(Math.round(precioContado)) + ' en ' + cuotas + ' cuotas de ' +
+              H.ars(Math.round(valorCuota)) + ' te cuesta ' + H.ars(Math.round(recargo)) + ' de recargo (' +
+              nf(recargoPct, 1) + '% sobre el contado). Ese recargo, repartido en ' + cuotas +
+              ' pagos, equivale a una tasa del ' + nf(rMensual * 100, 2) + '% mensual: ' + pct(teaImplicita) +
+              ' efectivo anual. ' +
+              (inflacion > 0
+                ? 'Descontadas al ' + pct(inflacion) + ' mensual, las cuotas valen hoy ' + H.ars(Math.round(vpCuotas)) +
+                  ', así que el recargo real es de ' + H.ars(Math.round(vpCuotas - precioContado)) + '. '
+                : '') +
+              'La tasa efectiva anual no incluye IVA sobre intereses ni sellos: el CFT que informa la entidad va a ser más alto.',
+            rows: rows,
+            chart: [
+              { label: 'Precio de contado', value: Math.round(precioContado), tone: 'main' },
+              { label: 'Recargo por financiar', value: Math.round(Math.max(0, recargo)), tone: 'bad' },
+            ],
+          };
+        }
+
+        const rows = [
+          { k: 'Precio de lista', v: Math.round(precioContado) },
+          { k: 'Contado con descuento', ref: '−' + nf(descuento, 0) + '%', v: Math.round(contadoNeto) },
+          { k: 'Total en cuotas', ref: cuotas + ' × ' + H.ars(Math.round(valorCuota)), v: Math.round(precioCuotas) },
+          { k: 'Valor presente de las cuotas', ref: 'descontadas al ' + pct(inflacion) + ' mensual', v: Math.round(vpCuotas), extra: true },
+          { k: 'Diferencia a favor de ' + (gananCuotas ? 'las cuotas' : 'el contado'), v: Math.round(Math.abs(diferencia)), extra: true },
+          { k: 'Lo que licúa la inflación sobre las cuotas', v: Math.round(precioCuotas - vpCuotas) },
+        ];
+        if (recargo > 0) {
+          rows.push({ k: 'Recargo nominal de las cuotas', ref: '+' + nf(recargoPct, 1) + '%', v: Math.round(recargo) });
+          rows.push({ k: 'Tasa efectiva anual del plan', v: Number(teaImplicita.toFixed(1)), format: 'unit', unit: '%', decimals: 1 });
+        }
+
+        return {
+          total: H.ars(Math.round(Math.min(contadoNeto, vpCuotas))),
+          sub:
+            (gananCuotas ? 'Convienen las cuotas' : 'Conviene el contado') + ': ' +
+            (gananCuotas
+              ? 'las ' + cuotas + ' cuotas valen hoy ' + H.ars(Math.round(vpCuotas)) + ' contra ' +
+                H.ars(Math.round(contadoNeto)) + ' del contado con descuento'
+              : 'el contado con descuento sale ' + H.ars(Math.round(contadoNeto)) + ' contra ' +
+                H.ars(Math.round(vpCuotas)) + ' que valen hoy las cuotas') +
+            ', o sea ' + H.ars(Math.round(Math.abs(diferencia))) + ' de diferencia en plata de hoy. ' +
+            'Con una inflación del ' + pct(inflacion) + ' mensual, la última cuota vale ' +
+            pct((1 - 1 / Math.pow(1 + inflacion / 100, cuotas)) * 100) + ' menos que hoy. ' +
+            'Ojo: esto vale sólo si vas a pagar el resumen completo todos los meses.',
+          rows: rows,
+          chart: [
+            { label: 'Valor presente de las cuotas', value: Math.round(vpCuotas), tone: gananCuotas ? 'good' : 'warn' },
+            { label: 'Contado con descuento', value: Math.round(contadoNeto), tone: gananCuotas ? 'warn' : 'good' },
+          ],
+        };
+      }
+
+      // ─────────────────── RAMAS DEL SALDO ───────────────────
+      if (!saldo) {
+        return { total: '—', sub: 'Cargá el saldo de la tarjeta para ver el costo.', rows: [], chart: [] };
+      }
+
+      const min = simularMinimo(saldo, tna, minimoPct, minimoFijo);
+      const tasaMensual = tna / 100 / 12;
+
+      // ─────────────────── PAGO FIJO POR MES ───────────────────
+      if (rama === 'fijo') {
+        const r = mesesConPagoFijo(saldo, tna, pagoFijo);
+        if (!r.viable) {
+          return {
+            total: '∞',
+            sub:
+              'Con ' + H.ars(Math.round(pagoFijo)) + ' por mes no llegás a cubrir el interés del primer mes, que es ' +
+              H.ars(Math.round(r.interesPrimerMes || saldo * tasaMensual)) +
+              '. La deuda crece aunque pagues todos los meses: hay que subir el pago o refinanciar a una tasa menor.',
+            rows: [
+              { k: 'Saldo de la tarjeta', v: Math.round(saldo) },
+              { k: 'Interés del primer mes', ref: pct(tasaMensual * 100) + ' mensual', v: Math.round(saldo * tasaMensual) },
+              { k: 'Tu pago mensual', v: Math.round(pagoFijo) },
+              { k: 'Le falta para cubrir el interés', v: Math.round(saldo * tasaMensual - pagoFijo), extra: true },
+            ],
+            chart: [
+              { label: 'Tu pago mensual', value: Math.round(pagoFijo), tone: 'good' },
+              { label: 'Interés que no cubrís', value: Math.round(Math.max(0, saldo * tasaMensual - pagoFijo)), tone: 'bad' },
+            ],
+          };
+        }
+
+        const meses = r.meses;
+        const totalPagado = pagoFijo * meses;
+        const interesTotal = totalPagado - saldo;
+        const ahorroVsMinimo = min.pagado - totalPagado;
+
+        const rows = [
+          { k: 'Saldo de la tarjeta', v: Math.round(saldo) },
+          { k: 'Tu pago mensual', v: Math.round(pagoFijo) },
+          { k: 'Interés del primer mes', ref: nf(tasaMensual * 100, 2) + '% mensual', v: Math.round(saldo * tasaMensual) },
+          { k: 'Meses hasta cancelar', v: Math.ceil(meses), format: 'unit', unit: 'meses' },
+          { k: 'Intereses de todo el plan', v: Math.round(interesTotal), extra: true },
+          { k: 'Total desembolsado', v: Math.round(totalPagado) },
+          { k: 'Sobre el saldo original', v: Number(((interesTotal / saldo) * 100).toFixed(1)), format: 'unit', unit: '%', decimals: 1 },
+        ];
+        if (!min.perpetua) {
+          rows.push({ k: 'Pagando sólo el mínimo pagarías', ref: Math.ceil(min.meses) + ' meses', v: Math.round(min.pagado) });
+          rows.push({ k: 'Lo que te ahorrás contra el mínimo', v: Math.round(Math.max(0, ahorroVsMinimo)), extra: true });
+        }
+
+        return {
+          total: H.ars(Math.round(totalPagado)),
+          sub:
+            'Con ' + H.ars(Math.round(pagoFijo)) + ' por mes cancelás en ' + Math.ceil(meses) + ' meses (' +
+            nf(meses / 12, 1) + ' años) y pagás ' + H.ars(Math.round(interesTotal)) + ' de intereses: un ' +
+            nf((interesTotal / saldo) * 100, 0) + '% sobre el saldo. ' +
+            (min.perpetua
+              ? 'Con esa tasa y ese porcentaje mínimo, pagando sólo el mínimo la deuda no se cancelaría nunca.'
+              : 'Pagando sólo el mínimo tardarías ' + Math.ceil(min.meses) + ' meses y desembolsarías ' +
+                H.ars(Math.round(min.pagado)) + ': te ahorrás ' + H.ars(Math.round(Math.max(0, ahorroVsMinimo))) + '.') +
+            ' La cuenta supone que no hacés consumos nuevos con esta tarjeta.',
+          rows: rows,
+          chart: [
+            { label: 'Capital', value: Math.round(saldo), tone: 'main' },
+            { label: 'Intereses', value: Math.round(Math.max(0, interesTotal)), tone: 'exit' },
+          ],
+        };
+      }
+
+      // ─────────────────── META DE MESES ───────────────────
+      if (rama === 'objetivo') {
+        const cuota = cuotaFrances(saldo, tna, mesesObjetivo);
+        const totalPagado = cuota * mesesObjetivo;
+        const interesTotal = totalPagado - saldo;
+        const minimoInicial = Math.max(saldo * (1 + tasaMensual) * (minimoPct / 100), minimoFijo, SIM.PISO_ABSOLUTO);
+
+        const rows = [
+          { k: 'Saldo de la tarjeta', v: Math.round(saldo) },
+          { k: 'Pago mensual necesario', ref: 'sistema francés a ' + mesesObjetivo + ' meses', v: Math.round(cuota), extra: true },
+          { k: 'Pago mínimo del primer resumen', ref: pct(minimoPct) + ' del saldo', v: Math.round(minimoInicial) },
+          { k: 'Cuánto más que el mínimo', v: Math.round(Math.max(0, cuota - minimoInicial)) },
+          { k: 'Intereses de todo el plan', v: Math.round(interesTotal) },
+          { k: 'Total desembolsado', v: Math.round(totalPagado) },
+        ];
+        if (!min.perpetua) {
+          rows.push({ k: 'Pagando sólo el mínimo pagarías', ref: Math.ceil(min.meses) + ' meses', v: Math.round(min.pagado) });
+          rows.push({ k: 'Lo que te ahorrás contra el mínimo', v: Math.round(Math.max(0, min.pagado - totalPagado)), extra: true });
+        }
+
+        return {
+          total: H.ars(Math.round(totalPagado)),
+          sub:
+            'Para salir en ' + mesesObjetivo + ' meses necesitás pagar ' + H.ars(Math.round(cuota)) +
+            ' todos los meses: ' + H.ars(Math.round(Math.max(0, cuota - minimoInicial))) + ' más que el mínimo del primer resumen. ' +
+            'Vas a desembolsar ' + H.ars(Math.round(totalPagado)) + ' en total, con ' + H.ars(Math.round(interesTotal)) +
+            ' de intereses. ' +
+            (min.perpetua
+              ? 'Con esa tasa y ese porcentaje mínimo, pagando el mínimo la deuda no se cancelaría nunca.'
+              : 'Contra pagar el mínimo, te ahorrás ' + H.ars(Math.round(Math.max(0, min.pagado - totalPagado))) + '.') +
+            ' Antes de aceptar la refinanciación de la propia tarjeta, comparalo con la cuota de un préstamo personal a la misma cantidad de meses.',
+          rows: rows,
+          chart: [
+            { label: 'Capital', value: Math.round(saldo), tone: 'main' },
+            { label: 'Intereses', value: Math.round(Math.max(0, interesTotal)), tone: 'exit' },
+          ],
+        };
+      }
+
+      // ─────────────────── SÓLO EL MÍNIMO (default) ───────────────────
+      // Si el mínimo no llega a cubrir el interés del mes, el saldo crece sin
+      // techo. Los acumulados de la simulación dejan de tener sentido económico
+      // (dan cifras astronómicas), así que no se muestran: se muestra el motivo.
+      if (min.perpetua) {
+        const minimoInicialP = Math.max(saldo * (1 + tasaMensual) * (minimoPct / 100), minimoFijo, SIM.PISO_ABSOLUTO);
+        const faltante = min.primerInteres - min.primerPago;
+        return {
+          total: 'Nunca',
+          sub:
+            'Con una TNA del ' + pct(tna) + ' —o sea ' + nf(tasaMensual * 100, 2) + '% por mes— y un mínimo del ' +
+            pct(minimoPct) + ', el pago mínimo no alcanza a cubrir el interés del mes: el interés del primer mes es ' +
+            H.ars(Math.round(min.primerInteres)) + ' y el mínimo es ' + H.ars(Math.round(min.primerPago)) +
+            '. La deuda crece todos los meses aunque pagues siempre en fecha, y no se cancela nunca. ' +
+            'Para que baje, el pago mensual tiene que superar el interés: probá la rama del pago fijo con un importe mayor a ' +
+            H.ars(Math.round(min.primerInteres)) + ', o refinanciá el saldo a una tasa menor.',
+          rows: [
+            { k: 'Saldo de la tarjeta', v: Math.round(saldo) },
+            { k: 'Tasa mensual', ref: 'TNA ' + pct(tna) + ' ÷ 12', v: Number((tasaMensual * 100).toFixed(2)), format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Interés del primer mes', v: Math.round(min.primerInteres) },
+            { k: 'Pago mínimo del primer resumen', ref: pct(minimoPct) + ' del saldo con interés', v: Math.round(minimoInicialP) },
+            { k: 'Lo que le falta al mínimo para cubrir el interés', v: Math.round(Math.max(0, faltante)), extra: true },
+            { k: 'Cuánto crece el saldo el primer mes', v: Math.round(Math.max(0, faltante)) },
+            { k: 'Pago mínimo que necesitarías para que baje', ref: 'por encima del interés', v: Math.round(min.primerInteres), extra: true },
+          ],
+          chart: [
+            { label: 'Interés del mes', value: Math.round(min.primerInteres), tone: 'bad' },
+            { label: 'Lo que cubre el mínimo', value: Math.round(min.primerPago), tone: 'good' },
+          ],
+        };
+      }
+
+      const multiplicador = saldo > 0 ? min.pagado / saldo : 0;
+      const rows = [
+        { k: 'Saldo de la tarjeta', v: Math.round(saldo) },
+        { k: 'Tasa mensual', ref: 'TNA ' + pct(tna) + ' ÷ 12', v: Number((tasaMensual * 100).toFixed(2)), format: 'unit', unit: '%', decimals: 2 },
+        { k: 'Interés del primer mes', v: Math.round(min.primerInteres) },
+        { k: 'Pago mínimo del primer resumen', ref: pct(minimoPct) + ' del saldo con interés', v: Math.round(min.primerPago) },
+        { k: 'De ese pago va a bajar capital', v: Math.round(Math.max(0, min.primerPago - min.primerInteres)) },
+        { k: 'Meses hasta cancelar', ref: nf(min.meses / 12, 1) + ' años', v: Math.ceil(min.meses), format: 'unit', unit: 'meses', extra: true },
+        { k: 'Intereses acumulados', v: Math.round(min.interesTotal), extra: true },
+        { k: 'Total desembolsado', v: Math.round(min.pagado) },
+        { k: 'Veces el saldo original', v: Number(multiplicador.toFixed(2)), format: 'unit', unit: '×', decimals: 2 },
+      ];
+
+      const sub =
+        'Pagando sólo el mínimo tardás ' + Math.ceil(min.meses) + ' meses (' + nf(min.meses / 12, 1) +
+          ' años) y desembolsás ' + H.ars(Math.round(min.pagado)) + ' por un saldo de ' + H.ars(Math.round(saldo)) +
+          ': ' + H.ars(Math.round(min.interesTotal)) + ' son intereses, ' + nf(multiplicador, 2) +
+          ' veces el saldo original. Del primer pago de ' + H.ars(Math.round(min.primerPago)) + ', ' +
+          H.ars(Math.round(min.primerInteres)) + ' se van en interés y sólo ' +
+          H.ars(Math.round(Math.max(0, min.primerPago - min.primerInteres))) +
+          ' bajan el capital. Todo esto suponiendo que no hacés ni un consumo más.';
+
+      return {
+        total: H.ars(Math.round(min.pagado)),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Capital', value: Math.round(saldo), tone: 'main' },
+          { label: 'Intereses', value: Math.round(Math.max(0, min.interesTotal)), tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,348 @@
+---
+/**
+ * Hub de decisión — "DNI, pasaporte y trámites: ¿cuánto cuesta y qué necesito?"
+ * Reemplaza 7 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo ramificado: 8 casos, cuatro de costo y tres determinísticos
+ * (CBU, CUIL, letra del DNI). Las ramas sin plata declaran format 'plain'
+ * en el resultado Y en cada fila: el default del runtime es pesos.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, ARANCELES, ENTIDADES, PSP, PESOS, LETRAS } from '../../lib/hubs/tramites';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ ARANCELES, ENTIDADES, PSP, PESOS, LETRAS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Las ramas de verificación NO son plata: cada fila declara su formato.
+    const CANT = { format: 'plain', decimals: 0 };
+    const UNID = (u) => ({ format: 'unit', unit: u, decimals: 0 });
+    const row = (k, v, fmt, extra, ref) => Object.assign({ k: k, v: v, extra: !!extra, ref: ref }, fmt || {});
+    const soloDigitos = (s) => String(s == null ? '' : s).replace(/\D/g, '');
+
+    // ─────────── CBU / CVU: dígitos verificadores del BCRA ───────────
+    // Espejo de src/lib/formulas/validar-cbu-cvu-identificar-banco.ts
+    function dvBloque(digitos, pesos) {
+      let suma = 0;
+      for (let k = 0; k < pesos.length; k++) suma += Number(digitos[k]) * pesos[k];
+      return (10 - (suma % 10)) % 10;
+    }
+
+    function detectarPSP(cbu, codigo) {
+      for (let i = 0; i < PSP.length; i++) if (cbu.indexOf(PSP[i][0]) === 0) return PSP[i][1];
+      if (codigo === '000') return 'Billetera virtual (CVU)';
+      return null;
+    }
+
+    // ─────────── CUIL/CUIT: módulo 11 de ANSES ───────────
+    // Espejo de src/lib/formulas/cuil-cuit-desde-dni-argentina.ts
+    function restoMod11(base10) {
+      let suma = 0;
+      for (let k = 0; k < 10; k++) suma += Number(base10[k]) * PESOS.cuil[k];
+      return suma % 11;
+    }
+
+    function calcularCuil(dni8, sexo) {
+      let prefijo = sexo === 'F' ? '27' : '20';
+      let resto = restoMod11(prefijo + dni8);
+      let dv;
+      if (resto === 0) {
+        dv = 0;
+      } else if (resto === 1) {
+        // El verificador daría 10: ANSES pasa al prefijo 23 y recalcula.
+        prefijo = '23';
+        const resto23 = restoMod11(prefijo + dni8);
+        dv = resto23 === 0 ? 0 : 11 - resto23;
+        if (dv === 10) dv = 9;
+      } else {
+        dv = 11 - resto;
+      }
+      return { prefijo: prefijo, dv: dv, cuil: prefijo + '-' + dni8 + '-' + dv };
+    }
+
+    // ─────────── Letra del DNI: módulo 11 orientativo ───────────
+    // Espejo de src/lib/formulas/letra-dni-argentina.ts
+    function calcularLetra(dni) {
+      const s = String(dni).padStart(8, '0');
+      let suma = 0;
+      for (let i = 0; i < 8; i++) suma += parseInt(s[7 - i], 10) * PESOS.letra[i];
+      const resto = suma % 11;
+      const resultado = 11 - resto;
+      const indice = resultado === 11 ? 0 : resultado === 10 ? 10 : resultado;
+      return { letra: LETRAS[indice] || 'A', suma: suma, resto: resto, resultado: resultado };
+    }
+
+    const miles = (n) => Number(n || 0).toLocaleString('es-AR');
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'dni';
+      const personas = Math.max(1, Math.min(12, Number(v.personas) || 1));
+      const modalidad = String(v.modalidad || 'comun');
+
+      // ══════════════ Ramas de costo ══════════════
+      if (id === 'dni' || id === 'dni-0-5' || id === 'pasaporte' || id === 'antecedentes' || id === 'residencia') {
+        let base = 0, extra = 0, plazo = '', etiquetaBase = '', etiquetaExtra = '';
+        let segundo = 0, etiquetaSegundo = '';
+
+        if (id === 'dni') {
+          base = ARANCELES.dni.comun[0];
+          plazo = ARANCELES.dni.comun[1];
+          etiquetaBase = 'Arancel RENAPER del DNI';
+        } else if (id === 'dni-0-5') {
+          base = ARANCELES.dni.gratis[0];
+          plazo = ARANCELES.dni.gratis[1];
+          etiquetaBase = 'Arancel RENAPER (0 a 5 años)';
+        } else if (id === 'pasaporte') {
+          // El pasaporte no tiene "urgente": si lo elegís, se cotiza como exprés.
+          const rapido = modalidad !== 'comun';
+          const tarifa = rapido ? ARANCELES.pasaporte.expres : ARANCELES.pasaporte.comun;
+          base = ARANCELES.pasaporte.comun[0];
+          extra = tarifa[0] - base;
+          plazo = tarifa[1];
+          etiquetaBase = 'Pasaporte común';
+          etiquetaExtra = 'Sobreprecio del pasaporte exprés';
+        } else if (id === 'antecedentes') {
+          const tarifa = ARANCELES.antecedentes[modalidad] || ARANCELES.antecedentes.comun;
+          base = ARANCELES.antecedentes.comun[0];
+          extra = tarifa[0] - base;
+          plazo = tarifa[1];
+          etiquetaBase = 'Certificado común';
+          etiquetaExtra = modalidad === 'expres' ? 'Sobreprecio del exprés' : 'Sobreprecio del urgente';
+        } else {
+          const t = ARANCELES.residencia[String(v.residencia || 'mercosur')] || ARANCELES.residencia.mercosur;
+          base = t[0];
+          segundo = t[1];
+          plazo = 'según turno de Migraciones';
+          etiquetaBase = 'Tasa de Migraciones';
+          etiquetaSegundo = 'Arancel del DNI para extranjeros';
+        }
+
+        const porPersona = base + extra + segundo;
+        const total = porPersona * personas;
+
+        const rows = [row(etiquetaBase, base * personas, null, false, personas > 1 ? miles(base) + ' × ' + personas : 'por persona')];
+        if (extra > 0) rows.push(row(etiquetaExtra, extra * personas, null, false, 'lo que pagás por apurar'));
+        if (segundo > 0) rows.push(row(etiquetaSegundo, segundo * personas, null, false, 'RENAPER, se paga aparte'));
+        rows.push(row('Personas que hacen el trámite', personas, CANT, false, 'multiplica el arancel'));
+        if (personas > 1) rows.push(row('Costo por persona', porPersona, null, false, 'arancel unitario'));
+        rows.push(row('Total a pagar', total, null, true, 'aranceles oficiales'));
+
+        let chart;
+        if (id === 'dni-0-5') {
+          chart = [
+            { label: 'Arancel del primer DNI', value: 0, tone: 'good' },
+            { label: 'Lo que te ahorrás frente a una renovación', value: ARANCELES.dni.comun[0] * personas, tone: 'main' },
+          ];
+        } else if (segundo > 0) {
+          chart = [
+            { label: etiquetaBase, value: base * personas, tone: 'main' },
+            { label: etiquetaSegundo, value: segundo * personas, tone: 'exit' },
+          ];
+        } else if (extra > 0) {
+          chart = [
+            { label: etiquetaBase, value: base * personas, tone: 'main' },
+            { label: etiquetaExtra, value: extra * personas, tone: 'warn' },
+          ];
+        } else {
+          chart = [{ label: etiquetaBase, value: Math.max(base * personas, 1), tone: 'main' }];
+        }
+
+        const subPartes = [];
+        if (total === 0) subPartes.push('Trámite gratuito');
+        subPartes.push('entrega estimada: ' + plazo);
+        if (personas > 1) subPartes.push(personas + ' personas · ' + H.ars(porPersona) + ' cada una');
+        subPartes.push('aranceles relevados el 27-07-2026: confirmalos en la fuente oficial antes de pagar');
+
+        return {
+          total: H.ars(total),
+          sub: subPartes.join(' · '),
+          rows: rows,
+          chart: chart,
+        };
+      }
+
+      // ══════════════ Validar CBU / CVU ══════════════
+      if (id === 'cbu') {
+        const limpio = soloDigitos(v.cbu);
+
+        if (limpio.length !== 22) {
+          return {
+            total: limpio.length ? 'Longitud incorrecta' : '—',
+            sub: limpio.length
+              ? 'Un CBU o CVU tiene 22 dígitos y vos ingresaste ' + limpio.length + '. Revisá que no falten ni sobren números.'
+              : 'Pegá el CBU o CVU de 22 dígitos en el campo de arriba.',
+            rows: [
+              row('Dígitos que ingresaste', limpio.length, CANT, true, 'tienen que ser 22'),
+              row('Dígitos que faltan o sobran', Math.abs(22 - limpio.length), CANT, false, '22 − lo ingresado'),
+            ],
+            chart: [
+              { label: 'Dígitos ingresados', value: Math.max(limpio.length, 1), tone: 'warn' },
+              { label: 'Dígitos que faltan', value: Math.max(22 - limpio.length, 0), tone: 'bad' },
+            ],
+            format: 'plain',
+          };
+        }
+
+        const bloque1 = limpio.slice(0, 8);
+        const bloque2 = limpio.slice(8, 22);
+        const codigo = bloque1.slice(0, 3);
+        const sucursal = bloque1.slice(3, 7);
+
+        const dv1Calc = dvBloque(bloque1.slice(0, 7), PESOS.dv1);
+        const dv1Ing = Number(bloque1[7]);
+        const dv1Ok = dv1Calc === dv1Ing;
+
+        const dv2Calc = dvBloque(bloque2.slice(0, 13), PESOS.dv2);
+        const dv2Ing = Number(bloque2[13]);
+        const dv2Ok = dv2Calc === dv2Ing;
+
+        const valido = dv1Ok && dv2Ok;
+        const psp = detectarPSP(limpio, codigo);
+        const banco = ENTIDADES[codigo];
+        const entidad = psp || banco || 'Entidad con código ' + codigo + ' (no identificada en la tabla del BCRA)';
+        const tipo = psp ? 'CVU de billetera virtual' : 'CBU bancario';
+
+        const cual = !dv1Ok && !dv2Ok
+          ? 'los dos bloques'
+          : !dv1Ok
+            ? 'el primer bloque (entidad y sucursal)'
+            : 'el segundo bloque (número de cuenta)';
+
+        return {
+          total: valido ? 'Válido' : 'Inválido',
+          sub: valido
+            ? tipo + ' de ' + entidad + ' · sucursal ' + sucursal + ' · los dos verificadores cierran. Confirmá igual el nombre del titular antes de transferir.'
+            : 'Falla el dígito verificador de ' + cual + '. Casi seguro es un error de tipeo: no transfieras, pedí que te reenvíen el CBU completo.',
+          rows: [
+            row('Dígitos del CBU/CVU', 22, CANT, false, entidad),
+            row('Bloque 1 · entidad y sucursal', 8, CANT, false, 'entidad ' + codigo + ' · sucursal ' + sucursal),
+            row('Verificador 1 que corresponde', dv1Calc, CANT, false, 'ingresado: ' + dv1Ing + (dv1Ok ? ' — cierra' : ' — NO cierra')),
+            row('Bloque 2 · número de cuenta', 14, CANT, false, 'los 13 dígitos de la cuenta más su verificador'),
+            row('Verificador 2 que corresponde', dv2Calc, CANT, false, 'ingresado: ' + dv2Ing + (dv2Ok ? ' — cierra' : ' — NO cierra')),
+            row('Verificadores que cierran', (dv1Ok ? 1 : 0) + (dv2Ok ? 1 : 0), CANT, true, 'sobre 2 · ' + tipo),
+          ],
+          chart: [
+            { label: 'Bloque 1 · entidad y sucursal (8 dígitos)', value: 8, tone: dv1Ok ? 'good' : 'bad' },
+            { label: 'Bloque 2 · número de cuenta (14 dígitos)', value: 14, tone: dv2Ok ? 'good' : 'bad' },
+          ],
+          format: 'plain',
+        };
+      }
+
+      // ══════════════ CUIL / CUIT desde el DNI ══════════════
+      if (id === 'cuil') {
+        const dniLimpio = soloDigitos(v.dni).replace(/^0+/, '');
+        if (!dniLimpio || dniLimpio.length > 8) {
+          return {
+            total: '—',
+            sub: dniLimpio.length > 8
+              ? 'El DNI no puede tener más de 8 dígitos.'
+              : 'Escribí tu número de DNI arriba: los puntos se ignoran solos.',
+            rows: [],
+            chart: [],
+            format: 'plain',
+          };
+        }
+        const dni8 = dniLimpio.padStart(8, '0');
+        const sexo = String(v.sexo || 'M').toUpperCase();
+        const r = calcularCuil(dni8, sexo);
+        const genero = sexo === 'F' ? 'femenino' : sexo === 'X' ? 'no binario u otro' : 'masculino';
+
+        return {
+          total: r.cuil,
+          sub:
+            'DNI ' + Number(dniLimpio).toLocaleString('es-AR') + ' · género ' + genero + ' · prefijo ' + r.prefijo +
+            ' · verificador ' + r.dv + (r.prefijo === '23' ? ' — el 20 daba un verificador de dos dígitos, por eso ANSES pasa al 23' : '') +
+            '. Para una persona física, el CUIT es este mismo número.',
+          rows: [
+            row('Prefijo asignado', Number(r.prefijo), CANT, false, genero),
+            row('DNI completado a 8 dígitos', Number(dni8), CANT, false, dni8),
+            row('Dígito verificador (módulo 11)', r.dv, CANT, true, 'serie 5-4-3-2-7-6-5-4-3-2'),
+            row('Dígitos del CUIL', 11, CANT, false, '2 de prefijo + 8 de DNI + 1 verificador'),
+          ],
+          chart: [
+            { label: 'Prefijo (2 dígitos)', value: 2, tone: 'main' },
+            { label: 'Tu DNI (8 dígitos)', value: 8, tone: 'good' },
+            { label: 'Verificador (1 dígito)', value: 1, tone: 'warn' },
+          ],
+          format: 'plain',
+        };
+      }
+
+      // ══════════════ Letra del DNI ══════════════
+      const dniNum = Number(soloDigitos(v.dni));
+      if (!dniNum || dniNum < 1000000 || dniNum > 99999999) {
+        return {
+          total: '—',
+          sub: 'Ingresá un número de DNI de 7 u 8 dígitos.',
+          rows: [],
+          chart: [],
+          format: 'plain',
+        };
+      }
+      const L = calcularLetra(dniNum);
+      return {
+        total: 'Letra ' + L.letra,
+        sub:
+          'DNI ' + dniNum.toLocaleString('es-AR') + ' → suma ponderada ' + L.suma + ', resto de dividir por 11 igual a ' + L.resto +
+          ', resultado ' + L.resultado + ' → letra ' + L.letra + '. Es orientativa: el DNI argentino no lleva letra oficial.',
+        rows: [
+          row('Suma ponderada de los dígitos', L.suma, CANT, false, 'serie 2-3-4-5-6-7-2-3 de derecha a izquierda'),
+          row('Resto de dividir por 11', L.resto, CANT, false, 'módulo 11'),
+          row('Resultado (11 menos el resto)', L.resultado, CANT, true, 'letra ' + L.letra),
+          row('Posición de la letra en la tabla', L.resultado === 11 ? 0 : L.resultado === 10 ? 10 : L.resultado, CANT, false, 'tabla A a K'),
+        ],
+        chart: [
+          { label: 'Dígitos del DNI', value: 8, tone: 'main' },
+          { label: 'Letra de control (orientativa)', value: 1, tone: 'warn' },
+        ],
+        format: 'plain',
+      };
+    });
+  })();
+</script>

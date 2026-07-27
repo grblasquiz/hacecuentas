@@ -1,0 +1,300 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto tiene que leudar la masa?"
+ * Reemplaza 5 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/masa.ts) y su compute().
+ * Todo el chrome, el CSS y el runtime viven en DecisionHub.astro y no se tocan.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, LEUDADO, ESTILOS, PIZZA } from '../../lib/hubs/masa';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ L: LEUDADO, ESTILOS, PIZZA }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const nf = (n, d) =>
+      Number(n || 0).toLocaleString('es-AR', {
+        minimumFractionDigits: d || 0,
+        maximumFractionDigits: d || 0,
+      });
+
+    const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+
+    /** Minutos → "2 h 30 min". Espejo del formato de la fórmula original. */
+    function humano(min) {
+      const m = Math.max(0, Math.round(min));
+      const h = Math.floor(m / 60);
+      const r = m % 60;
+      if (h === 0) return r + ' min';
+      if (r === 0) return h + ' h';
+      return h + ' h ' + r + ' min';
+    }
+
+    /** Factor de temperatura del modelo Q10. */
+    const factorTemp = (t) => Math.pow(2, (L.T_REF - t) / L.Q10);
+
+    /** Franjas fijas del eje de temperatura del gráfico. */
+    function franjas() {
+      return [
+        { label: 'Heladera (0 a 10 °C)', value: 10, from: 0, to: 10, tone: 'warn' },
+        { label: 'Fresco (10 a 20 °C)', value: 10, from: 10, to: 20, tone: 'good' },
+        { label: 'Óptimo (20 a 28 °C)', value: 8, from: 20, to: 28, tone: 'good' },
+        { label: 'Caliente (28 a 40 °C)', value: 12, from: 28, to: 40, tone: 'warn' },
+        { label: 'La levadura muere (40 a 55 °C)', value: 15, from: 40, to: 55, tone: 'bad' },
+      ];
+    }
+
+    function zona(t) {
+      if (t < 10) return 'heladera';
+      if (t < 20) return 'fresco';
+      if (t <= 28) return 'óptimo';
+      if (t < 40) return 'caliente';
+      return 'zona de muerte de la levadura';
+    }
+
+    H.onCompute(function (v, caso) {
+      const rama = (caso && caso.id) || 'leudado';
+
+      const temp = clamp(Number(v.temp), L.TEMP_MIN, L.TEMP_MAX);
+      const tipo = String(v.tipoLevadura || 'fresca');
+      const mult = L.EQUIV[tipo] || 1;
+      const nombreTipo = L.NOMBRE[tipo] || 'fresca';
+      const harina = Math.max(0, Number(v.harina) || 0);
+      const pctPuesto = Math.max(0, Number(v.levaduraPct) || 0);
+      const horas = Math.max(0, Number(v.horas) || 0);
+      const hidrat = clamp(Number(v.hidratacion) || 60, 50, 80);
+      const invitados = Math.max(1, Math.round(Number(v.invitados) || 1));
+      const estilo = ESTILOS[String(v.estilo || 'molde')] || ESTILOS.molde;
+
+      const fT = factorTemp(temp);
+      const chart = franjas();
+      const position = clamp(((temp - 0) / 55) * 100, 0, 100);
+      const positionLabel = nf(temp, 0) + ' °C — ' + zona(temp);
+
+      // ---------------------------------------------------------------
+      // Rama PIZZA: la harina sale del porcentaje panadero, no del campo.
+      // ---------------------------------------------------------------
+      if (rama === 'pizza') {
+        const bollos = Math.ceil(invitados / estilo.comen);
+        const aceitePct = estilo.aceite ? PIZZA.ACEITE : 0;
+        const divisor = 1 + hidrat / 100 + PIZZA.SAL + aceitePct + PIZZA.LEVADURA_SECA;
+        const harinaPorBollo = estilo.bollo / divisor;
+        const harinaTotal = Math.round(harinaPorBollo * bollos);
+        const agua = Math.round((harinaTotal * hidrat) / 100);
+        const sal = Math.round(harinaTotal * PIZZA.SAL * 10) / 10;
+        const aceite = estilo.aceite ? Math.round(harinaTotal * PIZZA.ACEITE * 10) / 10 : 0;
+        const levSeca = Math.round(harinaTotal * PIZZA.LEVADURA_SECA * 10) / 10;
+        const levFresca = Math.round(levSeca * 3 * 10) / 10;
+        const masaTotal = Math.round(estilo.bollo * bollos);
+
+        // La receta lleva 1% de instantánea = 3% en equivalente de fresca.
+        const doseEqPizza = clamp(PIZZA.LEVADURA_SECA * 100 * L.EQUIV.instantanea, L.DOSIS_MIN, L.DOSIS_MAX);
+        const minPizza = L.BASE_MIN * fT * (L.DOSIS_REF / doseEqPizza);
+
+        // Dosis alternativa para una fermentación larga de 24 h.
+        const eqLarga = (L.BASE_MIN * fT * L.DOSIS_REF) / (24 * 60);
+        const secaLarga = eqLarga / L.EQUIV.instantanea;
+
+        const rows = [
+          { k: 'Bollos que salen', ref: estilo.comen + ' por pizza', v: bollos, format: 'unit', unit: bollos === 1 ? 'bollo' : 'bollos' },
+          { k: 'Peso de cada bollo', ref: 'estilo ' + estilo.nombre, v: estilo.bollo, format: 'unit', unit: 'g' },
+          { k: 'Harina', ref: '100% panadero', v: harinaTotal, format: 'unit', unit: 'g', extra: true },
+          { k: 'Agua', ref: nf(hidrat, 0) + '% de hidratación', v: agua, format: 'unit', unit: 'ml' },
+          { k: 'Sal', ref: '2%', v: sal, format: 'unit', unit: 'g', decimals: 1 },
+        ];
+        if (estilo.aceite) rows.push({ k: 'Aceite de oliva', ref: '3%', v: aceite, format: 'unit', unit: 'g', decimals: 1 });
+        rows.push(
+          { k: 'Levadura seca instantánea', ref: '1%', v: levSeca, format: 'unit', unit: 'g', decimals: 1 },
+          { k: 'O levadura fresca', ref: '3%', v: levFresca, format: 'unit', unit: 'g', decimals: 1 },
+          { k: 'Masa total', v: masaTotal, format: 'unit', unit: 'g' },
+          { k: 'Leudado a ' + nf(temp, 0) + ' °C', ref: 'con esa levadura', v: Number((minPizza / 60).toFixed(2)), format: 'unit', unit: 'h', decimals: 2, extra: true },
+          { k: 'Levadura seca para fermentar 24 h', ref: nf(eqLarga, 2) + '% en fresca', v: Number(secaLarga.toFixed(3)), format: 'unit', unit: '% de la harina', decimals: 3 },
+        );
+
+        return {
+          total: humano(minPizza),
+          sub:
+            bollos + (bollos === 1 ? ' bollo' : ' bollos') + ' de ' + estilo.bollo + ' g (' + estilo.nombre + ') para ' +
+            invitados + (invitados === 1 ? ' persona' : ' personas') + ' · ' + nf(harinaTotal, 0) + ' g de harina y ' +
+            nf(agua, 0) + ' ml de agua · a ' + nf(temp, 0) + ' °C con 1% de levadura instantánea la masa leva en ' +
+            humano(minPizza) + '. Para una napolitana de 24 horas hay que bajar a ' + nf(secaLarga, 3) + '% de seca.',
+          rows: rows,
+          chart: chart,
+          format: 'unit',
+          unit: 'g',
+          position: position,
+          positionLabel: positionLabel,
+        };
+      }
+
+      // ---------------------------------------------------------------
+      // Rama DOSIS: se fija el tiempo y se despeja la levadura.
+      // También la usa la rama de heladera cuando hay horas objetivo.
+      // ---------------------------------------------------------------
+      if (rama === 'dosis') {
+        if (!horas) {
+          return {
+            total: '—',
+            sub: 'Poné cuántas horas tenés hasta hornear para saber cuánta levadura va.',
+            rows: [],
+            chart: chart,
+            format: 'unit',
+            unit: 'h',
+            position: position,
+            positionLabel: positionLabel,
+          };
+        }
+        const eq = (L.BASE_MIN * fT * L.DOSIS_REF) / (horas * 60);
+        const pctFresca = eq;
+        const pctSecaActiva = eq / L.EQUIV.seca_activa;
+        const pctInstantanea = eq / L.EQUIV.instantanea;
+        const pctElegido = eq / mult;
+        const gramos = (harina * pctElegido) / 100;
+
+        const rows = [
+          { k: 'Levadura ' + nombreTipo + ' que hay que poner', ref: nf(harina, 0) + ' g de harina', v: Number(gramos.toFixed(2)), format: 'unit', unit: 'g', decimals: 2, extra: true },
+          { k: 'Porcentaje panadero de esa dosis', v: Number(pctElegido.toFixed(3)), format: 'unit', unit: '% de la harina', decimals: 3 },
+          { k: 'Equivalente en levadura fresca', v: Number(pctFresca.toFixed(3)), format: 'unit', unit: '%', decimals: 3 },
+          { k: 'Equivalente en seca activa', v: Number(pctSecaActiva.toFixed(3)), format: 'unit', unit: '%', decimals: 3 },
+          { k: 'Equivalente en seca instantánea', v: Number(pctInstantanea.toFixed(3)), format: 'unit', unit: '%', decimals: 3 },
+          { k: 'Factor por temperatura', ref: 'contra los 25 °C de referencia', v: Number(fT.toFixed(2)), format: 'unit', unit: '×', decimals: 2 },
+          { k: 'Horas objetivo', v: Number(horas.toFixed(1)), format: 'unit', unit: 'h', decimals: 1 },
+        ];
+
+        const aviso =
+          pctFresca > 4
+            ? ' Ojo: más de 4% de fresca deja gusto a levadura. Conviene darle más tiempo o más temperatura antes que cargar dosis.'
+            : pctFresca < 0.2
+              ? ' Es una dosis muy baja, propia de fermentación larga: pesá con balanza de precisión o pasala a la heladera.'
+              : '';
+
+        return {
+          total: nf(gramos, 2) + ' g',
+          sub:
+            'Para que esté lista en ' + nf(horas, 1) + ' h a ' + nf(temp, 0) + ' °C: ' + nf(gramos, 2) + ' g de levadura ' +
+            nombreTipo + ' sobre ' + nf(harina, 0) + ' g de harina (' + nf(pctElegido, 3) + '% panadero, ' +
+            nf(pctFresca, 3) + '% en equivalente de fresca).' + aviso,
+          rows: rows,
+          chart: chart,
+          format: 'unit',
+          unit: 'g',
+          position: position,
+          positionLabel: positionLabel,
+        };
+      }
+
+      // ---------------------------------------------------------------
+      // Ramas LEUDADO y FRIO: se fija la dosis y sale el tiempo.
+      // ---------------------------------------------------------------
+      const eqPuesto = clamp(pctPuesto * mult, L.DOSIS_MIN, L.DOSIS_MAX);
+      const fL = L.DOSIS_REF / eqPuesto;
+      const minutos = L.BASE_MIN * fT * fL;
+      const gramosLev = (harina * pctPuesto) / 100;
+
+      const rows = [
+        { k: 'Tiempo del primer leudado', ref: nf(temp, 0) + ' °C', v: Number((minutos / 60).toFixed(2)), format: 'unit', unit: 'h', decimals: 2, extra: true },
+        { k: 'Levadura ' + nombreTipo + ' que pusiste', ref: nf(pctPuesto, 2) + '% de la harina', v: Number(gramosLev.toFixed(2)), format: 'unit', unit: 'g', decimals: 2 },
+        { k: 'Dosis en equivalente de levadura fresca', v: Number(eqPuesto.toFixed(2)), format: 'unit', unit: '%', decimals: 2 },
+        { k: 'Factor por temperatura', ref: 'contra los 25 °C de referencia', v: Number(fT.toFixed(2)), format: 'unit', unit: '×', decimals: 2 },
+        { k: 'Factor por dosis', ref: 'contra el 2% de referencia', v: Number(fL.toFixed(2)), format: 'unit', unit: '×', decimals: 2 },
+      ];
+
+      if (rama === 'frio') {
+        const min22 = L.BASE_MIN * factorTemp(22) * fL;
+        rows.push(
+          { k: 'La misma masa a 22 °C', v: Number((min22 / 60).toFixed(2)), format: 'unit', unit: 'h', decimals: 2 },
+          { k: 'Cuánto la estira el frío', ref: 'contra dejarla a 22 °C', v: Number((minutos / min22).toFixed(2)), format: 'unit', unit: '×', decimals: 2 },
+        );
+        if (horas > 0) {
+          const eqObj = (L.BASE_MIN * fT * L.DOSIS_REF) / (horas * 60);
+          rows.push({
+            k: 'Levadura ' + nombreTipo + ' para que salga en ' + nf(horas, 1) + ' h',
+            ref: nf(eqObj, 3) + '% en fresca',
+            v: Number(((harina * (eqObj / mult)) / 100).toFixed(2)),
+            format: 'unit',
+            unit: 'g',
+            decimals: 2,
+          });
+        }
+      } else {
+        L.COMPARAR.forEach(function (t) {
+          const m = L.BASE_MIN * factorTemp(t) * fL;
+          rows.push({ k: 'La misma masa a ' + t + ' °C', v: Number((m / 60).toFixed(2)), format: 'unit', unit: 'h', decimals: 2 });
+        });
+      }
+
+      const lectura =
+        temp >= 50
+          ? 'A esta temperatura la levadura se muere: la masa no va a levar.'
+          : temp >= 40
+            ? 'La levadura está al límite del estrés térmico: controlá cada 10 minutos.'
+            : temp > 28
+              ? 'Hace calor y esto se apura: controlá desde antes para no pasarte.'
+              : temp >= 20
+                ? 'Estás en el rango óptimo de fermentación.'
+                : temp >= 10
+                  ? 'Fermentación lenta y con más sabor: paciencia.'
+                  : 'Fermentación en frío: la levadura queda casi dormida.';
+
+      return {
+        total: humano(minutos),
+        sub:
+          nf(pctPuesto, 2) + '% de levadura ' + nombreTipo + ' (' + nf(eqPuesto, 2) + '% en equivalente de fresca) a ' +
+          nf(temp, 0) + ' °C · ' + nf(gramosLev, 2) + ' g sobre ' + nf(harina, 0) + ' g de harina · ' +
+          '×' + nf(fT, 2) + ' por temperatura y ×' + nf(fL, 2) + ' por dosis. ' + lectura,
+        rows: rows,
+        chart: chart,
+        format: 'unit',
+        unit: 'h',
+        position: position,
+        positionLabel: positionLabel,
+      };
+    });
+  })();
+</script>

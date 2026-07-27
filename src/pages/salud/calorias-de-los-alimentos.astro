@@ -1,0 +1,435 @@
+---
+/**
+ * Hub de decisión — "¿Cuántas calorías tiene lo que como?"
+ * Reemplaza 16 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/calorias-alimento.ts) y su
+ * compute(). Todo el chrome, el CSS y el runtime viven en DecisionHub.astro
+ * y no se tocan.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, ALIMENTOS, PLATOS, NUTRI } from '../../lib/hubs/calorias-alimento';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ ALIMENTOS, PLATOS, N: NUTRI }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const nf = (n, d) =>
+      Number(n || 0).toLocaleString('es-AR', {
+        minimumFractionDigits: d || 0,
+        maximumFractionDigits: d || 0,
+      });
+
+    const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+
+    /** Clasificación de índice glucémico (OMS/FAO y Universidad de Sídney). */
+    function claseIG(ig) {
+      if (!ig) return 'sin dato de IG';
+      if (ig <= 55) return 'IG bajo';
+      if (ig <= 69) return 'IG medio';
+      return 'IG alto';
+    }
+
+    /** Clasificación de carga glucémica (Harvard). */
+    function claseCG(cg) {
+      if (cg <= 10) return 'carga baja';
+      if (cg <= 19) return 'carga media';
+      return 'carga alta';
+    }
+
+    /** Clasificación del índice de saciedad de Holt (pan blanco = 100). */
+    function claseIS(is) {
+      if (!is) return '';
+      if (is >= 200) return 'muy saciante';
+      if (is >= 130) return 'saciante';
+      if (is >= 100) return 'saciedad media';
+      return 'poco saciante';
+    }
+
+    /**
+     * Donut de composición calórica. Los segmentos son KCAL, no gramos:
+     * la grasa rinde 9 kcal/g y el alcohol 7, por eso pesan más de lo que
+     * sugiere la balanza. El segmento "resto" cierra la diferencia contra el
+     * valor de tabla cuando el alimento la tiene.
+     */
+    function donut(kProt, kCarb, kGrasa, kAlc, totalTabla) {
+      const partes = [
+        { label: 'Proteínas', value: Math.round(kProt), tone: 'good' },
+        { label: 'Carbohidratos', value: Math.round(kCarb), tone: 'prop' },
+        { label: 'Grasas', value: Math.round(kGrasa), tone: 'warn' },
+      ];
+      if (kAlc > 0) partes.push({ label: 'Alcohol', value: Math.round(kAlc), tone: 'bad' });
+      const suma = kProt + kCarb + kGrasa + kAlc;
+      const total = totalTabla || suma;
+      const resto = total - suma;
+      // Sólo se muestra si la tabla y la suma de Atwater difieren de verdad
+      // (más del 3%): por debajo de eso es redondeo de la propia tabla.
+      if (resto > total * 0.03) partes.push({ label: 'Resto (agua, ácidos, redondeo de tabla)', value: Math.round(resto), tone: 'exit' });
+      return partes.filter((p) => p.value > 0);
+    }
+
+    H.onCompute(function (v, caso) {
+      const rama = (caso && caso.id) || 'catalogo';
+
+      const a = ALIMENTOS[String(v.alimento || 'pan_blanco')] || ALIMENTOS.pan_blanco;
+      const gramos = clamp(Number(v.gramos) || 0, 0, 3000);
+      const factor = gramos / 100;
+      const unidades = Math.max(1, Math.round(Number(v.unidades) || 1));
+
+      // ---------------------------------------------------------------
+      // Rama PLATO: valores por unidad entera, no por 100 g.
+      // ---------------------------------------------------------------
+      if (rama === 'plato') {
+        const p = PLATOS[String(v.plato || 'empanada_carne')] || PLATOS.empanada_carne;
+        const total = p.kcal * unidades;
+        const pctDia = (total / N.DIETA_REF) * 100;
+
+        const rows = [
+          { k: 'Calorías por unidad', ref: p.nota, v: p.kcal, format: 'unit', unit: 'kcal' },
+          { k: 'Unidades', v: unidades, format: 'plain' },
+          { k: 'Total de lo que comiste', v: Math.round(total), format: 'unit', unit: 'kcal', extra: true },
+          { k: 'Sobre una dieta de 2.000 kcal', v: Number(pctDia.toFixed(0)), format: 'unit', unit: '%' },
+        ];
+
+        let kProt = 0, kCarb = 0, kGrasa = 0;
+        if (p.p > 0 || p.c > 0 || p.g > 0) {
+          kProt = p.p * N.KCAL_PROT * unidades;
+          kCarb = p.c * N.KCAL_CARB * unidades;
+          kGrasa = p.g * N.KCAL_GRASA * unidades;
+          rows.push(
+            { k: 'Proteínas', v: Number((p.p * unidades).toFixed(1)), format: 'unit', unit: 'g', decimals: 1 },
+            { k: 'Carbohidratos', v: Number((p.c * unidades).toFixed(1)), format: 'unit', unit: 'g', decimals: 1 },
+            { k: 'Grasas', v: Number((p.g * unidades).toFixed(1)), format: 'unit', unit: 'g', decimals: 1 },
+          );
+        }
+
+        const esHuevo = String(v.plato || '').indexOf('huevo') === 0;
+        const esBurger = String(v.plato || '').indexOf('burger') === 0;
+        if (esHuevo) {
+          const grasaCoccion = (p.kcal - N.HUEVO_BASE) * unidades;
+          rows.push({ k: 'De eso, grasa de cocción', ref: 'el huevo en sí son 75 kcal', v: Math.round(grasaCoccion), format: 'unit', unit: 'kcal' });
+        }
+        if (esBurger) {
+          const dif = (p.kcal - N.BURGER_BASE) * unidades;
+          rows.push({ k: 'Contra una casera simple', ref: '350 kcal por unidad', v: Math.round(dif), format: 'unit', unit: 'kcal' });
+        }
+
+        return {
+          total: nf(total, 0) + ' kcal',
+          sub:
+            unidades + (unidades === 1 ? ' unidad' : ' unidades') + ' de ' + p.n.toLowerCase() + ' (' + p.nota + ') · ' +
+            nf(p.kcal, 0) + ' kcal cada una · ' + nf(pctDia, 0) + '% de una dieta de 2.000 kcal.' +
+            (esHuevo ? ' La diferencia entre métodos de cocción es la grasa, no el huevo.' : '') +
+            (esBurger ? ' La casera simple de referencia son 350 kcal.' : ''),
+          rows: rows,
+          chart: donut(kProt, kCarb, kGrasa, 0, total),
+          format: 'unit',
+          unit: 'kcal',
+        };
+      }
+
+      // ---------------------------------------------------------------
+      // Rama ETIQUETA: Atwater sobre lo que declara el rótulo + score de
+      // densidad nutricional.
+      // ---------------------------------------------------------------
+      if (rama === 'etiqueta') {
+        const prot = Math.max(0, Number(v.proteinas) || 0);
+        const carb = Math.max(0, Number(v.carbohidratos) || 0);
+        const gras = Math.max(0, Number(v.grasas) || 0);
+        const fib = Math.max(0, Number(v.fibra) || 0);
+        const azu = Math.max(0, Number(v.azucar) || 0);
+        const sod = Math.max(0, Number(v.sodio) || 0);
+        const gsat = Math.max(0, Number(v.grasaSat) || 0);
+
+        const kProt = prot * N.KCAL_PROT;
+        const kCarb = carb * N.KCAL_CARB;
+        const kGrasa = gras * N.KCAL_GRASA;
+        const kcal = kProt + kCarb + kGrasa;
+
+        if (!kcal) {
+          return {
+            total: '—',
+            sub: 'Cargá los gramos de proteínas, carbohidratos y grasas que declara la etiqueta.',
+            rows: [],
+            chart: [],
+            format: 'unit',
+            unit: 'kcal',
+          };
+        }
+
+        // Score de densidad nutricional (tipo NRF): lo bueno por cada 100 kcal,
+        // menos lo que conviene limitar.
+        const positivos = prot * 1 + fib * 2;
+        const negativos = azu + sod / 100 + gsat * 3;
+        const score = clamp((positivos * 100) / kcal - negativos, 0, 100);
+        const etiquetaScore =
+          score >= 70 ? 'muy densa en nutrientes' : score >= 50 ? 'densa' : score >= 20 ? 'moderada' : 'calorías vacías';
+
+        const penal = [
+          { n: 'los azúcares añadidos', peso: azu },
+          { n: 'el sodio', peso: sod / 100 },
+          { n: 'las grasas saturadas', peso: gsat * 3 },
+        ].sort((x, y) => y.peso - x.peso)[0];
+
+        const rows = [
+          { k: 'Calorías', ref: 'Atwater 4-4-9', v: Math.round(kcal), format: 'unit', unit: 'kcal', extra: true },
+          { k: 'De las proteínas', ref: nf(prot, 1) + ' g × 4', v: Math.round(kProt), format: 'unit', unit: 'kcal' },
+          { k: 'De los carbohidratos', ref: nf(carb, 1) + ' g × 4', v: Math.round(kCarb), format: 'unit', unit: 'kcal' },
+          { k: 'De las grasas', ref: nf(gras, 1) + ' g × 9', v: Math.round(kGrasa), format: 'unit', unit: 'kcal' },
+          { k: 'Carbohidratos disponibles', ref: 'totales menos fibra', v: Number(Math.max(0, carb - fib).toFixed(1)), format: 'unit', unit: 'g', decimals: 1 },
+          { k: 'Score de densidad nutricional', ref: '0 a 100', v: Math.round(score), format: 'plain', extra: true },
+          { k: 'Puntos que suman', ref: 'proteína × 1 + fibra × 2', v: Number(positivos.toFixed(1)), format: 'plain', decimals: 1 },
+          { k: 'Puntos que restan', ref: 'azúcar + sodio/100 + grasa sat × 3', v: Number(negativos.toFixed(1)), format: 'plain', decimals: 1 },
+          { k: 'Sobre una dieta de 2.000 kcal', v: Number(((kcal / N.DIETA_REF) * 100).toFixed(0)), format: 'unit', unit: '%' },
+        ];
+
+        return {
+          total: nf(kcal, 0) + ' kcal',
+          sub:
+            nf(prot, 1) + ' g de proteína, ' + nf(carb, 1) + ' g de carbohidratos y ' + nf(gras, 1) + ' g de grasa dan ' +
+            nf(kcal, 0) + ' kcal (' + nf((kGrasa / kcal) * 100, 0) + '% vienen de la grasa) · score de densidad ' +
+            nf(score, 0) + '/100: ' + etiquetaScore + (negativos > 0 ? ', y lo que más penaliza es ' + penal.n : '') + '.',
+          rows: rows,
+          chart: donut(kProt, kCarb, kGrasa, 0, kcal),
+          format: 'unit',
+          unit: 'kcal',
+        };
+      }
+
+      // ---------------------------------------------------------------
+      // Rama RECETA: macros de toda la preparación ÷ porciones.
+      // ---------------------------------------------------------------
+      if (rama === 'receta') {
+        const prot = Math.max(0, Number(v.proteinas) || 0);
+        const carb = Math.max(0, Number(v.carbohidratos) || 0);
+        const gras = Math.max(0, Number(v.grasas) || 0);
+        const kProt = prot * N.KCAL_PROT;
+        const kCarb = carb * N.KCAL_CARB;
+        const kGrasa = gras * N.KCAL_GRASA;
+        const kcal = kProt + kCarb + kGrasa;
+
+        if (!kcal) {
+          return {
+            total: '—',
+            sub: 'Cargá los gramos totales de proteína, carbohidratos y grasa de toda la preparación.',
+            rows: [],
+            chart: [],
+            format: 'unit',
+            unit: 'kcal',
+          };
+        }
+
+        const porPorcion = kcal / unidades;
+        const rows = [
+          { k: 'Calorías de toda la preparación', v: Math.round(kcal), format: 'unit', unit: 'kcal' },
+          { k: 'Porciones que rinde', v: unidades, format: 'plain' },
+          { k: 'Calorías por porción', v: Math.round(porPorcion), format: 'unit', unit: 'kcal', extra: true },
+          { k: 'Proteína por porción', v: Number((prot / unidades).toFixed(1)), format: 'unit', unit: 'g', decimals: 1 },
+          { k: 'Carbohidratos por porción', v: Number((carb / unidades).toFixed(1)), format: 'unit', unit: 'g', decimals: 1 },
+          { k: 'Grasa por porción', v: Number((gras / unidades).toFixed(1)), format: 'unit', unit: 'g', decimals: 1 },
+          { k: 'Calorías que vienen de la proteína', v: Number(((kProt / kcal) * 100).toFixed(0)), format: 'unit', unit: '%' },
+          { k: 'Calorías que vienen de los carbohidratos', v: Number(((kCarb / kcal) * 100).toFixed(0)), format: 'unit', unit: '%' },
+          { k: 'Calorías que vienen de la grasa', v: Number(((kGrasa / kcal) * 100).toFixed(0)), format: 'unit', unit: '%' },
+          { k: 'Una porción sobre una dieta de 2.000 kcal', v: Number(((porPorcion / N.DIETA_REF) * 100).toFixed(0)), format: 'unit', unit: '%' },
+        ];
+
+        return {
+          total: nf(porPorcion, 0) + ' kcal',
+          sub:
+            nf(kcal, 0) + ' kcal en total, repartidas en ' + unidades + (unidades === 1 ? ' porción' : ' porciones') +
+            ' de ' + nf(porPorcion, 0) + ' kcal · la grasa aporta el ' + nf((kGrasa / kcal) * 100, 0) +
+            '% de las calorías. No te olvides de sumar el aceite de cocción.',
+          rows: rows,
+          chart: donut(kProt / unidades, kCarb / unidades, kGrasa / unidades, 0, porPorcion),
+          format: 'unit',
+          unit: 'kcal',
+        };
+      }
+
+      // ---------------------------------------------------------------
+      // Ramas CATÁLOGO, GLUCEMIA y BEBIDA: todas leen el mismo catálogo.
+      // ---------------------------------------------------------------
+      const kcal = a.kcal * factor;
+      const prot = a.p * factor;
+      const carb = a.c * factor;
+      const gras = a.g * factor;
+      const fib = a.f * factor;
+      const disponibles = Math.max(0, carb - fib);
+      const cg = (a.ig * disponibles) / 100;
+
+      const kProt = prot * N.KCAL_PROT;
+      const kCarb = carb * N.KCAL_CARB;
+      const kGrasa = gras * N.KCAL_GRASA;
+      const gAlcohol = a.abv ? gramos * (a.abv / 100) * N.DENSIDAD_ETANOL : 0;
+      const kAlcohol = gAlcohol * N.KCAL_ALCOHOL;
+
+      if (rama === 'bebida') {
+        if (!a.abv) {
+          return {
+            total: '—',
+            sub: 'Elegí una bebida con alcohol del catálogo: cerveza, vino, espumante, destilado o fernet con cola.',
+            rows: [],
+            chart: [],
+            format: 'unit',
+            unit: 'kcal',
+          };
+        }
+        const pctAlc = kcal > 0 ? (kAlcohol / kcal) * 100 : 0;
+        const minCaminar = kcal / N.KCAL_MIN_CAMINATA;
+        const rows = [
+          { k: 'Calorías del vaso o la copa', ref: nf(gramos, 0) + ' ml de ' + a.n.toLowerCase(), v: Math.round(kcal), format: 'unit', unit: 'kcal', extra: true },
+          { k: 'Alcohol puro', ref: nf(a.abv, 1) + '% v/v', v: Number(gAlcohol.toFixed(1)), format: 'unit', unit: 'g', decimals: 1 },
+          { k: 'Calorías que vienen del alcohol', ref: '7 kcal por gramo', v: Math.round(kAlcohol), format: 'unit', unit: 'kcal' },
+          { k: 'Qué parte del total es alcohol', v: Number(pctAlc.toFixed(0)), format: 'unit', unit: '%' },
+          { k: 'Carbohidratos', v: Number(carb.toFixed(1)), format: 'unit', unit: 'g', decimals: 1 },
+          { k: 'Equivale a caminar', ref: '5 kcal por minuto', v: Math.round(minCaminar), format: 'unit', unit: 'min' },
+          { k: 'Sobre una dieta de 2.000 kcal', v: Number(((kcal / N.DIETA_REF) * 100).toFixed(0)), format: 'unit', unit: '%' },
+          { k: 'Si tomás eso todos los días, en un mes', v: Math.round(kcal * 30), format: 'unit', unit: 'kcal' },
+        ];
+        return {
+          total: nf(kcal, 0) + ' kcal',
+          sub:
+            nf(gramos, 0) + ' ml de ' + a.n.toLowerCase() + ' suman ' + nf(kcal, 0) + ' kcal y ' + nf(gAlcohol, 1) +
+            ' g de alcohol puro: cerca del ' + nf(pctAlc, 0) + '% de esas calorías son etanol, sin ningún nutriente. ' +
+            'Equivalen a ' + nf(minCaminar, 0) + ' minutos de caminata.',
+          rows: rows,
+          chart: donut(kProt, kCarb, kGrasa, kAlcohol, kcal),
+          format: 'unit',
+          unit: 'kcal',
+        };
+      }
+
+      if (rama === 'glucemia') {
+        if (!a.ig) {
+          return {
+            total: 'Sin dato de IG',
+            sub:
+              a.n + ' no tiene índice glucémico de referencia en las tablas internacionales, en general porque casi no ' +
+              'aporta carbohidratos. Elegí un alimento con carbohidratos para ver su carga glucémica.',
+            rows: [
+              { k: 'Carbohidratos de la porción', v: Number(carb.toFixed(1)), format: 'unit', unit: 'g', decimals: 1 },
+              { k: 'Fibra', v: Number(fib.toFixed(1)), format: 'unit', unit: 'g', decimals: 1 },
+              { k: 'Calorías', v: Math.round(kcal), format: 'unit', unit: 'kcal' },
+            ],
+            chart: donut(kProt, kCarb, kGrasa, kAlcohol, kcal),
+            format: 'unit',
+            unit: 'kcal',
+          };
+        }
+        const rows = [
+          { k: 'Índice glucémico del alimento', ref: claseIG(a.ig) + ' · bajo ≤55, medio 56-69, alto ≥70', v: a.ig, format: 'plain' },
+          { k: 'Carbohidratos totales de la porción', v: Number(carb.toFixed(1)), format: 'unit', unit: 'g', decimals: 1 },
+          { k: 'De eso, fibra', ref: 'no llega a glucosa', v: Number(fib.toFixed(1)), format: 'unit', unit: 'g', decimals: 1 },
+          { k: 'Carbohidratos disponibles', ref: 'totales menos fibra', v: Number(disponibles.toFixed(1)), format: 'unit', unit: 'g', decimals: 1 },
+          { k: 'Carga glucémica de tu porción', ref: 'IG × disponibles ÷ 100', v: Number(cg.toFixed(1)), format: 'plain', decimals: 1, extra: true },
+          { k: 'Umbral de carga baja', v: 10, format: 'plain' },
+          { k: 'Umbral de carga alta', v: 20, format: 'plain' },
+          { k: 'Carga glucémica cada 100 g', v: Number(((a.ig * Math.max(0, a.c - a.f)) / 100).toFixed(1)), format: 'plain', decimals: 1 },
+          { k: 'Calorías de la porción', v: Math.round(kcal), format: 'unit', unit: 'kcal' },
+        ];
+        return {
+          total: nf(cg, 1),
+          sub:
+            a.n + ' tiene IG ' + a.ig + ' (' + claseIG(a.ig) + '). En ' + nf(gramos, 0) + ' g la porción aporta ' +
+            nf(disponibles, 1) + ' g de carbohidratos disponibles, así que la carga glucémica es ' + nf(cg, 1) + ': ' +
+            claseCG(cg) + '. El IG es del alimento; la carga, de la porción que te servís.',
+          rows: rows,
+          chart: donut(kProt, kCarb, kGrasa, kAlcohol, kcal),
+          format: 'plain',
+          decimals: 1,
+        };
+      }
+
+      // Rama CATÁLOGO (por defecto).
+      const rows = [
+        { k: 'Calorías de la porción', ref: nf(a.kcal, 0) + ' kcal cada 100 ' + (a.abv ? 'ml' : 'g'), v: Math.round(kcal), format: 'unit', unit: 'kcal', extra: true },
+        { k: 'Proteínas', v: Number(prot.toFixed(1)), format: 'unit', unit: 'g', decimals: 1 },
+        { k: 'Carbohidratos totales', v: Number(carb.toFixed(1)), format: 'unit', unit: 'g', decimals: 1 },
+        { k: 'De eso, fibra', v: Number(fib.toFixed(1)), format: 'unit', unit: 'g', decimals: 1 },
+        { k: 'Grasas', v: Number(gras.toFixed(1)), format: 'unit', unit: 'g', decimals: 1 },
+      ];
+      if (gAlcohol > 0) {
+        rows.push({ k: 'Alcohol puro', ref: nf(a.abv, 1) + '% v/v', v: Number(gAlcohol.toFixed(1)), format: 'unit', unit: 'g', decimals: 1 });
+      }
+      if (a.ig) {
+        rows.push(
+          { k: 'Índice glucémico', ref: claseIG(a.ig), v: a.ig, format: 'plain' },
+          { k: 'Carga glucémica de la porción', ref: claseCG(cg), v: Number(cg.toFixed(1)), format: 'plain', decimals: 1 },
+        );
+      }
+      if (a.is) {
+        rows.push({ k: 'Índice de saciedad', ref: claseIS(a.is) + ' · pan blanco = 100', v: a.is, format: 'plain' });
+      }
+      rows.push(
+        { k: 'Grupo NOVA de procesamiento', ref: N.NOVA[a.nova], v: a.nova, format: 'plain' },
+        { k: 'Sobre una dieta de 2.000 kcal', v: Number(((kcal / N.DIETA_REF) * 100).toFixed(0)), format: 'unit', unit: '%' },
+      );
+
+      const dominante = [
+        { n: 'las grasas', k: kGrasa },
+        { n: 'los carbohidratos', k: kCarb },
+        { n: 'las proteínas', k: kProt },
+        { n: 'el alcohol', k: kAlcohol },
+      ].sort((x, y) => y.k - x.k)[0];
+
+      return {
+        total: nf(kcal, 0) + ' kcal',
+        sub:
+          nf(gramos, 0) + (a.abv ? ' ml de ' : ' g de ') + a.n.toLowerCase() + ' aportan ' + nf(kcal, 0) + ' kcal, con ' +
+          dominante.n + ' como macro dominante · ' +
+          (a.ig ? 'IG ' + a.ig + ' (' + claseIG(a.ig) + ') y carga glucémica ' + nf(cg, 1) + ' (' + claseCG(cg) + ') · ' : '') +
+          (a.is ? 'índice de saciedad ' + a.is + ' (' + claseIS(a.is) + ') · ' : '') +
+          N.NOVA[a.nova] + '.',
+        rows: rows,
+        chart: donut(kProt, kCarb, kGrasa, kAlcohol, kcal),
+        format: 'unit',
+        unit: 'kcal',
+      };
+    });
+  })();
+</script>

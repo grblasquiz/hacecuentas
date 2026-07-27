@@ -1,0 +1,324 @@
+---
+/**
+ * Hub de decisión — "Gas y agua: ¿cuánto voy a pagar?"
+ * Reemplaza 9 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: 4 casos (gas de red / zona fría / garrafa / agua).
+ * La página sólo aporta datos (src/lib/hubs/factura-gas-agua.ts) y compute().
+ *
+ * Sólo tres ramas son plata. Los m³, kg, días, kWh, litros y porcentajes
+ * declaran `format: 'unit'` en TODAS sus filas: el runtime hace Object.assign
+ * y una fila sin formato propio caería a pesos con "$".
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  GAS_CUADRO,
+  FACTOR_LITORAL,
+  DESCUENTO_SUBSIDIO,
+  DESCUENTO_ZONA_FRIA,
+  GAS_IVA,
+  GAS_TASAS,
+  GAS_FACTOR_IMPUESTOS,
+  GARRAFA_KG,
+  GARRAFA_CONSUMO_BASE,
+  GARRAFA_PERSONAS_BASE,
+  KWH_POR_M3_GAS_NATURAL,
+  KWH_POR_KG_GLP,
+  AGUA,
+  AGUA_EFICIENTE,
+  OMS_LITROS_PERSONA_DIA,
+  DIAS_MES,
+  MESES_BIMESTRE,
+} from '../../lib/hubs/factura-gas-agua';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    CUADRO: GAS_CUADRO,
+    FACTOR_LITORAL,
+    DESC_SUB: DESCUENTO_SUBSIDIO,
+    DESC_ZF: DESCUENTO_ZONA_FRIA,
+    GAS_IVA,
+    GAS_TASAS,
+    IMPUESTOS: GAS_FACTOR_IMPUESTOS,
+    GARRAFA_KG,
+    GARRAFA_BASE: GARRAFA_CONSUMO_BASE,
+    GARRAFA_PERSONAS_BASE,
+    KWH_M3: KWH_POR_M3_GAS_NATURAL,
+    KWH_KG: KWH_POR_KG_GLP,
+    AGUA,
+    EF: AGUA_EFICIENTE,
+    OMS: OMS_LITROS_PERSONA_DIA,
+    DIAS_MES,
+    MESES_BIMESTRE,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const nf = (n, d) =>
+      Number(n || 0).toLocaleString('es-AR', {
+        minimumFractionDigits: d || 0,
+        maximumFractionDigits: d || 0,
+      });
+
+    /** Tarifa bimestral del cuadro, antes de bonificaciones e impuestos. */
+    function baseGas(v) {
+      const t = CUADRO[v.categoria] || CUADRO.R23;
+      const m3 = Math.max(0, Math.round(Number(v.m3_bimestral) || 0));
+      const fd = v.zona === 'litoral' ? FACTOR_LITORAL : 1;
+      const subtotalGas = t.cargoFijoGas + t.variableGas * m3;
+      const subtotalDist = (t.cargoFijoDist + t.variableDist * m3) * fd;
+      return { t: t, m3: m3, fd: fd, gas: subtotalGas, dist: subtotalDist, base: subtotalGas + subtotalDist };
+    }
+
+    /**
+     * Precio MARGINAL del m³: sólo componentes variables, con impuestos.
+     * Mismo criterio que /hogar/climatizacion (R23 sin subsidio → $133,39).
+     */
+    function precioM3Marginal(v, pctSub) {
+      const b = baseGas(v);
+      return (b.t.variableGas + b.t.variableDist * b.fd) * (1 - pctSub) * IMPUESTOS;
+    }
+
+    /** Litros por mes de cada uso doméstico de agua. */
+    function litrosAgua(v) {
+      const personas = Math.max(1, Number(v.personas) || 1);
+      const duchas = Math.max(0, Number(v.duchas_dia) || 0);
+      const min = Math.max(0, Number(v.min_ducha) || 0);
+      const lavados = Math.max(0, Number(v.lavados_semana) || 0);
+      const ducha = duchas * min * AGUA.duchaLitrosMinuto;
+      const inodoro = personas * AGUA.descargasPersonaDia * AGUA.litrosDescarga;
+      const cocina = personas * AGUA.cocinaPersonaDia;
+      const lavado = (lavados * AGUA.litrosLavado) / 7;
+      const otros = personas * AGUA.otrosPersonaDia;
+      return {
+        personas: personas,
+        duchas: duchas,
+        min: min,
+        lavados: lavados,
+        ducha: ducha,
+        inodoro: inodoro,
+        cocina: cocina,
+        lavado: lavado,
+        otros: otros,
+        dia: ducha + inodoro + cocina + lavado + otros,
+      };
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'gas-red';
+      const pctSub = DESC_SUB[v.subsidio] != null ? DESC_SUB[v.subsidio] : 0;
+
+      // ── 1. Factura de gas natural de red ──────────────────────────────────
+      if (id === 'gas-red') {
+        const b = baseGas(v);
+        const desc = b.base * pctSub;
+        const neta = b.base - desc;
+        const iva = neta * GAS_IVA;
+        const tasas = neta * GAS_TASAS;
+        const total = neta + iva + tasas;
+        const mensual = total / MESES_BIMESTRE;
+        const porM3 = b.m3 > 0 ? total / b.m3 : 0;
+
+        const rows = [
+          { k: 'Cargo fijo del gas', ref: 'PIST · ' + v.categoria, v: b.gas - b.t.variableGas * b.m3 },
+          { k: 'Gas consumido', ref: nf(b.m3) + ' m³ × $' + nf(b.t.variableGas), v: b.t.variableGas * b.m3 },
+          {
+            k: 'Cargo fijo de distribución',
+            ref: v.zona === 'litoral' ? 'con recargo de zona' : 'AMBA',
+            v: b.t.cargoFijoDist * b.fd,
+          },
+          { k: 'Distribución variable', ref: nf(b.m3) + ' m³ × $' + nf(b.t.variableDist * b.fd, 1), v: b.t.variableDist * b.m3 * b.fd },
+        ];
+        if (desc > 0) rows.push({ k: 'Bonificación por subsidio (se resta)', ref: nf(pctSub * 100) + '%', v: desc });
+        rows.push({ k: 'IVA', ref: '27% · Ley 23.349 art. 28', v: iva });
+        rows.push({ k: 'Tasa ENARGAS y cargos fiduciarios', ref: '2,5%', v: tasas });
+        rows.push({ k: 'Total del bimestre', v: total, extra: true });
+        rows.push({ k: 'Equivalente por mes', v: mensual });
+        rows.push({ k: 'Precio efectivo del m³ facturado', v: porM3, decimals: 2 });
+
+        return {
+          total: H.ars(total),
+          sub:
+            nf(b.m3) + ' m³ en el bimestre · categoría ' + v.categoria + ' · ' +
+            H.ars(mensual) + ' por mes · ' + H.ars(porM3) + ' por m³ facturado' +
+            (pctSub > 0 ? ' · bonificación del ' + nf(pctSub * 100) + '%' : ' · sin subsidio'),
+          rows: rows,
+          chart: [
+            { label: 'Gas (PIST)', value: b.gas * (1 - pctSub), tone: 'main' },
+            { label: 'Distribución', value: b.dist * (1 - pctSub), tone: 'exit' },
+            { label: 'IVA y tasas', value: iva + tasas, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── 2. Bonificación de zona fría ──────────────────────────────────────
+      if (id === 'zona-fria') {
+        const b = baseGas(v);
+        const zf = DESC_ZF[v.zona_fria] != null ? DESC_ZF[v.zona_fria] : 0;
+        const netaSin = b.base * (1 - pctSub);
+        const netaCon = netaSin * (1 - zf);
+        const totalSin = netaSin * IMPUESTOS;
+        const totalCon = netaCon * IMPUESTOS;
+        const ahorro = totalSin - totalCon;
+        const efectivo = 1 - (1 - pctSub) * (1 - zf);
+
+        return {
+          total: H.ars(totalCon),
+          sub:
+            zf > 0
+              ? 'Bonificación de zona fría del ' + nf(zf * 100) + '% · ahorrás ' +
+                H.ars(ahorro / MESES_BIMESTRE) + ' por mes'
+              : 'Sin zona fría: pagás la tarifa completa de tu categoría',
+          rows: [
+            { k: 'Tarifa de gas del bimestre, antes de impuestos', ref: 'categoría ' + v.categoria, v: b.base },
+            { k: 'Bonificación general por subsidio', ref: nf(pctSub * 100) + '%', v: b.base * pctSub },
+            { k: 'Bonificación de zona fría', ref: 'Ley 27.637 · ' + nf(zf * 100) + '%', v: netaSin - netaCon },
+            { k: 'Factura sin la bonificación de zona fría', v: totalSin },
+            { k: 'Factura con la bonificación', v: totalCon, extra: true },
+            { k: 'Ahorro por mes', v: ahorro / MESES_BIMESTRE },
+            { k: 'Ahorro en un año', v: (ahorro / MESES_BIMESTRE) * 12 },
+            { k: 'Descuento total sobre la tarifa', v: efectivo * 100, format: 'unit', unit: '%', decimals: 1 },
+          ],
+          chart: [
+            { label: 'Lo que pagás', value: totalCon, tone: 'main' },
+            { label: 'Lo que bonifica el régimen', value: ahorro, tone: 'good' },
+          ],
+        };
+      }
+
+      // ── 3. Garrafa: duración y costo ──────────────────────────────────────
+      if (id === 'garrafa') {
+        const kg = GARRAFA_KG[v.tipo_garrafa] || GARRAFA_KG.kg10;
+        const base = GARRAFA_BASE[v.uso_garrafa] || GARRAFA_BASE.solo_cocina;
+        const personas = Math.max(1, Number(v.personas) || 1);
+        const precio = Math.max(0, Number(v.precio_garrafa) || 0);
+
+        const consumoKg = base * (personas / GARRAFA_PERSONAS_BASE);
+        const dias = consumoKg > 0 ? (kg / consumoKg) * DIAS_MES : 0;
+        const garrafasMes = kg > 0 ? consumoKg / kg : 0;
+        const costoMes = garrafasMes * precio;
+
+        const kwhMes = consumoKg * KWH_KG;
+        const m3Equiv = kwhMes / KWH_M3;
+        const pM3 = precioM3Marginal(v, pctSub);
+        const costoRed = m3Equiv * pM3;
+        const dif = costoMes - costoRed;
+
+        return {
+          total: H.ars(costoMes),
+          sub:
+            'Una garrafa de ' + nf(kg) + ' kg te dura unos ' + nf(dias) + ' días · ' +
+            nf(garrafasMes, 1) + ' garrafas por mes · ' +
+            (costoRed > 0
+              ? 'la misma energía en gas de red saldría ' + H.ars(costoRed)
+              : 'cargá el precio de la garrafa'),
+          rows: [
+            { k: 'Consumo estimado', ref: 'uso y personas', v: consumoKg, format: 'unit', unit: 'kg/mes', decimals: 1 },
+            { k: 'Duración de una garrafa', ref: nf(kg) + ' kg', v: dias, format: 'unit', unit: 'días' },
+            { k: 'Garrafas por mes', v: garrafasMes, format: 'plain', decimals: 1 },
+            { k: 'Costo mensual con garrafa', ref: H.ars(precio) + ' por envase', v: costoMes, extra: true },
+            { k: 'Energía que representa', ref: '12,8 kWh por kg de GLP', v: kwhMes, format: 'unit', unit: 'kWh/mes' },
+            { k: 'Equivale en gas natural', ref: '10,4 kWh por m³', v: m3Equiv, format: 'unit', unit: 'm³/mes' },
+            { k: 'Esa energía en gas de red', ref: H.ars(pM3) + ' por m³', v: costoRed },
+            { k: dif >= 0 ? 'De más que pagás por usar garrafa' : 'De menos que pagás por usar garrafa', v: Math.abs(dif) },
+          ],
+          chart: [
+            { label: 'Garrafa', value: costoMes, tone: dif >= 0 ? 'bad' : 'good' },
+            { label: 'Gas natural de red', value: costoRed, tone: dif >= 0 ? 'good' : 'bad' },
+          ],
+        };
+      }
+
+      // ── 4. Consumo de agua del hogar ──────────────────────────────────────
+      const a = litrosAgua(v);
+      const mensual = a.dia * DIAS_MES;
+      const m3 = mensual / 1000;
+      const costoM3 = Math.max(0, Number(v.costo_m3_agua) || 0);
+      const costo = m3 * costoM3;
+      const lppd = a.dia / a.personas;
+
+      const duchaEf = a.duchas * (a.min * EF.factorMinutos) * EF.duchaLitrosMinuto;
+      const inodoroEf = a.personas * AGUA.descargasPersonaDia * EF.litrosDescarga;
+      const restoEf = (a.cocina + a.lavado + a.otros) * EF.factorResto;
+      const mensualEf = (duchaEf + inodoroEf + restoEf) * DIAS_MES;
+      const ahorroL = Math.max(0, mensual - mensualEf);
+
+      return {
+        format: 'unit',
+        unit: 'L',
+        total: nf(mensual) + ' L',
+        sub:
+          nf(lppd) + ' litros por persona por día · referencia OMS ' + nf(OMS) + ' L · ' +
+          nf(m3, 1) + ' m³ en el mes' +
+          (costoM3 > 0 ? ' · ' + H.ars(costo) + ' si tenés medidor' : ''),
+        rows: [
+          { k: 'Duchas', ref: nf(a.duchas) + ' × ' + nf(a.min) + ' min × 9 L', v: a.ducha * DIAS_MES, format: 'unit', unit: 'L/mes' },
+          { k: 'Inodoro', ref: '5 descargas × 8 L por persona', v: a.inodoro * DIAS_MES, format: 'unit', unit: 'L/mes' },
+          { k: 'Lavarropas', ref: nf(a.lavados) + ' lavados por semana × 60 L', v: a.lavado * DIAS_MES, format: 'unit', unit: 'L/mes' },
+          { k: 'Cocina y limpieza', ref: '12 L por persona por día', v: a.cocina * DIAS_MES, format: 'unit', unit: 'L/mes' },
+          { k: 'Otros usos', ref: '8 L por persona por día', v: a.otros * DIAS_MES, format: 'unit', unit: 'L/mes' },
+          { k: 'Litros por persona por día', ref: 'referencia OMS: 100 L', v: lppd, format: 'unit', unit: 'L' },
+          { k: 'Consumo del mes', v: m3, format: 'unit', unit: 'm³', decimals: 1, extra: true },
+          { k: 'Costo del mes con medidor', ref: H.ars(costoM3) + ' por m³', v: costo, format: 'ars' },
+          { k: 'Con hábitos y equipos eficientes', ref: 'ducha corta de 6 L/min', v: mensualEf, format: 'unit', unit: 'L/mes' },
+          { k: 'Ahorro posible', v: ahorroL, format: 'unit', unit: 'L/mes' },
+          { k: 'Ese ahorro en pesos', ref: 'sólo si tu servicio es medido', v: (ahorroL / 1000) * costoM3, format: 'ars' },
+        ],
+        chart: [
+          { label: 'Duchas', value: a.ducha * DIAS_MES, tone: 'bad' },
+          { label: 'Inodoro', value: a.inodoro * DIAS_MES, tone: 'warn' },
+          { label: 'Lavarropas', value: a.lavado * DIAS_MES, tone: 'main' },
+          { label: 'Cocina y limpieza', value: a.cocina * DIAS_MES, tone: 'prop' },
+          { label: 'Otros usos', value: a.otros * DIAS_MES, tone: 'exit' },
+        ],
+      };
+    });
+  })();
+</script>

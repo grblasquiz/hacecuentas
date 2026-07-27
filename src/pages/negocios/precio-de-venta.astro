@@ -1,0 +1,220 @@
+---
+/**
+ * Hub de decisión — "¿A cuánto vendo mi producto?"
+ * Reemplaza 9 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * El chrome, el CSS y el runtime viven en DecisionHub.astro y no se tocan:
+ * esta página sólo aporta los datos y su compute().
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, PRECIO_MATH } from '../../lib/hubs/precio-venta';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ MATH: PRECIO_MATH }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const pct = (n) => n.toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+
+    H.onCompute(function (v, kase) {
+      const m = MATH[kase?.id] || { modo: 'margen', prorratear: false };
+      const costo = Math.max(0, v.costo || 0);
+      const fijos = Math.max(0, v.fijos || 0);
+      const unidades = Math.max(1, v.unidades || 1);
+      const ivaPct = Math.max(0, v.iva || 0);
+      const precioDado = Math.max(0, v.precio || 0);
+      const facturacion = Math.max(0, v.facturacion || 0);
+
+      // El costo fijo unitario sólo entra cuando la rama prorratea.
+      // Espejo de cafeteria-...ts y costos-fijos-variables.ts.
+      const fijoUnit = m.prorratear ? fijos / unidades : 0;
+      const costoUnit = costo + fijoUnit;
+
+      // ---------- Rama ticket promedio ----------
+      // Espejo de ticket-promedio.ts: ventas / transacciones, y el efecto del +10%.
+      if (m.modo === 'ticket') {
+        const ticket = facturacion / unidades;
+        const ticket10 = ticket * 1.1;
+        const extra = ticket10 * unidades - facturacion;
+        return {
+          total: H.ars(Math.round(ticket)),
+          sub:
+            unidades.toLocaleString('es-AR') + ' operaciones por ' + H.ars(Math.round(facturacion)) +
+            ' · subirlo 10% suma ' + H.ars(Math.round(extra)) + ' sin un solo cliente nuevo',
+          rows: [
+            { k: 'Facturación del período', v: facturacion },
+            { k: 'Cantidad de operaciones', v: unidades, format: 'unit', unit: 'ventas' },
+            { k: 'Ticket promedio', v: ticket, extra: true },
+            { k: 'Ticket con un 10% más', v: ticket10 },
+            { k: 'Facturación extra con ese 10%', v: extra },
+          ],
+          chart: [
+            { label: 'Facturación actual', value: facturacion, tone: 'main' },
+            { label: 'Lo que sumaría un ticket 10% mayor', value: Math.max(0, extra), tone: 'good' },
+          ],
+        };
+      }
+
+      // ---------- Precio ----------
+      // margen: precio = costo / (1 − m)   ·   markup: precio = costo × (1 + m)
+      // El objetivo se clampea a 99% en margen porque al 100% el precio diverge.
+      const objetivo = Math.max(0, v.objetivo || 0);
+      let precioNeto;
+      if (m.modo === 'markup') {
+        precioNeto = costoUnit * (1 + objetivo / 100);
+      } else if (m.modo === 'contribucion' || m.modo === 'equilibrio') {
+        precioNeto = precioDado > 0 ? precioDado : costoUnit / (1 - Math.min(99, objetivo) / 100);
+      } else {
+        precioNeto = costoUnit / (1 - Math.min(99, objetivo) / 100);
+      }
+
+      const ganancia = precioNeto - costoUnit;
+      const iva = precioNeto * (ivaPct / 100);
+      const precioFinal = precioNeto + iva;
+      // Las dos caras del mismo número: margen sobre la venta, markup sobre el costo.
+      const margenPct = precioNeto > 0 ? (ganancia / precioNeto) * 100 : 0;
+      const markupPct = costoUnit > 0 ? (ganancia / costoUnit) * 100 : 0;
+      // Contribución: precio menos costo VARIABLE, sin prorrateo (margen-contribucion.ts).
+      const contribucion = precioNeto - costo;
+      const contribucionPct = precioNeto > 0 ? (contribucion / precioNeto) * 100 : 0;
+
+      // ---------- Rama punto de equilibrio ----------
+      // Espejo de break-even.ts: unidades = fijos / (precio − costo variable).
+      if (m.modo === 'equilibrio') {
+        if (contribucion <= 0) {
+          return {
+            total: 'Sin equilibrio',
+            sub: 'El precio no supera al costo variable: cada venta agranda la pérdida. Subí el precio o bajá el costo antes de pensar en volumen.',
+            rows: [
+              { k: 'Precio de venta (sin IVA)', v: precioNeto },
+              { k: 'Costo variable por unidad', v: costo },
+              { k: 'Margen de contribución', v: contribucion, extra: true },
+            ],
+            chart: [{ label: 'Costo variable por unidad', value: costo, tone: 'bad' }],
+          };
+        }
+        const uEq = Math.ceil(fijos / contribucion);
+        const ventasEq = uEq * precioNeto;
+        const variablesEq = uEq * costo;
+        return {
+          total: uEq.toLocaleString('es-AR') + ' unidades',
+          sub:
+            'A ' + H.ars(Math.round(precioNeto)) + ' con ' + H.ars(Math.round(contribucion)) +
+            ' de contribución por unidad · ' + H.ars(Math.round(ventasEq)) + ' facturados para no perder plata',
+          rows: [
+            { k: 'Precio de venta (sin IVA)', v: precioNeto },
+            { k: 'Costo variable por unidad', v: costo },
+            { k: 'Margen de contribución por unidad', v: contribucion },
+            { k: 'Costos fijos del mes', v: fijos },
+            { k: 'Unidades para no perder plata', v: uEq, format: 'unit', unit: 'unidades', extra: true },
+            { k: 'Facturación en el punto de equilibrio', v: ventasEq },
+            { k: 'Unidades por día (sobre 26 días)', v: Math.ceil(uEq / 26), format: 'unit', unit: 'unidades' },
+          ],
+          chart: [
+            { label: 'Costos fijos', value: fijos, tone: 'bad' },
+            { label: 'Costos variables', value: variablesEq, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ---------- Rama margen de contribución ----------
+      if (m.modo === 'contribucion') {
+        const uEq = contribucion > 0 ? Math.ceil(fijos / contribucion) : 0;
+        return {
+          total: H.ars(Math.round(contribucion)),
+          sub:
+            'Cada unidad aporta ' + pct(contribucionPct) + ' del precio para cubrir los fijos' +
+            (uEq > 0 ? ' · hacen falta ' + uEq.toLocaleString('es-AR') + ' unidades para cubrirlos' : ' · con esta contribución no se cubren nunca'),
+          rows: [
+            { k: 'Precio de venta (sin IVA)', v: precioNeto },
+            { k: 'Costo variable por unidad', v: costo },
+            { k: 'Margen de contribución', v: contribucion, extra: true },
+            { k: 'Contribución sobre el precio', v: contribucionPct, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Costos fijos que hay que cubrir', v: fijos },
+          ],
+          chart: [
+            { label: 'Contribución', value: Math.max(0, contribucion), tone: 'good' },
+            { label: 'Costo variable', value: costo, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ---------- Ramas de precio (margen · markup · costo unitario completo) ----------
+      const rows = [
+        { k: 'Costo variable por unidad', v: costo },
+      ];
+      if (fijoUnit > 0)
+        rows.push({ k: 'Costos fijos prorrateados', ref: unidades.toLocaleString('es-AR') + ' u/mes', v: fijoUnit });
+      rows.push({ k: 'Costo total por unidad', v: costoUnit });
+      rows.push({ k: 'Ganancia por unidad', v: ganancia, extra: true });
+      rows.push({ k: 'Precio sin IVA', v: precioNeto });
+      if (iva > 0) rows.push({ k: 'IVA ' + ivaPct.toLocaleString('es-AR') + '%', v: iva });
+      rows.push({ k: 'Precio final al público', v: precioFinal, extra: true });
+      rows.push({ k: 'Margen sobre la venta', v: margenPct, format: 'unit', unit: '%', decimals: 1 });
+      rows.push({ k: 'Markup sobre el costo', v: markupPct, format: 'unit', unit: '%', decimals: 1 });
+
+      const chart = [
+        { label: 'Insumos', value: costo, tone: 'warn' },
+        { label: 'Costos fijos', value: fijoUnit, tone: 'prop' },
+        { label: 'Ganancia', value: Math.max(0, ganancia), tone: 'good' },
+        { label: 'IVA', value: iva, tone: 'bad' },
+      ].filter(function (s) { return s.value > 0; });
+
+      return {
+        total: H.ars(Math.round(precioFinal)),
+        sub:
+          (m.modo === 'markup'
+            ? 'Markup del ' + pct(markupPct) + ' sobre el costo = margen del ' + pct(margenPct) + ' sobre la venta'
+            : 'Margen del ' + pct(margenPct) + ' sobre la venta = markup del ' + pct(markupPct) + ' sobre el costo') +
+          (fijoUnit > 0 ? ' · con ' + H.ars(Math.round(fijoUnit)) + ' de fijos prorrateados por unidad' : '') +
+          (iva > 0 ? ' · precio sin IVA ' + H.ars(Math.round(precioNeto)) : ''),
+        rows: rows,
+        chart: chart,
+      };
+    });
+  })();
+</script>

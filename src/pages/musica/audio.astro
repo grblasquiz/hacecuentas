@@ -1,0 +1,519 @@
+---
+/**
+ * Hub de decisión — "Audio: BPM, tempo, afinación y decibeles".
+ * Reemplaza 9 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/audio.ts) y su compute().
+ * Todo el chrome, el CSS y el runtime viven en DecisionHub.astro y no se tocan.
+ *
+ * OJO: este hub NO es de plata. El default de `format` del runtime es 'ars', así
+ * que todas las filas y todos los resultados llevan `format` explícito.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, AUDIO } from '../../lib/hubs/audio';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ AUDIO }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const nf = (n, d) =>
+      Number(n || 0).toLocaleString('es-AR', {
+        minimumFractionDigits: d === undefined ? 0 : d,
+        maximumFractionDigits: d === undefined ? 0 : d,
+      });
+
+    /** Duración de la negra en milisegundos. La constante de toda la familia de tempo. */
+    const negraMs = (bpm) => 60000 / bpm;
+
+    /** Frecuencia de una nota MIDI en temperamento igual, con la base que se pase. */
+    const freqDeMidi = (midi, base) => base * Math.pow(2, (midi - AUDIO.MIDI_A4) / 12);
+
+    /** Tiempo máximo de exposición en minutos, criterio NIOSH. */
+    function minutosNiosh(db) {
+      const N = AUDIO.NIOSH;
+      return N.MINUTOS_BASE / Math.pow(2, (db - N.DB_BASE) / N.CANJE_DB);
+    }
+
+    function tiempoLegible(min) {
+      if (min >= 60) {
+        const hs = Math.floor(min / 60);
+        const mins = Math.round(min % 60);
+        return mins > 0 ? hs + ' h ' + mins + ' min' : hs + ' h';
+      }
+      if (min >= 1) return nf(min, 1) + ' minutos';
+      return nf(min * 60, 0) + ' segundos';
+    }
+
+    function generoPorBpm(bpm) {
+      if (bpm < 70) return 'Muy lento — downtempo, ambient, balada';
+      if (bpm < 90) return 'Lento — hip-hop, R&B, reggae, trap';
+      if (bpm < 110) return 'Moderado — reggaetón, cumbia, pop latino';
+      if (bpm < 125) return 'Medio — pop, indie, funk';
+      if (bpm < 140) return 'Bailable — house, techno, EDM';
+      if (bpm < 160) return 'Rápido — hardstyle, psytrance, punk';
+      if (bpm < 180) return 'Muy rápido — drum & bass, jungle';
+      return 'Extremo — speedcore, gabber';
+    }
+
+    function tempoItaliano(bpm) {
+      if (bpm < 60) return 'Largo';
+      if (bpm < 76) return 'Adagio';
+      if (bpm < 108) return 'Andante o Moderato';
+      if (bpm < 132) return 'Allegro';
+      if (bpm < 168) return 'Vivace';
+      return 'Presto';
+    }
+
+    function comparacionDb(db) {
+      if (db < 30) return 'silencio casi total';
+      if (db < 50) return 'biblioteca, oficina tranquila';
+      if (db < 65) return 'conversación normal';
+      if (db < 80) return 'tránsito urbano, restaurante ruidoso';
+      if (db < 90) return 'tránsito pesado, aspiradora';
+      if (db < 100) return 'moto, herramientas eléctricas';
+      if (db < 115) return 'recital de rock, discoteca';
+      if (db < 130) return 'sirena de ambulancia, umbral de dolor';
+      return 'despegue de avión, daño inmediato';
+    }
+
+    /** Franjas de riesgo auditivo, en dB. Se usan en las dos ramas de sonido. */
+    function bandasDb(max) {
+      return [
+        { label: 'Seguro', from: 0, to: 70, tone: 'good' },
+        { label: 'Bajo', from: 70, to: 85, tone: 'good' },
+        { label: 'Moderado', from: 85, to: 90, tone: 'warn' },
+        { label: 'Alto', from: 90, to: 100, tone: 'warn' },
+        { label: 'Muy alto', from: 100, to: 110, tone: 'bad' },
+        { label: 'Severo', from: 110, to: max, tone: 'bad' },
+      ];
+    }
+
+    const posEn = (valor, min, max) => Math.min(100, Math.max(0, ((valor - min) / (max - min)) * 100));
+
+    H.onCompute(function (v, caso) {
+      const rama = (caso && caso.id) || 'tempo';
+
+      const bpmInput = Math.min(300, Math.max(1, Number(v.bpm) || 120));
+      const metrica = String(v.metrica || '4/4').split('/');
+      const numerador = Math.max(1, Number(metrica[0]) || 4);
+      const denominador = Math.max(1, Number(metrica[1]) || 4);
+      const compases = Math.max(1, Math.round(Number(v.compases) || 1));
+      const beats = Math.max(1, Number(v.beats) || 1);
+      const segundos = Math.max(0.1, Number(v.segundos) || 1);
+      const notaIdx = Math.min(11, Math.max(0, Math.round(Number(v.nota) || 0)));
+      const octava = Math.min(8, Math.max(0, Math.round(Number(v.octava) || 4)));
+      const afinacion = Math.max(1, Number(v.afinacion) || 440);
+      const semitonos = Math.round(Number(v.semitonos) || 0);
+      const calibre = Math.max(0.001, Number(v.calibre) || 0.046);
+      const escala = Math.max(1, Number(v.escala) || 25.5);
+      const dbFuente = Math.max(0, Number(v.dbFuente) || 0);
+      const dRef = Math.max(0.01, Number(v.distanciaRef) || 1);
+      const dObj = Math.max(0.01, Number(v.distanciaObjetivo) || 1);
+      const potencia = Math.max(1, Number(v.potenciaAmp) || 1);
+      const impedancia = Math.max(0.1, Number(v.impedancia) || 8);
+      const parlantes = Math.max(1, Math.round(Number(v.cantidadParlantes) || 1));
+      const conexion = String(v.conexion || 'paralelo');
+
+      // ═══════════════════ FAMILIA TEMPO Y RITMO ═══════════════════
+
+      // Sacar el BPM de una canción: BPM = pulsos ÷ segundos × 60.
+      if (rama === 'tap') {
+        const bpm = (beats / segundos) * 60;
+        const negra = negraMs(bpm);
+        return {
+          format: 'unit',
+          unit: 'BPM',
+          decimals: 1,
+          total: nf(bpm, 1) + ' BPM',
+          sub:
+            'Contaste ' + nf(beats, 0) + ' pulsos en ' + nf(segundos, 0) + ' segundos: son ' + nf(bpm, 1) +
+            ' BPM. A ese tempo la negra dura ' + nf(negra, 0) + ' ms y un compás de 4/4, ' + nf(negra * 4 / 1000, 2) +
+            ' segundos. Zona típica: ' + generoPorBpm(bpm) + '. Si el número te suena raro, probá el doble (' +
+            nf(bpm * 2, 0) + ') o la mitad (' + nf(bpm / 2, 0) + '): contar al doble o a la mitad del tempo real es el error más común.',
+          rows: [
+            { k: 'Pulsos contados', v: Math.round(beats), format: 'plain' },
+            { k: 'Segundos de la medición', v: Math.round(segundos), format: 'unit', unit: 's' },
+            { k: 'Tempo resultante', v: Number(bpm.toFixed(1)), format: 'unit', unit: 'BPM', decimals: 1, extra: true },
+            { k: 'Duración de la negra', v: Number(negra.toFixed(1)), format: 'unit', unit: 'ms', decimals: 1 },
+            { k: 'Duración de un compás de 4/4', v: Number((negra * 4).toFixed(0)), format: 'unit', unit: 'ms' },
+            { k: 'Si contaste al doble, el tempo real es', v: Number((bpm / 2).toFixed(1)), format: 'unit', unit: 'BPM', decimals: 1 },
+            { k: 'Si contaste a la mitad, es', v: Number((bpm * 2).toFixed(1)), format: 'unit', unit: 'BPM', decimals: 1 },
+          ],
+          position: posEn(bpm, 40, 200),
+          positionLabel: nf(bpm, 0) + ' BPM — ' + generoPorBpm(bpm),
+          chart: [
+            { label: 'Muy lento', from: 40, to: 70, tone: 'main' },
+            { label: 'Lento', from: 70, to: 110, tone: 'good' },
+            { label: 'Medio', from: 110, to: 140, tone: 'prop' },
+            { label: 'Rápido', from: 140, to: 180, tone: 'warn' },
+            { label: 'Extremo', from: 180, to: 200, tone: 'bad' },
+          ],
+        };
+      }
+
+      // Delay y reverb sincronizados: divisiones de la negra.
+      if (rama === 'delay') {
+        const negra = negraMs(bpmInput);
+        const corchea = negra / 2;
+        const semicorchea = negra / 4;
+        const tresillo = (negra * 2) / 3;
+        const puntillo = corchea * 1.5;
+        const preDelay = negra / 16;
+        return {
+          format: 'unit',
+          unit: 'ms',
+          decimals: 1,
+          total: nf(negra, 0) + ' ms',
+          sub:
+            'A ' + nf(bpmInput, 0) + ' BPM la negra son ' + nf(negra, 0) +
+            ' ms, y de ahí sale todo lo demás. Para el delay de rock clásico usá la corchea con puntillo (' +
+            nf(puntillo, 0) + ' ms); para un slap corto, la semicorchea (' + nf(semicorchea, 0) +
+            ' ms); para el rebote a tres, el tresillo (' + nf(tresillo, 0) + ' ms). El pre-delay de reverb sugerido es ' +
+            nf(preDelay, 0) + ' ms: alcanza para que la cola no tape el ataque.',
+          rows: [
+            { k: 'Redonda · 1/1', v: Number((negra * 4).toFixed(1)), format: 'unit', unit: 'ms', decimals: 1 },
+            { k: 'Blanca · 1/2', v: Number((negra * 2).toFixed(1)), format: 'unit', unit: 'ms', decimals: 1 },
+            { k: 'Negra · 1/4', v: Number(negra.toFixed(1)), format: 'unit', unit: 'ms', decimals: 1, extra: true },
+            { k: 'Corchea con puntillo', ref: 'el delay de rock', v: Number(puntillo.toFixed(1)), format: 'unit', unit: 'ms', decimals: 1, extra: true },
+            { k: 'Tresillo de corchea', v: Number(tresillo.toFixed(1)), format: 'unit', unit: 'ms', decimals: 1 },
+            { k: 'Corchea · 1/8', v: Number(corchea.toFixed(1)), format: 'unit', unit: 'ms', decimals: 1 },
+            { k: 'Semicorchea · 1/16', v: Number(semicorchea.toFixed(1)), format: 'unit', unit: 'ms', decimals: 1 },
+            { k: 'Fusa · 1/32', v: Number((negra / 8).toFixed(1)), format: 'unit', unit: 'ms', decimals: 1 },
+            { k: 'Pre-delay de reverb sugerido', ref: '1/64', v: Number(preDelay.toFixed(1)), format: 'unit', unit: 'ms', decimals: 1 },
+          ],
+          position: posEn(bpmInput, 40, 200),
+          positionLabel: nf(bpmInput, 0) + ' BPM — negra de ' + nf(negra, 0) + ' ms',
+          chart: [
+            { label: 'Delays largos', from: 40, to: 90, tone: 'main' },
+            { label: 'Medios', from: 90, to: 130, tone: 'good' },
+            { label: 'Cortos', from: 130, to: 200, tone: 'prop' },
+          ],
+        };
+      }
+
+      // ═══════════════════ FAMILIA AFINACIÓN ═══════════════════
+
+      if (rama === 'nota') {
+        const midi = (octava + 1) * 12 + notaIdx;
+        const freq = freqDeMidi(midi, afinacion);
+        const onda = AUDIO.VELOCIDAD_SONIDO / freq;
+        const nombre = AUDIO.SHARP[notaIdx] + octava;
+        const desvio = afinacion - 440;
+        return {
+          format: 'unit',
+          unit: 'Hz',
+          decimals: 2,
+          total: nf(freq, 2) + ' Hz',
+          sub:
+            'La nota ' + nombre + ' vibra a ' + nf(freq, 2) + ' Hz ' +
+            (Math.abs(desvio) < 0.01
+              ? 'con el estándar A4 = 440 Hz'
+              : 'con una afinación base de ' + nf(afinacion, 1) + ' Hz, ' + (desvio > 0 ? '+' : '') + nf(desvio, 1) + ' Hz respecto del estándar 440') +
+            '. Su onda mide ' + nf(onda * 100, 1) + ' cm en el aire y corresponde a la nota MIDI ' + midi +
+            '. Cada semitono multiplica la frecuencia por 1,05946, así que un semitono arriba son ' +
+            nf(freqDeMidi(midi + 1, afinacion), 2) + ' Hz y la octava de arriba, el doble exacto: ' +
+            nf(freq * 2, 2) + ' Hz.',
+          rows: [
+            { k: 'Frecuencia de ' + nombre, v: Number(freq.toFixed(2)), format: 'unit', unit: 'Hz', decimals: 2, extra: true },
+            { k: 'Nota MIDI', v: midi, format: 'plain' },
+            { k: 'Afinación de referencia', ref: 'A4', v: Number(afinacion.toFixed(1)), format: 'unit', unit: 'Hz', decimals: 1 },
+            { k: 'Un semitono arriba', v: Number(freqDeMidi(midi + 1, afinacion).toFixed(2)), format: 'unit', unit: 'Hz', decimals: 2 },
+            { k: 'Un semitono abajo', v: Number(freqDeMidi(midi - 1, afinacion).toFixed(2)), format: 'unit', unit: 'Hz', decimals: 2 },
+            { k: 'Una octava arriba', v: Number((freq * 2).toFixed(2)), format: 'unit', unit: 'Hz', decimals: 2 },
+            { k: 'Longitud de onda', ref: '343 m/s a 20 °C', v: Number((onda * 100).toFixed(1)), format: 'unit', unit: 'cm', decimals: 1 },
+          ],
+          position: posEn(Math.log2(Math.max(20, Math.min(20000, freq))), Math.log2(20), Math.log2(20000)),
+          positionLabel: nombre + ' — ' + nf(freq, 1) + ' Hz',
+          chart: [
+            { label: 'Graves', from: Math.log2(20), to: Math.log2(250), tone: 'main' },
+            { label: 'Medios', from: Math.log2(250), to: Math.log2(2000), tone: 'good' },
+            { label: 'Agudos', from: Math.log2(2000), to: Math.log2(20000), tone: 'prop' },
+          ],
+        };
+      }
+
+      if (rama === 'transponer') {
+        const nuevoIdx = (((notaIdx + semitonos) % 12) + 12) % 12;
+        const octavasCorridas = Math.floor((notaIdx + semitonos) / 12);
+        const midi = (octava + 1) * 12 + notaIdx;
+        const midiNuevo = midi + semitonos;
+        const freqOrig = freqDeMidi(midi, afinacion);
+        const freqNueva = freqDeMidi(midiNuevo, afinacion);
+        const intervalos = [
+          'Unísono', 'Segunda menor', 'Segunda mayor', 'Tercera menor', 'Tercera mayor',
+          'Cuarta justa', 'Tritono', 'Quinta justa', 'Sexta menor', 'Sexta mayor',
+          'Séptima menor', 'Séptima mayor',
+        ];
+        const intervalo = intervalos[((semitonos % 12) + 12) % 12];
+        const orig = AUDIO.SHARP[notaIdx];
+        const nueva = AUDIO.SHARP[nuevoIdx];
+        const nuevaBemol = AUDIO.FLAT[nuevoIdx];
+        return {
+          format: 'unit',
+          unit: 'Hz',
+          decimals: 2,
+          total: orig + ' → ' + nueva,
+          sub:
+            (semitonos === 0
+              ? 'Sin transponer: el acorde queda en ' + nueva + '.'
+              : 'Transponiendo ' + orig + ' ' + Math.abs(semitonos) + ' semitono' + (Math.abs(semitonos) === 1 ? '' : 's') + ' ' +
+                (semitonos > 0 ? 'arriba' : 'abajo') + ' obtenés ' + nueva +
+                (nueva === nuevaBemol ? '' : ', que también se escribe ' + nuevaBemol) +
+                ': un intervalo de ' + intervalo.toLowerCase() + '.') +
+            ' El sufijo del acorde no cambia: si era menor con séptima, sigue siendo menor con séptima. En frecuencia, la fundamental pasa de ' +
+            nf(freqOrig, 2) + ' Hz a ' + nf(freqNueva, 2) + ' Hz' +
+            (octavasCorridas !== 0 ? ', cruzando ' + Math.abs(octavasCorridas) + ' octava' + (Math.abs(octavasCorridas) === 1 ? '' : 's') : '') + '.',
+          rows: [
+            { k: 'Semitonos aplicados', v: semitonos, format: 'unit', unit: 'semitonos' },
+            { k: 'Frecuencia de la fundamental original', ref: orig + octava, v: Number(freqOrig.toFixed(2)), format: 'unit', unit: 'Hz', decimals: 2 },
+            { k: 'Frecuencia de la fundamental nueva', ref: nueva + (octava + octavasCorridas), v: Number(freqNueva.toFixed(2)), format: 'unit', unit: 'Hz', decimals: 2, extra: true },
+            { k: 'Salto en frecuencia', v: Number((freqNueva - freqOrig).toFixed(2)), format: 'unit', unit: 'Hz', decimals: 2 },
+            { k: 'Relación entre las dos', v: Number((freqNueva / freqOrig).toFixed(4)), format: 'plain', decimals: 4 },
+            { k: 'Nota MIDI nueva', v: midiNuevo, format: 'plain' },
+          ],
+          position: posEn(nuevoIdx, 0, 11),
+          positionLabel: nueva + ' — ' + intervalo.toLowerCase(),
+          chart: [
+            { label: 'Do a Mi', from: 0, to: 4, tone: 'main' },
+            { label: 'Fa a Sol#', from: 4, to: 8, tone: 'good' },
+            { label: 'La a Si', from: 8, to: 11, tone: 'prop' },
+          ],
+        };
+      }
+
+      if (rama === 'cuerda') {
+        const midi = (octava + 1) * 12 + notaIdx;
+        const freq = freqDeMidi(midi, afinacion);
+        const UW = AUDIO.UNIT_WEIGHT;
+        const entorchada = calibre > UW.LIMITE_ENTORCHADA;
+        const unitWeight = Math.pow(calibre, 2) * (entorchada ? UW.ENTORCHADA : UW.LISA);
+        const lbs = (unitWeight * Math.pow(2 * escala * freq, 2)) / AUDIO.G_PULGADAS;
+        const kg = lbs * 0.4536;
+        const newtons = lbs * 4.4482;
+        const zona =
+          lbs < 10 ? 'muy baja' : lbs < 14 ? 'baja' : lbs < 18 ? 'ideal' : lbs < 22 ? 'media-alta' : 'alta';
+        const maxEscala = Math.max(26, Math.ceil(lbs) + 2);
+        return {
+          format: 'unit',
+          unit: 'lbs',
+          decimals: 1,
+          total: nf(lbs, 1) + ' lbs',
+          sub:
+            'Una cuerda ' + (entorchada ? 'entorchada' : 'lisa') + ' de ' + nf(calibre * 1000, 0) +
+            ' milésimas afinada en ' + AUDIO.SHARP[notaIdx] + octava + ' (' + nf(freq, 1) + ' Hz) sobre una escala de ' +
+            nf(escala, 2) + '" queda con ' + nf(lbs, 1) + ' libras de tensión, o sea ' + nf(kg, 1) +
+            ' kilos: zona ' + zona + '. La tensión sube con el cuadrado de la frecuencia, así que bajar un semitono la afloja alrededor de un 11% y bajar un tono entero, un 21%.',
+          rows: [
+            { k: 'Frecuencia de afinación', v: Number(freq.toFixed(2)), format: 'unit', unit: 'Hz', decimals: 2 },
+            { k: 'Tensión', v: Number(lbs.toFixed(1)), format: 'unit', unit: 'lbs', decimals: 1, extra: true },
+            { k: 'Tensión en kilos', v: Number(kg.toFixed(1)), format: 'unit', unit: 'kg', decimals: 1 },
+            { k: 'Tensión en newtons', v: Number(newtons.toFixed(1)), format: 'unit', unit: 'N', decimals: 1 },
+            { k: 'Calibre', v: Number((calibre * 1000).toFixed(0)), format: 'unit', unit: 'milésimas' },
+            { k: 'Escala', v: Number(escala.toFixed(2)), format: 'unit', unit: 'pulgadas', decimals: 2 },
+            { k: 'Si bajás un semitono', v: Number((lbs / Math.pow(2, 2 / 12)).toFixed(1)), format: 'unit', unit: 'lbs', decimals: 1 },
+            { k: 'Si bajás un tono entero', v: Number((lbs / Math.pow(2, 4 / 12)).toFixed(1)), format: 'unit', unit: 'lbs', decimals: 1 },
+          ],
+          position: posEn(lbs, 0, maxEscala),
+          positionLabel: nf(lbs, 1) + ' lbs — tensión ' + zona,
+          chart: [
+            { label: 'Muy baja', from: 0, to: 10, tone: 'bad' },
+            { label: 'Baja', from: 10, to: 14, tone: 'warn' },
+            { label: 'Ideal', from: 14, to: 18, tone: 'good' },
+            { label: 'Media-alta', from: 18, to: 22, tone: 'warn' },
+            { label: 'Alta', from: 22, to: maxEscala, tone: 'bad' },
+          ],
+        };
+      }
+
+      // ═══════════════════ FAMILIA SONIDO FÍSICO ═══════════════════
+
+      if (rama === 'distancia') {
+        const caida = 20 * Math.log10(dObj / dRef);
+        const dbObj = dbFuente - caida;
+        const seguro = dbObj < AUDIO.NIOSH.DB_BASE;
+        const minutos = seguro ? Infinity : minutosNiosh(dbObj);
+        const maxEscala = Math.max(120, Math.ceil(Math.max(dbFuente, dbObj)) + 5);
+        return {
+          format: 'unit',
+          unit: 'dB',
+          decimals: 1,
+          total: nf(dbObj, 1) + ' dB',
+          sub:
+            'De ' + nf(dbFuente, 0) + ' dB a ' + nf(dRef, 1) + ' m, a ' + nf(dObj, 1) + ' m llegan ' + nf(dbObj, 1) +
+            ' dB: se pierden ' + nf(caida, 1) + ' dB. Es la ley del cuadrado inverso, 6 dB cada vez que duplicás la distancia. Ese nivel se compara con ' +
+            comparacionDb(dbObj) + '. ' +
+            (seguro
+              ? 'Por debajo de 85 dB el criterio NIOSH no fija límite de exposición.'
+              : 'A ese nivel el tiempo máximo sin protección es de ' + tiempoLegible(minutos) + '.') +
+            ' Ojo: la cuenta vale en campo libre; en un lugar cerrado las reflexiones hacen que caiga bastante menos.',
+          rows: [
+            { k: 'Nivel en la distancia de referencia', ref: nf(dRef, 1) + ' m', v: Number(dbFuente.toFixed(1)), format: 'unit', unit: 'dB', decimals: 1 },
+            { k: 'Caída por distancia', ref: '−20 × log10(' + nf(dObj, 1) + ' ÷ ' + nf(dRef, 1) + ')', v: Number(caida.toFixed(1)), format: 'unit', unit: 'dB', decimals: 1 },
+            { k: 'Nivel a ' + nf(dObj, 1) + ' m', v: Number(dbObj.toFixed(1)), format: 'unit', unit: 'dB', decimals: 1, extra: true },
+            { k: 'A la mitad de esa distancia', v: Number((dbObj + 6.0206).toFixed(1)), format: 'unit', unit: 'dB', decimals: 1 },
+            { k: 'Al doble de esa distancia', v: Number((dbObj - 6.0206).toFixed(1)), format: 'unit', unit: 'dB', decimals: 1 },
+            { k: 'Minutos de exposición segura', ref: 'NIOSH', v: seguro ? 0 : Number(minutos.toFixed(1)), format: 'unit', unit: seguro ? 'sin límite' : 'minutos', decimals: seguro ? 0 : 1, extra: true },
+          ],
+          position: posEn(dbObj, 0, maxEscala),
+          positionLabel: nf(dbObj, 1) + ' dB — ' + comparacionDb(dbObj),
+          chart: bandasDb(maxEscala),
+        };
+      }
+
+      if (rama === 'ruido') {
+        const db = dbFuente;
+        const seguro = db < AUDIO.NIOSH.DB_BASE;
+        const minutos = minutosNiosh(db);
+        const maxEscala = Math.max(120, Math.ceil(db) + 5);
+        const riesgo =
+          db < 70 ? 'sin riesgo' : db < 85 ? 'bajo' : db <= 90 ? 'moderado' : db <= 100 ? 'alto' : db <= 110 ? 'muy alto' : 'severo';
+        return {
+          format: 'unit',
+          unit: 'minutos',
+          decimals: 1,
+          total: seguro ? 'Sin límite' : tiempoLegible(minutos),
+          sub:
+            'A ' + nf(db, 0) + ' dB (' + comparacionDb(db) + ') el riesgo es ' + riesgo + '. ' +
+            (seguro
+              ? 'Por debajo de 85 dB(A) el criterio NIOSH no fija un límite diario de exposición: podés estar sin restricción de tiempo.'
+              : 'El criterio NIOSH da un máximo de ' + tiempoLegible(minutos) +
+                ' por día sin protección auditiva. La cuenta es 480 minutos dividido 2 elevado a (' + nf(db, 0) +
+                ' − 85) sobre 3: cada 3 dB de más, la mitad del tiempo.') +
+            ' El daño auditivo por ruido es acumulativo y no se revierte: si tenés zumbido o el oído tapado después de una exposición, consultá a un profesional.',
+          rows: [
+            { k: 'Nivel de exposición', v: Number(db.toFixed(1)), format: 'unit', unit: 'dB', decimals: 1 },
+            { k: 'Límite de referencia NIOSH', ref: '8 horas', v: AUDIO.NIOSH.DB_BASE, format: 'unit', unit: 'dB' },
+            { k: 'Tiempo máximo sin protección', v: seguro ? 0 : Number(minutos.toFixed(1)), format: 'unit', unit: seguro ? 'sin límite' : 'minutos', decimals: seguro ? 0 : 1, extra: true },
+            { k: 'Si subís 3 dB', ref: nf(db + 3, 0) + ' dB', v: Number(minutosNiosh(db + 3).toFixed(1)), format: 'unit', unit: 'minutos', decimals: 1 },
+            { k: 'Si bajás 3 dB', ref: nf(db - 3, 0) + ' dB', v: Number(minutosNiosh(db - 3).toFixed(1)), format: 'unit', unit: 'minutos', decimals: 1 },
+            { k: 'Con tapones de 20 dB de atenuación', ref: nf(db - 20, 0) + ' dB', v: db - 20 < AUDIO.NIOSH.DB_BASE ? 0 : Number(minutosNiosh(db - 20).toFixed(1)), format: 'unit', unit: db - 20 < AUDIO.NIOSH.DB_BASE ? 'sin límite' : 'minutos', decimals: db - 20 < AUDIO.NIOSH.DB_BASE ? 0 : 1 },
+          ],
+          position: posEn(db, 0, maxEscala),
+          positionLabel: nf(db, 0) + ' dB — riesgo ' + riesgo,
+          chart: bandasDb(maxEscala),
+        };
+      }
+
+      if (rama === 'amp') {
+        const zTotal = conexion === 'serie' ? impedancia * parlantes : impedancia / parlantes;
+        const wPorParlante = potencia / parlantes;
+        const veredicto =
+          zTotal >= 4 ? 'segura para casi cualquier amplificador' : zTotal >= 2 ? 'sólo para amplificadores preparados para cargas bajas' : 'peligrosa: la mayoría entra en protección o se daña';
+        const maxEscala = Math.max(8, Math.ceil(zTotal) + 1);
+        return {
+          format: 'unit',
+          unit: 'Ω',
+          decimals: 2,
+          total: nf(zTotal, 2) + ' Ω',
+          sub:
+            nf(parlantes, 0) + ' parlantes de ' + nf(impedancia, 1) + ' Ω en ' + conexion + ' dan ' + nf(zTotal, 2) +
+            ' Ω de carga total: es una carga ' + veredicto + '. Cada parlante recibe ' + nf(wPorParlante, 0) +
+            ' W de los ' + nf(potencia, 0) + ' W del amplificador. En paralelo la impedancia se divide por la cantidad de parlantes; en serie se multiplica. Antes de bajar de 4 Ω, mirá la impedancia mínima que declara el fabricante del amplificador.',
+          rows: [
+            { k: 'Impedancia de cada parlante', v: Number(impedancia.toFixed(1)), format: 'unit', unit: 'Ω', decimals: 1 },
+            { k: 'Cantidad de parlantes', v: parlantes, format: 'plain' },
+            { k: 'Impedancia total en ' + conexion, v: Number(zTotal.toFixed(2)), format: 'unit', unit: 'Ω', decimals: 2, extra: true },
+            { k: 'La otra conexión daría', ref: conexion === 'serie' ? 'en paralelo' : 'en serie', v: Number((conexion === 'serie' ? impedancia / parlantes : impedancia * parlantes).toFixed(2)), format: 'unit', unit: 'Ω', decimals: 2 },
+            { k: 'Potencia del amplificador', v: Number(potencia.toFixed(0)), format: 'unit', unit: 'W' },
+            { k: 'Watts por parlante', v: Number(wPorParlante.toFixed(0)), format: 'unit', unit: 'W', extra: true },
+          ],
+          position: posEn(zTotal, 0, maxEscala),
+          positionLabel: nf(zTotal, 2) + ' Ω — carga ' + (zTotal >= 4 ? 'segura' : zTotal >= 2 ? 'límite' : 'peligrosa'),
+          chart: [
+            { label: 'Peligrosa', from: 0, to: 2, tone: 'bad' },
+            { label: 'Sólo amplificadores preparados', from: 2, to: 4, tone: 'warn' },
+            { label: 'Segura', from: 4, to: maxEscala, tone: 'good' },
+          ],
+        };
+      }
+
+      // ─────────── DURACIÓN DEL COMPÁS (rama por defecto) ───────────
+      const negra = negraMs(bpmInput);
+      const pulso = negra * (4 / denominador);
+      const compasMs = pulso * numerador;
+      const totalMs = compasMs * compases;
+      const totalSeg = totalMs / 1000;
+      const mins = Math.floor(totalSeg / 60);
+      const segs = totalSeg % 60;
+
+      return {
+        format: 'unit',
+        unit: 'ms',
+        decimals: 1,
+        total: nf(compasMs / 1000, 2) + ' s',
+        sub:
+          'A ' + nf(bpmInput, 0) + ' BPM en ' + numerador + '/' + denominador + ', cada pulso dura ' + nf(pulso, 0) +
+          ' ms y el compás entero ' + nf(compasMs / 1000, 2) + ' segundos. ' + nf(compases, 0) + ' compases suman ' +
+          (mins > 0 ? mins + ' min ' + nf(segs, 1) + ' s' : nf(segs, 1) + ' segundos') + '. Es un tempo ' +
+          tempoItaliano(bpmInput) + ' (' + generoPorBpm(bpmInput) + '). ' +
+          (denominador === 8
+            ? 'Ojo con el denominador: en ' + numerador + '/8 el pulso es la corchea, la mitad de la negra.'
+            : 'La cuenta general es (60000 ÷ BPM) × (4 ÷ denominador) × numerador.'),
+        rows: [
+          { k: 'Duración de la negra', ref: '60000 ÷ ' + nf(bpmInput, 0), v: Number(negra.toFixed(1)), format: 'unit', unit: 'ms', decimals: 1 },
+          { k: 'Duración del pulso', ref: 'figura de 1/' + denominador, v: Number(pulso.toFixed(1)), format: 'unit', unit: 'ms', decimals: 1 },
+          { k: 'Duración del compás', v: Number(compasMs.toFixed(1)), format: 'unit', unit: 'ms', decimals: 1, extra: true },
+          { k: 'Duración del compás en segundos', v: Number((compasMs / 1000).toFixed(3)), format: 'unit', unit: 's', decimals: 3 },
+          { k: 'Pulsos por compás', v: numerador, format: 'plain' },
+          { k: 'Compases pedidos', v: compases, format: 'plain' },
+          { k: 'Duración total', v: Number(totalSeg.toFixed(2)), format: 'unit', unit: 's', decimals: 2, extra: true },
+        ],
+        position: posEn(bpmInput, 40, 200),
+        positionLabel: nf(bpmInput, 0) + ' BPM — ' + tempoItaliano(bpmInput),
+        chart: [
+          { label: 'Largo', from: 40, to: 60, tone: 'main' },
+          { label: 'Adagio', from: 60, to: 76, tone: 'good' },
+          { label: 'Andante', from: 76, to: 108, tone: 'good' },
+          { label: 'Allegro', from: 108, to: 132, tone: 'prop' },
+          { label: 'Vivace', from: 132, to: 168, tone: 'warn' },
+          { label: 'Presto', from: 168, to: 200, tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>

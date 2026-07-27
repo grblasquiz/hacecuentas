@@ -1,0 +1,195 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto tiempo me va a llevar?"
+ * Reemplaza 5 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Las constantes de cada rama viven en src/lib/hubs/juegos.ts y son copia fiel
+ * de las fórmulas originales de src/lib/formulas/. Acá sólo va el compute().
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  PUZZLE_TASA,
+  PUZZLE_DIFICULTAD,
+  PUZZLE_FACTOR_MIN,
+  PUZZLE_FACTOR_MAX,
+  MODELISMO_NIVEL,
+  MODELISMO_TAMANO,
+  MODELISMO_COSTO_POT,
+  BANDAS_HORAS,
+  BANDAS_TOPE,
+} from '../../lib/hubs/juegos';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const MATH = {
+  PUZZLE_TASA,
+  PUZZLE_DIFICULTAD,
+  PUZZLE_FACTOR_MIN,
+  PUZZLE_FACTOR_MAX,
+  MODELISMO_NIVEL,
+  MODELISMO_TAMANO,
+  MODELISMO_COSTO_POT,
+  BANDAS: BANDAS_HORAS,
+  TOPE: BANDAS_TOPE,
+};
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ M: MATH }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    /** 12,5 → "12,5 h". Nada de este hub es plata salvo la pintura. */
+    function horasTxt(h) {
+      const dec = h < 10 ? 1 : 0;
+      return h.toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + ' h';
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'serie';
+
+      const cantidad = Math.max(0, Number(v.cantidad) || 0);
+      const horasDia = Math.max(0.5, Number(v.horasDia) || 2);
+      const diasSemana = Math.min(7, Math.max(1, Number(v.diasSemana) || 5));
+
+      let horas = 0;
+      let horasMin = 0;
+      let horasMax = 0;
+      let detalle = '';
+      const extras = [];
+
+      if (id === 'serie') {
+        const duracion = Math.max(1, Number(v.duracion) || 24);
+        const velocidad = Math.max(1, Number(v.velocidad) || 1);
+        const brutas = (cantidad * duracion) / 60;
+        horas = brutas / velocidad;
+        const ahorro = brutas - horas;
+        detalle =
+          cantidad + ' episodios × ' + duracion + ' min' +
+          (velocidad > 1 ? ' · a ' + String(velocidad).replace('.', ',') + 'x' : '');
+        if (ahorro > 0) {
+          extras.push({
+            k: 'Horas que te ahorrás por la velocidad',
+            ref: String(velocidad).replace('.', ',') + 'x',
+            v: ahorro,
+            format: 'unit',
+            unit: 'h',
+            decimals: 1,
+            extra: true,
+          });
+        }
+      } else if (id === 'juego') {
+        // Un objetivo > 100% es completismo: agrega contenido sobre la historia.
+        const objetivo = Math.max(1, Number(v.objetivo) || 100);
+        horas = cantidad * (objetivo / 100);
+        detalle = cantidad + ' h de ficha · objetivo ' + objetivo + '%';
+      } else if (id === 'puzzle') {
+        const tasa = M.PUZZLE_TASA[v.experiencia] || M.PUZZLE_TASA.intermedio;
+        const mult = M.PUZZLE_DIFICULTAD[v.dificultad] || M.PUZZLE_DIFICULTAD.media;
+        horas = (cantidad / tasa) * mult;
+        horasMin = horas * M.PUZZLE_FACTOR_MIN;
+        horasMax = horas * M.PUZZLE_FACTOR_MAX;
+        detalle = cantidad + ' piezas · ' + tasa + ' piezas/h × factor ' + String(mult).replace('.', ',');
+      } else if (id === 'modelismo') {
+        const nivel = M.MODELISMO_NIVEL[v.nivel] || M.MODELISMO_NIVEL.tabletop;
+        const multT = M.MODELISMO_TAMANO[v.tamano] || 1;
+        horasMin = cantidad * nivel.min * multT;
+        horasMax = cantidad * nivel.max * multT;
+        horas = (horasMin + horasMax) / 2;
+        const potes = cantidad * nivel.pinturas * multT;
+        const costo = potes * M.MODELISMO_COSTO_POT;
+        detalle = cantidad + ' figuras · ×' + String(multT).replace('.', ',') + ' por tamaño';
+        extras.push({
+          k: 'Pintura estimada (potes Citadel de 12 ml)',
+          ref: 'sin primer ni barniz',
+          v: costo,
+          format: 'unit',
+          unit: 'USD',
+          decimals: 2,
+          extra: true,
+        });
+      }
+
+      const horasSemana = horasDia * diasSemana;
+      const dias = horasDia > 0 ? Math.ceil(horas / horasDia) : 0;
+      const semanas = horasSemana > 0 ? horas / horasSemana : 0;
+      // Un fin de semana dedicado rinde 16 h: 8 el sábado y 8 el domingo.
+      const finesDeSemana = horas / 16;
+
+      const rows = [{ k: 'Horas totales de actividad', ref: 'neto', v: horas, format: 'unit', unit: 'h', decimals: 1 }];
+      if (horasMin > 0) {
+        rows.push({ k: 'Piso realista del rango', ref: 'día bueno', v: horasMin, format: 'unit', unit: 'h', decimals: 1 });
+        rows.push({ k: 'Techo realista del rango', ref: 'día malo', v: horasMax, format: 'unit', unit: 'h', decimals: 1 });
+      }
+      rows.push({ k: 'Horas por semana que le dedicás', v: horasSemana, format: 'unit', unit: 'h', decimals: 1 });
+      rows.push({ k: 'Días de dedicación a tu ritmo', v: dias, format: 'unit', unit: 'días', decimals: 0 });
+      rows.push({ k: 'Semanas de calendario', v: semanas, format: 'unit', unit: 'semanas', decimals: 1 });
+      rows.push({ k: 'Fines de semana completos', ref: '8 h sábado + 8 h domingo', v: finesDeSemana, format: 'unit', unit: 'finde', decimals: 1 });
+      extras.forEach(function (r) { rows.push(r); });
+
+      const pos = Math.min(100, Math.max(0, (horas / M.TOPE) * 100));
+      const banda = M.BANDAS.filter(function (b) { return horas >= b.from; }).pop() || M.BANDAS[0];
+      const etiquetaBanda = horas >= M.TOPE ? 'Varios meses' : banda.label;
+
+      return {
+        total: horasTxt(horas),
+        sub:
+          detalle +
+          ' · ' + dias + (dias === 1 ? ' día' : ' días') +
+          ' a ' + String(horasDia).replace('.', ',') + ' h por día, ' + diasSemana +
+          (diasSemana === 1 ? ' día por semana' : ' días por semana'),
+        rows: rows,
+        format: 'unit',
+        unit: 'h',
+        decimals: 1,
+        chart: M.BANDAS.map(function (b) {
+          return { label: b.label, value: b.to - b.from, from: b.from, to: b.to, tone: b.tone };
+        }),
+        position: pos,
+        positionLabel: horasTxt(horas) + ' — ' + etiquetaBanda,
+      };
+    });
+  })();
+</script>

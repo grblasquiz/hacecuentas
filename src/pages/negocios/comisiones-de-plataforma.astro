@@ -1,0 +1,187 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto me cobra de comisión la plataforma?"
+ * Reemplaza 12 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * El chrome, el CSS y el runtime viven en DecisionHub.astro y no se tocan:
+ * esta página sólo aporta los datos y su compute().
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, PLATAFORMA_MATH } from '../../lib/hubs/comisiones-plataforma';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ MATH: PLATAFORMA_MATH }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    /** Formatea con la moneda del caso: el hub es multi-país, "$" a secas mentiría. */
+    function money(moneda, n) {
+      return moneda + Math.round(n).toLocaleString('es-AR');
+    }
+
+    H.onCompute(function (v, kase) {
+      const m = MATH[kase?.id] || { comision: 0, retencion: 0, moneda: 'AR$', retLabel: 'Retenciones' };
+      const bruto = Math.max(0, v.bruto || 0);
+      const fijos = Math.max(0, v.fijos || 0);
+      const variables = Math.max(0, v.variables || 0);
+      const horas = Math.max(0, v.horas || 0);
+
+      // 0 en el campo = usar la tarifa vigente del caso.
+      const comisionPct = Number(v.comisionPct) > 0 ? Number(v.comisionPct) : m.comision;
+      const retencionPct = Number(v.retencionPct) > 0 ? Number(v.retencionPct) : m.retencion;
+
+      const comision = bruto * (comisionPct / 100);
+      const esCobro = m.side === 'cobro';
+
+      // Base de la retención:
+      //  - rama 'cobro': el IVA se calcula sobre TU comisión, no sobre la operación.
+      //    Espejo de comision-venta.ts → comisionNeta * alicuota.
+      //  - Chile: la boleta de honorarios se emite por el líquido, no por la tarifa.
+      //    Espejo de uber-driver-chile.ts → (tarifas - comisión) * 0,145.
+      //  - resto: sobre el bruto facturado.
+      const baseRet = esCobro ? comision : m.retSobreNeto ? bruto - comision : bruto;
+      const retencion = baseRet * (retencionPct / 100);
+
+      const costos = fijos + variables;
+
+      // Rama 'cobro': la comisión es TU ingreso, no un descuento.
+      // El IVA se factura pero no es tuyo, así que no entra en el neto.
+      const neto = esCobro ? comision - costos : bruto - comision - retencion - costos;
+
+      const rows = [];
+      if (esCobro) {
+        rows.push({ k: 'Monto de la operación', ref: 'base', v: bruto, format: 'unit', unit: m.moneda.trim() });
+        rows.push({
+          k: 'Tu comisión',
+          ref: comisionPct.toLocaleString('es-AR') + '%',
+          v: comision,
+          format: 'unit',
+          unit: m.moneda.trim(),
+          extra: true,
+        });
+        if (retencion > 0)
+          rows.push({
+            k: m.retLabel + ' (lo cobrás, no es tuyo)',
+            ref: retencionPct.toLocaleString('es-AR') + '%',
+            v: retencion,
+            format: 'unit',
+            unit: m.moneda.trim(),
+          });
+      } else {
+        rows.push({ k: 'Facturación bruta', ref: 'lo que paga el cliente', v: bruto, format: 'unit', unit: m.moneda.trim() });
+        if (comision > 0)
+          rows.push({
+            k: 'Comisión de la plataforma',
+            ref: comisionPct.toLocaleString('es-AR') + '%',
+            v: comision,
+            format: 'unit',
+            unit: m.moneda.trim(),
+          });
+        if (retencion > 0)
+          rows.push({
+            k: m.retLabel,
+            ref: retencionPct.toLocaleString('es-AR') + '%' + (m.retSobreNeto ? ' del líquido' : ''),
+            v: retencion,
+            format: 'unit',
+            unit: m.moneda.trim(),
+          });
+      }
+      if (fijos > 0) rows.push({ k: 'Costos fijos', v: fijos, format: 'unit', unit: m.moneda.trim() });
+      if (variables > 0) rows.push({ k: 'Costos variables', v: variables, format: 'unit', unit: m.moneda.trim() });
+      rows.push({
+        k: esCobro ? 'Tu honorario neto de gastos' : 'Te queda en el bolsillo',
+        v: Math.max(0, neto),
+        format: 'unit',
+        unit: m.moneda.trim(),
+        extra: true,
+      });
+      if (horas > 0)
+        rows.push({
+          k: 'Neto por hora trabajada',
+          ref: horas.toLocaleString('es-AR') + ' h',
+          v: neto / horas,
+          format: 'unit',
+          unit: m.moneda.trim(),
+        });
+
+      const refBruto = esCobro ? Math.max(comision, 1) : Math.max(bruto, 1);
+      const pctQueda = (neto / refBruto) * 100;
+      const pctPlataforma = esCobro ? 0 : (comision / refBruto) * 100;
+
+      const sub = esCobro
+        ? 'Tu comisión es ' + money(m.moneda, comision) + ' sobre una operación de ' + money(m.moneda, bruto) +
+          ' · de ahí te quedan ' + pctQueda.toFixed(0) + '% después de gastos' +
+          (retencion > 0 ? ' · facturás ' + money(m.moneda, comision + retencion) + ' con IVA' : '')
+        : 'De cada 100 que factura el cliente te quedan ' + pctQueda.toFixed(0) +
+          ' · la plataforma retiene ' + pctPlataforma.toFixed(1) + '%' +
+          (retencion > 0 ? ' y el fisco ' + ((retencion / refBruto) * 100).toFixed(1) + '%' : '') +
+          (horas > 0 ? ' · ' + money(m.moneda, neto / horas) + ' por hora' : '');
+
+      const chart = esCobro
+        ? [
+            { label: 'Tu honorario neto', value: Math.max(0, neto), tone: 'good' },
+            { label: 'Gastos de la operación', value: costos, tone: 'warn' },
+            { label: m.retLabel, value: retencion, tone: 'bad' },
+          ]
+        : [
+            { label: 'Te queda', value: Math.max(0, neto), tone: 'good' },
+            { label: 'Comisión de la plataforma', value: comision, tone: 'bad' },
+            { label: m.retLabel, value: retencion, tone: 'warn' },
+            { label: 'Costos de operar', value: costos, tone: 'prop' },
+          ];
+
+      return {
+        total: money(m.moneda, neto),
+        sub: sub,
+        rows: rows,
+        chart: chart.filter(function (s) { return s.value > 0; }),
+        format: 'unit',
+        unit: m.moneda.trim(),
+      };
+    });
+  })();
+</script>
