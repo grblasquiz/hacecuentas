@@ -40,6 +40,19 @@ function pyTask(name: string, script: string): Task {
   return { name, cmd: 'python3', args: [`scripts/${script}.py`] };
 }
 
+/**
+ * ¿Los gates abortan el build o sólo avisan?
+ *
+ * Por defecto AVISAN. Cada gate se agregó después de un incidente real y
+ * siguen corriendo y reportando, pero dejaron de frenar: entre el 25 y el 27
+ * de julio bloquearon cuatro deploys seguidos y en tres de esos casos lo que
+ * marcaban era deuda anterior, no el cambio que se estaba subiendo.
+ *
+ * Para que vuelvan a bloquear: HC_GATES=block npm run deploy
+ */
+const GATES_BLOQUEAN = process.env.HC_GATES === 'block';
+const fallidos: string[] = [];
+
 function run(t: Task): Promise<void> {
   return new Promise((resolve, reject) => {
     const start = Date.now();
@@ -65,11 +78,28 @@ function run(t: Task): Promise<void> {
       if (code === 0) {
         console.log(`${prefix} ✓ ${secs}s`);
         resolve();
-      } else {
+      } else if (GATES_BLOQUEAN) {
         reject(new Error(`${t.name} falló con código ${code} (${secs}s)`));
+      } else {
+        // Gates en modo aviso (decisión de Martin, 2026-07-27): frenaban cada
+        // deploy y varios marcaban deuda vieja, no el cambio que se estaba
+        // subiendo. Siguen corriendo y siguen logueando todo — sólo dejan de
+        // abortar. Para volver atrás: HC_GATES=block npm run deploy, o poner
+        // el default de GATES_BLOQUEAN en true.
+        console.warn(`${prefix} ⚠ falló con código ${code} (${secs}s) — NO bloquea (HC_GATES=warn)`);
+        fallidos.push(t.name);
+        resolve();
       }
     });
   });
+}
+
+function resumenGates() {
+  if (!fallidos.length) return;
+  console.warn('');
+  console.warn(`[prebuild] ⚠ ${fallidos.length} gate(s) fallaron sin bloquear: ${fallidos.join(', ')}`);
+  console.warn('[prebuild]   Revisá el log de arriba. Para que vuelvan a frenar: HC_GATES=block npm run deploy');
+  console.warn('');
 }
 
 async function main() {
@@ -179,6 +209,7 @@ async function main() {
 
   const total = ((Date.now() - t0) / 1000).toFixed(1);
   console.log(`[prebuild] ✓ total ${total}s`);
+  resumenGates();
 }
 
 main().catch((err) => {
