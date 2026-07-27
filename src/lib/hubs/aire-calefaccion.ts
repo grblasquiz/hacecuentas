@@ -191,7 +191,7 @@ export const hub: HubData = {
     { id: 'temp', label: 'Temperatura media del período (°C)', type: 'number', min: -20, max: 45, value: 11 },
   ],
   fineprint:
-    'Resultado estimado a partir de los datos ingresados. Verificá los supuestos y la fuente indicada si lo usás para una decisión importante.',
+    'Resultado estimado a partir de los datos ingresados. Verificá los supuestos y la fuente indicada si lo usás para una decisión importante. El precio del gas sale de un cuadro tarifario sin verificar contra el último publicado por ENARGAS (en julio de 2026 hubo un aumento que esta página no refleja), así que la comparación entre gas y electricidad es orientativa: el costo real del gas hoy es mayor que el que se muestra acá.',
 
   chart: {
     type: 'bars',

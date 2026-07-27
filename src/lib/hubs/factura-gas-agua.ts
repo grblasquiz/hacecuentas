@@ -280,7 +280,7 @@ export const hub: HubData = {
     },
   ],
   fineprint:
-    'Es una estimación orientativa. Los cuadros tarifarios de gas cambian varias veces al año, la categoría R la asigna tu distribuidora y la factura puede incluir cuotas, ajustes o consumos estimados. En agua, la mayoría de los hogares de AySA no tiene medidor y la boleta no depende del consumo. El número que manda siempre es el de tu factura.',
+    'Es una estimación orientativa y el cuadro tarifario de gas que usa está sin verificar contra el último publicado por ENARGAS: en julio de 2026 hubo un aumento (Res. 175/2026 y 204/2026) que esta página todavía no refleja, así que tomá el resultado como orden de magnitud y no como el importe de tu boleta. Los cuadros cambian varias veces al año, la categoría R la asigna tu distribuidora y la factura puede incluir cuotas, ajustes o consumos estimados. En agua, la mayoría de los hogares de AySA no tiene medidor y la boleta no depende del consumo. El número que manda siempre es el de tu factura.',
 
   chart: {
     type: 'donut',

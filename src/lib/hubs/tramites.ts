@@ -383,9 +383,9 @@ export const ARANCELES = {
   },
   /** Migraciones + DNI de extranjero. [tasa DNM, arancel DNI] */
   residencia: {
-    mercosur: [35000, 12000] as [number, number],
-    'no-mercosur': [90000, 12000] as [number, number],
-    permanente: [50000, 12000] as [number, number],
+    mercosur: [35000, 20000] as [number, number],
+    'no-mercosur': [90000, 20000] as [number, number],
+    permanente: [50000, 20000] as [number, number],
   },
 };
 

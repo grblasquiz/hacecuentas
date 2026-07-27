@@ -44,10 +44,11 @@ export const ASIGNACIONES = {
   bonoRefuerzo: 70000,
   /**
    * Ayuda escolar anual por hijo, pago único al inicio del ciclo lectivo.
-   * OJO — DISCREPANCIA EN EL REPO: la fórmula de tramos la tiene en $85.000
-   * (jun-2026) y la calculadora suelta de ayuda escolar en $65.000, sin fecha.
-   * Se toma el valor más alto y más reciente de los dos, que es el que trae
-   * fecha de verificación. Se actualiza en marzo de cada ciclo lectivo.
+   * $85.000 CONFIRMADO para todo 2026 (ANSES): aplica a titulares de AUH y de
+   * SUAF, se cobró desde el 9-mar-2026 presentando el certificado de alumno
+   * regular. Tope de ingreso del grupo familiar: $5.603.102.
+   * La discrepancia con la calc suelta ($65.000, sin fecha ni fuente) se
+   * resolvió corrigiendo esa fórmula, no este hub.
    */
   ayudaEscolar: 85000,
   /** Complemento Leche: embarazo, lactancia o hijo menor de 5 años. */

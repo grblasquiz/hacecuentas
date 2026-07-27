@@ -19,6 +19,19 @@ export interface Outputs {
 // Cuadro tarifario de referencia 2026 (valores bimestrales en ARS)
 // Fuente: ENARGAS — cuadros tarifarios distribuidoras 2025-2026
 // Estructura: [cargo_fijo_gas, variable_gas, cargo_fijo_dist, variable_dist]
+//
+// ⚠️ SIN VERIFICAR contra el cuadro vigente y SIN FETCHER automático. Chequeo
+// del 27-07-2026: ENARGAS publicó nuevos cuadros en julio (Res. 175/2026 y
+// 204/2026, +3,01% promedio nacional) y para Metrogas residencial CABA sin
+// subsidio el cargo fijo MENSUAL quedó en $22.606,14 (R1-R3) y $85.449,38 (R4)
+// — un orden de magnitud por encima de los cargos fijos bimestrales de esta
+// tabla. Además se prorrogó una bonificación extraordinaria del 25% para
+// usuarios con subsidio focalizado, que esta fórmula no contempla.
+// No reescribo la tabla porque desde prensa no se puede reconstruir el cuadro
+// completo por categoría (R11→R34) sin inventar valores. Lo que hay que hacer:
+// bajar el cuadro oficial de enargas.gob.ar/secciones/precios-y-tarifas y
+// escribir un fetcher, como ya tienen luz y dólar.
+// OJO: de esta tabla dependen los hubs /hogar/gas-y-agua y /hogar/climatizacion.
 const TARIFAS_GBA: Record<string, [number, number, number, number]> = {
   R11: [2800,  28, 3200, 32],
   R12: [3100,  31, 3500, 35],

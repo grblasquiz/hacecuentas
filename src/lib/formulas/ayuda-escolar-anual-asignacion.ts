@@ -2,7 +2,7 @@ export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; }
 export function ayudaEscolarAnualAsignacion(i: Inputs): Outputs {
   const h=Number(i.hijos)||0;
-  const perHijo=65000;
+  const perHijo=85000; // $85.000 por hijo, vigente todo 2026 (ANSES). Antes: 65.000, dato viejo sin fuente.
   const total=h*perHijo;
   const insightText = h <= 0
     ? `Ingresá la cantidad de hijos escolarizados para estimar la **Ayuda Escolar Anual** de ANSES: se paga **$${perHijo.toLocaleString('es-AR')} por hijo**, en un solo pago al inicio del ciclo lectivo.`
