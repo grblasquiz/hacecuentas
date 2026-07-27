@@ -166,7 +166,7 @@ export const hub: HubData = {
     yes: [
       'El Mundial 2026 repartió 48 plazas: 16 UEFA, 9 CAF, 8 AFC, 6 CONMEBOL, 6 CONCACAF (con Estados Unidos, México y Canadá como anfitriones) y 1 OFC, más 2 del repechaje intercontinental',
       'El campeón jugó 8 partidos, no 7: el formato de 48 sumó una ronda de dieciseisavos',
-      'La FIFA pagó USD 42 millones a la federación campeona y USD 9 millones a cada selección eliminada en la fase de grupos, más USD 1,5 millones de preparación para todas',
+      'La FIFA pagó USD 50 millones a la federación campeona y USD 9 millones a cada selección eliminada en la fase de grupos, más USD 1,5 millones de preparación para todas',
       'Lo que llega al jugador depende de cuánto reparte su federación: la AFA es de las que más baja al plantel, cerca del 65% del premio',
       'Miroslav Klose sigue siendo el máximo goleador histórico de Copas del Mundo con 16 goles',
       'Las copas de clubes 2026 están en curso: Libertadores y Sudamericana reparten 8 y 6 cupos para Argentina y Brasil, y Champions reparte hasta 5 por país en el top del ranking UEFA',
@@ -197,7 +197,7 @@ export const hub: HubData = {
     },
     {
       q: '¿Cuánta plata pagó la FIFA por cada fase del Mundial 2026?',
-      a: 'Los montos por federación fueron de USD 9 millones para las eliminadas en fase de grupos, 13 millones en dieciseisavos, 18 millones en octavos y cuartos, 27 millones para el cuarto puesto, 28 millones para el tercero, 30 millones para el subcampeón y 42 millones para el campeón. Además la FIFA pagó cerca de USD 1,5 millones a cada selección en concepto de preparación.',
+      a: 'La bolsa de rendimiento fue de USD 655 millones repartidos entre las 48 selecciones: 9 millones para las eliminadas en fase de grupos, 11 en dieciseisavos, 15 en octavos, 19 en cuartos, 27 millones para el cuarto puesto, 29 para el tercero, 33 para el subcampeón y 50 millones para el campeón. Además cada selección recibió USD 1,5 millones de preparación. Si ves el número de 42 millones dando vueltas, es el premio del campeón de Qatar 2022 sobre una bolsa de 440 millones.',
     },
     {
       q: '¿Cuánto cobró de premio cada jugador del Mundial?',
@@ -343,15 +343,22 @@ export const CONFEDERACIONES: Record<
 export const PLAZAS = { total: 48, directas: 46, repechaje: 2 };
 
 /** Premio de la FIFA por fase alcanzada, en dólares, para la federación. */
+/*
+ * Bolsa de rendimiento de 2026: USD 655 M sobre 48 selecciones. La tabla cierra
+ * exacto: 50 + 33 + 29 + 27 + 4×19 + 8×15 + 16×11 + 16×9 = 655 M.
+ *
+ * Los valores anteriores (campeón 42, subcampeón 30, tercero 28…) eran los de
+ * Qatar 2022 sobre una bolsa de 440 M y quedaron acá por arrastre.
+ */
 export const PREMIO_FASE: Record<string, { usd: number; label: string }> = {
   grupos: { usd: 9_000_000, label: 'Eliminada en fase de grupos' },
-  dieciseisavos: { usd: 13_000_000, label: 'Eliminada en dieciseisavos' },
-  octavos: { usd: 18_000_000, label: 'Eliminada en octavos' },
-  cuartos: { usd: 18_000_000, label: 'Eliminada en cuartos' },
+  dieciseisavos: { usd: 11_000_000, label: 'Eliminada en dieciseisavos' },
+  octavos: { usd: 15_000_000, label: 'Eliminada en octavos' },
+  cuartos: { usd: 19_000_000, label: 'Eliminada en cuartos' },
   cuartoLugar: { usd: 27_000_000, label: 'Cuarto puesto' },
-  tercero: { usd: 28_000_000, label: 'Tercer puesto' },
-  subcampeon: { usd: 30_000_000, label: 'Subcampeona' },
-  campeon: { usd: 42_000_000, label: 'Campeona del mundo' },
+  tercero: { usd: 29_000_000, label: 'Tercer puesto' },
+  subcampeon: { usd: 33_000_000, label: 'Subcampeona' },
+  campeon: { usd: 50_000_000, label: 'Campeona del mundo' },
 };
 
 /** Aporte fijo de la FIFA por preparación, por selección, en dólares. */

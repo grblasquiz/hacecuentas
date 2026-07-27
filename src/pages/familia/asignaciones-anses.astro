@@ -1,0 +1,208 @@
+---
+/**
+ * Hub de decisión — "AUH y asignaciones familiares: ¿cuánto cobro?"
+ * Reemplaza 7 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Los montos NO se escriben acá: viajan desde src/lib/hubs/auh.ts, que toma la
+ * AUH y la retención del 20% de src/lib/data/argentina-2026.ts (la única fuente
+ * del repo con fecha de verificación para este dato).
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, CASE_MATH } from '../../lib/hubs/auh';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ A: CASE_MATH }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'auh';
+      const hijos = Math.max(0, Math.floor(Number(v.hijos) || 0));
+      const hijosCud = Math.min(hijos, Math.max(0, Math.floor(Number(v.hijosCud) || 0)));
+      const ingreso = Math.max(0, Number(v.ingreso) || 0);
+      const integrantes = Math.max(1, Math.floor(Number(v.integrantes) || 1));
+      const meses = Math.min(12, Math.max(1, Math.floor(Number(v.mesesRetenidos) || 12)));
+      const bonoActivo = v.bono === 'si';
+
+      // AUH bruta: los hijos con CUD no entran en el tope de 5.
+      const generales = Math.min(hijos - hijosCud, A.maxHijosGeneral);
+      const brutoGeneral = generales * A.auhGeneral;
+      const brutoCud = hijosCud * A.auhDiscapacidad;
+      const brutoAuh = brutoGeneral + brutoCud;
+      const retenidoMes = brutoAuh * A.pctRetenido;
+      const cobroMes = brutoAuh - retenidoMes;
+      const bono = bonoActivo ? hijos * A.bonoRefuerzo : 0;
+
+      // ── AUH ────────────────────────────────────────────────────────────
+      if (id === 'auh') {
+        const tope = integrantes * A.topePorIntegrante;
+        const accede = ingreso <= tope;
+        const total = accede ? cobroMes + bono : 0;
+        const rows = [];
+        if (generales > 0) rows.push({ k: 'AUH por hijo sin CUD', ref: generales + ' × monto general', v: brutoGeneral });
+        if (hijosCud > 0) rows.push({ k: 'AUH por hijo con CUD', ref: hijosCud + ' × monto discapacidad', v: brutoCud });
+        rows.push({ k: 'Bruto mensual por todos los hijos', ref: 'Antes de la retención', v: brutoAuh });
+        rows.push({ k: 'Lo que te depositan (80%)', ref: 'Acreditación mensual', v: cobroMes, extra: true });
+        rows.push({ k: 'Lo que te retienen (20%)', ref: 'Se libera con la Libreta', v: retenidoMes });
+        if (bono > 0) rows.push({ k: 'Bono de refuerzo (sin retención)', ref: hijos + ' hijo(s)', v: bono });
+        rows.push({ k: 'Tope de ingreso del grupo', ref: integrantes + ' integrantes', v: tope });
+        rows.push({ k: 'Hijos que paga la AUH general', ref: 'Tope de 5, los CUD no cuentan', v: generales, format: 'unit', unit: 'hijos' });
+
+        return {
+          total: H.ars(total),
+          sub: accede
+            ? 'De ' + H.ars(brutoAuh) + ' brutos te acreditan ' + H.ars(cobroMes) + ' y se retiene ' + H.ars(retenidoMes) + ' hasta presentar la Libreta' +
+              (bono > 0 ? ' · más ' + H.ars(bono) + ' de bono, sin retención' : '')
+            : 'El ingreso declarado (' + H.ars(ingreso) + ') supera el tope de ' + H.ars(tope) + ' para ' + integrantes + ' integrantes',
+          rows: rows,
+          chart: [
+            { label: 'Cobro mensual (80%)', value: accede ? cobroMes : 0, tone: 'main' },
+            { label: 'Retenido hasta la Libreta (20%)', value: accede ? retenidoMes : 0, tone: 'warn' },
+            { label: 'Bono de refuerzo', value: bono, tone: 'good' },
+          ],
+        };
+      }
+
+      // ── Libreta: el 20% acumulado ──────────────────────────────────────
+      if (id === 'libreta') {
+        const acumulado = retenidoMes * meses;
+        return {
+          total: H.ars(acumulado),
+          sub:
+            meses + ' mes(es) × ' + H.ars(retenidoMes) + ' retenidos por ' + hijos + ' hijo(s), valuados al monto vigente. ' +
+            'El pago real usa el valor de cada mes retenido, así que suele salir algo menos.',
+          rows: [
+            { k: 'Bruto mensual por todos los hijos', ref: 'AUH sin retención', v: brutoAuh },
+            { k: 'Retenido por mes (20%)', ref: 'Libreta AUH', v: retenidoMes },
+            { k: 'Meses acumulados', ref: 'Sin presentar la Libreta', v: meses, format: 'unit', unit: 'meses' },
+            { k: 'Total a cobrar con la Libreta', ref: 'Estimado a valores de hoy', v: acumulado, extra: true },
+            { k: 'Lo que ya cobraste esos meses (80%)', ref: 'Acreditado mes a mes', v: cobroMes * meses },
+          ],
+          chart: [
+            { label: 'Ya cobrado mes a mes (80%)', value: cobroMes * meses, tone: 'main' },
+            { label: 'Retenido a la espera de la Libreta (20%)', value: acumulado, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── SUAF: tramo por ingreso del grupo familiar ─────────────────────
+      if (id === 'suaf' || id === 'escolar' || id === 'embarazo') {
+        let tramo = null;
+        for (let i = 0; i < A.tramos.length; i++) {
+          if (ingreso <= A.tramos[i].limite) { tramo = A.tramos[i]; break; }
+        }
+        const porHijo = tramo ? tramo.asignacion : 0;
+        const totalSuaf = porHijo * hijos;
+        const label = tramo ? 'Tramo ' + tramo.tramo + ' (hasta ' + H.ars(tramo.limite) + ')' : 'Fuera de tope';
+
+        if (id === 'escolar') {
+          const totalEscolar = A.ayudaEscolar * hijos;
+          return {
+            total: H.ars(totalEscolar),
+            sub: 'Pago ÚNICO anual por ' + hijos + ' hijo(s) escolarizado(s), a ' + H.ars(A.ayudaEscolar) + ' cada uno. No es mensual.',
+            rows: [
+              { k: 'Ayuda escolar por hijo', ref: 'Pago único anual', v: A.ayudaEscolar },
+              { k: 'Hijos escolarizados', ref: 'Con certificado de alumno regular', v: hijos, format: 'unit', unit: 'hijos' },
+              { k: 'Total de ayuda escolar', ref: 'Inicio del ciclo lectivo', v: totalEscolar, extra: true },
+              { k: 'Lo que cobrás por mes aparte', ref: label, v: totalSuaf },
+            ],
+            chart: [
+              { label: 'Ayuda escolar (pago único)', value: totalEscolar, tone: 'good' },
+              { label: 'Asignación mensual por hijo', value: totalSuaf, tone: 'main' },
+            ],
+          };
+        }
+
+        if (id === 'embarazo') {
+          const prenatal = porHijo > 0 ? porHijo : A.auhGeneral * (1 - A.pctRetenido);
+          const totalEmb = prenatal + A.complementoLeche;
+          return {
+            total: H.ars(totalEmb),
+            sub:
+              'Asignación prenatal de ' + H.ars(prenatal) + ' más el Complemento Leche de ' + H.ars(A.complementoLeche) + ' por mes' +
+              (porHijo > 0 ? ' · ' + label : ' · sin trabajo registrado, el prenatal se paga como AUE con retención del 20%'),
+            rows: [
+              { k: 'Asignación prenatal mensual', ref: porHijo > 0 ? 'Igual a la asignación por hijo' : 'AUE, neto del 20% retenido', v: prenatal },
+              { k: 'Complemento Leche mensual', ref: 'Embarazo, lactancia y hasta los 5', v: A.complementoLeche },
+              { k: 'Total mensual mientras dura', ref: 'Suma de ambos', v: totalEmb, extra: true },
+              { k: 'Total en 9 meses de embarazo', ref: 'Estimación a valores de hoy', v: totalEmb * 9 },
+            ],
+            chart: [
+              { label: 'Asignación prenatal', value: prenatal, tone: 'main' },
+              { label: 'Complemento Leche', value: A.complementoLeche, tone: 'good' },
+            ],
+          };
+        }
+
+        // SUAF puro
+        const rows = [
+          { k: 'Asignación por hijo', ref: label, v: porHijo },
+          { k: 'Hijos a cargo', ref: 'Todos los del grupo', v: hijos, format: 'unit', unit: 'hijos' },
+          { k: 'Total mensual', ref: 'Asignación familiar', v: totalSuaf, extra: true },
+          { k: 'Ingreso del grupo familiar', ref: 'IGF declarado', v: ingreso },
+          { k: 'Tope del régimen general', ref: 'Por encima no corresponde', v: A.topeIgf },
+        ];
+        if (porHijo > 0 && tramo && tramo.tramo > 1) {
+          rows.push({ k: 'Si estuvieras en el tramo 1 cobrarías', ref: 'Diferencia por ingreso', v: A.tramos[0].asignacion * hijos });
+        }
+        return {
+          total: H.ars(totalSuaf),
+          sub: porHijo > 0
+            ? label + ': ' + H.ars(porHijo) + ' por hijo × ' + hijos + ' hijo(s)'
+            : 'El ingreso del grupo (' + H.ars(ingreso) + ') supera el tope de ' + H.ars(A.topeIgf) + ': no corresponde la asignación general',
+          rows: rows,
+          chart: [
+            { label: 'Lo que cobrás hoy', value: totalSuaf, tone: 'main' },
+            { label: 'Lo que dejás de cobrar contra el tramo 1', value: Math.max(0, A.tramos[0].asignacion * hijos - totalSuaf), tone: 'warn' },
+          ],
+        };
+      }
+
+      return { total: H.ars(0), sub: '', rows: [], chart: [] };
+    });
+  })();
+</script>

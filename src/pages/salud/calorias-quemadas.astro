@@ -1,0 +1,294 @@
+---
+/**
+ * Hub de decisión — "¿Cuántas calorías quemé entrenando?"
+ * Reemplaza 19 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Un solo motor: kcal = MET × peso × horas. Las 19 calcs absorbidas eran esa
+ * misma cuenta con distinto MET. La única excepción es la rama de watts, que
+ * mide trabajo mecánico y no usa MET.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, ACTIVIDADES, ESCALAS, MOTOR } from '../../lib/hubs/calorias-quemadas';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+// Infinity no sobrevive a la serialización a JSON del define:vars.
+const ESCALAS_JSON = Object.fromEntries(
+  Object.entries(ESCALAS).map(([k, v]) => [k, v.map((s) => ({ ...s, hasta: s.hasta === Infinity ? null : s.hasta }))]),
+);
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ ACT: ACTIVIDADES, ESC: ESCALAS_JSON, K: MOTOR }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const nf = (n, d) =>
+      Number(n || 0).toLocaleString('es-AR', {
+        minimumFractionDigits: d || 0,
+        maximumFractionDigits: d || 0,
+      });
+
+    /** MET de una escala de velocidad (`hasta: null` = último escalón, sin techo). */
+    function porVelocidad(fam, kmh) {
+      const escala = ESC[fam] || [];
+      for (let j = 0; j < escala.length; j++) {
+        const s = escala[j];
+        if (s.hasta === null || kmh < s.hasta) return s;
+      }
+      return escala[escala.length - 1];
+    }
+
+    H.onCompute(function (v, caso) {
+      const rama = (caso && caso.id) || 'catalogo';
+
+      const peso = Math.max(0, Number(v.peso) || 0);
+      const actKey = String(v.actividad || 'correr-10');
+      const act = ACT[actKey] || ACT['correr-10'];
+      const minutosIn = Math.max(0, Number(v.minutos) || 0);
+      const distancia = Math.max(0, Number(v.distancia) || 0);
+      const pendiente = Math.min(30, Math.max(-30, Number(v.pendiente) || 0));
+      const pisos = Math.max(0, Number(v.pisos) || 0);
+      const watts = Math.max(0, Number(v.watts) || 0);
+
+      if (!peso) {
+        return {
+          total: '—',
+          sub: 'Ingresá tu peso para ver el gasto.',
+          rows: [],
+          chart: [],
+          format: 'unit',
+          unit: 'kcal',
+        };
+      }
+
+      const rows = [];
+      let met = act.met;
+      let metRef = act.nota;
+      let minutos = minutosIn;
+      let etiqueta = act.label;
+      // Notas que se van sumando a la línea de contexto según la rama.
+      const notas = [];
+
+      // ── Rama: escaleras ────────────────────────────────────────────────
+      // El tiempo NO se pide: sale de los pisos. 20 escalones a 0,5 s cada uno.
+      if (rama === 'pisos') {
+        if (!pisos) {
+          return {
+            total: '—',
+            sub: 'Ingresá cuántos pisos subiste.',
+            rows: [],
+            chart: [],
+            format: 'unit',
+            unit: 'kcal',
+          };
+        }
+        met = ACT['escaleras'].met;
+        metRef = ACT['escaleras'].nota;
+        etiqueta = 'subir ' + nf(pisos, 0) + (pisos === 1 ? ' piso' : ' pisos');
+        minutos = (pisos * K.ESCALONES_POR_PISO * K.SEG_POR_ESCALON) / 60;
+        const metros = pisos * K.ALTURA_PISO_M;
+        rows.push({ k: 'Escalones subidos', ref: '20 por piso', v: pisos * K.ESCALONES_POR_PISO, format: 'plain' });
+        rows.push({ k: 'Altura ganada', ref: '3 m por piso', v: metros, format: 'unit', unit: 'm' });
+        rows.push({ k: 'Tiempo de subida', ref: 'medio segundo por escalón', v: Number(minutos.toFixed(1)), format: 'unit', unit: 'min', decimals: 1 });
+        notas.push('el tiempo sale de los pisos, no de los minutos de arriba');
+      }
+
+      // ── Rama: distancia y tiempo ───────────────────────────────────────
+      // La velocidad manda sobre el MET de tabla, si la actividad tiene familia.
+      let velocidad = 0;
+      if (rama === 'ritmo') {
+        if (!distancia || !minutos) {
+          return {
+            total: '—',
+            sub: 'Ingresá la distancia y los minutos para calcular la velocidad.',
+            rows: [],
+            chart: [],
+            format: 'unit',
+            unit: 'kcal',
+          };
+        }
+        velocidad = distancia / (minutos / 60);
+        if (act.fam) {
+          const paso = porVelocidad(act.fam, velocidad);
+          met = paso.met;
+          metRef = 'escala de velocidad — ' + paso.label;
+          etiqueta = act.fam === 'bici' ? 'bici ' + paso.label : act.fam === 'correr' ? 'carrera ' + paso.label : 'caminata ' + paso.label;
+        } else {
+          notas.push('esta actividad no tiene escala de velocidad: se usa su MET de tabla');
+        }
+        rows.push({ k: 'Velocidad media', v: Number(velocidad.toFixed(1)), format: 'unit', unit: 'km/h', decimals: 1 });
+
+        // Pendiente: sólo tiene escala validada al caminar (~0,6 MET por punto).
+        if (pendiente > 0 && act.fam === 'caminar') {
+          const extra = pendiente * K.MET_POR_PUNTO_PENDIENTE;
+          met += extra;
+          rows.push({ k: 'MET extra por la subida', ref: nf(pendiente, 0) + '% de pendiente', v: Number(extra.toFixed(1)), format: 'unit', unit: 'MET', decimals: 1 });
+          metRef = metRef + ' + pendiente';
+        } else if (pendiente !== 0 && act.fam !== 'caminar') {
+          notas.push('el ajuste por pendiente sólo está validado para caminata');
+        }
+      }
+
+      // ── Rama: watts ────────────────────────────────────────────────────
+      // Única rama sin MET: mide trabajo mecánico real.
+      if (rama === 'watts') {
+        if (!watts || !minutos) {
+          return {
+            total: '—',
+            sub: 'Ingresá la potencia media y los minutos.',
+            rows: [],
+            chart: [],
+            format: 'unit',
+            unit: 'kcal',
+          };
+        }
+        const kj = (watts * minutos * 60) / 1000;
+        const kcalW = kj / (K.EFICIENCIA * K.KJ_POR_KCAL);
+        const kcalMinW = kcalW / minutos;
+        const metEquiv = kcalW / (peso * (minutos / 60));
+
+        const rowsW = [
+          { k: 'Trabajo mecánico', ref: nf(watts, 0) + ' W × ' + nf(minutos, 0) + ' min', v: Math.round(kj), format: 'unit', unit: 'kJ' },
+          { k: 'Calorías quemadas', ref: 'eficiencia 24%', v: Math.round(kcalW), extra: true, format: 'unit', unit: 'kcal' },
+          { k: 'Gasto por minuto', v: Number(kcalMinW.toFixed(1)), format: 'unit', unit: 'kcal/min', decimals: 1 },
+          { k: 'Gasto por hora', v: Math.round(kcalMinW * 60), format: 'unit', unit: 'kcal/h' },
+          { k: 'Rango por eficiencia 21%', ref: 'ciclista menos eficiente', v: Math.round(kj / (0.21 * K.KJ_POR_KCAL)), format: 'unit', unit: 'kcal' },
+          { k: 'Rango por eficiencia 27%', ref: 'ciclista muy entrenado', v: Math.round(kj / (0.27 * K.KJ_POR_KCAL)), format: 'unit', unit: 'kcal' },
+          { k: 'MET equivalente de la sesión', ref: 'para comparar con el catálogo', v: Number(metEquiv.toFixed(1)), format: 'unit', unit: 'MET', decimals: 1 },
+          { k: 'Equivale en minutos de caminata', ref: '3,5 MET', v: Math.round(kcalW / ((K.MET_CAMINATA_REF * peso) / 60)), format: 'unit', unit: 'min' },
+          { k: 'Equivale en medialunas', ref: '230 kcal cada una', v: Number((kcalW / K.KCAL_MEDIALUNA).toFixed(1)), format: 'unit', unit: 'medialunas', decimals: 1 },
+        ];
+
+        const posW = Math.min(100, Math.max(0, (metEquiv / K.ESCALA_MAX) * 100));
+        return {
+          total: nf(kcalW, 0) + ' kcal',
+          sub:
+            nf(watts, 0) + ' W medios durante ' + nf(minutos, 0) + ' min son ' + nf(kj, 0) +
+            ' kJ de trabajo, que al 24% de eficiencia mecánica son ' + nf(kcalW, 0) + ' kcal · ' +
+            'por eso en bici 1 kJ ≈ 1 kcal · equivale a un esfuerzo de ' + nf(metEquiv, 1) +
+            ' MET para tus ' + nf(peso, 0) + ' kg. Esta rama mide trabajo real, no estima con tabla.',
+          rows: rowsW,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'kcal',
+          position: posW,
+          positionLabel: nf(metEquiv, 1) + ' MET equivalentes — ' + banda(metEquiv),
+        };
+      }
+
+      if (!minutos) {
+        return {
+          total: '—',
+          sub: 'Ingresá los minutos de actividad.',
+          rows: [],
+          chart: [],
+          format: 'unit',
+          unit: 'kcal',
+        };
+      }
+
+      // ── Motor común: kcal = MET × peso × horas ─────────────────────────
+      const horas = minutos / 60;
+      const kcal = met * peso * horas;
+      // Netas: se descuenta el 1 MET que gastabas igual estando quieto.
+      const neto = Math.max(0, (met - 1) * peso * horas);
+      const kcalMin = kcal / minutos;
+      const acsm = kcal * K.ACSM_FACTOR;
+
+      rows.push({ k: 'MET de la actividad', ref: metRef, v: Number(met.toFixed(1)), format: 'unit', unit: 'MET', decimals: 1 });
+      rows.push({ k: 'Calorías quemadas (brutas)', ref: 'MET × ' + nf(peso, 0) + ' kg × ' + nf(horas, 2) + ' h', v: Math.round(kcal), extra: true, format: 'unit', unit: 'kcal' });
+      rows.push({ k: 'Calorías netas del ejercicio', ref: 'descontado el metabolismo de reposo', v: Math.round(neto), extra: true, format: 'unit', unit: 'kcal' });
+      rows.push({ k: 'Gasto por minuto', v: Number(kcalMin.toFixed(1)), format: 'unit', unit: 'kcal/min', decimals: 1 });
+      rows.push({ k: 'Gasto por hora', v: Math.round(met * peso), format: 'unit', unit: 'kcal/h' });
+      rows.push({ k: 'Variante ACSM del mismo cálculo', ref: 'MET × 3,5 × kg ÷ 200: +5%', v: Math.round(acsm), format: 'unit', unit: 'kcal' });
+
+      if (rama === 'ritmo' && distancia > 0) {
+        rows.push({ k: 'Calorías por kilómetro', v: Math.round(kcal / distancia), format: 'unit', unit: 'kcal/km' });
+      }
+
+      const minCaminata = kcal / ((K.MET_CAMINATA_REF * peso) / 60);
+      rows.push({ k: 'Equivale en minutos de caminata', ref: '3,5 MET a 4,8 km/h', v: Math.round(minCaminata), format: 'unit', unit: 'min' });
+      rows.push({ k: 'Equivale en pasos', ref: 'zancada de 0,7 m', v: Math.round(((minCaminata / 60) * K.VEL_CAMINATA_REF * 1000) / K.ZANCADA_M), format: 'plain' });
+      rows.push({ k: 'Equivale en medialunas', ref: '230 kcal cada una', v: Number((kcal / K.KCAL_MEDIALUNA).toFixed(1)), format: 'unit', unit: 'medialunas', decimals: 1 });
+
+      const pos = Math.min(100, Math.max(0, (met / K.ESCALA_MAX) * 100));
+      const pctNeto = kcal > 0 ? (neto / kcal) * 100 : 0;
+
+      const sub =
+        nf(kcal, 0) + ' kcal brutas en ' + nf(minutos, 0) + ' min de ' + etiqueta +
+        ' a ' + nf(met, 1) + ' MET (' + banda(met) + ')' +
+        (velocidad ? ' · ' + nf(velocidad, 1) + ' km/h' : '') +
+        ' · ' + nf(neto, 0) + ' kcal netas, el ' + nf(pctNeto, 0) +
+        '% del total: el resto lo gastabas igual estando quieto · ' +
+        nf(kcalMin, 1) + ' kcal por minuto, lo mismo que ' + nf(minCaminata, 0) + ' min de caminata' +
+        (notas.length ? ' · ' + notas.join(' · ') : '') + '.';
+
+      return {
+        total: nf(kcal, 0) + ' kcal',
+        sub: sub,
+        rows: rows,
+        chart: bandas(),
+        format: 'unit',
+        unit: 'kcal',
+        position: pos,
+        positionLabel: nf(met, 1) + ' MET — ' + banda(met),
+      };
+    });
+
+    /** Franjas de intensidad del Compendium sobre el eje MET. */
+    function bandas() {
+      return [
+        { label: 'Ligera (menos de 3 MET)', value: 3, from: 0, to: 3, tone: 'warn' },
+        { label: 'Moderada (3 a 6 MET)', value: 3, from: 3, to: 6, tone: 'good' },
+        { label: 'Vigorosa (6 a 9 MET)', value: 3, from: 6, to: 9, tone: 'good' },
+        { label: 'Muy vigorosa (más de 9 MET)', value: 7, from: 9, to: K.ESCALA_MAX, tone: 'main' },
+      ];
+    }
+
+    function banda(m) {
+      return m < 3 ? 'intensidad ligera' : m < 6 ? 'intensidad moderada' : m < 9 ? 'intensidad vigorosa' : 'intensidad muy vigorosa';
+    }
+  })();
+</script>

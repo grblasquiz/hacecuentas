@@ -1,0 +1,270 @@
+---
+/**
+ * Hub de decisión — "Ingresos Brutos: ¿cuánto pago en mi provincia?"
+ * Reemplaza 2 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: una jurisdicción (default), Convenio Multilateral y
+ * régimen simplificado.
+ *
+ * Los números salen de `JURISDICCIONES`, que el hub deriva de la tabla
+ * publicada en `src/content/argentina/ingresos-brutos.json` — la misma que
+ * muestran las 24 páginas vivas `/iibb/<provincia>`. Acá no se escribe ninguna
+ * alícuota a mano.
+ *
+ * OJO formato: la mitad de las filas NO son plata (alícuotas, coeficientes,
+ * ranking). El runtime hace Object.assign sobre el formato base 'ars', así que
+ * cada una de esas filas declara su propio `format`/`unit`.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, JURISDICCIONES, ACTIVIDADES, ESCALA_MAX } from '../../lib/hubs/iibb';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ JUR: JURISDICCIONES, ACTS: ACTIVIDADES, ESCALA_MAX }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    /** Fila en pesos (formato base del hub). */
+    const P = function (k, v, ref, extra) {
+      return { k: k, v: v, format: 'ars', decimals: 0, ref: ref, extra: !!extra };
+    };
+    /** Fila con unidad propia: alícuotas, coeficientes, ranking. NO es plata. */
+    const U = function (k, unit, v, decimals, ref, extra) {
+      return { k: k, v: v, format: 'unit', unit: unit, decimals: decimals == null ? 2 : decimals, ref: ref, extra: !!extra };
+    };
+
+    const byId = {};
+    for (let i = 0; i < JUR.length; i++) byId[JUR[i].slug] = JUR[i];
+    const actById = {};
+    for (let i = 0; i < ACTS.length; i++) actById[ACTS[i].id] = ACTS[i];
+
+    const jur = function (slug) { return byId[slug] || JUR[0]; };
+    const act = function (id) { return actById[id] || ACTS[0]; };
+    const ali = function (j, actId) {
+      const a = j.alicuotas[actId];
+      return typeof a === 'number' ? a : j.alicuotas.servicios;
+    };
+    const pesos = function (n) { return '$' + Math.round(n).toLocaleString('es-AR'); };
+    const pc = function (n) { return n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%'; };
+
+    /**
+     * Ranking de la alícuota efectiva contra la misma actividad en las 24
+     * jurisdicciones. 1 = la más cara.
+     */
+    const ranking = function (actId, valor) {
+      const todas = JUR.map(function (j) { return ali(j, actId); }).sort(function (a, b) { return b - a; });
+      let pos = 1;
+      for (let i = 0; i < todas.length; i++) if (todas[i] > valor) pos++;
+      return { pos: pos, total: todas.length, max: todas[0], min: todas[todas.length - 1] };
+    };
+
+    /** Posición 0-100 en la escala del gráfico (0 → ESCALA_MAX %). */
+    const posEscala = function (alicuota) {
+      return Math.max(0, Math.min(100, (alicuota / ESCALA_MAX) * 100));
+    };
+
+    /**
+     * Franjas de la escala. El runtime, cuando el gráfico es posicional, arma el
+     * degradé con `from`/`to` de cada segmento y clava el marcador en `position`.
+     * Si mandáramos sólo `value`, las franjas quedarían proporcionales al número
+     * y la barra mentiría.
+     */
+    const BANDAS = [
+      { label: 'Baja (hasta 2,5%)', from: 0, to: 2.5, value: 2.5, tone: 'good' },
+      { label: 'Media (2,5% a 3,5%)', from: 2.5, to: 3.5, value: 1, tone: 'warn' },
+      { label: 'Alta (3,5% a 4,5%)', from: 3.5, to: 4.5, value: 1, tone: 'exit' },
+      { label: 'Muy alta (más de 4,5%)', from: 4.5, to: ESCALA_MAX, value: ESCALA_MAX - 4.5, tone: 'bad' },
+    ];
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'una';
+      const fact = Math.max(0, Number(v.facturacion) || 0);
+      const ret = Math.max(0, Number(v.retenciones) || 0);
+      const j1 = jur(v.provincia);
+      const a = act(v.actividad);
+      const al1 = ali(j1, a.id);
+
+      // ── Convenio Multilateral ───────────────────────────────────────────────
+      if (id === 'convenio') {
+        const j2 = jur(v.provincia2);
+        const al2 = ali(j2, a.id);
+        // Coeficiente unificado = (participación en ingresos + en gastos) / 2.
+        // Misma cuenta que la fórmula original: sólo cambia que la entrada ya
+        // viene en porcentaje en vez de importes absolutos.
+        const pIng2 = Math.max(0, Math.min(100, Number(v.pctIngresos2) || 0)) / 100;
+        const pGas2 = Math.max(0, Math.min(100, Number(v.pctGastos2) || 0)) / 100;
+        const coef2 = (pIng2 + pGas2) / 2;
+        const coef1 = 1 - coef2;
+
+        const base1 = fact * coef1;
+        const base2 = fact * coef2;
+        const imp1 = base1 * al1 / 100;
+        const imp2 = base2 * al2 / 100;
+        const determinado = imp1 + imp2;
+        const efectiva = fact > 0 ? (determinado / fact) * 100 : 0;
+        const saldo = Math.max(0, determinado - ret);
+        const aFavor = Math.max(0, ret - determinado);
+        const r = ranking(a.id, efectiva);
+
+        const rows = [
+          P('Facturación gravada del mes', fact, 'Base imponible total, sin IVA'),
+          U('Coeficiente unificado — ' + j1.nombre, '%', coef1 * 100, 2, 'Promedio de ingresos y gastos'),
+          U('Coeficiente unificado — ' + j2.nombre, '%', coef2 * 100, 2, 'Promedio de ingresos y gastos'),
+          P('Base atribuida a ' + j1.nombre, base1, j1.organismo),
+          P('Base atribuida a ' + j2.nombre, base2, j2.organismo),
+          U('Alícuota en ' + j1.nombre, '%', al1, 2, a.label),
+          U('Alícuota en ' + j2.nombre, '%', al2, 2, a.label),
+          P('Impuesto en ' + j1.nombre, imp1, 'Base × alícuota'),
+          P('Impuesto en ' + j2.nombre, imp2, 'Base × alícuota'),
+          P('Impuesto determinado del mes', determinado, 'Suma de las dos jurisdicciones', true),
+          U('Alícuota efectiva combinada', '%', efectiva, 2, 'Sobre el total facturado'),
+        ];
+        if (ret > 0) rows.push(P('Retenciones y percepciones sufridas', -ret, 'SIRCREB y agentes de retención'));
+        rows.push(P('Saldo a pagar del mes', saldo, 'Impuesto determinado menos pagos a cuenta', true));
+        if (aFavor > 0) rows.push(P('Saldo a favor para el mes siguiente', aFavor, 'Te retuvieron de más'));
+
+        return {
+          total: pesos(saldo),
+          sub:
+            'Con un coeficiente de ' + pc(coef1 * 100) + ' para ' + j1.nombre + ' y ' + pc(coef2 * 100) + ' para ' +
+            j2.nombre + ', la alícuota efectiva combinada te queda en ' + pc(efectiva) +
+            '. Los coeficientes se arman con el ejercicio anterior y valen todo el año.',
+          rows: rows,
+          chart: BANDAS,
+          format: 'ars',
+          decimals: 0,
+          position: posEscala(efectiva),
+          positionLabel:
+            'Alícuota efectiva ' + pc(efectiva) + ' — equivale al puesto ' + r.pos + ' de ' + r.total +
+            ' si la comparás con ' + a.label.toLowerCase() + ' en cada jurisdicción',
+        };
+      }
+
+      // ── Régimen simplificado / mínimo mensual ───────────────────────────────
+      if (id === 'simplificado') {
+        const minimo = j1.minimoMensual || 0;
+        const general = fact * al1 / 100;
+        const cuota = Math.max(minimo, 0);
+        const ahorro = general - cuota;
+        const efectiva = fact > 0 ? (cuota / fact) * 100 : 0;
+        const r = ranking(a.id, al1);
+
+        const rows = [
+          P('Facturación gravada del mes', fact, 'Base imponible declarada'),
+          P('Cuota mensual del régimen simplificado', cuota, j1.organismo + ' — importe mínimo publicado', true),
+          U('Alícuota del régimen general en ' + j1.nombre, '%', al1, 2, a.label),
+          P('Lo que pagarías por régimen general', general, 'Facturación × alícuota'),
+          P(ahorro >= 0 ? 'Diferencia a favor del simplificado' : 'Diferencia en contra del simplificado', Math.abs(ahorro), 'Comparación mes a mes', true),
+          U('Alícuota efectiva que estás pagando', '%', efectiva, 2, 'Cuota fija sobre lo facturado'),
+          P('Facturación mensual de equilibrio', al1 > 0 ? cuota / (al1 / 100) : 0, 'Arriba de este monto conviene el general'),
+        ];
+        if (ret > 0) rows.push(P('Retenciones sufridas este mes', ret, 'Quedan como saldo a favor: el simplificado ya está pagado'));
+
+        return {
+          total: pesos(cuota),
+          sub:
+            'En ' + j1.nombre + ' el mínimo mensual publicado es ' + pesos(cuota) + '. ' +
+            (ahorro >= 0
+              ? 'Con lo que facturás, el simplificado te sale ' + pesos(Math.abs(ahorro)) + ' más barato que el régimen general.'
+              : 'Con lo que facturás ya te conviene el régimen general: te ahorrarías ' + pesos(Math.abs(ahorro)) + ' por mes.'),
+          rows: rows,
+          chart: BANDAS,
+          format: 'ars',
+          decimals: 0,
+          position: posEscala(efectiva),
+          positionLabel:
+            'Alícuota efectiva ' + pc(efectiva) + ' con la cuota fija · la alícuota general de ' + j1.nombre +
+            ' para ' + a.label.toLowerCase() + ' es ' + pc(al1) + ' (puesto ' + r.pos + ' de ' + r.total + ')',
+        };
+      }
+
+      // ── Caso por defecto: una sola jurisdicción ─────────────────────────────
+      const determinado = fact * al1 / 100;
+      const minimo = j1.minimoMensual || 0;
+      const aplicaMinimo = determinado < minimo;
+      const impuesto = Math.max(determinado, minimo);
+      const saldo = Math.max(0, impuesto - ret);
+      const aFavor = Math.max(0, ret - impuesto);
+      const r = ranking(a.id, al1);
+      const masCara = ranking(a.id, r.max);
+
+      const rows = [
+        P('Facturación gravada del mes', fact, 'Sin IVA, sin descuentos ni devoluciones'),
+        U('Alícuota aplicable en ' + j1.nombre, '%', al1, 2, a.label + (a.nota ? ' · ' + a.nota : '')),
+        P('Impuesto determinado', determinado, 'Base imponible × alícuota'),
+        P('Mínimo mensual de ' + j1.nombre, minimo, j1.organismo + (aplicaMinimo ? ' — se aplica este piso' : ' — no se aplica')),
+        P('Impuesto del mes', impuesto, aplicaMinimo ? 'Se paga el mínimo' : 'Base × alícuota', true),
+      ];
+      if (ret > 0) rows.push(P('Retenciones y percepciones sufridas', -ret, 'SIRCREB y agentes de retención'));
+      rows.push(P('Saldo a pagar del mes', saldo, 'Impuesto menos pagos a cuenta', true));
+      if (aFavor > 0) rows.push(P('Saldo a favor para el mes siguiente', aFavor, 'Te retuvieron más que el impuesto'));
+      rows.push(P('Lo que te quedás después de IIBB', Math.max(0, fact - impuesto), 'Facturación menos el impuesto del mes'));
+      rows.push(P('Costo anual estimado del impuesto', impuesto * 12, 'Doce meses al mismo nivel de facturación'));
+      rows.push(U('Puesto de ' + j1.nombre + ' entre las 24 jurisdicciones', 'de ' + r.total, r.pos, 0, '1 = la alícuota más cara para esta actividad'));
+      rows.push(P('Lo que pagarías en la jurisdicción más cara', fact * r.max / 100, pc(r.max) + ' para ' + a.label.toLowerCase()));
+      rows.push(P('Lo que pagarías en la más barata', fact * r.min / 100, pc(r.min) + ' para ' + a.label.toLowerCase()));
+
+      return {
+        total: pesos(saldo),
+        sub:
+          j1.nombre + ' aplica ' + pc(al1) + ' sobre ' + a.label.toLowerCase() + ' (' + j1.organismo + ', rango publicado ' +
+          (j1.rango || '—') + '). ' +
+          (aplicaMinimo
+            ? 'Tu cálculo da menos que el mínimo mensual, así que se paga el piso de ' + pesos(minimo) + '.'
+            : 'Sobre ' + pesos(fact) + ' facturados son ' + pesos(determinado) + ' de impuesto.'),
+        rows: rows,
+        chart: BANDAS,
+        format: 'ars',
+        decimals: 0,
+        position: posEscala(al1),
+        positionLabel:
+          'Alícuota ' + pc(al1) + ' en ' + j1.nombre + ' — puesto ' + r.pos + ' de ' + r.total +
+          ' entre las jurisdicciones para ' + a.label.toLowerCase() +
+          ' (la más cara aplica ' + pc(masCara.max) + ')',
+      };
+    });
+  })();
+</script>

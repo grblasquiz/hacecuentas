@@ -1,0 +1,205 @@
+---
+/**
+ * Hub de decisión — "¿Con cuánto tiempo tengo que llegar al aeropuerto?"
+ * Reemplaza 8 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/aeropuerto.ts) y su compute().
+ * Todo el chrome, el CSS y el runtime viven en DecisionHub.astro y no se tocan.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  CASE_MATH,
+  CONEXION_BASE,
+  CONEXION_RECARGOS,
+  ANTICIPO,
+  TRASLADO_VEL,
+  CIERRE_EMBARQUE_MIN,
+} from '../../lib/hubs/aeropuerto';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ MATH: CASE_MATH, BASE: CONEXION_BASE, REC: CONEXION_RECARGOS, ANT: ANTICIPO, VEL: TRASLADO_VEL, CIERRE: CIERRE_EMBARQUE_MIN }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    /** Minutos del día → "HH:MM", con vuelta de reloj para las salidas de madrugada. */
+    function hhmm(totalMin) {
+      const t = ((Math.round(totalMin) % 1440) + 1440) % 1440;
+      const h = Math.floor(t / 60);
+      const m = t % 60;
+      return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+    }
+
+    /** "07:45" → 465. Tolera "7.45", "7 45" y valores fuera de rango. */
+    function parseHora(txt) {
+      const m = String(txt == null ? '' : txt).match(/(\d{1,2})\D+(\d{1,2})/);
+      if (!m) {
+        const solo = String(txt == null ? '' : txt).match(/\d{1,2}/);
+        return solo ? Math.min(23, Number(solo[0])) * 60 : 0;
+      }
+      const h = Math.min(23, Math.max(0, Number(m[1])));
+      const mm = Math.min(59, Math.max(0, Number(m[2])));
+      return h * 60 + mm;
+    }
+
+    H.onCompute(function (v, kase) {
+      const modo = (MATH[kase && kase.id] || MATH.casa).modo;
+
+      if (modo === 'escala') {
+        // --- Tiempo mínimo de conexión (MCT) y colchón --------------------
+        const combo = BASE[v.conexion] || BASE['intl-intl'];
+        const otraTerminal = v.terminal === 'otra';
+        const otraAerolinea = v.aerolinea === 'otra';
+        const grande = v.aeropuertoSize === 'grande';
+
+        const addTerminal = otraTerminal ? REC.otraTerminal : 0;
+        const addAerolinea = otraAerolinea ? REC.otraAerolinea : 0;
+        const addGrande = grande ? REC.aeropuertoGrande : 0;
+
+        const recomendado = combo.min + addTerminal + addAerolinea + addGrande;
+        // Mismo piso que la fórmula original: nunca por debajo de 30 minutos.
+        const minimoTecnico = Math.max(30, recomendado - 30);
+
+        const escala = Math.max(0, Number(v.escalaMin) || 0);
+        const margen = escala - recomendado;
+
+        const rows = [
+          { k: 'Mínimo base (' + combo.label + ')', ref: 'MCT de referencia', v: combo.min, format: 'unit', unit: 'min' },
+        ];
+        if (addTerminal) rows.push({ k: 'Recargo por cambio de terminal', v: addTerminal, format: 'unit', unit: 'min' });
+        if (addAerolinea) rows.push({ k: 'Recargo por cambio de aerolínea', v: addAerolinea, format: 'unit', unit: 'min' });
+        if (addGrande) rows.push({ k: 'Recargo por aeropuerto grande', v: addGrande, format: 'unit', unit: 'min' });
+        rows.push({ k: 'Tiempo de conexión recomendado', ref: 'base + recargos', v: recomendado, format: 'unit', unit: 'min', extra: true });
+        rows.push({ k: 'Piso técnico, todo saliendo bien', v: minimoTecnico, format: 'unit', unit: 'min' });
+        rows.push({ k: 'Tu escala', v: escala, format: 'unit', unit: 'min' });
+        rows.push({ k: margen >= 0 ? 'Colchón que te sobra' : 'Minutos que te faltan', v: Math.abs(margen), format: 'unit', unit: 'min', extra: true });
+
+        let semaforo, tone;
+        if (margen < 0) { semaforo = 'Riesgoso: no llega al tiempo recomendado'; tone = 'bad'; }
+        else if (margen < 30) { semaforo = 'Ajustado: viable, pero sin margen para imprevistos'; tone = 'warn'; }
+        else { semaforo = 'Cómodo: te sobra tiempo para la conexión'; tone = 'good'; }
+
+        const top = Math.max(recomendado + 90, escala + 15);
+        const pos = Math.min(100, Math.max(0, (escala / top) * 100));
+
+        return {
+          total: (margen >= 0 ? '+' : '−') + Math.abs(margen) + ' min',
+          sub:
+            'Escala de ' + escala + ' min contra ' + recomendado + ' min recomendados · ' +
+            combo.label +
+            (otraTerminal ? ' · cambio de terminal' : '') +
+            (otraAerolinea ? ' · cambio de aerolínea' : '') +
+            (grande ? ' · aeropuerto grande' : ''),
+          rows: rows,
+          format: 'unit',
+          unit: 'min',
+          chart: [
+            { label: 'Riesgoso', value: recomendado, tone: 'bad', from: 0, to: recomendado },
+            { label: 'Ajustado', value: 30, tone: 'warn', from: recomendado, to: recomendado + 30 },
+            { label: 'Cómodo', value: top - recomendado - 30, tone: 'good', from: recomendado + 30, to: top },
+          ],
+          position: pos,
+          positionLabel: 'Escala de ' + escala + ' min — ' + semaforo,
+        };
+      }
+
+      // --- A qué hora salgo de casa ---------------------------------------
+      const tipo = v.tipoVuelo === 'domestico' ? 'domestico' : 'internacional';
+      const eq = v.equipaje === 'mano' ? 'mano' : 'bodega';
+      const size = ANT.size[v.aeropuertoSize] !== undefined ? v.aeropuertoSize : 'mediano';
+
+      const anticipoHoras = Math.max(0.5, ANT[tipo][eq] + ANT.size[size]);
+      const anticipoMin = Math.round(anticipoHoras * 60);
+
+      const km = Math.max(0, Number(v.distanciaKm) || 0);
+      const par = VEL[v.medio] || VEL.taxi;
+      const velocidad = v.horaPico === 'pico' ? par[1] : par[0];
+      const trasladoMin = km > 0 ? Math.round((km / velocidad) * 60) : 0;
+
+      const totalMin = anticipoMin + trasladoMin;
+      const despegue = parseHora(v.horaVuelo);
+      const enTerminal = despegue - anticipoMin;
+      const deCasa = despegue - totalMin;
+      const cierre = despegue - CIERRE;
+
+      const cruzaDia = deCasa < 0;
+      const madrugada = ((deCasa % 1440) + 1440) % 1440 < 6 * 60;
+
+      const rows = [
+        { k: 'Traslado hasta el aeropuerto', ref: km + ' km a ' + velocidad + ' km/h', v: trasladoMin, format: 'unit', unit: 'min' },
+        { k: 'Anticipo en la terminal', ref: tipo === 'internacional' ? 'vuelo internacional' : 'vuelo doméstico', v: anticipoMin, format: 'unit', unit: 'min' },
+        { k: 'Total desde que salís de casa', v: totalMin, format: 'unit', unit: 'min', extra: true },
+        { k: 'El embarque cierra antes del despegue', v: CIERRE, format: 'unit', unit: 'min' },
+      ];
+
+      const espera = Math.max(0, anticipoMin - CIERRE);
+      const pos = totalMin > 0 ? (trasladoMin / totalMin) * 100 : 0;
+
+      return {
+        total: hhmm(deCasa),
+        sub:
+          'Salís de casa ' + hhmm(deCasa) + (cruzaDia ? ' del día anterior' : '') +
+          ' · estás en la terminal ' + hhmm(enTerminal) +
+          ' · el embarque cierra ' + hhmm(cierre) +
+          (cruzaDia ? ' · dejá todo listo la noche previa' : madrugada ? ' · es salida de madrugada, revisá que haya transporte' : ''),
+        rows: rows,
+        format: 'unit',
+        unit: 'min',
+        chart: [
+          { label: 'Traslado', value: trasladoMin, tone: 'main', from: 0, to: trasladoMin },
+          { label: 'Trámites en terminal', value: espera, tone: 'good', from: trasladoMin, to: trasladoMin + espera },
+          { label: 'Hasta el cierre de embarque', value: CIERRE, tone: 'warn', from: trasladoMin + espera, to: totalMin },
+        ],
+        position: pos,
+        positionLabel: 'Salís ' + hhmm(deCasa) + ' y pisás la terminal ' + hhmm(enTerminal),
+      };
+    });
+  })();
+</script>

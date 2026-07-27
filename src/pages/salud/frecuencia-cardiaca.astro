@@ -1,0 +1,366 @@
+---
+/**
+ * Hub de decisión — "¿Cuál es mi zona de frecuencia cardíaca?"
+ * Reemplaza 11 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: 6 casos (zonas / FCmáx / zona 2 / reposo / VO2max / umbral).
+ * La página sólo aporta datos (src/lib/hubs/frecuencia-cardiaca.ts) y compute().
+ *
+ * NINGUNA rama es plata: TODAS las filas declaran `format: 'unit'`. El runtime
+ * hace Object.assign y una fila sin formato propio se imprimiría con "$".
+ *
+ * El gráfico es `scale`: cada rama devuelve segmentos con from/to absolutos y
+ * una `position` 0-100 calculada sobre el ancho total de la barra.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  FORMULAS_FCMAX,
+  ZONAS,
+  NIVELES,
+  COOPER,
+  VO2_TABLAS,
+  VO2_ETIQUETAS,
+  VO2_FUTBOL,
+  UMBRAL_BANDA,
+} from '../../lib/hubs/frecuencia-cardiaca';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    FORMULAS: FORMULAS_FCMAX,
+    ZONAS,
+    NIVELES,
+    COOPER,
+    VO2_TABLAS,
+    VO2_ETIQUETAS,
+    VO2_FUTBOL,
+    UMBRAL_BANDA,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const r = (n) => Math.round(n);
+    const nf = (n, d) => Number(n).toLocaleString('es-AR', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+    const pos = (v, lo, hi) => (hi <= lo ? 0 : Math.min(100, Math.max(0, ((v - lo) / (hi - lo)) * 100)));
+
+    /** Las tres fórmulas de FC máxima, con Tanaka como principal. */
+    function fcmax(edad) {
+      const out = {};
+      FORMULAS.forEach(function (f) {
+        out[f.id] = r(f.a - f.b * edad);
+      });
+      out.principal = out.tanaka;
+      return out;
+    }
+
+    /** Zonas por Karvonen (reserva cardíaca) y por porcentaje simple de FCmáx. */
+    function zonas(max, reposo) {
+      const reserva = Math.max(1, max - reposo);
+      return ZONAS.map(function (z) {
+        return {
+          label: z.label,
+          karLow: r(reserva * z.low + reposo),
+          karHigh: r(reserva * z.high + reposo),
+          simLow: r(max * z.low),
+          simHigh: r(max * z.high),
+        };
+      });
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'zonas';
+      const edad = Math.min(100, Math.max(10, Number(v.edad) || 35));
+      const reposo = Math.min(120, Math.max(30, Number(v.fcReposo) || 62));
+      const nivel = NIVELES[v.nivel] || NIVELES.moderado;
+      const F = fcmax(edad);
+      const max = F.principal;
+      const reserva = Math.max(1, max - reposo);
+      const Z = zonas(max, reposo);
+      const z2 = Z[1];
+
+      // ── 1. Mis 5 zonas de entrenamiento ───────────────────────────────────
+      if (id === 'zonas') {
+        const lo = Z[0].karLow;
+        const hi = Z[4].karHigh;
+        return {
+          total: z2.karLow + '–' + z2.karHigh + ' lpm',
+          sub:
+            'Zona 2 por Karvonen · FC máxima estimada ' + max + ' lpm (Tanaka) · reserva cardíaca ' +
+            reserva + ' lpm · por porcentaje simple la misma zona 2 sería ' + z2.simLow + '–' + z2.simHigh + ' lpm',
+          format: 'unit',
+          unit: 'lpm',
+          rows: [
+            { k: 'FC máxima estimada', ref: 'Tanaka · 208 − 0,7 × edad', v: max, format: 'unit', unit: 'lpm' },
+            { k: 'FC en reposo', v: reposo, format: 'unit', unit: 'lpm' },
+            { k: 'Reserva cardíaca', ref: 'FCmáx − reposo', v: reserva, format: 'unit', unit: 'lpm' },
+          ].concat(
+            Z.map(function (z) {
+              return {
+                k: z.label + ' · Karvonen',
+                ref: z.karLow + '–' + z.karHigh + ' lpm',
+                v: z.karHigh,
+                format: 'unit',
+                unit: 'lpm',
+                extra: z.label.indexOf('Z2') === 0,
+              };
+            })
+          ).concat([
+            {
+              k: 'Z2 Base aeróbica · porcentaje simple',
+              ref: z2.simLow + '–' + z2.simHigh + ' lpm',
+              v: z2.simHigh,
+              format: 'unit',
+              unit: 'lpm',
+            },
+          ]),
+          chart: Z.map(function (z, i) {
+            return {
+              label: z.label,
+              value: z.karHigh - z.karLow,
+              from: z.karLow,
+              to: z.karHigh,
+              tone: ['good', 'good', 'main', 'warn', 'bad'][i],
+            };
+          }),
+          position: pos((z2.karLow + z2.karHigh) / 2, lo, hi),
+          positionLabel: 'Zona 2: ' + z2.karLow + '–' + z2.karHigh + ' lpm',
+        };
+      }
+
+      // ── 2. Solo mi frecuencia cardíaca máxima ─────────────────────────────
+      if (id === 'fcmax') {
+        const lo = r(max * 0.5);
+        const difFox = F.fox - F.tanaka;
+        return {
+          total: max + ' lpm',
+          sub:
+            'Tanaka, la fórmula mejor validada · Fox (220 − edad) da ' + F.fox + ' lpm (' +
+            (difFox >= 0 ? '+' : '') + difFox + ') y Gellish ' + F.gellish + ' lpm · ninguna reemplaza un test de esfuerzo',
+          format: 'unit',
+          unit: 'lpm',
+          rows: [
+            { k: 'Tanaka (2001)', ref: '208 − 0,7 × edad', v: F.tanaka, format: 'unit', unit: 'lpm', extra: true },
+            { k: 'Fox (la clásica)', ref: '220 − edad', v: F.fox, format: 'unit', unit: 'lpm' },
+            { k: 'Gellish (2007)', ref: '207 − 0,7 × edad', v: F.gellish, format: 'unit', unit: 'lpm' },
+            { k: 'Diferencia entre Fox y Tanaka', v: Math.abs(difFox), format: 'unit', unit: 'lpm' },
+            { k: 'Zona 2 según Tanaka', ref: z2.simLow + '–' + z2.simHigh + ' lpm', v: z2.simHigh, format: 'unit', unit: 'lpm' },
+            { k: 'Umbral aproximado', ref: r(nivel.lt2 * 100) + '% de la FCmáx', v: r(max * nivel.lt2), format: 'unit', unit: 'lpm' },
+          ],
+          chart: ZONAS.map(function (z, i) {
+            return {
+              label: z.label,
+              value: r(max * z.high) - r(max * z.low),
+              from: r(max * z.low),
+              to: r(max * z.high),
+              tone: ['good', 'good', 'main', 'warn', 'bad'][i],
+            };
+          }),
+          position: pos(F.fox, lo, max),
+          positionLabel:
+            'Fox marca ' + F.fox + ' lpm' + (F.fox > max ? ', por encima de la FC máxima de Tanaka' : ', por debajo de la FC máxima de Tanaka'),
+        };
+      }
+
+      // ── 3. Mi zona 2 de base aeróbica ─────────────────────────────────────
+      if (id === 'zona2') {
+        const pts = [z2.simLow, z2.simHigh, z2.karLow, z2.karHigh].sort(function (a, b) { return a - b; });
+        const solapan = z2.karLow < z2.simHigh;
+        const segs = [
+          { label: 'Sólo porcentaje simple', from: pts[0], to: pts[1], tone: 'prop' },
+          { label: solapan ? 'Los dos métodos coinciden' : 'Zona entre los dos métodos', from: pts[1], to: pts[2], tone: 'main' },
+          { label: 'Sólo Karvonen', from: pts[2], to: pts[3], tone: 'good' },
+        ].map(function (s) { return { label: s.label, value: Math.max(1, s.to - s.from), from: s.from, to: s.to, tone: s.tone }; });
+
+        return {
+          total: z2.karLow + '–' + z2.karHigh + ' lpm',
+          sub:
+            'Zona 2 por Karvonen · por porcentaje simple sería ' + z2.simLow + '–' + z2.simHigh +
+            ' lpm: ' + Math.abs(z2.karLow - z2.simLow) + ' lpm de diferencia en el piso · elegí un método y quedate con ese',
+          format: 'unit',
+          unit: 'lpm',
+          rows: [
+            { k: 'FC máxima estimada', ref: 'Tanaka', v: max, format: 'unit', unit: 'lpm' },
+            { k: 'FC en reposo', v: reposo, format: 'unit', unit: 'lpm' },
+            { k: 'Reserva cardíaca', v: reserva, format: 'unit', unit: 'lpm' },
+            { k: 'Piso de zona 2 · Karvonen', ref: 'reserva × 60% + reposo', v: z2.karLow, format: 'unit', unit: 'lpm', extra: true },
+            { k: 'Techo de zona 2 · Karvonen', ref: 'reserva × 70% + reposo', v: z2.karHigh, format: 'unit', unit: 'lpm', extra: true },
+            { k: 'Piso de zona 2 · porcentaje simple', ref: '60% de la FCmáx', v: z2.simLow, format: 'unit', unit: 'lpm' },
+            { k: 'Techo de zona 2 · porcentaje simple', ref: '70% de la FCmáx', v: z2.simHigh, format: 'unit', unit: 'lpm' },
+            { k: 'Diferencia entre métodos en el piso', v: Math.abs(z2.karLow - z2.simLow), format: 'unit', unit: 'lpm' },
+          ],
+          chart: segs,
+          position: pos((z2.karLow + z2.karHigh) / 2, pts[0], pts[3]),
+          positionLabel: 'Tu zona 2 por Karvonen: ' + z2.karLow + '–' + z2.karHigh + ' lpm',
+        };
+      }
+
+      // ── 4. ¿Mi pulso en reposo es normal? ─────────────────────────────────
+      if (id === 'reposo') {
+        const estado =
+          reposo < nivel.reposoMin
+            ? 'por debajo del rango esperable para tu nivel'
+            : reposo > nivel.reposoMax
+            ? 'por encima del rango esperable para tu nivel'
+            : 'dentro del rango esperable para tu nivel';
+        const bandas = [
+          { label: 'Muy baja', from: 30, to: 50, tone: 'warn' },
+          { label: 'De persona entrenada', from: 50, to: 60, tone: 'good' },
+          { label: 'Normal', from: 60, to: 80, tone: 'good' },
+          { label: 'Normal alta', from: 80, to: 100, tone: 'warn' },
+          { label: 'Taquicardia', from: 100, to: 120, tone: 'bad' },
+        ].map(function (b) { return { label: b.label, value: b.to - b.from, from: b.from, to: b.to, tone: b.tone }; });
+
+        return {
+          total: reposo + ' lpm',
+          sub:
+            'Estás ' + estado + ' (' + nivel.label.toLowerCase() + ': ' + nivel.reposoMin + '–' +
+            nivel.reposoMax + ' lpm) · te quedan ' + reserva + ' lpm de reserva cardíaca',
+          format: 'unit',
+          unit: 'lpm',
+          rows: [
+            { k: 'Tu FC en reposo', v: reposo, format: 'unit', unit: 'lpm', extra: true },
+            { k: 'Piso esperable para tu nivel', ref: nivel.label, v: nivel.reposoMin, format: 'unit', unit: 'lpm' },
+            { k: 'Techo esperable para tu nivel', ref: nivel.label, v: nivel.reposoMax, format: 'unit', unit: 'lpm' },
+            { k: 'FC máxima estimada', ref: 'Tanaka', v: max, format: 'unit', unit: 'lpm' },
+            { k: 'Reserva cardíaca', v: reserva, format: 'unit', unit: 'lpm', extra: true },
+            { k: 'Reserva sobre la FC máxima', v: (reserva / max) * 100, format: 'unit', unit: '%', decimals: 1 },
+          ],
+          chart: bandas,
+          position: pos(reposo, 30, 120),
+          positionLabel: reposo + ' lpm — ' + estado,
+        };
+      }
+
+      // ── 5. Mi VO2max con el test de Cooper ────────────────────────────────
+      if (id === 'vo2') {
+        const dist = Math.max(0, Number(v.distancia) || 0);
+        const vo2 = (dist - COOPER.intercept) / COOPER.slope;
+        const decada = edad >= 60 ? '60' : edad >= 50 ? '50' : edad >= 40 ? '40' : edad >= 30 ? '30' : '20';
+        const tabla = (VO2_TABLAS[v.sexo] || VO2_TABLAS.hombre)[decada];
+        let idx = 0;
+        while (idx < tabla.length && vo2 >= tabla[idx]) idx++;
+        const categoria = VO2_ETIQUETAS[idx];
+        const topeEscala = Math.max(tabla[4] + 10, Math.ceil(vo2) + 5);
+        const bandas = [];
+        let prev = 15;
+        tabla.forEach(function (t, i) {
+          bandas.push({ label: VO2_ETIQUETAS[i], value: Math.max(1, t - prev), from: prev, to: t, tone: ['bad', 'bad', 'warn', 'main', 'good'][i] });
+          prev = t;
+        });
+        bandas.push({ label: 'Superior', value: Math.max(1, topeEscala - prev), from: prev, to: topeEscala, tone: 'good' });
+
+        const futbol = VO2_FUTBOL.filter(function (f) { return vo2 >= f.min; }).pop();
+
+        return {
+          total: nf(vo2, 1) + ' ml/kg/min',
+          sub:
+            dist + ' m en 12 minutos · categoría ' + categoria + ' según ACSM para ' +
+            (v.sexo === 'mujer' ? 'mujeres' : 'hombres') + ' de ' + decada + ' a ' + (Number(decada) + 9) + ' años' +
+            (futbol ? ' · en fútbol equivale al rango ' + futbol.label.toLowerCase() : ' · por debajo del rango amateur de fútbol'),
+          format: 'unit',
+          unit: 'ml/kg/min',
+          decimals: 1,
+          rows: [
+            { k: 'Distancia recorrida en 12 minutos', v: dist, format: 'unit', unit: 'm' },
+            { k: 'VO2max estimado', ref: '(metros − 504,9) ÷ 44,73', v: vo2, format: 'unit', unit: 'ml/kg/min', decimals: 1, extra: true },
+            { k: 'Piso de la categoría "Buena" para tu grupo', ref: 'ACSM', v: tabla[2], format: 'unit', unit: 'ml/kg/min' },
+            { k: 'Piso de la categoría "Excelente" para tu grupo', ref: 'ACSM', v: tabla[4], format: 'unit', unit: 'ml/kg/min' },
+            { k: 'Piso del rango amateur de fútbol', v: VO2_FUTBOL[0].min, format: 'unit', unit: 'ml/kg/min' },
+            { k: 'Piso del rango profesional de élite', v: VO2_FUTBOL[2].min, format: 'unit', unit: 'ml/kg/min' },
+            { k: 'Diferencia con el piso de élite', v: vo2 - VO2_FUTBOL[2].min, format: 'unit', unit: 'ml/kg/min', decimals: 1 },
+          ],
+          chart: bandas,
+          position: pos(vo2, 15, topeEscala),
+          positionLabel: nf(vo2, 1) + ' ml/kg/min — ' + categoria,
+        };
+      }
+
+      // ── 6. Mi umbral de lactato ───────────────────────────────────────────
+      const fcUmbral = r(max * nivel.lt2);
+      const bandaLow = r(max * (nivel.lt2 - UMBRAL_BANDA));
+      const bandaHigh = r(max * (nivel.lt2 + UMBRAL_BANDA));
+      const escala = [
+        { label: 'Recuperación', to: 0.7, tone: 'good' },
+        { label: 'Aeróbico', to: 0.8, tone: 'good' },
+        { label: 'Tempo', to: 0.87, tone: 'main' },
+        { label: 'Umbral', to: 0.92, tone: 'warn' },
+        { label: 'VO2 máx', to: 1.0, tone: 'bad' },
+      ];
+      const loEsc = r(max * 0.5);
+      let prevEsc = loEsc;
+      const bandasUmbral = escala.map(function (s) {
+        const to = r(max * s.to);
+        const seg = { label: s.label, value: Math.max(1, to - prevEsc), from: prevEsc, to: to, tone: s.tone };
+        prevEsc = to;
+        return seg;
+      });
+
+      return {
+        total: fcUmbral + ' lpm',
+        sub:
+          'Umbral de lactato estimado para nivel ' + nivel.label.toLowerCase() + ': ' +
+          r(nivel.lt2 * 100) + '% de tu FC máxima (' + max + ' lpm) · trabajá entre ' +
+          bandaLow + ' y ' + bandaHigh + ' lpm para elevarlo',
+        format: 'unit',
+        unit: 'lpm',
+        rows: [
+          { k: 'FC máxima estimada', ref: 'Tanaka', v: max, format: 'unit', unit: 'lpm' },
+          { k: 'Porcentaje del umbral para tu nivel', ref: nivel.label, v: nivel.lt2 * 100, format: 'unit', unit: '%' },
+          { k: 'FC de umbral estimada', v: fcUmbral, format: 'unit', unit: 'lpm', extra: true },
+          { k: 'Piso de la franja de trabajo', v: bandaLow, format: 'unit', unit: 'lpm' },
+          { k: 'Techo de la franja de trabajo', v: bandaHigh, format: 'unit', unit: 'lpm' },
+          { k: 'Margen entre el umbral y la FC máxima', v: max - fcUmbral, format: 'unit', unit: 'lpm' },
+        ],
+        chart: bandasUmbral,
+        position: pos(fcUmbral, loEsc, max),
+        positionLabel: 'Umbral: ' + fcUmbral + ' lpm (' + r(nivel.lt2 * 100) + '% de la FCmáx)',
+      };
+    });
+  })();
+</script>

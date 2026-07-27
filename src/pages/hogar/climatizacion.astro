@@ -1,0 +1,296 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto me cuesta el aire o la calefacción?"
+ * Reemplaza 9 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: 5 casos (frío / calor / equipo / agua / grados-día).
+ * La página sólo aporta datos (src/lib/hubs/aire-calefaccion.ts) y compute().
+ *
+ * Sólo tres ramas son plata. Frigorías, BTU, kcal/h, kWh, W, kg, m³ y grados-día
+ * declaran `format: 'unit'` en TODAS sus filas: el runtime hace Object.assign y
+ * una fila sin formato propio caería a pesos con "$".
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  TARIFAS_2026,
+  TARIFA_PARAMS,
+  FACTOR_IMPUESTOS_LUZ,
+  PRECIO_GAS_M3,
+  EER,
+  CONSUMO_CALOR,
+  LENA_KG_HORA,
+  LENA_KG_M3,
+  BTU,
+  KCAL,
+  ACS,
+  GRADOS_DIA,
+  BASE_HOGAR_KWH,
+  DIAS_MES,
+} from '../../lib/hubs/aire-calefaccion';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    TARIFAS: TARIFAS_2026,
+    P: TARIFA_PARAMS,
+    FACTOR: FACTOR_IMPUESTOS_LUZ,
+    GAS_M3: PRECIO_GAS_M3,
+    EER,
+    CALOR: CONSUMO_CALOR,
+    LENA_KG_HORA,
+    LENA_KG_M3,
+    BTU,
+    KCAL,
+    ACS,
+    GD: GRADOS_DIA,
+    BASE_HOGAR_KWH,
+    DIAS_MES,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const nf = (n, d) => Number(n).toLocaleString('es-AR', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+
+    /** Precio final del kWh, con la carga impositiva de la boleta ya aplicada. */
+    function precioKwh(v) {
+      const t = TARIFAS[v.distribuidora] || TARIFAS.edenor;
+      const base = v.condicion === 'subsidio' ? t.kwhPleno * (1 - P.bonificacionBase) : t.kwhPleno;
+      return base * FACTOR;
+    }
+
+    /** BTU exactos y equipo comercial que le corresponde al ambiente. */
+    function dimensionarFrio(m2) {
+      const exacto = m2 * BTU.porM2 * (BTU.altura / BTU.alturaRef) * BTU.factorOrientacion * BTU.factorAislacion;
+      const equipo = BTU.comerciales.find((e) => e >= exacto) || BTU.comerciales[BTU.comerciales.length - 1];
+      return { exacto: exacto, equipo: equipo, frigorias: Math.round(equipo / BTU.btuPorFrigoria) };
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'frio';
+      const m2 = Math.max(1, Number(v.m2) || 20);
+      const horas = Math.max(0, Number(v.horas) || 0);
+      const meses = Math.max(1, Number(v.meses) || 1);
+      const pk = precioKwh(v);
+      const eer = EER[v.equipo] || EER.inverter;
+      const notaTarifa =
+        (TARIFAS[v.distribuidora] || TARIFAS.edenor).label +
+        (v.condicion === 'subsidio' ? ' con subsidio' : ' sin subsidio') +
+        ' · ' + H.ars(Math.round(pk)) + ' el kWh con impuestos';
+
+      // ── 1. Cuánto me sale tener el aire prendido ───────────────────────────
+      if (id === 'frio') {
+        const d = dimensionarFrio(m2);
+        // Frigorías → watts térmicos → watts eléctricos según el EER.
+        const wattsTermicos = d.frigorias * 1.163;
+        const wattsElec = wattsTermicos / eer;
+        const kwhHora = wattsElec / 1000;
+        const kwhMes = kwhHora * horas * DIAS_MES;
+        const costoHora = kwhHora * pk;
+        const costoMes = kwhMes * pk;
+        const costoTemporada = costoMes * meses;
+        const restoHogar = BASE_HOGAR_KWH * pk;
+
+        return {
+          total: H.ars(costoMes),
+          sub:
+            nf(d.frigorias) + ' frigorías · ' + horas + ' h por día · ' +
+            (v.equipo === 'inverter' ? 'inverter' : 'velocidad fija') +
+            ' · ' + notaTarifa + ' · la temporada completa: ' + H.ars(costoTemporada),
+          rows: [
+            { k: 'Equipo que le corresponde al ambiente', ref: '600 BTU/m²', v: d.frigorias, format: 'unit', unit: 'frigorías' },
+            { k: 'Potencia eléctrica del equipo', ref: 'EER ' + eer, v: Math.round(wattsElec), format: 'unit', unit: 'W' },
+            { k: 'Consumo del mes', ref: horas + ' h × 30 días', v: kwhMes, format: 'unit', unit: 'kWh', decimals: 1 },
+            { k: 'Precio del kWh con impuestos', ref: 'ENRE', v: pk },
+            { k: 'Costo por hora de uso', v: costoHora },
+            { k: 'Costo del mes', v: costoMes },
+            { k: 'Costo de la temporada (' + meses + ' meses)', v: costoTemporada, extra: true },
+          ],
+          chart: [
+            { label: 'Aire acondicionado', value: costoMes, tone: 'bad' },
+            { label: 'Resto del hogar (~' + BASE_HOGAR_KWH + ' kWh)', value: restoHogar, tone: 'main' },
+          ],
+        };
+      }
+
+      // ── 2. Con qué calefacción gasto menos ────────────────────────────────
+      if (id === 'calor') {
+        const tam = m2 <= 15 ? 'chico' : m2 <= 30 ? 'mediano' : 'grande';
+        const c = CALOR[tam];
+        const precioLena = Math.max(0, Number(v.precioLena) || 0);
+
+        const gas = c.gasM3h * horas * DIAS_MES * GAS_M3;
+        const elec = (c.elecW / 1000) * horas * DIAS_MES * pk;
+        const aire = (c.aireW / 1000) * horas * DIAS_MES * pk;
+        const lenaKg = horas * DIAS_MES * LENA_KG_HORA;
+        const lena = lenaKg * precioLena;
+
+        const ops = [
+          { label: 'Gas natural', value: gas },
+          { label: 'Calefactor eléctrico', value: elec },
+          { label: 'Aire en modo calor', value: aire },
+          { label: 'Leña (salamandra)', value: lena },
+        ];
+        const barata = ops.reduce((a, b) => (b.value < a.value ? b : a));
+        const cara = ops.reduce((a, b) => (b.value > a.value ? b : a));
+
+        return {
+          total: H.ars(barata.value),
+          sub:
+            'Ambiente ' + tam + ' (' + m2 + ' m²) · ' + horas + ' h por día · lo más barato es ' +
+            barata.label.toLowerCase() + ', ' + H.ars(cara.value - barata.value) +
+            ' menos por mes que ' + cara.label.toLowerCase() + ' · ' + notaTarifa,
+          rows: [
+            { k: 'Gas natural', ref: nf(c.gasM3h, 1) + ' m³/h', v: gas },
+            { k: 'Calefactor eléctrico', ref: nf(c.elecW) + ' W', v: elec },
+            { k: 'Aire acondicionado en modo calor', ref: nf(c.aireW) + ' W', v: aire },
+            { k: 'Leña en salamandra', ref: LENA_KG_HORA + ' kg/h', v: lena },
+            { k: 'Leña que quemás en el mes', v: lenaKg, format: 'unit', unit: 'kg' },
+            { k: 'Leña de toda la temporada', v: (lenaKg * meses) / LENA_KG_M3, format: 'unit', unit: 'm³ estibados', decimals: 2 },
+            { k: 'Temporada completa con ' + barata.label.toLowerCase(), v: barata.value * meses, extra: true },
+          ],
+          chart: [
+            { label: 'Gas natural', value: gas, tone: 'good' },
+            { label: 'Aire en modo calor', value: aire, tone: 'main' },
+            { label: 'Leña (salamandra)', value: lena, tone: 'prop' },
+            { label: 'Calefactor eléctrico', value: elec, tone: 'bad' },
+          ],
+        };
+      }
+
+      // ── 3. Qué equipo necesita mi ambiente ────────────────────────────────
+      if (id === 'equipo') {
+        const d = dimensionarFrio(m2);
+        const frigNecesarias = Math.round(d.exacto / BTU.btuPorFrigoria);
+        const kcal = m2 * KCAL.altura * KCAL.factor;
+        const modelo = KCAL.modelos.find((x) => x >= kcal) || KCAL.modelos[KCAL.modelos.length - 1];
+
+        return {
+          total: nf(d.frigorias) + ' frigorías',
+          sub:
+            m2 + ' m² · frío: equipo de ' + nf(d.equipo) + ' BTU · calor: tiro balanceado de ' +
+            nf(modelo) + ' kcal/h' + (kcal > 7500 ? ' (te quedás corto: conviene dividir en dos equipos)' : ''),
+          format: 'plain',
+          rows: [
+            { k: 'Superficie del ambiente', v: m2, format: 'unit', unit: 'm²' },
+            { k: 'Frío necesario (cálculo exacto)', ref: '600 BTU/m² · este-oeste', v: Math.round(d.exacto), format: 'unit', unit: 'BTU' },
+            { k: 'Equipo comercial de frío', ref: 'escalón más chico que alcanza', v: d.equipo, format: 'unit', unit: 'BTU' },
+            { k: 'Frigorías del equipo', v: d.frigorias, format: 'unit', unit: 'frigorías', extra: true },
+            { k: 'Calor necesario', ref: '50 kcal/m³ · aislación regular', v: Math.round(kcal), format: 'unit', unit: 'kcal/h' },
+            { k: 'Calefactor de tiro balanceado sugerido', v: modelo, format: 'unit', unit: 'kcal/h', extra: true },
+          ],
+          chart: [
+            { label: 'Frigorías necesarias', value: frigNecesarias, tone: 'main' },
+            { label: 'Frigorías del equipo comercial', value: d.frigorias, tone: 'prop' },
+          ],
+        };
+      }
+
+      // ── 4. Agua caliente: termo eléctrico o gas ───────────────────────────
+      if (id === 'agua') {
+        const litros = Math.max(0, Number(v.litros) || 0);
+        // Energía térmica real: llevar los litros de 15 °C a 55 °C.
+        const kcalDia = litros * ACS.deltaT;
+        const kwhTermicos = kcalDia / ACS.kcalPorKwh;
+        const kwhElecDia = kwhTermicos / ACS.eficienciaElectrico;
+        const costoElecMes = kwhElecDia * pk * DIAS_MES;
+        const kwhGasDia = kwhTermicos / ACS.eficienciaGas;
+        const m3Dia = kwhGasDia / ACS.kwhPorM3;
+        const costoGasMes = m3Dia * GAS_M3 * DIAS_MES;
+        const ahorro = Math.abs(costoElecMes - costoGasMes);
+        const gana = costoGasMes <= costoElecMes ? 'el termotanque a gas' : 'el termo eléctrico';
+
+        return {
+          total: H.ars(Math.min(costoElecMes, costoGasMes)),
+          sub:
+            litros + ' L por día de 15 a 55 °C · te conviene ' + gana + ': ' + H.ars(ahorro) +
+            ' menos por mes, ' + H.ars(ahorro * 12) + ' al año · ' + notaTarifa,
+          rows: [
+            { k: 'Energía térmica que hace falta por día', ref: 'ΔT 40 °C', v: kwhTermicos, format: 'unit', unit: 'kWh térmicos', decimals: 2 },
+            { k: 'Electricidad del mes', ref: 'rendimiento 95%', v: kwhElecDia * DIAS_MES, format: 'unit', unit: 'kWh', decimals: 1 },
+            { k: 'Gas del mes', ref: 'rendimiento 80%', v: m3Dia * DIAS_MES, format: 'unit', unit: 'm³', decimals: 1 },
+            { k: 'Termo eléctrico', v: costoElecMes },
+            { k: 'Termotanque a gas', v: costoGasMes },
+            { k: 'Diferencia por mes', v: ahorro, extra: true },
+            { k: 'Diferencia al año', v: ahorro * 12 },
+          ],
+          chart: [
+            { label: 'Termo eléctrico', value: costoElecMes, tone: costoElecMes <= costoGasMes ? 'good' : 'bad' },
+            { label: 'Termotanque a gas', value: costoGasMes, tone: costoGasMes <= costoElecMes ? 'good' : 'bad' },
+          ],
+        };
+      }
+
+      // ── 5. Cuánta demanda térmica tiene mi zona ───────────────────────────
+      const T = Number(v.temp);
+      const dias = meses * DIAS_MES;
+      const hdd = Math.max(0, GD.baseHDD - T) * dias;
+      const cdd = Math.max(0, T - GD.baseCDD) * dias;
+      const domina = hdd >= cdd ? 'calefacción' : 'refrigeración';
+
+      return {
+        total: nf(hdd, 0) + ' HDD',
+        sub:
+          nf(T, 1) + ' °C de media durante ' + dias + ' días · predomina ' + domina +
+          ' · ' + nf(cdd, 0) + ' CDD de refrigeración',
+        format: 'plain',
+        rows: [
+          { k: 'Temperatura media del período', v: T, format: 'unit', unit: '°C', decimals: 1 },
+          { k: 'Días del período', ref: meses + ' meses × 30', v: dias, format: 'unit', unit: 'días' },
+          { k: 'Grados-día de calefacción (HDD)', ref: 'base 18 °C', v: hdd, format: 'unit', unit: '°día', decimals: 1, extra: true },
+          { k: 'Grados-día de refrigeración (CDD)', ref: 'base 24 °C', v: cdd, format: 'unit', unit: '°día', decimals: 1 },
+          { k: 'Demanda térmica total del período', v: hdd + cdd, format: 'unit', unit: '°día', decimals: 1 },
+        ],
+        chart: [
+          { label: 'Calefacción (HDD)', value: hdd, tone: 'bad' },
+          { label: 'Refrigeración (CDD)', value: cdd, tone: 'main' },
+        ],
+      };
+    });
+  })();
+</script>

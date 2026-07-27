@@ -1,0 +1,281 @@
+---
+/**
+ * Hub de decisión — "¿Cómo dividimos los gastos?"
+ * Absorbe siete calculadoras de reparto entre personas (grupo, pareja y propina).
+ *
+ * OJO: /finanzas-personales ya existe como pillar page (src/pages/finanzas-personales.astro).
+ * NO va un index.astro dentro del directorio: sería una ruta duplicada.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, PROPINA_PAISES } from '../../lib/hubs/gastos-pareja';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ PAISES: PROPINA_PAISES }}>
+  (function () {
+    const H = window.HC_HUB;
+    const ars = (n) => '$' + Math.round(n || 0).toLocaleString('es-AR');
+    const NOMBRES = ['A', 'B', 'C', 'D'];
+
+    /**
+     * Saldo del grupo con la menor cantidad de transferencias:
+     * se empareja al deudor más grande con el acreedor más grande hasta que
+     * uno de los dos queda en cero. Es el método greedy clásico.
+     */
+    function saldar(saldos) {
+      const deudores = saldos.filter((s) => s.saldo < -0.5).map((s) => ({ n: s.n, v: -s.saldo }));
+      const acreedores = saldos.filter((s) => s.saldo > 0.5).map((s) => ({ n: s.n, v: s.saldo }));
+      deudores.sort((a, b) => b.v - a.v);
+      acreedores.sort((a, b) => b.v - a.v);
+      const movs = [];
+      let i = 0;
+      let j = 0;
+      let guard = 0;
+      while (i < deudores.length && j < acreedores.length && guard++ < 200) {
+        const monto = Math.min(deudores[i].v, acreedores[j].v);
+        if (monto > 0.5) movs.push({ de: deudores[i].n, a: acreedores[j].n, monto: monto });
+        deudores[i].v -= monto;
+        acreedores[j].v -= monto;
+        if (deudores[i].v <= 0.5) i++;
+        if (acreedores[j].v <= 0.5) j++;
+      }
+      // Lo que queda del lado deudor es plata que todavía no se puso sobre la mesa.
+      let faltaPoner = 0;
+      for (let k = i; k < deudores.length; k++) faltaPoner += deudores[k].v;
+      return { movs, faltaPoner };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = caso ? caso.id : 'amigos';
+      const personas = Math.max(1, Math.round(v.personas || 1));
+      const propPct = Math.max(0, v.propinaPct || 0);
+      const gastoTotal = Math.max(0, v.gastoTotal || 0);
+
+      // ───────────────────────── Pareja proporcional al ingreso ─────────────────────────
+      if (id === 'pareja') {
+        const ingA = Math.max(0, v.ingresoA || 0);
+        const ingB = Math.max(0, v.ingresoB || 0);
+        const ingTotal = ingA + ingB;
+        const total = gastoTotal * (1 + propPct / 100);
+        const pctA = ingTotal > 0 ? (ingA / ingTotal) * 100 : 50;
+        const pctB = 100 - pctA;
+        const pagoA = total * (pctA / 100);
+        const pagoB = total - pagoA;
+        const mitad = total / 2;
+        const gap = Math.abs(pagoA - mitad);
+        const esfuerzo = ingTotal > 0 ? (total / ingTotal) * 100 : 0;
+
+        return {
+          total: ars(pagoA),
+          sub:
+            'Persona A pone ' + ars(pagoA) + ' (' + pctA.toFixed(1).replace('.', ',') + '%) y persona B ' +
+            ars(pagoB) + ' (' + pctB.toFixed(1).replace('.', ',') + '%) · ' +
+            (gap < 1
+              ? 'ganan casi lo mismo, así que es prácticamente 50/50'
+              : 'son ' + ars(gap) + ' de diferencia contra dividir al medio'),
+          rows: [
+            { k: 'Gasto a repartir', ref: propPct > 0 ? 'Con ' + propPct + '% de propina' : 'Sin propina', v: total },
+            { k: 'Ingreso de A', ref: 'Base del reparto', v: ingA },
+            { k: 'Ingreso de B', ref: 'Base del reparto', v: ingB },
+            { k: 'Le toca a A', ref: 'Proporcional al ingreso', v: pagoA, extra: true },
+            { k: 'Le toca a B', ref: 'Proporcional al ingreso', v: pagoB, extra: true },
+            { k: 'Porcentaje de A', ref: 'Sobre el ingreso conjunto', v: pctA, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Porcentaje de B', ref: 'Sobre el ingreso conjunto', v: pctB, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Si dividieran al medio', ref: 'Referencia 50/50', v: mitad },
+            { k: 'Diferencia contra el 50/50', ref: 'Lo que corrige el reparto', v: gap },
+            {
+              k: 'Esfuerzo de cada uno',
+              ref: 'Gasto ÷ ingreso conjunto',
+              v: esfuerzo,
+              format: 'unit',
+              unit: '% del ingreso',
+              decimals: 1,
+            },
+          ],
+          chart: [
+            { label: 'Persona A', value: Math.round(pagoA), tone: 'main' },
+            { label: 'Persona B', value: Math.round(pagoB), tone: 'prop' },
+          ],
+        };
+      }
+
+      // ───────────────────────── Cuenta del restaurante y propina ─────────────────────────
+      if (id === 'propina') {
+        const info = PAISES.find((p) => p.id === String(v.pais || 'argentina')) || PAISES[0];
+        const pct = info.restaurante;
+        const propina = gastoTotal * (pct / 100);
+        const total = gastoTotal + propina;
+        const porPersona = Math.ceil(total / personas);
+        const sobra = porPersona * personas - total;
+
+        return {
+          total: ars(porPersona),
+          sub:
+            'Con ' + pct + '% de propina en ' + info.nombre + ' el total va a ' + ars(total) +
+            ' y entre ' + personas + ' cae a ' + ars(porPersona) + ' por cabeza. ' + info.regla,
+          rows: [
+            { k: 'Consumo', ref: 'Lo que dice la cuenta', v: gastoTotal },
+            {
+              k: 'Propina sugerida en ' + info.nombre,
+              ref: pct === 0 ? 'No se deja propina' : pct + '% sobre el consumo',
+              v: propina,
+            },
+            { k: 'Total a pagar', ref: 'Consumo más propina', v: total },
+            { k: 'Comensales', ref: 'Entre cuántos se divide', v: personas, format: 'plain' },
+            { k: 'Pone cada uno', ref: 'Redondeado para arriba', v: porPersona, extra: true },
+            { k: 'Sobrante del redondeo', ref: 'Se suma a la propina', v: sobra },
+            {
+              k: 'Peso de la propina',
+              ref: 'Propina ÷ consumo',
+              v: pct,
+              format: 'unit',
+              unit: '%',
+              decimals: 0,
+            },
+          ],
+          chart: [
+            { label: 'Consumo', value: Math.round(gastoTotal), tone: 'main' },
+            { label: 'Propina', value: Math.round(propina), tone: 'prop' },
+            { label: 'Sobrante del redondeo', value: Math.round(sobra), tone: 'good' },
+          ],
+        };
+      }
+
+      // ───────────────────────── Grupo de amigos: quién le debe a quién ─────────────────────────
+      const pagos = [
+        Math.max(0, v.pagoA || 0),
+        Math.max(0, v.pagoB || 0),
+        Math.max(0, v.pagoC || 0),
+        Math.max(0, v.pagoD || 0),
+      ];
+      const totalPagado = pagos.reduce((a, b) => a + b, 0);
+      const base = totalPagado > 0 ? totalPagado : gastoTotal;
+      const propina = base * (propPct / 100);
+      const total = base + propina;
+      const parte = total / personas;
+
+      const saldos = [];
+      for (let k = 0; k < personas; k++) {
+        const puso = k < 4 ? pagos[k] : 0;
+        const nombre = k < 4 ? 'Persona ' + NOMBRES[k] : 'Persona ' + (k + 1);
+        saldos.push({ n: nombre, puso: puso, saldo: puso - parte });
+      }
+      const { movs, faltaPoner } = saldar(saldos);
+
+      const rows = [
+        {
+          k: totalPagado > 0 ? 'Total que ya se puso' : 'Gasto total',
+          ref: totalPagado > 0 ? 'Suma de lo de cada uno' : 'El que cargaste arriba',
+          v: base,
+        },
+      ];
+      if (propina > 0) {
+        rows.push({ k: 'Propina a sumar', ref: propPct + '% sobre el gasto', v: propina });
+        rows.push({ k: 'Total a repartir', ref: 'Gasto más propina', v: total });
+      }
+      rows.push(
+        { k: 'Participantes', ref: 'Entre cuántos se divide', v: personas, format: 'plain' },
+        { k: 'Le toca a cada uno', ref: 'Total ÷ participantes', v: parte, extra: true }
+      );
+
+      saldos.slice(0, Math.min(personas, 6)).forEach((s) => {
+        rows.push({
+          k: s.n + (s.saldo > 0.5 ? ': puso de más' : s.saldo < -0.5 ? ': puso de menos' : ': está a mano'),
+          ref: 'Puso ' + ars(s.puso) + ' de ' + ars(parte),
+          v: Math.abs(s.saldo),
+        });
+      });
+
+      movs.forEach((m, idx) => {
+        rows.push({
+          k: 'Transferencia ' + (idx + 1) + ': ' + m.de + ' → ' + m.a,
+          ref: 'Salda la diferencia entre los dos',
+          v: m.monto,
+          extra: true,
+        });
+      });
+      if (faltaPoner > 0.5) {
+        rows.push({
+          k: 'Falta poner sobre la mesa',
+          ref: propina > 0 ? 'Sobre todo la propina, que nadie desembolsó' : 'Nadie lo puso todavía',
+          v: faltaPoner,
+        });
+      }
+      rows.push({
+        k: 'Transferencias necesarias',
+        ref: 'Nunca más de ' + Math.max(0, personas - 1),
+        v: movs.length,
+        format: 'plain',
+      });
+
+      const sub =
+        movs.length === 0
+          ? 'A cada uno le toca ' + ars(parte) + ' y el grupo ya está a mano: no hace falta ninguna transferencia.'
+          : 'A cada uno le toca ' + ars(parte) + '. Con ' + movs.length +
+            (movs.length === 1 ? ' transferencia' : ' transferencias') + ' queda saldado: ' +
+            movs.map((m) => m.de + ' → ' + m.a + ' ' + ars(m.monto)).join(' · ');
+
+      // El donut muestra lo que PUSO cada uno sobre el total: de un vistazo se ve
+      // quién cargó con la cuenta y cuánto falta todavía sobre la mesa.
+      const chart = saldos
+        .slice(0, 6)
+        .filter((s) => s.puso > 0)
+        .map((s) => ({
+          label: s.n + ' puso',
+          value: Math.round(s.puso),
+          tone: s.saldo > 0.5 ? 'good' : 'main',
+        }));
+      if (faltaPoner > 0.5) chart.push({ label: 'Falta poner', value: Math.round(faltaPoner), tone: 'warn' });
+      if (chart.length === 0) chart.push({ label: 'Total a repartir', value: Math.round(total), tone: 'main' });
+
+      return {
+        total: ars(parte),
+        sub: sub,
+        rows: rows,
+        chart: chart,
+      };
+    });
+  })();
+</script>

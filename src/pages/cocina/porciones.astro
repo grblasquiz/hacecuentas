@@ -1,0 +1,142 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto arroz o pasta por persona?"
+ * Reemplaza 5 URLs de calculadora suelta (ver hub.replaces).
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, PORCION, ARROZ, PASTA_AGUA, COCINA } from '../../lib/hubs/porciones';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+
+const BANDS = hub.chart.bands ?? [];
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ PORCION, ARROZ, PASTA_AGUA, C: COCINA, BANDS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const nf = (n, d) => Number(n || 0).toLocaleString('es-AR', {
+      minimumFractionDigits: d || 0, maximumFractionDigits: d || 0,
+    });
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'arroz-guarnicion';
+      const cfg = PORCION[id] || PORCION['arroz-guarnicion'];
+      const adultos = Math.max(0, Math.round(Number(v.personas) || 0));
+      const ninos = Math.max(0, Math.round(Number(v.ninos) || 0));
+      const gAdulto = cfg.g;
+
+      // Marcador de la escala: gramos de seco por adulto, entre 40 y 160 g.
+      const position = Math.min(100, Math.max(0, ((gAdulto - 40) / 120) * 100));
+      const chart = BANDS.map((b) => ({ label: b.label, value: b.to - b.from, from: b.from, to: b.to, tone: b.tone === 'good' ? 'good' : b.tone === 'warn' ? 'warn' : 'main' }));
+
+      const rows = [];
+
+      if (cfg.tipo === 'arroz') {
+        const t = ARROZ[v.tipoArroz] || ARROZ['blanco_largo'];
+        // El chico come 3/4 de la porción adulta (factor de porcion-arroz-personas.ts).
+        const totalG = Math.round(gAdulto * (adultos + ninos * C.factorNino));
+        const aguaMl = totalG * t.ratio;
+        const tazas = totalG / C.gramosPorTazaArroz;
+        const cocido = totalG * t.rinde;
+
+        rows.push({ k: 'Arroz crudo, total', ref: t.label, v: totalG, format: 'unit', unit: 'g', extra: true });
+        rows.push({ k: 'Por adulto', ref: 'Porción', v: gAdulto, format: 'unit', unit: 'g' });
+        rows.push({ k: 'Agua', ref: t.ratio + ' partes por 1 de arroz', v: Math.round(aguaMl), format: 'unit', unit: 'ml' });
+        rows.push({ k: 'Medido en tazas de 185 g', ref: 'Sin balanza', v: tazas, format: 'unit', unit: 'tazas', decimals: 1 });
+        rows.push({ k: 'Arroz ya cocido', ref: 'Rinde ×' + t.rinde, v: Math.round(cocido), format: 'unit', unit: 'g' });
+        rows.push({ k: 'Tiempo de cocción', ref: 'Tapado', v: t.min, format: 'unit', unit: 'min' });
+
+        return {
+          total: nf(totalG) + ' g',
+          sub:
+            'Arroz crudo para ' + adultos + (adultos === 1 ? ' adulto' : ' adultos') +
+            (ninos > 0 ? ' y ' + ninos + (ninos === 1 ? ' chico' : ' chicos') : '') +
+            ' · ' + nf(Math.round(aguaMl)) + ' ml de agua · ' + t.min + ' min de ' + t.label.toLowerCase() + '.',
+          rows: rows,
+          chart: chart,
+          format: 'unit',
+          unit: 'g',
+          position: position,
+          positionLabel: gAdulto + ' g de arroz crudo por adulto',
+        };
+      }
+
+      // ── Pasta ──
+      const p = PASTA_AGUA[v.tipoPasta] || PASTA_AGUA['seca'];
+      // El chico come una porción fija de 40 g (factor de porciones-pasta-seca-persona-hambre.ts).
+      const totalG = Math.round(adultos * gAdulto + ninos * C.gramosNinoPasta);
+      const litros = (totalG / 100) * p.litrosPor100g;
+      const sal = litros * C.salPorLitro;
+      const olla = Math.ceil(litros * C.margenOlla);
+      const cocido = Math.round(totalG * C.factorCocidoPasta);
+      const kcal = Math.round(totalG * C.kcalPorGramoPasta);
+      const paquetes = Math.ceil(totalG / 500) || 0;
+
+      rows.push({ k: 'Pasta seca, total', ref: p.label, v: totalG, format: 'unit', unit: 'g', extra: true });
+      rows.push({ k: 'Por adulto', ref: 'Porción', v: gAdulto, format: 'unit', unit: 'g' });
+      rows.push({ k: 'Agua', ref: p.litrosPor100g + ' L cada 100 g', v: litros, format: 'unit', unit: 'L', decimals: 1 });
+      rows.push({ k: 'Sal gruesa', ref: '10 g por litro', v: Math.round(sal), format: 'unit', unit: 'g' });
+      rows.push({ k: 'Olla mínima', ref: '40% de margen', v: olla, format: 'unit', unit: 'L' });
+      rows.push({ k: 'Pasta ya cocida', ref: 'Rinde ×2,3', v: cocido, format: 'unit', unit: 'g' });
+      rows.push({ k: 'Calorías, sin salsa', ref: '350 kcal por 100 g', v: kcal, format: 'unit', unit: 'kcal' });
+      rows.push({ k: 'Paquetes de 500 g a comprar', ref: 'Redondeado', v: paquetes, format: 'plain' });
+
+      return {
+        total: nf(totalG) + ' g',
+        sub:
+          'Pasta seca para ' + adultos + (adultos === 1 ? ' adulto' : ' adultos') +
+          (ninos > 0 ? ' y ' + ninos + (ninos === 1 ? ' chico' : ' chicos') : '') +
+          ' · ' + nf(litros, 1) + ' L de agua con ' + nf(Math.round(sal)) + ' g de sal · olla de ' + olla + ' L.',
+        rows: rows,
+        chart: chart,
+        format: 'unit',
+        unit: 'g',
+        position: position,
+        positionLabel: gAdulto + ' g de pasta seca por adulto',
+      };
+    });
+  })();
+</script>

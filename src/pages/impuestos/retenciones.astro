@@ -1,0 +1,233 @@
+---
+/**
+ * Hub de decisión — "¿Qué retenciones y percepciones me hacen al facturar?"
+ * Reemplaza 7 URLs de calculadora suelta (ver hub.replaces).
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, RG830_RATES, TAX } from '../../lib/hubs/retenciones';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+
+const PLAN = {
+  tasaMensualPct: TAX.plan.tasaMensualPct,
+  cuotaMinima: TAX.plan.cuotaMinima,
+  pagoACuentaPct: TAX.plan.planes.micro.pagoACuentaPct,
+  cuotasMax: TAX.plan.planes.micro.cuotasMax,
+};
+
+const CONST = {
+  idcUnilateral: TAX.idcUnilateral,
+  idcComputable: TAX.idcComputable,
+  resarcitorio: TAX.interesResarcitorioMensual,
+  punitorio: TAX.interesPunitorioMensual,
+  turismoPesos: TAX.percepcionTurismoPesos,
+  monedaExtranjera: TAX.percepcionMonedaExtranjera,
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ RATES: RG830_RATES, K: CONST, PLAN }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const pct = (x) => (x * 100).toLocaleString('es-AR', { maximumFractionDigits: 2 }) + '%';
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'rg830';
+      const importe = Math.max(0, Number(v.importe) || 0);
+      const rows = [];
+      let total = 0;
+      let sub = '';
+      let chart = [];
+
+      // ── RG 830: retención de Ganancias sobre el comprobante ──
+      if (id === 'rg830') {
+        const tasa = RATES[v.regimen] || RATES['inscripto_ganancias_2%'];
+        const ret = importe * tasa;
+        const neto = importe - ret;
+        rows.push({ k: 'Importe facturado', ref: 'Bruto', v: importe });
+        rows.push({ k: 'Retención de Ganancias', ref: 'RG 830', v: ret });
+        rows.push({ k: 'Neto que te acreditan', ref: 'A cobrar', v: neto, extra: true });
+        total = neto;
+        sub = 'Te retienen ' + pct(tasa) + ' del comprobante · ' + H.ars(ret) + ' que después computás en tu DDJJ.';
+        chart = [
+          { label: 'Neto que cobrás', value: neto, tone: 'main' },
+          { label: 'Retención RG 830', value: ret, tone: 'warn' },
+        ];
+      }
+
+      // ── Impuesto al cheque (ley 25.413) ──
+      else if (id === 'cheque') {
+        const debito = importe * K.idcUnilateral;
+        const credito = importe * K.idcUnilateral;
+        const impuesto = debito + credito;
+        const computable = impuesto * K.idcComputable;
+        rows.push({ k: 'Monto del movimiento', ref: 'Base', v: importe });
+        rows.push({ k: 'Impuesto por el crédito (0,6%)', ref: 'Ley 25.413', v: credito });
+        rows.push({ k: 'Impuesto por el débito (0,6%)', ref: 'Ley 25.413', v: debito });
+        rows.push({ k: 'Computable a cuenta de Ganancias (33%)', ref: 'Recuperable', v: computable, extra: true });
+        rows.push({ k: 'Costo neto del impuesto', ref: 'No recuperable', v: impuesto - computable });
+        total = impuesto;
+        sub = '1,2% si la plata entra y sale · ' + H.ars(computable) + ' se recuperan a cuenta de Ganancias.';
+        chart = [
+          { label: 'Plata que movés', value: importe, tone: 'main' },
+          { label: 'Impuesto al cheque', value: impuesto, tone: 'warn' },
+        ];
+      }
+
+      // ── Percepción genérica con alícuota ──
+      else if (id === 'percepcion') {
+        const ali = Math.min(100, Math.max(0, Number(v.alicuota) || 0)) / 100;
+        const percep = importe * ali;
+        rows.push({ k: 'Base imponible', ref: 'Neto', v: importe });
+        rows.push({ k: 'Percepción (' + pct(ali) + ')', ref: 'Comprobante', v: percep });
+        rows.push({ k: 'Total a pagar', ref: 'Con percepción', v: importe + percep, extra: true });
+        total = importe + percep;
+        sub = 'Tasa efectiva sobre la base: ' + pct(ali) + ' · la percepción es recuperable en tu DDJJ.';
+        chart = [
+          { label: 'Base imponible', value: importe, tone: 'main' },
+          { label: 'Percepción', value: percep, tone: 'warn' },
+        ];
+      }
+
+      // ── Consumo en moneda extranjera: sin percepción desde 02-01-2026 ──
+      else if (id === 'tarjeta-fx') {
+        const percep = importe * K.monedaExtranjera;
+        const historico = importe * 0.6; // referencia 2019-2024: 30% PAÍS + 30% percepción
+        rows.push({ k: 'Consumo al tipo de cambio de la tarjeta', ref: 'Base', v: importe });
+        rows.push({ k: 'Impuesto PAÍS', ref: 'Derogado 2024', v: 0 });
+        rows.push({ k: 'Percepción 30% a cuenta', ref: 'Sin efecto 2026', v: percep });
+        rows.push({ k: 'Total que pagás', ref: 'Final', v: importe + percep, extra: true });
+        rows.push({ k: 'Lo que hubieras pagado de recargo entre 2019 y 2024', ref: 'Referencia', v: historico });
+        total = importe + percep;
+        sub = 'Sin Impuesto PAÍS y sin percepción: pagás el consumo y nada más. Te ahorrás ' + H.ars(historico) + ' contra el esquema viejo.';
+        chart = [
+          { label: 'Consumo', value: importe, tone: 'main' },
+          { label: 'Recargo impositivo', value: percep, tone: 'warn' },
+        ];
+      }
+
+      // ── Turismo pagado en pesos: percepción 30% vigente ──
+      else if (id === 'tarjeta-turismo') {
+        const percep = importe * K.turismoPesos;
+        rows.push({ k: 'Importe del servicio turístico', ref: 'En pesos', v: importe });
+        rows.push({ k: 'Percepción a cuenta (30%)', ref: 'RG 5617', v: percep });
+        rows.push({ k: 'Total a pagar', ref: 'Con percepción', v: importe + percep, extra: true });
+        rows.push({ k: 'Recuperable en tu DDJJ o por devolución', ref: 'No es costo', v: percep });
+        total = importe + percep;
+        sub = 'La percepción del 30% sigue vigente solo para turismo pagado en pesos · es recuperable.';
+        chart = [
+          { label: 'Servicio turístico', value: importe, tone: 'main' },
+          { label: 'Percepción 30%', value: percep, tone: 'warn' },
+        ];
+      }
+
+      // ── Mora: intereses resarcitorios y punitorios ──
+      else if (id === 'deuda') {
+        const dias = Math.max(0, Number(v.dias) || 0);
+        const res = importe * K.resarcitorio * (dias / 30);
+        const pun = importe * K.punitorio * (dias / 30);
+        rows.push({ k: 'Deuda original', ref: 'Capital', v: importe });
+        rows.push({ k: 'Intereses resarcitorios (' + dias + ' días)', ref: '2,75% mensual', v: res });
+        rows.push({ k: 'Total a regularizar', ref: 'Hoy', v: importe + res, extra: true });
+        rows.push({ k: 'Intereses punitorios, si hay juicio', ref: '3,50% mensual', v: pun });
+        total = importe + res;
+        const recargo = importe > 0 ? (res / importe) * 100 : 0;
+        sub = dias + ' días de atraso suman un ' + recargo.toLocaleString('es-AR', { maximumFractionDigits: 1 }) + '% sobre el capital.';
+        chart = [
+          { label: 'Capital adeudado', value: importe, tone: 'main' },
+          { label: 'Intereses resarcitorios', value: res, tone: 'warn' },
+        ];
+      }
+
+      // ── Plan de pagos Mis Facilidades ──
+      else if (id === 'plan') {
+        const pedidas = Math.max(1, Math.round(Number(v.cuotas) || 12));
+        const cuotas = Math.min(PLAN.cuotasMax, pedidas);
+        const tasa = PLAN.tasaMensualPct / 100;
+        const pagoACuenta = importe * (PLAN.pagoACuentaPct / 100);
+        const financiado = importe - pagoACuenta;
+        const cuota = tasa > 0
+          ? (financiado * tasa) / (1 - Math.pow(1 + tasa, -cuotas))
+          : financiado / cuotas;
+        const totalCuotas = cuota * cuotas;
+        const intereses = totalCuotas - financiado;
+        const totalPlan = pagoACuenta + totalCuotas;
+        rows.push({ k: 'Deuda a regularizar', ref: 'Capital', v: importe });
+        rows.push({ k: 'Pago a cuenta al adherir (' + PLAN.pagoACuentaPct + '%)', ref: 'Hoy', v: pagoACuenta });
+        rows.push({ k: 'Cuota mensual fija (' + cuotas + ' cuotas)', ref: 'Sistema francés', v: cuota, extra: true });
+        rows.push({ k: 'Intereses de financiación', ref: PLAN.tasaMensualPct + '% mensual', v: intereses });
+        rows.push({ k: 'Total del plan', ref: 'Todo incluido', v: totalPlan });
+        total = totalPlan;
+        const avisos = [];
+        if (pedidas > PLAN.cuotasMax) avisos.push('el máximo son ' + PLAN.cuotasMax + ' cuotas');
+        if (importe > 0 && cuota < PLAN.cuotaMinima) avisos.push('la cuota queda debajo del mínimo de ' + H.ars(PLAN.cuotaMinima));
+        sub = cuotas + ' cuotas de ' + H.ars(cuota) + ' más ' + H.ars(pagoACuenta) + ' de anticipo' +
+          (avisos.length ? ' · Ojo: ' + avisos.join('; ') + '.' : '.');
+        chart = [
+          { label: 'Deuda financiada', value: importe, tone: 'main' },
+          { label: 'Intereses del plan', value: intereses, tone: 'warn' },
+        ];
+      }
+
+      // ── Primera factura como monotributista ──
+      else {
+        const ret = 0;
+        rows.push({ k: 'Importe que facturás', ref: 'Bruto', v: importe });
+        rows.push({ k: 'Retención de Ganancias', ref: 'Monotributo exento', v: ret });
+        rows.push({ k: 'Retención de IVA', ref: 'Monotributo exento', v: 0 });
+        rows.push({ k: 'Costo de emitir la factura', ref: 'ARCA en línea', v: 0 });
+        rows.push({ k: 'Neto que cobrás', ref: 'A cobrar', v: importe - ret, extra: true });
+        total = importe - ret;
+        sub = 'Como monotributista cobrás el 100% del comprobante: la RG 830 no te alcanza.';
+        chart = [
+          { label: 'Neto que cobrás', value: importe, tone: 'main' },
+          { label: 'Retenciones nacionales', value: 0, tone: 'warn' },
+        ];
+      }
+
+      return { total: H.ars(total), sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

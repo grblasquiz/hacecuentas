@@ -1,0 +1,201 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto me queda en mano del sueldo bruto?" (Chile).
+ * Reemplaza /calculadora-sueldo-neto-chile-2026.
+ *
+ * OJO con el audience: HubData sólo admite 'AR' | 'global', pero esta página es
+ * chilena. El audience="CL" se pasa acá, literal al Layout, para no perder el
+ * geo targeting ni el hreflang del mercado que trae el tráfico.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UTM_CL,
+  TOPE_IMPONIBLE_CL,
+  TASA_FONASA,
+  TASA_CESANTIA,
+  AFP_CL,
+  IMPUESTO_UNICO_CL,
+} from '../../lib/hubs/sueldo-neto-chile';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ UTM: UTM_CL, TOPE: TOPE_IMPONIBLE_CL, FONASA: TASA_FONASA, CESANTIA: TASA_CESANTIA, AFPS: AFP_CL, TABLA: IMPUESTO_UNICO_CL }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+
+    // Impuesto Único de Segunda Categoría, en UTM. Espejo de
+    // src/lib/formulas/sueldo-neto-chile.ts.
+    function impuestoUnico(base) {
+      const utm = base / UTM;
+      if (utm <= 13.5) return { monto: 0, tramo: TABLA[0] };
+      let tramo = TABLA[0];
+      for (const b of TABLA) {
+        const hasta = b.hastaUtm === null ? Infinity : b.hastaUtm;
+        if (utm > b.desdeUtm && utm <= hasta) { tramo = b; break; }
+        if (utm > hasta) tramo = b;
+      }
+      return { monto: Math.max(0, (utm * tramo.factor - tramo.rebajaUtm) * UTM), tramo };
+    }
+
+    /** Liquidación completa a partir del bruto. Una sola fuente de verdad. */
+    function liquidar(bruto, afpId, esIsapre, planIsapre) {
+      const afp = AFPS.find((a) => a.id === afpId) || AFPS.find((a) => a.id === 'habitat');
+      const imponible = Math.min(bruto, TOPE);
+      const afpPct = afp.obligatoria + afp.comision;
+      const afpMonto = Math.round(imponible * (afpPct / 100));
+      const saludPct = esIsapre ? planIsapre : FONASA;
+      const saludMonto = Math.round(imponible * (saludPct / 100));
+      const cesantiaMonto = Math.round(imponible * (CESANTIA / 100));
+      const baseImpuesto = bruto - afpMonto - saludMonto;
+      const imp = impuestoUnico(baseImpuesto);
+      const impuesto = Math.round(imp.monto);
+      const descuentos = afpMonto + saludMonto + cesantiaMonto + impuesto;
+      return {
+        afp, afpPct, afpMonto, saludPct, saludMonto, cesantiaMonto,
+        baseImpuesto, impuesto, tramo: imp.tramo, descuentos,
+        liquido: bruto - descuentos, imponible,
+      };
+    }
+
+    /** Bisección: qué bruto deja exactamente este líquido. */
+    function brutoDesdeLiquido(objetivo, afpId, esIsapre, planIsapre) {
+      let lo = objetivo;
+      let hi = Math.max(objetivo * 3, objetivo + 1_000_000);
+      for (let i = 0; i < 80; i++) {
+        const mid = (lo + hi) / 2;
+        if (liquidar(mid, afpId, esIsapre, planIsapre).liquido < objetivo) lo = mid;
+        else hi = mid;
+      }
+      return Math.round(hi);
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = caso ? caso.id : 'fonasa';
+      const esIsapre = id === 'isapre';
+      const plan = Math.max(FONASA, Number(v.planIsapre) || FONASA);
+      const afpId = String(v.afp || 'habitat');
+      const monto = Math.max(0, v.sueldo || 0);
+
+      const inverso = id === 'liquido-a-bruto';
+      const bruto = inverso ? brutoDesdeLiquido(monto, afpId, false, plan) : monto;
+      const r = liquidar(bruto, afpId, esIsapre, plan);
+      const pctDesc = bruto > 0 ? (r.descuentos / bruto) * 100 : 0;
+      const saludTipo = esIsapre ? 'Isapre' : 'Fonasa';
+
+      const rows = [
+        { k: inverso ? 'Bruto necesario' : 'Sueldo bruto imponible', ref: 'Base del cálculo', v: bruto },
+        {
+          k: `AFP ${r.afp.nombre} (se resta)`,
+          ref: `10% obligatorio + ${r.afp.comision}% comisión`,
+          v: r.afpMonto,
+        },
+        { k: `Salud ${saludTipo} (se resta)`, ref: r.saludPct.toFixed(1) + '% de la imponible', v: r.saludMonto },
+        { k: 'Seguro de cesantía (se resta)', ref: CESANTIA + '% · contrato indefinido', v: r.cesantiaMonto },
+        { k: 'Base del Impuesto Único', ref: 'Bruto − AFP − salud', v: r.baseImpuesto },
+        {
+          k: 'Base en UTM',
+          ref: 'UTM ' + clp(UTM),
+          v: r.baseImpuesto / UTM,
+          format: 'unit',
+          unit: 'UTM',
+          decimals: 1,
+        },
+        {
+          k: 'Tramo del Impuesto Único',
+          ref: r.tramo.desdeUtm + (r.tramo.hastaUtm === null ? ' UTM en adelante' : ' a ' + r.tramo.hastaUtm + ' UTM'),
+          v: r.tramo.factor * 100,
+          format: 'unit',
+          unit: '% marginal',
+          decimals: 1,
+        },
+        { k: 'Impuesto Único (se resta)', ref: 'Segunda Categoría', v: r.impuesto },
+        { k: 'Total de descuentos', ref: 'AFP + salud + cesantía + impuesto', v: r.descuentos },
+        { k: 'Sueldo líquido', ref: 'Lo que te llega a la cuenta', v: r.liquido, extra: true },
+        {
+          k: 'Peso de los descuentos',
+          ref: 'Descuentos ÷ bruto',
+          v: pctDesc,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        },
+      ];
+
+      if (bruto > TOPE) {
+        rows.splice(1, 0, {
+          k: 'Renta que no cotiza (sobre el tope)',
+          ref: 'Tope imponible ' + clp(TOPE),
+          v: bruto - TOPE,
+        });
+      }
+
+      const sub = inverso
+        ? 'Para llevarte ' + clp(monto) + ' líquidos necesitás un bruto de ' + clp(bruto) +
+          ' · te descuentan ' + clp(r.descuentos) + ' (' + pctDesc.toFixed(1).replace('.', ',') + '%)'
+        : 'De ' + clp(bruto) + ' brutos te descuentan ' + clp(r.descuentos) +
+          ' (' + pctDesc.toFixed(1).replace('.', ',') + '%) · AFP ' + r.afp.nombre +
+          ' ' + r.afpPct.toFixed(2).replace('.', ',') + '% y salud ' + saludTipo;
+
+      return {
+        total: clp(inverso ? bruto : r.liquido),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Líquido en mano', value: Math.max(0, Math.round(r.liquido)), tone: 'main' },
+          { label: 'AFP ' + r.afp.nombre, value: r.afpMonto, tone: 'warn' },
+          { label: saludTipo, value: r.saludMonto, tone: 'prop' },
+          { label: 'Cesantía', value: r.cesantiaMonto, tone: 'good' },
+          { label: 'Impuesto Único', value: r.impuesto, tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,261 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto me queda en mano del sueldo bruto?" (Colombia).
+ * Reemplaza /calculadora-sueldo-neto-colombia-2026.
+ *
+ * OJO con el audience: HubData sólo admite 'AR' | 'global', pero esta página es
+ * colombiana. El audience="CO" se pasa acá, literal al Layout, para no perder el
+ * geo targeting ni el hreflang del mercado que trae el tráfico.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UVT_CO,
+  SMLMV_CO,
+  AUX_TRANSPORTE_CO,
+  TASA_SALUD,
+  TASA_PENSION,
+  RENTA_EXENTA_PCT,
+  RENTA_EXENTA_TOPE_UVT_MES,
+  RETEFUENTE_CO,
+} from '../../lib/hubs/sueldo-neto-colombia';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    UVT: UVT_CO,
+    SMLMV: SMLMV_CO,
+    AUX: AUX_TRANSPORTE_CO,
+    SALUD: TASA_SALUD,
+    PENSION: TASA_PENSION,
+    EXENTA_PCT: RENTA_EXENTA_PCT,
+    EXENTA_TOPE_UVT: RENTA_EXENTA_TOPE_UVT_MES,
+    TABLA: RETEFUENTE_CO,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const cop = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
+
+    // Retención salarial Art. 383 ET, en UVT mensuales.
+    function retencion(baseGravable) {
+      const uvts = baseGravable / UVT;
+      if (uvts <= 95) return { monto: 0, tramo: TABLA[0] };
+      let tramo = TABLA[0];
+      for (const b of TABLA) {
+        const hasta = b.hastaUvt === null ? Infinity : b.hastaUvt;
+        if (uvts > b.desdeUvt && uvts <= hasta) { tramo = b; break; }
+        if (uvts > hasta) tramo = b;
+      }
+      const enUvt = (uvts - tramo.desdeUvt) * tramo.tasa + tramo.adicionUvt;
+      return { monto: Math.max(0, enUvt * UVT), tramo };
+    }
+
+    /** Fondo de Solidaridad Pensional: 1% desde 4 SMLMV, escalonado desde 16. */
+    function fsp(salario) {
+      if (salario <= SMLMV * 4) return 0;
+      let monto = Math.round(salario * 0.01);
+      if (salario > SMLMV * 16) {
+        const n = salario / SMLMV;
+        const extra = n > 20 ? 0.01 : n > 19 ? 0.008 : n > 18 ? 0.006 : n > 17 ? 0.004 : 0.002;
+        monto += Math.round(salario * extra);
+      }
+      return monto;
+    }
+
+    /** Liquidación mensual del empleado. Una sola fuente de verdad. */
+    function liquidar(salario, quiereAux, otros) {
+      const aux = quiereAux && salario <= SMLMV * 2 ? AUX : 0;
+      const salud = Math.round(salario * (SALUD / 100));
+      const pension = Math.round(salario * (PENSION / 100));
+      const solidaridad = fsp(salario);
+      const basePrevia = salario - salud - pension - solidaridad;
+      // Renta exenta 25% con tope de 790 UVT/año prorrateado al mes (Art. 206-10 ET).
+      const exentaSinTope = basePrevia * (EXENTA_PCT / 100);
+      const exenta = Math.round(Math.min(exentaSinTope, EXENTA_TOPE_UVT * UVT));
+      const baseGravable = Math.max(0, basePrevia - exenta);
+      const ret = retencion(baseGravable);
+      const rete = Math.round(ret.monto);
+      const descuentos = salud + pension + solidaridad + rete + otros;
+      return {
+        aux, salud, pension, solidaridad, basePrevia, exenta, baseGravable,
+        rete, tramo: ret.tramo, descuentos, neto: salario + aux - descuentos,
+      };
+    }
+
+    /** Bisección: qué salario deja exactamente este neto. */
+    function brutoDesdeNeto(objetivo, quiereAux, otros) {
+      let lo = 0;
+      let hi = Math.max(objetivo * 3, objetivo + 5_000_000);
+      for (let i = 0; i < 80; i++) {
+        const mid = (lo + hi) / 2;
+        if (liquidar(mid, quiereAux, otros).neto < objetivo) lo = mid;
+        else hi = mid;
+      }
+      return Math.round(hi);
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = caso ? caso.id : 'empleado';
+      const quiereAux = String(v.auxilio || 'si') === 'si';
+      const otros = Math.max(0, v.otros || 0);
+      const monto = Math.max(0, v.salario || 0);
+
+      // ── Independiente: base del 40% de los ingresos, aporte completo ──
+      if (id === 'independiente') {
+        const base = monto * 0.4;
+        const saludInd = Math.round(base * 0.125);
+        const pensionInd = Math.round(base * 0.16);
+        const solidaridad = fsp(base);
+        const totalAportes = saludInd + pensionInd + solidaridad + otros;
+        const queda = monto - totalAportes;
+        const pct = monto > 0 ? (totalAportes / monto) * 100 : 0;
+        return {
+          total: cop(queda),
+          sub:
+            'Cotizás sobre ' + cop(base) + ' (40% de tus ingresos) y pagás ' + cop(totalAportes) +
+            ' de aportes: el ' + pct.toFixed(1).replace('.', ',') + '% de lo que facturás',
+          rows: [
+            { k: 'Ingresos del mes', ref: 'Lo que facturás', v: monto },
+            { k: 'Ingreso Base de Cotización', ref: '40% de los ingresos', v: base },
+            { k: 'Salud (se resta)', ref: '12,5% del IBC · aporte completo', v: saludInd },
+            { k: 'Pensión (se resta)', ref: '16% del IBC · aporte completo', v: pensionInd },
+            { k: 'Fondo de Solidaridad (se resta)', ref: solidaridad > 0 ? 'IBC mayor a 4 SMLMV' : 'No aplica', v: solidaridad },
+            { k: 'Otros descuentos (se restan)', ref: 'Los que cargaste', v: otros },
+            { k: 'Total de aportes', ref: 'Todo a tu cargo', v: totalAportes },
+            { k: 'Te queda', ref: 'Ingresos menos aportes', v: queda, extra: true },
+            { k: 'Peso de los aportes', ref: 'Aportes ÷ ingresos', v: pct, format: 'unit', unit: '%', decimals: 1 },
+          ],
+          chart: [
+            { label: 'Te queda', value: Math.max(0, Math.round(queda)), tone: 'main' },
+            { label: 'Salud', value: saludInd, tone: 'warn' },
+            { label: 'Pensión', value: pensionInd, tone: 'prop' },
+            { label: 'Fondo de Solidaridad', value: solidaridad, tone: 'bad' },
+          ],
+        };
+      }
+
+      const inverso = id === 'neto-a-bruto';
+      const salario = inverso ? brutoDesdeNeto(monto, quiereAux, otros) : monto;
+      const r = liquidar(salario, quiereAux, otros);
+      const pctDesc = salario > 0 ? (r.descuentos / salario) * 100 : 0;
+
+      const rows = [
+        { k: inverso ? 'Salario necesario' : 'Salario mensual', ref: 'Base del cálculo', v: salario },
+      ];
+      if (r.aux > 0) {
+        rows.push({ k: 'Auxilio de transporte (se suma)', ref: 'Hasta 2 SMLMV · no es base de aportes', v: r.aux });
+      } else if (quiereAux) {
+        rows.push({
+          k: 'Auxilio de transporte',
+          ref: 'No corresponde: el salario supera 2 SMLMV (' + cop(SMLMV * 2) + ')',
+          v: 0,
+        });
+      }
+      rows.push(
+        { k: 'Salud (se resta)', ref: SALUD + '% del salario · Ley 100', v: r.salud },
+        { k: 'Pensión (se resta)', ref: PENSION + '% del salario · Ley 100', v: r.pension },
+        {
+          k: 'Fondo de Solidaridad Pensional (se resta)',
+          ref: r.solidaridad > 0 ? 'Salario mayor a 4 SMLMV' : 'No aplica hasta 4 SMLMV',
+          v: r.solidaridad,
+        },
+        { k: 'Base depurada', ref: 'Salario menos aportes obligatorios', v: r.basePrevia },
+        { k: 'Renta exenta del 25% (se resta)', ref: 'Art. 206-10 ET · tope 790 UVT/año', v: r.exenta },
+        { k: 'Base gravable de retención', ref: 'Lo que mira el Art. 383', v: r.baseGravable },
+        {
+          k: 'Base gravable en UVT',
+          ref: 'UVT ' + cop(UVT),
+          v: r.baseGravable / UVT,
+          format: 'unit',
+          unit: 'UVT',
+          decimals: 1,
+        },
+        {
+          k: 'Tramo de retención',
+          ref: r.tramo.desdeUvt + (r.tramo.hastaUvt === null ? ' UVT en adelante' : ' a ' + r.tramo.hastaUvt + ' UVT'),
+          v: r.tramo.tasa * 100,
+          format: 'unit',
+          unit: '% marginal',
+          decimals: 0,
+        },
+        { k: 'Retención en la fuente (se resta)', ref: 'Art. 383 ET', v: r.rete }
+      );
+      if (otros > 0) {
+        rows.push({ k: 'Otros descuentos (se restan)', ref: 'Los que cargaste', v: otros });
+      }
+      rows.push(
+        { k: 'Total de descuentos', ref: 'Aportes + retención + otros', v: r.descuentos },
+        { k: 'Sueldo neto', ref: 'Lo que te consignan', v: r.neto, extra: true },
+        { k: 'Peso de los descuentos', ref: 'Descuentos ÷ salario', v: pctDesc, format: 'unit', unit: '%', decimals: 1 }
+      );
+
+      const sub = inverso
+        ? 'Para cobrar ' + cop(monto) + ' netos necesitás un salario de ' + cop(salario) +
+          ' · te descuentan ' + cop(r.descuentos)
+        : 'De ' + cop(salario) + ' te descuentan ' + cop(r.descuentos) +
+          ' (' + pctDesc.toFixed(1).replace('.', ',') + '%)' +
+          (r.rete > 0
+            ? ' · incluye ' + cop(r.rete) + ' de retención en la fuente'
+            : ' · sin retención en la fuente' + (r.aux > 0 ? ' y con auxilio de transporte' : ''));
+
+      return {
+        total: cop(inverso ? salario : r.neto),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Neto en mano', value: Math.max(0, Math.round(r.neto)), tone: 'main' },
+          { label: 'Salud', value: r.salud, tone: 'warn' },
+          { label: 'Pensión', value: r.pension, tone: 'prop' },
+          { label: 'Fondo de Solidaridad', value: r.solidaridad, tone: 'good' },
+          { label: 'Retención en la fuente', value: r.rete, tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>
