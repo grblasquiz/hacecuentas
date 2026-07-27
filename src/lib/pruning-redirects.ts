@@ -3463,7 +3463,6 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/infinite-series': '/categoria/matematica',
   '/interes-compuesto': '/inversiones/interes-compuesto',
   '/iva': '/impuestos/iva',
-  '/jubilacion': '/simulador-jubilacion-anses',
   '/light-year-parsec-converter': '/categoria/ciencia',
   '/liquidacion-final': '/trabajo/liquidacion-final',
   '/liquidacion-final-trabajo': '/trabajo/liquidacion-final',
