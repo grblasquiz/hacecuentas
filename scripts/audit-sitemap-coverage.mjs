@@ -41,6 +41,16 @@ const ALLOWLIST = new Set([
   '/410',
 ]);
 
+// Segmentos utilitarios fuera del sitemap a propósito (ver generate-sitemap.ts):
+// navegación/producto que en 90 días de Bing dio 0 impresiones en TODAS sus URLs.
+// Siguen vivas, linkeadas e indexables; sólo no las proponemos para crawl.
+const ALLOWED_PREFIXES = [
+  '/decidir', '/comparar', '/partners', '/historias',
+  '/mi', '/informes', '/fin-de-semana', '/top',
+];
+const isAllowedPrefix = (u) =>
+  ALLOWED_PREFIXES.some((p) => u === p || u.startsWith(p + '/'));
+
 function walk(dir) {
   const out = [];
   for (const e of readdirSync(dir)) {
@@ -134,7 +144,7 @@ for (const abs of walk(PAGES)) {
   const rel = relative(PAGES, abs).replace(/\\/g, '/');
   if (isDynamic(rel)) continue;
   const url = urlFor(rel);
-  if (ALLOWLIST.has(url)) continue;
+  if (ALLOWLIST.has(url) || isAllowedPrefix(url)) continue;
   if (inSitemap.has(url)) continue;
   // noindex declarado en la página (prop del Layout o meta directa).
   const src = readFileSync(abs, 'utf8');

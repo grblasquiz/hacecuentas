@@ -940,7 +940,6 @@ sitemaps.push({
     core('/contacto',                            '0.4',  'yearly'),
     core('/sugerir',                             '0.6',  'weekly'),
     core('/sugerencias',                         '0.7',  'daily',   true),
-    core('/glosario',                            '0.5',  'monthly'),
     core('/blog',                                '0.7',  'weekly'),
     core('/datasets',                            '0.6',  'monthly'),
     // Los hubs de vertical (/mx /co /cl /es /pt /en) NO van acá: cada
@@ -1608,6 +1607,31 @@ for (const s of sitemaps) {
 }
 if (gone410Stripped > 0) {
   console.log(`Stripped ${gone410Stripped} URLs marcadas como 410 GONE.`);
+}
+
+// Segmentos utilitarios: páginas de navegación/producto que no compiten por
+// ninguna query. Medición Bing 90d (CSV PageTraffic, 946 URLs con impresiones):
+// /decidir/, /comparar/, /partners/, /historias/, /mi/, /informes/,
+// /fin-de-semana/ y /top/ dieron 0 impresiones en TODOS sus URLs. Siguen vivas y
+// linkeadas desde el sitio; sólo salen del sitemap para que el crawl y la señal
+// se concentren en lo que puede rankear.
+const UTILITY_PREFIXES = [
+  '/decidir/', '/comparar/', '/partners/', '/historias/',
+  '/mi/', '/informes/', '/fin-de-semana/', '/top/',
+];
+let utilityStripped = 0;
+for (const s of sitemaps) {
+  const before = s.urls.length;
+  s.urls = s.urls.filter((u: any) => {
+    try {
+      const path = new URL(u.loc).pathname;
+      return !UTILITY_PREFIXES.some((p) => path === p.slice(0, -1) || path.startsWith(p));
+    } catch { return true; }
+  });
+  utilityStripped += before - s.urls.length;
+}
+if (utilityStripped > 0) {
+  console.log(`Stripped ${utilityStripped} URLs de segmentos utilitarios (0 impresiones Bing 90d).`);
 }
 
 // Filtro defensivo: excluir sources de 301/308 declarados en public/_redirects.
