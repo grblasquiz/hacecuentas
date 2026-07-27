@@ -1252,6 +1252,42 @@ if (glosarioTerms.length > 0) {
 }
 
 // 7b. Salas de decisión (/decidir/*) — namespace propio, segmento AISLADO.
+// ---------------------------------------------------------------------------
+// Hubs de decisión (/{silo}/{tema}) — la arquitectura que reemplaza a las
+// calculadoras sueltas. Cada hub declara su `slug` y su `lastReviewed`.
+//
+// Se leen del filesystem con regex en vez de importar el registry, porque el
+// registry usa `import.meta.glob` (Vite) y este script corre en tsx puro.
+//
+// lastmod = lastReviewed editorial, NO buildDate: deployar otra cosa no mueve
+// estas URLs (regla #1/#3 de CLAUDE.md, anti-churn del sitemap).
+// ---------------------------------------------------------------------------
+const decisionHubUrls: Url[] = (() => {
+  const dir = join(ROOT, 'src', 'lib', 'hubs');
+  if (!existsSync(dir)) return [];
+  const silos = new Map<string, string>();
+  const urls: Url[] = [];
+  for (const f of readdirSync(dir)) {
+    if (!f.endsWith('.ts') || f === 'types.ts' || f === 'registry.ts') continue;
+    const src = readFileSync(join(dir, f), 'utf8');
+    const slug = src.match(/^\s*slug:\s*'([^']+)'/m)?.[1];
+    if (!slug || !slug.includes('/')) continue;
+    const reviewed = src.match(/^\s*lastReviewed:\s*'([^']+)'/m)?.[1];
+    const siloHref = src.match(/^\s*siloHref:\s*'([^']+)'/m)?.[1];
+    const lastmod = clampToToday(reviewed || buildDate);
+    urls.push({ loc: `${site}/${slug}`, priority: '0.9', changefreq: 'weekly', lastmod });
+    if (siloHref) {
+      const prev = silos.get(siloHref);
+      if (!prev || lastmod > prev) silos.set(siloHref, lastmod);
+    }
+  }
+  // Página de silo: lastmod = el hub más fresco que contiene.
+  for (const [href, lastmod] of silos) {
+    urls.push({ loc: `${site}${href}`, priority: '0.8', changefreq: 'weekly', lastmod });
+  }
+  return urls;
+})();
+
 // Intención decisional (≠ calc transaccional, ≠ guía informacional). El lastmod
 // sale de room.lastReviewed (editorial), NO del buildDate, así que deployar otra
 // cosa NO mueve estas URLs ni inflar el sitemap de las ~2500 calcs (regla #1/#3).
@@ -1297,6 +1333,12 @@ if (DECISION_MANIFEST.length > 0) {
     }
   }
   sitemaps.push({ name: 'sitemap-decidir.xml', urls: decidirUrls });
+}
+
+// Hubs de decisión (/{silo}/{tema}) + páginas de silo. Sitemap propio para
+// poder mirar su indexación por separado en Bing/GSC durante la migración.
+if (decisionHubUrls.length > 0) {
+  sitemaps.push({ name: 'sitemap-hubs.xml', urls: decisionHubUrls });
 }
 
 // 7c. Productos verticales (/mi y /mi/*) — namespace propio, segmento AISLADO.

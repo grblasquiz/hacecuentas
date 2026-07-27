@@ -1,0 +1,283 @@
+---
+/**
+ * Hub de decisión — "¿Me descuentan Ganancias del sueldo?" (4ta categoría).
+ * Reemplaza 8 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Los valores fiscales NO se hardcodean acá: se serializan desde los módulos
+ * reales del repo (`src/lib/formulas/_ganancias-escala.ts`, `sueldo-ar.ts` y
+ * `src/lib/data/monotributo-2026.ts`), que es lo que patchea el fetcher de datos.
+ * Si ARCA actualiza la escala, este hub la sigue solo.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub } from '../../lib/hubs/ganancias-cuarta-categoria';
+import {
+  ESCALA,
+  MNI_MENSUAL_BASE,
+  INCREMENTO_CONYUGE_MENSUAL,
+  INCREMENTO_HIJO_MENSUAL,
+  GNI_ANUAL,
+  DEDUCCION_ESPECIAL_AUTONOMOS_ANUAL,
+} from '../../lib/formulas/_ganancias-escala';
+import { BASE_IMPONIBLE_MAXIMA_APORTES } from '../../lib/formulas/sueldo-ar';
+import { CUOTA_SERVICIOS } from '../../lib/data/monotributo-2026';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+/** JSON no soporta Infinity: el último tramo viaja como `null` = sin tope. */
+const FISCAL = {
+  escala: ESCALA.map((t) => ({
+    hasta: Number.isFinite(t.hasta) ? t.hasta : null,
+    tasa: t.tasa,
+    acumulado: t.acumulado,
+  })),
+  mni: MNI_MENSUAL_BASE,
+  conyuge: INCREMENTO_CONYUGE_MENSUAL,
+  hijo: INCREMENTO_HIJO_MENSUAL,
+  gniAnual: GNI_ANUAL,
+  dedEspAutonomos: DEDUCCION_ESPECIAL_AUTONOMOS_ANUAL,
+  topeAportes: BASE_IMPONIBLE_MAXIMA_APORTES,
+  cuotaMono: CUOTA_SERVICIOS,
+  aportes: 0.17,
+};
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ FISCAL }}>
+  (function () {
+    const H = window.HC_HUB;
+    const ESC = FISCAL.escala.map((t) => ({
+      hasta: t.hasta === null ? Infinity : t.hasta,
+      tasa: t.tasa,
+      acumulado: t.acumulado,
+    }));
+
+    /** Escala del art. 94 aplicada a una base MENSUAL, con detalle por tramo. */
+    function escalar(base) {
+      const tramos = [];
+      let anterior = 0;
+      let impuesto = 0;
+      let marginal = 0;
+      let idx = -1;
+      for (let i = 0; i < ESC.length; i++) {
+        const t = ESC[i];
+        const techo = Math.min(base, t.hasta);
+        const monto = Math.max(0, techo - anterior);
+        const grava = monto * t.tasa;
+        if (grava > 0) {
+          impuesto += grava;
+          marginal = t.tasa;
+          idx = i;
+        }
+        tramos.push({ i: i, desde: anterior, hasta: t.hasta, tasa: t.tasa, monto: monto, impuesto: grava });
+        anterior = t.hasta;
+        if (base <= t.hasta) break;
+      }
+      return { impuesto: impuesto, marginal: marginal, idx: idx, tramos: tramos };
+    }
+
+    function pct(t) { return Math.round(t * 1000) / 10; }
+
+    /** Segmentos + posición del gráfico de escalones. */
+    function grafico(det, base) {
+      const activos = det.tramos.filter((t) => t.impuesto > 0);
+      const chart = activos.map((t) => ({
+        label: 'Tramo ' + (t.i + 1) + ' · ' + pct(t.tasa) + '%',
+        value: Math.round(t.impuesto),
+        tone: t.i === det.idx ? 'warn' : 'main',
+      }));
+      let position = 0;
+      let positionLabel = 'Base imponible $0 — no llegás al primer tramo';
+      if (det.idx >= 0) {
+        const t = det.tramos[det.idx];
+        const ancho = (isFinite(t.hasta) ? t.hasta : t.desde * 1.5) - t.desde;
+        const dentro = ancho > 0 ? Math.min(1, (base - t.desde) / ancho) : 1;
+        position = Math.min(100, ((det.idx + dentro) / ESC.length) * 100);
+        positionLabel =
+          'Tramo ' + (det.idx + 1) + ' de ' + ESC.length + ' — ' + pct(t.tasa) +
+          '% sobre el excedente de ' + H.ars(t.desde);
+      }
+      return { chart: chart, position: position, positionLabel: positionLabel };
+    }
+
+    /** Deducciones personales mensuales según cargas declaradas. */
+    function deducciones(v) {
+      const cony = String(v.conyuge) === 'si' ? FISCAL.conyuge : 0;
+      const hijos = Math.max(0, Math.min(10, v.hijos || 0)) * FISCAL.hijo;
+      const otras = Math.max(0, v.siradig || 0);
+      return { cony: cony, hijos: hijos, otras: otras, total: FISCAL.mni + cony + hijos + otras };
+    }
+
+    function aportesDe(bruto) {
+      return Math.min(bruto, FISCAL.topeAportes) * FISCAL.aportes;
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'mensual';
+      const bruto = Math.max(0, v.bruto || 0);
+      const ded = deducciones(v);
+
+      // ---------- Monotributo → régimen general ----------
+      if (id === 'monotributo') {
+        const factAnual = bruto * 12;
+        const gastosAnual = Math.max(0, v.siradig || 0) * 12;
+        const utilidad = Math.max(0, factAnual - gastosAnual);
+        // Un autónomo deduce GNI + deducción especial del art. 30 inc. c) APARTADO 1
+        // ($18.031.308,76 anuales). Antes acá sólo se restaba la GNI, lo que
+        // sobreestimaba el impuesto y hacía ver al monotributo más conveniente
+        // de lo que es.
+        const dedAutonomo = FISCAL.gniAnual + FISCAL.dedEspAutonomos;
+        const baseAnual = Math.max(0, utilidad - dedAutonomo);
+        const det = escalar(baseAnual / 12);
+        const ganAnual = det.impuesto * 12;
+        const cuota = FISCAL.cuotaMono[String(v.categoria || 'H')] || 0;
+        const monoAnual = cuota * 12;
+        const g = grafico(det, baseAnual / 12);
+        const dif = ganAnual - monoAnual;
+        return {
+          total: H.ars(ganAnual),
+          sub:
+            'Ganancias anual en régimen general vs. cuota de monotributo categoría ' +
+            String(v.categoria || 'H') + ' (' + H.ars(monoAnual) + '/año). ' +
+            (dif > 0 ? 'Hoy la cuota fija sale ' + H.ars(dif) + ' más barata.' : 'El régimen general te ahorraría ' + H.ars(-dif) + ' al año.'),
+          rows: [
+            { k: 'Facturación anual', v: factAnual },
+            { k: 'Gastos deducibles anuales', v: gastosAnual },
+            { k: 'Ganancia no imponible', ref: 'Art. 30 inc. a', v: FISCAL.gniAnual },
+            { k: 'Deducción especial de autónomos', ref: 'Art. 30 inc. c ap. 1', v: FISCAL.dedEspAutonomos },
+            { k: 'Base imponible anual', ref: 'Art. 94', v: baseAnual },
+            { k: 'Ganancias anual estimada', ref: 'Art. 94', v: ganAnual, extra: true },
+            { k: 'Cuota de monotributo anual', ref: 'Cat. ' + String(v.categoria || 'H'), v: monoAnual },
+          ],
+          chart: g.chart,
+          position: g.position,
+          positionLabel: g.positionLabel,
+        };
+      }
+
+      // ---------- Base mensual común a los casos de empleado ----------
+      const conSac = id === 'aguinaldo' ? (bruto * 13) / 12 : bruto;
+      const aportes = aportesDe(conSac);
+      const base = Math.max(0, conSac - aportes - ded.total);
+      const det = escalar(base);
+      const g = grafico(det, base);
+      const retMensual = det.impuesto;
+      const umbral = Math.round(ded.total / (1 - FISCAL.aportes));
+
+      // ---------- Aguinaldo ----------
+      if (id === 'aguinaldo') {
+        const baseSinSac = Math.max(0, bruto - aportesDe(bruto) - ded.total);
+        const sinSac = escalar(baseSinSac).impuesto * 12;
+        const conSacAnual = retMensual * 12;
+        const extra = Math.max(0, conSacAnual - sinSac);
+        return {
+          total: H.ars(extra),
+          sub:
+            'Retención extra anual atribuible al aguinaldo · SAC de ' + H.ars(bruto / 2) +
+            ' por semestre · alícuota marginal ' + pct(det.marginal) + '%',
+          rows: [
+            { k: 'Medio aguinaldo (SAC) por semestre', ref: 'Art. 121 LCT', v: bruto / 2 },
+            { k: 'Base mensual con SAC prorrateado', ref: 'RG 4003', v: base },
+            { k: 'Retención anual sin aguinaldo', ref: 'Art. 94', v: sinSac },
+            { k: 'Retención anual con aguinaldo', ref: 'Art. 94', v: conSacAnual },
+            { k: 'Diferencia por el SAC', v: extra, extra: true },
+          ],
+          chart: g.chart,
+          position: g.position,
+          positionLabel: g.positionLabel,
+        };
+      }
+
+      // ---------- Saldo a favor de la liquidación anual ----------
+      if (id === 'saldo-favor') {
+        const baseAnualSac = Math.max(0, ((bruto * 13) / 12) - aportesDe((bruto * 13) / 12) - ded.total);
+        const impuestoAnual = escalar(baseAnualSac).impuesto * 12;
+        const retenido = Math.max(0, v.retenciones || 0);
+        const saldo = retenido - impuestoAnual;
+        const detA = escalar(baseAnualSac);
+        const gA = grafico(detA, baseAnualSac);
+        return {
+          total: H.ars(Math.abs(saldo)),
+          sub:
+            saldo > 0
+              ? 'Saldo A FAVOR: te retuvieron de más y se devuelve en la liquidación anual (F.1357).'
+              : saldo < 0
+                ? 'Saldo A PAGAR: el impuesto determinado supera lo retenido; te lo descuentan en los meses siguientes.'
+                : 'Sin diferencia: lo retenido coincide con el impuesto determinado.',
+          rows: [
+            { k: 'Retenciones sufridas en el año', ref: 'F.1357', v: retenido },
+            { k: 'Impuesto anual determinado', ref: 'Art. 94', v: impuestoAnual },
+            { k: 'Base imponible anual', v: baseAnualSac * 12 },
+            { k: 'Deducciones personales anuales', ref: 'Art. 30', v: ded.total * 12 },
+            { k: saldo >= 0 ? 'Saldo a favor tuyo' : 'Saldo a pagar', v: Math.abs(saldo), extra: true },
+          ],
+          chart: gA.chart,
+          position: gA.position,
+          positionLabel: gA.positionLabel,
+        };
+      }
+
+      // ---------- Caso por defecto: retención mensual ----------
+      return {
+        total: H.ars(retMensual),
+        sub:
+          retMensual > 0
+            ? 'Retención mensual · alícuota marginal ' + pct(det.marginal) + '% · ' + g.positionLabel
+            : 'No pagás Ganancias: tu bruto no supera el piso de ' + H.ars(umbral) + '/mes con tus deducciones.',
+        rows: [
+          { k: 'Sueldo bruto mensual', v: bruto },
+          { k: 'Aportes personales (17%)', ref: 'Ley 24.241', v: aportes },
+          { k: 'Ganancia no imponible + deducción especial', ref: 'Art. 30 a y c', v: FISCAL.mni },
+          { k: 'Cónyuge a cargo', ref: 'Art. 30 b.1', v: ded.cony },
+          { k: 'Hijos a cargo', ref: 'Art. 30 b.2', v: ded.hijos },
+          { k: 'Otras deducciones (SiRADIG)', ref: 'RG 4003', v: ded.otras },
+          { k: 'Base imponible mensual', ref: 'Art. 94', v: base },
+          { k: 'Retención del mes', ref: 'Art. 94', v: retMensual, extra: true },
+        ],
+        chart: g.chart,
+        position: g.position,
+        positionLabel: g.positionLabel,
+      };
+    });
+  })();
+</script>

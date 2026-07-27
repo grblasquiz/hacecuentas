@@ -1,0 +1,287 @@
+---
+/**
+ * Hub de decisión — "¿Cuántos días de vacaciones me corresponden?"
+ * Reemplaza 10 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Sigue el patrón de trabajo/indemnizacion-por-despido.astro: la página sólo
+ * aporta los datos (src/lib/hubs/vacaciones.ts) y su compute(). Todo el chrome,
+ * el CSS y el runtime viven en DecisionHub.astro y no se tocan.
+ *
+ * FORMATO: este hub devuelve DÍAS (y algunos meses/horas), no pesos. Cada
+ * resultado declara `format: 'unit'` + `unit` a nivel HubResult (eso cubre la
+ * leyenda del gráfico) y cada fila repite `format`/`unit` explícitamente.
+ * OJO: el runtime hace Object.assign(base, {format: r.format, ...}), así que
+ * una fila SIN `format` pisa el default del resultado con undefined y vuelve a
+ * caer en pesos. Por eso va en TODAS las filas, no sólo en las que difieren.
+ * El campo `ref` queda sólo para el artículo de ley.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, ESCALERA, DUELO, DUELO_CCT, PATERNIDAD_CCT, EXAMEN_CCT } from '../../lib/hubs/vacaciones';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ ESCALERA, DUELO, DUELO_CCT, PATERNIDAD_CCT, EXAMEN_CCT }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    /** Años (con decimales) entre el ingreso y el 31/12 del año en curso. */
+    function antiguedadAlCierre(fechaIngreso) {
+      const p = String(fechaIngreso || '').split('-').map(Number);
+      if (p.length !== 3 || p.some(isNaN)) return null;
+      const ingreso = new Date(p[0], p[1] - 1, p[2]);
+      if (isNaN(ingreso.getTime())) return null;
+      const cierre = new Date(new Date().getFullYear(), 11, 31);
+      return (cierre.getTime() - ingreso.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+    }
+
+    function tramoDe(aniosCumplidos) {
+      for (let i = ESCALERA.length - 1; i >= 0; i--) {
+        if (aniosCumplidos >= ESCALERA[i].desde) return ESCALERA[i];
+      }
+      return ESCALERA[0];
+    }
+
+    const plural = (n, s, p) => n + ' ' + (Math.abs(n) === 1 ? s : p);
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'antiguedad';
+      const sector = v.sector || 'general-lct';
+
+      // ---------- Rama por defecto: vacaciones por antigüedad (Art. 150) ----------
+      if (id === 'antiguedad') {
+        const aniosExactos = antiguedadAlCierre(v.fechaIngreso);
+        if (aniosExactos === null || aniosExactos < 0) {
+          return {
+            total: '— días',
+            sub: 'Cargá una fecha de ingreso válida (día, mes y año).',
+            rows: [],
+            chart: [],
+            format: 'unit',
+            unit: 'días',
+          };
+        }
+
+        const anios = Math.floor(aniosExactos);
+        const tramo = tramoDe(anios);
+        const completas = (v.medioAnio || 'si') === 'si';
+
+        // Proporcional del Art. 153: 1 día cada 20 días hábiles trabajados.
+        const hoy = new Date();
+        const inicioAnio = new Date(hoy.getFullYear(), 0, 1);
+        const p = String(v.fechaIngreso).split('-').map(Number);
+        const ingreso = new Date(p[0], p[1] - 1, p[2]);
+        const desde = ingreso > inicioAnio ? ingreso : inicioAnio;
+        const diasCorridos = Math.max(0, Math.round((hoy.getTime() - desde.getTime()) / 86400000));
+        const diasHabiles = Math.floor((diasCorridos * 5) / 7);
+        const proporcionales = Math.max(1, Math.floor(diasHabiles / 20));
+
+        const dias = completas ? tramo.dias : proporcionales;
+
+        // Próximo escalón y cuánto falta, en meses. Este es el dato que la gente busca.
+        const siguiente = ESCALERA.find((e) => e.desde > anios && e.dias > tramo.dias);
+        const mesesFaltan = siguiente ? Math.max(0, Math.ceil((siguiente.desde - aniosExactos) * 12)) : 0;
+
+        const rows = [];
+        rows.push({ k: 'Tramo por antigüedad — ' + tramo.label, ref: 'Art. 150', v: tramo.dias, format: 'unit', unit: 'días corridos' });
+        if (!completas) {
+          rows.push({ k: 'Días hábiles trabajados este año', ref: 'Art. 153', v: diasHabiles, format: 'unit', unit: 'días hábiles' });
+          rows.push({ k: 'Vacaciones proporcionales (1 cada 20 hábiles)', ref: 'Art. 153', v: proporcionales, extra: true, format: 'unit', unit: 'días corridos' });
+        }
+        rows.push({ k: 'Años de antigüedad al 31/12', v: anios, format: 'unit', unit: 'años cumplidos' });
+        if (siguiente) {
+          rows.push({ k: 'Faltan para pasar a ' + siguiente.dias + ' días', v: mesesFaltan, extra: true, format: 'unit', unit: 'meses' });
+          rows.push({ k: 'Días que ganás en el próximo escalón', v: siguiente.dias - tramo.dias, format: 'unit', unit: 'días corridos' });
+        }
+        rows.push({ k: 'Anticipación con la que te tienen que avisar', ref: 'Art. 154', v: 45, format: 'unit', unit: 'días' });
+
+        const positionLabel = completas
+          ? tramo.dias + ' días — ' + tramo.label.toLowerCase() +
+            (siguiente
+              ? ' · te faltan ' + plural(mesesFaltan, 'mes', 'meses') + ' para pasar a ' + siguiente.dias + ' días'
+              : ' · ya estás en el escalón máximo')
+          : proporcionales + ' días proporcionales — el tramo completo sería de ' + tramo.dias + ' días';
+
+        return {
+          total: plural(dias, 'día', 'días'),
+          sub:
+            plural(anios, 'año', 'años') + ' de antigüedad al 31/12/' + hoy.getFullYear() +
+            ' · ' + (completas ? 'vacaciones completas' : 'proporcionales por el Art. 153') +
+            (siguiente ? ' · próximo salto en ' + plural(mesesFaltan, 'mes', 'meses') : ''),
+          rows: rows,
+          chart: ESCALERA.map((e) => ({
+            label: e.label + ' · ' + e.dias + ' días',
+            value: e.dias,
+            tone: e.dias === tramo.dias ? 'main' : 'prop',
+          })),
+          format: 'unit',
+          unit: 'días',
+          // Posición del usuario sobre la escalera (0 a 25 años).
+          position: Math.min(100, Math.max(0, (aniosExactos / 25) * 100)),
+          positionLabel: positionLabel,
+        };
+      }
+
+      // ---------- Licencia por maternidad (Art. 177 y ley 24.716) ----------
+      if (id === 'maternidad') {
+        const opcion = v.opcionMaternidad || '45-45';
+        const antes = opcion === '30-60' ? 30 : 45;
+        const despues = 90 - antes;
+        return {
+          total: '90 días',
+          sub: antes + ' días antes del parto + ' + despues + ' después · los paga ANSES, no el empleador',
+          rows: [
+            { k: 'Tramo previo al parto', ref: 'Art. 177', v: antes, format: 'unit', unit: 'días corridos' },
+            { k: 'Tramo posterior al parto', ref: 'Art. 177', v: despues, format: 'unit', unit: 'días corridos' },
+            { k: 'Total de licencia por maternidad', v: 90, extra: true, format: 'unit', unit: 'días corridos' },
+            { k: 'Excedencia opcional mínima', ref: 'Art. 183', v: 3, format: 'unit', unit: 'meses sin goce' },
+            { k: 'Excedencia opcional máxima', ref: 'Art. 183', v: 6, format: 'unit', unit: 'meses sin goce' },
+            { k: 'Descanso diario por lactancia (durante un año)', ref: 'Art. 179', v: 1, format: 'unit', unit: 'hora por día' },
+          ],
+          chart: [
+            { label: 'Antes del parto', value: antes, tone: 'main' },
+            { label: 'Después del parto', value: despues, tone: 'good' },
+          ],
+          format: 'unit',
+          unit: 'días',
+          position: (antes / 90) * 100,
+          positionLabel: '90 días corridos · reparto ' + antes + '/' + despues,
+        };
+      }
+
+      // ---------- Licencia por paternidad (Art. 158 inc. a) ----------
+      if (id === 'paternidad') {
+        const lct = 2;
+        const cct = PATERNIDAD_CCT[sector] || lct;
+        const dias = Math.max(lct, cct);
+        return {
+          total: plural(dias, 'día', 'días'),
+          sub:
+            dias > lct
+              ? 'Tu convenio mejora el piso de 2 días de la LCT'
+              : 'Piso de la LCT: revisá tu convenio, casi todos dan más',
+          rows: [
+            { k: 'Piso legal por nacimiento de hijo', ref: 'Art. 158 inc. a', v: lct, format: 'unit', unit: 'días corridos' },
+            { k: 'Días según el convenio elegido', ref: 'CCT', v: cct, format: 'unit', unit: 'días corridos' },
+            { k: 'Días que te corresponden', v: dias, extra: true, format: 'unit', unit: 'días corridos' },
+            { k: 'Mejora del convenio sobre la LCT', v: Math.max(0, dias - lct), format: 'unit', unit: 'días corridos' },
+          ],
+          chart: [
+            { label: 'Piso LCT', value: lct, tone: 'main' },
+            { label: 'Mejora del convenio', value: Math.max(0, dias - lct), tone: 'good' },
+          ],
+          format: 'unit',
+          unit: 'días',
+          position: Math.min(100, (dias / 15) * 100),
+          positionLabel: dias + ' días corridos de licencia por paternidad',
+        };
+      }
+
+      // ---------- Licencia por fallecimiento de familiar (Art. 158 inc. b y c) ----------
+      if (id === 'fallecimiento') {
+        const parentesco = v.parentesco || 'padre-madre';
+        const lct = DUELO[parentesco] != null ? DUELO[parentesco] : 0;
+        const mejoras = DUELO_CCT[sector] || {};
+        const cct = mejoras[parentesco] != null ? mejoras[parentesco] : lct;
+        const dias = Math.max(lct, cct);
+        return {
+          total: dias > 0 ? plural(dias, 'día', 'días') : 'Sin licencia LCT',
+          sub:
+            dias === 0
+              ? 'El Art. 158 no cubre abuelos, suegros ni cuñados: dependés del convenio o de un permiso especial'
+              : 'Días corridos pagos al 100% · al menos uno tiene que ser hábil',
+          rows: [
+            { k: 'Piso legal por este vínculo', ref: 'Art. 158', v: lct, format: 'unit', unit: 'días corridos' },
+            { k: 'Días según el convenio elegido', ref: 'CCT', v: cct, format: 'unit', unit: 'días corridos' },
+            { k: 'Días que te corresponden', v: dias, extra: true, format: 'unit', unit: 'días corridos' },
+            { k: 'Días hábiles garantizados dentro de la licencia', ref: 'Art. 160', v: dias > 0 ? 1 : 0, format: 'unit', unit: 'días hábiles' },
+          ],
+          chart: [
+            { label: 'Piso LCT', value: lct, tone: 'main' },
+            { label: 'Mejora del convenio', value: Math.max(0, dias - lct), tone: 'good' },
+          ],
+          format: 'unit',
+          unit: 'días',
+          position: Math.min(100, (dias / 5) * 100),
+          positionLabel: dias + ' días corridos de licencia por duelo',
+        };
+      }
+
+      // ---------- Licencia por examen (Art. 149) ----------
+      const reglas = EXAMEN_CCT[sector] || EXAMEN_CCT['general-lct'];
+      const examenes = Math.max(1, v.examenes || 1);
+      const yaTomados = Math.max(0, Math.min(examenes, v.examenesTomados || 0));
+      const usados = yaTomados * reglas.porExamen;
+      const remanente = Math.max(0, reglas.topeAnual - usados);
+      const pendientes = examenes - yaTomados;
+      const necesarios = pendientes * reglas.porExamen;
+      const disponibles = Math.min(necesarios, remanente);
+
+      return {
+        total: plural(disponibles, 'día', 'días'),
+        sub:
+          disponibles < necesarios
+            ? 'No alcanzan para los ' + pendientes + ' exámenes pendientes: el tope anual es de ' + reglas.topeAnual + ' días'
+            : 'Cubren tus ' + pendientes + ' exámenes pendientes · ' + reglas.porExamen + ' días por examen',
+        rows: [
+          { k: 'Días por examen', ref: 'Art. 149', v: reglas.porExamen, format: 'unit', unit: 'días corridos' },
+          { k: 'Tope anual de la norma aplicable', ref: 'por año calendario', v: reglas.topeAnual, format: 'unit', unit: 'días corridos' },
+          { k: 'Días ya usados este año', v: usados, format: 'unit', unit: 'días corridos' },
+          { k: 'Días que te quedan del tope', v: remanente, format: 'unit', unit: 'días corridos' },
+          { k: 'Días disponibles para los exámenes pendientes', v: disponibles, extra: true, format: 'unit', unit: 'días corridos' },
+          { k: 'Días que quedarían sin cobertura', v: Math.max(0, necesarios - disponibles), format: 'unit', unit: 'días corridos' },
+        ],
+        chart: [
+          { label: 'Días usados', value: usados, tone: 'warn' },
+          { label: 'Días disponibles', value: remanente, tone: 'good' },
+        ],
+        format: 'unit',
+        unit: 'días',
+        position: Math.min(100, (usados / reglas.topeAnual) * 100),
+        positionLabel: usados + ' de ' + reglas.topeAnual + ' días anuales usados',
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,401 @@
+---
+/**
+ * Componente único de los hubs de decisión.
+ *
+ * Renderiza TODO el chrome a partir de un objeto `HubData`: hero con panel de
+ * resultado, selector de caso, panel de inputs, gráfico, desglose, respuesta
+ * rápida, FAQ y fuentes. Las páginas de hub sólo aportan datos + su compute().
+ *
+ * Contrato con la página:
+ *   window.HC_HUB.onCompute(fn)   → fn(valores) debe devolver un HubResult
+ *   window.HC_HUB.values()        → { [idCampo]: valor }  (números ya parseados)
+ *   window.HC_HUB.currentCase()   → id del caso activo (o null si el hub no ramifica)
+ *   window.HC_HUB.ars(n)          → formatea a pesos
+ *
+ * Decisiones de producto que NO son bugs (vienen del mockup aprobado):
+ *   - El panel de resultado arranca en $0 hasta que el usuario aprieta el botón.
+ *   - El desplegable "Mi caso es otro" arranca ABIERTO.
+ * No las "arregles".
+ *
+ * El CSS vive en src/styles/hub.css, con todos los selectores prefijados por
+ * `.hc-hub` para no chocar con Header/Footer ni con el resto del sitio.
+ */
+import '../../styles/hub.css';
+import type { HubData } from '../../lib/hubs/types';
+
+export interface Props {
+  data: HubData;
+}
+const { data } = Astro.props;
+
+const cases = data.cases?.items ?? [];
+const defaultCase = cases[0];
+const otherCases = cases.slice(1);
+---
+
+<div class="hc-hub">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Migas">
+      <a href="/">Inicio</a><span aria-hidden="true">›</span>
+      <a href={data.siloHref}>{data.silo}</a><span aria-hidden="true">›</span>
+      <span aria-current="page">{data.h1}</span>
+    </nav>
+
+    <header class="decision-hero">
+      <div class="hero-copy">
+        <p class="eyebrow">{data.eyebrow}</p>
+        <h1>{data.h1}</h1>
+        <p class="lede">{data.lede}</p>
+        <p class="stamp">
+          {data.stamps.map((s, i) => (
+            <>
+              {i > 0 && <span class="dot"></span>}
+              <span>{s}</span>
+            </>
+          ))}
+        </p>
+      </div>
+      <aside class="live-result" aria-live="polite">
+        <figure class="money-illustration" aria-hidden="true">
+          <svg viewBox="0 0 96 96" role="img">
+            <path class="paper" stroke-width="3" d="M23 10h43l12 13v58c0 4-3 7-7 7H23c-4 0-7-3-7-7V17c0-4 3-7 7-7Z"/>
+            <path class="paper" stroke-width="3" d="M66 10v14h12"/>
+            <path class="line" stroke-width="4" d="M29 34h31M29 46h22M29 58h17"/>
+            <circle class="coin" cx="68" cy="68" r="16" stroke-width="3"/>
+            <path class="line" stroke="#7d5208" stroke-width="3" d="M68 59v18M73 62c-2-3-11-3-11 2 0 6 12 2 12 8 0 5-9 6-13 2"/>
+            <path class="line" stroke-width="3" d="M9 30h-5M12 20l-4-4M84 39h7M83 30l5-5"/>
+          </svg>
+        </figure>
+        <p class="res-lbl">{data.resultLabel}</p>
+        <p class="res-val" id="total">$0</p>
+        <p class="res-sub" id="sub"></p>
+        <div class="result-status"><span class="pulse"></span>Se actualiza mientras completás tus datos</div>
+      </aside>
+    </header>
+
+    <main class="journey">
+      {data.cases && (
+        <section class="panel case-panel">
+          <div class="panel-head">
+            <p class="panel-kicker">Tu caso</p>
+            <h2 id="case-title">{data.cases.title}</h2>
+            <p class="panel-intro">{data.cases.intro}</p>
+          </div>
+          <button class="case-default" id="default-case" type="button" aria-selected="true">
+            <span><b>{defaultCase.label}</b><span>{defaultCase.hint}</span></span>
+            <span class="case-radio" aria-hidden="true"></span>
+          </button>
+          {/* open a propósito: expone las ramas al usuario y a los buscadores */}
+          <details class="other-cases" open>
+            <summary>Mi caso es otro</summary>
+            <div class="picker" role="tablist" aria-label={data.cases.title} id="picker">
+              {otherCases.map((c) => (
+                <button class="opt" type="button" role="tab" data-case={c.id} aria-selected="false">
+                  <b>{c.label}</b><span>{c.hint}</span>
+                </button>
+              ))}
+            </div>
+          </details>
+        </section>
+      )}
+
+      <section class="panel input-panel">
+        <div class="panel-head">
+          <p class="panel-kicker">Afiná la estimación</p>
+          <h2>{data.inputsTitle}</h2>
+          <p class="panel-intro">{data.inputsIntro}</p>
+        </div>
+        <span id="calc-name" hidden>{defaultCase?.label ?? data.h1}</span>
+        <div class="fields">
+          {data.fields.map((f) => (
+            <div class="f">
+              <label for={f.id}>{f.label}</label>
+              <div class="f-in">
+                {f.prefix && <span class="pre">{f.prefix}</span>}
+                {f.type === 'select' ? (
+                  <select id={f.id} data-field data-thousands={f.thousands ? '1' : null}>
+                    {f.options?.map((o) => (
+                      <option value={o.value} selected={String(f.value) === o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    id={f.id}
+                    data-field
+                    data-thousands={f.thousands ? '1' : null}
+                    type={f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text'}
+                    inputmode={f.thousands ? 'numeric' : undefined}
+                    min={f.min}
+                    max={f.max}
+                    step={f.step}
+                    value={String(f.value)}
+                  />
+                )}
+                {f.suffix && <span class="pre">{f.suffix}</span>}
+              </div>
+              {/* El contrato declara `help` desde el día 1 pero no se imprimía:
+                  todos los hubs venían escribiendo ayuda invisible. */}
+              {f.help && <p class="f-help">{f.help}</p>}
+            </div>
+          ))}
+        </div>
+        <div class="calc-go"><button class="btn" id="go" type="button">Actualizar estimación</button></div>
+        <p class="fineprint">{data.fineprint}</p>
+      </section>
+
+      <section class="panel result-panel">
+        <div class="panel-head">
+          <p class="panel-kicker">Cómo se forma el total</p>
+          <h2>{data.breakdownTitle}</h2>
+          <p class="panel-intro">{data.breakdownIntro}</p>
+        </div>
+        <p class="breakdown-note">{data.chart.caption}</p>
+        <div class="result-viz" data-chart={data.chart.type} aria-label={data.chart.title ?? 'Composición del resultado'}>
+          <div class="donut" id="result-donut" role="img" aria-label="Sin datos calculados">
+            <div class="donut-center"><b id="donut-center">$0</b><span>Total</span></div>
+          </div>
+          <ul class="viz-legend" id="viz-legend"></ul>
+        </div>
+        <div class="breakdown" id="breakdown"></div>
+      </section>
+
+      <section class="panel context-panel">
+        <div class="panel-head">
+          <p class="panel-kicker">Respuesta rápida</p>
+          <h2>Qué te corresponde</h2>
+        </div>
+        <div class="answer-strip">
+          <b id="answer-title">{defaultCase?.answer ?? data.answer?.title}</b>
+          <span id="answer-copy">{defaultCase?.yes[0] ?? data.answer?.copy}</span>
+        </div>
+        <div class="legal">
+          <div class="lcard yes"><h3>Entra en el cálculo</h3><ul id="yes-list"></ul></div>
+          <div class="lcard warn"><h3>Ojo con esto</h3><ul id="warn-list"></ul></div>
+        </div>
+        <p class="plazo"><b>Plazo:</b> <span id="plazo"></span></p>
+      </section>
+    </main>
+
+    <section class="support">
+      <div class="support-grid">
+        <div>
+          <h2>Preguntas frecuentes</h2>
+          <div class="faq">
+            {data.faq.map((f, i) => (
+              <details open={i === 0}>
+                <summary>{f.q}</summary>
+                <p set:html={f.a} />
+              </details>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h2>Fuentes</h2>
+          <div class="src">
+            {data.sources.map((s) => (
+              <a href={s.url} rel="nofollow noopener" target="_blank">
+                {s.name}
+                {(s.publisher || s.date) && (
+                  <small>{[s.publisher, s.date].filter(Boolean).join(' · ')}</small>
+                )}
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script is:inline define:vars={{ CASES: cases, HAS_CASES: !!data.cases }}>
+  (function () {
+    const $ = (id) => document.getElementById(id);
+    const ars = (n) => '$' + Math.round(n || 0).toLocaleString('es-AR');
+    const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, '')) || 0;
+
+    let current = HAS_CASES ? CASES[0] : null;
+    let computeFn = null;
+
+    /** Valores de los campos, ya parseados. */
+    function values() {
+      const out = {};
+      document.querySelectorAll('[data-field]').forEach((el) => {
+        out[el.id] = el.dataset.thousands || el.type === 'number' ? num(el.value) : el.value;
+      });
+      return out;
+    }
+
+    const TONES = {
+      main: 'var(--hc-blue)', exit: 'var(--hc-good)', prop: '#f4b942',
+      good: 'var(--hc-good)', warn: 'var(--hc-attn)', bad: '#c0392b',
+    };
+
+    /**
+     * Formatea un número según el hub. La mayoría son plata, pero los de
+     * fechas, salud o conversores devuelven cantidades: si les ponés "$"
+     * adelante la página miente.
+     */
+    function fmt(n, o) {
+      const dec = (o && o.decimals) || 0;
+      const val = Number(n || 0).toLocaleString('es-AR', {
+        minimumFractionDigits: dec, maximumFractionDigits: dec,
+      });
+      const f = (o && o.format) || 'ars';
+      if (f === 'ars') return '$' + val;
+      if (f === 'unit' && o && o.unit) return val + ' ' + o.unit;
+      return val;
+    }
+
+    function paint(res) {
+      if (!res) return;
+      // Formato por defecto del resultado; cada fila puede pisarlo.
+      const base = { format: res.format, unit: res.unit, decimals: res.decimals };
+      const f = (v, over) => fmt(v, Object.assign({}, base, over || {}));
+      const totalEl = $('total');
+      totalEl.textContent = res.total;
+      totalEl.style.setProperty('--amount-len', Math.max(7, res.total.length));
+      $('sub').textContent = res.sub || '';
+
+      // --- gráfico ---
+      // El tipo lo declara el hub en chart.type y viaja en data-chart. Un donut
+      // sirve para composición; para "dónde caigo yo" (IMC, semana de embarazo,
+      // tramo de Ganancias) hace falta una barra con posición marcada.
+      const viz = document.querySelector('.result-viz');
+      const kind = viz.dataset.chart || 'donut';
+      const segs = res.chart || [];
+      const sum = segs.reduce((a, s) => a + (s.value || 0), 0);
+      const color = (s, i) => TONES[s.tone || ['main', 'exit', 'prop'][i % 3]];
+      const donut = $('result-donut');
+      const POSITIONAL = kind === 'scale' || kind === 'timeline' || kind === 'progress' || kind === 'steps';
+
+      viz.classList.toggle('is-positional', POSITIONAL);
+
+      if (POSITIONAL) {
+        // Barra horizontal con las franjas y un marcador en `position`.
+        const total = segs.reduce((a, s) => a + ((s.to ?? 0) - (s.from ?? 0)), 0);
+        const useRange = total > 0;
+        let acc = 0;
+        const parts = segs.map((s, i) => {
+          const w = useRange ? ((s.to - s.from) / total) * 100 : (sum ? (s.value / sum) * 100 : 100 / segs.length);
+          const from = acc; acc += w;
+          return `${color(s, i)} ${from}% ${acc}%`;
+        });
+        donut.style.background = parts.length ? `linear-gradient(90deg, ${parts.join(',')})` : 'var(--hc-rule)';
+        donut.style.setProperty('--pos', Math.min(100, Math.max(0, res.position ?? 0)) + '%');
+        donut.dataset.poslabel = res.positionLabel || '';
+      } else {
+        let acc = 0;
+        const stops = segs.map((s, i) => {
+          const from = acc;
+          acc += sum ? (s.value / sum) * 100 : 0;
+          return `${color(s, i)} ${from}% ${acc}%`;
+        });
+        donut.style.background = stops.length ? `conic-gradient(${stops.join(',')})` : 'conic-gradient(var(--hc-rule) 0 100%)';
+      }
+
+      donut.setAttribute('aria-label',
+        res.positionLabel || segs.map((s) => `${s.label} ${sum ? Math.round(s.value / sum * 100) : 0}%`).join(', ') || 'Sin datos');
+      $('donut-center').textContent = res.total;
+
+      const legend = $('viz-legend');
+      legend.replaceChildren();
+      segs.forEach((s, i) => {
+        const li = document.createElement('li');
+        const dot = document.createElement('span');
+        dot.className = 'viz-dot';
+        dot.style.background = color(s, i);
+        const name = document.createElement('span');
+        name.className = 'viz-name';
+        name.textContent = s.label;
+        const val = document.createElement('span');
+        val.className = 'viz-value';
+        val.textContent = POSITIONAL && s.from != null ? `${s.from}–${s.to}` : f(s.value);
+        li.append(dot, name, val);
+        legend.appendChild(li);
+      });
+
+      // --- desglose ---
+      const bd = $('breakdown');
+      bd.replaceChildren();
+      const rows = res.rows || [];
+      const max = Math.max(...rows.map((r) => r.v), 1);
+      rows.forEach((r) => {
+        const w = r.v / max;
+        const d = document.createElement('div');
+        d.className = 'row' + (r.extra ? ' extra' : '') + (w >= 0.75 ? ' major' : w < 0.12 ? ' minor' : '');
+        d.style.setProperty('--share', Math.max(3, w * 100) + '%');
+        const k = document.createElement('span'); k.className = 'k'; k.textContent = r.k;
+        const v = document.createElement('span'); v.className = 'v';
+        v.textContent = f(r.v, { format: r.format, unit: r.unit, decimals: r.decimals });
+        if (r.ref) {
+          const a = document.createElement('span'); a.className = 'art'; a.textContent = r.ref;
+          d.append(k, a, v);
+        } else {
+          d.append(k, v);
+        }
+        bd.appendChild(d);
+      });
+    }
+
+    function run() {
+      if (computeFn) paint(computeFn(values(), current));
+    }
+
+    function fill(el, arr) {
+      el.replaceChildren();
+      (arr || []).forEach((t) => {
+        const li = document.createElement('li');
+        li.textContent = t;
+        el.appendChild(li);
+      });
+    }
+
+    function select(c) {
+      current = c;
+      $('default-case')?.setAttribute('aria-selected', c.id === CASES[0].id ? 'true' : 'false');
+      document.querySelectorAll('.opt').forEach((b) =>
+        b.setAttribute('aria-selected', b.dataset.case === c.id ? 'true' : 'false'));
+      fill($('yes-list'), c.yes);
+      fill($('warn-list'), c.warn);
+      $('plazo').textContent = c.plazo;
+      $('calc-name').textContent = c.label;
+      $('answer-title').textContent = c.answer;
+      $('answer-copy').textContent = c.yes[0] || '';
+      document.querySelector('.other-cases')?.classList.toggle('has-alt', c.id !== CASES[0].id);
+      run();
+    }
+
+    if (HAS_CASES) {
+      $('default-case')?.addEventListener('click', () => select(CASES[0]));
+      document.querySelectorAll('.opt').forEach((b) =>
+        b.addEventListener('click', () => select(CASES.find((c) => c.id === b.dataset.case))));
+      select(CASES[0]);
+    }
+
+    $('go').addEventListener('click', () => {
+      run();
+      document.querySelector('.result-panel').scrollIntoView({
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+        block: 'start',
+      });
+    });
+
+    document.querySelectorAll('[data-field]').forEach((el) => el.addEventListener('input', run));
+    document.querySelectorAll('[data-thousands]').forEach((el) =>
+      el.addEventListener('input', (e) => {
+        const v = num(e.target.value);
+        e.target.value = v ? v.toLocaleString('es-AR') : '';
+      }));
+
+    window.HC_HUB = {
+      onCompute(fn) { computeFn = fn; },
+      values, ars, num,
+      currentCase: () => current,
+    };
+
+    // Estado inicial deliberado: $0 hasta que el usuario aprieta el botón.
+    // Ver types.ts — es una decisión de producto, no un bug.
+    $('total').style.setProperty('--amount-len', 7);
+    $('sub').textContent = 'Actualizá la estimación para ver el resultado.';
+  })();
+</script>

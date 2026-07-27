@@ -1,0 +1,74 @@
+---
+/**
+ * Página de silo: lista los hubs de decisión de una vertical.
+ *
+ * Existe por dos motivos concretos:
+ *  1. Los breadcrumbs de los hubs apuntan acá. Sin esta página son un 404 y el
+ *     BreadcrumbList del JSON-LD queda roto en todas las páginas del silo.
+ *  2. Es el nodo que reparte link equity entre los hubs hermanos. Con ~250 URLs
+ *     en todo el sitio, home → silo → hub deja todo a dos clics.
+ *
+ * No lleva calculadora: es navegación y contexto. El contenido sale del
+ * registry, así que un hub nuevo aparece solo.
+ */
+import '../../styles/hub.css';
+import type { HubData } from '../../lib/hubs/types';
+
+export interface Props {
+  silo: string;
+  href: string;
+  /** Qué resuelve esta vertical, en una frase. */
+  lede: string;
+  hubs: HubData[];
+}
+const { silo, href, lede, hubs } = Astro.props;
+
+const totalCalcs = hubs.reduce((a, h) => a + (h.replaces?.length ?? 0), 0);
+---
+
+<div class="hc-hub">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Migas">
+      <a href="/">Inicio</a><span aria-hidden="true">›</span>
+      <span aria-current="page">{silo}</span>
+    </nav>
+
+    <header class="decision-hero">
+      <div class="hero-copy">
+        <p class="eyebrow">{silo}</p>
+        <h1>{silo}</h1>
+        <p class="lede">{lede}</p>
+        <p class="stamp">
+          <span>{hubs.length} {hubs.length === 1 ? 'herramienta' : 'herramientas'}</span>
+          <span class="dot"></span>
+          <span>{totalCalcs} calculadoras adentro</span>
+        </p>
+      </div>
+    </header>
+
+    <main class="journey">
+      <section class="panel case-panel" style="grid-column: 1 / -1;">
+        <div class="panel-head">
+          <p class="panel-kicker">Elegí tu pregunta</p>
+          <h2>¿Qué necesitás resolver?</h2>
+        </div>
+        <div class="picker">
+          {hubs.map((h) => (
+            <a class="opt" href={`/${h.slug}`}>
+              <b>{h.h1}</b>
+              <span>{h.replaces?.length ?? 0} calculadoras</span>
+            </a>
+          ))}
+        </div>
+        {hubs.length === 0 && (
+          <p class="fineprint">Todavía no hay herramientas publicadas en esta sección.</p>
+        )}
+      </section>
+    </main>
+  </div>
+</div>
+
+<style>
+  /* El selector de casos es un <button>; acá son links. Igual apariencia. */
+  .hc-hub .picker a.opt { text-decoration: none; }
+</style>

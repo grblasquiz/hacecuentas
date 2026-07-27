@@ -1,0 +1,101 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto sale construir una casa?"
+ * Reemplaza 7 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo: cálculo dominante (sin `cases`, con `answer`).
+ * El costo del m² NO está acá: se deriva de src/lib/formulas/costo-m2-construccion.ts
+ * (índice CAC / CPIC / ICC INDEC) dentro de src/lib/hubs/costo-por-m2.ts.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, M2, SHARES, MURO_ARS_M2 } from '../../lib/hubs/costo-por-m2';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ M2, SHARES, MURO_ARS_M2 }}>
+  (function () {
+    const H = window.HC_HUB;
+    const TONES = ['main', 'exit', 'prop', 'warn'];
+
+    H.onCompute(function (v) {
+      const cat = v.categoria || 'estandar';
+      const zona = v.zona || 'gba_sur';
+      const tabla = (M2[cat] || M2.estandar)[zona] || M2.estandar.gba_sur;
+
+      const cubiertos = Math.max(0, v.cubiertos || 0);
+      const semi = Math.max(0, v.semi || 0);
+      const computables = cubiertos + semi * 0.5;
+
+      const obra = tabla.ars * computables;
+
+      // Medianera: 3 m de altura estándar, la mitad la aporta el lindero.
+      const metros = Math.max(0, v.medianera || 0);
+      const miMitad = (metros * 3 * MURO_ARS_M2) / 2;
+
+      const rows = SHARES.map(function (s) {
+        return { k: s.label, ref: Math.round(s.share * 100) + '% de la obra', v: obra * s.share };
+      });
+      if (miMitad > 0) {
+        rows.push({ k: 'Tu mitad de la medianera', ref: 'CCyC art. 2014', v: miMitad, extra: true });
+      }
+
+      const total = obra + miMitad;
+      const cuotas = Math.max(1, v.cuotas || 1);
+
+      return {
+        total: H.ars(total),
+        sub:
+          computables.toLocaleString('es-AR') + ' m² computables · ' +
+          H.ars(tabla.ars) + '/m² (US$' + tabla.usd.toLocaleString('es-AR') + '/m²) · ' +
+          'unas ' + cuotas + ' cuotas de ' + H.ars(total / cuotas),
+        rows: rows,
+        chart: SHARES.map(function (s, i) {
+          return { label: s.label, value: obra * s.share, tone: TONES[i % TONES.length] };
+        }),
+      };
+    });
+  })();
+</script>

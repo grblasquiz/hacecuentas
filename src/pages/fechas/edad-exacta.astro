@@ -1,0 +1,168 @@
+---
+/**
+ * Hub de decisión — "¿Qué edad tengo exactamente?"
+ * Reemplaza 6 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo CÁLCULO DOMINANTE: sin `cases`, con `answer`.
+ * La página sólo aporta los datos (src/lib/hubs/edad-exacta.ts) y su compute().
+ * Todo el chrome, el CSS y el runtime viven en DecisionHub.astro y no se tocan.
+ *
+ * OJO formato: el runtime imprime cada valor del desglose con ars() (pesos).
+ * Acá los valores son CANTIDADES (meses, semanas, días, horas), no plata.
+ * Hasta que se extienda el contrato, la unidad viaja en el campo `ref`.
+ * Ver la nota larga en src/lib/hubs/edad-exacta.ts.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, DIAS_SEMANA } from '../../lib/hubs/edad-exacta';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ DIAS: DIAS_SEMANA }}>
+  (function () {
+    const H = window.HC_HUB;
+    const MS_DIA = 86400000;
+
+    H.onCompute(function (v) {
+      // --- entrada -----------------------------------------------------------
+      const parts = String(v.nacimiento || '').split('-').map(Number);
+      if (parts.length !== 3 || parts.some(isNaN)) {
+        return { total: '—', sub: 'Cargá una fecha de nacimiento válida.', rows: [], chart: [] };
+      }
+      const hora = Math.min(23, Math.max(0, Math.round(v.hora || 0)));
+      const [yy, mm, dd] = parts;
+      const nac = new Date(yy, mm - 1, dd, hora, 0, 0, 0);
+      if (isNaN(nac.getTime())) {
+        return { total: '—', sub: 'Fecha inválida.', rows: [], chart: [] };
+      }
+
+      const ahora = new Date();
+      if (nac > ahora) {
+        return { total: '—', sub: 'La fecha de nacimiento no puede ser futura.', rows: [], chart: [] };
+      }
+
+      const nacD = new Date(yy, mm - 1, dd);
+      const hoyD = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+
+      // --- años, meses y días cumplidos (método de calendario) ---------------
+      // Se cuenta por aniversario mensual con recorte al último día del mes
+      // (31-ene + 1 mes = 28-feb). El método ingenuo de "pedir prestados los días
+      // del mes anterior" da negativos cuando el día de nacimiento no existe en
+      // ese mes: nacido 31-12 visto un 1-3 daba "2 meses y -2 días".
+      const aniversario = function (n) {
+        const d = new Date(nacD.getFullYear(), nacD.getMonth() + n, 1);
+        const ultimo = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+        d.setDate(Math.min(nacD.getDate(), ultimo));
+        return d;
+      };
+      let mesesCumplidos =
+        (hoyD.getFullYear() - nacD.getFullYear()) * 12 + (hoyD.getMonth() - nacD.getMonth());
+      if (aniversario(mesesCumplidos) > hoyD) mesesCumplidos--;
+      const anios = Math.floor(mesesCumplidos / 12);
+      const meses = mesesCumplidos % 12;
+      const dias = Math.round((hoyD - aniversario(mesesCumplidos)) / MS_DIA);
+
+      // --- totales -----------------------------------------------------------
+      const diasTotal = Math.floor((hoyD - nacD) / MS_DIA);
+      const mesesTotal = anios * 12 + meses;
+      const semanas = Math.floor(diasTotal / 7);
+      const restoDias = diasTotal % 7;
+      const horasTotal = Math.floor((ahora - nac) / 3600000);
+
+      // --- próximo cumpleaños ------------------------------------------------
+      let prox = new Date(hoyD.getFullYear(), nacD.getMonth(), nacD.getDate());
+      if (prox < hoyD) prox = new Date(hoyD.getFullYear() + 1, nacD.getMonth(), nacD.getDate());
+      let ultimo = new Date(hoyD.getFullYear(), nacD.getMonth(), nacD.getDate());
+      if (ultimo > hoyD) ultimo = new Date(hoyD.getFullYear() - 1, nacD.getMonth(), nacD.getDate());
+
+      const faltan = Math.round((prox - hoyD) / MS_DIA);
+      const transcurridos = Math.round((hoyD - ultimo) / MS_DIA);
+      const largoAnio = Math.round((prox - ultimo) / MS_DIA) || 365;
+      const pct = Math.min(100, Math.max(0, (transcurridos / largoAnio) * 100));
+      const cumpleQue = anios + 1;
+
+      const diaNac = DIAS[nacD.getDay()];
+
+      // Los valores de estas filas son CANTIDADES, no pesos: cada fila declara
+      // su propio `format: 'unit'` + `unit`. `ref` queda libre para referencias.
+      const U = function (k, unit, v, extra) {
+        return { k: k, v: v, format: 'unit', unit: unit, extra: !!extra };
+      };
+      const rows = [
+        U('Años cumplidos', 'años', anios, true),
+        U('Meses sueltos además de los años', 'meses', meses),
+        U('Días sueltos además de los meses', 'días', dias),
+        U('Edad total en meses', 'meses', mesesTotal),
+        U('Edad total en semanas', 'semanas', semanas),
+        U('Edad total en días', 'días', diasTotal),
+        U('Edad total en horas', 'horas', horasTotal),
+        U('Días para tu próximo cumpleaños', 'días', faltan),
+      ];
+
+      return {
+        total: anios + (anios === 1 ? ' año' : ' años'),
+        sub:
+          anios + ' años, ' + meses + (meses === 1 ? ' mes y ' : ' meses y ') +
+          dias + (dias === 1 ? ' día' : ' días') +
+          ' · ' + semanas.toLocaleString('es-AR') + ' semanas y ' + restoDias +
+          (restoDias === 1 ? ' día' : ' días') +
+          ' · naciste un ' + diaNac,
+        rows: rows,
+        format: 'unit',
+        unit: 'días',
+        decimals: 0,
+        chart: [
+          { label: 'Transcurrido desde tu último cumpleaños', value: transcurridos, tone: 'main' },
+          { label: 'Falta para el próximo', value: faltan, tone: 'good' },
+        ],
+        position: pct,
+        positionLabel:
+          faltan === 0
+            ? '¡Hoy cumplís ' + anios + '! Año completo.'
+            : 'Faltan ' + faltan + (faltan === 1 ? ' día' : ' días') + ' para tus ' + cumpleQue,
+      };
+    });
+  })();
+</script>

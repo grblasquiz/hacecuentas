@@ -1,0 +1,340 @@
+---
+/**
+ * Hub de decisión — "¿Está bien el peso y la altura de mi hijo?"
+ * Arquetipo RAMIFICADO. Absorbe 7 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/crecimiento-infantil.ts) y su
+ * compute(). Todo el chrome, el CSS y el runtime viven en DecisionHub.astro y
+ * no se tocan.
+ *
+ * YMYL de salud infantil: el hub informa percentiles y remite al pediatra.
+ * No hay consejo clínico en ninguna rama. El aviso médico (dominio `health` de
+ * src/lib/disclaimers.ts) viaja en hub.fineprint.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, BMI_LMS, WFA_LMS, PCT_ADULTO, BANDS, BAND_TONES, MOCHILA_MAX } from '../../lib/hubs/crecimiento-infantil';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ BMI_LMS, WFA_LMS, PCT_ADULTO, BANDS, BAND_TONES, MOCHILA_MAX }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Acá los números son kg, cm y percentiles: formateo local, no pesos.
+    const dec = (n, d) => (Math.round(n * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d).replace('.', ',');
+
+    // CDF normal estándar — Abramowitz & Stegun 26.2.17 (error < 7,5e-8).
+    function normalCdf(z) {
+      if (z > 8) return 1;
+      if (z < -8) return 0;
+      const t = 1 / (1 + 0.2316419 * Math.abs(z));
+      const phi = 0.39894228 * Math.exp(-z * z / 2) *
+        (t * (0.31938153 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429)))));
+      return z >= 0 ? 1 - phi : phi;
+    }
+
+    // Interpolación lineal en una tabla LMS [x, L, M, S] ordenada por x.
+    function lookupLMS(table, x) {
+      const clamped = Math.max(table[0][0], Math.min(table[table.length - 1][0], x));
+      let lo = 0, hi = table.length - 1;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (table[mid][0] < clamped) lo = mid + 1; else hi = mid;
+      }
+      if (table[lo][0] === clamped || lo === 0) return { L: table[lo][1], M: table[lo][2], S: table[lo][3] };
+      const a = table[lo - 1], b = table[lo];
+      const f = (clamped - a[0]) / (b[0] - a[0]);
+      return { L: a[1] + f * (b[1] - a[1]), M: a[2] + f * (b[2] - a[2]), S: a[3] + f * (b[3] - a[3]) };
+    }
+
+    /** Z-score por la fórmula LMS estándar (CDC / OMS). */
+    function zLMS(valor, lms) {
+      return Math.abs(lms.L) < 1e-9
+        ? Math.log(valor / lms.M) / lms.S
+        : (Math.pow(valor / lms.M, lms.L) - 1) / (lms.L * lms.S);
+    }
+
+    /** Valor que corresponde a un Z dado (inversa de la LMS): para P3, P85, P97. */
+    function valorEnZ(z, lms) {
+      return Math.abs(lms.L) < 1e-9
+        ? lms.M * Math.exp(lms.S * z)
+        : lms.M * Math.pow(1 + lms.L * lms.S * z, 1 / lms.L);
+    }
+
+    const Z_P3 = -1.880794, Z_P85 = 1.036433, Z_P97 = 1.880794;
+
+    function franja(p) {
+      if (p < 3) return 0;
+      if (p < 85) return 1;
+      if (p < 97) return 2;
+      return 3;
+    }
+
+    /** Las 4 franjas de percentil como segmentos del gráfico. */
+    function bandasChart() {
+      return BANDS.map((b, i) => ({ label: b.label, value: b.to - b.from, tone: BAND_TONES[i] }));
+    }
+
+    function lecturaPercentil(p) {
+      const f = franja(p);
+      if (f === 0) return 'por debajo del P3 — conviene consultarlo con el pediatra';
+      if (f === 1) return 'dentro de lo esperado (P3–P85)';
+      if (f === 2) return 'en la franja de sobrepeso (P85–P97) — vale revisarlo en el control';
+      return 'por encima del P97 — conviene consultarlo con el pediatra';
+    }
+
+    H.onCompute(function (v, kase) {
+      const caso = (kase && kase.id) || 'imc';
+      const sexo = String(v.sexo || 'm') === 'f' ? 'f' : 'm';
+      const edad = Number(v.edad) || 0;
+      const peso = Number(v.peso) || 0;
+      const talla = Number(v.talla) || 0;
+      const nene = sexo === 'f' ? 'la nena' : 'el nene';
+
+      // ───────── Rama 3: cuánto va a medir de grande ─────────
+      if (caso === 'talla-adulta') {
+        const padre = Number(v.alturaPadre) || 0;
+        const madre = Number(v.alturaMadre) || 0;
+        if (padre < 130 || madre < 130) {
+          return { total: '—', sub: 'Cargá la altura de los dos padres (en cm).', rows: [], chart: [] };
+        }
+        // Talla diana familiar — Tanner 1970.
+        const diana = (padre + madre + (sexo === 'f' ? -13 : 13)) / 2;
+        const dianaMin = diana - 8.5, dianaMax = diana + 8.5;
+
+        // Proyección desde la talla actual: % de talla adulta alcanzado a esa edad.
+        const tabla = PCT_ADULTO[sexo];
+        const edadEnt = Math.max(8, Math.min(18, Math.round(edad)));
+        const pct = tabla[edadEnt];
+        const hayProyeccion = edad >= 8 && talla >= 80;
+        const proyectada = hayProyeccion ? (talla / pct) * 100 : 0;
+        const central = hayProyeccion ? (diana + proyectada) / 2 : diana;
+        const falta = Math.max(0, central - talla);
+
+        const CM = { format: 'unit', unit: 'cm', decimals: 1 };
+        const rows = [
+          Object.assign({ k: 'Talla diana familiar', ref: 'Tanner 1970', v: Number(diana.toFixed(1)), extra: true }, CM),
+          Object.assign({ k: 'Piso del rango probable (−8,5 cm)', ref: 'Tanner 1970', v: Number(dianaMin.toFixed(1)) }, CM),
+          Object.assign({ k: 'Techo del rango probable (+8,5 cm)', ref: 'Tanner 1970', v: Number(dianaMax.toFixed(1)) }, CM),
+        ];
+        if (hayProyeccion) {
+          rows.push(Object.assign({ k: 'Proyección desde la talla actual (' + edadEnt + ' años, ' + pct + '% ya alcanzado)', ref: 'WHO 5-19 / Bayley-Pinneau', v: Number(proyectada.toFixed(1)) }, CM));
+          rows.push(Object.assign({ k: 'Estimación central de los dos métodos', v: Number(central.toFixed(1)), extra: true }, CM));
+        }
+        rows.push(Object.assign({ k: 'Talla actual', v: Number(talla.toFixed(1)) }, CM));
+        if (falta > 0) rows.push(Object.assign({ k: 'Centímetros que le faltarían', v: Number(falta.toFixed(1)) }, CM));
+
+        const alcanzado = central > 0 ? Math.max(0, Math.min(100, (talla / central) * 100)) : 0;
+        return {
+          total: '≈ ' + dec(central, 0) + ' cm',
+          sub:
+            'Rango probable ' + dec(dianaMin, 0) + '–' + dec(dianaMax, 0) + ' cm (±8,5 cm, cubre al 95% de los casos)' +
+            (hayProyeccion ? ' · proyección por edad: ' + dec(proyectada, 0) + ' cm' : ' · desde los 8 años se suma la proyección por talla actual') +
+            ' · es una estimación estadística, no una predicción individual.',
+          rows: rows,
+          chart: [
+            { label: 'Talla ya alcanzada', value: Number(talla.toFixed(1)), tone: 'good' },
+            { label: 'Le faltaría crecer', value: Number(falta.toFixed(1)), tone: 'prop' },
+          ],
+          format: 'unit',
+          unit: 'cm',
+          decimals: 1,
+          position: Number(alcanzado.toFixed(1)),
+          positionLabel: 'Ya alcanzó el ' + dec(alcanzado, 0) + '% de su talla adulta estimada',
+        };
+      }
+
+      // ───────── Rama 4: mochila escolar ─────────
+      if (caso === 'mochila') {
+        if (peso <= 0) return { total: '—', sub: 'Cargá el peso del chico o la chica.', rows: [], chart: [] };
+        const tramo = MOCHILA_MAX.find((t) => edad <= t.hasta) || MOCHILA_MAX[MOCHILA_MAX.length - 1];
+        const ideal = peso * tramo.ideal;
+        const absoluto = peso * tramo.absoluto;
+        const vacia = 0.5; // mochila liviana vacía, kg
+        const margen = Math.max(0, ideal - vacia);
+        const actual = Number(v.mochila) || 0;
+
+        const KG = { format: 'unit', unit: 'kg', decimals: 1 };
+        const rows = [
+          Object.assign({ k: 'Límite ideal (10% del peso corporal)', v: Number(ideal.toFixed(1)), extra: true }, KG),
+          Object.assign({ k: 'Máximo absoluto para ' + dec(edad, 0) + ' años (' + Math.round(tramo.absoluto * 100) + '%)', v: Number(absoluto.toFixed(1)) }, KG),
+          Object.assign({ k: 'Margen para útiles (descontando ~0,5 kg de mochila vacía)', v: Number(margen.toFixed(1)) }, KG),
+        ];
+        if (actual > 0) {
+          rows.push(Object.assign({ k: 'Lo que pesa hoy la mochila cargada', v: Number(actual.toFixed(1)) }, KG));
+          rows.push(Object.assign({ k: 'Diferencia contra el límite ideal (' + (actual > ideal ? 'de más' : 'de margen') + ')', v: Number(Math.abs(actual - ideal).toFixed(1)), extra: true }, KG));
+        }
+
+        const pctPeso = peso > 0 && actual > 0 ? (actual / peso) * 100 : 0;
+        const estado = actual === 0
+          ? 'cargá el peso de la mochila para compararlo'
+          : actual <= ideal ? 'la mochila está dentro del límite ideal'
+          : actual <= absoluto ? 'pasa el límite ideal pero está por debajo del máximo absoluto'
+          : 'supera el máximo absoluto para la edad';
+        const picoCrec = edad >= 10 && edad <= 14
+          ? ' · entre los 10 y 14 años la columna está en pico de crecimiento: conviene ajustarse al 10%'
+          : '';
+
+        return {
+          total: dec(ideal, 1) + ' kg',
+          sub: 'Límite ideal para ' + dec(peso, 1) + ' kg de peso corporal · máximo absoluto ' + dec(absoluto, 1) + ' kg · ' + estado + picoCrec,
+          rows: rows,
+          chart: [
+            { label: 'Peso de la mochila hoy', value: Number(actual.toFixed(1)), tone: actual > ideal ? 'warn' : 'good' },
+            { label: 'Margen hasta el límite ideal', value: Number(Math.max(0, ideal - actual).toFixed(1)), tone: 'prop' },
+          ],
+          format: 'unit',
+          unit: 'kg',
+          decimals: 1,
+          position: Number(Math.max(0, Math.min(100, (pctPeso / 15) * 100)).toFixed(1)),
+          positionLabel: actual > 0
+            ? 'La mochila es el ' + dec(pctPeso, 1) + '% de su peso corporal (ideal: hasta 10%)'
+            : 'Límite ideal ' + dec(ideal, 1) + ' kg',
+        };
+      }
+
+      // ───────── Rama 2: percentiles de crecimiento (peso y talla) ─────────
+      if (caso === 'percentiles') {
+        if (peso <= 0) return { total: '—', sub: 'Cargá el peso del chico o la chica.', rows: [], chart: [] };
+
+        const KG = { format: 'unit', unit: 'kg', decimals: 1 };
+        const IMCU = { format: 'unit', unit: 'kg/m²', decimals: 1 };
+        const CM = { format: 'unit', unit: 'cm', decimals: 1 };
+        const rows = [];
+        let percentil, subExtra, refTabla;
+
+        if (edad <= 5) {
+          // Peso para la edad — tablas LMS OMS 2006 (0 a 60 meses).
+          const meses = Math.max(0, Math.min(60, edad * 12));
+          const lms = lookupLMS(WFA_LMS[sexo], meses);
+          percentil = normalCdf(zLMS(peso, lms)) * 100;
+          refTabla = 'peso para la edad · OMS 2006';
+          rows.push(Object.assign({ k: 'Peso actual', v: Number(peso.toFixed(1)) }, KG));
+          rows.push(Object.assign({ k: 'Peso de la mediana (P50) a los ' + dec(meses, 0) + ' meses', ref: 'OMS 2006', v: Number(lms.M.toFixed(1)) }, KG));
+          rows.push(Object.assign({ k: 'Piso del rango esperado (P3)', ref: 'OMS 2006', v: Number(valorEnZ(Z_P3, lms).toFixed(1)) }, KG));
+          rows.push(Object.assign({ k: 'Techo del rango esperado (P97)', ref: 'OMS 2006', v: Number(valorEnZ(Z_P97, lms).toFixed(1)) }, KG));
+          subExtra = 'Peso para la edad con las curvas OMS 2006 (0 a 5 años)';
+        } else {
+          // Después de los 5 el indicador válido es IMC para la edad (CDC 2000).
+          if (talla <= 0) return { total: '—', sub: 'Cargá la talla para leer el IMC para la edad.', rows: [], chart: [] };
+          const imc = peso / Math.pow(talla / 100, 2);
+          const lms = lookupLMS(BMI_LMS[sexo], Math.min(240, edad * 12));
+          percentil = normalCdf(zLMS(imc, lms)) * 100;
+          refTabla = 'IMC para la edad · CDC 2000';
+          rows.push(Object.assign({ k: 'IMC actual', v: Number(imc.toFixed(1)) }, IMCU));
+          rows.push(Object.assign({ k: 'IMC de la mediana (P50) para la edad', ref: 'CDC 2000', v: Number(lms.M.toFixed(1)) }, IMCU));
+          rows.push(Object.assign({ k: 'Peso actual', v: Number(peso.toFixed(1)) }, KG));
+          rows.push(Object.assign({ k: 'Talla actual', v: Number(talla.toFixed(1)) }, CM));
+          subExtra = 'Después de los 5 años el peso para la edad deja de ser el indicador de referencia: se lee IMC para la edad';
+        }
+
+        // Lectura de la talla contra la talla adulta proyectada (no es un percentil).
+        if (edad >= 8 && talla >= 80) {
+          const pct = PCT_ADULTO[sexo][Math.max(8, Math.min(18, Math.round(edad)))];
+          rows.push(Object.assign({ k: 'Talla adulta proyectada desde la talla actual (' + pct + '% ya alcanzado)', ref: 'WHO 5-19 / Bayley-Pinneau', v: Number(((talla / pct) * 100).toFixed(1)) }, CM));
+        }
+
+        const p = Math.max(0, Math.min(100, percentil));
+        rows.push({ k: 'Percentil que resulta (P' + dec(p, 0) + ')', ref: refTabla, v: Number(p.toFixed(1)), extra: true, format: 'plain', decimals: 1 });
+
+        return {
+          total: 'Percentil ' + dec(p, 0),
+          sub: subExtra + ' · ' + lecturaPercentil(p) + ' · lo que se evalúa en el control es la curva completa, no un punto suelto.',
+          rows: rows,
+          chart: bandasChart(),
+          format: 'plain',
+          decimals: 1,
+          position: Number(p.toFixed(1)),
+          positionLabel: 'Percentil ' + dec(p, 0) + ' — ' + lecturaPercentil(p) + ' (' + refTabla + ')',
+        };
+      }
+
+      // ───────── Rama 1 (default): IMC infantil por percentil ─────────
+      if (peso <= 0 || talla <= 0) {
+        return { total: '—', sub: 'Cargá el peso y la talla.', rows: [], chart: [] };
+      }
+      if (edad < 2) {
+        return {
+          total: '—',
+          sub: 'El IMC para la edad no se usa en menores de 2 años: en esa etapa el indicador es peso para la talla. Cambiá a la rama de percentiles de crecimiento.',
+          rows: [],
+          chart: [],
+        };
+      }
+
+      const imc = peso / Math.pow(talla / 100, 2);
+      const lms = lookupLMS(BMI_LMS[sexo], Math.min(240, edad * 12));
+      const z = zLMS(imc, lms);
+      const p = Math.max(0, Math.min(100, normalCdf(z) * 100));
+
+      const IMCU = { format: 'unit', unit: 'kg/m²', decimals: 1 };
+      const rows = [
+        Object.assign({ k: 'IMC del chico o la chica', v: Number(imc.toFixed(1)), extra: true }, IMCU),
+        Object.assign({ k: 'IMC de la mediana (P50) para la edad', ref: 'CDC 2000', v: Number(lms.M.toFixed(1)) }, IMCU),
+        Object.assign({ k: 'IMC del P3 (piso del rango esperado)', ref: 'CDC 2000', v: Number(valorEnZ(Z_P3, lms).toFixed(1)) }, IMCU),
+        Object.assign({ k: 'IMC del P85 (umbral de sobrepeso)', ref: 'CDC 2000', v: Number(valorEnZ(Z_P85, lms).toFixed(1)) }, IMCU),
+        Object.assign({ k: 'IMC del P97 (umbral de obesidad)', ref: 'CDC 2000', v: Number(valorEnZ(Z_P97, lms).toFixed(1)) }, IMCU),
+        { k: 'Percentil que resulta (P' + dec(p, 0) + ')', ref: 'CDC 2000 · franjas OMS', v: Number(p.toFixed(1)), extra: true, format: 'plain', decimals: 1 },
+      ];
+
+      const etiquetas = ['bajo peso para la edad', 'dentro de lo esperado', 'sobrepeso para la edad', 'obesidad para la edad'];
+      const etiqueta = etiquetas[franja(p)];
+
+      return {
+        total: 'Percentil ' + dec(p, 0),
+        sub:
+          'IMC ' + dec(imc, 1) + ' kg/m² · ' + nene + ' de ' + dec(edad, 0) + ' años · ' + lecturaPercentil(p) +
+          ' · Z-score ' + dec(z, 2) + ' (tablas LMS del CDC 2000, franjas OMS).',
+        rows: rows,
+        chart: bandasChart(),
+        format: 'plain',
+        decimals: 1,
+        position: Number(p.toFixed(1)),
+        positionLabel: 'Percentil ' + dec(p, 0) + ' — ' + etiqueta,
+      };
+    });
+  })();
+</script>

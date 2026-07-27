@@ -1,0 +1,224 @@
+---
+/**
+ * Hub de decisión — "¿Cuántas palabras tiene mi trabajo?"
+ * Reemplaza 9 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta datos (src/lib/hubs/contador-de-palabras.ts) y su
+ * compute(). Todo el chrome, el CSS y el runtime viven en DecisionHub.astro y
+ * no se tocan. Las dos limitaciones del contrato que encontró este hub
+ * (falta `type: 'textarea'` y el formateo forzado a pesos) están documentadas
+ * arriba del archivo de datos.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, PPG_BASE, LECTURA } from '../../lib/hubs/contador-de-palabras';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ PPG_BASE, LECTURA }}>
+  (function () {
+    const H = window.HC_HUB;
+    const nf = (n) => Math.round(n).toLocaleString('es-AR');
+
+    /** Minutos → texto corto ("45 min", "1 h 20 min"). */
+    function dur(min) {
+      if (!isFinite(min) || min <= 0) return '0 min';
+      if (min < 1) return Math.max(1, Math.round(min * 60)) + ' seg';
+      const t = Math.round(min);
+      if (t < 60) return t + ' min';
+      const h = Math.floor(t / 60), m = t % 60;
+      return m === 0 ? h + ' h' : h + ' h ' + m + ' min';
+    }
+
+    /** Sílabas aproximadas en español: grupos de vocales contiguas, mínimo 1 por palabra. */
+    function silabas(palabra) {
+      const g = palabra.toLowerCase().match(/[aeiouáéíóúüy]+/g);
+      return g && g.length ? g.length : 1;
+    }
+
+    H.onCompute(function (v) {
+      const texto = typeof v.texto === 'string' ? v.texto : String(v.texto == null ? '' : v.texto);
+      const objetivo = Math.max(0, v.objetivo || 0);
+      const interlineado = typeof v.interlineado === 'string' ? v.interlineado : 'doble';
+      const tamano = v.tamano || 12;
+      const wpm = v.wpm || 40;
+
+      // --- conteos base (mismo criterio que la calculadora absorbida) ---
+      const listaPalabras = texto.trim() === '' ? [] : texto.trim().split(/\s+/).filter(Boolean);
+      const palabras = listaPalabras.length;
+      const conEspacios = texto.length;
+      const sinEspacios = texto.replace(/\s/g, '').length;
+
+      const trozos = texto.split(/[.!?…]+/).map((s) => s.trim()).filter(Boolean);
+      let oraciones = trozos.length;
+      if (oraciones === 0 && texto.trim() !== '') oraciones = 1;
+
+      // El parche de abajo (swap a <textarea>) preserva los saltos de línea del
+      // pegado, así que esto ya cuenta párrafos de verdad.
+      let parrafos;
+      if (texto.trim() === '') parrafos = 0;
+      else if (/\n\s*\n/.test(texto)) parrafos = texto.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean).length;
+      else parrafos = texto.split(/\n/).map((l) => l.trim()).filter(Boolean).length || 1;
+
+      // --- páginas según formato (250/375/500 a 12 pt, reescalado por tamaño) ---
+      const ppg = (PPG_BASE[interlineado] || 250) * (12 / tamano);
+      const paginas = palabras / ppg;
+      const paginasObjetivo = objetivo / ppg;
+
+      // --- tiempos ---
+      const minSilencio = palabras / LECTURA.silencio;
+      const minVozAlta = palabras / LECTURA.vozAlta;
+      const faltan = Math.max(0, objetivo - palabras);
+      const minTipeo = faltan / Math.max(1, wpm);
+
+      // --- legibilidad (Fernández Huerta, Flesch adaptado al español) ---
+      let ilfh = 0, palPorOracion = 0, silPorPalabra = 0;
+      if (palabras > 0 && oraciones > 0) {
+        const totalSilabas = listaPalabras.reduce((a, p) => a + silabas(p), 0);
+        palPorOracion = palabras / oraciones;
+        silPorPalabra = totalSilabas / palabras;
+        ilfh = 206.84 - 60 * silPorPalabra - 1.02 * palPorOracion;
+      }
+      const nivel =
+        ilfh >= 90 ? 'muy fácil' : ilfh >= 80 ? 'fácil' : ilfh >= 70 ? 'bastante fácil'
+        : ilfh >= 60 ? 'normal' : ilfh >= 50 ? 'algo difícil' : ilfh >= 30 ? 'difícil' : 'muy difícil';
+
+      // --- bibliografía sugerida (~1 fuente por página del cuerpo) ---
+      const fuentes = Math.max(0, Math.round(paginasObjetivo || paginas));
+
+      // Acá NINGÚN valor es plata: son palabras, caracteres, párrafos, páginas y
+      // minutos. Por eso cada fila declara format:'unit' + unit + decimals, que
+      // el contrato ya soporta (HubRow.format/unit/decimals). Se explicita fila
+      // por fila porque el runtime hace Object.assign sobre el formato base: una
+      // clave ausente viaja como undefined y no heredaría el default del result.
+      const U = (unit, decimals) => ({ format: 'unit', unit: unit, decimals: decimals || 0 });
+      const rows = [
+        { k: 'Palabras', v: palabras, extra: true, ...U('palabras') },
+        { k: 'Caracteres con espacios', v: conEspacios, ...U('caracteres') },
+        { k: 'Caracteres sin espacios', v: sinEspacios, ...U('caracteres') },
+        { k: 'Párrafos', v: parrafos, ...U('párrafos') },
+        { k: 'Oraciones', v: oraciones, ...U('oraciones') },
+        { k: 'Páginas estimadas', ref: interlineado + ' ' + tamano + 'pt', v: paginas, ...U('págs.', 1) },
+        { k: 'Lectura en silencio', ref: dur(minSilencio) + ' · 200 ppm', v: minSilencio, ...U('min', 1) },
+        { k: 'Lectura en voz alta', ref: dur(minVozAlta) + ' · 130 ppm', v: minVozAlta, ...U('min', 1) },
+        { k: 'Tipear lo que falta', ref: dur(minTipeo) + ' · ' + wpm + ' ppm', v: minTipeo, ...U('min', 1) },
+        { k: 'Legibilidad Fernández Huerta', ref: nivel, v: Math.max(0, ilfh), ...U('índice') },
+        { k: 'Fuentes bibliográficas sugeridas', ref: '≈1 por página', v: fuentes, ...U('fuentes') },
+      ];
+
+      const pct = objetivo > 0 ? Math.min(100, (palabras / objetivo) * 100) : palabras > 0 ? 100 : 0;
+      const excedente = Math.max(0, palabras - objetivo);
+
+      let etiqueta;
+      if (objetivo <= 0) etiqueta = nf(palabras) + ' palabras — poné un objetivo para ver el avance';
+      else if (faltan > 0) etiqueta = nf(palabras) + ' de ' + nf(objetivo) + ' — te faltan ' + nf(faltan);
+      else if (excedente > 0) etiqueta = nf(palabras) + ' de ' + nf(objetivo) + ' — llegaste, te pasaste ' + nf(excedente);
+      else etiqueta = nf(palabras) + ' de ' + nf(objetivo) + ' — objetivo cumplido justo';
+
+      return {
+        total: nf(palabras) + ' palabras',
+        sub:
+          paginas.toFixed(1) + ' páginas a interlineado ' + interlineado + ' ' + tamano + 'pt · ' +
+          nf(conEspacios) + ' caracteres · se lee en ' + dur(minSilencio) +
+          (faltan > 0 ? ' · te faltan ' + nf(faltan) + ' palabras (' + dur(minTipeo) + ' de tipeo)' : ' · objetivo cumplido'),
+        rows: rows,
+        chart: [
+          { label: 'Escrito', value: Math.min(palabras, objetivo || palabras), tone: 'good' },
+          { label: 'Falta', value: faltan, tone: 'warn' },
+        ],
+        // Formato base del resultado: también manda sobre los valores del
+        // gráfico (la leyenda "Escrito / Falta" se imprime con este formato).
+        format: 'unit',
+        unit: 'palabras',
+        decimals: 0,
+        position: pct,
+        positionLabel: etiqueta,
+      };
+    });
+
+    /**
+     * PARCHE LOCAL — textarea.
+     *
+     * El contrato (`HubField.type`) todavía no tiene 'textarea', y types.ts es
+     * archivo compartido: no se toca desde un hub. Pero el input principal de
+     * este hub es texto pegado, y un <input type="text"> aplana los saltos de
+     * línea al pegar → el conteo de párrafos siempre daba 1.
+     *
+     * Solución acotada a esta página: al iniciar, reemplazamos el <input> por un
+     * <textarea> con el MISMO id y el mismo atributo data-field, copiando el
+     * valor. El runtime lee los campos con querySelectorAll('[data-field]') y
+     * `el.value`, así que sigue funcionando sin cambios.
+     *
+     * Cuando el contrato soporte `type: 'textarea'` (+ un `rows?` opcional),
+     * borrar este bloque y declararlo en src/lib/hubs/contador-de-palabras.ts.
+     */
+    (function patchTextarea() {
+      const input = document.getElementById('texto');
+      if (!input || input.tagName === 'TEXTAREA') return;
+
+      const ta = document.createElement('textarea');
+      ta.id = input.id;
+      ta.setAttribute('data-field', '');
+      ta.rows = 8;
+      // OJO: `input.value` de un <input type="text"> ya viene saneado sin saltos
+      // de línea; el atributo crudo sí los conserva.
+      ta.value = input.getAttribute('value') != null ? input.getAttribute('value') : input.value;
+      ta.className = input.className;
+      if (input.getAttribute('aria-describedby')) ta.setAttribute('aria-describedby', input.getAttribute('aria-describedby'));
+      ta.style.width = '100%';
+      ta.style.resize = 'vertical';
+      ta.style.minHeight = '9rem';
+      ta.style.font = 'inherit';
+      ta.style.lineHeight = '1.5';
+
+      input.replaceWith(ta);
+
+      // El runtime ya enganchó su listener 'input' sobre el <input> viejo, que
+      // acaba de morir. Reenganchamos disparando el mismo recálculo.
+      const go = document.getElementById('go');
+      if (go) ta.addEventListener('input', () => go.click());
+    })();
+  })();
+</script>

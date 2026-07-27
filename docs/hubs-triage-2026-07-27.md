@@ -1,0 +1,3698 @@
+# Triage hub por hub — 3334 calcs en 14 mercados
+
+Destino: **PAGINA** mantiene URL propia dentro del hub · **MODULO** se absorbe en el hub (301) · **FUSION** duplicado de una hermana (301) · **BORRAR** 0 tráfico y sin función única (301 al hub)
+
+
+## [CUERPO] ¿Cuánto tengo que pesar? · `peso-adulto`
+16 calcs · 13,444 ses/90d · **12 página · 2 módulo · 0 fusión · 2 borrar**
+
+- `PAGINA` 11870  /calculadora-imc
+- `PAGINA`   645  /calculadora-indice-masa-corporal-pediatrico
+- `PAGINA`   464  /calculadora-imc-infantil-percentil
+- `PAGINA`   107  /calculadora-porcentaje-grasa-corporal
+- `PAGINA`   100  /calculadora-peso-ideal
+- `PAGINA`    55  /calculadora-imc-adultos-mayores-edad-tabla
+- `PAGINA`    52  /calculadora-peso-objetivo-competicion
+- `PAGINA`    35  /calculadora-edad-metabolica
+- `PAGINA`    34  /calculadora-indice-cintura-altura-whtr-riesgo
+- `PAGINA`    29  /calculadora-cintura-cadera-rcc
+- `PAGINA`    27  /calculadora-grasa-corporal-pliegues
+- `PAGINA`    10  /calculadora-perimetro-abdominal-riesgo-cardiovascular
+- `MODULO`     9  /calculadora-ffmi-indice-masa-libre-grasa
+- `MODULO`     7  /calculadora-grasa-subcutanea-visceral-total-diferencia
+- `BORRAR`     0  /pt/calculadora-imc-tabela-oms-classificacao
+- `BORRAR`     0  /calculadora-indice-cintura-estatura
+
+## [SIN] SIN HUB · `sin-hub`
+1272 calcs · 11,490 ses/90d · **219 página · 475 módulo · 40 fusión · 538 borrar**
+
+- `PAGINA`   848  /co/calculadora-recargo-dominical-festivo-colombia-2026
+- `PAGINA`   403  /co/calculadora-aportes-arl-colombia-empleador-empleado-riesgo
+- `PAGINA`   394  /mx/calculadora-salario-diario-integrado-sdi-mexico
+- `PAGINA`   281  /co/calculadora-gastos-notariales-registro-compraventa-2026
+- `PAGINA`   259  /co/calculadora-prima-legal-colombia-30-dias-junio-diciembre
+- `PAGINA`   227  /mx/calculadora-liquidacion-despido-mexico-3-meses-12-dias
+- `PAGINA`   224  /mx/calculadora-prima-antiguedad-mexico
+- `PAGINA`   209  /co/calculadora-impuesto-industria-comercio-ica-colombia-municipios
+- `PAGINA`   173  /pe/calculadora-soat-peru-precio
+- `PAGINA`   149  /co/calculadora-liquidacion-laboral-colombia-completa-cesantias
+- `PAGINA`   140  /mx/calculadora-pension-imss-ley-73-mexico
+- `PAGINA`   135  /co/calculadora-recibo-luz-codensa-epm-colombia-estrato
+- `PAGINA`   135  /co/calculadora-sancion-extemporaneidad-dian-2026
+- `PAGINA`   133  /mx/calculadora-credito-infonavit-descuento
+- `PAGINA`   130  /mx/calculadora-placas-auto-costo-mexico
+- `PAGINA`   128  /mx/calculadora-isn-impuesto-sobre-nominas-estado
+- `PAGINA`   104  /co/calculadora-pila-independientes-colombia-2026
+- `PAGINA`   100  /cl/calculadora-gratificacion-legal-chile-25-porcentaje-4-75-utm
+- `PAGINA`    99  /co/calculadora-incapacidad-medica-eps-colombia
+- `PAGINA`    98  /co/calculadora-recargo-nocturno-colombia-2026
+- `PAGINA`    95  /co/calculadora-salario-aprendiz-sena-2026
+- `PAGINA`    94  /co/calculadora-reduccion-jornada-42-horas-colombia-2026
+- `PAGINA`    93  /co/calculadora-tabla-impuesto-renta-personas-naturales-colombia-2026
+- `PAGINA`    91  /co/calculadora-impuesto-timbre-nacional-colombia-2026
+- `PAGINA`    89  /mx/calculadora-isr-honorarios-persona-fisica
+- `PAGINA`    88  /mx/calculadora-pension-imss-modalidad-40-mexico-aportacion
+- `PAGINA`    85  /co/calculadora-pension-colombia-2026-edad-semanas-cotizadas
+- `PAGINA`    83  /cl/calculadora-uf-uta-utm-chile-conversion-pesos-2026
+- `PAGINA`    82  /mx/calculadora-imss-cuotas-empleado-patron-mexico-2026
+- `PAGINA`    78  /en/bmi-calculator
+- `PAGINA`    75  /mx/calculadora-pago-provisional-isr-arrendamiento-mexico-2026
+- `PAGINA`    74  /py/cuanto-es-en-guaranies-peso-argentino
+- `PAGINA`    71  /co/calculadora-interes-mora-dian-colombia-2026
+- `PAGINA`    68  /es/calculadora-renta-vitalicia-mayores-65-espana-fiscalidad
+- `PAGINA`    68  /es/calculadora-tasa-basura-municipios-espana-anual
+- `PAGINA`    66  /ec/calculadora-credito-hipotecario-biess-ecuador
+- `PAGINA`    66  /mx/calculadora-recargos-actualizacion-sat-mexico-2026
+- `PAGINA`    65  /mx/calculadora-factor-integracion-salarial-imss-mexico
+- `PAGINA`    62  /ve/cuanto-es-salario-minimo-venezuela-2026
+- `PAGINA`    60  /mx/calculadora-impuesto-cedular-arrendamiento-mexico
+- `PAGINA`    59  /do/calculadora-liquidacion-republica-dominicana
+- `PAGINA`    59  /ec/calculadora-prestamo-quirografario-iess-ecuador
+- `PAGINA`    58  /do/calculadora-vacaciones-republica-dominicana
+- `PAGINA`    56  /co/calculadora-salario-integral-colombia-2026
+- `PAGINA`    52  /mx/calculadora-imss-independientes-modalidad-10
+- `PAGINA`    52  /mx/calculadora-pension-issste-decimo-transitorio-mexico-2026
+- `PAGINA`    49  /co/calculadora-canasta-familiar-colombia-dane-mes
+- `PAGINA`    48  /cl/calculadora-aporte-mutual-empresa-chile-trabajador-tasa-base
+- `PAGINA`    47  /ve/calculadora-prestaciones-sociales-venezuela
+- `PAGINA`    47  /co/calculadora-retencion-salarios-procedimiento-1-colombia-2026
+- `PAGINA`    46  /mx/calculadora-infonavit-credito-mexico-puntaje-monto-2026
+- `PAGINA`    44  /co/calculadora-retefuente-colombia-2026-empleado-tabla
+- `PAGINA`    43  /cl/calculadora-isapre-cotizacion-chile-7-porcentaje-plan
+- `PAGINA`    43  /mx/calculadora-prima-riesgo-trabajo-imss-siniestralidad
+- `PAGINA`    42  /co/calculadora-comparendos-transito-colombia-2026
+- `PAGINA`    42  /mx/calculadora-coste-funeral-mexico-promedio-2026-paquetes
+- `PAGINA`    42  /es/calculadora-dependencia-grado-prestacion-espana-2026
+- `PAGINA`    42  /co/calculadora-tasa-interes-mora-colombia-tarjeta-credito-2026
+- `PAGINA`    40  /co/calculadora-tasacion-vivienda-colombia-precio-m2-zona-estrato
+- `PAGINA`    39  /co/calculadora-aporte-fondo-solidaridad-pension-fsp-colombia
+- `PAGINA`    39  /cl/calculadora-fondos-mutuos-chile-rentabilidad-comparativa-2026
+- `PAGINA`    39  /ve/calculadora-vacaciones-bono-vacacional-venezuela
+- `PAGINA`    38  /co/calculadora-impuesto-consumo-licores-colombia-cerveza-vino
+- `PAGINA`    37  /mx/calculadora-costo-construccion-m2-mexico
+- `PAGINA`    37  /es/calculadora-fp-grado-medio-superior-precio-publica-privada
+- `PAGINA`    37  /es/calculadora-impuesto-matriculacion-iedmt-coche-espana
+- `PAGINA`    37  /co/calculadora-impuestos-aerolineas-tasa-aeropuerto-colombia-internacional
+- `PAGINA`    36  /do/calculadora-isr-republica-dominicana
+- `PAGINA`    36  /ec/calculadora-planilla-luz-cnel-ecuador
+- `PAGINA`    36  /co/calculadora-provision-prestaciones-sociales-mensual-empleador-colombia-2026
+- `PAGINA`    34  /co/calculadora-ibc-independientes-contratista-colombia-2026-40-porciento
+- `PAGINA`    34  /es/calculadora-modelo-145-irpf-situacion-familiar-nomina
+- `FUSION`    34  /co/calculadora-retencion-procedimiento-2-colombia-2026  →calculadora-retencion-salarios-procedimiento-1-colombia-2026
+- `PAGINA`    34  /pe/calculadora-tipo-de-cambio-sunat-dolar-soles-peru
+- `PAGINA`    33  /py/calculadora-hora-trabajo-jornal-paraguay
+- `PAGINA`    33  /do/calculadora-itbis-republica-dominicana
+- `PAGINA`    33  /co/calculadora-salarios-minimos-a-pesos-colombia-2026
+- `PAGINA`    32  /py/bonificacion-familiar-paraguay
+- `PAGINA`    32  /co/calculadora-dotacion-laboral-colombia-2026
+- `PAGINA`    31  /co/calculadora-vacaciones-colombia-15-dias-habiles-laborales
+- `PAGINA`    30  /mx/calculadora-isr-intereses-bancarios-inversion-mexico-2026
+- `PAGINA`    29  /mx/calculadora-predial-cdmx-mexico
+- `PAGINA`    28  /cl/calculadora-credito-aval-cae-chile-deuda-final-promedio
+- `PAGINA`    28  /mx/calculadora-isr-premios-loteria-mexico-2026
+- `PAGINA`    27  /ve/calculadora-inces-venezuela
+- `PAGINA`    27  /cl/calculadora-permiso-postnatal-chile-12-semanas-extension
+- `PAGINA`    26  /ec/calculadora-impuesto-salida-divisas-isd-ecuador
+- `PAGINA`    26  /co/calculadora-impuesto-sucesiones-herencia-colombia-2026
+- `PAGINA`    26  /co/calculadora-trm-dolar-hoy-pesos-colombianos
+- `PAGINA`    25  /co/calculadora-cesantias-colombia-12-porciento-anual
+- `PAGINA`    25  /cl/calculadora-impuesto-primera-categoria-chile-empresas-2026
+- `PAGINA`    25  /ve/calculadora-islr-venezuela-2026
+- `PAGINA`    25  /mx/calculadora-luz-cfe-tarifa-domestica-bimestral-mexico
+- `PAGINA`    25  /mx/calculadora-pension-imss-1997
+- `PAGINA`    25  /cl/calculadora-sueldo-liquido-chile-2026-impuesto-segunda-categoria
+- `PAGINA`    25  /ec/calculadora-vacaciones-ecuador
+- `PAGINA`    24  /ec/calculadora-planilla-agua-ecuador
+- `PAGINA`    24  /mx/calculadora-retiro-afore-desempleo-mexico
+- `PAGINA`    23  /co/calculadora-auxilio-transporte-colombia-2026
+- `PAGINA`    23  /co/calculadora-cuenta-afc-ahorro-fomento-construccion-colombia
+- `PAGINA`    23  /co/calculadora-impoconsumo-restaurantes-bares-colombia-2026
+- `PAGINA`    23  /cl/calculadora-impuesto-territorial-contribuciones-bienes-raices-chile
+- `PAGINA`    23  /ec/calculadora-matriculacion-vehicular-ecuador
+- `PAGINA`    23  /es/calculadora-modelo-100-irpf-declaracion-anual-espana
+- `PAGINA`    23  /mx/calculadora-pagos-hipoteca-infonavit
+- `PAGINA`    23  /cl/calculadora-seguro-cesantia-chile-afc-cuota-fondo
+- `PAGINA`    23  /en/concrete-beam-sizing-dimensions
+- `PAGINA`    22  /py/calculadora-aporte-patronal-ips-paraguay
+- `PAGINA`    21  /ec/calculadora-cesantia-iess-ecuador
+- `PAGINA`    21  /mx/calculadora-isr-mexico-2026-tarifa-mensual-empleado
+- `PAGINA`    21  /pe/calculadora-itf-peru
+- `PAGINA`    21  /ec/calculadora-rebaja-gastos-personales-ecuador
+- `PAGINA`    21  /py/calculadora-salario-neto-paraguay
+- `PAGINA`    21  /es/calculadora-tipo-marginal-irpf-espana-2026-tramos-rapido
+- `PAGINA`    20  /co/calculadora-embargo-salario-colombia
+- `PAGINA`    20  /mx/calculadora-isr-actividad-empresarial-persona-fisica-mexico-2026
+- `PAGINA`    20  /ve/calculadora-retencion-islr-venezuela
+- `FUSION`    20  /do/calculadora-retencion-isr-salario-republica-dominicana  →calculadora-isr-republica-dominicana
+- `PAGINA`    19  /ve/calculadora-cestaticket-bono-alimentacion-venezuela
+- `PAGINA`    19  /mx/calculadora-colegiaturas-deducibles-sat-mexico
+- `PAGINA`    19  /cl/calculadora-coste-inscripcion-conservador-bienes-raices-chile
+- `PAGINA`    19  /co/calculadora-impuesto-circulacion-vehiculo-electrico-colombia
+- `PAGINA`    19  /co/calculadora-impuesto-vehiculos-bogota-2026-tabla
+- `PAGINA`    19  /en/severance-calculator-argentina
+- `PAGINA`    18  /cl/calculadora-coste-funeral-promedio-chile-2026-cremacion-sepelio
+- `PAGINA`    18  /cl/calculadora-costo-construccion-m2-chile
+- `PAGINA`    18  /pe/calculadora-costo-vida-mensual-peru
+- `PAGINA`    18  /mx/calculadora-descuento-pension-alimenticia-nomina-mexico
+- `PAGINA`    18  /pe/calculadora-descuento-tardanzas-faltas-peru
+- `PAGINA`    18  /co/calculadora-festivos-colombia-2026-calendario-puentes
+- `PAGINA`    18  /co/calculadora-honorarios-prestacion-servicios-colombia-retencion
+- `PAGINA`    18  /mx/calculadora-isr-finiquito-liquidacion-mexico-2026
+- `PAGINA`    18  /mx/calculadora-isr-quincenal-mexico-2026
+- `PAGINA`    18  /pe/calculadora-recibo-agua-sedapal-peru
+- `PAGINA`    17  /co/calculadora-comparativa-banco-comisiones-colombia-2026
+- `PAGINA`    17  /mx/calculadora-comparativa-banco-comisiones-mexico-2026
+- `PAGINA`    17  /pe/calculadora-costo-construccion-m2-peru
+- `PAGINA`    17  /es/calculadora-ibi-cuota-anual-espana-valor-catastral-municipio
+- `PAGINA`    17  /mx/calculadora-pension-bienestar-2026-monto
+- `PAGINA`    17  /mx/calculadora-pension-minima-garantizada-ley-97-mexico-2026
+- `PAGINA`    17  /pe/calculadora-renta-cuarta-categoria-honorarios-peru
+- `PAGINA`    17  /co/calculadora-salario-por-hora-colombia
+- `PAGINA`    17  /mx/calculadora-semanas-cotizadas-imss-requisito
+- `PAGINA`    16  /en/blood-oxygen-saturation-spo2-altitude
+- `PAGINA`    16  /co/calculadora-canon-arrendamiento-vivienda-aumento-anual-colombia-ipc
+- `PAGINA`    16  /mx/calculadora-devolucion-impuestos-declaracion-anual
+- `PAGINA`    16  /mx/calculadora-imss-trabajadoras-hogar-mexico
+- `PAGINA`    16  /co/calculadora-internet-fibra-claro-etb-tigo-colombia-mejor-precio
+- `PAGINA`    16  /pt/simulador-holerite-clt
+- `PAGINA`    15  /pe/calculadora-costo-constitucion-empresa-peru
+- `PAGINA`    15  /co/calculadora-credito-libranza-colombia-empleado-cuota-tasa
+- `PAGINA`    15  /ec/calculadora-deposito-plazo-fijo-ecuador
+- `PAGINA`    15  /es/calculadora-impuesto-circulacion-vehiculos-espana-municipio
+- `FUSION`    15  /co/calculadora-impuesto-patrimonio-colombia-personas-naturales-2026  →calculadora-tabla-impuesto-renta-personas-naturales-colombia-2026
+- `PAGINA`    15  /co/calculadora-recibo-gas-natural-colombia-vanti-epm-naturgas
+- `PAGINA`    15  /pe/calculadora-regimen-mype-tributario-rmt-peru
+- `PAGINA`    15  /mx/calculadora-tope-deducciones-personales-2026-mexico
+- `PAGINA`    15  /mx/calculadora-uma-conversion-mexico
+- `PAGINA`    14  /do/calculadora-bonificacion-republica-dominicana
+- `PAGINA`    14  /ec/calculadora-costo-construccion-m2-ecuador
+- `PAGINA`    14  /co/calculadora-ganancia-ocasional-venta-casa-colombia
+- `PAGINA`    14  /pe/calculadora-impuesto-vehicular-peru
+- `PAGINA`    14  /co/calculadora-obligado-declarar-renta-2026
+- `PAGINA`    14  /es/calculadora-pias-plan-individual-ahorro-sistematico-espana
+- `PAGINA`    14  /cl/calculadora-recibo-luz-chile-enel-cge-saesa-tarifa-bt1
+- `PAGINA`    14  /mx/calculadora-retencion-plataformas-digitales-mexico-2026
+- `PAGINA`    14  /co/calculadora-sancion-correccion-declaracion-dian-colombia-2026
+- `PAGINA`    14  /co/calculadora-soat-colombia-precio-2026-vehiculo
+- `PAGINA`    14  /pe/calculadora-subsidio-incapacidad-temporal-essalud-peru
+- `PAGINA`    14  /uy/devolucion-fonasa-uruguay
+- `PAGINA`    14  /en/pregnancy-due-date-calculator
+- `PAGINA`    13  /co/calculadora-aporte-eps-pension-empleado-colombia-2026
+- `PAGINA`    13  /co/calculadora-cuota-moderadora-copago-eps-colombia-2026
+- `PAGINA`    13  /mx/calculadora-fonacot-credito-mexico-monto-cat-tasa
+- `PAGINA`    13  /mx/calculadora-peso-dolar-tipo-cambio-mexico
+- `PAGINA`    13  /mx/calculadora-prima-dominical-dias-festivos-mexico
+- `PAGINA`    13  /ec/calculadora-retencion-honorarios-profesionales-ecuador
+- `PAGINA`    13  /ec/calculadora-rimpe-emprendedor-ecuador
+- `PAGINA`    13  /en/pregnancy-week-calculator
+- `PAGINA`    13  /do/salario-neto-republica-dominicana
+- `PAGINA`    12  /cl/calculadora-aporte-mutual-empresa-comparar-ist-asociacion-chilena
+- `PAGINA`    12  /mx/calculadora-aumento-salario-inflacion-mx
+- `PAGINA`    12  /cl/calculadora-copago-bonificacion-fonasa-chile
+- `PAGINA`    12  /mx/calculadora-coste-vida-mensual-mexico-soltero-pareja-familia
+- `PAGINA`    12  /co/calculadora-costo-matricula-vehiculo-nuevo-colombia-2026
+- `PAGINA`    12  /co/calculadora-costo-pasaporte-colombia-2026-departamento
+- `PAGINA`    12  /pe/calculadora-credito-vehicular-peru
+- `PAGINA`    12  /cl/calculadora-emprendedor-pyme-chile-puesta-marcha-1-dia
+- `PAGINA`    12  /pe/calculadora-essalud-aporte-peru
+- `PAGINA`    12  /es/calculadora-ganancia-patrimonial-venta-vivienda-espana
+- `PAGINA`    12  /co/calculadora-impuesto-loterias-juegos-azar-colombia-2026
+- `PAGINA`    12  /ec/calculadora-impuesto-plusvalia-inmueble-ecuador
+- `PAGINA`    12  /pe/calculadora-impuesto-predial-peru
+- `PAGINA`    12  /ec/calculadora-impuesto-rodaje-vehiculos-ecuador
+- `PAGINA`    12  /ve/calculadora-liquidacion-finiquito-venezuela
+- `PAGINA`    12  /cl/calculadora-saldo-afp-rentabilidad-multifondos-chile-2026
+- `PAGINA`    12  /ec/calculadora-sueldo-neto-ecuador
+- `PAGINA`    12  /cl/calculadora-vacaciones-chile-15-dias-habiles-progresivas
+- `PAGINA`    11  /co/calculadora-coste-funeral-promedio-colombia-2026-paquetes
+- `PAGINA`    11  /mx/calculadora-costo-licencia-conducir-mexico-por-estado
+- `PAGINA`    11  /cl/calculadora-credito-hipotecario-chile-uf-cmf-2026
+- `PAGINA`    11  /co/calculadora-ganancia-repartidor-apps-colombia-2026
+- `PAGINA`    11  /mx/calculadora-incapacidad-imss-enfermedad-general
+- `PAGINA`    11  /pe/calculadora-revision-tecnica-vehicular-peru
+- `PAGINA`    11  /pt-pt/calculadora-subsidio-ferias-portugal
+- `PAGINA`    11  /ve/calculadora-sueldo-neto-deducciones-venezuela
+- `PAGINA`    11  /co/calculadora-titulos-tes-colombia-rendimiento-vencimiento
+- `PAGINA`    11  /ve/cuanto-es-dolares-en-bolivares
+- `PAGINA`    11  /uy/salario-liquido-uruguay
+- `PAGINA`    10  /co/calculadora-arriendo-bogota-medellin-cali-precio-promedio
+- `PAGINA`    10  /uy/calculadora-bps-aportes
+- `PAGINA`    10  /cl/calculadora-canasta-mascota-perro-gato-chile-mensual
+- `PAGINA`    10  /ec/calculadora-constitucion-compania-sas-ecuador
+- `FUSION`    10  /mx/calculadora-costo-empleado-patron-mexico-2026  →calculadora-imss-cuotas-empleado-patron-mexico-2026
+- `PAGINA`    10  /co/calculadora-fna-cesantias-colombia-vivienda-rentabilidad
+- `PAGINA`    10  /co/calculadora-impuesto-predial-bogota-2026
+- `PAGINA`    10  /co/calculadora-retencion-fuente-arrendamientos-colombia-2026
+- `PAGINA`    10  /pe/calculadora-rus-nuevo-regimen-unico-simplificado-peru
+- `PAGINA`    10  /ve/calculadora-salario-integral-venezuela
+- `PAGINA`    10  /co/calculadora-salario-neto-colombia-2026-bruto-a-neto
+- `PAGINA`    10  /es/calculadora-universidad-publica-vs-privada-coste-grado-espana
+- `PAGINA`    10  /pt/iptu-sao-paulo-valor-venal-aliquota
+- `PAGINA`    10  /pt/salario-liquido-com-pensao-alimenticia-br
+- `MODULO`     9  /en/body-fat-skinfolds-jackson-pollock
+- `MODULO`     9  /cl/calculadora-aporte-empleador-empleado-chile-total-costo-laboral
+- `MODULO`     9  /ec/calculadora-aporte-iess-ecuador
+- `MODULO`     9  /co/calculadora-cdt-colombia-rentabilidad-90-180-360-dias
+- `MODULO`     9  /co/calculadora-conversion-uvt-uvr-colombia-actualizacion-2026
+- `MODULO`     9  /cl/calculadora-cuenta-2-afp-chile-aporte-voluntario-rendimiento
+- `MODULO`     9  /cl/calculadora-fonasa-chile-tramos-a-b-c-d-cobertura
+- `MODULO`     9  /es/calculadora-ingreso-minimo-vital-imv-espana-2026-cuantia
+- `MODULO`     9  /mx/calculadora-isr-arrendamiento-deduccion-ciega-mexico
+- `MODULO`     9  /co/calculadora-pcs-prestaciones-sociales-colombia-percent-salario
+- `MODULO`     9  /es/calculadora-renta-bruta-neta-espana-2026-irpf-ss
+- `FUSION`     9  /co/calculadora-renta-personas-naturales-colombia-2026-anual  →calculadora-tabla-impuesto-renta-personas-naturales-colombia-2026
+- `MODULO`     9  /mx/calculadora-resico-personas-fisicas-mexico-2026-cuota
+- `MODULO`     9  /cl/calculadora-tipo-cambio-dolar-peso-chile-clp-banco-central
+- `MODULO`     9  /pe/calculadora-vacaciones-truncas-peru
+- `MODULO`     9  /en/food-digestion-time-calculator
+- `MODULO`     8  /en/abdominal-circumference-cardiovascular-risk
+- `MODULO`     8  /ve/calculadora-actualizacion-inflacion-inpc-venezuela
+- `MODULO`     8  /cl/calculadora-aporte-trabajador-honorarios-chile-cotizacion-obligatoria
+- `MODULO`     8  /co/calculadora-canon-arrendamiento-comercial-colombia-comerciante
+- `MODULO`     8  /do/calculadora-certificado-financiero-republica-dominicana
+- `MODULO`     8  /es/calculadora-cesta-compra-mensual-familia-espana-inflacion
+- `MODULO`     8  /es/calculadora-comunidad-vecinos-gastos-mensuales-espana
+- `MODULO`     8  /ve/calculadora-costo-pasaporte-saime-venezuela
+- `MODULO`     8  /co/calculadora-cuota-compensacion-militar-libreta-2026
+- `MODULO`     8  /uy/calculadora-fonasa-aporte-uruguay
+- `MODULO`     8  /ec/calculadora-impuesto-alcabala-ecuador
+- `MODULO`     8  /mx/calculadora-isr-venta-terreno-inmueble-comercial-mexico
+- `MODULO`     8  /es/calculadora-itp-actos-juridicos-documentados-espana-vivienda
+- `MODULO`     8  /ec/calculadora-liquidacion-finiquito-ecuador
+- `MODULO`     8  /mx/calculadora-predial-cdmx-monterrey-guadalajara-2026
+- `MODULO`     8  /cl/calculadora-pyme-chile-regimen-14d-tributacion-simplificada
+- `MODULO`     8  /cl/calculadora-recibo-gas-chile-metrogas-lipigas-cilindro-vs-red
+- `MODULO`     8  /pe/calculadora-recibo-luz-peru-osinergmin
+- `MODULO`     8  /mx/calculadora-recibo-nomina-percepciones-deducciones-mexico-2026
+- `MODULO`     8  /ec/calculadora-retencion-fuente-dependencia-ecuador
+- `MODULO`     8  /mx/calculadora-rfc-cuota-resico-pf-mexico
+- `MODULO`     8  /mx/calculadora-rfc-homoclave-persona-fisica-mexico
+- `MODULO`     7  /es/calculadora-bomba-calor-aerotermia-espana-coste-instalacion
+- `MODULO`     7  /cl/calculadora-bono-cumplimiento-laboral-chile-pago-empresa
+- `MODULO`     7  /co/calculadora-cooperativas-prestamo-colombia-tasa-interes
+- `MODULO`     7  /pe/calculadora-credito-hipotecario-peru
+- `MODULO`     7  /es/calculadora-cuenta-remunerada-espana-rentabilidad-comparativa
+- `MODULO`     7  /cl/calculadora-deposito-plazo-chile-bancos-2026-tasa
+- `MODULO`     7  /co/calculadora-fecha-declaracion-renta-2026-colombia-cedula
+- `MODULO`     7  /pe/calculadora-impuesto-alcabala-peru
+- `MODULO`     7  /cl/calculadora-impuesto-timbres-estampillas-chile-credito-hipotecario
+- `MODULO`     7  /pe/calculadora-intereses-moratorios-sunat-peru
+- `MODULO`     7  /cl/calculadora-internet-fibra-chile-claro-vtr-mundo-mejor-precio
+- `MODULO`     7  /mx/calculadora-isr-personas-morales-mexico-30-porcentaje
+- `MODULO`     7  /es/calculadora-master-oficial-titulo-propio-precio-espana
+- `MODULO`     7  /mx/calculadora-mensualidad-universidad-privada-mexico-tec-uvm-anahuac
+- `MODULO`     7  /cl/calculadora-multa-no-aviso-uoct-transito-comuna-chile-2026
+- `MODULO`     7  /pe/calculadora-pension-alimentos-peru
+- `MODULO`     7  /co/calculadora-retencion-fuente-compras-servicios-2026
+- `MODULO`     7  /co/calculadora-revision-tecnomecanica-colombia-precio-multa
+- `MODULO`     7  /cl/calculadora-tarifa-vuelo-domestico-chile-impuestos-tasas-aeropuerto
+- `MODULO`     7  /cl/calculadora-tramo-registro-social-hogares-rsh-chile
+- `MODULO`     7  /en/date-difference-calculator
+- `MODULO`     7  /py/descuento-ips-9-salario
+- `MODULO`     7  /en/exact-age-calculator
+- `MODULO`     7  /pt/inss-patronal-empresa-20-porcento-folha
+- `MODULO`     7  /do/sueldo-bruto-a-neto-republica-dominicana
+- `MODULO`     7  /en/used-car-depreciation-calculator
+- `MODULO`     6  /cl/calculadora-acciones-bolsa-santiago-chile-comisiones-broker
+- `MODULO`     6  /cl/calculadora-banca-digital-mach-tenpo-chita-tarjeta-comisiones
+- `MODULO`     6  /mx/calculadora-cetes-mexico-rendimiento-28-91-182-364-dias
+- `MODULO`     6  /mx/calculadora-credito-automotriz-mexico-cat-mensualidad-2026
+- `MODULO`     6  /mx/calculadora-cuenta-de-ahorro-mexico-rendimiento-cetes-directo-nu-mercado-pago
+- `MODULO`     6  /cl/calculadora-gratuidad-educacion-superior-chile-deciles-1-6
+- `MODULO`     6  /ec/calculadora-impuesto-1-5-por-mil-activos-ecuador
+- `MODULO`     6  /ec/calculadora-impuesto-predial-ecuador
+- `MODULO`     6  /co/calculadora-isr-rentas-de-capital-dividendos-intereses-colombia
+- `MODULO`     6  /pe/calculadora-liquidacion-trabajadora-hogar-peru
+- `MODULO`     6  /cl/calculadora-nem-ranking-puntaje-demre-chile-2026
+- `MODULO`     6  /es/calculadora-paro-prestacion-desempleo-espana-2026-meses
+- `MODULO`     6  /es/calculadora-plan-pensiones-aportacion-deduccion-espana-2026
+- `MODULO`     6  /co/calculadora-precio-gasolina-acpm-galon-colombia-2026
+- `MODULO`     6  /mx/calculadora-prestaciones-superiores-ley-mexico-2026
+- `MODULO`     6  /cl/calculadora-reajuste-arriendo-ipc-chile
+- `MODULO`     6  /ve/calculadora-remesa-zelle-bolivares-venezuela
+- `MODULO`     6  /ec/calculadora-revision-tecnica-vehicular-ecuador
+- `MODULO`     6  /ec/calculadora-tabla-amortizacion-frances-aleman-ecuador
+- `MODULO`     6  /co/calculadora-tasa-impuesto-renta-fictop-paraisos-fiscales-colombia
+- `MODULO`     6  /mx/calculadora-tenencia-vehicular-mexico
+- `MODULO`     6  /do/calculadora-tss-afp-sfs-republica-dominicana
+- `MODULO`     6  /mx/calculadora-vacaciones-dias-antiguedad-mexico
+- `MODULO`     6  /uy/costo-empleador-uruguay
+- `FUSION`     6  /ve/cuanto-es-bolivares-en-dolares  →cuanto-es-dolares-en-bolivares
+- `MODULO`     6  /en/elo-rating-change-calculator
+- `MODULO`     6  /en/pc-power-consumption-psu
+- `MODULO`     6  /do/regalia-pascual-republica-dominicana
+- `MODULO`     6  /pt/salario-liquido-clt-inss-irrf-2026
+- `MODULO`     6  /en/salary-calculator-argentina
+- `MODULO`     6  /uy/unidad-reajustable-a-pesos-uruguay
+- `MODULO`     5  /pe/calculadora-arbitrios-municipales-peru
+- `MODULO`     5  /do/calculadora-articulo-86-retraso-prestaciones-republica-dominicana
+- `MODULO`     5  /es/calculadora-baja-laboral-incapacidad-temporal-espana-cuantia
+- `MODULO`     5  /es/calculadora-coste-km-coche-espana-peajes-vs-alternativa
+- `MODULO`     5  /es/calculadora-coste-vida-mensual-soltero-pareja-espana-ccaa
+- `MODULO`     5  /es/calculadora-costo-construccion-m2-espana
+- `MODULO`     5  /ec/calculadora-costo-vida-mensual-ecuador
+- `MODULO`     5  /ec/calculadora-credito-vehicular-ecuador
+- `MODULO`     5  /co/calculadora-credito-vehiculos-colombia-leasing-vs-credito
+- `MODULO`     5  /pe/calculadora-deposito-plazo-fijo-peru
+- `MODULO`     5  /es/calculadora-evau-nota-media-ponderaciones-grado-espana
+- `MODULO`     5  /cl/calculadora-fondo-mutuo-vs-deposito-plazo-chile-rendimiento
+- `MODULO`     5  /ec/calculadora-fondos-de-reserva-ecuador
+- `MODULO`     5  /co/calculadora-gravamen-movimientos-financieros-4-1000-colombia
+- `MODULO`     5  /mx/calculadora-honorarios-asimilados-vs-honorarios-libres-mexico
+- `MODULO`     5  /ec/calculadora-ice-consumos-especiales-ecuador
+- `MODULO`     5  /mx/calculadora-impuestos-herencia-donacion-inmueble-mexico
+- `MODULO`     5  /co/calculadora-liquidacion-contrato-termino-fijo-colombia-2026
+- `MODULO`     5  /pe/calculadora-multa-no-votar-elecciones-2026-peru
+- `MODULO`     5  /do/calculadora-prestamo-hipotecario-republica-dominicana
+- `MODULO`     5  /cl/calculadora-renta-presunta-chile-agricola-transporte-mineria
+- `MODULO`     5  /cl/calculadora-salario-por-hora-chile
+- `MODULO`     5  /cl/calculadora-semana-corrida-chile-remuneracion-variable
+- `MODULO`     5  /cl/calculadora-tasacion-vivienda-chile-dictuc-perito-precio
+- `MODULO`     5  /ec/calculadora-traspaso-dominio-vehicular-ecuador
+- `MODULO`     5  /ve/calculadora-utilidades-aguinaldo-venezuela
+- `MODULO`     5  /pt/irrf-mensal-folha-pagamento-2026
+- `MODULO`     5  /en/ovulation-calculator
+- `MODULO`     5  /en/pral-urine-acidity
+- `FUSION`     5  /do/regalia-pascual-proporcional-republica-dominicana  →regalia-pascual-republica-dominicana
+- `MODULO`     5  /pt/seguro-desemprego-valor-parcelas-trabalhador-clt
+- `MODULO`     4  /en/3d-print-cost-per-part
+- `MODULO`     4  /en/bogleheads-3-fund-portfolio-calculator
+- `MODULO`     4  /cl/calculadora-afp-pension-chile-2026-tabla-comisiones
+- `FUSION`     4  /cl/calculadora-cae-credito-hipotecario-chile-bancos-2026  →calculadora-credito-hipotecario-chile-uf-cmf-2026
+- `MODULO`     4  /do/calculadora-cesantia-republica-dominicana
+- `MODULO`     4  /ec/calculadora-credito-banco-pichincha-cuotas-ecuador
+- `MODULO`     4  /uy/calculadora-despido-uruguay
+- `MODULO`     4  /cl/calculadora-emol-uf-pesos-chile
+- `MODULO`     4  /co/calculadora-fondo-pensiones-voluntarias-colombia-deduccion-renta
+- `MODULO`     4  /mx/calculadora-gas-lp-llenar-tanque-estacionario-cilindro-mexico
+- `MODULO`     4  /co/calculadora-impuesto-cardo-tarjeta-credito-internacional-colombia
+- `MODULO`     4  /co/calculadora-impuesto-cervezas-licores-tabaco-colombia-2026
+- `MODULO`     4  /co/calculadora-impuesto-vehiculos-colombia-2026-departamento
+- `FUSION`     4  /ve/calculadora-intereses-prestaciones-sociales-venezuela  →calculadora-prestaciones-sociales-venezuela
+- `MODULO`     4  /mx/calculadora-isr-venta-auto-usado-persona-fisica-mexico
+- `MODULO`     4  /cl/calculadora-jornada-42-horas-chile-2026-sueldo-hora
+- `MODULO`     4  /cl/calculadora-mensualidad-universidad-privada-chile-uc-uss-uss
+- `MODULO`     4  /cl/calculadora-pago-anticipado-credito-hipotecario-chile-ahorro-uf
+- `MODULO`     4  /cl/calculadora-pago-electronico-chile-transbank-comisiones-onepay-mach
+- `MODULO`     4  /cl/calculadora-pase-escolar-tne-chile-precio-2026-recargo
+- `FUSION`     4  /mx/calculadora-pension-mujeres-bienestar-2026-elegibilidad-monto  →calculadora-pension-bienestar-2026-monto
+- `MODULO`     4  /cl/calculadora-permiso-circulacion-chile-vehiculo-2026-comuna
+- `MODULO`     4  /mx/calculadora-prestamo-coppel-abonos-quincenales-interes
+- `MODULO`     4  /py/calculadora-recargo-nocturno-paraguay
+- `MODULO`     4  /ve/calculadora-reconversion-bolivares-viejos-actuales-venezuela
+- `FUSION`     4  /mx/calculadora-resico-personas-morales-mexico-2026  →calculadora-resico-personas-fisicas-mexico-2026-cuota
+- `MODULO`     4  /do/calculadora-retencion-honorarios-servicios-profesionales-republica-dominicana
+- `MODULO`     4  /ec/calculadora-retencion-iva-ecuador
+- `MODULO`     4  /es/calculadora-reunificacion-deudas-espana-cuota-unificada
+- `MODULO`     4  /ec/calculadora-rimpe-negocio-popular-ecuador
+- `MODULO`     4  /ec/calculadora-salario-digno-ecuador
+- `MODULO`     4  /co/calculadora-sancion-minima-dian-colombia-2026-10-uvt
+- `MODULO`     4  /ec/calculadora-sppat-seguro-accidentes-transito-ecuador
+- `MODULO`     4  /ec/calculadora-subsidio-enfermedad-iess-ecuador
+- `MODULO`     4  /pe/calculadora-sueldo-bruto-a-neto-peru
+- `MODULO`     4  /mx/calculadora-tanda-ahorro-mexico-turnos-montos
+- `MODULO`     4  /py/calculadora-vacaciones-paraguay
+- `MODULO`     4  /en/code-lines-project-complexity-kloc
+- `MODULO`     4  /ve/cuanto-es-unidad-tributaria-bolivares
+- `MODULO`     4  /en/event-catering-cost-per-head-calculator
+- `MODULO`     4  /py/ire-paraguay
+- `MODULO`     4  /py/irp-paraguay-tramos
+- `MODULO`     4  /en/material-biodegradation-time
+- `MODULO`     4  /en/missouri-personal-property-tax-vehicle-calculator
+- `MODULO`     4  /en/spermiogram-reference-values-who-2021
+- `FUSION`     4  /uy/unidad-indexada-a-pesos-uruguay  →unidad-reajustable-a-pesos-uruguay
+- `MODULO`     3  /pt/aco-kg-m2-laje
+- `MODULO`     3  /en/baby-shower-budget-calculator
+- `MODULO`     3  /en/bond-present-value-zero-coupon
+- `MODULO`     3  /pe/calculadora-afp-vs-onp-peru
+- `MODULO`     3  /co/calculadora-aporte-cesantias-empleador-empleado-colombia-fondo
+- `MODULO`     3  /cl/calculadora-aporte-previsional-solidario-aps-chile
+- `FUSION`     3  /ec/calculadora-aporte-voluntario-iess-ecuador  →calculadora-aporte-iess-ecuador
+- `MODULO`     3  /cl/calculadora-bono-electrico-chile-subsidio-cuenta-electrica
+- `MODULO`     3  /ve/calculadora-bono-nocturno-venezuela
+- `MODULO`     3  /cl/calculadora-bono-renta-chile-cuanto-vale-mi-tiempo-uf
+- `MODULO`     3  /es/calculadora-bono-social-electrico-espana-2026-criterios
+- `MODULO`     3  /es/calculadora-cheque-guarderia-0-3-anos-espana-deduccion
+- `MODULO`     3  /cl/calculadora-contribuciones-morosas-tgr-chile-intereses-reajuste
+- `MODULO`     3  /co/calculadora-coste-vida-mensual-colombia-soltero-pareja
+- `MODULO`     3  /pe/calculadora-costo-brevete-licencia-conducir-peru-2026
+- `MODULO`     3  /uy/calculadora-costo-viaje-nafta-uruguay
+- `MODULO`     3  /ec/calculadora-decimo-cuarto-sueldo-ecuador
+- `MODULO`     3  /pe/calculadora-detracciones-igv-peru
+- `MODULO`     3  /cl/calculadora-devolucion-impuestos-operacion-renta-chile-2026
+- `MODULO`     3  /ve/calculadora-dias-feriados-domingos-trabajados-venezuela
+- `MODULO`     3  /es/calculadora-excedencia-voluntaria-reincorporacion-espana
+- `MODULO`     3  /mx/calculadora-gasolina-rendimiento-km-litro-vs-gas-lp-mexico
+- `MODULO`     3  /pe/calculadora-gratificacion-trunca-peru
+- `MODULO`     3  /ec/calculadora-honorarios-notariales-ecuador
+- `MODULO`     3  /cl/calculadora-impuesto-aerolinea-chile-tasa-embarque-internacional
+- `MODULO`     3  /ve/calculadora-impuesto-sucesoral-herencia-venezuela
+- `MODULO`     3  /cl/calculadora-impuesto-verde-vehiculo-nuevo-chile-sii
+- `MODULO`     3  /uy/calculadora-irae-uruguay
+- `MODULO`     3  /mx/calculadora-isan-auto-nuevo-mexico-2026
+- `MODULO`     3  /co/calculadora-isr-anual-colombia-personas-naturales-cedulas
+- `MODULO`     3  /mx/calculadora-isr-anual-personas-fisicas-mexico-tarifa-2026
+- `FUSION`     3  /do/calculadora-isr-empresas-sociedades-republica-dominicana  →calculadora-isr-republica-dominicana
+- `MODULO`     3  /mx/calculadora-isr-venta-casa-mexico-700000-udis
+- `MODULO`     3  /es/calculadora-letras-tesoro-espana-3-6-12-meses-rentabilidad
+- `MODULO`     3  /pe/calculadora-papeletas-transito-peru
+- `MODULO`     3  /co/calculadora-pension-rais-vs-prima-media-colombia
+- `MODULO`     3  /es/calculadora-permiso-paternidad-maternidad-espana-2026-semanas
+- `MODULO`     3  /co/calculadora-pico-y-placa-hoy-colombia-bogota-medellin-cali
+- `MODULO`     3  /co/calculadora-prestamo-nequi-colombia-cuota-salvavidas-bajo-monto
+- `MODULO`     3  /cl/calculadora-reajuste-sueldo-minimo-chile-2026-imm
+- `MODULO`     3  /do/calculadora-recargo-nocturno-republica-dominicana
+- `MODULO`     3  /co/calculadora-reforma-pensional-colombia-2025-pilares-ahorro
+- `MODULO`     3  /pe/calculadora-regimen-especial-renta-rer-peru
+- `MODULO`     3  /pe/calculadora-renta-primera-categoria-alquiler-peru
+- `FUSION`     3  /do/calculadora-salario-por-hora-republica-dominicana  →salario-neto-republica-dominicana
+- `MODULO`     3  /co/calculadora-subsidio-desempleo-proteccion-cesante-colombia
+- `MODULO`     3  /py/calculadora-subsidio-maternidad-ips-paraguay
+- `MODULO`     3  /pt-pt/calculadora-subsidio-refeicao-portugal
+- `MODULO`     3  /co/calculadora-subsidio-vivienda-mi-casa-ya-colombia-2026
+- `MODULO`     3  /co/calculadora-tarifa-taxi-bogota-2026-unidades-recargos
+- `MODULO`     3  /es/calculadora-tasacion-vivienda-espana-precio-m2-zona
+- `MODULO`     3  /mx/calculadora-tenencia-vehicular-mexico-cdmx-edomex-2026
+- `MODULO`     3  /en/cat-age-to-human-years
+- `MODULO`     3  /en/child-allowance-by-age
+- `MODULO`     3  /en/ideal-weight-calculator
+- `MODULO`     3  /pt/itbi-belo-horizonte-3-porcento
+- `MODULO`     3  /en/loan-payment-calculator
+- `MODULO`     3  /pt/porcoes-sushi-por-pessoa-media
+- `MODULO`     3  /en/pot-drainage-gravel
+- `MODULO`     3  /en/virginia-car-tax-personal-property-calculator
+- `MODULO`     3  /en/vocabulary-level-calculator
+- `MODULO`     2  /pt/auxilio-doenca-inss-91-porcento-beneficio
+- `MODULO`     2  /en/bricks-per-square-meter-wall
+- `MODULO`     2  /mx/calculadora-ahorro-voluntario-afore-mexico-2026
+- `MODULO`     2  /co/calculadora-aporte-caja-compensacion-colombia-2026-subsidio-familiar
+- `MODULO`     2  /cl/calculadora-apv-beneficio-tributario-chile-regimen-a-b
+- `MODULO`     2  /ec/calculadora-arriendo-maximo-legal-ecuador
+- `MODULO`     2  /cl/calculadora-arriendo-santiago-vina-concepcion-precio-promedio
+- `MODULO`     2  /cl/calculadora-arriendo-vs-comprar-chile-10-anos-uf
+- `MODULO`     2  /co/calculadora-aumento-mesada-pensional-colombia-2026-ipc
+- `MODULO`     2  /mx/calculadora-auto-contado-vs-financiado-mexico
+- `MODULO`     2  /es/calculadora-autoconsumo-solar-compensacion-excedentes-espana
+- `MODULO`     2  /ve/calculadora-bolivares-a-pesos-colombianos
+- `MODULO`     2  /co/calculadora-bono-hambre-cero-colombia-renta-ciudadana
+- `MODULO`     2  /es/calculadora-cedula-habitabilidad-espana-precio-tramite
+- `MODULO`     2  /mx/calculadora-cfdi-version-4-mexico-emitir-coste-validacion
+- `MODULO`     2  /pe/calculadora-comparador-comisiones-afp-peru
+- `MODULO`     2  /cl/calculadora-compensacion-corte-luz-sec-chile
+- `MODULO`     2  /es/calculadora-comunidad-autonoma-irpf-mas-alto-bajo-espana
+- `MODULO`     2  /mx/calculadora-contabilidad-electronica-multa-sat-mexico
+- `MODULO`     2  /co/calculadora-costo-anual-moto-colombia-2026-soat-tecnomecanica
+- `MODULO`     2  /cl/calculadora-costo-tag-autopistas-santiago-chile
+- `MODULO`     2  /cl/calculadora-credito-consumo-bci-chile-cuota-cae
+- `MODULO`     2  /co/calculadora-credito-hipotecario-colombia-2026-uvr-pesos
+- `MODULO`     2  /es/calculadora-cuanto-tarda-ver-serie-espana
+- `MODULO`     2  /ve/calculadora-cuanto-vale-mi-sueldo-en-dolares-venezuela
+- `FUSION`     2  /ec/calculadora-decimo-tercer-sueldo-ecuador  →calculadora-decimo-cuarto-sueldo-ecuador
+- `MODULO`     2  /es/calculadora-etiqueta-dgt-coche-espana-eco-cero-b-c
+- `MODULO`     2  /py/calculadora-factura-ande-consumo-electrico-paraguay
+- `MODULO`     2  /pt/calculadora-ferias-1-3-empregado-clt
+- `MODULO`     2  /pt/calculadora-financiamento-veiculo-cdc-banco
+- `MODULO`     2  /co/calculadora-fopep-pension-publica-colombia-cuantia
+- `MODULO`     2  /uy/calculadora-iass-uruguay
+- `MODULO`     2  /pt-pt/calculadora-imi-portugal
+- `FUSION`     2  /co/calculadora-impuesto-predial-medellin-2026  →calculadora-impuesto-predial-bogota-2026
+- `MODULO`     2  /do/calculadora-impuestos-importacion-vehiculo-republica-dominicana
+- `MODULO`     2  /co/calculadora-indemnizacion-sustitutiva-colpensiones-colombia-2026
+- `MODULO`     2  /mx/calculadora-ine-renovacion-costo
+- `MODULO`     2  /es/calculadora-irnr-no-residentes-alquiler-vivienda-espana
+- `MODULO`     2  /pt-pt/calculadora-iuc-portugal
+- `MODULO`     2  /pe/calculadora-jornal-construccion-civil-peru-2026-tabla
+- `MODULO`     2  /mx/calculadora-jovenes-construyendo-futuro-monto-2026
+- `MODULO`     2  /pe/calculadora-liquidacion-beneficios-sociales-peru
+- `MODULO`     2  /co/calculadora-nomina-vs-prestacion-servicios-colombia-2026
+- `MODULO`     2  /mx/calculadora-pagare-bancario-vs-cete-rendimiento-mexico
+- `MODULO`     2  /ve/calculadora-pago-reposo-ivss-venezuela
+- `MODULO`     2  /pt-pt/calculadora-pensao-reforma-seguranca-social-portugal
+- `FUSION`     2  /pe/calculadora-pension-65-peru  →calculadora-pension-alimentos-peru
+- `MODULO`     2  /co/calculadora-pension-alimentos-colombia-padre-divorcio-tabla
+- `MODULO`     2  /cl/calculadora-pension-de-alimentos-mora-chile-registro-deudores
+- `MODULO`     2  /cl/calculadora-permiso-paternidad-chile-5-dias-corridos
+- `MODULO`     2  /co/calculadora-puntaje-saber-11-icfes-colombia
+- `MODULO`     2  /ec/calculadora-recargo-nocturno-ecuador
+- `MODULO`     2  /mx/calculadora-renta-mensual-cdmx-vs-guadalajara-monterrey
+- `MODULO`     2  /es/calculadora-renting-leasing-compra-coche-espana-tco
+- `MODULO`     2  /ve/calculadora-retencion-iva-venezuela
+- `MODULO`     2  /pt-pt/calculadora-salario-liquido-portugal
+- `MODULO`     2  /pe/calculadora-salario-por-hora-dia-peru
+- `MODULO`     2  /mx/calculadora-salario-por-hora-mensual-diario-mexico
+- `MODULO`     2  /uy/calculadora-salario-por-hora-uruguay
+- `MODULO`     2  /ve/calculadora-salario-por-hora-venezuela
+- `MODULO`     2  /mx/calculadora-soat-seguro-auto-mexico-cobertura-comparador
+- `MODULO`     2  /cl/calculadora-subsidio-habitacional-chile-ds49-ds1-clase-media
+- `MODULO`     2  /es/calculadora-subsidio-mayores-52-anos-espana-cuantia-meses
+- `MODULO`     2  /co/calculadora-universidad-publica-vs-privada-colombia-coste-2026
+- `MODULO`     2  /en/ceramic-tile-calculator
+- `MODULO`     2  /pt/custo-inventario-extrajudicial-itcmd-cartorio
+- `MODULO`     2  /pt/drenagem-brita-vaso
+- `MODULO`     2  /pt/escritura-registro-cartorio-custos-compra
+- `MODULO`     2  /en/foreigner-residency-id-cost-argentina
+- `MODULO`     2  /en/gaming-pc-budget-fps-components
+- `MODULO`     2  /en/gestational-age-calculator
+- `MODULO`     2  /en/git-repo-size-calculator
+- `MODULO`     2  /en/muscle-recovery-hours
+- `MODULO`     2  /pt/pj-vs-clt-comparador-liquido-br
+- `MODULO`     2  /en/pregnancy-calendar-week-by-week
+- `MODULO`     2  /pt/previdencia-pgbl-vs-vgbl-comparador
+- `MODULO`     2  /en/puppy-cost-first-year
+- `MODULO`     2  /en/rule-of-72-calculator
+- `MODULO`     2  /uy/salario-vacacional-uruguay
+- `MODULO`     2  /en/screen-time-recommendations-by-age
+- `MODULO`     2  /en/servo-pwm-angle
+- `MODULO`     2  /en/steel-kg-m2-slab
+- `MODULO`     2  /en/study-abroad-costs-budget
+- `MODULO`     2  /uy/sueldo-nominal-a-liquido-uruguay
+- `MODULO`     2  /en/tdee-calorie-calculator
+- `MODULO`     2  /en/water-pump-power-watts
+- `MODULO`     2  /en/wedding-carbon-footprint
+- `MODULO`     1  /pt/abono-pecuniario-10-dias-ferias
+- `MODULO`     1  /pt/abono-salarial-pis-pasep-elegibilidade-valor
+- `MODULO`     1  /pt/adicional-noturno-20-porcento-clt
+- `MODULO`     1  /en/age-discuss-difficult-topics-with-kids
+- `MODULO`     1  /en/al30-gd30-bond-yield
+- `MODULO`     1  /en/alcohol-per-guest-event-calculator
+- `MODULO`     1  /pt/aluguel-com-opcao-de-compra-leasing-imovel
+- `MODULO`     1  /pt/aquario-litros-peixes
+- `MODULO`     1  /en/baby-teeth-eruption-timeline
+- `MODULO`     1  /en/back-to-school-budget-calculator
+- `MODULO`     1  /en/basal-metabolic-rate-calculator
+- `MODULO`     1  /en/baseboard-linear-meters
+- `MODULO`     1  /pt/bolsa-familia-valor-por-familia-2026
+- `MODULO`     1  /en/breast-milk-formula
+- `MODULO`     1  /co/calculadora-ahorro-en-pesos-vs-cdt-vs-fic-vs-tes-colombia
+- `MODULO`     1  /pe/calculadora-alquiler-asequible-ingreso-peru
+- `MODULO`     1  /mx/calculadora-aumento-renta-permitido-inpc-mexico
+- `MODULO`     1  /cl/calculadora-bebidas-por-invitado-evento-chile
+- `MODULO`     1  /es/calculadora-bebidas-por-invitado-evento-espana
+- `MODULO`     1  /mx/calculadora-bebidas-por-invitado-evento-mexico
+- `MODULO`     1  /py/calculadora-bebidas-por-invitado-evento-paraguay
+- `MODULO`     1  /ve/calculadora-bono-guerra-economica-ingreso-integral-venezuela
+- `MODULO`     1  /cl/calculadora-bono-marzo-bono-invierno-chile-cuantia-requisitos
+- `MODULO`     1  /uy/calculadora-bpc-a-pesos-uruguay
+- `MODULO`     1  /ve/calculadora-brecha-dolar-bcv-paralelo
+- `MODULO`     1  /mx/calculadora-casetas-gasolina-viaje-carretera-mexico-2026
+- `MODULO`     1  /co/calculadora-cesantias-traslado-fondo-rendimiento-colombia
+- `MODULO`     1  /mx/calculadora-comisiones-afore-2026-cuanto-te-cobran-mexico
+- `MODULO`     1  /co/calculadora-comparador-tarjeta-debito-colombia-2026-comisiones
+- `MODULO`     1  /uy/calculadora-contribucion-inmobiliaria-uruguay
+- `MODULO`     1  /co/calculadora-coste-arriendo-vs-comprar-colombia-10-anos
+- `MODULO`     1  /cl/calculadora-coste-vida-mensual-chile-soltero-pareja-familia
+- `MODULO`     1  /co/calculadora-costo-despido-empleador-colombia-2026
+- `MODULO`     1  /mx/calculadora-costo-pasaporte-mexicano-2026
+- `MODULO`     1  /py/calculadora-costo-transferencia-vehiculo-paraguay
+- `MODULO`     1  /do/calculadora-costo-vida-republica-dominicana
+- `MODULO`     1  /cl/calculadora-crefacile-financiar-electrodomesticos-chile-cuota-cae
+- `MODULO`     1  /cl/calculadora-cripto-chile-impuestos-trader-2026-sii
+- `MODULO`     1  /co/calculadora-cripto-colombia-impuestos-renta-trader-2026
+- `MODULO`     1  /co/calculadora-cuota-administracion-copropiedad-colombia
+- `MODULO`     1  /ve/calculadora-cupo-gasolina-subsidiada-venezuela
+- `MODULO`     1  /co/calculadora-curp-colombia-cedula-ciudadania-extranjeria-validez
+- `MODULO`     1  /cl/calculadora-deposito-vista-vs-cuenta-corriente-chile-comisiones
+- `MODULO`     1  /mx/calculadora-depreciacion-valor-auto-usado-mexico
+- `MODULO`     1  /ec/calculadora-devolucion-iva-tercera-edad-discapacidad-ecuador
+- `MODULO`     1  /es/calculadora-dividir-gastos-cuenta-amigos-espana
+- `FUSION`     1  /do/calculadora-doble-sueldo-republica-dominicana  →sueldo-anual-republica-dominicana
+- `MODULO`     1  /py/calculadora-embargo-salario-paraguay
+- `MODULO`     1  /es/calculadora-erte-vs-ere-diferencias-cuantia-espana
+- `MODULO`     1  /do/calculadora-euro-a-peso-dominicano
+- `MODULO`     1  /ve/calculadora-euros-a-bolivares-bcv-venezuela
+- `MODULO`     1  /es/calculadora-fibra-movil-mejor-precio-comparador-espana-2026
+- `MODULO`     1  /mx/calculadora-fondo-ahorro-vales-despensa-mexico-2026
+- `MODULO`     1  /py/calculadora-gasto-mensual-transporte-publico-paraguay
+- `MODULO`     1  /mx/calculadora-gasto-regreso-clases-2026-mexico
+- `MODULO`     1  /pt/calculadora-idade-anos-meses-dias-data-nascimento
+- `MODULO`     1  /ve/calculadora-igtf-venezuela-3
+- `FUSION`     1  /pe/calculadora-igv-peru  →calculadora-detracciones-igv-peru
+- `MODULO`     1  /co/calculadora-impuesto-departamento-loterias-vehiculos-cigarrillos
+- `MODULO`     1  /py/calculadora-impuesto-inmobiliario-paraguay
+- `MODULO`     1  /cl/calculadora-impuesto-segunda-categoria-anual-chile-rentas-altas
+- `MODULO`     1  /co/calculadora-impuestos-compras-internacionales-colombia-aliexpress-temu
+- `MODULO`     1  /ec/calculadora-impuestos-importacion-senae-ecuador
+- `MODULO`     1  /cl/calculadora-indemnizacion-anos-servicio-chile-despido
+- `MODULO`     1  /co/calculadora-ingresos-no-constitutivos-renta-colombia-vivienda
+- `MODULO`     1  /do/calculadora-ipi-republica-dominicana
+- `MODULO`     1  /mx/calculadora-isr-acciones-bolsa-mexico-10-por-ciento
+- `MODULO`     1  /co/calculadora-isr-arrendamiento-arrendador-colombia-deducciones
+- `MODULO`     1  /mx/calculadora-isr-retiro-ppr-afore-voluntario-anticipado-mexico
+- `MODULO`     1  /uy/calculadora-jornal-uruguay
+- `MODULO`     1  /es/calculadora-mibor-euribor-historico-hipoteca-revision
+- `MODULO`     1  /es/calculadora-modelo-130-pago-fraccionado-autonomo-espana
+- `MODULO`     1  /es/calculadora-modelo-720-bienes-extranjero-espana
+- `MODULO`     1  /ec/calculadora-multa-interes-mora-sri-ecuador
+- `MODULO`     1  /ec/calculadora-multas-transito-ecuador
+- `MODULO`     1  /co/calculadora-pago-anticipado-credito-hipotecario-colombia-ahorro-intereses
+- `MODULO`     1  /pe/calculadora-pago-feriado-trabajado-triple-peru
+- `MODULO`     1  /es/calculadora-pareja-de-hecho-vs-matrimonio-espana-fiscal
+- `MODULO`     1  /do/calculadora-pension-afp-estimacion-republica-dominicana
+- `MODULO`     1  /ec/calculadora-pension-montepio-viudez-iess-ecuador
+- `MODULO`     1  /co/calculadora-pico-placa-solidario-bogota-2026
+- `MODULO`     1  /es/calculadora-prestamo-coche-espana-cdc-vs-renting
+- `MODULO`     1  /co/calculadora-pse-comision-ventas-colombia
+- `MODULO`     1  /pt-pt/calculadora-recibos-verdes-trabalhador-independente-portugal
+- `MODULO`     1  /co/calculadora-rendimiento-cajitas-nu-nequi-bolsillos-colombia
+- `MODULO`     1  /co/calculadora-renta-pensionados-colombia-2026
+- `MODULO`     1  /pe/calculadora-renta-segunda-categoria-ganancia-capital-peru
+- `MODULO`     1  /cl/calculadora-retiro-programado-vs-renta-vitalicia-chile
+- `MODULO`     1  /cl/calculadora-retiro-seguro-cesantia-cic-afc-chile-giros
+- `MODULO`     1  /cl/calculadora-soap-seguro-obligatorio-chile-precio-2026
+- `MODULO`     1  /cl/calculadora-subsidio-arriendo-minvu-chile-2026-monto-requisitos
+- `MODULO`     1  /do/calculadora-subsidio-maternidad-sisalril-republica-dominicana
+- `MODULO`     1  /pe/calculadora-suspension-retencion-cuarta-categoria-peru
+- `MODULO`     1  /co/calculadora-tasa-de-cambio-paralelo-colombia-dolar-blue
+- `MODULO`     1  /cl/calculadora-tope-imponible-cotizaciones-chile-2026
+- `MODULO`     1  /co/calculadora-traspaso-vehiculo-colombia-2026
+- `MODULO`     1  /es/calculadora-vacaciones-pagadas-espana-22-dias-laborables
+- `FUSION`     1  /pe/calculadora-vacaciones-peru  →calculadora-vacaciones-truncas-peru
+- `MODULO`     1  /mx/calculadora-verificacion-vehicular-costo
+- `MODULO`     1  /pt/caldeira-kw-m2-aquecimento
+- `MODULO`     1  /en/competition-weight-calculator
+- `MODULO`     1  /en/conversion-ounce-gram-cooking
+- `FUSION`     1  /do/costo-empleador-republica-dominicana  →calculadora-costo-vida-republica-dominicana
+- `MODULO`     1  /en/creatine-loading-maintenance
+- `MODULO`     1  /en/credit-card-minimum-payment
+- `MODULO`     1  /en/credit-card-payoff-time-calculator
+- `MODULO`     1  /en/criminal-background-certificate-cost
+- `MODULO`     1  /en/crossfit-fran-benchmark-time
+- `MODULO`     1  /en/currency-converter
+- `MODULO`     1  /en/daily-dietary-fiber-intake-calculator
+- `MODULO`     1  /en/db-pool-max-connections
+- `MODULO`     1  /en/dca-bitcoin-historical-returns
+- `MODULO`     1  /en/dieta-mediterranea-adherencia-score-test
+- `MODULO`     1  /en/discount-calculator
+- `MODULO`     1  /en/due-date-from-conception-date
+- `MODULO`     1  /en/eficiencia-carnot-termodinamica
+- `MODULO`     1  /en/egg-size-gram-equivalents
+- `MODULO`     1  /en/electrolyte-replacement-exercise
+- `MODULO`     1  /en/fish-tank-water-calculator
+- `MODULO`     1  /en/food-ph-acidity-calculator
+- `MODULO`     1  /en/hemoglobin-a1c-diabetes-calculator
+- `MODULO`     1  /en/hsa-contribution-limit-2026-calculator
+- `MODULO`     1  /en/inches-to-cm-screen-converter
+- `MODULO`     1  /pt/ipva-sao-paulo-tabela-4-porcento-autos
+- `MODULO`     1  /en/medicare-irmaa-2026-brackets-calculator
+- `MODULO`     1  /en/minimum-retirement-pension-bonus-2026
+- `MODULO`     1  /en/mlss-max-lactate-steady-state
+- `MODULO`     1  /en/no-tax-on-overtime-deduction-calculator
+- `MODULO`     1  /en/omega-3-daily-dha-epa-dose
+- `MODULO`     1  /en/one-rep-max-calculator
+- `MODULO`     1  /en/overclock-temperatura-segura
+- `MODULO`     1  /en/paint-coverage-liters-per-square-meter
+- `MODULO`     1  /en/party-drinks-beer-wine-soda
+- `MODULO`     1  /en/percentage-calculator
+- `MODULO`     1  /en/peso-ideal-ninos
+- `MODULO`     1  /en/pet-medication-dosage-by-weight
+- `MODULO`     1  /en/planting-calendar-southern-hemisphere
+- `MODULO`     1  /en/podcasts-learn-language-daily-minutes
+- `MODULO`     1  /pt/porcoes-bolo-tamanho
+- `MODULO`     1  /en/pot-size-calculator
+- `MODULO`     1  /en/pregnancy-weight-gain-bmi
+- `MODULO`     1  /pt/quantidade-hamburguer-churrasco-aniversario
+- `MODULO`     1  /en/radioactive-decay-half-life
+- `MODULO`     1  /en/ratio-simplifier-calculator
+- `MODULO`     1  /pt/recesso-estagio-proporcional-dias
+- `MODULO`     1  /en/richter-scale-magnitude-energy
+- `MODULO`     1  /en/roi-calculator
+- `MODULO`     1  /en/rough-plaster-mortar-calculator
+- `MODULO`     1  /pt/salario-familia-2026-valor-filhos
+- `MODULO`     1  /en/sales-tax-calculator
+- `MODULO`     1  /en/sales-tax-holiday-2026-savings-calculator
+- `MODULO`     1  /pt/simples-nacional-anexo-iv-servicos-construcao
+- `MODULO`     1  /pt/simples-nacional-anexo-v-profissional-liberal
+- `MODULO`     1  /pt-pt/simulador-aimi-adicional-imi-portugal
+- `MODULO`     1  /en/social-security-earnings-limit-2026-calculator
+- `MODULO`     1  /en/sourdough-hydration-bakers-percentage-calculator
+- `MODULO`     1  /en/sports-hydration-electrolytes-exercise
+- `MODULO`     1  /en/stages-of-grief-family-loss
+- `MODULO`     1  /en/stair-calculator-blondel-rule
+- `MODULO`     1  /en/streaming-carbon-emissions-calculator
+- `MODULO`     1  /do/sueldo-anual-republica-dominicana
+- `MODULO`     1  /en/teaspoon-to-grams-converter
+- `MODULO`     1  /pt/tesouro-ipca-mais-juro-real-composto
+- `MODULO`     1  /en/thermal-k-minimum-zone
+- `MODULO`     1  /en/time-card-hours-worked-calculator
+- `MODULO`     1  /en/tip-by-state-bill-calculator
+- `MODULO`     1  /en/tire-pressure-psi-bar-conversion
+- `MODULO`     1  /en/ups-backup-runtime
+- `MODULO`     1  /en/used-car-transfer-cost
+- `MODULO`     1  /en/vegetable-cooking-times-steamed-boiled
+- `MODULO`     1  /en/ventilation-cfm-room
+- `MODULO`     1  /en/water-turtle-diet-weight-age
+- `MODULO`     1  /en/weekly-essay-writing-language-level
+- `FUSION`     0  /en/10k-training-plan-weeks  →5k-training-plan-weeks
+- `BORRAR`     0  /en/2x2-linear-system-cramer-rule
+- `BORRAR`     0  /en/2x2-matrix-determinant-inverse
+- `BORRAR`     0  /en/50-30-20-family-budget
+- `BORRAR`     0  /en/5k-training-plan-weeks
+- `BORRAR`     0  /pt/adicional-insalubridade-periculosidade-clt-10-20-30-40
+- `BORRAR`     0  /en/air-conditioning-btu-room-calculator
+- `BORRAR`     0  /en/alcohol-calories-beer-wine-fernet
+- `BORRAR`     0  /pt/alcool-ou-gasolina-vale-a-pena-regra-70-porcento
+- `BORRAR`     0  /en/aluminum-profile-linear-meters-window
+- `BORRAR`     0  /en/alyc-commissions-calculator
+- `BORRAR`     0  /en/amplifier-watts-per-channel
+- `BORRAR`     0  /en/annual-bonus-net
+- `BORRAR`     0  /en/annual-pet-carbon-footprint
+- `BORRAR`     0  /en/annual-refrigerator-energy-consumption-kwh
+- `BORRAR`     0  /en/annuity-payout-monthly-calculator
+- `BORRAR`     0  /pt/antecipacao-saque-aniversario-fgts
+- `BORRAR`     0  /pt/aplicativos-idioma-efetividade-comparacao-nivel
+- `BORRAR`     0  /pt/aposentadoria-inss-especial-insalubridade
+- `BORRAR`     0  /pt/aposentadoria-inss-idade-65-mulher-62-homem
+- `BORRAR`     0  /pt/aposentadoria-inss-professor-redutor-5-anos
+- `FUSION`     0  /pt/aposentadoria-inss-tempo-contribuicao-transicao  →calculadora-aposentadoria-inss-2026-tempo-contribuicao
+- `BORRAR`     0  /pt/aposentadoria-inss-transicao-idade-progressiva
+- `BORRAR`     0  /pt/aposentadoria-inss-transicao-pontos
+- `BORRAR`     0  /en/arithmetic-progression-nth-term-sum
+- `BORRAR`     0  /pt/aulas-semanais-italki-online-frequencia
+- `BORRAR`     0  /en/auto-debt-free-certificate-cost
+- `BORRAR`     0  /en/auto-insurance-monthly-premium-coverage
+- `BORRAR`     0  /pt/auxilio-brasil-substituto-bolsa-familia-atual
+- `FUSION`     0  /en/average-calculator  →weighted-average-calculator
+- `BORRAR`     0  /pt/aviso-previo-indenizado-30-dias
+- `BORRAR`     0  /pt/aviso-previo-proporcional-3-dias-ano
+- `BORRAR`     0  /en/aws-ec2-monthly-cost-calculator
+- `BORRAR`     0  /en/baby-diaper-calculator
+- `BORRAR`     0  /en/baby-feeding-amount-by-age-calculator
+- `BORRAR`     0  /en/baby-shoe-size
+- `BORRAR`     0  /en/baby-sleep-hours-by-age
+- `FUSION`     0  /en/baby-sleep-hours-by-age-chart  →baby-sleep-hours-by-age
+- `FUSION`     0  /en/bakers-percentage-calculator  →sourdough-hydration-bakers-percentage-calculator
+- `BORRAR`     0  /pt/bandwidth-streaming-bitrate-resolucao-youtube
+- `BORRAR`     0  /en/barrel-aging-whiskey-calculator
+- `BORRAR`     0  /en/battery-capacity-runtime-ah
+- `BORRAR`     0  /en/battery-runtime-mah-calculator
+- `BORRAR`     0  /en/bbq-meat-portions-per-person
+- `BORRAR`     0  /en/bcra-interest-rate-savings-impact
+- `BORRAR`     0  /en/best-languages-by-profession
+- `BORRAR`     0  /pt/biberon-ml-idade
+- `BORRAR`     0  /en/big-o-complexity-calculator
+- `BORRAR`     0  /en/biweekly-pay-periods-2026-calculator
+- `BORRAR`     0  /en/blood-alcohol-bac-widmark
+- `FUSION`     0  /en/blood-oxygen-saturation-spo2  →blood-oxygen-saturation-spo2-altitude
+- `BORRAR`     0  /en/blood-pressure-normal-hypertension
+- `BORRAR`     0  /en/blood-pressure-who-classification
+- `BORRAR`     0  /pt/blw-introducao-alimentos
+- `BORRAR`     0  /en/blw-introduction-6-months
+- `BORRAR`     0  /en/bmi-seniors-65-plus-table
+- `BORRAR`     0  /en/bmr-basal-harris-benedict-metabolism
+- `BORRAR`     0  /en/body-composition-fat-vs-lean
+- `BORRAR`     0  /pt/bolo-casamento-kg-por-convidado-br
+- `BORRAR`     0  /en/bond-al30-al35-al41-yield
+- `BORRAR`     0  /en/bond-modified-duration
+- `BORRAR`     0  /en/boxing-calories-burned
+- `BORRAR`     0  /en/bread-rising-time-yeast-calculator
+- `BORRAR`     0  /en/breast-pump-production
+- `BORRAR`     0  /en/bridge-fee-cripto-crosschain-costo
+- `BORRAR`     0  /en/btc-nasdaq-sp500-correlation
+- `BORRAR`     0  /en/buoyancy-force-volume
+- `BORRAR`     0  /en/burnout-mbi-assessment
+- `BORRAR`     0  /en/calcium-daily-intake-by-age-lactation-menopause
+- `BORRAR`     0  /co/calculadora-ahorro-comisiones-bre-b-vs-transferencia-colombia
+- `BORRAR`     0  /co/calculadora-ahorros-en-dolares-colombia-bancos-internacionales-2026
+- `BORRAR`     0  /uy/calculadora-ajuste-alquiler-uruguay
+- `BORRAR`     0  /pt-pt/calculadora-amortizacao-antecipada-credito-habitacao-portugal
+- `BORRAR`     0  /es/calculadora-amortizacion-anticipada-hipoteca-plazo-o-cuota-espana
+- `FUSION`     0  /ve/calculadora-anticipo-prestaciones-sociales-venezuela  →calculadora-prestaciones-sociales-venezuela
+- `FUSION`     0  /do/calculadora-anticipos-isr-dgii-republica-dominicana  →calculadora-isr-republica-dominicana
+- `BORRAR`     0  /ve/calculadora-aporte-faov-banavih-venezuela
+- `BORRAR`     0  /co/calculadora-aporte-fic-fomento-investigacion-cientifica-colombia
+- `FUSION`     0  /py/calculadora-aporte-ips-independiente-paraguay  →calculadora-aporte-patronal-ips-paraguay
+- `BORRAR`     0  /pt/calculadora-aposentadoria-inss-2026-tempo-contribuicao
+- `BORRAR`     0  /pt-pt/calculadora-atualizacao-renda-arrendamento-portugal
+- `BORRAR`     0  /cl/calculadora-aumento-pension-reforma-seguro-social-chile-2026
+- `BORRAR`     0  /co/calculadora-beps-colpensiones-colombia-2026
+- `BORRAR`     0  /ec/calculadora-calorias-diarias-ecuador
+- `BORRAR`     0  /ve/calculadora-calorias-diarias-venezuela
+- `BORRAR`     0  /mx/calculadora-cambio-propietario-refrendo-vehicular-mexico-2026
+- `BORRAR`     0  /pt-pt/calculadora-certificados-de-aforro-serie-f-portugal
+- `BORRAR`     0  /cl/calculadora-cobre-precio-bolsa-chile-impacto-fiscal-codelco
+- `BORRAR`     0  /cl/calculadora-coche-electrico-vs-gasolina-chile-tco-5-anos
+- `BORRAR`     0  /mx/calculadora-comisiones-pasarelas-pago-mexico-2026
+- `BORRAR`     0  /es/calculadora-complemento-brecha-genero-pension-espana-2026
+- `BORRAR`     0  /es/calculadora-comprar-coche-electrico-vs-gasolina-espana-2026
+- `BORRAR`     0  /cl/calculadora-comprar-iphone-usa-vs-chile-impuestos-viajero
+- `BORRAR`     0  /uy/calculadora-compras-exterior-courier-uruguay
+- `BORRAR`     0  /cl/calculadora-condonacion-cae-fes-chile-2026
+- `BORRAR`     0  /es/calculadora-consumo-aire-acondicionado-coste-luz-espana
+- `BORRAR`     0  /co/calculadora-contribucion-valorizacion-colombia
+- `BORRAR`     0  /cl/calculadora-copec-costo-viaje-bencina-chile
+- `BORRAR`     0  /cl/calculadora-coste-medico-particular-vs-fonasa-isapre-chile
+- `BORRAR`     0  /es/calculadora-coste-reforma-piso-cocina-bano-espana-m2
+- `BORRAR`     0  /es/calculadora-coste-trabajador-empresa-seguridad-social-espana
+- `BORRAR`     0  /es/calculadora-coste-vuelta-al-cole-2026
+- `BORRAR`     0  /py/calculadora-costo-importar-auto-paraguay
+- `BORRAR`     0  /pe/calculadora-costo-pasaporte-peruano-2026
+- `BORRAR`     0  /ec/calculadora-costo-pasaporte-registro-civil-ecuador
+- `BORRAR`     0  /co/calculadora-costo-vender-online-colombia-2026
+- `BORRAR`     0  /ec/calculadora-costo-viaje-gasolina-ecuador
+- `BORRAR`     0  /pe/calculadora-costo-viaje-gasolina-galon-peru
+- `BORRAR`     0  /py/calculadora-costo-viaje-nafta-paraguay
+- `BORRAR`     0  /cl/calculadora-credito-automotriz-chile-cuota-cae-2026
+- `BORRAR`     0  /mx/calculadora-credito-fovissste-mexico-2026
+- `BORRAR`     0  /mx/calculadora-credito-hipotecario-bancario-mexico-2026
+- `BORRAR`     0  /co/calculadora-credito-hipotecario-davivienda-cuota
+- `BORRAR`     0  /pe/calculadora-credito-mivivienda-bono-buen-pagador-peru
+- `BORRAR`     0  /ve/calculadora-credito-nomina-bdv-venezuela
+- `BORRAR`     0  /mx/calculadora-cripto-bitcoin-impuestos-mexico-isr-ganancia
+- `BORRAR`     0  /mx/calculadora-cuanta-renta-puedo-pagar-sueldo-mexico
+- `BORRAR`     0  /co/calculadora-cuanto-me-presta-banco-vivienda-sueldo-colombia
+- `BORRAR`     0  /py/calculadora-cuota-che-roga-pora-paraguay
+- `BORRAR`     0  /co/calculadora-cuota-inicial-vivienda-colombia-vis-no-vis
+- `BORRAR`     0  /py/calculadora-descuento-dia-no-trabajado-paraguay
+- `BORRAR`     0  /mx/calculadora-descuento-real-buen-fin-2026-mexico
+- `BORRAR`     0  /cl/calculadora-desglose-precio-bencina-impuesto-especifico-chile
+- `BORRAR`     0  /mx/calculadora-devolucion-ahorro-infonavit-subcuenta-vivienda-mexico
+- `BORRAR`     0  /co/calculadora-devolucion-iva-dps-colombia-2026-ciclos
+- `BORRAR`     0  /es/calculadora-devolucion-renta-2025-cuanto-tarda
+- `BORRAR`     0  /pt-pt/calculadora-dias-de-ferias-portugal
+- `BORRAR`     0  /pt-pt/calculadora-dias-uteis-feriados-portugal-2026
+- `BORRAR`     0  /es/calculadora-diesel-vs-gasolina-rentabilidad-km-ano-espana
+- `BORRAR`     0  /co/calculadora-digito-verificacion-nit-dian-colombia
+- `BORRAR`     0  /co/calculadora-edad-escolar-simat-colombia
+- `BORRAR`     0  /py/calculadora-euro-a-guarani
+- `BORRAR`     0  /uy/calculadora-factura-ute-consumo-electrico-uruguay
+- `BORRAR`     0  /co/calculadora-fecha-limite-secop-dias-habiles
+- `BORRAR`     0  /py/calculadora-feriado-trabajado-paraguay
+- `BORRAR`     0  /do/calculadora-ganancia-capital-venta-inmueble-dgii-republica-dominicana
+- `BORRAR`     0  /do/calculadora-gasto-gasolina-viaje-republica-dominicana
+- `BORRAR`     0  /do/calculadora-gastos-cierre-compra-vivienda-republica-dominicana
+- `BORRAR`     0  /uy/calculadora-gastos-compraventa-inmueble-uruguay
+- `BORRAR`     0  /co/calculadora-hora-fin-programa-rcn
+- `BORRAR`     0  /mx/calculadora-importacion-auto-estados-unidos-mexico-2026
+- `BORRAR`     0  /co/calculadora-impuesto-bebidas-azucaradas-ibua-colombia-2026
+- `BORRAR`     0  /cl/calculadora-impuesto-mayor-valor-venta-propiedad-chile-8000-uf
+- `BORRAR`     0  /uy/calculadora-impuesto-patrimonio-uruguay
+- `BORRAR`     0  /do/calculadora-impuesto-premios-loteria-republica-dominicana
+- `BORRAR`     0  /uy/calculadora-impuesto-primaria-uruguay
+- `BORRAR`     0  /do/calculadora-impuesto-sucesiones-herencia-republica-dominicana
+- `BORRAR`     0  /pe/calculadora-impuesto-venta-inmueble-renta-segunda-peru
+- `BORRAR`     0  /pe/calculadora-impuestos-compras-temu-shein-aliexpress-peru
+- `BORRAR`     0  /mx/calculadora-impuestos-importacion-compras-internet-mexico
+- `BORRAR`     0  /es/calculadora-impuestos-loteria-premio-espana-hacienda
+- `BORRAR`     0  /es/calculadora-impuestos-venta-acciones-fondos-irpf-espana
+- `BORRAR`     0  /es/calculadora-incapacidad-permanente-total-absoluta-cuantia-espana
+- `BORRAR`     0  /cl/calculadora-inta-calorias-diarias-chile
+- `BORRAR`     0  /es/calculadora-iprem-2026-espana-veces-ingresos
+- `BORRAR`     0  /mx/calculadora-isr-aguinaldo-exento-gravado-mexico
+- `BORRAR`     0  /mx/calculadora-isr-dividendos-persona-fisica-mexico
+- `BORRAR`     0  /pt-pt/calculadora-isv-importacao-carro-portugal
+- `BORRAR`     0  /es/calculadora-itp-transferencia-coche-segunda-mano-espana
+- `BORRAR`     0  /mx/calculadora-jornada-40-horas-mexico-calendario-gradual-2027-2030
+- `BORRAR`     0  /pt-pt/calculadora-mais-valias-acoes-cripto-irs-portugal
+- `BORRAR`     0  /mx/calculadora-meses-sin-intereses-msi-mexico
+- `BORRAR`     0  /ec/calculadora-mora-patronal-iess-ecuador
+- `BORRAR`     0  /do/calculadora-mora-recargos-dgii-republica-dominicana
+- `BORRAR`     0  /ec/calculadora-multa-no-sufragar-cne-ecuador
+- `BORRAR`     0  /co/calculadora-notas-colombia
+- `BORRAR`     0  /pt/calculadora-orcamento-presente-dia-dos-pais
+- `BORRAR`     0  /pt-pt/calculadora-orcamento-regresso-as-aulas-2026
+- `BORRAR`     0  /pt/calculadora-ovulacao-periodo-fertil-ciclo
+- `BORRAR`     0  /es/calculadora-paga-extra-prorrateo-espana
+- `BORRAR`     0  /cl/calculadora-pago-feriado-irrenunciable-18-19-septiembre-chile
+- `BORRAR`     0  /ve/calculadora-paro-forzoso-ivss-venezuela
+- `BORRAR`     0  /co/calculadora-peajes-combustible-ruta-colombia-2026
+- `BORRAR`     0  /es/calculadora-pension-viudedad-cuantia-espana-2026
+- `BORRAR`     0  /cl/calculadora-pgu-pension-garantizada-universal-chile-monto-requisitos
+- `BORRAR`     0  /es/calculadora-precio-itv-espana-2026-comunidad-tipo-vehiculo
+- `BORRAR`     0  /do/calculadora-prestamo-vehiculo-cuota-republica-dominicana
+- `BORRAR`     0  /co/calculadora-presuncion-costos-ugpp-colombia-2026
+- `BORRAR`     0  /cl/calculadora-presupuesto-asado-18-fiestas-patrias-chile
+- `BORRAR`     0  /mx/calculadora-presupuesto-fiesta-noche-mexicana-15-septiembre
+- `BORRAR`     0  /do/calculadora-presupuesto-utiles-escolares-republica-dominicana
+- `BORRAR`     0  /ec/calculadora-presupuesto-utiles-escolares-sierra-ecuador
+- `BORRAR`     0  /co/calculadora-recibo-agua-bogota-eaab-2026
+- `BORRAR`     0  /pe/calculadora-recibo-gas-natural-calidda-peru
+- `BORRAR`     0  /co/calculadora-redam-cuotas-alimentarias-mora
+- `BORRAR`     0  /pt-pt/calculadora-reembolso-irs-2026-quando-recebo
+- `BORRAR`     0  /cl/calculadora-reforma-previsional-chile-cotizacion-adicional-fapp
+- `BORRAR`     0  /py/calculadora-remesas-espana-paraguay
+- `BORRAR`     0  /pe/calculadora-renta-anual-trabajo-cuarta-quinta-peru
+- `BORRAR`     0  /pt/calculadora-restituicao-imposto-renda-2026-lotes
+- `BORRAR`     0  /pt-pt/calculadora-retencao-na-fonte-irs-portugal
+- `BORRAR`     0  /es/calculadora-retencion-irpf-factura-autonomo-15-7-espana
+- `BORRAR`     0  /co/calculadora-retiro-cesantias-porvenir
+- `BORRAR`     0  /es/calculadora-revalorizacion-pension-2026-ipc-espana
+- `BORRAR`     0  /ec/calculadora-rol-de-pagos-ecuador
+- `BORRAR`     0  /do/calculadora-san-ahorro-rotativo-republica-dominicana
+- `BORRAR`     0  /es/calculadora-seguro-coche-precio-espana-2026-edad-bonus-malus
+- `BORRAR`     0  /uy/calculadora-seguro-de-paro-uruguay
+- `BORRAR`     0  /ve/calculadora-semanas-cotizadas-pension-ivss-venezuela
+- `BORRAR`     0  /cl/calculadora-servel-edad-para-votar-chile
+- `BORRAR`     0  /cl/calculadora-sii-boleta-honorarios-2026
+- `BORRAR`     0  /es/calculadora-smi-2026-espana-neto-14-pagas-media-jornada
+- `BORRAR`     0  /es/calculadora-subida-sueldo-funcionarios-2026-espana
+- `BORRAR`     0  /pt-pt/calculadora-subsidio-de-doenca-baixa-medica-portugal
+- `BORRAR`     0  /uy/calculadora-subsidio-enfermedad-uruguay
+- `BORRAR`     0  /pe/calculadora-subsidio-lactancia-essalud-peru-monto-requisitos
+- `BORRAR`     0  /pt-pt/calculadora-subsidio-parental-licenca-parental-portugal
+- `BORRAR`     0  /pe/calculadora-subvencion-practicas-preprofesionales-peru
+- `BORRAR`     0  /cl/calculadora-sueldo-proporcional-dias-trabajados-chile
+- `BORRAR`     0  /pt-pt/calculadora-taxa-de-esforco-credito-habitacao-portugal
+- `BORRAR`     0  /pt/calculadora-tmb-mifflin-st-jeor-portugues
+- `BORRAR`     0  /es/calculadora-trastero-garaje-precio-alquiler-espana-2026
+- `BORRAR`     0  /pe/calculadora-uit-2026-soles-peru-conversor
+- `BORRAR`     0  /mx/calculadora-vacaciones-mexico-2024-reforma-12-dias-incremento
+- `BORRAR`     0  /mx/calculadora-verificacion-vehicular-mexico-multas-cdmx-edomex
+- `BORRAR`     0  /ve/calculadora-vuelto-en-bolivares-pago-en-dolares-venezuela
+- `BORRAR`     0  /pt/calendario-plantio-hemisferio-sul
+- `BORRAR`     0  /pt/capacidade-carga-pickup-peso-util
+- `BORRAR`     0  /en/car-battery-cca-calculator
+- `BORRAR`     0  /en/car-depreciation-annual-residual-value
+- `BORRAR`     0  /en/car-loan-interest-deduction-calculator
+- `BORRAR`     0  /en/carbon-offset-trees-flight
+- `BORRAR`     0  /en/caregiver-child-ratio-by-age
+- `BORRAR`     0  /pt/cbc-uba-materias-regularidade-requisitos
+- `BORRAR`     0  /pt/cdb-rendimento-liquido-ir-regressivo
+- `BORRAR`     0  /en/cedular-investment-income-tax
+- `BORRAR`     0  /en/celiac-gluten-free-tacc-foods
+- `BORRAR`     0  /en/child-bmi-percentile
+- `BORRAR`     0  /pt/chocolate-bombons-caseiro-receita
+- `BORRAR`     0  /en/choking-heimlich-age-maneuver
+- `BORRAR`     0  /en/cholesterol-total-ldl-hdl-levels
+- `BORRAR`     0  /en/cidr-subnetting-calculator
+- `BORRAR`     0  /en/co2-savings-idle-chargers
+- `BORRAR`     0  /pt/cobaia-vitamina-c-dosagem-diaria
+- `BORRAR`     0  /pt/coelho-comida-feno-peso-idade
+- `BORRAR`     0  /en/coffee-hydration-myths
+- `BORRAR`     0  /en/coffee-water-ratio-brewing-calculator
+- `BORRAR`     0  /en/cold-wallet-vs-hot-wallet-riesgo
+- `BORRAR`     0  /pt/colheita-esperada-horta-kg
+- `BORRAR`     0  /en/combinations-n-choose-k
+- `BORRAR`     0  /en/complete-vegan-protein-combinations
+- `BORRAR`     0  /en/compound-interest-calculator-long-term
+- `BORRAR`     0  /en/condo-fees-apartment-m2-category
+- `BORRAR`     0  /pt/consorcio-parcela-taxa-administracao-vs-financiamento
+- `BORRAR`     0  /pt/consumo-geladeira-anual-kwh
+- `BORRAR`     0  /pt/conta-de-luz-kwh-bandeira-tarifaria
+- `BORRAR`     0  /en/continuous-footing-m3-concrete
+- `BORRAR`     0  /pt/contrato-aluguel-2-anos-vs-3-anos
+- `BORRAR`     0  /pt/conversao-colher-cha-gramas
+- `BORRAR`     0  /pt/conversao-cups-gramas-farinha-acucar-oleo
+- `BORRAR`     0  /pt/conversao-medida-pneu-diametro
+- `BORRAR`     0  /pt/conversao-quintal-tonelada-kg-agro
+- `BORRAR`     0  /pt/conversao-torque-nm-lb-ft-kgm
+- `BORRAR`     0  /pt/conversao-velocidade-kmh-mph-nos
+- `BORRAR`     0  /en/conversion-bytes-kb-mb-gb-tb
+- `BORRAR`     0  /en/conversion-meters-to-feet
+- `BORRAR`     0  /en/cpr-bls-chest-compressions-rate
+- `BORRAR`     0  /en/critical-power-cp
+- `BORRAR`     0  /en/crypto-balance-to-local-currency
+- `BORRAR`     0  /pt/custo-empregada-domestica-esocial-2026
+- `BORRAR`     0  /pt/custo-obra-por-m2-quanto-custa-construir-casa-cub
+- `BORRAR`     0  /pt/custo-viagem-combustivel-km-litro
+- `BORRAR`     0  /en/daily-caffeine-safe-maximum-cups
+- `BORRAR`     0  /en/daily-calcium-intake
+- `BORRAR`     0  /en/daily-iron-requirements-by-sex-age
+- `BORRAR`     0  /en/daily-steps-calculator
+- `BORRAR`     0  /pt/darf-cripto-15-porcento-ganho-35k-mensal
+- `BORRAR`     0  /en/dash-diet-daily-sodium
+- `BORRAR`     0  /pt/dash-sodio-diario-tabela
+- `BORRAR`     0  /en/dc-power-supply-watts-amperage
+- `BORRAR`     0  /en/debt-avalanche-payoff-calculator
+- `BORRAR`     0  /pt/decimo-terceiro-salario-proporcional
+- `BORRAR`     0  /pt/decimo-terceiro-segunda-parcela-dezembro
+- `BORRAR`     0  /en/deck-boards-patio
+- `BORRAR`     0  /pt/depositos-aluguel-quantos-meses-devolucao
+- `BORRAR`     0  /pt/despejo-causa-prazos-honorarios-processo
+- `BORRAR`     0  /pt/despesas-condominio-m2
+- `BORRAR`     0  /pt/diluicao-concentracao-c1v1-c2v2
+- `BORRAR`     0  /en/dilution-concentration-c1v1-c2v2
+- `BORRAR`     0  /en/distance-two-points-cartesian-plane
+- `BORRAR`     0  /pt/distancia-queda-livre-altura
+- `BORRAR`     0  /en/divorce-settlement-cost-calculator
+- `FUSION`     0  /en/dog-age-by-breed  →dog-calories-by-breed-age
+- `BORRAR`     0  /en/dog-apartment-compatibility
+- `BORRAR`     0  /en/dog-calories-by-breed-age
+- `BORRAR`     0  /en/dog-food-calculator-by-weight
+- `BORRAR`     0  /en/dog-shedding-by-season-calculator
+- `BORRAR`     0  /en/dog-vaccination-schedule-puppy-adult
+- `BORRAR`     0  /en/dog-walking-minutes-by-breed
+- `BORRAR`     0  /en/door-hinge-screw-calculator
+- `BORRAR`     0  /en/doppler-effect-frequency-calculator
+- `BORRAR`     0  /en/drain-grate-size-calculator
+- `BORRAR`     0  /en/drive-time-calculator-stops
+- `BORRAR`     0  /en/driver-license-cost-by-category
+- `BORRAR`     0  /en/dry-pasta-portions-per-person
+- `BORRAR`     0  /pt/dsr-descanso-semanal-remunerado-clt
+- `BORRAR`     0  /pt/economia-eletrodomestico-eficiencia
+- `BORRAR`     0  /pt/elo-xadrez-vitoria-derrota-variacao
+- `BORRAR`     0  /en/emergency-fund-calculator-months-expenses
+- `BORRAR`     0  /pt/emissoes-email-anexos
+- `BORRAR`     0  /pt/emprestimo-consignado-margem-consignavel-inss-clt
+- `BORRAR`     0  /pt/empuxo-arquimedes-volume
+- `BORRAR`     0  /en/endurance-race-gel-calculator
+- `BORRAR`     0  /en/energy-efficient-appliance-savings
+- `BORRAR`     0  /en/english-levels-cambridge-duolingo-time-conversion
+- `BORRAR`     0  /en/epinephrine-dosage-weight-anaphylaxis
+- `BORRAR`     0  /en/estrogen-progesterone-cycle-phases
+- `BORRAR`     0  /en/ethernet-cable-category-speed-distance
+- `BORRAR`     0  /pt/euro-real-viagem-europa-iof-cambio
+- `BORRAR`     0  /en/eviction-timeline-attorney-fees
+- `BORRAR`     0  /en/extra-ac-fuel-consumption
+- `BORRAR`     0  /en/fantasy-football-auction-draft-budget-calculator
+- `BORRAR`     0  /en/fasting-blood-glucose-levels
+- `BORRAR`     0  /pt/fator-r-simples-nacional-anexo-iii-vs-v
+- `BORRAR`     0  /en/female-dog-cat-spaying-age
+- `BORRAR`     0  /pt/ferias-clt-integrais-mais-um-terco
+- `BORRAR`     0  /pt/ferias-proporcionais-clt-demitido
+- `BORRAR`     0  /en/fertilizante-npk-dosis
+- `BORRAR`     0  /pt/festa-churrasco-gramas-por-pessoa-br
+- `BORRAR`     0  /en/fetal-weight-percentile-by-week
+- `BORRAR`     0  /pt/fgts-aplicacao-compra-imovel-mcmv
+- `BORRAR`     0  /pt/fgts-saldo-rendimento-anual-tr
+- `BORRAR`     0  /pt/fideicomisso-construcao-aporte-cotas
+- `BORRAR`     0  /en/file-compression-ratio
+- `BORRAR`     0  /pt/financiamento-caixa-tr-poupanca-taxa
+- `BORRAR`     0  /en/first-home-purchase-costs
+- `BORRAR`     0  /en/fodmap-foods-intolerance-chart
+- `BORRAR`     0  /en/food-handler-permit-cost
+- `BORRAR`     0  /pt/fraldas-por-dia-mes-bebe-idade
+- `BORRAR`     0  /en/free-fall-distance
+- `BORRAR`     0  /en/friction-force-coefficient
+- `BORRAR`     0  /en/fsh-lh-menopause-perimenopause-age
+- `BORRAR`     0  /en/ftp-cycling-watts
+- `BORRAR`     0  /en/fuel-tank-range-calculator
+- `BORRAR`     0  /en/funding-rate-perpetual-bitcoin-cost
+- `BORRAR`     0  /pt/fundo-imobiliario-fii-rendimento-dividendo
+- `BORRAR`     0  /pt/furao-dieta-proteina-animal
+- `BORRAR`     0  /en/gas-ideal-pv-nrt
+- `BORRAR`     0  /en/gcd-lcm-two-integers
+- `BORRAR`     0  /en/glycemic-index-load-food-portion
+- `BORRAR`     0  /en/glycemic-load-meal
+- `BORRAR`     0  /en/gnc-vs-gasoline-annual-savings
+- `BORRAR`     0  /en/graduation-timeline-calculator
+- `BORRAR`     0  /en/gravitational-potential-energy
+- `BORRAR`     0  /en/ground-coffee-per-cup-brewing-method
+- `BORRAR`     0  /en/guinea-pig-vitamin-c-daily-dosage
+- `BORRAR`     0  /en/half-marathon-projection-from-10k-cameron
+- `BORRAR`     0  /en/healthy-snacks-150-300-calories
+- `BORRAR`     0  /en/heloc-home-equity-line-payment-calculator
+- `BORRAR`     0  /en/high-school-gpa-calculator
+- `BORRAR`     0  /en/homemade-pizza-dough-grams-guests
+- `BORRAR`     0  /en/hookes-law-spring-force
+- `BORRAR`     0  /en/huron-ferret-dieta-proteina-animal
+- `BORRAR`     0  /en/hydroponic-nutrients-ec-ppm
+- `BORRAR`     0  /en/ice-party-calculator
+- `BORRAR`     0  /en/ideal-weight-for-women
+- `BORRAR`     0  /en/ideal-weight-lorentz-devine-formula
+- `BORRAR`     0  /pt/imposto-importacao-compras-internacionais-remessa-conforme-20-60
+- `BORRAR`     0  /en/inductive-capacitive-reactance
+- `BORRAR`     0  /en/infant-formula-bottle-ml-by-age
+- `BORRAR`     0  /en/inflation-calculator-us-cpi
+- `BORRAR`     0  /en/intermittent-fasting-16-8-calories
+- `BORRAR`     0  /pt/ipva-parana-1-9-porcento-autos
+- `BORRAR`     0  /pt/ipva-santa-catarina-2-porcento-autos
+- `BORRAR`     0  /pt/ir-swing-trade-acoes-15-porcento-isento-20k
+- `BORRAR`     0  /en/ira-401k-argentina-equivalent
+- `BORRAR`     0  /en/iron-ferritin-anemia
+- `BORRAR`     0  /en/irregular-fertile-window
+- `BORRAR`     0  /en/isolated-footing-columns
+- `BORRAR`     0  /pt/itcmd-sao-paulo-heranca-doacao-4-porcento
+- `FUSION`     0  /en/ivf-due-date-calculator  →pregnancy-due-date-calculator
+- `BORRAR`     0  /en/jpg-quality-size-web-optimization
+- `BORRAR`     0  /en/keto-macros-deficit-complete
+- `BORRAR`     0  /en/kilos-to-pounds-converter
+- `BORRAR`     0  /en/kinetic-energy-ec
+- `BORRAR`     0  /en/language-app-effectiveness-comparison
+- `BORRAR`     0  /en/language-learning-hours-calculator
+- `BORRAR`     0  /en/language-variants-by-region
+- `BORRAR`     0  /en/lease-comparison-2-vs-3-years
+- `BORRAR`     0  /pt/leasing-versus-financiamento-auto
+- `BORRAR`     0  /en/leasing-vs-auto-loan-comparison
+- `BORRAR`     0  /en/leer-mes-libros-meta-anual-reto
+- `BORRAR`     0  /en/llm-token-cost-calculator
+- `BORRAR`     0  /en/logarithm-base-any-number
+- `BORRAR`     0  /en/magnesium-daily-requirement
+- `BORRAR`     0  /en/male-fertility-age
+- `BORRAR`     0  /en/marathon-pace-goal-time-split-kilometer
+- `BORRAR`     0  /en/maximum-heart-rate-by-age
+- `BORRAR`     0  /pt/mdc-mmc-dois-numeros-inteiros
+- `BORRAR`     0  /en/mean-median-mode-range-statistics
+- `BORRAR`     0  /en/mechanical-work-force-distance
+- `BORRAR`     0  /en/meeting-cost-calculator
+- `BORRAR`     0  /en/melamine-board-cutting-calculator
+- `BORRAR`     0  /pt/mesada-semanal-filho-idade
+- `BORRAR`     0  /pt/midjourney-creditos-mensais
+- `BORRAR`     0  /en/midjourney-stable-diffusion-credits-monthly
+- `BORRAR`     0  /en/money-market-fund-yield
+- `BORRAR`     0  /en/mortgage-payoff-extra-payment-calculator
+- `BORRAR`     0  /en/mortgage-refinance-break-even-calculator
+- `BORRAR`     0  /en/movie-duration-snacks
+- `BORRAR`     0  /en/moving-truck-cost-calculator
+- `BORRAR`     0  /pt/mudanca-custo-frete-caminhao-km-caixa
+- `BORRAR`     0  /pt/mulch-espessura-quantidade
+- `BORRAR`     0  /pt/multa-quebra-contrato-aluguel-proporcional
+- `BORRAR`     0  /en/music-equipment-budget-calculator
+- `BORRAR`     0  /en/natural-light-energy-savings
+- `BORRAR`     0  /en/net-present-value-calculator
+- `BORRAR`     0  /en/net-worth-tracker-calculator
+- `BORRAR`     0  /en/optimal-age-language-learning
+- `BORRAR`     0  /en/oven-temperature-conversion-calculator
+- `BORRAR`     0  /en/ovulation-fertile-window-calculator
+- `BORRAR`     0  /pt/padel-ranking-pontos-apt-aap-subir
+- `BORRAR`     0  /en/page-load-time-core-web-vitals
+- `BORRAR`     0  /pt/papel-poupado-impressao-dupla
+- `BORRAR`     0  /en/paper-saved-double-sided-printing
+- `BORRAR`     0  /pt/paralaxe-distancia-em-parsec
+- `BORRAR`     0  /en/parallax-distance-parsecs
+- `BORRAR`     0  /pt/parede-tijolos-m2
+- `BORRAR`     0  /en/parrot-parakeet-seed-distribution
+- `BORRAR`     0  /pt/passeios-cachorro-minutos-raca
+- `BORRAR`     0  /en/password-cracking-time-length
+- `BORRAR`     0  /pt/pc-gamer-fps-componentes-orcamento
+- `FUSION`     0  /en/pe-ratio-calculator  →ratio-simplifier-calculator
+- `BORRAR`     0  /pt/pegada-carbono-casamento-evento
+- `BORRAR`     0  /pt/pensao-alimenticia-percentual-salario-filho
+- `BORRAR`     0  /en/percentage-increase-decrease-calculator
+- `FUSION`     0  /en/percentage-of-number-calculator  →percentage-calculator
+- `BORRAR`     0  /pt/permutacoes-n-escolhidos-k
+- `BORRAR`     0  /en/photon-energy-frequency-wavelength
+- `BORRAR`     0  /en/pittsburgh-sleep-quality-index
+- `BORRAR`     0  /en/plant-spacing-vegetable-garden
+- `FUSION`     0  /en/planting-calendar-northern-hemisphere  →planting-calendar-southern-hemisphere
+- `BORRAR`     0  /pt/podcasts-aprender-idioma-minutos-dia
+- `BORRAR`     0  /en/polynomial-integral-calculator
+- `BORRAR`     0  /pt/pontos-cnh-suspensao-ctb-limite-12-meses
+- `BORRAR`     0  /en/portfolio-60-40-crypto-traditional-allocation
+- `BORRAR`     0  /en/post-marathon-rest-days-calculator
+- `BORRAR`     0  /en/postpartum-depression-screening
+- `BORRAR`     0  /en/power-factor-correction
+- `BORRAR`     0  /en/pregnancy-weeks-by-ultrasound-crl
+- `BORRAR`     0  /en/premature-infant-corrected-age
+- `BORRAR`     0  /pt/probabilidade-binomial-ensaios-sucessos
+- `BORRAR`     0  /en/probiotic-daily-cfu-dosage
+- `BORRAR`     0  /pt/progressao-geometrica-soma-termo
+- `BORRAR`     0  /pt/projecao-21k-de-10k-cameron
+- `BORRAR`     0  /en/property-tax-calculator-by-state-usa
+- `BORRAR`     0  /en/quadratic-equation-roots-discriminant
+- `BORRAR`     0  /pt/quando-podar-rosa
+- `BORRAR`     0  /en/quintal-to-metric-ton-converter
+- `FUSION`     0  /en/rabbit-age-in-human-years  →cat-age-to-human-years
+- `BORRAR`     0  /en/rabbit-diet-hay-pellets
+- `BORRAR`     0  /en/radians-to-degrees-angle
+- `BORRAR`     0  /en/radiative-forcing-co2-ppm
+- `BORRAR`     0  /en/recipe-scaling-calculator
+- `BORRAR`     0  /en/recommended-ram-by-use-case
+- `BORRAR`     0  /en/redshift-radial-velocity
+- `BORRAR`     0  /pt/regra-de-tres-simples-composta-direta-inversa
+- `BORRAR`     0  /en/rent-to-own-property-calculator
+- `BORRAR`     0  /en/rental-contract-usd-pesification
+- `BORRAR`     0  /en/rental-deposit-months-return
+- `BORRAR`     0  /en/rental-guarantee-insurance-monthly-cost
+- `BORRAR`     0  /pt/rescisao-clt-justa-causa
+- `FUSION`     0  /pt/rescisao-clt-sem-justa-causa  →rescisao-clt-justa-causa
+- `BORRAR`     0  /en/rice-portions-per-person-side-dish
+- `BORRAR`     0  /en/ring-size-finger
+- `BORRAR`     0  /en/rmd-required-minimum-distribution-calculator
+- `BORRAR`     0  /en/road-trip-time-distance-calculator
+- `BORRAR`     0  /en/roth-vs-traditional-ira-calculator
+- `BORRAR`     0  /en/rpe-rir-training-percentage
+- `BORRAR`     0  /en/rugby-handicap-points-relegation-average
+- `BORRAR`     0  /pt/rugby-handicap-pontos-descenso-media
+- `BORRAR`     0  /en/rule-of-three-simple-direct-inverse
+- `BORRAR`     0  /en/running-10-percent-rule
+- `BORRAR`     0  /en/safe-deposit-box-bank-cost-comparison
+- `BORRAR`     0  /en/scholarship-minimum-gpa-requirement
+- `BORRAR`     0  /en/screen-ppi-pixel-density
+- `BORRAR`     0  /en/seed-germination-days-temperature
+- `BORRAR`     0  /en/self-employment-tax-calculator-1099
+- `BORRAR`     0  /en/senior-bonus-deduction-65-calculator
+- `BORRAR`     0  /pt/servo-pwm-angulo
+- `BORRAR`     0  /en/side-hustle-tax-savings-calculator
+- `BORRAR`     0  /en/simple-interest-vs-compound-comparison
+- `BORRAR`     0  /en/simple-linear-regression-least-squares
+- `BORRAR`     0  /en/simple-pendulum-period
+- `FUSION`     0  /pt/simples-nacional-anexo-i-comercio  →simples-nacional-anexo-ii-industria
+- `BORRAR`     0  /pt/simples-nacional-anexo-ii-industria
+- `FUSION`     0  /pt/simples-nacional-anexo-iii-servicos  →simples-nacional-anexo-iv-servicos-construcao
+- `BORRAR`     0  /pt-pt/simulador-abono-de-familia-2026-escaloes-portugal
+- `BORRAR`     0  /pt-pt/simulador-ajudas-de-custo-portugal-2026
+- `BORRAR`     0  /pt-pt/simulador-csi-complemento-solidario-idosos-portugal
+- `BORRAR`     0  /pt-pt/simulador-imposto-selo-heranca-partilhas-portugal
+- `BORRAR`     0  /pt-pt/simulador-irs-conjunto-vs-separado-casados-portugal
+- `BORRAR`     0  /pt-pt/simulador-isencao-imt-imposto-selo-jovem-portugal
+- `BORRAR`     0  /pt-pt/simulador-pensao-alimentos-filhos-portugal
+- `BORRAR`     0  /pt-pt/simulador-pre-aviso-demissao-portugal
+- `BORRAR`     0  /pt-pt/simulador-rsi-rendimento-social-insercao-2026-portugal
+- `BORRAR`     0  /pt-pt/simulador-salario-layoff-portugal
+- `BORRAR`     0  /en/sine-cosine-tangent-angle-calculator
+- `BORRAR`     0  /en/social-security-benefits-calculator-usa
+- `BORRAR`     0  /en/social-security-cola-2026-increase-calculator
+- `BORRAR`     0  /en/solar-panel-kw-home-calculator
+- `BORRAR`     0  /en/speed-reading-progress-improvement
+- `BORRAR`     0  /en/sphere-volume-surface-area
+- `BORRAR`     0  /en/square-feet-to-square-meters-real-estate
+- `BORRAR`     0  /en/srm-color-cerveza-morey
+- `BORRAR`     0  /en/standard-deviation-variance-calculator
+- `BORRAR`     0  /en/stock-options-vesting-tech-startup
+- `BORRAR`     0  /en/stopping-distance-speed-friction
+- `BORRAR`     0  /en/subcutaneous-visceral-fat-difference
+- `BORRAR`     0  /en/superficie-corporal-du-bois
+- `BORRAR`     0  /en/suplementos-deportivos-stack-principiante
+- `BORRAR`     0  /en/swimming-pace-100m
+- `BORRAR`     0  /pt/tartaruga-agua-dieta-peso-idade
+- `BORRAR`     0  /en/tax-refund-calculator-usa
+- `BORRAR`     0  /en/teacher-competition-scoring-calculator
+- `BORRAR`     0  /pt/tempo-biodegradacao-material
+- `BORRAR`     0  /pt/tempos-cozimento-verduras-vapor-cozido
+- `BORRAR`     0  /pt/tesouro-prefixado-rendimento-vencimento
+- `BORRAR`     0  /en/testosterone-normal-levels-by-age-men
+- `BORRAR`     0  /en/tile-boxes-coverage-calculator
+- `BORRAR`     0  /en/timing-belt-change-interval-km
+- `BORRAR`     0  /en/tip-income-tax-deduction-calculator
+- `BORRAR`     0  /en/tire-diameter-calculator
+- `BORRAR`     0  /en/total-employment-cost-with-taxes
+- `BORRAR`     0  /pt/trail-running-desnivel-ritmo-ajustado
+- `BORRAR`     0  /en/trail-running-elevation-pace-adjustment
+- `BORRAR`     0  /en/transfer-car-registration-province
+- `BORRAR`     0  /en/triangle-area-herons-formula
+- `BORRAR`     0  /en/truck-payload-capacity-calculator
+- `BORRAR`     0  /en/uba-cbc-requirements
+- `BORRAR`     0  /en/us-b1-b2-tourist-visa-cost
+- `BORRAR`     0  /en/usb-transfer-time-calculator
+- `BORRAR`     0  /en/usd-broker-investment-calculator
+- `BORRAR`     0  /en/usda-hardiness-zone
+- `BORRAR`     0  /en/vacation-days-seniority-lct
+- `BORRAR`     0  /pt/vale-transporte-desconto-6-porcento-br
+- `BORRAR`     0  /pt/velocidade-usb-transferencia-arquivo
+- `BORRAR`     0  /en/vitamin-b12-dosage-vegan-monthly
+- `BORRAR`     0  /en/vitamin-d-dosage-daily-sun-exposure-age
+- `BORRAR`     0  /en/vitamina-b12-vegano
+- `BORRAR`     0  /en/vodka-fruit-infusion-time
+- `BORRAR`     0  /pt/volume-cone-raio-altura
+- `BORRAR`     0  /en/w4-paycheck-withholding-calculator
+- `BORRAR`     0  /en/waist-to-hip-ratio-cardiovascular-health
+- `BORRAR`     0  /en/water-heater-capacity-calculator
+- `BORRAR`     0  /en/water-pipe-diameter-by-flow-rate
+- `BORRAR`     0  /en/water-tank-capacity-by-people
+- `BORRAR`     0  /en/weekly-training-frequency-muscle-group
+- `BORRAR`     0  /en/weekly-volume-muscle-group
+- `BORRAR`     0  /en/weight-on-other-planets
+- `BORRAR`     0  /en/weighted-average-calculator
+- `BORRAR`     0  /en/weighted-average-cost-crypto
+- `BORRAR`     0  /en/when-to-prune-roses
+- `BORRAR`     0  /en/wifi-optimal-channels-24-5-ghz
+- `BORRAR`     0  /en/yield-farming-impermanent-loss-pool
+- `BORRAR`     0  /en/yoga-calories-by-style
+
+## [TRABAJO] Me despiden o renuncio: ¿cuánto me corresponde? · `despido`
+40 calcs · 7,768 ses/90d · **22 página · 18 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`  3376  /calculadora-indemnizacion-despido
+- `PAGINA`  1340  /calculadora-liquidacion-final-renuncia
+- `PAGINA`   684  /calculadora-art-indemnizacion-tabla-incapacidad-laboral-permanente
+- `PAGINA`   411  /cl/calculadora-finiquito-chile-completo-causal-despido
+- `PAGINA`   351  /mx/calculadora-finiquito-liquidacion-mexico
+- `PAGINA`   350  /calculadora-fondo-desempleo-anses-monto-tiempo
+- `PAGINA`   339  /calculadora-antiguedad-laboral
+- `PAGINA`   231  /mx/calculadora-finiquito-mexico-completo-rescision-relacion
+- `PAGINA`   225  /calculadora-liquidacion-final-empleada-casa-particular-despido-art-49
+- `PAGINA`    85  /calculadora-asignacion-desempleo-seguro-prestacion-anses
+- `PAGINA`    48  /calculadora-embargo-sueldo-porcentaje-maximo
+- `PAGINA`    41  /calculadora-art-prestacion-dineraria-ilt-dias-pago-incapacidad-temporaria
+- `PAGINA`    39  /calculadora-indemnizacion-despido-fuerza-mayor-art-247-lct
+- `PAGINA`    34  /calculadora-vacaciones-no-tomadas-indemnizacion-formula
+- `PAGINA`    30  /py/calculadora-preaviso-paraguay
+- `PAGINA`    26  /calculadora-indemnizacion-empleada-casa-particular-ley-26844-despido
+- `PAGINA`    24  /calculadora-dias-vacaciones-ganadas-antiguedad-lct
+- `PAGINA`    18  /py/calculadora-liquidacion-final-paraguay
+- `PAGINA`    14  /calculadora-indemnizacion-despido-embarazo-estabilidad-13-salarios
+- `PAGINA`    13  /do/calculadora-preaviso-republica-dominicana
+- `PAGINA`    12  /calculadora-resarcimiento-accidente
+- `PAGINA`    10  /calculadora-despido-enfermedad-inculpable-art-211-art-212-lct
+- `MODULO`     7  /py/calculadora-antiguedad-laboral-paraguay
+- `MODULO`     7  /calculadora-finiquito-bolivia-desvinculacion
+- `MODULO`     6  /co/calculadora-indemnizacion-despido-sin-justa-causa-colombia-2026
+- `MODULO`     6  /py/indemnizacion-despido-paraguay
+- `MODULO`     5  /calculadora-finiquito-renuncia-chile-articulo-162
+- `MODULO`     4  /ec/calculadora-antiguedad-laboral-ecuador
+- `MODULO`     4  /calculadora-finiquito-liquidacion-mexico-2026
+- `MODULO`     4  /ec/calculadora-indemnizacion-despido-intempestivo-ecuador
+- `MODULO`     4  /calculadora-libertad-condicional-dos-tercios-pena
+- `MODULO`     4  /uy/liquidacion-final-uruguay
+- `MODULO`     3  /co/calculadora-antiguedad-laboral-colombia
+- `MODULO`     3  /ve/calculadora-antiguedad-laboral-venezuela
+- `MODULO`     2  /cl/calculadora-finiquito-renuncia-voluntaria-chile-vacaciones-proporcionales
+- `MODULO`     2  /calculadora-indemnizacion-despido-objetivo-espana-20-dias
+- `MODULO`     2  /calculadora-preaviso-indemnizacion-sustitutiva-lct
+- `MODULO`     2  /ve/calculadora-preaviso-venezuela
+- `MODULO`     1  /es/calculadora-finiquito-despido-improcedente-espana-2026
+- `MODULO`     1  /pe/calculadora-indemnizacion-despido-arbitrario-peru
+
+## [VIVIENDA] Me actualizan el alquiler · `alquiler`
+26 calcs · 7,165 ses/90d · **10 página · 14 módulo · 0 fusión · 2 borrar**
+
+- `PAGINA`  4325  /calculadora-actualizacion-alquiler-icl
+- `PAGINA`  2392  /calculadora-actualizacion-inflacion-ipc
+- `PAGINA`   157  /calculadora-inflacion-acumulada-periodo
+- `PAGINA`    94  /calculadora-aumento-alquiler-trimestral-cuatrimestral-semestral
+- `PAGINA`    50  /calculadora-inflacion-poder-compra
+- `PAGINA`    22  /calculadora-comision-inmobiliaria-alquiler-caba-pba
+- `PAGINA`    18  /calculadora-contrato-alquiler-2-anios-vs-3-anios
+- `PAGINA`    17  /calculadora-seguro-caucion-alquiler-costo-mensual
+- `PAGINA`    15  /calculadora-desalojo-causa-plazos-honorarios-juicio
+- `PAGINA`    14  /calculadora-expensas-departamento-estimado
+- `MODULO`     9  /calculadora-abl-expensas-quien-paga-inquilino-propietario
+- `MODULO`     9  /calculadora-poliza-juridica-arrendamiento-mexico
+- `MODULO`     7  /py/calculadora-actualizacion-inflacion-ipc-paraguay
+- `MODULO`     6  /do/calculadora-actualizacion-inflacion-ipc-republica-dominicana
+- `MODULO`     5  /calculadora-depositos-alquiler-cuantos-meses-devolucion
+- `MODULO`     5  /calculadora-inflacion-perdida-poder-adquisitivo
+- `MODULO`     5  /calculadora-sueldo-minimo-para-alquilar
+- `MODULO`     3  /pe/calculadora-actualizacion-inflacion-ipc-peru
+- `MODULO`     3  /uy/calculadora-actualizacion-inflacion-ipc-uruguay
+- `MODULO`     3  /calculadora-cuanto-alquiler-puedo-pagar-sueldo-argentina
+- `MODULO`     2  /ec/calculadora-actualizacion-inflacion-ipc-ecuador
+- `MODULO`     2  /calculadora-expensas-departamento-calcular-m2-categoria
+- `MODULO`     1  /calculadora-alquiler-temporal-vs-tradicional-rendimiento-neto
+- `MODULO`     1  /calculadora-costo-mantener-propiedad-vacia-mensual
+- `BORRAR`     0  /en/aumento-alquiler-trimestral-cuatrimestral-semestral
+- `BORRAR`     0  /es/calculadora-contrato-alquiler-espana-fianza-aval-mes-renta
+
+## [FECHAS] Fechas, edad y cuenta regresiva · `fechas`
+39 calcs · 4,799 ses/90d · **16 página · 19 módulo · 1 fusión · 3 borrar**
+
+- `PAGINA`  2223  /dias-entre-dos-fechas
+- `PAGINA`  1460  /calculadora-edad-exacta
+- `PAGINA`   270  /calculadora-edad-en-semanas
+- `PAGINA`   269  /calculadora-generacion-perteneces
+- `PAGINA`   153  /calculadora-edad-exacta-anos-meses-dias-segundos
+- `PAGINA`   113  /calculadora-cuando-son-las-proximas-elecciones-por-pais
+- `PAGINA`    55  /calculadora-cuantos-dias-faltan-Navidad-2026
+- `PAGINA`    37  /calculadora-cuenta-regresiva-dias-faltan
+- `PAGINA`    27  /calculadora-edad-en-dias
+- `PAGINA`    24  /calculadora-biorhythm
+- `PAGINA`    23  /calculadora-de-horas
+- `PAGINA`    20  /calculadora-expectativa-vida
+- `PAGINA`    19  /calculadora-angel-guardian-fecha
+- `PAGINA`    13  /calculadora-cuanto-falta-fin-de-ano-2026-dias-horas-segundos
+- `PAGINA`    11  /calculadora-edad-planeta
+- `PAGINA`    10  /calculadora-dia-nacimiento-semana
+- `MODULO`     9  /calculadora-piedra-nacimiento
+- `MODULO`     7  /calculadora-nombre-rapper
+- `MODULO`     7  /calculadora-que-dia-de-la-semana
+- `MODULO`     6  /calculadora-cuando-es-el-dia-del-padre-madre-nino-por-pais
+- `MODULO`     6  /calculadora-cuenta-regresiva-dias-hasta-fecha
+- `MODULO`     6  /calculadora-horas-vida-restantes
+- `MODULO`     6  /calculadora-velocidad-distancia-tiempo-fisica
+- `MODULO`     5  /calculadora-nombre-estrella-wars
+- `MODULO`     4  /calculadora-fecha-10000-dias
+- `MODULO`     3  /calculadora-cuanto-falta-verano-enero-febrero
+- `MODULO`     2  /calculadora-cuanto-falta-feriado-proximo-argentina-2026
+- `MODULO`     2  /calculadora-nombre-elfo
+- `MODULO`     2  /calculadora-proximo-cumpleanos
+- `MODULO`     2  /calculadora-que-generacion-sos
+- `MODULO`     1  /mx/calculadora-cuanto-falta-grito-independencia-mexico
+- `MODULO`     1  /calculadora-cuanto-falta-mundial-fifa-2026-2030
+- `MODULO`     1  /calculadora-cuanto-falta-venc-tarjeta-credito-mes
+- `MODULO`     1  /calculadora-planeta-regente
+- `MODULO`     1  /calculadora-vida-utilizada-porcentaje
+- `BORRAR`     0  /pt/calculadora-de-horas-soma-banco-horas-jornada
+- `BORRAR`     0  /calculadora-numero-camino-vida
+- `BORRAR`     0  /sumar-restar-horas-minutos
+- `FUSION`     0  /velocidad-distancia-tiempo-despeje  →calculadora-velocidad-distancia-tiempo-fisica
+
+## [TRABAJO] Mi aguinaldo (SAC) · `aguinaldo`
+24 calcs · 2,833 ses/90d · **7 página · 14 módulo · 2 fusión · 1 borrar**
+
+- `PAGINA`  2368  /calculadora-aguinaldo-sac
+- `PAGINA`   307  /calculadora-aguinaldo-empleada-casa-particular-medio-tiempo-categoria
+- `PAGINA`    31  /mx/calculadora-prima-vacacional-mexico
+- `PAGINA`    26  /calculadora-cuanto-falta-aguinaldo-junio-diciembre
+- `PAGINA`    12  /mx/calculadora-aguinaldo-mexico-2026-15-dias-tope-30
+- `PAGINA`    11  /en/aguinaldo-calculator-argentina
+- `PAGINA`    11  /calculadora-liquidacion-cesantias-colombia-2026
+- `MODULO`     9  /calculadora-prima-servicios-colombia-2026
+- `MODULO`     8  /calculadora-aguinaldo-empleado-mensual-quincenal-vs-quincena
+- `MODULO`     8  /py/calculadora-aguinaldo-paraguay
+- `MODULO`     6  /pe/calculadora-cts-peru-deposito-semestral
+- `MODULO`     6  /pe/calculadora-gratificacion-peru-julio-diciembre
+- `FUSION`     5  /py/aguinaldo-proporcional-paraguay  →calculadora-aguinaldo-paraguay
+- `MODULO`     5  /calculadora-aguinaldo-mexico-2026
+- `MODULO`     5  /calculadora-sac-proporcional
+- `MODULO`     4  /pe/calculadora-aguinaldo-fiestas-patrias-sector-publico-peru-2026
+- `MODULO`     3  /calculadora-cts-peru-compensacion-tiempo-servicios-2026
+- `MODULO`     2  /uy/aguinaldo-uruguay
+- `MODULO`     2  /calculadora-gratificacion-peru-julio-diciembre-2026
+- `MODULO`     2  /calculadora-prima-de-antiguedad-mexico
+- `MODULO`     1  /cl/calculadora-aguinaldo-fiestas-patrias-Navidad-chile-2026
+- `MODULO`     1  /calculadora-prima-vacacional-mexico-2026
+- `BORRAR`     0  /calculadora-aguinaldo-jubilados-anses-diciembre-2026
+- `FUSION`     0  /pe/calculadora-aguinaldo-navidad-sector-publico-peru-2026  →calculadora-aguinaldo-fiestas-patrias-sector-publico-peru-2026
+
+## [TRABAJO] ¿Cuánto me queda de sueldo? · `sueldo-neto`
+50 calcs · 2,828 ses/90d · **29 página · 17 módulo · 2 fusión · 2 borrar**
+
+- `PAGINA`   436  /calculadora-sueldo-bruto-desde-neto
+- `PAGINA`   317  /sueldo-en-mano-argentina
+- `PAGINA`   315  /py/salario-minimo-paraguay-2026
+- `PAGINA`   249  /calculadora-aportes-patronales-empleado-registrado-cargas-sociales-2026
+- `PAGINA`   211  /co/calculadora-horas-extras-colombia-2026
+- `PAGINA`   181  /calculadora-sueldo-por-hora
+- `PAGINA`   155  /co/calculadora-salario-minimo-colombia-2026-auxilio-transporte
+- `PAGINA`   123  /calculadora-horas-extra
+- `PAGINA`   108  /calculadora-sueldo-neto-chile-2026
+- `PAGINA`   103  /calculadora-presentismo-puntualidad
+- `PAGINA`    87  /calculadora-horas-extras-50-100
+- `PAGINA`    68  /salario-minimo-vital-movil-argentina
+- `PAGINA`    60  /simulador-recibo-de-sueldo-argentina
+- `PAGINA`    44  /calculadora-sueldo-hora-extra-nocturna-feriado
+- `PAGINA`    40  /calculadora-ajuste-sueldo-inflacion
+- `PAGINA`    31  /calculadora-salario-minimo-2026-comparativa
+- `PAGINA`    28  /calculadora-sueldo-neto-mexico-isr-imss
+- `PAGINA`    27  /do/calculadora-horas-extras-republica-dominicana
+- `PAGINA`    26  /mx/calculadora-isr-mensual-empleados-subsidio-empleo-mexico
+- `PAGINA`    22  /mx/calculadora-salario-minimo-mexico-2026
+- `PAGINA`    21  /calculadora-plus-antiguedad
+- `PAGINA`    16  /calculadora-cuota-sindical-descuento-sueldo
+- `PAGINA`    15  /py/calculadora-horas-extras-paraguay
+- `PAGINA`    14  /calculadora-valor-hora-trabajo
+- `PAGINA`    11  /calculadora-sueldo-en-dolares
+- `PAGINA`    10  /calculadora-isr-mensual-mexico-2026
+- `PAGINA`    10  /do/calculadora-salario-minimo-republica-dominicana
+- `PAGINA`    10  /calculadora-salario-real-inflacion
+- `PAGINA`    10  /calculadora-sueldo-actualizado-ipc-inflacion
+- `MODULO`     9  /calculadora-sueldo-neto-autonomo-monotributista
+- `FUSION`     9  /calculadora-valor-hora-trabajo-mensual  →calculadora-valor-hora-trabajo
+- `MODULO`     7  /calculadora-cuanto-vale-mi-tiempo-hora-anual-salario
+- `MODULO`     7  /pt-pt/calculadora-salario-minimo-portugal-hora
+- `MODULO`     6  /sueldo-vs-promedio-argentino
+- `MODULO`     5  /calculadora-cuanto-gano-por-segundo
+- `MODULO`     5  /calculadora-horas-trabajo-necesarias-para-comprar
+- `MODULO`     5  /calculadora-poder-adquisitivo-sueldo-real
+- `MODULO`     4  /calculadora-honorarios-persona-fisica-mexico
+- `MODULO`     4  /cl/calculadora-horas-extras-chile-recargo-50-ley-40-horas
+- `MODULO`     3  /uy/calculadora-horas-extra-uruguay
+- `MODULO`     3  /mx/calculadora-horas-extras-doble-triple-mexico
+- `FUSION`     3  /calculadora-sueldo-neto-colombia-2026  →calculadora-sueldo-neto-chile-2026
+- `MODULO`     2  /ec/calculadora-horas-extra-suplementarias-ecuador
+- `MODULO`     2  /ve/calculadora-horas-extras-venezuela
+- `MODULO`     2  /mx/calculadora-sueldo-bruto-desde-neto-mexico-2026
+- `MODULO`     2  /mx/calculadora-sueldo-neto-mexico
+- `MODULO`     1  /uy/calculadora-salario-minimo-uruguay
+- `MODULO`     1  /calculadora-sueldo-en-dolares-poder-compra
+- `BORRAR`     0  /es/calculadora-horas-extras-valor-espana
+- `BORRAR`     0  /calculadora-horas-nocturnas-argentina
+
+## [IMPUESTOS] Impuesto a las Ganancias (4ta categoría) · `ganancias`
+37 calcs · 2,311 ses/90d · **17 página · 17 módulo · 2 fusión · 1 borrar**
+
+- `PAGINA`  1371  /calculadora-impuesto-ganancias-sueldo
+- `PAGINA`   215  /calculadora-retencion-ganancias-rg-830
+- `PAGINA`   192  /calculadora-impuesto-renta-colombia-persona-natural-2026
+- `PAGINA`   131  /calculadora-ganancias-empleados-4ta-categoria-2026
+- `PAGINA`    57  /calculadora-ganancias-aguinaldo-sac-retencion
+- `PAGINA`    53  /calculadora-cuarta-categoria-empleado-empresa-argentina
+- `PAGINA`    52  /es/calculadora-irpf-2026-tramos-espana-nomina
+- `PAGINA`    25  /calculadora-deduccion-prepaga-medicina-ganancias
+- `PAGINA`    24  /calculadora-ganancias-tramos-empleado-mensual-2026
+- `PAGINA`    23  /cl/calculadora-impuesto-renta-segunda-categoria-chile-2026-tabla
+- `PAGINA`    20  /es/calculadora-irpf-alquiler-vivienda-arrendador-espana
+- `PAGINA`    16  /es/calculadora-irpf-capital-mobiliario-intereses-dividendos-espana
+- `PAGINA`    16  /calculadora-retencion-ganancias-siradig-trabajador
+- `PAGINA`    12  /calculadora-deduccion-familia-conyuge-hijo-ganancias
+- `PAGINA`    12  /calculadora-impuesto-renta-peru-4ta-5ta-2026
+- `PAGINA`    12  /pe/calculadora-impuesto-renta-quinta-categoria-peru
+- `PAGINA`    10  /calculadora-ganancias-monotributista-pase-regimen-general
+- `MODULO`     9  /pe/calculadora-impuesto-renta-empresa-regimen-general-peru
+- `MODULO`     8  /co/calculadora-deduccion-dependientes-colombia-renta-2026
+- `MODULO`     7  /pe/calculadora-deduccion-adicional-3-uit-sunat-peru
+- `MODULO`     6  /calculadora-irpf-cataluna-2026-asalariado
+- `MODULO`     4  /calculadora-deduccion-alquiler-ganancias-40-porciento
+- `MODULO`     4  /uy/calculadora-irpf-alquiler-uruguay
+- `FUSION`     4  /uy/calculadora-irpf-uruguay  →calculadora-irpf-alquiler-uruguay
+- `MODULO`     4  /uy/irpf-servicios-personales-uruguay
+- `MODULO`     3  /calculadora-ganancias-segunda-categoria-renta-financiera-2026
+- `MODULO`     3  /co/calculadora-impuesto-renta-empresas-colombia-35-porcentaje-2026
+- `FUSION`     3  /calculadora-irpf-madrid-2026-asalariado  →calculadora-irpf-cataluna-2026-asalariado
+- `MODULO`     3  /pt/irpf-deducao-previdencia-pgbl-12-porcento
+- `MODULO`     2  /mx/calculadora-deduccion-gastos-medicos-mexico-personales-anual
+- `MODULO`     2  /calculadora-devolucion-ganancias-4ta-saldo-favor
+- `MODULO`     2  /ec/calculadora-impuesto-renta-ecuador
+- `MODULO`     2  /uy/calculadora-irpf-aguinaldo-uruguay
+- `MODULO`     2  /uy/calculadora-irpf-venta-inmueble-uruguay
+- `MODULO`     1  /mx/calculadora-deduccion-intereses-hipoteca-declaracion-anual-mexico
+- `MODULO`     1  /uy/calculadora-irpf-anual-devolucion-uruguay
+- `BORRAR`     0  /es/calculadora-deduccion-maternidad-1200-euros-espana
+
+## [MATE] Convertir unidades · `unidades`
+63 calcs · 2,051 ses/90d · **27 página · 33 módulo · 2 fusión · 1 borrar**
+
+- `PAGINA`   756  /conversor-moneda-dolar-peso-real-latam
+- `PAGINA`   314  /conversor-numero-a-letras-cantidad
+- `PAGINA`   131  /conversor-celsius-fahrenheit-temperatura
+- `PAGINA`    66  /calculadora-conversor-milimetros-a-pulgadas
+- `PAGINA`    64  /conversor-pulgadas-a-centimetros
+- `PAGINA`    61  /conversor-kilogramos-libras-onzas
+- `PAGINA`    60  /conversor-numeros-romanos-arabigos
+- `PAGINA`    56  /conversor-dolar-argentina
+- `PAGINA`    40  /calculadora-conversor-psi-a-bar
+- `PAGINA`    36  /calculadora-conversor-gramos-a-onzas
+- `PAGINA`    32  /calculadora-conversion-celsius-fahrenheit-kelvin-rankine-temperatura
+- `PAGINA`    27  /calculadora-conversor-kw-a-hp
+- `PAGINA`    26  /calculadora-conversion-quintal-tonelada-kg-agro
+- `PAGINA`    21  /calculadora-conversion-millas-kilometros-nudos-velocidad
+- `PAGINA`    21  /conversor-dolar-euro-pesos-argentinos
+- `PAGINA`    20  /calculadora-conversion-fahrenheit-celsius-clima
+- `PAGINA`    19  /calculadora-conversion-milla-kilometro-ida-vuelta
+- `PAGINA`    19  /conversor-decimal-binario-hexadecimal
+- `PAGINA`    19  /conversor-metros-cuadrados-hectareas-acres
+- `PAGINA`    17  /calculadora-conversor-talles-calzado-us-ar-eu
+- `PAGINA`    17  /conversor-litros-galones-mililitros
+- `PAGINA`    17  /conversor-unidades-longitud-peso-volumen-temperatura
+- `PAGINA`    16  /calculadora-conversor-mb-a-gb
+- `PAGINA`    16  /calculadora-tallas-ropa-internacional
+- `PAGINA`    15  /calculadora-talle-zapatilla-conversion
+- `PAGINA`    11  /calculadora-conversion-metro-pie-feet-exacto
+- `PAGINA`    11  /calculadora-conversor-mbps-a-mb-s
+- `MODULO`     9  /calculadora-conversion-kilo-libra-lb-kg-exacto
+- `MODULO`     9  /calculadora-conversion-litros-galones-onzas
+- `MODULO`     9  /calculadora-conversor-brazas-a-metros
+- `MODULO`     9  /calculadora-conversor-meses-a-semanas
+- `MODULO`     9  /calculadora-tamano-archivo-conversor
+- `MODULO`     8  /calculadora-conversor-pies-a-metros
+- `MODULO`     8  /calculadora-conversor-tb-a-gb
+- `MODULO`     7  /calculadora-conversor-milisegundos-a-segundos
+- `MODULO`     6  /calculadora-conversion-atmosferas-pascales-bar
+- `MODULO`     6  /calculadora-conversor-kb-a-mb
+- `MODULO`     5  /calculadora-conversion-libras-kilos-onzas-stone
+- `MODULO`     5  /calculadora-conversion-ppm-mg-l-quimica-agua
+- `MODULO`     5  /calculadora-conversor-celsius-a-kelvin
+- `MODULO`     4  /calculadora-conversor-bits-a-bytes
+- `MODULO`     4  /calculadora-conversor-micrometros-a-milimetros
+- `MODULO`     3  /calculadora-conversion-temperatura-clima
+- `MODULO`     3  /calculadora-conversor-calorias-a-joules
+- `MODULO`     3  /calculadora-conversor-radianes-a-grados
+- `MODULO`     3  /calculadora-conversor-talles-ropa-us-ar-eu
+- `MODULO`     3  /calculadora-conversor-toneladas-cortas-a-toneladas-metricas
+- `MODULO`     2  /calculadora-conversor-acres-a-hectareas
+- `MODULO`     2  /calculadora-conversor-anos-a-dias
+- `MODULO`     2  /calculadora-conversor-btu-a-joules
+- `MODULO`     2  /calculadora-conversor-dias-a-horas
+- `MODULO`     2  /calculadora-conversor-kwh-a-joules
+- `MODULO`     2  /calculadora-conversor-pulgadas-cuadradas-a-centimetros-cuadrados
+- `MODULO`     2  /calculadora-conversor-semanas-a-dias
+- `MODULO`     2  /calculadora-conversor-varas-a-metros
+- `MODULO`     2  /calculadora-zapatilla-usa-a-europa
+- `FUSION`     2  /conversor-letras-a-numero  →conversor-numero-a-letras-cantidad
+- `MODULO`     1  /calculadora-conversion-pulgada-centimetro-screen
+- `FUSION`     1  /calculadora-conversor-hectareas-a-metros-cuadrados  →conversor-metros-cuadrados-hectareas-acres
+- `MODULO`     1  /calculadora-conversor-horas-a-minutos
+- `MODULO`     1  /calculadora-conversor-pies-a-pulgadas
+- `MODULO`     1  /pt/conversor-idade-cachorro-gato-humana
+- `BORRAR`     0  /en/conversion-ppm-mg-l-quimica-agua
+
+## [OBRA] ¿Cuánto sale construir? · `construir`
+27 calcs · 1,692 ses/90d · **12 página · 15 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`   598  /calculadora-costo-m2-construccion-argentina
+- `PAGINA`   404  /calculadora-conversor-metros-lineales-a-metros-cuadrados
+- `PAGINA`   254  /calculadora-ladrillos-por-m2-construccion
+- `PAGINA`   125  /calculadora-cantidad-ladrillos-metro-cuadrado-pared
+- `PAGINA`    37  /calculadora-revoque-grueso-m3-m2
+- `PAGINA`    35  /calculadora-revoque-cemento-cal-arena
+- `PAGINA`    32  /calculadora-arena-grava-hormigon
+- `PAGINA`    31  /calculadora-cemento-arena-piedra-por-m3-hormigon
+- `PAGINA`    31  /calculadora-mortero-juntas-ladrillos-m2-pared
+- `PAGINA`    26  /calculadora-bloques-hormigon-por-m2-pared
+- `PAGINA`    18  /calculadora-alambre-cerco-perimetral-metros
+- `PAGINA`    11  /calculadora-volumen-excavacion-m3-tierra
+- `MODULO`     9  /calculadora-adoquines-m2
+- `MODULO`     9  /calculadora-arena-relleno-terreno-m3
+- `MODULO`     8  /calculadora-conversor-bolsas-cemento-por-metro-cubico
+- `MODULO`     8  /calculadora-conversor-pie-tabla-a-metro-cubico
+- `MODULO`     8  /calculadora-hierro-construccion-losa-m2
+- `MODULO`     8  /calculadora-malla-sima-losa-m2
+- `MODULO`     6  /calculadora-acero-kg-m2-losa
+- `MODULO`     6  /calculadora-cerramiento-perimetro-casa-ladrillos-costo
+- `MODULO`     6  /calculadora-contrapiso-m3
+- `MODULO`     6  /calculadora-viga-hormigon-h-b-dimensiones
+- `MODULO`     4  /calculadora-m2-casa-planos-total-construido
+- `MODULO`     4  /calculadora-materiales-construccion
+- `MODULO`     3  /calculadora-arena-sanitaria-gato-kg-mes
+- `MODULO`     3  /calculadora-metros-cuadrados-terreno-irregular-poligono
+- `MODULO`     2  /calculadora-zapata-corrida-m3-hormigon
+
+## [AUTO] Nafta, consumo y viajes en auto · `nafta`
+27 calcs · 1,369 ses/90d · **12 página · 14 módulo · 0 fusión · 1 borrar**
+
+- `PAGINA`   580  /calculadora-combustible-viaje-auto
+- `PAGINA`   213  /calculadora-costo-peaje-ruta
+- `PAGINA`   108  /calculadora-consumo-nafta-litros-100km
+- `PAGINA`   102  /calculadora-estimador-costo-viaje-taxi-remis
+- `PAGINA`    60  /calculadora-litros-nafta-viaje-ruta-argentina
+- `PAGINA`    57  /calculadora-uber-didi-cabify-comparativa-ciudad
+- `PAGINA`    52  /calculadora-autonomia-tanque-combustible
+- `PAGINA`    50  /calculadora-consumo-combustible-km-litro
+- `PAGINA`    42  /calculadora-comparar-nafta-vs-gnc-ahorro
+- `PAGINA`    29  /calculadora-autovia-peajes-argentina-ruta-2-ruta-3
+- `PAGINA`    24  /calculadora-costo-viaje-combustible-kilometros
+- `PAGINA`    12  /calculadora-precio-remis-por-km-argentina-2026-cordoba-rosario-buenos-aires
+- `MODULO`     5  /calculadora-emision-co2-auto-combustible
+- `MODULO`     4  /calculadora-autonomia-tanque-lleno-kilometros
+- `MODULO`     4  /calculadora-emisiones-co2-auto-g-km-anual
+- `MODULO`     4  /calculadora-huella-carbono-auto-anual
+- `MODULO`     4  /calculadora-peaje-autopista-baires-la-plata-costo
+- `MODULO`     3  /calculadora-ahorro-auto-electrico-vs-nafta-anual
+- `MODULO`     3  /calculadora-auto-electrico-vs-nafta-tco-5-anos-argentina
+- `MODULO`     3  /calculadora-uber-vs-auto-propio
+- `MODULO`     2  /calculadora-consumo-aire-acondicionado-auto-extra
+- `MODULO`     2  /calculadora-costo-cargar-auto-electrico-vs-nafta
+- `MODULO`     2  /calculadora-nafta-mensual-commute
+- `MODULO`     2  /calculadora-velocidad-promedio-trayecto-ciudad
+- `MODULO`     1  /calculadora-ahorro-transporte-publico-vs-auto
+- `MODULO`     1  /calculadora-litros-nafta-por-salario-poder-compra
+- `BORRAR`     0  /calculadora-llenar-tanque-nafta-argentina-costo
+
+## [TRABAJO] ¿Cuánto gana un…? (convenios y paritarias) · `cuanto-gana`
+22 calcs · 1,360 ses/90d · **17 página · 4 módulo · 1 fusión · 0 borrar**
+
+- `PAGINA`   391  /calculadora-paritaria-uocra-construccion-2026-categoria
+- `PAGINA`   161  /calculadora-sueldo-gastronomico-uthgra-mozo-cocinero
+- `PAGINA`   147  /es/calculadora-convenio-hosteleria-espana-sueldo-2026-categoria
+- `PAGINA`   140  /calculadora-sueldo-docente-argentina-cargo-antiguedad
+- `PAGINA`    89  /calculadora-sueldo-camionero-fedcam-basico-adicionales
+- `PAGINA`    71  /calculadora-paritaria-comercio-2026-aumento-acumulado
+- `PAGINA`    60  /calculadora-sueldo-empleados-comercio-cct-130-75
+- `PAGINA`    54  /calculadora-paritaria-camioneros-2026-flete-larga-distancia
+- `FUSION`    45  /es/calculadora-convenio-comercio-espana-sueldo-categoria-2026  →calculadora-convenio-hosteleria-espana-sueldo-2026-categoria
+- `PAGINA`    34  /calculadora-sueldo-smata-mecanico-automotor-basico
+- `PAGINA`    30  /calculadora-sueldo-policia-federal-grado-antiguedad
+- `PAGINA`    23  /calculadora-sueldo-docente-ademys-caba-antiguedad
+- `PAGINA`    21  /calculadora-sueldo-uom-metalurgico-basico-neto
+- `PAGINA`    19  /calculadora-sueldo-medico-residente-hospital-publico
+- `PAGINA`    14  /calculadora-sueldo-aeronautico-piloto-azafata-tripulante
+- `PAGINA`    11  /calculadora-sueldo-chofer-colectivo-uta-urbano
+- `PAGINA`    11  /calculadora-sueldo-enfermero-hospital-publico-categoria
+- `PAGINA`    11  /calculadora-sueldo-panadero-basico-feriado-nocturno
+- `MODULO`     9  /calculadora-licencia-vacaciones-cct-comercio-empleados-comercio-argentina-2026
+- `MODULO`     8  /calculadora-concurso-docente-puntaje-antecedentes-baires
+- `MODULO`     8  /calculadora-sueldo-programador-desarrollador-argentina-seniority
+- `MODULO`     3  /calculadora-sueldo-docente-afa-tecnico-categoria-b-c
+
+## [AUTO] ¿Cuánto me cuesta tener el auto? · `costo-auto`
+29 calcs · 1,203 ses/90d · **17 página · 9 módulo · 1 fusión · 2 borrar**
+
+- `PAGINA`   471  /calculadora-transfer-auto-costo-registro
+- `PAGINA`   209  /calculadora-patente-auto-provincia
+- `PAGINA`    97  /ec/calculadora-patente-municipal-ecuador
+- `PAGINA`    73  /calculadora-patente-ciclomotor-moto-argentina-costo
+- `PAGINA`    57  /calculadora-registro-dnrpa-auto-0km-arancel
+- `PAGINA`    43  /calculadora-costo-por-kilometro-auto
+- `PAGINA`    28  /calculadora-multa-transito-valor
+- `PAGINA`    28  /calculadora-patente-auto-valor
+- `PAGINA`    26  /calculadora-vtv-costo-provincia-2026
+- `PAGINA`    24  /calculadora-antiguedad-auto-amortizacion
+- `PAGINA`    21  /calculadora-vtv-ruta-vencimiento-vigencia-meses
+- `PAGINA`    19  /calculadora-vtv-vencimiento-turno
+- `PAGINA`    16  /calculadora-amortizacion-auto-valor-residual
+- `PAGINA`    14  /calculadora-multa-transito-puntos-licencia
+- `PAGINA`    12  /calculadora-patente-auto-cordoba-2026-valuacion-fiscal-cuotas
+- `PAGINA`    11  /calculadora-seguro-auto-estimado
+- `PAGINA`    10  /calculadora-patente-moto-provincias-2026-alicuota
+- `MODULO`     9  /calculadora-costo-mantenimiento-auto-anual-km
+- `MODULO`     7  /simulador-costo-mantener-auto
+- `MODULO`     6  /cl/calculadora-patente-comercial-municipal-chile-capital-propio
+- `FUSION`     5  /calculadora-vtv-costo-provincias-2026  →calculadora-vtv-costo-provincia-2026
+- `MODULO`     4  /calculadora-costo-total-propiedad-auto-anual
+- `MODULO`     3  /calculadora-certificado-libre-deuda-auto-costo
+- `MODULO`     3  /uy/calculadora-patente-rodados-uruguay
+- `MODULO`     3  /calculadora-titularidad-caratular-auto-trasladar-provincia
+- `MODULO`     2  /py/calculadora-patente-vehiculo-paraguay
+- `MODULO`     2  /cl/calculadora-seguro-auto-chile-todo-riesgo-comparador-2026
+- `BORRAR`     0  /calculadora-seguro-auto-estimacion-precio
+- `BORRAR`     0  /en/registro-dnrpa-auto-0km-arancel
+
+## [PLATA] ¿Dónde pongo mis pesos? · `donde-invierto`
+32 calcs · 1,198 ses/90d · **16 página · 13 módulo · 1 fusión · 2 borrar**
+
+- `PAGINA`   337  /calculadora-interes-compuesto
+- `PAGINA`   282  /calculadora-plazo-fijo
+- `PAGINA`   100  /calculadora-conversion-tna-tem-tea
+- `PAGINA`    86  /py/dolar-hoy-paraguay
+- `PAGINA`    86  /uy/dolar-hoy-uruguay
+- `PAGINA`    69  /ve/dolar-bcv-paralelo-bolivares-hoy
+- `PAGINA`    35  /calculadora-precio-dolar-producto
+- `PAGINA`    30  /calculadora-tasa-anual-equivalente-tea
+- `PAGINA`    22  /calculadora-interes-simple
+- `PAGINA`    22  /calculadora-plazo-fijo-uva-precancelable-rendimiento
+- `PAGINA`    21  /do/dolar-hoy-republica-dominicana
+- `PAGINA`    19  /calculadora-dolar-blue-vs-oficial-brecha
+- `PAGINA`    16  /calculadora-interes-simple-capital-tiempo-tasa
+- `PAGINA`    16  /calculadora-rendimiento-fci-money-market
+- `PAGINA`    15  /calculadora-tir-van-inversion
+- `PAGINA`    10  /calculadora-ahorro-compuesto-tiempo-duplicar-regla-72
+- `MODULO`     6  /calculadora-ahorro-uva-vs-pesos-vs-dolar-12-meses
+- `MODULO`     5  /calculadora-rendimiento-mercado-pago-billetera-argentina
+- `MODULO`     4  /calculadora-copom-tasa-referencia-banco-central-impacto
+- `MODULO`     3  /calculadora-comparar-dos-inversiones-rendimiento
+- `MODULO`     2  /calculadora-cagr-rendimiento-anualizado-compuesto
+- `MODULO`     2  /calculadora-caja-seguridad-banco-comparativa-mensual
+- `MODULO`     2  /calculadora-dolar-mep-paso-a-paso-costo-operacion
+- `MODULO`     2  /calculadora-primer-millon-ahorro-interes
+- `MODULO`     2  /calculadora-roi-inversion
+- `MODULO`     1  /calculadora-cuanto-pierdo-inflacion-plata-quieta
+- `MODULO`     1  /py/calculadora-plazo-fijo-paraguay
+- `MODULO`     1  /calculadora-spread-tasas-arbitraje-bancos-plazo-fijo
+- `MODULO`     1  /pt/dolar-real-iof-remessa-exterior-1-1
+- `FUSION`     0  /calculadora-interes-compuesto-diario  →calculadora-interes-compuesto
+- `BORRAR`     0  /calculadora-regla-72-duplicar-dinero
+- `BORRAR`     0  /pt/dolar-real-iof-cartao-credito-3-38
+
+## [FAMILIA] Separación, cuota alimentaria y herencia · `separacion`
+27 calcs · 1,142 ses/90d · **14 página · 11 módulo · 0 fusión · 2 borrar**
+
+- `PAGINA`   193  /calculadora-cuota-alimentaria-estimacion
+- `PAGINA`   172  /calculadora-cuota-alimentaria-hijos
+- `PAGINA`   142  /calculadora-cuota-alimentos-porcentaje-sueldo-hijo
+- `PAGINA`   116  /ec/calculadora-pension-alimenticia-ecuador
+- `PAGINA`    94  /cl/calculadora-impuesto-herencias-donaciones-chile-tabla
+- `PAGINA`    86  /cl/calculadora-pension-alimenticia-chile-padre-tribunal-familia
+- `PAGINA`    86  /calculadora-sucesion-costo
+- `PAGINA`    60  /calculadora-honorarios-abogado
+- `PAGINA`    45  /ec/calculadora-impuesto-herencias-legados-donaciones-ecuador
+- `PAGINA`    38  /calculadora-divorcio-express-costo-argentina-honorarios
+- `PAGINA`    33  /calculadora-sucesion-costo-honorarios-abogado-inmueble
+- `PAGINA`    16  /calculadora-matrimonio-civil-costo-tramite-argentina
+- `PAGINA`    11  /calculadora-herencia-legitima
+- `PAGINA`    10  /calculadora-sucesiones-costo-total-argentina-abogado
+- `MODULO`     8  /mx/calculadora-pension-alimenticia-mexico-padre-divorcio
+- `MODULO`     7  /calculadora-honorarios-abogado-espana-turno-oficio
+- `MODULO`     5  /calculadora-sucesion-fibonacci-termino-n
+- `MODULO`     4  /calculadora-division-bienes-divorcio
+- `MODULO`     4  /co/calculadora-divorcio-cuota-litis-honorarios-abogado-colombia
+- `MODULO`     4  /es/calculadora-pension-alimenticia-divorcio-espana-tabla
+- `MODULO`     3  /calculadora-divorcio-liquidacion-bienes-gananciales-costo
+- `MODULO`     2  /cl/calculadora-divorcio-chile-cese-convivencia-3-anos
+- `MODULO`     1  /py/calculadora-cuota-alimentaria-paraguay
+- `MODULO`     1  /co/calculadora-divorcio-particion-bienes-colombia-sociedad-conyugal
+- `MODULO`     1  /calculadora-tiempo-superar-ruptura-relacion-meses
+- `BORRAR`     0  /cl/calculadora-divorcio-particion-bienes-chile-sociedad-conyugal-vs-separacion
+- `BORRAR`     0  /pt/divorcio-liquidacao-bens-custo
+
+## [FAMILIA] Estoy embarazada: semana a semana · `embarazo`
+23 calcs · 1,129 ses/90d · **9 página · 10 módulo · 1 fusión · 3 borrar**
+
+- `PAGINA`   435  /calculadora-embarazo
+- `PAGINA`   191  /calculadora-semanas-embarazo
+- `PAGINA`   190  /calculadora-fecha-probable-parto
+- `PAGINA`    70  /calculadora-gestacion-perro-gato-duracion-parto
+- `PAGINA`    69  /calculadora-semanas-gestacion-ecografia
+- `PAGINA`    43  /calculadora-percentil-ecografia
+- `PAGINA`    29  /calculadora-peso-ideal-embarazo-imc-previo
+- `PAGINA`    26  /calculadora-aumento-peso-recomendado-embarazo
+- `PAGINA`    22  /calculadora-gestacion-perra
+- `MODULO`     9  /calculadora-embarazo-gemelar
+- `MODULO`     9  /calculadora-semanas-meses-trimestres-embarazo
+- `MODULO`     8  /mx/calculadora-ptu-reparto-utilidades-mexico-10-porcentaje
+- `MODULO`     7  /calculadora-calorias-embarazo-trimestre
+- `MODULO`     4  /calculadora-calendario-ecografias-embarazo-semanas
+- `MODULO`     4  /calculadora-semanas-gestacion-hoy-bebe-trimestre
+- `FUSION`     4  /calculadora-trimestre-embarazo  →calculadora-calorias-embarazo-trimestre
+- `MODULO`     3  /calculadora-embarazada-aumento-peso-semana-imc-previo
+- `MODULO`     2  /calculadora-doula-parto-acompanamiento-honorarios
+- `MODULO`     2  /calculadora-duracion-carrera-materias-por-cuatrimestre
+- `MODULO`     2  /calculadora-posparto-recuperacion
+- `BORRAR`     0  /es/calculadora-bono-cultural-joven-2026-espana-reparto-400
+- `BORRAR`     0  /pt/calculadora-data-parto-dum-naegele-portugues
+- `BORRAR`     0  /en/yodo-diario-embarazo
+
+## [TRABAJO] Vacaciones, feriados y licencias · `vacaciones-licencias`
+29 calcs · 1,095 ses/90d · **15 página · 9 módulo · 1 fusión · 4 borrar**
+
+- `PAGINA`   378  /calculadora-dias-vacaciones-ley
+- `PAGINA`   238  /calculadora-vacaciones-argentina
+- `PAGINA`   109  /calculadora-feriados-argentina-2026-calendario
+- `PAGINA`    41  /calculadora-licencia-conducir-costo-categoria-b1-a
+- `PAGINA`    41  /co/calculadora-licencia-paternidad-colombia-2-semanas
+- `PAGINA`    40  /ec/calculadora-licencia-maternidad-ecuador
+- `PAGINA`    38  /calculadora-licencia-maternidad-paternidad
+- `PAGINA`    33  /ec/calculadora-licencia-paternidad-ecuador
+- `PAGINA`    28  /pe/calculadora-feriados-peru-2026-calendario
+- `PAGINA`    25  /calculadora-licencia-maternidad-anses-90-dias-extension
+- `PAGINA`    19  /calculadora-dias-laborables-habiles-entre-fechas
+- `PAGINA`    19  /calculadora-maternidad-licencia-sueldo-anses-duracion
+- `PAGINA`    15  /mx/calculadora-licencia-maternidad-mexico-imss-12-semanas
+- `PAGINA`    14  /calculadora-licencia-fallecimiento-familiar-duelo-dias-lct
+- `FUSION`    14  /co/calculadora-licencia-maternidad-colombia-18-semanas  →calculadora-licencia-paternidad-colombia-2-semanas
+- `PAGINA`    11  /cl/calculadora-licencia-medica-chile-pago-subsidio-isapre-fonasa
+- `MODULO`     8  /pe/calculadora-licencia-maternidad-subsidio-essalud-peru
+- `MODULO`     5  /calculadora-licencia-examen-estudiante-trabajador-art-149-lct
+- `MODULO`     4  /calculadora-cuantos-feriados-restan-ano-argentina
+- `MODULO`     4  /cl/calculadora-licencia-conducir-chile-renovacion-precio-vencimiento
+- `MODULO`     4  /uy/calculadora-licencia-uruguay
+- `MODULO`     3  /pe/calculadora-licencia-paternidad-peru
+- `MODULO`     2  /calculadora-horas-trabajadas-semanal
+- `MODULO`     1  /calculadora-dias-vacaciones-me-alcanza
+- `MODULO`     1  /mx/calculadora-licencia-paternidad-mexico-5-dias-laborables
+- `BORRAR`     0  /py/calculadora-dias-habiles-feriados-paraguay-2026
+- `BORRAR`     0  /calculadora-dias-habiles-restantes-2026
+- `BORRAR`     0  /do/calculadora-dias-laborables-feriados-republica-dominicana
+- `BORRAR`     0  /calculadora-puente-optimo-vacaciones-2026
+
+## [ANSES] ¿Cuándo y con cuánto me jubilo? · `jubilacion`
+43 calcs · 1,058 ses/90d · **18 página · 22 módulo · 0 fusión · 3 borrar**
+
+- `PAGINA`   178  /calculadora-jubilacion-anses-monto-minimo-maxima-2026
+- `PAGINA`   123  /calculadora-comprar-anos-aportes-moratoria-previsional-cuotas
+- `PAGINA`    84  /cl/calculadora-pension-jubilacion-chile-edad-aportes-2026
+- `PAGINA`    76  /calculadora-edad-jubilacion-anos-aporte
+- `PAGINA`    72  /calculadora-jubilacion-minima-anses
+- `PAGINA`    65  /calculadora-pension-viudez-porcentaje-conyuge
+- `PAGINA`    64  /calculadora-jubilacion-docente-ips-buenos-aires
+- `PAGINA`    63  /ec/calculadora-jubilacion-iess-ecuador
+- `PAGINA`    58  /calculadora-jubilacion-docente-caba
+- `PAGINA`    45  /calculadora-ripte-actualizacion-jubilatoria-sueldo
+- `PAGINA`    40  /calculadora-pension-no-contributiva-madre-7-hijos-anses-2026
+- `PAGINA`    23  /calculadora-jubilacion-cuanto-necesito
+- `PAGINA`    22  /es/calculadora-jubilacion-espana-2026-pension-anos-cotizados
+- `PAGINA`    15  /py/calculadora-jubilacion-ips-paraguay
+- `PAGINA`    14  /calculadora-puam-pension-universal-adulto-mayor-anses-2026
+- `PAGINA`    14  /calculadora-quita-jubilatoria-bono-refuerzo-anses-2026
+- `PAGINA`    11  /mx/calculadora-pension-viudez-imss-90-porcentaje-mexico
+- `PAGINA`    10  /es/calculadora-pension-no-contributiva-jubilacion-invalidez-espana
+- `MODULO`     8  /calculadora-cuanto-falta-jubilarse-jubilacion-edad-aportes
+- `MODULO`     7  /calculadora-bono-anses-jubilados-junio-2026-aumento-mensual
+- `MODULO`     7  /calculadora-pension-alimentaria-hijo-porcentaje-sueldo-detallada
+- `MODULO`     7  /calculadora-pension-invalidez-anses-no-contributiva-2026-cuantia
+- `MODULO`     6  /calculadora-jubilacion-haber-movilidad-trimestral
+- `MODULO`     5  /ec/calculadora-jubilacion-patronal-ecuador
+- `MODULO`     5  /calculadora-pami-prestaciones-monto-copago-2026
+- `MODULO`     5  /mx/calculadora-pension-invalidez-imss-mexico
+- `MODULO`     4  /cl/calculadora-pension-viudez-vitalicia-chile-cuantia
+- `MODULO`     4  /calculadora-prestamo-anses-jubilados-monto-cuota-2026
+- `MODULO`     3  /mx/calculadora-afore-saldo-pension-jubilacion-mexico-2026
+- `MODULO`     3  /calculadora-fire-retiro-temprano
+- `MODULO`     3  /calculadora-haber-minimo-jubilatorio-2026-bono-total
+- `MODULO`     3  /calculadora-prestamo-anses-jubilado-argenta-monto
+- `MODULO`     3  /pe/calculadora-retiro-afp-jubilacion-peru
+- `MODULO`     2  /calculadora-cuanto-voy-a-cobrar-jubilacion-haber-estimado
+- `MODULO`     1  /uy/aporte-jubilatorio-uruguay
+- `MODULO`     1  /calculadora-credito-anses-pre-aprobado-jubilado-cuota
+- `MODULO`     1  /uy/calculadora-monto-jubilacion-bps-uruguay
+- `MODULO`     1  /calculadora-proyeccion-ahorro-jubilacion
+- `MODULO`     1  /calculadora-rol-ira-401k-argentino-equivalente
+- `MODULO`     1  /co/calculadora-sancion-moratoria-no-pago-liquidacion-colombia
+- `BORRAR`     0  /uy/calculadora-edad-jubilacion-uruguay
+- `BORRAR`     0  /es/calculadora-jubilacion-anticipada-coeficientes-reductores-espana-2026
+- `BORRAR`     0  /mx/calculadora-pension-viudez-vs-pension-alimenticia-mexico
+
+## [DEPORTE] Fútbol: torneos, premios y récords · `futbol-fan`
+38 calcs · 966 ses/90d · **17 página · 18 módulo · 1 fusión · 2 borrar**
+
+- `PAGINA`   253  /calculadora-mundial-2026-bonus-jugador-fase
+- `PAGINA`   159  /calculadora-top-10-goleadores-historico-mundial-fifa
+- `PAGINA`    87  /calculadora-mundial-2026-predictor-campeon-ranking
+- `PAGINA`    73  /calculadora-comparador-messi-vs-cristiano-goles-asistencias-titulos
+- `PAGINA`    71  /calculadora-premios-mundial-2026-seleccion-por-fase
+- `PAGINA`    43  /calculadora-derechos-tv-mundial-2026-argentina-espana-mexico-brasil
+- `PAGINA`    40  /calculadora-mundial-2026-estadios-comparador
+- `PAGINA`    26  /calculadora-cupos-copa-libertadores-pais-conmebol
+- `PAGINA`    25  /calculadora-mundial-2026-en-que-canal-pasan-el-partido-por-pais
+- `PAGINA`    24  /calculadora-mundial-2026-partidos-faltantes-seleccion
+- `PAGINA`    22  /calculadora-record-messi-goles-competencia-club-seleccion
+- `PAGINA`    13  /calculadora-distancia-recorrida-futbol-jugador
+- `PAGINA`    13  /calculadora-mundial-2026-cupos-confederacion
+- `PAGINA`    13  /calculadora-mundial-2026-record-messi-goles-minutos
+- `PAGINA`    13  /calculadora-tarjetas-amarillas-acumuladas-suspension
+- `PAGINA`    12  /calculadora-mundial-2026-botin-oro-goleador-estimador
+- `PAGINA`    11  /calculadora-descenso-futbol-argentino-promedios
+- `MODULO`     9  /calculadora-descenso-laliga-santander-puntos-necesarios
+- `MODULO`     9  /calculadora-mundial-2026-puntos-clasificar-octavos
+- `MODULO`     8  /calculadora-cupos-champions-league-coeficiente-uefa
+- `FUSION`     8  /calculadora-cupos-copa-sudamericana-pais-conmebol  →calculadora-cupos-copa-libertadores-pais-conmebol
+- `MODULO`     7  /calculadora-motogp-puntos-campeonato-restantes
+- `MODULO`     4  /calculadora-velocidad-pelota-futbol-tiro
+- `MODULO`     3  /calculadora-poisson-goles-esperados-partido
+- `MODULO`     3  /calculadora-premios-copa-argentina-por-ronda
+- `MODULO`     3  /calculadora-puntos-necesarios-clasificar-futbol
+- `MODULO`     2  /calculadora-cuota-socio-club-futbol-boca-river-real-madrid
+- `MODULO`     2  /calculadora-distancia-barrera-tiro-libre-9-15m
+- `MODULO`     2  /calculadora-fuera-de-juego-offside-distancia-camara-var
+- `MODULO`     2  /calculadora-mundial-2026-grupo-muerte-detector
+- `MODULO`     1  /calculadora-clausula-rescision-valor-mercado-jugador
+- `MODULO`     1  /calculadora-cupos-europa-league-tercer-lugar-liga
+- `MODULO`     1  /calculadora-distancia-recorrida-futbolista-por-posicion
+- `MODULO`     1  /calculadora-f1-puntos-campeonato-mundial-quedan
+- `MODULO`     1  /calculadora-mecanismo-solidaridad-fifa-5-porciento
+- `MODULO`     1  /calculadora-premios-liga-profesional-argentina-ronda-campeon
+- `BORRAR`     0  /calculadora-costo-salida-cancha-argentina
+- `BORRAR`     0  /calculadora-mls-playoffs-east-west-conference
+
+## [VIAJES] Millas y puntos: ¿cuándo conviene? · `millas`
+15 calcs · 885 ses/90d · **9 página · 6 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`   452  /calculadora-millas-avianca-lifemiles
+- `PAGINA`   212  /calculadora-millas-latam-destino
+- `PAGINA`    59  /calculadora-millaje-frecuente-aerolineas-argentinas-programas
+- `PAGINA`    44  /calculadora-puntos-amex-membership-rewards
+- `PAGINA`    33  /calculadora-pasaje-aereo-millas-vs-pesos-canjear
+- `PAGINA`    16  /calculadora-millas-american-aa-destino
+- `PAGINA`    14  /calculadora-millas-united-mileageplus
+- `PAGINA`    12  /calculadora-valor-millas-punto-centavos
+- `PAGINA`    10  /calculadora-descuento-vuelo-millas-vs-cash
+- `MODULO`     9  /cl/calculadora-millas-latam-pass-acumulacion-valor-chile
+- `MODULO`     8  /co/calculadora-millas-lifemiles-avianca-colombia-2026
+- `MODULO`     5  /calculadora-upgrade-clase-avion-costo
+- `MODULO`     4  /calculadora-puntos-vs-cash-vuelo-cuando-conviene
+- `MODULO`     4  /calculadora-valor-millas-viajero-frecuente
+- `MODULO`     3  /calculadora-millas-delta-skymiles
+
+## [IMPUESTOS] Facturar, IVA y retenciones · `facturar`
+34 calcs · 785 ses/90d · **11 página · 21 módulo · 1 fusión · 1 borrar**
+
+- `PAGINA`   285  /calculadora-iva-incluido-neto-discriminar
+- `PAGINA`   118  /calculadora-ingresos-brutos-provincial
+- `PAGINA`    76  /calculadora-impuesto-cheque-debitos-creditos
+- `PAGINA`    59  /calculadora-iva-agregar-discriminar
+- `PAGINA`    43  /cl/calculadora-iva-chile-19-porciento-tarifa-general
+- `PAGINA`    43  /calculadora-retencion-afip-cuit-regimen-general
+- `PAGINA`    24  /calculadora-intereses-resarcitorios-punitorios-afip
+- `PAGINA`    17  /calculadora-iibb-convenio-multilateral-coeficientes
+- `PAGINA`    13  /py/calculadora-iva-paraguay
+- `PAGINA`    11  /calculadora-iva-paises-latinoamerica
+- `PAGINA`    11  /uy/calculadora-iva-uruguay
+- `MODULO`     9  /calculadora-percepcion-dolar-tarjeta-impuesto-pais
+- `MODULO`     9  /calculadora-plan-pagos-arca-mis-facilidades-cuota-interes
+- `MODULO`     7  /co/calculadora-iva-frontera-paso-fronterizo-colombia-zonas-especiales
+- `MODULO`     7  /mx/calculadora-iva-mexico-trasladado-acreditable
+- `MODULO`     7  /calculadora-iva-saldo-favor-contra-ri
+- `MODULO`     5  /co/calculadora-iva-bienes-exentos-excluidos-colombia-2026
+- `MODULO`     5  /co/calculadora-iva-colombia-19-porciento-tarifa-general
+- `MODULO`     4  /calculadora-impuestos-courier-temu-shein-argentina
+- `MODULO`     4  /es/calculadora-iva-espana-21-10-4
+- `MODULO`     4  /mx/calculadora-iva-ieps-cigarros-bebidas-azucar-mexico
+- `MODULO`     4  /mx/calculadora-iva-mexico-16-tasa-cero-exenta-frontera
+- `MODULO`     4  /calculadora-percepciones-impositivas
+- `MODULO`     3  /calculadora-costo-real-pauta-exterior-impuestos-argentina
+- `MODULO`     3  /do/calculadora-impuesto-cheques-transferencias-republica-dominicana
+- `MODULO`     3  /calculadora-iva-mexico-frontera-norte-sur-8-vs-16-comparador
+- `MODULO`     2  /calculadora-impuestos-autonomo-espana
+- `MODULO`     1  /calculadora-cuanto-facturar-cubrir-gastos
+- `MODULO`     1  /calculadora-cuanto-tengo-que-facturar-para-ganar-x-neto
+- `MODULO`     1  /calculadora-factura-electronica-afip-primera-vez
+- `MODULO`     1  /ec/calculadora-iva-ecuador
+- `MODULO`     1  /cl/calculadora-iva-honorarios-chile-10-porciento-retencion
+- `FUSION`     0  /es/calculadora-iva-espana-21-10-4-categorias  →calculadora-iva-espana-21-10-4
+- `BORRAR`     0  /en/iva-refund-debit-card
+
+## [MATE] Porcentajes y regla de tres · `porcentajes`
+16 calcs · 783 ses/90d · **4 página · 7 módulo · 0 fusión · 5 borrar**
+
+- `PAGINA`   589  /calculadora-porcentajes
+- `PAGINA`   101  /calculadora-regla-de-tres-simple
+- `PAGINA`    32  /calculadora-porcentaje-aumento-disminucion
+- `PAGINA`    30  /calculadora-porcentaje-de-numero-calculadora
+- `MODULO`     9  /calculadora-conversion-porcentaje-fraccion-decimal
+- `MODULO`     9  /calculadora-interpolacion-lineal-valor
+- `MODULO`     8  /calculadora-de-escala
+- `MODULO`     2  /calculadora-porcentaje-pases-completados-top-5-ligas
+- `MODULO`     1  /calculadora-escala-plano-mapa
+- `MODULO`     1  /calculadora-porcentaje-conversion-tiros-al-arco-futbolista
+- `MODULO`     1  /calculadora-porcentaje-masa-volumen-solucion
+- `BORRAR`     0  /calculadora-regla-de-tres-inversa
+- `BORRAR`     0  /calculadora-regla-tres-compuesta
+- `BORRAR`     0  /porcentaje-inverso-de-que-numero
+- `BORRAR`     0  /proporcion-aurea-numero-oro
+- `BORRAR`     0  /redondeo-numeros-decimales-decenas-centenas
+
+## [CUERPO] Quiero bajar de peso · `bajar-peso`
+46 calcs · 778 ses/90d · **11 página · 29 módulo · 1 fusión · 5 borrar**
+
+- `PAGINA`   292  /calculadora-calorias-diarias-tdee
+- `PAGINA`   136  /calculadora-agua-diaria-necesaria
+- `PAGINA`    71  /calculadora-deficit-calorico-perder-peso
+- `PAGINA`    38  /calculadora-indice-glucemico-por-alimento
+- `PAGINA`    29  /calculadora-calorias-caminando
+- `PAGINA`    26  /calculadora-calorias-bebida-alcoholica
+- `PAGINA`    24  /calculadora-calorias-subir-escaleras-pisos
+- `PAGINA`    23  /calculadora-macros-distribucion-proteina-carbos-grasas
+- `PAGINA`    12  /calculadora-ayuno-intermitente-16-8-ventana-horario
+- `PAGINA`    12  /calculadora-calorias-sexo-relacion-intima-duracion
+- `PAGINA`    11  /calculadora-macros-deficit-volumen-mantenimiento
+- `MODULO`     8  /calculadora-carga-glucemica-comida
+- `MODULO`     8  /calculadora-pasos-diarios-recomendados-caminar-salud
+- `MODULO`     7  /calculadora-calorias-alimento-porcion
+- `MODULO`     7  /calculadora-macros-recomp-cut-bulk-lean-calorias
+- `MODULO`     6  /calculadora-calorias-copa-vino
+- `MODULO`     6  /calculadora-calorias-palta-aguacate-completa-mitad
+- `MODULO`     6  /calculadora-ingesta-sodio-diaria-mg-sal-hipertension
+- `MODULO`     6  /calculadora-superavit-calorico-masa-muscular
+- `FUSION`     5  /calculadora-indice-glucemico-carga-alimento-porcion  →calculadora-indice-glucemico-por-alimento
+- `MODULO`     5  /calculadora-macros-keto-dieta
+- `MODULO`     5  /calculadora-procesados-nova-clasificacion
+- `MODULO`     4  /calculadora-fibra-dietetica-recomendada-diaria-edad
+- `MODULO`     4  /calculadora-pasos-a-kilometros
+- `MODULO`     3  /calculadora-macros-paleo-dieta
+- `MODULO`     3  /en/macros-iifym-flexible
+- `MODULO`     2  /calculadora-calorias-huevo-revuelto-frito-cocido
+- `MODULO`     2  /calculadora-calorias-plato-argentino-tipico
+- `MODULO`     2  /calculadora-densidad-nutricional-score
+- `MODULO`     2  /calculadora-macros-mediterranea
+- `MODULO`     2  /en/macros-atkins-fases
+- `MODULO`     2  /en/macros-recomp-cut-bulk-lean-calorias
+- `MODULO`     1  /calculadora-agua-cafe-te-hidratacion-real-mitos
+- `MODULO`     1  /calculadora-azucares-anadidos-diarios-oms-mg-gramos
+- `MODULO`     1  /calculadora-calorias-arroz-blanco-integral-cocido
+- `MODULO`     1  /calculadora-calorias-hamburguesa-casera-comercial
+- `MODULO`     1  /calculadora-calorias-pan-blanco-integral-porcion
+- `MODULO`     1  /calculadora-indice-saciedad-alimento
+- `MODULO`     1  /calculadora-macros-dash-hipertension
+- `MODULO`     1  /calculadora-peso-posparto
+- `MODULO`     1  /en/macros-cutting-bulking-calculator
+- `BORRAR`     0  /calculadora-ayuno-intermitente-beneficios-calorias-20-4
+- `BORRAR`     0  /calculadora-calorias-quemadas-tareas-domesticas
+- `BORRAR`     0  /pt/calculadora-macros-emagrecimento-ganho-massa
+- `BORRAR`     0  /en/macros-16-8-intermittent-fasting
+- `BORRAR`     0  /en/macros-dash-hypertension
+
+## [VIVIENDA] ¿Compro o alquilo? Costos de escriturar · `comprar-casa`
+28 calcs · 751 ses/90d · **14 página · 10 módulo · 0 fusión · 4 borrar**
+
+- `PAGINA`   307  /calculadora-gastos-escritura-compra-inmueble
+- `PAGINA`   103  /calculadora-impuesto-sellos-inmueble-contrato
+- `PAGINA`    87  /calculadora-gastos-escritura-compraventa
+- `PAGINA`    28  /calculadora-plusvalia-inmueble-pba-venta-impuesto-2026
+- `PAGINA`    27  /es/calculadora-plusvalia-municipal-iivtnu-espana
+- `PAGINA`    27  /calculadora-sellos-compra-inmueble-caba-pba
+- `PAGINA`    21  /calculadora-costo-medianera-muro-lindero
+- `PAGINA`    20  /calculadora-arba-sellos-inmobiliarios-pba-compraventa
+- `PAGINA`    18  /calculadora-rentabilidad-alquiler-inmueble-caba-neto-bruto
+- `PAGINA`    17  /calculadora-honorarios-escribano-caba-compraventa
+- `PAGINA`    15  /calculadora-precio-m2-zona
+- `PAGINA`    14  /calculadora-comision-inmobiliaria-venta-inmueble-4-porciento
+- `PAGINA`    13  /calculadora-costo-total-comprar-propiedad-gastos
+- `PAGINA`    13  /calculadora-impuesto-transferencia-itu-iti-inmueble
+- `MODULO`     8  /calculadora-costo-escritura-inmueble-porcentaje-valor
+- `MODULO`     7  /calculadora-gastos-escriturar-vivienda-primera-casa
+- `MODULO`     6  /calculadora-alquiler-vs-comprar
+- `MODULO`     5  /calculadora-cap-rate-rentabilidad-alquiler-inmobiliario
+- `MODULO`     4  /calculadora-estampillado-sellado-inmueble-pba-caba-2026
+- `MODULO`     4  /do/calculadora-impuesto-transferencia-inmobiliaria-republica-dominicana
+- `MODULO`     3  /calculadora-rentabilidad-alquiler-vs-venta
+- `MODULO`     2  /calculadora-propiedad-tasacion-m2-barrio-caba-promedio
+- `MODULO`     1  /calculadora-alquiler-con-opcion-a-compra-leasing-inmueble
+- `MODULO`     1  /calculadora-fideicomiso-construccion-aporte-cuotas
+- `BORRAR`     0  /py/calculadora-gastos-escritura-compraventa-inmueble-paraguay
+- `BORRAR`     0  /mx/calculadora-gastos-escrituracion-isai-mexico-2026
+- `BORRAR`     0  /es/calculadora-rentabilidad-alquiler-bruta-neta-espana
+- `BORRAR`     0  /en/fideicomiso-construccion-aporte-cuotas
+
+## [ESTUDIO] Técnicas de estudio y escritura · `tecnicas`
+27 calcs · 702 ses/90d · **9 página · 16 módulo · 0 fusión · 2 borrar**
+
+- `PAGINA`   382  /calculadora-contador-de-palabras-y-caracteres
+- `PAGINA`   102  /calculadora-palabras-paginas-conversor
+- `PAGINA`    89  /calculadora-formula-citacion-apa
+- `PAGINA`    19  /calculadora-tiempo-lectura-paginas-estudio
+- `PAGINA`    18  /calculadora-citas-bibliograficas-formato-apa
+- `PAGINA`    17  /calculadora-palabras-por-pagina-trabajo
+- `PAGINA`    17  /calculadora-tecla-por-minuto-typing-test
+- `PAGINA`    10  /calculadora-lectura-velocidad-paginas-hora-wpm
+- `PAGINA`    10  /calculadora-tiempo-estudio-examen-dificultad-paginas
+- `MODULO`     8  /calculadora-tecnica-pomodoro-bloques-descanso-optimo
+- `MODULO`     5  /calculadora-productividad-pomodoro-sesiones-dia-efectivas
+- `MODULO`     4  /calculadora-calendario-estudio-parciales
+- `MODULO`     4  /calculadora-typing-speed
+- `MODULO`     3  /calculadora-ebbinghaus-curva-olvido
+- `MODULO`     3  /calculadora-tesis-palabras-tiempo-necesario-elaboracion
+- `MODULO`     2  /calculadora-leer-rapido-palabras-por-minuto-tiempo-libro
+- `MODULO`     1  /calculadora-calentamiento-estudio-minutos
+- `MODULO`     1  /calculadora-flashcards-por-dia
+- `MODULO`     1  /calculadora-horas-preparar-gre
+- `MODULO`     1  /calculadora-horas-preparar-sat
+- `MODULO`     1  /calculadora-legibilidad-texto-flesch
+- `MODULO`     1  /calculadora-regla-numero-dunbar-150-contactos-red
+- `MODULO`     1  /calculadora-repaso-optimo-examen
+- `MODULO`     1  /calculadora-scrum-sprint-velocity-story-points
+- `MODULO`     1  /calculadora-smart-goals-objetivos-metodologia-meta
+- `BORRAR`     0  /en/pomodoro-25-5-timer
+- `BORRAR`     0  /en/pomodoro-sessions-calculator
+
+## [COCINA] Convertir medidas de cocina · `medidas`
+23 calcs · 689 ses/90d · **8 página · 10 módulo · 1 fusión · 4 borrar**
+
+- `PAGINA`   478  /calculadora-conversor-fahrenheit-a-celsius-horno
+- `PAGINA`    40  /conversor-tazas-gramos-cocina-recetas
+- `PAGINA`    38  /calculadora-conversion-medidas-cocina-tazas-gramos
+- `PAGINA`    33  /calculadora-equivalencia-huevos-tamano-gramos-claras
+- `PAGINA`    24  /calculadora-proporciones-receta
+- `PAGINA`    20  /calculadora-conversion-cups-gramos-harina-azucar-aceite
+- `PAGINA`    18  /calculadora-conversor-tazas-a-mililitros
+- `PAGINA`    10  /calculadora-conversion-cucharaditas-gramos-especias-sal
+- `MODULO`     7  /calculadora-multiplicar-dividir-receta-porciones
+- `MODULO`     5  /calculadora-sustitucion-ingredientes-cocina
+- `FUSION`     5  /calculadora-temperatura-horno-celsius-fahrenheit-gas  →calculadora-conversor-fahrenheit-a-celsius-horno
+- `MODULO`     3  /mx/conversor-tazas-a-gramos-cocina-mexico
+- `MODULO`     2  /calculadora-huevos-por-receta-comensales
+- `MODULO`     1  /calculadora-conversion-peso-volumen-ingredientes-cocina
+- `MODULO`     1  /calculadora-conversion-temperaturas-horno-gas-electrico
+- `MODULO`     1  /calculadora-sustituto-huevo-vegano-receta
+- `MODULO`     1  /conversor-molde-torta-tamano
+- `MODULO`     1  /ec/conversor-tazas-a-gramos-cocina-ecuador
+- `MODULO`     1  /es/conversor-tazas-a-gramos-cocina-espana
+- `BORRAR`     0  /conversion-cucharadas-cucharaditas-ml
+- `BORRAR`     0  /gelatina-sin-sabor-gramos-por-litro
+- `BORRAR`     0  /merengue-azucar-por-clara
+- `BORRAR`     0  /sustituir-manteca-por-aceite-reposteria
+
+## [MASCOTAS] ¿Cuántos años humanos tiene mi mascota? · `edad-mascota`
+15 calcs · 674 ses/90d · **7 página · 5 módulo · 2 fusión · 1 borrar**
+
+- `PAGINA`   243  /calculadora-edad-perro-anos-humanos
+- `PAGINA`   191  /calculadora-edad-gato-humano-formula-anos
+- `PAGINA`    64  /calculadora-edad-humana-por-raza-perro
+- `PAGINA`    40  /calculadora-envejecer-mascota-humano-tabla-raza-tamano
+- `PAGINA`    38  /calculadora-edad-perro-humano
+- `PAGINA`    38  /calculadora-esperanza-vida-gato-raza-indoor
+- `FUSION`    32  /calculadora-edad-gato-anos-humanos  →calculadora-edad-perro-anos-humanos
+- `PAGINA`    12  /calculadora-edad-cachorro-humano
+- `MODULO`     7  /calculadora-edad-humana-conejo-anos
+- `MODULO`     5  /calculadora-expectativa-vida-raza-perro
+- `MODULO`     2  /calculadora-expectativa-vida-tortuga-terrestre
+- `MODULO`     1  /calculadora-edad-humana-tortuga
+- `MODULO`     1  /uy/calculadora-edad-perro-anos-humanos-uruguay
+- `FUSION`     0  /calculadora-edad-perro-humano-raza-tamano  →calculadora-edad-perro-humano
+- `BORRAR`     0  /calculadora-expectativa-vida-reptiles-especie
+
+## [VIVIENDA] ¿Por qué me vino tan cara la luz? · `servicios-luz`
+28 calcs · 668 ses/90d · **13 página · 14 módulo · 0 fusión · 1 borrar**
+
+- `PAGINA`   164  /calculadora-consumo-electrico-kwh-factura-luz
+- `PAGINA`    97  /cl/calculadora-tarifa-electrica-distribuidoras-chile-bt1-bt2-bt3
+- `PAGINA`    66  /calculadora-potencia-electrica-watts
+- `PAGINA`    53  /calculadora-watts-consumo-electrico-aparato-hora
+- `PAGINA`    39  /calculadora-iluminacion-lux-lumens-ambiente
+- `PAGINA`    33  /calculadora-consumo-electricidad-electrodomestico
+- `PAGINA`    28  /calculadora-foco-led-equivalencia-watts-lumens
+- `PAGINA`    26  /calculadora-factura-luz-estimada
+- `PAGINA`    25  /calculadora-costo-mensual-aire-acondicionado-consumo-kwh-factura
+- `PAGINA`    24  /calculadora-consumo-electrico-aparato-kwh-mes
+- `PAGINA`    23  /calculadora-costo-calefaccion-invierno
+- `PAGINA`    20  /calculadora-heladera-clase-a-consumo-anual-kwh
+- `PAGINA`    13  /calculadora-panel-solar-kwh-dimensionar
+- `MODULO`     9  /calculadora-grados-dia-calefaccion-refrigeracion-hdd-cdd-consumo
+- `MODULO`     8  /calculadora-calefactor-tiro-balanceado-kcal-m2-invierno
+- `MODULO`     6  /calculadora-ahorro-termo-electrico-vs-gas
+- `MODULO`     6  /calculadora-tarifa-electrica-edenor-edesur-segmentacion-n1-n2-n3
+- `MODULO`     5  /calculadora-consumo-electronica-hogar-watts-mensual
+- `MODULO`     4  /calculadora-panel-solar-kw-consumo-hogar-autoconsumo
+- `MODULO`     4  /co/calculadora-tarifa-electrica-colombia-mes-recibo-codensa
+- `MODULO`     3  /calculadora-ahorro-energia-solar-paneles
+- `MODULO`     3  /calculadora-banco-baterias-solar-dias-autonomia
+- `MODULO`     2  /calculadora-costo-aire-acondicionado-hora
+- `MODULO`     2  /do/calculadora-factura-luz-consumo-electrico-republica-dominicana
+- `MODULO`     2  /calculadora-lena-estufa-hogar-invierno
+- `MODULO`     2  /calculadora-paneles-solares-amortizacion-anos-argentina
+- `MODULO`     1  /calculadora-consumo-standby-aparatos
+- `BORRAR`     0  /mx/calculadora-paneles-solares-ahorro-cfe-mexico
+
+## [TRABAJO] Empleada doméstica: sueldo y liquidación · `casas-particulares`
+11 calcs · 665 ses/90d · **4 página · 4 módulo · 2 fusión · 1 borrar**
+
+- `PAGINA`   154  /co/calculadora-empleada-domestica-dias-colombia-2026
+- `FUSION`   145  /co/calculadora-liquidacion-empleada-domestica-por-dias-colombia-2026  →calculadora-empleada-domestica-dias-colombia-2026
+- `PAGINA`   136  /calculadora-sueldo-empleada-domestica-horas-retiro
+- `PAGINA`    96  /calculadora-vacaciones-empleada-casa-particular-antiguedad-dias
+- `PAGINA`    83  /calculadora-ninera-hora-noche-fin-de-semana-tarifa
+- `FUSION`    40  /co/calculadora-prestaciones-empleada-domestica-colombia-2026  →calculadora-empleada-domestica-dias-colombia-2026
+- `MODULO`     5  /py/calculadora-empleada-domestica-paraguay
+- `MODULO`     3  /mx/calculadora-costo-empleada-domestica-patron-mexico-2026
+- `MODULO`     2  /uy/calculadora-aportes-empleada-domestica-uruguay
+- `MODULO`     1  /ec/calculadora-sueldo-iess-empleada-domestica-ecuador
+- `BORRAR`     0  /calculadora-aportes-empleada-domestica-casas-particulares-empleador
+
+## [PLATA] Mi presupuesto y gastos del mes · `presupuesto`
+52 calcs · 652 ses/90d · **12 página · 25 módulo · 1 fusión · 14 borrar**
+
+- `PAGINA`   116  /calculadora-costo-supermercado-canasta-basica
+- `PAGINA`   106  /calculadora-split-gastos-grupo-amigos
+- `PAGINA`    94  /mx/calculadora-canasta-basica-mexico-costo-mensual-familia
+- `PAGINA`    51  /pe/calculadora-canasta-basica-peru-inei
+- `PAGINA`    42  /calculadora-descuento-porcentaje-precio
+- `PAGINA`    38  /calculadora-canasta-basica-hogar-inec-gasto-mensual
+- `PAGINA`    32  /cl/calculadora-canasta-basica-mensual-chile-ine-2026
+- `PAGINA`    27  /calculadora-dividir-gastos-pareja-proporcional
+- `PAGINA`    26  /calculadora-presupuesto-50-30-20
+- `PAGINA`    23  /calculadora-ahorro-meta-mensual
+- `PAGINA`    16  /calculadora-sube-argentina-costo-viaje-gasto-mensual
+- `PAGINA`    12  /ec/calculadora-canasta-basica-familiar-ecuador
+- `MODULO`     8  /calculadora-fondo-emergencia-meses
+- `MODULO`     6  /calculadora-ahorro-hormiga-gasto-diario
+- `MODULO`     5  /calculadora-ahorro-objetivo-mensual
+- `MODULO`     5  /calculadora-costo-hijo-mensual
+- `MODULO`     4  /calculadora-dias-sin-fumar-ahorro-salud
+- `FUSION`     4  /calculadora-fondo-emergencia-meses-gastos-cuanto  →calculadora-fondo-emergencia-meses
+- `MODULO`     4  /calculadora-tiempo-para-ahorrar-meta
+- `MODULO`     3  /calculadora-ahorro-bicicleta-vs-auto-mensual
+- `MODULO`     3  /calculadora-costo-suscripciones-mensual
+- `MODULO`     3  /calculadora-dividir-cuenta-propina-amigos
+- `MODULO`     3  /calculadora-gasto-tarjeta-sube-mensual
+- `MODULO`     3  /calculadora-pago-proporcional-pareja-ingreso-gastos-compartidos
+- `MODULO`     2  /co/calculadora-fondo-emergencia-colombia-meses-gastos
+- `MODULO`     2  /calculadora-precio-por-kilo-litro
+- `MODULO`     2  /calculadora-presupuesto-regla-50-30-20
+- `MODULO`     2  /calculadora-propina-restaurante
+- `MODULO`     1  /calculadora-ahorro-dejar-cigarrillos
+- `MODULO`     1  /calculadora-costo-mascota-vida-util
+- `MODULO`     1  /calculadora-costo-recital-festival-argentina
+- `MODULO`     1  /calculadora-costo-streaming-argentina
+- `MODULO`     1  /calculadora-cuanto-gasto-en-delivery
+- `MODULO`     1  /calculadora-de-propinas
+- `MODULO`     1  /calculadora-porcentaje-de-ahorro
+- `MODULO`     1  /calculadora-precio-por-unidad
+- `MODULO`     1  /calculadora-presupuesto-50-30-20-familiar-sueldo
+- `MODULO`     1  /calculadora-propina-por-pais-viaje
+- `BORRAR`     0  /calculadora-ahorro-descuentos-cuenta-dni-mes-tope
+- `BORRAR`     0  /ve/calculadora-canasta-basica-salarios-minimos-venezuela
+- `BORRAR`     0  /calculadora-comparador-precios
+- `BORRAR`     0  /calculadora-cuanto-ahorrar-por-mes-meta
+- `BORRAR`     0  /cl/calculadora-de-propinas-chile
+- `BORRAR`     0  /co/calculadora-de-propinas-colombia
+- `BORRAR`     0  /es/calculadora-de-propinas-espana
+- `BORRAR`     0  /mx/calculadora-de-propinas-mexico
+- `BORRAR`     0  /pe/calculadora-de-propinas-peru
+- `BORRAR`     0  /cl/calculadora-fondo-emergencia-chile-meses-gastos-recomendado
+- `BORRAR`     0  /es/calculadora-fondo-emergencia-espana-meses-gastos
+- `BORRAR`     0  /calculadora-presupuesto-navidad-regalos-cena
+- `BORRAR`     0  /do/calculadora-propina-legal-10-itbis-restaurante-republica-dominicana
+- `BORRAR`     0  /pt-pt/calculadora-propinas-universidade-portugal-2026
+
+## [IMPUESTOS] ¿Qué categoría de monotributo me toca? · `monotributo`
+16 calcs · 626 ses/90d · **9 página · 7 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`   276  /calculadora-monotributo-2026
+- `PAGINA`   139  /calculadora-monotributo-categoria-2026-recategorizacion-julio
+- `PAGINA`    45  /calculadora-monotributo-vs-responsable-inscripto
+- `PAGINA`    28  /calculadora-monotributo-cuota-2026-todas-categorias
+- `PAGINA`    26  /calculadora-autonomos-categoria-monto-2026
+- `PAGINA`    26  /calculadora-monotributo-categoria-ingresos-tope
+- `PAGINA`    22  /simulador-monotributo-neto
+- `PAGINA`    17  /co/calculadora-monotributo-colombia-pequenos-comercios
+- `PAGINA`    11  /calculadora-monotributo-mejor-categoria-2026
+- `MODULO`     8  /calculadora-facturacion-maxima-monotributo-vs-ri
+- `MODULO`     7  /calculadora-monotributo-social-beneficio-exencion
+- `MODULO`     5  /uy/calculadora-monotributo-uruguay
+- `MODULO`     5  /calculadora-monotributo-vs-autonomo-vs-empleado-mismo-ingreso
+- `MODULO`     4  /calculadora-impuestos-monotributo-freelance
+- `MODULO`     4  /calculadora-retencion-rg2616-proveedor-monotributo
+- `MODULO`     3  /calculadora-obra-social-monotributo-2026
+
+## [TECH] Electrónica y circuitos · `electronica`
+34 calcs · 575 ses/90d · **10 página · 19 módulo · 1 fusión · 4 borrar**
+
+- `PAGINA`   204  /calculadora-resistencia-codigo-colores-4-5-bandas
+- `PAGINA`    92  /calculadora-duracion-bateria-mah-consumo
+- `PAGINA`    47  /calculadora-autonomia-ups-tiempo-respaldo-servidor
+- `PAGINA`    40  /calculadora-resistencia-paralelo-serie
+- `PAGINA`    28  /calculadora-bpm-tempo-cancion
+- `PAGINA`    20  /calculadora-decibelios-distancia-sonido
+- `PAGINA`    13  /calculadora-carga-bateria-tiempo-amp
+- `PAGINA`    12  /calculadora-compas-tiempo-pulso
+- `PAGINA`    11  /calculadora-ups-autonomia-potencia-carga
+- `PAGINA`    10  /calculadora-divisor-tension-resistivo
+- `MODULO`     9  /calculadora-transformador-relacion-espiras
+- `MODULO`     8  /calculadora-amplificador-watts-parlantes
+- `MODULO`     8  /calculadora-bateria-capacidad-runtime-ah
+- `MODULO`     8  /calculadora-resistencia-led-voltaje-caida
+- `MODULO`     7  /calculadora-cuerda-guitarra-tension
+- `MODULO`     6  /calculadora-afinacion-frecuencia-nota
+- `MODULO`     6  /calculadora-ley-ohm-voltaje-resistencia
+- `MODULO`     5  /calculadora-autonomia-bateria-dispositivo-mah
+- `MODULO`     5  /calculadora-factor-potencia-corregir
+- `MODULO`     5  /calculadora-impedancia-circuito-rlc
+- `MODULO`     4  /calculadora-bateria-lipo-capacidad-descarga
+- `MODULO`     4  /calculadora-carga-capacitor-constante-rc
+- `FUSION`     4  /calculadora-resistencia-led-serie-paralelo  →calculadora-resistencia-paralelo-serie
+- `MODULO`     4  /calculadora-transposicion-acordes
+- `MODULO`     3  /calculadora-capacitor-carga-descarga-rc
+- `MODULO`     3  /calculadora-divisor-tension-formula
+- `MODULO`     3  /calculadora-stepper-pasos-grado
+- `MODULO`     3  /calculadora-tiempo-soldadura-tipo-estano
+- `MODULO`     2  /calculadora-delay-tiempo-ms-bpm
+- `MODULO`     1  /calculadora-reactancia-inductiva-capacitiva
+- `BORRAR`     0  /pt/bateria-autonomia-ah
+- `BORRAR`     0  /calculadora-amplificador-operacional-ganancia
+- `BORRAR`     0  /en/stepper-pasos-grado
+- `BORRAR`     0  /pt/stepper-passos-grau
+
+## [TECH] Impresión 3D · `impresion3d`
+9 calcs · 557 ses/90d · **2 página · 7 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`   484  /calculadora-costo-impresion-3d-pieza
+- `PAGINA`    43  /calculadora-filamento-3d-necesario-modelo
+- `MODULO`     9  /calculadora-resin-3d-mililitros-pieza
+- `MODULO`     5  /calculadora-precio-hora-servicio-3d
+- `MODULO`     4  /calculadora-energia-electrica-impresion-3d
+- `MODULO`     4  /calculadora-tiempo-impresion-3d-layer
+- `MODULO`     3  /calculadora-cooling-fan-3d-material
+- `MODULO`     3  /calculadora-peso-pla-abs-petg-volumen
+- `MODULO`     2  /calculadora-filamento-soldador-mm2
+
+## [PLATA] Salir de deudas y tarjetas · `deudas`
+36 calcs · 528 ses/90d · **11 página · 17 módulo · 2 fusión · 6 borrar**
+
+- `PAGINA`    95  /calculadora-costo-financiero-total-cft
+- `PAGINA`    85  /calculadora-cuota-prestamo
+- `PAGINA`    48  /mx/calculadora-tarjeta-credito-interes-cat-mexico
+- `PAGINA`    44  /co/calculadora-tarjeta-credito-colombia-tasa-usura-cuota-pago-minimo
+- `PAGINA`    39  /calculadora-deuda-tarjeta-pago-minimo-meses
+- `PAGINA`    37  /calculadora-tarjeta-credito-pago-minimo-intereses
+- `PAGINA`    23  /calculadora-prestamo-personal-cuota-mensual
+- `PAGINA`    22  /ec/calculadora-tarjeta-credito-pago-minimo-ecuador
+- `PAGINA`    19  /cl/calculadora-tarjeta-credito-chile-tasa-rotativa-pago-minimo
+- `PAGINA`    18  /calculadora-interes-acumulado-tarjeta
+- `PAGINA`    16  /calculadora-plazo-prescripcion-deuda
+- `FUSION`    15  /calculadora-tarjeta-credito-pago-minimo-costo-real  →calculadora-tarjeta-credito-pago-minimo-intereses
+- `MODULO`     9  /calculadora-apalancamiento-liquidacion
+- `MODULO`     9  /calculadora-costo-real-cuotas-vs-contado
+- `MODULO`     8  /pe/calculadora-prestamo-personal-tcea-peru
+- `MODULO`     6  /calculadora-cft-prestamo-personal-comparativa
+- `MODULO`     6  /calculadora-prestamo-personal-banco-nacion-cuota-2026
+- `MODULO`     4  /calculadora-cuotas-sin-interes-costo-real-inflacion
+- `MODULO`     4  /calculadora-cuotas-sin-interes-precio
+- `FUSION`     4  /calculadora-tarjeta-credito-minimo  →calculadora-tarjeta-credito-pago-minimo-intereses
+- `MODULO`     3  /calculadora-deuda-avalancha-vs-bola-nieve-comparar
+- `MODULO`     3  /es/calculadora-tarjeta-credito-interes-espana-tin-revolving
+- `MODULO`     2  /calculadora-creditos-pyme-fogaba-cft-comparativa
+- `MODULO`     2  /co/calculadora-deuda-mes-tarjeta-credito-colombia-pago-tope
+- `MODULO`     2  /mx/calculadora-prestamo-personal-issste-2026-monto-descuento
+- `MODULO`     1  /calculadora-cancelacion-anticipada-prestamo
+- `MODULO`     1  /calculadora-cuota-prestamo-auto-frances-argentino
+- `MODULO`     1  /uy/calculadora-cuota-prestamo-uruguay
+- `MODULO`     1  /es/calculadora-prestamo-personal-tae-tin-comparador-espana
+- `MODULO`     1  /calculadora-refinanciacion-prestamo
+- `BORRAR`     0  /calculadora-capacidad-endeudamiento
+- `BORRAR`     0  /calculadora-comparador-prestamos
+- `BORRAR`     0  /calculadora-cuota-maxima-segun-ingreso
+- `BORRAR`     0  /calculadora-cuota-simple-ahora-12-costo-cuotas
+- `BORRAR`     0  /cl/calculadora-prestamo-personal-chile-cae-cmf-cuota
+- `BORRAR`     0  /do/calculadora-tarjeta-credito-pago-minimo-republica-dominicana
+
+## [EVENTO] Organizo una fiesta o cumpleaños · `fiesta`
+42 calcs · 518 ses/90d · **11 página · 29 módulo · 0 fusión · 2 borrar**
+
+- `PAGINA`   243  /calculadora-bebidas-evento-litros-por-persona
+- `PAGINA`    53  /calculadora-porciones-torta-tamano-molde
+- `PAGINA`    35  /calculadora-porciones-torta-cumpleanos-invitados-tamano
+- `PAGINA`    14  /calculadora-helado-litros-por-evento-invitados-tipos
+- `PAGINA`    13  /calculadora-playlist-duracion-canciones
+- `PAGINA`    12  /calculadora-globos-decoracion-salon-metros
+- `PAGINA`    12  /calculadora-presupuesto-despedida-soltera
+- `PAGINA`    11  /calculadora-cantidad-pizzas-por-invitados-pizzeria
+- `PAGINA`    11  /calculadora-presupuesto-cumpleanos
+- `PAGINA`    10  /calculadora-fiambre-queso-por-invitado-picada
+- `PAGINA`    10  /calculadora-porciones-sushi-por-persona-promedio
+- `MODULO`     7  /calculadora-bebidas-evento-cerveza-vino-refresco-calculadora
+- `MODULO`     7  /calculadora-torta-personas-kg-porciones
+- `MODULO`     6  /calculadora-sillas-mesas-invitados
+- `MODULO`     5  /calculadora-cerveza-invitado-evento
+- `MODULO`     5  /calculadora-whisky-por-invitado-evento
+- `MODULO`     4  /calculadora-comida-para-invitados
+- `MODULO`     4  /calculadora-cotillon-cumple-personas
+- `MODULO`     4  /calculadora-meseros-necesarios-invitados
+- `MODULO`     4  /calculadora-presupuesto-cumple-15-quinceanera
+- `MODULO`     4  /calculadora-vajilla-alquiler-invitados
+- `MODULO`     4  /calculadora-vino-por-invitado-horas-evento
+- `MODULO`     4  /en/sushi-per-person-calculator
+- `MODULO`     3  /calculadora-bocadillos-por-invitado-evento-coffee-break
+- `MODULO`     3  /calculadora-canape-por-invitado-coctel
+- `MODULO`     3  /calculadora-gaseosa-por-invitado-cumple-infantil
+- `MODULO`     3  /calculadora-karaoke-canciones-por-hora
+- `MODULO`     3  /calculadora-kilos-chocolate-casero-bombones-receta
+- `MODULO`     3  /calculadora-pizza-por-invitado-porciones
+- `MODULO`     3  /calculadora-vino-por-invitado-cena
+- `MODULO`     3  /en/karaoke-songs-per-hour
+- `MODULO`     2  /calculadora-invitaciones-cumple-numero
+- `MODULO`     2  /calculadora-regalos-invitado-souvenir
+- `MODULO`     2  /calculadora-whisky-sour-proporciones
+- `MODULO`     1  /calculadora-agua-por-invitado-fiesta
+- `MODULO`     1  /calculadora-cumpleanos-invitados-gastar-torta-regalos
+- `MODULO`     1  /calculadora-presupuesto-graduacion
+- `MODULO`     1  /calculadora-sandwiches-miga-por-persona
+- `MODULO`     1  /calculadora-sushi-piezas-por-persona-evento-cumpleanos
+- `MODULO`     1  /en/playlist-duration-songs
+- `BORRAR`     0  /calculadora-sushi-por-invitado-cena
+- `BORRAR`     0  /en/pizzas-by-guests
+
+## [PLATA] Intereses judiciales y deuda · `deudas`
+4 calcs · 439 ses/90d · **1 página · 2 módulo · 0 fusión · 1 borrar**
+
+- `PAGINA`   433  /calculadora-interes-judicial-tasa
+- `MODULO`     4  /calculadora-obra-social-monotributista-aporte-extra-familiar
+- `MODULO`     2  /calculadora-bonus-anual-marco-fiscal-neto
+- `BORRAR`     0  /calculadora-aumento-prepaga-cuota-mensual-argentina
+
+## [VIAJES] Equipaje, escalas y jet lag · `aeropuerto`
+26 calcs · 420 ses/90d · **8 página · 16 módulo · 0 fusión · 2 borrar**
+
+- `PAGINA`    90  /calculadora-horario-llegada-zona-horaria
+- `PAGINA`    59  /calculadora-diferencia-horaria-ciudades-paises
+- `PAGINA`    57  /calculadora-llegada-aeropuerto-minutos-vuelo
+- `PAGINA`    47  /calculadora-hora-mundo-zona-horaria
+- `PAGINA`    37  /calculadora-conexion-vuelo-minimo-minutos
+- `PAGINA`    25  /calculadora-equipaje-vuelo-kg-lb-limites
+- `PAGINA`    11  /calculadora-zona-horaria-diferencia-ciudades-convertir
+- `PAGINA`    10  /calculadora-escala-suficiente-tiempo
+- `MODULO`     9  /calculadora-horario-de-verano-cambio-hora-por-pais
+- `MODULO`     9  /calculadora-maletas-peso-aerolineas-low-cost-premium
+- `MODULO`     9  /calculadora-vuelo-emisiones-co2-pasajero
+- `MODULO`     7  /calculadora-tiempo-vuelo-estimado-avion
+- `MODULO`     6  /calculadora-check-in-anticipo-horas-aeropuerto
+- `MODULO`     6  /calculadora-impuesto-pais-pasaje-avion-internacional
+- `MODULO`     6  /calculadora-peso-mochila-ideal-trekking-senderismo
+- `MODULO`     6  /calculadora-tiempo-conexion-aeropuerto-internacional
+- `MODULO`     6  /calculadora-traslado-aeropuerto-ciudad-tiempo
+- `MODULO`     5  /calculadora-adaptador-enchufe-voltaje-pais
+- `MODULO`     5  /calculadora-equipaje-extra-costo-aerolinea
+- `MODULO`     3  /calculadora-equipaje-peso-sobrepeso-coste-por-kilo
+- `MODULO`     2  /calculadora-distancia-vuelo-2-ciudades
+- `MODULO`     2  /calculadora-equipaje-mano-bodega-peso-volumen-aerolinea
+- `MODULO`     2  /calculadora-jet-lag-recuperacion
+- `MODULO`     1  /calculadora-equipaje-permitido-franquicia-aerolinea
+- `BORRAR`     0  /calculadora-jet-lag-recuperacion-horas-diferencia-dias
+- `BORRAR`     0  /calculadora-jet-lag-zonas-horarias-adaptacion-dias
+
+## [OBRA] Pintar y revestir · `pintar-revestir`
+17 calcs · 409 ses/90d · **8 página · 9 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`   157  /calculadora-pintura-paredes-habitacion-litros
+- `PAGINA`   119  /calculadora-pintura-por-m2-litros-latas
+- `PAGINA`    35  /calculadora-pisos-ceramicos-porcellanato-cajas
+- `PAGINA`    18  /calculadora-azulejos-baldosas-metros-cuadrados-cantidad
+- `PAGINA`    13  /calculadora-conversor-litros-pintura-por-metro-cuadrado
+- `PAGINA`    13  /calculadora-piso-flotante-m2-tablas
+- `PAGINA`    13  /calculadora-porcelanato-liquido-litros-m2
+- `PAGINA`    10  /calculadora-deck-madera-tablas-tornillos
+- `MODULO`     8  /calculadora-ceramicos-m2-cajas
+- `MODULO`     8  /calculadora-zocalo-metros-lineal
+- `MODULO`     5  /calculadora-barniz-aceite-m2-madera
+- `MODULO`     2  /calculadora-m2-pared-descontando-aberturas-pintura
+- `MODULO`     2  /calculadora-machimbre-revestimiento-m2
+- `MODULO`     2  /calculadora-pegamento-ceramicas-bolsas-m2-area
+- `MODULO`     2  /calculadora-pintura-rejas-metal-litros
+- `MODULO`     1  /calculadora-juntas-pastina-rejuntado-ceramicos-kg
+- `MODULO`     1  /calculadora-venecitas-mosaico-m2
+
+## [JARDIN] Huerta y jardín · `huerta`
+31 calcs · 401 ses/90d · **5 página · 23 módulo · 1 fusión · 2 borrar**
+
+- `PAGINA`   260  /calculadora-siembra-calendario-argentina-zona
+- `PAGINA`    22  /calculadora-riego-goteo-litros-hora-planta
+- `PAGINA`    13  /calculadora-podar-rosal-cuando-fecha
+- `PAGINA`    11  /calculadora-sustrato-mezcla-proporciones
+- `PAGINA`    10  /calculadora-heladas-fecha-primera-ultima-zona
+- `MODULO`     7  /calculadora-cesped-semillas-kg-m2
+- `MODULO`     7  /calculadora-profundidad-siembra-semilla
+- `MODULO`     6  /calculadora-agua-riego-plantas-dia
+- `MODULO`     6  /calculadora-calendario-siembra-hemisferio-sur
+- `MODULO`     6  /calculadora-germinacion-tiempo-temperatura
+- `MODULO`     6  /calculadora-mulching-espesor-cantidad
+- `MODULO`     5  /calculadora-macetas-tamano-planta
+- `MODULO`     5  /calculadora-poda-frecuencia-arbol-especie
+- `MODULO`     4  /calculadora-agua-jardin-consumo-mensual-m2
+- `FUSION`     4  /calculadora-calendario-siembra-hemisferio-norte  →calculadora-calendario-siembra-hemisferio-sur
+- `MODULO`     4  /calculadora-semillas-por-m2-huerta
+- `MODULO`     3  /calculadora-cosecha-esperada-huerta-kg
+- `MODULO`     3  /calculadora-luz-solar-horas-planta
+- `MODULO`     3  /calculadora-pasto-semilla-kg-m2-cesped-sembrar
+- `MODULO`     3  /calculadora-riego-automatico-programacion-minutos
+- `MODULO`     3  /calculadora-tierra-maceta-litros-volumen
+- `MODULO`     2  /calculadora-costo-cesped-sintetico-m2
+- `MODULO`     2  /calculadora-hidroponia-nutrientes-ec-ppm
+- `MODULO`     1  /en/agua-riego-plantas-dia
+- `MODULO`     1  /calculadora-cantidad-plantas-seto-metros
+- `MODULO`     1  /calculadora-jardin-vertical-plantas-m2
+- `MODULO`     1  /calculadora-lombriz-compostera-cantidad-necesaria
+- `MODULO`     1  /calculadora-tierra-jardin-cantero-m3
+- `MODULO`     1  /en/semillas-por-m2-huerta
+- `BORRAR`     0  /calculadora-arbol-frutal-produccion-kg-anual
+- `BORRAR`     0  /en/mulching-espesor-cantidad
+
+## [FAMILIA] Busco un embarazo · `buscar-embarazo`
+13 calcs · 379 ses/90d · **5 página · 8 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`   233  /calculadora-ovulacion-dias-fertiles
+- `PAGINA`    60  /calculadora-ciclo-menstrual
+- `PAGINA`    18  /calculadora-costo-fiv-argentina
+- `PAGINA`    15  /calculadora-test-embarazo-cuando
+- `PAGINA`    14  /calculadora-fertilidad-masculina-edad
+- `MODULO`     9  /calculadora-riesgo-embarazo-edad
+- `MODULO`     6  /calculadora-test-prenatal-no-invasivo-nipt-precio-arg
+- `MODULO`     5  /calculadora-ovulos-congelados-vitrificacion-precio-clinica
+- `MODULO`     5  /calculadora-probabilidad-conocer-pareja
+- `MODULO`     4  /calculadora-fecha-concepcion-desde-fpp
+- `MODULO`     4  /calculadora-fecha-probable-concepcion
+- `MODULO`     3  /calculadora-dias-minimos-test-embarazo-positivo
+- `MODULO`     3  /calculadora-implantacion-embrion
+
+## [NEGOCIO] ¿Me conviene el negocio? · `rentabilidad`
+46 calcs · 363 ses/90d · **14 página · 25 módulo · 0 fusión · 7 borrar**
+
+- `PAGINA`    44  /calculadora-margen-ganancia-markup
+- `PAGINA`    39  /calculadora-costo-laboral-total-empleador-cargas
+- `PAGINA`    27  /calculadora-costo-laboral-empleado
+- `PAGINA`    21  /calculadora-comision-doordash-rappi-pedidosya-restaurante-2026
+- `PAGINA`    20  /calculadora-comision-uber-driver-ganancia-real-argentina-2026
+- `PAGINA`    19  /calculadora-uber-driver-chile-ganancia-neta
+- `PAGINA`    18  /calculadora-ticket-promedio-ventas
+- `PAGINA`    17  /calculadora-punto-equilibrio-break-even
+- `PAGINA`    14  /calculadora-comision-venta-vendedor
+- `PAGINA`    14  /calculadora-ingreso-uber-airbnb-host
+- `PAGINA`    13  /calculadora-descuento-precio-final
+- `PAGINA`    11  /pe/calculadora-costo-laboral-total-empleador-peru
+- `PAGINA`    10  /calculadora-cafeteria-cuanto-cobrar-pais-cafe-medialuna-margen
+- `PAGINA`    10  /calculadora-costo-envio-peso-destino
+- `MODULO`     9  /co/calculadora-costo-total-empleado-empleador-colombia-2026
+- `MODULO`     8  /calculadora-rural-rentabilidad-hectarea-soja-maiz-trigo-2026
+- `MODULO`     7  /calculadora-rotacion-inventario-stock
+- `MODULO`     6  /calculadora-costo-total-empleado-empresa-argentina
+- `MODULO`     6  /calculadora-payback-periodo-recupero-inversion
+- `MODULO`     6  /calculadora-precio-minimo-venta-con-margen
+- `MODULO`     6  /calculadora-uber-driver-mexico-costos-reales
+- `MODULO`     4  /calculadora-dias-promedio-pago-proveedores-dpp
+- `MODULO`     4  /calculadora-dso-dias-promedio-cobro
+- `MODULO`     4  /calculadora-precio-venta-producto-markup
+- `MODULO`     3  /calculadora-comision-tienda-nube-2026-monto-mensual-checkout
+- `MODULO`     3  /calculadora-proyeccion-ventas-crecimiento
+- `MODULO`     3  /calculadora-roi-capacitacion-empleados
+- `MODULO`     2  /calculadora-costo-almacenamiento-inventario
+- `MODULO`     2  /calculadora-costo-envio-paquete-ecommerce
+- `MODULO`     2  /ec/calculadora-costo-laboral-total-empleador-ecuador
+- `MODULO`     2  /calculadora-gpu-h100-renta-hora-cloud-comparativa
+- `MODULO`     2  /calculadora-roi-ad-spend-facebook-meta
+- `MODULO`     1  /calculadora-capital-inicial-abrir-negocio
+- `MODULO`     1  /calculadora-comision-amazon-fba-producto
+- `MODULO`     1  /calculadora-comision-uber-eats-glovo-rider
+- `MODULO`     1  /calculadora-inferencia-llm-tokens-segundo-throughput
+- `MODULO`     1  /calculadora-margen-contribucion-producto
+- `MODULO`     1  /co/calculadora-rentabilidad-finca-raiz-colombia-renta-fija-comparada
+- `MODULO`     1  /calculadora-rentabilidad-mensual-negocio
+- `BORRAR`     0  /calculadora-capital-de-trabajo
+- `BORRAR`     0  /calculadora-comision-etsy-venta-handmade
+- `BORRAR`     0  /py/calculadora-comision-inmobiliaria-paraguay
+- `BORRAR`     0  /calculadora-costos-fijos-y-variables
+- `BORRAR`     0  /co/calculadora-rentabilidad-fondo-inversion-colectiva-fic-colombia
+- `BORRAR`     0  /pt/calculadora-rentabilidade-cdb-poupanca-tesouro
+- `BORRAR`     0  /en/capital-gains-tax-calculator-usa
+
+## [ANSES] Asignaciones y ayudas ANSES · `asignaciones`
+28 calcs · 348 ses/90d · **11 página · 11 módulo · 0 fusión · 6 borrar**
+
+- `PAGINA`    60  /es/calculadora-beca-comedor-escolar-espana-renta-umbrales
+- `PAGINA`    50  /calculadora-vacuna-calendario-nacional-anses
+- `PAGINA`    34  /cl/calculadora-asignacion-familiar-chile-2026-tramos-renta
+- `PAGINA`    29  /es/calculadora-becas-mec-2026-espana-renta-familiar-rendimiento
+- `PAGINA`    27  /calculadora-asignacion-familiar-empleado-registrado-anses
+- `PAGINA`    25  /calculadora-progresar-beca-monto-requisitos-2026
+- `PAGINA`    23  /cl/calculadora-asignacion-zona-extrema-chile-aysen-magallanes-arica
+- `PAGINA`    19  /calculadora-becas-manuel-belgrano-monto
+- `PAGINA`    15  /es/calculadora-beca-erasmus-mensualidad-pais-destino-2026
+- `PAGINA`    14  /calculadora-asignacion-discapacidad-pensionado
+- `PAGINA`    12  /calculadora-asignacion-universal-hijo-auh-2026-monto
+- `MODULO`     8  /calculadora-ayuda-escolar-anual-asignacion
+- `MODULO`     7  /calculadora-anses-complemento-leche-maternidad
+- `MODULO`     7  /calculadora-credito-universitario-progresar-monto-2026
+- `MODULO`     6  /calculadora-beca-promedio-minimo-requisito-universidades
+- `MODULO`     4  /calculadora-asignacion-familiar-anses-2026-tramos-ingreso
+- `MODULO`     2  /cl/calculadora-asignacion-familiar-vs-gratuidad-chile
+- `MODULO`     2  /co/calculadora-becas-icetex-colombia-credito-monto-2026
+- `MODULO`     1  /pe/calculadora-asignacion-familiar-peru
+- `MODULO`     1  /cl/calculadora-becas-junaeb-chile-cuantia-requisitos-2026
+- `MODULO`     1  /calculadora-becas-porcentaje-cobertura
+- `MODULO`     1  /calculadora-fecha-cobro-anses-cronograma-dni
+- `BORRAR`     0  /uy/calculadora-asignacion-familiar-bps-uruguay
+- `BORRAR`     0  /cl/calculadora-asignacion-familiar-pareja-no-casados-chile-derechos
+- `BORRAR`     0  /calculadora-auh-libreta-20-por-ciento-retenido-cobro
+- `BORRAR`     0  /mx/calculadora-beca-rita-cetina-benito-juarez-monto-mexico
+- `BORRAR`     0  /mx/calculadora-becas-elisa-acuna-conahcyt-mexico-monto
+- `BORRAR`     0  /calculadora-progresar-retencion-20-por-ciento
+
+## [OBRA] Agua, gas y electricidad de la obra · `instalaciones`
+23 calcs · 348 ses/90d · **13 página · 4 módulo · 3 fusión · 3 borrar**
+
+- `PAGINA`    51  /calculadora-tamano-aire-acondicionado-btu-habitacion
+- `PAGINA`    47  /calculadora-ventilacion-renovaciones-aire-hora
+- `PAGINA`    40  /calculadora-tanque-agua-litros-personas
+- `PAGINA`    25  /calculadora-electricidad-cable-amperaje-seccion
+- `PAGINA`    21  /calculadora-calefon-termotanque-litros-personas
+- `PAGINA`    20  /calculadora-capacidad-tanque-cisterna-litros
+- `PAGINA`    19  /calculadora-bombeo-cisterna-tanque-watts
+- `FUSION`    19  /calculadora-cable-awg-amperaje-seccion  →calculadora-electricidad-cable-amperaje-seccion
+- `PAGINA`    19  /calculadora-calefaccion-btu-necesarios-ambiente
+- `PAGINA`    19  /calculadora-calefaccion-watts-kcal-ambiente
+- `PAGINA`    14  /calculadora-caldera-kw-m2-calefaccion
+- `PAGINA`    14  /calculadora-diametro-caneria-agua-caudal
+- `PAGINA`    11  /calculadora-cano-estructural-peso-ml
+- `PAGINA`    11  /calculadora-conversion-btu-kcal-aire-acondicionado
+- `MODULO`     6  /calculadora-caida-tension-cable-distancia
+- `FUSION`     4  /calculadora-fusible-amperaje-cable-seccion  →calculadora-electricidad-cable-amperaje-seccion
+- `MODULO`     3  /calculadora-aire-acondicionado-frigorias-ambiente
+- `MODULO`     3  /en/electricidad-cable-amperaje-seccion
+- `MODULO`     1  /calculadora-caldera-potencia-kw-ambiente-metros
+- `FUSION`     1  /calculadora-cano-agua-diametro-caudal  →calculadora-diametro-caneria-agua-caudal
+- `BORRAR`     0  /en/cable-awg-amperage-section
+- `BORRAR`     0  /en/caldera-potencia-kw-ambiente-metros
+- `BORRAR`     0  /en/conversion-btu-kcal-air-conditioning
+
+## [EVENTO] Organizo un asado · `asado`
+17 calcs · 341 ses/90d · **6 página · 9 módulo · 0 fusión · 2 borrar**
+
+- `PAGINA`   211  /calculadora-carne-asado-kg-por-persona
+- `PAGINA`    23  /calculadora-asado-por-invitado-kg-carne
+- `PAGINA`    22  /calculadora-asado-kg-por-persona-cortes-tira-vacio-pollo
+- `PAGINA`    22  /mx/calculadora-carne-asado-kg-por-persona-mexico
+- `PAGINA`    15  /calculadora-empanadas-por-persona-evento-asado-cumple
+- `PAGINA`    12  /calculadora-fernet-cola-proporciones
+- `MODULO`     9  /calculadora-tamano-parrilla-personas-m2
+- `MODULO`     7  /calculadora-fernet-cola-por-invitado-juntada
+- `MODULO`     5  /calculadora-cantidad-hamburguesas-parrilla-cumpleanos
+- `MODULO`     4  /calculadora-pan-para-comida-evento
+- `MODULO`     3  /es/calculadora-carne-asado-kg-por-persona-espana
+- `MODULO`     3  /calculadora-chorizos-por-invitado-asado
+- `MODULO`     2  /calculadora-carbon-asado-kg
+- `MODULO`     2  /calculadora-milanesas-por-persona
+- `MODULO`     1  /py/calculadora-carne-asado-kg-por-persona-paraguay
+- `BORRAR`     0  /en/cantidad-hamburguesas-parrilla-cumpleanos
+- `BORRAR`     0  /en/empanadas-per-guest
+
+## [TECH] Gaming y PC · `gaming`
+23 calcs · 337 ses/90d · **12 página · 11 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`    82  /calculadora-watts-fuente-alimentacion-pc
+- `PAGINA`    35  /calculadora-energia-pc-gaming-costo-mes
+- `PAGINA`    32  /calculadora-ping-latencia-distancia
+- `PAGINA`    29  /calculadora-anime-tiempo-bingear-temporadas-episodios-horas
+- `PAGINA`    26  /calculadora-configuracion-pc-bottleneck
+- `PAGINA`    19  /calculadora-sensibilidad-mouse-dpi-juego
+- `PAGINA`    17  /calculadora-blox-fruits-valor-trade
+- `PAGINA`    13  /calculadora-portal-nether-overworld-minecraft
+- `PAGINA`    12  /calculadora-gaming-fps-componentes-pc-armar-presupuesto
+- `PAGINA`    11  /calculadora-maraton-serie-tiempo
+- `PAGINA`    10  /calculadora-fps-fluidez-video-juego
+- `PAGINA`    10  /calculadora-fps-ideal-monitor-hz
+- `MODULO`     8  /calculadora-ping-latencia-gaming-aceptable
+- `MODULO`     8  /calculadora-probabilidad-drop-loot
+- `MODULO`     5  /calculadora-probabilidad-loteria-premio
+- `MODULO`     4  /calculadora-rankeo-elo-puntos
+- `MODULO`     3  /calculadora-almacenamiento-juegos-gb
+- `MODULO`     3  /calculadora-iv-pokemon-go-cp-nivel
+- `MODULO`     3  /en/ping-latency-distance
+- `MODULO`     2  /calculadora-costo-gaming-por-hora
+- `MODULO`     2  /calculadora-fps-frames-por-segundo-juego
+- `MODULO`     2  /calculadora-puzzle-1000-piezas-tiempo-promedio-dificultad
+- `MODULO`     1  /calculadora-tiempo-completar-juego-horas
+
+## [DEPORTE] Running: ritmo, plan y maratón · `running`
+46 calcs · 333 ses/90d · **12 página · 28 módulo · 2 fusión · 4 borrar**
+
+- `PAGINA`    42  /calculadora-pace-ritmo-running
+- `PAGINA`    27  /calculadora-vo2max-test-cooper-12-minutos
+- `PAGINA`    25  /calculadora-fc-maxima-zonas-karvonen
+- `PAGINA`    24  /calculadora-zona2-cardio-frecuencia-edad-vo2max
+- `PAGINA`    18  /calculadora-calorias-quemadas-deporte
+- `PAGINA`    15  /calculadora-calorias-quemadas-ejercicio
+- `PAGINA`    15  /calculadora-puntos-ranking-ajedrez-elo
+- `PAGINA`    15  /calculadora-ritmo-caminata-pasos-por-km
+- `PAGINA`    14  /calculadora-handicap-golf-estimado
+- `PAGINA`    14  /calculadora-pubalgia-atletica-tiempo-recuperacion-fases
+- `PAGINA`    14  /calculadora-swolf-natacion-indice
+- `PAGINA`    10  /calculadora-velocidad-promedio-carrera-km-h
+- `MODULO`     9  /calculadora-calorias-natacion-estilos-distancia-velocidad
+- `MODULO`     8  /calculadora-handicap-golf-diferencial
+- `MODULO`     6  /calculadora-calorias-padel-hora-intensidad
+- `MODULO`     6  /calculadora-natacion-pace-100m
+- `MODULO`     6  /calculadora-ritmo-carrera-pace-km
+- `MODULO`     6  /calculadora-umbral-lactato-estimado
+- `MODULO`     6  /calculadora-velocidad-sprint-30m-futbol-por-posicion
+- `MODULO`     5  /calculadora-cuantas-calorias-bicicleta-distancia-pendiente-perfil
+- `MODULO`     5  /calculadora-velocidad-critica-natacion
+- `MODULO`     4  /calculadora-calorias-remo-indoor-ergometro
+- `MODULO`     4  /calculadora-plan-entrenamiento-maraton-42k-semanas
+- `MODULO`     4  /calculadora-vo2max-predecir-carrera-cooper-12min
+- `MODULO`     3  /calculadora-calorias-futbol-5-7-11
+- `MODULO`     3  /calculadora-peso-guantes-boxeo-kg-oz
+- `MODULO`     3  /calculadora-tiempo-maraton-predictor
+- `MODULO`     3  /calculadora-vo2-max-test-cooper
+- `MODULO`     2  /calculadora-calorias-ciclismo-intensidad
+- `MODULO`     2  /calculadora-calorias-quemadas-mediocampista-partido
+- `MODULO`     2  /calculadora-gel-energetico-carrera-cuantos
+- `FUSION`     2  /calculadora-plan-entrenamiento-21k-semi-maraton-semanas  →calculadora-plan-entrenamiento-maraton-42k-semanas
+- `FUSION`     2  /calculadora-plan-entrenamiento-5k-semanas  →calculadora-plan-entrenamiento-maraton-42k-semanas
+- `MODULO`     1  /calculadora-calorias-ciclismo-watts
+- `MODULO`     1  /calculadora-calorias-quemadas-running-km-peso
+- `MODULO`     1  /calculadora-calorias-saltar-cuerda-minutos
+- `MODULO`     1  /calculadora-ciclismo-power-w-kg-categoria-ftp
+- `MODULO`     1  /calculadora-descanso-post-maraton-regla-1-dia-km
+- `MODULO`     1  /calculadora-hidratacion-corredor-maraton-carrera
+- `MODULO`     1  /calculadora-peso-ideal-futbolista-altura-posicion
+- `MODULO`     1  /calculadora-vo2-max-futbolista-profesional-vs-amateur
+- `MODULO`     1  /pt/pace-natacao-100m-ritmo
+- `BORRAR`     0  /calculadora-plan-maraton-semanas-experiencia
+- `BORRAR`     0  /calculadora-tiempo-recuperacion-isquiotibial-grado-1-2-3
+- `BORRAR`     0  /en/pace-objetivo-maraton-tiempo
+- `BORRAR`     0  /en/swolf-swimming-index
+
+## [CUERPO] ¿Está bien el peso/altura de mi hijo? · `peso-hijos`
+11 calcs · 304 ses/90d · **6 página · 4 módulo · 1 fusión · 0 borrar**
+
+- `PAGINA`   119  /calculadora-percentil-bebe-oms
+- `PAGINA`    83  /calculadora-edad-corregida-prematuro
+- `PAGINA`    28  /calculadora-peso-ideal-bebe-mes-percentil
+- `PAGINA`    26  /calculadora-estatura-adulta-hijo
+- `PAGINA`    17  /calculadora-percentiles-crecimiento-pediatrico
+- `PAGINA`    12  /calculadora-talla-zapato-bebe
+- `MODULO`     7  /calculadora-aumento-altura-adolescente-prediccion
+- `MODULO`     6  /calculadora-adolescente-estatura-final-prediccion-edad-huesos
+- `MODULO`     4  /calculadora-percentil-peso-bebe-oms-edad-meses
+- `MODULO`     2  /calculadora-mochila-escolar-peso-maximo-edad-espalda
+- `FUSION`     0  /calculadora-edad-gestacional-corregida-prematuro  →calculadora-edad-corregida-prematuro
+
+## [CUERPO] Quiero ganar músculo y fuerza · `musculo`
+29 calcs · 300 ses/90d · **4 página · 20 módulo · 1 fusión · 4 borrar**
+
+- `PAGINA`   121  /calculadora-proteina-diaria-objetivo
+- `PAGINA`    48  /calculadora-proteina-gramos-por-peso-actividad
+- `PAGINA`    35  /calculadora-proteina-por-comida-absorcion
+- `PAGINA`    28  /calculadora-creatina-dosis-carga-mantenimiento
+- `MODULO`     9  /calculadora-repeticiones-maximas-epley-brzycki
+- `MODULO`     8  /calculadora-proteina-diaria-fisicoculturismo-ganar-musculo
+- `MODULO`     5  /calculadora-1rm-peso-maximo-levantamiento
+- `MODULO`     5  /calculadora-tabla-wilks-powerlifting-score
+- `MODULO`     5  /calculadora-whey-protein-dosis-diaria-scoop
+- `MODULO`     4  /calculadora-macronutrientes-dieta
+- `MODULO`     4  /calculadora-repeticion-maxima-estimada
+- `MODULO`     4  /calculadora-volumen-semanal-hipertrofia-musculo-series
+- `MODULO`     3  /calculadora-1rm-sentadilla-estimador
+- `MODULO`     3  /calculadora-calorias-gym-pesas-hora
+- `MODULO`     3  /calculadora-carbohidratos-durante-ejercicio
+- `MODULO`     3  /calculadora-frecuencia-entrenamiento-grupo-muscular
+- `MODULO`     3  /calculadora-recuperacion-muscular-horas
+- `MODULO`     2  /calculadora-descanso-entre-series-gimnasio
+- `MODULO`     2  /calculadora-periodizacion-entrenamiento
+- `MODULO`     1  /pt/1rm-agachamento-estimador
+- `MODULO`     1  /pt/1rm-levantamento-terra-estimador
+- `MODULO`     1  /pt/1rm-supino-estimador
+- `MODULO`     1  /calculadora-1rm-press-banca-estimador
+- `MODULO`     1  /calculadora-proteina-por-comida-anabolismo
+- `BORRAR`     0  /en/1rm-deadlift-estimator
+- `BORRAR`     0  /calculadora-bcaa-pre-workout-gramos
+- `FUSION`     0  /calculadora-proteina-diaria-gramos-objetivo  →calculadora-proteina-diaria-objetivo
+- `BORRAR`     0  /pt/proteina-vegana-completa-combinacao-aminoacidos
+- `BORRAR`     0  /en/whey-protein-daily-scoops
+
+## [CIENCIA] Física · `fisica`
+32 calcs · 285 ses/90d · **7 página · 17 módulo · 1 fusión · 7 borrar**
+
+- `PAGINA`   156  /calculadora-presion-atmosferica-altitud-barometrica
+- `PAGINA`    15  /calculadora-anos-luz-distancia-conversion
+- `PAGINA`    13  /calculadora-onda-longitud-frecuencia-velocidad
+- `PAGINA`    13  /calculadora-velocidad-sonido-segun-temperatura-aire
+- `PAGINA`    11  /calculadora-aceleracion-fuerza-masa
+- `PAGINA`    10  /calculadora-dilatacion-termica-longitud
+- `PAGINA`    10  /calculadora-escala-richter-magnitud-energia
+- `MODULO`     8  /calculadora-tiempo-viaje-interestelar
+- `MODULO`     7  /calculadora-calor-especifico-delta-t
+- `MODULO`     7  /calculadora-densidad-aire-temperatura-humedad-altitud-aviacion
+- `MODULO`     5  /calculadora-lente-distancia-focal
+- `MODULO`     4  /calculadora-distancia-caida-libre-altura
+- `MODULO`     4  /calculadora-presion-hidrostatica
+- `FUSION`     3  /calculadora-caida-libre-tiempo-altura  →calculadora-distancia-caida-libre-altura
+- `MODULO`     3  /calculadora-fuerza-friccion-coeficiente
+- `MODULO`     3  /calculadora-ley-coulomb-fuerza-electrica
+- `MODULO`     3  /calculadora-peso-en-otro-planeta
+- `MODULO`     2  /calculadora-entropia-cambio-fase
+- `MODULO`     2  /calculadora-velocidad-escape-planeta
+- `MODULO`     1  /calculadora-distancia-estrella-parsec
+- `MODULO`     1  /calculadora-edad-sol-vida-restante
+- `MODULO`     1  /calculadora-efecto-doppler-frecuencia
+- `MODULO`     1  /calculadora-energia-cinetica-joules
+- `MODULO`     1  /calculadora-momento-angular-rotacion
+- `MODULO`     1  /calculadora-velocidad-orbital-satelite
+- `BORRAR`     0  /pt/calculadora-energia-cinetica
+- `BORRAR`     0  /calculadora-energia-potencial-gravitatoria
+- `BORRAR`     0  /calculadora-tiro-parabolico-alcance-altura
+- `BORRAR`     0  /calculadora-vida-media-decaimiento-radiactivo
+- `BORRAR`     0  /densidad-masa-volumen-formula
+- `BORRAR`     0  /en/entropia-cambio-fase
+- `BORRAR`     0  /en/momento-angular-rotacion
+
+## [VIDA] Talles, ropa y estilo · `imagen`
+5 calcs · 266 ses/90d · **4 página · 1 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`   169  /calculadora-talla-sosten-corpino
+- `PAGINA`    57  /calculadora-talla-anillo-dedo
+- `PAGINA`    19  /calculadora-lana-tejer-prenda-agujas
+- `PAGINA`    14  /calculadora-tela-necesaria-prenda-vestido
+- `MODULO`     7  /calculadora-talla-pantalon-jeans
+
+## [CUERPO] Mis análisis y valores de salud · `salud-chequeo`
+33 calcs · 257 ses/90d · **5 página · 19 módulo · 0 fusión · 9 borrar**
+
+- `PAGINA`    65  /calculadora-alcohol-sangre-bac
+- `PAGINA`    45  /calculadora-dioptrias-receta-optica
+- `PAGINA`    34  /calculadora-tiempo-digestion-alimentos-estomago
+- `PAGINA`    24  /calculadora-conversion-colesterol-mg-mmol
+- `PAGINA`    23  /calculadora-frecuencia-cardiaca-zonas-entrenamiento
+- `MODULO`     7  /calculadora-calcio-diario-edad-lactancia-menopausia
+- `MODULO`     7  /calculadora-frecuencia-cardiaca-reposo-categorias-deportistas-edad
+- `MODULO`     6  /calculadora-cafeina-dosis-rendimiento
+- `MODULO`     5  /calculadora-exposicion-sol-vitamina-d
+- `MODULO`     5  /calculadora-frecuencia-cardiaca-maxima-edad
+- `MODULO`     4  /calculadora-lactosa-alimento-intolerancia
+- `MODULO`     4  /calculadora-protector-solar-spf-fototipo
+- `MODULO`     4  /calculadora-ritmo-cardiaco-maximo-edad-formula
+- `MODULO`     3  /calculadora-exposicion-ruido-decibeles-segura
+- `MODULO`     3  /calculadora-magnesio-dosis-deficiencia-sintomas
+- `MODULO`     3  /calculadora-magnesio-glicinato-vs-citrato-vs-malato-dosis
+- `MODULO`     3  /calculadora-vitamina-d-dosis-sol-diaria-edad
+- `MODULO`     2  /calculadora-acidez-orina-alimentos
+- `MODULO`     2  /calculadora-cafeina-dosis-segura-diaria-peso
+- `MODULO`     2  /calculadora-hierro-diario-vegetariano
+- `MODULO`     2  /calculadora-oxalatos-calculos-renales
+- `MODULO`     2  /calculadora-screen-time-adultos-fatiga-visual-pausas
+- `MODULO`     1  /calculadora-pH-alimento-alcalinidad
+- `MODULO`     1  /calculadora-spf-proteccion-solar-minutos-piel
+- `BORRAR`     0  /en/cafeina-dosis-rendimiento
+- `BORRAR`     0  /en/cafeina-dosis-segura-diaria-peso
+- `BORRAR`     0  /calculadora-calcio-corregido-albumina
+- `BORRAR`     0  /calculadora-clearance-creatinina-filtrado-glomerular
+- `BORRAR`     0  /calculadora-color-cabello-tono-piel
+- `BORRAR`     0  /calculadora-fructosa-malabsorcion
+- `BORRAR`     0  /calculadora-homa-ir-quicki
+- `BORRAR`     0  /en/magnesio-dosis-deficiencia-sintomas
+- `BORRAR`     0  /en/spf-sun-protection-minutes-skin-type
+
+## [COCINA] Tiempos y temperaturas de cocción · `coccion`
+14 calcs · 251 ses/90d · **5 página · 8 módulo · 0 fusión · 1 borrar**
+
+- `PAGINA`    64  /calculadora-rendimiento-masa-empanadas-cantidad
+- `PAGINA`    59  /calculadora-levadura-fermentacion-pizza-pan
+- `PAGINA`    45  /calculadora-tiempo-coccion-legumbres-remojo
+- `PAGINA`    26  /calculadora-masa-pizza-casera-gramos-invitados
+- `PAGINA`    24  /calculadora-masa-pizza-ingredientes-porciones
+- `MODULO`     7  /calculadora-tiempo-descongelado-alimentos-peso
+- `MODULO`     6  /calculadora-temperatura-interna-carne-punto-coccion
+- `MODULO`     6  /calculadora-tiempo-fermentacion-masa-temperatura
+- `MODULO`     5  /calculadora-tiempos-coccion-verduras-al-vapor-hervido
+- `MODULO`     3  /calculadora-tiempo-marinado-carne-pescado
+- `MODULO`     2  /calculadora-leudado-pan-levadura-tiempo-temperatura
+- `MODULO`     2  /calculadora-masa-molar-compuesto
+- `MODULO`     2  /calculadora-temperatura-aceite-fritura-punto-humo
+- `BORRAR`     0  /olla-presion-conversion-tiempos-coccion
+
+## [AUTO] Comprar y financiar un auto · `comprar-auto`
+19 calcs · 244 ses/90d · **7 página · 10 módulo · 0 fusión · 2 borrar**
+
+- `PAGINA`   101  /calculadora-neumaticos-medida-equivalente
+- `PAGINA`    41  /calculadora-presion-neumaticos-psi-bar
+- `PAGINA`    20  /calculadora-potencia-hp-kw-cv
+- `PAGINA`    18  /calculadora-financiacion-auto-cuota-prendario
+- `PAGINA`    14  /calculadora-conversion-torque-nm-lb-ft-kgm
+- `PAGINA`    11  /calculadora-presion-neumatico-psi-bar-auto
+- `PAGINA`    10  /calculadora-mezcla-2-tiempos-nafta-aceite
+- `MODULO`     5  /calculadora-cilindrada-motor-cc-litros
+- `MODULO`     5  /calculadora-conversion-velocidad-kmh-mph-nudos
+- `MODULO`     3  /calculadora-cca-bateria-auto-temperatura-motor
+- `MODULO`     3  /calculadora-cilindrada-motor-relacion-potencia
+- `MODULO`     3  /calculadora-distancia-frenado-velocidad-adhesion
+- `MODULO`     3  /calculadora-velocidad-maxima-relacion-potencia-peso
+- `MODULO`     2  /calculadora-aceite-motor-capacidad-cambio-km
+- `MODULO`     2  /calculadora-correa-distribucion-cambio-intervalo-km
+- `MODULO`     2  /calculadora-suspension-altura-libre-piso-auto
+- `MODULO`     1  /calculadora-capacidad-carga-camioneta-peso-util
+- `BORRAR`     0  /calculadora-cuota-plan-ahorro-auto-circulo-cerrado
+- `BORRAR`     0  /en/conversion-torque-nm-lb-ft-kgm
+
+## [MATE] Álgebra: ecuaciones y polinomios · `algebra`
+29 calcs · 237 ses/90d · **7 página · 12 módulo · 2 fusión · 8 borrar**
+
+- `PAGINA`    63  /calculadora-mcd-mcm-maximo-divisor-minimo-multiplo
+- `PAGINA`    42  /calculadora-raiz-cuadrada-cubica
+- `FUSION`    23  /calculadora-mcm-mcd-minimo-comun-multiplo  →calculadora-mcd-mcm-maximo-divisor-minimo-multiplo
+- `PAGINA`    18  /calculadora-fracciones-suma-resta-multiplicacion-division
+- `PAGINA`    15  /calculadora-potencias-y-raices
+- `PAGINA`    14  /calculadora-numeros-primos-factorizacion
+- `PAGINA`    13  /calculadora-mcd-mcm-dos-numeros-enteros
+- `PAGINA`    10  /calculadora-sistemas-ecuaciones-2x2-cramer
+- `MODULO`     9  /calculadora-logaritmos-base-10-natural-cualquier-base
+- `MODULO`     8  /calculadora-notacion-cientifica
+- `MODULO`     4  /calculadora-ecuacion-cuadratica-raices-discriminante
+- `MODULO`     3  /calculadora-determinante-inversa-matriz-2x2
+- `MODULO`     3  /calculadora-ecuacion-cuadratica-formula-resolvente
+- `MODULO`     3  /calculadora-logaritmo-base-cualquiera-numero
+- `MODULO`     3  /calculadora-sistema-ecuaciones-3x3
+- `FUSION`     1  /calculadora-determinante-inversa-matriz-3x3  →calculadora-determinante-inversa-matriz-2x2
+- `MODULO`     1  /calculadora-division-polinomios
+- `MODULO`     1  /calculadora-gauss-jordan
+- `MODULO`     1  /calculadora-progresion-aritmetica
+- `MODULO`     1  /calculadora-progresion-geometrica-suma-termino
+- `MODULO`     1  /calculadora-regla-ruffini
+- `BORRAR`     0  /calculadora-factorizacion-polinomios
+- `BORRAR`     0  /calculadora-inecuaciones
+- `BORRAR`     0  /calculadora-numeros-complejos
+- `BORRAR`     0  /calculadora-raices-polinomio
+- `BORRAR`     0  /calculadora-vectores
+- `BORRAR`     0  /pt/determinante-inversa-matriz-2x2
+- `BORRAR`     0  /ecuacion-recta-dos-puntos-pendiente
+- `BORRAR`     0  /fraccion-impropia-numero-mixto
+
+## [NEGOCIO] Monetizar contenido y redes · `creador`
+52 calcs · 234 ses/90d · **6 página · 42 módulo · 0 fusión · 4 borrar**
+
+- `PAGINA`    18  /calculadora-twitter-x-monetizacion-ingreso
+- `PAGINA`    17  /calculadora-youtube-cpm-por-nicho
+- `PAGINA`    15  /calculadora-engagement-rate-instagram
+- `PAGINA`    13  /calculadora-costo-por-lead-cpl-marketing
+- `PAGINA`    10  /calculadora-facebook-reels-bonus-pagos
+- `PAGINA`    10  /calculadora-influencer-tarifa-estimada
+- `MODULO`     9  /calculadora-twitch-bits-donaciones-dolares
+- `MODULO`     8  /calculadora-cpc-costo-por-click
+- `MODULO`     8  /calculadora-cpm-costo-por-mil-impresiones
+- `MODULO`     7  /calculadora-engagement-rate-redes-sociales
+- `MODULO`     7  /calculadora-tiktok-live-diamonds-dolares
+- `MODULO`     7  /calculadora-youtube-shorts-fund-ingreso
+- `MODULO`     6  /calculadora-cac-ltv-costo-adquisicion-cliente
+- `MODULO`     5  /calculadora-apple-music-royalties-pagos
+- `MODULO`     5  /calculadora-nps-net-promoter-score
+- `MODULO`     5  /calculadora-reach-frequency-grp-medios
+- `MODULO`     5  /calculadora-share-of-voice-marketing
+- `MODULO`     5  /calculadora-tiktok-engagement-rate
+- `MODULO`     5  /calculadora-youtube-tiempo-para-monetizar
+- `MODULO`     4  /calculadora-blog-adsense-rpm-nicho
+- `MODULO`     4  /calculadora-cpm-cpc-conversion-ads
+- `MODULO`     4  /calculadora-roas-retorno-inversion-publicitaria
+- `MODULO`     4  /calculadora-spotify-royalties-streams
+- `MODULO`     3  /calculadora-costo-por-view-cpv-video
+- `MODULO`     3  /calculadora-cpa-cac-ltv
+- `MODULO`     3  /calculadora-customer-effort-score-ces
+- `MODULO`     3  /calculadora-instagram-rate-card-por-followers
+- `MODULO`     3  /calculadora-kindle-kdp-ingreso-ebook
+- `MODULO`     3  /calculadora-mejor-hora-publicar
+- `MODULO`     3  /calculadora-tasa-de-conversion
+- `MODULO`     3  /calculadora-tiktok-duracion-optima-video
+- `MODULO`     2  /calculadora-audible-ingreso-audiolibro
+- `MODULO`     2  /calculadora-cac-costo-adquisicion-sales-funnel
+- `MODULO`     2  /calculadora-churn-retencion-clientes
+- `MODULO`     2  /calculadora-instagram-carrousel-slides-optimas
+- `MODULO`     2  /calculadora-instagram-influencer-pago-historia
+- `MODULO`     2  /calculadora-linkedin-posts-alcance
+- `MODULO`     2  /calculadora-newsletter-ingreso-suscriptores-pago
+- `MODULO`     2  /calculadora-regalias-spotify-por-pais-streams-dolares
+- `MODULO`     2  /calculadora-tasa-rebote-benchmark-sitio-web
+- `MODULO`     2  /calculadora-youtube-ingresos-cpm-suscriptores-views-monetizacion
+- `MODULO`     2  /calculadora-youtube-ingresos-vistas-pais
+- `MODULO`     2  /calculadora-youtube-suscriptores-para-1000
+- `MODULO`     1  /calculadora-attribution-modelo-primer-ultimo-click
+- `MODULO`     1  /calculadora-streamer-setup-presupuesto
+- `MODULO`     1  /calculadora-substack-suscriptores-meta
+- `MODULO`     1  /calculadora-tiktok-ads-cpm-presupuesto-conversion-2026
+- `MODULO`     1  /calculadora-twitch-horas-para-partner
+- `BORRAR`     0  /calculadora-facebook-ingresos-videos
+- `BORRAR`     0  /calculadora-pinterest-calendario-pines
+- `BORRAR`     0  /calculadora-tiempo-en-redes-sociales
+- `BORRAR`     0  /calculadora-tiktok-spark-ads-costo
+
+## [VIVIENDA] Mudarme y amueblar · `mudanza-deco`
+20 calcs · 234 ses/90d · **7 página · 13 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`    80  /calculadora-tamano-tv-distancia-ideal-pulgadas
+- `PAGINA`    44  /calculadora-metros-cuadrados-habitacion
+- `PAGINA`    27  /calculadora-mesa-comedor-tamano-personas
+- `PAGINA`    14  /calculadora-cortina-medida-ventana-tamano
+- `PAGINA`    13  /calculadora-cuadro-altura-colgar-pared
+- `PAGINA`    11  /calculadora-costo-estimado-mudanza
+- `PAGINA`    10  /calculadora-distribucion-muebles-porcentaje-libre
+- `MODULO`     9  /calculadora-ergonomia-escritorio-medidas
+- `MODULO`     6  /calculadora-mudanza-precio-kilometros-m3-cuadro
+- `MODULO`     4  /calculadora-espejo-tamano-pared-ideal
+- `MODULO`     3  /calculadora-color-pared-combinacion-complementario
+- `MODULO`     3  /calculadora-organizador-placard-distribucion
+- `MODULO`     2  /calculadora-cortinas-medir-tela-ventana-anchotelaje
+- `MODULO`     2  /calculadora-seguro-hogar-estimacion-cobertura
+- `MODULO`     1  /calculadora-almohadones-sofa-cantidad-decorativos
+- `MODULO`     1  /calculadora-forro-almohadon-medidas
+- `MODULO`     1  /calculadora-metros-cuadrados-vivienda-por-persona
+- `MODULO`     1  /calculadora-proyectos-hogar
+- `MODULO`     1  /calculadora-rollos-empapelado-papel-pared
+- `MODULO`     1  /calculadora-tamano-colchon-ideal-medidas
+
+## [VIVIENDA] Crédito hipotecario UVA · `hipotecario`
+11 calcs · 233 ses/90d · **4 página · 5 módulo · 1 fusión · 1 borrar**
+
+- `PAGINA`   104  /calculadora-credito-uva-cuota-actual
+- `PAGINA`    50  /calculadora-cuota-credito-hipotecario-uva-banco-nacion
+- `PAGINA`    46  /calculadora-amortizacion-prestamo-frances-aleman
+- `PAGINA`    15  /calculadora-credito-uva-vs-tasa-fija
+- `FUSION`     6  /calculadora-ingreso-minimo-credito-hipotecario-uva-banco-nacion  →calculadora-cuota-credito-hipotecario-uva-banco-nacion
+- `MODULO`     5  /calculadora-hipoteca-mensual-cuota-fija
+- `MODULO`     3  /calculadora-hipoteca-uva-santander-argentina
+- `MODULO`     2  /calculadora-capacidad-credito-hipotecario
+- `MODULO`     1  /calculadora-hipoteca-divisa-extranjera-vs-uva
+- `MODULO`     1  /es/calculadora-hipoteca-euribor-cuota
+- `BORRAR`     0  /uy/calculadora-cuota-credito-hipotecario-ui-uruguay
+
+## [COCINA] ¿Cuánto cocino por persona? · `porciones`
+9 calcs · 224 ses/90d · **4 página · 5 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`   119  /calculadora-porcion-arroz-gramos-personas
+- `PAGINA`    39  /calculadora-costo-receta-precio-por-porcion
+- `PAGINA`    22  /calculadora-arroz-agua-proporcion-coccion
+- `PAGINA`    14  /calculadora-porciones-pasta-seca-persona-hambre
+- `MODULO`     8  /calculadora-calorias-aproximadas-receta-plato
+- `MODULO`     7  /calculadora-agua-pasta-litros-gramos
+- `MODULO`     7  /calculadora-ensalada-por-persona
+- `MODULO`     5  /calculadora-pollo-por-persona
+- `MODULO`     3  /calculadora-porciones-arroz-por-persona-guarnicion
+
+## [PLATA] Bonos, CEDEARs y cripto · `inversion-avanzada`
+41 calcs · 216 ses/90d · **6 página · 27 módulo · 0 fusión · 8 borrar**
+
+- `PAGINA`    42  /calculadora-bonos-globales-al30-gd30-rendimiento
+- `PAGINA`    31  /calculadora-cedear-precio-teorico-ratio-conversion
+- `PAGINA`    21  /calculadora-depreciacion-activos-linea-recta
+- `PAGINA`    19  /es/calculadora-bonos-estado-espana-rentabilidad-vencimiento
+- `PAGINA`    18  /calculadora-bonos-al30-al35-al41-rendimiento-anual
+- `PAGINA`    13  /calculadora-cedear-ratio-conversion-dolares
+- `MODULO`     8  /cl/calculadora-bonos-tesoro-chile-bcu-bce-rendimiento
+- `MODULO`     7  /calculadora-ganancia-perdida-criptomonedas
+- `MODULO`     5  /calculadora-cedear-dividend-yield-2026
+- `MODULO`     4  /calculadora-break-even-opciones-call-put
+- `MODULO`     4  /calculadora-carbon-credit-tonelada-precio-mercado-2026
+- `MODULO`     4  /calculadora-costo-gas-fee-ethereum-2026
+- `MODULO`     4  /calculadora-wacc-costo-capital-promedio-ponderado
+- `MODULO`     3  /calculadora-gross-margin-vs-net
+- `MODULO`     3  /calculadora-leverage-trading-liquidacion-precio
+- `MODULO`     3  /calculadora-price-to-book-ratio-valor-libros
+- `MODULO`     2  /calculadora-black-scholes-opcion-call-put
+- `MODULO`     2  /calculadora-cedears-ratio-conversion-apple-microsoft
+- `MODULO`     2  /calculadora-halving-bitcoin-2026-fecha
+- `MODULO`     2  /calculadora-impermanent-loss-defi-2026
+- `MODULO`     2  /calculadora-position-size-cripto-leverage
+- `MODULO`     2  /calculadora-ratio-liquidez-corriente-seco
+- `MODULO`     2  /calculadora-sharpe-ratio-portafolio-riesgo
+- `MODULO`     2  /calculadora-usdt-vs-usdc-comision-exchange
+- `MODULO`     2  /calculadora-valor-empresa-multiplo-ebitda
+- `MODULO`     2  /calculadora-valuacion-startup-metodo-berkus
+- `MODULO`     1  /calculadora-bitcoin-halving-2028-proyeccion
+- `MODULO`     1  /calculadora-diversificacion-portafolio-correlacion
+- `MODULO`     1  /calculadora-dividendos-yield-anual
+- `MODULO`     1  /calculadora-flujo-caja-libre-fcf
+- `MODULO`     1  /calculadora-market-cap-vs-precio-token
+- `MODULO`     1  /calculadora-perpetual-liquidation-funding-binance-bybit-bitget
+- `MODULO`     1  /calculadora-position-size-forex-pips-riesgo
+- `BORRAR`     0  /en/bitcoin-halving-2028-proyeccion
+- `BORRAR`     0  /en/bitcoin-profit-loss-calculator
+- `BORRAR`     0  /do/calculadora-bonos-superate-alimentate-monto-republica-dominicana
+- `BORRAR`     0  /ve/calculadora-usdt-a-bolivares-binance-p2p-venezuela
+- `BORRAR`     0  /en/cedear-dividend-yield-2026
+- `BORRAR`     0  /en/position-size-stocks-percentage
+- `BORRAR`     0  /en/sharpe-ratio-backtest-calculator
+- `BORRAR`     0  /en/usdt-vs-usdc-commission-exchange
+
+## [OBRA] Muebles y carpintería · `carpinteria`
+10 calcs · 201 ses/90d · **6 página · 4 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`    62  /calculadora-corte-optimo-tablero
+- `PAGINA`    53  /calculadora-escalera-huella-contrahuella-ley-blondel
+- `PAGINA`    26  /calculadora-escalera-madera-huella-contrahuella
+- `PAGINA`    13  /calculadora-peso-madera-por-tipo-volumen
+- `PAGINA`    12  /calculadora-madera-necesaria-mueble
+- `PAGINA`    12  /calculadora-tablero-melamina-cortes-aprovechamiento
+- `MODULO`     8  /calculadora-estante-peso-maximo-material
+- `MODULO`     8  /calculadora-tornillos-madera-tipo-largo
+- `MODULO`     4  /calculadora-bisagras-tornillos-puerta-ventana-cantidad
+- `MODULO`     3  /calculadora-estantes-madera-soporte-peso
+
+## [TECH] Fotografía y video · `foto`
+25 calcs · 189 ses/90d · **5 página · 18 módulo · 0 fusión · 2 borrar**
+
+- `PAGINA`    45  /calculadora-tamano-imagen-pixeles-megapixeles
+- `PAGINA`    41  /calculadora-memoria-fotos-capacidad
+- `PAGINA`    21  /calculadora-video-bitrate-tamano-archivo
+- `PAGINA`    18  /calculadora-cuantas-fotos-videos-entran-gb
+- `PAGINA`    10  /calculadora-dpi-ppp-impresion-resolucion
+- `MODULO`     8  /calculadora-stop-motion-fps-tiempo
+- `MODULO`     6  /calculadora-audio-bitrate-tamano-mp3
+- `MODULO`     5  /calculadora-distancia-focal-equivalente
+- `MODULO`     5  /calculadora-filtro-nd-pasos-exposicion
+- `MODULO`     4  /calculadora-flash-numero-guia-distancia
+- `MODULO`     4  /calculadora-resolucion-pantalla-ppi
+- `MODULO`     3  /calculadora-almacenamiento-video-bitrate-duracion
+- `MODULO`     3  /calculadora-impresion-dpi-calidad
+- `MODULO`     3  /calculadora-megapixeles-impresion-tamano
+- `MODULO`     2  /calculadora-ancho-angulo-lente-distancia
+- `MODULO`     2  /calculadora-distancia-hiperfocal-lente
+- `MODULO`     2  /calculadora-iso-invariance-camara-modelo
+- `MODULO`     2  /calculadora-jpg-calidad-tamano-web-optimizacion
+- `MODULO`     1  /calculadora-profundidad-campo-dof-lente
+- `MODULO`     1  /calculadora-regla-600-estrellas
+- `MODULO`     1  /calculadora-relacion-de-aspecto
+- `MODULO`     1  /calculadora-tarjeta-sd-necesaria-sesion
+- `MODULO`     1  /calculadora-time-lapse-duracion-fotos
+- `BORRAR`     0  /calculadora-exposicion-triangulo
+- `BORRAR`     0  /en/dpi-ppp-print-resolution
+
+## [TECH] Internet, redes y almacenamiento · `redes`
+28 calcs · 188 ses/90d · **8 página · 17 módulo · 0 fusión · 3 borrar**
+
+- `PAGINA`    31  /calculadora-velocidad-internet-mbps-real
+- `PAGINA`    25  /calculadora-ancho-banda-descarga-tiempo
+- `PAGINA`    19  /calculadora-almacenamiento-bytes-kb-mb-gb-tb
+- `PAGINA`    17  /calculadora-costo-cloud-servidor-mensual
+- `PAGINA`    15  /calculadora-tokens-por-modelo-de-ia-costo
+- `PAGINA`    12  /calculadora-raid-almacenamiento-util-discos
+- `PAGINA`    11  /calculadora-costo-tokens-api-openai-claude-mensual
+- `PAGINA`    11  /calculadora-tokens-openai-gpt-costo-uso-mensual
+- `MODULO`     8  /calculadora-codigo-color-hex-rgb
+- `MODULO`     6  /calculadora-categoria-cable-ethernet-velocidad-distancia
+- `MODULO`     5  /calculadora-codigo-lineas-estimacion-proyecto
+- `MODULO`     4  /calculadora-claude-gemini-tokens-comparativa-precio-uso
+- `MODULO`     4  /calculadora-huella-digital-estimacion
+- `MODULO`     4  /calculadora-lineas-codigo-proyecto-complejidad-kloc
+- `MODULO`     3  /calculadora-subnetting-mascara-red-cidr
+- `MODULO`     3  /en/hashes-bcrypt-costo-tiempo-cracking
+- `MODULO`     2  /calculadora-generador-qr
+- `MODULO`     1  /calculadora-claude-37-tokens-costo-cache-prompt-mensual
+- `MODULO`     1  /calculadora-complejidad-algoritmica-big-o-iteraciones
+- `MODULO`     1  /calculadora-consumo-datos-moviles-streaming
+- `MODULO`     1  /calculadora-hashes-bcrypt-costo-tiempo-cracking
+- `MODULO`     1  /calculadora-tiempo-descarga-archivo-internet
+- `MODULO`     1  /calculadora-transferencia-archivo-red-lan-tiempo
+- `MODULO`     1  /calculadora-uptime-servidor-nueve-nueves-minutos
+- `MODULO`     1  /pt/claude-gemini-tokens-comparacao-preco-uso
+- `BORRAR`     0  /calculadora-wifi-canal-optimo-24-5-ghz
+- `BORRAR`     0  /en/raid-capacity-calculator
+- `BORRAR`     0  /pt/tokens-openai-gpt-custo-mensal
+
+## [FAMILIA] Mi bebé mes a mes · `bebe`
+23 calcs · 186 ses/90d · **6 página · 17 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`    31  /calculadora-leche-formula-biberon-cantidad-peso-bebe
+- `PAGINA`    27  /calculadora-nombre-bebe-significado
+- `PAGINA`    19  /calculadora-hitos-desarrollo-bebe-edad-meses
+- `PAGINA`    17  /calculadora-leche-materna-formula
+- `PAGINA`    11  /calculadora-cuota-jardin-maternal-cama-cuna-mensual-2026
+- `PAGINA`    11  /calculadora-vacunas-bebe-calendario-2026-argentina-edad
+- `MODULO`     8  /calculadora-desarrollo-motor-bebe
+- `MODULO`     8  /calculadora-formula-leche-bebe-litros-mes-edad-marca
+- `MODULO`     6  /calculadora-dientes-bebe-cronologia
+- `MODULO`     6  /calculadora-edad-ingreso-escolar-primaria-jardin
+- `MODULO`     6  /calculadora-tamano-bebe-semana
+- `MODULO`     5  /calculadora-calorias-lactancia
+- `MODULO`     5  /calculadora-panales-mes-bebe-talle-gasto-anual
+- `MODULO`     4  /calculadora-formula-infantil-biberon-edad-ml-dia
+- `MODULO`     4  /calculadora-guarderia-jardin-maternal-costo-caba-mensual
+- `MODULO`     4  /calculadora-screen-time-pediatra-edad-hora-dia
+- `MODULO`     3  /calculadora-alimentacion-complementaria
+- `MODULO`     3  /calculadora-costo-fiesta-cumpleanos-infantil-invitados
+- `MODULO`     2  /calculadora-cuna-colecho-edad-transicion-cama
+- `MODULO`     2  /calculadora-onzas-biberon-peso-bebe-dia
+- `MODULO`     2  /calculadora-vacunas-faltantes-bebe-edad-meses
+- `MODULO`     1  /calculadora-edad-quitar-panal-control-esfinteres
+- `MODULO`     1  /calculadora-percentil-dato
+
+## [MATE] Estadística y probabilidad · `estadistica`
+20 calcs · 185 ses/90d · **3 página · 11 módulo · 0 fusión · 6 borrar**
+
+- `PAGINA`   124  /calculadora-aleatorio-numero-dado
+- `PAGINA`    15  /calculadora-combinaciones-permutaciones-factorial
+- `PAGINA`    11  /calculadora-media-mediana-moda-rango-estadistica
+- `MODULO`     8  /calculadora-tamano-muestra-encuesta
+- `MODULO`     7  /generador-de-numeros-aleatorios
+- `MODULO`     5  /calculadora-coeficiente-variacion
+- `MODULO`     3  /calculadora-chi-cuadrado-independencia
+- `MODULO`     3  /calculadora-correlacion-pearson
+- `MODULO`     3  /calculadora-distribucion-normal-area
+- `MODULO`     2  /calculadora-z-score-valor-normal
+- `MODULO`     1  /calculadora-desvio-estandar-varianza-conjunto
+- `MODULO`     1  /calculadora-intervalo-confianza-media
+- `MODULO`     1  /calculadora-permutaciones-n-tomados-k-pnk
+- `MODULO`     1  /calculadora-probabilidad-binomial
+- `BORRAR`     0  /calculadora-probabilidad-evento
+- `BORRAR`     0  /pt/desvio-padrao-variancia
+- `BORRAR`     0  /pt/media-escolar-ensino-medio
+- `BORRAR`     0  /pt/media-para-passar-recuperacao-nota-necessaria
+- `BORRAR`     0  /pt/media-ponderada-enem-nota-corte-sisu
+- `BORRAR`     0  /en/permutaciones-n-tomados-k-pnk
+
+## [FAMILIA] Pareja: fechas y planes · `pareja-fechas`
+12 calcs · 178 ses/90d · **4 página · 8 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`    70  /calculadora-love-calculator
+- `PAGINA`    39  /calculadora-compatibilidad-nombres
+- `PAGINA`    31  /calculadora-dias-juntos-pareja
+- `PAGINA`    12  /calculadora-aniversario-pareja
+- `MODULO`     7  /calculadora-costo-boda-argentina
+- `MODULO`     4  /calculadora-tiempo-calidad-hijos-padres-madres-minutos
+- `MODULO`     3  /calculadora-edad-ideal-pareja
+- `MODULO`     3  /calculadora-presupuesto-casamiento-por-invitado
+- `MODULO`     3  /calculadora-regalo-boda-apropiado-invitado
+- `MODULO`     2  /calculadora-anillo-compromiso-precio-sueldo
+- `MODULO`     2  /calculadora-fecha-boda-ideal
+- `MODULO`     2  /calculadora-test-lenguaje-amor
+
+## [IMPUESTOS] Bienes personales y patrimonio · `patrimonio`
+8 calcs · 174 ses/90d · **2 página · 5 módulo · 1 fusión · 0 borrar**
+
+- `PAGINA`    63  /calculadora-bienes-personales-2026
+- `PAGINA`    62  /calculadora-valuacion-fiscal-automotor-argentina
+- `FUSION`    26  /calculadora-bienes-personales-tramos-alicuota-2026  →calculadora-bienes-personales-2026
+- `MODULO`     6  /calculadora-renta-financiera-cedular-personas
+- `MODULO`     5  /calculadora-abl-caba-valuacion-fiscal-actualizada-2026
+- `MODULO`     5  /calculadora-inmobiliario-provincial-pba-tramos
+- `MODULO`     5  /calculadora-valuacion-fiscal-neuquen-2026-impuesto-inmobiliario
+- `MODULO`     2  /calculadora-impuesto-bienes-personales-2026-cripto-cedears
+
+## [VIAJES] Visas y trámites para viajar · `visas`
+18 calcs · 174 ses/90d · **6 página · 12 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`    39  /calculadora-validar-cbu-cvu-identificar-banco
+- `PAGINA`    31  /calculadora-dni-pasaporte-costo-tramite-argentina
+- `PAGINA`    23  /calculadora-pasaporte-renovacion-costo-tiempo
+- `PAGINA`    16  /calculadora-letra-dni-argentina
+- `PAGINA`    13  /calculadora-cuil-cuit-desde-dni-argentina
+- `PAGINA`    10  /calculadora-visa-usa-costo-tiempo-pasaporte
+- `MODULO`     8  /calculadora-certificado-antecedentes-penales-costo
+- `MODULO`     8  /calculadora-visa-china-turista-costo
+- `MODULO`     7  /calculadora-dni-extranjero-residencia-costo-migraciones
+- `MODULO`     6  /calculadora-eta-canada-requisitos
+- `MODULO`     4  /calculadora-visa-turismo-usa-ee-uu-costo-b1-b2
+- `MODULO`     2  /calculadora-visa-schengen-europa-requisitos
+- `MODULO`     2  /calculadora-visa-turismo-paises-costo-tiempo
+- `MODULO`     1  /calculadora-esta-usa-requisitos
+- `MODULO`     1  /calculadora-franquicia-aduana-viajero-argentina-equipaje
+- `MODULO`     1  /calculadora-vacuna-fiebre-amarilla-cuanto-antes
+- `MODULO`     1  /calculadora-visa-brasil-ciudadano-argentino
+- `MODULO`     1  /calculadora-visa-japon-argentino
+
+## [ESTUDIO] ¿Con cuánto apruebo? · `aprobar`
+27 calcs · 173 ses/90d · **5 página · 16 módulo · 0 fusión · 6 borrar**
+
+- `PAGINA`    35  /calculadora-indice-asistencia-faltas
+- `PAGINA`    29  /calculadora-promedio-notas-universidad
+- `PAGINA`    25  /calculadora-notas-gpa-conversor
+- `PAGINA`    12  /pe/calculadora-promedio-ponderado-universidad-peru
+- `PAGINA`    10  /calculadora-nota-necesaria-aprobar
+- `MODULO`     8  /calculadora-promedio-ponderado-notas-materias
+- `MODULO`     6  /calculadora-nota-promedio-bachillerato-secundario-materias
+- `MODULO`     5  /calculadora-nota-minima-aprobar-final-parcial-promedio
+- `MODULO`     5  /calculadora-nota-parcial-recuperatorio-promocion
+- `MODULO`     5  /ec/calculadora-nota-postulacion-transformar-senescyt-ecuador
+- `MODULO`     5  /calculadora-promedio-ponderado-universidad
+- `MODULO`     5  /calculadora-ratio-alumno-profesor-curso
+- `MODULO`     4  /calculadora-comprension-lectora-score
+- `MODULO`     4  /calculadora-promedio-mediana-moda-estadistica
+- `MODULO`     4  /calculadora-uba-xxi-nota-final-promedio
+- `MODULO`     3  /calculadora-promedio-beca-argentina
+- `MODULO`     3  /calculadora-promedio-secundaria
+- `MODULO`     2  /ve/calculadora-promedio-notas-20-puntos-venezuela
+- `MODULO`     1  /calculadora-gpa-argentino-a-escala-4
+- `MODULO`     1  /calculadora-gpa-promedio-americano-escala-4-0
+- `MODULO`     1  /calculadora-promedio-goles-tiempo-anadido-drama-late-match
+- `BORRAR`     0  /es/calculadora-nota-media-expediente-universitario-espana
+- `BORRAR`     0  /mx/calculadora-promedio-calificaciones-sep-mexico
+- `BORRAR`     0  /uy/calculadora-promedio-escolaridad-udelar-uruguay
+- `BORRAR`     0  /ec/calculadora-promedio-notas-ecuador
+- `BORRAR`     0  /py/calculadora-promedio-notas-paraguay
+- `BORRAR`     0  /en/gpa-4-0-american-scale-calculator
+
+## [CUERPO] ¿Cuánto tengo que dormir? · `sueno`
+16 calcs · 173 ses/90d · **6 página · 7 módulo · 3 fusión · 0 borrar**
+
+- `PAGINA`    67  /calculadora-indice-bienestar-who5
+- `PAGINA`    26  /calculadora-sueno-bebe-horas
+- `PAGINA`    20  /calculadora-nivel-estres-percibido
+- `PAGINA`    11  /a-que-hora-acostarme
+- `PAGINA`    11  /calculadora-horas-de-sueno-por-edad
+- `PAGINA`    11  /calculadora-sueno-ideal-edad
+- `MODULO`     8  /calculadora-nivel-introversion-extraversion
+- `MODULO`     5  /calculadora-ciclo-sueno-rem-no-rem-90min
+- `MODULO`     5  /calculadora-sueno-bebe-horas-meses-tabla-padres
+- `MODULO`     4  /calculadora-tiempo-pantalla-ideal-edad
+- `MODULO`     2  /calculadora-calidad-sueno-pittsburgh
+- `MODULO`     1  /calculadora-cold-plunge-tiempo-temperatura-cortisol
+- `MODULO`     1  /calculadora-deep-work-cal-newport-horas-maximo-diario
+- `FUSION`     1  /calculadora-nivel-estres  →calculadora-nivel-estres-percibido
+- `FUSION`     0  /calculadora-horas-sueno-hijo-edad-recomendadas  →calculadora-horas-de-sueno-por-edad
+- `FUSION`     0  /calculadora-horas-sueno-necesarias-edad-adulto  →calculadora-horas-de-sueno-por-edad
+
+## [VIVIENDA] Gas, agua y consumo del hogar · `servicios-agua-gas`
+23 calcs · 153 ses/90d · **5 página · 18 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`    44  /calculadora-gas-natural-consumo-m3
+- `PAGINA`    23  /calculadora-lavandina-dilucion-litros-ml
+- `PAGINA`    17  /calculadora-consumo-agua-mensual
+- `PAGINA`    11  /calculadora-factura-gas-estimada
+- `PAGINA`    10  /calculadora-costo-lavado-ropa-lavadora-vs-lavanderia
+- `MODULO`     9  /calculadora-lavarropas-eficiencia-agua-litros-ciclo
+- `MODULO`     5  /calculadora-captacion-agua-lluvia-m2-techo-litros
+- `MODULO`     5  /calculadora-recoleccion-agua-lluvia-techo
+- `MODULO`     4  /calculadora-gasto-agua-mensual-hogar-litros
+- `MODULO`     3  /calculadora-garrafa-gas-duracion
+- `MODULO`     3  /calculadora-producto-limpieza-rendimiento-m2
+- `MODULO`     3  /calculadora-tarifa-gas-metrogas-naturgy-cuadro-2026
+- `MODULO`     3  /calculadora-tiempo-secado-ropa-aire-libre-horas
+- `MODULO`     2  /calculadora-gas-natural-subsidio-zonas-frias-patagonia
+- `MODULO`     2  /calculadora-humedad-relativa-ideal-ambiente
+- `MODULO`     2  /calculadora-limpieza-frecuencia-ambiente-hogar
+- `MODULO`     1  /calculadora-agua-consumo-hogar-ahorro
+- `MODULO`     1  /calculadora-costo-mantenimiento-hogar-anual
+- `MODULO`     1  /calculadora-limpieza-hogar-tiempo-metros-frecuencia-total
+- `MODULO`     1  /calculadora-lluvia-captacion-techo-m3-anual
+- `MODULO`     1  /calculadora-plantas-purificar-aire-habitacion
+- `MODULO`     1  /calculadora-tarifa-agua-aysa-2026-factura
+- `MODULO`     1  /calculadora-vida-util-electrodomestico-anos
+
+## [CLIMA] Clima y medio ambiente · `clima`
+16 calcs · 140 ses/90d · **4 página · 12 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`    30  /calculadora-arboles-compensar-co2-huella
+- `PAGINA`    27  /calculadora-fase-lunar-actual-proxima-luna-llena
+- `PAGINA`    20  /calculadora-biodegradacion-tiempo-materiales
+- `PAGINA`    14  /calculadora-huella-hidrica-alimentos-litros
+- `MODULO`     9  /calculadora-horas-luz-dia-fecha-latitud
+- `MODULO`     9  /calculadora-punto-de-rocio-dew-point-temperatura-humedad
+- `MODULO`     6  /calculadora-huella-carbono-personal
+- `MODULO`     6  /calculadora-mareas-altas-bajas-horario-ciclo-lunar-costa
+- `MODULO`     4  /calculadora-reciclaje-ahorro-residuos
+- `MODULO`     4  /calculadora-reciclaje-botellas-ahorro-co2
+- `MODULO`     3  /calculadora-humedad-absoluta-relativa-confort
+- `MODULO`     3  /calculadora-probabilidad-lluvia-24h-presion-humedad-tendencia
+- `MODULO`     2  /calculadora-retraso-amanecer-atardecer-minutos-dia
+- `MODULO`     1  /calculadora-huella-carbono-alimentacion-semanal
+- `MODULO`     1  /calculadora-papel-ahorrado-impresion-doble-cara
+- `MODULO`     1  /calculadora-velocidad-viento-beaufort-escala-0-12
+
+## [OBRA] Techos, aislación y humedad · `techo-aislacion`
+13 calcs · 138 ses/90d · **6 página · 6 módulo · 0 fusión · 1 borrar**
+
+- `PAGINA`    28  /calculadora-espesor-vidrio-ventana-m2
+- `PAGINA`    24  /calculadora-tejas-techo-m2
+- `PAGINA`    20  /calculadora-yeso-cielorraso-placas-m2
+- `PAGINA`    15  /calculadora-tornillos-durlock-placa-yeso-m2
+- `PAGINA`    13  /calculadora-aislacion-termica-k-minimo-zona
+- `PAGINA`    13  /calculadora-impermeabilizante-membrana-m2-techo
+- `MODULO`     8  /calculadora-impermeabilizacion-techo-membrana-rollos-m2-costo
+- `MODULO`     6  /calculadora-membrana-asfaltica-rollos
+- `MODULO`     4  /calculadora-aislante-termico-pared-eps-lana-vidrio-recomendado
+- `MODULO`     3  /calculadora-cantidad-ventanas-luz-natural-m2
+- `MODULO`     3  /calculadora-pendiente-techo-grados-porcentaje
+- `MODULO`     1  /calculadora-perfil-aluminio-metros-lineales-ventana
+- `BORRAR`     0  /en/membrana-asfaltica-rollos
+
+## [MATE] Área, perímetro y volumen · `geometria`
+22 calcs · 109 ses/90d · **3 página · 9 módulo · 1 fusión · 9 borrar**
+
+- `PAGINA`    40  /calculadora-area-perimetro-circulo-sector-circular
+- `PAGINA`    18  /calculadora-area-perimetro-figuras
+- `PAGINA`    18  /calculadora-volumen-cilindro-radio-altura
+- `MODULO`     9  /calculadora-teorema-pitagoras-hipotenusa-cateto
+- `MODULO`     5  /calculadora-area-triangulo-vertices-coordenadas
+- `MODULO`     4  /calculadora-volumen-superficie-esfera-radio
+- `MODULO`     3  /calculadora-distancia-entre-plantas-espaciado
+- `MODULO`     3  /calculadora-teorema-tales-proporcionalidad-segmentos
+- `MODULO`     2  /calculadora-area-perimetro-circulo-radio
+- `MODULO`     2  /calculadora-area-triangulo-heron-tres-lados
+- `MODULO`     2  /calculadora-distancia-entre-dos-puntos-2d-3d
+- `FUSION`     2  /calculadora-volumen-cono-radio-altura  →calculadora-volumen-cilindro-radio-altura
+- `MODULO`     1  /area-perimetro-rombo-diagonales
+- `BORRAR`     0  /area-perimetro-trapecio
+- `BORRAR`     0  /area-poligono-regular-apotema
+- `BORRAR`     0  /pt/area-triangulo-heron-tres-lados
+- `BORRAR`     0  /calculadora-area-entre-curvas
+- `BORRAR`     0  /diagonal-rectangulo-caja-tv
+- `BORRAR`     0  /distancia-punto-medio-dos-puntos
+- `BORRAR`     0  /teorema-tales-triangulos-semejantes
+- `BORRAR`     0  /volumen-piramide-base-altura
+- `BORRAR`     0  /volumen-prisma-rectangular-caja
+
+## [ESTUDIO] ¿Cuánto sale y cuánto dura la carrera? · `carrera`
+14 calcs · 108 ses/90d · **4 página · 9 módulo · 0 fusión · 1 borrar**
+
+- `PAGINA`    19  /pe/calculadora-costo-universidad-privada-peru
+- `PAGINA`    16  /calculadora-itba-utdt-costo-carrera-anual-privada
+- `PAGINA`    14  /calculadora-costo-universidad-privada-cuota
+- `PAGINA`    11  /calculadora-costo-carrera-privada
+- `MODULO`     8  /calculadora-creditos-restantes-carrera
+- `MODULO`     8  /calculadora-duracion-carrera-universidad
+- `MODULO`     7  /ec/calculadora-costo-universidad-privada-ecuador
+- `MODULO`     6  /calculadora-horas-estudio-materia-creditos
+- `MODULO`     5  /calculadora-costo-carrera-total
+- `MODULO`     5  /calculadora-creditos-universitarios-avance
+- `MODULO`     4  /calculadora-ingreso-colegio-privado-cuota-anual-caba
+- `MODULO`     3  /calculadora-materias-faltan-recibirte
+- `MODULO`     2  /calculadora-ingreso-medicina-puntaje-cbc-uba-2026
+- `BORRAR`     0  /en/itba-utdt-costo-carrera-anual-privada
+
+## [MASCOTAS] ¿Cuánto come mi perro o gato? · `alimentacion`
+27 calcs · 105 ses/90d · **2 página · 19 módulo · 4 fusión · 2 borrar**
+
+- `PAGINA`    14  /calculadora-comida-perro-diaria-gramos
+- `PAGINA`    10  /calculadora-peso-ideal-yorkshire-terrier
+- `FUSION`     7  /calculadora-comida-gato-diaria-gramos  →calculadora-comida-perro-diaria-gramos
+- `MODULO`     7  /calculadora-ejercicio-diario-raza-perro
+- `MODULO`     6  /calculadora-peso-ideal-bulldog-ingles
+- `MODULO`     6  /calculadora-peso-ideal-golden-retriever
+- `MODULO`     5  /calculadora-peso-ideal-dachshund-salchicha
+- `MODULO`     5  /calculadora-peso-ideal-pastor-aleman
+- `MODULO`     4  /calculadora-alimento-diario-perro
+- `MODULO`     4  /calculadora-peso-ideal-gato-raza
+- `MODULO`     4  /calculadora-peso-ideal-husky-siberiano
+- `MODULO`     4  /calculadora-peso-ideal-pitbull
+- `MODULO`     4  /calculadora-peso-ideal-rottweiler
+- `MODULO`     3  /calculadora-alimento-acuario-por-pez
+- `MODULO`     3  /calculadora-comida-yorkshire-terrier-porcion-diaria-edad
+- `MODULO`     3  /calculadora-peso-ideal-beagle
+- `MODULO`     3  /calculadora-peso-ideal-boxer
+- `MODULO`     2  /calculadora-calorias-perro-por-raza-edad
+- `MODULO`     2  /calculadora-comida-bulldog-frances-cantidad-edad-peso
+- `MODULO`     2  /calculadora-comida-cachorro-gramos-edad
+- `FUSION`     2  /calculadora-comida-tortuga-diaria-gramos  →calculadora-comida-perro-diaria-gramos
+- `FUSION`     2  /calculadora-peso-ideal-labrador-retriever  →calculadora-peso-ideal-golden-retriever
+- `MODULO`     1  /calculadora-conejo-comida-heno-peso-edad
+- `MODULO`     1  /calculadora-paseos-perro-minutos-raza-energia
+- `FUSION`     1  /calculadora-peso-ideal-bulldog-frances  →calculadora-peso-ideal-bulldog-ingles
+- `BORRAR`     0  /calculadora-comida-diaria-conejo-peso
+- `BORRAR`     0  /en/comida-gato-gramos-peso-ideal-racion
+
+## [VIAJES] ¿Cuánto sale el viaje? · `presupuesto-viaje`
+19 calcs · 94 ses/90d · **3 página · 11 módulo · 3 fusión · 2 borrar**
+
+- `PAGINA`    38  /calculadora-ropa-maleta-dias-viaje
+- `PAGINA`    14  /calculadora-costo-envio-compra-exterior
+- `PAGINA`    11  /calculadora-esqui-pase-cerro-catedral-bariloche-precio-dia
+- `MODULO`     9  /calculadora-moneda-local-cambio-pais
+- `MODULO`     5  /calculadora-presupuesto-viaje
+- `MODULO`     3  /calculadora-presupuesto-viaje-lima-peru
+- `MODULO`     2  /calculadora-costo-roaming-datos-exterior
+- `MODULO`     2  /calculadora-dias-ideales-viaje-destino
+- `MODULO`     2  /calculadora-emigrar-espana-presupuesto-primer-ano-familia
+- `FUSION`     2  /calculadora-presupuesto-viaje-dubai  →calculadora-presupuesto-viaje
+- `MODULO`     1  /calculadora-alquiler-auto-costo-dias
+- `MODULO`     1  /calculadora-noches-hospedaje-costo
+- `FUSION`     1  /calculadora-presupuesto-viaje-madrid  →calculadora-presupuesto-viaje
+- `MODULO`     1  /calculadora-presupuesto-viaje-rio-janeiro
+- `MODULO`     1  /calculadora-vacaciones-bariloche-presupuesto-7-dias-familia
+- `MODULO`     1  /calculadora-working-holiday-australia-costo-ano
+- `BORRAR`     0  /calculadora-costo-ciudadania-italiana-argentina
+- `BORRAR`     0  /py/calculadora-presupuesto-viaje-mundial-2026-paraguay
+- `FUSION`     0  /calculadora-presupuesto-viaje-vacaciones  →calculadora-presupuesto-viaje
+
+## [NEGOCIO] ¿Cuánto cobro por mi trabajo? · `cuanto-cobro`
+19 calcs · 93 ses/90d · **4 página · 12 módulo · 0 fusión · 3 borrar**
+
+- `PAGINA`    17  /calculadora-cuanto-cobro-por-hora-freelance
+- `PAGINA`    14  /calculadora-costo-hora-empleado-real
+- `PAGINA`    11  /co/calculadora-costo-hora-empleado-empresa-colombia-2026
+- `PAGINA`    10  /calculadora-costo-hora-disenador-grafico
+- `MODULO`     8  /calculadora-freelance-tarifa-hora
+- `MODULO`     8  /calculadora-tarifario-creador-contenido-multiplataforma
+- `MODULO`     5  /calculadora-ugc-tarifa-contenido-marca
+- `MODULO`     4  /calculadora-costo-hora-fotografo-evento
+- `MODULO`     4  /calculadora-rate-hora-freelance-nivel
+- `MODULO`     3  /calculadora-costo-hora-desarrollador-senior
+- `MODULO`     3  /calculadora-cuanto-cobrar-traduccion-palabra-2026-espanol-ingles
+- `MODULO`     2  /calculadora-hora-freelance-por-pais-mercado
+- `MODULO`     1  /calculadora-costo-hora-consultor-marketing
+- `MODULO`     1  /calculadora-costo-hora-redactor-copywriter
+- `MODULO`     1  /calculadora-productividad-ingreso-por-hora
+- `MODULO`     1  /calculadora-upwork-freelancer-comision-neta-argentina
+- `BORRAR`     0  /calculadora-productividad-empleados-output-hora
+- `BORRAR`     0  /en/freelance-hourly-rate-calculator
+- `BORRAR`     0  /en/freelance-rate-usd-per-hour-by-experience
+
+## [COCINA] Café de especialidad y cerveza casera · `cafe-cerveza`
+16 calcs · 88 ses/90d · **3 página · 12 módulo · 0 fusión · 1 borrar**
+
+- `PAGINA`    19  /calculadora-kefir-leche-proporciones
+- `PAGINA`    16  /calculadora-cafe-ratio-agua-gramos-metodo-preparacion
+- `PAGINA`    11  /calculadora-ibu-cerveza-lupulo-tinseth
+- `MODULO`     8  /calculadora-cafe-molido-taza-metodo-preparacion
+- `MODULO`     7  /calculadora-cold-brew-ratio
+- `MODULO`     6  /en/priming-sugar-carbonation
+- `MODULO`     5  /calculadora-alcohol-attenuation-levadura
+- `MODULO`     4  /calculadora-priming-sugar-carbonatacion-cerveza
+- `MODULO`     2  /calculadora-abv-cerveza-og-fg
+- `MODULO`     2  /calculadora-cafe-french-press-ratio
+- `MODULO`     2  /calculadora-espresso-tds-yield
+- `MODULO`     2  /calculadora-hidrometro-correccion-temperatura
+- `MODULO`     2  /calculadora-moka-pot-agua-cafe
+- `MODULO`     1  /calculadora-final-volume-cerveza-fermentador
+- `MODULO`     1  /calculadora-hidromiel-proporciones-miel-agua
+- `BORRAR`     0  /pt/cafe-moido-por-xicara
+
+## [ESTUDIO] Aprender un idioma: ¿cuánto tardo? · `idiomas`
+27 calcs · 85 ses/90d · **1 página · 25 módulo · 0 fusión · 1 borrar**
+
+- `PAGINA`    10  /calculadora-puntaje-dele-spanish
+- `MODULO`     9  /calculadora-ielts-toefl-puntaje-equivalencia-cef-c1-c2
+- `MODULO`     6  /calculadora-dificultad-idioma-fsi
+- `MODULO`     6  /calculadora-ingles-niveles-cambridge-duolingo-tiempo-conversion
+- `MODULO`     5  /calculadora-duolingo-xp-objetivo
+- `MODULO`     5  /calculadora-equivalencia-toefl-ielts-cambridge-mcer
+- `MODULO`     5  /calculadora-horas-aprender-aleman-c1
+- `MODULO`     4  /en/duolingo-time-cefr-level-progress
+- `MODULO`     3  /calculadora-dictado-velocidad-palabras-escuchar-idioma
+- `MODULO`     3  /calculadora-ingles-nivel-mcer-horas-estudio-fsi
+- `MODULO`     3  /calculadora-tiempo-c1-ingles-horas-semanales-meta-meses
+- `MODULO`     3  /calculadora-vocabulario-nivel-mcer-a1-c2-palabras
+- `MODULO`     2  /calculadora-anki-flashcards-dia-aprender-palabras
+- `MODULO`     2  /calculadora-duolingo-tiempo-dia-nivel-mcer-progreso
+- `MODULO`     2  /calculadora-horas-aprender-italiano-b1
+- `MODULO`     2  /calculadora-horas-aprender-portugues-b2
+- `MODULO`     2  /calculadora-horas-estudio-idioma-fluidez-fsi
+- `MODULO`     2  /calculadora-horas-peliculas-serie-inmersion-idioma
+- `MODULO`     2  /calculadora-horas-practica-10000-maestria-gladwell
+- `MODULO`     2  /calculadora-nivel-goethe-aleman
+- `MODULO`     2  /calculadora-sat-ielts-toefl-equivalencias-puntaje-convertidor
+- `MODULO`     1  /calculadora-acento-extranjero-score-practica-horas
+- `MODULO`     1  /calculadora-anos-fluidez-idioma
+- `MODULO`     1  /calculadora-cae-vs-toefl-vs-ielts-cuanto-cuesta-rinde-mas
+- `MODULO`     1  /calculadora-idioma-paralelo-2-al-mismo
+- `MODULO`     1  /calculadora-velocidad-traduccion-palabras-hora-profesional
+- `BORRAR`     0  /calculadora-score-ielts-band-objetivo
+
+## [MASCOTAS] Vacunas, dosis y reproducción · `salud-mascota`
+11 calcs · 82 ses/90d · **4 página · 5 módulo · 2 fusión · 0 borrar**
+
+- `PAGINA`    22  /calculadora-vacunas-gato-calendario-gatito
+- `PAGINA`    17  /calculadora-fecha-celo-perra
+- `PAGINA`    10  /calculadora-castracion-edad-ideal-perro-gato
+- `PAGINA`    10  /calculadora-vacunas-perro-calendario
+- `MODULO`     8  /calculadora-cachorros-camada-raza
+- `MODULO`     5  /calculadora-dosis-antiparasitario-perro-gato-peso
+- `FUSION`     3  /calculadora-dosis-antipulgas-peso-mascota  →calculadora-dosis-medicamento-mascota-por-peso
+- `MODULO`     3  /calculadora-dosis-medicamento-mascota-por-peso
+- `MODULO`     3  /calculadora-frecuencia-corte-unas-perro-gato
+- `MODULO`     1  /calculadora-frecuencia-bano-perro-raza-tipo-pelo
+- `FUSION`     0  /calculadora-vacunas-perro-calendario-cachorro  →calculadora-vacunas-perro-calendario
+
+## [TECH] Hobbies y maquetas · `gaming`
+2 calcs · 68 ses/90d · **1 página · 1 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`    60  /calculadora-stream-bitrate-calidad
+- `MODULO`     8  /calculadora-modelismo-pintura-figuras-tiempo-warhammer-citadel
+
+## [MASCOTAS] ¿Cuánto cuesta tener una mascota? · `costo-mascota`
+10 calcs · 57 ses/90d · **2 página · 8 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`    20  /calculadora-litros-pecera-acuario-cantidad-peces
+- `PAGINA`    19  /calculadora-costo-veterinario-consulta-promedio
+- `MODULO`     5  /calculadora-espacio-jaula-hamster-tamano
+- `MODULO`     4  /calculadora-tamano-cucha-perro-medidas
+- `MODULO`     2  /calculadora-agua-pez-betta-litros
+- `MODULO`     2  /calculadora-costo-mensual-raza-gato
+- `MODULO`     2  /calculadora-tortuga-acuatica-uvb-watts-pecera
+- `MODULO`     1  /calculadora-costo-mensual-mascota-perro-gato
+- `MODULO`     1  /calculadora-temperatura-acuario-especie
+- `MODULO`     1  /calculadora-tortuga-acuatica-tamano-acuario-filtro-litros
+
+## [CIENCIA] Química · `quimica`
+19 calcs · 32 ses/90d · **0 página · 8 módulo · 0 fusión · 11 borrar**
+
+- `MODULO`     7  /calculadora-moles-masa-formula-molecular
+- `MODULO`     6  /calculadora-moles-gramos-conversion
+- `MODULO`     6  /calculadora-ph-suelo-correccion-calcio
+- `MODULO`     4  /calculadora-numero-oxidacion-elemento
+- `MODULO`     3  /calculadora-concentracion-molar-solucion
+- `MODULO`     3  /calculadora-ph-concentracion-hidrogeno
+- `MODULO`     2  /calculadora-ley-gases-ideales
+- `MODULO`     1  /calculadora-poh-concentracion-oh
+- `BORRAR`     0  /calculadora-constante-equilibrio-kc
+- `BORRAR`     0  /calculadora-dilucion-c1v1-c2v2
+- `BORRAR`     0  /calculadora-molalidad-solucion
+- `BORRAR`     0  /calculadora-ph-acido-debil-ka
+- `BORRAR`     0  /calculadora-reactivo-limitante-estequiometria
+- `BORRAR`     0  /calculadora-rendimiento-porcentual-reaccion
+- `BORRAR`     0  /calculadora-titulacion-acido-base
+- `BORRAR`     0  /en/moles-masa-formula-molecular
+- `BORRAR`     0  /pt/moles-massa-formula-molecular
+- `BORRAR`     0  /en/ph-soil-correction-lime-sulfur
+- `BORRAR`     0  /en/poh-hydroxide-concentration
+
+## [MATE] Trigonometría · `trigonometria`
+6 calcs · 28 ses/90d · **2 página · 0 módulo · 2 fusión · 2 borrar**
+
+- `PAGINA`    14  /calculadora-trigonometria-seno-coseno-tangente
+- `PAGINA`    10  /calculadora-conversion-grados-radianes-gradianes
+- `FUSION`     4  /calculadora-conversion-radianes-grados-angulo  →calculadora-conversion-grados-radianes-gradianes
+- `BORRAR`     0  /ley-senos-cosenos-resolver-triangulo
+- `FUSION`     0  /seno-coseno-tangente-angulo  →calculadora-trigonometria-seno-coseno-tangente
+- `BORRAR`     0  /pt/seno-cosseno-tangente-angulo-triangulo
+
+## [VIVIENDA] Pileta: mantenimiento y costos · `piscina`
+5 calcs · 22 ses/90d · **0 página · 5 módulo · 0 fusión · 0 borrar**
+
+- `MODULO`     8  /calculadora-pileta-natacion-litros-m3
+- `MODULO`     6  /calculadora-piscina-cloro-mantenimiento-mensual-litros-tamano
+- `MODULO`     4  /calculadora-tiempo-evaporacion-piscina-litros-dia
+- `MODULO`     3  /calculadora-pileta-cloro-litros-volumen-dosificacion
+- `MODULO`     1  /calculadora-costo-mensual-pileta
+
+## [EVENTO] Tragos y coctelería · `tragos`
+6 calcs · 22 ses/90d · **0 página · 6 módulo · 0 fusión · 0 borrar**
+
+- `MODULO`     8  /calculadora-mojito-cubano-ingredientes
+- `MODULO`     6  /calculadora-pisco-sour-receta
+- `MODULO`     3  /calculadora-aperol-spritz-proporciones
+- `MODULO`     2  /calculadora-daiquiri-clasico-personas
+- `MODULO`     2  /calculadora-gin-tonic-proporciones
+- `MODULO`     1  /almibar-proporciones-azucar-agua
+
+## [COCINA] Cocción carne · `coccion`
+1 calcs · 11 ses/90d · **1 página · 0 módulo · 0 fusión · 0 borrar**
+
+- `PAGINA`    11  /calculadora-tiempo-temperatura-coccion-carne
+
+## [MATE] Cálculo: derivadas, integrales y límites · `calculo`
+14 calcs · 8 ses/90d · **0 página · 4 módulo · 0 fusión · 10 borrar**
+
+- `MODULO`     5  /calculadora-derivada-funcion-basica
+- `MODULO`     1  /calculadora-derivada-polinomio-coeficientes
+- `MODULO`     1  /calculadora-integral-definida-basica
+- `MODULO`     1  /calculadora-serie-taylor-maclaurin
+- `BORRAR`     0  /calculadora-asintotas-funcion
+- `BORRAR`     0  /calculadora-derivacion-implicita
+- `BORRAR`     0  /calculadora-derivadas-parciales
+- `BORRAR`     0  /calculadora-dominio-rango-funcion
+- `BORRAR`     0  /calculadora-limites-paso-a-paso
+- `BORRAR`     0  /co/calculadora-limites-retiro-recarga-nequi
+- `BORRAR`     0  /calculadora-maximos-minimos-funcion
+- `BORRAR`     0  /calculadora-recta-tangente-normal
+- `BORRAR`     0  /calculadora-transformada-laplace
+- `BORRAR`     0  /pt/integral-indefinida-polinomio
+
+## [AUTO] Estacionamiento · `costo-auto`
+1 calcs · 8 ses/90d · **0 página · 1 módulo · 0 fusión · 0 borrar**
+
+- `MODULO`     8  /calculadora-estacionamiento-medido-hora-caba-zona
+
+## [DEPORTE] Calorías por actividad · `running`
+1 calcs · 2 ses/90d · **0 página · 1 módulo · 0 fusión · 0 borrar**
+
+- `MODULO`     2  /calculadora-calorias-quemadas-yoga-pilates

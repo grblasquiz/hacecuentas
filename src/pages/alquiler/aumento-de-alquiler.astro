@@ -1,0 +1,270 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto me van a aumentar el alquiler?"
+ * Reemplaza 5 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta datos (src/lib/hubs/aumento-de-alquiler.ts) y su
+ * compute(). Todo el chrome, el CSS y el runtime viven en DecisionHub.astro.
+ *
+ * Los coeficientes NO se inventan: la serie diaria del ICL sale de
+ * src/lib/formulas/_bcra-icl.ts (misma fuente que usa la calc alquiler-icl,
+ * bajada de la API del BCRA) y la serie mensual del IPC de
+ * src/data/ipc-indec-serie.json pisada por src/data/live/inflacion.json,
+ * igual que la fórmula inflacion-ipc.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, FRECUENCIA_MESES, CONTRATO_MESES } from '../../lib/hubs/aumento-de-alquiler';
+import { ICL_FECHAS, ICL_VALORES, ICL_LAST_UPDATED } from '../../lib/formulas/_bcra-icl';
+import ipcSerieData from '../../data/ipc-indec-serie.json';
+import inflacionLive from '../../data/live/inflacion.json';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+// La serie del ICL es diaria y contigua desde el 01/07/2020: alcanza con el
+// primer día y el array de valores para reconstruir el lookup por fecha.
+const ICL_START = ICL_FECHAS[0];
+const ICL = ICL_VALORES as number[];
+
+// Misma construcción que src/lib/formulas/inflacion-ipc.ts: serie estática del
+// INDEC + los meses recientes del feed live.
+const IPC: Record<string, number> = {};
+for (const r of (ipcSerieData as any).serie as Array<{ mes: string; pct: number }>) {
+  if (r && typeof r.mes === 'string' && Number.isFinite(Number(r.pct))) IPC[r.mes] = Number(r.pct);
+}
+for (const r of ((inflacionLive as any).last_12_months as Array<{ fecha: string; valor: number }>) || []) {
+  const key = String(r.fecha).slice(0, 7);
+  if (/^\d{4}-\d{2}$/.test(key) && Number.isFinite(Number(r.valor))) IPC[key] = Number(r.valor);
+}
+const IPC_KEYS = Object.keys(IPC).sort();
+const IPC_PCTS = IPC_KEYS.map((k) => IPC[k]);
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    ICL,
+    ICL_START,
+    ICL_LAST_UPDATED,
+    IPC_KEYS,
+    IPC_PCTS,
+    FREQ: FRECUENCIA_MESES,
+    CONTRATO: CONTRATO_MESES,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const DAY = 86400000;
+
+    const dec = (n, d) => Number(n).toLocaleString('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d });
+    const isDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ''));
+    const fmtFecha = (iso) => {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+      return m ? m[3] + '/' + m[2] + '/' + m[1] : iso;
+    };
+    const labelMes = (k) => {
+      const p = k.split('-');
+      return MESES[Number(p[1]) - 1] + ' ' + p[0];
+    };
+
+    const START_MS = Date.parse(ICL_START + 'T00:00:00Z');
+
+    /** Parser del coeficiente manual. NO se puede usar H.num(): ese parser es
+     *  para plata y trata el punto como separador de miles, así que "1.2941"
+     *  (la forma en que el BCRA lo muestra y como se copia y pega) daba 12941.
+     *  Acá el último separador que aparezca es el decimal. */
+    function parseCoef(raw) {
+      const s = String(raw == null ? '' : raw).trim();
+      if (!s) return NaN;
+      const limpio = s.replace(/[^\d.,-]/g, '');
+      const corte = Math.max(limpio.lastIndexOf('.'), limpio.lastIndexOf(','));
+      const n =
+        corte === -1
+          ? Number(limpio)
+          : Number(limpio.slice(0, corte).replace(/[.,]/g, '') + '.' + limpio.slice(corte + 1));
+      return Number.isFinite(n) ? n : NaN;
+    }
+
+    /** Lookup del ICL por fecha. La serie es diaria y contigua, así que el
+     *  índice es la diferencia en días; se clampea igual que lookupICL(). */
+    function iclAt(iso) {
+      let idx = Math.round((Date.parse(iso + 'T00:00:00Z') - START_MS) / DAY);
+      if (idx < 0) idx = 0;
+      if (idx > ICL.length - 1) idx = ICL.length - 1;
+      const fecha = new Date(START_MS + idx * DAY).toISOString().slice(0, 10);
+      return { valor: ICL[idx], fecha: fecha };
+    }
+
+    /** IPC compuesto entre dos meses, ambos incluidos (misma semántica que la
+     *  calc de actualización por IPC). Recorta al último mes publicado. */
+    function ipcPeriodo(mesDesde, mesHasta) {
+      let from = IPC_KEYS.indexOf(mesDesde);
+      let to = IPC_KEYS.indexOf(mesHasta);
+      if (from === -1) from = mesDesde < IPC_KEYS[0] ? 0 : -1;
+      if (to === -1 && mesHasta > IPC_KEYS[IPC_KEYS.length - 1]) to = IPC_KEYS.length - 1;
+      if (from === -1 || to === -1 || to < from) return null;
+      let factor = 1;
+      for (let i = from; i <= to; i++) factor *= 1 + IPC_PCTS[i] / 100;
+      return { factor: factor, desde: IPC_KEYS[from], hasta: IPC_KEYS[to], meses: to - from + 1 };
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'icl';
+      const alquiler = Math.round(v.alquiler || 0);
+      const inf = (Number(v.inflacionMensual) || 0) / 100;
+      const desde = String(v.fechaDesde || '');
+      const hasta = String(v.fechaHasta || '');
+
+      let coef = 1;
+      let sub = '';
+      let ref = '';
+
+      if (id === 'icl') {
+        // Override manual: la calc vieja lo tenía como opción avanzada y sirve
+        // cuando el contrato fija un coeficiente cerrado o el propietario ya te
+        // pasó el suyo. Si hay valor válido (>0), pisa la serie del BCRA.
+        const crudo = String(v.coefManual == null ? '' : v.coefManual).trim();
+        const manual = parseCoef(crudo);
+        // Rango de cordura: el coeficiente es un cociente ICL_final ÷ ICL_inicio,
+        // siempre cerca de 1. Si viene 34,45 es el ICL bruto, no el cociente; y si
+        // viene 5 es una tasa mensual. En esos casos no lo aplicamos en silencio.
+        const manualOk = Number.isFinite(manual) && manual >= 0.5 && manual <= 10;
+        let aviso = '';
+        if (crudo && !manualOk) {
+          aviso =
+            'Ignoramos el coeficiente "' + crudo + '": tiene que ser el cociente entre los dos ICL ' +
+            '(un número cercano a 1, como 1,2941), no el valor bruto del índice ni un porcentaje mensual. ';
+        }
+
+        if (manualOk) {
+          coef = manual;
+          ref = 'coeficiente cargado a mano';
+          sub =
+            'Usás el coeficiente ' + dec(manual, 4) + ' que cargaste vos, no el de la serie del BCRA. ' +
+            'Borrá ese campo para volver al ICL oficial (último dato: ' + fmtFecha(ICL_LAST_UPDATED) + ').';
+        } else if (!isDate(desde) || !isDate(hasta) || desde > hasta) {
+          sub = aviso + 'Poné las dos fechas: la del último ajuste y la del ajuste nuevo.';
+        } else {
+          const a = iclAt(desde);
+          const b = iclAt(hasta);
+          coef = b.valor / a.valor;
+          ref = 'ICL ' + dec(b.valor, 2) + ' ÷ ' + dec(a.valor, 2);
+          sub =
+            aviso +
+            'Coeficiente ICL ' + dec(coef, 4) + ' = ' + dec(b.valor, 4) + ' ÷ ' + dec(a.valor, 4) +
+            ' (BCRA al ' + fmtFecha(b.fecha) + ' sobre el ' + fmtFecha(a.fecha) + '). Último dato publicado: ' +
+            fmtFecha(ICL_LAST_UPDATED) + '.';
+          const spanMeses =
+            (Number(hasta.slice(0, 4)) - Number(desde.slice(0, 4))) * 12 +
+            (Number(hasta.slice(5, 7)) - Number(desde.slice(5, 7)));
+          if (spanMeses >= 25) {
+            sub += ' Ojo: el período supera los 2 años. Como inicio va la fecha de tu ÚLTIMO ajuste, no la de la firma, o contás la inflación dos veces.';
+          }
+        }
+      } else if (id === 'ipc') {
+        const p = isDate(desde) && isDate(hasta) ? ipcPeriodo(desde.slice(0, 7), hasta.slice(0, 7)) : null;
+        if (!p) {
+          sub = 'Elegí un período con IPC publicado (la serie del INDEC arranca en enero de 2017).';
+        } else {
+          coef = p.factor;
+          ref = p.meses + (p.meses === 1 ? ' mes de IPC' : ' meses de IPC');
+          sub =
+            'IPC INDEC de ' + labelMes(p.desde) + ' a ' + labelMes(p.hasta) + ', ambos incluidos: ' +
+            p.meses + (p.meses === 1 ? ' mes' : ' meses') + ' que componen ' + dec((p.factor - 1) * 100, 1) + '%.';
+        }
+      } else if (id === 'frecuencia') {
+        const f = String(v.frecuencia || 'trim');
+        const mp = FREQ[f] || 3;
+        // Mismo bucle que la calc absorbida: un ajuste por período dentro de los 12 meses.
+        let acc = 1;
+        for (let m = mp; m <= 12; m += mp) acc = acc * Math.pow(1 + inf, mp);
+        coef = acc;
+        const etiqueta = { trim: 'trimestral', cuat: 'cuatrimestral', sem: 'semestral', anual: 'anual' }[f] || 'trimestral';
+        const ajustes = Math.floor(12 / mp);
+        ref = ajustes + (ajustes === 1 ? ' ajuste' : ' ajustes') + ' ' + etiqueta;
+        sub =
+          'Ajuste ' + etiqueta + ' con inflación de ' + dec(inf * 100, 1) + '% mensual: ' + ajustes +
+          (ajustes === 1 ? ' ajuste' : ' ajustes') + ' en 12 meses, +' + dec((coef - 1) * 100, 1) + '% acumulado.';
+      } else if (id === 'contrato-2' || id === 'contrato-3') {
+        const n = CONTRATO[id] || 24;
+        coef = Math.pow(1 + inf, n);
+        ref = n + ' meses compuestos';
+        sub =
+          'Contrato de ' + n / 12 + ' años: con ' + dec(inf * 100, 1) + '% mensual constante, en ' + n +
+          ' meses el alquiler acumula +' + dec((coef - 1) * 100, 1) + '% (×' + dec(coef, 2) + ').';
+      } else {
+        const n = Math.max(1, Math.round(Number(v.meses) || 12));
+        coef = Math.pow(1 + inf, n);
+        const simple = inf * 100 * n;
+        ref = n + (n === 1 ? ' mes' : ' meses') + ' al ' + dec(inf * 100, 1) + '%';
+        sub =
+          n + (n === 1 ? ' mes' : ' meses') + ' al ' + dec(inf * 100, 1) + '% mensual acumulan +' +
+          dec((coef - 1) * 100, 1) + '%, no el ' + dec(simple, 1) + '% de la suma simple (×' + dec(coef, 3) + ').';
+      }
+
+      const nuevo = Math.round(alquiler * coef);
+      const aumento = nuevo - alquiler;
+      const pct = (coef - 1) * 100;
+
+      const rows = [
+        { k: 'Alquiler que pagás hoy', v: alquiler },
+        { k: 'Aumento del período', ref: (pct >= 0 ? '+' : '') + dec(pct, 2) + '%', v: aumento },
+        { k: 'Alquiler nuevo', ref: ref || undefined, v: nuevo, extra: true },
+        { k: 'Lo que te cuesta el aumento en un año', ref: '12 cuotas', v: aumento * 12 },
+      ];
+
+      return {
+        total: H.ars(nuevo),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Cuota actual', value: alquiler, tone: 'main' },
+          { label: 'Cuánto sube', value: Math.max(0, aumento), tone: 'warn' },
+          { label: 'Cuota nueva', value: nuevo, tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

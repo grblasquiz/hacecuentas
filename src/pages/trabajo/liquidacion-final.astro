@@ -1,0 +1,192 @@
+---
+/**
+ * Hub de decisión — "Renuncio: ¿cuánto cobro de liquidación final?"
+ * Reemplaza 5 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * OJO: este hub cubre RENUNCIA (sólo rubros devengados). El despido y su
+ * indemnización viven en /trabajo/indemnizacion-por-despido.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, TRAMOS_VACACIONES } from '../../lib/hubs/liquidacion-final';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ TRAMOS: TRAMOS_VACACIONES }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    /** Días de vacaciones por año según antigüedad (Art. 150 LCT). */
+    function tramo(anios) {
+      for (const t of TRAMOS) if (anios <= t.hastaAnios) return t;
+      return TRAMOS[TRAMOS.length - 1];
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'renuncia';
+      const sueldo = v.sueldo || 0;
+      const diasMes = Math.min(30, Math.max(0, v.diasMes || 0));
+      const diasVac = Math.max(0, v.diasVac || 0);
+      const mesesSemestre = Math.min(6, Math.max(1, v.mesesSemestre || 1));
+      const anios = Math.max(0, v.anios || 0);
+      const meses = Math.min(11, Math.max(0, v.meses || 0));
+      const antTotalMeses = anios * 12 + meses;
+
+      // ---- Rama: sólo antigüedad (Art. 150 LCT) ----
+      if (id === 'antiguedad') {
+        const aniosDec = antTotalMeses / 12;
+        const t = tramo(aniosDec);
+        const dias = aniosDec < 0.5 ? Math.floor(antTotalMeses) : t.dias;
+        const label = aniosDec < 0.5 ? 'proporcional primer año' : t.label;
+        const valorDia = sueldo / 25;
+        const valorTramo = valorDia * dias;
+        const rows = [
+          { k: 'Valor del día de vacaciones', ref: 'Art. 155 — sueldo ÷ 25', v: valorDia },
+          { k: dias + ' días de vacaciones por año (' + label + ')', ref: 'Art. 150', v: valorTramo, extra: true },
+          { k: 'SAC sobre esos días', ref: 'Art. 123', v: valorTramo / 12 },
+        ];
+        return {
+          total: H.ars(valorTramo + valorTramo / 12),
+          sub:
+            anios + ' años y ' + meses + ' meses (' + antTotalMeses + ' meses) · tramo ' + label +
+            ' · ' + dias + ' días corridos',
+          rows: rows,
+          chart: [
+            { label: 'Días de vacaciones del tramo', value: valorTramo, tone: 'main' },
+            { label: 'SAC sobre vacaciones', value: valorTramo / 12, tone: 'prop' },
+          ],
+        };
+      }
+
+      // ---- Rama: sólo vacaciones no gozadas (Art. 156 LCT) ----
+      if (id === 'vacaciones') {
+        const valorDia = sueldo / 25;
+        const indemn = valorDia * diasVac;
+        const sacVac = indemn / 12;
+        // Art. 153 LCT: con menos de 6 meses no hay tramo, se liquida 1 día cada 20 trabajados.
+        const aniosDecVac = antTotalMeses / 12;
+        const propVac = aniosDecVac < 0.5;
+        const t = tramo(aniosDecVac);
+        const diasAnio = propVac ? Math.floor(antTotalMeses) : t.dias;
+        const labelVac = propVac ? 'proporcional, Art. 153' : t.label;
+        return {
+          total: H.ars(indemn + sacVac),
+          sub:
+            diasVac + ' días no gozados × ' + H.ars(valorDia) + ' por día · te correspondían ' +
+            diasAnio + ' días (' + labelVac + ')',
+          rows: [
+            { k: 'Valor del día de vacaciones', ref: 'Art. 155 — sueldo ÷ 25', v: valorDia },
+            { k: 'Vacaciones no gozadas (' + diasVac + ' días)', ref: 'Art. 156', v: indemn, extra: true },
+            { k: 'SAC sobre vacaciones', ref: 'Art. 123', v: sacVac },
+          ],
+          chart: [
+            { label: 'Vacaciones no gozadas', value: indemn, tone: 'main' },
+            { label: 'SAC sobre vacaciones', value: sacVac, tone: 'prop' },
+          ],
+        };
+      }
+
+      // ---- Rama: casas particulares, ley 26.844 — RENUNCIA (sólo devengados) ----
+      // Coherente con la pregunta del hub. El escenario de despido (arts. 48/42/43)
+      // queda descripto en los `warn` del caso, no se liquida acá.
+      if (id === 'casas-particulares') {
+        const diasTrabajados = (sueldo / 30) * diasMes;
+        const sacProp = (sueldo / 2) * (mesesSemestre / 6);
+        const vacaciones = (sueldo / 25) * diasVac;
+        const sacVac = vacaciones / 12;
+
+        const aniosDecCp = antTotalMeses / 12;
+        const propCp = aniosDecCp < 0.5;
+        const tCp = tramo(aniosDecCp);
+        const diasAnioCp = propCp ? Math.floor(antTotalMeses) : tCp.dias;
+        const labelCp = propCp ? 'proporcional, primer año' : tCp.label;
+
+        const rows = [
+          { k: 'Días trabajados del último mes', ref: 'sueldo ÷ 30', v: diasTrabajados, extra: true },
+          { k: 'SAC proporcional (' + mesesSemestre + '/6 del semestre)', ref: 'Art. 39 ley 26.844', v: sacProp },
+          { k: 'Vacaciones no gozadas (' + diasVac + ' días)', ref: 'Art. 30 ley 26.844', v: vacaciones },
+          { k: 'SAC sobre vacaciones', ref: 'Art. 39 ley 26.844', v: sacVac },
+        ];
+        const total = rows.reduce((a, r) => a + r.v, 0);
+        return {
+          total: H.ars(total),
+          sub:
+            'Ley 26.844 · renuncia: sólo lo devengado · te correspondían ' + diasAnioCp +
+            ' días de vacaciones por año (' + labelCp + ') · sin indemnización por antigüedad',
+          rows: rows,
+          chart: [
+            { label: 'Días trabajados del mes', value: diasTrabajados, tone: 'main' },
+            { label: 'SAC proporcional', value: sacProp, tone: 'prop' },
+            { label: 'Vacaciones no gozadas + su SAC', value: vacaciones + sacVac, tone: 'good' },
+          ],
+        };
+      }
+
+      // ---- Rama por defecto: renuncia común (LCT) ----
+      const diasTrabajados = (sueldo / 30) * diasMes;
+      const vacaciones = (sueldo / 25) * diasVac;
+      const sacProp = (sueldo / 2) * (mesesSemestre / 6);
+      const sacVac = vacaciones / 12;
+      const total = diasTrabajados + vacaciones + sacProp + sacVac;
+
+      return {
+        total: H.ars(total),
+        sub:
+          diasMes + ' días del último mes · ' + diasVac + ' días de vacaciones sin tomar · sin indemnización por antigüedad ni preaviso',
+        rows: [
+          { k: 'Días trabajados del último mes', ref: 'sueldo ÷ 30', v: diasTrabajados, extra: true },
+          { k: 'Aguinaldo proporcional (' + mesesSemestre + '/6 del semestre)', ref: 'Art. 121', v: sacProp },
+          { k: 'Vacaciones no gozadas (' + diasVac + ' días)', ref: 'Art. 156', v: vacaciones },
+          { k: 'SAC sobre vacaciones', ref: 'Art. 123', v: sacVac },
+        ],
+        chart: [
+          { label: 'Días trabajados del mes', value: diasTrabajados, tone: 'main' },
+          { label: 'SAC proporcional', value: sacProp, tone: 'prop' },
+          { label: 'Vacaciones no gozadas + su SAC', value: vacaciones + sacVac, tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

@@ -45,6 +45,22 @@ export const MNI_MENSUAL_BASE = 2_490_038;
  */
 export const GNI_ANUAL = 5_151_802.5;
 
+/**
+ * Deducción especial del art. 30 inc c) APARTADO 1 — autónomos y profesionales
+ * independientes. ANUAL, primer semestre 2026: $18.031.308,76.
+ *
+ * Es la contracara de `MNI_MENSUAL_BASE`, que usa el apartado 2 (la incrementada
+ * para relación de dependencia y jubilaciones, $24.728.652,02). Un monotributista
+ * que pasa a régimen general deduce ESTA, no aquella: usar la de empleados le
+ * bajaría el impuesto ~$558.000 anuales de más.
+ *
+ * OJO: el fetcher `scripts/update-data/fetchers/ganancias-escala.ts` NO patchea
+ * esta constante todavía — sólo toca MNI_MENSUAL_BASE, los incrementos y ESCALA.
+ * Cuando ARCA actualice el semestre hay que moverla a mano, o sumarla a la lista
+ * de `replaceNumericConst` del fetcher.
+ */
+export const DEDUCCION_ESPECIAL_AUTONOMOS_ANUAL = 18_031_308.76;
+
 /** Deducción mensual por cónyuge a cargo: 4.851.964,66 / 12 ≈ 404_330 */
 export const INCREMENTO_CONYUGE_MENSUAL = 404_330;
 

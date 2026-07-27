@@ -1,0 +1,163 @@
+---
+/**
+ * Hub de decisión — "¿Cuántas millas necesito para este destino?" (arquetipo CATÁLOGO).
+ * Reemplaza 5 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/millas.ts) y su compute().
+ * El chrome, el CSS y el runtime viven en DecisionHub.astro y no se tocan.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, PROGRAMAS_MAP, DESTINO_LABEL } from '../../lib/hubs/millas';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ PROGRAMAS: PROGRAMAS_MAP, DESTINOS: DESTINO_LABEL }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Este hub mezcla unidades: millas, dólares y centavos de dólar por milla.
+    // El runtime ya soporta `format`/`unit`/`decimals` (ver HubRow en types.ts):
+    // el resultado declara 'unit' + "millas" como default (lo usa la leyenda del
+    // gráfico, que es toda en millas) y cada fila en otra unidad se pisa sola.
+    // OJO: el runtime hace Object.assign(base, over), así que una fila que omite
+    // `format` NO hereda el del resultado — cada fila declara el suyo.
+    const MILLAS = { format: 'unit', unit: 'millas' };
+    const USD = { format: 'unit', unit: 'USD' };
+    const miles = (n) => Math.round(n || 0).toLocaleString('es-AR');
+
+    H.onCompute(function (v) {
+      const prog = PROGRAMAS[v.programa] || PROGRAMAS['lifemiles'];
+      const destKey = v.destino;
+      const destNombre = DESTINOS[destKey] || destKey;
+      const cab = v.cabina === 'business' ? 'business' : 'economy';
+      const viaje = v.tipoViaje === 'ida' ? 'ida' : 'ida-vuelta';
+      const tenes = Math.max(0, v.millasTenes || 0);
+
+      const tarifa = prog.tabla[destKey];
+
+      // El programa no publica tarifa para ese destino: se dice, no se inventa.
+      if (!tarifa) {
+        return {
+          total: 'Sin tarifa',
+          sub: prog.label + ' no tiene tarifa de referencia a ' + destNombre + '. Probá otro destino o cambiá de programa.',
+          rows: [{ k: 'Millas que tenés hoy', v: tenes, ...MILLAS }],
+          chart: [{ label: 'Millas que tenés', value: tenes, tone: 'good' }],
+          format: 'unit',
+          unit: 'millas',
+          position: 0,
+          positionLabel: 'Sin tarifa publicada para ' + destNombre + ' en ' + prog.label,
+        };
+      }
+
+      let necesitas;
+      if (cab === 'business' && viaje === 'ida-vuelta') necesitas = tarifa.businessIdaVuelta;
+      else if (cab === 'business') necesitas = tarifa.businessIda;
+      else if (viaje === 'ida-vuelta') necesitas = tarifa.economyIdaVuelta;
+      else necesitas = tarifa.economyIda;
+
+      const faltan = Math.max(0, necesitas - tenes);
+      const sobran = Math.max(0, tenes - necesitas);
+      const cubierto = necesitas > 0 ? Math.min(100, (tenes / necesitas) * 100) : 0;
+
+      const tasas = v.tasas > 0 ? v.tasas : prog.tasasDefaultUsd;
+      const precio = Math.max(0, v.precioPasaje || 0);
+      const valorCanjeUsd = (necesitas * prog.centavosPorMilla) / 100;
+
+      // Cuántos centavos de USD rinde cada milla en ESTE canje concreto.
+      let cpm = 0;
+      let veredicto = '';
+      if (precio > 0) {
+        const ahorroNeto = precio - tasas;
+        cpm = (ahorroNeto / necesitas) * 100;
+        if (ahorroNeto <= 0) {
+          veredicto = 'No conviene canjear: las tasas (USD ' + Math.round(tasas) + ') igualan o superan el precio cash del pasaje.';
+        } else if (cpm >= prog.centavosPorMilla) {
+          veredicto = 'Conviene canjear: cada milla te rinde ' + cpm.toFixed(2).replace('.', ',') + '¢, por encima de la referencia de ~' +
+            String(prog.centavosPorMilla).replace('.', ',') + '¢ de ' + prog.label + ' (referencia editorial, no oficial).';
+        } else {
+          veredicto = 'Conviene pagar cash o esperar un canje mejor: cada milla te rinde ' + cpm.toFixed(2).replace('.', ',') + '¢, por debajo de la referencia de ~' +
+            String(prog.centavosPorMilla).replace('.', ',') + '¢ de ' + prog.label + ' (referencia editorial, no oficial).';
+        }
+      }
+
+      const rows = [
+        { k: 'Millas que pide el canje', v: necesitas, ...MILLAS },
+        { k: 'Millas que tenés hoy', v: tenes, ...MILLAS },
+      ];
+      if (faltan > 0) rows.push({ k: 'Millas que te faltan', v: faltan, extra: true, ...MILLAS });
+      else rows.push({ k: 'Millas que te sobran', v: sobran, extra: true, ...MILLAS });
+      rows.push({ k: 'Tasas e impuestos del canje', ref: 'se pagan en plata', v: Math.round(tasas), ...USD });
+      rows.push({ k: 'Valor de referencia del canje', ref: 'a ' + String(prog.centavosPorMilla).replace('.', ',') + '¢/milla', v: Math.round(valorCanjeUsd), ...USD });
+      if (precio > 0) {
+        rows.push({ k: 'Precio del pasaje en efectivo', v: Math.round(precio), ...USD });
+        rows.push({ k: 'Rendimiento de cada milla', ref: 'centavos de dólar por milla', v: cpm, format: 'unit', unit: '¢USD', decimals: 2 });
+      }
+
+      const positionLabel = faltan > 0
+        ? 'Te faltan ' + miles(faltan) + ' millas'
+        : 'Ya te alcanza: tenés ' + miles(sobran) + ' millas de sobra';
+
+      const sub =
+        prog.label + ' · ' + destNombre + ' · ' + (cab === 'business' ? 'business' : 'económica') + ' · ' +
+        (viaje === 'ida-vuelta' ? 'ida y vuelta' : 'solo ida') + ' — ' + positionLabel +
+        ' (' + Math.round(cubierto) + '% cubierto)' + (veredicto ? ' · ' + veredicto : '');
+
+      return {
+        total: miles(necesitas) + ' millas',
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Millas que tenés', value: Math.min(tenes, necesitas), tone: 'good' },
+          { label: faltan > 0 ? 'Millas que te faltan' : 'Canje cubierto', value: faltan, tone: 'warn' },
+        ],
+        format: 'unit',
+        unit: 'millas',
+        position: cubierto,
+        positionLabel: positionLabel,
+      };
+    });
+  })();
+</script>

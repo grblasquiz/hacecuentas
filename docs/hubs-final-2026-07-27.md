@@ -1,0 +1,2437 @@
+# Arquitectura final — un hub, una pregunta
+
+**160 hubs · 1506 calcs adentro (618 conservan URL propia) · 229 calcs borradas**
+
+Umbral de viabilidad: 50 sesiones/90d por hub. `PAGINA` conserva URL · `MODULO` vive solo dentro del hub (301) · `BORRAR` se elimina (301 al hub)
+
+
+## [CUERPO] ¿Estoy en mi peso?
+`peso-estoy-bien` · 4 calcs (4 con URL) · 0 borradas · 12,060 ses/90d
+
+- `PAGINA` 11870  calculadora-imc
+- `PAGINA`   100  calculadora-peso-ideal
+- `PAGINA`    55  calculadora-imc-adultos-mayores-edad-tabla
+- `PAGINA`    35  calculadora-edad-metabolica
+
+## [VIVIENDA] ¿Cuánto me van a aumentar el alquiler?
+`aumento-alquiler` · 10 calcs (7 con URL) · 0 borradas · 7,027 ses/90d
+
+- `PAGINA`  4325  calculadora-actualizacion-alquiler-icl
+- `PAGINA`  2392  calculadora-actualizacion-inflacion-ipc
+- `PAGINA`   157  calculadora-inflacion-acumulada-periodo
+- `PAGINA`    94  calculadora-aumento-alquiler-trimestral-cuatrimestral-semestral
+- `PAGINA`    18  calculadora-contrato-alquiler-2-anios-vs-3-anios
+- `PAGINA`    15  calculadora-desalojo-causa-plazos-honorarios-juicio
+- `PAGINA`    14  calculadora-expensas-departamento-estimado
+- `MODULO`     9  calculadora-abl-expensas-quien-paga-inquilino-propietario  — solo dentro del hub
+- `MODULO`     2  calculadora-expensas-departamento-calcular-m2-categoria  — solo dentro del hub
+- `MODULO`     1  calculadora-costo-mantener-propiedad-vacia-mensual  — solo dentro del hub
+
+## [TRABAJO] Me despiden: ¿cuánto me tienen que pagar?
+`despido` · 9 calcs (7 con URL) · 0 borradas · 4,180 ses/90d
+
+- `PAGINA`  3376  calculadora-indemnizacion-despido
+- `PAGINA`   684  calculadora-art-indemnizacion-tabla-incapacidad-laboral-permanente
+- `PAGINA`    41  calculadora-art-prestacion-dineraria-ilt-dias-pago-incapacidad-temporaria
+- `PAGINA`    39  calculadora-indemnizacion-despido-fuerza-mayor-art-247-lct
+- `PAGINA`    14  calculadora-indemnizacion-despido-embarazo-estabilidad-13-salarios
+- `PAGINA`    12  calculadora-resarcimiento-accidente
+- `PAGINA`    10  calculadora-despido-enfermedad-inculpable-art-211-art-212-lct
+- `MODULO`     2  calculadora-indemnizacion-despido-objetivo-espana-20-dias  — solo dentro del hub
+- `MODULO`     2  calculadora-preaviso-indemnizacion-sustitutiva-lct  — solo dentro del hub
+
+## [TRABAJO] ¿Cuánto cobro de aguinaldo?
+`aguinaldo` · 12 calcs (4 con URL) · 1 borradas · 2,747 ses/90d
+
+- `PAGINA`  2368  calculadora-aguinaldo-sac
+- `PAGINA`   307  calculadora-aguinaldo-empleada-casa-particular-medio-tiempo-categoria
+- `PAGINA`    26  calculadora-cuanto-falta-aguinaldo-junio-diciembre
+- `PAGINA`    11  calculadora-liquidacion-cesantias-colombia-2026
+- `MODULO`     9  calculadora-prima-servicios-colombia-2026  — solo dentro del hub
+- `MODULO`     8  calculadora-aguinaldo-empleado-mensual-quincenal-vs-quincena  — solo dentro del hub
+- `MODULO`     5  calculadora-aguinaldo-mexico-2026  — solo dentro del hub
+- `MODULO`     5  calculadora-sac-proporcional  — solo dentro del hub
+- `MODULO`     3  calculadora-cts-peru-compensacion-tiempo-servicios-2026  — solo dentro del hub
+- `MODULO`     2  calculadora-gratificacion-peru-julio-diciembre-2026  — solo dentro del hub
+- `MODULO`     2  calculadora-prima-de-antiguedad-mexico  — solo dentro del hub
+- `MODULO`     1  calculadora-prima-vacacional-mexico-2026  — solo dentro del hub
+- `BORRAR`     0  calculadora-aguinaldo-jubilados-anses-diciembre-2026  — 0 sesiones/90d
+
+## [FECHAS] ¿Cuántos días hay entre dos fechas?
+`dias-entre-fechas` · 3 calcs (2 con URL) · 1 borradas · 2,253 ses/90d
+
+- `PAGINA`  2223  dias-entre-dos-fechas
+- `PAGINA`    23  calculadora-de-horas
+- `MODULO`     7  calculadora-que-dia-de-la-semana  — solo dentro del hub
+- `BORRAR`     0  sumar-restar-horas-minutos  — 0 sesiones/90d
+
+## [TRABAJO] Renuncio: ¿cuánto cobro de liquidación final?
+`renuncia` · 8 calcs (5 con URL) · 0 borradas · 1,978 ses/90d
+
+- `PAGINA`  1340  calculadora-liquidacion-final-renuncia
+- `PAGINA`   339  calculadora-antiguedad-laboral
+- `PAGINA`   225  calculadora-liquidacion-final-empleada-casa-particular-despido-art-49
+- `PAGINA`    34  calculadora-vacaciones-no-tomadas-indemnizacion-formula
+- `PAGINA`    24  calculadora-dias-vacaciones-ganadas-antiguedad-lct
+- `MODULO`     7  calculadora-finiquito-bolivia-desvinculacion  — solo dentro del hub
+- `MODULO`     5  calculadora-finiquito-renuncia-chile-articulo-162  — solo dentro del hub
+- `MODULO`     4  calculadora-finiquito-liquidacion-mexico-2026  — solo dentro del hub
+
+## [FECHAS] ¿Qué edad tengo exactamente?
+`edad-exacta` · 6 calcs (5 con URL) · 0 borradas · 1,922 ses/90d
+
+- `PAGINA`  1460  calculadora-edad-exacta
+- `PAGINA`   270  calculadora-edad-en-semanas
+- `PAGINA`   153  calculadora-edad-exacta-anos-meses-dias-segundos
+- `PAGINA`    27  calculadora-edad-en-dias
+- `PAGINA`    10  calculadora-dia-nacimiento-semana
+- `MODULO`     2  calculadora-proximo-cumpleanos  — solo dentro del hub
+
+## [IMPUESTOS] ¿Me descuentan Ganancias del sueldo?
+`ganancias-sueldo` · 12 calcs (9 con URL) · 0 borradas · 1,708 ses/90d
+
+- `PAGINA`  1371  calculadora-impuesto-ganancias-sueldo
+- `PAGINA`   131  calculadora-ganancias-empleados-4ta-categoria-2026
+- `PAGINA`    57  calculadora-ganancias-aguinaldo-sac-retencion
+- `PAGINA`    53  calculadora-cuarta-categoria-empleado-empresa-argentina
+- `PAGINA`    25  calculadora-deduccion-prepaga-medicina-ganancias
+- `PAGINA`    24  calculadora-ganancias-tramos-empleado-mensual-2026
+- `PAGINA`    16  calculadora-retencion-ganancias-siradig-trabajador
+- `PAGINA`    12  calculadora-deduccion-familia-conyuge-hijo-ganancias
+- `PAGINA`    10  calculadora-ganancias-monotributista-pase-regimen-general
+- `MODULO`     4  calculadora-deduccion-alquiler-ganancias-40-porciento  — solo dentro del hub
+- `MODULO`     3  calculadora-ganancias-segunda-categoria-renta-financiera-2026  — solo dentro del hub
+- `MODULO`     2  calculadora-devolucion-ganancias-4ta-saldo-favor  — solo dentro del hub
+
+## [TRABAJO] ¿Cuánto gana un… según convenio?
+`paritaria` · 20 calcs (16 con URL) · 0 borradas · 1,168 ses/90d
+
+- `PAGINA`   391  calculadora-paritaria-uocra-construccion-2026-categoria
+- `PAGINA`   161  calculadora-sueldo-gastronomico-uthgra-mozo-cocinero
+- `PAGINA`   140  calculadora-sueldo-docente-argentina-cargo-antiguedad
+- `PAGINA`    89  calculadora-sueldo-camionero-fedcam-basico-adicionales
+- `PAGINA`    71  calculadora-paritaria-comercio-2026-aumento-acumulado
+- `PAGINA`    60  calculadora-sueldo-empleados-comercio-cct-130-75
+- `PAGINA`    54  calculadora-paritaria-camioneros-2026-flete-larga-distancia
+- `PAGINA`    34  calculadora-sueldo-smata-mecanico-automotor-basico
+- `PAGINA`    30  calculadora-sueldo-policia-federal-grado-antiguedad
+- `PAGINA`    23  calculadora-sueldo-docente-ademys-caba-antiguedad
+- `PAGINA`    21  calculadora-sueldo-uom-metalurgico-basico-neto
+- `PAGINA`    19  calculadora-sueldo-medico-residente-hospital-publico
+- `PAGINA`    14  calculadora-sueldo-aeronautico-piloto-azafata-tripulante
+- `PAGINA`    11  calculadora-sueldo-chofer-colectivo-uta-urbano
+- `PAGINA`    11  calculadora-sueldo-enfermero-hospital-publico-categoria
+- `PAGINA`    11  calculadora-sueldo-panadero-basico-feriado-nocturno
+- `MODULO`     9  calculadora-licencia-vacaciones-cct-comercio-empleados-comercio-argentina-2026  — solo dentro del hub
+- `MODULO`     8  calculadora-concurso-docente-puntaje-antecedentes-baires  — solo dentro del hub
+- `MODULO`     8  calculadora-sueldo-programador-desarrollador-argentina-seniority  — solo dentro del hub
+- `MODULO`     3  calculadora-sueldo-docente-afa-tecnico-categoria-b-c  — solo dentro del hub
+
+## [CUERPO] ¿Está bien el peso y la altura de mi hijo?
+`peso-hijo` · 7 calcs (4 con URL) · 0 borradas · 1,167 ses/90d
+
+- `PAGINA`   645  calculadora-indice-masa-corporal-pediatrico
+- `PAGINA`   464  calculadora-imc-infantil-percentil
+- `PAGINA`    26  calculadora-estatura-adulta-hijo
+- `PAGINA`    17  calculadora-percentiles-crecimiento-pediatrico
+- `MODULO`     7  calculadora-aumento-altura-adolescente-prediccion  — solo dentro del hub
+- `MODULO`     6  calculadora-adolescente-estatura-final-prediccion-edad-huesos  — solo dentro del hub
+- `MODULO`     2  calculadora-mochila-escolar-peso-maximo-edad-espalda  — solo dentro del hub
+
+## [TRABAJO] ¿Cuánto me queda en mano del sueldo bruto?
+`sueldo-bruto-neto` · 7 calcs (6 con URL) · 1 borradas · 971 ses/90d
+
+- `PAGINA`   436  calculadora-sueldo-bruto-desde-neto
+- `PAGINA`   317  sueldo-en-mano-argentina
+- `PAGINA`   108  calculadora-sueldo-neto-chile-2026
+- `PAGINA`    60  simulador-recibo-de-sueldo-argentina
+- `PAGINA`    28  calculadora-sueldo-neto-mexico-isr-imss
+- `PAGINA`    10  calculadora-isr-mensual-mexico-2026
+- `MODULO`     9  calculadora-sueldo-neto-autonomo-monotributista  — solo dentro del hub
+- `BORRAR`     3  calculadora-sueldo-neto-colombia-2026  — duplicado de calculadora-sueldo-neto-chile-2026
+
+## [AUTO] ¿Cuánta nafta y peaje gasto en este viaje?
+`viaje-auto` · 8 calcs (5 con URL) · 0 borradas · 914 ses/90d
+
+- `PAGINA`   580  calculadora-combustible-viaje-auto
+- `PAGINA`   213  calculadora-costo-peaje-ruta
+- `PAGINA`    60  calculadora-litros-nafta-viaje-ruta-argentina
+- `PAGINA`    29  calculadora-autovia-peajes-argentina-ruta-2-ruta-3
+- `PAGINA`    24  calculadora-costo-viaje-combustible-kilometros
+- `MODULO`     4  calculadora-peaje-autopista-baires-la-plata-costo  — solo dentro del hub
+- `MODULO`     2  calculadora-nafta-mensual-commute  — solo dentro del hub
+- `MODULO`     2  calculadora-velocidad-promedio-trayecto-ciudad  — solo dentro del hub
+
+## [FAMILIA] ¿De cuántas semanas estoy?
+`semanas-embarazo` · 10 calcs (4 con URL) · 0 borradas · 774 ses/90d
+
+- `PAGINA`   435  calculadora-embarazo
+- `PAGINA`   191  calculadora-semanas-embarazo
+- `PAGINA`    69  calculadora-semanas-gestacion-ecografia
+- `PAGINA`    43  calculadora-percentil-ecografia
+- `MODULO`     9  calculadora-embarazo-gemelar  — solo dentro del hub
+- `MODULO`     9  calculadora-semanas-meses-trimestres-embarazo  — solo dentro del hub
+- `MODULO`     6  calculadora-tamano-bebe-semana  — solo dentro del hub
+- `MODULO`     4  calculadora-calendario-ecografias-embarazo-semanas  — solo dentro del hub
+- `MODULO`     4  calculadora-semanas-gestacion-hoy-bebe-trimestre  — solo dentro del hub
+- `MODULO`     4  calculadora-trimestre-embarazo  — solo dentro del hub
+
+## [TRABAJO] ¿Cuántos días de vacaciones me corresponden?
+`vacaciones` · 9 calcs (6 con URL) · 1 borradas · 720 ses/90d
+
+- `PAGINA`   378  calculadora-dias-vacaciones-ley
+- `PAGINA`   238  calculadora-vacaciones-argentina
+- `PAGINA`    38  calculadora-licencia-maternidad-paternidad
+- `PAGINA`    25  calculadora-licencia-maternidad-anses-90-dias-extension
+- `PAGINA`    19  calculadora-maternidad-licencia-sueldo-anses-duracion
+- `PAGINA`    14  calculadora-licencia-fallecimiento-familiar-duelo-dias-lct
+- `MODULO`     5  calculadora-licencia-examen-estudiante-trabajador-art-149-lct  — solo dentro del hub
+- `MODULO`     2  calculadora-horas-trabajadas-semanal  — solo dentro del hub
+- `MODULO`     1  calculadora-dias-vacaciones-me-alcanza  — solo dentro del hub
+- `BORRAR`     0  calculadora-puente-optimo-vacaciones-2026  — 0 sesiones/90d
+
+## [VIAJES] ¿Cuántas millas necesito para este destino?
+`millas-aerolinea` · 5 calcs (4 con URL) · 0 borradas · 697 ses/90d
+
+- `PAGINA`   452  calculadora-millas-avianca-lifemiles
+- `PAGINA`   212  calculadora-millas-latam-destino
+- `PAGINA`    16  calculadora-millas-american-aa-destino
+- `PAGINA`    14  calculadora-millas-united-mileageplus
+- `MODULO`     3  calculadora-millas-delta-skymiles  — solo dentro del hub
+
+## [MATE] ¿Cómo calculo un porcentaje?
+`porcentaje` · 5 calcs (4 con URL) · 1 borradas · 673 ses/90d
+
+- `PAGINA`   589  calculadora-porcentajes
+- `PAGINA`    32  calculadora-porcentaje-aumento-disminucion
+- `PAGINA`    30  calculadora-porcentaje-de-numero-calculadora
+- `PAGINA`    13  calculadora-descuento-precio-final
+- `MODULO`     9  calculadora-conversion-porcentaje-fraccion-decimal  — solo dentro del hub
+- `BORRAR`     0  porcentaje-inverso-de-que-numero  — 0 sesiones/90d
+
+## [MATE] Convertir metros, pies y pulgadas
+`convertir-longitud` · 15 calcs (8 con URL) · 1 borradas · 656 ses/90d
+
+- `PAGINA`   404  calculadora-conversor-metros-lineales-a-metros-cuadrados
+- `PAGINA`    66  calculadora-conversor-milimetros-a-pulgadas
+- `PAGINA`    64  conversor-pulgadas-a-centimetros
+- `PAGINA`    26  calculadora-conversion-quintal-tonelada-kg-agro
+- `PAGINA`    21  calculadora-conversion-millas-kilometros-nudos-velocidad
+- `PAGINA`    19  calculadora-conversion-milla-kilometro-ida-vuelta
+- `PAGINA`    19  conversor-metros-cuadrados-hectareas-acres
+- `PAGINA`    11  calculadora-conversion-metro-pie-feet-exacto
+- `MODULO`     9  calculadora-conversor-brazas-a-metros  — solo dentro del hub
+- `MODULO`     8  calculadora-conversor-pies-a-metros  — solo dentro del hub
+- `MODULO`     2  calculadora-conversor-acres-a-hectareas  — solo dentro del hub
+- `MODULO`     2  calculadora-conversor-pulgadas-cuadradas-a-centimetros-cuadrados  — solo dentro del hub
+- `MODULO`     2  calculadora-conversor-varas-a-metros  — solo dentro del hub
+- `MODULO`     1  calculadora-conversion-pulgada-centimetro-screen  — solo dentro del hub
+- `BORRAR`     1  calculadora-conversor-hectareas-a-metros-cuadrados  — duplicado de conversor-metros-cuadrados-hectareas-acres
+- `MODULO`     1  calculadora-conversor-pies-a-pulgadas  — solo dentro del hub
+
+## [VIVIENDA] ¿Cuánto sale escriturar una propiedad?
+`gastos-escritura` · 13 calcs (10 con URL) · 0 borradas · 648 ses/90d
+
+- `PAGINA`   307  calculadora-gastos-escritura-compra-inmueble
+- `PAGINA`   103  calculadora-impuesto-sellos-inmueble-contrato
+- `PAGINA`    87  calculadora-gastos-escritura-compraventa
+- `PAGINA`    28  calculadora-plusvalia-inmueble-pba-venta-impuesto-2026
+- `PAGINA`    27  calculadora-sellos-compra-inmueble-caba-pba
+- `PAGINA`    20  calculadora-arba-sellos-inmobiliarios-pba-compraventa
+- `PAGINA`    17  calculadora-honorarios-escribano-caba-compraventa
+- `PAGINA`    14  calculadora-comision-inmobiliaria-venta-inmueble-4-porciento
+- `PAGINA`    13  calculadora-costo-total-comprar-propiedad-gastos
+- `PAGINA`    13  calculadora-impuesto-transferencia-itu-iti-inmueble
+- `MODULO`     8  calculadora-costo-escritura-inmueble-porcentaje-valor  — solo dentro del hub
+- `MODULO`     7  calculadora-gastos-escriturar-vivienda-primera-casa  — solo dentro del hub
+- `MODULO`     4  calculadora-estampillado-sellado-inmueble-pba-caba-2026  — solo dentro del hub
+
+## [OBRA] ¿Cuánto sale construir una casa?
+`costo-construir` · 7 calcs (3 con URL) · 0 borradas · 642 ses/90d
+
+- `PAGINA`   598  calculadora-costo-m2-construccion-argentina
+- `PAGINA`    21  calculadora-costo-medianera-muro-lindero
+- `PAGINA`    11  calculadora-volumen-excavacion-m3-tierra
+- `MODULO`     4  calculadora-m2-casa-planos-total-construido  — solo dentro del hub
+- `MODULO`     4  calculadora-materiales-construccion  — solo dentro del hub
+- `MODULO`     3  calculadora-metros-cuadrados-terreno-irregular-poligono  — solo dentro del hub
+- `MODULO`     1  calculadora-fideicomiso-construccion-aporte-cuotas  — solo dentro del hub
+
+## [ESTUDIO] ¿Cuántas palabras tiene mi trabajo?
+`escribir` · 9 calcs (6 con URL) · 0 borradas · 633 ses/90d
+
+- `PAGINA`   382  calculadora-contador-de-palabras-y-caracteres
+- `PAGINA`   102  calculadora-palabras-paginas-conversor
+- `PAGINA`    89  calculadora-formula-citacion-apa
+- `PAGINA`    18  calculadora-citas-bibliograficas-formato-apa
+- `PAGINA`    17  calculadora-palabras-por-pagina-trabajo
+- `PAGINA`    17  calculadora-tecla-por-minuto-typing-test
+- `MODULO`     4  calculadora-typing-speed  — solo dentro del hub
+- `MODULO`     3  calculadora-tesis-palabras-tiempo-necesario-elaboracion  — solo dentro del hub
+- `MODULO`     1  calculadora-legibilidad-texto-flesch  — solo dentro del hub
+
+## [AUTO] Transferencia, licencia y multas
+`tramites-auto` · 7 calcs (5 con URL) · 0 borradas · 617 ses/90d
+
+- `PAGINA`   471  calculadora-transfer-auto-costo-registro
+- `PAGINA`    57  calculadora-registro-dnrpa-auto-0km-arancel
+- `PAGINA`    41  calculadora-licencia-conducir-costo-categoria-b1-a
+- `PAGINA`    28  calculadora-multa-transito-valor
+- `PAGINA`    14  calculadora-multa-transito-puntos-licencia
+- `MODULO`     3  calculadora-certificado-libre-deuda-auto-costo  — solo dentro del hub
+- `MODULO`     3  calculadora-titularidad-caratular-auto-trasladar-provincia  — solo dentro del hub
+
+## [IMPUESTOS] ¿Qué categoría de monotributo me toca?
+`monotributo-categoria` · 14 calcs (8 con URL) · 0 borradas · 604 ses/90d
+
+- `PAGINA`   276  calculadora-monotributo-2026
+- `PAGINA`   139  calculadora-monotributo-categoria-2026-recategorizacion-julio
+- `PAGINA`    45  calculadora-monotributo-vs-responsable-inscripto
+- `PAGINA`    28  calculadora-monotributo-cuota-2026-todas-categorias
+- `PAGINA`    26  calculadora-autonomos-categoria-monto-2026
+- `PAGINA`    26  calculadora-monotributo-categoria-ingresos-tope
+- `PAGINA`    22  simulador-monotributo-neto
+- `PAGINA`    11  calculadora-monotributo-mejor-categoria-2026
+- `MODULO`     8  calculadora-facturacion-maxima-monotributo-vs-ri  — solo dentro del hub
+- `MODULO`     7  calculadora-monotributo-social-beneficio-exencion  — solo dentro del hub
+- `MODULO`     5  calculadora-monotributo-vs-autonomo-vs-empleado-mismo-ingreso  — solo dentro del hub
+- `MODULO`     4  calculadora-impuestos-monotributo-freelance  — solo dentro del hub
+- `MODULO`     4  calculadora-retencion-rg2616-proveedor-monotributo  — solo dentro del hub
+- `MODULO`     3  calculadora-obra-social-monotributo-2026  — solo dentro del hub
+
+## [TRABAJO] ¿Cuánto me tienen que pagar las horas extra?
+`horas-extra` · 8 calcs (8 con URL) · 2 borradas · 598 ses/90d
+
+- `PAGINA`   181  calculadora-sueldo-por-hora
+- `PAGINA`   123  calculadora-horas-extra
+- `PAGINA`   103  calculadora-presentismo-puntualidad
+- `PAGINA`    87  calculadora-horas-extras-50-100
+- `PAGINA`    44  calculadora-sueldo-hora-extra-nocturna-feriado
+- `PAGINA`    21  calculadora-plus-antiguedad
+- `PAGINA`    16  calculadora-cuota-sindical-descuento-sueldo
+- `PAGINA`    14  calculadora-valor-hora-trabajo
+- `BORRAR`     9  calculadora-valor-hora-trabajo-mensual  — duplicado de calculadora-valor-hora-trabajo
+- `BORRAR`     0  calculadora-horas-nocturnas-argentina  — 0 sesiones/90d
+
+## [CUERPO] ¿Cuántas calorías necesito por día?
+`calorias-necesito` · 5 calcs (4 con URL) · 0 borradas · 557 ses/90d
+
+- `PAGINA`   292  calculadora-calorias-diarias-tdee
+- `PAGINA`   136  calculadora-agua-diaria-necesaria
+- `PAGINA`    71  calculadora-deficit-calorico-perder-peso
+- `PAGINA`    52  calculadora-peso-objetivo-competicion
+- `MODULO`     6  calculadora-superavit-calorico-masa-muscular  — solo dentro del hub
+
+## [TECH] Impresión 3D: ¿cuánto sale la pieza?
+`impresion3d` · 9 calcs (2 con URL) · 0 borradas · 557 ses/90d
+
+- `PAGINA`   484  calculadora-costo-impresion-3d-pieza
+- `PAGINA`    43  calculadora-filamento-3d-necesario-modelo
+- `MODULO`     9  calculadora-resin-3d-mililitros-pieza  — solo dentro del hub
+- `MODULO`     5  calculadora-precio-hora-servicio-3d  — solo dentro del hub
+- `MODULO`     4  calculadora-energia-electrica-impresion-3d  — solo dentro del hub
+- `MODULO`     4  calculadora-tiempo-impresion-3d-layer  — solo dentro del hub
+- `MODULO`     3  calculadora-cooling-fan-3d-material  — solo dentro del hub
+- `MODULO`     3  calculadora-peso-pla-abs-petg-volumen  — solo dentro del hub
+- `MODULO`     2  calculadora-filamento-soldador-mm2  — solo dentro del hub
+
+## [PLATA] ¿Cuánto crece mi plata con interés compuesto?
+`interes-compuesto` · 11 calcs (7 con URL) · 2 borradas · 539 ses/90d
+
+- `PAGINA`   337  calculadora-interes-compuesto
+- `PAGINA`   100  calculadora-conversion-tna-tem-tea
+- `PAGINA`    30  calculadora-tasa-anual-equivalente-tea
+- `PAGINA`    22  calculadora-interes-simple
+- `PAGINA`    16  calculadora-interes-simple-capital-tiempo-tasa
+- `PAGINA`    15  calculadora-tir-van-inversion
+- `PAGINA`    10  calculadora-ahorro-compuesto-tiempo-duplicar-regla-72
+- `MODULO`     3  calculadora-comparar-dos-inversiones-rendimiento  — solo dentro del hub
+- `MODULO`     2  calculadora-cagr-rendimiento-anualizado-compuesto  — solo dentro del hub
+- `MODULO`     2  calculadora-primer-millon-ahorro-interes  — solo dentro del hub
+- `MODULO`     2  calculadora-roi-inversion  — solo dentro del hub
+- `BORRAR`     0  calculadora-interes-compuesto-diario  — duplicado de calculadora-interes-compuesto
+- `BORRAR`     0  calculadora-regla-72-duplicar-dinero  — 0 sesiones/90d
+
+## [DEPORTE] Mundial 2026: grupos, cupos y predicciones
+`mundial` · 13 calcs (9 con URL) · 1 borradas · 521 ses/90d
+
+- `PAGINA`   253  calculadora-mundial-2026-bonus-jugador-fase
+- `PAGINA`    87  calculadora-mundial-2026-predictor-campeon-ranking
+- `PAGINA`    40  calculadora-mundial-2026-estadios-comparador
+- `PAGINA`    26  calculadora-cupos-copa-libertadores-pais-conmebol
+- `PAGINA`    25  calculadora-mundial-2026-en-que-canal-pasan-el-partido-por-pais
+- `PAGINA`    24  calculadora-mundial-2026-partidos-faltantes-seleccion
+- `PAGINA`    13  calculadora-mundial-2026-cupos-confederacion
+- `PAGINA`    13  calculadora-mundial-2026-record-messi-goles-minutos
+- `PAGINA`    12  calculadora-mundial-2026-botin-oro-goleador-estimador
+- `MODULO`     9  calculadora-mundial-2026-puntos-clasificar-octavos  — solo dentro del hub
+- `MODULO`     8  calculadora-cupos-champions-league-coeficiente-uefa  — solo dentro del hub
+- `BORRAR`     8  calculadora-cupos-copa-sudamericana-pais-conmebol  — duplicado de calculadora-cupos-copa-libertadores-pais-conmebol
+- `MODULO`     2  calculadora-mundial-2026-grupo-muerte-detector  — solo dentro del hub
+- `MODULO`     1  calculadora-cupos-europa-league-tercer-lugar-liga  — solo dentro del hub
+
+## [FAMILIA] ¿Cuánto es la cuota alimentaria?
+`cuota-alimentaria` · 4 calcs (3 con URL) · 0 borradas · 514 ses/90d
+
+- `PAGINA`   193  calculadora-cuota-alimentaria-estimacion
+- `PAGINA`   172  calculadora-cuota-alimentaria-hijos
+- `PAGINA`   142  calculadora-cuota-alimentos-porcentaje-sueldo-hijo
+- `MODULO`     7  calculadora-pension-alimentaria-hijo-porcentaje-sueldo-detallada  — solo dentro del hub
+
+## [PLATA] ¿Cómo salgo de las deudas?
+`salir-deudas` · 6 calcs (3 con URL) · 0 borradas · 493 ses/90d
+
+- `PAGINA`   433  calculadora-interes-judicial-tasa
+- `PAGINA`    39  calculadora-deuda-tarjeta-pago-minimo-meses
+- `PAGINA`    16  calculadora-plazo-prescripcion-deuda
+- `MODULO`     3  calculadora-deuda-avalancha-vs-bola-nieve-comparar  — solo dentro del hub
+- `MODULO`     1  calculadora-cancelacion-anticipada-prestamo  — solo dentro del hub
+- `MODULO`     1  calculadora-refinanciacion-prestamo  — solo dentro del hub
+
+## [FECHAS] ¿De qué generación soy?
+`generacion` · 16 calcs (7 con URL) · 1 borradas · 487 ses/90d
+
+- `PAGINA`   269  calculadora-generacion-perteneces
+- `PAGINA`    70  calculadora-love-calculator
+- `PAGINA`    39  calculadora-compatibilidad-nombres
+- `PAGINA`    24  calculadora-biorhythm
+- `PAGINA`    20  calculadora-expectativa-vida
+- `PAGINA`    19  calculadora-angel-guardian-fecha
+- `PAGINA`    11  calculadora-edad-planeta
+- `MODULO`     9  calculadora-piedra-nacimiento  — solo dentro del hub
+- `MODULO`     7  calculadora-nombre-rapper  — solo dentro del hub
+- `MODULO`     6  calculadora-horas-vida-restantes  — solo dentro del hub
+- `MODULO`     5  calculadora-nombre-estrella-wars  — solo dentro del hub
+- `MODULO`     2  calculadora-nombre-elfo  — solo dentro del hub
+- `MODULO`     2  calculadora-que-generacion-sos  — solo dentro del hub
+- `MODULO`     2  calculadora-test-lenguaje-amor  — solo dentro del hub
+- `MODULO`     1  calculadora-planeta-regente  — solo dentro del hub
+- `MODULO`     1  calculadora-vida-utilizada-porcentaje  — solo dentro del hub
+- `BORRAR`     0  calculadora-numero-camino-vida  — 0 sesiones/90d
+
+## [COCINA] ¿A qué temperatura pongo el horno?
+`horno` · 2 calcs (1 con URL) · 1 borradas · 484 ses/90d
+
+- `PAGINA`   478  calculadora-conversor-fahrenheit-a-celsius-horno
+- `BORRAR`     5  calculadora-temperatura-horno-celsius-fahrenheit-gas  — duplicado de calculadora-conversor-fahrenheit-a-celsius-horno
+- `MODULO`     1  calculadora-conversion-temperaturas-horno-gas-electrico  — solo dentro del hub
+
+## [TRABAJO] Me quedé sin trabajo: ¿qué me paga ANSES?
+`desempleo` · 3 calcs (3 con URL) · 0 borradas · 483 ses/90d
+
+- `PAGINA`   350  calculadora-fondo-desempleo-anses-monto-tiempo
+- `PAGINA`    85  calculadora-asignacion-desempleo-seguro-prestacion-anses
+- `PAGINA`    48  calculadora-embargo-sueldo-porcentaje-maximo
+
+## [ANSES] ¿Cuánto voy a cobrar de jubilación?
+`cuanto-jubilacion` · 16 calcs (7 con URL) · 0 borradas · 482 ses/90d
+
+- `PAGINA`   178  calculadora-jubilacion-anses-monto-minimo-maxima-2026
+- `PAGINA`    72  calculadora-jubilacion-minima-anses
+- `PAGINA`    64  calculadora-jubilacion-docente-ips-buenos-aires
+- `PAGINA`    58  calculadora-jubilacion-docente-caba
+- `PAGINA`    45  calculadora-ripte-actualizacion-jubilatoria-sueldo
+- `PAGINA`    23  calculadora-jubilacion-cuanto-necesito
+- `PAGINA`    14  calculadora-quita-jubilatoria-bono-refuerzo-anses-2026
+- `MODULO`     7  calculadora-bono-anses-jubilados-junio-2026-aumento-mensual  — solo dentro del hub
+- `MODULO`     6  calculadora-jubilacion-haber-movilidad-trimestral  — solo dentro del hub
+- `MODULO`     4  calculadora-prestamo-anses-jubilados-monto-cuota-2026  — solo dentro del hub
+- `MODULO`     3  calculadora-haber-minimo-jubilatorio-2026-bono-total  — solo dentro del hub
+- `MODULO`     3  calculadora-prestamo-anses-jubilado-argenta-monto  — solo dentro del hub
+- `MODULO`     2  calculadora-cuanto-voy-a-cobrar-jubilacion-haber-estimado  — solo dentro del hub
+- `MODULO`     1  calculadora-credito-anses-pre-aprobado-jubilado-cuota  — solo dentro del hub
+- `MODULO`     1  calculadora-fecha-cobro-anses-cronograma-dni  — solo dentro del hub
+- `MODULO`     1  calculadora-proyeccion-ahorro-jubilacion  — solo dentro del hub
+
+## [OBRA] ¿Cuántos ladrillos necesito?
+`ladrillos` · 7 calcs (5 con URL) · 0 borradas · 469 ses/90d
+
+- `PAGINA`   254  calculadora-ladrillos-por-m2-construccion
+- `PAGINA`   125  calculadora-cantidad-ladrillos-metro-cuadrado-pared
+- `PAGINA`    31  calculadora-mortero-juntas-ladrillos-m2-pared
+- `PAGINA`    26  calculadora-bloques-hormigon-por-m2-pared
+- `PAGINA`    18  calculadora-alambre-cerco-perimetral-metros
+- `MODULO`     9  calculadora-adoquines-m2  — solo dentro del hub
+- `MODULO`     6  calculadora-cerramiento-perimetro-casa-ladrillos-costo  — solo dentro del hub
+
+## [VIVIENDA] ¿Por qué me vino tan cara la luz?
+`factura-luz` · 19 calcs (9 con URL) · 0 borradas · 462 ses/90d
+
+- `PAGINA`   164  calculadora-consumo-electrico-kwh-factura-luz
+- `PAGINA`    66  calculadora-potencia-electrica-watts
+- `PAGINA`    53  calculadora-watts-consumo-electrico-aparato-hora
+- `PAGINA`    33  calculadora-consumo-electricidad-electrodomestico
+- `PAGINA`    28  calculadora-foco-led-equivalencia-watts-lumens
+- `PAGINA`    26  calculadora-factura-luz-estimada
+- `PAGINA`    24  calculadora-consumo-electrico-aparato-kwh-mes
+- `PAGINA`    20  calculadora-heladera-clase-a-consumo-anual-kwh
+- `PAGINA`    13  calculadora-panel-solar-kwh-dimensionar
+- `MODULO`     6  calculadora-tarifa-electrica-edenor-edesur-segmentacion-n1-n2-n3  — solo dentro del hub
+- `MODULO`     5  calculadora-captacion-agua-lluvia-m2-techo-litros  — solo dentro del hub
+- `MODULO`     5  calculadora-consumo-electronica-hogar-watts-mensual  — solo dentro del hub
+- `MODULO`     5  calculadora-recoleccion-agua-lluvia-techo  — solo dentro del hub
+- `MODULO`     4  calculadora-panel-solar-kw-consumo-hogar-autoconsumo  — solo dentro del hub
+- `MODULO`     3  calculadora-ahorro-energia-solar-paneles  — solo dentro del hub
+- `MODULO`     3  calculadora-banco-baterias-solar-dias-autonomia  — solo dentro del hub
+- `MODULO`     2  calculadora-paneles-solares-amortizacion-anos-argentina  — solo dentro del hub
+- `MODULO`     1  calculadora-consumo-standby-aparatos  — solo dentro del hub
+- `MODULO`     1  calculadora-lluvia-captacion-techo-m3-anual  — solo dentro del hub
+
+## [MASCOTAS] ¿Cuántos años humanos tiene mi perro?
+`edad-perro` · 6 calcs (5 con URL) · 1 borradas · 402 ses/90d
+
+- `PAGINA`   243  calculadora-edad-perro-anos-humanos
+- `PAGINA`    64  calculadora-edad-humana-por-raza-perro
+- `PAGINA`    40  calculadora-envejecer-mascota-humano-tabla-raza-tamano
+- `PAGINA`    38  calculadora-edad-perro-humano
+- `PAGINA`    12  calculadora-edad-cachorro-humano
+- `MODULO`     5  calculadora-expectativa-vida-raza-perro  — solo dentro del hub
+- `BORRAR`     0  calculadora-edad-perro-humano-raza-tamano  — duplicado de calculadora-edad-perro-humano
+
+## [JARDIN] Huerta: qué siembro, cuánto riego y cuántas plantas entran
+`cuando-sembrar` · 26 calcs (5 con URL) · 2 borradas · 399 ses/90d
+
+- `PAGINA`   260  calculadora-siembra-calendario-argentina-zona
+- `PAGINA`    22  calculadora-riego-goteo-litros-hora-planta
+- `PAGINA`    13  calculadora-podar-rosal-cuando-fecha
+- `PAGINA`    11  calculadora-sustrato-mezcla-proporciones
+- `PAGINA`    10  calculadora-heladas-fecha-primera-ultima-zona
+- `MODULO`     7  calculadora-cesped-semillas-kg-m2  — solo dentro del hub
+- `MODULO`     7  calculadora-profundidad-siembra-semilla  — solo dentro del hub
+- `MODULO`     6  calculadora-agua-riego-plantas-dia  — solo dentro del hub
+- `MODULO`     6  calculadora-calendario-siembra-hemisferio-sur  — solo dentro del hub
+- `MODULO`     6  calculadora-germinacion-tiempo-temperatura  — solo dentro del hub
+- `MODULO`     6  calculadora-mulching-espesor-cantidad  — solo dentro del hub
+- `MODULO`     5  calculadora-macetas-tamano-planta  — solo dentro del hub
+- `MODULO`     5  calculadora-poda-frecuencia-arbol-especie  — solo dentro del hub
+- `MODULO`     4  calculadora-agua-jardin-consumo-mensual-m2  — solo dentro del hub
+- `BORRAR`     4  calculadora-calendario-siembra-hemisferio-norte  — duplicado de calculadora-calendario-siembra-hemisferio-sur
+- `MODULO`     4  calculadora-semillas-por-m2-huerta  — solo dentro del hub
+- `MODULO`     3  calculadora-cosecha-esperada-huerta-kg  — solo dentro del hub
+- `MODULO`     3  calculadora-luz-solar-horas-planta  — solo dentro del hub
+- `MODULO`     3  calculadora-pasto-semilla-kg-m2-cesped-sembrar  — solo dentro del hub
+- `MODULO`     3  calculadora-riego-automatico-programacion-minutos  — solo dentro del hub
+- `MODULO`     3  calculadora-tierra-maceta-litros-volumen  — solo dentro del hub
+- `MODULO`     2  calculadora-costo-cesped-sintetico-m2  — solo dentro del hub
+- `MODULO`     2  calculadora-hidroponia-nutrientes-ec-ppm  — solo dentro del hub
+- `MODULO`     1  calculadora-cantidad-plantas-seto-metros  — solo dentro del hub
+- `MODULO`     1  calculadora-jardin-vertical-plantas-m2  — solo dentro del hub
+- `MODULO`     1  calculadora-lombriz-compostera-cantidad-necesaria  — solo dentro del hub
+- `MODULO`     1  calculadora-tierra-jardin-cantero-m3  — solo dentro del hub
+- `BORRAR`     0  calculadora-arbol-frutal-produccion-kg-anual  — 0 sesiones/90d
+
+## [MATE] Pasar números a letras y romanos
+`numeros-letras` · 3 calcs (3 con URL) · 1 borradas · 395 ses/90d
+
+- `PAGINA`   314  conversor-numero-a-letras-cantidad
+- `PAGINA`    60  conversor-numeros-romanos-arabigos
+- `PAGINA`    19  conversor-decimal-binario-hexadecimal
+- `BORRAR`     2  conversor-letras-a-numero  — duplicado de conversor-numero-a-letras-cantidad
+
+## [IMPUESTOS] ¿Cómo discrimino el IVA?
+`iva` · 9 calcs (4 con URL) · 0 borradas · 390 ses/90d
+
+- `PAGINA`   285  calculadora-iva-incluido-neto-discriminar
+- `PAGINA`    59  calculadora-iva-agregar-discriminar
+- `PAGINA`    14  calculadora-costo-envio-compra-exterior
+- `PAGINA`    11  calculadora-iva-paises-latinoamerica
+- `MODULO`     7  calculadora-iva-saldo-favor-contra-ri  — solo dentro del hub
+- `MODULO`     6  calculadora-impuesto-pais-pasaje-avion-internacional  — solo dentro del hub
+- `MODULO`     4  calculadora-impuestos-courier-temu-shein-argentina  — solo dentro del hub
+- `MODULO`     3  calculadora-iva-mexico-frontera-norte-sur-8-vs-16-comparador  — solo dentro del hub
+- `MODULO`     1  calculadora-franquicia-aduana-viajero-argentina-equipaje  — solo dentro del hub
+
+## [FAMILIA] ¿Cuáles son mis días fértiles?
+`cuando-quedo-embarazada` · 12 calcs (5 con URL) · 0 borradas · 374 ses/90d
+
+- `PAGINA`   233  calculadora-ovulacion-dias-fertiles
+- `PAGINA`    60  calculadora-ciclo-menstrual
+- `PAGINA`    18  calculadora-costo-fiv-argentina
+- `PAGINA`    15  calculadora-test-embarazo-cuando
+- `PAGINA`    14  calculadora-fertilidad-masculina-edad
+- `MODULO`     9  calculadora-riesgo-embarazo-edad  — solo dentro del hub
+- `MODULO`     6  calculadora-test-prenatal-no-invasivo-nipt-precio-arg  — solo dentro del hub
+- `MODULO`     5  calculadora-ovulos-congelados-vitrificacion-precio-clinica  — solo dentro del hub
+- `MODULO`     4  calculadora-fecha-concepcion-desde-fpp  — solo dentro del hub
+- `MODULO`     4  calculadora-fecha-probable-concepcion  — solo dentro del hub
+- `MODULO`     3  calculadora-dias-minimos-test-embarazo-positivo  — solo dentro del hub
+- `MODULO`     3  calculadora-implantacion-embrion  — solo dentro del hub
+
+## [DEPORTE] Fútbol: récords, estadísticas y tablas
+`estadisticas-futbol` · 24 calcs (8 con URL) · 1 borradas · 374 ses/90d
+
+- `PAGINA`   159  calculadora-top-10-goleadores-historico-mundial-fifa
+- `PAGINA`    73  calculadora-comparador-messi-vs-cristiano-goles-asistencias-titulos
+- `PAGINA`    22  calculadora-record-messi-goles-competencia-club-seleccion
+- `PAGINA`    15  calculadora-puntos-ranking-ajedrez-elo
+- `PAGINA`    14  calculadora-handicap-golf-estimado
+- `PAGINA`    13  calculadora-distancia-recorrida-futbol-jugador
+- `PAGINA`    13  calculadora-tarjetas-amarillas-acumuladas-suspension
+- `PAGINA`    11  calculadora-descenso-futbol-argentino-promedios
+- `MODULO`     9  calculadora-descenso-laliga-santander-puntos-necesarios  — solo dentro del hub
+- `MODULO`     8  calculadora-handicap-golf-diferencial  — solo dentro del hub
+- `MODULO`     7  calculadora-motogp-puntos-campeonato-restantes  — solo dentro del hub
+- `MODULO`     6  calculadora-velocidad-sprint-30m-futbol-por-posicion  — solo dentro del hub
+- `MODULO`     4  calculadora-velocidad-pelota-futbol-tiro  — solo dentro del hub
+- `MODULO`     3  calculadora-peso-guantes-boxeo-kg-oz  — solo dentro del hub
+- `MODULO`     3  calculadora-poisson-goles-esperados-partido  — solo dentro del hub
+- `MODULO`     3  calculadora-puntos-necesarios-clasificar-futbol  — solo dentro del hub
+- `MODULO`     2  calculadora-distancia-barrera-tiro-libre-9-15m  — solo dentro del hub
+- `MODULO`     2  calculadora-fuera-de-juego-offside-distancia-camara-var  — solo dentro del hub
+- `MODULO`     2  calculadora-porcentaje-pases-completados-top-5-ligas  — solo dentro del hub
+- `MODULO`     1  calculadora-ciclismo-power-w-kg-categoria-ftp  — solo dentro del hub
+- `MODULO`     1  calculadora-distancia-recorrida-futbolista-por-posicion  — solo dentro del hub
+- `MODULO`     1  calculadora-f1-puntos-campeonato-mundial-quedan  — solo dentro del hub
+- `MODULO`     1  calculadora-peso-ideal-futbolista-altura-posicion  — solo dentro del hub
+- `MODULO`     1  calculadora-porcentaje-conversion-tiros-al-arco-futbolista  — solo dentro del hub
+- `BORRAR`     0  calculadora-mls-playoffs-east-west-conference  — 0 sesiones/90d
+
+## [TRABAJO] Empleada doméstica: ¿cuánto le pago?
+`casas-particulares` · 4 calcs (4 con URL) · 1 borradas · 341 ses/90d
+
+- `PAGINA`   136  calculadora-sueldo-empleada-domestica-horas-retiro
+- `PAGINA`    96  calculadora-vacaciones-empleada-casa-particular-antiguedad-dias
+- `PAGINA`    83  calculadora-ninera-hora-noche-fin-de-semana-tarifa
+- `PAGINA`    26  calculadora-indemnizacion-empleada-casa-particular-ley-26844-despido
+- `BORRAR`     0  calculadora-aportes-empleada-domestica-casas-particulares-empleador  — 0 sesiones/90d
+
+## [TRABAJO] ¿Cuánto me cuesta un empleado?
+`costo-empleado` · 7 calcs (4 con URL) · 1 borradas · 339 ses/90d
+
+- `PAGINA`   249  calculadora-aportes-patronales-empleado-registrado-cargas-sociales-2026
+- `PAGINA`    39  calculadora-costo-laboral-total-empleador-cargas
+- `PAGINA`    27  calculadora-costo-laboral-empleado
+- `PAGINA`    14  calculadora-costo-hora-empleado-real
+- `MODULO`     6  calculadora-costo-total-empleado-empresa-argentina  — solo dentro del hub
+- `MODULO`     3  calculadora-roi-capacitacion-empleados  — solo dentro del hub
+- `MODULO`     1  calculadora-productividad-ingreso-por-hora  — solo dentro del hub
+- `BORRAR`     0  calculadora-productividad-empleados-output-hora  — 0 sesiones/90d
+
+## [FAMILIA] ¿Mi bebé crece bien?
+`crecimiento-bebe` · 16 calcs (7 con URL) · 2 borradas · 334 ses/90d
+
+- `PAGINA`   119  calculadora-percentil-bebe-oms
+- `PAGINA`    83  calculadora-edad-corregida-prematuro
+- `PAGINA`    28  calculadora-peso-ideal-bebe-mes-percentil
+- `PAGINA`    26  calculadora-sueno-bebe-horas
+- `PAGINA`    19  calculadora-hitos-desarrollo-bebe-edad-meses
+- `PAGINA`    12  calculadora-talla-zapato-bebe
+- `PAGINA`    11  calculadora-vacunas-bebe-calendario-2026-argentina-edad
+- `MODULO`     8  calculadora-desarrollo-motor-bebe  — solo dentro del hub
+- `MODULO`     6  calculadora-dientes-bebe-cronologia  — solo dentro del hub
+- `MODULO`     5  calculadora-sueno-bebe-horas-meses-tabla-padres  — solo dentro del hub
+- `MODULO`     4  calculadora-percentil-peso-bebe-oms-edad-meses  — solo dentro del hub
+- `MODULO`     4  calculadora-screen-time-pediatra-edad-hora-dia  — solo dentro del hub
+- `MODULO`     4  calculadora-tiempo-pantalla-ideal-edad  — solo dentro del hub
+- `MODULO`     2  calculadora-cuna-colecho-edad-transicion-cama  — solo dentro del hub
+- `MODULO`     2  calculadora-vacunas-faltantes-bebe-edad-meses  — solo dentro del hub
+- `MODULO`     1  calculadora-edad-quitar-panal-control-esfinteres  — solo dentro del hub
+- `BORRAR`     0  calculadora-edad-gestacional-corregida-prematuro  — duplicado de calculadora-edad-corregida-prematuro
+- `BORRAR`     0  calculadora-horas-sueno-hijo-edad-recomendadas  — 0 sesiones/90d
+
+## [AUTO] ¿Cuánto pago de patente?
+`patente` · 5 calcs (5 con URL) · 0 borradas · 332 ses/90d
+
+- `PAGINA`   209  calculadora-patente-auto-provincia
+- `PAGINA`    73  calculadora-patente-ciclomotor-moto-argentina-costo
+- `PAGINA`    28  calculadora-patente-auto-valor
+- `PAGINA`    12  calculadora-patente-auto-cordoba-2026-valuacion-fiscal-cuotas
+- `PAGINA`    10  calculadora-patente-moto-provincias-2026-alicuota
+
+## [PLATA] ¿Cuánto gano con un plazo fijo?
+`plazo-fijo` · 6 calcs (3 con URL) · 0 borradas · 328 ses/90d
+
+- `PAGINA`   282  calculadora-plazo-fijo
+- `PAGINA`    22  calculadora-plazo-fijo-uva-precancelable-rendimiento
+- `PAGINA`    16  calculadora-rendimiento-fci-money-market
+- `MODULO`     5  calculadora-rendimiento-mercado-pago-billetera-argentina  — solo dentro del hub
+- `MODULO`     2  calculadora-caja-seguridad-banco-comparativa-mensual  — solo dentro del hub
+- `MODULO`     1  calculadora-spread-tasas-arbitraje-bancos-plazo-fijo  — solo dentro del hub
+
+## [VIDA] ¿Qué talle soy?
+`talles` · 10 calcs (7 con URL) · 1 borradas · 319 ses/90d
+
+- `PAGINA`   169  calculadora-talla-sosten-corpino
+- `PAGINA`    57  calculadora-talla-anillo-dedo
+- `PAGINA`    19  calculadora-lana-tejer-prenda-agujas
+- `PAGINA`    17  calculadora-conversor-talles-calzado-us-ar-eu
+- `PAGINA`    16  calculadora-tallas-ropa-internacional
+- `PAGINA`    15  calculadora-talle-zapatilla-conversion
+- `PAGINA`    14  calculadora-tela-necesaria-prenda-vestido
+- `MODULO`     7  calculadora-talla-pantalon-jeans  — solo dentro del hub
+- `MODULO`     3  calculadora-conversor-talles-ropa-us-ar-eu  — solo dentro del hub
+- `MODULO`     2  calculadora-zapatilla-usa-a-europa  — solo dentro del hub
+- `BORRAR`     0  calculadora-color-cabello-tono-piel  — 0 sesiones/90d
+
+## [TECH] Resistencias, LED y código de colores
+`resistencias` · 12 calcs (3 con URL) · 2 borradas · 301 ses/90d
+
+- `PAGINA`   204  calculadora-resistencia-codigo-colores-4-5-bandas
+- `PAGINA`    40  calculadora-resistencia-paralelo-serie
+- `PAGINA`    10  calculadora-divisor-tension-resistivo
+- `MODULO`     9  calculadora-transformador-relacion-espiras  — solo dentro del hub
+- `MODULO`     8  calculadora-resistencia-led-voltaje-caida  — solo dentro del hub
+- `MODULO`     6  calculadora-ley-ohm-voltaje-resistencia  — solo dentro del hub
+- `MODULO`     5  calculadora-factor-potencia-corregir  — solo dentro del hub
+- `MODULO`     5  calculadora-impedancia-circuito-rlc  — solo dentro del hub
+- `BORRAR`     4  calculadora-resistencia-led-serie-paralelo  — duplicado de calculadora-resistencia-paralelo-serie
+- `MODULO`     3  calculadora-divisor-tension-formula  — solo dentro del hub
+- `MODULO`     3  calculadora-stepper-pasos-grado  — solo dentro del hub
+- `MODULO`     3  calculadora-tiempo-soldadura-tipo-estano  — solo dentro del hub
+- `MODULO`     1  calculadora-reactancia-inductiva-capacitiva  — solo dentro del hub
+- `BORRAR`     0  calculadora-amplificador-operacional-ganancia  — 0 sesiones/90d
+
+## [OBRA] ¿Cuántos litros de pintura necesito?
+`pintura` · 6 calcs (3 con URL) · 0 borradas · 298 ses/90d
+
+- `PAGINA`   157  calculadora-pintura-paredes-habitacion-litros
+- `PAGINA`   119  calculadora-pintura-por-m2-litros-latas
+- `PAGINA`    13  calculadora-conversor-litros-pintura-por-metro-cuadrado
+- `MODULO`     5  calculadora-barniz-aceite-m2-madera  — solo dentro del hub
+- `MODULO`     2  calculadora-m2-pared-descontando-aberturas-pintura  — solo dentro del hub
+- `MODULO`     2  calculadora-pintura-rejas-metal-litros  — solo dentro del hub
+
+## [EVENTO] ¿Cuánta bebida compro para la fiesta?
+`bebida-evento` · 11 calcs (2 con URL) · 0 borradas · 292 ses/90d
+
+- `PAGINA`   243  calculadora-bebidas-evento-litros-por-persona
+- `PAGINA`    12  calculadora-fernet-cola-proporciones
+- `MODULO`     7  calculadora-bebidas-evento-cerveza-vino-refresco-calculadora  — solo dentro del hub
+- `MODULO`     7  calculadora-fernet-cola-por-invitado-juntada  — solo dentro del hub
+- `MODULO`     5  calculadora-cerveza-invitado-evento  — solo dentro del hub
+- `MODULO`     5  calculadora-whisky-por-invitado-evento  — solo dentro del hub
+- `MODULO`     4  calculadora-vino-por-invitado-horas-evento  — solo dentro del hub
+- `MODULO`     3  calculadora-gaseosa-por-invitado-cumple-infantil  — solo dentro del hub
+- `MODULO`     3  calculadora-vino-por-invitado-cena  — solo dentro del hub
+- `MODULO`     2  calculadora-whisky-sour-proporciones  — solo dentro del hub
+- `MODULO`     1  calculadora-agua-por-invitado-fiesta  — solo dentro del hub
+
+## [CUERPO] Hábitos: sueño, alcohol y sol
+`habitos` · 20 calcs (8 con URL) · 4 borradas · 276 ses/90d
+
+- `PAGINA`    67  calculadora-indice-bienestar-who5
+- `PAGINA`    65  calculadora-alcohol-sangre-bac
+- `PAGINA`    34  calculadora-tiempo-digestion-alimentos-estomago
+- `PAGINA`    20  calculadora-nivel-estres-percibido
+- `PAGINA`    12  calculadora-ayuno-intermitente-16-8-ventana-horario
+- `PAGINA`    11  a-que-hora-acostarme
+- `PAGINA`    11  calculadora-horas-de-sueno-por-edad
+- `PAGINA`    11  calculadora-sueno-ideal-edad
+- `MODULO`     8  calculadora-nivel-introversion-extraversion  — solo dentro del hub
+- `MODULO`     8  calculadora-pasos-diarios-recomendados-caminar-salud  — solo dentro del hub
+- `MODULO`     5  calculadora-ciclo-sueno-rem-no-rem-90min  — solo dentro del hub
+- `MODULO`     5  calculadora-exposicion-sol-vitamina-d  — solo dentro del hub
+- `MODULO`     4  calculadora-lactosa-alimento-intolerancia  — solo dentro del hub
+- `MODULO`     4  calculadora-protector-solar-spf-fototipo  — solo dentro del hub
+- `MODULO`     2  calculadora-acidez-orina-alimentos  — solo dentro del hub
+- `MODULO`     2  calculadora-calidad-sueno-pittsburgh  — solo dentro del hub
+- `MODULO`     2  calculadora-oxalatos-calculos-renales  — solo dentro del hub
+- `MODULO`     2  calculadora-screen-time-adultos-fatiga-visual-pausas  — solo dentro del hub
+- `MODULO`     1  calculadora-agua-cafe-te-hidratacion-real-mitos  — solo dentro del hub
+- `BORRAR`     1  calculadora-nivel-estres  — duplicado de calculadora-nivel-estres-percibido
+- `MODULO`     1  calculadora-spf-proteccion-solar-minutos-piel  — solo dentro del hub
+- `BORRAR`     0  calculadora-ayuno-intermitente-beneficios-calorias-20-4  — 0 sesiones/90d
+- `BORRAR`     0  calculadora-fructosa-malabsorcion  — 0 sesiones/90d
+- `BORRAR`     0  calculadora-horas-sueno-necesarias-edad-adulto  — duplicado de calculadora-horas-de-sueno-por-edad
+
+## [EVENTO] ¿Cuánta carne compro para el asado?
+`asado-carne` · 7 calcs (3 con URL) · 0 borradas · 271 ses/90d
+
+- `PAGINA`   211  calculadora-carne-asado-kg-por-persona
+- `PAGINA`    23  calculadora-asado-por-invitado-kg-carne
+- `PAGINA`    22  calculadora-asado-kg-por-persona-cortes-tira-vacio-pollo
+- `MODULO`     5  calculadora-cantidad-hamburguesas-parrilla-cumpleanos  — solo dentro del hub
+- `MODULO`     5  calculadora-pollo-por-persona  — solo dentro del hub
+- `MODULO`     3  calculadora-chorizos-por-invitado-asado  — solo dentro del hub
+- `MODULO`     2  calculadora-milanesas-por-persona  — solo dentro del hub
+
+## [CUERPO] ¿Cómo gano músculo? Proteína, 1RM y volumen
+`proteina` · 18 calcs (3 con URL) · 1 borradas · 262 ses/90d
+
+- `PAGINA`   121  calculadora-proteina-diaria-objetivo
+- `PAGINA`    48  calculadora-proteina-gramos-por-peso-actividad
+- `PAGINA`    35  calculadora-proteina-por-comida-absorcion
+- `MODULO`     9  calculadora-repeticiones-maximas-epley-brzycki  — solo dentro del hub
+- `MODULO`     8  calculadora-proteina-diaria-fisicoculturismo-ganar-musculo  — solo dentro del hub
+- `MODULO`     5  calculadora-1rm-peso-maximo-levantamiento  — solo dentro del hub
+- `MODULO`     5  calculadora-tabla-wilks-powerlifting-score  — solo dentro del hub
+- `MODULO`     5  calculadora-whey-protein-dosis-diaria-scoop  — solo dentro del hub
+- `MODULO`     4  calculadora-repeticion-maxima-estimada  — solo dentro del hub
+- `MODULO`     4  calculadora-volumen-semanal-hipertrofia-musculo-series  — solo dentro del hub
+- `MODULO`     3  calculadora-1rm-sentadilla-estimador  — solo dentro del hub
+- `MODULO`     3  calculadora-carbohidratos-durante-ejercicio  — solo dentro del hub
+- `MODULO`     3  calculadora-frecuencia-entrenamiento-grupo-muscular  — solo dentro del hub
+- `MODULO`     3  calculadora-recuperacion-muscular-horas  — solo dentro del hub
+- `MODULO`     2  calculadora-descanso-entre-series-gimnasio  — solo dentro del hub
+- `MODULO`     2  calculadora-periodizacion-entrenamiento  — solo dentro del hub
+- `MODULO`     1  calculadora-1rm-press-banca-estimador  — solo dentro del hub
+- `MODULO`     1  calculadora-proteina-por-comida-anabolismo  — solo dentro del hub
+- `BORRAR`     0  calculadora-proteina-diaria-gramos-objetivo  — duplicado de calculadora-proteina-diaria-objetivo
+
+## [MASCOTAS] ¿Cuántos años humanos tiene mi gato?
+`edad-gato` · 3 calcs (3 con URL) · 0 borradas · 261 ses/90d
+
+- `PAGINA`   191  calculadora-edad-gato-humano-formula-anos
+- `PAGINA`    38  calculadora-esperanza-vida-gato-raza-indoor
+- `PAGINA`    32  calculadora-edad-gato-anos-humanos
+
+## [TECH] Fotografía: exposición, resolución y archivos
+`foto-archivos` · 24 calcs (6 con URL) · 1 borradas · 249 ses/90d
+
+- `PAGINA`    60  calculadora-stream-bitrate-calidad
+- `PAGINA`    45  calculadora-tamano-imagen-pixeles-megapixeles
+- `PAGINA`    41  calculadora-memoria-fotos-capacidad
+- `PAGINA`    21  calculadora-video-bitrate-tamano-archivo
+- `PAGINA`    18  calculadora-cuantas-fotos-videos-entran-gb
+- `PAGINA`    10  calculadora-dpi-ppp-impresion-resolucion
+- `MODULO`     8  calculadora-stop-motion-fps-tiempo  — solo dentro del hub
+- `MODULO`     6  calculadora-audio-bitrate-tamano-mp3  — solo dentro del hub
+- `MODULO`     5  calculadora-distancia-focal-equivalente  — solo dentro del hub
+- `MODULO`     5  calculadora-filtro-nd-pasos-exposicion  — solo dentro del hub
+- `MODULO`     4  calculadora-flash-numero-guia-distancia  — solo dentro del hub
+- `MODULO`     4  calculadora-resolucion-pantalla-ppi  — solo dentro del hub
+- `MODULO`     3  calculadora-almacenamiento-video-bitrate-duracion  — solo dentro del hub
+- `MODULO`     3  calculadora-impresion-dpi-calidad  — solo dentro del hub
+- `MODULO`     3  calculadora-megapixeles-impresion-tamano  — solo dentro del hub
+- `MODULO`     2  calculadora-ancho-angulo-lente-distancia  — solo dentro del hub
+- `MODULO`     2  calculadora-distancia-hiperfocal-lente  — solo dentro del hub
+- `MODULO`     2  calculadora-iso-invariance-camara-modelo  — solo dentro del hub
+- `MODULO`     2  calculadora-jpg-calidad-tamano-web-optimizacion  — solo dentro del hub
+- `MODULO`     1  calculadora-profundidad-campo-dof-lente  — solo dentro del hub
+- `MODULO`     1  calculadora-regla-600-estrellas  — solo dentro del hub
+- `MODULO`     1  calculadora-relacion-de-aspecto  — solo dentro del hub
+- `MODULO`     1  calculadora-tarjeta-sd-necesaria-sesion  — solo dentro del hub
+- `MODULO`     1  calculadora-time-lapse-duracion-fotos  — solo dentro del hub
+- `BORRAR`     0  calculadora-exposicion-triangulo  — 0 sesiones/90d
+
+## [CIENCIA] Presión, densidad y gases
+`presion` · 10 calcs (3 con URL) · 1 borradas · 249 ses/90d
+
+- `PAGINA`   156  calculadora-presion-atmosferica-altitud-barometrica
+- `PAGINA`    40  calculadora-conversor-psi-a-bar
+- `PAGINA`    27  calculadora-conversor-kw-a-hp
+- `MODULO`     7  calculadora-densidad-aire-temperatura-humedad-altitud-aviacion  — solo dentro del hub
+- `MODULO`     6  calculadora-conversion-atmosferas-pascales-bar  — solo dentro del hub
+- `MODULO`     4  calculadora-presion-hidrostatica  — solo dentro del hub
+- `MODULO`     3  calculadora-conversor-calorias-a-joules  — solo dentro del hub
+- `MODULO`     2  calculadora-conversor-btu-a-joules  — solo dentro del hub
+- `MODULO`     2  calculadora-conversor-kwh-a-joules  — solo dentro del hub
+- `MODULO`     2  calculadora-ley-gases-ideales  — solo dentro del hub
+- `BORRAR`     0  densidad-masa-volumen-formula  — 0 sesiones/90d
+
+## [TECH] ¿Qué FPS me da mi PC?
+`gaming-pc` · 12 calcs (8 con URL) · 0 borradas · 241 ses/90d
+
+- `PAGINA`    82  calculadora-watts-fuente-alimentacion-pc
+- `PAGINA`    35  calculadora-energia-pc-gaming-costo-mes
+- `PAGINA`    32  calculadora-ping-latencia-distancia
+- `PAGINA`    26  calculadora-configuracion-pc-bottleneck
+- `PAGINA`    19  calculadora-sensibilidad-mouse-dpi-juego
+- `PAGINA`    12  calculadora-gaming-fps-componentes-pc-armar-presupuesto
+- `PAGINA`    10  calculadora-fps-fluidez-video-juego
+- `PAGINA`    10  calculadora-fps-ideal-monitor-hz
+- `MODULO`     8  calculadora-ping-latencia-gaming-aceptable  — solo dentro del hub
+- `MODULO`     3  calculadora-almacenamiento-juegos-gb  — solo dentro del hub
+- `MODULO`     2  calculadora-costo-gaming-por-hora  — solo dentro del hub
+- `MODULO`     2  calculadora-fps-frames-por-segundo-juego  — solo dentro del hub
+
+## [FECHAS] ¿Cuánto falta para…?
+`cuenta-regresiva` · 10 calcs (4 con URL) · 0 borradas · 239 ses/90d
+
+- `PAGINA`   113  calculadora-cuando-son-las-proximas-elecciones-por-pais
+- `PAGINA`    55  calculadora-cuantos-dias-faltan-Navidad-2026
+- `PAGINA`    37  calculadora-cuenta-regresiva-dias-faltan
+- `PAGINA`    13  calculadora-cuanto-falta-fin-de-ano-2026-dias-horas-segundos
+- `MODULO`     6  calculadora-cuando-es-el-dia-del-padre-madre-nino-por-pais  — solo dentro del hub
+- `MODULO`     6  calculadora-cuenta-regresiva-dias-hasta-fecha  — solo dentro del hub
+- `MODULO`     4  calculadora-fecha-10000-dias  — solo dentro del hub
+- `MODULO`     3  calculadora-cuanto-falta-verano-enero-febrero  — solo dentro del hub
+- `MODULO`     1  calculadora-cuanto-falta-mundial-fifa-2026-2030  — solo dentro del hub
+- `MODULO`     1  calculadora-cuanto-falta-venc-tarjeta-credito-mes  — solo dentro del hub
+
+## [PLATA] ¿En qué se me va la plata?
+`gastos-mes` · 15 calcs (4 con URL) · 1 borradas · 237 ses/90d
+
+- `PAGINA`   116  calculadora-costo-supermercado-canasta-basica
+- `PAGINA`    42  calculadora-descuento-porcentaje-precio
+- `PAGINA`    38  calculadora-canasta-basica-hogar-inec-gasto-mensual
+- `PAGINA`    16  calculadora-sube-argentina-costo-viaje-gasto-mensual
+- `MODULO`     5  calculadora-costo-hijo-mensual  — solo dentro del hub
+- `MODULO`     4  calculadora-dias-sin-fumar-ahorro-salud  — solo dentro del hub
+- `MODULO`     3  calculadora-ahorro-bicicleta-vs-auto-mensual  — solo dentro del hub
+- `MODULO`     3  calculadora-costo-suscripciones-mensual  — solo dentro del hub
+- `MODULO`     3  calculadora-gasto-tarjeta-sube-mensual  — solo dentro del hub
+- `MODULO`     2  calculadora-precio-por-kilo-litro  — solo dentro del hub
+- `MODULO`     1  calculadora-ahorro-dejar-cigarrillos  — solo dentro del hub
+- `MODULO`     1  calculadora-costo-recital-festival-argentina  — solo dentro del hub
+- `MODULO`     1  calculadora-costo-streaming-argentina  — solo dentro del hub
+- `MODULO`     1  calculadora-cuanto-gasto-en-delivery  — solo dentro del hub
+- `MODULO`     1  calculadora-precio-por-unidad  — solo dentro del hub
+- `BORRAR`     0  calculadora-comparador-precios  — 0 sesiones/90d
+
+## [MATE] Álgebra: ecuaciones, polinomios y potencias
+`potencias` · 17 calcs (7 con URL) · 9 borradas · 235 ses/90d
+
+- `PAGINA`    63  calculadora-mcd-mcm-maximo-divisor-minimo-multiplo
+- `PAGINA`    42  calculadora-raiz-cuadrada-cubica
+- `BORRAR`    23  calculadora-mcm-mcd-minimo-comun-multiplo  — duplicado de calculadora-mcd-mcm-maximo-divisor-minimo-multiplo
+- `PAGINA`    18  calculadora-fracciones-suma-resta-multiplicacion-division
+- `PAGINA`    15  calculadora-potencias-y-raices
+- `PAGINA`    14  calculadora-numeros-primos-factorizacion
+- `PAGINA`    13  calculadora-mcd-mcm-dos-numeros-enteros
+- `PAGINA`    10  calculadora-sistemas-ecuaciones-2x2-cramer
+- `MODULO`     9  calculadora-logaritmos-base-10-natural-cualquier-base  — solo dentro del hub
+- `MODULO`     8  calculadora-notacion-cientifica  — solo dentro del hub
+- `MODULO`     4  calculadora-ecuacion-cuadratica-raices-discriminante  — solo dentro del hub
+- `MODULO`     3  calculadora-determinante-inversa-matriz-2x2  — solo dentro del hub
+- `MODULO`     3  calculadora-ecuacion-cuadratica-formula-resolvente  — solo dentro del hub
+- `MODULO`     3  calculadora-logaritmo-base-cualquiera-numero  — solo dentro del hub
+- `MODULO`     3  calculadora-sistema-ecuaciones-3x3  — solo dentro del hub
+- `BORRAR`     1  calculadora-determinante-inversa-matriz-3x3  — duplicado de calculadora-determinante-inversa-matriz-2x2
+- `MODULO`     1  calculadora-division-polinomios  — solo dentro del hub
+- `MODULO`     1  calculadora-gauss-jordan  — solo dentro del hub
+- `MODULO`     1  calculadora-regla-ruffini  — solo dentro del hub
+- `BORRAR`     0  calculadora-factorizacion-polinomios  — 0 sesiones/90d
+- `BORRAR`     0  calculadora-inecuaciones  — 0 sesiones/90d
+- `BORRAR`     0  calculadora-numeros-complejos  — 0 sesiones/90d
+- `BORRAR`     0  calculadora-raices-polinomio  — 0 sesiones/90d
+- `BORRAR`     0  ecuacion-recta-dos-puntos-pendiente  — 0 sesiones/90d
+- `BORRAR`     0  fraccion-impropia-numero-mixto  — 0 sesiones/90d
+- `BORRAR`     0  redondeo-numeros-decimales-decenas-centenas  — 0 sesiones/90d
+
+## [VIVIENDA] ¿Cuánto sale mudarme y qué muebles entran?
+`amueblar` · 18 calcs (7 con URL) · 0 borradas · 232 ses/90d
+
+- `PAGINA`    80  calculadora-tamano-tv-distancia-ideal-pulgadas
+- `PAGINA`    44  calculadora-metros-cuadrados-habitacion
+- `PAGINA`    27  calculadora-mesa-comedor-tamano-personas
+- `PAGINA`    14  calculadora-cortina-medida-ventana-tamano
+- `PAGINA`    13  calculadora-cuadro-altura-colgar-pared
+- `PAGINA`    11  calculadora-costo-estimado-mudanza
+- `PAGINA`    10  calculadora-distribucion-muebles-porcentaje-libre
+- `MODULO`     9  calculadora-ergonomia-escritorio-medidas  — solo dentro del hub
+- `MODULO`     6  calculadora-mudanza-precio-kilometros-m3-cuadro  — solo dentro del hub
+- `MODULO`     4  calculadora-espejo-tamano-pared-ideal  — solo dentro del hub
+- `MODULO`     3  calculadora-color-pared-combinacion-complementario  — solo dentro del hub
+- `MODULO`     3  calculadora-organizador-placard-distribucion  — solo dentro del hub
+- `MODULO`     2  calculadora-cortinas-medir-tela-ventana-anchotelaje  — solo dentro del hub
+- `MODULO`     2  calculadora-seguro-hogar-estimacion-cobertura  — solo dentro del hub
+- `MODULO`     1  calculadora-almohadones-sofa-cantidad-decorativos  — solo dentro del hub
+- `MODULO`     1  calculadora-metros-cuadrados-vivienda-por-persona  — solo dentro del hub
+- `MODULO`     1  calculadora-rollos-empapelado-papel-pared  — solo dentro del hub
+- `MODULO`     1  calculadora-tamano-colchon-ideal-medidas  — solo dentro del hub
+
+## [VIVIENDA] ¿Califico para un crédito hipotecario UVA?
+`hipotecario` · 8 calcs (4 con URL) · 1 borradas · 232 ses/90d
+
+- `PAGINA`   104  calculadora-credito-uva-cuota-actual
+- `PAGINA`    50  calculadora-cuota-credito-hipotecario-uva-banco-nacion
+- `PAGINA`    46  calculadora-amortizacion-prestamo-frances-aleman
+- `PAGINA`    15  calculadora-credito-uva-vs-tasa-fija
+- `BORRAR`     6  calculadora-ingreso-minimo-credito-hipotecario-uva-banco-nacion  — duplicado de calculadora-cuota-credito-hipotecario-uva-banco-nacion
+- `MODULO`     5  calculadora-hipoteca-mensual-cuota-fija  — solo dentro del hub
+- `MODULO`     3  calculadora-hipoteca-uva-santander-argentina  — solo dentro del hub
+- `MODULO`     2  calculadora-capacidad-credito-hipotecario  — solo dentro del hub
+- `MODULO`     1  calculadora-hipoteca-divisa-extranjera-vs-uva  — solo dentro del hub
+
+## [CUERPO] ¿Cuánta grasa corporal tengo?
+`grasa-corporal` · 7 calcs (5 con URL) · 1 borradas · 223 ses/90d
+
+- `PAGINA`   107  calculadora-porcentaje-grasa-corporal
+- `PAGINA`    34  calculadora-indice-cintura-altura-whtr-riesgo
+- `PAGINA`    29  calculadora-cintura-cadera-rcc
+- `PAGINA`    27  calculadora-grasa-corporal-pliegues
+- `PAGINA`    10  calculadora-perimetro-abdominal-riesgo-cardiovascular
+- `MODULO`     9  calculadora-ffmi-indice-masa-libre-grasa  — solo dentro del hub
+- `MODULO`     7  calculadora-grasa-subcutanea-visceral-total-diferencia  — solo dentro del hub
+- `BORRAR`     0  calculadora-indice-cintura-estatura  — 0 sesiones/90d
+
+## [PLATA] ¿Cuánto voy a pagar por este préstamo?
+`prestamo` · 7 calcs (3 con URL) · 3 borradas · 218 ses/90d
+
+- `PAGINA`    95  calculadora-costo-financiero-total-cft
+- `PAGINA`    85  calculadora-cuota-prestamo
+- `PAGINA`    23  calculadora-prestamo-personal-cuota-mensual
+- `MODULO`     6  calculadora-cft-prestamo-personal-comparativa  — solo dentro del hub
+- `MODULO`     6  calculadora-prestamo-personal-banco-nacion-cuota-2026  — solo dentro del hub
+- `MODULO`     2  calculadora-creditos-pyme-fogaba-cft-comparativa  — solo dentro del hub
+- `MODULO`     1  calculadora-cuota-prestamo-auto-frances-argentino  — solo dentro del hub
+- `BORRAR`     0  calculadora-capacidad-endeudamiento  — 0 sesiones/90d
+- `BORRAR`     0  calculadora-comparador-prestamos  — 0 sesiones/90d
+- `BORRAR`     0  calculadora-cuota-maxima-segun-ingreso  — 0 sesiones/90d
+
+## [AUTO] ¿Cuánto consume mi auto?
+`consumo-nafta` · 6 calcs (3 con URL) · 1 borradas · 217 ses/90d
+
+- `PAGINA`   108  calculadora-consumo-nafta-litros-100km
+- `PAGINA`    52  calculadora-autonomia-tanque-combustible
+- `PAGINA`    50  calculadora-consumo-combustible-km-litro
+- `MODULO`     4  calculadora-autonomia-tanque-lleno-kilometros  — solo dentro del hub
+- `MODULO`     2  calculadora-consumo-aire-acondicionado-auto-extra  — solo dentro del hub
+- `MODULO`     1  calculadora-litros-nafta-por-salario-poder-compra  — solo dentro del hub
+- `BORRAR`     0  calculadora-llenar-tanque-nafta-argentina-costo  — 0 sesiones/90d
+
+## [VIAJES] ¿Qué hora es allá?
+`husos` · 5 calcs (4 con URL) · 0 borradas · 216 ses/90d
+
+- `PAGINA`    90  calculadora-horario-llegada-zona-horaria
+- `PAGINA`    59  calculadora-diferencia-horaria-ciudades-paises
+- `PAGINA`    47  calculadora-hora-mundo-zona-horaria
+- `PAGINA`    11  calculadora-zona-horaria-diferencia-ciudades-convertir
+- `MODULO`     9  calculadora-horario-de-verano-cambio-hora-por-pais  — solo dentro del hub
+
+## [ANSES] ¿Cuándo me puedo jubilar?
+`cuando-jubilo` · 5 calcs (2 con URL) · 0 borradas · 211 ses/90d
+
+- `PAGINA`   123  calculadora-comprar-anos-aportes-moratoria-previsional-cuotas
+- `PAGINA`    76  calculadora-edad-jubilacion-anos-aporte
+- `MODULO`     8  calculadora-cuanto-falta-jubilarse-jubilacion-edad-aportes  — solo dentro del hub
+- `MODULO`     3  calculadora-fire-retiro-temprano  — solo dentro del hub
+- `MODULO`     1  calculadora-rol-ira-401k-argentino-equivalente  — solo dentro del hub
+
+## [MATE] Estadística y probabilidad
+`probabilidad` · 19 calcs (3 con URL) · 1 borradas · 207 ses/90d
+
+- `PAGINA`   124  calculadora-aleatorio-numero-dado
+- `PAGINA`    15  calculadora-combinaciones-permutaciones-factorial
+- `PAGINA`    11  calculadora-media-mediana-moda-rango-estadistica
+- `MODULO`     8  calculadora-probabilidad-drop-loot  — solo dentro del hub
+- `MODULO`     8  calculadora-tamano-muestra-encuesta  — solo dentro del hub
+- `MODULO`     7  generador-de-numeros-aleatorios  — solo dentro del hub
+- `MODULO`     5  calculadora-coeficiente-variacion  — solo dentro del hub
+- `MODULO`     5  calculadora-probabilidad-conocer-pareja  — solo dentro del hub
+- `MODULO`     5  calculadora-probabilidad-loteria-premio  — solo dentro del hub
+- `MODULO`     3  calculadora-chi-cuadrado-independencia  — solo dentro del hub
+- `MODULO`     3  calculadora-correlacion-pearson  — solo dentro del hub
+- `MODULO`     3  calculadora-distribucion-normal-area  — solo dentro del hub
+- `MODULO`     3  calculadora-probabilidad-lluvia-24h-presion-humedad-tendencia  — solo dentro del hub
+- `MODULO`     2  calculadora-z-score-valor-normal  — solo dentro del hub
+- `MODULO`     1  calculadora-desvio-estandar-varianza-conjunto  — solo dentro del hub
+- `MODULO`     1  calculadora-intervalo-confianza-media  — solo dentro del hub
+- `MODULO`     1  calculadora-percentil-dato  — solo dentro del hub
+- `MODULO`     1  calculadora-permutaciones-n-tomados-k-pnk  — solo dentro del hub
+- `MODULO`     1  calculadora-probabilidad-binomial  — solo dentro del hub
+- `BORRAR`     0  calculadora-probabilidad-evento  — 0 sesiones/90d
+
+## [FAMILIA] ¿Cuánto me toca de la herencia?
+`herencia` · 6 calcs (5 con URL) · 0 borradas · 205 ses/90d
+
+- `PAGINA`    86  calculadora-sucesion-costo
+- `PAGINA`    60  calculadora-honorarios-abogado
+- `PAGINA`    33  calculadora-sucesion-costo-honorarios-abogado-inmueble
+- `PAGINA`    11  calculadora-herencia-legitima
+- `PAGINA`    10  calculadora-sucesiones-costo-total-argentina-abogado
+- `MODULO`     5  calculadora-sucesion-fibonacci-termino-n  — solo dentro del hub
+
+## [IMPUESTOS] Impuesto a la renta: ¿cuánto pago?
+`renta-latam` · 2 calcs (2 con URL) · 0 borradas · 204 ses/90d
+
+- `PAGINA`   192  calculadora-impuesto-renta-colombia-persona-natural-2026
+- `PAGINA`    12  calculadora-impuesto-renta-peru-4ta-5ta-2026
+
+## [TRABAJO] ¿Mi sueldo le gana a la inflación?
+`sueldo-alcanza` · 12 calcs (6 con URL) · 0 borradas · 199 ses/90d
+
+- `PAGINA`    68  salario-minimo-vital-movil-argentina
+- `PAGINA`    40  calculadora-ajuste-sueldo-inflacion
+- `PAGINA`    31  calculadora-salario-minimo-2026-comparativa
+- `PAGINA`    11  calculadora-sueldo-en-dolares
+- `PAGINA`    10  calculadora-salario-real-inflacion
+- `PAGINA`    10  calculadora-sueldo-actualizado-ipc-inflacion
+- `MODULO`     7  calculadora-cuanto-vale-mi-tiempo-hora-anual-salario  — solo dentro del hub
+- `MODULO`     6  sueldo-vs-promedio-argentino  — solo dentro del hub
+- `MODULO`     5  calculadora-cuanto-gano-por-segundo  — solo dentro del hub
+- `MODULO`     5  calculadora-horas-trabajo-necesarias-para-comprar  — solo dentro del hub
+- `MODULO`     5  calculadora-poder-adquisitivo-sueldo-real  — solo dentro del hub
+- `MODULO`     1  calculadora-sueldo-en-dolares-poder-compra  — solo dentro del hub
+
+## [PLATA] ¿Conviene comprar dólares?
+`dolar` · 9 calcs (5 con URL) · 0 borradas · 195 ses/90d
+
+- `PAGINA`    56  conversor-dolar-argentina
+- `PAGINA`    50  calculadora-inflacion-poder-compra
+- `PAGINA`    35  calculadora-precio-dolar-producto
+- `PAGINA`    21  conversor-dolar-euro-pesos-argentinos
+- `PAGINA`    19  calculadora-dolar-blue-vs-oficial-brecha
+- `MODULO`     6  calculadora-ahorro-uva-vs-pesos-vs-dolar-12-meses  — solo dentro del hub
+- `MODULO`     5  calculadora-inflacion-perdida-poder-adquisitivo  — solo dentro del hub
+- `MODULO`     2  calculadora-dolar-mep-paso-a-paso-costo-operacion  — solo dentro del hub
+- `MODULO`     1  calculadora-cuanto-pierdo-inflacion-plata-quieta  — solo dentro del hub
+
+## [FAMILIA] ¿Cuándo nace mi bebé?
+`fecha-parto` · 2 calcs (1 con URL) · 0 borradas · 192 ses/90d
+
+- `PAGINA`   190  calculadora-fecha-probable-parto
+- `MODULO`     2  calculadora-doula-parto-acompanamiento-honorarios  — solo dentro del hub
+
+## [MATE] Convertir Celsius y Fahrenheit
+`convertir-temperatura` · 5 calcs (3 con URL) · 0 borradas · 191 ses/90d
+
+- `PAGINA`   131  conversor-celsius-fahrenheit-temperatura
+- `PAGINA`    32  calculadora-conversion-celsius-fahrenheit-kelvin-rankine-temperatura
+- `PAGINA`    20  calculadora-conversion-fahrenheit-celsius-clima
+- `MODULO`     5  calculadora-conversor-celsius-a-kelvin  — solo dentro del hub
+- `MODULO`     3  calculadora-conversion-temperatura-clima  — solo dentro del hub
+
+## [OBRA] ¿Cuánto cemento y arena necesito?
+`hormigon` · 13 calcs (4 con URL) · 0 borradas · 191 ses/90d
+
+- `PAGINA`    37  calculadora-revoque-grueso-m3-m2
+- `PAGINA`    35  calculadora-revoque-cemento-cal-arena
+- `PAGINA`    32  calculadora-arena-grava-hormigon
+- `PAGINA`    31  calculadora-cemento-arena-piedra-por-m3-hormigon
+- `MODULO`     9  calculadora-arena-relleno-terreno-m3  — solo dentro del hub
+- `MODULO`     8  calculadora-conversor-bolsas-cemento-por-metro-cubico  — solo dentro del hub
+- `MODULO`     8  calculadora-hierro-construccion-losa-m2  — solo dentro del hub
+- `MODULO`     8  calculadora-malla-sima-losa-m2  — solo dentro del hub
+- `MODULO`     6  calculadora-acero-kg-m2-losa  — solo dentro del hub
+- `MODULO`     6  calculadora-contrapiso-m3  — solo dentro del hub
+- `MODULO`     6  calculadora-viga-hormigon-h-b-dimensiones  — solo dentro del hub
+- `MODULO`     3  calculadora-arena-sanitaria-gato-kg-mes  — solo dentro del hub
+- `MODULO`     2  calculadora-zapata-corrida-m3-hormigon  — solo dentro del hub
+
+## [TECH] ¿Cuánto dura la batería?
+`baterias` · 9 calcs (4 con URL) · 0 borradas · 187 ses/90d
+
+- `PAGINA`    92  calculadora-duracion-bateria-mah-consumo
+- `PAGINA`    47  calculadora-autonomia-ups-tiempo-respaldo-servidor
+- `PAGINA`    13  calculadora-carga-bateria-tiempo-amp
+- `PAGINA`    11  calculadora-ups-autonomia-potencia-carga
+- `MODULO`     8  calculadora-bateria-capacidad-runtime-ah  — solo dentro del hub
+- `MODULO`     5  calculadora-autonomia-bateria-dispositivo-mah  — solo dentro del hub
+- `MODULO`     4  calculadora-bateria-lipo-capacidad-descarga  — solo dentro del hub
+- `MODULO`     4  calculadora-carga-capacitor-constante-rc  — solo dentro del hub
+- `MODULO`     3  calculadora-capacitor-carga-descarga-rc  — solo dentro del hub
+
+## [AUTO] ¿Me conviene tener auto o usar Uber?
+`auto-vs-uber` · 6 calcs (3 con URL) · 0 borradas · 183 ses/90d
+
+- `PAGINA`   102  calculadora-estimador-costo-viaje-taxi-remis
+- `PAGINA`    57  calculadora-uber-didi-cabify-comparativa-ciudad
+- `PAGINA`    12  calculadora-precio-remis-por-km-argentina-2026-cordoba-rosario-buenos-aires
+- `MODULO`     8  calculadora-estacionamiento-medido-hora-caba-zona  — solo dentro del hub
+- `MODULO`     3  calculadora-uber-vs-auto-propio  — solo dentro del hub
+- `MODULO`     1  calculadora-ahorro-transporte-publico-vs-auto  — solo dentro del hub
+
+## [IMPUESTOS] ¿Tengo que pagar Bienes Personales?
+`bienes-personales` · 7 calcs (2 con URL) · 1 borradas · 174 ses/90d
+
+- `PAGINA`    63  calculadora-bienes-personales-2026
+- `PAGINA`    62  calculadora-valuacion-fiscal-automotor-argentina
+- `BORRAR`    26  calculadora-bienes-personales-tramos-alicuota-2026  — duplicado de calculadora-bienes-personales-2026
+- `MODULO`     6  calculadora-renta-financiera-cedular-personas  — solo dentro del hub
+- `MODULO`     5  calculadora-abl-caba-valuacion-fiscal-actualizada-2026  — solo dentro del hub
+- `MODULO`     5  calculadora-inmobiliario-provincial-pba-tramos  — solo dentro del hub
+- `MODULO`     5  calculadora-valuacion-fiscal-neuquen-2026-impuesto-inmobiliario  — solo dentro del hub
+- `MODULO`     2  calculadora-impuesto-bienes-personales-2026-cripto-cedears  — solo dentro del hub
+
+## [VIAJES] ¿Me conviene pagar con millas o con plata?
+`valen-millas` · 8 calcs (5 con URL) · 0 borradas · 171 ses/90d
+
+- `PAGINA`    59  calculadora-millaje-frecuente-aerolineas-argentinas-programas
+- `PAGINA`    44  calculadora-puntos-amex-membership-rewards
+- `PAGINA`    33  calculadora-pasaje-aereo-millas-vs-pesos-canjear
+- `PAGINA`    12  calculadora-valor-millas-punto-centavos
+- `PAGINA`    10  calculadora-descuento-vuelo-millas-vs-cash
+- `MODULO`     5  calculadora-upgrade-clase-avion-costo  — solo dentro del hub
+- `MODULO`     4  calculadora-puntos-vs-cash-vuelo-cuando-conviene  — solo dentro del hub
+- `MODULO`     4  calculadora-valor-millas-viajero-frecuente  — solo dentro del hub
+
+## [AUTO] Neumáticos, aceite y service
+`mantenimiento` · 7 calcs (4 con URL) · 0 borradas · 170 ses/90d
+
+- `PAGINA`   101  calculadora-neumaticos-medida-equivalente
+- `PAGINA`    41  calculadora-presion-neumaticos-psi-bar
+- `PAGINA`    11  calculadora-presion-neumatico-psi-bar-auto
+- `PAGINA`    10  calculadora-mezcla-2-tiempos-nafta-aceite
+- `MODULO`     3  calculadora-cca-bateria-auto-temperatura-motor  — solo dentro del hub
+- `MODULO`     2  calculadora-aceite-motor-capacidad-cambio-km  — solo dentro del hub
+- `MODULO`     2  calculadora-correa-distribucion-cambio-intervalo-km  — solo dentro del hub
+
+## [COCINA] ¿Cuántos gramos es una taza?
+`tazas-gramos` · 10 calcs (6 con URL) · 2 borradas · 168 ses/90d
+
+- `PAGINA`    40  conversor-tazas-gramos-cocina-recetas
+- `PAGINA`    38  calculadora-conversion-medidas-cocina-tazas-gramos
+- `PAGINA`    33  calculadora-equivalencia-huevos-tamano-gramos-claras
+- `PAGINA`    20  calculadora-conversion-cups-gramos-harina-azucar-aceite
+- `PAGINA`    18  calculadora-conversor-tazas-a-mililitros
+- `PAGINA`    10  calculadora-conversion-cucharaditas-gramos-especias-sal
+- `MODULO`     5  calculadora-sustitucion-ingredientes-cocina  — solo dentro del hub
+- `MODULO`     2  calculadora-huevos-por-receta-comensales  — solo dentro del hub
+- `MODULO`     1  calculadora-conversion-peso-volumen-ingredientes-cocina  — solo dentro del hub
+- `MODULO`     1  calculadora-sustituto-huevo-vegano-receta  — solo dentro del hub
+- `BORRAR`     0  conversion-cucharadas-cucharaditas-ml  — 0 sesiones/90d
+- `BORRAR`     0  sustituir-manteca-por-aceite-reposteria  — 0 sesiones/90d
+
+## [IMPUESTOS] ¿Qué retenciones me hacen al facturar?
+`retenciones` · 7 calcs (3 con URL) · 0 borradas · 166 ses/90d
+
+- `PAGINA`    76  calculadora-impuesto-cheque-debitos-creditos
+- `PAGINA`    43  calculadora-retencion-afip-cuit-regimen-general
+- `PAGINA`    24  calculadora-intereses-resarcitorios-punitorios-afip
+- `MODULO`     9  calculadora-percepcion-dolar-tarjeta-impuesto-pais  — solo dentro del hub
+- `MODULO`     9  calculadora-plan-pagos-arca-mis-facilidades-cuota-interes  — solo dentro del hub
+- `MODULO`     4  calculadora-percepciones-impositivas  — solo dentro del hub
+- `MODULO`     1  calculadora-factura-electronica-afip-primera-vez  — solo dentro del hub
+
+## [COCINA] ¿Cuánto arroz o pasta por persona?
+`porciones` · 5 calcs (3 con URL) · 0 borradas · 165 ses/90d
+
+- `PAGINA`   119  calculadora-porcion-arroz-gramos-personas
+- `PAGINA`    22  calculadora-arroz-agua-proporcion-coccion
+- `PAGINA`    14  calculadora-porciones-pasta-seca-persona-hambre
+- `MODULO`     7  calculadora-agua-pasta-litros-gramos  — solo dentro del hub
+- `MODULO`     3  calculadora-porciones-arroz-por-persona-guarnicion  — solo dentro del hub
+
+## [EVENTO] ¿Cuánta comida compro para la fiesta?
+`comida-evento` · 14 calcs (6 con URL) · 1 borradas · 158 ses/90d
+
+- `PAGINA`    53  calculadora-porciones-torta-tamano-molde
+- `PAGINA`    35  calculadora-porciones-torta-cumpleanos-invitados-tamano
+- `PAGINA`    14  calculadora-helado-litros-por-evento-invitados-tipos
+- `PAGINA`    11  calculadora-cantidad-pizzas-por-invitados-pizzeria
+- `PAGINA`    10  calculadora-fiambre-queso-por-invitado-picada
+- `PAGINA`    10  calculadora-porciones-sushi-por-persona-promedio
+- `MODULO`     7  calculadora-torta-personas-kg-porciones  — solo dentro del hub
+- `MODULO`     4  calculadora-comida-para-invitados  — solo dentro del hub
+- `MODULO`     3  calculadora-bocadillos-por-invitado-evento-coffee-break  — solo dentro del hub
+- `MODULO`     3  calculadora-canape-por-invitado-coctel  — solo dentro del hub
+- `MODULO`     3  calculadora-kilos-chocolate-casero-bombones-receta  — solo dentro del hub
+- `MODULO`     3  calculadora-pizza-por-invitado-porciones  — solo dentro del hub
+- `MODULO`     1  calculadora-sandwiches-miga-por-persona  — solo dentro del hub
+- `MODULO`     1  calculadora-sushi-piezas-por-persona-evento-cumpleanos  — solo dentro del hub
+- `BORRAR`     0  calculadora-sushi-por-invitado-cena  — 0 sesiones/90d
+
+## [ESTUDIO] ¿Cuál es mi promedio?
+`promedio` · 16 calcs (4 con URL) · 0 borradas · 145 ses/90d
+
+- `PAGINA`    35  calculadora-indice-asistencia-faltas
+- `PAGINA`    29  calculadora-promedio-notas-universidad
+- `PAGINA`    25  calculadora-notas-gpa-conversor
+- `PAGINA`    10  calculadora-nota-necesaria-aprobar
+- `MODULO`     8  calculadora-promedio-ponderado-notas-materias  — solo dentro del hub
+- `MODULO`     6  calculadora-nota-promedio-bachillerato-secundario-materias  — solo dentro del hub
+- `MODULO`     5  calculadora-nota-minima-aprobar-final-parcial-promedio  — solo dentro del hub
+- `MODULO`     5  calculadora-nota-parcial-recuperatorio-promocion  — solo dentro del hub
+- `MODULO`     5  calculadora-promedio-ponderado-universidad  — solo dentro del hub
+- `MODULO`     4  calculadora-promedio-mediana-moda-estadistica  — solo dentro del hub
+- `MODULO`     4  calculadora-uba-xxi-nota-final-promedio  — solo dentro del hub
+- `MODULO`     3  calculadora-promedio-beca-argentina  — solo dentro del hub
+- `MODULO`     3  calculadora-promedio-secundaria  — solo dentro del hub
+- `MODULO`     1  calculadora-gpa-argentino-a-escala-4  — solo dentro del hub
+- `MODULO`     1  calculadora-gpa-promedio-americano-escala-4-0  — solo dentro del hub
+- `MODULO`     1  calculadora-promedio-goles-tiempo-anadido-drama-late-match  — solo dentro del hub
+
+## [PLATA] ¿Cómo dividimos los gastos?
+`gastos-pareja` · 7 calcs (2 con URL) · 0 borradas · 143 ses/90d
+
+- `PAGINA`   106  calculadora-split-gastos-grupo-amigos
+- `PAGINA`    27  calculadora-dividir-gastos-pareja-proporcional
+- `MODULO`     3  calculadora-dividir-cuenta-propina-amigos  — solo dentro del hub
+- `MODULO`     3  calculadora-pago-proporcional-pareja-ingreso-gastos-compartidos  — solo dentro del hub
+- `MODULO`     2  calculadora-propina-restaurante  — solo dentro del hub
+- `MODULO`     1  calculadora-de-propinas  — solo dentro del hub
+- `MODULO`     1  calculadora-propina-por-pais-viaje  — solo dentro del hub
+
+## [CUERPO] ¿Cuántas calorías quemé entrenando?
+`calorias-quemadas` · 18 calcs (5 con URL) · 1 borradas · 141 ses/90d
+
+- `PAGINA`    29  calculadora-calorias-caminando
+- `PAGINA`    24  calculadora-calorias-subir-escaleras-pisos
+- `PAGINA`    18  calculadora-calorias-quemadas-deporte
+- `PAGINA`    15  calculadora-calorias-quemadas-ejercicio
+- `PAGINA`    12  calculadora-calorias-sexo-relacion-intima-duracion
+- `MODULO`     9  calculadora-calorias-natacion-estilos-distancia-velocidad  — solo dentro del hub
+- `MODULO`     6  calculadora-calorias-padel-hora-intensidad  — solo dentro del hub
+- `MODULO`     5  calculadora-cuantas-calorias-bicicleta-distancia-pendiente-perfil  — solo dentro del hub
+- `MODULO`     4  calculadora-calorias-remo-indoor-ergometro  — solo dentro del hub
+- `MODULO`     4  calculadora-pasos-a-kilometros  — solo dentro del hub
+- `MODULO`     3  calculadora-calorias-futbol-5-7-11  — solo dentro del hub
+- `MODULO`     3  calculadora-calorias-gym-pesas-hora  — solo dentro del hub
+- `MODULO`     2  calculadora-calorias-ciclismo-intensidad  — solo dentro del hub
+- `MODULO`     2  calculadora-calorias-quemadas-mediocampista-partido  — solo dentro del hub
+- `MODULO`     2  calculadora-calorias-quemadas-yoga-pilates  — solo dentro del hub
+- `MODULO`     1  calculadora-calorias-ciclismo-watts  — solo dentro del hub
+- `MODULO`     1  calculadora-calorias-quemadas-running-km-peso  — solo dentro del hub
+- `MODULO`     1  calculadora-calorias-saltar-cuerda-minutos  — solo dentro del hub
+- `BORRAR`     0  calculadora-calorias-quemadas-tareas-domesticas  — 0 sesiones/90d
+
+## [OBRA] ¿Cuánta madera necesito para el mueble?
+`madera` · 10 calcs (5 con URL) · 0 borradas · 140 ses/90d
+
+- `PAGINA`    62  calculadora-corte-optimo-tablero
+- `PAGINA`    13  calculadora-peso-madera-por-tipo-volumen
+- `PAGINA`    12  calculadora-madera-necesaria-mueble
+- `PAGINA`    12  calculadora-tablero-melamina-cortes-aprovechamiento
+- `PAGINA`    10  calculadora-deck-madera-tablas-tornillos
+- `MODULO`     8  calculadora-conversor-pie-tabla-a-metro-cubico  — solo dentro del hub
+- `MODULO`     8  calculadora-estante-peso-maximo-material  — solo dentro del hub
+- `MODULO`     8  calculadora-tornillos-madera-tipo-largo  — solo dentro del hub
+- `MODULO`     4  calculadora-bisagras-tornillos-puerta-ventana-cantidad  — solo dentro del hub
+- `MODULO`     3  calculadora-estantes-madera-soporte-peso  — solo dentro del hub
+
+## [IMPUESTOS] Ingresos Brutos: ¿cuánto pago en mi provincia?
+`iibb` · 2 calcs (2 con URL) · 0 borradas · 135 ses/90d
+
+- `PAGINA`   118  calculadora-ingresos-brutos-provincial
+- `PAGINA`    17  calculadora-iibb-convenio-multilateral-coeficientes
+
+## [TRABAJO] ¿Cuándo es el próximo feriado?
+`feriados` · 4 calcs (2 con URL) · 1 borradas · 134 ses/90d
+
+- `PAGINA`   109  calculadora-feriados-argentina-2026-calendario
+- `PAGINA`    19  calculadora-dias-laborables-habiles-entre-fechas
+- `MODULO`     4  calculadora-cuantos-feriados-restan-ano-argentina  — solo dentro del hub
+- `MODULO`     2  calculadora-cuanto-falta-feriado-proximo-argentina-2026  — solo dentro del hub
+- `BORRAR`     0  calculadora-dias-habiles-restantes-2026  — 0 sesiones/90d
+
+## [VIAJES] ¿Con cuánto tiempo llego al aeropuerto?
+`aeropuerto` · 9 calcs (3 con URL) · 2 borradas · 133 ses/90d
+
+- `PAGINA`    57  calculadora-llegada-aeropuerto-minutos-vuelo
+- `PAGINA`    37  calculadora-conexion-vuelo-minimo-minutos
+- `PAGINA`    10  calculadora-escala-suficiente-tiempo
+- `MODULO`     7  calculadora-tiempo-vuelo-estimado-avion  — solo dentro del hub
+- `MODULO`     6  calculadora-check-in-anticipo-horas-aeropuerto  — solo dentro del hub
+- `MODULO`     6  calculadora-tiempo-conexion-aeropuerto-internacional  — solo dentro del hub
+- `MODULO`     6  calculadora-traslado-aeropuerto-ciudad-tiempo  — solo dentro del hub
+- `MODULO`     2  calculadora-distancia-vuelo-2-ciudades  — solo dentro del hub
+- `MODULO`     2  calculadora-jet-lag-recuperacion  — solo dentro del hub
+- `BORRAR`     0  calculadora-jet-lag-recuperacion-horas-diferencia-dias  — 0 sesiones/90d
+- `BORRAR`     0  calculadora-jet-lag-zonas-horarias-adaptacion-dias  — 0 sesiones/90d
+
+## [AUTO] ¿Cuánto me cuesta por año tener el auto?
+`costo-auto` · 8 calcs (5 con URL) · 2 borradas · 132 ses/90d
+
+- `PAGINA`    43  calculadora-costo-por-kilometro-auto
+- `PAGINA`    24  calculadora-antiguedad-auto-amortizacion
+- `PAGINA`    18  calculadora-financiacion-auto-cuota-prendario
+- `PAGINA`    16  calculadora-amortizacion-auto-valor-residual
+- `PAGINA`    11  calculadora-seguro-auto-estimado
+- `MODULO`     9  calculadora-costo-mantenimiento-auto-anual-km  — solo dentro del hub
+- `MODULO`     7  simulador-costo-mantener-auto  — solo dentro del hub
+- `MODULO`     4  calculadora-costo-total-propiedad-auto-anual  — solo dentro del hub
+- `BORRAR`     0  calculadora-cuota-plan-ahorro-auto-circulo-cerrado  — 0 sesiones/90d
+- `BORRAR`     0  calculadora-seguro-auto-estimacion-precio  — 0 sesiones/90d
+
+## [OBRA] ¿Cómo aislo la casa del frío y el calor?
+`aislacion` · 8 calcs (5 con URL) · 0 borradas · 131 ses/90d
+
+- `PAGINA`    47  calculadora-ventilacion-renovaciones-aire-hora
+- `PAGINA`    28  calculadora-espesor-vidrio-ventana-m2
+- `PAGINA`    20  calculadora-yeso-cielorraso-placas-m2
+- `PAGINA`    15  calculadora-tornillos-durlock-placa-yeso-m2
+- `PAGINA`    13  calculadora-aislacion-termica-k-minimo-zona
+- `MODULO`     4  calculadora-aislante-termico-pared-eps-lana-vidrio-recomendado  — solo dentro del hub
+- `MODULO`     3  calculadora-cantidad-ventanas-luz-natural-m2  — solo dentro del hub
+- `MODULO`     1  calculadora-perfil-aluminio-metros-lineales-ventana  — solo dentro del hub
+
+## [ANSES] ¿Me corresponde una pensión?
+`pensiones` · 5 calcs (3 con URL) · 0 borradas · 131 ses/90d
+
+- `PAGINA`    65  calculadora-pension-viudez-porcentaje-conyuge
+- `PAGINA`    40  calculadora-pension-no-contributiva-madre-7-hijos-anses-2026
+- `PAGINA`    14  calculadora-puam-pension-universal-adulto-mayor-anses-2026
+- `MODULO`     7  calculadora-pension-invalidez-anses-no-contributiva-2026-cuantia  — solo dentro del hub
+- `MODULO`     5  calculadora-pami-prestaciones-monto-copago-2026  — solo dentro del hub
+
+## [VIVIENDA] ¿Cuánto me cuesta el aire o la calefacción?
+`aire-calefaccion` · 9 calcs (3 con URL) · 0 borradas · 129 ses/90d
+
+- `PAGINA`    51  calculadora-tamano-aire-acondicionado-btu-habitacion
+- `PAGINA`    25  calculadora-costo-mensual-aire-acondicionado-consumo-kwh-factura
+- `PAGINA`    23  calculadora-costo-calefaccion-invierno
+- `MODULO`     9  calculadora-grados-dia-calefaccion-refrigeracion-hdd-cdd-consumo  — solo dentro del hub
+- `MODULO`     8  calculadora-calefactor-tiro-balanceado-kcal-m2-invierno  — solo dentro del hub
+- `MODULO`     6  calculadora-ahorro-termo-electrico-vs-gas  — solo dentro del hub
+- `MODULO`     3  calculadora-aire-acondicionado-frigorias-ambiente  — solo dentro del hub
+- `MODULO`     2  calculadora-costo-aire-acondicionado-hora  — solo dentro del hub
+- `MODULO`     2  calculadora-lena-estufa-hogar-invierno  — solo dentro del hub
+
+## [CUERPO] ¿Cuál es mi zona de frecuencia cardíaca?
+`frecuencia-cardiaca` · 11 calcs (4 con URL) · 0 borradas · 129 ses/90d
+
+- `PAGINA`    27  calculadora-vo2max-test-cooper-12-minutos
+- `PAGINA`    25  calculadora-fc-maxima-zonas-karvonen
+- `PAGINA`    24  calculadora-zona2-cardio-frecuencia-edad-vo2max
+- `PAGINA`    23  calculadora-frecuencia-cardiaca-zonas-entrenamiento
+- `MODULO`     7  calculadora-frecuencia-cardiaca-reposo-categorias-deportistas-edad  — solo dentro del hub
+- `MODULO`     6  calculadora-umbral-lactato-estimado  — solo dentro del hub
+- `MODULO`     5  calculadora-frecuencia-cardiaca-maxima-edad  — solo dentro del hub
+- `MODULO`     4  calculadora-ritmo-cardiaco-maximo-edad-formula  — solo dentro del hub
+- `MODULO`     4  calculadora-vo2max-predecir-carrera-cooper-12min  — solo dentro del hub
+- `MODULO`     3  calculadora-vo2-max-test-cooper  — solo dentro del hub
+- `MODULO`     1  calculadora-vo2-max-futbolista-profesional-vs-amateur  — solo dentro del hub
+
+## [DEPORTE] Running: ritmo, plan y lesiones
+`ritmo-running` · 14 calcs (5 con URL) · 4 borradas · 128 ses/90d
+
+- `PAGINA`    42  calculadora-pace-ritmo-running
+- `PAGINA`    15  calculadora-ritmo-caminata-pasos-por-km
+- `PAGINA`    14  calculadora-pubalgia-atletica-tiempo-recuperacion-fases
+- `PAGINA`    14  calculadora-swolf-natacion-indice
+- `PAGINA`    10  calculadora-velocidad-promedio-carrera-km-h
+- `MODULO`     6  calculadora-natacion-pace-100m  — solo dentro del hub
+- `MODULO`     6  calculadora-ritmo-carrera-pace-km  — solo dentro del hub
+- `MODULO`     5  calculadora-velocidad-critica-natacion  — solo dentro del hub
+- `MODULO`     4  calculadora-plan-entrenamiento-maraton-42k-semanas  — solo dentro del hub
+- `MODULO`     3  calculadora-tiempo-maraton-predictor  — solo dentro del hub
+- `MODULO`     2  calculadora-gel-energetico-carrera-cuantos  — solo dentro del hub
+- `BORRAR`     2  calculadora-plan-entrenamiento-21k-semi-maraton-semanas  — duplicado de calculadora-plan-entrenamiento-maraton-42k-semanas
+- `BORRAR`     2  calculadora-plan-entrenamiento-5k-semanas  — duplicado de calculadora-plan-entrenamiento-maraton-42k-semanas
+- `MODULO`     1  calculadora-cold-plunge-tiempo-temperatura-cortisol  — solo dentro del hub
+- `MODULO`     1  calculadora-descanso-post-maraton-regla-1-dia-km  — solo dentro del hub
+- `MODULO`     1  calculadora-hidratacion-corredor-maraton-carrera  — solo dentro del hub
+- `BORRAR`     0  calculadora-plan-maraton-semanas-experiencia  — 0 sesiones/90d
+- `BORRAR`     0  calculadora-tiempo-recuperacion-isquiotibial-grado-1-2-3  — 0 sesiones/90d
+
+## [OBRA] Tanque, cañerías y termotanque
+`agua-obra` · 6 calcs (6 con URL) · 1 borradas · 126 ses/90d
+
+- `PAGINA`    40  calculadora-tanque-agua-litros-personas
+- `PAGINA`    21  calculadora-calefon-termotanque-litros-personas
+- `PAGINA`    20  calculadora-capacidad-tanque-cisterna-litros
+- `PAGINA`    19  calculadora-bombeo-cisterna-tanque-watts
+- `PAGINA`    14  calculadora-diametro-caneria-agua-caudal
+- `PAGINA`    11  calculadora-cano-estructural-peso-ml
+- `BORRAR`     1  calculadora-cano-agua-diametro-caudal  — duplicado de calculadora-diametro-caneria-agua-caudal
+
+## [ANSES] AUH y asignaciones: ¿cuánto cobro?
+`auh` · 7 calcs (4 con URL) · 1 borradas · 122 ses/90d
+
+- `PAGINA`    50  calculadora-vacuna-calendario-nacional-anses
+- `PAGINA`    27  calculadora-asignacion-familiar-empleado-registrado-anses
+- `PAGINA`    14  calculadora-asignacion-discapacidad-pensionado
+- `PAGINA`    12  calculadora-asignacion-universal-hijo-auh-2026-monto
+- `MODULO`     8  calculadora-ayuda-escolar-anual-asignacion  — solo dentro del hub
+- `MODULO`     7  calculadora-anses-complemento-leche-maternidad  — solo dentro del hub
+- `MODULO`     4  calculadora-asignacion-familiar-anses-2026-tramos-ingreso  — solo dentro del hub
+- `BORRAR`     0  calculadora-auh-libreta-20-por-ciento-retenido-cobro  — 0 sesiones/90d
+
+## [DEPORTE] ¿Cuánto se lleva de premio cada equipo?
+`premios-futbol` · 7 calcs (2 con URL) · 1 borradas · 122 ses/90d
+
+- `PAGINA`    71  calculadora-premios-mundial-2026-seleccion-por-fase
+- `PAGINA`    43  calculadora-derechos-tv-mundial-2026-argentina-espana-mexico-brasil
+- `MODULO`     3  calculadora-premios-copa-argentina-por-ronda  — solo dentro del hub
+- `MODULO`     2  calculadora-cuota-socio-club-futbol-boca-river-real-madrid  — solo dentro del hub
+- `MODULO`     1  calculadora-clausula-rescision-valor-mercado-jugador  — solo dentro del hub
+- `MODULO`     1  calculadora-mecanismo-solidaridad-fifa-5-porciento  — solo dentro del hub
+- `MODULO`     1  calculadora-premios-liga-profesional-argentina-ronda-campeon  — solo dentro del hub
+- `BORRAR`     0  calculadora-costo-salida-cancha-argentina  — 0 sesiones/90d
+
+## [CUERPO] ¿Cuántas calorías tiene lo que como?
+`calorias-alimento` · 15 calcs (2 con URL) · 1 borradas · 119 ses/90d
+
+- `PAGINA`    38  calculadora-indice-glucemico-por-alimento
+- `PAGINA`    26  calculadora-calorias-bebida-alcoholica
+- `MODULO`     8  calculadora-calorias-aproximadas-receta-plato  — solo dentro del hub
+- `MODULO`     8  calculadora-carga-glucemica-comida  — solo dentro del hub
+- `MODULO`     7  calculadora-calorias-alimento-porcion  — solo dentro del hub
+- `MODULO`     6  calculadora-calorias-copa-vino  — solo dentro del hub
+- `MODULO`     6  calculadora-calorias-palta-aguacate-completa-mitad  — solo dentro del hub
+- `BORRAR`     5  calculadora-indice-glucemico-carga-alimento-porcion  — duplicado de calculadora-indice-glucemico-por-alimento
+- `MODULO`     5  calculadora-procesados-nova-clasificacion  — solo dentro del hub
+- `MODULO`     2  calculadora-calorias-huevo-revuelto-frito-cocido  — solo dentro del hub
+- `MODULO`     2  calculadora-calorias-plato-argentino-tipico  — solo dentro del hub
+- `MODULO`     2  calculadora-densidad-nutricional-score  — solo dentro del hub
+- `MODULO`     1  calculadora-calorias-arroz-blanco-integral-cocido  — solo dentro del hub
+- `MODULO`     1  calculadora-calorias-hamburguesa-casera-comercial  — solo dentro del hub
+- `MODULO`     1  calculadora-calorias-pan-blanco-integral-porcion  — solo dentro del hub
+- `MODULO`     1  calculadora-indice-saciedad-alimento  — solo dentro del hub
+
+## [COCINA] ¿Cuánto tiene que leudar la masa?
+`masa` · 6 calcs (3 con URL) · 0 borradas · 119 ses/90d
+
+- `PAGINA`    59  calculadora-levadura-fermentacion-pizza-pan
+- `PAGINA`    26  calculadora-masa-pizza-casera-gramos-invitados
+- `PAGINA`    24  calculadora-masa-pizza-ingredientes-porciones
+- `MODULO`     6  calculadora-tiempo-fermentacion-masa-temperatura  — solo dentro del hub
+- `MODULO`     2  calculadora-leudado-pan-levadura-tiempo-temperatura  — solo dentro del hub
+- `MODULO`     2  calculadora-masa-molar-compuesto  — solo dentro del hub
+
+## [MATE] ¿Cómo hago una regla de tres?
+`regla-de-tres` · 4 calcs (1 con URL) · 3 borradas · 119 ses/90d
+
+- `PAGINA`   101  calculadora-regla-de-tres-simple
+- `MODULO`     9  calculadora-interpolacion-lineal-valor  — solo dentro del hub
+- `MODULO`     8  calculadora-de-escala  — solo dentro del hub
+- `MODULO`     1  calculadora-escala-plano-mapa  — solo dentro del hub
+- `BORRAR`     0  calculadora-regla-de-tres-inversa  — 0 sesiones/90d
+- `BORRAR`     0  calculadora-regla-tres-compuesta  — 0 sesiones/90d
+- `BORRAR`     0  proporcion-aurea-numero-oro  — 0 sesiones/90d
+
+## [VIDA] DNI, pasaporte y trámites
+`tramites` · 7 calcs (4 con URL) · 0 borradas · 118 ses/90d
+
+- `PAGINA`    39  calculadora-validar-cbu-cvu-identificar-banco
+- `PAGINA`    31  calculadora-dni-pasaporte-costo-tramite-argentina
+- `PAGINA`    16  calculadora-letra-dni-argentina
+- `PAGINA`    13  calculadora-cuil-cuit-desde-dni-argentina
+- `MODULO`     8  calculadora-certificado-antecedentes-penales-costo  — solo dentro del hub
+- `MODULO`     7  calculadora-dni-extranjero-residencia-costo-migraciones  — solo dentro del hub
+- `MODULO`     4  calculadora-libertad-condicional-dos-tercios-pena  — solo dentro del hub
+
+## [MASCOTAS] ¿Cuánto dura la gestación de mi perra?
+`reproduccion` · 4 calcs (3 con URL) · 0 borradas · 117 ses/90d
+
+- `PAGINA`    70  calculadora-gestacion-perro-gato-duracion-parto
+- `PAGINA`    22  calculadora-gestacion-perra
+- `PAGINA`    17  calculadora-fecha-celo-perra
+- `MODULO`     8  calculadora-cachorros-camada-raza  — solo dentro del hub
+
+## [MATE] Convertir kilos, libras y onzas
+`convertir-peso` · 5 calcs (2 con URL) · 0 borradas · 114 ses/90d
+
+- `PAGINA`    61  conversor-kilogramos-libras-onzas
+- `PAGINA`    36  calculadora-conversor-gramos-a-onzas
+- `MODULO`     9  calculadora-conversion-kilo-libra-lb-kg-exacto  — solo dentro del hub
+- `MODULO`     5  calculadora-conversion-libras-kilos-onzas-stone  — solo dentro del hub
+- `MODULO`     3  calculadora-conversor-toneladas-cortas-a-toneladas-metricas  — solo dentro del hub
+
+## [NEGOCIO] ¿Cuánto me cobra de comisión la plataforma?
+`comisiones-plataforma` · 11 calcs (6 con URL) · 1 borradas · 111 ses/90d
+
+- `PAGINA`    21  calculadora-comision-doordash-rappi-pedidosya-restaurante-2026
+- `PAGINA`    20  calculadora-comision-uber-driver-ganancia-real-argentina-2026
+- `PAGINA`    19  calculadora-uber-driver-chile-ganancia-neta
+- `PAGINA`    14  calculadora-comision-venta-vendedor
+- `PAGINA`    14  calculadora-ingreso-uber-airbnb-host
+- `PAGINA`    10  calculadora-costo-envio-peso-destino
+- `MODULO`     6  calculadora-uber-driver-mexico-costos-reales  — solo dentro del hub
+- `MODULO`     3  calculadora-comision-tienda-nube-2026-monto-mensual-checkout  — solo dentro del hub
+- `MODULO`     2  calculadora-costo-envio-paquete-ecommerce  — solo dentro del hub
+- `MODULO`     1  calculadora-comision-amazon-fba-producto  — solo dentro del hub
+- `MODULO`     1  calculadora-comision-uber-eats-glovo-rider  — solo dentro del hub
+- `BORRAR`     0  calculadora-comision-etsy-venta-handmade  — 0 sesiones/90d
+
+## [MATE] Geometría: área, perímetro y volumen
+`area-perimetro` · 12 calcs (3 con URL) · 9 borradas · 109 ses/90d
+
+- `PAGINA`    40  calculadora-area-perimetro-circulo-sector-circular
+- `PAGINA`    18  calculadora-area-perimetro-figuras
+- `PAGINA`    18  calculadora-volumen-cilindro-radio-altura
+- `MODULO`     9  calculadora-teorema-pitagoras-hipotenusa-cateto  — solo dentro del hub
+- `MODULO`     5  calculadora-area-triangulo-vertices-coordenadas  — solo dentro del hub
+- `MODULO`     4  calculadora-volumen-superficie-esfera-radio  — solo dentro del hub
+- `MODULO`     3  calculadora-distancia-entre-plantas-espaciado  — solo dentro del hub
+- `MODULO`     3  calculadora-teorema-tales-proporcionalidad-segmentos  — solo dentro del hub
+- `MODULO`     2  calculadora-area-perimetro-circulo-radio  — solo dentro del hub
+- `MODULO`     2  calculadora-area-triangulo-heron-tres-lados  — solo dentro del hub
+- `MODULO`     2  calculadora-distancia-entre-dos-puntos-2d-3d  — solo dentro del hub
+- `BORRAR`     2  calculadora-volumen-cono-radio-altura  — duplicado de calculadora-volumen-cilindro-radio-altura
+- `MODULO`     1  area-perimetro-rombo-diagonales  — solo dentro del hub
+- `BORRAR`     0  area-perimetro-trapecio  — 0 sesiones/90d
+- `BORRAR`     0  area-poligono-regular-apotema  — 0 sesiones/90d
+- `BORRAR`     0  calculadora-area-entre-curvas  — 0 sesiones/90d
+- `BORRAR`     0  diagonal-rectangulo-caja-tv  — 0 sesiones/90d
+- `BORRAR`     0  distancia-punto-medio-dos-puntos  — 0 sesiones/90d
+- `BORRAR`     0  teorema-tales-triangulos-semejantes  — 0 sesiones/90d
+- `BORRAR`     0  volumen-piramide-base-altura  — 0 sesiones/90d
+- `BORRAR`     0  volumen-prisma-rectangular-caja  — 0 sesiones/90d
+
+## [COCINA] Bebidas caseras: café, cerveza y tragos
+`cafe` · 20 calcs (3 con URL) · 0 borradas · 104 ses/90d
+
+- `PAGINA`    19  calculadora-kefir-leche-proporciones
+- `PAGINA`    16  calculadora-cafe-ratio-agua-gramos-metodo-preparacion
+- `PAGINA`    11  calculadora-ibu-cerveza-lupulo-tinseth
+- `MODULO`     8  calculadora-cafe-molido-taza-metodo-preparacion  — solo dentro del hub
+- `MODULO`     8  calculadora-mojito-cubano-ingredientes  — solo dentro del hub
+- `MODULO`     7  calculadora-cold-brew-ratio  — solo dentro del hub
+- `MODULO`     6  calculadora-pisco-sour-receta  — solo dentro del hub
+- `MODULO`     5  calculadora-alcohol-attenuation-levadura  — solo dentro del hub
+- `MODULO`     4  calculadora-priming-sugar-carbonatacion-cerveza  — solo dentro del hub
+- `MODULO`     3  calculadora-aperol-spritz-proporciones  — solo dentro del hub
+- `MODULO`     2  calculadora-abv-cerveza-og-fg  — solo dentro del hub
+- `MODULO`     2  calculadora-cafe-french-press-ratio  — solo dentro del hub
+- `MODULO`     2  calculadora-daiquiri-clasico-personas  — solo dentro del hub
+- `MODULO`     2  calculadora-espresso-tds-yield  — solo dentro del hub
+- `MODULO`     2  calculadora-gin-tonic-proporciones  — solo dentro del hub
+- `MODULO`     2  calculadora-hidrometro-correccion-temperatura  — solo dentro del hub
+- `MODULO`     2  calculadora-moka-pot-agua-cafe  — solo dentro del hub
+- `MODULO`     1  almibar-proporciones-azucar-agua  — solo dentro del hub
+- `MODULO`     1  calculadora-final-volume-cerveza-fermentador  — solo dentro del hub
+- `MODULO`     1  calculadora-hidromiel-proporciones-miel-agua  — solo dentro del hub
+
+## [NEGOCIO] ¿A cuánto vendo mi producto?
+`precio-venta` · 8 calcs (4 con URL) · 1 borradas · 103 ses/90d
+
+- `PAGINA`    44  calculadora-margen-ganancia-markup
+- `PAGINA`    18  calculadora-ticket-promedio-ventas
+- `PAGINA`    17  calculadora-punto-equilibrio-break-even
+- `PAGINA`    10  calculadora-cafeteria-cuanto-cobrar-pais-cafe-medialuna-margen
+- `MODULO`     6  calculadora-precio-minimo-venta-con-margen  — solo dentro del hub
+- `MODULO`     4  calculadora-precio-venta-producto-markup  — solo dentro del hub
+- `MODULO`     3  calculadora-gross-margin-vs-net  — solo dentro del hub
+- `MODULO`     1  calculadora-margen-contribucion-producto  — solo dentro del hub
+- `BORRAR`     0  calculadora-costos-fijos-y-variables  — 0 sesiones/90d
+
+## [EVENTO] Carbón, parrilla y guarniciones del asado
+`asado-resto` · 6 calcs (2 con URL) · 0 borradas · 101 ses/90d
+
+- `PAGINA`    64  calculadora-rendimiento-masa-empanadas-cantidad
+- `PAGINA`    15  calculadora-empanadas-por-persona-evento-asado-cumple
+- `MODULO`     9  calculadora-tamano-parrilla-personas-m2  — solo dentro del hub
+- `MODULO`     7  calculadora-ensalada-por-persona  — solo dentro del hub
+- `MODULO`     4  calculadora-pan-para-comida-evento  — solo dentro del hub
+- `MODULO`     2  calculadora-carbon-asado-kg  — solo dentro del hub
+
+## [OBRA] ¿Cuántas cajas de cerámicos necesito?
+`ceramicos` · 10 calcs (4 con URL) · 0 borradas · 101 ses/90d
+
+- `PAGINA`    35  calculadora-pisos-ceramicos-porcellanato-cajas
+- `PAGINA`    18  calculadora-azulejos-baldosas-metros-cuadrados-cantidad
+- `PAGINA`    13  calculadora-piso-flotante-m2-tablas
+- `PAGINA`    13  calculadora-porcelanato-liquido-litros-m2
+- `MODULO`     8  calculadora-ceramicos-m2-cajas  — solo dentro del hub
+- `MODULO`     8  calculadora-zocalo-metros-lineal  — solo dentro del hub
+- `MODULO`     2  calculadora-machimbre-revestimiento-m2  — solo dentro del hub
+- `MODULO`     2  calculadora-pegamento-ceramicas-bolsas-m2-area  — solo dentro del hub
+- `MODULO`     1  calculadora-juntas-pastina-rejuntado-ceramicos-kg  — solo dentro del hub
+- `MODULO`     1  calculadora-venecitas-mosaico-m2  — solo dentro del hub
+
+## [CIENCIA] Física: movimiento, energía y ondas
+`cinematica` · 17 calcs (5 con URL) · 4 borradas · 96 ses/90d
+
+- `PAGINA`    13  calculadora-onda-longitud-frecuencia-velocidad
+- `PAGINA`    13  calculadora-velocidad-sonido-segun-temperatura-aire
+- `PAGINA`    11  calculadora-aceleracion-fuerza-masa
+- `PAGINA`    10  calculadora-dilatacion-termica-longitud
+- `PAGINA`    10  calculadora-escala-richter-magnitud-energia
+- `MODULO`     7  calculadora-calor-especifico-delta-t  — solo dentro del hub
+- `MODULO`     6  calculadora-velocidad-distancia-tiempo-fisica  — solo dentro del hub
+- `MODULO`     5  calculadora-lente-distancia-focal  — solo dentro del hub
+- `MODULO`     4  calculadora-distancia-caida-libre-altura  — solo dentro del hub
+- `BORRAR`     3  calculadora-caida-libre-tiempo-altura  — duplicado de calculadora-distancia-caida-libre-altura
+- `MODULO`     3  calculadora-fuerza-friccion-coeficiente  — solo dentro del hub
+- `MODULO`     3  calculadora-ley-coulomb-fuerza-electrica  — solo dentro del hub
+- `MODULO`     2  calculadora-entropia-cambio-fase  — solo dentro del hub
+- `MODULO`     2  calculadora-velocidad-escape-planeta  — solo dentro del hub
+- `MODULO`     1  calculadora-efecto-doppler-frecuencia  — solo dentro del hub
+- `MODULO`     1  calculadora-energia-cinetica-joules  — solo dentro del hub
+- `MODULO`     1  calculadora-momento-angular-rotacion  — solo dentro del hub
+- `MODULO`     1  calculadora-velocidad-orbital-satelite  — solo dentro del hub
+- `BORRAR`     0  calculadora-energia-potencial-gravitatoria  — 0 sesiones/90d
+- `BORRAR`     0  calculadora-tiro-parabolico-alcance-altura  — 0 sesiones/90d
+- `BORRAR`     0  velocidad-distancia-tiempo-despeje  — duplicado de calculadora-velocidad-distancia-tiempo-fisica
+
+## [EVENTO] ¿Cuánto sale la fiesta y qué necesito?
+`presupuesto-fiesta` · 19 calcs (4 con URL) · 0 borradas · 96 ses/90d
+
+- `PAGINA`    13  calculadora-playlist-duracion-canciones
+- `PAGINA`    12  calculadora-globos-decoracion-salon-metros
+- `PAGINA`    12  calculadora-presupuesto-despedida-soltera
+- `PAGINA`    11  calculadora-presupuesto-cumpleanos
+- `MODULO`     7  calculadora-costo-boda-argentina  — solo dentro del hub
+- `MODULO`     6  calculadora-sillas-mesas-invitados  — solo dentro del hub
+- `MODULO`     4  calculadora-cotillon-cumple-personas  — solo dentro del hub
+- `MODULO`     4  calculadora-meseros-necesarios-invitados  — solo dentro del hub
+- `MODULO`     4  calculadora-presupuesto-cumple-15-quinceanera  — solo dentro del hub
+- `MODULO`     4  calculadora-vajilla-alquiler-invitados  — solo dentro del hub
+- `MODULO`     3  calculadora-karaoke-canciones-por-hora  — solo dentro del hub
+- `MODULO`     3  calculadora-presupuesto-casamiento-por-invitado  — solo dentro del hub
+- `MODULO`     3  calculadora-regalo-boda-apropiado-invitado  — solo dentro del hub
+- `MODULO`     2  calculadora-anillo-compromiso-precio-sueldo  — solo dentro del hub
+- `MODULO`     2  calculadora-fecha-boda-ideal  — solo dentro del hub
+- `MODULO`     2  calculadora-invitaciones-cumple-numero  — solo dentro del hub
+- `MODULO`     2  calculadora-regalos-invitado-souvenir  — solo dentro del hub
+- `MODULO`     1  calculadora-cumpleanos-invitados-gastar-torta-regalos  — solo dentro del hub
+- `MODULO`     1  calculadora-presupuesto-graduacion  — solo dentro del hub
+
+## [HOGAR] ¿Cada cuánto limpio y cuánto producto uso?
+`limpieza` · 13 calcs (3 con URL) · 0 borradas · 95 ses/90d
+
+- `PAGINA`    39  calculadora-iluminacion-lux-lumens-ambiente
+- `PAGINA`    23  calculadora-lavandina-dilucion-litros-ml
+- `PAGINA`    10  calculadora-costo-lavado-ropa-lavadora-vs-lavanderia
+- `MODULO`     9  calculadora-lavarropas-eficiencia-agua-litros-ciclo  — solo dentro del hub
+- `MODULO`     3  calculadora-producto-limpieza-rendimiento-m2  — solo dentro del hub
+- `MODULO`     3  calculadora-tiempo-secado-ropa-aire-libre-horas  — solo dentro del hub
+- `MODULO`     2  calculadora-limpieza-frecuencia-ambiente-hogar  — solo dentro del hub
+- `MODULO`     1  calculadora-costo-mantenimiento-hogar-anual  — solo dentro del hub
+- `MODULO`     1  calculadora-forro-almohadon-medidas  — solo dentro del hub
+- `MODULO`     1  calculadora-limpieza-hogar-tiempo-metros-frecuencia-total  — solo dentro del hub
+- `MODULO`     1  calculadora-plantas-purificar-aire-habitacion  — solo dentro del hub
+- `MODULO`     1  calculadora-proyectos-hogar  — solo dentro del hub
+- `MODULO`     1  calculadora-vida-util-electrodomestico-anos  — solo dentro del hub
+
+## [PLATA] Pago el mínimo de la tarjeta: ¿cuánto me cuesta?
+`tarjeta` · 5 calcs (2 con URL) · 3 borradas · 91 ses/90d
+
+- `PAGINA`    37  calculadora-tarjeta-credito-pago-minimo-intereses
+- `PAGINA`    18  calculadora-interes-acumulado-tarjeta
+- `BORRAR`    15  calculadora-tarjeta-credito-pago-minimo-costo-real  — duplicado de calculadora-tarjeta-credito-pago-minimo-intereses
+- `MODULO`     9  calculadora-costo-real-cuotas-vs-contado  — solo dentro del hub
+- `MODULO`     4  calculadora-cuotas-sin-interes-costo-real-inflacion  — solo dentro del hub
+- `MODULO`     4  calculadora-cuotas-sin-interes-precio  — solo dentro del hub
+- `BORRAR`     4  calculadora-tarjeta-credito-minimo  — duplicado de calculadora-tarjeta-credito-pago-minimo-intereses
+- `BORRAR`     0  calculadora-cuota-simple-ahora-12-costo-cuotas  — 0 sesiones/90d
+
+## [TECH] Audio: BPM, tempo y decibeles
+`audio` · 9 calcs (3 con URL) · 0 borradas · 90 ses/90d
+
+- `PAGINA`    28  calculadora-bpm-tempo-cancion
+- `PAGINA`    20  calculadora-decibelios-distancia-sonido
+- `PAGINA`    12  calculadora-compas-tiempo-pulso
+- `MODULO`     8  calculadora-amplificador-watts-parlantes  — solo dentro del hub
+- `MODULO`     7  calculadora-cuerda-guitarra-tension  — solo dentro del hub
+- `MODULO`     6  calculadora-afinacion-frecuencia-nota  — solo dentro del hub
+- `MODULO`     4  calculadora-transposicion-acordes  — solo dentro del hub
+- `MODULO`     3  calculadora-exposicion-ruido-decibeles-segura  — solo dentro del hub
+- `MODULO`     2  calculadora-delay-tiempo-ms-bpm  — solo dentro del hub
+
+## [VIAJES] ¿Cuánto equipaje puedo llevar?
+`equipaje` · 8 calcs (2 con URL) · 0 borradas · 89 ses/90d
+
+- `PAGINA`    38  calculadora-ropa-maleta-dias-viaje
+- `PAGINA`    25  calculadora-equipaje-vuelo-kg-lb-limites
+- `MODULO`     9  calculadora-maletas-peso-aerolineas-low-cost-premium  — solo dentro del hub
+- `MODULO`     6  calculadora-peso-mochila-ideal-trekking-senderismo  — solo dentro del hub
+- `MODULO`     5  calculadora-equipaje-extra-costo-aerolinea  — solo dentro del hub
+- `MODULO`     3  calculadora-equipaje-peso-sobrepeso-coste-por-kilo  — solo dentro del hub
+- `MODULO`     2  calculadora-equipaje-mano-bodega-peso-volumen-aerolinea  — solo dentro del hub
+- `MODULO`     1  calculadora-equipaje-permitido-franquicia-aerolinea  — solo dentro del hub
+
+## [CLIMA] ¿Cuál es mi huella de carbono?
+`huella` · 9 calcs (3 con URL) · 0 borradas · 89 ses/90d
+
+- `PAGINA`    30  calculadora-arboles-compensar-co2-huella
+- `PAGINA`    20  calculadora-biodegradacion-tiempo-materiales
+- `PAGINA`    14  calculadora-huella-hidrica-alimentos-litros
+- `MODULO`     9  calculadora-vuelo-emisiones-co2-pasajero  — solo dentro del hub
+- `MODULO`     6  calculadora-huella-carbono-personal  — solo dentro del hub
+- `MODULO`     4  calculadora-reciclaje-ahorro-residuos  — solo dentro del hub
+- `MODULO`     4  calculadora-reciclaje-botellas-ahorro-co2  — solo dentro del hub
+- `MODULO`     1  calculadora-huella-carbono-alimentacion-semanal  — solo dentro del hub
+- `MODULO`     1  calculadora-papel-ahorrado-impresion-doble-cara  — solo dentro del hub
+
+## [TECH] Juegos: drops, ELO y tiempo de juego
+`juegos` · 9 calcs (4 con URL) · 0 borradas · 88 ses/90d
+
+- `PAGINA`    29  calculadora-anime-tiempo-bingear-temporadas-episodios-horas
+- `PAGINA`    17  calculadora-blox-fruits-valor-trade
+- `PAGINA`    13  calculadora-portal-nether-overworld-minecraft
+- `PAGINA`    11  calculadora-maraton-serie-tiempo
+- `MODULO`     8  calculadora-modelismo-pintura-figuras-tiempo-warhammer-citadel  — solo dentro del hub
+- `MODULO`     4  calculadora-rankeo-elo-puntos  — solo dentro del hub
+- `MODULO`     3  calculadora-iv-pokemon-go-cp-nivel  — solo dentro del hub
+- `MODULO`     2  calculadora-puzzle-1000-piezas-tiempo-promedio-dificultad  — solo dentro del hub
+- `MODULO`     1  calculadora-tiempo-completar-juego-horas  — solo dentro del hub
+
+## [TECH] ¿Cuánto me cuesta la API de IA?
+`costo-ia` · 15 calcs (4 con URL) · 0 borradas · 87 ses/90d
+
+- `PAGINA`    17  calculadora-costo-cloud-servidor-mensual
+- `PAGINA`    15  calculadora-tokens-por-modelo-de-ia-costo
+- `PAGINA`    11  calculadora-costo-tokens-api-openai-claude-mensual
+- `PAGINA`    11  calculadora-tokens-openai-gpt-costo-uso-mensual
+- `MODULO`     8  calculadora-codigo-color-hex-rgb  — solo dentro del hub
+- `MODULO`     5  calculadora-codigo-lineas-estimacion-proyecto  — solo dentro del hub
+- `MODULO`     4  calculadora-claude-gemini-tokens-comparativa-precio-uso  — solo dentro del hub
+- `MODULO`     4  calculadora-huella-digital-estimacion  — solo dentro del hub
+- `MODULO`     4  calculadora-lineas-codigo-proyecto-complejidad-kloc  — solo dentro del hub
+- `MODULO`     2  calculadora-generador-qr  — solo dentro del hub
+- `MODULO`     2  calculadora-gpu-h100-renta-hora-cloud-comparativa  — solo dentro del hub
+- `MODULO`     1  calculadora-claude-37-tokens-costo-cache-prompt-mensual  — solo dentro del hub
+- `MODULO`     1  calculadora-complejidad-algoritmica-big-o-iteraciones  — solo dentro del hub
+- `MODULO`     1  calculadora-hashes-bcrypt-costo-tiempo-cracking  — solo dentro del hub
+- `MODULO`     1  calculadora-inferencia-llm-tokens-segundo-throughput  — solo dentro del hub
+
+## [VIVIENDA] Gas y agua: ¿cuánto voy a pagar?
+`factura-gas-agua` · 9 calcs (3 con URL) · 0 borradas · 86 ses/90d
+
+- `PAGINA`    44  calculadora-gas-natural-consumo-m3
+- `PAGINA`    17  calculadora-consumo-agua-mensual
+- `PAGINA`    11  calculadora-factura-gas-estimada
+- `MODULO`     4  calculadora-gasto-agua-mensual-hogar-litros  — solo dentro del hub
+- `MODULO`     3  calculadora-garrafa-gas-duracion  — solo dentro del hub
+- `MODULO`     3  calculadora-tarifa-gas-metrogas-naturgy-cuadro-2026  — solo dentro del hub
+- `MODULO`     2  calculadora-gas-natural-subsidio-zonas-frias-patagonia  — solo dentro del hub
+- `MODULO`     1  calculadora-agua-consumo-hogar-ahorro  — solo dentro del hub
+- `MODULO`     1  calculadora-tarifa-agua-aysa-2026-factura  — solo dentro del hub
+
+## [NEGOCIO] CPC, CPM y ROAS: ¿cuánto me cuesta un cliente?
+`metricas-ads` · 20 calcs (1 con URL) · 1 borradas · 85 ses/90d
+
+- `PAGINA`    13  calculadora-costo-por-lead-cpl-marketing
+- `MODULO`     8  calculadora-cpc-costo-por-click  — solo dentro del hub
+- `MODULO`     8  calculadora-cpm-costo-por-mil-impresiones  — solo dentro del hub
+- `MODULO`     6  calculadora-cac-ltv-costo-adquisicion-cliente  — solo dentro del hub
+- `MODULO`     5  calculadora-nps-net-promoter-score  — solo dentro del hub
+- `MODULO`     5  calculadora-reach-frequency-grp-medios  — solo dentro del hub
+- `MODULO`     5  calculadora-share-of-voice-marketing  — solo dentro del hub
+- `MODULO`     4  calculadora-cpm-cpc-conversion-ads  — solo dentro del hub
+- `MODULO`     4  calculadora-roas-retorno-inversion-publicitaria  — solo dentro del hub
+- `MODULO`     3  calculadora-costo-por-view-cpv-video  — solo dentro del hub
+- `MODULO`     3  calculadora-costo-real-pauta-exterior-impuestos-argentina  — solo dentro del hub
+- `MODULO`     3  calculadora-cpa-cac-ltv  — solo dentro del hub
+- `MODULO`     3  calculadora-customer-effort-score-ces  — solo dentro del hub
+- `MODULO`     3  calculadora-mejor-hora-publicar  — solo dentro del hub
+- `MODULO`     3  calculadora-tasa-de-conversion  — solo dentro del hub
+- `MODULO`     2  calculadora-cac-costo-adquisicion-sales-funnel  — solo dentro del hub
+- `MODULO`     2  calculadora-churn-retencion-clientes  — solo dentro del hub
+- `MODULO`     2  calculadora-roi-ad-spend-facebook-meta  — solo dentro del hub
+- `MODULO`     2  calculadora-tasa-rebote-benchmark-sitio-web  — solo dentro del hub
+- `MODULO`     1  calculadora-attribution-modelo-primer-ultimo-click  — solo dentro del hub
+- `BORRAR`     0  calculadora-tiempo-en-redes-sociales  — 0 sesiones/90d
+
+## [NEGOCIO] ¿Cuánto se gana creando contenido?
+`streaming-musica` · 21 calcs (1 con URL) · 1 borradas · 85 ses/90d
+
+- `PAGINA`    17  calculadora-youtube-cpm-por-nicho
+- `MODULO`     9  calculadora-twitch-bits-donaciones-dolares  — solo dentro del hub
+- `MODULO`     7  calculadora-tiktok-live-diamonds-dolares  — solo dentro del hub
+- `MODULO`     7  calculadora-youtube-shorts-fund-ingreso  — solo dentro del hub
+- `MODULO`     5  calculadora-apple-music-royalties-pagos  — solo dentro del hub
+- `MODULO`     5  calculadora-tiktok-engagement-rate  — solo dentro del hub
+- `MODULO`     5  calculadora-youtube-tiempo-para-monetizar  — solo dentro del hub
+- `MODULO`     4  calculadora-blog-adsense-rpm-nicho  — solo dentro del hub
+- `MODULO`     4  calculadora-spotify-royalties-streams  — solo dentro del hub
+- `MODULO`     3  calculadora-kindle-kdp-ingreso-ebook  — solo dentro del hub
+- `MODULO`     3  calculadora-tiktok-duracion-optima-video  — solo dentro del hub
+- `MODULO`     2  calculadora-audible-ingreso-audiolibro  — solo dentro del hub
+- `MODULO`     2  calculadora-newsletter-ingreso-suscriptores-pago  — solo dentro del hub
+- `MODULO`     2  calculadora-regalias-spotify-por-pais-streams-dolares  — solo dentro del hub
+- `MODULO`     2  calculadora-youtube-ingresos-cpm-suscriptores-views-monetizacion  — solo dentro del hub
+- `MODULO`     2  calculadora-youtube-ingresos-vistas-pais  — solo dentro del hub
+- `MODULO`     2  calculadora-youtube-suscriptores-para-1000  — solo dentro del hub
+- `MODULO`     1  calculadora-streamer-setup-presupuesto  — solo dentro del hub
+- `MODULO`     1  calculadora-substack-suscriptores-meta  — solo dentro del hub
+- `MODULO`     1  calculadora-tiktok-ads-cpm-presupuesto-conversion-2026  — solo dentro del hub
+- `MODULO`     1  calculadora-twitch-horas-para-partner  — solo dentro del hub
+- `BORRAR`     0  calculadora-tiktok-spark-ads-costo  — 0 sesiones/90d
+
+## [ESTUDIO] ¿Cuánto sale, cuánto dura y cuánto me falta?
+`costo-carrera` · 12 calcs (3 con URL) · 0 borradas · 84 ses/90d
+
+- `PAGINA`    16  calculadora-itba-utdt-costo-carrera-anual-privada
+- `PAGINA`    14  calculadora-costo-universidad-privada-cuota
+- `PAGINA`    11  calculadora-costo-carrera-privada
+- `MODULO`     8  calculadora-creditos-restantes-carrera  — solo dentro del hub
+- `MODULO`     8  calculadora-duracion-carrera-universidad  — solo dentro del hub
+- `MODULO`     6  calculadora-horas-estudio-materia-creditos  — solo dentro del hub
+- `MODULO`     5  calculadora-costo-carrera-total  — solo dentro del hub
+- `MODULO`     5  calculadora-creditos-universitarios-avance  — solo dentro del hub
+- `MODULO`     4  calculadora-ingreso-colegio-privado-cuota-anual-caba  — solo dentro del hub
+- `MODULO`     3  calculadora-materias-faltan-recibirte  — solo dentro del hub
+- `MODULO`     2  calculadora-duracion-carrera-materias-por-cuatrimestre  — solo dentro del hub
+- `MODULO`     2  calculadora-ingreso-medicina-puntaje-cbc-uba-2026  — solo dentro del hub
+
+## [TECH] ¿Cuánto tarda en descargar? ¿Me alcanza el internet?
+`internet` · 9 calcs (3 con URL) · 1 borradas · 81 ses/90d
+
+- `PAGINA`    31  calculadora-velocidad-internet-mbps-real
+- `PAGINA`    25  calculadora-ancho-banda-descarga-tiempo
+- `PAGINA`    12  calculadora-raid-almacenamiento-util-discos
+- `MODULO`     6  calculadora-categoria-cable-ethernet-velocidad-distancia  — solo dentro del hub
+- `MODULO`     3  calculadora-subnetting-mascara-red-cidr  — solo dentro del hub
+- `MODULO`     1  calculadora-consumo-datos-moviles-streaming  — solo dentro del hub
+- `MODULO`     1  calculadora-tiempo-descarga-archivo-internet  — solo dentro del hub
+- `MODULO`     1  calculadora-transferencia-archivo-red-lan-tiempo  — solo dentro del hub
+- `MODULO`     1  calculadora-uptime-servidor-nueve-nueves-minutos  — solo dentro del hub
+- `BORRAR`     0  calculadora-wifi-canal-optimo-24-5-ghz  — 0 sesiones/90d
+
+## [MASCOTAS] Mi perro: cuánto tiene que pesar y cuánto come
+`peso-perro` · 16 calcs (2 con URL) · 2 borradas · 80 ses/90d
+
+- `PAGINA`    14  calculadora-comida-perro-diaria-gramos
+- `PAGINA`    10  calculadora-peso-ideal-yorkshire-terrier
+- `MODULO`     6  calculadora-peso-ideal-bulldog-ingles  — solo dentro del hub
+- `MODULO`     6  calculadora-peso-ideal-golden-retriever  — solo dentro del hub
+- `MODULO`     5  calculadora-peso-ideal-dachshund-salchicha  — solo dentro del hub
+- `MODULO`     5  calculadora-peso-ideal-pastor-aleman  — solo dentro del hub
+- `MODULO`     4  calculadora-alimento-diario-perro  — solo dentro del hub
+- `MODULO`     4  calculadora-peso-ideal-husky-siberiano  — solo dentro del hub
+- `MODULO`     4  calculadora-peso-ideal-pitbull  — solo dentro del hub
+- `MODULO`     4  calculadora-peso-ideal-rottweiler  — solo dentro del hub
+- `MODULO`     3  calculadora-comida-yorkshire-terrier-porcion-diaria-edad  — solo dentro del hub
+- `MODULO`     3  calculadora-peso-ideal-beagle  — solo dentro del hub
+- `MODULO`     3  calculadora-peso-ideal-boxer  — solo dentro del hub
+- `MODULO`     2  calculadora-calorias-perro-por-raza-edad  — solo dentro del hub
+- `MODULO`     2  calculadora-comida-bulldog-frances-cantidad-edad-peso  — solo dentro del hub
+- `MODULO`     2  calculadora-comida-cachorro-gramos-edad  — solo dentro del hub
+- `BORRAR`     2  calculadora-peso-ideal-labrador-retriever  — duplicado de calculadora-peso-ideal-golden-retriever
+- `BORRAR`     1  calculadora-peso-ideal-bulldog-frances  — duplicado de calculadora-peso-ideal-bulldog-ingles
+
+## [PLATA] ¿Cómo armo mi presupuesto mensual?
+`presupuesto-mensual` · 9 calcs (2 con URL) · 3 borradas · 80 ses/90d
+
+- `PAGINA`    26  calculadora-presupuesto-50-30-20
+- `PAGINA`    23  calculadora-ahorro-meta-mensual
+- `MODULO`     8  calculadora-fondo-emergencia-meses  — solo dentro del hub
+- `MODULO`     6  calculadora-ahorro-hormiga-gasto-diario  — solo dentro del hub
+- `MODULO`     5  calculadora-ahorro-objetivo-mensual  — solo dentro del hub
+- `BORRAR`     4  calculadora-fondo-emergencia-meses-gastos-cuanto  — duplicado de calculadora-fondo-emergencia-meses
+- `MODULO`     4  calculadora-tiempo-para-ahorrar-meta  — solo dentro del hub
+- `MODULO`     2  calculadora-presupuesto-regla-50-30-20  — solo dentro del hub
+- `MODULO`     1  calculadora-porcentaje-de-ahorro  — solo dentro del hub
+- `MODULO`     1  calculadora-presupuesto-50-30-20-familiar-sueldo  — solo dentro del hub
+- `BORRAR`     0  calculadora-ahorro-descuentos-cuenta-dni-mes-tope  — 0 sesiones/90d
+- `BORRAR`     0  calculadora-cuanto-ahorrar-por-mes-meta  — 0 sesiones/90d
+
+## [COCINA] ¿Cuánto y a qué temperatura cocino la carne?
+`coccion-carne` · 7 calcs (2 con URL) · 1 borradas · 79 ses/90d
+
+- `PAGINA`    45  calculadora-tiempo-coccion-legumbres-remojo
+- `PAGINA`    11  calculadora-tiempo-temperatura-coccion-carne
+- `MODULO`     7  calculadora-tiempo-descongelado-alimentos-peso  — solo dentro del hub
+- `MODULO`     6  calculadora-temperatura-interna-carne-punto-coccion  — solo dentro del hub
+- `MODULO`     5  calculadora-tiempos-coccion-verduras-al-vapor-hervido  — solo dentro del hub
+- `MODULO`     3  calculadora-tiempo-marinado-carne-pescado  — solo dentro del hub
+- `MODULO`     2  calculadora-temperatura-aceite-fritura-punto-humo  — solo dentro del hub
+- `BORRAR`     0  olla-presion-conversion-tiempos-coccion  — 0 sesiones/90d
+
+## [OBRA] ¿Qué medidas tiene que tener la escalera?
+`escalera` · 2 calcs (2 con URL) · 0 borradas · 79 ses/90d
+
+- `PAGINA`    53  calculadora-escalera-huella-contrahuella-ley-blondel
+- `PAGINA`    26  calculadora-escalera-madera-huella-contrahuella
+
+## [ESTUDIO] ¿Cuánto tardo en aprender inglés y qué puntaje necesito?
+`ingles` · 25 calcs (1 con URL) · 1 borradas · 79 ses/90d
+
+- `PAGINA`    10  calculadora-puntaje-dele-spanish
+- `MODULO`     9  calculadora-ielts-toefl-puntaje-equivalencia-cef-c1-c2  — solo dentro del hub
+- `MODULO`     6  calculadora-dificultad-idioma-fsi  — solo dentro del hub
+- `MODULO`     6  calculadora-ingles-niveles-cambridge-duolingo-tiempo-conversion  — solo dentro del hub
+- `MODULO`     5  calculadora-duolingo-xp-objetivo  — solo dentro del hub
+- `MODULO`     5  calculadora-equivalencia-toefl-ielts-cambridge-mcer  — solo dentro del hub
+- `MODULO`     5  calculadora-horas-aprender-aleman-c1  — solo dentro del hub
+- `MODULO`     3  calculadora-dictado-velocidad-palabras-escuchar-idioma  — solo dentro del hub
+- `MODULO`     3  calculadora-ingles-nivel-mcer-horas-estudio-fsi  — solo dentro del hub
+- `MODULO`     3  calculadora-tiempo-c1-ingles-horas-semanales-meta-meses  — solo dentro del hub
+- `MODULO`     3  calculadora-vocabulario-nivel-mcer-a1-c2-palabras  — solo dentro del hub
+- `MODULO`     2  calculadora-duolingo-tiempo-dia-nivel-mcer-progreso  — solo dentro del hub
+- `MODULO`     2  calculadora-horas-aprender-italiano-b1  — solo dentro del hub
+- `MODULO`     2  calculadora-horas-aprender-portugues-b2  — solo dentro del hub
+- `MODULO`     2  calculadora-horas-estudio-idioma-fluidez-fsi  — solo dentro del hub
+- `MODULO`     2  calculadora-horas-peliculas-serie-inmersion-idioma  — solo dentro del hub
+- `MODULO`     2  calculadora-nivel-goethe-aleman  — solo dentro del hub
+- `MODULO`     2  calculadora-sat-ielts-toefl-equivalencias-puntaje-convertidor  — solo dentro del hub
+- `MODULO`     1  calculadora-acento-extranjero-score-practica-horas  — solo dentro del hub
+- `MODULO`     1  calculadora-anos-fluidez-idioma  — solo dentro del hub
+- `MODULO`     1  calculadora-cae-vs-toefl-vs-ielts-cuanto-cuesta-rinde-mas  — solo dentro del hub
+- `MODULO`     1  calculadora-horas-preparar-gre  — solo dentro del hub
+- `MODULO`     1  calculadora-horas-preparar-sat  — solo dentro del hub
+- `MODULO`     1  calculadora-idioma-paralelo-2-al-mismo  — solo dentro del hub
+- `MODULO`     1  calculadora-velocidad-traduccion-palabras-hora-profesional  — solo dentro del hub
+- `BORRAR`     0  calculadora-score-ielts-band-objetivo  — 0 sesiones/90d
+
+## [CIENCIA] Astronomía: planetas, estrellas y luna
+`espacio` · 10 calcs (2 con URL) · 0 borradas · 76 ses/90d
+
+- `PAGINA`    27  calculadora-fase-lunar-actual-proxima-luna-llena
+- `PAGINA`    15  calculadora-anos-luz-distancia-conversion
+- `MODULO`     9  calculadora-horas-luz-dia-fecha-latitud  — solo dentro del hub
+- `MODULO`     8  calculadora-tiempo-viaje-interestelar  — solo dentro del hub
+- `MODULO`     6  calculadora-mareas-altas-bajas-horario-ciclo-lunar-costa  — solo dentro del hub
+- `MODULO`     4  calculadora-conversor-micrometros-a-milimetros  — solo dentro del hub
+- `MODULO`     3  calculadora-peso-en-otro-planeta  — solo dentro del hub
+- `MODULO`     2  calculadora-retraso-amanecer-atardecer-minutos-dia  — solo dentro del hub
+- `MODULO`     1  calculadora-distancia-estrella-parsec  — solo dentro del hub
+- `MODULO`     1  calculadora-edad-sol-vida-restante  — solo dentro del hub
+
+## [TECH] Convertir GB, MB y bytes
+`almacenamiento` · 7 calcs (3 con URL) · 0 borradas · 73 ses/90d
+
+- `PAGINA`    19  calculadora-almacenamiento-bytes-kb-mb-gb-tb
+- `PAGINA`    16  calculadora-conversor-mb-a-gb
+- `PAGINA`    11  calculadora-conversor-mbps-a-mb-s
+- `MODULO`     9  calculadora-tamano-archivo-conversor  — solo dentro del hub
+- `MODULO`     8  calculadora-conversor-tb-a-gb  — solo dentro del hub
+- `MODULO`     6  calculadora-conversor-kb-a-mb  — solo dentro del hub
+- `MODULO`     4  calculadora-conversor-bits-a-bytes  — solo dentro del hub
+
+## [NEGOCIO] ¿Cuánto cobra un influencer?
+`instagram` · 10 calcs (3 con URL) · 1 borradas · 72 ses/90d
+
+- `PAGINA`    18  calculadora-twitter-x-monetizacion-ingreso
+- `PAGINA`    15  calculadora-engagement-rate-instagram
+- `PAGINA`    10  calculadora-influencer-tarifa-estimada
+- `MODULO`     8  calculadora-tarifario-creador-contenido-multiplataforma  — solo dentro del hub
+- `MODULO`     7  calculadora-engagement-rate-redes-sociales  — solo dentro del hub
+- `MODULO`     5  calculadora-ugc-tarifa-contenido-marca  — solo dentro del hub
+- `MODULO`     3  calculadora-instagram-rate-card-por-followers  — solo dentro del hub
+- `MODULO`     2  calculadora-instagram-carrousel-slides-optimas  — solo dentro del hub
+- `MODULO`     2  calculadora-instagram-influencer-pago-historia  — solo dentro del hub
+- `MODULO`     2  calculadora-linkedin-posts-alcance  — solo dentro del hub
+- `BORRAR`     0  calculadora-pinterest-calendario-pines  — 0 sesiones/90d
+
+## [ESTUDIO] ¿Cómo estudio mejor y más rápido?
+`tecnicas-estudio` · 15 calcs (3 con URL) · 0 borradas · 72 ses/90d
+
+- `PAGINA`    19  calculadora-tiempo-lectura-paginas-estudio
+- `PAGINA`    10  calculadora-lectura-velocidad-paginas-hora-wpm
+- `PAGINA`    10  calculadora-tiempo-estudio-examen-dificultad-paginas
+- `MODULO`     8  calculadora-tecnica-pomodoro-bloques-descanso-optimo  — solo dentro del hub
+- `MODULO`     5  calculadora-productividad-pomodoro-sesiones-dia-efectivas  — solo dentro del hub
+- `MODULO`     4  calculadora-calendario-estudio-parciales  — solo dentro del hub
+- `MODULO`     4  calculadora-comprension-lectora-score  — solo dentro del hub
+- `MODULO`     3  calculadora-ebbinghaus-curva-olvido  — solo dentro del hub
+- `MODULO`     2  calculadora-anki-flashcards-dia-aprender-palabras  — solo dentro del hub
+- `MODULO`     2  calculadora-leer-rapido-palabras-por-minuto-tiempo-libro  — solo dentro del hub
+- `MODULO`     1  calculadora-calentamiento-estudio-minutos  — solo dentro del hub
+- `MODULO`     1  calculadora-deep-work-cal-newport-horas-maximo-diario  — solo dentro del hub
+- `MODULO`     1  calculadora-flashcards-por-dia  — solo dentro del hub
+- `MODULO`     1  calculadora-repaso-optimo-examen  — solo dentro del hub
+- `MODULO`     1  calculadora-smart-goals-objetivos-metodologia-meta  — solo dentro del hub
+
+## [COCINA] ¿Qué molde uso y cómo escalo la receta?
+`molde` · 4 calcs (2 con URL) · 2 borradas · 71 ses/90d
+
+- `PAGINA`    39  calculadora-costo-receta-precio-por-porcion
+- `PAGINA`    24  calculadora-proporciones-receta
+- `MODULO`     7  calculadora-multiplicar-dividir-receta-porciones  — solo dentro del hub
+- `MODULO`     1  conversor-molde-torta-tamano  — solo dentro del hub
+- `BORRAR`     0  gelatina-sin-sabor-gramos-por-litro  — 0 sesiones/90d
+- `BORRAR`     0  merengue-azucar-por-clara  — 0 sesiones/90d
+
+## [AUTO] VTV: ¿cuánto sale y cuándo vence?
+`vtv` · 3 calcs (3 con URL) · 1 borradas · 71 ses/90d
+
+- `PAGINA`    26  calculadora-vtv-costo-provincia-2026
+- `PAGINA`    21  calculadora-vtv-ruta-vencimiento-vigencia-meses
+- `PAGINA`    19  calculadora-vtv-vencimiento-turno
+- `BORRAR`     5  calculadora-vtv-costo-provincias-2026  — duplicado de calculadora-vtv-costo-provincia-2026
+
+## [FAMILIA] ¿Cuánta leche toma mi bebé?
+`biberon` · 7 calcs (2 con URL) · 0 borradas · 70 ses/90d
+
+- `PAGINA`    31  calculadora-leche-formula-biberon-cantidad-peso-bebe
+- `PAGINA`    17  calculadora-leche-materna-formula
+- `MODULO`     8  calculadora-formula-leche-bebe-litros-mes-edad-marca  — solo dentro del hub
+- `MODULO`     5  calculadora-calorias-lactancia  — solo dentro del hub
+- `MODULO`     4  calculadora-formula-infantil-biberon-edad-ml-dia  — solo dentro del hub
+- `MODULO`     3  calculadora-alimentacion-complementaria  — solo dentro del hub
+- `MODULO`     2  calculadora-onzas-biberon-peso-bebe-dia  — solo dentro del hub
+
+## [CUERPO] ¿Qué significan mis análisis?
+`analisis` · 2 calcs (2 con URL) · 3 borradas · 69 ses/90d
+
+- `PAGINA`    45  calculadora-dioptrias-receta-optica
+- `PAGINA`    24  calculadora-conversion-colesterol-mg-mmol
+- `BORRAR`     0  calculadora-calcio-corregido-albumina  — 0 sesiones/90d
+- `BORRAR`     0  calculadora-clearance-creatinina-filtrado-glomerular  — 0 sesiones/90d
+- `BORRAR`     0  calculadora-homa-ir-quicki  — 0 sesiones/90d
+
+## [FAMILIA] ¿Cuánto peso puedo subir en el embarazo?
+`peso-embarazo` · 6 calcs (2 con URL) · 0 borradas · 68 ses/90d
+
+- `PAGINA`    29  calculadora-peso-ideal-embarazo-imc-previo
+- `PAGINA`    26  calculadora-aumento-peso-recomendado-embarazo
+- `MODULO`     7  calculadora-calorias-embarazo-trimestre  — solo dentro del hub
+- `MODULO`     3  calculadora-embarazada-aumento-peso-semana-imc-previo  — solo dentro del hub
+- `MODULO`     2  calculadora-posparto-recuperacion  — solo dentro del hub
+- `MODULO`     1  calculadora-peso-posparto  — solo dentro del hub
+
+## [MATE] Convertir volumen y tiempo
+`convertir-volumen` · 9 calcs (2 con URL) · 0 borradas · 66 ses/90d
+
+- `PAGINA`    17  conversor-litros-galones-mililitros
+- `PAGINA`    17  conversor-unidades-longitud-peso-volumen-temperatura
+- `MODULO`     9  calculadora-conversion-litros-galones-onzas  — solo dentro del hub
+- `MODULO`     9  calculadora-conversor-meses-a-semanas  — solo dentro del hub
+- `MODULO`     7  calculadora-conversor-milisegundos-a-segundos  — solo dentro del hub
+- `MODULO`     2  calculadora-conversor-anos-a-dias  — solo dentro del hub
+- `MODULO`     2  calculadora-conversor-dias-a-horas  — solo dentro del hub
+- `MODULO`     2  calculadora-conversor-semanas-a-dias  — solo dentro del hub
+- `MODULO`     1  calculadora-conversor-horas-a-minutos  — solo dentro del hub
+
+## [CUERPO] ¿Qué suplementos tomo y en qué dosis?
+`suplementos` · 11 calcs (1 con URL) · 1 borradas · 65 ses/90d
+
+- `PAGINA`    28  calculadora-creatina-dosis-carga-mantenimiento
+- `MODULO`     7  calculadora-calcio-diario-edad-lactancia-menopausia  — solo dentro del hub
+- `MODULO`     6  calculadora-cafeina-dosis-rendimiento  — solo dentro del hub
+- `MODULO`     6  calculadora-ingesta-sodio-diaria-mg-sal-hipertension  — solo dentro del hub
+- `MODULO`     4  calculadora-fibra-dietetica-recomendada-diaria-edad  — solo dentro del hub
+- `MODULO`     3  calculadora-magnesio-dosis-deficiencia-sintomas  — solo dentro del hub
+- `MODULO`     3  calculadora-magnesio-glicinato-vs-citrato-vs-malato-dosis  — solo dentro del hub
+- `MODULO`     3  calculadora-vitamina-d-dosis-sol-diaria-edad  — solo dentro del hub
+- `MODULO`     2  calculadora-cafeina-dosis-segura-diaria-peso  — solo dentro del hub
+- `MODULO`     2  calculadora-hierro-diario-vegetariano  — solo dentro del hub
+- `MODULO`     1  calculadora-azucares-anadidos-diarios-oms-mg-gramos  — solo dentro del hub
+- `BORRAR`     0  calculadora-bcaa-pre-workout-gramos  — 0 sesiones/90d
+
+## [PLATA] Bonos argentinos: ¿cuánto rinden?
+`bonos` · 3 calcs (2 con URL) · 0 borradas · 64 ses/90d
+
+- `PAGINA`    42  calculadora-bonos-globales-al30-gd30-rendimiento
+- `PAGINA`    18  calculadora-bonos-al30-al35-al41-rendimiento-anual
+- `MODULO`     4  calculadora-copom-tasa-referencia-banco-central-impacto  — solo dentro del hub
+
+## [OBRA] ¿Qué potencia de caldera o estufa necesito?
+`caldera` · 5 calcs (4 con URL) · 0 borradas · 64 ses/90d
+
+- `PAGINA`    19  calculadora-calefaccion-btu-necesarios-ambiente
+- `PAGINA`    19  calculadora-calefaccion-watts-kcal-ambiente
+- `PAGINA`    14  calculadora-caldera-kw-m2-calefaccion
+- `PAGINA`    11  calculadora-conversion-btu-kcal-aire-acondicionado
+- `MODULO`     1  calculadora-caldera-potencia-kw-ambiente-metros  — solo dentro del hub
+
+## [PLATA] CEDEARs y acciones: ¿cuánto valen?
+`cedears` · 10 calcs (2 con URL) · 0 borradas · 64 ses/90d
+
+- `PAGINA`    31  calculadora-cedear-precio-teorico-ratio-conversion
+- `PAGINA`    13  calculadora-cedear-ratio-conversion-dolares
+- `MODULO`     5  calculadora-cedear-dividend-yield-2026  — solo dentro del hub
+- `MODULO`     4  calculadora-break-even-opciones-call-put  — solo dentro del hub
+- `MODULO`     3  calculadora-price-to-book-ratio-valor-libros  — solo dentro del hub
+- `MODULO`     2  calculadora-black-scholes-opcion-call-put  — solo dentro del hub
+- `MODULO`     2  calculadora-cedears-ratio-conversion-apple-microsoft  — solo dentro del hub
+- `MODULO`     2  calculadora-sharpe-ratio-portafolio-riesgo  — solo dentro del hub
+- `MODULO`     1  calculadora-diversificacion-portafolio-correlacion  — solo dentro del hub
+- `MODULO`     1  calculadora-dividendos-yield-anual  — solo dentro del hub
+
+## [AUTO] ¿Conviene un auto eléctrico o GNC?
+`electrico-vs-nafta` · 7 calcs (1 con URL) · 0 borradas · 63 ses/90d
+
+- `PAGINA`    42  calculadora-comparar-nafta-vs-gnc-ahorro
+- `MODULO`     5  calculadora-emision-co2-auto-combustible  — solo dentro del hub
+- `MODULO`     4  calculadora-emisiones-co2-auto-g-km-anual  — solo dentro del hub
+- `MODULO`     4  calculadora-huella-carbono-auto-anual  — solo dentro del hub
+- `MODULO`     3  calculadora-ahorro-auto-electrico-vs-nafta-anual  — solo dentro del hub
+- `MODULO`     3  calculadora-auto-electrico-vs-nafta-tco-5-anos-argentina  — solo dentro del hub
+- `MODULO`     2  calculadora-costo-cargar-auto-electrico-vs-nafta  — solo dentro del hub
+
+## [FAMILIA] Me divorcio: ¿cómo se reparte todo?
+`divorcio` · 5 calcs (2 con URL) · 0 borradas · 62 ses/90d
+
+- `PAGINA`    38  calculadora-divorcio-express-costo-argentina-honorarios
+- `PAGINA`    16  calculadora-matrimonio-civil-costo-tramite-argentina
+- `MODULO`     4  calculadora-division-bienes-divorcio  — solo dentro del hub
+- `MODULO`     3  calculadora-divorcio-liquidacion-bienes-gananciales-costo  — solo dentro del hub
+- `MODULO`     1  calculadora-tiempo-superar-ruptura-relacion-meses  — solo dentro del hub
+
+## [VIAJES] ¿Necesito visa y cuánto sale?
+`visa` · 13 calcs (2 con URL) · 1 borradas · 62 ses/90d
+
+- `PAGINA`    23  calculadora-pasaporte-renovacion-costo-tiempo
+- `PAGINA`    10  calculadora-visa-usa-costo-tiempo-pasaporte
+- `MODULO`     8  calculadora-visa-china-turista-costo  — solo dentro del hub
+- `MODULO`     6  calculadora-eta-canada-requisitos  — solo dentro del hub
+- `MODULO`     4  calculadora-visa-turismo-usa-ee-uu-costo-b1-b2  — solo dentro del hub
+- `MODULO`     2  calculadora-emigrar-espana-presupuesto-primer-ano-familia  — solo dentro del hub
+- `MODULO`     2  calculadora-visa-schengen-europa-requisitos  — solo dentro del hub
+- `MODULO`     2  calculadora-visa-turismo-paises-costo-tiempo  — solo dentro del hub
+- `MODULO`     1  calculadora-esta-usa-requisitos  — solo dentro del hub
+- `MODULO`     1  calculadora-vacuna-fiebre-amarilla-cuanto-antes  — solo dentro del hub
+- `MODULO`     1  calculadora-visa-brasil-ciudadano-argentino  — solo dentro del hub
+- `MODULO`     1  calculadora-visa-japon-argentino  — solo dentro del hub
+- `MODULO`     1  calculadora-working-holiday-australia-costo-ano  — solo dentro del hub
+- `BORRAR`     0  calculadora-costo-ciudadania-italiana-argentina  — 0 sesiones/90d
+
+## [VIVIENDA] ¿Me alcanza el sueldo para alquilar?
+`puedo-alquilar` · 6 calcs (2 con URL) · 0 borradas · 61 ses/90d
+
+- `PAGINA`    22  calculadora-comision-inmobiliaria-alquiler-caba-pba
+- `PAGINA`    17  calculadora-seguro-caucion-alquiler-costo-mensual
+- `MODULO`     9  calculadora-poliza-juridica-arrendamiento-mexico  — solo dentro del hub
+- `MODULO`     5  calculadora-depositos-alquiler-cuantos-meses-devolucion  — solo dentro del hub
+- `MODULO`     5  calculadora-sueldo-minimo-para-alquilar  — solo dentro del hub
+- `MODULO`     3  calculadora-cuanto-alquiler-puedo-pagar-sueldo-argentina  — solo dentro del hub
+
+## [NEGOCIO] ¿Cuánto necesito para abrir el negocio?
+`abrir-negocio` · 14 calcs (1 con URL) · 1 borradas · 60 ses/90d
+
+- `PAGINA`    21  calculadora-depreciacion-activos-linea-recta
+- `MODULO`     7  calculadora-rotacion-inventario-stock  — solo dentro del hub
+- `MODULO`     6  calculadora-payback-periodo-recupero-inversion  — solo dentro del hub
+- `MODULO`     4  calculadora-dias-promedio-pago-proveedores-dpp  — solo dentro del hub
+- `MODULO`     4  calculadora-dso-dias-promedio-cobro  — solo dentro del hub
+- `MODULO`     4  calculadora-wacc-costo-capital-promedio-ponderado  — solo dentro del hub
+- `MODULO`     3  calculadora-proyeccion-ventas-crecimiento  — solo dentro del hub
+- `MODULO`     2  calculadora-costo-almacenamiento-inventario  — solo dentro del hub
+- `MODULO`     2  calculadora-ratio-liquidez-corriente-seco  — solo dentro del hub
+- `MODULO`     2  calculadora-valor-empresa-multiplo-ebitda  — solo dentro del hub
+- `MODULO`     2  calculadora-valuacion-startup-metodo-berkus  — solo dentro del hub
+- `MODULO`     1  calculadora-capital-inicial-abrir-negocio  — solo dentro del hub
+- `MODULO`     1  calculadora-flujo-caja-libre-fcf  — solo dentro del hub
+- `MODULO`     1  calculadora-rentabilidad-mensual-negocio  — solo dentro del hub
+- `BORRAR`     0  calculadora-capital-de-trabajo  — 0 sesiones/90d
+
+## [ANSES] Becas Progresar y ayudas para estudiar
+`becas` · 5 calcs (2 con URL) · 1 borradas · 58 ses/90d
+
+- `PAGINA`    25  calculadora-progresar-beca-monto-requisitos-2026
+- `PAGINA`    19  calculadora-becas-manuel-belgrano-monto
+- `MODULO`     7  calculadora-credito-universitario-progresar-monto-2026  — solo dentro del hub
+- `MODULO`     6  calculadora-beca-promedio-minimo-requisito-universidades  — solo dentro del hub
+- `MODULO`     1  calculadora-becas-porcentaje-cobertura  — solo dentro del hub
+- `BORRAR`     0  calculadora-progresar-retencion-20-por-ciento  — 0 sesiones/90d
+
+## [MASCOTAS] Vacunas y dosis para mi mascota
+`vacunas-mascota` · 7 calcs (3 con URL) · 2 borradas · 57 ses/90d
+
+- `PAGINA`    22  calculadora-vacunas-gato-calendario-gatito
+- `PAGINA`    10  calculadora-castracion-edad-ideal-perro-gato
+- `PAGINA`    10  calculadora-vacunas-perro-calendario
+- `MODULO`     5  calculadora-dosis-antiparasitario-perro-gato-peso  — solo dentro del hub
+- `BORRAR`     3  calculadora-dosis-antipulgas-peso-mascota  — duplicado de calculadora-dosis-medicamento-mascota-por-peso
+- `MODULO`     3  calculadora-dosis-medicamento-mascota-por-peso  — solo dentro del hub
+- `MODULO`     3  calculadora-frecuencia-corte-unas-perro-gato  — solo dentro del hub
+- `MODULO`     1  calculadora-frecuencia-bano-perro-raza-tipo-pelo  — solo dentro del hub
+- `BORRAR`     0  calculadora-vacunas-perro-calendario-cachorro  — duplicado de calculadora-vacunas-perro-calendario
+
+## [FAMILIA] ¿Cuánto cuesta tener un hijo?
+`costo-hijo` · 6 calcs (2 con URL) · 0 borradas · 56 ses/90d
+
+- `PAGINA`    27  calculadora-nombre-bebe-significado
+- `PAGINA`    11  calculadora-cuota-jardin-maternal-cama-cuna-mensual-2026
+- `MODULO`     6  calculadora-edad-ingreso-escolar-primaria-jardin  — solo dentro del hub
+- `MODULO`     5  calculadora-panales-mes-bebe-talle-gasto-anual  — solo dentro del hub
+- `MODULO`     4  calculadora-guarderia-jardin-maternal-costo-caba-mensual  — solo dentro del hub
+- `MODULO`     3  calculadora-costo-fiesta-cumpleanos-infantil-invitados  — solo dentro del hub
+
+## [CUERPO] ¿Cómo reparto mis macros?
+`macros` · 8 calcs (2 con URL) · 0 borradas · 56 ses/90d
+
+- `PAGINA`    23  calculadora-macros-distribucion-proteina-carbos-grasas
+- `PAGINA`    11  calculadora-macros-deficit-volumen-mantenimiento
+- `MODULO`     7  calculadora-macros-recomp-cut-bulk-lean-calorias  — solo dentro del hub
+- `MODULO`     5  calculadora-macros-keto-dieta  — solo dentro del hub
+- `MODULO`     4  calculadora-macronutrientes-dieta  — solo dentro del hub
+- `MODULO`     3  calculadora-macros-paleo-dieta  — solo dentro del hub
+- `MODULO`     2  calculadora-macros-mediterranea  — solo dentro del hub
+- `MODULO`     1  calculadora-macros-dash-hipertension  — solo dentro del hub
+
+## [AUTO] Potencia, cilindrada y frenado
+`specs-auto` · 9 calcs (2 con URL) · 0 borradas · 56 ses/90d
+
+- `PAGINA`    20  calculadora-potencia-hp-kw-cv
+- `PAGINA`    14  calculadora-conversion-torque-nm-lb-ft-kgm
+- `MODULO`     5  calculadora-cilindrada-motor-cc-litros  — solo dentro del hub
+- `MODULO`     5  calculadora-conversion-velocidad-kmh-mph-nudos  — solo dentro del hub
+- `MODULO`     3  calculadora-cilindrada-motor-relacion-potencia  — solo dentro del hub
+- `MODULO`     3  calculadora-distancia-frenado-velocidad-adhesion  — solo dentro del hub
+- `MODULO`     3  calculadora-velocidad-maxima-relacion-potencia-peso  — solo dentro del hub
+- `MODULO`     2  calculadora-suspension-altura-libre-piso-auto  — solo dentro del hub
+- `MODULO`     1  calculadora-capacidad-carga-camioneta-peso-util  — solo dentro del hub
+
+## [NEGOCIO] ¿Cuánto cobro por hora como freelance?
+`tarifa-freelance` · 13 calcs (2 con URL) · 0 borradas · 56 ses/90d
+
+- `PAGINA`    17  calculadora-cuanto-cobro-por-hora-freelance
+- `PAGINA`    10  calculadora-costo-hora-disenador-grafico
+- `MODULO`     8  calculadora-freelance-tarifa-hora  — solo dentro del hub
+- `MODULO`     4  calculadora-costo-hora-fotografo-evento  — solo dentro del hub
+- `MODULO`     4  calculadora-rate-hora-freelance-nivel  — solo dentro del hub
+- `MODULO`     3  calculadora-costo-hora-desarrollador-senior  — solo dentro del hub
+- `MODULO`     3  calculadora-cuanto-cobrar-traduccion-palabra-2026-espanol-ingles  — solo dentro del hub
+- `MODULO`     2  calculadora-hora-freelance-por-pais-mercado  — solo dentro del hub
+- `MODULO`     1  calculadora-costo-hora-consultor-marketing  — solo dentro del hub
+- `MODULO`     1  calculadora-costo-hora-redactor-copywriter  — solo dentro del hub
+- `MODULO`     1  calculadora-cuanto-facturar-cubrir-gastos  — solo dentro del hub
+- `MODULO`     1  calculadora-cuanto-tengo-que-facturar-para-ganar-x-neto  — solo dentro del hub
+- `MODULO`     1  calculadora-upwork-freelancer-comision-neta-argentina  — solo dentro del hub
+
+## [OBRA] Cables, secciones y amperaje
+`electricidad-obra` · 2 calcs (1 con URL) · 2 borradas · 54 ses/90d
+
+- `PAGINA`    25  calculadora-electricidad-cable-amperaje-seccion
+- `BORRAR`    19  calculadora-cable-awg-amperaje-seccion  — duplicado de calculadora-electricidad-cable-amperaje-seccion
+- `MODULO`     6  calculadora-caida-tension-cable-distancia  — solo dentro del hub
+- `BORRAR`     4  calculadora-fusible-amperaje-cable-seccion  — duplicado de calculadora-electricidad-cable-amperaje-seccion
+
+## [OBRA] Techo: tejas, membrana y pendiente
+`techo` · 5 calcs (2 con URL) · 0 borradas · 54 ses/90d
+
+- `PAGINA`    24  calculadora-tejas-techo-m2
+- `PAGINA`    13  calculadora-impermeabilizante-membrana-m2-techo
+- `MODULO`     8  calculadora-impermeabilizacion-techo-membrana-rollos-m2-costo  — solo dentro del hub
+- `MODULO`     6  calculadora-membrana-asfaltica-rollos  — solo dentro del hub
+- `MODULO`     3  calculadora-pendiente-techo-grados-porcentaje  — solo dentro del hub
+
+## [VIVIENDA] ¿Me conviene comprar o seguir alquilando?
+`comprar-o-alquilar` · 8 calcs (2 con URL) · 0 borradas · 51 ses/90d
+
+- `PAGINA`    18  calculadora-rentabilidad-alquiler-inmueble-caba-neto-bruto
+- `PAGINA`    15  calculadora-precio-m2-zona
+- `MODULO`     6  calculadora-alquiler-vs-comprar  — solo dentro del hub
+- `MODULO`     5  calculadora-cap-rate-rentabilidad-alquiler-inmobiliario  — solo dentro del hub
+- `MODULO`     3  calculadora-rentabilidad-alquiler-vs-venta  — solo dentro del hub
+- `MODULO`     2  calculadora-propiedad-tasacion-m2-barrio-caba-promedio  — solo dentro del hub
+- `MODULO`     1  calculadora-alquiler-con-opcion-a-compra-leasing-inmueble  — solo dentro del hub
+- `MODULO`     1  calculadora-alquiler-temporal-vs-tradicional-rendimiento-neto  — solo dentro del hub
+
+## [FECHAS] ¿Cuánto tiempo llevamos juntos?
+`pareja` · 4 calcs (2 con URL) · 0 borradas · 50 ses/90d
+
+- `PAGINA`    31  calculadora-dias-juntos-pareja
+- `PAGINA`    12  calculadora-aniversario-pareja
+- `MODULO`     4  calculadora-tiempo-calidad-hijos-padres-madres-minutos  — solo dentro del hub
+- `MODULO`     3  calculadora-edad-ideal-pareja  — solo dentro del hub
+
+
+# DESCARTADOS — hub bajo 50 ses/90d, se borran enteros
+
+
+## [MASCOTAS] Acuario: litros, peces y temperatura — 37 ses · 9 calcs
+
+-    20  calculadora-litros-pecera-acuario-cantidad-peces
+-     5  calculadora-espacio-jaula-hamster-tamano
+-     3  calculadora-alimento-acuario-por-pez
+-     2  calculadora-comida-tortuga-diaria-gramos
+-     2  calculadora-tortuga-acuatica-uvb-watts-pecera
+-     2  calculadora-agua-pez-betta-litros
+-     1  calculadora-temperatura-acuario-especie
+-     1  calculadora-tortuga-acuatica-tamano-acuario-filtro-litros
+-     1  calculadora-conejo-comida-heno-peso-edad
+
+## [MASCOTAS] ¿Cuánto cuesta tener una mascota? — 35 ses · 7 calcs
+
+-    19  calculadora-costo-veterinario-consulta-promedio
+-     7  calculadora-ejercicio-diario-raza-perro
+-     4  calculadora-tamano-cucha-perro-medidas
+-     2  calculadora-costo-mensual-raza-gato
+-     1  calculadora-costo-mascota-vida-util
+-     1  calculadora-costo-mensual-mascota-perro-gato
+-     1  calculadora-paseos-perro-minutos-raza-energia
+
+## [PLATA] Cripto: ¿cuánto gano o pierdo? — 35 ses · 12 calcs
+
+-     9  calculadora-apalancamiento-liquidacion
+-     7  calculadora-ganancia-perdida-criptomonedas
+-     4  calculadora-costo-gas-fee-ethereum-2026
+-     3  calculadora-leverage-trading-liquidacion-precio
+-     2  calculadora-usdt-vs-usdc-comision-exchange
+-     2  calculadora-halving-bitcoin-2026-fecha
+-     2  calculadora-position-size-cripto-leverage
+-     2  calculadora-impermanent-loss-defi-2026
+-     1  calculadora-position-size-forex-pips-riesgo
+-     1  calculadora-perpetual-liquidation-funding-binance-bybit-bitget
+-     1  calculadora-bitcoin-halving-2028-proyeccion
+-     1  calculadora-market-cap-vs-precio-token
+
+## [MATE] Seno, coseno y tangente — 33 ses · 9 calcs
+
+-    14  calculadora-trigonometria-seno-coseno-tangente
+-    10  calculadora-conversion-grados-radianes-gradianes
+-     4  calculadora-conversion-radianes-grados-angulo
+-     3  calculadora-conversor-radianes-a-grados
+-     1  calculadora-progresion-aritmetica
+-     1  calculadora-progresion-geometrica-suma-termino
+-     0  calculadora-vectores
+-     0  ley-senos-cosenos-resolver-triangulo
+-     0  seno-coseno-tangente-angulo
+
+## [VIAJES] ¿Cuánto sale este viaje? — 28 ses · 11 calcs
+
+-    11  calculadora-esqui-pase-cerro-catedral-bariloche-precio-dia
+-     5  calculadora-presupuesto-viaje
+-     3  calculadora-presupuesto-viaje-lima-peru
+-     2  calculadora-presupuesto-viaje-dubai
+-     2  calculadora-dias-ideales-viaje-destino
+-     1  calculadora-presupuesto-viaje-madrid
+-     1  calculadora-alquiler-auto-costo-dias
+-     1  calculadora-noches-hospedaje-costo
+-     1  calculadora-presupuesto-viaje-rio-janeiro
+-     1  calculadora-vacaciones-bariloche-presupuesto-7-dias-familia
+-     0  calculadora-presupuesto-viaje-vacaciones
+
+## [VIVIENDA] Pileta: ¿cuánto cuesta mantenerla? — 22 ses · 5 calcs
+
+-     8  calculadora-pileta-natacion-litros-m3
+-     6  calculadora-piscina-cloro-mantenimiento-mensual-litros-tamano
+-     4  calculadora-tiempo-evaporacion-piscina-litros-dia
+-     3  calculadora-pileta-cloro-litros-volumen-dosificacion
+-     1  calculadora-costo-mensual-pileta
+
+## [CIENCIA] Molaridad, diluciones y concentración — 22 ses · 7 calcs
+
+-     7  calculadora-moles-masa-formula-molecular
+-     6  calculadora-moles-gramos-conversion
+-     5  calculadora-conversion-ppm-mg-l-quimica-agua
+-     3  calculadora-concentracion-molar-solucion
+-     1  calculadora-porcentaje-masa-volumen-solucion
+-     0  calculadora-dilucion-c1v1-c2v2
+-     0  calculadora-molalidad-solucion
+
+## [IMPUESTOS] IRPF España: ¿cuánto me retienen? — 18 ses · 4 calcs
+
+-     7  calculadora-honorarios-abogado-espana-turno-oficio
+-     6  calculadora-irpf-cataluna-2026-asalariado
+-     3  calculadora-irpf-madrid-2026-asalariado
+-     2  calculadora-impuestos-autonomo-espana
+
+## [VIAJES] Plata en el exterior: cambio, roaming y propinas — 16 ses · 3 calcs
+
+-     9  calculadora-moneda-local-cambio-pais
+-     5  calculadora-adaptador-enchufe-voltaje-pais
+-     2  calculadora-costo-roaming-datos-exterior
+
+## [CLIMA] ¿Va a llover? Humedad, rocío y viento — 15 ses · 4 calcs
+
+-     9  calculadora-punto-de-rocio-dew-point-temperatura-humedad
+-     3  calculadora-humedad-absoluta-relativa-confort
+-     2  calculadora-humedad-relativa-ideal-ambiente
+-     1  calculadora-velocidad-viento-beaufort-escala-0-12
+
+## [CIENCIA] pH, estequiometría y reacciones — 14 ses · 10 calcs
+
+-     6  calculadora-ph-suelo-correccion-calcio
+-     4  calculadora-numero-oxidacion-elemento
+-     3  calculadora-ph-concentracion-hidrogeno
+-     1  calculadora-poh-concentracion-oh
+-     0  calculadora-vida-media-decaimiento-radiactivo
+-     0  calculadora-titulacion-acido-base
+-     0  calculadora-constante-equilibrio-kc
+-     0  calculadora-reactivo-limitante-estequiometria
+-     0  calculadora-rendimiento-porcentual-reaccion
+-     0  calculadora-ph-acido-debil-ka
+
+## [MASCOTAS] Edad y vida de conejos, tortugas y reptiles — 10 ses · 4 calcs
+
+-     7  calculadora-edad-humana-conejo-anos
+-     2  calculadora-expectativa-vida-tortuga-terrestre
+-     1  calculadora-edad-humana-tortuga
+-     0  calculadora-expectativa-vida-reptiles-especie
+
+## [MASCOTAS] ¿Cuánta comida le doy a mi gato? — 7 ses · 1 calcs
+
+-     7  calculadora-comida-gato-diaria-gramos
+
+## [MATE] ¿Cómo derivo esta función? — 6 ses · 8 calcs
+
+-     5  calculadora-derivada-funcion-basica
+-     1  calculadora-derivada-polinomio-coeficientes
+-     0  calculadora-derivacion-implicita
+-     0  calculadora-derivadas-parciales
+-     0  calculadora-maximos-minimos-funcion
+-     0  calculadora-asintotas-funcion
+-     0  calculadora-recta-tangente-normal
+-     0  calculadora-dominio-rango-funcion
+
+## [MASCOTAS] ¿Cuánto tiene que pesar mi gato? — 4 ses · 1 calcs
+
+-     4  calculadora-peso-ideal-gato-raza
+
+## [MATE] ¿Cómo integro esta función? — 2 ses · 4 calcs
+
+-     1  calculadora-integral-definida-basica
+-     1  calculadora-serie-taylor-maclaurin
+-     0  calculadora-transformada-laplace
+-     0  calculadora-limites-paso-a-paso
+
+
+# HUÉRFANAS — no resuelven ninguna pregunta (17)
+
+-   756  conversor-moneda-dolar-peso-real-latam
+-   215  calculadora-retencion-ganancias-rg-830
+-    10  calculadora-facebook-reels-bonus-pagos
+-     8  calculadora-rural-rentabilidad-hectarea-soja-maiz-trigo-2026
+-     5  calculadora-ratio-alumno-profesor-curso
+-     4  calculadora-obra-social-monotributista-aporte-extra-familiar
+-     4  calculadora-honorarios-persona-fisica-mexico
+-     4  calculadora-carbon-credit-tonelada-precio-mercado-2026
+-     2  calculadora-horas-practica-10000-maestria-gladwell
+-     2  calculadora-bonus-anual-marco-fiscal-neto
+-     1  calculadora-regla-numero-dunbar-150-contactos-red
+-     1  calculadora-pH-alimento-alcalinidad
+-     1  calculadora-scrum-sprint-velocity-story-points
+-     0  calculadora-comida-diaria-conejo-peso
+-     0  calculadora-facebook-ingresos-videos
+-     0  calculadora-aumento-prepaga-cuota-mensual-argentina
+-     0  calculadora-presupuesto-navidad-regalos-cena

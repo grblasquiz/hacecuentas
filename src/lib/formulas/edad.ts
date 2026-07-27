@@ -38,8 +38,22 @@ export function edad(inputs: EdadInputs): EdadOutputs {
 
   if (dias < 0) {
     meses--;
-    const ultimoDiaMesAnterior = new Date(hoy.getFullYear(), hoy.getMonth(), 0).getDate();
-    dias += ultimoDiaMesAnterior;
+    // Días transcurridos desde el ANIVERSARIO MENSUAL anterior, no desde el
+    // largo del mes previo.
+    //
+    // Bug que esto arregla: sumar el largo del mes anterior daba negativo
+    // cuando el día de nacimiento no existe en ese mes. Nacido el 31-dic
+    // visto el 01-mar devolvía "34 años, 2 meses y -2 días", porque febrero
+    // tiene 28 y 1 − 31 + 28 = −2. Ahora el aniversario se recorta al último
+    // día del mes (28-feb) y la cuenta da 1 día.
+    const mesAniv = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+    const ultimoDiaDelMes = new Date(mesAniv.getFullYear(), mesAniv.getMonth() + 1, 0).getDate();
+    const aniversario = new Date(
+      mesAniv.getFullYear(),
+      mesAniv.getMonth(),
+      Math.min(nacimiento.getDate(), ultimoDiaDelMes),
+    );
+    dias = Math.round((hoy.getTime() - aniversario.getTime()) / 86_400_000);
   }
   if (meses < 0) {
     anios--;

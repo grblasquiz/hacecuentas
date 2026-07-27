@@ -1,0 +1,205 @@
+---
+/**
+ * Hub de decisión — "¿Cuántos días hay entre dos fechas?"
+ * Arquetipo: cálculo dominante (sin `cases`). Reemplaza 4 URLs sueltas.
+ *
+ * La página sólo aporta datos (src/lib/hubs/dias-entre-fechas.ts) y su compute().
+ * Todo el chrome vive en DecisionHub.astro y no se toca.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, FERIADOS_ISO } from '../../lib/hubs/dias-entre-fechas';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ FERIADOS: FERIADOS_ISO, ANSWER: hub.answer }}>
+  (function () {
+    const H = window.HC_HUB;
+    const HOLIDAYS = new Set(FERIADOS);
+    const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const MS = 86400000;
+
+    // El panel de "Respuesta rápida" lo llena el runtime sólo cuando el hub
+    // ramifica. Este hub no ramifica, así que lo poblamos nosotros una vez.
+    (function fillAnswer() {
+      const put = (id, arr) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.replaceChildren();
+        arr.forEach((t) => {
+          const li = document.createElement('li');
+          li.textContent = t;
+          el.appendChild(li);
+        });
+      };
+      put('yes-list', ANSWER.yes);
+      put('warn-list', ANSWER.warn);
+      const p = document.getElementById('plazo');
+      if (p) p.textContent = ANSWER.plazo;
+    })();
+
+    function parseISO(s) {
+      const p = String(s || '').split('-').map(Number);
+      if (p.length !== 3 || p.some((n) => !n || isNaN(n))) return null;
+      const d = new Date(p[0], p[1] - 1, p[2]);
+      d.setHours(0, 0, 0, 0);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function iso(d) {
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function parseHora(s) {
+      const m = String(s || '').trim().match(/^(\d{1,2})[:.]?(\d{2})?$/);
+      if (!m) return null;
+      const h = Number(m[1]);
+      const mi = Number(m[2] || 0);
+      if (h > 23 || mi > 59) return null;
+      return h * 60 + mi;
+    }
+
+    const nf = (n, dec) => Number(n).toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+    const plural = (n, s, p) => nf(n, 0) + ' ' + (Math.abs(n) === 1 ? s : p);
+
+    // El resultado son días y horas, no pesos: el formato viaja en el contrato
+    // (`format: 'unit'` + `unit` + `decimals`), a nivel resultado y por fila.
+    H.onCompute(function (v) {
+      const desde = parseISO(v.desde);
+      const hasta = parseISO(v.hasta);
+      if (!desde || !hasta) {
+        return {
+          total: 'Faltan fechas',
+          sub: 'Cargá la fecha de inicio y la de fin para ver el período.',
+          rows: [],
+          chart: [],
+          format: 'unit',
+          unit: 'días',
+          decimals: 0,
+        };
+      }
+
+      const incluir = v.modo === 'incluir';
+      const invertido = hasta < desde;
+      const ini = invertido ? hasta : desde;
+      const fin = invertido ? desde : hasta;
+
+      let corridos = Math.round((fin.getTime() - ini.getTime()) / MS);
+      if (incluir) corridos += 1;
+
+      // Recorremos el rango efectivo día por día.
+      let habilesBrutos = 0;
+      let finde = 0;
+      let feriadosHabiles = 0;
+      const cur = new Date(ini.getTime());
+      for (let i = 0; i < corridos; i++) {
+        const dow = cur.getDay();
+        if (dow === 0 || dow === 6) finde++;
+        else if (HOLIDAYS.has(iso(cur))) feriadosHabiles++;
+        else habilesBrutos++;
+        cur.setDate(cur.getDate() + 1);
+      }
+      const habiles = habilesBrutos;
+
+      // Horas: totales del período + diferencia entre los dos horarios.
+      const hA = parseHora(v.horaDesde);
+      const hB = parseHora(v.horaHasta);
+      let minutosTurno = null;
+      if (hA !== null && hB !== null) {
+        minutosTurno = hB - hA;
+        if (minutosTurno < 0) minutosTurno += 24 * 60;
+      }
+
+      const rows = [];
+      const push = (k, ref, val, unit, decimals, extra) => {
+        rows.push({ k: k, ref: ref, v: val, format: 'unit', unit: unit, decimals: decimals, extra: !!extra });
+      };
+
+      push('Días corridos', 'calendario', corridos, 'días', 0, true);
+      push('Días hábiles (sin findes ni feriados)', 'lun a vie', habiles, 'días', 0);
+      push('Sábados y domingos', 'fin de semana', finde, 'días', 0);
+      push('Feriados en día de semana', 'Ley 27.399', feriadosHabiles, 'días', 0);
+      push('Semanas', '÷ 7', corridos / 7, 'semanas', 1);
+      push('Meses aproximados', '÷ 30,44', corridos / 30.44, 'meses', 1);
+      push('Años aproximados', '÷ 365,25', corridos / 365.25, 'años', 2);
+      push('Horas totales del período', '× 24', corridos * 24, 'h', 0);
+      if (minutosTurno !== null) {
+        push(
+          'Diferencia entre los dos horarios',
+          minutosTurno === 0
+            ? 'mismo horario'
+            : Math.floor(minutosTurno / 60) + ' h ' + String(minutosTurno % 60).padStart(2, '0') + ' min',
+          minutosTurno / 60,
+          'h',
+          2,
+          true
+        );
+      }
+
+      const fueraDe2026 = ini.getFullYear() !== 2026 || fin.getFullYear() !== 2026;
+      const sub =
+        DIAS[desde.getDay()] + ' ' + desde.toLocaleDateString('es-AR') +
+        ' → ' + DIAS[hasta.getDay()] + ' ' + hasta.toLocaleDateString('es-AR') +
+        ' · ' + plural(habiles, 'día hábil', 'días hábiles') +
+        (incluir ? ' · contando ambos extremos' : '') +
+        (invertido ? ' · fechas invertidas, contamos la distancia' : '') +
+        (fueraDe2026 ? ' · feriados sólo disponibles para 2026' : '');
+
+      return {
+        total: plural(corridos, 'día', 'días'),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Días hábiles', value: habiles, tone: 'main' },
+          { label: 'Sábados y domingos', value: finde, tone: 'prop' },
+          { label: 'Feriados en día de semana', value: feriadosHabiles, tone: 'warn' },
+        ],
+        format: 'unit',
+        unit: 'días',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

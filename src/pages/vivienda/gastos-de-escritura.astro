@@ -1,0 +1,163 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto sale escriturar una propiedad?"
+ * Arquetipo RAMIFICADO: la jurisdicción (CABA / PBA) cambia sellos, alícuotas
+ * y exenciones. Reemplaza 13 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta datos (src/lib/hubs/gastos-de-escritura.ts) y su
+ * compute(). Todo el chrome, el CSS y el runtime viven en DecisionHub.astro.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, CASE_MATH, HONORARIOS, CEDULAR } from '../../lib/hubs/gastos-de-escritura';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ MATH: CASE_MATH, HON: HONORARIOS, CEDULAR }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    H.onCompute(function (v, kase) {
+      const m = MATH[kase?.id] || MATH.caba;
+      const precio = v.precio || 0;
+      const pctComision = v.comision || 0;
+      const precioCompra = v.precioCompra || 0;
+      const esVendedor = m.rol === 'vendedor';
+      const habitualista = v.vendedor === 'habitualista';
+
+      // --- Honorarios notariales: escala decreciente del Colegio de Escribanos.
+      let honorarios = 0;
+      if (precio <= HON.T1) honorarios = precio * HON.A1;
+      else if (precio <= HON.T2) honorarios = HON.T1 * HON.A1 + (precio - HON.T1) * HON.A2;
+      else if (precio <= HON.T3)
+        honorarios = HON.T1 * HON.A1 + (HON.T2 - HON.T1) * HON.A2 + (precio - HON.T2) * HON.A3;
+      else
+        honorarios =
+          HON.T1 * HON.A1 +
+          (HON.T2 - HON.T1) * HON.A2 +
+          (HON.T3 - HON.T2) * HON.A3 +
+          (precio - HON.T3) * HON.A4;
+
+      const ivaHon = honorarios * HON.IVA;
+      const aportes = honorarios * HON.APORTES;
+      const escribano = esVendedor ? 0 : honorarios + ivaHon + aportes;
+      const inscripcion = esVendedor ? 0 : HON.GASTOS_FIJOS;
+
+      // --- Sellos: base gravada = precio menos el tope exento de la rama.
+      // CABA (Ley Tarifaria 2026 / Ley 6.927 art. 34) tiene alícuota DIFERENCIAL por
+      // operación: 2,7% si el valor es ≤ $226.100.000 y 3,5% si lo supera. No son tramos
+      // marginales: superado el umbral, el 3,5% se aplica sobre toda la base.
+      // PBA (Ley 15.558) tiene alícuota única del 2%, así que umbral = 0 y no dispara.
+      const baseSellos = Math.max(0, precio - m.exencion);
+      const alicSellos =
+        m.exencion === 0 && m.umbral > 0 && precio > m.umbral ? m.sellosSobreUmbral : m.sellos;
+      const sellosTotal = baseSellos * alicSellos;
+      const miParte = sellosTotal / 2;
+      const exento = m.exencion > 0 && baseSellos === 0;
+
+      // --- Comisión inmobiliaria (más IVA 21%).
+      const comision = precio * (pctComision / 100);
+      const comisionConIva = comision * 1.21;
+
+      // --- Impuesto nacional del vendedor.
+      // ITI derogado (Ley 27.743). Cedular 15% sobre la ganancia, eximido para
+      // personas humanas no habitualistas desde el 1/1/2026 (Ley 27.802).
+      const ganancia = Math.max(0, precio - precioCompra);
+      const cedular = esVendedor && habitualista ? ganancia * CEDULAR : 0;
+
+      const rows = [];
+      if (escribano > 0) {
+        rows.push({ k: 'Honorarios del escribano', ref: 'Escala Colegio de Escribanos', v: honorarios });
+        rows.push({ k: 'IVA sobre honorarios (21%)', ref: 'Ley 23.349', v: ivaHon });
+        rows.push({ k: 'Aportes Caja Notarial (10%)', ref: 'Colegio de Escribanos', v: aportes });
+      }
+      rows.push({
+        k: exento
+          ? 'Impuesto de sellos — exento por vivienda única'
+          : 'Impuesto de sellos, tu mitad (' + m.jur + ')',
+        ref: m.jur === 'CABA' ? 'Ley Tarifaria 6.927' : 'Ley Impositiva 15.558',
+        v: miParte,
+      });
+      if (comisionConIva > 0)
+        rows.push({ k: 'Comisión inmobiliaria + IVA (' + pctComision + '%)', ref: 'CUCICBA / Dto-Ley 10.973', v: comisionConIva });
+      if (inscripcion > 0)
+        rows.push({ k: 'Inscripción registral y certificados', ref: 'Registro de la Propiedad', v: inscripcion });
+      if (esVendedor)
+        rows.push({
+          k: habitualista ? 'Impuesto cedular 15% sobre la ganancia' : 'ITI / cedular — no corresponde',
+          ref: habitualista ? 'Ley 20.628' : 'Ley 27.743 y Ley 27.802',
+          v: cedular,
+          extra: habitualista,
+        });
+
+      const total = escribano + miParte + comisionConIva + inscripcion + cedular;
+      const pct = precio > 0 ? (total / precio) * 100 : 0;
+
+      let sub =
+        m.jur +
+        ' · ' +
+        (exento
+          ? 'sellos exentos hasta ' + H.ars(m.exencion)
+          : 'sellos ' + (alicSellos * 100).toFixed(1).replace('.', ',') + '% (mitad tuya)') +
+        ' · ' +
+        pct.toFixed(1).replace('.', ',') +
+        '% del precio';
+      if (esVendedor && !habitualista) sub += ' · sin impuesto nacional a la transferencia';
+
+      return {
+        total: H.ars(total),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Escribano (honorarios, IVA y aportes)', value: escribano, tone: 'main' },
+          { label: 'Sellos (' + m.jur + ')', value: miParte, tone: 'exit' },
+          { label: 'Comisión inmobiliaria', value: comisionConIva, tone: 'prop' },
+          { label: 'ITI / plusvalía', value: cedular, tone: 'warn' },
+          { label: 'Inscripción y certificados', value: inscripcion, tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,237 @@
+---
+/**
+ * Hub de decisión — "¿De cuántas semanas estoy?" (arquetipo línea de tiempo).
+ * Reemplaza 10 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * ⚠️ YMYL — SALUD. El disclaimer médico ('health' de src/lib/disclaimers.ts +
+ * el override ES de 'calculadora-embarazo') va en fineprint, en el primer warn
+ * de CADA caso y en la última FAQ. No sacar. Este hub no diagnostica, no
+ * evalúa bienestar fetal y no da indicaciones clínicas.
+ *
+ * Patrón: la página sólo aporta datos (src/lib/hubs/semanas-embarazo.ts) y su
+ * compute(). Todo el chrome, el CSS y el runtime viven en DecisionHub.astro.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, CASE_MATH, TAMANO_SEMANA, HITOS } from '../../lib/hubs/semanas-embarazo';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ MATH: CASE_MATH, TAM: TAMANO_SEMANA, HITOS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+    function parseDate(s) {
+      const p = String(s || '').split('-').map(Number);
+      if (p.length !== 3 || p.some(isNaN)) return null;
+      const d = new Date(p[0], p[1] - 1, p[2]);
+      if (isNaN(d.getTime())) return null;
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+    function addDays(d, n) { const o = new Date(d.getTime()); o.setDate(o.getDate() + n); return o; }
+    function fmt(d) { return d.getDate() + ' de ' + MESES[d.getMonth()] + ' de ' + d.getFullYear(); }
+    function hoy() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+
+    /**
+     * Edad gestacional en días a partir de una medida ecográfica.
+     * Tramos derivados de Robinson-Fleming (LCC) y Hadlock (DBP), igual que la
+     * calculadora que este hub absorbe.
+     */
+    function diasPorEco(tipo, mm) {
+      if (tipo === 'dbp') {
+        const m = Math.min(100, Math.max(25, mm));
+        if (m <= 30) return 98 + (m - 25) * 1.4;
+        if (m <= 40) return 105 + (m - 31) * 1.4;
+        if (m <= 55) return 119 + (m - 41) * 1.4;
+        if (m <= 72) return 140 + (m - 56) * 1.24;
+        if (m <= 87) return 161 + (m - 73) * 1.4;
+        if (m <= 95) return 182 + (m - 88) * 2.63;
+        return 203 + (m - 96) * 2.8;
+      }
+      const m = Math.min(84, Math.max(1, mm));
+      if (m <= 4) return 37 + (m - 1) * 2;
+      if (m <= 8) return 43 + (m - 5) * 1.75;
+      if (m <= 14) return 49 + (m - 9) * 1.17;
+      if (m <= 21) return 56 + (m - 15) * 1;
+      if (m <= 29) return 63 + (m - 22) * 0.88;
+      if (m <= 39) return 70 + (m - 30) * 0.7;
+      if (m <= 55) return 77 + (m - 40) * 0.47;
+      if (m <= 65) return 84 + (m - 56) * 0.7;
+      if (m <= 75) return 91 + (m - 66) * 0.5;
+      return 96 + (m - 76) * 0.5;
+    }
+
+    function tamano(sem) {
+      const k = Math.max(4, Math.min(42, sem));
+      return TAM[k] || TAM[k - 1] || { fruta: 'una semilla', cm: 0, g: 0 };
+    }
+
+    function proximoControl(sem) {
+      for (let i = 0; i < HITOS.length; i++) {
+        const h = HITOS[i];
+        if (sem < h.hasta) {
+          if (sem >= h.desde) return 'Ahora (semanas ' + h.desde + '-' + h.hasta + '): ' + h.evento;
+          return 'En ' + (h.desde - sem) + ' semana' + (h.desde - sem === 1 ? '' : 's') + ' (semana ' + h.desde + '): ' + h.evento;
+        }
+      }
+      return 'Controles semanales hasta el nacimiento';
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = kase?.id || 'fum';
+      const m = MATH[id] || MATH.fum;
+      const t = hoy();
+
+      // --- días de gestación de hoy, según el método elegido ---
+      let dias = 0;
+      let origen = '';
+      let fumEfectiva = null;
+
+      if (id === 'ecografia') {
+        const eco = parseDate(v.fechaEco);
+        const mm = Number(v.medidaMm) || 0;
+        if (!eco || mm <= 0) {
+          return {
+            total: 'Faltan datos',
+            sub: 'Cargá la fecha de la ecografía y la medida en milímetros.',
+            rows: [], chart: [],
+          };
+        }
+        const diasEnEco = Math.round(diasPorEco(v.tipoMedida || 'lcc', mm));
+        const transcurridos = Math.round((t.getTime() - eco.getTime()) / 86400000);
+        dias = diasEnEco + transcurridos;
+        fumEfectiva = addDays(t, -dias);
+        origen = 'datación por ' + (v.tipoMedida === 'dbp' ? 'DBP' : 'LCC') + ' de ' + mm + ' mm';
+      } else {
+        const fum = parseDate(v.fum);
+        if (!fum) {
+          return {
+            total: 'Faltan datos',
+            sub: 'Cargá el primer día de tu última menstruación.',
+            rows: [], chart: [],
+          };
+        }
+        // Ajuste por ciclo: si ovulás más tarde que el día 14, estás de menos.
+        const ciclo = Math.min(45, Math.max(20, Number(v.ciclo) || 28));
+        dias = Math.round((t.getTime() - fum.getTime()) / 86400000) - (ciclo - 28);
+        fumEfectiva = fum;
+        origen = 'FUM del ' + fmt(fum) + (ciclo !== 28 ? ' · ciclo de ' + ciclo + ' días' : '');
+      }
+
+      if (dias < 0) dias = 0;
+      if (dias > 300) dias = 300;
+
+      const semanas = Math.floor(dias / 7);
+      const diasSueltos = dias % 7;
+
+      // Trimestres OMS/ACOG: 1º hasta 13+6 (día 97), 2º hasta 27+6 (día 195), 3º después.
+      const trimestre = dias <= 97 ? 1 : dias <= 195 ? 2 : 3;
+      const trimTxt = trimestre === 1 ? 'primer trimestre' : trimestre === 2 ? 'segundo trimestre' : 'tercer trimestre';
+
+      // Mes de embarazo calendario (4,345 semanas por mes), tope 10.
+      const mes = Math.min(10, Math.floor(dias / 30.44) + 1);
+
+      const fpp = addDays(fumEfectiva, 280);
+      const finPlanificado = addDays(fumEfectiva, m.semanasParto * 7);
+      const faltan = Math.max(0, Math.round((finPlanificado.getTime() - t.getTime()) / 86400000));
+
+      const tam = tamano(semanas);
+      const pesoG = Math.round(tam.g * m.factorPeso);
+
+      /**
+       * FORMATO: acá ningún valor es dinero. HubRow acepta `format`/`unit`/
+       * `decimals`, así que cada fila declara su unidad real (semanas, días,
+       * cm, g) y el runtime la imprime al lado del número en vez de un "$".
+       * OJO: paint() hace Object.assign(base, over) con las tres claves de la
+       * fila, así que un `format` ausente en la fila pisa el del resultado con
+       * undefined → cada fila declara SIEMPRE su formato, no se hereda.
+       */
+      const rows = [
+        { k: 'Semanas cumplidas', v: semanas, extra: true, format: 'unit', unit: 'semanas', decimals: 0 },
+        { k: 'Días sueltos además de esas semanas', v: diasSueltos, format: 'unit', unit: 'días', decimals: 0 },
+        { k: 'Días totales de gestación', v: dias, format: 'unit', unit: 'días', decimals: 0 },
+        { k: 'Mes de embarazo', v: mes, format: 'unit', unit: 'mes', decimals: 0 },
+        { k: 'Trimestre', ref: 'OMS/ACOG', v: trimestre, format: 'plain', decimals: 0 },
+        { k: 'Días que faltan', v: faltan, format: 'unit', unit: 'días', decimals: 0 },
+        { k: 'Semanas que faltan', v: Math.floor(faltan / 7), format: 'unit', unit: 'semanas', decimals: 0 },
+        { k: 'Largo aproximado del bebé', v: tam.cm, format: 'unit', unit: 'cm', decimals: 1 },
+        { k: 'Peso aproximado del bebé', v: pesoG, format: 'unit', unit: 'g', decimals: 0 },
+      ];
+
+      // Segmentos del gráfico: lo recorrido dentro de cada trimestre (en días).
+      const t1 = Math.min(dias, 98);
+      const t2 = Math.min(Math.max(dias - 98, 0), 98);
+      const t3 = Math.max(dias - 196, 0);
+
+      const sub =
+        origen +
+        ' · ' + trimTxt +
+        ' · fecha probable de parto: ' + fmt(fpp) +
+        (id === 'gemelar' ? ' (nacimiento planificado hacia el ' + fmt(finPlanificado) + ')' : '') +
+        ' · ' + proximoControl(semanas) +
+        ' · Tu bebé es del tamaño de ' + tam.fruta + '.';
+
+      return {
+        total: semanas + ' semanas y ' + diasSueltos + (diasSueltos === 1 ? ' día' : ' días'),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: '1er trimestre (sem. 1-13)', value: t1, tone: 'main' },
+          { label: '2º trimestre (sem. 14-27)', value: t2, tone: 'exit' },
+          { label: '3er trimestre (sem. 28-40)', value: t3, tone: 'prop' },
+        ],
+        // Los valores del gráfico son días recorridos en cada trimestre.
+        format: 'unit',
+        unit: 'días',
+        decimals: 0,
+        position: Math.max(0, Math.min(100, (dias / 280) * 100)),
+        positionLabel: 'Semana ' + semanas + ' — ' + trimTxt,
+      };
+    });
+  })();
+</script>

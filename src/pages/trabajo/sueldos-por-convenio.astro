@@ -1,0 +1,152 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto gana un… según convenio?" (arquetipo CATÁLOGO).
+ * Reemplaza 18 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/sueldos-por-convenio.ts) y su
+ * compute(). El chrome, el CSS y el runtime viven en DecisionHub.astro.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, CONVENIOS, ORDEN_CONVENIOS } from '../../lib/hubs/sueldos-por-convenio';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ CONV: CONVENIOS, ORDEN: ORDEN_CONVENIOS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    /** Antigüedad escalonada del escalafón docente del GCBA. */
+    function pctCaba(a) {
+      if (a >= 24) return 0.7;
+      if (a >= 22) return 0.6;
+      if (a >= 18) return 0.5;
+      if (a >= 15) return 0.4;
+      if (a >= 12) return 0.3;
+      if (a >= 10) return 0.25;
+      if (a >= 7) return 0.2;
+      if (a >= 5) return 0.15;
+      if (a >= 2) return 0.1;
+      return 0;
+    }
+
+    /** Bruto y desglose de un convenio en un escalón dado. */
+    function liquidar(key, nivel, antig) {
+      const c = CONV[key];
+      const basico = c.niveles[nivel] || c.niveles[0];
+      const anios = c.antig.tope ? Math.min(antig, c.antig.tope) : antig;
+      const pct = c.antig.tipo === 'tabla-caba' ? pctCaba(antig) : c.antig.v * anios;
+      const plus = basico * pct;
+      const extras = c.extraDoceavo
+        ? (basico + plus) / 12
+        : basico * c.extraPctBasico + c.extraFijo;
+      const bruto = basico + plus + extras;
+      const aportes = bruto * c.aportes;
+      return { c: c, basico: basico, plus: plus, pct: pct, extras: extras, bruto: bruto, aportes: aportes, neto: bruto - aportes };
+    }
+
+    H.onCompute(function (v) {
+      const key = CONV[v.convenio] ? v.convenio : 'comercio';
+      const nivel = Math.min(2, Math.max(0, Number(v.nivel) || 0));
+      const antig = Math.max(0, Math.min(45, Number(v.antiguedad) || 0));
+
+      const yo = liquidar(key, nivel, antig);
+
+      // Ranking: todos los convenios en el MISMO escalón y con la misma antigüedad.
+      const ranking = ORDEN.map(function (k) {
+        return { k: k, label: CONV[k].label, bruto: liquidar(k, nivel, antig).bruto };
+      }).sort(function (a, b) { return b.bruto - a.bruto; });
+
+      const puesto = ranking.findIndex(function (r) { return r.k === key; }) + 1;
+      const mediana = ranking[Math.floor(ranking.length / 2)].bruto;
+      const vsMediana = mediana > 0 ? Math.round((yo.bruto / mediana - 1) * 100) : 0;
+
+      const rows = ranking.map(function (r) {
+        return {
+          k: r.label,
+          ref: r.k === key ? 'tu convenio' : undefined,
+          v: r.bruto,
+          extra: r.k === key,
+        };
+      });
+
+      // Sumas no remunerativas (bono de paritaria, viáticos de larga distancia).
+      // Van al bolsillo pero NO al SAC ni a la jubilación: por eso se suman al
+      // final y se muestran aparte, nunca dentro del bruto.
+      // OJO: no van en `rows` — el desglose es el ranking de los 16 convenios por
+      // bruto, y meter ahí una fila que no es un convenio rompe esa lectura.
+      // Se muestran en el gráfico (segmento propio), en el total y en el subtítulo.
+      const noRem = Math.max(0, H.num(v.noRem));
+
+      const pctTxt = Math.round(yo.pct * 100);
+      const sub =
+        yo.c.label + ' · ' + yo.c.nombres[nivel] + ' · básico ' + H.ars(yo.basico) +
+        ' (escala ' + yo.c.vigencia + ') · bruto ' + H.ars(yo.bruto) +
+        ' · puesto ' + puesto + ' de ' + ranking.length +
+        (vsMediana === 0 ? ' (en la mediana)' : vsMediana > 0 ? ' (+' + vsMediana + '% vs. la mediana)' : ' (' + vsMediana + '% vs. la mediana)') +
+        ' · ' + yo.c.nota +
+        (noRem > 0
+          ? ' · más ' + H.ars(noRem) + ' de sumas no remunerativas, que van al bolsillo pero no al SAC ni a la jubilación.'
+          : '');
+
+      const chart = [
+        { label: 'Básico de convenio (' + yo.c.cct + ')', value: yo.basico, tone: 'main' },
+        { label: 'Antigüedad (' + pctTxt + '% por ' + antig + (antig === 1 ? ' año' : ' años') + ')', value: yo.plus, tone: 'good' },
+        { label: yo.c.extraLabel, value: yo.extras, tone: 'prop' },
+        { label: 'Aportes y descuentos (' + Math.round(yo.c.aportes * 100) + '%)', value: yo.aportes, tone: 'warn' },
+        { label: 'Sumas no remunerativas', value: noRem, tone: 'exit' },
+      ].filter(function (s) { return s.value > 0; });
+
+      return {
+        total: H.ars(yo.neto + noRem),
+        sub: sub,
+        rows: rows,
+        chart: chart,
+        position: Math.round(((ranking.length - puesto) / (ranking.length - 1)) * 100),
+        positionLabel: yo.c.label + ': puesto ' + puesto + ' de ' + ranking.length + ' convenios',
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,166 @@
+---
+/**
+ * Hub de decisión — "¿Estoy en mi peso?"
+ * Reemplaza 4 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo cálculo dominante: sin `cases`, la respuesta fija va en hub.answer.
+ * La página sólo aporta datos (src/lib/hubs/peso-ideal-imc.ts) y su compute().
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, SCALE } from '../../lib/hubs/peso-ideal-imc';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ SCALE }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Formateo local: acá los números son kg / IMC / años, no pesos.
+    const dec = (n, d) => (Math.round(n * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d).replace('.', ',');
+
+    H.onCompute(function (v) {
+      const peso = v.peso, alturaCm = v.altura, edad = v.edad || 0;
+      const cintura = v.cintura || 0, grasa = v.grasa || 0;
+      const sexo = String(v.sexo || 'm');
+      if (!peso || !alturaCm) {
+        return { total: '—', sub: 'Ingresá peso y altura.', rows: [], chart: [] };
+      }
+
+      // ── IMC (fórmula OMS: peso / altura²) ──
+      const alturaM = alturaCm / 100;
+      const imc = peso / (alturaM * alturaM);
+      const imcR = Number(imc.toFixed(2));
+
+      // ≥65: la OMS corre el rango saludable a 23–28 (protege frente a sarcopenia).
+      const esMayor = edad >= 65;
+      const rangoMin = esMayor ? 23 : 18.5;
+      const rangoMax = esMayor ? 28 : 24.9;
+
+      let categoria;
+      if (imc < 18.5) categoria = 'Bajo peso';
+      else if (imc < 25) categoria = esMayor && imc < 23 ? 'Bajo peso para adulto mayor' : 'Peso normal';
+      else if (imc < 30) categoria = esMayor && imc <= 28 ? 'Peso normal (ajustado ≥65)' : 'Sobrepeso';
+      else if (imc < 35) categoria = 'Obesidad grado I';
+      else if (imc < 40) categoria = 'Obesidad grado II';
+      else categoria = 'Obesidad grado III';
+
+      const pesoMin = rangoMin * alturaM * alturaM;
+      const pesoMax = rangoMax * alturaM * alturaM;
+
+      let diferencia;
+      if (peso < pesoMin) diferencia = 'te faltan ' + dec(pesoMin - peso, 1) + ' kg para el rango saludable';
+      else if (peso > pesoMax) diferencia = 'tenés ' + dec(peso - pesoMax, 1) + ' kg por encima del rango saludable';
+      else diferencia = 'estás dentro del rango saludable';
+
+      // ── Peso ideal: Devine (1974), Robinson (1983), Lorentz ──
+      const pulgSobre5pies = Math.max(0, alturaCm / 2.54 - 60);
+      const devine = sexo === 'f' ? 45.5 + 2.3 * pulgSobre5pies : 50 + 2.3 * pulgSobre5pies;
+      const robinson = sexo === 'f' ? 49 + 1.7 * pulgSobre5pies : 52 + 1.9 * pulgSobre5pies;
+      const lorentz = (alturaCm - 100) - ((alturaCm - 150) / (sexo === 'f' ? 2.5 : 4));
+      const promedio = (devine + robinson + lorentz) / 3;
+
+      // ── WHtR (cintura / altura) — umbral práctico 0,5 ──
+      let whtrTxt = '';
+      if (cintura > 0) {
+        const ratio = cintura / alturaCm;
+        const riesgo = ratio < 0.4 ? 'bajo' : ratio < 0.5 ? 'normal' : ratio < 0.6 ? 'aumentado' : 'alto';
+        whtrTxt = ' · WHtR ' + dec(ratio, 2) + ' (riesgo ' + riesgo + ')';
+      }
+
+      // ── Edad metabólica: Mifflin-St Jeor, o Katch-McArdle si hay grasa corporal ──
+      let edadMet = 0;
+      if (edad > 0) {
+        const base = 10 * peso + 6.25 * alturaCm + (sexo === 'f' ? -161 : 5);
+        const rmr = grasa > 0 ? 370 + 21.6 * (peso * (1 - grasa / 100)) : base - 5 * edad;
+        edadMet = Math.max(10, Math.min(100, Math.round((base - rmr) / 5)));
+      }
+
+      // Todas las filas de peso van en kg con 1 decimal; la edad metabólica en años.
+      // `ref` queda SÓLO para referencias reales (año de publicación de la fórmula).
+      const kg = { format: 'unit', unit: 'kg', decimals: 1 };
+      const rows = [
+        Object.assign({ k: 'Tu peso actual', v: Number(peso.toFixed(1)) }, kg),
+        Object.assign({ k: 'Piso del rango saludable (IMC ' + dec(rangoMin, 1) + ')', v: Number(pesoMin.toFixed(1)) }, kg),
+        Object.assign({ k: 'Techo del rango saludable (IMC ' + dec(rangoMax, 1) + ')', v: Number(pesoMax.toFixed(1)) }, kg),
+        Object.assign({ k: 'Peso ideal — Devine', ref: '1974', v: Number(devine.toFixed(1)) }, kg),
+        Object.assign({ k: 'Peso ideal — Robinson', ref: '1983', v: Number(robinson.toFixed(1)) }, kg),
+        Object.assign({ k: 'Peso ideal — Lorentz', ref: '1929', v: Number(lorentz.toFixed(1)) }, kg),
+        Object.assign({ k: 'Promedio de las tres fórmulas', v: Number(promedio.toFixed(1)), extra: true }, kg),
+      ];
+      if (edadMet > 0) {
+        rows.push({ k: 'Edad metabólica estimada', v: edadMet, extra: true, format: 'unit', unit: 'años', decimals: 0 });
+      }
+
+      // Escala 15–40 con las franjas de la OMS; `position` marca dónde caés vos.
+      // Las franjas van con from/to (valores de IMC, no de plata).
+      const pos = Math.max(0, Math.min(100, ((imc - SCALE.min) / (SCALE.max - SCALE.min)) * 100));
+      let desde = SCALE.min;
+      const chart = SCALE.bands.map(function (b) {
+        const seg = { label: b.label, value: b.to - desde, tone: b.tone, from: desde, to: b.to };
+        desde = b.to;
+        return seg;
+      });
+
+      const notaMayor = esMayor
+        ? ' · ≥65: rango ajustado 23–28 (OMS); ESPEN 2018 marca 22–27 como saludable'
+        : '';
+
+      return {
+        total: 'IMC ' + dec(imcR, 2),
+        sub: categoria + ' · rango saludable para ' + alturaCm + ' cm: ' + dec(pesoMin, 1) + '–' + dec(pesoMax, 1) +
+          ' kg · ' + diferencia + whtrTxt + notaMayor,
+        rows: rows,
+        chart: chart,
+        // Default del resultado: kg con 1 decimal (acá no hay pesos).
+        format: 'unit',
+        unit: 'kg',
+        decimals: 1,
+        position: Number(pos.toFixed(1)),
+        positionLabel: 'IMC ' + dec(imcR, 2) + ' — ' + categoria.toLowerCase(),
+      };
+    });
+  })();
+</script>

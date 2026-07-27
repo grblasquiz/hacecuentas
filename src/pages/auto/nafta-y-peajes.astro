@@ -1,0 +1,151 @@
+---
+/**
+ * Hub de decisión — "¿Cuánta nafta y peaje gasto en este viaje?"
+ * Reemplaza 8 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/nafta-y-peajes.ts) y su compute().
+ * Todo el chrome, el CSS y el runtime viven en DecisionHub.astro y no se tocan.
+ *
+ * El precio del litro NO está hardcodeado acá: viaja desde
+ * src/lib/data/nafta-precios.ts (mismo snapshot oficial que /precio-nafta-hoy).
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, PRECIOS_PROVINCIA, PRECIOS_NACIONAL } from '../../lib/hubs/nafta-y-peajes';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ PROV: PRECIOS_PROVINCIA, NAC: PRECIOS_NACIONAL }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    H.onCompute(function (v) {
+      const km = Math.max(0, v.distancia || 0);
+      const idaVuelta = v.sentido !== 'ida';
+      const sentidos = idaVuelta ? 2 : 1;
+      const kmEf = km * sentidos;
+
+      const tipo = v.combustible || 'Nafta Súper';
+      const tabla = (v.provincia && v.provincia !== 'nacional' && PROV[v.provincia]) || NAC;
+      const precio = Number(tabla[tipo] ?? NAC[tipo] ?? 0);
+
+      const consumo = Math.max(0, v.consumo || 0);
+      const litros = (kmEf / 100) * consumo;
+
+      const cabinas = Math.max(0, v.cabinas || 0);
+      const precioCabina = Math.max(0, v.precioCabina || 0);
+      const descuento = v.telepase === 'no' ? 1 : 0.9;
+
+      const pasajeros = Math.max(1, v.pasajeros || 1);
+      const viajes = Math.max(1, v.viajesMes || 1);
+      const velocidad = Math.max(1, v.velocidad || 1);
+
+      const combustible = litros * precio * viajes;
+      const peajes = cabinas * precioCabina * sentidos * descuento * viajes;
+      const desgaste = kmEf * Math.max(0, v.desgaste || 0) * viajes;
+      const extras = Math.max(0, v.extras || 0) * viajes;
+
+      const total = combustible + peajes + desgaste + extras;
+      const litrosTot = litros * viajes;
+      const horas = kmEf / velocidad;
+
+      const fmt = (n, d) => n.toLocaleString('es-AR', { maximumFractionDigits: d == null ? 1 : d });
+
+      const rows = [
+        {
+          k: 'Combustible',
+          ref: H.ars(precio) + '/L de ' + tipo,
+          v: combustible,
+          extra: true,
+        },
+        {
+          k: 'Peajes' + (cabinas ? ' (' + cabinas * sentidos + ' cabinas' + (descuento < 1 ? ', con Telepase)' : ')') : ''),
+          ref: cabinas ? H.ars(precioCabina) + ' por cabina' : 'sin peajes en el camino',
+          v: peajes,
+        },
+        { k: 'Desgaste del auto', ref: H.ars(v.desgaste || 0) + ' por km', v: desgaste },
+      ];
+      if (extras > 0) rows.push({ k: 'Otros gastos del viaje', ref: 'estacionamiento, comidas, alojamiento', v: extras });
+      rows.push({
+        k: 'Costo por persona',
+        ref: 'entre ' + pasajeros + (pasajeros === 1 ? ' ocupante' : ' ocupantes'),
+        v: total / pasajeros,
+        extra: true,
+      });
+      rows.push({
+        k: 'Litros de combustible',
+        ref: fmt(kmEf, 0) + (viajes > 1 ? ' km × ' + viajes + ' viajes' : ' km') + ' a ' + fmt(consumo) + ' L/100 km',
+        v: litrosTot,
+        format: 'unit',
+        unit: 'L',
+        decimals: 1,
+      });
+      rows.push({
+        k: 'Horas al volante',
+        ref: fmt(kmEf, 0) + ' km a ' + fmt(velocidad, 0) + ' km/h' + (viajes > 1 ? ', por viaje' : ''),
+        v: horas,
+        format: 'unit',
+        unit: 'h',
+        decimals: 1,
+      });
+
+      const sub =
+        fmt(litrosTot) + ' L de ' + tipo + ' a ' + H.ars(precio) + '/L · ' +
+        fmt(kmEf, 0) + ' km' + (idaVuelta ? ' ida y vuelta' : ' solo ida') +
+        (viajes > 1 ? ' × ' + viajes + ' viajes por mes' : '') +
+        ' · ' + fmt(horas) + ' h al volante a ' + fmt(velocidad, 0) + ' km/h · ' +
+        H.ars(total / pasajeros) + ' por persona entre ' + pasajeros;
+
+      const chart = [
+        { label: 'Combustible', value: combustible, tone: 'main' },
+        { label: 'Peajes', value: peajes, tone: 'exit' },
+        { label: 'Desgaste estimado', value: desgaste, tone: 'prop' },
+      ];
+      if (extras > 0) chart.push({ label: 'Otros gastos', value: extras, tone: 'warn' });
+
+      return { total: H.ars(total), sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>
