@@ -1,0 +1,309 @@
+---
+/**
+ * Hub de decisión — "¿Cuándo nace mi bebé?" (arquetipo ramificado).
+ * Reemplaza 2 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * SILO COMPARTIDO con /embarazo/semanas y /embarazo/dias-fertiles. El eje de
+ * ESTE hub es LA FECHA y su incertidumbre: Naegele con ajuste por ciclo,
+ * datación ecográfica, FIV por fecha de transferencia, distribución real de
+ * nacimientos y qué pasa después de las 40 semanas. Acá no hay tamaño del
+ * bebé, ni trimestres, ni ventana fértil: eso vive en los otros dos hubs.
+ *
+ * ⚠️ YMYL — SALUD. El disclaimer ('health' + el override ES de
+ * 'calculadora-embarazo' en src/lib/disclaimers.ts) va en fineprint y como
+ * PRIMER warn de cada caso. No sacar.
+ *
+ * Patrón: la página sólo aporta datos (src/lib/hubs/fecha-parto.ts) y su
+ * compute(). Todo el chrome, el CSS y el runtime viven en DecisionHub.astro.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, PARTO, FIV_OFFSET, TRAMOS, VENTANAS } from '../../lib/hubs/fecha-parto';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ PARTO, FIV_OFFSET, TRAMOS, VENTANAS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+    function parseDate(s) {
+      const p = String(s || '').split('-').map(Number);
+      if (p.length !== 3 || p.some(isNaN)) return null;
+      const d = new Date(p[0], p[1] - 1, p[2]);
+      if (isNaN(d.getTime())) return null;
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+    function addDays(d, n) { const o = new Date(d.getTime()); o.setDate(o.getDate() + n); return o; }
+    function fmt(d) { return d.getDate() + ' de ' + MESES[d.getMonth()] + ' de ' + d.getFullYear(); }
+    function corta(d) { return d.getDate() + '/' + (d.getMonth() + 1); }
+    function hoy() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+    function dif(a, b) { return Math.round((a.getTime() - b.getTime()) / 86400000); }
+    function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+    function plural(n, s, p) { return n === 1 ? s : p; }
+
+    function faltan(msg) {
+      return { total: 'Faltan datos', sub: msg, rows: [], chart: [] };
+    }
+
+    /** La línea de tiempo del gráfico va de la semana 36 a la 43. */
+    function posSemana(sem) { return clamp(((sem - 36) / 7) * 100, 0, 100); }
+
+    /** Segmentos del gráfico: cada tramo con su proporción real de nacimientos. */
+    function segmentos() {
+      return TRAMOS.map(function (t) {
+        return { label: t.label, value: t.pct, tone: t.tone, from: t.from, to: t.to };
+      });
+    }
+
+    function tramoDe(sem) {
+      for (let i = 0; i < TRAMOS.length; i++) {
+        if (sem < TRAMOS[i].hastaSemana) return TRAMOS[i];
+      }
+      return TRAMOS[TRAMOS.length - 1];
+    }
+
+    /**
+     * Todo el hub se reduce a una FUM efectiva: la fecha desde la que se
+     * cuentan los 280 días de Naegele. Cada rama la deriva a su manera.
+     */
+    function resultado(fumEfectiva, metodo, extraRows, extraSub) {
+      const t = hoy();
+      const fpp = addDays(fumEfectiva, PARTO.diasFumParto);
+
+      const diasGest = dif(t, fumEfectiva);
+      const semanaHoy = Math.floor(diasGest / 7);
+      const diasSueltos = ((diasGest % 7) + 7) % 7;
+      const faltanDias = dif(fpp, t);
+
+      // Fechas de apertura de cada tramo.
+      const inicioTermino = addDays(fumEfectiva, PARTO.semanaPretermino * 7);
+      const inicioCompleto = addDays(fumEfectiva, PARTO.semanaTerminoCompleto * 7);
+      const inicioTardio = addDays(fumEfectiva, PARTO.semanaTerminoTardio * 7);
+      const inicioPostermino = addDays(fumEfectiva, PARTO.semanaPostermino * 7);
+
+      const semanaRef = diasGest >= 0 ? semanaHoy : 40;
+      const tramo = tramoDe(clamp(semanaRef, 20, 45));
+
+      const rows = [
+        { k: 'Días de la última menstruación al parto', ref: 'Naegele · ACOG 700', v: PARTO.diasFumParto, extra: true, format: 'unit', unit: 'días', decimals: 0 },
+        { k: 'Semanas de gestación en la fecha probable de parto', v: 40, format: 'unit', unit: 'semanas', decimals: 0 },
+      ];
+      for (let i = 0; i < extraRows.length; i++) rows.push(extraRows[i]);
+
+      if (diasGest >= 0) {
+        rows.push({ k: 'Semanas de gestación hoy', v: semanaHoy, format: 'unit', unit: 'semanas', decimals: 0 });
+        rows.push({ k: 'Días sueltos además de esas semanas', v: diasSueltos, format: 'unit', unit: 'días', decimals: 0 });
+      }
+      rows.push({
+        k: faltanDias >= 0 ? 'Días que faltan para la fecha probable de parto' : 'Días que pasaron desde la fecha probable de parto',
+        v: Math.abs(faltanDias),
+        format: 'unit',
+        unit: 'días',
+        decimals: 0,
+      });
+      rows.push({ k: 'Semana en la que empieza el término', ref: 'ACOG 579', v: PARTO.semanaPretermino, format: 'unit', unit: 'semanas', decimals: 0 });
+      rows.push({ k: 'Semana en la que se considera postérmino', ref: 'ACOG 579', v: PARTO.semanaPostermino, format: 'unit', unit: 'semanas', decimals: 0 });
+
+      TRAMOS.forEach(function (tr) {
+        rows.push({
+          k: 'Nacimientos en ' + tr.label.toLowerCase(),
+          ref: 'NCHS',
+          v: tr.pct,
+          format: 'unit',
+          unit: '%',
+          decimals: 0,
+        });
+      });
+
+      const posicion = diasGest >= 0 && semanaHoy >= 36 ? posSemana(semanaHoy + diasSueltos / 7) : posSemana(40);
+      const etiqueta =
+        diasGest >= 0 && semanaHoy >= 36
+          ? 'Semana ' + semanaHoy + '+' + diasSueltos + ' — ' + tramo.corto
+          : 'Fecha probable de parto: semana 40 — término completo';
+
+      return {
+        total: fmt(fpp),
+        sub:
+          'Calculada por ' + metodo + '.' + (extraSub ? ' ' + extraSub : '') +
+          ' Ventana de término: del ' + corta(inicioTermino) + ' al ' + corta(addDays(inicioPostermino, -1)) +
+          ' · el tramo de término completo, donde nace el 41% de los bebés, va del ' + corta(inicioCompleto) + ' al ' + corta(addDays(inicioTardio, -1)) +
+          ' · desde el ' + corta(inicioPostermino) + ' sería postérmino' +
+          (diasGest >= 0
+            ? ' · hoy llevás ' + semanaHoy + ' ' + plural(semanaHoy, 'semana', 'semanas') + ' y ' + diasSueltos + ' ' + plural(diasSueltos, 'día', 'días')
+            : '') +
+          (faltanDias >= 0 ? ' · faltan ' + faltanDias + ' ' + plural(faltanDias, 'día', 'días') : ' · la fecha pasó hace ' + Math.abs(faltanDias) + ' días') +
+          '. Sólo alrededor del 4% nace el día exacto: es el centro de una ventana, no una predicción.',
+        rows: rows,
+        chart: segmentos(),
+        format: 'unit',
+        unit: 'días',
+        decimals: 0,
+        position: posicion,
+        positionLabel: etiqueta,
+      };
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'fum';
+
+      // ------------------------------------------------------------------ FIV
+      if (id === 'fiv') {
+        const ref = parseDate(v.fechaFiv);
+        if (!ref) return faltan('Cargá la fecha de la transferencia embrionaria o de la punción.');
+        const tipo = FIV_OFFSET[String(v.tipoFiv || 'd5')] || FIV_OFFSET.d5;
+        const fpp = addDays(ref, tipo.dias);
+        const fumEfectiva = addDays(fpp, -PARTO.diasFumParto);
+        return resultado(
+          fumEfectiva,
+          'FIV: ' + tipo.label,
+          [
+            { k: 'Días de esa fecha a la fecha probable de parto', ref: 'ACOG 700', v: tipo.dias, format: 'unit', unit: 'días', decimals: 0 },
+            { k: 'Días de la fecundación al parto', v: PARTO.diasConcepcionParto, format: 'unit', unit: 'días', decimals: 0 },
+            { k: 'Edad del embrión al transferirlo', v: PARTO.diasConcepcionParto - tipo.dias, format: 'unit', unit: 'días', decimals: 0 },
+          ],
+          'Última menstruación equivalente para tu carnet perinatal: ' + fmt(fumEfectiva) +
+            '. En FIV esta fecha no se corrige después por ecografía: es la más precisa que existe.'
+        );
+      }
+
+      // ----------------------------------------------------------- ECOGRAFÍA
+      if (id === 'eco') {
+        const fechaEco = parseDate(v.fechaEco);
+        if (!fechaEco) return faltan('Cargá la fecha en que te hiciste la ecografía.');
+        const sem = clamp(Math.round(Number(v.semanasEco) || 0), 0, 42);
+        const dias = clamp(Math.round(Number(v.diasEco) || 0), 0, 6);
+        const ega = sem * 7 + dias;
+        if (ega <= 0) return faltan('Cargá las semanas que informó la ecografía.');
+
+        // FUM efectiva = fecha de la eco − edad gestacional informada.
+        const fumEfectiva = addDays(fechaEco, -ega);
+
+        const extra = [
+          { k: 'Edad gestacional que informó la ecografía', v: ega, format: 'unit', unit: 'días', decimals: 0 },
+          { k: 'Margen de la datación ecográfica temprana', ref: 'ACOG 700', v: PARTO.margenEcoPrimerTrimestre, format: 'unit', unit: 'días', decimals: 0 },
+        ];
+
+        const fum = parseDate(v.fum);
+        let comentario = '';
+        if (fum) {
+          const corrimiento = dif(fumEfectiva, fum);
+          extra.push({
+            k: 'Corrimiento respecto de tu última menstruación',
+            v: Math.abs(corrimiento),
+            format: 'unit',
+            unit: 'días',
+            decimals: 0,
+          });
+          comentario =
+            Math.abs(corrimiento) > PARTO.margenEcoPrimerTrimestre
+              ? 'La ecografía se aparta ' + Math.abs(corrimiento) + ' días de tu última menstruación: supera los ' +
+                PARTO.margenEcoPrimerTrimestre + ' días de tolerancia, así que manda la ecografía.'
+              : 'La ecografía y tu última menstruación difieren en ' + Math.abs(corrimiento) + ' días, dentro de la tolerancia de ' +
+                PARTO.margenEcoPrimerTrimestre + ' días: se conserva la fecha por menstruación.';
+        }
+
+        return resultado(fumEfectiva, 'datación ecográfica', extra, comentario);
+      }
+
+      // -------------------------------------------------- YA TENGO LA FECHA
+      if (id === 'rango') {
+        const fpp = parseDate(v.fppConocida);
+        if (!fpp) return faltan('Cargá la fecha probable de parto que te dieron.');
+        const fumEfectiva = addDays(fpp, -PARTO.diasFumParto);
+        const extra = VENTANAS.map(function (w) {
+          return {
+            k: w.label,
+            ref: 'NCHS',
+            v: w.pct,
+            extra: w.dias === 0,
+            format: 'unit',
+            unit: '%',
+            decimals: 0,
+          };
+        });
+        return resultado(
+          fumEfectiva,
+          'la fecha que ya te dieron',
+          extra,
+          'Nacer antes o después de esa fecha es lo esperable: el 84% de los bebés nace dentro de las dos semanas previas o posteriores. Pasar la fecha no es una urgencia, pero desde las 41 semanas los controles se intensifican y se conversa la inducción.'
+        );
+      }
+
+      // -------------------------------------------------------------- NAEGELE
+      const fum = parseDate(v.fum);
+      if (!fum) return faltan('Cargá el primer día de tu última menstruación.');
+      const ciclo = clamp(Math.round(Number(v.ciclo) || PARTO.cicloBase), 20, 45);
+      const ajuste = ciclo - PARTO.cicloBase;
+
+      // Ciclo largo → ovulás más tarde → la fecha se atrasa esos días.
+      const fumEfectiva = addDays(fum, ajuste);
+
+      const extra = [
+        { k: 'Duración de tu ciclo', v: ciclo, format: 'unit', unit: 'días', decimals: 0 },
+        { k: 'Ciclo de referencia que asume la regla de Naegele', v: PARTO.cicloBase, format: 'unit', unit: 'días', decimals: 0 },
+        {
+          k: ajuste >= 0 ? 'Días que se atrasa la fecha por tu ciclo' : 'Días que se adelanta la fecha por tu ciclo',
+          v: Math.abs(ajuste),
+          format: 'unit',
+          unit: 'días',
+          decimals: 0,
+        },
+      ];
+
+      return resultado(
+        fumEfectiva,
+        'la regla de Naegele desde tu última menstruación',
+        extra,
+        ajuste === 0
+          ? 'Con un ciclo de 28 días no se aplica ninguna corrección.'
+          : 'Tu ciclo de ' + ciclo + ' días ' + (ajuste > 0 ? 'atrasa' : 'adelanta') + ' la fecha ' + Math.abs(ajuste) + ' ' +
+            plural(Math.abs(ajuste), 'día', 'días') + ' respecto de la regla clásica.'
+      );
+    });
+  })();
+</script>

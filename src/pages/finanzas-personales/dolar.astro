@@ -1,0 +1,289 @@
+---
+/**
+ * Hub de decisión — "¿Conviene comprar dólares?"
+ * Reemplaza 9 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/dolar.ts) y su compute().
+ * El chrome, el CSS y el runtime viven en DecisionHub.astro.
+ *
+ * Las cotizaciones, la tasa del BCRA y la inflación del INDEC viajan al cliente
+ * en DATA, que el módulo del hub arma leyendo src/data/live/*.json. No hay
+ * ninguna cotización hardcodeada acá.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, DOLAR_DATA } from '../../lib/hubs/dolar';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ DATA: DOLAR_DATA }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const usd = (n, d) =>
+      'US$ ' + Number(n || 0).toLocaleString('es-AR', {
+        minimumFractionDigits: d === undefined ? 2 : d,
+        maximumFractionDigits: d === undefined ? 2 : d,
+      });
+    const p1 = (n) => Number(n || 0).toFixed(1).replace('.', ',') + '%';
+    const clamp = (n) => Math.min(100, Math.max(0, n));
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'brecha';
+      const monto = Math.max(0, v.monto || 0);
+      const meses = Math.max(1, Math.min(120, v.meses || 12));
+      const libre = Math.max(0, v.dolarLibre || 0);
+      const oficial = Math.max(0, v.dolarOficial || 0);
+      const inflAnual = Math.max(0, v.inflacionAnual || 0);
+      const tnaPesos = Math.max(0, v.tnaPesos || 0);
+      const precioUSD = Math.max(0, v.precioUSD || 0);
+      const D = DATA;
+
+      // Los tipos que no tienen campo propio se mueven junto con el libre, para
+      // que pisar la cotización no deje el resto congelado en el dato del cron.
+      const factor = D.blue > 0 ? libre / D.blue : 1;
+      const mep = D.mep * factor;
+      const ccl = D.ccl * factor;
+      const cripto = D.cripto * factor;
+      const tarjeta = D.tarjeta * factor;
+
+      // Inflación y tasa llevadas al período elegido.
+      const inflPeriodo = (Math.pow(1 + inflAnual / 100, meses / 12) - 1) * 100;
+      const tasaPeriodo = (Math.pow(1 + tnaPesos / 100, meses / 12) - 1) * 100;
+
+      // ── Rama 1: a qué dólar compro ──────────────────────────────────────
+      if (id === 'brecha') {
+        const brecha = oficial > 0 ? (libre / oficial - 1) * 100 : 0;
+        const enOficial = oficial > 0 ? monto / oficial : 0;
+        const enLibre = libre > 0 ? monto / libre : 0;
+        const enMep = mep > 0 ? monto / mep : 0;
+        const enCcl = ccl > 0 ? monto / ccl : 0;
+        const enCripto = cripto > 0 ? monto / cripto : 0;
+        const MAX = Math.max(70, Math.ceil((brecha + 10) / 10) * 10);
+        return {
+          total: usd(enMep, 0),
+          sub:
+            'Es lo que te llevás por ' + H.ars(monto) + ' comprando al MEP de ' + H.ars(mep) +
+            ' · al libre serían ' + usd(enLibre, 0) + ' y al oficial ' + usd(enOficial, 0) +
+            ' · brecha ' + p1(brecha),
+          rows: [
+            { k: 'Al dólar oficial', ref: H.ars(oficial), v: enOficial, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Al dólar MEP', ref: H.ars(mep), v: enMep, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+            { k: 'Al contado con liquidación', ref: H.ars(ccl), v: enCcl, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Al dólar libre', ref: H.ars(libre), v: enLibre, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Al dólar cripto', ref: H.ars(cripto), v: enCripto, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Diferencia por dólar entre libre y oficial', v: libre - oficial },
+            { k: 'Brecha libre contra oficial', v: brecha, format: 'unit', unit: '%', decimals: 1, extra: true },
+          ],
+          chart: [
+            { label: 'Baja', from: 0, to: 10, tone: 'good' },
+            { label: 'Moderada', from: 10, to: 30, tone: 'prop' },
+            { label: 'Preocupante', from: 30, to: 50, tone: 'warn' },
+            { label: 'Alta', from: 50, to: MAX, tone: 'bad' },
+          ],
+          position: clamp((brecha / MAX) * 100),
+          positionLabel: 'Brecha del ' + p1(brecha),
+        };
+      }
+
+      // ── Rama 2: costo real de comprar MEP ───────────────────────────────
+      if (id === 'mep') {
+        // Espejo de dolar-mep-paso-a-paso-costo-operacion.ts, expresado sobre el
+        // MEP implícito publicado en vez de sobre el precio del bono: comprás y
+        // vendés el bono y la comisión te recorta los dólares que recibís.
+        const com = D.mepComision;
+        const usdBruto = mep > 0 ? monto / mep : 0;
+        const usdNeto = usdBruto * (1 - com / 100);
+        const mepEfectivo = usdNeto > 0 ? monto / usdNeto : 0;
+        const costoARS = (usdBruto - usdNeto) * mep;
+        const sobreprecio = mep > 0 ? (mepEfectivo / mep - 1) * 100 : 0;
+        const MAX = Math.max(3, Math.ceil(sobreprecio) + 1);
+        return {
+          total: usd(usdNeto),
+          sub:
+            'Netos por ' + H.ars(monto) + ' · tipo de cambio efectivo ' + H.ars(mepEfectivo) +
+            ' contra el MEP publicado de ' + H.ars(mep) + ' · comisión de referencia ' +
+            com.toFixed(2).replace('.', ',') + '%',
+          rows: [
+            { k: 'Pesos que ponés', v: monto },
+            { k: 'MEP publicado', ref: 'dato del ' + D.fecha, v: mep },
+            { k: 'Dólares antes de comisiones', v: usdBruto, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Dólares que recibís', ref: 'comisión ' + com.toFixed(2).replace('.', ',') + '%', v: usdNeto, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+            { k: 'Costo de la operación', v: costoARS },
+            { k: 'Tipo de cambio efectivo', v: mepEfectivo, extra: true },
+            { k: 'Sobreprecio contra el MEP publicado', v: sobreprecio, format: 'unit', unit: '%', decimals: 2 },
+          ],
+          chart: [
+            { label: 'Barato', from: 0, to: 0.5, tone: 'good' },
+            { label: 'Normal', from: 0.5, to: 1, tone: 'prop' },
+            { label: 'Caro', from: 1, to: 2, tone: 'warn' },
+            { label: 'Muy caro', from: 2, to: MAX, tone: 'bad' },
+          ],
+          position: clamp((sobreprecio / MAX) * 100),
+          positionLabel: 'Pagás ' + sobreprecio.toFixed(2).replace('.', ',') + '% sobre el MEP publicado',
+        };
+      }
+
+      // ── Rama 3: dólar contra plazo fijo contra UVA ──────────────────────
+      if (id === 'vs-pesos') {
+        // Espejo de ahorro-uva-vs-pesos-vs-dolar-12-meses.ts, generalizado a N
+        // meses: UVA ajusta por inflación más spread; el dólar sólo rinde lo que
+        // sube el tipo de cambio, y acá suponemos que acompaña a la inflación.
+        const spreadPeriodo = (Math.pow(1 + D.uvaSpread / 100, meses / 12) - 1) * 100;
+        const finUva = monto * (1 + inflPeriodo / 100) * (1 + spreadPeriodo / 100);
+        const finPesos = monto * (1 + tasaPeriodo / 100);
+        const usdHoy = mep > 0 ? monto / mep : 0;
+        const mepFinal = mep * (1 + inflPeriodo / 100);
+        const finDolar = usdHoy * mepFinal;
+
+        const ops = [
+          { n: 'Plazo fijo UVA', v: finUva },
+          { n: 'Plazo fijo en pesos', v: finPesos },
+          { n: 'Dólares guardados', v: finDolar },
+        ].sort((a, b) => b.v - a.v);
+        const gana = ops[0];
+        const realGanador = (gana.v / monto / (1 + inflPeriodo / 100) - 1) * 100;
+        const MIN = -20, MAX = 20;
+        return {
+          total: H.ars(gana.v),
+          sub:
+            'Gana ' + gana.n + ' a ' + meses + ' meses · ' + H.ars(gana.v - ops[1].v) +
+            ' por encima de ' + ops[1].n + ' · rendimiento real ' +
+            (realGanador >= 0 ? '+' : '−') + Math.abs(realGanador).toFixed(1).replace('.', ',') + '%',
+          rows: [
+            { k: 'Capital inicial', v: monto },
+            { k: 'Inflación del período', ref: meses + ' meses', v: inflPeriodo, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Plazo fijo UVA', ref: 'IPC + ' + D.uvaSpread + '% anual', v: finUva },
+            { k: 'Plazo fijo en pesos', ref: tnaPesos.toFixed(2).replace('.', ',') + '% TNA', v: finPesos },
+            { k: 'Dólares guardados', ref: 'sin rendimiento propio', v: finDolar },
+            { k: 'Lo que necesitás para empatar el IPC', v: monto * (1 + inflPeriodo / 100), extra: true },
+            { k: 'Rendimiento real del ganador', v: realGanador, format: 'unit', unit: '%', decimals: 1, extra: true },
+          ],
+          chart: [
+            { label: 'Perdés fuerte', from: MIN, to: -5, tone: 'bad' },
+            { label: 'Perdés', from: -5, to: -1, tone: 'warn' },
+            { label: 'Empatás', from: -1, to: 1, tone: 'prop' },
+            { label: 'Ganás', from: 1, to: MAX, tone: 'good' },
+          ],
+          position: clamp(((realGanador - MIN) / (MAX - MIN)) * 100),
+          positionLabel: gana.n + ' · rendimiento real ' + realGanador.toFixed(1).replace('.', ',') + '%',
+        };
+      }
+
+      // ── Rama 4: la plata quieta ─────────────────────────────────────────
+      if (id === 'quieta') {
+        // Espejo de calculadora-cuanto-pierdo-inflacion-plata-quieta.ts:
+        // valorReal = monto / (1 + inflación)^(meses/12).
+        const f = Math.pow(1 + inflAnual / 100, meses / 12);
+        const valorReal = f > 0 ? monto / f : 0;
+        const perdida = monto - valorReal;
+        const pctPerdido = monto > 0 ? (perdida / monto) * 100 : 0;
+        const queda = 100 - pctPerdido;
+        return {
+          total: H.ars(valorReal),
+          sub:
+            'Es lo que van a comprar tus ' + H.ars(monto) + ' dentro de ' + meses +
+            ' meses con inflación del ' + inflAnual.toFixed(1).replace('.', ',') +
+            '% anual · perdés ' + H.ars(perdida) + ' (' + p1(pctPerdido) + ')',
+          rows: [
+            { k: 'Monto que dejás quieto', v: monto },
+            { k: 'Inflación del período', ref: meses + ' meses', v: inflPeriodo, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Poder de compra que queda', v: valorReal, extra: true },
+            { k: 'Poder de compra perdido', v: perdida, extra: true },
+            { k: 'Porcentaje perdido', v: pctPerdido, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Lo que necesitarías para comprar lo mismo', v: monto * f },
+          ],
+          chart: [
+            { label: 'Queda poco', from: 0, to: 50, tone: 'bad' },
+            { label: 'Pérdida grande', from: 50, to: 75, tone: 'warn' },
+            { label: 'Pérdida moderada', from: 75, to: 90, tone: 'prop' },
+            { label: 'Casi intacto', from: 90, to: 100, tone: 'good' },
+          ],
+          position: clamp(queda),
+          positionLabel: 'Te queda el ' + p1(queda) + ' del poder de compra',
+        };
+      }
+
+      // ── Rama 5: un precio en dólares ────────────────────────────────────
+      const enOficial = precioUSD * oficial;
+      const enMep = precioUSD * mep;
+      const enLibre = precioUSD * libre;
+      const enTarjeta = precioUSD * tarjeta;
+      // Las franjas son los cuatro precios ordenados de menor a mayor: si el
+      // usuario pisa una cotización y cambia el orden, la escala lo acompaña.
+      const puntos = [
+        { label: 'Oficial', value: enOficial, tone: 'good' },
+        { label: 'MEP', value: enMep, tone: 'prop' },
+        { label: 'Libre', value: enLibre, tone: 'warn' },
+        { label: 'Tarjeta', value: enTarjeta, tone: 'bad' },
+      ].sort((a, b) => a.value - b.value);
+      const MAX = Math.max(puntos[puntos.length - 1].value, 1);
+      let acc = 0;
+      const bandas = puntos.map((p) => {
+        const from = acc;
+        acc = Math.max(from, p.value);
+        return { label: p.label, from: from, to: acc, tone: p.tone };
+      });
+      bandas[bandas.length - 1].to = MAX;
+      return {
+        total: H.ars(enMep),
+        sub:
+          usd(precioUSD, 0) + ' al MEP de ' + H.ars(mep) + ' · con tarjeta serían ' +
+          H.ars(enTarjeta) + ', ' + H.ars(enTarjeta - enMep) + ' más',
+        rows: [
+          { k: 'Precio en dólares', v: precioUSD, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Pagando al oficial', ref: H.ars(oficial), v: enOficial },
+          { k: 'Pagando al MEP', ref: H.ars(mep), v: enMep, extra: true },
+          { k: 'Pagando al libre', ref: H.ars(libre), v: enLibre },
+          { k: 'Pagando con tarjeta', ref: H.ars(tarjeta), v: enTarjeta, extra: true },
+          { k: 'Diferencia entre tarjeta y MEP', v: enTarjeta - enMep },
+        ],
+        chart: bandas,
+        position: clamp((enMep / MAX) * 100),
+        positionLabel: usd(precioUSD, 0) + ' son ' + H.ars(enMep) + ' al MEP',
+      };
+    });
+  })();
+</script>

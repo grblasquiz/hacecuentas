@@ -1,0 +1,257 @@
+---
+/**
+ * Hub de decisión — "¿Me conviene pagar con millas o con plata?" (arquetipo RAMIFICADO).
+ * Absorbe 8 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/valen-millas.ts) y su compute().
+ * El chrome, el CSS y el runtime viven en DecisionHub.astro y no se tocan.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, PROGRAMAS, CANALES, MULT_CLASE, BENCH_UPGRADE } from '../../lib/hubs/valen-millas';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ PROGRAMAS, CANALES, MULT_CLASE, BENCH_UPGRADE }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Este hub mezcla unidades: millas, dólares, pesos y centavos de dólar por
+    // milla. El runtime hace Object.assign(base, over), así que una fila que
+    // omite `format` NO hereda el del resultado y saldría con "$". Cada fila
+    // declara el suyo.
+    const CPM = { format: 'unit', unit: '¢/milla', decimals: 2 };
+    const MILLAS = { format: 'unit', unit: 'millas' };
+    const USD = { format: 'unit', unit: 'USD' };
+    const USD2 = { format: 'unit', unit: 'USD', decimals: 2 };
+    const ARS = { format: 'ars' };
+    const HORAS = { format: 'unit', unit: 'h', decimals: 1 };
+
+    // Tope de la escala del gráfico, en ¢/milla.
+    const TOPE = 4.5;
+    const dec2 = (n) => (Math.round(n * 100) / 100).toFixed(2).replace('.', ',');
+    const miles = (n) => Math.round(n || 0).toLocaleString('es-AR');
+
+    /** Franjas fijas de la escala (mismas que declara hub.chart.bands). */
+    function franjas() {
+      return [
+        { label: 'No canjear', value: 1, from: 0, to: 1, tone: 'bad' },
+        { label: 'Flojo', value: 0.5, from: 1, to: 1.5, tone: 'warn' },
+        { label: 'Buen canje', value: 0.5, from: 1.5, to: 2, tone: 'good' },
+        { label: 'Excelente', value: 1, from: 2, to: 3, tone: 'good' },
+        { label: 'Premium', value: 1.5, from: 3, to: TOPE, tone: 'good' },
+      ];
+    }
+
+    const pos = (cpm) => Math.min(100, Math.max(0, (cpm / TOPE) * 100));
+
+    /** Veredicto contra la referencia del programa. */
+    function veredicto(cpm, ref, prog) {
+      if (cpm <= 0) {
+        return 'El canje no ahorra nada: las tasas igualan o superan el precio en efectivo. Pagá en plata.';
+      }
+      if (cpm >= ref * 1.5) {
+        return 'Canje excelente: cada milla rinde ' + dec2(cpm) + ' ¢, muy por encima de la referencia de ' +
+          dec2(ref) + ' ¢ de ' + prog.label + '. Canjealo.';
+      }
+      if (cpm >= ref) {
+        return 'Conviene canjear: cada milla rinde ' + dec2(cpm) + ' ¢, por encima de la referencia de ' +
+          dec2(ref) + ' ¢ de ' + prog.label + '.';
+      }
+      if (cpm >= ref * 0.7) {
+        return 'Está ajustado: ' + dec2(cpm) + ' ¢ por milla, apenas por debajo de la referencia de ' +
+          dec2(ref) + ' ¢. Conviene sólo si no tenés a la vista un canje mejor.';
+      }
+      return 'Pagá en efectivo: cada milla rinde apenas ' + dec2(cpm) + ' ¢ contra una referencia de ' +
+        dec2(ref) + ' ¢. Guardá las millas para un canje más caro.';
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'canje';
+      const prog = PROGRAMAS[v.programa] || PROGRAMAS['generico'];
+      const ref = prog.cpmRef;
+      const millas = Math.max(0, v.millas || 0);
+      const cash = Math.max(0, v.precioCash || 0);
+      const tasas = Math.max(0, v.tasas || 0);
+      const cotiz = Math.max(0, v.cotizacion || 0);
+      const horas = Math.max(0.5, v.horas || 1);
+      const km = Math.max(0, v.km || 0);
+      const clase = MULT_CLASE[v.clase] != null ? v.clase : 'economica';
+
+      const rows = [];
+      let cpm = 0;
+      let sub = '';
+      let total = '';
+
+      // Núcleo del hub: el ahorro neto por milla. Vale para canje, upgrade y pesos.
+      const ahorroNeto = cash - tasas;
+      const cpmCanje = millas > 0 ? (ahorroNeto / millas) * 100 : 0;
+
+      if (id === 'canje' || id === 'pesos') {
+        cpm = cpmCanje;
+        rows.push({ k: 'Precio del pasaje en plata', v: cash, ...USD });
+        rows.push({ k: 'Tasas e impuestos del canje', ref: 'se pagan igual', v: tasas, ...USD });
+        rows.push({ k: 'Ahorro real del canje', v: ahorroNeto, extra: true, ...USD });
+        rows.push({ k: 'Millas que te piden', v: millas, ...MILLAS });
+        rows.push({ k: 'Valor de cada milla', ref: 'ahorro ÷ millas', v: cpm, extra: true, ...CPM });
+        rows.push({ k: 'Referencia de ' + prog.label, v: ref, ...CPM });
+        rows.push({
+          k: 'Valor del saldo a la referencia',
+          ref: 'millas × referencia',
+          v: (millas * ref) / 100,
+          ...USD2,
+        });
+        if (id === 'pesos') {
+          const pesosPorMilla = (cpm / 100) * cotiz;
+          rows.push({ k: 'Valor de cada milla en pesos', ref: 'a $' + miles(cotiz) + ' por dólar', v: pesosPorMilla, format: 'ars', decimals: 2 });
+          rows.push({ k: 'Ahorro del canje en pesos', v: ahorroNeto * cotiz, ...ARS });
+          total = '$' + dec2(pesosPorMilla) + ' por milla';
+        } else {
+          total = dec2(cpm) + ' ¢/milla';
+        }
+        sub = prog.label + ' — ' + veredicto(cpm, ref, prog);
+      } else if (id === 'puntos-tarjeta') {
+        const canal = CANALES[v.canal] || CANALES['transferencia-aerolinea'];
+        const mejor = CANALES['transferencia-aerolinea'];
+        cpm = canal.cpp;
+        const valorCanal = (millas * canal.cpp) / 100;
+        const valorMejor = (millas * mejor.cpp) / 100;
+        rows.push({ k: 'Puntos que tenés', v: millas, format: 'unit', unit: 'puntos' });
+        rows.push({ k: 'Valor por punto en este canal', ref: canal.label.toLowerCase(), v: canal.cpp, extra: true, ...CPM });
+        rows.push({ k: 'Valor de tus puntos en este canal', v: valorCanal, ...USD2 });
+        rows.push({ k: 'Valor transfiriendo a una aerolínea', ref: 'el mejor canal', v: valorMejor, ...USD2 });
+        rows.push({ k: 'Lo que dejás sobre la mesa', v: Math.max(0, valorMejor - valorCanal), extra: true, ...USD2 });
+        if (cotiz > 0) rows.push({ k: 'Valor de tus puntos en pesos', v: valorCanal * cotiz, ...ARS });
+        if (millas > 0 && cash > 0) {
+          rows.push({ k: 'Valor si los usás en este vuelo', ref: 'ahorro ÷ puntos', v: cpmCanje, ...CPM });
+        }
+        total = dec2(canal.cpp) + ' ¢/punto';
+        sub = canal.cpp >= 2
+          ? 'Estás en el mejor canal: ' + dec2(canal.cpp) + ' ¢ por punto. Transferir a aerolínea es donde el punto rinde más, pero es irreversible.'
+          : 'Este canal rinde ' + dec2(canal.cpp) + ' ¢ por punto contra ' + dec2(mejor.cpp) +
+            ' ¢ transfiriendo a una aerolínea: dejás US$ ' + miles(valorMejor - valorCanal) + ' sobre la mesa.';
+      } else if (id === 'upgrade') {
+        cpm = cpmCanje;
+        const b = BENCH_UPGRADE[clase] || BENCH_UPGRADE['business'];
+        const porHora = cash / horas;
+        rows.push({ k: 'Costo del upgrade en plata', v: cash, ...USD });
+        rows.push({ k: 'Duración del vuelo', v: horas, ...HORAS });
+        rows.push({ k: 'Costo por hora de vuelo', v: porHora, extra: true, ...USD2 });
+        rows.push({ k: 'Precio barato de mercado', ref: 'por hora', v: b.barato, ...USD });
+        rows.push({ k: 'Precio promedio de mercado', ref: 'por hora', v: b.promedio, ...USD });
+        rows.push({ k: 'Precio caro de mercado', ref: 'por hora', v: b.caro, ...USD });
+        if (millas > 0) {
+          rows.push({ k: 'Millas que piden por el upgrade', v: millas, ...MILLAS });
+          rows.push({ k: 'Valor de cada milla en el upgrade', v: cpm, extra: true, ...CPM });
+        }
+        total = 'US$ ' + dec2(porHora) + '/hora';
+        const juicio = porHora <= b.barato
+          ? 'Está barato para la cabina: por debajo del piso de mercado.'
+          : porHora <= b.promedio
+            ? 'Precio razonable, sobre todo si el vuelo es largo.'
+            : porHora <= b.caro
+              ? 'Está caro: sólo cierra si valorás mucho dormir o llegar entero.'
+              : 'Está por encima del mercado: pasá.';
+        const corto = horas < 3 ? ' Además, con menos de 3 horas de vuelo el upgrade rinde poco.' : '';
+        sub = juicio + corto + (millas > 0 ? ' Pagándolo con millas, cada una rinde ' + dec2(cpm) + ' ¢ contra la referencia de ' + dec2(ref) + ' ¢.' : '');
+      } else if (id === 'acumular') {
+        const mult = MULT_CLASE[clase];
+        const ganadas = km * prog.millasPorKm * mult;
+        const valorUsd = (ganadas * ref) / 100;
+        cpm = ref;
+        rows.push({ k: 'Distancia del vuelo', v: km, format: 'unit', unit: 'km' });
+        rows.push({ k: 'Millas por km del programa', v: prog.millasPorKm, format: 'unit', unit: 'millas/km', decimals: 2 });
+        rows.push({ k: 'Multiplicador de cabina', v: mult, format: 'unit', unit: '×', decimals: 1 });
+        rows.push({ k: 'Millas que vas a acreditar', v: ganadas, extra: true, ...MILLAS });
+        rows.push({ k: 'Referencia de ' + prog.label, v: ref, ...CPM });
+        rows.push({ k: 'Lo que valen esas millas', v: valorUsd, extra: true, ...USD2 });
+        if (cotiz > 0) rows.push({ k: 'Lo que valen en pesos', v: valorUsd * cotiz, ...ARS });
+        if (cash > 0) {
+          rows.push({ k: 'Precio del pasaje', v: cash, ...USD });
+          rows.push({
+            k: 'Las millas cubren',
+            ref: 'del precio del pasaje',
+            v: (valorUsd / cash) * 100,
+            format: 'unit',
+            unit: '%',
+            decimals: 1,
+          });
+        }
+        total = miles(ganadas) + ' millas';
+        sub = prog.label + ' — ese vuelo te deja unas ' + miles(ganadas) + ' millas, cerca de US$ ' + dec2(valorUsd) +
+          ' al valor de referencia. Sin estatus elite, tomalo como piso.';
+      } else {
+        // stock
+        const valorUsd = (millas * ref) / 100;
+        cpm = ref;
+        rows.push({ k: 'Millas en tu cuenta', v: millas, extra: true, ...MILLAS });
+        rows.push({ k: 'Referencia de ' + prog.label, v: ref, ...CPM });
+        rows.push({ k: 'Valor de tu saldo', v: valorUsd, extra: true, ...USD2 });
+        if (cotiz > 0) rows.push({ k: 'Valor de tu saldo en pesos', v: valorUsd * cotiz, ...ARS });
+        if (cash > 0 && millas > 0) {
+          rows.push({ k: 'Precio del pasaje que mirás', v: cash, ...USD });
+          rows.push({ k: 'Valor real en ese canje', ref: 'ahorro ÷ millas', v: cpmCanje, ...CPM });
+        }
+        total = 'US$ ' + dec2(valorUsd);
+        sub = prog.label + ' — tu saldo vale unos US$ ' + dec2(valorUsd) + ' a ' + dec2(ref) +
+          ' ¢ por milla. Es un promedio: el canje concreto puede rendir el doble o la mitad.';
+      }
+
+      const marcador = Math.max(0, cpm);
+
+      return {
+        total: total,
+        sub: sub,
+        rows: rows,
+        chart: franjas(),
+        format: 'unit',
+        unit: '¢/milla',
+        decimals: 2,
+        position: pos(marcador),
+        positionLabel: dec2(marcador) + ' ¢ por milla · referencia ' + dec2(ref) + ' ¢',
+      };
+    });
+  })();
+</script>

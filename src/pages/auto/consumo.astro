@@ -1,0 +1,171 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto consume mi auto?"
+ * Reemplaza 7 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/consumo-nafta.ts) y su compute().
+ * Todo el chrome, el CSS y el runtime viven en DecisionHub.astro y no se tocan.
+ *
+ * El precio del litro NO está hardcodeado acá: viaja desde
+ * src/lib/data/nafta-precios.ts (mismo snapshot oficial que /precio-nafta-hoy).
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, PRECIOS_PROVINCIA, PRECIOS_NACIONAL } from '../../lib/hubs/consumo-nafta';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ PROV: PRECIOS_PROVINCIA, NAC: PRECIOS_NACIONAL }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Penalidad del aire acondicionado: el compresor suma ~12% sobre el consumo
+    // base y se toma una velocidad urbana representativa de 30 km/h.
+    // Mismos valores que la fórmula original (US DOE/ORNL: 5–25%, mediana 12%).
+    const AC_PENALTY = 0.12;
+    const CITY_SPEED_KMH = 30;
+
+    H.onCompute(function (v) {
+      const km = Math.max(0, v.km || 0);
+      const litros = Math.max(0, v.litros || 0);
+      const tanque = Math.max(0, v.tanque || 0);
+      const reservaPct = Math.min(40, Math.max(0, v.reserva || 0));
+      const horasAire = Math.max(0, v.horasAire || 0);
+      const kmMes = Math.max(0, v.kmMes || 0);
+      const sueldo = Math.max(0, v.sueldo || 0);
+
+      const tipo = v.combustible || 'Nafta Súper';
+      const tabla = (v.provincia && v.provincia !== 'nacional' && PROV[v.provincia]) || NAC;
+      const precioManual = Math.max(0, v.precioManual || 0);
+      const precio = precioManual > 0 ? precioManual : Number(tabla[tipo] ?? NAC[tipo] ?? 0);
+
+      // Núcleo: consumo real medido entre dos cargas.
+      const consumo = km > 0 && litros > 0 ? (litros / km) * 100 : 0; // L/100 km
+      const kmL = consumo > 0 ? 100 / consumo : 0;
+      const mpg = kmL * 2.352;
+
+      // Autonomía: tanque ÷ consumo × 100. La útil descuenta el margen de reserva.
+      const autonomia = consumo > 0 ? (tanque / consumo) * 100 : 0;
+      const autonomiaUtil = autonomia * (1 - reservaPct / 100);
+
+      const costoTanque = tanque * precio;
+      const costoKm = (consumo / 100) * precio;
+      const gastoMes = costoKm * kmMes;
+
+      // Aire acondicionado: litros extra por hora sobre el consumo base urbano.
+      const aireLHora = kmL > 0 ? (CITY_SPEED_KMH / kmL) * AC_PENALTY : 0;
+      const aireLitrosMes = aireLHora * horasAire * 30;
+      const aireCostoMes = aireLitrosMes * precio;
+
+      // Poder de compra: litros por sueldo y km que rinden con TU consumo real.
+      const litrosSueldo = precio > 0 ? sueldo / precio : 0;
+      const kmSueldo = litrosSueldo * kmL;
+
+      const fmt = (n, d) => n.toLocaleString('es-AR', { maximumFractionDigits: d == null ? 1 : d });
+
+      const nivel =
+        consumo < 7 ? 'muy eficiente'
+        : consumo < 10 ? 'eficiente'
+        : consumo < 13 ? 'promedio'
+        : consumo < 16 ? 'alto'
+        : 'muy alto';
+
+      const rows = [
+        { k: 'Consumo real', ref: fmt(litros) + ' L en ' + fmt(km, 0) + ' km', v: consumo, format: 'unit', unit: 'L/100 km', decimals: 1, extra: true },
+        { k: 'Rendimiento', ref: '100 ÷ ' + fmt(consumo) + ' L/100 km', v: kmL, format: 'unit', unit: 'km/L', decimals: 1 },
+        { k: 'Equivalente en millas por galón', ref: 'para comparar con datos de EE. UU.', v: mpg, format: 'unit', unit: 'MPG', decimals: 1 },
+        { k: 'Autonomía con el tanque lleno', ref: 'tanque de ' + fmt(tanque, 0) + ' L', v: autonomia, format: 'unit', unit: 'km', decimals: 0 },
+        { k: 'Autonomía útil', ref: 'dejando ' + fmt(reservaPct, 0) + '% de reserva', v: autonomiaUtil, format: 'unit', unit: 'km', decimals: 0, extra: true },
+        { k: 'Llenar el tanque de cero', ref: H.ars(precio) + '/L de ' + tipo, v: costoTanque, format: 'ars' },
+        { k: 'Costo por kilómetro', ref: 'solo combustible', v: costoKm, format: 'ars' },
+      ];
+      if (kmMes > 0) {
+        rows.push({ k: 'Gasto de combustible por mes', ref: fmt(kmMes, 0) + ' km por mes', v: gastoMes, format: 'ars' });
+      }
+      if (horasAire > 0) {
+        rows.push({
+          k: 'Nafta extra del aire acondicionado',
+          ref: fmt(aireLHora, 2) + ' L/h × ' + fmt(horasAire) + ' h/día × 30 días',
+          v: aireLitrosMes,
+          format: 'unit',
+          unit: 'L por mes',
+          decimals: 1,
+        });
+        rows.push({ k: 'Lo que cuesta ese aire al mes', ref: 'a ' + H.ars(precio) + '/L', v: aireCostoMes, format: 'ars' });
+      }
+      if (sueldo > 0) {
+        rows.push({ k: 'Litros que comprás con un sueldo', ref: H.ars(sueldo) + ' ÷ ' + H.ars(precio), v: litrosSueldo, format: 'unit', unit: 'L', decimals: 0 });
+        rows.push({ k: 'Kilómetros que hacés con un sueldo', ref: 'con tu consumo real', v: kmSueldo, format: 'unit', unit: 'km', decimals: 0 });
+      }
+
+      const sub =
+        fmt(kmL) + ' km/L · nivel ' + nivel + ' · ' +
+        fmt(autonomia, 0) + ' km con el tanque lleno (' + fmt(autonomiaUtil, 0) + ' km útiles) · ' +
+        H.ars(costoKm) + ' por km a ' + H.ars(precio) + '/L de ' + tipo;
+
+      // Escala 0–20 L/100 km: menos es mejor.
+      const MAXESC = 20;
+      const pos = Math.min(100, Math.max(0, (consumo / MAXESC) * 100));
+
+      return {
+        total: fmt(consumo) + ' L/100 km',
+        sub: sub,
+        rows: rows,
+        format: 'unit',
+        unit: 'L/100 km',
+        decimals: 1,
+        position: pos,
+        positionLabel: fmt(consumo) + ' L/100 km — consumo ' + nivel,
+        chart: [
+          { label: 'Muy eficiente', value: 7, from: 0, to: 7, tone: 'good' },
+          { label: 'Eficiente', value: 3, from: 7, to: 10, tone: 'good' },
+          { label: 'Promedio', value: 3, from: 10, to: 13, tone: 'prop' },
+          { label: 'Alto', value: 3, from: 13, to: 16, tone: 'warn' },
+          { label: 'Muy alto', value: 4, from: 16, to: MAXESC, tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>

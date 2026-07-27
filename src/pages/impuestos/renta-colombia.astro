@@ -1,0 +1,139 @@
+---
+/**
+ * Hub de decisión — "Impuesto de renta en Colombia: ¿cuánto pago?"
+ * Reemplaza /calculadora-impuesto-renta-colombia-persona-natural-2026.
+ *
+ * OJO con el audience: HubData sólo admite 'AR' | 'global', pero esta página es
+ * colombiana. El audience="CO" se pasa acá, literal al Layout, para no perder el
+ * geo targeting ni el hreflang del mercado que trae el tráfico.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, UVT, TABLA_RENTA_CO, LIMITE_336 } from '../../lib/hubs/renta-colombia';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ UVT, TABLA: TABLA_RENTA_CO, LIMITE_336 }}>
+  (function () {
+    const H = window.HC_HUB;
+    const cop = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
+
+    // Tabla Art. 241 ET, en UVT. Espejo de src/lib/formulas/renta-colombia-persona-natural.ts.
+    function impuestoEnUvt(rentaUvt) {
+      if (rentaUvt <= 0) return { uvt: 0, tramo: TABLA[0] };
+      for (const t of TABLA) {
+        const hasta = t.hasta === null ? Infinity : t.hasta;
+        if (rentaUvt > t.desde && rentaUvt <= hasta) {
+          return { uvt: t.base + (rentaUvt - t.desde) * (t.tasa / 100), tramo: t };
+        }
+      }
+      const last = TABLA[TABLA.length - 1];
+      return { uvt: last.base + (rentaUvt - last.desde) * (last.tasa / 100), tramo: last };
+    }
+
+    H.onCompute(function (v) {
+      const ingreso = Math.max(0, v.ingreso || 0);
+      const deducciones = Math.max(0, v.deducciones || 0);
+      const exentas = Math.max(0, v.exentas || 0);
+      const retenciones = Math.max(0, v.retenciones || 0);
+
+      const ingresoNeto = ingreso - deducciones;
+      // Art. 336 ET: deducciones + exentas topeadas al 40% de la renta líquida.
+      const limite = ingresoNeto * LIMITE_336;
+      const exentasAplicadas = Math.min(exentas, limite);
+      const recorte = Math.max(0, exentas - exentasAplicadas);
+      const rentaGravable = Math.max(0, ingresoNeto - exentasAplicadas);
+      const rentaUvt = rentaGravable / UVT;
+
+      const res = impuestoEnUvt(rentaUvt);
+      const impuestoBruto = Math.round(res.uvt * UVT);
+      const acreditado = Math.min(retenciones, impuestoBruto);
+      const saldo = Math.max(0, impuestoBruto - acreditado);
+      const aFavor = Math.max(0, retenciones - impuestoBruto);
+      const efectiva = ingreso > 0 ? (impuestoBruto / ingreso) * 100 : 0;
+
+      const rows = [
+        { k: 'Ingreso anual bruto', ref: 'Declarado', v: ingreso },
+        { k: 'Deducciones imputadas (se restan)', ref: 'Cédula general', v: deducciones },
+        { k: 'Rentas exentas aplicadas (se restan)', ref: 'Tope 40% · Art. 336', v: exentasAplicadas },
+        { k: 'Renta gravable', ref: 'Base del Art. 241', v: rentaGravable },
+        { k: 'Renta gravable en UVT', ref: 'UVT ' + cop(UVT), v: rentaUvt, format: 'unit', unit: 'UVT', decimals: 1 },
+        {
+          k: 'Tramo aplicado',
+          ref: res.tramo.desde + (res.tramo.hasta === null ? ' UVT en adelante' : ' a ' + res.tramo.hasta + ' UVT'),
+          v: res.tramo.tasa,
+          format: 'unit',
+          unit: '% marginal',
+        },
+        { k: 'Impuesto liquidado', ref: 'Art. 241 ET', v: impuestoBruto },
+        { k: 'Retenciones acreditadas (se restan)', ref: 'Anticipo del año', v: acreditado },
+        { k: 'Saldo a pagar', ref: 'Formulario 210', v: saldo, extra: true },
+        { k: 'Tasa efectiva sobre el ingreso', ref: 'Impuesto ÷ ingreso', v: efectiva, format: 'unit', unit: '%', decimals: 2 },
+      ];
+      if (recorte > 0) {
+        rows.splice(3, 0, { k: 'Beneficios recortados por el tope del 40%', ref: 'Art. 336 ET', v: recorte });
+      }
+      if (aFavor > 0) {
+        rows.push({ k: 'Saldo a favor para devolución', ref: 'Retenciones de más', v: aFavor, extra: true });
+      }
+
+      return {
+        total: cop(saldo),
+        sub:
+          'Renta gravable ' + rentaUvt.toFixed(0) + ' UVT · tramo del ' + res.tramo.tasa + '% marginal · ' +
+          'impuesto liquidado ' + cop(impuestoBruto) +
+          (aFavor > 0
+            ? ' · te queda ' + cop(aFavor) + ' a favor'
+            : ' · tasa efectiva ' + efectiva.toFixed(2).replace('.', ',') + '%'),
+        rows: rows,
+        chart: [
+          { label: 'Deducciones y exentas', value: Math.round(deducciones + exentasAplicadas), tone: 'good' },
+          { label: 'Renta gravable sin impuesto', value: Math.max(0, Math.round(rentaGravable - impuestoBruto)), tone: 'main' },
+          { label: 'Impuesto liquidado', value: impuestoBruto, tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

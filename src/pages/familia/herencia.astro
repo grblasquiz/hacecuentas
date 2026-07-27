@@ -1,0 +1,148 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto me toca de la herencia y cuánto cuesta la sucesión?"
+ * Reemplaza 5 URLs de calculadora suelta (ver hub.replaces).
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, CASE_HERENCIA, TASA_JUSTICIA, OTROS_GASTOS } from '../../lib/hubs/herencia';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ CASE_HERENCIA, TASA_JUSTICIA, OTROS_GASTOS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Escala decreciente de honorarios sobre el acervo.
+    // Espejo de src/lib/formulas/sucesion-costo.ts.
+    function porcHonorarios(acervo, tipo) {
+      let p;
+      if (acervo <= 10000000) p = 0.10;
+      else if (acervo <= 50000000) p = 0.07;
+      else if (acervo <= 200000000) p = 0.05;
+      else p = 0.03;
+      if (tipo === 'testamentaria') p += 0.01;
+      return p;
+    }
+
+    H.onCompute(function (v, kase) {
+      const C = CASE_HERENCIA[kase && kase.id] || CASE_HERENCIA['hijos'];
+      const acervo = Math.max(0, v.acervo || 0);
+      const hijos = Math.max(1, Math.round(v.hijos || 0));
+      const jurisdiccion = v.jurisdiccion || 'caba';
+      const tipo = v.tipo || 'intestada';
+
+      // --- reparto forzoso (CCyC arts. 2444-2450) ---
+      const legitima = acervo * C.fraccion;
+      const disponible = acervo - legitima;
+
+      // --- costo del trámite (espejo de sucesion-costo.ts) ---
+      const pHon = porcHonorarios(acervo, tipo);
+      const pTasa = TASA_JUSTICIA[jurisdiccion] != null ? TASA_JUSTICIA[jurisdiccion] : 0.025;
+      const honorarios = acervo * pHon;
+      const tasa = acervo * pTasa;
+      const otros = acervo * OTROS_GASTOS;
+      const costo = honorarios + tasa + otros;
+      const neto = Math.max(0, acervo - costo);
+      const factorNeto = acervo > 0 ? neto / acervo : 0;
+
+      // --- cuánto le toca a cada uno, ya neto de costos ---
+      const legitimaNeta = legitima * factorNeto;
+      const disponibleNeta = disponible * factorNeto;
+
+      let porHeredero, quien, partes;
+      if (C.reparto === 'hijos') {
+        partes = hijos;
+        porHeredero = legitimaNeta / partes;
+        quien = 'cada hijo (' + partes + (partes > 1 ? ' hijos)' : ' hijo)');
+      } else if (C.reparto === 'hijos+conyuge') {
+        partes = hijos + 1;
+        porHeredero = legitimaNeta / partes;
+        quien = 'cada heredero (cónyuge + ' + hijos + (hijos > 1 ? ' hijos)' : ' hijo)');
+      } else if (C.reparto === 'unico') {
+        partes = 1;
+        porHeredero = legitimaNeta;
+        quien = 'el cónyuge, único heredero forzoso';
+      } else if (C.reparto === 'padres') {
+        partes = 2;
+        porHeredero = legitimaNeta / 2;
+        quien = 'cada padre (2 ascendientes)';
+      } else {
+        // conyuge+padres: mitad de la legítima al cónyuge, mitad a los ascendientes
+        partes = 2;
+        porHeredero = legitimaNeta / 2;
+        quien = 'el cónyuge (los padres se reparten la otra mitad)';
+      }
+
+      const rows = [
+        { k: 'Acervo hereditario', ref: 'Valor declarado', v: acervo },
+        { k: 'Legítima protegida (' + Math.round(C.fraccion * 100) + '%)', ref: C.ref, v: legitima },
+        { k: 'Porción de libre disposición', ref: 'Art. 2445', v: disponible },
+        { k: 'Honorarios del abogado (' + (pHon * 100).toFixed(0) + '%)', ref: 'Ley arancelaria', v: honorarios },
+        { k: 'Tasa de justicia (' + (pTasa * 100).toFixed(1).replace('.', ',') + '%)', ref: jurisdiccion === 'caba' ? 'CABA' : jurisdiccion === 'pba' ? 'Prov. Buenos Aires' : 'Otra provincia', v: tasa },
+        { k: 'Aportes, edictos e inscripciones', ref: '1,5% estimado', v: otros },
+        { k: 'Costo total de la sucesión', ref: (acervo > 0 ? (costo / acervo * 100).toFixed(1).replace('.', ',') : '0') + '% del acervo', v: costo, extra: true },
+        { k: 'Acervo neto, después de costos', ref: 'A repartir', v: neto },
+        { k: 'Legítima neta a repartir', ref: C.ref, v: legitimaNeta },
+        { k: 'Le toca a ' + quien, ref: 'Neto de costos', v: porHeredero, extra: true },
+      ];
+
+      return {
+        total: H.ars(porHeredero),
+        sub:
+          'Legítima ' + Math.round(C.fraccion * 100) + '% del acervo · ' +
+          'la sucesión se lleva ' + H.ars(costo) +
+          (acervo > 0 ? ' (' + (costo / acervo * 100).toFixed(1).replace('.', ',') + '% del acervo)' : '') +
+          ' · queda ' + H.ars(neto) + ' a repartir',
+        rows: rows,
+        chart: [
+          { label: 'Legítima (herederos forzosos)', value: Math.round(legitimaNeta), tone: 'main' },
+          { label: 'Porción disponible', value: Math.round(disponibleNeta), tone: 'good' },
+          { label: 'Costo de la sucesión', value: Math.round(costo), tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

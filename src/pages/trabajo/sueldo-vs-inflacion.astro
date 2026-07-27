@@ -1,0 +1,264 @@
+---
+/**
+ * Hub de decisión — "¿Mi sueldo le gana a la inflación?"
+ * Reemplaza 12 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/sueldo-alcanza.ts) y su
+ * compute(). El chrome, el CSS y el runtime viven en DecisionHub.astro.
+ *
+ * El IPC, el SMVM, el RIPTE y las cotizaciones viajan al cliente en DATA, que
+ * el módulo del hub arma leyendo las fuentes vivas. Nada hardcodeado acá.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, SUELDO_DATA } from '../../lib/hubs/sueldo-alcanza';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ DATA: SUELDO_DATA }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    /**
+     * Inflación acumulada de los últimos `meses`, en %.
+     * Espejo de inflacionAcumuladaDesde() de src/lib/data/inflacion-serie-ar.ts:
+     * compone los IPC mensuales conocidos y, si el período es más largo que la
+     * serie viva, estima el tramo faltante con el promedio geométrico mensual.
+     */
+    function inflacionAcumulada(meses) {
+      const s = DATA.serie || [];
+      if (!s.length || meses <= 0) return { pct: 0, exacto: false };
+      const n = Math.min(meses, s.length);
+      const usados = s.slice(s.length - n);
+      let f = usados.reduce((p, v) => p * (1 + v / 100), 1);
+      if (meses <= s.length) return { pct: (f - 1) * 100, exacto: true };
+      const completa = s.reduce((p, v) => p * (1 + v / 100), 1);
+      const g = Math.pow(completa, 1 / s.length);
+      f = f * Math.pow(g, meses - s.length);
+      return { pct: (f - 1) * 100, exacto: false };
+    }
+
+    const pct = (n, d) => (n >= 0 ? '+' : '−') + Math.abs(n).toFixed(d === undefined ? 1 : d).replace('.', ',') + '%';
+    const usd = (n) => 'US$ ' + Math.round(n).toLocaleString('es-AR');
+    const clamp = (n) => Math.min(100, Math.max(0, n));
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'aumento';
+      const actual = Math.max(0, v.sueldoActual || 0);
+      const anterior = Math.max(0, v.sueldoAnterior || 0);
+      const meses = Math.max(1, Math.min(120, v.meses || 12));
+      const horasSemana = Math.max(1, Math.min(84, v.horasSemana || 48));
+      const precio = Math.max(0, v.precio || 0);
+      const D = DATA;
+
+      // ── Rama 1: aumento vs IPC ──────────────────────────────────────────
+      if (id === 'aumento') {
+        const inf = inflacionAcumulada(meses);
+        const necesario = anterior * (1 + inf.pct / 100);
+        const dif = actual - necesario;
+        const real = necesario > 0 ? (actual / necesario - 1) * 100 : 0;
+        const nominal = anterior > 0 ? (actual / anterior - 1) * 100 : 0;
+
+        // Escala de −20% a +15% de variación real.
+        const MIN = -20, MAX = 15;
+        return {
+          total: (dif >= 0 ? '+' : '−') + H.ars(Math.abs(dif)),
+          sub:
+            (dif >= 0 ? 'Le ganás a la inflación por ' : 'Te faltan ') + H.ars(Math.abs(dif)) +
+            ' por mes · aumento nominal ' + pct(nominal) + ' contra IPC ' + inf.pct.toFixed(1).replace('.', ',') + '%' +
+            (inf.exacto ? '' : ' (tramo estimado: la serie del INDEC cubre ' + D.serie.length + ' meses)'),
+          rows: [
+            { k: 'Sueldo anterior', v: anterior },
+            { k: 'Inflación acumulada del período', ref: 'INDEC · ' + meses + ' meses', v: inf.pct, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Sueldo necesario para empatar', ref: 'anterior × (1 + IPC)', v: necesario },
+            { k: 'Sueldo de hoy', v: actual },
+            { k: 'Diferencia real por mes', v: dif, extra: true },
+            { k: 'Variación real', v: real, format: 'unit', unit: '%', decimals: 1, extra: true },
+          ],
+          chart: [
+            { label: 'Pérdida fuerte', from: MIN, to: -10, tone: 'bad' },
+            { label: 'Perdiste', from: -10, to: -2, tone: 'warn' },
+            { label: 'Empataste', from: -2, to: 2, tone: 'prop' },
+            { label: 'Le ganaste', from: 2, to: MAX, tone: 'good' },
+          ],
+          position: clamp(((real - MIN) / (MAX - MIN)) * 100),
+          positionLabel: 'Variación real ' + pct(real),
+        };
+      }
+
+      // ── Rama 2: contra el salario mínimo ────────────────────────────────
+      if (id === 'minimo') {
+        // Espejo de src/lib/formulas/salario-minimo.ts: jornada completa (≥48 h)
+        // cobra el SMVM íntegro; por debajo, el proporcional al valor hora.
+        const horasMes = (horasSemana * 52) / 12;
+        const proporcional =
+          horasSemana >= 48 ? D.smvmMensual : Math.round(D.smvmHora * horasMes);
+        const mult = proporcional > 0 ? actual / proporcional : 0;
+        const dif = actual - proporcional;
+        const MAX = 5;
+        return {
+          total: mult.toFixed(2).replace('.', ',') + ' × el mínimo',
+          sub:
+            'Piso legal ' + H.ars(proporcional) + ' para ' + horasSemana + ' h semanales · SMVM ' +
+            H.ars(D.smvmMensual) + ' vigente ' + D.smvmFecha,
+          rows: [
+            { k: 'SMVM mensual, jornada completa', ref: 'CNEPySMVyM', v: D.smvmMensual },
+            { k: 'SMVM por hora', ref: 'mensual ÷ 200', v: D.smvmHora },
+            { k: 'Piso legal para tu jornada', ref: horasSemana + ' h/semana', v: proporcional },
+            { k: 'Tu sueldo', v: actual },
+            { k: 'Diferencia contra el piso', v: dif, extra: true },
+            { k: 'Cuántos mínimos cobrás', v: mult, format: 'unit', unit: 'SMVM', decimals: 2, extra: true },
+          ],
+          chart: [
+            { label: 'Bajo el piso', from: 0, to: 1, tone: 'bad' },
+            { label: 'Cerca del piso', from: 1, to: 2, tone: 'warn' },
+            { label: 'Holgado', from: 2, to: 4, tone: 'good' },
+            { label: 'Muy por encima', from: 4, to: MAX, tone: 'main' },
+          ],
+          position: clamp((mult / MAX) * 100),
+          positionLabel: 'Tu sueldo es ' + mult.toFixed(2).replace('.', ',') + ' veces el mínimo',
+        };
+      }
+
+      // ── Rama 3: contra el promedio argentino (RIPTE) ────────────────────
+      if (id === 'promedio') {
+        const ripte = D.ripteNominal;
+        const dif = actual - ripte;
+        const vsPct = ripte > 0 ? (actual / ripte - 1) * 100 : 0;
+        const delProm = ripte > 0 ? (actual / ripte) * 100 : 0;
+        const enUsd = D.dolar.blue > 0 ? actual / D.dolar.blue : 0;
+        const MAX = 220;
+        return {
+          total: pct(vsPct, 0) + ' vs el promedio',
+          sub:
+            'RIPTE ' + H.ars(ripte) + ' (' + D.ripteMes + ') · tu sueldo equivale a ' +
+            usd(enUsd) + ' al blue de ' + H.ars(D.dolar.blue),
+          rows: [
+            { k: 'Promedio de trabajadores registrados', ref: 'RIPTE ' + D.ripteMes, v: ripte },
+            { k: 'Tu sueldo bruto', v: actual },
+            { k: 'Diferencia contra el promedio', v: dif, extra: true },
+            { k: 'Tu sueldo como % del promedio', v: delProm, format: 'unit', unit: '%', decimals: 0 },
+            { k: 'Tu sueldo en dólares', ref: 'blue ' + D.dolarFecha, v: enUsd, format: 'unit', unit: 'USD', decimals: 0 },
+          ],
+          chart: [
+            { label: 'Muy por debajo', from: 0, to: 70, tone: 'bad' },
+            { label: 'En torno al promedio', from: 70, to: 130, tone: 'warn' },
+            { label: 'Por encima', from: 130, to: 200, tone: 'good' },
+            { label: 'Muy por encima', from: 200, to: MAX, tone: 'main' },
+          ],
+          position: clamp((delProm / MAX) * 100),
+          positionLabel: 'Tu sueldo es el ' + Math.round(delProm) + '% del promedio',
+        };
+      }
+
+      // ── Rama 4: el sueldo en dólares ────────────────────────────────────
+      if (id === 'dolares') {
+        const d = D.dolar;
+        const enOficial = d.oficial > 0 ? actual / d.oficial : 0;
+        const enBlue = d.blue > 0 ? actual / d.blue : 0;
+        const enMep = d.mep > 0 ? actual / d.mep : 0;
+        const enCripto = d.cripto > 0 ? actual / d.cripto : 0;
+        const brecha = d.oficial > 0 ? (d.blue / d.oficial - 1) * 100 : 0;
+        const MAX = 3000;
+        return {
+          total: usd(enBlue),
+          sub:
+            'Al blue de ' + H.ars(d.blue) + ' · al oficial de ' + H.ars(d.oficial) + ' serían ' +
+            usd(enOficial) + ' · brecha ' + brecha.toFixed(1).replace('.', ',') + '% · cotizaciones del ' + D.dolarFecha,
+          rows: [
+            { k: 'Al dólar oficial', ref: H.ars(d.oficial), v: enOficial, format: 'unit', unit: 'USD', decimals: 0 },
+            { k: 'Al dólar blue', ref: H.ars(d.blue), v: enBlue, format: 'unit', unit: 'USD', decimals: 0, extra: true },
+            { k: 'Al dólar MEP', ref: H.ars(d.mep), v: enMep, format: 'unit', unit: 'USD', decimals: 0 },
+            { k: 'Al dólar cripto', ref: H.ars(d.cripto), v: enCripto, format: 'unit', unit: 'USD', decimals: 0 },
+            { k: 'Brecha blue contra oficial', v: brecha, format: 'unit', unit: '%', decimals: 1 },
+          ],
+          chart: [
+            { label: 'Hasta 500', from: 0, to: 500, tone: 'bad' },
+            { label: '500 a 1.000', from: 500, to: 1000, tone: 'warn' },
+            { label: '1.000 a 2.000', from: 1000, to: 2000, tone: 'good' },
+            { label: 'Más de 2.000', from: 2000, to: MAX, tone: 'main' },
+          ],
+          position: clamp((enBlue / MAX) * 100),
+          positionLabel: 'Tu sueldo al blue: ' + usd(enBlue),
+        };
+      }
+
+      // ── Rama 5: valor del tiempo ────────────────────────────────────────
+      const horasMes = (horasSemana * 52) / 12;
+      const valorHora = horasMes > 0 ? actual / horasMes : 0;
+      const diasSemana = 5;
+      const valorDia = valorHora * (horasSemana / diasSemana);
+      const valorMinuto = valorHora / 60;
+      const valorSegundo = valorMinuto / 60;
+      const horasCompra = valorHora > 0 ? precio / valorHora : 0;
+      const diasCompra = horasCompra / 8;
+      const MAX_H = Math.max(200, Math.ceil(horasCompra / 50) * 50);
+      return {
+        total: H.ars(valorHora),
+        sub:
+          'Vale tu hora con ' + horasSemana + ' h semanales (' + Math.round(horasMes) +
+          ' h al mes) · lo que querés comprar cuesta ' + horasCompra.toFixed(1).replace('.', ',') + ' horas de trabajo',
+        rows: [
+          { k: 'Horas trabajadas por mes', ref: 'semana × 52 ÷ 12', v: horasMes, format: 'unit', unit: 'h', decimals: 0 },
+          { k: 'Valor de tu hora', v: valorHora, decimals: 2, extra: true },
+          { k: 'Valor de tu día', ref: 'jornada de ' + (horasSemana / diasSemana).toFixed(1).replace('.', ',') + ' h', v: valorDia },
+          { k: 'Valor de tu minuto', v: valorMinuto, decimals: 2 },
+          { k: 'Valor de tu segundo', v: valorSegundo, decimals: 4 },
+          { k: 'Horas de trabajo para comprarlo', v: horasCompra, format: 'unit', unit: 'h', decimals: 1, extra: true },
+          { k: 'Días laborales para comprarlo', ref: 'de 8 h', v: diasCompra, format: 'unit', unit: 'días', decimals: 1 },
+        ],
+        chart: [
+          { label: 'Menos de 8 h', from: 0, to: 8, tone: 'good' },
+          { label: '1 a 5 días', from: 8, to: 40, tone: 'prop' },
+          { label: '1 a 4 semanas', from: 40, to: 160, tone: 'warn' },
+          { label: 'Más de un mes', from: 160, to: MAX_H, tone: 'bad' },
+        ],
+        position: clamp((horasCompra / MAX_H) * 100),
+        positionLabel:
+          horasCompra.toFixed(1).replace('.', ',') + ' horas (' + diasCompra.toFixed(1).replace('.', ',') + ' días laborales)',
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,359 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto cemento, arena y hierro necesito?" (ramificado).
+ * Reemplaza 12 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * SILO COMPARTIDO con /construccion/pintura, /construccion/ladrillos y
+ * /construccion/costo-por-m2. Este hub es obra gruesa húmeda + armadura.
+ *
+ * ⚠️ Las contradicciones entre las fórmulas viejas que este hub unifica están
+ * documentadas en src/lib/hubs/hormigon.ts. Resumen: la zapata usaba 10
+ * bolsas/m³ contra las 7 del H-21, `arena-grava` y `cemento-m3` diferían en
+ * los áridos de todos los grados menos el H-21, el revoque grueso daba 6
+ * bolsas/m³ sin cal contra 4 bolsas + cal, y el acero de losa sumaba dos veces
+ * el efecto de la luz.
+ *
+ * ⚠️ YMYL — estructura. Los disclaimers ('construction-structural' y
+ * 'construction-materials' de src/lib/disclaimers.ts) van en fineprint y como
+ * primer warn de cada caso. No sacar.
+ *
+ * Patrón: la página sólo aporta datos (src/lib/hubs/hormigon.ts) y su
+ * compute(). Todo el chrome, el CSS y el runtime viven en DecisionHub.astro.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, DOSIFICACIONES, REVOQUES, LOSAS, BARRAS, MALLAS, OBRA } from '../../lib/hubs/hormigon';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ DOSIFICACIONES, REVOQUES, LOSAS, BARRAS, MALLAS, OBRA }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    function num(x, def) { const n = Number(x); return isFinite(n) && n > 0 ? n : def; }
+    function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+    function n1(n) { return n.toLocaleString('es-AR', { maximumFractionDigits: 1 }); }
+    function n2(n) { return n.toLocaleString('es-AR', { maximumFractionDigits: 2 }); }
+    function faltan(msg) { return { total: 'Faltan datos', sub: msg, rows: [], chart: [] }; }
+
+    /** Factor de desperdicio común a todas las ramas. */
+    function factorDesp(v) { return 1 + clamp(Number(v.desperdicio) || 0, 0, 20) / 100; }
+    function pctDesp(v) { return clamp(Number(v.desperdicio) || 0, 0, 20); }
+
+    /**
+     * Núcleo del hub: de un volumen de hormigón y una dosificación salen
+     * cemento, arena, piedra y agua. Lo comparten las ramas de hormigón y de
+     * fundación.
+     */
+    function materialesHormigon(m3, dosKey, factor) {
+      const d = DOSIFICACIONES[dosKey] || DOSIFICACIONES.h21;
+      const cementoKg = m3 * d.cementoKg * factor;
+      const arenaM3 = m3 * d.arena * factor;
+      const piedraM3 = m3 * d.piedra * factor;
+      const aguaL = m3 * d.aguaL;
+      return {
+        d: d,
+        cementoKg: cementoKg,
+        bolsas: Math.ceil(cementoKg / OBRA.bolsaCemento),
+        arenaM3: arenaM3,
+        arenaKg: arenaM3 * OBRA.densidadArena,
+        piedraM3: piedraM3,
+        piedraKg: piedraM3 * OBRA.densidadPiedra,
+        aguaL: aguaL,
+      };
+    }
+
+    function filasHormigon(mat, m3) {
+      return [
+        { k: 'Cemento', ref: mat.d.corto + ' · ' + mat.d.partes, v: Math.round(mat.cementoKg), extra: true, format: 'unit', unit: 'kg', decimals: 0 },
+        { k: 'Bolsas de cemento de 50 kg', v: mat.bolsas, format: 'unit', unit: 'bolsas', decimals: 0 },
+        { k: 'Bolsas de cemento por m³ en esta dosificación', v: mat.d.cementoKg / OBRA.bolsaCemento, format: 'unit', unit: 'bolsas', decimals: 1 },
+        { k: 'Arena', v: mat.arenaM3, format: 'unit', unit: 'm³', decimals: 2 },
+        { k: 'Arena en peso', ref: '1.550 kg/m³', v: mat.arenaKg / 1000, format: 'unit', unit: 't', decimals: 2 },
+        { k: 'Piedra partida', v: mat.piedraM3, format: 'unit', unit: 'm³', decimals: 2 },
+        { k: 'Piedra en peso', ref: '1.600 kg/m³', v: mat.piedraKg / 1000, format: 'unit', unit: 't', decimals: 2 },
+        { k: 'Agua de amasado', v: Math.round(mat.aguaL), format: 'unit', unit: 'litros', decimals: 0 },
+        { k: 'Volumen de hormigón', v: m3, format: 'unit', unit: 'm³', decimals: 2 },
+      ];
+    }
+
+    function chartHormigon(mat) {
+      return [
+        { label: 'Cemento', value: Math.round(mat.cementoKg), tone: 'main' },
+        { label: 'Arena', value: Math.round(mat.arenaKg), tone: 'prop' },
+        { label: 'Piedra', value: Math.round(mat.piedraKg), tone: 'exit' },
+        { label: 'Agua', value: Math.round(mat.aguaL), tone: 'good' },
+      ];
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'hormigon';
+      const factor = factorDesp(v);
+      const desp = pctDesp(v);
+
+      // ------------------------------------------------------------ FUNDACIÓN
+      if (id === 'fundacion') {
+        const L = num(v.largo, 0), A = num(v.ancho, 0), h = num(v.alto, 0);
+        if (!L || !A || !h) return faltan('Cargá el largo, el ancho y el alto de la zapata.');
+        const m3 = L * A * h;
+        const mat = materialesHormigon(m3, String(v.dosificacion || 'h21'), factor);
+
+        const luz = num(v.luz, 4);
+        const vigaAlto = (luz * 100) / OBRA.viga.divisorAlto;
+        const vigaAncho = vigaAlto / OBRA.viga.relacionAncho;
+
+        const rows = filasHormigon(mat, m3).concat([
+          { k: 'Sección de la zapata', v: A * h, format: 'unit', unit: 'm²', decimals: 3 },
+          { k: 'Predimensionado de viga: alto (luz ÷ 12)', v: vigaAlto, format: 'unit', unit: 'cm', decimals: 0 },
+          { k: 'Predimensionado de viga: ancho (alto ÷ 2)', v: vigaAncho, format: 'unit', unit: 'cm', decimals: 0 },
+          { k: 'Desperdicio incluido', v: desp, format: 'unit', unit: '%', decimals: 0 },
+        ]);
+
+        return {
+          total: mat.bolsas + ' bolsas de cemento',
+          sub:
+            'Una zapata de ' + n1(L) + ' × ' + n2(A) + ' × ' + n2(h) + ' m son ' + n2(m3) + ' m³ de hormigón ' + mat.d.corto +
+            ': ' + mat.bolsas + ' bolsas de cemento de 50 kg, ' + n2(mat.arenaM3) + ' m³ de arena, ' + n2(mat.piedraM3) +
+            ' m³ de piedra y ' + Math.round(mat.aguaL) + ' litros de agua, con ' + desp + '% de desperdicio ya incluido. ' +
+            'Una viga que salve ' + n1(luz) + ' m se predimensiona en ' + Math.round(vigaAlto) + ' × ' + Math.round(vigaAncho) +
+            ' cm: es una regla de bolsillo para anticipar volumen y encofrado, no un cálculo estructural.',
+          rows: rows,
+          chart: chartHormigon(mat),
+          format: 'unit',
+          unit: 'kg',
+          decimals: 0,
+        };
+      }
+
+      // ------------------------------------------------- CONTRAPISO Y RELLENO
+      if (id === 'contrapiso') {
+        const m2 = num(v.m2, 0);
+        const espesor = num(v.espesor, 0);
+        if (!m2 || !espesor) return faltan('Cargá la superficie en m² y el espesor en cm.');
+
+        const m3 = m2 * (espesor / 100);
+        const bolsas = Math.ceil(m3 * OBRA.contrapiso.bolsasPorM3 * factor);
+        const arenaM3 = m3 * OBRA.contrapiso.arena * factor;
+        const cascoteM3 = m3 * OBRA.contrapiso.cascote * factor;
+
+        // Relleno: el mismo volumen neto, pero pedido con compactación.
+        const rellenoM3 = m3 * (1 + OBRA.relleno.compactacionPct / 100);
+        const camiones = Math.ceil(rellenoM3 / OBRA.relleno.m3PorCamion);
+
+        const cementoKg = bolsas * OBRA.bolsaCemento;
+        const arenaKg = arenaM3 * OBRA.densidadArena;
+        const cascoteKg = cascoteM3 * OBRA.densidadCascote;
+
+        const rows = [
+          { k: 'Mezcla de contrapiso', v: m3, extra: true, format: 'unit', unit: 'm³', decimals: 2 },
+          { k: 'Bolsas de cemento de 50 kg', ref: '~3 bolsas por m³', v: bolsas, format: 'unit', unit: 'bolsas', decimals: 0 },
+          { k: 'Cemento en peso', v: cementoKg, format: 'unit', unit: 'kg', decimals: 0 },
+          { k: 'Arena', v: arenaM3, format: 'unit', unit: 'm³', decimals: 2 },
+          { k: 'Cascote', v: cascoteM3, format: 'unit', unit: 'm³', decimals: 2 },
+          { k: 'Arena en peso', ref: '1.550 kg/m³', v: arenaKg / 1000, format: 'unit', unit: 't', decimals: 2 },
+          { k: 'Volumen neto si fuera relleno de arena', v: m3, format: 'unit', unit: 'm³', decimals: 2 },
+          { k: 'Compactación que hay que sumar al relleno', v: OBRA.relleno.compactacionPct, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Arena de relleno a pedir, ya compactada', v: rellenoM3, format: 'unit', unit: 'm³', decimals: 2 },
+          { k: 'Camiones de arena', ref: '7 m³ por camión', v: camiones, format: 'unit', unit: 'camiones', decimals: 0 },
+          { k: 'Espesor', v: espesor, format: 'unit', unit: 'cm', decimals: 1 },
+          { k: 'Desperdicio incluido', v: desp, format: 'unit', unit: '%', decimals: 0 },
+        ];
+
+        return {
+          total: n2(m3) + ' m³ de mezcla',
+          sub:
+            'Un contrapiso de ' + n1(m2) + ' m² con ' + n1(espesor) + ' cm son ' + n2(m3) + ' m³ de mezcla: ' + bolsas +
+            ' bolsas de cemento de 50 kg, ' + n2(arenaM3) + ' m³ de arena y ' + n2(cascoteM3) + ' m³ de cascote. ' +
+            'Si en cambio es relleno de arena, con ' + OBRA.relleno.compactacionPct + '% de compactación tenés que pedir ' +
+            n2(rellenoM3) + ' m³, o sea ' + camiones + (camiones === 1 ? ' camión' : ' camiones') + ' de ' + OBRA.relleno.m3PorCamion +
+            ' m³. El contrapiso de cascote no es hormigón estructural: nivela y aísla.',
+          rows: rows,
+          chart: [
+            { label: 'Cemento', value: Math.round(cementoKg), tone: 'main' },
+            { label: 'Arena', value: Math.round(arenaKg), tone: 'prop' },
+            { label: 'Cascote', value: Math.round(cascoteKg), tone: 'exit' },
+          ],
+          format: 'unit',
+          unit: 'kg',
+          decimals: 0,
+        };
+      }
+
+      // ---------------------------------------------------------------- REVOQUE
+      if (id === 'revoque') {
+        const m2 = num(v.m2, 0);
+        if (!m2) return faltan('Cargá los m² de pared a revocar.');
+        const t = REVOQUES[String(v.tipoRevoque || 'completo')] || REVOQUES.completo;
+
+        // El espesor del campo sólo pisa el del tipo si el usuario lo bajó al
+        // rango de un revoque: por encima de 6 cm ya no es revoque.
+        const espCampo = num(v.espesor, 0);
+        const espesor = espCampo > 0 && espCampo <= 6 ? espCampo : t.espesor;
+
+        const volM3 = m2 * (espesor / 100);
+        const cementoKg = volM3 * t.cementoKg * factor;
+        const calKg = volM3 * t.calKg * factor;
+        const arenaM3 = volM3 * t.arena * factor;
+        const arenaKg = arenaM3 * OBRA.densidadArena;
+        const aguaL = volM3 * t.aguaL;
+
+        const bolsasCemento = Math.ceil(cementoKg / OBRA.bolsaCemento);
+        const bolsasCal = calKg > 0 ? Math.ceil(calKg / OBRA.bolsaCal) : 0;
+
+        const rows = [
+          { k: 'Mortero necesario', v: volM3, extra: true, format: 'unit', unit: 'm³', decimals: 3 },
+          { k: 'Cemento', ref: t.cementoKg + ' kg/m³ de mortero', v: Math.round(cementoKg), format: 'unit', unit: 'kg', decimals: 0 },
+          { k: 'Bolsas de cemento de 50 kg', v: bolsasCemento, format: 'unit', unit: 'bolsas', decimals: 0 },
+          { k: 'Cal', ref: t.calKg + ' kg/m³ de mortero', v: Math.round(calKg), format: 'unit', unit: 'kg', decimals: 0 },
+          { k: 'Bolsas de cal de 25 kg', v: bolsasCal, format: 'unit', unit: 'bolsas', decimals: 0 },
+          { k: 'Arena', v: arenaM3, format: 'unit', unit: 'm³', decimals: 2 },
+          { k: 'Arena en peso', ref: '1.550 kg/m³', v: arenaKg / 1000, format: 'unit', unit: 't', decimals: 2 },
+          { k: 'Agua de amasado', v: Math.round(aguaL), format: 'unit', unit: 'litros', decimals: 0 },
+          { k: 'Espesor aplicado', v: espesor, format: 'unit', unit: 'cm', decimals: 1 },
+          { k: 'Mortero por m² de pared', v: volM3 / m2, format: 'unit', unit: 'm³', decimals: 3 },
+          { k: 'Desperdicio incluido', v: desp, format: 'unit', unit: '%', decimals: 0 },
+        ];
+
+        return {
+          total: bolsasCemento + (bolsasCemento === 1 ? ' bolsa' : ' bolsas') + ' de cemento',
+          sub:
+            'Revocar ' + n1(m2) + ' m² con ' + t.nombre + ' a ' + n1(espesor) + ' cm consume ' + n2(volM3) + ' m³ de mortero: ' +
+            bolsasCemento + ' bolsas de cemento de 50 kg' + (bolsasCal > 0 ? ', ' + bolsasCal + ' bolsas de cal de 25 kg' : '') +
+            ', ' + n2(arenaM3) + ' m³ de arena y ' + Math.round(aguaL) + ' litros de agua, con ' + desp + '% de desperdicio incluido. ' +
+            'Si la pared está despareja, medí el espesor real: es lo que más mueve la cuenta.',
+          rows: rows,
+          chart: [
+            { label: 'Cemento', value: Math.round(cementoKg), tone: 'main' },
+            { label: 'Cal', value: Math.round(calKg), tone: 'warn' },
+            { label: 'Arena', value: Math.round(arenaKg), tone: 'prop' },
+            { label: 'Agua', value: Math.round(aguaL), tone: 'good' },
+          ].filter(function (s) { return s.value > 0; }),
+          format: 'unit',
+          unit: 'kg',
+          decimals: 0,
+        };
+      }
+
+      // ------------------------------------------------------- HIERRO Y MALLA
+      if (id === 'hierro') {
+        const m2 = num(v.m2, 0);
+        if (!m2) return faltan('Cargá los m² de losa.');
+        const t = LOSAS[String(v.tipoLosa || 'maciza')] || LOSAS.maciza;
+        const luz = clamp(num(v.luz, 4), 1, 12);
+
+        // Curva limpia: la base vale hasta 4 m de luz y suma 2 kg/m² por metro
+        // adicional. El original sumaba esto DOS veces (ver hub .ts).
+        const kgPorM2 = t.porLuz ? t.kgPorM2 + Math.max(0, luz - 4) * 2 : t.kgPorM2;
+        const kgTotales = m2 * kgPorM2 * factor;
+        const pesoMetro = BARRAS[t.diam] || BARRAS[10];
+        const barras = Math.ceil(kgTotales / (pesoMetro * OBRA.largoBarra));
+        const alambre = kgTotales * OBRA.alambrePorKg;
+
+        // Malla SIMA: el solape se descuenta de las dos dimensiones del paño.
+        const malla = MALLAS[String(v.tipoMalla || 'Q188')] || MALLAS.Q188;
+        const areaNeta = (OBRA.malla.ancho - OBRA.malla.solapeM) * (OBRA.malla.largo - OBRA.malla.solapeM);
+        const panos = Math.ceil((m2 * factor) / areaNeta);
+        const pesoMalla = panos * malla.pesoKg;
+
+        const rows = [
+          { k: 'Hierro total', ref: t.nombre, v: Math.round(kgTotales), extra: true, format: 'unit', unit: 'kg', decimals: 0 },
+          { k: 'Cuantía de acero', v: kgPorM2, format: 'unit', unit: 'kg/m²', decimals: 1 },
+          { k: 'Barras de Ø ' + t.diam + ' mm de 12 m', v: barras, format: 'unit', unit: 'barras', decimals: 0 },
+          { k: 'Peso por metro de esa barra', v: pesoMetro, format: 'unit', unit: 'kg/m', decimals: 3 },
+          { k: 'Alambre de atar', ref: '20 g por kg de hierro', v: alambre, format: 'unit', unit: 'kg', decimals: 2 },
+          { k: 'Paños de malla ' + malla.nombre, v: panos, format: 'unit', unit: 'paños', decimals: 0 },
+          { k: 'Rendimiento neto por paño', ref: 'solape de 25 cm', v: areaNeta, format: 'unit', unit: 'm²', decimals: 2 },
+          { k: 'Peso total de la malla', v: pesoMalla, format: 'unit', unit: 'kg', decimals: 0 },
+          { k: 'Malla por m² de losa', v: pesoMalla / m2, format: 'unit', unit: 'kg/m²', decimals: 2 },
+          { k: 'Superficie de losa', v: m2, format: 'unit', unit: 'm²', decimals: 1 },
+          { k: 'Desperdicio incluido', v: desp, format: 'unit', unit: '%', decimals: 0 },
+        ];
+
+        return {
+          total: Math.round(kgTotales).toLocaleString('es-AR') + ' kg de hierro',
+          sub:
+            'Para ' + n1(m2) + ' m² de ' + t.nombre + (t.porLuz ? ' con ' + n1(luz) + ' m de luz' : '') + ' la cuantía es de ' +
+            n1(kgPorM2) + ' kg/m²: ' + Math.round(kgTotales).toLocaleString('es-AR') + ' kg de hierro, que son ' + barras +
+            ' barras de Ø ' + t.diam + ' mm de 12 m, más ' + n2(alambre) + ' kg de alambre de atar. Si además va malla, son ' +
+            panos + (panos === 1 ? ' paño' : ' paños') + ' de ' + malla.nombre + ' (' + n1(pesoMalla) +
+            ' kg). Ya incluye ' + desp + '% de desperdicio por cortes y empalmes. El diámetro y la separación reales salen del plano de armadura.',
+          rows: rows,
+          chart: [
+            { label: 'Barras Ø ' + t.diam + ' mm', value: Math.round(kgTotales), tone: 'main' },
+            { label: 'Malla ' + malla.nombre, value: Math.round(pesoMalla), tone: 'prop' },
+            { label: 'Alambre de atar', value: Math.round(alambre * 100) / 100, tone: 'warn' },
+          ],
+          format: 'unit',
+          unit: 'kg',
+          decimals: 0,
+        };
+      }
+
+      // -------------------------------------------------------------- HORMIGÓN
+      const m3 = num(v.m3, 0);
+      if (!m3) return faltan('Cargá el volumen de hormigón en m³.');
+      const mat = materialesHormigon(m3, String(v.dosificacion || 'h21'), factor);
+
+      const rows = filasHormigon(mat, m3).concat([
+        { k: 'Desperdicio incluido', v: desp, format: 'unit', unit: '%', decimals: 0 },
+      ]);
+
+      return {
+        total: mat.bolsas + ' bolsas de cemento',
+        sub:
+          'Para ' + n2(m3) + ' m³ de hormigón ' + mat.d.nombre + ' (dosificación ' + mat.d.partes + ') necesitás ' +
+          mat.bolsas + ' bolsas de cemento de 50 kg —' + Math.round(mat.cementoKg).toLocaleString('es-AR') + ' kg—, ' +
+          n2(mat.arenaM3) + ' m³ de arena (' + n2(mat.arenaKg / 1000) + ' t), ' + n2(mat.piedraM3) + ' m³ de piedra (' +
+          n2(mat.piedraKg / 1000) + ' t) y ' + Math.round(mat.aguaL) + ' litros de agua. Ya incluye ' + desp +
+          '% de desperdicio. Por encima de 1 m³ suele convenir hormigón elaborado.',
+        rows: rows,
+        chart: chartHormigon(mat),
+        format: 'unit',
+        unit: 'kg',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

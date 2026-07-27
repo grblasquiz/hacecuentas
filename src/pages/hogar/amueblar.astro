@@ -1,0 +1,266 @@
+---
+/**
+ * Hub de decisión — "¿Qué medida de mueble entra en mi ambiente?"
+ * Reemplaza 14 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Toda la matemática de abajo es espejo de las fórmulas reales listadas en
+ * src/lib/hubs/amueblar.ts. Las constantes viajan en MEDIDAS: no se duplican
+ * números a mano dentro del script.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, MEDIDAS } from '../../lib/hubs/amueblar';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ M: MEDIDAS }}>
+  (function () {
+    const H = window.HC_HUB;
+    const r0 = (n) => Math.round(n);
+    const n1 = (n) => Math.round(n * 10) / 10;
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'living';
+      const largo = Math.max(0, v.largo), ancho = Math.max(0, v.ancho), alto = Math.max(0, v.alto);
+      const m2 = largo * ancho;
+      const rows = [];
+
+      // ---------- LIVING: TV, reparto del ambiente y almohadones ----------
+      if (id === 'living') {
+        const d = Math.max(0, v.distancia);
+        // tamano-tv-distancia.ts
+        const minimo = r0(d * M.tv.min), ideal = r0(d * M.tv.ideal), maximo = r0(d * M.tv.max);
+        const diagonalCm = ideal * 2.54;
+        const anchoTv = diagonalCm * 16 / Math.sqrt(337);
+        const altoTv = diagonalCm * 9 / Math.sqrt(337);
+        // distribucion-muebles-m2.ts
+        const pctLibre = M.pctLibre.living;
+        const m2Muebles = n1(m2 * (1 - pctLibre / 100));
+        const m2Libre = n1(m2 - m2Muebles);
+        // cantidad-almohadones-sofa.ts (estilo moderno = cuerpos + 2)
+        const sofa = Math.max(0, v.medida);
+        const cuerpos = sofa <= 160 ? 2 : sofa <= 230 ? 3 : 4;
+        const almohadones = cuerpos + 2;
+
+        rows.push({ k: 'TV ideal para tu distancia', ref: 'THX/SMPTE', v: ideal, format: 'unit', unit: 'pulgadas', extra: true });
+        rows.push({ k: 'Mínimo antes de que se sienta chica', v: minimo, format: 'unit', unit: 'pulgadas' });
+        rows.push({ k: 'Máximo antes de tener que mover la cabeza', v: maximo, format: 'unit', unit: 'pulgadas' });
+        rows.push({ k: 'Ancho real del televisor', ref: '16:9', v: n1(anchoTv), format: 'unit', unit: 'cm', decimals: 1 });
+        rows.push({ k: 'Alto real del televisor', ref: '16:9', v: n1(altoTv), format: 'unit', unit: 'cm', decimals: 1 });
+        rows.push({ k: 'Altura del centro de la pantalla', v: M.tv.alturaCentro, format: 'unit', unit: 'cm' });
+        rows.push({ k: 'Superficie del ambiente', v: n1(m2), format: 'unit', unit: 'm²', decimals: 1 });
+        rows.push({ k: 'Máximo a ocupar con muebles', ref: pctLibre + '% libre', v: m2Muebles, format: 'unit', unit: 'm²', decimals: 1 });
+        rows.push({ k: 'Almohadones para el sofá', ref: cuerpos + ' cuerpos', v: almohadones, format: 'plain' });
+
+        return {
+          total: ideal + '"',
+          sub: 'A ' + n1(d) + ' m del sillón · buscá entre ' + (ideal - 5) + '" y ' + (ideal + 5) + '" · ' +
+            n1(anchoTv) + ' cm de ancho de mueble',
+          rows: rows,
+          format: 'unit', unit: 'cm',
+          chart: [
+            { label: 'Muebles (m²)', value: m2Muebles, tone: 'main' },
+            { label: 'Libre para circular (m²)', value: m2Libre, tone: 'good' },
+          ],
+        };
+      }
+
+      // ---------- COMEDOR: la mesa ----------
+      if (id === 'comedor') {
+        // mesa-comedor-personas.ts, forma rectangular
+        const pers = Math.max(2, v.personas);
+        const anchoMesa = M.mesa.ancho;
+        const largoMesa = Math.max(M.mesa.largoMin, Math.ceil(pers / 2) * M.mesa.cmPorComensal);
+        const m2Mesa = (largoMesa * anchoMesa) / 10000;
+        const c = M.mesa.circulacion;
+        const m2ConSillas = ((largoMesa + 2 * c) * (anchoMesa + 2 * c)) / 10000;
+        const pctLibre = M.pctLibre.comedor;
+        const m2Muebles = n1(m2 * (1 - pctLibre / 100));
+        const sobra = n1(m2 - m2ConSillas);
+
+        rows.push({ k: 'Largo de la mesa', ref: '60 cm × comensal', v: largoMesa, format: 'unit', unit: 'cm', extra: true });
+        rows.push({ k: 'Ancho de la mesa', v: anchoMesa, format: 'unit', unit: 'cm' });
+        rows.push({ k: 'Superficie de la mesa', v: n1(m2Mesa), format: 'unit', unit: 'm²', decimals: 1 });
+        rows.push({ k: 'Espacio total con las sillas corridas', ref: '+90 cm por lado', v: n1(m2ConSillas), format: 'unit', unit: 'm²', decimals: 1 });
+        rows.push({ k: 'Superficie del ambiente', v: n1(m2), format: 'unit', unit: 'm²', decimals: 1 });
+        rows.push({ k: 'Máximo a ocupar con muebles', ref: pctLibre + '% libre', v: m2Muebles, format: 'unit', unit: 'm²', decimals: 1 });
+
+        return {
+          total: largoMesa + ' × ' + anchoMesa + ' cm',
+          sub: pers + ' comensales · necesita ' + n1(m2ConSillas) + ' m² con las sillas · ' +
+            (sobra >= 0 ? 'te sobran ' + sobra + ' m²' : 'te faltan ' + n1(-sobra) + ' m²'),
+          rows: rows,
+          format: 'unit', unit: 'cm',
+          chart: [
+            { label: 'Mesa con sillas (m²)', value: n1(Math.min(m2ConSillas, m2)), tone: 'main' },
+            { label: 'Resto del ambiente (m²)', value: Math.max(0, sobra), tone: 'good' },
+          ],
+        };
+      }
+
+      // ---------- DORMITORIO: colchón y placard ----------
+      if (id === 'dormitorio') {
+        // tamano-colchon.ts — 2 personas
+        const estatura = Math.max(0, v.estatura);
+        const largoMin = estatura + 20;
+        const largoColchon = largoMin <= 190 ? 190 : 200;
+        const anchoColchon = largoColchon === 200 ? (estatura >= 180 ? 180 : 160) : 140;
+        const nombre = largoColchon === 200 ? (estatura >= 180 ? 'King' : 'Queen') : '2 plazas';
+        const holgura = largoColchon - largoMin;
+        // organizador-placard-espacios.ts — uso mixto
+        const anchoPlacard = Math.max(0, v.medida);
+        const cmColgar = r0(anchoPlacard * M.placard.colgar);
+        const cmEstantes = r0(anchoPlacard * M.placard.estantes);
+        const cmCajones = anchoPlacard - cmColgar - cmEstantes;
+        // reparto del ambiente
+        const pctLibre = M.pctLibre.dormitorio;
+        const m2Muebles = n1(m2 * (1 - pctLibre / 100));
+        const m2Ocupa = n1((anchoColchon * largoColchon + anchoPlacard * M.placard.profundidad) / 10000);
+
+        rows.push({ k: 'Ancho del colchón (' + nombre + ')', v: anchoColchon, format: 'unit', unit: 'cm', extra: true });
+        rows.push({ k: 'Largo del colchón', v: largoColchon, format: 'unit', unit: 'cm' });
+        rows.push({ k: 'Largo mínimo por tu estatura', ref: 'estatura + 20', v: largoMin, format: 'unit', unit: 'cm' });
+        rows.push({ k: 'Margen de sobra a los pies', v: holgura, format: 'unit', unit: 'cm' });
+        rows.push({ k: 'Placard: ancho para colgar', ref: '45%', v: cmColgar, format: 'unit', unit: 'cm' });
+        rows.push({ k: 'Placard: ancho de estantes', ref: '30%', v: cmEstantes, format: 'unit', unit: 'cm' });
+        rows.push({ k: 'Placard: ancho de cajones', ref: '25%', v: cmCajones, format: 'unit', unit: 'cm' });
+        rows.push({ k: 'Altura de la barra de colgar', v: M.placard.alturaBarra, format: 'unit', unit: 'cm' });
+        rows.push({ k: 'Máximo a ocupar con muebles', ref: pctLibre + '% libre', v: m2Muebles, format: 'unit', unit: 'm²', decimals: 1 });
+
+        return {
+          total: anchoColchon + ' × ' + largoColchon + ' cm',
+          sub: nombre + ' · ' + (holgura < 5
+            ? 'vas justo: sólo ' + holgura + ' cm de margen, evaluá medida especial'
+            : holgura + ' cm de margen sobre el mínimo') +
+            ' · cama y placard ocupan ' + m2Ocupa + ' m²',
+          rows: rows,
+          format: 'unit', unit: 'cm',
+          chart: [
+            { label: 'Cama y placard (m²)', value: n1(Math.min(m2Ocupa, m2)), tone: 'main' },
+            { label: 'Libre para circular (m²)', value: Math.max(0, n1(m2 - m2Ocupa)), tone: 'good' },
+          ],
+        };
+      }
+
+      // ---------- ESCRITORIO ----------
+      if (id === 'escritorio') {
+        // ergonomia-escritorio-medidas.ts
+        const e = Math.max(0, v.estatura);
+        const alturaSilla = r0(e * M.ergonomia.silla);
+        const alturaEscritorio = r0(alturaSilla + e * M.ergonomia.escritorio);
+        const alturaMonitor = r0(alturaSilla + e * M.ergonomia.monitor);
+        const distMin = r0(e * M.ergonomia.distMin);
+        const distMax = r0(e * M.ergonomia.distMax);
+        const pctLibre = M.pctLibre.escritorio;
+        const m2Muebles = n1(m2 * (1 - pctLibre / 100));
+        const m2Libre = n1(m2 - m2Muebles);
+
+        rows.push({ k: 'Altura del escritorio', ref: 'codos a 90°', v: alturaEscritorio, format: 'unit', unit: 'cm', extra: true });
+        rows.push({ k: 'Altura del asiento de la silla', v: alturaSilla, format: 'unit', unit: 'cm' });
+        rows.push({ k: 'Borde superior del monitor', ref: 'altura de los ojos', v: alturaMonitor, format: 'unit', unit: 'cm' });
+        rows.push({ k: 'Distancia mínima al monitor', v: distMin, format: 'unit', unit: 'cm' });
+        rows.push({ k: 'Distancia máxima al monitor', v: distMax, format: 'unit', unit: 'cm' });
+        rows.push({ k: 'Superficie del ambiente', v: n1(m2), format: 'unit', unit: 'm²', decimals: 1 });
+        rows.push({ k: 'Máximo a ocupar con muebles', ref: pctLibre + '% libre', v: m2Muebles, format: 'unit', unit: 'm²', decimals: 1 });
+
+        return {
+          total: alturaEscritorio + ' cm',
+          sub: 'Para ' + e + ' cm de estatura · silla a ' + alturaSilla + ' cm · monitor a ' +
+            distMin + '–' + distMax + ' cm de distancia',
+          rows: rows,
+          format: 'unit', unit: 'cm',
+          chart: [
+            { label: 'Muebles (m²)', value: m2Muebles, tone: 'main' },
+            { label: 'Libre para circular (m²)', value: m2Libre, tone: 'good' },
+          ],
+        };
+      }
+
+      // ---------- PAREDES Y VENTANAS ----------
+      // cortinas-medir-tela-ventana-anchotelaje.ts — telaje 2×, cabecilla estándar
+      const anchoVentana = Math.max(0, v.medida);
+      const caida = alto * 100;
+      const anchoTela = anchoVentana * M.cortina.telaje + M.cortina.sideSeam;
+      const largoTela = caida + M.cortina.cabecilla + M.cortina.dobladillo;
+      const panos = Math.ceil(anchoTela / M.cortina.rollo);
+      const metrosTela = (panos * largoTela) / 100;
+      // calculadora-rollos-empapelado-papel-pared.ts
+      const perimetro = 2 * (largo + ancho);
+      const areaBruta = perimetro * alto;
+      const areaEmpapelar = areaBruta * (1 - M.empapelado.descuentoAberturas / 100);
+      const areaPorRollo = M.empapelado.anchoRollo * M.empapelado.largoRollo;
+      const rollos = Math.ceil(areaEmpapelar / areaPorRollo);
+      const tirasPorRollo = Math.floor(M.empapelado.largoRollo / alto);
+      // espejo-tamano-pared.ts — uso decorativo, sobre la pared más larga
+      const anchoParedCm = largo * 100, altoParedCm = alto * 100;
+      const anchoEspejo = r0(anchoParedCm * M.espejo.anchoPct);
+      const altoEspejo = r0(anchoEspejo * M.espejo.altoRatio);
+      const centroEspejo = r0(altoParedCm * M.espejo.centroPct);
+
+      rows.push({ k: 'Tela a comprar (rollo de 140 cm)', ref: panos + ' paños', v: n1(metrosTela), format: 'unit', unit: 'm', decimals: 1, extra: true });
+      rows.push({ k: 'Ancho total de tela', ref: 'telaje ×2', v: r0(anchoTela), format: 'unit', unit: 'cm' });
+      rows.push({ k: 'Largo de cada paño', ref: '+cabecilla +dobladillo', v: r0(largoTela), format: 'unit', unit: 'cm' });
+      rows.push({ k: 'Rollos de empapelado', ref: '0,53 × 10 m', v: rollos, format: 'plain' });
+      rows.push({ k: 'Superficie de pared a empapelar', ref: '-10% aberturas', v: n1(areaEmpapelar), format: 'unit', unit: 'm²', decimals: 1 });
+      rows.push({ k: 'Tiras enteras por rollo', v: tirasPorRollo, format: 'plain' });
+      rows.push({ k: 'Ancho del espejo decorativo', ref: '50% de la pared', v: anchoEspejo, format: 'unit', unit: 'cm' });
+      rows.push({ k: 'Alto del espejo decorativo', v: altoEspejo, format: 'unit', unit: 'cm' });
+      rows.push({ k: 'Centro del espejo desde el piso', v: centroEspejo, format: 'unit', unit: 'cm' });
+      rows.push({ k: 'Centro del cuadro desde el piso', ref: 'regla del museo', v: M.cuadro.centro, format: 'unit', unit: 'cm' });
+
+      return {
+        total: n1(metrosTela) + ' m de tela',
+        sub: 'Ventana de ' + anchoVentana + ' cm y caída de ' + r0(caida) + ' cm · ' + panos +
+          ' paños · y ' + rollos + ' rollos de empapelado para ' + n1(perimetro) + ' m de perímetro',
+        rows: rows,
+        format: 'unit', unit: 'cm',
+        chart: [
+          { label: 'Pared a empapelar (m²)', value: n1(areaEmpapelar), tone: 'main' },
+          { label: 'Aberturas descontadas (m²)', value: n1(areaBruta - areaEmpapelar), tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

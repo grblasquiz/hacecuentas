@@ -12,8 +12,8 @@
 
 // Última actualización: refresco mensual cuando se publique nuevo RIPTE.
 // Cuando se actualice, bumpear lastReviewed en el .json del calc.
-const RIPTE_BASE_MONTH = '2026-02';
-const RIPTE_NOMINAL = 1734357.18; // ARS promedio mensual feb 2026
+export const RIPTE_BASE_MONTH = '2026-02';
+export const RIPTE_NOMINAL = 1734357.18; // ARS promedio mensual feb 2026
 const USD_BLUE_PROMEDIO_MES = 1437.06; // Cotización blue promedio feb 2026 (RIPTE/USD)
 const RIPTE_USD_BLUE = 1207.21; // RIPTE expresado en USD blue feb 2026
 const RIPTE_USD_OFICIAL = 1216.62;
