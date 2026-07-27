@@ -45,16 +45,13 @@ export const PILLARS: PillarDef[] = [
     icon: '💼',
     color: '#2563eb',
     domain: 'money',
-    // Era 'sueldo-en-mano-argentina', absorbida por el hub /trabajo/sueldo-bruto-y-neto.
-    // El pilar espera un slug de calc (lo resuelve contra la colección), así que
-    // acá va una calc viva; el pilar entero debería migrar a apuntar al hub.
-    mainCalc: 'calculadora-sueldo-por-hora',
-    calcs: [
-      'calculadora-horas-extras-50-100',
-      'salario-minimo-vital-movil-argentina',
-      'calculadora-ajuste-sueldo-inflacion',
-      'calculadora-jubilacion-anses-monto-minimo-maxima-2026',
-    ],
+    // La categoría 'trabajo' quedó SIN calcs sueltas: los hubs de decisión
+    // (/trabajo/sueldo-bruto-y-neto, /trabajo/indemnizacion-por-despido,
+    // /trabajo/sueldo-vs-inflacion) absorbieron todas. hub-config degrada solo
+    // cuando el slug no resuelve (primary queda undefined), así que apuntamos a
+    // una calc viva del mismo mundo. Migrar el pilar a apuntar al hub.
+    mainCalc: 'calculadora-cuanto-alquiler-puedo-pagar-sueldo-argentina',
+    calcs: [],
     rooms: [
       'cuanto-aumento-pedir',
       'aceptar-oferta-laboral',
@@ -82,16 +79,9 @@ export const PILLARS: PillarDef[] = [
     icon: '🧾',
     color: '#0ea5e9',
     domain: 'money',
-    mainCalc: 'calculadora-monotributo-2026',
-    calcs: [
-      'calculadora-monotributo-vs-responsable-inscripto',
-      'calculadora-monotributo-categoria-2026-recategorizacion-julio',
-      'calculadora-iva-agregar-discriminar',
-      'calculadora-bienes-personales-2026',
-      'calculadora-ingresos-brutos-provincial',
-      'calculadora-impuesto-cheque-debitos-creditos',
-      'calculadora-autonomos-categoria-monto-2026',
-    ],
+    // 'calculadora-monotributo-2026' la absorbió el hub /impuestos/monotributo.
+    mainCalc: 'calculadora-cuanto-tengo-que-facturar-para-ganar-x-neto',
+    calcs: [],
     rooms: [
       'monotributo-o-responsable-inscripto',
       'que-categoria-de-monotributo-me-corresponde',
@@ -118,17 +108,11 @@ export const PILLARS: PillarDef[] = [
     icon: '💰',
     color: '#16a34a',
     domain: 'money',
-    mainCalc: 'calculadora-cuota-prestamo',
+    mainCalc: 'calculadora-fondo-emergencia-meses',
     calcs: [
-      'calculadora-plazo-fijo',
-      'calculadora-interes-compuesto',
-      'calculadora-costo-financiero-total-cft',
-      'calculadora-credito-uva-vs-tasa-fija',
-      'calculadora-tarjeta-credito-pago-minimo-intereses',
-      'calculadora-fondo-emergencia-meses',
-      'calculadora-presupuesto-50-30-20',
-      'calculadora-ahorro-uva-vs-pesos-vs-dolar-12-meses',
-    ],
+    'calculadora-fondo-emergencia-meses',
+    'calculadora-presupuesto-50-30-20',
+  ],
     rooms: [
       'puedo-pagar-este-prestamo',
       'cancelar-deuda-o-invertir',
@@ -160,17 +144,10 @@ export const PILLARS: PillarDef[] = [
     icon: '📊',
     color: '#7c3aed',
     domain: 'money',
-    mainCalc: 'calculadora-margen-ganancia-markup',
+    mainCalc: 'calculadora-cuanto-cobro-por-hora-freelance',
     calcs: [
-      'calculadora-punto-equilibrio-break-even',
-      'calculadora-iva-agregar-discriminar',
-      'calculadora-costo-laboral-empleado',
-      'calculadora-cuanto-cobro-por-hora-freelance',
-      'calculadora-impuestos-monotributo-freelance',
-      'calculadora-roas-retorno-inversion-publicitaria',
-      'calculadora-cac-ltv-costo-adquisicion-cliente',
-      'calculadora-tasa-de-conversion',
-    ],
+    'calculadora-cuanto-cobro-por-hora-freelance',
+  ],
     rooms: [
       'mi-negocio-es-rentable',
       'cuanto-cobrar-por-hora-freelance',
