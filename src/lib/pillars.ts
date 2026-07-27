@@ -45,17 +45,14 @@ export const PILLARS: PillarDef[] = [
     icon: '💼',
     color: '#2563eb',
     domain: 'money',
-    mainCalc: 'sueldo-en-mano-argentina',
+    // Era 'sueldo-en-mano-argentina', absorbida por el hub /trabajo/sueldo-bruto-y-neto.
+    // El pilar espera un slug de calc (lo resuelve contra la colección), así que
+    // acá va una calc viva; el pilar entero debería migrar a apuntar al hub.
+    mainCalc: 'calculadora-sueldo-por-hora',
     calcs: [
-      'calculadora-aguinaldo-sac',
-      'calculadora-indemnizacion-despido',
-      'calculadora-impuesto-ganancias-sueldo',
-      'calculadora-antiguedad-laboral',
       'calculadora-horas-extras-50-100',
-      'calculadora-vacaciones-argentina',
       'salario-minimo-vital-movil-argentina',
       'calculadora-ajuste-sueldo-inflacion',
-      'calculadora-liquidacion-final-renuncia',
       'calculadora-jubilacion-anses-monto-minimo-maxima-2026',
     ],
     rooms: [
@@ -87,14 +84,12 @@ export const PILLARS: PillarDef[] = [
     domain: 'money',
     mainCalc: 'calculadora-monotributo-2026',
     calcs: [
-      'calculadora-impuesto-ganancias-sueldo',
       'calculadora-monotributo-vs-responsable-inscripto',
       'calculadora-monotributo-categoria-2026-recategorizacion-julio',
       'calculadora-iva-agregar-discriminar',
       'calculadora-bienes-personales-2026',
       'calculadora-ingresos-brutos-provincial',
       'calculadora-impuesto-cheque-debitos-creditos',
-      'calculadora-impuesto-sellos-inmueble-contrato',
       'calculadora-autonomos-categoria-monto-2026',
     ],
     rooms: [
@@ -132,7 +127,6 @@ export const PILLARS: PillarDef[] = [
       'calculadora-tarjeta-credito-pago-minimo-intereses',
       'calculadora-fondo-emergencia-meses',
       'calculadora-presupuesto-50-30-20',
-      'calculadora-inflacion-acumulada-periodo',
       'calculadora-ahorro-uva-vs-pesos-vs-dolar-12-meses',
     ],
     rooms: [
