@@ -1,0 +1,185 @@
+---
+/**
+ * Hub de decisión — "¿Cuánta carne compro para el asado?"
+ * Arquetipo RAMIFICADO. Absorbe 7 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/asado.ts) y su compute(). Todo el
+ * chrome, el CSS y el runtime viven en DecisionHub.astro y no se tocan.
+ *
+ * El resultado es accionable: kilos por corte y unidades de chorizo/morcilla, no
+ * un total abstracto. Todo va en `unit` (kg, unidades, gramos); lo único en pesos
+ * es el presupuesto, y sólo si el usuario carga el precio del kilo.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, RACIONES, REPARTO, PESO_CHORIZO_G, PESO_MORCILLA_G, SPLIT_CHORIZO, FACTOR_COME_POCO } from '../../lib/hubs/asado';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ RACIONES, REPARTO, PESO_CHORIZO_G, PESO_MORCILLA_G, SPLIT_CHORIZO, FACTOR_COME_POCO }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Kilos, gramos y unidades: formateo local. Sólo el presupuesto es plata.
+    const dec = (n, d) => (Math.round(n * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d).replace('.', ',');
+
+    H.onCompute(function (v, kase) {
+      const caso = (kase && kase.id) || 'clasico';
+      const adultos = Math.max(0, Math.floor(Number(v.adultos) || 0));
+      const ninos = Math.max(0, Math.floor(Number(v.ninos) || 0));
+      const comenPocoRaw = Math.max(0, Math.floor(Number(v.comenPoco) || 0));
+      const comenPoco = Math.min(comenPocoRaw, adultos);
+      const conPollo = String(v.incluirPollo || 'si') !== 'no';
+      const conAchuras = String(v.incluirAchuras || 'si') !== 'no';
+      const precioKg = Math.max(0, Number(v.precioKg) || 0);
+
+      const totalPersonas = adultos + ninos;
+      if (totalPersonas === 0) {
+        return { total: '—', sub: 'Cargá cuántos adultos y chicos van al asado.', rows: [], chart: [] };
+      }
+
+      const R = RACIONES[caso] || RACIONES.clasico;
+      // Los que comen poco cuentan como 60% de una ración de adulto.
+      const adultosPlenos = adultos - comenPoco;
+      const gramos = adultosPlenos * R.adulto + comenPoco * R.adulto * FACTOR_COME_POCO + ninos * R.nino;
+      const totalKg = gramos / 1000;
+
+      // Reparto por corte. Si se apaga pollo o achuras, ese porcentaje se reparte
+      // mitad y mitad entre tira y vacío — el mismo criterio de la fórmula
+      // original (sin pollo: +12,5 y +12,5; sin achuras: +10 y +10).
+      // En la rama de sólo achuras no hay tira ni vacío: ahí se renormaliza
+      // proporcionalmente entre los rubros que quedan.
+      const base = REPARTO[caso] || REPARTO.clasico;
+      const pct = {
+        tira: base.tira,
+        vacio: base.vacio,
+        pollo: conPollo ? base.pollo : 0,
+        embutidos: base.embutidos,
+        achuras: conAchuras ? base.achuras : 0,
+      };
+      const hayCortes = base.tira + base.vacio > 0;
+      if (hayCortes) {
+        if (!conPollo) { pct.tira += base.pollo / 2; pct.vacio += base.pollo / 2; }
+        if (!conAchuras) { pct.tira += base.achuras / 2; pct.vacio += base.achuras / 2; }
+      } else {
+        const suma = pct.tira + pct.vacio + pct.pollo + pct.embutidos + pct.achuras;
+        if (suma > 0) {
+          pct.tira /= suma; pct.vacio /= suma; pct.pollo /= suma;
+          pct.embutidos /= suma; pct.achuras /= suma;
+        }
+      }
+
+      const tiraKg = totalKg * pct.tira;
+      const vacioKg = totalKg * pct.vacio;
+      const polloKg = totalKg * pct.pollo;
+      const achurasKg = totalKg * pct.achuras;
+      const embutidosKg = totalKg * pct.embutidos;
+
+      const chorizoKg = embutidosKg * SPLIT_CHORIZO;
+      const morcillaKg = embutidosKg * (1 - SPLIT_CHORIZO);
+      const chorizos = Math.ceil((chorizoKg * 1000) / PESO_CHORIZO_G);
+      const morcillas = Math.ceil((morcillaKg * 1000) / PESO_MORCILLA_G);
+
+      // Guarniciones y fuego (mismas referencias que la fórmula original).
+      const panG = Math.round((adultos * 80 + ninos * 40) / 50) * 50;
+      const carbonKg = Math.max(3, Math.round(totalKg));
+      const gramosPorPersona = (totalKg * 1000) / totalPersonas;
+
+      const KG = { format: 'unit', unit: 'kg', decimals: 2 };
+      const rows = [
+        Object.assign({ k: 'Total a la parrilla (peso crudo)', ref: R.etiqueta, v: Number(totalKg.toFixed(2)), extra: true }, KG),
+      ];
+      if (tiraKg > 0) rows.push(Object.assign({ k: 'Tira de asado', ref: dec(pct.tira * 100, 0) + '% del total', v: Number(tiraKg.toFixed(2)) }, KG));
+      if (vacioKg > 0) rows.push(Object.assign({ k: 'Vacío', ref: dec(pct.vacio * 100, 0) + '% del total', v: Number(vacioKg.toFixed(2)) }, KG));
+      if (polloKg > 0) rows.push(Object.assign({ k: 'Pollo', ref: dec(pct.pollo * 100, 0) + '% del total', v: Number(polloKg.toFixed(2)) }, KG));
+      if (achurasKg > 0) rows.push(Object.assign({ k: 'Achuras (mollejas, chinchulines, riñón)', ref: dec(pct.achuras * 100, 0) + '% del total', v: Number(achurasKg.toFixed(2)) }, KG));
+      rows.push({ k: 'Chorizos', ref: '~' + PESO_CHORIZO_G + ' g cada uno', v: chorizos, extra: true, format: 'unit', unit: 'unidades', decimals: 0 });
+      rows.push({ k: 'Morcillas', ref: '~' + PESO_MORCILLA_G + ' g cada una', v: morcillas, format: 'unit', unit: 'unidades', decimals: 0 });
+      rows.push({ k: 'Pan (para el choripán y la mesa)', ref: '80 g por adulto + 40 g por chico', v: panG, format: 'unit', unit: 'g', decimals: 0 });
+      rows.push({ k: 'Carbón o leña', ref: '~1 kg por kg de carne, mínimo 3', v: carbonKg, format: 'unit', unit: 'kg', decimals: 0 });
+      rows.push({ k: 'Promedio por comensal', v: Number(gramosPorPersona.toFixed(0)), format: 'unit', unit: 'g', decimals: 0 });
+
+      if (precioKg > 0) {
+        const presupuesto = totalKg * precioKg;
+        rows.push({ k: 'Presupuesto estimado de la carne', ref: 'precio del kilo que cargaste', v: Math.round(presupuesto), extra: true, format: 'ars', decimals: 0 });
+        rows.push({ k: 'Costo por comensal', v: Math.round(presupuesto / totalPersonas), format: 'ars', decimals: 0 });
+      }
+
+      const chart = [];
+      if (tiraKg > 0) chart.push({ label: 'Tira de asado', value: Number(tiraKg.toFixed(2)), tone: 'main' });
+      if (vacioKg > 0) chart.push({ label: 'Vacío', value: Number(vacioKg.toFixed(2)), tone: 'prop' });
+      if (polloKg > 0) chart.push({ label: 'Pollo', value: Number(polloKg.toFixed(2)), tone: 'good' });
+      if (chorizoKg > 0) chart.push({ label: 'Chorizos (' + chorizos + ' u)', value: Number(chorizoKg.toFixed(2)), tone: 'warn' });
+      if (morcillaKg > 0) chart.push({ label: 'Morcillas (' + morcillas + ' u)', value: Number(morcillaKg.toFixed(2)), tone: 'exit' });
+      if (achurasKg > 0) chart.push({ label: 'Achuras', value: Number(achurasKg.toFixed(2)), tone: 'bad' });
+
+      const detalleGente =
+        adultos + (adultos === 1 ? ' adulto' : ' adultos') +
+        (comenPoco > 0 ? ' (' + comenPoco + ' que come' + (comenPoco === 1 ? '' : 'n') + ' poco, al 60%)' : '') +
+        (ninos > 0 ? ' y ' + ninos + (ninos === 1 ? ' chico' : ' chicos') : '');
+
+      const listaCorta = []
+        .concat(tiraKg > 0 ? [dec(tiraKg, 2) + ' kg de tira'] : [])
+        .concat(vacioKg > 0 ? [dec(vacioKg, 2) + ' kg de vacío'] : [])
+        .concat(polloKg > 0 ? [dec(polloKg, 2) + ' kg de pollo'] : [])
+        .concat(achurasKg > 0 ? [dec(achurasKg, 2) + ' kg de achuras'] : [])
+        .concat([chorizos + ' chorizos', morcillas + ' morcillas'])
+        .join(', ');
+
+      return {
+        total: dec(totalKg, 2) + ' kg',
+        sub:
+          'Para ' + detalleGente + ', ración ' + R.etiqueta + ' (' + R.adulto + ' g por adulto y ' + R.nino +
+          ' g por chico, peso crudo). En el mostrador pedís: ' + listaCorta + '. Sumá ' + panG + ' g de pan y ' +
+          carbonKg + ' kg de carbón. La carne pierde entre 25% y 35% al cocinarse: estos gramos son crudos.',
+        rows: rows,
+        chart: chart,
+        format: 'unit',
+        unit: 'kg',
+        decimals: 2,
+      };
+    });
+  })();
+</script>

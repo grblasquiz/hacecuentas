@@ -1,0 +1,379 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto falta para…?"
+ * Reemplaza 10 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: 4 casos (fecha elegida, Navidad y fin de año, próximo
+ * feriado, fechas móviles).
+ *
+ * OJO — HUB QUE CADUCA. En este archivo NO hay ningún año literal. Todo sale de
+ * `new Date()` en el navegador. Una fecha pasada nunca devuelve negativo: salta
+ * a la próxima ocurrencia y lo avisa. La tabla de feriados cubre un solo año y
+ * el compute() lo detecta solo (`ANIO_TABLA`), avisando en pantalla si hoy cae
+ * fuera en vez de mostrar un 0 engañoso.
+ *
+ * OJO formato: nada de esto es plata. Todas las filas declaran `format: 'unit'`
+ * porque el runtime hace Object.assign y una fila sin formato propio saldría
+ * con "$" adelante.
+ *
+ * Lo que se absorbe pero NO se reimplementa: la fecha de las próximas
+ * elecciones por país. No hay en el repo una tabla electoral multi-país
+ * mantenida, y hardcodearla sería exactamente el tipo de dato que caduca sin
+ * que nadie se entere. La URL redirige igual.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  FERIADOS,
+  FECHAS_MOVILES,
+  VERANO_MES,
+  VERANO_DIA,
+  MUNDIAL_2030,
+  HITO_DIAS,
+} from '../../lib/hubs/cuenta-regresiva';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ FERIADOS, MOVILES: FECHAS_MOVILES, VERANO_MES, VERANO_DIA, MUNDIAL: MUNDIAL_2030, HITO_DIAS }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const MS_DIA = 86400000;
+
+    /** Fila con unidad explícita. Nada acá es plata. */
+    const U = function (k, unit, v, decimals, ref, extra) {
+      return { k: k, v: v, format: 'unit', unit: unit, decimals: decimals || 0, ref: ref, extra: !!extra };
+    };
+
+    const mk = function (y, m, d, h) { return new Date(y, m - 1, d, h || 0, 0, 0, 0); };
+
+    /** N-ésimo día de la semana del mes. n negativo = contado desde el final. */
+    const nthDow = function (anio, mes, dow, n) {
+      if (n > 0) {
+        const primero = mk(anio, mes, 1, 0);
+        const delta = (dow - primero.getDay() + 7) % 7;
+        return mk(anio, mes, 1 + delta + (n - 1) * 7, 0);
+      }
+      const ultimo = new Date(anio, mes, 0); // día 0 del mes siguiente = último del mes
+      const back = (ultimo.getDay() - dow + 7) % 7;
+      return mk(anio, mes, ultimo.getDate() - back - (-n - 1) * 7, 0);
+    };
+
+    const resolverRegla = function (r, anio) {
+      if (r.tipo === 'fija') return mk(anio, r.mes, r.dia, 0);
+      if (r.tipo === 'sab') return nthDow(anio, r.mes, 6, r.n);
+      return nthDow(anio, r.mes, 0, r.n);
+    };
+
+    /** Próxima ocurrencia de una regla anual, tomando el año siguiente si ya pasó. */
+    const proximaRegla = function (r, ahora) {
+      const a = resolverRegla(r, ahora.getFullYear());
+      return a.getTime() > ahora.getTime() ? a : resolverRegla(r, ahora.getFullYear() + 1);
+    };
+
+    /** Próxima ocurrencia de un día/mes fijo. */
+    const proximaFija = function (mes, dia, hora, ahora) {
+      const a = mk(ahora.getFullYear(), mes, dia, hora);
+      return a.getTime() > ahora.getTime() ? a : mk(ahora.getFullYear() + 1, mes, dia, hora);
+    };
+
+    /** Ocurrencia anterior: el mismo día y mes del año previo. Ancla del progreso. */
+    const anterior = function (d) {
+      return new Date(d.getFullYear() - 1, d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), 0, 0);
+    };
+
+    const fmtFecha = function (d) {
+      try {
+        return d.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      } catch (e) {
+        return d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
+      }
+    };
+
+    /** Días hábiles (lunes a viernes) entre dos momentos. Estimación 5/7 si el tramo es enorme. */
+    const habiles = function (desde, hasta) {
+      const dias = Math.ceil((hasta - desde) / MS_DIA);
+      if (dias <= 0) return 0;
+      if (dias > 4000) return Math.round(dias * 5 / 7);
+      let n = 0;
+      const cur = new Date(desde.getFullYear(), desde.getMonth(), desde.getDate());
+      for (let i = 0; i < dias; i++) {
+        cur.setDate(cur.getDate() + 1);
+        const w = cur.getDay();
+        if (w !== 0 && w !== 6) n++;
+      }
+      return n;
+    };
+
+    /** Próximo vencimiento de tarjeta: ese día del mes, corrido al último día si el mes es corto. */
+    const proximoVenc = function (dia, ahora) {
+      for (let k = 0; k < 3; k++) {
+        const y = ahora.getFullYear();
+        const m = ahora.getMonth() + k;
+        const ultimo = new Date(y, m + 1, 0).getDate();
+        const cand = new Date(y, m, Math.min(dia, ultimo), 0, 0, 0, 0);
+        if (cand.getTime() > ahora.getTime()) return cand;
+      }
+      return new Date(ahora.getTime() + MS_DIA);
+    };
+
+    // Año que cubre la tabla de feriados cargada. Se deriva del dato, no se escribe.
+    const ANIO_TABLA = FERIADOS.length ? Number(FERIADOS[0].fecha.slice(0, 4)) : 0;
+
+    const parseFeriado = function (f) {
+      const p = f.fecha.split('-');
+      return mk(Number(p[0]), Number(p[1]), Number(p[2]), 0);
+    };
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'fecha';
+      const ahora = new Date();
+
+      // ── filas comunes a todos los casos ───────────────────────────────────
+      const diaVenc = Math.max(1, Math.min(31, Math.round(v.diaVenc || 10)));
+      const venc = proximoVenc(diaVenc, ahora);
+      const verano = proximaFija(VERANO_MES, VERANO_DIA, 0, ahora);
+      const mundial = mk(MUNDIAL.anio, MUNDIAL.mes, MUNDIAL.dia, 0);
+
+      const extras = function (rows) {
+        rows.push(U('Faltan para el próximo verano (21 de diciembre)', 'días',
+          Math.ceil((verano - ahora) / MS_DIA), 0, 'Solsticio · hemisferio sur'));
+        if (mundial > ahora) {
+          rows.push(U('Faltan para el Mundial 2030', 'días',
+            Math.ceil((mundial - ahora) / MS_DIA), 0, 'FIFA · fecha estimada'));
+        }
+        rows.push(U('Faltan para el vencimiento de tu tarjeta (día ' + diaVenc + ')', 'días',
+          Math.ceil((venc - ahora) / MS_DIA), 0, 'Se corre al último día si el mes es corto'));
+        return rows;
+      };
+
+      /** Bloque estándar de una espera: la misma diferencia en 6 unidades. */
+      const unidades = function (rows, objetivo, etiqueta) {
+        const ms = Math.max(0, objetivo - ahora);
+        rows.push(U(etiqueta + ' — días', 'días', Math.ceil(ms / MS_DIA), 0, fmtFecha(objetivo), true));
+        rows.push(U(etiqueta + ' — semanas', 'semanas', ms / MS_DIA / 7, 1));
+        rows.push(U(etiqueta + ' — días hábiles', 'días hábiles', habiles(ahora, objetivo), 0, 'Lunes a viernes'));
+        rows.push(U(etiqueta + ' — horas', 'horas', Math.floor(ms / 3600000), 0));
+        rows.push(U(etiqueta + ' — minutos', 'minutos', Math.floor(ms / 60000), 0));
+        rows.push(U(etiqueta + ' — segundos', 'segundos', Math.floor(ms / 1000), 0));
+        return rows;
+      };
+
+      /** Resultado con barra de progreso: cuánto del período ya transcurrió. */
+      const salida = function (objetivo, titulo, sub, rows, ancla) {
+        const inicio = ancla || anterior(objetivo);
+        const total = Math.max(1, objetivo - inicio);
+        const transcurrido = Math.min(total, Math.max(0, ahora - inicio));
+        const pct = (transcurrido / total) * 100;
+        const dias = Math.ceil(Math.max(0, objetivo - ahora) / MS_DIA);
+        return {
+          total: dias.toLocaleString('es-AR') + (dias === 1 ? ' día' : ' días'),
+          sub: sub,
+          rows: rows,
+          chart: [
+            { label: 'Ya transcurrió', value: Math.round(transcurrido / MS_DIA), tone: 'prop' },
+            { label: 'Falta', value: Math.round((total - transcurrido) / MS_DIA), tone: 'main' },
+          ],
+          format: 'unit',
+          unit: 'días',
+          decimals: 0,
+          position: Math.round(pct * 10) / 10,
+          positionLabel: 'Faltan ' + dias.toLocaleString('es-AR') + (dias === 1 ? ' día para ' : ' días para ') + titulo,
+        };
+      };
+
+      // ── caso: Navidad y fin de año ────────────────────────────────────────
+      if (id === 'navidad') {
+        const navidad = proximaFija(12, 25, 0, ahora);
+        const nochebuena = new Date(navidad.getTime() - MS_DIA);
+        const finDeAnio = mk(navidad.getFullYear(), 12, 31, 23);
+        const anioNuevo = mk(navidad.getFullYear() + 1, 1, 1, 0);
+
+        let rows = unidades([], navidad, 'Navidad');
+        rows.push(U('Faltan para Nochebuena (24 a la noche)', 'días', Math.ceil((nochebuena - ahora) / MS_DIA), 0, fmtFecha(nochebuena)));
+        rows.push(U('Faltan para el 31 a las 23:59', 'días', Math.ceil((finDeAnio - ahora) / MS_DIA), 0, fmtFecha(finDeAnio)));
+        rows.push(U('Faltan para el 1 de enero', 'días', Math.ceil((anioNuevo - ahora) / MS_DIA), 0, fmtFecha(anioNuevo), true));
+        rows = extras(rows);
+
+        return salida(
+          navidad,
+          'Navidad',
+          'Próxima Navidad: ' + fmtFecha(navidad) + ' · Año Nuevo: ' + fmtFecha(anioNuevo) +
+            ' · ambos son feriados inamovibles (ley 27.399)',
+          rows
+        );
+      }
+
+      // ── caso: el próximo feriado ──────────────────────────────────────────
+      if (id === 'feriado') {
+        const futuros = FERIADOS
+          .map(function (f) { return { d: parseFeriado(f), nombre: f.nombre, tipo: f.tipo }; })
+          .filter(function (f) { return f.d.getTime() > ahora.getTime(); })
+          .sort(function (a, b) { return a.d - b.d; });
+
+        if (!futuros.length) {
+          // La tabla cubre UN año. Fuera de ese año no inventamos: avisamos.
+          const msg = ahora.getFullYear() > ANIO_TABLA
+            ? 'La tabla de feriados cargada cubre el año ' + ANIO_TABLA + ' y hoy ya estamos en ' +
+              ahora.getFullYear() + ': todavía no está publicado el calendario que necesitás. Mientras tanto, usá el caso "una fecha que elijo yo".'
+            : 'Ya pasaron todos los feriados de ' + ANIO_TABLA +
+              '. El calendario del año siguiente se publica por decreto entre septiembre y noviembre.';
+          return {
+            total: '—',
+            sub: msg,
+            rows: extras([]),
+            chart: [],
+            format: 'unit',
+            unit: 'días',
+            decimals: 0,
+            position: 100,
+            positionLabel: 'Sin feriados cargados para esta fecha',
+          };
+        }
+
+        const prox = futuros[0];
+        const anteriores = FERIADOS
+          .map(parseFeriado)
+          .filter(function (d) { return d.getTime() <= ahora.getTime(); })
+          .sort(function (a, b) { return b - a; });
+        const ancla = anteriores.length ? anteriores[0] : mk(ANIO_TABLA, 1, 1, 0);
+
+        let rows = unidades([], prox.d, prox.nombre);
+        rows.push(U('Feriados que quedan en el año', 'feriados', futuros.length, 0, 'Calendario ' + ANIO_TABLA));
+        if (futuros[1]) {
+          rows.push(U('Faltan para el siguiente (' + futuros[1].nombre + ')', 'días',
+            Math.ceil((futuros[1].d - ahora) / MS_DIA), 0, fmtFecha(futuros[1].d)));
+        }
+        const dow = prox.d.getDay();
+        rows.push(U('Días de descanso seguidos si cae pegado al finde', 'días',
+          dow === 1 || dow === 5 ? 3 : dow === 0 || dow === 6 ? 2 : 1, 0, 'Fin de semana largo'));
+        rows = extras(rows);
+
+        return salida(
+          prox.d,
+          prox.nombre,
+          prox.nombre + ' — ' + fmtFecha(prox.d) + ' · ' + prox.tipo + ' · quedan ' + futuros.length +
+            ' feriados en el calendario ' + ANIO_TABLA,
+          rows,
+          ancla
+        );
+      }
+
+      // ── caso: fechas que se mueven cada año ───────────────────────────────
+      if (id === 'moviles') {
+        const cfg = MOVILES[v.pais] || MOVILES.ar;
+        const padre = proximaRegla(cfg.padre, ahora);
+        const madre = proximaRegla(cfg.madre, ahora);
+        const nino = proximaRegla(cfg.nino, ahora);
+        const lista = [
+          { d: padre, k: 'Día del Padre' },
+          { d: madre, k: 'Día de la Madre' },
+          { d: nino, k: 'Día del Niño' },
+        ].sort(function (a, b) { return a.d - b.d; });
+        const prox = lista[0];
+
+        let rows = unidades([], prox.d, prox.k + ' en ' + cfg.pais);
+        rows.push(U('Faltan para el Día del Padre', 'días', Math.ceil((padre - ahora) / MS_DIA), 0, fmtFecha(padre)));
+        rows.push(U('Faltan para el Día de la Madre', 'días', Math.ceil((madre - ahora) / MS_DIA), 0, fmtFecha(madre)));
+        rows.push(U('Faltan para el Día del Niño', 'días', Math.ceil((nino - ahora) / MS_DIA), 0,
+          cfg.ninoNota || fmtFecha(nino)));
+        rows = extras(rows);
+
+        return salida(
+          prox.d,
+          'el ' + prox.k + ' en ' + cfg.pais,
+          'La próxima de las tres en ' + cfg.pais + ' es el ' + prox.k + ': ' + fmtFecha(prox.d) +
+            '. Ninguna de las tres es feriado.',
+          rows
+        );
+      }
+
+      // ── caso por defecto: una fecha que elijo yo ──────────────────────────
+      const partes = (v.objetivo || '').split('-');
+      const hora = Math.max(0, Math.min(23, Math.round(v.hora || 0)));
+      if (partes.length !== 3 || !Number(partes[0])) {
+        return {
+          total: '—',
+          sub: 'Elegí una fecha para arrancar la cuenta.',
+          rows: extras([]),
+          chart: [],
+          format: 'unit',
+          unit: 'días',
+          decimals: 0,
+        };
+      }
+
+      const elegida = mk(Number(partes[0]), Number(partes[1]), Number(partes[2]), hora);
+      // Regla dura del hub: nunca un número negativo. Si ya pasó, saltamos al
+      // mismo día del año siguiente y lo decimos.
+      const yaPaso = elegida.getTime() <= ahora.getTime();
+      let objetivo = elegida;
+      let anioSalto = elegida.getFullYear();
+      while (objetivo.getTime() <= ahora.getTime()) {
+        anioSalto++;
+        objetivo = mk(anioSalto, Number(partes[1]), Number(partes[2]), hora);
+      }
+
+      let rows = unidades([], objetivo, 'Tu fecha');
+      if (yaPaso) {
+        rows.push(U('Pasaron desde la fecha original', 'días',
+          Math.floor((ahora - elegida) / MS_DIA), 0, fmtFecha(elegida), true));
+      }
+      const hito = new Date(elegida.getTime() + HITO_DIAS * MS_DIA);
+      rows.push(U('Faltan para tus ' + HITO_DIAS.toLocaleString('es-AR') + ' días desde esa fecha', 'días',
+        Math.max(0, Math.ceil((hito - ahora) / MS_DIA)), 0, fmtFecha(hito)));
+      rows = extras(rows);
+
+      const sub = yaPaso
+        ? 'El ' + fmtFecha(elegida) + ' ya pasó: la cuenta salta a la próxima vez que se repite, el ' + fmtFecha(objetivo) + '.'
+        : 'Hasta el ' + fmtFecha(objetivo) + (hora ? ' a las ' + hora + ':00' : ' a la medianoche') + ', con el reloj de tu dispositivo.';
+
+      return salida(objetivo, 'tu fecha', sub, rows);
+    });
+  })();
+</script>

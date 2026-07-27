@@ -1,0 +1,359 @@
+---
+/**
+ * Hub de decisión — "¿Qué resistencia necesito?"
+ * Reemplaza 7 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo ramificado: la rama activa llega como segundo argumento de
+ * compute() y decide qué campos se leen. La rama por defecto es el código de
+ * colores, que es la de más tráfico.
+ *
+ * La página sólo aporta datos (src/lib/hubs/resistencias.ts) y su compute().
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, DIG, MULT, TOL, TEMPCO, COLOR_LABEL, E12, E24, POTENCIAS } from '../../lib/hubs/resistencias';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ DIG, MULT, TOL, TEMPCO, COLOR_LABEL, E12, E24, POTENCIAS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Acá NO hay pesos: TODAS las filas declaran su formato y su unidad.
+    const VOLT = { format: 'unit', unit: 'V', decimals: 2 };
+    const MILIAMP = { format: 'unit', unit: 'mA', decimals: 2 };
+    const MILIWATT = { format: 'unit', unit: 'mW', decimals: 1 };
+    const PORC = { format: 'unit', unit: '%', decimals: 2 };
+    const PLAIN = { format: 'plain', decimals: 0 };
+
+    const row = (k, v, fmt, extra, ref) => Object.assign({ k: k, v: v, extra: !!extra, ref: ref }, fmt);
+
+    const dec = (n, d) =>
+      Number(n || 0).toLocaleString('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+    /**
+     * Múltiplos de ohm. 4700 Ω NO se muestra como "4.700 Ω": se escala a
+     * "4,7 kΩ". Devuelve el número ya escalado + la unidad + los decimales
+     * justos (sin ceros de relleno), para que la fila declare `unit` y el
+     * runtime formatee bien.
+     */
+    function escalaOhm(ohms) {
+      const abs = Math.abs(ohms);
+      let v = ohms;
+      let unit = 'Ω';
+      if (abs >= 1e6) { v = ohms / 1e6; unit = 'MΩ'; }
+      else if (abs >= 1e3) { v = ohms / 1e3; unit = 'kΩ'; }
+      // Decimales justos: 4,7 kΩ y no 4,70 kΩ; 1 kΩ y no 1,00 kΩ.
+      const r2 = Math.round(v * 100) / 100;
+      let d = 2;
+      if (Math.abs(r2 - Math.round(r2)) < 1e-9) d = 0;
+      else if (Math.abs(r2 * 10 - Math.round(r2 * 10)) < 1e-9) d = 1;
+      return { v: r2, unit: unit, decimals: d, factor: abs >= 1e6 ? 1e6 : abs >= 1e3 ? 1e3 : 1 };
+    }
+
+    /** Fila de resistencia ya escalada al múltiplo que corresponde. */
+    function rowOhm(k, ohms, extra, ref) {
+      const e = escalaOhm(ohms);
+      return row(k, e.v, { format: 'unit', unit: e.unit, decimals: e.decimals }, extra, ref);
+    }
+
+    /** Texto corto de una resistencia, con su múltiplo. */
+    function txtOhm(ohms) {
+      const e = escalaOhm(ohms);
+      return dec(e.v, e.decimals) + ' ' + e.unit;
+    }
+
+    /**
+     * Valor E12 inmediatamente SUPERIOR (IEC 60063).
+     *
+     * OJO: `resistencia-led-serie-paralelo.ts` normaliza la mantisa al rango
+     * [1, 10) y después la compara contra una lista E12 que va de 10 a 82, así
+     * que cualquier valor le devuelve el primer elemento: 150 Ω le sale 1 kΩ.
+     * Acá la mantisa se normaliza al rango [10, 100), que es el de la lista.
+     */
+    function nextE12(valor) {
+      if (valor <= 0) return 10;
+      const exp = Math.floor(Math.log10(valor)) - 1;
+      const base = valor / Math.pow(10, exp);
+      for (let i = 0; i < E12.length; i++) {
+        if (E12[i] >= base - 1e-9) return E12[i] * Math.pow(10, exp);
+      }
+      return 100 * Math.pow(10, exp);
+    }
+
+    /** Valor E24 más cercano en escala relativa (informativo). */
+    function cercanoE24(valor) {
+      if (valor <= 0) return 0;
+      const exp = Math.floor(Math.log10(valor));
+      const base = valor / Math.pow(10, exp);
+      let mejor = E24[0];
+      let dif = Infinity;
+      const lista = E24.concat([100]);
+      for (let i = 0; i < lista.length; i++) {
+        const d = Math.abs(lista[i] - base);
+        if (d < dif) { dif = d; mejor = lista[i]; }
+      }
+      return mejor * Math.pow(10, exp);
+    }
+
+    /** Tamaño comercial por potencia disipada, en mW. */
+    function tamanoPotencia(mW) {
+      for (let i = 0; i < POTENCIAS.length; i++) {
+        if (mW <= POTENCIAS[i].max) return POTENCIAS[i].label;
+      }
+      return POTENCIAS[POTENCIAS.length - 1].label;
+    }
+
+    const vacio = (msg) => ({ total: '—', sub: msg, rows: [], chart: [] });
+
+    // ─────────────────────────── RAMA: código de colores ───────────────────────────
+    function calcCodigo(v) {
+      const tipo = String(v.tipoBandas || '4');
+      const b = [v.banda1, v.banda2, v.banda3, v.banda4, v.banda5, v.banda6].map((x) => String(x || 'negro'));
+
+      let ohms, tol, cifras, colorMult, colorTol, tempco = 0;
+      if (tipo === '4') {
+        cifras = (DIG[b[0]] || 0) * 10 + (DIG[b[1]] || 0);
+        colorMult = b[2];
+        colorTol = b[3];
+        ohms = cifras * (MULT[colorMult] != null ? MULT[colorMult] : 1);
+        tol = TOL[colorTol] != null ? TOL[colorTol] : 20;
+      } else {
+        cifras = (DIG[b[0]] || 0) * 100 + (DIG[b[1]] || 0) * 10 + (DIG[b[2]] || 0);
+        colorMult = b[3];
+        colorTol = b[4];
+        ohms = cifras * (MULT[colorMult] != null ? MULT[colorMult] : 1);
+        tol = TOL[colorTol] != null ? TOL[colorTol] : 1;
+        if (tipo === '6') tempco = TEMPCO[b[5]] != null ? TEMPCO[b[5]] : 0;
+      }
+
+      const mn = ohms * (1 - tol / 100);
+      const mx = ohms * (1 + tol / 100);
+      const margen = mx - mn;
+      const e = escalaOhm(ohms || 1);
+
+      const usados = tipo === '4' ? b.slice(0, 4) : tipo === '5' ? b.slice(0, 5) : b.slice(0, 6);
+      const lectura = usados.map((c) => COLOR_LABEL[c] || c).join(' · ');
+
+      const rows = [
+        rowOhm('Valor nominal', ohms, true, tipo + ' bandas'),
+        row('Tolerancia de la última banda', tol, PORC, false, COLOR_LABEL[colorTol] || colorTol),
+        rowOhm('Valor mínimo real', mn, false, '−' + dec(tol, 2) + '%'),
+        rowOhm('Valor máximo real', mx, false, '+' + dec(tol, 2) + '%'),
+        rowOhm('Margen total entre extremos', margen, false, 'incertidumbre'),
+        rowOhm('Multiplicador de la banda ' + (tipo === '4' ? '3' : '4'), MULT[colorMult] != null ? MULT[colorMult] : 1, false, COLOR_LABEL[colorMult] || colorMult),
+        row('Cifras significativas leídas', cifras, PLAIN, false, tipo === '4' ? '2 cifras' : '3 cifras'),
+        rowOhm('Valor comercial E24 más cercano', cercanoE24(ohms || 1), false, 'IEC 60063'),
+      ];
+      if (tipo === '6') {
+        rows.push(row('Coeficiente de temperatura', tempco, { format: 'unit', unit: 'ppm/K', decimals: 0 }, false, COLOR_LABEL[b[5]] || b[5]));
+      }
+
+      return {
+        total: txtOhm(ohms),
+        sub:
+          lectura + ' · ±' + dec(tol, 2) + '% · la pieza real cae entre ' +
+          txtOhm(mn) + ' y ' + txtOhm(mx),
+        rows: rows,
+        // Las barras van todas en la MISMA unidad escalada, si no la comparación miente.
+        chart: [
+          { label: 'Valor nominal', value: ohms / e.factor, tone: 'main' },
+          { label: 'Margen de tolerancia (±)', value: margen / e.factor, tone: 'warn' },
+        ],
+        format: 'unit',
+        unit: e.unit,
+        decimals: 2,
+      };
+    }
+
+    // ─────────────────────────────── RAMA: LED ───────────────────────────────
+    function calcLed(v) {
+      const vF = Number(v.vFuente) || 0;
+      const vLed = Number(v.vLed) || 0;
+      const mA = Number(v.iLed) || 0;
+      const cant = Math.max(1, Math.round(Number(v.cantidadLeds) || 1));
+      const conexion = String(v.conexion || 'serie');
+
+      if (vF <= 0) return vacio('Ingresá la tensión de la fuente.');
+      if (vLed <= 0) return vacio('Ingresá la caída directa del LED (Vf).');
+      if (mA <= 0) return vacio('Ingresá la corriente del LED en mA.');
+
+      const vLedTotal = conexion === 'serie' ? vLed * cant : vLed;
+      if (vF <= vLedTotal) {
+        return vacio(
+          conexion === 'serie'
+            ? cant + ' LED en serie necesitan ' + dec(vLedTotal, 2) + ' V y la fuente da ' + dec(vF, 2) + ' V: bajá la cantidad o subí la fuente.'
+            : 'La caída del LED (' + dec(vLed, 2) + ' V) supera la fuente (' + dec(vF, 2) + ' V): necesitás más tensión.',
+        );
+      }
+
+      const iRamaA = mA / 1000; // la R se calcula SIEMPRE por rama, no con la corriente total
+      const iTotalMa = conexion === 'serie' ? mA : mA * cant;
+      const vR = vF - vLedTotal;
+      const R = vR / iRamaA;
+      const comercial = nextE12(R);
+      const potMw = vR * iRamaA * 1000;
+      const potComercialMw = comercial * iRamaA * iRamaA * 1000;
+      const ramas = conexion === 'serie' ? 1 : cant;
+
+      const rows = [
+        rowOhm('Resistencia exacta necesaria', R, false, 'por rama'),
+        rowOhm('Valor comercial E12 (el que comprás)', comercial, true, 'siempre hacia arriba'),
+        row('Tensión que cae en la resistencia', vR, VOLT, true, 'la que sobra'),
+        row('Caída total de los LED', vLedTotal, VOLT, false, conexion),
+        row('Corriente por cada rama', mA, MILIAMP, false, 'nominal del LED'),
+        row('Corriente total del circuito', iTotalMa, MILIAMP, false, ramas + (ramas === 1 ? ' rama' : ' ramas')),
+        row('Potencia disipada por la resistencia', potMw, MILIWATT, false, tamanoPotencia(potMw * 2)),
+        row('Potencia con el valor comercial', potComercialMw, MILIWATT, false, 'E12'),
+        row('Resistencias que necesitás', ramas, PLAIN, false, conexion === 'serie' ? 'una sola' : 'una por LED'),
+      ];
+
+      return {
+        total: txtOhm(comercial),
+        sub:
+          'Exacta ' + txtOhm(R) + ' → comercial ' + txtOhm(comercial) + ' · disipa ' +
+          dec(potMw, 1) + ' mW, alcanza una de ' + tamanoPotencia(potMw * 2) + ' · ' +
+          ramas + (ramas === 1 ? ' resistencia' : ' resistencias') + ' para ' + cant + (cant === 1 ? ' LED' : ' LED'),
+        rows: rows,
+        chart: [
+          { label: 'Cae en el LED', value: Number(vLedTotal.toFixed(3)), tone: 'good' },
+          { label: 'Cae en la resistencia', value: Number(vR.toFixed(3)), tone: 'main' },
+        ],
+        format: 'unit',
+        unit: 'V',
+        decimals: 2,
+      };
+    }
+
+    // ────────────────────── RAMA: serie y paralelo ──────────────────────
+    function calcSerieParalelo(v) {
+      const vals = [Number(v.r1) || 0, Number(v.r2) || 0, Number(v.r3) || 0, Number(v.r4) || 0].filter((x) => x > 0);
+      if (vals.length < 2) return vacio('Cargá al menos dos resistencias mayores a 0 en R1 a R4.');
+
+      let serie = 0;
+      let invParalelo = 0;
+      for (let i = 0; i < vals.length; i++) { serie += vals[i]; invParalelo += 1 / vals[i]; }
+      const paralelo = 1 / invParalelo;
+      const menor = Math.min.apply(null, vals);
+      const e = escalaOhm(serie);
+
+      const rows = [];
+      for (let i = 0; i < vals.length; i++) rows.push(rowOhm('R' + (i + 1), vals[i], false, 'ingresada'));
+      rows.push(rowOhm('Equivalente en SERIE', serie, true, 'suma directa'));
+      rows.push(rowOhm('Equivalente en PARALELO', paralelo, true, 'suma de inversas'));
+      rows.push(rowOhm('La resistencia más chica del grupo', menor, false, 'techo del paralelo'));
+      rows.push(row('Cantidad de resistencias', vals.length, PLAIN, false, 'mayores a 0'));
+      rows.push(row('Cuánto baja el paralelo respecto de la más chica', (1 - paralelo / menor) * 100, PORC, false, 'siempre baja'));
+
+      return {
+        total: txtOhm(serie),
+        sub:
+          'En serie ' + txtOhm(serie) + ' · en paralelo ' + txtOhm(paralelo) +
+          ' · el paralelo siempre queda por debajo de la más chica (' + txtOhm(menor) + ')',
+        rows: rows,
+        chart: vals.map((x, i) => ({
+          label: 'R' + (i + 1),
+          value: x / e.factor,
+          tone: ['main', 'exit', 'prop', 'warn'][i % 4],
+        })),
+        format: 'unit',
+        unit: e.unit,
+        decimals: 2,
+      };
+    }
+
+    // ─────────────────────────── RAMA: divisor ───────────────────────────
+    function calcDivisor(v) {
+      const vin = Number(v.vFuente) || 0;
+      const r1 = Number(v.r1) || 0;
+      const r2 = Number(v.r2) || 0;
+      if (vin <= 0) return vacio('Ingresá la tensión de entrada (Vin).');
+      if (r1 <= 0 || r2 <= 0) return vacio('Cargá R1 y R2 con valores mayores a 0.');
+
+      const factor = r2 / (r1 + r2);
+      const vout = vin * factor;
+      const caidaR1 = vin - vout;
+      const iA = vin / (r1 + r2);
+      const iMa = iA * 1000;
+      const potMw = vin * iA * 1000;
+      const potR1Mw = caidaR1 * iA * 1000;
+      const potR2Mw = vout * iA * 1000;
+
+      const rows = [
+        row('Tensión de salida (Vout, sobre R2)', vout, VOLT, true, 'Vin × R2/(R1+R2)'),
+        row('Tensión que cae en R1', caidaR1, VOLT, false, 'la que se pierde'),
+        row('Fracción de la entrada que llega a la salida', factor * 100, PORC, false, 'relación R2/(R1+R2)'),
+        row('Corriente permanente del divisor', iMa, MILIAMP, false, 'Vin/(R1+R2)'),
+        rowOhm('Resistencia equivalente del divisor', r1 + r2, false, 'R1 + R2'),
+        row('Potencia total quemada en calor', potMw, MILIWATT, false, 'las 24 horas'),
+        row('Potencia disipada por R1', potR1Mw, MILIWATT, false, tamanoPotencia(potR1Mw * 2)),
+        row('Potencia disipada por R2', potR2Mw, MILIWATT, false, tamanoPotencia(potR2Mw * 2)),
+      ];
+
+      return {
+        total: dec(vout, 3) + ' V',
+        sub:
+          'De ' + dec(vin, 2) + ' V entran y salen ' + dec(vout, 3) + ' V (' + dec(factor * 100, 1) +
+          '% del total) · el divisor consume ' + dec(iMa, 2) + ' mA todo el tiempo · sólo sirve sin carga apreciable',
+        rows: rows,
+        chart: [
+          { label: 'Salida sobre R2', value: Number(vout.toFixed(3)), tone: 'main' },
+          { label: 'Caída en R1', value: Number(caidaR1.toFixed(3)), tone: 'warn' },
+        ],
+        format: 'unit',
+        unit: 'V',
+        decimals: 3,
+      };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'codigo';
+      if (id === 'led') return calcLed(v);
+      if (id === 'serie-paralelo') return calcSerieParalelo(v);
+      if (id === 'divisor') return calcDivisor(v);
+      return calcCodigo(v);
+    });
+  })();
+</script>

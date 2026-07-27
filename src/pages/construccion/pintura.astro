@@ -1,0 +1,229 @@
+---
+/**
+ * Hub de decisión — "¿Cuántos litros de pintura necesito?"
+ * Reemplaza 6 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo: ramificado (4 ramas, `cases`).
+ * Los rendimientos NO están acá: se derivan de las fórmulas reales del repo
+ * (pintura-m2, pintura-paredes-habitacion-litros, conversor-litros-pintura,
+ * barniz-aceite-m2-madera, pintura-rejas-metal-litros, m2-pared-aberturas)
+ * dentro de src/lib/hubs/pintura.ts.
+ *
+ * Lo que el hub resuelve y ninguna calc suelta hacía: el descuento de puertas
+ * y ventanas es un campo, y el resultado se expresa en LATAS de 4 y 20 L.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  PRODUCTOS,
+  PRODUCTO_POR_RAMA,
+  POROSIDAD,
+  REJAS,
+  MARGEN,
+  M2_PUERTA,
+  M2_VENTANA,
+  LATA_GRANDE_L,
+  LATA_CHICA_L,
+  LATA_ESMALTE_L,
+} from '../../lib/hubs/pintura';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    PRODUCTOS,
+    PRODUCTO_POR_RAMA,
+    POROSIDAD,
+    REJAS,
+    MARGEN,
+    M2_PUERTA,
+    M2_VENTANA,
+    LATA_GRANDE_L,
+    LATA_CHICA_L,
+    LATA_ESMALTE_L,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    // El desglose mezcla litros, m², latas y pesos: NINGUNA fila puede quedar sin
+    // `format`, porque el runtime hace Object.assign y la que no lo declara cae
+    // a pesos. Las de plata declaran 'ars' igual, para que se lea explícito.
+    const U = (v, unit, decimals) => ({ v: v, format: 'unit', unit: unit, decimals: decimals || 0 });
+
+    const n = (x, d) =>
+      Number(x || 0).toLocaleString('es-AR', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+    /** Rendimiento: 12 se escribe entero, 12,5 con coma (nunca 12.5). */
+    const rend = (x) => Number(x || 0).toLocaleString('es-AR', { maximumFractionDigits: 1 });
+
+    /** Producto elegido, corregido si no pertenece a la familia de la rama. */
+    function productoDe(rama, elegido) {
+      const familia = rama === 'madera' ? 'madera' : rama === 'metal' ? 'metal' : 'pared';
+      const p = PRODUCTOS[elegido];
+      if (p && p.familia === familia) return { id: elegido, ...p };
+      const fb = PRODUCTO_POR_RAMA[rama] || 'latex_interior';
+      return { id: fb, ...PRODUCTOS[fb] };
+    }
+
+    /**
+     * Traduce litros a la compra real de pinturería: se llena con latas grandes
+     * y se completa con chicas; si hacen falta 5 o más chicas conviene otra
+     * grande (5 × 4 L = 20 L al precio de una lata de 20 L, que sale menos).
+     */
+    function aLatas(litros) {
+      let grandes = Math.floor(litros / LATA_GRANDE_L);
+      const resto = litros - grandes * LATA_GRANDE_L;
+      let chicas = Math.ceil(resto / LATA_CHICA_L - 1e-9);
+      if (chicas >= LATA_GRANDE_L / LATA_CHICA_L) {
+        grandes += 1;
+        chicas = 0;
+      }
+      const compradosL = grandes * LATA_GRANDE_L + chicas * LATA_CHICA_L;
+      return { grandes: grandes, chicas: chicas, compradosL: compradosL, sobranteL: compradosL - litros };
+    }
+
+    function textoLatas(l) {
+      const partes = [];
+      if (l.grandes) partes.push(l.grandes + ' lata' + (l.grandes === 1 ? '' : 's') + ' de ' + LATA_GRANDE_L + ' L');
+      if (l.chicas) partes.push(l.chicas + ' lata' + (l.chicas === 1 ? '' : 's') + ' de ' + LATA_CHICA_L + ' L');
+      return partes.length ? partes.join(' + ') : 'nada para comprar';
+    }
+
+    H.onCompute(function (v, kase) {
+      const rama = (kase && kase.id) || 'interior';
+      const largo = Math.max(0, v.largo || 0);
+      const alto = Math.max(0, v.alto || 0);
+      const manos = Math.min(6, Math.max(1, Math.round(v.manos || 2)));
+      const precioLitro = Math.max(0, v.precioLitro || 0);
+      const P = productoDe(rama, v.producto);
+
+      // ── Superficie a cubrir según la rama ───────────────────────────────
+      const bruto = largo * alto;
+      let area = bruto;
+      let aberturas = 0;
+      let techoM2 = 0;
+      let rendimiento = P.rend;
+      let factor = 1;
+
+      if (rama === 'metal') {
+        const R = REJAS[v.reja] || REJAS.barrotes;
+        factor = R.factor;
+        area = bruto * factor;
+      } else if (rama === 'madera') {
+        const po = POROSIDAD[v.porosidad] ? v.porosidad : 'media';
+        rendimiento = (P.rendMadera && P.rendMadera[po]) || P.rend || 10;
+        area = bruto;
+      } else {
+        const puertas = Math.max(0, Math.round(v.puertas || 0));
+        const ventanas = Math.max(0, Math.round(v.ventanas || 0));
+        const extra = Math.max(0, v.extra || 0);
+        aberturas = puertas * M2_PUERTA + ventanas * M2_VENTANA + extra;
+        techoM2 = String(v.techo) === 'si' ? Math.max(0, v.techoM2 || 0) : 0;
+        area = Math.max(0, bruto - aberturas) + techoM2;
+      }
+
+      if (!rendimiento || rendimiento <= 0) rendimiento = 10;
+
+      // ── Litros: superficie × manos / rendimiento, más el margen ─────────
+      const litrosPorMano = area / rendimiento;
+      const litrosNetos = litrosPorMano * manos;
+      const litros = litrosNetos * (1 + MARGEN);
+      const L = aLatas(litros);
+      const costo = L.compradosL * precioLitro;
+
+      const rows = [];
+
+      if (rama === 'metal') {
+        rows.push({ k: 'Frente aparente de la reja', ref: 'largo × alto', ...U(bruto, 'm²', 1) });
+        rows.push({ k: 'Superficie real de metal', ref: 'factor ' + rend(factor) + ' del tipo de reja', ...U(area, 'm²', 1) });
+      } else if (rama === 'madera') {
+        rows.push({ k: 'Superficie de madera', ref: 'largo × alto', ...U(area, 'm²', 1) });
+      } else {
+        rows.push({ k: 'Pared bruta', ref: 'largo × alto', ...U(bruto, 'm²', 1) });
+        rows.push({ k: 'Puertas, ventanas y otros descuentos', ref: 'puerta ' + rend(M2_PUERTA) + ' m² · ventana ' + rend(M2_VENTANA) + ' m²', ...U(aberturas, 'm²', 1) });
+        if (techoM2 > 0) rows.push({ k: 'Techo', ref: 'largo × ancho del ambiente', ...U(techoM2, 'm²', 1) });
+        rows.push({ k: 'Superficie neta a pintar', ref: 'bruto − aberturas' + (techoM2 > 0 ? ' + techo' : ''), ...U(area, 'm²', 1), extra: true });
+      }
+
+      rows.push({ k: 'Litros por mano', ref: rend(rendimiento) + ' m²/L', ...U(litrosPorMano, 'L', 2) });
+      rows.push({ k: 'Litros por ' + manos + ' mano' + (manos === 1 ? '' : 's'), ref: 'sin margen', ...U(litrosNetos, 'L', 2) });
+      rows.push({ k: 'Margen de desperdicio y retoques (' + Math.round(MARGEN * 100) + '%)', ref: 'lo que queda en el rodillo', ...U(litros - litrosNetos, 'L', 2) });
+      rows.push({ k: 'Litros necesarios', ref: P.label, ...U(litros, 'L', 2), extra: true });
+      rows.push({ k: 'Latas de ' + LATA_GRANDE_L + ' L', ref: 'balde de pinturería', ...U(L.grandes, 'latas'), extra: true });
+      rows.push({ k: 'Latas de ' + LATA_CHICA_L + ' L', ref: 'lata chica', ...U(L.chicas, 'latas'), extra: true });
+      rows.push({ k: 'Litros que te sobran', ref: 'guardalos para los retoques', ...U(L.sobranteL, 'L', 2) });
+
+      if (rama === 'metal') {
+        rows.push({ k: 'Equivalente en latas de ' + LATA_ESMALTE_L + ' L', ref: 'el envase típico del esmalte', ...U(Math.ceil(litros / LATA_ESMALTE_L), 'latas') });
+      }
+
+      rows.push({ k: 'Costo estimado del material', ref: '$' + n(precioLitro) + ' por litro', v: costo, format: 'ars' });
+
+      const subSuperficie =
+        rama === 'metal'
+          ? n(area, 1) + ' m² de metal (frente ' + n(bruto, 1) + ' m² × ' + rend(factor) + ')'
+          : rama === 'madera'
+            ? n(area, 1) + ' m² de madera'
+            : n(area, 1) + ' m² netos (bruto ' + n(bruto, 1) + ' − ' + n(aberturas, 1) + ' de aberturas' + (techoM2 > 0 ? ' + ' + n(techoM2, 1) + ' de techo' : '') + ')';
+
+      return {
+        total: textoLatas(L),
+        sub:
+          subSuperficie + ' · ' + manos + ' mano' + (manos === 1 ? '' : 's') + ' de ' + P.label.toLowerCase() +
+          ' a ' + rend(rendimiento) + ' m²/L · ' + n(litros, 1) + ' L necesarios, te sobran ' + n(L.sobranteL, 1) + ' L',
+        format: 'plain',
+        rows: rows,
+        chart: [
+          { label: 'Litros por mano', value: Math.round(litrosPorMano * 100) / 100, tone: 'prop' },
+          { label: 'Litros necesarios (con margen)', value: Math.round(litros * 100) / 100, tone: 'main' },
+          { label: 'Litros que comprás en latas', value: L.compradosL, tone: 'good' },
+          { label: 'Litros que sobran', value: Math.round(L.sobranteL * 100) / 100, tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

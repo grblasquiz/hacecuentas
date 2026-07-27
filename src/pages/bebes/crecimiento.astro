@@ -1,0 +1,360 @@
+---
+/**
+ * Hub de decisión — "¿Mi bebé crece bien?" (0 a 24 meses)
+ * Arquetipo RAMIFICADO. Absorbe 9 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/crecimiento-bebe.ts) y su
+ * compute(). Todo el chrome, el CSS y el runtime viven en DecisionHub.astro y
+ * no se tocan.
+ *
+ * YMYL de salud infantil: el hub informa percentiles, edad corregida y
+ * cronologías, y remite al pediatra. No hay consejo clínico en ninguna rama.
+ * El aviso médico (dominio `health` de src/lib/disclaimers.ts) viaja en
+ * hub.fineprint y como primer `warn` de cada rama.
+ *
+ * NO se pisa con /salud/crecimiento-infantil: aquel arranca en edad escolar
+ * (IMC infantil, talla adulta, mochila). Acá el rango es 0-24 meses.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, WFA_LMS, BANDS, BAND_TONES, HITOS, HITOS_AREA, DIENTES, TALLA_PIE, PIE_POR_EDAD } from '../../lib/hubs/crecimiento-bebe';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ WFA_LMS, BANDS, BAND_TONES, HITOS, HITOS_AREA, DIENTES, TALLA_PIE, PIE_POR_EDAD }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Acá los números son kg, cm, meses y dientes: formateo local, no pesos.
+    const dec = (n, d) => (Math.round(n * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d).replace('.', ',');
+
+    // CDF normal estándar — Abramowitz & Stegun 26.2.17 (error < 7,5e-8).
+    function normalCdf(z) {
+      if (z > 8) return 1;
+      if (z < -8) return 0;
+      const t = 1 / (1 + 0.2316419 * Math.abs(z));
+      const phi = 0.39894228 * Math.exp(-z * z / 2) *
+        (t * (0.31938153 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429)))));
+      return z >= 0 ? 1 - phi : phi;
+    }
+
+    // Interpolación lineal en una tabla LMS [mes, L, M, S] ordenada por mes.
+    function lookupLMS(table, x) {
+      const clamped = Math.max(table[0][0], Math.min(table[table.length - 1][0], x));
+      let lo = 0, hi = table.length - 1;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (table[mid][0] < clamped) lo = mid + 1; else hi = mid;
+      }
+      if (table[lo][0] === clamped || lo === 0) return { L: table[lo][1], M: table[lo][2], S: table[lo][3] };
+      const a = table[lo - 1], b = table[lo];
+      const f = (clamped - a[0]) / (b[0] - a[0]);
+      return { L: a[1] + f * (b[1] - a[1]), M: a[2] + f * (b[2] - a[2]), S: a[3] + f * (b[3] - a[3]) };
+    }
+
+    /** Z-score por la fórmula LMS estándar (OMS). */
+    function zLMS(valor, lms) {
+      return Math.abs(lms.L) < 1e-9
+        ? Math.log(valor / lms.M) / lms.S
+        : (Math.pow(valor / lms.M, lms.L) - 1) / (lms.L * lms.S);
+    }
+
+    /** Peso que corresponde a un Z dado (inversa de la LMS): para P3, P15, P85, P97. */
+    function pesoEnZ(z, lms) {
+      return Math.abs(lms.L) < 1e-9
+        ? lms.M * Math.exp(lms.S * z)
+        : lms.M * Math.pow(1 + lms.L * lms.S * z, 1 / lms.L);
+    }
+
+    const Z_P3 = -1.880794, Z_P15 = -1.036433, Z_P85 = 1.036433, Z_P97 = 1.880794;
+
+    function franja(p) {
+      if (p < 3) return 0;
+      if (p < 15) return 1;
+      if (p < 85) return 2;
+      if (p < 97) return 3;
+      return 4;
+    }
+
+    /** Las 5 franjas de percentil como segmentos del gráfico. */
+    function bandasChart() {
+      return BANDS.map((b, i) => ({ label: b.label, value: b.to - b.from, tone: BAND_TONES[i] }));
+    }
+
+    function lecturaPercentil(p) {
+      const f = franja(p);
+      if (f === 0) return 'por debajo del P3 — conviene consultarlo con el pediatra';
+      if (f === 1) return 'en la franja baja (P3–P15) — dentro de lo aceptable, se sigue de cerca';
+      if (f === 2) return 'dentro de lo esperado (P15–P85)';
+      if (f === 3) return 'en la franja alta (P85–P97) — dentro de lo aceptable, se sigue de cerca';
+      return 'por encima del P97 — conviene consultarlo con el pediatra';
+    }
+
+    /** Última entrada de una tabla con `mes` <= edad. */
+    function tramo(tabla, edad) {
+      let out = tabla[0];
+      for (const t of tabla) if (t.mes <= edad) out = t;
+      return out;
+    }
+
+    /** Percentil de peso para una edad en meses dada. */
+    function percentilPeso(sexo, meses, peso) {
+      const lms = lookupLMS(WFA_LMS[sexo], Math.max(0, Math.min(36, meses)));
+      const z = zLMS(peso, lms);
+      return { lms: lms, z: z, p: Math.max(0, Math.min(100, normalCdf(z) * 100)) };
+    }
+
+    H.onCompute(function (v, kase) {
+      const caso = (kase && kase.id) || 'percentil';
+      const sexo = String(v.sexo || 'm') === 'f' ? 'f' : 'm';
+      const edad = Math.max(0, Number(v.edadMeses) || 0);
+      const peso = Number(v.peso) || 0;
+      const talla = Number(v.talla) || 0;
+      const semGest = Number(v.semanasGestacion) || 40;
+      const bebe = sexo === 'f' ? 'la beba' : 'el bebé';
+
+      const KG = { format: 'unit', unit: 'kg', decimals: 2 };
+      const CM = { format: 'unit', unit: 'cm', decimals: 1 };
+      const MES = { format: 'unit', unit: 'meses', decimals: 1 };
+      const SEM = { format: 'unit', unit: 'semanas', decimals: 0 };
+
+      // Semanas de prematurez y edad corregida (se usan en varias ramas).
+      const semPrem = Math.max(0, 40 - semGest);
+      const edadCorregida = Math.max(0, edad - (semPrem * 7) / 30.4375);
+      const esPrematuro = semGest < 37;
+
+      // ───────── Rama 2: bebé prematuro (edad corregida) ─────────
+      if (caso === 'prematuro') {
+        if (!esPrematuro) {
+          return {
+            total: 'Nació a término',
+            sub: 'Con ' + dec(semGest, 0) + ' semanas de gestación no corresponde corregir la edad: a partir de las 37 semanas el bebé es de término y se evalúa con la edad del calendario. Bajá las semanas de gestación si querés ver la corrección.',
+            rows: [
+              Object.assign({ k: 'Semanas de gestación al nacer', ref: 'a término desde la semana 37', v: Number(semGest.toFixed(0)) }, SEM),
+              Object.assign({ k: 'Edad cronológica (de calendario)', v: Number(edad.toFixed(1)), extra: true }, MES),
+            ],
+            chart: [],
+            format: 'unit',
+            unit: 'meses',
+            decimals: 1,
+          };
+        }
+
+        const rows = [
+          Object.assign({ k: 'Semanas de gestación al nacer', ref: 'prematuro: menos de 37', v: Number(semGest.toFixed(0)) }, SEM),
+          Object.assign({ k: 'Semanas de prematurez (40 − gestación)', v: Number(semPrem.toFixed(0)) }, SEM),
+          Object.assign({ k: 'Edad cronológica (de calendario)', v: Number(edad.toFixed(1)) }, MES),
+          Object.assign({ k: 'Edad corregida (la que se usa para el desarrollo)', ref: 'SAP · seguimiento del prematuro', v: Number(edadCorregida.toFixed(1)), extra: true }, MES),
+        ];
+
+        const faltaCorregir = Math.max(0, 24 - edadCorregida);
+        rows.push(Object.assign({ k: faltaCorregir > 0 ? 'Meses que faltan para los 24 corregidos' : 'Meses ya cumplidos por encima de los 24 corregidos', v: Number((faltaCorregir > 0 ? faltaCorregir : edadCorregida - 24).toFixed(1)) }, MES));
+
+        if (peso > 0) {
+          const conCorr = percentilPeso(sexo, edadCorregida, peso);
+          const sinCorr = percentilPeso(sexo, edad, peso);
+          rows.push(Object.assign({ k: 'Peso actual', v: Number(peso.toFixed(2)) }, KG));
+          rows.push(Object.assign({ k: 'Peso de la mediana (P50) a la edad corregida', ref: 'OMS 2006', v: Number(conCorr.lms.M.toFixed(2)) }, KG));
+          rows.push({ k: 'Percentil de peso con edad CORREGIDA', ref: 'OMS 2006', v: Number(conCorr.p.toFixed(1)), extra: true, format: 'plain', decimals: 1 });
+          rows.push({ k: 'Percentil si se usara la edad de calendario (no corresponde)', ref: 'OMS 2006', v: Number(sinCorr.p.toFixed(1)), format: 'plain', decimals: 1 });
+        }
+
+        const hitoCorr = tramo(HITOS, Math.round(edadCorregida));
+        return {
+          total: dec(edadCorregida, 1) + ' meses corregidos',
+          sub:
+            bebe.charAt(0).toUpperCase() + bebe.slice(1) + ' nació a las ' + dec(semGest, 0) + ' semanas, o sea ' + dec(semPrem, 0) +
+            ' semanas antes de término: su edad corregida es de ' + dec(edadCorregida, 1) + ' meses frente a ' + dec(edad, 1) +
+            ' de calendario. Con esa edad se evalúan crecimiento, alimentación y desarrollo (lo esperable ahí es «' + hitoCorr.esperados.split(',')[0].toLowerCase() +
+            '»). Las vacunas, en cambio, van por edad cronológica.' +
+            (edadCorregida >= 24 ? ' Ya superó los 24 meses corregidos: desde acá se suele usar la edad del calendario.' : ''),
+          rows: rows,
+          chart: [
+            { label: 'Edad corregida', value: Number(edadCorregida.toFixed(1)), tone: 'good' },
+            { label: 'Descuento por prematurez', value: Number(((semPrem * 7) / 30.4375).toFixed(1)), tone: 'prop' },
+          ],
+          format: 'unit',
+          unit: 'meses',
+          decimals: 1,
+          position: Number(Math.max(0, Math.min(100, (edadCorregida / 24) * 100)).toFixed(1)),
+          positionLabel: 'Edad corregida ' + dec(edadCorregida, 1) + ' de 24 meses (hasta ahí se corrige)',
+        };
+      }
+
+      // ───────── Rama 3: hitos del desarrollo ─────────
+      if (caso === 'hitos') {
+        const edadHito = esPrematuro ? edadCorregida : edad;
+        const h = tramo(HITOS, Math.round(edadHito));
+        const area = tramo(HITOS_AREA, Math.round(edadHito));
+        const alcanzados = HITOS.filter((x) => x.mes <= Math.round(edadHito)).length;
+        const pendientes = Math.max(0, HITOS.length - alcanzados);
+
+        const rows = [
+          Object.assign({ k: 'Edad con la que se leen los hitos' + (esPrematuro ? ' (corregida por prematurez)' : ''), ref: esPrematuro ? 'SAP · edad corregida' : 'edad cronológica', v: Number(edadHito.toFixed(1)), extra: true }, MES),
+          { k: 'Tramo de hitos que le corresponde', ref: 'desarrollo motor por edad', v: h.mes, extra: true, format: 'unit', unit: 'meses', decimals: 0 },
+          { k: 'Tramos de hitos ya recorridos (de ' + HITOS.length + ')', v: alcanzados, format: 'unit', unit: 'tramos', decimals: 0 },
+          { k: 'Tramos que le quedan hasta los 24 meses', v: pendientes, format: 'unit', unit: 'tramos', decimals: 0 },
+        ];
+
+        // Talla de calzado: por pie medido, y si no se midió, por edad.
+        const pieCargado = Number(v.pieCm) || 0;
+        const piePorEdad = tramo(PIE_POR_EDAD, Math.round(edad)).cm;
+        const pieCm = pieCargado > 0 ? pieCargado : piePorEdad;
+        let calzado = TALLA_PIE[0];
+        for (const t of TALLA_PIE) if (t.cm <= pieCm) calzado = t;
+        rows.push(Object.assign({ k: 'Largo del pie ' + (pieCargado > 0 ? '(medido)' : '(referencia por edad)'), v: Number(pieCm.toFixed(1)) }, CM));
+        rows.push({ k: 'Talla de calzado que le corresponde (AR/EU)', ref: 'dejar 1 a 1,5 cm de holgura', v: calzado.ar, format: 'plain', decimals: 0 });
+
+        return {
+          total: 'Hitos de ~' + dec(h.mes, 0) + ' meses',
+          sub:
+            'A los ' + dec(edadHito, 1) + ' meses' + (esPrematuro ? ' de edad corregida' : '') + ' lo esperable es: en lo motor ' + area.motor.toLowerCase() +
+            ', en lenguaje ' + area.lenguaje.toLowerCase() + ' y en lo social ' + area.social.toLowerCase() + '. Lo que viene después: ' + h.proximos.toLowerCase() +
+            '. Para estimular: ' + h.estimulacion.toLowerCase() + '. Señales de alerta de esta edad: ' + h.alerta.toLowerCase() +
+            ' — si aparece alguna, consultá al pediatra sin esperar al próximo control. Cada bebé tiene su ritmo: son orientativos, no un examen.',
+          rows: rows,
+          chart: [
+            { label: 'Tramos de hitos recorridos', value: alcanzados, tone: 'good' },
+            { label: 'Tramos por venir', value: pendientes, tone: 'prop' },
+          ],
+          format: 'unit',
+          unit: 'tramos',
+          decimals: 0,
+          position: Number(Math.max(0, Math.min(100, (edadHito / 24) * 100)).toFixed(1)),
+          positionLabel: 'Tramo de ' + dec(h.mes, 0) + ' meses — ' + h.esperados.split(',')[0].toLowerCase(),
+        };
+      }
+
+      // ───────── Rama 4: dientes de leche ─────────
+      if (caso === 'dientes') {
+        const salidos = DIENTES.filter((d) => d.mes <= Math.round(edad));
+        const proximos = DIENTES.filter((d) => d.mes > Math.round(edad)).slice(0, 2);
+        const total = salidos.length > 0 ? salidos[salidos.length - 1].total : 0;
+        const faltan = 20 - total;
+        const regla = Math.max(0, Math.min(20, Math.round(edad) - 6));
+
+        const D = { format: 'unit', unit: 'dientes', decimals: 0 };
+        const rows = [
+          Object.assign({ k: 'Dientes esperables a los ' + dec(edad, 0) + ' meses', ref: 'cronología de erupción', v: total, extra: true }, D),
+          Object.assign({ k: 'Dientes de leche que faltan (de 20)', v: faltan }, D),
+          Object.assign({ k: 'Regla práctica: edad en meses − 6', v: regla }, D),
+        ];
+        if (proximos.length > 0) {
+          rows.push({ k: 'Próximo en salir: ' + proximos[0].diente, v: proximos[0].mes, format: 'unit', unit: 'meses', decimals: 0 });
+          if (proximos[1]) rows.push({ k: 'Y después: ' + proximos[1].diente, v: proximos[1].mes, format: 'unit', unit: 'meses', decimals: 0 });
+        }
+
+        const cuidados = edad < 6
+          ? 'Limpiá las encías con gasa húmeda después de las tomas.'
+          : edad < 24
+            ? 'Cepillado con cepillo suave y agua. Primera visita al odontopediatra antes del año.'
+            : 'Cepillado dos veces por día con pasta con flúor (cantidad de un grano de arroz) y control odontológico cada 6 meses.';
+
+        return {
+          total: total + (total === 1 ? ' diente' : ' dientes'),
+          sub:
+            (total === 0
+              ? 'A los ' + dec(edad, 0) + ' meses todavía no se esperan dientes: los primeros incisivos suelen asomar entre los 6 y los 10 meses.'
+              : total >= 20
+                ? 'A los ' + dec(edad, 0) + ' meses la dentición de leche suele estar completa: los 20 dientes.'
+                : 'A los ' + dec(edad, 0) + ' meses lo esperable son ' + total + ' de 20 dientes de leche. Lo que sigue: ' + proximos[0].diente.toLowerCase() + ' (~' + proximos[0].mes + ' meses).') +
+            ' La cronología es orientativa: dos o tres meses de diferencia son normales. ' + cuidados,
+          rows: rows,
+          chart: [
+            { label: 'Dientes ya salidos', value: total, tone: 'good' },
+            { label: 'Dientes por salir', value: faltan, tone: 'prop' },
+          ],
+          format: 'unit',
+          unit: 'dientes',
+          decimals: 0,
+          position: Number(((total / 20) * 100).toFixed(1)),
+          positionLabel: total + ' de 20 dientes de leche',
+        };
+      }
+
+      // ───────── Rama 1 (default): percentil de peso ─────────
+      if (peso <= 0) {
+        return { total: '—', sub: 'Cargá el peso del bebé para calcular el percentil.', rows: [], chart: [] };
+      }
+
+      const res = percentilPeso(sexo, edad, peso);
+      const lms = res.lms;
+      const p = res.p;
+      const p3 = pesoEnZ(Z_P3, lms), p15 = pesoEnZ(Z_P15, lms), p85 = pesoEnZ(Z_P85, lms), p97 = pesoEnZ(Z_P97, lms);
+      const difMediana = peso - lms.M;
+
+      const rows = [
+        Object.assign({ k: 'Peso actual', v: Number(peso.toFixed(2)), extra: true }, KG),
+        Object.assign({ k: 'Peso de la mediana (P50) a los ' + dec(edad, 0) + ' meses', ref: 'OMS 2006', v: Number(lms.M.toFixed(2)) }, KG),
+        Object.assign({ k: 'Piso del rango esperado (P15)', ref: 'OMS 2006', v: Number(p15.toFixed(2)) }, KG),
+        Object.assign({ k: 'Techo del rango esperado (P85)', ref: 'OMS 2006', v: Number(p85.toFixed(2)) }, KG),
+        Object.assign({ k: 'Umbral de bajo peso (P3)', ref: 'OMS 2006', v: Number(p3.toFixed(2)) }, KG),
+        Object.assign({ k: 'Umbral de peso elevado (P97)', ref: 'OMS 2006', v: Number(p97.toFixed(2)) }, KG),
+        Object.assign({ k: difMediana >= 0 ? 'Diferencia por encima de la mediana' : 'Diferencia por debajo de la mediana', v: Number(Math.abs(difMediana).toFixed(2)) }, KG),
+      ];
+      if (talla > 0) {
+        rows.push(Object.assign({ k: 'Talla medida (sin percentil: se lee en la curva de longitud del control)', v: Number(talla.toFixed(1)) }, CM));
+      }
+      rows.push({ k: 'Percentil de peso que resulta (P' + dec(p, 0) + ')', ref: 'peso para la edad · OMS 2006', v: Number(p.toFixed(1)), extra: true, format: 'plain', decimals: 1 });
+
+      const avisoPrem = esPrematuro
+        ? ' OJO: nació a las ' + dec(semGest, 0) + ' semanas, así que este percentil habría que leerlo con la edad corregida (' + dec(edadCorregida, 1) + ' meses) — cambiá a la rama de prematuro.'
+        : '';
+
+      return {
+        total: 'Percentil ' + dec(p, 0),
+        sub:
+          dec(peso, 2) + ' kg a los ' + dec(edad, 0) + ' meses · ' + lecturaPercentil(p) +
+          ' · Z-score ' + dec(res.z, 2) + ' (tablas LMS de peso para la edad, OMS 2006). Lo que se evalúa en el control es la curva completa, no un punto suelto.' + avisoPrem,
+        rows: rows,
+        chart: bandasChart(),
+        format: 'plain',
+        decimals: 1,
+        position: Number(p.toFixed(1)),
+        positionLabel: 'Percentil ' + dec(p, 0) + ' — ' + lecturaPercentil(p),
+      };
+    });
+  })();
+</script>

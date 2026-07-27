@@ -1,0 +1,346 @@
+---
+/**
+ * Hub de decisión — "¿Cuáles son mis días fértiles?" (arquetipo ramificado).
+ * Reemplaza 7 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * SILO COMPARTIDO con /embarazo/semanas: aquel responde "de cuántas semanas
+ * estoy" (ya hay embarazo); este responde lo de ANTES —buscarlo o datar la
+ * concepción—. No se duplica nada: acá no hay trimestres, ni tamaño del bebé,
+ * ni calendario de ecografías.
+ *
+ * ⚠️ YMYL — SALUD. El disclaimer ('health' + el override ES de
+ * 'calculadora-ovulacion-dias-fertiles' en src/lib/disclaimers.ts) va en
+ * fineprint, como PRIMER warn de cada caso y en la FAQ. Además, cada rama dice
+ * explícitamente que esto NO es un método anticonceptivo y que el método del
+ * ritmo falla ~24% en uso típico. No sacar.
+ *
+ * Patrón: la página sólo aporta datos (src/lib/hubs/dias-fertiles.ts) y su
+ * compute(). Todo el chrome, el CSS y el runtime viven en DecisionHub.astro.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, CICLO, PROB_POR_DIA, EDAD_MUJER, RIESGO_DOWN, EDAD_VARON } from '../../lib/hubs/dias-fertiles';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ CICLO, PROB_POR_DIA, EDAD_MUJER, RIESGO_DOWN, EDAD_VARON }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+    function parseDate(s) {
+      const p = String(s || '').split('-').map(Number);
+      if (p.length !== 3 || p.some(isNaN)) return null;
+      const d = new Date(p[0], p[1] - 1, p[2]);
+      if (isNaN(d.getTime())) return null;
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+    function addDays(d, n) { const o = new Date(d.getTime()); o.setDate(o.getDate() + n); return o; }
+    function fmt(d) { return d.getDate() + ' de ' + MESES[d.getMonth()] + ' de ' + d.getFullYear(); }
+    function corta(d) { return d.getDate() + '/' + (d.getMonth() + 1); }
+    function hoy() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+    function dif(a, b) { return Math.round((a.getTime() - b.getTime()) / 86400000); }
+    function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+
+    /** Fases del ciclo en días, para el gráfico de línea de tiempo. */
+    function fases(ciclo, diaOvulacion) {
+      const finMenstrual = Math.min(CICLO.sangrado, diaOvulacion - CICLO.diasPrevios - 1);
+      const inicioFertil = Math.max(finMenstrual, diaOvulacion - CICLO.diasPrevios);
+      const finFertil = Math.min(ciclo, diaOvulacion + CICLO.diasPosteriores);
+      return [
+        { label: 'Menstruación', value: finMenstrual, tone: 'bad', from: 1, to: finMenstrual },
+        { label: 'Folicular', value: inicioFertil - finMenstrual, tone: 'main', from: finMenstrual, to: inicioFertil },
+        { label: 'Ventana fértil', value: finFertil - inicioFertil, tone: 'good', from: inicioFertil, to: finFertil },
+        { label: 'Lútea', value: Math.max(0, ciclo - finFertil), tone: 'warn', from: finFertil, to: ciclo },
+      ];
+    }
+
+    /** Fila de "faltan datos" común a todas las ramas. */
+    function faltan(msg) {
+      return { total: 'Faltan datos', sub: msg, rows: [], chart: [] };
+    }
+
+    function tramoMujer(edad) {
+      for (let i = 0; i < EDAD_MUJER.length; i++) if (edad <= EDAD_MUJER[i].hasta) return EDAD_MUJER[i];
+      return EDAD_MUJER[EDAD_MUJER.length - 1];
+    }
+    function tramoVaron(edad) {
+      for (let i = 0; i < EDAD_VARON.length; i++) if (edad <= EDAD_VARON[i].hasta) return EDAD_VARON[i];
+      return EDAD_VARON[EDAD_VARON.length - 1];
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'regular';
+      const t = hoy();
+      const ciclo = clamp(Math.round(Number(v.ciclo) || 28), 21, 45);
+      const diaOvulacion = ciclo - CICLO.faseLutea; // día del ciclo en que se ovula
+
+      // ---------------------------------------------------------------- EDAD
+      if (id === 'edad') {
+        const edadM = clamp(Math.round(Number(v.edadMujer) || 32), 18, 50);
+        const edadV = clamp(Math.round(Number(v.edadVaron) || 34), 18, 60);
+        const m = tramoMujer(edadM);
+        const h = tramoVaron(edadV);
+        const down = RIESGO_DOWN[edadM] || 8;
+        const crom = Math.round(down / 1.5);
+        const mesesEsperables = Math.min(36, Math.round(100 / m.porCiclo));
+
+        const rows = [
+          { k: 'Probabilidad de embarazo por ciclo', ref: 'ASRM', v: m.porCiclo, extra: true, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Probabilidad acumulada en 12 meses de búsqueda', ref: 'ACOG 589', v: m.doceMeses, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Meses de búsqueda estadísticamente esperables', v: mesesEsperables, format: 'unit', unit: 'meses', decimals: 0 },
+          { k: 'Riesgo de aborto espontáneo a tu edad', v: m.aborto, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Trisomía 21 al nacer: 1 en cada', ref: 'Morris 2002', v: down, format: 'plain', decimals: 0 },
+          { k: 'Alteración cromosómica total: 1 en cada', v: crom, format: 'plain', decimals: 0 },
+          { k: 'Motilidad espermática esperada a esa edad', v: h.motilidad, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Fragmentación del ADN espermático', v: h.fragmentacion, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Tiempo promedio a la concepción por factor masculino', v: h.meses, format: 'unit', unit: 'meses', decimals: 1 },
+        ];
+
+        const consulta = edadM >= 40 ? 'sin esperar' : edadM >= 35 ? 'a los 6 meses de búsqueda' : 'a los 12 meses de búsqueda';
+
+        return {
+          total: m.porCiclo + '% por ciclo',
+          sub:
+            'A los ' + edadM + ' años: ' + m.etiqueta.toLowerCase() + ' · ' + m.doceMeses + '% de lograrlo dentro de los 12 meses · aborto espontáneo ' +
+            m.abortoTxt + ' · trisomía 21 al nacer 1 en ' + down + ' (' + (100 / down).toFixed(2) + '%). Factor masculino a los ' + edadV +
+            ': calidad ' + h.calidad.toLowerCase() + '. Consulta recomendada ' + consulta + '. Son cifras poblacionales, no un pronóstico personal.',
+          rows: rows,
+          chart: fases(ciclo, diaOvulacion),
+          format: 'unit',
+          unit: 'días',
+          decimals: 0,
+          position: clamp((m.porCiclo / 25) * 100, 0, 100),
+          positionLabel: edadM + ' años — ' + m.porCiclo + '% de probabilidad por ciclo (' + m.etiqueta.toLowerCase() + ')',
+        };
+      }
+
+      // ---------------------------------------------------------- CONCEPCIÓN
+      if (id === 'concepcion') {
+        const tipo = String(v.tipoRef || 'fum');
+        const ajuste = ciclo - 28; // corrimiento de la ovulación respecto del día 14
+        let concepcion = null;
+        let fumEquiv = null;
+        let fpp = null;
+
+        if (tipo === 'fpp') {
+          const ref = parseDate(v.fpp);
+          if (!ref) return faltan('Cargá la fecha probable de parto que te dieron.');
+          fpp = ref;
+          concepcion = addDays(fpp, -(CICLO.diasConcepcionParto - ajuste));
+          fumEquiv = addDays(concepcion, -diaOvulacion);
+        } else {
+          const ref = parseDate(v.fum);
+          if (!ref) return faltan('Cargá el primer día de tu última menstruación.');
+          fumEquiv = ref;
+          concepcion = addDays(fumEquiv, diaOvulacion);
+          fpp = addDays(fumEquiv, CICLO.diasFumParto + ajuste);
+        }
+
+        const desde = addDays(concepcion, -CICLO.margenConcepcion);
+        const hasta = addDays(concepcion, CICLO.margenConcepcion);
+        const impInicio = addDays(concepcion, CICLO.implantacion.inicio);
+        const impPico = addDays(concepcion, CICLO.implantacion.pico);
+        const impFin = addDays(concepcion, CICLO.implantacion.fin);
+        const test = addDays(impPico, CICLO.implantacion.testDesdePico);
+
+        const diasGest = clamp(dif(t, fumEquiv), 0, 320);
+        const semanas = Math.floor(diasGest / 7);
+        const diasSueltos = diasGest % 7;
+
+        const rows = [
+          { k: 'Día de tu ciclo en el que ovulaste', v: diaOvulacion, extra: true, format: 'plain', decimals: 0 },
+          { k: 'Ancho de la ventana de concepción', ref: 'ACOG 700', v: CICLO.margenConcepcion * 2 + 1, format: 'unit', unit: 'días', decimals: 0 },
+          { k: 'La relación pudo ser hasta esto antes', v: CICLO.diasPrevios, format: 'unit', unit: 'días', decimals: 0 },
+          { k: 'Semanas de gestación hoy', v: semanas, format: 'unit', unit: 'semanas', decimals: 0 },
+          { k: 'Días sueltos además de esas semanas', v: diasSueltos, format: 'unit', unit: 'días', decimals: 0 },
+          { k: 'Días totales de gestación', v: diasGest, format: 'unit', unit: 'días', decimals: 0 },
+          { k: 'Implantación más temprana (días post-ovulación)', v: CICLO.implantacion.inicio, format: 'unit', unit: 'días', decimals: 0 },
+          { k: 'Implantación más probable (días post-ovulación)', v: CICLO.implantacion.pico, format: 'unit', unit: 'días', decimals: 0 },
+          { k: 'Implantación más tardía (días post-ovulación)', v: CICLO.implantacion.fin, format: 'unit', unit: 'días', decimals: 0 },
+          { k: 'Test de embarazo confiable (días post-ovulación)', v: CICLO.implantacion.pico + CICLO.implantacion.testDesdePico, format: 'unit', unit: 'días', decimals: 0 },
+        ];
+
+        return {
+          total: fmt(concepcion),
+          sub:
+            'Ventana de concepción del ' + corta(desde) + ' al ' + corta(hasta) +
+            ' · fecha probable de parto: ' + fmt(fpp) +
+            ' · hoy llevarías ' + semanas + ' semanas y ' + diasSueltos + (diasSueltos === 1 ? ' día' : ' días') +
+            ' · implantación entre el ' + corta(impInicio) + ' y el ' + corta(impFin) + ', con pico el ' + corta(impPico) +
+            ' · test confiable desde el ' + corta(test) + '.' +
+            (ciclo !== 28 ? ' Cálculo ajustado a tu ciclo de ' + ciclo + ' días.' : ''),
+          rows: rows,
+          chart: fases(ciclo, diaOvulacion),
+          format: 'unit',
+          unit: 'días',
+          decimals: 0,
+          position: clamp((diaOvulacion / ciclo) * 100, 0, 100),
+          positionLabel: 'Concepción el día ' + diaOvulacion + ' de un ciclo de ' + ciclo + ' días',
+        };
+      }
+
+      // ------------------------------------------------------------ IRREGULAR
+      if (id === 'irregular') {
+        const fum = parseDate(v.fum);
+        if (!fum) return faltan('Cargá el primer día de tu última menstruación.');
+        let corto = clamp(Math.round(Number(v.cicloCorto) || 25), 21, 45);
+        let largo = clamp(Math.round(Number(v.cicloLargo) || 34), 21, 60);
+        if (largo < corto) { const tmp = corto; corto = largo; largo = tmp; }
+
+        // Método del calendario (Ogino-Knaus): corto − 18, largo − 11.
+        const primerFertil = Math.max(1, corto - CICLO.ogino.restaCorto);
+        const ultimoFertil = Math.max(primerFertil, largo - CICLO.ogino.restaLargo);
+        const ovulTemprana = Math.max(1, corto - CICLO.faseLutea);
+        const ovulTardia = Math.max(ovulTemprana, largo - CICLO.faseLutea);
+        const variacion = largo - corto;
+
+        const transcurridos = dif(t, fum);
+        const diaCiclo = transcurridos >= 0 ? (transcurridos % largo) + 1 : 1;
+        const enVentana = diaCiclo >= primerFertil && diaCiclo <= ultimoFertil;
+
+        const inicioFecha = addDays(fum, primerFertil - 1);
+        const finFecha = addDays(fum, ultimoFertil - 1);
+
+        const rows = [
+          { k: 'Primer día potencialmente fértil del ciclo', ref: 'ciclo corto − 18', v: primerFertil, extra: true, format: 'plain', decimals: 0 },
+          { k: 'Último día potencialmente fértil del ciclo', ref: 'ciclo largo − 11', v: ultimoFertil, format: 'plain', decimals: 0 },
+          { k: 'Ancho de tu ventana fértil ampliada', v: ultimoFertil - primerFertil + 1, format: 'unit', unit: 'días', decimals: 0 },
+          { k: 'Variación entre tu ciclo más corto y el más largo', v: variacion, format: 'unit', unit: 'días', decimals: 0 },
+          { k: 'Ovulación más temprana posible (día del ciclo)', v: ovulTemprana, format: 'plain', decimals: 0 },
+          { k: 'Ovulación más tardía posible (día del ciclo)', v: ovulTardia, format: 'plain', decimals: 0 },
+          { k: 'Día del ciclo en el que estás hoy', v: diaCiclo, format: 'plain', decimals: 0 },
+          { k: 'Fallo del método del calendario en uso típico', ref: 'Trussell 2011', v: CICLO.falloMetodoRitmo, format: 'unit', unit: '%', decimals: 0 },
+        ];
+
+        return {
+          total: 'Días ' + primerFertil + ' a ' + ultimoFertil + ' del ciclo',
+          sub:
+            'Con ciclos de ' + corto + ' a ' + largo + ' días (varían ' + variacion + ') tu ventana fértil ampliada va del ' +
+            corta(inicioFecha) + ' al ' + corta(finFecha) + ', o sea ' + (ultimoFertil - primerFertil + 1) + ' días. Hoy estás en el día ' +
+            diaCiclo + (enVentana ? ', dentro de la ventana' : ', fuera de la ventana') +
+            (variacion > 8 ? '. Variás más de 8 días entre ciclos: conviene consulta ginecológica.' : '.') +
+            ' Nunca uses este rango para evitar un embarazo: el método del calendario falla en cerca del 24% de las usuarias.',
+          rows: rows,
+          chart: fases(largo, ovulTardia),
+          format: 'unit',
+          unit: 'días',
+          decimals: 0,
+          position: clamp((diaCiclo / largo) * 100, 0, 100),
+          positionLabel: 'Día ' + diaCiclo + ' de un ciclo de hasta ' + largo + ' días' + (enVentana ? ' — dentro de la ventana fértil' : ''),
+        };
+      }
+
+      // -------------------------------------------------------------- REGULAR
+      const fum = parseDate(v.fum);
+      if (!fum) return faltan('Cargá el primer día de tu última menstruación.');
+
+      const ovulacion = addDays(fum, diaOvulacion);
+      const inicioVentana = addDays(ovulacion, -CICLO.diasPrevios);
+      const finVentana = addDays(ovulacion, CICLO.diasPosteriores);
+      const proxima = addDays(fum, ciclo);
+
+      const transcurridos = dif(t, fum);
+      const diaCiclo = transcurridos >= 0 ? (transcurridos % ciclo) + 1 : 1;
+      const diasHastaOvular = dif(ovulacion, t);
+      const diasHastaProxima = dif(proxima, t);
+
+      let fase;
+      if (diaCiclo <= CICLO.sangrado) fase = 'fase menstrual';
+      else if (diaCiclo < diaOvulacion - CICLO.diasPrevios + 1) fase = 'fase folicular';
+      else if (diaCiclo <= diaOvulacion + CICLO.diasPosteriores) fase = 'ventana fértil';
+      else fase = 'fase lútea';
+
+      const rows = [
+        { k: 'Ovulación: día de tu ciclo', ref: 'ciclo − 14', v: diaOvulacion, extra: true, format: 'plain', decimals: 0 },
+        { k: 'Duración de tu ventana fértil', v: CICLO.diasPrevios + CICLO.diasPosteriores, format: 'unit', unit: 'días', decimals: 0 },
+        { k: 'Día del ciclo en el que estás hoy', v: diaCiclo, format: 'plain', decimals: 0 },
+        { k: 'Días hasta la ovulación', v: Math.abs(diasHastaOvular), format: 'unit', unit: 'días', decimals: 0 },
+        { k: 'Días hasta tu próxima menstruación', v: Math.max(0, diasHastaProxima), format: 'unit', unit: 'días', decimals: 0 },
+        { k: 'Supervivencia de los espermatozoides', v: CICLO.diasPrevios, format: 'unit', unit: 'días', decimals: 0 },
+        { k: 'Vida del óvulo tras la ovulación', v: 24, format: 'unit', unit: 'horas', decimals: 0 },
+      ];
+      PROB_POR_DIA.forEach(function (p) {
+        rows.push({
+          k: 'Probabilidad de embarazo — ' + p.label.toLowerCase(),
+          ref: 'Wilcox 2000',
+          v: p.pct,
+          format: 'unit',
+          unit: '%',
+          decimals: 0,
+        });
+      });
+      rows.push({
+        k: 'Fallo del método del calendario en uso típico',
+        ref: 'Trussell 2011',
+        v: CICLO.falloMetodoRitmo,
+        format: 'unit',
+        unit: '%',
+        decimals: 0,
+      });
+
+      const tresCiclos = [1, 2, 3].map(function (n) { return corta(addDays(fum, ciclo * n)); }).join(', ');
+
+      return {
+        total: corta(inicioVentana) + ' al ' + corta(finVentana),
+        sub:
+          'Ovulación estimada el ' + fmt(ovulacion) + ' (día ' + diaOvulacion + ' de un ciclo de ' + ciclo + ' días) · hoy estás en el día ' +
+          diaCiclo + ', en ' + fase +
+          (diasHastaOvular === 0 ? ' · ovulás hoy' : diasHastaOvular > 0 ? ' · faltan ' + diasHastaOvular + ' días para ovular' : ' · la ovulación pasó hace ' + Math.abs(diasHastaOvular) + ' días') +
+          ' · próxima menstruación el ' + fmt(proxima) + ' · las tres siguientes: ' + tresCiclos +
+          '. No sirve como anticonceptivo: el método del calendario falla en cerca del 24% de las usuarias.',
+        rows: rows,
+        chart: fases(ciclo, diaOvulacion),
+        format: 'unit',
+        unit: 'días',
+        decimals: 0,
+        position: clamp((diaCiclo / ciclo) * 100, 0, 100),
+        positionLabel: 'Día ' + diaCiclo + ' de ' + ciclo + ' — ' + fase,
+      };
+    });
+  })();
+</script>

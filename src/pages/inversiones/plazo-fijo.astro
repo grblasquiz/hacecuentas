@@ -1,0 +1,233 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto gano con un plazo fijo?"
+ * Reemplaza 6 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/plazo-fijo.ts) y su compute().
+ * Todo el chrome, el CSS y el runtime viven en DecisionHub.astro y no se tocan.
+ *
+ * Las tasas (BCRA) y la inflación (INDEC) viajan al cliente desde TASAS, que el
+ * módulo de datos arma leyendo src/data/live/*.json. No hay tasas hardcodeadas.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, TASAS } from '../../lib/hubs/plazo-fijo';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ TASAS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const PCT = { format: 'unit', unit: '%', decimals: 2 };
+    const fpct = (n) =>
+      Number(n || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+
+    H.onCompute(function (v, kase) {
+      const id = kase && kase.id ? kase.id : 'tradicional';
+      const capital = Math.max(0, v.capital || 0);
+      const dias = Math.max(1, Math.min(3650, Math.round(v.dias || 30)));
+      const tna = Math.max(0, v.tna || 0);
+      const tnaBilletera = Math.max(0, v.tnaBilletera || 0);
+      const infMensual = Math.max(0, v.inflacion || 0) / 100;
+      const spread = Math.max(0, v.spread || 0);
+
+      // Inflación acumulada del período: el dato mensual del INDEC llevado a días.
+      const infPeriodo = Math.pow(1 + infMensual, dias / 30) - 1;
+      const costoInflacion = capital * infPeriodo;
+
+      // Plazo fijo tradicional: interés SIMPLE sobre el plazo (no capitaliza).
+      const interesTrad = capital * (tna / 100) * (dias / 365);
+      const finalTrad = capital + interesTrad;
+      const teaTrad = (Math.pow(1 + tna / 100 / 365, 365) - 1) * 100;
+
+      const rows = [];
+      let final = finalTrad;
+      let interes = interesTrad;
+      let sub = '';
+
+      if (id === 'uva') {
+        // UVA: el capital ajusta por inflación diaria equivalente y encima corre el spread anual.
+        const infDiaria = Math.pow(1 + infMensual, 1 / 30) - 1;
+        const spreadDiaria = spread / 100 / 365;
+        final = capital * Math.pow(1 + infDiaria, dias) * Math.pow(1 + spreadDiaria, dias);
+        interes = final - capital;
+        const ajuste = capital * (Math.pow(1 + infDiaria, dias) - 1);
+        const premio = interes - ajuste;
+        // Precancelación: se pierde el ajuste y se cobra la tasa tradicional penalizada 30%.
+        const finalPrecancelado = capital * (1 + (tna / 100 / 365) * 0.7 * dias);
+
+        rows.push({ k: 'Capital invertido', ref: 'Depósito inicial', v: capital });
+        rows.push({ k: 'Ajuste por UVA (inflación del período)', ref: 'IPC INDEC', v: ajuste });
+        rows.push({ k: 'Spread anual del banco', ref: fpct(spread) + ' TNA', v: premio });
+        rows.push({ k: 'Monto final del UVA a plazo completo', ref: dias + ' días', v: final, extra: true });
+        rows.push({ k: 'Monto final del plazo fijo tradicional', ref: fpct(tna) + ' TNA', v: finalTrad });
+        rows.push({
+          k: 'Diferencia a favor del ' + (final >= finalTrad ? 'UVA' : 'tradicional'),
+          ref: 'Comparación',
+          v: Math.abs(final - finalTrad),
+          extra: true,
+        });
+        rows.push({ k: 'Si precancelás (perdés el ajuste UVA)', ref: 'Tasa penalizada', v: finalPrecancelado });
+        rows.push({ k: 'Lo que resignás por precancelar', ref: 'Costo de salir antes', v: Math.max(0, final - finalPrecancelado) });
+
+        sub =
+          'UVA a ' + dias + ' días con inflación ' + fpct(infMensual * 100) + ' mensual y spread ' + fpct(spread) +
+          ' · ' + (final >= finalTrad ? 'le gana' : 'le pierde') + ' al tradicional por ' + H.ars(Math.abs(final - finalTrad));
+      } else if (id === 'billetera') {
+        // Money market / billetera: capitalización DIARIA.
+        const tasaDiaria = tnaBilletera / 100 / 365;
+        final = capital * Math.pow(1 + tasaDiaria, dias);
+        interes = final - capital;
+        const tea = (Math.pow(1 + tasaDiaria, 365) - 1) * 100;
+        const porDia = interes / dias;
+
+        rows.push({ k: 'Capital invertido', ref: 'Saldo en la billetera', v: capital });
+        rows.push({ k: 'TNA de la billetera', ref: TASAS.billeteraMejor.nombre, v: tnaBilletera, ...PCT });
+        rows.push({ k: 'TEA por capitalización diaria', ref: 'Interés compuesto', v: tea, ...PCT });
+        rows.push({ k: 'Rendimiento del período', ref: dias + ' días', v: interes, extra: true });
+        rows.push({ k: 'Lo que sumás por día', ref: 'Acreditación diaria', v: porDia, decimals: 2 });
+        rows.push({ k: 'Saldo final', ref: 'Disponible al instante', v: final, extra: true });
+        rows.push({ k: 'El mismo plazo en un plazo fijo', ref: fpct(tna) + ' TNA', v: interesTrad });
+        rows.push({
+          k: 'Diferencia a favor ' + (interes >= interesTrad ? 'de la billetera' : 'del plazo fijo'),
+          ref: 'Comparación',
+          v: Math.abs(interes - interesTrad),
+        });
+
+        sub =
+          'Capitalización diaria a ' + fpct(tnaBilletera) + ' TNA (TEA ' + fpct(tea) + ')' +
+          ' · ' + H.ars(porDia) + ' por día · la plata queda disponible en el momento';
+      } else if (id === 'bancos') {
+        // Comparación entre entidades con el relevamiento vigente.
+        const mejor = capital * (TASAS.bancoMejor.tna / 100) * (dias / 365);
+        const peor = capital * (TASAS.bancoPeor.tna / 100) * (dias / 365);
+        const promedio = capital * (TASAS.bancosPromedio / 100) * (dias / 365);
+        interes = mejor;
+        final = capital + mejor;
+
+        rows.push({ k: 'Capital invertido', ref: 'Depósito inicial', v: capital });
+        rows.push({
+          k: 'Mejor TNA del relevamiento: ' + TASAS.bancoMejor.nombre,
+          ref: 'BCRA',
+          v: TASAS.bancoMejor.tna,
+          ...PCT,
+        });
+        rows.push({
+          k: 'Peor TNA del relevamiento: ' + TASAS.bancoPeor.nombre,
+          ref: 'BCRA',
+          v: TASAS.bancoPeor.tna,
+          ...PCT,
+        });
+        rows.push({
+          k: 'Spread entre el mejor y el peor',
+          ref: 'Diferencia de TNA',
+          v: TASAS.bancoMejor.tna - TASAS.bancoPeor.tna,
+          format: 'unit',
+          unit: 'puntos',
+          decimals: 2,
+        });
+        rows.push({ k: 'Interés en el banco que más paga', ref: dias + ' días', v: mejor, extra: true });
+        rows.push({ k: 'Interés promedio del sistema', ref: fpct(TASAS.bancosPromedio) + ' TNA', v: promedio });
+        rows.push({ k: 'Interés en el banco que menos paga', ref: dias + ' días', v: peor });
+        rows.push({ k: 'Lo que ganás por elegir bien', ref: 'Mejor − peor', v: mejor - peor, extra: true });
+        rows.push({ k: 'Saldo final en el mejor banco', ref: 'Capital + interés', v: final });
+
+        sub =
+          TASAS.bancosCantidad + ' bancos relevados · de ' + fpct(TASAS.bancoPeor.tna) + ' a ' +
+          fpct(TASAS.bancoMejor.tna) + ' TNA · elegir bien te deja ' + H.ars(mejor - peor) + ' más en ' + dias + ' días';
+      } else {
+        // Plazo fijo tradicional (caso por defecto).
+        const mensualEq = capital * (tna / 100) * (30 / 365);
+
+        rows.push({ k: 'Capital invertido', ref: 'Depósito inicial', v: capital });
+        rows.push({ k: 'TNA aplicada', ref: 'BCRA ' + TASAS.plazoFijoFecha, v: tna, ...PCT });
+        rows.push({ k: 'TEA equivalente si renovás siempre', ref: 'Interés compuesto', v: teaTrad, ...PCT });
+        rows.push({ k: 'Interés del período', ref: dias + ' días', v: interesTrad, extra: true });
+        rows.push({ k: 'Equivalente por cada 30 días', ref: 'Interés simple', v: mensualEq });
+        rows.push({ k: 'Monto final al vencimiento', ref: 'Capital + interés', v: finalTrad, extra: true });
+      }
+
+      // Rendimiento real: lo que queda después de descontar la inflación del período.
+      const gananciaReal = interes - costoInflacion;
+      const rendNominalPct = capital > 0 ? (interes / capital) * 100 : 0;
+      const rendRealPct = capital > 0 ? ((final / capital / (1 + infPeriodo)) - 1) * 100 : 0;
+
+      rows.push({ k: 'Lo que la inflación le saca al capital', ref: 'IPC del período', v: costoInflacion });
+      rows.push({
+        k: gananciaReal >= 0 ? 'Ganancia REAL (por encima de la inflación)' : 'PÉRDIDA real (te ganó la inflación)',
+        ref: 'Interés − inflación',
+        v: Math.abs(gananciaReal),
+        extra: true,
+      });
+      rows.push({ k: 'Rendimiento nominal del período', ref: dias + ' días', v: rendNominalPct, ...PCT });
+      rows.push({ k: 'Rendimiento real del período', ref: 'Descontada la inflación', v: rendRealPct, ...PCT });
+
+      if (!sub) {
+        sub =
+          fpct(tna) + ' TNA a ' + dias + ' días · ganás ' + H.ars(interes) +
+          ' · inflación estimada ' + fpct(infPeriodo * 100) + ' del período' +
+          ' · real ' + (rendRealPct >= 0 ? '+' : '−') + fpct(Math.abs(rendRealPct));
+      }
+
+      const chart = [
+        { label: 'Interés que te pagan', value: Math.round(interes), tone: 'good' },
+        { label: 'Lo que se lleva la inflación', value: Math.round(costoInflacion), tone: 'bad' },
+        {
+          label: gananciaReal >= 0 ? 'Te queda de ganancia real' : 'Perdés en términos reales',
+          value: Math.round(Math.abs(gananciaReal)),
+          tone: gananciaReal >= 0 ? 'main' : 'warn',
+        },
+      ];
+
+      return {
+        total: H.ars(final),
+        sub: sub,
+        rows: rows,
+        chart: chart,
+      };
+    });
+  })();
+</script>

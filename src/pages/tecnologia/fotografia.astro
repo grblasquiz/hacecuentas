@@ -1,0 +1,332 @@
+---
+/**
+ * Hub de decisión — "Fotos y video: cuánto ocupan y a qué resolución"
+ * Reemplaza 16 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: compute() recibe el id del caso activo como 2º
+ * argumento y cambia qué responde, no qué campos lee.
+ *
+ * La página sólo aporta datos (src/lib/hubs/fotografia.ts) y su compute().
+ * Todo el chrome, el CSS y el runtime viven en DecisionHub.astro y no se tocan.
+ *
+ * CRITERIO DE MÚLTIPLOS: base decimal en todo el hub, 1 GB = 1000 MB (la vara
+ * del fabricante de la tarjeta y la del bitrate). El valor binario que reporta
+ * el sistema operativo se calcula aparte y viaja en su propia fila, rotulado
+ * "GiB". No se mezclan nunca.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, PARAMS, MB_POR_MP, ASPECTOS } from '../../lib/hubs/fotografia';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ PARAMS, MB_POR_MP, ASPECTOS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Acá los números son GB, MB, fotos, minutos, DPI, píxeles y centímetros.
+    // Nada de pesos: formateo local y `format: 'unit'` en cada fila.
+    const dec = (n, d) => (Math.round(n * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d).replace('.', ',');
+    const miles = (n) => Math.round(n).toLocaleString('es-AR');
+
+    // Unidades reutilizadas (siempre explícitas: una fila sin `format` cae a pesos).
+    const U = {
+      gb: { format: 'unit', unit: 'GB', decimals: 2 },
+      gb1: { format: 'unit', unit: 'GB', decimals: 1 },
+      gib: { format: 'unit', unit: 'GiB', decimals: 2 },
+      mb: { format: 'unit', unit: 'MB', decimals: 1 },
+      mb2: { format: 'unit', unit: 'MB', decimals: 2 },
+      fotos: { format: 'unit', unit: 'fotos', decimals: 0 },
+      min: { format: 'unit', unit: 'min', decimals: 0 },
+      min1: { format: 'unit', unit: 'min', decimals: 1 },
+      horas: { format: 'unit', unit: 'h', decimals: 1 },
+      seg: { format: 'unit', unit: 's', decimals: 1 },
+      dpi: { format: 'unit', unit: 'DPI', decimals: 0 },
+      px: { format: 'unit', unit: 'px', decimals: 0 },
+      cm: { format: 'unit', unit: 'cm', decimals: 1 },
+      mp: { format: 'unit', unit: 'MP', decimals: 1 },
+      mbmin: { format: 'unit', unit: 'MB/min', decimals: 1 },
+      gbhora: { format: 'unit', unit: 'GB/h', decimals: 1 },
+    };
+    const row = (k, v, u, extra, ref) => {
+      const r = Object.assign({ k: k, v: v }, u);
+      if (extra) r.extra = true;
+      if (ref) r.ref = ref;
+      return r;
+    };
+
+    /** Barra de progreso: dos franjas (ocupado / libre) y el marcador en `position`. */
+    function barra(pct) {
+      const p = Math.max(0, Math.min(100, pct));
+      return [
+        { label: 'Ocupado', value: p, tone: 'warn', from: 0, to: p },
+        { label: 'Libre', value: 100 - p, tone: 'good', from: p, to: 100 },
+      ];
+    }
+
+    H.onCompute(function (v, kase) {
+      const caso = kase || 'tarjeta';
+
+      const tarjetaGb = v.tarjetaGb || 0;
+      const mp = v.megapixeles || 0;
+      const formato = String(v.formato || 'raw_comp');
+      const fotosPrevistas = Math.max(0, v.fotosPrevistas || 0);
+      const minutosVideo = Math.max(0, v.minutosVideo || 0);
+      const bitrateVideo = v.bitrateVideo || 0;
+      const bitrateAudio = Math.max(0, v.bitrateAudio || 0);
+      const aspecto = String(v.aspecto || '3:2');
+      const anchoImpresionCm = v.anchoImpresionCm || 0;
+      const dpi = v.dpi || 0;
+      const duracionSeg = v.duracionSeg || 0;
+      const fps = v.fps || 0;
+      const intervaloSeg = v.intervaloSeg || 0;
+
+      const meta = MB_POR_MP[formato] || MB_POR_MP.raw_comp;
+      // Peso medio de un archivo: megapíxeles × factor del formato.
+      const mbFoto = mp * meta.factor;
+
+      // Capacidad en base DECIMAL (1 GB = 1000 MB), la vara del fabricante.
+      const capMB = tarjetaGb * PARAMS.BASE_GB;
+      // Lo mismo en base binaria, sólo para informar qué va a mostrar el SO.
+      const capGiB = capMB / PARAMS.BASE_GIB;
+      const capUtilMB = capMB * (1 - PARAMS.MERMA_FORMATEO);
+
+      // Bitrate → MB por minuto. Mbps × 60 s ÷ 8 bits por byte.
+      const mbVideoMin = (bitrateVideo * 60) / 8;
+      const mbAudioMin = (bitrateAudio / 1000 * 60) / 8;
+      const mbMin = mbVideoMin + mbAudioMin;
+
+      const libreTxt = (mbLibres) =>
+        mbLibres >= 0
+          ? 'te quedan ' + dec(mbLibres / PARAMS.BASE_GB, 1) + ' GB'
+          : 'te pasaste por ' + dec(-mbLibres / PARAMS.BASE_GB, 1) + ' GB';
+
+      // ─────────────────────────── Rama: la tarjeta ───────────────────────────
+      if (caso === 'tarjeta') {
+        if (!mp || !tarjetaGb) {
+          return { total: '—', sub: 'Ingresá la capacidad de la tarjeta y los megapíxeles.', rows: [], chart: [] };
+        }
+        const fotosTotal = Math.floor(capMB / mbFoto);
+        const usadoFotos = fotosPrevistas * mbFoto;
+        const usadoVideo = minutosVideo * mbMin;
+        const usado = usadoFotos + usadoVideo;
+        const libre = capMB - usado;
+        const fotosEnLibre = Math.floor(Math.max(0, libre) / mbFoto);
+        const pct = capMB > 0 ? (usado / capMB) * 100 : 0;
+
+        const rows = [
+          row('Peso medio de cada foto', Number(mbFoto.toFixed(2)), U.mb2, false, meta.nombre),
+          row('Fotos que entran en la tarjeta vacía', fotosTotal, U.fotos, true),
+          row('Ocupan las ' + miles(fotosPrevistas) + ' fotos previstas', usadoFotos / PARAMS.BASE_GB, U.gb),
+          row('Ocupan los ' + miles(minutosVideo) + ' min de video', usadoVideo / PARAMS.BASE_GB, U.gb),
+          row('Total ocupado', usado / PARAMS.BASE_GB, U.gb, true),
+          row('Espacio libre', libre / PARAMS.BASE_GB, U.gb, true),
+          row('Fotos más que entran en lo libre', fotosEnLibre, U.fotos),
+          row('Minutos de video que entran en lo libre', mbMin > 0 ? Math.max(0, libre) / mbMin : 0, U.min1),
+          row('Capacidad nominal del fabricante', tarjetaGb, U.gb1, false, '1 GB = 1000 MB'),
+          row('Lo que va a mostrar el sistema operativo', capGiB, U.gib, false, '1 GiB = 1024 MiB'),
+          row('Capacidad útil tras el formateo', capUtilMB / PARAMS.BASE_GB, U.gb, false, '−3% típico'),
+        ];
+
+        return {
+          total: miles(fotosTotal) + ' fotos',
+          sub:
+            meta.nombre + ' de ' + dec(mp, 1) + ' MP: ' + dec(mbFoto, 2) + ' MB cada una · tarjeta de ' +
+            dec(tarjetaGb, 0) + ' GB (' + dec(capGiB, 1) + ' GiB en la compu) · tu plan usa ' +
+            dec(usado / PARAMS.BASE_GB, 1) + ' GB y ' + libreTxt(libre),
+          rows: rows,
+          chart: barra(pct),
+          format: 'unit',
+          unit: 'GB',
+          decimals: 2,
+          position: Number(Math.max(0, Math.min(100, pct)).toFixed(1)),
+          positionLabel: miles(fotosEnLibre) + ' fotos · ' + libreTxt(libre),
+        };
+      }
+
+      // ─────────────────────────── Rama: el video ─────────────────────────────
+      if (caso === 'video') {
+        if (!bitrateVideo || !minutosVideo) {
+          return { total: '—', sub: 'Ingresá el bitrate y los minutos de video.', rows: [], chart: [] };
+        }
+        const mbVideo = mbVideoMin * minutosVideo;
+        const mbAudio = mbAudioMin * minutosVideo;
+        const mbTotal = mbVideo + mbAudio;
+        const gbTotal = mbTotal / PARAMS.BASE_GB;
+        const pct = capMB > 0 ? (mbTotal / capMB) * 100 : 0;
+        const libre = capMB - mbTotal;
+        const pctVideo = mbTotal > 0 ? (mbVideo / mbTotal) * 100 : 0;
+
+        const rows = [
+          row('Pista de video', mbVideo, U.mb, false, dec(bitrateVideo, 1) + ' Mbps'),
+          row('Pista de audio', mbAudio, U.mb, false, dec(bitrateAudio, 0) + ' kbps'),
+          row('Tamaño total del archivo', gbTotal, U.gb, true),
+          row('Tamaño total en megabytes', mbTotal, U.mb),
+          row('Consumo por minuto', mbMin, U.mbmin),
+          row('Consumo por hora', (mbMin * 60) / PARAMS.BASE_GB, U.gbhora, true),
+          row('Minutos de este video que entran en la tarjeta', mbMin > 0 ? capMB / mbMin : 0, U.min1),
+          row('Espacio que te queda en la tarjeta', libre / PARAMS.BASE_GB, U.gb),
+          row('El mismo archivo medido en base binaria', mbTotal / PARAMS.BASE_GIB, U.gib, false, '1 GiB = 1024 MiB'),
+        ];
+
+        return {
+          total: dec(gbTotal, 2) + ' GB',
+          sub:
+            dec(minutosVideo, 0) + ' min a ' + dec(bitrateVideo, 1) + ' Mbps + audio ' + dec(bitrateAudio, 0) +
+            ' kbps = ' + dec(mbTotal, 1) + ' MB · el video se lleva el ' + dec(pctVideo, 1) + '% · ' +
+            dec((mbMin * 60) / PARAMS.BASE_GB, 1) + ' GB por hora de grabación',
+          rows: rows,
+          chart: barra(pct),
+          format: 'unit',
+          unit: 'MB',
+          decimals: 1,
+          position: Number(Math.max(0, Math.min(100, pct)).toFixed(1)),
+          positionLabel: dec(gbTotal, 2) + ' GB de ' + dec(tarjetaGb, 0) + ' GB · ' + libreTxt(libre),
+        };
+      }
+
+      // ─────────────────────────── Rama: la impresión ─────────────────────────
+      if (caso === 'impresion') {
+        const ratio = ASPECTOS[aspecto] || ASPECTOS['3:2'];
+        if (!mp || !dpi || !anchoImpresionCm) {
+          return { total: '—', sub: 'Ingresá megapíxeles, DPI y el ancho de impresión.', rows: [], chart: [] };
+        }
+        const totalPx = mp * 1e6;
+        // Los píxeles se reparten según la relación de aspecto.
+        const anchoPx = Math.round(Math.sqrt((totalPx * ratio[0]) / ratio[1]));
+        const altoPx = Math.round(Math.sqrt((totalPx * ratio[1]) / ratio[0]));
+
+        const anchoAlDpi = (anchoPx / dpi) * PARAMS.CM_POR_PULGADA;
+        const altoAlDpi = (altoPx / dpi) * PARAMS.CM_POR_PULGADA;
+        const anchoMax300 = (anchoPx / PARAMS.DPI_FOTO) * PARAMS.CM_POR_PULGADA;
+        const altoMax300 = (altoPx / PARAMS.DPI_FOTO) * PARAMS.CM_POR_PULGADA;
+
+        // DPI que te quedan si forzás el ancho pedido.
+        const dpiReal = anchoPx / (anchoImpresionCm / PARAMS.CM_POR_PULGADA);
+        // Megapíxeles que harían falta para ese ancho a los DPI elegidos.
+        const altoPedidoCm = (anchoImpresionCm * ratio[1]) / ratio[0];
+        const mpNecesarios =
+          ((anchoImpresionCm / PARAMS.CM_POR_PULGADA) * dpi * ((altoPedidoCm / PARAMS.CM_POR_PULGADA) * dpi)) / 1e6;
+
+        const pct = anchoMax300 > 0 ? (anchoImpresionCm / anchoMax300) * 100 : 0;
+        const veredicto =
+          dpiReal >= 300 ? 'calidad fotográfica' : dpiReal >= 150 ? 'bien para póster' : 'sólo para ver de lejos';
+
+        const rows = [
+          row('Píxeles del lado ancho', anchoPx, U.px, false, aspecto),
+          row('Píxeles del lado alto', altoPx, U.px, false, aspecto),
+          row('Ancho impreso a ' + dec(dpi, 0) + ' DPI', anchoAlDpi, U.cm, true),
+          row('Alto impreso a ' + dec(dpi, 0) + ' DPI', altoAlDpi, U.cm, true),
+          row('Ancho máximo con calidad fotográfica', anchoMax300, U.cm, false, '300 DPI'),
+          row('Alto máximo con calidad fotográfica', altoMax300, U.cm, false, '300 DPI'),
+          row('DPI reales si imprimís a ' + dec(anchoImpresionCm, 0) + ' cm de ancho', dpiReal, U.dpi, true),
+          row('Alto que te queda a ese ancho', altoPedidoCm, U.cm),
+          row('Megapíxeles necesarios para ese tamaño a ' + dec(dpi, 0) + ' DPI', mpNecesarios, U.mp),
+          row('Megapíxeles que tenés', mp, U.mp),
+        ];
+
+        return {
+          total: dec(anchoAlDpi, 1) + ' × ' + dec(altoAlDpi, 1) + ' cm',
+          sub:
+            dec(mp, 1) + ' MP (' + miles(anchoPx) + '×' + miles(altoPx) + ' px, ' + aspecto + ') impresos a ' +
+            dec(dpi, 0) + ' DPI · a ' + dec(anchoImpresionCm, 0) + ' cm de ancho te quedan ' + dec(dpiReal, 0) +
+            ' DPI reales: ' + veredicto,
+          rows: rows,
+          chart: barra(pct),
+          format: 'unit',
+          unit: 'cm',
+          decimals: 1,
+          position: Number(Math.max(0, Math.min(100, pct)).toFixed(1)),
+          positionLabel:
+            dec(anchoImpresionCm, 0) + ' cm pedidos · máximo nítido ' + dec(anchoMax300, 1) + ' cm a 300 DPI',
+        };
+      }
+
+      // ───────────────────── Rama: time-lapse y stop motion ───────────────────
+      if (!duracionSeg || !fps || !mp) {
+        return { total: '—', sub: 'Ingresá la duración del video, los fps y los megapíxeles.', rows: [], chart: [] };
+      }
+      const fotos = Math.ceil(duracionSeg * fps);
+      const capturaSeg = fotos * intervaloSeg;
+      const capturaHoras = capturaSeg / 3600;
+      const espacioMB = fotos * mbFoto;
+      const pct = capMB > 0 ? (espacioMB / capMB) * 100 : 0;
+      const libre = capMB - espacioMB;
+      const dur24 = fotos / 24;
+      const fluidez =
+        fps < 10 ? 'entrecortado / experimental'
+          : fps < 13 ? 'stop motion clásico'
+          : fps < 20 ? 'moderno y fluido'
+          : 'cine profesional';
+
+      const rows = [
+        row('Fotos que hay que disparar', fotos, U.fotos, true),
+        row('Fotos por segundo de video final', fps, { format: 'unit', unit: 'fps', decimals: 0 }, false, fluidez),
+        row('Tiempo de captura', capturaHoras, U.horas, true, dec(intervaloSeg, 1) + ' s de intervalo'),
+        row('Tiempo de captura en minutos', capturaSeg / 60, U.min1),
+        row('Peso medio de cada foto', Number(mbFoto.toFixed(2)), U.mb2, false, meta.nombre),
+        row('Espacio que ocupa la secuencia', espacioMB / PARAMS.BASE_GB, U.gb, true),
+        row('Espacio que te queda en la tarjeta', libre / PARAMS.BASE_GB, U.gb),
+        row('Duración si después la pasás a 24 fps', dur24, U.seg),
+        row('Fotos que entran en la tarjeta entera', Math.floor(capMB / mbFoto), U.fotos),
+      ];
+
+      return {
+        total: miles(fotos) + ' fotos',
+        sub:
+          dec(duracionSeg, 0) + ' s de video a ' + dec(fps, 0) + ' fps (' + fluidez + ') · ' +
+          dec(capturaHoras, 1) + ' h de captura con intervalo de ' + dec(intervaloSeg, 1) + ' s · ' +
+          dec(espacioMB / PARAMS.BASE_GB, 1) + ' GB en ' + meta.nombre,
+        rows: rows,
+        chart: barra(pct),
+        format: 'unit',
+        unit: 'GB',
+        decimals: 2,
+        position: Number(Math.max(0, Math.min(100, pct)).toFixed(1)),
+        positionLabel: miles(fotos) + ' fotos · ' + dec(espacioMB / PARAMS.BASE_GB, 1) + ' GB · ' + libreTxt(libre),
+      };
+    });
+  })();
+</script>

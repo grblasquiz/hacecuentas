@@ -1,0 +1,307 @@
+---
+/**
+ * Hub de decisión — "¿Qué talle soy?"
+ * Reemplaza 11 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: cuatro ramas (ropa, calzado, corpiño, anillo). El
+ * runtime de DecisionHub llena las listas de "Qué te corresponde" desde
+ * hub.cases; esta página sólo aporta los datos y compute().
+ *
+ * Nada de lo que sale acá es plata: cada fila declara `format` explícito
+ * ('unit' con cm/mm/pulgadas o 'plain' para el número de talle).
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, ROPA, CALZADO, COPAS, UK_ANILLO, SCALES } from '../../lib/hubs/talles';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ ROPA, CALZADO, COPAS, UK_ANILLO, SCALES }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    /** es-AR con los decimales que la magnitud necesita. */
+    function n1(x, d) {
+      return Number(x || 0).toLocaleString('es-AR', {
+        minimumFractionDigits: d == null ? 1 : d,
+        maximumFractionDigits: d == null ? 1 : d,
+      });
+    }
+    /** Redondeo al medio punto, que es el paso real de la numeración de calzado. */
+    const half = (x) => Math.round(x * 2) / 2;
+    const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+
+    /** Posición 0-100 sobre una escala lineal. */
+    function posOn(scale, valor) {
+      return Number(clamp(((valor - scale.min) / (scale.max - scale.min)) * 100, 0, 100).toFixed(1));
+    }
+    function segsOf(scale) {
+      return scale.bands.map((b) => ({ label: b.label, value: b.to - b.from, from: b.from, to: b.to, tone: b.tone === 'neutral' ? 'main' : b.tone }));
+    }
+
+    // ---------- ROPA ----------
+    // Fila por contorno de busto/pecho: la primera cuyo tope no superás.
+    function filaPorBusto(tabla, busto) {
+      for (let i = 0; i < tabla.length; i++) if (busto <= tabla[i].bustoMax) return tabla[i];
+      return tabla[tabla.length - 1];
+    }
+    function filaPorCintura(tabla, cintura) {
+      for (let i = 0; i < tabla.length; i++) if (cintura <= tabla[i].cinturaMax) return tabla[i];
+      return tabla[tabla.length - 1];
+    }
+    /** Escala de busto derivada de la propia tabla, con franjas contiguas. */
+    function scaleRopa(tabla) {
+      const bands = tabla.map((r, i) => ({
+        label: r.letra + ' — busto ' + r.bustoMin + ' a ' + (tabla[i + 1] ? tabla[i + 1].bustoMin : r.bustoMax) + ' cm',
+        from: r.bustoMin,
+        to: tabla[i + 1] ? tabla[i + 1].bustoMin : r.bustoMax,
+        tone: i <= 1 ? 'neutral' : i <= 3 ? 'good' : 'warn',
+      }));
+      return { min: bands[0].from, max: bands[bands.length - 1].to, unit: 'cm de busto', bands: bands };
+    }
+
+    function calcRopa(v) {
+      // La tabla de ropa es de adulto: si vino "niño/a" (que existe para calzado)
+      // caemos a la de mujer y lo decimos, en vez de mentir con un talle.
+      const esNino = v.genero === 'nino';
+      const tabla = ROPA[v.genero === 'hombre' ? 'hombre' : 'mujer'];
+      const perfil = v.genero === 'hombre' ? 'hombre' : 'mujer';
+      const busto = Number(v.busto) || 0;
+      const cintura = Number(v.cintura) || 0;
+      const cadera = Number(v.cadera) || 0;
+      const entrepierna = Number(v.entrepierna) || 0;
+
+      if (busto <= 0) {
+        return { total: '—', sub: 'Cargá el contorno de busto o pecho en centímetros.', rows: [], chart: [] };
+      }
+
+      const fila = filaPorBusto(tabla, busto);
+      const filaCintura = cintura > 0 ? filaPorCintura(tabla, cintura) : fila;
+      // Entre dos talles: mandamos el mayor, porque agrandar una prenda no se puede.
+      const idxBusto = tabla.indexOf(fila);
+      const idxCintura = tabla.indexOf(filaCintura);
+      const manda = idxCintura > idxBusto ? filaCintura : fila;
+
+      // Pantalón: misma cuenta que la calculadora de jeans, con ajuste regular
+      // (holgura 0). La cadera pesa porque un pantalón que entra en la cintura
+      // pero no en la cadera no sirve.
+      const base = Math.max(cintura, cadera * (perfil === 'mujer' ? 0.78 : 0.9));
+      const euJean = clamp(Math.round((base - 62) / 2) * 2 + 34, 30, 64);
+      const usJean = perfil === 'mujer' ? Math.max(0, Math.round((euJean - 32) / 2)) : Math.round(cintura / 2.54);
+      const w = Math.round(cintura / 2.54);
+      const l = Math.round(entrepierna / 2.54 / 2) * 2;
+
+      const rows = [
+        { k: 'Contorno de busto o pecho', ref: 'ISO 8559-1', v: busto, format: 'unit', unit: 'cm', decimals: 1 },
+        { k: 'Contorno de cintura', ref: 'ISO 8559-1', v: cintura, format: 'unit', unit: 'cm', decimals: 1 },
+        { k: 'Contorno de cadera', ref: 'ISO 8559-1', v: cadera, format: 'unit', unit: 'cm', decimals: 1 },
+        { k: 'Talle AR', ref: manda.ar + ' · ' + manda.letra, v: manda.arNum, format: 'plain', decimals: 0, extra: true },
+        { k: 'Talle EU', ref: manda.eu, v: manda.euNum, format: 'plain', decimals: 0 },
+        { k: 'Talle US', ref: manda.us, v: manda.usNum, format: 'plain', decimals: 0 },
+        { k: 'Talle UK', ref: manda.uk, v: manda.ukNum, format: 'plain', decimals: 0 },
+        { k: 'Talle de pantalón AR/EU', ref: 'Jeans', v: euJean, format: 'plain', decimals: 0, extra: true },
+        { k: 'Talle de pantalón US', ref: 'Jeans', v: usJean, format: 'plain', decimals: 0 },
+        { k: 'Jean W — cintura en pulgadas', ref: 'W' + w, v: w, format: 'unit', unit: 'pulgadas', decimals: 0 },
+        { k: 'Jean L — largo de entrepierna', ref: 'L' + l, v: l, format: 'unit', unit: 'pulgadas', decimals: 0 },
+      ];
+
+      const scale = scaleRopa(tabla);
+      const partes = [
+        'busto ' + n1(busto) + ' cm → ' + manda.letra,
+        'AR ' + manda.ar + ' · EU ' + manda.eu + ' · US ' + manda.us + ' · UK ' + manda.uk,
+        'jean AR/EU ' + euJean + ' (W' + w + '/L' + l + ')',
+      ];
+      if (idxCintura > idxBusto) partes.push('la cintura pide un talle más y ese es el que manda');
+      if (esNino) partes.push('la tabla de ropa es de adulto: en chicos el talle va por altura');
+
+      return {
+        total: manda.letra + ' · AR ' + manda.ar,
+        sub: partes.join(' · '),
+        rows: rows,
+        chart: segsOf(scale),
+        format: 'plain',
+        decimals: 0,
+        position: posOn(scale, busto),
+        positionLabel:
+          'Busto ' + n1(busto) + ' cm — talle ' + manda.letra + ' (AR ' + manda.ar + ' · EU ' + manda.eu +
+          ' · US ' + manda.us + ' · UK ' + manda.uk + ')',
+      };
+    }
+
+    // ---------- CALZADO ----------
+    function calcCalzado(v) {
+      const cfg = CALZADO[v.genero] || CALZADO.hombre;
+      const cm = Number(v.pie) || 0;
+      if (cm < 15 || cm > 35) {
+        return { total: '—', sub: 'Cargá el largo del pie en centímetros (entre 15 y 35).', rows: [], chart: [] };
+      }
+      // EU = (cm + 1,5) × 1,5 redondeado al 0,5 — punto París con 15 mm de horma.
+      const eu = Math.max(15, half((cm + 1.5) * 1.5));
+      const us = Math.max(1, half(cm - cfg.offset));
+      const uk = Math.max(0.5, us + cfg.ukDelta);
+      const ar = eu;
+
+      const rows = [
+        { k: 'Largo del pie medido', ref: 'ISO 9407', v: cm, format: 'unit', unit: 'cm', decimals: 1 },
+        { k: 'Talle AR', ref: 'igual al EU', v: ar, format: 'plain', decimals: 1, extra: true },
+        { k: 'Talle EU', ref: 'Punto París', v: eu, format: 'plain', decimals: 1 },
+        { k: 'Talle US (' + cfg.label + ')', ref: 'US', v: us, format: 'plain', decimals: 1 },
+        { k: 'Talle UK', ref: 'UK', v: uk, format: 'plain', decimals: 1 },
+        { k: 'Holgura recomendada dentro del calzado', ref: 'running / medias gruesas', v: 0.5, format: 'unit', unit: 'cm', decimals: 1 },
+        { k: 'Largo de horma sugerido', ref: 'pie + holgura', v: cm + 0.5, format: 'unit', unit: 'cm', decimals: 1 },
+      ];
+
+      const scale = SCALES.calzado;
+      return {
+        total: 'AR ' + n1(ar) + ' · US ' + n1(us),
+        sub:
+          'pie de ' + n1(cm) + ' cm (' + cfg.label + ') · AR/EU ' + n1(eu) + ' · US ' + n1(us) + ' · UK ' + n1(uk) +
+          ' · para correr o medias gruesas sumá medio talle',
+        rows: rows,
+        chart: segsOf(scale),
+        format: 'plain',
+        decimals: 1,
+        position: posOn(scale, cm),
+        positionLabel:
+          'Pie de ' + n1(cm) + ' cm — talle AR/EU ' + n1(eu) + ' (US ' + n1(us) + ' ' + cfg.label + ' · UK ' + n1(uk) + ')',
+      };
+    }
+
+    // ---------- CORPIÑO ----------
+    function calcCorpino(v) {
+      const bajo = Number(v.bajoBusto) || 0;
+      const pecho = Number(v.busto) || 0;
+      if (bajo < 55 || bajo > 130) {
+        return { total: '—', sub: 'Cargá el contorno bajo el busto en centímetros (entre 55 y 130).', rows: [], chart: [] };
+      }
+      if (pecho < 60 || pecho > 150) {
+        return { total: '—', sub: 'Cargá el contorno del busto en centímetros (entre 60 y 150).', rows: [], chart: [] };
+      }
+      // Banda: contorno bajo el busto redondeado al múltiplo de 5 (numeración EU).
+      const banda = Math.round(bajo / 5) * 5;
+      const dif = pecho - bajo;
+      // Copa: la letra cuya diferencia teórica esté más cerca de la tuya.
+      let copa = COPAS[0].letra, mejor = Infinity;
+      COPAS.forEach(function (c) {
+        const d = Math.abs(dif - c.diff);
+        if (d < mejor) { mejor = d; copa = c.letra; }
+      });
+      const copaUS = copa === 'E (DD)' ? 'DD' : copa;
+      // Banda US: contorno en pulgadas, +4 si es par y +5 si es impar.
+      const pulgadas = Math.round(bajo / 2.54);
+      const bandaUS = pulgadas % 2 === 0 ? pulgadas + 4 : pulgadas + 5;
+      const bandaAR = banda + 15;
+
+      const rows = [
+        { k: 'Contorno bajo el busto', ref: 'define la banda', v: bajo, format: 'unit', unit: 'cm', decimals: 1 },
+        { k: 'Contorno del busto', ref: 'parte más prominente', v: pecho, format: 'unit', unit: 'cm', decimals: 1 },
+        { k: 'Diferencia entre ambos', ref: 'copa ' + copa, v: dif, format: 'unit', unit: 'cm', decimals: 1, extra: true },
+        { k: 'Banda EU', ref: banda + copa, v: banda, format: 'plain', decimals: 0, extra: true },
+        { k: 'Banda AR / ES', ref: bandaAR + copa, v: bandaAR, format: 'plain', decimals: 0 },
+        { k: 'Banda US / UK', ref: bandaUS + copaUS, v: bandaUS, format: 'plain', decimals: 0 },
+      ];
+
+      const scale = SCALES.corpino;
+      return {
+        total: banda + copa,
+        sub:
+          'banda ' + banda + ' (EU) · ' + bandaAR + ' (AR) · ' + bandaUS + ' (US/UK) · copa ' + copa +
+          ' por ' + n1(dif) + ' cm de diferencia · si la banda se te sube, bajá una banda y subí una copa',
+        rows: rows,
+        chart: segsOf(scale),
+        format: 'plain',
+        decimals: 0,
+        position: posOn(scale, dif),
+        positionLabel:
+          'Diferencia de ' + n1(dif) + ' cm — copa ' + copa + ' sobre banda ' + banda + ' EU (' + bandaAR + ' AR · ' + bandaUS + copaUS + ' US/UK)',
+      };
+    }
+
+    // ---------- ANILLO ----------
+    function calcAnillo(v) {
+      const circ = Number(v.dedo) || 0;
+      if (circ < 35 || circ > 80) {
+        return { total: '—', sub: 'Cargá la circunferencia del dedo en milímetros (entre 35 y 80).', rows: [], chart: [] };
+      }
+      const diametro = circ / Math.PI;
+      const tallaEU = Math.round(circ); // AR y EU = circunferencia en mm (ISO 8653)
+      const tallaUS = Math.max(0, Number(((circ - 36.5) / 2.55).toFixed(1)));
+      const tallaES = Math.max(0, Math.round(circ - 40));
+      const idxUK = Math.round((circ - 44.2) / 1.25);
+      const tallaUK = idxUK >= 0 && idxUK < UK_ANILLO.length ? UK_ANILLO[idxUK] : '—';
+
+      const rows = [
+        { k: 'Circunferencia del dedo', ref: 'ISO 8653', v: circ, format: 'unit', unit: 'mm', decimals: 1 },
+        { k: 'Diámetro interior del anillo', ref: 'circunferencia ÷ π', v: diametro, format: 'unit', unit: 'mm', decimals: 1 },
+        { k: 'Talle AR / EU', ref: 'mm de circunferencia', v: tallaEU, format: 'plain', decimals: 0, extra: true },
+        { k: 'Talle US', ref: tallaUK !== '—' ? 'UK ' + tallaUK : 'fuera de la tabla UK', v: tallaUS, format: 'plain', decimals: 1 },
+        { k: 'Talle ES', ref: 'circunferencia − 40', v: tallaES, format: 'plain', decimals: 0 },
+        { k: 'Margen por anillo ancho (más de 6 mm)', ref: 'medio talle', v: 0.5, format: 'unit', unit: 'mm', decimals: 1 },
+      ];
+
+      const scale = SCALES.anillo;
+      return {
+        total: 'Talle ' + tallaEU,
+        sub:
+          n1(circ) + ' mm de circunferencia = ' + n1(diametro) + ' mm de diámetro · AR/EU ' + tallaEU +
+          ' · US ' + n1(tallaUS) + ' · UK ' + tallaUK + ' · ES ' + tallaES,
+        rows: rows,
+        chart: segsOf(scale),
+        format: 'plain',
+        decimals: 0,
+        position: posOn(scale, circ),
+        positionLabel:
+          'Circunferencia de ' + n1(circ) + ' mm — talle AR/EU ' + tallaEU + ' (US ' + n1(tallaUS) + ' · UK ' + tallaUK + ' · ES ' + tallaES + ')',
+      };
+    }
+
+    const BRANCH = { ropa: calcRopa, calzado: calcCalzado, corpino: calcCorpino, anillo: calcAnillo };
+
+    H.onCompute(function (v, kase) {
+      const fn = BRANCH[(kase && kase.id) || 'ropa'] || calcRopa;
+      return fn(v);
+    });
+  })();
+</script>

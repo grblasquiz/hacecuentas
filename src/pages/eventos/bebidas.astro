@@ -1,0 +1,271 @@
+---
+/**
+ * Hub de decisión — "¿Cuánta bebida compro para la fiesta?"
+ * Reemplaza 11 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo: ramificado (4 ramas, `cases`).
+ * Los consumos NO están acá: se derivan de las fórmulas reales del repo
+ * (cerveza-invitado-evento, vino-por-invitado-*, fernet-cola-*, whisky-*,
+ * gaseosa-*, agua-*, bebidas-evento-*) dentro de src/lib/hubs/bebidas-evento.ts.
+ *
+ * Lo que el hub resuelve y ninguna calc suelta hacía: reparte a los tomadores
+ * entre bebidas (para no comprar el triple), devuelve BOTELLAS y packs en vez
+ * de litros abstractos, y suma el hielo.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  RAMAS,
+  CERVEZA_LH,
+  FACTOR_VERANO,
+  LATA_CERVEZA_ML,
+  HIELO_POR_LITRO_CERVEZA,
+  CAJON_U,
+  VINO,
+  COPAS_POR_BOTELLA,
+  BOTELLA_VINO_L,
+  VASO_FERNET_ML,
+  FERNET_PCT,
+  BOTELLA_FERNET_L,
+  BOTELLA_COLA_L,
+  WHISKY_MEDIDAS_PP,
+  WHISKY_FACTOR_LARGO,
+  WHISKY_FACTOR_CORTO,
+  MEDIDA_WHISKY_ML,
+  BOTELLA_DESTILADO_L,
+  MARGEN_WHISKY,
+  GASEOSA_NINO_L,
+  GASEOSA_ADULTO_L,
+  GASEOSA_FACTOR_LARGO,
+  GASEOSA_FACTOR_CORTO,
+  BOTELLA_GASEOSA_L,
+  AGUA_PP,
+  AGUA_FACTOR_LARGO,
+  BOTELLA_AGUA_L,
+  BIDON_L,
+  PERSONAS_POR_KG_HIELO,
+} from '../../lib/hubs/bebidas-evento';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    RAMAS,
+    CERVEZA_LH,
+    FACTOR_VERANO,
+    LATA_CERVEZA_ML,
+    HIELO_POR_LITRO_CERVEZA,
+    CAJON_U,
+    VINO,
+    COPAS_POR_BOTELLA,
+    BOTELLA_VINO_L,
+    VASO_FERNET_ML,
+    FERNET_PCT,
+    BOTELLA_FERNET_L,
+    BOTELLA_COLA_L,
+    WHISKY_MEDIDAS_PP,
+    WHISKY_FACTOR_LARGO,
+    WHISKY_FACTOR_CORTO,
+    MEDIDA_WHISKY_ML,
+    BOTELLA_DESTILADO_L,
+    MARGEN_WHISKY,
+    GASEOSA_NINO_L,
+    GASEOSA_ADULTO_L,
+    GASEOSA_FACTOR_LARGO,
+    GASEOSA_FACTOR_CORTO,
+    BOTELLA_GASEOSA_L,
+    AGUA_PP,
+    AGUA_FACTOR_LARGO,
+    BOTELLA_AGUA_L,
+    BIDON_L,
+    PERSONAS_POR_KG_HIELO,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    // El desglose mezcla litros, botellas, latas, kg y pesos: NINGUNA fila puede
+    // quedar sin `format`, porque el runtime hace Object.assign y la que no lo
+    // declara cae a pesos. Las de plata declaran 'ars' igual, para que se lea
+    // explícito.
+    const U = (v, unit, decimals) => ({ v: v, format: 'unit', unit: unit, decimals: decimals || 0 });
+
+    const n = (x, d) =>
+      Number(x || 0).toLocaleString('es-AR', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+
+    /** Fernets por persona, tal como los calcula la fórmula de juntada. */
+    function fernetsPorPersona(horas) {
+      if (horas < 3) return 1.5;
+      return 2 + Math.max(0, Math.min(horas - 4, 2)) * 0.5;
+    }
+
+    H.onCompute(function (v, kase) {
+      const rama = (kase && kase.id) || 'adultos';
+      const R = RAMAS[rama] || RAMAS.adultos;
+
+      const invitados = Math.max(1, Math.round(v.invitados || 1));
+      const ninos = Math.min(invitados, Math.max(0, Math.round(v.ninos || 0)));
+      const adultos = invitados - ninos;
+      const horas = Math.min(16, Math.max(1, v.horas || 1));
+      const clima = AGUA_PP[v.clima] ? v.clima : 'templado';
+      const verano = clima === 'verano';
+      const pct = Math.min(100, Math.max(0, v.pctTomadores == null ? 80 : v.pctTomadores)) / 100;
+      const precioLitro = Math.max(0, v.precioLitro || 0);
+
+      // Los tomadores se REPARTEN entre bebidas: la misma persona no toma
+      // cerveza y fernet a la vez. Cada porción se computa con su fórmula.
+      const tomadores = adultos * pct;
+      const subCerveza = tomadores * R.cerveza;
+      const subFernet = tomadores * R.fernet;
+      const subVino = tomadores * R.vino;
+      const subWhisky = tomadores * R.whisky;
+
+      // ── Cerveza ────────────────────────────────────────────────────────
+      const lh = CERVEZA_LH[R.tipoCerveza] || CERVEZA_LH.cumpleanos;
+      const litrosCerveza = subCerveza * horas * lh * (verano ? FACTOR_VERANO : 1);
+      const latasCerveza = Math.ceil((litrosCerveza * 1000) / LATA_CERVEZA_ML);
+      const cajones = Math.ceil(latasCerveza / CAJON_U);
+
+      // ── Vino ───────────────────────────────────────────────────────────
+      const perfilVino = VINO[R.tipoVino] || VINO.cena;
+      const botellasVino = Math.ceil(subVino * horas * perfilVino.botellasPersonaHora);
+      const vinoTinto = Math.ceil(botellasVino * perfilVino.tinto);
+      const vinoBlanco = Math.ceil(botellasVino * perfilVino.blanco);
+      const vinoEspumante = Math.ceil(botellasVino * perfilVino.espumante);
+      const litrosVino = botellasVino * BOTELLA_VINO_L;
+
+      // ── Fernet con cola ────────────────────────────────────────────────
+      const fpp = fernetsPorPersona(horas);
+      const tragosFernet = fpp * subFernet;
+      const litrosFernet = (tragosFernet * VASO_FERNET_ML * FERNET_PCT) / 1000;
+      const litrosCola = (tragosFernet * VASO_FERNET_ML * (1 - FERNET_PCT)) / 1000;
+      const botellasFernet = Math.ceil(litrosFernet / BOTELLA_FERNET_L);
+
+      // ── Whisky ─────────────────────────────────────────────────────────
+      let medidasPP = WHISKY_MEDIDAS_PP[R.perfilWhisky] || WHISKY_MEDIDAS_PP.medio;
+      if (horas >= 6) medidasPP *= WHISKY_FACTOR_LARGO;
+      else if (horas <= 2) medidasPP *= WHISKY_FACTOR_CORTO;
+      const medidasWhisky = Math.round(medidasPP * subWhisky);
+      const litrosWhisky = (medidasWhisky * MEDIDA_WHISKY_ML) / 1000;
+      const botellasWhisky = Math.ceil((litrosWhisky * MARGEN_WHISKY) / BOTELLA_DESTILADO_L);
+
+      // ── Gaseosa: la suelta MÁS la cola que pide el fernet ───────────────
+      let factorGaseosa = 1;
+      if (horas >= 5) factorGaseosa = GASEOSA_FACTOR_LARGO;
+      else if (horas <= 2) factorGaseosa = GASEOSA_FACTOR_CORTO;
+      const gaseosaSuelta = (ninos * GASEOSA_NINO_L + adultos * GASEOSA_ADULTO_L) * factorGaseosa;
+      const litrosGaseosa = gaseosaSuelta + litrosCola;
+      const botellasGaseosa = Math.ceil(litrosGaseosa / BOTELLA_GASEOSA_L);
+
+      // ── Agua ───────────────────────────────────────────────────────────
+      const litrosAgua = invitados * AGUA_PP[clima] * (horas >= 6 ? AGUA_FACTOR_LARGO : 1);
+      const bidonesAgua = Math.ceil(litrosAgua / BIDON_L);
+      const botellasAgua = Math.ceil(litrosAgua / BOTELLA_AGUA_L);
+
+      // ── Hielo: el mayor de los dos criterios de bar ─────────────────────
+      const hieloKg = Math.ceil(
+        Math.max(invitados / PERSONAS_POR_KG_HIELO, litrosCerveza * HIELO_POR_LITRO_CERVEZA)
+      );
+
+      const litrosTotales = litrosCerveza + litrosVino + litrosFernet + litrosWhisky + litrosGaseosa + litrosAgua;
+      const envases = latasCerveza + botellasVino + botellasFernet + botellasWhisky + botellasGaseosa + bidonesAgua;
+      const costo = litrosTotales * precioLitro;
+
+      const rows = [
+        { k: 'Invitados que toman alcohol', ref: 'sobre ' + adultos + ' adultos, ' + Math.round(pct * 100) + '%', ...U(Math.round(tomadores), 'personas') },
+      ];
+
+      if (litrosCerveza > 0) {
+        rows.push({ k: 'Cerveza', ref: n(lh, 2) + ' L por tomador y por hora' + (verano ? ' (×' + FACTOR_VERANO + ' verano)' : ''), ...U(litrosCerveza, 'L', 1) });
+        rows.push({ k: 'Latas de cerveza de ' + LATA_CERVEZA_ML + ' ml', ref: cajones + ' cajón' + (cajones === 1 ? '' : 'es') + ' de ' + CAJON_U, ...U(latasCerveza, 'latas'), extra: true });
+      }
+      if (botellasVino > 0) {
+        rows.push({ k: 'Botellas de vino de ' + n(BOTELLA_VINO_L, 2) + ' L', ref: COPAS_POR_BOTELLA + ' copas por botella', ...U(botellasVino, 'botellas'), extra: true });
+        rows.push({ k: 'Reparto del vino', ref: vinoTinto + ' tinto · ' + vinoBlanco + ' blanco · ' + vinoEspumante + ' espumante', ...U(vinoTinto + vinoBlanco + vinoEspumante, 'botellas') });
+      }
+      if (botellasFernet > 0) {
+        rows.push({ k: 'Tragos de fernet a servir', ref: n(fpp, 1) + ' por persona · vaso de ' + VASO_FERNET_ML + ' ml', ...U(Math.round(tragosFernet), 'tragos') });
+        rows.push({ k: 'Botellas de fernet de ' + n(BOTELLA_FERNET_L, 2) + ' L', ref: 'proporción ' + Math.round(FERNET_PCT * 100) + '/' + Math.round((1 - FERNET_PCT) * 100), ...U(botellasFernet, 'botellas'), extra: true });
+      }
+      if (botellasWhisky > 0) {
+        rows.push({ k: 'Botellas de whisky de ' + n(BOTELLA_DESTILADO_L, 2) + ' L', ref: medidasWhisky + ' medidas de ' + MEDIDA_WHISKY_ML + ' ml', ...U(botellasWhisky, 'botellas'), extra: true });
+      }
+      rows.push({ k: 'Gaseosa (incluye la cola del fernet)', ref: n(litrosCola, 1) + ' L son para el fernet', ...U(litrosGaseosa, 'L', 1) });
+      rows.push({ k: 'Botellas de gaseosa de ' + n(BOTELLA_GASEOSA_L, 2) + ' L', ref: 'mitad cola, mitad sabores', ...U(botellasGaseosa, 'botellas'), extra: true });
+      rows.push({ k: 'Agua', ref: n(AGUA_PP[clima], 2) + ' L por persona · ' + clima, ...U(litrosAgua, 'L', 1) });
+      rows.push({ k: 'Bidones de agua de ' + BIDON_L + ' L', ref: 'o ' + botellasAgua + ' botellas de ' + n(BOTELLA_AGUA_L, 2) + ' L', ...U(bidonesAgua, 'bidones'), extra: true });
+      rows.push({ k: 'Hielo', ref: '1 kg cada ' + PERSONAS_POR_KG_HIELO + ' personas o ' + HIELO_POR_LITRO_CERVEZA + ' kg por litro de cerveza', ...U(hieloKg, 'kg'), extra: true });
+      rows.push({ k: 'Litros de bebida en total', ref: n(litrosTotales / invitados, 1) + ' L por cabeza', ...U(litrosTotales, 'L', 1) });
+      rows.push({ k: 'Costo estimado de la bebida', ref: '$' + n(precioLitro) + ' por litro promedio', v: costo, format: 'ars' });
+
+      const partes = [];
+      if (latasCerveza) partes.push(latasCerveza + ' latas de cerveza');
+      if (botellasVino) partes.push(botellasVino + ' de vino');
+      if (botellasFernet) partes.push(botellasFernet + ' de fernet');
+      if (botellasWhisky) partes.push(botellasWhisky + ' de whisky');
+      if (botellasGaseosa) partes.push(botellasGaseosa + ' de gaseosa');
+      if (bidonesAgua) partes.push(bidonesAgua + ' bidones de agua');
+
+      return {
+        total: n(envases) + ' envases',
+        sub:
+          partes.join(' · ') + ' · ' + hieloKg + ' kg de hielo — para ' + invitados + ' invitados' +
+          (ninos ? ' (' + ninos + ' chicos)' : '') + ' durante ' + n(horas, 1) + ' h',
+        format: 'plain',
+        rows: rows,
+        chart: [
+          { label: 'Cerveza (L)', value: Math.round(litrosCerveza), tone: 'main' },
+          { label: 'Vino (L)', value: Math.round(litrosVino), tone: 'bad' },
+          { label: 'Fernet (L)', value: Math.round(litrosFernet), tone: 'exit' },
+          { label: 'Gaseosa (L)', value: Math.round(litrosGaseosa), tone: 'prop' },
+          { label: 'Agua (L)', value: Math.round(litrosAgua), tone: 'good' },
+          { label: 'Hielo (kg)', value: hieloKg, tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

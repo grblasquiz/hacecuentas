@@ -1,0 +1,563 @@
+---
+/**
+ * Hub de decisión — "Récords y estadísticas de jugadores" (cálculo dominante).
+ * Reemplaza 17 URLs de calculadora suelta (ver hub.replaces), de las cuales 11
+ * se reimplementan en 10 métricas y 6 se absorben sólo por URL porque no
+ * comparan a la persona con un profesional (ver el comentario del módulo de
+ * datos, src/lib/hubs/estadisticas-futbol.ts).
+ *
+ * Sin `cases`: la respuesta fija sale de hub.answer y la puebla esta página,
+ * porque el runtime sólo llena esas listas cuando el hub ramifica. La
+ * ramificación real la hacen los dos select encadenados (deporte → métrica),
+ * que además esconden los campos que la métrica elegida no usa.
+ *
+ * El Mundial 2026 terminó el 19 de julio de 2026 con España campeona: todo lo
+ * que lo mencione va en pasado.
+ *
+ * Nada de este hub es dinero: cada fila declara format 'unit' o 'plain'.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  METRICAS,
+  POSICION_DISTANCIA,
+  SPRINT_BENCH,
+  PASES_BENCH,
+  PESO_BENCH,
+  WKG_TABLA,
+  CONST,
+  ESCALAS,
+  FRANJAS,
+} from '../../lib/hubs/estadisticas-futbol';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+const ANSWER = hub.answer;
+const BANDS = hub.chart.bands ?? [];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    METRICAS,
+    POS: POSICION_DISTANCIA,
+    SPRINT_BENCH,
+    PASES_BENCH,
+    PESO_BENCH,
+    WKG_TABLA,
+    CONST,
+    ESCALAS,
+    FRANJAS,
+    ANSWER,
+    BANDS,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    function n1(x) { return Number(x.toFixed(1)); }
+    function n2(x) { return Number(x.toFixed(2)); }
+    // Los valores de las filas viajan como número y los formatea el runtime.
+    // En cambio el total y el subtítulo son texto que armamos acá, así que
+    // pasan por es-AR: coma decimal, no punto.
+    function es1(x) { return Number(x).toLocaleString('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
+    function es2(x) { return Number(x).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+    /**
+     * Interpola el valor de una métrica sobre la escala 0-100 del gráfico.
+     * Los pares vienen ordenados por posición ascendente; el valor puede ir en
+     * descenso (menos es mejor) sin que cambie la cuenta.
+     */
+    function escalar(puntos, valor) {
+      if (!puntos || !puntos.length) return 0;
+      const primero = puntos[0];
+      const ultimo = puntos[puntos.length - 1];
+      const asc = ultimo[0] > primero[0];
+      const antes = asc ? valor <= primero[0] : valor >= primero[0];
+      const despues = asc ? valor >= ultimo[0] : valor <= ultimo[0];
+      if (antes) return primero[1];
+      if (despues) return ultimo[1];
+      for (let i = 0; i < puntos.length - 1; i++) {
+        const a = puntos[i], b = puntos[i + 1];
+        const dentro = asc ? valor >= a[0] && valor <= b[0] : valor <= a[0] && valor >= b[0];
+        if (dentro) {
+          const span = b[0] - a[0];
+          const k = span === 0 ? 0 : (valor - a[0]) / span;
+          return clamp(a[1] + k * (b[1] - a[1]), 0, 100);
+        }
+      }
+      return ultimo[1];
+    }
+
+    function franja(pos) {
+      for (let i = 0; i < FRANJAS.length; i++) if (pos <= FRANJAS[i].hasta) return FRANJAS[i].nombre;
+      return FRANJAS[FRANJAS.length - 1].nombre;
+    }
+
+    /** Las franjas del gráfico son siempre las mismas: sólo se mueve el marcador. */
+    function bandas() {
+      return BANDS.map(function (b) {
+        return {
+          label: b.label,
+          value: b.to - b.from,
+          from: b.from,
+          to: b.to,
+          tone: b.tone === 'good' ? 'good' : b.tone === 'bad' ? 'bad' : b.tone === 'warn' ? 'warn' : 'main',
+        };
+      });
+    }
+
+    function salida(total, sub, rows, pos, posLabel) {
+      return {
+        total: total,
+        sub: sub,
+        rows: rows,
+        chart: bandas(),
+        // Las franjas del gráfico valen puntos de la escala 0-100, no pesos.
+        // Cada fila del desglose pisa el formato con su propia unidad.
+        format: 'unit',
+        unit: 'puntos',
+        decimals: 0,
+        position: Number(clamp(pos, 0, 100).toFixed(1)),
+        positionLabel: posLabel,
+      };
+    }
+
+    // El panel de "Respuesta rápida" lo llena el runtime sólo cuando el hub
+    // ramifica. Este hub no ramifica, así que lo poblamos nosotros una vez.
+    (function fillAnswer() {
+      const put = function (id, arr) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.replaceChildren();
+        (arr || []).forEach(function (t) {
+          const li = document.createElement('li');
+          li.textContent = t;
+          el.appendChild(li);
+        });
+      };
+      put('yes-list', ANSWER.yes);
+      put('warn-list', ANSWER.warn);
+      const p = document.getElementById('plazo');
+      if (p) p.textContent = ANSWER.plazo;
+    })();
+
+    // --- select encadenados: el deporte filtra las métricas, y la métrica
+    //     decide qué campos quedan a la vista.
+    const depSel = document.getElementById('deporte');
+    const metSel = document.getElementById('metrica');
+    const SIEMPRE = ['deporte', 'metrica'];
+
+    function syncMetricas() {
+      const dep = depSel ? depSel.value : 'futbol';
+      let primera = null;
+      Array.prototype.forEach.call(metSel.options, function (o) {
+        const m = METRICAS[o.value];
+        const ok = !!m && m.deporte === dep;
+        o.hidden = !ok;
+        o.disabled = !ok;
+        if (ok && !primera) primera = o.value;
+      });
+      const actual = METRICAS[metSel.value];
+      if (!actual || actual.deporte !== dep) metSel.value = primera || metSel.value;
+    }
+
+    function syncCampos() {
+      const m = METRICAS[metSel.value] || METRICAS.distancia;
+      const visibles = SIEMPRE.concat(m.campos);
+      document.querySelectorAll('[data-field]').forEach(function (el) {
+        const caja = el.closest('.f');
+        if (caja) caja.hidden = visibles.indexOf(el.id) === -1;
+      });
+    }
+
+    function sync() { syncMetricas(); syncCampos(); }
+    if (depSel) depSel.addEventListener('change', sync);
+    if (metSel) metSel.addEventListener('change', syncCampos);
+    sync();
+
+    H.onCompute(function (v) {
+      const met = String(v.metrica || 'distancia');
+      const pos = String(v.posicion || 'mediocampista');
+
+      // ------------------------------------------- km recorridos por partido
+      if (met === 'distancia') {
+        const p = POS[pos] || POS.mediocampista;
+        const min = clamp(Number(v.minutos) || 90, 1, 130);
+        const ratio = min / 90;
+        const km = p.km90 * ratio;
+        const kmMin = p.min * ratio;
+        const kmMax = p.max * ratio;
+        const kmHI = km * p.hiPct;
+        const sprints = Math.round(p.sprints * ratio);
+        // Acá el número que se ubica en la escala es el del PROFESIONAL: esta
+        // métrica devuelve la referencia contra la que el usuario compara su
+        // GPS, no un dato propio. Por eso el marcador cae siempre en la franja
+        // profesional, y el ratio de la escala vale 1 por definición.
+        const posEsc = escalar(ESCALAS.distancia, 1);
+
+        const rows = [
+          { k: 'Distancia profesional para tu posición y minutos', v: n2(km), extra: true, format: 'unit', unit: 'km', decimals: 2 },
+          { k: 'Piso del rango profesional', ref: 'FIFA', v: n2(kmMin), format: 'unit', unit: 'km', decimals: 2 },
+          { k: 'Techo del rango profesional', ref: 'FIFA', v: n2(kmMax), format: 'unit', unit: 'km', decimals: 2 },
+          { k: 'De eso, a alta intensidad (más de 19,8 km/h)', v: n2(kmHI), format: 'unit', unit: 'km', decimals: 2 },
+          { k: 'Porcentaje del total a alta intensidad', v: Math.round(p.hiPct * 100), format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Sprints esperables en esos minutos', v: sprints, format: 'plain', decimals: 0 },
+          { k: 'Referencia profesional cada 90 minutos', v: p.km90, format: 'unit', unit: 'km', decimals: 1 },
+          { k: 'Minutos jugados', v: min, format: 'unit', unit: 'minutos', decimals: 0 },
+        ];
+
+        return salida(
+          es2(km) + ' km',
+          'Un ' + p.nombre.toLowerCase() + ' profesional recorre entre ' + es1(kmMin) + ' y ' + es1(kmMax) + ' km en ' + min +
+            ' minutos, con un promedio de ' + p.km90 + ' km cada 90. De ese total, unos ' + es2(kmHI) + ' km (' +
+            Math.round(p.hiPct * 100) + '%) son a alta intensidad: sprints y carreras por encima de 19,8 km/h, la parte que más cansa. Compará tu GPS contra ese rango.',
+          rows,
+          posEsc,
+          p.nombre + ' — referencia profesional ' + p.km90 + ' km cada 90 minutos'
+        );
+      }
+
+      // --------------------------------------------------- sprint de 30 m
+      if (met === 'sprint') {
+        const d = clamp(Number(v.distancia) || 30, 1, 120);
+        const t = Number(v.segundos) || 0;
+        if (t <= 0) return { total: 'Faltan datos', sub: 'Cargá el tiempo cronometrado en segundos.', rows: [], chart: [] };
+        const ms = d / t;
+        const kmh = ms * 3.6;
+        // El benchmark está definido sobre 30 m: normalizamos el tiempo.
+        const t30 = t * (30 / d);
+        const bench = SPRINT_BENCH[pos] || SPRINT_BENCH.mediocampista;
+        const dif = t30 - bench;
+        const posEsc = escalar(ESCALAS.sprint, t30);
+
+        const rows = [
+          { k: 'Tu tiempo llevado a 30 metros', v: n2(t30), extra: true, format: 'unit', unit: 's', decimals: 2 },
+          { k: 'Tiempo que cronometraste', v: n2(t), format: 'unit', unit: 's', decimals: 2 },
+          { k: 'Distancia del test', v: d, format: 'unit', unit: 'm', decimals: 0 },
+          { k: 'Tu velocidad promedio', v: n1(kmh), format: 'unit', unit: 'km/h', decimals: 1 },
+          { k: 'Tu velocidad en metros por segundo', v: n2(ms), format: 'unit', unit: 'm/s', decimals: 2 },
+          { k: 'Referencia élite de tu posición en 30 m', ref: 'FIFA', v: bench, format: 'unit', unit: 's', decimals: 2 },
+          { k: dif > 0 ? 'Lo que te falta para la referencia élite' : 'Lo que le sacás a la referencia élite', v: n2(Math.abs(dif)), format: 'unit', unit: 's', decimals: 2 },
+          { k: 'Umbral de récord mundial en 30 m', v: 3.55, format: 'unit', unit: 's', decimals: 2 },
+        ];
+
+        return salida(
+          es2(t30) + ' s en 30 m',
+          'Corriste ' + d + ' m en ' + es2(t) + ' s, o sea ' + es1(kmh) + ' km/h. Llevado a 30 metros son ' + es2(t30) +
+            ' s: nivel ' + franja(posEsc) + '. La referencia élite de tu posición es ' + bench.toFixed(2) + ' s, así que ' +
+            (dif > 0 ? 'te faltan ' + es2(dif) + ' s' : 'ya estás ' + es2(Math.abs(dif)) + ' s por debajo') + '.',
+          rows,
+          posEsc,
+          es2(t30) + ' s en 30 m — ' + franja(posEsc) + ' (élite de la posición: ' + bench.toFixed(2) + ' s)'
+        );
+      }
+
+      // ------------------------------------------------ velocidad del disparo
+      if (met === 'disparo') {
+        const d = clamp(Number(v.distancia) || 20, 1, 120);
+        const t = Number(v.segundos) || 0;
+        if (t <= 0) return { total: 'Faltan datos', sub: 'Cargá el tiempo de vuelo de la pelota en segundos.', rows: [], chart: [] };
+        const ms = d / t;
+        const kmh = ms * 3.6;
+        const posEsc = escalar(ESCALAS.disparo, kmh);
+        const reaccion =
+          t < 0.5 ? 'inatajable: el arquero no llega a reaccionar'
+          : t < 0.8 ? 'muy difícil: el arquero tiene que anticipar la dirección'
+          : t < 1.2 ? 'difícil: el arquero puede reaccionar si le va hacia el cuerpo'
+          : 'atajable: al arquero le sobra tiempo para reaccionar';
+
+        const rows = [
+          { k: 'Velocidad de tu disparo', v: n1(kmh), extra: true, format: 'unit', unit: 'km/h', decimals: 1 },
+          { k: 'La misma velocidad en metros por segundo', v: n2(ms), format: 'unit', unit: 'm/s', decimals: 2 },
+          { k: 'Distancia al arco', v: d, format: 'unit', unit: 'm', decimals: 0 },
+          { k: 'Tiempo de vuelo, que es lo que tiene el arquero para reaccionar', v: n2(t), format: 'unit', unit: 's', decimals: 2 },
+          { k: 'Piso del nivel profesional', v: 100, format: 'unit', unit: 'km/h', decimals: 0 },
+          { k: 'Piso del nivel élite', v: 120, format: 'unit', unit: 'km/h', decimals: 0 },
+          { k: 'Diferencia contra el piso profesional', v: n1(Math.abs(kmh - 100)), format: 'unit', unit: 'km/h', decimals: 1 },
+        ];
+
+        return salida(
+          es1(kmh) + ' km/h',
+          'Tu remate viaja a ' + es1(kmh) + ' km/h (' + es2(ms) + ' m/s) desde ' + d + ' metros: nivel ' + franja(posEsc) +
+            '. El arquero tiene ' + es2(t) + ' s para reaccionar, así que es un tiro ' + reaccion + '. Un remate profesional anda entre 100 y 120 km/h.',
+          rows,
+          posEsc,
+          es1(kmh) + ' km/h — ' + franja(posEsc)
+        );
+      }
+
+      // ------------------------------------------------ pases completados (%)
+      if (met === 'pases') {
+        const intentados = Number(v.intentos) || 0;
+        const completados = Number(v.aciertos) || 0;
+        if (intentados <= 0) return { total: 'Faltan datos', sub: 'Cargá los pases intentados.', rows: [], chart: [] };
+        if (completados > intentados) {
+          return { total: 'Revisá los datos', sub: 'Los pases completados no pueden superar a los intentados.', rows: [], chart: [] };
+        }
+        const b = PASES_BENCH[pos] || PASES_BENCH.mediocampista;
+        const pct = (completados / intentados) * 100;
+        // La escala se arma con los umbrales de la posición: el mismo 85% es
+        // élite en un delantero y flojo en un defensor central.
+        const puntos = [[Math.max(0, b.bajo - 15), 0], [b.bajo, 25], [b.medio, 50], [b.elite, 75], [b.elite + (100 - b.elite) / 2, 92], [100, 100]];
+        const posEsc = escalar(puntos, pct);
+
+        const rows = [
+          { k: 'Tu precisión de pase', v: n1(pct), extra: true, format: 'unit', unit: '%', decimals: 1 },
+          { k: 'Pases completados', v: completados, format: 'plain', decimals: 0 },
+          { k: 'Pases intentados', v: intentados, format: 'plain', decimals: 0 },
+          { k: 'Pases que erraste', v: intentados - completados, format: 'plain', decimals: 0 },
+          { k: 'Umbral élite de tu posición', ref: 'FBref', v: b.elite, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Promedio de tu posición en las top 5 ligas', ref: 'FBref', v: b.medio, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Piso de tu posición', ref: 'FBref', v: b.bajo, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Diferencia contra el umbral élite', v: n1(Math.abs(pct - b.elite)), format: 'unit', unit: '%', decimals: 1 },
+        ];
+
+        return salida(
+          es1(pct) + '%',
+          completados + ' de ' + intentados + ' pases completados dan ' + es1(pct) + '%: nivel ' + franja(posEsc) +
+            ' para la posición. En las cinco grandes ligas europeas el umbral élite de tu puesto es ' + b.elite +
+            '%, el promedio ' + b.medio + '% y el piso ' + b.bajo + '%. El mismo porcentaje se lee distinto según dónde jugues.',
+          rows,
+          posEsc,
+          es1(pct) + '% de pases — ' + franja(posEsc) + ' (élite de la posición: ' + b.elite + '%)'
+        );
+      }
+
+      // --------------------------------------------- conversión de tiros (%)
+      if (met === 'conversion') {
+        const tiros = Number(v.intentos) || 0;
+        const goles = Number(v.aciertos) || 0;
+        if (tiros <= 0) return { total: 'Faltan datos', sub: 'Cargá los tiros al arco.', rows: [], chart: [] };
+        if (goles > tiros) {
+          return { total: 'Revisá los datos', sub: 'Los goles no pueden superar a los tiros al arco.', rows: [], chart: [] };
+        }
+        const pct = (goles / tiros) * 100;
+        const posEsc = escalar(ESCALAS.conversion, pct);
+
+        const rows = [
+          { k: 'Tu conversión sobre tiros al arco', v: n1(pct), extra: true, format: 'unit', unit: '%', decimals: 1 },
+          { k: 'Goles convertidos', v: goles, format: 'plain', decimals: 0 },
+          { k: 'Tiros al arco', v: tiros, format: 'plain', decimals: 0 },
+          { k: 'Tiros al arco por cada gol', v: goles > 0 ? n1(tiros / goles) : tiros, format: 'unit', unit: 'tiros', decimals: 1 },
+          { k: 'Promedio de las top 5 ligas sobre tiros al arco', ref: 'FBref', v: 30, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Piso del promedio profesional', v: 12, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Umbral de goleador top de liga', v: 22, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Umbral de élite mundial', v: 30, format: 'unit', unit: '%', decimals: 0 },
+        ];
+
+        return salida(
+          es1(pct) + '%',
+          goles + ' goles en ' + tiros + ' tiros al arco dan ' + es1(pct) + '%: nivel ' + franja(posEsc) +
+            '. En las cinco grandes ligas europeas la conversión sobre tiros al arco promedia entre 28% y 32%, y sobre el total de remates baja a 10-12%. Un delantero top convierte entre 18% y 25% de todos sus remates.',
+          rows,
+          posEsc,
+          es1(pct) + '% de conversión — ' + franja(posEsc)
+        );
+      }
+
+      // -------------------------------------------- peso de competición (kg)
+      if (met === 'peso') {
+        const alt = clamp(Number(v.alturaCm) || 178, 140, 220);
+        const peso = clamp(Number(v.pesoKg) || 75, 35, 160);
+        const b = PESO_BENCH[pos] || PESO_BENCH.mediocampista;
+        const mts = alt / 100;
+        const ideal = b.imcBase * mts * mts + b.ajuste;
+        const pMin = ideal - 3;
+        const pMax = ideal + 3;
+        const desvio = peso - ideal;
+        const imcActual = peso / (mts * mts);
+        const posEsc = escalar(ESCALAS.peso, Math.abs(desvio));
+        const dentro = peso >= pMin && peso <= pMax;
+
+        const rows = [
+          { k: 'Peso de competición para tu altura y puesto', v: n1(ideal), extra: true, format: 'unit', unit: 'kg', decimals: 1 },
+          { k: 'Piso del rango recomendado', v: n1(pMin), format: 'unit', unit: 'kg', decimals: 1 },
+          { k: 'Techo del rango recomendado', v: n1(pMax), format: 'unit', unit: 'kg', decimals: 1 },
+          { k: 'Tu peso actual', v: n1(peso), format: 'unit', unit: 'kg', decimals: 1 },
+          { k: desvio >= 0 ? 'Kilos por encima del peso de competición' : 'Kilos por debajo del peso de competición', v: n1(Math.abs(desvio)), format: 'unit', unit: 'kg', decimals: 1 },
+          { k: 'Tu IMC actual', v: n1(imcActual), format: 'plain', decimals: 1 },
+          { k: 'IMC objetivo de tu posición', v: b.imcBase, format: 'plain', decimals: 1 },
+          { k: 'Ajuste en kilos por la demanda del puesto', v: b.ajuste, format: 'unit', unit: 'kg', decimals: 1 },
+        ];
+
+        return salida(
+          es1(ideal) + ' kg',
+          'Para ' + alt + ' cm jugando de ' + b.nombre.toLowerCase() + ', el peso de rendimiento ronda los ' + es1(ideal) +
+            ' kg, con un rango de ' + es1(pMin) + ' a ' + es1(pMax) + ' kg. Parte de un IMC objetivo de ' + b.imcBase +
+            (b.ajuste !== 0 ? ' con un ajuste de ' + (b.ajuste > 0 ? '+' : '') + b.ajuste + ' kg por la demanda física del puesto' : ' sin ajuste') +
+            '. Con ' + es1(peso) + ' kg estás ' + (dentro ? 'dentro del rango' : (desvio > 0 ? es1(desvio) + ' kg por encima' : es1(Math.abs(desvio)) + ' kg por debajo')) +
+            '. El IMC no distingue músculo de grasa: para eso hace falta una antropometría.',
+          rows,
+          posEsc,
+          es1(peso) + ' kg contra un objetivo de ' + es1(ideal) + ' kg — ' + (dentro ? 'dentro del rango de competición' : 'fuera del rango de competición')
+        );
+      }
+
+      // ---------------------------------------------------- golf: diferencial
+      if (met === 'golf-diferencial' || met === 'golf-handicap') {
+        const score = Number(v.score) || 0;
+        const cr = Number(v.courseRating) || 0;
+        const slope = Number(v.slopeRating) || 0;
+        if (!score || !cr || !slope) {
+          return { total: 'Faltan datos', sub: 'Cargá el score, el Course Rating y el Slope del campo.', rows: [], chart: [] };
+        }
+        if (slope < 55 || slope > 155) {
+          return { total: 'Revisá los datos', sub: 'El Slope Rating tiene que estar entre 55 y 155.', rows: [], chart: [] };
+        }
+        const diferencial = ((score - cr) * CONST.slopeNeutro) / slope;
+        const estimado = Math.max(0, diferencial - CONST.ajusteTresTarjetas);
+        const valor = met === 'golf-handicap' ? estimado : diferencial;
+        const sobrePar = score - cr;
+        const posEsc = escalar(ESCALAS.golf, valor);
+
+        const rows = [
+          { k: met === 'golf-handicap' ? 'Tu handicap estimado' : 'Diferencial de esta tarjeta', ref: 'WHS', v: n1(valor), extra: true, format: 'plain', decimals: 1 },
+          { k: 'Diferencial de la vuelta', v: n1(diferencial), format: 'plain', decimals: 1 },
+          { k: 'Handicap estimado con el ajuste de 3 tarjetas', v: n1(estimado), format: 'plain', decimals: 1 },
+          { k: 'Golpes por encima del Course Rating', v: n1(sobrePar), format: 'unit', unit: 'golpes', decimals: 1 },
+          { k: 'Golpes totales de tu tarjeta', v: score, format: 'unit', unit: 'golpes', decimals: 0 },
+          { k: 'Course Rating del campo', v: cr, format: 'plain', decimals: 1 },
+          { k: 'Slope Rating del campo', v: slope, format: 'plain', decimals: 0 },
+          { k: 'Slope neutro de la fórmula', v: CONST.slopeNeutro, format: 'plain', decimals: 0 },
+          { k: 'Tarjetas que pide el index oficial', v: 20, format: 'unit', unit: 'vueltas', decimals: 0 },
+        ];
+
+        return salida(
+          es1(valor),
+          'Con ' + score + ' golpes en un campo de Course Rating ' + cr + ' y Slope ' + slope + ', el diferencial es ' +
+            es1(diferencial) + ' y el handicap estimado ' + es1(estimado) + ': nivel ' + franja(posEsc) +
+            '. La fórmula es (score − Course Rating) × 113 ÷ Slope, y el ajuste de −2 es el que aplica el World Handicap System cuando hay apenas 3 tarjetas. El index oficial promedia los mejores 8 diferenciales de las últimas 20 vueltas, así que esto es una estimación.',
+          rows,
+          posEsc,
+          'Handicap ' + es1(valor) + ' — ' + franja(posEsc)
+        );
+      }
+
+      // ----------------------------------------------------- ajedrez: ELO
+      if (met === 'elo') {
+        const elo = Number(v.eloPropio) || 0;
+        const rival = Number(v.eloRival) || 0;
+        const res = Number(v.resultado);
+        if (!elo || !rival) return { total: 'Faltan datos', sub: 'Cargá tu ELO y el de tu rival.', rows: [], chart: [] };
+        const k = CONST.factorK;
+        const esperado = 1 / (1 + Math.pow(10, (rival - elo) / 400));
+        const variacion = k * (res - esperado);
+        const nuevo = elo + variacion;
+        const posEsc = escalar(ESCALAS.elo, nuevo);
+        const favorito = elo > rival;
+
+        const rows = [
+          { k: 'Tu nuevo ELO', ref: 'FIDE', v: Math.round(nuevo), extra: true, format: 'plain', decimals: 0 },
+          { k: variacion >= 0 ? 'Puntos que ganás' : 'Puntos que perdés', v: n1(Math.abs(variacion)), format: 'unit', unit: 'puntos', decimals: 1 },
+          { k: 'Tu ELO antes de la partida', v: elo, format: 'plain', decimals: 0 },
+          { k: 'ELO de tu rival', v: rival, format: 'plain', decimals: 0 },
+          { k: 'Diferencia de rating', v: Math.abs(elo - rival), format: 'unit', unit: 'puntos', decimals: 0 },
+          { k: 'Probabilidad que te daba la fórmula', v: n1(esperado * 100), format: 'unit', unit: '%', decimals: 1 },
+          { k: 'Factor K aplicado', v: k, format: 'plain', decimals: 0 },
+        ];
+
+        const resTxt = res === 1 ? 'Ganaste' : res === 0.5 ? 'Empataste' : 'Perdiste';
+
+        return salida(
+          Math.round(nuevo) + ' de ELO',
+          resTxt + ' contra un rival de ' + rival + ' siendo ' + (favorito ? 'favorito' : 'el menos favorito') +
+            ': la fórmula te daba ' + es1(esperado * 100) + '% de chances, así que ' +
+            (variacion >= 0 ? 'sumás ' + es1(variacion) : 'perdés ' + es1(Math.abs(variacion))) + ' puntos y quedás en ' +
+            Math.round(nuevo) + '. La variación es K × (resultado real − resultado esperado), con K = ' + k +
+            ', el factor que FIDE aplica a la mayoría de los jugadores.',
+          rows,
+          posEsc,
+          Math.round(nuevo) + ' de ELO — ' + franja(posEsc)
+        );
+      }
+
+      // --------------------------------------------------- ciclismo: W/kg
+      const ftp = Number(v.ftpWatts) || 0;
+      const kg = Number(v.pesoKg) || 0;
+      if (ftp <= 0 || kg <= 0) {
+        return { total: 'Faltan datos', sub: 'Cargá tu FTP en watts y tu peso en kilos.', rows: [], chart: [] };
+      }
+      const sexo = String(v.sexo || 'masculino') === 'femenino' ? 'femenino' : 'masculino';
+      const tabla = WKG_TABLA[sexo];
+      const wkg = ftp / kg;
+      let cat = tabla[tabla.length - 1];
+      for (let i = 0; i < tabla.length; i++) {
+        if (wkg >= tabla[i].desde) { cat = tabla[i]; break; }
+      }
+      // Piso de la categoría inmediatamente superior, para saber cuánto falta.
+      let siguiente = null;
+      for (let i = tabla.length - 1; i >= 0; i--) {
+        if (tabla[i].desde > wkg) { siguiente = tabla[i]; }
+      }
+      const posEsc = escalar(ESCALAS['wkg-' + sexo], wkg);
+      const wattsFaltan = siguiente ? siguiente.desde * kg - ftp : 0;
+      const kilosFaltan = siguiente ? kg - ftp / siguiente.desde : 0;
+
+      const rows = [
+        { k: 'Tu relación potencia-peso', ref: 'Coggan', v: n2(wkg), extra: true, format: 'unit', unit: 'W/kg', decimals: 2 },
+        { k: 'Tu FTP', v: ftp, format: 'unit', unit: 'W', decimals: 0 },
+        { k: 'Tu peso', v: n1(kg), format: 'unit', unit: 'kg', decimals: 1 },
+        { k: 'Piso de tu categoría actual', v: cat.desde, format: 'unit', unit: 'W/kg', decimals: 2 },
+        { k: siguiente ? 'Piso de la categoría siguiente' : 'Ya estás en la categoría más alta de la tabla', v: siguiente ? siguiente.desde : cat.desde, format: 'unit', unit: 'W/kg', decimals: 2 },
+        { k: 'Watts que te faltan para subir de categoría', v: Math.max(0, Math.round(wattsFaltan)), format: 'unit', unit: 'W', decimals: 0 },
+        { k: 'Kilos que tendrías que bajar para el mismo salto', v: Math.max(0, n1(kilosFaltan)), format: 'unit', unit: 'kg', decimals: 1 },
+      ];
+
+      return salida(
+        es2(wkg) + ' W/kg',
+        ftp + ' W de FTP sobre ' + es1(kg) + ' kg dan ' + es2(wkg) + ' W/kg: categoría ' + cat.categoria + ' (' + cat.descripcion +
+          ') en la tabla Coggan ' + (sexo === 'femenino' ? 'femenina' : 'masculina') + '.' +
+          (siguiente
+            ? ' Para llegar a ' + siguiente.categoria + ' necesitás ' + Math.max(0, Math.round(wattsFaltan)) +
+              ' W más de FTP, o bajar ' + Math.max(0, es1(kilosFaltan)) + ' kg manteniendo la potencia.'
+            : ' Ya estás en el escalón más alto de la tabla.'),
+        rows,
+        posEsc,
+        es2(wkg) + ' W/kg — ' + cat.categoria + ' (' + franja(posEsc) + ')'
+      );
+    });
+  })();
+</script>

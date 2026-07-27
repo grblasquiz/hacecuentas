@@ -1,0 +1,412 @@
+---
+/**
+ * Hub de decisión — "Presión, densidad y gases: convertir y calcular"
+ * Reemplaza 11 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: 4 casos (convertir / altitud / hidrostática / gases).
+ * El runtime llena las listas de "Qué te corresponde" desde `cases`.
+ *
+ * La página sólo aporta datos (src/lib/hubs/presion-y-gases.ts) y compute().
+ * NADA acá es plata: cada fila declara format 'unit' con su unidad propia.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, UNITS, CONST, SCALE } from '../../lib/hubs/presion-y-gases';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+const BANDS = hub.chart.bands ?? [];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ UNITS, C: CONST, SCALE, BANDS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Nada de este hub es plata. El runtime hace Object.assign y una fila sin
+    // `format` propio caería a pesos con "$": se declara en TODAS.
+    const PA = { format: 'unit', unit: 'Pa', decimals: 2 };
+    const HPA = { format: 'unit', unit: 'hPa', decimals: 2 };
+    const KPA = { format: 'unit', unit: 'kPa', decimals: 3 };
+    const BAR = { format: 'unit', unit: 'bar', decimals: 5 };
+    const ATM = { format: 'unit', unit: 'atm', decimals: 5 };
+    const PSI = { format: 'unit', unit: 'psi', decimals: 4 };
+    const MMHG = { format: 'unit', unit: 'mmHg', decimals: 2 };
+    const M = { format: 'unit', unit: 'm', decimals: 2 };
+    const CEL = { format: 'unit', unit: '°C', decimals: 2 };
+    const KEL = { format: 'unit', unit: 'K', decimals: 2 };
+    const PCT = { format: 'unit', unit: '%', decimals: 2 };
+    const LTS = { format: 'unit', unit: 'L', decimals: 4 };
+    const MOL = { format: 'unit', unit: 'mol', decimals: 6 };
+    const KGM3 = { format: 'unit', unit: 'kg/m³', decimals: 4 };
+    const GCM3 = { format: 'unit', unit: 'g/cm³', decimals: 4 };
+    const LMOL = { format: 'unit', unit: 'L/mol', decimals: 4 };
+
+    const row = (k, v, fmt, extra, ref) => Object.assign({ k: k, v: v, extra: !!extra, ref: ref }, fmt);
+
+    /** Formato humano con decimales adaptativos (para los textos, no las filas). */
+    function fmt(n, d) {
+      if (!isFinite(n)) return '—';
+      if (d == null) {
+        const abs = Math.abs(n);
+        if (abs === 0) d = 0;
+        else if (abs < 0.0001) d = 10;
+        else if (abs < 0.01) d = 7;
+        else if (abs < 1) d = 5;
+        else if (abs < 1000) d = 4;
+        else d = 2;
+      }
+      return Number(n).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: d });
+    }
+
+    /**
+     * Decimales para que una fila conserve ~7 cifras significativas.
+     * Sin esto, 1,602e-19 eV o 0,00064 bar colapsarían a "0".
+     */
+    function decFor(n) {
+      const abs = Math.abs(Number(n) || 0);
+      if (!isFinite(abs) || abs === 0) return 2;
+      const exp = Math.floor(Math.log10(abs));
+      return Math.max(2, Math.min(14, 6 - exp));
+    }
+
+    /** Posición 0-100 sobre la regla logarítmica de presión (1 Pa → 100 MPa). */
+    function posPa(pa) {
+      if (!(pa > 0)) return 0;
+      const lo = Math.log10(SCALE.minPa), hi = Math.log10(SCALE.maxPa);
+      return Math.max(0, Math.min(100, ((Math.log10(pa) - lo) / (hi - lo)) * 100));
+    }
+
+    /** Franjas del gráfico: DÉCADAS logarítmicas, no pascales crudos. */
+    function bandas() {
+      return BANDS.map(function (b) {
+        return {
+          label: b.label,
+          value: Math.log10(b.to) - Math.log10(b.from),
+          tone: b.tone === 'good' ? 'good' : b.tone === 'bad' ? 'bad' : b.tone === 'warn' ? 'warn' : 'main',
+        };
+      });
+    }
+
+    /** Referencia reconocible más cercana, en escala logarítmica. */
+    function referencia(pa) {
+      if (!(pa > 0)) return '';
+      let ref = SCALE.refs[0];
+      SCALE.refs.forEach(function (r) {
+        if (Math.abs(Math.log10(r.pa) - Math.log10(pa)) < Math.abs(Math.log10(ref.pa) - Math.log10(pa))) ref = r;
+      });
+      const veces = pa / ref.pa;
+      if (Math.abs(veces - 1) < 0.03) return 'prácticamente ' + ref.label;
+      return veces >= 1 ? fmt(veces, 2) + ' veces ' + ref.label : 'un ' + fmt(veces * 100, 1) + '% de ' + ref.label;
+    }
+
+    /** Presión barométrica ICAO: P = P0 · (1 − L·h/T0)^5,25588. */
+    function baroPa(hMetros, p0Pa) {
+      const ratio = 1 - (C.LAPSE * hMetros) / C.T0_K;
+      if (ratio <= 0) return 0;
+      return p0Pa * Math.pow(ratio, C.BARO_EXP);
+    }
+
+    /**
+     * Punto de ebullición del agua a una presión dada.
+     * Antoine (Stull) invertido: log10(P_mmHg) = A − B/(C + T°C),
+     * con A = 8,07131, B = 1730,63, C = 233,426 (rango 1-100 °C).
+     */
+    function ebullicion(paAbs) {
+      const mmHg = paAbs / UNITS.mmhg.f;
+      if (!(mmHg > 0)) return NaN;
+      const A = 8.07131, B = 1730.63, Cc = 233.426;
+      return B / (A - Math.log10(mmHg)) - Cc;
+    }
+
+    // Los dos select listan las 29 unidades de las tres familias: dejamos
+    // visibles sólo las de la familia elegida, así nadie pide "atm a joules".
+    const famSel = document.getElementById('familia');
+    const desdeSel = document.getElementById('desde');
+    const hastaSel = document.getElementById('hasta');
+    const DEFAULTS = { presion: ['atm', 'psi'], energia: ['cal', 'j'], potencia: ['kw', 'hp'] };
+
+    function syncOptions() {
+      const fam = famSel ? famSel.value : 'presion';
+      [desdeSel, hastaSel].forEach(function (sel, idx) {
+        if (!sel) return;
+        let vale = false;
+        Array.prototype.forEach.call(sel.options, function (o) {
+          const u = UNITS[o.value];
+          const ok = !!u && u.fam === fam;
+          o.hidden = !ok;
+          o.disabled = !ok;
+          if (ok && o.value === sel.value) vale = true;
+        });
+        if (!vale) sel.value = (DEFAULTS[fam] || DEFAULTS.presion)[idx];
+      });
+    }
+    if (famSel) famSel.addEventListener('change', syncOptions);
+    syncOptions();
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'convertir';
+
+      // ── Rama 1: convertir unidades ───────────────────────────────────────
+      if (id === 'convertir') {
+        const uD = UNITS[String(v.desde)] || UNITS.atm;
+        const uH = UNITS[String(v.hasta)] || UNITS.psi;
+        const valor = Number(v.valor) || 0;
+        if (uD.fam !== uH.fam) {
+          return {
+            total: '—',
+            sub:
+              'No se puede convertir ' + uD.name.toLowerCase() + ' a ' + uH.name.toLowerCase() +
+              ': son magnitudes distintas. Elegí la misma familia en el primer selector.',
+            rows: [],
+            chart: [],
+          };
+        }
+        const base = valor * uD.f;      // en Pa, J o W según la familia
+        const salida = base / uH.f;
+        const factor = uD.f / uH.f;
+
+        const rows = [];
+        Object.keys(UNITS).forEach(function (k) {
+          const u = UNITS[k];
+          if (u.fam !== uD.fam) return;
+          const val = base / u.f;
+          rows.push(
+            Object.assign(
+              { k: u.name, v: val, extra: k === String(v.hasta) },
+              { format: 'unit', unit: u.sym, decimals: decFor(val) }
+            )
+          );
+        });
+
+        const esPresion = uD.fam === 'presion';
+        const pa = esPresion ? base : 0;
+        const comp = esPresion ? referencia(pa) : '';
+        if (esPresion) {
+          rows.push(row('Presión manométrica equivalente (restando 1 atm)', pa - C.P0_PA, PA));
+          rows.push(row('Cuántas atmósferas es', pa / C.P0_PA, ATM, false, '1 atm = 101.325 Pa exactos'));
+        }
+
+        return {
+          total: fmt(salida) + ' ' + uH.sym,
+          sub:
+            fmt(valor) + ' ' + uD.sym + ' = ' + fmt(salida) + ' ' + uH.sym +
+            ' · factor exacto: 1 ' + uD.sym + ' = ' + fmt(factor) + ' ' + uH.sym +
+            (comp ? ' · ' + comp : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'década',
+          decimals: 2,
+          position: esPresion ? Number(posPa(pa).toFixed(1)) : 0,
+          positionLabel: esPresion
+            ? fmt(salida) + ' ' + uH.sym + ' = ' + fmt(pa, 2) + ' Pa' + (comp ? ' — ' + comp : '')
+            : fmt(salida) + ' ' + uH.sym + ' — la regla de abajo es de presión, esta conversión no es de presión',
+        };
+      }
+
+      // ── Rama 2: presión según la altitud ─────────────────────────────────
+      if (id === 'altitud') {
+        const h = Number(v.altitud) || 0;
+        const p0hPa = Number(v.presionMar) || 1013.25;
+        const p0Pa = p0hPa * 100;
+        const pa = baroPa(h, p0Pa);
+        if (!(pa > 0)) {
+          return { total: '—', sub: 'Altitud fuera del rango del modelo estándar (hasta 20.000 m).', rows: [], chart: [] };
+        }
+        const pct = (pa / p0Pa) * 100;
+        const tK = C.T0_K - C.LAPSE * h;
+        const rho = pa / (C.R_AIRE * tK);
+        const teb = ebullicion(pa);
+
+        const rows = [
+          row('Presión atmosférica a esa altitud', pa / 100, HPA, true),
+          row('En kilopascales', pa / 1000, KPA),
+          row('En atmósferas', pa / C.P0_PA, ATM),
+          row('En milímetros de mercurio', pa / UNITS.mmhg.f, MMHG),
+          row('En psi', pa / UNITS.psi.f, PSI),
+          row('Porcentaje respecto del nivel del mar', pct, PCT, true, 'gobierna el oxígeno disponible'),
+          row('Temperatura estándar a esa altura', tK - C.CERO_K, CEL, false, 'gradiente ICAO 6,5 °C/km'),
+          row('Temperatura estándar en kelvin', tK, KEL),
+          row('Densidad del aire a esa altitud', rho, KGM3, false, 'ρ = P/(R_aire·T)'),
+          row('Densidad relativa vs nivel del mar', (rho / C.RHO0) * 100, PCT),
+          row('El agua hierve a', teb, CEL, true, 'ecuación de Antoine'),
+          row('Altitud considerada', h, M),
+        ];
+
+        const comp = referencia(pa);
+        return {
+          total: fmt(pa / 100, 1) + ' hPa',
+          sub:
+            'A ' + fmt(h, 0) + ' m la presión es de ' + fmt(pa / 100, 1) + ' hPa (' + fmt(pct, 1) +
+            '% del nivel del mar) · ' + fmt(pa / UNITS.mmhg.f, 1) + ' mmHg · el agua hierve a ' +
+            fmt(teb, 1) + ' °C' + (comp ? ' · ' + comp : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'década',
+          decimals: 2,
+          position: Number(posPa(pa).toFixed(1)),
+          positionLabel: fmt(pa / 100, 1) + ' hPa a ' + fmt(h, 0) + ' m — ' + fmt(pct, 1) + '% del nivel del mar',
+        };
+      }
+
+      // ── Rama 3: presión hidrostática ─────────────────────────────────────
+      if (id === 'hidrostatica') {
+        const rho = Number(v.densidad) || 0;
+        const prof = Number(v.profundidad) || 0;
+        const g = Number(v.gravedad) || C.G0;
+        if (!(rho > 0) || !(prof >= 0)) {
+          return { total: '—', sub: 'Completá una densidad mayor a cero y una profundidad válida.', rows: [], chart: [] };
+        }
+        const pMan = rho * g * prof;          // presión de la columna (manométrica)
+        const pAbs = pMan + C.P0_PA;          // sumando la atmósfera de la superficie
+        const porAtm = C.P0_PA / (rho * g);   // metros que suman 1 atm con ese fluido
+
+        const rows = [
+          row('Presión de la columna (manométrica)', pMan, PA, true, 'P = ρ·g·h'),
+          row('En bar', pMan / UNITS.bar.f, BAR),
+          row('En psi', pMan / UNITS.psi.f, PSI),
+          row('En atmósferas', pMan / C.P0_PA, ATM),
+          row('Presión atmosférica de la superficie', C.P0_PA, PA, false, '1 atm exacta'),
+          row('Presión total absoluta', pAbs, PA, true),
+          row('Presión absoluta en bar', pAbs / UNITS.bar.f, BAR),
+          row('Presión absoluta en atmósferas', pAbs / C.P0_PA, ATM, true),
+          row('Metros que suman una atmósfera con este fluido', porAtm, M, false, 'regla del buceo'),
+          row('Columna equivalente en metros de agua', pMan / UNITS.mh2o.f, M),
+          row('Densidad del fluido en g/cm³', rho / 1000, GCM3),
+          row('Gravedad usada', g, { format: 'unit', unit: 'm/s²', decimals: 5 }),
+        ];
+
+        const comp = referencia(pAbs);
+        return {
+          total: fmt(pMan / UNITS.bar.f, 3) + ' bar',
+          sub:
+            'A ' + fmt(prof, 1) + ' m en un fluido de ' + fmt(rho, 0) + ' kg/m³: ' +
+            fmt(pMan / UNITS.bar.f, 3) + ' bar de columna y ' + fmt(pAbs / C.P0_PA, 2) +
+            ' atmósferas absolutas · cada ' + fmt(porAtm, 2) + ' m suman 1 atm' + (comp ? ' · ' + comp : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'década',
+          decimals: 2,
+          position: Number(posPa(pAbs).toFixed(1)),
+          positionLabel:
+            fmt(pAbs / C.P0_PA, 2) + ' atm absolutas a ' + fmt(prof, 1) + ' m de profundidad',
+        };
+      }
+
+      // ── Rama 4: ley de los gases ideales ─────────────────────────────────
+      const inc = String(v.gasIncognita || 'volumen');
+      let P = Number(v.gasP) || 0;      // atm
+      let V = Number(v.gasV) || 0;      // L
+      let n = Number(v.gasN) || 0;      // mol
+      let T = (Number(v.gasT) || 0) + C.CERO_K; // K
+      const R = C.R_LATM;
+      const MOLAR = Number(v.masaMolar) || 0;
+
+      let despejada = '';
+      if (inc === 'presion') {
+        if (!(V > 0) || !(n > 0) || !(T > 0)) {
+          return { total: '—', sub: 'Para despejar la presión hacen falta volumen, moles y temperatura mayores a cero.', rows: [], chart: [] };
+        }
+        P = (n * R * T) / V;
+        despejada = 'P = ' + fmt(P, 6) + ' atm';
+      } else if (inc === 'volumen') {
+        if (!(P > 0) || !(n > 0) || !(T > 0)) {
+          return { total: '—', sub: 'Para despejar el volumen hacen falta presión, moles y temperatura mayores a cero.', rows: [], chart: [] };
+        }
+        V = (n * R * T) / P;
+        despejada = 'V = ' + fmt(V, 6) + ' L';
+      } else if (inc === 'moles') {
+        if (!(P > 0) || !(V > 0) || !(T > 0)) {
+          return { total: '—', sub: 'Para despejar los moles hacen falta presión, volumen y temperatura mayores a cero.', rows: [], chart: [] };
+        }
+        n = (P * V) / (R * T);
+        despejada = 'n = ' + fmt(n, 6) + ' mol';
+      } else {
+        if (!(P > 0) || !(V > 0) || !(n > 0)) {
+          return { total: '—', sub: 'Para despejar la temperatura hacen falta presión, volumen y moles mayores a cero.', rows: [], chart: [] };
+        }
+        T = (P * V) / (n * R);
+        despejada = 'T = ' + fmt(T, 2) + ' K (' + fmt(T - C.CERO_K, 2) + ' °C)';
+      }
+
+      const paGas = P * C.P0_PA;
+      const volMolar = n > 0 ? V / n : 0;
+      const masaG = MOLAR > 0 ? n * MOLAR : 0;
+      const rhoGas = V > 0 && masaG > 0 ? masaG / V : 0; // g/L = kg/m³
+
+      const rows = [
+        row('Presión', P, ATM, inc === 'presion'),
+        row('Presión en pascales', paGas, PA),
+        row('Presión en kPa', paGas / 1000, KPA),
+        row('Volumen', V, LTS, inc === 'volumen'),
+        row('Cantidad de sustancia', n, MOL, inc === 'moles'),
+        row('Temperatura', T, KEL, inc === 'temperatura', 'K = °C + 273,15'),
+        row('Temperatura en Celsius', T - C.CERO_K, CEL),
+        row('Volumen molar en estas condiciones', volMolar, LMOL, false, 'en CNPT da 22,414 L/mol'),
+        row('Constante R usada', R, { format: 'unit', unit: 'L·atm/(mol·K)', decimals: 9 }, false, 'R_SI / 101,325'),
+        row('R en unidades del SI', C.R_SI, { format: 'unit', unit: 'J/(mol·K)', decimals: 11 }, false, 'exacta desde 2019'),
+      ];
+      if (masaG > 0) {
+        rows.push(row('Masa del gas', masaG, { format: 'unit', unit: 'g', decimals: 4 }));
+        rows.push(row('Densidad del gas', rhoGas, KGM3, false, 'ρ = m/V, en g/L equivale a kg/m³'));
+      }
+
+      const comp = referencia(paGas);
+      return {
+        total: despejada,
+        sub:
+          'PV = nRT · P = ' + fmt(P, 4) + ' atm · V = ' + fmt(V, 4) + ' L · n = ' + fmt(n, 4) +
+          ' mol · T = ' + fmt(T, 2) + ' K (' + fmt(T - C.CERO_K, 2) + ' °C)' + (comp ? ' · la presión es ' + comp : ''),
+        rows: rows,
+        chart: bandas(),
+        format: 'unit',
+        unit: 'década',
+        decimals: 2,
+        position: Number(posPa(paGas).toFixed(1)),
+        positionLabel: despejada + ' — presión del gas ' + fmt(P, 4) + ' atm',
+      };
+    });
+  })();
+</script>

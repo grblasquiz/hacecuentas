@@ -1,0 +1,312 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto alcohol, sol y pantalla me hacen bien?"
+ * Reemplaza 18 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo ramificado: la rama activa llega como segundo argumento de
+ * compute() (el objeto HubCase que expone DecisionHub).
+ *
+ * OJO CON EL FORMATO: acá no hay pesos. Cada fila declara su propio
+ * `format` ('unit' con g/L, min, h, pasos, pausas, o 'plain'). Una fila sin
+ * `format` cae a pesos y la página miente.
+ *
+ * RAMA ALCOHOL: el copy jamás dice que se puede manejar. El `sub` de esa rama
+ * termina SIEMPRE en "si tomaste, no manejés", esté donde esté el número.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  GRAMOS_TRAGO,
+  ALCOHOL,
+  FOTOTIPO_MIN,
+  VITD_BASE_MIN,
+  SOL,
+  PROTOCOLO_HORAS,
+  PANTALLAS,
+  PASOS_META,
+} from '../../lib/hubs/habitos';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ GRAMOS_TRAGO, ALCOHOL, FOTOTIPO_MIN, VITD_BASE_MIN, SOL, PROTOCOLO_HORAS, PANTALLAS, PASOS_META }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    const nf = (n, d) => Number(n || 0).toLocaleString('es-AR', {
+      minimumFractionDigits: d || 0, maximumFractionDigits: d || 0,
+    });
+    const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+
+    H.onCompute(function (v, caso) {
+      const rama = (caso && caso.id) || 'alcohol';
+
+      // ───────────────────────── ALCOHOL EN SANGRE ─────────────────────────
+      // Widmark: BAC = gramos / (peso × r) − 0,15 × horas.
+      // El mensaje NUNCA habilita a conducir, esté donde esté el número.
+      if (rama === 'alcohol') {
+        const peso = Number(v.peso) || 0;
+        const sexo = String(v.sexo || 'm');
+        const bebidas = Math.max(0, Number(v.bebidas) || 0);
+        const horas = Math.max(0, Number(v.horas) || 0);
+        const gPorTrago = GRAMOS_TRAGO[String(v.tipoBebida || 'cerveza_500')] || 14;
+
+        if (!peso) {
+          return { total: '—', sub: 'Ingresá tu peso corporal. Y si tomaste, no manejés.', rows: [], chart: [] };
+        }
+
+        const gramos = gPorTrago * bebidas;
+        const r = sexo === 'f' ? ALCOHOL.R_F : ALCOHOL.R_M;
+        const bruto = gramos / (peso * r);
+        const bac = Math.max(0, bruto - ALCOHOL.ELIMINACION_HORA * horas);
+        const horasCero = bac > 0 ? bac / ALCOHOL.ELIMINACION_HORA : 0;
+
+        const rows = [
+          { k: 'Alcohol ingerido', ref: String(bebidas) + ' tragos', v: Number(gramos.toFixed(1)), format: 'unit', unit: 'g', decimals: 1 },
+          { k: 'Alcoholemia al terminar de tomar', ref: 'Widmark', v: Number(bruto.toFixed(2)), format: 'unit', unit: 'g/L', decimals: 2 },
+          { k: 'Ya metabolizado', ref: '0,15 g/L por hora', v: Number(Math.min(bruto, ALCOHOL.ELIMINACION_HORA * horas).toFixed(2)), format: 'unit', unit: 'g/L', decimals: 2 },
+          { k: 'Alcoholemia estimada ahora', v: Number(bac.toFixed(2)), extra: true, format: 'unit', unit: 'g/L', decimals: 2 },
+          { k: 'Horas hasta llegar a cero', v: Number(horasCero.toFixed(1)), format: 'unit', unit: 'h', decimals: 1 },
+          { k: 'Límite legal general (auto)', ref: 'ley 24.449 art. 48', v: ALCOHOL.LIMITE_GENERAL, format: 'unit', unit: 'g/L', decimals: 1 },
+          { k: 'Límite legal en moto', ref: 'ley 24.449 art. 48', v: ALCOHOL.LIMITE_MOTO, format: 'unit', unit: 'g/L', decimals: 1 },
+          { k: 'Límite legal profesional', ref: 'ley 24.449 art. 48', v: ALCOHOL.LIMITE_PROFESIONAL, format: 'unit', unit: 'g/L', decimals: 1 },
+        ];
+
+        const tope = ALCOHOL.ESCALA_MAX;
+        const chart = [
+          { label: 'Hasta 0,5 g/L (tope general)', value: 0.5, from: 0, to: 0.5, tone: 'good' },
+          { label: '0,5 a 0,8 — sobre el límite', value: 0.3, from: 0.5, to: 0.8, tone: 'warn' },
+          { label: '0,8 a 1,5 — embriaguez', value: 0.7, from: 0.8, to: 1.5, tone: 'bad' },
+          { label: '1,5 o más — riesgo de intoxicación', value: 1, from: 1.5, to: tope, tone: 'bad' },
+        ];
+
+        const estado = bac === 0
+          ? 'sin alcohol detectable'
+          : bac < ALCOHOL.LIMITE_MOTO ? 'por debajo del tope de moto, pero con reflejos ya afectados'
+          : bac < ALCOHOL.LIMITE_GENERAL ? 'por debajo del tope general, con reflejos y juicio afectados'
+          : bac < 0.8 ? 'por encima del límite legal'
+          : bac < 1.5 ? 'embriaguez: coordinación comprometida'
+          : 'nivel peligroso, riesgo de intoxicación aguda';
+
+        const sub = bac === 0
+          ? 'Ya metabolizaste lo que tomaste según la estimación. Igual, si tomaste, no manejés: Widmark puede errarle 30%.'
+          : nf(bac, 2) + ' g/L estimados · ' + estado + ' · faltan unas ' + nf(horasCero, 1) +
+            ' h para llegar a cero. SI TOMASTE, NO MANEJÉS: pedí un remis o que maneje alguien que no tomó.';
+
+        return {
+          total: nf(bac, 2) + ' g/L',
+          sub: sub,
+          rows: rows,
+          chart: chart,
+          format: 'unit',
+          unit: 'g/L',
+          decimals: 2,
+          position: clamp((bac / tope) * 100, 0, 100),
+          positionLabel: nf(bac, 2) + ' g/L — ' + estado + '. No manejés.',
+        };
+      }
+
+      // ─────────────────────────── SOL Y PROTECTOR ──────────────────────────
+      if (rama === 'sol') {
+        const foto = String(v.fototipo || 'III');
+        const spf = clamp(Number(v.spf) || 30, 2, 100);
+        const lat = clamp(Number(v.latitud) || 34, 0, 65);
+        const estacion = String(v.estacion || 'verano');
+
+        const auto = FOTOTIPO_MIN[foto] || 15;
+        const protegido = auto * spf * SOL.FACTOR_APLICACION;
+
+        // Vitamina D: base por fototipo, ajustada por latitud y estación.
+        let vitd = VITD_BASE_MIN[foto] || 18;
+        if (lat > 45) vitd *= 1.5;
+        else if (lat > 35) vitd *= 1.2;
+        else if (lat < 20) vitd *= 0.8;
+        const invSinUvb = estacion === 'invierno' && lat > 35;
+        vitd = invSinUvb ? 0 : vitd * (SOL.ESTACION[estacion] ?? 1);
+
+        const rows = [
+          { k: 'Minutos que tu piel aguanta sin protector', ref: 'fototipo ' + foto, v: Math.round(auto), extra: true, format: 'unit', unit: 'min', decimals: 0 },
+          { k: 'Minutos con protector bien aplicado', ref: 'SPF ' + spf + ' × 0,6', v: Math.round(protegido), format: 'unit', unit: 'min', decimals: 0 },
+          { k: 'Equivale en horas de protección teórica', v: Number((protegido / 60).toFixed(1)), format: 'unit', unit: 'h', decimals: 1 },
+          { k: 'Minutos de sol para vitamina D', ref: 'sin protector, 3-4 veces por semana', v: Math.round(vitd), format: 'unit', unit: 'min', decimals: 0 },
+          { k: 'Reaplicación del protector', v: 2, format: 'unit', unit: 'h', decimals: 0 },
+          { k: 'Radiación UV filtrada por el SPF', ref: '1 − 1/SPF', v: Number((100 - 100 / spf).toFixed(1)), format: 'unit', unit: '%', decimals: 1 },
+          { k: 'Superficie de piel a exponer para vitamina D', v: 20, format: 'unit', unit: '%', decimals: 0 },
+        ];
+
+        const tope = SOL.ESCALA_MAX;
+        const chart = [
+          { label: 'Hasta 10 min — piel muy sensible', value: 10, from: 0, to: 10, tone: 'bad' },
+          { label: '10 a 20 min — sensible', value: 10, from: 10, to: 20, tone: 'warn' },
+          { label: '20 a 40 min — tolerancia media', value: 20, from: 20, to: 40, tone: 'good' },
+          { label: '40 a 60 min — tolerancia alta', value: 20, from: 40, to: tope, tone: 'good' },
+        ];
+
+        const sub = (invSinUvb
+          ? 'En invierno a ' + nf(lat) + '° de latitud el sol no genera UVB útil: la vitamina D no se sintetiza y eso se resuelve con un profesional, no con sol de más. '
+          : 'Con ' + nf(Math.round(vitd)) + ' min de sol sin protector, 3-4 veces por semana, cubrís la síntesis de vitamina D. ') +
+          'Con SPF ' + spf + ' llegás a unos ' + nf(Math.round(protegido)) + ' min teóricos, pero reaplicá cada 2 horas igual.';
+
+        return {
+          total: nf(Math.round(auto)) + ' min',
+          sub: sub,
+          rows: rows,
+          chart: chart,
+          format: 'unit',
+          unit: 'min',
+          decimals: 0,
+          position: clamp((auto / tope) * 100, 0, 100),
+          positionLabel: 'Fototipo ' + foto + ' — ' + nf(Math.round(auto)) + ' min al sol antes de enrojecer',
+        };
+      }
+
+      // ────────────────────────── AYUNO INTERMITENTE ────────────────────────
+      if (rama === 'ayuno') {
+        const proto = String(v.protocolo || '16_8');
+        const horasAyuno = PROTOCOLO_HORAS[proto] || 16;
+        const ventana = 24 - horasAyuno;
+
+        const raw = String(v.horaUltimaComida || '20:00');
+        const partes = raw.split(':');
+        const hh = clamp(parseInt(partes[0], 10) || 0, 0, 23);
+        const mm = clamp(parseInt(partes[1], 10) || 0, 0, 59);
+        const totalMin = (hh * 60 + mm + horasAyuno * 60) % 1440;
+        const romper = String(Math.floor(totalMin / 60)).padStart(2, '0') + ':' + String(totalMin % 60).padStart(2, '0');
+
+        const comidas = Math.max(1, Math.floor(ventana / 3));
+
+        const rows = [
+          { k: 'Horas de ayuno del protocolo', ref: proto.replace('_', '/'), v: horasAyuno, extra: true, format: 'unit', unit: 'h', decimals: 0 },
+          { k: 'Ventana para comer', v: ventana, format: 'unit', unit: 'h', decimals: 0 },
+          { k: 'Comidas que entran cómodas en la ventana', ref: 'una cada 3 h', v: comidas, format: 'plain', decimals: 0 },
+          { k: 'Porcentaje del día en ayuno', v: Number(((horasAyuno / 24) * 100).toFixed(0)), format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Horas de ayuno por semana', v: horasAyuno * 7, format: 'unit', unit: 'h', decimals: 0 },
+          { k: 'Semanas de adaptación recomendadas', v: 3, format: 'unit', unit: 'semanas', decimals: 0 },
+        ];
+
+        const chart = [
+          { label: '12 a 14 h — ayuno nocturno', value: 2, from: 12, to: 14, tone: 'good' },
+          { label: '14 a 16 h — arranque', value: 2, from: 14, to: 16, tone: 'good' },
+          { label: '16 a 18 h — el más estudiado', value: 2, from: 16, to: 18, tone: 'warn' },
+          { label: '18 a 24 h — ventana corta', value: 6, from: 18, to: 24, tone: 'bad' },
+        ];
+
+        return {
+          total: nf(horasAyuno) + ' h',
+          sub: 'Si tu última comida es a las ' + raw + ', rompés el ayuno a las ' + romper +
+            ' y tenés ' + ventana + ' h de ventana para ' + comidas + (comidas === 1 ? ' comida.' : ' comidas.'),
+          rows: rows,
+          chart: chart,
+          format: 'unit',
+          unit: 'h',
+          decimals: 0,
+          position: clamp(((horasAyuno - 12) / 12) * 100, 0, 100),
+          positionLabel: 'Ayuno de ' + horasAyuno + ' h · ventana de ' + ventana + ' h, hasta las ' + romper,
+        };
+      }
+
+      // ────────────────────────── PANTALLAS Y DESCANSO ──────────────────────
+      const horas = Math.max(0, Number(v.horasPantalla) || 0);
+      const pausasActuales = Math.max(0, Math.floor(Number(v.pausasActuales) || 0));
+      const distancia = Math.max(0, Number(v.distanciaMonitor) || 0);
+      const pasos = Math.max(0, Number(v.pasosActuales) || 0);
+      const metaObj = PASOS_META[String(v.grupoEdad || 'adulto')] || PASOS_META.adulto;
+
+      if (!horas) {
+        return { total: '—', sub: 'Ingresá tus horas de pantalla por día.', rows: [], chart: [] };
+      }
+
+      const pausasMinimas = Math.floor((horas * 60) / PANTALLAS.MIN_ENTRE_PAUSAS);
+      const pausasLargas = Math.floor(horas / PANTALLAS.HORAS_ENTRE_PAUSAS_LARGAS);
+      const deficit = Math.max(0, pausasMinimas - pausasActuales);
+
+      // Score de riesgo de fatiga visual (síndrome visual informático).
+      let score = 0;
+      if (horas > 6) score += 2;
+      if (horas > 9) score += 2;
+      if (pausasMinimas > 0 && pausasActuales < pausasMinimas * 0.5) score += 2;
+      if (distancia > 0 && distancia < 50) score += 2;
+      if (pasos < metaObj.min) score += 1;
+
+      const nivel = score <= 3 ? 'bajo' : score <= 6 ? 'moderado' : score <= 10 ? 'alto' : 'crítico';
+
+      const rows = [
+        { k: 'Pausas visuales mínimas por día', ref: 'regla 20-20-20 (AAO)', v: pausasMinimas, extra: true, format: 'unit', unit: 'pausas', decimals: 0 },
+        { k: 'Pausas que te faltan hoy', v: deficit, format: 'unit', unit: 'pausas', decimals: 0 },
+        { k: 'Pausas largas de 5 minutos', ref: 'una cada 2 h (NIOSH)', v: pausasLargas, format: 'unit', unit: 'pausas', decimals: 0 },
+        { k: 'Minutos de descanso visual acumulados', ref: '20 segundos por pausa', v: Number(((pausasMinimas * 20) / 60).toFixed(1)), format: 'unit', unit: 'min', decimals: 1 },
+        { k: 'Distancia recomendada a la pantalla', v: 60, format: 'unit', unit: 'cm', decimals: 0 },
+        { k: 'Meta de pasos por día', ref: metaObj.label, v: metaObj.optimo, format: 'unit', unit: 'pasos', decimals: 0 },
+        { k: 'Pasos que te faltan para la meta', v: Math.max(0, metaObj.optimo - pasos), format: 'unit', unit: 'pasos', decimals: 0 },
+        { k: 'Score de riesgo de fatiga visual', v: score, format: 'plain', decimals: 0 },
+      ];
+
+      const tope = PANTALLAS.ESCALA_MAX;
+      const chart = [
+        { label: 'Bajo (0-3)', value: 3, from: 0, to: 3, tone: 'good' },
+        { label: 'Moderado (4-6)', value: 3, from: 3, to: 6, tone: 'warn' },
+        { label: 'Alto (7-10)', value: 4, from: 6, to: 10, tone: 'bad' },
+        { label: 'Crítico (11+)', value: 6, from: 10, to: tope, tone: 'bad' },
+      ];
+
+      return {
+        total: nf(pausasMinimas) + ' pausas',
+        sub: 'Con ' + nf(horas, horas % 1 ? 1 : 0) + ' h de pantalla necesitás ' + nf(pausasMinimas) + ' pausas cortas y ' +
+          nf(pausasLargas) + ' largas' + (deficit > 0 ? ' · te faltan ' + nf(deficit) : ' · ya las cumplís') +
+          ' · riesgo de fatiga visual ' + nivel + (pasos < metaObj.min ? ' · y caminás menos de los ' + nf(metaObj.min) + ' pasos mínimos.' : '.'),
+        rows: rows,
+        chart: chart,
+        format: 'unit',
+        unit: 'pausas',
+        decimals: 0,
+        position: clamp((score / tope) * 100, 0, 100),
+        positionLabel: 'Riesgo ' + nivel + ' — score ' + score + ' sobre ' + tope,
+      };
+    });
+  })();
+</script>
