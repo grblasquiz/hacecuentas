@@ -5,11 +5,6 @@ export interface Outputs { haberMinimo: number; bonoExtra: number; total: number
 // Valores oficiales julio 2026 (ANSES — movilidad mensual por IPC, DNU 274/2024)
 // Haber mínimo jul-2026: $411.989,33 tras el aumento del 2,15% (IPC de mayo).
 // Con el bono extraordinario de $70.000 el total es $481.989,33. Se ajusta mes a mes.
-//
-// OJO: el comentario decía "$403.317,99 jun-2026" mientras la constante ya era la de
-// julio. Cinco fórmulas más siguen con el valor de junio y quedan 2,1% abajo:
-// jubilacion-haber-minimo-movilidad, cuanto-voy-a-cobrar-jubilacion-haber-estimado,
-// puam-*-2026, pension-invalidez-*-2026 y asignacion-discapacidad-pensionado.
 const HABER_MINIMO = 411989.33;
 const BONO_EXTRA = 70000; // bono complementario por decreto para haberes hasta la mínima
 

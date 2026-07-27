@@ -10,7 +10,7 @@
  *                        actualizadas (art. 30/32, coeficiente 1,5% por año)
  *   Haber estimado     = máximo(haber mínimo garantizado, haber proporcional)
  *
- * El haber mínimo garantizado ($403.318, referencial 2026, misma cifra que el
+ * El haber mínimo garantizado ($411.989, referencial 2026, misma cifra que el
  * resto de las calcs previsionales del sitio) actúa de piso. Este modelo omite
  * el componente fijo PBU por separado (queda absorbido por el piso), así que el
  * haber real puede ser algo mayor que el proporcional puro.
@@ -34,7 +34,7 @@ export interface Outputs {
 
 // Haber mínimo garantizado ANSES — referencial 2026 (misma fuente que
 // jubilacion-anses-monto-minimo-maxima-2026.ts). Rota con la movilidad.
-const HABER_MINIMO = 403_318;
+const HABER_MINIMO = 411_989;
 const COEF_ANUAL = 0.015; // 1,5% por año de aportes (Ley 24.241 art. 30/32)
 
 const fmt = (n: number): string => '$' + Math.round(n).toLocaleString('es-AR');

@@ -20,7 +20,7 @@ export function compute(i: Inputs): Outputs {
   const tipoPrestacion = String(i.tipo_prestacion || 'jubilacion_aportante');
 
   // Límite de haber para elegibilidad (aproximadamente 2 SMVM 2026)
-  const LIMITE_HABER_2026 = 403318;
+  const LIMITE_HABER_2026 = 411989;
 
   // Montos de bono según tipo de prestación (junio 2026)
   const MONTOS_BONO: { [key: string]: number } = {

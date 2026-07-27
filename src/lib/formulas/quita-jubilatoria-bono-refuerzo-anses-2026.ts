@@ -21,8 +21,8 @@ const PARAMETROS_2026: Record<
 > = {
   jubilacion: {
     nombre: "Jubilación / Pensión contributiva",
-    haberMinimo: 403318,
-    tope: 403318, // hasta 1 haber mínimo
+    haberMinimo: 411989,
+    tope: 411989, // hasta 1 haber mínimo
     bono: 70000,
   },
   puam: {
