@@ -501,3 +501,118 @@
   line-height: 1.45;
   color: var(--hc-muted);
 }
+
+
+/* ===========================================================================
+   Correcciones de la auditoría móvil del 27-07-2026.
+   Los 20 hubs comparten este archivo, así que cada arreglo aplica a todos.
+   =========================================================================== */
+
+/* 1. Hero y support cortados en mobile ------------------------------------
+   Ambos usan full-bleed con margen negativo para pintar el fondo de lado a
+   lado. Sin acotar el desborde, el bloque se corre 5px fuera del viewport y
+   se comen las primeras letras del H1, del lede y de los sellos. Se nota
+   sobre todo en "Sueldos por convenio". */
+.hc-hub { overflow-x: clip; }
+.hc-hub .decision-hero,
+.hc-hub .support {
+  max-width: 100vw;
+  overflow-x: clip;
+}
+/* El scrollbar hace que 100vw > ancho útil: con esto el cálculo no se pasa. */
+@supports (width: 100dvw) {
+  .hc-hub .decision-hero,
+  .hc-hub .support { max-width: 100dvw; }
+}
+
+/* 2. Legibilidad: los textos funcionales no bajan de 12px ------------------
+   Había etiquetas de 9-11px (el "Total" del donut, los títulos de las
+   tarjetas legales, los kickers de panel). */
+.hc-hub .panel-kicker,
+.hc-hub .eyebrow { font-size: 12px; }
+.hc-hub .lcard h3 { font-size: 12px; }
+.hc-hub .donut-center span { font-size: 12px; }
+.hc-hub .src small,
+.hc-hub .stamp,
+.hc-hub .breakdown-note,
+.hc-hub .fineprint,
+.hc-hub .f-help { font-size: 13px; }
+.hc-hub .row .art { font-size: 12px; }
+.hc-hub .viz-name { font-size: 13px; }
+
+/* 3. Contraste AA -----------------------------------------------------------
+   --hc-muted era #738196: 3,96:1 sobre blanco y 3,65:1 sobre el fondo gris.
+   WCAG AA pide 4,5:1 para texto normal, y estos grises se usan en ayudas,
+   unidades, referencias legales y fuentes. #5A6879 da 4,84:1 sobre blanco y
+   4,53:1 sobre --hc-bg. El modo oscuro ya cumplía. */
+:root { --hc-muted: #5a6879; }
+:root[data-theme="light"] { --hc-muted: #5a6879; }
+
+/* 4. Gráfico en mobile: primero el dibujo, después la leyenda ---------------
+   El grid lado a lado dejaba columnas de 16-49px para los nombres: palabras
+   partidas en cinco líneas e importes montados encima del texto. */
+@media (max-width: 719px) {
+  .hc-hub .result-viz {
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 18px;
+  }
+  .hc-hub .result-viz .viz-legend {
+    width: 100%;
+    display: grid;
+    gap: 8px;
+  }
+  .hc-hub .viz-legend li {
+    display: grid;
+    grid-template-columns: 10px minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 9px;
+    width: 100%;
+  }
+  .hc-hub .viz-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+  }
+  .hc-hub .viz-value { white-space: nowrap; font-variant-numeric: tabular-nums; }
+}
+
+/* 5. Escalas posicionales: la etiqueta afuera de la barra -------------------
+   El marcador ("21 días — de 5 a 10 años…") se dibujaba centrado sobre la
+   aguja y desbordaba el contenedor: 497px dentro de 265px en Aguinaldo. */
+.hc-hub .result-viz.is-positional { max-width: 100%; overflow: visible; }
+.hc-hub .result-viz.is-positional .donut { margin-top: 40px; }
+@media (max-width: 719px) {
+  /* Fuera de la barra, alineada a la izquierda y en flujo: no puede desbordar. */
+  .hc-hub .result-viz.is-positional .donut::after {
+    left: 0;
+    transform: none;
+    white-space: normal;
+    max-width: 100%;
+    text-align: left;
+    line-height: 1.35;
+    border-radius: 10px;
+  }
+  .hc-hub .result-viz.is-positional .donut { margin-top: 56px; }
+}
+
+/* 6. Selects: el texto largo se cortaba sin aviso ---------------------------
+   "Empleados de Comercio (…", "Sí — me corresponden va…". El usuario no podía
+   saber qué opción quedó elegida. El <select> nativo no admite dos líneas, así
+   que en pantallas chicas achicamos el texto y le damos todo el ancho. */
+.hc-hub .f-in select { text-overflow: ellipsis; }
+@media (max-width: 719px) {
+  .hc-hub .f-in select { font-size: 14px; padding-right: 34px; }
+  /* Un select largo ocupa la fila entera en vez de media. */
+  .hc-hub .fields { grid-template-columns: 1fr; }
+}
+
+/* 7. Panel de resultado en mobile ------------------------------------------
+   Conservaba una caja pensada para el hero de escritorio y quedaba angosto. */
+@media (max-width: 719px) {
+  .hc-hub .live-result { width: 100%; }
+  .hc-hub .breakdown { grid-template-columns: 1fr; }
+  .hc-hub .row { grid-template-columns: minmax(0, 1fr) auto; }
+  .hc-hub .row .art { grid-column: 1; }
+}

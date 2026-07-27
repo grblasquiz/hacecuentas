@@ -211,7 +211,38 @@ const otherCases = cases.slice(1);
   (function () {
     const $ = (id) => document.getElementById(id);
     const ars = (n) => '$' + Math.round(n || 0).toLocaleString('es-AR');
-    const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, '')) || 0;
+    /**
+     * Parseo numérico consciente del formato es-AR.
+     *
+     * Bug que esto arregla: la versión anterior borraba TODOS los puntos para
+     * leer el separador de miles, así que un decimal escrito con punto —que es
+     * lo que devuelve SIEMPRE un <input type="number">, sin importar el
+     * locale— se multiplicaba por diez. En el hub de nafta, "8.5 L/100 km"
+     * entraba como 85 y daba 680 litros para 800 km en vez de 68.
+     *
+     * Regla: si hay coma, la coma manda como decimal y los puntos son miles.
+     * Si sólo hay puntos, el último es decimal cuando le siguen 1 o 2 dígitos
+     * y no hay más de uno; con 3 dígitos detrás o varios puntos, son miles.
+     */
+    function num(v) {
+      if (typeof v === 'number') return isFinite(v) ? v : 0;
+      let t = String(v ?? '').trim().replace(/\s/g, '');
+      if (!t) return 0;
+      const neg = /^-/.test(t);
+      t = t.replace(/[^\d.,]/g, '');
+      if (t.includes(',')) {
+        t = t.replace(/\./g, '').replace(',', '.');
+      } else {
+        const puntos = (t.match(/\./g) || []).length;
+        if (puntos > 1) t = t.replace(/\./g, '');
+        else if (puntos === 1) {
+          const dec = t.split('.')[1] || '';
+          if (dec.length === 3) t = t.replace('.', ''); // 1.500 = mil quinientos
+        }
+      }
+      const n = Number(t);
+      return isFinite(n) ? (neg ? -n : n) : 0;
+    }
 
     let current = HAS_CASES ? CASES[0] : null;
     let computeFn = null;
@@ -220,7 +251,13 @@ const otherCases = cases.slice(1);
     function values() {
       const out = {};
       document.querySelectorAll('[data-field]').forEach((el) => {
-        out[el.id] = el.dataset.thousands || el.type === 'number' ? num(el.value) : el.value;
+        if (el.type === 'number') {
+          // El navegador ya normaliza a punto decimal y sin miles.
+          const n = Number(el.value);
+          out[el.id] = el.value === '' ? 0 : (isFinite(n) ? n : 0);
+        } else {
+          out[el.id] = el.dataset.thousands ? num(el.value) : el.value;
+        }
       });
       return out;
     }
