@@ -6,8 +6,17 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import PillarHub from '../components/PillarHub.astro';
 import { PILLAR_BY_SLUG } from '../lib/pillars';
+import { hubsOfSilo } from '../lib/hubs/registry';
 
 const pillar = PILLAR_BY_SLUG['finanzas-personales'];
+
+/*
+ * Esta pillar es la única del sitio que sirve la raíz de un silo que además
+ * tiene hubs de decisión. PillarHub no los conoce (lee `pillars.ts`, no el
+ * registry), así que sin este bloque los 8 hubs de /finanzas-personales/*
+ * quedaban sin un solo inlink desde su propio índice.
+ */
+const hubs = hubsOfSilo('/finanzas-personales');
 ---
 
 <Layout
@@ -20,5 +29,30 @@ const pillar = PILLAR_BY_SLUG['finanzas-personales'];
 >
   <Header slot="header" />
   <PillarHub pillar={pillar} />
+  {hubs.length > 0 && (
+    <section class="fp-hubs">
+      <h2>Decidí con estas guías</h2>
+      <ul>
+        {hubs.map((h) => (
+          <li>
+            <a href={`/${h.slug}`}>{h.h1}</a>
+            <p>{h.lede}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
   <Footer slot="footer" />
 </Layout>
+
+<style>
+  .fp-hubs { max-width: 72rem; margin: 0 auto; padding: 2.5rem 1.25rem 3.5rem; }
+  .fp-hubs h2 { font-size: 1.4rem; margin: 0 0 1.25rem; }
+  .fp-hubs ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); }
+  .fp-hubs li { border: 1px solid rgba(0,0,0,.12); border-radius: .6rem; padding: 1rem; }
+  .fp-hubs a { font-weight: 600; text-decoration: none; }
+  .fp-hubs a:hover { text-decoration: underline; }
+  .fp-hubs p { margin: .4rem 0 0; font-size: .9rem; opacity: .8; }
+  @media (prefers-color-scheme: dark) { .fp-hubs li { border-color: rgba(255,255,255,.16); } }
+</style>
