@@ -1,0 +1,35 @@
+---
+export const prerender = true;
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/pt/energia-da-casa';
+const canonical = `https://hacecuentas.com/${hub.slug}`;
+const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub.faq.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))};
+---
+<Layout title={hub.title} description={hub.description} canonical={canonical} schema={schema} audience="BR" lang="pt-BR" ogType="article" articleSection={hub.silo}>
+  <Header /><DecisionHub data={hub} /><Footer />
+</Layout>
+<script>
+  import { formulaMap } from '../../../lib/hub-formulas-generated/pt-energia-da-casa';
+  const configs = {"c1":{"formulaId":"consumo-heladera-anual-kwh","fields":["potenciaW","dutyCycle","tarifa"],"outputs":[{"id":"kwhAnual","label":"Consumo anual","primary":true},{"id":"kwhMensual","label":"Consumo mensal"},{"id":"costoAnual","label":"Custo anual"},{"id":"resumen","label":"Interpretação"}],"title":"Consumo de Geladeira em kWh (Gasto Anual)"},"c2":{"formulaId":"conta-de-luz-kwh-bandeira-tarifaria","fields":["consumoKwh","tarifaKwh","bandeira","cip"],"outputs":[{"id":"total","label":"Conta estimada","primary":true},{"id":"valorEnergia","label":"Valor da energia (kWh × tarifa)"},{"id":"valorBandeira","label":"Acréscimo da bandeira"},{"id":"cipValor","label":"Iluminação pública (CIP)"},{"id":"custoMedioKwh","label":"Custo médio por kWh"},{"id":"detalhe","label":"Detalhe"}],"title":"Calculadora de conta de luz (kWh e bandeira tarifária)"},"c3":{"formulaId":"energia-electrodomestico-etiqueta-eficiencia","fields":["kwhClaseActual","kwhClaseNueva","tarifa"],"outputs":[{"id":"ahorroKwhAño","label":"kWh/ano economizados","primary":true},{"id":"ahorroPesosAño","label":"R$/ano economizados"},{"id":"resumen","label":"Interpretação"}],"title":"¿Cuánto ahorrás cambiando a electrodoméstico A+++?"}};
+  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
+  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
+  function register() {
+    const H = (window as any).HC_HUB;
+    if (!H) return;
+    H.onCompute((all:any, selected:any) => {
+    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
+    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
+    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
+    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
+    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
+    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'ars'}));
+    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
+    return {total:main.toLocaleString('pt-BR',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'ars'};
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
+  else register();
+</script>

@@ -1,0 +1,35 @@
+---
+export const prerender = true;
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/pe/estudiar-y-aprobar';
+const canonical = `https://hacecuentas.com/${hub.slug}`;
+const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub.faq.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))};
+---
+<Layout title={hub.title} description={hub.description} canonical={canonical} schema={schema} audience="PE" lang="es" ogType="article" articleSection={hub.silo}>
+  <Header /><DecisionHub data={hub} /><Footer />
+</Layout>
+<script>
+  import { formulaMap } from '../../../lib/hub-formulas-generated/pe-estudiar-y-aprobar';
+  const configs = {"c1":{"formulaId":"costo-universidad-privada-peru","fields":["pensionCuota","cuotasPorCiclo","matriculaPorCiclo","numCiclos","ciclosCursados","aumentoAnual"],"outputs":[{"id":"costoTotal","label":"Costo total de la carrera","primary":true},{"id":"costoPorCiclo","label":"Costo por ciclo"},{"id":"costoPorAnio","label":"Costo por año (2 ciclos)"},{"id":"costoRestante","label":"Costo restante por pagar"},{"id":"detalle","label":"Detalle"}],"title":"¿Cuánto cuesta estudiar en una universidad privada en Perú? (2026)"},"c2":{"formulaId":"promedio-ponderado-universidad-peru","fields":["notas","creditos","creditosPendiente","objetivo"],"outputs":[{"id":"promedioPonderado","label":"Tu promedio ponderado","primary":true},{"id":"totalCreditos","label":"Créditos acumulados"},{"id":"cursos","label":"Cursos ingresados"},{"id":"necesitas","label":"Nota que necesitas en el curso pendiente"},{"id":"detalle","label":"Detalle"}],"title":"Calculadora de Promedio Ponderado Universitario — Perú (escala 0-20)"}};
+  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
+  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
+  function register() {
+    const H = (window as any).HC_HUB;
+    if (!H) return;
+    H.onCompute((all:any, selected:any) => {
+    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
+    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
+    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
+    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
+    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
+    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'unit'}));
+    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
+    return {total:main.toLocaleString('es',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'unit'};
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
+  else register();
+</script>

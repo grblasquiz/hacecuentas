@@ -1,0 +1,35 @@
+---
+export const prerender = true;
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/es/comida-cuentas-y-tiempo-con-amigos';
+const canonical = `https://hacecuentas.com/${hub.slug}`;
+const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub.faq.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))};
+---
+<Layout title={hub.title} description={hub.description} canonical={canonical} schema={schema} audience="ES" lang="es" ogType="article" articleSection={hub.silo}>
+  <Header /><DecisionHub data={hub} /><Footer />
+</Layout>
+<script>
+  import { formulaMap } from '../../../lib/hub-formulas-generated/es-comida-cuentas-y-tiempo-con-amigos';
+  const configs = {"c1":{"formulaId":"bebidas-evento-litros-por-persona","fields":["personas","duracionHoras","tipoBebida","temporada"],"outputs":[{"id":"litrosTotales","label":"Litros totales de bebida","format":"number","primary":true,"suffix":" litros"},{"id":"litrosCerveza","label":"Litros de cerveza","format":"number","suffix":" litros"},{"id":"botellasVino","label":"Botellas de vino (750 ml)","format":"number"},{"id":"litrosGaseosa","label":"Litros de refresco/agua","format":"number","suffix":" litros"},{"id":"detalle","label":"Detalle","format":"text"}],"title":"Calculadora de bebidas para evento o fiesta — España"},"c2":{"formulaId":"carne-asado-kg-por-persona","fields":["adultos","menores","tipoEvento","hayEntrada","incluirAchuras"],"outputs":[{"id":"kgCarne","label":"Kilos de carne","format":"number","primary":true,"suffix":" kg"},{"id":"kgAchuras","label":"Kilos de embutido/despiece","format":"number","suffix":" kg"},{"id":"cantidadChorizos","label":"Chorizos y butifarras","format":"number","suffix":" unidades"},{"id":"cantidadMorcillas","label":"Morcillas","format":"number","suffix":" unidades"},{"id":"detalle","label":"Detalle","format":"text"}],"title":"Calculadora de carne para barbacoa por persona — España"},"c3":{"formulaId":"maraton-serie-tiempo","fields":["episodios","duracionMin","horasDia"],"outputs":[{"id":"horasTotal","label":"Horas totales","format":"number","primary":true,"suffix":" h"},{"id":"diasCompletos","label":"Días para terminar","format":"number","suffix":" días"},{"id":"finesSemana","label":"Fines de semana (8 h/día)","format":"number"},{"id":"mensaje","label":"Contexto","format":"text"}],"title":"Calculadora de maratón de serie — cuánto tardas en verla entera"},"c4":{"formulaId":"propinas-completa","fields":["totalCuenta","propinaPct","personas","redondeo"],"outputs":[{"id":"porPersona","label":"Cada uno paga","format":"number","primary":true,"prefix":"€ "},{"id":"propinaTotal","label":"Propina total","format":"number","prefix":"€ "},{"id":"totalConPropina","label":"Total con propina","format":"number","prefix":"€ "},{"id":"propinaPorPersona","label":"Propina por persona","format":"number","prefix":"€ "},{"id":"mensaje","label":"Resumen","format":"text"}],"title":"Calculadora de propinas en España: cuánto dejar y cuánto pone cada uno"},"c5":{"formulaId":"split-gastos-grupo-amigos","fields":["gastoTotal","cantidadPersonas","montoPagadoPorUno"],"outputs":[{"id":"parteIgualitaria","label":"Parte igualitaria por persona","format":"currency","primary":true},{"id":"debenAlPagador","label":"Cada uno le debe al que pagó más","format":"currency"},{"id":"sobrePagoPagador","label":"El que pagó puso de más","format":"currency"}],"title":"Calculadora para dividir gastos entre amigos — España"},"c6":{"formulaId":"conversion-medidas-cocina-tazas-gramos","fields":["ingredient","quantity","from_unit","to_unit"],"outputs":[{"id":"result","label":"Equivalencia","primary":true,"format":"decimal","suffix":""},{"id":"result_label","label":"Resultado completo","format":"text"},{"id":"grams_per_cup","label":"Gramos por taza (referencia)","format":"text"},{"id":"reference_table","label":"Tabla de referencia del ingrediente","format":"text"}],"title":"Convertir tazas a gramos (y viceversa) por ingrediente — España"}};
+  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
+  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
+  function register() {
+    const H = (window as any).HC_HUB;
+    if (!H) return;
+    H.onCompute((all:any, selected:any) => {
+    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
+    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
+    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
+    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
+    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
+    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'unit'}));
+    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
+    return {total:main.toLocaleString('es',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'unit'};
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
+  else register();
+</script>

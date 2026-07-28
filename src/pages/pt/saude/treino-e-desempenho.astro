@@ -1,0 +1,35 @@
+---
+export const prerender = true;
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/pt/treino-e-desempenho';
+const canonical = `https://hacecuentas.com/${hub.slug}`;
+const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub.faq.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))};
+---
+<Layout title={hub.title} description={hub.description} canonical={canonical} schema={schema} audience="BR" lang="pt-BR" ogType="article" articleSection={hub.silo}>
+  <Header /><DecisionHub data={hub} /><Footer />
+</Layout>
+<script>
+  import { formulaMap } from '../../../lib/hub-formulas-generated/pt-treino-e-desempenho';
+  const configs = {"c1":{"formulaId":"1rm-sentadilla-estimador","fields":["peso","reps"],"outputs":[{"id":"rm1","label":"1RM","primary":true},{"id":"resumen","label":"Int"}],"title":"1RM agachamento: calcule seu máximo"},"c2":{"formulaId":"1rm-peso-muerto-estimador","fields":["peso","reps"],"outputs":[{"id":"rm1","label":"1RM Estimado","primary":true},{"id":"resumen","label":"Intensidade"}],"title":"1RM Levantamento Terra: Calcule seu Máximo Estimado"},"c3":{"formulaId":"1rm-press-banca-estimador","fields":["peso","reps"],"outputs":[{"id":"rm1","label":"1RM","primary":true},{"id":"resumen","label":"Intensidade"}],"title":"Calculadora de 1RM no Supino"},"c4":{"formulaId":"imc-tabela-oms-classificacao","fields":["weight_kg","height_cm","sex"],"outputs":[{"id":"imc","label":"Seu IMC","primary":true,"format":"decimal","suffix":"kg/m²"},{"id":"classification","label":"Classificação OMS","format":"text"},{"id":"ideal_weight","label":"Peso ideal estimado","format":"decimal","suffix":"kg"},{"id":"weight_to_normal","label":"Diferença até faixa normal","format":"text"},{"id":"healthy_range","label":"Faixa de peso saudável para sua altura","format":"text"},{"id":"disclaimer","label":"Ressalva importante","format":"text"}],"title":"IMC 2026: Calcule e Veja sua Classificação pela Tabela OMS"},"c5":{"formulaId":"macros-emagrecimento-ganho-massa","fields":["input_mode","get_direto","peso","altura","idade","sexo","nivel_atividade","objetivo","proteina_g_kg","gordura_pct"],"outputs":[{"id":"kcal_alvo","label":"Calorias-alvo por dia","primary":true,"format":"integer","suffix":"kcal"},{"id":"proteina_g","label":"Proteína","primary":false,"format":"integer","suffix":"g/dia"},{"id":"gordura_g","label":"Gordura","primary":false,"format":"integer","suffix":"g/dia"},{"id":"carbo_g","label":"Carboidrato","primary":false,"format":"integer","suffix":"g/dia"},{"id":"distribuicao_pct","label":"Distribuição P / C / G","primary":false,"format":"text"},{"id":"exemplos_alimentos","label":"Exemplos de alimentos para bater as metas","primary":false,"format":"text"},{"id":"tmb_calculada","label":"TMB estimada (Mifflin-St Jeor)","primary":false,"format":"integer","suffix":"kcal"},{"id":"get_usado","label":"GET utilizado no cálculo","primary":false,"format":"integer","suffix":"kcal"}],"title":"Calculadora de Macros: Cutting, Manutenção e Bulking"},"c6":{"formulaId":"tmb-mifflin-st-jeor-portugues","fields":["sex","weight","height","age","activity"],"outputs":[{"id":"tmb","label":"TMB — Taxa Metabólica Basal","primary":true,"format":"decimal","suffix":"kcal/dia"},{"id":"get","label":"GET — Gasto Energético Total","primary":false,"format":"decimal","suffix":"kcal/dia"},{"id":"deficit_cut","label":"Déficit para emagrecer (−20%)","primary":false,"format":"decimal","suffix":"kcal/dia"},{"id":"surplus_bulk","label":"Superávit para ganho de massa (+15%)","primary":false,"format":"decimal","suffix":"kcal/dia"},{"id":"formula_used","label":"Fórmula aplicada","primary":false,"format":"text"}],"title":"TMB Mifflin-St Jeor: calcule sua Taxa Metabólica Basal"},"c7":{"formulaId":"pace-natacion-100m-ritmo","fields":["distanciaM","tiempoMinutos"],"outputs":[{"id":"pace","label":"Pace por 100m","primary":true},{"id":"velocidadMs","label":"Velocidade m/s"},{"id":"clasificacion","label":"Classificação"}],"title":"Pace Natação 100m"},"c8":{"formulaId":"padel-ranking-puntos-apt-aap-subir","fields":["categoriaActual"],"outputs":[{"id":"puntosSubir","label":"Pontos para subir","primary":true},{"id":"torneosMinimos","label":"Torneios mínimos estimados"},{"id":"observacion","label":"Observação"}],"title":"Calculadora de pontos para subir de categoria no pádel (APT/AAP)"},"c9":{"formulaId":"proyeccion-21k-desde-10k-cameron","fields":["t10kMin"],"outputs":[{"id":"proy21k","label":"Projeção 21K","primary":true},{"id":"resumen","label":"Meta de treino"}],"title":"Projeção de Tempo na Meia Maratona pelo seu 10K"},"c10":{"formulaId":"rugby-handicap-puntos-descenso-promedio","fields":["puntosGanados","partidosJugados"],"outputs":[{"id":"promedio","label":"Média de pontos/partida","primary":true},{"id":"clasificacion","label":"Classificação esperada"},{"id":"riesgoDescenso","label":"Risco de rebaixamento"}],"title":"Calculadora de média de pontos por partida no rugby"},"c11":{"formulaId":"trail-running-desnivel-ritmo-ajustado","fields":["distanciaKm","desnivelPositivo","paceBaseKm"],"outputs":[{"id":"tiempoAjustado","label":"Tempo ajustado","primary":true},{"id":"ritmoEfectivo","label":"Ritmo efetivo"},{"id":"interpretacion","label":"Interpretação"}],"title":"Ritmo ajustado trail running con desnivel: calculadora Naismith"}};
+  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
+  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
+  function register() {
+    const H = (window as any).HC_HUB;
+    if (!H) return;
+    H.onCompute((all:any, selected:any) => {
+    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
+    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
+    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
+    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
+    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
+    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'unit'}));
+    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
+    return {total:main.toLocaleString('pt-BR',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'unit'};
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
+  else register();
+</script>

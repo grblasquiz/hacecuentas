@@ -1,0 +1,35 @@
+---
+export const prerender = true;
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/py/organizar-un-evento';
+const canonical = `https://hacecuentas.com/${hub.slug}`;
+const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub.faq.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))};
+---
+<Layout title={hub.title} description={hub.description} canonical={canonical} schema={schema} audience="PY" lang="es" ogType="article" articleSection={hub.silo}>
+  <Header /><DecisionHub data={hub} /><Footer />
+</Layout>
+<script>
+  import { formulaMap } from '../../../lib/hub-formulas-generated/py-organizar-un-evento';
+  const configs = {"c1":{"formulaId":"bebidas-evento-litros-por-persona","fields":["personas","duracionHoras","tipoBebida","temporada"],"outputs":[{"id":"litrosTotales","label":"Litros totales de bebida","format":"number","primary":true,"suffix":" litros"},{"id":"litrosCerveza","label":"Litros de cerveza","format":"number","suffix":" litros"},{"id":"botellasVino","label":"Botellas de vino (750 ml)","format":"number"},{"id":"litrosGaseosa","label":"Litros de gaseosa/agua","format":"number","suffix":" litros"},{"id":"detalle","label":"Detalle","format":"text"}],"title":"Calculadora de bebidas para evento o fiesta — Paraguay"},"c2":{"formulaId":"carne-asado-kg-por-persona","fields":["adultos","menores","tipoEvento","hayEntrada","incluirAchuras"],"outputs":[{"id":"kgCarne","label":"Kilos de carne","format":"number","primary":true,"suffix":" kg"},{"id":"kgAchuras","label":"Kilos de achuras","format":"number","suffix":" kg"},{"id":"cantidadChorizos","label":"Chorizos","format":"number","suffix":" unidades"},{"id":"cantidadMorcillas","label":"Morcillas","format":"number","suffix":" unidades"},{"id":"detalle","label":"Detalle","format":"text"}],"title":"Calculadora de carne para asado por persona — Paraguay"}};
+  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
+  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
+  function register() {
+    const H = (window as any).HC_HUB;
+    if (!H) return;
+    H.onCompute((all:any, selected:any) => {
+    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
+    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
+    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
+    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
+    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
+    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'unit'}));
+    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
+    return {total:main.toLocaleString('es',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'unit'};
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
+  else register();
+</script>

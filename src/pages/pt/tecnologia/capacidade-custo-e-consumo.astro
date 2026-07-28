@@ -1,0 +1,35 @@
+---
+export const prerender = true;
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/pt/capacidade-custo-e-consumo';
+const canonical = `https://hacecuentas.com/${hub.slug}`;
+const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub.faq.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))};
+---
+<Layout title={hub.title} description={hub.description} canonical={canonical} schema={schema} audience="BR" lang="pt-BR" ogType="article" articleSection={hub.silo}>
+  <Header /><DecisionHub data={hub} /><Footer />
+</Layout>
+<script>
+  import { formulaMap } from '../../../lib/hub-formulas-generated/pt-capacidade-custo-e-consumo';
+  const configs = {"c1":{"formulaId":"bandwidth-streaming-bitrate-resolucion-youtube","fields":["resolucion","plataforma"],"outputs":[{"id":"bitrateMbps","label":"Taxa de bitrate recomendada","primary":true},{"id":"uploadMinimo","label":"Upload mínimo"},{"id":"codec","label":"Codec","suffix":"text"}],"title":"Calculadora de bitrate para streaming (YouTube, Twitch, Kick)"},"c2":{"formulaId":"bateria-capacidad-runtime-ah","fields":["ah","v","consumo","dod","eficiencia"],"outputs":[{"id":"horas","label":"Autonomia","primary":true},{"id":"wh","label":"Energia útil (Wh)"},{"id":"resumen","label":"Interpretação"}],"title":"Autonomia de Bateria em Horas (Ah e Watts)"},"c3":{"formulaId":"claude-gemini-tokens-comparativa-precio-uso","fields":["modelo","tokensEntrada","tokensSalida"],"outputs":[{"id":"costoMensualUsd","label":"Custo mensal USD","primary":true},{"id":"contexto","label":"Contexto máx."},{"id":"recomendacion","label":"Recomendação"}],"title":"Claude vs Gemini vs GPT-4o: Comparação de Preço por Token"},"c4":{"formulaId":"emisiones-enviar-email-adjuntos","fields":["emailsPorDia","porcentajeConAdjunto"],"outputs":[{"id":"gCo2Dia","label":"g CO₂/dia","primary":true},{"id":"kgCo2Año","label":"kg CO₂/ano"},{"id":"resumen","label":"Interpretação"}],"title":"CO₂ por E-mail: Quanto Emite uma Mensagem com e sem Anexo"},"c5":{"formulaId":"midjourney-stable-diffusion-credits-mensual","fields":["plan"],"outputs":[{"id":"precioMes","label":"Preço USD/mês","primary":true},{"id":"horasFast","label":"Horas GPU rápidas"},{"id":"rolmode","label":"Modo Relaxed / Stealth"}],"title":"Quanto custa o Midjourney por mês?"},"c6":{"formulaId":"papel-ahorrado-impresion-doble-cara","fields":["hojasSem"],"outputs":[{"id":"hojasAño","label":"Folhas poupadas por ano","primary":true},{"id":"arboles","label":"Árvores equivalentes poupadas"},{"id":"resumen","label":"Interpretação"}],"title":"Quanto papel você economiza imprimindo frente e verso?"},"c7":{"formulaId":"gaming-fps-componentes-pc-armar-presupuesto","fields":["objetivoFps","anoJuegos"],"outputs":[{"id":"presupuestoTotal","label":"Orçamento USD","primary":true},{"id":"gpuSugerida","label":"GPU sugerida"},{"id":"cpuSugerido","label":"CPU sugerida"}],"title":"PC Gamer Preço e Orçamento por FPS"},"c8":{"formulaId":"servo-pwm-angulo","fields":["pulso","rango"],"outputs":[{"id":"angulo","label":"Ângulo","primary":true},{"id":"porcentaje","label":"% da faixa"},{"id":"resumen","label":"Interpretação"}],"title":"Calcular ângulo do servo a partir do pulso PWM"},"c9":{"formulaId":"stepper-pasos-grado","fields":["angulo","microstep"],"outputs":[{"id":"pasosPorRev","label":"Passos por revolução","primary":true},{"id":"pasosPorGrado","label":"Passos por grau"},{"id":"resumen","label":"Interpretação"}],"title":"Passos por Revolução e Microstepping: NEMA 17, NEMA 23 e Drivers A4988"},"c10":{"formulaId":"tokens-openai-gpt-costo-uso-mensual","fields":["tokensEntrada","tokensSalida","modelo"],"outputs":[{"id":"costoMensual","label":"Custo mensal USD","primary":true},{"id":"porRequest","label":"Custo por requisição média"},{"id":"observacion","label":"Observação"}],"title":"Custo API OpenAI: Tokens ChatGPT e GPT-4"},"c11":{"formulaId":"velocidad-usb-transferencia-archivo","fields":["tamano","version"],"outputs":[{"id":"tiempo","label":"Tempo de transferência","primary":true},{"id":"velocidadReal","label":"Velocidade real"},{"id":"resumen","label":"Interpretação"}],"title":"Quanto Tempo Demora uma Transferência USB?"}};
+  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
+  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
+  function register() {
+    const H = (window as any).HC_HUB;
+    if (!H) return;
+    H.onCompute((all:any, selected:any) => {
+    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
+    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
+    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
+    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
+    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
+    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'unit'}));
+    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
+    return {total:main.toLocaleString('pt-BR',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'unit'};
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
+  else register();
+</script>

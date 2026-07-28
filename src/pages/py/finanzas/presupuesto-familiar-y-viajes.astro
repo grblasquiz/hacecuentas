@@ -1,0 +1,35 @@
+---
+export const prerender = true;
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/py/presupuesto-familiar-y-viajes';
+const canonical = `https://hacecuentas.com/${hub.slug}`;
+const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub.faq.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))};
+---
+<Layout title={hub.title} description={hub.description} canonical={canonical} schema={schema} audience="PY" lang="es" ogType="article" articleSection={hub.silo}>
+  <Header /><DecisionHub data={hub} /><Footer />
+</Layout>
+<script>
+  import { formulaMap } from '../../../lib/hub-formulas-generated/py-presupuesto-familiar-y-viajes';
+  const configs = {"c1":{"formulaId":"cuota-alimentaria-paraguay","fields":["ingreso","hijos"],"outputs":[{"id":"cuotaEstimada","label":"Cuota orientativa estimada","primary":true},{"id":"rangoOrientativo","label":"Rango orientativo"},{"id":"enJornales","label":"Equivalente en jornales mínimos"},{"id":"detalle","label":"Detalle"}],"title":"Calculadora de cuota alimentaria — Paraguay (orientativa)"},"c2":{"formulaId":"gasto-mensual-transporte-publico-paraguay","fields":["viajesDia","diasMes","tarifa","kmDia","rend","precioLitro"],"outputs":[{"id":"gastoMensual","label":"Gasto mensual en pasajes","primary":true},{"id":"gastoAnual","label":"Gasto anual"},{"id":"pasajesMes","label":"Pasajes por mes"},{"id":"gastoAuto","label":"Gasto en auto (si comparás)"},{"id":"ahorroVsAuto","label":"Diferencia colectivo vs auto"},{"id":"detalle","label":"Detalle"}],"title":"Calculadora de gasto en colectivo — Paraguay (mensual)"},"c3":{"formulaId":"presupuesto-viaje-mundial-2026-paraguay","fields":["personas","vueloUsd","noches","hotelNocheUsd","entradas","precioEntradaUsd","viaticosDiaUsd"],"outputs":[{"id":"totalGuaranies","label":"Total en guaraníes","primary":true},{"id":"totalUsd","label":"Total en dólares"},{"id":"porPersonaUsd","label":"Por persona (US$)"},{"id":"porPersonaGuaranies","label":"Por persona (Gs.)"},{"id":"detalle","label":"Detalle"}],"title":"Calculadora de presupuesto — Mundial 2026 desde Paraguay"}};
+  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
+  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
+  function register() {
+    const H = (window as any).HC_HUB;
+    if (!H) return;
+    H.onCompute((all:any, selected:any) => {
+    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
+    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
+    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
+    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
+    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
+    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'ars'}));
+    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
+    return {total:main.toLocaleString('es',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'ars'};
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
+  else register();
+</script>

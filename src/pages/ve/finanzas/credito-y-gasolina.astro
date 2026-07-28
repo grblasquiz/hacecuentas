@@ -1,0 +1,35 @@
+---
+export const prerender = true;
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/ve/credito-y-gasolina';
+const canonical = `https://hacecuentas.com/${hub.slug}`;
+const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub.faq.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))};
+---
+<Layout title={hub.title} description={hub.description} canonical={canonical} schema={schema} audience="VE" lang="es" ogType="article" articleSection={hub.silo}>
+  <Header /><DecisionHub data={hub} /><Footer />
+</Layout>
+<script>
+  import { formulaMap } from '../../../lib/hub-formulas-generated/ve-credito-y-gasolina';
+  const configs = {"c1":{"formulaId":"calculadora-credito-nomina-bdv-venezuela","fields":["salarioMensual","montoSolicitado","plazoMeses","tasaAnual"],"outputs":[{"id":"cuotaMensual","label":"Cuota mensual","format":"currency","prefix":"Bs.","primary":true,"description":"Cuota fija mensual con el sistema francés."},{"id":"cuotaMaxima","label":"Cuota máxima (1/3 del salario)","format":"currency","prefix":"Bs.","description":"Tope prudencial y legal de deducción por nómina."},{"id":"esViable","label":"¿Entra en tu capacidad?","format":"text","description":"Sí si la cuota no supera el tope de 1/3 del salario."},{"id":"totalPagado","label":"Total a pagar","format":"currency","prefix":"Bs.","description":"Suma de todas las cuotas."},{"id":"interesesTotales","label":"Intereses totales","format":"currency","prefix":"Bs.","description":"Total pagado menos el monto del crédito."},{"id":"montoMaximo","label":"Monto máximo prestable","format":"currency","prefix":"Bs.","description":"Con la cuota tope, el plazo y la tasa indicados."}],"title":"Calculadora de crédito de nómina (credinómina): cuota y capacidad de pago"},"c2":{"formulaId":"calculadora-cupo-gasolina-subsidiada-venezuela","fields":["tipoVehiculo","litrosConsumo"],"outputs":[{"id":"ahorroMensual","label":"Ahorro mensual del subsidio","format":"text","primary":true},{"id":"cupoMensual","label":"Cupo subsidiado","format":"text"},{"id":"litrosSubsidiados","label":"Litros a precio subsidiado","format":"text"},{"id":"litrosExcedente","label":"Litros a precio internacional","format":"text"},{"id":"cupoRestante","label":"Cupo restante","format":"text"},{"id":"costoMes","label":"Costo total del mes","format":"text"}],"title":"Cupo de gasolina subsidiada en Venezuela: litros y ahorro mensual"}};
+  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
+  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
+  function register() {
+    const H = (window as any).HC_HUB;
+    if (!H) return;
+    H.onCompute((all:any, selected:any) => {
+    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
+    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
+    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
+    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
+    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
+    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'ars'}));
+    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
+    return {total:main.toLocaleString('es',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'ars'};
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
+  else register();
+</script>

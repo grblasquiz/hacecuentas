@@ -1,0 +1,35 @@
+---
+export const prerender = true;
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/pt-pt/impostos-do-automovel';
+const canonical = `https://hacecuentas.com/${hub.slug}`;
+const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub.faq.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))};
+---
+<Layout title={hub.title} description={hub.description} canonical={canonical} schema={schema} audience="PT" lang="pt-PT" ogType="article" articleSection={hub.silo}>
+  <Header /><DecisionHub data={hub} /><Footer />
+</Layout>
+<script>
+  import { formulaMap } from '../../../lib/hub-formulas-generated/pt-pt-impostos-do-automovel';
+  const configs = {"c1":{"formulaId":"calculadora-isv-importacao-carro-portugal","fields":["cilindrada","co2","combustivel","anosUso"],"outputs":[{"id":"isvTotal","label":"ISV a pagar","primary":true},{"id":"componenteCilindrada","label":"Componente de cilindrada"},{"id":"componenteAmbiental","label":"Componente ambiental (CO2)"},{"id":"reducao","label":"Redução por anos de uso"},{"id":"detalhe","label":"Detalhe"}],"title":"Simulador de ISV — Importar e Legalizar um Carro em Portugal 2026"},"c2":{"formulaId":"calculadora-iuc-portugal","fields":["cilindrada","combustivel","anoMatricula","co2"],"outputs":[{"id":"iucEstimado","label":"IUC anual estimado","primary":true},{"id":"categoria","label":"Categoria"},{"id":"componenteCilindrada","label":"Componente de cilindrada"},{"id":"componenteCo2","label":"Componente de CO2"},{"id":"coeficiente","label":"Coeficiente de antiguidade"},{"id":"combustivel","label":"Combustível"},{"id":"detalhe","label":"Detalhe"}],"title":"Calculadora de IUC: quanto pago de selo do carro?"}};
+  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
+  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
+  function register() {
+    const H = (window as any).HC_HUB;
+    if (!H) return;
+    H.onCompute((all:any, selected:any) => {
+    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
+    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
+    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
+    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
+    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
+    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'ars'}));
+    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
+    return {total:main.toLocaleString('pt-PT',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'ars'};
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
+  else register();
+</script>

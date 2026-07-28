@@ -1,0 +1,35 @@
+---
+export const prerender = true;
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/co/documentos-y-pasaporte';
+const canonical = `https://hacecuentas.com/${hub.slug}`;
+const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub.faq.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))};
+---
+<Layout title={hub.title} description={hub.description} canonical={canonical} schema={schema} audience="CO" lang="es" ogType="article" articleSection={hub.silo}>
+  <Header /><DecisionHub data={hub} /><Footer />
+</Layout>
+<script>
+  import { formulaMap } from '../../../lib/hub-formulas-generated/co-documentos-y-pasaporte';
+  const configs = {"c1":{"formulaId":"costo-pasaporte-colombia-2026","fields":["tipo","lugar","estampillas_departamentales"],"outputs":[{"id":"total_a_pagar","label":"Total a pagar","primary":true},{"id":"libreta","label":"Valor de la libreta"},{"id":"impuesto_timbre","label":"Impuesto de timbre"},{"id":"estampillas_depto","label":"Estampillas departamentales"},{"id":"detalle","label":"Desglose del cálculo"}],"title":"Calculadora del costo del pasaporte colombiano 2026"},"c2":{"formulaId":"curp-colombia-cedula-ciudadania-extranjeria-validez","fields":["tipo_tramite","departamento","edad","expedicion_anterior"],"outputs":[{"id":"costo_tramite","label":"Costo del trámite","type":"currency","format":"COP"},{"id":"plazo_dias","label":"Plazo expedición (días hábiles)","type":"number"},{"id":"validez_anios","label":"Validez documento (años)","type":"number"},{"id":"fecha_vencimiento","label":"Fecha estimada vencimiento","type":"text"},{"id":"requiere_foto","label":"¿Requiere fotografía?","type":"text"},{"id":"requiere_comprobante","label":"Requisitos adicionales","type":"text"},{"id":"valida_voto","label":"¿Válida para votar?","type":"text"}],"title":"Cédula de Ciudadanía Colombia: costos, plazos y validez"}};
+  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
+  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
+  function register() {
+    const H = (window as any).HC_HUB;
+    if (!H) return;
+    H.onCompute((all:any, selected:any) => {
+    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
+    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
+    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
+    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
+    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
+    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'ars'}));
+    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
+    return {total:main.toLocaleString('es',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'ars'};
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
+  else register();
+</script>

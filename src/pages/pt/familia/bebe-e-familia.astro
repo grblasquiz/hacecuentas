@@ -1,0 +1,35 @@
+---
+export const prerender = true;
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/pt/bebe-e-familia';
+const canonical = `https://hacecuentas.com/${hub.slug}`;
+const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub.faq.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))};
+---
+<Layout title={hub.title} description={hub.description} canonical={canonical} schema={schema} audience="BR" lang="pt-BR" ogType="article" articleSection={hub.silo}>
+  <Header /><DecisionHub data={hub} /><Footer />
+</Layout>
+<script>
+  import { formulaMap } from '../../../lib/hub-formulas-generated/pt-bebe-e-familia';
+  const configs = {"c1":{"formulaId":"formula-infantil-biberon-edad-ml-dia","fields":["edadMeses","pesoKg"],"outputs":[{"id":"mlDia","label":"Total ml/dia","primary":true},{"id":"tomas","label":"Refeições sugeridas"},{"id":"mlPorToma","label":"ml por refeição"}],"title":"Quantos ml de fórmula o bebê precisa por dia? Calculadora por idade e peso"},"c2":{"formulaId":"introduccion-alimentos-blw-edad-etapa-6meses","fields":["edadMeses"],"outputs":[{"id":"apto","label":"Apto para BLW?","primary":true},{"id":"etapa","label":"Etapa"},{"id":"recomendacion","label":"Recomendação"}],"title":"Quando Começar BLW? Calculadora por Idade e Etapa"},"c3":{"formulaId":"data-parto-dum-naegele-portugues","fields":["dum","cycle_days"],"outputs":[{"id":"dpp","label":"Data Provável do Parto (DPP)","primary":true,"format":"date"},{"id":"gestational_age","label":"Idade Gestacional Hoje","format":"text"},{"id":"milestone_t1","label":"Fim do 1° Trimestre (12 semanas)","format":"date"},{"id":"milestone_morpho","label":"Ultrassom Morfológico (20 semanas)","format":"date"},{"id":"milestone_t3","label":"Início do 3° Trimestre (28 semanas)","format":"date"},{"id":"milestone_preterm","label":"Termo Precoce (37 semanas)","format":"date"},{"id":"trimester_label","label":"Trimestre Atual","format":"text"}],"title":"Data Provável do Parto (DPP) pela DUM — Regra de Naegele"},"c4":{"formulaId":"idade-anos-meses-dias-data-nascimento","fields":["dataNascimento","dataReferencia"],"outputs":[{"id":"idade","label":"Idade exata","primary":true},{"id":"proximoAniversario","label":"Próximo aniversário"},{"id":"diaSemanaNascimento","label":"Dia da semana do nascimento"},{"id":"totalDias","label":"Total de dias vividos"},{"id":"totalSemanas","label":"Total de semanas"},{"id":"detalhe","label":"Detalhe"}],"title":"Calculadora de Idade — anos, meses e dias"},"c5":{"formulaId":"calculadora-orcamento-presente-dia-dos-pais","fields":["orcamentoTotal","numeroPresentes","custoExtras"],"outputs":[{"id":"valorPorPresente","label":"Valor-alvo por presente","primary":true},{"id":"faixaSugerida","label":"Faixa sugerida (econômico a caprichado)"},{"id":"disponivelPresentes","label":"Disponível para presentes (após extras)"},{"id":"dataDiaDosPais","label":"Dia dos Pais 2026"},{"id":"detalhe","label":"Detalhe"}],"title":"Dia dos Pais 2026: calculadora de orçamento para o presente"},"c6":{"formulaId":"ovulacao-periodo-fertil-ciclo","fields":["dum","cycle_length"],"outputs":[{"id":"ovulation_date","label":"Dia estimado da ovulação","primary":true,"format":"date"},{"id":"fertile_window_start","label":"Início da janela fértil","primary":false,"format":"date"},{"id":"fertile_window_end","label":"Fim da janela fértil","primary":false,"format":"date"},{"id":"peak_days","label":"Dias de pico de fertilidade","primary":false,"format":"text"},{"id":"next_period","label":"Próxima menstruação estimada","primary":false,"format":"date"},{"id":"days_until_ovulation","label":"Dias até a ovulação (a partir de hoje)","primary":false,"format":"integer"},{"id":"explanation_text","label":"Observação","primary":false,"format":"text"}],"title":"Ovulação e Período Fértil: calcule seus dias férteis"},"c7":{"formulaId":"pañales-por-dia-mes-bebe-edad","fields":["mes"],"outputs":[{"id":"diarios","label":"Por dia","primary":true},{"id":"mensuales","label":"Por mês"},{"id":"tamano","label":"Tamanho"},{"id":"resumen","label":"Interpretação"}],"title":"Quantas fraldas por dia e por mês conforme a idade do bebê"},"c8":{"formulaId":"mesada-semanal-hijo-edad-sugerida-monto","fields":["edad","nivelVida"],"outputs":[{"id":"mesadaSemanal","label":"Mesada semanal","primary":true},{"id":"mensualEquivalente","label":"Equivalente mensal"},{"id":"proposito","label":"Propósito","suffix":"text"}],"title":"Quanto de mesada dar ao filho por idade?"}};
+  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
+  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
+  function register() {
+    const H = (window as any).HC_HUB;
+    if (!H) return;
+    H.onCompute((all:any, selected:any) => {
+    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
+    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
+    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
+    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
+    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
+    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'unit'}));
+    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
+    return {total:main.toLocaleString('pt-BR',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'unit'};
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
+  else register();
+</script>

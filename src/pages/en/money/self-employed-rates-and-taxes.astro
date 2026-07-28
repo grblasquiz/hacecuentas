@@ -1,0 +1,59 @@
+---
+export const prerender = true;
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, SS_RATE, MEDICARE_RATE, SE_MULTIPLIER, SE_FILING_THRESHOLD, QBI_RATE, BILLABLE_DAY_HOURS, MONTHLY_WORK_HOURS } from '../../../lib/hubs/en/self-employed-rates-and-taxes';
+const canonical = `https://hacecuentas.com/${hub.slug}`;
+const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub.faq.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))};
+---
+<Layout title={hub.title} description={hub.description} canonical={canonical} schema={schema} audience="US" lang="en" ogType="article" articleSection={hub.silo}>
+  <Header /><DecisionHub data={hub} /><Footer />
+</Layout>
+<script is:inline define:vars={{ SS_RATE, MEDICARE_RATE, SE_MULTIPLIER, SE_FILING_THRESHOLD, QBI_RATE, BILLABLE_DAY_HOURS, MONTHLY_WORK_HOURS }}>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = n => '$' + Math.round(n || 0).toLocaleString('en-US');
+    const unit = { format: 'unit', unit: 'USD' };
+    H.onCompute(function (v, c) {
+      const id = (c && c.id) || 'rate';
+      if (id === 'meeting') {
+        const hourly = Math.max(0, v.salary) / MONTHLY_WORK_HOURS;
+        const cost = Math.max(1, v.people) * Math.max(0, v.minutes) / 60 * hourly;
+        return { total: usd(cost), sub: 'labor cost for this meeting', rows: [
+          { k: 'Average hourly labor cost', v: hourly, ...unit },
+          { k: 'Attendee-hours', v: v.people * v.minutes / 60, format: 'unit', unit: 'hours', decimals: 1 },
+          { k: 'Meeting labor cost', v: cost, ...unit, extra: true },
+        ], chart: [{label:'Meeting',value:cost,tone:'warn'}], format:'unit', unit:'USD' };
+      }
+      if (id === 'tax') {
+        const profit = Math.max(0, v.gross - v.bizexp);
+        const seBase = profit * SE_MULTIPLIER;
+        const ss = profit >= SE_FILING_THRESHOLD ? Math.min(seBase, Math.max(0, v.wagebase)) * SS_RATE : 0;
+        const medicare = profit >= SE_FILING_THRESHOLD ? seBase * MEDICARE_RATE : 0;
+        const half = (ss + medicare) / 2;
+        const qbi = v.qbi === 'yes' ? Math.max(0, profit - half) * QBI_RATE : 0;
+        const incomeBase = Math.max(0, profit - half - qbi);
+        const federal = incomeBase * Math.max(0, Number(v.bracket)) / 100;
+        const state = incomeBase * Math.max(0, v.staterate) / 100;
+        const tax = ss + medicare + federal + state;
+        const keep = Math.max(0, profit - tax);
+        return { total: usd(tax), sub: usd(tax / 4) + ' per estimated-tax quarter', rows: [
+          { k:'Net profit',v:profit,...unit }, { k:'Social Security',ref:'Schedule SE',v:ss,...unit },
+          { k:'Medicare',ref:'Schedule SE',v:medicare,...unit }, { k:'Federal income tax',v:federal,...unit },
+          { k:'State income tax',v:state,...unit }, { k:'Estimated total tax',v:tax,...unit,extra:true },
+          { k:'You keep after modeled tax',v:keep,...unit },
+        ], chart:[{label:'You keep',value:keep,tone:'good'},{label:'Tax',value:tax,tone:'warn'}], format:'unit',unit:'USD' };
+      }
+      const reserve = Math.min(.9, Math.max(0, v.reserve / 100));
+      const revenue = (Math.max(0, v.target) + Math.max(0, v.expenses)) / Math.max(.1, 1 - reserve);
+      const hours = Math.max(1, v.billable) * Math.max(1, v.weeks);
+      const rate = revenue / hours;
+      return { total: usd(rate) + '/hr', sub: usd(rate * BILLABLE_DAY_HOURS) + ' per 8-hour billable day', rows: [
+        { k:'Required annual revenue',v:revenue,...unit }, { k:'Billable hours per year',v:hours,format:'unit',unit:'hours' },
+        { k:'Minimum hourly rate',v:rate,...unit,extra:true }, { k:'Minimum day rate',v:rate*BILLABLE_DAY_HOURS,...unit },
+      ], chart:[{label:'Take-home',value:v.target,tone:'good'},{label:'Expenses',value:v.expenses,tone:'main'},{label:'Tax reserve',value:revenue*reserve,tone:'warn'}], format:'unit',unit:'USD' };
+    });
+  })();
+</script>

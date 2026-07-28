@@ -1,0 +1,46 @@
+---
+export const prerender = true;
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, UF, UTM, TERRITORIAL, MORA_TGR, MAYOR_VALOR, TIMBRES, HERENCIA_TRAMOS, HERENCIA_PARENTESCO, DONACION_EXENTA_UTM } from '../../../lib/hubs/cl/impuestos-de-mi-propiedad';
+const canonical = `https://hacecuentas.com/${hub.slug}`;
+const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub.faq.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))};
+---
+<Layout title={hub.title} description={hub.description} canonical={canonical} schema={schema} audience="CL" lang="es" ogType="article" articleSection={hub.silo}>
+  <Header /><DecisionHub data={hub} /><Footer />
+</Layout>
+<script is:inline define:vars={{ UF, UTM, TERRITORIAL, MORA_TGR, MAYOR_VALOR, TIMBRES, HERENCIA_TRAMOS, HERENCIA_PARENTESCO, DONACION_EXENTA_UTM }}>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = n => '$' + Math.round(n || 0).toLocaleString('es-CL');
+    H.onCompute(function (v, c) {
+      const id = (c && c.id) || 'contribuciones';
+      let base=0, tax=0, rows=[];
+      if (id === 'morosas') {
+        base = Math.max(0,v.cuotaVencida) * (1 + Math.max(0,v.ipcAcumulado)/100);
+        const interest=base*MORA_TGR.interesMensual*Math.ceil(Math.max(0,v.mesesAtraso));
+        const fine=base*Math.min(MORA_TGR.multaTope,MORA_TGR.multaBase+MORA_TGR.multaPorMes*Math.ceil(Math.max(0,v.mesesAtraso)));
+        tax=interest+fine; rows=[{k:'Cuota reajustada',v:base},{k:'Interés penal',ref:'Art. 53 CT',v:interest},{k:'Multa',ref:'Art. 53 inc. 3 CT',v:fine},{k:'Total a pagar',v:base+tax,extra:true}];
+      } else if (id === 'vender') {
+        const gain=Math.max(0,v.precioVenta-v.costoAdquisicion); const free=Math.max(0,MAYOR_VALOR.exencionUf-v.cupoUsadoUf)*UF;
+        base=Math.max(0,gain-free); tax=base*MAYOR_VALOR.tasaImpuestoUnico;
+        rows=[{k:'Mayor valor',v:gain},{k:'Cupo exento disponible',ref:'Art. 17 N°8 LIR',v:free},{k:'Mayor valor gravado',v:base},{k:'Impuesto único',v:tax,extra:true}];
+      } else if (id === 'timbres') {
+        base=Math.max(0,v.montoCredito); const rate=v.exencionTimbres==='si'?0:Math.min(TIMBRES.tope,TIMBRES.tasaMensual*Math.ceil(Math.max(1,v.plazoMeses)));
+        tax=base*rate; rows=[{k:'Monto del crédito',v:base},{k:'Tasa aplicable',v:rate*100,format:'unit',unit:'%'},{k:'Impuesto de timbres',ref:'DL 3.475',v:tax,extra:true}];
+      } else if (id === 'heredar') {
+        const kin=HERENCIA_PARENTESCO.find(p=>p.id===v.parentesco)||HERENCIA_PARENTESCO[4];
+        const exempt=(v.esDonacion==='donacion'?DONACION_EXENTA_UTM:kin.exencionUtm)*UTM;
+        base=Math.max(0,v.asignacion-v.deudas-exempt); const u=base/UTM;
+        const band=HERENCIA_TRAMOS.find(t=>t.hastaUtm===null||u<=t.hastaUtm); tax=Math.max(0,(u*band.tasa-band.deduccionUtm)*UTM)*(1+kin.recargo);
+        rows=[{k:'Asignación neta',v:Math.max(0,v.asignacion-v.deudas)},{k:'Exención',v:exempt},{k:'Base afecta',v:base},{k:'Base en UTM',v:u,format:'unit',unit:'UTM',decimals:2},{k:'Impuesto',ref:'Ley 16.271',v:tax,extra:true}];
+      } else {
+        base=Math.max(0,v.avaluo-(v.tipoPropiedad==='habitacional'?Math.max(0,v.exentoAvaluo):0));
+        tax=base*Math.max(0,v.tasaTerritorial)/100; rows=[{k:'Avalúo afecto',v:base},{k:'Contribución anual',ref:'Ley 17.235',v:tax,extra:true},{k:'Cada cuota',v:tax/TERRITORIAL.cuotasAlAnio}];
+      }
+      return {total:clp(tax),sub:id==='morosas'?'recargos, además del capital reajustado':'estimación del caso seleccionado',rows,chart:[{label:'Base neta',value:Math.max(0,base-tax),tone:'good'},{label:'Impuesto o recargo',value:tax,tone:'warn'}]};
+    });
+  })();
+</script>

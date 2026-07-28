@@ -1,0 +1,35 @@
+---
+export const prerender = true;
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/en/family-budget-and-big-expenses';
+const canonical = `https://hacecuentas.com/${hub.slug}`;
+const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub.faq.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))};
+---
+<Layout title={hub.title} description={hub.description} canonical={canonical} schema={schema} audience="US" lang="en" ogType="article" articleSection={hub.silo}>
+  <Header /><DecisionHub data={hub} /><Footer />
+</Layout>
+<script>
+  import { formulaMap } from '../../../lib/hub-formulas-generated/en-family-budget-and-big-expenses';
+  const configs = {"c1":{"formulaId":"presupuesto-50-30-20-familiar-sueldo","fields":["monto","plazo","tasa"],"outputs":[{"id":"resultado","label":"Needs (50%)","primary":true},{"id":"deseos","label":"Wants (30%)"},{"id":"ahorro","label":"Savings (20%)"},{"id":"resumen","label":"Interpretation"}],"title":"50/30/20 Family Budget Rule"},"c2":{"formulaId":"baby-shower-budget-guests-food-decoration","fields":["guest_count","venue_type","event_hall_cost","food_per_person","decoration_budget","cake_cost","favor_per_person","photography_budget"],"outputs":[{"id":"venue_cost","label":"Venue Cost","primary":false,"format":"currency","suffix":"USD"},{"id":"food_cost","label":"Food Total","primary":false,"format":"currency","suffix":"USD"},{"id":"decoration_cost","label":"Decorations","primary":false,"format":"currency","suffix":"USD"},{"id":"cake_cost","label":"Cake / Desserts","primary":false,"format":"currency","suffix":"USD"},{"id":"favor_cost","label":"Party Favors Total","primary":false,"format":"currency","suffix":"USD"},{"id":"photography_cost","label":"Photography / Video","primary":false,"format":"currency","suffix":"USD"},{"id":"total_budget","label":"Total Budget","primary":true,"format":"currency","suffix":"USD"},{"id":"cost_per_guest","label":"Cost per Guest","primary":true,"format":"currency","suffix":"USD"},{"id":"venue_savings_home","label":"Savings vs Restaurant (Home option)","primary":false,"format":"currency","suffix":"USD"}],"title":"Baby Shower Budget Calculator — Cost Per Guest Breakdown"},"c3":{"formulaId":"back-to-school-budget-calculator","fields":["kids","grade_level","include_electronics"],"outputs":[{"id":"total_budget","label":"Total Back-to-School Budget","primary":true,"format":"currency","suffix":"USD"},{"id":"per_child","label":"Budget per Child","primary":false,"format":"currency","suffix":"USD"},{"id":"clothing_budget","label":"Clothing & Accessories","primary":false,"format":"currency","suffix":"USD"},{"id":"shoes_budget","label":"Shoes","primary":false,"format":"currency","suffix":"USD"},{"id":"supplies_budget","label":"School Supplies","primary":false,"format":"currency","suffix":"USD"},{"id":"electronics_budget","label":"Electronics","primary":false,"format":"currency","suffix":"USD"},{"id":"other_budget","label":"Dorm, Food & Other (College)","primary":false,"format":"currency","suffix":"USD"}],"title":"Back-to-School Budget Calculator 2026"},"c4":{"formulaId":"discount-calculator","fields":["original_price","discount_1","discount_2"],"outputs":[{"id":"final_price","label":"Final Price","primary":true,"format":"currency"},{"id":"savings","label":"You Save","primary":false,"format":"currency"},{"id":"total_discount","label":"Real Discount","primary":false,"format":"text"}],"title":"Discount Calculator — Percent Off & Stacked Deals"},"c5":{"formulaId":"itba-utdt-costo-carrera-anual-privada","fields":["universidad","carrera"],"outputs":[{"id":"costoAnual","label":"Annual Cost (USD)","primary":true},{"id":"costoCarrera","label":"Total Program Cost"},{"id":"beca","label":"Scholarship Opportunities"}],"title":"How Much Does Private University Cost in Argentina?"},"c6":{"formulaId":"caja-seguridad-banco-comparativa-mensual","fields":["tamano","banco"],"outputs":[{"id":"costoAnual","label":"Annual Cost Estimate","primary":true},{"id":"costoMensual","label":"Monthly Cost"},{"id":"interpretacion","label":"Interpretation"}],"title":"Bank Safe Deposit Box Costs by Size & Type"}};
+  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
+  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
+  function register() {
+    const H = (window as any).HC_HUB;
+    if (!H) return;
+    H.onCompute((all:any, selected:any) => {
+    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
+    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
+    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
+    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
+    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
+    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'ars'}));
+    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
+    return {total:main.toLocaleString('en',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'ars'};
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
+  else register();
+</script>

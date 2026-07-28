@@ -1,0 +1,35 @@
+---
+export const prerender = true;
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/pt/converter-medidas';
+const canonical = `https://hacecuentas.com/${hub.slug}`;
+const schema = {'@context':'https://schema.org','@type':'FAQPage',mainEntity:hub.faq.map(f=>({'@type':'Question',name:f.q,acceptedAnswer:{'@type':'Answer',text:f.a}}))};
+---
+<Layout title={hub.title} description={hub.description} canonical={canonical} schema={schema} audience="BR" lang="pt-BR" ogType="article" articleSection={hub.silo}>
+  <Header /><DecisionHub data={hub} /><Footer />
+</Layout>
+<script>
+  import { formulaMap } from '../../../lib/hub-formulas-generated/pt-converter-medidas';
+  const configs = {"c1":{"formulaId":"conversion-medida-neumatico-radio-diametro","fields":["ancho","aspect","rin"],"outputs":[{"id":"diametroMm","label":"Diâmetro","primary":true},{"id":"circunf","label":"Circunferência"},{"id":"revKm","label":"Rev/km"},{"id":"resumen","label":"Interpretação"}],"title":"Medida de Pneu: Calcule o Diâmetro Real"},"c2":{"formulaId":"conversion-quintal-tonelada-kg-agro","fields":["valor","unidad"],"outputs":[{"id":"resultado","label":"Resultado da conversão","primary":true},{"id":"resumen","label":"Detalhes"}],"title":"Calculadora: Quintal Métrico para Tonelada"},"c3":{"formulaId":"conversion-torque-nm-lb-ft-kgm","fields":["v","de"],"outputs":[{"id":"nm","label":"Nm","primary":true},{"id":"lbft","label":"lb·ft"},{"id":"kgm","label":"kg·m"},{"id":"resumen","label":"Resumo"}],"title":"Conversão de Torque: Nm, lb·ft e kg·m"},"c4":{"formulaId":"conversion-velocidad-kmh-mph-nudos","fields":["v","de"],"outputs":[{"id":"kmh","label":"km/h","primary":true},{"id":"mph","label":"mph"},{"id":"kn","label":"nós"},{"id":"ms","label":"m/s"},{"id":"resumen","label":"Resumo"}],"title":"Conversão de velocidade: km/h ↔ mph ↔ nós"}};
+  const numeric = (o:any) => Object.entries(o || {}).filter(([k,v]) => !k.startsWith('_') && typeof v === 'number' && Number.isFinite(v as number));
+  const labelFor = (cfg:any,key:string) => cfg.outputs.find((o:any)=>o.id===key)?.label || key.replace(/_/g,' ');
+  function register() {
+    const H = (window as any).HC_HUB;
+    if (!H) return;
+    H.onCompute((all:any, selected:any) => {
+    const id=selected?.id || Object.keys(configs)[0], cfg=(configs as any)[id];
+    const values:any={}; for(const key of cfg.fields) values[key]=all[id+'__'+key];
+    let out:any; try { out=formulaMap[id](values) || {}; } catch(e:any) { return {total:'—',sub:e?.message||'Revisa los datos',rows:[],chart:[],format:'plain'}; }
+    const nums=numeric(out); const preferred=cfg.outputs.find((x:any)=>x.primary && typeof out[x.id]==='number') || cfg.outputs.find((x:any)=>typeof out[x.id]==='number');
+    const mainKey=preferred?.id || nums[0]?.[0], main=Number(out[mainKey] ?? nums[0]?.[1] ?? 0);
+    const rows=nums.slice(0,12).map(([k,v])=>({k:labelFor(cfg,k),v:Number(v),format:'unit'}));
+    const chart=nums.slice(0,6).map(([k,v],i)=>({label:labelFor(cfg,k),value:Math.abs(Number(v)),tone:i===0?'main':i===1?'good':'prop'}));
+    return {total:main.toLocaleString('pt-BR',{maximumFractionDigits:2}),sub:out._insight || out.detalle || out.resumen || cfg.title,rows,chart,format:'unit'};
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', register, { once: true });
+  else register();
+</script>

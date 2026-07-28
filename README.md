@@ -92,7 +92,7 @@ El repositorio público más grande de calculadoras fiscales, de salud, finanzas
 
 ## 🇧🇷 Brasil — fiscal / trabalhista completo
 
-FGTS, rescisão CLT, 13º, férias, INSS, Simples Nacional, IRPF, ITBI + más — **100+ calcs PT-BR**:
+FGTS, rescisão CLT, 13º, férias, INSS, Simples Nacional, IRPF, ITBI + más — **0+ calcs PT-BR**:
 
 - [FGTS saque-aniversário por ano](https://hacecuentas.com/pt/fgts-saque-aniversario-valor-por-ano)
 - [Rescisão CLT sem justa causa](https://hacecuentas.com/pt/rescisao-clt-sem-justa-causa)
@@ -108,7 +108,7 @@ FGTS, rescisão CLT, 13º, férias, INSS, Simples Nacional, IRPF, ITBI + más �
 - [ITBI São Paulo capital 3%](https://hacecuentas.com/pt/itbi-sao-paulo-capital-3-porcento)
 - [CDB rendimento líquido IR regressivo](https://hacecuentas.com/pt/cdb-rendimento-liquido-ir-regressivo)
 - [IPVA São Paulo tabela FIPE](https://hacecuentas.com/pt/ipva-sao-paulo-tabela-4-porcento-autos)
-- [+100 calcs PT-BR](https://hacecuentas.com/pt/)
+- [+0 calcs PT-BR](https://hacecuentas.com/pt/)
 
 ---
 
