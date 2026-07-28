@@ -491,12 +491,16 @@ if [ "$SMOKE" = true ]; then
   # ambos casos la poda de calcs las convirtió en 301. Preferí siempre HUBS, que
   # son destino y no origen de redirect.
   #
+  # Pasó una TERCERA vez el 28-07-2026 con /en/bmi-calculator, que se podó al
+  # absorberla /en/health/body-weight: el smoke test la vio en 301 y rollbackeó
+  # una versión sana. Si vas a podar, revisá ESTA LISTA primero.
+  #
   # SIN URL DE EMBED (28-07-2026): `/embed/[slug].astro` genera sus rutas desde
   # `src/content/calcs/*.json`, o sea sólo las calcs sueltas de AR — y ya no
   # queda ninguna, así que /embed/* está VACÍO. El feature (plugin de WordPress,
   # /embeber, oEmbed) no tiene nada que servir hasta que se le dé soporte a los
   # hubs. Cuando eso pase, volvé a meter una URL de embed acá.
-  for url in / /salud/peso-ideal-imc /trabajo/sueldo-bruto-y-neto /en/bmi-calculator /es /sitemap.xml /matematica/ecuaciones-y-polinomios /dolar-hoy-mexico; do
+  for url in / /salud/peso-ideal-imc /trabajo/sueldo-bruto-y-neto /en/health/body-weight /es /sitemap.xml /matematica/ecuaciones-y-polinomios /dolar-hoy-mexico; do
     STATUS=$(curl -sS -o /dev/null -w "%{http_code}" -A "HC-LocalDeploy/1.0" "https://hacecuentas.com$url" || echo "ERR")
     if [ "$STATUS" = "200" ]; then
       echo "  ✓ $url"
