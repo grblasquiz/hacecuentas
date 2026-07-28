@@ -1676,6 +1676,7 @@ export const PRUNING_REDIRECTS: Record<string, string> = {
   '/calculadora-indice-saciedad-alimento': '/salud/calorias-de-los-alimentos',
   '/calculadora-indice-tobillo-brazo': '/salud',
   '/calculadora-indice-tobillo-brazo-itb': '/salud',
+  '/calculadora-inecuaciones': '/matematica/ecuaciones-y-polinomios',
   '/calculadora-inferencia-llm-tokens-segundo-throughput': '/tecnologia/costo-de-ia',
   '/calculadora-inflacion-acumulada-periodo': '/alquiler/aumento-de-alquiler',
   '/calculadora-inflacion-perdida-poder-adquisitivo': '/finanzas-personales/dolar',
