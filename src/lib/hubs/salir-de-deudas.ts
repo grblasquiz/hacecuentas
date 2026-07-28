@@ -10,12 +10,12 @@ import type { HubData } from './types';
  * intereses superan al capital, y eso es exactamente lo que tiene que verse.
  */
 export const hub: HubData = {
-  slug: 'deudas/salir-de-deudas',
+  slug: 'finanzas-personales/salir-de-deudas',
   title: '¿Cómo salgo de las deudas? Pago mínimo, refinanciación y cancelación anticipada',
   description:
     'Cuánto vas a terminar pagando según lo que hagas con tu deuda: seguir con el pago mínimo de la tarjeta, atacar varias deudas por orden de tasa, refinanciar o cancelar antes. Capital, intereses y meses, con la TNA y el CFT que te cobran.',
-  silo: 'Deudas',
-  siloHref: '/deudas',
+  silo: 'Finanzas personales',
+  siloHref: '/finanzas-personales',
 
   eyebrow: 'Guía y estimación financiera',
   h1: '¿Cómo salgo de las deudas?',

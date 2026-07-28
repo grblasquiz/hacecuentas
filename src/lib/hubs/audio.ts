@@ -38,12 +38,12 @@ import type { HubData } from './types';
  */
 
 export const hub: HubData = {
-  slug: 'musica/audio',
+  slug: 'tecnologia/audio',
   title: 'Audio: BPM, tempo, afinación y decibeles — calculadoras en una',
   description:
     'Sacá el BPM de una canción, la duración del compás, el delay sincronizado en milisegundos, la frecuencia de cualquier nota con A440, la tensión de una cuerda y el nivel en decibeles a distancia, con el tiempo de exposición seguro.',
-  silo: 'Música',
-  siloHref: '/musica',
+  silo: 'Tecnología',
+  siloHref: '/tecnologia',
 
   eyebrow: 'Guía y calculadoras de audio',
   h1: 'Audio: BPM, tempo, afinación y decibeles',

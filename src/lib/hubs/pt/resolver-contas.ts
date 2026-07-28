@@ -1,11 +1,11 @@
 import type { HubData } from '../types';
 
 export const hub: HubData = {
-  slug: 'pt/ciencia/resolver-contas',
+  slug: 'pt/matematica/resolver-contas',
   title: "Como resolvo esta conta de ciência ou matemática? | Hacé Cuentas",
   description: "Hub de decisão com 9 cálculos: Energía Cinética: Calculadora Ec = ½mv²; Calculadora de Diluição — Fórmula C1V1 = C2V2; Queda Livre — Distância e Altura por Tempo; Empuxo de Arquimedes — Calcule a Força de Empuxo (E = ρ × V × g); Calculadora de Integral Indefinida de Polinômio; MDC e MMC de dois números — Máximo Divisor Comum e Mínimo Múltiplo Comum; Converter Gramas em Moles (n = m ÷ M); Paralaxe para Parsecs: Calculadora de Distância Estelar; Calculadora de Regra de Três.",
   silo: "Ciência e matemática",
-  siloHref: '/pt/ciencia',
+  siloHref: '/pt/matematica',
   locale: 'pt',
   eyebrow: "Brasil · Ciência e matemática",
   h1: "Como resolvo esta conta de ciência ou matemática?",

@@ -1,11 +1,11 @@
 import type { HubData } from '../types';
 
 export const hub: HubData = {
-  slug: 'pt/cozinha/comida-para-receitas-e-festas',
+  slug: 'pt/vida/comida-para-receitas-e-festas',
   title: "Quanto de comida eu preciso preparar? | Hacé Cuentas",
   description: "Hub de decisão com 10 cálculos: Quantidade de Bolo de Casamento por Convidado; Quanto Café Moído por Xícara (por Método de Preparo); Quanto chocolate preciso para fazer bombons caseiros?; Conversão de Colher de Chá para Gramas — Sal, Açúcar, Especiarias; Conversor Cups para Gramas — Farinha, Açúcar, Óleo e 18 Ingredientes; Gramas de Carne por Pessoa no Churrasco; Calculadora de Porções de Bolo por Tamanho da Forma; Porções de sushi por pessoa; Quantos Hambúrgueres por Pessoa para uma Festa?; Tempos de cozimento de verduras no vapor e em água fervente.",
   silo: "Receitas e festas",
-  siloHref: '/pt/cozinha',
+  siloHref: '/pt/vida',
   locale: 'pt',
   eyebrow: "Brasil · Receitas e festas",
   h1: "Quanto de comida eu preciso preparar?",

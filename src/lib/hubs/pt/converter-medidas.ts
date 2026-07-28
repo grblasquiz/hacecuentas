@@ -1,11 +1,11 @@
 import type { HubData } from '../types';
 
 export const hub: HubData = {
-  slug: 'pt/ferramentas/converter-medidas',
+  slug: 'pt/matematica/converter-medidas',
   title: "Como converto esta medida sem errar? | Hacé Cuentas",
   description: "Hub de decisão com 4 cálculos: Medida de Pneu: Calcule o Diâmetro Real; Calculadora: Quintal Métrico para Tonelada; Conversão de Torque: Nm, lb·ft e kg·m; Conversão de velocidade: km/h ↔ mph ↔ nós.",
   silo: "Conversores",
-  siloHref: '/pt/ferramentas',
+  siloHref: '/pt/matematica',
   locale: 'pt',
   eyebrow: "Brasil · Conversores",
   h1: "Como converto esta medida sem errar?",

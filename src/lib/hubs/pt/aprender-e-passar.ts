@@ -1,11 +1,11 @@
 import type { HubData } from '../types';
 
 export const hub: HubData = {
-  slug: 'pt/estudos/aprender-e-passar',
+  slug: 'pt/vida/aprender-e-passar',
   title: "Quanto preciso estudar ou tirar para passar? | Hacé Cuentas",
   description: "Hub de decisão com 7 cálculos: Qual aplicativo de idiomas é melhor para o seu nível?; Quantas Aulas de Idioma por Semana Você Precisa?; Calculadora de Regularidade CBC UBA: Regular ou Livre?; Média escolar do ensino médio: aprovação, recuperação ou reprovação; Calculadora: quanto preciso para passar; Calculadora de média ponderada do ENEM (nota de corte do SiSU); Podcasts para aprender idiomas.",
   silo: "Estudos",
-  siloHref: '/pt/estudos',
+  siloHref: '/pt/vida',
   locale: 'pt',
   eyebrow: "Brasil · Estudos",
   h1: "Quanto preciso estudar ou tirar para passar?",

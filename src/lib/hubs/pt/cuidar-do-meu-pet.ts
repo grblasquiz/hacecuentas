@@ -1,11 +1,11 @@
 import type { HubData } from '../types';
 
 export const hub: HubData = {
-  slug: 'pt/pets/cuidar-do-meu-pet',
+  slug: 'pt/casa/cuidar-do-meu-pet',
   title: "Quanto meu animal precisa por dia? | Hacé Cuentas",
   description: "Hub de decisão com 7 cálculos: Quantos litros por peixe? Calculadora de aquário; Calculadora de Vitamina C para Cobaias — Dose Diária por Peso; Quanto deve comer um coelho? Feno, pellets e verduras por peso; Idade do seu animal em anos humanos; Quanto devo alimentar meu furão? Ração e proteína diária por peso; Quantos minutos de passeio o seu cachorro precisa por dia?; Quanto alimentar tartaruga de água: calculadora por peso e idade.",
   silo: "Cuidados com pets",
-  siloHref: '/pt/pets',
+  siloHref: '/pt/casa',
   locale: 'pt',
   eyebrow: "Brasil · Cuidados com pets",
   h1: "Quanto meu animal precisa por dia?",

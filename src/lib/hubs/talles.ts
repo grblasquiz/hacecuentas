@@ -25,12 +25,12 @@ import type { HubData } from './types';
  *    rama por defecto (ropa) para que el dato viva también en el HTML estático.
  */
 export const hub: HubData = {
-  slug: 'moda/talles',
+  slug: 'conversores/talles',
   title: '¿Qué talle soy? — Conversor de talles de ropa, calzado, corpiño y anillo 2026',
   description:
     'Averiguá tu talle con tus medidas en centímetros y velo convertido a AR, US, EU y UK. Ropa y jeans por busto, cintura y cadera; zapatillas por largo del pie; corpiño por contorno y copa; anillo por circunferencia del dedo.',
-  silo: 'Moda',
-  siloHref: '/moda',
+  silo: 'Conversores',
+  siloHref: '/conversores',
 
   eyebrow: 'Guía de talles y equivalencias',
   h1: '¿Qué talle soy?',

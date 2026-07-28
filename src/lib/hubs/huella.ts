@@ -192,12 +192,12 @@ const AVISO_ESTIMACION =
   'Toda huella de carbono es una estimación con factores promedio: dos personas con los mismos hábitos pueden diferir bastante según su país, su matriz eléctrica y su cadena de suministro. Los números de acá sirven para comparar opciones y priorizar cambios, no para declarar emisiones ante nadie.';
 
 export const hub: HubData = {
-  slug: 'ambiente/huella-de-carbono',
+  slug: 'hogar/huella-de-carbono',
   title: '¿Cuál es mi huella de carbono? Calculadora anual, vuelos, dieta y compensación',
   description:
     'Cuántas toneladas de CO₂ generás por año entre transporte, dieta y energía, cuánto emite un vuelo por pasajero, cuánto pesa la carne en tu alimentación, cuánto evitás reciclando y cuántos árboles harían falta para compensarlo. Factores DEFRA, EWG y Mekonnen & Hoekstra.',
-  silo: 'Ambiente',
-  siloHref: '/ambiente',
+  silo: 'Hogar',
+  siloHref: '/hogar',
 
   eyebrow: 'Emisiones, compensación y residuos',
   h1: '¿Cuál es mi huella de carbono?',

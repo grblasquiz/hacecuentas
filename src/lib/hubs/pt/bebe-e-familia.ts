@@ -1,11 +1,11 @@
 import type { HubData } from '../types';
 
 export const hub: HubData = {
-  slug: 'pt/familia/bebe-e-familia',
+  slug: 'pt/vida/bebe-e-familia',
   title: "O que preciso planejar para o bebê e a família? | Hacé Cuentas",
   description: "Hub de decisão com 8 cálculos: Quantos ml de fórmula o bebê precisa por dia? Calculadora por idade e peso; Quando Começar BLW? Calculadora por Idade e Etapa; Data Provável do Parto (DPP) pela DUM — Regra de Naegele; Calculadora de Idade — anos, meses e dias; Dia dos Pais 2026: calculadora de orçamento para o presente; Ovulação e Período Fértil: calcule seus dias férteis; Quantas fraldas por dia e por mês conforme a idade do bebê; Quanto de mesada dar ao filho por idade?.",
   silo: "Bebê e família",
-  siloHref: '/pt/familia',
+  siloHref: '/pt/vida',
   locale: 'pt',
   eyebrow: "Brasil · Bebê e família",
   h1: "O que preciso planejar para o bebê e a família?",
