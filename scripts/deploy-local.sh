@@ -402,7 +402,12 @@ if [ ! -f dist/server/wrapper.mjs ]; then
   exit 1
 fi
 HTML_COUNT=$(find dist/client -name '*.html' 2>/dev/null | wc -l | tr -d ' ')
-MIN_HTML=2000
+# Piso del prerender. Bajado de 2000 a 1700 el 28-07-2026: la consolidación en
+# hubs borró 1.383 calcs sueltas + sus /embed/ + las páginas /categoria/*, así
+# que el sitio pasó de ~4.900 HTMLs a ~1.860 SIN estar roto. El gate frenó un
+# build sano. Si volvés a podar en masa, recalculá este piso — sirve para
+# detectar un prerender vacío, no para congelar el tamaño del sitio.
+MIN_HTML=1700
 if [ "$HTML_COUNT" -lt "$MIN_HTML" ]; then
   err "prerender ROTO: solo $HTML_COUNT HTMLs en dist/client (esperados ≥$MIN_HTML). NO deployo — el sitio en vivo queda intacto."
   exit 1
