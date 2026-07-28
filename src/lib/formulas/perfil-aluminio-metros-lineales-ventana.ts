@@ -8,7 +8,7 @@ export function perfilAluminioMetrosLinealesVentana(i: Inputs): Outputs {
   const nhojas = i.nhojas !== undefined && i.nhojas !== '' ? Number(i.nhojas) : 2; // number of sliding panels (0 = fixed pane)
   const contramarco = String(i.contramarco) === 'si' || String(i.contramarco) === 'yes' ? 1 : 0;
   const travesano = String(i.travesano) === 'si' || String(i.travesano) === 'yes' ? 1 : 0;
-  const desperdicio = Number(i.desperdicio) || 10; // waste % (10 or 15)
+  const desperdicio = (Number.isFinite(Number(i.desperdicio)) ? Number(i.desperdicio) : 10); // waste % (10 or 15)
 
   // Safety: zero dimensions → zero result
   if (ancho <= 0 || alto <= 0) {

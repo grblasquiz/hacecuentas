@@ -22,7 +22,7 @@ export function conversorSemanasADias(i: Inputs): Outputs {
   const months = days / 30.44;
   const monthsStr = months.toFixed(1).replace(/\.?0+$/, '');
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'd'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'd' : "sem"),
     resumen: v + ' ' + fromLabel + ' = ' + rStr + ' ' + toLabel + '.',
     _insight: {
       title: 'En meses, a ojo',

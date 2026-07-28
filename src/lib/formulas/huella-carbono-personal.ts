@@ -8,9 +8,10 @@ export function huellaCarbono(i: Inputs): Outputs {
   const CO2_KM:Record<string,number> = { auto:0.21, electrico:0.05, 'transporte-publico':0.06, bicicleta:0 };
   const CO2_DIETA:Record<string,number> = { 'carne-diaria':2.5, mixta:1.5, vegetariana:1.0, vegana:0.7 };
   const CO2_ENERGIA:Record<string,number> = { baja:0.6, media:1.0, alta:1.8 };
-  const transAnual = (CO2_KM[trans]||0.21) * km * 52 / 1000;
-  const dietaAnual = CO2_DIETA[dieta]||1.5;
-  const energiaAnual = CO2_ENERGIA[energia]||1.0;
+  const factorKm = Number.isFinite(CO2_KM[trans]) ? CO2_KM[trans] : 0.21;
+  const transAnual = factorKm * km * 52 / 1000;
+  const dietaAnual = Number.isFinite(CO2_DIETA[dieta]) ? CO2_DIETA[dieta] : 1.5;
+  const energiaAnual = Number.isFinite(CO2_ENERGIA[energia]) ? CO2_ENERGIA[energia] : 1.0;
   const otros = 1.0;
   const total = Number((transAnual + dietaAnual + energiaAnual + otros).toFixed(1));
   const promedioArg = 4.7;

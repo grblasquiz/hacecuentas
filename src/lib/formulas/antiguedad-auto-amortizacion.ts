@@ -18,7 +18,7 @@ export interface Outputs {
 export function antiguedadAutoAmortizacion(i: Inputs): Outputs {
   const precio = Number(i.precio0km);
   const anos = Number(i.anosAntiguedad);
-  const tasa = Number(i.tasaAnual) || 18; // 18% anual típico en Argentina
+  const tasa = (Number.isFinite(Number(i.tasaAnual)) ? Number(i.tasaAnual) : 18); // 18% anual típico en Argentina
 
   if (!precio || precio <= 0) throw new Error('Ingresá el precio 0km del vehículo');
   if (anos < 0 || anos > 50) throw new Error('Los años de antigüedad deben estar entre 0 y 50');

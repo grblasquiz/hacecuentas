@@ -20,7 +20,7 @@ export function conversorKbAMb(i: Inputs): Outputs {
   const mbDecimal = d === 'ida' ? r : v;
   const mbBinario = kb / 1024;
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'MB'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'MB' : "KB"),
     resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
     _insight: {
       title: 'Decimal (1.000) vs. binario (1.024)',

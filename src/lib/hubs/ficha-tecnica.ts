@@ -443,7 +443,16 @@ export const CONV = {
  */
 export const HP_POR_LITRO = { no: 85, si: 150 };
 
-export const AERO = { cd: 0.3, area: 2.2, rho: 1.225, eficiencia: 0.85, wattsPorHp: 745.7 };
+/*
+ * Velocidad máxima: balance completo P·η = Crr·m·g·v + ½·ρ·Cd·A·v³.
+ * Antes sólo se equilibraba contra el arrastre aerodinámico, ignorando la
+ * resistencia a la rodadura, y sobreestimaba: daba 200 km/h para un 110 HP de
+ * 1.200 kg. Crr 0,012 es un radial de calle (rango SAE J2452: 0,010-0,015).
+ */
+export const AERO = {
+  cd: 0.3, area: 2.2, rho: 1.225, eficiencia: 0.85, wattsPorHp: 745.7,
+  crr: 0.012, g: 9.80665,
+};
 
 export const ALTURA_LIBRE: Record<string, { nombre: string; min: number; max: number }> = {
   sedan: { nombre: 'sedán o hatchback', min: 12, max: 15 },

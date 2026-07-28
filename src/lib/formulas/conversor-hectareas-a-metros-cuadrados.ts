@@ -19,7 +19,7 @@ export function conversorHectareasAMetrosCuadrados(i: Inputs): Outputs {
   const metros2 = d === 'ida' ? r : v;
   const canchas = metros2 / 7000;
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'm²'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'm²' : "ha"),
     resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
     _insight: {
       title: 'Para dimensionarlo',

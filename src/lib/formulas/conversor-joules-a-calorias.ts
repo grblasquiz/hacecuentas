@@ -19,7 +19,7 @@ export function conversorJoulesACalorias(i: Inputs): Outputs {
   const cal = d === 'ida' ? r : v;
   const kcal = cal / 1000;
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'cal'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'cal' : "J"),
     resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
     _insight: {
       title: 'Caloría chica vs. kcal de las etiquetas',

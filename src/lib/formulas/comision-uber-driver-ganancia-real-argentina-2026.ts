@@ -31,7 +31,7 @@ export interface Outputs {
 export function compute(i: Inputs): Outputs {
   const viajes_por_dia = Number(i.viajes_por_dia) || 0;
   const tarifa_promedio_usd = Number(i.tarifa_promedio_usd) || 0;
-  const comision_porcentaje = Number(i.comision_porcentaje) || 25;
+  const comision_porcentaje = (Number.isFinite(Number(i.comision_porcentaje)) ? Number(i.comision_porcentaje) : 25);
   const consumo_km_litro = Number(i.consumo_km_litro) || 8;
   const precio_nafta_ars_litro = Number(i.precio_nafta_ars_litro) || 2000;
   const km_por_viaje = Number(i.km_por_viaje) || 8;
@@ -39,7 +39,7 @@ export function compute(i: Inputs): Outputs {
   const tasa_cambio_usd_ars = Number(i.tasa_cambio_usd_ars) || 1500;
   const horas_trabajo_dia = Number(i.horas_trabajo_dia) || 8;
   const dias_trabajo_mes = Number(i.dias_trabajo_mes) || 22;
-  const aportacion_monotributo_porcentaje = Number(i.aportacion_monotributo_porcentaje) || 21;
+  const aportacion_monotributo_porcentaje = (Number.isFinite(Number(i.aportacion_monotributo_porcentaje)) ? Number(i.aportacion_monotributo_porcentaje) : 21);
 
   // Ingreso bruto diario
   const ingreso_bruto_diario_usd = viajes_por_dia * tarifa_promedio_usd;

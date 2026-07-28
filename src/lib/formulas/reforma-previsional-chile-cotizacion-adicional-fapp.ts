@@ -23,7 +23,7 @@ const UF_FALLBACK = 40_844.79;
 
 export function compute(i: Inputs): Outputs {
   const sueldo = Math.max(0, Number(i.sueldoBruto) || 0);
-  const tasa = Math.max(0, Math.min(7, Number(i.tasaAdicional) || 1));
+  const tasa = Math.max(0, Math.min(7, (Number.isFinite(Number(i.tasaAdicional)) ? Number(i.tasaAdicional) : 1)));
   const uf = Number(i.valorUF) > 0 ? Number(i.valorUF) : UF_FALLBACK;
 
   // Base imponible topada en 90 UF (tope AFP).

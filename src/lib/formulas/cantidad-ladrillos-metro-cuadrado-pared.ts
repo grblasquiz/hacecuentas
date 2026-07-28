@@ -22,7 +22,7 @@ export function cantidadLadrillosMetroCuadradoPared(i: Inputs): Outputs {
 
   const areaM2   = Math.max(Number(i.areaM2) || 0, 0);
   const tipoBrick = String(i.tipoBrick || 'comun_12');
-  const mermaPct = Math.max(Number(i.mermaPct) || 5, 0);
+  const mermaPct = Math.max((Number.isFinite(Number(i.mermaPct)) ? Number(i.mermaPct) : 5), 0);
 
   const brickData = BRICK_TYPES[tipoBrick] ?? BRICK_TYPES['comun_12'];
   const [bricksPerM2, labelEs, labelEn] = brickData;

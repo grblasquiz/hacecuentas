@@ -25,7 +25,7 @@ export function conversorCaloriasAJoules(i: Inputs): Outputs {
   };
 
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'J'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'J' : "cal"),
     resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
     _insight
   };

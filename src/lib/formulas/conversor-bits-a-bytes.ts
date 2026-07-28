@@ -25,7 +25,7 @@ export function conversorBitsABytes(i: Inputs): Outputs {
   };
 
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'B'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'B' : "bits"),
     resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
     _insight
   };

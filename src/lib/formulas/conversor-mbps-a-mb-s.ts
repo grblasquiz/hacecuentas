@@ -23,7 +23,7 @@ export function conversorMbpsAMbS(i: Inputs): Outputs {
   const minGB = segGB / 60;
   const tiempoGB = minGB >= 1 ? minGB.toFixed(1).replace(/\.0$/, '') + ' min' : Math.round(segGB) + ' s';
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'MB/s'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'MB/s' : "Mbps"),
     resumen: v + ' ' + fromLabel + ' = ' + rTxt + ' ' + toLabel + '.',
     _insight: {
       title: 'Tu velocidad real de bajada',

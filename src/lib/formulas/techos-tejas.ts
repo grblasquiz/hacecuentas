@@ -30,8 +30,8 @@ const TIPOS: Record<string, { nombre: string; porM2: number }> = {
 export function techosTejas(i: Inputs): Outputs {
   const m2 = Number(i.m2);
   const tipo = String(i.tipoTeja || 'francesa');
-  const pend = Number(i.pendiente) || 30; // 30% default
-  const desp = Number(i.desperdicio) || 10;
+  const pend = (Number.isFinite(Number(i.pendiente)) ? Number(i.pendiente) : 30); // 30% default
+  const desp = (Number.isFinite(Number(i.desperdicio)) ? Number(i.desperdicio) : 10);
   if (!m2 || m2 <= 0) throw new Error('Ingresá los m² de techo en planta');
   if (!TIPOS[tipo]) throw new Error('Tipo de teja no válido');
 

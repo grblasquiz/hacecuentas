@@ -10,7 +10,7 @@ export function maderaTerrazaMetrosCuadradosTablas(i: Inputs): Outputs {
   const largo_tabla_cm   = Math.max(1, Number(i.largo_tabla)    || 300); // board length, cm
   const ancho_tabla_mm   = Math.max(1, Number(i.ancho_tabla)    || 90);  // board face width, mm
   const separacion_mm    = Math.max(0, Number(i.separacion)     || 5);   // gap between boards, mm
-  const desperdicio_pct  = Math.max(0, Math.min(50, Number(i.desperdicio) || 10)); // waste %, 0–50
+  const desperdicio_pct  = Math.max(0, Math.min(50, (Number.isFinite(Number(i.desperdicio)) ? Number(i.desperdicio) : 10))); // waste %, 0–50
 
   // --- convert to consistent units (mm) ---
   const largo_terraza_mm = largo_terraza_m * 1000;

@@ -19,7 +19,7 @@ export function conversorTbAGb(i: Inputs): Outputs {
   const rTxt = r.toFixed(4).replace(/\.?0+$/, '');
   const vTxt = String(v);
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'GB'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'GB' : "TB"),
     resumen: v + ' ' + fromLabel + ' = ' + rTxt + ' ' + toLabel + '.',
     _insight: {
       title: 'Sistema decimal (1 TB = 1000 GB)',

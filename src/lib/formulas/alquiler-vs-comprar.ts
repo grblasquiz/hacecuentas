@@ -21,7 +21,7 @@ export function alquilerVsComprar(i: Inputs): Outputs {
   const ajusteAnual = Number(i.ajusteAlquilerAnual);
   const plazo = Number(i.plazoAnios);
   const tasaAnual = Number(i.tasaCreditoAnual);
-  const piePct = Number(i.piePorcentaje) || 25;
+  const piePct = (Number.isFinite(Number(i.piePorcentaje)) ? Number(i.piePorcentaje) : 25);
 
   if (!valor || valor <= 0) throw new Error('Ingresá el valor de la propiedad');
   if (!alquiler || alquiler <= 0) throw new Error('Ingresá el alquiler mensual');

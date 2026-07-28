@@ -68,7 +68,7 @@ export function compute(i: Inputs): Outputs {
     };
   }
 
-  const solape = Math.min(Math.max(Number(i.solape) || 10, 0), 50); // entre 0% y 50%
+  const solape = Math.min(Math.max((Number.isFinite(Number(i.solape)) ? Number(i.solape) : 10), 0), 50); // entre 0% y 50%
   const config = CONFIGS[i.tipoMembrana] ?? DEFAULT_CONFIG;
   const conManoObra = (i.incluirManoObra ?? "si") === "si";
 

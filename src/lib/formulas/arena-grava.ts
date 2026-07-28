@@ -30,7 +30,7 @@ const DOSIFICACIONES: Record<string, { nombre: string; cemento: number; arena: n
 export function arenaGrava(i: Inputs): Outputs {
   const m3 = Number(i.m3);
   const dos = String(i.dosificacion || '1_2_3');
-  const desp = Number(i.desperdicio) || 5;
+  const desp = (Number.isFinite(Number(i.desperdicio)) ? Number(i.desperdicio) : 5);
   if (!m3 || m3 <= 0) throw new Error('Ingresá el volumen de hormigón en m³');
   if (!DOSIFICACIONES[dos]) throw new Error('Dosificación no válida');
 

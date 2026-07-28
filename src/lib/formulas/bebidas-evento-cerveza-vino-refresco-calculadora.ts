@@ -21,9 +21,9 @@ export function bebidasEventoCervezaVinoRefrescoCalculadora(i: Inputs): Outputs 
   const invitados = Math.max(1, Math.round(Number(i.invitados) || 0));
   const horas = Math.max(1, Number(i.horas) || 1);
   // beverage mix percentages (0–100); default 50/30/20
-  const pctCerveza = Math.min(100, Math.max(0, Number(i.pct_cerveza) || 50));
-  const pctVino    = Math.min(100, Math.max(0, Number(i.pct_vino)    || 30));
-  const pctGaseosa = Math.min(100, Math.max(0, Number(i.pct_gaseosa) || 20));
+  const pctCerveza = Math.min(100, Math.max(0, (Number.isFinite(Number(i.pct_cerveza)) ? Number(i.pct_cerveza) : 50)));
+  const pctVino    = Math.min(100, Math.max(0, (Number.isFinite(Number(i.pct_vino)) ? Number(i.pct_vino) : 30)));
+  const pctGaseosa = Math.min(100, Math.max(0, (Number.isFinite(Number(i.pct_gaseosa)) ? Number(i.pct_gaseosa) : 20)));
 
   // Normalise splits to 100% if they don't add up
   const totalPct = pctCerveza + pctVino + pctGaseosa;

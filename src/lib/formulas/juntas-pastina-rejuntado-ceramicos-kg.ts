@@ -27,7 +27,7 @@ export function juntasPastinaRejuntadoCeramicosKg(i: Inputs): Outputs {
   const ancho  = Math.max(1, Number(i.ancho)  || 300); // mm
   const junta  = Math.max(0.5, Number(i.junta)  || 3); // mm (joint width)
   const espesor = Math.max(1, Number(i.espesor) || 8); // mm (tile thickness)
-  const desperdicio = Math.max(0, Math.min(30, Number(i.desperdicio) || 10)); // %
+  const desperdicio = Math.max(0, Math.min(30, (Number.isFinite(Number(i.desperdicio)) ? Number(i.desperdicio) : 10))); // %
 
   // Grout density for standard cement-based grout (Weber Classic, Klaukol): 1.70 kg/dm³
   const DENSITY = 1.70;

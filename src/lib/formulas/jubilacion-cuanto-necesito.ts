@@ -6,7 +6,7 @@ export function jubilacionCuantoNecesito(i: Inputs): Outputs {
   const gastoMensual = Number(i.gastoMensualRetiro);
   const anios = Number(i.aniosParaRetiro);
   const ahorroActual = Number(i.ahorroActualUSD) || 0;
-  const rendAnual = Number(i.rendimientoAnual) || 7;
+  const rendAnual = (Number.isFinite(Number(i.rendimientoAnual)) ? Number(i.rendimientoAnual) : 7);
   if (!gastoMensual || gastoMensual <= 0) throw new Error('Ingresá el ingreso mensual deseado');
   if (!anios || anios <= 0) throw new Error('Ingresá los años al retiro');
 

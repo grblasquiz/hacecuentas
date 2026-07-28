@@ -22,7 +22,7 @@ export function fireRetiroTemprano(i: Inputs): Outputs {
   const gastosMes = Number(i.gastosMensuales);
   const patrimonio = Number(i.patrimonioActual) || 0;
   const aporte = Number(i.aporteMensual) || 0;
-  const rend = Number(i.rendimientoAnual) || 7;
+  const rend = (Number.isFinite(Number(i.rendimientoAnual)) ? Number(i.rendimientoAnual) : 7);
   const tasaRetiro = Number(i.tasaRetiroPorcentaje) || 4;
 
   if (!gastosMes || gastosMes <= 0) throw new Error('Ingresá tus gastos mensuales');

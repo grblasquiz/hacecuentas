@@ -1,4 +1,10 @@
-import { COURIER_2026, PUERTA_A_PUERTA_2026, fmtARS } from '../data/argentina-2026';
+import {
+  COURIER_2026,
+  IVA_IMPORTACION_2026,
+  TASA_ESTADISTICA_2026,
+  DERECHO_IMPORTACION_TIPICO_2026,
+  fmtARS,
+} from '../data/argentina-2026';
 
 export interface Inputs { [k: string]: number | string; }
 export interface Outputs { [k: string]: string | number; _insight?: any; }
@@ -7,47 +13,53 @@ const fmtUSD = (v: number) =>
   'US$' + v.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
 /**
- * Impuestos de una compra en Temu/Shein/Amazon según régimen (jul-2026, pre-reforma):
- * - Courier: FOB hasta US$400 exento de derecho de importación y tasa de estadística (5 envíos/año, tope US$3.000).
- *   Sobre el excedente de US$400 se pagan derechos según la posición arancelaria del producto (no se estima acá).
- * - Puerta a puerta (Correo Argentino): franquicia US$50 en los primeros 12 envíos; 50% sobre el excedente.
+ * Impuestos de una compra en Temu/Shein/Amazon — régimen vigente desde el Decreto 604/2026
+ * (BO 17-jul-2026), que unificó courier y puerta a puerta:
+ *  - Franquicia de US$400 FOB por envío, 5 envíos por año calendario, en AMBOS regímenes.
+ *  - La franquicia exime derecho de importación y tasa de estadística. **NO exime el IVA (21%)**,
+ *    que se paga siempre (ARCA: "alcanzados únicamente por el IVA e impuestos internos").
+ *  - Sobre el excedente de US$400 se pagan además derecho de importación (según posición
+ *    arancelaria, 0–35%; usamos 20% como referencia editable) y tasa de estadística (3%).
+ *  - Se derogó el arancel único del 50% que regía para los envíos postales.
  */
 export function compute(i: Inputs): Outputs {
   const valor = Math.max(0, Number(i.valorUSD) || 0);
   const regimen = String(i.regimen || 'courier');
   const tc = Math.max(1, Number(i.cotizacionDolar) || 1500);
 
-  // Puerta a puerta (siempre se calcula para comparar)
-  const excPap = Math.max(0, valor - PUERTA_A_PUERTA_2026.franquiciaUSD);
-  const impPapUSD = excPap * PUERTA_A_PUERTA_2026.alicuotaExcedente;
+  const derechoPctRaw = Number(i.derechoImportacionPct);
+  const derechoPct = Number.isFinite(derechoPctRaw) && derechoPctRaw >= 0
+    ? derechoPctRaw / 100
+    : DERECHO_IMPORTACION_TIPICO_2026;
 
-  // Courier
-  const excCourier = Math.max(0, valor - COURIER_2026.franquiciaUSD);
-  const courierExento = excCourier === 0;
+  // Desde el Dto. 604/2026 los dos regímenes comparten franquicia y cantidad de envíos.
+  const franquicia = COURIER_2026.franquiciaUSD;
+  const enviosAnio = COURIER_2026.enviosPorAnio;
+  const excedente = Math.max(0, valor - franquicia);
+  const dentroFranquicia = excedente === 0;
 
-  const esCourier = regimen === 'courier';
+  // Derecho de importación y tasa de estadística: solo sobre el excedente.
+  const derechosUSD = excedente * derechoPct;
+  const tasaEstadisticaUSD = excedente * TASA_ESTADISTICA_2026;
+  // IVA: sobre el valor total + derechos + tasa (base imponible de importación).
+  const ivaUSD = (valor + derechosUSD + tasaEstadisticaUSD) * IVA_IMPORTACION_2026;
+
+  const impuestosUSD = derechosUSD + tasaEstadisticaUSD + ivaUSD;
+  const totalUSD = valor + impuestosUSD;
+
   const superaTope = valor > COURIER_2026.topeEnvioUSD;
-
-  let impuestoTxt: string;
-  let totalUSD: number | null;
-  if (esCourier) {
-    impuestoTxt = courierExento ? 'US$0 (dentro de la franquicia de US$400)' : `derechos s/ ${fmtUSD(excCourier)} según producto`;
-    totalUSD = courierExento ? valor : null;
-  } else {
-    impuestoTxt = impPapUSD > 0 ? fmtUSD(impPapUSD) : 'US$0 (dentro de la franquicia de US$50)';
-    totalUSD = valor + impPapUSD;
-  }
+  const esCourier = regimen === 'courier';
 
   const out: Outputs = {
-    impuestoAduana: impuestoTxt,
-    costoTotalUSD: totalUSD === null ? 'depende del arancel del producto' : fmtUSD(totalUSD),
-    costoTotalPesos: totalUSD === null ? `mínimo ${fmtARS(valor * tc)} + derechos` : fmtARS(totalUSD * tc),
-    excedenteGravado: esCourier
-      ? (courierExento ? 'US$0' : fmtUSD(excCourier))
-      : (excPap > 0 ? fmtUSD(excPap) : 'US$0'),
-    franquiciaRegimen: esCourier
-      ? `US$400 por envío (${COURIER_2026.enviosPorAnio} envíos/año)`
-      : `US$50 por envío (primeros ${PUERTA_A_PUERTA_2026.enviosConFranquicia} envíos/año)`,
+    impuestoAduana: fmtUSD(Math.round(impuestosUSD * 100) / 100),
+    ivaImportacion: fmtUSD(Math.round(ivaUSD * 100) / 100),
+    derechosYTasa: dentroFranquicia
+      ? 'US$0 (exento por franquicia)'
+      : `${fmtUSD(Math.round((derechosUSD + tasaEstadisticaUSD) * 100) / 100)} (derechos ${(derechoPct * 100).toFixed(0)}% + tasa 3% sobre el excedente)`,
+    costoTotalUSD: fmtUSD(Math.round(totalUSD * 100) / 100),
+    costoTotalPesos: fmtARS(totalUSD * tc),
+    excedenteGravado: fmtUSD(Math.round(excedente * 100) / 100),
+    franquiciaRegimen: `US$${franquicia} por envío (${enviosAnio} envíos/año) — ${esCourier ? 'courier' : 'puerta a puerta'}, unificados por el Dto. 604/2026`,
   };
 
   let title: string; let text: string; let tone: 'good' | 'neutral' | 'warn';
@@ -55,20 +67,14 @@ export function compute(i: Inputs): Outputs {
     title = 'Supera el tope del régimen simplificado';
     text = `Un envío de **${fmtUSD(valor)}** supera el tope de **US$3.000** por envío: pasa al régimen general de importación, con despachante y tributos plenos. Esta calculadora no aplica a ese caso.`;
     tone = 'warn';
-  } else if (esCourier && courierExento) {
-    title = 'No pagás tributos aduaneros por este envío';
-    text = `Por courier, un envío de **${fmtUSD(valor)}** entra dentro de la franquicia de **US$400**: exento de derecho de importación y tasa de estadística. Por puerta a puerta el mismo envío pagaría **${fmtUSD(impPapUSD)}** (50% sobre lo que excede US$50). Recordá el límite de **5 envíos por año** con este beneficio.`;
+  } else if (dentroFranquicia) {
+    title = `Pagás ${fmtUSD(Math.round(ivaUSD * 100) / 100)} de IVA (no pagás derechos)`;
+    text = `Un envío de **${fmtUSD(valor)}** entra dentro de la franquicia de **US$${franquicia}**: **exento de derecho de importación y tasa de estadística**. Pero la franquicia **no exime el IVA**: pagás el **21%**, o sea **${fmtUSD(Math.round(ivaUSD * 100) / 100)}** (${fmtARS(ivaUSD * tc)} al dólar cargado). Total estimado: **${fmtARS(totalUSD * tc)}**. Recordá el límite de **${enviosAnio} envíos por año**.`;
     tone = 'good';
-  } else if (esCourier) {
-    title = `El excedente de US$400 paga derechos`;
-    text = `Tu envío supera la franquicia courier en **${fmtUSD(excCourier)}**. Ese excedente paga derecho de importación según la posición arancelaria del producto (varía por tipo de mercadería), más IVA e impuestos internos si aplican. Si podés dividir la compra en envíos de hasta US$400, cada uno entra exento (máximo 5 por año).`;
-    tone = 'warn';
   } else {
-    title = impPapUSD > 0 ? `Pagás ${fmtUSD(impPapUSD)} de tributo aduanero` : 'Envío exento por franquicia';
-    text = impPapUSD > 0
-      ? `Por puerta a puerta pagás el **50%** de lo que excede US$50: **${fmtUSD(impPapUSD)}** (${fmtARS(impPapUSD * tc)} al dólar cargado). El mismo envío por courier ${valor <= 400 ? 'entraría **exento** (franquicia US$400)' : 'también supera su franquicia de US$400'}.`
-      : `Un envío de **${fmtUSD(valor)}** entra dentro de la franquicia de **US$50** de Correo Argentino, válida para los primeros 12 envíos del año.`;
-    tone = impPapUSD > 0 ? 'neutral' : 'good';
+    title = `El excedente de US$${franquicia} paga derechos, tasa e IVA`;
+    text = `Tu envío supera la franquicia en **${fmtUSD(excedente)}**. Sobre ese excedente pagás derecho de importación (acá estimado al **${(derechoPct * 100).toFixed(0)}%**, pero depende de la posición arancelaria del producto) y la tasa de estadística del **3%**. Además, el **IVA del 21% se paga sobre todo el envío**, esté o no dentro de la franquicia: **${fmtUSD(Math.round(ivaUSD * 100) / 100)}**. Impuestos totales: **${fmtUSD(Math.round(impuestosUSD * 100) / 100)}** (${fmtARS(impuestosUSD * tc)}). Si podés dividir la compra en envíos de hasta US$${franquicia}, cada uno se ahorra los derechos y la tasa (máximo ${enviosAnio} por año).`;
+    tone = 'warn';
   }
 
   out._insight = { title, text, tone, icon: '📦' };

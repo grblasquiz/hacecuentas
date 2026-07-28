@@ -24,7 +24,7 @@ export function propinaRestaurante(i: Inputs): Outputs {
   if (i.porcentajePropina === 'custom') {
     pct = Number(i.propinaCustom) || 0;
   } else {
-    pct = Number(i.porcentajePropina) || 10;
+    pct = (Number.isFinite(Number(i.porcentajePropina)) ? Number(i.porcentajePropina) : 10);
   }
 
   if (pct < 0 || pct > 100) throw new Error('Porcentaje de propina inválido');

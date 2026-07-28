@@ -202,7 +202,19 @@ export const hub: HubData = {
       max: 150,
       step: 1,
       value: 10,
-      help: 'El viento es el factor que más dispara la evaporación después del calor.',
+      help: 'El del pronóstico, que se mide a 10 metros de altura en terreno abierto.',
+    },
+    {
+      id: 'abrigo',
+      label: '¿Cuánto viento le llega al agua?',
+      type: 'select',
+      value: 'normal',
+      options: [
+        { value: 'expuesta', label: 'Expuesta — campo abierto, sin reparo' },
+        { value: 'normal', label: 'Normal — casa con cerco o medianeras' },
+        { value: 'protegida', label: 'Protegida — patio cerrado, muros altos' },
+      ],
+      help: 'Sobre el espejo de agua sopla bastante menos que a 10 metros: en un patio con cerco, alrededor de un tercio.',
     },
     {
       id: 'potenciaBomba',
@@ -466,9 +478,34 @@ export const CLORO = {
   SEMANAS_MES: 4.33,
 };
 
-/** Constantes del cálculo de evaporación (Rohwer / Penman simplificada). */
+/*
+ * Evaporación: método de Shah (2014), ASHRAE Transactions 120(2), paper
+ * SE-14-001, tabla 14 — pileta exterior desocupada = el mayor de la convección
+ * natural, la forzada con aire quieto y la forzada por viento.
+ *
+ * Reemplaza a la correlación anterior `(2,2 + 1,5·v)·(es − ea)`, que no
+ * correspondía a ninguna fuente publicada y daba hasta 29 mm/día (casi 3 cm de
+ * bajada de nivel diaria) cuando el rango real de una pileta en verano es de 4
+ * a 8 mm/día: el término de viento dominaba al base ya a 6 km/h.
+ *
+ * El otro error que arreglamos es de unidades, no de fórmula: el viento que
+ * informa el pronóstico se mide a 10 m en terreno abierto, y la correlación
+ * pide la velocidad SOBRE el espejo de agua. De ahí el factor de abrigo.
+ */
 export const EVAP = {
-  /** Coeficientes empíricos para piscinas: mm/día = (A + B·v)·(es − ea), v en m/s. */
-  A: 2.2,
-  B: 1.5,
+  /** Ec. 1 — convección natural. */
+  C: 35,
+  /** Ec. 2 y 7 — convección forzada. */
+  B: 0.00005,
+  /** Ec. 7 — velocidad de referencia, m/s. */
+  U0: 0.15,
+  P_ATM: 101325,
+  R_AIRE_SECO: 287.055,
+};
+
+/** Cuánto del viento informado llega al espejo de agua. */
+export const ABRIGO_EVAP: Record<string, { label: string; factor: number }> = {
+  expuesta: { label: 'Expuesta (campo abierto, sin reparo)', factor: 0.5 },
+  normal: { label: 'Normal (casa con cerco o medianeras)', factor: 0.3 },
+  protegida: { label: 'Protegida (patio cerrado, muros altos)', factor: 0.15 },
 };

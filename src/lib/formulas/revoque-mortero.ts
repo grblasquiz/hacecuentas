@@ -31,7 +31,7 @@ export function revoqueMortero(i: Inputs): Outputs {
   const m2 = Number(i.m2);
   const tipo = String(i.tipoRevoque || 'completo');
   const espCustom = Number(i.espesor) || 0;
-  const desp = Number(i.desperdicio) || 10;
+  const desp = (Number.isFinite(Number(i.desperdicio)) ? Number(i.desperdicio) : 10);
   if (!m2 || m2 <= 0) throw new Error('Ingresá los m² de pared');
   if (!TIPOS[tipo]) throw new Error('Tipo de revoque no válido');
 

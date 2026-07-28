@@ -1,5 +1,5 @@
 /** Prima vacacional México según antigüedad (reforma LFT 2023) */
-import { MEXICO_2026 } from '../data/mexico-2026';
+import { MEXICO_2026, isrMensual2026 } from '../data/mexico-2026';
 
 export interface Inputs {
   salarioDiario: number;
@@ -38,28 +38,10 @@ function diasVacacionesPorAntiguedad(anios: number): number {
   return 32;
 }
 
-// ISR tabla mensual
-const ISR = [
-  { limInf: 0.01, limSup: 746.04, cuota: 0, tasa: 1.92 },
-  { limInf: 746.05, limSup: 6332.05, cuota: 14.32, tasa: 6.40 },
-  { limInf: 6332.06, limSup: 11128.01, cuota: 371.83, tasa: 10.88 },
-  { limInf: 11128.02, limSup: 12935.82, cuota: 893.63, tasa: 16.00 },
-  { limInf: 12935.83, limSup: 15487.71, cuota: 1182.88, tasa: 17.92 },
-  { limInf: 15487.72, limSup: 31236.49, cuota: 1640.18, tasa: 21.36 },
-  { limInf: 31236.50, limSup: 49233.00, cuota: 5004.12, tasa: 23.52 },
-  { limInf: 49233.01, limSup: 93993.90, cuota: 9236.89, tasa: 30.00 },
-  { limInf: 93993.91, limSup: Infinity, cuota: 22665.17, tasa: 32.00 },
-];
-
-function calcISR(base: number): number {
-  if (base <= 0) return 0;
-  for (const b of ISR) {
-    if (base >= b.limInf && base <= b.limSup) {
-      return b.cuota + (base - b.limInf) * (b.tasa / 100);
-    }
-  }
-  return 0;
-}
+// ISR: tarifa mensual 2026 desde la fuente única (Art. 96 LISR, Anexo 8 RMF 2026).
+// Antes había una tabla hardcodeada acá que no coincidía con src/lib/data/mexico-2026.ts
+// (renglones de un ejercicio anterior) y retenía de más.
+const calcISR = (base: number) => isrMensual2026(base);
 
 export function primaVacacionalMexico(i: Inputs): Outputs {
   const salarioDiario = Number(i.salarioDiario);

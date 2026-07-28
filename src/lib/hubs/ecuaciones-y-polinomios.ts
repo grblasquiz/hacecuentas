@@ -25,15 +25,15 @@ export const hub: HubData = {
   slug: 'matematica/ecuaciones-y-polinomios',
   title: '¿Cómo resuelvo esta ecuación? — Cuadrática, inecuaciones y polinomios',
   description:
-    'Fórmula resolvente con discriminante y raíces complejas, inecuaciones lineales con notación de intervalo, factorización, raíces de un polinomio, división larga y regla de Ruffini. Con el planteo y cada paso intermedio.',
+    'Fórmula resolvente con discriminante y raíces complejas, inecuaciones lineales, polinómicas, racionales y con valor absoluto resueltas por tabla de signos y notación de intervalos, factorización, raíces de un polinomio, división larga y regla de Ruffini. Con el planteo y cada paso intermedio.',
   silo: 'Matemática',
   siloHref: '/matematica',
 
   eyebrow: 'Guía y calculadora de matemática',
   h1: '¿Cómo resuelvo esta ecuación?',
   lede:
-    'Empezamos por la cuadrática, que es la que más se pregunta: la resolvente, el discriminante y qué pasa cuando da negativo. Si lo tuyo es una inecuación, una factorización, las raíces de un polinomio de grado alto, una división larga o Ruffini, lo cambiás abajo y el procedimiento se adapta.',
-  stamps: ['Actualizado 27-07-2026', '6 procedimientos adentro', 'Con cada paso intermedio'],
+    'Empezamos por la cuadrática, que es la que más se pregunta: la resolvente, el discriminante y qué pasa cuando da negativo. Si lo tuyo es una inecuación —lineal, polinómica, racional o con valor absoluto—, una factorización, las raíces de un polinomio de grado alto, una división larga o Ruffini, lo cambiás abajo y el procedimiento se adapta.',
+  stamps: ['Actualizado 28-07-2026', '6 procedimientos adentro', 'Con la tabla de signos completa'],
 
   resultLabel: 'La solución',
 
@@ -64,21 +64,25 @@ export const hub: HubData = {
       },
       {
         id: 'inecuacion',
-        label: 'Inecuación lineal (con notación de intervalo)',
-        hint: 'Ej.: "2x − 6 ≥ 0" → x ≥ 3 → [3, +∞)',
-        answer: 'Despejás x como en una ecuación, pero si dividís por un número negativo, das vuelta el signo.',
+        label: 'Inecuación (lineal, polinómica, racional o con valor absoluto)',
+        hint: 'Ej.: "x² − 5x + 6 > 0" → (−∞, 2) ∪ (3, +∞)',
+        answer:
+          'Buscás los puntos críticos, armás la tabla de signos y te quedás con los intervalos donde la expresión cumple.',
         yes: [
-          'Planteo: pasá todo a la forma a·x + b (operador) 0',
-          'Paso 1: la frontera es el x que anula la expresión, o sea x₀ = −b ÷ a',
-          'Paso 2: si a es positivo el sentido se conserva; si a es negativo, se invierte',
-          'La respuesta se escribe como intervalo: corchete cuando el extremo entra (≤ o ≥) y paréntesis cuando no (< o >)',
-          'El infinito siempre lleva paréntesis: nunca "[+∞]"',
+          'Planteo: pasá TODO a un solo lado, de modo que quede expresión (signo) 0. Nunca resuelvas con números a los dos lados',
+          'Paso 1 — puntos críticos: los ceros del numerador, más los ceros del denominador si es racional, más los x donde |P(x)| = c si hay valor absoluto',
+          'Paso 2 — tabla de signos: ordenás los puntos críticos en la recta y probás un valor de prueba en cada intervalo que queda entre ellos',
+          'Paso 3 — armás la unión de los intervalos que cumplen, y unís los que quedan pegados',
+          'Notación: corchete cuando el extremo entra (≤ o ≥) y paréntesis cuando no. En ±∞ SIEMPRE paréntesis: "[−∞" no existe',
+          'En la racional los ceros del denominador se excluyen siempre, aunque el signo sea ≤ o ≥: ahí la expresión no está definida',
         ],
         warn: [
           'Multiplicar o dividir por un negativo DA VUELTA el signo: es el error número uno de esta cuenta',
-          'Sumar o restar no invierte nada: sólo el producto y el cociente por negativos',
-          'Si a = 0 la x desaparece: la inecuación se cumple para todos los reales o para ninguno, según el signo de b',
-          'Esta rama resuelve inecuaciones de primer grado. Las de grado 2 o más necesitan tabla de signos entre las raíces',
+          'En la racional NO se puede "pasar multiplicando" el denominador: no sabés su signo, y si es negativo la desigualdad se invierte',
+          'En la lineal alcanza con despejar; de grado 2 en adelante la tabla de signos no es opcional',
+          'Una raíz doble no cambia el signo: la expresión toca el cero y vuelve al mismo lado (por eso x² ≥ 0 se cumple siempre)',
+          '|P(x)| < c es una intersección (queda un solo intervalo) y |P(x)| > c es una unión (quedan dos): no son simétricos',
+          'Si c es negativo, |P(x)| < c no lo cumple nadie y |P(x)| > c lo cumplen todos los reales',
         ],
         plazo: 'chequeo: probá un número del intervalo que te dio. Tiene que cumplir la desigualdad original.',
       },
@@ -176,6 +180,19 @@ export const hub: HubData = {
     { id: 'b', label: 'b — coeficiente de x', value: '-3', help: 'En la inecuación es el término independiente.' },
     { id: 'c', label: 'c — término independiente', value: '2', help: 'Sólo cuadrática.' },
     {
+      id: 'tipoIneq',
+      label: 'Tipo de inecuación',
+      type: 'select',
+      value: 'lineal',
+      options: [
+        { value: 'lineal', label: 'Lineal — a·x + b (usa a y b)' },
+        { value: 'polinomica', label: 'Polinómica de grado ≥ 2 (usa los coeficientes)' },
+        { value: 'racional', label: 'Racional P(x) ÷ Q(x) (usa coeficientes y denominador)' },
+        { value: 'absoluta', label: 'Con valor absoluto |P(x)| contra un límite' },
+      ],
+      help: 'Sólo la rama de inecuación. La lineal usa a y b; las otras tres usan el campo de coeficientes.',
+    },
+    {
       id: 'op',
       label: 'Signo de la inecuación',
       type: 'select',
@@ -186,7 +203,7 @@ export const hub: HubData = {
         { value: '<', label: '< menor que cero' },
         { value: '<=', label: '≤ menor o igual a cero' },
       ],
-      help: 'Sólo la rama de inecuación: a·x + b (signo) 0.',
+      help: 'Sólo la rama de inecuación. En la lineal compara a·x + b contra 0; en la polinómica P(x); en la racional P(x) ÷ Q(x); y en la de valor absoluto compara |P(x)| contra el límite c.',
     },
     {
       id: 'coefs',
@@ -195,6 +212,18 @@ export const hub: HubData = {
       help: 'Del mayor grado al término independiente, separados por espacios. Poné los ceros de los términos que faltan ("1 0 0 -1" es x³ − 1). Punto decimal, no coma.',
     },
     { id: 'divisor', label: 'Coeficientes del divisor', value: '1 -1', help: 'Sólo la división larga. "1 -1" es (x − 1).' },
+    {
+      id: 'denom',
+      label: 'Coeficientes de Q(x) — denominador',
+      value: '1 -1',
+      help: 'Sólo la inecuación racional: el denominador de P(x) ÷ Q(x). "1 -1" es (x − 1). Sus ceros se excluyen siempre de la solución.',
+    },
+    {
+      id: 'limAbs',
+      label: 'c — límite del valor absoluto',
+      value: '1',
+      help: 'Sólo la inecuación con valor absoluto: el número contra el que se compara |P(x)|.',
+    },
     { id: 'r', label: 'r — la raíz de Ruffini', value: '1', help: 'Sólo Ruffini: el r de (x − r). Para dividir por (x + 2) cargá −2.' },
   ],
   fineprint:
@@ -234,6 +263,34 @@ export const hub: HubData = {
     {
       q: '¿Cómo se escribe la solución de una inecuación en notación de intervalo?',
       a: 'Con <b>corchete</b> cuando el extremo pertenece a la solución (signos ≤ y ≥) y con <b>paréntesis</b> cuando no (signos &lt; y &gt;). El infinito lleva siempre paréntesis porque no es un número. Así, x ≥ 3 se escribe <b>[3, +∞)</b>; x &lt; 3 se escribe <b>(−∞, 3)</b>; y una solución vacía se escribe <b>∅</b>.',
+    },
+    {
+      q: '¿Por qué al multiplicar por un número negativo se da vuelta el signo de la desigualdad?',
+      a: 'Porque multiplicar por un negativo <b>refleja la recta numérica</b>: el que estaba a la derecha pasa a estar a la izquierda. Es fácil de ver con números: <b>2 &lt; 5</b> es verdadero, pero multiplicando los dos lados por −1 queda −2 y −5, y <b>−2 &gt; −5</b>. Si dejaras el signo como estaba escribirías −2 &lt; −5, que es falso. Con la igualdad no pasa porque un igual no tiene orden que invertir. Sumar y restar tampoco invierte nada: mueve los dos lados en el mismo sentido y la distancia entre ellos no cambia.',
+    },
+    {
+      q: '¿Cómo se arma la tabla de signos de una inecuación polinómica?',
+      a: 'Primero se pasa todo a un lado para que quede <b>P(x) (signo) 0</b>. Después se buscan las <b>raíces reales</b> de P, que son los únicos puntos donde la expresión puede cambiar de signo, y se ordenan sobre la recta. Esas raíces parten la recta en intervalos; en cada uno se prueba <b>un valor cualquiera</b> y se anota si el resultado da positivo o negativo. La solución es la unión de los intervalos con el signo que pediste. En x² − 5x + 6 &gt; 0 las raíces son 2 y 3, los signos son + / − / + y la respuesta es <b>(−∞, 2) ∪ (3, +∞)</b>.',
+    },
+    {
+      q: '¿Por qué en una inecuación racional no se puede pasar multiplicando el denominador?',
+      a: 'Porque <b>no sabés qué signo tiene</b>. Multiplicar los dos lados por Q(x) es multiplicar por algo que en unos intervalos es positivo y en otros negativo, así que la desigualdad se conserva en unos y se invierte en otros: el resultado sale mal. Con una ecuación sí se puede porque el igual no tiene sentido que invertir. El método correcto es dejar el cociente entero de un lado, buscar los <b>ceros del numerador y los del denominador</b> juntos, y hacer la tabla de signos del cociente.',
+    },
+    {
+      q: '¿Por qué los ceros del denominador se marcan siempre con paréntesis?',
+      a: 'Porque ahí la expresión <b>no está definida</b>: no podés dividir por cero. Ese punto queda excluido de la solución aunque el signo sea ≤ o ≥, y por eso se escribe con paréntesis, no con corchete. Es la diferencia clave con los ceros del numerador, que con ≤ o ≥ sí entran y llevan corchete. En (x − 1) ÷ (x − 2) ≥ 0 la respuesta es <b>(−∞, 1] ∪ (2, +∞)</b>: el 1 entra con corchete y el 2 queda afuera con paréntesis.',
+    },
+    {
+      q: '¿Por qué |x| &gt; c y |x| &lt; c dan formas de solución distintas?',
+      a: 'Porque el valor absoluto es una <b>distancia al cero</b>, y las dos preguntas son opuestas. <b>|x| &lt; c</b> pide los puntos que están cerca del cero: eso obliga a cumplir dos condiciones a la vez (x &gt; −c <b>y</b> x &lt; c), o sea una <b>intersección</b>, y da un único intervalo (−c, c). <b>|x| &gt; c</b> pide los que están lejos: alcanza con cumplir una de las dos (x &lt; −c <b>o</b> x &gt; c), o sea una <b>unión</b>, y da dos intervalos separados, (−∞, −c) ∪ (c, +∞). El error típico es escribir −c &lt; x &gt; c, que no significa nada.',
+    },
+    {
+      q: '¿Qué pasa si el límite del valor absoluto es negativo?',
+      a: 'Se resuelve sin hacer ninguna cuenta, porque <b>un valor absoluto nunca es negativo</b>. Si c &lt; 0, entonces |P(x)| &lt; c <b>no lo cumple ningún x</b> y la solución es ∅; y |P(x)| &gt; c <b>lo cumplen todos</b>, o sea ℝ. El caso de borde es c = 0: |P(x)| &gt; 0 se cumple en todos lados menos en las raíces de P, y |P(x)| ≤ 0 se cumple sólo en esas raíces exactas.',
+    },
+    {
+      q: '¿Qué pasa en una inecuación cuando hay una raíz doble?',
+      a: 'Que ahí <b>no hay cambio de signo</b>: la curva toca el eje y vuelve al mismo lado. Por eso en (x − 2)² &gt; 0 la solución es todo ℝ menos el 2, que se escribe <b>(−∞, 2) ∪ (2, +∞)</b>, y no dos regiones con signos distintos. La regla general es que el signo se invierte al cruzar una raíz de multiplicidad <b>impar</b> y se conserva al cruzar una de multiplicidad <b>par</b>. Si armás la tabla probando valores en cada intervalo, esto te sale solo sin tener que acordarte de la regla.',
     },
     {
       q: '¿Qué dice el teorema del factor y para qué se usa al factorizar?',
@@ -304,6 +361,6 @@ export const hub: HubData = {
     '/calculadora-regla-ruffini',
   ],
 
-  lastReviewed: '2026-07-27',
+  lastReviewed: '2026-07-28',
   audience: 'global',
 };

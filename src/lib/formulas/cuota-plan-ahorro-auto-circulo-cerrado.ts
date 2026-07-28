@@ -42,7 +42,7 @@ const fmt = (n: number): string => '$' + Math.round(n).toLocaleString('es-AR');
 export function compute(i: Inputs): Outputs {
   const valor = Number(i.valorMovil) || 0;
   const cuotas = Math.max(1, Number(i.cantidadCuotas) || 84);
-  const pAdmin = (Number(i.porcentajeAdmin) || 2) / 100;   // default 2%
+  const pAdmin = ((Number.isFinite(Number(i.porcentajeAdmin)) ? Number(i.porcentajeAdmin) : 2)) / 100;   // default 2%
   const pSeguro = (Number(i.porcentajeSeguro) || 0.15) / 100; // default 0,15%
 
   if (valor <= 0) throw new Error('Ingresá el valor móvil (precio de lista) del auto.');

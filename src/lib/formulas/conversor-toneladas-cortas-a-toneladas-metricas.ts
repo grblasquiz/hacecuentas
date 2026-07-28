@@ -19,7 +19,7 @@ export function conversorToneladasCortasAToneladasMetricas(i: Inputs): Outputs {
   const rTxt = r.toFixed(4).replace(/\.?0+$/, '');
   const vTxt = String(v);
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 't'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 't' : "t cortas"),
     resumen: v + ' ' + fromLabel + ' = ' + rTxt + ' ' + toLabel + '.',
     _insight: {
       title: 'Tonelada corta vs métrica',

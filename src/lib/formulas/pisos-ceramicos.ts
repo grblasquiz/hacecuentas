@@ -37,7 +37,7 @@ export function pisosCeramicos(i: Inputs): Outputs {
   const a = Number(i.ancho);
   const pieza = String(i.dimensionPieza || '60x60');
   const m2Caja = Number(i.m2PorCaja) || 0;
-  const desp = Number(i.desperdicio) || 10;
+  const desp = (Number.isFinite(Number(i.desperdicio)) ? Number(i.desperdicio) : 10);
   if (!l || !a) throw new Error(T.errorDimensions);
 
   const m2 = l * a;

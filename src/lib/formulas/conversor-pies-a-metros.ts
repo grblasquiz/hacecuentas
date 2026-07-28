@@ -26,7 +26,7 @@ export function conversorPiesAMetros(i: Inputs): Outputs {
   else if (metros < 3) refTxt = 'algo más que **el alto de una habitación**';
   else refTxt = 'cerca de **' + fmt(pisos) + ' pisos** de un edificio (≈3 m cada uno)';
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'm'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'm' : "ft"),
     resumen: v + ' ' + fromLabel + ' = ' + fmt(r) + ' ' + toLabel + '.',
     _insight: {
       title: 'En la práctica',

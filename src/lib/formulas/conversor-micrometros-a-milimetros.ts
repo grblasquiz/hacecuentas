@@ -26,7 +26,7 @@ export function conversorMicrometrosAMilimetros(i: Inputs): Outputs {
     icon: '🔬',
   };
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'mm'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'mm' : "µm"),
     resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
     _insight
   };

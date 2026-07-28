@@ -13,6 +13,15 @@ export interface Inputs {
   diasVacaciones: number;
   primaVacacionalPorc: number;
   causaBaja: string;
+  /** Días trabajados del último período que aún no te pagaron. Default 0. */
+  diasSalariosPendientes?: number;
+}
+
+/** Number() da NaN con string vacío/undefined y `??` no lo atrapa: usar isFinite. */
+function num(v: unknown, fallback: number): number {
+  if (v === '' || v === null || v === undefined) return fallback;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
 }
 
 export interface Outputs {
@@ -46,8 +55,10 @@ export function finiquitoMexicoCalculo(i: Inputs): Outputs {
   const diasTrabajados = Math.max(1, Math.round((fBaja.getTime() - fIngreso.getTime()) / 86400000));
   const aniosAntiguedad = diasTrabajados / 365;
 
-  // Salarios pendientes (estimamos últimos 15 días)
-  const diasUltimoPeriodo = Math.min(15, diasTrabajados);
+  // Salarios pendientes: días efectivamente trabajados y no pagados del último período.
+  // Antes se hardcodeaban 15 días SIEMPRE, lo que inflaba el total de todo el mundo.
+  // Ahora es parámetro; default 0 (no se asume que haya salario devengado impago).
+  const diasUltimoPeriodo = Math.max(0, Math.min(num(i.diasSalariosPendientes, 0), diasTrabajados));
   const salariosPendientes = salarioDiario * diasUltimoPeriodo;
 
   // Aguinaldo proporcional
@@ -66,7 +77,10 @@ export function finiquitoMexicoCalculo(i: Inputs): Outputs {
   const salarioTopePrima = Math.min(salarioDiario, salarioMinimoDiario * 2);
   let primaAntiguedad = 0;
   if (causa === 'despido' || (causa === 'renuncia' && aniosAntiguedad >= 15)) {
-    primaAntiguedad = 12 * salarioTopePrima * Math.floor(aniosAntiguedad);
+    // Art. 162 fracc. III LFT: 12 días por año de servicio, PROPORCIONAL en las fracciones de año.
+    // Antes se truncaba con Math.floor (4,58 años pagaba 4), lo que subpagaba al trabajador.
+    // Mismo criterio que src/lib/formulas/prima-de-antiguedad-mexico.ts.
+    primaAntiguedad = 12 * salarioTopePrima * aniosAntiguedad;
   }
 
   // Indemnización 3 meses (solo despido injustificado)
@@ -75,6 +89,9 @@ export function finiquitoMexicoCalculo(i: Inputs): Outputs {
     indemnizacion3meses = salarioDiario * 90;
 
     // 20 días por año (Art. 50 LFT) — se suma a la indemnización
+    // SIN VERIFICAR (28-07-2026): el Art. 50 fracc. II dice "por cada uno de los años de servicios
+    // prestados"; si las fracciones de año se pagan proporcionales o se truncan es materia de
+    // criterio jurisprudencial y no lo pude confirmar con fuente oficial. Se deja el truncado.
     indemnizacion3meses += salarioDiario * 20 * Math.floor(aniosAntiguedad);
   }
 

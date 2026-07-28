@@ -25,7 +25,7 @@ export function conversorBrazasAMetros(i: Inputs): Outputs {
   };
 
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'm'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'm' : "brazas"),
     resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
     _insight
   };

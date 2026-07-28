@@ -105,15 +105,15 @@ export function compute(i: Inputs): Outputs {
 
   // --- Parse inputs defensively ---
   const homePrice = Math.max(Number(i.home_price) || 0, 0);
-  const downPaymentPct = Math.min(Math.max(Number(i.down_payment_pct) || 10, 0), 100);
+  const downPaymentPct = Math.min(Math.max((Number.isFinite(Number(i.down_payment_pct)) ? Number(i.down_payment_pct) : 10), 0), 100);
   const mortgageRatePct = Math.max(Number(i.mortgage_rate) || 6.8, 0);
   const loanTermYears = parseInt(String(i.loan_term_years) || "30", 10) || 30;
   const propertyTaxRatePct = Math.max(Number(i.property_tax_rate) || 1.1, 0);
   const insuranceAnnual = Math.max(Number(i.home_insurance_annual) || 1500, 0);
   const hoaMonthly = Math.max(Number(i.hoa_monthly) || 0, 0);
   const maintenanceRatePct = Math.max(Number(i.maintenance_rate) || 1.0, 0);
-  const buyClosingCostPct = Math.max(Number(i.buy_closing_cost_pct) || 3.0, 0);
-  const sellClosingCostPct = Math.max(Number(i.sell_closing_cost_pct) || 6.0, 0);
+  const buyClosingCostPct = Math.max((Number.isFinite(Number(i.buy_closing_cost_pct)) ? Number(i.buy_closing_cost_pct) : 3.0), 0);
+  const sellClosingCostPct = Math.max((Number.isFinite(Number(i.sell_closing_cost_pct)) ? Number(i.sell_closing_cost_pct) : 6.0), 0);
   const appreciationRatePct = Number(i.appreciation_rate) ?? 3.5;
   const monthlyRent = Math.max(Number(i.monthly_rent) || 0, 0);
   const rentInflationPct = Math.max(Number(i.rent_inflation) || 3.0, 0);

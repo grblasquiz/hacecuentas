@@ -21,7 +21,7 @@ export function conversorPiesAPulgadas(i: Inputs): Outputs {
   const pulgadas = d === 'ida' ? r : v;
   const cm = pulgadas * 2.54;
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'in'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'in' : "ft"),
     resumen: v + ' ' + fromLabel + ' = ' + fmt(r) + ' ' + toLabel + '.',
     _insight: {
       title: 'Equivalencia exacta',

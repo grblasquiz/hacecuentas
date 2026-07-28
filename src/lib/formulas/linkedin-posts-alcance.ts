@@ -16,7 +16,10 @@ export function linkedinPostsAlcance(i: Inputs): Outputs {
     'Artículo largo': 0.6,
   };
   const mult = multByTipo[tp] || 1;
-  const base = c * (er / 100) * 100;
+  // Cota superior de alcance orgánico: LinkedIn muestra el post a una fracción de la red,
+  // que crece con el engagement rate pero nunca supera el tamaño de la red.
+  const alcanceRed = Math.min(1, 0.10 + (er / 100) * 4);
+  const base = c * alcanceRed;
   const reach = base * mult;
   const interacciones = Math.round(reach * (er / 100));
   const tip = tp === 'Artículo largo' ? 'Artículos rinden menos en feed pero mejor para SEO y personal brand' : tp === 'Poll' ? 'Polls tienen 80% más reach — usá para preguntas provocativas' : 'Gancho en primeras 200 caracteres + cero links externos en el post';

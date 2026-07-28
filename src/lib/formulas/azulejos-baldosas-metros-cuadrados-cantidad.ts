@@ -7,7 +7,7 @@ export function azulejosBaldosasMetrosCuadradosCantidad(i: Inputs): Outputs {
   // Inputs
   const area = Number(i.area_m2) || 0;          // m² to cover
   const m2PorCaja = Number(i.m2_por_caja) || 1; // m² coverage per box
-  const desperdicioPct = Number(i.desperdicio_pct) || 10; // waste %
+  const desperdicioPct = (Number.isFinite(Number(i.desperdicio_pct)) ? Number(i.desperdicio_pct) : 10); // waste %
 
   // Real formula: Boxes = ceil( area × (1 + waste/100) / m2_per_box )
   const factorDesperdicio = 1 + desperdicioPct / 100;

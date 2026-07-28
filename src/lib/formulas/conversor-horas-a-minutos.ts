@@ -22,7 +22,7 @@ export function conversorHorasAMinutos(i: Inputs): Outputs {
   const mm = Math.round(absMin - hh * 60);
   const desglose = hh > 0 ? (hh + ' h' + (mm > 0 ? ' ' + mm + ' min' : '')) : (mm + ' min');
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'min'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'min' : "h"),
     resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
     _insight: {
       title: 'En horas y minutos',

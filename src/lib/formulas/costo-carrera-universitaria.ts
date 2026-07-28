@@ -23,7 +23,7 @@ export function costoCarreraUniversitaria(i: Inputs): Outputs {
   const anios = Number(i.duracionAnios) || 5;
   const inscripcion = Number(i.inscripcion) || 0;
   const materiales = Number(i.materiales) || 0;
-  const aumentoAnual = Number(i.aumentoAnual) || 30; // % anual
+  const aumentoAnual = (Number.isFinite(Number(i.aumentoAnual)) ? Number(i.aumentoAnual) : 30); // % anual
 
   if (!cuota || cuota <= 0) throw new Error('Ingresá la cuota mensual');
 

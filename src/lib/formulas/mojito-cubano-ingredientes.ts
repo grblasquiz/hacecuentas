@@ -16,7 +16,7 @@ export function mojitoCubanoIngredientes(i: Inputs): Outputs {
   const tot = p * t;
   const limones = Math.ceil((l * tot) / 30);
   const fmt = (ml: number) => `${ml}ml`;
-  const lista = `Ron blanco: ${Math.ceil(r * tot * 1.15)}ml (${Math.ceil(r * tot * 1.15 / 750)} botellas) | Azúcar: ${Math.ceil(a * tot * 1.1)}g | Limas: ${limones} | Soda: ${Math.ceil(s * tot * 1.15)}ml | Menta: ${Math.ceil(m * tot / 8)} atados grandes | Hielo: ${(p * 0.8).toFixed(1)}kg`;
+  const lista = `Ron blanco: ${Math.ceil(r * tot * 1.15)}ml (${Math.ceil(r * tot * 1.15 / 750)} botellas) | Azúcar: ${Math.ceil(a * tot * 1.1)}g | Limas: ${limones} | Soda: ${Math.ceil(s * tot * 1.15)}ml | Menta: ${Math.ceil(m * tot / 60)} atados grandes | Hielo: ${(p * 0.8).toFixed(1)}kg`;
 
   // Compra real de ron (con 15% de margen) y botellas, para el insight
   const ronCompraMl = Math.ceil(r * tot * 1.15);
@@ -53,7 +53,7 @@ export function mojitoCubanoIngredientes(i: Inputs): Outputs {
     totalazucar: `${a * tot} g`,
     totaljugodelima: fmt(l * tot),
     totalsoda: fmt(s * tot),
-    totalhojasdementa: `${m * tot} hojas (${Math.ceil(m * tot / 8)} atados)`,
+    totalhojasdementa: `${m * tot} hojas (${Math.ceil(m * tot / 60)} atados)`,
     listaCompras: lista,
     _insight,
     _chart,

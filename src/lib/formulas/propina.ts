@@ -40,7 +40,7 @@ export function propina(inputs: PropinaInputs): PropinaOutputs {
   } as const)[__lang];
 
   const cuenta = Number(inputs.cuenta);
-  const pct = Number(inputs.porcentajePropina) || 10;
+  const pct = (Number.isFinite(Number(inputs.porcentajePropina)) ? Number(inputs.porcentajePropina) : 10);
   const personas = Math.max(1, Number(inputs.cantidadPersonas) || 1);
 
   if (!cuenta || cuenta <= 0) throw new Error(T.errorCuenta);

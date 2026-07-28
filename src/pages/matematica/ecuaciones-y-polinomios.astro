@@ -181,6 +181,187 @@ const schema = {
     const cfmt = (z) =>
       z.im === 0 ? fmt(z.re) : fmt(z.re) + (z.im >= 0 ? ' + ' : ' − ') + fmt(Math.abs(z.im)) + 'i';
 
+    // ---- motor de inecuaciones por tabla de signos ------------------------
+    // Sirve para polinómica, racional y valor absoluto. La idea es siempre la
+    // misma: los PUNTOS CRÍTICOS son los únicos lugares donde la expresión
+    // puede cambiar de signo, así que parten la recta en tramos y en cada tramo
+    // basta con probar un valor.
+    const realRoots = (c) => roots(c).filter((z) => z.im === 0).map((z) => R(z.re));
+
+    function inecuacionGeneral(v, tipo, op, signo, cumple) {
+      const P = parseCoefs(v.coefs);
+      if (!P) return err('Cargá al menos dos coeficientes válidos de P(x), del mayor grado al independiente, y que el primero no sea 0.', 'Coeficientes leídos', 0);
+      const Q = tipo === 'racional' ? parseCoefs(v.denom) : null;
+      if (tipo === 'racional' && !Q) return err('En la racional también hace falta el denominador Q(x): al menos dos coeficientes y el primero distinto de 0.', 'Coeficientes de Q(x)', 0);
+      const lim = tipo === 'absoluta' ? H.num(v.limAbs) : 0;
+
+      const cerradoOp = op.indexOf('=') >= 0;
+      const expr =
+        tipo === 'racional'
+          ? 'P(x) ÷ Q(x)'
+          : tipo === 'absoluta'
+            ? '|P(x)| − ' + fmt(lim)
+            : 'P(x)';
+
+      // La expresión, siempre comparada contra 0.
+      const F = (x) =>
+        tipo === 'racional'
+          ? polyEval(P, x) / polyEval(Q, x)
+          : tipo === 'absoluta'
+            ? Math.abs(polyEval(P, x)) - lim
+            : polyEval(P, x);
+
+      // --- paso 1: los puntos críticos ---
+      // 'cero'  → anula la expresión: entra si el signo es ≤ o ≥
+      // 'excl'  → anula el denominador: NUNCA entra, va con paréntesis
+      // 'abs'   → ahí |P(x)| = c, o sea la expresión vale 0
+      let crit = [];
+      if (tipo === 'absoluta') {
+        // Un valor absoluto nunca es negativo: con c < 0 no hay cortes.
+        if (lim >= 0) {
+          realRoots(P.map((x, k) => (k === P.length - 1 ? x - lim : x))).forEach((x) => crit.push({ x: x, t: 'abs' }));
+          realRoots(P.map((x, k) => (k === P.length - 1 ? x + lim : x))).forEach((x) => crit.push({ x: x, t: 'abs' }));
+        }
+      } else {
+        realRoots(P).forEach((x) => crit.push({ x: x, t: 'cero' }));
+        if (Q) realRoots(Q).forEach((x) => crit.push({ x: x, t: 'excl' }));
+      }
+      crit.sort((p, q) => p.x - q.x);
+      // Dedupe con tolerancia. Si un punto es cero de P y de Q a la vez, gana
+      // la exclusión: ahí la expresión sigue sin estar definida.
+      const xs = [];
+      crit.forEach((p) => {
+        const prev = xs[xs.length - 1];
+        if (prev && Math.abs(prev.x - p.x) < 1e-7) {
+          if (p.t === 'excl') prev.t = 'excl';
+        } else xs.push({ x: p.x, t: p.t });
+      });
+
+      // --- paso 2: la tabla de signos ---
+      const cuts = [-Infinity].concat(xs.map((p) => p.x)).concat([Infinity]);
+      const atoms = [];
+      for (let k = 0; k < cuts.length - 1; k++) {
+        const lo = cuts[k];
+        const hi = cuts[k + 1];
+        // Si no hay ningún punto crítico el tramo es toda la recta y los dos
+        // extremos son infinitos: ahí el valor de prueba es el 0.
+        const xm = !isFinite(lo) && !isFinite(hi) ? 0 : !isFinite(lo) ? hi - 1 : !isFinite(hi) ? lo + 1 : (lo + hi) / 2;
+        const val = R(F(xm));
+        atoms.push({ kind: 'int', idx: k, x: xm, val: val, sat: cumple(val) });
+        if (k < xs.length) {
+          const p = xs[k];
+          // En el punto crítico la expresión vale exactamente 0 (salvo que esté
+          // excluido). No se evalúa numéricamente para no arrastrar el error
+          // del método iterativo de raíces.
+          atoms.push({ kind: 'pt', idx: k, x: p.x, t: p.t, sat: p.t === 'excl' ? false : cerradoOp });
+        }
+      }
+
+      // --- paso 3: unir los tramos que cumplen, en notación de intervalo ---
+      // Se agrupan los tramos consecutivos que cumplen (incluyendo el punto
+      // crítico del medio si entra), así no salen cosas como [1, 2] ∪ [2, 3].
+      const partes = [];
+      let i = 0;
+      while (i < atoms.length) {
+        if (!atoms[i].sat) { i++; continue; }
+        let j = i;
+        while (j + 1 < atoms.length && atoms[j + 1].sat) j++;
+        const A = atoms[i];
+        const B = atoms[j];
+        if (i === j && A.kind === 'pt') {
+          partes.push('{' + fmt(A.x) + '}');
+        } else {
+          const lo = A.kind === 'pt' ? A.x : cuts[A.idx];
+          const hi = B.kind === 'pt' ? B.x : cuts[B.idx + 1];
+          // El ±∞ nunca lleva corchete: no es un número, no pertenece a nada.
+          const izq = (isFinite(lo) && A.kind === 'pt' ? '[' : '(') + (isFinite(lo) ? fmt(lo) : '−∞');
+          const der = (isFinite(hi) ? fmt(hi) : '+∞') + (isFinite(hi) && B.kind === 'pt' ? ']' : ')');
+          partes.push(izq + ', ' + der);
+        }
+        i = j + 1;
+      }
+      const solucion = partes.length ? partes.join(' ∪ ') : '∅';
+      const total = solucion === '(−∞, +∞)' ? 'ℝ' : solucion;
+
+      // --- filas: el procedimiento completo ---
+      const rows = [
+        { k: 'P(x) = ' + polyText(P), ref: 'el polinomio que cargaste', v: P.length - 1, ...GRADO },
+      ];
+      if (Q) rows.push({ k: 'Q(x) = ' + polyText(Q), ref: 'denominador: sus ceros se excluyen', v: Q.length - 1, ...GRADO });
+      if (tipo === 'absoluta') rows.push({ k: 'c — el límite de |P(x)|', ref: lim < 0 ? 'negativo: un valor absoluto nunca llega ahí' : 'se compara |P(x)| contra este número', v: R(lim), ...PLAIN4 });
+      rows.push({ k: 'La inecuación: ' + expr + ' ' + signo + ' 0', ref: 'paso 0: todo de un solo lado del signo', v: 0, ...ENTERO });
+      rows.push({ k: 'Puntos críticos encontrados', ref: 'paso 1: los únicos lugares donde puede cambiar el signo', v: xs.length, extra: true, ...ENTERO });
+
+      xs.forEach((p, k) => {
+        rows.push({
+          k: 'Punto crítico ' + (k + 1) + ': x = ' + fmt(p.x),
+          ref:
+            p.t === 'excl'
+              ? 'cero de Q(x) → EXCLUIDO, va con paréntesis aunque el signo sea ≤ o ≥'
+              : p.t === 'abs'
+                ? '|P(x)| = ' + fmt(lim) + ' → la expresión vale 0 acá' + (cerradoOp ? ', y con ' + signo + ' el extremo ENTRA' : ', pero con ' + signo + ' NO entra')
+                : 'raíz de P(x) → la expresión vale 0 acá' + (cerradoOp ? ', y con ' + signo + ' el extremo ENTRA' : ', pero con ' + signo + ' NO entra'),
+          v: p.x,
+          ...PLAIN4,
+        });
+      });
+
+      atoms.filter((at) => at.kind === 'int').forEach((at) => {
+        const lo = cuts[at.idx];
+        const hi = cuts[at.idx + 1];
+        rows.push({
+          k:
+            'Tramo (' + (isFinite(lo) ? fmt(lo) : '−∞') + ', ' + (isFinite(hi) ? fmt(hi) : '+∞') + ') — pruebo x = ' + fmt(at.x),
+          ref: 'paso 2: la expresión da ' + (at.val > 0 ? 'POSITIVO (+)' : at.val < 0 ? 'NEGATIVO (−)' : 'cero') + ' → ' + (at.sat ? 'CUMPLE' : 'no cumple'),
+          v: at.val,
+          extra: at.sat,
+          ...PLAIN4,
+        });
+      });
+
+      rows.push({ k: 'Tramos que cumplen, sobre el total', ref: 'paso 3: se unen los que quedan pegados', v: atoms.filter((at) => at.kind === 'int' && at.sat).length, ...ENTERO });
+
+      // Verificación: un valor de adentro tiene que cumplir de verdad.
+      const testigo = atoms.filter((at) => at.kind === 'int' && at.sat)[0];
+      if (testigo) {
+        rows.push({ k: 'Verificación: ' + expr + ' en x = ' + fmt(testigo.x), ref: 'un punto de la solución: tiene que cumplir ' + signo + ' 0', v: testigo.val, ...PLAIN4 });
+      }
+      if (Q) {
+        xs.filter((p) => p.t === 'excl').forEach((p) => {
+          rows.push({ k: 'Q(' + fmt(p.x) + ')', ref: 'da 0: ahí P(x) ÷ Q(x) no está definida', v: R(polyEval(Q, p.x)), ...PLAIN4 });
+        });
+      }
+
+      const subPorTipo =
+        tipo === 'racional'
+          ? 'Ojo: el denominador NO se pasa multiplicando, porque no se sabe su signo. Sus ceros se excluyen siempre.'
+          : tipo === 'absoluta'
+            ? (op.charAt(0) === '<'
+                ? 'Con |P(x)| ' + signo + ' c se piden las dos condiciones a la vez (intersección): queda un tramo solo.'
+                : 'Con |P(x)| ' + signo + ' c alcanza con cumplir una de las dos (unión): quedan tramos separados.')
+            : 'De grado 2 en adelante hay que ir por la tabla de signos: despejar la x sin más no alcanza.';
+
+      return {
+        total: total,
+        sub:
+          (xs.length
+            ? 'Puntos críticos en ' + xs.map((p) => fmt(p.x)).join(', ') + '. '
+            : 'No hay puntos críticos: la expresión no cambia de signo en toda la recta. ') + subPorTipo,
+        rows: rows,
+        format: 'plain',
+        decimals: 4,
+        chart: atoms
+          .filter((at) => at.kind === 'int')
+          .map((at) => ({
+            label:
+              '(' + (isFinite(cuts[at.idx]) ? fmt(cuts[at.idx]) : '−∞') + ', ' +
+              (isFinite(cuts[at.idx + 1]) ? fmt(cuts[at.idx + 1]) : '+∞') + ') → ' + (at.sat ? 'cumple' : 'no'),
+            value: Math.abs(at.val) || 0.001,
+            tone: at.sat ? 'good' : 'bad',
+          })),
+      };
+    }
+
     H.onCompute(function (v, kase) {
       const a = H.num(v.a);
       const b = H.num(v.b);
@@ -323,11 +504,15 @@ const schema = {
         };
       }
 
-      // ---- 2) Inecuación lineal ----------------------------------------
-      // a·x + b (op) 0, con notación de intervalo.
+      // ---- 2) Inecuaciones ----------------------------------------------
+      // Cuatro tipos: lineal (despeje directo) y polinómica / racional / con
+      // valor absoluto (tabla de signos sobre los puntos críticos).
       if (id === 'inecuacion') {
         const cumple = (y) => (op === '>' ? y > 0 : op === '>=' ? y >= 0 : op === '<' ? y < 0 : y <= 0);
         const signo = { '>': '>', '>=': '≥', '<': '<', '<=': '≤' }[op] || '≥';
+        const tipoIneq = String(v.tipoIneq || 'lineal');
+
+        if (tipoIneq !== 'lineal') return inecuacionGeneral(v, tipoIneq, op, signo, cumple);
 
         if (a === 0) {
           const vale = cumple(b);

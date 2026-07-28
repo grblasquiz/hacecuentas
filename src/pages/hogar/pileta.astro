@@ -13,7 +13,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import DecisionHub from '../../components/hub/DecisionHub.astro';
-import { hub, FORMAS, TIPOS, ESTACIONES, CLORO, EVAP } from '../../lib/hubs/pileta';
+import { hub, FORMAS, TIPOS, ESTACIONES, CLORO, EVAP, ABRIGO_EVAP } from '../../lib/hubs/pileta';
 
 const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
 
@@ -55,7 +55,7 @@ const schema = {
   <Footer />
 </Layout>
 
-<script is:inline define:vars={{ FORMAS, TIPOS, ESTACIONES, CL: CLORO, EV: EVAP }}>
+<script is:inline define:vars={{ FORMAS, TIPOS, ESTACIONES, CL: CLORO, EV: EVAP, AB: ABRIGO_EVAP }}>
   (function () {
     const H = window.HC_HUB;
 
@@ -121,11 +121,24 @@ const schema = {
       const temp = Math.min(50, Math.max(-10, v.temperatura === undefined ? 28 : v.temperatura));
       const hum = Math.min(100, Math.max(1, v.humedad || 55));
       const vientoKmh = Math.min(150, Math.max(0, v.viento === undefined ? 10 : v.viento));
-      const vms = vientoKmh / 3.6;
-      const es = 0.6108 * Math.exp((17.27 * temp) / (temp + 237.3));
-      const ea = es * (hum / 100);
-      let mmDia = (EV.A + EV.B * vms) * (es - ea);
-      if (mmDia < 0) mmDia = 0;
+      // Shah (2014), ASHRAE Transactions 120(2) SE-14-001, tabla 14: el mayor de
+      // convección natural, forzada con aire quieto y forzada por viento. El
+      // viento del pronóstico se mide a 10 m: el factor de abrigo lo baja al
+      // espejo de agua, que es donde ocurre la evaporación.
+      const abrigo = AB[v.abrigo] || AB.normal;
+      const u = (vientoKmh / 3.6) * abrigo.factor;
+      const pSat = (t) => 610.78 * Math.exp((17.27 * t) / (t + 237.3)); // Pa
+      const W = (pv) => (0.622 * pv) / (EV.P_ATM - pv);
+      const rhoAire = (t, pv) =>
+        (EV.P_ATM - pv) / (EV.R_AIRE_SECO * (t + 273.15)) + (pv * 0.622) / (EV.R_AIRE_SECO * (t + 273.15));
+      const pw = pSat(temp);            // sin dato de agua, se asume a temperatura ambiente
+      const pa = pSat(temp) * (hum / 100);
+      const dp = Math.max(0, pw - pa);
+      const dRho = rhoAire(temp, pa) - rhoAire(temp, pw);
+      const e1 = dRho > 0 ? EV.C * Math.cbrt(dRho) * Math.max(0, W(pw) - W(pa)) : 0;
+      const e2 = EV.B * dp;
+      const e7 = u > EV.U0 ? EV.B * Math.pow(u / EV.U0, 0.7) * dp : 0;
+      let mmDia = Math.max(e1, e2, e7) * 24; // kg/m²·h → mm/día (1 kg/m² = 1 mm)
       mmDia = mmDia * E.evap; // el cobertor de invernada corta la evaporación
       const evapLitrosDia = mmDia * superficie;
       const evapLitrosMes = evapLitrosDia * 30;

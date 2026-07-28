@@ -20,7 +20,7 @@ export function conversorMbAGb(i: Inputs): Outputs {
   const mbTotal = d === 'ida' ? v : r;
   const gbBin = mbTotal / 1024;
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'GB'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'GB' : "MB"),
     resumen: v + ' ' + fromLabel + ' = ' + rTxt + ' ' + toLabel + '.',
     _insight: {
       title: 'Decimal vs binario',

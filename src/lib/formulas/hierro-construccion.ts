@@ -32,7 +32,7 @@ export function hierroConstruccion(i: Inputs): Outputs {
   const m2 = Number(i.m2);
   const luz = Number(i.luz) || 4;
   const tipo = String(i.tipoLosa || 'losa_maciza_media');
-  const desperd = Number(i.desperdicio) || 7;
+  const desperd = (Number.isFinite(Number(i.desperdicio)) ? Number(i.desperdicio) : 7);
   if (!m2 || m2 <= 0) throw new Error('Ingresá los m² de losa');
   if (!TIPOS[tipo]) throw new Error('Tipo de losa no válido');
 

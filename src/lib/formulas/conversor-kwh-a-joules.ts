@@ -27,7 +27,7 @@ export function conversorKwhAJoules(i: Inputs): Outputs {
     icon: '⚡'
   };
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'J'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'J' : "kWh"),
     resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
     _insight
   };

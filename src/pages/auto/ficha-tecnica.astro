@@ -139,9 +139,18 @@ const schema = {
         const ratio = (P.hp / peso) * 1000;
         const kgPorHp = P.hp > 0 ? peso / P.hp : 0;
         // Espejo de velocidad-maxima-relacion-potencia-peso.ts:
-        // P·η = ½·ρ·Cd·A·v³  →  v = ((2·P·η)/(ρ·Cd·A))^(1/3)
+        // P·η = Crr·m·g·v + ½·ρ·Cd·A·v³, resuelto por bisección.
+        // La rodadura no es despreciable: sin ella el resultado sobreestima
+        // unos 7 km/h en un auto de calle.
         const watts = P.hp * AERO.wattsPorHp;
-        const vms = Math.pow((2 * watts * AERO.eficiencia) / (AERO.rho * AERO.cd * AERO.area), 1 / 3);
+        const disponible = watts * AERO.eficiencia;
+        const demanda = (v) => AERO.crr * peso * AERO.g * v + 0.5 * AERO.rho * AERO.cd * AERO.area * v * v * v;
+        let lo = 0, hi = 200; // m/s
+        for (let k = 0; k < 60; k++) {
+          const mid = (lo + hi) / 2;
+          if (demanda(mid) > disponible) hi = mid; else lo = mid;
+        }
+        const vms = (lo + hi) / 2;
         const vmax = vms * 3.6;
         const e = escala('performance', ratio);
 

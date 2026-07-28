@@ -31,7 +31,7 @@ const DOSIFICACIONES: Record<string, {
 export function cementoM3(i: Inputs): Outputs {
   const m3 = Number(i.m3);
   const dosif = String(i.dosificacion || 'h21');
-  const desperd = Number(i.desperdicio) || 5;
+  const desperd = (Number.isFinite(Number(i.desperdicio)) ? Number(i.desperdicio) : 5);
   if (!m3 || m3 <= 0) throw new Error('Ingresá los m³');
   if (!DOSIFICACIONES[dosif]) throw new Error('Dosificación no válida');
 

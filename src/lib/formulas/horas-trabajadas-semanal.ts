@@ -34,7 +34,7 @@ export function horasTrabajadasSemanal(i: HorasTrabajadasInputs): HorasTrabajada
   if (!totalMin) throw new Error('Cargá al menos un día trabajado');
   const limite = Math.max(0, Number(i.jornadaNormal) || 40);
   const valor = Math.max(0, Number(i.valorHora) || 0);
-  const recargo = Math.max(0, Number(i.recargoExtra) || 50) / 100;
+  const recargo = Math.max(0, (Number.isFinite(Number(i.recargoExtra)) ? Number(i.recargoExtra) : 50)) / 100;
   const decimal = totalMin / 60;
   const normales = Math.min(decimal, limite), extras = Math.max(0, decimal - limite);
   const sueldoNormal = normales * valor, sueldoExtra = extras * valor * (1 + recargo);

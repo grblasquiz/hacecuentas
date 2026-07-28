@@ -25,7 +25,7 @@ export function conversorPsiABar(i: Inputs): Outputs {
   else if (bar <= 3.5) refTxt = 'el rango típico de **presión de neumáticos** de auto (≈2-2,5 bar)';
   else refTxt = 'una presión **alta**, propia de equipos o industria';
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'bar'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'bar' : "psi"),
     resumen: v + ' ' + fromLabel + ' = ' + fmt(r) + ' ' + toLabel + '.',
     _insight: {
       title: 'En la práctica',

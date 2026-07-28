@@ -32,7 +32,7 @@ export function conversorBolsasCementoPorMetroCubico(i: Inputs): Outputs {
       };
 
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'bolsas'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'bolsas' : "m³"),
     resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
     _insight
   };

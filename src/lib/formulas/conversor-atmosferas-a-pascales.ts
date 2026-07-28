@@ -23,7 +23,7 @@ export function conversorAtmosferasAPascales(i: Inputs): Outputs {
   const atmFmt = atm.toLocaleString('es-AR', { maximumFractionDigits: 4 });
   const kPaFmt = kPa.toLocaleString('es-AR', { maximumFractionDigits: 2 });
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'Pa'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'Pa' : "atm"),
     resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
     _insight: {
       title: 'Qué presión representa',

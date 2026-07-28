@@ -32,7 +32,7 @@ export function conversorDiasAHoras(i: Inputs): Outputs {
   };
 
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'h'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'h' : "d"),
     resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
     _insight: insight
   };

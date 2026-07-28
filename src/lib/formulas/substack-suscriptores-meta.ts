@@ -10,7 +10,9 @@ export function substackSuscriptoresMeta(i: Inputs): Outputs {
   const pctM = 100 - pctA;
   const precioAnualMensualizado = pm * 0.84;
   const precioEfectivo = (pm * pctM / 100) + (precioAnualMensualizado * pctA / 100);
-  const netoSub = precioEfectivo * 0.9 - (precioEfectivo * 0.029 + 0.30 / 12);
+  // Stripe cobra USD 0,30 por transacción: 12 cobros/año en mensual, 1 en anual.
+  const cargoFijoMensualizado = (pctM / 100) * 0.30 + (pctA / 100) * (0.30 / 12);
+  const netoSub = precioEfectivo * 0.9 - (precioEfectivo * 0.029 + cargoFijoMensualizado);
   const subs = Math.ceil(meta / netoSub);
   const bruto = subs * precioEfectivo;
   const feesCom = bruto - subs * netoSub;

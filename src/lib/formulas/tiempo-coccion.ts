@@ -13,6 +13,25 @@ export interface Outputs {
   _insight?: any;
 }
 
+/**
+ * MÍNIMOS DE SEGURIDAD ALIMENTARIA (USDA-FSIS, "Safe Minimum Internal Temperature Chart").
+ * Son PISOS sanitarios, no puntos de cocción:
+ *   - Aves (pollo, pavo/pavita), enteras, en presas o molidas: 74 °C (165 °F). SIN excepción y SIN reposo.
+ *   - Carne molida de vaca/cerdo/cordero/ternera: 71 °C (160 °F).
+ *   - Cortes enteros de vaca/cerdo/cordero/ternera (bifes, chuletas, roasts): 63 °C (145 °F) + 3 min de reposo.
+ *   - Pescado y mariscos: 63 °C (145 °F).
+ * Distinción usada en este archivo y en `temperatura-carne.ts` (criterio unificado):
+ *   - "jugoso"/"medio" = PUNTO DE COCCIÓN culinario. Por debajo de 63 °C en cortes enteros
+ *     es práctica de cocina, NO cumple el mínimo USDA (ver AVISO_SUBMINIMO).
+ *   - "bien" (bien cocido) = 71 °C, que además coincide con el mínimo de carne molida.
+ *     No se usa 74 °C para vaca/cerdo/cordero: 74 °C es el mínimo de AVES, no de carne roja.
+ * Fuente: https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/safe-temperature-chart
+ */
+const MIN_USDA_AVE = 74;
+const MIN_USDA_CORTE_ENTERO = 63;
+const AVISO_SUBMINIMO =
+  'Por debajo de 63 °C internos es un punto de cocción culinario, no el mínimo de seguridad de USDA-FSIS (63 °C + 3 min de reposo en cortes enteros). Evitalo en embarazo, niños chicos, mayores o personas inmunocomprometidas.';
+
 type Carne = {
   nombre: string;
   minPorKg: Record<string, number>; // rare, medium, well
@@ -35,9 +54,10 @@ const CARNES: Record<string, Carne> = {
     nombre: 'Pechuga de pollo',
     minPorKg: { bien: 25, medio: 25, jugoso: 25 },
     tempHorno: 200,
-    tempInterna: { bien: 72, medio: 72, jugoso: 72 },
+    // 74 °C es el mínimo USDA-FSIS para TODA ave, también la pechuga. No existe "pollo a punto".
+    tempInterna: { bien: 74, medio: 74, jugoso: 74 },
     metodo: 'Horno 200 °C. Sellar en sartén antes para dorar.',
-    notas: 'No exceder 72-75 °C interna, si no queda seca.',
+    notas: '74 °C internos mínimo (USDA-FSIS), medidos en la parte más gruesa. Para que no quede seca, controlá con termómetro y retirala apenas llega a 74 °C: no le sirve más tiempo, le sirve no pasarse.',
   },
   peceto: {
     nombre: 'Peceto',
@@ -75,9 +95,10 @@ const CARNES: Record<string, Carne> = {
     nombre: 'Lomo de cerdo',
     minPorKg: { medio: 35, bien: 50, jugoso: 30 },
     tempHorno: 180,
-    tempInterna: { medio: 65, bien: 71, jugoso: 62 },
+    // 63 °C es el piso USDA para cortes enteros de cerdo: no se baja de ahí ni en "jugoso".
+    tempInterna: { medio: 65, bien: 71, jugoso: 63 },
     metodo: 'Horno 180 °C. Sellar previo. Glaseado en últimos 15 min.',
-    notas: 'Punto medio: 63-65 °C interna. Reposar 10 min.',
+    notas: 'Mínimo 63 °C internos + 3 min de reposo (USDA-FSIS). Punto medio: 65 °C. Reposar 10 min.',
   },
   pescado_filete: {
     nombre: 'Filete de pescado (salmón, merluza)',
@@ -114,9 +135,13 @@ export function tiempoCoccion(i: Inputs): Outputs {
 
   const c = CARNES[carne];
   const min = (c.minPorKg[coccion] || c.minPorKg['medio'] || 40) * peso;
-  const tempInt = c.tempInterna[coccion] || c.tempInterna['medio'] || 63;
-  const minTotal = Math.round(min);
   const esAve = ['pollo_entero', 'pollo_pechuga', 'pavita'].includes(carne);
+  let tempInt = c.tempInterna[coccion] || c.tempInterna['medio'] || MIN_USDA_CORTE_ENTERO;
+  // Red de seguridad: ninguna ave puede salir por debajo de 74 °C, pase lo que pase con la tabla.
+  if (esAve) tempInt = Math.max(tempInt, MIN_USDA_AVE);
+  const bajoMinimoUSDA = !esAve && tempInt < MIN_USDA_CORTE_ENTERO;
+  const notas = bajoMinimoUSDA ? `${c.notas} ${AVISO_SUBMINIMO}` : c.notas;
+  const minTotal = Math.round(min);
   const horas = Math.floor(minTotal / 60);
   const resto = minTotal % 60;
   const tiempoTxt = horas > 0 ? `${horas} h ${resto} min` : `${minTotal} min`;
@@ -126,13 +151,15 @@ export function tiempoCoccion(i: Inputs): Outputs {
     tempHorno: c.tempHorno,
     tempInterna: tempInt,
     metodo: c.metodo,
-    notas: c.notas,
+    notas,
     _insight: {
-      title: esAve ? 'Cocción segura' : 'Punto de cocción',
+      title: esAve ? 'Cocción segura' : bajoMinimoUSDA ? 'Punto de cocción (bajo el mínimo USDA)' : 'Punto de cocción',
       text: esAve
-        ? `**${c.nombre}** de ${peso} kg necesita unos **${tiempoTxt}** a ${c.tempHorno} °C. Clave de seguridad: llegar a **${tempInt} °C internos** para eliminar el riesgo de salmonella.`
-        : `**${c.nombre}** de ${peso} kg a punto ${coccion}: unos **${tiempoTxt}** de horno a ${c.tempHorno} °C, retirando a **${tempInt} °C internos**. Dejá reposar antes de cortar.`,
-      tone: esAve ? 'warn' : 'neutral',
+        ? `**${c.nombre}** de ${peso} kg necesita unos **${tiempoTxt}** a ${c.tempHorno} °C. Clave de seguridad: **${MIN_USDA_AVE} °C internos como mínimo** (USDA-FSIS, mínimo para toda ave, sin excepciones y sin tiempo de reposo). Medí en la parte más gruesa, sin tocar el hueso: por debajo de 74 °C puede sobrevivir la salmonella.`
+        : bajoMinimoUSDA
+          ? `**${c.nombre}** de ${peso} kg a punto ${coccion}: unos **${tiempoTxt}** de horno a ${c.tempHorno} °C, retirando a **${tempInt} °C internos**. Ojo: ${AVISO_SUBMINIMO}`
+          : `**${c.nombre}** de ${peso} kg a punto ${coccion}: unos **${tiempoTxt}** de horno a ${c.tempHorno} °C, retirando a **${tempInt} °C internos** (mínimo USDA para cortes enteros: ${MIN_USDA_CORTE_ENTERO} °C + 3 min de reposo). Dejá reposar antes de cortar.`,
+      tone: esAve || bajoMinimoUSDA ? 'warn' : 'neutral',
       icon: esAve ? '🍗' : '🥩'
     },
   };

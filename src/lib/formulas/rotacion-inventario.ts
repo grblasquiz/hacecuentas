@@ -11,11 +11,12 @@ export interface Outputs {
 export function rotacionInventario(i: Inputs): Outputs {
   const cmv = Number(i.costoMercaderiaVendida);
   const inv = Number(i.inventarioPromedio);
-  if (!cmv || cmv <= 0) throw new Error('Ingresá el costo de la mercadería vendida');
-  if (!inv || inv <= 0) throw new Error('Ingresá el inventario promedio');
+  if (!Number.isFinite(cmv) || cmv < 0) throw new Error('Ingresá el costo de la mercadería vendida');
+  if (!Number.isFinite(inv) || inv <= 0) throw new Error('Ingresá el inventario promedio');
 
   const rotacion = cmv / inv;
-  const dias = 365 / rotacion;
+  // Sin ventas en el período (CMV 0) la rotación es 0 y el stock no rota: tope 365 días.
+  const dias = rotacion > 0 ? 365 / rotacion : 365;
 
   let clasif = '';
   if (rotacion > 12) clasif = 'Muy alta — buen flujo, riesgo de quiebres.';

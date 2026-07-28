@@ -37,7 +37,7 @@ const TRAMOS = [
 
 export function compute(i: Inputs): Outputs {
   const honorarios = Math.max(0, Number(i.honorariosAnuales) || 0);
-  const tasa = Math.max(0, Math.min(30, Number(i.tasaRetencion) || 14.5));
+  const tasa = Math.max(0, Math.min(30, (Number.isFinite(Number(i.tasaRetencion)) ? Number(i.tasaRetencion) : 14.5)));
   const rebajas = Math.max(0, Number(i.rebajas) || 0);
   const uta = Number(i.valorUTA) > 0 ? Number(i.valorUTA) : UTA_FALLBACK;
 

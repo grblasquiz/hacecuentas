@@ -5,7 +5,7 @@ export interface Outputs { porPersona: number; propina: number; totalConPropina:
 export function propinaDividirCuenta(i: Inputs): Outputs {
   const total = Number(i.totalCuenta);
   const personas = Number(i.personas) || 1;
-  const pct = Number(i.propinaPct) || 10;
+  const pct = (Number.isFinite(Number(i.propinaPct)) ? Number(i.propinaPct) : 10);
   if (!total || total <= 0) throw new Error('Ingresá el total de la cuenta');
 
   const propina = Math.round(total * pct / 100);

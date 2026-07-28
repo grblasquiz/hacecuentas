@@ -22,7 +22,7 @@ export function conversorAnosADias(i: Inputs): Outputs {
   const diasFmt = dias.toLocaleString('es-AR', { maximumFractionDigits: 2 });
   const semanasFmt = semanas.toLocaleString('es-AR', { maximumFractionDigits: semanas < 10 ? 1 : 0 });
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'd'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'd' : "años"),
     resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
     _insight: {
       title: 'Cuánto tiempo es',

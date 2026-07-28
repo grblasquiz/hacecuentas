@@ -4,24 +4,38 @@
 export const fmtARS = (v: number, dec = 0) =>
   '$' + v.toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 
-// ── Compras del exterior (régimen vigente jul-2026, pre-reforma courier anunciada) ──
-// Fuentes: ARCA envíos internacionales + prensa especializada (iProfesional/Canal26/minutouno, jul-2026).
+// ── Compras del exterior (régimen vigente desde el Decreto 604/2026, BO 17-jul-2026) ──
+// El decreto unificó courier y puerta a puerta: misma franquicia de US$400 FOB, 5 envíos/año,
+// y derogó el arancel único del 50% sobre el excedente de los envíos postales.
+// IMPORTANTE: la franquicia exime DERECHO DE IMPORTACIÓN y TASA DE ESTADÍSTICA, **no el IVA**.
+// ARCA: los envíos dentro de la franquicia quedan "alcanzados únicamente por el impuesto al
+// valor agregado e impuestos internos, de corresponder".
+// Fuentes: Decreto 604/2026 (BO 17-jul-2026) · ARCA — Pequeños envíos courier (afip.gob.ar).
 export const COURIER_2026 = {
-  franquiciaUSD: 400,        // valor FOB exento de derecho de importación y tasa de estadística
+  franquiciaUSD: 400,        // valor FOB exento de derecho de importación y tasa de estadística (NO de IVA)
   enviosPorAnio: 5,
   topeEnvioUSD: 3000,
   topeKg: 50,
   unidadesIgualesMax: 3,
-  fuente: 'ARCA — régimen courier (RG vigente jul-2026)',
+  fuente: 'ARCA — régimen courier (Dto. 1065/2024 · RG 5631/25) + Decreto 604/2026',
 } as const;
 
+// IVA general de importación. Se aplica sobre TODO el valor, esté o no dentro de la franquicia.
+export const IVA_IMPORTACION_2026 = 0.21;
+// Tasa de estadística: solo sobre el excedente de la franquicia.
+export const TASA_ESTADISTICA_2026 = 0.03;
+// Derecho de importación sobre el excedente: NO es una alícuota única — depende de la posición
+// arancelaria (AEC Mercosur, 0%–35%). 20% es el valor típico de bienes de consumo, editable.
+// SIN VERIFICAR (28-07-2026): no hay una alícuota oficial única; el 20% es una referencia, no norma.
+export const DERECHO_IMPORTACION_TIPICO_2026 = 0.20;
+
 export const PUERTA_A_PUERTA_2026 = {
-  franquiciaUSD: 50,         // por envío, primeros 12 envíos del año
-  enviosConFranquicia: 12,
-  alicuotaExcedente: 0.5,    // 50% sobre el excedente de USD 50
+  franquiciaUSD: 400,        // Dto. 604/2026: equiparado al courier (antes US$50)
+  enviosConFranquicia: 5,    // Dto. 604/2026: 5 por año calendario (antes 12)
+  alicuotaExcedente: null,   // Dto. 604/2026 derogó el arancel único del 50%: rige el régimen general
   topeEnvioUSD: 3000,
   topeKg: 20,
-  fuente: 'Correo Argentino / ARCA — envíos postales internacionales',
+  fuente: 'Decreto 604/2026 (BO 17-jul-2026) — Correo Argentino / ARCA, envíos postales internacionales',
 } as const;
 
 export const DOLAR_OFICIAL_REF = { venta: 1500, fecha: '2026-07-17' } as const; // BCRA, referencia editable en cada calc

@@ -33,7 +33,7 @@ export function isoInvarianceCamaraModelo(inputs: Inputs): Outputs {
   const _insight = {
     title: tieneDr ? 'Tu punto invariant' : 'Verificá el modelo',
     text: tieneDr
-      ? `Punto ISO invariant en **${d.isoInvariancePoint}** con un rango dinámico de **${d.dr}**. ${d.note}`
+      ? `Punto ISO invariant en **${d.iso}** con un rango dinámico de **${d.dr}**. ${d.note}`
       : `No tenemos el dato exacto de este sensor. ${d.note}`,
     tone: tieneDr ? (drNum >= 14.5 ? 'good' : drNum < 13 ? 'warn' : 'neutral') : 'neutral',
     icon: '📷',

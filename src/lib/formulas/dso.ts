@@ -11,8 +11,8 @@ export interface Outputs {
 export function dso(i: Inputs): Outputs {
   const ctas = Number(i.cuentasPorCobrar);
   const ventas = Number(i.ventasAnuales);
-  if (!ctas || ctas < 0) throw new Error('Ingresá cuentas por cobrar');
-  if (!ventas || ventas <= 0) throw new Error('Ingresá ventas anuales');
+  if (!Number.isFinite(ctas) || ctas < 0) throw new Error('Ingresá cuentas por cobrar');
+  if (!Number.isFinite(ventas) || ventas <= 0) throw new Error('Ingresá ventas anuales');
 
   const ventasDiarias = ventas / 365;
   const dsoValor = ctas / ventasDiarias;

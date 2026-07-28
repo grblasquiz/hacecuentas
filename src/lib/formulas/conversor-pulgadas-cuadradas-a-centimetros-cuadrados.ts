@@ -19,7 +19,7 @@ export function conversorPulgadasCuadradasACentimetrosCuadrados(i: Inputs): Outp
   const rStr = r.toFixed(4).replace(/\.?0+$/, '');
   const vStr = String(v);
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'cm²'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'cm²' : "in²"),
     resumen: v + ' ' + fromLabel + ' = ' + rStr + ' ' + toLabel + '.',
     _insight: {
       title: 'Ojo: es área, no longitud',

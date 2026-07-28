@@ -26,7 +26,7 @@ export function conversorGramosAOnzas(i: Inputs): Outputs {
     icon: '⚖️'
   };
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'oz'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'oz' : "g"),
     resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
     _insight: insight
   };

@@ -26,7 +26,7 @@ export function conversorLitrosPinturaPorMetroCuadrado(i: Inputs): Outputs {
     icon: '🎨'
   };
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'L'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'L' : "m²"),
     resumen: v + ' ' + fromLabel + ' = ' + rTxt + ' ' + toLabel + '.',
     _insight
   };

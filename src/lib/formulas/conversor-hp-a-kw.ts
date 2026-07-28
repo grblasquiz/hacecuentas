@@ -20,7 +20,7 @@ export function conversorHpAKw(i: Inputs): Outputs {
   const kw = d === 'ida' ? r : v;
   const cv = hp * 1.01387;
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'kW'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'kW' : "HP"),
     resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
     _insight: {
       title: 'HP mecánico, no CV',

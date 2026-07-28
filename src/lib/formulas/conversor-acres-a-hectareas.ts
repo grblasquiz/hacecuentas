@@ -22,7 +22,7 @@ export function conversorAcresAHectareas(i: Inputs): Outputs {
   const canchasFmt = canchas.toLocaleString('es-AR', { maximumFractionDigits: canchas < 10 ? 1 : 0 });
   const haFmt = ha.toLocaleString('es-AR', { maximumFractionDigits: 4 });
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'ha'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'ha' : "ac"),
     resumen: v + ' ' + fromLabel + ' = ' + r.toFixed(4).replace(/\.?0+$/, '') + ' ' + toLabel + '.',
     _insight: {
       title: 'Cuánto terreno es',

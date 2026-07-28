@@ -20,7 +20,7 @@ export function conversorMesesASemanas(i: Inputs): Outputs {
   const meses = d === 'ida' ? v : r;
   const dias = Math.round(meses * 30.4369);
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'sem'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'sem' : "meses"),
     resumen: v + ' ' + fromLabel + ' = ' + rTxt + ' ' + toLabel + '.',
     _insight: {
       title: 'Ojo con el mes "promedio"',

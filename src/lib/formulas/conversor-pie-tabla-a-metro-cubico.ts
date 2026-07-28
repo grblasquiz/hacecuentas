@@ -28,7 +28,7 @@ export function conversorPieTablaAMetroCubico(i: Inputs): Outputs {
     ref = `Es volumen comercial de madera aserrada (cientos de tablas): pensalo por m³ para fletes.`;
   }
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + 'm³'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? 'm³' : "pie tabla"),
     resumen: v + ' ' + fromLabel + ' = ' + rTxt + ' ' + toLabel + '.',
     _insight: {
       title: 'En obra',

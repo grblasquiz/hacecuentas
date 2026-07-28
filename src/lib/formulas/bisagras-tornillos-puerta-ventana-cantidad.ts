@@ -24,7 +24,7 @@ export function bisagrasTornillosPuertaVentanaCantidad(i: Inputs): Outputs {
   const cantidadPuertas = Math.max(1, Math.round(Number(i.cantidad_puertas) || 1));
   const pesoCat = String(i.peso_categoria || 'media');   // liviana | media | pesada | muy_pesada
   const huecosPorAla = Math.max(2, Math.min(4, Math.round(Number(i.agujeros_por_ala) || 2)));
-  const bufferPct = Math.min(30, Math.max(0, Number(i.buffer_pct) || 10));
+  const bufferPct = Math.min(30, Math.max(0, (Number.isFinite(Number(i.buffer_pct)) ? Number(i.buffer_pct) : 10)));
 
   // Weight-category => minimum hinges + label
   type PesoKey = 'liviana' | 'media' | 'pesada' | 'muy_pesada';

@@ -22,7 +22,7 @@ export function conversorRadianesAGrados(i: Inputs): Outputs {
   const turns = degForVuelta / 360;
   const turnsStr = turns.toFixed(2).replace(/\.?0+$/, '');
   return {
-    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + '°'.toString(),
+    resultado: r.toFixed(6).replace(/\.?0+$/, '') + ' ' + (d === 'ida' ? '°' : "rad"),
     resumen: v + ' ' + fromLabel + ' = ' + rStr + ' ' + toLabel + '.',
     _insight: {
       title: 'En vueltas de círculo',
