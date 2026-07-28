@@ -1,0 +1,157 @@
+---
+interface Props {
+  data: any;
+  icl: number[];
+  iclStart: string;
+  iclLastUpdated: string;
+  ipcKeys: string[];
+  ipcPcts: number[];
+  frecuencias: Record<string, number>;
+  contratos: Record<string, number>;
+}
+const { data, icl, iclStart, iclLastUpdated, ipcKeys, ipcPcts, frecuencias, contratos } = Astro.props;
+const years = new Intl.DateTimeFormat('es-AR', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(`${iclLastUpdated}T12:00:00`));
+---
+<main id="main" class="rent">
+  <section class="hero">
+    <div class="shell crumb"><a href="/alquiler">Alquiler</a><span>/</span>Aumento de alquiler</div>
+    <div class="shell hero-grid">
+      <div class="intro">
+        <span class="eyebrow">Calculadora de alquiler</span>
+        <h1>¿Cuánto vas a pagar en tu próximo ajuste?</h1>
+        <p>Calculá tu nueva cuota según el índice y las fechas de tu contrato. Usamos datos oficiales del BCRA y del INDEC.</p>
+        <div class="trust">
+          <span><svg viewBox="0 0 24 24"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5z"/></svg>Datos privados</span>
+          <span><svg viewBox="0 0 24 24"><path d="M4 20h16M6 17V8h12v9M9 8V4h6v4"/></svg>Fuentes oficiales</span>
+          <span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>ICL al {years}</span>
+        </div>
+        <svg class="hero-art" viewBox="0 0 500 230" role="img" aria-label="Edificio y llave de alquiler">
+          <defs><linearGradient id="b" x1="0" x2="1"><stop stop-color="#d9e8ff"/><stop offset="1" stop-color="#eef5ff"/></linearGradient><filter id="s"><feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#17365f" flood-opacity=".12"/></filter></defs>
+          <path d="M36 202h315" stroke="#1769e8" stroke-width="7"/>
+          <path d="M58 65h188v137H58z" fill="url(#b)" filter="url(#s)"/>
+          <path d="M92 101h30v27H92zm59 0h30v27h-30zm59 0h30v27h-30zM92 151h30v27H92zm59 0h30v51h-30zm59 0h30v27h-30z" fill="#fff"/>
+          <circle cx="294" cy="127" r="52" fill="none" stroke="#efa62f" stroke-width="15"/>
+          <path d="m334 158 114-37m-12 4 12 34m-42-24 11 35" fill="none" stroke="#efa62f" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <form class="calculator" id="rent-form">
+        <div class="calc-head"><h2>Calculá tu aumento</h2><span>Resultado instantáneo</span></div>
+        <fieldset>
+          <legend>¿Cómo se actualiza tu contrato?</legend>
+          <div class="modes">
+            <label class="active"><input type="radio" name="mode" value="icl" checked><svg viewBox="0 0 40 40"><path d="M7 33h26M10 29V16h20v13M15 16V9h10v7"/></svg><b>ICL · BCRA</b></label>
+            <label><input type="radio" name="mode" value="ipc"><svg viewBox="0 0 40 40"><path d="M6 32h28M9 27l8-9 6 5 10-15M27 8h6v6"/></svg><b>IPC · INDEC</b></label>
+            <label><input type="radio" name="mode" value="manual"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="14"/><path d="m13 27 14-14M14 14h.1M26 26h.1"/></svg><b>% pactado</b></label>
+          </div>
+        </fieldset>
+        <div class="other-label">Otros escenarios</div>
+        <div class="more-modes">
+          <label><input type="radio" name="mode" value="frecuencia"><span>Ajuste por frecuencia</span><small>Trimestral, cuatrimestral o semestral</small></label>
+          <label><input type="radio" name="mode" value="contrato-2"><span>Contrato de 2 años</span><small>Proyección a 24 meses</small></label>
+          <label><input type="radio" name="mode" value="contrato-3"><span>Contrato de 3 años</span><small>Proyección a 36 meses</small></label>
+        </div>
+
+        <div class="input-title">Datos del ajuste</div>
+        <label class="field amount"><span>Alquiler que pagás hoy</span><div><b>$</b><input id="alquiler" inputmode="numeric" value="600.000" aria-label="Alquiler que pagás hoy"></div></label>
+        <div class="field-grid date-fields">
+          <label class="field"><span>Último ajuste o firma</span><input id="desde" type="date" value="2025-08-01"></label>
+          <label class="field"><span>Próximo ajuste</span><input id="hasta" type="date" value="2026-08-01"></label>
+        </div>
+        <div class="field-grid rate-fields" hidden>
+          <label class="field"><span>Ajuste mensual estimado</span><div><input id="tasa" type="number" value="2" min="-10" max="100" step=".1"><b>%</b></div></label>
+          <label class="field months-field"><span>Meses del período</span><div><input id="meses" type="number" value="12" min="1" max="120"><b>meses</b></div></label>
+          <label class="field frequency-field" hidden><span>Frecuencia</span><select id="frecuencia"><option value="trim">Trimestral</option><option value="cuat">Cuatrimestral</option><option value="sem">Semestral</option><option value="anual">Anual</option></select></label>
+        </div>
+        <details class="manual-coef"><summary>Usar un coeficiente ICL exacto</summary><label class="field"><span>Coeficiente opcional</span><input id="coef" type="text" inputmode="decimal" placeholder="Ej. 1,2941"></label></details>
+
+        <section class="result" aria-live="polite">
+          <div class="result-top"><div><span>Tu alquiler nuevo sería</span><strong id="total">$0</strong></div><b id="rise">0%</b></div>
+          <div class="comparison"><div><small>Pagás hoy</small><b id="old">$0</b></div><svg viewBox="0 0 28 20"><path d="M2 10h22m-6-6 6 6-6 6"/></svg><div><small id="new-label">Desde el próximo ajuste</small><b id="new">$0</b></div></div>
+          <div class="progress"><i id="progress"></i></div>
+          <p id="result-detail"></p>
+          <div class="actions"><button class="primary" type="submit">Actualizar cálculo</button><button class="share" type="button">Compartir</button></div>
+        </section>
+        <p class="fineprint"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"/><path d="M10 9v5M10 6v.2"/></svg>El contrato manda: índice, frecuencia, moneda y topes tienen que estar escritos ahí.</p>
+      </form>
+    </div>
+  </section>
+
+  <section class="explanation shell">
+    <header><span>Resultado explicado</span><h2>Entendé de dónde sale el aumento</h2><p>Sin fórmulas escondidas: te mostramos el índice aplicado, la diferencia en pesos y cómo impacta en tu presupuesto.</p></header>
+    <div class="explain-grid">
+      <article class="bars-card card"><h3>Antes y después del ajuste</h3><div class="bars">
+        <div><b>Alquiler actual</b><i><em id="old-bar"></em></i><strong id="old-row">$0</strong></div>
+        <div><b>Aumento</b><i><em id="increase-bar"></em></i><strong id="increase-row">$0</strong></div>
+        <div><b>Nueva cuota</b><i><em id="new-bar"></em></i><strong id="new-row">$0</strong></div>
+      </div><div class="metrics"><span>Coeficiente aplicado<strong id="coef-value">1,0000</strong></span><span>Aumento porcentual<strong id="pct-value">0%</strong></span></div></article>
+      <aside class="legal card"><div class="legal-head"><i><svg viewBox="0 0 32 32"><path d="M7 3h13l5 5v21H7zM20 3v6h5M11 15h10M11 20h10"/></svg></i><div><span>Tu contrato manda</span><h3 id="legal-title">Ajuste por ICL</h3></div></div><p id="legal-copy">Se compara el ICL del próximo ajuste contra el del último ajuste o la firma.</p><div class="formula" id="formula">ICL nuevo ÷ ICL anterior = coeficiente</div><div class="warning"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"/><path d="M10 5v6M10 14v.2"/></svg><span id="warning-copy">Revisá que ambas fechas coincidan con las que figuran en tu contrato.</span></div></aside>
+    </div>
+  </section>
+
+  <section class="guide">
+    <div class="shell"><header><span>Elegí bien el índice</span><h2>¿Qué dice tu contrato?</h2><p>Cada modalidad se calcula distinto. Te ayudamos a identificar cuál corresponde en tu caso.</p></header>
+      <div class="guide-grid">
+        <article><svg viewBox="0 0 48 48"><path d="M7 40h34M11 35V18h26v17M17 18V9h14v9"/></svg><b>El más habitual</b><h3>ICL del BCRA</h3><p>Para contratos que indican “Índice para Contratos de Locación”. Usa la serie diaria oficial.</p></article>
+        <article><svg viewBox="0 0 48 48"><path d="M7 39h34M10 33l9-10 7 5 12-17M31 11h7v7"/></svg><b>Inflación</b><h3>IPC del INDEC</h3><p>Para contratos que ajustan por inflación acumulada entre los meses publicados.</p></article>
+        <article><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="17"/><path d="M16 32l16-16M17 17h.1M31 31h.1"/></svg><b>Libre acuerdo</b><h3>Porcentaje pactado</h3><p>Para ajustes trimestrales, cuatrimestrales o semestrales con una tasa definida.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="timeline shell"><header><span>Tu contrato en el tiempo</span><h2>Qué fecha tenés que usar</h2><p>El error más común es volver a usar la fecha de firma después de haber tenido un ajuste.</p></header><div class="timeline-row">
+    <article><i></i><h3>Firma del contrato</h3><p>Es la fecha inicial sólo si todavía no tuviste ningún aumento.</p></article>
+    <article><i></i><h3>Último ajuste</h3><p>Desde acá se calcula el próximo si ya hubo aumentos anteriores.</p></article>
+    <article><i></i><h3>Próximo ajuste</h3><p>La fecha en la que empieza a regir tu nueva cuota.</p></article>
+  </div></section>
+
+  <section class="content shell">
+    <article><span>Tu resultado, explicado</span><h2>El índice y las fechas definen cuánto vas a pagar</h2><p>Los contratos anteriores al DNU 70/2023 mantienen las reglas con las que fueron firmados. En los contratos nuevos, las partes pueden acordar plazo, moneda, índice y frecuencia. Por eso esta calculadora parte de lo que dice tu contrato y no de una regla única.</p></article>
+    <section class="faq"><h2>Preguntas frecuentes</h2>{data.faq.map((f:any, i:number)=><details open={i===0}><summary>{f.q}<svg viewBox="0 0 20 20"><path d="m5 7 5 5 5-5"/></svg></summary><p>{f.a}</p></details>)}</section>
+    <section class="sources"><h2>Fuentes oficiales</h2>{data.sources.map((s:any)=><a href={s.url} target="_blank" rel="noopener"><span>{s.name}<small>{s.publisher}{s.date ? ` · ${s.date}` : ''}</small></span><svg viewBox="0 0 20 20"><path d="M7 5h8v8M15 5 6 14"/></svg></a>)}</section>
+  </section>
+</main>
+
+<script is:inline define:vars={{ ICL: icl, ICL_START: iclStart, ICL_LAST_UPDATED: iclLastUpdated, IPC_KEYS: ipcKeys, IPC_PCTS: ipcPcts, FREQ: frecuencias, CONTRATO: contratos }}>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const form = $('rent-form');
+  if (!form) return;
+  const DAY = 86400000, START = Date.parse(ICL_START + 'T00:00:00Z');
+  const money = n => '$' + Math.round(n || 0).toLocaleString('es-AR');
+  const dec = (n,d=1) => Number(n).toLocaleString('es-AR',{minimumFractionDigits:d,maximumFractionDigits:d});
+  const num = raw => { const s=String(raw||'').replace(/[^\d,-]/g,'').replace(/\./g,'').replace(',','.'); return Number(s)||0 };
+  const parseCoef = raw => { const s=String(raw||'').trim().replace(/[^\d.,-]/g,''); const p=Math.max(s.lastIndexOf('.'),s.lastIndexOf(',')); return Number(p<0?s:s.slice(0,p).replace(/[.,]/g,'')+'.'+s.slice(p+1)) };
+  const dateOk = s => /^\d{4}-\d{2}-\d{2}$/.test(s);
+  const iclAt = iso => { let i=Math.round((Date.parse(iso+'T00:00:00Z')-START)/DAY); i=Math.max(0,Math.min(ICL.length-1,i)); return {v:ICL[i],date:new Date(START+i*DAY).toISOString().slice(0,10)} };
+  const ipcPeriod = (a,b) => { let from=IPC_KEYS.indexOf(a),to=IPC_KEYS.indexOf(b); if(from<0&&a<IPC_KEYS[0])from=0;if(to<0&&b>IPC_KEYS.at(-1))to=IPC_KEYS.length-1;if(from<0||to<from)return null;let factor=1;for(let i=from;i<=to;i++)factor*=1+IPC_PCTS[i]/100;return {factor,months:to-from+1,from:IPC_KEYS[from],to:IPC_KEYS[to]} };
+  const currentMode = () => form.querySelector('input[name=mode]:checked')?.value || 'icl';
+  function state() {
+    const mode=currentMode(), rent=num($('alquiler').value), from=$('desde').value, to=$('hasta').value, rate=Number($('tasa').value||0)/100, months=Math.max(1,Number($('meses').value||12));
+    let factor=1,detail='',formula='',title='',copy='',warning='Revisá que los datos coincidan con los que figuran en tu contrato.';
+    if(mode==='icl'){ const manual=parseCoef($('coef').value); title='Ajuste por ICL';copy='Se compara el ICL del próximo ajuste contra el del último ajuste o la firma.';if(Number.isFinite(manual)&&manual>=.5&&manual<=10){factor=manual;formula='Coeficiente manual = '+dec(factor,4);detail='Usamos el coeficiente exacto que cargaste.'}else if(dateOk(from)&&dateOk(to)&&from<=to){const a=iclAt(from),b=iclAt(to);factor=b.v/a.v;formula=dec(b.v,4)+' ÷ '+dec(a.v,4)+' = '+dec(factor,4);detail='Serie diaria oficial del BCRA, último dato '+ICL_LAST_UPDATED+'.'}else detail='Completá las dos fechas en orden.'}
+    else if(mode==='ipc'){title='Ajuste por IPC';copy='Se compone la inflación publicada por el INDEC mes a mes.';const p=dateOk(from)&&dateOk(to)?ipcPeriod(from.slice(0,7),to.slice(0,7)):null;if(p){factor=p.factor;formula=p.months+' meses compuestos = ×'+dec(factor,4);detail='IPC desde '+p.from+' hasta '+p.to+', ambos incluidos.'}else detail='Elegí un período con IPC publicado.'}
+    else if(mode==='frecuencia'){const f=$('frecuencia').value,mp=FREQ[f]||3;factor=Math.pow(1+rate,12);title='Ajuste por frecuencia';copy='La tasa mensual se compone durante 12 meses.';formula=Math.floor(12/mp)+' ajustes · ×'+dec(factor,4);detail='Proyección orientativa con inflación mensual constante.'}
+    else {const n=mode==='contrato-2'?24:mode==='contrato-3'?36:months;factor=Math.pow(1+rate,n);title=mode==='manual'?'Porcentaje pactado':mode==='contrato-2'?'Contrato de 2 años':'Contrato de 3 años';copy='Cada período se aplica sobre el alquiler ya actualizado.';formula='(1 + '+dec(rate*100,1)+'%)^'+n+' = ×'+dec(factor,4);detail='Proyección de '+n+' meses con tasa constante.'}
+    if(!Number.isFinite(factor)||factor<=0)factor=1;
+    const next=Math.round(rent*factor),inc=next-rent,pct=(factor-1)*100,max=Math.max(1,next);
+    $('total').textContent=money(next);$('old').textContent=money(rent);$('new').textContent=money(next);$('rise').textContent=(pct>=0?'↑ ':'↓ ')+dec(Math.abs(pct),1)+'%';$('progress').style.width=Math.min(100,rent/max*100)+'%';$('result-detail').textContent=detail;
+    $('old-row').textContent=money(rent);$('increase-row').textContent=(inc>=0?'+':'')+money(inc);$('new-row').textContent=money(next);$('old-bar').style.width=rent/max*100+'%';$('increase-bar').style.width=Math.max(0,inc)/max*100+'%';$('new-bar').style.width='100%';$('coef-value').textContent=dec(factor,4);$('pct-value').textContent=(pct>=0?'+':'')+dec(pct,1)+'%';$('legal-title').textContent=title;$('legal-copy').textContent=copy;$('formula').textContent=formula||'Completá los datos para ver la fórmula';$('warning-copy').textContent=warning;
+  }
+  function modeUI(){
+    const mode=currentMode(),dates=mode==='icl'||mode==='ipc',rate=!dates;
+    document.querySelectorAll('.modes label').forEach(l=>l.classList.toggle('active',l.querySelector('input').checked));
+    document.querySelector('.date-fields').hidden=!dates;document.querySelector('.rate-fields').hidden=!rate;document.querySelector('.manual-coef').hidden=mode!=='icl';document.querySelector('.months-field').hidden=mode!=='manual';document.querySelector('.frequency-field').hidden=mode!=='frecuencia';
+    state();
+  }
+  form.addEventListener('submit',e=>{e.preventDefault();state()});form.addEventListener('input',state);form.addEventListener('change',e=>{if(e.target.name==='mode')modeUI();else state()});
+  document.querySelector('.share').addEventListener('click',async()=>{const text='Mi alquiler actualizado sería '+$('total').textContent;try{if(navigator.share)await navigator.share({title:'Aumento de alquiler',text,url:location.href});else await navigator.clipboard.writeText(text+' '+location.href)}catch{}});
+  modeUI();
+})();
+</script>
+
+<style>
+  .rent{--navy:#102c52;--blue:#1769e8;--green:#168653;--amber:#efa62f;color:#12243e;background:#fff}.shell{width:min(1120px,calc(100% - 40px));margin-inline:auto}.hero{position:relative;overflow:hidden;background:#f2f7ff;padding:34px 0 72px}.hero:after{content:"";position:absolute;width:500px;height:500px;border:100px solid #e5efff;border-radius:50%;right:-240px;top:-160px}.crumb{display:flex;gap:10px;color:#78899c;font-size:13px;position:relative;z-index:1}.crumb a{color:var(--blue);font-weight:700;text-decoration:none}.hero-grid{display:grid;grid-template-columns:.92fr 1.08fr;gap:68px;margin-top:38px;position:relative;z-index:1}.eyebrow{display:flex;align-items:center;gap:9px;color:var(--blue);text-transform:uppercase;font-size:12px;font-weight:800;letter-spacing:.13em}.eyebrow:before{content:"";width:26px;height:2px;background:var(--blue)}.intro h1{font-size:56px;line-height:1.03;letter-spacing:-.055em;margin:20px 0}.intro>p{font-size:18px;line-height:1.65;color:#586b80}.trust{display:flex;gap:10px;margin-top:28px}.trust span{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #dce5f1;border-radius:9px;padding:9px 11px;font-size:10px;color:#566a80}.trust svg{width:17px;fill:none;stroke:var(--blue);stroke-width:1.7}.hero-art{width:90%;height:auto;margin-top:35px}.calculator{background:#fff;border:1px solid #dce4ee;border-radius:18px;box-shadow:0 22px 60px #12335b1a;padding:30px 34px}.calc-head{display:flex;align-items:center;justify-content:space-between}.calc-head h2{font-size:25px;margin:0}.calc-head span{font-size:11px;color:#78899c}.calculator fieldset{border:0;padding:0;margin:24px 0 0}.calculator legend,.input-title{font-size:13px;font-weight:750;margin-bottom:10px}.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.modes label{min-height:82px;border:1.5px solid #dce3ec;border-radius:10px;display:grid;place-items:center;padding:10px;cursor:pointer;color:#526479}.modes label.active{border-color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue);background:#f4f8ff;color:var(--blue)}.modes input,.more-modes input{position:absolute;opacity:0}.modes svg{width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:1.7}.modes b{font-size:12px}.other-label{margin:15px 0 8px;font-size:11px;font-weight:750;color:#66798e}.more-modes{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:0 0 20px}.more-modes label{position:relative;border:1px solid #dce4ed;border-radius:8px;padding:10px 9px;cursor:pointer;min-height:70px}.more-modes label:has(input:checked){border-color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue);background:#f4f8ff}.more-modes span,.more-modes small{display:block}.more-modes span{font-size:11px;font-weight:700}.more-modes small{font-size:9px;line-height:1.35;color:#74869a;margin-top:4px}.field{display:block;border:1.5px solid #dce3ec;border-radius:10px;padding:9px 13px;margin-bottom:12px}.field>span{display:block;font-size:10px;color:#77899d;margin-bottom:5px}.field div{display:flex;align-items:center;gap:8px}.field input,.field select{width:100%;border:0;outline:0;background:transparent;color:inherit;font:700 16px inherit}.field.amount input{font-size:20px}.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field-grid[hidden]{display:none}.manual-coef{font-size:11px;color:#63768c;margin-bottom:12px}.manual-coef[hidden]{display:none}.manual-coef summary{cursor:pointer;margin-bottom:9px}.manual-coef .field{margin:0}.result{background:var(--navy);color:#fff;border-radius:13px;padding:21px 23px;margin-top:10px}.result-top{display:flex;justify-content:space-between;align-items:start}.result-top span,.comparison small{display:block;color:#b9c9dc;font-size:11px}.result-top strong{display:block;font-size:37px;letter-spacing:-.04em;margin-top:5px}.result-top>b{background:#eaf8f1;color:var(--green);border-radius:99px;padding:7px 10px;font-size:11px}.comparison{display:grid;grid-template-columns:1fr 42px 1fr;align-items:center;margin-top:17px;border-top:1px solid #355070;padding-top:13px}.comparison svg{width:25px;fill:none;stroke:#65a2ff;stroke-width:2}.comparison>div:last-child{text-align:right}.progress{height:6px;background:#294769;border-radius:9px;overflow:hidden;margin-top:14px}.progress i{display:block;height:100%;background:#5d98f3;border-radius:9px}.result>p{font-size:10px;color:#b9c9dc;line-height:1.5;min-height:30px}.actions{display:flex;gap:9px}.actions button{border:0;border-radius:8px;padding:12px;font-weight:750;cursor:pointer}.primary{flex:1;background:#397df0;color:#fff}.share{background:#fff;color:var(--navy)}.fineprint{display:flex;gap:6px;align-items:flex-start;font-size:10px;line-height:1.5;color:#697c91}.fineprint svg{width:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6}.explanation,.timeline,.content{padding-block:76px}.explanation header,.guide header,.timeline header{text-align:center;max-width:700px;margin:0 auto 40px}.explanation header span,.guide header span,.timeline header span,.content>article>span{color:var(--blue);font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.explanation header h2,.guide header h2,.timeline header h2{font-size:36px;letter-spacing:-.035em;margin:10px 0}.explanation header p,.guide header p,.timeline header p{color:#627489;line-height:1.6}.explain-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:22px}.card{border:1px solid #dfe5ec;border-radius:16px;padding:28px;box-shadow:0 10px 30px #17304e0b}.card h3{margin:0;font-size:20px}.bars{display:grid;gap:20px;margin-top:27px}.bars>div{display:grid;grid-template-columns:120px 1fr 100px;gap:13px;align-items:center;font-size:11px}.bars i{height:14px;background:#edf1f6;border-radius:10px;overflow:hidden}.bars em{display:block;height:100%;background:#a6b2c0;border-radius:10px}.bars>div:nth-child(2) em{background:#22a36a}.bars>div:nth-child(3) em{background:var(--blue)}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}.metrics span{background:#f6f9fc;border-radius:11px;padding:15px;font-size:10px;color:#74869a}.metrics strong{display:block;font-size:21px;color:#132641;margin-top:5px}.metrics span:last-child strong{color:var(--green)}.legal{background:#fff9ee;border-color:#f0d8ad}.legal-head{display:flex;gap:12px;align-items:center}.legal-head i{display:grid;place-items:center;width:44px;height:44px;background:#ffebc7;border-radius:10px}.legal-head svg{width:25px;fill:none;stroke:#d48200;stroke-width:1.7}.legal-head span{display:inline-block;background:#fff0d4;color:#a56600;border-radius:99px;padding:5px 8px;font-size:9px;font-weight:800}.legal-head h3{font-size:17px;margin-top:6px}.legal>p{font-size:12px;line-height:1.6;color:#5e6d7e}.formula{background:#fff;border:1px dashed #dfb76f;border-radius:9px;padding:14px;font-size:12px;font-weight:700}.warning{display:flex;gap:7px;color:#8a5a08;font-size:10px;line-height:1.5;margin-top:15px}.warning svg{width:17px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6}.guide{background:#f7f9fc;padding:76px 0}.guide-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.guide-grid article{background:#fff;border:1px solid #dfe5ec;border-radius:15px;padding:24px}.guide-grid svg{width:38px;fill:none;stroke:var(--blue);stroke-width:1.6}.guide-grid b{display:block;width:max-content;background:#eef5ff;color:var(--blue);border-radius:99px;padding:5px 8px;font-size:9px;margin-top:15px}.guide-grid h3{font-size:17px}.guide-grid p{font-size:12px;line-height:1.65;color:#65768a}.timeline-row{display:grid;grid-template-columns:repeat(3,1fr);position:relative}.timeline-row:before{content:"";position:absolute;top:24px;left:16%;right:16%;height:2px;background:#dbe4ef}.timeline-row article{text-align:center;position:relative;padding-inline:25px}.timeline-row i{display:block;width:48px;height:48px;margin:auto;border-radius:50%;background:var(--blue);border:7px solid #fff;box-shadow:0 0 0 2px var(--blue)}.timeline-row article:nth-child(2) i{background:var(--amber);box-shadow:0 0 0 2px var(--amber)}.timeline-row article:nth-child(3) i{background:#22a36a;box-shadow:0 0 0 2px #22a36a}.timeline-row h3{font-size:15px;margin:18px 0 7px}.timeline-row p{font-size:11px;line-height:1.55;color:#6d8095}.content{display:grid;grid-template-columns:.85fr 1.15fr;gap:50px;border-top:1px solid #e2e7ed}.content>article h2{font-size:30px;letter-spacing:-.03em}.content>article p{line-height:1.75;color:#5d7085}.faq{grid-column:2}.faq h2,.sources h2{font-size:25px}.faq details{border-bottom:1px solid #dfe5ec}.faq summary{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:16px 0;font-weight:700;cursor:pointer}.faq summary svg{width:18px;fill:none;stroke:currentColor;stroke-width:1.7}.faq details[open] summary svg{transform:rotate(180deg)}.faq p{font-size:13px;line-height:1.7;color:#617489}.sources{grid-column:2}.sources a{display:flex;justify-content:space-between;align-items:center;border:1px solid #dfe5ec;border-radius:10px;padding:14px 16px;margin:9px 0;color:inherit;text-decoration:none}.sources span,.sources small{display:block}.sources span{font-size:13px;font-weight:700}.sources small{font-size:10px;color:#718398;margin-top:4px}.sources svg{width:18px;fill:none;stroke:var(--blue);stroke-width:1.7}
+  @media(max-width:900px){.hero-grid{grid-template-columns:1fr}.intro{text-align:center}.eyebrow,.trust{justify-content:center}.hero-art{max-width:500px}.explain-grid,.content{grid-template-columns:1fr}.faq,.sources{grid-column:1}.guide-grid{grid-template-columns:1fr}.hero h1{max-width:700px;margin-inline:auto}.intro>p{max-width:650px;margin-inline:auto}}
+  @media(max-width:560px){.shell{width:calc(100% - 24px)}.hero{padding-top:24px}.hero-grid{margin-top:24px;gap:28px}.intro h1{font-size:39px}.intro>p{font-size:15px}.trust{display:grid;grid-template-columns:repeat(3,1fr)}.trust span{font-size:8px;padding:7px 4px;justify-content:center}.hero-art{margin-top:15px}.calculator{padding:23px 17px}.calc-head h2{font-size:22px}.calc-head span{font-size:9px}.modes label{min-height:75px}.modes b{font-size:9px}.field-grid{grid-template-columns:1fr}.result-top strong{font-size:33px}.explanation,.timeline,.content,.guide{padding-block:55px}.explanation header h2,.guide header h2,.timeline header h2{font-size:30px}.bars>div{grid-template-columns:90px 1fr 80px}.metrics{grid-template-columns:1fr}.timeline-row{grid-template-columns:1fr;gap:30px}.timeline-row:before{display:none}.content{gap:24px}.actions{display:grid}.share{grid-column:1}.sources span{font-size:11px}}
+</style>
