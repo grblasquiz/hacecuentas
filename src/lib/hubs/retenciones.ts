@@ -360,6 +360,8 @@ export const hub: HubData = {
     '/calculadora-percepcion-dolar-tarjeta-impuesto-pais',
     '/calculadora-percepciones-impositivas',
     '/calculadora-factura-electronica-afip-primera-vez',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-retencion-ganancias-rg-830',
   ],
 
   lastReviewed: '2026-07-27',

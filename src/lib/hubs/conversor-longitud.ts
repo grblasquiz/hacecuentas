@@ -244,6 +244,9 @@ export const hub: HubData = {
     '/calculadora-conversor-pies-a-pulgadas',
     '/calculadora-conversor-hectareas-a-metros-cuadrados',
     '/calculadora-conversion-pulgada-centimetro-screen',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-conversor-micrometros-a-milimetros',
+    '/calculadora-anos-luz-distancia-conversion',
   ],
 
   lastReviewed: '2026-07-27',

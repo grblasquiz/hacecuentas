@@ -452,6 +452,10 @@ export const hub: HubData = {
     '/calculadora-conversor-kwh-a-joules',
     '/calculadora-conversor-btu-a-joules',
     '/densidad-masa-volumen-formula',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-calor-especifico-delta-t',
+    '/calculadora-dilatacion-termica-longitud',
+    '/calculadora-entropia-cambio-fase',
   ],
 
   lastReviewed: '2026-07-27',

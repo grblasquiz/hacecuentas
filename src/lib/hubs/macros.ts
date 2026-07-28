@@ -354,6 +354,8 @@ export const hub: HubData = {
     '/calculadora-macros-dash-hipertension',
     '/calculadora-macros-deficit-volumen-mantenimiento',
     '/calculadora-macros-recomp-cut-bulk-lean-calorias',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-macronutrientes-dieta',
   ],
 
   lastReviewed: '2026-07-27',

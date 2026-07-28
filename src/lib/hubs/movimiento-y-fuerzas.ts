@@ -403,6 +403,9 @@ export const hub: HubData = {
     '/calculadora-energia-cinetica-joules',
     '/calculadora-energia-potencial-gravitatoria',
     '/calculadora-momento-angular-rotacion',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-ley-coulomb-fuerza-electrica',
+    '/velocidad-distancia-tiempo-despeje',
   ],
 
   lastReviewed: '2026-07-27',

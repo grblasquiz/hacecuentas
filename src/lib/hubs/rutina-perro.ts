@@ -281,6 +281,8 @@ export const hub: HubData = {
     '/calculadora-paseos-perro-minutos-raza-energia',
     '/calculadora-frecuencia-bano-perro-raza-tipo-pelo',
     '/calculadora-frecuencia-corte-unas-perro-gato',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-tamano-cucha-perro-medidas',
   ],
 
   lastReviewed: '2026-07-27',

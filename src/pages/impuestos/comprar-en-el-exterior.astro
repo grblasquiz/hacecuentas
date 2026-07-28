@@ -1,0 +1,179 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto me sale de verdad traerlo de afuera?"
+ * Reemplaza 2 URLs de calculadora suelta (ver hub.replaces).
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, ENVIOS_2026 } from '../../lib/hubs/comprar-en-el-exterior';
+import dolarLive from '../../data/live/dolar.json';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+
+/** Cotización oficial de venta del feed vivo; si falta, queda el valor por defecto del hub. */
+const oficialVenta = Number((dolarLive as any)?.quotes?.oficial?.venta) || 0;
+const data = oficialVenta > 0
+  ? {
+      ...hub,
+      fields: hub.fields.map((f) =>
+        f.id === 'dolar' ? { ...f, value: Math.round(oficialVenta).toLocaleString('es-AR') } : f,
+      ),
+    }
+  : hub;
+
+const K = {
+  franquicia: ENVIOS_2026.franquiciaFobUSD,
+  envios: ENVIOS_2026.enviosPorAnio,
+  tope: ENVIOS_2026.topeEnvioUSD,
+  tasa: ENVIOS_2026.tasaEstadistica,
+  iva: ENVIOS_2026.iva,
+  ivaAdic: ENVIOS_2026.ivaAdicionalGeneral,
+  ganancias: ENVIOS_2026.gananciasGeneral,
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={data} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ K }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const usd = (n) =>
+      'US$' + (Math.round((n || 0) * 100) / 100).toLocaleString('es-AR', { maximumFractionDigits: 2 });
+    const pct = (x) => (x * 100).toLocaleString('es-AR', { maximumFractionDigits: 2 }) + '%';
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'plataforma';
+
+      const producto = Math.max(0, Number(v.producto) || 0);
+      const envio = Math.max(0, Number(v.envio) || 0);
+      const gestion = Math.max(0, Number(v.gestion) || 0);
+      const arancel = Math.min(35, Math.max(0, Number(v.arancel) || 0)) / 100;
+      const usados = Math.min(K.envios, Math.max(0, Math.round(Number(v.enviosUsados) || 0)));
+      const dolar = Math.max(1, Number(v.dolar) || 1);
+
+      const valorAduana = producto + envio;
+      const cupoAgotado = usados >= K.envios;
+      const regimenGeneral = id === 'general';
+      const sinFranquicia = regimenGeneral || id === 'cupo' || cupoAgotado;
+      const franquicia = sinFranquicia ? 0 : K.franquicia;
+
+      // Base gravada: lo que excede la franquicia. Dentro de la franquicia no hay
+      // derecho de importación ni tasa de estadística, pero el IVA se paga siempre.
+      const gravado = Math.max(0, valorAduana - franquicia);
+      const derechos = gravado * arancel;
+      const tasaEst = gravado * K.tasa;
+      const baseIva = valorAduana + derechos + tasaEst;
+      const iva = baseIva * K.iva;
+      const ivaAdicional = regimenGeneral ? baseIva * K.ivaAdic : 0;
+      const percepGanancias = regimenGeneral ? baseIva * K.ganancias : 0;
+
+      const impuestos = derechos + tasaEst + iva + ivaAdicional + percepGanancias;
+      const gestionConIva = gestion * (1 + K.iva);
+      const totalUSD = valorAduana + impuestos + gestionConIva;
+      const totalPesos = totalUSD * dolar;
+
+      const rows = [];
+      rows.push({ k: 'Producto (valor FOB)', ref: 'Carrito', v: producto });
+      rows.push({ k: 'Envío internacional', ref: 'Flete', v: envio });
+      rows.push({
+        k: 'Derecho de importación (' + pct(arancel) + ')',
+        ref: sinFranquicia ? 'Sobre todo el valor' : 'Sobre el excedente',
+        v: derechos,
+      });
+      rows.push({
+        k: 'Tasa de estadística (3%)',
+        ref: gravado > 0 ? 'Sobre el excedente' : 'Exenta por franquicia',
+        v: tasaEst,
+      });
+      rows.push({ k: 'IVA de importación (21%)', ref: 'Se paga siempre', v: iva });
+      if (regimenGeneral) {
+        rows.push({ k: 'Percepción de IVA adicional (20%)', ref: 'Recuperable', v: ivaAdicional });
+        rows.push({ k: 'Percepción a cuenta de Ganancias (6%)', ref: 'Recuperable', v: percepGanancias });
+      }
+      rows.push({ k: 'Gastos de gestión y despacho, con IVA', ref: 'Cobra el operador', v: gestionConIva });
+      rows.push({ k: 'Total puesto en tu casa', ref: 'Final', v: totalUSD, extra: true });
+      rows.push({ k: 'Total en pesos', ref: 'A $' + Math.round(dolar).toLocaleString('es-AR'), v: totalPesos, format: 'ars' });
+
+      const recargo = producto > 0 ? ((totalUSD - producto) / producto) * 100 : 0;
+      const avisos = [];
+      if (!regimenGeneral && valorAduana > K.tope) {
+        avisos.push('el envío supera el tope de ' + usd(K.tope) + ' del régimen simplificado: pasa al general, con despachante');
+      }
+      if (!regimenGeneral && cupoAgotado) {
+        avisos.push('ya usaste los ' + K.envios + ' envíos con franquicia del año: este tributa desde el primer dólar');
+      }
+
+      let sub;
+      if (regimenGeneral) {
+        sub = 'Régimen general: ' + usd(impuestos) + ' de tributos sobre ' + usd(valorAduana) +
+          ' declarados, sin contar honorarios del despachante.';
+      } else if (gravado > 0) {
+        sub = 'Te pasás ' + usd(gravado) + ' de la franquicia de ' + usd(K.franquicia) + ' · pagás ' +
+          usd(impuestos) + ' de impuestos, ' + usd(iva) + ' de eso es IVA.';
+      } else {
+        sub = 'Entrás dentro de la franquicia de ' + usd(K.franquicia) +
+          ': sin derechos ni tasa de estadística, pero el IVA de ' + usd(iva) + ' se paga igual.';
+      }
+      sub += ' El paquete te sale ' + recargo.toLocaleString('es-AR', { maximumFractionDigits: 1 }) +
+        '% más que el precio del carrito.';
+      if (avisos.length) sub += ' Ojo: ' + avisos.join('; ') + '.';
+
+      const chart = [
+        { label: 'Producto', value: producto, tone: 'main' },
+        { label: 'Envío', value: envio, tone: 'prop' },
+        { label: 'Impuestos', value: impuestos, tone: 'warn' },
+        { label: 'Gestión y despacho', value: gestionConIva, tone: 'exit' },
+      ];
+
+      return {
+        total: H.ars(totalPesos),
+        sub: sub,
+        rows: rows,
+        chart: chart,
+        format: 'unit',
+        unit: 'USD',
+        decimals: 2,
+      };
+    });
+  })();
+</script>

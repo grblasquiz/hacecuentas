@@ -324,6 +324,9 @@ export const hub: HubData = {
     '/calculadora-fecha-probable-concepcion',
     '/calculadora-fecha-concepcion-desde-fpp',
     '/calculadora-implantacion-embrion',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-dias-minimos-test-embarazo-positivo',
+    '/calculadora-test-embarazo-cuando',
   ],
 
   lastReviewed: '2026-07-27',

@@ -249,6 +249,8 @@ export const hub: HubData = {
     '/calculadora-costo-mensual-raza-gato',
     '/calculadora-costo-veterinario-consulta-promedio',
     '/calculadora-arena-sanitaria-gato-kg-mes',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-costo-mascota-vida-util',
   ],
 
   lastReviewed: '2026-07-27',

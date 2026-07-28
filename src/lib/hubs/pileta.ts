@@ -397,6 +397,8 @@ export const hub: HubData = {
     '/calculadora-costo-mensual-pileta',
     '/calculadora-piscina-cloro-mantenimiento-mensual-litros-tamano',
     '/calculadora-tiempo-evaporacion-piscina-litros-dia',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-pileta-cloro-litros-volumen-dosificacion',
   ],
 
   lastReviewed: '2026-07-27',

@@ -280,6 +280,10 @@ export const hub: HubData = {
     '/calculadora-panales-mes-bebe-talle-gasto-anual',
     '/calculadora-guarderia-jardin-maternal-costo-caba-mensual',
     '/calculadora-cuota-jardin-maternal-cama-cuna-mensual-2026',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-ovulos-congelados-vitrificacion-precio-clinica',
+    '/calculadora-costo-fiv-argentina',
+    '/calculadora-test-prenatal-no-invasivo-nipt-precio-arg',
   ],
 
   lastReviewed: '2026-07-27',

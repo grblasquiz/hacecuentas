@@ -291,6 +291,9 @@ export const hub: HubData = {
     '/calculadora-m2-casa-planos-total-construido',
     '/calculadora-metros-cuadrados-terreno-irregular-poligono',
     '/calculadora-fideicomiso-construccion-aporte-cuotas',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-propiedad-tasacion-m2-barrio-caba-promedio',
+    '/calculadora-proyectos-hogar',
   ],
 
   lastReviewed: '2026-07-27',

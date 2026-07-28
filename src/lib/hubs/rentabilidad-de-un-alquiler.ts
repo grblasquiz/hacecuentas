@@ -308,6 +308,8 @@ export const hub: HubData = {
     '/calculadora-costo-mantener-propiedad-vacia-mensual',
     '/calculadora-precio-m2-zona',
     '/calculadora-alquiler-con-opcion-a-compra-leasing-inmueble',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-alquiler-temporal-vs-tradicional-rendimiento-neto',
   ],
 
   lastReviewed: '2026-07-27',

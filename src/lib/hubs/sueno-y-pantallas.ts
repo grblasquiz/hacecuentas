@@ -343,6 +343,8 @@ export const hub: HubData = {
     '/calculadora-tiempo-pantalla-ideal-edad',
     '/calculadora-tiempo-en-redes-sociales',
     '/calculadora-deep-work-cal-newport-horas-maximo-diario',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-screen-time-pediatra-edad-hora-dia',
   ],
 
   lastReviewed: '2026-07-27',

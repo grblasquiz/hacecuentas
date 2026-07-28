@@ -361,6 +361,8 @@ export const hub: HubData = {
     '/calculadora-inflacion-perdida-poder-adquisitivo',
     '/calculadora-dolar-mep-paso-a-paso-costo-operacion',
     '/calculadora-cuanto-pierdo-inflacion-plata-quieta',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/conversor-moneda-dolar-peso-real-latam',
   ],
 
   lastReviewed: '2026-07-27',

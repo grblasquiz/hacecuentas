@@ -246,6 +246,8 @@ export const hub: HubData = {
     '/calculadora-mls-playoffs-east-west-conference',
     '/calculadora-f1-puntos-campeonato-mundial-quedan',
     '/calculadora-motogp-puntos-campeonato-restantes',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-tarjetas-amarillas-acumuladas-suspension',
   ],
 
   lastReviewed: '2026-07-27',

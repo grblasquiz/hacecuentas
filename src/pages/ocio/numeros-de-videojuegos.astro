@@ -1,0 +1,336 @@
+---
+/**
+ * Hub de decisión — "¿Qué número necesito para mi juego?"
+ * Reemplaza 4 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo ramificado: cada `case` es un juego con su propia matemática.
+ * compute() recibe (valores, caso) y despacha por caso.id.
+ * La página sólo aporta datos (src/lib/hubs/numeros-de-videojuegos.ts) y su compute().
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, FRUTAS, DUST_LEVELS, CPM, MC } from '../../lib/hubs/numeros-de-videojuegos';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ FRUTAS, DUST: DUST_LEVELS, CPM, MC }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Ninguna rama es plata. El runtime hace Object.assign: una fila sin
+    // `format` propio cae a pesos.
+    const P0 = { format: 'plain', decimals: 0 };
+    const P1 = { format: 'plain', decimals: 1 };
+    const P2 = { format: 'plain', decimals: 2 };
+    const PCT = { format: 'unit', unit: '%', decimals: 1 };
+    const PCT0 = { format: 'unit', unit: '%', decimals: 0 };
+    const BLK = { format: 'unit', unit: 'bloques', decimals: 0 };
+    const PTS = { format: 'unit', unit: 'pts', decimals: 1 };
+
+    const fmt = (n, d) =>
+      Number(n || 0).toLocaleString('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+    // ── CPM interpolado. Copia fiel de iv-pokemon-go.ts ───────────────────
+    const NIVELES_CPM = Object.keys(CPM).map(Number).sort(function (a, b) { return a - b; });
+    function cpmAprox(nivel) {
+      for (let k = 0; k < NIVELES_CPM.length - 1; k++) {
+        const lo = NIVELES_CPM[k], hi = NIVELES_CPM[k + 1];
+        if (nivel >= lo && nivel <= hi) {
+          const t = (nivel - lo) / (hi - lo);
+          return CPM[String(lo)] + t * (CPM[String(hi)] - CPM[String(lo)]);
+        }
+      }
+      if (nivel < NIVELES_CPM[0]) return CPM[String(NIVELES_CPM[0])];
+      return CPM[String(NIVELES_CPM[NIVELES_CPM.length - 1])];
+    }
+
+    const vacio = function (msg) {
+      return { total: '—', sub: msg, rows: [], chart: [], format: 'plain' };
+    };
+
+    // ══ Minecraft ═════════════════════════════════════════════════════════
+    function minecraft(v) {
+      const dir = String(v.mcDireccion || 'overworld-to-nether');
+      const x = Number(v.mcX) || 0, y = Number(v.mcY) || 0, z = Number(v.mcZ) || 0;
+      const aNether = dir === 'overworld-to-nether';
+
+      // Copia fiel de portal-nether-overworld.ts: floor al bajar, ×8 al subir.
+      const xd = aNether ? Math.floor(x / MC.ratio) : x * MC.ratio;
+      const zd = aNether ? Math.floor(z / MC.ratio) : z * MC.ratio;
+      const yd = y;
+      const destino = aNether ? 'Nether' : 'Overworld';
+
+      // EXTENSIÓN: la Y sobre la escala de alturas del Nether.
+      const yClamp = Math.min(MC.techoNether, Math.max(0, yd));
+      const posicion = (yClamp / MC.techoNether) * 100;
+      let zonaY = 'Zona recomendada';
+      if (yd < 31) zonaY = 'Bedrock y mar de lava';
+      else if (yd < 70) zonaY = 'Transitable pero expuesta';
+      else if (yd > 127) zonaY = 'Arriba del techo: no se puede construir';
+
+      // EXTENSIÓN: cuánto camino del Overworld ahorra el tramo por el Nether.
+      const distOverworld = Math.sqrt(x * x + z * z);
+      const distNether = distOverworld / MC.ratio;
+
+      const rows = [];
+      rows.push(Object.assign({ k: 'X del portal en ' + destino, ref: aNether ? 'X ÷ 8, redondeado hacia abajo' : 'X × 8', v: xd, extra: true }, P0));
+      rows.push(Object.assign({ k: 'Y del portal en ' + destino, ref: zonaY, v: yd, extra: true }, P0));
+      rows.push(Object.assign({ k: 'Z del portal en ' + destino, ref: aNether ? 'Z ÷ 8, redondeado hacia abajo' : 'Z × 8', v: zd, extra: true }, P0));
+      rows.push(Object.assign({ k: 'Relación entre dimensiones', ref: '1 bloque del Nether = 8 del Overworld', v: MC.ratio }, P0));
+      rows.push(Object.assign({ k: 'Radio de búsqueda de portal en el Nether', v: MC.radioNether }, BLK));
+      rows.push(Object.assign({ k: 'Radio de búsqueda en el Overworld', v: MC.radioOverworld }, BLK));
+      rows.push(Object.assign({ k: 'Distancia desde el spawn en el Overworld', v: distOverworld }, BLK));
+      rows.push(Object.assign({ k: 'La misma distancia caminando por el Nether', v: distNether, extra: true }, BLK));
+      rows.push(Object.assign({ k: 'Camino que te ahorrás', v: 87.5 }, PCT0));
+
+      return {
+        total: 'X ' + fmt(xd, 0) + ' · Z ' + fmt(zd, 0),
+        sub:
+          'Construí el portal en ' + destino + ' en X=' + fmt(xd, 0) + ', Y=' + fmt(yd, 0) + ', Z=' + fmt(zd, 0) +
+          ' para que se enlace con (' + fmt(x, 0) + ', ' + fmt(y, 0) + ', ' + fmt(z, 0) + '). ' +
+          (yd < 31 ? 'Ojo: a esa altura caés en el mar de lava, subilo a Y=70-120.'
+            : yd > 127 ? 'Ojo: Y=127 es el techo del Nether, bajalo.'
+            : 'La altura está bien.'),
+        rows: rows,
+        format: 'plain',
+        decimals: 0,
+        position: posicion,
+        positionLabel: 'Y=' + fmt(yd, 0) + ' — ' + zonaY,
+        chart: [
+          { label: 'Bedrock y lava', value: 31, from: 0, to: 31, tone: 'bad' },
+          { label: 'Expuesta', value: 39, from: 31, to: 70, tone: 'warn' },
+          { label: 'Recomendada', value: 50, from: 70, to: 120, tone: 'good' },
+          { label: 'Techo', value: 8, from: 120, to: 128, tone: 'bad' },
+        ],
+      };
+    }
+
+    // ══ Pokémon GO ════════════════════════════════════════════════════════
+    function pokemon(v) {
+      const cp = Number(v.pgCp) || 0, hp = Number(v.pgHp) || 0, dust = Number(v.pgPolvo) || 0;
+      const atkB = Number(v.pgAtkBase) || 0, defB = Number(v.pgDefBase) || 0, hpB = Number(v.pgHpBase) || 0;
+      if (!cp || !hp || !dust || !atkB || !defB || !hpB) {
+        return vacio('Completá CP, HP, polvo estelar y los tres stats base de la especie.');
+      }
+
+      // Copia fiel de iv-pokemon-go.ts.
+      let rango = null;
+      for (let k = 0; k < DUST.length; k++) if (DUST[k].dust === dust) { rango = DUST[k]; break; }
+      if (!rango) {
+        rango = DUST.reduce(function (best, curr) {
+          return Math.abs(curr.dust - dust) < Math.abs(best.dust - dust) ? curr : best;
+        });
+      }
+      const nivelMedio = (rango.min + rango.max) / 2;
+      const cpm = cpmAprox(nivelMedio);
+
+      const hpIvRaw = hp / cpm - hpB;
+      const hpIv = Math.max(0, Math.min(15, Math.round(hpIvRaw)));
+      const hpTotal = hpB + hpIv;
+      const sqrtDef = Math.sqrt(defB + 7.5);
+      const atkEstim = (cp * 10) / (cpm * cpm * Math.sqrt(hpTotal) * sqrtDef);
+      const atkDefIv = Math.max(0, Math.min(30, Math.round(atkEstim - atkB)));
+      const atkIv = Math.min(15, Math.floor(atkDefIv / 2));
+      const defIv = Math.min(15, atkDefIv - atkIv);
+
+      const ivTotal = atkIv + defIv + hpIv;
+      const ivMin = Math.max(0, ivTotal - 3);
+      const ivMax = Math.min(45, ivTotal + 3);
+      const pctMin = Math.round((ivMin / 45) * 100);
+      const pctMax = Math.round((ivMax / 45) * 100);
+      const pctMed = (pctMin + pctMax) / 2;
+
+      let calif = 'Regular / transferir';
+      if (pctMed >= 96) calif = 'Hundo / casi perfecto (PvE élite)';
+      else if (pctMed >= 82) calif = 'Excelente (Liga Súper o Ultra viable)';
+      else if (pctMed >= 66) calif = 'Bueno';
+
+      const rows = [];
+      rows.push(Object.assign({ k: 'Nivel estimado del Pokémon', ref: 'por el polvo estelar (' + fmt(rango.dust, 0) + ')', v: nivelMedio, extra: true }, P1));
+      rows.push(Object.assign({ k: 'Multiplicador CPM de ese nivel', v: cpm, format: 'plain', decimals: 4 }));
+      rows.push(Object.assign({ k: 'IV de estamina estimado', ref: 'de 0 a 15', v: hpIv }, P0));
+      rows.push(Object.assign({ k: 'IV de ataque estimado', ref: 'de 0 a 15', v: atkIv }, P0));
+      rows.push(Object.assign({ k: 'IV de defensa estimado', ref: 'de 0 a 15', v: defIv }, P0));
+      rows.push(Object.assign({ k: 'IV total estimado', ref: 'sobre 45', v: ivTotal, extra: true }, P0));
+      rows.push(Object.assign({ k: 'Piso del rango de IV', v: ivMin }, P0));
+      rows.push(Object.assign({ k: 'Techo del rango de IV', v: ivMax }, P0));
+      rows.push(Object.assign({ k: 'Porcentaje mínimo', v: pctMin }, PCT0));
+      rows.push(Object.assign({ k: 'Porcentaje máximo', v: pctMax, extra: true }, PCT0));
+
+      return {
+        total: pctMin + '–' + pctMax + '%',
+        sub:
+          'Nivel ~' + fmt(nivelMedio, 1) + ' · IV entre ' + ivMin + ' y ' + ivMax + ' de 45 · ' + calif +
+          '. Confirmalo con el appraisal del juego antes de gastar polvo.',
+        rows: rows,
+        format: 'plain',
+        decimals: 0,
+        position: Math.min(99.9, pctMed),
+        positionLabel: pctMin + '–' + pctMax + '% — ' + calif,
+        chart: [
+          { label: 'Regular', value: 66, from: 0, to: 66, tone: 'bad' },
+          { label: 'Bueno', value: 16, from: 66, to: 82, tone: 'warn' },
+          { label: 'Excelente', value: 14, from: 82, to: 96, tone: 'good' },
+          { label: 'Casi perfecto', value: 4, from: 96, to: 100, tone: 'main' },
+        ],
+      };
+    }
+
+    // ══ ELO ═══════════════════════════════════════════════════════════════
+    function elo(v) {
+      const mio = Number(v.eloPropio) || 0;
+      const rival = Number(v.eloRival) || 0;
+      const S = Number(v.eloResultado);
+      const K = Number(v.eloK) || 0;
+      if (!K || (S !== 0 && S !== 0.5 && S !== 1)) {
+        return vacio('Elegí el resultado de la partida y poné un factor K válido.');
+      }
+
+      // Copia fiel de rankeo-elo-puntos.ts.
+      const E = 1 / (1 + Math.pow(10, (rival - mio) / 400));
+      const cambio = K * (S - E);
+      const nuevo = Math.round(mio + cambio);
+      const probPct = E * 100;
+
+      // Los otros dos resultados posibles, para ver el riesgo antes de jugar.
+      const siGana = K * (1 - E);
+      const siPierde = K * (0 - E);
+      const siEmpata = K * (0.5 - E);
+
+      const resultadoTxt = S === 1 ? 'victoria' : S === 0 ? 'derrota' : 'empate';
+
+      const rows = [];
+      rows.push(Object.assign({ k: 'Probabilidad esperada de ganar', ref: 'E = 1 / (1 + 10^((rival − vos)/400))', v: probPct, extra: true }, PCT));
+      rows.push(Object.assign({ k: 'Diferencia de rating', v: mio - rival }, PTS));
+      rows.push(Object.assign({ k: 'Cambio por esta ' + resultadoTxt, ref: 'K × (resultado − E)', v: cambio, extra: true }, PTS));
+      rows.push(Object.assign({ k: 'Tu nuevo rating', v: nuevo, extra: true }, P0));
+      rows.push(Object.assign({ k: 'Lo que sumarías si ganás', v: siGana }, PTS));
+      rows.push(Object.assign({ k: 'Lo que moverías si empatás', v: siEmpata }, PTS));
+      rows.push(Object.assign({ k: 'Lo que perderías si perdés', v: siPierde }, PTS));
+      rows.push(Object.assign({ k: 'Factor K aplicado', v: K }, P0));
+
+      let zona = 'Parejo';
+      if (probPct < 40) zona = 'Underdog';
+      else if (probPct >= 60) zona = 'Favorito';
+
+      return {
+        total: String(nuevo),
+        sub:
+          resultadoTxt.charAt(0).toUpperCase() + resultadoTxt.slice(1) + ' contra un rival de ' + fmt(rival, 0) +
+          ' · probabilidad esperada ' + fmt(probPct, 1) + '% · ' + (cambio >= 0 ? '+' : '−') + fmt(Math.abs(cambio), 1) +
+          ' pts con K=' + fmt(K, 0) + ' · ' + fmt(mio, 0) + ' → ' + fmt(nuevo, 0),
+        rows: rows,
+        format: 'plain',
+        decimals: 0,
+        position: probPct,
+        positionLabel: fmt(probPct, 0) + '% de probabilidad — ' + zona,
+        chart: [
+          { label: 'Underdog', value: 40, from: 0, to: 40, tone: 'bad' },
+          { label: 'Parejo', value: 20, from: 40, to: 60, tone: 'warn' },
+          { label: 'Favorito', value: 40, from: 60, to: 100, tone: 'good' },
+        ],
+      };
+    }
+
+    // ══ Blox Fruits ═══════════════════════════════════════════════════════
+    function blox(v) {
+      const da = FRUTAS[String(v.bfDoy || '').toLowerCase()];
+      const rec = FRUTAS[String(v.bfRecibo || '').toLowerCase()];
+      if (!da || !rec) return vacio('Elegí la fruta que das y la que recibís.');
+
+      // Copia fiel de blox-fruits-trade.ts.
+      const diff = rec.valor - da.valor;
+      const ratio = da.valor > 0 ? rec.valor / da.valor : 0;
+      let veredicto = 'L trade (perdés bastante)';
+      if (ratio >= 1.15) veredicto = 'W trade (ganás bastante)';
+      else if (ratio >= 1.03) veredicto = 'Slight W (leve ganancia)';
+      else if (ratio >= 0.97) veredicto = 'Fair trade (parejo)';
+      else if (ratio >= 0.85) veredicto = 'Slight L (leve pérdida)';
+
+      // EXTENSIÓN: valor recibido por cada 100 puntos entregados.
+      const por100 = da.valor > 0 ? (rec.valor / da.valor) * 100 : 0;
+
+      const rows = [];
+      rows.push(Object.assign({ k: 'Valor de ' + da.nombre + ' (' + da.tier + ')', ref: 'la que das', v: da.valor }, P0));
+      rows.push(Object.assign({ k: 'Valor de ' + rec.nombre + ' (' + rec.tier + ')', ref: 'la que recibís', v: rec.valor }, P0));
+      rows.push(Object.assign({ k: diff >= 0 ? 'Puntos que ganás' : 'Puntos que perdés', v: Math.abs(diff), extra: true }, P0));
+      rows.push(Object.assign({ k: 'Ratio del trade', ref: 'recibís ÷ das', v: ratio, extra: true }, P2));
+      rows.push(Object.assign({ k: 'Recibís por cada 100 que entregás', v: por100 }, P0));
+      rows.push(Object.assign({ k: 'Umbral de W claro', ref: 'ratio 1,15', v: 1.15 }, P2));
+      rows.push(Object.assign({ k: 'Umbral de L claro', ref: 'ratio 0,85', v: 0.85 }, P2));
+
+      // Escala del ratio de 0,5 a 2,0.
+      const posicion = ((Math.min(2, Math.max(0.5, ratio)) - 0.5) / 1.5) * 100;
+
+      return {
+        total: fmt(ratio, 2) + 'x',
+        sub:
+          'Das ' + da.nombre + ' (' + da.valor + ') y recibís ' + rec.nombre + ' (' + rec.valor + ') · ' +
+          veredicto + ' · ' + (diff >= 0 ? '+' : '−') + fmt(Math.abs(diff), 0) + ' puntos de valor. ' +
+          'Valores de comunidad del Update 24: contrastalos si el juego ya actualizó.',
+        rows: rows,
+        format: 'plain',
+        decimals: 2,
+        position: posicion,
+        positionLabel: fmt(ratio, 2) + 'x — ' + veredicto,
+        chart: [
+          { label: 'L claro', value: 35, from: 50, to: 85, tone: 'bad' },
+          { label: 'Leve L', value: 12, from: 85, to: 97, tone: 'warn' },
+          { label: 'Parejo', value: 6, from: 97, to: 103, tone: 'main' },
+          { label: 'Leve W', value: 12, from: 103, to: 115, tone: 'good' },
+          { label: 'W claro', value: 85, from: 115, to: 200, tone: 'good' },
+        ],
+      };
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'minecraft';
+      if (id === 'pokemon') return pokemon(v);
+      if (id === 'elo') return elo(v);
+      if (id === 'bloxfruits') return blox(v);
+      return minecraft(v);
+    });
+  })();
+</script>

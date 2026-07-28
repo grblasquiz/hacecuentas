@@ -322,6 +322,11 @@ export const hub: HubData = {
     '/calculadora-tiempo-descongelado-alimentos-peso',
     '/calculadora-tiempo-marinado-carne-pescado',
     '/calculadora-temperatura-aceite-fritura-punto-humo',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-tiempos-coccion-verduras-al-vapor-hervido',
+    '/calculadora-tiempo-coccion-legumbres-remojo',
+    '/calculadora-olla-presion-conversion-tiempos-coccion',
+    '/olla-presion-conversion-tiempos-coccion',
   ],
 
   lastReviewed: '2026-07-27',

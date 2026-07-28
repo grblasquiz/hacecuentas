@@ -322,6 +322,8 @@ export const hub: HubData = {
     // central es la misma y le damos rama propia hasta que exista
     // /matematica/estadistica. Ver reporte.
     '/calculadora-promedio-mediana-moda-estadistica',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-nota-promedio-bachillerato-secundario-materias',
   ],
 
   lastReviewed: '2026-07-27',

@@ -296,6 +296,12 @@ export const hub: HubData = {
     '/calculadora-aire-acondicionado-frigorias-ambiente',
     '/calculadora-lena-estufa-hogar-invierno',
     '/calculadora-costo-aire-acondicionado-hora',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-conversion-btu-kcal-aire-acondicionado',
+    '/calculadora-caldera-kw-m2-calefaccion',
+    '/calculadora-caldera-potencia-kw-ambiente-metros',
+    '/calculadora-calefaccion-btu-necesarios-ambiente',
+    '/calculadora-calefaccion-watts-kcal-ambiente',
   ],
 
   lastReviewed: '2026-07-27',

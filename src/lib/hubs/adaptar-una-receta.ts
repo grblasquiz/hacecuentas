@@ -238,6 +238,13 @@ export const hub: HubData = {
     '/calculadora-sustitucion-ingredientes-cocina',
     '/calculadora-sustituto-huevo-vegano-receta',
     '/sustituir-manteca-por-aceite-reposteria',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-proporciones-receta',
+    '/calculadora-merengue-azucar-por-clara',
+    '/calculadora-gelatina-sin-sabor-gramos-por-litro',
+    '/calculadora-kefir-leche-proporciones',
+    '/merengue-azucar-por-clara',
+    '/gelatina-sin-sabor-gramos-por-litro',
   ],
 
   lastReviewed: '2026-07-27',

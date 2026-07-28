@@ -373,6 +373,8 @@ export const hub: HubData = {
     '/calculadora-dilucion-c1v1-c2v2',
     '/calculadora-porcentaje-masa-volumen-solucion',
     '/calculadora-titulacion-acido-base',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-conversion-ppm-mg-l-quimica-agua',
   ],
 
   lastReviewed: '2026-07-27',

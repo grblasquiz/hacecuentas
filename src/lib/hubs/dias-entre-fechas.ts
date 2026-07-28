@@ -153,6 +153,9 @@ export const hub: HubData = {
     '/calculadora-de-horas',
     '/calculadora-que-dia-de-la-semana',
     '/sumar-restar-horas-minutos',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-aniversario-pareja',
+    '/calculadora-dias-juntos-pareja',
   ],
 
   lastReviewed: '2026-07-27',

@@ -28,7 +28,9 @@ export interface PillarDef {
   calcs: string[]; // destacadas
   rooms: string[]; // slugs de salas de decisión (/decidir/*)
   guide: string; // slug de guía-pilar (/guia/*)
-  categories: string[]; // categorías relacionadas (/categoria/*)
+  categories: string[]; // vacío desde el cierre del catálogo: /categoria/* se generaba
+                        // desde las calcs sueltas y esa taxonomía ya no existe (la
+                        // reemplazaron los silos de hubs). Ver PillarHub.
   dataPages: Array<{ href: string; label: string }>; // superficies de datos
 }
 
@@ -61,7 +63,7 @@ export const PILLARS: PillarDef[] = [
       'cuanto-vale-mi-hora',
     ],
     guide: 'sueldos-argentina-2026',
-    categories: ['finanzas', 'impuestos'],
+    categories: [],
     dataPages: [
       { href: '/datos-aguinaldo-2026', label: 'Datos del aguinaldo 2026' },
       { href: '/datos-topes-sipa-2026', label: 'Topes SIPA 2026' },
@@ -80,7 +82,7 @@ export const PILLARS: PillarDef[] = [
     color: '#0ea5e9',
     domain: 'money',
     // 'calculadora-monotributo-2026' la absorbió el hub /impuestos/monotributo.
-    mainCalc: 'calculadora-cuanto-tengo-que-facturar-para-ganar-x-neto',
+    mainCalc: '',
     calcs: [],
     rooms: [
       'monotributo-o-responsable-inscripto',
@@ -89,7 +91,7 @@ export const PILLARS: PillarDef[] = [
       'cuanto-facturar-para-ganar-x-neto',
     ],
     guide: 'impuestos-argentina-2026',
-    categories: ['impuestos', 'finanzas'],
+    categories: [],
     dataPages: [
       { href: '/datos-monotributo-2026', label: 'Categorías del monotributo 2026' },
       { href: '/datos-ganancias-2026', label: 'Escala de Ganancias 2026' },
@@ -121,7 +123,7 @@ export const PILLARS: PillarDef[] = [
       'puedo-afrontar-un-credito-uva',
     ],
     guide: 'finanzas-personales',
-    categories: ['finanzas'],
+    categories: [],
     dataPages: [
       { href: '/comparador-plazo-fijo', label: 'Comparador de plazos fijos (tasas hoy)' },
       { href: '/plazo-fijo-vs-billeteras', label: 'Plazo fijo vs billeteras: dónde rinde más hoy' },
@@ -152,7 +154,7 @@ export const PILLARS: PillarDef[] = [
       'cuanto-invertir-en-publicidad',
     ],
     guide: 'negocios-e-independientes-2026',
-    categories: ['negocios', 'marketing'],
+    categories: [],
     dataPages: [
       { href: '/datos-monotributo-2026', label: 'Categorías del monotributo 2026' },
     ],

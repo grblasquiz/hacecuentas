@@ -256,6 +256,8 @@ export const hub: HubData = {
     '/calculadora-costo-recital-festival-argentina',
     '/calculadora-ahorro-dejar-cigarrillos',
     '/calculadora-comparador-precios',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-aumento-prepaga-cuota-mensual-argentina',
   ],
 
   lastReviewed: '2026-07-27',

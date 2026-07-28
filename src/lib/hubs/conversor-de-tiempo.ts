@@ -284,6 +284,8 @@ export const hub: HubData = {
     '/calculadora-conversor-semanas-a-dias',
     '/calculadora-conversor-dias-a-horas',
     '/calculadora-conversor-horas-a-minutos',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-conversor-milisegundos-a-segundos',
   ],
 
   lastReviewed: '2026-07-27',

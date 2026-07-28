@@ -233,6 +233,8 @@ export const hub: HubData = {
     '/calculadora-creatina-dosis-carga-mantenimiento',
     '/calculadora-gel-energetico-carrera-cuantos',
     '/calculadora-hidratacion-corredor-maraton-carrera',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-bcaa-pre-workout-gramos',
   ],
 
   lastReviewed: '2026-07-27',

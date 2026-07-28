@@ -279,6 +279,8 @@ export const hub: HubData = {
     '/calculadora-abl-expensas-quien-paga-inquilino-propietario',
     '/calculadora-expensas-departamento-calcular-m2-categoria',
     '/calculadora-desalojo-causa-plazos-honorarios-juicio',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-poliza-juridica-arrendamiento-mexico',
   ],
 
   lastReviewed: '2026-07-27',

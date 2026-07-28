@@ -313,6 +313,9 @@ export const hub: HubData = {
     '/calculadora-tamano-colchon-ideal-medidas',
     '/calculadora-rollos-empapelado-papel-pared',
     '/calculadora-almohadones-sofa-cantidad-decorativos',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-forro-almohadon-medidas',
+    '/calculadora-metros-cuadrados-vivienda-por-persona',
   ],
 
   lastReviewed: '2026-07-27',

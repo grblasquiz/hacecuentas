@@ -224,6 +224,8 @@ export const hub: HubData = {
     '/calculadora-retencion-ganancias-siradig-trabajador',
     '/calculadora-ganancias-monotributista-pase-regimen-general',
     '/calculadora-devolucion-ganancias-4ta-saldo-favor',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-ganancias-segunda-categoria-renta-financiera-2026',
   ],
 
   lastReviewed: '2026-07-27',

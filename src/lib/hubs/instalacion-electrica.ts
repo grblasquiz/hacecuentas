@@ -427,6 +427,9 @@ export const hub: HubData = {
     '/calculadora-ley-ohm-voltaje-resistencia',
     '/calculadora-factor-potencia-corregir',
     '/calculadora-transformador-relacion-espiras',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-iluminacion-lux-lumens-ambiente',
+    '/calculadora-electricidad-cable-amperaje-seccion',
   ],
 
   lastReviewed: '2026-07-27',

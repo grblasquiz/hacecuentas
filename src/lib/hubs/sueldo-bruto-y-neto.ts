@@ -270,6 +270,8 @@ export const hub: HubData = {
     '/sueldo-en-mano-argentina',
     '/simulador-recibo-de-sueldo-argentina',
     '/calculadora-sueldo-neto-autonomo-monotributista',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-bonus-anual-marco-fiscal-neto',
   ],
 
   lastReviewed: '2026-07-27',

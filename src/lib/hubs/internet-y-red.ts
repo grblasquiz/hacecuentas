@@ -312,6 +312,10 @@ export const hub: HubData = {
     '/calculadora-consumo-datos-moviles-streaming',
     '/calculadora-categoria-cable-ethernet-velocidad-distancia',
     '/calculadora-wifi-canal-optimo-24-5-ghz',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-subnetting-mascara-red-cidr',
+    '/calculadora-uptime-servidor-nueve-nueves-minutos',
+    '/calculadora-tiempo-descarga-archivo-internet',
   ],
 
   lastReviewed: '2026-07-27',

@@ -267,6 +267,8 @@ export const hub: HubData = {
     '/calculadora-riego-goteo-litros-hora-planta',
     '/calculadora-riego-automatico-programacion-minutos',
     '/calculadora-agua-jardin-consumo-mensual-m2',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-captacion-agua-lluvia-m2-techo-litros',
   ],
 
   lastReviewed: '2026-07-27',

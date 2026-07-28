@@ -380,6 +380,9 @@ export const hub: HubData = {
     '/calculadora-churn-retencion-clientes',
     '/calculadora-cac-costo-adquisicion-sales-funnel',
     '/calculadora-attribution-modelo-primer-ultimo-click',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-tiktok-ads-cpm-presupuesto-conversion-2026',
+    '/calculadora-tiktok-spark-ads-costo',
   ],
 
   lastReviewed: '2026-07-27',

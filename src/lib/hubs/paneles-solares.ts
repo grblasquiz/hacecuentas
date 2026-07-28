@@ -452,6 +452,9 @@ export const hub: HubData = {
     '/calculadora-panel-solar-kw-consumo-hogar-autoconsumo',
     '/calculadora-paneles-solares-amortizacion-anos-argentina',
     '/calculadora-ahorro-energia-solar-paneles',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-banco-baterias-solar-dias-autonomia',
+    '/calculadora-panel-solar-kwh-dimensionar',
   ],
 
   lastReviewed: '2026-07-27',

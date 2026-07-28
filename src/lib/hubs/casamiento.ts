@@ -541,6 +541,8 @@ export const hub: HubData = {
     '/calculadora-presupuesto-casamiento-por-invitado',
     '/calculadora-regalo-boda-apropiado-invitado',
     '/calculadora-fecha-boda-ideal',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-matrimonio-civil-costo-tramite-argentina',
   ],
 
   lastReviewed: '2026-07-27',

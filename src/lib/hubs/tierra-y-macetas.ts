@@ -203,6 +203,12 @@ export const hub: HubData = {
     '/calculadora-macetas-tamano-planta',
     '/calculadora-tierra-maceta-litros-volumen',
     '/calculadora-sustrato-mezcla-proporciones',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-ph-suelo-correccion-calcio',
+    '/calculadora-mulching-espesor-cantidad',
+    '/calculadora-lombriz-compostera-cantidad-necesaria',
+    '/calculadora-pasto-semilla-kg-m2-cesped-sembrar',
+    '/calculadora-tierra-jardin-cantero-m3',
   ],
 
   lastReviewed: '2026-07-27',

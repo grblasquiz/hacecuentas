@@ -330,6 +330,8 @@ export const hub: HubData = {
     '/calculadora-gross-margin-vs-net',
     '/calculadora-margen-contribucion-producto',
     '/calculadora-costos-fijos-y-variables',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-costo-receta-precio-por-porcion',
   ],
 
   lastReviewed: '2026-07-27',

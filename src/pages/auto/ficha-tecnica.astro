@@ -1,0 +1,292 @@
+---
+/**
+ * Hub de decisión — "¿Qué me dicen los números de la ficha técnica?"
+ * Reemplaza 9 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta datos (src/lib/hubs/ficha-tecnica.ts) y su compute().
+ * Todo el chrome, el CSS y el runtime viven en DecisionHub.astro y no se tocan.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, CONV, HP_POR_LITRO, AERO, ALTURA_LIBRE, BANDAS } from '../../lib/hubs/ficha-tecnica';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ CONV, HP_POR_LITRO, AERO, ALTURA_LIBRE, BANDAS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    /** Formateo local: en este hub NO hay plata, así que nunca se usa H.ars(). */
+    function n(x, d) {
+      return Number(x || 0).toLocaleString('es-AR', {
+        minimumFractionDigits: d || 0,
+        maximumFractionDigits: d || 0,
+      });
+    }
+
+    /** Franjas de la rama + posición del marcador dentro de la escala completa. */
+    function escala(rama, valor) {
+      const bandas = BANDAS[rama] || [];
+      const tope = bandas.length ? bandas[bandas.length - 1][1] : 100;
+      const piso = bandas.length ? bandas[0][0] : 0;
+      const chart = bandas.map(function (b) {
+        return { label: b[2], value: b[1] - b[0], from: b[0], to: b[1], tone: b[3] };
+      });
+      const pos = tope > piso ? ((valor - piso) / (tope - piso)) * 100 : 0;
+      let etiqueta = bandas.length ? bandas[bandas.length - 1][2] : '';
+      for (let i = 0; i < bandas.length; i++) {
+        if (valor < bandas[i][1]) { etiqueta = bandas[i][2]; break; }
+      }
+      return { chart: chart, position: Math.min(100, Math.max(0, pos)), banda: etiqueta };
+    }
+
+    /** Potencia declarada → kW, y de ahí a HP y CV. Fuente única para dos ramas. */
+    function potencias(v) {
+      const p = Math.max(0, Number(v.potencia) || 0);
+      const kw = v.unidad === 'kw' ? p : v.unidad === 'cv' ? p * CONV.cvToKw : p * CONV.hpToKw;
+      return { kw: kw, hp: kw / CONV.hpToKw, cv: kw / CONV.cvToKw };
+    }
+
+    H.onCompute(function (v, kase) {
+      const rama = (kase && kase.id) || 'potencia';
+
+      // ── Potencia: HP ↔ kW ↔ CV + cilindrada y estimación por litraje ──────
+      if (rama === 'potencia') {
+        const P = potencias(v);
+        const cc = Math.max(0, Number(v.cc) || 0);
+        const litros = cc / 1000;
+        // Espejo de cilindrada-motor-relacion-potencia.ts: 85 HP/L atm, 150 turbo.
+        const factor = HP_POR_LITRO[v.turbo] || HP_POR_LITRO.no;
+        const hpEstimado = litros * factor;
+        const especifica = litros > 0 ? P.hp / litros : 0;
+        const e = escala('potencia', P.hp);
+
+        return {
+          total: n(P.hp, 1) + ' HP',
+          sub:
+            n(P.kw, 1) + ' kW · ' + n(P.cv, 1) + ' CV · motor de ' + n(litros, 2) + ' L' +
+            (litros > 0 ? ' · ' + n(especifica, 1) + ' HP por litro' : ''),
+          format: 'unit',
+          unit: 'HP',
+          decimals: 1,
+          rows: [
+            { k: 'Potencia en HP', ref: '1 HP = 0,7457 kW', v: P.hp, format: 'unit', unit: 'HP', decimals: 1 },
+            { k: 'Potencia en kW', ref: 'unidad del SI', v: P.kw, format: 'unit', unit: 'kW', decimals: 1 },
+            { k: 'Potencia en CV', ref: '1 CV = 0,7355 kW', v: P.cv, format: 'unit', unit: 'CV', decimals: 1 },
+            { k: 'Cilindrada', v: cc, format: 'unit', unit: 'cc' },
+            { k: 'Cilindrada en litros', ref: '1 L = 1.000 cc', v: litros, format: 'unit', unit: 'L', decimals: 2 },
+            {
+              k: 'Potencia estimada por cilindrada',
+              ref: v.turbo === 'si' ? '150 HP/L turbo' : '85 HP/L atmosférico',
+              v: hpEstimado,
+              format: 'unit',
+              unit: 'HP',
+            },
+            { k: 'Potencia específica real', v: especifica, format: 'unit', unit: 'HP/L', decimals: 1, extra: true },
+          ],
+          chart: e.chart,
+          position: e.position,
+          positionLabel: n(P.hp, 0) + ' HP — perfil ' + e.banda.toLowerCase(),
+        };
+      }
+
+      // ── Performance: HP por tonelada y velocidad máxima teórica ───────────
+      if (rama === 'performance') {
+        const P = potencias(v);
+        const peso = Math.max(1, Number(v.peso) || 0);
+        const ratio = (P.hp / peso) * 1000;
+        const kgPorHp = P.hp > 0 ? peso / P.hp : 0;
+        // Espejo de velocidad-maxima-relacion-potencia-peso.ts:
+        // P·η = ½·ρ·Cd·A·v³  →  v = ((2·P·η)/(ρ·Cd·A))^(1/3)
+        const watts = P.hp * AERO.wattsPorHp;
+        const vms = Math.pow((2 * watts * AERO.eficiencia) / (AERO.rho * AERO.cd * AERO.area), 1 / 3);
+        const vmax = vms * 3.6;
+        const e = escala('performance', ratio);
+
+        return {
+          total: n(ratio, 1) + ' HP/ton',
+          sub:
+            n(P.hp, 0) + ' HP para ' + n(peso, 0) + ' kg · cada HP mueve ' + n(kgPorHp, 1) +
+            ' kg · máxima teórica ~' + n(vmax, 0) + ' km/h',
+          format: 'unit',
+          unit: 'HP/ton',
+          decimals: 1,
+          rows: [
+            { k: 'Potencia del motor', v: P.hp, format: 'unit', unit: 'HP', decimals: 1 },
+            { k: 'Peso en orden de marcha', v: peso, format: 'unit', unit: 'kg' },
+            { k: 'Relación potencia/peso', v: ratio, format: 'unit', unit: 'HP/ton', decimals: 1, extra: true },
+            { k: 'Kilos que mueve cada HP', v: kgPorHp, format: 'unit', unit: 'kg/HP', decimals: 2 },
+            { k: 'Velocidad máxima teórica', ref: 'Cd 0,30 · A 2,2 m²', v: vmax, format: 'unit', unit: 'km/h' },
+            { k: 'La misma en millas por hora', v: vmax / CONV.mphToKmh, format: 'unit', unit: 'mph' },
+            { k: 'La misma en nudos', v: vmax / CONV.ktToKmh, format: 'unit', unit: 'nudos' },
+          ],
+          chart: e.chart,
+          position: e.position,
+          positionLabel: n(ratio, 1) + ' HP/ton — ' + e.banda.toLowerCase(),
+        };
+      }
+
+      // ── Torque: Nm ↔ lb·ft ↔ kg·m ─────────────────────────────────────────
+      if (rama === 'torque') {
+        const t = Math.max(0, Number(v.torque) || 0);
+        const nm =
+          v.torqueUnidad === 'lbft' ? t * CONV.lbftToNm : v.torqueUnidad === 'kgm' ? t * CONV.kgmToNm : t;
+        const lbft = nm / CONV.lbftToNm;
+        const kgm = nm / CONV.kgmToNm;
+        const e = escala('torque', nm);
+
+        return {
+          total: n(nm, 1) + ' Nm',
+          sub: n(lbft, 1) + ' lb·ft · ' + n(kgm, 2) + ' kg·m',
+          format: 'unit',
+          unit: 'Nm',
+          decimals: 1,
+          rows: [
+            { k: 'Torque en newton metro', ref: 'unidad del SI', v: nm, format: 'unit', unit: 'Nm', decimals: 1 },
+            { k: 'Torque en libra pie', ref: '1 lb·ft = 1,35582 Nm', v: lbft, format: 'unit', unit: 'lb·ft', decimals: 1 },
+            { k: 'Torque en kilográmetro', ref: '1 kg·m = 9,80665 Nm', v: kgm, format: 'unit', unit: 'kg·m', decimals: 2 },
+          ],
+          chart: e.chart,
+          position: e.position,
+          positionLabel: n(nm, 0) + ' Nm — torque ' + e.banda.toLowerCase(),
+        };
+      }
+
+      // ── Carga: PBT − tara, y qué queda después de los ocupantes ───────────
+      if (rama === 'carga') {
+        const pbt = Math.max(0, Number(v.pbt) || 0);
+        const tara = Math.max(0, Number(v.tara) || 0);
+        const util = pbt - tara;
+        const pct = pbt > 0 ? (util / pbt) * 100 : 0;
+        const ocupantes = Math.max(0, Number(v.ocupantes) || 0);
+        const pesoOcupantes = ocupantes * 75;
+        const paraCaja = util - pesoOcupantes;
+        const e = escala('carga', pct);
+
+        return {
+          total: n(util, 0) + ' kg',
+          sub:
+            util <= 0
+              ? 'La tara declarada iguala o supera el PBT: revisá los dos valores en la cédula.'
+              : 'Es el ' + n(pct, 0) + '% del PBT · con ' + ocupantes + ' ocupante' +
+                (ocupantes === 1 ? '' : 's') + ' te quedan ' + n(Math.max(0, paraCaja), 0) + ' kg para la caja',
+          format: 'unit',
+          unit: 'kg',
+          rows: [
+            { k: 'Peso bruto total (PBT)', ref: 'cédula del vehículo', v: pbt, format: 'unit', unit: 'kg' },
+            { k: 'Tara (peso en vacío)', v: tara, format: 'unit', unit: 'kg' },
+            { k: 'Carga útil disponible', v: Math.max(0, util), format: 'unit', unit: 'kg', extra: true },
+            { k: 'Porcentaje del PBT', v: Math.max(0, pct), format: 'unit', unit: '%' },
+            { k: 'Peso de los ocupantes', ref: '75 kg cada uno', v: pesoOcupantes, format: 'unit', unit: 'kg' },
+            { k: 'Queda para la caja', v: Math.max(0, paraCaja), format: 'unit', unit: 'kg' },
+          ],
+          chart: e.chart,
+          position: e.position,
+          positionLabel: n(pct, 0) + '% del PBT — capacidad ' + e.banda.toLowerCase(),
+        };
+      }
+
+      // ── Despeje: altura libre al piso por carrocería ───────────────────────
+      if (rama === 'despeje') {
+        const t = ALTURA_LIBRE[v.tipo] || ALTURA_LIBRE.sedan;
+        const medio = (t.min + t.max) / 2;
+        const e = escala('despeje', medio);
+
+        return {
+          total: n(t.min, 0) + '–' + n(t.max, 0) + ' cm',
+          sub:
+            'Rango típico para ' + t.nombre + ' · punto medio ' + n(medio, 1) + ' cm (' +
+            n(medio / 2.54, 1) + ' pulgadas)',
+          format: 'unit',
+          unit: 'cm',
+          decimals: 1,
+          rows: [
+            { k: 'Altura libre mínima del rango', v: t.min, format: 'unit', unit: 'cm' },
+            { k: 'Altura libre máxima del rango', v: t.max, format: 'unit', unit: 'cm' },
+            { k: 'Punto medio de referencia', v: medio, format: 'unit', unit: 'cm', decimals: 1, extra: true },
+            { k: 'El mismo valor en pulgadas', v: medio / 2.54, format: 'unit', unit: 'in', decimals: 1 },
+            { k: 'Lomo de burro normalizado', ref: 'altura típica', v: 10, format: 'unit', unit: 'cm' },
+            { k: 'Cordón de vereda típico', v: 15, format: 'unit', unit: 'cm' },
+          ],
+          chart: e.chart,
+          position: e.position,
+          positionLabel: n(medio, 1) + ' cm — despeje ' + e.banda.toLowerCase(),
+        };
+      }
+
+      // ── Frenado: reacción + frenado efectivo ──────────────────────────────
+      const vk = Math.max(0, Number(v.velocidad) || 0);
+      const mu = Number(v.superficie) || 0.7;
+      const tr = Math.max(0, Number(v.reaccion));
+      const vms = vk / 3.6;
+      const dReaccion = vms * tr;
+      const dFrenado = (vms * vms) / (2 * mu * CONV.g);
+      const total = dReaccion + dFrenado;
+      const e = escala('frenado', total);
+
+      return {
+        total: n(total, 1) + ' m',
+        sub:
+          n(dReaccion, 1) + ' m reaccionando + ' + n(dFrenado, 1) + ' m frenando · equivale a ' +
+          n(total / 4.5, 1) + ' largos de auto',
+        format: 'unit',
+        unit: 'm',
+        decimals: 1,
+        rows: [
+          { k: 'Distancia mientras reaccionás', ref: tr + ' s de reacción', v: dReaccion, format: 'unit', unit: 'm', decimals: 1 },
+          { k: 'Distancia de frenado efectivo', ref: 'μ ' + String(mu).replace('.', ','), v: dFrenado, format: 'unit', unit: 'm', decimals: 1 },
+          { k: 'Distancia total de detención', v: total, format: 'unit', unit: 'm', decimals: 1, extra: true },
+          { k: 'Largos de auto', ref: '4,5 m cada uno', v: total / 4.5, format: 'unit', unit: 'largos', decimals: 1 },
+          { k: 'Velocidad en metros por segundo', v: vms, format: 'unit', unit: 'm/s', decimals: 1 },
+          { k: 'La misma en millas por hora', v: vk / CONV.mphToKmh, format: 'unit', unit: 'mph', decimals: 1 },
+          { k: 'La misma en nudos', v: vk / CONV.ktToKmh, format: 'unit', unit: 'nudos', decimals: 1 },
+        ],
+        chart: e.chart,
+        position: e.position,
+        positionLabel: n(total, 0) + ' m — distancia ' + e.banda.toLowerCase(),
+      };
+    });
+  })();
+</script>

@@ -182,11 +182,11 @@ const COUNTRY_NAVS: Record<Country, Array<{href: string; label: string; activePa
   EN: [{ href: '/en', label: 'All calculators' }],
   GLOBAL: [
     { href: '/global', label: 'Todas' },
-    { href: '/categoria/salud', label: 'Salud' },
-    { href: '/categoria/finanzas', label: 'Finanzas' },
-    { href: '/categoria/cocina', label: 'Cocina' },
-    { href: '/categoria/mascotas', label: 'Mascotas' },
-    { href: '/categoria/matematica', label: 'Matemática' },
+    { href: '/salud', label: 'Salud' },
+    { href: '/finanzas-personales', label: 'Finanzas' },
+    { href: '/cocina', label: 'Cocina' },
+    { href: '/mascotas', label: 'Mascotas' },
+    { href: '/matematica', label: 'Matemática' },
   ],
 };
 const navItems = COUNTRY_NAVS[pageCountry];
@@ -210,13 +210,15 @@ const NAV_MORE: Array<{ href: string; label: string; icon?: string }> = pageCoun
 // Menú mobile: sólo las categorías PRINCIPALES (arquitectura de pilares
 // jul-2026: la lista completa de 26 categorías inflaba el grafo de links
 // sitewide y diluía autoridad). El resto se llega vía /calculadoras.
-const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
-  { slug: 'finanzas', label: 'Finanzas' },
-  { slug: 'impuestos', label: 'Impuestos' },
-  { slug: 'negocios', label: 'Negocios' },
-  { slug: 'salud', label: 'Salud' },
-  { slug: 'vida', label: 'Vida diaria' },
-  { slug: 'matematica', label: 'Matemática' },
+// Silos de hubs de decisión. Antes eran `/categoria/*`, que se generaban desde
+// las calcs sueltas: al consolidarlas en hubs esa taxonomía dejó de existir.
+const MOBILE_CATEGORIES: Array<{ href: string; label: string }> = [
+  { href: '/finanzas-personales', label: 'Finanzas' },
+  { href: '/impuestos', label: 'Impuestos' },
+  { href: '/negocios', label: 'Negocios' },
+  { href: '/salud', label: 'Salud' },
+  { href: '/hogar', label: 'Hogar' },
+  { href: '/matematica', label: 'Matemática' },
 ];
 ---
 
@@ -336,11 +338,11 @@ const MOBILE_CATEGORIES: Array<{ slug: string; label: string }> = [
       {navItems.map(item => (
         <a href={item.href}>{item.label}</a>
       ))}
-      <span class="mobile-nav-group">Categorías</span>
+      <span class="mobile-nav-group">Temas</span>
       {MOBILE_CATEGORIES.map(cat => (
-        <a href={`/categoria/${cat.slug}`}>{cat.label}</a>
+        <a href={cat.href}>{cat.label}</a>
       ))}
-      <a href="/calculadoras" class="mobile-nav-all">Ver todas las calculadoras →</a>
+      <a href="/calculadoras" class="mobile-nav-all">Ver todas las guías →</a>
     </div>
   )}
 </header>

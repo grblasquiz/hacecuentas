@@ -271,6 +271,9 @@ export const hub: HubData = {
     '/calculadora-diametro-caneria-agua-caudal',
     '/calculadora-cano-estructural-peso-ml',
     '/calculadora-cano-agua-diametro-caudal',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-lluvia-captacion-techo-m3-anual',
+    '/calculadora-recoleccion-agua-lluvia-techo',
   ],
 
   lastReviewed: '2026-07-27',

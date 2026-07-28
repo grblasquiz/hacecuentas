@@ -340,6 +340,9 @@ export const hub: HubData = {
     '/calculadora-dias-ideales-viaje-destino',
     '/calculadora-esqui-pase-cerro-catedral-bariloche-precio-dia',
     '/calculadora-emigrar-espana-presupuesto-primer-ano-familia',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-presupuesto-viaje-lima-peru',
+    '/calculadora-presupuesto-viaje-madrid',
   ],
 
   lastReviewed: '2026-07-27',

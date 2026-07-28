@@ -1,0 +1,326 @@
+---
+/**
+ * Hub de decisión — "¿Qué va a salir nítido y cuánto entra en el cuadro?"
+ * Reemplaza 4 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/nitidez-y-encuadre.ts) y su
+ * compute(). Todo el chrome, el CSS y el runtime viven en DecisionHub.astro.
+ *
+ * ACÁ NO HAY PLATA: cada fila declara su `format` ('unit' con su unidad o
+ * 'plain'). Una fila sin format propio saldría en pesos.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, SENSORES, DIAG_FF, COC_DIVISOR, ARCSEC_POR_SEGUNDO } from '../../lib/hubs/nitidez-y-encuadre';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ SENSORES, DIAG_FF, COC_DIVISOR, ARCSEC_POR_SEGUNDO }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    /** Campos numéricos tipeados: pueden venir con separador de miles y coma. */
+    function nnum(x, def) {
+      const n = Number(String(x == null ? '' : x).replace(/\./g, '').replace(',', '.'));
+      return isFinite(n) && n > 0 ? n : def;
+    }
+    /** Los selects llegan con punto decimal: no les toques los puntos. */
+    function fnum(x, def) {
+      const n = Number(x);
+      return isFinite(n) && n > 0 ? n : def;
+    }
+    function r(n, d) {
+      const p = Math.pow(10, d || 0);
+      return Math.round(n * p) / p;
+    }
+    function es(n, d) {
+      return r(n, d == null ? 2 : d).toLocaleString('es-AR', {
+        minimumFractionDigits: d == null ? 0 : d,
+        maximumFractionDigits: d == null ? 2 : d,
+      });
+    }
+    /** Distancia en milímetros → texto legible en mm, cm o m. */
+    function dist(mm) {
+      if (!isFinite(mm)) return 'infinito';
+      if (mm >= 1000) return es(mm / 1000, 2) + ' m';
+      if (mm >= 10) return es(mm / 10, 1) + ' cm';
+      return es(mm, 1) + ' mm';
+    }
+    function seg(s) {
+      if (s < 1) return es(s, 2) + ' s';
+      return es(s, 1) + ' s';
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'dof';
+
+      const f = nnum(v.focal, 50);                 // mm
+      const N = fnum(v.apertura, 2.8);
+      const s = nnum(v.distancia, 3) * 1000;       // m → mm
+      const sen = SENSORES[String(v.sensor)] || SENSORES.ff;
+
+      const diag = Math.sqrt(sen.w * sen.w + sen.h * sen.h);
+      const crop = DIAG_FF / diag;
+      const c = diag / COC_DIVISOR;                 // círculo de confusión, mm
+
+      // Hiperfocal completa. Hp es la parte que usan los límites cercano/lejano.
+      const Hp = (f * f) / (N * c);
+      const Hip = Hp + f;
+
+      // ───────────────────────────────── Profundidad de campo
+      if (id === 'dof') {
+        const near = (s * Hp) / (Hp + s - f);
+        const infinita = s >= Hip;
+        const far = infinita ? Infinity : (s * Hp) / (Hp - s + f);
+        const dof = infinita ? Infinity : far - near;
+        const adelante = s - near;
+        const atras = infinita ? Infinity : far - s;
+        const repartoAtras = infinita ? 100 : (atras / dof) * 100;
+
+        const rows = [
+          {
+            k: 'Profundidad de campo total',
+            ref: 'Df − Dn',
+            v: infinita ? 0 : r(dof / 1000, 3),
+            format: 'unit', unit: infinita ? 'metros (infinita)' : 'metros', decimals: 3, extra: true,
+          },
+          { k: 'Límite cercano — desde acá está nítido', v: r(near / 1000, 3), format: 'unit', unit: 'm', decimals: 3 },
+          {
+            k: 'Límite lejano — hasta acá está nítido',
+            v: infinita ? 0 : r(far / 1000, 3),
+            format: 'unit', unit: infinita ? 'm (infinito)' : 'm', decimals: 3,
+          },
+          { k: 'Margen hacia adelante del sujeto', v: r(adelante / 1000, 3), format: 'unit', unit: 'm', decimals: 3 },
+          {
+            k: 'Margen hacia atrás del sujeto',
+            v: infinita ? 0 : r(atras / 1000, 3),
+            format: 'unit', unit: infinita ? 'm (infinito)' : 'm', decimals: 3,
+          },
+          { k: 'Reparto: cuánto del margen queda atrás', v: r(repartoAtras, 0), format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Hiperfocal con este diafragma', ref: 'f²/(N·c) + f', v: r(Hip / 1000, 2), format: 'unit', unit: 'm', decimals: 2 },
+          { k: 'Círculo de confusión de tu sensor', ref: 'diagonal / 1500', v: r(c, 4), format: 'unit', unit: 'mm', decimals: 4 },
+        ];
+
+        const bands = [
+          { label: 'Menos de 5 cm — foco crítico, plano de macro o retrato muy abierto', from: 0, to: 0.05, tone: 'bad' },
+          { label: '5 a 30 cm — retrato con fondo bien desenfocado', from: 0.05, to: 0.3, tone: 'warn' },
+          { label: '30 cm a 2 m — margen cómodo para grupo o producto', from: 0.3, to: 2, tone: 'good' },
+          { label: 'Más de 2 m — casi todo el encuadre nítido', from: 2, to: 10, tone: 'good' },
+        ];
+        const dofM = infinita ? 10 : dof / 1000;
+        const pos = Math.max(0, Math.min(100, (Math.log10(Math.max(dofM, 0.01) * 100) / Math.log10(1000)) * 100));
+
+        return {
+          total: infinita ? 'Infinita' : dist(dof),
+          sub:
+            f + ' mm a f/' + N + ' sobre ' + sen.label + ', enfocando a ' + es(s / 1000, 2) + ' m · ' +
+            (infinita
+              ? 'superaste la hiperfocal (' + es(Hip / 1000, 2) + ' m): está nítido desde ' + dist(near) + ' hasta el infinito'
+              : 'nítido de ' + dist(near) + ' a ' + dist(far) + ' — ' + r(repartoAtras, 0) + '% del margen queda detrás del sujeto'),
+          rows: rows,
+          chart: bands.map(function (b) { return { label: b.label, value: b.to - b.from, tone: b.tone, from: b.from, to: b.to }; }),
+          format: 'unit',
+          unit: 'm',
+          decimals: 2,
+          position: r(pos, 1),
+          positionLabel: infinita ? 'Profundidad infinita' : dist(dof) + ' de zona nítida',
+        };
+      }
+
+      // ───────────────────────────────── Hiperfocal
+      if (id === 'hiperfocal') {
+        const hipAbierto = (f * f) / ((N / Math.SQRT2) * c) + f;   // un paso más abierto
+        const hipCerrado = (f * f) / ((N * Math.SQRT2) * c) + f;   // un paso más cerrado
+        // Enfocando al infinito, el límite cercano se va a la hiperfocal entera.
+        const cercaHip = Hip / 2;
+
+        const rows = [
+          { k: 'Enfocá a esta distancia', ref: 'H = f²/(N·c) + f', v: r(Hip / 1000, 2), format: 'unit', unit: 'm', decimals: 2, extra: true },
+          { k: 'Desde acá está nítido — la mitad de la hiperfocal', v: r(cercaHip / 1000, 2), format: 'unit', unit: 'm', decimals: 2 },
+          { k: 'Límite cercano si enfocás al infinito', ref: 'el doble: perdés todo el primer plano', v: r(Hip / 1000, 2), format: 'unit', unit: 'm', decimals: 2 },
+          { k: 'Primer plano que ganás usando la hiperfocal', v: r(cercaHip / 1000, 2), format: 'unit', unit: 'm', decimals: 2 },
+          { k: 'Hiperfocal un paso más abierto (f/' + es(N / Math.SQRT2, 1) + ')', v: r(hipAbierto / 1000, 2), format: 'unit', unit: 'm', decimals: 2 },
+          { k: 'Hiperfocal un paso más cerrado (f/' + es(N * Math.SQRT2, 1) + ')', v: r(hipCerrado / 1000, 2), format: 'unit', unit: 'm', decimals: 2 },
+          { k: 'Factor de recorte de tu sensor', ref: '43,27 / diagonal', v: r(crop, 2), format: 'unit', unit: '×', decimals: 2 },
+          { k: 'Círculo de confusión de tu sensor', ref: 'diagonal / 1500', v: r(c, 4), format: 'unit', unit: 'mm', decimals: 4 },
+        ];
+
+        const bands = [
+          { label: 'Menos de 1,5 m — hiperfocal corta, entra primer plano muy cercano', from: 0, to: 1.5, tone: 'good' },
+          { label: '1,5 a 5 m — el rango típico del paisaje con gran angular', from: 1.5, to: 5, tone: 'good' },
+          { label: '5 a 20 m — te quedás sin primer plano cercano', from: 5, to: 20, tone: 'warn' },
+          { label: 'Más de 20 m — la técnica deja de servir, enfocá al sujeto', from: 20, to: 100, tone: 'bad' },
+        ];
+        const hipM = Hip / 1000;
+        const pos = Math.max(0, Math.min(100, (Math.log10(Math.max(hipM, 0.1) * 10) / Math.log10(1000)) * 100));
+
+        return {
+          total: dist(Hip),
+          sub:
+            f + ' mm a f/' + N + ' sobre ' + sen.label + ' · enfocando a ' + dist(Hip) +
+            ' queda nítido desde ' + dist(cercaHip) + ' hasta el infinito · ' +
+            (hipM < 1.5
+              ? 'hiperfocal corta: podés meter primer plano casi pegado a la lente'
+              : hipM < 5
+                ? 'el rango cómodo del paisaje: enfocá a un tercio del encuadre'
+                : hipM < 20
+                  ? 'hiperfocal larga: cerrá un paso más o pasá a una focal más corta'
+                  : 'con esta focal la hiperfocal no es una técnica útil: enfocá directo al sujeto'),
+          rows: rows,
+          chart: bands.map(function (b) { return { label: b.label, value: b.to - b.from, tone: b.tone, from: b.from, to: b.to }; }),
+          format: 'unit',
+          unit: 'm',
+          decimals: 2,
+          position: r(pos, 1),
+          positionLabel: dist(Hip) + ' de hiperfocal',
+        };
+      }
+
+      // ───────────────────────────────── Encuadre (ángulo de visión)
+      if (id === 'encuadre') {
+        const d = s / 1000; // metros
+        const grados = function (lado) { return 2 * Math.atan(lado / (2 * f)) * (180 / Math.PI); };
+        const aH = grados(sen.w);
+        const aV = grados(sen.h);
+        const aD = grados(diag);
+        const ancho = (d * sen.w) / f;
+        const alto = (d * sen.h) / f;
+
+        const tipo =
+          aH >= 84 ? 'ultra gran angular — arquitectura e interiores chicos'
+          : aH >= 60 ? 'gran angular — paisaje, interiores y calle'
+          : aH >= 40 ? 'angular moderado — reportaje y grupo'
+          : aH >= 28 ? 'normal — parecido a como ve el ojo'
+          : aH >= 15 ? 'tele corto — retrato'
+          : aH >= 7 ? 'teleobjetivo — deporte y fauna'
+          : 'super teleobjetivo — fauna lejana y astronomía';
+
+        const rows = [
+          { k: 'Ancho que entra en el cuadro', ref: 'd × ancho_sensor / f', v: r(ancho, 2), format: 'unit', unit: 'm', decimals: 2, extra: true },
+          { k: 'Alto que entra en el cuadro', v: r(alto, 2), format: 'unit', unit: 'm', decimals: 2 },
+          { k: 'Ángulo de visión horizontal', ref: '2·atan(w/2f)', v: r(aH, 1), format: 'unit', unit: '°', decimals: 1 },
+          { k: 'Ángulo de visión vertical', v: r(aV, 1), format: 'unit', unit: '°', decimals: 1 },
+          { k: 'Ángulo de visión diagonal — el de la ficha técnica', v: r(aD, 1), format: 'unit', unit: '°', decimals: 1 },
+          { k: 'Para que entren 3 m de ancho, parate a', ref: 'ancho × f / w', v: r((3 * f) / sen.w, 2), format: 'unit', unit: 'm', decimals: 2 },
+          { k: 'Focal equivalente en full frame', ref: 'focal × factor de recorte', v: r(f * crop, 0), format: 'unit', unit: 'mm', decimals: 0 },
+          { k: 'Cuánto cubre por cada metro de distancia', v: r(sen.w / f, 3), format: 'unit', unit: 'm de ancho por metro', decimals: 3 },
+        ];
+
+        const bands = [
+          { label: 'Menos de 15° — teleobjetivo', from: 0, to: 15, tone: 'bad' },
+          { label: '15 a 40° — tele corto y normal', from: 15, to: 40, tone: 'warn' },
+          { label: '40 a 60° — angular moderado', from: 40, to: 60, tone: 'good' },
+          { label: '60 a 84° — gran angular', from: 60, to: 84, tone: 'good' },
+          { label: 'Más de 84° — ultra gran angular', from: 84, to: 120, tone: 'warn' },
+        ];
+        const pos = Math.max(0, Math.min(100, (aH / 120) * 100));
+
+        return {
+          total: es(ancho, 2) + ' m de ancho',
+          sub:
+            f + ' mm sobre ' + sen.label + ' a ' + es(d, 2) + ' m · entra un campo de ' +
+            es(ancho, 2) + ' × ' + es(alto, 2) + ' m (' + es(aH, 1) + '° horizontales, ' +
+            es(aD, 1) + '° diagonales) · ' + tipo,
+          rows: rows,
+          chart: bands.map(function (b) { return { label: b.label, value: b.to - b.from, tone: b.tone, from: b.from, to: b.to }; }),
+          format: 'unit',
+          unit: 'm',
+          decimals: 2,
+          position: r(pos, 1),
+          positionLabel: es(aH, 1) + '° horizontales — ' + tipo,
+        };
+      }
+
+      // ───────────────────────────────── Estrellas (regla 600 / 500)
+      const feq = f * crop;
+      const t600 = 600 / feq;
+      const t500 = 500 / feq;
+      // Arrastre angular durante la exposición, en segundos de arco.
+      const arrastre600 = ARCSEC_POR_SEGUNDO * t600;
+      // Cerca de la Polar (declinación 60°) el arrastre cae con el coseno.
+      const t600Polar = t600 / Math.cos((60 * Math.PI) / 180);
+
+      const rows = [
+        { k: 'Tiempo máximo por la regla 600', ref: '600 / focal equivalente', v: r(t600, 1), format: 'unit', unit: 'segundos', decimals: 1, extra: true },
+        { k: 'Tiempo máximo por la regla 500 — la estricta', v: r(t500, 1), format: 'unit', unit: 'segundos', decimals: 1 },
+        { k: 'Focal equivalente en full frame', ref: 'focal × factor de recorte', v: r(feq, 0), format: 'unit', unit: 'mm', decimals: 0 },
+        { k: 'Factor de recorte de tu sensor', v: r(crop, 2), format: 'unit', unit: '×', decimals: 2 },
+        { k: 'Arrastre de la estrella en ese tiempo', ref: '15,041 ″/s en el ecuador celeste', v: r(arrastre600, 0), format: 'unit', unit: 'segundos de arco', decimals: 0 },
+        { k: 'Tiempo si apuntás a 60° de declinación (cerca de la Polar)', v: r(t600Polar, 1), format: 'unit', unit: 'segundos', decimals: 1 },
+        { k: 'Ángulo de visión horizontal de esa focal', v: r(2 * Math.atan(sen.w / (2 * f)) * (180 / Math.PI), 1), format: 'unit', unit: '°', decimals: 1 },
+        { k: 'Diafragma que elegiste', ref: 'no entra en la regla 600, sí en la NPF', v: N, format: 'plain', decimals: 1 },
+      ];
+
+      const bands = [
+        { label: 'Menos de 5 s — margen mínimo, pensá en un tracker', from: 0, to: 5, tone: 'bad' },
+        { label: '5 a 15 s — apilá varias tomas para ganar señal', from: 5, to: 15, tone: 'warn' },
+        { label: '15 a 30 s — el rango cómodo del gran angular', from: 15, to: 30, tone: 'good' },
+        { label: 'Más de 30 s — la cámara sola llega hasta 30 s, después va Bulb', from: 30, to: 60, tone: 'warn' },
+      ];
+      const pos = Math.max(0, Math.min(100, (t600 / 60) * 100));
+
+      return {
+        total: seg(t600),
+        sub:
+          f + ' mm sobre ' + sen.label + ' son ' + es(feq, 0) + ' mm equivalentes · regla 600: ' +
+          seg(t600) + ' · regla 500: ' + seg(t500) + ' · ' +
+          (t600 < 5
+            ? 'aun con la regla permisiva el margen es mínimo: montura ecuatorial o apilado'
+            : t600 < 15
+              ? 'usá la regla 500 si vas a imprimir y compensá la luz apilando tomas'
+              : t600 < 30
+                ? 'rango cómodo: sacá una prueba y ampliá al 100% antes de la tanda'
+                : 'la cámara sola llega hasta 30 s: para más necesitás modo Bulb y disparador'),
+        rows: rows,
+        chart: bands.map(function (b) { return { label: b.label, value: b.to - b.from, tone: b.tone, from: b.from, to: b.to }; }),
+        format: 'unit',
+        unit: 'segundos',
+        decimals: 1,
+        position: r(pos, 1),
+        positionLabel: seg(t600) + ' con la regla 600',
+      };
+    });
+  })();
+</script>

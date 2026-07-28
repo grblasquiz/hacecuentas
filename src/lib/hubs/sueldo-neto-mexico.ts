@@ -262,6 +262,8 @@ export const hub: HubData = {
   replaces: [
     '/calculadora-sueldo-neto-mexico-isr-imss',
     '/calculadora-isr-mensual-mexico-2026',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-honorarios-persona-fisica-mexico',
   ],
 
   lastReviewed: '2026-07-27',

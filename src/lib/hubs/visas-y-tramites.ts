@@ -430,6 +430,8 @@ export const hub: HubData = {
     '/calculadora-working-holiday-australia-costo-ano',
     '/calculadora-vacuna-fiebre-amarilla-cuanto-antes',
     '/calculadora-costo-ciudadania-italiana-argentina',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-visa-turismo-usa-ee-uu-costo-b1-b2',
   ],
 
   lastReviewed: '2026-07-27',

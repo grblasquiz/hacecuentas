@@ -609,6 +609,9 @@ export const hub: HubData = {
     '/calculadora-presupuesto-cumple-15-quinceanera',
     '/calculadora-presupuesto-graduacion',
     '/calculadora-presupuesto-despedida-soltera',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-costo-fiesta-cumpleanos-infantil-invitados',
+    '/calculadora-presupuesto-navidad-regalos-cena',
   ],
 
   lastReviewed: '2026-07-27',

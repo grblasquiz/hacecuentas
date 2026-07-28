@@ -288,6 +288,8 @@ export const hub: HubData = {
     '/calculadora-frecuencia-entrenamiento-grupo-muscular',
     '/calculadora-recuperacion-muscular-horas',
     '/calculadora-periodizacion-entrenamiento',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-volumen-semanal-hipertrofia-musculo-series',
   ],
 
   lastReviewed: '2026-07-27',

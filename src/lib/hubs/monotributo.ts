@@ -328,6 +328,8 @@ export const hub: HubData = {
     '/calculadora-retencion-rg2616-proveedor-monotributo',
     '/calculadora-impuestos-monotributo-freelance',
     '/calculadora-obra-social-monotributo-2026',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-cuanto-tengo-que-facturar-para-ganar-x-neto',
   ],
 
   lastReviewed: '2026-07-27',

@@ -359,6 +359,11 @@ export const hub: HubData = {
     '/calculadora-influencer-tarifa-estimada',
     '/calculadora-mejor-hora-publicar',
     '/calculadora-regalias-spotify-por-pais-streams-dolares',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-instagram-rate-card-por-followers',
+    '/calculadora-instagram-influencer-pago-historia',
+    '/calculadora-tarifario-creador-contenido-multiplataforma',
+    '/calculadora-ugc-tarifa-contenido-marca',
   ],
 
   lastReviewed: '2026-07-27',

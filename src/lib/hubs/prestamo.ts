@@ -353,6 +353,9 @@ export const hub: HubData = {
     '/calculadora-cuota-maxima-segun-ingreso',
     '/calculadora-comparador-prestamos',
     '/calculadora-capacidad-endeudamiento',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-cuota-plan-ahorro-auto-circulo-cerrado',
+    '/calculadora-financiacion-auto-cuota-prendario',
   ],
 
   lastReviewed: '2026-07-27',

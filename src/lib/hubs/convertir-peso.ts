@@ -206,6 +206,8 @@ export const hub: HubData = {
     '/calculadora-conversion-kilo-libra-lb-kg-exacto',
     '/calculadora-conversion-libras-kilos-onzas-stone',
     '/calculadora-conversor-toneladas-cortas-a-toneladas-metricas',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-conversion-quintal-tonelada-kg-agro',
   ],
 
   lastReviewed: '2026-07-27',

@@ -292,6 +292,8 @@ export const hub: HubData = {
     '/area-perimetro-trapecio',
     '/area-perimetro-rombo-diagonales',
     '/area-poligono-regular-apotema',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-area-perimetro-figuras',
   ],
 
   lastReviewed: '2026-07-27',

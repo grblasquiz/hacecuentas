@@ -293,6 +293,9 @@ export const hub: HubData = {
     '/calculadora-fuera-de-juego-offside-distancia-camara-var',
     '/calculadora-distancia-barrera-tiro-libre-9-15m',
     '/calculadora-peso-guantes-boxeo-kg-oz',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-poisson-goles-esperados-partido',
+    '/calculadora-promedio-goles-tiempo-anadido-drama-late-match',
   ],
 
   lastReviewed: '2026-07-27',

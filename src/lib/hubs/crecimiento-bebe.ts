@@ -386,6 +386,11 @@ export const hub: HubData = {
     '/calculadora-dientes-bebe-cronologia',
     '/calculadora-percentil-peso-bebe-oms-edad-meses',
     '/calculadora-edad-gestacional-corregida-prematuro',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-cuna-colecho-edad-transicion-cama',
+    '/calculadora-edad-quitar-panal-control-esfinteres',
+    '/calculadora-vacunas-faltantes-bebe-edad-meses',
+    '/calculadora-vacunas-bebe-calendario-2026-argentina-edad',
   ],
 
   lastReviewed: '2026-07-27',

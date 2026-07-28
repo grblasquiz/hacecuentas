@@ -1,0 +1,319 @@
+---
+/**
+ * Hub de decisión — "¿Cómo publico en cada red para que rinda?"
+ * Reemplaza 6 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: 5 casos (engagement / duración / carrusel / LinkedIn /
+ * Pinterest). La página sólo aporta datos (src/lib/hubs/publicar-en-redes.ts) y
+ * el compute() de abajo.
+ *
+ * NO HAY PLATA en ninguna rama. El runtime formatea en pesos por defecto y hace
+ * Object.assign, así que TODAS las filas declaran `format` propio ('unit' con su
+ * unidad, o 'plain'). Si alguna se olvidara, se imprimiría "$45" para 45
+ * comentarios.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  BANDS_SEGUIDORES,
+  BANDS_ALCANCE,
+  BENCH_TAMANO,
+  DUR_OBJETIVO,
+  DUR_NICHO,
+  CARR_OBJETIVO,
+  CARR_TIPO,
+  LI_FORMATO,
+  PIN_CUPO_PROGRAMABLE,
+} from '../../lib/hubs/publicar-en-redes';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+// Infinity no sobrevive a JSON: se serializa como null. Lo mandamos como número.
+const BENCH = BENCH_TAMANO.map((b) => ({ ...b, max: b.max === Infinity ? Number.MAX_SAFE_INTEGER : b.max }));
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    BANDS_SEG: BANDS_SEGUIDORES,
+    BANDS_ALC: BANDS_ALCANCE,
+    BENCH,
+    DUR_OBJ: DUR_OBJETIVO,
+    DUR_NIC: DUR_NICHO,
+    CARR_OBJ: CARR_OBJETIVO,
+    CARR_TIP: CARR_TIPO,
+    LI_FMT: LI_FORMATO,
+    PIN_CUPO: PIN_CUPO_PROGRAMABLE,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const nf = (n, d) =>
+      Number(n || 0).toLocaleString('es-AR', {
+        minimumFractionDigits: d || 0,
+        maximumFractionDigits: d || 0,
+      });
+    const num = (x) => Math.max(0, Number(x) || 0);
+    const tones = ['bad', 'warn', 'good', 'main', 'main'];
+
+    /** Convierte una tabla de franjas en segmentos del gráfico de escala. */
+    function bandsToChart(bands, tope) {
+      return bands.map(function (b, i) {
+        const to = i === bands.length - 1 ? Math.max(tope, b.to) : b.to;
+        return { label: b.label + ' (' + nf(b.from, 1) + '% a ' + nf(to, 1) + '%)', value: to - b.from, from: b.from, to: to, tone: tones[i] || 'main' };
+      });
+    }
+
+    function bandLabel(bands, er) {
+      for (let i = 0; i < bands.length; i++) if (er < bands[i].to) return bands[i].label;
+      return bands[bands.length - 1].label;
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'engagement';
+
+      // ── 1. Engagement rate ────────────────────────────────────────────────
+      if (id === 'engagement') {
+        const seg = num(v.seguidores);
+        const likes = num(v.likes);
+        const com = num(v.comentarios);
+        const sh = num(v.compartidos);
+        const sv = num(v.guardados);
+        const alc = num(v.alcance);
+        const total = likes + com + sh + sv;
+
+        const erSeg = seg > 0 ? (total / seg) * 100 : 0;
+        const erAlc = alc > 0 ? (total / alc) * 100 : 0;
+
+        // Sobre vistas la vara es otra: si hay alcance cargado, ese es el número
+        // principal y se compara contra las franjas de vistas.
+        const usaAlcance = alc > 0;
+        const er = usaAlcance ? erAlc : erSeg;
+        const bands = usaAlcance ? BANDS_ALC : BANDS_SEG;
+        const nivel = bandLabel(bands, er).toLowerCase();
+        const tope = Math.max(bands[bands.length - 1].to, Math.ceil(er) + 1);
+
+        let band = BENCH[BENCH.length - 1];
+        for (let i = 0; i < BENCH.length; i++) {
+          if (seg < BENCH[i].max) { band = BENCH[i]; break; }
+        }
+        const objetivo = (band.min + band.top) / 2;
+        const faltan = Math.max(0, (objetivo / 100) * seg - total);
+
+        return {
+          total: nf(er, 2) + '%',
+          sub:
+            nf(total) + ' interacciones sobre ' +
+            (usaAlcance ? nf(alc) + ' de alcance o vistas' : nf(seg) + ' seguidores') +
+            ' · nivel ' + nivel + ' · tu franja de tamaño es ' + band.label +
+            ', que promedia ' + nf(band.min, 1) + '% a ' + nf(band.top, 1) + '% sobre seguidores',
+          rows: [
+            { k: 'Likes', v: likes, format: 'plain' },
+            { k: 'Comentarios', v: com, format: 'plain' },
+            { k: 'Compartidos', v: sh, format: 'plain' },
+            { k: 'Guardados', v: sv, format: 'plain' },
+            { k: 'Interacciones totales', ref: 'el numerador de las dos versiones', v: total, format: 'plain' },
+            { k: 'Engagement sobre seguidores', ref: 'la versión que usan las agencias', v: erSeg, format: 'unit', unit: '%', decimals: 2, extra: !usaAlcance },
+            { k: 'Engagement sobre alcance o vistas', ref: alc > 0 ? 'la versión honesta' : 'cargá el alcance para verla', v: erAlc, format: 'unit', unit: '%', decimals: 2, extra: usaAlcance },
+            { k: 'Tasa de comentarios', ref: 'la señal más difícil de inflar', v: seg > 0 ? (com / seg) * 100 : 0, format: 'unit', unit: '%', decimals: 3 },
+            { k: 'Promedio de referencia de tu tamaño', ref: band.label, v: objetivo, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Interacciones que te faltan para ese promedio', v: faltan, format: 'plain' },
+          ],
+          chart: bandsToChart(bands, tope),
+          position: Math.min(100, (er / tope) * 100),
+          positionLabel:
+            'Engagement ' + nf(er, 2) + '% ' + (usaAlcance ? 'sobre vistas' : 'sobre seguidores') + ' — nivel ' + nivel,
+        };
+      }
+
+      // ── 2. Duración del video de TikTok (segundos) ────────────────────────
+      if (id === 'duracion') {
+        const base = DUR_OBJ[v.objetivoVideo] || DUR_OBJ.mix;
+        const adj = DUR_NIC[v.nicho] !== undefined ? DUR_NIC[v.nicho] : 0;
+        const minF = Math.max(3, base[0] + adj);
+        const maxF = Math.max(minF + 5, base[1] + adj);
+        const recom = Math.round((minF + maxF) / 2);
+        const MIN_REWARDS = 60;
+        const TOPE = 240;
+        const califica = recom >= MIN_REWARDS;
+
+        return {
+          total: nf(recom) + ' s',
+          sub:
+            'Rango sano: ' + nf(minF) + ' a ' + nf(maxF) + ' segundos · tu nicho ' +
+            (adj > 0 ? 'suma ' + nf(adj) + ' s' : adj < 0 ? 'resta ' + nf(-adj) + ' s' : 'no mueve la base') +
+            ' · ' + (califica ? 'califica para el programa de recompensas' : 'queda por debajo del mínimo de 60 s para monetizar'),
+          rows: [
+            { k: 'Base mínima del objetivo', v: base[0], format: 'unit', unit: 's' },
+            { k: 'Base máxima del objetivo', v: base[1], format: 'unit', unit: 's' },
+            { k: 'Ajuste de tu nicho', ref: 'segundos que suma o resta el formato', v: adj, format: 'unit', unit: 's' },
+            { k: 'Piso recomendado', v: minF, format: 'unit', unit: 's' },
+            { k: 'Duración recomendada', ref: 'el centro del rango', v: recom, format: 'unit', unit: 's', extra: true },
+            { k: 'Techo recomendado', v: maxF, format: 'unit', unit: 's' },
+            { k: 'Mínimo para el programa de recompensas', ref: 'debajo de esto no paga', v: MIN_REWARDS, format: 'unit', unit: 's' },
+            { k: 'Segundos que te faltan para monetizar', v: Math.max(0, MIN_REWARDS - recom), format: 'unit', unit: 's' },
+          ],
+          chart: [
+            { label: 'Hook corto (0 a 15 s)', value: 15, from: 0, to: 15, tone: 'main' },
+            { label: 'Corto (15 a 60 s)', value: 45, from: 15, to: 60, tone: 'warn' },
+            { label: 'Monetizable (60 a 180 s)', value: 120, from: 60, to: 180, tone: 'good' },
+            { label: 'Largo (más de 180 s)', value: TOPE - 180, from: 180, to: TOPE, tone: 'bad' },
+          ],
+          position: Math.min(100, (recom / TOPE) * 100),
+          positionLabel: 'Apuntá a ' + nf(recom) + ' segundos (rango ' + nf(minF) + ' a ' + nf(maxF) + ')',
+        };
+      }
+
+      // ── 3. Slides del carrusel de Instagram ───────────────────────────────
+      if (id === 'carrusel') {
+        const base = CARR_OBJ[v.objetivoCarrusel] || CARR_OBJ.saves;
+        const adj = CARR_TIP[v.tipoCarrusel] !== undefined ? CARR_TIP[v.tipoCarrusel] : 0;
+        const minF = Math.max(3, base[0] + adj);
+        const maxF = Math.min(10, base[1] + adj);
+        const opt = Math.round((minF + maxF) / 2);
+        const TOPE = 10;
+
+        return {
+          total: nf(opt) + ' slides',
+          sub:
+            'Rango sano: ' + nf(minF) + ' a ' + nf(maxF) + ' slides · estructura sugerida: slide 1 gancho, ' +
+            nf(2) + ' a ' + nf(Math.max(2, opt - 1)) + ' desarrollo, slide ' + nf(opt) + ' llamada a la acción',
+          rows: [
+            { k: 'Base mínima del objetivo', v: base[0], format: 'unit', unit: 'slides' },
+            { k: 'Base máxima del objetivo', v: base[1], format: 'unit', unit: 'slides' },
+            { k: 'Ajuste del tipo de contenido', v: adj, format: 'unit', unit: 'slides' },
+            { k: 'Piso del rango', v: minF, format: 'unit', unit: 'slides' },
+            { k: 'Slides óptimas', ref: 'el centro del rango', v: opt, format: 'unit', unit: 'slides', extra: true },
+            { k: 'Techo del rango', ref: 'el cálculo nunca pasa de 10', v: maxF, format: 'unit', unit: 'slides' },
+            { k: 'Slides de desarrollo', ref: 'entre el gancho y el cierre', v: Math.max(0, opt - 2), format: 'unit', unit: 'slides' },
+          ],
+          chart: [
+            { label: 'Muy corto (menos de 3)', value: 3, from: 0, to: 3, tone: 'bad' },
+            { label: 'Alcance y venta (3 a 5)', value: 2, from: 3, to: 5, tone: 'warn' },
+            { label: 'Educativo y guardados (5 a 7)', value: 2, from: 5, to: 7, tone: 'good' },
+            { label: 'Conversación y relato (7 a 10)', value: 3, from: 7, to: TOPE, tone: 'main' },
+          ],
+          position: Math.min(100, (opt / TOPE) * 100),
+          positionLabel: nf(opt) + ' slides (rango ' + nf(minF) + ' a ' + nf(maxF) + ')',
+        };
+      }
+
+      // ── 4. Alcance del posteo de LinkedIn ─────────────────────────────────
+      if (id === 'linkedin') {
+        const c = num(v.conexiones);
+        const er = Math.max(0, Number(v.erLinkedin) || 0);
+        const mult = LI_FMT[v.formatoLinkedin] !== undefined ? LI_FMT[v.formatoLinkedin] : 1;
+        // Espejo exacto de linkedin-posts-alcance.ts: base = conexiones × er/100 × 100.
+        const base = c * (er / 100) * 100;
+        const reach = base * mult;
+        const interacciones = Math.round(reach * (er / 100));
+        // Techo de la escala: el mejor formato de la tabla (encuesta, 1,8).
+        const techo = Math.max(1, base * 1.8);
+
+        return {
+          total: nf(Math.round(reach)),
+          sub:
+            'Impresiones estimadas con un posteo de tipo ' + String(v.formatoLinkedin) + ' · multiplicador ' +
+            nf(mult, 1) + 'x sobre tu base de ' + nf(Math.round(base)) + ' impresiones · ' +
+            nf(interacciones) + ' interacciones esperadas',
+          rows: [
+            { k: 'Conexiones o seguidores', v: c, format: 'plain' },
+            { k: 'Tu engagement rate', v: er, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Alcance base', ref: 'antes del formato', v: base, format: 'unit', unit: 'impresiones' },
+            { k: 'Multiplicador del formato', v: mult, format: 'unit', unit: 'veces', decimals: 2 },
+            { k: 'Impresiones estimadas', v: reach, format: 'unit', unit: 'impresiones', extra: true },
+            { k: 'Interacciones esperadas', ref: 'likes, comentarios y compartidos', v: interacciones, format: 'plain' },
+            { k: 'Techo con el mejor formato', ref: 'encuesta, multiplicador 1,8', v: techo, format: 'unit', unit: 'impresiones' },
+            { k: 'Impresiones que dejás sobre la mesa', ref: 'contra ese techo', v: Math.max(0, techo - reach), format: 'unit', unit: 'impresiones' },
+          ],
+          chart: [
+            { label: 'Artículo largo (0,6x)', value: 0.6, from: 0, to: base * 0.6, tone: 'bad' },
+            { label: 'Texto e imagen (1x a 1,2x)', value: 0.6, from: base * 0.6, to: base * 1.2, tone: 'warn' },
+            { label: 'Video y documento (1,5x a 1,6x)', value: 0.4, from: base * 1.2, to: base * 1.6, tone: 'good' },
+            { label: 'Encuesta (1,8x)', value: 0.2, from: base * 1.6, to: techo, tone: 'main' },
+          ],
+          position: Math.min(100, techo > 0 ? (reach / techo) * 100 : 0),
+          positionLabel: nf(Math.round(reach)) + ' impresiones estimadas con multiplicador ' + nf(mult, 1) + 'x',
+        };
+      }
+
+      // ── 5. Cadencia de Pines ──────────────────────────────────────────────
+      const pinesSemana = Math.max(1, Math.round(num(v.pinesSemana) || 7));
+      const dias = Math.min(7, Math.max(1, Math.round(num(v.diasPublicacion) || 5)));
+      const listos = Math.round(num(v.pinesListos));
+      const porDia = Math.ceil(pinesSemana / dias);
+      const semanas = Math.floor(listos / pinesSemana);
+      const programables = Math.min(PIN_CUPO, listos);
+      const faltan = Math.max(0, pinesSemana - listos);
+      const TOPE_SEMANAS = 4;
+
+      return {
+        total: nf(porDia) + (porDia === 1 ? ' Pin por día' : ' Pines por día'),
+        sub:
+          nf(pinesSemana) + ' Pines por semana repartidos en ' + nf(dias) + (dias === 1 ? ' día' : ' días') +
+          ' · con ' + nf(listos) + ' piezas listas tenés ' + nf(semanas) + (semanas === 1 ? ' semana' : ' semanas') +
+          ' de cobertura · podés dejar ' + nf(programables) + ' programados',
+        rows: [
+          { k: 'Meta semanal', v: pinesSemana, format: 'unit', unit: 'Pines' },
+          { k: 'Días de publicación', v: dias, format: 'unit', unit: 'días' },
+          { k: 'Pines por día', ref: 'redondeado hacia arriba', v: porDia, format: 'unit', unit: 'Pines', extra: true },
+          { k: 'Piezas ya producidas', v: listos, format: 'unit', unit: 'Pines' },
+          { k: 'Semanas de cobertura', ref: 'lo que te dura el stock', v: semanas, format: 'unit', unit: 'semanas' },
+          { k: 'Podés dejar programados', ref: 'cupo de una cuenta Business', v: programables, format: 'unit', unit: 'Pines' },
+          { k: 'Te faltan para cerrar la semana', v: faltan, format: 'unit', unit: 'Pines' },
+          { k: 'Pines al mes con esta cadencia', v: pinesSemana * 4, format: 'unit', unit: 'Pines' },
+        ],
+        chart: [
+          { label: 'Sin stock (menos de 1 semana)', value: 1, from: 0, to: 1, tone: 'bad' },
+          { label: 'Justo (1 a 2 semanas)', value: 1, from: 1, to: 2, tone: 'warn' },
+          { label: 'Cómodo (2 a 4 semanas)', value: 2, from: 2, to: TOPE_SEMANAS, tone: 'good' },
+        ],
+        position: Math.min(100, (semanas / TOPE_SEMANAS) * 100),
+        positionLabel:
+          nf(semanas) + (semanas === 1 ? ' semana' : ' semanas') + ' de cobertura con ' + nf(listos) + ' Pines listos',
+      };
+    });
+  })();
+</script>

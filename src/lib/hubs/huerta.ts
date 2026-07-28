@@ -342,6 +342,10 @@ export const hub: HubData = {
     '/calculadora-calendario-siembra-hemisferio-sur',
     '/calculadora-poda-frecuencia-arbol-especie',
     '/calculadora-calendario-siembra-hemisferio-norte',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-arbol-frutal-produccion-kg-anual',
+    '/calculadora-cosecha-esperada-huerta-kg',
+    '/calculadora-luz-solar-horas-planta',
   ],
 
   lastReviewed: '2026-07-27',

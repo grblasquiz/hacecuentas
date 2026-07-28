@@ -451,6 +451,9 @@ export const hub: HubData = {
     '/calculadora-resistencia-led-serie-paralelo',
     '/calculadora-divisor-tension-formula',
     '/calculadora-amplificador-operacional-ganancia',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-impedancia-circuito-rlc',
+    '/calculadora-reactancia-inductiva-capacitiva',
   ],
 
   lastReviewed: '2026-07-27',

@@ -236,6 +236,8 @@ export const hub: HubData = {
     '/calculadora-conversor-mb-a-gb',
     '/calculadora-conversor-tb-a-gb',
     '/calculadora-raid-almacenamiento-util-discos',
+    // Absorbidas en el cierre del catálogo (27-07-2026): ya no existen como calc suelta.
+    '/calculadora-tamano-archivo-conversor',
   ],
 
   lastReviewed: '2026-07-27',
