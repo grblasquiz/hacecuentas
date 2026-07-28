@@ -482,12 +482,17 @@ if [ "$SMOKE" = true ]; then
   # Cubre estático (hub/home/locale), embed (asset), ruta SSR (dolar-hoy → valida
   # que el worker sirve SSR) y sitemap. Un break del split-build cae acá → rollback.
   #
-  # OJO al elegir estas URLs: tienen que estar VIVAS y devolver 200. Antes esta
-  # lista apuntaba a /calculadora-imc, /calculadora-aguinaldo-sac y su embed;
-  # los hubs de decisión las absorbieron, así que pasaron a devolver 301 (y el
-  # embed 404) y el smoke disparó un auto-rollback de una versión que estaba
-  # sana. Si volvés a podar algo de acá, cambiá la URL por su hub.
-  for url in / /salud/peso-ideal-imc /trabajo/sueldo-bruto-y-neto /en/bmi-calculator /es /sitemap.xml /embed/calculadora-anos-luz-distancia-conversion /dolar-hoy-mexico; do
+  # OJO al elegir estas URLs: tienen que estar VIVAS y devolver 200. Esta lista
+  # ya disparó DOS auto-rollbacks de versiones sanas: primero apuntaba a
+  # /calculadora-imc y su embed, y después a /embed/calculadora-anos-luz-*, y en
+  # ambos casos la poda de calcs las convirtió en 301. Preferí siempre HUBS, que
+  # son destino y no origen de redirect.
+  #
+  # El embed es el único que obliga a apuntar a una calc suelta (prueba que
+  # Static Assets sirve /embed/*), y hoy sólo sobrevive una: inecuaciones, que se
+  # dejó viva a propósito porque el hub de ecuaciones únicamente porta la lineal.
+  # Si algún día se poda, hay que cambiar esta URL o sacar el embed del smoke.
+  for url in / /salud/peso-ideal-imc /trabajo/sueldo-bruto-y-neto /en/bmi-calculator /es /sitemap.xml /embed/calculadora-inecuaciones /dolar-hoy-mexico; do
     STATUS=$(curl -sS -o /dev/null -w "%{http_code}" -A "HC-LocalDeploy/1.0" "https://hacecuentas.com$url" || echo "ERR")
     if [ "$STATUS" = "200" ]; then
       echo "  ✓ $url"
