@@ -142,6 +142,16 @@ export interface HubData {
 
   lastReviewed: string;
   audience?: 'AR' | 'global';
+
+  /**
+   * Mercado del hub, cuando no es Argentina. Los hubs de país viven bajo su
+   * propio prefijo (`slug: 'co/impuestos/renta'` → /co/impuestos/renta), que es
+   * donde ya vivían sus calculadoras y donde el hreflang tiene sentido. Sin
+   * este campo el hub es AR/global y va en la raíz (`slug: 'trabajo/…'`).
+   *
+   * El `siloHref` de un hub de país incluye el prefijo: '/co/impuestos'.
+   */
+  locale?: 'cl' | 'co' | 'do' | 'ec' | 'en' | 'es' | 'mx' | 'pe' | 'pt' | 'pt-pt' | 'py' | 'uy' | 've';
 }
 
 /**
