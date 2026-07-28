@@ -12,7 +12,7 @@ export const prerender = true;
 import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
-import DecisionHub from '../../components/hub/DecisionHub.astro';
+import GastosEscrituraExperience from '../../components/GastosEscrituraExperience.astro';
 import { hub, CASE_MATH, HONORARIOS, CEDULAR } from '../../lib/hubs/gastos-de-escritura';
 
 const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
@@ -51,13 +51,14 @@ const schema = {
   articleSection={hub.silo}
 >
   <Header />
-  <DecisionHub data={hub} />
+  <GastosEscrituraExperience data={hub} />
   <Footer />
 </Layout>
 
 <script is:inline define:vars={{ MATH: CASE_MATH, HON: HONORARIOS, CEDULAR }}>
   (function () {
     const H = window.HC_HUB;
+    if (!H) return;
 
     H.onCompute(function (v, kase) {
       const m = MATH[kase?.id] || MATH.caba;
