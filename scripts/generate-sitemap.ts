@@ -597,19 +597,10 @@ const priorityUrls: Url[] = [
   prio('/guia/estimar-materiales-construccion-sin-comprar-de-mas', '0.85', 'monthly'),
   prio('/guia/fondo-emergencia-como-calcular',                   '0.85', 'monthly'),
 ];
-// Salas P0: una cohorte chica y estable para concentrar descubrimiento. El
-// lastmod viene de la revisión editorial real de cada sala, nunca del deploy.
-const priorityDecisionMeta = new Map(DECISION_MANIFEST.map((room) => [room.slug, room]));
-for (const decision of PRIORITY_DECISIONS) {
-  const room = priorityDecisionMeta.get(decision.slug);
-  if (!room) throw new Error(`Sala P0 sin manifest: ${decision.slug}`);
-  priorityUrls.push({
-    loc: `${site}/decidir/${decision.slug}`,
-    priority: '0.95',
-    changefreq: 'weekly',
-    lastmod: clampToToday(room.lastReviewed),
-  });
-}
+// Las salas P0 de /decidir salieron del sitemap el 28-07-2026 junto con el
+// resto de /decidir/*: la sección se dio de baja y sus 68 URLs son 301 al hub
+// que responde la misma pregunta. El manifest sigue importado porque alimenta
+// los backlinks contextuales de las calcs y el copy de otros componentes.
 // Las /categoria/* se dieron de baja el 28-07-2026: se generaban desde las calcs
 // sueltas de AR y, consolidadas en hubs, quedaron vacías. Hoy son 301 al silo
 // equivalente, así que no van al sitemap — una URL que redirige no se envía a
@@ -803,7 +794,7 @@ for (const { c } of autoTopPriority) {
     lastmod: getCalcLastMod(c, fp, buildDate),
   });
 }
-console.log(`📌 sitemap-priority.xml: ${PRIORITY_DECISIONS.length} salas P0 + ${topPrioritySlugs.length} curated + ${autoTopPriority.length} auto-completeness`);
+console.log(`📌 sitemap-priority.xml: ${topPrioritySlugs.length} curated + ${autoTopPriority.length} auto-completeness`);
 
 sitemaps.push({ name: 'sitemap-priority.xml', urls: priorityUrls });
 
@@ -1329,36 +1320,10 @@ const decisionHubUrls: Url[] = (() => {
 // Intención decisional (≠ calc transaccional, ≠ guía informacional). El lastmod
 // sale de room.lastReviewed (editorial), NO del buildDate, así que deployar otra
 // cosa NO mueve estas URLs ni inflar el sitemap de las ~2500 calcs (regla #1/#3).
-if (DECISION_MANIFEST.length > 0) {
-  const hubLastmod = maxLastmod(
-    DECISION_MANIFEST.map((r) => ({ loc: '', priority: '', changefreq: '', lastmod: clampToToday(r.lastReviewed) })),
-    buildDate,
-  );
-  const decidirUrls: Url[] = [
-    { loc: `${site}/decidir`, priority: '0.8', changefreq: 'weekly', lastmod: hubLastmod },
-    // Hubs de decisión (/decidir/laborales|vivienda|deudas|negocio) — lastmod
-    // editorial FIJO (hub.lastReviewed), mismo criterio anti-churn que las salas.
-    ...DECISION_HUBS.map((h) => ({
-      loc: `${site}/decidir/${h.slug}`,
-      priority: '0.8',
-      changefreq: 'weekly',
-      lastmod: clampToToday(h.lastReviewed),
-    })),
-    ...DECISION_MANIFEST.map((r) => ({
-      loc: `${site}/decidir/${r.slug}`,
-      priority: '0.8',
-      changefreq: 'monthly',
-      lastmod: clampToToday(r.lastReviewed),
-    })),
-  ];
-  // Las salas país (/co|mx|cl|pe/decidir/*) se dieron de baja el 28-07-2026: cada
-  // una respondía una pregunta que hoy responde un hub del mismo mercado, con más
-  // calculadoras adentro. Son 301 al hub equivalente, así que NO van al sitemap.
-  // El manifest (DECISION_MANIFEST_LOCALES) sigue existiendo porque alimenta el
-  // copy y los equivalentes de hreflang; no confundir "hay datos" con "hay página".
-  // Las salas de AR (/decidir/*) sí siguen vivas y entran arriba.
-  sitemaps.push({ name: 'sitemap-decidir.xml', urls: decidirUrls });
-}
+// Las salas /decidir se dieron de baja el 28-07-2026: cada pregunta que
+// respondían la responde hoy un hub de decisión con más calculadoras adentro.
+// Las 68 URLs son 301. Ya no hay sitemap-decidir.xml.
+
 
 // Hubs de decisión (/{silo}/{tema}) + páginas de silo. Sitemap propio para
 // poder mirar su indexación por separado en Bing/GSC durante la migración.
@@ -1725,15 +1690,27 @@ let totalUrls = 0;
 // Si una categoría o un locale queda con cero URLs distribuibles, ya no entra
 // en `sitemaps`. Eliminamos el XML de builds anteriores para que Cloudflare no
 // siga sirviendo URLs que hoy son noindex/restringidas.
-const generatedNames = new Set(sitemaps.map((s) => s.name));
+// Sólo los que realmente se escriben: un sitemap que quedó en 0 URLs no se
+// escribe, así que su archivo viejo tiene que salir del disco.
+const generatedNames = new Set(sitemaps.filter((s) => s.urls.length > 0 || (s as any).skipWrite).map((s) => s.name));
 const localeSitemapRe = /^sitemap-(?:en|pt|pt-pt|mx|es|co|cl|pe|ec|ve|py|uy|do)\.xml$/;
 for (const name of safeReadDir(PUBLIC_DIR)) {
-  const managed = /^sitemap-calcs-[a-z0-9-]+\.xml$/i.test(name) || localeSitemapRe.test(name);
-  if (managed && !generatedNames.has(name)) unlinkSync(join(PUBLIC_DIR, name));
+  if (name === 'sitemap.xml') continue;
+  // Antes sólo se limpiaban los sitemaps de calcs y de locale, así que los de
+  // secciones dadas de baja quedaban huérfanos en disco: Cloudflare los seguía
+  // sirviendo con URLs muertas (sitemap-glosario.xml publicaba 48 páginas que
+  // hoy son 404, y sitemap-decidir.xml quedó en 0). Ahora se borra cualquier
+  // sitemap-*.xml que este build no haya generado.
+  if (/^sitemap-[a-z0-9-]+\.xml$/i.test(name) && !generatedNames.has(name)) {
+    unlinkSync(join(PUBLIC_DIR, name));
+  }
 }
 for (const s of sitemaps) {
   // sitemap-images.xml lo escribimos arriba con imagesetXml (schema distinto).
   if ((s as any).skipWrite) continue;
+  // No escribir sitemaps vacíos: quedaban en disco con 0 URLs y Cloudflare los
+  // servía igual. El índice ya no los lista (ver `indexableSitemaps`).
+  if (s.urls.length === 0) continue;
   writeFileSync(join(PUBLIC_DIR, s.name), urlsetXml(s.urls), 'utf8');
   totalUrls += s.urls.length;
 }
@@ -1743,7 +1720,11 @@ totalUrls += imageEntriesClean.length;
 // de recrawl para Bing/IndexNow, contiene landings editoriales que no pertenecen
 // a los sitemaps de calcs/core. Los solapamientos entre sitemaps son válidos en
 // el protocolo y los consumidores internos deduplican por URL.
-const indexableSitemaps = sitemaps;
+// Un sitemap vacío en el índice es ruido: el rastreador lo pide y no encuentra
+// nada. Pasaba con sitemap-{comparaciones,decidir,mi,registries}.xml, que
+// quedaron en 0 URLs cuando su contenido se consolidó o salió del sitemap a
+// propósito (p. ej. /decidir/*, que sigue vivo pero no compite por queries).
+const indexableSitemaps = sitemaps.filter((s) => s.urls.length > 0 || (s as any).skipWrite);
 const indexEntries = indexableSitemaps.map((s) => {
   const loc = `${site}/${s.name}`;
   const desired = maxLastmod(s.urls, buildDate);
