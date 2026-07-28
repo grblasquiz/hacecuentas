@@ -1,0 +1,252 @@
+---
+/**
+ * Hub de decisión CL — "Me enfermé o nació mi guagua: ¿cuánto cobro?"
+ * Ruta bajo el prefijo /cl/, igual que las calculadoras que absorbe.
+ * audience="CL" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, UF, REGLAS, TOPE_SUBSIDIO_MENSUAL } from '../../../lib/hubs/cl/licencias-y-permisos';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ UF, R: REGLAS, TOPE_MES: TOPE_SUBSIDIO_MENSUAL }}>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+    const num = (n, d) => n.toLocaleString('es-CL', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'comun';
+      const renta = Math.max(0, v.renta || 0);
+      // La base del subsidio es la renta imponible topada en 90 UF.
+      const baseMensual = Math.min(renta, TOPE_MES);
+      const diario = baseMensual / R.mesComercial;
+      const diarioSinTope = renta / R.mesComercial;
+      const topa = renta > TOPE_MES;
+
+      // ── Licencia médica común ───────────────────────────────────────
+      if (id === 'comun') {
+        const dias = Math.max(1, Math.round(v.dias || 1));
+        // Art. 14 DFL 44: la carencia de 3 días solo aplica hasta 10 días de licencia.
+        const hayCarencia = dias <= R.carenciaSoloHastaDias;
+        const diasCarencia = hayCarencia ? Math.min(R.carenciaDias, dias) : 0;
+        const diasPagados = dias - diasCarencia;
+        const subsidio = diario * diasPagados;
+        const perdidoCarencia = diarioSinTope * diasCarencia;
+        const perdidoTope = (diarioSinTope - diario) * diasPagados;
+
+        return {
+          total: clp(subsidio),
+          sub:
+            num(dias) + (dias === 1 ? ' día de licencia' : ' días de licencia') + ' · ' +
+            (hayCarencia
+              ? num(diasCarencia) + ' de carencia sin pago (licencia de hasta ' + R.carenciaSoloHastaDias + ' días)'
+              : 'sin carencia: se paga desde el primer día') +
+            ' · subsidio diario ' + clp(diario) +
+            (topa ? ' · topado en ' + R.topeUf + ' UF' : ''),
+          rows: [
+            { k: 'Renta imponible promedio', ref: 'Promedio de las 3 últimas rentas', v: renta },
+            { k: 'Base del subsidio', ref: topa ? 'Topada en ' + R.topeUf + ' UF' : 'Bajo el tope de ' + R.topeUf + ' UF', v: baseMensual },
+            { k: 'Subsidio diario', ref: 'Base ÷ ' + R.mesComercial + ' días', v: diario },
+            { k: 'Días de licencia', ref: 'Los que certifica el médico', v: dias, format: 'unit', unit: 'días' },
+            { k: 'Días de carencia sin pago', ref: hayCarencia ? 'Art. 14 DFL 44 · licencia de hasta ' + R.carenciaSoloHastaDias + ' días' : 'No aplica: la licencia supera los ' + R.carenciaSoloHastaDias + ' días', v: diasCarencia, format: 'unit', unit: 'días' },
+            { k: 'Días efectivamente pagados', ref: 'Con subsidio', v: diasPagados, format: 'unit', unit: 'días' },
+            { k: 'Subsidio total de la licencia', ref: 'No paga Impuesto Único · Art. 17 N°13 LIR', v: subsidio, extra: true },
+            { k: 'Lo que pierdes por la carencia', ref: hayCarencia ? 'No lo paga nadie' : 'No aplica', v: perdidoCarencia },
+            { k: 'Lo que pierdes por el tope imponible', ref: topa ? 'Renta sobre ' + R.topeUf + ' UF' : 'No aplica', v: perdidoTope },
+            { k: 'Lo que habrías cobrado sin carencia ni tope', ref: 'Referencia', v: diarioSinTope * dias },
+          ],
+          chart: [
+            { label: 'Subsidio que cobras', value: Math.max(0, Math.round(subsidio)), tone: 'main' },
+            { label: 'Perdido por la carencia', value: Math.max(0, Math.round(perdidoCarencia)), tone: 'bad' },
+            { label: 'Perdido por el tope imponible', value: Math.max(0, Math.round(perdidoTope)), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── Accidente del trabajo o enfermedad profesional ──────────────
+      if (id === 'laboral') {
+        const dias = Math.max(1, Math.round(v.dias || 1));
+        const subsidio = diario * dias;
+        const perdidoTope = (diarioSinTope - diario) * dias;
+        return {
+          total: clp(subsidio),
+          sub:
+            'Ley 16.744 · ' + num(dias) + (dias === 1 ? ' día' : ' días') +
+            ' al 100% desde el primer día, sin carencia · lo paga la mutual o el ISL' +
+            (topa ? ' · topado en ' + R.topeUf + ' UF' : ''),
+          rows: [
+            { k: 'Renta imponible promedio', ref: 'Base del subsidio', v: renta },
+            { k: 'Base del subsidio', ref: topa ? 'Topada en ' + R.topeUf + ' UF' : 'Bajo el tope de ' + R.topeUf + ' UF', v: baseMensual },
+            { k: 'Subsidio diario', ref: 'Base ÷ ' + R.mesComercial + ' días', v: diario },
+            { k: 'Días de reposo', ref: 'Certificados por la mutual', v: dias, format: 'unit', unit: 'días' },
+            { k: 'Días de carencia', ref: 'La Ley 16.744 no tiene carencia', v: 0, format: 'unit', unit: 'días' },
+            { k: 'Subsidio total', ref: 'Paga la mutualidad o el ISL', v: subsidio, extra: true },
+            { k: 'Cuánto cobrarías si fuera licencia común', ref: 'Con ' + R.carenciaDias + ' días de carencia si dura hasta ' + R.carenciaSoloHastaDias, v: diario * Math.max(0, dias - (dias <= R.carenciaSoloHastaDias ? Math.min(R.carenciaDias, dias) : 0)) },
+            { k: 'Lo que pierdes por el tope imponible', ref: topa ? 'Renta sobre ' + R.topeUf + ' UF' : 'No aplica', v: perdidoTope },
+          ],
+          chart: [
+            { label: 'Subsidio al 100%', value: Math.max(0, Math.round(subsidio)), tone: 'main' },
+            { label: 'Perdido por el tope imponible', value: Math.max(0, Math.round(perdidoTope)), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── Prenatal + postnatal ────────────────────────────────────────
+      if (id === 'maternal') {
+        const diasPre = R.prenatalSemanas * 7;
+        const diasPost = R.postnatalSemanas * 7;
+        const diasTotal = diasPre + diasPost;
+        const subPre = diario * diasPre;
+        const subPost = diario * diasPost;
+        const total = subPre + subPost;
+        const perdidoTope = (diarioSinTope - diario) * diasTotal;
+        return {
+          total: clp(total),
+          sub:
+            R.prenatalSemanas + ' semanas de prenatal + ' + R.postnatalSemanas + ' de postnatal = ' +
+            num(diasTotal) + ' días · subsidio maternal del Estado · ' + clp(diario * 30) + ' al mes' +
+            (topa ? ' (topado en ' + R.topeUf + ' UF)' : ''),
+          rows: [
+            { k: 'Renta imponible promedio', ref: 'Base del subsidio maternal', v: renta },
+            { k: 'Base del subsidio', ref: topa ? 'Topada en ' + R.topeUf + ' UF' : 'Bajo el tope de ' + R.topeUf + ' UF', v: baseMensual },
+            { k: 'Subsidio diario', ref: 'Base ÷ ' + R.mesComercial + ' días', v: diario },
+            { k: 'Días de prenatal', ref: R.prenatalSemanas + ' semanas · Art. 195 CT', v: diasPre, format: 'unit', unit: 'días' },
+            { k: 'Subsidio del prenatal', ref: 'Lo paga el Estado, no el empleador', v: subPre },
+            { k: 'Días de postnatal', ref: R.postnatalSemanas + ' semanas · Art. 195 CT', v: diasPost, format: 'unit', unit: 'días' },
+            { k: 'Subsidio del postnatal', ref: 'Subsidio maternal', v: subPost },
+            { k: 'Días totales del descanso maternal', ref: 'Prenatal + postnatal', v: diasTotal, format: 'unit', unit: 'días' },
+            { k: 'Subsidio total del descanso maternal', ref: 'Sin contar el postnatal parental', v: total, extra: true },
+            { k: 'Subsidio mensual equivalente', ref: 'Base topada', v: diario * 30 },
+            { k: 'Lo que pierdes por el tope imponible', ref: topa ? 'Renta sobre ' + R.topeUf + ' UF' : 'No aplica', v: perdidoTope },
+          ],
+          chart: [
+            { label: 'Prenatal (' + R.prenatalSemanas + ' semanas)', value: Math.round(subPre), tone: 'prop' },
+            { label: 'Postnatal (' + R.postnatalSemanas + ' semanas)', value: Math.round(subPost), tone: 'main' },
+            { label: 'Perdido por el tope', value: Math.max(0, Math.round(perdidoTope)), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── Postnatal parental ──────────────────────────────────────────
+      if (id === 'parental') {
+        const media = v.modalidadParental === 'media';
+        const semanas = media ? R.parentalMediaSemanas : R.parentalCompletaSemanas;
+        const dias = semanas * 7;
+        const factor = media ? R.parentalMediaFactor : 1;
+        const subsidio = diario * factor * dias;
+        // En media jornada el empleador paga la media jornada trabajada.
+        const sueldoMediaJornada = media ? (renta / R.mesComercial) * R.parentalMediaFactor * dias : 0;
+        const ingresoTotal = subsidio + sueldoMediaJornada;
+
+        // El otro camino, para comparar.
+        const otroSemanas = media ? R.parentalCompletaSemanas : R.parentalMediaSemanas;
+        const otroDias = otroSemanas * 7;
+        const otroFactor = media ? 1 : R.parentalMediaFactor;
+        const otroTotal =
+          diario * otroFactor * otroDias +
+          (media ? 0 : (renta / R.mesComercial) * R.parentalMediaFactor * otroDias);
+
+        const maxPadre = media ? R.parentalPadreMaxMedia : R.parentalPadreMaxCompleta;
+        const semanasPadre = Math.min(maxPadre, Math.max(0, Math.round(v.semanasPadre || 0)));
+
+        return {
+          total: clp(ingresoTotal),
+          sub:
+            (media ? 'Media jornada: ' : 'Jornada completa: ') + semanas + ' semanas · subsidio al ' +
+            num(factor * 100) + '%' +
+            (media ? ' más la media jornada que te paga el empleador' : '') +
+            ' · la otra modalidad daría ' + clp(otroTotal),
+          rows: [
+            { k: 'Renta imponible promedio', ref: 'Base del subsidio', v: renta },
+            { k: 'Base del subsidio', ref: topa ? 'Topada en ' + R.topeUf + ' UF' : 'Bajo el tope de ' + R.topeUf + ' UF', v: baseMensual },
+            { k: 'Semanas del postnatal parental', ref: 'Art. 197 bis CT', v: semanas, format: 'unit', unit: 'semanas' },
+            { k: 'Días del período', ref: semanas + ' semanas × 7', v: dias, format: 'unit', unit: 'días' },
+            { k: 'Porcentaje del subsidio', ref: media ? 'Media jornada' : 'Jornada completa', v: factor * 100, format: 'unit', unit: '%' },
+            { k: 'Subsidio del período', ref: 'Lo paga el Estado', v: subsidio },
+            { k: 'Remuneración por la media jornada trabajada', ref: media ? 'La paga el empleador' : 'No aplica en jornada completa', v: sueldoMediaJornada },
+            { k: 'Ingreso total del postnatal parental', ref: 'Subsidio + remuneración', v: ingresoTotal, extra: true },
+            { k: 'Ingreso total con la otra modalidad', ref: otroSemanas + ' semanas', v: otroTotal },
+            {
+              k: 'Diferencia entre las dos modalidades',
+              ref: ingresoTotal >= otroTotal ? 'A favor de la que elegiste' : 'A favor de la otra',
+              v: Math.abs(ingresoTotal - otroTotal),
+            },
+            { k: 'Semanas traspasables al padre', ref: 'Máximo ' + maxPadre + ' · desde la séptima semana', v: semanasPadre, format: 'unit', unit: 'semanas' },
+            { k: 'Semanas que te quedan a ti', ref: 'Después del traspaso', v: Math.max(0, semanas - semanasPadre), format: 'unit', unit: 'semanas' },
+          ],
+          chart: [
+            { label: 'Subsidio del Estado', value: Math.round(subsidio), tone: 'main' },
+            { label: 'Remuneración del empleador', value: Math.round(sueldoMediaJornada), tone: 'good' },
+          ],
+        };
+      }
+
+      // ── Permiso de paternidad ───────────────────────────────────────
+      const diarioRemuneracion = renta / R.mesComercial;
+      const totalPaternidad = diarioRemuneracion * R.paternidadDias;
+      return {
+        total: clp(totalPaternidad),
+        sub:
+          R.paternidadDias + ' días pagados por el empleador (Art. 195 inc. 2 CT) · ' +
+          clp(diarioRemuneracion) + ' por día · usables dentro del primer mes desde el parto',
+        rows: [
+          { k: 'Tu remuneración mensual', ref: 'La paga el empleador, no es subsidio', v: renta },
+          { k: 'Valor del día', ref: 'Remuneración ÷ ' + R.mesComercial + ' días', v: diarioRemuneracion },
+          { k: 'Días de permiso de paternidad', ref: 'Art. 195 inc. 2 CT · irrenunciable', v: R.paternidadDias, format: 'unit', unit: 'días' },
+          { k: 'Total del permiso', ref: 'Remuneración normal, no subsidio', v: totalPaternidad, extra: true },
+          { k: 'Semanas del postnatal parental que además puedes recibir', ref: 'Traspaso de la madre · jornada completa', v: R.parentalPadreMaxCompleta, format: 'unit', unit: 'semanas' },
+          { k: 'Cuánto sumarían esas semanas como subsidio', ref: 'Sobre tu renta imponible topada', v: diario * R.parentalPadreMaxCompleta * 7 },
+          { k: 'Total potencial: permiso + semanas traspasadas', ref: 'Si la madre te traspasa el máximo', v: totalPaternidad + diario * R.parentalPadreMaxCompleta * 7 },
+        ],
+        chart: [
+          { label: R.paternidadDias + ' días de permiso', value: Math.round(totalPaternidad), tone: 'main' },
+          { label: 'Semanas traspasables del parental', value: Math.round(diario * R.parentalPadreMaxCompleta * 7), tone: 'prop' },
+        ],
+      };
+    });
+  })();
+</script>

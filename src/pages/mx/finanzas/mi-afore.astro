@@ -1,0 +1,335 @@
+---
+/**
+ * Hub de decisión MX — "¿Cuánto tengo en la Afore y cuánto me la comen las comisiones?"
+ *
+ * El audience="MX" se pasa literal al Layout: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UMA_MX,
+  SM_MX,
+  COMISIONES_MX,
+  DESEMPLEO_MX,
+  ISR_ANUAL_MX,
+  DEDUCCION_MX,
+} from '../../../lib/hubs/mx/mi-afore';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="MX"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    UMA: UMA_MX,
+    SM: SM_MX,
+    COM: COMISIONES_MX,
+    DES: DESEMPLEO_MX,
+    ISR_ANUAL: ISR_ANUAL_MX,
+    DED: DEDUCCION_MX,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+
+    /** ISR anual 2026 (LISR Art. 152, Anexo 8 RMF 2026) a partir de la base gravable anual. */
+    function isrAnual(base) {
+      if (!(base > 0)) return 0;
+      for (const f of ISR_ANUAL) {
+        const sup = f[1] === null ? Infinity : f[1];
+        if (base >= f[0] && base <= sup) {
+          return Math.round((f[2] + (base - f[0]) * f[3]) * 100) / 100;
+        }
+      }
+      const last = ISR_ANUAL[ISR_ANUAL.length - 1];
+      return Math.round((last[2] + (base - last[0]) * last[3]) * 100) / 100;
+    }
+
+    /** Tasa marginal (%) de la tarifa anual para un ingreso dado. */
+    function tasaMarginal(ingreso) {
+      if (!(ingreso > 0)) return 0;
+      for (const f of ISR_ANUAL) {
+        const sup = f[1] === null ? Infinity : f[1];
+        if (ingreso >= f[0] && ingreso <= sup) return Math.round(f[3] * 10000) / 100;
+      }
+      const last = ISR_ANUAL[ISR_ANUAL.length - 1];
+      return Math.round(last[3] * 10000) / 100;
+    }
+
+    /** Proyección año a año con rendimiento r y comisión c sobre saldo. */
+    function proyectar(saldo0, aporte, r, c, anios) {
+      let saldo = saldo0;
+      for (let a = 0; a < anios; a++) saldo = saldo * (1 + r - c) + aporte;
+      return saldo;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'proyeccion';
+      const saldo = Math.max(0, v.saldo || 0);
+      const salario = Math.max(0, v.salario || 0);
+      const rendimiento = Math.max(0, v.rendimiento || 0) / 100;
+      const comision = Math.max(0, v.comision || 0) / 100;
+
+      // ── Proyección del saldo al retiro ────────────────────────────────────
+      if (id === 'proyeccion') {
+        const edadHoy = Math.max(18, Math.floor(v.edadActual || 40));
+        const edadRet = Math.max(edadHoy, Math.floor(Number(v.edadRetiro) || 65));
+        const anios = edadRet - edadHoy;
+        const rNeto = rendimiento - comision;
+
+        // Aportación obligatoria RCV: 6,5% del SBC (obrero + patrón + Estado), topada a 25 UMA.
+        const topeMensual = UMA.diaria * 25 * SM.factorMensual;
+        const sbc = Math.min(salario, topeMensual);
+        const obligatoriaAnual = sbc * 0.065 * 12;
+        const voluntariaAnual = Math.max(0, v.voluntarioMensual || 0) * 12;
+        const aporteAnual = obligatoriaAnual + voluntariaAnual;
+
+        const factor = Math.pow(1 + rNeto, anios);
+        const saldoBase = saldo * factor;
+        const saldoAportes = rNeto !== 0
+          ? aporteAnual * ((factor - 1) / rNeto)
+          : aporteAnual * anios;
+        const saldoFinal = saldoBase + saldoAportes;
+
+        // Cada peso de saldo compra aproximadamente 0,4% de pensión mensual vitalicia.
+        const pension = saldoFinal * 0.004;
+        const reemplazo = salario > 0 ? (pension / salario) * 100 : 0;
+
+        return {
+          total: mxn(saldoFinal),
+          sub:
+            'A los ' + edadRet + ' años, tras ' + anios + (anios === 1 ? ' año' : ' años') +
+            ' con un rendimiento neto de ' + ((rNeto * 100).toFixed(2).replace('.', ',')) + '%. ' +
+            'Compraría una pensión de ' + mxn(pension) + ' al mes, una tasa de reemplazo del ' +
+            reemplazo.toFixed(0) + '% de tu sueldo actual.',
+          rows: [
+            { k: 'Saldo proyectado al retiro', v: saldoFinal, extra: true },
+            { k: 'Saldo actual capitalizado', v: saldoBase },
+            { k: 'Aportaciones futuras con rendimiento', v: saldoAportes },
+            { k: 'Aportación obligatoria anual', ref: '6,5% del SBC', v: obligatoriaAnual },
+            { k: 'Aportación voluntaria anual', v: voluntariaAnual },
+            { k: 'Pensión mensual estimada', v: pension },
+            { k: 'Tasa de reemplazo', v: reemplazo, format: 'unit', unit: '%', decimals: 0 },
+            { k: 'Años que le quedan al saldo', v: anios, format: 'unit', unit: 'años' },
+            { k: 'Rendimiento neto de comisión', v: rNeto * 100, format: 'unit', unit: '%', decimals: 2 },
+          ],
+          chart: [
+            { label: 'Saldo actual capitalizado', value: Math.max(0, saldoBase), tone: 'main' },
+            { label: 'Aportaciones futuras', value: Math.max(0, saldoAportes), tone: 'good' },
+          ],
+        };
+      }
+
+      // ── Ahorro voluntario y deducción de ISR ──────────────────────────────
+      if (id === 'voluntario') {
+        const aportacion = Math.max(0, v.voluntarioMensual || 0) * 12;
+        const ingreso = Math.max(0, v.ingresoAnual || 0);
+        const anios = Math.max(1, Math.floor(v.aniosProyeccion || 20));
+
+        const cincoUma = UMA.anual * DED.topeUmasAnuales;
+        const diezPct = ingreso * DED.topePorcentajeIngresos;
+        const tope = Math.min(diezPct, cincoUma);
+        const deducible = Math.min(aportacion, tope);
+        const excedente = Math.max(0, aportacion - deducible);
+
+        const ahorroFiscal = Math.max(0, isrAnual(ingreso) - isrAnual(Math.max(0, ingreso - deducible)));
+        const marginal = tasaMarginal(ingreso);
+        const costoNeto = aportacion - ahorroFiscal;
+
+        const r = rendimiento;
+        const factor = Math.pow(1 + r, anios);
+        const proyectado = r !== 0 ? aportacion * ((factor - 1) / r) : aportacion * anios;
+        const aportado = aportacion * anios;
+
+        return {
+          total: mxn(ahorroFiscal),
+          sub:
+            'De los ' + mxn(aportacion) + ' que aportas al año, ' + mxn(deducible) +
+            ' son deducibles (manda ' + (tope === cincoUma ? 'el tope de 5 UMA anuales' : 'el 10% de tu ingreso') +
+            '). Tu tasa marginal es del ' + marginal.toFixed(2).replace('.', ',') + '%, así que aportar te cuesta neto ' +
+            mxn(costoNeto) + '.',
+          rows: [
+            { k: 'ISR que te devuelve el SAT', v: ahorroFiscal, extra: true },
+            { k: 'Aportación voluntaria anual', v: aportacion },
+            { k: 'Monto deducible', ref: 'LISR Art. 151-V', v: deducible },
+            { k: 'Excedente no deducible', v: excedente },
+            { k: 'Tope aplicable', ref: tope === cincoUma ? '5 UMA anuales' : '10% del ingreso', v: tope },
+            { k: 'Costo neto de la aportación', v: costoNeto },
+            { k: 'Tasa marginal de ISR', v: marginal, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Fondo proyectado a ' + anios + (anios === 1 ? ' año' : ' años'), v: proyectado },
+            { k: 'Total aportado en el período', v: aportado },
+            { k: 'Rendimientos generados', v: Math.max(0, proyectado - aportado) },
+          ],
+          chart: [
+            { label: 'Sale de tu bolsillo', value: Math.max(0, costoNeto), tone: 'main' },
+            { label: 'Te lo devuelve el SAT', value: Math.max(0, ahorroFiscal), tone: 'good' },
+          ],
+        };
+      }
+
+      // ── Costo acumulado de la comisión ────────────────────────────────────
+      if (id === 'comisiones') {
+        const aporteAnual = Math.max(0, v.voluntarioMensual || 0) * 12;
+        const res = [1, 10, 30].map(function (anios) {
+          const con = proyectar(saldo, aporteAnual, rendimiento, comision, anios);
+          const sin = proyectar(saldo, aporteAnual, rendimiento, 0, anios);
+          return { anios: anios, con: con, sin: sin, costo: sin - con };
+        });
+        const a1 = res[0], a10 = res[1], a30 = res[2];
+        const comisionEsteAnio = saldo * comision;
+        const pctComido = a30.sin > 0 ? (a30.costo / a30.sin) * 100 : 0;
+
+        return {
+          total: mxn(a30.costo),
+          sub:
+            'Eso es lo que se lleva una comisión del ' + (comision * 100).toFixed(2).replace('.', ',') +
+            '% anual en 30 años: el ' + pctComido.toFixed(1).replace('.', ',') +
+            '% de tu saldo final. Este año pagas ' + mxn(comisionEsteAnio) + '. ' +
+            'El promedio autorizado por la CONSAR para 2026 es ' +
+            (COM.promedioSistema * 100).toFixed(3).replace('.', ',') + '%.',
+          rows: [
+            { k: 'Costo de la comisión a 30 años', v: a30.costo, extra: true },
+            { k: 'Comisión que pagas este año', v: comisionEsteAnio },
+            { k: 'Costo acumulado a 1 año', v: a1.costo },
+            { k: 'Costo acumulado a 10 años', v: a10.costo },
+            { k: 'Saldo a 30 años con comisión', v: a30.con },
+            { k: 'Saldo a 30 años sin comisión', v: a30.sin },
+            { k: 'Porcentaje del saldo final que se lleva', v: pctComido, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Comisión promedio del sistema 2026', ref: 'CONSAR', v: COM.promedioSistema * 100, format: 'unit', unit: '%', decimals: 3 },
+          ],
+          chart: [
+            { label: 'Lo que te queda a 30 años', value: Math.max(0, a30.con), tone: 'main' },
+            { label: 'Lo que se lleva la comisión', value: Math.max(0, a30.costo), tone: 'bad' },
+          ],
+        };
+      }
+
+      // ── Retiro parcial por desempleo ──────────────────────────────────────
+      if (id === 'desempleo') {
+        const aniosCuenta = Math.max(0, v.aniosCuenta || 0);
+        const semanas = Math.max(0, Math.floor(v.semanas || 0));
+        const sbcDiario = salario / SM.factorMensual;
+
+        const elegibleA = aniosCuenta >= 3;
+        const elegibleB = aniosCuenta >= 5;
+
+        const topeA = DES.modalidadA.topeVecesSmMensual * SM.generalMensual;
+        const montoA = elegibleA
+          ? Math.min(DES.modalidadA.diasSbc * sbcDiario, topeA, saldo)
+          : 0;
+        const noventaDias = DES.modalidadB.diasSbc * sbcDiario;
+        const oncePuntoCinco = DES.modalidadB.porcentajeSaldoRcv * saldo;
+        const montoB = elegibleB ? Math.min(noventaDias, oncePuntoCinco, saldo) : 0;
+
+        const mejor = Math.max(montoA, montoB);
+        const modalidad = elegibleB && montoB >= montoA ? 'B' : 'A';
+        const restante = saldo - mejor;
+        const semanasDescontadas = semanas > 0 && saldo > 0 ? Math.round(semanas * (mejor / saldo)) : 0;
+
+        return {
+          total: mxn(mejor),
+          sub:
+            (elegibleA || elegibleB
+              ? 'Te conviene la Modalidad ' + modalidad + '. '
+              : 'Tu cuenta necesita al menos 3 años de antigüedad para retirar por desempleo. ') +
+            'Necesitas ' + DES.diasDesempleoMinimo + ' días naturales sin trabajo y solo puedes hacerlo una vez cada ' +
+            DES.aniosEntreRetiros + ' años. Se te descontarían unas ' + semanasDescontadas + ' semanas cotizadas.',
+          rows: [
+            { k: 'Monto retirable (Modalidad ' + modalidad + ')', v: mejor, extra: true },
+            { k: 'Modalidad A — 30 días del SBC', ref: elegibleA ? 'tope 10 SM mensuales' : 'requiere 3 años de cuenta', v: montoA },
+            { k: 'Modalidad B — 90 días del SBC', ref: elegibleB ? 'o 11,5% del saldo, lo menor' : 'requiere 5 años de cuenta', v: montoB },
+            { k: '90 días de tu salario base', v: noventaDias },
+            { k: '11,5% del saldo de tu Afore', v: oncePuntoCinco },
+            { k: 'Queda en tu Afore', v: restante },
+            { k: 'Semanas cotizadas que se descuentan', ref: 'recuperables si reintegras', v: semanasDescontadas, format: 'unit', unit: 'semanas' },
+            { k: 'Tope de la Modalidad A', ref: '10 salarios mínimos mensuales', v: topeA },
+          ],
+          chart: [
+            { label: 'Retiro por desempleo', value: Math.max(0, mejor), tone: 'exit' },
+            { label: 'Queda en tu Afore', value: Math.max(0, restante), tone: 'main' },
+          ],
+        };
+      }
+
+      // ── Retiro anticipado del ahorro voluntario / PPR ─────────────────────
+      const monto = Math.max(0, v.montoRetiro || 0);
+      const retencion = monto * DED.retencionRetiroAnticipado;
+      const neto = monto - retencion;
+      const isrAislado = isrAnual(monto);
+      const ingreso = Math.max(0, v.ingresoAnual || 0);
+      const isrConRetiro = isrAnual(ingreso + monto);
+      const isrSinRetiro = isrAnual(ingreso);
+      const isrIncremental = Math.max(0, isrConRetiro - isrSinRetiro);
+      const ajuste = isrIncremental - retencion;
+      const exencionEdad = UMA.anual * 5;
+
+      return {
+        total: mxn(neto),
+        sub:
+          'Te retienen ' + mxn(retencion) + ' (el 20% del retiro, LISR Art. 145) y recibes ' + mxn(neto) +
+          ' en el momento. Acumulado a un ingreso anual de ' + mxn(ingreso) + ', ese retiro te genera ' +
+          mxn(isrIncremental) + ' de ISR: ' +
+          (ajuste > 0
+            ? 'en la declaración anual pagarías ' + mxn(ajuste) + ' adicionales.'
+            : 'en la declaración anual recuperarías ' + mxn(-ajuste) + '.'),
+        rows: [
+          { k: 'Neto que recibes al retirar', v: neto, extra: true },
+          { k: 'Monto retirado', v: monto },
+          { k: 'Retención provisional del 20%', ref: 'LISR Art. 145', v: retencion },
+          { k: 'ISR incremental que genera el retiro', ref: 'acumulado a tus ingresos', v: isrIncremental },
+          { k: 'Ajuste en la declaración anual', ref: ajuste > 0 ? 'a pagar' : 'a favor', v: Math.abs(ajuste) },
+          { k: 'ISR del retiro tomado aisladamente', v: isrAislado },
+          { k: 'Referencia: exención por edad 65+ o invalidez', ref: '5 UMA anuales, no aplicada aquí', v: exencionEdad },
+        ],
+        chart: [
+          { label: 'Neto en mano', value: Math.max(0, neto), tone: 'main' },
+          { label: 'Retención del 20%', value: Math.max(0, retencion), tone: 'exit' },
+        ],
+      };
+    });
+  })();
+</script>

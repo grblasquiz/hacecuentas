@@ -1,0 +1,342 @@
+---
+/**
+ * Hub de decisão BR — "Comprar um imóvel: quanto preciso ter na mão e quanto pago por mês?".
+ * Ruta bajo el prefijo /pt/, igual que las calculadoras que absorbe.
+ * audience="BR" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  TETO_SFH,
+  FGTS_ANOS_MINIMOS,
+  FGTS_JUROS_ANUAL,
+  SAQUE_ANIVERSARIO,
+} from '../../../lib/hubs/pt/comprar-um-imovel';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="BR"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header lang="pt" />
+  <DecisionHub data={hub} />
+  <Footer lang="pt" />
+</Layout>
+
+<script is:inline define:vars={{ TETO_SFH, FGTS_ANOS_MINIMOS, FGTS_JUROS_ANUAL, SAQUE_ANIVERSARIO }}>
+  (function () {
+    const H = window.HC_HUB;
+    const brl = (n) =>
+      'R$ ' + (Math.round((n || 0) * 100) / 100).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    const num = (x, d) => {
+      const n = Number(x);
+      return isFinite(n) ? n : d;
+    };
+
+    /** Tabela do saque-aniversário (Anexo da Lei 13.932/2019). `ate: null` = última faixa. */
+    function saqueAniversario(saldo) {
+      for (let k = 0; k < SAQUE_ANIVERSARIO.length; k++) {
+        const f = SAQUE_ANIVERSARIO[k];
+        if (f.ate === null || saldo <= f.ate) return saldo * f.aliquota + f.adicional;
+      }
+      return 0;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'sac';
+
+      const valor = Math.max(0, num(v.valorImovel, 0));
+      const entrada = Math.max(0, num(v.entrada, 0));
+      const saldoFgts = Math.max(0, num(v.saldoFgts, 0));
+      const anosFgts = Math.max(0, num(v.anosFgts, 0));
+      const temImovel = String(v.temImovel || 'nao') === 'sim';
+      const n = Math.max(1, Math.round(num(v.prazoMeses, 360)));
+      const taxaAnual = Math.max(0, num(v.taxaAnual, 11.5)) / 100;
+      const itbiAliq = Math.max(0, num(v.itbiAliquota, 3)) / 100;
+      const cartorio = Math.max(0, num(v.custoCartorio, 0));
+      const valorVenal = Math.max(0, num(v.valorVenal, 0));
+      const iptuAliq = Math.max(0, num(v.iptuAliquota, 1)) / 100;
+      const tr = Math.max(0, num(v.trAnual, 1.2)) / 100;
+
+      if (valor <= 0) {
+        return {
+          total: brl(0),
+          sub: 'Informe o valor do imóvel para começar a conta.',
+          rows: [],
+          chart: [],
+        };
+      }
+
+      // Elegibilidade do FGTS — art. 20, VII da Lei 8.036/1990 + Resolução CMN 5.255/2025.
+      const impedimentos = [];
+      if (anosFgts < FGTS_ANOS_MINIMOS)
+        impedimentos.push('menos de ' + FGTS_ANOS_MINIMOS + ' anos de FGTS');
+      if (valor > TETO_SFH) impedimentos.push('imóvel acima do teto do SFH (' + brl(TETO_SFH) + ')');
+      if (temImovel) impedimentos.push('já possui imóvel residencial no mesmo município');
+      const podeFgts = impedimentos.length === 0;
+      const fgtsAplicado = podeFgts ? Math.min(saldoFgts, Math.max(0, valor - entrada)) : 0;
+
+      const entradaTotal = entrada + fgtsAplicado;
+      const pv = Math.max(0, valor - entradaTotal);
+      const im = Math.pow(1 + taxaAnual, 1 / 12) - 1;
+
+      /* ── 1 e 2. Financiamento: SAC e Price ────────────────────────────── */
+      if (id === 'sac' || id === 'price') {
+        if (pv <= 0) {
+          return {
+            total: brl(0),
+            sub: 'Entrada e FGTS já cobrem todo o valor do imóvel: não há nada a financiar.',
+            rows: [
+              { k: 'Entrada com recursos próprios', ref: 'Dinheiro seu', v: entrada },
+              { k: 'FGTS aplicado', ref: podeFgts ? 'Requisitos atendidos' : 'Bloqueado', v: fgtsAplicado },
+            ],
+            chart: [],
+          };
+        }
+
+        let primeira, ultima, totalPago;
+        if (id === 'sac') {
+          const amort = pv / n;
+          // Soma fechada do SAC: n×amort + juros de um saldo que decresce linearmente.
+          totalPago = pv + im * amort * ((n * (n + 1)) / 2);
+          primeira = amort + pv * im;
+          ultima = amort + amort * im;
+        } else {
+          const parcela = im > 0 ? (pv * im) / (1 - Math.pow(1 + im, -n)) : pv / n;
+          primeira = parcela;
+          ultima = parcela;
+          totalPago = parcela * n;
+        }
+        const totalJuros = totalPago - pv;
+        const jurosPct = (totalJuros / pv) * 100;
+        const rendaMinima = primeira / 0.3;
+        const jurosPrimeira = pv * im;
+
+        const rows = [
+          { k: 'Valor do imóvel', ref: 'Preço de compra', v: valor },
+          { k: 'Entrada com recursos próprios', ref: 'Dinheiro seu', v: entrada },
+          {
+            k: 'FGTS aplicado na entrada',
+            ref: podeFgts ? 'Requisitos do SFH atendidos' : 'Bloqueado: ' + impedimentos.join('; '),
+            v: fgtsAplicado,
+          },
+          { k: 'Valor financiado', ref: 'Imóvel − entrada − FGTS', v: pv, extra: true },
+          {
+            k: 'Taxa efetiva usada',
+            ref: 'Campo editável: use a taxa da sua simulação bancária',
+            v: taxaAnual * 100,
+            format: 'unit',
+            unit: '% a.a.',
+            decimals: 2,
+          },
+          {
+            k: 'Prazo',
+            ref: (n / 12).toFixed(0) + ' anos',
+            v: n,
+            format: 'unit',
+            unit: 'meses',
+          },
+          { k: 'Primeira parcela', ref: id === 'sac' ? 'A mais cara no SAC' : 'Parcela fixa (Price)', v: primeira, extra: true },
+          { k: 'Última parcela', ref: id === 'sac' ? 'Amortização constante derruba os juros' : 'Igual à primeira', v: ultima },
+          { k: 'Juros embutidos na primeira parcela', ref: 'Saldo devedor × taxa mensal', v: jurosPrimeira },
+          { k: 'Total pago no fim do contrato', ref: 'Sem seguros MIP/DFI e taxa de administração', v: totalPago },
+          { k: 'Total de juros', ref: jurosPct.toFixed(0) + '% do valor financiado', v: totalJuros, extra: true },
+          { k: 'Renda mensal mínima aproximada', ref: 'Parcela ≤ 30% da renda, critério usual dos bancos', v: rendaMinima },
+        ];
+
+        return {
+          total: brl(primeira),
+          sub:
+            (id === 'sac' ? 'SAC: ' : 'Price: ') +
+            'financiando ' + brl(pv) + ' em ' + n + ' meses a ' + (taxaAnual * 100).toFixed(2) +
+            '% a.a., a parcela ' + (id === 'sac' ? 'começa em ' + brl(primeira) + ' e cai até ' + brl(ultima) : 'é fixa em ' + brl(primeira)) +
+            '. Você paga ' + brl(totalJuros) + ' de juros (' + jurosPct.toFixed(0) + '% do financiado). Não inclui seguros obrigatórios.',
+          rows: rows,
+          chart: [
+            { label: 'Valor financiado', value: Math.round(pv), tone: 'main' },
+            { label: 'Juros do contrato', value: Math.round(totalJuros), tone: 'bad' },
+            { label: 'Entrada + FGTS', value: Math.round(entradaTotal), tone: 'good' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      /* ── 3. FGTS na entrada ───────────────────────────────────────────── */
+      if (id === 'fgts') {
+        const pctEntrada = (entradaTotal / valor) * 100;
+        const rows = [
+          {
+            k: 'Anos de FGTS informados',
+            ref: 'Mínimo legal: ' + FGTS_ANOS_MINIMOS + ' anos somados (art. 20, VII)',
+            v: anosFgts,
+            format: 'unit',
+            unit: anosFgts === 1 ? 'ano' : 'anos',
+          },
+          { k: 'Teto do imóvel no SFH', ref: 'Resolução CMN 5.255/2025', v: TETO_SFH },
+          { k: 'Saldo total do FGTS', ref: 'Contas ativas e inativas somadas', v: saldoFgts },
+          {
+            k: 'FGTS que pode entrar na compra',
+            ref: podeFgts ? 'Requisitos atendidos' : 'Bloqueado: ' + impedimentos.join('; '),
+            v: fgtsAplicado,
+            extra: true,
+          },
+          { k: 'Entrada total (recursos próprios + FGTS)', ref: 'O que o banco vê como entrada', v: entradaTotal, extra: true },
+          {
+            k: 'Percentual do imóvel coberto pela entrada',
+            ref: 'Bancos costumam exigir 20% no mínimo',
+            v: pctEntrada,
+            format: 'unit',
+            unit: '%',
+            decimals: 1,
+          },
+          { k: 'Valor que ainda precisa ser financiado', ref: 'Imóvel − entrada total', v: pv },
+          { k: 'Saldo de FGTS que sobra na conta', ref: 'Continua rendendo TR + 3% a.a.', v: Math.max(0, saldoFgts - fgtsAplicado) },
+        ];
+        return {
+          total: brl(fgtsAplicado),
+          sub: podeFgts
+            ? 'Você pode aplicar ' + brl(fgtsAplicado) + ' do FGTS, o que leva sua entrada a ' + brl(entradaTotal) +
+              ' (' + pctEntrada.toFixed(1) + '% do imóvel) e reduz o financiamento para ' + brl(pv) + '.'
+            : 'Neste cenário o FGTS NÃO pode ser usado: ' + impedimentos.join('; ') + '. A entrada fica limitada aos seus ' + brl(entrada) + '.',
+          rows: rows,
+          chart: [
+            { label: 'FGTS aplicado', value: Math.round(fgtsAplicado), tone: 'good' },
+            { label: 'Entrada própria', value: Math.round(entrada), tone: 'main' },
+            { label: 'A financiar', value: Math.round(pv), tone: 'warn' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      /* ── 4. Custos de fechamento ──────────────────────────────────────── */
+      if (id === 'fechamento') {
+        const itbi = valor * itbiAliq;
+        const custosTotais = itbi + cartorio;
+        const pctCustos = (custosTotais / valor) * 100;
+        const caixaNecessario = entrada + custosTotais;
+        const rows = [
+          { k: 'Base de cálculo do ITBI', ref: 'Valor da transação · STJ, Tema 1.113', v: valor },
+          {
+            k: 'Alíquota do ITBI aplicada',
+            ref: 'Campo editável: é municipal (SP e BH cobram 3%)',
+            v: itbiAliq * 100,
+            format: 'unit',
+            unit: '%',
+            decimals: 1,
+          },
+          { k: 'ITBI a recolher', ref: 'Pago antes do registro na matrícula', v: itbi, extra: true },
+          { k: 'Escritura + registro em cartório', ref: 'Estimativa editável: emolumentos são fixados por lei estadual', v: cartorio },
+          { k: 'Total de custos de fechamento', ref: 'ITBI + cartório', v: custosTotais, extra: true },
+          {
+            k: 'Custos sobre o preço do imóvel',
+            ref: 'Referência de mercado: 4% a 6%',
+            v: pctCustos,
+            format: 'unit',
+            unit: '%',
+            decimals: 2,
+          },
+          { k: 'Caixa necessário no dia da assinatura', ref: 'Entrada própria + custos (o FGTS não paga ITBI nem cartório)', v: caixaNecessario, extra: true },
+        ];
+        return {
+          total: brl(custosTotais),
+          sub:
+            'Fechar a compra custa ' + brl(custosTotais) + ' além da entrada — ' + pctCustos.toFixed(2) +
+            '% do preço. Contando a entrada própria, você precisa de ' + brl(caixaNecessario) +
+            ' em dinheiro no dia: o FGTS não pode ser usado para pagar ITBI nem cartório.',
+          rows: rows,
+          chart: [
+            { label: 'ITBI', value: Math.round(itbi), tone: 'bad' },
+            { label: 'Cartório', value: Math.round(cartorio), tone: 'warn' },
+            { label: 'Entrada própria', value: Math.round(entrada), tone: 'main' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      /* ── 5. Manter o imóvel ───────────────────────────────────────────── */
+      const iptuAnual = valorVenal * iptuAliq;
+      const iptuMensal = iptuAnual / 12;
+      const cota = iptuAnual / 10;
+      const taxaFgts = tr + FGTS_JUROS_ANUAL;
+      const rendimentoFgts = saldoFgts * taxaFgts;
+      const saqueAniv = saqueAniversario(saldoFgts);
+      const rows = [
+        { k: 'Valor venal para o IPTU', ref: 'Está no carnê; menor que o preço de mercado', v: valorVenal },
+        {
+          k: 'Alíquota do IPTU aplicada',
+          ref: 'Campo editável: municipal (SP: 1,0% residencial, Lei 15.889/2013)',
+          v: iptuAliq * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        },
+        { k: 'IPTU do ano', ref: 'Valor venal × alíquota, antes de descontos municipais', v: iptuAnual, extra: true },
+        { k: 'IPTU por mês', ref: 'Para orçar', v: iptuMensal },
+        { k: 'Valor de cada cota', ref: 'Parcelamento usual em até 10 cotas', v: cota },
+        {
+          k: 'Rendimento do FGTS no ano',
+          ref: 'TR (' + (tr * 100).toFixed(2) + '%) + 3% a.a. · art. 13 da Lei 8.036/1990',
+          v: rendimentoFgts,
+        },
+        {
+          k: 'Taxa de rendimento do FGTS',
+          ref: 'Costuma ficar abaixo da inflação',
+          v: taxaFgts * 100,
+          format: 'unit',
+          unit: '% a.a.',
+          decimals: 2,
+        },
+        { k: 'Saque-aniversário liberaria por ano', ref: 'Tabela do Anexo da Lei 13.932/2019', v: saqueAniv },
+        { k: 'Custo fixo anual do imóvel (só IPTU)', ref: 'Sem condomínio, seguro e manutenção', v: iptuAnual },
+      ];
+      return {
+        total: brl(iptuAnual),
+        sub:
+          'O IPTU sai por ' + brl(iptuAnual) + ' no ano (' + brl(iptuMensal) + '/mês, ou ' + brl(cota) +
+          ' por cota em 10 parcelas). Enquanto isso, o FGTS parado rende ' + brl(rendimentoFgts) +
+          ' no ano a ' + (taxaFgts * 100).toFixed(2) + '% — abaixo da inflação na maioria dos anos.',
+        rows: rows,
+        chart: [
+          { label: 'IPTU do ano', value: Math.round(iptuAnual), tone: 'bad' },
+          { label: 'Rendimento do FGTS no ano', value: Math.round(rendimentoFgts), tone: 'good' },
+          { label: 'Saque-aniversário anual', value: Math.round(saqueAniv), tone: 'prop' },
+        ].filter((s) => s.value > 0),
+      };
+    });
+  })();
+</script>

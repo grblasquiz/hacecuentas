@@ -1,0 +1,322 @@
+---
+/**
+ * Hub de decisão PT — "Os impostos de comprar e de ter casa".
+ * A rota vive sob /pt-pt/, tal como as calculadoras que absorve.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, IMI_TAXAS, AIMI, IMT_HPP, IMT_JOVEM, SELO_GRATUITAS } from '../../../lib/hubs/pt-pt/casa';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt-pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PT"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ IMI_TAXAS, AIMI, IMT_HPP, IMT_JOVEM, SELO_GRATUITAS }}>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n, d) =>
+      Number(n || 0).toLocaleString('de-DE', {
+        minimumFractionDigits: d || 0,
+        maximumFractionDigits: d || 0,
+      }) + ' €';
+
+    /** Nº de prestações do IMI conforme o montante anual (art. 120.º CIMI). */
+    function prestacoesImi(valor) {
+      if (valor <= 100) return { n: 1, meses: 'maio' };
+      if (valor <= 500) return { n: 2, meses: 'maio e novembro' };
+      return { n: 3, meses: 'maio, agosto e novembro' };
+    }
+
+    /** Escala marginal genérica sobre uma base, com limites em €. */
+    function porBandas(base, bandas) {
+      if (base <= 0) return 0;
+      let imposto = 0;
+      let anterior = 0;
+      for (const b of bandas) {
+        const limite = b.ate === null ? Infinity : b.ate;
+        const noTramo = Math.min(base, limite) - anterior;
+        if (noTramo > 0) imposto += noTramo * b.taxa;
+        anterior = limite;
+        if (base <= limite) break;
+      }
+      return imposto;
+    }
+
+    /** AIMI — espelho de aimiPessoaSingular() de src/lib/data/portugal-2026.ts. */
+    function aimi(vptTotal, conjunta) {
+      const deducao = conjunta ? AIMI.deducaoCasal : AIMI.deducaoSingular;
+      const base = Math.max(0, vptTotal - deducao);
+      if (base <= 0) return { imposto: 0, base: 0, deducao: deducao };
+      const f = conjunta ? 2 : 1;
+      const imposto = porBandas(base, [
+        { ate: AIMI.banda1Ate * f, taxa: AIMI.taxa1 },
+        { ate: AIMI.banda2Ate * f, taxa: AIMI.taxa2 },
+        { ate: null, taxa: AIMI.taxa3 },
+      ]);
+      return { imposto: imposto, base: base, deducao: deducao };
+    }
+
+    /** IMT de habitação própria e permanente — espelho de imt(valor, true). */
+    function imtHpp(valor) {
+      if (valor <= 0) return { imposto: 0, taxa: 0, abater: 0 };
+      for (const e of IMT_HPP) {
+        const limite = e.ate === null ? Infinity : e.ate;
+        if (valor <= limite) {
+          return { imposto: Math.max(0, valor * e.taxa - e.abater), taxa: e.taxa, abater: e.abater };
+        }
+      }
+      const u = IMT_HPP[IMT_HPP.length - 1];
+      return { imposto: Math.max(0, valor * u.taxa - u.abater), taxa: u.taxa, abater: u.abater };
+    }
+
+    /** IMT Jovem — espelho de imtJovem() de src/lib/data/portugal-2026.ts. */
+    function beneficioJovem(valor) {
+      const normalImt = imtHpp(valor).imposto;
+      const normalSelo = valor * IMT_JOVEM.seloAquisicao;
+      if (valor <= IMT_JOVEM.isencaoTotalAte) {
+        return { imt: 0, selo: 0, normalImt: normalImt, normalSelo: normalSelo, tipo: 'total' };
+      }
+      if (valor <= IMT_JOVEM.isencaoParcialAte) {
+        const excedente = valor - IMT_JOVEM.isencaoTotalAte;
+        return {
+          imt: excedente * IMT_JOVEM.taxaExcedente,
+          selo: excedente * IMT_JOVEM.seloAquisicao,
+          normalImt: normalImt,
+          normalSelo: normalSelo,
+          tipo: 'parcial',
+        };
+      }
+      return { imt: normalImt, selo: normalSelo, normalImt: normalImt, normalSelo: normalSelo, tipo: 'nenhuma' };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'tenho';
+      const rows = [];
+      let total = 0;
+      let sub = '';
+      let chart = [];
+
+      if (id === 'varias') {
+        // ── AIMI ──
+        const vptTotal = Math.max(0, v.vptTotal || 0);
+        const conjunta = String(v.conjunta || 'nao') === 'sim';
+        const r = aimi(vptTotal, conjunta);
+        total = r.imposto;
+
+        rows.push({ k: 'Somatório do VPT habitacional a 1 de janeiro', ref: 'Prédios habitacionais e terrenos para construção', v: vptTotal, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Dedução (abate)',
+          ref: conjunta ? 'Casal em tributação conjunta' : 'Pessoa singular · art. 135.º-C CIMI',
+          v: r.deducao,
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({ k: 'Base sujeita a AIMI', ref: 'VPT − dedução', v: r.base, format: 'unit', unit: '€' });
+        rows.push({ k: 'AIMI anual', ref: 'Bandas marginais · art. 135.º-F CIMI', v: total, extra: true, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Taxa efetiva sobre o património',
+          ref: 'AIMI ÷ VPT total',
+          v: vptTotal > 0 ? (total / vptTotal) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+
+        sub =
+          (r.base > 0
+            ? 'Está sujeito a AIMI sobre ' + eur(r.base)
+            : 'Não paga AIMI: fica abaixo da dedução de ' + eur(r.deducao)) +
+          ' · liquidado em junho e pago em setembro';
+        chart = [
+          { label: 'VPT fora do AIMI', value: Math.round(Math.min(vptTotal, r.deducao)), tone: 'good' },
+          { label: 'VPT sujeito a AIMI', value: Math.round(r.base), tone: 'warn' },
+          { label: 'AIMI a pagar', value: Math.round(total), tone: 'bad' },
+        ];
+      } else if (id === 'comprar') {
+        // ── IMT + Imposto do Selo, com o benefício jovem ──
+        const valor = Math.max(0, v.valorCompra || 0);
+        const idade = Math.max(0, Math.round(v.idade || 0));
+        const elegivel = idade <= IMT_JOVEM.idadeMaxima;
+        const b = beneficioJovem(valor);
+        const imtPagar = elegivel ? b.imt : b.normalImt;
+        const seloPagar = elegivel ? b.selo : b.normalSelo;
+        const normalTotal = b.normalImt + b.normalSelo;
+        total = imtPagar + seloPagar;
+        const poupanca = normalTotal - total;
+        const escalao = imtHpp(valor);
+
+        rows.push({ k: 'Valor tributável', ref: 'O maior entre o preço e o VPT', v: valor, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Escalão de IMT (habitação própria e permanente)',
+          ref: 'Parcela a abater de ' + eur(escalao.abater, 2),
+          v: escalao.taxa * 100,
+          format: 'unit',
+          unit: '% marginal',
+          decimals: 2,
+        });
+        rows.push({ k: 'IMT sem benefício', ref: 'Tabela HPP do continente', v: b.normalImt, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Imposto do Selo sem benefício',
+          ref: (IMT_JOVEM.seloAquisicao * 100).toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' % · verba 1.1 TGIS',
+          v: b.normalSelo,
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({ k: 'IMT que vai mesmo pagar', ref: elegivel ? 'Isenção ' + b.tipo : 'Sem benefício: mais de ' + IMT_JOVEM.idadeMaxima + ' anos', v: imtPagar, format: 'unit', unit: '€' });
+        rows.push({ k: 'Imposto do Selo que vai mesmo pagar', ref: elegivel ? 'Isenção ' + b.tipo : 'Sem benefício', v: seloPagar, format: 'unit', unit: '€' });
+        rows.push({ k: 'Total a pagar antes da escritura', ref: 'IMT + Selo · não entra no crédito', v: total, extra: true, format: 'unit', unit: '€' });
+        rows.push({ k: 'Poupança do benefício jovem', ref: 'Face a um comprador sem benefício', v: poupanca, format: 'unit', unit: '€' });
+
+        sub =
+          (!elegivel
+            ? 'Com ' + idade + ' anos não cumpre o requisito de idade do IMT Jovem'
+            : b.tipo === 'total'
+              ? 'Isenção total: não paga IMT nem Selo'
+              : b.tipo === 'parcial'
+                ? 'Isenção parcial: só paga sobre o que passa de ' + eur(IMT_JOVEM.isencaoTotalAte)
+                : 'Acima de ' + eur(IMT_JOVEM.isencaoParcialAte) + ' não há benefício jovem') +
+          ' · pagam-se antes da escritura';
+        chart = [
+          { label: 'Fica para a casa', value: Math.round(Math.max(0, valor - total)), tone: 'good' },
+          { label: 'IMT', value: Math.round(imtPagar), tone: 'bad' },
+          { label: 'Imposto do Selo', value: Math.round(seloPagar), tone: 'warn' },
+        ];
+      } else if (id === 'heranca') {
+        // ── Imposto do Selo das transmissões gratuitas (verba 1.2 TGIS) ──
+        const valor = Math.max(0, v.valorHeranca || 0);
+        const isento = String(v.parentesco || 'proximo') !== 'outros';
+        total = isento ? 0 : valor * SELO_GRATUITAS.taxa;
+
+        rows.push({ k: 'Valor que recebe', ref: 'Nos imóveis conta o VPT', v: valor, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Taxa aplicável',
+          ref: isento ? 'Cônjuge, descendentes e ascendentes: isentos' : 'Verba 1.2 da TGIS',
+          v: isento ? 0 : SELO_GRATUITAS.taxa * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 0,
+        });
+        rows.push({ k: 'Imposto do Selo a pagar', ref: 'Transmissão gratuita', v: total, extra: true, format: 'unit', unit: '€' });
+        rows.push({ k: 'Fica-lhe, líquido de imposto', ref: 'Valor recebido − Selo', v: valor - total, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'O que pagaria se não fosse do núcleo próximo',
+          ref: 'Referência de comparação',
+          v: valor * SELO_GRATUITAS.taxa,
+          format: 'unit',
+          unit: '€',
+        });
+
+        sub =
+          (isento
+            ? 'Isento: Portugal não tributa heranças em linha reta'
+            : 'Sujeito a ' + (SELO_GRATUITAS.taxa * 100).toLocaleString('de-DE') + ' % de Imposto do Selo') +
+          ' · a participação entrega-se até ao final do 3.º mês seguinte ao do óbito';
+        chart = [
+          { label: 'Fica consigo', value: Math.round(valor - total), tone: 'good' },
+          { label: 'Imposto do Selo', value: Math.round(total), tone: 'bad' },
+        ];
+      } else {
+        // ── IMI anual ──
+        const vpt = Math.max(0, v.vpt || 0);
+        let taxaPct = Number(v.taxaImi);
+        if (!isFinite(taxaPct) || taxaPct <= 0) taxaPct = IMI_TAXAS.padrao * 100;
+        const taxa = taxaPct / 100;
+        total = vpt * taxa;
+        const p = prestacoesImi(total);
+        const foraDoIntervalo = taxa < IMI_TAXAS.min || taxa > IMI_TAXAS.max;
+
+        rows.push({ k: 'VPT do imóvel', ref: 'Caderneta predial', v: vpt, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Taxa municipal aplicada',
+          ref: foraDoIntervalo
+            ? 'Fora do intervalo legal — confirme no seu concelho'
+            : 'Intervalo legal ' + (IMI_TAXAS.min * 100).toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' % a ' + (IMI_TAXAS.max * 100).toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' %',
+          v: taxaPct,
+          format: 'unit',
+          unit: '%',
+          decimals: 3,
+        });
+        rows.push({ k: 'IMI anual', ref: 'VPT × taxa municipal', v: total, extra: true, format: 'unit', unit: '€' });
+        rows.push({ k: 'Número de prestações', ref: 'Art. 120.º do CIMI · ' + p.meses, v: p.n, format: 'plain' });
+        rows.push({ k: 'Valor de cada prestação', ref: p.meses, v: total / p.n, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'IMI à taxa mínima do intervalo legal',
+          ref: (IMI_TAXAS.min * 100).toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' %',
+          v: vpt * IMI_TAXAS.min,
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({
+          k: 'IMI à taxa máxima do intervalo legal',
+          ref: (IMI_TAXAS.max * 100).toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' %',
+          v: vpt * IMI_TAXAS.max,
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({
+          k: 'O que pagaria se o prédio fosse rústico',
+          ref: (IMI_TAXAS.rustico * 100).toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' % · taxa única nacional',
+          v: vpt * IMI_TAXAS.rustico,
+          format: 'unit',
+          unit: '€',
+        });
+
+        sub =
+          'Paga em ' + p.n + (p.n === 1 ? ' prestação' : ' prestações') + ' (' + p.meses + ')' +
+          ' · ' + eur(total / p.n) + ' de cada vez' +
+          (foraDoIntervalo ? ' · atenção: a taxa que indicou está fora do intervalo legal' : '');
+        chart = [
+          { label: 'VPT do imóvel', value: Math.round(Math.max(0, vpt - total)), tone: 'good' },
+          { label: 'IMI de um ano', value: Math.round(total), tone: 'warn' },
+        ];
+      }
+
+      return {
+        total: eur(total),
+        sub: sub,
+        rows: rows,
+        chart: chart,
+      };
+    });
+  })();
+</script>

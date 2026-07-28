@@ -1,0 +1,138 @@
+---
+/**
+ * Hub de decisión MX — apoyos del Bienestar: quién califica y de cuánto.
+ * audience="MX" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, BIENESTAR_MX, JCF_MX } from '../../../lib/hubs/mx/apoyos-del-bienestar';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="MX"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ B: BIENESTAR_MX, JCF: JCF_MX }}>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'adultos';
+      const edad = Math.floor(Math.max(0, v.edad || 0));
+      const mujer = String(v.sexo || 'mujer') === 'mujer';
+      const conDiscapacidad = String(v.discapacidad || 'no') === 'si';
+
+      // ── Caso 3: Jóvenes Construyendo el Futuro ─────────────────────────
+      if (id === 'jovenes') {
+        const meses = Math.min(JCF.duracionMaxMeses, Math.max(0, v.mesesJcf || 0));
+        const mensual = JCF.apoyoMensual;
+        const total = mensual * meses;
+        const elegible = edad >= JCF.edadMin && edad <= JCF.edadMax;
+
+        return {
+          total: mxn(mensual),
+          sub:
+            (elegible
+              ? 'Estás en el rango de edad del programa (' + JCF.edadMin + ' a ' + JCF.edadMax + ' años). '
+              : 'Con ' + edad + ' años quedas fuera del rango de edad del programa (' + JCF.edadMin + ' a ' + JCF.edadMax + '). ') +
+            'Con ' + meses + ' meses de capacitación juntas ' + mxn(total) + ' en total, más seguro médico del IMSS mientras dura.',
+          rows: [
+            { k: 'Apoyo mensual del programa', v: mensual },
+            { k: 'Meses de capacitación', v: meses, format: 'unit', unit: 'meses' },
+            { k: 'Total que juntas', v: total, extra: true },
+            { k: 'Apoyo mensual del ejercicio anterior', v: JCF.apoyoMensual2025 },
+            { k: 'Aumento respecto del año anterior', v: mensual - JCF.apoyoMensual2025 },
+            { k: 'Duración máxima del programa', v: JCF.duracionMaxMeses, format: 'unit', unit: 'meses' },
+          ],
+          chart: [
+            { label: 'Apoyo mensual', value: mensual, tone: 'main' },
+            { label: 'Total del programa', value: total, tone: 'good' },
+          ],
+        };
+      }
+
+      // ── Casos 1 y 2: pensiones del Bienestar ───────────────────────────
+      const programas = [];
+      if (edad >= 65) programas.push({ nombre: 'Pensión para Adultos Mayores (65+)', bimestral: B.adultosMayoresBimestral });
+      if (mujer && edad >= 60 && edad <= 64) programas.push({ nombre: 'Pensión Mujeres Bienestar (60 a 64)', bimestral: B.mujeres60a64Bimestral });
+      if (conDiscapacidad && edad <= 64) programas.push({ nombre: 'Pensión para Personas con Discapacidad', bimestral: B.discapacidadBimestral });
+
+      const bimestral = programas.reduce((s, p) => s + p.bimestral, 0);
+      const mensual = bimestral / 2;
+      const anual = bimestral * 6;
+
+      let proximo;
+      if (edad >= 65) {
+        proximo = 'Ya estás en la pensión universal de 65 años o más; el monto se revisa cada año.';
+      } else if (mujer && edad < 60) {
+        proximo = 'Te faltan ' + (60 - edad) + ' años para Mujeres Bienestar y ' + (65 - edad) + ' para la pensión universal.';
+      } else {
+        proximo = 'Te faltan ' + (65 - edad) + ' años para la pensión universal de adultos mayores.';
+      }
+
+      const rows = [
+        { k: 'Programas que te corresponden hoy', v: programas.length, format: 'plain', extra: true },
+        { k: 'Total bimestral', v: bimestral },
+        { k: 'Equivalente mensual', v: mensual },
+        { k: 'Total del año (6 pagos)', v: anual },
+        { k: 'Pensión de Adultos Mayores 65+ (bimestral)', v: B.adultosMayoresBimestral },
+        { k: 'Mujeres Bienestar 60 a 64 (bimestral)', v: B.mujeres60a64Bimestral },
+        { k: 'Personas con discapacidad (bimestral)', v: B.discapacidadBimestral },
+      ];
+
+      return {
+        total: mxn(bimestral),
+        sub:
+          (programas.length > 0
+            ? 'Programa: ' + programas.map((p) => p.nombre).join(' + ') + '. Equivale a ' + mxn(mensual) + ' al mes y ' + mxn(anual) + ' al año. '
+            : 'Hoy no te corresponde ningún programa con transferencia directa. ') + proximo,
+        rows: rows,
+        chart: [
+          { label: 'Adultos Mayores 65+', value: B.adultosMayoresBimestral, tone: edad >= 65 ? 'main' : 'prop' },
+          { label: 'Mujeres Bienestar', value: B.mujeres60a64Bimestral, tone: mujer && edad >= 60 && edad <= 64 ? 'main' : 'prop' },
+          { label: 'Discapacidad', value: B.discapacidadBimestral, tone: conDiscapacidad && edad <= 64 ? 'main' : 'prop' },
+        ],
+      };
+    });
+  })();
+</script>

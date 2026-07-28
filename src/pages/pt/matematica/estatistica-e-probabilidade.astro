@@ -1,0 +1,276 @@
+---
+/**
+ * Hub de decisão BR — "Qual é a chance disso acontecer?".
+ * Hub de matemática: NENHUMA linha do resultado é dinheiro, então todas usam
+ * format 'plain' ou 'unit'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/pt/estatistica-e-probabilidade';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="BR"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header lang="pt" />
+  <DecisionHub data={hub} />
+  <Footer lang="pt" />
+</Layout>
+
+<script is:inline>
+  (function () {
+    const H = window.HC_HUB;
+    const dec = (n, d) =>
+      (Math.round((n || 0) * Math.pow(10, d)) / Math.pow(10, d)).toLocaleString('pt-BR', {
+        minimumFractionDigits: d,
+        maximumFractionDigits: d,
+      });
+
+    /**
+     * Parser de lista tolerante ao Brasil: aqui a vírgula é separador DECIMAL.
+     * Se o texto tem ponto e vírgula, quebra de linha ou espaço, esses mandam e
+     * a vírgula fica valendo como decimal. Só quando não há nenhum outro
+     * separador a vírgula é tratada como separador de itens.
+     */
+    function parseLista(txt) {
+      const s = String(txt || '').trim();
+      if (!s) return [];
+      const temOutro = /[;\n\t ]/.test(s);
+      const partes = temOutro ? s.split(/[;\n\t ]+/) : s.split(',');
+      return partes
+        .map((x) => Number(temOutro ? x.trim().replace(/[,;]+$/, '').replace(',', '.') : x.trim()))
+        .filter((x) => isFinite(x));
+    }
+
+    /** C(n,k) por produto encurtado: não estoura com n grande. */
+    function comb(n, k) {
+      if (k < 0 || k > n) return 0;
+      const kk = Math.min(k, n - k);
+      let r = 1;
+      for (let j = 0; j < kk; j++) r = (r * (n - j)) / (j + 1);
+      return r;
+    }
+    /** A(n,k) = n × (n−1) × … × (n−k+1). */
+    function arranjo(n, k) {
+      if (k < 0 || k > n) return 0;
+      let r = 1;
+      for (let j = 0; j < k; j++) r *= n - j;
+      return r;
+    }
+    function binomPontual(n, k, p) {
+      if (k < 0 || k > n) return 0;
+      return comb(n, k) * Math.pow(p, k) * Math.pow(1 - p, n - k);
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'dispersao';
+
+      // ================= CASO: contagem =================
+      if (id === 'contagem') {
+        const n = Math.max(0, Math.round(v.n || 0));
+        const k = Math.max(0, Math.round(v.k || 0));
+        const modo = String(v.ordem || 'importa');
+        if (k > n && modo !== 'repeticao') {
+          return {
+            total: '—',
+            sub: 'k = ' + k + ' é maior que n = ' + n + ': não dá para escolher mais elementos do que existem.',
+            rows: [],
+            chart: [],
+            format: 'plain',
+          };
+        }
+        const a = arranjo(n, k);
+        const c = comb(n, k);
+        const rep = Math.pow(n, k);
+        const escolhido = modo === 'naoimporta' ? c : modo === 'repeticao' ? rep : a;
+        const nomeModo =
+          modo === 'naoimporta' ? 'combinações C(' + n + ',' + k + ')'
+          : modo === 'repeticao' ? 'sequências com repetição ' + n + '^' + k
+          : 'arranjos A(' + n + ',' + k + ')';
+
+        const rows = [
+          { k: 'Arranjos A(n,k) — a ordem importa', ref: 'n × (n−1) × … × (n−k+1)', v: a, format: 'plain', decimals: 0, extra: modo === 'importa' },
+          { k: 'Combinações C(n,k) — a ordem não importa', ref: 'A(n,k) ÷ k!', v: c, format: 'plain', decimals: 0, extra: modo === 'naoimporta' },
+          { k: 'Sequências com repetição', ref: 'n elevado a k', v: rep, format: 'plain', decimals: 0, extra: modo === 'repeticao' },
+          { k: 'Ordenações de cada grupo (k!)', ref: 'É por isso que o arranjo é maior que a combinação', v: k > 0 ? a / (c || 1) : 1, format: 'plain', decimals: 0 },
+          { k: 'Permutação de todos os n elementos (n!)', ref: 'O caso A(n,n)', v: arranjo(n, n), format: 'plain', decimals: 0 },
+          { k: 'Chance de acertar um sorteio de k entre n', ref: '1 ÷ C(n,k) — a ordem das dezenas não importa', v: c > 0 ? (1 / c) * 100 : 0, format: 'unit', unit: '%', decimals: 8 },
+        ];
+
+        return {
+          total: isFinite(escolhido) ? Math.round(escolhido).toLocaleString('pt-BR') : '∞',
+          sub:
+            'Há ' + (isFinite(escolhido) ? Math.round(escolhido).toLocaleString('pt-BR') : 'mais números do que o navegador consegue representar') +
+            ' ' + nomeModo + ' · o arranjo é ' + (c > 0 ? dec(a / c, 0) : '—') + ' vezes maior que a combinação.',
+          rows: rows,
+          format: 'plain',
+          decimals: 0,
+          chart: [
+            { label: 'Combinações (grupos distintos)', value: Math.round(c), tone: 'main' },
+            { label: 'Ordenações extras dos mesmos grupos', value: Math.round(Math.max(0, a - c)), tone: 'exit' },
+          ].filter((s) => s.value > 0 && isFinite(s.value)),
+        };
+      }
+
+      // ================= CASO: binomial =================
+      if (id === 'binomial') {
+        const n = Math.max(0, Math.round(v.n || 0));
+        const k = Math.max(0, Math.round(v.k || 0));
+        const p = v.p;
+        const modo = String(v.modoBinomial || 'exato');
+        if (!(p >= 0 && p <= 1)) {
+          return {
+            total: '—',
+            sub: 'p tem de ser uma probabilidade entre 0 e 1. Para 50%, informe 0,5.',
+            rows: [],
+            chart: [],
+            format: 'plain',
+          };
+        }
+        if (k > n) {
+          return {
+            total: '—',
+            sub: 'Não dá para ter ' + k + ' sucessos em apenas ' + n + ' tentativas.',
+            rows: [],
+            chart: [],
+            format: 'plain',
+          };
+        }
+        const exato = binomPontual(n, k, p);
+        let acumAte = 0;
+        for (let j = 0; j <= k; j++) acumAte += binomPontual(n, j, p);
+        const peloMenos = 1 - (acumAte - exato);
+        const menosQueK = acumAte - exato;
+        const maisQueK = 1 - acumAte;
+        const media = n * p;
+        const dp = Math.sqrt(n * p * (1 - p));
+        const peloMenosUm = 1 - Math.pow(1 - p, n);
+        const escolhido = modo === 'atek' ? acumAte : modo === 'pelomenos' ? peloMenos : exato;
+        const nomeModo =
+          modo === 'atek' ? 'no máximo ' + k + ' sucesso(s)'
+          : modo === 'pelomenos' ? 'pelo menos ' + k + ' sucesso(s)'
+          : 'exatamente ' + k + ' sucesso(s)';
+
+        const rows = [
+          { k: 'Combinações C(n,k)', ref: 'De quantas ordens diferentes esses k sucessos podem cair', v: comb(n, k), format: 'plain', decimals: 0 },
+          { k: 'P(X = k) — exatamente k sucessos', ref: 'C(n,k) × p^k × (1−p)^(n−k)', v: exato * 100, format: 'unit', unit: '%', decimals: 4, extra: modo === 'exato' },
+          { k: 'P(X ≤ k) — no máximo k sucessos', ref: 'Soma das probabilidades de 0 até k', v: acumAte * 100, format: 'unit', unit: '%', decimals: 4, extra: modo === 'atek' },
+          { k: 'P(X ≥ k) — pelo menos k sucessos', ref: '1 − P(X ≤ k−1)', v: peloMenos * 100, format: 'unit', unit: '%', decimals: 4, extra: modo === 'pelomenos' },
+          { k: 'P(X ≥ 1) — pelo menos um sucesso', ref: '1 − (1−p)^n', v: peloMenosUm * 100, format: 'unit', unit: '%', decimals: 4 },
+          { k: 'Sucessos esperados em média', ref: 'n × p', v: media, format: 'plain', decimals: 2 },
+          { k: 'Desvio padrão da distribuição', ref: '√(n × p × (1−p))', v: dp, format: 'plain', decimals: 4 },
+          { k: 'Faixa provável (média ± 1 desvio)', ref: 'de ' + dec(Math.max(0, media - dp), 1) + ' a ' + dec(Math.min(n, media + dp), 1) + ' sucessos', v: 2 * dp, format: 'unit', unit: 'sucessos de largura', decimals: 2 },
+        ];
+
+        return {
+          total: dec(escolhido * 100, 4) + '%',
+          sub:
+            'A chance de ' + nomeModo + ' em ' + n + ' tentativa(s) com p = ' + dec(p, 4) +
+            ' é de ' + dec(escolhido * 100, 4) + '% · em média sairiam ' + dec(media, 2) + ' sucessos.',
+          rows: rows,
+          format: 'plain',
+          decimals: 4,
+          chart: [
+            { label: 'Menos que ' + k + ' sucessos', value: Math.round(menosQueK * 10000), tone: 'exit' },
+            { label: 'Exatamente ' + k + ' sucessos', value: Math.round(exato * 10000), tone: 'main' },
+            { label: 'Mais que ' + k + ' sucessos', value: Math.round(maisQueK * 10000), tone: 'prop' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      // ================= CASO padrão: dispersão =================
+      const arr = parseLista(v.dados);
+      if (arr.length === 0) {
+        return { total: '—', sub: 'Informe pelo menos um número na lista de dados.', rows: [], chart: [], format: 'plain' };
+      }
+      const amostra = String(v.tipoAmostra || 'populacao') === 'amostra';
+      const N = arr.length;
+      if (amostra && N < 2) {
+        return {
+          total: '—',
+          sub: 'Uma amostra precisa de pelo menos dois dados para ter desvio padrão (o denominador é N−1).',
+          rows: [],
+          chart: [],
+          format: 'plain',
+        };
+      }
+      const soma = arr.reduce(function (x, y) { return x + y; }, 0);
+      const media = soma / N;
+      const somaQuad = arr.reduce(function (x, y) { return x + Math.pow(y - media, 2); }, 0);
+      const denom = amostra ? N - 1 : N;
+      const variancia = somaQuad / denom;
+      const sigma = Math.sqrt(variancia);
+      const cv = Math.abs(media) > 1e-12 ? (sigma / Math.abs(media)) * 100 : 0;
+      const ordenado = arr.slice().sort(function (x, y) { return x - y; });
+      const mediana =
+        N % 2 === 1 ? ordenado[(N - 1) / 2] : (ordenado[N / 2 - 1] + ordenado[N / 2]) / 2;
+      const dentro = arr.filter(function (x) { return Math.abs(x - media) <= sigma; }).length;
+      const dispersao = cv < 15 ? 'baixa (dados homogêneos)' : cv < 30 ? 'moderada' : 'alta (dados muito espalhados)';
+
+      const rows = [
+        { k: 'Quantidade de dados (N)', ref: 'Números reconhecidos na lista', v: N, format: 'plain', decimals: 0 },
+        { k: 'Soma dos dados', ref: 'Base da média', v: soma, format: 'plain', decimals: 4 },
+        { k: 'Média aritmética', ref: 'soma ÷ N', v: media, format: 'plain', decimals: 4, extra: true },
+        { k: 'Mediana', ref: 'O valor do meio depois de ordenar', v: mediana, format: 'plain', decimals: 4 },
+        { k: 'Soma dos quadrados dos desvios', ref: 'Σ (xᵢ − média)²', v: somaQuad, format: 'plain', decimals: 4 },
+        { k: 'Variância', ref: amostra ? 'Σ desvios² ÷ (N−1) · amostra, correção de Bessel' : 'Σ desvios² ÷ N · população', v: variancia, format: 'plain', decimals: 4 },
+        { k: 'Desvio padrão', ref: 'Raiz quadrada da variância · na unidade dos dados', v: sigma, format: 'plain', decimals: 4, extra: true },
+        { k: 'Coeficiente de variação', ref: 'desvio padrão ÷ média — dispersão ' + dispersao, v: cv, format: 'unit', unit: '%', decimals: 2 },
+        { k: 'Dados dentro de um desvio da média', ref: 'entre ' + dec(media - sigma, 2) + ' e ' + dec(media + sigma, 2), v: dentro, format: 'unit', unit: 'de ' + N, decimals: 0 },
+        { k: 'Menor valor', ref: 'Mínimo do conjunto', v: ordenado[0], format: 'plain', decimals: 4 },
+        { k: 'Maior valor', ref: 'Máximo do conjunto', v: ordenado[N - 1], format: 'plain', decimals: 4 },
+        { k: 'Amplitude', ref: 'máximo − mínimo', v: ordenado[N - 1] - ordenado[0], format: 'plain', decimals: 4 },
+      ];
+
+      return {
+        total: dec(sigma, 4),
+        sub:
+          'Sobre ' + N + ' dados, a média é ' + dec(media, 2) + ' e o desvio padrão ' +
+          (amostra ? 'amostral (s)' : 'populacional (σ)') + ' é ' + dec(sigma, 4) +
+          ' · coeficiente de variação de ' + dec(cv, 1) + '%: dispersão ' + dispersao + '.',
+        rows: rows,
+        format: 'plain',
+        decimals: 4,
+        chart: [
+          { label: 'Dados dentro de ±1 desvio da média', value: dentro, tone: 'main' },
+          { label: 'Dados fora de ±1 desvio', value: N - dentro, tone: 'exit' },
+        ].filter((s) => s.value > 0),
+      };
+    });
+  })();
+</script>

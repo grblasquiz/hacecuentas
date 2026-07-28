@@ -1,0 +1,263 @@
+---
+/**
+ * Hub EN — "Where do I stand in the standings?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ * Gráfico 'scale': las 4 ramas devuelven position (0-100) y positionLabel.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  ELO_SCALE,
+  AUCTION_SPLITS,
+  AUCTION_LABELS,
+  RUGBY_BANDS,
+  RUGBY_SAFETY_PPG,
+  FRAN_BANDS,
+  FRAN_LOAD_LB,
+  FRAN_TOTAL_REPS,
+} from '../../../lib/hubs/en/competition-and-rankings';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    ELO_SCALE,
+    AUCTION_SPLITS,
+    AUCTION_LABELS,
+    RUGBY_BANDS,
+    RUGBY_SAFETY_PPG,
+    FRAN_BANDS,
+    FRAN_LOAD_LB,
+    FRAN_TOTAL_REPS,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(x || 0).toLocaleString('en-US');
+    const usd = (x) => '$' + Math.round(x || 0).toLocaleString('en-US');
+    const mmss = (s) => {
+      const t = Math.max(0, Math.round(s || 0));
+      return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+    };
+    /** Franjas fijas del gráfico posicional (0-100). */
+    const BANDS = [
+      { label: 'Bottom quarter', value: 25, from: 0, to: 25, tone: 'bad' },
+      { label: 'Below average', value: 25, from: 25, to: 50, tone: 'warn' },
+      { label: 'Above average', value: 25, from: 50, to: 75, tone: 'main' },
+      { label: 'Top quarter', value: 25, from: 75, to: 100, tone: 'good' },
+    ];
+    const clamp = (x) => Math.min(100, Math.max(0, x));
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'elo';
+
+      if (id === 'ppg') {
+        const pts = Math.max(0, v.points || 0);
+        const games = Math.max(1, Math.round(v.games || 1));
+        const left = Math.max(0, Math.round(v.gamesLeft || 0));
+        const ppg = pts / games;
+        let band = RUGBY_BANDS[RUGBY_BANDS.length - 1];
+        for (let n = 0; n < RUGBY_BANDS.length; n++) {
+          if (ppg >= RUGBY_BANDS[n].min) { band = RUGBY_BANDS[n]; break; }
+        }
+        const totalGames = games + left;
+        const ptsForSafety = RUGBY_SAFETY_PPG * totalGames;
+        const stillNeeded = Math.max(0, ptsForSafety - pts);
+        const paceNeeded = left > 0 ? stillNeeded / left : 0;
+        const rows = [
+          { k: 'Points won so far', ref: 'In ' + games + ' games', v: pts, format: 'plain' },
+          { k: 'Points per game', ref: band.label, v: ppg, format: 'unit', unit: 'pts/game', decimals: 2, extra: true },
+          { k: 'Distance to the safety line', ref: RUGBY_SAFETY_PPG + ' pts/game is comfortable safety', v: ppg - RUGBY_SAFETY_PPG, format: 'unit', unit: 'pts/game', decimals: 2, extra: true },
+          { k: 'Season points that safety requires', ref: 'Over all ' + totalGames + ' games', v: ptsForSafety, format: 'plain', decimals: 1 },
+          { k: 'Points you still have to win', ref: left > 0 ? 'From the ' + left + ' games left' : 'The season is over', v: stillNeeded, format: 'plain', decimals: 1 },
+          { k: 'Pace needed over the remaining games', ref: left > 0 ? (paceNeeded > 4 ? 'Above the maximum for a win — safety is out of your hands' : 'Points per game from here') : 'No games left', v: paceNeeded, format: 'unit', unit: 'pts/game', decimals: 2 },
+          { k: 'Where you finish at your current pace', ref: 'Average held for the whole season', v: ppg * totalGames, format: 'plain', decimals: 1 },
+          { k: 'Points a Gold Cup place would take', ref: '3.0 pts/game across the season', v: 3 * totalGames, format: 'plain', decimals: 1 },
+        ];
+        return {
+          total: ppg.toFixed(2) + ' pts/game',
+          sub:
+            band.label + ' — relegation risk ' + band.risk.toLowerCase() + ' · ' + n0(pts) + ' points from ' + games +
+            ' games' + (left > 0 ? ', needing ' + paceNeeded.toFixed(2) + ' per game from the ' + left + ' left to reach safety' : '') +
+            ' · head-to-head and points difference still decide ties',
+          rows: rows,
+          chart: BANDS,
+          format: 'plain',
+          position: clamp((ppg / 4) * 100),
+          positionLabel: ppg.toFixed(2) + ' pts/game — ' + band.label,
+        };
+      }
+
+      if (id === 'auction') {
+        const total = Math.max(1, v.budget || 200);
+        const roster = Math.max(2, Math.round(v.roster || 16));
+        let benchSpots = Math.max(0, Math.round(v.bench || 0));
+        if (benchSpots >= roster) benchSpots = roster - 1;
+        const starters = roster - benchSpots;
+        const strategy = AUCTION_SPLITS[String(v.strategy)] ? String(v.strategy) : 'balanced';
+        const split = AUCTION_SPLITS[strategy];
+        // Cada plaza cuesta al menos $1: la banca se reserva primero.
+        let benchTotal = benchSpots * 1;
+        if (total - benchTotal < starters) benchTotal = Math.max(0, total - starters);
+        const starterBudget = total - benchTotal;
+        const qb = Math.round((starterBudget * split.qb) / 100);
+        const rb = Math.round((starterBudget * split.rb) / 100);
+        const wr = Math.round((starterBudget * split.wr) / 100);
+        const te = Math.round((starterBudget * split.te) / 100);
+        const dst = Math.round((starterBudget * split.dst) / 100);
+        // El kicker absorbe el redondeo para que la suma cierre exacta.
+        const k = Math.max(1, starterBudget - qb - rb - wr - te - dst);
+        const perStarter = starters > 0 ? starterBudget / starters : 0;
+        const topLabel = rb >= wr ? 'RB' : 'WR';
+        const topValue = Math.max(rb, wr);
+        const rows = [
+          { k: 'Reserved for the bench', ref: '$1 per bench spot, ' + benchSpots + ' of them', v: benchTotal, format: 'unit', unit: 'USD' },
+          { k: 'Budget for starters', ref: starters + ' starting slots', v: starterBudget, format: 'unit', unit: 'USD', extra: true },
+          { k: 'Quarterback', ref: split.qb + '% of the starter budget', v: qb, format: 'unit', unit: 'USD' },
+          { k: 'Running backs', ref: split.rb + '% of the starter budget', v: rb, format: 'unit', unit: 'USD', extra: topLabel === 'RB' },
+          { k: 'Wide receivers', ref: split.wr + '% of the starter budget', v: wr, format: 'unit', unit: 'USD', extra: topLabel === 'WR' },
+          { k: 'Tight end', ref: split.te + '% of the starter budget', v: te, format: 'unit', unit: 'USD' },
+          { k: 'Defence / special teams', ref: 'Never overpay here', v: dst, format: 'unit', unit: 'USD' },
+          { k: 'Kicker', ref: 'Absorbs the rounding so the split closes', v: k, format: 'unit', unit: 'USD' },
+          { k: 'Average per starting slot', ref: 'Starter budget ÷ starters', v: perStarter, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Share of the budget held back for the bench', ref: 'Bench ÷ total budget', v: (benchTotal / total) * 100, format: 'unit', unit: '%', decimals: 1 },
+        ];
+        return {
+          total: usd(starterBudget) + ' for starters',
+          sub:
+            AUCTION_LABELS[strategy] + ' plan on a ' + usd(total) + ' budget · ' + usd(benchTotal) + ' held back for ' +
+            benchSpots + ' bench spot' + (benchSpots === 1 ? '' : 's') + ' · biggest pool is ' + topLabel + ' at ' +
+            usd(topValue) + ' — nominate other managers’ targets early and keep this powder dry',
+          rows: rows,
+          format: 'unit',
+          unit: 'USD',
+          chart: BANDS,
+          position: clamp((starterBudget / total) * 100),
+          positionLabel: Math.round((starterBudget / total) * 100) + '% of the budget going to starters',
+        };
+      }
+
+      if (id === 'fran') {
+        const s = Math.max(1, v.franSec || 1);
+        const div = FRAN_LOAD_LB[String(v.franDiv)] ? String(v.franDiv) : 'men';
+        const load = FRAN_LOAD_LB[div];
+        let band = FRAN_BANDS[FRAN_BANDS.length - 1];
+        let idx = FRAN_BANDS.length - 1;
+        for (let n = 0; n < FRAN_BANDS.length; n++) {
+          if (s < FRAN_BANDS[n].under) { band = FRAN_BANDS[n]; idx = n; break; }
+        }
+        const nextBand = idx > 0 ? FRAN_BANDS[idx - 1] : null;
+        const rows = [
+          { k: 'Your Fran time', ref: mmss(s), v: s, format: 'unit', unit: 's' },
+          { k: 'Level band', ref: band.label + ' — ' + band.ref, v: idx + 1, format: 'plain', extra: true },
+          { k: 'Seconds to reach the next band', ref: nextBand ? 'To be ' + nextBand.label : 'Already in the top band', v: nextBand ? Math.max(0, s - nextBand.under) + 1 : 0, format: 'unit', unit: 's', extra: true },
+          { k: 'Seconds per rep across the whole workout', ref: FRAN_TOTAL_REPS + ' thrusters and pull-ups combined', v: s / FRAN_TOTAL_REPS, format: 'unit', unit: 's/rep', decimals: 2 },
+          { k: 'Reps per minute', ref: 'The pace the clock demands', v: (FRAN_TOTAL_REPS / s) * 60, format: 'unit', unit: 'reps/min', decimals: 1 },
+          { k: 'Rx thruster load for this division', ref: div === 'men' ? 'Men’s Rx' : 'Women’s Rx', v: load, format: 'unit', unit: 'lb' },
+          { k: 'Total weight moved on the thrusters', ref: '45 thrusters at Rx load', v: load * 45, format: 'unit', unit: 'lb' },
+          { k: 'Elite benchmark, for reference', ref: 'Under 2:30', v: 150, format: 'unit', unit: 's' },
+        ];
+        return {
+          total: mmss(s),
+          sub:
+            band.label + ' (' + band.ref + ') at ' + load + ' lb Rx · ' + (s / FRAN_TOTAL_REPS).toFixed(2) +
+            ' seconds per rep across all ' + FRAN_TOTAL_REPS + ' reps' +
+            (nextBand ? ' · ' + (Math.max(0, s - nextBand.under) + 1) + ' seconds off would put you in ' + nextBand.label : '') +
+            ' · the bands only apply at Rx loads and full range of motion',
+          rows: rows,
+          format: 'plain',
+          chart: BANDS,
+          position: clamp(100 - (s / 600) * 100),
+          positionLabel: mmss(s) + ' — ' + band.label,
+        };
+      }
+
+      // elo
+      const mine = Math.max(0, v.myElo || 0);
+      const opp = Math.max(0, v.oppElo || 0);
+      const S = Number(v.result);
+      const score = S === 1 || S === 0 || S === 0.5 ? S : 1;
+      const K = Math.max(1, v.kFactor || 32);
+      const E = 1 / (1 + Math.pow(10, (opp - mine) / ELO_SCALE));
+      const change = K * (score - E);
+      const newElo = Math.round(mine + change);
+      const favourite = E > 0.5;
+      const rows = [
+        { k: 'Your rating', ref: 'Before the game', v: mine, format: 'plain' },
+        { k: 'Opponent’s rating', ref: (opp - mine >= 0 ? '+' : '') + Math.round(opp - mine) + ' on you', v: opp, format: 'plain' },
+        { k: 'Expected score', ref: '1 ÷ (1 + 10^(gap ÷ 400))', v: E * 100, format: 'unit', unit: '%', decimals: 1, extra: true },
+        { k: 'Rating change', ref: 'K × (result − expected)', v: change, format: 'plain', decimals: 1, extra: true },
+        { k: 'New rating', ref: 'Rounded to a whole point', v: newElo, format: 'plain', extra: true },
+        { k: 'What a win would have been worth', ref: 'From this same position', v: K * (1 - E), format: 'plain', decimals: 1 },
+        { k: 'What a loss would have cost', ref: 'From this same position', v: K * (0 - E), format: 'plain', decimals: 1 },
+        { k: 'The same result at K = 20', ref: 'Established chess rating', v: 20 * (score - E), format: 'plain', decimals: 1 },
+        { k: 'The same result at K = 40', ref: 'Juniors and FIFA-style ratings', v: 40 * (score - E), format: 'plain', decimals: 1 },
+        { k: 'Rating gap that would make you a 75% favourite', ref: 'Above your opponent', v: 190, format: 'plain' },
+      ];
+      return {
+        total: (change >= 0 ? '+' : '') + change.toFixed(1) + ' pts',
+        sub:
+          'New rating ' + n0(newElo) + ' · you were ' + (favourite ? 'the favourite' : 'the underdog') + ' at ' +
+          (E * 100).toFixed(0) + '% expected · ' +
+          (score === 1
+            ? favourite
+              ? 'beating who you should barely moves the needle'
+              : 'upsets are where ratings actually move'
+            : score === 0
+              ? favourite
+                ? 'losing as favourite is the most expensive outcome there is'
+                : 'the damage is contained because you were not expected to win'
+              : 'a draw counts as half a win, so it is measured against expectation, not against the result'),
+        rows: rows,
+        format: 'plain',
+        chart: BANDS,
+        position: clamp(E * 100),
+        positionLabel: (E * 100).toFixed(0) + '% expected score before the game',
+      };
+    });
+  })();
+</script>

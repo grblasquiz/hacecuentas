@@ -1,0 +1,229 @@
+---
+/**
+ * Hub de decisión EC — "Sueldo neto: lo que te descuentan y lo que cuesta a la empresa".
+ * audience="EC" literal: HubData sólo modela 'AR' | 'global' y el mercado viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  SBU,
+  IESS_PERSONAL,
+  IESS_PATRONAL,
+  FONDOS_RESERVA,
+  HORAS_MES,
+  RECARGO_SUPLEMENTARIA,
+  RECARGO_EXTRAORDINARIA,
+  RECARGO_NOCTURNO,
+  CANASTA_BASICA,
+  PERCEPTORES,
+} from '../../../lib/hubs/ec/sueldo-neto';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="EC"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    SBU,
+    IESS_PERSONAL,
+    IESS_PATRONAL,
+    FONDOS_RESERVA,
+    HORAS_MES,
+    RECARGO_SUPLEMENTARIA,
+    RECARGO_EXTRAORDINARIA,
+    RECARGO_NOCTURNO,
+    CANASTA_BASICA,
+    PERCEPTORES,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) =>
+      '$' + new Intl.NumberFormat('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.round((n || 0) * 100) / 100);
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'base';
+      const sueldo = Math.max(0, v.sueldo || 0);
+      const otros = Math.max(0, v.otros || 0);
+      const hSupl = Math.max(0, v.horasSupl || 0);
+      const hExtra = Math.max(0, v.horasExtra || 0);
+      const hNoct = Math.max(0, v.horasNoct || 0);
+      const descuentos = Math.max(0, v.descuentos || 0);
+      const segundoAnio = String(v.antiguedad || 'segundo') === 'segundo';
+
+      // Valor hora: sueldo ÷ 240 (método del Ministerio del Trabajo).
+      const valorHora = sueldo / HORAS_MES;
+      const pagoSupl = hSupl * valorHora * (1 + RECARGO_SUPLEMENTARIA);
+      const pagoExtra = hExtra * valorHora * (1 + RECARGO_EXTRAORDINARIA);
+      const recargoNoct = hNoct * valorHora * RECARGO_NOCTURNO;
+      const totalHoras = pagoSupl + pagoExtra + recargoNoct;
+
+      // Materia gravada: remuneración de carácter normal (sin décimos).
+      const materia = sueldo + otros + totalHoras;
+      const aportePersonal = materia * IESS_PERSONAL;
+      const aportePatronal = materia * IESS_PATRONAL;
+      const neto = Math.max(0, materia - aportePersonal - descuentos);
+
+      // Lado del empleador: provisiones de décimos, vacaciones y fondos de reserva.
+      const prov13 = materia / 12;
+      const prov14 = SBU / 12;
+      const provVac = materia / 24;
+      const fondos = segundoAnio ? materia * FONDOS_RESERVA : 0;
+      const costoEmpleador = materia + aportePatronal + prov13 + prov14 + provVac + fondos;
+      const factor = materia > 0 ? costoEmpleador / materia : 0;
+
+      // Salario digno: canasta básica familiar del INEC ÷ perceptores del hogar tipo.
+      const salarioDigno = CANASTA_BASICA / PERCEPTORES;
+      const ingresoAnual = materia * 12 + materia + SBU + fondos * 12;
+      const ingresoEquivalente = ingresoAnual / 12;
+      const brecha = salarioDigno - ingresoEquivalente;
+
+      const rows = [
+        { k: 'Sueldo mensual pactado', ref: 'Remuneración base del contrato', v: sueldo },
+      ];
+      if (otros > 0) rows.push({ k: 'Comisiones y bonos del mes', ref: 'Materia gravada', v: otros });
+      if (hSupl > 0) {
+        rows.push({
+          k: 'Horas suplementarias (' + hSupl + ' h)',
+          ref: 'Recargo 50% · art. 55 · ' + usd(valorHora * 1.5) + '/h',
+          v: pagoSupl,
+        });
+      }
+      if (hExtra > 0) {
+        rows.push({
+          k: 'Horas extraordinarias (' + hExtra + ' h)',
+          ref: 'Recargo 100% · art. 55 · ' + usd(valorHora * 2) + '/h',
+          v: pagoExtra,
+        });
+      }
+      if (hNoct > 0) {
+        rows.push({
+          k: 'Recargo nocturno (' + hNoct + ' h)',
+          ref: 'Recargo 25% · art. 49 · ' + usd(valorHora * 0.25) + '/h',
+          v: recargoNoct,
+        });
+      }
+      rows.push({ k: 'Materia gravada del mes', ref: 'Base de los aportes al IESS', v: materia });
+      rows.push({ k: 'Aporte personal al IESS', ref: '9,45% · se te descuenta', v: aportePersonal });
+      if (descuentos > 0) rows.push({ k: 'Otros descuentos', ref: 'Anticipos, préstamos, retención de IR', v: descuentos });
+      rows.push({ k: 'Sueldo neto que recibes', ref: 'Lo que llega a tu cuenta', v: neto, extra: id !== 'empleador' && id !== 'digno' });
+      rows.push({ k: 'Aporte patronal al IESS', ref: '11,15% · lo paga la empresa', v: aportePatronal });
+      rows.push({ k: 'Provisión del décimo tercero', ref: 'Un doceavo · se paga hasta el 24 de diciembre', v: prov13 });
+      rows.push({ k: 'Provisión del décimo cuarto', ref: 'SBU ÷ 12 · 15 de marzo o 15 de agosto', v: prov14 });
+      rows.push({ k: 'Provisión de vacaciones', ref: '15 días al año · un veinticuatroavo', v: provVac });
+      rows.push({
+        k: 'Fondos de reserva',
+        ref: segundoAnio ? '8,33% · desde el mes 13' : 'Aún no corresponde (primer año)',
+        v: fondos,
+      });
+      rows.push({
+        k: 'Costo total mensual para el empleador',
+        ref: 'Sueldo + patronal + provisiones',
+        v: costoEmpleador,
+        extra: id === 'empleador',
+      });
+      rows.push({
+        k: 'Cuántas veces el sueldo cuesta el trabajador',
+        ref: 'Costo total ÷ materia gravada',
+        v: factor,
+        format: 'unit',
+        unit: '×',
+        decimals: 2,
+      });
+      rows.push({ k: 'Valor de tu hora ordinaria', ref: 'Sueldo ÷ ' + HORAS_MES + ' h', v: valorHora });
+      rows.push({ k: 'Salario digno mensual de referencia', ref: 'Canasta INEC ÷ ' + String(PERCEPTORES).replace('.', ',') + ' perceptores', v: salarioDigno });
+      rows.push({
+        k: 'Tu ingreso mensual equivalente',
+        ref: 'Sueldos + décimos + fondos ÷ 12',
+        v: ingresoEquivalente,
+        extra: id === 'digno',
+      });
+
+      let total, sub, chart;
+      if (id === 'empleador') {
+        total = usd(costoEmpleador);
+        sub =
+          'Pagar ' + usd(materia) + ' de remuneración te cuesta ' + usd(costoEmpleador) + ' al mes · ' +
+          factor.toFixed(2).replace('.', ',') + '× el sueldo · ' + usd(costoEmpleador * 12) + ' al año' +
+          (segundoAnio ? ' · con fondos de reserva' : ' · todavía sin fondos de reserva');
+        chart = [
+          { label: 'Remuneración del trabajador', value: materia, tone: 'main' },
+          { label: 'Aporte patronal 11,15%', value: aportePatronal, tone: 'warn' },
+          { label: 'Provisión décimo tercero', value: prov13, tone: 'prop' },
+          { label: 'Provisión décimo cuarto', value: prov14, tone: 'prop' },
+          { label: 'Provisión vacaciones', value: provVac, tone: 'prop' },
+          { label: 'Fondos de reserva', value: fondos, tone: 'prop' },
+        ].filter((s) => s.value > 0);
+      } else if (id === 'digno') {
+        total = usd(ingresoEquivalente);
+        sub =
+          (brecha > 0
+            ? 'No llegas al salario digno de ' + usd(salarioDigno) + ' · te faltan ' + usd(brecha) + ' al mes'
+            : 'Superas el salario digno de ' + usd(salarioDigno) + ' por ' + usd(-brecha) + ' al mes') +
+          ' · canasta básica ' + usd(CANASTA_BASICA) + ' ÷ ' + String(PERCEPTORES).replace('.', ',') + ' perceptores';
+        chart = [
+          { label: 'Sueldos del año', value: materia * 12, tone: 'main' },
+          { label: 'Décimo tercero', value: materia, tone: 'prop' },
+          { label: 'Décimo cuarto', value: SBU, tone: 'prop' },
+          { label: 'Fondos de reserva del año', value: fondos * 12, tone: 'good' },
+        ].filter((s) => s.value > 0);
+      } else {
+        total = usd(neto);
+        sub =
+          'De ' + usd(materia) + ' de materia gravada te quedan ' + usd(neto) +
+          ' · IESS personal ' + usd(aportePersonal) + ' (9,45%)' +
+          (totalHoras > 0 ? ' · horas con recargo ' + usd(totalHoras) : '') +
+          ' · tu hora vale ' + usd(valorHora);
+        chart = [
+          { label: 'Neto que recibes', value: neto, tone: 'main' },
+          { label: 'Aporte personal IESS', value: aportePersonal, tone: 'exit' },
+          { label: 'Otros descuentos', value: descuentos, tone: 'warn' },
+        ].filter((s) => s.value > 0);
+      }
+
+      return { total: total, sub: sub, rows: rows, chart: chart, decimals: 2 };
+    });
+  })();
+</script>

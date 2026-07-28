@@ -1,0 +1,47 @@
+---
+/**
+ * Silo Trabajo · Paraguay — índice de hubs de decisión del mercado PY.
+ * Existe para que el breadcrumb de los hubs paraguayos no apunte a un 404 y para
+ * repartir link equity entre hermanos. El listado sale del registry, no a mano.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import SiloIndex from '../../../components/hub/SiloIndex.astro';
+import { hubsOfSilo } from '../../../lib/hubs/registry';
+
+const HREF = '/py/trabajo';
+const SILO = 'Trabajo';
+const LEDE =
+  'Sueldo neto, horas extras, aguinaldo, vacaciones, liquidación final y aportes al IPS, resueltos con el salario mínimo vigente y el artículo del Código del Trabajo que aplica en cada caso.';
+const hubs = hubsOfSilo(HREF);
+const CANONICAL = `https://hacecuentas.com${HREF}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `${SILO} en Paraguay`,
+  description: LEDE,
+  url: CANONICAL,
+  hasPart: hubs.map((h) => ({
+    '@type': 'WebPage',
+    name: h.h1,
+    url: `https://hacecuentas.com/${h.slug}`,
+  })),
+};
+---
+
+<Layout
+  title={`Trabajo y sueldos en Paraguay — calculadoras laborales | Hacé Cuentas`}
+  description={LEDE}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PY"
+  lang="es"
+>
+  <Header />
+  <SiloIndex silo={SILO} href={HREF} lede={LEDE} hubs={hubs} />
+  <Footer />
+</Layout>

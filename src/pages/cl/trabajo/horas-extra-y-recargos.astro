@@ -1,0 +1,313 @@
+---
+/**
+ * Hub de decisión CL — "¿Cuánto me tienen que pagar de más este mes?"
+ * Ruta bajo el prefijo /cl/, igual que las calculadoras que absorbe.
+ * audience="CL" va literal al Layout: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UF,
+  UTM,
+  TASAS,
+  TRAMOS_IUSC,
+  MULTAS_FERIADO_UTM,
+  JORNADA_VIGENTE,
+  JORNADA_ANTERIOR,
+  JORNADA_2028,
+} from '../../../lib/hubs/cl/horas-extra-y-recargos';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    UF,
+    UTM,
+    TASAS,
+    TRAMOS: TRAMOS_IUSC,
+    MULTAS: MULTAS_FERIADO_UTM,
+    J42: JORNADA_VIGENTE,
+    J44: JORNADA_ANTERIOR,
+    J40: JORNADA_2028,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+    const pct = (n, d) => n.toLocaleString('es-CL', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+
+    // Valor de la hora ordinaria — método Dirección del Trabajo:
+    // (sueldo ÷ 30 × 28) ÷ (4 × jornada semanal). Con 42 h el divisor queda en 180.
+    function horaOrdinaria(sueldo, jornada) {
+      if (!(jornada > 0)) return 0;
+      return ((sueldo / 30) * 28) / (4 * jornada);
+    }
+
+    // Impuesto Único de Segunda Categoría — Art. 43 N°1 LIR, tramos mensuales en UTM.
+    function iusc(baseImponible) {
+      const baseUtm = UTM > 0 ? baseImponible / UTM : 0;
+      for (const t of TRAMOS) {
+        const hasta = t.hastaUtm === null ? Infinity : t.hastaUtm;
+        if (baseUtm <= hasta) {
+          return {
+            impuesto: Math.max(0, baseImponible * t.factor - t.rebajaUtm * UTM),
+            marginal: t.factor * 100,
+            baseUtm: baseUtm,
+          };
+        }
+      }
+      return { impuesto: 0, marginal: 0, baseUtm: baseUtm };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'extras';
+      const sueldo = Math.max(0, v.sueldo || 0);
+      const jornada = Math.max(1, Math.min(45, v.jornada || 42));
+      const horas = Math.max(0, v.horas || 0);
+      const recargo = Math.max(0, v.recargo != null ? v.recargo : 50);
+      const topeImponible = TASAS.topeAfpUf * UF;
+
+      const hOrd = horaOrdinaria(sueldo, jornada);
+
+      // ── Horas extra ─────────────────────────────────────────────────
+      if (id === 'extras') {
+        const hExtra = hOrd * (1 + recargo / 100);
+        const total = hExtra * horas;
+        const hExtra44 = horaOrdinaria(sueldo, J44) * (1 + recargo / 100);
+        return {
+          total: clp(total),
+          sub:
+            'Hora ordinaria ' + clp(hOrd) + ' · hora extra ' + clp(hExtra) +
+            ' (recargo ' + pct(recargo) + '%) · ' + pct(horas) + (horas === 1 ? ' hora' : ' horas') +
+            ' en el mes',
+          rows: [
+            { k: 'Sueldo base mensual', ref: 'Base del cálculo', v: sueldo },
+            { k: 'Divisor de la jornada', ref: 'Método DT: 30 ÷ 28 × 4 × jornada', v: (30 * 4 * jornada) / 28, format: 'unit', unit: 'horas/mes', decimals: 0 },
+            { k: 'Valor de la hora ordinaria', ref: 'Sueldo ÷ 30 × 28 ÷ (4 × ' + pct(jornada) + ')', v: hOrd },
+            { k: 'Recargo aplicado', ref: 'Mínimo legal 50% · Art. 32 CT', v: recargo, format: 'unit', unit: '%' },
+            { k: 'Valor de la hora extraordinaria', ref: 'Hora ordinaria × ' + (1 + recargo / 100).toLocaleString('es-CL'), v: hExtra },
+            { k: 'Cantidad de horas extra', ref: 'Máximo 2 por día · Art. 31 CT', v: horas, format: 'unit', unit: 'horas' },
+            { k: 'Total a pagar por horas extra', ref: 'Se paga con la remuneración del mes', v: total, extra: true },
+            { k: 'Lo mismo con la jornada anterior de 44 h', ref: 'Referencia Ley 21.561', v: hExtra44 * horas },
+          ],
+          chart: [
+            { label: 'Hora ordinaria', value: Math.round(hOrd), tone: 'main' },
+            { label: 'Hora extra (+' + pct(recargo) + '%)', value: Math.round(hExtra), tone: 'good' },
+          ],
+        };
+      }
+
+      // ── Efecto de la jornada de 42 horas ────────────────────────────
+      if (id === 'jornada42') {
+        const h42 = horaOrdinaria(sueldo, J42);
+        const h44 = horaOrdinaria(sueldo, J44);
+        const h40 = horaOrdinaria(sueldo, J40);
+        const alza = h44 > 0 ? (h42 / h44 - 1) * 100 : 0;
+        const alza40 = h44 > 0 ? (h40 / h44 - 1) * 100 : 0;
+        const extra42 = h42 * 1.5;
+        const extra44 = h44 * 1.5;
+        return {
+          total: clp(h42),
+          sub:
+            'Tu hora ordinaria con jornada de 42 h · subió ' +
+            alza.toLocaleString('es-CL', { maximumFractionDigits: 2 }) + '% respecto de las 44 h, sin que cambie tu sueldo',
+          rows: [
+            { k: 'Sueldo base mensual', ref: 'No puede bajar por la reducción · Ley 21.561', v: sueldo },
+            { k: 'Valor de la hora con 44 horas', ref: 'Hasta el 25-abr-2026', v: h44 },
+            { k: 'Valor de la hora con 42 horas', ref: 'Desde el 26-abr-2026', v: h42, extra: true },
+            { k: 'Cuánto subió tu hora', ref: '42 h vs 44 h', v: alza, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Hora extra al 50% con 44 horas', ref: 'Art. 32 CT', v: extra44 },
+            { k: 'Hora extra al 50% con 42 horas', ref: 'Art. 32 CT', v: extra42 },
+            { k: 'Valor de la hora que tendrás con 40 horas', ref: 'Etapa final, abril 2028', v: h40 },
+            { k: 'Alza acumulada 44 → 40 horas', ref: 'Proyección Ley 21.561', v: alza40, format: 'unit', unit: '%', decimals: 2 },
+          ],
+          chart: [
+            { label: 'Hora con 44 h', value: Math.round(h44), tone: 'main' },
+            { label: 'Hora con 42 h', value: Math.round(h42), tone: 'good' },
+            { label: 'Hora con 40 h (2028)', value: Math.round(h40), tone: 'prop' },
+          ],
+        };
+      }
+
+      // ── Feriado irrenunciable trabajado ─────────────────────────────
+      if (id === 'feriado') {
+        const hFestivo = hOrd * 1.5;
+        const total = hFestivo * horas;
+        const multa = MULTAS.find((m) => m.id === v.empresa) || MULTAS[0];
+        const multaClp = multa.utm * UTM;
+        return {
+          total: clp(total),
+          sub:
+            'Por ' + pct(horas) + (horas === 1 ? ' hora' : ' horas') + ' en el feriado irrenunciable · hora recargada ' +
+            clp(hFestivo) + ' · multa referencial al empleador ' + clp(multaClp),
+          rows: [
+            { k: 'Sueldo base mensual', ref: 'Base del cálculo', v: sueldo },
+            { k: 'Valor de la hora ordinaria', ref: 'Método DT con jornada de ' + pct(jornada) + ' h', v: hOrd },
+            { k: 'Valor de la hora en feriado irrenunciable', ref: 'Se paga como extraordinaria · Art. 32 CT', v: hFestivo },
+            { k: 'Horas trabajadas ese día', ref: 'Ley 19.973', v: horas, format: 'unit', unit: 'horas' },
+            { k: 'Total que te deben por el festivo', ref: 'Con la remuneración del mes', v: total, extra: true },
+            { k: 'Multa referencial por trabajador afectado', ref: multa.utm + ' UTM · Art. 506 CT (rango)', v: multaClp },
+            { k: 'Diferencia respecto de un día normal', ref: 'Recargo del 50%', v: total - hOrd * horas },
+          ],
+          chart: [
+            { label: 'Hora ordinaria', value: Math.round(hOrd), tone: 'main' },
+            { label: 'Hora en feriado (+50%)', value: Math.round(hFestivo), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── Semana corrida ──────────────────────────────────────────────
+      if (id === 'semana-corrida') {
+        const variable = Math.max(0, v.variable || 0);
+        const dias = Math.max(0, v.diasTrabajados || 0);
+        const domingos = Math.max(0, v.domingos || 0);
+        const promedio = dias > 0 ? variable / dias : 0;
+        const semana = promedio * domingos;
+        return {
+          total: clp(semana),
+          sub:
+            dias > 0
+              ? 'Promedio diario ' + clp(promedio) + ' × ' + pct(domingos) +
+                (domingos === 1 ? ' domingo o festivo' : ' domingos y festivos') + ' del período'
+              : 'Pon los días efectivamente trabajados para calcular el promedio diario',
+          rows: [
+            { k: 'Remuneración variable del período', ref: 'Comisiones, trato o primas devengadas', v: variable },
+            { k: 'Días efectivamente trabajados', ref: 'Sin domingos ni festivos · Art. 45 CT', v: dias, format: 'unit', unit: 'días' },
+            { k: 'Promedio diario', ref: 'Variable ÷ días trabajados', v: promedio },
+            { k: 'Domingos y festivos del período', ref: 'Los que hay que pagarte', v: domingos, format: 'unit', unit: 'días' },
+            { k: 'Semana corrida que te corresponde', ref: 'Promedio × domingos y festivos', v: semana, extra: true },
+            { k: 'Total del período con semana corrida', ref: 'Variable + semana corrida', v: variable + semana },
+            {
+              k: 'Peso de la semana corrida sobre lo variable',
+              ref: 'Cuánto suma a tu liquidación',
+              v: variable > 0 ? (semana / variable) * 100 : 0,
+              format: 'unit',
+              unit: '%',
+              decimals: 1,
+            },
+          ],
+          chart: [
+            { label: 'Remuneración variable', value: Math.round(variable), tone: 'main' },
+            { label: 'Semana corrida', value: Math.round(semana), tone: 'good' },
+          ],
+        };
+      }
+
+      // ── Bono de cumplimiento ────────────────────────────────────────
+      const bonoBase = Math.max(0, v.bono || 0);
+      const cumpl = Math.max(0, Math.min(150, v.cumplimiento != null ? v.cumplimiento : 100));
+      const comAfp = Math.max(0, Math.min(3, v.comisionAfp != null ? v.comisionAfp : 1.27)) / 100;
+      const bonoBruto = bonoBase * (cumpl / 100);
+      const brutoTotal = sueldo + bonoBruto;
+      // Tope imponible de 90 UF (Art. 16 DL 3.500) — la fórmula vieja no lo aplicaba.
+      const imponible = Math.min(brutoTotal, topeImponible);
+      const afp = imponible * TASAS.afp;
+      const comision = imponible * comAfp;
+      const salud = imponible * TASAS.salud;
+      const cesantia = imponible * TASAS.cesantia;
+      const baseTributable = Math.max(0, brutoTotal - afp - comision - salud - cesantia);
+      const imp = iusc(baseTributable);
+      const descuentos = afp + comision + salud + cesantia + imp.impuesto;
+      const liquidoTotal = brutoTotal - descuentos;
+
+      // Cuánto del bono llega: el líquido con bono menos el líquido sin bono.
+      const impSin = (function () {
+        const imponibleSin = Math.min(sueldo, topeImponible);
+        const a = imponibleSin * TASAS.afp;
+        const c = imponibleSin * comAfp;
+        const s = imponibleSin * TASAS.salud;
+        const ce = imponibleSin * TASAS.cesantia;
+        const base = Math.max(0, sueldo - a - c - s - ce);
+        return sueldo - (a + c + s + ce + iusc(base).impuesto);
+      })();
+      const bonoLiquido = liquidoTotal - impSin;
+      const retencionBono = bonoBruto > 0 ? ((bonoBruto - bonoLiquido) / bonoBruto) * 100 : 0;
+
+      return {
+        total: clp(bonoLiquido),
+        sub:
+          'Lo que llega a tu cuenta del bono bruto de ' + clp(bonoBruto) +
+          ' (cumplimiento ' + pct(cumpl) + '%) · te retienen el ' +
+          retencionBono.toLocaleString('es-CL', { maximumFractionDigits: 1 }) +
+          '% · tramo marginal del Impuesto Único ' + pct(imp.marginal, 1) + '%',
+        rows: [
+          { k: 'Bono comprometido al 100%', ref: 'Según el plan de metas', v: bonoBase },
+          { k: 'Bono bruto ajustado por cumplimiento', ref: pct(cumpl) + '% de logro', v: bonoBruto },
+          { k: 'Remuneración bruta del mes', ref: 'Sueldo + bono', v: brutoTotal },
+          {
+            k: 'Renta imponible del mes',
+            ref: brutoTotal > topeImponible ? 'Topada en ' + TASAS.topeAfpUf + ' UF · Art. 16 DL 3.500' : 'Bajo el tope de ' + TASAS.topeAfpUf + ' UF',
+            v: imponible,
+          },
+          { k: 'AFP obligatoria', ref: '10% · DL 3.500', v: afp },
+          { k: 'Comisión de la AFP', ref: pct(comAfp * 100, 2) + '% de la administradora', v: comision },
+          { k: 'Salud', ref: '7% legal · Ley 18.469', v: salud },
+          { k: 'Seguro de cesantía', ref: '0,6% contrato indefinido · Ley 19.728', v: cesantia },
+          { k: 'Renta líquida imponible del impuesto', ref: 'Bruto menos cotizaciones', v: baseTributable },
+          {
+            k: 'Renta en UTM',
+            ref: 'UTM ' + clp(UTM),
+            v: imp.baseUtm,
+            format: 'unit',
+            unit: 'UTM',
+            decimals: 2,
+          },
+          { k: 'Impuesto Único de Segunda Categoría', ref: 'Art. 43 N°1 LIR', v: imp.impuesto },
+          { k: 'Total de descuentos del mes', ref: 'Cotizaciones + impuesto', v: descuentos },
+          { k: 'Líquido total del mes (sueldo + bono)', ref: 'Lo que llega a tu cuenta', v: liquidoTotal },
+          { k: 'Del bono, lo que efectivamente llega', ref: 'Líquido con bono − líquido sin bono', v: bonoLiquido, extra: true },
+        ],
+        chart: [
+          { label: 'Bono que llega a tu cuenta', value: Math.max(0, Math.round(bonoLiquido)), tone: 'main' },
+          { label: 'Cotizaciones sobre el bono', value: Math.max(0, Math.round(bonoBruto * (TASAS.afp + comAfp + TASAS.salud + TASAS.cesantia))), tone: 'prop' },
+          { label: 'Impuesto sobre el bono', value: Math.max(0, Math.round(bonoBruto - bonoLiquido - bonoBruto * (TASAS.afp + comAfp + TASAS.salud + TASAS.cesantia))), tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

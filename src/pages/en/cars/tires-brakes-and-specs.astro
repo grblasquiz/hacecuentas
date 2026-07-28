@@ -1,0 +1,292 @@
+---
+/**
+ * Hub EN — "What do the numbers on my car's stickers actually mean?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  NM_PER_LBFT,
+  NM_PER_KGFM,
+  PSI_PER_BAR,
+  G_N,
+  M_PER_INCH,
+  M_PER_FT,
+  MPS_PER_MPH,
+  KG_PER_LB,
+  CCA_PER_LITER,
+  CCA_DIESEL_FACTOR,
+  CCA_HEADROOM,
+  FRICTION,
+} from '../../../lib/hubs/en/tires-brakes-and-specs';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    NM_PER_LBFT,
+    NM_PER_KGFM,
+    PSI_PER_BAR,
+    G_N,
+    M_PER_INCH,
+    M_PER_FT,
+    MPS_PER_MPH,
+    KG_PER_LB,
+    CCA_PER_LITER,
+    CCA_DIESEL_FACTOR,
+    CCA_HEADROOM,
+    FRICTION,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(x || 0).toLocaleString('en-US');
+    /** Peso medio de un ocupante adulto, FMVSS/SAE: 150 lb por plaza. */
+    const OCCUPANT_LB = 150;
+    /** Largo de auto de referencia para expresar la distancia de frenado. */
+    const CAR_LENGTH_FT = 15;
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'tiresize';
+
+      if (id === 'pressure') {
+        const raw = Math.max(0, v.pressure || 0);
+        const unit = String(v.punit || 'psi');
+        const bar = unit === 'psi' ? raw / PSI_PER_BAR : unit === 'kpa' ? raw / 100 : raw;
+        const psi = bar * PSI_PER_BAR;
+        const kpa = bar * 100;
+        let zone, tone;
+        if (psi < 28) { zone = 'below the normal passenger-car range — under-inflated'; tone = 'bad'; }
+        else if (psi <= 36) { zone = 'inside the normal passenger-car range'; tone = 'good'; }
+        else if (psi <= 45) { zone = 'the range for a loaded SUV or pickup'; tone = 'warn'; }
+        else { zone = 'high — check it against the door-jamb placard'; tone = 'bad'; }
+        // NHTSA: 8 psi de subinflado ≈ 3% de economía de combustible perdida.
+        const shortfall = Math.max(0, 33 - psi);
+        const rows = [
+          { k: 'Pressure in psi', ref: 'The unit US placards use', v: psi, format: 'unit', unit: 'psi', decimals: 1, extra: true },
+          { k: 'Pressure in bar', ref: '1 bar = 14.5038 psi (exact)', v: bar, format: 'unit', unit: 'bar', decimals: 2 },
+          { k: 'Pressure in kPa', ref: '1 bar = 100 kPa (exact)', v: kpa, format: 'unit', unit: 'kPa' },
+          { k: 'Gap to a typical 33 psi placard value', ref: shortfall > 0 ? 'You are below it' : 'At or above it', v: shortfall, format: 'unit', unit: 'psi', decimals: 1 },
+          { k: 'Approximate fuel economy lost at this level', ref: 'NHTSA: ~3% per 8 psi under-inflated', v: (shortfall / 8) * 3, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Pressure this reads on a 30°F colder morning', ref: '≈1 psi per 10°F', v: psi - 3, format: 'unit', unit: 'psi', decimals: 1 },
+        ];
+        return {
+          total: psi.toFixed(1) + ' psi',
+          sub:
+            bar.toFixed(2) + ' bar · ' + Math.round(kpa) + ' kPa — ' + zone +
+            ' · set it cold, and follow the door-jamb placard, not the sidewall maximum',
+          rows: rows,
+          chart: [
+            { label: 'Pressure you have (psi)', value: Math.round(psi * 10) / 10, tone: tone === 'good' ? 'good' : 'warn' },
+            { label: 'Gap to a 33 psi target', value: Math.round(shortfall * 10) / 10, tone: 'bad' },
+          ],
+        };
+      }
+
+      if (id === 'stopping') {
+        const mph = Math.max(1, v.speed || 1);
+        const mu = FRICTION[String(v.surface || 'dry')] || FRICTION.dry;
+        const tr = Math.max(0.1, v.reaction || 1);
+        const mps = mph * MPS_PER_MPH;
+        const reactM = mps * tr;
+        const brakeM = (mps * mps) / (2 * mu * G_N);
+        const totalM = reactM + brakeM;
+        const ft = (m) => m / M_PER_FT;
+        const rows = [
+          { k: 'Speed', ref: n0(mph) + ' mph', v: mps, format: 'unit', unit: 'm/s', decimals: 1 },
+          { k: 'Grip of the surface', ref: 'Coefficient of friction used', v: mu, format: 'plain', decimals: 2 },
+          { k: 'Reaction distance', ref: tr + ' s before you touch the brake', v: ft(reactM), format: 'unit', unit: 'ft' },
+          { k: 'Braking distance', ref: 'Grows with the square of speed', v: ft(brakeM), format: 'unit', unit: 'ft' },
+          { k: 'Total stopping distance', ref: 'Reaction plus braking', v: ft(totalM), format: 'unit', unit: 'ft', extra: true },
+          { k: 'That is how many car lengths', ref: '15 ft per car', v: ft(totalM) / CAR_LENGTH_FT, format: 'unit', unit: 'cars', decimals: 1 },
+          { k: 'Total at half this speed, for comparison', ref: 'Braking distance falls fourfold', v: ft(mps / 2 * tr + ((mps / 2) * (mps / 2)) / (2 * mu * G_N)), format: 'unit', unit: 'ft' },
+        ];
+        return {
+          total: n0(ft(totalM)) + ' ft',
+          sub:
+            n0(ft(reactM)) + ' ft reacting plus ' + n0(ft(brakeM)) + ' ft braking · about ' +
+            (ft(totalM) / CAR_LENGTH_FT).toFixed(1) + ' car lengths · halving your speed cuts the braking part to a quarter',
+          rows: rows,
+          chart: [
+            { label: 'Reaction distance (ft)', value: Math.round(ft(reactM)), tone: 'warn' },
+            { label: 'Braking distance (ft)', value: Math.round(ft(brakeM)), tone: 'bad' },
+          ],
+        };
+      }
+
+      if (id === 'payload') {
+        const gvwr = Math.max(0, v.gvwr || 0);
+        const curb = Math.max(0, v.curb || 0);
+        const people = Math.max(0, Math.round(v.people || 0));
+        const payload = Math.max(0, gvwr - curb);
+        const occupants = people * OCCUPANT_LB;
+        const cargo = Math.max(0, payload - occupants);
+        const rows = [
+          { k: 'GVWR from the placard', ref: 'Maximum the loaded truck may weigh', v: gvwr, format: 'unit', unit: 'lb' },
+          { k: 'Curb weight', ref: 'The truck empty, with fluids', v: curb, format: 'unit', unit: 'lb' },
+          { k: 'Total payload capacity', ref: 'GVWR minus curb weight', v: payload, format: 'unit', unit: 'lb', extra: true },
+          { k: 'Weight of ' + people + (people === 1 ? ' occupant' : ' occupants'), ref: '150 lb each', v: occupants, format: 'unit', unit: 'lb' },
+          { k: 'Cargo you can still load', ref: 'After the people are seated', v: cargo, format: 'unit', unit: 'lb', extra: true },
+          { k: 'Payload as a share of GVWR', ref: 'Payload ÷ GVWR', v: gvwr > 0 ? (payload / gvwr) * 100 : 0, format: 'unit', unit: '%', decimals: 1 },
+          { k: 'The same cargo figure in kilograms', ref: '1 lb = 0.45359237 kg (exact)', v: cargo * KG_PER_LB, format: 'unit', unit: 'kg' },
+        ];
+        return {
+          total: n0(cargo) + ' lb of cargo',
+          sub:
+            'Total payload ' + n0(payload) + ' lb, minus ' + n0(occupants) + ' lb of people · ' +
+            'a trailer’s tongue weight comes out of this same budget · your exact figure is on the yellow door-jamb sticker',
+          rows: rows,
+          chart: [
+            { label: 'Curb weight (lb)', value: Math.round(curb), tone: 'main' },
+            { label: 'Occupants (lb)', value: Math.round(occupants), tone: 'warn' },
+            { label: 'Cargo still available (lb)', value: Math.round(cargo), tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'battery') {
+        const liters = Math.max(0.1, v.displacement || 0.1);
+        const diesel = String(v.fuel || 'gas') === 'diesel';
+        const mult = diesel ? CCA_DIESEL_FACTOR : 1;
+        const min = liters * CCA_PER_LITER * mult;
+        const rec = min * CCA_HEADROOM;
+        const rows = [
+          { k: 'Displacement', ref: 'As entered', v: liters, format: 'unit', unit: 'L', decimals: 1 },
+          { k: 'CCA per litre applied', ref: diesel ? 'Diesel: doubled for compression ignition' : 'Gasoline baseline', v: CCA_PER_LITER * mult, format: 'unit', unit: 'CCA/L' },
+          { k: 'Minimum CCA', ref: 'Do not go below this', v: min, format: 'unit', unit: 'CCA', extra: true },
+          { k: 'Recommended CCA', ref: '20% headroom for cold starts', v: rec, format: 'unit', unit: 'CCA', extra: true },
+          { k: 'Headroom the recommendation buys', ref: 'Recommended minus minimum', v: rec - min, format: 'unit', unit: 'CCA' },
+          { k: 'Roughly what it delivers at 0°F', ref: 'Cold roughly halves usable output', v: rec / 2, format: 'unit', unit: 'CCA' },
+        ];
+        return {
+          total: n0(rec) + ' CCA',
+          sub:
+            'Never below ' + n0(min) + ' CCA for a ' + liters.toFixed(1) + ' L ' + (diesel ? 'diesel' : 'gasoline') +
+            ' · more CCA than specified is harmless, less is a January no-start · confirm against the owner’s manual and the group size that fits',
+          rows: rows,
+          chart: [
+            { label: 'Minimum CCA', value: Math.round(min), tone: 'warn' },
+            { label: 'Recommended headroom', value: Math.round(rec - min), tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'torque') {
+        const raw = Math.max(0, v.torque || 0);
+        const unit = String(v.tunit || 'lbft');
+        const nm = unit === 'lbft' ? raw * NM_PER_LBFT : unit === 'kgm' ? raw * NM_PER_KGFM : raw;
+        const lbft = nm / NM_PER_LBFT;
+        const kgm = nm / NM_PER_KGFM;
+        const rows = [
+          { k: 'In pound-feet', ref: '1 lb-ft = 1.3558179483314 N·m (exact)', v: lbft, format: 'unit', unit: 'lb-ft', decimals: 2, extra: true },
+          { k: 'In newton-metres', ref: 'SI unit', v: nm, format: 'unit', unit: 'N·m', decimals: 2, extra: true },
+          { k: 'In kilogram-metres', ref: '1 kg·m = 9.80665 N·m (exact)', v: kgm, format: 'unit', unit: 'kg·m', decimals: 2 },
+          { k: 'In inch-pounds', ref: '12 in-lb per lb-ft', v: lbft * 12, format: 'unit', unit: 'in-lb', decimals: 1 },
+          { k: 'Round trip back to the unit you entered', ref: 'Exact factors, so it closes on itself', v: unit === 'lbft' ? lbft : unit === 'kgm' ? kgm : nm, format: 'unit', unit: unit === 'lbft' ? 'lb-ft' : unit === 'kgm' ? 'kg·m' : 'N·m', decimals: 4 },
+        ];
+        return {
+          total: lbft.toFixed(1) + ' lb-ft',
+          sub:
+            nm.toFixed(1) + ' N·m · ' + kgm.toFixed(2) + ' kg·m · ' +
+            'use a calibrated torque wrench for the final pass and re-torque wheels after 50–100 miles',
+          rows: rows,
+          chart: [
+            { label: 'Value in lb-ft', value: Math.round(lbft * 10) / 10, tone: 'main' },
+            { label: 'Value in N·m', value: Math.round(nm * 10) / 10, tone: 'good' },
+          ],
+        };
+      }
+
+      // tiresize
+      const width = Math.max(1, v.width || 1);
+      const aspect = Math.max(1, v.aspect || 1);
+      const rim = Math.max(1, v.rim || 1);
+      const sidewallMm = (width * aspect) / 100;
+      const diamMm = rim * 25.4 + sidewallMm * 2;
+      const diamIn = diamMm / (M_PER_INCH * 1000);
+      const circM = (diamMm * Math.PI) / 1000;
+      const revPerMile = 1609.344 / circM;
+      const ref = Math.max(0, v.refdiam || 0);
+      const errPct = ref > 0 ? ((diamIn - ref) / ref) * 100 : 0;
+      const rows = [
+        { k: 'Sidewall height', ref: width + ' mm × ' + aspect + '%', v: sidewallMm, format: 'unit', unit: 'mm' },
+        { k: 'Overall diameter', ref: 'Rim plus two sidewalls', v: diamIn, format: 'unit', unit: 'in', decimals: 2, extra: true },
+        { k: 'Overall diameter in millimetres', ref: '1 in = 25.4 mm (exact)', v: diamMm, format: 'unit', unit: 'mm' },
+        { k: 'Rolling circumference', ref: 'π × diameter', v: circM / M_PER_FT, format: 'unit', unit: 'ft', decimals: 2 },
+        { k: 'Revolutions per mile', ref: '5,280 ft ÷ circumference', v: revPerMile, format: 'unit', unit: 'rev/mi' },
+        ref > 0
+          ? {
+              k: errPct >= 0 ? 'Speedometer reads LOW by' : 'Speedometer reads HIGH by',
+              ref: 'Against a ' + ref + ' in reference tire',
+              v: Math.abs(errPct),
+              format: 'unit',
+              unit: '%',
+              decimals: 2,
+              extra: true,
+            }
+          : { k: 'Speedometer check', ref: 'Enter the diameter you are replacing to compare', v: 0, format: 'plain' },
+        ref > 0
+          ? { k: 'Real speed when the needle says 60 mph', ref: 'Scaled by the diameter change', v: 60 * (diamIn / ref), format: 'unit', unit: 'mph', decimals: 1 }
+          : { k: 'Manufacturer tolerance on diameter change', ref: 'Beyond this, expect rubbing and ABS errors', v: 3, format: 'unit', unit: '%' },
+      ];
+      return {
+        total: diamIn.toFixed(2) + ' in',
+        sub:
+          width + '/' + aspect + ' R' + rim + ' · ' + Math.round(diamMm) + ' mm overall · ' +
+          n0(revPerMile) + ' revolutions per mile' +
+          (ref > 0
+            ? ' · ' + (Math.abs(errPct) > 3 ? 'OUTSIDE' : 'within') + ' the ±3% tolerance against your reference size'
+            : ' · enter your old size above to check the speedometer error'),
+        rows: rows,
+        chart: [
+          { label: 'Rim diameter (mm)', value: Math.round(rim * 25.4), tone: 'main' },
+          { label: 'Sidewalls, top and bottom (mm)', value: Math.round(sidewallMm * 2), tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

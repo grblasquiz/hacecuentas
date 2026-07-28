@@ -1,0 +1,430 @@
+---
+/**
+ * Hub de decisión CL — "¿Cuánta plata necesito al mes para vivir en Chile?"
+ * Ruta bajo el prefijo /cl/, igual que las calculadoras que absorbe.
+ * audience="CL" va literal al Layout: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UF,
+  IMM,
+  CBA,
+  CIUDADES,
+  HOGARES,
+  NIVELES,
+  ARRIENDO_BASE,
+  TRANSPORTE,
+  SALUD,
+  SERVICIOS_BASE,
+  MASCOTAS,
+  VET_CONSULTA,
+  VET_VISITAS_ANUALES,
+  PELUQUERIA_SESIONES_ANUALES,
+  VACUNA_ANUAL,
+  ASADO,
+  CARNES,
+  BEBIDAS,
+  PROPINA_SUGERIDA_PCT,
+  FUNERAL,
+  DERECHOS_CEMENTERIO,
+} from '../../../lib/hubs/cl/cuanto-cuesta-vivir';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    UF, IMM, CBA, CIUDADES, HOGARES, NIVELES, ARRIENDO_BASE, TRANSPORTE, SALUD,
+    SERVICIOS_BASE, MASCOTAS, VET_CONSULTA, VET_VISITAS_ANUALES,
+    PELUQUERIA_SESIONES_ANUALES, VACUNA_ANUAL, ASADO, CARNES, BEBIDAS,
+    PROPINA_SUGERIDA_PCT, FUNERAL, DERECHOS_CEMENTERIO,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+    const pick = (arr, id, def) => arr.find((x) => x.id === id) || arr[def || 0];
+
+    // ── Presupuesto mensual del hogar ────────────────────────────────────────
+    // Espejo de coste-vida-mensual-chile-soltero-pareja-familia.ts. Única
+    // diferencia deliberada: el tipo de vivienda ya no es un campo propio, se
+    // deriva del nivel de gasto (austero → depto periferia, medio → depto
+    // centro, acomodado → casa buena), y el arriendo puede pisarse con el real.
+    function presupuesto(v) {
+      const ciudad = pick(CIUDADES, v.ciudad, 0);
+      const hogar = pick(HOGARES, v.hogar, 0);
+      const nivel = pick(NIVELES, v.nivel, 1);
+      const coef = ciudad.coef;
+      const mf = hogar.mult;
+      const mn = nivel.mult;
+
+      const arriendoBase = ARRIENDO_BASE[nivel.vivienda] * (0.8 + 0.2 * mf);
+      const arriendoReal = Math.max(0, Number(v.arriendo) || 0);
+      const arriendo = arriendoReal > 0 ? arriendoReal : Math.round(arriendoBase * coef);
+
+      const alimentacion = Math.round(300000 * mf * mn * coef);
+      const transporte = Math.round((TRANSPORTE[v.auto] != null ? TRANSPORTE[v.auto] : 220000) * mn * coef);
+      const saludSel = pick(SALUD, v.salud, 1);
+      const salud = Math.round(saludSel.base * (0.9 + 0.1 * mf) * coef);
+      const servicios = Math.round(SERVICIOS_BASE * (0.85 + 0.15 * mf) * mn * coef);
+      const ocio = Math.round(nivel.ocio * (0.85 + 0.15 * mf) * coef);
+      const otros = Math.round(nivel.otros * mf * mn * coef);
+
+      const total = arriendo + alimentacion + transporte + salud + servicios + ocio + otros;
+      return { ciudad, hogar, nivel, arriendo, arriendoEstimado: arriendoReal === 0, alimentacion, transporte, salud, servicios, ocio, otros, total };
+    }
+
+    // ── Canasta básica del hogar ─────────────────────────────────────────────
+    function canasta(v) {
+      const hogar = pick(HOGARES, v.hogar, 0);
+      const porAdulto = Math.max(0, Number(v.cbaAdulto) || CBA.adulto);
+      const personas = hogar.adultos + hogar.adolescentes + hogar.ninos + hogar.menores;
+      const cbaAdultos = hogar.adultos * porAdulto;
+      const cbaAdolescentes = hogar.adolescentes * porAdulto * CBA.pesoAdolescente;
+      const cbaNinos = hogar.ninos * porAdulto * CBA.pesoNino;
+      const cbaMenores = hogar.menores * porAdulto * CBA.pesoMenor;
+      const cba = cbaAdultos + cbaAdolescentes + cbaNinos + cbaMenores;
+      const cbt = cba * CBA.factorCbt;
+      const ingreso = Math.max(0, Number(v.ingreso) || 0);
+      return {
+        hogar, personas, porAdulto,
+        cbaAdultos, cbaAdolescentes, cbaNinos, cbaMenores,
+        cba, cbt,
+        porPersona: personas > 0 ? cba / personas : 0,
+        margen: cba * 1.15,
+        pctIngreso: ingreso > 0 ? (cba / ingreso) * 100 : 0,
+        ingresoPerCapita: personas > 0 ? ingreso / personas : 0,
+        lineaPerCapita: personas > 0 ? cbt / personas : 0,
+        ingreso,
+      };
+    }
+
+    // ── Canasta de la mascota ────────────────────────────────────────────────
+    function mascota(v) {
+      const m = pick(MASCOTAS, v.mascota, 0);
+      const premium = v.nivel === 'alto';
+      const comida = premium ? m.comidaPremium : m.comidaStandard;
+      const vetMes = (VET_CONSULTA * VET_VISITAS_ANUALES) / 12;
+      const peluMes = (m.peluqueria * PELUQUERIA_SESIONES_ANUALES) / 12;
+      const totalMes = m.id === 'ninguna' ? 0 : comida + vetMes + peluMes;
+      const esterilizacion = m.id === 'ninguna' || v.esterilizada === 'si' ? 0 : m.esterilizacion;
+      const vacuna = m.id === 'ninguna' ? 0 : VACUNA_ANUAL;
+      return {
+        m, premium, comida,
+        vetMes: m.id === 'ninguna' ? 0 : vetMes,
+        peluMes: m.id === 'ninguna' ? 0 : peluMes,
+        totalMes,
+        anualBase: totalMes * 12,
+        vacuna,
+        esterilizacion,
+        primerAnio: totalMes * 12 + vacuna + esterilizacion,
+      };
+    }
+
+    // ── Evento: asado, bebidas y propina ─────────────────────────────────────
+    function evento(v) {
+      const adultos = Math.max(0, Math.round(Number(v.invitados) || 0));
+      const menores = Math.max(0, Math.round(Number(v.menores) || 0));
+      const personas = Math.max(1, adultos + menores);
+      const horas = Math.max(1, Math.round(Number(v.horasEvento) || 6));
+      const carne = pick(CARNES, v.carne, 1);
+
+      // Carne: kilos redondeados hacia arriba al medio kilo (espejo de la fórmula).
+      const kgCarne = Math.ceil(((adultos * ASADO.gramosAdulto + menores * ASADO.gramosMenor) / 1000) * 2) / 2;
+      const longanizas = Math.ceil(adultos + menores * 0.5);
+      const kgCarbon = Math.ceil(personas * ASADO.carbonPorPersonaKg);
+      const costoCarneSola = kgCarne * carne.precioKg;
+      const costoLonganizas = longanizas * ASADO.precioLonganiza;
+      const costoCarbon = kgCarbon * ASADO.precioCarbonKg;
+      const costoCarne = Math.round(costoCarneSola + costoLonganizas + costoCarbon);
+      const costoBebidas = adultos * ASADO.bebidaAdulto + menores * ASADO.bebidaMenor;
+      const costoAcomp = personas * ASADO.acompanamientoPersona;
+      const total = costoCarne + costoBebidas + costoAcomp;
+
+      // Litros de bebida: 0,35 L de alcohol y 0,25 L sin alcohol por persona y hora,
+      // con decaimiento del 30% por hora después de la cuarta.
+      const horasEfectivas = horas <= BEBIDAS.decaimientoDespuesDeHoras
+        ? horas
+        : BEBIDAS.decaimientoDespuesDeHoras + (horas - BEBIDAS.decaimientoDespuesDeHoras) * BEBIDAS.factorDecaimiento;
+      const litrosAlcohol = adultos * BEBIDAS.alcoholPersonaHora * horasEfectivas;
+      const litrosSinAlcohol = personas * BEBIDAS.sinAlcoholPersonaHora * horasEfectivas;
+
+      // Propina sugerida del 10% (Ley 21.442) si en vez de asado salen a comer.
+      const cuenta = Math.max(0, Number(v.cuenta) || 0);
+      const propina = Math.round(cuenta * PROPINA_SUGERIDA_PCT / 100);
+      const porPersonaRestaurante = Math.ceil((cuenta + propina) / personas);
+
+      return {
+        adultos, menores, personas, horas, carne, kgCarne, longanizas, kgCarbon,
+        costoCarneSola, costoLonganizas, costoCarbon, costoCarne, costoBebidas, costoAcomp,
+        total, porCabeza: Math.round(total / personas),
+        litrosAlcohol, litrosSinAlcohol, litrosTotales: litrosAlcohol + litrosSinAlcohol,
+        cuenta, propina, porPersonaRestaurante,
+      };
+    }
+
+    // ── Valor de tu hora ─────────────────────────────────────────────────────
+    function valorHora(v) {
+      const ingreso = Math.max(0, Number(v.ingreso) || 0);
+      const horasSemana = Math.max(1, Number(v.horasSemana) || 44);
+      // 52 semanas al año menos 3 de vacaciones y feriados = 49 semanas efectivas.
+      const semanas = 49;
+      const horasAnuales = horasSemana * semanas;
+      const hora = horasAnuales > 0 ? (ingreso * 12) / horasAnuales : 0;
+      // Hora del ingreso mínimo con la MISMA jornada, para que la comparación
+      // sea entre iguales (la fórmula vieja la fijaba en 40 h y sobreestimaba).
+      const horaMinimo = (IMM * 12) / (horasSemana * semanas);
+      return {
+        ingreso, horasSemana, horasAnuales, hora,
+        minuto: hora / 60,
+        enUf: UF > 0 ? hora / UF : 0,
+        horaMinimo,
+        vsMinimo: horaMinimo > 0 ? (hora / horaMinimo) * 100 : 0,
+      };
+    }
+
+    // ── Funeral ──────────────────────────────────────────────────────────────
+    function funeral(v) {
+      const f = pick(FUNERAL, v.funeral, 1);
+      const ciudad = pick(CIUDADES, v.ciudad, 0);
+      // El ajuste regional del servicio funerario es más plano que el del costo
+      // de vida general: tabla propia, espejo de la fórmula original.
+      const ajuste = ciudad.coefFuneral;
+      const servicio = f.base * ajuste;
+      const derechos = (DERECHOS_CEMENTERIO[v.cementerio] != null ? DERECHOS_CEMENTERIO[v.cementerio] : DERECHOS_CEMENTERIO.publico) * ajuste;
+      const total = servicio + derechos;
+      // Cuota mortuoria: tope de 15 UF, reembolso contra factura del servicio.
+      const cuotaMortuoria = Math.min(total, 15 * UF);
+      return {
+        f, ajuste, servicio, derechos, total,
+        min: total * 0.85, max: total * 1.15,
+        cuotaMortuoria, neto: Math.max(0, total - cuotaMortuoria),
+      };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'presupuesto';
+      const rows = [];
+      let total, sub, chart;
+
+      if (id === 'canasta') {
+        const c = canasta(v);
+        rows.push({ k: 'Personas en el hogar', ref: c.hogar.nombre, v: c.personas, format: 'unit', unit: 'personas' });
+        rows.push({ k: 'Canasta alimentaria por adulto', ref: 'Valor per cápita de referencia', v: c.porAdulto });
+        if (c.cbaAdultos > 0) rows.push({ k: 'Adultos', ref: c.hogar.adultos + ' × 100%', v: c.cbaAdultos });
+        if (c.cbaAdolescentes > 0) rows.push({ k: 'Adolescentes', ref: c.hogar.adolescentes + ' × 85%', v: c.cbaAdolescentes });
+        if (c.cbaNinos > 0) rows.push({ k: 'Niños', ref: c.hogar.ninos + ' × 60%', v: c.cbaNinos });
+        if (c.cbaMenores > 0) rows.push({ k: 'Menores', ref: c.hogar.menores + ' × 45%', v: c.cbaMenores });
+        rows.push({ k: 'Canasta básica alimentaria del hogar', ref: 'Sólo alimentación', v: c.cba, extra: true });
+        rows.push({ k: 'Canasta básica por persona', ref: 'Alimentación per cápita', v: c.porPersona });
+        rows.push({ k: 'Con un margen de seguridad del 15%', ref: 'Para desviaciones de precio', v: c.margen });
+        rows.push({ k: 'Canasta básica total (línea de pobreza)', ref: 'Aproximadamente 2× la alimentaria', v: c.cbt, extra: true });
+        rows.push({ k: 'Línea de pobreza per cápita', ref: 'Ministerio de Desarrollo Social', v: c.lineaPerCapita });
+        if (c.ingreso > 0) {
+          rows.push({ k: 'Ingreso per cápita de tu hogar', ref: 'Ingreso líquido ÷ personas', v: c.ingresoPerCapita });
+          rows.push({ k: 'Porcentaje del ingreso que se va en comer', ref: 'Canasta alimentaria ÷ ingreso', v: c.pctIngreso, format: 'unit', unit: '%', decimals: 1 });
+          rows.push({ k: c.ingresoPerCapita >= c.lineaPerCapita ? 'Margen sobre la línea de pobreza' : 'Brecha bajo la línea de pobreza', ref: 'Per cápita', v: Math.abs(c.ingresoPerCapita - c.lineaPerCapita), extra: true });
+        }
+        total = clp(c.cbt);
+        sub = 'Alimentar a ' + c.personas + (c.personas === 1 ? ' persona' : ' personas') + ' cuesta ' + clp(c.cba) +
+          ' al mes; la línea de pobreza del hogar son ' + clp(c.cbt) +
+          (c.ingreso > 0
+            ? (c.ingresoPerCapita >= c.lineaPerCapita
+              ? ' · tu hogar está sobre la línea, con ' + clp(c.ingresoPerCapita - c.lineaPerCapita) + ' per cápita de margen'
+              : ' · tu hogar está bajo la línea por ' + clp(c.lineaPerCapita - c.ingresoPerCapita) + ' per cápita')
+            : ' · suma tu ingreso para ver de qué lado de la línea caes');
+        chart = [
+          { label: 'Adultos', value: Math.round(c.cbaAdultos), tone: 'main' },
+          { label: 'Adolescentes', value: Math.round(c.cbaAdolescentes), tone: 'prop' },
+          { label: 'Niños', value: Math.round(c.cbaNinos), tone: 'good' },
+          { label: 'Menores', value: Math.round(c.cbaMenores), tone: 'warn' },
+          { label: 'Resto de la canasta total', value: Math.round(c.cbt - c.cba), tone: 'exit' },
+        ].filter((s) => s.value > 0);
+
+      } else if (id === 'mascota') {
+        const m = mascota(v);
+        rows.push({ k: 'Comida — ' + m.m.nombre, ref: m.premium ? 'Alimento premium' : 'Alimento estándar', v: m.comida });
+        rows.push({ k: 'Veterinario prorrateado', ref: VET_VISITAS_ANUALES + ' consultas al año de ' + clp(VET_CONSULTA), v: m.vetMes });
+        rows.push({ k: 'Peluquería prorrateada', ref: PELUQUERIA_SESIONES_ANUALES + ' sesiones al año', v: m.peluMes });
+        rows.push({ k: 'Gasto mensual de la mascota', ref: 'Rutina, sin urgencias', v: m.totalMes, extra: true });
+        rows.push({ k: 'Gasto anual de rutina', ref: 'Mensual × 12', v: m.anualBase });
+        if (m.vacuna > 0) rows.push({ k: 'Vacuna de refuerzo anual', ref: 'Una vez al año', v: m.vacuna });
+        if (m.esterilizacion > 0) rows.push({ k: 'Esterilización pendiente', ref: 'Pago único', v: m.esterilizacion });
+        rows.push({ k: 'Costo del primer año', ref: 'Rutina más vacuna y esterilización', v: m.primerAnio, extra: true });
+        if (m.totalMes > 0) {
+          rows.push({ k: 'Peso de la comida en el gasto', ref: 'Comida ÷ total mensual', v: (m.comida / m.totalMes) * 100, format: 'unit', unit: '%', decimals: 1 });
+        }
+        total = clp(m.totalMes);
+        sub = m.m.id === 'ninguna'
+          ? 'Elige una mascota en el formulario para ver su canasta mensual'
+          : m.m.nombre + ': ' + clp(m.totalMes) + ' al mes de rutina · ' + clp(m.primerAnio) + ' el primer año contando vacuna' + (m.esterilizacion > 0 ? ' y esterilización' : '') + ' · las urgencias van aparte';
+        chart = [
+          { label: 'Comida', value: Math.round(m.comida), tone: 'main' },
+          { label: 'Veterinario', value: Math.round(m.vetMes), tone: 'prop' },
+          { label: 'Peluquería', value: Math.round(m.peluMes), tone: 'exit' },
+        ].filter((s) => s.value > 0);
+
+      } else if (id === 'evento') {
+        const e = evento(v);
+        rows.push({ k: 'Invitados', ref: e.adultos + ' adultos y ' + e.menores + ' menores', v: e.personas, format: 'unit', unit: 'personas' });
+        rows.push({ k: 'Carne a comprar', ref: '450 g por adulto, 220 g por menor', v: e.kgCarne, format: 'unit', unit: 'kg', decimals: 1 });
+        rows.push({ k: 'Carne — ' + e.carne.nombre, ref: clp(e.carne.precioKg) + ' el kilo', v: e.costoCarneSola });
+        rows.push({ k: 'Longanizas', ref: e.longanizas + ' unidades a ' + clp(ASADO.precioLonganiza), v: e.costoLonganizas });
+        rows.push({ k: 'Carbón', ref: e.kgCarbon + ' kg · 0,7 kg por persona', v: e.costoCarbon });
+        rows.push({ k: 'Bebidas', ref: clp(ASADO.bebidaAdulto) + ' por adulto, ' + clp(ASADO.bebidaMenor) + ' por menor', v: e.costoBebidas });
+        rows.push({ k: 'Acompañamientos', ref: 'Pan amasado, ensalada, pebre y papas', v: e.costoAcomp });
+        rows.push({ k: 'Total del asado', ref: 'Todo incluido', v: e.total, extra: true });
+        rows.push({ k: 'Costo por cabeza si dividen la cuenta', ref: 'Total ÷ ' + e.personas, v: e.porCabeza, extra: true });
+        rows.push({ k: 'Litros de bebida alcohólica a comprar', ref: '0,35 L por adulto y hora, ' + e.horas + ' h', v: e.litrosAlcohol, format: 'unit', unit: 'L', decimals: 1 });
+        rows.push({ k: 'Litros de bebida sin alcohol y agua', ref: '0,25 L por persona y hora', v: e.litrosSinAlcohol, format: 'unit', unit: 'L', decimals: 1 });
+        rows.push({ k: 'Compra total de bebida (suma un 10% de colchón)', ref: 'Alcohol más sin alcohol', v: e.litrosTotales * 1.1, format: 'unit', unit: 'L', decimals: 1 });
+        if (e.cuenta > 0) {
+          rows.push({ k: 'Si en vez de asado salen a comer — cuenta', ref: 'Consumo sin propina', v: e.cuenta });
+          rows.push({ k: 'Propina sugerida del 10%', ref: 'Ley 21.442 · voluntaria', v: e.propina });
+          rows.push({ k: 'Cuánto pone cada uno en el restaurante', ref: 'Redondeado hacia arriba', v: e.porPersonaRestaurante });
+        }
+        total = clp(e.total);
+        sub = 'Asado para ' + e.personas + ': ' + clp(e.total) + ' en total, ' + clp(e.porCabeza) +
+          ' por cabeza · necesitas ' + e.kgCarne.toLocaleString('es-CL') + ' kg de carne, ' + e.kgCarbon +
+          ' kg de carbón y unos ' + Math.ceil(e.litrosTotales * 1.1) + ' litros de bebida';
+        chart = [
+          { label: 'Carne, longaniza y carbón', value: e.costoCarne, tone: 'main' },
+          { label: 'Bebidas', value: e.costoBebidas, tone: 'prop' },
+          { label: 'Acompañamientos', value: e.costoAcomp, tone: 'good' },
+        ].filter((s) => s.value > 0);
+
+      } else if (id === 'hora') {
+        const h = valorHora(v);
+        const p = presupuesto(v);
+        rows.push({ k: 'Ingreso líquido mensual', ref: 'Lo que llega a la cuenta', v: h.ingreso });
+        rows.push({ k: 'Horas trabajadas al año', ref: h.horasSemana + ' h por semana × 49 semanas', v: h.horasAnuales, format: 'plain' });
+        rows.push({ k: 'Valor de tu hora', ref: 'Ingreso anual ÷ horas del año', v: h.hora, extra: true });
+        rows.push({ k: 'Valor de tu minuto', ref: 'Hora ÷ 60', v: h.minuto });
+        rows.push({ k: 'Valor de tu hora en UF', ref: 'UF de hoy ' + clp(UF), v: h.enUf, format: 'unit', unit: 'UF', decimals: 4 });
+        rows.push({ k: 'Hora del ingreso mínimo', ref: clp(IMM) + ' con tu misma jornada · Ley 21.830', v: h.horaMinimo });
+        rows.push({ k: 'Tu hora comparada con la del mínimo', ref: '100% = igual al ingreso mínimo', v: h.vsMinimo, format: 'unit', unit: '%', decimals: 0 });
+        rows.push({ k: 'Horas de tu vida que cuesta el arriendo', ref: clp(p.arriendo) + ' al mes', v: h.hora > 0 ? p.arriendo / h.hora : 0, format: 'unit', unit: 'horas', decimals: 1 });
+        rows.push({ k: 'Horas que cuesta la comida del mes', ref: clp(p.alimentacion) + ' al mes', v: h.hora > 0 ? p.alimentacion / h.hora : 0, format: 'unit', unit: 'horas', decimals: 1 });
+        rows.push({ k: 'Horas que cuesta el transporte del mes', ref: clp(p.transporte) + ' al mes', v: h.hora > 0 ? p.transporte / h.hora : 0, format: 'unit', unit: 'horas', decimals: 1 });
+        rows.push({ k: 'Umbral para delegar una tarea', ref: 'Conviene pagar por debajo de la mitad de tu hora', v: h.hora * 0.5 });
+        total = clp(h.hora);
+        sub = 'Tu hora vale ' + clp(h.hora) + ' (' + clp(h.minuto) + ' el minuto, ' +
+          h.enUf.toFixed(4).replace('.', ',') + ' UF) · es ' + h.vsMinimo.toFixed(0) +
+          '% de la hora del ingreso mínimo con tu misma jornada';
+        chart = [
+          { label: 'Arriendo', value: Math.round(h.hora > 0 ? p.arriendo / h.hora : 0), tone: 'bad' },
+          { label: 'Comida', value: Math.round(h.hora > 0 ? p.alimentacion / h.hora : 0), tone: 'warn' },
+          { label: 'Transporte', value: Math.round(h.hora > 0 ? p.transporte / h.hora : 0), tone: 'prop' },
+          { label: 'Resto del presupuesto', value: Math.round(h.hora > 0 ? (p.total - p.arriendo - p.alimentacion - p.transporte) / h.hora : 0), tone: 'main' },
+        ].filter((s) => s.value > 0);
+
+      } else if (id === 'funeral') {
+        const f = funeral(v);
+        rows.push({ k: 'Servicio — ' + f.f.nombre, ref: 'Ajuste regional ×' + f.ajuste.toFixed(2).replace('.', ','), v: f.servicio });
+        rows.push({ k: 'Derechos de cementerio', ref: v.cementerio === 'privado' ? 'Parque privado, perpetuidad' : 'Cementerio municipal', v: f.derechos });
+        rows.push({ k: 'Costo total del funeral', ref: 'Servicio más derechos', v: f.total, extra: true });
+        rows.push({ k: 'Piso del rango entre funerarias', ref: '−15% respecto del promedio', v: f.min });
+        rows.push({ k: 'Techo del rango entre funerarias', ref: '+15% respecto del promedio', v: f.max });
+        rows.push({ k: 'Cuota mortuoria que puedes recuperar', ref: 'Tope de 15 UF · AFP o IPS, contra factura', v: f.cuotaMortuoria });
+        rows.push({ k: 'Tope legal de la cuota mortuoria en UF', ref: 'UF de hoy ' + clp(UF), v: 15, format: 'unit', unit: 'UF', decimals: 0 });
+        rows.push({ k: 'Costo neto después de la cuota mortuoria', ref: 'Lo que sale del bolsillo', v: f.neto, extra: true });
+        const cremacionBasica = FUNERAL[0].base * f.ajuste + f.derechos;
+        if (f.total > cremacionBasica) {
+          rows.push({ k: 'Ahorro si eliges cremación básica', ref: 'Contra la modalidad elegida', v: f.total - cremacionBasica });
+        }
+        total = clp(f.total);
+        sub = f.f.nombre + ': ' + clp(f.total) + ' en total (rango ' + clp(f.min) + ' a ' + clp(f.max) +
+          ' según funeraria) · la cuota mortuoria devuelve hasta ' + clp(f.cuotaMortuoria) +
+          ', así que del bolsillo salen ' + clp(f.neto);
+        chart = [
+          { label: 'Servicio funerario', value: Math.round(f.servicio), tone: 'main' },
+          { label: 'Derechos de cementerio', value: Math.round(f.derechos), tone: 'prop' },
+        ].filter((s) => s.value > 0);
+
+      } else {
+        const p = presupuesto(v);
+        const ingreso = Math.max(0, Number(v.ingreso) || 0);
+        rows.push({ k: 'Arriendo', ref: p.arriendoEstimado ? 'Estimado para ' + p.ciudad.nombre : 'El que declaraste', v: p.arriendo, extra: true });
+        rows.push({ k: 'Alimentación', ref: 'Supermercado y feria del hogar', v: p.alimentacion });
+        rows.push({ k: 'Transporte', ref: v.auto === 'no' ? 'Sólo transporte público' : v.auto === 'dos' ? 'Dos autos más público' : 'Un auto más público', v: p.transporte });
+        rows.push({ k: 'Salud de bolsillo', ref: pick(SALUD, v.salud, 1).nombre, v: p.salud });
+        rows.push({ k: 'Servicios básicos', ref: 'Luz, agua, gas, internet y telefonía', v: p.servicios });
+        rows.push({ k: 'Ocio y cultura', ref: p.nivel.nombre, v: p.ocio });
+        rows.push({ k: 'Otros gastos', ref: 'Vestuario, higiene y hogar', v: p.otros });
+        rows.push({ k: 'Gasto total del mes', ref: p.hogar.nombre + ' en ' + p.ciudad.nombre, v: p.total, extra: true });
+        rows.push({ k: 'Índice de costo de vida de tu ciudad', ref: 'Santiago = 1,00', v: p.ciudad.coef, format: 'plain', decimals: 2 });
+        rows.push({ k: 'Ahorro recomendado, piso del 10%', ref: 'Sobre el gasto total', v: p.total * 0.1 });
+        rows.push({ k: 'Ahorro recomendado, techo del 20%', ref: 'Sobre el gasto total', v: p.total * 0.2 });
+        rows.push({ k: 'Fondo de emergencia sugerido', ref: 'Seis meses de gasto', v: p.total * 6 });
+        rows.push({ k: 'Gasto medido en ingresos mínimos', ref: 'Ingreso mínimo ' + clp(IMM), v: p.total / IMM, format: 'unit', unit: 'ingresos mínimos', decimals: 2 });
+        if (ingreso > 0) {
+          rows.push({ k: 'Ingreso líquido del hogar', ref: 'Lo que declaraste', v: ingreso });
+          rows.push({ k: ingreso >= p.total ? 'Te sobra al mes' : 'Te falta al mes', ref: 'Ingreso menos gasto', v: Math.abs(ingreso - p.total), extra: true });
+          rows.push({ k: 'Gasto como porcentaje del ingreso', ref: 'Gasto ÷ ingreso', v: (p.total / ingreso) * 100, format: 'unit', unit: '%', decimals: 1 });
+        }
+        total = clp(p.total);
+        sub = 'Vivir en ' + p.ciudad.nombre + ' con este perfil cuesta ' + clp(p.total) + ' al mes · el arriendo se lleva ' +
+          Math.round((p.arriendo / p.total) * 100) + '% del presupuesto' +
+          (ingreso > 0
+            ? (ingreso >= p.total ? ' · con tu ingreso te sobran ' + clp(ingreso - p.total) : ' · con tu ingreso te faltan ' + clp(p.total - ingreso))
+            : ' · suma tu ingreso para ver si cierra');
+        chart = [
+          { label: 'Arriendo', value: p.arriendo, tone: 'main' },
+          { label: 'Alimentación', value: p.alimentacion, tone: 'prop' },
+          { label: 'Transporte', value: p.transporte, tone: 'exit' },
+          { label: 'Salud', value: p.salud, tone: 'good' },
+          { label: 'Servicios', value: p.servicios, tone: 'warn' },
+          { label: 'Ocio', value: p.ocio, tone: 'bad' },
+          { label: 'Otros', value: p.otros, tone: 'prop' },
+        ].filter((s) => s.value > 0);
+      }
+
+      return { total: total, sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

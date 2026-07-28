@@ -1,0 +1,250 @@
+---
+/**
+ * Hub de decisión DO — "¿A dónde se te va el sueldo cada mes?".
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  LUZ,
+  RENDIMIENTO_KM_GALON,
+  UTILES_ANUAL_POR_HIJO,
+  SUPERATE,
+  SALARIO_MINIMO_REF,
+  PCT_MINIMO_TARJETA,
+} from '../../../lib/hubs/do/presupuesto-del-hogar';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="DO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    LUZ,
+    RENDIMIENTO_KM_GALON,
+    UTILES_ANUAL_POR_HIJO,
+    SUPERATE,
+    SALARIO_MINIMO_REF,
+    PCT_MINIMO_TARJETA,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const dop = (n) => 'RD$ ' + Math.round(n || 0).toLocaleString('de-DE');
+
+    /** Factura de luz por bloques escalonados + cargo fijo + ITBIS sobre el umbral. */
+    function facturaLuz(kwh) {
+      let prev = 0;
+      let energia = 0;
+      for (const b of LUZ.bloques) {
+        const hasta = b.hasta === null ? Infinity : b.hasta;
+        const enBloque = Math.max(0, Math.min(kwh, hasta) - prev);
+        if (enBloque > 0) energia += enBloque * b.precio;
+        prev = hasta;
+        if (kwh <= hasta) break;
+      }
+      const subtotal = energia + LUZ.cargoFijo;
+      const itbis = kwh > LUZ.umbralItbis ? subtotal * LUZ.itbis : 0;
+      return { energia: energia, cargoFijo: LUZ.cargoFijo, itbis: itbis, total: subtotal + itbis };
+    }
+
+    /** Meses hasta saldar la tarjeta pagando sólo el mínimo (% del capital + interés). */
+    function mesesPagoMinimo(saldo, tasaMensual) {
+      let s = saldo;
+      let meses = 0;
+      let intereses = 0;
+      while (s > 0.01 && meses < 600) {
+        meses++;
+        const interes = s * tasaMensual;
+        const pago = s * PCT_MINIMO_TARJETA + interes;
+        intereses += interes;
+        s = s + interes - pago;
+      }
+      return { meses: meses, intereses: intereses };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'unico';
+      const ingresoBase = Math.max(0, v.ingreso || 0);
+      const vivienda = Math.max(0, v.vivienda || 0);
+      const alimentos = Math.max(0, v.alimentos || 0);
+      const kwh = Math.max(0, v.consumoKwh || 0);
+      const km = Math.max(0, v.kmMes || 0);
+      const precioGalon = Math.max(0, v.precioGalon || 0);
+      const saldoTarjeta = Math.max(0, v.saldoTarjeta || 0);
+      const tasaTarjeta = Math.max(0, v.tasaTarjeta || 0);
+      const hijos = Math.max(0, Math.floor(v.hijosEscuela || 0));
+
+      const luz = facturaLuz(kwh);
+      const galones = RENDIMIENTO_KM_GALON > 0 ? km / RENDIMIENTO_KM_GALON : 0;
+      const combustible = galones * precioGalon;
+
+      const tasaMensual = tasaTarjeta / 100 / 12;
+      const interesTarjeta = saldoTarjeta * tasaMensual;
+      const pagoMinimo = saldoTarjeta > 0 ? saldoTarjeta * PCT_MINIMO_TARJETA + interesTarjeta : 0;
+      const sim = saldoTarjeta > 0 && tasaMensual >= 0 ? mesesPagoMinimo(saldoTarjeta, tasaMensual) : { meses: 0, intereses: 0 };
+
+      const escuela = (hijos * UTILES_ANUAL_POR_HIJO) / 12;
+
+      // Bonos de Supérate: sólo en el caso correspondiente.
+      const bonos = id === 'superate' ? SUPERATE.alimentate + SUPERATE.bonogasHogar : 0;
+      const ingreso = ingresoBase + bonos;
+
+      const gastos = vivienda + alimentos + luz.total + combustible + pagoMinimo + escuela;
+      const margen = ingreso - gastos;
+      const pctGasto = ingreso > 0 ? (gastos / ingreso) * 100 : 0;
+      const pctVivienda = ingreso > 0 ? (vivienda / ingreso) * 100 : 0;
+      const salariosMinimos = SALARIO_MINIMO_REF > 0 ? gastos / SALARIO_MINIMO_REF : 0;
+
+      const rows = [
+        { k: 'Ingreso neto del hogar', ref: id === 'dos' ? 'Suma de los dos ingresos' : 'Después de TSS e ISR', v: ingresoBase },
+      ];
+      if (bonos > 0) {
+        rows.push({
+          k: 'Bonos de Supérate',
+          ref: 'Aliméntate ' + dop(SUPERATE.alimentate) + ' + Bonogás ' + dop(SUPERATE.bonogasHogar),
+          v: bonos,
+        });
+        rows.push({ k: 'Ingreso total disponible', ref: 'Sueldo + bonos', v: ingreso });
+      }
+      rows.push({ k: 'Vivienda', ref: 'Alquiler, cuota o mantenimiento', v: vivienda });
+      rows.push({
+        k: 'Vivienda sobre el ingreso',
+        ref: 'Referencia habitual: hasta 30%',
+        v: pctVivienda,
+        format: 'unit',
+        unit: '%',
+        decimals: 1,
+      });
+      rows.push({ k: 'Alimentos y supermercado', ref: 'Compra del mes', v: alimentos });
+      rows.push({ k: 'Energía consumida', ref: kwh + ' kWh por bloques escalonados', v: luz.energia });
+      rows.push({ k: 'Cargo fijo de comercialización', ref: 'Pliego tarifario residencial', v: luz.cargoFijo });
+      rows.push({
+        k: 'ITBIS de la factura de luz',
+        ref: kwh > LUZ.umbralItbis ? '18% por superar ' + LUZ.umbralItbis + ' kWh' : 'No aplica bajo ' + LUZ.umbralItbis + ' kWh',
+        v: luz.itbis,
+      });
+      rows.push({ k: 'Factura de luz estimada', ref: 'Energía + cargo fijo + ITBIS', v: luz.total });
+      rows.push({
+        k: 'Galones de combustible al mes',
+        ref: km + ' km ÷ ' + RENDIMIENTO_KM_GALON + ' km por galón',
+        v: galones,
+        format: 'unit',
+        unit: 'galones',
+        decimals: 1,
+      });
+      rows.push({ k: 'Gasto en combustible', ref: 'Galones × ' + dop(precioGalon) + ' el galón', v: combustible });
+
+      if (saldoTarjeta > 0) {
+        rows.push({ k: 'Interés mensual de la tarjeta', ref: tasaTarjeta.toString().replace('.', ',') + '% anual', v: interesTarjeta });
+        rows.push({
+          k: 'Pago mínimo de la tarjeta',
+          ref: Math.round(PCT_MINIMO_TARJETA * 100) + '% del capital + interés del mes',
+          v: pagoMinimo,
+        });
+        rows.push({
+          k: 'Meses para saldarla pagando sólo el mínimo',
+          ref: 'Simulación con saldo decreciente',
+          v: sim.meses,
+          format: 'unit',
+          unit: 'meses',
+        });
+        rows.push({ k: 'Intereses totales si pagás sólo el mínimo', ref: 'Sobre ' + dop(saldoTarjeta) + ' de deuda', v: sim.intereses });
+      }
+
+      if (escuela > 0) {
+        rows.push({
+          k: 'Regreso a clases prorrateado',
+          ref: hijos + ' hijo(s) × ' + dop(UTILES_ANUAL_POR_HIJO) + ' al año ÷ 12',
+          v: escuela,
+        });
+      }
+
+      rows.push({ k: 'Total de gastos del mes', ref: 'Todo lo de arriba', v: gastos, extra: true });
+      rows.push({
+        k: 'Porcentaje del ingreso que se va en gastos',
+        ref: 'Gastos ÷ ingreso',
+        v: pctGasto,
+        format: 'unit',
+        unit: '%',
+        decimals: 1,
+      });
+      rows.push({ k: 'Margen que te queda', ref: 'Ingreso − gastos', v: margen, extra: true });
+      rows.push({
+        k: 'Tu gasto medido en salarios mínimos',
+        ref: 'Mínimo de empresa grande: ' + dop(SALARIO_MINIMO_REF),
+        v: salariosMinimos,
+        format: 'unit',
+        unit: 'salarios mínimos',
+        decimals: 2,
+      });
+
+      let sub =
+        (margen >= 0
+          ? 'Te sobran ' + dop(margen) + ' al mes'
+          : 'Te faltan ' + dop(Math.abs(margen)) + ' al mes') +
+        ' · gastás el ' + pctGasto.toFixed(1).replace('.', ',') + '% de lo que entra' +
+        ' · tu gasto equivale a ' + salariosMinimos.toFixed(2).replace('.', ',') + ' salarios mínimos';
+
+      if (kwh > LUZ.umbralItbis) {
+        sub += ' · pasás los ' + LUZ.umbralItbis + ' kWh: la factura lleva ITBIS sobre el total';
+      }
+      if (sim.meses > 0) {
+        sub += ' · pagando sólo el mínimo tardarías ' + sim.meses + ' meses en saldar la tarjeta';
+      }
+
+      const chart = [
+        { label: 'Vivienda', value: Math.round(vivienda), tone: 'main' },
+        { label: 'Alimentos', value: Math.round(alimentos), tone: 'prop' },
+        { label: 'Luz', value: Math.round(luz.total), tone: 'warn' },
+        { label: 'Combustible', value: Math.round(combustible), tone: 'exit' },
+      ];
+      if (pagoMinimo > 0) chart.push({ label: 'Tarjeta de crédito', value: Math.round(pagoMinimo), tone: 'bad' });
+      if (escuela > 0) chart.push({ label: 'Escuela', value: Math.round(escuela), tone: 'prop' });
+      chart.push({ label: margen >= 0 ? 'Margen libre' : 'Faltante', value: Math.round(Math.abs(margen)), tone: margen >= 0 ? 'good' : 'bad' });
+
+      return { total: dop(margen), sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

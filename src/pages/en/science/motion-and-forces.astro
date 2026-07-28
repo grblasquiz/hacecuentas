@@ -1,0 +1,347 @@
+---
+/**
+ * Hub EN — "What's the force, energy or motion here?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  G_N,
+  KG_PER_LB,
+  M_PER_FT,
+  M_PER_IN,
+  MPS_PER_MPH,
+  J_PER_FTLBF,
+  J_PER_KCAL,
+  RHO_WATER,
+} from '../../../lib/hubs/en/motion-and-forces';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    G_N,
+    KG_PER_LB,
+    M_PER_FT,
+    M_PER_IN,
+    MPS_PER_MPH,
+    J_PER_FTLBF,
+    J_PER_KCAL,
+    RHO_WATER,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n1 = (x) => Number(x || 0).toLocaleString('en-US', { maximumFractionDigits: 1 });
+    const n2 = (x) => Number(x || 0).toLocaleString('en-US', { maximumFractionDigits: 2 });
+    const LBF_PER_N = KG_PER_LB * G_N; // newtons per pound-force (exact)
+    const RPM_PER_RADS = 60 / (2 * Math.PI);
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'freefall';
+
+      if (id === 'kinetic') {
+        const m = Math.max(0, v.mass || 0);
+        const sp = Math.max(0, v.speed || 0);
+        const ek = 0.5 * m * sp * sp;
+        const ekHalf = 0.5 * m * (sp / 2) * (sp / 2);
+        const dropH = G_N > 0 ? (sp * sp) / (2 * G_N) : 0;
+        return {
+          total: n1(ek / 1000) + ' kJ',
+          sub:
+            n1(ek) + ' J · ' + n1(ek / J_PER_FTLBF) + ' ft·lbf · same energy as dropping this mass from ' +
+            n1(dropH) + ' m (' + n1(dropH / M_PER_FT) + ' ft) · at half this speed it would carry only a quarter as much',
+          rows: [
+            { k: 'Mass', ref: 'As entered', v: m, format: 'unit', unit: 'kg' },
+            { k: 'Speed', ref: n1(sp / MPS_PER_MPH) + ' mph', v: sp, format: 'unit', unit: 'm/s', decimals: 2 },
+            { k: 'Kinetic energy', ref: 'Ek = ½ m v²', v: ek, format: 'unit', unit: 'J', extra: true },
+            { k: 'The same in kilojoules', ref: '1 kJ = 1,000 J', v: ek / 1000, format: 'unit', unit: 'kJ', decimals: 2 },
+            { k: 'The same in foot-pounds', ref: '1 ft·lbf = 1.3558179483 J (exact)', v: ek / J_PER_FTLBF, format: 'unit', unit: 'ft·lbf' },
+            { k: 'Equivalent free-fall drop height', ref: 'h = v² ÷ 2g', v: dropH, format: 'unit', unit: 'm', decimals: 2, extra: true },
+            { k: 'Energy at half this speed', ref: 'Quarter of the full figure', v: ekHalf, format: 'unit', unit: 'J' },
+            { k: 'Food-calorie equivalent', ref: '1 kcal = 4,184 J (thermochemical)', v: ek / J_PER_KCAL, format: 'unit', unit: 'kcal', decimals: 2 },
+          ],
+          chart: [
+            { label: 'Energy already there at half speed (J)', value: Math.round(ekHalf), tone: 'good' },
+            { label: 'Energy added by the second half of the speed (J)', value: Math.round(ek - ekHalf), tone: 'bad' },
+          ],
+        };
+      }
+
+      if (id === 'potential') {
+        const m = Math.max(0, v.mass || 0);
+        const h = Math.max(0, v.height || 0);
+        const ep = m * G_N * h;
+        const vImp = Math.sqrt(2 * G_N * h);
+        return {
+          total: n1(ep / 1000) + ' kJ',
+          sub:
+            n1(ep) + ' J stored at ' + n1(h) + ' m (' + n1(h / M_PER_FT) + ' ft) · released, it arrives at ' +
+            n2(vImp) + ' m/s (' + n1(vImp / MPS_PER_MPH) + ' mph) · the impact speed is the same whatever the mass',
+          rows: [
+            { k: 'Mass', ref: 'As entered', v: m, format: 'unit', unit: 'kg' },
+            { k: 'Height above your reference level', ref: n1(h / M_PER_FT) + ' ft', v: h, format: 'unit', unit: 'm', decimals: 2 },
+            { k: 'Potential energy', ref: 'Ep = m g h, g = 9.80665 m/s²', v: ep, format: 'unit', unit: 'J', extra: true },
+            { k: 'The same in kilojoules', ref: '1 kJ = 1,000 J', v: ep / 1000, format: 'unit', unit: 'kJ', decimals: 2 },
+            { k: 'The same in foot-pounds', ref: 'Exact factor', v: ep / J_PER_FTLBF, format: 'unit', unit: 'ft·lbf' },
+            { k: 'The same in kilocalories', ref: 'Physics conversion, not a nutrition figure', v: ep / J_PER_KCAL, format: 'unit', unit: 'kcal', decimals: 3 },
+            { k: 'Impact speed after the full drop', ref: 'v = √(2 g h) — independent of mass', v: vImp, format: 'unit', unit: 'm/s', decimals: 2, extra: true },
+            { k: 'That impact speed in mph', ref: '1 mph = 0.44704 m/s (exact)', v: vImp / MPS_PER_MPH, format: 'unit', unit: 'mph', decimals: 1 },
+          ],
+          chart: [
+            { label: 'Potential energy at the top (J)', value: Math.round(ep), tone: 'main' },
+            { label: 'Kinetic energy at the bottom (J)', value: Math.round(ep), tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'work') {
+        const F = Math.max(0, v.force || 0);
+        const d = Math.max(0, v.distance || 0);
+        const a = Math.min(180, Math.max(0, v.angle || 0));
+        const rad = (a * Math.PI) / 180;
+        const along = F * Math.cos(rad);
+        const across = F * Math.sin(rad);
+        const W = along * d;
+        const note =
+          Math.abs(W) < 0.05
+            ? 'the force is perpendicular to the motion, so it does no work at all'
+            : W < 0
+            ? 'the work is negative: this force is taking energy out, like a brake'
+            : 'energy transferred into the object';
+        return {
+          total: n1(W) + ' J',
+          sub:
+            n1(W / J_PER_FTLBF) + ' ft·lbf · ' + n1(along) + ' N of the ' + n1(F) +
+            ' N acts along the motion at ' + a + '° — ' + note,
+          rows: [
+            { k: 'Applied force', ref: n1(F / LBF_PER_N) + ' lbf', v: F, format: 'unit', unit: 'N' },
+            { k: 'Angle to the direction of motion', ref: 'cos θ = ' + Math.cos(rad).toFixed(4), v: a, format: 'unit', unit: '°' },
+            { k: 'Component along the motion', ref: 'F × cos θ — the only part that works', v: along, format: 'unit', unit: 'N', decimals: 1, extra: true },
+            { k: 'Component doing nothing', ref: 'F × sin θ — perpendicular, zero work', v: across, format: 'unit', unit: 'N', decimals: 1 },
+            { k: 'Distance moved', ref: n1(d / M_PER_FT) + ' ft', v: d, format: 'unit', unit: 'm', decimals: 2 },
+            { k: 'Work done', ref: 'W = F d cos θ', v: W, format: 'unit', unit: 'J', decimals: 1, extra: true },
+            { k: 'The same in foot-pounds', ref: '1 ft·lbf = 1.3558179483 J (exact)', v: W / J_PER_FTLBF, format: 'unit', unit: 'ft·lbf', decimals: 1 },
+            { k: 'Power if you do it in 10 seconds', ref: 'W ÷ t — 745.7 W is one horsepower', v: W / 10, format: 'unit', unit: 'W', decimals: 1 },
+          ],
+          chart: [
+            { label: 'Useful force along the motion (N)', value: Math.round(Math.abs(along)), tone: 'good' },
+            { label: 'Wasted perpendicular force (N)', value: Math.round(across), tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'friction') {
+        const mu = Math.max(0, v.mu || 0);
+        const N = Math.max(0, v.normal || 0);
+        const F = mu * N;
+        return {
+          total: n1(F) + ' N',
+          sub:
+            n1(F / LBF_PER_N) + ' lbf · the same effort as lifting ' + n1(F / G_N) +
+            ' kg (' + n1(F / G_N / KG_PER_LB) + ' lb) · use the static coefficient to break it loose, the kinetic one to keep it moving',
+          rows: [
+            { k: 'Coefficient of friction μ', ref: 'Dimensionless', v: mu, format: 'plain', decimals: 2 },
+            { k: 'Normal force', ref: 'On level ground this is the weight, m g', v: N, format: 'unit', unit: 'N' },
+            { k: 'Friction force', ref: 'F = μ N', v: F, format: 'unit', unit: 'N', decimals: 1, extra: true },
+            { k: 'The same in pounds-force', ref: '1 lbf = 4.4482216153 N (exact)', v: F / LBF_PER_N, format: 'unit', unit: 'lbf', decimals: 1 },
+            { k: 'Mass this normal force corresponds to', ref: 'N ÷ g, at standard gravity', v: N / G_N, format: 'unit', unit: 'kg', decimals: 1 },
+            { k: 'Effort equivalent of the friction', ref: 'Like lifting this much mass', v: F / G_N, format: 'unit', unit: 'kg', decimals: 1 },
+            { k: 'Work to slide it 1 metre', ref: 'All of it lost as heat', v: F, format: 'unit', unit: 'J', decimals: 1 },
+          ],
+          chart: [
+            { label: 'Friction resisting you (N)', value: Math.round(F), tone: 'bad' },
+            { label: 'Normal force not turned into friction (N)', value: Math.round(Math.max(0, N - F)), tone: 'main' },
+          ],
+        };
+      }
+
+      if (id === 'spring') {
+        const k = Math.max(0, v.kspring || 0);
+        const x = Math.max(0, v.deform || 0);
+        const F = k * x;
+        const E = 0.5 * k * x * x;
+        const Ehalf = 0.5 * k * (x / 2) * (x / 2);
+        const stiff = k < 1000 ? 'a soft spring — laboratory or spring-balance territory' : k < 15000 ? 'medium stiffness, like a bike or motorcycle shock' : 'a stiff spring: automotive or industrial suspension';
+        return {
+          total: n1(F) + ' N',
+          sub:
+            n1(F / LBF_PER_N) + ' lbf at ' + n2(x * 100) + ' cm (' + n2(x / M_PER_IN) + ' in) of deflection · ' +
+            n2(E) + ' J stored · ' + stiff,
+          rows: [
+            { k: 'Spring constant k', ref: n1(k / (LBF_PER_N / M_PER_IN)) + ' lb/in', v: k, format: 'unit', unit: 'N/m' },
+            { k: 'Deflection x', ref: n2(x / M_PER_IN) + ' in', v: x * 100, format: 'unit', unit: 'cm', decimals: 2 },
+            { k: 'Spring force', ref: 'F = k x (Hooke’s law)', v: F, format: 'unit', unit: 'N', decimals: 1, extra: true },
+            { k: 'The same in pounds-force', ref: '1 lbf = 4.4482216153 N (exact)', v: F / LBF_PER_N, format: 'unit', unit: 'lbf', decimals: 1 },
+            { k: 'Elastic energy stored', ref: 'E = ½ k x²', v: E, format: 'unit', unit: 'J', decimals: 3, extra: true },
+            { k: 'Energy already stored at half the deflection', ref: 'A quarter of the total — energy is quadratic', v: Ehalf, format: 'unit', unit: 'J', decimals: 3 },
+            { k: 'Force needed for twice the deflection', ref: 'Linear: force just doubles', v: F * 2, format: 'unit', unit: 'N', decimals: 1 },
+          ],
+          chart: [
+            { label: 'Energy stored in the first half of the stretch (J)', value: Math.round(Ehalf * 1000) / 1000, tone: 'good' },
+            { label: 'Energy stored in the second half (J)', value: Math.round((E - Ehalf) * 1000) / 1000, tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'angular') {
+        const I = Math.max(0, v.inertia || 0);
+        const w = Math.max(0, v.omega || 0);
+        const L = I * w;
+        const Ek = 0.5 * I * w * w;
+        const EkTight = 0.5 * (I / 2) * (2 * w) * (2 * w); // same L, half the inertia
+        return {
+          total: n2(L) + ' kg·m²/s',
+          sub:
+            'Spinning at ' + n1(w * RPM_PER_RADS) + ' rpm with ' + n2(Ek) +
+            ' J of rotational energy · halve the moment of inertia and ω doubles while L stays put — that is the skater effect',
+          rows: [
+            { k: 'Moment of inertia I', ref: 'About the axis you are using', v: I, format: 'unit', unit: 'kg·m²', decimals: 2 },
+            { k: 'Angular velocity ω', ref: n1(w * RPM_PER_RADS) + ' rpm', v: w, format: 'unit', unit: 'rad/s', decimals: 2 },
+            { k: 'Angular momentum L', ref: 'L = I ω — conserved without external torque', v: L, format: 'unit', unit: 'kg·m²/s', decimals: 3, extra: true },
+            { k: 'Rotational speed in rpm', ref: '1 rad/s = 9.5493 rpm', v: w * RPM_PER_RADS, format: 'unit', unit: 'rpm', decimals: 1 },
+            { k: 'Time for one full turn', ref: '2π ÷ ω', v: w > 0 ? (2 * Math.PI) / w : 0, format: 'unit', unit: 's', decimals: 3 },
+            { k: 'Rotational kinetic energy', ref: 'Ek = ½ I ω²', v: Ek, format: 'unit', unit: 'J', decimals: 2, extra: true },
+            { k: 'Energy after halving I at constant L', ref: 'Doubles — paid for by the work of pulling in', v: EkTight, format: 'unit', unit: 'J', decimals: 2 },
+          ],
+          chart: [
+            { label: 'Rotational energy now (J)', value: Math.round(Ek * 100) / 100, tone: 'main' },
+            { label: 'Extra energy if you halve I at the same L (J)', value: Math.round((EkTight - Ek) * 100) / 100, tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'pendulum') {
+        const L = Math.max(0.001, v.plength || 0.001);
+        const T = 2 * Math.PI * Math.sqrt(L / G_N);
+        const T1m = 2 * Math.PI * Math.sqrt(1 / G_N);
+        const secondsPendulum = G_N / (Math.PI * Math.PI); // L for T = 2 s
+        return {
+          total: n2(T) + ' s',
+          sub:
+            'A full there-and-back cycle · ' + n2(1 / T) + ' Hz, ' + n1(60 / T) +
+            ' swings per minute · the mass of the bob makes no difference, only the length and local gravity do',
+          rows: [
+            { k: 'Length', ref: n2(L / M_PER_IN) + ' in', v: L, format: 'unit', unit: 'm', decimals: 3 },
+            { k: 'Period of a full cycle', ref: 'T = 2π √(L/g), small-angle', v: T, format: 'unit', unit: 's', decimals: 3, extra: true },
+            { k: 'Time for one half swing', ref: 'T ÷ 2', v: T / 2, format: 'unit', unit: 's', decimals: 3 },
+            { k: 'Frequency', ref: '1 ÷ T', v: 1 / T, format: 'unit', unit: 'Hz', decimals: 3 },
+            { k: 'Full swings per minute', ref: '60 ÷ T', v: 60 / T, format: 'unit', unit: 'per min', decimals: 1 },
+            { k: 'Period of a 1 metre pendulum, for reference', ref: 'At standard gravity', v: T1m, format: 'unit', unit: 's', decimals: 3 },
+            { k: 'Length that gives an exact 2 second period', ref: 'The classic seconds pendulum: g ÷ π²', v: secondsPendulum, format: 'unit', unit: 'm', decimals: 4, extra: true },
+            { k: 'Extra period at a 30° amplitude', ref: 'The small-angle formula under-reads by ~1.7%', v: T * 0.017, format: 'unit', unit: 's', decimals: 4 },
+          ],
+          chart: [
+            { label: 'Period of your pendulum (s)', value: Math.round(T * 100) / 100, tone: 'main' },
+            { label: 'Period of a 1 m reference pendulum (s)', value: Math.round(T1m * 100) / 100, tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'buoyancy') {
+        const rho = Math.max(0.001, Number(v.fluid) || RHO_WATER);
+        const vol = Math.max(0, v.vol || 0);
+        const objm = Math.max(0, v.objmass || 0);
+        const displacedMass = rho * vol;
+        const F = displacedMass * G_N;
+        const weight = objm * G_N;
+        const net = F - weight;
+        const floats = net >= 0;
+        const avgDensity = vol > 0 ? objm / vol : 0;
+        return {
+          total: n1(F) + ' N of lift',
+          sub:
+            n1(F / LBF_PER_N) + ' lbf — the weight of ' + n1(displacedMass) + ' kg (' + n1(displacedMass / KG_PER_LB) +
+            ' lb) of displaced fluid · your object weighs ' + n1(weight) + ' N, so it ' +
+            (floats ? 'FLOATS with ' + n1(net) + ' N to spare' : 'SINKS: it is ' + n1(-net) + ' N too heavy'),
+          rows: [
+            { k: 'Fluid density', ref: 'Fresh water is 1,000 kg/m³', v: rho, format: 'unit', unit: 'kg/m³', decimals: 1 },
+            { k: 'Volume displaced', ref: n1(vol * 1000) + ' litres', v: vol, format: 'unit', unit: 'm³', decimals: 4 },
+            { k: 'Mass of fluid displaced', ref: 'ρ × V', v: displacedMass, format: 'unit', unit: 'kg', decimals: 2 },
+            { k: 'Buoyant force', ref: 'F = ρ V g (Archimedes)', v: F, format: 'unit', unit: 'N', decimals: 1, extra: true },
+            { k: 'The same in pounds-force', ref: '1 lbf = 4.4482216153 N (exact)', v: F / LBF_PER_N, format: 'unit', unit: 'lbf', decimals: 1 },
+            { k: 'Weight of your object', ref: 'm g at standard gravity', v: weight, format: 'unit', unit: 'N', decimals: 1 },
+            { k: floats ? 'Spare lift' : 'Shortfall — it sinks', ref: 'Buoyancy minus weight', v: Math.abs(net), format: 'unit', unit: 'N', decimals: 1, extra: true },
+            { k: 'Average density of your object', ref: 'Below the fluid density means it floats', v: avgDensity, format: 'unit', unit: 'kg/m³', decimals: 1 },
+            { k: 'Share of the volume that ends up submerged', ref: 'Only meaningful if it floats', v: floats && rho > 0 ? Math.min(100, (avgDensity / rho) * 100) : 100, format: 'unit', unit: '%', decimals: 1 },
+          ],
+          chart: [
+            { label: 'Buoyant force (N)', value: Math.round(F), tone: 'good' },
+            { label: 'Weight pulling it down (N)', value: Math.round(weight), tone: 'bad' },
+          ],
+        };
+      }
+
+      // freefall
+      const t = Math.max(0, v.tfall || 0);
+      const h = 0.5 * G_N * t * t;
+      const vImpact = G_N * t;
+      const firstHalf = 0.5 * G_N * (t / 2) * (t / 2);
+      return {
+        total: n1(h) + ' m',
+        sub:
+          n1(h / M_PER_FT) + ' ft in ' + n1(t) + ' s, arriving at ' + n1(vImpact) + ' m/s (' +
+          n1(vImpact / MPS_PER_MPH) + ' mph, ' + n1(vImpact * 3.6) +
+          ' km/h) · no air resistance, and the mass makes no difference',
+        rows: [
+          { k: 'Time falling', ref: 'As entered', v: t, format: 'unit', unit: 's', decimals: 2 },
+          { k: 'Distance fallen', ref: 'h = ½ g t², g = 9.80665 m/s²', v: h, format: 'unit', unit: 'm', decimals: 2, extra: true },
+          { k: 'The same in feet', ref: '1 ft = 0.3048 m (exact)', v: h / M_PER_FT, format: 'unit', unit: 'ft', decimals: 1 },
+          { k: 'Impact speed', ref: 'v = g t', v: vImpact, format: 'unit', unit: 'm/s', decimals: 2, extra: true },
+          { k: 'Impact speed in mph', ref: '1 mph = 0.44704 m/s (exact)', v: vImpact / MPS_PER_MPH, format: 'unit', unit: 'mph', decimals: 1 },
+          { k: 'Impact speed in km/h', ref: '3.6 km/h per m/s', v: vImpact * 3.6, format: 'unit', unit: 'km/h', decimals: 1 },
+          { k: 'Distance covered in the first half of the time', ref: 'Only a quarter of the total', v: firstHalf, format: 'unit', unit: 'm', decimals: 2 },
+          { k: 'Time to fall from 10 m, for comparison', ref: 't = √(2h/g)', v: Math.sqrt((2 * 10) / G_N), format: 'unit', unit: 's', decimals: 2 },
+        ],
+        chart: [
+          { label: 'Fallen in the first half of the time (m)', value: Math.round(firstHalf * 100) / 100, tone: 'good' },
+          { label: 'Fallen in the second half (m)', value: Math.round((h - firstHalf) * 100) / 100, tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,210 @@
+---
+/**
+ * Hub de decisión CL — "¿Cuánto me cuesta realmente contratar a alguien?"
+ * Ruta bajo el prefijo /cl/, igual que las calculadoras que absorbe.
+ * audience="CL" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UF,
+  COSTOS,
+  TOPE_GRATIFICACION_MENSUAL,
+  MUTUAL_BASE_PCT_DEFAULT,
+} from '../../../lib/hubs/cl/costo-de-contratar';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    UF,
+    COSTOS,
+    TOPE_GRAT: TOPE_GRATIFICACION_MENSUAL,
+    MUTUAL_BASE: MUTUAL_BASE_PCT_DEFAULT,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+    const num = (n, d) => n.toLocaleString('es-CL', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'indefinido';
+      const bruto = Math.max(0, v.bruto || 0);
+      const trabajadores = Math.max(1, Math.round(v.trabajadores || 1));
+      const mutualBase = Math.max(0, v.mutualBase != null ? v.mutualBase : MUTUAL_BASE) / 100;
+      const mutualAdic =
+        Math.min(COSTOS.mutualAdicionalMaxPct, Math.max(0, v.mutualAdicional || 0)) / 100;
+      const reformaTasa =
+        Math.min(COSTOS.reformaTasaFinalPct, Math.max(0, v.reformaTasa != null ? v.reformaTasa : 1)) / 100;
+
+      // Bases topadas: 90 UF para SIS, mutual y reforma; 135,2 UF para cesantía.
+      const topeAfp = COSTOS.topeAfpUf * UF;
+      const topeCes = COSTOS.topeCesantiaUf * UF;
+      const baseAfp = Math.min(bruto, topeAfp);
+      const baseCes = Math.min(bruto, topeCes);
+
+      // ── Solo la mutual ──────────────────────────────────────────────
+      if (id === 'mutual') {
+        const tasaTotal = mutualBase + mutualAdic;
+        const porTrabajador = baseAfp * tasaTotal;
+        const mensual = porTrabajador * trabajadores;
+        const nomina = bruto * trabajadores;
+        return {
+          total: clp(mensual),
+          sub:
+            'Cotización de la Ley 16.744 por ' + num(trabajadores) +
+            (trabajadores === 1 ? ' trabajador' : ' trabajadores') + ' · tasa total ' +
+            num(tasaTotal * 100, 2) + '% · ' + clp(mensual * 12) + ' al año',
+          rows: [
+            { k: 'Remuneración imponible por trabajador', ref: bruto > topeAfp ? 'Topada en ' + COSTOS.topeAfpUf + ' UF' : 'Bajo el tope de ' + COSTOS.topeAfpUf + ' UF', v: baseAfp },
+            { k: 'Cotización básica', ref: 'Ley 16.744 Art. 15 a) + SANNA · valor editable', v: mutualBase * 100, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Cotización adicional diferenciada', ref: 'Resolución SUSESO · máximo ' + COSTOS.mutualAdicionalMaxPct + '%', v: mutualAdic * 100, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Tasa total aplicada', ref: 'Básica + adicional', v: tasaTotal * 100, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Aporte por trabajador', ref: 'Base imponible × tasa total', v: porTrabajador },
+            { k: 'Aporte mensual de toda la nómina', ref: num(trabajadores) + ' trabajadores', v: mensual, extra: true },
+            { k: 'Aporte anual de toda la nómina', ref: '12 meses', v: mensual * 12 },
+            {
+              k: 'Peso sobre la masa salarial',
+              ref: 'Aporte ÷ nómina bruta',
+              v: nomina > 0 ? (mensual / nomina) * 100 : 0,
+              format: 'unit',
+              unit: '%',
+              decimals: 2,
+            },
+            { k: 'Cuánto pagarías con la adicional en su máximo legal', ref: COSTOS.mutualAdicionalMaxPct + '% · Art. 15 b) Ley 16.744', v: baseAfp * (mutualBase + COSTOS.mutualAdicionalMaxPct / 100) * trabajadores },
+          ],
+          chart: [
+            { label: 'Cotización básica', value: Math.round(baseAfp * mutualBase * trabajadores), tone: 'main' },
+            { label: 'Adicional por siniestralidad', value: Math.round(baseAfp * mutualAdic * trabajadores), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── Solo la cotización de la reforma previsional ────────────────
+      if (id === 'reforma') {
+        const hoy = baseAfp * reformaTasa;
+        const final = baseAfp * (COSTOS.reformaTasaFinalPct / 100);
+        return {
+          total: clp(hoy * trabajadores),
+          sub:
+            'Cotización adicional del ' + num(reformaTasa * 100, 1) + '% de cargo del empleador · ' +
+            clp(hoy * trabajadores * 12) + ' al año · en régimen del ' + COSTOS.reformaTasaFinalPct + '% serán ' +
+            clp(final * trabajadores),
+          rows: [
+            { k: 'Remuneración imponible por trabajador', ref: bruto > topeAfp ? 'Topada en ' + COSTOS.topeAfpUf + ' UF' : 'Bajo el tope de ' + COSTOS.topeAfpUf + ' UF', v: baseAfp },
+            { k: 'Tasa vigente aplicada', ref: 'Ley 21.735 · valor editable, confirmá con la SP', v: reformaTasa * 100, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Cotización mensual por trabajador', ref: 'Base × tasa', v: hoy },
+            { k: 'Cotización mensual de la nómina', ref: num(trabajadores) + ' trabajadores', v: hoy * trabajadores, extra: true },
+            { k: 'Cotización anual de la nómina', ref: '12 meses', v: hoy * trabajadores * 12 },
+            { k: 'Cotización por trabajador en régimen', ref: 'Cuando la gradualidad llegue al ' + COSTOS.reformaTasaFinalPct + '%', v: final },
+            { k: 'Cuánto más costará en régimen', ref: 'Por trabajador y por mes', v: final - hoy },
+            { k: 'Diferencia anual de toda la nómina en régimen', ref: '12 meses × ' + num(trabajadores) + ' trabajadores', v: (final - hoy) * trabajadores * 12 },
+          ],
+          chart: [
+            { label: 'Cotización de hoy', value: Math.round(hoy * trabajadores), tone: 'main' },
+            { label: 'Aumento hasta el ' + COSTOS.reformaTasaFinalPct + '%', value: Math.max(0, Math.round((final - hoy) * trabajadores)), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── Costo laboral completo (indefinido o plazo fijo) ────────────
+      const esPlazoFijo = id === 'plazo-fijo';
+      const tasaAfc = esPlazoFijo ? COSTOS.afcEmpleadorPlazoFijo : COSTOS.afcEmpleadorIndefinido;
+      const cesantia = baseCes * tasaAfc;
+      const sis = baseAfp * COSTOS.sis;
+      const mutual = baseAfp * (mutualBase + mutualAdic);
+      const reforma = baseAfp * reformaTasa;
+      // Gratificación Art. 50 prorrateada: 25% del mes, con tope de 4,75 IMM ÷ 12.
+      const gratificacion =
+        v.gratificacion === 'no' ? 0 : Math.min(bruto * COSTOS.gratificacionPct, TOPE_GRAT);
+
+      const aportes = cesantia + sis + mutual + reforma + gratificacion;
+      const costoMensual = bruto + aportes;
+      const sobrecosto = bruto > 0 ? (aportes / bruto) * 100 : 0;
+
+      return {
+        total: clp(costoMensual * trabajadores),
+        sub:
+          'Costo mensual de ' + num(trabajadores) + (trabajadores === 1 ? ' trabajador' : ' trabajadores') +
+          ' · un ' + num(sobrecosto, 1) + '% por sobre el bruto · ' +
+          clp(costoMensual * trabajadores * 12) + ' al año' +
+          (esPlazoFijo ? ' · contrato a plazo fijo (cesantía 3%)' : ' · contrato indefinido (cesantía 2,4%)'),
+        rows: [
+          { k: 'Sueldo bruto pactado', ref: 'Lo que va en el contrato', v: bruto },
+          { k: 'Base imponible para SIS, mutual y reforma', ref: bruto > topeAfp ? 'Topada en ' + COSTOS.topeAfpUf + ' UF' : 'Bajo el tope de ' + COSTOS.topeAfpUf + ' UF', v: baseAfp },
+          { k: 'Base imponible del seguro de cesantía', ref: bruto > topeCes ? 'Topada en ' + COSTOS.topeCesantiaUf + ' UF' : 'Bajo el tope de ' + COSTOS.topeCesantiaUf + ' UF', v: baseCes },
+          { k: 'Seguro de cesantía del empleador', ref: num(tasaAfc * 100, 1) + '% · Ley 19.728 Art. 5', v: cesantia },
+          { k: 'SIS (invalidez y sobrevivencia)', ref: num(COSTOS.sis * 100, 1) + '% · DL 3.500 Art. 59', v: sis },
+          { k: 'Cotización Ley de Accidentes del Trabajo', ref: num((mutualBase + mutualAdic) * 100, 2) + '% · Ley 16.744 Art. 15', v: mutual },
+          { k: 'Cotización adicional de la reforma previsional', ref: num(reformaTasa * 100, 1) + '% · Ley 21.735', v: reforma },
+          {
+            k: 'Gratificación legal prorrateada',
+            ref:
+              v.gratificacion === 'no'
+                ? 'Sin utilidades líquidas: no se devenga'
+                : bruto * COSTOS.gratificacionPct > TOPE_GRAT
+                  ? 'Topada en 4,75 IMM al año · Art. 50 CT'
+                  : '25% de la remuneración · Art. 50 CT',
+            v: gratificacion,
+          },
+          { k: 'Total de aportes del empleador', ref: 'Todo lo que va por sobre el bruto', v: aportes },
+          { k: 'Sobrecosto sobre el bruto', ref: 'Aportes ÷ bruto', v: sobrecosto, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Costo laboral mensual por trabajador', ref: 'Bruto + aportes', v: costoMensual, extra: true },
+          { k: 'Costo laboral anual por trabajador', ref: '12 meses', v: costoMensual * 12 },
+          { k: 'Costo anual de toda la nómina', ref: num(trabajadores) + ' trabajadores × 12 meses', v: costoMensual * trabajadores * 12 },
+        ],
+        chart: [
+          { label: 'Sueldo bruto', value: Math.round(bruto * trabajadores), tone: 'main' },
+          { label: 'Gratificación legal', value: Math.round(gratificacion * trabajadores), tone: 'good' },
+          { label: 'Seguro de cesantía y SIS', value: Math.round((cesantia + sis) * trabajadores), tone: 'prop' },
+          { label: 'Mutual y reforma previsional', value: Math.round((mutual + reforma) * trabajadores), tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,256 @@
+---
+/**
+ * Hub de decisión ES — mi nómina. Reemplaza 8 calculadoras sueltas.
+ * audience="ES" literal al Layout. define:vars serializa a JSON.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  SMI,
+  FUNCIONARIOS,
+  TABLAS_CONVENIO,
+  COSTE_EMPRESA,
+  VACACIONES,
+} from '../../../lib/hubs/es/mi-nomina';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/es' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="ES"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ SMI: SMI, F: FUNCIONARIOS, TABLAS: TABLAS_CONVENIO, E: COSTE_EMPRESA, VAC: VACACIONES }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n) => Math.round(n || 0).toLocaleString('es-ES') + ' €';
+    const eur2 = (n) => (n || 0).toFixed(2).replace('.', ',') + ' €';
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'smi';
+      const manual = Math.max(0, v.salarioBase || 0);
+      const cat = TABLAS[String(v.categoria || 'dependiente')] || TABLAS.dependiente;
+      const factor = Math.max(0, Math.min(1, (Number(v.jornada) || 100) / 100));
+      const anios = Math.max(0, v.antiguedad || 0);
+      const pagas = Number(v.pagas) === 12 ? 12 : 14;
+      const horasExtra = Math.max(0, v.horasExtra || 0);
+      const recargo = Math.max(0, v.recargo || 0) / 100;
+      const jornadaAnual = Math.max(1, v.jornadaAnual || 1800);
+      const temporal = String(v.contrato || 'indefinido') === 'temporal';
+
+      // ── Salario base mensual según la rama ────────────────────────
+      let baseMensual;
+      let plusMensual = 0;
+      let etiquetaBase;
+      if (manual > 0) {
+        baseMensual = manual * factor;
+        etiquetaBase = 'El que has introducido';
+      } else if (id === 'smi') {
+        baseMensual = (SMI.anual / pagas) * factor;
+        etiquetaBase = 'Salario mínimo prorrateado a tu jornada';
+      } else if (id === 'comercio' || id === 'hosteleria') {
+        baseMensual = cat.base * factor;
+        plusMensual = cat.plus * factor;
+        etiquetaBase = 'Tabla de convenio · ' + cat.nombre;
+      } else {
+        baseMensual = (SMI.anual / 14) * factor;
+        etiquetaBase = 'Referencia: introduce tu bruto real arriba';
+      }
+
+      // ── Antigüedad ────────────────────────────────────────────────
+      let pctAntiguedad = 0;
+      if (id === 'comercio') {
+        pctAntiguedad = anios >= 10 ? 0.1 : anios >= 6 ? 0.06 : anios >= 3 ? 0.03 : 0;
+      } else if (id === 'hosteleria') {
+        pctAntiguedad = Math.min(anios * 0.01, 0.2);
+      }
+      const antiguedadMensual = baseMensual * pctAntiguedad;
+
+      const mensualTotal = baseMensual + plusMensual + antiguedadMensual;
+      let brutoAnual = mensualTotal * pagas;
+
+      // ── Subida de empleados públicos ──────────────────────────────
+      let subidaAnual = 0;
+      let atrasos = 0;
+      if (id === 'funcionario') {
+        const partida = manual > 0 ? manual * factor : baseMensual;
+        const tras1 = partida * (1 + F.pct2025 / 100);
+        const pct2 = F.pct2026Fijo + F.pct2026Variable;
+        const tras2 = tras1 * (1 + pct2 / 100);
+        subidaAnual = (tras2 - partida) * pagas;
+        atrasos = (tras1 - partida) * pagas;
+        brutoAnual = tras2 * pagas;
+      }
+
+      // ── Horas extra ───────────────────────────────────────────────
+      const valorHoraOrdinaria = brutoAnual / jornadaAnual;
+      const valorHoraExtra = valorHoraOrdinaria * (1 + recargo);
+      const importeHorasExtra = valorHoraExtra * horasExtra;
+      const brutoConExtras = brutoAnual + importeHorasExtra;
+
+      // ── Descuentos del trabajador ─────────────────────────────────
+      const topeAnual = E.baseMaximaMensual * 12;
+      const baseCotizacion = Math.min(brutoConExtras, topeAnual);
+      const ssTrabajador = baseCotizacion * ((SMI.ssTrabajadorPct + SMI.meiTrabajadorPct) / 100);
+
+      // ── Coste para la empresa ─────────────────────────────────────
+      const tipoEmpresa =
+        E.contingenciasComunes +
+        (temporal ? E.desempleoTemporal : E.desempleoIndefinido) +
+        E.fogasa +
+        E.formacion +
+        E.mei;
+      const ssEmpresa = baseCotizacion * tipoEmpresa;
+      const costeEmpresa = brutoConExtras + ssEmpresa;
+
+      // ── Vacaciones ────────────────────────────────────────────────
+      const valorDiaVacaciones = brutoConExtras / 365;
+
+      const rows = [
+        { k: 'Salario base mensual', ref: etiquetaBase, v: baseMensual },
+      ];
+      if (plusMensual > 0) rows.push({ k: 'Plus de convenio', ref: 'Mensual, de la tabla', v: plusMensual });
+      if (antiguedadMensual > 0) {
+        rows.push({
+          k: 'Antigüedad',
+          ref: Math.round(pctAntiguedad * 100) + '% por ' + anios + ' años',
+          v: antiguedadMensual,
+        });
+      }
+      rows.push({ k: 'Bruto por paga', ref: pagas + ' pagas al año', v: mensualTotal });
+      if (id === 'funcionario') {
+        rows.push({ k: 'Subida anual del acuerdo', ref: 'Fija más variable si el IPC llega al umbral', v: subidaAnual });
+        rows.push({ k: 'Atrasos del primer año', ref: 'Pago único retroactivo', v: atrasos });
+      }
+      rows.push({ k: 'Bruto anual sin horas extra', ref: 'Base del cálculo', v: brutoAnual });
+      rows.push({
+        k: 'Valor de la hora ordinaria',
+        ref: 'Bruto anual ÷ ' + jornadaAnual + ' h de convenio',
+        v: valorHoraOrdinaria,
+        decimals: 2,
+      });
+      rows.push({
+        k: 'Valor de la hora extra',
+        ref: 'Con recargo del ' + Math.round(recargo * 100) + '%',
+        v: valorHoraExtra,
+        decimals: 2,
+      });
+      if (horasExtra > 0) {
+        rows.push({
+          k: 'Horas extra del año',
+          ref: horasExtra + ' h' + (horasExtra > 80 ? ' · superas el máximo legal de 80' : ''),
+          v: importeHorasExtra,
+        });
+      }
+      rows.push({ k: 'Bruto anual total', ref: 'Con horas extra incluidas', v: brutoConExtras, extra: true });
+      rows.push({
+        k: 'Cotización del trabajador',
+        ref: (SMI.ssTrabajadorPct + SMI.meiTrabajadorPct).toFixed(2).replace('.', ',') + '% con tope',
+        v: ssTrabajador,
+      });
+      rows.push({
+        k: 'Días de vacaciones al año',
+        ref: VAC.diasNaturales + ' naturales · art. 38 del Estatuto',
+        v: VAC.diasLaborables,
+        format: 'unit',
+        unit: 'días laborables',
+      });
+      rows.push({ k: 'Valor de un día de vacaciones', ref: 'Bruto anual ÷ 365', v: valorDiaVacaciones, decimals: 2 });
+      rows.push({
+        k: 'Cotización a cargo de la empresa',
+        ref: (tipoEmpresa * 100).toFixed(2).replace('.', ',') + '% de la base',
+        v: ssEmpresa,
+      });
+      rows.push({ k: 'Coste total para la empresa', ref: 'Bruto más cuota patronal', v: costeEmpresa, extra: true });
+      rows.push({
+        k: 'Sobrecoste sobre tu bruto',
+        ref: 'Lo que la empresa paga de más',
+        v: brutoConExtras > 0 ? (ssEmpresa / brutoConExtras) * 100 : 0,
+        format: 'unit',
+        unit: '%',
+        decimals: 1,
+      });
+
+      const chart = [
+        { label: 'Salario base anual', value: Math.round(baseMensual * pagas), tone: 'main' },
+        { label: 'Plus y antigüedad', value: Math.round((plusMensual + antiguedadMensual) * pagas), tone: 'prop' },
+        { label: 'Horas extra', value: Math.round(importeHorasExtra), tone: 'good' },
+        { label: 'Cuota de la empresa', value: Math.round(ssEmpresa), tone: 'warn' },
+      ].filter(function (s) {
+        return s.value > 0;
+      });
+
+      const principal = id === 'empresa' ? costeEmpresa : brutoConExtras;
+      const sub =
+        id === 'empresa'
+          ? 'Un bruto de ' +
+            eur(brutoConExtras) +
+            ' le cuesta a la empresa ' +
+            eur(costeEmpresa) +
+            ', un ' +
+            ((ssEmpresa / (brutoConExtras || 1)) * 100).toFixed(1).replace('.', ',') +
+            '% más'
+          : 'Bruto de ' +
+            eur(brutoConExtras) +
+            ' al año en ' +
+            pagas +
+            ' pagas de ' +
+            eur(mensualTotal) +
+            ' · tu hora ordinaria vale ' +
+            eur2(valorHoraOrdinaria) +
+            ' y la extra ' +
+            eur2(valorHoraExtra);
+
+      return {
+        total: eur(principal),
+        sub: sub,
+        rows: rows,
+        chart: chart,
+        format: 'unit',
+        unit: '€',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

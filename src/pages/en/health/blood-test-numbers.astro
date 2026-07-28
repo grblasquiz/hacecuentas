@@ -1,0 +1,276 @@
+---
+/**
+ * Decision hub EN — "Are my numbers normal?"
+ * Replaces 12 loose calculator URLs (see hub.replaces).
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  BP,
+  LIPIDS,
+  GLYCEMIC,
+  IRON,
+  SPO2_BY_ALTITUDE,
+  TESTOSTERONE,
+  HORMONES,
+  SEMEN_WHO_2021,
+} from '../../../lib/hubs/en/blood-test-numbers';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ BP, LIPIDS, GLY: GLYCEMIC, IRON, SPO2: SPO2_BY_ALTITUDE, T: TESTOSTERONE, HORM: HORMONES, SEMEN: SEMEN_WHO_2021 }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    /** Linear interpolation of the expected SpO2 for an altitude in feet. */
+    function expectedSpo2(ft) {
+      const a = Math.max(0, ft || 0);
+      for (let i = 1; i < SPO2.length; i++) {
+        if (a <= SPO2[i].ft) {
+          const lo = SPO2[i - 1], hi = SPO2[i];
+          return lo.spo2 + ((a - lo.ft) / (hi.ft - lo.ft)) * (hi.spo2 - lo.spo2);
+        }
+      }
+      return SPO2[SPO2.length - 1].spo2;
+    }
+
+    /** Maps a value onto 0-100 given the band edges of a scale. */
+    function place(value, min, max) {
+      if (max <= min) return 0;
+      return Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100));
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'bp';
+      const female = String(v.sex) === 'f';
+      const age = Math.max(1, Math.round(v.age || 45));
+      let total, sub, rows = [], position = 0, positionLabel = '', chart = [];
+
+      if (id === 'bp') {
+        const s = Math.max(0, v.systolic || 0);
+        const d = Math.max(0, v.diastolic || 0);
+        let cat;
+        if (s >= BP.crisis.sys || d >= BP.crisis.dia) cat = 'Hypertensive crisis — seek care now';
+        else if (s >= BP.stage1.sys || d >= BP.stage1.dia) cat = 'Stage 2 hypertension';
+        else if (s >= BP.elevated.sys || d >= BP.elevated.dia) cat = 'Stage 1 hypertension';
+        else if (s >= BP.normal.sys) cat = 'Elevated';
+        else cat = 'Normal';
+        const esc = s >= BP.escThreshold.sys || d >= BP.escThreshold.dia ? 'Hypertension' : s >= 130 || d >= 85 ? 'High-normal' : 'Normal';
+
+        rows = [
+          { k: 'Systolic', ref: 'Top number', v: s, format: 'unit', unit: 'mmHg', decimals: 0, extra: true },
+          { k: 'Diastolic', ref: 'Bottom number', v: d, format: 'unit', unit: 'mmHg', decimals: 0, extra: true },
+          { k: 'Pulse pressure', ref: 'Systolic minus diastolic · over 60 is a stiffness marker after 60', v: s - d, format: 'unit', unit: 'mmHg', decimals: 0 },
+          { k: 'Mean arterial pressure', ref: 'Diastolic + one third of the pulse pressure', v: d + (s - d) / 3, format: 'unit', unit: 'mmHg', decimals: 0 },
+          { k: 'ACC/AHA stage 1 threshold', ref: 'US guideline, 2017', v: BP.elevated.sys, format: 'unit', unit: 'mmHg systolic', decimals: 0 },
+          { k: 'ESC / WHO hypertension threshold', ref: 'Same reading, different name', v: BP.escThreshold.sys, format: 'unit', unit: 'mmHg systolic', decimals: 0 },
+          { k: 'Distance to the stage 1 line (130 systolic)', ref: 'Negative means you are past it', v: BP.elevated.sys - s, format: 'unit', unit: 'mmHg', decimals: 0 },
+          { k: 'Distance to the stage 2 line (140 systolic)', ref: 'Negative means you are past it', v: BP.stage1.sys - s, format: 'unit', unit: 'mmHg', decimals: 0 },
+        ];
+        total = s + '/' + d + ' mmHg';
+        sub = 'ACC/AHA 2017: ' + cat + ' · ESC/WHO would call this ' + esc + ' · mean arterial pressure ' + Math.round(d + (s - d) / 3) + ' mmHg';
+        position = place(s, 100, 190);
+        positionLabel = s + '/' + d + ' — ' + cat;
+        chart = [
+          { label: 'Normal (under 120)', value: 120, from: 100, to: 120, tone: 'good' },
+          { label: 'Elevated (120–129)', value: 130, from: 120, to: 130, tone: 'prop' },
+          { label: 'Stage 1 (130–139)', value: 140, from: 130, to: 140, tone: 'warn' },
+          { label: 'Stage 2 (140–179)', value: 180, from: 140, to: 180, tone: 'bad' },
+          { label: 'Crisis (180+)', value: 190, from: 180, to: 190, tone: 'bad' },
+        ];
+      } else if (id === 'lipids') {
+        const tc = Math.max(0, v.total || 0);
+        const ldl = Math.max(0, v.ldl || 0);
+        const hdl = Math.max(0, v.hdl || 0);
+        const tg = Math.max(0, v.trig || 0);
+        const nonHdl = Math.max(0, tc - hdl);
+        const ratio = hdl > 0 ? tc / hdl : 0;
+        const hdlLow = female ? LIPIDS.hdl.lowWomen : LIPIDS.hdl.lowMen;
+        const ldlCat =
+          ldl < LIPIDS.ldl.optimal ? 'optimal' :
+          ldl < LIPIDS.ldl.nearOptimal ? 'near optimal' :
+          ldl < LIPIDS.ldl.borderline ? 'borderline high' :
+          ldl < LIPIDS.ldl.high ? 'high' : 'very high';
+
+        rows = [
+          { k: 'Total cholesterol', ref: 'Desirable under ' + LIPIDS.total.desirable + ' · high from ' + LIPIDS.total.high, v: tc, format: 'unit', unit: 'mg/dL', decimals: 0 },
+          { k: 'LDL — ' + ldlCat, ref: 'The number that drives treatment', v: ldl, format: 'unit', unit: 'mg/dL', decimals: 0, extra: true },
+          { k: 'HDL', ref: 'Low under ' + hdlLow + ' for your sex · protective from ' + LIPIDS.hdl.protective, v: hdl, format: 'unit', unit: 'mg/dL', decimals: 0 },
+          { k: 'Triglycerides', ref: 'Normal under ' + LIPIDS.trig.normal + ' · pancreatitis risk over ' + LIPIDS.trig.veryHigh, v: tg, format: 'unit', unit: 'mg/dL', decimals: 0 },
+          { k: 'Non-HDL cholesterol', ref: 'Total minus HDL · many guidelines now prefer this', v: nonHdl, format: 'unit', unit: 'mg/dL', decimals: 0, extra: true },
+          { k: 'Total to HDL ratio', ref: 'Under 3.5 is favourable', v: ratio, format: 'unit', unit: ': 1', decimals: 2 },
+          { k: 'Distance from LDL to the optimal line (100)', ref: 'Negative means you are above it', v: LIPIDS.ldl.optimal - ldl, format: 'unit', unit: 'mg/dL', decimals: 0 },
+        ];
+        total = ldl + ' mg/dL LDL';
+        sub = 'LDL ' + ldlCat + ' · total ' + tc + ' · HDL ' + hdl + (hdl < hdlLow ? ' (low)' : '') + ' · triglycerides ' + tg + ' · non-HDL ' + Math.round(nonHdl);
+        position = place(ldl, 50, 200);
+        positionLabel = 'LDL ' + ldl + ' mg/dL — ' + ldlCat;
+        chart = [
+          { label: 'Optimal (under 100)', value: 100, from: 50, to: 100, tone: 'good' },
+          { label: 'Near optimal (100–129)', value: 130, from: 100, to: 130, tone: 'good' },
+          { label: 'Borderline (130–159)', value: 160, from: 130, to: 160, tone: 'prop' },
+          { label: 'High (160–189)', value: 190, from: 160, to: 190, tone: 'warn' },
+          { label: 'Very high (190+)', value: 200, from: 190, to: 200, tone: 'bad' },
+        ];
+      } else if (id === 'sugar') {
+        const a1c = Math.max(0, v.a1c || 0);
+        const g = Math.max(0, v.glucose || 0);
+        const eag = GLY.eag.slope * a1c - GLY.eag.intercept;
+        const a1cCat = a1c < GLY.a1cNormal ? 'normal' : a1c < GLY.a1cDiabetes ? 'prediabetes' : 'diabetes range';
+        const gCat = g < GLY.fastingNormal ? 'normal' : g < GLY.fastingDiabetes ? 'prediabetes' : 'diabetes range';
+
+        rows = [
+          { k: 'HbA1c — ' + a1cCat, ref: 'ADA: under ' + GLY.a1cNormal + '% normal, ' + GLY.a1cDiabetes + '%+ diabetes', v: a1c, format: 'unit', unit: '%', decimals: 1, extra: true },
+          { k: 'Estimated average glucose from that A1c', ref: 'ADAG: 28.7 × A1c − 46.7', v: eag, format: 'unit', unit: 'mg/dL', decimals: 0, extra: true },
+          { k: 'Fasting glucose — ' + gCat, ref: 'ADA: under 100 normal, 126+ diabetes', v: g, format: 'unit', unit: 'mg/dL', decimals: 0 },
+          { k: 'Distance to the prediabetes line (5.7%)', ref: 'Negative means you are above it', v: GLY.a1cNormal - a1c, format: 'unit', unit: 'percentage points', decimals: 1 },
+          { k: 'Distance to the diabetes line (6.5%)', ref: 'Negative means you are above it', v: GLY.a1cDiabetes - a1c, format: 'unit', unit: 'percentage points', decimals: 1 },
+          { k: 'A1c that would match your fasting glucose', ref: 'Inverting the ADAG equation', v: (g + GLY.eag.intercept) / GLY.eag.slope, format: 'unit', unit: '%', decimals: 1 },
+          { k: 'Do the two numbers agree?', ref: a1cCat === gCat ? 'Yes — same category' : 'No — ' + a1cCat + ' vs ' + gCat + ', worth asking about', v: a1cCat === gCat ? 1 : 0, format: 'plain' },
+        ];
+        total = a1c.toFixed(1) + '%';
+        sub = 'HbA1c is ' + a1cCat + ' · that is an average glucose of about ' + Math.round(eag) + ' mg/dL · fasting glucose is ' + gCat;
+        position = place(a1c, 4.5, 9);
+        positionLabel = 'A1c ' + a1c.toFixed(1) + '% — ' + a1cCat;
+        chart = [
+          { label: 'Normal (under 5.7%)', value: 5.7, from: 4.5, to: 5.7, tone: 'good' },
+          { label: 'Prediabetes (5.7–6.4%)', value: 6.5, from: 5.7, to: 6.5, tone: 'warn' },
+          { label: 'Diabetes range (6.5%+)', value: 9, from: 6.5, to: 9, tone: 'bad' },
+        ];
+      } else if (id === 'iron') {
+        const f = Math.max(0, v.ferritin || 0);
+        const lo = female ? IRON.refWomenLow : IRON.refMenLow;
+        const hi = female ? IRON.refWomenHigh : IRON.refMenHigh;
+        const cat =
+          f < IRON.depleted ? 'depleted stores (WHO threshold)' :
+          f < IRON.actionable ? 'low — most clinicians treat here if symptoms fit' :
+          f > IRON.overload ? 'high — needs its own workup, not iron' : 'adequate';
+
+        rows = [
+          { k: 'Ferritin — ' + cat, ref: 'Laboratory range for your sex: ' + lo + '–' + hi + ' ng/mL', v: f, format: 'unit', unit: 'ng/mL', decimals: 0, extra: true },
+          { k: 'WHO threshold for depleted iron stores', ref: 'WHO 2020', v: IRON.depleted, format: 'unit', unit: 'ng/mL', decimals: 0 },
+          { k: 'Clinical action threshold', ref: 'Deficiency without anaemia is already symptomatic here', v: IRON.actionable, format: 'unit', unit: 'ng/mL', decimals: 0 },
+          { k: 'Distance to the action threshold', ref: 'Negative means you are above it', v: IRON.actionable - f, format: 'unit', unit: 'ng/mL', decimals: 0 },
+          { k: 'Bottom of your laboratory reference range', ref: female ? 'Female range' : 'Male range', v: lo, format: 'unit', unit: 'ng/mL', decimals: 0 },
+          { k: 'Top of your laboratory reference range', ref: female ? 'Female range' : 'Male range', v: hi, format: 'unit', unit: 'ng/mL', decimals: 0 },
+        ];
+        total = f + ' ng/mL';
+        sub = 'Ferritin is ' + cat + ' · remember inflammation raises ferritin and can hide a real deficiency';
+        position = place(f, 0, 200);
+        positionLabel = 'Ferritin ' + f + ' ng/mL — ' + cat;
+        chart = [
+          { label: 'Depleted (under 15)', value: 15, from: 0, to: 15, tone: 'bad' },
+          { label: 'Low (15–30)', value: 30, from: 15, to: 30, tone: 'warn' },
+          { label: 'Adequate (30–200)', value: 200, from: 30, to: 200, tone: 'good' },
+        ];
+      } else if (id === 'oxygen') {
+        const s = Math.max(0, v.spo2 || 0);
+        const ft = Math.max(0, v.altitude || 0);
+        const exp = expectedSpo2(ft);
+        const gap = s - exp;
+        const cat =
+          ft < 5000
+            ? (s >= 95 ? 'normal for sea level' : s >= 91 ? 'borderline' : 'low — seek assessment')
+            : (gap >= -2 ? 'as expected for this altitude' : gap >= -5 ? 'below the expected value here' : 'well below expected — seek assessment');
+
+        rows = [
+          { k: 'Your reading', ref: 'Pulse oximeter, at rest', v: s, format: 'unit', unit: '%', decimals: 0, extra: true },
+          { k: 'Expected at ' + Math.round(ft).toLocaleString('en-US') + ' feet', ref: 'Healthy acclimatised adult', v: exp, format: 'unit', unit: '%', decimals: 0, extra: true },
+          { k: 'Difference from the expected value', ref: 'Negative means below expectation', v: gap, format: 'unit', unit: 'percentage points', decimals: 1 },
+          { k: 'Normal band at sea level — lower bound', ref: '95 to 100%', v: 95, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Threshold usually prompting assessment at sea level', ref: 'Sustained readings below this', v: 90, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Typical device accuracy', ref: 'Worse with cold hands, nail polish, poor perfusion or darker skin', v: 3, format: 'unit', unit: 'percentage points either way', decimals: 0 },
+        ];
+        total = s + '%';
+        sub = 'At ' + Math.round(ft).toLocaleString('en-US') + ' feet the expected reading is about ' + Math.round(exp) + '% — yours is ' + cat;
+        position = place(s, 80, 100);
+        positionLabel = 'SpO2 ' + s + '% — ' + cat;
+        chart = [
+          { label: 'Low (under 90%)', value: 90, from: 80, to: 90, tone: 'bad' },
+          { label: 'Borderline (90–94%)', value: 95, from: 90, to: 95, tone: 'warn' },
+          { label: 'Normal (95–100%)', value: 100, from: 95, to: 100, tone: 'good' },
+        ];
+      } else {
+        const t = Math.max(0, v.testosterone || 0);
+        const fsh = Math.max(0, v.fsh || 0);
+        const decline = Math.max(0, age - T.declineFromAge) * (T.declinePctPerYear / 100);
+        const ageAdjusted = ((T.low + T.high) / 2) * (1 - decline);
+        const tCat = t < T.low ? 'below the action threshold' : t > T.high ? 'above the usual range' : 'inside the adult male range';
+        const fshCat = fsh >= HORM.fshMenopause ? 'in the menopausal range' : 'below the menopause threshold';
+
+        rows = [
+          { k: 'Total testosterone — ' + tCat, ref: 'Adult male range ' + T.low + '–' + T.high + ' ng/dL', v: t, format: 'unit', unit: 'ng/dL', decimals: 0, extra: true },
+          { k: 'Age-adjusted expectation at ' + age, ref: 'About 1% decline a year from age 30', v: ageAdjusted, format: 'unit', unit: 'ng/dL', decimals: 0 },
+          { k: 'Endocrine Society action threshold', ref: 'Morning draw, confirmed on a second sample', v: T.low, format: 'unit', unit: 'ng/dL', decimals: 0 },
+          { k: 'FSH — ' + fshCat, ref: 'Menopausal range from about ' + HORM.fshMenopause + ' IU/L', v: fsh, format: 'unit', unit: 'IU/L', decimals: 1, extra: true },
+          { k: 'FSH follicular reference range — upper bound', ref: 'Early follicular phase', v: HORM.fshFollicular.high, format: 'unit', unit: 'IU/L', decimals: 1 },
+          { k: 'Progesterone confirming ovulation', ref: 'Mid-luteal draw, about 7 days before the period', v: HORM.progesteroneOvulatory, format: 'unit', unit: 'ng/mL and above', decimals: 0 },
+          { k: 'Estradiol in the luteal phase — upper bound', ref: 'Phase-dependent, wide normal spread', v: HORM.estradiol.luteal[1], format: 'unit', unit: 'pg/mL', decimals: 0 },
+          { k: 'Semen: concentration lower reference limit', ref: 'WHO 2021, 6th edition, 5th percentile', v: SEMEN.concentrationMPerMl, format: 'unit', unit: 'million/mL', decimals: 0 },
+          { k: 'Semen: total motility lower reference limit', ref: 'WHO 2021', v: SEMEN.totalMotilityPct, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Semen: progressive motility lower reference limit', ref: 'WHO 2021', v: SEMEN.progressiveMotilityPct, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Semen: normal morphology lower reference limit', ref: 'WHO 2021 — strict criteria', v: SEMEN.normalMorphologyPct, format: 'unit', unit: '%', decimals: 0 },
+        ];
+        total = t + ' ng/dL';
+        sub =
+          'Testosterone is ' + tCat + ' (age-adjusted expectation about ' + Math.round(ageAdjusted) +
+          ' ng/dL) · FSH is ' + fshCat + ' · WHO 2021 semen limits listed below';
+        position = place(t, 100, 1200);
+        positionLabel = 'Testosterone ' + t + ' ng/dL — ' + tCat;
+        chart = [
+          { label: 'Below threshold (under 300)', value: 300, from: 100, to: 300, tone: 'bad' },
+          { label: 'Adult male range (300–1000)', value: 1000, from: 300, to: 1000, tone: 'good' },
+          { label: 'Above the usual range', value: 1200, from: 1000, to: 1200, tone: 'warn' },
+        ];
+      }
+
+      return { total: total, sub: sub, rows: rows, format: 'plain', position: position, positionLabel: positionLabel, chart: chart };
+    });
+  })();
+</script>

@@ -1,0 +1,258 @@
+---
+/**
+ * Hub de decisión PE — "Impuesto a la renta de personas: cuánto pagas según tu categoría".
+ * Absorbe el hub raíz /impuestos/renta-peru y lo amplía con 1ra y 2da categoría.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UIT,
+  TRAMOS,
+  DEDUCCION_UIT,
+  DEDUCCION_4TA,
+  TOPE_4TA_UIT,
+  ADICIONAL_3UIT,
+  TASA_EFECTIVA_CAPITAL,
+  TASA_RENTA_NETA_CAPITAL,
+  DEDUCCION_CAPITAL,
+  SUSPENSION,
+} from '../../../lib/hubs/pe/renta-de-personas';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PE"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    UIT,
+    TRAMOS,
+    DEDUCCION_UIT,
+    DEDUCCION_4TA,
+    TOPE_4TA_UIT,
+    ADICIONAL: ADICIONAL_3UIT,
+    TASA_CAP: TASA_EFECTIVA_CAPITAL,
+    TASA_NETA_CAP: TASA_RENTA_NETA_CAPITAL,
+    DED_CAP: DEDUCCION_CAPITAL,
+    SUSPENSION,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const sol = (n) => 'S/ ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(Math.round(n || 0));
+
+    /** Escala del Art. 53 LIR sobre la renta neta (ya descontadas las 7 UIT). */
+    function escala(rentaNeta) {
+      let base = Math.max(0, rentaNeta);
+      let impuesto = 0, anterior = 0, marginal = 0, desdeUit = 0, hastaUit = null;
+      for (const t of TRAMOS) {
+        const limite = t.hastaUit === null ? Infinity : t.hastaUit * UIT;
+        const enTramo = Math.min(base, limite - anterior);
+        if (enTramo > 0) {
+          impuesto += enTramo * t.tasa;
+          marginal = t.tasa;
+          desdeUit = anterior / UIT;
+          hastaUit = t.hastaUit;
+          base -= enTramo;
+        }
+        anterior = limite;
+        if (base <= 0) break;
+      }
+      return { impuesto: impuesto, marginal: marginal, desdeUit: desdeUit, hastaUit: hastaUit };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || '5ta';
+      const r5 = Math.max(0, v.renta5ta || 0);
+      const r4 = Math.max(0, v.renta4ta || 0);
+      const alquilerMes = Math.max(0, v.alquiler || 0);
+      const ganancia = Math.max(0, v.ganancia || 0);
+      const gastos = Math.max(0, v.gastos3uit || 0);
+      const retenciones = Math.max(0, v.retenciones || 0);
+
+      const rows = [];
+
+      // ---- Rentas de capital: tasa plana, fuera de la escala progresiva ----
+      if (id === '1ra' || id === '2da') {
+        const bruto = id === '1ra' ? alquilerMes * 12 : ganancia;
+        const rentaNeta = bruto * (1 - DED_CAP);
+        const impuesto = rentaNeta * TASA_NETA_CAP;
+        const neto = bruto - impuesto;
+        const etiqueta = id === '1ra' ? 'Alquiler bruto del año' : 'Ganancia o dividendo del año';
+
+        rows.push({ k: etiqueta, ref: id === '1ra' ? alquilerMes > 0 ? sol(alquilerMes) + ' por mes × 12' : 'Cargá el alquiler mensual' : 'Precio de venta menos costo computable', v: bruto });
+        rows.push({ k: 'Deducción sin sustento', ref: DED_CAP * 100 + '% del bruto · no hay que justificarla', v: bruto * DED_CAP });
+        rows.push({ k: 'Renta neta imponible', ref: '80% del bruto', v: rentaNeta });
+        rows.push({ k: 'Impuesto del año', ref: TASA_NETA_CAP * 100 + '% sobre la renta neta = ' + TASA_CAP * 100 + '% efectivo sobre el bruto', v: impuesto, extra: true });
+        if (id === '1ra') {
+          rows.push({ k: 'Lo que pagas cada mes', ref: 'Pago Fácil · formulario 1683', v: impuesto / 12 });
+        }
+        rows.push({ k: 'Lo que te queda después del impuesto', ref: 'Bruto menos impuesto', v: neto });
+        rows.push({
+          k: 'Tasa efectiva sobre el bruto',
+          ref: 'Impuesto ÷ ingreso bruto',
+          v: bruto > 0 ? (impuesto / bruto) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+
+        const sub = id === '1ra'
+          ? 'Un alquiler de ' + sol(alquilerMes) + ' al mes paga ' + sol(impuesto / 12) + ' de impuesto cada mes · ' + sol(impuesto) + ' al año · te quedan ' + sol(neto / 12) + ' netos por mes'
+          : 'Sobre una ganancia de ' + sol(bruto) + ' el impuesto es ' + sol(impuesto) + ' · tasa efectiva ' + (TASA_CAP * 100) + '% · te quedan ' + sol(neto);
+
+        return {
+          total: sol(impuesto),
+          sub: sub,
+          rows: rows,
+          chart: [
+            { label: 'Lo que te queda', value: Math.round(neto), tone: 'main' },
+            { label: 'Deducción del ' + DED_CAP * 100 + '% (fuera del impuesto)', value: Math.round(bruto * DED_CAP), tone: 'good' },
+            { label: 'Impuesto', value: Math.round(impuesto), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ---- Rentas de trabajo: 4ta + 5ta suman una sola base y pasan por la escala ----
+      const deduccion20 = Math.min(r4 * DEDUCCION_4TA, TOPE_4TA_UIT * UIT);
+      const r4Neta = r4 - deduccion20;
+      const brutoTrabajo = r4Neta + r5;
+      const ded7 = DEDUCCION_UIT * UIT;
+      const adicional = Math.min(gastos, ADICIONAL.topeUit * UIT);
+      const rentaNeta = Math.max(0, brutoTrabajo - ded7 - adicional);
+      const e = escala(rentaNeta);
+      const impuesto = Math.round(e.impuesto);
+      const saldo = impuesto - retenciones;
+      const ingresoTotal = r4 + r5;
+      const efectiva = ingresoTotal > 0 ? (impuesto / ingresoTotal) * 100 : 0;
+
+      // Umbral de suspensión de retenciones de 4ta (sólo informativo en esa rama).
+      const umbralSusp = SUSPENSION.generalUit * UIT;
+
+      rows.push({ k: 'Ingresos de quinta categoría', ref: '12 sueldos + 2 gratificaciones', v: r5 });
+      if (r4 > 0) {
+        rows.push({ k: 'Honorarios de cuarta categoría', ref: 'Recibos por honorarios del año', v: r4 });
+        rows.push({
+          k: 'Deducción del ' + DEDUCCION_4TA * 100 + '% de cuarta (se resta)',
+          ref: deduccion20 >= TOPE_4TA_UIT * UIT ? 'Topeada en ' + TOPE_4TA_UIT + ' UIT · Art. 45 LIR' : 'Art. 45 LIR',
+          v: deduccion20,
+        });
+      }
+      rows.push({ k: 'Renta bruta de trabajo', ref: 'Cuarta neta + quinta', v: brutoTrabajo });
+      rows.push({ k: 'Deducción fija de ' + DEDUCCION_UIT + ' UIT (se resta)', ref: 'Art. 46 LIR', v: Math.min(ded7, brutoTrabajo) });
+      if (adicional > 0) {
+        rows.push({
+          k: 'Deducción adicional por gastos (se resta)',
+          ref: adicional >= ADICIONAL.topeUit * UIT ? 'Topeada en ' + ADICIONAL.topeUit + ' UIT' : 'Hasta ' + ADICIONAL.topeUit + ' UIT · comprobante electrónico',
+          v: adicional,
+        });
+      }
+      if (gastos > adicional) {
+        rows.push({ k: 'Gastos que superan el tope y se pierden', ref: 'Excedente sobre ' + ADICIONAL.topeUit + ' UIT', v: gastos - adicional });
+      }
+      rows.push({ k: 'Renta neta imponible', ref: 'Base de la escala del Art. 53', v: rentaNeta });
+      rows.push({
+        k: 'Renta neta en UIT',
+        ref: 'UIT ' + sol(UIT),
+        v: rentaNeta / UIT,
+        format: 'unit',
+        unit: 'UIT',
+        decimals: 1,
+      });
+      rows.push({
+        k: 'Tramo de la escala en el que caes',
+        ref: e.hastaUit === null ? 'De 45 UIT en adelante' : 'De ' + e.desdeUit.toFixed(0) + ' a ' + e.hastaUit + ' UIT',
+        v: e.marginal * 100,
+        format: 'unit',
+        unit: '% marginal',
+      });
+      rows.push({ k: 'Impuesto del ejercicio', ref: 'Escala del Art. 53 LIR', v: impuesto });
+      rows.push({ k: 'Retenciones y pagos a cuenta (se restan)', ref: 'Anticipos ya pagados', v: Math.min(retenciones, impuesto) });
+      if (saldo > 0) {
+        rows.push({ k: 'Saldo por regularizar', ref: 'Declaración anual', v: saldo, extra: true });
+      } else if (saldo < 0) {
+        rows.push({ k: 'Saldo a favor para pedir en devolución', ref: 'Te retuvieron de más', v: -saldo, extra: true });
+      }
+      rows.push({
+        k: 'Tasa efectiva sobre tus ingresos brutos',
+        ref: 'Impuesto ÷ ingresos',
+        v: efectiva,
+        format: 'unit',
+        unit: '%',
+        decimals: 2,
+      });
+      if (id === '4ta') {
+        rows.push(
+          r4 <= umbralSusp
+            ? { k: 'Margen que te queda antes de perder la suspensión de retenciones', ref: SUSPENSION.generalUit + ' UIT · Formulario Virtual 1609', v: umbralSusp - r4 }
+            : { k: 'Cuánto pasaste el umbral de suspensión de retenciones', ref: SUSPENSION.generalUit + ' UIT · ya no procede la suspensión', v: r4 - umbralSusp }
+        );
+      }
+
+      const sub =
+        (rentaNeta <= 0
+          ? 'No superas la deducción de ' + DEDUCCION_UIT + ' UIT: no pagas impuesto a la renta de trabajo'
+          : 'Renta neta ' + (rentaNeta / UIT).toFixed(1).replace('.', ',') + ' UIT · tramo del ' + (e.marginal * 100) + '%') +
+        (saldo < 0
+          ? ' · tienes ' + sol(-saldo) + ' a favor para pedir en devolución'
+          : saldo > 0
+            ? ' · te quedan ' + sol(saldo) + ' por regularizar'
+            : ' · sin saldo pendiente') +
+        ' · tasa efectiva ' + efectiva.toFixed(2).replace('.', ',') + '%';
+
+      const fuera = Math.round(Math.min(ded7, brutoTrabajo) + adicional + deduccion20);
+
+      return {
+        total: sol(impuesto),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Fuera del impuesto (deducciones)', value: fuera, tone: 'good' },
+          { label: 'Renta gravada que te queda', value: Math.max(0, Math.round(rentaNeta - impuesto)), tone: 'main' },
+          { label: 'Impuesto', value: impuesto, tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

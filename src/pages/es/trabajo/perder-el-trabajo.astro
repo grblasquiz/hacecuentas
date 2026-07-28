@@ -1,0 +1,209 @@
+---
+/**
+ * Hub de decisión ES — perder el trabajo. Reemplaza 5 calculadoras sueltas.
+ * audience="ES" literal al Layout. define:vars serializa a JSON.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, DESPIDO, PARO, SUBSIDIO_52 } from '../../../lib/hubs/es/perder-el-trabajo';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/es' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="ES"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ D: DESPIDO, P: PARO, S: SUBSIDIO_52 }}>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n) => Math.round(n || 0).toLocaleString('es-ES') + ' €';
+
+    function mesesPrestacion(dias) {
+      let meses = 0;
+      for (const par of P.duracion) {
+        if (dias >= par[0]) meses = par[1];
+      }
+      return meses;
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'improcedente';
+      const brutoAnual = Math.max(0, v.brutoAnual || 0);
+      const anios = Math.max(0, v.anios || 0);
+      const aniosPre = Math.min(Math.max(0, v.aniosPre2012 || 0), anios);
+      const aniosPost = Math.max(0, anios - aniosPre);
+      const diasCotizados = Math.max(0, Math.round(v.diasCotizados || 0));
+      const hijos = String(v.hijos || '0');
+      const diasVacaciones = Math.max(0, v.diasVacaciones || 0);
+      const diasMes = Math.max(0, v.diasMes || 0);
+
+      const salarioDiario = brutoAnual / 365;
+      const salarioMensual = brutoAnual / 12;
+
+      // ── Finiquito ─────────────────────────────────────────────────
+      const importeDiasMes = salarioDiario * diasMes;
+      const importeVacaciones = salarioDiario * diasVacaciones;
+      // Parte proporcional de pagas extra devengadas del semestre en curso.
+      const pagasProrrateadas = (brutoAnual / 14) * ((diasMes + 30) / 180);
+      const finiquito = importeDiasMes + importeVacaciones + Math.max(0, pagasProrrateadas);
+
+      // ── Indemnización ─────────────────────────────────────────────
+      let indemnizacion = 0;
+      let refIndemnizacion = 'No corresponde en este caso';
+      if (id === 'improcedente') {
+        const pre = Math.min(salarioDiario * D.diasImprocedentePre2012 * aniosPre, salarioMensual * D.topePre2012);
+        const post = salarioDiario * D.diasImprocedente * aniosPost;
+        indemnizacion = Math.min(pre + post, salarioMensual * D.topeImprocedente);
+        refIndemnizacion =
+          D.diasImprocedente + ' días/año' + (aniosPre > 0 ? ' + ' + D.diasImprocedentePre2012 + ' días pre-2012' : '') +
+          ' · tope ' + D.topeImprocedente + ' mensualidades';
+      } else if (id === 'objetivo') {
+        indemnizacion = Math.min(salarioDiario * D.diasObjetivo * anios, salarioMensual * D.topeObjetivo);
+        refIndemnizacion = D.diasObjetivo + ' días/año · tope ' + D.topeObjetivo + ' mensualidades';
+      } else if (id === 'fin') {
+        indemnizacion = salarioDiario * D.diasFinContrato * anios;
+        refIndemnizacion = D.diasFinContrato + ' días/año por fin de contrato temporal';
+      }
+
+      // ── Prestación por desempleo ──────────────────────────────────
+      const baseReguladoraMensual = salarioMensual;
+      const topeMin = P.iprem * (P.topeMin[hijos] || P.topeMin['0']);
+      const topeMax = P.iprem * (P.topeMax[hijos] || P.topeMax['0']);
+      const tieneParo = id !== 'fin' && diasCotizados >= P.diasMinimos;
+      const brutoPrimeros = Math.min(Math.max(baseReguladoraMensual * P.pctPrimeros180, topeMin), topeMax);
+      const brutoResto = Math.min(Math.max(baseReguladoraMensual * P.pctDesde181, topeMin), topeMax);
+      const meses = tieneParo ? mesesPrestacion(diasCotizados) : 0;
+      const mesesPrimeros = Math.min(meses, 6);
+      const mesesResto = Math.max(0, meses - 6);
+      const totalParo = brutoPrimeros * mesesPrimeros + brutoResto * mesesResto;
+
+      // ── Subsidio para mayores de 52 ───────────────────────────────
+      const subsidioMensual = P.iprem * S.pctIprem;
+      const limiteRentas = S.smiMensual * S.limiteRentasPctSmi;
+
+      const rows = [
+        { k: 'Salario bruto anual', ref: 'Base del cálculo', v: brutoAnual },
+        { k: 'Salario diario', ref: 'Bruto anual ÷ 365', v: salarioDiario, decimals: 2 },
+        { k: 'Días trabajados del mes', ref: diasMes + ' días sin cobrar', v: importeDiasMes },
+        { k: 'Vacaciones no disfrutadas', ref: diasVacaciones + ' días', v: importeVacaciones },
+        { k: 'Pagas extra devengadas', ref: 'Parte proporcional del período', v: Math.max(0, pagasProrrateadas) },
+        { k: 'Finiquito', ref: 'Siempre te corresponde, tributa entero', v: finiquito, extra: true },
+        { k: 'Indemnización', ref: refIndemnizacion, v: indemnizacion, extra: true },
+      ];
+      if (indemnizacion > D.limiteExencionIrpf) {
+        rows.push({
+          k: 'Parte de la indemnización que tributa',
+          ref: 'El exceso sobre ' + eur(D.limiteExencionIrpf),
+          v: indemnizacion - D.limiteExencionIrpf,
+        });
+      }
+      if (id === 'subsidio52') {
+        rows.push({ k: 'Subsidio mensual', ref: '80% del IPREM', v: subsidioMensual, extra: true });
+        rows.push({ k: 'Límite de rentas propias', ref: '75% del salario mínimo mensual', v: limiteRentas });
+      } else {
+        rows.push({
+          k: 'Prestación de los primeros 6 meses',
+          ref: tieneParo ? '70% de la base, entre topes' : 'Sin derecho en este caso',
+          v: tieneParo ? brutoPrimeros : 0,
+        });
+        rows.push({
+          k: 'Prestación a partir del mes 7',
+          ref: tieneParo ? '60% de la base, entre topes' : 'Sin derecho en este caso',
+          v: tieneParo ? brutoResto : 0,
+        });
+        rows.push({
+          k: 'Duración de la prestación',
+          ref: diasCotizados + ' días cotizados',
+          v: meses,
+          format: 'unit',
+          unit: 'meses',
+        });
+        rows.push({ k: 'Total que cobrarás de paro', ref: 'Durante toda la prestación', v: totalParo });
+        rows.push({ k: 'Tope mínimo mensual', ref: 'Según hijos a cargo', v: topeMin });
+        rows.push({ k: 'Tope máximo mensual', ref: 'Según hijos a cargo', v: topeMax });
+      }
+
+      const totalBolsillo = finiquito + indemnizacion + (id === 'subsidio52' ? 0 : totalParo);
+      rows.push({ k: 'Total estimado en tu bolsillo', ref: 'Finiquito + indemnización + paro', v: totalBolsillo, extra: true });
+
+      const chart = [
+        { label: 'Finiquito', value: Math.round(finiquito), tone: 'prop' },
+        { label: 'Indemnización', value: Math.round(indemnizacion), tone: 'main' },
+        { label: 'Paro (total)', value: Math.round(id === 'subsidio52' ? 0 : totalParo), tone: 'good' },
+      ].filter(function (s) {
+        return s.value > 0;
+      });
+
+      const sub =
+        id === 'subsidio52'
+          ? 'Cobrarías ' +
+            eur(subsidioMensual) +
+            ' al mes hasta la jubilación, siempre que tus rentas propias no pasen de ' +
+            eur(limiteRentas) +
+            ' al mes'
+          : tieneParo
+            ? 'Finiquito de ' +
+              eur(finiquito) +
+              ' e indemnización de ' +
+              eur(indemnizacion) +
+              ' · después, ' +
+              eur(brutoPrimeros) +
+              ' al mes de paro durante ' +
+              meses +
+              ' meses'
+            : 'Finiquito de ' +
+              eur(finiquito) +
+              ' e indemnización de ' +
+              eur(indemnizacion) +
+              ' · sin derecho a prestación contributiva con estos datos';
+
+      return {
+        total: eur(totalBolsillo),
+        sub: sub,
+        rows: rows,
+        chart: chart,
+        format: 'unit',
+        unit: '€',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

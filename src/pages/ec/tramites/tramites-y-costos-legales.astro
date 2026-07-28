@@ -1,0 +1,232 @@
+---
+/**
+ * Hub de decisión EC — "Trámites y costos legales: pasaporte, multa electoral, notaría y traspaso".
+ * audience="EC" literal: HubData sólo modela 'AR' | 'global' y el mercado viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  SBU,
+  IVA,
+  PASAPORTE,
+  MULTA_SUFRAGIO,
+  COSTO_CEDULA,
+  NOTARIA_FIJOS,
+  NOTARIA_CUANTIA,
+  NOTARIA_MINIMO,
+  TRASPASO,
+} from '../../../lib/hubs/ec/tramites-y-costos-legales';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="EC"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ SBU, IVA, PASAPORTE, MULTA_SUFRAGIO, COSTO_CEDULA, NOTARIA_FIJOS, NOTARIA_CUANTIA, NOTARIA_MINIMO, TRASPASO }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) =>
+      '$' + new Intl.NumberFormat('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        .format(Math.round((n || 0) * 100) / 100);
+
+    /** Tabla gradual descendente del honorario notarial de cuantía determinada. */
+    function honorarioCuantia(valor) {
+      let tasa = NOTARIA_CUANTIA[NOTARIA_CUANTIA.length - 1].tasa;
+      for (const t of NOTARIA_CUANTIA) {
+        if (t.hasta === null || valor <= t.hasta) { tasa = t.tasa; break; }
+      }
+      return Math.max(valor * tasa, NOTARIA_MINIMO);
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'pasaporte';
+      const rows = [];
+      let total = 0, sub = '', chart = [];
+
+      if (id === 'pasaporte') {
+        const key = String(v.solicitante || 'adulto');
+        const costo =
+          key === 'menor' ? PASAPORTE.menor :
+          key === 'tercera_edad' ? PASAPORTE.terceraEdad :
+          key === 'discapacidad' ? PASAPORTE.discapacidad :
+          PASAPORTE.adulto;
+        const vigencia = key === 'menor' ? PASAPORTE.vigenciaMenor : PASAPORTE.vigenciaAdulto;
+        const cedula = String(v.incluyeCedula || 'no') === 'si' ? COSTO_CEDULA : 0;
+        total = costo + cedula;
+        const ahorro = PASAPORTE.adulto - costo;
+
+        rows.push({ k: 'Costo del pasaporte ordinario electrónico', ref: 'Registro Civil · la renovación cuesta lo mismo', v: costo, extra: true });
+        rows.push({ k: 'Renovación de la cédula', ref: cedula > 0 ? 'Requisito previo del pasaporte' : 'No la incluiste en el trámite', v: cedula });
+        rows.push({ k: 'Recargo por trámite urgente', ref: 'No existe: la entrega el mismo día en oficinas principales no tiene costo extra', v: 0 });
+        rows.push({ k: 'Total del trámite', ref: 'Pasaporte más cédula si corresponde', v: total, extra: true });
+        rows.push({ k: 'Vigencia del pasaporte', ref: key === 'menor' ? 'Máximo legal para menores de 18' : 'Vigencia del pasaporte de adulto', v: vigencia, format: 'unit', unit: 'años' });
+        rows.push({ k: 'Lo que ahorras por tu condición', ref: ahorro > 0 ? 'Descuento o exoneración frente a la tarifa de adulto' : 'Sin descuento aplicable', v: ahorro });
+        rows.push({ k: 'Costo por año de vigencia', ref: 'Total del pasaporte repartido en su vigencia', v: vigencia > 0 ? costo / vigencia : 0 });
+
+        sub = 'Pasaporte ' + usd(costo) + ' con ' + vigencia + ' años de vigencia' +
+          (cedula > 0 ? ' más ' + usd(cedula) + ' de cédula' : '') +
+          (ahorro > 0 ? ' · te ahorras ' + usd(ahorro) + ' frente a la tarifa de adulto' : '') +
+          ' · sin recargo por urgencia';
+        chart = [
+          { label: 'Pasaporte', value: Math.round(costo * 100) / 100, tone: 'main' },
+          { label: 'Cédula', value: Math.round(cedula * 100) / 100, tone: 'prop' },
+          { label: 'Descuento o exoneración', value: Math.round(ahorro * 100) / 100, tone: 'good' },
+        ];
+      } else if (id === 'sufragio') {
+        const key = String(v.situacionElectoral || 'no_sufragar');
+        const exento = key === 'facultativo';
+        const variante = MULTA_SUFRAGIO.variantes[key] || MULTA_SUFRAGIO.variantes.no_sufragar;
+        const elecciones = Math.max(1, Math.min(20, Math.floor(Number(v.elecciones) || 1)));
+        const unitaria = exento ? 0 : MULTA_SUFRAGIO.sbu * variante.pctSBU;
+        total = unitaria * elecciones;
+
+        rows.push({ k: 'Salario básico unificado vigente', ref: 'Base de cálculo de toda multa electoral', v: MULTA_SUFRAGIO.sbu });
+        rows.push({
+          k: 'Multa por elección',
+          ref: exento ? 'Voto facultativo o justificativo válido: no se genera multa' : variante.label + ' · ' + Math.round(variante.pctSBU * 100) + '% del SBU',
+          v: unitaria,
+        });
+        rows.push({ k: 'Elecciones sin sufragar', ref: 'Las multas electorales son acumulativas', v: elecciones, format: 'unit', unit: 'elecciones' });
+        rows.push({ k: 'Total que debes al CNE', ref: exento ? 'No corresponde multa en tu caso' : 'Multa por elección × cantidad de elecciones', v: total, extra: true });
+        rows.push({ k: 'Referencia: no sufragar', ref: '10% del SBU', v: MULTA_SUFRAGIO.sbu * 0.1 });
+        rows.push({ k: 'Referencia: no integrar la junta receptora', ref: '15% del SBU', v: MULTA_SUFRAGIO.sbu * 0.15 });
+        rows.push({ k: 'Referencia: abandono de funciones de JRV (mínimo)', ref: '11 SBU · el organismo electoral fija el monto entre 11 y 20 SBU', v: MULTA_SUFRAGIO.sbu * 11 });
+
+        sub = exento
+          ? 'Con voto facultativo o justificativo válido no se genera multa, pero conviene tramitar igual el certificado o la justificación ante el CNE.'
+          : variante.label + ' · ' + Math.round(variante.pctSBU * 100) + '% del SBU = ' + usd(unitaria) + ' por elección · ' +
+            elecciones + ' elección(es) = ' + usd(total) + ' · el monto sube solo cada enero con el SBU';
+        chart = [
+          { label: 'Tu multa acumulada', value: Math.round(total * 100) / 100, tone: 'bad' },
+          { label: 'Salario básico de referencia', value: MULTA_SUFRAGIO.sbu, tone: 'main' },
+        ];
+      } else if (id === 'notaria') {
+        const tipo = String(v.tipoActo || 'compraventa');
+        const esCuantia = tipo === 'compraventa' || tipo === 'promesa';
+        const cuantia = Math.max(0, Number(v.cuantia) || 0);
+        const desc = String(v.descuentoNotarial || 'ninguno');
+
+        let base, etiqueta;
+        if (esCuantia) {
+          base = honorarioCuantia(cuantia);
+          etiqueta = tipo === 'promesa' ? 'Promesa de compraventa' : 'Compraventa o transferencia de dominio';
+        } else {
+          const f = NOTARIA_FIJOS[tipo] || NOTARIA_FIJOS.reconocimiento_firma;
+          base = f.pctSBU * SBU;
+          etiqueta = f.label;
+        }
+
+        let factor = 1, descLabel = 'Sin descuento aplicado';
+        if (desc === 'vis' && (!esCuantia || cuantia <= 60000)) { factor = 0.75; descLabel = 'Vivienda de interés social · −25%'; }
+        else if (desc === 'adulto_mayor') { factor = 0.5; descLabel = 'Adulto mayor · −50%'; }
+        const honorario = base * factor;
+        const ivaMonto = honorario * IVA;
+        total = honorario + ivaMonto;
+
+        // Costos que NO cobra la notaría pero acompañan una compraventa de inmueble.
+        const alcabala = esCuantia ? cuantia * 0.01 : 0;
+        const registro = esCuantia ? cuantia * 0.003 : 0;
+
+        rows.push({ k: 'Honorario base del acto', ref: etiqueta + (esCuantia ? ' · tabla gradual sobre ' + usd(cuantia) : ' · tarifa fija del tarifario'), v: base });
+        rows.push({ k: 'Descuento de ley', ref: descLabel, v: base - honorario });
+        rows.push({ k: 'Honorario notarial a pagar', ref: 'Tarifario del Consejo de la Judicatura', v: honorario, extra: true });
+        rows.push({ k: 'IVA sobre el honorario', ref: (IVA * 100).toFixed(0) + '% · se suma a todo acto notarial', v: ivaMonto });
+        rows.push({ k: 'Total en la notaría', ref: 'Honorario más IVA', v: total, extra: true });
+        rows.push({ k: 'Impuesto de alcabala municipal', ref: esCuantia ? 'Aproximadamente 1% · lo cobra el municipio, no la notaría' : 'No aplica a este acto', v: alcabala });
+        rows.push({ k: 'Inscripción en el Registro de la Propiedad', ref: esCuantia ? 'Aproximadamente 0,3% · aparte del honorario notarial' : 'No aplica a este acto', v: registro });
+        rows.push({ k: 'Costo completo de la operación', ref: 'Notaría más alcabala más registro', v: total + alcabala + registro });
+
+        sub = etiqueta + (esCuantia ? ' por ' + usd(cuantia) : '') + ' · honorario ' + usd(honorario) +
+          ' más IVA ' + usd(ivaMonto) + ' = ' + usd(total) + ' en la notaría' +
+          (esCuantia ? ' · con alcabala y registro la operación completa ronda ' + usd(total + alcabala + registro) : '');
+        chart = [
+          { label: 'Honorario notarial', value: Math.round(honorario * 100) / 100, tone: 'main' },
+          { label: 'IVA', value: Math.round(ivaMonto * 100) / 100, tone: 'warn' },
+          { label: 'Alcabala municipal', value: Math.round(alcabala * 100) / 100, tone: 'exit' },
+          { label: 'Registro de la propiedad', value: Math.round(registro * 100) / 100, tone: 'prop' },
+        ];
+      } else {
+        const precio = Math.max(0, Number(v.valorVehiculo) || 0);
+        const avaluo = Math.max(0, Number(v.avaluoSRI) || 0);
+        const tipoVeh = TRASPASO.mantenimientoVial[String(v.tipoVehiculo || 'liviano')] !== undefined ? String(v.tipoVehiculo) : 'liviano';
+        const mantVial = TRASPASO.mantenimientoVial[tipoVeh];
+        const base = Math.max(precio, avaluo);
+        const impuesto = base * TRASPASO.impuestoPct;
+        const notaria = TRASPASO.notariaDefault;
+        total = impuesto + TRASPASO.tramiteANT + TRASPASO.especieMatricula + mantVial + notaria;
+
+        rows.push({ k: 'Valor del contrato de compraventa', ref: 'El precio que pactaste con el vendedor', v: precio });
+        rows.push({ k: 'Avalúo del vehículo en el SRI', ref: avaluo > precio ? 'Manda el avalúo por ser mayor que el contrato' : 'Menor o igual al contrato: manda el contrato', v: avaluo });
+        rows.push({ k: 'Base sobre la que se calcula el impuesto', ref: 'El mayor entre el contrato y el avalúo del SRI', v: base });
+        rows.push({ k: 'Impuesto a la transferencia de dominio', ref: '1% sobre la base', v: impuesto, extra: true });
+        rows.push({ k: 'Trámite de traspaso en la ANT', ref: 'Tasa de servicio', v: TRASPASO.tramiteANT });
+        rows.push({ k: 'Nueva especie de matrícula', ref: 'Se emite a nombre del nuevo propietario', v: TRASPASO.especieMatricula });
+        rows.push({ k: 'Tasa de mantenimiento vial', ref: 'Según la clase de vehículo', v: mantVial });
+        rows.push({ k: 'Honorario de la notaría', ref: 'Contrato de compraventa legalizado · referencial', v: notaria });
+        rows.push({ k: 'Costo total del traspaso', ref: 'Impuesto más tasas más notaría', v: total, extra: true });
+        rows.push({
+          k: 'Cuánto suma el traspaso sobre el precio del auto',
+          ref: 'Costo del traspaso sobre el precio pactado',
+          v: precio > 0 ? (total / precio) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+
+        sub = 'Base ' + usd(base) + (avaluo > precio ? ' (mandó el avalúo del SRI)' : '') +
+          ' · impuesto del 1% ' + usd(impuesto) + ' más tasas y notaría · el traspaso te cuesta ' + usd(total);
+        chart = [
+          { label: 'Impuesto del 1%', value: Math.round(impuesto * 100) / 100, tone: 'exit' },
+          { label: 'Notaría', value: Math.round(notaria * 100) / 100, tone: 'main' },
+          { label: 'Trámite ANT y especie', value: TRASPASO.tramiteANT + TRASPASO.especieMatricula, tone: 'prop' },
+          { label: 'Mantenimiento vial', value: mantVial, tone: 'warn' },
+        ];
+      }
+
+      return { total: usd(total), sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

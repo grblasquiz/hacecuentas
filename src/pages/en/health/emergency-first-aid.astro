@@ -1,0 +1,307 @@
+---
+/**
+ * Decision hub EN — "What do I do right now?" (choking, CPR, anaphylaxis).
+ * Replaces 3 loose calculator URLs (see hub.replaces).
+ *
+ * SAFETY: read the contract at the top of src/lib/hubs/en/emergency-first-aid.ts
+ * before touching compute(). Two rules that must survive every edit:
+ *   1. Every branch's `total` starts with "Call 911".
+ *   2. The anaphylaxis branch names an autoinjector STRENGTH for a weight band.
+ *      It must never emit mg/kg, millilitres, or an ampoule volume.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  RATE,
+  BREATH_SECONDS,
+  SWAP_MINUTES,
+  MAX_PAUSE_SECONDS,
+  CPR,
+  CHOKING,
+  EPI_BANDS,
+  EPI_REPEAT_MIN,
+  EPI_OBSERVE_H,
+  CLOCK,
+  LB_PER_KG,
+  CM_PER_IN,
+} from '../../../lib/hubs/en/emergency-first-aid';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    RATE,
+    BREATH_SECONDS,
+    SWAP_MINUTES,
+    MAX_PAUSE_SECONDS,
+    CPR,
+    CHOKING,
+    EPI_BANDS,
+    EPI_REPEAT_MIN,
+    EPI_OBSERVE_H,
+    CLOCK,
+    LB_PER_KG,
+    CM_PER_IN,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    /** Where we are on the 0–10 minute clock the chart plots. */
+    function clockPos(min) {
+      return Math.min(100, Math.max(0, (min / CLOCK.max) * 100));
+    }
+    function clockChart() {
+      return CLOCK.bands.map(function (b) {
+        return { label: b.label, value: b.to, from: b.from, to: b.to, tone: b.tone };
+      });
+    }
+
+    /** The row that opens every breakdown, so the number is never the first thing read. */
+    function call911Row() {
+      return {
+        k: 'Emergency number to call before anything below',
+        ref: 'United States and Canada. In the EU and much of the world, 112.',
+        v: 911,
+        format: 'plain',
+        decimals: 0,
+        extra: true,
+      };
+    }
+
+    /** CPR rows shared by the three age branches. */
+    function cprRows(spec, rate, twoRescuers, minutes) {
+      const rows = [call911Row()];
+      const perCycle = twoRescuers ? spec.compressionsDouble : spec.compressionsSingle;
+      const ratio = twoRescuers ? spec.ratioDouble : spec.ratioSingle;
+      // A cycle is `perCycle` compressions at the measured rate, plus the time
+      // the two breaths take out of the compression stream.
+      const cycleSec = rate > 0 ? (perCycle / rate) * 60 + BREATH_SECONDS : 0;
+      const swapSec = SWAP_MINUTES * 60;
+      const cyclesPerSwap = cycleSec > 0 ? swapSec / cycleSec : 0;
+
+      rows.push({ k: 'Your measured compression rate', ref: 'The 15-second count you entered, multiplied by four', v: rate, format: 'unit', unit: '/min', decimals: 0, extra: true });
+      rows.push({ k: 'Target rate — slowest acceptable', ref: 'AHA 2025, identical for every age', v: RATE.min, format: 'unit', unit: '/min', decimals: 0 });
+      rows.push({ k: 'Target rate — fastest acceptable', ref: 'Faster than this and the chest never refills', v: RATE.max, format: 'unit', unit: '/min', decimals: 0 });
+      rows.push({
+        k: rate < RATE.min ? 'Compressions per minute you are short by' : rate > RATE.max ? 'Compressions per minute you are over by' : 'Room left inside the target window',
+        ref: rate < RATE.min ? 'Speed up until the 15-second count reaches 25' : rate > RATE.max ? 'Ease off until the 15-second count drops to 30' : 'You are in the window — hold this pace',
+        v: rate < RATE.min ? RATE.min - rate : rate > RATE.max ? rate - RATE.max : RATE.max - rate,
+        format: 'unit',
+        unit: '/min',
+        decimals: 0,
+        extra: true,
+      });
+      rows.push({ k: 'Compressions to count in 15 seconds — low end', ref: RATE.min + '/min divided by four', v: RATE.min / 4, format: 'plain', decimals: 0 });
+      rows.push({ k: 'Compressions to count in 15 seconds — high end', ref: RATE.max + '/min divided by four', v: RATE.max / 4, format: 'plain', decimals: 0 });
+      rows.push({ k: 'Seconds per compression at your rate', ref: 'Sixty divided by your rate', v: rate > 0 ? 60 / rate : 0, format: 'unit', unit: 's', decimals: 2 });
+
+      rows.push({ k: 'Compression depth — minimum', ref: spec.label + (spec.thirdOfChest ? ', and at least a third of the chest depth' : ''), v: spec.depthMinIn, format: 'unit', unit: 'in', decimals: 2, extra: true });
+      rows.push({ k: 'Compression depth — maximum', ref: spec.depthMaxIn > spec.depthMinIn ? 'Past this you injure without adding blood flow' : 'The guideline figure for this age', v: spec.depthMaxIn, format: 'unit', unit: 'in', decimals: 2, extra: true });
+      rows.push({ k: 'Compression depth — minimum, in centimetres', ref: 'The same figure in the units the guideline states', v: spec.depthMinCm, format: 'unit', unit: 'cm', decimals: 1 });
+      rows.push({ k: 'Compression depth — maximum, in centimetres', ref: 'Converted from ' + spec.depthMaxIn + ' in', v: spec.depthMaxCm, format: 'unit', unit: 'cm', decimals: 1 });
+
+      rows.push({ k: 'Compressions per cycle', ref: 'Ratio ' + ratio + ' — ' + (twoRescuers ? 'two rescuers' : 'one rescuer'), v: perCycle, format: 'plain', decimals: 0, extra: true });
+      rows.push({ k: 'Rescue breaths per cycle', ref: 'Just enough to make the chest visibly rise', v: 2, format: 'plain', decimals: 0 });
+      rows.push({ k: 'Seconds a full cycle takes at your rate', ref: perCycle + ' compressions plus about ' + BREATH_SECONDS + ' s of breaths', v: cycleSec, format: 'unit', unit: 's', decimals: 1 });
+      rows.push({ k: 'Cycles before the next rescuer swap', ref: 'Swap every ' + SWAP_MINUTES + ' minutes — depth fades before you feel tired', v: cyclesPerSwap, format: 'plain', decimals: 1 });
+      rows.push({ k: 'Compressions delivered between swaps', ref: 'At your current pace', v: cyclesPerSwap * perCycle, format: 'plain', decimals: 0 });
+      rows.push({ k: 'Longest acceptable pause in compressions', ref: 'Including the changeover itself', v: MAX_PAUSE_SECONDS, format: 'unit', unit: 's', decimals: 0 });
+
+      rows.push({ k: 'Minutes elapsed', ref: 'What you entered', v: minutes, format: 'unit', unit: 'min', decimals: 1 });
+      rows.push({ k: 'Rescuer swaps that should have happened by now', ref: 'One every ' + SWAP_MINUTES + ' minutes', v: Math.floor(minutes / SWAP_MINUTES), format: 'plain', decimals: 0 });
+      return rows;
+    }
+
+    /** Choking rows shared by the adult/pregnant/infant branches. */
+    function chokingRows(spec, cycles, minutes) {
+      const rows = [call911Row()];
+      rows.push({ k: 'Back blows per cycle', ref: 'Between the shoulder blades, heel of your hand', v: spec.backBlows, format: 'plain', decimals: 0, extra: true });
+      rows.push({ k: (spec.secondManeuver === 'abdominal thrusts' ? 'Abdominal thrusts' : 'Chest thrusts') + ' per cycle', ref: 'Given after the back blows, not before', v: spec.secondCount, format: 'plain', decimals: 0, extra: true });
+      rows.push({
+        k: 'Abdominal thrusts allowed in this situation',
+        ref: spec.abdominal
+          ? 'Permitted above age 1, after the back blows'
+          : 'NEVER — the adult maneuver causes organ injury here',
+        v: spec.abdominal ? spec.secondCount : 0,
+        format: 'plain',
+        decimals: 0,
+        extra: !spec.abdominal,
+      });
+      rows.push({ k: 'Cycles you have given', ref: 'What you entered', v: cycles, format: 'plain', decimals: 0 });
+      rows.push({ k: 'Back blows delivered so far', ref: spec.backBlows + ' per cycle', v: cycles * spec.backBlows, format: 'plain', decimals: 0 });
+      rows.push({ k: 'Thrusts delivered so far', ref: spec.secondCount + ' per cycle', v: cycles * spec.secondCount, format: 'plain', decimals: 0 });
+      rows.push({ k: 'Total maneuvers delivered so far', ref: 'Back blows plus thrusts', v: cycles * (spec.backBlows + spec.secondCount), format: 'plain', decimals: 0 });
+      rows.push({ k: 'Maximum number of cycles before you stop', ref: 'There is none. You stop when it clears or they go unresponsive.', v: 0, format: 'plain', decimals: 0 });
+      rows.push({ k: 'Minutes elapsed', ref: 'What you entered', v: minutes, format: 'unit', unit: 'min', decimals: 1 });
+      rows.push({ k: 'Compressions per cycle once you switch to CPR', ref: 'If they stop responding, start CPR at 30:2', v: 30, format: 'plain', decimals: 0 });
+      rows.push({ k: 'Compression rate once you switch to CPR — low end', ref: 'Same target for every age', v: RATE.min, format: 'unit', unit: '/min', decimals: 0 });
+      rows.push({ k: 'Compression rate once you switch to CPR — high end', ref: 'Same target for every age', v: RATE.max, format: 'unit', unit: '/min', decimals: 0 });
+      return rows;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'choking-adult';
+
+      const count15 = Math.max(0, Number(v.count15) || 0);
+      const rate = count15 * 4;
+      const twoRescuers = String(v.rescuers || '1') === '2';
+      // 0 is a legitimate answer here ("no cycles given yet"), so no `|| default`.
+      const cyclesRaw = Number(v.cycles);
+      const cycles = Number.isFinite(cyclesRaw) && cyclesRaw > 0 ? Math.floor(cyclesRaw) : 0;
+      const lb = Math.max(0, Number(v.weightLb) || 0);
+      const minutesRaw = Number(v.minutes);
+      const minutes = Number.isFinite(minutesRaw) && minutesRaw > 0 ? minutesRaw : 0;
+
+      const base = {
+        format: 'plain',
+        position: clockPos(minutes),
+        positionLabel: 'Minute ' + minutes.toFixed(1) + ' — 911 should already be on the line',
+        chart: clockChart(),
+      };
+
+      // ---- Anaphylaxis --------------------------------------------------------
+      // NO DOSE IS CALCULATED HERE. Device strength for a weight band only.
+      if (id === 'anaphylaxis') {
+        const kg = lb / LB_PER_KG;
+        let band = EPI_BANDS[0];
+        for (const b of EPI_BANDS) if (kg >= b.minKg && kg < b.maxKg) band = b;
+        const labelled = band.mg > 0;
+        const openTop = band.maxKg > 1000;
+
+        const rows = [call911Row()];
+        rows.push({ k: 'Weight you entered', ref: 'Used only to place it in a labelled band', v: lb, format: 'unit', unit: 'lb', decimals: 0 });
+        rows.push({ k: 'Weight in kilograms', ref: 'The units the device labels use', v: kg, format: 'unit', unit: 'kg', decimals: 1 });
+        rows.push({
+          k: labelled ? 'Autoinjector strength labelled for this weight band' : 'Autoinjector strength labelled for this weight band',
+          ref: labelled ? band.label + ' — use the device this person was actually prescribed' : 'None. Below 7.5 kg no standard autoinjector is labelled — this is a clinician decision, and this page will not improvise one.',
+          v: band.mg,
+          format: 'unit',
+          unit: 'mg',
+          decimals: 2,
+          extra: true,
+        });
+        rows.push({ k: 'Lower weight bound of this band', ref: labelled ? String(band.minKg) + ' kg' : 'No lower bound applies', v: band.minKg * LB_PER_KG, format: 'unit', unit: 'lb', decimals: 1 });
+        rows.push({ k: 'Upper weight bound of this band', ref: openTop ? 'No upper bound — 0.3 mg is the top standard strength' : String(band.maxKg) + ' kg', v: openTop ? 0 : band.maxKg * LB_PER_KG, format: 'unit', unit: 'lb', decimals: 1 });
+        if (!openTop) {
+          rows.push({ k: 'Pounds until the next device band', ref: 'Crossing it is a prescriber decision, not an automatic switch', v: Math.max(0, band.maxKg * LB_PER_KG - lb), format: 'unit', unit: 'lb', decimals: 1 });
+        }
+        rows.push({
+          k: 'Millilitres this page tells you to draw up',
+          ref: 'Zero, deliberately. Preparing an injectable dose from a vial is a supervised clinical act, not a web calculation.',
+          v: 0,
+          format: 'unit',
+          unit: 'mL',
+          decimals: 0,
+          extra: true,
+        });
+        rows.push({ k: 'Milligrams per kilogram this page calculates', ref: 'Also zero, and for the same reason', v: 0, format: 'unit', unit: 'mg/kg', decimals: 0 });
+        rows.push({ k: 'Minutes before a second dose — earliest', ref: 'Only if there is no improvement, and only per the written plan', v: EPI_REPEAT_MIN.from, format: 'unit', unit: 'min', decimals: 0 });
+        rows.push({ k: 'Minutes before a second dose — latest', ref: 'Which is why people are usually prescribed two devices', v: EPI_REPEAT_MIN.to, format: 'unit', unit: 'min', decimals: 0 });
+        rows.push({ k: 'Minutes elapsed', ref: 'What you entered', v: minutes, format: 'unit', unit: 'min', decimals: 1 });
+        rows.push({
+          k: 'Minutes until the second-dose window opens',
+          ref: minutes >= EPI_REPEAT_MIN.from ? 'The window is already open — follow the prescriber’s plan' : 'Counting from when the first dose went in',
+          v: Math.max(0, EPI_REPEAT_MIN.from - minutes),
+          format: 'unit',
+          unit: 'min',
+          decimals: 1,
+        });
+        rows.push({ k: 'Hours of observation afterwards — minimum', ref: 'A biphasic reaction can return hours later', v: EPI_OBSERVE_H.from, format: 'unit', unit: 'h', decimals: 0 });
+        rows.push({ k: 'Hours of observation afterwards — maximum', ref: 'Go to hospital even if they recover completely', v: EPI_OBSERVE_H.to, format: 'unit', unit: 'h', decimals: 0 });
+
+        return Object.assign({}, base, {
+          total: 'Call 911 — then the prescribed autoinjector, outer thigh',
+          sub:
+            'At ' + lb.toFixed(0) + ' lb (' + kg.toFixed(1) + ' kg) the labelled band is the ' +
+            (labelled ? band.label : 'one below 7.5 kg, where no standard autoinjector is labelled') +
+            '. Use the device this person was prescribed and carries — this page names a band, it does not prescribe and it does not calculate a dose to prepare. Inject into the outer mid-thigh, through clothing if you have to, and call 911 in the same moment.',
+          rows: rows,
+        });
+      }
+
+      // ---- Choking ------------------------------------------------------------
+      if (id === 'choking-adult' || id === 'choking-infant') {
+        const spec = id === 'choking-infant' ? CHOKING.infant : CHOKING.adult;
+        return Object.assign({}, base, {
+          total: 'Call 911 — then 5 back blows, then 5 ' + spec.secondManeuver,
+          sub:
+            (id === 'choking-infant'
+              ? 'Baby under 1: alternate 5 back blows with 5 chest thrusts, heel of one hand, and never abdominal thrusts — they can rupture the liver or spleen at this age. '
+              : 'Adult or child over 1: since the October 2025 AHA update the sequence starts with 5 back blows, then 5 abdominal thrusts, alternating. ') +
+            spec.where +
+            ' Keep going until the object comes out or they stop responding; the moment they do, start CPR.',
+          rows: chokingRows(spec, cycles, minutes),
+        });
+      }
+
+      // ---- CPR ----------------------------------------------------------------
+      const spec = id === 'cpr-infant' ? CPR.infant : id === 'cpr-child' ? CPR.child : CPR.adult;
+      const perCycle = twoRescuers ? spec.compressionsDouble : spec.compressionsSingle;
+      const ratio = twoRescuers ? spec.ratioDouble : spec.ratioSingle;
+      const paceNote =
+        rate === 0
+          ? 'Enter a 15-second count to check your pace.'
+          : rate < RATE.min
+            ? 'Your ' + rate + '/min is too slow — speed up.'
+            : rate > RATE.max
+              ? 'Your ' + rate + '/min is too fast — the chest is not refilling.'
+              : 'Your ' + rate + '/min is inside the window — hold it.';
+
+      return Object.assign({}, base, {
+        total: 'Call 911 — then ' + RATE.min + '–' + RATE.max + '/min, ' + spec.depthMinIn + (spec.depthMaxIn > spec.depthMinIn ? '–' + spec.depthMaxIn : '') + ' in deep',
+        sub:
+          spec.label + ': compress at ' + RATE.min + ' to ' + RATE.max + ' a minute, ' +
+          (spec.depthMaxIn > spec.depthMinIn ? spec.depthMinIn + ' to ' + spec.depthMaxIn : 'about ' + spec.depthMinIn) +
+          ' inches deep' + (spec.thirdOfChest ? ' and at least a third of the chest depth' : '') +
+          ', ratio ' + ratio + ' with ' + (twoRescuers ? 'two rescuers' : 'one rescuer') + ' (' + perCycle + ' compressions to 2 breaths). ' +
+          spec.hands + ' ' + paceNote,
+        rows: cprRows(spec, rate, twoRescuers, minutes),
+      });
+    });
+  })();
+</script>

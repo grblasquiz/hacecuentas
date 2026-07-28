@@ -1,0 +1,294 @@
+---
+/**
+ * Decision hub EN/US — "Should I refinance, pay extra, or borrow against my home?"
+ * audience="US" goes literally to the Layout: HubData only models 'AR' | 'global',
+ * and the real market travels in hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, DEFAULT_CLTV } from '../../../lib/hubs/en/home-loan';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ DEFAULT_CLTV }}>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) => '$' + Math.round(Number(n) || 0).toLocaleString('en-US');
+    const USD = { format: 'unit', unit: 'USD' };
+
+    /** Level-payment (fully amortizing) monthly payment. Mirrors monthlyPayment() of the refi formula. */
+    function pmt(principal, annualRatePct, months) {
+      if (principal <= 0 || months <= 0) return 0;
+      const r = annualRatePct / 100 / 12;
+      if (r === 0) return principal / months;
+      const f = Math.pow(1 + r, months);
+      return (principal * r * f) / (f - 1);
+    }
+
+    function monthsToText(m) {
+      const y = Math.floor(m / 12);
+      const mo = Math.round(m % 12);
+      if (y <= 0) return mo + (mo === 1 ? ' month' : ' months');
+      if (mo === 0) return y + (y === 1 ? ' year' : ' years');
+      return y + ' yr ' + mo + ' mo';
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'refinance';
+      const homeValue = Math.max(0, v.home_value || 0);
+      const balance = Math.max(0, v.balance || 0);
+      const curRate = Math.max(0, v.current_rate || 0);
+      const remYears = Math.max(0, v.remaining_years || 0);
+      const newRate = Math.max(0, v.new_rate || 0);
+      const newTermYears = Math.max(1, v.new_term_years || 30);
+      const closing = Math.max(0, v.closing_costs || 0);
+      const extra = Math.max(0, v.extra_payment || 0);
+      const downPct = Math.min(100, Math.max(0, v.down_payment_pct || 0));
+      const closingPct = Math.max(0, v.closing_pct || 0);
+      const cltv = Math.min(100, Math.max(0, v.cltv || DEFAULT_CLTV));
+
+      const remMonths = Math.round(remYears * 12);
+      const newMonths = Math.round(newTermYears * 12);
+
+      // ─────────────────────────── Refinance ───────────────────────────
+      if (id === 'refinance') {
+        const curPay = pmt(balance, curRate, remMonths);
+        const newPay = pmt(balance, newRate, newMonths);
+        const savings = curPay - newPay;
+        // Break-even = closing costs ÷ monthly savings, rounded up (refi formula, step 3).
+        const breakEven = savings > 0 && closing > 0 ? Math.ceil(closing / savings) : 0;
+        const intCur = curPay * remMonths - balance;
+        const intNew = newPay * newMonths - balance;
+        const intSaved = intCur - intNew;
+
+        const rows = [
+          { k: 'Balance being refinanced', v: balance, ...USD },
+          { k: 'Current payment (principal + interest)', ref: curRate + '% for ' + monthsToText(remMonths), v: curPay, ...USD, decimals: 2 },
+          { k: 'New payment (principal + interest)', ref: newRate + '% for ' + monthsToText(newMonths), v: newPay, ...USD, decimals: 2 },
+          { k: savings >= 0 ? 'Monthly savings' : 'Monthly increase', ref: 'Difference between the two payments', v: Math.abs(savings), ...USD, decimals: 2 },
+          { k: 'Closing costs on the new loan', ref: 'Origination, appraisal, title, recording', v: closing, ...USD },
+          {
+            k: savings > 0 ? 'Break-even point' : 'Break-even point (payment goes up, so none)',
+            ref: savings > 0 && closing > 0 ? monthsToText(breakEven) : 'Not applicable',
+            v: breakEven,
+            format: 'unit',
+            unit: 'months',
+          },
+          { k: 'Lifetime interest — current loan', ref: monthsToText(remMonths) + ' left', v: intCur, ...USD },
+          { k: 'Lifetime interest — new loan', ref: monthsToText(newMonths) + ' term', v: intNew, ...USD },
+          {
+            k: intSaved >= 0 ? 'Lifetime interest saved' : 'Extra lifetime interest from the longer term',
+            ref: 'The number that decides it',
+            v: Math.abs(intSaved),
+            ...USD,
+            extra: true,
+          },
+          {
+            k: 'Payments added by the new term',
+            ref: newMonths + ' vs ' + remMonths + ' months',
+            v: newMonths - remMonths,
+            format: 'unit',
+            unit: 'months',
+          },
+        ];
+
+        const sub =
+          (savings > 0
+            ? 'Payment drops ' + usd(savings) + '/mo'
+            : 'Payment rises ' + usd(-savings) + '/mo') +
+          (savings > 0 && closing > 0 ? ' · you break even in month ' + breakEven : ' · no break-even to recover') +
+          ' · lifetime interest ' + (intSaved >= 0 ? 'falls ' : 'rises ') + usd(Math.abs(intSaved));
+
+        return {
+          total: (intSaved >= 0 ? '' : '−') + usd(Math.abs(intSaved)),
+          sub: sub,
+          rows: rows,
+          chart: [
+            { label: 'Interest — new loan', value: Math.max(0, Math.round(intNew)), tone: 'main' },
+            { label: intSaved >= 0 ? 'Interest avoided' : 'Interest added', value: Math.round(Math.abs(intSaved)), tone: intSaved >= 0 ? 'good' : 'bad' },
+            { label: 'Closing costs', value: Math.round(closing), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ──────────────────────── Extra principal ────────────────────────
+      if (id === 'extra') {
+        const r = curRate / 100 / 12;
+        const basePay = pmt(balance, curRate, remMonths) || (remMonths ? balance / remMonths : 0);
+        const intBase = basePay * remMonths - balance;
+
+        // Same simulation as mortgage-payoff-extra-payment-calculator.ts.
+        const payment = basePay + extra;
+        let bal = balance;
+        let intExtra = 0;
+        let months = 0;
+        const cap = remMonths + 1;
+        while (bal > 0.005 && months < cap) {
+          const interest = bal * r;
+          let principal = payment - interest;
+          if (principal <= 0) { months = remMonths; intExtra = intBase; break; }
+          if (principal > bal) principal = bal;
+          intExtra += interest;
+          bal -= principal;
+          months++;
+        }
+        const monthsSaved = Math.max(0, remMonths - months);
+        const intSaved = Math.max(0, intBase - intExtra);
+
+        const rows = [
+          { k: 'Current balance', v: balance, ...USD },
+          { k: 'Scheduled payment (principal + interest)', ref: curRate + '% for ' + monthsToText(remMonths), v: basePay, ...USD, decimals: 2 },
+          { k: 'Extra applied to principal each month', ref: 'Must be marked "apply to principal"', v: extra, ...USD },
+          { k: 'New total monthly payment', ref: 'Scheduled + extra', v: payment, ...USD, decimals: 2 },
+          { k: 'Scheduled payoff', ref: 'Without the extra', v: remMonths, format: 'unit', unit: 'months' },
+          { k: 'Payoff with the extra payment', ref: monthsToText(months), v: months, format: 'unit', unit: 'months' },
+          { k: 'Time cut off the loan', ref: monthsToText(monthsSaved), v: monthsSaved, format: 'unit', unit: 'months', extra: true },
+          { k: 'Total interest — normal schedule', v: intBase, ...USD },
+          { k: 'Total interest — with the extra', v: intExtra, ...USD },
+          { k: 'Interest you never pay', ref: 'The whole point of the exercise', v: intSaved, ...USD, extra: true },
+          {
+            k: 'Return on every extra dollar',
+            ref: 'Risk-free, equal to your note rate',
+            v: curRate,
+            format: 'unit',
+            unit: '% per year',
+            decimals: 2,
+          },
+        ];
+
+        return {
+          total: usd(intSaved),
+          sub:
+            'Paid off in ' + monthsToText(months) + ' instead of ' + monthsToText(remMonths) +
+            ' — ' + monthsToText(monthsSaved) + ' sooner · payment becomes ' + usd(payment) + '/mo',
+          rows: rows,
+          chart: [
+            { label: 'Interest you still pay', value: Math.max(0, Math.round(intExtra)), tone: 'main' },
+            { label: 'Interest you skip', value: Math.round(intSaved), tone: 'good' },
+            { label: 'Principal (never changes)', value: Math.round(balance), tone: 'prop' },
+          ],
+        };
+      }
+
+      // ─────────────────────────── HELOC ───────────────────────────
+      if (id === 'heloc') {
+        const available = homeValue > 0 ? Math.max(0, homeValue * (cltv / 100) - balance) : 0;
+        const line = available;
+        const r = newRate / 100 / 12;
+        const drawYears = 10;
+        const repayYears = 20;
+        const interestOnly = line * r;
+        const drawInterest = interestOnly * drawYears * 12;
+        const repayPay = pmt(line, newRate, repayYears * 12);
+        const repayInterest = repayPay * repayYears * 12 - line;
+        const totalInterest = drawInterest + repayInterest;
+        const jump = repayPay - interestOnly;
+        const currentLtv = homeValue > 0 ? (balance / homeValue) * 100 : 0;
+
+        const rows = [
+          { k: 'Home value', v: homeValue, ...USD },
+          { k: 'First mortgage balance', v: balance, ...USD },
+          { k: 'Your loan-to-value today', ref: 'Mortgage ÷ home value', v: currentLtv, format: 'unit', unit: '%', decimals: 1 },
+          { k: 'Lender ceiling on total debt', ref: cltv + '% combined loan-to-value', v: homeValue * (cltv / 100), ...USD },
+          { k: 'Line you could open', ref: 'Ceiling minus the first mortgage', v: available, ...USD, extra: true },
+          { k: 'Interest-only payment (draw period)', ref: newRate + '% · balance never falls', v: interestOnly, ...USD, decimals: 2 },
+          { k: 'Amortizing payment (repayment period)', ref: repayYears + '-year repayment', v: repayPay, ...USD, decimals: 2 },
+          { k: 'Payment jump when repayment starts', ref: 'Budget for this, not the draw payment', v: jump, ...USD, decimals: 2, extra: true },
+          { k: 'Interest paid across a ' + drawYears + '-year draw', ref: 'Buys down nothing', v: drawInterest, ...USD },
+          { k: 'Interest paid across repayment', v: repayInterest, ...USD },
+          { k: 'Total interest if you carry the full line', ref: drawYears + ' + ' + repayYears + ' years', v: totalInterest, ...USD },
+        ];
+
+        return {
+          total: usd(available),
+          sub:
+            'Interest-only ' + usd(interestOnly) + '/mo during the draw, then ' + usd(repayPay) +
+            '/mo — a jump of ' + usd(jump) + '. Variable rate: this can move.',
+          rows: rows,
+          chart: [
+            { label: 'Line you could draw', value: Math.round(available), tone: 'main' },
+            { label: 'Interest over the draw period', value: Math.round(drawInterest), tone: 'warn' },
+            { label: 'Interest over repayment', value: Math.max(0, Math.round(repayInterest)), tone: 'bad' },
+          ],
+        };
+      }
+
+      // ─────────────────────────── Purchase ───────────────────────────
+      const price = homeValue;
+      const down = price * (downPct / 100);
+      const costs = price * (closingPct / 100);
+      const loan = Math.max(0, price - down);
+      const cashToClose = down + costs;
+      const pi = pmt(loan, newRate, newMonths);
+      const ltv = price > 0 ? (loan / price) * 100 : 0;
+      const lifeInterest = pi * newMonths - loan;
+
+      const rows = [
+        { k: 'Purchase price', v: price, ...USD },
+        { k: 'Down payment', ref: downPct + '% of the price', v: down, ...USD },
+        { k: 'Closing costs', ref: closingPct + '% — fees, title, prepaids, escrow', v: costs, ...USD },
+        { k: 'Cash you need at the closing table', ref: 'Down payment + closing costs', v: cashToClose, ...USD, extra: true },
+        { k: 'Loan amount', ref: 'Price minus down payment', v: loan, ...USD },
+        { k: 'Loan-to-value', ref: ltv > 80 ? 'Above 80% — expect mortgage insurance' : 'At or below 80% — no PMI on a conventional loan', v: ltv, format: 'unit', unit: '%', decimals: 1 },
+        { k: 'Monthly principal and interest', ref: newRate + '% for ' + newTermYears + ' years', v: pi, ...USD, decimals: 2 },
+        { k: 'Lifetime interest on this loan', ref: 'If you never prepay or refinance', v: lifeInterest, ...USD },
+        { k: 'Total of payments over the full term', ref: 'Principal + interest', v: pi * newMonths, ...USD },
+      ];
+
+      return {
+        total: usd(cashToClose),
+        sub:
+          'Loan of ' + usd(loan) + ' at ' + newRate + '% · principal and interest ' + usd(pi) +
+          '/mo (taxes, insurance and any HOA are on top) · loan-to-value ' + ltv.toFixed(1) + '%',
+        rows: rows,
+        chart: [
+          { label: 'Down payment', value: Math.round(down), tone: 'good' },
+          { label: 'Closing costs', value: Math.round(costs), tone: 'warn' },
+          { label: 'Financed with the mortgage', value: Math.round(loan), tone: 'main' },
+        ],
+      };
+    });
+  })();
+</script>

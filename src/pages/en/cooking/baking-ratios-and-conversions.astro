@@ -1,0 +1,255 @@
+---
+/**
+ * Hub de decisión EN (US) — "How do I scale / measure this recipe?"
+ * Absorbe 8 calculadoras de panadería y conversión del mercado inglés.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  KITCHEN,
+  HYDRATION_CLASSES,
+  RISE,
+  OVEN,
+  LEAVENING_CAP,
+  EGG,
+  TSP_GRAMS,
+  VEGGIES,
+} from '../../../lib/hubs/en/baking-ratios-and-conversions';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ KITCHEN, HYDRATION_CLASSES, RISE, OVEN, LEAVENING_CAP, EGG, TSP_GRAMS, VEGGIES }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    const r0 = (x) => Math.round(x);
+    const r1 = (x) => Math.round(x * 10) / 10;
+    /** Punto decimal explícito: el runtime formatea en es-AR y usa coma. */
+    const d1 = (x) => (Math.round(x * 10) / 10).toFixed(1);
+    const d2 = (x) => (Math.round(x * 100) / 100).toFixed(2);
+
+    const fToC = (f) => ((f - 32) * 5) / 9;
+    const cToF = (c) => (c * 9) / 5 + 32;
+    const cToGas = (c) => (c - OVEN.gasMarkIntercept) / OVEN.gasMarkSlope;
+
+    function gasLabel(gm) {
+      const r = Math.round(gm * 4) / 4;
+      if (r <= 0) return 'below the Gas Mark scale';
+      if (r === 0.25) return 'Gas Mark ¼';
+      if (r === 0.5) return 'Gas Mark ½';
+      if (r === 0.75) return 'Gas Mark ¾';
+      const whole = Math.floor(r);
+      const frac = r - whole;
+      const f = frac === 0.25 ? '¼' : frac === 0.5 ? '½' : frac === 0.75 ? '¾' : '';
+      return 'Gas Mark ' + whole + f;
+    }
+
+    function hydrationClass(h) {
+      for (const c of HYDRATION_CLASSES) if (h < c.max) return c.label;
+      return HYDRATION_CLASSES[HYDRATION_CLASSES.length - 1].label;
+    }
+
+    function riseMinutes(tempC, instantPct) {
+      // Q10: la actividad se duplica cada 10 °C. Dosis en equivalente de fresca.
+      const freshEquiv = Math.max(0.1, Math.min(20, instantPct * RISE.freshEquiv.instant));
+      const t = Math.max(-5, Math.min(55, tempC));
+      const tempFactor = Math.pow(2, (RISE.refTempC - t) / RISE.q10);
+      const yeastFactor = RISE.refDosePct / freshEquiv;
+      return { min: RISE.baseMin * tempFactor * yeastFactor, tempFactor: tempFactor, yeastFactor: yeastFactor };
+    }
+
+    function hhmm(mins) {
+      const h = Math.floor(mins / 60);
+      const m = Math.round(mins % 60);
+      if (h === 0) return m + ' min';
+      if (m === 0) return h + ' h';
+      return h + ' h ' + m + ' min';
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'yeast';
+
+      const flourIn = Math.max(0, v.flour || 0);
+      const hyd = Math.max(0, v.hydration || 0);
+      const saltPct = Math.max(0, v.saltPct || 0);
+      const yeastPct = Math.max(0, v.yeastPct || 0);
+      const starter = Math.max(0, v.starter || 0);
+      const tempF = Number.isFinite(v.doughTempF) ? v.doughTempF : 75;
+      const ovenF = Number.isFinite(v.ovenF) ? v.ovenF : 350;
+      const from = Math.max(1, Math.round(v.servingsFrom || 1));
+      const to = Math.max(1, Math.round(v.servingsTo || 1));
+
+      const rows = [];
+      let total = '';
+      let sub = '';
+
+      // Composición base de la masa: se calcula siempre, porque es lo que
+      // alimenta el gráfico en los cuatro casos.
+      let totalFlour = flourIn;
+      let water = flourIn * (hyd / 100);
+      let starterFlour = 0;
+      let starterWater = 0;
+      let waterToAdd = water;
+
+      if (id === 'sourdough') {
+        // Starter al 100%: mitad harina, mitad agua.
+        starterFlour = starter / 2;
+        starterWater = starter / 2;
+        totalFlour = flourIn + starterFlour;
+        water = totalFlour * (hyd / 100);
+        waterToAdd = water - starterWater;
+      }
+
+      const salt = totalFlour * (saltPct / 100);
+      const yeast = id === 'sourdough' ? 0 : totalFlour * (yeastPct / 100);
+      const doughTotal = totalFlour + water + salt + yeast;
+
+      const tempC = fToC(tempF);
+      const ovenC = fToC(ovenF);
+      const gas = cToGas(ovenC);
+      const factor = to / from;
+
+      if (id === 'yeast') {
+        const rise = riseMinutes(tempC, yeastPct);
+        total = r0(doughTotal) + ' g of dough';
+        sub =
+          d1(hyd) + '% hydration — ' + hydrationClass(hyd) + ' · first rise about ' +
+          hhmm(rise.min) + ' at ' + r0(tempF) + ' °F (' + r0(tempC) + ' °C)';
+
+        rows.push({ k: 'Flour', ref: '100% — the baseline of every other line', v: r0(flourIn), format: 'unit', unit: 'g' });
+        rows.push({ k: 'Water', ref: d1(hyd) + '% hydration', v: r0(water), format: 'unit', unit: 'g' });
+        rows.push({ k: 'Salt', ref: d1(saltPct) + '% of flour', v: r1(salt), format: 'unit', unit: 'g', decimals: 1 });
+        rows.push({ k: 'Instant yeast', ref: d1(yeastPct) + '% of flour', v: r1(yeast), format: 'unit', unit: 'g', decimals: 1 });
+        rows.push({ k: 'Fresh yeast if you use that instead', ref: '1% instant = 3% fresh', v: r1(yeast * RISE.freshEquiv.instant), format: 'unit', unit: 'g', decimals: 1 });
+        rows.push({ k: 'Active dry yeast instead', ref: '1% instant = 1.33% active dry', v: r1((yeast * RISE.freshEquiv.instant) / RISE.freshEquiv.active_dry), format: 'unit', unit: 'g', decimals: 1 });
+        rows.push({ k: 'Total dough weight', ref: 'Flour × ' + d2(doughTotal / Math.max(1, flourIn)), v: r0(doughTotal), format: 'unit', unit: 'g', extra: true });
+        rows.push({ k: 'First rise at this temperature', ref: hhmm(rise.min) + ' · ×' + d2(rise.tempFactor) + ' temp, ×' + d2(rise.yeastFactor) + ' dose', v: r0(rise.min), format: 'unit', unit: 'min', extra: true });
+        rows.push({ k: 'Same dough in a 39 °F fridge', ref: 'Cold retard, more flavor', v: r0(riseMinutes(4, yeastPct).min), format: 'unit', unit: 'min' });
+        rows.push({ k: 'Dough balls of 250 g this makes', ref: 'Pizza-sized portions', v: Math.floor(doughTotal / 250), format: 'plain' });
+      } else if (id === 'sourdough') {
+        total = r0(Math.max(0, waterToAdd)) + ' g of water to add';
+        sub =
+          waterToAdd < 0
+            ? 'Your starter alone already carries more water than ' + d1(hyd) + '% hydration allows — raise the target, add flour, or use less starter'
+            : r0(totalFlour) + ' g total flour · starter is ' + d1((starterFlour / Math.max(1, totalFlour)) * 100) +
+              '% of it · ' + hydrationClass(hyd);
+
+        rows.push({ k: 'Flour you add', ref: 'Before counting the starter', v: r0(flourIn), format: 'unit', unit: 'g' });
+        rows.push({ k: 'Flour hiding in the starter', ref: 'Half of a 100% hydration starter', v: r0(starterFlour), format: 'unit', unit: 'g' });
+        rows.push({ k: 'Total flour — the 100% baseline', ref: 'What every percentage is measured against', v: r0(totalFlour), format: 'unit', unit: 'g', extra: true });
+        rows.push({ k: 'Water already in the starter', ref: 'The other half of the starter', v: r0(starterWater), format: 'unit', unit: 'g' });
+        rows.push({ k: 'Total water this dough needs', ref: 'Total flour × ' + d1(hyd) + '%', v: r0(water), format: 'unit', unit: 'g' });
+        rows.push({ k: 'Water to actually pour in', ref: 'Total water minus the starter’s water', v: r0(waterToAdd), format: 'unit', unit: 'g', extra: true });
+        rows.push({ k: 'Salt', ref: d1(saltPct) + '% of TOTAL flour, starter included', v: r1(salt), format: 'unit', unit: 'g', decimals: 1 });
+        rows.push({ k: 'Starter as a share of total flour', ref: '15–25% is the usual same-day range', v: r1((starterFlour / Math.max(1, totalFlour)) * 100), format: 'unit', unit: '%', decimals: 1 });
+        rows.push({ k: 'Total dough weight', ref: 'Flour + water + salt', v: r0(doughTotal), format: 'unit', unit: 'g' });
+        rows.push({ k: 'Loaves of 900 g this makes', ref: 'Standard batard or boule', v: Math.floor(doughTotal / 900), format: 'plain' });
+      } else if (id === 'scale') {
+        const capped = factor > 1.5;
+        const leavenFactor = capped ? 1 + (factor - 1) * LEAVENING_CAP : factor;
+        const bakeExtraLow = factor > 1 ? 10 : 0;
+        const bakeExtraHigh = factor > 1 ? 25 : 0;
+
+        total = d2(factor) + '× the recipe';
+        sub =
+          from + ' servings → ' + to + ' servings' +
+          (capped ? ' · leavening capped at ' + d2(leavenFactor) + '× to avoid a bitter, collapsing bake' : '') +
+          (factor > 1 ? ' · add ' + bakeExtraLow + '–' + bakeExtraHigh + '% to the bake time' : ' · measure small amounts by weight');
+
+        rows.push({ k: 'Scale factor', ref: to + ' ÷ ' + from + ' servings', v: r1(factor * 100) / 100, format: 'unit', unit: '×', decimals: 2, extra: true });
+        rows.push({ k: 'Flour at the new size', ref: 'Scales straight up', v: r0(flourIn * factor), format: 'unit', unit: 'g' });
+        rows.push({ k: 'Water at the new size', ref: 'Hydration stays at ' + d1(hyd) + '%', v: r0(flourIn * (hyd / 100) * factor), format: 'unit', unit: 'g' });
+        rows.push({ k: 'Salt at the new size', ref: 'Scales straight up', v: r1(flourIn * (saltPct / 100) * factor), format: 'unit', unit: 'g', decimals: 1 });
+        rows.push({ k: 'Leavening at the new size', ref: capped ? '×' + d2(leavenFactor) + ' — capped at 78% of linear growth' : 'Linear, below the 1.5× cap', v: r1(flourIn * (yeastPct / 100) * leavenFactor), format: 'unit', unit: 'g', decimals: 2 });
+        rows.push({ k: 'Leavening the naive linear math would give', ref: capped ? 'What you should NOT use' : 'Same as above below 1.5×', v: r1(flourIn * (yeastPct / 100) * factor), format: 'unit', unit: 'g', decimals: 2 });
+        rows.push({ k: 'Large eggs, if the recipe had 3', ref: 'Rounded to whole units', v: Math.max(1, Math.round(3 * factor)), format: 'plain' });
+        rows.push({ k: 'Extra bake time to expect, low end', ref: 'Check by temperature, not by clock', v: bakeExtraLow, format: 'unit', unit: '%' });
+        rows.push({ k: 'Extra bake time to expect, high end', ref: 'Deeper pans run to the top of the range', v: bakeExtraHigh, format: 'unit', unit: '%' });
+        rows.push({ k: 'Total dough or batter weight after scaling', ref: 'Check it fits your pans and mixer', v: r0(doughTotal * factor), format: 'unit', unit: 'g' });
+      } else {
+        const convF = ovenF - OVEN.convectionF;
+        const large = EGG.weights.L;
+        const saltTsp = TSP_GRAMS.find((t) => t.id === 'salt_fine');
+        const flourTsp = TSP_GRAMS.find((t) => t.id === 'flour');
+        const oreganoTsp = TSP_GRAMS.find((t) => t.id === 'oregano');
+        const broccoli = VEGGIES.find((x) => x.id === 'broccoli');
+
+        total = r0(ovenC) + ' °C';
+        sub =
+          r0(ovenF) + ' °F = ' + r0(ovenC) + ' °C = ' + gasLabel(gas) +
+          ' · on a fan oven set ' + r0(convF) + ' °F (' + r0(fToC(convF)) + ' °C) instead';
+
+        rows.push({ k: 'Your oven temperature in °C', ref: '(°F − 32) × 5/9', v: r0(ovenC), format: 'unit', unit: '°C', extra: true });
+        rows.push({ k: 'The same temperature as a Gas Mark', ref: '°C = Gas Mark × 14 + 121 → ' + gasLabel(gas), v: r1(Math.round(gas * 4) / 4), format: 'unit', unit: 'Gas Mark', decimals: 2 });
+        rows.push({ k: 'What to set on a convection or fan oven', ref: '−25 °F · ' + r0(fToC(convF)) + ' °C', v: r0(convF), format: 'unit', unit: '°F', extra: true });
+        rows.push({ k: 'A US Large egg, in the shell', ref: 'Medium 50 g · XL 64 g · Jumbo 71 g', v: large, format: 'unit', unit: 'g' });
+        rows.push({ k: 'White from one Large egg', ref: '58% of the whole egg', v: r0(large * EGG.whiteRatio), format: 'unit', unit: 'g' });
+        rows.push({ k: 'Yolk from one Large egg', ref: '31% of the whole egg', v: r0(large * EGG.yolkRatio), format: 'unit', unit: 'g' });
+        rows.push({ k: 'Edible egg, shell removed', ref: 'Shell is 9% of the weight', v: r0(large * (1 - EGG.shellRatio)), format: 'unit', unit: 'g' });
+        rows.push({ k: 'One level teaspoon of fine table salt', ref: 'Coarse salt 4.5 g · flake salt 2.8 g', v: saltTsp ? saltTsp.g : 6, format: 'unit', unit: 'g', decimals: 1 });
+        rows.push({ k: 'One level teaspoon of all-purpose flour', ref: 'Sugar 4 g · baking soda 4.8 g', v: flourTsp ? flourTsp.g : 3, format: 'unit', unit: 'g', decimals: 1 });
+        rows.push({ k: 'One level teaspoon of dried oregano', ref: 'Six times lighter than the same spoon of salt', v: oreganoTsp ? oreganoTsp.g : 1, format: 'unit', unit: 'g', decimals: 1 });
+        rows.push({ k: 'One US cup, in millilitres', ref: '16 tbsp · 48 tsp · an AU metric cup is 250 mL', v: r1(KITCHEN.mlPerCup), format: 'unit', unit: 'mL', decimals: 1 });
+        rows.push({ k: 'Broccoli, steamed', ref: broccoli ? 'Boiled takes ' + broccoli.t[2] + '–' + broccoli.t[3] + ' min' : '', v: broccoli ? broccoli.t[1] : 6, format: 'unit', unit: 'min' });
+      }
+
+      return {
+        total: total,
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Flour', value: r0(totalFlour), tone: 'main' },
+          { label: 'Water', value: r0(Math.max(0, water)), tone: 'good' },
+          { label: 'Salt', value: r1(salt), tone: 'warn' },
+          { label: 'Yeast', value: r1(yeast), tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>

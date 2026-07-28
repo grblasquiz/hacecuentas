@@ -1,0 +1,424 @@
+---
+/**
+ * Decision hub EN — "How much of this vitamin, mineral or supplement do I need per day?"
+ * Replaces 16 loose calculator URLs (see hub.replaces).
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  CALCIUM,
+  CALCIUM_PER_SERVING,
+  IRON,
+  IRON_UL,
+  MAGNESIUM,
+  MAGNESIUM_SUPPLEMENT_UL,
+  B12,
+  VITAMIN_D,
+  OMEGA3,
+  IODINE,
+  PROBIOTIC,
+  CREATINE,
+  PROTEIN_RATE,
+  CAFFEINE,
+  LB_PER_KG,
+} from '../../../lib/hubs/en/supplements-and-daily-intake';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    CALCIUM,
+    CA_SERVING: CALCIUM_PER_SERVING,
+    IRON,
+    IRON_UL,
+    MAGNESIUM,
+    MG_SUPP_UL: MAGNESIUM_SUPPLEMENT_UL,
+    B12,
+    VITD: VITAMIN_D,
+    OMEGA3,
+    IODINE,
+    PROBIOTIC,
+    CREATINE,
+    PROTEIN_RATE,
+    CAFFEINE,
+    LB_PER_KG,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    /** Calcium RDA and UL for an age, sex and life stage. Mirrors the live formula. */
+    function calciumFor(age, isMale, stage) {
+      if (stage === 'pregnant' || stage === 'lactating') {
+        return age < 19 ? CALCIUM.pregnantTeen : CALCIUM.pregnantAdult;
+      }
+      if (age < 0.5) return CALCIUM.infant0to6;
+      if (age < 1) return CALCIUM.infant7to12;
+      if (age < 4) return CALCIUM.child1to3;
+      if (age < 9) return CALCIUM.child4to8;
+      if (age < 19) return CALCIUM.teen9to18;
+      if (age <= 50) return CALCIUM.adult19to50;
+      if (age <= 70) return isMale ? CALCIUM.man51to70 : CALCIUM.woman51to70;
+      return CALCIUM.adult71plus;
+    }
+
+    function ironFor(age, isMale, stage) {
+      if (stage === 'pregnant') return IRON.pregnancy;
+      if (stage === 'lactating') return IRON.lactation;
+      if (age >= 14 && age <= 18) return isMale ? IRON.teenMale : IRON.teenFemale;
+      if (age > 50) return isMale ? IRON.olderMale : IRON.olderFemale;
+      return isMale ? IRON.adultMale : IRON.adultFemale;
+    }
+
+    function magnesiumFor(age, isMale) {
+      if (age < 4) return MAGNESIUM.under4;
+      if (age < 9) return MAGNESIUM.age4to8;
+      if (age < 14) return MAGNESIUM.age9to13;
+      if (age < 19) return isMale ? MAGNESIUM.teenMale : MAGNESIUM.teenFemale;
+      if (age <= 30) return isMale ? MAGNESIUM.male19to30 : MAGNESIUM.female19to30;
+      return isMale ? MAGNESIUM.male31plus : MAGNESIUM.female31plus;
+    }
+
+    function probioticFor(age) {
+      if (age < 0.5) return PROBIOTIC.infant0to6;
+      if (age < 1) return PROBIOTIC.infant6to12;
+      if (age < 4) return PROBIOTIC.child1to3;
+      if (age < 13) return PROBIOTIC.child4to12;
+      if (age < 18) return PROBIOTIC.teen;
+      if (age < 65) return PROBIOTIC.adult;
+      return PROBIOTIC.senior;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'calcium';
+
+      // Age 0 is a legitimate input here (infants), so read it without a truthy fallback.
+      const ageRaw = Number(v.age);
+      const age = Number.isFinite(ageRaw) && ageRaw >= 0 ? ageRaw : 35;
+      const isMale = String(v.sex || 'f') === 'm';
+      const stage = String(v.lifeStage || 'none');
+      const lb = Math.max(0, Number(v.weightLb) || 0);
+      const kg = lb / LB_PER_KG;
+      const intake = Math.max(0, Number(v.currentIntake) || 0);
+      const diet = String(v.diet || 'omnivore');
+      const b12Schedule = String(v.b12Schedule || 'daily');
+      const phototype = String(v.phototype || '3');
+      const latitudeZone = String(v.latitudeZone || 'temperate');
+      const season = String(v.season || 'summer');
+      const sunMinutes = Math.max(0, Number(v.sunMinutes) || 0);
+      const fishOilMg = Math.max(0, Number(v.fishOilMg) || 0);
+      const omega3Pct = Math.max(0, Number(v.omega3Pct) || 0);
+      const capsulesPerDay = Math.max(0, Number(v.capsulesPerDay) || 0);
+      const trainingGoal = String(v.trainingGoal || 'hypertrophy');
+      const proteinFromFood = Math.max(0, Number(v.proteinFromFood) || 0);
+      const scoopProtein = Math.max(1, Number(v.scoopProtein) || 25);
+
+      const rows = [];
+      let requirement = 0;
+      // Cases where the "current intake" is computed rather than typed in
+      // (omega-3 from capsules, protein from food, caffeine from drinks).
+      let intakeOverride = null;
+      let unit = 'mg';
+      let total = '';
+      let sub = '';
+      let coverageLabel = '';
+
+      // ---- Calcium ------------------------------------------------------------
+      if (id === 'calcium') {
+        const c = calciumFor(age, isMale, stage);
+        requirement = c.rda;
+        unit = 'mg';
+        rows.push({ k: c.ai ? 'Adequate intake — ' + c.label : 'RDA — ' + c.label, ref: 'NIH ODS / IOM 2011', v: c.rda, format: 'unit', unit: 'mg', decimals: 0, extra: true });
+        rows.push({ k: 'Tolerable upper intake level', ref: 'A real ceiling, not a target', v: c.ul, format: 'unit', unit: 'mg', decimals: 0 });
+        rows.push({ k: 'Servings of dairy to reach it', ref: 'At ' + CA_SERVING + ' mg per cup of milk', v: Math.ceil(c.rda / CA_SERVING), format: 'unit', unit: 'servings', decimals: 0 });
+        rows.push({ k: 'Largest useful single dose', ref: 'Absorption falls off sharply above this', v: 500, format: 'unit', unit: 'mg', decimals: 0 });
+        if (intake > 0) {
+          rows.push({ k: 'What you currently get', ref: 'As entered', v: intake, format: 'unit', unit: 'mg', decimals: 0 });
+          rows.push({ k: intake < c.rda ? 'Shortfall to close' : 'Above the requirement by', ref: intake > c.ul ? 'You are over the upper limit' : 'Within the upper limit', v: Math.abs(c.rda - intake), format: 'unit', unit: 'mg', decimals: 0, extra: true });
+        }
+        total = c.rda + ' mg/day';
+        sub = c.label + ' · upper limit ' + c.ul + ' mg · about ' + Math.ceil(c.rda / CA_SERVING) + ' dairy servings a day.';
+        coverageLabel = 'calcium';
+      }
+
+      // ---- Iron ---------------------------------------------------------------
+      else if (id === 'iron') {
+        const ir = ironFor(age, isMale, stage);
+        const vegMultiplier = diet === 'omnivore' ? 1 : 1.8;
+        requirement = ir.rda * vegMultiplier;
+        unit = 'mg';
+        rows.push({ k: 'RDA — ' + ir.label, ref: 'NIH ODS / IOM 2001', v: ir.rda, format: 'unit', unit: 'mg', decimals: 0, extra: true });
+        if (vegMultiplier > 1) {
+          rows.push({ k: 'Effective requirement on a ' + diet + ' diet', ref: 'Non-heme iron absorbs about 1.8× less efficiently', v: requirement, format: 'unit', unit: 'mg', decimals: 1, extra: true });
+        }
+        rows.push({ k: 'Tolerable upper intake level', ref: 'Adults — do not exceed without a blood test', v: IRON_UL, format: 'unit', unit: 'mg', decimals: 0 });
+        rows.push({ k: 'Pregnancy requirement for comparison', ref: 'The highest of any life stage', v: IRON.pregnancy, format: 'unit', unit: 'mg', decimals: 0 });
+        rows.push({ k: 'Post-menopausal requirement for comparison', ref: 'Drops back to the male figure', v: IRON.olderFemale, format: 'unit', unit: 'mg', decimals: 0 });
+        if (intake > 0) {
+          rows.push({ k: 'What you currently get', ref: 'As entered', v: intake, format: 'unit', unit: 'mg', decimals: 1 });
+          rows.push({ k: 'Coverage of your requirement', ref: 'Under 90% is a shortfall', v: (intake / requirement) * 100, format: 'unit', unit: '%', decimals: 0, extra: true });
+          rows.push({ k: intake < requirement ? 'Shortfall to close' : 'Above the requirement by', ref: intake > IRON_UL ? 'Over the 45 mg upper limit — see a clinician' : 'Within the upper limit', v: Math.abs(requirement - intake), format: 'unit', unit: 'mg', decimals: 1 });
+        }
+        total = (Math.round(requirement * 10) / 10) + ' mg/day';
+        sub = ir.label + ' · RDA ' + ir.rda + ' mg' + (vegMultiplier > 1 ? ', raised to ' + (Math.round(requirement * 10) / 10) + ' mg on a ' + diet + ' diet' : '') + ' · upper limit ' + IRON_UL + ' mg.';
+        coverageLabel = 'iron';
+      }
+
+      // ---- Magnesium ----------------------------------------------------------
+      else if (id === 'magnesium') {
+        requirement = magnesiumFor(age, isMale);
+        unit = 'mg';
+        rows.push({ k: 'RDA for your age and sex', ref: 'NIH ODS / IOM 1997', v: requirement, format: 'unit', unit: 'mg', decimals: 0, extra: true });
+        rows.push({ k: 'Upper limit for SUPPLEMENTAL magnesium', ref: 'Food magnesium does not count toward this', v: MG_SUPP_UL, format: 'unit', unit: 'mg', decimals: 0, extra: true });
+        rows.push({ k: 'Male reference for comparison', ref: age > 30 ? '31 and over' : '19 to 30', v: age > 30 ? MAGNESIUM.male31plus : MAGNESIUM.male19to30, format: 'unit', unit: 'mg', decimals: 0 });
+        rows.push({ k: 'Female reference for comparison', ref: age > 30 ? '31 and over' : '19 to 30', v: age > 30 ? MAGNESIUM.female31plus : MAGNESIUM.female19to30, format: 'unit', unit: 'mg', decimals: 0 });
+        rows.push({ k: 'Roughly what 30 g of pumpkin seeds provides', ref: 'One of the densest food sources', v: 150, format: 'unit', unit: 'mg', decimals: 0 });
+        if (intake > 0) {
+          rows.push({ k: 'What you currently get', ref: 'As entered', v: intake, format: 'unit', unit: 'mg', decimals: 0 });
+          rows.push({ k: intake < requirement ? 'Shortfall to close from food or supplements' : 'Above the requirement by', ref: 'Keep any supplemental portion under ' + MG_SUPP_UL + ' mg', v: Math.abs(requirement - intake), format: 'unit', unit: 'mg', decimals: 0, extra: true });
+        }
+        total = requirement + ' mg/day';
+        sub = 'RDA ' + requirement + ' mg a day from all sources, but supplemental magnesium should stay under ' + MG_SUPP_UL + ' mg.';
+        coverageLabel = 'magnesium';
+      }
+
+      // ---- Vitamin D ----------------------------------------------------------
+      else if (id === 'vitaminD') {
+        const rda = age < 1 ? VITD.aiInfantIU : age <= 70 ? VITD.rda1to70IU : VITD.rda71plusIU;
+        requirement = rda;
+        unit = 'IU';
+        const base = VITD.baseMinutesByPhototype[phototype] || VITD.baseMinutesByPhototype['3'];
+        const latMult = VITD.latitudeMultiplier[latitudeZone] || 1;
+        const seasonMult = VITD.seasonMultiplier[season] || 1;
+        const ageFactor = age >= 70 ? VITD.ageFactor.from70 : age >= 50 ? VITD.ageFactor.from50 : age < 5 ? VITD.ageFactor.under5 : VITD.ageFactor.standard;
+        const minutesNeeded = base * latMult * seasonMult * ageFactor;
+        const impractical = minutesNeeded > VITD.maxUsefulMinutes;
+
+        rows.push({ k: age < 1 ? 'Adequate intake' : 'RDA for your age', ref: 'NIH ODS — 600 IU to age 70, 800 IU after', v: rda, format: 'unit', unit: 'IU', decimals: 0, extra: true });
+        rows.push({ k: 'Tolerable upper intake level', ref: 'Adults — chronic excess causes hypercalcaemia', v: VITD.ulAdultIU, format: 'unit', unit: 'IU', decimals: 0 });
+        rows.push({ k: 'Midday sun needed for about 1,000 IU', ref: impractical ? 'Beyond the practical limit — synthesis is not happening' : 'Skin type ' + phototype + ' · ' + latitudeZone + ' · ' + season, v: Math.min(minutesNeeded, VITD.maxUsefulMinutes), format: 'unit', unit: 'minutes', decimals: 0, extra: true });
+        rows.push({ k: 'Baseline for your skin type at the equator in summer', ref: 'Before latitude, season and age adjustments', v: base, format: 'unit', unit: 'minutes', decimals: 0 });
+        rows.push({ k: 'Season multiplier applied', ref: season + ' — winter is 3.5× at any latitude', v: seasonMult, format: 'plain', decimals: 2 });
+        rows.push({ k: 'Latitude multiplier applied', ref: latitudeZone, v: latMult, format: 'plain', decimals: 2 });
+        rows.push({ k: 'Age factor applied', ref: 'Skin synthesis falls with age', v: ageFactor, format: 'plain', decimals: 2 });
+        if (sunMinutes > 0 && !impractical) {
+          const iuFromSun = (sunMinutes / Math.max(1, minutesNeeded)) * VITD.iuPerFullExposure;
+          rows.push({ k: 'Estimated IU from your stated sun exposure', ref: 'A model, not a measurement — clothing and sunscreen are not inputs', v: iuFromSun, format: 'unit', unit: 'IU', decimals: 0, extra: true });
+          rows.push({ k: 'Remaining gap to the RDA', ref: iuFromSun >= rda ? 'Sun covers it, on this model' : 'What a supplement would need to add', v: Math.max(0, rda - iuFromSun), format: 'unit', unit: 'IU', decimals: 0 });
+        }
+        if (intake > 0) {
+          rows.push({ k: 'What your supplement provides', ref: 'As entered', v: intake, format: 'unit', unit: 'IU', decimals: 0 });
+          rows.push({ k: 'That as a share of the upper limit', ref: VITD.ulAdultIU + ' IU', v: (intake / VITD.ulAdultIU) * 100, format: 'unit', unit: '%', decimals: 0 });
+        }
+        total = rda + ' IU/day';
+        sub = 'RDA ' + rda + ' IU · upper limit ' + VITD.ulAdultIU + ' IU · ' + (impractical ? 'sun cannot realistically supply it under these conditions' : 'about ' + Math.round(minutesNeeded) + ' minutes of midday sun for 1,000 IU') + '.';
+        coverageLabel = 'vitamin D';
+      }
+
+      // ---- B12 ----------------------------------------------------------------
+      else if (id === 'b12') {
+        const rda = stage === 'pregnant' ? B12.pregnancyMcg : stage === 'lactating' ? B12.lactationMcg : B12.rdaMcg;
+        requirement = rda;
+        unit = 'mcg';
+        const dose =
+          b12Schedule === 'weekly' ? B12.veganWeekly
+            : b12Schedule === 'monthly' ? 0
+              : age >= 65 ? B12.veganDaily65plus : B12.veganDailyAdult;
+
+        rows.push({ k: 'Official RDA', ref: stage === 'none' ? 'NIH ODS, adults' : 'Raised for ' + stage, v: rda, format: 'unit', unit: 'mcg', decimals: 1, extra: true });
+        if (b12Schedule === 'monthly') {
+          rows.push({ k: 'A monthly oral dose does not work', ref: 'Per-dose absorption saturates — switch to daily or weekly', v: 0, format: 'unit', unit: 'mcg', decimals: 0, extra: true });
+        } else {
+          rows.push({ k: b12Schedule === 'weekly' ? 'Weekly supplement dose' : 'Daily supplement dose', ref: b12Schedule === 'weekly' ? 'One large dose via passive diffusion' : age >= 65 ? 'Raised from 250 mcg because absorption falls after 65' : 'Standard vegan adult dose', v: dose, format: 'unit', unit: 'mcg', decimals: 0, extra: true });
+          rows.push({ k: 'That dose as a multiple of the RDA', ref: 'Not overdosing — passive diffusion absorbs about 1%', v: dose / rda, format: 'unit', unit: '×', decimals: 0 });
+        }
+        rows.push({ k: 'Daily alternative — the low, split schedule', ref: B12.microDailyRange + ' mcg spread through the day', v: 100, format: 'unit', unit: 'mcg', decimals: 0 });
+        rows.push({ k: 'Weekly alternative', ref: 'One dose, same weekly coverage', v: B12.veganWeekly, format: 'unit', unit: 'mcg', decimals: 0 });
+        rows.push({ k: 'Daily dose from age 65', ref: 'Absorption declines with age', v: B12.veganDaily65plus, format: 'unit', unit: 'mcg', decimals: 0 });
+        if (intake > 0) {
+          rows.push({ k: 'What you currently take', ref: 'As entered', v: intake, format: 'unit', unit: 'mcg', decimals: 0 });
+        }
+        total = b12Schedule === 'monthly' ? 'Monthly does not work' : dose + ' mcg ' + (b12Schedule === 'weekly' ? 'per week' : 'per day');
+        sub = 'The RDA is only ' + rda + ' mcg, but oral absorption is the constraint: ' + (b12Schedule === 'monthly' ? 'a monthly tablet leaves most of the month uncovered — move to daily or weekly.' : dose + ' mcg ' + (b12Schedule === 'weekly' ? 'weekly' : 'daily') + ' is what actually covers it.');
+        coverageLabel = 'B12';
+      }
+
+      // ---- Omega-3 and iodine --------------------------------------------------
+      else if (id === 'omega3') {
+        requirement = OMEGA3.ahaMin;
+        unit = 'mg';
+        const perCapsule = (fishOilMg * omega3Pct) / 100;
+        const dailyEpaDha = perCapsule * capsulesPerDay;
+        rows.push({ k: 'AHA minimum EPA + DHA', ref: 'General adult recommendation', v: OMEGA3.ahaMin, format: 'unit', unit: 'mg', decimals: 0, extra: true });
+        rows.push({ k: 'Upper end of the general range', ref: 'AHA — above this needs a reason', v: OMEGA3.ahaMax, format: 'unit', unit: 'mg', decimals: 0 });
+        rows.push({ k: 'Where medical supervision starts', ref: 'FDA flags intakes above this', v: OMEGA3.supervisionAbove, format: 'unit', unit: 'mg', decimals: 0 });
+        if (perCapsule > 0) {
+          rows.push({ k: 'Actual EPA + DHA per capsule', ref: fishOilMg + ' mg of oil at ' + omega3Pct + '% — standard oil is ' + OMEGA3.standardConcentration + '%', v: perCapsule, format: 'unit', unit: 'mg', decimals: 0, extra: true });
+          rows.push({ k: 'What you get per day', ref: capsulesPerDay + ' capsule' + (capsulesPerDay === 1 ? '' : 's'), v: dailyEpaDha, format: 'unit', unit: 'mg', decimals: 0, extra: true });
+          rows.push({ k: 'Capsules to reach the AHA minimum', ref: 'Of this specific brand', v: Math.ceil(OMEGA3.ahaMin / perCapsule), format: 'unit', unit: 'capsules', decimals: 0 });
+          rows.push({ k: 'Capsules to reach the top of the range', ref: OMEGA3.ahaMax + ' mg', v: Math.ceil(OMEGA3.ahaMax / perCapsule), format: 'unit', unit: 'capsules', decimals: 0 });
+          requirement = OMEGA3.ahaMin;
+        }
+        const iod = stage === 'pregnant' ? IODINE.pregnancy : stage === 'lactating' ? IODINE.lactation : age < 14 ? IODINE.child : IODINE.adult;
+        rows.push({ k: 'Iodine requirement', ref: stage === 'none' ? (age < 14 ? 'Child' : 'Adult') : stage === 'pregnant' ? 'Pregnancy' : 'Lactation', v: iod, format: 'unit', unit: 'mcg', decimals: 0, extra: true });
+        rows.push({ k: 'That target as iodized salt', ref: 'At ' + IODINE.mcgPerGramIodizedSalt + ' mcg per gram of salt', v: iod / IODINE.mcgPerGramIodizedSalt, format: 'unit', unit: 'g of salt', decimals: 1 });
+        rows.push({ k: 'Adult iodine requirement for comparison', ref: 'Non-pregnant baseline', v: IODINE.adult, format: 'unit', unit: 'mcg', decimals: 0 });
+        total = (dailyEpaDha > 0 ? Math.round(dailyEpaDha) + ' mg EPA+DHA' : OMEGA3.ahaMin + '–' + OMEGA3.ahaMax + ' mg/day');
+        sub =
+          'AHA target ' + OMEGA3.ahaMin + ' to ' + OMEGA3.ahaMax + ' mg of EPA plus DHA a day' +
+          (perCapsule > 0 ? ' · your capsule delivers ' + Math.round(perCapsule) + ' mg each' : '') +
+          ' · iodine ' + iod + ' mcg.';
+        coverageLabel = 'EPA + DHA';
+        if (dailyEpaDha > 0) intakeOverride = dailyEpaDha;
+      }
+
+      // ---- Sports supplements --------------------------------------------------
+      else if (id === 'sports') {
+        const rate = (PROTEIN_RATE[trainingGoal] || PROTEIN_RATE.hypertrophy);
+        const proteinTarget = kg * rate.rate;
+        requirement = proteinTarget;
+        unit = 'g';
+        const deficit = Math.max(0, proteinTarget - proteinFromFood);
+        const loading = kg * CREATINE.loadingPerKg;
+        const maintenance = Math.max(CREATINE.maintenanceFloorG, kg * CREATINE.maintenancePerKg);
+
+        rows.push({ k: 'Daily protein target — ' + rate.label, ref: rate.rate + ' g per kg (ISSN 2017)', v: proteinTarget, format: 'unit', unit: 'g', decimals: 0, extra: true });
+        rows.push({ k: 'Protein you already get from food', ref: 'As entered', v: proteinFromFood, format: 'unit', unit: 'g', decimals: 0 });
+        rows.push({ k: 'Protein gap to close', ref: deficit > 0 ? 'What whey would cover' : 'Food already covers your target', v: deficit, format: 'unit', unit: 'g', decimals: 0, extra: true });
+        rows.push({ k: 'Whey scoops to close it', ref: 'At ' + scoopProtein + ' g of protein per scoop', v: deficit / scoopProtein, format: 'unit', unit: 'scoops', decimals: 1, extra: true });
+        rows.push({ k: 'Creatine loading dose', ref: CREATINE.loadingPerKg + ' g/kg split into 4 doses, for ' + CREATINE.loadingDays + ' days', v: loading, format: 'unit', unit: 'g per day', decimals: 1 });
+        rows.push({ k: 'Creatine maintenance dose', ref: CREATINE.maintenancePerKg + ' g/kg, with a ' + CREATINE.maintenanceFloorG + ' g floor', v: maintenance, format: 'unit', unit: 'g per day', decimals: 1, extra: true });
+        rows.push({ k: 'Flat dose if you skip loading', ref: 'Full saturation in ' + CREATINE.saturationWeeksNoLoad + ' weeks instead of one', v: CREATINE.flatDoseG, format: 'unit', unit: 'g per day', decimals: 0 });
+        rows.push({ k: 'Total creatine over a loading week', ref: 'Then you drop to maintenance', v: loading * 7, format: 'unit', unit: 'g', decimals: 0 });
+        rows.push({ k: 'Protein per sitting for best use', ref: '20 to 40 g maximises muscle protein synthesis', v: 40, format: 'unit', unit: 'g', decimals: 0 });
+        if (diet !== 'omnivore') {
+          rows.push({ k: 'Baseline muscle creatine on a plant-based diet', ref: 'About 20% lower — supplementation does more for you', v: 80, format: 'unit', unit: '% of omnivore', decimals: 0 });
+        }
+        total = Math.round(proteinTarget) + ' g protein/day';
+        sub =
+          rate.label + ' at ' + rate.rate + ' g/kg · ' + Math.round(deficit) + ' g gap = ' +
+          (deficit / scoopProtein).toFixed(1) + ' whey scoops · creatine ' + maintenance.toFixed(1) + ' g a day to maintain.';
+        coverageLabel = 'protein';
+        intakeOverride = proteinFromFood;
+      }
+
+      // ---- Caffeine ------------------------------------------------------------
+      else if (id === 'caffeine') {
+        const byWeight = Math.min(CAFFEINE.adultMax, kg * CAFFEINE.perKg);
+        const limit =
+          stage === 'pregnant' || stage === 'lactating' ? CAFFEINE.pregnancyMax
+            : age < 18 ? CAFFEINE.adolescentMax
+              : byWeight;
+        requirement = limit;
+        unit = 'mg';
+
+        const consumed =
+          Math.max(0, Number(v.coffeeCups) || 0) * CAFFEINE.brewedCoffee +
+          Math.max(0, Number(v.espressoShots) || 0) * CAFFEINE.espresso +
+          Math.max(0, Number(v.teaCups) || 0) * CAFFEINE.blackTea +
+          Math.max(0, Number(v.energyDrinks) || 0) * CAFFEINE.energyDrink +
+          Math.max(0, Number(v.colaCans) || 0) * CAFFEINE.cola;
+
+        rows.push({ k: 'Your daily ceiling', ref: stage !== 'none' ? 'Pregnancy and lactation limit' : age < 18 ? 'Conservative adolescent limit' : kg * CAFFEINE.perKg > CAFFEINE.adultMax ? 'Capped at the FDA 400 mg limit' : CAFFEINE.perKg + ' mg per kg of bodyweight', v: limit, format: 'unit', unit: 'mg', decimals: 0, extra: true });
+        rows.push({ k: 'FDA limit for healthy adults', ref: 'The absolute ceiling regardless of weight', v: CAFFEINE.adultMax, format: 'unit', unit: 'mg', decimals: 0 });
+        rows.push({ k: 'Pregnancy limit', ref: 'Half the adult figure — lower is better', v: CAFFEINE.pregnancyMax, format: 'unit', unit: 'mg', decimals: 0 });
+        rows.push({ k: 'Your ceiling in 8 oz cups of brewed coffee', ref: 'At ' + CAFFEINE.brewedCoffee + ' mg a cup', v: limit / CAFFEINE.brewedCoffee, format: 'unit', unit: 'cups', decimals: 1 });
+        rows.push({ k: 'What you are drinking today', ref: 'Summed across every source you entered', v: consumed, format: 'unit', unit: 'mg', decimals: 0, extra: true });
+        rows.push({ k: consumed <= limit ? 'Headroom left' : 'Over your ceiling by', ref: consumed <= limit ? 'How much more you could have' : 'Worth cutting back', v: Math.abs(limit - consumed), format: 'unit', unit: 'mg', decimals: 0, extra: true });
+        rows.push({ k: 'Brewed coffee, 8 oz', ref: 'FDA reference value', v: CAFFEINE.brewedCoffee, format: 'unit', unit: 'mg', decimals: 0 });
+        rows.push({ k: 'Espresso, single shot', ref: 'Less than a brewed cup, despite the reputation', v: CAFFEINE.espresso, format: 'unit', unit: 'mg', decimals: 0 });
+        rows.push({ k: 'Black tea, 8 oz', ref: 'Mayo Clinic reference', v: CAFFEINE.blackTea, format: 'unit', unit: 'mg', decimals: 0 });
+        rows.push({ k: 'Green tea, 8 oz', ref: 'Mayo Clinic reference', v: CAFFEINE.greenTea, format: 'unit', unit: 'mg', decimals: 0 });
+        rows.push({ k: 'Energy drink, 250 ml', ref: 'EFSA reference', v: CAFFEINE.energyDrink, format: 'unit', unit: 'mg', decimals: 0 });
+        rows.push({ k: 'Cola, 12 oz', ref: 'FDA reference', v: CAFFEINE.cola, format: 'unit', unit: 'mg', decimals: 0 });
+        total = Math.round(limit) + ' mg/day';
+        sub =
+          'Your ceiling is ' + Math.round(limit) + ' mg — about ' + (limit / CAFFEINE.brewedCoffee).toFixed(1) +
+          ' cups of brewed coffee. You are currently at ' + Math.round(consumed) + ' mg.';
+        coverageLabel = 'caffeine ceiling';
+        intakeOverride = consumed;
+      }
+
+      // ---- Probiotics ----------------------------------------------------------
+      else {
+        const p = probioticFor(age);
+        requirement = p.max;
+        unit = 'billion CFU';
+        rows.push({ k: 'Typical daily dose — lower end', ref: p.label, v: p.min, format: 'unit', unit: 'billion CFU', decimals: 1, extra: true });
+        rows.push({ k: 'Typical daily dose — upper end', ref: p.label, v: p.max, format: 'unit', unit: 'billion CFU', decimals: 1, extra: true });
+        rows.push({ k: 'Midpoint of the range', ref: 'A reasonable starting point', v: (p.min + p.max) / 2, format: 'unit', unit: 'billion CFU', decimals: 1 });
+        rows.push({ k: 'Adult reference range — lower end', ref: 'For comparison', v: PROBIOTIC.adult.min, format: 'unit', unit: 'billion CFU', decimals: 1 });
+        rows.push({ k: 'Adult reference range — upper end', ref: 'For comparison', v: PROBIOTIC.adult.max, format: 'unit', unit: 'billion CFU', decimals: 1 });
+        rows.push({ k: 'Infant reference — under 6 months', ref: 'Orders of magnitude lower', v: PROBIOTIC.infant0to6.max, format: 'unit', unit: 'billion CFU', decimals: 1 });
+        rows.push({ k: 'That upper dose in raw CFU', ref: 'What a label states', v: p.max * 1e9, format: 'plain', decimals: 0 });
+        total = p.min + '–' + p.max + ' billion CFU/day';
+        sub = p.label + ' · the strain matters far more than the CFU count on the box.';
+        coverageLabel = 'probiotic dose';
+      }
+
+      // ---- Coverage bar --------------------------------------------------------
+      const covered = typeof intakeOverride === 'number' ? intakeOverride : intake;
+      const pct = requirement > 0 ? Math.min(150, (covered / requirement) * 100) : 0;
+
+      return {
+        total: total,
+        sub: sub,
+        rows: rows,
+        format: 'plain',
+        position: Math.min(100, Math.max(0, (pct / 150) * 100)),
+        positionLabel:
+          covered > 0
+            ? Math.round(pct) + '% of your ' + coverageLabel + ' requirement covered'
+            : 'Enter your current intake to see how much you cover',
+        chart: [
+          { label: 'Covered', value: Math.min(requirement, covered), tone: 'good' },
+          { label: 'Still to cover', value: Math.max(0, requirement - covered), tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

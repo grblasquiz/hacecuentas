@@ -1,0 +1,343 @@
+---
+/**
+ * Decision hub EN/US — "What tax will I pay on this purchase or on my property?"
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  STATE_RATES,
+  STATE_NAMES,
+  NATIONAL_AVG_RATE,
+  CAPITAL_GAINS,
+  NIIT,
+  BRACKETS,
+  VA_CAR_TAX,
+  MO_PROPERTY_TAX,
+} from '../../../lib/hubs/en/sales-and-property-tax';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    STATE_RATES,
+    STATE_NAMES,
+    NATIONAL_AVG_RATE,
+    CAPITAL_GAINS,
+    NIIT,
+    BRACKETS,
+    VA_CAR_TAX,
+    MO_PROPERTY_TAX,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) => '$' + Math.round(Number(n) || 0).toLocaleString('en-US');
+    const usd2 = (n) =>
+      '$' + (Math.round((Number(n) || 0) * 100) / 100).toLocaleString('en-US', {
+        minimumFractionDigits: 2, maximumFractionDigits: 2,
+      });
+    const USD = { format: 'unit', unit: 'USD' };
+
+    /** Mirror of calcFederalTax() in src/lib/data/usa-2026.ts. */
+    function federalTax(taxable, status) {
+      const ti = Math.max(0, Number(taxable) || 0);
+      if (ti <= 0) return 0;
+      const b = BRACKETS[status] || BRACKETS.single;
+      let tax = 0;
+      for (let k = 0; k < b.length; k++) {
+        const lower = b[k][0];
+        const rate = b[k][1];
+        const upper = k + 1 < b.length ? b[k + 1][0] : Infinity;
+        if (ti <= lower) break;
+        tax += (Math.min(ti, upper) - lower) * rate;
+      }
+      return Math.round(tax * 100) / 100;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'purchase';
+      const status = ['single', 'mfj', 'mfs', 'hoh'].indexOf(v.filing_status) >= 0 ? v.filing_status : 'single';
+
+      // ─────────────────────────── Sales tax ───────────────────────────
+      if (id === 'purchase') {
+        const amount = Math.max(0, v.purchase_amount || 0);
+        const rate = Math.max(0, v.sales_tax_rate || 0);
+        const extract = v.tax_mode === 'extract';
+        const holidayShare = Math.min(100, Math.max(0, v.holiday_share || 0)) / 100;
+        const r = rate / 100;
+
+        let net, tax, total;
+        if (extract) {
+          total = amount;
+          net = amount / (1 + r);
+          tax = total - net;
+        } else {
+          net = amount;
+          tax = amount * r;
+          total = amount + tax;
+        }
+        const holidaySaving = tax * holidayShare;
+
+        const rows = [
+          { k: 'Pre-tax price', ref: extract ? 'Backed out of the total you entered' : 'What you entered', v: net, ...USD, decimals: 2 },
+          { k: 'Combined sales tax rate', ref: 'State + county + city + districts', v: rate, format: 'unit', unit: '%', decimals: 3 },
+          { k: 'Sales tax', ref: extract ? 'Hidden inside the total' : 'Added at the register', v: tax, ...USD, decimals: 2, extra: true },
+          { k: 'Total you pay', v: total, ...USD, decimals: 2, extra: true },
+          { k: 'Tax as a share of the pre-tax price', v: net > 0 ? (tax / net) * 100 : 0, format: 'unit', unit: '%', decimals: 3 },
+          { k: 'Share of the basket a tax holiday would cover', ref: 'Category and per-item caps apply', v: holidayShare * 100, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'What a tax holiday would save', ref: 'Only on the exempt portion', v: holidaySaving, ...USD, decimals: 2 },
+          { k: 'Total during a tax holiday', v: total - holidaySaving, ...USD, decimals: 2 },
+        ];
+
+        return {
+          total: usd2(tax),
+          sub:
+            usd2(net) + ' plus ' + rate + '% sales tax is ' + usd2(total) + ' at the register' +
+            (holidaySaving > 0 ? ' · a holiday on ' + (holidayShare * 100).toFixed(0) + '% of the basket saves ' + usd2(holidaySaving) : ''),
+          rows: rows,
+          chart: [
+            { label: 'Pre-tax price', value: Math.round(net), tone: 'main' },
+            { label: 'Sales tax', value: Math.round(tax), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ────────────────────── Property tax on a home ──────────────────────
+      if (id === 'home') {
+        const value = Math.max(0, v.home_value || 0);
+        const code = String(v.state || 'TX').toUpperCase();
+        const custom = code === 'CUSTOM';
+        const rate = custom ? Math.max(0, v.custom_rate || 0) : (STATE_RATES[code] !== undefined ? STATE_RATES[code] : STATE_RATES.TX);
+        const label = custom ? 'your own rate' : (STATE_NAMES[code] || code);
+        const annual = value * (rate / 100);
+        const monthly = annual / 12;
+        const per1000 = rate * 10;
+        const nationalAnnual = value * (NATIONAL_AVG_RATE / 100);
+        const diff = annual - nationalAnnual;
+
+        const rows = [
+          { k: 'Home market value', v: value, ...USD },
+          { k: 'Effective rate applied', ref: custom ? 'Entered by you' : label + ' state average', v: rate, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Annual property tax', ref: 'Value × rate', v: annual, ...USD, extra: true },
+          { k: 'Monthly escrow collection', ref: 'What the servicer sets aside', v: monthly, ...USD, decimals: 2, extra: true },
+          { k: 'Dollars per $1,000 of value', ref: 'The mill-rate way of quoting it', v: per1000, ...USD, decimals: 2 },
+          { k: 'National average bill on the same home', ref: '~' + NATIONAL_AVG_RATE + '% effective', v: nationalAnnual, ...USD },
+          { k: diff >= 0 ? 'How much more than the national average' : 'How much less than the national average', v: Math.abs(diff), ...USD },
+          { k: 'Property tax over ten years', ref: 'Before any reassessment or rate change', v: annual * 10, ...USD },
+        ];
+
+        return {
+          total: usd(annual),
+          sub:
+            'A ' + usd(value) + ' home at ' + rate + '% costs about ' + usd(annual) + ' a year — ' + usd2(monthly) +
+            ' a month in escrow · ' + (diff >= 0 ? usd(diff) + ' above' : usd(-diff) + ' below') + ' the national average',
+          rows: rows,
+          chart: [
+            { label: 'Home value kept', value: Math.max(0, Math.round(value - annual)), tone: 'main' },
+            { label: 'Annual property tax', value: Math.round(annual), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ─────────────────── Vehicle personal property tax ───────────────────
+      if (id === 'vehicle') {
+        const isVA = String(v.vehicle_state || 'MO').toUpperCase() === 'VA';
+        const value = Math.max(0, v.vehicle_value || 0);
+        const rate = Math.max(0, v.vehicle_rate || 0);
+
+        if (isVA) {
+          const assessed = value;
+          const gross = Math.round((assessed / 100) * rate * 100) / 100;
+          const reliefBase = Math.min(assessed, VA_CAR_TAX.pptraReliefCap);
+          const reliefPct = Math.min(100, Math.max(0, v.pptra_relief || 0));
+          const relief = Math.round(((reliefBase / 100) * rate) * (reliefPct / 100) * 100) / 100;
+          const net = Math.max(0, Math.round((gross - relief) * 100) / 100);
+          const eff = assessed > 0 ? (net / assessed) * 100 : 0;
+
+          const rows = [
+            { k: 'Assessed value on your notice', ref: 'Clean trade-in value at January 1', v: assessed, ...USD },
+            { k: 'Local rate', ref: 'Per $100 of assessed value', v: rate, ...USD, decimals: 2 },
+            { k: 'Gross tax before relief', ref: 'Assessed ÷ 100 × rate', v: gross, ...USD, decimals: 2 },
+            { k: 'Value eligible for PPTRA relief', ref: 'First $' + VA_CAR_TAX.pptraReliefCap.toLocaleString('en-US') + ' only', v: reliefBase, ...USD },
+            { k: 'PPTRA relief applied', ref: reliefPct + '% on the eligible portion', v: relief, ...USD, decimals: 2 },
+            { k: 'Tax you actually owe', v: net, ...USD, decimals: 2, extra: true },
+            { k: 'Effective rate on the vehicle', v: eff, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Value above the relief cap', ref: 'Gets no relief at all', v: Math.max(0, assessed - VA_CAR_TAX.pptraReliefCap), ...USD },
+          ];
+
+          return {
+            total: usd2(net),
+            sub:
+              'Virginia: ' + usd(assessed) + ' assessed at $' + rate.toFixed(2) + ' per $100 is ' + usd2(gross) +
+              ', less ' + usd2(relief) + ' of PPTRA relief · rates and relief are set by your locality every year',
+            rows: rows,
+            chart: [
+              { label: 'Tax you pay', value: Math.round(net), tone: 'warn' },
+              { label: 'PPTRA relief', value: Math.round(relief), tone: 'good' },
+            ],
+          };
+        }
+
+        // Missouri: assessed at 33⅓% of market value, rounded to the nearest ten.
+        const assessedRaw = value * MO_PROPERTY_TAX.assessmentRatio;
+        const assessed = Math.round(assessedRaw / 10) * 10;
+        const tax = Math.round((assessed / 100) * rate * 100) / 100;
+        const eff = value > 0 ? (tax / value) * 100 : 0;
+
+        const rows = [
+          { k: 'Vehicle market value', ref: 'January 1 valuation guide', v: value, ...USD },
+          { k: 'Statutory assessment ratio', ref: 'RSMo 137.115', v: MO_PROPERTY_TAX.assessmentRatio * 100, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Assessed value', ref: 'Rounded to the nearest ten dollars', v: assessed, ...USD },
+          { k: 'Combined levy', ref: 'Per $100 of assessed value — county, city, school', v: rate, ...USD, decimals: 2 },
+          { k: 'Annual tax', ref: 'Assessed ÷ 100 × levy', v: tax, ...USD, decimals: 2, extra: true },
+          { k: 'Effective rate on the vehicle', v: eff, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Value not subject to tax', ref: 'The other two thirds', v: Math.max(0, value - assessed), ...USD },
+        ];
+
+        return {
+          total: usd2(tax),
+          sub:
+            'Missouri: ' + usd(value) + ' assessed at 33⅓% is ' + usd(assessed) + ', taxed at $' + rate.toFixed(2) +
+            ' per $100 · your county collector has the exact combined levy',
+          rows: rows,
+          chart: [
+            { label: 'Assessed and taxed', value: Math.round(assessed), tone: 'warn' },
+            { label: 'Not assessed', value: Math.max(0, Math.round(value - assessed)), tone: 'main' },
+          ],
+        };
+      }
+
+      // ─────────────────────────── Capital gains ───────────────────────────
+      const basis = Math.max(0, v.purchase_price || 0);
+      const sale = Math.max(0, v.sale_price || 0);
+      const costs = Math.max(0, v.other_costs || 0);
+      const ordinary = Math.max(0, v.other_taxable_income || 0);
+      const isLong = String(v.holding || 'long') !== 'short';
+      const gain = sale - basis - costs;
+
+      if (gain <= 0) {
+        const loss = Math.abs(gain);
+        return {
+          total: '−' + usd(loss),
+          sub:
+            'This is a capital loss of ' + usd(loss) + '. Losses offset gains, and up to $3,000 of net loss can offset ordinary income each year, with the rest carried forward.',
+          rows: [
+            { k: 'Sale price', v: sale, ...USD },
+            { k: 'Cost basis', ref: 'What you paid', v: basis, ...USD },
+            { k: 'Commissions and improvements', ref: 'Added to the basis', v: costs, ...USD },
+            { k: 'Adjusted basis', v: basis + costs, ...USD },
+            { k: 'Capital loss', ref: 'No tax due', v: loss, ...USD, extra: true },
+            { k: 'Loss usable against ordinary income this year', ref: 'Annual limit', v: Math.min(loss, 3000), ...USD },
+            { k: 'Loss carried forward', ref: 'Indefinitely, to future years', v: Math.max(0, loss - 3000), ...USD },
+          ],
+          chart: [
+            { label: 'Capital returned', value: Math.round(sale), tone: 'main' },
+            { label: 'Capital lost', value: Math.round(loss), tone: 'bad' },
+          ],
+        };
+      }
+
+      let tax = 0;
+      let rateLabel = '';
+      let band0 = 0, band15 = 0, band20 = 0;
+      if (!isLong) {
+        tax = federalTax(ordinary + gain, status) - federalTax(ordinary, status);
+        rateLabel = (gain > 0 ? ((tax / gain) * 100).toFixed(0) : '0') + '% ordinary (short-term)';
+      } else {
+        const cg = CAPITAL_GAINS[status];
+        const top = ordinary + gain;
+        band0 = Math.max(0, Math.min(top, cg.zeroMax) - ordinary);
+        band15 = Math.max(0, Math.min(top, cg.fifteenMax) - Math.max(ordinary, cg.zeroMax));
+        band20 = Math.max(0, top - Math.max(ordinary, cg.fifteenMax));
+        tax = band15 * 0.15 + band20 * 0.20;
+        const parts = [];
+        if (band0 > 0) parts.push('0%');
+        if (band15 > 0) parts.push('15%');
+        if (band20 > 0) parts.push('20%');
+        rateLabel = parts.join(' / ') + ' long-term';
+      }
+
+      const magi = ordinary + gain;
+      const niitBase = Math.min(gain, Math.max(0, magi - NIIT.threshold[status]));
+      const niit = niitBase * NIIT.rate;
+      const totalTax = Math.round((tax + niit) * 100) / 100;
+      const afterTax = gain - totalTax;
+      const effRate = gain > 0 ? (totalTax / gain) * 100 : 0;
+
+      const rows = [
+        { k: 'Sale price', v: sale, ...USD },
+        { k: 'Cost basis', ref: 'What you paid', v: basis, ...USD },
+        { k: 'Commissions and improvements', ref: 'Added to the basis', v: costs, ...USD },
+        { k: 'Capital gain', ref: isLong ? 'Held more than one year' : 'Held one year or less', v: gain, ...USD, extra: true },
+        { k: 'Other taxable income the gain stacks on', v: ordinary, ...USD },
+        { k: 'Rate band applied', ref: rateLabel, v: effRate, format: 'unit', unit: '% effective', decimals: 1 },
+      ];
+      if (isLong) {
+        rows.push({ k: 'Gain taxed at 0%', ref: 'Below $' + CAPITAL_GAINS[status].zeroMax.toLocaleString('en-US') + ' stacked', v: band0, ...USD });
+        rows.push({ k: 'Gain taxed at 15%', v: band15, ...USD });
+        rows.push({ k: 'Gain taxed at 20%', ref: 'Above $' + CAPITAL_GAINS[status].fifteenMax.toLocaleString('en-US') + ' stacked', v: band20, ...USD });
+      }
+      rows.push({ k: 'Capital gains tax before NIIT', v: tax, ...USD });
+      rows.push({ k: 'Net Investment Income Tax', ref: (NIIT.rate * 100).toFixed(1) + '% above $' + NIIT.threshold[status].toLocaleString('en-US') + ' MAGI', v: niit, ...USD });
+      rows.push({ k: 'Total federal tax on the gain', v: totalTax, ...USD, extra: true });
+      rows.push({ k: 'Gain you keep', ref: 'Before any state tax', v: afterTax, ...USD, extra: true });
+
+      return {
+        total: usd(totalTax),
+        sub:
+          'A ' + usd(gain) + (isLong ? ' long-term' : ' short-term') + ' gain stacked on ' + usd(ordinary) +
+          ' of income: ' + rateLabel + ', effective ' + effRate.toFixed(1) + '% · you keep ' + usd(afterTax) + '. State tax not included.',
+        rows: rows,
+        chart: [
+          { label: 'Gain you keep', value: Math.max(0, Math.round(afterTax)), tone: 'good' },
+          { label: 'Federal capital gains tax', value: Math.round(tax), tone: 'warn' },
+          { label: 'Net Investment Income Tax', value: Math.round(niit), tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>

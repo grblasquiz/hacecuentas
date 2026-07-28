@@ -1,0 +1,215 @@
+---
+/**
+ * Hub de decisión CL — "¿Cuánto me queda emitiendo boletas de honorarios?"
+ * Ruta bajo el prefijo /cl/, igual que las calculadoras que absorbe.
+ * audience="CL" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UF,
+  RETENCION_POR_ANIO,
+  RETENCION_VIGENTE,
+  COTIZACIONES,
+  TOPE_ANUAL_UF,
+} from '../../../lib/hubs/cl/trabajo-a-honorarios';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    UF,
+    TASAS_ANIO: RETENCION_POR_ANIO,
+    TASA_VIGENTE: RETENCION_VIGENTE,
+    COT: COTIZACIONES,
+    TOPE_UF_ANUAL: TOPE_ANUAL_UF,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+    const num = (n, d) => n.toLocaleString('es-CL', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+
+    function tasaDe(anio) {
+      const fila = TASAS_ANIO.find((r) => String(r.anio) === String(anio));
+      return (fila ? fila.tasa : TASA_VIGENTE) / 100;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'boleta';
+      const monto = Math.max(0, v.monto || 0);
+      const anio = v.anio || '2026';
+      const tasa = tasaDe(anio);
+
+      // ── Boleta por un monto bruto ───────────────────────────────────
+      if (id === 'boleta') {
+        const retencion = monto * tasa;
+        const liquido = monto - retencion;
+        const finalTasa = TASAS_ANIO[TASAS_ANIO.length - 1].tasa / 100;
+        return {
+          total: clp(liquido),
+          sub:
+            'Sobre un bruto de ' + clp(monto) + ' te retienen el ' + num(tasa * 100, 2) + '% (' +
+            clp(retencion) + ') · sin IVA: la boleta de honorarios está exenta · ' +
+            clp(retencion * 12) + ' de retención al año si boleteas lo mismo cada mes',
+          rows: [
+            { k: 'Honorario bruto de la boleta', ref: 'Lo que documentas en el SII', v: monto },
+            { k: 'Tasa de retención del año ' + anio, ref: 'Gradualidad Ley 21.133', v: tasa * 100, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Retención', ref: 'La entera quien te paga, en el F-29', v: retencion },
+            { k: 'Líquido que recibes', ref: 'Bruto − retención', v: liquido, extra: true },
+            { k: 'IVA de la boleta', ref: 'Exenta · Art. 12 letra E N°8 DL 825', v: 0 },
+            { k: 'Retención acumulada en 12 boletas iguales', ref: 'Es la que financia tus cotizaciones', v: retencion * 12 },
+            { k: 'Líquido acumulado en 12 boletas iguales', ref: 'Antes de las cotizaciones de abril', v: liquido * 12 },
+            { k: 'Lo mismo con la tasa final de la gradualidad', ref: num(finalTasa * 100) + '% desde 2028', v: monto * (1 - finalTasa) },
+            { k: 'Cuánto más te retendrán en 2028', ref: 'Por la misma boleta', v: monto * finalTasa - retencion },
+          ],
+          chart: [
+            { label: 'Líquido que recibes', value: Math.round(liquido), tone: 'main' },
+            { label: 'Retención del SII', value: Math.round(retencion), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── Del líquido al bruto ────────────────────────────────────────
+      if (id === 'liquido') {
+        const bruto = tasa < 1 ? monto / (1 - tasa) : 0;
+        const retencion = bruto - monto;
+        return {
+          total: clp(bruto),
+          sub:
+            'Para recibir ' + clp(monto) + ' líquidos hay que boletear ' + clp(bruto) +
+            ' con la tasa del ' + num(tasa * 100, 2) + '% · la retención sale ' + clp(retencion),
+          rows: [
+            { k: 'Líquido que quieres recibir', ref: 'Lo acordado con el cliente', v: monto },
+            { k: 'Tasa de retención del año ' + anio, ref: 'Gradualidad Ley 21.133', v: tasa * 100, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Bruto que tienes que boletear', ref: 'Líquido ÷ (1 − tasa)', v: bruto, extra: true },
+            { k: 'Retención que se descuenta', ref: 'Bruto − líquido', v: retencion },
+            { k: 'Cuánto le cuesta el trabajo a tu cliente', ref: 'El bruto de la boleta, sin IVA', v: bruto },
+            {
+              k: 'Sobrecosto del bruto sobre el líquido',
+              ref: 'Cuánto más hay que boletear',
+              v: monto > 0 ? ((bruto - monto) / monto) * 100 : 0,
+              format: 'unit',
+              unit: '%',
+              decimals: 2,
+            },
+            { k: 'Bruto necesario en 2028', ref: 'Con la tasa final del ' + num(TASAS_ANIO[TASAS_ANIO.length - 1].tasa, 0) + '%', v: monto / (1 - TASAS_ANIO[TASAS_ANIO.length - 1].tasa / 100) },
+          ],
+          chart: [
+            { label: 'Líquido para ti', value: Math.round(monto), tone: 'main' },
+            { label: 'Retención sobre el bruto', value: Math.max(0, Math.round(retencion)), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── Cotización previsional obligatoria del independiente ────────
+      const anuales = Math.max(0, v.honorariosAnuales || 0);
+      const comAfp = Math.max(0, Math.min(3, v.comisionAfp != null ? v.comisionAfp : 1.27)) / 100;
+      const tasaAcc = Math.max(0, Math.min(4, v.accidentes != null ? v.accidentes : COT.accidentesDefault * 100)) / 100;
+      const base80 = anuales * COT.baseSobreBruto;
+      const topeAnual = TOPE_UF_ANUAL * UF;
+      const aplicaTope = v.tope !== 'no';
+      const base = aplicaTope ? Math.min(base80, topeAnual) : base80;
+      const topada = aplicaTope && base80 > topeAnual;
+
+      const afp = base * COT.afp;
+      const comision = base * comAfp;
+      const salud = base * COT.salud;
+      const sis = base * COT.sis;
+      const accidentes = base * tasaAcc;
+      const totalCot = afp + comision + salud + sis + accidentes;
+
+      const retencionAnual = anuales * tasa;
+      const cubierto = Math.min(retencionAnual, totalCot);
+      const remanente = Math.max(0, retencionAnual - totalCot);
+      const falta = Math.max(0, totalCot - retencionAnual);
+      const tasaEfectiva = anuales > 0 ? (totalCot / anuales) * 100 : 0;
+
+      return {
+        total: clp(totalCot),
+        sub:
+          'Cotización anual sobre el 80% de ' + clp(anuales) + ' = base de ' + clp(base) +
+          (topada ? ' (topada en ' + TOPE_UF_ANUAL + ' UF)' : '') +
+          ' · tu retención de ' + clp(retencionAnual) +
+          (falta > 0 ? ' no alcanza: faltan ' + clp(falta) : ' deja ' + clp(remanente) + ' de remanente para el impuesto'),
+        rows: [
+          { k: 'Honorarios brutos del año', ref: 'Total boleteado', v: anuales },
+          { k: 'Base imponible (80% de los brutos)', ref: 'Ley 21.133', v: base80 },
+          { k: 'Tope de la base imponible anual', ref: COT.topeMensualUf + ' UF × 12 = ' + TOPE_UF_ANUAL + ' UF', v: topeAnual },
+          { k: 'Base sobre la que se cotiza', ref: topada ? 'Topada' : 'Sin tope aplicado', v: base, extra: true },
+          { k: 'AFP obligatoria', ref: '10% · DL 3.500', v: afp },
+          { k: 'Comisión de la AFP', ref: num(comAfp * 100, 2) + '% de la administradora', v: comision },
+          { k: 'Salud', ref: '7% legal', v: salud },
+          { k: 'SIS (invalidez y sobrevivencia)', ref: num(COT.sis * 100, 1) + '%', v: sis },
+          { k: 'Ley 16.744 (accidentes del trabajo)', ref: num(tasaAcc * 100, 2) + '% · valor editable, confirmá con la SUSESO', v: accidentes },
+          { k: 'Seguro de cesantía', ref: 'No aplica al independiente · Ley 19.728', v: 0 },
+          { k: 'Cotización total del año', ref: 'Se cobra en la Operación Renta de abril', v: totalCot, extra: true },
+          { k: 'Retención acumulada del año', ref: num(tasa * 100, 2) + '% de tus honorarios', v: retencionAnual },
+          { k: 'Retención destinada a cotizaciones', ref: 'Se aplica antes que el impuesto', v: cubierto },
+          {
+            k: falta > 0 ? 'Cuánto te falta para cubrir las cotizaciones' : 'Remanente que pasa al impuesto',
+            ref: falta > 0 ? 'Lo tendrás que pagar tú' : 'De acá sale la devolución, si queda',
+            v: falta > 0 ? falta : remanente,
+          },
+          {
+            k: 'Tasa efectiva de cotización sobre tus brutos',
+            ref: 'Cotización ÷ honorarios',
+            v: tasaEfectiva,
+            format: 'unit',
+            unit: '%',
+            decimals: 2,
+          },
+        ],
+        chart: [
+          { label: 'AFP y comisión', value: Math.round(afp + comision), tone: 'main' },
+          { label: 'Salud', value: Math.round(salud), tone: 'prop' },
+          { label: 'SIS y accidentes', value: Math.round(sis + accidentes), tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

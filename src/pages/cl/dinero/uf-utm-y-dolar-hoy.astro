@@ -1,0 +1,138 @@
+---
+/**
+ * Hub de decisión CL — "¿Cuánto vale hoy la UF, la UTM y el dólar?"
+ * audience="CL" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, UF, UTM, UTA, USD, EUR, FECHAS, UNIDADES } from '../../../lib/hubs/cl/uf-utm-y-dolar-hoy';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ UF, UTM, UTA, USD, EUR, FECHAS, UNIDADES }}>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+    const num = (n, d) => (n || 0).toLocaleString('es-CL', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'uf';
+      const monto = Math.max(0, v.monto || 0);
+      const aPesos = v.direccion !== 'desde_pesos';
+
+      // En el caso de moneda extranjera el usuario elige entre dólar y euro.
+      const unidadId = id === 'dolar' ? (v.moneda === 'euro' ? 'euro' : 'dolar') : id;
+      const u = UNIDADES.find((x) => x.id === unidadId) || UNIDADES[0];
+
+      // Hacia pesos se MULTIPLICA; desde pesos se DIVIDE. Invertirlo es el bug
+      // clásico de los conversores mal escritos.
+      const resultado = aPesos ? monto * u.valor : monto / u.valor;
+
+      const rows = [];
+      const total = aPesos ? clp(resultado) : num(resultado, u.decimales) + ' ' + u.abrev;
+      const sub = aPesos
+        ? num(monto, 2) + ' ' + u.abrev + ' equivalen a ' + clp(resultado) + ' · ' + u.nombre + ' de ' + u.fecha + ': ' + num(u.valor, 2)
+        : clp(monto) + ' equivalen a ' + num(resultado, u.decimales) + ' ' + u.abrev + ' · ' + u.nombre + ' de ' + u.fecha + ': ' + num(u.valor, 2);
+
+      rows.push({
+        k: 'Monto que ingresaste',
+        ref: aPesos ? 'Expresado en ' + u.abrev : 'Expresado en pesos chilenos',
+        v: monto,
+        format: aPesos ? 'unit' : 'ars',
+        unit: u.abrev,
+        decimals: aPesos ? 2 : 0,
+      });
+      rows.push({
+        k: 'Valor de 1 ' + u.abrev,
+        ref: u.nombre + ' · dato del ' + u.fecha,
+        v: u.valor,
+        decimals: 2,
+      });
+      rows.push({
+        k: 'Resultado de la conversión',
+        ref: aPesos ? 'Monto × valor de la ' + u.abrev : 'Monto ÷ valor de la ' + u.abrev,
+        v: resultado,
+        format: aPesos ? 'ars' : 'unit',
+        unit: u.abrev,
+        decimals: aPesos ? 0 : u.decimales,
+        extra: true,
+      });
+      rows.push({ k: 'UF de hoy', ref: 'Unidad de Fomento · ' + FECHAS.uf, v: UF, decimals: 2 });
+      rows.push({ k: 'UTM del mes', ref: 'Unidad Tributaria Mensual · ' + FECHAS.utm, v: UTM });
+      rows.push({ k: 'UTA vigente', ref: 'Unidad Tributaria Anual · ' + FECHAS.uta, v: UTA });
+      rows.push({ k: 'Dólar observado', ref: 'Banco Central · ' + FECHAS.dolar, v: USD, decimals: 2 });
+      rows.push({ k: 'Euro', ref: 'Banco Central · ' + FECHAS.euro, v: EUR, decimals: 2 });
+      rows.push({
+        k: 'Cuántas UF son 1 UTM',
+        ref: 'Referencia entre las dos unidades chilenas',
+        v: UF > 0 ? UTM / UF : 0,
+        format: 'unit',
+        unit: 'UF',
+        decimals: 3,
+      });
+      rows.push({
+        k: 'Cuántos dólares es 1 UF',
+        ref: 'UF ÷ dólar observado',
+        v: USD > 0 ? UF / USD : 0,
+        format: 'unit',
+        unit: 'USD',
+        decimals: 2,
+      });
+
+      return {
+        total: total,
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'UTA', value: Math.round(UTA), tone: 'prop' },
+          { label: 'UTM', value: Math.round(UTM), tone: 'main' },
+          { label: 'UF', value: Math.round(UF), tone: 'good' },
+          { label: 'Euro', value: Math.round(EUR), tone: 'warn' },
+          { label: 'Dólar', value: Math.round(USD), tone: 'exit' },
+        ],
+      };
+    });
+  })();
+</script>

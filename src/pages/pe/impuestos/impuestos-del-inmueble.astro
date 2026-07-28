@@ -1,0 +1,244 @@
+---
+/**
+ * Hub de decisión PE — "Tengo, compro o vendo un inmueble: ¿qué impuestos pago?"
+ * Absorbe predial, arbitrios municipales, alcabala y renta de segunda por venta.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UIT,
+  PREDIAL_TRAMOS,
+  PREDIAL_MINIMO_UIT,
+  PREDIAL_DEDUCCION_UIT,
+  ARBITRIOS_TARIFAS,
+  ARBITRIOS_MIX,
+  ARBITRIOS_FACTOR_COMERCIO,
+  ALCABALA,
+  VENTA,
+} from '../../../lib/hubs/pe/impuestos-del-inmueble';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PE"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    UIT,
+    PREDIAL_TRAMOS,
+    PREDIAL_MINIMO_UIT,
+    PREDIAL_DEDUCCION_UIT,
+    ARBITRIOS_TARIFAS,
+    ARBITRIOS_MIX,
+    ARBITRIOS_FACTOR_COMERCIO,
+    ALCABALA,
+    VENTA,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const nf = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
+    const sol = (n) => 'S/ ' + nf.format(Math.round(n || 0));
+    const MONEY = { format: 'unit', unit: 'soles' };
+
+    /** Escala progresiva acumulativa del predial (Art. 13 TUO). hastaUit null = tramo abierto. */
+    function predial(base) {
+      let restante = Math.max(0, base);
+      let impuesto = 0, anterior = 0;
+      const tramos = [];
+      for (const t of PREDIAL_TRAMOS) {
+        const limite = t.hastaUit === null ? Infinity : t.hastaUit * UIT;
+        const ancho = limite - anterior;
+        const enTramo = Math.min(restante, ancho);
+        if (enTramo > 0) {
+          impuesto += enTramo * t.tasa;
+          tramos.push({
+            etiqueta: t.hastaUit === null ? 'Exceso de ' + (anterior / UIT) + ' UIT' : 'Hasta ' + t.hastaUit + ' UIT',
+            tasa: t.tasa,
+            monto: enTramo * t.tasa,
+          });
+          restante -= enTramo;
+        }
+        anterior = limite;
+        if (restante <= 0) break;
+      }
+      return { impuesto: impuesto, tramos: tramos };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'propietario';
+      const autovaluo = Math.max(0, v.autovaluo || 0);
+      const rows = [];
+
+      // ---------- Propietario / pensionista: predial (+ arbitrios) ----------
+      if (id === 'propietario' || id === 'pensionista') {
+        const esPensionista = id === 'pensionista';
+        const deduccion = esPensionista ? PREDIAL_DEDUCCION_UIT * UIT : 0;
+        const base = Math.max(0, autovaluo - deduccion);
+        const e = predial(base);
+        const minimo = PREDIAL_MINIMO_UIT * UIT;
+        const aplicoMinimo = base > 0 && e.impuesto < minimo;
+        const impuesto = base > 0 ? Math.max(e.impuesto, minimo) : 0;
+
+        // Arbitrios: estimación referencial por m² según ordenanza distrital.
+        const area = Math.max(0, v.areaM2 || 0);
+        const tarifa = ARBITRIOS_TARIFAS.find((t) => t.id === String(v.distrito || 'otro')) || ARBITRIOS_TARIFAS[4];
+        const comercio = String(v.uso || 'casa') === 'comercio';
+        const arbitrios = area * tarifa.solM2Anual * (comercio ? ARBITRIOS_FACTOR_COMERCIO : 1);
+        const total = impuesto + arbitrios;
+
+        rows.push({ k: 'Autovalúo declarado', ref: 'Declaración jurada municipal', v: autovaluo });
+        if (esPensionista) {
+          rows.push({ k: 'Deducción de pensionista o adulto mayor', ref: PREDIAL_DEDUCCION_UIT + ' UIT · Art. 19 del TUO', v: Math.min(deduccion, autovaluo) });
+        }
+        rows.push({ k: 'Base imponible del predial', ref: esPensionista ? 'Autovalúo menos la deducción' : 'Igual al autovalúo', v: base });
+        for (const t of e.tramos) {
+          rows.push({ k: 'Predial del tramo ' + (t.tasa * 100).toString().replace('.', ',') + '%', ref: t.etiqueta, v: t.monto });
+        }
+        rows.push({ k: 'Impuesto predial anual', ref: aplicoMinimo ? 'Se aplica el mínimo legal de ' + (PREDIAL_MINIMO_UIT * 100).toString().replace('.', ',') + '% de la UIT' : 'Escala progresiva del Art. 13', v: impuesto, extra: true });
+        rows.push({ k: 'Cuota trimestral del predial', ref: 'Febrero, mayo, agosto y noviembre', v: impuesto / 4 });
+        rows.push({ k: 'Arbitrios anuales estimados', ref: area + ' m² × ' + tarifa.solM2Anual + ' S/ por m² en ' + tarifa.nombre + (comercio ? ' × factor comercial' : '') + ' · REFERENCIAL', v: arbitrios });
+        rows.push({ k: 'Limpieza pública (estimado)', ref: 'Reparto referencial del arbitrio', v: arbitrios * ARBITRIOS_MIX.limpieza });
+        rows.push({ k: 'Serenazgo (estimado)', ref: 'Reparto referencial del arbitrio', v: arbitrios * ARBITRIOS_MIX.serenazgo });
+        rows.push({ k: 'Parques y jardines (estimado)', ref: 'Reparto referencial del arbitrio', v: arbitrios * ARBITRIOS_MIX.parques });
+        rows.push({ k: 'Costo municipal total del año', ref: 'Predial más arbitrios', v: total, extra: true });
+        rows.push({ k: 'Equivale por mes', ref: 'Total ÷ 12', v: total / 12 });
+        rows.push({ k: 'Tasa efectiva sobre el autovalúo', ref: 'Predial ÷ autovalúo', v: autovaluo > 0 ? (impuesto / autovaluo) * 100 : 0, format: 'unit', unit: '%', decimals: 3 });
+
+        return {
+          total: sol(total),
+          sub:
+            'Predial ' + sol(impuesto) + ' + arbitrios estimados ' + sol(arbitrios) + ' al año' +
+            (esPensionista ? ' · la deducción de ' + PREDIAL_DEDUCCION_UIT + ' UIT deja la base en ' + sol(base) : '') +
+            ' · los arbitrios dependen de la ordenanza de tu distrito',
+          rows: rows,
+          format: MONEY.format,
+          unit: MONEY.unit,
+          chart: [
+            { label: 'Impuesto predial', value: Math.round(impuesto), tone: 'main' },
+            { label: 'Arbitrios (estimados)', value: Math.round(arbitrios), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ---------- Comprador: alcabala ----------
+      if (id === 'comprador') {
+        const valor = Math.max(0, v.valorCompra || 0);
+        const inafecto = ALCABALA.uitInafectas * UIT;
+        // Base imponible: el mayor entre valor de transferencia y autovalúo (Art. 24).
+        const base = Math.max(valor, autovaluo);
+        const gravado = Math.max(0, base - inafecto);
+        const impuesto = gravado * ALCABALA.tasa;
+
+        rows.push({ k: 'Valor de transferencia pactado', ref: 'Precio de la compraventa', v: valor });
+        rows.push({ k: 'Autovalúo del predio', ref: 'Se compara y manda el mayor · Art. 24', v: autovaluo });
+        rows.push({ k: 'Base imponible', ref: base > valor ? 'Manda el autovalúo, que es mayor' : 'Manda el valor de transferencia', v: base });
+        rows.push({ k: 'Tramo inafecto', ref: ALCABALA.uitInafectas + ' UIT · Art. 25 del TUO', v: Math.min(base, inafecto) });
+        rows.push({ k: 'Tramo gravado', ref: 'Lo que excede las ' + ALCABALA.uitInafectas + ' UIT', v: gravado });
+        rows.push({ k: 'Alcabala a pagar', ref: ALCABALA.tasa * 100 + '% del exceso · la paga el comprador', v: impuesto, extra: true });
+        rows.push({ k: 'Tasa efectiva sobre el precio', ref: 'Alcabala ÷ base imponible', v: base > 0 ? (impuesto / base) * 100 : 0, format: 'unit', unit: '%', decimals: 2 });
+        rows.push({ k: 'Costo total de la compra', ref: 'Precio más alcabala, sin gastos notariales ni registrales', v: valor + impuesto });
+
+        return {
+          total: sol(impuesto),
+          sub: impuesto > 0
+            ? 'Base ' + sol(base) + ' menos ' + sol(inafecto) + ' inafectos = ' + sol(gravado) + ' gravados al ' + ALCABALA.tasa * 100 + '% · lo paga el comprador'
+            : 'La base no supera las ' + ALCABALA.uitInafectas + ' UIT (' + sol(inafecto) + '): no hay alcabala a pagar, pero igual conviene liquidarla',
+          rows: rows,
+          format: MONEY.format,
+          unit: MONEY.unit,
+          chart: [
+            { label: 'Tramo inafecto (' + ALCABALA.uitInafectas + ' UIT)', value: Math.round(Math.min(base, inafecto)), tone: 'good' },
+            { label: 'Tramo gravado', value: Math.round(gravado), tone: 'main' },
+            { label: 'Alcabala', value: Math.round(impuesto), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ---------- Vendedor: renta de segunda categoría ----------
+      const venta = Math.max(0, v.valorVenta || 0);
+      const costoBase = Math.max(0, v.costoAdquisicion || 0);
+      const icm = Math.max(1, v.icm || 1);
+      const exonerada = String(v.casaHabitacion || 'no') === 'si';
+
+      const costoComputable = costoBase * icm;
+      const ganancia = Math.max(0, venta - costoComputable);
+      const rentaNeta = ganancia * (1 - VENTA.deduccion);
+      const impuesto = exonerada ? 0 : rentaNeta * VENTA.tasaRentaNeta;
+      const neto = venta - impuesto;
+
+      rows.push({ k: 'Precio de venta', ref: 'Lo que recibes por el inmueble', v: venta });
+      rows.push({ k: 'Valor de adquisición original', ref: 'Según la escritura de compra', v: costoBase });
+      rows.push({ k: 'Costo computable actualizado', ref: 'Adquisición × ICM ' + String(icm).replace('.', ','), v: costoComputable });
+      rows.push({ k: 'Ganancia de capital', ref: 'Venta menos costo computable', v: ganancia });
+      rows.push({ k: 'Renta neta imponible', ref: '80% de la ganancia · deducción del ' + VENTA.deduccion * 100 + '% sin sustento', v: rentaNeta });
+      rows.push({
+        k: exonerada ? 'Impuesto (exonerado por casa habitación)' : 'Impuesto de segunda categoría',
+        ref: exonerada ? 'Dos años en propiedad y destinado a vivienda' : VENTA.tasaRentaNeta * 100 + '% de la renta neta = ' + VENTA.tasaEfectiva * 100 + '% efectivo sobre la ganancia',
+        v: impuesto,
+        extra: true,
+      });
+      rows.push({ k: 'Te queda después del impuesto', ref: 'Precio de venta menos impuesto', v: neto });
+      rows.push({ k: 'Tasa efectiva sobre la ganancia', ref: 'Impuesto ÷ ganancia', v: ganancia > 0 ? (impuesto / ganancia) * 100 : 0, format: 'unit', unit: '%', decimals: 2 });
+      rows.push({ k: 'Tasa efectiva sobre el precio de venta', ref: 'Impuesto ÷ venta', v: venta > 0 ? (impuesto / venta) * 100 : 0, format: 'unit', unit: '%', decimals: 2 });
+
+      return {
+        total: sol(impuesto),
+        sub: exonerada
+          ? 'Casa habitación: la venta no paga renta de segunda categoría. Ganancia estimada ' + sol(ganancia) + ' · conserva la documentación que acredite la condición'
+          : ganancia > 0
+            ? 'Ganancia ' + sol(ganancia) + ' · impuesto ' + sol(impuesto) + ' (' + VENTA.tasaEfectiva * 100 + '% efectivo) · te quedan ' + sol(neto)
+            : 'El costo computable actualizado iguala o supera el precio de venta: no hay ganancia gravada',
+        rows: rows,
+        format: MONEY.format,
+        unit: MONEY.unit,
+        chart: [
+          { label: 'Costo computable', value: Math.round(Math.min(costoComputable, venta)), tone: 'good' },
+          { label: 'Ganancia que te queda', value: Math.round(Math.max(0, ganancia - impuesto)), tone: 'main' },
+          { label: 'Impuesto', value: Math.round(impuesto), tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

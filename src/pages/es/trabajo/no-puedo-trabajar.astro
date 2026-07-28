@@ -1,0 +1,256 @@
+---
+/**
+ * Hub de decisión ES — baja, incapacidad y dependencia. Reemplaza 4 calculadoras.
+ * YMYL salud + plata. audience="ES" literal al Layout.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, IT, IP, IPREM, PENSIONES, PNC } from '../../../lib/hubs/es/no-puedo-trabajar';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/es' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="ES"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ IT: IT, IP: IP, IPREM: IPREM, P: PENSIONES, PNC: PNC }}>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n) => Math.round(n || 0).toLocaleString('es-ES') + ' €';
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'comun';
+      const base = Math.max(0, v.base || 0);
+      const dias = Math.max(0, Math.round(v.dias || 0));
+      const complemento = String(v.complemento || 'no');
+      const edad = Math.max(16, v.edad || 45);
+      const grado = String(v.gradoIp || 'total');
+      const rentas = Math.max(0, v.rentasAnuales || 0);
+
+      const baseDiaria = base / 30;
+      const rows = [];
+      let principal = 0;
+      let sub = '';
+      let chart = [];
+
+      if (id === 'comun' || id === 'profesional') {
+        let importe = 0;
+        let d1 = 0;
+        let d2 = 0;
+        let d3 = 0;
+        if (id === 'profesional') {
+          d3 = Math.max(0, dias - 1);
+          importe = baseDiaria * IT.pctProfesional * d3 + baseDiaria; // el día de la baja lo paga la empresa
+        } else {
+          d1 = Math.min(dias, IT.diasCarencia);
+          d2 = Math.max(0, Math.min(dias, 20) - IT.diasCarencia);
+          d3 = Math.max(0, dias - 20);
+          importe = baseDiaria * IT.pctDias4a20 * d2 + baseDiaria * IT.pctDesde21 * d3;
+        }
+
+        const salarioPeriodo = baseDiaria * dias;
+        const pctComplemento = complemento === '100' ? 1 : complemento === '75' ? 0.75 : 0;
+        const conComplemento = pctComplemento > 0 ? Math.max(importe, salarioPeriodo * pctComplemento) : importe;
+        principal = conComplemento;
+
+        rows.push({ k: 'Base reguladora mensual', ref: 'Base del cálculo', v: base });
+        rows.push({ k: 'Base reguladora diaria', ref: 'Base mensual ÷ 30', v: baseDiaria, decimals: 2 });
+        rows.push({ k: 'Días de baja', ref: 'Los que has indicado', v: dias, format: 'unit', unit: 'días' });
+        if (id === 'comun') {
+          rows.push({ k: 'Días 1 a 3 sin prestación', ref: 'Salvo complemento de convenio', v: d1, format: 'unit', unit: 'días' });
+          rows.push({ k: 'Días 4 a 20 al 60%', ref: 'Contingencia común', v: baseDiaria * IT.pctDias4a20 * d2 });
+          rows.push({ k: 'Días 21 en adelante al 75%', ref: 'Contingencia común', v: baseDiaria * IT.pctDesde21 * d3 });
+        } else {
+          rows.push({ k: 'Día de la baja', ref: 'Lo paga la empresa al 100%', v: baseDiaria });
+          rows.push({ k: 'Resto de días al 75%', ref: 'Desde el día siguiente, sin carencia', v: baseDiaria * IT.pctProfesional * d3 });
+        }
+        rows.push({ k: 'Prestación legal del período', ref: 'Sin complemento', v: importe, extra: true });
+        if (pctComplemento > 0) {
+          rows.push({
+            k: 'Con el complemento del convenio',
+            ref: 'Hasta el ' + Math.round(pctComplemento * 100) + '% del salario',
+            v: conComplemento,
+            extra: true,
+          });
+        }
+        rows.push({ k: 'Salario que habrías cobrado', ref: 'Si no hubiera baja', v: salarioPeriodo });
+        rows.push({ k: 'Lo que dejas de ingresar', ref: 'Diferencia con tu salario', v: Math.max(0, salarioPeriodo - conComplemento) });
+        rows.push({
+          k: 'Duración máxima de la baja',
+          ref: 'Prorrogable ' + IT.prorrogaDias + ' días más',
+          v: IT.duracionMaximaDias,
+          format: 'unit',
+          unit: 'días',
+        });
+
+        chart = [
+          { label: 'Lo que cobras', value: Math.round(conComplemento), tone: 'main' },
+          { label: 'Lo que dejas de ingresar', value: Math.round(Math.max(0, salarioPeriodo - conComplemento)), tone: 'bad' },
+        ];
+        sub =
+          'Por ' +
+          dias +
+          ' días de baja cobrarías ' +
+          eur(conComplemento) +
+          ' en total, frente a los ' +
+          eur(salarioPeriodo) +
+          ' de salario del mismo período';
+      } else if (id === 'permanente') {
+        const pct =
+          grado === 'absoluta' || grado === 'gran_invalidez'
+            ? IP.absoluta.pct
+            : grado === 'total_cualificada' && edad >= 55
+              ? IP.total.pctCualificada
+              : IP.total.pct;
+        const pension = Math.min(base * (pct / 100), P.maximaMensual);
+        const exenta = grado === 'absoluta' || grado === 'gran_invalidez';
+        let complementoGi = 0;
+        if (grado === 'gran_invalidez') {
+          complementoGi = base * (IP.granInvalidez.complementoMinPctBR / 100);
+        }
+        principal = pension + complementoGi;
+
+        rows.push({ k: 'Base reguladora mensual', ref: 'Base del cálculo', v: base });
+        rows.push({
+          k: 'Porcentaje del grado',
+          ref:
+            grado === 'absoluta'
+              ? 'Absoluta para todo trabajo'
+              : grado === 'gran_invalidez'
+                ? 'Gran invalidez'
+                : grado === 'total_cualificada'
+                  ? 'Total cualificada, 55 años o más'
+                  : 'Total para la profesión habitual',
+          v: pct,
+          format: 'unit',
+          unit: '%',
+          decimals: 0,
+        });
+        rows.push({ k: 'Pensión mensual', ref: 'Base × porcentaje, con tope', v: pension, extra: true });
+        if (complementoGi > 0) {
+          rows.push({
+            k: 'Complemento de gran invalidez',
+            ref: 'Mínimo el ' + IP.granInvalidez.complementoMinPctBR + '% de la base',
+            v: complementoGi,
+          });
+        }
+        rows.push({ k: 'Total mensual', ref: 'Lo que ingresas al mes', v: principal, extra: true });
+        rows.push({ k: 'Total anual', ref: '14 pagas', v: principal * 14 });
+        rows.push({
+          k: 'Tributación en el IRPF',
+          ref: exenta ? 'Exenta: no tributa' : 'Tributa como rendimiento del trabajo',
+          v: exenta ? 0 : 1,
+          format: 'plain',
+        });
+        rows.push({ k: 'Pensión máxima del sistema', ref: 'Tope legal mensual', v: P.maximaMensual });
+
+        chart = [
+          { label: 'Tu pensión', value: Math.round(principal), tone: 'main' },
+          { label: 'Parte de la base que pierdes', value: Math.round(Math.max(0, base - principal)), tone: 'bad' },
+        ];
+        sub =
+          'Con el grado reconocido cobrarías ' +
+          eur(principal) +
+          ' al mes, el ' +
+          pct +
+          '% de tu base reguladora' +
+          (exenta ? ', y está exenta de IRPF' : ', y tributa como un salario');
+      } else {
+        // Pensión no contributiva y dependencia.
+        const limite = PNC.limiteRenta['1'];
+        const integraMensual = PNC.integraAnual / 14;
+        let cuantia = 0;
+        if (rentas < limite) {
+          const proporcion = 1 - rentas / limite;
+          cuantia = Math.max(integraMensual * PNC.porcentajeMinimo, integraMensual * proporcion);
+        }
+        principal = cuantia;
+
+        rows.push({ k: 'Cuantía íntegra anual', ref: '14 pagas', v: PNC.integraAnual });
+        rows.push({ k: 'Cuantía íntegra mensual', ref: 'Sin otras rentas', v: integraMensual });
+        rows.push({ k: 'Rentas de la unidad de convivencia', ref: 'Anuales', v: rentas });
+        rows.push({ k: 'Límite de rentas para una persona', ref: 'Sube con cada miembro', v: limite });
+        rows.push({
+          k: 'Pensión no contributiva estimada',
+          ref: rentas >= limite ? 'Superas el límite: sin derecho' : 'Reducida en proporción a tus rentas',
+          v: cuantia,
+          extra: true,
+        });
+        rows.push({ k: 'Suelo del 25% de la cuantía íntegra', ref: 'Mínimo si se reconoce el derecho', v: integraMensual * PNC.porcentajeMinimo });
+        rows.push({
+          k: 'Edad mínima de la modalidad de jubilación',
+          ref: 'Para invalidez: entre 18 y 64 años',
+          v: PNC.edadJubilacion,
+          format: 'unit',
+          unit: 'años',
+        });
+        rows.push({
+          k: 'Grado de discapacidad exigido en invalidez',
+          ref: 'Reconocido por la comunidad autónoma',
+          v: PNC.gradoInvalidezMinimo,
+          format: 'unit',
+          unit: '%',
+        });
+
+        chart = [
+          { label: 'Pensión no contributiva', value: Math.round(cuantia), tone: 'main' },
+          { label: 'Hasta la cuantía íntegra', value: Math.round(Math.max(0, integraMensual - cuantia)), tone: 'prop' },
+        ];
+        sub =
+          rentas >= limite
+            ? 'Con ' + eur(rentas) + ' de rentas anuales superas el límite de ' + eur(limite) + ': no habría derecho a la pensión no contributiva'
+            : 'Cobrarías en torno a ' + eur(cuantia) + ' al mes en 14 pagas, una vez descontadas tus rentas del límite';
+      }
+
+      return {
+        total: eur(principal),
+        sub: sub,
+        rows: rows,
+        chart: chart.filter(function (s) {
+          return s.value > 0;
+        }),
+        format: 'unit',
+        unit: '€',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

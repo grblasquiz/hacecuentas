@@ -1,0 +1,302 @@
+---
+/**
+ * Hub de decisão PT — "Quanto custam os filhos e o que o Estado devolve".
+ * A rota vive sob /pt-pt/, tal como as calculadoras que absorve.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, ABONO, PROPINAS, ESCOLA } from '../../../lib/hubs/pt-pt/filhos';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt-pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PT"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ ABONO, PROPINAS, ESCOLA }}>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n, d) =>
+      Number(n || 0).toLocaleString('de-DE', {
+        minimumFractionDigits: d || 0,
+        maximumFractionDigits: d || 0,
+      }) + ' €';
+
+    const IDADE_KEY = { ate36: 'ate36meses', de36a72: 'de36a72meses', mais72: 'mais72meses' };
+    const IDADE_LABEL = { ate36: 'até 36 meses', de36a72: 'dos 36 aos 72 meses', mais72: 'mais de 72 meses' };
+
+    /** Escalão do abono (1 a 5) pelo rendimento de referência anual. 5 = sem direito. */
+    function escalaoAbono(rendRef) {
+      for (let i = 0; i < ABONO.escaloesLimite.length; i++) {
+        if (rendRef <= ABONO.escaloesLimite[i]) return i + 1;
+      }
+      return 5;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'abono';
+      const rows = [];
+      let totalTexto = '';
+      let sub = '';
+      let chart = [];
+
+      if (id === 'escola') {
+        // ── Orçamento do regresso às aulas (referências de mercado, não oficiais) ──
+        const filhos = Math.min(10, Math.max(1, Math.round(v.nFilhos || 1)));
+        const ciclo = ESCOLA.material[String(v.ciclo)] !== undefined ? String(v.ciclo) : 'ciclo1';
+        const privada = String(v.tipoEscola || 'publica') === 'privada';
+        const comRefeicoes = String(v.refeicoes || 'sim') === 'sim';
+
+        const material = ESCOLA.material[ciclo] * filhos;
+        const manuais = (privada ? ESCOLA.manuaisPrivada[ciclo] : 0) * filhos;
+        const vestuario = ESCOLA.vestuario * filhos;
+        const extras = ESCOLA.extras[ciclo] * filhos;
+        const arranque = material + manuais + vestuario + extras;
+
+        const refeicaoDia = privada ? ESCOLA.refeicaoDiaPrivada : ESCOLA.refeicaoDiaPublica;
+        const refeicoesMes = comRefeicoes ? refeicaoDia * ESCOLA.diasRefeicaoMes * filhos : 0;
+        const refeicoesAno = refeicoesMes * ESCOLA.mesesAnoLetivo;
+        const totalAno = arranque + refeicoesAno;
+        totalTexto = eur(totalAno);
+
+        rows.push({ k: 'Filhos em idade escolar', ref: ESCOLA.ciclos[ciclo] + ' · escola ' + (privada ? 'privada' : 'pública'), v: filhos, format: 'plain' });
+        rows.push({ k: 'Material escolar', ref: 'Referência de mercado por ciclo', v: material, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Manuais escolares',
+          ref: privada ? 'Pagos na escola privada' : 'Gratuitos do 1.º ao 12.º ano na escola pública',
+          v: manuais,
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({ k: 'Mochila, vestuário e calçado', ref: 'Arranque de setembro', v: vestuario, format: 'unit', unit: '€' });
+        rows.push({ k: 'Extras do ciclo', ref: ciclo === 'secundario' ? 'Inclui calculadora gráfica' : 'Agenda, equipamento de educação física', v: extras, format: 'unit', unit: '€' });
+        rows.push({ k: 'Custo do arranque em setembro', ref: 'Tudo o que se paga de uma vez', v: arranque, extra: true, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Refeições por mês',
+          ref: comRefeicoes ? eur(refeicaoDia, 2) + '/dia × ' + ESCOLA.diasRefeicaoMes + ' dias' : 'Não come na escola',
+          v: refeicoesMes,
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({ k: 'Refeições no ano letivo', ref: ESCOLA.mesesAnoLetivo + ' meses', v: refeicoesAno, format: 'unit', unit: '€' });
+        rows.push({ k: 'Custo total do ano letivo', ref: 'Arranque + refeições', v: totalAno, extra: true, format: 'unit', unit: '€' });
+        rows.push({ k: 'Custo médio por filho no ano', ref: 'Total ÷ número de filhos', v: totalAno / filhos, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'O que pouparia na escola pública',
+          ref: privada ? 'Manuais gratuitos e refeições subsidiadas' : 'Já está na pública',
+          v: privada
+            ? ESCOLA.manuaisPrivada[ciclo] * filhos +
+              (comRefeicoes
+                ? (ESCOLA.refeicaoDiaPrivada - ESCOLA.refeicaoDiaPublica) * ESCOLA.diasRefeicaoMes * filhos * ESCOLA.mesesAnoLetivo
+                : 0)
+            : 0,
+          format: 'unit',
+          unit: '€',
+        });
+
+        sub =
+          'Arranque de ' + eur(arranque) + ' em setembro' +
+          (comRefeicoes ? ' e ' + eur(refeicoesMes) + ' por mês de refeições' : '') +
+          ' · valores de referência, ajuste-os à sua escola';
+        chart = [
+          { label: 'Material e extras', value: Math.round(material + extras), tone: 'main' },
+          { label: 'Mochila e vestuário', value: Math.round(vestuario), tone: 'good' },
+          { label: 'Manuais', value: Math.round(manuais), tone: 'bad' },
+          { label: 'Refeições do ano', value: Math.round(refeicoesAno), tone: 'warn' },
+        ];
+      } else if (id === 'universidade') {
+        // ── Propinas ──
+        const propina = Math.max(0, v.propinaAnual || 0);
+        const anos = Math.max(1, Math.round(v.nAnos || 1));
+        const prestacoes = Math.max(1, Math.round(v.nPrestacoes || 1));
+        const mensal = propina / prestacoes;
+        const totalCurso = propina * anos;
+        const acimaMax = propina > PROPINAS.maxPublicoAnual;
+        totalTexto = eur(totalCurso);
+
+        rows.push({ k: 'Propina anual', ref: acimaMax ? 'Acima do máximo público: típico do privado' : 'Dentro do limite do ensino público', v: propina, format: 'unit', unit: '€' });
+        rows.push({ k: 'Prestações por ano', ref: 'Habitualmente ' + PROPINAS.prestacoesPadrao, v: prestacoes, format: 'plain' });
+        rows.push({ k: 'Valor de cada prestação', ref: 'Propina anual ÷ prestações', v: mensal, format: 'unit', unit: '€', decimals: 2 });
+        rows.push({ k: 'Duração do curso', ref: 'Anos letivos', v: anos, format: 'unit', unit: 'anos' });
+        rows.push({ k: 'Custo total do curso em propinas', ref: 'Sem contar matrícula, seguro e materiais', v: totalCurso, extra: true, format: 'unit', unit: '€' });
+        rows.push({ k: 'Propina máxima do ensino superior público', ref: 'Valor de referência do ano letivo', v: PROPINAS.maxPublicoAnual, format: 'unit', unit: '€' });
+        rows.push({ k: 'Propina máxima do ano letivo anterior', ref: 'Antes do descongelamento', v: PROPINAS.anteriorAnual, format: 'unit', unit: '€' });
+        rows.push({ k: 'Subida face ao ano anterior', ref: 'No máximo do público', v: PROPINAS.maxPublicoAnual - PROPINAS.anteriorAnual, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Quanto paga a mais do que no público',
+          ref: acimaMax ? 'Diferença ao longo do curso' : 'Está no valor do público',
+          v: Math.max(0, (propina - PROPINAS.maxPublicoAnual) * anos),
+          format: 'unit',
+          unit: '€',
+        });
+
+        sub =
+          eur(mensal) + ' por prestação, ' + prestacoes + ' vezes por ano' +
+          ' · ' + eur(totalCurso) + ' ao longo de ' + anos + (anos === 1 ? ' ano' : ' anos') +
+          (acimaMax ? ' · acima do máximo do ensino público' : '');
+        chart = [
+          { label: 'Propinas do curso', value: Math.round(totalCurso), tone: 'warn' },
+          {
+            label: 'O que custaria no público',
+            value: Math.round(Math.min(propina, PROPINAS.maxPublicoAnual) * anos),
+            tone: 'good',
+          },
+        ];
+      } else if (id === 'pensao') {
+        // ── Pensão de alimentos: repartição proporcional do custo real da criança ──
+        const rendPagador = Math.max(0, v.rendimentoPagador || 0);
+        const rendOutro = Math.max(0, v.rendimentoOutro || 0);
+        const custo = Math.max(0, v.custoMensalCrianca || 0);
+        const totalRend = rendPagador + rendOutro;
+        const fracao = totalRend > 0 ? rendPagador / totalRend : 0;
+        const pensao = custo * fracao;
+        totalTexto = eur(pensao);
+
+        rows.push({ k: 'Rendimento de quem paga a pensão', ref: 'Progenitor sem a guarda', v: rendPagador, format: 'unit', unit: '€' });
+        rows.push({ k: 'Rendimento do outro progenitor', ref: 'Progenitor com quem a criança reside', v: rendOutro, format: 'unit', unit: '€' });
+        rows.push({ k: 'Rendimento conjunto', ref: 'Base da repartição proporcional', v: totalRend, format: 'unit', unit: '€' });
+        rows.push({ k: 'Custo mensal da criança', ref: 'Necessidades correntes', v: custo, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Quota-parte de quem paga',
+          ref: 'Rendimento ÷ rendimento conjunto',
+          v: fracao * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        rows.push({ k: 'Pensão de alimentos orientativa', ref: 'Estimativa — quem fixa é o tribunal', v: pensao, extra: true, format: 'unit', unit: '€' });
+        rows.push({ k: 'Parte suportada pelo progenitor com a guarda', ref: 'O resto do custo da criança', v: Math.max(0, custo - pensao), format: 'unit', unit: '€' });
+        rows.push({ k: 'Pensão ao fim de um ano', ref: '12 mensalidades', v: pensao * 12, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Peso da pensão no rendimento de quem paga',
+          ref: 'Pensão ÷ rendimento',
+          v: rendPagador > 0 ? (pensao / rendPagador) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+
+        sub =
+          'Quem paga representa ' + (fracao * 100).toFixed(1).replace('.', ',') + ' % do rendimento conjunto' +
+          ' · valor meramente orientativo: não há fórmula legal e quem fixa é o Tribunal de Família';
+        chart = [
+          { label: 'Suportado por quem paga a pensão', value: Math.round(pensao), tone: 'warn' },
+          { label: 'Suportado por quem tem a guarda', value: Math.round(Math.max(0, custo - pensao)), tone: 'good' },
+        ];
+      } else {
+        // ── Abono de família ──
+        const rendimento = Math.max(0, v.rendimentoAnualAgregado || 0);
+        const nFilhos = Math.max(1, Math.round(v.nFilhos || 1));
+        const idade = IDADE_KEY[String(v.idadeAbono)] ? String(v.idadeAbono) : 'ate36';
+        const mono = String(v.monoparental || 'nao') === 'sim';
+
+        const rendRef = rendimento / (nFilhos + 1);
+        const escalao = escalaoAbono(rendRef);
+        const semDireito = escalao === 5;
+        const base = semDireito ? 0 : ABONO.montante[IDADE_KEY[idade]][escalao - 1];
+        const majoracao = mono ? base * ABONO.majoracaoMonoparental : 0;
+        const porCrianca = base + majoracao;
+        const totalMes = porCrianca * nFilhos;
+        totalTexto = eur(totalMes);
+
+        rows.push({ k: 'Rendimento anual do agregado', ref: 'Todos os elementos somados', v: rendimento, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Rendimento de referência',
+          ref: 'Rendimento ÷ (' + nFilhos + ' titulares + 1)',
+          v: rendRef,
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({
+          k: 'Escalão em que cai',
+          ref: semDireito ? 'Acima de ' + eur(ABONO.escaloesLimite[3]) + ': sem direito' : 'Limite do escalão: ' + eur(ABONO.escaloesLimite[escalao - 1]),
+          v: escalao,
+          format: 'plain',
+        });
+        rows.push({ k: 'Abono base por criança', ref: 'Faixa etária: ' + IDADE_LABEL[idade], v: base, format: 'unit', unit: '€', decimals: 2 });
+        rows.push({
+          k: 'Majoração de família monoparental',
+          ref: mono ? (ABONO.majoracaoMonoparental * 100).toLocaleString('de-DE') + ' % sobre o abono' : 'Não aplicável',
+          v: majoracao,
+          format: 'unit',
+          unit: '€',
+          decimals: 2,
+        });
+        rows.push({ k: 'Abono por criança e por mês', ref: 'Base + majoração', v: porCrianca, format: 'unit', unit: '€', decimals: 2 });
+        rows.push({ k: 'Abono total do agregado por mês', ref: nFilhos + (nFilhos === 1 ? ' criança' : ' crianças'), v: totalMes, extra: true, format: 'unit', unit: '€', decimals: 2 });
+        rows.push({ k: 'Abono ao fim de um ano', ref: '12 mensalidades', v: totalMes * 12, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Margem até ao limite do escalão seguinte',
+          ref: semDireito ? 'Já não há escalão com direito' : 'Rendimento de referência que ainda cabe',
+          v: semDireito ? 0 : Math.max(0, ABONO.escaloesLimite[escalao - 1] - rendRef),
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({
+          k: 'Abono se a criança tivesse menos de 36 meses',
+          ref: 'Referência de comparação',
+          v: semDireito ? 0 : ABONO.montante.ate36meses[escalao - 1],
+          format: 'unit',
+          unit: '€',
+          decimals: 2,
+        });
+
+        sub = semDireito
+          ? 'Sem direito a abono: o rendimento de referência de ' + eur(rendRef) + ' passa o limite do 4.º escalão'
+          : escalao + '.º escalão · ' + eur(porCrianca) + ' por criança e por mês' +
+            (mono ? ' (já com a majoração de família monoparental)' : '');
+        chart = semDireito
+          ? [{ label: 'Rendimento de referência do agregado', value: Math.round(rendRef), tone: 'warn' }]
+          : [
+              { label: 'Abono anual que recebe', value: Math.round(totalMes * 12), tone: 'good' },
+              { label: 'Rendimento anual do agregado', value: Math.round(rendimento), tone: 'main' },
+            ];
+      }
+
+      return {
+        total: totalTexto,
+        sub: sub,
+        rows: rows,
+        chart: chart,
+      };
+    });
+  })();
+</script>

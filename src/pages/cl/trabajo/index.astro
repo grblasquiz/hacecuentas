@@ -1,0 +1,47 @@
+---
+/**
+ * Silo Trabajo · Chile — índice de hubs de decisión del mercado CL.
+ * Existe para que el breadcrumb de los hubs chilenos no apunte a un 404 y para
+ * repartir link equity entre hermanos. El listado sale del registry, no a mano.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import SiloIndex from '../../../components/hub/SiloIndex.astro';
+import { hubsOfSilo } from '../../../lib/hubs/registry';
+
+const HREF = '/cl/trabajo';
+const SILO = 'Trabajo';
+const LEDE =
+  'Sueldo líquido, horas extra, finiquito, gratificación y seguro de cesantía en Chile, resueltos con el Código del Trabajo, la UTM del mes y los topes imponibles en UF que rigen hoy.';
+const hubs = hubsOfSilo(HREF);
+const CANONICAL = `https://hacecuentas.com${HREF}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `${SILO} en Chile`,
+  description: LEDE,
+  url: CANONICAL,
+  hasPart: hubs.map((h) => ({
+    '@type': 'WebPage',
+    name: h.h1,
+    url: `https://hacecuentas.com/${h.slug}`,
+  })),
+};
+---
+
+<Layout
+  title={`Trabajo y sueldos en Chile — calculadoras laborales | Hacé Cuentas`}
+  description={LEDE}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+>
+  <Header />
+  <SiloIndex silo={SILO} href={HREF} lede={LEDE} hubs={hubs} />
+  <Footer />
+</Layout>

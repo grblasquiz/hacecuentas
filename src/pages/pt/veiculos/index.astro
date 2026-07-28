@@ -1,0 +1,47 @@
+---
+/**
+ * Silo Veículos · Brasil — índice de hubs de decisão do mercado BR.
+ * Existe para que o breadcrumb dos hubs brasileiros não aponte para um 404 e
+ * para repartir link equity entre irmãos. A lista sai do registry, não à mão.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import SiloIndex from '../../../components/hub/SiloIndex.astro';
+import { hubsOfSilo } from '../../../lib/hubs/registry';
+
+const HREF = '/pt/veiculos';
+const SILO = 'Veículos';
+const LEDE =
+  'O que o carro realmente custa por mês: combustível pela regra dos 70%, IPVA de São Paulo, Paraná e Santa Catarina sobre a tabela FIPE, seguro, manutenção, depreciação e a comparação entre CDC, consórcio, leasing e pagamento à vista.';
+const hubs = hubsOfSilo(HREF);
+const CANONICAL = `https://hacecuentas.com${HREF}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `${SILO} no Brasil`,
+  description: LEDE,
+  url: CANONICAL,
+  hasPart: hubs.map((h) => ({
+    '@type': 'WebPage',
+    name: h.h1,
+    url: `https://hacecuentas.com/${h.slug}`,
+  })),
+};
+---
+
+<Layout
+  title="Veículos no Brasil — calculadoras de custo, IPVA e financiamento | Hacé Cuentas"
+  description={LEDE}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="BR"
+  lang="pt"
+>
+  <Header lang="pt" />
+  <SiloIndex silo={SILO} href={HREF} lede={LEDE} hubs={hubs} />
+  <Footer lang="pt" />
+</Layout>

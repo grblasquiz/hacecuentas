@@ -1,0 +1,412 @@
+---
+/**
+ * Hub de decisión CO — "¿Cuándo me pensiono y con cuánto?".
+ *
+ * 🔴 La reforma pensional (Ley 2381/2024) está SUSPENDIDA (Auto 841 de 2025).
+ * Todo el compute() liquida con la Ley 100/1993. No meter pilares acá.
+ *
+ * audience="CO" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  SMLMV,
+  REQUISITOS_RPM,
+  TASA_RPM,
+  DESCUENTOS_PENSIONADO,
+  REAJUSTE,
+  BEPS_INCENTIVO,
+} from '../../../lib/hubs/co/pension';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    SMLMV,
+    REQ: REQUISITOS_RPM,
+    TASA: TASA_RPM,
+    DESC: DESCUENTOS_PENSIONADO,
+    REAJUSTE,
+    BEPS_INCENTIVO,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const cop = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
+    const pct1 = (n) => n.toLocaleString('es-CO', { maximumFractionDigits: 1 });
+
+    /**
+     * Tasa de reemplazo del RPM — art. 34 Ley 100, modificado por art. 10 Ley 797/2003.
+     * r = 65,50 − 0,50 × s (s = IBL en SMLMV), sobre las primeras 1.300 semanas;
+     * + 1,5 puntos por cada 50 semanas adicionales. Piso 55%, techo 80%.
+     */
+    function tasaReemplazo(ibl, semanas) {
+      const s = SMLMV > 0 ? ibl / SMLMV : 0;
+      let r = TASA.constante - TASA.factorIbl * s;
+      r = Math.min(TASA.maximoPct, Math.max(TASA.minimoPct, r));
+      const extra = Math.max(0, semanas - REQ.semanasMinimas);
+      const bloques = Math.floor(extra / TASA.semanasPorBloque);
+      const conBloques = r + bloques * TASA.puntosPorBloque;
+      return {
+        base: r,
+        bloques: bloques,
+        total: Math.min(TASA.maximoPct, conBloques),
+        topada: conBloques > TASA.maximoPct,
+      };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'rpm';
+      const ibl = Math.max(0, v.ibl || 0);
+      const semanas = Math.max(0, Math.round(v.semanas || 0));
+      const edad = Math.max(0, Math.round(v.edad || 0));
+      const esMujer = String(v.sexo || 'mujer') === 'mujer';
+      const edadRequerida = esMujer ? REQ.edadMujer : REQ.edadHombre;
+      const capital = Math.max(0, v.capital || 0);
+      const ahorroMensual = Math.max(0, v.ahorroMensual || 0);
+      const rendimiento = Math.max(0, v.rendimiento || 0) / 100;
+      const mesadaActual = Math.max(0, v.mesada || 0);
+
+      // Avance contra los dos requisitos (sirve al gráfico de progreso).
+      const avanceSemanas = Math.min(100, (semanas / REQ.semanasMinimas) * 100);
+      const avanceEdad = Math.min(100, edadRequerida > 0 ? (edad / edadRequerida) * 100 : 0);
+      const aniosFaltantes = Math.max(0, edadRequerida - edad);
+      const semanasFaltantes = Math.max(0, REQ.semanasMinimas - semanas);
+
+      const rows = [];
+      let total, sub, chart, position, positionLabel;
+
+      if (id === 'pensionado') {
+        // ── Reajuste anual de la mesada ──
+        const eraMinima = mesadaActual > 0 && mesadaActual <= REAJUSTE.smlmvAnterior;
+        const conIpc = mesadaActual * (1 + REAJUSTE.ipcPct / 100);
+        const nueva = eraMinima ? SMLMV : Math.max(conIpc, SMLMV);
+        const aumento = nueva - mesadaActual;
+        const pctEfectivo = mesadaActual > 0 ? (aumento / mesadaActual) * 100 : 0;
+        const salud = nueva * DESC.saludPct;
+        const neta = nueva - salud;
+
+        rows.push({ k: 'Tu mesada del año pasado', ref: 'Punto de partida', v: mesadaActual });
+        rows.push({
+          k: eraMinima ? 'Sube con el salario mínimo (mesada de 1 SMLMV)' : 'Sube el IPC del año anterior',
+          ref: eraMinima ? 'Piso legal · SMLMV vigente' : REAJUSTE.ipcPct.toLocaleString('es-CO') + '% · DANE',
+          v: aumento,
+        });
+        rows.push({ k: 'Mesada reajustada', ref: 'Desde la nómina de enero', v: nueva, extra: true });
+        rows.push({
+          k: 'Aumento efectivo que te quedó',
+          ref: 'Sobre la mesada anterior',
+          v: pctEfectivo,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        rows.push({ k: 'Descuento de salud', ref: '4% de la mesada · el pensionado NO aporta a pensión', v: salud });
+        rows.push({ k: 'Mesada neta que cobrás', ref: 'Después del descuento de salud', v: neta, extra: true });
+        rows.push({ k: 'Total del año con 13 mesadas', ref: 'Mesada 14 eliminada desde el 31-jul-2011', v: neta * 13 });
+        rows.push({
+          k: 'Piso legal que nunca se puede cruzar',
+          ref: 'Ninguna mesada puede quedar bajo el SMLMV',
+          v: SMLMV,
+        });
+
+        total = cop(neta);
+        sub =
+          'Mesada bruta ' + cop(nueva) + ' (+' + pct1(pctEfectivo) + '%)' +
+          ' · descuento de salud ' + cop(salud) +
+          ' · el reajuste es automático desde enero';
+        chart = [
+          { label: 'Mesada neta en tu bolsillo', value: Math.round(neta), tone: 'main' },
+          { label: 'Descuento de salud (4%)', value: Math.round(salud), tone: 'warn' },
+        ];
+        position = 100;
+        positionLabel = 'Ya pensionado · mesada reajustada ' + cop(nueva);
+      } else if (id === 'rais') {
+        // ── Fondo privado: proyección de capital a la edad de retiro ──
+        const meses = Math.max(0, aniosFaltantes * 12);
+        const r = rendimiento / 12;
+        const capitalFuturo = capital * Math.pow(1 + r, meses) +
+          (r === 0 ? ahorroMensual * meses : ahorroMensual * (Math.pow(1 + r, meses) - 1) / r);
+        const aportado = capital + ahorroMensual * meses;
+        const rendimientos = Math.max(0, capitalFuturo - aportado);
+        // Retiro programado simplificado: capital repartido en 20 años de mesadas.
+        const mesesRetiro = 240;
+        const mesadaProyectada = capitalFuturo / mesesRetiro;
+        const alcanzaMinimo = mesadaProyectada >= SMLMV;
+        const salud = mesadaProyectada * DESC.saludPct;
+
+        rows.push({ k: 'Capital que tenés hoy en la cuenta individual', ref: 'Saldo + bono pensional', v: capital });
+        rows.push({ k: 'Lo que vas a seguir aportando', ref: cop(ahorroMensual) + '/mes durante ' + Math.round(meses) + ' meses', v: ahorroMensual * meses });
+        rows.push({ k: 'Rendimientos proyectados', ref: (rendimiento * 100).toLocaleString('es-CO') + '% anual · supuesto tuyo, no garantía', v: rendimientos });
+        rows.push({ k: 'Capital estimado al retiro', ref: 'A los ' + edadRequerida + ' años', v: capitalFuturo, extra: true });
+        rows.push({ k: 'Mesada estimada con retiro programado', ref: 'Capital repartido en 20 años', v: mesadaProyectada, extra: true });
+        rows.push({
+          k: 'Cuántos salarios mínimos es esa mesada',
+          ref: 'SMLMV ' + cop(SMLMV),
+          v: SMLMV > 0 ? mesadaProyectada / SMLMV : 0,
+          format: 'unit',
+          unit: 'SMLMV',
+          decimals: 2,
+        });
+        rows.push({ k: 'Descuento de salud sobre la mesada', ref: '4% · Ley 100 art. 204', v: salud });
+        rows.push({
+          k: alcanzaMinimo ? 'Margen por encima del mínimo legal' : 'Cuánto te falta para llegar al mínimo legal',
+          ref: alcanzaMinimo ? 'Tu capital alcanza para pensionarte' : 'Si no llegás, aplicá a la Garantía de Pensión Mínima con 1.300 semanas',
+          v: Math.abs(mesadaProyectada - SMLMV),
+        });
+        rows.push({
+          k: 'Semanas cotizadas (piden 1.300 para la Garantía de Pensión Mínima)',
+          ref: 'Historia laboral',
+          v: semanas,
+          format: 'unit',
+          unit: 'semanas',
+        });
+
+        total = cop(mesadaProyectada - salud);
+        sub =
+          'Capital proyectado ' + cop(capitalFuturo) +
+          ' · mesada bruta ' + cop(mesadaProyectada) +
+          (alcanzaMinimo ? ' · supera el mínimo legal' : ' · NO llega al mínimo: mirá la Garantía de Pensión Mínima') +
+          ' · el rendimiento es un supuesto, no una promesa';
+        chart = [
+          { label: 'Lo que aportaste vos', value: Math.round(aportado), tone: 'main' },
+          { label: 'Rendimientos del fondo', value: Math.round(rendimientos), tone: 'good' },
+        ];
+        position = Math.min(100, Math.round(avanceEdad));
+        positionLabel = aniosFaltantes > 0
+          ? 'Te faltan ' + aniosFaltantes + ' años para la edad de retiro'
+          : 'Ya cumpliste la edad de retiro';
+      } else if (id === 'no-alcanzo') {
+        // ── Indemnización sustitutiva (RPM) y devolución de saldos (RAIS) ──
+        // Indemnización = salario base semanal × semanas × porcentaje promedio de cotización.
+        // El porcentaje de cotización a pensión es el 16% del IBC (Ley 797/2003).
+        const pctCotizacion = 0.16;
+        const baseSemanal = ibl * 12 / 52;
+        const indemnizacion = baseSemanal * semanas * pctCotizacion;
+        const devolucionSaldos = capital;
+
+        rows.push({ k: 'Semanas que alcanzaste a cotizar', ref: 'Historia laboral', v: semanas, format: 'unit', unit: 'semanas' });
+        rows.push({ k: 'Semanas que te faltan para pensionarte', ref: REQ.semanasMinimas.toLocaleString('es-CO') + ' mínimas · Ley 797/2003', v: semanasFaltantes, format: 'unit', unit: 'semanas' });
+        rows.push({
+          k: 'Años de cotización que representan esas semanas faltantes',
+          ref: 'A 52 semanas por año',
+          v: semanasFaltantes / 52,
+          format: 'unit',
+          unit: 'años',
+          decimals: 1,
+        });
+        rows.push({ k: 'Salario base semanal', ref: 'IBL mensual × 12 ÷ 52', v: baseSemanal });
+        rows.push({ k: 'Indemnización sustitutiva en Colpensiones', ref: 'Base semanal × semanas × 16% cotizado', v: indemnizacion, extra: true });
+        rows.push({ k: 'Devolución de saldos si estás en fondo privado', ref: 'Todo tu capital con rendimientos', v: devolucionSaldos, extra: true });
+        rows.push({
+          k: 'Diferencia entre las dos salidas',
+          ref: devolucionSaldos > indemnizacion ? 'El fondo privado devuelve más' : 'Colpensiones indemniza más en tu caso',
+          v: Math.abs(devolucionSaldos - indemnizacion),
+        });
+        rows.push({
+          k: 'A cuántos meses de tu IBL equivale la indemnización',
+          ref: 'Para dimensionarla',
+          v: ibl > 0 ? indemnizacion / ibl : 0,
+          format: 'unit',
+          unit: 'meses de IBL',
+          decimals: 1,
+        });
+
+        total = cop(indemnizacion);
+        sub =
+          'Te faltan ' + semanasFaltantes.toLocaleString('es-CO') + ' semanas (' +
+          (semanasFaltantes / 52).toFixed(1).replace('.', ',') + ' años de cotización)' +
+          ' · devolución de saldos ' + cop(devolucionSaldos) +
+          ' · cobrar la indemnización cierra el derecho de pensión';
+        chart = [
+          { label: 'Semanas ya cotizadas', value: semanas, tone: 'good' },
+          { label: 'Semanas que faltan', value: semanasFaltantes, tone: 'bad' },
+        ];
+        position = Math.round(avanceSemanas);
+        positionLabel = semanas.toLocaleString('es-CO') + ' de ' + REQ.semanasMinimas.toLocaleString('es-CO') + ' semanas (' + Math.round(avanceSemanas) + '%)';
+      } else if (id === 'beps') {
+        // ── BEPS: ahorro + incentivo del 20%, pagado como anualidad bimestral ──
+        const meses = Math.max(0, aniosFaltantes * 12);
+        const r = rendimiento / 12;
+        const ahorroFuturo = capital * Math.pow(1 + r, meses) +
+          (r === 0 ? ahorroMensual * meses : ahorroMensual * (Math.pow(1 + r, meses) - 1) / r);
+        const incentivo = ahorroFuturo * BEPS_INCENTIVO;
+        const capitalTotal = ahorroFuturo + incentivo;
+        // Anualidad vitalicia repartida en 20 años → 120 pagos bimestrales.
+        const pagosBimestrales = 120;
+        const bimestral = capitalTotal / pagosBimestrales;
+        const equivalenteMensual = bimestral / 2;
+
+        rows.push({ k: 'Ahorro que llevás acumulado', ref: 'Saldo BEPS', v: capital });
+        rows.push({ k: 'Lo que vas a seguir ahorrando', ref: cop(ahorroMensual) + '/mes durante ' + Math.round(meses) + ' meses', v: ahorroMensual * meses });
+        rows.push({ k: 'Ahorro proyectado al momento de redimir', ref: 'Con rendimientos', v: ahorroFuturo });
+        rows.push({ k: 'Incentivo del Estado', ref: '20% del ahorro · se acredita al redimir', v: incentivo, extra: true });
+        rows.push({ k: 'Capital total con incentivo', ref: 'Ahorro + incentivo', v: capitalTotal, extra: true });
+        rows.push({ k: 'Anualidad estimada, por bimestre', ref: 'Repartida en 20 años de pagos', v: bimestral });
+        rows.push({ k: 'Equivalente mensual', ref: 'Para comparar con una mesada', v: equivalenteMensual });
+        rows.push({
+          k: 'Qué fracción de un salario mínimo es',
+          ref: 'BEPS nunca llega a 1 SMLMV: por diseño no es pensión',
+          v: SMLMV > 0 ? (equivalenteMensual / SMLMV) * 100 : 0,
+          format: 'unit',
+          unit: '% de un SMLMV',
+          decimals: 1,
+        });
+
+        total = cop(bimestral);
+        sub =
+          'Capital con incentivo ' + cop(capitalTotal) +
+          ' · equivale a ' + cop(equivalenteMensual) + ' por mes' +
+          ' · BEPS es un piso de ingreso, no una pensión';
+        chart = [
+          { label: 'Tu ahorro proyectado', value: Math.round(ahorroFuturo), tone: 'main' },
+          { label: 'Incentivo del Estado (20%)', value: Math.round(incentivo), tone: 'good' },
+        ];
+        position = Math.min(100, Math.round(avanceEdad));
+        positionLabel = aniosFaltantes > 0
+          ? 'Faltan ' + aniosFaltantes + ' años para redimir'
+          : 'Ya podés redimir tu ahorro BEPS';
+      } else {
+        // ── Régimen de Prima Media (Colpensiones) ──
+        const t = tasaReemplazo(ibl, semanas);
+        const mesadaCalculada = ibl * (t.total / 100);
+        const mesada = Math.max(SMLMV, mesadaCalculada);
+        const aplicaPiso = mesadaCalculada < SMLMV;
+        const salud = mesada * DESC.saludPct;
+        const neta = mesada - salud;
+        const cumpleEdad = edad >= edadRequerida;
+        const cumpleSemanas = semanas >= REQ.semanasMinimas;
+        const cumple = cumpleEdad && cumpleSemanas;
+
+        rows.push({ k: 'IBL: promedio cotizado de los últimos 10 años', ref: 'Base de la mesada · art. 21 Ley 100', v: ibl });
+        rows.push({
+          k: 'Tu IBL medido en salarios mínimos',
+          ref: 'La variable de la fórmula',
+          v: SMLMV > 0 ? ibl / SMLMV : 0,
+          format: 'unit',
+          unit: 'SMLMV',
+          decimals: 2,
+        });
+        rows.push({
+          k: 'Tasa base de reemplazo',
+          ref: TASA.constante + ' − ' + TASA.factorIbl + ' × (IBL en SMLMV) · art. 34 Ley 100',
+          v: t.base,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        rows.push({
+          k: 'Bloques de 50 semanas de más',
+          ref: '+1,5 puntos cada uno',
+          v: t.bloques,
+          format: 'plain',
+        });
+        rows.push({
+          k: 'Tasa de reemplazo final',
+          ref: t.topada ? 'Topada en el ' + TASA.maximoPct + '% legal' : 'Entre ' + TASA.minimoPct + '% y ' + TASA.maximoPct + '%',
+          v: t.total,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        rows.push({ k: 'Mesada que sale de la fórmula', ref: 'IBL × tasa de reemplazo', v: mesadaCalculada });
+        if (aplicaPiso) {
+          rows.push({ k: 'Se aplica el piso legal de 1 SMLMV', ref: 'Ninguna pensión puede ser menor', v: SMLMV - mesadaCalculada });
+        }
+        rows.push({ k: 'Mesada bruta', ref: 'Lo que reconoce Colpensiones', v: mesada, extra: true });
+        rows.push({ k: 'Descuento de salud', ref: '4% · el pensionado NO aporta a pensión', v: salud });
+        rows.push({ k: 'Mesada neta que cobrás', ref: 'Después de salud', v: neta, extra: true });
+        rows.push({ k: 'Total del año con 13 mesadas', ref: 'Mesada 14 eliminada desde el 31-jul-2011', v: neta * 13 });
+        rows.push({
+          k: cumpleSemanas ? 'Semanas que te sobran' : 'Semanas que te faltan',
+          ref: REQ.semanasMinimas.toLocaleString('es-CO') + ' mínimas',
+          v: Math.abs(semanas - REQ.semanasMinimas),
+          format: 'unit',
+          unit: 'semanas',
+        });
+        rows.push({
+          k: cumpleEdad ? 'Años de edad que ya cumpliste de más' : 'Años que te faltan de edad',
+          ref: edadRequerida + ' años · ' + (esMujer ? 'mujer' : 'hombre'),
+          v: Math.abs(edad - edadRequerida),
+          format: 'unit',
+          unit: 'años',
+        });
+
+        total = cop(neta);
+        sub =
+          (cumple
+            ? 'Ya cumplís edad y semanas: podés radicar'
+            : (!cumpleSemanas && !cumpleEdad
+                ? 'Te faltan ' + semanasFaltantes.toLocaleString('es-CO') + ' semanas y ' + aniosFaltantes + ' años de edad'
+                : !cumpleSemanas
+                  ? 'Te faltan ' + semanasFaltantes.toLocaleString('es-CO') + ' semanas'
+                  : 'Te faltan ' + aniosFaltantes + ' años de edad')) +
+          ' · tasa de reemplazo ' + pct1(t.total) + '%' +
+          ' · mesada bruta ' + cop(mesada) +
+          (aplicaPiso ? ' (piso de 1 SMLMV)' : '');
+        chart = [
+          { label: 'Mesada neta', value: Math.round(neta), tone: 'main' },
+          { label: 'Descuento de salud (4%)', value: Math.round(salud), tone: 'warn' },
+          { label: 'Parte del IBL que NO se reemplaza', value: Math.max(0, Math.round(ibl - mesada)), tone: 'bad' },
+        ];
+        position = Math.round(Math.min(avanceSemanas, avanceEdad));
+        positionLabel = cumple
+          ? 'Cumplís los dos requisitos: ' + semanas.toLocaleString('es-CO') + ' semanas y ' + edad + ' años'
+          : semanas.toLocaleString('es-CO') + '/' + REQ.semanasMinimas.toLocaleString('es-CO') + ' semanas · ' + edad + '/' + edadRequerida + ' años';
+      }
+
+      return {
+        total: total,
+        sub: sub,
+        rows: rows,
+        chart: chart,
+        position: position,
+        positionLabel: positionLabel,
+      };
+    });
+  })();
+</script>

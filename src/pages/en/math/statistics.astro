@@ -1,0 +1,334 @@
+---
+/**
+ * Hub de decisión EN — "What do these numbers actually say?"
+ *
+ * audience="US" y lang="en" van literales: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/en/statistics';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline>
+  (function () {
+    const H = window.HC_HUB;
+
+    function n2(x, d) {
+      return Number(x || 0).toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: d == null ? 3 : d,
+      });
+    }
+    /** Same parsing rule as the original formulas: split, coerce, drop non-numbers. */
+    function parse(s) {
+      return String(s == null ? '' : s)
+        .split(/[,;\s]+/)
+        .filter((t) => t.length > 0)
+        .map((t) => Number(t.replace(/[^\d.eE+-]/g, '')))
+        .filter((x) => isFinite(x));
+    }
+    function sum(a) { return a.reduce((x, y) => x + y, 0); }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'describe';
+      const xs = parse(v.data);
+      const ys = parse(v.data2);
+      const isSample = String(v.basis || 'sample') !== 'population';
+      const PLAIN = { format: 'plain', decimals: 3 };
+
+      function empty(msg) {
+        return {
+          total: '—',
+          sub: msg,
+          rows: [{ k: 'Values found in the first list', ref: 'Parsed', v: xs.length, format: 'plain', decimals: 0 }],
+          chart: [{ label: 'No data', value: 1, from: 0, to: 100, tone: 'warn' }],
+          format: 'plain',
+          decimals: 3,
+          position: 0,
+          positionLabel: 'No data yet',
+        };
+      }
+
+      // ── Counting: C(n,k) and P(n,k) ───────────────────────────────────────
+      if (id === 'counting') {
+        const n = Math.floor(Number(v.n) || 0);
+        const k = Math.floor(Number(v.k) || 0);
+        if (k < 0 || k > n || n < 0) {
+          return {
+            total: '0',
+            sub: 'k has to be between 0 and n — you cannot choose ' + k + ' items out of ' + n + '.',
+            rows: [
+              { k: 'Set size (n)', ref: 'Your input', v: n, format: 'plain', decimals: 0 },
+              { k: 'Chosen (k)', ref: 'Out of range', v: k, format: 'plain', decimals: 0 },
+            ],
+            chart: [{ label: 'Invalid selection', value: 1, from: 0, to: 100, tone: 'warn' }],
+            format: 'plain',
+            decimals: 0,
+            position: 0,
+            positionLabel: 'k must be between 0 and n',
+          };
+        }
+        // Multiplicative form, same as combinaciones-n-tomados-k-cnk.ts: avoids
+        // building n! and overflowing long before the answer does.
+        let c = 1;
+        const m = Math.min(k, n - k);
+        for (let j = 0; j < m; j++) c = (c * (n - j)) / (j + 1);
+        c = Math.round(c);
+        let p = 1;
+        for (let j = 0; j < k; j++) p *= n - j;
+        let kfact = 1;
+        for (let j = 2; j <= k; j++) kfact *= j;
+        const share = n > 0 ? (k / n) * 100 : 0;
+
+        return {
+          total: c.toLocaleString('en-US'),
+          sub:
+            'C(' + n + ',' + k + ') = ' + c.toLocaleString('en-US') + ' selections where order does not matter · ' +
+            'P(' + n + ',' + k + ') = ' + p.toLocaleString('en-US') + ' arrangements where it does',
+          rows: [
+            { k: 'Set size (n)', ref: 'Distinct items to choose from', v: n, format: 'plain', decimals: 0 },
+            { k: 'Chosen (k)', ref: 'Items picked', v: k, format: 'plain', decimals: 0 },
+            { k: 'C(n,k) — combinations, order ignored', ref: 'n! ÷ (k! × (n−k)!)', v: c, format: 'plain', decimals: 0, extra: true },
+            { k: 'P(n,k) — permutations, order matters', ref: 'n! ÷ (n−k)!', v: p, format: 'plain', decimals: 0 },
+            { k: 'Orderings of each selection (k!)', ref: 'P(n,k) ÷ C(n,k)', v: kfact, format: 'plain', decimals: 0 },
+            { k: 'Complement C(n, n−k)', ref: 'Choosing what to leave out', v: c, format: 'plain', decimals: 0 },
+            { k: 'Odds of hitting one specific selection', ref: '1 in C(n,k)', v: c, format: 'unit', unit: 'to 1', decimals: 0 },
+          ],
+          chart: [
+            { label: 'Share of the set you are picking', value: share, from: 0, to: 100, tone: 'main' },
+          ],
+          format: 'plain',
+          decimals: 0,
+          position: Math.max(0, Math.min(100, share)),
+          positionLabel: 'Picking ' + k + ' of ' + n + ' — ' + n2(share, 1) + '% of the set',
+        };
+      }
+
+      // ── Regression on two lists ───────────────────────────────────────────
+      if (id === 'regression') {
+        const n = Math.min(xs.length, ys.length);
+        if (n < 2) return empty('Least-squares regression needs at least two (x, y) pairs in the two lists.');
+        const X = xs.slice(0, n);
+        const Y = ys.slice(0, n);
+        const mx = sum(X) / n;
+        const my = sum(Y) / n;
+        let num = 0, den = 0, sst = 0;
+        for (let i = 0; i < n; i++) {
+          num += (X[i] - mx) * (Y[i] - my);
+          den += (X[i] - mx) * (X[i] - mx);
+          sst += (Y[i] - my) * (Y[i] - my);
+        }
+        if (den === 0) return empty('Every X value is identical, so no line can be fitted.');
+        const m = num / den;
+        const b = my - m * mx;
+        let ssr = 0;
+        for (let i = 0; i < n; i++) { const e = Y[i] - (m * X[i] + b); ssr += e * e; }
+        const r2 = sst === 0 ? 1 : 1 - ssr / sst;
+        const r = sst === 0 ? 1 : Math.sign(m) * Math.sqrt(Math.max(0, r2));
+        const quality = r2 >= 0.9 ? 'very strong' : r2 >= 0.7 ? 'strong' : r2 >= 0.5 ? 'moderate' : r2 >= 0.3 ? 'weak' : 'very weak';
+
+        return {
+          total: 'y = ' + n2(m, 4) + 'x ' + (b < 0 ? '− ' : '+ ') + n2(Math.abs(b), 4),
+          sub:
+            'R² = ' + n2(r2, 4) + ' — the line explains ' + n2(r2 * 100, 1) + '% of the variation in Y (' + quality + ' fit) · ' +
+            (m > 0 ? 'Y rises' : m < 0 ? 'Y falls' : 'Y is flat') + ' by ' + n2(Math.abs(m), 4) + ' per unit of X',
+          rows: [
+            { k: 'Pairs used (n)', ref: 'Shortest of the two lists', v: n, format: 'plain', decimals: 0 },
+            { k: 'Mean of X', ref: 'Σx ÷ n', v: mx, format: 'plain', decimals: 4 },
+            { k: 'Mean of Y', ref: 'Σy ÷ n', v: my, format: 'plain', decimals: 4 },
+            { k: 'Slope (m)', ref: 'Σ(x−x̄)(y−ȳ) ÷ Σ(x−x̄)²', v: m, format: 'plain', decimals: 6, extra: true },
+            { k: 'Intercept (b)', ref: 'ȳ − m·x̄', v: b, format: 'plain', decimals: 6 },
+            { k: 'Correlation coefficient r', ref: 'Signed square root of R²', v: r, format: 'plain', decimals: 4 },
+            { k: 'Coefficient of determination R²', ref: '1 − SSR ÷ SST', v: r2, format: 'plain', decimals: 4, extra: true },
+            { k: 'Variation explained by the line', ref: 'R² as a percentage', v: r2 * 100, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Total sum of squares (SST)', ref: 'Σ(y−ȳ)²', v: sst, format: 'plain', decimals: 4 },
+            { k: 'Residual sum of squares (SSR)', ref: 'Σ(y−ŷ)²', v: ssr, format: 'plain', decimals: 4 },
+          ],
+          chart: [
+            { label: 'Weak fit', value: 0, from: 0, to: 50, tone: 'bad' },
+            { label: 'Moderate fit', value: 0, from: 50, to: 70, tone: 'warn' },
+            { label: 'Strong fit', value: 0, from: 70, to: 90, tone: 'good' },
+            { label: 'Very strong fit', value: 0, from: 90, to: 100, tone: 'good' },
+          ],
+          format: 'plain',
+          decimals: 4,
+          position: Math.max(0, Math.min(100, r2 * 100)),
+          positionLabel: 'R² = ' + n2(r2, 3) + ' — ' + quality + ' fit',
+        };
+      }
+
+      // ── Weighted average ──────────────────────────────────────────────────
+      if (id === 'weighted') {
+        if (xs.length === 0) return empty('Enter the values you want to average in the first list.');
+        if (ys.length !== xs.length) {
+          return empty('The two lists must be the same length: ' + xs.length + ' values against ' + ys.length + ' weights.');
+        }
+        if (ys.some((w) => w <= 0)) return empty('Every weight has to be positive.');
+        const totalW = sum(ys);
+        const sw = xs.reduce((acc, x, i) => acc + x * ys[i], 0);
+        const weighted = sw / totalW;
+        const simple = sum(xs) / xs.length;
+        const lo = Math.min.apply(null, xs);
+        const hi = Math.max.apply(null, xs);
+        const span = hi - lo;
+        const pos = span > 0 ? ((weighted - lo) / span) * 100 : 50;
+
+        return {
+          total: n2(weighted, 3),
+          sub:
+            'Weighted average ' + n2(weighted, 3) + ' against an unweighted ' + n2(simple, 3) +
+            ' · total weight ' + n2(totalW, 2) + ' across ' + xs.length + ' items',
+          rows: [
+            { k: 'Items averaged', ref: 'Values in the first list', v: xs.length, format: 'plain', decimals: 0 },
+            { k: 'Total weight', ref: 'Σ weights (credit hours, for a GPA)', v: totalW, format: 'plain', decimals: 2 },
+            { k: 'Σ (value × weight)', ref: 'The numerator', v: sw, format: 'plain', decimals: 3 },
+            { k: 'Weighted average', ref: 'Σ(v×w) ÷ Σw', v: weighted, format: 'plain', decimals: 4, extra: true },
+            { k: 'Plain unweighted average', ref: 'For comparison', v: simple, format: 'plain', decimals: 4 },
+            { k: 'How much the weighting moved it', ref: 'Weighted − unweighted', v: weighted - simple, format: 'plain', decimals: 4 },
+            { k: 'Heaviest single weight', ref: 'Biggest influence on the result', v: Math.max.apply(null, ys), format: 'plain', decimals: 2 },
+            { k: 'Lowest value in the set', ref: 'Minimum', v: lo, format: 'plain', decimals: 3 },
+            { k: 'Highest value in the set', ref: 'Maximum', v: hi, format: 'plain', decimals: 3 },
+          ],
+          chart: [
+            { label: 'Bottom third of your values', value: 0, from: 0, to: 33, tone: 'warn' },
+            { label: 'Middle third', value: 0, from: 33, to: 67, tone: 'good' },
+            { label: 'Top third', value: 0, from: 67, to: 100, tone: 'good' },
+          ],
+          format: 'plain',
+          decimals: 3,
+          position: Math.max(0, Math.min(100, pos)),
+          positionLabel: 'Weighted average ' + n2(weighted, 2) + ' within ' + n2(lo, 2) + '–' + n2(hi, 2),
+        };
+      }
+
+      // ── Describe / spread: one data set ───────────────────────────────────
+      if (xs.length === 0) return empty('Paste some numbers into the first list, separated by commas.');
+      const n = xs.length;
+      const sorted = xs.slice().sort((a, b) => a - b);
+      const total = sum(xs);
+      const mean = total / n;
+      const median = n % 2 ? sorted[(n - 1) / 2] : (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
+      const lo = sorted[0];
+      const hi = sorted[n - 1];
+      const range = hi - lo;
+      const freq = {};
+      sorted.forEach((x) => { freq[x] = (freq[x] || 0) + 1; });
+      let maxF = 0;
+      Object.keys(freq).forEach((k) => { if (freq[k] > maxF) maxF = freq[k]; });
+      const modes = Object.keys(freq).filter((k) => freq[k] === maxF);
+      const modeTxt = maxF <= 1 ? 'no mode (all values unique)' : (modes.length > 1 ? 'modes ' : 'mode ') + modes.join(' and ');
+      const denom = isSample ? n - 1 : n;
+      const ss = xs.reduce((a, x) => a + (x - mean) * (x - mean), 0);
+      const variance = denom > 0 ? ss / denom : 0;
+      const sd = Math.sqrt(variance);
+      const cv = Math.abs(mean) > 1e-12 ? (sd / Math.abs(mean)) * 100 : 0;
+      const sem = n > 0 ? sd / Math.sqrt(n) : 0;
+      function quantile(p) {
+        const idx = (n - 1) * p;
+        const loI = Math.floor(idx);
+        const hiI = Math.ceil(idx);
+        return sorted[loI] + (sorted[hiI] - sorted[loI]) * (idx - loI);
+      }
+      const q1 = quantile(0.25);
+      const q3 = quantile(0.75);
+      const pos = range > 0 ? ((mean - lo) / range) * 100 : 50;
+      const skew =
+        Math.abs(mean - median) < 1e-9
+          ? 'mean and median coincide — the data is symmetric'
+          : mean > median
+          ? 'the mean sits above the median, so high values are pulling it up (right skew)'
+          : 'the mean sits below the median, so low values are pulling it down (left skew)';
+      const dispersion = cv < 15 ? 'tightly clustered' : cv < 30 ? 'moderately spread' : 'widely scattered';
+
+      const rows = [
+        { k: 'Count (n)', ref: 'Values parsed', v: n, format: 'plain', decimals: 0 },
+        { k: 'Sum', ref: 'Σx', v: total, format: 'plain', decimals: 3 },
+        { k: 'Mean', ref: 'Σx ÷ n', v: mean, format: 'plain', decimals: 4, extra: id === 'describe' },
+        { k: 'Median', ref: 'Middle value once sorted', v: median, format: 'plain', decimals: 4 },
+        { k: 'Minimum', ref: 'Smallest value', v: lo, format: 'plain', decimals: 3 },
+        { k: 'First quartile (Q1)', ref: '25% of values fall below', v: q1, format: 'plain', decimals: 3 },
+        { k: 'Third quartile (Q3)', ref: '75% of values fall below', v: q3, format: 'plain', decimals: 3 },
+        { k: 'Maximum', ref: 'Largest value', v: hi, format: 'plain', decimals: 3 },
+        { k: 'Range', ref: 'Maximum − minimum', v: range, format: 'plain', decimals: 3 },
+        { k: 'Interquartile range (IQR)', ref: 'Q3 − Q1, robust to outliers', v: q3 - q1, format: 'plain', decimals: 3 },
+        { k: 'Sum of squared deviations', ref: 'Σ(x − mean)²', v: ss, format: 'plain', decimals: 4 },
+        { k: 'Degrees of freedom used', ref: isSample ? 'n − 1 (sample)' : 'n (population)', v: denom, format: 'plain', decimals: 0 },
+        { k: isSample ? 'Sample variance (s²)' : 'Population variance (σ²)', ref: 'Σ(x−mean)² ÷ ' + (isSample ? 'n−1' : 'n'), v: variance, format: 'plain', decimals: 4 },
+        { k: isSample ? 'Sample standard deviation (s)' : 'Population standard deviation (σ)', ref: 'Square root of the variance', v: sd, format: 'plain', decimals: 4, extra: id === 'spread' },
+        { k: 'Coefficient of variation', ref: 'Standard deviation ÷ mean', v: cv, format: 'unit', unit: '%', decimals: 1 },
+        { k: 'Standard error of the mean', ref: 's ÷ √n', v: sem, format: 'plain', decimals: 4 },
+        { k: 'Lower edge of the one-sigma band', ref: 'mean − 1 s', v: mean - sd, format: 'plain', decimals: 3 },
+        { k: 'Upper edge of the one-sigma band', ref: 'mean + 1 s', v: mean + sd, format: 'plain', decimals: 3 },
+      ];
+
+      const headline = id === 'spread' ? sd : mean;
+      const sub =
+        id === 'spread'
+          ? (isSample ? 'Sample' : 'Population') + ' standard deviation ' + n2(sd, 3) + ' around a mean of ' + n2(mean, 3) +
+            ' · coefficient of variation ' + n2(cv, 1) + '%, ' + dispersion
+          : 'n = ' + n + ' · mean ' + n2(mean, 3) + ', median ' + n2(median, 3) + ', ' + modeTxt + ' · ' + skew;
+
+      return {
+        total: n2(headline, 3),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Bottom third (' + n2(lo, 2) + '–' + n2(lo + range / 3, 2) + ')', value: 0, from: 0, to: 33, tone: 'warn' },
+          { label: 'Middle third', value: 0, from: 33, to: 67, tone: 'good' },
+          { label: 'Top third (up to ' + n2(hi, 2) + ')', value: 0, from: 67, to: 100, tone: 'warn' },
+        ],
+        format: 'plain',
+        decimals: 3,
+        position: Math.max(0, Math.min(100, pos)),
+        positionLabel:
+          id === 'spread'
+            ? 'Mean ' + n2(mean, 2) + ' ± ' + n2(sd, 2) + ' within ' + n2(lo, 2) + '–' + n2(hi, 2)
+            : 'Mean ' + n2(mean, 2) + ' within ' + n2(lo, 2) + '–' + n2(hi, 2) + ' (median ' + n2(median, 2) + ')',
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,202 @@
+---
+/**
+ * Hub de decisión VE — "Liquidación LOTTT: cuánto me tienen que pagar al salir".
+ * El compute() replica las fórmulas vivas de prestaciones, liquidación, preaviso,
+ * utilidades, vacaciones, salario integral, anticipo e intereses (Art. 143).
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, LOTTT, ANTICIPO_TOPE_PCT } from '../../../lib/hubs/ve/liquidacion-lottt';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="VE"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ L: LOTTT, TOPE: ANTICIPO_TOPE_PCT }}>
+  (function () {
+    const H = window.HC_HUB;
+    const bs = (n) =>
+      'Bs. ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(Math.round((n || 0) * 100) / 100);
+
+    /** Días de preaviso por antigüedad en meses (LOTTT Art. 81). */
+    function diasPreaviso(meses) {
+      for (const t of L.preaviso) {
+        const hasta = t.hastaMeses === null ? Infinity : t.hastaMeses;
+        if (meses <= hasta) return t.dias;
+      }
+      return 0;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'renuncia';
+
+      const salarioMensual = Math.max(0, v.salarioMensual || 0);
+      const anios = Math.max(0, Math.floor(v.anios || 0));
+      const meses = Math.min(11, Math.max(0, Math.floor(v.meses || 0)));
+      const diasUtilidades = Math.max(0, Math.round(v.diasUtilidades || 0)) || L.utilidadesDiasMin;
+      const diasBonoVacContrato = Math.max(0, Math.round(v.diasBonoVacacional || 0)) || L.bonoVacacionalDiasBase;
+      const anticipos = Math.max(0, v.anticipos || 0);
+      const tasaBcv = Math.max(0, v.tasaBcv || 0);
+
+      // ── Salario integral diario (Art. 104): normal + alícuotas sobre 360 días.
+      const salarioDiario = salarioMensual / 30;
+      const alicuotaUtilidades = (diasUtilidades * salarioDiario) / L.diasAnioComercial;
+      const alicuotaBonoVac = (diasBonoVacContrato * salarioDiario) / L.diasAnioComercial;
+      const integralDiario = salarioDiario + alicuotaUtilidades + alicuotaBonoVac;
+
+      // ── Prestaciones Art. 142: garantía vs retroactivo, gana el mayor.
+      const mesesTotales = anios * 12 + meses;
+      const trimestres = Math.floor(mesesTotales / 3);
+      const diasGarantiaBase = L.garantiaDiasPorTrimestre * trimestres;
+      let diasAdic = 0;
+      for (let a = 2; a <= anios; a++) diasAdic += L.diasAdicionalesPorAnio;
+      diasAdic = Math.min(diasAdic, L.diasAdicionalesMax);
+      const diasGarantia = diasGarantiaBase + diasAdic;
+      const montoGarantia = diasGarantia * integralDiario;
+
+      let aniosRetro = anios;
+      if (meses > L.fraccionSuperiorMeses) aniosRetro += 1;
+      const diasRetro = L.retroactivoDiasPorAnio * aniosRetro;
+      const montoRetro = diasRetro * integralDiario;
+
+      const prestaciones = Math.max(montoGarantia, montoRetro);
+      const ganaRetro = montoRetro >= montoGarantia;
+
+      // ── Fraccionados del período en curso (Art. 196 / 131).
+      const diasVacAnio = Math.min(
+        L.vacacionesDiasBase + Math.max(0, Math.max(1, anios) - 1) * L.vacacionesDiasPorAnio,
+        L.vacacionesDiasMax,
+      );
+      const diasBonoVacAnio = Math.min(
+        L.bonoVacacionalDiasBase + Math.max(0, anios - 1) * L.bonoVacacionalDiasPorAnio,
+        L.bonoVacacionalDiasMax,
+      );
+      const fraccion = meses / 12;
+      const vacFrac = diasVacAnio * salarioDiario * fraccion;
+      const bonoFrac = diasBonoVacAnio * salarioDiario * fraccion;
+      const utilFrac = diasUtilidades * salarioDiario * fraccion;
+
+      // ── Indemnización Art. 92 (solo despido injustificado).
+      const esInjustificado = id === 'injustificado';
+      const indemnizacion = esInjustificado ? prestaciones : 0;
+
+      // ── Preaviso Art. 81 (a cargo del patrono en el despido injustificado).
+      const diasPre = diasPreaviso(mesesTotales);
+      const montoPreaviso = esInjustificado ? diasPre * salarioDiario : 0;
+
+      // ── Intereses Art. 143 sobre el saldo, lineales (no capitalizan).
+      const intereses = prestaciones * (tasaBcv / 100);
+
+      // ── Anticipo Art. 144: hasta el 75% de la GARANTÍA acreditada.
+      const anticipoMaximo = montoGarantia * (TOPE / 100);
+
+      const rows = [
+        { k: 'Salario normal diario', ref: 'Mensual ÷ 30', v: salarioDiario },
+        { k: 'Alícuota de utilidades', ref: diasUtilidades + ' días ÷ ' + L.diasAnioComercial + ' · Art. 131', v: alicuotaUtilidades },
+        { k: 'Alícuota de bono vacacional', ref: diasBonoVacContrato + ' días ÷ ' + L.diasAnioComercial + ' · Art. 192', v: alicuotaBonoVac },
+        { k: 'Salario integral diario', ref: 'Base de las prestaciones · Art. 104', v: integralDiario, extra: true },
+        { k: 'Garantía de prestaciones', ref: diasGarantia + ' días (' + trimestres + ' trimestres + ' + diasAdic + ' adic.)', v: montoGarantia },
+        { k: 'Retroactivo de prestaciones', ref: diasRetro + ' días (' + aniosRetro + ' × ' + L.retroactivoDiasPorAnio + ') al último integral', v: montoRetro },
+        {
+          k: 'Prestaciones sociales que cobrás',
+          ref: 'Se paga el mayor · Art. 142 · gana el ' + (ganaRetro ? 'retroactivo' : 'la garantía'),
+          v: prestaciones,
+          extra: true,
+        },
+        { k: 'Vacaciones fraccionadas', ref: diasVacAnio + ' días × ' + meses + '/12 · Art. 190', v: vacFrac },
+        { k: 'Bono vacacional fraccionado', ref: diasBonoVacAnio + ' días × ' + meses + '/12 · Art. 192', v: bonoFrac },
+        { k: 'Utilidades fraccionadas', ref: diasUtilidades + ' días × ' + meses + '/12 · Art. 131', v: utilFrac },
+      ];
+
+      if (esInjustificado) {
+        rows.push({ k: 'Indemnización por despido injustificado', ref: 'Igual a las prestaciones · Art. 92', v: indemnizacion, extra: true });
+        rows.push({ k: 'Preaviso a cargo del patrono', ref: diasPre + ' días × salario diario · Art. 81', v: montoPreaviso });
+      } else {
+        rows.push({
+          k: 'Preaviso que te corresponde dar',
+          ref: 'Art. 81 · lo debe el trabajador en la renuncia',
+          v: diasPre,
+          format: 'unit',
+          unit: 'días',
+        });
+      }
+
+      if (tasaBcv > 0) {
+        rows.push({ k: 'Intereses sobre prestaciones (1 año)', ref: 'Tasa BCV ' + tasaBcv + '% · Art. 143', v: intereses });
+      }
+
+      const total =
+        prestaciones + vacFrac + bonoFrac + utilFrac + indemnizacion + montoPreaviso + intereses - Math.min(anticipos, prestaciones);
+
+      if (anticipos > 0) {
+        rows.push({ k: 'Anticipos ya cobrados (se restan)', ref: 'Art. 144', v: Math.min(anticipos, prestaciones) });
+      }
+      rows.push({ k: 'Anticipo máximo que podrías pedir hoy', ref: TOPE + '% de la garantía · Art. 144', v: anticipoMaximo });
+      rows.push({ k: 'Total a cobrar', ref: 'Suma del finiquito', v: Math.max(0, total), extra: true });
+      rows.push({
+        k: 'Equivale a meses de tu salario',
+        ref: 'Total ÷ salario mensual',
+        v: salarioMensual > 0 ? total / salarioMensual : 0,
+        format: 'unit',
+        unit: 'meses',
+        decimals: 1,
+      });
+
+      const sub =
+        anios + ' año(s) y ' + meses + ' mes(es) · integral diario ' + bs(integralDiario) +
+        ' · gana el ' + (ganaRetro ? 'retroactivo (' + diasRetro + ' días)' : 'la garantía (' + diasGarantia + ' días)') +
+        (esInjustificado ? ' · con indemnización del Art. 92' : ' · sin indemnización del Art. 92');
+
+      const chart = [
+        { label: 'Prestaciones sociales (Art. 142)', value: Math.round(prestaciones), tone: 'main' },
+        { label: 'Vacaciones, bono y utilidades fraccionados', value: Math.round(vacFrac + bonoFrac + utilFrac), tone: 'prop' },
+      ];
+      if (esInjustificado) {
+        chart.push({ label: 'Indemnización y preaviso (Arts. 92 y 81)', value: Math.round(indemnizacion + montoPreaviso), tone: 'good' });
+      }
+      if (tasaBcv > 0) chart.push({ label: 'Intereses del Art. 143', value: Math.round(intereses), tone: 'warn' });
+
+      return { total: bs(Math.max(0, total)), sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

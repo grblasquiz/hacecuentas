@@ -1,0 +1,261 @@
+---
+/**
+ * Hub de decisión UY — "Jubilación": edad de causal, tasa de reemplazo, monto del
+ * tramo BPS, montepío y IASS sobre la pasividad.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  BPC,
+  JUB,
+  MONTEPIO,
+  IASS_FRANJAS,
+  IASS_MNI_BPC,
+  EDAD_MINIMA,
+  EDAD_AVANZADA,
+  TASA_REEMPLAZO,
+} from '../../../lib/hubs/uy/jubilacion';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="UY"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    BPC,
+    REQ: JUB.aniosServicioComun,
+    MIN_CONTRIB: JUB.minAniosContributivo,
+    MONTEPIO,
+    IASS: IASS_FRANJAS,
+    IASS_MNI_BPC,
+    EDAD_MINIMA,
+    EDAD_AVANZADA,
+    TR: TASA_REEMPLAZO,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const uyu = (n) => '$U ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(Math.round(n || 0));
+    const pct = (x) => new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(x);
+
+    function porFranjas(base, franjas) {
+      if (base <= 0) return 0;
+      let imp = 0, antBpc = 0;
+      for (const f of franjas) {
+        const limite = f.hastaBpc === null ? Infinity : f.hastaBpc * BPC;
+        const piso = antBpc * BPC;
+        const enTramo = Math.min(base, limite) - piso;
+        if (enTramo <= 0) { antBpc = f.hastaBpc === null ? Infinity : f.hastaBpc; continue; }
+        imp += enTramo * f.tasa;
+        antBpc = f.hastaBpc === null ? Infinity : f.hastaBpc;
+        if (base <= limite) break;
+      }
+      return imp;
+    }
+
+    function edadComun(anio) {
+      for (const t of EDAD_MINIMA) {
+        if (t.nacidoHasta === null || anio <= t.nacidoHasta) return t.edad;
+      }
+      return 65;
+    }
+
+    function tasaReemplazo(anios, edad) {
+      if (anios < REQ) return 0;
+      const adicServ =
+        TR.adicServicio30a35 * Math.min(Math.max(anios - 30, 0), 5) +
+        TR.adicServicio35a40 * Math.min(Math.max(anios - 35, 0), 5);
+      const bonusEdad = Math.min(TR.adicEdadPorAnio * Math.max(edad - 60, 0), TR.topeAdicEdad);
+      return Math.min(TR.base + adicServ + bonusEdad, TR.maxTasa);
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'comun';
+      const anio = Math.round(v.anioNacimiento || 0);
+      const anios = Math.max(0, v.aniosServicio || 0);
+      const edadRetiro = Math.max(0, v.edadRetiro || 0);
+      const sueldo = Math.max(0, v.sueldo || 0);
+
+      const eComun = edadComun(anio);
+      const avanzada = EDAD_AVANZADA.find((e) => anios >= e.aniosServicio);
+
+      const rows = [];
+      let total = 0;
+      let sub = '';
+      let chart = [];
+
+      if (id === 'iass') {
+        // Ya jubilado: la pasividad es el campo "sueldo".
+        const iass = porFranjas(sueldo, IASS);
+        const liquido = sueldo - iass;
+        total = liquido;
+
+        rows.push({ k: 'Pasividad nominal mensual', ref: 'Jubilación o pensión', v: sueldo });
+        rows.push({ k: 'Mínimo no imponible del IASS', ref: IASS_MNI_BPC + ' BPC', v: IASS_MNI_BPC * BPC });
+        rows.push({ k: 'IASS mensual', ref: sueldo <= IASS_MNI_BPC * BPC ? 'Exento' : 'Escala progresiva en BPC', v: iass });
+        rows.push({ k: 'IASS anual', ref: '12 meses', v: iass * 12 });
+        rows.push({ k: 'Pasividad líquida mensual', ref: 'Nominal − IASS', v: liquido, extra: true });
+        rows.push({
+          k: 'Tasa efectiva del IASS',
+          ref: 'IASS ÷ pasividad',
+          v: sueldo > 0 ? (iass / sueldo) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        rows.push({
+          k: 'Tu pasividad medida en BPC',
+          ref: 'BPC ' + uyu(BPC),
+          v: BPC > 0 ? sueldo / BPC : 0,
+          format: 'unit',
+          unit: 'BPC',
+          decimals: 1,
+        });
+
+        sub = sueldo <= IASS_MNI_BPC * BPC
+          ? 'No pagás IASS: tu pasividad está por debajo del mínimo no imponible de ' + IASS_MNI_BPC + ' BPC'
+          : 'IASS de ' + uyu(iass) + ' por mes · ' + uyu(iass * 12) + ' al año · te quedan ' + uyu(liquido);
+        chart = [
+          { label: 'Pasividad líquida', value: Math.round(liquido), tone: 'main' },
+          { label: 'IASS retenido', value: Math.round(iass), tone: 'bad' },
+        ];
+      } else {
+        const tasa = tasaReemplazo(anios, edadRetiro);
+        const jubilacion = sueldo * tasa;
+        const iass = porFranjas(jubilacion, IASS);
+        const liquido = jubilacion - iass;
+        total = liquido;
+
+        const configuraComun = anios >= REQ;
+        const edadCausal = configuraComun ? eComun : avanzada ? avanzada.edad : null;
+        const causal = configuraComun
+          ? 'Causal común (' + REQ + ' años de servicio)'
+          : avanzada
+            ? 'Edad avanzada (' + avanzada.edad + ' años con ' + avanzada.aniosServicio + ' de servicio)'
+            : 'No configura causal contributiva';
+
+        const adicServ =
+          TR.adicServicio30a35 * Math.min(Math.max(anios - 30, 0), 5) +
+          TR.adicServicio35a40 * Math.min(Math.max(anios - 35, 0), 5);
+        const bonusEdad = Math.min(TR.adicEdadPorAnio * Math.max(edadRetiro - 60, 0), TR.topeAdicEdad);
+
+        rows.push({
+          k: 'Edad mínima de tu cohorte (causal común)',
+          ref: 'Nacido en ' + anio + ' · transición Ley 20.130',
+          v: eComun,
+          format: 'unit',
+          unit: 'años',
+        });
+        rows.push({
+          k: 'Años de servicio declarados',
+          ref: configuraComun ? 'Configurás la causal común' : 'Te faltan ' + Math.max(0, REQ - anios) + ' para la causal común',
+          v: anios,
+          format: 'unit',
+          unit: 'años',
+        });
+        rows.push({
+          k: 'Edad a la que te podés jubilar',
+          ref: causal,
+          v: edadCausal === null ? 0 : edadCausal,
+          format: 'unit',
+          unit: 'años',
+          extra: true,
+        });
+        rows.push({ k: 'Sueldo Básico Jubilatorio', ref: 'Promedio de tus mejores años', v: sueldo });
+        rows.push({
+          k: 'Tasa base por ' + REQ + ' años de servicio',
+          ref: configuraComun ? 'Régimen anterior y de transición' : 'No aplica sin causal común',
+          v: configuraComun ? TR.base * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        rows.push({
+          k: 'Adicional por años de servicio sobre 30',
+          ref: '+1% entre 30 y 35 · +0,5% entre 35 y 40',
+          v: configuraComun ? adicServ * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        rows.push({
+          k: 'Adicional por trabajar después de los 60',
+          ref: '+' + pct(TR.adicEdadPorAnio * 100) + '% por año · tope ' + pct(TR.topeAdicEdad * 100) + '%',
+          v: configuraComun ? bonusEdad * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        rows.push({
+          k: 'Tasa de reemplazo aplicada',
+          ref: tasa >= TR.maxTasa ? 'Tope global del ' + pct(TR.maxTasa * 100) + '% alcanzado' : 'Suma de base y adicionales',
+          v: tasa * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        rows.push({ k: 'Jubilación nominal estimada (tramo BPS)', ref: 'SBJ × tasa de reemplazo', v: jubilacion });
+        rows.push({ k: 'IASS sobre la pasividad', ref: iass > 0 ? 'Escala progresiva en BPC' : 'Bajo el mínimo no imponible', v: iass });
+        rows.push({ k: 'Jubilación líquida estimada', ref: 'Nominal − IASS', v: liquido, extra: true });
+        rows.push({ k: 'Brecha contra tu sueldo básico', ref: 'Lo que dejás de percibir', v: Math.max(0, sueldo - jubilacion) });
+        rows.push({ k: 'Aporte jubilatorio mensual que hacés hoy', ref: pct(MONTEPIO * 100) + '% de montepío sobre el nominal', v: sueldo * MONTEPIO });
+
+        sub = (edadCausal === null
+          ? 'Con ' + anios + ' años de servicio no configurás causal contributiva (el piso son ' + MIN_CONTRIB + ')'
+          : 'Te jubilás a los ' + edadCausal + ' años por ' + (configuraComun ? 'causal común' : 'edad avanzada')) +
+          ' · tasa de reemplazo ' + pct(tasa * 100) + '%' +
+          (jubilacion > 0 ? ' · nominal estimado ' + uyu(jubilacion) : '');
+
+        chart = [
+          { label: 'Jubilación líquida', value: Math.round(liquido), tone: 'main' },
+          { label: 'IASS', value: Math.round(iass), tone: 'bad' },
+          { label: 'Brecha contra el sueldo básico', value: Math.round(Math.max(0, sueldo - jubilacion)), tone: 'warn' },
+        ];
+      }
+
+      return { total: uyu(total), sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

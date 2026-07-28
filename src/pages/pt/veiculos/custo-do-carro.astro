@@ -1,0 +1,419 @@
+---
+/**
+ * Hub de decisão BR — "Quanto me custa o carro por mês, de verdade?".
+ * As tabelas de IPVA e as constantes de IOF viajam pelo define:vars como
+ * objetos simples (não há Infinity aqui, então nada precisa virar null).
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  IPVA_SP_ALIQUOTAS,
+  IPVA_PR,
+  IPVA_SC,
+  IPVA_PARCELAS,
+  IOF,
+  RENDIMENTO_ETANOL,
+} from '../../../lib/hubs/pt/custo-do-carro';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="BR"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header lang="pt" />
+  <DecisionHub data={hub} />
+  <Footer lang="pt" />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    SP: IPVA_SP_ALIQUOTAS,
+    PR: IPVA_PR,
+    SC: IPVA_SC,
+    PARCELAS: IPVA_PARCELAS,
+    IOF,
+    ETANOL: RENDIMENTO_ETANOL,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const brl = (n) =>
+      'R$ ' + (Math.round((n || 0) * 100) / 100).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    const pct = (n) => n.toFixed(1).replace('.', ',') + '%';
+
+    /** Alíquota do IPVA: manual vence, senão a tabela do estado por tipo de veículo. */
+    function aliquotaIPVA(estado, tipo, manual) {
+      if (manual > 0) return manual;
+      const tabela = estado === 'pr' ? PR : estado === 'sc' ? SC : SP;
+      const a = tabela[tipo];
+      return typeof a === 'number' ? a : tabela.auto;
+    }
+
+    /** Parcela pela Tabela Price. */
+    function price(pv, i, n) {
+      if (pv <= 0 || n <= 0) return 0;
+      if (i === 0) return pv / n;
+      const f = Math.pow(1 + i, n);
+      return (pv * i * f) / (f - 1);
+    }
+
+    /** IOF de crédito a pessoa física — Decreto 6.306/2007, art. 7º. */
+    function iofCredito(pv, meses) {
+      const dias = Math.min(meses * 30, IOF.diasMax);
+      return pv * (IOF.diario * dias + IOF.adicional);
+    }
+
+    /**
+     * CET mensal: taxa que iguala o dinheiro EFETIVAMENTE recebido ao fluxo das
+     * parcelas. Como o IOF é financiado, ele entra na parcela e sai do líquido —
+     * por isso o CET tem de ficar ACIMA da taxa nominal.
+     */
+    function cetMensal(liquidoRecebido, pmt, n) {
+      if (liquidoRecebido <= 0 || pmt <= 0 || n <= 0) return 0;
+      let r = 0.01;
+      for (let it = 0; it < 200; it++) {
+        let f = -liquidoRecebido;
+        let df = 0;
+        for (let t = 1; t <= n; t++) {
+          const d = Math.pow(1 + r, t);
+          f += pmt / d;
+          df += (-t * pmt) / (d * (1 + r));
+        }
+        if (df === 0) break;
+        const delta = f / df;
+        r -= delta;
+        if (!isFinite(r) || r < -0.99) return 0;
+        if (Math.abs(delta) < 1e-12) break;
+      }
+      return r > 0 ? r : 0;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'mensal';
+
+      const kmMes = Math.max(0, v.kmMes || 0);
+      const consumo = Math.max(0.1, v.consumo || 11);
+      const consumoAlc = Math.max(0, v.consumoAlcool || 0);
+      const pGas = Math.max(0, v.precoGasolina || 0);
+      const pAlc = Math.max(0, v.precoAlcool || 0);
+      const escolha = String(v.combustivel || 'melhor');
+      const fipe = Math.max(0, v.valorFipe || 0);
+      const estado = String(v.estado || 'sp');
+      const tipo = String(v.tipoVeiculo || 'auto');
+      const manual = Math.max(0, v.aliquotaManual || 0);
+      const descCota = Math.min(30, Math.max(0, v.descontoCota || 0)) / 100;
+      const seguro = Math.max(0, v.seguroAno || 0);
+      const manut = Math.max(0, v.manutencaoAno || 0);
+      const deprPct = Math.min(40, Math.max(0, v.depreciacaoPct || 0)) / 100;
+      const parcelaMes = Math.max(0, v.parcelaMes || 0);
+      const distIda = Math.max(0, v.distanciaKm || 0);
+      const pedIda = Math.max(0, v.pedagios || 0);
+      const idaVolta = String(v.idaVolta || 'sim') === 'sim';
+      const pax = Math.max(1, Math.round(v.passageiros || 1));
+      const entrada = Math.min(Math.max(0, v.entrada || 0), fipe);
+      const prazo = Math.max(1, Math.round(v.prazoMeses || 48));
+      const iMes = Math.max(0, v.jurosMes || 0) / 100;
+      const adm = Math.max(0, v.taxaAdm || 0) / 100;
+      const fundo = Math.max(0, v.fundoReserva || 0) / 100;
+      const vrgPct = Math.min(90, Math.max(0, v.vrgPct || 0)) / 100;
+      const rendMes = Math.max(0, v.rendimentoAplicacao || 0) / 100;
+
+      // ---- combustível: custo por km de cada opção ----
+      // Sem consumo real do etanol, a referência é a regra dos 70%.
+      const consumoAlcUsado = consumoAlc > 0 ? consumoAlc : consumo * ETANOL;
+      const custoKmGas = pGas > 0 ? pGas / consumo : 0;
+      const custoKmAlc = pAlc > 0 ? pAlc / consumoAlcUsado : 0;
+      const alcoolGanha = custoKmAlc > 0 && custoKmAlc < custoKmGas;
+      const usaAlcool = escolha === 'alcool' || (escolha === 'melhor' && alcoolGanha);
+      const custoKmComb = usaAlcool ? custoKmAlc : custoKmGas;
+      const nomeComb = usaAlcool ? 'álcool' : 'gasolina';
+
+      // ================= CASO: abastecer =================
+      if (id === 'abastecer') {
+        if (pGas <= 0 || pAlc <= 0) {
+          return { total: brl(0), sub: 'Informe o preço do litro dos dois combustíveis.', rows: [], chart: [] };
+        }
+        const razao = pAlc / pGas;
+        const limite = pGas * ETANOL;
+        const maior = Math.max(custoKmAlc, custoKmGas);
+        const menor = Math.min(custoKmAlc, custoKmGas);
+        // Economia medida sobre a opção MAIS CARA — é a forma correta de medir
+        // quanto se deixa de gastar ao trocar.
+        const economia = maior > 0 ? ((maior - menor) / maior) * 100 : 0;
+        const gastoMes = kmMes * custoKmComb;
+        const gastoMesOutro = kmMes * (usaAlcool ? custoKmGas : custoKmAlc);
+
+        const rows = [
+          { k: 'Preço do litro do álcool', ref: 'Informado por você', v: pAlc, decimals: 2 },
+          { k: 'Limite dos 70% do preço da gasolina', ref: brl(pGas) + ' × 70%', v: limite, decimals: 2 },
+          { k: 'Álcool em relação à gasolina', ref: 'Abaixo de 70% o etanol ganha', v: razao * 100, format: 'unit', unit: '%', decimals: 1 },
+          { k: 'Consumo usado no álcool', ref: consumoAlc > 0 ? 'Medido por você' : 'Estimado: 70% do consumo com gasolina', v: consumoAlcUsado, format: 'unit', unit: 'km/l', decimals: 1 },
+          { k: 'Custo por km com álcool', ref: brl(pAlc) + ' ÷ ' + consumoAlcUsado.toFixed(1).replace('.', ',') + ' km/l', v: custoKmAlc, decimals: 3 },
+          { k: 'Custo por km com gasolina', ref: brl(pGas) + ' ÷ ' + consumo.toFixed(1).replace('.', ',') + ' km/l', v: custoKmGas, decimals: 3 },
+          { k: 'Economia da opção mais barata', ref: 'Medida sobre a opção mais cara', v: economia, format: 'unit', unit: '%', decimals: 1, extra: true },
+          { k: 'Gasto mensal com ' + nomeComb, ref: kmMes.toLocaleString('pt-BR') + ' km ÷ consumo × preço', v: gastoMes, extra: true },
+          { k: 'Gasto mensal com o outro combustível', ref: 'Para comparar', v: gastoMesOutro },
+          { k: 'Diferença por mês', ref: 'O que a escolha certa poupa', v: Math.abs(gastoMes - gastoMesOutro) },
+        ];
+
+        return {
+          total: brl(gastoMes),
+          sub:
+            'Compensa abastecer com ' + nomeComb.toUpperCase() + ' · o álcool está a ' +
+            pct(razao * 100) + ' do preço da gasolina (limite: 70%) · economia de ' + pct(economia) + ' por km.',
+          rows: rows,
+          chart: [
+            { label: 'Custo/km com álcool', value: Math.round(custoKmAlc * 1000), tone: usaAlcool ? 'good' : 'warn' },
+            { label: 'Custo/km com gasolina', value: Math.round(custoKmGas * 1000), tone: usaAlcool ? 'warn' : 'good' },
+          ],
+        };
+      }
+
+      // ================= CASO: viagem =================
+      if (id === 'viagem') {
+        const dist = idaVolta ? distIda * 2 : distIda;
+        const ped = idaVolta ? pedIda * 2 : pedIda;
+        if (dist <= 0) {
+          return { total: brl(0), sub: 'Informe a distância da viagem.', rows: [], chart: [] };
+        }
+        const consumoUsado = usaAlcool ? consumoAlcUsado : consumo;
+        const preco = usaAlcool ? pAlc : pGas;
+        const litros = dist / consumoUsado;
+        const combustivel = litros * preco;
+        const total = combustivel + ped;
+        const porKm = total / dist;
+        const porPessoa = total / pax;
+
+        // Custo mensal completo por km, para comparar com o custo só de combustível.
+        const aliq = aliquotaIPVA(estado, tipo, manual);
+        const fixoAno = fipe * (aliq / 100) + seguro + manut + fipe * deprPct;
+        const custoKmTotalCarro = kmMes > 0 ? custoKmComb + fixoAno / 12 / kmMes + parcelaMes / kmMes : custoKmComb;
+
+        const rows = [
+          { k: 'Distância total', ref: idaVolta ? 'Ida e volta' : 'Só ida', v: dist, format: 'unit', unit: 'km', decimals: 0 },
+          { k: 'Litros de ' + nomeComb, ref: dist.toFixed(0) + ' km ÷ ' + consumoUsado.toFixed(1).replace('.', ',') + ' km/l', v: litros, format: 'unit', unit: 'L', decimals: 1 },
+          { k: 'Combustível', ref: litros.toFixed(1).replace('.', ',') + ' L × ' + brl(preco), v: combustivel },
+          { k: 'Pedágios', ref: idaVolta ? 'Dobrados para a volta' : 'Só ida', v: ped },
+          { k: 'Custo total da viagem', ref: 'Combustível + pedágio', v: total, extra: true },
+          { k: 'Custo por km só de combustível', ref: 'O que a maioria calcula', v: porKm, decimals: 3 },
+          { k: 'Custo por km do carro inteiro', ref: 'Com IPVA, seguro, manutenção e depreciação rateados', v: custoKmTotalCarro, decimals: 3, extra: true },
+          { k: 'Custo real da viagem pelo km cheio', ref: dist.toFixed(0) + ' km × custo por km do carro + pedágio', v: dist * custoKmTotalCarro + ped },
+          { k: 'Por pessoa dividindo entre ' + pax, ref: 'Rateio do custo, não cobrança de transporte', v: porPessoa },
+        ];
+
+        return {
+          total: brl(total),
+          sub:
+            dist.toFixed(0) + ' km com ' + nomeComb + ' a ' + brl(preco) + '/L: ' +
+            litros.toFixed(1).replace('.', ',') + ' litros (' + brl(combustivel) + ') + ' + brl(ped) +
+            ' de pedágio' + (pax > 1 ? ' · ' + brl(porPessoa) + ' por pessoa' : '') + '.',
+          rows: rows,
+          chart: [
+            { label: 'Combustível', value: Math.round(combustivel), tone: 'main' },
+            { label: 'Pedágios', value: Math.round(ped), tone: 'exit' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      // ================= CASO: ipva =================
+      if (id === 'ipva') {
+        if (fipe <= 0) {
+          return { total: brl(0), sub: 'Informe o valor do veículo na tabela FIPE.', rows: [], chart: [] };
+        }
+        const aliq = aliquotaIPVA(estado, tipo, manual);
+        const anual = fipe * (aliq / 100);
+        const nCotas = PARCELAS[estado] || 3;
+        const cota = anual / nCotas;
+        const aVista = anual * (1 - descCota);
+        const spV = fipe * ((SP[tipo] || SP.auto) / 100);
+        const prV = fipe * ((PR[tipo] || PR.auto) / 100);
+        const scV = fipe * ((SC[tipo] || SC.auto) / 100);
+
+        const rows = [
+          { k: 'Valor venal (base de cálculo)', ref: 'Tabela FIPE', v: fipe },
+          { k: 'Alíquota aplicada', ref: manual > 0 ? 'Informada por você' : estado === 'sp' ? 'Lei 13.296/2008 (SP)' : estado === 'pr' ? 'Tabela PR 2026' : estado === 'sc' ? 'Tabela SC 2026' : 'Tabela padrão', v: aliq, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'IPVA do ano', ref: brl(fipe) + ' × ' + aliq.toString().replace('.', ',') + '%', v: anual, extra: true },
+          { k: 'Cada cota parcelando em ' + nCotas + 'x', ref: 'Calendário da SEFAZ do estado', v: cota },
+          { k: 'Cota única com ' + (descCota * 100).toFixed(1).replace('.', ',') + '% de desconto', ref: 'Confirme se o desconto existe neste exercício', v: aVista },
+          { k: 'Peso do IPVA por mês', ref: 'IPVA do ano ÷ 12', v: anual / 12, extra: true },
+          { k: 'O mesmo carro em São Paulo', ref: (SP[tipo] || SP.auto) + '%', v: spV },
+          { k: 'O mesmo carro no Paraná', ref: (PR[tipo] || PR.auto).toString().replace('.', ',') + '%', v: prV },
+          { k: 'O mesmo carro em Santa Catarina', ref: (SC[tipo] || SC.auto) + '%', v: scV },
+        ];
+
+        return {
+          total: brl(anual),
+          sub:
+            'IPVA de ' + brl(anual) + ' no ano (' + brl(anual / 12) + ' por mês) · ' + nCotas +
+            ' cotas de ' + brl(cota) + ' ou ' + brl(aVista) + ' em cota única.',
+          rows: rows,
+          chart: [
+            { label: 'São Paulo', value: Math.round(spV), tone: 'bad' },
+            { label: 'Paraná', value: Math.round(prV), tone: 'good' },
+            { label: 'Santa Catarina', value: Math.round(scV), tone: 'warn' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      // ================= CASO: financiar =================
+      if (id === 'financiar') {
+        if (fipe <= 0) {
+          return { total: brl(0), sub: 'Informe o valor do veículo.', rows: [], chart: [] };
+        }
+        const financiado = Math.max(0, fipe - entrada);
+        const iof = iofCredito(financiado, prazo);
+        // O IOF é financiado junto: entra no saldo devedor e sai do que você recebe.
+        const pmtCDC = price(financiado + iof, iMes, prazo);
+        const totalCDC = entrada + pmtCDC * prazo;
+        const jurosCDC = totalCDC - fipe - iof;
+        const cetM = cetMensal(financiado, pmtCDC, prazo);
+        const cetA = (Math.pow(1 + cetM, 12) - 1) * 100;
+
+        const totalConsorcio = fipe * (1 + adm + fundo);
+        const pmtConsorcio = totalConsorcio / prazo;
+
+        // Leasing: o VRG é pago no fim, então o que ele tira das parcelas é o
+        // seu VALOR PRESENTE, não o valor cheio — senão o leasing sairia
+        // artificialmente barato só por empurrar 30% do bem para o final.
+        const vrg = fipe * vrgPct;
+        const vrgPresente = vrg / Math.pow(1 + iMes, prazo);
+        const pmtLeasing = price(Math.max(0, fipe - entrada - vrgPresente), iMes, prazo);
+        const totalLeasing = entrada + pmtLeasing * prazo + vrg;
+
+        // À vista: o preço do carro. O que o dinheiro renderia no prazo é o
+        // custo de oportunidade, e ele já entra na comparação como taxa de
+        // desconto — somá-lo ao total seria contá-lo duas vezes.
+        const oportunidade = fipe * (Math.pow(1 + rendMes, prazo) - 1);
+
+        /** Valor presente de uma série de parcelas iguais, à taxa de desconto d. */
+        const vpSerie = (pmt, d, n) => (d === 0 ? pmt * n : (pmt * (1 - Math.pow(1 + d, -n))) / d);
+        const vpCDC = entrada + vpSerie(pmtCDC, rendMes, prazo);
+        const vpConsorcio = vpSerie(pmtConsorcio, rendMes, prazo);
+        const vpLeasing = entrada + vpSerie(pmtLeasing, rendMes, prazo) + vrg / Math.pow(1 + rendMes, prazo);
+        const vpAVista = fipe;
+
+        // A comparação honesta é em valor presente: totais nominais de fluxos
+        // com prazos e formatos diferentes não são comparáveis.
+        const opcoes = [
+          { nome: 'CDC', total: vpCDC },
+          { nome: 'consórcio', total: vpConsorcio },
+          { nome: 'leasing', total: vpLeasing },
+          { nome: 'à vista', total: vpAVista },
+        ].sort((a, b) => a.total - b.total);
+
+        const rows = [
+          { k: 'Valor financiado no CDC', ref: brl(fipe) + ' − entrada de ' + brl(entrada), v: financiado },
+          { k: 'IOF do crédito', ref: '0,0082%/dia até 365 dias + 0,38% · Decreto 6.306/2007', v: iof },
+          { k: 'Parcela do CDC', ref: prazo + 'x pela Tabela Price a ' + (iMes * 100).toFixed(2).replace('.', ',') + '% a.m.', v: pmtCDC, extra: true },
+          { k: 'Total pago no CDC', ref: 'Entrada + todas as parcelas', v: totalCDC, extra: true },
+          { k: 'Juros do CDC', ref: 'Total pago − preço do carro − IOF', v: jurosCDC },
+          { k: 'CET anual efetivo do CDC', ref: 'Taxa que iguala o líquido recebido ao fluxo das parcelas', v: cetA, format: 'unit', unit: '% a.a.', decimals: 2 },
+          { k: 'Parcela do consórcio', ref: prazo + 'x · adm ' + (adm * 100).toFixed(1).replace('.', ',') + '% + fundo ' + (fundo * 100).toFixed(1).replace('.', ',') + '%', v: pmtConsorcio },
+          { k: 'Total pago no consórcio', ref: 'Sem juros, mas sem carro até a contemplação', v: totalConsorcio },
+          { k: 'Parcela do leasing', ref: 'Price sobre o valor menos o VRG trazido a valor presente', v: pmtLeasing },
+          { k: 'Total pago no leasing', ref: 'Parcelas + VRG de ' + brl(vrg) + ' no fim', v: totalLeasing },
+          { k: 'Custo de oportunidade de pagar à vista', ref: prazo + ' meses a ' + (rendMes * 100).toFixed(2).replace('.', ',') + '% a.m. (antes do IR) · informativo', v: oportunidade },
+          { k: 'Valor presente do CDC', ref: 'Fluxo descontado à taxa da sua aplicação', v: vpCDC },
+          { k: 'Valor presente do consórcio', ref: 'Sem o carro até a contemplação', v: vpConsorcio },
+          { k: 'Valor presente do leasing', ref: 'Parcelas + VRG descontados', v: vpLeasing },
+          { k: 'Valor presente de pagar à vista', ref: 'É o próprio preço do carro', v: vpAVista },
+          { k: 'Diferença entre a opção mais barata e a mais cara', ref: 'Em valor presente: ' + opcoes[0].nome + ' contra ' + opcoes[opcoes.length - 1].nome, v: opcoes[opcoes.length - 1].total - opcoes[0].total, extra: true },
+        ];
+
+        return {
+          total: brl(totalCDC),
+          sub:
+            'CDC: ' + prazo + 'x de ' + brl(pmtCDC) + ', CET de ' + cetA.toFixed(2).replace('.', ',') +
+            '% a.a. · em valor presente, a opção mais barata aqui é ' + opcoes[0].nome + ' (' + brl(opcoes[0].total) + ').',
+          rows: rows,
+          chart: [
+            { label: 'CDC em valor presente', value: Math.round(vpCDC), tone: 'bad' },
+            { label: 'Consórcio em valor presente', value: Math.round(vpConsorcio), tone: 'warn' },
+            { label: 'Leasing em valor presente', value: Math.round(vpLeasing), tone: 'exit' },
+            { label: 'À vista (preço do carro)', value: Math.round(vpAVista), tone: 'good' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      // ================= CASO padrão: custo mensal =================
+      const aliq = aliquotaIPVA(estado, tipo, manual);
+      const ipvaAno = fipe * (aliq / 100);
+      const combustivelMes = kmMes * custoKmComb;
+      const ipvaMes = ipvaAno / 12;
+      const seguroMes = seguro / 12;
+      const manutMes = manut / 12;
+      const deprMes = (fipe * deprPct) / 12;
+      const totalMes = combustivelMes + ipvaMes + seguroMes + manutMes + deprMes + parcelaMes;
+      const desembolso = totalMes - deprMes;
+      const custoKm = kmMes > 0 ? totalMes / kmMes : 0;
+
+      const rows = [
+        { k: 'Combustível (' + nomeComb + ')', ref: kmMes.toLocaleString('pt-BR') + ' km × ' + brl(custoKmComb) + '/km', v: combustivelMes },
+        { k: 'IPVA rateado', ref: brl(ipvaAno) + ' no ano ÷ 12 · alíquota de ' + aliq.toString().replace('.', ',') + '%', v: ipvaMes },
+        { k: 'Seguro rateado', ref: brl(seguro) + ' por ano ÷ 12', v: seguroMes },
+        { k: 'Manutenção rateada', ref: brl(manut) + ' por ano ÷ 12', v: manutMes },
+        { k: 'Depreciação', ref: (deprPct * 100).toFixed(1).replace('.', ',') + '% de ' + brl(fipe) + ' por ano ÷ 12', v: deprMes },
+        { k: 'Parcela do financiamento', ref: 'O que você já paga hoje', v: parcelaMes },
+        { k: 'Custo total do mês', ref: 'Tudo somado, inclusive o que não sai da conta', v: totalMes, extra: true },
+        { k: 'Do bolso, de fato', ref: 'Custo total menos a depreciação', v: desembolso },
+        { k: 'Custo por quilômetro rodado', ref: 'Total do mês ÷ ' + kmMes.toLocaleString('pt-BR') + ' km', v: custoKm, decimals: 2, extra: true },
+        { k: 'Custo do carro no ano', ref: 'Custo do mês × 12', v: totalMes * 12 },
+      ];
+
+      return {
+        total: brl(totalMes),
+        sub:
+          'Sai ' + brl(desembolso) + ' do bolso por mês e mais ' + brl(deprMes) +
+          ' de valor que o carro perde · ' + brl(custoKm) + ' por quilômetro rodado.',
+        rows: rows,
+        chart: [
+          { label: 'Combustível', value: Math.round(combustivelMes), tone: 'main' },
+          { label: 'Depreciação', value: Math.round(deprMes), tone: 'bad' },
+          { label: 'Seguro', value: Math.round(seguroMes), tone: 'exit' },
+          { label: 'Manutenção', value: Math.round(manutMes), tone: 'prop' },
+          { label: 'IPVA', value: Math.round(ipvaMes), tone: 'warn' },
+          { label: 'Parcela', value: Math.round(parcelaMes), tone: 'good' },
+        ].filter((s) => s.value > 0),
+      };
+    });
+  })();
+</script>

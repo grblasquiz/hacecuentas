@@ -1,0 +1,239 @@
+---
+/**
+ * Decision hub EN — "How hard should I train, and what do I need to drink?"
+ * Replaces 7 loose calculator URLs (see hub.replaces).
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, HRMAX, ZONES, METS, STEPS, HYDRATION } from '../../../lib/hubs/en/exercise-and-training';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ HRMAX, ZONES, METS, STEPS, HYD: HYDRATION }}>
+  (function () {
+    const H = window.HC_HUB;
+    const LB_TO_KG = 0.453592;
+
+    /** Energy cost from a MET value: kcal/min = MET × 3.5 × kg / 200. */
+    function kcal(met, kg, minutes) {
+      return (met * 3.5 * kg) / 200 * minutes;
+    }
+    /** Epley-family percentage of 1RM for a given number of reps to failure. */
+    function pctOf1rm(repsToFailure) {
+      const r = Math.max(1, repsToFailure);
+      return 100 / (1 + r / 30);
+    }
+    const clamp = (n) => Math.min(100, Math.max(0, n));
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'zones';
+      const age = Math.max(10, Math.round(v.age || 40));
+      const kg = Math.max(0, v.weight || 0) * LB_TO_KG;
+      const minutes = Math.max(0, v.minutes || 0);
+      let total, sub, rows = [], position = 0, positionLabel = '', chart = [];
+
+      if (id === 'zones') {
+        const fox = HRMAX.foxBase - age;
+        const tanaka = HRMAX.tanakaBase - HRMAX.tanakaSlope * age;
+        const rest = Math.max(0, v.restingHr || 0);
+        const reserve = Math.max(0, tanaka - rest);
+
+        rows = [
+          { k: 'Maximum heart rate — Tanaka (208 − 0.7 × age)', ref: 'Better validated, especially over 40', v: tanaka, format: 'unit', unit: 'bpm', decimals: 0, extra: true },
+          { k: 'Maximum heart rate — Fox (220 − age)', ref: 'The famous one', v: fox, format: 'unit', unit: 'bpm', decimals: 0 },
+          { k: 'Gap between the two formulas', ref: 'Widens with age', v: Math.abs(tanaka - fox), format: 'unit', unit: 'bpm', decimals: 1 },
+          { k: 'Heart-rate reserve (Tanaka max − resting)', ref: 'Basis of the Karvonen zones', v: reserve, format: 'unit', unit: 'bpm', decimals: 0 },
+        ];
+        ZONES.forEach(function (z) {
+          rows.push({
+            k: z.name,
+            ref: Math.round(z.from * 100) + '–' + Math.round(z.to * 100) + '% of max · Karvonen ' +
+              Math.round(rest + reserve * z.from) + '–' + Math.round(rest + reserve * z.to) + ' bpm',
+            v: Math.round(tanaka * z.to),
+            format: 'unit',
+            unit: 'bpm upper edge',
+            decimals: 0,
+            extra: z.name.indexOf('Zone 2') === 0,
+          });
+        });
+
+        total = Math.round(tanaka) + ' bpm';
+        sub =
+          'Tanaka puts your max at ' + Math.round(tanaka) + ' bpm, Fox at ' + Math.round(fox) +
+          ' · aerobic base (zone 2) is ' + Math.round(tanaka * 0.6) + '–' + Math.round(tanaka * 0.7) + ' bpm' +
+          (rest > 0 ? ' · Karvonen zone 2 is ' + Math.round(rest + reserve * 0.6) + '–' + Math.round(rest + reserve * 0.7) + ' bpm' : '');
+        position = clamp(((tanaka - 140) / 70) * 100);
+        positionLabel = 'Max heart rate ' + Math.round(tanaka) + ' bpm at age ' + age;
+        chart = [
+          { label: 'Zone 1–2 — easy', value: 40, from: 0, to: 40, tone: 'good' },
+          { label: 'Zone 3 — moderate', value: 75, from: 40, to: 75, tone: 'prop' },
+          { label: 'Zone 4–5 — hard', value: 100, from: 75, to: 100, tone: 'warn' },
+        ];
+      } else if (id === 'strength') {
+        const reps = Math.max(1, Math.round(v.reps || 5));
+        const rir = Math.max(0, Math.round(v.rir || 0));
+        const oneRm = Math.max(0, v.oneRm || 0);
+        const effective = reps + rir;
+        const pct = pctOf1rm(effective);
+        const rpe = Math.max(1, 10 - rir);
+        const load = oneRm * (pct / 100);
+
+        rows = [
+          { k: 'Target reps in the set', ref: 'What you plan to perform', v: reps, format: 'plain' },
+          { k: 'Reps left in reserve', ref: 'RPE ' + rpe + ' on the 1–10 scale', v: rir, format: 'plain' },
+          { k: 'Effective reps to failure', ref: 'Reps + reps in reserve', v: effective, format: 'plain', extra: true },
+          { k: 'Percentage of your one-rep max', ref: 'Population average — recalibrate against your own data', v: pct, format: 'unit', unit: '% of 1RM', decimals: 1, extra: true },
+          { k: 'Load to put on the bar', ref: oneRm > 0 ? 'From a 1RM of ' + oneRm + ' lb' : 'Enter your 1RM to see this', v: load, format: 'unit', unit: 'lb', decimals: 0, extra: true },
+          { k: 'Percentage if you took the same reps to failure', ref: 'RPE 10, 0 in reserve', v: pctOf1rm(reps), format: 'unit', unit: '% of 1RM', decimals: 1 },
+          { k: 'One-rep max implied if you hit this set', ref: 'Epley-family estimate', v: load > 0 ? load / (pctOf1rm(effective) / 100) : 0, format: 'unit', unit: 'lb', decimals: 0 },
+        ];
+        total = pct.toFixed(0) + '% of 1RM';
+        sub =
+          reps + ' reps at RPE ' + rpe + ' (' + rir + ' in reserve) is a ' + effective +
+          '-rep-to-failure effort, about ' + pct.toFixed(0) + '% of your max' +
+          (oneRm > 0 ? ' — roughly ' + Math.round(load / 5) * 5 + ' lb' : '');
+        position = clamp(pct);
+        positionLabel = pct.toFixed(0) + '% of 1RM at RPE ' + rpe;
+        chart = [
+          { label: 'Endurance (under 70%)', value: 70, from: 0, to: 70, tone: 'good' },
+          { label: 'Hypertrophy (70–85%)', value: 85, from: 70, to: 85, tone: 'prop' },
+          { label: 'Strength (85%+)', value: 100, from: 85, to: 100, tone: 'warn' },
+        ];
+      } else if (id === 'steps') {
+        const steps = Math.max(0, Math.round(v.steps || 0));
+        const miles = steps / STEPS.stepsPerMile;
+        const walkMinutes = miles * 20; // about 3 mph
+        const burned = kcal(METS.walkBrisk, kg, walkMinutes);
+
+        rows = [
+          { k: 'Steps today', ref: 'Wrist trackers over-count 5–15%', v: steps, format: 'plain', extra: true },
+          { k: 'Distance covered', ref: 'About ' + STEPS.stepsPerMile.toLocaleString('en-US') + ' steps per mile', v: miles, format: 'unit', unit: 'miles', decimals: 2, extra: true },
+          { k: 'Time on foot at a brisk pace', ref: 'Around 3 mph', v: walkMinutes, format: 'unit', unit: 'minutes', decimals: 0 },
+          { k: 'Calories, at your body weight', ref: 'MET ' + METS.walkBrisk + ' — estimate only', v: burned, format: 'unit', unit: 'kcal', decimals: 0, extra: true },
+          { k: 'Where the mortality benefit plateaus in adults', ref: 'Paluch 2022 meta-analysis', v: STEPS.benefitPlateau, format: 'plain' },
+          { k: 'Where it plateaus in older adults', ref: 'Lee 2019', v: STEPS.olderAdultPlateau, format: 'plain' },
+          { k: 'The famous target', ref: 'From a 1960s pedometer name, not from evidence', v: STEPS.marketingTarget, format: 'plain' },
+          {
+            k: steps >= STEPS.benefitPlateau ? 'Steps past the evidence-based plateau' : 'Steps short of the evidence-based plateau',
+            ref: 'The first few thousand matter most',
+            v: Math.abs(steps - STEPS.benefitPlateau),
+            format: 'plain',
+          },
+        ];
+        total = steps.toLocaleString('en-US') + ' steps';
+        sub =
+          miles.toFixed(2) + ' miles · about ' + Math.round(burned) + ' kcal · the measured benefit plateaus near ' +
+          STEPS.benefitPlateau.toLocaleString('en-US') + ', not ' + STEPS.marketingTarget.toLocaleString('en-US');
+        position = clamp((steps / 15000) * 100);
+        positionLabel = steps.toLocaleString('en-US') + ' steps';
+        chart = [
+          { label: 'Sedentary (under 5,000)', value: 33, from: 0, to: 33, tone: 'warn' },
+          { label: 'Active (5,000–8,000)', value: 53, from: 33, to: 53, tone: 'good' },
+          { label: 'Past the plateau (8,000+)', value: 100, from: 53, to: 100, tone: 'good' },
+        ];
+      } else if (id === 'class') {
+        const style = String(v.style || 'vinyasa');
+        const met = METS[style] != null ? METS[style] : METS.vinyasa;
+        const burned = kcal(met, kg, minutes);
+        const walkEquivalent = kcal(METS.walkBrisk, kg, minutes);
+
+        rows = [
+          { k: 'MET value for this style', ref: 'Compendium of Physical Activities', v: met, format: 'unit', unit: 'METs', decimals: 1, extra: true },
+          { k: 'Calories for a ' + Math.round(minutes) + '-minute class', ref: 'At your body weight — about 20% error', v: burned, format: 'unit', unit: 'kcal', decimals: 0, extra: true },
+          { k: 'Calories per minute', ref: 'MET × 3.5 × kg ÷ 200', v: minutes > 0 ? burned / minutes : 0, format: 'unit', unit: 'kcal/min', decimals: 1 },
+          { k: 'The same time spent walking briskly', ref: 'MET ' + METS.walkBrisk, v: walkEquivalent, format: 'unit', unit: 'kcal', decimals: 0 },
+          { k: 'Restorative or yin, same class length', ref: 'MET ' + METS.yin, v: kcal(METS.yin, kg, minutes), format: 'unit', unit: 'kcal', decimals: 0 },
+          { k: 'Hot or Bikram, same class length', ref: 'MET ' + METS.hot, v: kcal(METS.hot, kg, minutes), format: 'unit', unit: 'kcal', decimals: 0 },
+          { k: 'Spread between the gentlest and the hardest style', ref: 'Same room, same hour, very different cost', v: kcal(METS.hot, kg, minutes) - kcal(METS.yin, kg, minutes), format: 'unit', unit: 'kcal', decimals: 0 },
+        ];
+        total = Math.round(burned).toLocaleString('en-US') + ' kcal';
+        sub =
+          met + ' METs for ' + Math.round(minutes) + ' minutes at your weight · about the same as ' +
+          Math.round((burned / walkEquivalent) * minutes) + ' minutes of brisk walking';
+        position = clamp((met / 6) * 100);
+        positionLabel = met + ' METs — ' + (met < 3 ? 'light' : met < 4.5 ? 'moderate' : 'vigorous');
+        chart = [
+          { label: 'Light (under 3 METs)', value: 50, from: 0, to: 50, tone: 'good' },
+          { label: 'Moderate (3–6 METs)', value: 100, from: 50, to: 100, tone: 'prop' },
+        ];
+      } else {
+        const hours = minutes / 60;
+        const lost = Math.max(0, v.weightLost || 0);
+        const lostKg = lost * LB_TO_KG;
+        const duringLow = HYD.mlPerHourLow * hours;
+        const duringHigh = HYD.mlPerHourHigh * hours;
+        const sweatRate = hours > 0 && lostKg > 0 ? (lostKg * 1000) / hours : 0;
+        const afterLow = lostKg * HYD.replaceLowPerKg * 1000;
+        const afterHigh = lostKg * HYD.replaceHighPerKg * 1000;
+        const litres = (duringLow + duringHigh) / 2 / 1000;
+
+        rows = [
+          { k: 'Fluid during the session — lower end', ref: HYD.mlPerHourLow + ' mL/h · ACSM', v: duringLow, format: 'unit', unit: 'mL', decimals: 0 },
+          { k: 'Fluid during the session — upper end', ref: HYD.mlPerHourHigh + ' mL/h · ACSM', v: duringHigh, format: 'unit', unit: 'mL', decimals: 0, extra: true },
+          { k: 'Sodium to add past the first hour — lower end', ref: HYD.sodiumMgPerLiterLow + ' mg per litre', v: hours > 1 ? litres * HYD.sodiumMgPerLiterLow : 0, format: 'unit', unit: 'mg', decimals: 0 },
+          { k: 'Sodium to add past the first hour — upper end', ref: HYD.sodiumMgPerLiterHigh + ' mg per litre', v: hours > 1 ? litres * HYD.sodiumMgPerLiterHigh : 0, format: 'unit', unit: 'mg', decimals: 0, extra: true },
+          { k: 'Your measured sweat rate', ref: lost > 0 ? 'From ' + lost + ' lb lost over ' + hours.toFixed(1) + ' h' : 'Weigh yourself before and after to fill this in', v: sweatRate, format: 'unit', unit: 'mL per hour', decimals: 0 },
+          { k: 'Fluid to replace afterwards — lower end', ref: HYD.replaceLowPerKg + ' L per kg lost', v: afterLow, format: 'unit', unit: 'mL', decimals: 0 },
+          { k: 'Fluid to replace afterwards — upper end', ref: HYD.replaceHighPerKg + ' L per kg lost', v: afterHigh, format: 'unit', unit: 'mL', decimals: 0, extra: true },
+          { k: 'Daily caffeine level not generally associated with harm', ref: 'FDA, healthy adults — coffee counts toward fluid intake', v: HYD.caffeineDailyMax, format: 'unit', unit: 'mg', decimals: 0 },
+        ];
+        total = Math.round(duringLow) + '–' + Math.round(duringHigh) + ' mL';
+        sub =
+          'Drink that during a ' + Math.round(minutes) + '-minute session' +
+          (hours > 1 ? ' and add ' + Math.round(litres * HYD.sodiumMgPerLiterLow) + '–' + Math.round(litres * HYD.sodiumMgPerLiterHigh) + ' mg of sodium' : ' — under an hour, drinking to thirst is enough') +
+          (lost > 0 ? ' · replace ' + Math.round(afterLow) + '–' + Math.round(afterHigh) + ' mL afterwards' : '');
+        position = clamp((hours / 4) * 100);
+        positionLabel = hours.toFixed(1) + ' hours — ' + (hours <= 1 ? 'thirst is enough' : 'sodium matters');
+        chart = [
+          { label: 'Under 1 h — drink to thirst', value: 25, from: 0, to: 25, tone: 'good' },
+          { label: '1–2 h — add sodium', value: 50, from: 25, to: 50, tone: 'prop' },
+          { label: 'Over 2 h — plan fluid and sodium', value: 100, from: 50, to: 100, tone: 'warn' },
+        ];
+      }
+
+      return { total: total, sub: sub, rows: rows, format: 'plain', position: position, positionLabel: positionLabel, chart: chart };
+    });
+  })();
+</script>

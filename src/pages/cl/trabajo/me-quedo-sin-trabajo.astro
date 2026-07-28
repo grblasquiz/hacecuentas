@@ -1,0 +1,226 @@
+---
+/**
+ * Hub de decisión CL — "Me quedé sin trabajo: ¿cuánta plata me corresponde?"
+ * Aplica el tope de 90 UF del Art. 172 y el de 11 años del Art. 163, y trata la
+ * indemnización legal como renta exenta (Art. 178 CT / Art. 17 N°13 LIR).
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UF,
+  UTM,
+  LEY,
+  RECARGOS_ART168,
+  ESCALA_GIROS_AFC,
+  MIN_COTIZACIONES,
+  TRAMOS_IUSC,
+} from '../../../lib/hubs/cl/me-quedo-sin-trabajo';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ UF, UTM, LEY, RECARGOS: RECARGOS_ART168, GIROS: ESCALA_GIROS_AFC, MIN_COT: MIN_COTIZACIONES, TRAMOS: TRAMOS_IUSC }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+
+    const TOPE_BASE = LEY.topeBaseUf * UF;     // Art. 172 CT — 90 UF
+    const TOPE_IMPONIBLE = LEY.topeAfpUf * UF; // tope de cotizaciones
+
+    // Impuesto Único mensual — Art. 43 N°1 LIR (progresivo con rebaja en UTM).
+    function iusc(base) {
+      const enUtm = base / UTM;
+      let t = TRAMOS[TRAMOS.length - 1];
+      for (const x of TRAMOS) { if (x.hastaUtm === null || enUtm <= x.hastaUtm) { t = x; break; } }
+      return { monto: Math.max(0, base * t.factor - t.rebajaUtm * UTM), marginal: t.factor * 100 };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'necesidades';
+      const sueldo = Math.max(0, v.sueldo || 0);
+      const anios = Math.max(0, Math.round(Number(v.anios) || 0));
+      const mesesExtra = Math.min(11, Math.max(0, Math.round(Number(v.mesesExtra) || 0)));
+      const diasVac = Math.max(0, Number(v.diasVacaciones) || 0);
+      const diasSueldo = Math.min(30, Math.max(0, Number(v.diasSueldo) || 0));
+      const mesesCot = Math.max(0, Math.round(Number(v.mesesCotizados) || 0));
+      const recargo = RECARGOS.find((r) => r.id === v.recargo) || RECARGOS[0];
+
+      const hayIndemnizacion = id === 'necesidades' || id === 'injustificado';
+      const esPlazoFijo = id === 'plazo-fijo';
+
+      // Art. 163 CT: fracción superior a 6 meses = año completo; tope de 11 años.
+      const aniosComputables = Math.min(anios + (mesesExtra > 6 ? 1 : 0), LEY.topeAnios);
+      // Art. 172 CT: la base de cálculo topa en 90 UF.
+      const baseIndemnizacion = Math.min(sueldo, TOPE_BASE);
+      const topado = sueldo > TOPE_BASE;
+
+      const ias = hayIndemnizacion ? baseIndemnizacion * aniosComputables : 0;
+      const pctRecargo = id === 'injustificado' ? recargo.pct : 0;
+      const montoRecargo = ias * (pctRecargo / 100);
+      const aviso = hayIndemnizacion && v.avisoPrevio !== 'si' ? baseIndemnizacion : 0;
+
+      // Parte remuneracional: sí cotiza y sí tributa.
+      const valorDia = sueldo / 30;
+      const vacaciones = valorDia * diasVac;
+      const sueldoPendiente = valorDia * diasSueldo;
+      const baseRemuneracional = vacaciones + sueldoPendiente;
+
+      // Cotizaciones sólo sobre la parte remuneracional, con el tope imponible.
+      const baseCotizable = Math.min(baseRemuneracional, TOPE_IMPONIBLE);
+      const afp = baseCotizable * LEY.afpObligatorio;
+      const salud = baseCotizable * LEY.saludFonasa;
+      const cesantiaDesc = esPlazoFijo ? 0 : baseCotizable * LEY.cesantia;
+
+      // Impuesto Único: el aviso previo sustitutivo es indemnización legal (Art. 178 CT),
+      // así que NO entra en la base. Sólo entra lo remuneracional, neto de cotizaciones.
+      const baseImpuesto = Math.max(0, baseRemuneracional - afp - salud - cesantiaDesc);
+      const imp = iusc(baseImpuesto);
+
+      const brutoIndemnizatorio = ias + montoRecargo + aviso;
+      const totalBruto = brutoIndemnizatorio + baseRemuneracional;
+      const descuentos = afp + salud + cesantiaDesc + imp.monto;
+      const neto = totalBruto - descuentos;
+
+      // Seguro de cesantía (Ley 19.728): escala decreciente sobre el promedio de renta.
+      const minCot = esPlazoFijo ? MIN_COT.plazoFijo : MIN_COT.indefinido;
+      const cumpleAfc = mesesCot >= minCot;
+      const totalGiros = cumpleAfc ? GIROS.reduce((a, p) => a + sueldo * p, 0) : 0;
+      const primerGiro = cumpleAfc ? sueldo * GIROS[0] : 0;
+
+      const rows = [];
+      if (hayIndemnizacion) {
+        rows.push({
+          k: 'Base de cálculo de la indemnización',
+          ref: topado ? 'Topada en 90 UF · Art. 172 CT' : 'Tu remuneración · Art. 172 CT',
+          v: baseIndemnizacion,
+        });
+        rows.push({
+          k: 'Años computables',
+          ref: 'Fracción > 6 meses = año completo · tope 11 · Art. 163 CT',
+          v: aniosComputables,
+          format: 'unit',
+          unit: aniosComputables === 1 ? 'año' : 'años',
+        });
+        rows.push({ k: 'Indemnización por años de servicio', ref: 'Un mes por año · Art. 163 CT', v: ias, extra: true });
+        if (montoRecargo > 0) {
+          rows.push({ k: 'Recargo por despido improcedente', ref: '+' + pctRecargo + '% · Art. 168 CT', v: montoRecargo });
+        }
+        rows.push({
+          k: aviso > 0 ? 'Indemnización sustitutiva del aviso previo' : 'Aviso previo (te avisaron con 30 días)',
+          ref: 'Un mes sobre la base topada · Art. 162 CT',
+          v: aviso,
+        });
+        if (topado) {
+          rows.push({
+            k: 'Remuneración que quedó fuera por el tope de 90 UF',
+            ref: 'Por cada año computable',
+            v: (sueldo - TOPE_BASE) * aniosComputables,
+          });
+        }
+      }
+      rows.push({ k: 'Vacaciones proporcionales', ref: diasVac + ' días hábiles · Arts. 67 y 73 CT', v: vacaciones });
+      rows.push({ k: 'Sueldo de los días trabajados', ref: diasSueldo + ' días · mes comercial de 30', v: sueldoPendiente });
+      rows.push({ k: 'Total bruto del finiquito', ref: 'Indemnizatorio más remuneracional', v: totalBruto });
+      rows.push({
+        k: 'Parte indemnizatoria exenta',
+        ref: 'No paga AFP, salud ni impuesto · Art. 178 CT y Art. 17 N°13 LIR',
+        v: brutoIndemnizatorio,
+      });
+      rows.push({ k: 'AFP sobre la parte remuneracional', ref: '10% · DL 3.500', v: afp });
+      rows.push({ k: 'Salud sobre la parte remuneracional', ref: '7% · Ley 18.469', v: salud });
+      if (cesantiaDesc > 0) {
+        rows.push({ k: 'Seguro de cesantía del trabajador', ref: '0,6% · Ley 19.728', v: cesantiaDesc });
+      }
+      rows.push({
+        k: 'Impuesto Único sobre lo remuneracional',
+        ref: imp.monto > 0 ? 'Tramo del ' + imp.marginal.toLocaleString('es-CL') + '% · Art. 43 N°1 LIR' : 'Bajo el tramo exento de 13,5 UTM',
+        v: imp.monto,
+      });
+      rows.push({ k: 'Total de descuentos', ref: 'Sólo sobre lo remuneracional', v: descuentos });
+      rows.push({ k: 'Finiquito líquido a recibir', ref: 'Pago dentro de 10 días hábiles', v: neto, extra: true });
+      rows.push({
+        k: cumpleAfc ? 'Primer giro del seguro de cesantía' : 'Te faltan cotizaciones para girar',
+        ref: cumpleAfc ? '70% de la renta · Ley 19.728' : 'Necesitas ' + minCot + ' cotizaciones y tienes ' + mesesCot,
+        v: cumpleAfc ? primerGiro : 0,
+      });
+      rows.push({
+        k: 'Total estimado de los 6 giros del seguro de cesantía',
+        ref: '70 / 55 / 45 / 40 / 35 / 30% de la renta',
+        v: totalGiros,
+      });
+      if (id === 'renuncia') {
+        rows.push({
+          k: 'Fondo de Cesantía Solidario',
+          ref: 'La renuncia no da acceso: sólo tu cuenta individual',
+          v: 0,
+        });
+      }
+
+      const sub =
+        (hayIndemnizacion
+          ? 'Te corresponden ' + clp(ias + montoRecargo) + ' por años de servicio' + (aviso > 0 ? ' más ' + clp(aviso) + ' de aviso previo' : '')
+          : 'Sin indemnización por años de servicio en esta causal') +
+        ' · ' + clp(brutoIndemnizatorio) + ' quedan exentos de cotizaciones e impuesto' +
+        (topado ? ' · tu base quedó topada en 90 UF (' + clp(TOPE_BASE) + ')' : '') +
+        (cumpleAfc ? ' · puedes girar hasta ' + clp(totalGiros) + ' del seguro de cesantía' : '');
+
+      return {
+        total: clp(neto),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Indemnización por años de servicio', value: Math.round(ias), tone: 'main' },
+          { label: 'Recargo Art. 168', value: Math.round(montoRecargo), tone: 'good' },
+          { label: 'Aviso previo sustitutivo', value: Math.round(aviso), tone: 'prop' },
+          { label: 'Vacaciones y sueldo pendiente', value: Math.round(baseRemuneracional), tone: 'exit' },
+          { label: 'Descuentos sobre lo remuneracional', value: Math.round(descuentos), tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

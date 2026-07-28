@@ -1,0 +1,301 @@
+---
+/**
+ * Hub EN — "How do I get this solution, gas or heat problem right?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  R_GAS,
+  N_A,
+  KELVIN_OFFSET,
+  PA_PER_ATM,
+  PA_PER_PSI,
+  MOLAR_VOLUME_STP,
+  LATENT_FUSION_WATER,
+  LATENT_VAPORISATION_WATER,
+} from '../../../lib/hubs/en/chemistry-and-thermodynamics';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    R_GAS,
+    N_A,
+    KELVIN_OFFSET,
+    PA_PER_ATM,
+    PA_PER_PSI,
+    MOLAR_VOLUME_STP,
+    LATENT_FUSION_WATER,
+    LATENT_VAPORISATION_WATER,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n1 = (x) => Number(x || 0).toLocaleString('en-US', { maximumFractionDigits: 1 });
+    const n2 = (x) => Number(x || 0).toLocaleString('en-US', { maximumFractionDigits: 2 });
+    const n4 = (x) => Number(x || 0).toLocaleString('en-US', { maximumFractionDigits: 4 });
+    const ML_PER_FLOZ = 29.5735295625; // US fluid ounce, exact
+    const cToF = (c) => c * 9 / 5 + 32;
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'dilution';
+
+      if (id === 'moles') {
+        const m = Math.max(0, v.massg || 0);
+        const M = Math.max(0.000001, v.molarmass || 0.000001);
+        const n = m / M;
+        const molecules = n * N_A;
+        return {
+          total: n4(n) + ' mol',
+          sub:
+            n1(n * 1000) + ' mmol · ' + molecules.toExponential(4) +
+            ' molecules or formula units, using the exact Avogadro constant 6.02214076 × 10²³ · one mole of this substance weighs ' +
+            n4(M) + ' g',
+          rows: [
+            { k: 'Mass weighed out', ref: n4(m / 28.349523125) + ' oz (avoirdupois)', v: m, format: 'unit', unit: 'g', decimals: 4 },
+            { k: 'Molar mass', ref: 'From the formula on the bottle', v: M, format: 'unit', unit: 'g/mol', decimals: 4 },
+            { k: 'Amount of substance', ref: 'n = m ÷ M', v: n, format: 'unit', unit: 'mol', decimals: 5, extra: true },
+            { k: 'The same in millimoles', ref: '1 mol = 1,000 mmol', v: n * 1000, format: 'unit', unit: 'mmol', decimals: 2 },
+            { k: 'Number of particles, ×10²³', ref: 'n × 6.02214076 × 10²³ (exact)', v: molecules / 1e23, format: 'unit', unit: '×10²³', decimals: 4, extra: true },
+            { k: 'Mass of one millimole', ref: 'M ÷ 1,000', v: M / 1000, format: 'unit', unit: 'g', decimals: 6 },
+            { k: 'Mass needed for exactly 1 mole', ref: 'Equal to the molar mass', v: M, format: 'unit', unit: 'g', decimals: 4 },
+            { k: 'Concentration if dissolved in 1 litre', ref: 'n ÷ 1 L', v: n, format: 'unit', unit: 'mol/L', decimals: 5 },
+          ],
+          chart: [
+            { label: 'Moles you have (mmol)', value: Math.round(n * 1000 * 100) / 100, tone: 'main' },
+            { label: 'Extra mmol to reach a round 1 mol', value: Math.round(Math.max(0, 1000 - n * 1000) * 100) / 100, tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'poh') {
+        const oh = Math.max(1e-15, v.oh || 1e-15);
+        const poh = -Math.log10(oh);
+        const ph = 14 - poh;
+        const hplus = Math.pow(10, -ph);
+        const nature = ph > 7.5 ? 'alkaline' : ph < 6.5 ? 'acidic' : 'essentially neutral';
+        return {
+          total: 'pH ' + n2(ph),
+          sub:
+            'pOH ' + n2(poh) + ' · [H⁺] = ' + hplus.toExponential(3) + ' mol/L · ' + nature +
+            ' at 25 °C · the sum pH + pOH = 14 only holds at that temperature',
+          rows: [
+            { k: '[OH⁻] as entered, ×10⁻³ mol/L', ref: oh.toExponential(3) + ' mol/L', v: oh * 1000, format: 'unit', unit: '×10⁻³ mol/L', decimals: 4 },
+            { k: 'pOH', ref: '−log₁₀[OH⁻]', v: poh, format: 'plain', decimals: 2, extra: true },
+            { k: 'pH', ref: '14 − pOH at 25 °C', v: ph, format: 'plain', decimals: 2, extra: true },
+            { k: '[H⁺], ×10⁻¹⁰ mol/L', ref: hplus.toExponential(3) + ' mol/L', v: hplus * 1e10, format: 'unit', unit: '×10⁻¹⁰ mol/L', decimals: 4 },
+            { k: 'How many times more alkaline than neutral', ref: 'Each pH point is a factor of ten', v: Math.pow(10, ph - 7), format: 'plain', decimals: 1 },
+            { k: 'Neutral pH at this temperature', ref: '25 °C reference — it drops as water warms', v: 7, format: 'plain', decimals: 2 },
+            { k: 'Neutral pH at 50 °C, for comparison', ref: 'Kw rises with temperature', v: 6.63, format: 'plain', decimals: 2 },
+          ],
+          chart: [
+            { label: 'pH', value: Math.round(ph * 100) / 100, tone: ph > 7 ? 'main' : 'bad' },
+            { label: 'pOH', value: Math.round(poh * 100) / 100, tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'idealgas') {
+        const mode = String(v.gmode || 'n');
+        const P = Math.max(0, v.gp || 0);
+        const Vl = Math.max(0, v.gv || 0);
+        const Vm3 = Vl / 1000;
+        const tC = v.gt === undefined || v.gt === '' ? 0 : Number(v.gt);
+        const TK = tC + KELVIN_OFFSET;
+        const nIn = Math.max(0, v.gn || 0);
+        let label, total, solvedRow;
+        let n = nIn, p = P, vol = Vm3, T = TK;
+        if (mode === 'n') {
+          n = T > 0 ? (P * Vm3) / (R_GAS * T) : 0;
+          label = 'moles';
+          total = n4(n) + ' mol';
+          solvedRow = { k: 'Moles of gas (solved)', ref: 'n = PV ÷ RT', v: n, format: 'unit', unit: 'mol', decimals: 5, extra: true };
+        } else if (mode === 'p') {
+          p = Vm3 > 0 ? (nIn * R_GAS * T) / Vm3 : 0;
+          label = 'pressure';
+          total = Math.round(p).toLocaleString('en-US') + ' Pa';
+          solvedRow = { k: 'Pressure (solved)', ref: 'P = nRT ÷ V', v: p, format: 'unit', unit: 'Pa', extra: true };
+        } else if (mode === 'v') {
+          vol = P > 0 ? (nIn * R_GAS * T) / P : 0;
+          label = 'volume';
+          total = n4(vol * 1000) + ' L';
+          solvedRow = { k: 'Volume (solved)', ref: 'V = nRT ÷ P', v: vol * 1000, format: 'unit', unit: 'L', decimals: 4, extra: true };
+        } else {
+          T = nIn > 0 ? (P * Vm3) / (nIn * R_GAS) : 0;
+          label = 'temperature';
+          total = n2(T) + ' K';
+          solvedRow = { k: 'Temperature (solved)', ref: 'T = PV ÷ nR', v: T, format: 'unit', unit: 'K', decimals: 2, extra: true };
+        }
+        const molarVol = n > 0 ? (vol * 1000) / n : 0;
+        return {
+          total: total,
+          sub:
+            'Solving PV = nRT for ' + label + ' with R = 8.314462618 J/(mol·K) · ' +
+            n2(p / PA_PER_ATM) + ' atm, ' + n2(p / PA_PER_PSI) + ' psi · ' +
+            n2(T) + ' K = ' + n2(T - KELVIN_OFFSET) + ' °C = ' + n1(cToF(T - KELVIN_OFFSET)) + ' °F',
+          rows: [
+            solvedRow,
+            { k: 'Pressure', ref: n2(p / PA_PER_ATM) + ' atm · ' + n2(p / PA_PER_PSI) + ' psi', v: p, format: 'unit', unit: 'Pa' },
+            { k: 'Volume', ref: n2(vol * 1000 / 3.785411784) + ' US gallons', v: vol * 1000, format: 'unit', unit: 'L', decimals: 3 },
+            { k: 'Temperature in kelvin', ref: 'Absolute scale — the only one this works in', v: T, format: 'unit', unit: 'K', decimals: 2 },
+            { k: 'The same in Fahrenheit', ref: '°F = °C × 9/5 + 32', v: cToF(T - KELVIN_OFFSET), format: 'unit', unit: '°F', decimals: 1 },
+            { k: 'Molar volume in your conditions', ref: '22.414 L/mol at 0 °C and 1 atm', v: molarVol, format: 'unit', unit: 'L/mol', decimals: 3 },
+            { k: 'Molar volume at 0 °C and 1 atm', ref: 'The classic reference figure', v: MOLAR_VOLUME_STP, format: 'unit', unit: 'L/mol', decimals: 3 },
+            { k: 'Number of molecules, ×10²³', ref: 'n × Avogadro (exact)', v: (n * N_A) / 1e23, format: 'unit', unit: '×10²³', decimals: 3 },
+          ],
+          chart: [
+            { label: 'Molar volume here (L/mol)', value: Math.round(molarVol * 100) / 100, tone: 'main' },
+            { label: 'Molar volume at 0 °C, 1 atm (L/mol)', value: Math.round(MOLAR_VOLUME_STP * 100) / 100, tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'carnot') {
+        const th = Math.max(0.01, v.thot || 0.01);
+        const tc = Math.max(0.01, v.tcold || 0.01);
+        const valid = tc < th;
+        const eta = valid ? 1 - tc / th : 0;
+        const pct = eta * 100;
+        const ca = valid ? (1 - Math.sqrt(tc / th)) * 100 : 0;
+        return {
+          total: n2(pct) + '%',
+          sub: valid
+            ? 'The hard ceiling between ' + n1(th) + ' K (' + n1(th - KELVIN_OFFSET) + ' °C) and ' + n1(tc) + ' K (' + n1(tc - KELVIN_OFFSET) +
+              ' °C) · ' + n1(100 - pct) + '% of the heat has to be dumped no matter what · an engine actually producing power tops out near ' +
+              n1(ca) + '%'
+            : 'The cold reservoir must be colder than the hot one — check your two temperatures',
+          rows: [
+            { k: 'Hot reservoir', ref: n1(th - KELVIN_OFFSET) + ' °C · ' + n1(cToF(th - KELVIN_OFFSET)) + ' °F', v: th, format: 'unit', unit: 'K', decimals: 1 },
+            { k: 'Cold reservoir', ref: n1(tc - KELVIN_OFFSET) + ' °C · ' + n1(cToF(tc - KELVIN_OFFSET)) + ' °F', v: tc, format: 'unit', unit: 'K', decimals: 1 },
+            { k: 'Temperature ratio T_c / T_h', ref: 'The whole calculation is this ratio', v: th > 0 ? tc / th : 0, format: 'plain', decimals: 4 },
+            { k: 'Maximum (Carnot) efficiency', ref: 'η = 1 − T_c/T_h, in kelvin', v: pct, format: 'unit', unit: '%', decimals: 2, extra: true },
+            { k: 'Heat that must be rejected', ref: 'Second law — not an engineering shortfall', v: 100 - pct, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Realistic ceiling at finite power', ref: 'Curzon–Ahlborn: 1 − √(T_c/T_h)', v: ca, format: 'unit', unit: '%', decimals: 2, extra: true },
+            { k: 'Work from 1,000 J of heat at the Carnot limit', ref: 'The best case, unreachable in practice', v: eta * 1000, format: 'unit', unit: 'J', decimals: 1 },
+          ],
+          chart: [
+            { label: 'Maximum useful work (%)', value: Math.round(pct * 100) / 100, tone: 'good' },
+            { label: 'Heat that must be thrown away (%)', value: Math.round((100 - pct) * 100) / 100, tone: 'bad' },
+          ],
+        };
+      }
+
+      if (id === 'entropy') {
+        const q = Number(v.heatq || 0);
+        const T = Math.max(0.01, v.tphase || 0.01);
+        const dS = q / T;
+        const absorbs = dS >= 0;
+        const iceRef = (LATENT_FUSION_WATER * 1000) / 273.15; // ΔS melting 1 kg of ice
+        const steamRef = (LATENT_VAPORISATION_WATER * 1000) / 373.15;
+        return {
+          total: n1(dS) + ' J/K',
+          sub:
+            (absorbs ? 'Entropy rises' : 'Entropy falls') + ' as the system ' + (absorbs ? 'absorbs ' : 'releases ') +
+            n1(Math.abs(q) / 1000) + ' kJ at a fixed ' + n2(T) + ' K (' + n1(T - KELVIN_OFFSET) +
+            ' °C) · the colder the transition, the bigger the entropy change for the same heat',
+          rows: [
+            { k: 'Heat exchanged', ref: absorbs ? 'Absorbed by the system' : 'Released by the system', v: q, format: 'unit', unit: 'J' },
+            { k: 'The same in kilojoules', ref: '1 kJ = 1,000 J', v: q / 1000, format: 'unit', unit: 'kJ', decimals: 2 },
+            { k: 'Transition temperature', ref: n1(T - KELVIN_OFFSET) + ' °C · ' + n1(cToF(T - KELVIN_OFFSET)) + ' °F', v: T, format: 'unit', unit: 'K', decimals: 2 },
+            { k: 'Entropy change ΔS', ref: 'ΔS = Q ÷ T, valid at constant T', v: dS, format: 'unit', unit: 'J/K', decimals: 2, extra: true },
+            { k: 'Melting 1 kg of ice, for comparison', ref: '333.55 kJ at 273.15 K', v: iceRef, format: 'unit', unit: 'J/K', decimals: 1 },
+            { k: 'Boiling 1 kg of water, for comparison', ref: '2,256.4 kJ at 373.15 K', v: steamRef, format: 'unit', unit: 'J/K', decimals: 1 },
+            { k: 'Your ΔS as a multiple of melting a kilo of ice', ref: 'A quick sense of scale', v: iceRef !== 0 ? Math.abs(dS) / iceRef : 0, format: 'plain', decimals: 3 },
+          ],
+          chart: [
+            { label: 'Your entropy change (J/K)', value: Math.round(Math.abs(dS)), tone: absorbs ? 'good' : 'warn' },
+            { label: 'Melting 1 kg of ice (J/K)', value: Math.round(iceRef), tone: 'main' },
+          ],
+        };
+      }
+
+      // dilution
+      const mode = String(v.dmode || 'v1');
+      const c1 = Math.max(0, v.c1 || 0);
+      const v1in = Math.max(0, v.v1 || 0);
+      const c2 = Math.max(0, v.c2 || 0);
+      const v2in = Math.max(0, v.v2 || 0);
+      let V1 = v1in, V2 = v2in, C2 = c2, headline, solved;
+      if (mode === 'v1') {
+        V1 = c1 > 0 ? (c2 * v2in) / c1 : 0;
+        headline = n2(V1) + ' mL of stock';
+        solved = { k: 'Stock volume to measure out (solved)', ref: 'V₁ = C₂V₂ ÷ C₁', v: V1, format: 'unit', unit: 'mL', decimals: 2, extra: true };
+      } else if (mode === 'v2') {
+        V2 = c2 > 0 ? (c1 * v1in) / c2 : 0;
+        headline = n2(V2) + ' mL final volume';
+        solved = { k: 'Final volume to make up to (solved)', ref: 'V₂ = C₁V₁ ÷ C₂', v: V2, format: 'unit', unit: 'mL', decimals: 2, extra: true };
+      } else {
+        C2 = v2in > 0 ? (c1 * v1in) / v2in : 0;
+        headline = n4(C2) + ' M final';
+        solved = { k: 'Final concentration (solved)', ref: 'C₂ = C₁V₁ ÷ V₂', v: C2, format: 'unit', unit: 'M', decimals: 5, extra: true };
+      }
+      const solvent = Math.max(0, V2 - V1);
+      const factor = C2 > 0 ? c1 / C2 : 0;
+      return {
+        total: headline,
+        sub:
+          'Take ' + n2(V1) + ' mL of the ' + n2(c1) + ' M stock and make up to ' + n2(V2) + ' mL — about ' +
+          n2(solvent) + ' mL of solvent added · a ' + n1(factor) + '-fold dilution · make up to the mark rather than measuring the solvent, volumes are not strictly additive',
+        rows: [
+          solved,
+          { k: 'Stock concentration C₁', ref: 'As entered', v: c1, format: 'unit', unit: 'M', decimals: 4 },
+          { k: 'Stock volume V₁', ref: n2(V1 / ML_PER_FLOZ) + ' US fl oz', v: V1, format: 'unit', unit: 'mL', decimals: 2 },
+          { k: 'Final concentration C₂', ref: 'What you end up with', v: C2, format: 'unit', unit: 'M', decimals: 5 },
+          { k: 'Final volume V₂', ref: n2(V2 / ML_PER_FLOZ) + ' US fl oz', v: V2, format: 'unit', unit: 'mL', decimals: 2 },
+          { k: 'Solvent to add', ref: 'V₂ − V₁, approximate: make up to the mark', v: solvent, format: 'unit', unit: 'mL', decimals: 2, extra: true },
+          { k: 'Dilution factor', ref: 'C₁ ÷ C₂', v: factor, format: 'plain', decimals: 2 },
+          { k: 'Moles of solute carried across', ref: 'Unchanged by the dilution — that is the whole identity', v: (c1 * V1) / 1000, format: 'unit', unit: 'mol', decimals: 5 },
+        ],
+        chart: [
+          { label: 'Stock solution (mL)', value: Math.round(V1 * 100) / 100, tone: 'main' },
+          { label: 'Solvent added (mL)', value: Math.round(solvent * 100) / 100, tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

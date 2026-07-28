@@ -1,0 +1,246 @@
+---
+/**
+ * Hub de decisión CL — "¿Cuánto me queda líquido del sueldo bruto?"
+ * Ruta bajo el prefijo /cl/, igual que las calculadoras que absorbe.
+ * audience="CL" va literal al Layout: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UF,
+  UTM,
+  TASAS,
+  TRAMOS_IUSC,
+  AFP,
+  ZONAS_EXTREMAS,
+  CREDITO_POR_HIJO,
+} from '../../../lib/hubs/cl/sueldo-liquido';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ UF, UTM, TASAS, TRAMOS: TRAMOS_IUSC, AFP, ZONAS: ZONAS_EXTREMAS, CREDITO_POR_HIJO }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+
+    const TOPE_AFP_SALUD = TASAS.topeAfpUf * UF;
+    const TOPE_CESANTIA = TASAS.topeCesantiaUf * UF;
+
+    // Impuesto Único de Segunda Categoría — Art. 43 N°1 LIR.
+    // impuesto = base · factor − rebaja(UTM) · UTM. Espejo de la fórmula original.
+    function iusc(base) {
+      const enUtm = base / UTM;
+      let tramo = TRAMOS[TRAMOS.length - 1];
+      for (const t of TRAMOS) {
+        if (t.hastaUtm === null || enUtm <= t.hastaUtm) { tramo = t; break; }
+      }
+      return {
+        monto: Math.max(0, base * tramo.factor - tramo.rebajaUtm * UTM),
+        marginal: tramo.factor * 100,
+        enUtm: enUtm,
+        hasta: tramo.hastaUtm,
+      };
+    }
+
+    // Liquidación completa a partir de un bruto imponible.
+    function liquidar(bruto, comision, esIsapre, pctIsapre, hijos) {
+      const baseAfpSalud = Math.min(bruto, TOPE_AFP_SALUD);
+      const baseCesantia = Math.min(bruto, TOPE_CESANTIA);
+      const afp = baseAfpSalud * TASAS.afpObligatorio;
+      const com = baseAfpSalud * (comision / 100);
+      const salud = esIsapre
+        ? baseAfpSalud * (Math.max(6, Math.min(12, pctIsapre)) / 100)
+        : baseAfpSalud * TASAS.saludFonasa;
+      const cesantia = baseCesantia * TASAS.cesantia;
+      const baseImponible = bruto - afp - com - salud - cesantia;
+      const imp = iusc(baseImponible);
+      const impuesto = Math.max(0, imp.monto - CREDITO_POR_HIJO * hijos);
+      const descuentos = afp + com + salud + cesantia + impuesto;
+      return {
+        bruto, afp, com, salud, cesantia, impuesto, descuentos,
+        liquido: bruto - descuentos,
+        baseImponible, marginal: imp.marginal, enUtm: imp.enUtm,
+        creditoUsado: Math.min(CREDITO_POR_HIJO * hijos, imp.monto),
+        topeado: bruto > TOPE_AFP_SALUD,
+      };
+    }
+
+    // Búsqueda del bruto que deja un líquido objetivo (bisección: la función es monótona).
+    function brutoParaLiquido(objetivo, comision, esIsapre, pctIsapre, hijos) {
+      let lo = objetivo, hi = objetivo * 3 + 1000000;
+      for (let i = 0; i < 60; i++) {
+        const mid = (lo + hi) / 2;
+        if (liquidar(mid, comision, esIsapre, pctIsapre, hijos).liquido < objetivo) lo = mid;
+        else hi = mid;
+      }
+      return (lo + hi) / 2;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'fonasa';
+      const afpSel = AFP.find((a) => a.id === v.afp) || AFP[3];
+      const zona = ZONAS.find((z) => z.id === v.zona) || ZONAS[0];
+      const esIsapre = id === 'isapre';
+      const pctIsapre = Math.max(6, Math.min(12, Number(v.planIsapre) || 8.5));
+      const hijos = Math.max(0, Math.floor(Number(v.hijos) || 0));
+      const entrada = Math.max(0, v.sueldo || 0);
+      const dias = Math.min(30, Math.max(1, Math.round(Number(v.dias) || 30)));
+      const jornada = Math.min(45, Math.max(20, Math.round(Number(v.jornada) || 44)));
+
+      const rows = [];
+      let bruto, r, sub, totalLabel;
+
+      if (id === 'liquido-a-bruto') {
+        bruto = brutoParaLiquido(entrada, afpSel.comision, esIsapre, pctIsapre, hijos);
+        r = liquidar(bruto, afpSel.comision, esIsapre, pctIsapre, hijos);
+        rows.push({ k: 'Líquido que quieres llevarte', ref: 'Tu objetivo', v: entrada });
+        rows.push({ k: 'Sueldo bruto imponible que hay que pactar', ref: 'Resultado de la búsqueda', v: bruto, extra: true });
+        totalLabel = clp(bruto);
+        sub =
+          'Para llevarte ' + clp(entrada) + ' líquidos necesitas un bruto de ' + clp(bruto) +
+          ' · los descuentos se llevan ' + clp(r.descuentos) + ' (' +
+          (bruto > 0 ? (r.descuentos / bruto * 100).toFixed(1).replace('.', ',') : '0') + '%)';
+      } else {
+        // Asignación de zona: se suma al sueldo base y es imponible y tributable.
+        const asignacionZona = entrada * (zona.pct / 100);
+        const brutoMes = entrada + asignacionZona;
+        bruto = id === 'parcial' ? brutoMes / 30 * dias : brutoMes;
+        r = liquidar(bruto, afpSel.comision, esIsapre, pctIsapre, hijos);
+        rows.push({ k: 'Sueldo bruto imponible del mes', ref: 'Base del contrato', v: entrada });
+        if (asignacionZona > 0) {
+          rows.push({ k: 'Asignación de zona — ' + zona.nombre, ref: '+' + zona.pct + '% · DL 249, imponible', v: asignacionZona });
+        }
+        if (id === 'parcial') {
+          rows.push({
+            k: 'Bruto proporcional por ' + dias + (dias === 1 ? ' día trabajado' : ' días trabajados'),
+            ref: 'Mes comercial de 30 días',
+            v: bruto,
+          });
+          const valorHora = brutoMes / 30 * 28 / jornada;
+          rows.push({
+            k: 'Valor de tu hora ordinaria',
+            ref: 'Art. 32 CT · jornada de ' + jornada + ' h semanales',
+            v: valorHora,
+          });
+          rows.push({
+            k: 'Valor de una hora extraordinaria',
+            ref: 'Recargo del 50% · Art. 32 CT',
+            v: valorHora * 1.5,
+          });
+        }
+        totalLabel = clp(r.liquido);
+        sub =
+          'De ' + clp(bruto) + ' brutos te quedan ' + clp(r.liquido) + ' en la mano · los descuentos se llevan ' +
+          (bruto > 0 ? (r.descuentos / bruto * 100).toFixed(1).replace('.', ',') : '0') + '%' +
+          (r.impuesto > 0
+            ? ' · pagas ' + clp(r.impuesto) + ' de Impuesto Único (tramo del ' + r.marginal.toLocaleString('es-CL') + '%)'
+            : ' · no llegas al tramo gravado de ' + TASAS.exentoUtm.toLocaleString('es-CL') + ' UTM, no pagas Impuesto Único');
+      }
+
+      rows.push({ k: 'AFP — cotización obligatoria', ref: '10% · DL 3.500', v: r.afp });
+      rows.push({ k: 'AFP — comisión de ' + afpSel.nombre, ref: afpSel.comision.toFixed(2).replace('.', ',') + '% de la renta imponible', v: r.com });
+      rows.push({
+        k: esIsapre ? 'Salud — plan Isapre' : 'Salud — Fonasa',
+        ref: esIsapre ? pctIsapre.toFixed(1).replace('.', ',') + '% pactado en UF' : '7% legal · Ley 18.469',
+        v: r.salud,
+      });
+      rows.push({ k: 'Seguro de cesantía del trabajador', ref: '0,6% · Ley 19.728, contrato indefinido', v: r.cesantia });
+      rows.push({ k: 'Renta líquida imponible (base del impuesto)', ref: 'Bruto menos AFP, salud y cesantía', v: r.baseImponible });
+      rows.push({
+        k: 'Renta líquida imponible en UTM',
+        ref: 'UTM del mes ' + clp(UTM),
+        v: r.enUtm,
+        format: 'unit',
+        unit: 'UTM',
+        decimals: 1,
+      });
+      rows.push({
+        k: 'Tramo del Impuesto Único en el que caes',
+        ref: 'Art. 43 N°1 LIR',
+        v: r.marginal,
+        format: 'unit',
+        unit: '% marginal',
+        decimals: 1,
+      });
+      if (r.creditoUsado > 0) {
+        rows.push({ k: 'Crédito por ' + hijos + (hijos === 1 ? ' hijo' : ' hijos'), ref: 'Art. 55 bis LIR', v: r.creditoUsado });
+      }
+      rows.push({ k: 'Impuesto Único de Segunda Categoría', ref: 'Después del crédito por hijos', v: r.impuesto });
+      rows.push({ k: 'Total de descuentos del mes', ref: 'Previsionales más impuesto', v: r.descuentos });
+      rows.push({ k: 'Sueldo líquido', ref: 'Lo que llega a tu cuenta', v: r.liquido, extra: true });
+      rows.push({
+        k: 'Tasa efectiva de descuento',
+        ref: 'Descuentos ÷ bruto',
+        v: bruto > 0 ? r.descuentos / bruto * 100 : 0,
+        format: 'unit',
+        unit: '%',
+        decimals: 2,
+      });
+      rows.push({
+        k: r.topeado ? 'Renta que quedó por encima del tope imponible y no cotiza' : 'Margen que te queda antes del tope imponible',
+        ref: TASAS.topeAfpUf + ' UF · ' + clp(TOPE_AFP_SALUD),
+        v: Math.abs(bruto - TOPE_AFP_SALUD),
+      });
+
+      return {
+        total: totalLabel,
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Líquido a tu cuenta', value: Math.round(r.liquido), tone: 'main' },
+          { label: 'AFP (10% + comisión)', value: Math.round(r.afp + r.com), tone: 'prop' },
+          { label: esIsapre ? 'Salud (plan Isapre)' : 'Salud (7% Fonasa)', value: Math.round(r.salud), tone: 'prop' },
+          { label: 'Seguro de cesantía', value: Math.round(r.cesantia), tone: 'exit' },
+          { label: 'Impuesto Único', value: Math.round(r.impuesto), tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,208 @@
+---
+/**
+ * Hub de decisión PE — "Créditos y ahorro: cuánto pagas de verdad, cuánto ganas".
+ * audience="PE" literal: HubData sólo modela 'AR' | 'global' y el mercado viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  BBP_TRAMOS,
+  MIVIVIENDA,
+  FSD_COBERTURA,
+  TOPE_TCEA_CONSUMO,
+} from '../../../lib/hubs/pe/creditos-y-ahorro';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PE"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ BBP: BBP_TRAMOS, MV: MIVIVIENDA, FSD: FSD_COBERTURA, TOPE: TOPE_TCEA_CONSUMO }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    // 'es-PE' en V8 emite formato tipo US; el formato legal peruano (Ley 23560) es
+    // punto para miles y coma para decimales, que es lo que da 'de-DE'.
+    const sol = (n) => 'S/ ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(Math.round(n || 0));
+    const pct = (n, d) => Number(n || 0).toFixed(d === undefined ? 2 : d).replace('.', ',') + '%';
+
+    /** Cuota fija del sistema francés a partir de una tasa efectiva mensual. */
+    function cuotaFrancesa(capital, iMensual, n) {
+      if (n <= 0) return 0;
+      if (iMensual <= 0) return capital / n;
+      return (capital * iMensual) / (1 - Math.pow(1 + iMensual, -n));
+    }
+
+    /** Tasa efectiva mensual equivalente a una tasa EFECTIVA anual (TEA/TCEA/TREA). */
+    const mensual = (anualPct) => Math.pow(1 + anualPct / 100, 1 / 12) - 1;
+
+    function bonoPorValor(valor) {
+      if (valor < MV.viviendaMin || valor > MV.viviendaMax) return 0;
+      for (const t of BBP) {
+        if (valor >= t.min && valor <= t.max) return t.bono;
+      }
+      return 0;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'personal';
+      const monto = Math.max(0, v.monto || 0);
+      const tasa = Math.max(0, v.tasa || 0);
+      const n = Math.max(1, Math.round(v.plazoMeses || 1));
+      // Un 0% de cuota inicial es legítimo: solo se fuerza el mínimo en MIVIVIENDA.
+      const inicialPctRaw = Number.isFinite(v.inicialPct) ? Math.max(0, v.inicialPct) : 20;
+      const segurosPct = Math.max(0, Number.isFinite(v.segurosPct) ? v.segurosPct : 1.3);
+      const bonoManual = Math.max(0, v.bonoManual || 0);
+
+      const rows = [];
+      let total = sol(0);
+      let sub = '';
+      let chart = [];
+
+      if (id === 'plazofijo') {
+        // --- Ahorro: TREA con capitalización efectiva, base comercial 360 días ---
+        const dias = n * 30;
+        const factor = Math.pow(1 + tasa / 100, dias / 360);
+        const montoFinal = monto * factor;
+        const interes = montoFinal - monto;
+        const rendPeriodo = monto > 0 ? (interes / monto) * 100 : 0;
+        const interesMes = n > 0 ? interes / n : 0;
+        const cubierto = Math.min(montoFinal, FSD);
+        const excedente = Math.max(0, montoFinal - FSD);
+
+        rows.push({ k: 'Capital que depositas', ref: 'Lo que sale de tu bolsillo hoy', v: monto });
+        rows.push({ k: 'Interés ganado en el plazo', ref: 'TREA ' + pct(tasa) + ' · base 360 días', v: interes, extra: true });
+        rows.push({ k: 'Monto final al vencimiento', ref: 'Capital + interés', v: montoFinal });
+        rows.push({ k: 'Interés promedio por mes', ref: 'Interés total ÷ ' + n + ' meses', v: interesMes });
+        rows.push({ k: 'Rendimiento del período completo', ref: 'No es la tasa anual: es lo que ganas en ' + n + ' meses', v: rendPeriodo, format: 'unit', unit: '%', decimals: 2 });
+        rows.push({ k: 'Cubierto por el Fondo de Seguro de Depósitos', ref: 'Tope por persona y por entidad', v: cubierto });
+        rows.push({ k: 'Excedente sin cobertura del FSD', ref: excedente > 0 ? 'Conviene repartirlo en otra entidad' : 'Todo tu depósito queda asegurado', v: excedente });
+        rows.push({ k: 'Días efectivos del depósito', ref: n + ' meses × 30 días (base comercial)', v: dias, format: 'unit', unit: 'días' });
+
+        total = sol(montoFinal);
+        sub =
+          'Depositando ' + sol(monto) + ' a TREA ' + pct(tasa) + ' por ' + n + ' meses ganas ' + sol(interes) +
+          ' · ' + pct(rendPeriodo) + ' del período · ' +
+          (excedente > 0 ? sol(excedente) + ' quedan fuera de la cobertura del FSD' : 'depósito 100% cubierto por el FSD');
+        chart = [
+          { label: 'Capital depositado', value: Math.round(monto), tone: 'main' },
+          { label: 'Interés ganado', value: Math.round(interes), tone: 'good' },
+        ];
+        return { total: total, sub: sub, rows: rows, chart: chart };
+      }
+
+      // --- Créditos ---
+      let precio = monto;
+      let inicialPct = inicialPctRaw;
+      let inicial = 0;
+      let bono = 0;
+      let financiado = monto;
+      let etiquetaTasa = 'TCEA';
+
+      if (id === 'hipotecario' || id === 'vehicular') {
+        inicial = precio * (inicialPct / 100);
+        financiado = Math.max(0, precio - inicial);
+        etiquetaTasa = id === 'hipotecario' ? 'TEA' : 'TCEA';
+      } else if (id === 'mivivienda') {
+        inicialPct = Math.max(MV.inicialMinPct, inicialPct);
+        inicial = precio * (inicialPct / 100);
+        bono = bonoManual > 0 ? bonoManual : bonoPorValor(precio);
+        financiado = Math.max(0, precio - inicial - bono);
+        etiquetaTasa = 'TEA';
+      }
+
+      const i = mensual(tasa);
+      const cuota = cuotaFrancesa(financiado, i, n);
+      const totalCuotas = cuota * n;
+      const intereses = totalCuotas - financiado;
+      const sobrecosto = financiado > 0 ? (intereses / financiado) * 100 : 0;
+
+      // TCEA estimada: la tasa pactada más el costo anualizado de seguros y comisiones.
+      const conSeguros = id === 'personal' || id === 'vehicular';
+      const tcea = conSeguros ? tasa : tasa + segurosPct;
+      const cuotaConSeguros = cuotaFrancesa(financiado, mensual(tcea), n);
+
+      rows.push({ k: 'Precio o monto solicitado', ref: id === 'personal' ? 'Lo que te presta la entidad' : 'Valor del bien que compras', v: precio });
+      if (inicial > 0) {
+        rows.push({ k: 'Cuota inicial que aportas', ref: pct(inicialPct, 1) + ' del precio', v: inicial });
+      }
+      if (id === 'mivivienda') {
+        rows.push({ k: 'Bono del Buen Pagador', ref: bonoManual > 0 ? 'Monto que cargaste de tu carta de aprobación' : 'Subsidio no reembolsable por tramo de valor', v: bono });
+      }
+      rows.push({ k: 'Monto que realmente financias', ref: 'Sobre esto corren los intereses', v: financiado });
+      rows.push({ k: 'Cuota mensual', ref: etiquetaTasa + ' ' + pct(tasa) + ' · sistema francés · ' + n + ' cuotas', v: cuota, extra: true });
+      if (!conSeguros) {
+        rows.push({ k: 'Cuota estimada incluyendo seguros y comisiones', ref: 'TCEA estimada ' + pct(tcea), v: cuotaConSeguros });
+        rows.push({ k: 'Cuánto suma el seguro a la cuota', ref: 'Diferencia entre la cuota nominal y la cuota real', v: cuotaConSeguros - cuota });
+      }
+      rows.push({ k: 'Total de todas las cuotas', ref: n + ' cuotas de ' + sol(cuota), v: totalCuotas });
+      rows.push({ k: 'Intereses, seguros y gastos', ref: 'Lo que pagas de más sobre el capital', v: intereses });
+      rows.push({ k: 'Sobrecosto sobre lo financiado', ref: 'Intereses ÷ capital financiado', v: sobrecosto, format: 'unit', unit: '%', decimals: 1 });
+      rows.push({ k: 'Desembolso total del bien', ref: 'Cuota inicial + todas las cuotas', v: inicial + totalCuotas });
+      rows.push({ k: 'Tasa efectiva mensual aplicada', ref: 'No es la tasa anual ÷ 12', v: i * 100, format: 'unit', unit: '%', decimals: 3 });
+      rows.push({ k: 'Ingreso neto sugerido para calificar', ref: 'Cuota ÷ 30%, la referencia habitual de los bancos', v: cuota / 0.3 });
+
+      total = sol(cuota);
+      const avisoTope = id === 'personal' && tasa > TOPE
+        ? ' · esa TCEA supera el tope legal de consumo en soles (' + pct(TOPE) + '): revisa las condiciones'
+        : '';
+      sub =
+        'Financias ' + sol(financiado) + ' en ' + n + ' cuotas de ' + sol(cuota) +
+        ' · devuelves ' + sol(totalCuotas) + ', de los cuales ' + sol(intereses) + ' son intereses y gastos (' +
+        pct(sobrecosto, 0) + ' extra)' +
+        (bono > 0 ? ' · el bono te bajó la deuda en ' + sol(bono) : '') +
+        avisoTope;
+
+      chart = [
+        { label: 'Capital financiado', value: Math.round(financiado), tone: 'main' },
+        { label: 'Intereses, seguros y gastos', value: Math.round(Math.max(0, intereses)), tone: 'exit' },
+      ];
+      if (inicial > 0) chart.push({ label: 'Cuota inicial', value: Math.round(inicial), tone: 'prop' });
+      if (bono > 0) chart.push({ label: 'Bono del Buen Pagador', value: Math.round(bono), tone: 'good' });
+
+      return { total: total, sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

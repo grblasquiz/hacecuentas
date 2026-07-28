@@ -1,0 +1,332 @@
+---
+/**
+ * Hub de decisión EN (mercado US) — "How many boards, cuts, hinges and steps?".
+ * audience="US" y lang="en" literales al Layout; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  SHEET_L_IN,
+  SHEET_W_IN,
+  KERF_IN,
+  IRC_MAX_RISER_IN,
+  IRC_MIN_TREAD_IN,
+  IRC_MAX_VARIATION_IN,
+  TARGET_RISER_IN,
+  METRIC_TARGET_RISER_IN,
+  BLONDEL_MIN_IN,
+  BLONDEL_MAX_IN,
+  US_SUM_MIN_IN,
+  US_SUM_MAX_IN,
+  HINGE_SPACING_IN,
+  DOOR_TYPES,
+  SASH_OVERLAP_FT,
+} from '../../../lib/hubs/en/carpentry-and-stairs';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    SHEET_L_IN,
+    SHEET_W_IN,
+    KERF_IN,
+    IRC_MAX_RISER_IN,
+    IRC_MIN_TREAD_IN,
+    IRC_MAX_VARIATION_IN,
+    TARGET_RISER_IN,
+    METRIC_TARGET_RISER_IN,
+    BLONDEL_MIN_IN,
+    BLONDEL_MAX_IN,
+    US_SUM_MIN_IN,
+    US_SUM_MAX_IN,
+    HINGE_SPACING_IN,
+    DOOR_TYPES,
+    SASH_OVERLAP_FT,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(x).toLocaleString('en-US');
+    const n1 = (x) => (Math.round(x * 10) / 10).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const n2 = (x) => (Math.round(x * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'deck';
+      const len = Math.max(0, v.len_ft || 0);
+      const wid = Math.max(0, v.wid_ft || 0);
+      const face = Math.max(0.25, v.board_face_in || 5.5);
+      const gap = Math.max(0, v.gap_in || 0);
+      const stock = Math.max(1, v.stock_len_ft || 16);
+      const pieceL = Math.max(0.25, v.piece_l_in || 1);
+      const pieceW = Math.max(0.25, v.piece_w_in || 1);
+      const pieces = Math.max(1, Math.round(v.total_pieces || 1));
+      const rise = Math.max(1, v.rise_in || 1);
+      const run = Math.max(1, v.run_in || 1);
+      const sashes = Math.max(0, Math.round(v.sashes || 0));
+      const waste = Math.max(0, v.waste_pct || 0);
+      const wf = 1 + waste / 100;
+
+      const rows = [];
+      let total, sub, chart, unit, decimals;
+
+      if (id === 'deck') {
+        // Porte de madera-terraza-metros-cuadrados-tablas.ts:
+        // filas = ceil(ancho / (ancho_tabla + separación)); columnas = ceil(largo / largo_tabla).
+        const rowsAcross = Math.ceil((wid * 12) / (face + gap));
+        const cols = Math.ceil(len / stock);
+        const net = rowsAcross * cols;
+        const withWaste = Math.ceil(net * wf);
+        const area = len * wid;
+        const linear = withWaste * stock;
+        const joists = Math.floor((len * 12) / 16) + 1;
+        const screws = rowsAcross * joists * 2;
+
+        rows.push({ k: 'Deck area', ref: n1(len) + ' ft × ' + n1(wid) + ' ft', v: area, format: 'unit', unit: 'sq ft', decimals: 1 });
+        rows.push({ k: 'Coverage per board including the gap', ref: n2(face) + ' in face + ' + n2(gap) + ' in gap', v: face + gap, format: 'unit', unit: 'in', decimals: 3 });
+        rows.push({ k: 'Rows across the deck width', ref: 'Width ÷ coverage per board', v: rowsAcross, format: 'plain' });
+        rows.push({ k: 'Pieces along the deck length', ref: n1(stock) + ' ft boards', v: cols, format: 'plain' });
+        rows.push({ k: 'Boards before waste', ref: 'Rows × pieces', v: net, format: 'plain' });
+        rows.push({ k: 'Boards to buy', ref: waste + '% for end cuts and culls', v: withWaste, format: 'plain', extra: true });
+        rows.push({ k: 'Linear feet of decking purchased', ref: withWaste + ' × ' + n1(stock) + ' ft', v: linear, format: 'unit', unit: 'ft' });
+        rows.push({ k: 'Joists at 16 in on center', ref: 'Across the ' + n1(len) + ' ft length', v: joists, format: 'plain' });
+        rows.push({ k: 'Deck screws', ref: 'Two per board per joist', v: screws, format: 'plain' });
+        rows.push({ k: 'Boxes of 350 screws', ref: 'Rounded up', v: Math.ceil(screws / 350), format: 'plain' });
+        rows.push({ k: 'Total gap width across the deck', ref: rowsAcross + ' gaps of ' + n2(gap) + ' in', v: rowsAcross * gap, format: 'unit', unit: 'in', decimals: 1 });
+        rows.push({ k: 'Deck area in square meters', ref: '1 m² = 10.764 sq ft', v: area / 10.764, format: 'unit', unit: 'm²', decimals: 1 });
+
+        total = withWaste + ' boards';
+        sub = n1(area) + ' sq ft needs ' + rowsAcross + ' rows × ' + cols + ' pieces = ' + net + ' boards, ' + withWaste +
+          ' with ' + waste + '% waste · ' + n0(linear) + ' linear ft of ' + n1(stock) + ' ft decking and about ' + n0(screws) + ' screws';
+        chart = [
+          { label: 'Boards that land on the deck', value: net, tone: 'main' },
+          { label: 'Waste and cull allowance (boards)', value: withWaste - net, tone: 'warn' },
+          { label: 'Rows across the width', value: rowsAcross, tone: 'good' },
+          { label: 'Joists at 16 in on center', value: joists, tone: 'prop' },
+        ];
+        unit = 'boards'; decimals = 0;
+      } else if (id === 'sheet') {
+        // Porte de tablero-melamina-cortes-aprovechamiento.ts: se prueban las dos
+        // orientaciones de guillotina y gana la que rinde más piezas por placa.
+        const colsA = Math.floor(SHEET_L_IN / (pieceL + KERF_IN));
+        const rowsA = Math.floor(SHEET_W_IN / (pieceW + KERF_IN));
+        const perA = colsA * rowsA;
+        const colsB = Math.floor(SHEET_L_IN / (pieceW + KERF_IN));
+        const rowsB = Math.floor(SHEET_W_IN / (pieceL + KERF_IN));
+        const perB = colsB * rowsB;
+        const per = Math.max(perA, perB);
+        const rotated = perB > perA;
+        const usedCols = rotated ? colsB : colsA;
+        const usedRows = rotated ? rowsB : rowsA;
+
+        const sheetArea = (SHEET_L_IN * SHEET_W_IN) / 144;
+        const pieceArea = (pieceL * pieceW) / 144;
+        const usedArea = per * pieceArea;
+        const yieldPct = sheetArea > 0 ? (usedArea / sheetArea) * 100 : 0;
+        const sheets = per > 0 ? Math.ceil(pieces / per) : 0;
+        const totalWaste = sheets * sheetArea - pieces * pieceArea;
+
+        rows.push({ k: 'Sheet size', ref: SHEET_L_IN + ' × ' + SHEET_W_IN + ' in (4 × 8 ft)', v: sheetArea, format: 'unit', unit: 'sq ft', decimals: 2 });
+        rows.push({ k: 'Part size', ref: n2(pieceL) + ' × ' + n2(pieceW) + ' in', v: pieceArea, format: 'unit', unit: 'sq ft', decimals: 3 });
+        rows.push({ k: 'Saw kerf per cut', ref: '1/8 in blade — the metric source uses 3 mm', v: KERF_IN, format: 'unit', unit: 'in', decimals: 3 });
+        rows.push({ k: 'Parts per sheet, standard orientation', ref: colsA + ' columns × ' + rowsA + ' rows', v: perA, format: 'plain' });
+        rows.push({ k: 'Parts per sheet, rotated 90°', ref: colsB + ' columns × ' + rowsB + ' rows', v: perB, format: 'plain' });
+        rows.push({ k: 'Best layout', ref: (rotated ? 'Rotated 90°' : 'Standard orientation') + ' — ' + usedCols + ' × ' + usedRows, v: per, format: 'plain', extra: true });
+        rows.push({ k: 'Yield per sheet', ref: yieldPct >= 80 ? 'Good utilisation' : yieldPct >= 65 ? 'Typical for guillotine cutting' : 'High waste — try another layout', v: yieldPct, format: 'unit', unit: '%', decimals: 1 });
+        rows.push({ k: 'Offcut left on each sheet', ref: 'Usable for smaller parts', v: sheetArea - usedArea, format: 'unit', unit: 'sq ft', decimals: 2 });
+        rows.push({ k: 'Parts the job needs', ref: 'What you entered', v: pieces, format: 'plain' });
+        rows.push({ k: 'Sheets to buy', ref: 'Rounded up', v: sheets, format: 'plain', extra: true });
+        rows.push({ k: 'Total waste across the job', ref: 'Sheets bought minus parts made', v: Math.max(0, totalWaste), format: 'unit', unit: 'sq ft', decimals: 2 });
+        rows.push({ k: 'Material lost to the kerf per sheet', ref: (usedCols - 1 + usedRows - 1) + ' cuts × 1/8 in', v: Math.max(0, (usedCols - 1) * KERF_IN * SHEET_W_IN + (usedRows - 1) * KERF_IN * SHEET_L_IN) / 144, format: 'unit', unit: 'sq ft', decimals: 3 });
+
+        total = sheets + (sheets === 1 ? ' sheet' : ' sheets');
+        sub = per + ' part' + (per === 1 ? '' : 's') + ' per 4 × 8 sheet at ' + n1(yieldPct) + '% yield (' +
+          (rotated ? 'rotated 90°' : 'standard orientation') + ', ' + usedCols + ' × ' + usedRows + ') · ' + pieces +
+          ' parts need ' + sheets + ' sheet' + (sheets === 1 ? '' : 's') + ', leaving ' + n2(Math.max(0, totalWaste)) + ' sq ft of offcut';
+        chart = [
+          { label: 'Useful area per sheet (sq ft)', value: Math.round(usedArea * 100) / 100, tone: 'good' },
+          { label: 'Offcut per sheet (sq ft)', value: Math.round((sheetArea - usedArea) * 100) / 100, tone: 'warn' },
+          { label: 'Parts per sheet', value: per, tone: 'main' },
+          { label: 'Sheets needed', value: sheets, tone: 'prop' },
+        ];
+        unit = ''; decimals = 0;
+      } else if (id === 'stairs') {
+        // Porte de escalera-huella-contrahuella-ley-blondel.ts, con dos cambios:
+        // (a) la contrahuella objetivo pasa de 18 cm (7.09") a 7.5", el valor de
+        //     diseño americano bajo el tope del IRC de 7-3/4";
+        // (b) el número de huellas es contrahuellas − 1, no contrahuellas.
+        const risers = Math.max(1, Math.ceil(rise / TARGET_RISER_IN));
+        const riser = rise / risers;
+        const treads = Math.max(1, risers - 1);
+        const tread = run / treads;
+        const blondel = tread + 2 * riser;
+        const usSum = tread + riser;
+        const riserOk = riser <= IRC_MAX_RISER_IN;
+        const treadOk = tread >= IRC_MIN_TREAD_IN;
+        // Lo que habría dado la fórmula métrica original.
+        const risersMetric = Math.max(1, Math.ceil(rise / METRIC_TARGET_RISER_IN));
+        const treadMetric = run / risersMetric;
+
+        rows.push({ k: 'Total rise', ref: 'Finished floor to finished floor', v: rise, format: 'unit', unit: 'in', decimals: 2 });
+        rows.push({ k: 'Total run available', ref: 'Horizontal space for the flight', v: run, format: 'unit', unit: 'in', decimals: 1 });
+        rows.push({ k: 'Number of risers', ref: 'Rise ÷ 7.5 in target, rounded up', v: risers, format: 'plain', extra: true });
+        rows.push({ k: 'Number of treads', ref: 'One fewer than the risers', v: treads, format: 'plain', extra: true });
+        rows.push({ k: 'Riser height', ref: riserOk ? 'Under the IRC 7-3/4 in maximum' : 'OVER the IRC 7-3/4 in maximum — add a riser', v: riser, format: 'unit', unit: 'in', decimals: 3, extra: true });
+        rows.push({ k: 'Tread depth', ref: treadOk ? 'Meets the IRC 10 in minimum' : 'UNDER the IRC 10 in minimum — the flight needs more run', v: tread, format: 'unit', unit: 'in', decimals: 3, extra: true });
+        rows.push({ k: 'IRC maximum riser', ref: 'R311.7.5.1, one- and two-family dwellings', v: IRC_MAX_RISER_IN, format: 'unit', unit: 'in', decimals: 2 });
+        rows.push({ k: 'IRC minimum tread', ref: 'R311.7.5.2', v: IRC_MIN_TREAD_IN, format: 'unit', unit: 'in', decimals: 2 });
+        rows.push({ k: 'Riser headroom against the limit', ref: riserOk ? 'Margin you have left' : 'How far over you are', v: Math.abs(IRC_MAX_RISER_IN - riser), format: 'unit', unit: 'in', decimals: 3 });
+        rows.push({ k: 'Blondel value (tread + 2 × riser)', ref: blondel >= BLONDEL_MIN_IN && blondel <= BLONDEL_MAX_IN ? 'Inside the comfortable 24.4–25.2 in band' : 'Outside the comfortable band — a European guideline, not US code', v: blondel, format: 'unit', unit: 'in', decimals: 2 });
+        rows.push({ k: 'US rule of 25 (tread + riser)', ref: usSum >= US_SUM_MIN_IN && usSum <= US_SUM_MAX_IN ? 'Inside the 17–18 in band' : 'Outside the 17–18 in band', v: usSum, format: 'unit', unit: 'in', decimals: 2 });
+        rows.push({ k: 'Maximum variation allowed between risers', ref: 'R311.7.5.1 — the most-failed inspection item', v: IRC_MAX_VARIATION_IN, format: 'unit', unit: 'in', decimals: 3 });
+        rows.push({ k: 'Stringer length', ref: 'Diagonal of the rise and run', v: Math.sqrt(rise * rise + run * run), format: 'unit', unit: 'in', decimals: 1 });
+        rows.push({ k: 'Angle of the flight', ref: 'Comfortable range is 30 to 37 degrees', v: (Math.atan(rise / run) * 180) / Math.PI, format: 'unit', unit: '°', decimals: 1 });
+        rows.push({ k: 'Risers the metric 18 cm target would give', ref: 'For comparison: ' + n2(rise / risersMetric) + ' in riser, ' + n2(treadMetric) + ' in tread', v: risersMetric, format: 'plain' });
+        rows.push({ k: 'Riser height in centimetres', ref: '1 in = 2.54 cm', v: riser * 2.54, format: 'unit', unit: 'cm', decimals: 1 });
+
+        total = risers + ' × ' + n2(riser) + ' in';
+        sub = n1(rise) + ' in of rise over ' + n1(run) + ' in of run = ' + risers + ' risers of ' + n2(riser) +
+          ' in and ' + treads + ' treads of ' + n2(tread) + ' in · ' +
+          (riserOk && treadOk ? 'both inside the IRC limits' : !riserOk ? 'the riser is OVER the IRC 7-3/4 in maximum' : 'the tread is UNDER the IRC 10 in minimum') +
+          ' · Blondel ' + n1(blondel) + ' in';
+        chart = [
+          { label: 'Riser height (in)', value: Math.round(riser * 100) / 100, tone: riserOk ? 'good' : 'bad' },
+          { label: 'IRC maximum riser (in)', value: IRC_MAX_RISER_IN, tone: 'warn' },
+          { label: 'Tread depth (in)', value: Math.round(tread * 100) / 100, tone: treadOk ? 'good' : 'bad' },
+          { label: 'IRC minimum tread (in)', value: IRC_MIN_TREAD_IN, tone: 'warn' },
+        ];
+        unit = 'in'; decimals = 2;
+      } else if (id === 'hinges') {
+        // Porte de bisagras-tornillos-puerta-ventana-cantidad.ts:
+        // bisagras = max(mínimo por peso, ceil(alto / 30")); tornillos = bisagras × huecos × 2.
+        const dt = DOOR_TYPES.find((d) => d.id === String(v.door_type)) || DOOR_TYPES[1];
+        const holes = dt.minHinges >= 4 ? 3 : 2;
+        const byHeight = Math.ceil(dt.heightIn / HINGE_SPACING_IN);
+        const perDoor = Math.max(dt.minHinges, byHeight);
+        const doors = pieces;
+        const totalHinges = perDoor * doors;
+        const perHinge = holes * 2;
+        const screwsNet = totalHinges * perHinge;
+        const screwsBuy = Math.ceil(screwsNet * wf);
+
+        rows.push({ k: 'Door type', ref: dt.label, v: doors, format: 'plain' });
+        rows.push({ k: 'Door height', ref: 'Standard for this type', v: dt.heightIn, format: 'unit', unit: 'in' });
+        rows.push({ k: 'Hinges by the height rule', ref: 'One every ' + HINGE_SPACING_IN + ' in, rounded up', v: byHeight, format: 'plain' });
+        rows.push({ k: 'Minimum hinges by weight class', ref: 'BHMA weight categories', v: dt.minHinges, format: 'plain' });
+        rows.push({ k: 'Hinges per door', ref: 'The larger of the two rules', v: perDoor, format: 'plain', extra: true });
+        rows.push({ k: 'Total hinges for the job', ref: doors + (doors === 1 ? ' door' : ' doors'), v: totalHinges, format: 'plain', extra: true });
+        rows.push({ k: 'Holes per leaf', ref: dt.minHinges >= 4 ? 'Heavy-duty hardware' : 'Standard residential hardware', v: holes, format: 'plain' });
+        rows.push({ k: 'Screws per hinge', ref: 'Holes per leaf × two leaves', v: perHinge, format: 'plain' });
+        rows.push({ k: 'Screws before the buffer', ref: 'Hinges × screws per hinge', v: screwsNet, format: 'plain' });
+        rows.push({ k: 'Screws to buy', ref: waste + '% buffer for stripped and dropped ones', v: screwsBuy, format: 'plain', extra: true });
+        rows.push({ k: 'Boxes of 100 screws', ref: 'Rounded up', v: Math.ceil(screwsBuy / 100), format: 'plain' });
+        rows.push({ k: 'Hinge spacing along the door edge', ref: 'Height ÷ hinges', v: dt.heightIn / perDoor, format: 'unit', unit: 'in', decimals: 1 });
+        rows.push({ k: 'Metric equivalent of the height rule', ref: '30 in = 0.76 m, the source figure is 0.75 m', v: HINGE_SPACING_IN * 2.54, format: 'unit', unit: 'cm', decimals: 1 });
+
+        total = totalHinges + (totalHinges === 1 ? ' hinge' : ' hinges');
+        sub = doors + (doors === 1 ? ' door' : ' doors') + ' × ' + perDoor + ' hinges (height rule gives ' + byHeight +
+          ', weight minimum ' + dt.minHinges + ') = ' + totalHinges + ' hinges and ' + screwsBuy +
+          ' screws · use ' + dt.screw + ', with at least one per hinge long enough to reach the framing';
+        chart = [
+          { label: 'Hinges by the height rule', value: byHeight, tone: 'main' },
+          { label: 'Minimum by weight class', value: dt.minHinges, tone: 'warn' },
+          { label: 'Total hinges for the job', value: totalHinges, tone: 'good' },
+          { label: 'Screws to buy', value: screwsBuy, tone: 'prop' },
+        ];
+        unit = ''; decimals = 0;
+      } else {
+        // Porte de perfil-aluminio-metros-lineales-ventana.ts:
+        // marco + hojas + contramarco + travesaño, con desperdicio y barras comerciales.
+        const frame = 2 * (len + wid);
+        let sashPerim = 0;
+        if (sashes >= 1) {
+          const sashW = len / sashes + SASH_OVERLAP_FT;
+          sashPerim = 2 * (sashW + wid) * sashes;
+        }
+        const net = frame + sashPerim;
+        const withWaste = net * wf;
+        const bars = Math.ceil(withWaste / stock);
+        const barsMetric = Math.ceil(withWaste / 19.685);
+
+        rows.push({ k: 'Window size', ref: n1(len) + ' ft wide × ' + n1(wid) + ' ft high', v: len * wid, format: 'unit', unit: 'sq ft', decimals: 2 });
+        rows.push({ k: 'Outer frame perimeter', ref: '2 × (width + height)', v: frame, format: 'unit', unit: 'ft', decimals: 2 });
+        rows.push({ k: 'Sliding sashes', ref: sashes === 0 ? 'Fixed pane — no sash frames' : sashes + ' sash frames with 1-1/4 in overlap each', v: sashes, format: 'plain' });
+        rows.push({ k: 'Sash frame perimeter', ref: 'All sashes together', v: sashPerim, format: 'unit', unit: 'ft', decimals: 2 });
+        rows.push({ k: 'Net profile length', ref: 'Frame plus sashes', v: net, format: 'unit', unit: 'ft', decimals: 2 });
+        rows.push({ k: 'Waste allowance', ref: waste + '% for miters and offcuts', v: net * (waste / 100), format: 'unit', unit: 'ft', decimals: 2 });
+        rows.push({ k: 'Profile to buy', ref: 'Net plus waste', v: withWaste, format: 'unit', unit: 'ft', decimals: 2, extra: true });
+        rows.push({ k: 'Stock bars of ' + n0(stock) + ' ft', ref: 'Rounded up', v: bars, format: 'plain', extra: true });
+        rows.push({ k: 'Length those bars give you', ref: bars + ' × ' + n0(stock) + ' ft', v: bars * stock, format: 'unit', unit: 'ft', decimals: 1 });
+        rows.push({ k: 'Offcut left over', ref: 'Keep it for repairs', v: Math.max(0, bars * stock - withWaste), format: 'unit', unit: 'ft', decimals: 2 });
+        rows.push({ k: 'Miter cuts to make', ref: 'Four per frame, four per sash', v: 4 + sashes * 4, format: 'plain' });
+        rows.push({ k: 'Same length in meters', ref: '1 m = 3.281 ft', v: withWaste / 3.281, format: 'unit', unit: 'm', decimals: 2 });
+        rows.push({ k: 'Bars if bought as 6 m stock', ref: 'How the metric market sells it — 19 ft 8 in', v: barsMetric, format: 'plain' });
+
+        total = n1(withWaste) + ' ft';
+        sub = 'A ' + n1(len) + ' × ' + n1(wid) + ' ft window with ' + sashes + ' sash' + (sashes === 1 ? '' : 'es') +
+          ' takes ' + n2(net) + ' ft of profile, ' + n2(withWaste) + ' ft with ' + waste + '% waste · that is ' + bars +
+          ' bar' + (bars === 1 ? '' : 's') + ' of ' + n0(stock) + ' ft, or ' + barsMetric + ' of 6 m stock';
+        chart = [
+          { label: 'Outer frame (ft)', value: Math.round(frame * 100) / 100, tone: 'main' },
+          { label: 'Sash frames (ft)', value: Math.round(sashPerim * 100) / 100, tone: 'good' },
+          { label: 'Waste allowance (ft)', value: Math.round(net * (waste / 100) * 100) / 100, tone: 'warn' },
+          { label: 'Offcut from whole bars (ft)', value: Math.round(Math.max(0, bars * stock - withWaste) * 100) / 100, tone: 'prop' },
+        ];
+        unit = 'ft'; decimals = 2;
+      }
+
+      return {
+        total: total,
+        sub: sub,
+        rows: rows,
+        format: unit ? 'unit' : 'plain',
+        unit: unit,
+        decimals: decimals,
+        chart: chart,
+      };
+    });
+  })();
+</script>

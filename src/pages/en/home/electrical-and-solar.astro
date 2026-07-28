@@ -1,0 +1,245 @@
+---
+/**
+ * Hub de decisión EN (mercado US) — "What wire gauge, what breaker, and how many solar panels?".
+ * audience="US" y lang="en" literales al Layout; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  AWG,
+  K_COPPER,
+  K_FROM_METRIC,
+  BREAKERS,
+  CONTINUOUS_FACTOR,
+  PANEL_SQFT,
+  PANEL_LB,
+  SYSTEM_EFF,
+  FEDERAL_CREDIT,
+} from '../../../lib/hubs/en/electrical-and-solar';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ AWG, K_COPPER, K_FROM_METRIC, BREAKERS, CONTINUOUS_FACTOR, PANEL_SQFT, PANEL_LB, SYSTEM_EFF, FEDERAL_CREDIT }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(x).toLocaleString('en-US');
+    const n1 = (x) => (Math.round(x * 10) / 10).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const n2 = (x) => (Math.round(x * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'wire';
+      const load = Math.max(0, v.load_a || 0);
+      const volts = Math.max(1, Number(v.volts) || 240);
+      const cont = String(v.continuous) === 'yes';
+      const len = Math.max(0, v.distance_ft || 0);
+      const vdMax = Math.max(0.5, v.vd_max || 3);
+      const kwh = Math.max(0, v.monthly_kwh || 0);
+      const psh = Math.max(0.1, v.psh || 4.5);
+      const panelW = Math.max(1, v.panel_w || 400);
+      const pfKw = Math.max(0, v.pf_kw || 0);
+      const pf1 = Math.min(0.999, Math.max(0.05, v.pf_now || 0.75));
+      const pf2 = Math.min(1, Math.max(0.05, v.pf_target || 0.95));
+
+      const rows = [];
+      let total, sub, chart;
+
+      /** Ampacidad de un conductor en la columna que corresponde por NEC 110.14(C). */
+      function ampacity(e, design) {
+        return design <= 100 ? e.a60 : e.a75;
+      }
+
+      if (id === 'wire' || id === 'longrun') {
+        // Rama 'wire' porta cable-awg-amperaje-seccion.ts (tabla de ampacidad, que
+        // coincide con la columna de 60 °C de la NEC Table 310.16).
+        // Rama 'longrun' porta electricidad-cable-amperaje.ts (caída de tensión),
+        // con K = 12.9 en vez del ρ = 0.0178 Ω·mm²/m del original.
+        const design = cont ? load * CONTINUOUS_FACTOR : load;
+        const allowedDrop = (volts * vdMax) / 100;
+
+        // Primer calibre que cumple ampacidad.
+        let byAmp = AWG.find((e) => ampacity(e, design) >= design) || AWG[AWG.length - 1];
+        // Primer calibre que cumple caída de tensión.
+        const cmilNeeded = allowedDrop > 0 ? (2 * K_COPPER * design * len) / allowedDrop : 0;
+        let byVd = AWG.find((e) => e.cmil >= cmilNeeded) || AWG[AWG.length - 1];
+        // Gobierna el más grueso de los dos.
+        const chosen = byVd.cmil > byAmp.cmil ? byVd : byAmp;
+        const governedBy = byVd.cmil > byAmp.cmil ? 'voltage drop' : 'ampacity';
+
+        const drop = chosen.cmil > 0 ? (2 * K_COPPER * design * len) / chosen.cmil : 0;
+        const dropPct = volts > 0 ? (drop / volts) * 100 : 0;
+        const dropMetric = chosen.cmil > 0 ? (2 * K_FROM_METRIC * design * len) / chosen.cmil : 0;
+        const cap = ampacity(chosen, design);
+        const hardCap = chosen.maxOcpd > 0 ? Math.min(cap, chosen.maxOcpd) : cap;
+        let breaker = BREAKERS.find((b) => b >= design && b <= hardCap) || 0;
+        if (!breaker) breaker = BREAKERS.filter((b) => b <= hardCap).pop() || BREAKERS[0];
+
+        rows.push({ k: 'Load current', ref: cont ? 'Continuous — sized at 125%' : 'Intermittent duty', v: load, format: 'unit', unit: 'A', decimals: 1 });
+        rows.push({ k: 'Design current', ref: cont ? 'Load × 1.25 per NEC 210.19(A)' : 'Same as the load', v: design, format: 'unit', unit: 'A', decimals: 1 });
+        rows.push({ k: 'System voltage', ref: volts === 208 ? 'Three-phase' : 'Single-phase', v: volts, format: 'unit', unit: 'V' });
+        rows.push({ k: 'Gauge required by ampacity alone', ref: 'AWG ' + byAmp.awg + ' — Table 310.16, ' + (design <= 100 ? '60' : '75') + ' °C column', v: ampacity(byAmp, design), format: 'unit', unit: 'A' });
+        rows.push({ k: 'One-way run length', ref: 'The formula adds the return path', v: len, format: 'unit', unit: 'ft' });
+        rows.push({ k: 'Voltage drop budget', ref: vdMax + '% of ' + volts + ' V', v: allowedDrop, format: 'unit', unit: 'V', decimals: 2 });
+        rows.push({ k: 'Circular mils needed for that budget', ref: '2 × 12.9 × A × ft ÷ allowed drop', v: cmilNeeded, format: 'plain' });
+        rows.push({ k: 'Gauge required by voltage drop', ref: 'AWG ' + byVd.awg + ' — ' + n0(byVd.cmil) + ' cmil', v: byVd.cmil, format: 'plain' });
+        rows.push({ k: 'Governing gauge', ref: 'AWG ' + chosen.awg + ' — set by ' + governedBy, v: chosen.cmil, format: 'plain', extra: true });
+        rows.push({ k: 'Ampacity of that conductor', ref: (design <= 100 ? '60' : '75') + ' °C column, copper', v: cap, format: 'unit', unit: 'A' });
+        rows.push({ k: 'Breaker to install', ref: chosen.maxOcpd > 0 ? 'Capped at ' + chosen.maxOcpd + ' A by NEC 240.4(D)' : 'NEC 240.6(A) standard size', v: breaker, format: 'unit', unit: 'A', extra: true });
+        rows.push({ k: 'Actual voltage drop on that conductor', ref: dropPct <= vdMax ? 'Within the recommendation' : 'Over the recommendation — go up a size', v: drop, format: 'unit', unit: 'V', decimals: 2 });
+        rows.push({ k: 'Voltage drop as a percentage', ref: 'Against the ' + vdMax + '% target', v: dropPct, format: 'unit', unit: '%', decimals: 2 });
+        rows.push({ k: 'Voltage the load actually sees', ref: 'Supply minus the drop', v: volts - drop, format: 'unit', unit: 'V', decimals: 1 });
+        rows.push({ k: 'Conductor cross-section in metric', ref: 'AWG ' + chosen.awg + ' = ' + n2(chosen.mm2) + ' mm²', v: chosen.mm2, format: 'unit', unit: 'mm²', decimals: 2 });
+        rows.push({ k: 'Drop the metric formula would have predicted', ref: 'Using ρ = 0.0178 Ω·mm²/m, i.e. K = 10.7', v: dropMetric, format: 'unit', unit: 'V', decimals: 2 });
+        rows.push({ k: 'How much that metric constant understates it', ref: 'Why the ported constant was replaced', v: Math.max(0, drop - dropMetric), format: 'unit', unit: 'V', decimals: 2 });
+        rows.push({ k: 'Maximum run at this gauge and current', ref: 'Before the ' + vdMax + '% budget is spent', v: design > 0 ? (allowedDrop * chosen.cmil) / (2 * K_COPPER * design) : 0, format: 'unit', unit: 'ft' });
+
+        total = 'AWG ' + chosen.awg;
+        sub = n1(design) + ' A design current over ' + n0(len) + ' ft at ' + volts + ' V · ampacity alone allows AWG ' +
+          byAmp.awg + ', voltage drop needs AWG ' + byVd.awg + ' · use AWG ' + chosen.awg + ' on a ' + breaker +
+          ' A breaker, which drops ' + n2(dropPct) + '%';
+        chart = [
+          { label: 'Design current (A)', value: Math.round(design * 10) / 10, tone: 'main' },
+          { label: 'Conductor ampacity (A)', value: cap, tone: 'good' },
+          { label: 'Breaker rating (A)', value: breaker, tone: 'prop' },
+          { label: 'Voltage drop (V)', value: Math.round(drop * 100) / 100, tone: dropPct <= vdMax ? 'good' : 'bad' },
+        ];
+      } else if (id === 'solar') {
+        // Porte de panel-solar-kw-consumo-hogar-autoconsumo.ts:
+        // paneles = consumo_mensual / (kWp × HSP × 30 × eficiencia)
+        const kwp = panelW / 1000;
+        const perPanel = kwp * psh * 30 * SYSTEM_EFF;
+        const exact = perPanel > 0 ? kwh / perPanel : 0;
+        const panels = Math.ceil(exact);
+        const arrayKw = panels * kwp;
+        const generated = arrayKw * psh * 30 * SYSTEM_EFF;
+        const coverage = kwh > 0 ? Math.min(100, (generated / kwh) * 100) : 0;
+        const roof = panels * PANEL_SQFT;
+        const weight = panels * PANEL_LB;
+
+        rows.push({ k: 'Monthly electricity use', ref: 'From the utility bill', v: kwh, format: 'unit', unit: 'kWh' });
+        rows.push({ k: 'Panel rated power', ref: 'Standard test conditions', v: panelW, format: 'unit', unit: 'W' });
+        rows.push({ k: 'Peak sun hours per day', ref: 'Site-specific — check PVWatts for your zip code', v: psh, format: 'unit', unit: 'h/day', decimals: 1 });
+        rows.push({ k: 'System efficiency assumed', ref: 'Inverter, wiring, soiling, temperature, mismatch', v: SYSTEM_EFF * 100, format: 'unit', unit: '%' });
+        rows.push({ k: 'Monthly generation per panel', ref: 'kWp × PSH × 30 × efficiency', v: perPanel, format: 'unit', unit: 'kWh', decimals: 1 });
+        rows.push({ k: 'Panels needed, exact', ref: 'Before rounding', v: exact, format: 'plain', decimals: 2 });
+        rows.push({ k: 'Panels to install', ref: 'Rounded up', v: panels, format: 'plain', extra: true });
+        rows.push({ k: 'Array size', ref: panels + ' × ' + panelW + ' W', v: arrayKw, format: 'unit', unit: 'kW', decimals: 2, extra: true });
+        rows.push({ k: 'Estimated monthly generation', ref: 'What the array actually makes', v: generated, format: 'unit', unit: 'kWh' });
+        rows.push({ k: 'Share of your bill covered', ref: 'Before net metering rules', v: coverage, format: 'unit', unit: '%', decimals: 1 });
+        rows.push({ k: 'Annual generation', ref: 'Twelve average months', v: generated * 12, format: 'unit', unit: 'kWh' });
+        rows.push({ k: 'Unshaded roof area required', ref: '≈ 24 sq ft per panel', v: roof, format: 'unit', unit: 'sq ft' });
+        rows.push({ k: 'Same area in square meters', ref: '1 m² = 10.764 sq ft', v: roof / 10.764, format: 'unit', unit: 'm²', decimals: 1 });
+        rows.push({ k: 'Weight the roof carries', ref: '≈ 50 lb per panel plus racking', v: weight, format: 'unit', unit: 'lb' });
+        rows.push({ k: 'Distributed roof load', ref: 'Over the array footprint', v: roof > 0 ? weight / roof : 0, format: 'unit', unit: 'lb/sq ft', decimals: 2 });
+        rows.push({ k: 'Federal credit on the installed cost', ref: 'IRC §25D — 30%, non-refundable', v: FEDERAL_CREDIT * 100, format: 'unit', unit: '%' });
+
+        total = panels + ' panels';
+        sub = n0(kwh) + ' kWh a month at ' + n1(psh) + ' peak sun hours needs ' + panels + ' panels of ' + panelW +
+          ' W — a ' + n2(arrayKw) + ' kW array making about ' + n0(generated) + ' kWh a month (' + n0(coverage) +
+          '% of the bill) on ' + n0(roof) + ' sq ft of south-facing roof';
+        chart = [
+          { label: 'Monthly consumption (kWh)', value: Math.round(kwh), tone: 'warn' },
+          { label: 'Monthly generation (kWh)', value: Math.round(generated), tone: 'good' },
+          { label: 'Roof area required (sq ft)', value: Math.round(roof), tone: 'prop' },
+        ];
+      } else {
+        // Porte de factor-potencia-corregir.ts: Qc = P(tanφ1 − tanφ2);
+        // C = Qc / (2πf V²). Frecuencia fijada en 60 Hz para el mercado US.
+        const freq = 60;
+        const valid = pf2 > pf1;
+        const p = pfKw * 1000;
+        const tan1 = Math.tan(Math.acos(pf1));
+        const tan2 = Math.tan(Math.acos(pf2));
+        const qc = valid ? p * (tan1 - tan2) : 0;
+        const farads = qc / (2 * Math.PI * freq * volts * volts);
+        const s1 = pf1 > 0 ? p / pf1 : 0;
+        const s2 = pf2 > 0 ? p / pf2 : 0;
+        const i1 = volts > 0 ? s1 / volts : 0;
+        const i2 = volts > 0 ? s2 / volts : 0;
+        const farads50 = qc / (2 * Math.PI * 50 * volts * volts);
+
+        rows.push({ k: 'Real power of the installation', ref: 'What actually does work', v: pfKw, format: 'unit', unit: 'kW', decimals: 1 });
+        rows.push({ k: 'Current power factor', ref: valid ? 'From the bill or measured' : 'Target must exceed the current value', v: pf1, format: 'plain', decimals: 2 });
+        rows.push({ k: 'Target power factor', ref: 'Just above the utility threshold', v: pf2, format: 'plain', decimals: 2 });
+        rows.push({ k: 'Apparent power before correction', ref: 'kW ÷ power factor', v: s1 / 1000, format: 'unit', unit: 'kVA', decimals: 2 });
+        rows.push({ k: 'Apparent power after correction', ref: 'Same work, less current', v: s2 / 1000, format: 'unit', unit: 'kVA', decimals: 2 });
+        rows.push({ k: 'Capacity freed on the service', ref: 'Transformer and cable you already own', v: (s1 - s2) / 1000, format: 'unit', unit: 'kVA', decimals: 2, extra: true });
+        rows.push({ k: 'That saving as a percentage', ref: 'Of the apparent power before', v: s1 > 0 ? ((s1 - s2) / s1) * 100 : 0, format: 'unit', unit: '%', decimals: 1 });
+        rows.push({ k: 'Reactive power to add', ref: 'P × (tan φ₁ − tan φ₂)', v: qc / 1000, format: 'unit', unit: 'kVAR', decimals: 2, extra: true });
+        rows.push({ k: 'Capacitance at 60 Hz', ref: 'Qc ÷ (2π × 60 × V²) — US frequency', v: farads * 1e6, format: 'unit', unit: 'µF', decimals: 1, extra: true });
+        rows.push({ k: 'Capacitance the same bank would need at 50 Hz', ref: 'Why a European table does not port', v: farads50 * 1e6, format: 'unit', unit: 'µF', decimals: 1 });
+        rows.push({ k: 'Line current before correction', ref: 'At ' + volts + ' V', v: i1, format: 'unit', unit: 'A', decimals: 1 });
+        rows.push({ k: 'Line current after correction', ref: 'Less copper loss, less heat', v: i2, format: 'unit', unit: 'A', decimals: 1 });
+        rows.push({ k: 'Current no longer being drawn', ref: 'Pure reactive circulation removed', v: Math.max(0, i1 - i2), format: 'unit', unit: 'A', decimals: 1 });
+        rows.push({ k: 'Phase angle before', ref: 'arccos of the power factor', v: (Math.acos(pf1) * 180) / Math.PI, format: 'unit', unit: '°', decimals: 1 });
+        rows.push({ k: 'Phase angle after', ref: 'Closer to zero is closer to unity', v: (Math.acos(pf2) * 180) / Math.PI, format: 'unit', unit: '°', decimals: 1 });
+
+        total = valid ? n2(qc / 1000) + ' kVAR' : 'Set a higher target';
+        sub = valid
+          ? n1(pfKw) + ' kW at ' + n2(pf1) + ' power factor pulls ' + n2(s1 / 1000) + ' kVA · correcting to ' + n2(pf2) +
+            ' takes ' + n2(qc / 1000) + ' kVAR (' + n1(farads * 1e6) + ' µF at 60 Hz) and frees ' + n2((s1 - s2) / 1000) +
+            ' kVA of service capacity'
+          : 'The target power factor has to be higher than the current one — there is nothing to correct otherwise.';
+        chart = [
+          { label: 'Apparent power before (kVA)', value: Math.round((s1 / 1000) * 100) / 100, tone: 'warn' },
+          { label: 'Apparent power after (kVA)', value: Math.round((s2 / 1000) * 100) / 100, tone: 'good' },
+          { label: 'Reactive power added (kVAR)', value: Math.round((qc / 1000) * 100) / 100, tone: 'prop' },
+        ];
+      }
+
+      return {
+        total: total,
+        sub: sub,
+        rows: rows,
+        format: 'plain',
+        decimals: 0,
+        chart: chart,
+      };
+    });
+  })();
+</script>

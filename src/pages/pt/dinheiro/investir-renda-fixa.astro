@@ -1,0 +1,356 @@
+---
+/**
+ * Hub de decisão BR — "Poupança, CDB, Tesouro ou FII?".
+ * As tabelas de IR e IOF viajam pelo define:vars com `ateDias: null` no lugar
+ * de Infinity, que não sobrevive à serialização.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  IR_REGRESSIVO,
+  IOF_TABELA,
+  IR_PREVIDENCIA,
+  POUPANCA,
+  CUSTODIA_B3,
+  SPREAD_CDI_SELIC,
+  PGBL_TETO_DEDUCAO,
+  FII_IR_GANHO,
+  DIAS_POR_MES,
+} from '../../../lib/hubs/pt/investir-renda-fixa';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="BR"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header lang="pt" />
+  <DecisionHub data={hub} />
+  <Footer lang="pt" />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    IR_REGRESSIVO,
+    IOF_TABELA,
+    IR_PREVIDENCIA,
+    POUPANCA,
+    CUSTODIA_B3,
+    SPREAD_CDI_SELIC,
+    PGBL_TETO_DEDUCAO,
+    FII_IR_GANHO,
+    DIAS_POR_MES,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const brl = (n) =>
+      'R$ ' + (Math.round((n || 0) * 100) / 100).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    const pct = (n) => (n || 0).toFixed(2).replace('.', ',') + '%';
+
+    /** Alíquota de IR da renda fixa por dias corridos — Lei 11.033/2004. */
+    function irRendaFixa(dias) {
+      for (const f of IR_REGRESSIVO) {
+        if (f.ateDias === null || dias <= f.ateDias) return f.aliquota;
+      }
+      return 0.15;
+    }
+    /** IOF sobre o rendimento nos 30 primeiros dias — Decreto 6.306/2007. */
+    function iofFator(dias) {
+      if (dias >= 30) return 0;
+      const idx = Math.max(1, Math.round(dias)) - 1;
+      return IOF_TABELA[Math.min(idx, IOF_TABELA.length - 1)];
+    }
+    function irPrevidencia(anos) {
+      for (const f of IR_PREVIDENCIA) {
+        if (f.ateAnos === null || anos <= f.ateAnos) return f.aliquota;
+      }
+      return 0.1;
+    }
+    /** Capitaliza uma taxa anual pelo prazo em meses. */
+    function cresce(taxaAnual, meses) {
+      return Math.pow(1 + taxaAnual, meses / 12);
+    }
+
+    H.onCompute(function (v) {
+      const objetivo = String(v.objetivo || 'medio');
+      const aporte = Math.max(0, v.aporte || 0);
+      const meses = Math.max(1, Math.round(v.meses || 1));
+      const selic = Math.max(0, v.selic || 0) / 100;
+      const pctCdi = Math.max(0, v.pctCdi || 0) / 100;
+      const ipca = Math.max(0, v.ipca || 0) / 100;
+      const juroReal = Math.max(0, v.juroReal || 0) / 100;
+      const dyMensal = Math.max(0, v.dyMensal || 0) / 100;
+      const rendaAnual = Math.max(0, v.rendaBrutaAnual || 0);
+      const aliqIrpf = Math.min(27.5, Math.max(0, v.aliquotaIrpf || 0)) / 100;
+
+      if (aporte <= 0) {
+        return { total: brl(0), sub: 'Informe quanto você vai aplicar.', rows: [], chart: [] };
+      }
+
+      // Dias corridos reais: 6 meses são 183 dias, não 180. Isso muda a faixa do IR.
+      const dias = Math.round(meses * DIAS_POR_MES);
+      const anos = meses / 12;
+      const aliqIr = irRendaFixa(dias);
+      const iof = iofFator(dias);
+
+      /** Líquido de um produto tributado: IOF sobre o rendimento e depois IR. */
+      function liquidoTributado(valorFinalBruto, custos) {
+        const rendBruto = Math.max(0, valorFinalBruto - aporte);
+        const iofValor = rendBruto * iof;
+        const base = Math.max(0, rendBruto - iofValor - (custos || 0));
+        const ir = base * aliqIr;
+        return {
+          bruto: valorFinalBruto,
+          iof: iofValor,
+          custos: custos || 0,
+          ir: ir,
+          liquido: aporte + base - ir,
+        };
+      }
+
+      // --- Poupança: isenta de IR e de IOF (Lei 8.177/1991). ---
+      const poupMensal =
+        selic > POUPANCA.selicGatilho
+          ? POUPANCA.taxaMensalCheia
+          : (selic * POUPANCA.fracaoSelic) / 12;
+      const poupanca = aporte * Math.pow(1 + poupMensal, meses);
+
+      // --- CDB pós-fixado: CDI ≈ Selic − 0,10 p.p. ---
+      const cdi = Math.max(0, selic - SPREAD_CDI_SELIC);
+      const cdb = liquidoTributado(aporte * cresce(cdi * pctCdi, meses), 0);
+
+      // --- Tesouro Selic: rende ~100% da Selic, com custódia da B3. ---
+      const selicBruto = aporte * cresce(selic, meses);
+      const custodiaSelic = ((aporte + selicBruto) / 2) * CUSTODIA_B3 * anos;
+      const tSelic = liquidoTributado(selicBruto, custodiaSelic);
+
+      // --- Tesouro IPCA+: taxa nominal = (1+IPCA)(1+juro real) − 1. ---
+      const nominalIpca = (1 + ipca) * (1 + juroReal) - 1;
+      const ipcaBruto = aporte * cresce(nominalIpca, meses);
+      const custodiaIpca = ((aporte + ipcaBruto) / 2) * CUSTODIA_B3 * anos;
+      const tIpca = liquidoTributado(ipcaBruto, custodiaIpca);
+      const ipcaLiqAnual = Math.pow(tIpca.liquido / aporte, 1 / anos) - 1;
+      const juroRealLiquido = ((1 + ipcaLiqAnual) / (1 + ipca) - 1) * 100;
+
+      // --- FII: rendimento isento + ganho de capital a 20% na venda. ---
+      const rendimentosFii = aporte * dyMensal * meses;
+      const valorCotasFinal = aporte; // sem premissa de valorização: só o que é verificável
+      const fiiLiquido = aporte + rendimentosFii;
+
+      const rows = [];
+      const chart = [];
+      let total = 0;
+      let sub = '';
+
+      if (objetivo === 'aposentadoria') {
+        // --- PGBL vs VGBL, tabela regressiva por prazo do aporte. ---
+        const aliqPrev = irPrevidencia(anos);
+        const montante = aporte * cresce(cdi * pctCdi, meses);
+        const rendimento = montante - aporte;
+        const tetoDeducao = rendaAnual * PGBL_TETO_DEDUCAO;
+        const dedutivel = Math.min(aporte, tetoDeducao);
+        const excedente = Math.max(0, aporte - tetoDeducao);
+        const economiaIr = dedutivel * aliqIrpf;
+
+        const liquidoPgbl = montante - montante * aliqPrev + economiaIr;
+        const liquidoVgbl = montante - rendimento * aliqPrev;
+        const vence = liquidoPgbl >= liquidoVgbl ? 'PGBL' : 'VGBL';
+        total = Math.max(liquidoPgbl, liquidoVgbl);
+
+        rows.push({ k: 'Aporte', ref: 'Valor aplicado no plano', v: aporte });
+        rows.push({ k: 'Montante bruto no fim do prazo', ref: meses + ' meses à taxa informada', v: montante, extra: true });
+        rows.push({
+          k: 'Alíquota da tabela regressiva',
+          ref: anos.toFixed(1).replace('.', ',') + ' anos de prazo · Lei 11.053/2004',
+          v: aliqPrev * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        rows.push({ k: 'Teto dedutível do PGBL', ref: '12% da renda bruta tributável · Lei 9.532/1997', v: tetoDeducao });
+        rows.push({ k: 'Parte do aporte que deduz', ref: excedente > 0 ? 'O excedente deveria ir para um VGBL' : 'Aporte inteiro dentro do teto', v: dedutivel });
+        rows.push({ k: 'Economia de IRPF no ano do aporte', ref: 'Parte dedutível × sua alíquota marginal de ' + pct(aliqIrpf * 100), v: economiaIr });
+        rows.push({ k: 'IR do resgate no PGBL', ref: 'Incide sobre o valor TOTAL resgatado', v: montante * aliqPrev });
+        rows.push({ k: 'IR do resgate no VGBL', ref: 'Incide só sobre o rendimento', v: rendimento * aliqPrev });
+        rows.push({ k: 'Líquido final com PGBL', ref: 'Resgate − IR + economia de IRPF', v: liquidoPgbl, extra: true });
+        rows.push({ k: 'Líquido final com VGBL', ref: 'Resgate − IR sobre o rendimento', v: liquidoVgbl, extra: true });
+        rows.push({ k: 'Diferença entre os dois', ref: vence + ' é a melhor escolha neste cenário', v: Math.abs(liquidoPgbl - liquidoVgbl) });
+
+        sub =
+          vence + ' vence por ' + brl(Math.abs(liquidoPgbl - liquidoVgbl)) +
+          ' · alíquota regressiva de ' + pct(aliqPrev * 100) +
+          ' · o PGBL só compensa na declaração completa e com contribuição ao INSS';
+
+        chart.push({ label: 'Aporte', value: Math.round(aporte), tone: 'main' });
+        chart.push({ label: 'Rendimento que fica com você', value: Math.round(Math.max(0, total - aporte)), tone: 'good' });
+        chart.push({
+          label: 'Imposto no resgate',
+          value: Math.round(vence === 'PGBL' ? montante * aliqPrev : rendimento * aliqPrev),
+          tone: 'bad',
+        });
+      } else if (objetivo === 'renda') {
+        total = fiiLiquido;
+        rows.push({ k: 'Valor aplicado em cotas', ref: 'Aporte informado', v: aporte });
+        rows.push({
+          k: 'Rendimento mensal isento',
+          ref: pct(dyMensal * 100) + ' ao mês sobre o valor aplicado · art. 3º III da Lei 11.033/2004',
+          v: aporte * dyMensal,
+          extra: true,
+        });
+        rows.push({ k: 'Rendimentos acumulados em ' + meses + ' meses', ref: 'Sem IR, sem reinvestimento', v: rendimentosFii, extra: true });
+        rows.push({
+          k: 'Dividend yield anualizado',
+          ref: 'Rendimento mensal composto por 12 meses',
+          v: (Math.pow(1 + dyMensal, 12) - 1) * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        rows.push({ k: 'Valor das cotas no fim (premissa conservadora)', ref: 'Sem valorização projetada: cota vale o que você pagou', v: valorCotasFinal });
+        rows.push({
+          k: 'IR se você vender com lucro',
+          ref: pct(FII_IR_GANHO * 100) + ' sobre o ganho · sem isenção de R$ 20 mil',
+          v: FII_IR_GANHO * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 0,
+        });
+        rows.push({ k: 'Poupança no mesmo prazo, para comparar', ref: 'Isenta de IR', v: poupanca });
+        rows.push({ k: 'CDB no mesmo prazo, já no líquido', ref: pct(pctCdi * 100) + ' do CDI, IR de ' + pct(aliqIr * 100), v: cdb.liquido });
+
+        sub =
+          'Renda de ' + brl(aporte * dyMensal) + ' por mês, isenta de IR, contra ' +
+          brl((cdb.liquido - aporte) / meses) + ' por mês do CDB no líquido · a cota do FII oscila, o CDB não';
+
+        chart.push({ label: 'Capital aplicado', value: Math.round(aporte), tone: 'main' });
+        chart.push({ label: 'Rendimentos isentos recebidos', value: Math.round(rendimentosFii), tone: 'good' });
+      } else {
+        // Reserva de emergência e objetivo de 2 a 5 anos: comparação direta.
+        const opcoes = [
+          { nome: 'Poupança', liquido: poupanca, ir: 0, iof: 0, custos: 0 },
+          { nome: 'CDB a ' + pct(pctCdi * 100) + ' do CDI', liquido: cdb.liquido, ir: cdb.ir, iof: cdb.iof, custos: 0 },
+          { nome: 'Tesouro Selic', liquido: tSelic.liquido, ir: tSelic.ir, iof: tSelic.iof, custos: tSelic.custos },
+        ];
+        if (objetivo !== 'reserva') {
+          opcoes.push({ nome: 'Tesouro IPCA+', liquido: tIpca.liquido, ir: tIpca.ir, iof: tIpca.iof, custos: tIpca.custos });
+        }
+        opcoes.sort((a, b) => b.liquido - a.liquido);
+        const melhor = opcoes[0];
+        const pior = opcoes[opcoes.length - 1];
+        total = melhor.liquido;
+
+        rows.push({ k: 'Valor aplicado', ref: 'Aporte único', v: aporte });
+        rows.push({
+          k: 'Prazo em dias corridos',
+          ref: meses + ' meses · define a faixa do IR',
+          v: dias,
+          format: 'unit',
+          unit: 'dias',
+        });
+        rows.push({
+          k: 'Alíquota de IR do prazo',
+          ref: 'Lei 11.033/2004 · mínimo de 15% acima de 720 dias',
+          v: aliqIr * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        if (iof > 0) {
+          rows.push({
+            k: 'IOF sobre o rendimento',
+            ref: 'Resgate antes de 30 dias · Decreto 6.306/2007',
+            v: iof * 100,
+            format: 'unit',
+            unit: '%',
+            decimals: 0,
+          });
+        }
+        opcoes.forEach((o) => {
+          rows.push({
+            k: o.nome + ' — líquido no fim',
+            ref:
+              o.ir > 0 || o.custos > 0
+                ? 'IR de ' + brl(o.ir) + (o.custos > 0 ? ' + custódia de ' + brl(o.custos) : '') + (o.iof > 0 ? ' + IOF de ' + brl(o.iof) : '')
+                : 'Isento de IR e de IOF',
+            v: o.liquido,
+            extra: o.nome === melhor.nome,
+          });
+        });
+        rows.push({ k: 'Diferença entre a melhor e a pior opção', ref: 'No mesmo prazo e no mesmo risco de crédito', v: melhor.liquido - pior.liquido });
+        if (objetivo !== 'reserva') {
+          rows.push({
+            k: 'Juro real líquido do Tesouro IPCA+',
+            ref: 'Acima do IPCA de ' + pct(ipca * 100) + ', já descontados IR e custódia',
+            v: juroRealLiquido,
+            format: 'unit',
+            unit: '% ao ano',
+            decimals: 2,
+          });
+        }
+        rows.push({
+          k: 'Rendimento mensal da poupança na Selic informada',
+          ref: selic > POUPANCA.selicGatilho ? '0,5% ao mês + TR (Selic acima de 8,5%)' : '70% da Selic + TR (Selic até 8,5%)',
+          v: poupMensal * 100,
+          format: 'unit',
+          unit: '% ao mês',
+          decimals: 3,
+        });
+
+        const ganho = melhor.liquido - aporte;
+        sub =
+          melhor.nome + ' entrega ' + brl(melhor.liquido) + ' em ' + meses + ' meses (' +
+          brl(ganho) + ' de ganho líquido), ' + brl(melhor.liquido - pior.liquido) + ' a mais que ' + pior.nome;
+
+        chart.push({ label: 'Capital aplicado', value: Math.round(aporte), tone: 'main' });
+        chart.push({ label: 'Rendimento líquido', value: Math.round(Math.max(0, ganho)), tone: 'good' });
+        chart.push({ label: 'IR, IOF e custódia', value: Math.round(melhor.ir + melhor.iof + melhor.custos), tone: 'bad' });
+      }
+
+      return {
+        total: brl(total),
+        sub: sub,
+        rows: rows,
+        chart: chart.filter((s) => s.value > 0),
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,222 @@
+---
+/**
+ * Hub de decisión PE — "AFP u ONP y cuánto voy a cobrar al jubilarme".
+ * audience="PE" literal: HubData sólo modela 'AR' | 'global' y el mercado viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  RMV,
+  ONP,
+  AFP,
+  ONP_ANIOS_MINIMOS,
+  EDAD_JUBILACION,
+  RETIRO_PCT,
+  ESSALUD_PCT,
+  EXPECTATIVA,
+  PENSION_65,
+} from '../../../lib/hubs/pe/afp-onp-y-jubilacion';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PE"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ RMV, ONP, AFP, ONP_MIN: ONP_ANIOS_MINIMOS, EDAD_JUB: EDAD_JUBILACION, RETIRO_PCT, ESSALUD_PCT, EXPECTATIVA, P65: PENSION_65 }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const sol = (n) => 'S/ ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(Math.round(n || 0));
+    const pct = (n, d) => Number(n || 0).toFixed(d === undefined ? 2 : d).replace('.', ',') + '%';
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'afp';
+      const sueldo = Math.max(0, v.sueldo || 0);
+      const edad = Math.max(0, Math.round(v.edad || 0));
+      const saldo = Math.max(0, v.saldo || 0);
+      // Una rentabilidad de 0% es un supuesto legítimo del usuario: no se pisa con un default.
+      const rAnual = Math.max(0, Number.isFinite(v.rentabilidad) ? v.rentabilidad : 6);
+      const sexo = String(v.sexo || 'hombre') === 'mujer' ? 'mujer' : 'hombre';
+      const afpId = String(v.afp || 'Integra');
+      const aniosAportados = Math.max(0, Math.round(v.aniosAportados || 0));
+
+      const comision = AFP.comisionFlujo[afpId] !== undefined ? AFP.comisionFlujo[afpId] : AFP.comisionFlujo.Integra;
+      const tasaAfp = AFP.fondo + AFP.primaSeguro + comision;
+
+      const aporteFondo = sueldo * AFP.fondo;
+      const prima = sueldo * AFP.primaSeguro;
+      const comisionSoles = sueldo * comision;
+      const descuentoAfp = aporteFondo + prima + comisionSoles;
+      const descuentoOnp = sueldo * ONP;
+
+      // Ranking de comisiones por flujo entre las cuatro administradoras.
+      const nombres = Object.keys(AFP.comisionFlujo);
+      let masBarata = nombres[0], masCara = nombres[0];
+      for (const k of nombres) {
+        if (AFP.comisionFlujo[k] < AFP.comisionFlujo[masBarata]) masBarata = k;
+        if (AFP.comisionFlujo[k] > AFP.comisionFlujo[masCara]) masCara = k;
+      }
+      const brechaComision = sueldo * (AFP.comisionFlujo[masCara] - AFP.comisionFlujo[masBarata]);
+
+      // --- Proyección del fondo a los 65 ---
+      const aniosFaltan = Math.max(0, EDAD_JUB - edad);
+      const meses = aniosFaltan * 12;
+      const rMensual = Math.pow(1 + rAnual / 100, 1 / 12) - 1;
+      const fvSaldo = saldo * Math.pow(1 + rMensual, meses);
+      const fvAportes = rMensual > 0
+        ? aporteFondo * ((Math.pow(1 + rMensual, meses) - 1) / rMensual)
+        : aporteFondo * meses;
+      const fondo = fvSaldo + fvAportes;
+      const aportadoTotal = saldo + aporteFondo * meses;
+      const rendimiento = fondo - aportadoTotal;
+
+      const retiro955 = fondo * RETIRO_PCT;
+      const aEsSalud = fondo * ESSALUD_PCT;
+
+      const aniosExp = EXPECTATIVA[sexo];
+      const mesesExp = aniosExp * 12;
+      const pension = rMensual > 0
+        ? (fondo * rMensual) / (1 - Math.pow(1 + rMensual, -mesesExp))
+        : (mesesExp > 0 ? fondo / mesesExp : 0);
+      const aniosQueDuraElRetiro = pension > 0 ? retiro955 / pension / 12 : 0;
+
+      // Pensión 65
+      const p65Anual = P65.bimestral * P65.pagosAnio;
+      const p65Mensual = p65Anual / 12;
+
+      const rows = [];
+      let total, sub, chart;
+
+      if (id === 'pension65') {
+        const cumpleEdad = edad >= P65.edadMinima;
+        const faltanAnios = Math.max(0, P65.edadMinima - edad);
+        rows.push({ k: 'Subvención por bimestre', ref: 'Programa Pensión 65 · MIDIS', v: P65.bimestral, extra: true });
+        rows.push({ k: 'Transferencias al año', ref: 'Un pago cada dos meses', v: P65.pagosAnio, format: 'plain' });
+        rows.push({ k: 'Total que se cobra en el año', ref: sol(P65.bimestral) + ' × ' + P65.pagosAnio + ' pagos', v: p65Anual });
+        rows.push({ k: 'Equivalente mensual', ref: 'Solo para comparar con otros ingresos', v: p65Mensual });
+        rows.push({ k: 'Edad mínima del programa', ref: cumpleEdad ? 'Ya cumples la edad' : 'Te faltan ' + faltanAnios + ' año(s)', v: P65.edadMinima, format: 'unit', unit: 'años' });
+        rows.push({ k: 'Requisitos que hay que cumplir a la vez', ref: 'Edad · pobreza extrema SISFOH · sin otra pensión · DNI vigente', v: 4, format: 'plain' });
+        rows.push({ k: 'Cuánto cubre de una remuneración mínima', ref: 'Equivalente mensual ÷ RMV', v: RMV > 0 ? (p65Mensual / RMV) * 100 : 0, format: 'unit', unit: '%', decimals: 0 });
+
+        total = sol(P65.bimestral);
+        sub =
+          'Pensión 65 paga ' + sol(P65.bimestral) + ' cada dos meses: ' + sol(p65Anual) + ' al año, unos ' +
+          sol(p65Mensual) + ' por mes · ' +
+          (cumpleEdad ? 'ya cumples la edad mínima' : 'te faltan ' + faltanAnios + ' año(s) para la edad mínima') +
+          ' · los cuatro requisitos son acumulativos';
+        chart = [
+          { label: 'Subvención bimestral', value: Math.round(P65.bimestral), tone: 'main' },
+          { label: 'Resto del año (5 pagos más)', value: Math.round(p65Anual - P65.bimestral), tone: 'prop' },
+        ];
+        return { total: total, sub: sub, rows: rows, chart: chart };
+      }
+
+      if (id === 'onp') {
+        const tienePension = aniosAportados >= ONP_MIN;
+        const faltanAportes = Math.max(0, ONP_MIN - aniosAportados);
+        rows.push({ k: 'Remuneración bruta del mes', ref: 'Base del aporte previsional', v: sueldo });
+        rows.push({ k: 'Descuento de la ONP', ref: pct(ONP * 100, 0) + ' de la remuneración asegurable', v: descuentoOnp, extra: true });
+        rows.push({ k: 'Te queda después del aporte', ref: 'Antes de la retención de quinta categoría', v: sueldo - descuentoOnp });
+        rows.push({ k: 'Lo mismo si estuvieras en una AFP', ref: 'AFP ' + afpId + ' · ' + pct(tasaAfp * 100) + ' total', v: descuentoAfp });
+        rows.push({ k: 'Diferencia mensual entre los dos sistemas', ref: descuentoOnp > descuentoAfp ? 'La ONP te descuenta más' : 'La AFP te descuenta más', v: Math.abs(descuentoOnp - descuentoAfp) });
+        rows.push({ k: 'Aportes que llevas', ref: tienePension ? 'Ya superas el mínimo para tener pensión' : 'Te faltan ' + faltanAportes + ' año(s) para el mínimo', v: aniosAportados, format: 'unit', unit: 'años' });
+        rows.push({ k: 'Años de aportes que exige el sistema', ref: 'Sin ese mínimo no hay pensión de jubilación', v: ONP_MIN, format: 'unit', unit: 'años' });
+        rows.push({ k: 'Aporte que harás en un año', ref: '12 meses (las gratificaciones están inafectas)', v: descuentoOnp * 12 });
+        rows.push({ k: 'Lo aportado hasta hoy a este sueldo', ref: 'Referencia: ' + aniosAportados + ' años al sueldo actual', v: descuentoOnp * 12 * aniosAportados });
+
+        total = sol(descuentoOnp);
+        sub =
+          'De ' + sol(sueldo) + ' brutos la ONP te descuenta ' + sol(descuentoOnp) + ' (' + pct(ONP * 100, 0) + ') · ' +
+          (tienePension
+            ? 'con ' + aniosAportados + ' años de aportes ya tienes derecho a pensión'
+            : 'con ' + aniosAportados + ' años todavía no tienes derecho a pensión: faltan ' + faltanAportes) +
+          ' · en AFP ' + afpId + ' el descuento sería ' + sol(descuentoAfp);
+        chart = [
+          { label: 'Te queda en mano', value: Math.round(sueldo - descuentoOnp), tone: 'main' },
+          { label: 'Aporte a la ONP (fondo común)', value: Math.round(descuentoOnp), tone: 'exit' },
+        ];
+        return { total: total, sub: sub, rows: rows, chart: chart };
+      }
+
+      // Ramas 'afp' y 'elegir': comparten el desglose del descuento y la proyección.
+      rows.push({ k: 'Remuneración bruta del mes', ref: 'Base del aporte previsional', v: sueldo });
+      rows.push({ k: 'Aporte al fondo que se acumula a tu nombre', ref: pct(AFP.fondo * 100, 0) + ' · Cuenta Individual de Capitalización', v: aporteFondo, extra: true });
+      rows.push({ k: 'Prima del seguro de invalidez y sobrevivencia', ref: pct(AFP.primaSeguro * 100) + ' · no se acumula en tu fondo', v: prima });
+      rows.push({ k: 'Comisión de la administradora', ref: 'AFP ' + afpId + ' · ' + pct(comision * 100) + ' por flujo', v: comisionSoles });
+      rows.push({ k: 'Descuento total en la AFP', ref: pct(tasaAfp * 100) + ' del sueldo', v: descuentoAfp });
+      rows.push({ k: 'El mismo sueldo en la ONP', ref: pct(ONP * 100, 0) + ' fijo, sin comisión', v: descuentoOnp });
+      rows.push({ k: 'Diferencia mensual entre los dos sistemas', ref: descuentoAfp < descuentoOnp ? 'Hoy la AFP te descuenta menos' : 'Hoy la ONP te descuenta menos', v: Math.abs(descuentoAfp - descuentoOnp) });
+      rows.push({ k: 'Brecha mensual entre la AFP más barata y la más cara', ref: masBarata + ' contra ' + masCara + ' · solo comisión', v: brechaComision });
+      rows.push({ k: 'Esa misma brecha en los años que te faltan', ref: aniosFaltan + ' años × 12 meses', v: brechaComision * meses });
+      rows.push({ k: 'Años que te faltan para los 65', ref: 'Edad de jubilación ordinaria', v: aniosFaltan, format: 'unit', unit: 'años' });
+      rows.push({ k: 'Fondo proyectado a los 65', ref: 'Saldo actual + aportes, a ' + pct(rAnual, 1) + ' anual', v: fondo });
+      rows.push({ k: 'De ese fondo, lo que aportaste', ref: 'Saldo de hoy + aportes futuros', v: aportadoTotal });
+      rows.push({ k: 'De ese fondo, el rendimiento', ref: 'Lo que genera el fondo, no tu bolsillo', v: rendimiento });
+      rows.push({ k: 'Retiro de una sola vez al jubilarte', ref: pct(RETIRO_PCT * 100, 1) + ' del fondo', v: retiro955 });
+      rows.push({ k: 'Lo que va a EsSalud de ese fondo', ref: pct(ESSALUD_PCT * 100, 1) + ' · financia tu salud como pensionista', v: aEsSalud });
+      rows.push({ k: 'Pensión mensual estimada', ref: 'Retiro programado · expectativa de ' + aniosExp + ' años', v: pension });
+      rows.push({ k: 'Cuánto duraría el retiro gastado al ritmo de esa pensión', ref: 'Retiro ÷ pensión mensual', v: aniosQueDuraElRetiro, format: 'unit', unit: 'años', decimals: 1 });
+
+      const esElegir = id === 'elegir';
+      total = esElegir ? sol(Math.abs(descuentoAfp - descuentoOnp)) : sol(descuentoAfp);
+      sub = esElegir
+        ? 'Con ' + sol(sueldo) + ' brutos, la AFP ' + afpId + ' descuenta ' + sol(descuentoAfp) + ' y la ONP ' + sol(descuentoOnp) +
+          ' · la más barata por comisión es ' + masBarata +
+          ' · en el mes casi da igual, la diferencia real es que la ONP exige ' + ONP_MIN + ' años de aportes para pagar pensión'
+        : 'De ' + sol(sueldo) + ' brutos te descuentan ' + sol(descuentoAfp) + ' (' + pct(tasaAfp * 100) + ') · solo ' +
+          sol(aporteFondo) + ' se acumula a tu nombre · a los 65 tendrías ' + sol(fondo) +
+          ', unos ' + sol(pension) + ' de pensión mensual';
+
+      chart = [
+        { label: 'Te queda en mano', value: Math.round(sueldo - descuentoAfp), tone: 'main' },
+        { label: 'Aporte al fondo (es tuyo)', value: Math.round(aporteFondo), tone: 'good' },
+        { label: 'Prima del seguro', value: Math.round(prima), tone: 'warn' },
+        { label: 'Comisión de la AFP', value: Math.round(comisionSoles), tone: 'exit' },
+      ];
+
+      return { total: total, sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

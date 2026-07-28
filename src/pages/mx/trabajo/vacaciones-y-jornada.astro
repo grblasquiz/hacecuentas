@@ -1,0 +1,233 @@
+---
+/**
+ * Hub de decisión MX — vacaciones, prima vacacional, tiempo extra y jornada.
+ * audience="MX" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  VACACIONES_MX,
+  HORAS_EXTRAS_MX,
+  DESCANSOS_MX,
+  JORNADA_MX,
+  FACTOR_MENSUAL_MX,
+  EXENCION_PRIMA_VAC_UMAS,
+  UMA_DIARIA_MX,
+} from '../../../lib/hubs/mx/vacaciones-y-jornada';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="MX"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    VAC: VACACIONES_MX,
+    HE: HORAS_EXTRAS_MX,
+    DESC: DESCANSOS_MX,
+    JORNADA: JORNADA_MX,
+    FACTOR_MENSUAL: FACTOR_MENSUAL_MX,
+    EXENCION_PRIMA_UMAS: EXENCION_PRIMA_VAC_UMAS,
+    UMA_DIARIA: UMA_DIARIA_MX,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+
+    /**
+     * Días de vacaciones por antigüedad — LFT Art. 76 (vacaciones dignas).
+     * Espejo exacto de src/lib/formulas/vacaciones-dias-antiguedad-mexico.ts:
+     * 0 días antes del primer aniversario; 12/14/16/18/20 en los años 1 a 5;
+     * 22 en los años 6-10 y +2 por cada quinquenio posterior.
+     */
+    function diasVacaciones(aniosRaw) {
+      const a = Math.floor(Math.max(0, aniosRaw || 0));
+      if (a < 1) return 0;
+      if (a <= VAC.porAnio.length) return VAC.porAnio[a - 1];
+      const quinquenios = Math.floor((a - 6) / 5);
+      return 22 + quinquenios * VAC.incrementoQuinquenal;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'dias';
+      const sueldo = Math.max(0, v.sueldo || 0);
+      const salarioDiario = sueldo / FACTOR_MENSUAL;
+      const anios = Math.floor(Math.max(0, v.antiguedad || 0));
+      const dias = diasVacaciones(anios);
+
+      // ── Caso 3: horas extra (LFT Arts. 66-68) ──────────────────────────
+      if (id === 'extras') {
+        const jornada = Math.min(12, Math.max(1, v.jornadaDiaria || 8));
+        const extras = Math.max(0, v.horasExtra || 0);
+        const valorHora = salarioDiario / jornada;
+        const horasDobles = Math.min(extras, HE.doblesMaxSemanal);
+        const horasTriples = Math.max(0, extras - HE.doblesMaxSemanal);
+        const pagoDobles = horasDobles * valorHora * HE.tasaDoble;
+        const pagoTriples = horasTriples * valorHora * HE.tasaTriple;
+        const total = pagoDobles + pagoTriples;
+
+        return ({
+          total: mxn(total),
+          sub:
+            'Por ' + extras + ' horas extra en la semana. Tu hora ordinaria vale ' + mxn(valorHora) + '.' +
+            (horasTriples > 0
+              ? ' Ojo: ' + horasTriples + ' de esas horas exceden el tope legal de ' + HE.doblesMaxSemanal + ' por semana (LFT Art. 66).'
+              : ''),
+          rows: [
+            { k: 'Valor de tu hora ordinaria', ref: 'salario diario / jornada', v: valorHora, decimals: 2 },
+            { k: 'Horas pagadas al doble', ref: 'LFT Art. 67', v: horasDobles, format: 'unit', unit: 'horas', decimals: 1 },
+            { k: 'Pago de las horas dobles', v: pagoDobles },
+            { k: 'Horas pagadas al triple', ref: 'LFT Art. 68', v: horasTriples, format: 'unit', unit: 'horas', decimals: 1 },
+            { k: 'Pago de las horas triples', v: pagoTriples },
+            { k: 'Total de tiempo extraordinario en la semana', v: total, extra: true },
+            { k: 'Equivalente mensual aproximado', ref: '4,33 semanas', v: total * 4.333333 },
+          ],
+          chart: [
+            { label: 'Horas al doble', value: pagoDobles, tone: 'main' },
+            { label: 'Horas al triple', value: pagoTriples, tone: 'bad' },
+          ],
+        });
+      }
+
+      // ── Caso 4: calendario de la jornada ───────────────────────────────
+      if (id === 'jornada') {
+        const anio = String(v.anio || '2027');
+        const maxima = JORNADA[anio] !== undefined ? JORNADA[anio] : 48;
+        const hoy = Math.min(48, Math.max(1, v.horasSemana || 48));
+        const nuevas = Math.min(hoy, maxima);
+        const bajan = Math.max(0, hoy - maxima);
+        const horasMes = (h) => (h * 52) / 12;
+        const valorHoraHoy = sueldo > 0 ? sueldo / horasMes(hoy) : 0;
+        const valorHoraAnio = sueldo > 0 ? sueldo / horasMes(nuevas) : 0;
+        const valorHora2030 = sueldo > 0 ? sueldo / horasMes(Math.min(hoy, 40)) : 0;
+
+        return ({
+          total: maxima + ' h por semana',
+          sub:
+            anio === '2026'
+              ? 'En 2026 la jornada máxima legal sigue siendo de 48 horas: la reducción arranca el 1 de enero de 2027.'
+              : 'Jornada máxima legal en ' + anio + '. ' +
+                (bajan > 0
+                  ? 'Tu semana se acorta ' + bajan + ' h, sin que baje tu salario.'
+                  : 'Ya trabajas por debajo del tope de ese año.'),
+          rows: [
+            { k: 'Jornada máxima legal en ' + anio, v: maxima, format: 'unit', unit: 'h/semana' },
+            { k: 'Horas que trabajas hoy', v: hoy, format: 'unit', unit: 'h/semana' },
+            { k: 'Horas que se te acortan', v: bajan, format: 'unit', unit: 'h/semana', extra: true },
+            { k: 'Valor de tu hora hoy', v: valorHoraHoy, decimals: 2 },
+            { k: 'Valor de tu hora en ' + anio, v: valorHoraAnio, decimals: 2 },
+            { k: 'Valor de tu hora en 2030 (meta de 40 h)', v: valorHora2030, decimals: 2 },
+          ],
+          chart: Object.keys(JORNADA).map((a) => ({
+            label: a,
+            value: JORNADA[a],
+            tone: a === anio ? 'main' : 'prop',
+          })),
+          format: 'unit',
+          unit: 'h',
+        });
+      }
+
+      // ── Caso 2: pago de vacaciones y prima ─────────────────────────────
+      if (id === 'pago') {
+        const primaPct = Math.max(VAC.primaVacacional * 100, v.primaPct || VAC.primaVacacional * 100) / 100;
+        const pagoDias = dias * salarioDiario;
+        const primaLegal = dias * salarioDiario * VAC.primaVacacional;
+        const primaReal = dias * salarioDiario * primaPct;
+        const exento = EXENCION_PRIMA_UMAS * UMA_DIARIA;
+        const gravado = Math.max(0, primaReal - exento);
+
+        return ({
+          total: mxn(pagoDias + primaReal),
+          sub:
+            dias + ' días de vacaciones con salario diario de ' + mxn(salarioDiario) +
+            ', más prima vacacional del ' + (primaPct * 100).toFixed(0) + '%.',
+          rows: [
+            { k: 'Días de vacaciones', ref: 'LFT Art. 76', v: dias, format: 'unit', unit: 'días' },
+            { k: 'Salario diario', v: salarioDiario, decimals: 2 },
+            { k: 'Salario de los días de vacaciones', v: pagoDias },
+            { k: 'Prima vacacional mínima de ley (25%)', ref: 'LFT Art. 80', v: primaLegal },
+            { k: 'Prima vacacional que te pagan', v: primaReal, extra: true },
+            { k: 'Parte exenta de ISR de la prima', ref: 'LISR Art. 93 · ' + EXENCION_PRIMA_UMAS + ' UMA', v: Math.min(primaReal, exento) },
+            { k: 'Parte gravada de la prima', v: gravado },
+            { k: 'Total a cobrar', v: pagoDias + primaReal },
+          ],
+          chart: [
+            { label: 'Salario de los días', value: pagoDias, tone: 'main' },
+            { label: 'Prima vacacional', value: primaReal, tone: 'good' },
+          ],
+        });
+      }
+
+      // ── Caso 1: días de vacaciones ─────────────────────────────────────
+      const proporcional = anios < 1 ? VAC.porAnio[0] * Math.min(1, Math.max(0, v.antiguedad || 0)) : 0;
+      const siguiente = diasVacaciones(anios + 1);
+
+      return ({
+        total: (anios < 1 ? proporcional.toFixed(1).replace('.', ',') : String(dias)) + ' días',
+        sub:
+          anios < 1
+            ? 'Aún no cumples el primer aniversario: el derecho nace al cumplirlo. Mientras tanto, en el finiquito te tocan proporcionales sobre los 12 días del primer año.'
+            : 'Con ' + anios + ' años de antigüedad. El próximo aniversario pasas a ' + siguiente + ' días.',
+        rows: [
+          { k: 'Días de vacaciones este año', ref: 'LFT Art. 76', v: anios < 1 ? proporcional : dias, format: 'unit', unit: 'días', decimals: 1, extra: true },
+          { k: 'Días en tu próximo aniversario', v: siguiente, format: 'unit', unit: 'días' },
+          { k: 'Días el primer año', v: VAC.porAnio[0], format: 'unit', unit: 'días' },
+          { k: 'Días al quinto año', v: VAC.porAnio[VAC.porAnio.length - 1], format: 'unit', unit: 'días' },
+          { k: 'Días a los diez años', v: diasVacaciones(10), format: 'unit', unit: 'días' },
+          { k: 'Días a los veinte años', v: diasVacaciones(20), format: 'unit', unit: 'días' },
+          { k: 'Valor en dinero de tus días', v: (anios < 1 ? proporcional : dias) * salarioDiario, format: 'ars' },
+        ],
+        chart: [1, 3, 5, 10, 15, 20].map((a) => ({
+          label: a + ' años',
+          value: diasVacaciones(a),
+          tone: a === Math.max(1, anios) ? 'main' : 'prop',
+        })),
+        format: 'unit',
+        unit: 'días',
+      });
+    });
+  })();
+</script>

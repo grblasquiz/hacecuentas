@@ -1,0 +1,274 @@
+---
+/**
+ * Decision hub EN — "When am I fertile, and when is the baby due?"
+ * Replaces 14 loose calculator URLs (see hub.replaces).
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  GESTATION_FROM_LMP,
+  GESTATION_FROM_CONCEPTION,
+  IVF_OFFSET,
+  WINDOW,
+  WEIGHT_GAIN,
+  FIRST_TRIMESTER_LB,
+  HADLOCK,
+} from '../../../lib/hubs/en/fertility-and-pregnancy';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    LMP_DAYS: GESTATION_FROM_LMP,
+    CONC_DAYS: GESTATION_FROM_CONCEPTION,
+    IVF: IVF_OFFSET,
+    WINDOW,
+    GAIN: WEIGHT_GAIN,
+    T1: FIRST_TRIMESTER_LB,
+    HADLOCK,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const DAY = 86400000;
+
+    function parseDate(s) {
+      if (!s || typeof s !== 'string') return null;
+      const p = s.split('-').map(Number);
+      if (p.length !== 3 || !p[0]) return null;
+      return Date.UTC(p[0], p[1] - 1, p[2]);
+    }
+    function addDays(ms, d) { return ms + d * DAY; }
+    function fmtDate(ms) {
+      return new Date(ms).toLocaleDateString('en-US', { timeZone: 'UTC', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    function todayUTC() {
+      const n = new Date();
+      return Date.UTC(n.getFullYear(), n.getMonth(), n.getDate());
+    }
+    const daysFromToday = (ms) => Math.round((ms - todayUTC()) / DAY);
+
+    /** Robinson & Fleming 1975: gestational age in days from crown-rump length in mm. */
+    function crlToDays(mm) {
+      if (!(mm > 0)) return 0;
+      return 8.052 * Math.sqrt(mm * 1.037) + 23.73;
+    }
+    /** Hadlock 1991 composite in-utero growth curve: mean EFW in grams at a gestational week. */
+    function hadlockMean(weeks) {
+      if (!(weeks > 0)) return 0;
+      return Math.exp(HADLOCK.a + HADLOCK.b * weeks - HADLOCK.c * weeks * weeks);
+    }
+    function gainBand(bmi) {
+      for (const b of GAIN) if (bmi < b.maxBmi) return b;
+      return GAIN[GAIN.length - 1];
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'ttc';
+      const start = parseDate(v.startDate);
+      const cycle = Math.max(20, Math.round(v.cycle || 28));
+      const luteal = Math.max(10, Math.round(v.luteal || 14));
+      const rows = [];
+
+      if (!start) {
+        return { total: 'Enter a date', sub: 'Pick the key date for the case you selected.', rows: [], chart: [], format: 'plain' };
+      }
+
+      // ---- Fertility cases -------------------------------------------------
+      if (id === 'ttc' || id === 'irregular') {
+        let winStart, winEnd, ovulation, label;
+        if (id === 'ttc') {
+          // Cycle day 1 is the first day of bleeding, so cycle day N is start + (N − 1).
+          ovulation = addDays(start, cycle - luteal - 1);
+          winStart = addDays(ovulation, -WINDOW.spermDaysBefore);
+          winEnd = addDays(ovulation, WINDOW.eggDaysAfter);
+          label = 'Ovulation ' + fmtDate(ovulation);
+          rows.push({ k: 'Ovulation day', ref: 'Cycle ' + cycle + ' − luteal ' + luteal + ' days', v: daysFromToday(ovulation), format: 'unit', unit: 'days from today', decimals: 0, extra: true });
+          rows.push({ k: 'Peak fertility starts', ref: 'The 2 highest-probability days', v: daysFromToday(addDays(ovulation, -WINDOW.peakDaysBefore)), format: 'unit', unit: 'days from today', decimals: 0 });
+          rows.push({ k: 'Next period due if not pregnant', ref: 'Start + one full cycle', v: daysFromToday(addDays(start, cycle)), format: 'unit', unit: 'days from today', decimals: 0 });
+          rows.push({ k: 'Cycle day today', ref: 'Counting from the first day of bleeding', v: Math.round((todayUTC() - start) / DAY) + 1, format: 'plain' });
+        } else {
+          const shortest = Math.max(20, Math.round(v.shortest || 26));
+          const longest = Math.max(shortest, Math.round(v.longest || 34));
+          // Calendar rule in cycle days: first fertile day = shortest − 18, last = longest − 11.
+          winStart = addDays(start, shortest - 18 - 1);
+          winEnd = addDays(start, longest - 11 - 1);
+          ovulation = addDays(start, Math.round((longest + shortest) / 2) - luteal - 1);
+          label = 'Fertile from ' + fmtDate(winStart);
+          rows.push({ k: 'Shortest cycle recorded', ref: 'First fertile day = shortest − 18', v: shortest, format: 'unit', unit: 'days', decimals: 0 });
+          rows.push({ k: 'Longest cycle recorded', ref: 'Last fertile day = longest − 11', v: longest, format: 'unit', unit: 'days', decimals: 0 });
+          rows.push({ k: 'Variation between them', ref: 'Over about 8 days is clinically irregular', v: longest - shortest, format: 'unit', unit: 'days', decimals: 0, extra: true });
+        }
+        const windowDays = Math.round((winEnd - winStart) / DAY) + 1;
+        rows.push({ k: 'Fertile window opens', ref: fmtDate(winStart), v: daysFromToday(winStart), format: 'unit', unit: 'days from today', decimals: 0, extra: true });
+        rows.push({ k: 'Fertile window closes', ref: fmtDate(winEnd), v: daysFromToday(winEnd), format: 'unit', unit: 'days from today', decimals: 0 });
+        rows.push({ k: 'Days in the fertile window', ref: 'Sperm survive up to 5 days; the egg about 1', v: windowDays, format: 'unit', unit: 'days', decimals: 0 });
+        rows.push({ k: 'Due date if you conceive this cycle', ref: 'Ovulation + 266 days', v: daysFromToday(addDays(ovulation, CONC_DAYS)), format: 'unit', unit: 'days from today', decimals: 0 });
+
+        return {
+          total: fmtDate(winStart) + ' → ' + fmtDate(winEnd),
+          sub:
+            label + ' · ' + windowDays + '-day fertile window · a due date from this cycle would be ' +
+            fmtDate(addDays(ovulation, CONC_DAYS)),
+          rows: rows,
+          format: 'plain',
+          position: Math.min(100, Math.max(0, (windowDays / 42) * 100)),
+          positionLabel: windowDays + ' fertile days this cycle',
+          chart: [
+            { label: 'First trimester (0–13 w)', value: 13, from: 0, to: 13, tone: 'prop' },
+            { label: 'Second trimester (14–27 w)', value: 27, from: 13, to: 27, tone: 'good' },
+            { label: 'Third trimester (28–36 w)', value: 37, from: 27, to: 37, tone: 'main' },
+            { label: 'Term (37–42 w)', value: 42, from: 37, to: 42, tone: 'good' },
+          ],
+        };
+      }
+
+      // ---- Dating cases ----------------------------------------------------
+      let edd, lmpEquiv, method;
+      if (id === 'lmp') {
+        // Naegele adjusted for cycle length: a 32-day cycle ovulates 4 days late.
+        edd = addDays(start, LMP_DAYS + (cycle - 28));
+        lmpEquiv = start;
+        method = 'Last period + ' + LMP_DAYS + ' days' + (cycle !== 28 ? ', adjusted ' + (cycle - 28 > 0 ? '+' : '') + (cycle - 28) + ' d for a ' + cycle + '-day cycle' : '');
+      } else if (id === 'conception') {
+        edd = addDays(start, CONC_DAYS);
+        lmpEquiv = addDays(start, -14);
+        method = 'Conception + ' + CONC_DAYS + ' days';
+      } else if (id === 'ivf') {
+        const day5 = String(v.embryoDay) !== '3';
+        const off = day5 ? IVF.day5 : IVF.day3;
+        edd = addDays(start, off);
+        lmpEquiv = addDays(start, day5 ? -19 : -17);
+        method = (day5 ? 'Day-5 blastocyst' : 'Day-3 embryo') + ': transfer + ' + off + ' days';
+      } else {
+        // Ultrasound: the entered date is the scan date and CRL gives the age on that day.
+        const gaDays = crlToDays(Math.max(0, v.crl || 0));
+        lmpEquiv = addDays(start, -Math.round(gaDays));
+        edd = addDays(lmpEquiv, LMP_DAYS);
+        method = 'CRL ' + (v.crl || 0) + ' mm → ' + (gaDays / 7).toFixed(1) + ' weeks at the scan (Robinson-Fleming)';
+        rows.push({ k: 'Gestational age at the scan', ref: 'Robinson & Fleming 1975', v: gaDays / 7, format: 'unit', unit: 'weeks', decimals: 1 });
+      }
+
+      const ageDays = Math.round((todayUTC() - lmpEquiv) / DAY);
+      const weeks = Math.floor(ageDays / 7);
+      const days = ageDays - weeks * 7;
+      const trimester = weeks < 14 ? 'first' : weeks < 28 ? 'second' : 'third';
+
+      rows.push({ k: 'Estimated due date', ref: method, v: daysFromToday(edd), format: 'unit', unit: 'days from today', decimals: 0, extra: true });
+      rows.push({ k: 'Last-period equivalent', ref: 'What charts, scans and tests count from', v: daysFromToday(lmpEquiv), format: 'unit', unit: 'days from today', decimals: 0 });
+      rows.push({ k: 'How far along you are', ref: weeks + ' weeks and ' + days + ' days · ' + trimester + ' trimester', v: weeks + days / 7, format: 'unit', unit: 'weeks', decimals: 1, extra: true });
+      rows.push({ k: 'Days to go until the due date', ref: 'Term is anything from 37 to 42 weeks', v: daysFromToday(edd), format: 'unit', unit: 'days', decimals: 0 });
+
+      // Milestones.
+      [
+        [12, 'End of the first trimester and the usual dating scan'],
+        [20, 'Anatomy scan'],
+        [28, 'Third trimester begins'],
+        [37, 'Full term begins'],
+      ].forEach(function (m) {
+        rows.push({
+          k: 'Week ' + m[0] + ' — ' + m[1],
+          ref: fmtDate(addDays(lmpEquiv, m[0] * 7)),
+          v: daysFromToday(addDays(lmpEquiv, m[0] * 7)),
+          format: 'unit',
+          unit: 'days from today',
+          decimals: 0,
+        });
+      });
+
+      // Fetal weight on the Hadlock curve.
+      if (weeks >= 10 && weeks <= 42) {
+        const mean = hadlockMean(weeks + days / 7);
+        rows.push({ k: 'Expected fetal weight at this age (50th percentile)', ref: 'Hadlock 1991 composite curve', v: mean, format: 'unit', unit: 'grams', decimals: 0 });
+        rows.push({ k: '10th percentile — below this is small for gestational age', ref: 'Mean − 1.28 SD, CV 12.7%', v: mean * (1 - 1.28 * HADLOCK.cv), format: 'unit', unit: 'grams', decimals: 0 });
+        rows.push({ k: '90th percentile — above this is large for gestational age', ref: 'Mean + 1.28 SD, CV 12.7%', v: mean * (1 + 1.28 * HADLOCK.cv), format: 'unit', unit: 'grams', decimals: 0 });
+      }
+
+      // Weight gain by pre-pregnancy BMI (IOM 2009).
+      const lb = Math.max(0, v.prePregWeight || 0);
+      const inches = Math.max(0, v.height || 0);
+      if (lb > 0 && inches > 0) {
+        const bmi = (lb / (inches * inches)) * 703;
+        const band = gainBand(bmi);
+        rows.push({ k: 'Pre-pregnancy BMI — ' + band.label, ref: 'IOM / NASEM 2009', v: bmi, format: 'unit', unit: 'BMI', decimals: 1 });
+        rows.push({ k: 'Total weight gain recommended — lower end', ref: 'Singleton pregnancy', v: band.minLb, format: 'unit', unit: 'lb', decimals: 0 });
+        rows.push({ k: 'Total weight gain recommended — upper end', ref: 'Singleton pregnancy', v: band.maxLb, format: 'unit', unit: 'lb', decimals: 0 });
+        rows.push({ k: 'Expected gain per week from the second trimester', ref: 'First trimester total: ' + T1.min + ' to ' + T1.max + ' lb', v: (band.rateMin + band.rateMax) / 2, format: 'unit', unit: 'lb per week', decimals: 2 });
+        if (weeks > 13) {
+          const expected = T1.max + (weeks - 13) * ((band.rateMin + band.rateMax) / 2);
+          rows.push({ k: 'Total gain expected by week ' + weeks, ref: 'First trimester plus the weekly rate since', v: expected, format: 'unit', unit: 'lb', decimals: 1, extra: true });
+        }
+      }
+
+      // Corrected age for a preterm baby.
+      const wb = Math.round(v.weeksAtBirth || 0);
+      if (wb > 0 && wb < 40) {
+        rows.push({ k: 'Weeks born early', ref: '40 weeks minus ' + wb, v: 40 - wb, format: 'unit', unit: 'weeks', decimals: 0 });
+        rows.push({ k: 'Subtract this from chronological age for corrected age', ref: 'AAP — use until about age 2', v: (40 - wb) / 4.345, format: 'unit', unit: 'months', decimals: 1, extra: true });
+      }
+
+      const pos = Math.min(100, Math.max(0, (weeks + days / 7) / 42 * 100));
+
+      return {
+        total: fmtDate(edd),
+        sub:
+          weeks + ' weeks and ' + days + ' days today · ' + trimester + ' trimester · ' +
+          Math.max(0, daysFromToday(edd)) + ' days to go · ' + method,
+        rows: rows,
+        format: 'plain',
+        position: pos,
+        positionLabel: weeks + 'w ' + days + 'd — ' + trimester + ' trimester',
+        chart: [
+          { label: 'First trimester (0–13 w)', value: 13, from: 0, to: 13, tone: 'prop' },
+          { label: 'Second trimester (14–27 w)', value: 27, from: 13, to: 27, tone: 'good' },
+          { label: 'Third trimester (28–36 w)', value: 37, from: 27, to: 37, tone: 'main' },
+          { label: 'Term (37–42 w)', value: 42, from: 37, to: 42, tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

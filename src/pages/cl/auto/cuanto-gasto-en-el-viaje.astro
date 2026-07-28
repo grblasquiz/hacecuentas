@@ -1,0 +1,351 @@
+---
+/**
+ * Hub de decisión CL — "¿Cuánto me sale este viaje en auto?"
+ * Ruta bajo el prefijo /cl/, igual que las calculadoras que absorbe.
+ * audience="CL" va literal al Layout: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UTM,
+  IVA,
+  COMBUSTIBLES,
+  TAG_TARIFAS,
+  TCO_ANIOS,
+  TCO_SUPUESTOS,
+  PERMISO_TRAMOS,
+  PERMISO_MINIMO_UTM,
+} from '../../../lib/hubs/cl/cuanto-gasto-en-el-viaje';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    UTM,
+    IVA,
+    COMBUSTIBLES,
+    TAG_TARIFAS,
+    TCO_ANIOS,
+    TCO_SUPUESTOS,
+    PERMISO_TRAMOS,
+    PERMISO_MINIMO_UTM,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+
+    const TASA_DEFAULT = COMBUSTIBLES[0].utmM3;      // g93, valor precargado del campo
+    const TARIFA_DEFAULT = TAG_TARIFAS[1].valorKm;   // punta, valor precargado del campo
+
+    // Permiso de circulación — tabla progresiva en UTM, Art. 12 Ley 18.290.
+    function permisoCirculacion(valor) {
+      const enUtm = valor / UTM;
+      let tramo = PERMISO_TRAMOS[0];
+      for (const t of PERMISO_TRAMOS) {
+        if (t.hastaUtm === null || enUtm <= t.hastaUtm) { tramo = t; break; }
+      }
+      return Math.max(PERMISO_MINIMO_UTM, tramo.fijoUtm + (enUtm - tramo.desdeUtm) * tramo.tasa) * UTM;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'viaje';
+
+      const km = Math.max(0, Number(v.distanciaKm) || 0);
+      const consumo = Math.max(0, Number(v.consumoL100) || 0);
+      const precioLitro = Math.max(0, v.precioLitro || 0);
+      const peajes = Math.max(0, v.peajes || 0);
+      const kmTag = Math.max(0, Number(v.kmDiariosTag) || 0);
+      const diasTag = Math.min(31, Math.max(0, Math.round(Number(v.diasMesTag) || 22)));
+      const arriendoTag = Math.max(0, v.arriendoTag || 0);
+      const kmAnuales = Math.max(0, Number(v.kmAnuales) || 0);
+      const precioElectrico = Math.max(0, v.precioElectrico || 0);
+      const precioBencinero = Math.max(0, v.precioBencinero || 0);
+      const consumoKwh = Math.max(0, Number(v.consumoKwh100) || 0);
+      const precioKwh = Math.max(0, Number(v.precioKwh) || 0);
+
+      const comb = COMBUSTIBLES.find((c) => c.id === v.combustible) || COMBUSTIBLES[0];
+      // Si el usuario no tocó la tasa, se usa la del combustible elegido.
+      const tasaPuesta = Number(v.tasaUtmM3);
+      const tasaUtmM3 = tasaPuesta > 0 && Math.abs(tasaPuesta - TASA_DEFAULT) > 1e-9 ? tasaPuesta : comb.utmM3;
+
+      const tarifaSel = TAG_TARIFAS.find((t) => t.id === v.tarifaTag) || TAG_TARIFAS[0];
+      const tarifaPuesta = Number(v.tarifaKm);
+      const tarifaKm = tarifaPuesta > 0 && tarifaPuesta !== TARIFA_DEFAULT ? tarifaPuesta : tarifaSel.valorKm;
+
+      const rows = [];
+      let total, sub, chart;
+
+      if (id === 'tag') {
+        const costoDiario = kmTag * tarifaKm;
+        const peajesMes = costoDiario * diasTag;
+        const mensual = peajesMes + arriendoTag;
+        const anual = mensual * 12;
+        // Bencina de esos mismos kilómetros, para comparar.
+        const kmMes = kmTag * diasTag;
+        const bencinaMes = (kmMes * consumo / 100) * precioLitro;
+
+        rows.push({
+          k: 'Kilómetros diarios en autopista',
+          ref: 'Ida y vuelta si corresponde',
+          v: kmTag,
+          format: 'unit',
+          unit: 'km',
+        });
+        rows.push({ k: 'Tarifa por kilómetro aplicada', ref: tarifaSel.nombre, v: tarifaKm });
+        rows.push({ k: 'Costo de peaje por día', ref: 'Kilómetros × tarifa', v: costoDiario });
+        rows.push({
+          k: 'Días al mes que usas la autopista',
+          ref: 'Días hábiles típicos: 22',
+          v: diasTag,
+          format: 'unit',
+          unit: 'días',
+        });
+        rows.push({ k: 'Peajes del mes', ref: 'Costo diario × días', v: peajesMes });
+        rows.push({ k: 'Arriendo del dispositivo TAG', ref: 'Se cobra aunque no la uses', v: arriendoTag });
+        rows.push({ k: 'Total de TAG al mes', ref: 'Peajes más arriendo', v: mensual, extra: true });
+        rows.push({ k: 'Total de TAG al año', ref: 'Mensual × 12', v: anual });
+        rows.push({
+          k: 'Kilómetros que haces al mes por autopista',
+          ref: 'Base de la comparación con la bencina',
+          v: kmMes,
+          format: 'unit',
+          unit: 'km',
+        });
+        rows.push({ k: 'Bencina de esos mismos kilómetros', ref: 'Con tu consumo y el precio del litro', v: bencinaMes });
+        rows.push({
+          k: 'Cuánto pesa el TAG comparado con la bencina',
+          ref: 'TAG del mes ÷ bencina del mes',
+          v: bencinaMes > 0 ? (mensual / bencinaMes) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 0,
+        });
+
+        total = clp(mensual);
+        sub =
+          'Con ' + kmTag + ' km diarios en ' + tarifaSel.nombre + ' a ' + clp(tarifaKm) + '/km, gastas ' +
+          clp(costoDiario) + ' por día y ' + clp(mensual) + ' al mes con el arriendo incluido · ' +
+          clp(anual) + ' al año';
+        chart = [
+          { label: 'Peajes del mes', value: Math.round(peajesMes), tone: 'main' },
+          { label: 'Arriendo del TAG', value: Math.round(arriendoTag), tone: 'warn' },
+          { label: 'Bencina de esos km', value: Math.round(bencinaMes), tone: 'prop' },
+        ];
+      } else if (id === 'impuestos') {
+        // Impuesto específico por litro: (UTM/m³) × UTM ÷ 1.000.
+        const especifico = (tasaUtmM3 * UTM) / 1000;
+        // El impuesto específico NO integra la base del IVA (Art. 6° Ley 18.502):
+        // el IVA se calcula sobre el resto del precio.
+        const baseConIva = Math.max(0, precioLitro - especifico);
+        const iva = baseConIva * (IVA / (1 + IVA));
+        const componenteBase = Math.max(0, baseConIva - iva);
+        const totalImpuestos = especifico + iva;
+        const pct = precioLitro > 0 ? (totalImpuestos / precioLitro) * 100 : 0;
+        const litrosViaje = km * consumo / 100;
+
+        rows.push({ k: 'Precio del litro en surtidor', ref: comb.nombre, v: precioLitro });
+        rows.push({
+          k: 'Tasa del impuesto específico aplicada',
+          ref: 'Ley 18.502 + MEPCO · dato editable',
+          v: tasaUtmM3,
+          format: 'unit',
+          unit: 'UTM/m³',
+          decimals: 4,
+        });
+        rows.push({ k: 'Impuesto específico por litro', ref: 'Tasa × UTM ÷ 1.000', v: especifico, extra: true });
+        rows.push({ k: 'IVA por litro', ref: Math.round(IVA * 100) + '% sobre el combustible, sin el específico', v: iva });
+        rows.push({ k: 'Combustible, transporte y margen', ref: 'Lo que no es impuesto', v: componenteBase });
+        rows.push({ k: 'Total de impuestos por litro', ref: 'Específico más IVA', v: totalImpuestos });
+        rows.push({
+          k: 'Porcentaje del litro que se lleva el Estado',
+          ref: 'Impuestos ÷ precio',
+          v: pct,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        rows.push({
+          k: 'Litros de tu viaje',
+          ref: km + ' km a ' + consumo.toLocaleString('es-CL') + ' L/100 km',
+          v: litrosViaje,
+          format: 'unit',
+          unit: 'L',
+          decimals: 1,
+        });
+        rows.push({ k: 'Impuestos que pagas sólo en este viaje', ref: 'Litros × impuestos por litro', v: litrosViaje * totalImpuestos });
+        rows.push({ k: 'Costo del combustible del viaje', ref: 'Litros × precio del litro', v: litrosViaje * precioLitro });
+
+        total = clp(totalImpuestos);
+        sub =
+          'De los ' + clp(precioLitro) + ' que pagas por litro de ' + comb.nombre.toLowerCase() + ', ' +
+          clp(especifico) + ' son impuesto específico y ' + clp(iva) + ' son IVA: ' + clp(totalImpuestos) +
+          ' (' + pct.toFixed(1).replace('.', ',') + '%) se los lleva el Estado';
+        chart = [
+          { label: 'Combustible y margen', value: Math.round(componenteBase), tone: 'main' },
+          { label: 'Impuesto específico', value: Math.round(especifico), tone: 'bad' },
+          { label: 'IVA', value: Math.round(iva), tone: 'warn' },
+        ];
+      } else if (id === 'electrico') {
+        const A = TCO_ANIOS;
+        const energiaAnualE = (kmAnuales * consumoKwh / 100) * precioKwh;
+        const energiaAnualB = (kmAnuales * consumo / 100) * precioLitro;
+        const permisoE = permisoCirculacion(precioElectrico);
+        const permisoB = permisoCirculacion(precioBencinero);
+
+        const operacionAnualE =
+          energiaAnualE + TCO_SUPUESTOS.mantencionAnualElectrico + TCO_SUPUESTOS.seguroAnualElectrico +
+          TCO_SUPUESTOS.revisionTecnicaAnual + permisoE;
+        const operacionAnualB =
+          energiaAnualB + TCO_SUPUESTOS.mantencionAnualBencinero + TCO_SUPUESTOS.seguroAnualBencinero +
+          TCO_SUPUESTOS.revisionTecnicaAnual + permisoB;
+
+        const residualE = precioElectrico * Math.pow(1 - TCO_SUPUESTOS.depreciacionAnualElectrico, A);
+        const residualB = precioBencinero * Math.pow(1 - TCO_SUPUESTOS.depreciacionAnualBencinero, A);
+
+        const tcoE = precioElectrico + operacionAnualE * A - residualE;
+        const tcoB = precioBencinero + operacionAnualB * A - residualB;
+        const ahorro = tcoB - tcoE;
+        const kmTotales = kmAnuales * A;
+
+        rows.push({ k: 'Precio del auto eléctrico', ref: 'Precio de lista', v: precioElectrico });
+        rows.push({ k: 'Precio del bencinero equivalente', ref: 'Precio de lista', v: precioBencinero });
+        rows.push({ k: 'Sobreprecio del eléctrico', ref: 'Lo que hay que recuperar', v: Math.abs(precioElectrico - precioBencinero) });
+        rows.push({ k: 'Energía del eléctrico en ' + A + ' años', ref: consumoKwh + ' kWh/100 km a ' + clp(precioKwh) + '/kWh', v: energiaAnualE * A });
+        rows.push({ k: 'Bencina del bencinero en ' + A + ' años', ref: consumo.toLocaleString('es-CL') + ' L/100 km a ' + clp(precioLitro) + '/L', v: energiaAnualB * A });
+        rows.push({ k: 'Lo que ahorras en energía en ' + A + ' años', ref: 'Diferencia entre las dos', v: Math.max(0, (energiaAnualB - energiaAnualE) * A), extra: true });
+        rows.push({ k: 'Mantención del eléctrico en ' + A + ' años', ref: 'Supuesto editable de mercado', v: TCO_SUPUESTOS.mantencionAnualElectrico * A });
+        rows.push({ k: 'Mantención del bencinero en ' + A + ' años', ref: 'Supuesto editable de mercado', v: TCO_SUPUESTOS.mantencionAnualBencinero * A });
+        rows.push({ k: 'Permiso de circulación del eléctrico en ' + A + ' años', ref: 'Art. 12 Ley 18.290 sobre su valor', v: permisoE * A });
+        rows.push({ k: 'Permiso de circulación del bencinero en ' + A + ' años', ref: 'Art. 12 Ley 18.290 sobre su valor', v: permisoB * A });
+        rows.push({ k: 'Valor residual del eléctrico al año ' + A, ref: Math.round(TCO_SUPUESTOS.depreciacionAnualElectrico * 100) + '% anual de depreciación', v: residualE });
+        rows.push({ k: 'Valor residual del bencinero al año ' + A, ref: Math.round(TCO_SUPUESTOS.depreciacionAnualBencinero * 100) + '% anual de depreciación', v: residualB });
+        rows.push({ k: 'Costo total de propiedad del eléctrico', ref: 'Compra más operación menos residual', v: tcoE });
+        rows.push({ k: 'Costo total de propiedad del bencinero', ref: 'Compra más operación menos residual', v: tcoB });
+        rows.push({
+          k: ahorro >= 0 ? 'Lo que ahorras eligiendo el eléctrico' : 'Lo que te cuesta de más el eléctrico',
+          ref: 'Diferencia de costo total a ' + A + ' años',
+          v: Math.abs(ahorro),
+          extra: true,
+        });
+        rows.push({ k: 'Costo por kilómetro del eléctrico', ref: kmTotales.toLocaleString('es-CL') + ' km en ' + A + ' años', v: kmTotales > 0 ? tcoE / kmTotales : 0 });
+        rows.push({ k: 'Costo por kilómetro del bencinero', ref: kmTotales.toLocaleString('es-CL') + ' km en ' + A + ' años', v: kmTotales > 0 ? tcoB / kmTotales : 0 });
+
+        total = clp(Math.abs(ahorro));
+        sub =
+          (ahorro >= 0
+            ? 'A ' + A + ' años el eléctrico te sale ' + clp(Math.abs(ahorro)) + ' más barato'
+            : 'A ' + A + ' años el eléctrico te sale ' + clp(Math.abs(ahorro)) + ' más caro') +
+          ' · costo total de propiedad ' + clp(tcoE) + ' contra ' + clp(tcoB) +
+          ' · en energía ahorras ' + clp(Math.max(0, (energiaAnualB - energiaAnualE) * A));
+        chart = [
+          { label: 'Energía del eléctrico (5 años)', value: Math.round(energiaAnualE * A), tone: 'good' },
+          { label: 'Bencina del bencinero (5 años)', value: Math.round(energiaAnualB * A), tone: 'bad' },
+          { label: 'Depreciación del eléctrico', value: Math.round(precioElectrico - residualE), tone: 'warn' },
+          { label: 'Depreciación del bencinero', value: Math.round(precioBencinero - residualB), tone: 'prop' },
+        ];
+      } else {
+        // Caso base: viaje puntual.
+        const litros = km * consumo / 100;
+        const costoCombustible = litros * precioLitro;
+        const costoTotal = costoCombustible + peajes;
+        const porKm = km > 0 ? costoTotal / km : 0;
+        const especifico = (tasaUtmM3 * UTM) / 1000;
+        const baseConIva = Math.max(0, precioLitro - especifico);
+        const iva = baseConIva * (IVA / (1 + IVA));
+
+        rows.push({
+          k: 'Distancia del viaje',
+          ref: 'Sólo la ida',
+          v: km,
+          format: 'unit',
+          unit: 'km',
+        });
+        rows.push({
+          k: 'Litros que vas a gastar',
+          ref: km + ' km × ' + consumo.toLocaleString('es-CL') + ' L/100 km',
+          v: litros,
+          format: 'unit',
+          unit: 'L',
+          decimals: 1,
+        });
+        rows.push({ k: 'Precio del litro que pusiste', ref: comb.nombre, v: precioLitro });
+        rows.push({ k: 'Costo del combustible', ref: 'Litros × precio del litro', v: costoCombustible, extra: true });
+        rows.push({ k: 'Peajes de la ruta', ref: 'Plazas interurbanas del trayecto', v: peajes });
+        rows.push({ k: 'Costo total del viaje de ida', ref: 'Combustible más peajes', v: costoTotal, extra: true });
+        rows.push({ k: 'Costo del viaje de ida y vuelta', ref: 'El doble de kilómetros y de peajes', v: costoTotal * 2 });
+        rows.push({ k: 'Costo por kilómetro', ref: 'Total ÷ kilómetros', v: porKm });
+        rows.push({ k: 'Costo por persona si van cuatro', ref: 'Total del viaje ÷ 4', v: costoTotal / 4 });
+        rows.push({ k: 'Impuestos que pagas en la bencina de este viaje', ref: 'Específico más IVA por litro × litros', v: litros * (especifico + iva) });
+        rows.push({
+          k: 'Margen de seguridad si consumes un 15% más de lo esperado',
+          ref: 'En ruta con carga, aire y viento en contra',
+          v: costoCombustible * 0.15,
+        });
+
+        total = clp(costoTotal);
+        sub =
+          km.toLocaleString('es-CL') + ' km con un consumo de ' + consumo.toLocaleString('es-CL') +
+          ' L/100 km son ' + litros.toFixed(1).replace('.', ',') + ' litros: ' + clp(costoCombustible) +
+          ' de combustible más ' + clp(peajes) + ' de peajes = ' + clp(costoTotal) + ' · ' + clp(porKm) + ' por kilómetro';
+        chart = [
+          { label: 'Combustible', value: Math.round(costoCombustible), tone: 'main' },
+          { label: 'Peajes', value: Math.round(peajes), tone: 'exit' },
+          { label: 'De eso, impuestos', value: Math.round(litros * (especifico + iva)), tone: 'bad' },
+        ];
+      }
+
+      return {
+        total: total,
+        sub: sub,
+        rows: rows,
+        chart: chart.filter((c) => c.value > 0),
+      };
+    });
+  })();
+</script>

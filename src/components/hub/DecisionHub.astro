@@ -28,6 +28,115 @@ export interface Props {
 }
 const { data } = Astro.props;
 
+/*
+ * Placeholder del panel antes del primer cálculo. Estaba hardcodeado en "$0",
+ * que en los mercados no argentinos muestra la moneda equivocada (Portugal en
+ * euros arrancaba diciendo "$0"). Se deriva del locale del hub; los hubs de AR
+ * y los globales siguen viendo "$0" exactamente como antes.
+ */
+const CERO_POR_LOCALE: Record<string, string> = {
+  'pt-pt': '€0', es: '€0',
+  en: '$0', pt: 'R$0',
+  cl: '$0', co: '$0', mx: '$0', uy: '$0', py: 'Gs 0', ve: 'Bs 0',
+  pe: 'S/ 0', ec: '$0', do: 'RD$0',
+};
+const CERO = (data.locale && CERO_POR_LOCALE[data.locale]) || '$0';
+
+/*
+ * Cómo escribe números el usuario de este mercado. El parser asumía es-AR
+ * ("1.500,50"), así que en los mercados de punto decimal un "450,000" tecleado
+ * como cuatrocientos cincuenta mil se leía como 450. Afecta a todo campo con
+ * `thousands: true`.
+ */
+// Ojo: tiene que coincidir con lo que imprime LOCALE_NUMERICO más abajo, o el
+// usuario teclea con una convención y lee el resultado con la otra.
+//
+// Ecuador es el caso raro: la RAE marca coma decimal para el español, pero el
+// país está dolarizado y la banca, el SRI y cualquier estado de cuenta usan el
+// formato del dólar ($1,234.56). Como acá se calcula plata en dólares, mandan
+// la práctica contable y lo que el usuario ve en su recibo — por eso 'ec' va
+// en esta lista Y su LOCALE_NUMERICO es en-US, para que leer y escribir
+// coincidan (es-EC imprimiría 1.234,56 y quedarían invertidos).
+const LOCALES_PUNTO_DECIMAL = new Set(['en', 'mx', 'pe', 'ec', 'do']);
+const PUNTO_DECIMAL = !!data.locale && LOCALES_PUNTO_DECIMAL.has(data.locale);
+
+/*
+ * Cómo IMPRIME números este hub. Es el espejo del parser de arriba y estaba
+ * hardcodeado en 'es-AR' para todos los mercados: un 10 con 3 decimales salía
+ * "10,000", que un lector inglés lee como diez mil. Afectaba a los 61 hubs en
+ * inglés y a los de Brasil.
+ */
+const LOCALE_NUMERICO: Record<string, string> = {
+  'pt-pt': 'pt-PT', es: 'es-ES', en: 'en-US', pt: 'pt-BR',
+  cl: 'es-CL', co: 'es-CO', mx: 'es-MX', uy: 'es-UY', py: 'es-PY',
+  ve: 'es-VE', pe: 'es-PE', ec: 'en-US', do: 'es-DO',
+};
+const NUM_LOCALE = (data.locale && LOCALE_NUMERICO[data.locale]) || 'es-AR';
+
+/* Símbolo de moneda del mercado, derivado del mismo mapa que el placeholder. */
+const MONEDA = CERO.replace(/0$/, '');
+
+/*
+ * Chrome del componente. Estaba todo hardcodeado en español rioplatense, así que
+ * los 61 hubs en inglés y los de Brasil/Portugal mostraban "Inicio", "Tu caso" y
+ * "Actualizar estimación" a lectores que no leen español. El voseo ("completás")
+ * además sólo tiene sentido en AR: los demás mercados hispanos van con tuteo.
+ *
+ * El breadcrumb también apuntaba siempre a "/" (el home argentino); ahora un hub
+ * de mercado enlaza el home de SU mercado, que es lo que el rastreador espera.
+ */
+type ChromeStrings = {
+  home: string; migas: string; tuCaso: string; otroCaso: string; afina: string;
+  actualiza: string; boton: string; comoSeForma: string; total: string;
+  composicion: string; sinDatos: string; respuesta: string; queCorresponde: string;
+  entra: string; ojo: string; plazo: string; faq: string; fuentes: string;
+};
+const CHROME: Record<string, ChromeStrings> = {
+  /* Argentina: el default cuando el hub no declara `locale`. Único con voseo. */
+  ar: {
+    home: 'Inicio', migas: 'Migas', tuCaso: 'Tu caso', otroCaso: 'Mi caso es otro',
+    afina: 'Afiná la estimación', actualiza: 'Se actualiza mientras completás tus datos',
+    boton: 'Actualizar estimación', comoSeForma: 'Cómo se forma el total', total: 'Total',
+    composicion: 'Composición del resultado', sinDatos: 'Sin datos calculados',
+    respuesta: 'Respuesta rápida', queCorresponde: 'Qué te corresponde',
+    entra: 'Entra en el cálculo', ojo: 'Ojo con esto', plazo: 'Plazo:',
+    faq: 'Preguntas frecuentes', fuentes: 'Fuentes',
+  },
+  'es-neutro': {
+    home: 'Inicio', migas: 'Migas', tuCaso: 'Tu caso', otroCaso: 'Mi caso es otro',
+    afina: 'Ajusta la estimación', actualiza: 'Se actualiza mientras completas tus datos',
+    boton: 'Actualizar estimación', comoSeForma: 'Cómo se forma el total', total: 'Total',
+    composicion: 'Composición del resultado', sinDatos: 'Sin datos calculados',
+    respuesta: 'Respuesta rápida', queCorresponde: 'Qué te corresponde',
+    entra: 'Entra en el cálculo', ojo: 'Ojo con esto', plazo: 'Plazo:',
+    faq: 'Preguntas frecuentes', fuentes: 'Fuentes',
+  },
+  en: {
+    home: 'Home', migas: 'Breadcrumb', tuCaso: 'Your situation', otroCaso: "That's not my case",
+    afina: 'Fine-tune the estimate', actualiza: 'Updates as you fill in your details',
+    boton: 'Update estimate', comoSeForma: 'How the total adds up', total: 'Total',
+    composicion: 'Result breakdown', sinDatos: 'Nothing calculated yet',
+    respuesta: 'Quick answer', queCorresponde: 'What applies to you',
+    entra: "What's included", ojo: 'Watch out for this', plazo: 'Deadline:',
+    faq: 'Frequently asked questions', fuentes: 'Sources',
+  },
+  pt: {
+    home: 'Início', migas: 'Navegação', tuCaso: 'O seu caso', otroCaso: 'Meu caso é outro',
+    afina: 'Ajuste a estimativa', actualiza: 'Atualiza conforme você preenche seus dados',
+    boton: 'Atualizar estimativa', comoSeForma: 'Como se forma o total', total: 'Total',
+    composicion: 'Composição do resultado', sinDatos: 'Nada calculado ainda',
+    respuesta: 'Resposta rápida', queCorresponde: 'O que se aplica a você',
+    entra: 'Entra no cálculo', ojo: 'Atenção a isto', plazo: 'Prazo:',
+    faq: 'Perguntas frequentes', fuentes: 'Fontes',
+  },
+};
+CHROME['pt-pt'] = { ...CHROME.pt, actualiza: 'Atualiza à medida que preenche os seus dados', queCorresponde: 'O que lhe corresponde' };
+for (const l of ['cl', 'co', 'mx', 'uy', 'py', 've', 'pe', 'ec', 'do', 'es']) CHROME[l] = CHROME['es-neutro'];
+
+const T = (data.locale && CHROME[data.locale]) || CHROME.ar;
+/* Home del mercado: los hubs de AR/globales siguen apuntando a "/". */
+const HOME = data.locale ? `/${data.locale}` : '/';
+
 const cases = data.cases?.items ?? [];
 const defaultCase = cases[0];
 const otherCases = cases.slice(1);
@@ -35,8 +144,8 @@ const otherCases = cases.slice(1);
 
 <div class="hc-hub">
   <div class="wrap">
-    <nav class="crumbs" aria-label="Migas">
-      <a href="/">Inicio</a><span aria-hidden="true">›</span>
+    <nav class="crumbs" aria-label={T.migas}>
+      <a href={HOME}>{T.home}</a><span aria-hidden="true">›</span>
       <a href={data.siloHref}>{data.silo}</a><span aria-hidden="true">›</span>
       <span aria-current="page">{data.h1}</span>
     </nav>
@@ -67,9 +176,9 @@ const otherCases = cases.slice(1);
           </svg>
         </figure>
         <p class="res-lbl">{data.resultLabel}</p>
-        <p class="res-val" id="total">$0</p>
+        <p class="res-val" id="total">{CERO}</p>
         <p class="res-sub" id="sub"></p>
-        <div class="result-status"><span class="pulse"></span>Se actualiza mientras completás tus datos</div>
+        <div class="result-status"><span class="pulse"></span>{T.actualiza}</div>
       </aside>
     </header>
 
@@ -77,7 +186,7 @@ const otherCases = cases.slice(1);
       {data.cases && (
         <section class="panel case-panel">
           <div class="panel-head">
-            <p class="panel-kicker">Tu caso</p>
+            <p class="panel-kicker">{T.tuCaso}</p>
             <h2 id="case-title">{data.cases.title}</h2>
             <p class="panel-intro">{data.cases.intro}</p>
           </div>
@@ -87,7 +196,7 @@ const otherCases = cases.slice(1);
           </button>
           {/* open a propósito: expone las ramas al usuario y a los buscadores */}
           <details class="other-cases" open>
-            <summary>Mi caso es otro</summary>
+            <summary>{T.otroCaso}</summary>
             <div class="picker" role="tablist" aria-label={data.cases.title} id="picker">
               {otherCases.map((c) => (
                 <button class="opt" type="button" role="tab" data-case={c.id} aria-selected="false">
@@ -101,7 +210,7 @@ const otherCases = cases.slice(1);
 
       <section class="panel input-panel">
         <div class="panel-head">
-          <p class="panel-kicker">Afiná la estimación</p>
+          <p class="panel-kicker">{T.afina}</p>
           <h2>{data.inputsTitle}</h2>
           <p class="panel-intro">{data.inputsIntro}</p>
         </div>
@@ -139,20 +248,20 @@ const otherCases = cases.slice(1);
             </div>
           ))}
         </div>
-        <div class="calc-go"><button class="btn" id="go" type="button">Actualizar estimación</button></div>
+        <div class="calc-go"><button class="btn" id="go" type="button">{T.boton}</button></div>
         <p class="fineprint">{data.fineprint}</p>
       </section>
 
       <section class="panel result-panel">
         <div class="panel-head">
-          <p class="panel-kicker">Cómo se forma el total</p>
+          <p class="panel-kicker">{T.comoSeForma}</p>
           <h2>{data.breakdownTitle}</h2>
           <p class="panel-intro">{data.breakdownIntro}</p>
         </div>
         <p class="breakdown-note">{data.chart.caption}</p>
-        <div class="result-viz" data-chart={data.chart.type} aria-label={data.chart.title ?? 'Composición del resultado'}>
-          <div class="donut" id="result-donut" role="img" aria-label="Sin datos calculados">
-            <div class="donut-center"><b id="donut-center">$0</b><span>Total</span></div>
+        <div class="result-viz" data-chart={data.chart.type} aria-label={data.chart.title ?? T.composicion}>
+          <div class="donut" id="result-donut" role="img" aria-label={T.sinDatos}>
+            <div class="donut-center"><b id="donut-center">{CERO}</b><span>{T.total}</span></div>
           </div>
           <ul class="viz-legend" id="viz-legend"></ul>
         </div>
@@ -161,25 +270,25 @@ const otherCases = cases.slice(1);
 
       <section class="panel context-panel">
         <div class="panel-head">
-          <p class="panel-kicker">Respuesta rápida</p>
-          <h2>Qué te corresponde</h2>
+          <p class="panel-kicker">{T.respuesta}</p>
+          <h2>{T.queCorresponde}</h2>
         </div>
         <div class="answer-strip">
           <b id="answer-title">{defaultCase?.answer ?? data.answer?.title}</b>
           <span id="answer-copy">{defaultCase?.yes[0] ?? data.answer?.copy}</span>
         </div>
         <div class="legal">
-          <div class="lcard yes"><h3>Entra en el cálculo</h3><ul id="yes-list"></ul></div>
-          <div class="lcard warn"><h3>Ojo con esto</h3><ul id="warn-list"></ul></div>
+          <div class="lcard yes"><h3>{T.entra}</h3><ul id="yes-list"></ul></div>
+          <div class="lcard warn"><h3>{T.ojo}</h3><ul id="warn-list"></ul></div>
         </div>
-        <p class="plazo"><b>Plazo:</b> <span id="plazo"></span></p>
+        <p class="plazo"><b>{T.plazo}</b> <span id="plazo"></span></p>
       </section>
     </main>
 
     <section class="support">
       <div class="support-grid">
         <div>
-          <h2>Preguntas frecuentes</h2>
+          <h2>{T.faq}</h2>
           <div class="faq">
             {data.faq.map((f, i) => (
               <details open={i === 0}>
@@ -190,7 +299,7 @@ const otherCases = cases.slice(1);
           </div>
         </div>
         <div>
-          <h2>Fuentes</h2>
+          <h2>{T.fuentes}</h2>
           <div class="src">
             {data.sources.map((s) => (
               <a href={s.url} rel="nofollow noopener" target="_blank">
@@ -207,10 +316,10 @@ const otherCases = cases.slice(1);
   </div>
 </div>
 
-<script is:inline define:vars={{ CASES: cases, HAS_CASES: !!data.cases }}>
+<script is:inline define:vars={{ PUNTO_DECIMAL, NUM_LOCALE, MONEDA, CASES: cases, HAS_CASES: !!data.cases }}>
   (function () {
     const $ = (id) => document.getElementById(id);
-    const ars = (n) => '$' + Math.round(n || 0).toLocaleString('es-AR');
+    const ars = (n) => MONEDA + Math.round(n || 0).toLocaleString(NUM_LOCALE);
     /**
      * Parseo numérico consciente del formato es-AR.
      *
@@ -230,7 +339,12 @@ const otherCases = cases.slice(1);
       if (!t) return 0;
       const neg = /^-/.test(t);
       t = t.replace(/[^\d.,]/g, '');
-      if (t.includes(',')) {
+      if (PUNTO_DECIMAL) {
+        // en-US y afines: la coma es separador de miles y el punto es decimal.
+        t = t.replace(/,/g, '');
+        const puntos = (t.match(/\./g) || []).length;
+        if (puntos > 1) t = t.replace(/\./g, '');
+      } else if (t.includes(',')) {
         t = t.replace(/\./g, '').replace(',', '.');
       } else {
         const puntos = (t.match(/\./g) || []).length;
@@ -274,11 +388,11 @@ const otherCases = cases.slice(1);
      */
     function fmt(n, o) {
       const dec = (o && o.decimals) || 0;
-      const val = Number(n || 0).toLocaleString('es-AR', {
+      const val = Number(n || 0).toLocaleString(NUM_LOCALE, {
         minimumFractionDigits: dec, maximumFractionDigits: dec,
       });
       const f = (o && o.format) || 'ars';
-      if (f === 'ars') return '$' + val;
+      if (f === 'ars') return MONEDA + val;
       if (f === 'unit' && o && o.unit) return val + ' ' + o.unit;
       return val;
     }
@@ -421,7 +535,7 @@ const otherCases = cases.slice(1);
     document.querySelectorAll('[data-thousands]').forEach((el) =>
       el.addEventListener('input', (e) => {
         const v = num(e.target.value);
-        e.target.value = v ? v.toLocaleString('es-AR') : '';
+        e.target.value = v ? v.toLocaleString(NUM_LOCALE) : '';
       }));
 
     window.HC_HUB = {

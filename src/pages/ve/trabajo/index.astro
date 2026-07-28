@@ -1,0 +1,46 @@
+---
+/**
+ * Silo Trabajo · Venezuela — índice de hubs de decisión laborales del mercado VE.
+ * El listado sale del registry, no a mano.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import SiloIndex from '../../../components/hub/SiloIndex.astro';
+import { hubsOfSilo } from '../../../lib/hubs/registry';
+
+const HREF = '/ve/trabajo';
+const SILO = 'Trabajo';
+const LEDE =
+  'Prestaciones sociales, liquidación, recargos de jornada y seguridad social en Venezuela, resueltos con el artículo de la LOTTT que aplica en cada caso y con el salario siempre editable.';
+const hubs = hubsOfSilo(HREF);
+const CANONICAL = `https://hacecuentas.com${HREF}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `${SILO} en Venezuela`,
+  description: LEDE,
+  url: CANONICAL,
+  hasPart: hubs.map((h) => ({
+    '@type': 'WebPage',
+    name: h.h1,
+    url: `https://hacecuentas.com/${h.slug}`,
+  })),
+};
+---
+
+<Layout
+  title={`Trabajo en Venezuela — calculadoras LOTTT e IVSS | Hacé Cuentas`}
+  description={LEDE}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="VE"
+  lang="es"
+>
+  <Header />
+  <SiloIndex silo={SILO} href={HREF} lede={LEDE} hubs={hubs} />
+  <Footer />
+</Layout>

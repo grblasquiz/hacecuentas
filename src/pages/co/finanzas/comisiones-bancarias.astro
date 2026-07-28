@@ -1,0 +1,240 @@
+---
+/**
+ * Hub de decisión CO — "¿Cuánto me está cobrando el banco por mover mi plata?".
+ *
+ * 🔴 La exención del GMF (350 UVT) se aplica sobre la BASE (los retiros del mes),
+ * nunca sobre el impuesto ya calculado. La calc vieja restaba los 350 UVT al
+ * impuesto y por eso el 4×1000 le daba casi siempre cero.
+ *
+ * audience="CO" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, UVT, GMF, BRE_B, IVA } from '../../../lib/hubs/co/comisiones-bancarias';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ UVT, GMF, BRE_B, IVA }}>
+  (function () {
+    const H = window.HC_HUB;
+    const cop = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
+    const pct2 = (n) => n.toLocaleString('es-CO', { maximumFractionDigits: 2 });
+
+    /**
+     * GMF del mes. La exención de 350 UVT topa la BASE GRAVABLE (los retiros),
+     * no el impuesto: gmf = (retiros − exento) × 0,4%.
+     */
+    function gmfDelMes(retiros, exenta) {
+      const topeExento = exenta ? GMF.exencionMensualUvt * UVT : 0;
+      const exento = Math.min(Math.max(0, retiros), topeExento);
+      const gravado = Math.max(0, retiros - exento);
+      return {
+        exento: exento,
+        gravado: gravado,
+        impuesto: gravado * GMF.tasa,
+        sinExencion: Math.max(0, retiros) * GMF.tasa,
+        topeExento: topeExento,
+      };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'ahorros';
+      const retiros = Math.max(0, v.retiros || 0);
+      const exenta = String(v.cuentaExenta || 'si') === 'si';
+      const cuotaManejo = Math.max(0, v.cuotaManejo || 0);
+      const numRetiros = Math.max(0, Math.round(v.numRetiros || 0));
+      const costoRetiro = Math.max(0, v.costoRetiro || 0);
+      const numTransf = Math.max(0, Math.round(v.numTransferencias || 0));
+      const costoTransf = Math.max(0, v.costoTransferencia || 0);
+
+      const g = gmfDelMes(retiros, exenta);
+      const rows = [];
+      let total, sub, chart;
+
+      if (id === 'comercio') {
+        // ── Comercio que cobra por PSE o pasarela ──
+        const venta = Math.max(0, v.ventaPromedio || 0);
+        const pctCom = Math.max(0, v.comisionPct || 0) / 100;
+        const fija = Math.max(0, v.comisionFija || 0);
+        const numVentas = Math.max(0, Math.round(v.numVentas || 0));
+
+        const comisionSinIva = venta * pctCom + fija;
+        const ivaComision = comisionSinIva * IVA;
+        const comisionTotal = comisionSinIva + ivaComision;
+        const efectivoPct = venta > 0 ? (comisionTotal / venta) * 100 : 0;
+        const ventasMes = venta * numVentas;
+        const comisionesMes = comisionTotal * numVentas;
+        // Un comercio persona jurídica no accede a la exención: GMF sobre todo lo que retire.
+        const gmfComercio = retiros * GMF.tasa;
+        const costoMes = comisionesMes + gmfComercio + cuotaManejo;
+
+        rows.push({ k: 'Venta promedio por cobro', ref: 'Tu ticket típico', v: venta });
+        rows.push({ k: 'Comisión porcentual de la pasarela', ref: pct2(pctCom * 100) + '% sobre la venta', v: venta * pctCom });
+        rows.push({ k: 'Tarifa fija por transacción', ref: 'La que castiga los tickets chicos', v: fija });
+        rows.push({ k: 'IVA sobre la comisión', ref: '19% sobre la comisión, no sobre la venta', v: ivaComision });
+        rows.push({ k: 'Comisión total por cobro', ref: 'Lo que te descuentan de cada venta', v: comisionTotal, extra: true });
+        rows.push({
+          k: 'Costo efectivo sobre la venta',
+          ref: 'Comisión total ÷ venta',
+          v: efectivoPct,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        rows.push({ k: 'Neto que recibís por cada venta', ref: 'Venta menos comisión', v: Math.max(0, venta - comisionTotal) });
+        rows.push({ k: 'Ventas del mes', ref: numVentas.toLocaleString('es-CO') + ' cobros', v: ventasMes });
+        rows.push({ k: 'Comisiones del mes', ref: 'Todo lo que se queda la pasarela', v: comisionesMes, extra: true });
+        rows.push({ k: '4×1000 sobre lo que retirás del negocio', ref: 'Las personas jurídicas no tienen la exención de 350 UVT', v: gmfComercio });
+        rows.push({ k: 'Cuota de manejo de la cuenta del negocio', ref: 'Cargo fijo mensual', v: cuotaManejo });
+        rows.push({ k: 'Costo total de cobrar, en el mes', ref: 'Comisiones + GMF + cuota', v: costoMes, extra: true });
+        rows.push({
+          k: 'Qué porcentaje de tus ventas se va en cobrar',
+          ref: 'Costo total ÷ ventas del mes',
+          v: ventasMes > 0 ? (costoMes / ventasMes) * 100 : 0,
+          format: 'unit',
+          unit: '% de las ventas',
+          decimals: 2,
+        });
+        rows.push({ k: 'Costo anual de cobrar', ref: '12 meses al mismo ritmo', v: costoMes * 12 });
+
+        total = cop(costoMes);
+        sub =
+          'Cada venta de ' + cop(venta) + ' te deja ' + cop(Math.max(0, venta - comisionTotal)) +
+          ' · costo efectivo ' + pct2(efectivoPct) + '%' +
+          ' · en el año son ' + cop(costoMes * 12);
+        chart = [
+          { label: 'Comisiones de la pasarela', value: Math.round(comisionesMes), tone: 'bad' },
+          { label: '4×1000', value: Math.round(gmfComercio), tone: 'warn' },
+          { label: 'Cuota de manejo', value: Math.round(cuotaManejo), tone: 'prop' },
+        ];
+      } else {
+        // ── Personas: ahorros, billetera o transferencias ──
+        const esBilletera = id === 'billetera';
+        const esTransferencias = id === 'transferencias';
+
+        // En la rama de transferencias se compara el costo actual contra Bre-B ($0 hoy).
+        const costoTransfMes = numTransf * costoTransf;
+        const costoTransfBreB = 0;
+        const costoTransfFuturo = numTransf * BRE_B.costoFuturoPorOperacion;
+
+        const cuota = esBilletera ? 0 : cuotaManejo;
+        const costoRetirosMes = numRetiros * costoRetiro;
+        const comisionesMes = cuota + costoRetirosMes + (esTransferencias ? 0 : costoTransfMes);
+        const costoMes = comisionesMes + g.impuesto;
+
+        rows.push({ k: 'Plata que sacás o transferís en el mes', ref: 'Base del 4×1000', v: retiros });
+        if (exenta) {
+          rows.push({
+            k: 'Parte exenta del 4×1000',
+            ref: GMF.exencionMensualUvt + ' UVT/mes en cuenta marcada · art. 879 ET',
+            v: g.exento,
+          });
+        }
+        rows.push({ k: 'Base gravada con el 4×1000', ref: exenta ? 'Lo que pasa de la exención' : 'Sin cuenta marcada: todo grava', v: g.gravado });
+        rows.push({ k: '4×1000 del mes', ref: '0,4% sobre la base gravada · art. 870 ET', v: g.impuesto, extra: true });
+        if (exenta) {
+          rows.push({ k: 'Lo que te ahorra tener la cuenta marcada', ref: 'Contra pagar el GMF desde el primer peso', v: g.sinExencion - g.impuesto });
+        } else {
+          rows.push({
+            k: 'Lo que te ahorrarías marcando la cuenta como exenta',
+            ref: 'Trámite gratis, una sola cuenta por persona',
+            v: g.sinExencion - Math.max(0, retiros - GMF.exencionMensualUvt * UVT) * GMF.tasa,
+          });
+        }
+        rows.push({
+          k: esBilletera ? 'Cuota de manejo (las billeteras básicas no cobran)' : 'Cuota de manejo del mes',
+          ref: esBilletera ? 'Sin cargo fijo mensual' : 'Cargo fijo de la cuenta o la tarjeta',
+          v: cuota,
+        });
+        rows.push({ k: 'Retiros en cajero con cargo', ref: numRetiros + ' retiros × ' + cop(costoRetiro), v: costoRetirosMes });
+
+        if (esTransferencias) {
+          rows.push({ k: 'Lo que te cuestan hoy las transferencias', ref: numTransf + ' × ' + cop(costoTransf) + ' · banco tradicional', v: costoTransfMes });
+          rows.push({ k: 'Lo mismo por Bre-B, hoy', ref: 'Gratis para personas naturales', v: costoTransfBreB, extra: true });
+          rows.push({ k: 'Lo que ahorrás al mes pasándote a Bre-B', ref: 'Sólo comisiones: el GMF se paga igual', v: costoTransfMes, extra: true });
+          rows.push({ k: 'Ahorro anual con Bre-B', ref: '12 meses al mismo ritmo', v: costoTransfMes * 12 });
+          rows.push({
+            k: 'Lo que costaría Bre-B cuando empiece el cobro',
+            ref: cop(BRE_B.costoFuturoPorOperacion) + ' por operación desde ' + BRE_B.desdeCobro,
+            v: costoTransfFuturo,
+          });
+          rows.push({ k: 'Tope por transacción de Bre-B', ref: 'Límite del sistema de pagos inmediatos', v: BRE_B.topePorTransaccion });
+        } else {
+          rows.push({ k: 'Transferencias a otros bancos', ref: numTransf + ' × ' + cop(costoTransf), v: costoTransfMes });
+        }
+
+        rows.push({ k: 'Total de comisiones del mes', ref: 'Sin contar el impuesto', v: comisionesMes });
+        rows.push({ k: 'Costo total del mes', ref: 'Comisiones + 4×1000', v: costoMes, extra: true });
+        rows.push({
+          k: 'Qué porcentaje de la plata que moviste se te fue en costos',
+          ref: 'Costo total ÷ plata movida',
+          v: retiros > 0 ? (costoMes / retiros) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        rows.push({ k: 'Costo anual al mismo ritmo', ref: '12 meses', v: costoMes * 12 });
+
+        total = cop(costoMes);
+        sub = esTransferencias
+          ? 'Pasándote a Bre-B ahorrás ' + cop(costoTransfMes * 12) + ' al año en comisiones' +
+            ' · el 4×1000 (' + cop(g.impuesto) + ') se paga igual' +
+            ' · Bre-B empieza a cobrar en ' + BRE_B.desdeCobro
+          : '4×1000: ' + cop(g.impuesto) +
+            ' · comisiones: ' + cop(comisionesMes) +
+            ' · en el año son ' + cop(costoMes * 12) +
+            (exenta ? ' · exención de 350 UVT aplicada' : ' · sin cuenta marcada como exenta');
+        chart = [
+          { label: '4×1000', value: Math.round(g.impuesto), tone: 'warn' },
+          { label: 'Cuota de manejo', value: Math.round(cuota), tone: 'bad' },
+          { label: 'Retiros en cajero', value: Math.round(costoRetirosMes), tone: 'prop' },
+          { label: 'Transferencias', value: Math.round(costoTransfMes), tone: 'main' },
+        ];
+      }
+
+      return { total: total, sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

@@ -1,0 +1,236 @@
+---
+/**
+ * Hub de decisión MX — "¿Cuánto de pensión alimenticia me corresponde o me van a descontar?"
+ *
+ * El audience="MX" se pasa literal al Layout: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UMA_MX,
+  SM_MX,
+  REFERENCIAS_MX,
+  VIUDEZ_MX,
+} from '../../../lib/hubs/mx/pension-alimenticia';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="MX"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    UMA: UMA_MX,
+    SM: SM_MX,
+    REF: REFERENCIAS_MX,
+    VIU: VIUDEZ_MX,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+    const pctTxt = (n, d) => (n * 100).toFixed(d === undefined ? 0 : d).replace('.', ',') + '%';
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'cuanto';
+      const hijos = Math.max(0, Math.floor(v.hijos || 0));
+
+      // ── Cuánto podría fijar el juez ───────────────────────────────────────
+      if (id === 'cuanto') {
+        const ingresos = Math.max(0, v.ingresos || 0);
+        const custodia = String(v.custodia || 'exclusiva');
+        const edu = Math.max(0, v.gastosEducacion || 0) / 12;
+        const salud = Math.max(0, v.gastosSalud || 0) / 12;
+
+        const clave = Math.min(5, Math.max(1, hijos || 1));
+        let porcentaje = REF.porHijos[clave] || 0.2;
+        if (custodia === 'compartida') porcentaje = porcentaje * REF.factorCustodiaCompartida;
+        else if (custodia === 'visitas') porcentaje = porcentaje * REF.factorVisitas;
+
+        const manutencion = ingresos * porcentaje;
+        const sinTope = manutencion + edu + salud;
+        const tope = ingresos * REF.topePracticaJudicial;
+        const topeada = sinTope > tope;
+        const total = topeada ? tope : sinTope;
+
+        // Rango de referencia por hijo: 10% a 30% del ingreso.
+        const rangoMin = ingresos * REF.rangoMinPorHijo * Math.max(1, hijos);
+        const rangoMax = Math.min(ingresos * REF.rangoMaxPorHijo * Math.max(1, hijos), tope);
+
+        const restante = ingresos - total;
+        const subsistencia = SM.generalMensual * 1.3;
+        const apretado = restante < subsistencia && ingresos > 0;
+
+        return {
+          total: mxn(total),
+          sub:
+            'Referencia del ' + pctTxt(porcentaje, 1) + ' del ingreso por ' + Math.max(1, hijos) +
+            (Math.max(1, hijos) === 1 ? ' hijo' : ' hijos') +
+            (custodia === 'compartida' ? ', ajustada por custodia compartida' : custodia === 'visitas' ? ', ajustada por régimen de visitas' : '') +
+            '. El rango que suelen manejar los juzgados va de ' + mxn(rangoMin) + ' a ' + mxn(rangoMax) + '.' +
+            (topeada ? ' La suma con educación y salud superaba el 50% del ingreso y se ajustó a ese tope práctico.' : '') +
+            (apretado ? ' Ojo: al obligado le quedarían ' + mxn(restante) + ', por debajo del margen de subsistencia de referencia.' : ''),
+          rows: [
+            { k: 'Pensión mensual estimada', v: total, extra: true },
+            { k: 'Manutención básica', ref: pctTxt(porcentaje, 1) + ' del ingreso', v: manutencion },
+            { k: 'Aportación de educación (mensualizada)', v: edu },
+            { k: 'Aportación de salud (mensualizada)', v: salud },
+            { k: 'Extremo bajo del rango de referencia', ref: '10% por hijo', v: rangoMin },
+            { k: 'Extremo alto del rango de referencia', ref: '30% por hijo', v: rangoMax },
+            { k: 'Le queda al obligado', v: restante },
+            { k: 'Margen de subsistencia de referencia', ref: '1,3 salarios mínimos', v: subsistencia },
+            { k: 'Porcentaje del ingreso que representa', v: ingresos > 0 ? (total / ingresos) * 100 : 0, format: 'unit', unit: '%', decimals: 1 },
+          ],
+          chart: [
+            { label: 'Manutención', value: Math.max(0, topeada ? total : manutencion), tone: 'main' },
+            { label: 'Educación', value: Math.max(0, topeada ? 0 : edu), tone: 'prop' },
+            { label: 'Salud', value: Math.max(0, topeada ? 0 : salud), tone: 'good' },
+            { label: 'Le queda al obligado', value: Math.max(0, restante), tone: 'exit' },
+          ],
+        };
+      }
+
+      // ── Descuento en nómina ───────────────────────────────────────────────
+      if (id === 'descuento') {
+        const neto = Math.max(0, v.sueldoNeto || 0);
+        const tipo = String(v.tipoDescuento || 'porcentaje');
+        const valor = Math.max(0, v.valorDescuento || 0);
+
+        let pension = tipo === 'porcentaje' ? neto * (valor / 100) : valor;
+
+        // Protección del salario mínimo (LFT Art. 110-V).
+        const smMensual = SM.generalDiario * SM.factorMensual;
+        let protegido = false;
+        if (neto > 0 && neto <= smMensual) {
+          pension = 0;
+          protegido = true;
+        } else if (neto - pension < smMensual) {
+          pension = Math.max(0, neto - smMensual);
+        }
+
+        const restante = neto - pension;
+        const proporcion = neto > 0 ? pension / neto : 0;
+        const superaReferencia = proporcion > REF.topePracticaJudicial;
+
+        return {
+          total: mxn(pension),
+          sub:
+            (protegido
+              ? 'Tu sueldo neto está en el nivel del salario mínimo o por debajo: la LFT lo protege y no procede descuento salvo orden judicial expresa. '
+              : 'Sobre un neto de ' + mxn(neto) + ', el descuento es el ' + pctTxt(proporcion, 1) + ' y te quedan ' + mxn(restante) + '. ') +
+            (superaReferencia
+              ? 'Supera la referencia del 50% que suelen usar los juzgados: es una referencia, no un límite legal, y puedes pedir revisión.'
+              : 'Está dentro del rango que los juzgados suelen considerar razonable.'),
+          rows: [
+            { k: 'Descuento mensual por pensión', v: pension, extra: true },
+            { k: 'Sueldo neto antes del descuento', v: neto },
+            { k: 'Te queda libre', v: restante },
+            { k: 'Salario mínimo mensual protegido', ref: 'LFT Art. 110-V', v: smMensual },
+            { k: 'Descuento anual estimado', v: pension * 12 },
+            { k: 'Proporción del neto que se retiene', v: proporcion * 100, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Referencia de la práctica judicial', ref: 'no es límite legal', v: REF.topePracticaJudicial * 100, format: 'unit', unit: '%', decimals: 0 },
+          ],
+          chart: [
+            { label: 'Se descuenta por pensión', value: Math.max(0, pension), tone: 'exit' },
+            { label: 'Te queda libre', value: Math.max(0, restante), tone: 'main' },
+          ],
+        };
+      }
+
+      // ── Viudez frente a pensión alimenticia ───────────────────────────────
+      const institucion = String(v.institucion || 'imss');
+      const base = Math.max(0, v.pensionAsegurado || 0);
+      const semanas = Math.max(0, Math.floor(v.semanas || 0));
+      const ingresos = Math.max(0, v.ingresos || 0);
+
+      const hayViudez = institucion === 'imss' || institucion === 'issste';
+      const pctViudez = institucion === 'issste' ? VIU.porcentajeIssste : VIU.porcentajeImss;
+      let viudez = hayViudez ? base * pctViudez : 0;
+      let orfandad = institucion === 'imss' ? base * VIU.porcentajeOrfandadImss * hijos : 0;
+      const suma = viudez + orfandad;
+      const excede = base > 0 && suma > base;
+      if (excede) {
+        const ajuste = base / suma;
+        viudez = viudez * ajuste;
+        orfandad = orfandad * ajuste;
+      }
+      const totalViudez = viudez + orfandad;
+      const cumpleSemanas = institucion !== 'imss' || semanas >= VIU.semanasMinimasImss;
+
+      // Contraste con el rango civil de referencia.
+      const alimMin = ingresos * REF.rangoMinPorHijo * Math.max(1, hijos);
+      const alimMax = Math.min(ingresos * REF.rangoMaxPorHijo * Math.max(1, hijos), ingresos * REF.topePracticaJudicial);
+
+      return {
+        total: mxn(totalViudez),
+        sub:
+          (hayViudez
+            ? 'Viudez del ' + pctTxt(pctViudez) + ' de la pensión del asegurado (' + mxn(base) + ')' +
+              (orfandad > 0 ? ' más ' + pctTxt(VIU.porcentajeOrfandadImss) + ' de orfandad por cada hijo' : '') + '. ' +
+              (cumpleSemanas ? '' : 'Ojo: el IMSS exige ' + VIU.semanasMinimasImss + ' semanas cotizadas del asegurado y aquí hay ' + semanas + '. ')
+            : 'Sin afiliación al IMSS o al ISSSTE no hay pensión de viudez: la única vía es la alimenticia civil. ') +
+          'Una pensión alimenticia civil por ' + Math.max(1, hijos) +
+          (Math.max(1, hijos) === 1 ? ' hijo' : ' hijos') + ' sobre un ingreso de ' + mxn(ingresos) +
+          ' se movería entre ' + mxn(alimMin) + ' y ' + mxn(alimMax) + '.',
+        rows: [
+          { k: 'Total de la seguridad social', v: totalViudez, extra: true },
+          { k: 'Pensión de viudez', ref: institucion === 'issste' ? 'ISSSTE, 100% del haber' : 'IMSS, LSS Art. 131', v: viudez },
+          { k: 'Pensión de orfandad', ref: institucion === 'imss' ? '20% por hijo, LSS Art. 137' : 'no aplica en este caso', v: orfandad },
+          { k: 'Pensión base del asegurado', v: base },
+          { k: 'Aguinaldo anual de la pensión', ref: 'una mensualidad', v: totalViudez },
+          { k: 'Alimenticia civil: extremo bajo', ref: '10% del ingreso por hijo', v: alimMin },
+          { k: 'Alimenticia civil: extremo alto', ref: '30% del ingreso por hijo', v: alimMax },
+          { k: 'Semanas cotizadas del asegurado', v: semanas, format: 'unit', unit: 'semanas' },
+          { k: 'Semanas mínimas que exige el IMSS', v: VIU.semanasMinimasImss, format: 'unit', unit: 'semanas' },
+        ],
+        chart: [
+          { label: 'Viudez', value: Math.max(0, viudez), tone: 'main' },
+          { label: 'Orfandad', value: Math.max(0, orfandad), tone: 'prop' },
+          { label: 'Parte de la pensión que no se paga', value: Math.max(0, base - totalViudez), tone: 'exit' },
+        ],
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,255 @@
+---
+/**
+ * Hub de decisão BR — "Fui demitido: quanto eu vou receber?".
+ * Ruta bajo el prefijo /pt/, igual que las calculadoras que absorbe.
+ * audience="BR" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, AVISO, MULTA_FGTS, SD, MINIMO } from '../../../lib/hubs/pt/rescisao-clt';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="BR"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header lang="pt" />
+  <DecisionHub data={hub} />
+  <Footer lang="pt" />
+</Layout>
+
+<script is:inline define:vars={{ AVISO, MULTA_FGTS, SD, MINIMO }}>
+  (function () {
+    const H = window.HC_HUB;
+    const brl = (n) =>
+      'R$ ' + (Math.round((n || 0) * 100) / 100).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+
+    function parseDate(s) {
+      if (!s) return null;
+      const d = new Date(String(s) + 'T12:00:00');
+      return isNaN(d.getTime()) ? null : d;
+    }
+    function anosCompletos(a, b) {
+      let n = b.getFullYear() - a.getFullYear();
+      if (b.getMonth() < a.getMonth() || (b.getMonth() === a.getMonth() && b.getDate() < a.getDate())) n--;
+      return Math.max(0, n);
+    }
+    function mesesCompletos(a, b) {
+      let n = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
+      if (b.getDate() < a.getDate()) n--;
+      return Math.max(0, n);
+    }
+    /** Avos do 13º: cada mês com 15 dias ou mais de trabalho vale 1/12. */
+    function avos13(admissao, fim) {
+      if (admissao.getFullYear() < fim.getFullYear()) {
+        let m = fim.getMonth() + 1;
+        if (fim.getDate() < 15) m -= 1;
+        return Math.min(12, Math.max(0, m));
+      }
+      let m = fim.getMonth() - admissao.getMonth() + 1;
+      if (admissao.getDate() > 15) m -= 1;
+      if (fim.getDate() < 15) m -= 1;
+      return Math.min(12, Math.max(0, m));
+    }
+    /** Avos de férias proporcionais dentro do período aquisitivo em curso (máx. 12). */
+    function avosFerias(admissao, fim) {
+      let aniv = new Date(fim.getFullYear(), admissao.getMonth(), admissao.getDate());
+      if (aniv > fim) aniv = new Date(fim.getFullYear() - 1, admissao.getMonth(), admissao.getDate());
+      if (aniv < admissao) aniv = new Date(admissao);
+      const completos = mesesCompletos(aniv, fim);
+      const marco = new Date(aniv.getFullYear(), aniv.getMonth() + completos, aniv.getDate());
+      const fracao = Math.round((fim.getTime() - marco.getTime()) / 86400000);
+      return Math.min(12, Math.max(0, completos + (fracao >= 15 ? 1 : 0)));
+    }
+    /** Parcelas do seguro-desemprego por meses trabalhados e número da solicitação. */
+    function parcelasSD(meses, solicitacao) {
+      const carencia = solicitacao === 1 ? 12 : solicitacao === 2 ? 9 : 6;
+      if (meses < carencia) return 0;
+      if (meses >= 24) return 5;
+      if (meses >= 12) return 4;
+      return 3;
+    }
+    /** Tabela MTE: mesma lógica de calcSeguroDesemprego() em brasil-2026.ts. */
+    function valorParcelaSD(media) {
+      let v;
+      if (media <= SD.faixa1) v = media * 0.8;
+      else if (media <= SD.faixa2) v = SD.parcelaFixa + (media - SD.faixa1) * 0.5;
+      else v = SD.teto;
+      return Math.min(Math.max(v, SD.piso), SD.teto);
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'sem_justa_causa';
+      const salario = Math.max(0, v.salario || 0);
+      const fgts = Math.max(0, v.saldoFgts || 0);
+      const vencidos = Math.min(2, Math.max(0, Math.round(Number(v.feriasVencidas) || 0)));
+      const mesesTrab = Math.min(36, Math.max(0, Math.round(v.mesesTrabalhados || 0)));
+      const solicitacao = Math.min(3, Math.max(1, Math.round(Number(v.solicitacao) || 1)));
+
+      const admissao = parseDate(v.admissao);
+      const saida = parseDate(v.saida);
+      if (!admissao || !saida || saida <= admissao || salario <= 0) {
+        return {
+          total: brl(0),
+          sub: 'Informe um salário maior que zero e uma data de saída posterior à admissão.',
+          rows: [],
+          chart: [],
+        };
+      }
+
+      const anos = anosCompletos(admissao, saida);
+      const diario = salario / 30;
+
+      // Aviso prévio: 30 dias + 3 por ano completo, teto 90 (Lei 12.506/2011).
+      const diasAvisoCheio = Math.min(AVISO.maxDias, AVISO.baseDias + AVISO.diasPorAno * anos);
+      let diasAviso = 0;
+      if (id === 'sem_justa_causa') diasAviso = diasAvisoCheio;
+      else if (id === 'acordo_mutuo') diasAviso = Math.ceil(diasAvisoCheio / 2);
+      const aviso = diario * diasAviso;
+
+      // Art. 487 §1º CLT: o aviso indenizado projeta o fim do contrato para frente.
+      const fimEfetivo = new Date(saida);
+      if (diasAviso > 0) fimEfetivo.setDate(fimEfetivo.getDate() + diasAviso);
+
+      const diasMes = saida.getDate();
+      const saldoSalario = diario * diasMes;
+
+      const temProporcionais = id !== 'justa_causa';
+      const meses13 = temProporcionais ? avos13(admissao, fimEfetivo) : 0;
+      const decimo = (salario / 12) * meses13;
+      const mesesFerias = temProporcionais ? avosFerias(admissao, fimEfetivo) : 0;
+      const feriasProp = (salario / 12) * mesesFerias;
+      const tercoProp = feriasProp / 3;
+      const feriasVenc = salario * vencidos;
+      const tercoVenc = feriasVenc / 3;
+
+      const pctMulta =
+        id === 'sem_justa_causa' || id === 'prazo_determinado'
+          ? MULTA_FGTS.semJustaCausa
+          : id === 'acordo_mutuo'
+          ? MULTA_FGTS.acordoMutuo
+          : 0;
+      const multa = fgts * pctMulta;
+
+      const total =
+        saldoSalario + aviso + decimo + feriasProp + tercoProp + feriasVenc + tercoVenc + multa;
+
+      // Seguro-desemprego: só nas saídas involuntárias.
+      const temSD = id === 'sem_justa_causa' || id === 'prazo_determinado';
+      const parcelas = temSD ? parcelasSD(mesesTrab, solicitacao) : 0;
+      const parcelaSD = temSD && parcelas > 0 ? valorParcelaSD(salario) : 0;
+
+      const rows = [
+        { k: 'Saldo de salário', ref: diasMes + ' dias no mês da saída', v: saldoSalario },
+      ];
+      if (aviso > 0) {
+        rows.push({
+          k: 'Aviso prévio indenizado',
+          ref: diasAviso + ' dias · Lei 12.506/2011' + (id === 'acordo_mutuo' ? ' (metade, art. 484-A)' : ''),
+          v: aviso,
+        });
+      }
+      if (decimo > 0) rows.push({ k: '13º salário proporcional', ref: meses13 + '/12 avos', v: decimo });
+      if (feriasProp > 0) {
+        rows.push({ k: 'Férias proporcionais', ref: mesesFerias + '/12 avos', v: feriasProp });
+        rows.push({ k: '1/3 constitucional sobre as proporcionais', ref: 'Art. 7º XVII da Constituição', v: tercoProp });
+      }
+      if (feriasVenc > 0) {
+        rows.push({ k: 'Férias vencidas', ref: vencidos + (vencidos === 1 ? ' período' : ' períodos'), v: feriasVenc });
+        rows.push({ k: '1/3 sobre as férias vencidas', ref: 'Art. 7º XVII da Constituição', v: tercoVenc });
+      }
+      if (multa > 0) {
+        rows.push({
+          k: 'Multa rescisória do FGTS',
+          ref: Math.round(pctMulta * 100) + '% do depositado · art. 18 Lei 8.036/90',
+          v: multa,
+        });
+      }
+      rows.push({ k: 'Total bruto da rescisão', ref: 'Antes de INSS e IRRF', v: total, extra: true });
+      rows.push({
+        k: 'Anos completos de casa',
+        ref: 'Base do aviso proporcional',
+        v: anos,
+        format: 'unit',
+        unit: anos === 1 ? 'ano' : 'anos',
+      });
+      rows.push({
+        k: 'Parcelas de seguro-desemprego',
+        ref: temSD
+          ? mesesTrab + ' meses trabalhados · ' + solicitacao + 'ª solicitação'
+          : 'Esta modalidade não dá direito ao benefício',
+        v: parcelas,
+        format: 'unit',
+        unit: parcelas === 1 ? 'parcela' : 'parcelas',
+      });
+      if (parcelas > 0) {
+        rows.push({ k: 'Valor de cada parcela do seguro-desemprego', ref: 'Tabela MTE · teto ' + brl(SD.teto), v: parcelaSD });
+        rows.push({ k: 'Total do seguro-desemprego', ref: parcelas + ' × ' + brl(parcelaSD), v: parcelas * parcelaSD, extra: true });
+      }
+      if (id !== 'justa_causa' && id !== 'pedido_demissao') {
+        rows.push({
+          k: 'Saque do FGTS liberado',
+          ref: id === 'acordo_mutuo' ? '80% do saldo · art. 484-A CLT' : '100% do saldo',
+          v: id === 'acordo_mutuo' ? fgts * 0.8 : fgts,
+        });
+      }
+
+      const sub =
+        'Aviso de ' + diasAviso + ' dias · ' + meses13 + '/12 de 13º · ' + mesesFerias + '/12 de férias' +
+        (multa > 0 ? ' · multa de ' + Math.round(pctMulta * 100) + '% do FGTS' : ' · sem multa do FGTS') +
+        (parcelas > 0
+          ? ' · ' + parcelas + ' parcelas de seguro-desemprego de ' + brl(parcelaSD)
+          : ' · sem seguro-desemprego');
+
+      return {
+        total: brl(total),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Saldo de salário', value: Math.round(saldoSalario), tone: 'main' },
+          { label: 'Aviso prévio', value: Math.round(aviso), tone: 'exit' },
+          { label: '13º proporcional', value: Math.round(decimo), tone: 'prop' },
+          { label: 'Férias + 1/3', value: Math.round(feriasProp + tercoProp + feriasVenc + tercoVenc), tone: 'good' },
+          { label: 'Multa do FGTS', value: Math.round(multa), tone: 'warn' },
+        ].filter((s) => s.value > 0),
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,374 @@
+---
+/**
+ * Decision hub EN/US — "How much of my paycheck do I actually keep?"
+ * Every statutory constant travels from src/lib/data/usa-2026.ts through the hub
+ * data module; nothing is written inline here.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  BRACKETS,
+  STD_DEDUCTION,
+  FICA,
+  CTC,
+  OBBBA,
+  FUTA,
+} from '../../../lib/hubs/en/paycheck-and-taxes';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ BRACKETS, STD_DEDUCTION, FICA, CTC, OBBBA, FUTA }}>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) => '$' + Math.round(Number(n) || 0).toLocaleString('en-US');
+    const USD = { format: 'unit', unit: 'USD' };
+
+    /** Flat federal supplemental withholding rate for bonuses under $1M (IRS Pub. 15, §7). */
+    const SUPPLEMENTAL_RATE = 0.22;
+
+    /** Progressive federal tax. Exact mirror of calcFederalTax() in src/lib/data/usa-2026.ts. */
+    function federalTax(taxable, status) {
+      const ti = Math.max(0, Number(taxable) || 0);
+      if (ti <= 0) return 0;
+      const b = BRACKETS[status] || BRACKETS.single;
+      let tax = 0;
+      for (let k = 0; k < b.length; k++) {
+        const lower = b[k][0];
+        const rate = b[k][1];
+        const upper = k + 1 < b.length ? b[k + 1][0] : Infinity;
+        if (ti <= lower) break;
+        tax += (Math.min(ti, upper) - lower) * rate;
+      }
+      return Math.round(tax * 100) / 100;
+    }
+
+    /** Mirror of marginalRate2026(). */
+    function marginalRate(taxable, status) {
+      const ti = Math.max(0, Number(taxable) || 0);
+      const b = BRACKETS[status] || BRACKETS.single;
+      let rate = b[0][1];
+      for (let k = 0; k < b.length; k++) if (ti > b[k][0]) rate = b[k][1];
+      return rate;
+    }
+
+    function periods(freq) {
+      if (freq === 'weekly') return { n: 52, label: 'weekly' };
+      if (freq === 'semimonthly') return { n: 24, label: 'semi-monthly' };
+      if (freq === 'monthly') return { n: 12, label: 'monthly' };
+      if (freq === 'biweekly27') return { n: 27, label: 'biweekly (27-check year)' };
+      return { n: 26, label: 'biweekly' };
+    }
+
+    /** Employee-side Social Security + Medicare on a wage figure. */
+    function fica(wages, status) {
+      const ss = Math.min(Math.max(0, wages), FICA.ssWageBase) * FICA.ssRate;
+      const med = Math.max(0, wages) * FICA.medicareRate;
+      const addl = Math.max(0, wages - FICA.addlMedicareThreshold[status]) * FICA.addlMedicareRate;
+      return { ss: ss, med: med, addl: addl, total: ss + med + addl };
+    }
+
+    /** Generic OBBBA-style capped deduction with a $X-per-$1,000 MAGI phase-out. */
+    function cappedDeduction(amount, cap, threshold, per1000, magi) {
+      const eligible = Math.min(Math.max(0, amount), cap);
+      const excess = Math.max(0, magi - threshold);
+      const reduction = Math.round(excess * (per1000 / 1000) * 100) / 100;
+      return {
+        eligible: eligible,
+        reduction: reduction,
+        deduction: Math.max(0, Math.round((eligible - reduction) * 100) / 100),
+      };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'paycheck';
+      const salary = Math.max(0, v.annual_salary || 0);
+      const status = ['single', 'mfj', 'mfs', 'hoh'].indexOf(v.filing_status) >= 0 ? v.filing_status : 'single';
+      const p = periods(v.pay_frequency);
+      const kids = Math.max(0, Math.round(v.qualifying_children || 0));
+      const otherDeps = Math.max(0, Math.round(v.other_dependents || 0));
+      const extraWh = Math.max(0, v.extra_withholding || 0);
+      const withheld = Math.max(0, v.federal_withheld || 0);
+      const bonus = Math.max(0, v.bonus || 0);
+      const otPremium = Math.max(0, v.overtime_premium || 0);
+      const tips = Math.max(0, v.tip_income || 0);
+      const profit = Math.max(0, v.net_profit_1099 || 0);
+      const sutaRate = Math.max(0, v.suta_rate || 0) / 100;
+      const sutaBase = Math.max(0, v.suta_wage_base || 0);
+      const benefitsPct = Math.max(0, v.benefits_pct || 0) / 100;
+
+      const std = STD_DEDUCTION[status];
+
+      // ─────────────────────── W-4 withholding per paycheck ───────────────────────
+      if (id === 'paycheck') {
+        const taxable = Math.max(0, salary - std);
+        const annualTax = federalTax(taxable, status);
+        // W-4 Step 3 credits: $2,000 per child, $500 per other dependent (Pub. 15-T).
+        const credits = kids * 2000 + otherDeps * 500;
+        const annualWithholding = Math.max(0, annualTax - credits);
+        const perCheckFed = annualWithholding / p.n + extraWh;
+        const gross = salary / p.n;
+        const f = fica(salary, status);
+        const perCheckFica = f.total / p.n;
+        const takeHome = gross - perCheckFed - perCheckFica;
+        const annualTake = takeHome * p.n;
+
+        const rows = [
+          { k: 'Annual gross salary', v: salary, ...USD },
+          { k: 'Standard deduction applied', ref: 'Filing as ' + status.toUpperCase(), v: std, ...USD },
+          { k: 'Taxable wages for withholding', ref: 'Salary minus standard deduction', v: taxable, ...USD },
+          { k: 'Annual federal income tax', ref: 'Percentage method, Pub. 15-T', v: annualTax, ...USD },
+          { k: 'Dependent credits (W-4 Step 3)', ref: kids + ' child, ' + otherDeps + ' other', v: credits, ...USD },
+          { k: 'Federal income tax withheld per year', ref: 'Tax minus credits, plus any Step 4(c)', v: annualWithholding + extraWh * p.n, ...USD },
+          { k: 'Social Security withheld', ref: (FICA.ssRate * 100).toFixed(2) + '% up to $' + FICA.ssWageBase.toLocaleString('en-US'), v: f.ss, ...USD },
+          { k: 'Medicare withheld', ref: (FICA.medicareRate * 100).toFixed(2) + '% — no cap', v: f.med, ...USD },
+          { k: 'Additional Medicare Tax', ref: (FICA.addlMedicareRate * 100).toFixed(1) + '% above $' + FICA.addlMedicareThreshold[status].toLocaleString('en-US'), v: f.addl, ...USD },
+          { k: 'Pay periods a year', ref: p.label, v: p.n, format: 'unit', unit: 'paychecks' },
+          { k: 'Gross per paycheck', v: gross, ...USD, decimals: 2 },
+          { k: 'Federal income tax per paycheck', v: perCheckFed, ...USD, decimals: 2 },
+          { k: 'Social Security + Medicare per paycheck', v: perCheckFica, ...USD, decimals: 2 },
+          { k: 'Take-home per paycheck (before state tax)', ref: 'What actually hits the account', v: takeHome, ...USD, decimals: 2, extra: true },
+          { k: 'Effective federal take-home rate', ref: 'Take-home ÷ gross', v: salary > 0 ? (annualTake / salary) * 100 : 0, format: 'unit', unit: '%', decimals: 1 },
+        ];
+
+        return {
+          total: usd(takeHome),
+          sub:
+            'Per ' + p.label + ' paycheck on ' + usd(salary) + ' filing ' + status.toUpperCase() +
+            ' · ' + usd(perCheckFed) + ' federal, ' + usd(perCheckFica) + ' FICA · state tax not included',
+          rows: rows,
+          chart: [
+            { label: 'Take-home', value: Math.max(0, Math.round(annualTake)), tone: 'good' },
+            { label: 'Federal income tax', value: Math.round(annualWithholding + extraWh * p.n), tone: 'warn' },
+            { label: 'Social Security + Medicare', value: Math.round(f.total), tone: 'bad' },
+          ],
+        };
+      }
+
+      // ─────────────────────── Refund or balance due ───────────────────────
+      if (id === 'refund') {
+        const agi = salary;
+        const taxable = Math.max(0, agi - std);
+        const taxBefore = federalTax(taxable, status);
+        const raw = kids * CTC.perChild + otherDeps * CTC.otherDependent;
+        const over = Math.max(0, agi - CTC.phaseoutStart[status]);
+        const reduction = Math.ceil(over / 1000) * CTC.phaseoutPer1000;
+        const allowed = Math.max(0, raw - reduction);
+        const taxAfter = Math.max(0, taxBefore - allowed);
+        const unused = Math.max(0, allowed - taxBefore);
+        const actc = Math.min(unused, kids * CTC.refundableCap);
+        const refund = Math.round((withheld - taxAfter + actc) * 100) / 100;
+        const isRefund = refund >= 0;
+        const effective = agi > 0 ? (taxAfter / agi) * 100 : 0;
+
+        const rows = [
+          { k: 'Total income for the year', v: agi, ...USD },
+          { k: 'Standard deduction', ref: 'Filing as ' + status.toUpperCase(), v: std, ...USD },
+          { k: 'Taxable income', v: taxable, ...USD },
+          { k: 'Tax before credits', ref: 'Bracket table', v: taxBefore, ...USD },
+          { k: 'Your marginal bracket', ref: 'Rate on the last dollar', v: marginalRate(taxable, status) * 100, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Child and dependent credits claimed', ref: '$' + CTC.perChild.toLocaleString('en-US') + ' per child, $' + CTC.otherDependent + ' per other dependent', v: raw, ...USD },
+          { k: 'Credit lost to the income phase-out', ref: '$' + CTC.phaseoutPer1000 + ' per $1,000 over $' + CTC.phaseoutStart[status].toLocaleString('en-US'), v: reduction > raw ? raw : reduction, ...USD },
+          { k: 'Credits actually allowed', v: allowed, ...USD },
+          { k: 'Tax after credits', ref: 'What you owe for the year', v: taxAfter, ...USD },
+          { k: 'Refundable additional child credit', ref: 'Up to $' + CTC.refundableCap.toLocaleString('en-US') + ' per child', v: actc, ...USD },
+          { k: 'Federal tax already withheld', ref: 'W-2 Box 2', v: withheld, ...USD },
+          { k: isRefund ? 'Refund coming to you' : 'Balance you will owe', ref: 'Withheld minus tax, plus refundable credits', v: Math.abs(refund), ...USD, extra: true },
+          { k: 'Effective federal tax rate', ref: 'Tax after credits ÷ income', v: effective, format: 'unit', unit: '%', decimals: 1 },
+        ];
+
+        return {
+          total: (isRefund ? '' : '−') + usd(Math.abs(refund)),
+          sub:
+            (isRefund ? 'Estimated refund of ' + usd(refund) : 'Estimated balance due of ' + usd(-refund)) +
+            ' · tax after credits ' + usd(taxAfter) + ' against ' + usd(withheld) + ' withheld · effective rate ' + effective.toFixed(1) + '%',
+          rows: rows,
+          chart: [
+            { label: 'Tax you actually owe', value: Math.round(taxAfter), tone: 'warn' },
+            { label: isRefund ? 'Overpaid — coming back' : 'Underpaid — still due', value: Math.round(Math.abs(refund)), tone: isRefund ? 'good' : 'bad' },
+            { label: 'Credits that erased tax', value: Math.round(Math.min(allowed, taxBefore)), tone: 'main' },
+          ],
+        };
+      }
+
+      // ─────────────────────── Bonus, overtime and tips ───────────────────────
+      if (id === 'extras') {
+        const magi = salary;
+        const bonusFed = bonus * SUPPLEMENTAL_RATE;
+        // FICA on the bonus, measured as the incremental amount on top of salary.
+        const bonusFica = fica(salary + bonus, status).total - fica(salary, status).total;
+        const bonusNet = bonus - bonusFed - bonusFica;
+
+        const ot = cappedDeduction(otPremium, status === 'mfj' ? OBBBA.overtime.capMFJ : OBBBA.overtime.capSingle,
+          OBBBA.overtime.phaseoutStart[status], OBBBA.overtime.reductionPer1000, magi);
+        const tp = cappedDeduction(tips, OBBBA.tips.cap,
+          OBBBA.tips.phaseoutStart[status], OBBBA.tips.reductionPer1000, magi);
+
+        const mr = marginalRate(Math.max(0, magi - std), status);
+        const otSaving = Math.round(ot.deduction * mr * 100) / 100;
+        const tipSaving = Math.round(tp.deduction * mr * 100) / 100;
+        const totalKept = bonusNet + otSaving + tipSaving;
+
+        const rows = [
+          { k: 'Bonus paid', v: bonus, ...USD },
+          { k: 'Federal withholding on the bonus', ref: 'Flat ' + (SUPPLEMENTAL_RATE * 100).toFixed(0) + '% supplemental rate', v: bonusFed, ...USD },
+          { k: 'Social Security + Medicare on the bonus', ref: 'Applies regardless', v: bonusFica, ...USD },
+          { k: 'Bonus in hand', ref: 'Before state tax; reconciled at filing', v: bonusNet, ...USD, extra: true },
+          { k: 'Qualified overtime premium', ref: 'The FLSA extra half only', v: otPremium, ...USD },
+          { k: 'Overtime premium within the cap', ref: 'Cap $' + (status === 'mfj' ? OBBBA.overtime.capMFJ : OBBBA.overtime.capSingle).toLocaleString('en-US'), v: ot.eligible, ...USD },
+          { k: 'Overtime deduction lost to the phase-out', ref: '$' + OBBBA.overtime.reductionPer1000 + ' per $1,000 over $' + OBBBA.overtime.phaseoutStart[status].toLocaleString('en-US'), v: Math.min(ot.reduction, ot.eligible), ...USD },
+          { k: 'Overtime deduction you can claim', v: ot.deduction, ...USD },
+          { k: 'Qualified tips reported', v: tips, ...USD },
+          { k: 'Tip deduction you can claim', ref: 'Cap $' + OBBBA.tips.cap.toLocaleString('en-US') + ' · same phase-out', v: tp.deduction, ...USD },
+          { k: 'Your marginal rate', ref: 'Applied to both deductions', v: mr * 100, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Federal tax the overtime deduction saves', ref: 'Arrives at filing, not in the paycheck', v: otSaving, ...USD },
+          { k: 'Federal tax the tip deduction saves', ref: 'Arrives at filing, not in the paycheck', v: tipSaving, ...USD },
+          { k: 'Everything you keep from the extra pay', ref: 'Net bonus plus both deductions’ value', v: totalKept, ...USD, extra: true },
+        ];
+
+        return {
+          total: usd(totalKept),
+          sub:
+            'Bonus nets ' + usd(bonusNet) + ' after ' + (SUPPLEMENTAL_RATE * 100).toFixed(0) + '% withholding and payroll tax · overtime deduction ' +
+            usd(ot.deduction) + ' and tip deduction ' + usd(tp.deduction) + ' are worth ' + usd(otSaving + tipSaving) + ' at your ' + (mr * 100).toFixed(0) + '% rate',
+          rows: rows,
+          chart: [
+            { label: 'Kept from the extra pay', value: Math.max(0, Math.round(totalKept)), tone: 'good' },
+            { label: 'Federal withholding on the bonus', value: Math.round(bonusFed), tone: 'warn' },
+            { label: 'Social Security + Medicare', value: Math.round(bonusFica), tone: 'bad' },
+          ],
+        };
+      }
+
+      // ─────────────────────── Self-employment (1099) ───────────────────────
+      if (id === 'selfemployed') {
+        const w2 = salary;
+        const netEarnings = profit * FICA.seNetEarningsFactor;
+        const ssRoom = Math.max(0, FICA.ssWageBase - w2);
+        const ssBase = Math.min(netEarnings, ssRoom);
+        const ssTax = ssBase * FICA.ssRateSelfEmployed;
+        const medTax = netEarnings * FICA.medicareRateSelfEmployed;
+        const addlRoom = Math.max(0, FICA.addlMedicareThreshold[status] - w2);
+        const addlBase = Math.max(0, netEarnings - addlRoom);
+        const addl = addlBase * FICA.addlMedicareRate;
+        const seTax = Math.round((ssTax + medTax + addl) * 100) / 100;
+        const halfSE = Math.round((seTax / 2) * 100) / 100;
+
+        const taxableWith = Math.max(0, profit + w2 - halfSE - std);
+        const taxableWithout = Math.max(0, w2 - std);
+        const incomeTaxOnSE = Math.max(0, federalTax(taxableWith, status) - federalTax(taxableWithout, status));
+        const totalSet = Math.round((seTax + incomeTaxOnSE) * 100) / 100;
+        const quarterly = totalSet / 4;
+        const kept = Math.max(0, profit - totalSet);
+
+        const rows = [
+          { k: 'Net self-employment profit', ref: 'Schedule C bottom line', v: profit, ...USD },
+          { k: 'W-2 wages you also have', ref: 'Already counted against the wage base', v: w2, ...USD },
+          { k: 'Net earnings from self-employment', ref: 'Profit × ' + (FICA.seNetEarningsFactor * 100).toFixed(2) + '%', v: netEarnings, ...USD },
+          { k: 'Social Security portion', ref: (FICA.ssRateSelfEmployed * 100).toFixed(1) + '% up to $' + FICA.ssWageBase.toLocaleString('en-US'), v: ssTax, ...USD },
+          { k: 'Medicare portion', ref: (FICA.medicareRateSelfEmployed * 100).toFixed(1) + '% — no cap', v: medTax, ...USD },
+          { k: 'Additional Medicare Tax', ref: (FICA.addlMedicareRate * 100).toFixed(1) + '% above $' + FICA.addlMedicareThreshold[status].toLocaleString('en-US'), v: addl, ...USD },
+          { k: 'Self-employment tax', ref: 'Schedule SE total', v: seTax, ...USD, extra: true },
+          { k: 'Deductible half of the SE tax', ref: 'Above-the-line adjustment', v: halfSE, ...USD },
+          { k: 'Federal income tax on the profit', ref: 'Incremental over your other income', v: incomeTaxOnSE, ...USD },
+          { k: 'Total to set aside', ref: 'SE tax + income tax on the profit', v: totalSet, ...USD, extra: true },
+          { k: 'Quarterly estimated payment', ref: 'Form 1040-ES', v: quarterly, ...USD },
+          { k: 'Effective tax rate on the profit', v: profit > 0 ? (totalSet / profit) * 100 : 0, format: 'unit', unit: '%', decimals: 1 },
+          { k: 'What you actually keep from the profit', v: kept, ...USD, extra: true },
+        ];
+
+        return {
+          total: usd(kept),
+          sub:
+            'On ' + usd(profit) + ' of profit: ' + usd(seTax) + ' self-employment tax plus ' + usd(incomeTaxOnSE) +
+            ' income tax · set aside ' + usd(totalSet) + ' (' + usd(quarterly) + ' a quarter)',
+          rows: rows,
+          chart: [
+            { label: 'Kept', value: Math.round(kept), tone: 'good' },
+            { label: 'Self-employment tax', value: Math.round(seTax), tone: 'bad' },
+            { label: 'Federal income tax on the profit', value: Math.round(incomeTaxOnSE), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ─────────────────────── Employer cost of an employee ───────────────────────
+      const empSS = Math.min(salary, FICA.ssWageBase) * FICA.ssRate;
+      const empMed = salary * FICA.medicareRate; // employer does NOT match Additional Medicare
+      const futa = Math.min(salary, FUTA.wageBase) * FUTA.rate;
+      const suta = Math.min(salary, sutaBase) * sutaRate;
+      const benefits = salary * benefitsPct;
+      const totalCost = salary + empSS + empMed + futa + suta + benefits;
+      const overhead = totalCost - salary;
+      const multiplier = salary > 0 ? totalCost / salary : 0;
+
+      const rows = [
+        { k: 'Base salary', v: salary, ...USD },
+        { k: 'Employer Social Security', ref: (FICA.ssRate * 100).toFixed(2) + '% up to $' + FICA.ssWageBase.toLocaleString('en-US'), v: empSS, ...USD },
+        { k: 'Employer Medicare', ref: (FICA.medicareRate * 100).toFixed(2) + '% — no cap, no match on the extra 0.9%', v: empMed, ...USD },
+        { k: 'Federal unemployment tax (FUTA)', ref: (FUTA.rate * 100).toFixed(1) + '% on the first $' + FUTA.wageBase.toLocaleString('en-US'), v: futa, ...USD },
+        { k: 'State unemployment insurance (SUTA)', ref: (sutaRate * 100).toFixed(2) + '% on the first $' + sutaBase.toLocaleString('en-US'), v: suta, ...USD },
+        { k: 'Benefits and other loaded costs', ref: (benefitsPct * 100).toFixed(1) + '% of salary', v: benefits, ...USD },
+        { k: 'Everything on top of salary', ref: 'Payroll taxes + benefits', v: overhead, ...USD, extra: true },
+        { k: 'Total annual cost of this employee', v: totalCost, ...USD, extra: true },
+        { k: 'Monthly cost', v: totalCost / 12, ...USD, decimals: 2 },
+        { k: 'Cost as a multiple of salary', ref: 'The number to use when budgeting a hire', v: multiplier, format: 'plain', decimals: 2 },
+        { k: 'Overhead as a percentage of salary', v: salary > 0 ? (overhead / salary) * 100 : 0, format: 'unit', unit: '%', decimals: 1 },
+      ];
+
+      return {
+        total: usd(totalCost),
+        sub:
+          'A ' + usd(salary) + ' salary costs ' + usd(totalCost) + ' a year — ' + usd(overhead) +
+          ' on top, a multiplier of ' + multiplier.toFixed(2) + '× · workers’ comp and equipment not included',
+        rows: rows,
+        chart: [
+          { label: 'Salary', value: Math.round(salary), tone: 'main' },
+          { label: 'Employer payroll taxes', value: Math.round(empSS + empMed + futa + suta), tone: 'warn' },
+          { label: 'Benefits and other costs', value: Math.round(benefits), tone: 'prop' },
+        ],
+      };
+    });
+  })();
+</script>

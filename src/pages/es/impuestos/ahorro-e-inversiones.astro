@@ -1,0 +1,243 @@
+---
+/**
+ * Hub de decisión ES — impuestos del ahorro. Reemplaza 4 calculadoras sueltas.
+ * audience="ES" va literal al Layout; los Infinity viajan como null en define:vars.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, ESCALA_AHORRO, AHORRO_PARAMS } from '../../../lib/hubs/es/ahorro-e-inversiones';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/es' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="ES"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ ESCALA: ESCALA_AHORRO, P: AHORRO_PARAMS }}>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n) => Math.round(n || 0).toLocaleString('es-ES') + ' €';
+
+    function escala(base, tramos) {
+      if (!(base > 0)) return 0;
+      let cuota = 0;
+      let prev = 0;
+      for (const par of tramos) {
+        const limite = par[0] == null ? Infinity : par[0];
+        if (base > prev) {
+          cuota += (Math.min(base, limite) - prev) * par[1];
+          prev = limite;
+          if (base <= limite) break;
+        }
+      }
+      return cuota;
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'acciones';
+      const venta = Math.max(0, v.venta || 0);
+      const compra = Math.max(0, v.compra || 0);
+      const comisiones = Math.max(0, v.comisiones || 0);
+      const perdidas = Math.max(0, v.perdidas || 0);
+      const capital = Math.max(0, v.capital || 0);
+      const premio = Math.max(0, v.premio || 0);
+      const bienesFuera = Math.max(0, v.bienesFuera || 0);
+
+      const rows = [];
+      let chart = [];
+      let total = 0;
+      let sub = '';
+
+      if (id === 'loteria') {
+        const exento = Math.min(premio, P.loteriaExento);
+        const gravado = Math.max(0, premio - P.loteriaExento);
+        const impuesto = gravado * P.loteriaTipo;
+        total = premio - impuesto;
+        const efectivo = premio > 0 ? (impuesto / premio) * 100 : 0;
+
+        rows.push({ k: 'Premio cobrado', ref: 'Por décimo o boleto', v: premio });
+        rows.push({ k: 'Parte exenta', ref: 'Primeros ' + eur(P.loteriaExento), v: exento });
+        rows.push({ k: 'Parte que tributa', ref: 'El exceso sobre la exención', v: gravado });
+        rows.push({
+          k: 'Retención del gravamen especial',
+          ref: Math.round(P.loteriaTipo * 100) + '% sobre el exceso',
+          v: impuesto,
+          extra: true,
+        });
+        rows.push({ k: 'Te queda limpio', ref: 'Lo que ingresas de verdad', v: total, extra: true });
+        rows.push({
+          k: 'Tipo efectivo sobre el premio',
+          ref: 'Impuesto ÷ premio',
+          v: efectivo,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+
+        chart = [
+          { label: 'Para ti', value: Math.round(total), tone: 'main' },
+          { label: 'Gravamen del 20%', value: Math.round(impuesto), tone: 'bad' },
+        ];
+        sub =
+          'De ' +
+          eur(premio) +
+          ' te quedan ' +
+          eur(total) +
+          ' · Hacienda se lleva ' +
+          eur(impuesto) +
+          ' (' +
+          efectivo.toFixed(2).replace('.', ',') +
+          '% efectivo, porque los primeros ' +
+          eur(P.loteriaExento) +
+          ' están exentos)';
+      } else if (id === 'extranjero') {
+        const obligado = bienesFuera > P.umbral720;
+        total = bienesFuera;
+
+        rows.push({ k: 'Mayor bloque de bienes en el extranjero', ref: 'Cuentas, valores o inmuebles', v: bienesFuera });
+        rows.push({ k: 'Umbral del modelo 720', ref: 'Por bloque, no sobre el total', v: P.umbral720 });
+        rows.push({
+          k: 'Diferencia con el umbral',
+          ref: obligado ? 'Lo superas: hay que declarar' : 'No llegas: no hay obligación',
+          v: Math.abs(bienesFuera - P.umbral720),
+        });
+        rows.push({
+          k: '¿Te toca presentarlo?',
+          ref: obligado ? 'Sí, antes del 31 de marzo' : 'No, este año no',
+          v: obligado ? 1 : 0,
+          format: 'plain',
+          extra: true,
+        });
+        rows.push({
+          k: 'Umbral de variación para repetirlo',
+          ref: 'Subida del bloque respecto al último declarado',
+          v: 20000,
+        });
+
+        chart = [
+          { label: 'Tu mayor bloque', value: Math.round(bienesFuera), tone: obligado ? 'warn' : 'main' },
+          { label: 'Umbral de 50.000 €', value: P.umbral720, tone: 'prop' },
+        ];
+        sub = obligado
+          ? 'Tu mayor bloque son ' +
+            eur(bienesFuera) +
+            ' y supera el umbral de ' +
+            eur(P.umbral720) +
+            ': te toca presentar el modelo 720 antes del 31 de marzo. No paga impuesto, sólo informa.'
+          : 'Tu mayor bloque son ' +
+            eur(bienesFuera) +
+            ', por debajo del umbral de ' +
+            eur(P.umbral720) +
+            ': este año no tienes que presentar el modelo 720.';
+      } else {
+        // Ganancia patrimonial y capital mobiliario comparten la base del ahorro.
+        const ganancia = id === 'dividendos' ? 0 : Math.max(0, venta - compra - comisiones);
+        const compensables = Math.min(perdidas, ganancia + capital * P.limiteCompensacion);
+        const base = Math.max(0, ganancia + capital - compensables);
+        const impuesto = escala(base, ESCALA);
+        const retenido = capital * P.retencionCapital;
+        const saldo = retenido - impuesto;
+        total = ganancia + capital - impuesto;
+        const efectivo = ganancia + capital > 0 ? (impuesto / (ganancia + capital)) * 100 : 0;
+
+        if (id !== 'dividendos') {
+          rows.push({ k: 'Importe de venta', ref: 'Lo que te ingresó el broker', v: venta });
+          rows.push({ k: 'Coste de adquisición (se resta)', ref: 'Lo que pagaste por los títulos', v: compra });
+          rows.push({ k: 'Comisiones (se restan)', ref: 'De compra y de venta', v: comisiones });
+          rows.push({ k: 'Ganancia patrimonial', ref: 'Venta − compra − comisiones', v: ganancia });
+        }
+        rows.push({ k: 'Intereses y dividendos', ref: 'Rendimientos del capital mobiliario', v: capital });
+        rows.push({ k: 'Pérdidas compensadas', ref: 'Del año y de los cuatro anteriores', v: compensables });
+        rows.push({ k: 'Base del ahorro', ref: 'Sobre la que se aplica la escala', v: base });
+        rows.push({ k: 'Impuesto del ahorro', ref: 'Escala del 19% al 28%', v: impuesto, extra: true });
+        rows.push({ k: 'Retenido en origen', ref: '19% de intereses y dividendos', v: retenido });
+        rows.push({
+          k: saldo >= 0 ? 'En la Renta te sale a devolver' : 'En la Renta te sale a pagar',
+          ref: 'Retenido menos impuesto',
+          v: Math.abs(saldo),
+        });
+        rows.push({ k: 'Te queda limpio', ref: 'Ganancia y rendimientos tras impuestos', v: total, extra: true });
+        rows.push({
+          k: 'Tipo efectivo',
+          ref: 'Impuesto ÷ ganancia bruta',
+          v: efectivo,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        if (perdidas > compensables) {
+          rows.push({
+            k: 'Pérdidas que quedan pendientes',
+            ref: 'Arrastran hasta cuatro ejercicios',
+            v: perdidas - compensables,
+          });
+        }
+
+        chart = [
+          { label: 'Para ti', value: Math.round(Math.max(0, total)), tone: 'main' },
+          { label: 'Impuesto del ahorro', value: Math.round(impuesto), tone: 'bad' },
+        ];
+        sub =
+          'Con una base del ahorro de ' +
+          eur(base) +
+          ' pagas ' +
+          eur(impuesto) +
+          ' (' +
+          efectivo.toFixed(2).replace('.', ',') +
+          '% efectivo) y te quedan ' +
+          eur(total) +
+          ' limpios';
+      }
+
+      return {
+        total: eur(total),
+        sub: sub,
+        rows: rows,
+        chart: chart.filter(function (s) {
+          return s.value > 0;
+        }),
+        format: 'unit',
+        unit: '€',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,232 @@
+---
+/**
+ * Hub de decisão BR — "Quanto realmente cai na minha conta?".
+ * As faixas do INSS e do IRRF viajam pelo define:vars com `ate: null` no lugar
+ * de Infinity, que não sobrevive à serialização.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  INSS,
+  IRRF,
+  DEP,
+  REDUTOR,
+  MINIMO,
+  TETO_INSS,
+  ADICIONAIS,
+  CONSIGNADO,
+  VALE_TRANSPORTE_PCT,
+} from '../../../lib/hubs/pt/salario-liquido';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="BR"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header lang="pt" />
+  <DecisionHub data={hub} />
+  <Footer lang="pt" />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ INSS, IRRF, DEP, REDUTOR, MINIMO, TETO_INSS, ADICIONAIS, CONSIGNADO, VT_PCT: VALE_TRANSPORTE_PCT }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const brl = (n) =>
+      'R$ ' + (Math.round((n || 0) * 100) / 100).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+
+    /** INSS progressivo: alíquota da faixa − parcela a deduzir, limitado ao teto. */
+    function calcINSS(bruto) {
+      const base = Math.min(Math.max(bruto, 0), TETO_INSS);
+      for (const f of INSS) {
+        if (base <= f.ate) return Math.round((base * f.aliquota - f.deduzir) * 100) / 100;
+      }
+      const ult = INSS[INSS.length - 1];
+      return Math.round((TETO_INSS * ult.aliquota - ult.deduzir) * 100) / 100;
+    }
+    function irrfTabelaCheia(base) {
+      if (base <= 0) return 0;
+      for (const f of IRRF) {
+        if (f.ate === null || base <= f.ate) return Math.max(0, base * f.aliquota - f.deduzir);
+      }
+      return 0;
+    }
+    /** IRRF com o redutor: zero até a isenção, redução linear até o teto do redutor. */
+    function calcIRRF(base) {
+      if (base <= REDUTOR.isencao) return 0;
+      const cheio = irrfTabelaCheia(base);
+      if (base >= REDUTOR.teto) return cheio;
+      return cheio * ((base - REDUTOR.isencao) / (REDUTOR.teto - REDUTOR.isencao));
+    }
+
+    H.onCompute(function (v) {
+      const salario = Math.max(0, v.salario || 0);
+      const deps = Math.max(0, Math.round(v.dependentes || 0));
+      const horasNot = Math.max(0, v.horasNoturnas || 0);
+      const variaveis = Math.max(0, v.variaveis || 0);
+      const diasUteis = Math.max(1, Math.round(v.diasUteis || 22));
+      const domingos = Math.max(0, Math.round(v.domingos || 0));
+      const vtCusto = Math.max(0, v.valeTransporte || 0);
+      const pensaoPct = Math.min(70, Math.max(0, v.pensaoPct || 0)) / 100;
+      const consignado = Math.max(0, v.consignado || 0);
+      const adicional = String(v.adicional || 'nenhum');
+
+      if (salario <= 0) {
+        return { total: brl(0), sub: 'Informe um salário base maior que zero.', rows: [], chart: [] };
+      }
+
+      // Adicional de risco: insalubridade sobre o mínimo, periculosidade sobre o salário base.
+      let valorAdicional = 0;
+      let refAdicional = '';
+      if (adicional === 'insal10') {
+        valorAdicional = MINIMO * ADICIONAIS.insalubridadeGraus.minimo;
+        refAdicional = '10% do salário mínimo · art. 192 CLT';
+      } else if (adicional === 'insal20') {
+        valorAdicional = MINIMO * ADICIONAIS.insalubridadeGraus.medio;
+        refAdicional = '20% do salário mínimo · art. 192 CLT';
+      } else if (adicional === 'insal40') {
+        valorAdicional = MINIMO * ADICIONAIS.insalubridadeGraus.maximo;
+        refAdicional = '40% do salário mínimo · art. 192 CLT';
+      } else if (adicional === 'peric') {
+        valorAdicional = salario * ADICIONAIS.periculosidade;
+        refAdicional = '30% do salário base · art. 193 CLT';
+      }
+
+      // Adicional noturno: 20% sobre a hora + hora reduzida de 52min30s (art. 73 CLT).
+      const horaNormal = salario / 220;
+      const fatorReducao = 60 / ADICIONAIS.horaNoturnaMin;
+      const valorNoturno = horasNot * horaNormal * (1 + ADICIONAIS.noturno) * fatorReducao - horasNot * horaNormal;
+      const noturno = Math.max(0, valorNoturno);
+
+      // DSR sobre a parte variável (Lei 605/1949).
+      const variavelTotal = variaveis + noturno;
+      const dsr = (variavelTotal / diasUteis) * domingos;
+
+      const bruto = salario + valorAdicional + variavelTotal + dsr;
+      const inss = calcINSS(bruto);
+      const deducaoDeps = deps * DEP;
+
+      // A pensão judicial abate a base do IRRF; por isso é estimada antes do imposto.
+      const baseAntesPensao = Math.max(0, bruto - inss);
+      const pensao = baseAntesPensao * pensaoPct;
+      const baseIrrf = Math.max(0, baseAntesPensao - deducaoDeps - pensao);
+      const irrf = Math.max(0, calcIRRF(baseIrrf));
+
+      const vt = Math.min(vtCusto, salario * VT_PCT);
+      const liquido = Math.max(0, bruto - inss - irrf - pensao - vt - consignado);
+
+      const remuneracaoDisponivel = bruto - inss - irrf;
+      const margem = remuneracaoDisponivel * CONSIGNADO.margem;
+      const efetiva = bruto > 0 ? ((inss + irrf) / bruto) * 100 : 0;
+
+      const rows = [{ k: 'Salário base', ref: 'Contrato', v: salario }];
+      if (valorAdicional > 0) rows.push({ k: 'Adicional de risco', ref: refAdicional, v: valorAdicional });
+      if (noturno > 0) {
+        rows.push({
+          k: 'Adicional noturno',
+          ref: horasNot + 'h · 20% + hora reduzida de 52min30s',
+          v: noturno,
+        });
+      }
+      if (variaveis > 0) rows.push({ k: 'Horas extras e comissões', ref: 'Parte variável do mês', v: variaveis });
+      if (dsr > 0) {
+        rows.push({
+          k: 'DSR sobre a parte variável',
+          ref: domingos + ' domingos/feriados ÷ ' + diasUteis + ' dias úteis · Lei 605/1949',
+          v: dsr,
+        });
+      }
+      rows.push({ k: 'Remuneração bruta do mês', ref: 'Base do INSS e do FGTS', v: bruto, extra: true });
+      rows.push({ k: 'INSS (desconto)', ref: 'Progressivo · teto ' + brl(TETO_INSS), v: inss });
+      if (deducaoDeps > 0) {
+        rows.push({ k: 'Dedução por ' + deps + (deps === 1 ? ' dependente' : ' dependentes'), ref: brl(DEP) + ' cada · Lei 9.250/1995', v: deducaoDeps });
+      }
+      if (pensao > 0) rows.push({ k: 'Pensão alimentícia (desconto)', ref: 'Dedutível da base do IRRF', v: pensao });
+      rows.push({ k: 'Base de cálculo do IRRF', ref: 'Bruto − INSS − dependentes − pensão', v: baseIrrf });
+      rows.push({
+        k: 'IRRF (desconto)',
+        ref: irrf === 0 ? 'Isento pelo redutor (base até ' + brl(REDUTOR.isencao) + ')' : 'Tabela mensal com redutor',
+        v: irrf,
+      });
+      if (vt > 0) rows.push({ k: 'Vale-transporte (desconto)', ref: 'Teto de ' + Math.round(VT_PCT * 100) + '% do salário base', v: vt });
+      if (consignado > 0) rows.push({ k: 'Parcela de consignado (desconto)', ref: 'Autorizada por você', v: consignado });
+      rows.push({ k: 'Salário líquido', ref: 'O que cai na conta', v: liquido, extra: true });
+      rows.push({
+        k: 'Margem consignável disponível',
+        ref: Math.round(CONSIGNADO.margem * 100) + '% da remuneração disponível',
+        v: Math.max(0, margem - consignado),
+      });
+      rows.push({
+        k: 'Alíquota efetiva de INSS + IRRF',
+        ref: 'Descontos obrigatórios ÷ bruto',
+        v: efetiva,
+        format: 'unit',
+        unit: '%',
+        decimals: 2,
+      });
+      rows.push({
+        k: 'Depósito do FGTS do mês (não sai do seu bolso)',
+        ref: '8% da remuneração · art. 15 da Lei 8.036/90',
+        v: bruto * 0.08,
+      });
+
+      const sub =
+        'De ' + brl(bruto) + ' brutos sobram ' + brl(liquido) +
+        ' (' + (bruto > 0 ? ((liquido / bruto) * 100).toFixed(1).replace('.', ',') : '0') + '%)' +
+        ' · alíquota efetiva de ' + efetiva.toFixed(2).replace('.', ',') + '%' +
+        (consignado > margem ? ' · ATENÇÃO: o consignado passou da margem de 35%' : '');
+
+      return {
+        total: brl(liquido),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Líquido na mão', value: Math.round(liquido), tone: 'main' },
+          { label: 'INSS', value: Math.round(inss), tone: 'warn' },
+          { label: 'IRRF', value: Math.round(irrf), tone: 'bad' },
+          { label: 'Pensão, vale-transporte e consignado', value: Math.round(pensao + vt + consignado), tone: 'exit' },
+        ].filter((s) => s.value > 0),
+      };
+    });
+  })();
+</script>

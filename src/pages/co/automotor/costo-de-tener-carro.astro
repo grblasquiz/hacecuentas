@@ -1,0 +1,277 @@
+---
+/**
+ * Hub de decisión CO — "Costo anual de tener carro o moto".
+ * Ruta bajo el prefijo /co/, igual que las calculadoras que absorbe.
+ * audience="CO" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  MOTO,
+  ELECTRICO,
+  SOAT_MOTO,
+  TECNO_MOTO,
+  TRAMITES_REF,
+  TAXI,
+  DESCUENTO_ANTICIPADO_REF,
+  MULTAS,
+} from '../../../lib/hubs/co/costo-de-tener-carro';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    MOTO,
+    ELECTRICO,
+    SOAT_MOTO,
+    TECNO_MOTO,
+    TRAMITES: TRAMITES_REF,
+    TAXI,
+    DESC: DESCUENTO_ANTICIPADO_REF,
+    MULTA_C: MULTAS.C,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const cop = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
+
+    /** SOAT de moto por cilindraje — tabla maestra verificada (Superfinanciera). */
+    function soatMoto(cc) {
+      if (cc < 100) return SOAT_MOTO.menos100cc;
+      if (cc <= 200) return SOAT_MOTO.de100a200cc;
+      return SOAT_MOTO.mas200cc;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'carro';
+      const avaluo = Math.max(0, v.avaluo || 0);
+      const cc = Math.max(0, v.cilindraje || 0);
+      const umbral1 = Math.max(0, v.umbral1 || 0);
+      const umbral2 = Math.max(umbral1, v.umbral2 || 0);
+      const kmMes = Math.max(0, v.kmMes || 0);
+      const rendimiento = Math.max(1, v.rendimiento || 1);
+      const precioGalon = Math.max(0, v.precioGalon || 0);
+      const anticipado = String(v.anticipado || 'si') === 'si';
+      const tramite = String(v.tramite || 'ninguno');
+
+      const esMoto = id === 'moto';
+      const rows = [];
+
+      // ── Impuesto de vehículos (art. 145 Ley 488/1998) ────────────────
+      // La tarifa del tramo se aplica sobre TODO el avalúo: no es marginal.
+      let tasa, refTasa;
+      if (id === 'electrico') {
+        tasa = ELECTRICO.tasaElectrico;
+        refTasa = 'Tarifa reducida para eléctricos · Ley 1964 de 2019';
+      } else if (esMoto) {
+        if (cc <= MOTO.cilindradaGravadaDesde) {
+          tasa = 0;
+          refTasa = 'Moto de hasta ' + MOTO.cilindradaGravadaDesde + ' c.c.: no gravada';
+        } else {
+          tasa = MOTO.tasa;
+          refTasa = 'Moto de más de ' + MOTO.cilindradaGravadaDesde + ' c.c. · art. 145 Ley 488';
+        }
+      } else if (avaluo <= umbral1) {
+        tasa = 0.015;
+        refTasa = 'Tramo bajo · hasta ' + cop(umbral1) + ' · ⚠️ umbral referencial';
+      } else if (avaluo <= umbral2) {
+        tasa = 0.02;
+        refTasa = 'Tramo medio · hasta ' + cop(umbral2) + ' · ⚠️ umbral referencial';
+      } else {
+        tasa = 0.035;
+        refTasa = 'Tramo alto · sobre ' + cop(umbral2) + ' · ⚠️ umbral referencial';
+      }
+
+      const impuestoPleno = Math.round(avaluo * tasa);
+      const descuento = anticipado ? Math.round(impuestoPleno * DESC) : 0;
+      const impuesto = impuestoPleno - descuento;
+
+      // ── SOAT y tecnomecánica ─────────────────────────────────────────
+      const soat = esMoto ? soatMoto(cc) : Math.max(0, v.soat || 0);
+      const tecno = esMoto ? TECNO_MOTO.tipico : Math.max(0, v.tecno || 0);
+
+      // ── Combustible ──────────────────────────────────────────────────
+      const kmAnio = kmMes * 12;
+      const galones = kmAnio / rendimiento;
+      const combustible = galones * precioGalon;
+
+      const anualRecurrente = impuesto + soat + tecno + combustible;
+
+      // ── Trámite de una sola vez ──────────────────────────────────────
+      let tramiteCosto = 0;
+      let refTramite = '';
+      if (tramite === 'matricula') {
+        tramiteCosto = esMoto ? TRAMITES.matriculaMoto : TRAMITES.matriculaCarro;
+        refTramite = '⚠️ Referencial · varía por organismo de tránsito';
+      } else if (tramite === 'traspaso') {
+        const base = esMoto ? TRAMITES.traspasoMoto : TRAMITES.traspasoCarro;
+        const retencion = avaluo * TRAMITES.retencionTraspaso;
+        tramiteCosto = base + retencion;
+        refTramite =
+          'Trámite ' + cop(base) + ' + retención del ' +
+          (TRAMITES.retencionTraspaso * 100).toFixed(0) + '% (' + cop(retencion) + ')';
+      }
+
+      rows.push({ k: 'Avalúo comercial del vehículo', ref: 'Tabla del Ministerio de Transporte', v: avaluo });
+      rows.push({
+        k: 'Tarifa del impuesto que te corresponde',
+        ref: refTasa,
+        v: tasa * 100,
+        format: 'unit',
+        unit: '%',
+        decimals: 2,
+      });
+      rows.push({ k: 'Impuesto de vehículos pleno', ref: 'Tarifa sobre todo el avalúo, no marginal', v: impuestoPleno });
+      if (descuento > 0) {
+        rows.push({
+          k: 'Descuento por pago anticipado',
+          ref: (DESC * 100).toFixed(0) + '% · ⚠️ no todos los departamentos lo ofrecen',
+          v: descuento,
+        });
+      } else if (impuestoPleno > 0) {
+        rows.push({
+          k: 'Descuento que estás dejando pasar',
+          ref: 'Hasta ' + (DESC * 100).toFixed(0) + '% pagando anticipado, donde aplique',
+          v: Math.round(impuestoPleno * DESC),
+        });
+      }
+      rows.push({ k: 'Impuesto de vehículos a pagar', ref: 'Después del descuento', v: impuesto });
+      rows.push({
+        k: 'SOAT anual',
+        ref: esMoto
+          ? 'Por cilindraje (' + cc + ' c.c.) · tarifa regulada, igual en todas las aseguradoras'
+          : 'Tarifa regulada: es la MISMA en todas las aseguradoras',
+        v: soat,
+      });
+      rows.push({
+        k: 'Revisión tecnomecánica',
+        ref: esMoto
+          ? 'Entre ' + cop(TECNO_MOTO.min) + ' y ' + cop(TECNO_MOTO.max) + ' según CDA'
+          : '⚠️ Referencial · cada CDA fija el suyo dentro del tope oficial',
+        v: tecno,
+      });
+      rows.push({
+        k: 'Kilómetros al año',
+        ref: kmMes.toLocaleString('es-CO') + ' km por mes',
+        v: kmAnio,
+        format: 'unit',
+        unit: 'km',
+      });
+      rows.push({
+        k: 'Combustible del año',
+        ref: galones.toFixed(0) + ' galones a ' + cop(precioGalon),
+        v: combustible,
+      });
+      rows.push({ k: 'Costo anual recurrente', ref: 'Impuesto + SOAT + tecnomecánica + combustible', v: anualRecurrente, extra: true });
+      rows.push({ k: 'Equivalente por mes', ref: 'Para presupuestarlo', v: anualRecurrente / 12, extra: true });
+      if (kmAnio > 0) {
+        rows.push({
+          k: 'Costo por kilómetro',
+          ref: 'Sin mantenimiento, llantas ni depreciación',
+          v: anualRecurrente / kmAnio,
+          decimals: 0,
+        });
+      }
+      if (tramiteCosto > 0) {
+        rows.push({
+          k: tramite === 'matricula' ? 'Matrícula del vehículo nuevo' : 'Traspaso del vehículo usado',
+          ref: refTramite,
+          v: tramiteCosto,
+          extra: true,
+        });
+        rows.push({ k: 'Total del primer año', ref: 'Costo recurrente más el trámite', v: anualRecurrente + tramiteCosto, extra: true });
+      }
+      // Comparación de cierre: el mismo kilometraje en taxi (Decreto Distrital 042 de 2026).
+      // La unidad del taxímetro corre por cada 100 m, más el banderazo por carrera.
+      const carrerasMes = kmMes > 0 ? Math.max(1, Math.round(kmMes / 8)) : 0; // carrera típica ~8 km
+      const taxiPorKm = (TAXI.unidadPesos.basico * 1000) / TAXI.metrosPorUnidad / 1000 * 10;
+      const taxiAnio =
+        carrerasMes > 0
+          ? (TAXI.banderazoPesos.basico * carrerasMes + (kmMes * 1000 / TAXI.metrosPorUnidad) * TAXI.unidadPesos.basico) * 12
+          : 0;
+      if (taxiAnio > 0) {
+        rows.push({
+          k: 'El mismo kilometraje en taxi en Bogotá',
+          ref: 'Banderazo ' + cop(TAXI.banderazoPesos.basico) + ' + ' + cop(TAXI.unidadPesos.basico) + ' por cada 100 m · Decreto 042 de 2026',
+          v: taxiAnio,
+        });
+        rows.push({
+          k: taxiAnio > anualRecurrente ? 'Lo que te ahorra tener carro propio' : 'Lo que te ahorraría moverte en taxi',
+          ref: 'Diferencia anual, sin contar mantenimiento ni depreciación',
+          v: Math.abs(taxiAnio - anualRecurrente),
+          extra: true,
+        });
+      }
+
+      rows.push({
+        k: 'Lo que costaría circular sin SOAT o sin tecnomecánica',
+        ref: 'Infracción tipo C, más grúa y patios aparte',
+        v: MULTA_C,
+      });
+
+      const pesoImpuesto = anualRecurrente > 0 ? (impuesto / anualRecurrente) * 100 : 0;
+      const sub =
+        'Te cuesta ' + cop(anualRecurrente / 12) + ' por mes' +
+        (kmAnio > 0 ? ' y ' + cop(anualRecurrente / kmAnio) + ' por kilómetro' : '') +
+        ' · el impuesto se lleva el ' + pesoImpuesto.toFixed(0) + '% del total' +
+        (tasa === 0 ? ' (tu moto no paga impuesto por cilindraje)' : '') +
+        ' · falta sumarle mantenimiento y depreciación';
+
+      return {
+        total: cop(anualRecurrente),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Impuesto de vehículos', value: Math.round(impuesto), tone: 'bad' },
+          { label: 'SOAT', value: Math.round(soat), tone: 'warn' },
+          { label: 'Tecnomecánica', value: Math.round(tecno), tone: 'prop' },
+          { label: 'Combustible', value: Math.round(combustible), tone: 'main' },
+        ],
+      };
+    });
+  })();
+</script>

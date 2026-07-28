@@ -1,0 +1,383 @@
+---
+/**
+ * Hub de decisão PT — "IRS: quanto pago, quanto me devolvem e quando recebo".
+ * A rota vive sob /pt-pt/, tal como as calculadoras que absorve.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, ESCALOES, IRS_BASES, SS, CAT_B, PRAZOS } from '../../../lib/hubs/pt-pt/irs';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt-pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PT"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ ESCALOES, IRS_BASES, SS, CAT_B, PRAZOS }}>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n, d) =>
+      Number(n || 0).toLocaleString('de-DE', {
+        minimumFractionDigits: d || 0,
+        maximumFractionDigits: d || 0,
+      }) + ' €';
+
+    const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
+    /** Escala progressiva de IRS sobre o rendimento coletável. */
+    function irsPorEscaloes(base) {
+      if (base <= 0) return 0;
+      let imposto = 0;
+      let anterior = 0;
+      for (const e of ESCALOES) {
+        const limite = e.ate === null ? Infinity : e.ate;
+        const noTramo = Math.min(base, limite) - anterior;
+        if (noTramo > 0) imposto += noTramo * e.taxa;
+        anterior = limite;
+        if (base <= limite) break;
+      }
+      return imposto;
+    }
+
+    function marginal(base) {
+      let anterior = 0;
+      for (const e of ESCALOES) {
+        const limite = e.ate === null ? Infinity : e.ate;
+        if (base <= limite) return { taxa: e.taxa, de: anterior, ate: e.ate };
+        anterior = limite;
+      }
+      const u = ESCALOES[ESCALOES.length - 1];
+      return { taxa: u.taxa, de: anterior, ate: null };
+    }
+
+    /** Espelho de irsTrabalhoDependenteAnual() de src/lib/data/portugal-2026.ts. */
+    function irsTrabalho(brutoAnual, ssAnual) {
+      if (brutoAnual <= 0) return 0;
+      if (brutoAnual <= IRS_BASES.minimoExistencia) return 0;
+      const deducao = Math.max(IRS_BASES.deducaoEspecifica, ssAnual);
+      return irsPorEscaloes(Math.max(0, brutoAnual - deducao));
+    }
+
+    function irsIndividual(bruto) {
+      return irsTrabalho(bruto, bruto * SS.trabalhador);
+    }
+
+    function coletavelTrabalho(brutoAnual) {
+      if (brutoAnual <= IRS_BASES.minimoExistencia) return 0;
+      return Math.max(0, brutoAnual - Math.max(IRS_BASES.deducaoEspecifica, brutoAnual * SS.trabalhador));
+    }
+
+    function parseISO(s) {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || '').trim());
+      if (!m) return null;
+      const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function fmtData(d) {
+      return d.getDate() + ' de ' + MESES[d.getMonth()] + ' de ' + d.getFullYear();
+    }
+
+    /** Janela estimada do reembolso a partir da data de entrega. */
+    function janelaReembolso(dataStr, tipo) {
+      const d = parseISO(dataStr);
+      const limite = parseISO(PRAZOS.entregaAte);
+      if (!d) return null;
+      const dentro = d <= limite;
+      const dias = !dentro
+        ? PRAZOS.diasForaDePrazo
+        : String(tipo) === 'automatico'
+          ? PRAZOS.diasAutomatico
+          : PRAZOS.diasNormal;
+      const de = new Date(d.getTime()); de.setDate(de.getDate() + dias[0]);
+      const ate = new Date(d.getTime()); ate.setDate(ate.getDate() + dias[1]);
+      return { dentro: dentro, dias: dias, de: de, ate: ate, entrega: d };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'dependente';
+      const r1 = Math.max(0, v.rendimento1 || 0);
+      const r2 = Math.max(0, v.rendimento2 || 0);
+      const retencoes = Math.max(0, v.retencoes || 0);
+
+      const rows = [];
+      let imposto = 0;
+      let ssAnual = 0;
+      let rendimentoBase = r1;
+      let coletavel = 0;
+      let subExtra = '';
+
+      if (id === 'casados') {
+        // ── Quociente conjugal: (r1+r2)/2, imposto sobre a metade, × 2 ──
+        const separado = irsIndividual(r1) + irsIndividual(r2);
+        const metade = (r1 + r2) / 2;
+        const conjunto = irsTrabalho(metade, metade * SS.trabalhador) * 2;
+        const poupanca = separado - conjunto;
+        const conjuntaGanha = poupanca > 0.005;
+        imposto = Math.min(separado, conjunto);
+        rendimentoBase = r1 + r2;
+        coletavel = coletavelTrabalho(metade) * 2;
+        ssAnual = rendimentoBase * SS.trabalhador;
+
+        rows.push({ k: 'Rendimento bruto anual do 1.º titular', ref: 'Categoria A', v: r1, format: 'unit', unit: '€' });
+        rows.push({ k: 'Rendimento bruto anual do 2.º titular', ref: 'Categoria A', v: r2, format: 'unit', unit: '€' });
+        rows.push({ k: 'IRS em tributação separada', ref: 'Cada um pelo seu escalão', v: separado, format: 'unit', unit: '€' });
+        rows.push({ k: 'IRS em tributação conjunta', ref: 'Quociente conjugal · art. 69.º CIRS', v: conjunto, format: 'unit', unit: '€' });
+        rows.push({
+          k: conjuntaGanha ? 'Poupança de entregar em conjunto' : 'Poupança de entregar em separado',
+          ref: 'Diferença entre as duas opções',
+          v: Math.abs(poupanca),
+          extra: true,
+          format: 'unit',
+          unit: '€',
+        });
+        subExtra =
+          Math.abs(poupanca) <= 0.005
+            ? 'Indiferente: as duas opções pagam o mesmo'
+            : conjuntaGanha
+              ? 'Compensa a tributação CONJUNTA: poupa ' + eur(poupanca)
+              : 'Compensa a tributação SEPARADA: poupa ' + eur(-poupanca);
+      } else if (id === 'maisvalias') {
+        // ── Categoria G: mais-valia × taxa autónoma, com isenção da cripto ≥ 365 dias ──
+        const venda = Math.max(0, v.valorVenda || 0);
+        const compra = Math.max(0, v.valorCompra || 0);
+        const despesas = Math.max(0, v.despesas || 0);
+        const dias = Math.max(0, Math.round(v.diasDetencao || 0));
+        const cripto = String(v.tipoAtivo || 'acoes') === 'cripto';
+        const isenta = cripto && dias >= 365;
+
+        const maisValia = Math.max(0, venda - compra - despesas);
+        const baseTributavel = isenta ? 0 : maisValia;
+        imposto = baseTributavel * IRS_BASES.taxaAutonoma;
+        rendimentoBase = maisValia;
+        coletavel = coletavelTrabalho(r1);
+        ssAnual = 0;
+
+        const marginalSalario = marginal(coletavel);
+        const irsEnglobado = maisValia * marginalSalario.taxa;
+
+        rows.push({ k: 'Valor de venda', ref: 'Valor de realização', v: venda, format: 'unit', unit: '€' });
+        rows.push({ k: 'Valor de aquisição (abate)', ref: 'O que pagou pelo ativo', v: compra, format: 'unit', unit: '€' });
+        rows.push({ k: 'Comissões e despesas (abatem)', ref: 'Compra e venda', v: despesas, format: 'unit', unit: '€' });
+        rows.push({ k: 'Mais-valia', ref: 'Base da categoria G', v: maisValia, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Base tributável',
+          ref: isenta ? 'Cripto detida ' + dias + ' dias: isenta' : 'Tributada por inteiro',
+          v: baseTributavel,
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({
+          k: 'IRS à taxa autónoma',
+          ref: (IRS_BASES.taxaAutonoma * 100).toLocaleString('de-DE') + ' % · art. 72.º CIRS',
+          v: imposto,
+          extra: true,
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({
+          k: 'IRS se optasse pelo englobamento',
+          ref: 'À sua marginal de ' + (marginalSalario.taxa * 100).toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' %',
+          v: isenta ? 0 : irsEnglobado,
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({ k: 'Encaixe líquido da operação', ref: 'Mais-valia − IRS', v: maisValia - imposto, format: 'unit', unit: '€' });
+        subExtra = isenta
+          ? 'Isenta: deteve ' + dias + ' dias (365 ou mais)'
+          : irsEnglobado < imposto
+            ? 'Neste caso o englobamento sairia mais barato: ' + eur(irsEnglobado)
+            : 'A taxa autónoma sai mais barata do que englobar';
+      } else if (id === 'independente') {
+        // ── Categoria B, regime simplificado: coeficiente + Segurança Social própria ──
+        const servicos = String(v.tipoAtividade || 'servicos') !== 'bens';
+        const coef = servicos ? CAT_B.coefServicos : CAT_B.coefBens;
+        const percRelevante = servicos ? SS.relevanteServicos : SS.relevanteBens;
+
+        coletavel = r1 * coef;
+        imposto = irsPorEscaloes(coletavel);
+        const baseSsMensal = Math.min((r1 / 12) * percRelevante, SS.baseMaximaMensal);
+        ssAnual = baseSsMensal * SS.independenteGeral * 12;
+        rendimentoBase = r1;
+
+        rows.push({ k: 'Faturação bruta do ano', ref: 'Recibos verdes emitidos', v: r1, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Rendimento tributável em IRS',
+          ref: 'Coeficiente ' + coef.toLocaleString('de-DE') + ' · art. 31.º CIRS',
+          v: coletavel,
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({ k: 'IRS do ano pelos escalões', ref: 'Categoria B simplificado', v: imposto, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Base contributiva mensal',
+          ref: (percRelevante * 100).toLocaleString('de-DE') + ' % do faturado · tope ' + eur(SS.baseMaximaMensal),
+          v: baseSsMensal,
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({
+          k: 'Segurança Social do ano',
+          ref: (SS.independenteGeral * 100).toLocaleString('de-DE') + ' % · Código Contributivo',
+          v: ssAnual,
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({
+          k: 'Sobra-lhe no ano, depois de IRS e Segurança Social',
+          ref: 'Sem contar despesas da atividade',
+          v: r1 - imposto - ssAnual,
+          extra: true,
+          format: 'unit',
+          unit: '€',
+        });
+        subExtra =
+          'Carga total de ' +
+          (r1 > 0 ? (((imposto + ssAnual) / r1) * 100).toFixed(1).replace('.', ',') : '0') +
+          ' % do que fatura';
+      } else {
+        // ── Categoria A: dedução específica, escalões e acerto com as retenções ──
+        ssAnual = r1 * SS.trabalhador;
+        coletavel = coletavelTrabalho(r1);
+        imposto = irsTrabalho(r1, ssAnual);
+
+        rows.push({ k: 'Rendimento bruto anual', ref: 'Categoria A · 14 meses', v: r1, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Segurança Social descontada no ano',
+          ref: (SS.trabalhador * 100).toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' %',
+          v: ssAnual,
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({
+          k: 'Dedução específica (abate)',
+          ref: 'A maior entre ' + eur(IRS_BASES.deducaoEspecifica, 2) + ' e a Segurança Social paga',
+          v: Math.max(IRS_BASES.deducaoEspecifica, ssAnual),
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({ k: 'Rendimento coletável', ref: 'Base dos escalões', v: coletavel, format: 'unit', unit: '€' });
+        rows.push({ k: 'IRS apurado do ano', ref: 'Escalões da Lei n.º 73-A/2025', v: imposto, format: 'unit', unit: '€' });
+      }
+
+      // ── Acerto com as retenções (não se aplica às mais-valias autónomas) ──
+      const usaRetencoes = id !== 'maisvalias';
+      const saldo = usaRetencoes ? imposto - retencoes : imposto;
+      const aReceber = usaRetencoes && saldo < 0;
+
+      if (usaRetencoes) {
+        rows.push({ k: 'IRS retido na fonte durante o ano (abate)', ref: 'Adiantamento já pago', v: retencoes, format: 'unit', unit: '€' });
+        rows.push({
+          k: aReceber ? 'Reembolso a receber' : 'IRS a pagar no acerto',
+          ref: 'Nota de liquidação',
+          v: Math.abs(saldo),
+          extra: true,
+          format: 'unit',
+          unit: '€',
+        });
+      }
+
+      const m = marginal(coletavel);
+      rows.push({
+        k: 'Escalão de IRS em que cai',
+        ref: m.ate === null ? 'Acima de ' + eur(m.de) : eur(m.de) + ' a ' + eur(m.ate),
+        v: m.taxa * 100,
+        format: 'unit',
+        unit: '% marginal',
+        decimals: 1,
+      });
+      rows.push({
+        k: 'Taxa efetiva sobre o rendimento bruto',
+        ref: 'IRS ÷ rendimento',
+        v: rendimentoBase > 0 ? (imposto / rendimentoBase) * 100 : 0,
+        format: 'unit',
+        unit: '%',
+        decimals: 2,
+      });
+
+      // ── Janela do reembolso ──
+      const j = janelaReembolso(v.dataEntrega, v.tipoEntrega);
+      let textoPrazo = '';
+      if (j) {
+        rows.push({
+          k: 'Prazo estimado até ao reembolso',
+          ref: j.dentro
+            ? String(v.tipoEntrega) === 'automatico'
+              ? 'IRS Automático dentro do prazo'
+              : 'Modelo 3 dentro do prazo'
+            : 'Entrega fora do prazo: sem garantia de calendário',
+          v: j.dias[1],
+          format: 'unit',
+          unit: 'dias no máximo',
+        });
+        textoPrazo =
+          (aReceber || !usaRetencoes ? ' · reembolso estimado entre ' : ' · janela de processamento entre ') +
+          fmtData(j.de) + ' e ' + fmtData(j.ate);
+      }
+
+      const ficaConsigo = Math.max(0, rendimentoBase - imposto - ssAnual);
+      const sub =
+        (usaRetencoes
+          ? aReceber
+            ? 'Tem ' + eur(-saldo) + ' a receber'
+            : saldo > 0
+              ? 'Fica com ' + eur(saldo) + ' a pagar'
+              : 'Acerto a zero'
+          : 'Imposto autónomo de ' + eur(imposto)) +
+        (subExtra ? ' · ' + subExtra : '') +
+        textoPrazo;
+
+      const chart = [
+        { label: 'Fica consigo', value: Math.round(ficaConsigo), tone: 'good' },
+        { label: 'IRS', value: Math.round(imposto), tone: 'bad' },
+      ];
+      if (ssAnual > 0) chart.push({ label: 'Segurança Social', value: Math.round(ssAnual), tone: 'warn' });
+
+      return {
+        total: eur(Math.abs(saldo)),
+        sub: sub,
+        rows: rows,
+        chart: chart,
+      };
+    });
+  })();
+</script>

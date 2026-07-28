@@ -1,0 +1,298 @@
+---
+/**
+ * Hub de decisión EN — "What is the area, the angle or the distance?"
+ *
+ * audience="US" y lang="en" van literales: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/en/geometry-trigonometry';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline>
+  (function () {
+    const H = window.HC_HUB;
+    const DEG_PER_RAD = 57.29577951308232; // 180 / π, the exact factor the old converter used
+
+    function n2(x, d) {
+      if (!isFinite(x)) return '∞';
+      return Number(x || 0).toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: d == null ? 4 : d,
+      });
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'triangle';
+      const a = Number(v.a) || 0;
+      const b = Number(v.b) || 0;
+      const c = Number(v.c) || 0;
+      const d = Number(v.d) || 0;
+      const ang = Number(v.ang) || 0;
+      const unit = String(v.unit || 'deg');
+
+      // ── Triangle area, Heron's formula ───────────────────────────────────
+      if (id === 'triangle') {
+        if (a <= 0 || b <= 0 || c <= 0) {
+          return {
+            total: '—',
+            sub: 'All three sides have to be positive lengths.',
+            rows: [
+              { k: 'Side a', ref: 'Must be > 0', v: a, format: 'plain', decimals: 4 },
+              { k: 'Side b', ref: 'Must be > 0', v: b, format: 'plain', decimals: 4 },
+              { k: 'Side c', ref: 'Must be > 0', v: c, format: 'plain', decimals: 4 },
+            ],
+            chart: [{ label: 'No valid triangle', value: 1, tone: 'warn' }],
+            format: 'plain',
+            decimals: 4,
+          };
+        }
+        if (a + b <= c || a + c <= b || b + c <= a) {
+          return {
+            total: 'Not a triangle',
+            sub: 'Sides ' + n2(a, 3) + ', ' + n2(b, 3) + ' and ' + n2(c, 3) + ' break the triangle inequality: each side must be shorter than the sum of the other two.',
+            rows: [
+              { k: 'Side a', ref: 'b + c = ' + n2(b + c, 3), v: a, format: 'plain', decimals: 4 },
+              { k: 'Side b', ref: 'a + c = ' + n2(a + c, 3), v: b, format: 'plain', decimals: 4 },
+              { k: 'Side c', ref: 'a + b = ' + n2(a + b, 3), v: c, format: 'plain', decimals: 4 },
+            ],
+            chart: [
+              { label: 'Side a', value: a, tone: 'main' },
+              { label: 'Side b', value: b, tone: 'good' },
+              { label: 'Side c', value: c, tone: 'warn' },
+            ],
+            format: 'plain',
+            decimals: 4,
+          };
+        }
+        const per = a + b + c;
+        const s = per / 2;
+        const area = Math.sqrt(s * (s - a) * (s - b) * (s - c));
+        const longest = Math.max(a, b, c);
+        // (sum of the two shorter sides squared) − (longest squared):
+        // 0 = right-angled, > 0 = acute, < 0 = obtuse.
+        const sq = a * a + b * b + c * c - longest * longest * 2;
+        const kind = Math.abs(sq) < 1e-9 ? 'right-angled' : sq > 0 ? 'acute' : 'obtuse';
+        const inradius = area / s;
+        const circum = (a * b * c) / (4 * area);
+        return {
+          total: n2(area, 4) + ' sq units',
+          sub:
+            'A ' + kind + ' triangle · perimeter ' + n2(per, 4) + ' · semiperimeter ' + n2(s, 4) +
+            ' · inscribed circle radius ' + n2(inradius, 4),
+          rows: [
+            { k: 'Side a', ref: n2((a / per) * 100, 1) + '% of the perimeter', v: a, format: 'plain', decimals: 4 },
+            { k: 'Side b', ref: n2((b / per) * 100, 1) + '% of the perimeter', v: b, format: 'plain', decimals: 4 },
+            { k: 'Side c', ref: n2((c / per) * 100, 1) + '% of the perimeter', v: c, format: 'plain', decimals: 4 },
+            { k: 'Perimeter', ref: 'a + b + c', v: per, format: 'plain', decimals: 4 },
+            { k: 'Semiperimeter s', ref: 'Perimeter ÷ 2', v: s, format: 'plain', decimals: 4 },
+            { k: 'Area', ref: '√(s(s−a)(s−b)(s−c))', v: area, format: 'unit', unit: 'sq units', decimals: 4, extra: true },
+            { k: 'Height on side a', ref: '2 × area ÷ a', v: (2 * area) / a, format: 'plain', decimals: 4 },
+            { k: 'Height on side b', ref: '2 × area ÷ b', v: (2 * area) / b, format: 'plain', decimals: 4 },
+            { k: 'Height on side c', ref: '2 × area ÷ c', v: (2 * area) / c, format: 'plain', decimals: 4 },
+            { k: 'Inscribed circle radius', ref: 'Area ÷ s', v: inradius, format: 'plain', decimals: 4 },
+            { k: 'Circumscribed circle radius', ref: 'abc ÷ (4 × area)', v: circum, format: 'plain', decimals: 4 },
+          ],
+          chart: [
+            { label: 'Side a', value: a, tone: 'main' },
+            { label: 'Side b', value: b, tone: 'good' },
+            { label: 'Side c', value: c, tone: 'prop' },
+          ],
+          format: 'plain',
+          decimals: 4,
+        };
+      }
+
+      // ── Sphere ───────────────────────────────────────────────────────────
+      if (id === 'sphere') {
+        const r = a;
+        if (r <= 0) {
+          return {
+            total: '—',
+            sub: 'Enter a positive radius in box a.',
+            rows: [{ k: 'Radius', ref: 'Must be > 0', v: r, format: 'plain', decimals: 4 }],
+            chart: [{ label: 'No sphere', value: 1, tone: 'warn' }],
+            format: 'plain',
+            decimals: 4,
+          };
+        }
+        const vol = (4 / 3) * Math.PI * r * r * r;
+        const surf = 4 * Math.PI * r * r;
+        const cube = 8 * r * r * r;
+        return {
+          total: n2(vol, 3) + ' cubic units',
+          sub:
+            'Radius ' + n2(r, 4) + ' · surface area ' + n2(surf, 3) + ' square units · the sphere fills ' +
+            n2((vol / cube) * 100, 1) + '% of the smallest cube that contains it',
+          rows: [
+            { k: 'Radius r', ref: 'Your input', v: r, format: 'plain', decimals: 4 },
+            { k: 'Diameter', ref: '2r', v: 2 * r, format: 'plain', decimals: 4 },
+            { k: 'Great-circle circumference', ref: '2πr', v: 2 * Math.PI * r, format: 'plain', decimals: 4 },
+            { k: 'Surface area', ref: '4πr²', v: surf, format: 'unit', unit: 'sq units', decimals: 4, extra: true },
+            { k: 'Volume', ref: '4/3 πr³', v: vol, format: 'unit', unit: 'cubic units', decimals: 4, extra: true },
+            { k: 'Volume of the bounding cube', ref: '(2r)³', v: cube, format: 'unit', unit: 'cubic units', decimals: 4 },
+            { k: 'Empty space left in that cube', ref: 'Cube − sphere', v: cube - vol, format: 'unit', unit: 'cubic units', decimals: 4 },
+            { k: 'Surface-area-to-volume ratio', ref: '3 ÷ r', v: surf / vol, format: 'plain', decimals: 5 },
+            { k: 'If you doubled the radius, volume ×', ref: 'Cube scaling', v: 8, format: 'plain', decimals: 0 },
+            { k: 'If you doubled the radius, surface ×', ref: 'Square scaling', v: 4, format: 'plain', decimals: 0 },
+          ],
+          chart: [
+            { label: 'The sphere itself', value: vol, tone: 'main' },
+            { label: 'Empty space in its bounding cube', value: Math.max(0, cube - vol), tone: 'good' },
+          ],
+          format: 'plain',
+          decimals: 4,
+        };
+      }
+
+      // ── Distance between two points ──────────────────────────────────────
+      if (id === 'distance') {
+        const dx = c - a;
+        const dy = d - b;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const manhattan = Math.abs(dx) + Math.abs(dy);
+        const slope = dx === 0 ? Infinity : dy / dx;
+        const angle = Math.atan2(dy, dx) * DEG_PER_RAD;
+        return {
+          total: n2(dist, 4) + ' units',
+          sub:
+            'From (' + n2(a, 3) + ', ' + n2(b, 3) + ') to (' + n2(c, 3) + ', ' + n2(d, 3) + ') · Δx = ' + n2(dx, 3) +
+            ', Δy = ' + n2(dy, 3) + ' · midpoint (' + n2((a + c) / 2, 3) + ', ' + n2((b + d) / 2, 3) + ')',
+          rows: [
+            { k: 'Δx = x₂ − x₁', ref: 'Horizontal gap', v: dx, format: 'plain', decimals: 4 },
+            { k: 'Δy = y₂ − y₁', ref: 'Vertical gap', v: dy, format: 'plain', decimals: 4 },
+            { k: 'Δx²', ref: 'First leg squared', v: dx * dx, format: 'plain', decimals: 4 },
+            { k: 'Δy²', ref: 'Second leg squared', v: dy * dy, format: 'plain', decimals: 4 },
+            { k: 'Δx² + Δy²', ref: 'The squared distance', v: dx * dx + dy * dy, format: 'plain', decimals: 4 },
+            { k: 'Distance √(Δx² + Δy²)', ref: 'Pythagorean theorem', v: dist, format: 'unit', unit: 'units', decimals: 6, extra: true },
+            { k: 'Midpoint x', ref: '(x₁ + x₂) ÷ 2', v: (a + c) / 2, format: 'plain', decimals: 4 },
+            { k: 'Midpoint y', ref: '(y₁ + y₂) ÷ 2', v: (b + d) / 2, format: 'plain', decimals: 4 },
+            { k: 'Slope of the line', ref: dx === 0 ? 'Vertical line — undefined' : 'Δy ÷ Δx', v: isFinite(slope) ? slope : 0, format: 'plain', decimals: 5 },
+            { k: 'Angle with the horizontal', ref: 'atan2(Δy, Δx)', v: angle, format: 'unit', unit: '°', decimals: 3 },
+            { k: 'City-block (Manhattan) distance', ref: '|Δx| + |Δy| — always ≥ the straight line', v: manhattan, format: 'unit', unit: 'units', decimals: 4 },
+          ],
+          chart: [
+            { label: 'Δx² = ' + n2(dx * dx, 2), value: dx * dx, tone: 'main' },
+            { label: 'Δy² = ' + n2(dy * dy, 2), value: dy * dy, tone: 'good' },
+          ],
+          format: 'plain',
+          decimals: 4,
+        };
+      }
+
+      // ── Trigonometric ratios ─────────────────────────────────────────────
+      if (id === 'trig') {
+        const rad = unit === 'deg' ? ang / DEG_PER_RAD : ang;
+        const deg = unit === 'deg' ? ang : ang * DEG_PER_RAD;
+        const s = Math.sin(rad);
+        const co = Math.cos(rad);
+        const tanUndef = Math.abs(co) < 1e-10;
+        const t = tanUndef ? Infinity : Math.tan(rad);
+        let reduced = deg % 360;
+        if (reduced < 0) reduced += 360;
+        const quadrant = reduced < 90 ? 'first' : reduced < 180 ? 'second' : reduced < 270 ? 'third' : 'fourth';
+        return {
+          total:
+            'sin ' + n2(s, 4) + ' · cos ' + n2(co, 4) + ' · tan ' + (tanUndef ? 'undefined' : n2(t, 4)),
+          sub:
+            n2(ang, 4) + (unit === 'deg' ? '°' : ' rad') + ' is ' + n2(deg, 4) + '° or ' + n2(rad, 6) +
+            ' rad · reduced to ' + n2(reduced, 3) + '° in the ' + quadrant + ' quadrant' +
+            (tanUndef ? ' · the cosine is zero here, so the tangent is undefined' : ''),
+          rows: [
+            { k: 'Angle in degrees', ref: 'Same angle, degree scale', v: deg, format: 'unit', unit: '°', decimals: 5 },
+            { k: 'Angle in radians', ref: 'Same angle, radian scale', v: rad, format: 'unit', unit: 'rad', decimals: 7 },
+            { k: 'Sine', ref: 'y coordinate on the unit circle', v: s, format: 'plain', decimals: 6, extra: true },
+            { k: 'Cosine', ref: 'x coordinate on the unit circle', v: co, format: 'plain', decimals: 6, extra: true },
+            { k: 'Tangent', ref: tanUndef ? 'Undefined — cosine is zero' : 'sine ÷ cosine', v: tanUndef ? 0 : t, format: 'plain', decimals: 6, extra: true },
+            { k: 'sin²θ', ref: 'First half of the identity', v: s * s, format: 'plain', decimals: 6 },
+            { k: 'cos²θ', ref: 'Second half of the identity', v: co * co, format: 'plain', decimals: 6 },
+            { k: 'sin²θ + cos²θ', ref: 'Always exactly 1', v: s * s + co * co, format: 'plain', decimals: 6 },
+            { k: 'Cosecant (1 ÷ sin)', ref: Math.abs(s) < 1e-10 ? 'Undefined — sine is zero' : 'Reciprocal of sine', v: Math.abs(s) < 1e-10 ? 0 : 1 / s, format: 'plain', decimals: 6 },
+            { k: 'Secant (1 ÷ cos)', ref: tanUndef ? 'Undefined — cosine is zero' : 'Reciprocal of cosine', v: tanUndef ? 0 : 1 / co, format: 'plain', decimals: 6 },
+            { k: 'Cotangent (cos ÷ sin)', ref: Math.abs(s) < 1e-10 ? 'Undefined — sine is zero' : 'Reciprocal of tangent', v: Math.abs(s) < 1e-10 ? 0 : co / s, format: 'plain', decimals: 6 },
+          ],
+          chart: [
+            { label: 'sin²θ = ' + n2(s * s, 4), value: s * s, tone: 'main' },
+            { label: 'cos²θ = ' + n2(co * co, 4), value: co * co, tone: 'good' },
+          ],
+          format: 'plain',
+          decimals: 4,
+        };
+      }
+
+      // ── Radians ↔ degrees ────────────────────────────────────────────────
+      const rad = unit === 'deg' ? ang / DEG_PER_RAD : ang;
+      const deg = unit === 'deg' ? ang : ang * DEG_PER_RAD;
+      const turns = deg / 360;
+      let inTurn = deg % 360;
+      if (inTurn < 0) inTurn += 360;
+      const rest = 360 - inTurn;
+      return {
+        total: unit === 'deg' ? n2(rad, 6) + ' rad' : n2(deg, 4) + '°',
+        sub:
+          n2(deg, 4) + '° = ' + n2(rad, 6) + ' rad = ' + n2(rad / Math.PI, 5) + '·π rad · ' +
+          n2(turns, 4) + ' of a full turn · conversion factor 180 ÷ π = 57.29577951',
+        rows: [
+          { k: 'Angle in degrees', ref: 'Degree scale', v: deg, format: 'unit', unit: '°', decimals: 5, extra: unit !== 'deg' },
+          { k: 'Angle in radians', ref: 'Radian scale', v: rad, format: 'unit', unit: 'rad', decimals: 8, extra: unit === 'deg' },
+          { k: 'As a multiple of π', ref: 'rad ÷ π', v: rad / Math.PI, format: 'unit', unit: '× π', decimals: 6 },
+          { k: 'As a fraction of a full turn', ref: '360° = 2π rad = 1 turn', v: turns, format: 'unit', unit: 'turns', decimals: 6 },
+          { k: 'In gradians', ref: '400 gon in a full turn', v: deg * (400 / 360), format: 'unit', unit: 'gon', decimals: 5 },
+          { k: 'In arcminutes', ref: '60 per degree', v: deg * 60, format: 'unit', unit: "'", decimals: 2 },
+          { k: 'Reduced into the first turn', ref: 'Angle mod 360°', v: inTurn, format: 'unit', unit: '°', decimals: 4 },
+          { k: 'Conversion factor used', ref: '180 ÷ π, exact', v: DEG_PER_RAD, format: 'unit', unit: '° per rad', decimals: 8 },
+        ],
+        chart: [
+          { label: 'Your angle within one turn (' + n2(inTurn, 2) + '°)', value: Math.max(0, inTurn), tone: 'main' },
+          { label: 'The rest of the full turn (' + n2(rest, 2) + '°)', value: Math.max(0, rest), tone: 'good' },
+        ],
+        format: 'plain',
+        decimals: 4,
+      };
+    });
+  })();
+</script>

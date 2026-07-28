@@ -1,0 +1,259 @@
+---
+/**
+ * Hub de decisión PE — "El día que no trabajo: vacaciones, feriado, falta o descanso médico".
+ * audience="PE" literal: HubData sólo modela 'AR' | 'global' y el mercado viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  DIAS_VACACIONES,
+  DIAS_A_CARGO_EMPLEADOR,
+  TOPE_DIAS_SUBSIDIO,
+  FERIADOS,
+  TOTAL_FERIADOS,
+} from '../../../lib/hubs/pe/dias-que-no-trabajo';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PE"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ DIAS_VACACIONES, DIAS_A_CARGO_EMPLEADOR, TOPE_DIAS_SUBSIDIO, FERIADOS, TOTAL_FERIADOS }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    // 'es-PE' en V8 emite formato tipo US; el formato legal peruano (Ley 23560) es
+    // punto para miles y coma para decimales, que es lo que da 'de-DE'.
+    const sol = (n) => 'S/ ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(Math.round(n || 0));
+
+    /** Parsea 'YYYY-MM-DD' como fecha local para que el conteo de días no dependa del huso. */
+    function parseLocal(s) {
+      const p = String(s || '').split('-').map(Number);
+      return p.length === 3 && !p.some(isNaN) ? new Date(p[0], p[1] - 1, p[2]) : new Date(NaN);
+    }
+
+    /** Días hasta el próximo feriado del calendario, o null si ya pasaron todos. */
+    function proximoFeriado() {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      for (let k = 0; k < FERIADOS.length; k++) {
+        const d = parseLocal(FERIADOS[k].fecha);
+        if (!isNaN(d.getTime()) && d >= hoy) {
+          return { nombre: FERIADOS[k].nombre, dias: Math.round((d.getTime() - hoy.getTime()) / 86400000) };
+        }
+      }
+      return null;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'vacaciones';
+
+      const sueldo = Math.max(0, v.sueldo || 0);
+      const horasDia = Math.min(12, Math.max(1, Math.round(v.horasDia || 8)));
+      const diasFeriado = Math.max(0, Math.min(16, Math.round(v.diasFeriado || 0)));
+      const conSustitutorio = String(v.sustitutorio || 'no') === 'si';
+      const diasFalta = Math.max(0, Math.min(30, Math.round(v.diasFalta || 0)));
+      const minutos = Math.max(0, Math.min(5000, Math.round(v.minutosTardanza || 0)));
+      const diasMedico = Math.max(0, Math.min(400, Math.round(v.diasMedico || 0)));
+      const diasYaUsados = Math.max(0, Math.min(DIAS_A_CARGO_EMPLEADOR, Math.round(v.diasYaUsados || 0)));
+      const vacSituacion = String(v.vacVencidas || 'por_gozar');
+
+      const diario = sueldo / 30;
+      const valorMinuto = diario / (horasDia * 60);
+      const prox = proximoFeriado();
+
+      const rows = [
+        { k: 'Remuneración diaria', ref: 'Sueldo ÷ 30 · siempre 30 días', v: diario },
+      ];
+
+      let total = 0;
+      let sub = '';
+      let chart = [];
+
+      if (id === 'vacaciones') {
+        // Remuneración vacacional = 1 remuneración por los 30 días de descanso.
+        const remVacacional = sueldo;
+        const noGozadas = vacSituacion !== 'por_gozar';
+        const esDireccion = vacSituacion === 'direccion';
+        // Art. 23 D. Leg. 713: indemnización de una remuneración, salvo personal de dirección.
+        const indemnizacion = noGozadas && !esDireccion ? sueldo : 0;
+        const adeudado = remVacacional + indemnizacion;
+        const triple = noGozadas && !esDireccion ? sueldo * 3 : remVacacional;
+        total = adeudado;
+
+        rows.push({ k: 'Días de descanso al año', ref: 'D. Leg. 713 art. 10', v: DIAS_VACACIONES, format: 'unit', unit: 'días' });
+        rows.push({ k: 'Remuneración vacacional', ref: 'Una remuneración por los 30 días', v: remVacacional, extra: true });
+        rows.push({
+          k: 'Indemnización vacacional',
+          ref: esDireccion
+            ? 'No corresponde al personal de dirección · art. 23'
+            : noGozadas
+              ? 'Art. 23 D. Leg. 713 · una remuneración'
+              : 'Solo si dejas vencer el plazo',
+          v: indemnizacion,
+        });
+        rows.push({ k: 'Total que te adeudan además del sueldo del mes', ref: 'Vacacional + indemnización', v: adeudado, extra: true });
+        rows.push({ k: 'El famoso "pago triple"', ref: 'Sueldo del mes + vacacional + indemnización', v: triple });
+        rows.push({ k: 'Valor de cada día de descanso', ref: 'Un treintavo de la remuneración', v: diario });
+        rows.push({ k: 'Días que puedes vender al empleador', ref: 'Máximo legal, con acuerdo escrito', v: 15, format: 'unit', unit: 'días' });
+
+        sub = noGozadas && !esDireccion
+          ? 'Dejaste vencer el plazo: te deben ' + sol(adeudado) + ' además del sueldo del mes · el pago triple suma ' + sol(triple)
+          : esDireccion
+            ? 'Como personal de dirección cobras la remuneración vacacional de ' + sol(remVacacional) + ', pero no la indemnización del art. 23'
+            : 'Por tus ' + DIAS_VACACIONES + ' días cobras ' + sol(remVacacional) + ', pagados antes de salir de vacaciones · cada día vale ' + sol(diario);
+
+        chart = [
+          { label: 'Remuneración vacacional', value: Math.round(remVacacional), tone: 'main' },
+          { label: 'Indemnización art. 23', value: Math.round(indemnizacion), tone: 'good' },
+        ].filter(function (s) { return s.value > 0; });
+      } else if (id === 'feriado') {
+        // Sin descanso sustitutorio se agregan 2 diarias por feriado: la del día
+        // trabajado y la sobretasa del 100%. La tercera ya está dentro del sueldo.
+        const adicionalPorDia = conSustitutorio ? 0 : diario * 2;
+        const adicional = adicionalPorDia * diasFeriado;
+        const valorDiaFeriado = conSustitutorio ? diario : diario * 3;
+        total = adicional;
+
+        rows.push({ k: 'Valor del feriado trabajado', ref: conSustitutorio ? 'Compensado con día libre' : 'Triple: sueldo + día trabajado + sobretasa 100%', v: valorDiaFeriado, extra: true });
+        rows.push({ k: 'Ya incluido en tu sueldo mensual', ref: 'Una remuneración diaria por feriado', v: diario * diasFeriado });
+        rows.push({ k: 'Pago por el día efectivamente trabajado', ref: conSustitutorio ? 'No corresponde con descanso sustitutorio' : 'Segunda remuneración diaria', v: conSustitutorio ? 0 : diario * diasFeriado });
+        rows.push({ k: 'Sobretasa del 100%', ref: conSustitutorio ? 'No corresponde con descanso sustitutorio' : 'Tercera remuneración diaria', v: conSustitutorio ? 0 : diario * diasFeriado });
+        rows.push({ k: 'Adicional que debe aparecer en tu boleta', ref: diasFeriado + ' feriado(s) trabajado(s)', v: adicional, extra: true });
+        rows.push({ k: 'Sueldo del mes con el adicional', ref: 'Remuneración + pago del feriado', v: sueldo + adicional });
+        rows.push({ k: 'Feriados nacionales del calendario', ref: 'Fuente: El Peruano', v: TOTAL_FERIADOS, format: 'unit', unit: 'feriados' });
+        if (prox) {
+          rows.push({ k: 'Días hasta el próximo feriado (' + prox.nombre + ')', ref: 'Calendario nacional vigente', v: prox.dias, format: 'unit', unit: 'días' });
+        }
+
+        sub = conSustitutorio
+          ? 'Con descanso sustitutorio no hay pago extra: el feriado se compensa con el día libre · sin ese descanso el día valdría ' + sol(diario * 3)
+          : 'Cada feriado trabajado vale ' + sol(diario * 3) + ' · por ' + diasFeriado + ' feriado(s) te deben ' + sol(adicional) + ' adicionales · el mes cierra en ' + sol(sueldo + adicional);
+
+        chart = [
+          { label: 'Ya incluido en el sueldo', value: Math.round(diario * diasFeriado), tone: 'prop' },
+          { label: 'Día trabajado', value: Math.round(conSustitutorio ? 0 : diario * diasFeriado), tone: 'main' },
+          { label: 'Sobretasa 100%', value: Math.round(conSustitutorio ? 0 : diario * diasFeriado), tone: 'good' },
+        ].filter(function (s) { return s.value > 0; });
+      } else if (id === 'falta') {
+        const descFaltas = diario * diasFalta;
+        const descTardanzas = valorMinuto * minutos;
+        const descuento = descFaltas + descTardanzas;
+        const aCobrar = Math.max(0, sueldo - descuento);
+        total = descuento;
+
+        rows.push({ k: 'Valor del minuto', ref: 'Diaria ÷ ' + horasDia * 60 + ' minutos de jornada', v: valorMinuto, decimals: 2 });
+        rows.push({ k: 'Descuento por faltas', ref: diasFalta + ' día(s) × remuneración diaria', v: descFaltas });
+        rows.push({ k: 'Descuento por tardanzas', ref: minutos + ' minuto(s) × valor del minuto', v: descTardanzas });
+        rows.push({ k: 'Descuento total del mes', ref: 'Faltas + tardanzas', v: descuento, extra: true });
+        rows.push({ k: 'Sueldo que terminas cobrando', ref: 'Remuneración − descuentos', v: aCobrar, extra: true });
+        rows.push({
+          k: 'Cuánto de tu sueldo se te fue en descuentos',
+          ref: 'Descuento ÷ remuneración',
+          v: sueldo > 0 ? (descuento / sueldo) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        rows.push({
+          k: 'Horas equivalentes de trabajo perdidas',
+          ref: 'Faltas y tardanzas convertidas a horas',
+          v: diasFalta * horasDia + minutos / 60,
+          format: 'unit',
+          unit: 'horas',
+          decimals: 1,
+        });
+
+        sub = descuento > 0
+          ? 'Te descuentan ' + sol(descuento) + ' y cobras ' + sol(aCobrar) + ' · el día vale ' + sol(diario) + ' y el minuto ' + sol(valorMinuto)
+          : 'Sin faltas ni tardanzas cobras tu remuneración completa: ' + sol(sueldo);
+
+        chart = [
+          { label: 'Sueldo a cobrar', value: Math.round(aCobrar), tone: 'main' },
+          { label: 'Descuento por faltas', value: Math.round(descFaltas), tone: 'exit' },
+          { label: 'Descuento por tardanzas', value: Math.round(descTardanzas), tone: 'warn' },
+        ].filter(function (s) { return s.value > 0; });
+      } else {
+        // Descanso médico: el cupo de 20 días del empleador es ACUMULADO en el año.
+        const cupoEmpleador = Math.max(0, DIAS_A_CARGO_EMPLEADOR - diasYaUsados);
+        const diasEmpleador = Math.min(diasMedico, cupoEmpleador);
+        const diasEssalud = Math.min(Math.max(diasMedico - diasEmpleador, 0), TOPE_DIAS_SUBSIDIO);
+        const diasSinCobertura = Math.max(0, diasMedico - diasEmpleador - diasEssalud);
+        const pagoEmpleador = diasEmpleador * diario;
+        const pagoEssalud = diasEssalud * diario;
+        total = pagoEmpleador + pagoEssalud;
+
+        rows.push({ k: 'Días a cargo del empleador', ref: 'Cupo restante del año: ' + cupoEmpleador + ' de ' + DIAS_A_CARGO_EMPLEADOR, v: diasEmpleador, format: 'unit', unit: 'días' });
+        rows.push({ k: 'Días a cargo de EsSalud', ref: 'Desde el día ' + (DIAS_A_CARGO_EMPLEADOR + 1) + ' del año · tope ' + TOPE_DIAS_SUBSIDIO, v: diasEssalud, format: 'unit', unit: 'días' });
+        rows.push({ k: 'Paga tu empleador', ref: diasEmpleador + ' día(s) × remuneración diaria', v: pagoEmpleador });
+        rows.push({ k: 'Paga EsSalud (subsidio)', ref: diasEssalud + ' día(s) × promedio diario', v: pagoEssalud });
+        rows.push({ k: 'Total del período de incapacidad', ref: 'Empleador + EsSalud', v: total, extra: true });
+        if (diasSinCobertura > 0) {
+          rows.push({ k: 'Días fuera del tope de subsidio', ref: 'Superan los ' + TOPE_DIAS_SUBSIDIO + ' días · se evalúa invalidez', v: diasSinCobertura, format: 'unit', unit: 'días' });
+        }
+        rows.push({
+          k: 'Cuánto representa sobre un mes de sueldo',
+          ref: 'Total ÷ remuneración mensual',
+          v: sueldo > 0 ? total / sueldo : 0,
+          format: 'unit',
+          unit: 'remuneraciones',
+          decimals: 2,
+        });
+        rows.push({ k: 'Cupo de días del empleador que te queda para el resto del año', ref: 'Se cuenta acumulado por año calendario', v: Math.max(0, cupoEmpleador - diasEmpleador), format: 'unit', unit: 'días' });
+
+        sub = diasMedico > 0
+          ? 'De ' + diasMedico + ' días, ' + diasEmpleador + ' los paga el empleador (' + sol(pagoEmpleador) + ') y ' + diasEssalud + ' EsSalud (' + sol(pagoEssalud) + ') · total ' + sol(total)
+          : 'Carga los días de tu certificado médico para ver cómo se reparte el pago';
+
+        chart = [
+          { label: 'Paga el empleador', value: Math.round(pagoEmpleador), tone: 'main' },
+          { label: 'Paga EsSalud', value: Math.round(pagoEssalud), tone: 'good' },
+        ].filter(function (s) { return s.value > 0; });
+      }
+
+      return { total: sol(total), sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

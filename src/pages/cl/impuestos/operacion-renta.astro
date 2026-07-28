@@ -1,0 +1,304 @@
+---
+/**
+ * Hub de decisión CL — "¿Me devuelven o tengo que pagar en la Operación Renta?"
+ * Ruta bajo el prefijo /cl/, igual que las calculadoras que absorbe.
+ * audience="CL" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UF,
+  UTM,
+  UTA,
+  TRAMOS_IGC,
+  RETENCION_POR_ANIO,
+  COTIZACIONES_INDEPENDIENTE,
+  APV,
+} from '../../../lib/hubs/cl/operacion-renta';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    UF,
+    UTM,
+    UTA,
+    TRAMOS: TRAMOS_IGC,
+    TASAS_ANIO: RETENCION_POR_ANIO,
+    COT: COTIZACIONES_INDEPENDIENTE,
+    APV,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+    const num = (n, d) => n.toLocaleString('es-CL', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+
+    // Impuesto Global Complementario — Art. 52 LIR, tramos anuales en UTA.
+    function igc(base) {
+      const baseUta = UTA > 0 ? Math.max(0, base) / UTA : 0;
+      for (const t of TRAMOS) {
+        const hasta = t.hastaUta === null ? Infinity : t.hastaUta;
+        if (baseUta <= hasta) {
+          return {
+            impuesto: Math.max(0, Math.max(0, base) * t.factor - t.rebajaUta * UTA),
+            marginal: t.factor * 100,
+            baseUta: baseUta,
+            tramo: t.nombre,
+          };
+        }
+      }
+      return { impuesto: 0, marginal: 0, baseUta: baseUta, tramo: TRAMOS[0].nombre };
+    }
+
+    function tasaRetencion(anio) {
+      const fila = TASAS_ANIO.find((r) => String(r.anio) === String(anio));
+      return (fila ? fila.tasa : 15.25) / 100;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'honorarios';
+      const sueldos = Math.max(0, v.sueldos || 0);
+      const honorarios = Math.max(0, v.honorarios || 0);
+      const otras = Math.max(0, v.otrasRentas || 0);
+      const cotizaciones = Math.max(0, v.cotizaciones || 0);
+      const retenido = Math.max(0, v.retenido || 0);
+
+      // ── Honorarios: devolución real después de cotizaciones ─────────
+      if (id === 'honorarios') {
+        const tasa = tasaRetencion(v.anioRetencion || '2026');
+        const retencion = honorarios * tasa;
+        // Cotizaciones del independiente: 80% de las rentas brutas, topado en 90 UF × 12.
+        const topeAnual = COT.topeMensualUf * COT.mesesDelAnio * UF;
+        const base80 = Math.min(honorarios * COT.baseSobreBruto, topeAnual);
+        const cotIndep = base80 * COT.tasaTotalDefault;
+        // Presunción de gastos: 30% de los ingresos brutos, tope 15 UTA.
+        const presuncion = Math.min(honorarios * 0.3, 15 * UTA);
+        const baseImponible = Math.max(0, honorarios - presuncion);
+        const r = igc(baseImponible);
+
+        const aCotizaciones = Math.min(retencion, cotIndep);
+        const remanente = Math.max(0, retencion - cotIndep);
+        const faltaCotizacion = Math.max(0, cotIndep - retencion);
+        const devolucion = remanente - r.impuesto;
+
+        return {
+          total: clp(Math.abs(devolucion)),
+          sub:
+            (devolucion >= 0 ? 'Te devuelven ' : 'Tienes que pagar ') + clp(Math.abs(devolucion)) +
+            ' · de tu retención de ' + clp(retencion) + ', ' + clp(aCotizaciones) +
+            ' se van a cotizaciones · tramo ' + r.tramo +
+            (faltaCotizacion > 0 ? ' · te faltan ' + clp(faltaCotizacion) + ' para cubrir las cotizaciones' : ''),
+          rows: [
+            { k: 'Honorarios brutos del año', ref: 'Total boleteado', v: honorarios },
+            { k: 'Retención acumulada del año', ref: num(tasa * 100, 2) + '% · Ley 21.133', v: retencion },
+            { k: 'Base de cotización (80% de los brutos)', ref: 'Topada en ' + COT.topeMensualUf * COT.mesesDelAnio + ' UF al año', v: base80 },
+            { k: 'Cotizaciones previsionales estimadas', ref: '≈' + num(COT.tasaTotalDefault * 100) + '% de la base · se pagan PRIMERO', v: cotIndep },
+            { k: 'Retención destinada a cotizaciones', ref: 'Orden de prelación de la Ley 21.133', v: aCotizaciones },
+            { k: 'Remanente de la retención para el impuesto', ref: 'Lo único acreditable contra el IGC', v: remanente },
+            { k: 'Presunción de gastos', ref: '30% de los brutos, tope 15 UTA', v: presuncion },
+            { k: 'Base imponible del Global Complementario', ref: 'Honorarios − presunción de gastos', v: baseImponible },
+            { k: 'Base en UTA', ref: 'UTA ' + clp(UTA), v: r.baseUta, format: 'unit', unit: 'UTA', decimals: 2 },
+            { k: 'Tasa marginal del tramo', ref: r.tramo + ' · Art. 52 LIR', v: r.marginal, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Impuesto Global Complementario', ref: 'Base × factor − rebaja', v: r.impuesto },
+            {
+              k: devolucion >= 0 ? 'Devolución estimada' : 'Cargo a pagar',
+              ref: 'Remanente − impuesto',
+              v: Math.abs(devolucion),
+              extra: true,
+            },
+          ],
+          chart: [
+            { label: 'Cotizaciones previsionales', value: Math.max(0, Math.round(cotIndep)), tone: 'prop' },
+            { label: 'Impuesto Global Complementario', value: Math.max(0, Math.round(r.impuesto)), tone: 'warn' },
+            { label: devolucion >= 0 ? 'Devolución' : 'Cargo', value: Math.max(0, Math.round(Math.abs(devolucion))), tone: devolucion >= 0 ? 'good' : 'bad' },
+          ],
+        };
+      }
+
+      // ── Ganancia en criptomonedas ───────────────────────────────────
+      if (id === 'cripto') {
+        const venta = Math.max(0, v.criptoVenta || 0);
+        const costo = Math.max(0, v.criptoCosto || 0);
+        const mayorValor = Math.max(0, venta - costo);
+
+        // La ganancia se agrega al resto de las rentas: el impuesto es el delta.
+        const baseSin = Math.max(0, sueldos + honorarios + otras - cotizaciones);
+        const baseCon = baseSin + mayorValor;
+        const rSin = igc(baseSin);
+        const rCon = igc(baseCon);
+        const impuestoCripto = Math.max(0, rCon.impuesto - rSin.impuesto);
+        const efectiva = mayorValor > 0 ? (impuestoCripto / mayorValor) * 100 : 0;
+        const neto = mayorValor - impuestoCripto;
+
+        return {
+          total: clp(impuestoCripto),
+          sub:
+            'Impuesto por un mayor valor de ' + clp(mayorValor) + ' · tasa efectiva sobre la ganancia ' +
+            num(efectiva, 1) + '% · tramo ' + rCon.tramo + ' · te quedan ' + clp(neto),
+          rows: [
+            { k: 'Total vendido en criptomonedas', ref: 'Monto recibido', v: venta },
+            { k: 'Costo de adquisición y comisiones', ref: 'Tiene que estar acreditado', v: costo },
+            { k: 'Mayor valor (ganancia)', ref: 'Renta ordinaria · Art. 20 N°5 LIR', v: mayorValor },
+            { k: 'Resto de tus rentas del año', ref: 'Sueldos, honorarios y capital, menos cotizaciones', v: baseSin },
+            { k: 'Impuesto sin la ganancia de cripto', ref: 'Tramo ' + rSin.tramo, v: rSin.impuesto },
+            { k: 'Base total con la ganancia', ref: 'Todo se suma en el Global Complementario', v: baseCon },
+            { k: 'Base total en UTA', ref: 'UTA ' + clp(UTA), v: rCon.baseUta, format: 'unit', unit: 'UTA', decimals: 2 },
+            { k: 'Tasa marginal que te toca', ref: rCon.tramo + ' · Art. 52 LIR', v: rCon.marginal, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Impuesto con la ganancia incluida', ref: 'Global Complementario total', v: rCon.impuesto },
+            { k: 'Impuesto atribuible a la ganancia de cripto', ref: 'Diferencia entre los dos escenarios', v: impuestoCripto, extra: true },
+            {
+              k: 'Tasa efectiva sobre la ganancia',
+              ref: 'Impuesto ÷ mayor valor',
+              v: efectiva,
+              format: 'unit',
+              unit: '%',
+              decimals: 2,
+            },
+            { k: 'Ganancia neta que te queda', ref: 'Mayor valor − impuesto', v: neto },
+          ],
+          chart: [
+            { label: 'Ganancia neta', value: Math.max(0, Math.round(neto)), tone: 'main' },
+            { label: 'Impuesto sobre la ganancia', value: Math.max(0, Math.round(impuestoCripto)), tone: 'warn' },
+            { label: 'Costo de adquisición', value: Math.max(0, Math.round(costo)), tone: 'prop' },
+          ],
+        };
+      }
+
+      // ── APV: Régimen A vs Régimen B ─────────────────────────────────
+      if (id === 'apv') {
+        const aporte = Math.max(0, v.apvAporte || 0);
+        const baseSin = Math.max(0, sueldos + honorarios + otras - cotizaciones);
+        const rSin = igc(baseSin);
+
+        const bonoA = Math.min(aporte * APV.regimenABonoPct, APV.regimenATopeUtm * UTM);
+        const rebajable = Math.min(aporte, APV.regimenBTopeUf * UF);
+        const rConB = igc(Math.max(0, baseSin - rebajable));
+        const ahorroB = Math.max(0, rSin.impuesto - rConB.impuesto);
+        const mejor = bonoA >= ahorroB ? 'Régimen A' : 'Régimen B';
+        const beneficio = Math.max(bonoA, ahorroB);
+
+        return {
+          total: clp(beneficio),
+          sub:
+            'Te conviene el ' + mejor + ' · Régimen A ' + clp(bonoA) + ' de bonificación estatal, Régimen B ' +
+            clp(ahorroB) + ' de ahorro de impuesto · tu tasa marginal es ' + num(rSin.marginal, 1) + '%',
+          rows: [
+            { k: 'Aporte anual al APV', ref: 'Art. 42 bis LIR', v: aporte },
+            { k: 'Renta imponible del año sin APV', ref: 'Todas tus rentas menos cotizaciones', v: baseSin },
+            { k: 'Tu tasa marginal', ref: rSin.tramo + ' · Art. 52 LIR', v: rSin.marginal, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Régimen A — bonificación estatal', ref: num(APV.regimenABonoPct * 100) + '% del aporte, tope ' + APV.regimenATopeUtm + ' UTM', v: bonoA },
+            { k: 'Tope del Régimen A en pesos', ref: APV.regimenATopeUtm + ' UTM × ' + clp(UTM), v: APV.regimenATopeUtm * UTM },
+            { k: 'Aporte rebajable en Régimen B', ref: 'Tope ' + APV.regimenBTopeUf + ' UF', v: rebajable },
+            { k: 'Base imponible con la rebaja del Régimen B', ref: 'Renta − aporte rebajable', v: Math.max(0, baseSin - rebajable) },
+            { k: 'Impuesto sin APV', ref: 'Global Complementario', v: rSin.impuesto },
+            { k: 'Impuesto con el Régimen B', ref: 'Global Complementario con la rebaja', v: rConB.impuesto },
+            { k: 'Régimen B — ahorro de impuesto', ref: 'Diferencia de impuesto', v: ahorroB },
+            { k: 'Beneficio del régimen que te conviene', ref: mejor, v: beneficio, extra: true },
+            { k: 'Diferencia entre los dos regímenes', ref: 'Cuánto pierdes si eliges el otro', v: Math.abs(bonoA - ahorroB) },
+          ],
+          chart: [
+            { label: 'Régimen A — bonificación', value: Math.round(bonoA), tone: 'good' },
+            { label: 'Régimen B — ahorro de impuesto', value: Math.round(ahorroB), tone: 'main' },
+          ],
+        };
+      }
+
+      // ── Dependiente o rentas de varias fuentes ──────────────────────
+      const soloSueldos = id === 'sueldos';
+      const rentaBruta = soloSueldos ? sueldos : sueldos + honorarios + otras;
+      const base = Math.max(0, rentaBruta - cotizaciones);
+      const r = igc(base);
+      const resultado = r.impuesto - retenido;
+      const efectiva = rentaBruta > 0 ? (r.impuesto / rentaBruta) * 100 : 0;
+
+      return {
+        total: clp(Math.abs(resultado)),
+        sub:
+          (resultado <= 0 ? 'Te devuelven ' : 'Tienes que pagar ') + clp(Math.abs(resultado)) +
+          ' · renta imponible ' + num(r.baseUta, 1) + ' UTA · tramo ' + r.tramo +
+          ' · tasa efectiva ' + num(efectiva, 2) + '%',
+        rows: [
+          { k: 'Sueldos brutos del año', ref: 'Remuneraciones imponibles', v: sueldos },
+          ...(soloSueldos
+            ? []
+            : [
+                { k: 'Honorarios brutos del año', ref: 'Total boleteado', v: honorarios },
+                { k: 'Arriendos y rentas de capital', ref: 'Van al Global Complementario', v: otras },
+              ]),
+          { k: 'Renta bruta total del año', ref: soloSueldos ? 'Solo sueldos' : 'Todas las fuentes se suman', v: rentaBruta },
+          { k: 'Cotizaciones obligatorias (se rebajan)', ref: 'AFP y salud', v: cotizaciones },
+          { k: 'Renta imponible anual', ref: 'Base del Art. 52 LIR', v: base, extra: true },
+          { k: 'Renta imponible en UTA', ref: 'UTA ' + clp(UTA), v: r.baseUta, format: 'unit', unit: 'UTA', decimals: 2 },
+          { k: 'Tramo en el que caes', ref: r.tramo, v: r.marginal, format: 'unit', unit: '% marginal', decimals: 1 },
+          { k: 'Impuesto Global Complementario anual', ref: 'Base × factor − rebaja × UTA', v: r.impuesto },
+          { k: 'Impuesto ya retenido o pagado', ref: 'Impuesto Único y PPM del año', v: retenido },
+          {
+            k: resultado <= 0 ? 'Devolución' : 'Cargo a pagar',
+            ref: 'Impuesto anual − lo ya pagado',
+            v: Math.abs(resultado),
+            extra: true,
+          },
+          {
+            k: 'Tasa efectiva sobre tus rentas brutas',
+            ref: 'Impuesto ÷ renta bruta',
+            v: efectiva,
+            format: 'unit',
+            unit: '%',
+            decimals: 2,
+          },
+          { k: 'Margen que te queda antes del tramo exento', ref: '13,5 UTA = ' + clp(13.5 * UTA), v: Math.max(0, 13.5 * UTA - base) },
+        ],
+        chart: [
+          { label: 'Fuera del impuesto (cotizaciones)', value: Math.round(cotizaciones), tone: 'good' },
+          { label: 'Renta gravada que te queda', value: Math.max(0, Math.round(base - r.impuesto)), tone: 'main' },
+          { label: 'Impuesto Global Complementario', value: Math.max(0, Math.round(r.impuesto)), tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

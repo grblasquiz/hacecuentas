@@ -1,0 +1,312 @@
+---
+/**
+ * Hub de decisión MX — ISR de rendimientos: intereses, bolsa, dividendos, cripto y premios.
+ * audience="MX" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, INVERSIONES_MX } from '../../../lib/hubs/mx/isr-de-mis-inversiones';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="MX"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ I: INVERSIONES_MX }}>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+
+    /** Tarifa progresiva del Art. 152 LISR (Anexo 8 RMF 2026). */
+    function isrAnual(base) {
+      if (!isFinite(base) || base <= 0) return 0;
+      for (let k = 0; k < I.tarifaAnual.length; k++) {
+        const f = I.tarifaAnual[k];
+        const limSup = f[1] === null ? Infinity : f[1];
+        if (base >= f[0] && base <= limSup) {
+          return Math.round((f[2] + (base - f[0]) * f[3]) * 100) / 100;
+        }
+      }
+      const last = I.tarifaAnual[I.tarifaAnual.length - 1];
+      return Math.round((last[2] + (base - last[0]) * last[3]) * 100) / 100;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'intereses';
+      const otros = Math.max(0, v.otrosIngresos || 0);
+
+      // ── Caso 2: venta de acciones en bolsa ─────────────────────────────
+      if (id === 'bolsa') {
+        const ganancias = Math.max(0, v.gananciaBolsa || 0);
+        const perdidas = Math.max(0, v.perdidasBolsa || 0);
+        const previas = Math.max(0, v.perdidasPreviasBolsa || 0);
+
+        const netaEjercicio = ganancias - perdidas;
+
+        if (netaEjercicio <= 0) {
+          const perdidaEjercicio = -netaEjercicio;
+          return {
+            total: mxn(0),
+            sub:
+              'Sin ISR bursátil este ejercicio: cerraste con una pérdida neta de ' + mxn(perdidaEjercicio) +
+              '. Decláratela igual, porque solo así puedes compensarla en los diez ejercicios siguientes.',
+            rows: [
+              { k: 'Ganancias del ejercicio', v: ganancias },
+              { k: 'Pérdidas del ejercicio', v: perdidas },
+              { k: 'Pérdida neta del ejercicio', v: perdidaEjercicio, extra: true },
+              { k: 'Pérdidas previas pendientes', v: previas },
+              { k: 'Total amortizable a futuro', v: perdidaEjercicio + previas, extra: true },
+              { k: 'ISR a pagar', ref: 'LISR Art. 129', v: 0 },
+            ],
+            chart: [
+              { label: 'Pérdida del ejercicio', value: perdidaEjercicio, tone: 'bad' },
+              { label: 'Pérdidas previas', value: previas, tone: 'warn' },
+            ],
+          };
+        }
+
+        const compensadas = Math.min(previas, netaEjercicio);
+        const base = netaEjercicio - compensadas;
+        const isr = base * I.bolsa;
+        const neto = netaEjercicio - isr;
+        const isrGeneral = isrAnual(otros + base) - isrAnual(otros);
+
+        return {
+          total: mxn(isr),
+          sub:
+            'ISR bursátil del ejercicio: 10% definitivo sobre una base de ' + mxn(base) + '. ' +
+            'Nadie te lo retiene: lo declaras y lo pagas tú en abril.',
+          rows: [
+            { k: 'Ganancias del ejercicio', v: ganancias },
+            { k: 'Pérdidas del ejercicio', v: perdidas },
+            { k: 'Ganancia neta del ejercicio', v: netaEjercicio, extra: true },
+            { k: 'Pérdidas previas compensadas', v: compensadas },
+            { k: 'Base gravable', v: base },
+            { k: 'ISR del 10% definitivo', ref: 'LISR Art. 129', v: isr, extra: true },
+            { k: 'Te queda de la ganancia', v: neto },
+            { k: 'Si tributara con la tarifa general', ref: 'LISR Art. 152', v: isrGeneral },
+            { k: 'Diferencia a favor del régimen bursátil', v: Math.max(0, isrGeneral - isr) },
+            { k: 'Pérdidas previas que siguen pendientes', v: Math.max(0, previas - compensadas) },
+          ],
+          chart: [
+            { label: 'Te queda', value: Math.max(0, neto), tone: 'main' },
+            { label: 'ISR (10%)', value: isr, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── Caso 3: dividendos ─────────────────────────────────────────────
+      if (id === 'dividendos') {
+        const dividendo = Math.max(0, v.dividendo || 0);
+        const tasaMoral = I.dividendos.isrMoral;
+        const factor = 1 / (1 - tasaMoral);
+
+        const retencion = dividendo * I.dividendos.retencion;
+        const acumulable = dividendo * factor;
+        const acreditable = acumulable * tasaMoral;
+        const isrPorAcumulacion = Math.max(0, isrAnual(otros + acumulable) - isrAnual(otros));
+        const efectoNeto = isrPorAcumulacion - acreditable;
+        const isrTotal = retencion + efectoNeto;
+        const tasaEfectiva = dividendo > 0 ? (isrTotal / dividendo) * 100 : 0;
+
+        return {
+          total: mxn(isrTotal),
+          sub:
+            'ISR total estimado sobre el dividendo: ' + mxn(retencion) + ' de retención definitiva del 10% más el efecto de acumularlo en tu anual. ' +
+            (efectoNeto < 0
+              ? 'La acumulación te deja ' + mxn(-efectoNeto) + ' a favor, porque acreditas más ISR corporativo del que agrega tu tarifa.'
+              : 'La acumulación te suma ' + mxn(efectoNeto) + ' de impuesto.'),
+          rows: [
+            { k: 'Dividendo recibido', v: dividendo },
+            { k: 'Retención definitiva del 10%', ref: 'LISR Art. 140', v: retencion, extra: true },
+            { k: 'Dividendo acumulable piramidado', ref: 'LISR Art. 10', v: acumulable },
+            { k: 'ISR corporativo acreditable', v: acreditable },
+            { k: 'ISR que agrega la acumulación', ref: 'LISR Art. 152', v: isrPorAcumulacion },
+            { k: 'Efecto neto de acumular', v: efectoNeto },
+            { k: 'ISR total estimado', v: isrTotal, extra: true },
+            { k: 'Te queda del dividendo', v: dividendo - isrTotal },
+            { k: 'Tasa efectiva sobre el dividendo', v: tasaEfectiva, format: 'unit', unit: '%', decimals: 2 },
+          ],
+          chart: [
+            { label: 'Te queda', value: Math.max(0, dividendo - isrTotal), tone: 'main' },
+            { label: 'Retención 10%', value: retencion, tone: 'warn' },
+            { label: 'Efecto de la acumulación', value: Math.max(0, efectoNeto), tone: 'prop' },
+          ],
+        };
+      }
+
+      // ── Caso 4: ganancia en cripto ─────────────────────────────────────
+      if (id === 'cripto') {
+        const compra = Math.max(0, v.criptoCompra || 0);
+        const venta = Math.max(0, v.criptoVenta || 0);
+        const comisiones = Math.max(0, v.criptoComisiones || 0);
+
+        const gananciaBruta = venta - compra;
+        const gananciaNeta = gananciaBruta - comisiones;
+
+        if (gananciaNeta <= 0) {
+          return {
+            total: mxn(0),
+            sub:
+              'La operación cerró con una pérdida de ' + mxn(-gananciaNeta) +
+              ': no genera ISR. Las pérdidas por enajenación de bienes solo se compensan contra ganancias del mismo tipo, con las reglas y plazos de la ley.',
+            rows: [
+              { k: 'Importe de la venta', v: venta },
+              { k: 'Costo de adquisición', v: compra },
+              { k: 'Comisiones del exchange', v: comisiones },
+              { k: 'Resultado de la operación', v: gananciaNeta, extra: true },
+              { k: 'ISR a pagar', v: 0 },
+            ],
+            chart: [
+              { label: 'Costo de adquisición', value: compra, tone: 'prop' },
+              { label: 'Pérdida', value: -gananciaNeta, tone: 'bad' },
+            ],
+          };
+        }
+
+        // Enajenación de bienes: la ganancia se ACUMULA a los demás ingresos (tarifa Art. 152).
+        const isrSin = isrAnual(otros);
+        const isrCon = isrAnual(otros + gananciaNeta);
+        const isr = Math.max(0, isrCon - isrSin);
+        const tasaEfectiva = gananciaNeta > 0 ? (isr / gananciaNeta) * 100 : 0;
+        const siFuera10 = gananciaNeta * I.bolsa;
+
+        return {
+          total: mxn(isr),
+          sub:
+            'ISR que agrega la ganancia cripto a tu declaración, con la tarifa progresiva sobre el acumulado. ' +
+            'Si aplicara el 10% de la bolsa serían ' + mxn(siFuera10) + ', pero cripto no tiene ese régimen.',
+          rows: [
+            { k: 'Importe de la venta', v: venta },
+            { k: 'Costo de adquisición', v: compra },
+            { k: 'Comisiones del exchange', v: comisiones },
+            { k: 'Ganancia neta de la operación', v: gananciaNeta, extra: true },
+            { k: 'ISR sin la ganancia', ref: 'LISR Art. 152', v: isrSin },
+            { k: 'ISR con la ganancia acumulada', v: isrCon },
+            { k: 'ISR que agrega la operación', v: isr, extra: true },
+            { k: 'Te queda de la ganancia', v: gananciaNeta - isr },
+            { k: 'Referencia: si aplicara el 10% bursátil', v: siFuera10 },
+            { k: 'Tasa efectiva de la operación', v: tasaEfectiva, format: 'unit', unit: '%', decimals: 1 },
+          ],
+          chart: [
+            { label: 'Te queda', value: Math.max(0, gananciaNeta - isr), tone: 'main' },
+            { label: 'ISR de la operación', value: isr, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── Caso 5: premio de lotería, rifa o sorteo ───────────────────────
+      if (id === 'premios') {
+        const premio = Math.max(0, v.premio || 0);
+        const tasaEstatal = Math.max(0, (v.impuestoEstatal || 0) / 100);
+        // LISR 138: federal bajo si el impuesto local no excede el umbral; alto si lo excede.
+        const tasaFederal = tasaEstatal > I.premios.umbralEstatal ? I.premios.federalAlta : I.premios.federalBaja;
+
+        const isrFederal = premio * tasaFederal;
+        const impEstatal = premio * tasaEstatal;
+        const retTotal = isrFederal + impEstatal;
+        const neto = premio - retTotal;
+        const tasaEfectiva = premio > 0 ? (retTotal / premio) * 100 : 0;
+
+        return {
+          total: mxn(neto),
+          sub:
+            'Premio neto que cobras en la mano. La retención de ISR es pago definitivo: no se acumula a tus demás ingresos ni se te devuelve. ' +
+            (tasaFederal === I.premios.federalAlta
+              ? 'Como el impuesto local excede el umbral de ley, la tasa federal sube al 21%.'
+              : 'Como el impuesto local no excede el umbral de ley, la tasa federal se queda en el 1%.'),
+          rows: [
+            { k: 'Valor del premio', v: premio },
+            { k: 'Tasa de ISR federal', ref: 'LISR Art. 138', v: tasaFederal * 100, format: 'unit', unit: '%', decimals: 0 },
+            { k: 'ISR federal retenido', v: isrFederal, extra: true },
+            { k: 'Tasa de impuesto estatal', ref: 'ley de hacienda local', v: tasaEstatal * 100, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Impuesto estatal retenido', v: impEstatal },
+            { k: 'Total retenido', v: retTotal },
+            { k: 'Premio neto', v: neto, extra: true },
+            { k: 'Se lleva el fisco', v: tasaEfectiva, format: 'unit', unit: '%', decimals: 1 },
+          ],
+          chart: [
+            { label: 'Premio neto', value: Math.max(0, neto), tone: 'main' },
+            { label: 'ISR federal', value: isrFederal, tone: 'warn' },
+            { label: 'Impuesto estatal', value: impEstatal, tone: 'prop' },
+          ],
+        };
+      }
+
+      // ── Caso 1: intereses de banco, Cetes o SOFIPO ─────────────────────
+      const capital = Math.max(0, v.capital || 0);
+      const tasa = Math.max(0, (v.tasaInteresAnual || 0) / 100);
+      const dias = Math.max(0, v.plazoDias || 0);
+      const inflacion = Math.max(0, (v.inflacionAnual || 0) / 100);
+
+      const fraccion = dias / 365;
+      const interesNominal = capital * tasa * fraccion;
+      const isrRetenido = capital * I.retencionIntereses * fraccion;
+      const interesNeto = interesNominal - isrRetenido;
+      const interesReal = interesNominal - capital * inflacion * fraccion;
+      const mordida = interesNominal > 0 ? (isrRetenido / interesNominal) * 100 : 0;
+
+      return {
+        total: mxn(isrRetenido),
+        sub:
+          'ISR que te retiene el intermediario sobre un capital de ' + mxn(capital) + ' durante ' + Math.round(dias) + ' días. ' +
+          'Se calcula sobre el capital, no sobre el interés, y equivale al ' + mordida.toFixed(1).replace('.', ',') + '% de lo que ganaste. ' +
+          (interesReal <= 0
+            ? 'Ojo: con esa inflación tu interés real es negativo, así que en la anual esta retención puede volver como saldo a favor.'
+            : 'Es un pago provisional: en la anual el impuesto se recalcula sobre el interés real.'),
+        rows: [
+          { k: 'Capital invertido', v: capital },
+          { k: 'Interés nominal del periodo', v: interesNominal, extra: true },
+          { k: 'ISR retenido', ref: 'LISR Arts. 54 y 135', v: isrRetenido, extra: true },
+          { k: 'Interés neto que cobras', v: interesNeto },
+          { k: 'Monto final al vencimiento', v: capital + interesNeto },
+          { k: 'Interés real, ya descontada la inflación', v: interesReal },
+          { k: 'Qué porcentaje del interés se lleva la retención', v: mordida, format: 'unit', unit: '%', decimals: 1 },
+        ],
+        chart: [
+          { label: 'Interés neto', value: Math.max(0, interesNeto), tone: 'main' },
+          { label: 'ISR retenido', value: isrRetenido, tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

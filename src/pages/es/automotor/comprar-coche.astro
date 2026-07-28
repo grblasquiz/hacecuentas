@@ -1,0 +1,252 @@
+---
+/**
+ * Hub de decisión ES — qué coche comprar y cómo pagarlo.
+ * Reemplaza 6 calculadoras sueltas.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  IEDMT_TIPOS,
+  IEDMT_TRAMOS,
+  DEPRECIACION,
+  RENTING_INCLUYE_ANUAL,
+} from '../../../lib/hubs/es/comprar-coche';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/es' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="ES"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ TIPOS: IEDMT_TIPOS, TRAMOS: IEDMT_TRAMOS, DEP: DEPRECIACION, RENT_INC: RENTING_INCLUYE_ANUAL }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n) => Math.round(n || 0).toLocaleString('es-ES') + ' €';
+
+    function cuotaPrestamo(capital, tinAnual, meses) {
+      if (!(capital > 0) || meses <= 0) return 0;
+      const i = tinAnual / 12;
+      if (i === 0) return capital / meses;
+      return (capital * i) / (1 - Math.pow(1 + i, -meses));
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'electrico';
+      const precioA = Math.max(0, v.precioA || 0);
+      const precioB = Math.max(0, v.precioB || 0);
+      const km = Math.max(0, v.kmAnuales || 0);
+      const consumoA = Math.max(0, v.consumoA || 0);
+      const consumoB = Math.max(0, v.consumoB || 0);
+      const pEnergiaA = Math.max(0, v.precioEnergiaA || 0);
+      const pEnergiaB = Math.max(0, v.precioEnergiaB || 0);
+      const anios = Math.max(1, Math.round(v.anios || 1));
+      const co2 = Math.max(0, v.co2 || 0);
+      const territorio = String(v.territorio || 'peninsula_baleares');
+      const cuotaRenting = Math.max(0, v.cuotaRenting || 0);
+      const tin = Math.max(0, v.tinPrestamo || 0) / 100;
+
+      // ── Impuesto de matriculación ─────────────────────────────────
+      let indice = 3;
+      for (const par of TRAMOS) {
+        const limite = par[0] == null ? Infinity : par[0];
+        if (co2 <= limite) {
+          indice = par[1];
+          break;
+        }
+      }
+      const tipoIedmt = (TIPOS[territorio] || TIPOS.peninsula_baleares)[indice] / 100;
+      const iedmt = precioA * tipoIedmt;
+
+      // ── Coste de uso de cada opción ───────────────────────────────
+      const usoAnualA = (km * consumoA * pEnergiaA) / 100;
+      const usoAnualB = (km * consumoB * pEnergiaB) / 100;
+      const usoA = usoAnualA * anios;
+      const usoB = usoAnualB * anios;
+
+      const totalA = precioA + usoA;
+      const totalB = precioB + usoB;
+      const diferenciaPrecio = precioA - precioB;
+      const ahorroAnual = usoAnualB - usoAnualA;
+      const aniosRecuperar = ahorroAnual > 0 ? diferenciaPrecio / ahorroAnual : 0;
+      const kmRecuperar = ahorroAnual > 0 && km > 0 ? (diferenciaPrecio / ahorroAnual) * km : 0;
+
+      const rows = [
+        { k: 'Precio del coche que valoras', ref: 'Opción A', v: precioA },
+        { k: 'Precio de la alternativa', ref: 'Opción B', v: precioB },
+        { k: 'Sobreprecio de la opción A', ref: 'Lo que hay que recuperar con el uso', v: diferenciaPrecio },
+        { k: 'Coste de energía al año, opción A', ref: consumoA.toFixed(1).replace('.', ',') + ' por 100 km', v: usoAnualA },
+        { k: 'Coste de energía al año, opción B', ref: consumoB.toFixed(1).replace('.', ',') + ' por 100 km', v: usoAnualB },
+        { k: 'Ahorro anual de la opción A', ref: 'Diferencia de coste de uso', v: Math.max(0, ahorroAnual), extra: true },
+        {
+          k: 'Años para recuperar el sobreprecio',
+          ref: ahorroAnual > 0 ? 'Sobreprecio ÷ ahorro anual' : 'La opción A no ahorra en uso',
+          v: aniosRecuperar,
+          format: 'unit',
+          unit: 'años',
+          decimals: 1,
+          extra: true,
+        },
+        {
+          k: 'Kilómetros para recuperar el sobreprecio',
+          ref: 'Al ritmo de ' + km + ' km al año',
+          v: kmRecuperar,
+          format: 'unit',
+          unit: 'km',
+        },
+        { k: 'Coste total en ' + anios + ' años, opción A', ref: 'Precio más energía', v: totalA, extra: true },
+        { k: 'Coste total en ' + anios + ' años, opción B', ref: 'Precio más energía', v: totalB, extra: true },
+        {
+          k: 'Opción más barata a ' + anios + ' años',
+          ref: totalA <= totalB ? 'La opción A' : 'La opción B',
+          v: Math.abs(totalA - totalB),
+        },
+        {
+          k: 'Emisiones homologadas',
+          ref: 'Las de la ficha técnica',
+          v: co2,
+          format: 'unit',
+          unit: 'g/km',
+        },
+        {
+          k: 'Impuesto de matriculación',
+          ref: tipoIedmt === 0 ? 'Exento por emisiones' : (tipoIedmt * 100).toFixed(2).replace('.', ',') + '% del valor',
+          v: iedmt,
+          extra: true,
+        },
+      ];
+
+      let principal = totalA;
+      let sub = '';
+
+      if (id === 'renting') {
+        const meses = anios * 12;
+        const cuotaFinanciacion = cuotaPrestamo(precioA, tin, meses);
+        const costeFinanciacion = cuotaFinanciacion * meses;
+        const interesesTotales = Math.max(0, costeFinanciacion - precioA);
+        const costeRenting = cuotaRenting * meses;
+        const valorResidual = precioA * Math.max(DEP.suelo, 1 - DEP.primerAnio - DEP.anualPosterior * (anios - 1));
+        const costeCompra = precioA + RENT_INC * anios - valorResidual;
+        const costeFinanciado = costeFinanciacion + RENT_INC * anios - valorResidual;
+
+        rows.push({ k: 'Cuota de financiación', ref: 'TIN del ' + (tin * 100).toFixed(1).replace('.', ',') + '% a ' + meses + ' meses', v: cuotaFinanciacion });
+        rows.push({ k: 'Intereses del préstamo', ref: 'Todo el período', v: interesesTotales });
+        rows.push({ k: 'Cuota de renting', ref: 'Incluye seguro, mantenimiento e impuesto', v: cuotaRenting });
+        rows.push({ k: 'Coste total del renting', ref: meses + ' cuotas, sin propiedad al final', v: costeRenting, extra: true });
+        rows.push({ k: 'Valor residual del coche comprado', ref: 'Lo que valdría al cabo de ' + anios + ' años', v: valorResidual });
+        rows.push({ k: 'Coste total comprando al contado', ref: 'Precio más gastos menos valor residual', v: costeCompra, extra: true });
+        rows.push({ k: 'Coste total financiando', ref: 'Con intereses, menos valor residual', v: costeFinanciado, extra: true });
+        rows.push({
+          k: 'Diferencia entre renting y compra',
+          ref: costeRenting <= costeCompra ? 'El renting sale más barato' : 'Comprar sale más barato',
+          v: Math.abs(costeRenting - costeCompra),
+        });
+
+        principal = Math.min(costeRenting, costeCompra, costeFinanciado);
+        sub =
+          'A ' +
+          anios +
+          ' años: renting ' +
+          eur(costeRenting) +
+          ', compra al contado ' +
+          eur(costeCompra) +
+          ' y financiando ' +
+          eur(costeFinanciado) +
+          ' · gana ' +
+          (costeCompra <= costeRenting && costeCompra <= costeFinanciado
+            ? 'comprar al contado'
+            : costeRenting <= costeFinanciado
+              ? 'el renting'
+              : 'financiar');
+      } else if (id === 'matriculacion') {
+        principal = iedmt;
+        sub =
+          co2 <= 120
+            ? 'Con ' + co2 + ' g/km de CO₂ el coche está exento del impuesto de matriculación'
+            : 'Con ' +
+              co2 +
+              ' g/km pagarías ' +
+              eur(iedmt) +
+              ' de impuesto de matriculación, el ' +
+              (tipoIedmt * 100).toFixed(2).replace('.', ',') +
+              '% del valor del vehículo';
+      } else {
+        principal = totalA;
+        sub =
+          ahorroAnual > 0
+            ? 'La opción A ahorra ' +
+              eur(ahorroAnual) +
+              ' al año en energía y recupera su sobreprecio en ' +
+              aniosRecuperar.toFixed(1).replace('.', ',') +
+              ' años · a ' +
+              anios +
+              ' años gana ' +
+              (totalA <= totalB ? 'la opción A' : 'la opción B') +
+              ' por ' +
+              eur(Math.abs(totalA - totalB))
+            : 'Con estos datos la opción A no ahorra en uso: a ' +
+              anios +
+              ' años gana la opción B por ' +
+              eur(Math.abs(totalA - totalB));
+      }
+
+      return {
+        total: eur(principal),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Opción A: precio', value: Math.round(precioA), tone: 'main' },
+          { label: 'Opción A: energía', value: Math.round(usoA), tone: 'warn' },
+          { label: 'Opción B: precio', value: Math.round(precioB), tone: 'prop' },
+          { label: 'Opción B: energía', value: Math.round(usoB), tone: 'bad' },
+        ].filter(function (s) {
+          return s.value > 0;
+        }),
+        format: 'unit',
+        unit: '€',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

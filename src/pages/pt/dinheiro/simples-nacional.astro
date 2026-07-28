@@ -1,0 +1,231 @@
+---
+/**
+ * Hub de decisão BR — "Em que anexo eu caio e quanto pago de DAS?".
+ * As tabelas dos Anexos I a V viajam pelo define:vars como arrays simples.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  ANEXOS,
+  FATOR_R_LIMITE,
+  TETO_SIMPLES,
+  TETO_SUBLIMITE_ICMS_ISS,
+  ESCALA_MAX,
+} from '../../../lib/hubs/pt/simples-nacional';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="BR"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header lang="pt" />
+  <DecisionHub data={hub} />
+  <Footer lang="pt" />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ ANEXOS, FATOR_R_LIMITE, TETO_SIMPLES, TETO_SUBLIMITE_ICMS_ISS, ESCALA_MAX }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const brl = (n) =>
+      'R$ ' + (Math.round((n || 0) * 100) / 100).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    const pct = (n) => (n || 0).toFixed(2).replace('.', ',') + '%';
+
+    /** Faixa do RBT12 dentro de um anexo (a última cobre até o teto). */
+    function faixaDe(tabela, rbt12) {
+      for (let i = 0; i < tabela.length; i++) {
+        if (rbt12 <= tabela[i].ate) return { f: tabela[i], idx: i };
+      }
+      return { f: tabela[tabela.length - 1], idx: tabela.length - 1 };
+    }
+    /** Alíquota efetiva da LC 123: (RBT12 × nominal − dedução) ÷ RBT12. */
+    function efetiva(tabela, rbt12) {
+      const { f, idx } = faixaDe(tabela, rbt12);
+      const e = rbt12 > 0 ? ((rbt12 * (f.aliquota / 100) - f.deduzir) / rbt12) * 100 : f.aliquota;
+      return { aliq: Math.max(0, e), nominal: f.aliquota, deduzir: f.deduzir, faixa: idx + 1 };
+    }
+
+    const NOMES = {
+      i: 'Anexo I — comércio',
+      ii: 'Anexo II — indústria',
+      iii: 'Anexo III — serviços',
+      iv: 'Anexo IV — construção e advocacia',
+      v: 'Anexo V — serviços sem Fator R',
+    };
+
+    H.onCompute(function (v) {
+      const escolha = String(v.anexo || 'fator-r');
+      const rbt12 = Math.max(0, v.rbt12 || 0);
+      const fatMes = Math.max(0, v.faturamentoMes || 0);
+      const folha = Math.max(0, v.folha12m || 0);
+      const proExtra = Math.max(0, v.proLaboreExtra || 0);
+
+      if (rbt12 <= 0) {
+        return {
+          total: brl(0),
+          sub: 'Informe o RBT12, a receita bruta dos últimos 12 meses.',
+          rows: [],
+          chart: [],
+        };
+      }
+      if (rbt12 > TETO_SIMPLES) {
+        return {
+          total: brl(0),
+          sub:
+            'RBT12 de ' + brl(rbt12) + ' acima do teto de ' + brl(TETO_SIMPLES) +
+            ': a empresa está fora do Simples Nacional e deve migrar para lucro presumido ou real.',
+          rows: [
+            { k: 'RBT12 informado', ref: 'Receita bruta de 12 meses', v: rbt12 },
+            { k: 'Teto do Simples Nacional', ref: 'art. 3º II da LC 123/2006', v: TETO_SIMPLES },
+            { k: 'Excedente', ref: 'Motivo de exclusão do regime', v: rbt12 - TETO_SIMPLES },
+          ],
+          chart: [],
+        };
+      }
+
+      const fatorR = rbt12 > 0 ? folha / rbt12 : 0;
+      const sujeitoFatorR = escolha === 'fator-r';
+      let chave = escolha;
+      if (sujeitoFatorR) chave = fatorR >= FATOR_R_LIMITE ? 'iii' : 'v';
+
+      const r = efetiva(ANEXOS[chave], rbt12);
+      const das = fatMes * (r.aliq / 100);
+
+      const rows = [
+        { k: 'Anexo aplicado', ref: NOMES[chave], v: r.faixa, format: 'unit', unit: 'ª faixa de 6' },
+        { k: 'RBT12', ref: 'Receita bruta dos 12 meses anteriores', v: rbt12 },
+        { k: 'Alíquota nominal da faixa', ref: 'Tabela do anexo · LC 123/2006', v: r.nominal, format: 'unit', unit: '%', decimals: 2 },
+        { k: 'Parcela a deduzir', ref: 'Coluna da tabela do anexo', v: r.deduzir },
+        {
+          k: 'Alíquota efetiva',
+          ref: '(RBT12 × nominal − dedução) ÷ RBT12',
+          v: r.aliq,
+          format: 'unit',
+          unit: '%',
+          decimals: 3,
+          extra: true,
+        },
+        { k: 'DAS do mês', ref: 'Faturamento do mês × alíquota efetiva', v: das, extra: true },
+        { k: 'DAS estimado em 12 meses', ref: 'Mantido o mesmo faturamento mensal', v: das * 12 },
+      ];
+
+      // Fator R e o custo de subir a folha para alcançar os 28%.
+      let subFator = '';
+      if (sujeitoFatorR) {
+        const folhaMinima = rbt12 * FATOR_R_LIMITE;
+        const faltante = Math.max(0, folhaMinima - folha);
+        const aliqIII = efetiva(ANEXOS.iii, rbt12).aliq;
+        const aliqV = efetiva(ANEXOS.v, rbt12).aliq;
+        const economiaMes = (fatMes * (aliqV - aliqIII)) / 100;
+
+        rows.push({
+          k: 'Fator R',
+          ref: 'Folha de 12 meses ÷ RBT12 · limite de 28%',
+          v: fatorR * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+          extra: true,
+        });
+        rows.push({ k: 'Folha de 12 meses necessária para o Anexo III', ref: '28% do RBT12', v: folhaMinima });
+        rows.push({ k: 'Quanto falta de folha em 12 meses', ref: faltante > 0 ? 'Você está no Anexo V' : 'Meta já atingida', v: faltante });
+        rows.push({ k: 'Diferença de DAS entre os anexos III e V', ref: 'No faturamento deste mês', v: economiaMes });
+
+        if (proExtra > 0) {
+          const inssSocio = proExtra * 0.11;
+          const folhaNova = folha + proExtra * 12;
+          const fatorNovo = folhaNova / rbt12;
+          const dasNovo = (fatMes * efetiva(ANEXOS[fatorNovo >= FATOR_R_LIMITE ? 'iii' : 'v'], rbt12).aliq) / 100;
+          const saldo = das - dasNovo - inssSocio;
+          rows.push({ k: 'Custo mensal de INSS do aumento de pró-labore', ref: '11% do valor · art. 21 da Lei 8.212/1991', v: inssSocio });
+          rows.push({ k: 'Fator R depois de 12 meses com o aumento', ref: 'Projeção', v: fatorNovo * 100, format: 'unit', unit: '%', decimals: 2 });
+          rows.push({
+            k: saldo >= 0 ? 'Ganho líquido mensal do aumento' : 'Prejuízo líquido mensal do aumento',
+            ref: 'Economia de DAS − INSS do pró-labore',
+            v: Math.abs(saldo),
+            extra: true,
+          });
+        }
+
+        subFator =
+          ' · Fator R de ' + pct(fatorR * 100) +
+          (fatorR >= FATOR_R_LIMITE ? ' (≥ 28%: Anexo III)' : ' (< 28%: Anexo V, faltam ' + brl(faltante) + ' de folha)');
+      }
+
+      if (chave === 'iv') {
+        rows.push({
+          k: 'Atenção: CPP fora do DAS',
+          ref: 'INSS patronal de 20% sobre a folha, recolhido à parte',
+          v: 0,
+          format: 'plain',
+        });
+      }
+      if (rbt12 > TETO_SUBLIMITE_ICMS_ISS) {
+        rows.push({
+          k: 'Acima do sublimite: ICMS e ISS fora do DAS',
+          ref: 'RBT12 maior que ' + brl(TETO_SUBLIMITE_ICMS_ISS),
+          v: 0,
+          format: 'plain',
+        });
+      }
+
+      const posicao = Math.min(100, (r.aliq / ESCALA_MAX) * 100);
+
+      return {
+        total: brl(das),
+        sub:
+          NOMES[chave] + ', ' + r.faixa + 'ª faixa · alíquota efetiva de ' + pct(r.aliq) +
+          ' sobre ' + brl(fatMes) + ' faturados' + subFator,
+        rows: rows,
+        position: posicao,
+        positionLabel: 'Alíquota efetiva de ' + pct(r.aliq) + ' — ' + NOMES[chave],
+        chart: [
+          { label: 'Até 6% — muito baixa', value: 6, from: 0, to: 6, tone: 'good' },
+          { label: '6% a 12%', value: 6, from: 6, to: 12, tone: 'main' },
+          { label: '12% a 20%', value: 8, from: 12, to: 20, tone: 'warn' },
+          { label: 'Acima de 20%', value: 13, from: 20, to: ESCALA_MAX, tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>

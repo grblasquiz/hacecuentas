@@ -1,0 +1,263 @@
+---
+/**
+ * Hub de decisión EC — "Impuesto a la renta: cuánto pago y cuánto me retienen".
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  IR_TABLA,
+  FRACCION_BASICA,
+  IESS_PERSONAL,
+  PCT_REBAJA,
+  CANASTA_BASICA,
+  CANASTAS_POR_CARGAS,
+  RET_HONORARIOS_NATURAL,
+  RET_IVA_HONORARIOS,
+  IVA,
+  MULTA_PCT_MENSUAL,
+  MULTA_TOPE,
+} from '../../../lib/hubs/ec/impuesto-a-la-renta';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="EC"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    IR_TABLA,
+    FRACCION_BASICA,
+    IESS_PERSONAL,
+    PCT_REBAJA,
+    CANASTA_BASICA,
+    CANASTAS_POR_CARGAS,
+    RET_NATURAL: RET_HONORARIOS_NATURAL,
+    RET_IVA: RET_IVA_HONORARIOS,
+    IVA,
+    MULTA_PCT: MULTA_PCT_MENSUAL,
+    MULTA_TOPE,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) =>
+      '$' + new Intl.NumberFormat('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        .format(Math.round((n || 0) * 100) / 100);
+
+    /** Tabla del SRI: fracción básica + impuesto fijo + % sobre el excedente. */
+    function irTabla(base) {
+      const b = Math.max(0, base);
+      for (const t of IR_TABLA) {
+        const techo = t.hasta === null ? Infinity : t.hasta;
+        if (b > t.desde && b <= techo) {
+          return { impuesto: t.base + (b - t.desde) * t.pct, pct: t.pct, desde: t.desde, hasta: t.hasta };
+        }
+      }
+      const u = IR_TABLA[IR_TABLA.length - 1];
+      return { impuesto: u.base + (b - u.desde) * u.pct, pct: u.pct, desde: u.desde, hasta: u.hasta };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'dependencia';
+      const ingreso = Math.max(0, v.ingresoAnual || 0);
+      const gastos = Math.max(0, v.gastosPersonales || 0);
+      const cargas = String(v.cargas || '0');
+      const retenciones = Math.max(0, v.retenciones || 0);
+      const meses = Math.max(0, Math.floor(v.mesesRetraso || 0));
+      const tasaMora = Math.max(0, v.tasaMora || 0);
+
+      const rows = [];
+
+      // --- Base imponible ---
+      const esDependencia = id === 'dependencia' || id === 'gastos';
+      const aporteIess = esDependencia ? ingreso * IESS_PERSONAL : 0;
+      const base = Math.max(0, ingreso - aporteIess);
+
+      // --- Rebaja por gastos personales (crédito, no deducción) ---
+      const canastas = CANASTAS_POR_CARGAS[cargas] || 7;
+      const topeGastos = canastas * CANASTA_BASICA;
+      const gastosComputables = Math.min(gastos, topeGastos);
+      const rebajaPlena = gastosComputables * PCT_REBAJA;
+
+      const t = irTabla(base);
+      const causadoTabla = Math.max(0, t.impuesto);
+      const rebaja = Math.min(rebajaPlena, causadoTabla);
+      const impuesto = Math.max(0, causadoTabla - rebaja);
+      const saldo = impuesto - retenciones;
+      const efectiva = ingreso > 0 ? (impuesto / ingreso) * 100 : 0;
+
+      // ---------- Rama: me atrasé con el SRI ----------
+      if (id === 'mora') {
+        const multa = Math.min(impuesto * MULTA_PCT * meses, impuesto * MULTA_TOPE);
+        const interes = impuesto * (tasaMora / 100) * meses;
+        const total = impuesto + multa + interes;
+        const enTope = meses > 0 && impuesto * MULTA_PCT * meses >= impuesto * MULTA_TOPE;
+
+        rows.push({ k: 'Impuesto causado del ejercicio', ref: 'Tabla del SRI menos la rebaja', v: impuesto, decimals: 2 });
+        rows.push({ k: 'Meses o fracción de retraso', ref: 'Cuenta desde el vencimiento', v: meses, format: 'unit', unit: meses === 1 ? 'mes' : 'meses' });
+        rows.push({
+          k: 'Multa por declarar tarde',
+          ref: enTope ? 'Tope del 100% alcanzado · LRTI art. 100' : MULTA_PCT * 100 + '% del impuesto por mes o fracción · LRTI art. 100',
+          v: multa,
+          decimals: 2,
+        });
+        rows.push({ k: 'Interés de mora', ref: 'Tasa ' + tasaMora + '% mensual × ' + meses, v: interes, decimals: 2 });
+        rows.push({ k: 'Recargo total sobre el impuesto', ref: 'Multa más interés', v: multa + interes, decimals: 2 });
+        rows.push({ k: 'Total a pagar al SRI', ref: 'Impuesto más recargos', v: total, extra: true, decimals: 2 });
+        rows.push({
+          k: 'Cuánto encarece la deuda el retraso',
+          ref: 'Recargos ÷ impuesto',
+          v: impuesto > 0 ? ((multa + interes) / impuesto) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+
+        return {
+          total: usd(total),
+          sub:
+            meses === 0
+              ? 'Sin retraso no hay multa ni interés: carga los meses de atraso para ver el recargo'
+              : 'Sobre un impuesto de ' + usd(impuesto) + ', ' + meses + (meses === 1 ? ' mes' : ' meses') + ' de retraso suman ' +
+                usd(multa + interes) + ' de recargos' + (enTope ? ' · la multa ya está en el tope del 100%' : ''),
+          rows: rows,
+          decimals: 2,
+          chart: [
+            { label: 'Impuesto causado', value: Math.round(impuesto * 100) / 100, tone: 'main' },
+            { label: 'Multa por declarar tarde', value: Math.round(multa * 100) / 100, tone: 'bad' },
+            { label: 'Interés de mora', value: Math.round(interes * 100) / 100, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ---------- Ramas de cálculo del impuesto ----------
+      rows.push({ k: 'Ingresos gravados del año', ref: 'Sin décimos ni fondos de reserva: están exentos', v: ingreso, decimals: 2 });
+      if (esDependencia) {
+        rows.push({
+          k: 'Aporte personal al IESS (se resta)',
+          ref: (IESS_PERSONAL * 100).toFixed(2).replace('.', ',') + '% del ingreso',
+          v: aporteIess,
+          decimals: 2,
+        });
+      }
+      rows.push({ k: 'Base imponible', ref: esDependencia ? 'Ingreso menos aporte personal' : 'Honorarios sin deducción de aportes', v: base, decimals: 2 });
+      rows.push({ k: 'Fracción básica desgravada', ref: 'Por debajo de este monto el impuesto es cero', v: FRACCION_BASICA, decimals: 2 });
+      rows.push({
+        k: 'Tramo de la tabla en el que caes',
+        ref: t.hasta === null ? 'Desde ' + usd(t.desde) + ' en adelante' : 'De ' + usd(t.desde) + ' a ' + usd(t.hasta),
+        v: t.pct * 100,
+        format: 'unit',
+        unit: '% sobre el excedente',
+      });
+      rows.push({ k: 'Impuesto según la tabla del SRI', ref: 'Impuesto de la fracción básica más el % del excedente', v: causadoTabla, decimals: 2 });
+      rows.push({
+        k: 'Tope de gastos personales computables',
+        ref: canastas + ' canastas básicas × ' + usd(CANASTA_BASICA),
+        v: topeGastos,
+        decimals: 2,
+      });
+      if (gastos > gastosComputables) {
+        rows.push({ k: 'Gastos que superan el tope y no suman', ref: 'Excedente sobre el tope de canastas', v: gastos - gastosComputables, decimals: 2 });
+      }
+      rows.push({
+        k: 'Rebaja por gastos personales (se resta del impuesto)',
+        ref: PCT_REBAJA * 100 + '% de ' + usd(gastosComputables),
+        v: rebaja,
+        decimals: 2,
+      });
+      if (rebajaPlena > rebaja) {
+        rows.push({ k: 'Rebaja que se pierde por falta de impuesto', ref: 'La rebaja nunca deja el impuesto en negativo', v: rebajaPlena - rebaja, decimals: 2 });
+      }
+      rows.push({ k: 'Impuesto causado del año', ref: 'Tabla menos rebaja', v: impuesto, extra: true, decimals: 2 });
+
+      if (id === 'dependencia') {
+        rows.push({ k: 'Retención mensual que te haría el empleador', ref: 'Impuesto proyectado ÷ 12', v: impuesto / 12, decimals: 2 });
+      }
+      if (id === 'honorarios') {
+        const retTeorica = ingreso * RET_NATURAL;
+        rows.push({ k: 'Retención de renta sobre tus facturas', ref: RET_NATURAL * 100 + '% del honorario · persona natural', v: retTeorica, decimals: 2 });
+        rows.push({ k: 'IVA que facturas en el año', ref: IVA * 100 + '% sobre el honorario', v: ingreso * IVA, decimals: 2 });
+        rows.push({
+          k: 'Retención de IVA si el cliente es agente de retención',
+          ref: RET_IVA * 100 + '% del IVA de servicios profesionales',
+          v: ingreso * IVA * RET_IVA,
+          decimals: 2,
+        });
+      }
+      rows.push({ k: 'Retenciones que ya te hicieron (se restan)', ref: 'Crédito tributario del ejercicio', v: Math.min(retenciones, impuesto), decimals: 2 });
+      if (saldo > 0) {
+        rows.push({ k: 'Saldo por pagar en la declaración', ref: 'Impuesto menos retenciones', v: saldo, extra: true, decimals: 2 });
+      } else if (saldo < 0) {
+        rows.push({ k: 'Saldo a favor para pedir o compensar', ref: 'Te retuvieron de más', v: -saldo, extra: true, decimals: 2 });
+      }
+      rows.push({ k: 'Tasa efectiva sobre tus ingresos', ref: 'Impuesto ÷ ingresos gravados', v: efectiva, format: 'unit', unit: '%', decimals: 2 });
+
+      const sub =
+        (base <= FRACCION_BASICA
+          ? 'Tu base imponible no llega a la fracción básica desgravada: el impuesto es cero'
+          : 'Base imponible ' + usd(base) + ' · tramo del ' + (t.pct * 100) + '% sobre el excedente') +
+        (rebaja > 0 ? ' · la rebaja por gastos personales te ahorra ' + usd(rebaja) : '') +
+        (saldo < 0
+          ? ' · te queda ' + usd(-saldo) + ' a favor'
+          : saldo > 0
+            ? ' · te falta pagar ' + usd(saldo)
+            : '') +
+        ' · tasa efectiva ' + efectiva.toFixed(2).replace('.', ',') + '%';
+
+      const bolsillo = Math.max(0, ingreso - aporteIess - impuesto);
+
+      return {
+        total: usd(impuesto),
+        sub: sub,
+        rows: rows,
+        decimals: 2,
+        chart: [
+          { label: 'Te queda en el bolsillo', value: Math.round(bolsillo * 100) / 100, tone: 'main' },
+          { label: 'Aporte personal al IESS', value: Math.round(aporteIess * 100) / 100, tone: 'good' },
+          { label: 'Impuesto a la renta', value: Math.round(impuesto * 100) / 100, tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

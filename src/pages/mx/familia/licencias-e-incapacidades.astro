@@ -1,0 +1,250 @@
+---
+/**
+ * Hub de decisión MX — "Me incapacitan o voy a ser mamá/papá: ¿cuánto cobro y por cuánto tiempo?"
+ *
+ * El audience="MX" se pasa literal al Layout: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UMA_MX,
+  SM_MX,
+  SUBSIDIOS_MX,
+  OBRERO_MX,
+  ISR_MENSUAL_MX,
+} from '../../../lib/hubs/mx/licencias-e-incapacidades';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="MX"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    UMA: UMA_MX,
+    SM: SM_MX,
+    SUB: SUBSIDIOS_MX,
+    OBRERO: OBRERO_MX,
+    ISR_MENSUAL: ISR_MENSUAL_MX,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+
+    /** ISR mensual 2026 (LISR Art. 96, Anexo 8 RMF 2026) sobre la base gravable mensual. */
+    function isrMensual(base) {
+      if (!(base > 0)) return 0;
+      for (const f of ISR_MENSUAL) {
+        const sup = f[1] === null ? Infinity : f[1];
+        if (base >= f[0] && base <= sup) {
+          return Math.round((f[2] + (base - f[0]) * f[3]) * 100) / 100;
+        }
+      }
+      const last = ISR_MENSUAL[ISR_MENSUAL.length - 1];
+      return Math.round((last[2] + (base - last[0]) * last[3]) * 100) / 100;
+    }
+
+    function fechaISO(base, deltaDias) {
+      const d = new Date(base.getTime());
+      d.setUTCDate(d.getUTCDate() + deltaDias);
+      return d.toISOString().slice(0, 10);
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'maternidad';
+      const bruto = Math.max(0, v.salario || 0);
+      const esMensual = String(v.periodo || 'diario') === 'mensual';
+      const sbcIngresado = esMensual ? bruto / SM.factorMensual : bruto;
+      const topeDiario = UMA.diaria * SUB.topeSbcUmas;
+      const topado = sbcIngresado > topeDiario;
+      const sbc = Math.min(sbcIngresado, topeDiario);
+
+      // ── Maternidad ────────────────────────────────────────────────────────
+      if (id === 'maternidad') {
+        const semanas = Math.max(0, Math.floor(v.semanas || 0));
+        const cumple = semanas >= SUB.maternidadSemanasRequeridas;
+        const dias = SUB.maternidad.dias;
+        const subsidioDiario = sbc * SUB.maternidad.porcentajeSbc;
+        const subsidio = cumple ? subsidioDiario * dias : 0;
+        const noCubierto = Math.max(0, (sbcIngresado - sbc) * dias);
+
+        const parto = new Date((String(v.fechaParto || '') || '2026-11-15') + 'T00:00:00Z');
+        const partoValido = !isNaN(parto.getTime());
+        const inicio = partoValido ? fechaISO(parto, -SUB.maternidadDiasAntes) : '—';
+        const fin = partoValido ? fechaISO(parto, SUB.maternidadDiasDespues) : '—';
+
+        return {
+          total: mxn(subsidio),
+          sub:
+            (cumple
+              ? 'Cumples las ' + SUB.maternidadSemanasRequeridas + ' semanas requeridas: el IMSS te paga el 100% de tu salario base durante ' + dias + ' días. '
+              : 'Con ' + semanas + ' semanas no llegas a las ' + SUB.maternidadSemanasRequeridas +
+                ' que pide el IMSS: conservas la licencia, pero el pago corre a cargo del patrón. ') +
+            (partoValido ? 'Licencia del ' + inicio + ' al ' + fin + '.' : '') +
+            (topado ? ' Tu salario supera el tope de 25 UMA y quedan ' + mxn(noCubierto) + ' sin cubrir.' : ''),
+          rows: [
+            { k: 'Subsidio total por maternidad', v: subsidio, extra: true },
+            { k: 'Subsidio diario', ref: '100% del SBC, LSS Art. 101', v: subsidioDiario, decimals: 2 },
+            { k: 'Días pagados', v: cumple ? dias : 0, format: 'unit', unit: 'días' },
+            { k: 'Salario base de cotización diario', ref: topado ? 'topado a 25 UMA' : 'de tu recibo IMSS', v: sbc, decimals: 2 },
+            { k: 'Parte no cubierta por el tope', v: noCubierto },
+            { k: 'Semanas cotizadas en 12 meses', v: semanas, format: 'unit', unit: 'semanas' },
+            { k: 'Semanas requeridas', ref: 'LSS Art. 102', v: SUB.maternidadSemanasRequeridas, format: 'unit', unit: 'semanas' },
+            { k: 'Días antes del parto', v: SUB.maternidadDiasAntes, format: 'unit', unit: 'días' },
+            { k: 'Días después del parto', v: SUB.maternidadDiasDespues, format: 'unit', unit: 'días' },
+          ],
+          chart: [
+            { label: 'Lo que paga el IMSS', value: Math.max(0, subsidio), tone: 'main' },
+            { label: 'No cubierto por el tope', value: Math.max(0, noCubierto), tone: 'bad' },
+          ],
+        };
+      }
+
+      // ── Paternidad ────────────────────────────────────────────────────────
+      if (id === 'paternidad') {
+        const dias = SUB.paternidadDiasLft;
+        const diasSemana = Math.min(7, Math.max(1, Math.floor(v.diasSemana || 5)));
+        // Los días son laborables: se traducen a días naturales de calendario.
+        const diasNaturales = Math.round((dias * 7) / diasSemana);
+        const brutoLicencia = sbcIngresado * dias;
+
+        // Descuentos ordinarios de nómina sobre esos días.
+        const tresUmaDiaria = UMA.diaria * 3;
+        const excedenteDiario = Math.max(0, sbc - tresUmaDiaria);
+        const cuotaObrera = (sbc * OBRERO.totalSinExcedente + excedenteDiario * OBRERO.eymExcedente) * dias;
+
+        // ISR: tasa marginal mensual aplicada al importe de los días.
+        const sueldoMensual = sbcIngresado * SM.factorMensual;
+        const isrMes = isrMensual(sueldoMensual);
+        const tasaEfectiva = sueldoMensual > 0 ? isrMes / sueldoMensual : 0;
+        const isr = brutoLicencia * tasaEfectiva;
+        const neto = brutoLicencia - cuotaObrera - isr;
+
+        return {
+          total: mxn(brutoLicencia),
+          sub:
+            'Cinco días laborables con goce de sueldo (LFT Art. 132, fracción XXVII bis), unos ' +
+            diasNaturales + ' días naturales de calendario si trabajas ' + diasSemana +
+            ' días por semana. Los paga tu patrón, no el IMSS: tras la cuota obrera y el ISR te quedan unos ' +
+            mxn(neto) + '.',
+          rows: [
+            { k: 'Pago bruto de los 5 días', v: brutoLicencia, extra: true },
+            { k: 'Neto estimado en mano', v: neto },
+            { k: 'Cuota obrera del IMSS', ref: '2,375% del SBC + excedente', v: cuotaObrera },
+            { k: 'Retención de ISR estimada', ref: 'tasa efectiva ' + (tasaEfectiva * 100).toFixed(1).replace('.', ',') + '%', v: isr },
+            { k: 'Días laborables de licencia', ref: 'LFT Art. 132-XXVII bis', v: dias, format: 'unit', unit: 'días' },
+            { k: 'Días naturales que abarca', v: diasNaturales, format: 'unit', unit: 'días' },
+            { k: 'Salario diario', v: sbcIngresado, decimals: 2 },
+          ],
+          chart: [
+            { label: 'Neto en mano', value: Math.max(0, neto), tone: 'main' },
+            { label: 'ISR', value: Math.max(0, isr), tone: 'exit' },
+            { label: 'Cuota obrera IMSS', value: Math.max(0, cuotaObrera), tone: 'prop' },
+          ],
+        };
+      }
+
+      // ── Incapacidad: enfermedad general o riesgo de trabajo ───────────────
+      const esRiesgo = id === 'riesgo';
+      const dias = Math.max(1, Math.floor(v.diasIncapacidad || 1));
+      const reglas = esRiesgo ? SUB.riesgoTrabajo : SUB.enfermedadGeneral;
+      const porcentaje = reglas.porcentajeSbc;
+      const diasCarencia = reglas.desdeDia - 1;
+      const diasNoPagados = Math.min(dias, diasCarencia);
+      const diasPagados = dias - diasNoPagados;
+
+      const subsidioDiario = sbc * porcentaje;
+      const subsidio = subsidioDiario * diasPagados;
+      const salarioPleno = sbc * dias;
+      const noCubierto = salarioPleno - subsidio;
+
+      const maxDiasInicial = SUB.enfermedadGeneral.maxSemanas * 7;
+      const maxDiasTotal = (SUB.enfermedadGeneral.maxSemanas + SUB.enfermedadGeneral.prorrogaSemanas) * 7;
+      let aviso = '';
+      if (!esRiesgo && dias > maxDiasTotal) {
+        aviso =
+          ' Ojo: la ley cubre como máximo ' + SUB.enfermedadGeneral.maxSemanas + ' semanas más ' +
+          SUB.enfermedadGeneral.prorrogaSemanas + ' de prórroga (' + maxDiasTotal +
+          ' días); después el subsidio termina y procede el dictamen de invalidez.';
+      } else if (!esRiesgo && dias > maxDiasInicial) {
+        aviso =
+          ' Superas las ' + SUB.enfermedadGeneral.maxSemanas +
+          ' semanas iniciales: el tramo extra requiere prórroga autorizada por el IMSS.';
+      }
+
+      // Contraste con la otra clasificación, que es la decisión que importa.
+      const otroPct = esRiesgo ? SUB.enfermedadGeneral.porcentajeSbc : SUB.riesgoTrabajo.porcentajeSbc;
+      const otraCarencia = esRiesgo ? SUB.enfermedadGeneral.desdeDia - 1 : SUB.riesgoTrabajo.desdeDia - 1;
+      const otroSubsidio = sbc * otroPct * (dias - Math.min(dias, otraCarencia));
+
+      return {
+        total: mxn(subsidio),
+        sub:
+          (esRiesgo
+            ? 'Riesgo de trabajo: el IMSS paga el 100% de tu salario base desde el primer día (LSS Art. 58). '
+            : 'Enfermedad general: el IMSS paga el 60% del salario base y solo a partir del cuarto día (LSS Art. 98). Los primeros ' +
+              diasNoPagados + ' días no se pagan. ') +
+          'Son ' + mxn(subsidioDiario) + ' por día durante ' + diasPagados +
+          (diasPagados === 1 ? ' día' : ' días') + '.' +
+          (topado ? ' Tu salario se topó a 25 UMA diarias.' : '') + aviso,
+        rows: [
+          { k: 'Subsidio total del período', v: subsidio, extra: true },
+          { k: 'Subsidio diario', ref: Math.round(porcentaje * 100) + '% del SBC', v: subsidioDiario, decimals: 2 },
+          { k: 'Días pagados', v: diasPagados, format: 'unit', unit: 'días' },
+          { k: 'Días sin subsidio', ref: esRiesgo ? 'se paga desde el día 1' : 'días 1 a 3', v: diasNoPagados, format: 'unit', unit: 'días' },
+          { k: 'Salario pleno del período', v: salarioPleno },
+          { k: 'Ingreso que dejas de percibir', v: noCubierto },
+          { k: esRiesgo ? 'Si lo clasificaran como enfermedad general' : 'Si se clasificara como riesgo de trabajo', v: otroSubsidio },
+          { k: 'Salario base de cotización diario', ref: topado ? 'topado a 25 UMA' : 'de tu recibo IMSS', v: sbc, decimals: 2 },
+        ],
+        chart: [
+          { label: 'Subsidio del IMSS', value: Math.max(0, subsidio), tone: 'main' },
+          { label: 'Ingreso no cubierto', value: Math.max(0, noCubierto), tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>

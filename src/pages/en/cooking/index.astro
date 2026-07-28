@@ -1,0 +1,47 @@
+---
+/**
+ * Silo Cooking · mercado inglés — índice de hubs de decisión.
+ * Existe para que el breadcrumb de los hubs de cocina en inglés no apunte a un
+ * 404 y para repartir link equity entre hermanos. El listado sale del registry.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import SiloIndex from '../../../components/hub/SiloIndex.astro';
+import { hubsOfSilo } from '../../../lib/hubs/registry';
+
+const HREF = '/en/cooking';
+const SILO = 'Cooking';
+const LEDE =
+  'Party portions, baking ratios, brewing strength and drink counts — worked out with real numbers: cooked-to-raw shrink, baker’s percentages, SCA brew ratios and catering consumption rates, in both imperial and metric.';
+const hubs = hubsOfSilo(HREF);
+const CANONICAL = `https://hacecuentas.com${HREF}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Cooking calculators',
+  description: LEDE,
+  url: CANONICAL,
+  hasPart: hubs.map((h) => ({
+    '@type': 'WebPage',
+    name: h.h1,
+    url: `https://hacecuentas.com/${h.slug}`,
+  })),
+};
+---
+
+<Layout
+  title="Cooking Calculators — Portions, Baking Ratios, Brewing & Party Drinks | Hacé Cuentas"
+  description={LEDE}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+>
+  <Header />
+  <SiloIndex silo={SILO} href={HREF} lede={LEDE} hubs={hubs} />
+  <Footer />
+</Layout>

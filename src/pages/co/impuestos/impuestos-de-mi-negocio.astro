@@ -1,0 +1,231 @@
+---
+/**
+ * Hub de decisión CO — "Tengo un negocio: ¿qué impuestos me tocan?".
+ * audience="CO" literal al Layout: HubData sólo modela 'AR' | 'global' y el
+ * mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UVT,
+  IVA,
+  RENTA_SOCIEDADES,
+  RST,
+  TOPES_DECLARAR,
+} from '../../../lib/hubs/co/impuestos-de-mi-negocio';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    UVT,
+    IVA,
+    RENTA_SOCIEDADES,
+    RST,
+    TOPES: TOPES_DECLARAR,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const cop = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
+    const pct = (n) => n.toFixed(2).replace('.', ',') + '%';
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'responsable_iva';
+
+      const ingresos = Math.max(0, v.ingresos || 0);
+      const compras = Math.max(0, v.compras || 0);
+      const gravado = Math.min(100, Math.max(0, v.pctGravado || 0)) / 100;
+      const icaPorMil = Math.max(0, v.icaPorMil || 0);
+      const tarifaRst = Math.max(0, v.tarifaRst || 0) / 100;
+      const utilidad = Math.max(0, v.utilidad || 0);
+
+      // ── IVA (arts. 420, 468 y 485 ET) ──────────────────────────────────
+      const ventasGravadas = ingresos * gravado;
+      const esResponsable = id !== 'no_responsable';
+      const ivaGenerado = esResponsable ? ventasGravadas * IVA.general : 0;
+      // Sólo es descontable el IVA de las compras atribuibles a operaciones
+      // gravadas: se prorratea con el mismo porcentaje de ventas gravadas.
+      const ivaComprasTotal = compras * IVA.general;
+      const ivaDescontable = esResponsable ? ivaComprasTotal * gravado : 0;
+      const ivaCosto = ivaComprasTotal - ivaDescontable;
+      const ivaNeto = Math.max(0, ivaGenerado - ivaDescontable);
+      const ivaAFavor = Math.max(0, ivaDescontable - ivaGenerado);
+
+      // ── ICA municipal (Ley 14/1983) ────────────────────────────────────
+      // En el RST el ICA consolidado va incluido en la tarifa: no se liquida aparte.
+      const icaTeorico = ingresos * (icaPorMil / 1000);
+      const ica = id === 'rst' ? 0 : icaTeorico;
+
+      // ── Renta / RST ────────────────────────────────────────────────────
+      let impuestoRenta = 0;
+      let etiquetaRenta = '';
+      let refRenta = '';
+      if (id === 'rst') {
+        impuestoRenta = ingresos * tarifaRst;
+        etiquetaRenta = 'Cuota del Régimen Simple (renta + ICA)';
+        refRenta = pct(tarifaRst * 100) + ' sobre ingresos brutos · art. 908 ET';
+      } else if (id === 'sociedad') {
+        impuestoRenta = utilidad * RENTA_SOCIEDADES;
+        etiquetaRenta = 'Impuesto de renta de la sociedad';
+        refRenta = (RENTA_SOCIEDADES * 100).toFixed(0) + '% sobre la utilidad fiscal · art. 240 ET';
+      }
+
+      const totalTributos = ivaNeto + ica + impuestoRenta;
+      const rows = [
+        { k: 'Ingresos brutos del año', ref: 'Base de todo el cálculo', v: ingresos },
+        {
+          k: 'Ventas gravadas con IVA',
+          ref: (gravado * 100).toFixed(0) + '% de tus ingresos',
+          v: ventasGravadas,
+        },
+      ];
+
+      if (esResponsable) {
+        rows.push({ k: 'IVA generado en tus ventas', ref: '19% · art. 468 ET', v: ivaGenerado });
+        rows.push({ k: 'IVA descontable de tus compras (se resta)', ref: 'Proporción atribuible a lo gravado · art. 485 ET', v: ivaDescontable });
+        if (ivaCosto > 0) {
+          rows.push({ k: 'IVA de compras que NO podés descontar', ref: 'Queda como costo del negocio', v: ivaCosto });
+        }
+        rows.push({ k: 'IVA a girar a la DIAN', ref: 'Generado menos descontable', v: ivaNeto });
+        if (ivaAFavor > 0) {
+          rows.push({ k: 'Saldo a favor de IVA para el período siguiente', ref: 'Descontable mayor que generado', v: ivaAFavor, extra: true });
+        }
+      } else {
+        rows.push({ k: 'IVA que cobrás', ref: 'No responsable: no facturás IVA', v: 0 });
+        rows.push({ k: 'IVA de tus compras que se te queda como costo', ref: 'Sin derecho a descuento · art. 437 par. 3 ET', v: ivaCosto });
+      }
+
+      if (id === 'rst') {
+        rows.push({ k: 'ICA liquidado aparte', ref: 'Va incluido en la cuota del RST', v: 0 });
+        rows.push({
+          k: 'ICA que estarías pagando fuera del RST',
+          ref: icaPorMil.toLocaleString('es-CO') + ' por mil · referencia',
+          v: icaTeorico,
+        });
+      } else {
+        rows.push({
+          k: 'ICA municipal del año',
+          ref: icaPorMil.toLocaleString('es-CO') + ' por mil · Ley 14/1983',
+          v: ica,
+        });
+      }
+
+      if (impuestoRenta > 0 || id === 'rst' || id === 'sociedad') {
+        rows.push({ k: etiquetaRenta, ref: refRenta, v: impuestoRenta });
+      } else {
+        rows.push({
+          k: 'Impuesto de renta',
+          ref: 'Persona natural: se liquida en tu declaración anual',
+          v: 0,
+        });
+      }
+
+      rows.push({ k: 'Total de impuestos del año', ref: 'IVA girado + ICA + renta o RST', v: totalTributos, extra: true });
+
+      const carga = ingresos > 0 ? (totalTributos / ingresos) * 100 : 0;
+      rows.push({
+        k: 'Carga tributaria sobre tus ingresos',
+        ref: 'Total de impuestos ÷ ingresos brutos',
+        v: carga,
+        format: 'unit',
+        unit: '%',
+        decimals: 2,
+      });
+      rows.push({
+        k: 'Tarifa de ICA que cargaste',
+        ref: 'Editable: la fija el acuerdo de tu municipio',
+        v: icaPorMil,
+        format: 'unit',
+        unit: 'por mil',
+        decimals: 2,
+      });
+      rows.push({
+        k: 'Margen que te queda antes del tope del Régimen Simple',
+        ref: RST.topeIngresosUvt.toLocaleString('es-CO') + ' UVT · art. 905 ET',
+        v: Math.max(0, RST.topeIngresosPesos - ingresos),
+      });
+
+      // ── Sub ────────────────────────────────────────────────────────────
+      let sub;
+      if (id === 'no_responsable') {
+        sub =
+          'No girás IVA, pero ' + cop(ivaCosto) + ' de IVA de tus compras se te quedan como costo' +
+          ' · ICA ' + cop(ica) + ' al año · carga total ' + pct(carga);
+      } else if (id === 'rst') {
+        sub =
+          'Cuota del RST ' + cop(impuestoRenta) + ' (con el ICA adentro)' +
+          (ivaNeto > 0 ? ' · IVA a girar ' + cop(ivaNeto) : ' · sin IVA a girar') +
+          ' · carga total ' + pct(carga);
+      } else if (id === 'sociedad') {
+        sub =
+          'Renta ' + cop(impuestoRenta) + ' al ' + (RENTA_SOCIEDADES * 100).toFixed(0) + '%' +
+          ' · IVA ' + cop(ivaNeto) + ' · ICA ' + cop(ica) +
+          ' · carga total ' + pct(carga);
+      } else {
+        sub =
+          'IVA a girar ' + cop(ivaNeto) + ' · ICA ' + cop(ica) +
+          (ivaAFavor > 0 ? ' · te queda ' + cop(ivaAFavor) + ' de saldo a favor de IVA' : '') +
+          ' · carga total ' + pct(carga) + ' (la renta va aparte)';
+      }
+
+      const chart = [
+        { label: 'Queda en el negocio', value: Math.max(0, Math.round(ingresos - totalTributos)), tone: 'main' },
+        { label: esResponsable ? 'IVA a la DIAN' : 'IVA de compras que es costo', value: Math.round(esResponsable ? ivaNeto : ivaCosto), tone: 'warn' },
+        { label: 'ICA al municipio', value: Math.round(ica), tone: 'exit' },
+        { label: id === 'rst' ? 'Cuota del Régimen Simple' : 'Impuesto de renta', value: Math.round(impuestoRenta), tone: 'bad' },
+      ].filter((s) => s.value > 0);
+
+      return {
+        total: cop(totalTributos),
+        sub: sub,
+        rows: rows,
+        chart: chart,
+      };
+    });
+  })();
+</script>

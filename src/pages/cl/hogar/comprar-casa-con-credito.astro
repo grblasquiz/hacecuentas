@@ -1,0 +1,391 @@
+---
+/**
+ * Hub de decisión CL — "¿Cuánto necesito realmente para comprar esta casa?"
+ * Ruta bajo el prefijo /cl/, igual que las calculadoras que absorbe.
+ * audience="CL" va literal al Layout: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UF,
+  TIMBRES,
+  CBR,
+  MAYOR_VALOR,
+  PROGRAMAS,
+  CONSTRUCCION,
+} from '../../../lib/hubs/cl/comprar-casa-con-credito';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ UF, TIMBRES, CBR, MAYOR_VALOR, PROGRAMAS, CONSTRUCCION }}>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+    const uf = (n) => (n || 0).toLocaleString('es-CL', { maximumFractionDigits: 1 }) + ' UF';
+
+    function cuotaFrancesa(capital, tasaMensual, meses) {
+      if (meses <= 0) return 0;
+      if (tasaMensual <= 0) return capital / meses;
+      const f = Math.pow(1 + tasaMensual, meses);
+      return capital * ((tasaMensual * f) / (f - 1));
+    }
+
+    // Amortización real mes a mes.
+    function amortizar(capital, tasaMensual, mesesTotales, hasta) {
+      const cuota = cuotaFrancesa(capital, tasaMensual, mesesTotales);
+      let saldo = capital;
+      let interes = 0;
+      const n = Math.min(hasta, mesesTotales);
+      for (let m = 1; m <= n; m++) {
+        const int = saldo * tasaMensual;
+        interes += int;
+        saldo = Math.max(0, saldo - (cuota - int));
+      }
+      return { cuota: cuota, saldo: saldo, interes: interes, meses: n };
+    }
+
+    // CAE: tasa que iguala el VP de la cuota TOTAL contra el neto recibido. Bisección
+    // (el VP de una anualidad decrece monótonamente con r).
+    function cae(cuotaTotal, netoRecibido, meses) {
+      if (cuotaTotal <= 0 || netoRecibido <= 0 || meses <= 0) return 0;
+      const vp = (r) => (r <= 0 ? cuotaTotal * meses : (cuotaTotal * (1 - Math.pow(1 + r, -meses))) / r);
+      let lo = 1e-9, hi = 1;
+      for (let k = 0; k < 200; k++) {
+        const mid = (lo + hi) / 2;
+        if (vp(mid) > netoRecibido) lo = mid; else hi = mid;
+      }
+      // Anualización compuesta de la tasa mensual.
+      return (Math.pow(1 + (lo + hi) / 2, 12) - 1) * 100;
+    }
+
+    // Gastos de escrituración en UF. Timbre sobre el CRÉDITO (DL 3.475); CBR 0,2% con tope.
+    function gastosCompra(precioUf, creditoUf, tasaTimbre) {
+      const timbresUf = creditoUf * tasaTimbre;
+      const cbrUf = Math.min(precioUf * UF * CBR.tasa, CBR.topeClp) / UF;
+      const notariaUf = Math.min(12, 2.5 + precioUf * 0.0012);
+      const tasacionUf = 3.5;
+      return {
+        timbresUf, cbrUf, notariaUf, tasacionUf,
+        totalUf: timbresUf + cbrUf + notariaUf + tasacionUf,
+      };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'primera';
+
+      const precioUf = Math.max(0, Number(v.precioUf) || 0);
+      const piePct = Math.min(100, Math.max(0, Number(v.piePct) || 0));
+      const tasaAnual = Math.max(0, Number(v.tasa) || 0);
+      const plazoAnios = Math.max(1, Math.round(Number(v.plazo) || 25));
+      const comisionAnual = Math.max(0, v.comisionAnual || 0);
+      const tasaTimbre =
+        v.tipoVivienda === 'general' ? TIMBRES.general : v.tipoVivienda === 'social' ? TIMBRES.social : TIMBRES.dfl2;
+
+      const tasaMensual = tasaAnual / 100 / 12;
+      const mesesTotales = plazoAnios * 12;
+      const rows = [];
+
+      // ─── Rama: vender la propiedad, impuesto al mayor valor ────────────────
+      if (id === 'vender') {
+        const precioVenta = Math.max(0, v.precioVenta || 0);
+        const costoCompra = Math.max(0, v.costoCompra || 0);
+        const mejoras = Math.max(0, v.mejoras || 0);
+        const usadasUf = Math.max(0, Number(v.exencionUsadaUf) || 0);
+
+        const ganancia = Math.max(0, precioVenta - costoCompra - mejoras);
+        const gananciaUf = ganancia / UF;
+        const cupoUf = Math.max(0, MAYOR_VALOR.exencionUf - usadasUf);
+        const exentoUf = Math.min(gananciaUf, cupoUf);
+        const afectaUf = Math.max(0, gananciaUf - cupoUf);
+        const impuesto = afectaUf * UF * MAYOR_VALOR.tasaIus;
+        const neta = ganancia - impuesto;
+
+        rows.push({ k: 'Precio de venta', ref: 'Lo que recibes', v: precioVenta });
+        rows.push({ k: 'Costo de adquisición reajustado por IPC', ref: 'Lo que pagaste, en pesos de hoy', v: costoCompra });
+        rows.push({ k: 'Mejoras acreditadas', ref: 'Solo si están declaradas al SII', v: mejoras });
+        rows.push({ k: 'Mayor valor (la ganancia)', ref: 'Venta menos costo menos mejoras', v: ganancia, extra: true });
+        rows.push({ k: 'Mayor valor en UF', ref: 'UF a $' + UF.toLocaleString('es-CL', { maximumFractionDigits: 2 }), v: gananciaUf, format: 'unit', unit: 'UF', decimals: 1 });
+        rows.push({ k: 'Exención de por vida ya usada', ref: 'Ventas anteriores', v: usadasUf, format: 'unit', unit: 'UF' });
+        rows.push({ k: 'Exención que te queda disponible', ref: MAYOR_VALOR.exencionUf.toLocaleString('es-CL') + ' UF menos lo usado · Art. 17 N°8 LIR', v: cupoUf, format: 'unit', unit: 'UF', decimals: 0 });
+        rows.push({ k: 'Parte de la ganancia que queda exenta', ref: 'Hasta agotar el cupo', v: exentoUf, format: 'unit', unit: 'UF', decimals: 1 });
+        rows.push({ k: 'Parte afecta a impuesto', ref: 'Lo que excede el cupo', v: afectaUf * UF });
+        rows.push({ k: 'Impuesto Único y Sustitutivo', ref: '10% sobre la base afecta', v: impuesto, extra: true });
+        rows.push({ k: 'Ganancia neta después del impuesto', ref: 'Lo que te queda limpio', v: neta, extra: true });
+        rows.push({ k: 'Exención que te quedará para el futuro', ref: 'Cupo restante tras esta venta', v: Math.max(0, cupoUf - exentoUf), format: 'unit', unit: 'UF', decimals: 0 });
+
+        return {
+          total: clp(impuesto),
+          sub:
+            impuesto > 0
+              ? 'Sobre un mayor valor de ' + clp(ganancia) + ' (' + uf(gananciaUf) + '), quedan afectas ' + clp(afectaUf * UF) +
+                ': pagas ' + clp(impuesto) + ' y te quedan ' + clp(neta) + ' limpios.'
+              : ganancia > 0
+                ? 'Tu mayor valor de ' + clp(ganancia) + ' (' + uf(gananciaUf) + ') cabe dentro de tu exención disponible de ' +
+                  uf(cupoUf) + ': no pagas impuesto al mayor valor.'
+                : 'No hay mayor valor: el precio de venta no supera el costo reajustado más las mejoras.',
+          rows: rows,
+          chart: [
+            { label: 'Ganancia neta', value: Math.round(Math.max(0, neta)), tone: 'main' },
+            { label: 'Impuesto 10%', value: Math.round(impuesto), tone: 'warn' },
+            { label: 'Costo de adquisición recuperado', value: Math.round(costoCompra), tone: 'prop' },
+          ],
+        };
+      }
+
+      // ─── Rama: construir en sitio propio ───────────────────────────────────
+      if (id === 'construir') {
+        const metros = Math.max(0, Number(v.metros) || 0);
+        const nivel = CONSTRUCCION.find((c) => c.id === v.calidad) || CONSTRUCCION[1];
+        const totalUf = nivel.ufM2 * metros;
+        const totalClp = totalUf * UF;
+        const materiales = totalClp * 0.6;
+        const manoObra = totalClp * 0.4;
+        const imprevistos = totalClp * 0.12;
+        const creditoUf = Math.max(0, totalUf * (1 - piePct / 100));
+        const amC = amortizar(creditoUf, tasaMensual, mesesTotales, 1);
+
+        rows.push({ k: 'Superficie a construir', ref: 'Metros útiles', v: metros, format: 'unit', unit: 'm²' });
+        rows.push({ k: 'Costo directo por m²', ref: nivel.nombre.split(' — ')[0] + ' · ' + nivel.ufM2 + ' UF/m²', v: nivel.ufM2 * UF });
+        rows.push({ k: 'Costo directo de la obra en UF', ref: metros + ' m² × ' + nivel.ufM2 + ' UF', v: totalUf, format: 'unit', unit: 'UF', decimals: 0, extra: true });
+        rows.push({ k: 'Costo directo de la obra en pesos', ref: 'Con la UF de hoy', v: totalClp, extra: true });
+        rows.push({ k: 'Materiales', ref: '≈ 60% del costo directo', v: materiales });
+        rows.push({ k: 'Mano de obra', ref: '≈ 40% del costo directo', v: manoObra });
+        rows.push({ k: 'Imprevistos recomendados', ref: '12% del costo directo', v: imprevistos });
+        rows.push({ k: 'Presupuesto prudente con imprevistos', ref: 'Obra más colchón', v: totalClp + imprevistos, extra: true });
+        rows.push({ k: 'Crédito si financias el resto', ref: 'Obra menos el ' + piePct + '% que pones', v: creditoUf * UF });
+        rows.push({ k: 'Dividendo de ese crédito', ref: plazoAnios + ' años al ' + tasaAnual.toLocaleString('es-CL') + '%', v: amC.cuota * UF });
+
+        return {
+          total: clp(totalClp),
+          sub:
+            'Construir ' + metros + ' m² con terminación ' + nivel.nombre.split(' — ')[0].toLowerCase() + ' cuesta unos ' +
+            clp(totalClp) + ' (' + uf(totalUf) + ') de costo directo, a ' + nivel.ufM2 + ' UF/m² · con un 12% de imprevistos, presupuesta ' +
+            clp(totalClp + imprevistos) + ' · no incluye terreno ni permisos.',
+          rows: rows,
+          chart: [
+            { label: 'Materiales', value: Math.round(materiales), tone: 'main' },
+            { label: 'Mano de obra', value: Math.round(manoObra), tone: 'prop' },
+            { label: 'Imprevistos (12%)', value: Math.round(imprevistos), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ─── Rama: prepago / abono a capital ───────────────────────────────────
+      if (id === 'prepago') {
+        const pieUf0 = precioUf * (piePct / 100);
+        const credUf0 = precioUf - pieUf0;
+        const yaPagados = Math.min(mesesTotales - 1, Math.max(0, Math.round(Number(v.mesesPagados) || 0)));
+        const est = amortizar(credUf0, tasaMensual, mesesTotales, yaPagados);
+        const saldo = est.saldo;
+        const restantes = mesesTotales - yaPagados;
+        const abono = Math.min(saldo * 0.99, Math.max(0, Number(v.abonoUf) || 0));
+        const tasaAlt = Math.max(0, Number(v.tasaAlternativa) || 0) / 100;
+        const aPlazo = v.modoPrepago !== 'cuota';
+
+        // Intereses SIN prepagar: amortizar el saldo por los meses restantes.
+        const sinPrepago = amortizar(saldo, tasaMensual, restantes, restantes);
+        const nuevoSaldo = saldo - abono;
+
+        let interesDespues = 0, cuotaNueva = est.cuota, mesesNuevos = restantes;
+        if (aPlazo) {
+          // Misma cuota, menos meses: amortizar hasta liquidar.
+          let s = nuevoSaldo, m = 0;
+          while (s > 0.005 && m < restantes) {
+            const int = s * tasaMensual;
+            interesDespues += int;
+            s = s - (est.cuota - int);
+            m++;
+            if (est.cuota <= int) { m = restantes; break; }
+          }
+          mesesNuevos = m;
+        } else {
+          const r2 = amortizar(nuevoSaldo, tasaMensual, restantes, restantes);
+          cuotaNueva = r2.cuota;
+          interesDespues = r2.interes;
+        }
+
+        const ahorro = Math.max(0, sinPrepago.interes - interesDespues);
+        const mesesAhorrados = restantes - mesesNuevos;
+        // Alternativa: invertir el abono a tasa real durante el horizonte que dura el beneficio.
+        const aniosHorizonte = (aPlazo ? restantes : restantes) / 12;
+        const ganaInvertir = abono * (Math.pow(1 + tasaAlt, aniosHorizonte) - 1);
+        const ventaja = ahorro - ganaInvertir;
+
+        rows.push({ k: 'Saldo del crédito hoy', ref: 'Tras ' + yaPagados + ' cuotas pagadas', v: saldo * UF, extra: true });
+        rows.push({ k: 'Saldo en UF', ref: 'Así lo expresa tu banco', v: saldo, format: 'unit', unit: 'UF', decimals: 1 });
+        rows.push({ k: 'Cuotas que te quedan', ref: 'De ' + mesesTotales + ' totales', v: restantes, format: 'unit', unit: 'meses' });
+        rows.push({ k: 'Dividendo actual', ref: 'Sistema francés', v: est.cuota * UF });
+        rows.push({ k: 'Abono a capital que harías', ref: uf(abono), v: abono * UF, extra: true });
+        rows.push({ k: 'Intereses que pagarías SIN prepagar', ref: 'Hasta el final del crédito', v: sinPrepago.interes * UF });
+        rows.push({ k: 'Intereses que pagarás prepagando', ref: aPlazo ? 'Acortando el plazo' : 'Bajando la cuota', v: interesDespues * UF });
+        rows.push({ k: 'Ahorro en intereses', ref: 'La diferencia entre las dos rutas', v: ahorro * UF, extra: true });
+        rows.push({ k: 'Ahorro en intereses, en UF', ref: 'Moneda del crédito', v: ahorro, format: 'unit', unit: 'UF', decimals: 1 });
+        if (aPlazo) {
+          rows.push({ k: 'Meses que te ahorras', ref: 'El crédito termina antes', v: mesesAhorrados, format: 'unit', unit: 'meses' });
+          rows.push({ k: 'Años que te ahorras', ref: 'Lo mismo, en años', v: mesesAhorrados / 12, format: 'unit', unit: 'años', decimals: 1 });
+        } else {
+          rows.push({ k: 'Dividendo nuevo', ref: 'Mismo plazo, cuota más baja', v: cuotaNueva * UF, extra: true });
+          rows.push({ k: 'Cuánto te baja el dividendo', ref: 'Alivio mensual', v: (est.cuota - cuotaNueva) * UF });
+        }
+        rows.push({ k: 'Si invirtieras ese monto al ' + (tasaAlt * 100).toLocaleString('es-CL') + '% real', ref: 'Ganancia en el mismo horizonte', v: ganaInvertir * UF });
+        rows.push({
+          k: ventaja >= 0 ? 'Ventaja de prepagar sobre invertir' : 'Ventaja de invertir sobre prepagar',
+          ref: 'Diferencia entre las dos estrategias',
+          v: Math.abs(ventaja) * UF,
+          extra: true,
+        });
+        rows.push({ k: 'Rendimiento implícito de prepagar', ref: 'Es exactamente la tasa de tu crédito', v: tasaAnual, format: 'unit', unit: '% real anual', decimals: 2 });
+
+        return {
+          total: clp(ahorro * UF),
+          sub:
+            'Abonando ' + uf(abono) + ' (' + clp(abono * UF) + ') ' +
+            (aPlazo
+              ? 'acortas el crédito en ' + mesesAhorrados + ' meses'
+              : 'bajas el dividendo a ' + clp(cuotaNueva * UF)) +
+            ' y ahorras ' + clp(ahorro * UF) + ' en intereses · ' +
+            (ventaja >= 0
+              ? 'conviene prepagar: le gana por ' + clp(Math.abs(ventaja) * UF) + ' a invertir al ' + (tasaAlt * 100).toLocaleString('es-CL') + '%.'
+              : 'invertir al ' + (tasaAlt * 100).toLocaleString('es-CL') + '% le gana por ' + clp(Math.abs(ventaja) * UF) + '.'),
+          rows: rows,
+          chart: [
+            { label: 'Intereses que te ahorras', value: Math.round(ahorro * UF), tone: 'good' },
+            { label: 'Intereses que igual pagarás', value: Math.round(interesDespues * UF), tone: 'warn' },
+            { label: 'Capital que abonas', value: Math.round(abono * UF), tone: 'main' },
+          ],
+        };
+      }
+
+      // ─── Ramas de compra: primera vivienda y con subsidio ──────────────────
+      const conSubsidio = id === 'subsidio';
+      const prog = PROGRAMAS.find((p) => p.id === v.programa) || PROGRAMAS[PROGRAMAS.length - 1];
+      const subsidioIngresado = Math.max(0, Number(v.subsidioUf) || 0);
+      const subsidioUf = conSubsidio
+        ? Math.min(precioUf, subsidioIngresado > 0 ? subsidioIngresado : prog.subsidioRefUf)
+        : 0;
+      const ahorroUf = Math.max(0, Number(v.ahorroUf) || 0);
+
+      let pieUf, creditoUf;
+      if (conSubsidio) {
+        pieUf = Math.min(precioUf, ahorroUf + subsidioUf);
+        creditoUf = Math.max(0, precioUf - subsidioUf - ahorroUf);
+      } else {
+        pieUf = precioUf * (piePct / 100);
+        creditoUf = precioUf - pieUf;
+      }
+
+      const am = amortizar(creditoUf, tasaMensual, mesesTotales, mesesTotales);
+      const g = gastosCompra(precioUf, creditoUf, tasaTimbre);
+
+      // Seguros que exige el banco, mensualizados.
+      const desgravamenMes = (creditoUf * 0.0025) / 12;
+      const incendioMes = (precioUf * 0.0006) / 12;
+      const comisionMes = comisionAnual / UF / 12;
+      const cuotaTotal = am.cuota + desgravamenMes + incendioMes + comisionMes;
+      const caeAnual = cae(cuotaTotal, creditoUf, mesesTotales);
+      const efectivoFirma = (conSubsidio ? ahorroUf : pieUf) + g.totalUf;
+      const rentaSugerida = (cuotaTotal * UF) / 0.28;
+
+      rows.push({ k: 'Precio de la vivienda', ref: precioUf.toLocaleString('es-CL') + ' UF', v: precioUf * UF });
+      if (conSubsidio) {
+        rows.push({ k: 'Programa', ref: prog.nota, v: prog.capUf, format: 'unit', unit: 'UF de tope' });
+        rows.push({
+          k: precioUf <= prog.capUf ? 'La vivienda está dentro del tope del programa' : 'La vivienda SUPERA el tope del programa',
+          ref: 'Tope de ' + prog.capUf.toLocaleString('es-CL') + ' UF',
+          v: prog.capUf * UF,
+        });
+        rows.push({ k: 'Subsidio que aporta el Estado', ref: uf(subsidioUf) + ' · monto referencial, editable', v: subsidioUf * UF, extra: true });
+        rows.push({ k: 'Tu ahorro acreditado', ref: uf(ahorroUf), v: ahorroUf * UF });
+        rows.push({
+          k: ahorroUf >= prog.ahorroMinUf ? 'Cumples el ahorro mínimo exigido' : 'NO alcanzas el ahorro mínimo exigido',
+          ref: prog.ahorroMinUf + ' UF mínimos del programa',
+          v: prog.ahorroMinUf * UF,
+        });
+      } else {
+        rows.push({ k: 'Pie que pones', ref: piePct + '% del precio · ' + uf(pieUf), v: pieUf * UF, extra: true });
+      }
+      rows.push({ k: 'Crédito hipotecario que necesitas', ref: uf(creditoUf) + ' a ' + plazoAnios + ' años', v: creditoUf * UF, extra: true });
+      rows.push({ k: 'Dividendo (capital e interés)', ref: uf(am.cuota) + ' al mes · sistema francés', v: am.cuota * UF, extra: true });
+      rows.push({ k: 'Seguro de desgravamen', ref: '0,25% anual sobre la deuda', v: desgravamenMes * UF });
+      rows.push({ k: 'Seguro de incendio y sismo', ref: '0,06% anual sobre el inmueble', v: incendioMes * UF });
+      rows.push({ k: 'Comisión de administración', ref: clp(comisionAnual) + ' al año', v: comisionMes * UF });
+      rows.push({ k: 'Cuota total que se te descuenta cada mes', ref: 'Dividendo más seguros y comisión', v: cuotaTotal * UF, extra: true });
+      rows.push({ k: 'CAE — Carga Anual Equivalente', ref: 'Tasa nominal del crédito: ' + tasaAnual.toLocaleString('es-CL') + '%', v: caeAnual, format: 'unit', unit: '%', decimals: 2, extra: true });
+      rows.push({ k: 'Renta líquida sugerida para que te aprueben', ref: 'Cuota total ≤ 28% de la renta', v: rentaSugerida });
+      rows.push({
+        k: 'Impuesto de timbres y estampillas',
+        ref: (tasaTimbre * 100).toLocaleString('es-CL') + '% del CRÉDITO · DL 3.475',
+        v: g.timbresUf * UF,
+      });
+      rows.push({ k: 'Inscripción en el Conservador de Bienes Raíces', ref: '0,2% del precio, tope ' + clp(CBR.topeClp), v: g.cbrUf * UF });
+      rows.push({ k: 'Notaría y estudio de títulos', ref: 'Rango de mercado', v: g.notariaUf * UF });
+      rows.push({ k: 'Tasación de la propiedad', ref: 'La encarga el banco', v: g.tasacionUf * UF });
+      rows.push({ k: 'Total de gastos de escrituración', ref: 'Se pagan en efectivo, no se financian', v: g.totalUf * UF, extra: true });
+      rows.push({ k: 'Gastos como % del precio', ref: 'Referencia: entre 2% y 4%', v: precioUf > 0 ? (g.totalUf / precioUf) * 100 : 0, format: 'unit', unit: '%', decimals: 2 });
+      rows.push({ k: 'PLATA QUE NECESITAS EL DÍA DE LA FIRMA', ref: conSubsidio ? 'Tu ahorro más los gastos' : 'Pie más los gastos', v: efectivoFirma * UF, extra: true });
+      rows.push({ k: 'Total de intereses en todo el crédito', ref: mesesTotales + ' cuotas', v: am.interes * UF });
+      rows.push({ k: 'Total pagado al final del crédito', ref: 'Cuota total × ' + mesesTotales, v: cuotaTotal * mesesTotales * UF });
+
+      return {
+        total: clp(efectivoFirma * UF),
+        sub:
+          'Necesitas ' + clp(efectivoFirma * UF) + ' en efectivo para firmar (' +
+          (conSubsidio ? 'ahorro de ' + uf(ahorroUf) : 'pie de ' + uf(pieUf)) + ' más ' + uf(g.totalUf) + ' de gastos) · ' +
+          'dividendo de ' + clp(am.cuota * UF) + ', cuota total con seguros ' + clp(cuotaTotal * UF) +
+          ' · CAE ' + caeAnual.toFixed(2).replace('.', ',') + '% contra una tasa de ' + tasaAnual.toLocaleString('es-CL') + '%.',
+        rows: rows,
+        chart: [
+          { label: conSubsidio ? 'Tu ahorro' : 'Pie', value: Math.round((conSubsidio ? ahorroUf : pieUf) * UF), tone: 'main' },
+          { label: 'Impuesto de timbres', value: Math.round(g.timbresUf * UF), tone: 'warn' },
+          { label: 'Conservador de Bienes Raíces', value: Math.round(g.cbrUf * UF), tone: 'prop' },
+          { label: 'Notaría y estudio de títulos', value: Math.round(g.notariaUf * UF), tone: 'prop' },
+          { label: 'Tasación', value: Math.round(g.tasacionUf * UF), tone: 'exit' },
+        ],
+      };
+    });
+  })();
+</script>

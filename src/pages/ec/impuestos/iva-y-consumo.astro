@@ -1,0 +1,372 @@
+---
+/**
+ * Hub de decisión EC — "¿Cuánto impuesto se le suma a lo que compro, importo o envío al exterior?"
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  IVA,
+  SBU,
+  ISD_TARIFA,
+  ISD_EXENTO_TARJETA,
+  ISD_EXENTO_TRANSF,
+  RET_IVA_CASOS,
+  ICE_CATS,
+  ICE_VEHICULO,
+  FODINFA,
+  ARANCEL_4X4,
+  LIMITE_4X4_FOB,
+  LIMITE_4X4_ANUAL,
+  DEVOLUCION_SBU_TOPE,
+  DEVOLUCION_BENEFICIARIOS,
+} from '../../../lib/hubs/ec/iva-y-consumo';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="EC"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    IVA,
+    SBU,
+    ISD_TARIFA,
+    ISD_EXENTO_TARJETA,
+    ISD_EXENTO_TRANSF,
+    RET_CASOS: RET_IVA_CASOS,
+    ICE_CATS,
+    ICE_VEHICULO,
+    FODINFA,
+    ARANCEL_4X4,
+    LIMITE_4X4_FOB,
+    LIMITE_4X4_ANUAL,
+    DEV_SBU: DEVOLUCION_SBU_TOPE,
+    DEV_BENEF: DEVOLUCION_BENEFICIARIOS,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) =>
+      '$' + new Intl.NumberFormat('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        .format(Math.round((n || 0) * 100) / 100);
+    const pct = (x) => String(Math.round(x * 10000) / 100).replace('.', ',') + '%';
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'iva';
+      const monto = Math.max(0, v.monto || 0);
+      const cantidad = Math.max(0, v.cantidadIce || 0);
+      const fleteSeguro = Math.max(0, v.fleteSeguro || 0);
+      const adv = Math.max(0, v.adValorem || 0) / 100;
+      const isdUsado = Math.max(0, v.isdUsado || 0);
+      const rows = [];
+
+      // ---------- Retención de IVA ----------
+      if (id === 'retencion') {
+        const c = RET_CASOS.find((x) => x.id === v.casoRetencion) || RET_CASOS[0];
+        const iva = monto * IVA;
+        const retenido = iva * c.pct;
+        const alProveedor = monto + iva - retenido;
+
+        rows.push({ k: 'Base imponible de la factura', ref: 'Valor del bien o servicio sin IVA', v: monto, decimals: 2 });
+        rows.push({ k: 'IVA de la factura', ref: pct(IVA) + ' sobre la base', v: iva, decimals: 2 });
+        rows.push({ k: 'Total de la factura', ref: 'Base más IVA', v: monto + iva, decimals: 2 });
+        rows.push({ k: 'Porcentaje de retención aplicado', ref: c.label, v: c.pct * 100, format: 'unit', unit: '% del IVA' });
+        rows.push({ k: 'IVA retenido por el comprador', ref: 'Va directo al SRI a tu nombre', v: retenido, extra: true, decimals: 2 });
+        rows.push({ k: 'IVA que sí cobra el proveedor', ref: 'La parte no retenida', v: iva - retenido, decimals: 2 });
+        rows.push({ k: 'Lo que efectivamente te pagan', ref: 'Total de factura menos retención', v: alProveedor, decimals: 2 });
+
+        return {
+          total: usd(retenido),
+          sub: 'Sobre una factura de ' + usd(monto + iva) + ' te retienen ' + usd(retenido) + ' de IVA y cobras ' + usd(alProveedor) + ' · la retención es crédito tributario, no un costo',
+          rows: rows,
+          decimals: 2,
+          chart: [
+            { label: 'Lo que te pagan', value: Math.round(alProveedor * 100) / 100, tone: 'main' },
+            { label: 'IVA retenido (crédito tributario)', value: Math.round(retenido * 100) / 100, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ---------- ICE ----------
+      if (id === 'ice') {
+        const cat = ICE_CATS.find((x) => x.id === v.categoriaIce) || ICE_CATS[0];
+        let ice = 0;
+        let tarifaTxt = '';
+        let baseIce = monto;
+
+        if (cat.tipo === 'vehiculo') {
+          const tramo = ICE_VEHICULO.find((t) => t.hasta === null || monto <= t.hasta) || ICE_VEHICULO[ICE_VEHICULO.length - 1];
+          ice = monto * tramo.rate;
+          tarifaTxt = pct(tramo.rate) + ' ad-valorem según el precio';
+        } else if (cat.tipo === 'ad') {
+          ice = monto * cat.rate;
+          tarifaTxt = pct(cat.rate) + ' ad-valorem';
+        } else {
+          const por = cat.por || 1;
+          ice = (cantidad / por) * cat.rate;
+          baseIce = monto;
+          tarifaTxt = usd(cat.rate) + ' por ' + (por > 1 ? por + ' ' : '') + cat.unidad;
+        }
+
+        const baseIva = baseIce + ice;
+        const iva = baseIva * IVA;
+        const total = baseIva + iva;
+
+        rows.push({ k: 'Producto o servicio', ref: cat.label, v: baseIce, decimals: 2 });
+        if (cat.tipo === 'esp') {
+          rows.push({ k: 'Cantidad gravada', ref: cat.unidad, v: cantidad, format: 'plain', decimals: 2 });
+        }
+        rows.push({ k: 'ICE de la operación', ref: tarifaTxt, v: ice, extra: true, decimals: 2 });
+        rows.push({ k: 'Base sobre la que se calcula el IVA', ref: 'Precio más ICE: el IVA se aplica encima del ICE', v: baseIva, decimals: 2 });
+        rows.push({ k: 'IVA', ref: pct(IVA) + ' sobre precio más ICE', v: iva, decimals: 2 });
+        rows.push({ k: 'Precio final con ICE e IVA', ref: 'Lo que termina pagando el consumidor', v: total, decimals: 2 });
+        rows.push({
+          k: 'Peso de los impuestos en el precio final',
+          ref: '(ICE más IVA) ÷ precio final',
+          v: total > 0 ? ((ice + iva) / total) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+
+        return {
+          total: usd(ice),
+          sub: cat.label + ' · tarifa ' + tarifaTxt + ' · con el IVA encima, el precio final llega a ' + usd(total),
+          rows: rows,
+          decimals: 2,
+          chart: [
+            { label: 'Precio sin impuestos', value: Math.round(baseIce * 100) / 100, tone: 'main' },
+            { label: 'ICE', value: Math.round(ice * 100) / 100, tone: 'bad' },
+            { label: 'IVA', value: Math.round(iva * 100) / 100, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ---------- Importación ----------
+      if (id === 'importacion') {
+        const esCourier = String(v.regimenImport || '4x4') === '4x4';
+        const cif = monto + fleteSeguro;
+        const fodinfa = cif * FODINFA;
+        const arancel = esCourier ? ARANCEL_4X4 : cif * adv;
+        const iva = esCourier ? 0 : (cif + arancel + fodinfa) * IVA;
+        const tributos = arancel + fodinfa + iva;
+        const total = cif + tributos;
+
+        rows.push({ k: 'Valor de la mercancía (FOB)', ref: 'Lo que pagaste por el producto', v: monto, decimals: 2 });
+        rows.push({ k: 'Flete y seguro internacional', ref: 'Se suman a la base gravada', v: fleteSeguro, decimals: 2 });
+        rows.push({ k: 'CIF: base de todos los tributos', ref: 'FOB más flete más seguro', v: cif, decimals: 2 });
+        rows.push({
+          k: 'Arancel',
+          ref: esCourier ? 'Tarifa fija del régimen courier 4x4' : pct(adv) + ' ad-valorem sobre el CIF',
+          v: arancel,
+          decimals: 2,
+        });
+        rows.push({ k: 'FODINFA', ref: pct(FODINFA) + ' del CIF', v: fodinfa, decimals: 2 });
+        rows.push({
+          k: 'IVA de importación',
+          ref: esCourier ? 'El régimen 4x4 no paga IVA' : pct(IVA) + ' sobre CIF más arancel más FODINFA',
+          v: iva,
+          decimals: 2,
+        });
+        rows.push({ k: 'Total de tributos', ref: 'Arancel más FODINFA más IVA', v: tributos, extra: true, decimals: 2 });
+        rows.push({ k: 'Costo total nacionalizado', ref: 'CIF más tributos', v: total, decimals: 2 });
+        rows.push({
+          k: 'Cuánto encarece la aduana tu compra',
+          ref: 'Tributos ÷ valor de la mercancía',
+          v: monto > 0 ? (tributos / monto) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        if (esCourier && monto > LIMITE_4X4_FOB) {
+          rows.push({ k: 'Cuánto pasaste el límite del régimen 4x4', ref: 'Sobre ' + usd(LIMITE_4X4_FOB) + ' FOB entra como importación general', v: monto - LIMITE_4X4_FOB, decimals: 2 });
+        }
+
+        return {
+          total: usd(tributos),
+          sub:
+            (esCourier
+              ? 'Courier 4x4: arancel fijo de ' + usd(ARANCEL_4X4) + ' más FODINFA, sin IVA'
+              : 'Importación general: ad-valorem, FODINFA e IVA sobre el CIF') +
+            ' · costo total nacionalizado ' + usd(total) +
+            (esCourier && monto > LIMITE_4X4_FOB ? ' · ojo: este paquete supera el límite del régimen' : ''),
+          rows: rows,
+          decimals: 2,
+          chart: [
+            { label: 'Mercancía, flete y seguro (CIF)', value: Math.round(cif * 100) / 100, tone: 'main' },
+            { label: 'Arancel y FODINFA', value: Math.round((arancel + fodinfa) * 100) / 100, tone: 'bad' },
+            { label: 'IVA de importación', value: Math.round(iva * 100) / 100, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ---------- ISD ----------
+      if (id === 'isd') {
+        const tipo = String(v.isdTipo || 'tarjeta');
+        const cupo = tipo === 'tarjeta' ? ISD_EXENTO_TARJETA : tipo === 'transferencia' ? ISD_EXENTO_TRANSF : 0;
+        const usado = tipo === 'tarjeta' ? Math.min(isdUsado, cupo) : 0;
+        const disponible = Math.max(0, cupo - usado);
+        const exento = Math.min(monto, disponible);
+        const gravado = Math.max(0, monto - disponible);
+        const isd = gravado * ISD_TARIFA;
+        const total = monto + isd;
+
+        rows.push({ k: 'Monto que sale del país', ref: tipo === 'tarjeta' ? 'Consumo o retiro con tarjeta' : tipo === 'transferencia' ? 'Transferencia o efectivo' : 'Operación sin exención', v: monto, decimals: 2 });
+        rows.push({
+          k: 'Cupo exento que te corresponde',
+          ref: tipo === 'tarjeta' ? 'Cupo anual con tarjeta' : tipo === 'transferencia' ? '3 SBU' : 'Esta operación no tiene exención',
+          v: cupo,
+          decimals: 2,
+        });
+        if (tipo === 'tarjeta') {
+          rows.push({ k: 'Cupo ya consumido en el año', ref: 'Acumulado entre todas tus tarjetas', v: usado, decimals: 2 });
+          rows.push({ k: 'Cupo exento que te queda disponible', ref: 'Antes de esta operación', v: disponible, decimals: 2 });
+        }
+        rows.push({ k: 'Parte exenta de esta operación', ref: 'No paga ISD', v: exento, decimals: 2 });
+        rows.push({ k: 'Base gravada', ref: 'Lo que excede el cupo', v: gravado, decimals: 2 });
+        rows.push({ k: 'ISD a pagar', ref: pct(ISD_TARIFA) + ' sobre la base gravada', v: isd, extra: true, decimals: 2 });
+        rows.push({ k: 'Costo total de la operación', ref: 'Monto más ISD', v: total, decimals: 2 });
+        rows.push({
+          k: 'Tasa efectiva sobre el monto',
+          ref: 'ISD ÷ monto de la operación',
+          v: monto > 0 ? (isd / monto) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        if (tipo === 'tarjeta') {
+          rows.push({ k: 'Cupo exento que te queda después de esta compra', ref: 'Para el resto del año', v: Math.max(0, disponible - exento), decimals: 2 });
+        }
+
+        return {
+          total: usd(isd),
+          sub:
+            isd <= 0
+              ? 'Esta operación queda dentro del cupo exento: no paga ISD · te quedan ' + usd(Math.max(0, disponible - monto)) + ' de margen'
+              : usd(gravado) + ' quedan gravados al ' + pct(ISD_TARIFA) + ' · el ISD suma ' + usd(isd) + ' y la operación te cuesta ' + usd(total),
+          rows: rows,
+          decimals: 2,
+          chart: [
+            { label: 'Parte exenta', value: Math.round(exento * 100) / 100, tone: 'good' },
+            { label: 'Base gravada', value: Math.round(gravado * 100) / 100, tone: 'main' },
+            { label: 'ISD', value: Math.round(isd * 100) / 100, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ---------- Devolución de IVA ----------
+      if (id === 'devolucion') {
+        const b = DEV_BENEF.find((x) => x.id === v.beneficiario) || DEV_BENEF[0];
+        const topeBase = IVA * DEV_SBU * SBU;
+        const tope = topeBase * b.factor;
+        const ivaPagado = monto * (IVA / (1 + IVA));
+        const devolucion = Math.min(ivaPagado, tope);
+
+        rows.push({ k: 'Compras del mes con IVA incluido', ref: 'Total facturado a tu nombre', v: monto, decimals: 2 });
+        rows.push({ k: 'IVA contenido en esas compras', ref: 'Total × 0,15 ÷ 1,15', v: ivaPagado, decimals: 2 });
+        rows.push({ k: 'Tope mensual base', ref: pct(IVA) + ' sobre ' + DEV_SBU + ' SBU', v: topeBase, decimals: 2 });
+        rows.push({ k: 'Tope que te corresponde', ref: b.label, v: tope, extra: true, decimals: 2 });
+        rows.push({ k: 'Devolución del mes', ref: 'El menor entre el IVA pagado y el tope', v: devolucion, decimals: 2 });
+        if (ivaPagado > tope) {
+          rows.push({ k: 'IVA que excede el tope y no se devuelve', ref: 'Se pierde en el mes', v: ivaPagado - tope, decimals: 2 });
+        }
+        rows.push({ k: 'Devolución anual si repites el mismo mes', ref: 'Devolución mensual × 12', v: devolucion * 12, decimals: 2 });
+        rows.push({
+          k: 'Cuánto del tope estás aprovechando',
+          ref: 'Devolución ÷ tope mensual',
+          v: tope > 0 ? (devolucion / tope) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+
+        return {
+          total: usd(devolucion),
+          sub:
+            b.label + ' · sobre compras por ' + usd(monto) + ' pagaste ' + usd(ivaPagado) + ' de IVA y te devuelven ' +
+            usd(devolucion) + (ivaPagado > tope ? ' (llegaste al tope mensual)' : ''),
+          rows: rows,
+          decimals: 2,
+          chart: [
+            { label: 'Lo que te devuelven', value: Math.round(devolucion * 100) / 100, tone: 'good' },
+            { label: 'IVA que excede el tope', value: Math.round(Math.max(0, ivaPagado - tope) * 100) / 100, tone: 'warn' },
+            { label: 'Compras sin el componente de IVA', value: Math.round((monto - ivaPagado) * 100) / 100, tone: 'main' },
+          ],
+        };
+      }
+
+      // ---------- Compra local con IVA (caso por defecto) ----------
+      const iva = monto * IVA;
+      const total = monto + iva;
+      const baseSiIncluia = monto / (1 + IVA);
+      const ivaSiIncluia = monto - baseSiIncluia;
+
+      rows.push({ k: 'Valor del bien o servicio', ref: 'Base imponible, sin IVA', v: monto, decimals: 2 });
+      rows.push({ k: 'IVA', ref: pct(IVA) + ' sobre la base', v: iva, extra: true, decimals: 2 });
+      rows.push({ k: 'Precio final con IVA', ref: 'Base más IVA', v: total, decimals: 2 });
+      rows.push({ k: 'Si ese monto YA incluía IVA: base imponible', ref: 'Monto ÷ 1,15', v: baseSiIncluia, decimals: 2 });
+      rows.push({ k: 'Si ese monto YA incluía IVA: IVA contenido', ref: 'Monto menos la base', v: ivaSiIncluia, decimals: 2 });
+      rows.push({ k: 'Diferencia entre sumar y quitar el IVA', ref: 'Por qué no da lo mismo restar el 15%', v: iva - ivaSiIncluia, decimals: 2 });
+      rows.push({
+        k: 'Peso del IVA en el precio final',
+        ref: 'IVA ÷ precio con IVA',
+        v: total > 0 ? (iva / total) * 100 : 0,
+        format: 'unit',
+        unit: '%',
+        decimals: 2,
+      });
+
+      return {
+        total: usd(iva),
+        sub: 'Sobre ' + usd(monto) + ' sin IVA, el precio final es ' + usd(total) + ' · si ese mismo monto ya incluía IVA, la base sería ' + usd(baseSiIncluia),
+        rows: rows,
+        decimals: 2,
+        chart: [
+          { label: 'Base imponible', value: Math.round(monto * 100) / 100, tone: 'main' },
+          { label: 'IVA ' + pct(IVA), value: Math.round(iva * 100) / 100, tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

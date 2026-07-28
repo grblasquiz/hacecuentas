@@ -1,0 +1,187 @@
+---
+/**
+ * Hub de decisión ES — costes de tener coche. Reemplaza 5 calculadoras sueltas.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  IVTM_TARIFAS,
+  IVTM_COEFICIENTES,
+  ITV,
+  TASAS_DGT,
+  MANTENIMIENTO_POR_KM,
+} from '../../../lib/hubs/es/costes-del-coche';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/es' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="ES"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ TAR: IVTM_TARIFAS, COEF: IVTM_COEFICIENTES, ITV: ITV, TASAS: TASAS_DGT, MANT: MANTENIMIENTO_POR_KM }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n) => Math.round(n || 0).toLocaleString('es-ES') + ' €';
+    const eur2 = (n) => (n || 0).toFixed(2).replace('.', ',') + ' €';
+
+    const ITV_TARIFAS = {
+      'gasolina-menor1600': ITV.turismoGasolinaMenor1600,
+      'gasolina-mayor1600': ITV.turismoGasolinaMayor1600,
+      'diesel-menor1600': ITV.turismoDieselMenor1600,
+      'diesel-mayor1600': ITV.turismoDieselMayor1600,
+      moto: ITV.moto,
+    };
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'anual';
+      const cv = String(v.cvFiscales || '8a12');
+      const muni = COEF[String(v.municipio || 'madrid')] || COEF.madrid;
+      const tipoVehiculo = String(v.tipoVehiculo || 'gasolina-menor1600');
+      const ccaaItv = String(v.ccaaItv || 'referencia');
+      const seguro = Math.max(0, v.seguro || 0);
+      const km = Math.max(0, v.kmAnuales || 0);
+      const consumo = Math.max(0, v.consumo || 0);
+      const precioCarburante = Math.max(0, v.precioCarburante || 0);
+      const peajes = Math.max(0, v.peajes || 0);
+      const valorFiscal = Math.max(0, v.valorFiscal || 0);
+      const tipoItp = Math.max(0, v.tipoItp || 0) / 100;
+
+      const ivtm = (TAR[cv] || TAR['8a12']) * muni.coef;
+      const factorItv = ITV.ccaaFactor[ccaaItv] != null ? ITV.ccaaFactor[ccaaItv] : 1;
+      const itvTarifa = (ITV_TARIFAS[tipoVehiculo] || ITV.turismoGasolinaMenor1600) * factorItv + ITV.tasaDGT;
+      const itvAnualizada = itvTarifa / 2;
+
+      const litros = (km * consumo) / 100;
+      const combustible = litros * precioCarburante;
+      const mantenimiento = km * MANT;
+
+      const fijos = ivtm + seguro + itvAnualizada;
+      const variables = combustible + mantenimiento + peajes;
+      const totalAnual = fijos + variables;
+      const porKm = km > 0 ? totalAnual / km : 0;
+
+      const itp = valorFiscal * tipoItp;
+      const tasaDgt = tipoVehiculo === 'moto' ? TASAS.moto : TASAS.coche;
+
+      const rows = [
+        { k: 'Impuesto de circulación (IVTM)', ref: muni.nombre + ' · coeficiente ' + String(muni.coef).replace('.', ','), v: ivtm },
+        { k: 'Seguro anual', ref: 'La prima que has indicado', v: seguro },
+        { k: 'ITV', ref: 'Tarifa más tasa de tráfico', v: itvTarifa },
+        { k: 'ITV prorrateada al año', ref: 'Periodicidad de dos años', v: itvAnualizada },
+        { k: 'Costes fijos del año', ref: 'Se pagan aunque no uses el coche', v: fijos, extra: true },
+        {
+          k: 'Combustible',
+          ref: consumo.toFixed(1).replace('.', ',') + ' l/100 km · ' + eur2(precioCarburante) + '/l',
+          v: combustible,
+        },
+        { k: 'Litros al año', ref: 'Según consumo y kilómetros', v: litros, format: 'unit', unit: 'litros' },
+        { k: 'Mantenimiento y neumáticos', ref: eur2(MANT) + ' por km', v: mantenimiento },
+        { k: 'Peajes', ref: 'Los que has indicado', v: peajes },
+        { k: 'Costes variables del año', ref: 'Dependen de los kilómetros', v: variables, extra: true },
+        { k: 'Coste total del año', ref: 'Sin contar depreciación', v: totalAnual, extra: true },
+        { k: 'Coste mensual', ref: 'Total anual ÷ 12', v: totalAnual / 12 },
+        { k: 'Coste por kilómetro', ref: km + ' km al año', v: porKm, decimals: 3, extra: true },
+        {
+          k: 'Peso de los costes fijos',
+          ref: 'Sobre el total anual',
+          v: totalAnual > 0 ? (fijos / totalAnual) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        },
+      ];
+
+      if (id === 'transferencia') {
+        rows.push({ k: 'Valor fiscal del vehículo', ref: 'Tablas de Hacienda, no el precio pagado', v: valorFiscal });
+        rows.push({
+          k: 'ITP de la transferencia',
+          ref: (tipoItp * 100).toFixed(1).replace('.', ',') + '% del valor fiscal',
+          v: itp,
+          extra: true,
+        });
+        rows.push({ k: 'Tasa de la DGT por cambio de titularidad', ref: 'Tasa de tráfico', v: tasaDgt });
+        rows.push({ k: 'Coste total de comprarlo', ref: 'ITP más tasa', v: itp + tasaDgt, extra: true });
+      }
+
+      const chart = [
+        { label: 'Combustible', value: Math.round(combustible), tone: 'main' },
+        { label: 'Seguro', value: Math.round(seguro), tone: 'prop' },
+        { label: 'Mantenimiento', value: Math.round(mantenimiento), tone: 'warn' },
+        { label: 'Impuesto e ITV', value: Math.round(ivtm + itvAnualizada), tone: 'bad' },
+        { label: 'Peajes', value: Math.round(peajes), tone: 'good' },
+      ].filter(function (s) {
+        return s.value > 0;
+      });
+
+      const principal = id === 'transferencia' ? itp + tasaDgt : totalAnual;
+      const sub =
+        id === 'transferencia'
+          ? 'Comprar ese coche de segunda mano cuesta ' +
+            eur(itp + tasaDgt) +
+            ' en impuestos y tasas: ' +
+            eur(itp) +
+            ' de ITP sobre el valor fiscal y ' +
+            eur2(tasaDgt) +
+            ' de tasa de tráfico'
+          : 'Tener el coche cuesta ' +
+            eur(totalAnual) +
+            ' al año (' +
+            eur(totalAnual / 12) +
+            ' al mes) · cada kilómetro sale a ' +
+            porKm.toFixed(3).replace('.', ',') +
+            ' €';
+
+      return {
+        total: eur(principal),
+        sub: sub,
+        rows: rows,
+        chart: chart,
+        format: 'unit',
+        unit: '€',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

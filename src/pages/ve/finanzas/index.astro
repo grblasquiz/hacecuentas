@@ -1,0 +1,46 @@
+---
+/**
+ * Silo Finanzas · Venezuela — índice de hubs de decisión del mercado VE.
+ * El listado sale del registry, no a mano.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import SiloIndex from '../../../components/hub/SiloIndex.astro';
+import { hubsOfSilo } from '../../../lib/hubs/registry';
+
+const HREF = '/ve/finanzas';
+const SILO = 'Finanzas';
+const LEDE =
+  'Dólar BCV y paralelo, remesas, USDT, reconversiones del bolívar y cuánto vale realmente tu ingreso: las cuentas que en Venezuela hay que rehacer cada semana, con la tasa siempre editable.';
+const hubs = hubsOfSilo(HREF);
+const CANONICAL = `https://hacecuentas.com${HREF}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `${SILO} en Venezuela`,
+  description: LEDE,
+  url: CANONICAL,
+  hasPart: hubs.map((h) => ({
+    '@type': 'WebPage',
+    name: h.h1,
+    url: `https://hacecuentas.com/${h.slug}`,
+  })),
+};
+---
+
+<Layout
+  title={`Finanzas en Venezuela — dólar, bolívares y remesas | Hacé Cuentas`}
+  description={LEDE}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="VE"
+  lang="es"
+>
+  <Header />
+  <SiloIndex silo={SILO} href={HREF} lede={LEDE} hubs={hubs} />
+  <Footer />
+</Layout>

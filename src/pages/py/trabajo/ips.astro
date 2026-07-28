@@ -1,0 +1,226 @@
+---
+/**
+ * Hub de decisión PY — "¿Cuánto aportás al IPS y qué te devuelve?".
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, IPS, SMVM, DIAS_MES, JUBILACION, MATERNIDAD } from '../../../lib/hubs/py/ips';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PY"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ IPS, SMVM, DIAS_MES, JUBILACION, MATERNIDAD }}>
+  (function () {
+    const H = window.HC_HUB;
+    const gs = (n) => 'Gs. ' + Math.round(n || 0).toLocaleString('de-DE');
+
+    // Modalidades del IPS, en el mismo orden de prelación que usa la fórmula original.
+    function modalidad(edad, aniosAporte) {
+      const J = JUBILACION;
+      if (edad >= J.ordinaria.edad && aniosAporte >= J.ordinaria.anios) {
+        return { nombre: 'Ordinaria', pct: J.ordinaria.pct, cumple: true, estimada: false };
+      }
+      if (edad >= J.anticipada.edad && aniosAporte >= J.anticipada.anios) {
+        const extra = Math.max(0, Math.min(edad, J.anticipada.edadTope - 1) - J.anticipada.edad);
+        return {
+          nombre: 'Anticipada',
+          pct: Math.min(1, J.anticipada.pctBase + J.anticipada.pctPorAnio * extra),
+          cumple: true,
+          estimada: false,
+        };
+      }
+      if (edad >= J.proporcional.edad && aniosAporte >= J.proporcional.anios) {
+        return {
+          nombre: 'Proporcional',
+          pct: J.proporcional.pctReferencia * (aniosAporte / J.proporcional.referenciaAnios),
+          cumple: true,
+          estimada: true,
+        };
+      }
+      return { nombre: 'Todavía no cumplís los requisitos', pct: 0, cumple: false, estimada: false };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'aportes';
+      const salario = Math.max(0, v.salario || 0);
+      const empleados = Math.max(1, Math.round(v.empleados || 1));
+      const edad = Math.max(0, Math.round(v.edad || 0));
+      const aniosAporte = Math.max(0, Math.round(v.aniosAporte || 0));
+      const promedio = Math.max(0, v.promedio || 0);
+
+      const obrero = salario * IPS.obrero;
+      const patronal = salario * IPS.patronal;
+      const patronalIps = salario * IPS.patronalIps;
+      const patronalSalud = salario * IPS.patronalSalud;
+      const totalAporte = obrero + patronal;
+      const costoEmpleador = salario + patronal;
+      const planilla = costoEmpleador * empleados;
+
+      const m = modalidad(edad, aniosAporte);
+      const haber = promedio * m.pct;
+
+      const salarioDiario = salario / DIAS_MES;
+      const subsidioMaternidad = salarioDiario * MATERNIDAD.diasReposo * MATERNIDAD.pct;
+      const cuotaMaternidad = subsidioMaternidad / MATERNIDAD.cuotas;
+
+      const rows = [
+        { k: 'Salario bruto declarado', ref: 'Base de todos los aportes', v: salario },
+        {
+          k: 'Aporte obrero (se descuenta de tu recibo)',
+          ref: (IPS.obrero * 100).toFixed(0) + '%',
+          v: obrero,
+        },
+        {
+          k: 'Aporte patronal al IPS',
+          ref: (IPS.patronalIps * 100).toFixed(0) + '% · lo paga la empresa',
+          v: patronalIps,
+        },
+        {
+          k: 'Aporte patronal a Salud Pública',
+          ref: (IPS.patronalSalud * 100).toLocaleString('de-DE') + '% · lo paga la empresa',
+          v: patronalSalud,
+        },
+        {
+          k: 'Total que entra a tu nombre cada mes',
+          ref: ((IPS.obrero + IPS.patronal) * 100).toLocaleString('de-DE') + '% del salario',
+          v: totalAporte,
+          extra: true,
+        },
+        {
+          k: 'Costo mensual del puesto para la empresa',
+          ref: 'Bruto + patronal · sin aguinaldo ni vacaciones',
+          v: costoEmpleador,
+        },
+      ];
+
+      if (empleados > 1) {
+        rows.push({
+          k: 'Costo de la planilla (' + empleados + ' empleados)',
+          ref: 'Costo del puesto × cantidad',
+          v: planilla,
+        });
+      }
+
+      rows.push({
+        k: 'Aporte que vas a haber hecho en un año',
+        ref: 'Obrero × 12',
+        v: obrero * 12,
+      });
+      rows.push({
+        k: 'Modalidad jubilatoria que te corresponde hoy',
+        ref: m.cumple
+          ? m.nombre + (m.estimada ? ' · porcentaje orientativo' : '')
+          : 'Ordinaria: ' + JUBILACION.ordinaria.edad + ' años y ' + JUBILACION.ordinaria.anios + ' de aportes',
+        v: m.pct * 100,
+        format: 'unit',
+        unit: '% del promedio',
+      });
+      rows.push({
+        k: m.cumple ? 'Haber jubilatorio estimado' : 'Haber si hoy cumplieras los requisitos',
+        ref: 'Sobre el promedio de los últimos ' + JUBILACION.mesesPromedio + ' salarios',
+        v: m.cumple ? haber : promedio * JUBILACION.ordinaria.pct,
+      });
+      rows.push({
+        k: 'Años de aporte que te faltan para la ordinaria',
+        ref: JUBILACION.ordinaria.anios + ' años exigidos',
+        v: Math.max(0, JUBILACION.ordinaria.anios - aniosAporte),
+        format: 'unit',
+        unit: 'años',
+      });
+      rows.push({
+        k: 'Años de edad que te faltan para la ordinaria',
+        ref: JUBILACION.ordinaria.edad + ' años exigidos',
+        v: Math.max(0, JUBILACION.ordinaria.edad - edad),
+        format: 'unit',
+        unit: 'años',
+      });
+      rows.push({
+        k: 'Subsidio de maternidad del IPS',
+        ref: MATERNIDAD.diasReposo + ' días al 100% · ' + MATERNIDAD.semanas + ' semanas',
+        v: subsidioMaternidad,
+      });
+      rows.push({
+        k: 'Cada cuota del subsidio de maternidad',
+        ref: MATERNIDAD.cuotas + ' cuotas',
+        v: cuotaMaternidad,
+      });
+      rows.push({
+        k: 'Tu salario medido en salarios mínimos',
+        ref: 'SMVM ' + gs(SMVM),
+        v: SMVM > 0 ? salario / SMVM : 0,
+        format: 'unit',
+        unit: 'SMVM',
+        decimals: 2,
+      });
+
+      const total =
+        id === 'empleador' ? (empleados > 1 ? planilla : costoEmpleador)
+        : id === 'jubilacion' ? (m.cumple ? haber : promedio * JUBILACION.ordinaria.pct)
+        : id === 'maternidad' ? subsidioMaternidad
+        : totalAporte;
+
+      const sub =
+        id === 'empleador'
+          ? 'Cada empleado cuesta ' + gs(costoEmpleador) + ' por mes · el patronal agrega ' + gs(patronal)
+          : id === 'jubilacion'
+            ? (m.cumple
+                ? 'Accedés a la jubilación ' + m.nombre.toLowerCase() + ': ' + (m.pct * 100).toFixed(0) + '% del promedio' + (m.estimada ? ' (orientativo)' : '')
+                : 'Todavía no cumplís: te faltan ' + Math.max(0, JUBILACION.ordinaria.anios - aniosAporte) + ' años de aporte y ' + Math.max(0, JUBILACION.ordinaria.edad - edad) + ' de edad')
+            : id === 'maternidad'
+              ? MATERNIDAD.semanas + ' semanas al 100% · ' + MATERNIDAD.cuotas + ' cuotas de ' + gs(cuotaMaternidad)
+              : 'Vos ponés ' + gs(obrero) + ' y tu empleador ' + gs(patronal) + ' · el puesto cuesta ' + gs(costoEmpleador);
+
+      return {
+        total: gs(total),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Lo que ponés vos (aporte obrero)', value: Math.round(obrero), tone: 'main' },
+          { label: 'Patronal al IPS', value: Math.round(patronalIps), tone: 'good' },
+          { label: 'Patronal a Salud Pública', value: Math.round(patronalSalud), tone: 'prop' },
+        ],
+      };
+    });
+  })();
+</script>

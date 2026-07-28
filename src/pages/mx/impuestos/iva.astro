@@ -1,0 +1,142 @@
+---
+/**
+ * Hub de decisión MX — IVA: calcularlo sobre un monto, declararlo y elegir la tasa.
+ * audience="MX" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, IVA_MX } from '../../../lib/hubs/mx/iva';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="MX"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ IVA: IVA_MX }}>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+
+    /** Tasa decimal a partir del valor del select. 'exento' se trata como 0 sin acreditamiento. */
+    function tasaDe(valor) {
+      if (valor === 'exento') return { tasa: 0, exento: true, label: 'exento' };
+      const n = Number(valor);
+      if (n === 8) return { tasa: IVA.frontera, exento: false, label: '8% región fronteriza' };
+      if (n === 0) return { tasa: IVA.tasaCero, exento: false, label: 'tasa 0%' };
+      return { tasa: IVA.general, exento: false, label: '16% general' };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'monto';
+      const monto = Math.max(0, v.monto || 0);
+      const t = tasaDe(v.tasa);
+
+      // ── Caso 2: declaración mensual ────────────────────────────────────
+      if (id === 'declaracion') {
+        const trasladado = Math.max(0, v.trasladado || 0);
+        const acreditable = Math.max(0, v.acreditable || 0);
+        const retenido = Math.max(0, v.retenido || 0);
+        const saldoAnterior = Math.max(0, v.saldoAnterior || 0);
+
+        const cargo = trasladado - acreditable;
+        const saldo = cargo - retenido - saldoAnterior;
+        const aPagar = Math.max(0, saldo);
+        const aFavor = Math.max(0, -saldo);
+
+        return {
+          total: aPagar > 0 ? mxn(aPagar) : mxn(aFavor),
+          sub:
+            aPagar > 0
+              ? 'IVA a pagar del período. Se presenta a más tardar el día 17 del mes siguiente.'
+              : 'Saldo a favor del período: lo puedes acreditar el mes que viene, compensarlo o pedirlo en devolución.',
+          rows: [
+            { k: 'IVA trasladado cobrado', ref: 'LIVA Art. 1', v: trasladado },
+            { k: 'IVA acreditable pagado', ref: 'LIVA Arts. 4 y 5', v: acreditable },
+            { k: 'Impuesto a cargo antes de retenciones', v: cargo },
+            { k: 'IVA que te retuvieron', v: retenido },
+            { k: 'Saldo a favor de meses anteriores', v: saldoAnterior },
+            { k: 'IVA a pagar', v: aPagar, extra: true },
+            { k: 'Saldo a favor del período', v: aFavor },
+          ],
+          chart: [
+            { label: 'IVA acreditable', value: acreditable, tone: 'good' },
+            { label: 'Retenciones y saldo previo', value: retenido + saldoAnterior, tone: 'prop' },
+            { label: aPagar > 0 ? 'IVA a pagar' : 'Saldo a favor', value: aPagar > 0 ? aPagar : aFavor, tone: aPagar > 0 ? 'warn' : 'good' },
+          ],
+        };
+      }
+
+      // ── Casos 1 y 3: IVA de un monto y comparación de tasas ────────────
+      const esExtraer = v.direccion === 'extraer';
+      const subtotal = esExtraer ? monto / (1 + t.tasa) : monto;
+      const iva = subtotal * t.tasa;
+      const total = subtotal + iva;
+
+      const ivaGeneral = subtotal * IVA.general;
+      const ivaFrontera = subtotal * IVA.frontera;
+
+      return {
+        total: mxn(iva),
+        sub:
+          'IVA a la ' + t.label + ' sobre un subtotal de ' + mxn(subtotal) + '. Total con impuesto: ' + mxn(total) + '.' +
+          (t.exento
+            ? ' Al ser un acto exento no cobras IVA, pero tampoco puedes acreditar el que pagaste en tus compras: se te vuelve costo.'
+            : Number(v.tasa) === 0
+              ? ' A tasa 0% no cobras IVA y sí puedes acreditar el que pagaste, así que es habitual que te quede saldo a favor.'
+              : ''),
+        rows: [
+          { k: 'Subtotal sin IVA', v: subtotal, decimals: 2 },
+          { k: 'IVA de la operación', ref: t.label, v: iva, decimals: 2, extra: true },
+          { k: 'Total con IVA', v: total, decimals: 2 },
+          { k: 'Tasa aplicada', v: t.tasa * 100, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Mismo monto a la tasa general del 16%', v: ivaGeneral, decimals: 2 },
+          { k: 'Mismo monto a la tasa de frontera del 8%', v: ivaFrontera, decimals: 2 },
+          { k: 'Lo que te ahorra la tasa de frontera', v: ivaGeneral - ivaFrontera, decimals: 2 },
+        ],
+        chart: [
+          { label: 'Subtotal', value: subtotal, tone: 'main' },
+          { label: 'IVA', value: iva, tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

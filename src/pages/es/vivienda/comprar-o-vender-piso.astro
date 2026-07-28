@@ -1,0 +1,276 @@
+---
+/**
+ * Hub de decisión ES — impuestos de comprar o vender vivienda.
+ * Reemplaza 4 calculadoras sueltas.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  ITP_TIPOS,
+  IVA_VIVIENDA,
+  COEF_PLUSVALIA,
+  ESCALA_AHORRO,
+  GASTOS_NOTARIA_PCT,
+} from '../../../lib/hubs/es/comprar-o-vender-piso';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/es' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="ES"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ ITP: ITP_TIPOS, IVA: IVA_VIVIENDA, COEF: COEF_PLUSVALIA, AHORRO: ESCALA_AHORRO, GASTOS: GASTOS_NOTARIA_PCT }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n) => Math.round(n || 0).toLocaleString('es-ES') + ' €';
+
+    function escala(base, tramos) {
+      if (!(base > 0)) return 0;
+      let cuota = 0;
+      let prev = 0;
+      for (const par of tramos) {
+        const limite = par[0] == null ? Infinity : par[0];
+        if (base > prev) {
+          cuota += (Math.min(base, limite) - prev) * par[1];
+          prev = limite;
+          if (base <= limite) break;
+        }
+      }
+      return cuota;
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'segunda_mano';
+      const precio = Math.max(0, v.precio || 0);
+      const region = ITP[String(v.ccaa || 'MAD')] || ITP.MAD;
+      const reducido = String(v.tipoReducido || 'no') === 'si';
+      const precioCompra = Math.max(0, v.precioCompra || 0);
+      const gastosCompra = Math.max(0, v.gastosCompra || 0);
+      const anios = Math.max(0, Math.min(20, Math.round(v.anios || 0)));
+      const valorSuelo = Math.max(0, v.valorSuelo || 0);
+      const tipoPlusvalia = Math.max(0, Math.min(30, v.tipoPlusvalia || 0)) / 100;
+      const metros = Math.max(1, v.metros || 1);
+      const precioM2 = Math.max(0, v.precioM2 || 0);
+
+      const gastosNotaria = precio * GASTOS;
+      const tasacion = metros * precioM2;
+      const rows = [];
+      let total = 0;
+      let chart = [];
+      let sub = '';
+
+      if (id === 'vendo') {
+        // ── Plusvalía municipal por los dos métodos ─────────────────
+        const coef = COEF[String(anios)] != null ? COEF[String(anios)] : 0.45;
+        const baseObjetiva = valorSuelo * coef;
+        const cuotaObjetiva = baseObjetiva * tipoPlusvalia;
+
+        const gananciaBruta = precio - precioCompra;
+        const proporcionSuelo = precioCompra > 0 ? Math.min(1, valorSuelo / precioCompra) : 0;
+        const baseReal = Math.max(0, gananciaBruta * proporcionSuelo);
+        const cuotaReal = baseReal * tipoPlusvalia;
+
+        const hayIncremento = gananciaBruta > 0;
+        const plusvalia = !hayIncremento ? 0 : Math.min(cuotaObjetiva, cuotaReal);
+        const metodo = !hayIncremento
+          ? 'Sin incremento de valor: no se paga'
+          : cuotaReal <= cuotaObjetiva
+            ? 'Método real (te sale menor)'
+            : 'Método objetivo (te sale menor)';
+
+        // ── Ganancia patrimonial en el IRPF ─────────────────────────
+        const valorAdquisicion = precioCompra + gastosCompra;
+        const valorTransmision = precio - plusvalia - gastosNotaria * 0.3;
+        const ganancia = Math.max(0, valorTransmision - valorAdquisicion);
+        const irpf = escala(ganancia, AHORRO);
+
+        total = plusvalia + irpf;
+
+        rows.push({ k: 'Precio de venta', ref: 'Lo que te pagan', v: precio });
+        rows.push({ k: 'Valor catastral del suelo', ref: 'Del recibo del IBI', v: valorSuelo });
+        rows.push({
+          k: 'Coeficiente del método objetivo',
+          ref: anios + ' año(s) de tenencia',
+          v: coef * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 0,
+        });
+        rows.push({ k: 'Plusvalía por el método objetivo', ref: 'Valor del suelo × coeficiente × tipo', v: cuotaObjetiva });
+        rows.push({ k: 'Plusvalía por el método real', ref: 'Ganancia × proporción de suelo × tipo', v: cuotaReal });
+        rows.push({ k: 'Plusvalía municipal a pagar', ref: metodo, v: plusvalia, extra: true });
+        rows.push({ k: 'Valor de adquisición', ref: 'Precio de compra más gastos', v: valorAdquisicion });
+        rows.push({ k: 'Ganancia patrimonial', ref: 'Venta menos adquisición y gastos', v: ganancia });
+        rows.push({ k: 'IRPF de la ganancia', ref: 'Base del ahorro, del 19% al 28%', v: irpf, extra: true });
+        rows.push({ k: 'Total de impuestos de la venta', ref: 'Plusvalía más IRPF', v: total, extra: true });
+        rows.push({ k: 'Te queda de la venta', ref: 'Precio menos impuestos', v: precio - total });
+        rows.push({
+          k: 'Ahorro por elegir el método bueno',
+          ref: 'Diferencia entre los dos métodos',
+          v: hayIncremento ? Math.abs(cuotaObjetiva - cuotaReal) : cuotaObjetiva,
+        });
+
+        chart = [
+          { label: 'Te queda a ti', value: Math.round(precio - total), tone: 'main' },
+          { label: 'Plusvalía municipal', value: Math.round(plusvalia), tone: 'warn' },
+          { label: 'IRPF de la ganancia', value: Math.round(irpf), tone: 'bad' },
+        ];
+        sub =
+          'Vendiendo por ' +
+          eur(precio) +
+          ' pagarías ' +
+          eur(plusvalia) +
+          ' de plusvalía municipal (' +
+          metodo.toLowerCase() +
+          ') y ' +
+          eur(irpf) +
+          ' de IRPF: te quedan ' +
+          eur(precio - total);
+      } else if (id === 'obra_nueva') {
+        const iva = precio * IVA.nueva;
+        const ajd = precio * region.ajd;
+        total = iva + ajd + gastosNotaria;
+
+        rows.push({ k: 'Precio de la vivienda', ref: 'Obra nueva', v: precio });
+        rows.push({ k: 'IVA', ref: Math.round(IVA.nueva * 100) + '% de vivienda nueva', v: iva, extra: true });
+        rows.push({
+          k: 'Actos Jurídicos Documentados',
+          ref: (region.ajd * 100).toFixed(2).replace('.', ',') + '% en ' + region.nombre,
+          v: ajd,
+          extra: true,
+        });
+        rows.push({ k: 'Notaría, registro y gestoría', ref: 'Aproximadamente el 1,5% del precio', v: gastosNotaria });
+        rows.push({ k: 'Total de gastos e impuestos', ref: 'Lo que hay que sumar al precio', v: total, extra: true });
+        rows.push({ k: 'Desembolso total', ref: 'Precio más impuestos y gastos', v: precio + total });
+        rows.push({
+          k: 'Impuestos y gastos sobre el precio',
+          ref: 'Lo que se encarece la compra',
+          v: precio > 0 ? (total / precio) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        rows.push({ k: 'Tasación de referencia de la zona', ref: metros + ' m² × ' + eur(precioM2) + '/m²', v: tasacion });
+
+        chart = [
+          { label: 'Precio de la vivienda', value: Math.round(precio), tone: 'main' },
+          { label: 'IVA', value: Math.round(iva), tone: 'bad' },
+          { label: 'AJD', value: Math.round(ajd), tone: 'warn' },
+          { label: 'Notaría y registro', value: Math.round(gastosNotaria), tone: 'prop' },
+        ];
+        sub =
+          'Comprar obra nueva por ' +
+          eur(precio) +
+          ' en ' +
+          region.nombre +
+          ' suma ' +
+          eur(total) +
+          ' de impuestos y gastos: el desembolso real es de ' +
+          eur(precio + total);
+      } else {
+        const tipo = reducido ? region.reducido : region.general;
+        const itp = precio * tipo;
+        total = itp + gastosNotaria;
+
+        rows.push({ k: 'Precio o valor de referencia', ref: 'Se usa el mayor de los dos', v: precio });
+        rows.push({
+          k: 'Tipo de ITP aplicable',
+          ref: region.nombre + (reducido ? ' · tipo reducido' : ' · tipo general'),
+          v: tipo * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        rows.push({ k: 'ITP a pagar', ref: 'Impuesto de Transmisiones Patrimoniales', v: itp, extra: true });
+        rows.push({
+          k: 'Lo que ahorrarías con el tipo reducido',
+          ref: reducido ? 'Ya lo estás aplicando' : 'Si cumplieras los requisitos',
+          v: precio * (region.general - region.reducido),
+        });
+        rows.push({ k: 'Notaría, registro y gestoría', ref: 'Aproximadamente el 1,5% del precio', v: gastosNotaria });
+        rows.push({ k: 'Total de gastos e impuestos', ref: 'Lo que hay que sumar al precio', v: total, extra: true });
+        rows.push({ k: 'Desembolso total', ref: 'Precio más impuestos y gastos', v: precio + total });
+        rows.push({
+          k: 'Impuestos y gastos sobre el precio',
+          ref: 'Lo que se encarece la compra',
+          v: precio > 0 ? (total / precio) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        rows.push({ k: 'Tasación de referencia de la zona', ref: metros + ' m² × ' + eur(precioM2) + '/m²', v: tasacion });
+
+        chart = [
+          { label: 'Precio de la vivienda', value: Math.round(precio), tone: 'main' },
+          { label: 'ITP', value: Math.round(itp), tone: 'bad' },
+          { label: 'Notaría y registro', value: Math.round(gastosNotaria), tone: 'prop' },
+        ];
+        sub =
+          'Comprar por ' +
+          eur(precio) +
+          ' en ' +
+          region.nombre +
+          ' con un ITP del ' +
+          (tipo * 100).toFixed(2).replace('.', ',') +
+          '% suma ' +
+          eur(total) +
+          ' de impuestos y gastos: el desembolso real es de ' +
+          eur(precio + total);
+      }
+
+      return {
+        total: eur(total),
+        sub: sub,
+        rows: rows,
+        chart: chart.filter(function (s) {
+          return s.value > 0;
+        }),
+        format: 'unit',
+        unit: '€',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

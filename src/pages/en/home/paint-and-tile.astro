@@ -1,0 +1,239 @@
+---
+/**
+ * Hub de decisión EN (mercado US) — "How much paint, tile and plaster do I buy?".
+ * audience="US" y lang="en" van literales al Layout: HubData sólo modela
+ * 'AR' | 'global' y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  THINSET_LB_PER_SQFT,
+  GROUT_LB_PER_SQFT,
+  CEMENT_LB_PER_CUFT,
+  CEMENT_SACK_LB,
+  SAND_RATIO,
+  TRIM_PIECE_FT,
+  DOOR_WIDTH_FT,
+} from '../../../lib/hubs/en/paint-and-tile';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ THINSET_LB_PER_SQFT, GROUT_LB_PER_SQFT, CEMENT_LB_PER_CUFT, CEMENT_SACK_LB, SAND_RATIO, TRIM_PIECE_FT, DOOR_WIDTH_FT }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n1 = (x) => (Math.round(x * 10) / 10).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const n0 = (x) => Math.round(x).toLocaleString('en-US');
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'paint';
+      const len = Math.max(0, v.len_ft || 0);
+      const wid = Math.max(0, v.wid_ft || 0);
+      const hgt = Math.max(0, v.hgt_ft || 0);
+      const openings = Math.max(0, v.openings_sqft || 0);
+      const coverage = Math.max(1, v.coverage || 1);
+      const coats = Math.max(1, Math.round(v.coats || 1));
+      const thick = Math.max(0, v.thick_in || 0);
+      const doors = Math.max(0, Math.round(v.doors || 0));
+      const waste = Math.max(0, v.waste_pct || 0);
+
+      const perimeter = 2 * (len + wid);
+      const floorArea = len * wid;
+      const wallGross = perimeter * hgt;
+      const wallArea = Math.max(0, wallGross - openings);
+      const wf = 1 + waste / 100;
+
+      const rows = [];
+      let total, sub, unit, decimals, netUnits, wasteUnits, roundUnits, chartUnit;
+
+      if (id === 'paint') {
+        // Porte directo de pintura-paredes-litros-por-metros-cuadrados.ts:
+        // litros = (m² / rendimiento) × manos × (1 + colchón/100)
+        const needSqft = wallArea * coats;
+        const netGal = needSqft / coverage;
+        const withWaste = netGal * wf;
+        const cans = Math.ceil(withWaste);
+        const pails = Math.ceil(withWaste / 5);
+
+        rows.push({ k: 'Gross wall area (perimeter × ceiling height)', ref: n0(perimeter) + ' ft × ' + n1(hgt) + ' ft', v: wallGross, format: 'unit', unit: 'sq ft' });
+        rows.push({ k: 'Doors and windows subtracted', ref: 'Not painted', v: openings, format: 'unit', unit: 'sq ft' });
+        rows.push({ k: 'Net wall area to paint', ref: 'One coat', v: wallArea, format: 'unit', unit: 'sq ft' });
+        rows.push({ k: 'Total area covered across all coats', ref: coats + (coats === 1 ? ' coat' : ' coats'), v: needSqft, format: 'unit', unit: 'sq ft' });
+        rows.push({ k: 'Coverage on the can', ref: 'Per gallon, one coat', v: coverage, format: 'unit', unit: 'sq ft/gal' });
+        rows.push({ k: 'Paint needed before waste', ref: 'Area ÷ coverage', v: netGal, format: 'unit', unit: 'gal', decimals: 2 });
+        rows.push({ k: 'Waste allowance', ref: waste + '% roller and tray loss', v: netGal * (waste / 100), format: 'unit', unit: 'gal', decimals: 2 });
+        rows.push({ k: 'Paint needed with waste', ref: 'What actually leaves the store', v: withWaste, format: 'unit', unit: 'gal', decimals: 2 });
+        rows.push({ k: 'One-gallon cans to buy', ref: 'Rounded up', v: cans, format: 'plain', extra: true });
+        rows.push({ k: 'Or five-gallon pails', ref: 'Cheaper per gallon above 5 gal', v: pails, format: 'plain' });
+        rows.push({ k: 'Same quantity in liters', ref: '1 gal = 3.785 L', v: withWaste * 3.785, format: 'unit', unit: 'L', decimals: 1 });
+        rows.push({ k: 'Surplus left over after the job', ref: 'Your touch-up stock', v: Math.max(0, cans - withWaste), format: 'unit', unit: 'gal', decimals: 2 });
+
+        total = cans + (cans === 1 ? ' gal' : ' gal');
+        sub = n0(wallArea) + ' sq ft of wall × ' + coats + (coats === 1 ? ' coat' : ' coats') + ' at ' + n0(coverage) +
+          ' sq ft/gal = ' + n1(withWaste) + ' gal with ' + waste + '% waste · buy ' + cans + ' one-gallon can' + (cans === 1 ? '' : 's') +
+          ' or ' + pails + ' five-gallon pail' + (pails === 1 ? '' : 's');
+        netUnits = netGal; wasteUnits = netGal * (waste / 100); roundUnits = Math.max(0, cans - withWaste);
+        unit = 'gal'; decimals = 2; chartUnit = 'gal';
+      } else if (id === 'tile') {
+        // Porte de pisos-ceramicos.ts + azulejos-baldosas-…-cantidad.ts:
+        // cajas = ceil( área × (1 + desperdicio/100) / m² por caja )
+        const withWaste = floorArea * wf;
+        const boxes = Math.ceil(withWaste / coverage);
+        const bought = boxes * coverage;
+        const thinset = withWaste * THINSET_LB_PER_SQFT;
+        const grout = withWaste * GROUT_LB_PER_SQFT;
+
+        rows.push({ k: 'Floor area to tile', ref: n1(len) + ' ft × ' + n1(wid) + ' ft', v: floorArea, format: 'unit', unit: 'sq ft' });
+        rows.push({ k: 'Waste allowance for cuts', ref: waste + '% of the area', v: floorArea * (waste / 100), format: 'unit', unit: 'sq ft' });
+        rows.push({ k: 'Area to cover including waste', ref: 'What you must be able to lay', v: withWaste, format: 'unit', unit: 'sq ft', decimals: 1 });
+        rows.push({ k: 'Coverage per box', ref: 'From the box label', v: coverage, format: 'unit', unit: 'sq ft/box', decimals: 1 });
+        rows.push({ k: 'Boxes to buy', ref: 'Rounded up — boxes sell whole', v: boxes, format: 'plain', extra: true });
+        rows.push({ k: 'Area those boxes actually cover', ref: boxes + ' × ' + n1(coverage) + ' sq ft', v: bought, format: 'unit', unit: 'sq ft', decimals: 1 });
+        rows.push({ k: 'Surplus after the job', ref: 'Keep it sealed as spares', v: Math.max(0, bought - withWaste), format: 'unit', unit: 'sq ft', decimals: 1 });
+        rows.push({ k: 'Thin-set mortar', ref: '≈ 1 lb per sq ft, standard tile', v: thinset, format: 'unit', unit: 'lb' });
+        rows.push({ k: '50 lb bags of thin-set', ref: 'Rounded up', v: Math.ceil(thinset / 50), format: 'plain' });
+        rows.push({ k: 'Grout', ref: '≈ 0.08 lb per sq ft', v: grout, format: 'unit', unit: 'lb', decimals: 1 });
+        rows.push({ k: 'Floor area in square meters', ref: '1 m² = 10.764 sq ft', v: floorArea / 10.764, format: 'unit', unit: 'm²', decimals: 1 });
+
+        total = boxes + (boxes === 1 ? ' box' : ' boxes');
+        sub = n0(floorArea) + ' sq ft + ' + waste + '% waste = ' + n0(withWaste) + ' sq ft to lay · ' + boxes + ' box' + (boxes === 1 ? '' : 'es') +
+          ' at ' + n1(coverage) + ' sq ft covers ' + n0(bought) + ' sq ft · plus ' + n0(thinset) + ' lb of thin-set and ' + n1(grout) + ' lb of grout';
+        netUnits = floorArea; wasteUnits = floorArea * (waste / 100); roundUnits = Math.max(0, bought - withWaste);
+        unit = 'sq ft'; decimals = 0; chartUnit = 'sq ft';
+      } else if (id === 'plaster') {
+        // Porte de revoque-grueso-m3-m2.ts: V = m² × (espesor_cm/100);
+        // bolsas = ceil(V × 6) a 50 kg (300 kg/m³) y arena = V × 0.9.
+        const cuft = wallArea * (thick / 12);
+        const cementLb = cuft * CEMENT_LB_PER_CUFT;
+        const sacks = Math.ceil(cementLb / CEMENT_SACK_LB);
+        const sandCuft = cuft * SAND_RATIO;
+        const withWaste = cuft * wf;
+        const sacksWithWaste = Math.ceil((withWaste * CEMENT_LB_PER_CUFT) / CEMENT_SACK_LB);
+
+        rows.push({ k: 'Wall area to render', ref: 'Openings already subtracted', v: wallArea, format: 'unit', unit: 'sq ft' });
+        rows.push({ k: 'Coat thickness', ref: 'Per coat', v: thick, format: 'unit', unit: 'in', decimals: 3 });
+        rows.push({ k: 'Mortar volume', ref: 'Area × thickness ÷ 12', v: cuft, format: 'unit', unit: 'cu ft', decimals: 2 });
+        rows.push({ k: 'Mortar volume in cubic yards', ref: '27 cu ft = 1 cu yd', v: cuft / 27, format: 'unit', unit: 'cu yd', decimals: 2 });
+        rows.push({ k: 'Volume including waste', ref: waste + '% for an uneven substrate', v: withWaste, format: 'unit', unit: 'cu ft', decimals: 2 });
+        rows.push({ k: 'Portland cement by weight', ref: '18.7 lb per cu ft of mortar', v: withWaste * CEMENT_LB_PER_CUFT, format: 'unit', unit: 'lb' });
+        rows.push({ k: '94 lb sacks of cement', ref: 'Rounded up', v: sacksWithWaste, format: 'plain', extra: true });
+        rows.push({ k: 'Sand', ref: '0.9 cu ft per cu ft of mortar', v: withWaste * SAND_RATIO, format: 'unit', unit: 'cu ft', decimals: 2 });
+        rows.push({ k: 'Sand in cubic yards', ref: 'How the yard sells it', v: (withWaste * SAND_RATIO) / 27, format: 'unit', unit: 'cu yd', decimals: 2 });
+        rows.push({ k: 'Mortar volume in cubic meters', ref: '1 m³ = 35.31 cu ft', v: withWaste / 35.3147, format: 'unit', unit: 'm³', decimals: 3 });
+        rows.push({ k: 'Cement without the waste allowance', ref: 'For reference: ' + sacks + ' sacks, ' + n1(sandCuft) + ' cu ft sand', v: cementLb, format: 'unit', unit: 'lb' });
+
+        total = n1(withWaste) + ' cu ft';
+        sub = n0(wallArea) + ' sq ft at ' + thick + ' in = ' + n1(withWaste) + ' cu ft of mortar with ' + waste + '% waste · ' +
+          sacksWithWaste + ' sack' + (sacksWithWaste === 1 ? '' : 's') + ' of 94 lb cement and ' + n1(withWaste * SAND_RATIO) + ' cu ft of sand';
+        netUnits = cuft; wasteUnits = cuft * (waste / 100); roundUnits = Math.max(0, (sacksWithWaste * CEMENT_SACK_LB) / CEMENT_LB_PER_CUFT - withWaste);
+        unit = 'cu ft'; decimals = 2; chartUnit = 'cu ft';
+      } else if (id === 'membrane') {
+        // Porte de membrana-asfaltica-rollos.ts: rollos = ceil(m² × 1.1 / 10).
+        // El 1.1 original es el solape; acá viaja en el campo de waste.
+        const withOverlap = floorArea * wf;
+        const rolls = Math.ceil(withOverlap / coverage);
+        const covered = rolls * coverage;
+
+        rows.push({ k: 'Roof surface to waterproof', ref: 'Slope length, not the footprint', v: floorArea, format: 'unit', unit: 'sq ft' });
+        rows.push({ k: 'Roof area in squares', ref: '1 square = 100 sq ft', v: floorArea / 100, format: 'unit', unit: 'squares', decimals: 2 });
+        rows.push({ k: 'Overlap allowance between courses', ref: waste + '% consumed twice', v: floorArea * (waste / 100), format: 'unit', unit: 'sq ft' });
+        rows.push({ k: 'Material to lay including overlap', ref: 'What has to leave the store', v: withOverlap, format: 'unit', unit: 'sq ft' });
+        rows.push({ k: 'Net coverage per roll', ref: 'US roll roofing ≈ 1 square', v: coverage, format: 'unit', unit: 'sq ft/roll' });
+        rows.push({ k: 'Rolls to buy', ref: 'Rounded up', v: rolls, format: 'plain', extra: true });
+        rows.push({ k: 'Coverage those rolls provide', ref: rolls + ' × ' + n0(coverage) + ' sq ft', v: covered, format: 'unit', unit: 'sq ft' });
+        rows.push({ k: 'Reserve for flashings and repairs', ref: 'What is left over', v: Math.max(0, covered - withOverlap), format: 'unit', unit: 'sq ft' });
+        rows.push({ k: 'Roof area in square meters', ref: '1 m² = 10.764 sq ft', v: floorArea / 10.764, format: 'unit', unit: 'm²', decimals: 1 });
+        rows.push({ k: 'Equivalent metric rolls of 10 m²', ref: 'How the same roll is sold outside the US', v: Math.ceil(withOverlap / 107.64), format: 'plain' });
+
+        total = rolls + (rolls === 1 ? ' roll' : ' rolls');
+        sub = n0(floorArea) + ' sq ft (' + n1(floorArea / 100) + ' squares) plus ' + waste + '% overlap = ' + n0(withOverlap) +
+          ' sq ft to lay · ' + rolls + ' roll' + (rolls === 1 ? '' : 's') + ' cover ' + n0(covered) + ' sq ft';
+        netUnits = floorArea; wasteUnits = floorArea * (waste / 100); roundUnits = Math.max(0, covered - withOverlap);
+        unit = 'sq ft'; decimals = 0; chartUnit = 'sq ft';
+      } else {
+        // Porte de zocalo-metros-lineal.ts: m = 2×(L+A) − puertas; total = m × 1.08.
+        const net = Math.max(0, perimeter - doors * DOOR_WIDTH_FT);
+        const withWaste = net * wf;
+        const pieces = Math.ceil(withWaste / TRIM_PIECE_FT);
+        const bought = pieces * TRIM_PIECE_FT;
+
+        rows.push({ k: 'Room perimeter', ref: '2 × (' + n1(len) + ' + ' + n1(wid) + ') ft', v: perimeter, format: 'unit', unit: 'ft', decimals: 1 });
+        rows.push({ k: 'Door openings subtracted', ref: doors + ' × 3 ft of opening', v: doors * DOOR_WIDTH_FT, format: 'unit', unit: 'ft' });
+        rows.push({ k: 'Net trim run', ref: 'What actually touches the wall', v: net, format: 'unit', unit: 'ft', decimals: 1 });
+        rows.push({ k: 'Waste allowance', ref: waste + '% for miters and copes', v: net * (waste / 100), format: 'unit', unit: 'ft', decimals: 1 });
+        rows.push({ k: 'Trim to buy', ref: 'Net plus waste', v: withWaste, format: 'unit', unit: 'ft', decimals: 1 });
+        rows.push({ k: 'Eight-foot sticks', ref: 'Rounded up', v: pieces, format: 'plain', extra: true });
+        rows.push({ k: 'Or sixteen-foot sticks', ref: 'Fewer joints on long walls', v: Math.ceil(withWaste / 16), format: 'plain' });
+        rows.push({ k: 'Length those sticks give you', ref: pieces + ' × 8 ft', v: bought, format: 'unit', unit: 'ft' });
+        rows.push({ k: 'Offcut left over', ref: 'Useful for closets and returns', v: Math.max(0, bought - withWaste), format: 'unit', unit: 'ft', decimals: 1 });
+        rows.push({ k: 'Inside and outside corners to cut', ref: 'Rectangular room', v: 4, format: 'plain' });
+        rows.push({ k: 'Trim run in meters', ref: '1 m = 3.281 ft', v: net / 3.281, format: 'unit', unit: 'm', decimals: 1 });
+
+        total = pieces + (pieces === 1 ? ' stick' : ' sticks');
+        sub = n1(net) + ' linear ft of trim plus ' + waste + '% waste = ' + n1(withWaste) + ' ft · ' + pieces +
+          ' stick' + (pieces === 1 ? '' : 's') + ' of 8 ft, or ' + Math.ceil(withWaste / 16) + ' of 16 ft with fewer joints';
+        netUnits = net; wasteUnits = net * (waste / 100); roundUnits = Math.max(0, bought - withWaste);
+        unit = 'ft'; decimals = 1; chartUnit = 'ft';
+      }
+
+      return {
+        total: total,
+        sub: sub,
+        rows: rows,
+        format: 'unit',
+        unit: unit,
+        decimals: decimals,
+        chart: [
+          { label: 'Material that covers the surface (' + chartUnit + ')', value: Math.max(0, netUnits), tone: 'main' },
+          { label: 'Waste allowance you added on purpose (' + chartUnit + ')', value: Math.max(0, wasteUnits), tone: 'warn' },
+          { label: 'Surplus from buying whole units (' + chartUnit + ')', value: Math.max(0, roundUnits), tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

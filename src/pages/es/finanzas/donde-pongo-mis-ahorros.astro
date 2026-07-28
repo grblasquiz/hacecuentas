@@ -1,0 +1,251 @@
+---
+/**
+ * Hub de decisión ES — dónde poner los ahorros. Reemplaza 7 calculadoras sueltas.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  ESCALA_AHORRO,
+  PLAN_PENSIONES,
+  RENTA_VITALICIA_PCT,
+  LIMITE_RENTA_VITALICIA,
+  FGD_COBERTURA,
+} from '../../../lib/hubs/es/donde-pongo-mis-ahorros';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/es' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="ES"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ AHORRO: ESCALA_AHORRO, PLAN: PLAN_PENSIONES, RV: RENTA_VITALICIA_PCT, LIM_RV: LIMITE_RENTA_VITALICIA, FGD: FGD_COBERTURA }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n) => Math.round(n || 0).toLocaleString('es-ES') + ' €';
+    const pctS = (n) => n.toFixed(2).replace('.', ',') + '%';
+
+    function escala(base, tramos) {
+      if (!(base > 0)) return 0;
+      let cuota = 0;
+      let prev = 0;
+      for (const par of tramos) {
+        const limite = par[0] == null ? Infinity : par[0];
+        if (base > prev) {
+          cuota += (Math.min(base, limite) - prev) * par[1];
+          prev = limite;
+          if (base <= limite) break;
+        }
+      }
+      return cuota;
+    }
+
+    function pctRentaVitalicia(edad) {
+      for (const par of RV) {
+        const limite = par[0] == null ? Infinity : par[0];
+        if (edad <= limite) return par[1];
+      }
+      return RV[RV.length - 1][1];
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'emergencia';
+      const capital = Math.max(0, v.capital || 0);
+      const gastos = Math.max(0, v.gastosMensuales || 0);
+      const mesesFondo = Math.max(1, Math.round(v.mesesFondo || 6));
+      const rentabilidad = Math.max(0, v.rentabilidad || 0) / 100;
+      const plazoMeses = Math.max(1, Math.round(v.plazoMeses || 12));
+      const aportacion = Math.max(0, v.aportacionAnual || 0);
+      const marginal = Math.max(0, Math.min(50, v.marginal || 0)) / 100;
+      const edad = Math.max(18, Math.round(v.edad || 68));
+
+      const fondoObjetivo = gastos * mesesFondo;
+      const bruto = capital * rentabilidad * (plazoMeses / 12);
+      const impuesto = escala(bruto, AHORRO);
+      const neto = bruto - impuesto;
+      const tae = capital > 0 && plazoMeses > 0 ? Math.pow(1 + neto / capital, 12 / plazoMeses) - 1 : 0;
+
+      const rows = [
+        { k: 'Capital que colocas', ref: 'Base del cálculo', v: capital },
+        { k: 'Plazo', ref: 'El que no vas a tocar el dinero', v: plazoMeses, format: 'unit', unit: 'meses' },
+        {
+          k: 'Rentabilidad anual',
+          ref: 'La que ofrece el producto',
+          v: rentabilidad * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        },
+        { k: 'Rendimiento bruto del plazo', ref: 'Antes de impuestos', v: bruto },
+        { k: 'Impuesto del ahorro', ref: 'Escala del 19% al 28%', v: impuesto },
+        { k: 'Rendimiento neto', ref: 'Lo que te queda de verdad', v: neto, extra: true },
+        {
+          k: 'Rentabilidad neta anualizada',
+          ref: 'Después de impuestos',
+          v: tae * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        },
+      ];
+
+      let principal = neto;
+      let sub = '';
+
+      if (id === 'emergencia') {
+        const cubierto = fondoObjetivo > 0 ? Math.min(100, (capital / fondoObjetivo) * 100) : 0;
+        principal = fondoObjetivo;
+        rows.push({ k: 'Gastos fijos mensuales', ref: 'Lo que necesitas cada mes', v: gastos });
+        rows.push({ k: 'Fondo de emergencia objetivo', ref: mesesFondo + ' meses de gastos', v: fondoObjetivo, extra: true });
+        rows.push({
+          k: capital >= fondoObjetivo ? 'Excedente sobre el fondo' : 'Lo que te falta para el fondo',
+          ref: capital >= fondoObjetivo ? 'Este dinero ya puede invertirse' : 'Complétalo antes de invertir',
+          v: Math.abs(capital - fondoObjetivo),
+          extra: true,
+        });
+        rows.push({
+          k: 'Porcentaje del fondo cubierto',
+          ref: 'Capital ÷ objetivo',
+          v: cubierto,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        rows.push({ k: 'Cobertura del Fondo de Garantía de Depósitos', ref: 'Por titular y entidad', v: FGD });
+        sub =
+          capital >= fondoObjetivo
+            ? 'Tu fondo de emergencia debería ser de ' +
+              eur(fondoObjetivo) +
+              ' y ya lo tienes cubierto: los ' +
+              eur(capital - fondoObjetivo) +
+              ' restantes son los que puedes plantearte invertir'
+            : 'Tu fondo de emergencia debería ser de ' +
+              eur(fondoObjetivo) +
+              ' y te faltan ' +
+              eur(fondoObjetivo - capital) +
+              ': completa esto antes de inmovilizar nada';
+      } else if (id === 'jubilacion') {
+        const aportacionValida = Math.min(aportacion, PLAN.limiteIndividual);
+        const ahorroFiscal = aportacionValida * marginal;
+        const pctRv = pctRentaVitalicia(edad);
+        const rentaAnual = capital * rentabilidad;
+        const rentaGravada = rentaAnual * pctRv;
+        const impuestoRv = escala(rentaGravada, AHORRO);
+        principal = ahorroFiscal;
+
+        rows.push({ k: 'Aportación anual al plan', ref: 'La que has indicado', v: aportacion });
+        rows.push({ k: 'Aportación con derecho a reducción', ref: 'Límite individual anual', v: aportacionValida });
+        rows.push({
+          k: 'Ahorro fiscal de este año',
+          ref: 'Aportación × marginal del ' + pctS(marginal * 100),
+          v: ahorroFiscal,
+          extra: true,
+        });
+        rows.push({
+          k: 'Límite si hay aportaciones de empresa',
+          ref: 'Suma de individual y empresarial',
+          v: PLAN.limiteConEmpresa,
+        });
+        rows.push({
+          k: 'Impuesto diferido al rescatar',
+          ref: 'Tributará como rendimiento del trabajo',
+          v: aportacionValida * marginal,
+        });
+        rows.push({
+          k: 'Parte de la renta vitalicia que tributa',
+          ref: 'Con ' + edad + ' años al constituirla',
+          v: pctRv * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 0,
+        });
+        rows.push({ k: 'Renta vitalicia anual estimada', ref: 'Capital × rentabilidad', v: rentaAnual });
+        rows.push({ k: 'Impuesto de la renta vitalicia', ref: 'Sobre la parte que tributa', v: impuestoRv });
+        rows.push({ k: 'Límite reinvertible para dejar exenta una ganancia', ref: 'Art. 38.3 de la ley del IRPF', v: LIM_RV });
+
+        sub =
+          'Aportar ' +
+          eur(aportacionValida) +
+          ' al plan te ahorra ' +
+          eur(ahorroFiscal) +
+          ' este año, pero ese impuesto sólo se difiere · a los ' +
+          edad +
+          ' años, una renta vitalicia sólo tributaría por el ' +
+          Math.round(pctRv * 100) +
+          '% de cada cobro';
+      } else {
+        sub =
+          'Con ' +
+          eur(capital) +
+          ' al ' +
+          pctS(rentabilidad * 100) +
+          ' durante ' +
+          plazoMeses +
+          ' meses ganarías ' +
+          eur(bruto) +
+          ' brutos y ' +
+          eur(neto) +
+          ' netos, un ' +
+          pctS(tae * 100) +
+          ' anualizado después de impuestos';
+      }
+
+      return {
+        total: eur(principal),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Capital', value: Math.round(capital), tone: 'main' },
+          { label: 'Rendimiento neto', value: Math.round(Math.max(0, neto)), tone: 'good' },
+          { label: 'Impuesto', value: Math.round(impuesto), tone: 'bad' },
+        ].filter(function (s) {
+          return s.value > 0;
+        }),
+        format: 'unit',
+        unit: '€',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

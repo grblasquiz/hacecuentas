@@ -1,0 +1,317 @@
+---
+/**
+ * Hub de decisión CL — "¿Con cuánto me voy a jubilar?"
+ * audience="CL" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UF,
+  UTM,
+  PGU,
+  BAC,
+  EDAD_LEGAL,
+  APV,
+  SOBREVIVENCIA,
+  MULTIFONDOS,
+  TOPE_IMPONIBLE_UF,
+  APORTE_OBLIGATORIO,
+} from '../../../lib/hubs/cl/cuanta-pension-voy-a-tener';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ UF, UTM, PGU, BAC, EDAD_LEGAL, APV, SOBREVIVENCIA, MULTIFONDOS, TOPE_IMPONIBLE_UF, APORTE_OBLIGATORIO }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+    const TOPE = TOPE_IMPONIBLE_UF * UF;
+
+    // Anualidad mensual: cuánto se puede pagar por mes durante n meses a la tasa i.
+    function anualidad(saldo, tasaAnualPct, meses) {
+      if (meses <= 0) return 0;
+      const i = Math.pow(1 + tasaAnualPct / 100, 1 / 12) - 1;
+      if (i <= 0) return saldo / meses;
+      return (saldo * i) / (1 - Math.pow(1 + i, -meses));
+    }
+
+    // Complemento de la PGU según los umbrales PBI/PBS. Se SUMA a la pensión base.
+    function pgu(pensionBase, edad, decil, residencia) {
+      const max = edad >= PGU.edadMayor ? PGU.maxMayor : PGU.maxBase;
+      const motivos = [];
+      if (edad < PGU.edadMinima) motivos.push('todavía no cumples ' + PGU.edadMinima + ' años');
+      if (!residencia) motivos.push('no se acreditan 20 años de residencia en Chile');
+      if (decil >= PGU.decilExcluido) motivos.push('el decil ' + decil + ' queda fuera: la PGU excluye al 10% más rico');
+      if (motivos.length) return { monto: 0, max: max, motivos: motivos };
+      if (pensionBase <= PGU.pensionBaseInferior) return { monto: max, max: max, motivos: [] };
+      if (pensionBase >= PGU.pensionBaseSuperior) {
+        return { monto: 0, max: max, motivos: ['tu pensión base supera la Pensión Base Superior de ' + clp(PGU.pensionBaseSuperior)] };
+      }
+      const factor = 1 - (pensionBase - PGU.pensionBaseInferior) / (PGU.pensionBaseSuperior - PGU.pensionBaseInferior);
+      return { monto: Math.max(0, max * factor), max: max, motivos: [] };
+    }
+
+    // Beneficio por Años Cotizados: 0,1 UF por año, tope 2,5 UF.
+    function bac(mesesCotizados, edad, esMujer) {
+      const minimo = esMujer ? BAC.mesesMinMujer : BAC.mesesMinHombre;
+      const cumple = edad >= BAC.edadMinima && mesesCotizados >= minimo;
+      const anios = Math.min(Math.floor(mesesCotizados / 12), BAC.aniosTope);
+      const uf = Math.min(anios * BAC.ufPorAnioCotizado, BAC.topeUf);
+      return { cumple: cumple, anios: anios, uf: uf, clp: cumple ? uf * UF : 0, minimo: minimo };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'proyectar';
+      const edad = Math.min(100, Math.max(18, Math.round(Number(v.edad) || 40)));
+      const esMujer = v.sexo === 'mujer';
+      const edadLegal = esMujer ? EDAD_LEGAL.mujer : EDAD_LEGAL.hombre;
+      const saldo = Math.max(0, v.saldo || 0);
+      const sueldo = Math.max(0, v.sueldo || 0);
+      const fondo = MULTIFONDOS.find((m) => m.id === v.fondo) || MULTIFONDOS[2];
+      const pensionBase = Math.max(0, v.pensionBase || 0);
+      const decil = Math.min(10, Math.max(1, Math.round(Number(v.decil) || 5)));
+      const residencia = v.residencia !== 'no';
+      const expectativa = Math.min(45, Math.max(5, Math.round(Number(v.expectativa) || 22)));
+      const tasaTecnica = Math.min(8, Math.max(0.5, Number(v.tasaTecnica) || 3));
+      const ofertaRvUf = Math.max(0, Number(v.ofertaRv) || 0);
+      const hijos = Math.min(10, Math.max(0, Math.round(Number(v.hijos) || 0)));
+      const mesesCotizados = Math.min(720, Math.max(0, Math.round(Number(v.mesesCotizados) || 0)));
+      const aporteApv = Math.max(0, v.aporteApv || 0);
+      const tasaMarginal = Math.min(40, Math.max(0, Number(v.tasaMarginal) || 0));
+      const topeApvAUtm = Math.min(60, Math.max(1, Number(v.topeApvA) || APV.topeRegimenAUtm));
+
+      const rows = [];
+      let total, sub, chart;
+
+      if (id === 'proyectar') {
+        const aniosFaltan = Math.max(0, edadLegal - edad);
+        const baseImponible = Math.min(sueldo, TOPE);
+        const aporteMensual = baseImponible * APORTE_OBLIGATORIO;
+        const r = fondo.real10 / 100;
+        const iMes = Math.pow(1 + r, 1 / 12) - 1;
+        const meses = aniosFaltan * 12;
+        const saldoCapitalizado = saldo * Math.pow(1 + iMes, meses);
+        const aportesCapitalizados = iMes > 0 && meses > 0 ? aporteMensual * (Math.pow(1 + iMes, meses) - 1) / iMes : aporteMensual * meses;
+        const saldoFinal = saldoCapitalizado + aportesCapitalizados;
+        const pensionRp = anualidad(saldoFinal, tasaTecnica, expectativa * 12);
+        const compl = pgu(pensionRp, edadLegal, decil, residencia);
+        const beneficio = bac(mesesCotizados + meses, edadLegal, esMujer);
+        const pensionTotal = pensionRp + compl.monto + beneficio.clp;
+        const tasaReemplazo = sueldo > 0 ? (pensionTotal / sueldo) * 100 : 0;
+
+        total = clp(pensionTotal);
+        sub =
+          'Con ' + aniosFaltan + ' años por delante en el ' + fondo.nombre.split(' —')[0] + ', tu saldo llegaría a ' + clp(saldoFinal) +
+          ' y rendiría ' + clp(pensionRp) + ' al mes como retiro programado' +
+          (compl.monto > 0 ? ' · la PGU te suma ' + clp(compl.monto) : '') +
+          (beneficio.clp > 0 ? ' · el Beneficio por Años Cotizados suma ' + clp(beneficio.clp) : '') +
+          ' · tasa de reemplazo ' + tasaReemplazo.toFixed(0) + '% de tu renta actual';
+
+        rows.push({ k: 'Saldo que llevas hoy', ref: 'Cuenta de capitalización individual', v: saldo });
+        rows.push({ k: 'Años que te faltan hasta la edad legal', ref: edadLegal + ' años · DL 3.500', v: aniosFaltan, format: 'unit', unit: 'años' });
+        rows.push({ k: 'Renta imponible sobre la que cotizas', ref: 'Topada en ' + TOPE_IMPONIBLE_UF + ' UF = ' + clp(TOPE), v: baseImponible });
+        rows.push({ k: 'Cotización obligatoria mensual', ref: '10% de la renta imponible · DL 3.500', v: aporteMensual });
+        rows.push({ k: 'Rentabilidad real usada en la proyección', ref: fondo.nombre + ' · histórica a 10 años', v: fondo.real10, format: 'unit', unit: '% real anual', decimals: 1 });
+        rows.push({ k: 'Tu saldo actual capitalizado', ref: 'Sin sumar aportes futuros', v: saldoCapitalizado });
+        rows.push({ k: 'Aportes futuros capitalizados', ref: aniosFaltan + ' años de cotizaciones', v: aportesCapitalizados });
+        rows.push({ k: 'Saldo estimado al pensionarte', ref: 'En pesos de hoy, rentabilidad real', v: saldoFinal, extra: true });
+        rows.push({ k: 'Pensión de retiro programado', ref: 'Anualidad a ' + expectativa + ' años, tasa técnica ' + tasaTecnica.toString().replace('.', ',') + '%', v: pensionRp, extra: true });
+        rows.push({ k: 'Complemento de la PGU', ref: compl.motivos.length ? 'No corresponde: ' + compl.motivos[0] : 'Se suma a tu pensión', v: compl.monto });
+        rows.push({ k: 'Beneficio por Años Cotizados', ref: beneficio.cumple ? beneficio.anios + ' años computables · ' + beneficio.uf.toString().replace('.', ',') + ' UF' : 'No alcanzas el mínimo de ' + beneficio.minimo + ' meses', v: beneficio.clp });
+        rows.push({ k: 'Pensión total estimada', ref: 'Fondo propio más aportes del Estado', v: pensionTotal, extra: true });
+        rows.push({ k: 'Tasa de reemplazo', ref: 'Pensión ÷ renta imponible de hoy', v: tasaReemplazo, format: 'unit', unit: '%', decimals: 1 });
+        chart = [
+          { label: 'De tu propio fondo', value: Math.round(pensionRp), tone: 'main' },
+          { label: 'PGU', value: Math.round(compl.monto), tone: 'good' },
+          { label: 'Beneficio por años cotizados', value: Math.round(beneficio.clp), tone: 'prop' },
+        ];
+      } else if (id === 'pgu') {
+        const compl = pgu(pensionBase, edad, decil, residencia);
+        const beneficio = bac(mesesCotizados, edad, esMujer);
+        const pensionFinal = pensionBase + compl.monto + beneficio.clp;
+
+        total = clp(pensionFinal);
+        sub = compl.monto > 0
+          ? 'Cumples los requisitos: la PGU te suma ' + clp(compl.monto) + ' al mes sobre tu pensión base de ' + clp(pensionBase) +
+            (beneficio.clp > 0 ? ', y el Beneficio por Años Cotizados otros ' + clp(beneficio.clp) : '') +
+            ' · tu pensión final queda en ' + clp(pensionFinal)
+          : 'Con estos datos no te corresponde PGU: ' + (compl.motivos[0] || 'no cumples los requisitos') + ' · tu pensión queda en ' + clp(pensionFinal);
+
+        rows.push({ k: 'Pensión base autofinanciada', ref: 'La que sale de tu propio fondo', v: pensionBase });
+        rows.push({ k: 'PGU máxima para tu tramo de edad', ref: edad >= PGU.edadMayor ? PGU.edadMayor + ' años o más' : PGU.edadMinima + ' a ' + (PGU.edadMayor - 1) + ' años', v: compl.max });
+        rows.push({ k: 'Pensión Base Inferior', ref: 'Hasta acá se recibe la PGU completa', v: PGU.pensionBaseInferior });
+        rows.push({ k: 'Pensión Base Superior', ref: 'Desde acá no corresponde PGU', v: PGU.pensionBaseSuperior });
+        rows.push({ k: 'PGU que te corresponde', ref: compl.motivos.length ? 'No corresponde: ' + compl.motivos.join(' · ') : 'Complemento estatal mensual', v: compl.monto, extra: true });
+        rows.push({ k: 'Beneficio por Años Cotizados', ref: beneficio.cumple ? beneficio.anios + ' años computables · ' + beneficio.uf.toString().replace('.', ',') + ' UF a UF ' + clp(UF) : 'No alcanzas el mínimo de ' + beneficio.minimo + ' meses cotizados', v: beneficio.clp });
+        rows.push({ k: 'Pensión final estimada', ref: 'Base más complementos del Estado', v: pensionFinal, extra: true });
+        rows.push({
+          k: 'Cuánto de tu pensión pone el Estado',
+          ref: 'PGU y beneficio sobre el total',
+          v: pensionFinal > 0 ? ((compl.monto + beneficio.clp) / pensionFinal) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        chart = [
+          { label: 'Pensión autofinanciada', value: Math.round(pensionBase), tone: 'main' },
+          { label: 'PGU', value: Math.round(compl.monto), tone: 'good' },
+          { label: 'Beneficio por años cotizados', value: Math.round(beneficio.clp), tone: 'prop' },
+        ];
+      } else if (id === 'modalidad') {
+        const meses = expectativa * 12;
+        const pensionRp = anualidad(saldo, tasaTecnica, meses);
+        const rvClp = ofertaRvUf * UF;
+        const dif = pensionRp - rvClp;
+        // Saldo remanente a 10 años pagando esa pensión constante.
+        const iMes = Math.pow(1 + tasaTecnica / 100, 1 / 12) - 1;
+        const m = Math.min(meses, 120);
+        const factor = Math.pow(1 + iMes, m);
+        const remanente = Math.max(0, saldo * factor - pensionRp * (factor - 1) / iMes);
+
+        total = clp(pensionRp);
+        sub = ofertaRvUf > 0
+          ? 'El retiro programado partiría en ' + clp(pensionRp) + ' al mes (' + (pensionRp / UF).toFixed(2).replace('.', ',') + ' UF) contra ' +
+            clp(rvClp) + ' de tu oferta de renta vitalicia · ' +
+            (dif >= 0
+              ? 'el retiro programado parte ' + clp(Math.abs(dif)) + ' más alto, pero se recalcula cada año y tiende a bajar'
+              : 'la renta vitalicia parte ' + clp(Math.abs(dif)) + ' más alta y además queda fija en UF de por vida')
+          : 'El retiro programado partiría en ' + clp(pensionRp) + ' al mes (' + (pensionRp / UF).toFixed(2).replace('.', ',') + ' UF). Ingresa la oferta en UF de tu certificado SCOMP para comparar contra una renta vitalicia real.';
+
+        rows.push({ k: 'Saldo con el que te pensionas', ref: 'Cuenta individual completa', v: saldo });
+        rows.push({ k: 'Años de pensión esperados', ref: 'Expectativa al pensionarte', v: expectativa, format: 'unit', unit: 'años' });
+        rows.push({ k: 'Pensión inicial de retiro programado', ref: 'Anualidad a tasa técnica ' + tasaTecnica.toString().replace('.', ',') + '%', v: pensionRp, extra: true });
+        rows.push({ k: 'Esa pensión en UF', ref: 'UF de hoy ' + clp(UF), v: pensionRp / UF, format: 'unit', unit: 'UF', decimals: 2 });
+        rows.push({ k: 'Oferta de renta vitalicia', ref: ofertaRvUf > 0 ? ofertaRvUf.toString().replace('.', ',') + ' UF fijas de por vida' : 'Sin oferta cargada', v: rvClp, extra: ofertaRvUf > 0 });
+        if (ofertaRvUf > 0) {
+          rows.push({ k: dif >= 0 ? 'Cuánto más alto parte el retiro programado' : 'Cuánto más alta es la renta vitalicia', ref: 'Diferencia de pensión inicial', v: Math.abs(dif), extra: true });
+        }
+        rows.push({ k: 'Saldo heredable a 10 años en retiro programado', ref: 'Si fallecieras pagando esa pensión', v: remanente });
+        rows.push({ k: 'Saldo heredable en renta vitalicia', ref: 'El fondo pasa a la compañía de seguros', v: 0 });
+        chart = [
+          { label: 'Retiro programado (inicial)', value: Math.round(pensionRp), tone: 'main' },
+          { label: 'Renta vitalicia (fija en UF)', value: Math.round(rvClp), tone: 'prop' },
+        ];
+      } else if (id === 'sobrevivencia') {
+        const conyugePct = hijos > 0 ? SOBREVIVENCIA.conyugeConHijos : SOBREVIVENCIA.conyugeSinHijos;
+        let conyuge = pensionBase * (conyugePct / 100);
+        let porHijo = pensionBase * (SOBREVIVENCIA.porHijo / 100);
+        let totalHijos = porHijo * hijos;
+        let grupo = conyuge + totalHijos;
+        // Tope: el grupo no puede superar la pensión de referencia del causante.
+        let ajustado = false;
+        if (grupo > pensionBase && grupo > 0) {
+          const f = pensionBase / grupo;
+          conyuge *= f;
+          porHijo *= f;
+          totalHijos *= f;
+          grupo = pensionBase;
+          ajustado = true;
+        }
+
+        total = clp(grupo);
+        sub =
+          'Sobre una pensión de referencia de ' + clp(pensionBase) + ', el cónyuge recibe el ' + conyugePct + '% (' + clp(conyuge) + ')' +
+          (hijos > 0 ? ' y ' + hijos + (hijos === 1 ? ' hijo suma un ' : ' hijos suman un ') + SOBREVIVENCIA.porHijo + '% cada uno (' + clp(totalHijos) + ' en total)' : ' porque no hay hijos con derecho a orfandad') +
+          ' · el grupo familiar cobra ' + clp(grupo) + (ajustado ? ', ajustado al tope del 100% de la pensión de referencia' : '');
+
+        rows.push({ k: 'Pensión de referencia del causante', ref: 'Base de todos los porcentajes', v: pensionBase });
+        rows.push({ k: 'Porcentaje del cónyuge o conviviente civil', ref: hijos > 0 ? 'Con hijos con derecho · Art. 58 DL 3.500' : 'Sin hijos con derecho · Art. 58 DL 3.500', v: conyugePct, format: 'unit', unit: '%' });
+        rows.push({ k: 'Pensión del cónyuge', ref: 'Mensual', v: conyuge, extra: true });
+        if (hijos > 0) {
+          rows.push({ k: 'Porcentaje de orfandad por hijo', ref: 'Art. 58 DL 3.500', v: SOBREVIVENCIA.porHijo, format: 'unit', unit: '%' });
+          rows.push({ k: 'Pensión de cada hijo', ref: 'Mensual, mientras dure el derecho', v: porHijo });
+          rows.push({ k: 'Pensión de todos los hijos', ref: hijos + (hijos === 1 ? ' hijo con derecho' : ' hijos con derecho'), v: totalHijos });
+        }
+        rows.push({ k: 'Total del grupo familiar', ref: ajustado ? 'Ajustado al 100% de la pensión de referencia' : 'Suma de todas las pensiones', v: grupo, extra: true });
+        rows.push({
+          k: 'Porcentaje de la pensión del causante que queda a la familia',
+          ref: 'Grupo ÷ pensión de referencia',
+          v: pensionBase > 0 ? (grupo / pensionBase) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        chart = [
+          { label: 'Cónyuge', value: Math.round(conyuge), tone: 'main' },
+          { label: hijos === 1 ? 'Hijo' : 'Hijos (' + hijos + ')', value: Math.round(totalHijos), tone: 'prop' },
+        ];
+      } else {
+        // APV
+        const topeA = topeApvAUtm * UTM;
+        const beneficioA = Math.min(aporteApv * (APV.bonificacionPct / 100), topeA);
+        const topeB = APV.topeRegimenBUf * UF;
+        const rebajable = Math.min(aporteApv, topeB);
+        const beneficioB = rebajable * (tasaMarginal / 100);
+        const ganaA = beneficioA >= beneficioB;
+        const beneficio = bac(mesesCotizados, edad, esMujer);
+
+        total = clp(Math.max(beneficioA, beneficioB));
+        sub =
+          'Con un aporte anual de ' + clp(aporteApv) + ' te conviene el ' + (ganaA ? 'Régimen A' : 'Régimen B') + ': te deja ' +
+          clp(Math.max(beneficioA, beneficioB)) + ' de beneficio · Régimen A ' + clp(beneficioA) + ' de bonificación estatal contra Régimen B ' +
+          clp(beneficioB) + ' de menor impuesto a tu tasa marginal del ' + tasaMarginal.toString().replace('.', ',') + '%';
+
+        rows.push({ k: 'Aporte anual de APV', ref: 'Lo que depositas en el año calendario', v: aporteApv });
+        rows.push({ k: 'Régimen A — bonificación estatal', ref: APV.bonificacionPct + '% del aporte · Art. 42 bis LIR', v: aporteApv * (APV.bonificacionPct / 100) });
+        rows.push({ k: 'Régimen A — tope anual', ref: topeApvAUtm.toString().replace('.', ',') + ' UTM · UTM ' + clp(UTM) + ' (campo editable)', v: topeA });
+        rows.push({ k: 'Régimen A — beneficio efectivo', ref: 'Bonificación topada', v: beneficioA, extra: ganaA });
+        rows.push({ k: 'Régimen B — tope anual de rebaja', ref: APV.topeRegimenBUf + ' UF · UF ' + clp(UF), v: topeB });
+        rows.push({ k: 'Régimen B — aporte que rebaja la base', ref: 'Lo que efectivamente se descuenta', v: rebajable });
+        rows.push({ k: 'Régimen B — ahorro de impuesto', ref: 'Rebaja × tu tasa marginal', v: beneficioB, extra: !ganaA });
+        rows.push({ k: 'Diferencia entre los dos regímenes', ref: 'Son excluyentes: eliges uno', v: Math.abs(beneficioA - beneficioB), extra: true });
+        rows.push({ k: 'Beneficio por Años Cotizados de la reforma', ref: beneficio.cumple ? beneficio.uf.toString().replace('.', ',') + ' UF al mes sobre tu pensión' : 'Requiere ' + BAC.edadMinima + ' años y ' + beneficio.minimo + ' meses cotizados', v: beneficio.clp });
+        chart = [
+          { label: 'Régimen A — bonificación 15%', value: Math.round(beneficioA), tone: ganaA ? 'good' : 'prop' },
+          { label: 'Régimen B — menor impuesto', value: Math.round(beneficioB), tone: ganaA ? 'prop' : 'good' },
+        ];
+      }
+
+      return { total: total, sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

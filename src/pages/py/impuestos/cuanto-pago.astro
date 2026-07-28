@@ -1,0 +1,263 @@
+---
+/**
+ * Hub de decisión PY — "¿Cuánto le pagás al fisco por lo que ganás?".
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  IRP_UMBRAL,
+  IRP_TRAMOS,
+  IRP_CAPITAL,
+  IRE,
+  IVA,
+  IPS_INDEPENDIENTE,
+  SMVM,
+} from '../../../lib/hubs/py/impuestos';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PY"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ IRP_UMBRAL, IRP_TRAMOS, IRP_CAPITAL, IRE, IVA, IPS_INDEPENDIENTE, SMVM }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const gs = (n) => 'Gs. ' + Math.round(n || 0).toLocaleString('de-DE');
+
+    /**
+     * IRP por servicios personales (Ley 6380/19): si el ingreso BRUTO anual no
+     * supera el umbral de no incidencia, el impuesto es cero. Superado el umbral,
+     * la escala progresiva se aplica sobre la renta NETA.
+     */
+    function irp(rentaNeta, ingresoBruto) {
+      if (ingresoBruto <= IRP_UMBRAL) return { impuesto: 0, marginal: 0, porTramo: [] };
+      let base = Math.max(0, rentaNeta);
+      let impuesto = 0;
+      let anterior = 0;
+      let marginal = 0;
+      const porTramo = [];
+      for (const t of IRP_TRAMOS) {
+        const limite = t.hasta === null ? Infinity : t.hasta;
+        const ancho = limite - anterior;
+        const enTramo = Math.max(0, Math.min(base, ancho));
+        if (enTramo > 0) {
+          impuesto += enTramo * t.tasa;
+          marginal = t.tasa;
+          base -= enTramo;
+        }
+        porTramo.push({ tasa: t.tasa, monto: enTramo, impuesto: enTramo * t.tasa, hasta: limite });
+        anterior = limite;
+        if (base <= 0) break;
+      }
+      return { impuesto: impuesto, marginal: marginal, porTramo: porTramo };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'servicios';
+      const bruto = Math.max(0, v.ingresoBruto || 0);
+      const deducibles = Math.max(0, v.deducibles || 0);
+      const rentaEmpresarial = Math.max(0, v.rentaEmpresarial || 0);
+      const dividendos = Math.max(0, v.dividendos || 0);
+      const montoIva = Math.max(0, v.montoIva || 0);
+      const tasaIva = String(v.tasaIva) === '5' ? IVA.reducida : IVA.general;
+      const rentaIps = Math.max(0, v.rentaIps || 0);
+
+      const rentaNeta = Math.max(0, bruto - deducibles);
+      const incidido = bruto > IRP_UMBRAL;
+      const r = irp(rentaNeta, bruto);
+      const irpAnual = r.impuesto;
+      const efectiva = bruto > 0 ? (irpAnual / bruto) * 100 : 0;
+
+      const ire = rentaEmpresarial * IRE.general;
+      const idu = dividendos * IRE.idu;
+
+      const netoIva = montoIva / (1 + tasaIva);
+      const ivaMonto = montoIva - netoIva;
+
+      const baseIps = Math.max(rentaIps, IPS_INDEPENDIENTE.piso);
+      const aporteIpsMensual = rentaIps > 0 ? baseIps * IPS_INDEPENDIENTE.tasa : 0;
+      const aporteIpsAnual = aporteIpsMensual * 12;
+
+      const rows = [
+        { k: 'Ingreso bruto anual', ref: 'Todo lo facturado o percibido', v: bruto },
+        { k: 'Gastos e inversiones deducibles', ref: 'Con comprobante a tu nombre', v: deducibles },
+        { k: 'Renta neta anual', ref: 'Base de la escala del IRP', v: rentaNeta },
+        {
+          k: incidido ? 'Cuánto pasaste el umbral de no incidencia' : 'Margen que te queda antes del umbral',
+          ref: gs(IRP_UMBRAL) + ' de ingreso bruto anual',
+          v: Math.abs(bruto - IRP_UMBRAL),
+        },
+      ];
+
+      if (incidido) {
+        for (let n = 0; n < r.porTramo.length; n++) {
+          const t = r.porTramo[n];
+          if (t.monto <= 0) continue;
+          rows.push({
+            k: 'Renta gravada al ' + (t.tasa * 100).toFixed(0) + '%',
+            ref: t.hasta === Infinity ? 'Exceso sin techo' : 'Hasta ' + gs(t.hasta),
+            v: t.impuesto,
+          });
+        }
+      }
+
+      rows.push({
+        k: 'IRP anual a pagar',
+        ref: incidido ? 'Escala progresiva · Ley 6380/19' : 'No incidido: el bruto no supera el umbral',
+        v: irpAnual,
+        extra: true,
+      });
+      rows.push({
+        k: 'IRP mensualizado',
+        ref: 'IRP anual ÷ 12',
+        v: irpAnual / 12,
+      });
+      rows.push({
+        k: 'Tasa efectiva sobre tu ingreso bruto',
+        ref: 'IRP ÷ bruto',
+        v: efectiva,
+        format: 'unit',
+        unit: '%',
+        decimals: 2,
+      });
+      rows.push({
+        k: 'Tasa marginal del tramo en el que caés',
+        ref: incidido ? 'Se aplica sólo al excedente' : 'No incidido',
+        v: r.marginal * 100,
+        format: 'unit',
+        unit: '%',
+      });
+
+      if (rentaEmpresarial > 0) {
+        rows.push({
+          k: 'IRE sobre la renta empresarial',
+          ref: (IRE.general * 100).toFixed(0) + '% · Régimen General',
+          v: ire,
+        });
+        rows.push({
+          k: 'Utilidad de la empresa después del IRE',
+          ref: 'Antes de distribuir',
+          v: rentaEmpresarial - ire,
+        });
+      }
+      if (dividendos > 0) {
+        rows.push({
+          k: 'IDU sobre las utilidades distribuidas',
+          ref: (IRE.idu * 100).toFixed(0) + '% residentes · ' + (IRE.iduNoResidente * 100).toFixed(0) + '% exterior',
+          v: idu,
+        });
+      }
+
+      rows.push({
+        k: 'Neto del precio que cargaste, sin IVA',
+        ref: 'Precio ÷ ' + (1 + tasaIva).toLocaleString('de-DE'),
+        v: netoIva,
+      });
+      rows.push({
+        k: 'IVA contenido en ese precio',
+        ref: 'Tasa del ' + (tasaIva * 100).toFixed(0) + '%',
+        v: ivaMonto,
+      });
+
+      if (rentaIps > 0) {
+        rows.push({
+          k: 'Aporte mensual al IPS como independiente',
+          ref: (IPS_INDEPENDIENTE.tasa * 100).toFixed(0) + '% · base ' + gs(baseIps),
+          v: aporteIpsMensual,
+        });
+        rows.push({
+          k: 'Aporte anual al IPS como independiente',
+          ref: 'Sólo jubilación, no salud',
+          v: aporteIpsAnual,
+        });
+      }
+
+      rows.push({
+        k: 'Lo que te queda después de IRP y aportes',
+        ref: 'Bruto − IRP − aporte al IPS',
+        v: Math.max(0, bruto - irpAnual - aporteIpsAnual),
+      });
+      rows.push({
+        k: 'Tu ingreso bruto medido en salarios mínimos mensuales',
+        ref: 'Bruto ÷ 12 ÷ ' + gs(SMVM),
+        v: SMVM > 0 ? bruto / 12 / SMVM : 0,
+        format: 'unit',
+        unit: 'SMVM',
+        decimals: 2,
+      });
+
+      const total =
+        id === 'empresa' ? ire + idu
+        : id === 'consumidor' ? ivaMonto
+        : id === 'independiente' ? aporteIpsAnual
+        : irpAnual;
+
+      const sub =
+        (incidido
+          ? 'Estás incidido por el IRP: superaste el umbral de ' + gs(IRP_UMBRAL)
+          : 'No estás incidido por el IRP: tu bruto no llega a ' + gs(IRP_UMBRAL)) +
+        ' · renta neta ' + gs(rentaNeta) +
+        ' · tasa efectiva ' + efectiva.toFixed(2).replace('.', ',') + '%' +
+        (rentaEmpresarial > 0 ? ' · IRE ' + gs(ire) : '') +
+        (rentaIps > 0 ? ' · IPS ' + gs(aporteIpsMensual) + '/mes' : '');
+
+      return {
+        total: gs(total),
+        sub: sub,
+        rows: rows,
+        chart: [
+          {
+            label: 'Lo que te queda',
+            value: Math.max(0, Math.round(bruto - irpAnual - aporteIpsAnual)),
+            tone: 'main',
+          },
+          { label: 'IRP del año', value: Math.round(irpAnual), tone: 'warn' },
+          { label: 'Aporte al IPS', value: Math.round(aporteIpsAnual), tone: 'prop' },
+        ],
+      };
+    });
+  })();
+</script>

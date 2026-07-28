@@ -1,0 +1,225 @@
+---
+/**
+ * Hub de decisión ES — impuestos del autónomo. Reemplaza 4 calculadoras sueltas.
+ *
+ * OJO: HubData sólo admite audience 'AR' | 'global'; el audience="ES" va literal
+ * al Layout. define:vars serializa a JSON, así que los Infinity viajan como null.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  RETENCIONES,
+  TRAMOS_RETA,
+  AUTONOMO_PARAMS,
+  ESCALA_GENERAL,
+  MINIMO_CONTRIBUYENTE,
+} from '../../../lib/hubs/es/autonomos';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/es' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="ES"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    RET: RETENCIONES,
+    RETA: TRAMOS_RETA,
+    P: AUTONOMO_PARAMS,
+    ESCALA: ESCALA_GENERAL,
+    MINIMO: MINIMO_CONTRIBUYENTE,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n) => Math.round(n || 0).toLocaleString('es-ES') + ' €';
+
+    function escala(base, tramos) {
+      if (!(base > 0)) return 0;
+      let cuota = 0;
+      let prev = 0;
+      for (const par of tramos) {
+        const limite = par[0] == null ? Infinity : par[0];
+        if (base > prev) {
+          cuota += (Math.min(base, limite) - prev) * par[1];
+          prev = limite;
+          if (base <= limite) break;
+        }
+      }
+      return cuota;
+    }
+
+    /** Cuota mensual del RETA según el rendimiento neto mensual ya reducido. */
+    function cuotaReta(rendimientoMensual) {
+      for (const par of RETA) {
+        const limite = par[0] == null ? Infinity : par[0];
+        if (rendimientoMensual <= limite) return par[1];
+      }
+      return RETA[RETA.length - 1][1];
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'profesional';
+      const facturacion = Math.max(0, v.facturacion || 0);
+      const gastos = Math.max(0, v.gastos || 0);
+      const tipoIva = Math.max(0, Number(v.tipoIva) || 0) / 100;
+      const ivaSoportado = Math.max(0, v.ivaSoportado || 0);
+      const societario = String(v.societario || 'no') === 'si';
+      const tarifaPlana = String(v.tarifaPlana || 'no') === 'si';
+
+      // ── Cuota del RETA ────────────────────────────────────────────
+      const rendimientoBruto = Math.max(0, facturacion - gastos);
+      const reduccion = societario ? P.reduccionSocietario : P.reduccionFisica;
+      const rendimientoCotizable = rendimientoBruto * (1 - reduccion);
+      const cuotaMensual = tarifaPlana ? P.tarifaPlanaMensual : cuotaReta(rendimientoCotizable / 12);
+      const cuotaAnual = cuotaMensual * 12;
+
+      // ── IRPF ──────────────────────────────────────────────────────
+      // La cuota del RETA es gasto deducible: baja el rendimiento del IRPF.
+      const rendimientoIrpf = Math.max(0, facturacion - gastos - cuotaAnual);
+      const irpf = Math.max(0, escala(rendimientoIrpf, ESCALA) - escala(MINIMO, ESCALA));
+
+      // ── Anticipos: retención en factura o modelo 130 ──────────────
+      const tipoRetencion = id === 'nuevo' ? RET.nuevos / 100 : RET.general / 100;
+      const conRetencion = id !== 'empresarial';
+      const retenido = conRetencion ? facturacion * tipoRetencion : 0;
+      const pago130 = conRetencion
+        ? 0
+        : Math.max(0, rendimientoIrpf * P.tipoPagoFraccionado);
+      const anticipado = retenido + pago130;
+      const saldoRenta = anticipado - irpf;
+
+      // ── IVA ───────────────────────────────────────────────────────
+      const ivaRepercutido = facturacion * tipoIva;
+      const ivaLiquidar = Math.max(0, ivaRepercutido - ivaSoportado);
+
+      const neto = Math.max(0, facturacion - gastos - cuotaAnual - irpf);
+      const presion = facturacion > 0 ? ((cuotaAnual + irpf) / facturacion) * 100 : 0;
+
+      const rows = [
+        { k: 'Facturación anual sin IVA', ref: 'Base del cálculo', v: facturacion },
+        { k: 'Gastos deducibles (se restan)', ref: 'Gasto de la actividad', v: gastos },
+        {
+          k: 'Rendimiento neto para cotizar',
+          ref: 'Menos la deducción genérica del ' + Math.round(reduccion * 100) + '%',
+          v: rendimientoCotizable,
+        },
+        {
+          k: 'Cuota de autónomos',
+          ref: eur(cuotaMensual) + ' al mes' + (tarifaPlana ? ' · tarifa plana' : ' · tramo del RETA'),
+          v: cuotaAnual,
+        },
+        { k: 'Rendimiento neto del IRPF', ref: 'Facturación − gastos − cuota', v: rendimientoIrpf },
+        { k: 'IRPF del año', ref: 'Escala general, menos el mínimo', v: irpf, extra: true },
+      ];
+      if (conRetencion) {
+        rows.push({
+          k: 'Retención en factura',
+          ref: Math.round(tipoRetencion * 100) + '% de lo facturado',
+          v: retenido,
+        });
+      } else {
+        rows.push({
+          k: 'Pago fraccionado del año (modelo 130)',
+          ref: '20% del rendimiento neto · art. 110.3 RIRPF',
+          v: pago130,
+        });
+        rows.push({ k: 'Pago del trimestre', ref: 'Modelo 130 ÷ 4, orientativo', v: pago130 / 4 });
+      }
+      rows.push({
+        k: saldoRenta >= 0 ? 'En la Renta te sale a devolver' : 'En la Renta te sale a pagar',
+        ref: 'Anticipado menos IRPF real',
+        v: Math.abs(saldoRenta),
+      });
+      rows.push({
+        k: 'IVA repercutido',
+        ref: 'Tipo del ' + Math.round(tipoIva * 100) + '% · no es tuyo',
+        v: ivaRepercutido,
+      });
+      rows.push({ k: 'IVA soportado (se resta)', ref: 'El de tus compras', v: ivaSoportado });
+      rows.push({ k: 'IVA a ingresar en el año', ref: 'Modelo 303', v: ivaLiquidar });
+      rows.push({ k: 'Te queda limpio', ref: 'Tras gastos, cuota e IRPF', v: neto, extra: true });
+      rows.push({ k: 'Neto mensual', ref: 'Limpio ÷ 12', v: neto / 12 });
+      rows.push({
+        k: 'Presión fiscal',
+        ref: '(cuota + IRPF) ÷ facturación',
+        v: presion,
+        format: 'unit',
+        unit: '%',
+        decimals: 1,
+      });
+
+      const chart = [
+        { label: 'Te queda limpio', value: Math.round(neto), tone: 'main' },
+        { label: 'Gastos de la actividad', value: Math.round(gastos), tone: 'prop' },
+        { label: 'Cuota de autónomos', value: Math.round(cuotaAnual), tone: 'warn' },
+        { label: 'IRPF', value: Math.round(irpf), tone: 'bad' },
+      ].filter(function (s) {
+        return s.value > 0;
+      });
+
+      const sub =
+        'De ' +
+        eur(facturacion) +
+        ' facturados te quedan ' +
+        eur(neto) +
+        ' (' +
+        eur(neto / 12) +
+        ' al mes) · entre cuota e IRPF se va el ' +
+        presion.toFixed(1).replace('.', ',') +
+        '% · aparte, ' +
+        eur(ivaLiquidar) +
+        ' de IVA que nunca fueron tuyos';
+
+      return {
+        total: eur(neto),
+        sub: sub,
+        rows: rows,
+        chart: chart,
+        format: 'unit',
+        unit: '€',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

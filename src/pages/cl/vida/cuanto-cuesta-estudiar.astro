@@ -1,0 +1,313 @@
+---
+/**
+ * Hub de decisión CL — "¿Cuánto me va a costar la universidad y con qué deuda salgo?"
+ * Ruta bajo el prefijo /cl/, igual que las calculadoras que absorbe.
+ * audience="CL" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, UF, FES, NEM, ESTUDIAR } from '../../../lib/hubs/cl/cuanto-cuesta-estudiar';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ UF, FES, NEM, ESTUDIAR }}>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+
+    /** Promedio de notas → puntaje NEM con la tabla oficial DEMRE del grupo. */
+    function notaAPuntaje(nota, grupo) {
+      const idx = Math.min(300, Math.max(0, Math.round(nota * 100) - 400));
+      return NEM[grupo][idx];
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'gratuidad';
+
+      const decil = Math.min(10, Math.max(1, Math.round(Number(v.decil) || 1)));
+      const arancelReal = Math.max(0, v.arancelReal || 0);
+      const arancelRegulado = Math.max(0, v.arancelRegulado || 0);
+      const duracion = Math.min(8, Math.max(1, Math.round(Number(v.duracion) || 5)));
+      const atraso = Math.min(5, Math.max(0, Math.round(Number(v.atraso) || 0)));
+      const reajuste = Math.max(0, Number(v.reajuste) || 0) / 100;
+      const tasa = Math.max(0, Number(v.tasaCae) || 0) / 100;
+      const rentaEgreso = Math.max(0, v.rentaEgreso || 0);
+      const deudaActual = Math.max(0, v.deudaActual || 0);
+      const cuotasPagadas = Math.max(0, Math.round(Number(v.cuotasPagadas) || 0));
+      const cuotasTotales = Math.max(1, Math.round(Number(v.cuotasTotales) || 1));
+      const perfil = String(v.perfilFes || 'tituladoAlDia');
+      const promedio = Math.min(7, Math.max(4, Number(v.promedio) || 4));
+      const grupo = ['A', 'B', 'C'].indexOf(String(v.grupoNem)) >= 0 ? String(v.grupoNem) : 'A';
+      const promCol = Math.min(7, Math.max(4, Number(v.promedioColegio) || 4));
+      const maxCol = Math.min(7, Math.max(promCol, Number(v.maximoColegio) || promCol));
+      const tarifaAdulto = Math.max(0, v.tarifaAdulto || 0);
+      const viajesMes = Math.max(1, Math.round(Number(v.viajesMes) || 1));
+
+      // ── Arancel total de la carrera, con reajuste año a año ──
+      let arancelTotalReal = 0;
+      let arancelTotalRegulado = 0;
+      for (let a = 0; a < duracion; a++) {
+        const f = Math.pow(1 + reajuste, a);
+        arancelTotalReal += arancelReal * f;
+        arancelTotalRegulado += arancelRegulado * f;
+      }
+
+      // ── Gratuidad (Ley 21.091): cubre el arancel REGULADO por la duración formal.
+      // Excedida hasta en 1 año, la institución cobra hasta el 50% del regulado de ese período;
+      // pasado ese año, hasta el 100%. NO es un tope plano de 6 años.
+      const tieneGratuidad = decil <= ESTUDIAR.decilesGratuidad;
+      const cubreGratuidad = tieneGratuidad ? arancelTotalRegulado : 0;
+      // Brecha entre lo que cobra la institución y lo que cubre el Estado.
+      const brechaArancel = tieneGratuidad ? Math.max(0, arancelTotalReal - arancelTotalRegulado) : 0;
+
+      let cobroAtraso = 0;
+      if (tieneGratuidad && atraso > 0) {
+        const reguladoAtrasoAnio = arancelRegulado * Math.pow(1 + reajuste, duracion);
+        const aniosAlCincuenta = Math.min(1, atraso);
+        const aniosAlCien = Math.max(0, atraso - 1);
+        cobroAtraso =
+          reguladoAtrasoAnio * aniosAlCincuenta * ESTUDIAR.fraccionCobroPrimerAnioExtra +
+          reguladoAtrasoAnio * aniosAlCien * ESTUDIAR.fraccionCobroDespues;
+      } else if (!tieneGratuidad && atraso > 0) {
+        cobroAtraso = arancelReal * Math.pow(1 + reajuste, duracion) * atraso;
+      }
+
+      const aCargoConGratuidad = brechaArancel + cobroAtraso;
+
+      // ── CAE: capitalización durante la carrera ──
+      let deudaAlEgresar = 0;
+      for (let a = 0; a < duracion; a++) {
+        const desembolso = arancelReal * Math.pow(1 + reajuste, a);
+        deudaAlEgresar += desembolso * Math.pow(1 + tasa, duracion - a - 1);
+      }
+
+      // ── Repago: la cuota topa en el 10% de la renta bruta Y el saldo SIGUE devengando
+      // interés (la fórmula vieja asumía interés cero acá, lo que subestimaba plazo y costo).
+      const cuotaMensual = (rentaEgreso * ESTUDIAR.topeCuotaCaeSobreRenta);
+      const tasaMensual = tasa / 12;
+      let saldo = deudaAlEgresar;
+      let meses = 0;
+      let pagadoTotal = 0;
+      const MAX_MESES = 480;
+      while (saldo > 1 && meses < MAX_MESES) {
+        const interes = saldo * tasaMensual;
+        if (cuotaMensual <= interes) { meses = MAX_MESES; break; } // la cuota no cubre ni el interés
+        saldo = saldo + interes - cuotaMensual;
+        pagadoTotal += cuotaMensual;
+        meses++;
+      }
+      const noAmortiza = meses >= MAX_MESES;
+      const aniosPago = meses / 12;
+      const interesRepago = Math.max(0, pagadoTotal - deudaAlEgresar);
+
+      // ── FES: condonación inicial en UF ──
+      const baseUf = FES.baseUf[perfil] ?? FES.baseUf.tituladoAlDia;
+      const factorFes = cuotasPagadas / cuotasTotales + 1;
+      const condonacionUf = baseUf * factorFes;
+      const condonacionClp = Math.min(condonacionUf * UF, deudaActual);
+      const saldoTrasFes = Math.max(0, deudaActual - condonacionUf * UF);
+      const pagoAnticipado = saldoTrasFes * FES.pagoAnticipado.pagoRequeridoPct;
+      const condonacionExtra = saldoTrasFes * FES.pagoAnticipado.condonacionPct;
+
+      // ── NEM y ranking DEMRE ──
+      const nemPts = notaAPuntaje(promedio, grupo);
+      const promPts = notaAPuntaje(promCol, grupo);
+      const maxPts = notaAPuntaje(maxCol, grupo);
+      let rankingPts;
+      if (nemPts <= promPts) rankingPts = nemPts;
+      else if (nemPts >= maxPts) rankingPts = 1000;
+      else rankingPts = Math.round(nemPts + (1000 - nemPts) * (nemPts - promPts) / (maxPts - promPts));
+
+      // ── TNE: se paga un tercio de la tarifa adulto ──
+      const tarifaTne = tarifaAdulto * ESTUDIAR.factorTneSobreTarifa;
+      const mensualAdulto = tarifaAdulto * viajesMes;
+      const mensualTne = tarifaTne * viajesMes;
+      const ahorroMensualTne = mensualAdulto - mensualTne;
+
+      const rows = [];
+      let total, sub;
+
+      if (id === 'gratuidad') {
+        rows.push({ k: 'Arancel real de la carrera completa', ref: duracion + ' años con reajuste del ' + (reajuste * 100).toFixed(1).replace('.', ',') + '%', v: arancelTotalReal });
+        rows.push({ k: 'Arancel regulado de la carrera completa', ref: 'Lo que puede cubrir la gratuidad', v: arancelTotalRegulado });
+        rows.push({
+          k: tieneGratuidad ? 'Te corresponde gratuidad' : 'No te corresponde gratuidad',
+          ref: 'Decil ' + decil + ' · el beneficio alcanza hasta el decil ' + ESTUDIAR.decilesGratuidad,
+          v: decil,
+          format: 'unit',
+          unit: '= tu decil',
+        });
+        rows.push({ k: 'Lo que cubre el Estado', ref: 'Arancel regulado · Ley 21.091', v: cubreGratuidad });
+        rows.push({ k: 'Brecha entre el arancel real y el regulado', ref: 'Queda a tu cargo aunque tengas gratuidad', v: brechaArancel });
+        if (atraso > 0) {
+          rows.push({
+            k: 'Cobro por los ' + atraso + (atraso === 1 ? ' año' : ' años') + ' de atraso',
+            ref: atraso === 1 ? 'Hasta el 50% del arancel regulado · Ley 21.091' : 'El primer año al 50%, el resto al 100%',
+            v: cobroAtraso,
+          });
+        }
+        rows.push({ k: 'Total a tu cargo con gratuidad', ref: 'Brecha más cobro por atraso', v: tieneGratuidad ? aCargoConGratuidad : arancelTotalReal + cobroAtraso, extra: true });
+        total = clp(tieneGratuidad ? aCargoConGratuidad : arancelTotalReal + cobroAtraso);
+        sub = tieneGratuidad
+          ? 'El Estado cubre ' + clp(cubreGratuidad) + ' de arancel regulado' +
+            (brechaArancel > 0
+              ? ' · pero tu institución cobra ' + clp(brechaArancel) + ' más, y esa diferencia la pagas tú'
+              : ' · tu arancel real no supera el regulado, así que no pagas diferencia') +
+            (cobroAtraso > 0 ? ' · más ' + clp(cobroAtraso) + ' por el atraso' : '')
+          : 'Con decil ' + decil + ' no accedes a gratuidad: la carrera completa te cuesta ' +
+            clp(arancelTotalReal + cobroAtraso);
+      } else if (id === 'arancel-cae') {
+        rows.push({ k: 'Arancel de la carrera completa', ref: duracion + ' años con reajuste anual', v: arancelTotalReal });
+        rows.push({ k: 'Deuda al momento de egresar', ref: 'Con la capitalización del ' + (tasa * 100).toFixed(1).replace('.', ',') + '% durante la carrera', v: deudaAlEgresar, extra: true });
+        rows.push({ k: 'Lo que suma la capitalización durante la carrera', ref: 'Deuda al egresar menos aranceles', v: Math.max(0, deudaAlEgresar - arancelTotalReal) });
+        rows.push({ k: 'Cuota mensual al egresar', ref: '10% de la renta bruta · tope legal', v: cuotaMensual });
+        rows.push({
+          k: noAmortiza ? 'La cuota no alcanza a cubrir el interés' : 'Años hasta pagar la deuda',
+          ref: noAmortiza ? 'Con esa renta el saldo no baja' : 'Con el saldo devengando interés durante el repago',
+          v: noAmortiza ? 0 : aniosPago,
+          format: 'unit',
+          unit: 'años',
+          decimals: 1,
+        });
+        rows.push({ k: 'Interés pagado durante el repago', ref: 'Lo que no cuentan los cálculos que asumen interés cero', v: interesRepago });
+        rows.push({ k: 'Total desembolsado por el crédito', ref: 'Suma de todas las cuotas', v: pagadoTotal });
+        total = clp(deudaAlEgresar);
+        sub =
+          'Sales con ' + clp(deudaAlEgresar) + ' de deuda · con una renta de ' + clp(rentaEgreso) +
+          ' la cuota tope es ' + clp(cuotaMensual) +
+          (noAmortiza
+            ? ' y no alcanza a cubrir el interés: el saldo no baja'
+            : ' y terminas de pagar en unos ' + aniosPago.toFixed(1).replace('.', ',') + ' años, con ' + clp(interesRepago) + ' de interés');
+      } else if (id === 'fes') {
+        rows.push({ k: 'Saldo actual de tu deuda CAE', ref: 'Tu dato', v: deudaActual });
+        rows.push({
+          k: 'Base de condonación de tu perfil',
+          ref: 'Fórmula publicada por el Mineduc',
+          v: baseUf,
+          format: 'unit',
+          unit: 'UF',
+          decimals: 0,
+        });
+        rows.push({
+          k: 'Factor por cuotas pagadas',
+          ref: cuotasPagadas + ' ÷ ' + cuotasTotales + ' + 1',
+          v: factorFes,
+          format: 'plain',
+          decimals: 3,
+        });
+        rows.push({
+          k: 'Condonación inicial estimada',
+          ref: 'Base × factor',
+          v: condonacionUf,
+          format: 'unit',
+          unit: 'UF',
+          decimals: 1,
+        });
+        rows.push({ k: 'Condonación inicial en pesos', ref: 'UF de hoy ' + clp(UF), v: condonacionClp, extra: true });
+        rows.push({ k: 'Saldo después de la condonación inicial', ref: 'Deuda menos condonación', v: saldoTrasFes });
+        rows.push({ k: 'Pago anticipado para condonar el resto', ref: Math.round(FES.pagoAnticipado.pagoRequeridoPct * 100) + '% en hasta ' + FES.pagoAnticipado.cuotasMax + ' cuotas', v: pagoAnticipado });
+        rows.push({ k: 'Lo que se condonaría con ese pago', ref: Math.round(FES.pagoAnticipado.condonacionPct * 100) + '% del saldo restante', v: condonacionExtra });
+        total = clp(condonacionClp);
+        sub =
+          'Con base ' + baseUf + ' UF y ' + cuotasPagadas + ' de ' + cuotasTotales + ' cuotas pagadas, la condonación inicial estimada es de ' +
+          condonacionUf.toLocaleString('es-CL', { maximumFractionDigits: 1 }) + ' UF (' + clp(condonacionClp) + ')' +
+          (saldoTrasFes <= 0 ? ' · cubre todo tu saldo' : ' · quedarían ' + clp(saldoTrasFes)) +
+          ' · el proyecto de ley del FES sigue en tramitación';
+      } else if (id === 'admision') {
+        rows.push({
+          k: 'Tu promedio de enseñanza media',
+          ref: 'Grupo ' + grupo + ' de la tabla DEMRE',
+          v: promedio,
+          format: 'plain',
+          decimals: 2,
+        });
+        rows.push({ k: 'Puntaje NEM', ref: 'Tabla oficial DEMRE, escala 100–1000', v: nemPts, format: 'unit', unit: 'puntos', extra: true });
+        rows.push({ k: 'Promedio histórico de tu colegio en puntos', ref: 'Tres generaciones anteriores', v: promPts, format: 'unit', unit: 'puntos' });
+        rows.push({ k: 'Máximo histórico de tu colegio en puntos', ref: 'Referencia del tope del ranking', v: maxPts, format: 'unit', unit: 'puntos' });
+        rows.push({ k: 'Puntaje ranking estimado', ref: 'Estimación agregada: el oficial se calcula nivel por nivel', v: rankingPts, format: 'unit', unit: 'puntos', extra: true });
+        rows.push({ k: 'Puntos que te suma el ranking', ref: 'Ranking menos NEM', v: rankingPts - nemPts, format: 'unit', unit: 'puntos' });
+        total = rankingPts + ' pts';
+        sub =
+          'Un promedio de ' + promedio.toLocaleString('es-CL', { minimumFractionDigits: 2 }) + ' equivale a ' + nemPts +
+          ' puntos NEM · frente al histórico de tu colegio tu ranking estimado es ' + rankingPts +
+          (rankingPts > nemPts ? ' (+' + (rankingPts - nemPts) + ' puntos)' : ' (el ranking nunca baja de tu NEM)');
+      } else {
+        // tne
+        rows.push({ k: 'Tarifa adulto por viaje', ref: 'La de tu ciudad · no hay tabla nacional única', v: tarifaAdulto });
+        rows.push({ k: 'Tarifa con TNE por viaje', ref: 'Un tercio de la tarifa adulto', v: tarifaTne, extra: true });
+        rows.push({ k: 'Ahorro por viaje', ref: 'Dos tercios de la tarifa', v: tarifaAdulto - tarifaTne });
+        rows.push({ k: 'Gasto mensual pagando tarifa adulto', ref: viajesMes + ' viajes', v: mensualAdulto });
+        rows.push({ k: 'Gasto mensual con la TNE', ref: viajesMes + ' viajes', v: mensualTne });
+        rows.push({ k: 'Ahorro mensual con la TNE', ref: 'Diferencia', v: ahorroMensualTne, extra: true });
+        rows.push({ k: 'Ahorro en un año', ref: 'Mensual × 12', v: ahorroMensualTne * 12 });
+        total = clp(ahorroMensualTne * 12);
+        sub =
+          'Con la TNE pagas ' + clp(mensualTne) + ' al mes en vez de ' + clp(mensualAdulto) +
+          ': ahorras ' + clp(ahorroMensualTne) + ' al mes y ' + clp(ahorroMensualTne * 12) + ' al año';
+      }
+
+      // Cierre común: la comparación entre financiar y no financiar.
+      rows.push({ k: 'Arancel total de la carrera', ref: 'Sin financiamiento', v: arancelTotalReal });
+      rows.push({ k: 'Deuda al egresar financiando con CAE', ref: 'Con capitalización', v: deudaAlEgresar });
+      rows.push({
+        k: 'Total desembolsado si pagas el crédito completo',
+        ref: noAmortiza ? 'La cuota no amortiza con esa renta' : 'Suma de las cuotas',
+        v: pagadoTotal,
+      });
+
+      return {
+        total: total,
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Arancel de la carrera', value: Math.round(arancelTotalReal), tone: 'main' },
+          { label: 'Cubre la gratuidad', value: Math.round(cubreGratuidad), tone: 'good' },
+          { label: 'A tu cargo con gratuidad', value: Math.round(aCargoConGratuidad), tone: 'warn' },
+          { label: 'Interés del CAE', value: Math.round(Math.max(0, deudaAlEgresar - arancelTotalReal) + interesRepago), tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>

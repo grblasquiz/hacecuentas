@@ -1,0 +1,202 @@
+---
+/**
+ * Hub de decisão BR — "Tenho direito a algum benefício e de quanto é?".
+ * Ruta bajo el prefijo /pt/, igual que las calculadoras que absorbe.
+ * audience="BR" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, MINIMO, BOLSA_FAMILIA, ABONO } from '../../../lib/hubs/pt/beneficios-do-governo';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+/** Los getters no viajan como tales: se serializan a valores planos. */
+const BF = {
+  limitePerCapita: BOLSA_FAMILIA.limitePerCapita,
+  porPessoa: BOLSA_FAMILIA.porPessoa,
+  pisoFamilia: BOLSA_FAMILIA.pisoFamilia,
+  primeiraInfancia: BOLSA_FAMILIA.primeiraInfancia,
+  variavelFamiliar: BOLSA_FAMILIA.variavelFamiliar,
+  regraProtecao: BOLSA_FAMILIA.regraProtecao,
+  tetoProtecao: BOLSA_FAMILIA.tetoProtecao,
+};
+const AB = {
+  anosCadastroMinimo: ABONO.anosCadastroMinimo,
+  limiteSalarios: ABONO.limiteSalarios,
+  diasMinimos: ABONO.diasMinimos,
+  limiteRemuneracao: ABONO.limiteRemuneracao,
+  valorMensal: ABONO.valorMensal,
+};
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="BR"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header lang="pt" />
+  <DecisionHub data={hub} />
+  <Footer lang="pt" />
+</Layout>
+
+<script is:inline define:vars={{ MINIMO, BF, AB }}>
+  (function () {
+    const H = window.HC_HUB;
+    const brl = (n) =>
+      'R$ ' + (Math.round((n || 0) * 100) / 100).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'bolsa_familia';
+      const rows = [];
+      const chart = [];
+
+      if (id === 'abono') {
+        const salarioMedio = Math.max(0, v.salarioMedio || 0);
+        const meses = Math.min(12, Math.max(0, Math.round(Number(v.mesesTrabalhados) || 0)));
+        const anosCad = Math.max(0, Number(v.anosCadastro) || 0);
+
+        const okCadastro = anosCad >= AB.anosCadastroMinimo;
+        const okSalario = salarioMedio > 0 && salarioMedio <= AB.limiteRemuneracao;
+        // Art. 9º da Lei 7.998/1990: 30 dias trabalhados no ano-base — 1 mês na escala mensal.
+        const okMeses = meses >= 1;
+        const elegivel = okCadastro && okSalario && okMeses;
+
+        // Salário mínimo × meses ÷ 12: arredondar a cota antes de multiplicar
+        // faz o valor de 12 meses cair 4 centavos abaixo do mínimo cheio.
+        const valor = elegivel ? Math.round((MINIMO * meses / 12) * 100) / 100 : 0;
+
+        rows.push({ k: 'Anos de inscrição no PIS/PASEP', ref: 'Mínimo de ' + AB.anosCadastroMinimo + ' anos · art. 9º da Lei 7.998/1990', v: anosCad, format: 'unit', unit: 'anos' });
+        rows.push({ k: 'Remuneração média no ano-base', ref: 'Limite de ' + AB.limiteSalarios + ' salários mínimos (' + brl(AB.limiteRemuneracao) + ')', v: salarioMedio });
+        rows.push({ k: 'Meses trabalhados no ano-base', ref: 'Mês com 15 dias ou mais conta cheio', v: meses, format: 'unit', unit: meses === 1 ? 'mês' : 'meses' });
+        rows.push({ k: 'Valor de cada mês', ref: 'Salário mínimo ÷ 12', v: AB.valorMensal });
+        rows.push({ k: 'Abono a receber', ref: elegivel ? meses + '/12 do salário mínimo' : 'Requisitos não cumpridos', v: valor, extra: true });
+        rows.push({ k: 'Valor integral (12 meses)', ref: 'Um salário mínimo cheio', v: MINIMO });
+
+        const faltas = [];
+        if (!okCadastro) faltas.push('faltam ' + (AB.anosCadastroMinimo - anosCad) + ' ano(s) de cadastro no PIS/PASEP');
+        if (!okSalario) faltas.push('a remuneração média passa de ' + brl(AB.limiteRemuneracao));
+        if (!okMeses) faltas.push('é preciso ao menos ' + AB.diasMinimos + ' dias trabalhados no ano-base');
+
+        chart.push({ label: 'Abono a receber', value: Math.round(valor), tone: 'main' });
+        chart.push({ label: 'Parte não proporcional', value: Math.max(0, Math.round(MINIMO - valor)), tone: 'warn' });
+
+        return {
+          total: brl(valor),
+          sub: elegivel
+            ? 'Elegível ao abono: ' + brl(valor) + ' pelos ' + meses + ' meses trabalhados no ano-base (valor cheio: ' + brl(MINIMO) + ').'
+            : 'Sem direito ao abono neste exercício — ' + faltas.join('; ') + '.',
+          rows: rows,
+          chart: chart.filter((s) => s.value > 0),
+        };
+      }
+
+      // ── Bolsa Família (e a aba do extinto Auxílio Brasil, que usa a mesma conta) ──
+      const renda = Math.max(0, v.rendaFamiliar || 0);
+      const membros = Math.max(1, Math.round(Number(v.membros) || 1));
+      const criancas = Math.max(0, Math.round(Number(v.criancas) || 0));
+      const jovens = Math.max(0, Math.round(Number(v.jovens) || 0));
+      const gestantes = Math.max(0, Math.round(Number(v.gestantes) || 0));
+
+      const perCapita = renda / membros;
+      // Art. 4º da Lei 14.601/2023: renda per capita ATÉ o limite (inclusive).
+      const elegivel = perCapita <= BF.limitePerCapita;
+      const naProtecao = !elegivel && perCapita <= BF.tetoProtecao;
+
+      const rendaCidadania = membros * BF.porPessoa;
+      const complementar = Math.max(0, BF.pisoFamilia - rendaCidadania);
+      const adicInfancia = criancas * BF.primeiraInfancia;
+      const adicVariavel = (jovens + gestantes) * BF.variavelFamiliar;
+      const bruto = rendaCidadania + complementar + adicInfancia + adicVariavel;
+
+      const fator = elegivel ? 1 : naProtecao ? BF.regraProtecao : 0;
+      const valor = bruto * fator;
+
+      rows.push({ k: 'Renda per capita da família', ref: brl(renda) + ' ÷ ' + membros + ' pessoas', v: perCapita });
+      rows.push({ k: 'Limite do programa', ref: 'Art. 4º da Lei 14.601/2023', v: BF.limitePerCapita });
+      rows.push({ k: 'Benefício de Renda de Cidadania', ref: membros + ' × ' + brl(BF.porPessoa) + ' por pessoa', v: rendaCidadania });
+      rows.push({
+        k: 'Benefício Complementar',
+        ref: complementar > 0 ? 'Completa até o piso de ' + brl(BF.pisoFamilia) : 'Não incide: a soma por pessoa já passa do piso',
+        v: complementar,
+      });
+      if (criancas > 0) rows.push({ k: 'Benefício Primeira Infância', ref: criancas + ' × ' + brl(BF.primeiraInfancia) + ' (0 a 6 anos)', v: adicInfancia });
+      if (jovens + gestantes > 0) {
+        rows.push({
+          k: 'Benefício Variável Familiar',
+          ref: (jovens + gestantes) + ' × ' + brl(BF.variavelFamiliar) + ' (7 a 18 anos, gestantes e nutrizes)',
+          v: adicVariavel,
+        });
+      }
+      rows.push({ k: 'Valor cheio do benefício', ref: 'Antes da Regra de Proteção', v: bruto });
+      if (naProtecao) {
+        rows.push({ k: 'Regra de Proteção', ref: '50% por até 24 meses · renda até ' + brl(BF.tetoProtecao) + ' por pessoa', v: -bruto * 0.5 });
+      }
+      rows.push({
+        k: 'Benefício mensal estimado',
+        ref: elegivel ? 'Dentro do limite de renda' : naProtecao ? 'Metade, pela Regra de Proteção' : 'Renda acima do limite do programa',
+        v: valor,
+        extra: true,
+      });
+      rows.push({ k: 'Valor no ano', ref: '12 parcelas', v: valor * 12 });
+      rows.push({ k: 'Renda da família com o benefício', ref: 'Renda declarada + benefício', v: renda + valor });
+      rows.push({ k: 'Nova renda per capita', ref: 'Com o benefício, dividido por ' + membros, v: (renda + valor) / membros });
+
+      chart.push({ label: 'Renda de Cidadania', value: Math.round(rendaCidadania * fator), tone: 'main' });
+      chart.push({ label: 'Complementar até o piso', value: Math.round(complementar * fator), tone: 'exit' });
+      chart.push({ label: 'Primeira Infância', value: Math.round(adicInfancia * fator), tone: 'good' });
+      chart.push({ label: 'Variável Familiar', value: Math.round(adicVariavel * fator), tone: 'prop' });
+
+      const nota =
+        id === 'auxilio_brasil'
+          ? 'O Auxílio Brasil foi extinto em 2023: esta é a conta do Bolsa Família, o programa que efetivamente paga hoje. '
+          : '';
+
+      const sub =
+        nota +
+        (elegivel
+          ? 'Renda per capita de ' + brl(perCapita) + ', dentro do limite de ' + brl(BF.limitePerCapita) +
+            '. Benefício estimado: ' + brl(valor) + ' por mês.'
+          : naProtecao
+          ? 'Renda per capita de ' + brl(perCapita) + ' passa do limite, mas fica até meio salário mínimo por pessoa: pela Regra de Proteção a família mantém 50% (' +
+            brl(valor) + ') por até 24 meses.'
+          : 'Renda per capita de ' + brl(perCapita) + ' está acima do limite de ' + brl(BF.limitePerCapita) +
+            ' e do teto da Regra de Proteção (' + brl(BF.tetoProtecao) + ') — sem direito ao benefício.');
+
+      return { total: brl(valor), sub: sub, rows: rows, chart: chart.filter((s) => s.value > 0) };
+    });
+  })();
+</script>

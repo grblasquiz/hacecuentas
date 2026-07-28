@@ -1,0 +1,247 @@
+---
+/**
+ * Hub EN — "Does this dog fit my life, and what will it cost?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  DOG_BREEDS,
+  WALK_BASE,
+  WALK_AGE_FACTOR,
+  COATS,
+  FIRST_YEAR_USD,
+  FOOD_PRICE_PER_LB,
+  G_PER_LB,
+} from '../../../lib/hubs/en/dog-lifestyle-and-costs';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ DOG_BREEDS, WALK_BASE, WALK_AGE_FACTOR, COATS, FIRST_YEAR_USD, FOOD_PRICE_PER_LB, G_PER_LB }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (x) => '$' + Math.round(x || 0).toLocaleString('en-US');
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'walking';
+      const br = DOG_BREEDS[String(v.breed || 'beagle')] || DOG_BREEDS.beagle;
+      const stage = String(v.lifestage || 'adult');
+
+      if (id === 'apartment') {
+        // 0 horas solo es un valor legítimo: nada de `|| 8`.
+        const alone = Math.max(0, Number.isFinite(v.hoursalone) ? v.hoursalone : 0);
+        const home = String(v.homesize || 'medium');
+        let score = br.aptOk ? 8 : 4;
+        const deductions = [];
+        let sizePenalty = 0;
+        if (home === 'small') {
+          if (br.size === 'large') { sizePenalty = 3; deductions.push('a large breed in a studio or one-bedroom'); }
+          else if (br.size === 'medium') { sizePenalty = 1; deductions.push('a medium breed in a small flat'); }
+        }
+        score -= sizePenalty;
+        let homeBonus = 0;
+        if (home === 'large') { homeBonus = 1; score += 1; }
+        let alonePenalty = 0;
+        if (alone >= 10) { alonePenalty = 2; deductions.push('ten or more hours alone — too long for any dog'); }
+        else if (alone >= 8) { alonePenalty = 1; deductions.push('eight or more hours alone'); }
+        score -= alonePenalty;
+        let exercisePenalty = 0;
+        if (br.exercise >= 90 && home !== 'large') { exercisePenalty = 1; deductions.push(br.label + ' needs ' + br.exercise + ' minutes of exercise a day'); }
+        score -= exercisePenalty;
+        score = Math.max(1, Math.min(10, score));
+        const verdict =
+          score >= 8 ? 'A good fit' :
+          score >= 6 ? 'Workable with conditions' :
+          score >= 4 ? 'Difficult — it would take real commitment' : 'Not recommended in this setup';
+        const advice =
+          score >= 8 ? 'Two proper walks a day and this breed settles in an apartment without trouble.' :
+          score >= 6 ? 'It works if the walks genuinely happen every day and someone breaks up the time alone.' :
+          score >= 4 ? 'Only with a midday walker or daycare, plus serious daily exercise. Be honest about whether that happens on a bad week.' :
+          'The combination of breed, space and hours alone is the one that produces barking, destruction and a surrendered dog. Change one of the three.';
+        const rows = [
+          { k: 'Starting score for the breed', ref: br.label + (br.aptOk ? ' — generally apartment-friendly' : ' — generally not apartment-friendly'), v: br.aptOk ? 8 : 4, format: 'plain' },
+          { k: 'Deduction for apartment size', ref: home === 'small' ? 'Small flat against a ' + br.size + ' dog' : 'No deduction at this size', v: -sizePenalty, format: 'plain' },
+          { k: 'Bonus for a larger home', ref: home === 'large' ? 'Three or more bedrooms, or a yard' : 'Not applicable', v: homeBonus, format: 'plain' },
+          { k: 'Deduction for hours alone', ref: alone + ' hours a day', v: -alonePenalty, format: 'plain' },
+          { k: 'Deduction for exercise demand', ref: br.exercise + ' minutes a day needed', v: -exercisePenalty, format: 'plain' },
+          { k: 'Fit score', ref: verdict, v: score, format: 'unit', unit: 'out of 10', extra: true },
+          { k: 'Hours alone that stop costing points', ref: 'Below this the score is unaffected', v: 8, format: 'unit', unit: 'hours' },
+          { k: 'Walking minutes this breed needs regardless', ref: 'The number that decides it, not the floor area', v: br.exercise, format: 'unit', unit: 'min/day', extra: true },
+        ];
+        return {
+          total: score + '/10 — ' + verdict,
+          sub:
+            br.label + ' in a ' + home + ' apartment, ' + alone + ' hours alone · ' +
+            (deductions.length ? 'Against it: ' + deductions.join('; ') + '. ' : 'Nothing working against it. ') + advice,
+          rows: rows,
+          chart: [
+            { label: 'Score retained', value: score, tone: 'good' },
+            { label: 'Points lost', value: Math.max(0, 10 - score), tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'shedding') {
+        const key = String(v.coat || 'double');
+        const coat = COATS[key] || COATS.double;
+        const shedding = String(v.season || 'normal') === 'shedding';
+        let min = coat.min;
+        let max = coat.max;
+        if (shedding && key !== 'wire') {
+          min = Math.min(7, Math.round(coat.min * 1.5));
+          max = Math.min(7, coat.max === 7 ? 7 : Math.round(coat.max * 1.5));
+        }
+        const label = min === max ? min + (min === 1 ? ' time/week' : ' times/week') : min + '–' + max + ' times/week';
+        const extra =
+          key === 'double' && shedding ? ' At peak blow-out, brush daily or every other day — and never shave the undercoat, it is the thermoregulating layer.' :
+          key === 'wire' && shedding ? ' Wire coats do not blow their coat seasonally; the hard coat is maintained by hand stripping, not clipping.' : '';
+        const rows = [
+          { k: 'Coat type', ref: coat.label, v: 0, format: 'plain' },
+          { k: 'Normal season, low end', ref: 'Baseline frequency', v: coat.min, format: 'unit', unit: 'times/week' },
+          { k: 'Normal season, high end', ref: 'Baseline frequency', v: coat.max, format: 'unit', unit: 'times/week' },
+          { k: 'This season, low end', ref: shedding ? 'Shedding season, roughly +50%' : 'Normal season', v: min, format: 'unit', unit: 'times/week', extra: true },
+          { k: 'This season, high end', ref: shedding ? 'Capped at daily' : 'Normal season', v: max, format: 'unit', unit: 'times/week', extra: true },
+          { k: 'Extra sessions a week in shedding season', ref: 'The difference the blow-out makes', v: Math.max(0, max - coat.max), format: 'unit', unit: 'times/week' },
+          { k: 'Brushing sessions in a year at this rate', ref: 'Midpoint of the range', v: ((min + max) / 2) * 52, format: 'plain' },
+          { k: 'Weeks a double-coat blow-out lasts', ref: 'Twice a year, driven by daylight not temperature', v: 3, format: 'unit', unit: 'weeks' },
+        ];
+        return {
+          total: label,
+          sub:
+            coat.label + ' in ' + (shedding ? 'shedding season' : 'normal season') + ' · use ' + coat.tool + '.' + extra,
+          rows: rows,
+          chart: [
+            { label: 'Normal season (times/week)', value: Math.round(((coat.min + coat.max) / 2) * 10) / 10, tone: 'main' },
+            { label: 'Added in shedding season', value: Math.max(0, Math.round((((min + max) / 2) - ((coat.min + coat.max) / 2)) * 10) / 10), tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'cost') {
+        const sizeKey = br.size === 'toy' ? 'toy' : br.size === 'small' ? 'small' : br.size === 'medium' ? 'medium' : 'large';
+        const c = FIRST_YEAR_USD[sizeKey];
+        const withSpay = String(v.includespay || 'yes') === 'yes';
+        const spay = withSpay ? c.spay : 0;
+        const pricePerLb = FOOD_PRICE_PER_LB[String(v.foodquality || 'premium')] ?? FOOD_PRICE_PER_LB.premium;
+        // Un cachorro come ~10% más que la media adulta de la raza durante el crecimiento.
+        const gramsDay = ((br.foodMin + br.foodMax) / 2) * 1.1;
+        const lbYear = (gramsDay * 365) / G_PER_LB;
+        const food = lbYear * pricePerLb;
+        const oneOff = c.setup + c.vaccines + spay + c.microchip;
+        const total = oneOff + food + c.vetExtras;
+        const rows = [
+          { k: 'Starter supplies', ref: 'Crate, bed, bowls, collar, lead, carrier, toys', v: c.setup, format: 'unit', unit: 'USD' },
+          { k: 'Puppy vaccine series and exams', ref: 'Core series plus deworming', v: c.vaccines, format: 'unit', unit: 'USD' },
+          { k: 'Spay or neuter', ref: withSpay ? 'Typical US clinic price for a ' + sizeKey + ' dog' : 'Not included this year', v: spay, format: 'unit', unit: 'USD' },
+          { k: 'Microchip', ref: 'One-off, and the single cheapest thing on this list', v: c.microchip, format: 'unit', unit: 'USD' },
+          { k: 'Food for twelve months', ref: Math.round(lbYear) + ' lb at $' + pricePerLb.toFixed(2) + '/lb — about ' + Math.round(gramsDay) + ' g/day', v: food, format: 'unit', unit: 'USD', extra: true },
+          { k: 'Routine vet care and preventives', ref: 'Flea, tick and heartworm prevention plus extra visits', v: c.vetExtras, format: 'unit', unit: 'USD' },
+          { k: 'One-off spend that will not repeat', ref: 'Supplies, vaccines, surgery and chip', v: oneOff, format: 'unit', unit: 'USD', extra: true },
+          { k: 'First-year total', ref: 'Excludes purchase or adoption fee, and emergencies', v: total, format: 'unit', unit: 'USD', extra: true },
+          { k: 'Per month', ref: 'The figure to actually budget against', v: total / 12, format: 'unit', unit: 'USD' },
+          { k: 'Rough second-year cost', ref: 'Food and routine care only', v: food + c.vetExtras, format: 'unit', unit: 'USD' },
+        ];
+        return {
+          total: usd(total),
+          sub:
+            br.label + ' · ' + usd(total / 12) + '/month · ' + usd(oneOff) + ' of it is one-off · ' +
+            'excludes the adoption or breeder fee and excludes emergencies, which run $2,000–$5,000 when they come',
+          rows: rows,
+          chart: [
+            { label: 'Food (12 months)', value: Math.round(food), tone: 'main' },
+            { label: 'Routine vet and preventives', value: c.vetExtras, tone: 'prop' },
+            { label: 'Spay or neuter', value: spay, tone: 'warn' },
+            { label: 'Vaccine series', value: c.vaccines, tone: 'good' },
+            { label: 'Starter supplies and chip', value: c.setup + c.microchip, tone: 'exit' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      // walking
+      const energyChoice = String(v.energy || 'breed');
+      const energy = energyChoice === 'breed' ? br.energy : energyChoice;
+      const sizeKey = br.size === 'toy' ? 'toy' : br.size;
+      const base = (WALK_BASE[energy] || WALK_BASE.medium)[sizeKey] ?? 55;
+      const factor = WALK_AGE_FACTOR[stage] ?? 1.0;
+      const minutes = Math.max(15, Math.round(base * factor));
+      const outings = stage === 'adult' ? 2 : 3;
+      const perOuting = Math.round(minutes / outings);
+      const intensity =
+        energy === 'high' && stage === 'adult'
+          ? 'High: brisk walking, trotting and active play. This breed needs mental work as well as physical.'
+          : energy === 'low' || stage === 'senior'
+          ? 'Low to moderate: a comfortable pace on flat ground with plenty of stops to sniff.'
+          : 'Moderate: a brisk walk with some trotting. Sniffing counts as exercise.';
+        let warning = '';
+      if (br.brachy) warning += 'Flat-faced breed: avoid exertion above about 77 °F — they cannot cool themselves efficiently. ';
+      if (stage === 'puppy') warning += 'AKC puppy rule: five minutes of structured exercise per month of age, twice a day, and no running on hard surfaces until the growth plates close. ';
+      if (stage === 'senior') warning += 'Senior: shorter and more frequent beats long and occasional. ';
+      const rows = [
+        { k: 'Breed', ref: br.label + ' — ' + br.size + ', ' + br.energy + ' energy by default', v: br.exercise, format: 'unit', unit: 'min/day' },
+        { k: 'Base for a healthy adult', ref: energy + ' energy, ' + sizeKey + ' size', v: base, format: 'unit', unit: 'min/day' },
+        { k: 'Life-stage factor', ref: stage === 'puppy' ? 'Puppy: 60% of the adult figure' : stage === 'senior' ? 'Senior: 70% of the adult figure' : 'Adult: the full figure', v: factor, format: 'plain', decimals: 2 },
+        { k: 'Daily walking target', ref: 'Floor of 15 minutes for any dog', v: minutes, format: 'unit', unit: 'min/day', extra: true },
+        { k: 'Outings a day', ref: stage === 'adult' ? 'Two is enough for an adult' : 'More and shorter at this stage', v: outings, format: 'plain', extra: true },
+        { k: 'Minutes per outing', ref: 'Daily target divided by the outings', v: perOuting, format: 'unit', unit: 'min', extra: true },
+        { k: 'Hours a week', ref: 'What this actually costs you in time', v: (minutes * 7) / 60, format: 'unit', unit: 'hours/week', decimals: 1 },
+        { k: 'The same dog as a high-energy adult', ref: 'For comparison, if your dog is more driven than the breed average', v: (WALK_BASE.high[sizeKey] ?? 80), format: 'unit', unit: 'min/day' },
+      ];
+      return {
+        total: minutes + ' min/day',
+        sub:
+          br.label + ' · ' + outings + ' outings of about ' + perOuting + ' min · ' + intensity + ' ' + warning,
+        rows: rows,
+        chart: [
+          { label: 'Minutes per outing', value: perOuting, tone: 'main' },
+          { label: 'Rest of the daily target', value: Math.max(0, minutes - perOuting), tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

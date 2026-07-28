@@ -1,0 +1,300 @@
+---
+/**
+ * Hub de decisión EC — "¿Qué régimen me toca y cuánto voy a pagar al año?"
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  IR_TABLA,
+  FRACCION_BASICA,
+  TECHO_POPULAR,
+  TECHO_EMPRENDEDOR,
+  RIMPE_POPULAR,
+  RIMPE_EMPRENDEDOR,
+  PATENTE_MIN,
+  PATENTE_MAX,
+  PATENTE_TABLA,
+  PATENTE_QUITO_FIJA,
+  PATRIMONIO_PRESUNTO,
+  TARIFA_ACTIVOS,
+  CONSTITUCION,
+} from '../../../lib/hubs/ec/regimen-rimpe-y-negocio';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="EC"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    IR_TABLA,
+    FRACCION_BASICA,
+    TECHO_POPULAR,
+    TECHO_EMPRENDEDOR,
+    RIMPE_POPULAR,
+    RIMPE_EMPRENDEDOR,
+    PATENTE_MIN,
+    PATENTE_MAX,
+    PATENTE_TABLA,
+    PATENTE_QUITO_FIJA,
+    PATRIMONIO_PRESUNTO,
+    TARIFA_ACTIVOS,
+    CONSTITUCION,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) =>
+      '$' + new Intl.NumberFormat('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        .format(Math.round((n || 0) * 100) / 100);
+
+    /** Cuota fija anual del RIMPE negocio popular. */
+    function cuotaPopular(ingresos) {
+      const t = RIMPE_POPULAR.find((x) => ingresos > x.desde && ingresos <= x.hasta);
+      if (ingresos <= 0) return 0;
+      return t ? t.cuota : RIMPE_POPULAR[RIMPE_POPULAR.length - 1].cuota;
+    }
+
+    /** Cuota anual del RIMPE emprendedor: fijo del tramo + % sobre el excedente. */
+    function cuotaEmprendedor(ingresos) {
+      if (ingresos <= TECHO_POPULAR) return cuotaPopular(ingresos);
+      const t = RIMPE_EMPRENDEDOR.find((x) => ingresos > x.desde && ingresos <= x.hasta) ||
+        RIMPE_EMPRENDEDOR[RIMPE_EMPRENDEDOR.length - 1];
+      return t.base + (ingresos - t.desde) * t.pct;
+    }
+
+    /** Tabla del IR de personas naturales. */
+    function irPersona(base) {
+      const b = Math.max(0, base);
+      for (const t of IR_TABLA) {
+        const techo = t.hasta === null ? Infinity : t.hasta;
+        if (b > t.desde && b <= techo) return t.base + (b - t.desde) * t.pct;
+      }
+      const u = IR_TABLA[IR_TABLA.length - 1];
+      return u.base + (b - u.desde) * u.pct;
+    }
+
+    /** Patente municipal progresiva sobre el patrimonio, acotada a los límites del COOTAD. */
+    function patenteProgresiva(patrimonio) {
+      const p = Math.max(0, patrimonio);
+      let causado = PATENTE_MIN;
+      for (const t of PATENTE_TABLA) {
+        const techo = t.hasta === null ? Infinity : t.hasta;
+        if (p > t.desde && p <= techo) { causado = t.base + (p - t.desde) * t.pct; break; }
+      }
+      const u = PATENTE_TABLA[PATENTE_TABLA.length - 1];
+      if (p > u.desde) causado = u.base + (p - u.desde) * u.pct;
+      return Math.min(PATENTE_MAX, Math.max(PATENTE_MIN, causado));
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'popular';
+      const ingresos = Math.max(0, v.ingresos || 0);
+      const gastos = Math.max(0, v.gastos || 0);
+      const activos = Math.max(0, v.activos || 0);
+      const pasivos = Math.max(0, v.pasivos || 0);
+      const socios = Math.max(1, Math.floor(v.socios || 1));
+      const tasaSociedad = Math.max(0, v.tarifaSociedad || 0) / 100;
+      const rows = [];
+
+      // Patrimonio: si no lo cargan, se presume el 10% de los ingresos (COOTAD).
+      const patrimonioIn = Math.max(0, v.patrimonio || 0);
+      const patrimonio = patrimonioIn > 0 ? patrimonioIn : ingresos * PATRIMONIO_PRESUNTO;
+      const patenteFija = String(v.canton || 'tabla') === 'quito_fija';
+      const patente = patenteFija ? PATENTE_QUITO_FIJA : patenteProgresiva(patrimonio);
+
+      // 1,5 por mil sobre activos (solo obligados a llevar contabilidad).
+      const baseActivos = Math.max(0, activos - pasivos);
+      const impActivos = baseActivos * TARIFA_ACTIVOS;
+
+      // Los cuatro caminos, siempre con las mismas cifras.
+      const utilidad = Math.max(0, ingresos - gastos);
+      const rPopular = ingresos <= TECHO_POPULAR ? cuotaPopular(ingresos) : null;
+      const rEmprendedor = ingresos <= TECHO_EMPRENDEDOR ? cuotaEmprendedor(ingresos) : null;
+      const rGeneral = irPersona(utilidad);
+      const rSociedad = utilidad * tasaSociedad;
+
+      // ---------- Constitución de compañía ----------
+      if (id === 'sas') {
+        const tipo = String(v.tipoCompania || 'sas');
+        const via = tipo === 'sas' ? 'digital' : String(v.via || 'digital');
+        const capitalMin = CONSTITUCION.capitalMinimo[tipo] || 1;
+        const firmas = via === 'digital' ? socios * CONSTITUCION.firmaElectronica : 0;
+        const notaria = via === 'tradicional' ? (tipo === 'sa' ? CONSTITUCION.notariaSa : CONSTITUCION.notariaLtda) : 0;
+        const registro = via === 'tradicional' ? CONSTITUCION.registroMercantil : 0;
+        const tramites = CONSTITUCION.supercias + CONSTITUCION.ruc + CONSTITUCION.reservaNombre + firmas + notaria + registro;
+        const desembolso = tramites + capitalMin;
+        const anualSociedad = rSociedad + patente + impActivos;
+
+        rows.push({ k: 'Trámite en SUPERCIAS', ref: 'La constitución en línea no tiene costo', v: CONSTITUCION.supercias, decimals: 2 });
+        rows.push({ k: 'Reserva de denominación y RUC', ref: 'SUPERCIAS y SRI, sin costo', v: CONSTITUCION.reservaNombre + CONSTITUCION.ruc, decimals: 2 });
+        rows.push({ k: 'Firmas electrónicas', ref: socios + (socios === 1 ? ' firmante × ' : ' firmantes × ') + usd(CONSTITUCION.firmaElectronica) + ' al año', v: firmas, decimals: 2 });
+        if (via === 'tradicional') {
+          rows.push({ k: 'Notaría', ref: 'Escritura o documento privado notariado · valor de mercado referencial', v: notaria, decimals: 2 });
+          rows.push({ k: 'Registro Mercantil', ref: 'Inscripción · varía por cantón y capital', v: registro, decimals: 2 });
+        }
+        rows.push({ k: 'Costo total de trámites', ref: 'Lo que realmente gastas para existir', v: tramites, extra: true, decimals: 2 });
+        rows.push({ k: 'Capital mínimo a integrar', ref: 'No es un gasto: queda en la compañía', v: capitalMin, decimals: 2 });
+        rows.push({ k: 'Desembolso inicial total', ref: 'Trámites más capital', v: desembolso, decimals: 2 });
+        rows.push({ k: 'Impuesto a la renta anual de la sociedad', ref: 'Tarifa editable sobre la utilidad · confírmala en la norma', v: rSociedad, decimals: 2 });
+        rows.push({ k: 'Patente municipal anual', ref: patenteFija ? 'Tarifa fija del cantón' : 'Tabla progresiva sobre el patrimonio', v: patente, decimals: 2 });
+        rows.push({ k: 'Impuesto del 1,5 por mil sobre activos', ref: 'Sobre activos menos pasivos deducibles', v: impActivos, decimals: 2 });
+        rows.push({ k: 'Carga tributaria anual como compañía', ref: 'Renta más tributos municipales', v: anualSociedad, decimals: 2 });
+        if (rEmprendedor !== null) {
+          rows.push({ k: 'Contra el RIMPE con las mismas cifras', ref: 'Cuota del RIMPE más patente y 1,5 por mil', v: rEmprendedor + patente + impActivos, decimals: 2 });
+        }
+
+        return {
+          total: usd(tramites),
+          sub:
+            (tipo === 'sas' ? 'SAS' : tipo === 'ltda' ? 'Cía. Ltda.' : 'S.A.') + ' por vía ' + via + ' · trámites ' + usd(tramites) +
+            ' más ' + usd(capitalMin) + ' de capital · la carga tributaria anual estimada sería ' + usd(anualSociedad),
+          rows: rows,
+          decimals: 2,
+          chart: [
+            { label: 'Firmas electrónicas', value: Math.round(firmas * 100) / 100, tone: 'main' },
+            { label: 'Notaría y Registro Mercantil', value: Math.round((notaria + registro) * 100) / 100, tone: 'warn' },
+            { label: 'Capital a integrar (queda tuyo)', value: Math.round(capitalMin * 100) / 100, tone: 'good' },
+          ],
+        };
+      }
+
+      // ---------- Regímenes de persona natural ----------
+      const renta =
+        id === 'popular' ? (rPopular === null ? cuotaEmprendedor(ingresos) : rPopular)
+        : id === 'emprendedor' ? (rEmprendedor === null ? rGeneral : rEmprendedor)
+        : rGeneral;
+
+      const totalAnual = renta + patente + impActivos;
+
+      rows.push({ k: 'Ingresos brutos del año', ref: 'La cifra que define tu régimen', v: ingresos, decimals: 2 });
+      if (id === 'general') {
+        rows.push({ k: 'Costos y gastos con comprobante (se restan)', ref: 'Solo bajan la base en el régimen general', v: gastos, decimals: 2 });
+        rows.push({ k: 'Base imponible', ref: 'Ingresos menos costos y gastos', v: utilidad, decimals: 2 });
+        rows.push({ k: 'Fracción básica desgravada', ref: 'Por debajo de este monto el impuesto es cero', v: FRACCION_BASICA, decimals: 2 });
+      }
+      rows.push({
+        k: 'Impuesto a la renta del régimen elegido',
+        ref: id === 'popular' ? 'Cuota fija por tramo del negocio popular'
+          : id === 'emprendedor' ? 'Cuota del tramo más porcentaje sobre el excedente'
+          : 'Tabla progresiva de personas naturales',
+        v: renta,
+        extra: true,
+        decimals: 2,
+      });
+      rows.push({
+        k: 'Patente municipal anual',
+        ref: patenteFija
+          ? 'Tarifa fija del cantón'
+          : (patrimonioIn > 0 ? 'Tabla progresiva sobre tu patrimonio' : 'Patrimonio presumido en el ' + PATRIMONIO_PRESUNTO * 100 + '% de los ingresos'),
+        v: patente,
+        decimals: 2,
+      });
+      rows.push({
+        k: 'Impuesto del 1,5 por mil sobre activos',
+        ref: activos > 0 ? 'Activos menos pasivos deducibles' : 'Solo aplica si llevas contabilidad',
+        v: impActivos,
+        decimals: 2,
+      });
+      rows.push({ k: 'Carga tributaria anual total', ref: 'Renta más tributos municipales', v: totalAnual, extra: true, decimals: 2 });
+
+      // Comparación con las mismas cifras.
+      rows.push({
+        k: 'Si liquidaras como negocio popular',
+        ref: rPopular === null ? 'No aplica: superas el techo de ' + usd(TECHO_POPULAR) : 'Cuota fija más tributos municipales',
+        v: rPopular === null ? 0 : rPopular + patente + impActivos,
+        decimals: 2,
+      });
+      rows.push({
+        k: 'Si liquidaras como RIMPE emprendedor',
+        ref: rEmprendedor === null ? 'No aplica: superas el techo de ' + usd(TECHO_EMPRENDEDOR) : 'Cuota del tramo más tributos municipales',
+        v: rEmprendedor === null ? 0 : rEmprendedor + patente + impActivos,
+        decimals: 2,
+      });
+      rows.push({ k: 'Si liquidaras en el régimen general', ref: 'Tabla sobre la utilidad más tributos municipales', v: rGeneral + patente + impActivos, decimals: 2 });
+      rows.push({ k: 'Si lo hicieras como compañía', ref: 'Tarifa editable sobre la utilidad más tributos municipales', v: rSociedad + patente + impActivos, decimals: 2 });
+      rows.push({
+        k: 'Tasa efectiva sobre tu facturación',
+        ref: 'Carga anual ÷ ingresos brutos',
+        v: ingresos > 0 ? (totalAnual / ingresos) * 100 : 0,
+        format: 'unit',
+        unit: '%',
+        decimals: 2,
+      });
+      rows.push({
+        k: 'Margen del negocio',
+        ref: 'Utilidad ÷ ingresos · define qué régimen te conviene',
+        v: ingresos > 0 ? (utilidad / ingresos) * 100 : 0,
+        format: 'unit',
+        unit: '%',
+        decimals: 1,
+      });
+
+      // Cuál sale más barato con estas cifras.
+      const opciones = [
+        { label: 'RIMPE negocio popular', valor: rPopular === null ? null : rPopular },
+        { label: 'RIMPE emprendedor', valor: rEmprendedor === null ? null : rEmprendedor },
+        { label: 'régimen general', valor: rGeneral },
+        { label: 'compañía', valor: rSociedad },
+      ].filter((o) => o.valor !== null);
+      opciones.sort((a, b) => a.valor - b.valor);
+      const mejor = opciones[0];
+
+      return {
+        total: usd(totalAnual),
+        sub:
+          'Impuesto a la renta ' + usd(renta) + ' + patente ' + usd(patente) +
+          (impActivos > 0 ? ' + 1,5 por mil ' + usd(impActivos) : '') +
+          ' · con estas cifras el camino más barato en renta es ' + mejor.label + ' (' + usd(mejor.valor) + ')',
+        rows: rows,
+        decimals: 2,
+        chart: [
+          { label: 'Impuesto a la renta del régimen', value: Math.round(renta * 100) / 100, tone: 'main' },
+          { label: 'Patente municipal', value: Math.round(patente * 100) / 100, tone: 'warn' },
+          { label: 'Impuesto del 1,5 por mil', value: Math.round(impActivos * 100) / 100, tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>

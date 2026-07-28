@@ -1,0 +1,205 @@
+---
+/**
+ * Hub de decisión PE — "Sueldo neto: lo que te descuentan y lo que cuesta a la empresa".
+ * audience="PE" literal: HubData sólo modela 'AR' | 'global' y el mercado viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  RMV,
+  UIT,
+  ESSALUD,
+  ONP,
+  AFP,
+  ASIGNACION_FAMILIAR,
+  BONIF_GRATI,
+  TRAMOS_5TA,
+  DEDUCCION_UIT,
+} from '../../../lib/hubs/pe/sueldo-neto';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PE"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ RMV, UIT, ESSALUD, ONP, AFP, ASIGNACION_FAMILIAR, BONIF_GRATI, TRAMOS: TRAMOS_5TA, DEDUCCION_UIT }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    // 'es-PE' en V8 emite formato tipo US; el formato legal peruano (Ley 23560) es
+    // punto para miles y coma para decimales, que es lo que da 'de-DE'.
+    const sol = (n) => 'S/ ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(Math.round(n || 0));
+
+    /** Impuesto a la renta de 5ta categoría anual: 7 UIT de deducción + escala del Art. 53 LIR. */
+    function renta5taAnual(brutoAnual) {
+      let base = Math.max(0, brutoAnual - DEDUCCION_UIT * UIT);
+      if (base <= 0) return 0;
+      let impuesto = 0, anterior = 0;
+      for (const t of TRAMOS) {
+        const limite = t.hastaUit === null ? Infinity : t.hastaUit * UIT;
+        const enTramo = Math.min(base, limite - anterior);
+        if (enTramo <= 0) break;
+        impuesto += enTramo * t.tasa;
+        base -= enTramo;
+        anterior = limite;
+        if (base <= 0) break;
+      }
+      return impuesto;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'onp';
+      const sueldo = Math.max(0, v.bruto || 0);
+      const otros = Math.max(0, v.otros || 0);
+      const horasDia = Math.min(12, Math.max(1, Math.round(v.horasDia || 8)));
+      const afpId = String(v.afp || 'Integra');
+
+      const asignacion = id === 'asignacion' ? ASIGNACION_FAMILIAR : 0;
+      const bruto = sueldo + otros + asignacion;
+
+      // Descuento previsional. En la rama del empleador se muestra ONP como referencia.
+      let tasaPension, etiquetaPension;
+      if (id === 'afp') {
+        const comision = AFP.comisionFlujo[afpId] || AFP.comisionFlujo.Integra;
+        tasaPension = AFP.fondo + AFP.primaSeguro + comision;
+        etiquetaPension = 'AFP ' + afpId + ' · ' + (tasaPension * 100).toFixed(2).replace('.', ',') + '%';
+      } else {
+        tasaPension = ONP;
+        etiquetaPension = 'ONP · ' + (ONP * 100).toFixed(0) + '%';
+      }
+      const pension = bruto * tasaPension;
+
+      // El año en planilla son 14 remuneraciones: 12 sueldos + 2 gratificaciones.
+      const brutoAnual = bruto * 14;
+      const rentaAnual = renta5taAnual(brutoAnual);
+      const rentaMes = rentaAnual / 12;
+
+      const neto = Math.max(0, bruto - pension - rentaMes);
+
+      // Lado del empleador: EsSalud sobre base mínima de 1 RMV + provisiones.
+      const baseEssalud = Math.max(bruto, RMV);
+      const essalud = baseEssalud * ESSALUD;
+      const provCts = bruto / 12;
+      const provGrati = (bruto * 2 * (1 + BONIF_GRATI)) / 12;
+      const provVac = bruto / 12;
+      const costoEmpleador = bruto + essalud + provCts + provGrati + provVac;
+      const sobrecosto = costoEmpleador - bruto;
+
+      const valorDia = bruto / 30;
+      const valorHora = valorDia / horasDia;
+
+      const rows = [
+        { k: 'Remuneración bruta del mes', ref: 'Sueldo + otros ingresos remunerativos', v: bruto },
+      ];
+      if (asignacion > 0) {
+        rows.push({ k: 'Asignación familiar incluida', ref: '10% de la RMV · monto fijo', v: asignacion });
+      }
+      rows.push({ k: 'Descuento del sistema de pensiones', ref: etiquetaPension, v: pension });
+      if (id === 'afp') {
+        rows.push({ k: 'Del descuento, lo que va a tu cuenta individual', ref: 'Aporte al fondo · 10%', v: bruto * AFP.fondo });
+        rows.push({ k: 'Del descuento, prima de seguro y comisión', ref: 'No se acumula en tu fondo', v: pension - bruto * AFP.fondo });
+      }
+      rows.push({ k: 'Retención de renta de quinta categoría', ref: 'Art. 53 LIR · proyección anual ÷ 12', v: rentaMes });
+      rows.push({ k: 'Sueldo neto que recibes', ref: 'Lo que llega a tu cuenta', v: neto, extra: true });
+      rows.push({ k: 'Aporte a EsSalud que paga la empresa', ref: '9% · base mínima 1 RMV · no se te descuenta', v: essalud });
+      rows.push({ k: 'Provisión mensual de CTS', ref: 'Un doceavo · depósitos de mayo y noviembre', v: provCts });
+      rows.push({ k: 'Provisión mensual de gratificaciones', ref: '2 sueldos/año + bonificación 9% · Ley 30334', v: provGrati });
+      rows.push({ k: 'Provisión mensual de vacaciones', ref: 'Un doceavo · 30 días de descanso al año', v: provVac });
+      rows.push({
+        k: 'Costo total mensual para el empleador',
+        ref: 'Sueldo + EsSalud + provisiones',
+        v: costoEmpleador,
+        extra: id === 'empleador',
+      });
+      rows.push({
+        k: 'Cuánto se lleva el sueldo del costo total',
+        ref: 'Neto ÷ costo del empleador',
+        v: costoEmpleador > 0 ? (neto / costoEmpleador) * 100 : 0,
+        format: 'unit',
+        unit: '%',
+        decimals: 1,
+      });
+      rows.push({ k: 'Valor de tu día de trabajo', ref: 'Bruto ÷ 30', v: valorDia });
+      rows.push({
+        k: 'Valor de tu hora de trabajo',
+        ref: 'Valor día ÷ ' + horasDia + ' h',
+        v: valorHora,
+      });
+      rows.push({
+        k: 'Renta de quinta categoría del año',
+        ref: DEDUCCION_UIT + ' UIT de deducción · 14 remuneraciones',
+        v: rentaAnual,
+      });
+
+      const esEmpleador = id === 'empleador';
+      const total = esEmpleador ? sol(costoEmpleador) : sol(neto);
+      const sub = esEmpleador
+        ? 'Pagar ' + sol(bruto) + ' de sueldo te cuesta ' + sol(costoEmpleador) + ' al mes · ' +
+          (bruto > 0 ? ((sobrecosto / bruto) * 100).toFixed(1).replace('.', ',') : '0') + '% de sobrecosto · ' +
+          sol(costoEmpleador * 12) + ' al año'
+        : 'De ' + sol(bruto) + ' brutos te quedan ' + sol(neto) + ' · ' + etiquetaPension +
+          (rentaMes > 0
+            ? ' · retención de quinta ' + sol(rentaMes) + '/mes'
+            : ' · no llegas al piso de la renta de quinta (' + DEDUCCION_UIT + ' UIT)') +
+          ' · tu hora vale ' + sol(valorHora);
+
+      const chart = esEmpleador
+        ? [
+            { label: 'Sueldo bruto del trabajador', value: Math.round(bruto), tone: 'main' },
+            { label: 'EsSalud 9% (empleador)', value: Math.round(essalud), tone: 'warn' },
+            { label: 'Provisión CTS', value: Math.round(provCts), tone: 'prop' },
+            { label: 'Provisión gratificaciones', value: Math.round(provGrati), tone: 'prop' },
+            { label: 'Provisión vacaciones', value: Math.round(provVac), tone: 'prop' },
+          ]
+        : [
+            { label: 'Neto que recibes', value: Math.round(neto), tone: 'main' },
+            { label: 'Sistema de pensiones', value: Math.round(pension), tone: 'exit' },
+            { label: 'Renta de quinta categoría', value: Math.round(rentaMes), tone: 'warn' },
+          ];
+
+      return { total: total, sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

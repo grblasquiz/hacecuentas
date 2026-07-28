@@ -1,0 +1,321 @@
+---
+/**
+ * Hub de decisão BR — "Alugar: quanto custa entrar, ficar e sair antes da hora?".
+ * Ruta bajo el prefijo /pt/, igual que las calculadoras que absorbe.
+ * audience="BR" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  CAUCAO_MAX_ALUGUEIS,
+  PRAZO_DENUNCIA_VAZIA_MESES,
+  HONORARIOS_PURGA,
+  MESES_VALOR_CAUSA,
+  HONORARIOS_SUCUMBENCIA,
+} from '../../../lib/hubs/pt/alugar-um-imovel';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="BR"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header lang="pt" />
+  <DecisionHub data={hub} />
+  <Footer lang="pt" />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    CAUCAO_MAX_ALUGUEIS,
+    PRAZO_DENUNCIA_VAZIA_MESES,
+    HONORARIOS_PURGA,
+    MESES_VALOR_CAUSA,
+    HONORARIOS_SUCUMBENCIA,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const brl = (n) =>
+      'R$ ' + (Math.round((n || 0) * 100) / 100).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    const num = (x, d) => {
+      const n = Number(x);
+      return isFinite(n) ? n : d;
+    };
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'entrar';
+
+      const aluguel = Math.max(0, num(v.aluguel, 0));
+      const m2 = Math.max(0, num(v.m2, 0));
+      const condM2 = Math.max(0, num(v.condominioM2, 0));
+      const condominio = m2 * condM2;
+      const prazo = Math.max(1, Math.round(num(v.prazoMeses, 30)));
+      const cumpridos = Math.min(prazo, Math.max(0, Math.round(num(v.mesesCumpridos, 0))));
+      const multaMeses = Math.max(0, num(v.multaMeses, 3));
+      const garantia = String(v.garantia || 'caucao');
+      const premioSeguro = Math.max(0, num(v.seguroPremioAlugueis, 1.5));
+      const mesesAtraso = Math.max(0, Math.round(num(v.mesesAtraso, 0)));
+      const multaMorPct = Math.max(0, num(v.multaMoratoriaPct, 10)) / 100;
+      const valorImovel = Math.max(0, num(v.valorImovel, 0));
+      const pctDesc = Math.min(100, Math.max(0, num(v.pctDescontavel, 30))) / 100;
+
+      if (aluguel <= 0) {
+        return {
+          total: brl(0),
+          sub: 'Informe um valor de aluguel maior que zero.',
+          rows: [],
+          chart: [],
+        };
+      }
+
+      const custoMensal = aluguel + condominio;
+
+      /* ── 1. Entrar: quanto preciso ter na mão ─────────────────────────── */
+      if (id === 'entrar') {
+        let garantiaValor = 0;
+        let garantiaRef = '';
+        if (garantia === 'caucao') {
+          garantiaValor = CAUCAO_MAX_ALUGUEIS * aluguel;
+          garantiaRef = CAUCAO_MAX_ALUGUEIS + ' aluguéis · teto do art. 38 §2º';
+        } else if (garantia === 'seguro') {
+          garantiaValor = premioSeguro * aluguel;
+          garantiaRef = premioSeguro.toLocaleString('pt-BR') + ' aluguel(éis) de prêmio anual · preço de mercado';
+        } else if (garantia === 'fiador') {
+          garantiaRef = 'Sem desembolso: o fiador responde com o patrimônio dele';
+        } else {
+          garantiaRef = 'Contrato sem garantia (art. 37 permite, mas é raro)';
+        }
+
+        const total = aluguel + condominio + garantiaValor;
+        const rows = [
+          { k: 'Primeiro aluguel', ref: 'Mês da entrada', v: aluguel },
+          { k: 'Taxa de condomínio do mês', ref: m2 + ' m² × ' + brl(condM2) + '/m² (estimativa editável)', v: condominio },
+          { k: 'Garantia locatícia', ref: garantiaRef, v: garantiaValor },
+          { k: 'Total para entrar', ref: 'Art. 37 e 38 da Lei 8.245/1991', v: total, extra: true },
+          { k: 'Custo fixo por mês depois de entrar', ref: 'Aluguel + condomínio', v: custoMensal },
+          {
+            k: 'Teto legal da caução em dinheiro',
+            ref: 'Art. 38 §2º · devolvida com rendimento de poupança',
+            v: CAUCAO_MAX_ALUGUEIS * aluguel,
+          },
+        ];
+        return {
+          total: brl(total),
+          sub:
+            'Para assinar você precisa de ' + brl(total) +
+            ', dos quais ' + brl(garantiaValor) + ' são garantia' +
+            (garantia === 'caucao' ? ' que volta para você no fim, com rendimento de poupança.' :
+             garantia === 'seguro' ? ' que NÃO volta: é prêmio de seguro.' :
+             ' sem desembolso seu.'),
+          rows: rows,
+          chart: [
+            { label: 'Primeiro aluguel', value: Math.round(aluguel), tone: 'main' },
+            { label: 'Condomínio', value: Math.round(condominio), tone: 'prop' },
+            { label: 'Garantia', value: Math.round(garantiaValor), tone: 'warn' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      /* ── 2. Prazo do contrato ─────────────────────────────────────────── */
+      if (id === 'prazo') {
+        const totalContrato = custoMensal * prazo;
+        const denunciaVazia = prazo >= PRAZO_DENUNCIA_VAZIA_MESES;
+        const rows = [
+          { k: 'Custo fixo por mês', ref: 'Aluguel + condomínio', v: custoMensal },
+          {
+            k: 'Prazo do contrato',
+            ref: denunciaVazia ? 'Igual ou acima dos 30 meses do art. 46' : 'Abaixo dos 30 meses: retomada pelo art. 47',
+            v: prazo,
+            format: 'unit',
+            unit: prazo === 1 ? 'mês' : 'meses',
+          },
+          { k: 'Total pago ao longo do contrato', ref: brl(custoMensal) + ' × ' + prazo + ' meses', v: totalContrato, extra: true },
+          { k: 'Só de aluguel no período', ref: 'Sem condomínio', v: aluguel * prazo },
+          { k: 'Só de condomínio no período', ref: 'Estimativa por m², editável', v: condominio * prazo },
+          {
+            k: 'Diferença para um contrato de 30 meses',
+            ref: 'Comparação com o padrão do art. 46',
+            v: Math.abs(custoMensal * PRAZO_DENUNCIA_VAZIA_MESES - totalContrato),
+          },
+        ];
+        return {
+          total: brl(totalContrato),
+          sub:
+            'Contrato de ' + prazo + ' meses a ' + brl(custoMensal) + '/mês. ' +
+            (denunciaVazia
+              ? 'Como tem 30 meses ou mais, ele termina na data marcada e o locador retoma sem justificar (art. 46).'
+              : 'Abaixo de 30 meses, quando virar indeterminado a retomada só é possível pelos motivos do art. 47 ou após 5 anos.'),
+          rows: rows,
+          chart: [
+            { label: 'Aluguel no período', value: Math.round(aluguel * prazo), tone: 'main' },
+            { label: 'Condomínio no período', value: Math.round(condominio * prazo), tone: 'prop' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      /* ── 3. Sair antes do fim ─────────────────────────────────────────── */
+      if (id === 'sair') {
+        const restantes = Math.max(0, prazo - cumpridos);
+        const multaCheia = multaMeses * aluguel;
+        const multaProporcional = multaCheia * (restantes / prazo);
+        const economia = multaCheia - multaProporcional;
+        const pctCumprido = (cumpridos / prazo) * 100;
+        const rows = [
+          { k: 'Multa contratual cheia', ref: multaMeses + ' aluguéis, como está no contrato', v: multaCheia },
+          {
+            k: 'Meses que faltam cumprir',
+            ref: cumpridos + ' de ' + prazo + ' meses já cumpridos',
+            v: restantes,
+            format: 'unit',
+            unit: restantes === 1 ? 'mês' : 'meses',
+          },
+          {
+            k: 'Multa proporcional devida',
+            ref: 'Art. 4º da Lei 8.245/1991 · ' + restantes + '/' + prazo,
+            v: multaProporcional,
+            extra: true,
+          },
+          { k: 'Quanto a proporcionalidade economiza', ref: 'Diferença para a multa cheia', v: economia },
+          { k: 'Aluguel + condomínio do mês da saída', ref: 'Devidos até a entrega das chaves', v: custoMensal },
+          { k: 'Total a acertar na saída', ref: 'Multa proporcional + mês corrente', v: multaProporcional + custoMensal },
+        ];
+        return {
+          total: brl(multaProporcional),
+          sub:
+            'Você já cumpriu ' + pctCumprido.toFixed(0) + '% do contrato, então a multa cai de ' +
+            brl(multaCheia) + ' para ' + brl(multaProporcional) +
+            '. Se a saída for por transferência do seu emprego para outra cidade, com aviso escrito de 30 dias, a multa é dispensada.',
+          rows: rows,
+          chart: [
+            { label: 'Multa a pagar', value: Math.round(multaProporcional), tone: 'bad' },
+            { label: 'Reduzido pela proporção', value: Math.round(economia), tone: 'good' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      /* ── 4. Despejo / purga da mora ───────────────────────────────────── */
+      if (id === 'despejo') {
+        const divida = mesesAtraso * custoMensal;
+        const multaMoratoria = divida * multaMorPct;
+        const honorariosPurga = (divida + multaMoratoria) * HONORARIOS_PURGA;
+        const totalPurga = divida + multaMoratoria + honorariosPurga;
+        const valorCausa = MESES_VALOR_CAUSA * aluguel;
+        const sucumbMin = valorCausa * HONORARIOS_SUCUMBENCIA.min;
+        const sucumbMax = valorCausa * HONORARIOS_SUCUMBENCIA.max;
+        const rows = [
+          {
+            k: 'Meses em atraso',
+            ref: brl(custoMensal) + ' por mês (aluguel + condomínio)',
+            v: mesesAtraso,
+            format: 'unit',
+            unit: mesesAtraso === 1 ? 'mês' : 'meses',
+          },
+          { k: 'Dívida de aluguéis e encargos', ref: mesesAtraso + ' × ' + brl(custoMensal), v: divida },
+          { k: 'Multa moratória do contrato', ref: Math.round(multaMorPct * 100) + '% sobre o débito', v: multaMoratoria },
+          {
+            k: 'Honorários para purgar a mora',
+            ref: Math.round(HONORARIOS_PURGA * 100) + '% · art. 62, II, "d" da Lei 8.245/1991',
+            v: honorariosPurga,
+          },
+          { k: 'Total para purgar a mora e ficar no imóvel', ref: 'Uma vez a cada 24 meses (art. 62, parág. único)', v: totalPurga, extra: true },
+          { k: 'Valor da causa da ação de despejo', ref: MESES_VALOR_CAUSA + ' aluguéis · art. 58, II', v: valorCausa },
+          { k: 'Honorários de sucumbência — mínimo', ref: Math.round(HONORARIOS_SUCUMBENCIA.min * 100) + '% do valor da causa · art. 85 §2º CPC', v: sucumbMin },
+          { k: 'Honorários de sucumbência — máximo', ref: Math.round(HONORARIOS_SUCUMBENCIA.max * 100) + '% do valor da causa · art. 85 §2º CPC', v: sucumbMax },
+          { k: 'Caução para a liminar de desocupação', ref: '3 aluguéis · art. 59 §1º, IX', v: 3 * aluguel },
+        ];
+        return {
+          total: brl(totalPurga),
+          sub:
+            'Purgar a mora custa ' + brl(totalPurga) + ' (dívida de ' + brl(divida) +
+            ' + multa + 10% de honorários) e só pode ser feito uma vez a cada 24 meses. ' +
+            'A ação em si tem valor de causa de ' + brl(valorCausa) + ', sobre o qual incidem 10% a 20% de honorários de sucumbência.',
+          rows: rows,
+          chart: [
+            { label: 'Dívida', value: Math.round(divida), tone: 'main' },
+            { label: 'Multa moratória', value: Math.round(multaMoratoria), tone: 'warn' },
+            { label: 'Honorários (10%)', value: Math.round(honorariosPurga), tone: 'bad' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      /* ── 5. Aluguel com opção de compra ───────────────────────────────── */
+      const totalPago = aluguel * prazo;
+      const acumulado = totalPago * pctDesc;
+      const naoCreditado = totalPago - acumulado;
+      const falta = Math.max(0, valorImovel - acumulado);
+      const pctCoberto = valorImovel > 0 ? (acumulado / valorImovel) * 100 : 0;
+      const rows = [
+        { k: 'Total pago de aluguel no contrato', ref: brl(aluguel) + ' × ' + prazo + ' meses', v: totalPago },
+        {
+          k: 'Percentual creditado no preço',
+          ref: 'Livremente pactuado — não há mínimo legal',
+          v: Math.round(pctDesc * 100),
+          format: 'unit',
+          unit: '%',
+        },
+        { k: 'Crédito acumulado para a compra', ref: 'Aluguel pago × percentual descontável', v: acumulado, extra: true },
+        { k: 'Aluguel que NÃO conta para a compra', ref: 'Fica com o proprietário', v: naoCreditado },
+        { k: 'Valor do imóvel', ref: 'Preço travado no contrato', v: valorImovel },
+        { k: 'Quanto ainda falta para comprar', ref: 'Entrada própria ou financiamento', v: falta },
+        {
+          k: 'Percentual do imóvel já coberto',
+          ref: 'Crédito ÷ valor do imóvel',
+          v: pctCoberto,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        },
+      ];
+      return {
+        total: brl(acumulado),
+        sub:
+          'Depois de ' + prazo + ' meses pagando ' + brl(aluguel) + ', você terá desembolsado ' + brl(totalPago) +
+          ' e acumulado ' + brl(acumulado) + ' de crédito — ' + pctCoberto.toFixed(1) + '% do imóvel. Faltariam ' + brl(falta) + '.',
+        rows: rows,
+        chart: [
+          { label: 'Crédito acumulado', value: Math.round(acumulado), tone: 'good' },
+          { label: 'Falta pagar', value: Math.round(falta), tone: 'warn' },
+        ].filter((s) => s.value > 0),
+      };
+    });
+  })();
+</script>

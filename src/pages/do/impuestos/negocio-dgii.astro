@@ -1,0 +1,223 @@
+---
+/**
+ * Hub de decisión DO — "Qué le debe tu negocio a la DGII".
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  ITBIS,
+  TASA_ISR_SOCIEDADES,
+  ANTICIPOS,
+  RETENCION_HONORARIOS,
+  ITF,
+  PROPINA_LEGAL,
+  MORA,
+} from '../../../lib/hubs/do/negocio-dgii';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="DO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    ITBIS,
+    TASA_ISR: TASA_ISR_SOCIEDADES,
+    ANTICIPOS,
+    RET_HON: RETENCION_HONORARIOS,
+    ITF,
+    PROPINA_LEGAL,
+    MORA,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const dop = (n) => 'RD$ ' + Math.round(n || 0).toLocaleString('de-DE');
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'sociedad';
+      const ventas = Math.max(0, v.ventasGravadas || 0);
+      const compras = Math.max(0, v.comprasGravadas || 0);
+      const ingresosAnuales = Math.max(0, v.ingresosAnuales || 0);
+      const gastos = Math.max(0, v.gastosDeducibles || 0);
+      const honorarios = Math.max(0, v.honorarios || 0);
+      const consumo = Math.max(0, v.consumo || 0);
+      const transferencias = Math.max(0, v.transferencias || 0);
+      const mesesAtraso = Math.max(0, Math.ceil(v.mesesAtraso || 0));
+
+      // ITBIS del mes: débito − crédito fiscal.
+      const itbisDebito = ventas * ITBIS;
+      const itbisCredito = compras * ITBIS;
+      const itbisAPagar = Math.max(0, itbisDebito - itbisCredito);
+      const itbisSaldoAFavor = Math.max(0, itbisCredito - itbisDebito);
+
+      // ISR anual de la sociedad.
+      const rentaNeta = Math.max(0, ingresosAnuales - gastos);
+      const isrAnual = rentaNeta * TASA_ISR;
+      const margen = ingresosAnuales > 0 ? (rentaNeta / ingresosAnuales) * 100 : 0;
+
+      // Anticipos: método según la Tasa Efectiva de Tributación.
+      const tet = ingresosAnuales > 0 ? isrAnual / ingresosAnuales : 0;
+      const baseAnticipo = tet > ANTICIPOS.umbralTet ? isrAnual : ingresosAnuales * ANTICIPOS.umbralTet;
+      const anticipoMensual = baseAnticipo / ANTICIPOS.cuotas;
+
+      // Retención de honorarios y su ITBIS.
+      const retencionIsr = honorarios * RET_HON;
+      const itbisHonorarios = honorarios * ITBIS;
+      const netoHonorarios = honorarios - retencionIsr;
+
+      // Cuenta de restaurante: consumo + 10% legal + 18% de ITBIS sobre el consumo.
+      const propina = consumo * PROPINA_LEGAL;
+      const itbisConsumo = consumo * ITBIS;
+      const cuentaTotal = consumo + propina + itbisConsumo;
+
+      // Impuesto a cheques y transferencias.
+      const itf = transferencias * ITF.tasa;
+      const itfAnterior = transferencias * ITF.tasaAnterior;
+
+      // Mora sobre el ITBIS del mes.
+      const recargoPct = mesesAtraso > 0 ? MORA.primerMes + MORA.mesAdicional * (mesesAtraso - 1) : 0;
+      const recargo = itbisAPagar * recargoPct;
+      const interes = itbisAPagar * MORA.interesMensual * mesesAtraso;
+      const sobrecostoMora = recargo + interes;
+
+      const aPagarEsteMes = itbisAPagar + anticipoMensual + itf + sobrecostoMora;
+
+      const rows = [
+        { k: 'ITBIS cobrado en tus ventas (débito fiscal)', ref: Math.round(ITBIS * 100) + '% sobre ' + dop(ventas), v: itbisDebito },
+        { k: 'ITBIS adelantado en tus compras (crédito fiscal)', ref: 'Sólo con comprobante fiscal válido', v: itbisCredito },
+        { k: 'ITBIS a pagar del mes', ref: 'Débito − crédito · vence el día 20', v: itbisAPagar, extra: true },
+      ];
+      if (itbisSaldoAFavor > 0) {
+        rows.push({ k: 'Saldo de ITBIS a favor', ref: 'Se arrastra al mes siguiente', v: itbisSaldoAFavor });
+      }
+
+      rows.push({ k: 'Renta neta imponible del año', ref: 'Ingresos − gastos deducibles', v: rentaNeta });
+      rows.push({
+        k: 'Margen neto sobre los ingresos',
+        ref: 'Renta neta ÷ ingresos',
+        v: margen,
+        format: 'unit',
+        unit: '%',
+        decimals: 1,
+      });
+      rows.push({ k: 'ISR anual de la sociedad', ref: Math.round(TASA_ISR * 100) + '% · Art. 297', v: isrAnual });
+      rows.push({
+        k: 'Tasa Efectiva de Tributación (TET)',
+        ref: 'Umbral del método de anticipos: ' + (ANTICIPOS.umbralTet * 100).toFixed(1).replace('.', ',') + '%',
+        v: tet * 100,
+        format: 'unit',
+        unit: '%',
+        decimals: 2,
+      });
+      rows.push({
+        k: 'Anticipo mensual del ISR',
+        ref: tet > ANTICIPOS.umbralTet ? 'ISR liquidado ÷ 12 (TET sobre el umbral)' : '1,5% de los ingresos ÷ 12 (TET bajo el umbral)',
+        v: anticipoMensual,
+        extra: true,
+      });
+
+      if (honorarios > 0) {
+        rows.push({ k: 'Retención de ISR sobre honorarios', ref: Math.round(RET_HON * 100) + '% · Art. 309', v: retencionIsr });
+        rows.push({ k: 'ITBIS de los honorarios retenido al 100%', ref: 'Norma 02-05 · persona física', v: itbisHonorarios });
+        rows.push({ k: 'Neto que recibe el profesional', ref: 'Honorarios − retención de ISR', v: netoHonorarios });
+      }
+
+      if (consumo > 0) {
+        rows.push({ k: 'Propina legal del 10%', ref: 'Art. 228 · va al personal, no es impuesto', v: propina });
+        rows.push({ k: 'ITBIS del consumo', ref: '18% sobre el consumo, sin la propina', v: itbisConsumo });
+        rows.push({ k: 'Total de la cuenta al cliente', ref: 'Consumo × 1,28', v: cuentaTotal });
+      }
+
+      rows.push({
+        k: 'Impuesto a cheques y transferencias (ITF)',
+        ref: (ITF.tasa * 100).toFixed(2).replace('.', ',') + '% desde jul-2026 · Ley 30-26',
+        v: itf,
+      });
+      rows.push({
+        k: 'Lo que pagabas de ITF con la tasa anterior',
+        ref: (ITF.tasaAnterior * 100).toFixed(2).replace('.', ',') + '%',
+        v: itfAnterior,
+      });
+
+      if (mesesAtraso > 0) {
+        rows.push({
+          k: 'Recargo por mora sobre el ITBIS',
+          ref: Math.round(recargoPct * 100) + '% · Art. 252 (' + mesesAtraso + ' mes/es)',
+          v: recargo,
+        });
+        rows.push({
+          k: 'Interés indemnizatorio',
+          ref: (MORA.interesMensual * 100).toFixed(2).replace('.', ',') + '% mensual · Art. 27',
+          v: interes,
+        });
+        rows.push({ k: 'Sobrecosto total por atrasarte', ref: 'Recargo + interés', v: sobrecostoMora });
+      }
+
+      rows.push({ k: 'Total a pagar a la DGII este mes', ref: 'ITBIS + anticipo + ITF + mora', v: aPagarEsteMes, extra: true });
+
+      let sub =
+        'ITBIS del mes ' + dop(itbisAPagar) + ' · anticipo ' + dop(anticipoMensual) +
+        ' (TET ' + (tet * 100).toFixed(2).replace('.', ',') + '%, ' +
+        (tet > ANTICIPOS.umbralTet ? 'método del ISR liquidado' : 'método del 1,5% de ingresos') + ')' +
+        ' · ISR anual estimado ' + dop(isrAnual);
+
+      if (mesesAtraso > 0) {
+        sub += ' · atrasarte ' + mesesAtraso + ' mes(es) te cuesta ' + dop(sobrecostoMora) + ' extra';
+      }
+      if (id === 'consumo' && consumo === 0) {
+        sub += ' · cargá el consumo de una cuenta para ver el 10% legal y el ITBIS';
+      }
+
+      const chart = [
+        { label: 'ITBIS a enterar', value: Math.round(itbisAPagar), tone: 'main' },
+        { label: 'Anticipo del ISR', value: Math.round(anticipoMensual), tone: 'prop' },
+        { label: 'Impuesto a transferencias', value: Math.round(itf), tone: 'exit' },
+      ];
+      if (sobrecostoMora > 0) chart.push({ label: 'Recargos e intereses', value: Math.round(sobrecostoMora), tone: 'bad' });
+
+      return { total: dop(aPagarEsteMes), sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

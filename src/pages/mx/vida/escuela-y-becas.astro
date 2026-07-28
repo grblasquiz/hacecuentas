@@ -1,0 +1,314 @@
+---
+/**
+ * Hub de decisión MX — costo de la escuela, becas y promedio SEP.
+ * audience="MX" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, UNIVERSIDAD_MX, REGRESO_CLASES_MX, BECAS_BIENESTAR_MX, POSGRADO_MX, SEP_ESCALA } from '../../../lib/hubs/mx/escuela-y-becas';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="MX"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ U: UNIVERSIDAD_MX, R: REGRESO_CLASES_MX, BB: BECAS_BIENESTAR_MX, P: POSGRADO_MX, SEP: SEP_ESCALA }}>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+    const num = (v, d) => {
+      if (v === '' || v === null || v === undefined) return d;
+      const n = Number(String(v).replace(/[^0-9.,-]/g, '').replace(/\.(?=\d{3}\b)/g, '').replace(',', '.'));
+      return Number.isFinite(n) ? n : d;
+    };
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'universidad';
+
+      // ── Rama 2: regreso a clases ────────────────────────────────────────
+      if (id === 'regreso') {
+        const hijos = Math.max(1, Math.min(10, Math.round(num(v.hijos, 1))));
+        const nivel = String(v.nivel || 'primaria');
+        const tipo = String(v.tipoEscuela || 'publica');
+        const conUniformes = String(v.incluyeUniformes || 'si') === 'si';
+
+        const fila = (R.costos[tipo] || R.costos.publica)[nivel] || R.costos.publica.primaria;
+        const utiles = fila[0];
+        const uniformes = conUniformes ? fila[1] : 0;
+        const mochila = fila[2];
+        const cuotas = fila[3];
+
+        const porAlumno = utiles + uniformes + mochila + cuotas;
+        const total = porAlumno * hijos;
+        const otroTipo = tipo === 'publica' ? 'privada' : 'publica';
+        const filaOtro = (R.costos[otroTipo] || R.costos.publica)[nivel] || R.costos.publica.primaria;
+        const totalOtro = (filaOtro[0] + (conUniformes ? filaOtro[1] : 0) + filaOtro[2] + filaOtro[3]) * hijos;
+
+        const segs = [
+          { label: 'Útiles', value: utiles * hijos, tone: 'good' },
+          { label: 'Mochila y calzado', value: mochila * hijos, tone: 'prop' },
+          { label: 'Cuotas e inscripción', value: cuotas * hijos, tone: 'warn' },
+        ];
+        if (uniformes > 0) segs.splice(1, 0, { label: 'Uniformes', value: uniformes * hijos, tone: 'main' });
+
+        return {
+          total: mxn(total),
+          sub:
+            'Para ' + hijos + (hijos === 1 ? ' alumno' : ' alumnos') + ' de ' + (R.nivelLabel[nivel] || nivel) +
+            ' en escuela ' + (tipo === 'privada' ? 'privada' : 'pública') + ', presupuesta ' + mxn(total) + ', o sea ' +
+            mxn(porAlumno) + ' por alumno. La lista de útiles es apenas ' + Math.round((utiles / porAlumno) * 100) +
+            '% del gasto: el resto son uniformes, calzado y cuotas.',
+          rows: [
+            { k: 'Gasto total del regreso a clases', v: total, extra: true },
+            { k: 'Gasto por alumno', v: porAlumno },
+            { k: 'Útiles', v: utiles * hijos },
+            { k: 'Uniformes', v: uniformes * hijos },
+            { k: 'Mochila y calzado', v: mochila * hijos },
+            { k: 'Cuotas e inscripción', v: cuotas * hijos },
+            { k: 'El mismo caso en escuela ' + (otroTipo === 'privada' ? 'privada' : 'pública'), v: totalOtro },
+            { k: 'Alumnos', v: hijos, format: 'plain' },
+          ],
+          chart: segs,
+        };
+      }
+
+      // ── Rama 3: becas Rita Cetina y Benito Juárez ───────────────────────
+      if (id === 'becas') {
+        const esBenito = String(v.programaBeca || 'rita-cetina') === 'benito-juarez';
+        const n = Math.max(1, Math.round(num(v.numEstudiantes, 1)));
+        const base = Math.max(0, num(v.montoBaseBimestral, 0));
+        const adicional = Math.max(0, num(v.montoAdicional, 0));
+
+        const bimestral = esBenito ? base * n : base + adicional * (n - 1);
+        const mensual = bimestral / 2;
+        const ciclo = bimestral * BB.bimestresCiclo;
+        const nombre = esBenito ? 'Beca Benito Juárez (media superior)' : 'Beca Rita Cetina (secundaria)';
+
+        return {
+          total: mxn(bimestral),
+          sub:
+            'Con ' + n + (n === 1 ? ' estudiante' : ' estudiantes') + ', la ' + nombre + ' paga alrededor de ' +
+            mxn(bimestral) + ' por bimestre, unos ' + mxn(mensual) + ' al mes, y cerca de ' + mxn(ciclo) +
+            ' en todo el ciclo escolar. Confirma el monto vigente en el portal oficial: cambia cada convocatoria.',
+          rows: [
+            { k: 'Monto bimestral', v: bimestral, extra: true },
+            { k: 'Equivalente mensual promedio', v: mensual },
+            { k: 'Estimado de todo el ciclo escolar', ref: BB.bimestresCiclo + ' bimestres', v: ciclo },
+            { k: 'Monto base bimestral aplicado', v: base },
+            { k: 'Adicional por estudiante extra', v: esBenito ? 0 : adicional },
+            { k: 'Estudiantes considerados', v: n, format: 'plain' },
+            { k: 'Bimestres del ciclo escolar', v: BB.bimestresCiclo, format: 'plain' },
+          ],
+          chart: esBenito
+            ? [{ label: 'Monto por estudiante', value: Math.round(base), tone: 'main' }, { label: 'Estudiantes adicionales', value: Math.round(base * (n - 1)), tone: 'prop' }]
+            : [{ label: 'Base por familia', value: Math.round(base), tone: 'main' }, { label: 'Adicional por estudiantes extra', value: Math.round(adicional * (n - 1)), tone: 'prop' }],
+        };
+      }
+
+      // ── Rama 4: beca de posgrado ────────────────────────────────────────
+      if (id === 'posgrado') {
+        const nivel = String(v.nivelPosgrado || 'maestria_nacional');
+        const pais = String(v.paisDestino || 'mexico');
+        const categoria = String(v.categoriaPadron || 'consolidado');
+        const meses = Math.max(1, Math.round(num(v.duracionMeses, 24)));
+
+        const base = P.montoBase[nivel] !== undefined ? P.montoBase[nivel] : 15000;
+        const fPais = P.ajustePais[pais] !== undefined ? P.ajustePais[pais] : 1;
+        const fPadron = P.factorPadron[categoria] !== undefined ? P.factorPadron[categoria] : 0.7;
+
+        const mensual = Math.round(base * fPais * fPadron);
+        const anual = mensual * 12;
+        const totalBeca = mensual * meses;
+        const maximo = Math.round(base * fPais);
+        const perdido = maximo - mensual;
+
+        return {
+          total: mxn(mensual),
+          sub:
+            'El apoyo mensual queda en ' + mxn(mensual) + '. En ' + meses + ' meses acumularías ' + mxn(totalBeca) +
+            '. ' + (categoria === 'no_evaluado'
+              ? 'Como el programa no está evaluado, el monto se calcula al 70% del máximo: si logra la inclusión al padrón, el apoyo sube.'
+              : 'La categoría del programa en el padrón se aplica como factor sobre el monto máximo del nivel.'),
+          rows: [
+            { k: 'Apoyo mensual estimado', v: mensual, extra: true },
+            { k: 'Apoyo anual', v: anual },
+            { k: 'Total de toda la beca', ref: meses + ' meses', v: totalBeca },
+            { k: 'Monto base del nivel', v: base },
+            { k: 'Monto máximo con el ajuste por destino', v: maximo },
+            { k: 'Diferencia por la categoría del programa', v: perdido },
+            { k: 'Duración del posgrado', v: meses, format: 'unit', unit: 'meses' },
+          ],
+          chart: [
+            { label: 'Apoyo que cobras', value: mensual, tone: 'main' },
+            { label: 'Diferencia hasta el máximo', value: Math.max(0, perdido), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── Rama 5: promedio SEP ────────────────────────────────────────────
+      if (id === 'promedio') {
+        const parse = (raw) =>
+          String(raw || '')
+            .trim()
+            .split(/[;,]/)
+            .map((s) => Number(s.trim().replace(',', '.')))
+            .filter((n) => Number.isFinite(n));
+
+        const grades = parse(v.calificaciones);
+        const pesosRaw = String(v.pesos || '').trim();
+        const weights = pesosRaw ? parse(pesosRaw) : grades.map(() => 1);
+
+        if (!grades.length || weights.length !== grades.length || weights.some((w) => w <= 0)) {
+          return {
+            total: '—',
+            sub: 'Escribe tus calificaciones separadas por punto y coma (por ejemplo 7.5; 8; 6.4). Los pesos son opcionales, pero si los pones tiene que haber uno positivo por cada calificación.',
+            rows: [{ k: 'Calificaciones leídas', v: grades.length, format: 'plain' }],
+            chart: [{ label: 'Sin datos', value: 1, tone: 'warn' }],
+            format: 'plain',
+          };
+        }
+
+        const aprobatoria = SEP.aprobatoria;
+        const pesoProxima = 1;
+        const suma = grades.reduce((s, g, idx) => s + g * weights[idx], 0);
+        const pesoTotal = weights.reduce((s, w) => s + w, 0);
+        const promedio = Math.round((suma / pesoTotal) * 100) / 100;
+        const necesita = (aprobatoria * (pesoTotal + pesoProxima) - suma) / pesoProxima;
+        const aprobado = promedio >= aprobatoria;
+
+        const mensaje =
+          necesita <= 0
+            ? 'Ya aseguraste el promedio de ' + aprobatoria + ': incluso con la calificación mínima en la siguiente evaluación pasas.'
+            : necesita > 10
+              ? 'Con una sola evaluación más ya no alcanzas el ' + aprobatoria + ': necesitarías más de 10. Te toca regularización o examen extraordinario.'
+              : 'Para cerrar con promedio ' + aprobatoria + ' necesitas mínimo ' + necesita.toFixed(2).replace('.', ',') + ' en la siguiente evaluación.';
+
+        return {
+          total: promedio.toFixed(2).replace('.', ','),
+          sub:
+            'Tu promedio ponderado es ' + promedio.toFixed(2).replace('.', ',') + ' sobre 10. La boleta SEP va de 5 a 10 y se acredita con ' +
+            aprobatoria + '. ' + mensaje,
+          rows: [
+            { k: 'Promedio ponderado', v: promedio, format: 'plain', decimals: 2, extra: true },
+            { k: 'Calificación mínima aprobatoria', ref: 'escala SEP 5 a 10', v: aprobatoria, format: 'plain' },
+            { k: 'Necesitas en la siguiente evaluación', v: necesita > 10 ? 10 : Math.max(0, necesita), format: 'plain', decimals: 2 },
+            { k: 'Evaluaciones contadas', v: grades.length, format: 'plain' },
+            { k: 'Peso total acumulado', v: pesoTotal, format: 'plain', decimals: 2 },
+            { k: 'Diferencia contra la mínima', v: Math.round((promedio - aprobatoria) * 100) / 100, format: 'plain', decimals: 2 },
+          ],
+          chart: [
+            { label: aprobado ? 'Sobre la mínima' : 'Debajo de la mínima', value: Math.max(0.01, Math.abs(promedio - aprobatoria)), tone: aprobado ? 'good' : 'bad' },
+            { label: 'Mínima aprobatoria', value: aprobatoria, tone: 'main' },
+          ],
+          format: 'plain',
+          decimals: 2,
+        };
+      }
+
+      // ── Rama 1 (default): universidad privada ───────────────────────────
+      const cuatrimestres = Math.max(1, Math.round(num(v.cuatrimestres, 12)));
+      const mensualidad = Math.max(0, num(v.mensualidad, 0));
+      const pctBeca = Math.min(100, Math.max(0, num(v.pctBeca, 0)));
+      const usaCredito = String(v.usoCredito || 'no') !== 'no';
+      const tasa = Math.max(0, num(v.tasaCredito, 0));
+      const cobertura = Math.min(100, Math.max(0, num(v.coberturaCredito, 0)));
+      const plazo = Math.max(0, Math.round(num(v.plazoMeses, 0)));
+
+      const meses = cuatrimestres * U.mesesPorCuatrimestre;
+      const sinBeca = mensualidad * meses;
+      const montoBeca = sinBeca * (pctBeca / 100);
+      const conBeca = sinBeca - montoBeca;
+      const porCuatrimestre = sinBeca / cuatrimestres;
+
+      let montoCredito = 0;
+      let cuota = 0;
+      let interes = 0;
+      let costoFinal = conBeca;
+
+      if (usaCredito) {
+        montoCredito = conBeca * (cobertura / 100);
+        if (montoCredito > 0 && plazo > 0) {
+          const tm = tasa / 100 / 12;
+          if (tm > 0) {
+            const f = (Math.pow(1 + tm, plazo) * tm) / (Math.pow(1 + tm, plazo) - 1);
+            cuota = montoCredito * f;
+          } else {
+            cuota = montoCredito / plazo;
+          }
+          interes = cuota * plazo - montoCredito;
+          costoFinal = conBeca + interes;
+        }
+      }
+
+      const rango = U.rangos[String(v.universidad || 'otras')] || U.rangos.otras;
+
+      const segs = [{ label: 'Lo que pagas', value: Math.round(conBeca), tone: 'main' }];
+      if (montoBeca > 0) segs.push({ label: 'Lo que cubre la beca', value: Math.round(montoBeca), tone: 'good' });
+      if (interes > 0) segs.push({ label: 'Intereses del crédito', value: Math.round(interes), tone: 'bad' });
+
+      return {
+        total: mxn(costoFinal),
+        sub:
+          cuatrimestres + ' cuatrimestres a ' + mxn(mensualidad) + ' de mensualidad son ' + mxn(sinBeca) +
+          ' de colegiaturas. ' +
+          (pctBeca > 0 ? 'La beca del ' + pctBeca + '% te ahorra ' + mxn(montoBeca) + '. ' : '') +
+          (interes > 0
+            ? 'Financiando ' + mxn(montoCredito) + ' a ' + plazo + ' meses pagas ' + mxn(cuota) + ' al mes y sumas ' + mxn(interes) + ' de intereses.'
+            : 'Sin crédito, el costo final es lo que pagas de colegiaturas.'),
+        rows: [
+          { k: 'Costo final de la carrera', v: costoFinal, extra: true },
+          { k: 'Costo total sin beca', v: sinBeca },
+          { k: 'Lo que cubre la beca', ref: pctBeca + '%', v: montoBeca },
+          { k: 'Costo con beca, antes de intereses', v: conBeca },
+          { k: 'Costo por cuatrimestre', v: porCuatrimestre },
+          { k: 'Monto financiado con crédito', v: montoCredito },
+          { k: 'Cuota mensual del crédito', v: cuota },
+          { k: 'Intereses totales del crédito', v: interes },
+          { k: 'Mensualidades totales de la carrera', v: meses, format: 'unit', unit: 'meses' },
+          { k: 'Referencia de mercado por cuatrimestre (mínimo)', v: rango.min },
+          { k: 'Referencia de mercado por cuatrimestre (máximo)', v: rango.max },
+        ],
+        chart: segs,
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,228 @@
+---
+/**
+ * Hub EN — "What's my GPA and what do I need to keep the scholarship?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  GPA_MAX,
+  GPA_BAND_A,
+  GPA_BAND_B,
+  GPA_BAND_C,
+  SCHOLARSHIP_FLOOR,
+  SCHOLARSHIP_MERIT,
+  WEIGHTED_MAX,
+  PORTFOLIO_BANDS,
+} from '../../../lib/hubs/en/gpa-and-grades';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ GPA_MAX, GPA_BAND_A, GPA_BAND_B, GPA_BAND_C, SCHOLARSHIP_FLOOR, SCHOLARSHIP_MERIT, WEIGHTED_MAX, PORTFOLIO_BANDS }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(x || 0).toLocaleString('en-US');
+    const num = (x, def) => {
+      const n = Number(x);
+      return Number.isFinite(n) ? n : def;
+    };
+
+    /** Banda por letra, idéntica a gpa-promedio-americano-escala-4-0.ts. */
+    function band(gpa) {
+      if (gpa >= GPA_BAND_A) return 'A — excellent, honors territory';
+      if (gpa >= GPA_BAND_B) return 'B — good standing';
+      if (gpa >= GPA_BAND_C) return 'C — passing';
+      return 'D/F — academic risk';
+    }
+
+    /** Franjas del gráfico de escala: las mismas bandas, sobre 0–4.0. */
+    function gpaBands() {
+      return [
+        { label: 'D/F', value: 1, tone: 'bad', from: 0, to: GPA_BAND_C },
+        { label: 'C', value: 1, tone: 'warn', from: GPA_BAND_C, to: GPA_BAND_B },
+        { label: 'B', value: 1, tone: 'main', from: GPA_BAND_B, to: GPA_BAND_A },
+        { label: 'A', value: 1, tone: 'good', from: GPA_BAND_A, to: GPA_MAX },
+      ];
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'unweighted';
+
+      const gradePoints = Math.max(0, num(v.gradepoints, 0));
+      const credits = Math.max(0.5, num(v.credits, 1));
+      const cum = gradePoints / credits;
+
+      if (id === 'weighted') {
+        const advanced = Math.max(0, Math.round(num(v.advanced, 0)));
+        const all = Math.max(1, Math.round(num(v.allcourses, 1)));
+        const bump = Math.max(0, num(v.bump, 0));
+        const capped = Math.min(all, advanced);
+        const share = capped / all;
+        const added = share * bump;
+        const unweighted = Math.min(GPA_MAX, cum);
+        const weighted = Math.min(WEIGHTED_MAX, unweighted + added);
+        const rows = [
+          { k: 'Unweighted GPA', ref: 'Grade points ÷ credit hours, capped at ' + GPA_MAX.toFixed(1), v: unweighted, format: 'plain', decimals: 2, extra: true },
+          { k: 'Advanced courses', ref: capped + ' of ' + all + ' on the transcript', v: capped, format: 'plain' },
+          { k: 'Share of the load that is AP or honors', ref: 'Advanced ÷ total courses', v: share * 100, format: 'unit', unit: '%', decimals: 1 },
+          { k: 'Bonus per advanced course', ref: 'Set by your school, not by a national rule', v: bump, format: 'plain', decimals: 2 },
+          { k: 'Points the weighting adds', ref: 'Share × bonus', v: added, format: 'plain', decimals: 2 },
+          { k: 'Weighted GPA', ref: 'Capped at ' + WEIGHTED_MAX.toFixed(1) + ' on a typical AP scale', v: weighted, format: 'plain', decimals: 2, extra: true },
+          { k: 'Gap between the two numbers', ref: 'What colleges strip out when they recalculate', v: weighted - unweighted, format: 'plain', decimals: 2 },
+        ];
+        return {
+          total: weighted.toFixed(2),
+          sub:
+            'Unweighted ' + unweighted.toFixed(2) + ' · ' + band(unweighted) + ' · the weighting adds ' + added.toFixed(2) +
+            ' points, but most selective universities recalculate the unweighted number themselves',
+          rows: rows,
+          chart: gpaBands(),
+          position: Math.min(100, (unweighted / GPA_MAX) * 100),
+          positionLabel: 'Unweighted ' + unweighted.toFixed(2) + ' on the 4.0 scale — ' + band(unweighted),
+        };
+      }
+
+      if (id === 'scholarship') {
+        const target = Math.max(0, Math.min(WEIGHTED_MAX, num(v.target, SCHOLARSHIP_FLOOR)));
+        const future = Math.max(0.5, num(v.futurecredits, 1));
+        const totalAfter = credits + future;
+        const needPoints = target * totalAfter - gradePoints;
+        const needGpa = needPoints / future;
+        const feasible = needGpa <= GPA_MAX;
+        const alreadyThere = cum >= target;
+        const maxReachable = (gradePoints + GPA_MAX * future) / totalAfter;
+        const rows = [
+          { k: 'Cumulative GPA right now', ref: n0(gradePoints) + ' grade points ÷ ' + credits + ' credits', v: cum, format: 'plain', decimals: 2, extra: true },
+          { k: 'GPA you have to reach', ref: 'Common floor ' + SCHOLARSHIP_FLOOR.toFixed(1) + ' · merit awards ' + SCHOLARSHIP_MERIT.toFixed(1) + '+', v: target, format: 'plain', decimals: 2 },
+          { k: 'Gap to close', ref: 'Target minus current', v: Math.max(0, target - cum), format: 'plain', decimals: 2 },
+          { k: 'Credits after this term', ref: credits + ' banked + ' + future + ' in progress', v: totalAfter, format: 'unit', unit: 'credits', decimals: 1 },
+          { k: 'GPA you need to average this term', ref: 'Over the ' + future + ' credits in progress', v: Math.max(0, needGpa), format: 'plain', decimals: 2, extra: true },
+          { k: 'Best cumulative GPA reachable this term', ref: 'If you get straight ' + GPA_MAX.toFixed(1) + 's', v: maxReachable, format: 'plain', decimals: 2 },
+          { k: 'Grade points still needed', ref: 'Target × total credits − points banked', v: Math.max(0, needPoints), format: 'plain', decimals: 1 },
+        ];
+        return {
+          total: Math.max(0, needGpa).toFixed(2),
+          sub: alreadyThere
+            ? 'You are already at ' + cum.toFixed(2) + ', above the ' + target.toFixed(2) + ' minimum — a term at ' + Math.max(0, needGpa).toFixed(2) + ' keeps you there'
+            : feasible
+              ? 'Average ' + needGpa.toFixed(2) + ' across the ' + future + ' credits in progress and the cumulative GPA reaches ' + target.toFixed(2)
+              : 'Not reachable in one term: even straight ' + GPA_MAX.toFixed(1) + 's only lift the cumulative to ' + maxReachable.toFixed(2) + ' — talk to an advisor about an appeal or a two-term plan',
+          rows: rows,
+          chart: gpaBands(),
+          position: Math.min(100, (cum / GPA_MAX) * 100),
+          positionLabel: 'Currently ' + cum.toFixed(2) + ' · minimum required ' + target.toFixed(2),
+        };
+      }
+
+      if (id === 'portfolio') {
+        const d = Math.max(0, num(v.pdegrees, 0));
+        const s = Math.max(0, num(v.pseniority, 0));
+        const p = Math.max(0, num(v.ppubs, 0));
+        const c = Math.max(0, num(v.pcourses, 0));
+        const tot = d + s + p + c;
+        const level =
+          tot >= PORTFOLIO_BANDS.high ? 'High — very competitive'
+          : tot >= PORTFOLIO_BANDS.medium ? 'Medium — competitive'
+          : tot >= PORTFOLIO_BANDS.basic ? 'Basic — add coursework and service'
+          : 'Initial — add qualifications';
+        const rows = [
+          { k: 'Qualifications and degrees', ref: 'Certificates, degrees, endorsements', v: d, format: 'plain' },
+          { k: 'Years of service', ref: 'Accrues automatically — so does everyone else’s', v: s, format: 'plain' },
+          { k: 'Publications and research', ref: 'Usually the scarcest category', v: p, format: 'plain' },
+          { k: 'Professional development', ref: 'Where points are normally cheapest to add', v: c, format: 'plain' },
+          { k: 'Total portfolio score', ref: 'Bands at ' + PORTFOLIO_BANDS.basic + ' / ' + PORTFOLIO_BANDS.medium + ' / ' + PORTFOLIO_BANDS.high, v: tot, format: 'unit', unit: 'points', extra: true },
+          { k: 'Points to the next band', ref: 'What it takes to move up one level', v: tot >= PORTFOLIO_BANDS.high ? 0 : (tot >= PORTFOLIO_BANDS.medium ? PORTFOLIO_BANDS.high - tot : tot >= PORTFOLIO_BANDS.basic ? PORTFOLIO_BANDS.medium - tot : PORTFOLIO_BANDS.basic - tot), format: 'unit', unit: 'points', extra: true },
+        ];
+        return {
+          total: n0(tot) + ' points',
+          sub: level + ' · point schedules are set locally, so use this to track your own profile over time rather than to predict a ranking',
+          rows: rows,
+          chart: [
+            { label: 'Initial', value: 1, tone: 'bad', from: 0, to: PORTFOLIO_BANDS.basic },
+            { label: 'Basic', value: 1, tone: 'warn', from: PORTFOLIO_BANDS.basic, to: PORTFOLIO_BANDS.medium },
+            { label: 'Medium', value: 1, tone: 'main', from: PORTFOLIO_BANDS.medium, to: PORTFOLIO_BANDS.high },
+            { label: 'High', value: 1, tone: 'good', from: PORTFOLIO_BANDS.high, to: Math.max(100, tot + 10) },
+          ],
+          position: Math.min(100, (tot / Math.max(100, tot + 10)) * 100),
+          positionLabel: n0(tot) + ' points — ' + level,
+        };
+      }
+
+      // unweighted (default)
+      const gpa = Math.max(0, Math.min(GPA_MAX, cum));
+      const pct = Math.max(0, num(v.pct, 0));
+      const pctMax = Math.max(1, num(v.pctmax, 100));
+      const fromPct = Math.max(0, Math.min(GPA_MAX, (pct / pctMax) * GPA_MAX));
+      const rows = [
+        { k: 'Total grade points', ref: 'Grade point value × credits, summed', v: gradePoints, format: 'plain', decimals: 1 },
+        { k: 'Total credit hours', ref: 'Attempted, including any you failed', v: credits, format: 'unit', unit: 'credits', decimals: 1 },
+        { k: 'GPA on the 4.0 scale', ref: 'Grade points ÷ credit hours', v: gpa, format: 'plain', decimals: 2, extra: true },
+        { k: 'Percentage average converted', ref: '(' + pct + ' ÷ ' + pctMax + ') × ' + GPA_MAX.toFixed(1) + ' — an approximation, not a standard', v: fromPct, format: 'plain', decimals: 2, extra: true },
+        { k: 'Gap to the usual scholarship floor', ref: SCHOLARSHIP_FLOOR.toFixed(1) + ' cumulative', v: Math.max(0, SCHOLARSHIP_FLOOR - gpa), format: 'plain', decimals: 2 },
+        { k: 'Gap to a competitive merit award', ref: SCHOLARSHIP_MERIT.toFixed(1) + ' cumulative', v: Math.max(0, SCHOLARSHIP_MERIT - gpa), format: 'plain', decimals: 2 },
+        { k: 'Gap to the honors threshold', ref: GPA_BAND_A.toFixed(1) + ' cumulative', v: Math.max(0, GPA_BAND_A - gpa), format: 'plain', decimals: 2 },
+        { k: 'Grade points short of that honors line', ref: 'Over the same ' + credits + ' credits', v: Math.max(0, GPA_BAND_A - gpa) * credits, format: 'plain', decimals: 1 },
+      ];
+      return {
+        total: gpa.toFixed(2),
+        sub:
+          band(gpa) + ' · the percentage average converts to ' + fromPct.toFixed(2) + ' · ' +
+          (gpa >= SCHOLARSHIP_MERIT
+            ? 'above the ' + SCHOLARSHIP_MERIT.toFixed(1) + ' bar most competitive merit awards set'
+            : gpa >= SCHOLARSHIP_FLOOR
+              ? 'above the common ' + SCHOLARSHIP_FLOOR.toFixed(1) + ' scholarship floor, below the ' + SCHOLARSHIP_MERIT.toFixed(1) + ' merit bar'
+              : 'below the ' + SCHOLARSHIP_FLOOR.toFixed(1) + ' floor most awards require'),
+        rows: rows,
+        chart: gpaBands(),
+        position: Math.min(100, (gpa / GPA_MAX) * 100),
+        positionLabel: 'GPA ' + gpa.toFixed(2) + ' — ' + band(gpa),
+      };
+    });
+  })();
+</script>

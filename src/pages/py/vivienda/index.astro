@@ -1,0 +1,46 @@
+---
+/**
+ * Silo Vivienda · Paraguay — índice de hubs de decisión del mercado PY.
+ * El listado sale del registry, no a mano.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import SiloIndex from '../../../components/hub/SiloIndex.astro';
+import { hubsOfSilo } from '../../../lib/hubs/registry';
+
+const HREF = '/py/vivienda';
+const SILO = 'Vivienda';
+const LEDE =
+  'Crédito Che Róga Porã, gastos de escritura, comisión inmobiliaria, impuesto inmobiliario y factura de la ANDE: todo lo que cuesta comprar y sostener una casa en Paraguay.';
+const hubs = hubsOfSilo(HREF);
+const CANONICAL = `https://hacecuentas.com${HREF}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `${SILO} en Paraguay`,
+  description: LEDE,
+  url: CANONICAL,
+  hasPart: hubs.map((h) => ({
+    '@type': 'WebPage',
+    name: h.h1,
+    url: `https://hacecuentas.com/${h.slug}`,
+  })),
+};
+---
+
+<Layout
+  title={`Vivienda en Paraguay — crédito, escritura y gastos | Hacé Cuentas`}
+  description={LEDE}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PY"
+  lang="es"
+>
+  <Header />
+  <SiloIndex silo={SILO} href={HREF} lede={LEDE} hubs={hubs} />
+  <Footer />
+</Layout>

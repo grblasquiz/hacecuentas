@@ -1,0 +1,295 @@
+---
+/**
+ * Hub de decisión CL — "¿Qué bonos y beneficios del Estado me corresponden?"
+ * Ruta bajo el prefijo /cl/, igual que las calculadoras que absorbe.
+ * audience="CL" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UTM,
+  ASIGNACION_FAMILIAR,
+  BONOS,
+  BECAS_JUNAEB,
+  RSH_CORTES,
+} from '../../../lib/hubs/cl/bonos-y-beneficios-del-estado';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ UTM, AF: ASIGNACION_FAMILIAR, BONOS, BECAS: BECAS_JUNAEB, RSH: RSH_CORTES }}>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+
+    /** Tramo de asignación familiar por renta. El monto por carga BAJA al subir la renta. */
+    function tramoAsignacion(renta) {
+      for (const t of AF.tramos) {
+        if (t.hasta === null || renta <= t.hasta) return t;
+      }
+      return AF.tramos[AF.tramos.length - 1];
+    }
+
+    /** Tramo estimado del Registro Social de Hogares por ingreso per cápita (referencial). */
+    function tramoRsh(perCapita) {
+      for (const c of RSH) {
+        if (perCapita <= c.hasta) return c;
+      }
+      return RSH[RSH.length - 1];
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'rsh';
+
+      const renta = Math.max(0, v.renta || 0);
+      const ingresoHogar = Math.max(0, v.ingresoHogar || 0);
+      const integrantes = Math.max(1, Math.round(Number(v.integrantes) || 1));
+      const cargas = Math.max(0, Math.min(AF.topeCargas, Math.floor(Number(v.cargas) || 0)));
+      const conInvalidez = String(v.invalidez) === 'si';
+      const estudiantes = Math.max(0, Math.floor(Number(v.estudiantes) || 0));
+      const nivel = String(v.nivelBeca || 'media');
+      const esIndigena = String(v.indigena) === 'si';
+      const pareja = String(v.pareja || 'convivencia');
+      const bonoSel = String(v.bono || 'marzo');
+
+      // ── Registro Social de Hogares ──
+      const perCapita = ingresoHogar / integrantes;
+      const rsh = tramoRsh(perCapita);
+      const enElSesenta = rsh.percentil <= 60;
+
+      // ── Asignación familiar ──
+      const tAf = tramoAsignacion(renta);
+      // La carga con invalidez acreditada cobra el doble.
+      const cargasEquivalentes = conInvalidez && cargas > 0 ? cargas + 1 : cargas;
+      const afMensual = tAf.porCarga * cargasEquivalentes;
+      const afAnual = afMensual * 12;
+
+      // ── Bono de temporada ──
+      let bonoUnitario = 0;
+      let bonoUnidades = 1;
+      let bonoNombre = '';
+      if (bonoSel === 'invierno') {
+        bonoUnitario = BONOS.invierno;
+        bonoUnidades = 1;
+        bonoNombre = 'Bono de Invierno';
+      } else if (bonoSel === 'logro1') {
+        bonoUnitario = BONOS.logroTramo1;
+        bonoUnidades = estudiantes;
+        bonoNombre = 'Bono Logro Escolar — tramo 1';
+      } else if (bonoSel === 'logro2') {
+        bonoUnitario = BONOS.logroTramo2;
+        bonoUnidades = estudiantes;
+        bonoNombre = 'Bono Logro Escolar — tramo 2';
+      } else {
+        bonoUnitario = BONOS.aporteFamiliarPermanente;
+        bonoUnidades = Math.max(1, cargas);
+        bonoNombre = 'Aporte Familiar Permanente';
+      }
+      const bonoTotal = bonoUnitario * bonoUnidades;
+
+      // ── Becas JUNAEB: montos ANUALES (la Presidente va en UTM) ──
+      let becaPresidenteUtm = 0;
+      if (nivel === 'media') becaPresidenteUtm = BECAS.presidenteUtmMedia;
+      else if (nivel === 'superior') becaPresidenteUtm = BECAS.presidenteUtmSuperior;
+      const becaPresidente = becaPresidenteUtm * UTM;
+
+      let becaIndigena = 0;
+      if (esIndigena) {
+        if (nivel === 'basica') becaIndigena = BECAS.indigenaBasica;
+        else if (nivel === 'media') becaIndigena = BECAS.indigenaMedia;
+        else if (nivel === 'superior') becaIndigena = BECAS.indigenaSuperior;
+      }
+      const becaPractica = nivel === 'practica' ? BECAS.practicaTecnica : 0;
+      const becasPorEstudiante = becaPresidente + becaIndigena + becaPractica;
+      const becasTotal = becasPorEstudiante * estudiantes;
+
+      const formalizada = pareja === 'auc' || pareja === 'matrimonio';
+
+      const rows = [];
+      let total, sub;
+
+      if (id === 'rsh') {
+        rows.push({ k: 'Ingreso total del hogar', ref: 'Tu dato', v: ingresoHogar });
+        rows.push({
+          k: 'Personas en el hogar',
+          ref: 'Integrantes declarados',
+          v: integrantes,
+          format: 'plain',
+        });
+        rows.push({ k: 'Ingreso per cápita del hogar', ref: 'Ingreso ÷ integrantes', v: perCapita, extra: true });
+        rows.push({
+          k: 'Tramo estimado del Registro Social de Hogares',
+          ref: 'Estimación por ingreso: el oficial está en tu Cartola Hogar',
+          v: rsh.percentil,
+          format: 'unit',
+          unit: '% (percentil)',
+        });
+        total = rsh.percentil + '%';
+        sub =
+          'Con ' + clp(ingresoHogar) + ' entre ' + integrantes + ' persona' + (integrantes === 1 ? '' : 's') +
+          ', tu ingreso per cápita es ' + clp(perCapita) + ' → ' + rsh.nombre +
+          (enElSesenta
+            ? ' · estás dentro del 60% priorizado, el rango que abre la mayoría de los subsidios'
+            : ' · fuera del 60% priorizado: la oferta focalizada se reduce');
+      } else if (id === 'asignacion' || id === 'convivientes') {
+        rows.push({ k: 'Tu renta mensual', ref: 'Base del tramo de asignación', v: renta });
+        rows.push({
+          k: 'Cargas familiares acreditadas',
+          ref: conInvalidez ? 'Una de ellas con invalidez: cobra el doble' : 'Causantes reconocidos',
+          v: cargas,
+          format: 'plain',
+        });
+        rows.push({
+          k: 'Monto por carga del tramo ' + tAf.id,
+          ref: tAf.hasta === null ? 'Renta sobre el tope: sin derecho a pago' : 'Renta hasta ' + clp(tAf.hasta),
+          v: tAf.porCarga,
+        });
+        rows.push({ k: 'Asignación familiar del mes', ref: 'Monto por carga × cargas', v: afMensual, extra: true });
+        rows.push({ k: 'Asignación familiar en el año', ref: 'Mensual × 12', v: afAnual });
+        if (id === 'convivientes') {
+          rows.push({
+            k: formalizada ? 'Tu pareja puede ser carga familiar' : 'Tu pareja NO puede ser carga familiar',
+            ref: formalizada ? 'Matrimonio o Acuerdo de Unión Civil inscrito' : 'La convivencia informal no habilita',
+            v: formalizada ? 1 : 0,
+            format: 'plain',
+          });
+          rows.push({
+            k: 'Tus hijos reconocidos sí son causantes',
+            ref: 'Con independencia del estado civil de los padres',
+            v: cargas,
+            format: 'plain',
+          });
+        }
+        total = clp(afMensual);
+        sub =
+          tAf.porCarga > 0
+            ? 'Con ' + clp(renta) + ' de renta caes en el tramo ' + tAf.id + ': ' + clp(tAf.porCarga) +
+              ' por carga, o sea ' + clp(afMensual) + ' al mes y ' + clp(afAnual) + ' al año'
+            : 'Con ' + clp(renta) + ' de renta superas el tope de ' + clp(AF.tramos[2].hasta) +
+              ': no se paga asignación, aunque tus cargas siguen reconocidas como causantes';
+      } else if (id === 'bonos') {
+        rows.push({ k: 'Monto unitario del ' + bonoNombre, ref: 'Dato al ' + BONOS.fechaDato, v: bonoUnitario });
+        rows.push({
+          k: bonoSel === 'invierno' ? 'Pago único' : bonoSel === 'marzo' ? 'Cargas o causantes' : 'Estudiantes que califican',
+          ref: 'Unidades del cálculo',
+          v: bonoUnidades,
+          format: 'plain',
+        });
+        rows.push({ k: 'Total del ' + bonoNombre, ref: 'Unitario × unidades', v: bonoTotal, extra: true });
+        if (bonoSel === 'invierno') {
+          rows.push({ k: 'Tope de pensión para calificar', ref: 'Incluye CDEV y Beneficio por Años Cotizados', v: BONOS.inviernoTopePension });
+        }
+        total = clp(bonoTotal);
+        sub =
+          'El ' + bonoNombre + ' son ' + clp(bonoUnitario) +
+          (bonoSel === 'invierno' ? ' de pago único' : ' × ' + bonoUnidades + ' = ' + clp(bonoTotal)) +
+          ' · es automático, no se postula';
+      } else {
+        // becas
+        rows.push({
+          k: 'Estudiantes considerados',
+          ref: 'Nivel: ' + nivel,
+          v: estudiantes,
+          format: 'plain',
+        });
+        if (becaPresidenteUtm > 0) {
+          rows.push({
+            k: 'Beca Presidente de la República',
+            ref: becaPresidenteUtm.toLocaleString('es-CL') + ' UTM al año · UTM de hoy ' + clp(UTM),
+            v: becaPresidente,
+          });
+        }
+        if (becaIndigena > 0) {
+          rows.push({ k: 'Beca Indígena', ref: 'Monto anual del nivel · dato al ' + BECAS.fechaDato, v: becaIndigena });
+        }
+        if (becaPractica > 0) {
+          rows.push({ k: 'Beca Práctica Técnico Profesional', ref: 'Pago único de libre disposición', v: becaPractica });
+        }
+        rows.push({ k: 'Total anual por estudiante', ref: 'Suma de las becas que aplican', v: becasPorEstudiante });
+        rows.push({ k: 'Total anual del hogar', ref: 'Por estudiante × estudiantes', v: becasTotal, extra: true });
+        rows.push({
+          k: 'Equivalente mensual repartido en 10 cuotas',
+          ref: 'Sólo para dimensionar: no es una mensualidad',
+          v: becasPorEstudiante / 10,
+        });
+        total = clp(becasTotal);
+        sub =
+          becasPorEstudiante > 0
+            ? 'Las becas que aplican suman ' + clp(becasPorEstudiante) + ' al AÑO por estudiante (' +
+              clp(becasTotal) + ' en el hogar) · son montos anuales pagados en cuotas, no mensualidades'
+            : 'Con el nivel y el perfil indicados no se activa ninguna de estas tres becas de mantención: revisa el resto de la oferta JUNAEB';
+      }
+
+      // Cierre común: la foto completa del año.
+      rows.push({ k: 'Asignación familiar en el año', ref: 'Tramo ' + tAf.id, v: afAnual });
+      rows.push({ k: 'Bono de temporada seleccionado', ref: bonoNombre, v: bonoTotal });
+      rows.push({ k: 'Becas JUNAEB del hogar en el año', ref: 'Montos anuales', v: becasTotal });
+      rows.push({
+        k: 'Total de beneficios estimados en el año',
+        ref: 'Asignación más bono más becas',
+        v: afAnual + bonoTotal + becasTotal,
+        extra: true,
+      });
+      rows.push({
+        k: 'Tramo estimado del Registro Social de Hogares',
+        ref: 'Referencial · el oficial es tu Cartola Hogar',
+        v: rsh.percentil,
+        format: 'unit',
+        unit: '% (percentil)',
+      });
+
+      return {
+        total: total,
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Asignación familiar (año)', value: Math.round(afAnual), tone: 'main' },
+          { label: 'Bono de temporada', value: Math.round(bonoTotal), tone: 'good' },
+          { label: 'Becas JUNAEB (año)', value: Math.round(becasTotal), tone: 'prop' },
+        ],
+      };
+    });
+  })();
+</script>

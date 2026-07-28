@@ -1,0 +1,177 @@
+---
+/**
+ * Hub de decisión EN — "How do I convert this unit?"
+ *
+ * audience="US" y lang="en" van literales: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, UNITS, BENCHMARKS } from '../../../lib/hubs/en/unit-converter';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ UNITS, BENCHMARKS }}>
+  (function () {
+    const H = window.HC_HUB;
+    const BY_ID = {};
+    UNITS.forEach((u) => { BY_ID[u.id] = u; });
+
+    function n2(x, d) {
+      return Number(x || 0).toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: d == null ? 4 : d,
+      });
+    }
+    /**
+     * Decimals that keep a number readable across ten orders of magnitude —
+     * and never MORE than the value actually needs. The hub runtime formats
+     * rows with es-AR (comma decimal), so padding "10" out to "10,000" would
+     * read as ten thousand to an English-speaking visitor.
+     */
+    function decFor(x) {
+      const a = Math.abs(x);
+      if (!isFinite(a) || a === 0) return 0;
+      const cap = a >= 10000 ? 0 : a >= 100 ? 1 : a >= 1 ? 3 : a >= 0.01 ? 5 : 8;
+      for (let d = 0; d < cap; d++) {
+        if (Math.abs(a - Number(a.toFixed(d))) < 1e-12) return d;
+      }
+      return cap;
+    }
+
+    // Temperature is affine, so it does not go through a plain factor.
+    function toKelvin(v, id) {
+      if (id === 'C') return v + 273.15;
+      if (id === 'F') return (v + 459.67) * (5 / 9);
+      return v;
+    }
+    function fromKelvin(k, id) {
+      if (id === 'C') return k - 273.15;
+      if (id === 'F') return k * (9 / 5) - 459.67;
+      return k;
+    }
+
+    H.onCompute(function (v) {
+      const value = Number(v.value) || 0;
+      const from = BY_ID[String(v.unit)] ? String(v.unit) : 'm';
+      const src = BY_ID[from];
+      const family = UNITS.filter((u) => u.dim === src.dim);
+      const isTemp = src.dim === 'temp';
+
+      // Base value of the quantity: metre, kilogram, m², litre, watt, mg/L or kelvin.
+      const baseValue = isTemp ? toKelvin(value, from) : value * src.factor;
+
+      const target = BY_ID[src.pair] && BY_ID[src.pair].dim === src.dim ? BY_ID[src.pair] : family.find((u) => u.id !== from) || src;
+      const targetValue = isTemp ? fromKelvin(baseValue, target.id) : baseValue / target.factor;
+
+      // Every unit in the family gets its OWN symbol on its OWN row: the old
+      // converters printed the SOURCE unit on the reverse direction.
+      const rows = family
+        .filter((u) => u.id !== from)
+        .map((u) => {
+          const out = isTemp ? fromKelvin(baseValue, u.id) : baseValue / u.factor;
+          return {
+            k: u.name.replace(/^[^—]+— /, '').replace(/^./, (m) => m.toUpperCase()),
+            ref: isTemp
+              ? 'Affine scale conversion'
+              : '1 ' + u.sym + ' = ' + n2(u.factor / src.factor, 8) + ' ' + src.sym,
+            v: out,
+            format: 'unit',
+            unit: u.sym,
+            decimals: decFor(out),
+            extra: u.id === target.id,
+          };
+        });
+
+      rows.unshift({
+        k: 'Your value',
+        ref: 'As entered',
+        v: value,
+        format: 'unit',
+        unit: src.sym,
+        decimals: decFor(value),
+      });
+
+      // Mixed-unit reading, the way people actually say it out loud.
+      let mixed = '';
+      if (src.dim === 'length' && baseValue > 0) {
+        const totalIn = baseValue / 0.0254;
+        const ft = Math.floor(totalIn / 12);
+        const inch = totalIn - ft * 12;
+        mixed = ft + ' ft ' + n2(inch, 1) + ' in';
+      } else if (src.dim === 'mass' && baseValue > 0) {
+        const totalOz = baseValue / 0.028349523125;
+        const lb = Math.floor(totalOz / 16);
+        const oz = totalOz - lb * 16;
+        mixed = lb + ' lb ' + n2(oz, 1) + ' oz';
+      }
+      if (mixed) {
+        rows.push({ k: 'Said out loud', ref: 'Mixed US units', v: baseValue / (src.dim === 'length' ? 0.0254 : 0.028349523125), format: 'unit', unit: src.dim === 'length' ? 'in total' : 'oz total', decimals: 1 });
+      }
+
+      const bench = BENCHMARKS[src.dim];
+      const mine = Math.abs(baseValue);
+      const ratio = bench && bench.value ? mine / Math.abs(bench.value) : 0;
+
+      const sub =
+        n2(value, decFor(value)) + ' ' + src.sym + ' = ' + n2(targetValue, decFor(targetValue)) + ' ' + target.sym +
+        (mixed ? ' · ' + mixed : '') +
+        (bench ? ' · ' + n2(ratio * 100, ratio < 1 ? 1 : 0) + '% of the reference — ' + bench.label : '');
+
+      return {
+        total: n2(targetValue, decFor(targetValue)) + ' ' + target.sym,
+        sub: sub,
+        rows: rows,
+        format: 'unit',
+        unit: src.sym,
+        decimals: decFor(value),
+        chart: [
+          { label: 'Your quantity' + (isTemp ? ', on the absolute (kelvin) scale' : ''), value: Math.max(0, mine), tone: 'main' },
+          { label: bench ? bench.label : 'Reference', value: Math.max(0, bench ? Math.abs(bench.value) : 1), tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

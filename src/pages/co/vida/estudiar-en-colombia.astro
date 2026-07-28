@@ -1,0 +1,265 @@
+---
+/**
+ * Hub de decisión CO — "¿Con qué puntaje entro, cuánto cuesta y cómo lo pago?".
+ * audience="CO" literal: HubData sólo modela 'AR' | 'global' y el mercado viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  SABER11,
+  FRANJAS_SABER11,
+  ESCALA_NOTAS,
+  EDADES_GRADO,
+  CALENDARIO,
+} from '../../../lib/hubs/co/estudiar-en-colombia';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    SABER: SABER11,
+    FRANJAS: FRANJAS_SABER11,
+    ESCALA: ESCALA_NOTAS,
+    GRADOS: EDADES_GRADO,
+    CAL: CALENDARIO,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const cop = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
+    const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+    // El 0 es un puntaje legítimo: nada de `Number(x) || default`.
+    const num = (x, def) => {
+      if (x === '' || x === null || x === undefined) return def;
+      const n = Number(String(x).replace(',', '.'));
+      return Number.isFinite(n) ? n : def;
+    };
+
+    /** Promedio ponderado de notas, escala 0 a 5 con pesos iguales. */
+    function promedioNotas(raw) {
+      const partes = String(raw || '')
+        .split(/[;]/)
+        .map((s) => s.trim())
+        .filter((s) => s !== '')
+        .map((s) => Number(s.replace(',', '.')))
+        .filter((n) => Number.isFinite(n) && n >= ESCALA.min && n <= ESCALA.max);
+      if (!partes.length) return null;
+      const suma = partes.reduce((a, b) => a + b, 0);
+      return { promedio: suma / partes.length, cantidad: partes.length };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'publica';
+      const LC = clamp(num(v.lectura, 0), 0, SABER.maxPrueba);
+      const MAT = clamp(num(v.matematicas, 0), 0, SABER.maxPrueba);
+      const SOC = clamp(num(v.sociales, 0), 0, SABER.maxPrueba);
+      const CN = clamp(num(v.ciencias, 0), 0, SABER.maxPrueba);
+      const ING = clamp(num(v.ingles, 0), 0, SABER.maxPrueba);
+      const matricula = Math.max(0, num(v.matricula, 0));
+      const semestres = clamp(Math.round(num(v.semestres, 10)), 1, 20);
+      const sostenimiento = Math.max(0, num(v.sostenimiento, 0));
+      const tasaEa = clamp(num(v.tasa, 0), 0, 40) / 100;
+      const edad = clamp(Math.round(num(v.edad, 0)), 0, 20);
+      const notas = promedioNotas(v.notas);
+
+      // Ponderación oficial ICFES: pesos 3/3/3/3/1, divisor 13, escala ×5 → 0..500.
+      const ponderado =
+        (SABER.pesos.lectura * LC +
+          SABER.pesos.matematicas * MAT +
+          SABER.pesos.sociales * SOC +
+          SABER.pesos.ciencias * CN +
+          SABER.pesos.ingles * ING) /
+        SABER.divisor;
+      const global = clamp(Math.round(ponderado * SABER.escala), 0, SABER.maxGlobal);
+
+      const mesesCarrera = semestres * CAL.mesesPorSemestre;
+      const costoMatricula = matricula * semestres;
+      const costoSostenimiento = sostenimiento * mesesCarrera;
+      const costoTotal = costoMatricula + costoSostenimiento;
+
+      const rows = [];
+      let total, sub, chart;
+
+      const filaNotas = notas
+        ? {
+            k: 'Promedio ponderado de tus ' + notas.cantidad + ' notas',
+            ref: 'Escala ' + ESCALA.min + ' a ' + ESCALA.max + ' · aprueba desde ' + ESCALA.aprueba.toFixed(1),
+            v: notas.promedio,
+            format: 'unit',
+            unit: '/ ' + ESCALA.max.toFixed(1),
+            decimals: 2,
+          }
+        : null;
+
+      if (id === 'publica') {
+        const franja = FRANJAS.find((f) => global >= f.from && global <= f.to) || FRANJAS[0];
+        const pruebas = [
+          ['Lectura Crítica', LC, SABER.pesos.lectura],
+          ['Matemáticas', MAT, SABER.pesos.matematicas],
+          ['Sociales y Ciudadanas', SOC, SABER.pesos.sociales],
+          ['Ciencias Naturales', CN, SABER.pesos.ciencias],
+          ['Inglés', ING, SABER.pesos.ingles],
+        ];
+        pruebas.forEach(function (p) {
+          rows.push({ k: p[0], ref: 'Peso ' + p[2] + ' en el global', v: p[1], format: 'unit', unit: '/ 100' });
+        });
+        rows.push({ k: 'Promedio ponderado de las 5 pruebas', ref: 'Suma ponderada ÷ ' + SABER.divisor, v: ponderado, format: 'unit', unit: '/ 100', decimals: 1 });
+        rows.push({ k: 'Puntaje global del Saber 11', ref: 'Ponderado × ' + SABER.escala + ' · ICFES', v: global, format: 'unit', unit: '/ ' + SABER.maxGlobal, extra: true });
+        rows.push({ k: 'Franja de desempeño orientativa', ref: franja.label + ' · no es corte oficial', v: franja.to, format: 'unit', unit: 'puntos de techo' });
+        const flojas = pruebas.slice().sort(function (a, b) { return a[1] - b[1]; });
+        const debil = flojas.find(function (p) { return p[2] === 3; }) || flojas[0];
+        rows.push({ k: 'Cuánto sube tu global si mejorás 10 puntos en ' + debil[0], ref: 'Peso ' + debil[2] + ' · palanca más rentable', v: Math.round((debil[2] * 10 / SABER.divisor) * SABER.escala), format: 'unit', unit: 'puntos' });
+        rows.push({ k: 'Cuánto sube tu global si mejorás 10 puntos en Inglés', ref: 'Peso 1 · la palanca más floja', v: Math.round((1 * 10 / SABER.divisor) * SABER.escala), format: 'unit', unit: 'puntos' });
+        if (filaNotas) rows.push(filaNotas);
+
+        total = global + ' / ' + SABER.maxGlobal;
+        sub =
+          'Franja ' + franja.label.toLowerCase() +
+          ' · tu prueba más fuerte es ' + pruebas.slice().sort(function (a, b) { return b[1] - a[1]; })[0][0] +
+          ' · cada punto en una prueba de peso 3 vale el triple que uno de Inglés' +
+          (notas ? ' · promedio de notas ' + notas.promedio.toFixed(2) : '');
+        chart = [
+          { label: 'Lectura Crítica', value: LC, tone: 'main' },
+          { label: 'Matemáticas', value: MAT, tone: 'main' },
+          { label: 'Sociales y Ciudadanas', value: SOC, tone: 'main' },
+          { label: 'Ciencias Naturales', value: CN, tone: 'main' },
+          { label: 'Inglés (peso 1)', value: ING, tone: 'prop' },
+        ];
+      } else if (id === 'privada') {
+        const porAnio = costoTotal / (semestres / CAL.semestresPorAnio);
+        rows.push({ k: 'Matrícula por semestre', ref: 'La que te cotizaron', v: matricula });
+        rows.push({ k: 'Semestres del programa', ref: 'Duración cargada', v: semestres, format: 'plain' });
+        rows.push({ k: 'Matrícula de toda la carrera', ref: 'Matrícula × semestres', v: costoMatricula });
+        rows.push({ k: 'Meses de estudio', ref: CAL.mesesPorSemestre + ' meses por semestre', v: mesesCarrera, format: 'plain' });
+        rows.push({ k: 'Sostenimiento de toda la carrera', ref: 'Mensual × meses de estudio', v: costoSostenimiento });
+        rows.push({ k: 'Costo total de la carrera', ref: 'Matrícula + sostenimiento', v: costoTotal, extra: true });
+        rows.push({ k: 'Costo promedio por año', ref: 'Total ÷ años del programa', v: porAnio });
+        rows.push({ k: 'Peso del sostenimiento sobre el total', ref: 'El rubro que nadie proyecta', v: costoTotal > 0 ? (costoSostenimiento / costoTotal) * 100 : 0, format: 'unit', unit: '%', decimals: 1 });
+        rows.push({ k: 'Cuánto cuesta repetir un semestre', ref: 'Matrícula + ' + CAL.mesesPorSemestre + ' meses de sostenimiento', v: matricula + sostenimiento * CAL.mesesPorSemestre });
+        if (filaNotas) rows.push(filaNotas);
+
+        total = cop(costoTotal);
+        sub =
+          'Carrera de ' + semestres + ' semestres · ' + cop(costoMatricula) + ' de matrícula y ' +
+          cop(costoSostenimiento) + ' de sostenimiento · el sostenimiento pesa ' +
+          (costoTotal > 0 ? ((costoSostenimiento / costoTotal) * 100).toFixed(0) : '0') + '% del total';
+        chart = [
+          { label: 'Matrícula de toda la carrera', value: Math.round(costoMatricula), tone: 'main' },
+          { label: 'Sostenimiento de toda la carrera', value: Math.round(costoSostenimiento), tone: 'warn' },
+          { label: 'Costo de repetir un semestre', value: Math.round(matricula + sostenimiento * CAL.mesesPorSemestre), tone: 'exit' },
+        ];
+      } else if (id === 'icetex') {
+        // Plazo de amortización: el doble del tiempo que duró la carrera, en MESES.
+        // (La fórmula vieja usaba semestres × 2 como si fueran meses: 10 semestres → 20 meses.)
+        const plazoMeses = mesesCarrera * 2;
+        const capital = costoMatricula;
+        const iMes = tasaEa > 0 ? Math.pow(1 + tasaEa, 1 / 12) - 1 : 0;
+        const f = Math.pow(1 + iMes, plazoMeses);
+        const cuota = capital <= 0 ? 0 : iMes > 0 ? (capital * (iMes * f)) / (f - 1) : capital / plazoMeses;
+        const totalPagado = cuota * plazoMeses;
+        const intereses = Math.max(0, totalPagado - capital);
+
+        rows.push({ k: 'Capital financiado', ref: 'Matrícula × semestres', v: capital });
+        rows.push({ k: 'Tasa efectiva anual de tu línea', ref: 'La de tu carta de aprobación', v: tasaEa * 100, format: 'unit', unit: '% E.A.', decimals: 2 });
+        rows.push({ k: 'Tasa mensual equivalente', ref: '(1 + E.A.)^(1/12) − 1', v: iMes * 100, format: 'unit', unit: '% mensual', decimals: 3 });
+        rows.push({ k: 'Plazo de amortización', ref: 'El doble de los ' + mesesCarrera + ' meses de estudio', v: plazoMeses, format: 'unit', unit: 'meses' });
+        rows.push({ k: 'Cuota mensual después de graduarte', ref: 'Sistema francés de cuota fija', v: cuota, extra: true });
+        rows.push({ k: 'Total que devolvés', ref: 'Cuota × plazo', v: totalPagado });
+        rows.push({ k: 'Intereses del crédito', ref: 'Total menos capital', v: intereses });
+        rows.push({ k: 'Cuánto pagás por cada peso prestado', ref: 'Total ÷ capital', v: capital > 0 ? totalPagado / capital : 0, format: 'unit', unit: 'pesos', decimals: 2 });
+        rows.push({ k: 'Sueldo mínimo de enganche para que la cuota sea el 20% del ingreso', ref: 'Umbral de riesgo prudente', v: cuota * 5 });
+        if (filaNotas) rows.push(filaNotas);
+
+        total = cop(cuota);
+        sub =
+          'Cuota de ' + cop(cuota) + ' durante ' + plazoMeses + ' meses · financiás ' + cop(capital) +
+          ' y devolvés ' + cop(totalPagado) + ' · los intereses suman ' + cop(intereses);
+        chart = [
+          { label: 'Capital financiado', value: Math.round(capital), tone: 'main' },
+          { label: 'Intereses del crédito', value: Math.round(intereses), tone: 'bad' },
+          { label: 'Cuota mensual', value: Math.round(cuota), tone: 'warn' },
+        ];
+      } else {
+        // Colegio: grado orientativo por edad.
+        let sugerido = GRADOS[0];
+        for (let k = 0; k < GRADOS.length; k++) {
+          if (edad >= GRADOS[k].edad) sugerido = GRADOS[k];
+        }
+        const siguiente = GRADOS.find(function (g) { return g.edad > edad; });
+
+        rows.push({ k: 'Edad del estudiante al matricular', ref: 'Cumplidos', v: edad, format: 'unit', unit: 'años' });
+        rows.push({ k: 'Edad mínima orientativa del nivel sugerido', ref: sugerido.grado, v: sugerido.edad, format: 'unit', unit: 'años' });
+        rows.push({ k: 'Cuántos años pasa la edad mínima del nivel', ref: 'Margen frente al piso del grado', v: Math.max(0, edad - sugerido.edad), format: 'unit', unit: 'años' });
+        rows.push({
+          k: siguiente ? 'Años que faltan para el nivel siguiente (' + siguiente.grado + ')' : 'Ya está en el nivel más alto de la educación media',
+          ref: siguiente ? 'Referencia ' + siguiente.edad + ' años' : 'Media completa',
+          v: siguiente ? siguiente.edad - edad : 0,
+          format: 'unit',
+          unit: 'años',
+        });
+        GRADOS.forEach(function (g) {
+          rows.push({ k: 'Edad de referencia · ' + g.grado, ref: 'Ley 115 de 1994 · orientativo', v: g.edad, format: 'unit', unit: 'años' });
+        });
+        if (filaNotas) rows.push(filaNotas);
+
+        total = sugerido.grado;
+        sub =
+          'Con ' + edad + ' años, el nivel orientativo es ' + sugerido.grado.toLowerCase() +
+          ' · la ubicación final la define la institución con la secretaría de educación y pesa más el grado que ya cursó' +
+          ' · sin registro en SIMAT el cupo no existe formalmente';
+        chart = [
+          { label: 'Edad del estudiante', value: edad, tone: 'main' },
+          { label: 'Edad mínima del nivel sugerido', value: sugerido.edad, tone: 'good' },
+          { label: 'Edad de referencia de secundaria', value: GRADOS[3].edad, tone: 'prop' },
+          { label: 'Edad de referencia de media', value: GRADOS[4].edad, tone: 'warn' },
+        ];
+      }
+
+      return { total: total, sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

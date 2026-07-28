@@ -1,0 +1,286 @@
+---
+/**
+ * Hub de decisión CO — "¿Cuánto me pueden subir el arriendo y cuánto debería estar pagando?"
+ * Vive bajo /co/ igual que las calculadoras que absorbe. audience="CO" va literal al Layout:
+ * HubData sólo modela 'AR' | 'global' y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  IPC_ANUAL,
+  IPC_ANIO,
+  TOPE_CANON_PCT_VALOR,
+  RETENCION_ARRIENDO,
+  MERCADO,
+  UVT,
+} from '../../../lib/hubs/co/arriendo';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    IPC_ANUAL,
+    IPC_ANIO,
+    TOPE_PCT: TOPE_CANON_PCT_VALOR,
+    RET: RETENCION_ARRIENDO,
+    MERCADO,
+    UVT,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const cop = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
+    const pct = (n) => n.toFixed(1).replace('.', ',') + '%';
+
+    function refMercado(ciudadId, alcobas) {
+      const c = MERCADO.ciudades.find((x) => x.id === ciudadId) || MERCADO.ciudades[0];
+      const f = MERCADO.alcobas[alcobas] || 1;
+      const canon = c.base2Alcobas * f;
+      return { nombre: c.nombre, canon: canon, admin: canon * MERCADO.adminPctTipico.medio };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'vivienda';
+      const canon = Math.max(0, v.canon || 0);
+      const ipc = Math.max(0, Math.min(30, v.ipc === undefined || v.ipc === null || v.ipc === '' ? IPC_ANUAL : Number(v.ipc)));
+      const admin = Math.max(0, v.administracion || 0);
+      const valor = Math.max(0, v.valorComercial || 0);
+      const predial = Math.max(0, v.predial || 0);
+      const alcobas = Math.min(4, Math.max(1, Math.round(v.alcobas || 2)));
+      const ciudad = String(v.ciudad || 'bogota');
+      const retiene = String(v.retiene || 'si') === 'si';
+
+      const aumento = canon * (ipc / 100);
+      const nuevoCanon = canon + aumento;
+      const topeArt18 = valor * TOPE_PCT;
+      const ref = refMercado(ciudad, alcobas);
+
+      const rows = [];
+      let total, sub, chart;
+
+      if (id === 'arrendador') {
+        // Lo que le queda al arrendador: canon menos gastos que asume y menos anticipo de renta.
+        const predialMes = predial / 12;
+        const retencion = retiene && canon >= RET.basePesos ? canon * RET.tasa : 0;
+        const neto = Math.max(0, canon - admin - predialMes - retencion);
+        const rentabilidad = valor > 0 ? ((neto * 12) / valor) * 100 : 0;
+
+        rows.push({ k: 'Canon bruto que cobrás', ref: 'Lo que dice el contrato', v: canon });
+        rows.push({ k: 'Cuota de administración que asumís', ref: 'Ley 675/2001 · 0 si la paga el inquilino', v: admin });
+        rows.push({ k: 'Impuesto predial prorrateado al mes', ref: cop(predial) + ' al año ÷ 12', v: predialMes });
+        rows.push({
+          k: retencion > 0 ? 'Retención en la fuente que te practican' : 'Retención en la fuente (no aplica)',
+          ref:
+            retencion > 0
+              ? (RET.tasa * 100).toString().replace('.', ',') + '% · art. 401 ET'
+              : retiene
+                ? 'El canon no llega a la base de ' + RET.baseUvt + ' UVT'
+                : 'El arrendatario no es agente retenedor',
+          v: retencion,
+        });
+        rows.push({ k: 'Lo que te queda limpio por mes', ref: 'Antes de vacancia y reparaciones', v: neto, extra: true });
+        rows.push({ k: 'Neto en el año', ref: 'Doce meses sin vacancia', v: neto * 12 });
+        rows.push({
+          k: 'Rentabilidad anual sobre el valor comercial',
+          ref: 'Neto anual ÷ valor del inmueble',
+          v: rentabilidad,
+          format: 'unit',
+          unit: '% anual',
+          decimals: 2,
+        });
+        rows.push({
+          k: 'Cuánto perdés por cada mes que el inmueble esté vacío',
+          ref: 'Vacancia: el gasto sigue corriendo',
+          v: neto + admin + predialMes,
+        });
+
+        total = cop(neto);
+        sub =
+          'De ' + cop(canon) + ' brutos te quedan ' + cop(neto) + ' limpios (' +
+          pct(canon > 0 ? (neto / canon) * 100 : 0) + ' del canon) · rentabilidad ' +
+          rentabilidad.toFixed(2).replace('.', ',') + '% anual sobre el valor comercial' +
+          (retencion > 0 ? ' · la retención es anticipo de renta, se acredita al declarar' : '');
+        chart = [
+          { label: 'Lo que te queda limpio', value: Math.round(neto), tone: 'main' },
+          { label: 'Administración', value: Math.round(admin), tone: 'prop' },
+          { label: 'Predial (mes)', value: Math.round(predialMes), tone: 'warn' },
+          { label: 'Retención en la fuente', value: Math.round(retencion), tone: 'exit' },
+        ].filter((s) => s.value > 0);
+      } else if (id === 'mercado') {
+        const tuyo = canon + admin;
+        const refTotal = ref.canon + ref.admin;
+        const dif = tuyo - refTotal;
+        const difPct = refTotal > 0 ? (dif / refTotal) * 100 : 0;
+
+        rows.push({ k: 'Tu canon', ref: 'Sin administración', v: canon });
+        rows.push({ k: 'Tu cuota de administración', ref: 'Ley 675/2001', v: admin });
+        rows.push({ k: 'Tu costo real por mes', ref: 'Canon + administración', v: tuyo, extra: true });
+        rows.push({
+          k: 'Canon de referencia en ' + ref.nombre,
+          ref: alcobas + (alcobas === 1 ? ' alcoba' : ' alcobas') + ' · zona media-alta · ' + MERCADO.fecha,
+          v: ref.canon,
+        });
+        rows.push({
+          k: 'Administración típica de referencia',
+          ref: (MERCADO.adminPctTipico.medio * 100).toFixed(0) + '% del canon',
+          v: ref.admin,
+        });
+        rows.push({ k: 'Costo real de referencia', ref: 'Promedio de mercado, no oficial', v: refTotal });
+        rows.push({
+          k: dif >= 0 ? 'Cuánto pagás por encima de la referencia' : 'Cuánto pagás por debajo de la referencia',
+          ref: 'Diferencia mensual',
+          v: Math.abs(dif),
+        });
+        rows.push({
+          k: 'Diferencia contra el mercado',
+          ref: 'Sobre el costo real de referencia',
+          v: difPct,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        rows.push({
+          k: 'Cuánto pesa la administración en tu costo real',
+          ref: 'Administración ÷ (canon + administración)',
+          v: tuyo > 0 ? (admin / tuyo) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        rows.push({ k: 'Tu costo real en el año', ref: 'Doce meses', v: tuyo * 12 });
+
+        total = cop(tuyo);
+        sub =
+          'Tu costo real es ' + cop(tuyo) + ' por mes · la referencia en ' + ref.nombre + ' para ' +
+          alcobas + (alcobas === 1 ? ' alcoba' : ' alcobas') + ' es ' + cop(refTotal) + ' · ' +
+          (dif >= 0 ? 'pagás ' + cop(dif) + ' más' : 'pagás ' + cop(-dif) + ' menos') +
+          ' (' + pct(Math.abs(difPct)) + ')';
+        chart = [
+          { label: 'Tu canon', value: Math.round(canon), tone: 'main' },
+          { label: 'Tu administración', value: Math.round(admin), tone: 'prop' },
+        ];
+      } else {
+        // vivienda | comercial: el aumento y el costo real de vivir (u operar) ahí.
+        const esVivienda = id === 'vivienda';
+        const costoReal = nuevoCanon + admin;
+        const excedeTope = esVivienda && topeArt18 > 0 && nuevoCanon > topeArt18;
+
+        rows.push({ k: 'Canon actual', ref: 'Lo que pagás hoy', v: canon });
+        rows.push({
+          k: esVivienda ? 'Aumento máximo legal del año' : 'Reajuste pactado del año',
+          ref: esVivienda
+            ? 'IPC ' + IPC_ANIO + ' = ' + ipc.toString().replace('.', ',') + '% · art. 20 Ley 820/2003'
+            : ipc.toString().replace('.', ',') + '% · libre pacto, Código de Comercio',
+          v: aumento,
+        });
+        rows.push({ k: 'Canon nuevo desde el aniversario del contrato', ref: 'Canon + reajuste', v: nuevoCanon });
+        if (esVivienda) {
+          rows.push({
+            k: 'Canon máximo legal por el valor del inmueble',
+            ref: '1% del valor comercial · art. 18 Ley 820/2003',
+            v: topeArt18,
+          });
+          rows.push({
+            k: excedeTope ? 'Cuánto excede tu canon el tope del 1%' : 'Margen que queda hasta el tope del 1%',
+            ref: 'Sobre el canon nuevo',
+            v: Math.abs(topeArt18 - nuevoCanon),
+          });
+        } else {
+          rows.push({
+            k: 'Años de ocupación para ganar el derecho de renovación',
+            ref: 'Mismo local y mismo negocio · art. 518 C.Co.',
+            v: 2,
+            format: 'unit',
+            unit: 'años',
+          });
+        }
+        rows.push({ k: 'Cuota de administración', ref: 'Ley 675/2001 · coeficiente de copropiedad', v: admin });
+        rows.push({
+          k: esVivienda ? 'Costo real de vivir ahí, por mes' : 'Costo real de operar ahí, por mes',
+          ref: 'Canon nuevo + administración',
+          v: costoReal,
+          extra: true,
+        });
+        rows.push({ k: 'Costo real en el año', ref: 'Doce meses', v: costoReal * 12 });
+        rows.push({ k: 'Cuánto sube tu desembolso en el año', ref: 'Aumento × 12', v: aumento * 12 });
+        rows.push({
+          k: 'Cuánto pesa la administración sobre el canon',
+          ref: 'Administración ÷ canon nuevo',
+          v: nuevoCanon > 0 ? (admin / nuevoCanon) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        rows.push({
+          k: 'Ingreso mensual sugerido para sostenerlo',
+          ref: 'Costo real ≤ un tercio del ingreso',
+          v: costoReal * 3,
+        });
+
+        total = cop(costoReal);
+        sub =
+          (esVivienda
+            ? 'El tope legal del aumento es el IPC ' + IPC_ANIO + ' (' + ipc.toString().replace('.', ',') + '%)'
+            : 'En local comercial el reajuste es de libre pacto: no hay tope de IPC') +
+          ' · canon nuevo ' + cop(nuevoCanon) +
+          ' · con administración pagás ' + cop(costoReal) + ' por mes' +
+          (excedeTope
+            ? ' · ojo: supera el 1% del valor comercial, que es el tope del art. 18'
+            : esVivienda && topeArt18 > 0
+              ? ' · estás dentro del tope del 1% del valor comercial'
+              : '');
+        chart = [
+          { label: 'Canon actual', value: Math.round(canon), tone: 'main' },
+          { label: 'Aumento del año', value: Math.round(aumento), tone: 'warn' },
+          { label: 'Administración', value: Math.round(admin), tone: 'prop' },
+        ].filter((s) => s.value > 0);
+      }
+
+      return { total: total, sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

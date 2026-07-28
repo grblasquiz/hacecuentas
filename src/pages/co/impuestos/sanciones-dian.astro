@@ -1,0 +1,243 @@
+---
+/**
+ * Hub de decisión CO — "Sanciones e intereses de mora de la DIAN".
+ * Ruta bajo el prefijo /co/, igual que las calculadoras que absorbe.
+ * audience="CO" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, UVT, SANCIONES, CORRECCION, MORA } from '../../../lib/hubs/co/sanciones-dian';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ UVT, SANCIONES, CORRECCION, MORA }}>
+  (function () {
+    const H = window.HC_HUB;
+    const cop = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
+    const pct = (n, d) => n.toFixed(d === undefined ? 2 : d).replace('.', ',');
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'extemporanea';
+      const impuesto = Math.max(0, v.impuesto || 0);
+      const mayorValor = Math.max(0, v.mayorValor || 0);
+      // "Mes o fracción" (arts. 641 y 642): cualquier parte de un mes cuenta como mes entero.
+      const meses = Math.max(0, Math.ceil(v.meses || 0));
+      const diasMora = Math.max(0, Math.floor(v.diasMora || 0));
+      const usuraEa = Math.max(0, v.usura || 0) / 100;
+      const reduccionPct = Math.max(0, Math.min(75, v.reduccion || 0));
+      const uvr = Math.max(0, v.uvr || 0);
+
+      const minima = SANCIONES.minimaUvt * UVT;
+      const esCorreccion = id === 'correccion' || id === 'correccion-emplazada';
+
+      const rows = [];
+      let base, tasa, tope, sancionCalculada, topeAplicado, refSancion, etiquetaBase;
+
+      if (esCorreccion) {
+        // Art. 644 ET: la base es el MAYOR VALOR que arroja la corrección, no el impuesto total.
+        base = mayorValor;
+        tasa = id === 'correccion' ? CORRECCION.voluntaria : CORRECCION.conEmplazamiento;
+        tope = null;
+        sancionCalculada = base * tasa;
+        topeAplicado = false;
+        refSancion = 'Art. 644 ET · ' + (tasa * 100).toFixed(0) + '% del mayor valor';
+        etiquetaBase = 'Mayor valor a pagar que arroja la corrección';
+        rows.push({ k: etiquetaBase, ref: 'Base del art. 644 ET', v: base });
+        rows.push({
+          k: 'Tarifa que te aplica',
+          ref: id === 'correccion' ? 'Corrección voluntaria' : 'Después del emplazamiento para corregir',
+          v: tasa * 100,
+          format: 'unit',
+          unit: '%',
+        });
+      } else {
+        // Arts. 641 / 642 ET: porcentaje por mes o fracción sobre el impuesto a cargo, con tope.
+        base = impuesto;
+        tasa =
+          id === 'emplazado'
+            ? SANCIONES.extemporaneidadConEmplazamientoPorMes
+            : SANCIONES.extemporaneidadPorMes;
+        tope = id === 'emplazado' ? SANCIONES.topeConEmplazamiento : SANCIONES.topeSinEmplazamiento;
+        const pctSinTope = tasa * meses;
+        const pctAplicado = Math.min(pctSinTope, tope);
+        topeAplicado = pctSinTope > tope;
+        sancionCalculada = base * pctAplicado;
+        refSancion =
+          (id === 'emplazado' ? 'Art. 642 ET' : 'Art. 641 ET') +
+          ' · ' + (tasa * 100).toFixed(0) + '%/mes, tope ' + (tope * 100).toFixed(0) + '%';
+        etiquetaBase = 'Impuesto a cargo de la declaración';
+        rows.push({ k: etiquetaBase, ref: 'Base de la sanción', v: base });
+        rows.push({
+          k: 'Meses de retraso liquidados',
+          ref: 'Mes o fracción cuenta como mes entero',
+          v: meses,
+          format: 'unit',
+          unit: meses === 1 ? 'mes' : 'meses',
+        });
+        rows.push({
+          k: 'Porcentaje de sanción que te corresponde',
+          ref: topeAplicado
+            ? 'Topado en el ' + (tope * 100).toFixed(0) + '% · ' + (pctSinTope * 100).toFixed(0) + '% sin tope'
+            : (tasa * 100).toFixed(0) + '% × ' + meses,
+          v: pctAplicado * 100,
+          format: 'unit',
+          unit: '%',
+        });
+      }
+
+      const minimaAplicada = sancionCalculada < minima;
+      const sancionAntesDeReduccion = Math.max(sancionCalculada, minima);
+      const factorReduccion = 1 - reduccionPct / 100;
+      // La reducción del art. 640 se aplica sobre la sanción ya liquidada; el piso del
+      // art. 639 sigue mandando después de reducir.
+      const sancion = Math.max(sancionAntesDeReduccion * factorReduccion, minima);
+      const ahorroReduccion = sancionAntesDeReduccion - sancion;
+
+      rows.push({ k: 'Sanción que sale de la cuenta', ref: refSancion, v: sancionCalculada });
+      rows.push({
+        k: 'Sanción mínima legal',
+        ref: SANCIONES.minimaUvt + ' UVT · art. 639 ET' + (minimaAplicada ? ' — es la que rige' : ''),
+        v: minima,
+      });
+      if (reduccionPct > 0) {
+        rows.push({
+          k: 'Reducción del art. 640 aplicada',
+          ref: reduccionPct + '% menos, con el piso de la mínima igual vigente',
+          v: ahorroReduccion,
+        });
+      }
+      rows.push({ k: 'Sanción definitiva', ref: 'La mayor entre la calculada y la mínima', v: sancion, extra: true });
+
+      // Art. 635 ET (Ley 1819/2016): tasa diaria = (usura − 2 pts) / 365, interés SIMPLE.
+      const tasaMoraEa = Math.max(0, usuraEa - MORA.puntosMenos);
+      const tasaDiaria = tasaMoraEa / MORA.baseDias;
+      const capitalMora = esCorreccion ? mayorValor : impuesto;
+      const intereses = capitalMora * tasaDiaria * diasMora;
+      const porDia = capitalMora * tasaDiaria;
+
+      rows.push({
+        k: 'Tasa de mora aplicada',
+        ref: 'Usura ' + pct(usuraEa * 100) + '% − ' + (MORA.puntosMenos * 100).toFixed(0) + ' puntos · art. 635 ET',
+        v: tasaMoraEa * 100,
+        format: 'unit',
+        unit: '% E.A.',
+        decimals: 2,
+      });
+      rows.push({
+        k: 'Días de mora que corren',
+        ref: 'Días calendario desde el vencimiento',
+        v: diasMora,
+        format: 'unit',
+        unit: 'días',
+      });
+      rows.push({ k: 'Intereses de mora', ref: 'Capital × tasa diaria × días · interés simple', v: intereses });
+      rows.push({ k: 'Lo que te cuesta cada día extra de atraso', ref: 'Interés diario', v: porDia, extra: true });
+
+      const totalImpuesto = esCorreccion ? mayorValor : impuesto;
+      const total = totalImpuesto + sancion + intereses;
+      rows.push({ k: 'Total a pagar para ponerte al día', ref: 'Impuesto + sanción + intereses', v: total, extra: true });
+
+      const recargoPct = totalImpuesto > 0 ? ((sancion + intereses) / totalImpuesto) * 100 : 0;
+      rows.push({
+        k: 'Cuánto encarece el atraso tu deuda',
+        ref: 'Sanción + intereses sobre el impuesto',
+        v: recargoPct,
+        format: 'unit',
+        unit: '%',
+        decimals: 1,
+      });
+
+      if (uvr > 0) {
+        rows.push({
+          k: 'Tu total expresado en UVR',
+          ref: 'UVR del día que cargaste: ' + cop(uvr),
+          v: total / uvr,
+          format: 'unit',
+          unit: 'UVR',
+          decimals: 2,
+        });
+      }
+      rows.push({
+        k: 'Tu total expresado en UVT',
+        ref: 'UVT vigente ' + cop(UVT),
+        v: total / UVT,
+        format: 'unit',
+        unit: 'UVT',
+        decimals: 1,
+      });
+
+      let sub;
+      if (esCorreccion) {
+        sub =
+          'Sanción del ' + (tasa * 100).toFixed(0) + '% sobre el mayor valor (art. 644 ET)' +
+          (minimaAplicada ? ', pero rige la mínima de ' + SANCIONES.minimaUvt + ' UVT' : '') +
+          ' · intereses por ' + diasMora + ' días: ' + cop(intereses) +
+          (id === 'correccion'
+            ? ' · corregir voluntariamente te ahorra ' + cop(Math.max(0, mayorValor * CORRECCION.conEmplazamiento - mayorValor * CORRECCION.voluntaria)) + ' frente a esperar el emplazamiento'
+            : ' · haberla corregido antes del emplazamiento te habría costado la mitad de sanción');
+      } else {
+        sub =
+          meses + (meses === 1 ? ' mes' : ' meses') + ' de retraso' +
+          (topeAplicado ? ' — ya estás en el tope legal del ' + (tope * 100).toFixed(0) + '%' : '') +
+          (minimaAplicada ? ' · rige la sanción mínima de ' + SANCIONES.minimaUvt + ' UVT' : '') +
+          ' · cada día extra suma ' + cop(porDia) +
+          (id === 'extemporanea'
+            ? ' · si te emplazan, la sanción se duplica a ' + cop(Math.max(Math.min(SANCIONES.extemporaneidadConEmplazamientoPorMes * meses, SANCIONES.topeConEmplazamiento) * impuesto, minima))
+            : '');
+      }
+
+      return {
+        total: cop(total),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: esCorreccion ? 'Mayor impuesto de la corrección' : 'Impuesto que siempre ibas a deber', value: Math.round(totalImpuesto), tone: 'main' },
+          { label: 'Sanción', value: Math.round(sancion), tone: 'bad' },
+          { label: 'Intereses de mora', value: Math.round(intereses), tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

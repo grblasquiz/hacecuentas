@@ -1,0 +1,233 @@
+---
+/**
+ * Hub EN — "What is this costing me, and what would I save by changing it?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  US_RATE_PER_KWH,
+  GRID_KG_CO2_PER_KWH,
+  FRIDGE_BANDS,
+  SHEETS_PER_TREE,
+} from '../../../lib/hubs/en/home-energy-savings';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ US_RATE_PER_KWH, GRID_KG_CO2_PER_KWH, FRIDGE_BANDS, SHEETS_PER_TREE }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) =>
+      '$' + (Math.round((n || 0) * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const n0 = (x) => Math.round(x || 0).toLocaleString('en-US');
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'fridge';
+      // El default cae en la tarifa de EE.UU., NO en la argentina — ver el bug documentado
+      // en src/lib/hubs/en/home-energy-savings.ts.
+      const rate = v.rate > 0 ? v.rate : US_RATE_PER_KWH;
+
+      if (id === 'appliance') {
+        const oldK = Math.max(0, v.oldkwh || 0);
+        const newK = Math.max(0, v.newkwh || 0);
+        const price = Math.max(0, v.price || 0);
+        const savedK = oldK - newK;
+        const savedUsd = savedK * rate;
+        const co2 = savedK * GRID_KG_CO2_PER_KWH;
+        const payback = savedUsd > 0 ? price / savedUsd : 0;
+        const rows = [
+          { k: 'Old appliance', ref: 'Annual consumption', v: oldK, format: 'unit', unit: 'kWh/yr' },
+          { k: 'New appliance', ref: 'Annual consumption', v: newK, format: 'unit', unit: 'kWh/yr' },
+          { k: savedK >= 0 ? 'Energy saved per year' : 'Extra energy the new one uses', ref: 'Difference', v: Math.abs(savedK), format: 'unit', unit: 'kWh/yr', extra: true },
+          { k: savedK >= 0 ? 'Dollars saved per year' : 'Extra cost per year', ref: usd(rate) + '/kWh', v: Math.abs(savedUsd), format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'CO₂ avoided per year', ref: GRID_KG_CO2_PER_KWH + ' kg/kWh · EPA eGRID', v: Math.abs(co2), format: 'unit', unit: 'kg CO₂', decimals: 1 },
+          { k: 'Purchase price', ref: 'As entered', v: price, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: savedUsd > 0 ? 'Simple payback' : 'No payback — the new unit costs more to run', ref: savedUsd > 0 ? 'Price ÷ annual saving' : 'Check the two consumption figures', v: payback, format: 'unit', unit: 'years', decimals: 1, extra: true },
+          { k: 'Saving over 10 years', ref: 'At today’s rate, ignoring inflation', v: Math.abs(savedUsd) * 10, format: 'unit', unit: 'USD', decimals: 2 },
+        ];
+        return {
+          total: usd(Math.abs(savedUsd)) + '/yr',
+          sub:
+            n0(Math.abs(savedK)) + ' kWh and ' + co2.toFixed(0) + ' kg CO₂ a year · ' +
+            (savedUsd > 0
+              ? 'payback in ' + payback.toFixed(1) + ' years — worth it only if that is well inside the appliance’s life'
+              : 'the "efficient" option is not cheaper to run at these figures — recheck the labels'),
+          rows: rows,
+          chart: [
+            { label: 'Energy the new one still uses (kWh/yr)', value: Math.round(newK), tone: 'main' },
+            { label: 'Energy saved (kWh/yr)', value: Math.round(Math.max(0, savedK)), tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'lighting') {
+        const w = Math.max(0, v.lampwatts || 0);
+        const h = Math.max(0, v.lamphours || 0);
+        const kwhMonth = (w * h * 30) / 1000;
+        const kwhYear = (w * h * 365) / 1000;
+        // Un LED equivalente consume ~15% de un incandescente para el mismo lumen (DOE).
+        const ledW = w * 0.15;
+        const ledYear = (ledW * h * 365) / 1000;
+        const rows = [
+          { k: 'Fixture power', ref: 'As entered', v: w, format: 'unit', unit: 'W' },
+          { k: 'Consumption per month', ref: h + ' h/day × 30', v: kwhMonth, format: 'unit', unit: 'kWh', decimals: 2 },
+          { k: 'Consumption per year', ref: h + ' h/day × 365', v: kwhYear, format: 'unit', unit: 'kWh', decimals: 1, extra: true },
+          { k: 'Cost per month', ref: usd(rate) + '/kWh', v: kwhMonth * rate, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Cost per year', ref: usd(rate) + '/kWh', v: kwhYear * rate, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'What an equivalent LED would use', ref: 'About 15% of the wattage · DOE', v: ledYear, format: 'unit', unit: 'kWh/yr', decimals: 1 },
+          { k: 'Annual saving from switching to LED', ref: 'If this fixture is not LED already', v: Math.max(0, (kwhYear - ledYear) * rate), format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'CO₂ this fixture is responsible for per year', ref: GRID_KG_CO2_PER_KWH + ' kg/kWh', v: kwhYear * GRID_KG_CO2_PER_KWH, format: 'unit', unit: 'kg CO₂', decimals: 1 },
+        ];
+        return {
+          total: usd(kwhYear * rate) + '/yr',
+          sub:
+            kwhMonth.toFixed(1) + ' kWh a month · switching this fixture to LED would save about ' +
+            usd(Math.max(0, (kwhYear - ledYear) * rate)) + ' a year · if it is already LED, this lever is spent',
+          rows: rows,
+          chart: [
+            { label: 'What an LED would still use (kWh/yr)', value: Math.round(ledYear * 10) / 10, tone: 'main' },
+            { label: 'What switching would save (kWh/yr)', value: Math.round(Math.max(0, kwhYear - ledYear) * 10) / 10, tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'standby') {
+        const n = Math.max(0, Math.round(v.chargers || 0));
+        const w = Math.max(0, v.idlewatts || 0);
+        const kwhYear = (n * w * 24 * 365) / 1000;
+        const cost = kwhYear * rate;
+        const co2 = kwhYear * GRID_KG_CO2_PER_KWH;
+        // Referencia honesta: una heladera moderna eficiente, para que se vea la escala.
+        const fridgeRef = FRIDGE_BANDS.efficient;
+        const rows = [
+          { k: 'Devices left plugged in', ref: 'As entered', v: n, format: 'plain' },
+          { k: 'Idle draw of each', ref: 'Modern chargers are a fraction of a watt', v: w, format: 'unit', unit: 'W', decimals: 2 },
+          { k: 'Combined continuous draw', ref: 'Devices × watts', v: n * w, format: 'unit', unit: 'W', decimals: 2 },
+          { k: 'Annual consumption', ref: '24 h × 365 days', v: kwhYear, format: 'unit', unit: 'kWh/yr', decimals: 1, extra: true },
+          { k: 'Annual cost', ref: usd(rate) + '/kWh', v: cost, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'CO₂ per year', ref: GRID_KG_CO2_PER_KWH + ' kg/kWh', v: co2, format: 'unit', unit: 'kg CO₂', decimals: 1 },
+          { k: 'For scale: an efficient refrigerator', ref: 'One appliance, every year', v: fridgeRef, format: 'unit', unit: 'kWh/yr' },
+          { k: 'One set-top box left on, for comparison', ref: '15 W continuous', v: (15 * 24 * 365) / 1000, format: 'unit', unit: 'kWh/yr' },
+        ];
+        return {
+          total: usd(cost) + '/yr',
+          sub:
+            kwhYear.toFixed(1) + ' kWh a year — about ' + Math.round((kwhYear / fridgeRef) * 100) +
+            '% of what one efficient fridge uses · real, but small: the set-top box and the console are the standby loads worth attacking',
+          rows: rows,
+          chart: [
+            { label: 'Your chargers (kWh/yr)', value: Math.round(kwhYear * 10) / 10, tone: 'main' },
+            { label: 'One efficient fridge (kWh/yr)', value: fridgeRef, tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'paper') {
+        const weekly = Math.max(0, v.sheets || 0);
+        const savedYear = weekly * 52 * 0.5;
+        const treesSaved = savedYear / SHEETS_PER_TREE;
+        const reams = savedYear / 500;
+        const rows = [
+          { k: 'Sheets printed per week', ref: 'Single-sided today', v: weekly, format: 'plain' },
+          { k: 'Sheets per year', ref: '52 weeks', v: weekly * 52, format: 'plain' },
+          { k: 'Sheets saved per year going double-sided', ref: 'Halves the sheet count', v: savedYear, format: 'plain', extra: true },
+          { k: 'Reams saved per year', ref: '500 sheets per ream', v: reams, format: 'unit', unit: 'reams', decimals: 1, extra: true },
+          { k: 'Trees that represents', ref: SHEETS_PER_TREE.toLocaleString('en-US') + ' sheets per tree — a rough figure', v: treesSaved, format: 'plain', decimals: 2 },
+          { k: 'Sheets you would still print', ref: 'Both sides of half as much paper', v: weekly * 52 * 0.5, format: 'plain' },
+        ];
+        return {
+          total: n0(savedYear) + ' sheets/yr',
+          sub:
+            reams.toFixed(1) + ' reams and roughly ' + treesSaved.toFixed(2) +
+            ' trees · set duplex as the printer default rather than relying on people to pick it · the tree count is a communication device, not an accounting fact',
+          rows: rows,
+          chart: [
+            { label: 'Sheets you still print', value: Math.round(weekly * 52 * 0.5), tone: 'main' },
+            { label: 'Sheets saved', value: Math.round(savedYear), tone: 'good' },
+          ],
+        };
+      }
+
+      // fridge
+      const watts = Math.max(0, v.watts || 0);
+      const duty = Math.min(100, Math.max(1, v.duty || 1)) / 100;
+      const kwhYear = (watts * 24 * 365 * duty) / 1000;
+      const kwhMonth = kwhYear / 12;
+      const cost = kwhYear * rate;
+      const band = kwhYear >= FRIDGE_BANDS.high ? 'high' : kwhYear <= FRIDGE_BANDS.efficient ? 'low' : 'mid';
+      const modernSaving = Math.max(0, kwhYear - 300) * rate;
+      const rows = [
+        { k: 'Compressor power', ref: 'As entered', v: watts, format: 'unit', unit: 'W' },
+        { k: 'Duty cycle', ref: 'Share of the time it actually runs', v: duty * 100, format: 'unit', unit: '%' },
+        { k: 'Consumption per month', ref: 'Annual ÷ 12', v: kwhMonth, format: 'unit', unit: 'kWh', decimals: 1 },
+        { k: 'Consumption per year', ref: 'W × 24 × 365 × duty ÷ 1,000', v: kwhYear, format: 'unit', unit: 'kWh', extra: true },
+        { k: 'Cost per year', ref: usd(rate) + '/kWh', v: cost, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+        { k: 'CO₂ per year', ref: GRID_KG_CO2_PER_KWH + ' kg/kWh · EPA eGRID', v: kwhYear * GRID_KG_CO2_PER_KWH, format: 'unit', unit: 'kg CO₂' },
+        { k: 'A modern efficient unit, for comparison', ref: 'ENERGY STAR range', v: 300, format: 'unit', unit: 'kWh/yr' },
+        { k: 'What replacing it would save per year', ref: 'Against a 300 kWh/yr unit', v: modernSaving, format: 'unit', unit: 'USD', decimals: 2 },
+      ];
+      return {
+        total: n0(kwhYear) + ' kWh/yr',
+        sub:
+          usd(cost) + ' a year · ' +
+          (band === 'high'
+            ? 'high — typical of an old unit, and usually the highest-value replacement in the house'
+            : band === 'low'
+              ? 'efficient, in line with a modern unit'
+              : 'about average for a household fridge') +
+          ' · clean the condenser coils, a choked one raises the duty cycle directly',
+        rows: rows,
+        chart: [
+          { label: 'What a modern unit would use (kWh/yr)', value: 300, tone: 'good' },
+          { label: 'Extra energy yours uses (kWh/yr)', value: Math.round(Math.max(0, kwhYear - 300)), tone: band === 'high' ? 'bad' : 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,333 @@
+---
+/**
+ * Hub de decisión CL — "¿Me conviene seguir arrendando o comprar?"
+ * Ruta bajo el prefijo /cl/, igual que las calculadoras que absorbe.
+ * audience="CL" va literal al Layout: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, UF, SUBSIDIO, TIMBRES, CBR } from '../../../lib/hubs/cl/arrendar-o-comprar';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ UF, SUBSIDIO, TIMBRES, CBR }}>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+    const uf = (n) => (n || 0).toLocaleString('es-CL', { maximumFractionDigits: 1 }) + ' UF';
+
+    // Cuota del sistema francés. Con tasa 0 degenera en capital/plazo.
+    function cuotaFrancesa(capital, tasaMensual, meses) {
+      if (meses <= 0) return 0;
+      if (tasaMensual <= 0) return capital / meses;
+      const f = Math.pow(1 + tasaMensual, meses);
+      return capital * ((tasaMensual * f) / (f - 1));
+    }
+
+    // Amortización real mes a mes: devuelve el saldo tras `hasta` meses y el interés pagado.
+    function amortizar(capital, tasaMensual, mesesTotales, hasta) {
+      const cuota = cuotaFrancesa(capital, tasaMensual, mesesTotales);
+      let saldo = capital;
+      let interes = 0;
+      const n = Math.min(hasta, mesesTotales);
+      for (let m = 1; m <= n; m++) {
+        const int = saldo * tasaMensual;
+        interes += int;
+        saldo = Math.max(0, saldo - (cuota - int));
+      }
+      return { cuota: cuota, saldo: saldo, interes: interes, mesesPagados: n };
+    }
+
+    // Gastos de escrituración, en UF. El timbre grava el CRÉDITO (DL 3.475), no el precio.
+    // El Conservador cobra 0,2% del precio con tope en pesos.
+    function gastosCompra(precioUf, creditoUf, tasaTimbre) {
+      const timbresUf = creditoUf * tasaTimbre;
+      const cbrClp = Math.min(precioUf * UF * CBR.tasa, CBR.topeClp);
+      const cbrUf = cbrClp / UF;
+      // Notaría y estudio de títulos: rango de mercado, escala suave con el precio.
+      const notariaUf = Math.min(12, 2.5 + precioUf * 0.0012);
+      const tasacionUf = 3.5;
+      return {
+        timbresUf: timbresUf,
+        cbrUf: cbrUf,
+        notariaUf: notariaUf,
+        tasacionUf: tasacionUf,
+        totalUf: timbresUf + cbrUf + notariaUf + tasacionUf,
+      };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'comparar';
+
+      const precioUf = Math.max(0, Number(v.precioUf) || 0);
+      const piePct = Math.min(100, Math.max(0, Number(v.piePct) || 0));
+      const tasaAnual = Math.max(0, Number(v.tasa) || 0);
+      const plazoAnios = Math.max(1, Math.round(Number(v.plazo) || 25));
+      const arriendo = Math.max(0, v.arriendo || 0);
+      const gastoComun = Math.max(0, v.gastoComun || 0);
+      const ipc = Number(v.ipc) || 0;
+      const reval = Number(v.revalorizacion) || 0;
+      const anios = Math.max(1, Math.round(Number(v.anios) || 10));
+      const contribUf = Math.max(0, Number(v.contribuciones) || 0);
+      const arriendoCobrado = Math.max(0, v.arriendoCobrado || 0);
+      const tasaTimbre =
+        v.tipoVivienda === 'general' ? TIMBRES.general : v.tipoVivienda === 'social' ? TIMBRES.social : TIMBRES.dfl2;
+
+      const rows = [];
+
+      // ─── Rama: reajuste del arriendo por IPC ───────────────────────────────
+      if (id === 'reajuste') {
+        const alza = Math.round(arriendo * ipc / 100);
+        const nuevo = arriendo + alza;
+        rows.push({ k: 'Arriendo vigente antes del reajuste', ref: 'Lo que pagas hoy', v: arriendo });
+        rows.push({ k: 'IPC acumulado del período pactado', ref: 'Publicado por el INE', v: ipc, format: 'unit', unit: '%', decimals: 1 });
+        rows.push({ k: 'Alza que corresponde', ref: 'Arriendo × IPC del período', v: alza });
+        rows.push({ k: 'Arriendo reajustado que corresponde', ref: 'Art. del contrato de arriendo', v: nuevo, extra: true });
+        rows.push({ k: 'Diferencia en el año completo', ref: 'Alza × 12 meses', v: alza * 12 });
+
+        let sub =
+          'Con un IPC acumulado del ' + ipc.toLocaleString('es-CL') + '%, tu arriendo de ' + clp(arriendo) +
+          ' sube ' + clp(alza) + ' y queda en ' + clp(nuevo) + '.';
+        const chart = [
+          { label: 'Arriendo vigente', value: Math.round(arriendo), tone: 'main' },
+          { label: 'Alza por IPC', value: Math.round(alza), tone: 'warn' },
+        ];
+
+        if (arriendoCobrado > 0) {
+          const exceso = arriendoCobrado - nuevo;
+          rows.push({ k: 'Arriendo que te comunicaron', ref: 'Lo que dice el aviso', v: arriendoCobrado });
+          rows.push({
+            k: exceso > 0 ? 'Te están cobrando de más' : exceso < 0 ? 'Te están cobrando de menos' : 'El cobro coincide con el IPC',
+            ref: 'Cobrado menos lo que corresponde',
+            v: Math.abs(exceso),
+            extra: true,
+          });
+          if (exceso > 0) {
+            rows.push({ k: 'Exceso en el año completo', ref: 'Diferencia × 12 meses', v: exceso * 12 });
+            chart.push({ label: 'Cobro por sobre el IPC', value: Math.round(exceso), tone: 'bad' });
+            sub += ' Te comunicaron ' + clp(arriendoCobrado) + ': son ' + clp(exceso) + ' por sobre el reajuste pactado.';
+          } else {
+            sub += ' El aviso de ' + clp(arriendoCobrado) + ' no supera el reajuste que corresponde.';
+          }
+        }
+
+        return { total: clp(nuevo), sub: sub, rows: rows, chart: chart };
+      }
+
+      // ─── Rama: subsidio de arriendo MINVU ──────────────────────────────────
+      if (id === 'subsidio') {
+        const totalClp = SUBSIDIO.totalUf * UF;
+        const topeClp = SUBSIDIO.topeMensualUf * UF;
+        const arriendoMaxClp = SUBSIDIO.arriendoMaxUf * UF;
+        const ahorroMinClp = SUBSIDIO.ahorroMinimoUf * UF;
+        const aporte = Math.min(topeClp, arriendo);
+        const meses = Math.floor(SUBSIDIO.totalUf / SUBSIDIO.topeMensualUf);
+        const pagasTu = Math.max(0, arriendo - aporte);
+        const cubre = arriendo > 0 ? (aporte / arriendo) * 100 : 0;
+        const dentroDelTope = arriendo <= arriendoMaxClp;
+
+        rows.push({ k: 'Subsidio total del llamado', ref: SUBSIDIO.totalUf + ' UF · MINVU', v: totalClp, extra: true });
+        rows.push({ k: 'Subsidio total en UF', ref: 'Monto fijado en UF', v: SUBSIDIO.totalUf, format: 'unit', unit: 'UF' });
+        rows.push({ k: 'Tope mensual del aporte', ref: String(SUBSIDIO.topeMensualUf).replace('.', ',') + ' UF · zona general', v: topeClp });
+        rows.push({ k: 'Tope mensual en zona especial', ref: String(SUBSIDIO.topeMensualUfZonaEspecial).replace('.', ',') + ' UF', v: SUBSIDIO.topeMensualUfZonaEspecial * UF });
+        rows.push({ k: 'Aporte sobre tu arriendo', ref: 'El menor entre el tope y tu arriendo', v: aporte, extra: true });
+        rows.push({ k: 'Lo que sigues pagando tú', ref: 'Arriendo menos el aporte', v: pagasTu });
+        rows.push({ k: 'Porcentaje de tu arriendo que cubre', ref: 'Aporte ÷ arriendo', v: cubre, format: 'unit', unit: '%', decimals: 0 });
+        rows.push({ k: 'Duración usando el tope completo', ref: 'Subsidio total ÷ tope mensual', v: meses, format: 'unit', unit: 'meses' });
+        rows.push({
+          k: dentroDelTope ? 'Tu arriendo está dentro del máximo permitido' : 'Tu arriendo SUPERA el máximo permitido',
+          ref: SUBSIDIO.arriendoMaxUf + ' UF · zona general',
+          v: arriendoMaxClp,
+        });
+        rows.push({ k: 'Ahorro mínimo exigido', ref: SUBSIDIO.ahorroMinimoUf + ' UF en cuenta para la vivienda', v: ahorroMinClp });
+        rows.push({ k: 'Ingreso familiar mínimo', ref: SUBSIDIO.ingresoMinUf + ' UF', v: SUBSIDIO.ingresoMinUf * UF });
+        rows.push({ k: 'Ingreso familiar máximo (grupo de hasta 3)', ref: SUBSIDIO.ingresoMaxUf + ' UF · +' + SUBSIDIO.ufExtraPorIntegranteDesde4to + ' UF desde el 4º integrante', v: SUBSIDIO.ingresoMaxUf * UF });
+
+        return {
+          total: clp(aporte),
+          sub:
+            'El subsidio aporta hasta ' + clp(aporte) + ' al mes (' + cubre.toFixed(0) + '% de tu arriendo de ' + clp(arriendo) +
+            ') durante unos ' + meses + ' meses, hasta agotar las ' + SUBSIDIO.totalUf + ' UF' +
+            (dentroDelTope ? '.' : ' — pero tu arriendo supera el máximo de ' + SUBSIDIO.arriendoMaxUf + ' UF (' + clp(arriendoMaxClp) + '), así que hoy no calificarías.'),
+          rows: rows,
+          chart: [
+            { label: 'Lo que aporta el subsidio', value: Math.round(aporte), tone: 'good' },
+            { label: 'Lo que pagas tú', value: Math.round(pagasTu), tone: 'main' },
+          ],
+        };
+      }
+
+      // ─── Ramas de costo: arrendar y comparar ───────────────────────────────
+      const factorIpc = 1 + ipc / 100;
+      let costoArriendo = 0;
+      let costoArriendoSolo = 0;
+      for (let a = 0; a < anios; a++) {
+        costoArriendoSolo += arriendo * Math.pow(factorIpc, a) * 12;
+        costoArriendo += (arriendo + gastoComun) * Math.pow(factorIpc, a) * 12;
+      }
+      const arriendoFinal = arriendo * Math.pow(factorIpc, anios - 1);
+      const entradaArriendo = arriendo * 2 + gastoComun; // garantía + primer mes + gasto común
+
+      // ─── Rama: sigo arrendando ─────────────────────────────────────────────
+      if (id === 'arrendar') {
+        rows.push({ k: 'Arriendo mensual de hoy', ref: 'Lo que pagas ahora', v: arriendo });
+        rows.push({ k: 'Gasto común mensual', ref: 'Se reajusta con los costos del edificio', v: gastoComun });
+        rows.push({ k: 'Arriendo mensual en el último año del período', ref: 'Reajustado ' + ipc.toLocaleString('es-CL') + '% cada año', v: arriendoFinal, extra: true });
+        rows.push({ k: 'Total de arriendo en ' + anios + ' años', ref: 'Sin contar gasto común', v: costoArriendoSolo });
+        rows.push({ k: 'Total de gasto común en ' + anios + ' años', ref: 'Reajustado al mismo ritmo', v: costoArriendo - costoArriendoSolo });
+        rows.push({ k: 'Todo lo que se va en arrendar', ref: anios + ' años, arriendo más gasto común', v: costoArriendo, extra: true });
+        rows.push({ k: 'Equivalente en meses del arriendo de hoy', ref: 'Total ÷ arriendo actual', v: arriendo > 0 ? costoArriendo / arriendo : 0, format: 'unit', unit: 'meses', decimals: 0 });
+        rows.push({ k: 'Equivalente en UF de hoy', ref: 'UF a $' + UF.toLocaleString('es-CL', { maximumFractionDigits: 2 }), v: costoArriendo / UF, format: 'unit', unit: 'UF', decimals: 0 });
+        rows.push({ k: 'Entrada para tomar un arriendo nuevo', ref: 'Garantía + primer mes + gasto común', v: entradaArriendo });
+
+        return {
+          total: clp(costoArriendo),
+          sub:
+            'Arrendar ' + anios + ' años con IPC del ' + ipc.toLocaleString('es-CL') + '% suma ' + clp(costoArriendo) +
+            ' · el arriendo termina en ' + clp(arriendoFinal) + ', un ' +
+            (arriendo > 0 ? ((arriendoFinal / arriendo - 1) * 100).toFixed(0) : '0') + '% más que hoy · no queda patrimonio.',
+          rows: rows,
+          chart: [
+            { label: 'Arriendo del período', value: Math.round(costoArriendoSolo), tone: 'main' },
+            { label: 'Gasto común del período', value: Math.round(costoArriendo - costoArriendoSolo), tone: 'prop' },
+            { label: 'Entrada (garantía y primer mes)', value: Math.round(entradaArriendo), tone: 'exit' },
+          ],
+        };
+      }
+
+      // ─── Rama: comparar arrendar contra comprar ────────────────────────────
+      const pieUf = precioUf * (piePct / 100);
+      const creditoUf = precioUf - pieUf;
+      const tasaMensual = tasaAnual / 100 / 12;
+      const mesesTotales = plazoAnios * 12;
+      const mesesHorizonte = anios * 12;
+      const am = amortizar(creditoUf, tasaMensual, mesesTotales, mesesHorizonte);
+      const g = gastosCompra(precioUf, creditoUf, tasaTimbre);
+
+      const dividendosUf = am.cuota * am.mesesPagados;
+      const seguroAnualUf = precioUf * 0.0006 + creditoUf * 0.0025; // incendio sobre el inmueble + desgravamen sobre la deuda
+      const mantencionAnualUf = precioUf * 0.005;
+      const gastosRecurrentesUf = (contribUf + seguroAnualUf + mantencionAnualUf) * anios;
+      // Como dueño el gasto común lo sigues pagando: entra en ambos lados y no altera la diferencia,
+      // pero se muestra para que el total de "ser dueño" sea comparable con el de arrendar.
+      let gastoComunDueno = 0;
+      for (let a = 0; a < anios; a++) gastoComunDueno += gastoComun * Math.pow(factorIpc, a) * 12;
+
+      const desembolsadoUf = pieUf + g.totalUf + dividendosUf + gastosRecurrentesUf;
+      const desembolsadoClp = desembolsadoUf * UF + gastoComunDueno;
+      const valorFinalUf = precioUf * Math.pow(1 + reval / 100, anios);
+      const patrimonioUf = valorFinalUf - am.saldo;
+      const costoNetoUf = desembolsadoUf - patrimonioUf;
+      const costoNetoClp = costoNetoUf * UF + gastoComunDueno;
+      const ventaja = costoArriendo - costoNetoClp; // >0 → comprar sale más barato
+
+      // Año en que comprar deja de ser más caro que arrendar (misma métrica de costo neto).
+      let breakeven = 0;
+      for (let a = 1; a <= Math.max(anios, plazoAnios); a++) {
+        const amA = amortizar(creditoUf, tasaMensual, mesesTotales, a * 12);
+        const gA = (contribUf + seguroAnualUf + mantencionAnualUf) * a;
+        const descA = pieUf + g.totalUf + amA.cuota * amA.mesesPagados + gA;
+        const patA = precioUf * Math.pow(1 + reval / 100, a) - amA.saldo;
+        const netoA = (descA - patA) * UF;
+        let arrA = 0;
+        for (let k = 0; k < a; k++) arrA += arriendo * Math.pow(factorIpc, k) * 12;
+        if (netoA <= arrA) { breakeven = a; break; }
+      }
+
+      rows.push({ k: 'Precio de la vivienda', ref: precioUf.toLocaleString('es-CL') + ' UF', v: precioUf * UF });
+      rows.push({ k: 'Pie que pones el día uno', ref: piePct + '% del precio · ' + uf(pieUf), v: pieUf * UF, extra: true });
+      rows.push({ k: 'Crédito hipotecario', ref: uf(creditoUf) + ' a ' + plazoAnios + ' años', v: creditoUf * UF });
+      rows.push({ k: 'Dividendo mensual', ref: 'Sistema francés · ' + uf(am.cuota) + ' al mes', v: am.cuota * UF, extra: true });
+      rows.push({
+        k: 'Impuesto de timbres y estampillas',
+        ref: (tasaTimbre * 100).toLocaleString('es-CL') + '% del CRÉDITO · DL 3.475',
+        v: g.timbresUf * UF,
+      });
+      rows.push({ k: 'Inscripción en el Conservador de Bienes Raíces', ref: '0,2% del precio, tope ' + clp(CBR.topeClp), v: g.cbrUf * UF });
+      rows.push({ k: 'Notaría y estudio de títulos', ref: 'Rango de mercado', v: g.notariaUf * UF });
+      rows.push({ k: 'Tasación de la propiedad', ref: 'Exigida por el banco', v: g.tasacionUf * UF });
+      rows.push({ k: 'Plata que necesitas el día de la escritura', ref: 'Pie más todos los gastos', v: (pieUf + g.totalUf) * UF, extra: true });
+      rows.push({ k: 'Dividendos pagados en ' + anios + ' años', ref: am.mesesPagados + ' cuotas', v: dividendosUf * UF });
+      rows.push({ k: 'De eso, intereses al banco', ref: 'Lo que no baja tu deuda', v: am.interes * UF });
+      rows.push({ k: 'Contribuciones, seguros y mantención del período', ref: 'Gastos de ser dueño', v: gastosRecurrentesUf * UF });
+      rows.push({ k: 'Total desembolsado comprando', ref: 'Todo lo que sale de tu bolsillo', v: desembolsadoClp });
+      rows.push({ k: 'Valor de la vivienda al año ' + anios, ref: reval.toLocaleString('es-CL') + '% anual · ' + uf(valorFinalUf), v: valorFinalUf * UF });
+      rows.push({ k: 'Saldo que aún le debes al banco', ref: uf(am.saldo) + ' pendientes', v: am.saldo * UF });
+      rows.push({ k: 'Patrimonio que te queda', ref: 'Valor de la vivienda menos la deuda', v: patrimonioUf * UF, extra: true });
+      rows.push({ k: 'Costo NETO de haber comprado', ref: 'Desembolsado menos patrimonio', v: costoNetoClp, extra: true });
+      rows.push({ k: 'Costo de haber arrendado lo mismo', ref: anios + ' años con IPC del ' + ipc.toLocaleString('es-CL') + '%', v: costoArriendo, extra: true });
+      rows.push({
+        k: ventaja >= 0 ? 'Comprar te sale más barato en' : 'Arrendar te sale más barato en',
+        ref: 'Diferencia entre las dos rutas',
+        v: Math.abs(ventaja),
+        extra: true,
+      });
+      rows.push({
+        k: breakeven > 0 ? 'Año en que comprar pasa a convenir' : 'No hay cruce dentro del plazo del crédito',
+        ref: 'Con estos supuestos',
+        v: breakeven,
+        format: 'unit',
+        unit: 'años',
+      });
+
+      return {
+        total: clp(Math.abs(ventaja)),
+        sub:
+          (ventaja >= 0
+            ? 'Comprar gana: el costo neto de ser dueño (' + clp(costoNetoClp) + ') queda ' + clp(Math.abs(ventaja)) + ' por debajo de arrendar (' + clp(costoArriendo) + ')'
+            : 'Arrendar gana: ser dueño sale ' + clp(Math.abs(ventaja)) + ' más caro que los ' + clp(costoArriendo) + ' del arriendo') +
+          ' en ' + anios + ' años · dividendo de ' + clp(am.cuota * UF) + ' y ' + clp((pieUf + g.totalUf) * UF) + ' para firmar' +
+          (breakeven > 0 ? ' · el cruce llega al año ' + breakeven + '.' : ' · no hay cruce en el plazo del crédito.'),
+        rows: rows,
+        chart: [
+          { label: 'Arrendar ' + anios + ' años', value: Math.round(costoArriendo), tone: ventaja >= 0 ? 'bad' : 'good' },
+          { label: 'Comprar: costo neto', value: Math.round(Math.max(0, costoNetoClp)), tone: ventaja >= 0 ? 'good' : 'bad' },
+          { label: 'Patrimonio que te queda comprando', value: Math.round(Math.max(0, patrimonioUf * UF)), tone: 'main' },
+        ],
+      };
+    });
+  })();
+</script>

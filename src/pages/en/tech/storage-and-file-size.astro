@@ -1,0 +1,261 @@
+---
+/**
+ * Hub EN — "How much space is this, and how long will it take?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  DATA_UNITS,
+  USB_SPEEDS,
+  USB_MARKETED_GBPS,
+  GIT_PACK_RATIO,
+  GIT_KB_PER_COMMIT,
+} from '../../../lib/hubs/en/storage-and-file-size';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ DATA_UNITS, USB_SPEEDS, USB_MARKETED_GBPS, GIT_PACK_RATIO, GIT_KB_PER_COMMIT }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(x || 0).toLocaleString('en-US');
+    const sig = (n) => {
+      if (!Number.isFinite(n)) return String(n);
+      if (n !== 0 && (Math.abs(n) < 1e-4 || Math.abs(n) >= 1e15)) return n.toExponential(4);
+      return Number(n.toFixed(6)).toLocaleString('en-US', { maximumFractionDigits: 6 });
+    };
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'convert';
+
+      if (id === 'raid') {
+        const level = String(v.raid || '5');
+        const n = Math.max(1, Math.floor(v.disks || 1));
+        const tb = Math.max(0, v.diskTb || 0);
+        let usable = 0;
+        let tolerates = '0';
+        if (level === '0') { usable = n * tb; tolerates = '0'; }
+        else if (level === '1') { usable = tb; tolerates = String(n - 1); }
+        else if (level === '5') { usable = (n - 1) * tb; tolerates = '1'; }
+        else if (level === '6') { usable = (n - 2) * tb; tolerates = '2'; }
+        else if (level === '10') { usable = (n / 2) * tb; tolerates = '1 per mirrored pair'; }
+        usable = Math.max(0, usable);
+        const raw = n * tb;
+        const lost = Math.max(0, raw - usable);
+        const eff = raw > 0 ? (usable / raw) * 100 : 0;
+        const rows = [
+          { k: 'Raw capacity you bought', ref: n + ' disks × ' + tb + ' TB', v: raw, format: 'unit', unit: 'TB', decimals: 1 },
+          { k: 'Usable capacity', ref: 'RAID ' + level, v: usable, format: 'unit', unit: 'TB', decimals: 1, extra: true },
+          { k: 'Consumed by redundancy', ref: 'Raw minus usable', v: lost, format: 'unit', unit: 'TB', decimals: 1, extra: true },
+          { k: 'Storage efficiency', ref: 'Usable ÷ raw', v: eff, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Usable capacity in binary terabytes', ref: 'What the OS will report (TiB)', v: (usable * 1e12) / Math.pow(1024, 4), format: 'unit', unit: 'TiB', decimals: 2 },
+          { k: 'Cost of redundancy per usable terabyte', ref: 'Redundancy ÷ usable', v: usable > 0 ? lost / usable : 0, format: 'unit', unit: 'TB lost per TB kept', decimals: 2 },
+        ];
+        return {
+          total: usable.toFixed(1) + ' TB usable',
+          sub:
+            'RAID ' + level + ' with ' + n + ' × ' + tb + ' TB · tolerates ' + tolerates + ' disk failure' +
+            (tolerates === '1' ? '' : 's') + ' · ' + Math.round(eff) + '% storage efficiency · ' +
+            (level === '0' ? 'no redundancy at all — one dead disk loses everything' : 'this is not a backup, keep a separate copy'),
+          rows: rows,
+          chart: [
+            { label: 'Usable (TB)', value: Math.round(usable * 10) / 10, tone: 'good' },
+            { label: 'Redundancy (TB)', value: Math.round(lost * 10) / 10, tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'compress') {
+        const o = Math.max(0, v.original || 0);
+        const c = Math.max(0, v.compressed || 0);
+        if (o === 0) {
+          return {
+            total: '—',
+            sub: 'Enter an original size greater than zero to compare against.',
+            rows: [{ k: 'Original size', ref: 'Cannot be zero', v: 0, format: 'unit', unit: 'MB' }],
+            chart: [{ label: 'Original (MB)', value: 0, tone: 'main' }],
+          };
+        }
+        const reduction = (1 - c / o) * 100;
+        const ratio = c > 0 ? o / c : 0;
+        const saved = o - c;
+        const rows = [
+          { k: 'Original size', ref: 'Before compressing', v: o, format: 'unit', unit: 'MB', decimals: 1 },
+          { k: 'Compressed size', ref: 'After compressing', v: c, format: 'unit', unit: 'MB', decimals: 1 },
+          { k: 'Reduction', ref: '1 − compressed ÷ original', v: reduction, format: 'unit', unit: '%', decimals: 1, extra: true },
+          { k: 'Compression ratio', ref: 'Original ÷ compressed', v: ratio, format: 'unit', unit: ': 1', decimals: 2, extra: true },
+          { k: 'Megabytes saved', ref: 'Original minus compressed', v: saved, format: 'unit', unit: 'MB', decimals: 2 },
+          { k: 'Saved over 1,000 downloads', ref: 'Where compression actually pays off', v: (saved * 1000) / 1024, format: 'unit', unit: 'GB', decimals: 1 },
+          { k: 'Share of the original that remains', ref: 'Compressed ÷ original', v: (c / o) * 100, format: 'unit', unit: '%', decimals: 1 },
+        ];
+        return {
+          total: reduction.toFixed(1) + '% smaller',
+          sub:
+            ratio.toFixed(2) + ':1 ratio · ' + saved.toFixed(1) + ' MB saved · ' +
+            (reduction < 5
+              ? 'almost nothing gained — this content is already compressed, and zipping it just costs CPU'
+              : reduction >= 60
+                ? 'a large gain, typical of text, code or logs'
+                : 'a normal gain for mixed content'),
+          rows: rows,
+          chart: [
+            { label: 'Compressed (MB)', value: Math.round(c * 100) / 100, tone: 'main' },
+            { label: 'Saved (MB)', value: Math.round(saved * 100) / 100, tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'repo') {
+        const files = Math.max(0, v.files || 0);
+        const kbAvg = Math.max(0, v.kbAvg || 0);
+        const commits = Math.max(0, v.commits || 0);
+        const treeKb = files * kbAvg;
+        const gitKb = treeKb * GIT_PACK_RATIO + commits * GIT_KB_PER_COMMIT;
+        const totalKb = treeKb + gitKb;
+        const mb = totalKb / 1024;
+        const advice =
+          mb > 500 ? 'heavy — move binaries to Git LFS or split the repository'
+          : mb > 100 ? 'starting to get heavy — watch what enters the history'
+          : 'healthy and fast to clone';
+        const rows = [
+          { k: 'Working tree', ref: n0(files) + ' files × ' + kbAvg + ' KB', v: treeKb / 1024, format: 'unit', unit: 'MB', decimals: 1 },
+          { k: 'The .git directory', ref: '60% packed tree + 2 KB per commit', v: gitKb / 1024, format: 'unit', unit: 'MB', decimals: 1, extra: true },
+          { k: 'Total on disk', ref: 'What a fresh clone costs you', v: mb, format: 'unit', unit: 'MB', decimals: 1, extra: true },
+          { k: 'Of that, history overhead from commits', ref: n0(commits) + ' commits × 2 KB', v: (commits * GIT_KB_PER_COMMIT) / 1024, format: 'unit', unit: 'MB', decimals: 1 },
+          { k: 'Time to clone on a 100 Mbps link', ref: 'About 12.5 MB/s of payload', v: mb / 12.5, format: 'unit', unit: 'seconds', decimals: 0 },
+          { k: 'Bandwidth for 100 CI clones', ref: 'What a build pipeline pulls in a day', v: (mb * 100) / 1024, format: 'unit', unit: 'GB', decimals: 1 },
+        ];
+        return {
+          total: mb.toFixed(1) + ' MB',
+          sub:
+            (treeKb / 1024).toFixed(1) + ' MB of working tree plus ' + (gitKb / 1024).toFixed(1) + ' MB of .git · ' +
+            advice + ' · assumes text-like content, binaries make it much larger',
+          rows: rows,
+          chart: [
+            { label: 'Working tree (MB)', value: Math.round((treeKb / 1024) * 10) / 10, tone: 'main' },
+            { label: '.git directory (MB)', value: Math.round((gitKb / 1024) * 10) / 10, tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'usb') {
+        const gb = Math.max(0.001, v.fileGb || 0.001);
+        const gen = String(v.usb || '3.0');
+        const mbs = USB_SPEEDS[gen] || USB_SPEEDS['3.0'];
+        const marketed = USB_MARKETED_GBPS[gen] || 5;
+        const seconds = (gb * 1024) / mbs;
+        const usb2Seconds = (gb * 1024) / USB_SPEEDS['2.0'];
+        const timeStr =
+          seconds < 60 ? seconds.toFixed(1) + ' s'
+          : seconds < 3600 ? (seconds / 60).toFixed(1) + ' min'
+          : (seconds / 3600).toFixed(2) + ' h';
+        const theoretical = (marketed * 1000) / 8; // Gbps → MB/s raw
+        const rows = [
+          { k: 'File size', ref: 'As entered', v: gb, format: 'unit', unit: 'GB', decimals: 2 },
+          { k: 'Marketed bus speed', ref: 'Raw signalling rate, in bits', v: marketed, format: 'unit', unit: 'Gbps', decimals: 2 },
+          { k: 'That same rate in megabytes per second', ref: 'Gbps ÷ 8, before overhead', v: theoretical, format: 'unit', unit: 'MB/s' },
+          { k: 'Realistic sustained speed', ref: 'After protocol overhead', v: mbs, format: 'unit', unit: 'MB/s', extra: true },
+          { k: 'Share of the headline figure you actually get', ref: 'Real ÷ theoretical', v: theoretical > 0 ? (mbs / theoretical) * 100 : 0, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Transfer time', ref: 'Size ÷ sustained speed', v: seconds, format: 'unit', unit: 'seconds', decimals: 1, extra: true },
+          { k: 'Gigabytes moved per minute', ref: 'At this sustained speed', v: (mbs * 60) / 1024, format: 'unit', unit: 'GB/min', decimals: 1 },
+          { k: 'The same file on USB 2.0', ref: 'For scale', v: usb2Seconds / 60, format: 'unit', unit: 'min', decimals: 1 },
+        ];
+        return {
+          total: timeStr,
+          sub:
+            gb + ' GB over USB ' + gen + ' at about ' + n0(mbs) + ' MB/s sustained · ' +
+            'the ' + marketed + ' Gbps on the box is ' + n0(theoretical) + ' MB/s before overhead · ' +
+            'the slowest drive in the chain sets the real ceiling',
+          rows: rows,
+          chart: [
+            { label: 'Sustained speed (MB/s)', value: Math.round(mbs), tone: 'good' },
+            { label: 'Overhead lost from the headline (MB/s)', value: Math.round(Math.max(0, theoretical - mbs)), tone: 'warn' },
+          ],
+        };
+      }
+
+      // convert
+      const value = v.value || 0;
+      const fromU = String(v.from || 'TB');
+      const toU = String(v.to || 'GB');
+      const system = String(v.system || 'bin');
+      const base = system === 'dec' ? 1000 : 1024;
+      const other = system === 'dec' ? 1024 : 1000;
+      let fi = DATA_UNITS.indexOf(fromU); if (fi < 0) fi = 4;
+      let ti = DATA_UNITS.indexOf(toU); if (ti < 0) ti = 3;
+      const bytes = value * Math.pow(base, fi);
+      const result = bytes / Math.pow(base, ti);
+      const otherBytes = value * Math.pow(other, fi);
+      const otherResult = otherBytes / Math.pow(other, ti);
+      const crossResult = bytes / Math.pow(other, ti);
+      const gapPct = result !== 0 ? ((crossResult - result) / result) * 100 : 0;
+      const rows = [
+        { k: 'Result in ' + DATA_UNITS[ti], ref: 'Using the ' + (base === 1024 ? 'binary (1024)' : 'decimal (1000)') + ' system', v: result, format: 'unit', unit: DATA_UNITS[ti], decimals: 4, extra: true },
+        { k: 'The same quantity in raw bytes', ref: value + ' ' + DATA_UNITS[fi] + ' × ' + base + '^' + fi, v: bytes, format: 'plain' },
+        { k: 'Same conversion in the other system', ref: base === 1024 ? 'Decimal (1000) instead' : 'Binary (1024) instead', v: otherResult, format: 'unit', unit: DATA_UNITS[ti], decimals: 4 },
+        { k: 'Those bytes read back in ' + (base === 1024 ? 'decimal' : 'binary') + ' ' + DATA_UNITS[ti], ref: 'Why a drive shows a different number', v: crossResult, format: 'unit', unit: DATA_UNITS[ti], decimals: 4, extra: true },
+        { k: 'Size of the binary-versus-decimal gap', ref: 'Grows about 2.4% per unit step', v: Math.abs(gapPct), format: 'unit', unit: '%', decimals: 2 },
+        { k: 'Round trip back to ' + DATA_UNITS[fi], ref: 'Closes exactly on itself', v: (result * Math.pow(base, ti)) / Math.pow(base, fi), format: 'unit', unit: DATA_UNITS[fi], decimals: 6 },
+        { k: 'Time to move it on a 1 Gbps link', ref: '125 MB/s before overhead', v: bytes / (125 * 1e6), format: 'unit', unit: 'seconds', decimals: 1 },
+      ];
+      return {
+        total: sig(result) + ' ' + DATA_UNITS[ti],
+        sub:
+          sig(value) + ' ' + DATA_UNITS[fi] + ' = ' + sig(result) + ' ' + DATA_UNITS[ti] + ' in the ' +
+          (base === 1024 ? 'binary (1024)' : 'decimal (1000)') + ' system · ' + sig(bytes) + ' bytes in total · ' +
+          'the other system would give you ' + sig(crossResult) + ' ' + DATA_UNITS[ti],
+        rows: rows,
+        chart: [
+          { label: 'This system (' + DATA_UNITS[ti] + ')', value: Math.round(result * 100) / 100, tone: 'main' },
+          { label: 'Difference against the other system', value: Math.round(Math.abs(crossResult - result) * 100) / 100, tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

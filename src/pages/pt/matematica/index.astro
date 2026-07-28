@@ -1,0 +1,47 @@
+---
+/**
+ * Silo Matemática · Brasil — índice de hubs de decisão do mercado BR.
+ * Existe para que o breadcrumb dos hubs brasileiros não aponte para um 404 e
+ * para repartir link equity entre irmãos. A lista sai do registry, não à mão.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import SiloIndex from '../../../components/hub/SiloIndex.astro';
+import { hubsOfSilo } from '../../../lib/hubs/registry';
+
+const HREF = '/pt/matematica';
+const SILO = 'Matemática';
+const LEDE =
+  'Geometria, trigonometria, estatística e probabilidade com a fórmula à mostra: área de um triângulo pelos três lados, volume de cone, seno, cosseno e tangente, desvio padrão populacional e amostral, arranjos, combinações e distribuição binomial.';
+const hubs = hubsOfSilo(HREF);
+const CANONICAL = `https://hacecuentas.com${HREF}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `${SILO} — Brasil`,
+  description: LEDE,
+  url: CANONICAL,
+  hasPart: hubs.map((h) => ({
+    '@type': 'WebPage',
+    name: h.h1,
+    url: `https://hacecuentas.com/${h.slug}`,
+  })),
+};
+---
+
+<Layout
+  title="Matemática — geometria, trigonometria e estatística | Hacé Cuentas"
+  description={LEDE}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="BR"
+  lang="pt"
+>
+  <Header lang="pt" />
+  <SiloIndex silo={SILO} href={HREF} lede={LEDE} hubs={hubs} />
+  <Footer lang="pt" />
+</Layout>

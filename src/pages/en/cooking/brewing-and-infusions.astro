@@ -1,0 +1,231 @@
+---
+/**
+ * Hub de decisión EN (US) — "How strong will it come out and how long does it take?"
+ * Absorbe 6 calculadoras de café, cerveza casera y destilados del mercado inglés.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  CONV,
+  BREW,
+  GRAMS_PER_TBSP_COFFEE,
+  PRIMING,
+  SRM,
+  BARREL,
+  INFUSIONS,
+} from '../../../lib/hubs/en/brewing-and-infusions';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ CONV, BREW, GRAMS_PER_TBSP_COFFEE, PRIMING, SRM, BARREL, INFUSIONS }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    const r0 = (x) => Math.round(x);
+    const r1 = (x) => Math.round(x * 10) / 10;
+    const d1 = (x) => (Math.round(x * 10) / 10).toFixed(1);
+    const d2 = (x) => (Math.round(x * 100) / 100).toFixed(2);
+    const clamp = (x) => Math.min(100, Math.max(0, x));
+    const fToC = (f) => ((f - 32) * 5) / 9;
+
+    // Bandas fijas del gráfico posicional. Mismo reparto que hub.chart.bands.
+    const BANDS = [
+      { label: 'Delicate', from: 0, to: 25, tone: 'good' },
+      { label: 'Balanced', from: 25, to: 55, tone: 'main' },
+      { label: 'Bold', from: 55, to: 80, tone: 'warn' },
+      { label: 'Intense', from: 80, to: 100, tone: 'bad' },
+    ];
+
+    /** Fuerza del café por ratio, en bandas honestas: 1:16 es "balanced", no "delicate". */
+    function coffeePosition(ratio) {
+      if (ratio >= 18) return 15;
+      if (ratio >= 15) return 40;
+      if (ratio >= 12) return 65;
+      if (ratio >= 8) return 78;
+      return 92;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'coffee';
+
+      const methodKey = String(v.method || 'drip');
+      const method = BREW[methodKey] || BREW.drip;
+      const cups = Math.max(1, Math.round(v.cups || 1));
+      const cupOz = Math.max(0.5, v.cupOz || 8);
+      const batchGal = Math.max(0.1, v.batchGal || 5);
+      const targetCo2 = Math.max(0.1, v.targetCo2 || 2.4);
+      const bottlingF = Number.isFinite(v.bottlingTempF) ? v.bottlingTempF : 68;
+      const grainLb = Math.max(0, v.grainLb || 0);
+      const grainL = Math.max(0, v.grainColorL || 0);
+      const strength = String(v.strength || 'medium');
+      const infusionMl = Math.max(1, v.infusionMl || 750);
+      const ingredientKey = String(v.ingredient || 'citrus');
+
+      const batchL = batchGal * CONV.lPerGalUS;
+
+      const rows = [];
+      let total = '';
+      let sub = '';
+      let position = 50;
+      let positionLabel = '';
+
+      if (id === 'coffee') {
+        const waterG = cupOz * CONV.mlPerFlOzUS * cups;
+        const coffeeG = waterG / method.ratio;
+        const tbsp = coffeeG / GRAMS_PER_TBSP_COFFEE;
+
+        total = d1(coffeeG) + ' g of coffee';
+        sub =
+          method.label + ' at 1:' + method.ratio + ' · ' + cups + (cups === 1 ? ' serving' : ' servings') +
+          ' of ' + d1(cupOz) + ' fl oz · ' + r0(waterG) + ' g of water · ' + method.grind;
+
+        rows.push({ k: 'Coffee to weigh out', ref: '1:' + method.ratio + ' by mass · ' + method.label, v: r1(coffeeG), format: 'unit', unit: 'g', decimals: 1, extra: true });
+        rows.push({ k: 'Water', ref: d1(cupOz * cups) + ' fl oz · 1 fl oz = 29.57 mL', v: r0(waterG), format: 'unit', unit: 'g' });
+        rows.push({ k: 'The same dose in ounces', ref: '1 oz = 28.35 g', v: r1(coffeeG / CONV.gPerOz) , format: 'unit', unit: 'oz', decimals: 2 });
+        rows.push({ k: 'Rough tablespoon fallback', ref: '5.3 g per level tbsp — use a scale instead', v: r1(tbsp), format: 'unit', unit: 'tbsp', decimals: 1 });
+        rows.push({ k: 'Total brew mass in the vessel', ref: 'Coffee plus water', v: r0(coffeeG + waterG), format: 'unit', unit: 'g' });
+        rows.push({ k: 'Coffee strength', ref: 'Grams of coffee per litre of water', v: r0(1000 / method.ratio), format: 'unit', unit: 'g/L' });
+        rows.push({ k: 'Beans for a week of this, at one brew a day', ref: '7 days · buy in this size bag', v: r0(coffeeG * 7), format: 'unit', unit: 'g' });
+
+        position = coffeePosition(method.ratio);
+        positionLabel = method.label + ' — 1:' + method.ratio;
+      } else if (id === 'beer') {
+        const tC = fToC(bottlingF);
+        const residual = PRIMING.residualA - PRIMING.residualB * tC + PRIMING.residualC * tC * tC;
+        const delta = Math.max(0, targetCo2 - residual);
+        const dextrose = delta * batchL * PRIMING.sugarFactor.dextrose;
+        const tableSugar = delta * batchL * PRIMING.sugarFactor.table_sugar;
+        const dme = delta * batchL * PRIMING.sugarFactor.dme;
+
+        const mcu = grainLb > 0 && grainL > 0 ? (grainLb * grainL) / batchGal : 0;
+        const srm = mcu > 0 ? SRM.moreyA * Math.pow(mcu, SRM.moreyB) : 0;
+        const ebc = srm * SRM.ebcFactor;
+        const colorName =
+          srm < 3 ? 'pale straw' : srm < 6 ? 'golden' : srm < 10 ? 'dark golden / light amber'
+          : srm < 17 ? 'amber to reddish' : srm < 25 ? 'copper brown' : srm < 35 ? 'dark brown' : 'opaque black';
+
+        total = r0(dextrose) + ' g of corn sugar';
+        sub =
+          d1(batchGal) + ' US gal (' + d1(batchL) + ' L) to ' + d1(targetCo2) + ' volumes · ' +
+          d2(residual) + ' vol already dissolved at ' + r0(bottlingF) + ' °F · color ' + d1(srm) + ' SRM, ' + colorName +
+          (targetCo2 > PRIMING.dangerVolumes ? ' · ABOVE 3.5 VOLUMES: use thick-walled bottles' : '');
+
+        rows.push({ k: 'Batch volume', ref: d1(batchGal) + ' US gal — an imperial gal would be 20% more', v: r1(batchL), format: 'unit', unit: 'L', decimals: 1 });
+        rows.push({ k: 'CO₂ already dissolved from fermentation', ref: 'At ' + r0(bottlingF) + ' °F / ' + r0(tC) + ' °C', v: r1(residual * 100) / 100, format: 'unit', unit: 'volumes', decimals: 2 });
+        rows.push({ k: 'CO₂ you still have to add', ref: 'Target minus residual', v: r1(delta * 100) / 100, format: 'unit', unit: 'volumes', decimals: 2 });
+        rows.push({ k: 'Corn sugar (dextrose) to add', ref: '3.86 g per litre per volume · ' + d1(dextrose / CONV.gPerOz) + ' oz', v: r0(dextrose), format: 'unit', unit: 'g', extra: true });
+        rows.push({ k: 'Table sugar instead', ref: '3.51 factor — less sugar, same result', v: r0(tableSugar), format: 'unit', unit: 'g' });
+        rows.push({ k: 'Dry malt extract instead', ref: '4.5 factor — more of it, adds body', v: r0(dme), format: 'unit', unit: 'g' });
+        rows.push({ k: 'Malt colour units in this bill', ref: grainLb + ' lb × ' + grainL + ' °L ÷ ' + d1(batchGal) + ' gal', v: r1(mcu), format: 'unit', unit: 'MCU', decimals: 1 });
+        rows.push({ k: 'Beer colour', ref: 'Morey: 1.4922 × MCU^0.6859 — ' + colorName, v: r1(srm), format: 'unit', unit: 'SRM', decimals: 1 });
+        rows.push({ k: 'The same colour on the European scale', ref: 'SRM × 1.97', v: r1(ebc), format: 'unit', unit: 'EBC', decimals: 1 });
+        rows.push({ k: 'Days of bottle conditioning at room temperature', ref: 'Before the carbonation matches the math', v: 18, format: 'unit', unit: 'days' });
+
+        position = clamp((targetCo2 / 5) * 100);
+        positionLabel = d1(targetCo2) + ' volumes of CO₂' + (targetCo2 > PRIMING.dangerVolumes ? ' — bottle-bomb territory' : '');
+      } else if (id === 'barrel') {
+        const barrelL = batchL;
+        const factor = Math.pow(BARREL.referenceL / barrelL, 1 / 3);
+        const months200 = BARREL.monthsWhiskey[strength] != null ? BARREL.monthsWhiskey[strength] : BARREL.monthsWhiskey.medium;
+        const monthsRum200 = BARREL.monthsRum[strength] != null ? BARREL.monthsRum[strength] : BARREL.monthsRum.medium;
+        const months = months200 / factor;
+        const daysLow = months * 30 * BARREL.windowLow;
+        const daysHigh = months * 30 * BARREL.windowHigh;
+        const tasteEvery = barrelL <= 5 ? 'every 1–2 weeks' : barrelL <= 20 ? 'every 2–4 weeks' : 'every 1–2 months';
+
+        total = r0(months * 30) + ' days';
+        sub =
+          d1(barrelL) + ' L cask · window ' + r0(daysLow) + '–' + r0(daysHigh) + ' days (about ' + d1(months) +
+          ' months) · ages ' + d1(factor) + '× faster than a 200 L barrel · taste ' + tasteEvery;
+
+        rows.push({ k: 'Cask volume', ref: d1(batchGal) + ' US gal', v: r1(barrelL), format: 'unit', unit: 'L', decimals: 1 });
+        rows.push({ k: 'How much faster than a 200 L barrel', ref: 'Cube root of the volume ratio', v: r1(factor * 10) / 10, format: 'unit', unit: '×', decimals: 2 });
+        rows.push({ k: 'What this would take in a 200 L cask', ref: strength + ' oak character, whiskey', v: months200, format: 'unit', unit: 'months' });
+        rows.push({ k: 'Target time in your cask', ref: 'Whiskey · ' + d1(months) + ' months', v: r0(months * 30), format: 'unit', unit: 'days', extra: true });
+        rows.push({ k: 'Start tasting from', ref: '−20% of the target', v: r0(daysLow), format: 'unit', unit: 'days' });
+        rows.push({ k: 'Do not go past', ref: '+20% of the target — over-oaking is one-way', v: r0(daysHigh), format: 'unit', unit: 'days', extra: true });
+        rows.push({ k: 'Same cask, aging rum instead', ref: monthsRum200 + ' months at 200 L — rum runs faster', v: r0((monthsRum200 / factor) * 30), format: 'unit', unit: 'days' });
+        rows.push({ k: 'Expected evaporation loss over six months', ref: 'Small casks breathe far more than big ones', v: barrelL <= 5 ? 13 : barrelL <= 20 ? 8 : 3, format: 'unit', unit: '%' });
+        rows.push({ k: 'Water soak before first use', ref: 'Swells the staves and stops leaks', v: 48, format: 'unit', unit: 'hours' });
+
+        position = clamp((months200 / 120) * 100 + 10);
+        positionLabel = strength + ' oak — ' + d1(months) + ' months in a ' + d1(barrelL) + ' L cask';
+      } else {
+        const ing = INFUSIONS.find((x) => x.id === ingredientKey) || INFUSIONS[0];
+        const avgDays = (ing.days[0] + ing.days[1]) / 2;
+        const bottles = infusionMl / 750;
+
+        total = ing.days[0] + '–' + ing.days[1] + ' days';
+        sub =
+          ing.label + ' in ' + r0(infusionMl) + ' mL (' + d1(infusionMl / CONV.mlPerFlOzUS) + ' US fl oz) · use ' +
+          ing.dose + ' · ' + ing.tip;
+
+        rows.push({ k: 'Start tasting at', ref: ing.label, v: ing.days[0], format: 'unit', unit: 'days' });
+        rows.push({ k: 'Strain by', ref: 'Past this it turns bitter or muddy', v: ing.days[1], format: 'unit', unit: 'days', extra: true });
+        rows.push({ k: 'Spirit volume', ref: d1(bottles) + ' standard 750 mL bottles', v: r0(infusionMl), format: 'unit', unit: 'mL' });
+        rows.push({ k: 'The same volume in US fluid ounces', ref: '1 US fl oz = 29.57 mL, the imperial one is 28.41', v: r1(infusionMl / CONV.mlPerFlOzUS), format: 'unit', unit: 'fl oz', decimals: 1 });
+        rows.push({ k: 'Shake daily for the first', ref: 'Gets the extraction started evenly', v: 3, format: 'unit', unit: 'days' });
+        rows.push({ k: 'Taste checks before you strain', ref: 'One a day from the low end onward', v: Math.max(1, ing.days[1] - ing.days[0] + 1), format: 'plain' });
+        rows.push({ k: 'How long it keeps once strained and refrigerated', ref: 'Dark glass, cool and away from light', v: 90, format: 'unit', unit: 'days' });
+
+        position = clamp(100 - (avgDays / 28) * 100);
+        positionLabel = ing.label + ' — ' + ing.days[0] + '–' + ing.days[1] + ' days';
+      }
+
+      return {
+        total: total,
+        sub: sub,
+        rows: rows,
+        chart: BANDS,
+        position: position,
+        positionLabel: positionLabel,
+      };
+    });
+  })();
+</script>

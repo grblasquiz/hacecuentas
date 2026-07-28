@@ -1,0 +1,176 @@
+---
+/**
+ * Decision hub EN — "What will renting this place really cost me?"
+ * Replaces 8 loose calculator URLs (see hub.replaces).
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, AFFORDABILITY } from '../../../lib/hubs/en/renting-a-home';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ AFF: AFFORDABILITY }}>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) => '$' + Math.round(n || 0).toLocaleString('en-US');
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'movein';
+      const rent = Math.max(0, v.rent || 0);
+      const depositMonths = Math.max(0, v.depositMonths || 0);
+      const deposit = rent * depositMonths;
+      const lastMonth = String(v.lastMonth) === 'yes' ? rent : 0;
+      const fees = Math.max(0, v.fees || 0);
+      const hoa = Math.max(0, v.hoa || 0);
+      const utilities = Math.max(0, v.utilities || 0);
+      const insuranceYear = Math.max(0, v.insurance || 0);
+      const insuranceMonth = insuranceYear / 12;
+      const moving = Math.max(0, v.moving || 0);
+      const income = Math.max(0, v.income || 0);
+      const deductions = Math.max(0, v.deductions || 0);
+      const inc = Math.max(0, v.renewalIncreasePct || 0) / 100;
+
+      const moveIn = rent + deposit + lastMonth + fees + insuranceYear + moving;
+      const monthly = rent + hoa + utilities + insuranceMonth;
+      const sharePct = income > 0 ? (monthly / income) * 100 : 0;
+      const incomeNeeded = rent * AFF.incomeMultipleOfRent;
+
+      let total, sub, rows, chart;
+
+      if (id === 'deposit') {
+        const back = Math.max(0, deposit - deductions);
+        rows = [
+          { k: 'Security deposit paid', ref: depositMonths + ' month(s) of rent', v: deposit, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Deductions itemised by the landlord', ref: 'Must be written and itemised in most states', v: deductions, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Deposit you should get back', ref: 'Wear and tear is never deductible', v: back, format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'Share of the deposit withheld', ref: 'Over 50% usually deserves a written challenge', v: deposit > 0 ? (deductions / deposit) * 100 : 0, format: 'unit', unit: '%', decimals: 1 },
+          { k: 'Typical statutory deadline to return it', ref: 'Varies by state; clock often starts at your forwarding address', v: 30, format: 'unit', unit: 'days', decimals: 0 },
+          { k: 'Deposit as a share of one month’s rent', ref: 'Many states cap this at 1 or 2 months', v: rent > 0 ? (deposit / rent) * 100 : 0, format: 'unit', unit: '%', decimals: 0 },
+        ];
+        total = usd(back);
+        sub =
+          'You should get ' + usd(back) + ' of your ' + usd(deposit) + ' deposit back' +
+          (deductions > 0 ? ' after ' + usd(deductions) + ' in itemised deductions' : '') +
+          ' · demand the written itemisation if it does not arrive within 30 days';
+        chart = [
+          { label: 'Returned to you', value: Math.round(back), tone: 'good' },
+          { label: 'Withheld by the landlord', value: Math.round(deductions), tone: 'warn' },
+        ];
+      } else if (id === 'monthly') {
+        rows = [
+          { k: 'Base rent', ref: 'What the listing advertises', v: rent, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'HOA, condo or amenity fee', ref: 'Sometimes passed through separately', v: hoa, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Utilities not included', ref: 'Commonly 10–20% on top of rent', v: utilities, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Renters insurance, spread monthly', ref: usd(insuranceYear) + ' a year', v: insuranceMonth, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'True monthly cost', ref: 'Everything you actually pay each month', v: monthly, format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'Gap between the advertised rent and what you pay', ref: 'The number the listing does not show', v: monthly - rent, format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'Share of your gross monthly income', ref: 'The 30% rule is a convention, not a law', v: sharePct, format: 'unit', unit: '%', decimals: 1, extra: true },
+          { k: 'Gross monthly income most landlords require', ref: AFF.incomeMultipleOfRent + '× the rent', v: incomeNeeded, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Annual cost of this rental', ref: '12 months at the true cost', v: monthly * 12, format: 'unit', unit: 'USD', decimals: 0 },
+        ];
+        total = usd(monthly);
+        sub =
+          usd(monthly - rent) + ' a month more than the advertised rent · ' +
+          (income > 0 ? sharePct.toFixed(1) + '% of your gross income' + (sharePct > AFF.rentShareOfGrossPct ? ' — above the 30% rule' : ' — inside the 30% rule') : 'enter your income to test the 30% rule') +
+          ' · landlords will want to see ' + usd(incomeNeeded) + ' a month';
+        chart = [
+          { label: 'Rent', value: Math.round(rent), tone: 'main' },
+          { label: 'HOA and fees', value: Math.round(hoa), tone: 'prop' },
+          { label: 'Utilities', value: Math.round(utilities), tone: 'warn' },
+          { label: 'Insurance', value: Math.round(insuranceMonth), tone: 'good' },
+        ];
+      } else if (id === 'lease') {
+        const oneYearTwoYearTotal = rent * 12 + rent * (1 + inc) * 12;
+        const twoYearLocked = rent * 24;
+        const saving = oneYearTwoYearTotal - twoYearLocked;
+        const breakEvenPct = 0; // locking in wins whenever any increase is expected
+        rows = [
+          { k: 'Year 1 at the current rent', ref: '12 months', v: rent * 12, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Year 2 after a ' + (inc * 100).toFixed(1) + '% renewal increase', ref: 'One-year lease, renewed', v: rent * (1 + inc) * 12, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Two years on annual leases', ref: 'Total over 24 months', v: oneYearTwoYearTotal, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Two years locked at today’s rent', ref: 'Two-year lease, no increase', v: twoYearLocked, format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'Saved by locking in', ref: 'Only if you actually stay the full term', v: saving, format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'Monthly premium the longer lease can charge before it stops paying', ref: 'Saving spread over 24 months', v: saving / 24, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Typical cost of breaking the lease early', ref: 'Two months’ rent plus the deposit is common', v: rent * 2 + deposit, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Renewal increase at which the two options tie', ref: 'Below this, the flexibility is free', v: breakEvenPct, format: 'unit', unit: '%', decimals: 1 },
+        ];
+        total = usd(saving);
+        sub =
+          'Locking in for two years saves ' + usd(saving) + ' against renewing at ' + (inc * 100).toFixed(1) +
+          '% · that is ' + usd(saving / 24) + ' a month, and breaking early would cost about ' + usd(rent * 2 + deposit);
+        chart = [
+          { label: 'Two annual leases', value: Math.round(oneYearTwoYearTotal), tone: 'warn' },
+          { label: 'One two-year lease', value: Math.round(twoYearLocked), tone: 'good' },
+        ];
+      } else {
+        rows = [
+          { k: 'First month’s rent', ref: 'Due at signing', v: rent, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Security deposit', ref: depositMonths + ' month(s) — many states cap this at 1 or 2', v: deposit, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Last month’s rent up front', ref: lastMonth > 0 ? 'Required by this lease' : 'Not required', v: lastMonth, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Application, admin, pet and parking fees', ref: 'Usually non-refundable', v: fees, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Renters insurance, first year', ref: 'Most leases require it before handover', v: insuranceYear, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Moving truck and movers', ref: 'Book 3+ weeks out to avoid the peak premium', v: moving, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Total cash needed on day one', ref: 'Only the deposit comes back', v: moveIn, format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'Of that, money you never see again', ref: 'Move-in total minus the deposit', v: moveIn - deposit, format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'Move-in cost as a multiple of the monthly rent', ref: 'Two and a half to three and a half is typical', v: rent > 0 ? moveIn / rent : 0, format: 'unit', unit: '× rent', decimals: 2 },
+          { k: 'True monthly cost once you are in', ref: 'Rent plus fees, utilities and insurance', v: monthly, format: 'unit', unit: 'USD', decimals: 0 },
+        ];
+        total = usd(moveIn);
+        sub =
+          usd(moveIn) + ' to get the keys — ' + (rent > 0 ? (moveIn / rent).toFixed(1) : '0') +
+          '× the monthly rent · ' + usd(moveIn - deposit) + ' of it is spent, not refundable · then ' + usd(monthly) + ' a month';
+        chart = [
+          { label: 'First month’s rent', value: Math.round(rent), tone: 'main' },
+          { label: 'Security deposit (refundable)', value: Math.round(deposit), tone: 'good' },
+          { label: 'Last month up front', value: Math.round(lastMonth), tone: 'prop' },
+          { label: 'Fees and insurance', value: Math.round(fees + insuranceYear), tone: 'warn' },
+          { label: 'Moving', value: Math.round(moving), tone: 'bad' },
+        ];
+      }
+
+      return { total: total, sub: sub, rows: rows, chart: chart, format: 'unit', unit: 'USD', decimals: 0 };
+    });
+  })();
+</script>

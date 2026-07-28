@@ -1,0 +1,227 @@
+---
+/**
+ * Hub EN — "How far will a tank get me, and what will this drive cost?"
+ * Ruta bajo el prefijo del mercado inglés (/en/), igual que las calcs que absorbe.
+ * audience="US" y lang="en" van literales: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  AC_PENALTY,
+  CITY_SPEED_MPH,
+  OVERNIGHT_THRESHOLD_HRS,
+} from '../../../lib/hubs/en/fuel-and-trip-cost';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ AC_PENALTY, CITY_SPEED_MPH, OVERNIGHT_THRESHOLD_HRS }}>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) =>
+      '$' + (Math.round((n || 0) * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const hm = (hours) => {
+      const t = Math.max(0, hours || 0);
+      const h = Math.floor(t);
+      const m = Math.round((t - h) * 60);
+      return h === 0 ? m + 'm' : h + 'h ' + m + 'm';
+    };
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'roadtrip';
+      const distance = Math.max(0, v.distance || 0);
+      const mpg = Math.max(0.1, v.mpg || 0.1);
+      const tank = Math.max(0, v.tank || 0);
+      const level = Math.min(100, Math.max(0, v.level === undefined ? 100 : v.level));
+      const price = Math.max(0, v.price || 0);
+      const speed = Math.max(1, v.speed || 1);
+      const breakEvery = Math.max(0.25, v.breakevery || 2);
+      const breakMin = Math.max(0, v.breakmin || 0);
+      const acHours = Math.max(0, v.achours || 0);
+      const cngMpg = Math.max(0.1, v.cngmpg || 0.1);
+      const cngPrice = Math.max(0, v.cngprice || 0);
+      const cngCost = Math.max(0, v.cngcost || 0);
+
+      const fullRange = tank * mpg;
+
+      if (id === 'range') {
+        const gallonsNow = tank * (level / 100);
+        const rangeNow = gallonsNow * mpg;
+        const safe = rangeNow * 0.9;
+        const rows = [
+          { k: 'Tank capacity', ref: 'As entered', v: tank, format: 'unit', unit: 'gal', decimals: 1 },
+          { k: 'Fuel in the tank right now', ref: level + '% full', v: gallonsNow, format: 'unit', unit: 'gal', decimals: 1 },
+          { k: 'Fuel economy used', ref: 'Your observed mpg', v: mpg, format: 'unit', unit: 'mpg', decimals: 1 },
+          { k: 'Full-tank range', ref: 'Tank × mpg', v: fullRange, format: 'unit', unit: 'mi' },
+          { k: 'Range left at the current level', ref: 'Gallons on board × mpg', v: rangeNow, format: 'unit', unit: 'mi', extra: true },
+          { k: 'Plan your next stop by', ref: '90% of range — 10% reserve', v: safe, format: 'unit', unit: 'mi' },
+          { k: 'Cost to fill the tank from here', ref: usd(price) + '/gal', v: (tank - gallonsNow) * price, format: 'unit', unit: 'USD', decimals: 2 },
+        ];
+        return {
+          total: Math.round(rangeNow).toLocaleString('en-US') + ' mi',
+          sub:
+            'Full tank would take you ' + Math.round(fullRange).toLocaleString('en-US') +
+            ' mi · plan the next station by ' + Math.round(safe).toLocaleString('en-US') +
+            ' mi · a full fill-up costs ' + usd((tank - gallonsNow) * price),
+          rows: rows,
+          chart: [
+            { label: 'Miles you can still drive', value: Math.round(rangeNow), tone: 'main' },
+            { label: 'Miles already used from this tank', value: Math.round(fullRange - rangeNow), tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'ac') {
+        // Espejo de consumo-aire-acondicionado-auto-extra.ts: +12% sobre el consumo base
+        // a una velocidad de ciudad representativa (30 km/h = 18,64 mph).
+        const galPerHour = (CITY_SPEED_MPH / mpg) * AC_PENALTY;
+        const galPerDay = galPerHour * acHours;
+        const galPerMonth = galPerDay * 30;
+        const costMonth = galPerMonth * price;
+        const baseGalMonth = (CITY_SPEED_MPH / mpg) * acHours * 30;
+        const rows = [
+          { k: 'A/C penalty applied', ref: 'DOE median of the 5–25% range', v: AC_PENALTY * 100, format: 'unit', unit: '%' },
+          { k: 'City speed used for the base burn', ref: '30 km/h, the figure the source model uses', v: CITY_SPEED_MPH, format: 'unit', unit: 'mph', decimals: 1 },
+          { k: 'Extra fuel per hour of A/C', ref: 'Base burn × 12%', v: galPerHour, format: 'unit', unit: 'gal/h', decimals: 3 },
+          { k: 'Extra fuel per day', ref: acHours + ' h/day', v: galPerDay, format: 'unit', unit: 'gal', decimals: 3 },
+          { k: 'Extra fuel per month', ref: '30 days', v: galPerMonth, format: 'unit', unit: 'gal', decimals: 2 },
+          { k: 'Extra cost per month', ref: usd(price) + '/gal', v: costMonth, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Extra cost per year', ref: '12 months', v: costMonth * 12, format: 'unit', unit: 'USD', decimals: 2 },
+        ];
+        return {
+          total: usd(costMonth) + '/mo',
+          sub:
+            'About ' + galPerMonth.toFixed(2) + ' extra gallons a month from the compressor · ' +
+            usd(costMonth * 12) + ' a year · above 40 mph the A/C still beats open windows',
+          rows: rows,
+          chart: [
+            { label: 'Fuel the engine burns anyway', value: Math.round(baseGalMonth * 100) / 100, tone: 'main' },
+            { label: 'Extra fuel the A/C adds', value: Math.round(galPerMonth * 100) / 100, tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'cng') {
+        const gasCost = (distance / mpg) * price;
+        const cngCostYear = (distance / cngMpg) * cngPrice;
+        const saving = gasCost - cngCostYear;
+        const payback = saving > 0 ? cngCost / saving : 0;
+        const rows = [
+          { k: 'Miles per year', ref: 'As entered', v: distance, format: 'unit', unit: 'mi' },
+          { k: 'Gasoline: gallons per year', ref: 'Miles ÷ mpg', v: distance / mpg, format: 'unit', unit: 'gal' },
+          { k: 'Gasoline: cost per year', ref: usd(price) + '/gal', v: gasCost, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'CNG: GGE per year', ref: 'Miles ÷ miles-per-GGE', v: distance / cngMpg, format: 'unit', unit: 'GGE' },
+          { k: 'CNG: cost per year', ref: usd(cngPrice) + '/GGE', v: cngCostYear, format: 'unit', unit: 'USD', decimals: 2 },
+          {
+            k: saving >= 0 ? 'Annual saving with CNG' : 'Annual extra cost with CNG',
+            ref: 'Gasoline minus CNG',
+            v: Math.abs(saving),
+            format: 'unit',
+            unit: 'USD',
+            decimals: 2,
+            extra: true,
+          },
+          { k: 'Conversion cost to recover', ref: 'As entered', v: cngCost, format: 'unit', unit: 'USD', decimals: 2 },
+          {
+            k: saving > 0 ? 'Years to pay back the conversion' : 'Payback never happens at these prices',
+            ref: saving > 0 ? 'Conversion ÷ annual saving' : 'CNG costs more per mile here',
+            v: saving > 0 ? payback : 0,
+            format: 'unit',
+            unit: 'years',
+            decimals: 1,
+          },
+        ];
+        return {
+          total: (saving >= 0 ? usd(saving) : '−' + usd(-saving)) + '/yr',
+          sub:
+            saving > 0
+              ? 'CNG is cheaper per mile · the conversion pays for itself in ' + payback.toFixed(1) +
+                ' years at ' + Math.round(distance).toLocaleString('en-US') + ' mi/yr'
+              : 'At these prices gasoline wins — recheck the CNG price is quoted per GGE, not per kg',
+          rows: rows,
+          chart: [
+            { label: 'Gasoline: cost per year', value: Math.round(gasCost), tone: 'warn' },
+            { label: 'CNG: cost per year', value: Math.round(cngCostYear), tone: 'good' },
+          ],
+        };
+      }
+
+      // roadtrip
+      const driveHours = distance / speed;
+      const breaks = Math.floor(driveHours / breakEvery);
+      const breakHours = (breaks * breakMin) / 60;
+      const totalHours = driveHours + breakHours;
+      const gallons = distance / mpg;
+      const fuelCost = gallons * price;
+      const fillups = fullRange > 0 ? Math.max(0, Math.ceil(distance / (fullRange * 0.9)) - 1) : 0;
+      const rows = [
+        { k: 'Driving time', ref: 'Distance ÷ average speed', v: driveHours * 60, format: 'unit', unit: 'min' },
+        { k: 'Rest stops', ref: 'One every ' + breakEvery + ' h', v: breaks, format: 'plain' },
+        { k: 'Time spent stopped', ref: breakMin + ' min each', v: breakHours * 60, format: 'unit', unit: 'min' },
+        { k: 'Total trip time', ref: 'Driving plus stops', v: totalHours * 60, format: 'unit', unit: 'min', extra: true },
+        { k: 'Fuel burned', ref: 'Distance ÷ mpg', v: gallons, format: 'unit', unit: 'gal', decimals: 1 },
+        { k: 'Fuel cost', ref: usd(price) + '/gal', v: fuelCost, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+        { k: 'Refuel stops needed', ref: 'Planning on 90% of tank range', v: fillups, format: 'plain' },
+        { k: 'Cost per mile in fuel alone', ref: 'Excludes tolls, wear and depreciation', v: distance > 0 ? fuelCost / distance : 0, format: 'unit', unit: 'USD', decimals: 3 },
+      ];
+      const longDrive = totalHours > OVERNIGHT_THRESHOLD_HRS;
+      return {
+        total: hm(totalHours) + ' · ' + usd(fuelCost),
+        sub:
+          hm(driveHours) + ' driving plus ' + breaks + ' stop' + (breaks === 1 ? '' : 's') + ' · ' +
+          gallons.toFixed(1) + ' gal at ' + usd(price) + '/gal · ' +
+          (longDrive
+            ? 'over ' + OVERNIGHT_THRESHOLD_HRS + ' h total — split it across two days'
+            : 'manageable in a single day with the stops built in'),
+        rows: rows,
+        chart: [
+          { label: 'Driving time (min)', value: Math.round(driveHours * 60), tone: 'main' },
+          { label: 'Rest stops (min)', value: Math.round(breakHours * 60), tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

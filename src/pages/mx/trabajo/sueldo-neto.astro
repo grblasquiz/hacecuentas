@@ -1,0 +1,317 @@
+---
+/**
+ * Hub de decisión MX — "¿Cuánto me queda del sueldo en mano?".
+ * audience="MX" va literal al Layout: HubData sólo modela 'AR' | 'global' y el
+ * mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, ISR_MENSUAL, IMSS_OBRERO, SUBSIDIO, UMA, SALARIO_MINIMO } from '../../../lib/hubs/mx/sueldo-neto';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="MX"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ TARIFA: ISR_MENSUAL, IMSS: IMSS_OBRERO, SUBSIDIO, UMA, SM: SALARIO_MINIMO }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+
+    // Tarifa Art. 96 LISR (Anexo 8 RMF): cuota fija + tasa sobre el excedente.
+    function isrMensual(base) {
+      if (!(base > 0)) return { isr: 0, marginal: 0, tramo: null };
+      for (const t of TARIFA) {
+        const hasta = t.hasta === null ? Infinity : t.hasta;
+        if (base >= t.desde && base <= hasta) {
+          return { isr: t.cuota + (base - t.desde) * t.tasa, marginal: t.tasa * 100, tramo: t };
+        }
+      }
+      const last = TARIFA[TARIFA.length - 1];
+      return { isr: last.cuota + (base - last.desde) * last.tasa, marginal: last.tasa * 100, tramo: last };
+    }
+
+    // Cuota obrera IMSS por componentes (LSS): 2,375% del SBC + 0,4% del excedente de 3 UMA,
+    // con el SBC topado a 25 UMA (Art. 28 LSS).
+    function imssObrero(sbcMensual) {
+      if (!(sbcMensual > 0)) return 0;
+      const tope = UMA.diaria * IMSS.topeUmas * SM.factorMensual;
+      const sbc = Math.min(sbcMensual, tope);
+      const umbral = UMA.diaria * IMSS.umbralExcedenteUmas * SM.factorMensual;
+      return sbc * IMSS.base + Math.max(0, sbc - umbral) * IMSS.excedente;
+    }
+
+    function subsidio(ingresoMensual) {
+      return ingresoMensual > 0 && ingresoMensual <= SUBSIDIO.tope ? SUBSIDIO.monto : 0;
+    }
+
+    // Descuentos de un bruto mensual. Devuelve todo lo que necesita el desglose.
+    function desdeBruto(bruto, pctInfonavit) {
+      const t = isrMensual(bruto);
+      const isrBruto = t.isr;
+      const spe = subsidio(bruto);
+      let isrEfectivo = isrBruto;
+      let speEntregado = 0;
+      if (spe > 0) {
+        if (spe >= isrBruto) {
+          isrEfectivo = 0;
+          speEntregado = spe - isrBruto;
+        } else {
+          isrEfectivo = isrBruto - spe;
+        }
+      }
+      const imss = imssObrero(bruto);
+      const infonavit = pctInfonavit > 0 ? bruto * (pctInfonavit / 100) : 0;
+      const neto = bruto - isrEfectivo - imss - infonavit + speEntregado;
+      return {
+        isrBruto,
+        isrEfectivo,
+        spe,
+        speAcreditado: Math.min(spe, isrBruto),
+        speEntregado,
+        imss,
+        infonavit,
+        neto,
+        marginal: t.marginal,
+        tramo: t.tramo,
+      };
+    }
+
+    // Problema inverso: el neto es monótono creciente en el bruto → búsqueda binaria.
+    function brutoDesdeNeto(netoObjetivo, pctInfonavit) {
+      let lo = netoObjetivo;
+      let hi = Math.max(netoObjetivo * 1.1, netoObjetivo + 1000);
+      let guard = 0;
+      while (desdeBruto(hi, pctInfonavit).neto < netoObjetivo && guard < 100) {
+        hi *= 1.5;
+        guard++;
+      }
+      for (let k = 0; k < 200; k++) {
+        const mid = (lo + hi) / 2;
+        if (desdeBruto(mid, pctInfonavit).neto < netoObjetivo) lo = mid;
+        else hi = mid;
+        if (hi - lo < 0.005) break;
+      }
+      return Math.round(hi * 100) / 100;
+    }
+
+    const FACTOR = { mensual: 1, quincenal: 2, semanal: 52 / 12, diario: SM.factorMensual };
+    const NOMBRE = { mensual: 'al mes', quincenal: 'por quincena', semanal: 'por semana', diario: 'por día' };
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'nomina';
+      const periodo = FACTOR[v.periodo] ? v.periodo : 'mensual';
+      const factor = FACTOR[periodo];
+      const monto = Math.max(0, v.sueldo || 0);
+      const pctInfonavit = id === 'nomina' || id === 'neto-a-bruto' ? Math.max(0, Math.min(50, v.infonavit || 0)) : 0;
+      const vales = id === 'nomina' ? Math.max(0, v.vales || 0) : 0;
+      const horas = Math.max(1, Math.min(60, v.horas || 48));
+      const zona = v.zona === 'frontera' ? 'frontera' : 'general';
+
+      // ── Caso 4: conversión de período y piso legal. No hay impuestos de por medio. ──
+      if (id === 'por-hora') {
+        const mensual = monto * factor;
+        const horasMes = (horas * 52) / 12;
+        const porHora = horasMes > 0 ? mensual / horasMes : 0;
+        const diario = mensual / SM.factorMensual;
+        const semanal = (mensual * 12) / 52;
+        const anual = mensual * 12;
+        const smDiario = zona === 'frontera' ? SM.zlfnDiario : SM.generalDiario;
+        const smMensual = smDiario * SM.factorMensual;
+        const cuantos = smMensual > 0 ? mensual / smMensual : 0;
+        const cumple = mensual >= smMensual;
+
+        return {
+          total: mxn(porHora) + ' / hora',
+          sub:
+            'Con ' + horas + ' h por semana trabajás ' + horasMes.toFixed(0) + ' h al mes · ' +
+            (cumple
+              ? 'ganás ' + cuantos.toFixed(2) + ' salarios mínimos de la zona ' + (zona === 'frontera' ? 'Frontera Norte' : 'general')
+              : 'tu sueldo queda ' + mxn(smMensual - mensual) + ' por debajo del piso legal mensual'),
+          rows: [
+            { k: 'Valor de tu hora ordinaria', ref: 'Sueldo mensual ÷ horas del mes', v: porHora, extra: true, decimals: 2 },
+            { k: 'Horas que trabajás al mes', ref: 'Horas semanales × 52 ÷ 12', v: horasMes, format: 'unit', unit: 'horas', decimals: 1 },
+            { k: 'Equivalente diario', ref: 'Factor mensual ' + SM.factorMensual + ' días', v: diario, decimals: 2 },
+            { k: 'Equivalente semanal', ref: 'Mensual × 12 ÷ 52', v: semanal },
+            { k: 'Equivalente mensual', ref: 'Base de todos los cálculos', v: mensual },
+            { k: 'Equivalente anual', ref: 'Sin aguinaldo ni prima vacacional', v: anual },
+            { k: 'Salario mínimo diario de tu zona', ref: 'CONASAMI', v: smDiario, decimals: 2 },
+            { k: 'Salario mínimo mensual equivalente', ref: 'Mínimo diario × ' + SM.factorMensual, v: smMensual },
+            {
+              k: 'Cuántos salarios mínimos ganás',
+              ref: cumple ? 'Cumple el piso legal' : 'Por debajo del piso legal',
+              v: cuantos,
+              format: 'unit',
+              unit: 'salarios mínimos',
+              decimals: 2,
+            },
+            {
+              k: cumple ? 'Cuánto le sacás al mínimo mensual' : 'Cuánto te falta para el mínimo mensual',
+              ref: 'Diferencia contra el piso',
+              v: Math.abs(mensual - smMensual),
+              extra: true,
+            },
+          ],
+          chart: [
+            { label: 'Piso legal del mes (salario mínimo)', value: Math.round(Math.min(mensual, smMensual)), tone: 'warn' },
+            { label: 'Lo que ganás por encima del piso', value: Math.round(Math.max(0, mensual - smMensual)), tone: 'good' },
+          ],
+        };
+      }
+
+      // ── Casos 1-3: nómina, sólo ISR y neto→bruto. ──
+      let brutoMensual;
+      if (id === 'neto-a-bruto') {
+        brutoMensual = monto > 0 ? brutoDesdeNeto(monto * factor, pctInfonavit) : 0;
+      } else {
+        brutoMensual = monto * factor;
+      }
+
+      const d = desdeBruto(brutoMensual, pctInfonavit);
+      const soloIsr = id === 'solo-isr';
+      const imss = soloIsr ? 0 : d.imss;
+      const infonavit = soloIsr ? 0 : d.infonavit;
+      const valesMensual = vales * factor;
+      const netoMensual = brutoMensual - d.isrEfectivo - imss - infonavit + d.speEntregado + valesMensual;
+
+      const p = (n) => n / factor; // de base mensual al período del usuario
+      const efectiva = brutoMensual > 0 ? (d.isrEfectivo / brutoMensual) * 100 : 0;
+      const descuentos = d.isrEfectivo + imss + infonavit;
+
+      const rows = [
+        {
+          k: id === 'neto-a-bruto' ? 'Sueldo bruto que tenés que pedir' : 'Sueldo bruto del período',
+          ref: NOMBRE[periodo],
+          v: p(brutoMensual),
+          extra: id === 'neto-a-bruto',
+        },
+        { k: 'ISR de tarifa antes del subsidio', ref: 'Art. 96 LISR', v: p(d.isrBruto) },
+      ];
+
+      if (d.spe > 0) {
+        rows.push({
+          k: 'Subsidio para el empleo acreditado (se resta del ISR)',
+          ref: 'Decreto DOF · tope ' + mxn(SUBSIDIO.tope) + '/mes',
+          v: p(d.speAcreditado),
+        });
+      }
+      if (d.speEntregado > 0) {
+        rows.push({
+          k: 'Subsidio entregado en efectivo (suma al neto)',
+          ref: 'El subsidio superó al ISR',
+          v: p(d.speEntregado),
+        });
+      }
+
+      rows.push({ k: 'ISR efectivamente retenido', ref: 'Después del subsidio', v: p(d.isrEfectivo) });
+
+      if (!soloIsr) {
+        rows.push({
+          k: 'Cuota obrera del IMSS',
+          ref: '2,375% del SBC + 0,4% sobre 3 UMA · tope 25 UMA',
+          v: p(imss),
+        });
+        if (infonavit > 0) {
+          rows.push({ k: 'Descuento de Infonavit', ref: pctInfonavit + '% del sueldo', v: p(infonavit) });
+        }
+        if (valesMensual > 0) {
+          rows.push({ k: 'Vales de despensa (suman al neto)', ref: 'Parte exenta · Art. 93 LISR', v: p(valesMensual) });
+        }
+      }
+
+      rows.push({ k: 'Total de descuentos', ref: 'ISR + IMSS + Infonavit', v: p(descuentos) });
+      rows.push({
+        k: soloIsr ? 'Bruto menos ISR' : 'Sueldo neto que te queda',
+        ref: NOMBRE[periodo],
+        v: p(netoMensual),
+        extra: id !== 'neto-a-bruto',
+      });
+      rows.push({
+        k: 'Tasa marginal del tramo en el que caés',
+        ref: d.tramo
+          ? mxn(d.tramo.desde) + (d.tramo.hasta === null ? ' en adelante' : ' a ' + mxn(d.tramo.hasta))
+          : 'Sin ingreso',
+        v: d.marginal,
+        format: 'unit',
+        unit: '%',
+        decimals: 2,
+      });
+      rows.push({
+        k: 'Tasa efectiva de ISR sobre el bruto',
+        ref: 'ISR retenido ÷ bruto',
+        v: efectiva,
+        format: 'unit',
+        unit: '%',
+        decimals: 2,
+      });
+      rows.push({
+        k: 'Qué porcentaje del bruto te llevás',
+        ref: 'Neto ÷ bruto',
+        v: brutoMensual > 0 ? (netoMensual / brutoMensual) * 100 : 0,
+        format: 'unit',
+        unit: '%',
+        decimals: 1,
+      });
+
+      const sub =
+        (id === 'neto-a-bruto'
+          ? 'Para cobrar ' + mxn(monto) + ' netos ' + NOMBRE[periodo] + ' necesitás un bruto de ' + mxn(p(brutoMensual))
+          : id === 'solo-isr'
+            ? 'ISR retenido de ' + mxn(p(d.isrEfectivo)) + ' ' + NOMBRE[periodo]
+            : 'De ' + mxn(p(brutoMensual)) + ' brutos te descuentan ' + mxn(p(descuentos))) +
+        ' · tasa efectiva de ISR ' + efectiva.toFixed(2).replace('.', ',') + '%' +
+        (d.speEntregado > 0 ? ' · el subsidio te suma ' + mxn(p(d.speEntregado)) : '');
+
+      const chart = [
+        { label: soloIsr ? 'Bruto menos ISR' : 'Neto en tu cuenta', value: Math.round(p(netoMensual)), tone: 'main' },
+        { label: 'ISR retenido', value: Math.round(p(d.isrEfectivo)), tone: 'warn' },
+        { label: 'Cuota obrera del IMSS', value: Math.round(p(imss)), tone: 'exit' },
+        { label: 'Descuento de Infonavit', value: Math.round(p(infonavit)), tone: 'bad' },
+      ].filter((s) => s.value > 0);
+
+      return { total: mxn(p(netoMensual)), sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

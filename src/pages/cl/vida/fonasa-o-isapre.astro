@@ -1,0 +1,240 @@
+---
+/**
+ * Hub de decisión CL — "¿Me conviene Fonasa o una Isapre, y cuánto pago de mi bolsillo?"
+ * Ruta bajo el prefijo /cl/, igual que las calculadoras que absorbe.
+ * audience="CL" va literal al Layout: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, UF, SALUD, BONIF_MLE } from '../../../lib/hubs/cl/fonasa-o-isapre';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ UF, SALUD, NIVELES: BONIF_MLE }}>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+
+    /**
+     * Tramo de Fonasa. El criterio legal se define contra el ingreso mínimo mensual:
+     * B ≤ IMM · C > IMM y ≤ 1,46 × IMM · D > 1,46 × IMM. Con 3 o más cargas se baja un tramo.
+     * (La fórmula vieja usaba una constante "UF_2026 = 780000" que no es la UF ni nada legal.)
+     */
+    function tramoFonasa(ingreso, imm, cargas) {
+      const corteB = imm;
+      const corteC = imm * SALUD.factorTramoC;
+      let letra;
+      if (ingreso <= 0) letra = 'A';
+      else if (ingreso <= corteB) letra = 'B';
+      else if (ingreso <= corteC) letra = 'C';
+      else letra = 'D';
+
+      // 3 o más cargas acreditadas bajan un tramo: D → C, C → B.
+      let bajado = false;
+      if (cargas >= SALUD.cargasParaBajarTramo) {
+        if (letra === 'D') { letra = 'C'; bajado = true; }
+        else if (letra === 'C') { letra = 'B'; bajado = true; }
+      }
+      return { letra, corteB, corteC, bajado };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'fonasa-tramo';
+      const esIndep = id === 'independiente';
+
+      const ingresoBruto = Math.max(0, v.ingreso || 0);
+      // El independiente cotiza sobre el 80% de sus honorarios brutos.
+      const ingreso = esIndep ? ingresoBruto * 0.8 : ingresoBruto;
+      const imm = Math.max(1, v.imm || SALUD.imm);
+      const cargas = Math.max(0, Math.floor(Number(v.cargas) || 0));
+      const planUf = Math.max(0, Number(v.planUf) || 0);
+      const cobertura = Math.min(100, Math.max(0, Number(v.coberturaIsapre) || 0)) / 100;
+      const nivel = NIVELES.find((n) => n.id === String(v.nivelMle)) || NIVELES[0];
+      const valorPrest = Math.max(0, v.valorPrestacion || 0);
+      const atenciones = Math.max(0, Math.floor(Number(v.atenciones) || 0));
+
+      const topeImponible = SALUD.topeImponibleUf * UF;
+      const baseImponible = Math.min(ingreso, topeImponible);
+      const cotizacion = baseImponible * SALUD.cotizacionLegal;
+
+      const t = tramoFonasa(ingreso, imm, cargas);
+
+      // Copagos por atención en cada vía.
+      const copagoMai = 0; // Copago Cero en la red pública, todos los tramos.
+      const copagoMle = t.letra === 'A' ? null : valorPrest * (1 - nivel.bonif);
+      const copagoIsapre = valorPrest * (1 - cobertura);
+
+      // Precio del plan de Isapre: pactado en UF, no topado por la renta imponible.
+      const planClp = planUf * UF;
+      const excedente = Math.max(0, planClp - cotizacion);
+      const aFavor = Math.max(0, cotizacion - planClp);
+
+      // Gasto anual por vía.
+      const anualFonasaMai = cotizacion * 12;
+      const anualFonasaMle = cotizacion * 12 + (copagoMle === null ? 0 : copagoMle * atenciones);
+      const anualIsapre = planClp * 12 + copagoIsapre * atenciones;
+      const anualParticular = valorPrest * atenciones;
+
+      const rows = [];
+      let total, sub;
+
+      rows.push({ k: esIndep ? 'Honorarios brutos del mes' : 'Ingreso imponible del mes', ref: 'Tu dato', v: ingresoBruto });
+      if (esIndep) {
+        rows.push({ k: 'Renta imponible del independiente', ref: '80% de los honorarios brutos', v: ingreso });
+      }
+      rows.push({
+        k: 'Cotización legal de salud (7%)',
+        ref: 'Sobre la renta imponible topada en ' + SALUD.topeImponibleUf + ' UF',
+        v: cotizacion,
+      });
+
+      if (id === 'isapre-plan') {
+        rows.push({ k: 'Precio del plan de Isapre', ref: planUf.toLocaleString('es-CL') + ' UF × ' + clp(UF), v: planClp, extra: true });
+        if (excedente > 0) {
+          rows.push({ k: 'Excedente sobre el 7%: lo pagas tú', ref: 'Sale de tu líquido todos los meses', v: excedente });
+          rows.push({ k: 'Excedente en un año', ref: 'Excedente × 12', v: excedente * 12 });
+        } else {
+          rows.push({ k: 'Excedente de cotización a tu favor', ref: 'Queda en tu cuenta de la Isapre, no en efectivo', v: aFavor });
+        }
+        rows.push({
+          k: 'Porcentaje real de tu renta que va a salud',
+          ref: 'Precio del plan ÷ ingreso imponible',
+          v: ingreso > 0 ? (planClp / ingreso) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        total = clp(anualIsapre);
+        sub =
+          'Tu plan de ' + planUf.toLocaleString('es-CL') + ' UF cuesta ' + clp(planClp) + ' al mes' +
+          (excedente > 0
+            ? ' · son ' + clp(excedente) + ' por encima del 7% legal, o ' + clp(excedente * 12) + ' al año de tu bolsillo'
+            : ' · queda por debajo del 7% legal, así que ' + clp(aFavor) + ' al mes se acumulan como excedente a tu favor');
+      } else if (id === 'atencion-puntual') {
+        rows.push({ k: 'Valor particular de la atención', ref: 'Sin usar ningún seguro', v: valorPrest });
+        rows.push({ k: 'En la red pública (MAI)', ref: 'Copago Cero, todos los tramos', v: copagoMai, extra: true });
+        rows.push({
+          k: copagoMle === null ? 'Bono de libre elección: el tramo A no accede' : 'Copago del bono de libre elección',
+          ref: copagoMle === null ? 'Tramo A: sólo atención institucional' : nivel.nombre + ' · bonifica ' + Math.round(nivel.bonif * 100) + '%',
+          v: copagoMle === null ? 0 : copagoMle,
+        });
+        rows.push({
+          k: 'Copago con tu plan de Isapre',
+          ref: 'Cubre ' + Math.round(cobertura * 100) + '% de la prestación',
+          v: copagoIsapre,
+        });
+        rows.push({
+          k: 'Lo que ahorras usando la red pública',
+          ref: 'Frente a pagar particular',
+          v: valorPrest - copagoMai,
+        });
+        total = clp(copagoMle === null ? copagoMai : Math.min(copagoMai, copagoMle, copagoIsapre));
+        sub =
+          'Por una atención de ' + clp(valorPrest) + ': ' + clp(copagoMai) + ' en la red pública, ' +
+          (copagoMle === null ? 'sin acceso a bonos en tramo A' : clp(copagoMle) + ' con bono de libre elección') +
+          ', ' + clp(copagoIsapre) + ' con tu plan de Isapre y ' + clp(valorPrest) + ' particular';
+      } else {
+        // fonasa-tramo e independiente comparten la lectura por tramo.
+        rows.push({ k: 'Corte del tramo B', ref: '1 ingreso mínimo mensual', v: t.corteB });
+        rows.push({ k: 'Corte del tramo C', ref: '1,46 × ingreso mínimo mensual', v: t.corteC });
+        rows.push({ k: 'Copago en la red pública (MAI)', ref: 'Copago Cero desde 2022, cualquier tramo', v: copagoMai });
+        if (copagoMle !== null) {
+          rows.push({
+            k: 'Copago por atención con bono de libre elección',
+            ref: nivel.nombre + ' · bonifica ' + Math.round(nivel.bonif * 100) + '%',
+            v: copagoMle,
+          });
+        }
+        rows.push({ k: 'Cotización de salud en un año', ref: '7% × 12 meses', v: anualFonasaMai });
+        if (copagoMle !== null && atenciones > 0) {
+          rows.push({ k: 'Copagos del año si compras bonos', ref: atenciones + ' atenciones', v: copagoMle * atenciones });
+        }
+        total = clp(anualFonasaMle);
+        sub =
+          'Quedas en el tramo ' + t.letra + (t.bajado ? ' (bajaste un tramo por tener ' + cargas + ' cargas acreditadas)' : '') +
+          ' · en la red pública no pagas copago' +
+          (copagoMle === null
+            ? ' y el tramo A no accede a la compra de bonos'
+            : ' · con bonos de libre elección pagarías ' + clp(copagoMle) + ' por atención');
+      }
+
+      rows.push({ k: 'Año completo en Fonasa, red pública', ref: 'Sólo la cotización del 7%', v: anualFonasaMai });
+      rows.push({ k: 'Año completo en Fonasa con bonos', ref: 'Cotización más copagos de libre elección', v: anualFonasaMle });
+      rows.push({ k: 'Año completo en Isapre', ref: 'Precio del plan más copagos', v: anualIsapre });
+      rows.push({ k: 'Año completo pagando todo particular', ref: 'Sin seguro', v: anualParticular });
+      rows.push({
+        k: 'Diferencia entre Isapre y Fonasa en el año',
+        ref: anualIsapre >= anualFonasaMle ? 'La Isapre te cuesta de más' : 'La Isapre te sale más barata',
+        v: Math.abs(anualIsapre - anualFonasaMle),
+        extra: true,
+      });
+      rows.push({
+        k: 'Tope imponible de las cotizaciones',
+        ref: SALUD.topeImponibleUf + ' UF · UF de hoy ' + clp(UF),
+        v: topeImponible,
+      });
+      rows.push({
+        k: 'Tramo de Fonasa que te corresponde',
+        ref: 'A = 1, B = 2, C = 3, D = 4',
+        v: { A: 1, B: 2, C: 3, D: 4 }[t.letra],
+        format: 'unit',
+        unit: '= tramo ' + t.letra,
+      });
+
+      return {
+        total: total,
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Fonasa, red pública', value: Math.round(anualFonasaMai), tone: 'good' },
+          { label: 'Fonasa con bonos', value: Math.round(anualFonasaMle), tone: 'main' },
+          { label: 'Isapre', value: Math.round(anualIsapre), tone: 'prop' },
+          { label: 'Todo particular', value: Math.round(anualParticular), tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>

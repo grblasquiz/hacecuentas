@@ -1,0 +1,235 @@
+---
+/**
+ * Hub de decisión CO — "¿Cuánto necesito al mes para vivir en Colombia y con qué ayudas cuento?"
+ * Gasto del hogar por ciudad y composición, fondo de emergencia y transferencias del Estado.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  SMLMV,
+  AUXILIO_TRANSPORTE,
+  APORTES_EMPLEADO,
+  IVA_DPS,
+  BASE_MENSUAL,
+  CIUDADES,
+  NIVELES,
+  FONDO_MESES,
+} from '../../../lib/hubs/co/presupuesto-del-hogar';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    SMLMV,
+    AUXILIO: AUXILIO_TRANSPORTE,
+    APORTES: APORTES_EMPLEADO,
+    IVA: IVA_DPS,
+    BASE: BASE_MENSUAL,
+    CIUDADES,
+    NIVELES,
+    FONDO_MESES,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const cop = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'soltero';
+      const ciudadObj = CIUDADES.find((c) => c.id === String(v.ciudad || 'bogota')) || CIUDADES[0];
+      const coefCiudad = ciudadObj.coef;
+      const nivelKey = String(v.nivel || 'medio');
+      const coefNivel = NIVELES[nivelKey] !== undefined ? NIVELES[nivelKey] : 1;
+      const adultos = Math.min(6, Math.max(1, Math.round(v.adultos || 1)));
+      const hijos = Math.min(8, Math.max(0, Math.round(v.hijos || 0)));
+      const personas = adultos + hijos;
+      const ingresos = Math.max(0, v.ingresos || 0);
+      const empleo = String(v.empleo || 'asalariado');
+      const sisben = String(v.sisben || 'ninguno');
+      const cicloIva = Math.max(0, Number(v.cicloIva) || 0);
+      const rentaCiclo = Math.max(0, Number(v.rentaCiudadana) || 0);
+
+      // Economía de escala: la vivienda y los servicios se comparten; comida y transporte no.
+      const escalaHogar = 1 + 0.45 * (adultos - 1) + 0.4 * hijos;
+      const escalaVivienda = 1 + 0.18 * (adultos - 1) + 0.12 * hijos;
+      const f = coefCiudad * coefNivel;
+
+      const vivienda = BASE.vivienda * f * escalaVivienda;
+      const alimentacion = BASE.alimentacion * f * escalaHogar;
+      const transporte = BASE.transporte * f * escalaHogar;
+      const servicios = BASE.servicios * f * escalaVivienda;
+      const salud = BASE.salud * f * escalaHogar;
+      const ocio = BASE.ocio * f * escalaHogar;
+      const educacion = hijos * BASE.educacionPorHijo * f;
+
+      const total = vivienda + alimentacion + transporte + servicios + salud + ocio + educacion;
+
+      // Fondo de emergencia: meses según estabilidad + refuerzo por dependientes.
+      const mesesBase = FONDO_MESES[empleo] !== undefined ? FONDO_MESES[empleo] : 3;
+      const inestable = empleo === 'independiente' || empleo === 'informal';
+      const dependientes = hijos + Math.max(0, adultos - 1);
+      const meses = mesesBase + dependientes * (inestable ? 1 : 0.5);
+      const fondo = total * meses;
+
+      // Transferencias: se mensualizan porque los giros son bimestrales.
+      const focalizado = sisben === 'a' || sisben === 'b';
+      const ivaAnual = focalizado ? cicloIva * IVA.ciclosPorAnio : 0;
+      const ivaMes = ivaAnual / 12;
+      const rentaMes = focalizado ? rentaCiclo / 2 : 0;
+      const transferenciasMes = ivaMes + rentaMes;
+
+      const disponible = ingresos + transferenciasMes;
+      const brecha = disponible - total;
+      const pctSmlmv = (total / SMLMV) * 100;
+      const brutoSugerido = total / (1 - APORTES);
+
+      const rows = [
+        { k: 'Vivienda (arriendo o cuota + administración)', ref: ciudadObj.nombre + ' · referencia ' + BASE.fecha, v: vivienda },
+        { k: 'Alimentación', ref: personas + (personas === 1 ? ' persona' : ' personas'), v: alimentacion },
+        { k: 'Transporte', ref: 'Público o combustible', v: transporte },
+        { k: 'Servicios públicos e internet', ref: 'Luz, gas, agua, internet', v: servicios },
+        { k: 'Salud y cuidado personal', ref: 'Copagos, medicamentos, aseo', v: salud },
+        { k: 'Ocio y gastos personales', ref: 'Lo que evita que el presupuesto se rompa', v: ocio },
+      ];
+      if (educacion > 0) {
+        rows.push({ k: 'Educación y cuidado', ref: hijos + (hijos === 1 ? ' hijo' : ' hijos') + ' · referencia, varía muchísimo', v: educacion });
+      }
+      rows.push({ k: 'Gasto total del mes', ref: 'Suma de todos los rubros', v: total, extra: true });
+      rows.push({ k: 'Gasto por persona', ref: 'Total ÷ ' + personas, v: total / personas });
+      rows.push({
+        k: 'Cuántos salarios mínimos es tu presupuesto',
+        ref: 'SMLMV ' + cop(SMLMV),
+        v: total / SMLMV,
+        format: 'unit',
+        unit: 'SMLMV',
+        decimals: 2,
+      });
+      rows.push({
+        k: 'Peso del presupuesto sobre un salario mínimo',
+        ref: 'Total ÷ SMLMV',
+        v: pctSmlmv,
+        format: 'unit',
+        unit: '%',
+        decimals: 0,
+      });
+      rows.push({
+        k: 'Salario bruto que necesitarías como asalariado',
+        ref: 'Descontando ' + (APORTES * 100).toFixed(0) + '% de salud y pensión',
+        v: brutoSugerido,
+      });
+      rows.push({
+        k: 'Meses de gastos que debería cubrir tu fondo',
+        ref: empleo === 'asalariado' ? 'Ingreso estable' : inestable ? 'Ingreso variable · +1 mes por dependiente' : 'Contrato a plazo · +½ mes por dependiente',
+        v: meses,
+        format: 'unit',
+        unit: 'meses',
+        decimals: 1,
+      });
+      rows.push({ k: 'Fondo de emergencia objetivo', ref: 'Gasto mensual × meses', v: fondo, extra: true });
+      rows.push({
+        k: 'Cuánto ahorrar por mes para llegar en un año',
+        ref: 'Objetivo ÷ 12',
+        v: fondo / 12,
+      });
+      rows.push({
+        k: focalizado ? 'Devolución del IVA mensualizada' : 'Devolución del IVA (tu hogar no está focalizado)',
+        ref: focalizado ? cop(cicloIva) + ' × ' + IVA.ciclosPorAnio + ' ciclos ÷ 12' : 'Sólo Sisbén IV grupos A y B',
+        v: ivaMes,
+      });
+      rows.push({
+        k: focalizado ? 'Renta Ciudadana mensualizada' : 'Renta Ciudadana (tu hogar no está focalizado)',
+        ref: focalizado
+          ? rentaCiclo > 0
+            ? 'Giro bimestral ÷ 2'
+            : 'Cargá lo que te giraron: el monto no es público por hogar'
+          : 'Sólo Sisbén IV grupos A y B',
+        v: rentaMes,
+      });
+      rows.push({ k: 'Transferencias del Estado en el año', ref: 'Todo lo mensualizado × 12', v: transferenciasMes * 12 });
+      rows.push({ k: 'Ingreso disponible del hogar', ref: 'Ingresos + transferencias mensualizadas', v: disponible });
+      rows.push({
+        k: brecha >= 0 ? 'Lo que te sobra cada mes' : 'Lo que te falta cada mes',
+        ref: brecha >= 0 ? 'Candidato natural al fondo de emergencia' : 'Brecha a cubrir con ingreso o recorte',
+        v: Math.abs(brecha),
+        extra: true,
+      });
+      rows.push({
+        k: 'Cuánto pesa la vivienda en tu presupuesto',
+        ref: 'Sano por debajo del 33%',
+        v: total > 0 ? (vivienda / total) * 100 : 0,
+        format: 'unit',
+        unit: '%',
+        decimals: 0,
+      });
+
+      const sub =
+        'Vivir así en ' + ciudadObj.nombre + ' cuesta ' + cop(total) + ' al mes para ' + personas +
+        (personas === 1 ? ' persona' : ' personas') + ' (' + (total / SMLMV).toFixed(2).replace('.', ',') +
+        ' salarios mínimos) · tu fondo de emergencia debería ser de ' + cop(fondo) + ' (' +
+        meses.toFixed(1).replace('.', ',') + ' meses) · ' +
+        (brecha >= 0
+          ? 'te sobran ' + cop(brecha) + ' por mes'
+          : 'te faltan ' + cop(-brecha) + ' por mes') +
+        (focalizado && transferenciasMes > 0 ? ' contando ' + cop(transferenciasMes) + ' de transferencias mensualizadas' : '');
+
+      return {
+        total: cop(total),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Vivienda', value: Math.round(vivienda), tone: 'main' },
+          { label: 'Alimentación', value: Math.round(alimentacion), tone: 'prop' },
+          { label: 'Transporte', value: Math.round(transporte), tone: 'warn' },
+          { label: 'Servicios', value: Math.round(servicios), tone: 'exit' },
+          { label: 'Educación y cuidado', value: Math.round(educacion), tone: 'good' },
+          { label: 'Salud', value: Math.round(salud), tone: 'bad' },
+          { label: 'Ocio', value: Math.round(ocio), tone: 'good' },
+        ].filter((s) => s.value > 0),
+      };
+    });
+  })();
+</script>

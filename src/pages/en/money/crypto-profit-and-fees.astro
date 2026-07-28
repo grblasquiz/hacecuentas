@@ -1,0 +1,263 @@
+---
+/**
+ * Decision hub EN — "What am I really making on crypto after fees?"
+ * Replaces 12 loose calculator URLs (see hub.replaces).
+ *
+ * compute() mirrors src/lib/formulas/bitcoin-profit-loss-calculator.ts:
+ * cost basis carries the buy fee, proceeds are net of the sell fee, and the
+ * annualised return is a CAGR over the holding period.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, LONG_TERM_DAYS, FUNDING_SETTLEMENTS_PER_DAY, HALVING } from '../../../lib/hubs/en/crypto-profit-and-fees';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ LONG_TERM_DAYS, SETTLEMENTS: FUNDING_SETTLEMENTS_PER_DAY, HALVING }}>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) => '$' + Math.round(n || 0).toLocaleString('en-US');
+    const pct = (n) => (n >= 0 ? '+' : '') + (n || 0).toFixed(2) + '%';
+
+    /** Constant-product impermanent loss for a price ratio r: 2√r / (1 + r) − 1. */
+    function impermanentLoss(r) {
+      if (!(r > 0)) return 0;
+      return (2 * Math.sqrt(r)) / (1 + r) - 1;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'trade';
+      let total, sub, rows, chart;
+
+      if (id === 'trade') {
+        const amount = Math.max(0, v.amount || 0);
+        const buyPrice = Math.max(0, v.buyPrice || 0);
+        const sellPrice = Math.max(0, v.sellPrice || 0);
+        const buyFee = Math.min(100, Math.max(0, v.buyFee || 0)) / 100;
+        const sellFee = Math.min(100, Math.max(0, v.sellFee || 0)) / 100;
+        const days = Math.max(0, Math.round(v.days || 0));
+
+        const grossCost = amount * buyPrice;
+        const costBasis = grossCost * (1 + buyFee);
+        const grossProceeds = amount * sellPrice;
+        const netProceeds = grossProceeds * (1 - sellFee);
+        const profit = netProceeds - costBasis;
+        const ret = costBasis > 0 ? (profit / costBasis) * 100 : 0;
+        let cagr = 0;
+        if (days > 0 && costBasis > 0 && netProceeds > 0) cagr = (Math.pow(netProceeds / costBasis, 365 / days) - 1) * 100;
+        else if (days === 0) cagr = ret;
+        const breakeven = amount > 0 && 1 - sellFee > 0 ? costBasis / (amount * (1 - sellFee)) : 0;
+        const feesPaid = grossCost * buyFee + grossProceeds * sellFee;
+        const longTerm = days > LONG_TERM_DAYS;
+
+        rows = [
+          { k: 'Gross cost of the position', ref: 'Amount × buy price', v: grossCost, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Cost basis including the buy fee', ref: 'IRS Pub. 544 — acquisition costs capitalise', v: costBasis, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Gross proceeds', ref: 'Amount × sell price', v: grossProceeds, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Net proceeds after the sell fee', ref: 'What actually lands in your account', v: netProceeds, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Total fees paid on both sides', ref: 'Buy fee plus sell fee in dollars', v: feesPaid, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: profit >= 0 ? 'Profit after all fees' : 'Loss after all fees', ref: 'Net proceeds minus cost basis', v: profit, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Total return', ref: 'On the cost basis, not on the gross cost', v: ret, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Annualised return (CAGR)', ref: days > 0 ? 'Over ' + days + ' days held' : 'Same-day trade — not meaningful', v: cagr, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Break-even sell price', ref: 'Above your buy price, because of both fees', v: breakeven, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'How far above your buy price break-even sits', ref: 'The cost of the round trip', v: buyPrice > 0 ? ((breakeven - buyPrice) / buyPrice) * 100 : 0, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Tax treatment', ref: longTerm ? 'Long-term — held over 365 days' : 'Short-term — taxed as ordinary income', v: days, format: 'unit', unit: 'days held', decimals: 0 },
+          { k: longTerm ? 'Days past the long-term line' : 'Days short of the long-term line', ref: 'One year and a day from acquisition', v: Math.abs(days - LONG_TERM_DAYS), format: 'unit', unit: 'days', decimals: 0 },
+        ];
+        total = usd(profit);
+        sub =
+          pct(ret) + ' total, ' + pct(cagr) + ' annualised · ' + usd(feesPaid) + ' lost to fees · break-even ' +
+          usd(breakeven) + ' · ' + (longTerm ? 'long-term gain' : 'short-term gain, taxed as ordinary income');
+        chart = [
+          { label: 'Your capital', value: Math.round(grossCost), tone: 'main' },
+          { label: 'Profit after fees', value: Math.round(Math.max(0, profit)), tone: 'good' },
+          { label: 'Fees paid', value: Math.round(feesPaid), tone: 'warn' },
+          { label: 'Loss', value: Math.round(Math.max(0, -profit)), tone: 'bad' },
+        ];
+      } else if (id === 'dca') {
+        const monthly = Math.max(0, v.monthly || 0);
+        const months = Math.max(0, Math.round(v.months || 0));
+        const avgPrice = Math.max(0, v.avgBuyPrice || 0);
+        const nowPrice = Math.max(0, v.sellPrice || 0);
+        const flatFee = Math.max(0, v.flatFee || 0);
+
+        const invested = monthly * months;
+        const feesTotal = flatFee * months;
+        const netInvested = invested - feesTotal;
+        const units = avgPrice > 0 ? netInvested / avgPrice : 0;
+        const value = units * nowPrice;
+        const profit = value - invested;
+        const ret = invested > 0 ? (profit / invested) * 100 : 0;
+        const years = months / 12;
+        const cagr = years > 0 && invested > 0 && value > 0 ? (Math.pow(value / invested, 1 / years) - 1) * 100 : 0;
+        const effectiveBasis = units > 0 ? invested / units : 0;
+        const feeDrag = monthly > 0 ? (flatFee / monthly) * 100 : 0;
+
+        rows = [
+          { k: 'Total invested', ref: usd(monthly) + ' × ' + months + ' months', v: invested, format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'Fees paid across every purchase', ref: usd(flatFee) + ' per buy', v: feesTotal, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Fee as a share of each purchase', ref: 'Flat fees hurt small recurring buys most', v: feeDrag, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Money that actually bought the asset', ref: 'Invested minus fees', v: netInvested, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Units accumulated', ref: 'At an average price of ' + usd(avgPrice), v: units, format: 'unit', unit: 'units', decimals: 6 },
+          { k: 'Weighted average cost basis per unit', ref: 'Including fees — this is your real break-even', v: effectiveBasis, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Current value of the position', ref: 'At ' + usd(nowPrice) + ' per unit', v: value, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: profit >= 0 ? 'Profit' : 'Loss', ref: 'Value minus everything you put in', v: profit, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Total return on the whole position', ref: 'Not on the last purchase', v: ret, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Annualised return', ref: 'Over ' + years.toFixed(1) + ' years of buying', v: cagr, format: 'unit', unit: '%', decimals: 2 },
+        ];
+        total = usd(value);
+        sub =
+          usd(invested) + ' invested over ' + months + ' months · break-even is ' + usd(effectiveBasis) +
+          ' per unit · ' + pct(ret) + ' total, ' + pct(cagr) + ' a year · ' + usd(feesTotal) + ' went to fees';
+        chart = [
+          { label: 'Invested', value: Math.round(invested), tone: 'main' },
+          { label: 'Gain', value: Math.round(Math.max(0, profit)), tone: 'good' },
+          { label: 'Fees', value: Math.round(feesTotal), tone: 'warn' },
+          { label: 'Loss', value: Math.round(Math.max(0, -profit)), tone: 'bad' },
+        ];
+      } else if (id === 'pool') {
+        const r = Math.max(0.01, v.priceRatio || 1);
+        const stake = Math.max(0, v.poolValue || 0);
+        const apr = Math.max(0, v.poolApr || 0) / 100;
+        const il = impermanentLoss(r);
+        const ilPct = il * 100;
+        const ilDollars = stake * Math.abs(il);
+        const holdValue = stake * ((1 + r) / 2);
+        const poolValue = holdValue * (1 + il);
+        const feeIncomeYear = stake * apr;
+        const breakEvenApr = Math.abs(il) * 100;
+        const daysToOffset = apr > 0 ? (Math.abs(il) / apr) * 365 : 0;
+
+        rows = [
+          { k: 'Price ratio you entered', ref: 'One pool asset against the other', v: r, format: 'unit', unit: '×', decimals: 2 },
+          { k: 'Impermanent loss', ref: 'Formula 2√r ÷ (1 + r) − 1', v: ilPct, format: 'unit', unit: '%', decimals: 2, extra: true },
+          { k: 'Impermanent loss in dollars', ref: 'On a ' + usd(stake) + ' position', v: ilDollars, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Value if you had simply held the two assets', ref: 'No pool, no fees, no loss', v: holdValue, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Value of the pool position before fee income', ref: 'Held value reduced by impermanent loss', v: poolValue, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Fee income over a year at the stated APR', ref: apr * 100 + '% on ' + usd(stake), v: feeIncomeYear, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'APR needed just to break even against holding', ref: 'Over a full year, for this price move', v: breakEvenApr, format: 'unit', unit: '%', decimals: 2, extra: true },
+          { k: 'Days of fee income needed to offset the loss', ref: 'At the APR you entered', v: daysToOffset, format: 'unit', unit: 'days', decimals: 0 },
+          { k: 'Net position against simply holding', ref: 'Fee income minus impermanent loss, one year', v: feeIncomeYear - ilDollars, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+        ];
+        total = ilPct.toFixed(2) + '%';
+        sub =
+          'A ' + r.toFixed(2) + '× divergence costs ' + usd(ilDollars) + ' against holding · you need ' +
+          breakEvenApr.toFixed(2) + '% APR to break even · at ' + (apr * 100).toFixed(1) + '% that takes ' +
+          Math.round(daysToOffset) + ' days';
+        chart = [
+          { label: 'Pool value after impermanent loss', value: Math.round(poolValue), tone: 'main' },
+          { label: 'Impermanent loss', value: Math.round(ilDollars), tone: 'bad' },
+          { label: 'Fee income over a year', value: Math.round(feeIncomeYear), tone: 'good' },
+        ];
+      } else if (id === 'perp') {
+        const rate = (v.fundingRate || 0) / 100;
+        const notional = Math.max(0, v.notional || 0);
+        const lev = Math.max(1, v.leverage || 1);
+        const days = Math.max(0, Math.round(v.days || 0));
+        const margin = notional / lev;
+
+        const perSettlement = notional * rate;
+        const perDay = perSettlement * SETTLEMENTS;
+        const overPeriod = perDay * days;
+        const annualPct = rate * SETTLEMENTS * 365 * 100;
+        const annualOnMargin = annualPct * lev;
+
+        rows = [
+          { k: 'Funding per settlement', ref: (v.fundingRate || 0) + '% on ' + usd(notional) + ' notional', v: perSettlement, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Funding per day', ref: SETTLEMENTS + ' settlements a day', v: perDay, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Funding over ' + days + ' days', ref: 'What holding costs you before price moves at all', v: overPeriod, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Annualised funding rate on notional', ref: 'Rate × 3 × 365 — the number that matters', v: annualPct, format: 'unit', unit: '%', decimals: 2, extra: true },
+          { k: 'Annualised funding against your own margin', ref: 'At ' + lev + '× leverage', v: annualOnMargin, format: 'unit', unit: '%', decimals: 2, extra: true },
+          { k: 'Your margin at risk', ref: 'Notional ÷ leverage', v: margin, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Funding over the period as a share of your margin', ref: 'The quiet bleed', v: margin > 0 ? (overPeriod / margin) * 100 : 0, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Price move needed just to cover funding', ref: 'On the notional, over the period', v: notional > 0 ? (overPeriod / notional) * 100 : 0, format: 'unit', unit: '%', decimals: 3 },
+        ];
+        total = usd(Math.abs(overPeriod));
+        sub =
+          (rate >= 0 ? 'You pay ' : 'You receive ') + usd(Math.abs(perDay)) + ' a day · ' +
+          annualPct.toFixed(1) + '% a year on notional, ' + annualOnMargin.toFixed(1) + '% against your margin at ' + lev + '×';
+        chart = [
+          { label: 'Your margin', value: Math.round(margin), tone: 'main' },
+          { label: 'Funding over the period', value: Math.round(Math.abs(overPeriod)), tone: rate >= 0 ? 'bad' : 'good' },
+        ];
+      } else {
+        const amount = Math.max(0, v.convertAmount || 0);
+        const fee = Math.max(0, v.convertFee || 0) / 100;
+        const spread = Math.max(0, v.spread || 0) / 100;
+        const gas = Math.max(0, v.gas || 0);
+
+        const feeCost = amount * fee;
+        const spreadCost = amount * spread;
+        const totalCost = feeCost + spreadCost + gas;
+        const received = Math.max(0, amount - totalCost);
+        const effectivePct = amount > 0 ? (totalCost / amount) * 100 : 0;
+
+        rows = [
+          { k: 'Amount you are converting', ref: 'Before any friction', v: amount, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Quoted conversion fee', ref: (v.convertFee || 0) + '% — the number they advertise', v: feeCost, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Spread against the mid price', ref: (v.spread || 0) + '% — usually the bigger half', v: spreadCost, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Network gas or bridge fee', ref: 'Flat, so it hurts small transfers most', v: gas, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Total cost of the conversion', ref: 'Fee plus spread plus gas', v: totalCost, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'What you actually receive', ref: 'The only number worth comparing between routes', v: received, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Effective all-in cost', ref: 'Against the advertised fee of ' + (v.convertFee || 0) + '%', v: effectivePct, format: 'unit', unit: '%', decimals: 3, extra: true },
+          { k: 'How much worse than the quoted fee', ref: 'Spread and gas the quote left out', v: effectivePct - fee * 100, format: 'unit', unit: 'percentage points', decimals: 3 },
+          { k: 'Cost of doing this every month for a year', ref: '12 conversions', v: totalCost * 12, format: 'unit', unit: 'USD', decimals: 2 },
+        ];
+        total = usd(received);
+        sub =
+          'You receive ' + usd(received) + ' of ' + usd(amount) + ' · all-in cost ' + effectivePct.toFixed(3) +
+          '%, against an advertised ' + (v.convertFee || 0) + '% · compare routes on the output amount, not the fee';
+        chart = [
+          { label: 'Amount received', value: Math.round(received), tone: 'good' },
+          { label: 'Fee', value: Math.round(feeCost), tone: 'warn' },
+          { label: 'Spread', value: Math.round(spreadCost), tone: 'bad' },
+          { label: 'Gas or bridge', value: Math.round(gas), tone: 'prop' },
+        ];
+      }
+
+      return { total: total, sub: sub, rows: rows, chart: chart, format: 'unit', unit: 'USD', decimals: 2 };
+    });
+  })();
+</script>

@@ -1,0 +1,255 @@
+---
+/**
+ * Hub de decisión MX — gasto de usar el auto: viaje en carretera, conversión a
+ * gas LP y prima del seguro.
+ * audience="MX" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, USO_MX } from '../../../lib/hubs/mx/gasto-de-usar-el-auto';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="MX"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ U: USO_MX }}>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+    const num1 = (n) => (n || 0).toLocaleString('es-MX', { maximumFractionDigits: 1 });
+
+    /** Factor por edad del conductor (fórmula original del comparador de seguros). */
+    function factorEdad(edad) {
+      if (edad < 25) return 1.4;
+      if (edad <= 65) return 1.0;
+      return 1.25;
+    }
+
+    /** Factor por kilometraje anual declarado. */
+    function factorKm(km) {
+      if (km <= 5000) return 0.9;
+      if (km <= 10000) return 0.95;
+      if (km <= 20000) return 1.0;
+      if (km <= 40000) return 1.1;
+      return 1.25;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'viaje';
+
+      // ── Caso 2: gasolina contra gas LP ────────────────────────────────
+      if (id === 'glp') {
+        const kmAnuales = Math.max(0, v.kmAnuales || 0);
+        const rendimiento = Math.max(0.1, Number(v.rendimientoKmL) || 12);
+        const precioLitro = Math.max(0, Number(v.precioLitro) || U.gasolinaMagna);
+        const consumoGlp = Math.max(0.1, Number(v.consumoGlp) || 11);
+        const precioGlp = Math.max(0, Number(v.precioGlpKg) || 0);
+        const conversion = Math.max(0, v.costoConversion || 0);
+        const mantenimiento = Math.max(0, v.mantenimientoGlp || 0);
+
+        const litros = kmAnuales / rendimiento;
+        const kgGlp = (kmAnuales / 100) * consumoGlp;
+        const gastoGasolina = litros * precioLitro;
+        const gastoGlpCombustible = kgGlp * precioGlp;
+        const gastoGlp = gastoGlpCombustible + mantenimiento;
+        const ahorroAnual = gastoGasolina - gastoGlp;
+        const ahorroMensual = ahorroAnual / 12;
+        const payback = ahorroAnual > 0 ? (conversion / ahorroAnual) * 12 : 0;
+        const ahorro5 = ahorroAnual * 5 - conversion;
+
+        return {
+          total: mxn(Math.max(0, ahorroMensual)),
+          sub:
+            ahorroAnual <= 0
+              ? 'Con tus números el gas LP no genera ahorro: el combustible más el mantenimiento del equipo igualan o superan lo que gastas hoy en gasolina. Convertir solo sumaría el costo de la instalación.'
+              : payback > 60
+                ? 'Ahorras ' +
+                  mxn(ahorroMensual) +
+                  ' al mes, pero recuperas la instalación recién en ' +
+                  num1(payback) +
+                  ' meses, más de cinco años. Solo conviene si vas a conservar el auto mucho tiempo.'
+                : 'Ahorras ' +
+                  mxn(ahorroMensual) +
+                  ' al mes y recuperas la inversión en ' +
+                  num1(payback) +
+                  ' meses. A cinco años el ahorro neto acumulado es de ' +
+                  mxn(ahorro5) +
+                  '.',
+          rows: [
+            { k: 'Gasto anual con gasolina', v: gastoGasolina, extra: true },
+            { k: 'Gasto anual con gas LP', ref: 'combustible más mantenimiento', v: gastoGlp },
+            { k: 'Ahorro anual', v: ahorroAnual },
+            { k: 'Ahorro mensual', v: ahorroMensual },
+            { k: 'Costo de la instalación', v: conversion },
+            { k: 'Ahorro neto a cinco años', v: ahorro5 },
+            { k: 'Meses para recuperar la inversión', v: ahorroAnual > 0 ? payback : 0, format: 'unit', unit: 'meses', decimals: 1 },
+            { k: 'Litros de gasolina al año', v: litros, format: 'unit', unit: 'L', decimals: 0 },
+            { k: 'Kilos de gas LP al año', v: kgGlp, format: 'unit', unit: 'kg', decimals: 0 },
+          ],
+          chart: [
+            { label: 'Gasto con gasolina', value: gastoGasolina, tone: 'bad' },
+            { label: 'Gasto con gas LP', value: gastoGlp, tone: 'good' },
+          ],
+        };
+      }
+
+      // ── Caso 3: prima del seguro ──────────────────────────────────────
+      if (id === 'seguro') {
+        const edad = Math.max(18, Math.round(Number(v.edad) || 30));
+        const aniosLic = Math.max(0, Math.round(Number(v.aniosLicencia) || 0));
+        const kmAnuales = Math.max(0, v.kmAnuales || 0);
+        const siniestros = Math.max(0, Math.round(Number(v.siniestros) || 0));
+        const deducibleKey = String(v.deducible || '5000');
+
+        let recargos = 0;
+        if (siniestros > 0) recargos += siniestros * U.seguro.recargoPorSiniestro;
+        if (aniosLic < 2) recargos += U.seguro.recargoLicenciaNueva;
+        if (Number(deducibleKey) <= 2500) recargos += U.seguro.recargoDeducibleBajo;
+
+        const fEdad = factorEdad(edad);
+        const fModelo = U.seguro.modelo[String(v.modeloAuto)] || 1;
+        const fZona = U.seguro.zona[String(v.ciudad)] || 1;
+        const fVehiculo = U.seguro.vehiculo[String(v.tipoVehiculo)] || 1;
+        const fUso = U.seguro.uso[String(v.usoVehiculo)] || 1;
+        const fKm = factorKm(kmAnuales);
+        const fDeducible = U.seguro.deducible[deducibleKey] || 1;
+
+        const comun = fEdad * fModelo * fZona * fVehiculo * fKm * (1 + recargos);
+        const primaRc = Math.round(U.seguro.base.responsabilidad * comun);
+        const conUso = comun * fUso * fDeducible;
+        const primaLimitada = Math.round(U.seguro.base.limitada * conUso);
+        const primaAmplia = Math.round(U.seguro.base.amplia * conUso);
+        const primaTodoRiesgo = Math.round(U.seguro.base.todo_riesgo * conUso);
+
+        const cobertura = String(v.cobertura || 'amplia');
+        const elegida =
+          cobertura === 'responsabilidad'
+            ? primaRc
+            : cobertura === 'limitada'
+              ? primaLimitada
+              : cobertura === 'amplia'
+                ? primaAmplia
+                : primaTodoRiesgo;
+
+        const multiplicador = fEdad * fModelo * fZona * fVehiculo * fUso * fKm * (1 + recargos);
+        const riesgo =
+          multiplicador > 2.0 ? 'alto' : multiplicador > 1.3 ? 'medio-alto' : multiplicador > 1.0 ? 'medio' : 'bajo';
+
+        return {
+          total: mxn(elegida),
+          sub:
+            'Prima anual estimada para la cobertura elegida, con un perfil de riesgo ' +
+            riesgo +
+            ' (multiplicador ×' +
+            multiplicador.toFixed(2) +
+            ' sobre la prima base). Espera cotizaciones entre ' +
+            mxn(elegida * U.seguro.rangoMin) +
+            ' y ' +
+            mxn(elegida * U.seguro.rangoMax) +
+            ' según la aseguradora. Cotiza al menos con tres.',
+          rows: [
+            { k: 'Responsabilidad civil', v: primaRc },
+            { k: 'Cobertura limitada', v: primaLimitada },
+            { k: 'Cobertura amplia', v: primaAmplia },
+            { k: 'Todo riesgo', v: primaTodoRiesgo },
+            { k: 'Prima de la cobertura que elegiste', v: elegida, extra: true },
+            { k: 'Rango bajo esperable del mercado', v: elegida * U.seguro.rangoMin },
+            { k: 'Rango alto esperable del mercado', v: elegida * U.seguro.rangoMax },
+            { k: 'Multiplicador de riesgo de tu perfil', v: multiplicador, format: 'plain', decimals: 2 },
+            { k: 'Recargos aplicados', v: recargos * 100, format: 'unit', unit: '%', decimals: 0 },
+            { k: 'Costo mensual de la cobertura elegida', v: elegida / 12 },
+          ],
+          chart: [
+            { label: 'Responsabilidad civil', value: primaRc, tone: 'good' },
+            { label: 'Cobertura limitada', value: primaLimitada, tone: 'prop' },
+            { label: 'Cobertura amplia', value: primaAmplia, tone: 'main' },
+            { label: 'Todo riesgo', value: primaTodoRiesgo, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── Caso 1: costo de un viaje en carretera ────────────────────────
+      const distancia = Math.max(0, Number(v.distanciaKm) || 0);
+      const rendimiento = Math.max(0.1, Number(v.rendimientoKmL) || 12);
+      const precioLitro = Math.max(0, Number(v.precioLitro) || U.gasolinaMagna);
+      const casetasIda = Math.max(0, v.totalCasetas || 0);
+      const trayectos = String(v.tipoViaje) === 'ida' ? 1 : 2;
+
+      const kmTotales = distancia * trayectos;
+      const litros = kmTotales / rendimiento;
+      const costoGasolina = litros * precioLitro;
+      const costoCasetas = casetasIda * trayectos;
+      const total = costoGasolina + costoCasetas;
+      const porKm = kmTotales > 0 ? total / kmTotales : 0;
+
+      return {
+        total: mxn(total),
+        sub:
+          num1(kmTotales) +
+          ' km ' +
+          (trayectos === 2 ? 'de ida y vuelta' : 'solo de ida') +
+          ' consumen unos ' +
+          num1(litros) +
+          ' litros. Sale a ' +
+          mxn(porKm) +
+          ' por kilómetro. ' +
+          (casetasIda === 0
+            ? 'No cargaste casetas: si vas por autopista de cuota, súmalas con Traza tu Ruta de la SICT.'
+            : 'Si viajan varios, divide el total entre los pasajeros para compararlo contra el autobús.'),
+        rows: [
+          { k: 'Gasolina del viaje', v: costoGasolina, extra: true },
+          { k: 'Casetas del viaje', v: costoCasetas },
+          { k: 'Costo total del viaje', v: total },
+          { k: 'Costo por kilómetro', v: porKm, decimals: 2 },
+          { k: 'Distancia total', v: kmTotales, format: 'unit', unit: 'km', decimals: 0 },
+          { k: 'Litros necesarios', v: litros, format: 'unit', unit: 'L', decimals: 1 },
+          { k: 'Precio por litro usado', v: precioLitro, decimals: 2 },
+        ],
+        chart: [
+          { label: 'Gasolina', value: costoGasolina, tone: 'main' },
+          { label: 'Casetas', value: costoCasetas, tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

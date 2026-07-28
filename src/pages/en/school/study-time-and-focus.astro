@@ -1,0 +1,290 @@
+---
+/**
+ * Hub EN — "How do I plan my study time?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  POMODORO_BLOCK,
+  POMODORO_SHORT_BREAK,
+  POMODORO_LONG_BREAK,
+  POMODORO_LONG_EVERY,
+  SUSTAINABLE_FOCUS_HOURS,
+  DAILY_POMODORO_CEILING,
+  AVG_BOOK_PAGES,
+  AVG_MINUTES_PER_PAGE,
+  DAYS_PER_MONTH,
+  WEEKS_PER_MONTH,
+  SEMESTER_WEEKS,
+} from '../../../lib/hubs/en/study-time-and-focus';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    POMODORO_BLOCK,
+    POMODORO_SHORT_BREAK,
+    POMODORO_LONG_BREAK,
+    POMODORO_LONG_EVERY,
+    SUSTAINABLE_FOCUS_HOURS,
+    DAILY_POMODORO_CEILING,
+    AVG_BOOK_PAGES,
+    AVG_MINUTES_PER_PAGE,
+    DAYS_PER_MONTH,
+    WEEKS_PER_MONTH,
+    SEMESTER_WEEKS,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(x || 0).toLocaleString('en-US');
+    const usd = (n) => '$' + Math.round(n || 0).toLocaleString('en-US');
+    /** '' y null valen el default (el form manda cadena vacía, no ausencia de clave). */
+    const pos = (x, def) => {
+      if (x === '' || x === null || x === undefined) return def;
+      const n = Number(x);
+      return Number.isFinite(n) && n > 0 ? n : def;
+    };
+    const fmtTime = (min) => {
+      const m = Math.round(min);
+      const h = Math.floor(m / 60);
+      const r = m % 60;
+      return h && r ? h + 'h ' + r + 'm' : h ? h + 'h' : r + 'm';
+    };
+
+    /**
+     * Empaquetado greedy idéntico a tecnica-pomodoro-bloques-descanso-optimo.ts:
+     * el descanso va ANTES de cada bloque salvo el primero, y es largo cuando el
+     * bloque previo cierra un grupo de `every`. La sesión termina en bloque.
+     */
+    function pack(available, block, shortB, longB, every) {
+      let blocks = 0, used = 0, shorts = 0, longs = 0;
+      while (blocks < 5000) {
+        const brk = blocks === 0 ? 0 : blocks % every === 0 ? longB : shortB;
+        if (used + brk + block > available) break;
+        used += brk + block;
+        if (blocks > 0) {
+          if (blocks % every === 0) longs++;
+          else shorts++;
+        }
+        blocks++;
+      }
+      return { blocks: blocks, used: Math.round(used), shorts: shorts, longs: longs };
+    }
+
+    function pomodoroResult(available, block, shortB, longB, every, label) {
+      const r = pack(available, block, shortB, longB, every);
+      const focus = Math.round(r.blocks * block);
+      const free = Math.max(0, Math.round(available - r.used));
+      const eff = r.used > 0 ? (focus / r.used) * 100 : 0;
+      const focusHours = focus / 60;
+      const rows = [
+        { k: 'Time available', ref: label, v: available, format: 'unit', unit: 'min' },
+        { k: 'Focus blocks that fit', ref: block + '-minute Pomodoros', v: r.blocks, format: 'plain', extra: true },
+        { k: 'Real focus time', ref: r.blocks + ' × ' + block + ' min', v: focus, format: 'unit', unit: 'min', extra: true },
+        { k: 'Short breaks', ref: shortB + ' min each', v: r.shorts, format: 'plain' },
+        { k: 'Long breaks', ref: longB + ' min each, one every ' + every + ' blocks', v: r.longs, format: 'plain' },
+        { k: 'Time spent on breaks', ref: 'Short + long', v: r.shorts * shortB + r.longs * longB, format: 'unit', unit: 'min' },
+        { k: 'Full session length', ref: 'Ends on a block, not on a break', v: r.used, format: 'unit', unit: 'min' },
+        { k: 'Time left over', ref: 'Not enough for another block', v: free, format: 'unit', unit: 'min' },
+        { k: 'Focus efficiency', ref: 'Focus ÷ session length', v: eff, format: 'unit', unit: '%', decimals: 0 },
+        { k: 'Focus in hours', ref: 'Sustainable ceiling around ' + SUSTAINABLE_FOCUS_HOURS + ' h in one sitting', v: focusHours, format: 'unit', unit: 'h', decimals: 2 },
+      ];
+      let note;
+      if (r.blocks === 0) {
+        note = available + ' min is not enough for a single ' + block + '-minute block — shorten the block or find more time';
+      } else if (focusHours > SUSTAINABLE_FOCUS_HOURS) {
+        note = fmtTime(focus) + ' of focus is past the ~' + SUSTAINABLE_FOCUS_HOURS + ' h the brain sustains well in one go — split it into two sessions';
+      } else if (r.blocks > DAILY_POMODORO_CEILING) {
+        note = 'more than ' + DAILY_POMODORO_CEILING + ' blocks in a day is where quality per block starts to fall';
+      } else {
+        note = fmtTime(focus) + ' of real focus, ' + Math.round(eff) + '% of the session' + (free > 0 ? ', with ' + free + ' min to spare' : '');
+      }
+      return {
+        total: r.blocks + (r.blocks === 1 ? ' Pomodoro' : ' Pomodoros'),
+        sub: note,
+        rows: rows,
+        chart: [
+          { label: 'Real focus', value: focus, tone: 'main' },
+          { label: 'Short breaks', value: r.shorts * shortB, tone: 'good' },
+          { label: 'Long breaks', value: r.longs * longB, tone: 'warn' },
+        ].filter((s) => s.value > 0),
+      };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'session';
+
+      const block = pos(v.block, POMODORO_BLOCK);
+      const shortB = pos(v.shortbreak, POMODORO_SHORT_BREAK);
+      const longB = pos(v.longbreak, POMODORO_LONG_BREAK);
+      const every = Math.max(2, Math.round(pos(v.every, POMODORO_LONG_EVERY)));
+
+      if (id === 'day') {
+        const hours = pos(v.hours, 8);
+        return pomodoroResult(hours * 60, block, shortB, longB, every, hours + ' h of study time today');
+      }
+
+      if (id === 'reading') {
+        const books = pos(v.books, 1);
+        const months = pos(v.months, 12);
+        const perMonth = books / months;
+        const daysPerBook = perMonth > 0 ? DAYS_PER_MONTH / perMonth : 0;
+        const minsPerDay = (perMonth * AVG_BOOK_PAGES * AVG_MINUTES_PER_PAGE) / DAYS_PER_MONTH;
+        const pagesPerDay = (perMonth * AVG_BOOK_PAGES) / DAYS_PER_MONTH;
+        const totalHours = (books * AVG_BOOK_PAGES * AVG_MINUTES_PER_PAGE) / 60;
+        const rows = [
+          { k: 'Books in the goal', ref: 'Over ' + months + ' month' + (months === 1 ? '' : 's'), v: books, format: 'plain' },
+          { k: 'Books per month', ref: 'Goal ÷ months left', v: perMonth, format: 'plain', decimals: 2, extra: true },
+          { k: 'Days you get per book', ref: DAYS_PER_MONTH + '-day month', v: daysPerBook, format: 'unit', unit: 'days', decimals: 0 },
+          { k: 'Pages per day', ref: 'At an average ' + AVG_BOOK_PAGES + '-page book', v: pagesPerDay, format: 'unit', unit: 'pages', decimals: 0 },
+          { k: 'Reading minutes per day', ref: AVG_MINUTES_PER_PAGE + ' min per page', v: minsPerDay, format: 'unit', unit: 'min', decimals: 0, extra: true },
+          { k: 'Reading minutes per week', ref: 'Seven days of the same pace', v: minsPerDay * 7, format: 'unit', unit: 'min', decimals: 0 },
+          { k: 'Total reading hours for the whole goal', ref: books + ' books × ' + AVG_BOOK_PAGES + ' pages', v: totalHours, format: 'unit', unit: 'h', decimals: 0 },
+        ];
+        const monthUsed = Math.min(minsPerDay, 24 * 60);
+        return {
+          total: Math.round(minsPerDay) + ' min a day',
+          sub:
+            perMonth.toFixed(2) + ' books a month, about ' + Math.round(daysPerBook) + ' days per book · ' +
+            'a long novel or dense non-fiction can easily double this, so treat it as a planning average',
+          rows: rows,
+          chart: [
+            { label: 'Daily reading', value: Math.round(monthUsed), tone: 'main' },
+            { label: 'Rest of the day', value: Math.max(0, 24 * 60 - Math.round(monthUsed)), tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'speed') {
+        const current = pos(v.currentwpm, 0);
+        const target = pos(v.targetwpm, 0);
+        const weeklyGain = Math.max(1, pos(v.weeklygain, 1));
+        const gap = Math.max(0, target - current);
+        const weeks = gap > 0 ? gap / weeklyGain : 0;
+        const weeksRounded = Math.ceil(weeks);
+        const months = weeks / WEEKS_PER_MONTH;
+        const pctFaster = current > 0 ? ((target - current) / current) * 100 : 0;
+        const pageNow = current > 0 ? (AVG_BOOK_PAGES * 250) / current : 0;
+        const pageThen = target > 0 ? (AVG_BOOK_PAGES * 250) / target : 0;
+        const rows = [
+          { k: 'Reading speed now', ref: 'General prose, silent reading', v: current, format: 'unit', unit: 'wpm' },
+          { k: 'Reading speed target', ref: 'Measure comprehension at the same time', v: target, format: 'unit', unit: 'wpm' },
+          { k: 'Gap to close', ref: 'Target minus current', v: gap, format: 'unit', unit: 'wpm', extra: true },
+          { k: 'Relative improvement', ref: 'Beyond about +100% it is usually skimming', v: pctFaster, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Weeks of consistent practice', ref: 'Gap ÷ ' + weeklyGain + ' wpm gained per week', v: weeksRounded, format: 'unit', unit: 'weeks', extra: true },
+          { k: 'The same in months', ref: WEEKS_PER_MONTH + ' weeks per month', v: months, format: 'unit', unit: 'months', decimals: 1 },
+          { k: 'Time for a ' + AVG_BOOK_PAGES + '-page book now', ref: 'About 250 words per page', v: pageNow / 60, format: 'unit', unit: 'h', decimals: 1 },
+          { k: 'Time for the same book at target speed', ref: 'If comprehension holds', v: pageThen / 60, format: 'unit', unit: 'h', decimals: 1 },
+          { k: 'Hours saved per book', ref: 'The actual payoff of the training', v: Math.max(0, (pageNow - pageThen) / 60), format: 'unit', unit: 'h', decimals: 1 },
+        ];
+        return {
+          total: weeksRounded + (weeksRounded === 1 ? ' week' : ' weeks'),
+          sub: gap === 0
+            ? 'You are already at or above the target — re-test comprehension before raising it further'
+            : 'About ' + months.toFixed(1) + ' months at ' + weeklyGain + ' wpm gained per week · gains slow down as you go, so the later weeks are optimistic',
+          rows: rows,
+          chart: [
+            { label: 'Speed you already have', value: Math.round(current), tone: 'main' },
+            { label: 'Gap still to close', value: Math.round(gap), tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'abroad') {
+        const items = [
+          { label: 'Tuition and fees', value: Math.max(0, Number(v.tuition) || 0) },
+          { label: 'Housing', value: Math.max(0, Number(v.housing) || 0) },
+          { label: 'Food', value: Math.max(0, Number(v.food) || 0) },
+          { label: 'Health insurance', value: Math.max(0, Number(v.insurance) || 0) },
+          { label: 'Flights', value: Math.max(0, Number(v.flights) || 0) },
+          { label: 'Visa and paperwork', value: Math.max(0, Number(v.visa) || 0) },
+          { label: 'Personal spending', value: Math.max(0, Number(v.personal) || 0) },
+        ];
+        const total = items.reduce((a, s) => a + s.value, 0);
+        const weekly = total > 0 ? total / SEMESTER_WEEKS : 0;
+        const biggest = items.slice().sort((a, b) => b.value - a.value)[0];
+        const rows = items.map((s) => ({
+          k: s.label,
+          ref: total > 0 ? ((s.value / total) * 100).toFixed(0) + '% of the budget' : '—',
+          v: s.value,
+          format: 'unit',
+          unit: 'USD',
+        }));
+        rows.push({ k: 'Semester total', ref: 'All seven line items', v: total, format: 'unit', unit: 'USD', extra: true });
+        rows.push({ k: 'Average per week', ref: SEMESTER_WEEKS + '-week semester', v: weekly, format: 'unit', unit: 'USD', extra: true });
+        rows.push({ k: 'Average per month', ref: 'About 4.2 months of term', v: total / (SEMESTER_WEEKS / 4.345), format: 'unit', unit: 'USD' });
+        rows.push({ k: 'Tuition and housing together', ref: 'Usually most of the total', v: items[0].value + items[1].value, format: 'unit', unit: 'USD' });
+        return {
+          total: usd(total),
+          sub:
+            usd(weekly) + ' a week over a ' + SEMESTER_WEEKS + '-week semester · biggest line is ' + biggest.label.toLowerCase() +
+            ' at ' + usd(biggest.value) + ' · check whether your home tuition also keeps running while you are away',
+          rows: rows,
+          chart: items.filter((s) => s.value > 0).map((s, i) => ({
+            label: s.label,
+            value: Math.round(s.value),
+            tone: i === 0 ? 'main' : i === 1 ? 'exit' : 'prop',
+          })),
+        };
+      }
+
+      // session (default)
+      const minutes = pos(v.minutes, 0);
+      if (minutes <= 0) {
+        return {
+          total: 'Enter your minutes',
+          sub: 'Put the time you have available in the field above.',
+          rows: [],
+          chart: [{ label: 'No time entered', value: 1, tone: 'main' }],
+        };
+      }
+      return pomodoroResult(minutes, block, shortB, longB, every, minutes + ' min for this session');
+    });
+  })();
+</script>

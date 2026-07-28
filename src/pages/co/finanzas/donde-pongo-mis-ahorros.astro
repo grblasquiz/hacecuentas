@@ -1,0 +1,261 @@
+---
+/**
+ * Hub de decisión CO — "¿Dónde pongo mis ahorros?"
+ * Compara CDT, FIC, TES, cajitas digitales, dólares y finca raíz después de
+ * retención, comisión, 4×1000 e inflación.
+ *
+ * audience="CO" va literal al Layout: HubData sólo modela 'AR' | 'global' y el
+ * mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  RETENCION_RENDIMIENTOS,
+  GMF,
+  UVT,
+  AHORRO_DIGITAL,
+  IPC_REFERENCIA,
+  TRM,
+  TRM_FECHA,
+} from '../../../lib/hubs/co/donde-pongo-mis-ahorros';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    RET: RETENCION_RENDIMIENTOS,
+    GMF,
+    UVT,
+    DIGITAL: AHORRO_DIGITAL,
+    IPC_REFERENCIA,
+    TRM,
+    TRM_FECHA,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const cop = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
+
+    // Etiqueta de la comisión según la rama: el mismo campo significa cosas distintas.
+    const COMISION_REF = {
+      cdt: 'Normalmente 0 en un CDT',
+      fic: 'Administración + custodia del FIC',
+      tes: 'Comisión del comisionista de bolsa',
+      digital: 'Las cajitas no suelen cobrar comisión',
+      dolares: 'Mantenimiento de la cuenta en USD',
+      finca: 'Predial, administración y vacancia',
+    };
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'cdt';
+      const monto = Math.max(0, v.monto || 0);
+      const meses = Math.max(1, Math.round(v.plazo || 12));
+      // OJO: 0 es un valor legítimo en tasa, comisión e inflación. Nada de `|| default`.
+      const tasa = Math.max(0, Number(v.tasa) || 0) / 100;
+      const comisionPct = Math.max(0, Number(v.comision) || 0) / 100;
+      const inflPct = Math.max(0, Number(v.inflacion) || 0) / 100;
+      const pagaGmf = String(v.gmf) === 'si';
+
+      const anios = meses / 12;
+
+      // Rendimiento bruto con capitalización real: capital × [(1+EA)^(años) − 1].
+      // NO la tasa dividida por 12 ni prorrateada linealmente.
+      const bruto = monto * (Math.pow(1 + tasa, anios) - 1);
+
+      // Retención en la fuente sobre rendimientos financieros (7%).
+      // La finca raíz no la lleva: el canon tributa como renta de capital.
+      const aplicaRetencion = id !== 'finca';
+      const retencion = aplicaRetencion ? bruto * RET : 0;
+
+      // La comisión se cobra sobre el CAPITAL administrado, todos los años,
+      // gane o pierda el producto. Ese es el punto: no es un % del rendimiento.
+      const comision = monto * comisionPct * anios;
+
+      // 4×1000: se cobra por RETIRO, una vez, no como costo anual del capital.
+      const gmf = pagaGmf ? (monto + Math.max(0, bruto)) * GMF.tasa : 0;
+
+      const netoNominal = bruto - retencion - comision - gmf;
+      const finalNominal = monto + netoNominal;
+
+      // Inflación: cuánto vale el saldo final en plata de hoy.
+      const factorInfl = Math.pow(1 + inflPct, anios);
+      const finalReal = finalNominal / factorInfl;
+      const netoReal = finalReal - monto;
+      const perdidaInflacion = finalNominal - finalReal;
+
+      // Tasas efectivas anuales resultantes.
+      const eaNeta = anios > 0 && monto > 0 ? (Math.pow(finalNominal / monto, 1 / anios) - 1) * 100 : 0;
+      const eaReal = anios > 0 && monto > 0 ? (Math.pow(Math.max(0.0001, finalReal / monto), 1 / anios) - 1) * 100 : 0;
+
+      const rows = [
+        { k: 'Capital que ponés', ref: 'Tu inversión inicial', v: monto },
+        {
+          k: 'Rendimiento bruto del período',
+          ref: (tasa * 100).toFixed(2).replace('.', ',') + '% EA capitalizado a ' + meses + ' meses',
+          v: bruto,
+        },
+      ];
+
+      if (aplicaRetencion) {
+        rows.push({
+          k: 'Retención en la fuente (se resta)',
+          ref: (RET * 100).toFixed(0) + '% sobre rendimientos · DUR 1625/2016',
+          v: retencion,
+        });
+      } else {
+        rows.push({
+          k: 'Retención sobre el canon (va aparte)',
+          ref: 'El arriendo tributa como renta de capital, no como rendimiento financiero',
+          v: 0,
+        });
+      }
+
+      rows.push({
+        k: 'Comisión del producto (se resta)',
+        ref: COMISION_REF[id] || 'Costo anual sobre el capital',
+        v: comision,
+      });
+      rows.push({
+        k: pagaGmf ? 'Gravamen 4×1000 al retirar (se resta)' : 'Gravamen 4×1000 que te ahorrás',
+        ref: pagaGmf
+          ? 'Se cobra por retiro · marcá tu cuenta exenta'
+          : 'Cuenta exenta hasta ' + GMF.exencionMensualUvt + ' UVT/mes · art. 879 ET',
+        v: pagaGmf ? gmf : (monto + Math.max(0, bruto)) * GMF.tasa,
+      });
+
+      rows.push({ k: 'Ganancia neta nominal', ref: 'Después de impuestos y costos', v: netoNominal, extra: true });
+      rows.push({ k: 'Saldo final en pesos corrientes', ref: 'Lo que vas a ver en la cuenta', v: finalNominal });
+      rows.push({
+        k: 'Lo que se lleva la inflación',
+        ref: (inflPct * 100).toFixed(1).replace('.', ',') + '% anual durante ' + meses + ' meses',
+        v: perdidaInflacion,
+      });
+      rows.push({
+        k: 'Saldo final en plata de hoy',
+        ref: 'Poder de compra real',
+        v: finalReal,
+      });
+      rows.push({
+        k: netoReal >= 0 ? 'Ganancia REAL: cuánto más podés comprar' : 'Pérdida REAL de poder de compra',
+        ref: 'Lo único que aumenta tu patrimonio de verdad',
+        v: Math.abs(netoReal),
+        extra: true,
+      });
+      rows.push({
+        k: 'Tasa efectiva anual neta (después de impuestos)',
+        ref: 'Comparable entre productos',
+        v: eaNeta,
+        format: 'unit',
+        unit: '% EA',
+        decimals: 2,
+      });
+      rows.push({
+        k: 'Tasa efectiva anual REAL (después de inflación)',
+        ref: 'Fórmula de Fisher: (1+neta)÷(1+IPC)−1',
+        v: eaReal,
+        format: 'unit',
+        unit: '% EA real',
+        decimals: 2,
+      });
+
+      if (id === 'digital') {
+        const brutoNu = monto * (Math.pow(1 + DIGITAL.nuCajitasEaPct / 100, anios) - 1);
+        const brutoNequi = monto * (Math.pow(1 + DIGITAL.nequiEaPct / 100, anios) - 1);
+        rows.push({
+          k: 'Diferencia entre una cajita al ' + DIGITAL.nuCajitasEaPct + '% y un bolsillo al ' + DIGITAL.nequiEaPct + '%',
+          ref: 'Misma plata, misma liquidez, cero costo de cambiarse',
+          v: (brutoNu - brutoNequi) * (1 - RET),
+          extra: true,
+        });
+      }
+
+      if (id === 'dolares') {
+        rows.push({
+          k: 'Cuántos dólares comprás hoy con ese capital',
+          ref: 'TRM ' + cop(TRM) + ' · ' + TRM_FECHA,
+          v: TRM > 0 ? monto / TRM : 0,
+          format: 'unit',
+          unit: 'USD',
+          decimals: 2,
+        });
+        rows.push({
+          k: 'Cuánto tendría que moverse la TRM para empatar la inflación',
+          ref: 'Lo que le falta a tu tasa en USD para no perder poder de compra',
+          v: Math.max(0, (inflPct - tasa) * 100),
+          format: 'unit',
+          unit: '% de devaluación anual',
+          decimals: 2,
+        });
+      }
+
+      const gana = netoReal >= 0;
+      const sub =
+        (gana
+          ? 'Ganás poder de compra: tasa real ' + eaReal.toFixed(2).replace('.', ',') + '% EA'
+          : 'Perdés poder de compra: tu tasa real es ' + eaReal.toFixed(2).replace('.', ',') + '% EA') +
+        ' · nominal ' + eaNeta.toFixed(2).replace('.', ',') + '% EA neta' +
+        ' · saldo final ' + cop(finalNominal) + ', que hoy compra ' + cop(finalReal);
+
+      // Donut: a dónde se fue el rendimiento bruto. Si la inflación se lo come
+      // todo, el segmento verde desaparece y el gráfico lo muestra sin maquillaje.
+      const chart = [
+        { label: 'Tu ganancia real', value: Math.max(0, Math.round(netoReal)), tone: 'good' },
+        { label: 'Se la lleva la inflación', value: Math.max(0, Math.round(perdidaInflacion)), tone: 'bad' },
+        { label: 'Retención en la fuente', value: Math.max(0, Math.round(retencion)), tone: 'warn' },
+        { label: 'Comisión del producto', value: Math.max(0, Math.round(comision)), tone: 'warn' },
+      ];
+      if (pagaGmf) chart.push({ label: 'Gravamen 4×1000', value: Math.max(0, Math.round(gmf)), tone: 'warn' });
+
+      return {
+        total: cop(netoReal),
+        sub: sub,
+        rows: rows,
+        chart: chart.filter((s) => s.value > 0),
+      };
+    });
+  })();
+</script>

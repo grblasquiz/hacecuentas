@@ -1,0 +1,396 @@
+---
+/**
+ * Hub de decisão PT — "Os dias em que não trabalha e quanto recebe por eles".
+ * A rota vive sob /pt-pt/, tal como as calculadoras que absorve.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  FERIAS,
+  FERIADOS,
+  CARNAVAL,
+  DOENCA,
+  PARENTAL,
+  LAYOFF,
+  PRE_AVISO,
+} from '../../../lib/hubs/pt-pt/ferias-baixas-e-licencas';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt-pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PT"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ FERIAS, FERIADOS, CARNAVAL, DOENCA, PARENTAL, LAYOFF, PRE_AVISO }}>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n, d) =>
+      Number(n || 0).toLocaleString('de-DE', {
+        minimumFractionDigits: d || 0,
+        maximumFractionDigits: d || 0,
+      }) + ' €';
+
+    /**
+     * Dias corridos e dias úteis entre duas datas ISO, inclusive.
+     * Espelho de diasUteisPortugal() de src/lib/data/portugal-2026.ts (usa UTC).
+     */
+    function contarDias(inicioISO, fimISO, feriados) {
+      const p = (s) => {
+        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || '').trim());
+        if (!m) return NaN;
+        return Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+      };
+      let cur = p(inicioISO);
+      const end = p(fimISO);
+      if (isNaN(cur) || isNaN(end) || end < cur) {
+        return { corridos: 0, uteis: 0, feriadosNoIntervalo: 0, fimDeSemana: 0, invalido: true };
+      }
+      const fset = {};
+      feriados.forEach((f) => { fset[f.data] = true; });
+      const DAY = 86400000;
+      let corridos = 0, uteis = 0, feriadosNoIntervalo = 0, fimDeSemana = 0;
+      for (; cur <= end; cur += DAY) {
+        corridos++;
+        const dt = new Date(cur);
+        const dow = dt.getUTCDay();
+        const iso =
+          dt.getUTCFullYear() + '-' +
+          String(dt.getUTCMonth() + 1).padStart(2, '0') + '-' +
+          String(dt.getUTCDate()).padStart(2, '0');
+        const wknd = dow === 0 || dow === 6;
+        const fer = !!fset[iso];
+        if (wknd) fimDeSemana++;
+        if (fer && !wknd) feriadosNoIntervalo++;
+        if (!wknd && !fer) uteis++;
+      }
+      return { corridos: corridos, uteis: uteis, feriadosNoIntervalo: feriadosNoIntervalo, fimDeSemana: fimDeSemana, invalido: false };
+    }
+
+    /** Subsídio de doença por escalões. Espelho da fórmula viva. */
+    function subsidioDoenca(rr, dias, temMajoracao) {
+      const diariaRR = rr / 30;
+      const piso = Math.min(DOENCA.minimoDiario, diariaRR);
+      let total = 0;
+      let diasPagos = 0;
+      let anterior = 0;
+      const tramos = [];
+      for (const e of DOENCA.escaloes) {
+        const ate = e.ate === null ? Infinity : e.ate;
+        const inicio = Math.max(anterior, DOENCA.diasNaoPagos) + 1;
+        const fim = Math.min(dias, ate);
+        const n = Math.max(0, fim - inicio + 1);
+        anterior = ate;
+        if (n > 0) {
+          const pct = e.pct + (temMajoracao ? e.majoracao : 0);
+          const diario = Math.max(diariaRR * pct, piso);
+          total += diario * n;
+          diasPagos += n;
+          tramos.push({ inicio: inicio, fim: fim, n: n, pct: pct, diario: diario, valor: diario * n });
+        }
+        if (dias <= ate) break;
+      }
+      return { diariaRR: diariaRR, total: total, diasPagos: diasPagos, tramos: tramos };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'ferias';
+      const rows = [];
+      let totalTexto = '';
+      let sub = '';
+      let chart = [];
+
+      if (id === 'doenca') {
+        const rr = Math.max(0, v.remuneracaoMedia || 0);
+        const dias = Math.max(0, Math.round(v.diasBaixa || 0));
+        const maj = String(v.majoracao || 'nao') === 'sim';
+        const r = subsidioDoenca(rr, dias, maj);
+        const salarioDoPeriodo = r.diariaRR * dias;
+        totalTexto = eur(r.total);
+
+        rows.push({ k: 'Remuneração de referência mensal', ref: 'Média dos meses anteriores', v: rr, format: 'unit', unit: '€' });
+        rows.push({ k: 'Remuneração de referência diária', ref: 'Mensal ÷ 30', v: r.diariaRR, format: 'unit', unit: '€', decimals: 2 });
+        rows.push({ k: 'Dias de baixa', ref: 'Certificado de incapacidade temporária', v: dias, format: 'unit', unit: 'dias' });
+        rows.push({
+          k: 'Dias sem subsídio',
+          ref: 'Os primeiros ' + DOENCA.diasNaoPagos + ' dias, por conta de outrem',
+          v: Math.min(DOENCA.diasNaoPagos, dias),
+          format: 'unit',
+          unit: 'dias',
+        });
+        r.tramos.forEach((t) => {
+          rows.push({
+            k: 'Dias ' + t.inicio + ' a ' + t.fim + ' — ' + Math.round(t.pct * 100) + ' %',
+            ref: t.n + ' dias × ' + eur(t.diario, 2) + '/dia',
+            v: t.valor,
+            format: 'unit',
+            unit: '€',
+          });
+        });
+        rows.push({ k: 'Total do subsídio de doença', ref: 'Pago pela Segurança Social', v: r.total, extra: true, format: 'unit', unit: '€' });
+        rows.push({ k: 'O que ganharia a trabalhar no mesmo período', ref: 'Remuneração diária × dias', v: salarioDoPeriodo, format: 'unit', unit: '€' });
+        rows.push({ k: 'Quanto perde por estar de baixa', ref: 'Diferença', v: Math.max(0, salarioDoPeriodo - r.total), format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Percentagem da retribuição que o subsídio cobre',
+          ref: 'Subsídio ÷ retribuição do período',
+          v: salarioDoPeriodo > 0 ? (r.total / salarioDoPeriodo) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        rows.push({ k: 'Mínimo diário garantido', ref: '30 % do IAS', v: DOENCA.minimoDiario, format: 'unit', unit: '€', decimals: 2 });
+
+        sub =
+          r.diasPagos + ' dias pagos de ' + dias +
+          ' · cobre ' + (salarioDoPeriodo > 0 ? ((r.total / salarioDoPeriodo) * 100).toFixed(1).replace('.', ',') : '0') + ' % do que ganharia' +
+          (maj ? ' · com majoração de 5 pontos' : '');
+        chart = [
+          { label: 'Subsídio que recebe', value: Math.round(r.total), tone: 'good' },
+          { label: 'Retribuição que perde', value: Math.round(Math.max(0, salarioDoPeriodo - r.total)), tone: 'bad' },
+        ];
+      } else if (id === 'parental') {
+        const rr = Math.max(0, v.remuneracaoMedia || 0);
+        const key = String(v.modalidade || '120');
+        const mod = PARENTAL.modalidades[key] || PARENTAL.modalidades['120'];
+        const diariaRR = rr / 30;
+        const diario = Math.max(diariaRR * mod.pct, Math.min(PARENTAL.minimoDiario, diariaRR));
+        const mensal = diario * 30;
+        const total = diario * mod.dias;
+        totalTexto = eur(total);
+
+        rows.push({ k: 'Remuneração de referência mensal', ref: 'Base de cálculo da Segurança Social', v: rr, format: 'unit', unit: '€' });
+        rows.push({ k: 'Remuneração de referência diária', ref: 'Mensal ÷ 30', v: diariaRR, format: 'unit', unit: '€', decimals: 2 });
+        rows.push({ k: 'Duração da licença', ref: mod.label, v: mod.dias, format: 'unit', unit: 'dias' });
+        rows.push({ k: 'Percentagem aplicada', ref: 'Modalidade escolhida', v: mod.pct * 100, format: 'unit', unit: '%', decimals: 0 });
+        rows.push({ k: 'Subsídio diário', ref: 'Nunca abaixo de ' + eur(PARENTAL.minimoDiario, 2), v: diario, format: 'unit', unit: '€', decimals: 2 });
+        rows.push({ k: 'Subsídio mensal', ref: '30 dias', v: mensal, format: 'unit', unit: '€' });
+        rows.push({ k: 'Total da licença', ref: mod.dias + ' dias · sem IRS nem Segurança Social', v: total, extra: true, format: 'unit', unit: '€' });
+        rows.push({ k: 'O que ganharia a trabalhar no mesmo período', ref: 'Remuneração de referência × ' + mod.dias + ' dias', v: diariaRR * mod.dias, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Total se escolhesse 120 dias a 100 %',
+          ref: 'Referência de comparação',
+          v: Math.max(diariaRR * 1, Math.min(PARENTAL.minimoDiario, diariaRR)) * 120,
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({
+          k: 'Total se partilhasse: 150 dias a 100 %',
+          ref: 'A modalidade que mais rende',
+          v: Math.max(diariaRR * 1, Math.min(PARENTAL.minimoDiario, diariaRR)) * 150,
+          format: 'unit',
+          unit: '€',
+        });
+
+        sub =
+          mod.label + ' · ' + eur(mensal) + ' por mês durante ' + mod.dias + ' dias' +
+          ' · não desconta IRS nem Segurança Social';
+        chart = [
+          { label: 'Subsídio parental', value: Math.round(total), tone: 'good' },
+          { label: 'Diferença face à retribuição', value: Math.round(Math.max(0, diariaRR * mod.dias - total)), tone: 'warn' },
+        ];
+      } else if (id === 'layoff') {
+        const salario = Math.max(0, v.remuneracaoMedia || 0);
+        const doisTercos = salario * LAYOFF.fracao;
+        let compensacao = doisTercos;
+        let limite = 'nenhum';
+        if (doisTercos < LAYOFF.piso) { compensacao = LAYOFF.piso; limite = 'piso'; }
+        else if (doisTercos > LAYOFF.teto) { compensacao = LAYOFF.teto; limite = 'teto'; }
+        totalTexto = eur(compensacao);
+
+        rows.push({ k: 'Retribuição normal ilíquida', ref: 'Salário bruto mensal', v: salario, format: 'unit', unit: '€' });
+        rows.push({ k: 'Dois terços da retribuição', ref: 'Regra do art. 305.º CT', v: doisTercos, format: 'unit', unit: '€' });
+        rows.push({ k: 'Piso legal', ref: 'Retribuição mínima mensal garantida', v: LAYOFF.piso, format: 'unit', unit: '€' });
+        rows.push({ k: 'Teto legal', ref: 'Três vezes a RMMG', v: LAYOFF.teto, format: 'unit', unit: '€' });
+        rows.push({ k: 'Compensação retributiva mensal', ref: limite === 'nenhum' ? 'Entre o piso e o teto' : 'Aplicou-se o ' + limite, v: compensacao, extra: true, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Parte paga pela Segurança Social (primeiros 60 dias)',
+          ref: (LAYOFF.parteSegSocialAte60Dias * 100).toLocaleString('de-DE') + ' %',
+          v: compensacao * LAYOFF.parteSegSocialAte60Dias,
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({
+          k: 'Parte paga pela entidade empregadora (primeiros 60 dias)',
+          ref: (LAYOFF.parteEntidadeAte60Dias * 100).toLocaleString('de-DE') + ' %',
+          v: compensacao * LAYOFF.parteEntidadeAte60Dias,
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({ k: 'Quanto perde por mês face ao salário normal', ref: 'Salário − compensação', v: Math.max(0, salario - compensacao), format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Percentagem do salário que mantém',
+          ref: 'Compensação ÷ retribuição',
+          v: salario > 0 ? (compensacao / salario) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+
+        sub =
+          (limite === 'piso'
+            ? 'Aplicou-se o piso: ninguém em layoff recebe menos do que a RMMG'
+            : limite === 'teto'
+              ? 'Aplicou-se o teto de três vezes a RMMG'
+              : 'Dois terços da retribuição, dentro dos limites legais') +
+          ' · perde ' + eur(Math.max(0, salario - compensacao)) + ' por mês';
+        chart = [
+          { label: 'Compensação que recebe', value: Math.round(compensacao), tone: 'good' },
+          { label: 'Retribuição que perde', value: Math.round(Math.max(0, salario - compensacao)), tone: 'bad' },
+        ];
+      } else if (id === 'sair') {
+        const aTermo = String(v.tipoContrato || 'sem_termo') === 'a_termo';
+        let dias, regime;
+        if (aTermo) {
+          const curto = String(v.duracaoContrato || '6mais') === 'menos6';
+          dias = curto ? PRE_AVISO.termoMenos6meses : PRE_AVISO.termo6mesesOuMais;
+          regime = curto
+            ? 'Contrato a termo com duração inferior a 6 meses'
+            : 'Contrato a termo com duração de 6 meses ou mais';
+        } else {
+          const anos = Math.max(0, v.antiguidade || 0);
+          dias = anos > 2 ? PRE_AVISO.semTermoMais2anos : PRE_AVISO.semTermoAte2anos;
+          regime = anos > 2
+            ? 'Contrato sem termo com mais de 2 anos de antiguidade'
+            : 'Contrato sem termo com até 2 anos de antiguidade';
+        }
+        const salario = Math.max(0, v.remuneracaoMedia || 0);
+        const custoDiaFalta = salario / 30;
+        totalTexto = dias + ' dias';
+
+        rows.push({ k: 'Pré-aviso que tem de dar', ref: regime + ' · art. 400.º CT', v: dias, extra: true, format: 'unit', unit: 'dias de calendário' });
+        rows.push({ k: 'Contrato sem termo, até 2 anos', ref: 'Referência legal', v: PRE_AVISO.semTermoAte2anos, format: 'unit', unit: 'dias' });
+        rows.push({ k: 'Contrato sem termo, mais de 2 anos', ref: 'Referência legal', v: PRE_AVISO.semTermoMais2anos, format: 'unit', unit: 'dias' });
+        rows.push({ k: 'Contrato a termo, 6 meses ou mais', ref: 'Referência legal', v: PRE_AVISO.termo6mesesOuMais, format: 'unit', unit: 'dias' });
+        rows.push({ k: 'Contrato a termo, menos de 6 meses', ref: 'Referência legal', v: PRE_AVISO.termoMenos6meses, format: 'unit', unit: 'dias' });
+        rows.push({ k: 'Custo de cada dia de pré-aviso em falta', ref: 'Retribuição base ÷ 30', v: custoDiaFalta, format: 'unit', unit: '€', decimals: 2 });
+        rows.push({ k: 'Indemnização se não cumprir nada do pré-aviso', ref: dias + ' dias em falta', v: custoDiaFalta * dias, format: 'unit', unit: '€' });
+
+        sub =
+          regime + ' · ' + dias + ' dias de calendário a contar da comunicação escrita' +
+          ' · não cumprir custa-lhe ' + eur(custoDiaFalta * dias);
+        chart = [
+          { label: 'Dias de pré-aviso', value: dias, tone: 'main' },
+          { label: 'Dias do mês sem pré-aviso', value: Math.max(0, 30 - dias), tone: 'good' },
+        ];
+      } else {
+        // ── Férias: direito em dias úteis + contagem de dias úteis e feriados do período ──
+        const admissao = String(v.situacaoFerias || 'completo') === 'admissao';
+        const meses = Math.max(0, Math.round(v.mesesContrato || 0));
+        const direito = admissao
+          ? Math.min(FERIAS.diasPorMesNoAnoDeAdmissao * meses, FERIAS.maximoNoAnoDeAdmissao)
+          : FERIAS.anoCompleto;
+
+        const comCarnaval = String(v.incluirCarnaval || 'nao') === 'sim';
+        const lista = comCarnaval ? FERIADOS.concat([CARNAVAL]) : FERIADOS;
+        const c = contarDias(v.dataInicio, v.dataFim, lista);
+        totalTexto = direito + ' dias úteis';
+
+        rows.push({
+          k: 'Dias úteis de férias a que tem direito',
+          ref: admissao
+            ? FERIAS.diasPorMesNoAnoDeAdmissao + ' dias × ' + meses + ' meses, até ' + FERIAS.maximoNoAnoDeAdmissao
+            : 'Ano civil completo · art. 238.º CT',
+          v: direito,
+          extra: true,
+          format: 'unit',
+          unit: 'dias úteis',
+        });
+        rows.push({ k: 'Mínimo legal num ano completo', ref: 'Art. 238.º do Código do Trabalho', v: FERIAS.anoCompleto, format: 'unit', unit: 'dias úteis' });
+        if (c.invalido) {
+          rows.push({ k: 'Período a contar', ref: 'Verifique as datas: o fim tem de ser igual ou posterior ao início', v: 0, format: 'unit', unit: 'dias' });
+        } else {
+          rows.push({ k: 'Dias corridos no período que indicou', ref: 'Ambas as datas incluídas', v: c.corridos, format: 'unit', unit: 'dias' });
+          rows.push({ k: 'Dias úteis no período', ref: 'Segunda a sexta, sem feriados', v: c.uteis, format: 'unit', unit: 'dias úteis' });
+          rows.push({ k: 'Fins de semana no período', ref: 'Sábados e domingos', v: c.fimDeSemana, format: 'unit', unit: 'dias' });
+          rows.push({
+            k: 'Feriados em dias úteis no período',
+            ref: comCarnaval ? 'Com o Carnaval contado' : 'Só feriados obrigatórios',
+            v: c.feriadosNoIntervalo,
+            format: 'unit',
+            unit: 'dias',
+          });
+          rows.push({
+            k: 'Dias de férias que gastaria neste período',
+            ref: 'Um dia de férias por cada dia útil',
+            v: c.uteis,
+            format: 'unit',
+            unit: 'dias úteis',
+          });
+          rows.push({
+            k: 'Dias de férias que lhe sobrariam',
+            ref: 'Direito − dias úteis do período',
+            v: direito - c.uteis,
+            format: 'unit',
+            unit: 'dias úteis',
+          });
+          rows.push({
+            k: 'Dias de calendário que ganha por cada dia útil gasto',
+            ref: 'Efeito dos fins de semana e feriados',
+            v: c.uteis > 0 ? c.corridos / c.uteis : 0,
+            format: 'unit',
+            unit: 'dias',
+            decimals: 2,
+          });
+        }
+        rows.push({ k: 'Feriados nacionais obrigatórios no ano', ref: 'Sem contar o feriado municipal', v: FERIADOS.length, format: 'unit', unit: 'feriados' });
+
+        sub = c.invalido
+          ? 'Tem direito a ' + direito + ' dias úteis de férias · indique um período válido para contar os dias úteis'
+          : 'Tem direito a ' + direito + ' dias úteis · o período que escolheu gasta ' + c.uteis +
+            ' e dá-lhe ' + c.corridos + ' dias de calendário seguidos';
+        chart = c.invalido
+          ? [{ label: 'Dias úteis de férias a que tem direito', value: direito, tone: 'good' }]
+          : [
+              { label: 'Dias úteis (gastam férias)', value: c.uteis, tone: 'warn' },
+              { label: 'Fins de semana (grátis)', value: c.fimDeSemana, tone: 'good' },
+              { label: 'Feriados (grátis)', value: c.feriadosNoIntervalo, tone: 'main' },
+            ];
+      }
+
+      return {
+        total: totalTexto,
+        sub: sub,
+        rows: rows,
+        chart: chart,
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,203 @@
+---
+/**
+ * Hub de decisión UY — "Unidades y valores": UI, UR, BPC, dólar, actualización por
+ * inflación y reajuste anual del alquiler.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, BPC, UI, UR, USD } from '../../../lib/hubs/uy/unidades-y-valores';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="UY"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ BPC, UI, UR, USD }}>
+  (function () {
+    const H = window.HC_HUB;
+    const uyu = (n) => '$U ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(Math.round((n || 0) * 100) / 100);
+    const num = (n, d) => new Intl.NumberFormat('de-DE', { maximumFractionDigits: d === undefined ? 2 : d }).format(n || 0);
+
+    const VALORES = {
+      ui: { valor: UI.valor, nombre: 'UI', largo: 'Unidad Indexada', ref: 'Valor al ' + UI.fecha + ' · ' + UI.fuente },
+      ur: { valor: UR.valor, nombre: 'UR', largo: 'Unidad Reajustable', ref: UR.mesValor + ' · ' + UR.fuente },
+      bpc: { valor: BPC, nombre: 'BPC', largo: 'Base de Prestaciones y Contribuciones', ref: 'Fijada por decreto, vigente todo el año' },
+      usd: { valor: USD.interbancario, nombre: 'USD', largo: 'Dólar interbancario', ref: 'Referencia BCU al ' + USD.fecha },
+    };
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'a-pesos';
+      const monto = Math.max(0, v.monto || 0);
+      const u = VALORES[String(v.unidad || 'ui')] || VALORES.ui;
+      const varIpc = Number(v.varIpc);
+      const varUr = Number(v.varUr);
+      const vIpc = Number.isFinite(varIpc) ? varIpc : 0;
+      const vUr = Number.isFinite(varUr) ? varUr : 0;
+
+      const rows = [];
+      let total = 0;
+      let sub = '';
+      let chart = [];
+
+      if (id === 'a-unidad') {
+        const enUnidad = u.valor > 0 ? monto / u.valor : 0;
+        total = monto;
+        rows.push({ k: 'Monto en pesos', ref: 'Lo que ingresaste', v: monto });
+        rows.push({ k: 'Valor vigente de 1 ' + u.nombre, ref: u.ref, v: u.valor, decimals: 4 });
+        rows.push({
+          k: 'Equivalente en ' + u.largo,
+          ref: 'Pesos ÷ valor de la unidad',
+          v: enUnidad,
+          format: 'unit',
+          unit: u.nombre,
+          decimals: 2,
+          extra: true,
+        });
+        rows.push({ k: 'El mismo monto en UI', ref: 'Unidad Indexada', v: monto / UI.valor, format: 'unit', unit: 'UI', decimals: 2 });
+        rows.push({ k: 'El mismo monto en UR', ref: 'Unidad Reajustable', v: monto / UR.valor, format: 'unit', unit: 'UR', decimals: 2 });
+        rows.push({ k: 'El mismo monto en BPC', ref: 'Base de Prestaciones y Contribuciones', v: monto / BPC, format: 'unit', unit: 'BPC', decimals: 2 });
+        rows.push({ k: 'El mismo monto en dólares', ref: 'Referencia interbancaria BCU', v: monto / USD.interbancario, format: 'unit', unit: 'USD', decimals: 2 });
+        sub = uyu(monto) + ' equivalen a ' + num(enUnidad) + ' ' + u.nombre + ' · ' + num(monto / BPC) + ' BPC · ' +
+          num(monto / USD.interbancario) + ' dólares';
+        chart = [
+          { label: 'En UI', value: Math.round(monto / UI.valor), tone: 'main' },
+          { label: 'En UR', value: Math.round(monto / UR.valor), tone: 'prop' },
+          { label: 'En BPC', value: Math.round(monto / BPC), tone: 'good' },
+          { label: 'En dólares', value: Math.round(monto / USD.interbancario), tone: 'warn' },
+        ];
+      } else if (id === 'inflacion') {
+        const factor = 1 + vIpc / 100;
+        const actualizado = monto * factor;
+        const incremento = actualizado - monto;
+        const perdida = factor > 0 ? (1 - 1 / factor) * 100 : 0;
+        total = actualizado;
+
+        rows.push({ k: 'Monto original', ref: 'Pesos del momento inicial', v: monto });
+        rows.push({
+          k: 'Inflación acumulada del período',
+          ref: 'La cargás vos con el dato del INE',
+          v: vIpc,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        rows.push({ k: 'Factor de actualización', ref: '1 + inflación ÷ 100', v: factor, format: 'plain', decimals: 4 });
+        rows.push({ k: 'Monto actualizado', ref: 'Original × factor', v: actualizado, extra: true });
+        rows.push({ k: 'Cuánto hay que sumarle', ref: 'Actualizado − original', v: incremento });
+        rows.push({
+          k: 'Poder de compra perdido si lo guardaste en efectivo',
+          ref: 'Sobre el monto actualizado',
+          v: perdida,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        rows.push({ k: 'El monto original medido en UI de hoy', ref: 'Referencia real', v: monto / UI.valor, format: 'unit', unit: 'UI', decimals: 2 });
+
+        sub = 'Para igualar ' + uyu(monto) + ' hoy necesitás ' + uyu(actualizado) +
+          ' · el efectivo perdió ' + num(perdida) + '% de poder de compra';
+        chart = [
+          { label: 'Monto original', value: Math.round(monto), tone: 'main' },
+          { label: 'Ajuste por inflación', value: Math.round(incremento), tone: 'warn' },
+        ];
+      } else if (id === 'alquiler') {
+        const menor = Math.min(vIpc, vUr);
+        const indice = vIpc <= vUr ? 'IPC' : 'UR';
+        const nuevoIpc = monto * (1 + vIpc / 100);
+        const nuevoUr = monto * (1 + vUr / 100);
+        const nuevo = monto * (1 + menor / 100);
+        const aumento = nuevo - monto;
+        total = nuevo;
+
+        rows.push({ k: 'Alquiler actual', ref: 'Lo que pagás hoy', v: monto });
+        rows.push({ k: 'Variación anual del IPC', ref: 'Precios al consumo', v: vIpc, format: 'unit', unit: '%', decimals: 2 });
+        rows.push({ k: 'Variación anual de la UR', ref: 'Índice Medio de Salarios', v: vUr, format: 'unit', unit: '%', decimals: 2 });
+        rows.push({ k: 'Alquiler si se aplicara el IPC', ref: 'Ajuste por precios', v: nuevoIpc });
+        rows.push({ k: 'Alquiler si se aplicara la UR', ref: 'Ajuste por salarios', v: nuevoUr });
+        rows.push({ k: 'Nuevo alquiler', ref: 'Se aplica el menor: ' + indice + ' (' + num(menor) + '%)', v: nuevo, extra: true });
+        rows.push({ k: 'Aumento mensual', ref: 'Nuevo − actual', v: aumento });
+        rows.push({ k: 'Aumento en el año', ref: '12 meses', v: aumento * 12 });
+        rows.push({ k: 'Lo que te ahorra aplicar el menor índice', ref: 'Diferencia contra el otro índice', v: Math.abs(nuevoIpc - nuevoUr) });
+        rows.push({ k: 'Tu alquiler nuevo medido en UI', ref: 'Referencia indexada', v: nuevo / UI.valor, format: 'unit', unit: 'UI', decimals: 2 });
+
+        sub = 'Se aplica el ' + indice + ' (' + num(menor) + '%) · tu alquiler pasa de ' + uyu(monto) + ' a ' + uyu(nuevo) +
+          ' · ' + uyu(aumento) + ' más por mes';
+        chart = [
+          { label: 'Alquiler actual', value: Math.round(monto), tone: 'main' },
+          { label: 'Ajuste por IPC', value: Math.round(nuevoIpc - monto), tone: 'good' },
+          { label: 'Ajuste por UR', value: Math.round(nuevoUr - monto), tone: 'warn' },
+        ];
+      } else {
+        // a-pesos
+        const pesos = monto * u.valor;
+        total = pesos;
+        rows.push({ k: 'Cantidad de ' + u.largo, ref: 'Lo que ingresaste', v: monto, format: 'unit', unit: u.nombre, decimals: 2 });
+        rows.push({ k: 'Valor vigente de 1 ' + u.nombre, ref: u.ref, v: u.valor, decimals: 4 });
+        rows.push({ k: 'Equivalente en pesos', ref: 'Cantidad × valor de la unidad', v: pesos, extra: true });
+        if (String(v.unidad || 'ui') === 'usd') {
+          rows.push({ k: 'Si vendés los dólares en el banco', ref: 'Pizarra compra ' + uyu(USD.brouCompra), v: monto * USD.brouCompra });
+          rows.push({ k: 'Si tenés que comprarlos en el banco', ref: 'Pizarra venta ' + uyu(USD.brouVenta), v: monto * USD.brouVenta });
+          rows.push({
+            k: 'Spread de la pizarra',
+            ref: 'Diferencia entre compra y venta sobre la referencia',
+            v: USD.interbancario > 0 ? ((USD.brouVenta - USD.brouCompra) / USD.interbancario) * 100 : 0,
+            format: 'unit',
+            unit: '%',
+            decimals: 1,
+          });
+        }
+        rows.push({ k: 'Ese monto en BPC', ref: 'BPC ' + uyu(BPC), v: pesos / BPC, format: 'unit', unit: 'BPC', decimals: 2 });
+        rows.push({ k: 'Ese monto en UI', ref: 'UI ' + uyu(UI.valor), v: pesos / UI.valor, format: 'unit', unit: 'UI', decimals: 2 });
+        rows.push({ k: 'Ese monto en UR', ref: 'UR ' + uyu(UR.valor), v: pesos / UR.valor, format: 'unit', unit: 'UR', decimals: 2 });
+
+        sub = num(monto) + ' ' + u.nombre + ' equivalen a ' + uyu(pesos) + ' · ' + u.ref;
+        chart = [
+          { label: 'Equivalente en pesos', value: Math.round(pesos), tone: 'main' },
+          { label: 'Si fuera la misma cantidad de UI', value: Math.round(monto * UI.valor), tone: 'prop' },
+          { label: 'Si fuera la misma cantidad de UR', value: Math.round(monto * UR.valor), tone: 'good' },
+        ];
+      }
+
+      return { total: uyu(total), sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

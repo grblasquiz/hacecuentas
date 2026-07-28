@@ -1,0 +1,247 @@
+---
+/**
+ * Hub de decisión CL — "¿Cuánto me va a costar de verdad este crédito?"
+ * audience="CL" va literal al Layout: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, UF, PAGO_MINIMO_PCT } from '../../../lib/hubs/cl/pedir-un-credito';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ UF, PAGO_MINIMO_PCT }}>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+    const pct = (n) => n.toFixed(2).replace('.', ',') + '%';
+
+    // CAE = tasa ANUAL EFECTIVA (Ley 20.555). La mensual sale de la raíz doceava,
+    // no de dividir por 12: dividir trata la CAE como nominal e infla la cuota.
+    const mensual = (caeAnualPct) => Math.pow(1 + caeAnualPct / 100, 1 / 12) - 1;
+
+    // Cuota de amortización francesa.
+    function cuotaFrancesa(capital, i, n) {
+      if (n <= 0) return 0;
+      if (i <= 0) return capital / n;
+      return (capital * i) / (1 - Math.pow(1 + i, -n));
+    }
+
+    function oferta(capital, caePct, meses, comisionPct) {
+      const i = mensual(caePct);
+      const cuota = cuotaFrancesa(capital, i, meses);
+      const totalCuotas = cuota * meses;
+      const comision = capital * (comisionPct / 100);
+      return {
+        cuota,
+        i,
+        intereses: totalCuotas - capital,
+        comision,
+        total: totalCuotas + comision,
+        costo: totalCuotas - capital + comision,
+      };
+    }
+
+    // Simulación mes a mes de una línea rotativa.
+    function rotativa(deuda, caePct, tipoPago, pagoFijo) {
+      const i = mensual(caePct);
+      let saldo = deuda;
+      let intereses = 0;
+      let mes = 0;
+      let primerAbono = 0;
+      const MAX = 600;
+      while (saldo > 0.01 && mes < MAX) {
+        mes += 1;
+        const interes = saldo * i;
+        intereses += interes;
+        let abono = tipoPago === 'minimo' ? Math.max(saldo * (PAGO_MINIMO_PCT / 100), 5000) : pagoFijo;
+        if (mes === 1) primerAbono = abono;
+        if (abono <= interes && mes > 2) {
+          // El abono no alcanza a cubrir el interés: la deuda no muere nunca.
+          return { meses: MAX, intereses: intereses, saldoFinal: saldo, noTermina: true, primerAbono, i };
+        }
+        saldo = saldo + interes - abono;
+        if (saldo < 0) saldo = 0;
+      }
+      return { meses: mes, intereses, saldoFinal: saldo, noTermina: mes >= MAX && saldo > 0.01, primerAbono, i };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'consumo';
+      const monto = Math.max(0, v.monto || 0);
+      const meses = Math.min(120, Math.max(1, Math.round(Number(v.plazo) || 36)));
+      const cae = Math.max(0.1, Math.min(60, Number(v.cae) || 26));
+      const cae2 = Math.max(0.1, Math.min(60, Number(v.cae2) || 32));
+      const caeBanco = Math.max(0.1, Math.min(60, Number(v.caeBanco) || 22));
+      const comisionPct = Math.max(0, Math.min(10, Number(v.comision) || 0));
+      const tmc = Math.max(5, Math.min(80, Number(v.tmc) || 37.78));
+      const pagoFijo = Math.max(5000, v.pagoMensual || 80000);
+      const tipoPago = v.tipoPago === 'fijo' ? 'fijo' : 'minimo';
+
+      const rows = [];
+      let total, sub, chart;
+
+      if (id === 'tarjeta') {
+        const r = rotativa(monto, cae, tipoPago, pagoFijo);
+        const alt = oferta(monto, caeBanco, Math.min(60, meses), 0);
+        total = r.noTermina ? 'No se paga nunca' : r.meses + (r.meses === 1 ? ' mes' : ' meses');
+        sub = r.noTermina
+          ? 'Con ' + pct(cae) + ' de CAE y ese abono, el interés del mes se come el pago: el saldo no baja. Necesitas subir la cuota o pasar la deuda a un crédito en cuotas.'
+          : 'Tardas ' + r.meses + ' meses (' + (r.meses / 12).toFixed(1).replace('.', ',') + ' años) y pagas ' + clp(r.intereses) +
+            ' de intereses · el total trepa a ' + clp(monto + r.intereses) + ', ' + (monto > 0 ? ((monto + r.intereses) / monto).toFixed(1).replace('.', ',') : '0') + ' veces lo que debías';
+        rows.push({ k: 'Deuda actual de la tarjeta', ref: 'Saldo de la línea rotativa', v: monto });
+        rows.push({ k: 'Tasa mensual equivalente', ref: 'CAE ' + pct(cae) + ' · (1+CAE)^(1/12) − 1', v: r.i * 100, format: 'unit', unit: '%', decimals: 3 });
+        rows.push({ k: 'Interés del primer mes', ref: 'Sobre el saldo actual', v: monto * r.i });
+        rows.push({
+          k: tipoPago === 'minimo' ? 'Primer pago mínimo' : 'Abono fijo mensual',
+          ref: tipoPago === 'minimo' ? PAGO_MINIMO_PCT.toString().replace('.', ',') + '% del saldo, recalculado cada mes' : 'El mismo todos los meses',
+          v: r.primerAbono,
+        });
+        rows.push({ k: 'Meses hasta llegar a cero', ref: r.noTermina ? 'Más de 600 meses: no converge' : 'Simulación mes a mes', v: r.meses, format: 'unit', unit: 'meses' });
+        rows.push({ k: 'Intereses que pagas en el camino', ref: 'Acumulado de la simulación', v: r.intereses, extra: true });
+        rows.push({ k: 'Total desembolsado', ref: 'Deuda más intereses', v: monto + r.intereses });
+        rows.push({ k: 'Si pasaras la deuda a un crédito de consumo', ref: 'CAE ' + pct(caeBanco) + ' a ' + Math.min(60, meses) + ' meses', v: alt.intereses });
+        rows.push({
+          k: 'Lo que te ahorrarías consolidando',
+          ref: 'Intereses de la rotativa menos los del crédito',
+          v: Math.max(0, r.intereses - alt.intereses),
+          extra: true,
+        });
+        chart = [
+          { label: 'Deuda original', value: Math.round(monto), tone: 'main' },
+          { label: 'Intereses de la rotativa', value: Math.round(r.intereses), tone: 'bad' },
+        ];
+      } else if (id === 'comparar') {
+        const a = oferta(monto, cae, meses, comisionPct);
+        const b = oferta(monto, cae2, meses, 0);
+        const ganaA = a.costo <= b.costo;
+        total = clp(Math.min(a.cuota, b.cuota));
+        sub =
+          'Conviene la ' + (ganaA ? 'primera' : 'segunda') + ' oferta: te deja pagando ' + clp(Math.abs(a.costo - b.costo)) +
+          ' menos en total · costo de la primera ' + clp(a.costo) + ' contra ' + clp(b.costo) + ' de la segunda';
+        rows.push({ k: 'Capital que te prestan', ref: 'Igual en las dos ofertas', v: monto });
+        rows.push({ k: 'Oferta 1 — cuota mensual', ref: 'CAE ' + pct(cae) + ' a ' + meses + ' meses', v: a.cuota, extra: ganaA });
+        rows.push({ k: 'Oferta 1 — intereses', ref: 'Sobre el plazo completo', v: a.intereses });
+        if (a.comision > 0) rows.push({ k: 'Oferta 1 — comisión de originación', ref: pct(comisionPct) + ' del capital', v: a.comision });
+        rows.push({ k: 'Oferta 1 — costo total del crédito', ref: 'Intereses más comisiones', v: a.costo });
+        rows.push({ k: 'Oferta 2 — cuota mensual', ref: 'CAE ' + pct(cae2) + ' a ' + meses + ' meses', v: b.cuota, extra: !ganaA });
+        rows.push({ k: 'Oferta 2 — intereses', ref: 'Sobre el plazo completo', v: b.intereses });
+        rows.push({ k: 'Oferta 2 — costo total del crédito', ref: 'Intereses más comisiones', v: b.costo });
+        rows.push({ k: 'Diferencia entre firmar una u otra', ref: 'Costo total de la peor menos la mejor', v: Math.abs(a.costo - b.costo), extra: true });
+        chart = [
+          { label: 'Capital', value: Math.round(monto), tone: 'main' },
+          { label: 'Costo oferta 1', value: Math.round(a.costo), tone: ganaA ? 'good' : 'warn' },
+          { label: 'Costo oferta 2', value: Math.round(b.costo), tone: ganaA ? 'warn' : 'good' },
+        ];
+      } else if (id === 'casa-comercial') {
+        const t = oferta(monto, cae, meses, 0);
+        const bco = oferta(monto, caeBanco, meses, 0);
+        const dif = t.costo - bco.costo;
+        total = clp(t.cuota);
+        sub =
+          'En ' + meses + ' cuotas con la tarjeta de la tienda pagas ' + clp(t.costo) + ' de costo financiero (' +
+          (monto > 0 ? Math.round((t.costo / monto) * 100) : 0) + '% sobre el precio contado) · ' +
+          (dif > 0 ? 'financiando con el banco te ahorrarías ' + clp(dif) : 'la tienda queda ' + clp(Math.abs(dif)) + ' más barata que el banco');
+        rows.push({ k: 'Precio contado del producto', ref: 'El que la ley obliga a informar', v: monto });
+        rows.push({ k: 'Cuota con la tarjeta de la tienda', ref: 'CAE ' + pct(cae) + ' a ' + meses + ' cuotas', v: t.cuota, extra: true });
+        rows.push({ k: 'Costo financiero de la tienda', ref: 'Todo lo que pagas por sobre el precio', v: t.costo });
+        rows.push({ k: 'Total que terminas pagando en la tienda', ref: 'Precio más costo financiero', v: monto + t.costo });
+        rows.push({ k: 'Cuota con crédito bancario', ref: 'CAE ' + pct(caeBanco) + ' a ' + meses + ' cuotas', v: bco.cuota });
+        rows.push({ k: 'Costo financiero del banco', ref: 'Misma compra, otra CAE', v: bco.costo });
+        rows.push({ k: dif >= 0 ? 'Lo que pagas de más por financiar en la tienda' : 'Lo que la tienda te ahorra frente al banco', ref: 'Diferencia de costo financiero', v: Math.abs(dif), extra: true });
+        rows.push({
+          k: 'Costo financiero como porcentaje del precio',
+          ref: 'Cuánto del total es puro financiamiento',
+          v: monto > 0 ? (t.costo / monto) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        chart = [
+          { label: 'Precio del producto', value: Math.round(monto), tone: 'main' },
+          { label: 'Costo financiero tienda', value: Math.round(t.costo), tone: 'bad' },
+          { label: 'Costo financiero banco', value: Math.round(bco.costo), tone: 'warn' },
+        ];
+      } else {
+        const c = oferta(monto, cae, meses, comisionPct);
+        total = clp(c.cuota);
+        sub =
+          'Cuota de ' + clp(c.cuota) + ' por ' + meses + ' meses · devuelves ' + clp(c.total) + ' en total, o sea ' +
+          clp(c.costo) + ' de costo (' + (monto > 0 ? Math.round((c.costo / monto) * 100) : 0) + '% sobre lo que pides)' +
+          (cae > tmc ? ' · ATENCIÓN: la CAE supera la tasa máxima convencional de referencia' : ' · la CAE está bajo la tasa máxima convencional de referencia');
+        rows.push({ k: 'Capital que te prestan', ref: 'Lo que llega a tu cuenta', v: monto });
+        rows.push({ k: 'Tasa mensual equivalente', ref: 'CAE ' + pct(cae) + ' · (1+CAE)^(1/12) − 1', v: c.i * 100, format: 'unit', unit: '%', decimals: 3 });
+        rows.push({ k: 'Cuota mensual', ref: 'Amortización francesa a ' + meses + ' meses', v: c.cuota, extra: true });
+        rows.push({ k: 'Intereses del crédito', ref: 'Suma de cuotas menos capital', v: c.intereses });
+        if (c.comision > 0) rows.push({ k: 'Comisión de originación', ref: pct(comisionPct) + ' del capital, una sola vez', v: c.comision });
+        rows.push({ k: 'Costo total del crédito', ref: 'Intereses más comisiones', v: c.costo, extra: true });
+        rows.push({ k: 'Total que devuelves', ref: 'Capital más costo', v: c.total });
+        rows.push({
+          k: 'Costo sobre el capital pedido',
+          ref: 'Cuánto pagas de más por cada peso',
+          v: monto > 0 ? (c.costo / monto) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        rows.push({
+          k: cae > tmc ? 'Cuánto excede la CAE al tope de referencia' : 'Margen que te queda hasta el tope de referencia',
+          ref: 'Tasa máxima convencional editable: ' + pct(tmc),
+          v: Math.abs(cae - tmc),
+          format: 'unit',
+          unit: 'puntos',
+          decimals: 2,
+        });
+        chart = [
+          { label: 'Capital', value: Math.round(monto), tone: 'main' },
+          { label: 'Intereses', value: Math.round(c.intereses), tone: 'warn' },
+          { label: 'Comisiones', value: Math.round(c.comision), tone: 'exit' },
+        ];
+      }
+
+      return { total: total, sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

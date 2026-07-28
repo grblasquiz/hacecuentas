@@ -1,0 +1,230 @@
+---
+/**
+ * Hub de decisión CO — "Nos separamos: cómo se reparte y cuánto es la cuota".
+ * audience="CO" literal: HubData sólo modela 'AR' | 'global' y el mercado viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  SMLMV,
+  TOPE_EMBARGO_ALIMENTOS,
+  RANGO_PRACTICA,
+  GANANCIALES,
+  CUOTA_LITIS,
+  REDAM,
+} from '../../../lib/hubs/co/divorcio-y-cuota-alimentaria';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    SMLMV,
+    TOPE_EMBARGO: TOPE_EMBARGO_ALIMENTOS,
+    RANGO: RANGO_PRACTICA,
+    GANANCIALES,
+    LITIS: CUOTA_LITIS,
+    REDAM,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const cop = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'alimentos';
+      const ingresos = Math.max(0, v.ingresos || 0);
+      const descuentos = Math.min(Math.max(0, v.descuentos || 0), ingresos);
+      const hijos = Math.max(1, Math.round(v.hijos || 1));
+      const gastos = Math.max(0, v.gastos || 0);
+      const patrimonio = Math.max(0, v.patrimonio || 0);
+      const deudas = Math.max(0, v.deudas || 0);
+      const mora = Math.max(0, Math.round(v.mora || 0));
+      // El 0 es legítimo en porcentaje y en cuota litis: no usar `|| default`.
+      const pct = Math.min(50, Math.max(0, v.porcentaje === '' || v.porcentaje === null || v.porcentaje === undefined ? RANGO.tipico : Number(v.porcentaje)));
+      const litisPct = Math.min(50, Math.max(0, v.litis === '' || v.litis === null || v.litis === undefined ? Math.round(LITIS.tipico * 100) : Number(v.litis)));
+
+      const neto = Math.max(0, ingresos - descuentos);
+      // Cuota base + mitad de los gastos extraordinarios. NO hay tabla legal: el
+      // porcentaje es un parámetro del usuario, no una escala normativa.
+      const cuotaBase = neto * (pct / 100);
+      const aporteExtra = gastos / 2;
+      const cuotaTotal = cuotaBase + aporteExtra;
+      const topeEmbargo = ingresos * TOPE_EMBARGO;
+
+      const rows = [];
+      let total, sub, chart;
+
+      if (id === 'alimentos') {
+        const porHijo = cuotaTotal / hijos;
+        const leQueda = Math.max(0, neto - cuotaTotal);
+        const orientMin = neto * (RANGO.min / 100);
+        const orientMax = neto * (RANGO.max / 100);
+
+        rows.push({ k: 'Ingreso mensual bruto', ref: 'Declarado', v: ingresos });
+        rows.push({ k: 'Aportes obligatorios y descuentos de ley (se restan)', ref: 'Salud y pensión', v: descuentos });
+        rows.push({ k: 'Ingreso neto: base de la ponderación', ref: 'Capacidad económica · art. 129 Ley 1098/2006', v: neto });
+        rows.push({ k: 'Porcentaje que estás evaluando', ref: 'Parámetro tuyo, NO escala legal', v: pct, format: 'unit', unit: '%' });
+        rows.push({ k: 'Cuota base mensual', ref: 'Ingreso neto × porcentaje', v: cuotaBase });
+        rows.push({ k: 'Tu mitad de los gastos extraordinarios', ref: 'Se reparten contra factura', v: aporteExtra });
+        rows.push({ k: 'Cuota mensual total', ref: 'Base + extraordinarios', v: cuotaTotal, extra: true });
+        rows.push({ k: 'Corresponde por cada uno de los ' + hijos + ' hijos', ref: 'Referencia de reparto', v: porHijo });
+        rows.push({ k: 'Cuota anual', ref: '12 mensualidades', v: cuotaTotal * 12 });
+        rows.push({ k: 'Piso del rango de práctica judicial', ref: RANGO.min + '% del neto · orientativo', v: orientMin });
+        rows.push({ k: 'Techo del rango de práctica judicial', ref: RANGO.max + '% del neto · orientativo', v: orientMax });
+        rows.push({ k: 'Tope máximo de descuento por nómina', ref: Math.round(TOPE_EMBARGO * 100) + '% del salario · CST arts. 154-156', v: topeEmbargo });
+        rows.push({ k: 'Ingreso que te queda después de la cuota', ref: 'Mínimo vital de referencia ' + cop(SMLMV), v: leQueda });
+
+        const pctSobreNeto = neto > 0 ? (cuotaTotal / neto) * 100 : 0;
+        sub =
+          'Cuota de ' + cop(cuotaTotal) + '/mes para ' + hijos + (hijos === 1 ? ' hijo' : ' hijos') +
+          ' · equivale al ' + pctSobreNeto.toFixed(0) + '% de tu ingreso neto' +
+          (cuotaTotal > topeEmbargo
+            ? ' · ¡ojo! supera el tope de embargo del ' + Math.round(TOPE_EMBARGO * 100) + '% del salario'
+            : ' · dentro del tope de embargo del ' + Math.round(TOPE_EMBARGO * 100) + '%') +
+          ' · en Colombia no hay tabla legal de porcentajes';
+        total = cop(cuotaTotal);
+        chart = [
+          { label: 'Cuota base para los hijos', value: Math.round(cuotaBase), tone: 'main' },
+          { label: 'Tu mitad de gastos extraordinarios', value: Math.round(aporteExtra), tone: 'prop' },
+          { label: 'Ingreso neto que te queda', value: Math.round(leQueda), tone: 'good' },
+          { label: 'Tope legal de descuento por nómina', value: Math.round(topeEmbargo), tone: 'warn' },
+        ];
+      } else if (id === 'bienes') {
+        const activoNeto = Math.max(0, patrimonio - deudas);
+        const mitad = activoNeto * GANANCIALES;
+
+        rows.push({ k: 'Activo de la sociedad conyugal', ref: 'Adquirido durante el matrimonio', v: patrimonio });
+        rows.push({ k: 'Deudas sociales (se restan)', ref: 'Pasivo de la sociedad', v: deudas });
+        rows.push({ k: 'Activo social neto a repartir', ref: 'Art. 1830 Código Civil', v: activoNeto });
+        rows.push({ k: 'Gananciales de cada cónyuge', ref: Math.round(GANANCIALES * 100) + '% cada uno', v: mitad, extra: true });
+        rows.push({ k: 'Proporción de deudas que absorbe cada uno', ref: 'Se pagan antes del reparto', v: deudas / 2 });
+        rows.push({ k: 'Peso de las deudas sobre el activo social', ref: 'Cuánto se come el pasivo', v: patrimonio > 0 ? (deudas / patrimonio) * 100 : 0, format: 'unit', unit: '%', decimals: 1 });
+        rows.push({ k: 'Cuota de alimentos anual, para dimensionar aparte', ref: 'NO se descuenta de los gananciales', v: cuotaTotal * 12 });
+
+        sub =
+          'Activo social neto de ' + cop(activoNeto) + ' · ' + cop(mitad) + ' para cada uno' +
+          ' · los bienes propios, herencias y donaciones quedan fuera de esta masa';
+        total = cop(mitad);
+        chart = [
+          { label: 'Gananciales del cónyuge 1', value: Math.round(mitad), tone: 'main' },
+          { label: 'Gananciales del cónyuge 2', value: Math.round(mitad), tone: 'prop' },
+          { label: 'Deudas sociales que se pagan antes', value: Math.round(deudas), tone: 'bad' },
+        ];
+      } else if (id === 'costo') {
+        const activoNeto = Math.max(0, patrimonio - deudas);
+        const recupera = activoNeto * GANANCIALES;
+        const litis = recupera * (litisPct / 100);
+        const topeLitis = recupera * LITIS.topeLegal;
+        // Referencias de mercado, no tarifas oficiales: en Colombia no hay tarifa obligatoria.
+        const notaria = Math.max(400000, activoNeto * 0.005);
+        const gastosProceso = 900000;
+        const costoTotal = litis + notaria + gastosProceso;
+
+        rows.push({ k: 'Activo social neto en discusión', ref: 'Base del pleito', v: activoNeto });
+        rows.push({ k: 'Lo que te correspondería recuperar', ref: Math.round(GANANCIALES * 100) + '% de gananciales', v: recupera });
+        rows.push({ k: 'Cuota litis pactada', ref: 'Porcentaje sobre lo recuperado', v: litisPct, format: 'unit', unit: '%' });
+        rows.push({ k: 'Cuota litis en pesos', ref: 'Honorarios de éxito del abogado', v: litis, extra: true });
+        rows.push({ k: 'Techo legal del pacto de cuota litis', ref: Math.round(LITIS.topeLegal * 100) + '% de lo obtenido · Ley 1123/2007', v: topeLitis });
+        rows.push({ k: 'Derechos notariales y de registro (referencia)', ref: 'Se liquidan sobre la cuantía', v: notaria });
+        rows.push({ k: 'Gastos del proceso (referencia)', ref: 'Notificaciones, copias, peritajes', v: gastosProceso });
+        rows.push({ k: 'Costo estimado total del proceso', ref: 'Suma de los tres rubros', v: costoTotal, extra: true });
+        rows.push({ k: 'Peso del costo sobre lo que recuperás', ref: 'Costo ÷ gananciales', v: recupera > 0 ? (costoTotal / recupera) * 100 : 0, format: 'unit', unit: '%', decimals: 1 });
+        rows.push({ k: 'Lo que te queda neto después del proceso', ref: 'Gananciales menos costos', v: Math.max(0, recupera - costoTotal) });
+
+        sub =
+          'Costo estimado de ' + cop(costoTotal) + ' sobre ' + cop(recupera) + ' recuperados' +
+          (litisPct > Math.round(LITIS.topeLegal * 100)
+            ? ' · el pacto excede el techo legal'
+            : ' · el pacto está dentro del techo del ' + Math.round(LITIS.topeLegal * 100) + '%') +
+          ' · de mutuo acuerdo ante notario esto baja muchísimo';
+        total = cop(costoTotal);
+        chart = [
+          { label: 'Cuota litis del abogado', value: Math.round(litis), tone: 'warn' },
+          { label: 'Notaría y registro', value: Math.round(notaria), tone: 'prop' },
+          { label: 'Gastos del proceso', value: Math.round(gastosProceso), tone: 'exit' },
+          { label: 'Lo que te queda neto', value: Math.round(Math.max(0, recupera - costoTotal)), tone: 'good' },
+        ];
+      } else {
+        // REDAM
+        const saldo = cuotaTotal * mora;
+        const faltanConsec = Math.max(0, REDAM.cuotasConsecutivas - mora);
+        const reportable = mora >= REDAM.cuotasConsecutivas;
+
+        rows.push({ k: 'Cuota mensual de referencia', ref: 'La que venís calculando arriba', v: cuotaTotal });
+        rows.push({ k: 'Cuotas en mora', ref: 'Mensualidades no pagadas', v: mora, format: 'plain' });
+        rows.push({ k: 'Saldo acumulado en mora', ref: 'Cuota × cuotas vencidas', v: saldo, extra: true });
+        rows.push({ k: 'Umbral de reporte por cuotas consecutivas', ref: 'Ley 2097 de 2021', v: REDAM.cuotasConsecutivas, format: 'plain' });
+        rows.push({ k: 'Umbral de reporte por cuotas no consecutivas', ref: 'Ley 2097 de 2021', v: REDAM.cuotasNoConsecutivas, format: 'plain' });
+        rows.push({
+          k: reportable ? 'Cuotas que pasaste el umbral consecutivo' : 'Cuotas que te faltan para el umbral',
+          ref: 'Conteo frente a las ' + REDAM.cuotasConsecutivas + ' consecutivas',
+          v: reportable ? mora - REDAM.cuotasConsecutivas : faltanConsec,
+          format: 'plain',
+        });
+        rows.push({ k: 'Deuda equivalente en meses de ingreso neto', ref: 'Saldo ÷ ingreso neto', v: neto > 0 ? saldo / neto : 0, format: 'unit', unit: 'meses', decimals: 1 });
+        rows.push({ k: 'Cuánto tendrías que abonar por mes para ponerte al día en un año', ref: 'Además de la cuota corriente', v: saldo / 12 });
+        rows.push({ k: 'Tope máximo de descuento por nómina para cobrarte', ref: Math.round(TOPE_EMBARGO * 100) + '% del salario · CST arts. 154-156', v: topeEmbargo });
+
+        sub =
+          (reportable
+            ? 'Con ' + mora + ' cuotas en mora se configura el umbral de reporte al REDAM'
+            : 'Todavía no llegás al umbral: te faltan ' + faltanConsec + ' cuotas consecutivas') +
+          ' · saldo de ' + cop(saldo) +
+          ' · el reporte lo ordena el juez o el comisario de familia, no es automático';
+        total = cop(saldo);
+        chart = [
+          { label: 'Saldo acumulado en mora', value: Math.round(saldo), tone: 'bad' },
+          { label: 'Cuota mensual corriente', value: Math.round(cuotaTotal), tone: 'main' },
+          { label: 'Abono mensual para ponerte al día en un año', value: Math.round(saldo / 12), tone: 'warn' },
+          { label: 'Tope de descuento por nómina', value: Math.round(topeEmbargo), tone: 'prop' },
+        ];
+      }
+
+      return { total: total, sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

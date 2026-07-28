@@ -1,0 +1,381 @@
+---
+/**
+ * Hub de decisión CL — "¿Cuánto me cuesta al año tener el auto?"
+ * Ruta bajo el prefijo /cl/, igual que las calculadoras que absorbe.
+ * audience="CL" va literal al Layout: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UF,
+  UTM,
+  PERMISO_TRAMOS,
+  PERMISO_MINIMO_UTM,
+  SOAP_COBERTURAS_UF,
+  MULTA_RANGOS,
+  SEGURO_PRIMA_BASE_MENSUAL,
+  SEGURO_COBERTURAS,
+  IMPUESTO_VERDE_FACTOR_PRECIO,
+  IMPUESTO_VERDE_CTE_RENDIMIENTO,
+  IMPUESTO_VERDE_CTE_NOX,
+  TASA_MAXIMA_CONVENCIONAL_CMF,
+  LICENCIA_VIGENCIA,
+} from '../../../lib/hubs/cl/cuanto-cuesta-tener-auto';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    UF,
+    UTM,
+    PERMISO_TRAMOS,
+    PERMISO_MINIMO_UTM,
+    SOAP_COBERTURAS_UF,
+    MULTA_RANGOS,
+    SEGURO_PRIMA_BASE_MENSUAL,
+    SEGURO_COBERTURAS,
+    IMPUESTO_VERDE_FACTOR_PRECIO,
+    IMPUESTO_VERDE_CTE_RENDIMIENTO,
+    IMPUESTO_VERDE_CTE_NOX,
+    TASA_MAXIMA_CONVENCIONAL_CMF,
+    LICENCIA_VIGENCIA,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+
+    // Permiso de circulación — tabla progresiva en UTM, Art. 12 Ley 18.290.
+    function permisoCirculacion(tasacion) {
+      const enUtm = tasacion / UTM;
+      let tramo = PERMISO_TRAMOS[0];
+      for (const t of PERMISO_TRAMOS) {
+        if (t.hastaUtm === null || enUtm <= t.hastaUtm) { tramo = t; break; }
+      }
+      const utm = tramo.fijoUtm + (enUtm - tramo.desdeUtm) * tramo.tasa;
+      const finalUtm = Math.max(PERMISO_MINIMO_UTM, utm);
+      return { utm: finalUtm, pesos: finalUtm * UTM, tasacionUtm: enUtm, tasaMarginal: tramo.tasa * 100 };
+    }
+
+    // Seguro voluntario — modelo de factores heredado de la calc absorbida.
+    function seguroAnual(coberturaId, edad, anioVehiculo) {
+      const cob = SEGURO_COBERTURAS.find((c) => c.id === coberturaId) || SEGURO_COBERTURAS[0];
+      if (cob.factor === 0) return { anual: 0, nombre: cob.nombre, factor: 0 };
+      const factorEdad =
+        edad < 25 ? 1.45 : edad < 35 ? 1.15 : edad < 55 ? 1.0 : edad < 65 ? 1.08 : 1.25;
+      const antiguedad = new Date().getFullYear() - anioVehiculo;
+      const factorAntiguedad =
+        antiguedad <= 5 ? 1.0 : antiguedad <= 10 ? 1.1 : antiguedad <= 15 ? 1.3 : antiguedad <= 20 ? 1.6 : 2.0;
+      const base = SEGURO_PRIMA_BASE_MENSUAL * 12 * factorEdad * factorAntiguedad;
+      return { anual: base * cob.factor, nombre: cob.nombre, factor: cob.factor, antiguedad: antiguedad };
+    }
+
+    // Impuesto verde — Art. 3° Ley 20.780, resultado en UTM.
+    function impuestoVerde(rendimiento, nox, precio) {
+      const exento = !isFinite(rendimiento) || rendimiento <= 0 || rendimiento >= 100000;
+      const termRend = exento ? 0 : IMPUESTO_VERDE_CTE_RENDIMIENTO / rendimiento;
+      const utm = Math.max(0, (termRend + IMPUESTO_VERDE_CTE_NOX * nox) * (precio * IMPUESTO_VERDE_FACTOR_PRECIO));
+      return { utm: utm, pesos: utm * UTM, exento: exento && nox <= 0 };
+    }
+
+    // Crédito automotriz — sistema francés, igual que la fórmula original.
+    function creditoAuto(valor, pie, meses, cae) {
+      const monto = Math.max(0, valor - Math.min(valor, pie));
+      const r = cae / 100 / 12;
+      let cuota;
+      if (monto === 0) cuota = 0;
+      else if (r === 0) cuota = monto / meses;
+      else {
+        const f = Math.pow(1 + r, meses);
+        cuota = monto * ((r * f) / (f - 1));
+      }
+      const totalCuotas = cuota * meses;
+      return {
+        monto: monto,
+        cuota: cuota,
+        totalCuotas: totalCuotas,
+        intereses: Math.max(0, totalCuotas - monto),
+        costoTotal: Math.min(valor, pie) + totalCuotas,
+        excede: cae > TASA_MAXIMA_CONVENCIONAL_CMF,
+      };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'anual';
+
+      const tasacion = Math.max(0, v.tasacion || 0);
+      const soapPrecio = Math.max(0, v.soapPrecio || 0);
+      const revisionPrecio = Math.max(0, v.revisionPrecio || 0);
+      const edad = Math.min(90, Math.max(18, Math.round(Number(v.edad) || 40)));
+      const anioVehiculo = Math.min(2030, Math.max(1980, Math.round(Number(v.anioVehiculo) || 2020)));
+      const precioAuto = Math.max(0, v.precioAuto || 0);
+      const rendimiento = Math.max(0, Number(v.rendimiento) || 0);
+      const nox = Math.max(0, Number(v.nox) || 0);
+      const pie = Math.max(0, v.pie || 0);
+      const plazo = Math.min(84, Math.max(1, Math.round(Number(v.plazo) || 48)));
+      const cae = Math.min(60, Math.max(0, Number(v.cae) || 0));
+      const arancelLicencia = Math.max(0, v.arancelLicencia || 0);
+
+      const clase = LICENCIA_VIGENCIA.find((l) => l.id === v.claseLicencia) || LICENCIA_VIGENCIA[0];
+      const multa = MULTA_RANGOS.find((m) => m.id === v.gravedad) || MULTA_RANGOS[2];
+
+      const rows = [];
+      let total, sub, chart;
+
+      if (id === 'comprar') {
+        const iv = impuestoVerde(rendimiento, nox, precioAuto);
+        const cr = creditoAuto(precioAuto, pie, plazo, cae);
+        const permisoNuevo = permisoCirculacion(precioAuto);
+        const desembolsoInicial = Math.min(precioAuto, pie) + iv.pesos;
+
+        rows.push({ k: 'Precio de venta del auto nuevo', ref: 'Base del impuesto verde y del crédito', v: precioAuto });
+        rows.push({
+          k: 'Impuesto verde en UTM',
+          ref: '(35 ÷ rendimiento + 120 × NOx) × precio × 0,00000006',
+          v: iv.utm,
+          format: 'unit',
+          unit: 'UTM',
+          decimals: 2,
+        });
+        rows.push({ k: 'Impuesto verde en pesos', ref: 'Art. 3° Ley 20.780 · pago único al inscribir', v: iv.pesos, extra: true });
+        rows.push({ k: 'Pie que pones', ref: 'Sale de tu bolsillo el día uno', v: Math.min(precioAuto, pie) });
+        rows.push({ k: 'Monto que financias', ref: 'Precio menos pie', v: cr.monto });
+        rows.push({ k: 'Cuota mensual del crédito', ref: 'Sistema francés · CAE ' + cae.toLocaleString('es-CL') + '%', v: cr.cuota, extra: true });
+        rows.push({
+          k: 'Plazo del crédito',
+          ref: 'Cuotas pactadas',
+          v: plazo,
+          format: 'unit',
+          unit: 'meses',
+        });
+        rows.push({ k: 'Intereses totales del crédito', ref: 'Lo que pagas de más por financiar', v: cr.intereses });
+        rows.push({ k: 'Costo total del auto financiado', ref: 'Pie más todas las cuotas', v: cr.costoTotal });
+        rows.push({
+          k: 'Permiso de circulación del primer año',
+          ref: 'Art. 12 Ley 18.290 · sobre el valor del vehículo nuevo',
+          v: permisoNuevo.pesos,
+        });
+        rows.push({ k: 'SOAP del primer año', ref: 'Precio de mercado que pusiste', v: soapPrecio });
+        rows.push({ k: 'Desembolso inicial (pie + impuesto verde)', ref: 'Lo que necesitas tener el día de la compra', v: desembolsoInicial });
+        rows.push({
+          k: cr.excede ? 'La CAE ofrecida supera la tasa máxima convencional de referencia' : 'Margen que te queda bajo la tasa máxima convencional',
+          ref: 'Referencia CMF ' + TASA_MAXIMA_CONVENCIONAL_CMF + '% anual',
+          v: Math.abs(TASA_MAXIMA_CONVENCIONAL_CMF - cae),
+          format: 'unit',
+          unit: 'puntos',
+          decimals: 1,
+        });
+
+        total = clp(desembolsoInicial);
+        sub =
+          'Necesitas ' + clp(desembolsoInicial) + ' el día de la compra (pie más impuesto verde) y después ' +
+          clp(cr.cuota) + ' al mes durante ' + plazo + ' meses · ' +
+          (iv.exento
+            ? 'este vehículo queda exento de impuesto verde'
+            : 'el impuesto verde son ' + iv.utm.toFixed(2).replace('.', ',') + ' UTM = ' + clp(iv.pesos)) +
+          ' · intereses del crédito: ' + clp(cr.intereses);
+        chart = [
+          { label: 'Pie', value: Math.round(Math.min(precioAuto, pie)), tone: 'main' },
+          { label: 'Monto financiado', value: Math.round(cr.monto), tone: 'prop' },
+          { label: 'Intereses del crédito', value: Math.round(cr.intereses), tone: 'warn' },
+          { label: 'Impuesto verde', value: Math.round(iv.pesos), tone: 'bad' },
+        ];
+      } else if (id === 'multa') {
+        const min = multa.minUtm * UTM;
+        const max = multa.maxUtm * UTM;
+        const medio = (min + max) / 2;
+
+        rows.push({
+          k: 'Rango legal en UTM — mínimo',
+          ref: 'Art. 200 Ley 18.290',
+          v: multa.minUtm,
+          format: 'unit',
+          unit: 'UTM',
+          decimals: 2,
+        });
+        rows.push({
+          k: 'Rango legal en UTM — máximo',
+          ref: 'Art. 200 Ley 18.290',
+          v: multa.maxUtm,
+          format: 'unit',
+          unit: 'UTM',
+          decimals: 2,
+        });
+        rows.push({ k: 'Multa mínima en pesos', ref: 'UTM del mes ' + clp(UTM), v: min });
+        rows.push({ k: 'Punto medio del rango', ref: 'Lo más habitual si no hay agravantes', v: medio, extra: true });
+        rows.push({ k: 'Multa máxima en pesos', ref: 'Con agravantes o reincidencia acreditada', v: max });
+        rows.push({ k: 'Diferencia entre el mínimo y el máximo', ref: 'Lo que te juegas en la audiencia', v: max - min });
+        rows.push({
+          k: 'Permiso de circulación que no vas a poder sacar mientras esté impaga',
+          ref: 'Registro de Multas de Tránsito No Pagadas',
+          v: permisoCirculacion(tasacion).pesos,
+        });
+
+        total = clp(medio);
+        sub =
+          'Una infracción ' + multa.nombre.toLowerCase() + ' va de ' + multa.minUtm.toLocaleString('es-CL') +
+          ' a ' + multa.maxUtm.toLocaleString('es-CL') + ' UTM: entre ' + clp(min) + ' y ' + clp(max) +
+          ' con la UTM de hoy · el monto exacto lo fija el Juzgado de Policía Local';
+        chart = [
+          { label: 'Multa mínima', value: Math.round(min), tone: 'good' },
+          { label: 'Margen hasta el punto medio', value: Math.round(medio - min), tone: 'warn' },
+          { label: 'Margen hasta el máximo', value: Math.round(max - medio), tone: 'bad' },
+        ];
+      } else if (id === 'licencia') {
+        const porAnio = arancelLicencia / clase.anios;
+        const multaVencida = { min: 1 * UTM, max: 1.5 * UTM };
+
+        rows.push({ k: 'Arancel municipal de la licencia', ref: clase.nombre, v: arancelLicencia, extra: true });
+        rows.push({
+          k: 'Vigencia de la licencia',
+          ref: 'Clase y edad del conductor',
+          v: clase.anios,
+          format: 'unit',
+          unit: 'años',
+        });
+        rows.push({ k: 'Costo de la licencia repartido por año', ref: 'Arancel ÷ años de vigencia', v: porAnio });
+        rows.push({ k: 'Multa mínima por conducir con la licencia vencida', ref: 'Infracción grave · 1 UTM', v: multaVencida.min });
+        rows.push({ k: 'Multa máxima por conducir con la licencia vencida', ref: 'Infracción grave · 1,5 UTM', v: multaVencida.max });
+        rows.push({
+          k: 'Cuánto pesa la multa comparada con el arancel',
+          ref: 'Multa mínima ÷ arancel',
+          v: arancelLicencia > 0 ? (multaVencida.min / arancelLicencia) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 0,
+        });
+        rows.push({ k: 'Permiso de circulación anual de tu auto', ref: 'Para dimensionar el gasto', v: permisoCirculacion(tasacion).pesos });
+
+        total = clp(arancelLicencia);
+        sub =
+          'Renovar te cuesta ' + clp(arancelLicencia) + ' y la licencia te dura ' + clase.anios +
+          ' años: ' + clp(porAnio) + ' al año · renovar atrasado no tiene multa, pero manejar con ella vencida es infracción grave de ' +
+          clp(multaVencida.min) + ' a ' + clp(multaVencida.max);
+        chart = [
+          { label: 'Arancel de la licencia', value: Math.round(arancelLicencia), tone: 'main' },
+          { label: 'Multa mínima si manejas vencido', value: Math.round(multaVencida.min), tone: 'bad' },
+        ];
+      } else {
+        // Caso base: costo anual del auto que ya tengo.
+        const permiso = permisoCirculacion(tasacion);
+        const seg = seguroAnual(v.cobertura, edad, anioVehiculo);
+        const licenciaPorAnio = arancelLicencia / clase.anios;
+        const totalAnual = permiso.pesos + soapPrecio + revisionPrecio + seg.anual + licenciaPorAnio;
+
+        rows.push({ k: 'Tasación fiscal SII de tu auto', ref: 'Base del permiso de circulación', v: tasacion });
+        rows.push({
+          k: 'Tasación expresada en UTM',
+          ref: 'UTM del mes ' + clp(UTM),
+          v: permiso.tasacionUtm,
+          format: 'unit',
+          unit: 'UTM',
+          decimals: 1,
+        });
+        rows.push({
+          k: 'Permiso de circulación en UTM',
+          ref: 'Tabla progresiva Art. 12 Ley 18.290',
+          v: permiso.utm,
+          format: 'unit',
+          unit: 'UTM',
+          decimals: 2,
+        });
+        rows.push({ k: 'Permiso de circulación anual', ref: 'Se paga en marzo, o en dos cuotas marzo y agosto', v: permiso.pesos });
+        rows.push({ k: 'Cuota de marzo si lo fraccionas', ref: 'Mitad del permiso, sin recargo', v: permiso.pesos / 2 });
+        rows.push({ k: 'Cuota de agosto si lo fraccionas', ref: 'La otra mitad, mismo total', v: permiso.pesos / 2 });
+        rows.push({ k: 'SOAP anual', ref: 'Vigencia 1 de abril a 31 de marzo', v: soapPrecio });
+        rows.push({
+          k: 'Cobertura del SOAP por muerte',
+          ref: SOAP_COBERTURAS_UF.muerte + ' UF · Ley 18.490 Art. 25',
+          v: SOAP_COBERTURAS_UF.muerte * UF,
+        });
+        rows.push({
+          k: 'Cobertura del SOAP en gastos médicos por persona',
+          ref: SOAP_COBERTURAS_UF.gastosMedicos + ' UF · Ley 18.490 Art. 25',
+          v: SOAP_COBERTURAS_UF.gastosMedicos * UF,
+        });
+        rows.push({ k: 'Revisión técnica y análisis de gases', ref: 'Tarifa de la planta revisora', v: revisionPrecio });
+        rows.push({
+          k: seg.anual > 0 ? 'Seguro voluntario — ' + seg.nombre : 'Seguro voluntario',
+          ref: seg.anual > 0 ? 'Estimación de mercado · vehículo de ' + seg.antiguedad + ' años' : 'No contratas ninguno: sólo tienes el SOAP',
+          v: seg.anual,
+        });
+        rows.push({ k: 'Licencia de conducir prorrateada', ref: clase.nombre + ' · ' + clase.anios + ' años de vigencia', v: licenciaPorAnio });
+        rows.push({ k: 'Costo fijo anual del auto', ref: 'Todo lo obligatorio más el seguro', v: totalAnual, extra: true });
+        rows.push({ k: 'Costo fijo mensual equivalente', ref: 'Anual ÷ 12', v: totalAnual / 12 });
+        rows.push({
+          k: 'Cuánto pesa el costo fijo sobre la tasación del auto',
+          ref: 'Costo anual ÷ tasación',
+          v: tasacion > 0 ? (totalAnual / tasacion) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+
+        total = clp(totalAnual);
+        sub =
+          'Tener este auto te cuesta ' + clp(totalAnual) + ' al año sólo en costos fijos, o sea ' +
+          clp(totalAnual / 12) + ' al mes · el permiso son ' + permiso.utm.toFixed(2).replace('.', ',') +
+          ' UTM (' + clp(permiso.pesos) + ') y no incluye bencina, TAG ni mantención';
+        chart = [
+          { label: 'Permiso de circulación', value: Math.round(permiso.pesos), tone: 'prop' },
+          { label: 'SOAP', value: Math.round(soapPrecio), tone: 'exit' },
+          { label: 'Revisión técnica', value: Math.round(revisionPrecio), tone: 'exit' },
+          { label: 'Seguro voluntario', value: Math.round(seg.anual), tone: 'main' },
+          { label: 'Licencia (por año)', value: Math.round(licenciaPorAnio), tone: 'warn' },
+        ];
+      }
+
+      return {
+        total: total,
+        sub: sub,
+        rows: rows,
+        chart: chart.filter((c) => c.value > 0),
+      };
+    });
+  })();
+</script>

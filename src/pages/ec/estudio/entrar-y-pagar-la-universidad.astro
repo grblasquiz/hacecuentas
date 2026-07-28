@@ -1,0 +1,234 @@
+---
+/**
+ * Hub de decisión EC — "Nota de postulación Transformar y costo de la universidad".
+ * audience="EC" literal: HubData sólo modela 'AR' | 'global' y el mercado viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  SENESCYT,
+  UNIVERSIDADES,
+  SBU,
+  NOTA_MINIMA_APROBACION,
+  UTILES_ESCOLARES,
+} from '../../../lib/hubs/ec/entrar-y-pagar-la-universidad';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="EC"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ SENESCYT, UNIVERSIDADES, SBU, NOTA_MINIMA_APROBACION, UTILES_ESCOLARES }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) =>
+      '$' + new Intl.NumberFormat('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        .format(Math.round((n || 0) * 100) / 100);
+    const num = (n, d) => (n || 0).toFixed(d).replace('.', ',');
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'general';
+
+      // ── Nota de postulación: se calcula SIEMPRE, para poder ubicarla en la escala ──
+      const examen = Math.min(SENESCYT.examenMax, Math.max(0, Number(v.puntajeExamen) || 0));
+      const escala = String(v.escalaGrado || '10') === '20' ? 20 : 10;
+      const notaGrado = Math.min(escala, Math.max(0, Number(v.notaGrado) || 0));
+      // El 0 legítimo se respeta: `Math.max(0, Number(x) || 0)` no lo reemplaza por un default.
+      const afRaw = Number(v.accionAfirmativa);
+      const accionAfirmativa = Number.isFinite(afRaw) ? Math.min(SENESCYT.accionAfirmativaMax, Math.max(0, afRaw)) : 0;
+
+      const pesos = id === 'tecnico' ? SENESCYT.tecnico : SENESCYT.general;
+      const gradoEn1000 = notaGrado * (1000 / escala);
+      const aporteExamen = examen * pesos.pesoExamen;
+      const aporteGrado = gradoEn1000 * pesos.pesoGrado;
+      const notaPostulacion = aporteExamen + aporteGrado + accionAfirmativa;
+
+      // Posición en la escala 400–1000 del examen Transformar.
+      const rango = SENESCYT.examenMax - SENESCYT.examenMin;
+      const position = Math.min(100, Math.max(0, ((notaPostulacion - SENESCYT.examenMin) / rango) * 100));
+      const franja =
+        notaPostulacion >= 950 ? 'franja de excelencia' :
+        notaPostulacion >= 850 ? 'franja alta' :
+        notaPostulacion >= 700 ? 'franja media' : 'franja baja';
+      const positionLabel = 'Nota de postulación ' + Math.round(notaPostulacion) + ' / 1000 · ' + franja;
+
+      // ── Costo de la carrera privada ──
+      const arancel = Math.max(0, Number(v.arancelSemestre) || 0);
+      const matricula = Math.max(0, Number(v.matriculaSemestre) || 0);
+      const semestres = Math.max(1, Math.round(Number(v.semestres) || 1));
+      const becaRaw = Number(v.becaPct);
+      const becaPct = Number.isFinite(becaRaw) ? Math.min(100, Math.max(0, becaRaw)) : 0;
+      const arancelConBeca = arancel * (1 - becaPct / 100);
+      const costoSemestre = arancelConBeca + matricula;
+      const costoCarrera = costoSemestre * semestres;
+      const ahorroBeca = (arancel - arancelConBeca) * semestres;
+      const meses = (semestres / 2) * 12;
+      const costoMensualizado = meses > 0 ? costoCarrera / meses : 0;
+
+      // ── Regreso a clases ──
+      const nivelSel = String(v.nivelUtiles || 'fiscal_basica').split('_');
+      const tipoInst = UTILES_ESCOLARES[nivelSel[0]] ? nivelSel[0] : 'fiscal';
+      const nivel = UTILES_ESCOLARES[tipoInst][nivelSel[1]] ? nivelSel[1] : 'basica';
+      const fila = UTILES_ESCOLARES[tipoInst][nivel];
+      const hijos = Math.max(1, Math.min(10, Math.round(Number(v.hijos) || 1)));
+      const utilesEst = fila[0] * hijos;
+      const uniformesEst = fila[1] * hijos;
+      const mochilaEst = fila[2] * hijos;
+      const utilesTotal = utilesEst + uniformesEst + mochilaEst;
+
+      const rows = [
+        {
+          k: 'Aporte del examen Transformar',
+          ref: 'Puntaje ' + Math.round(examen) + ' × ' + (pesos.pesoExamen * 100).toFixed(0) + '%',
+          v: aporteExamen,
+          format: 'unit',
+          unit: 'pts',
+          decimals: 1,
+        },
+        {
+          k: 'Aporte de la nota de grado',
+          ref: 'Nota ' + num(notaGrado, 2) + ' sobre ' + escala + ' → ' + Math.round(gradoEn1000) + '/1000 × ' + (pesos.pesoGrado * 100).toFixed(0) + '%',
+          v: aporteGrado,
+          format: 'unit',
+          unit: 'pts',
+          decimals: 1,
+        },
+        {
+          k: 'Puntos de acción afirmativa',
+          ref: accionAfirmativa > 0 ? 'Se suman al final · máximo ' + SENESCYT.accionAfirmativaMax : 'No acreditaste acción afirmativa',
+          v: accionAfirmativa,
+          format: 'unit',
+          unit: 'pts',
+          decimals: 0,
+        },
+        {
+          k: 'Tu nota de postulación',
+          ref: (id === 'tecnico' ? 'Ponderación de bachillerato técnico afín' : 'Ponderación de bachillerato general') + ' · escala de 400 a 1000',
+          v: notaPostulacion,
+          format: 'unit',
+          unit: 'pts',
+          decimals: 1,
+          extra: true,
+        },
+        {
+          k: 'Nota de postulación con la otra ponderación',
+          ref: id === 'tecnico' ? 'Si te evaluaran como bachillerato general (carrera no afín)' : 'Si vinieras de bachillerato técnico afín',
+          v: (id === 'tecnico'
+            ? examen * SENESCYT.general.pesoExamen + gradoEn1000 * SENESCYT.general.pesoGrado
+            : examen * SENESCYT.tecnico.pesoExamen + gradoEn1000 * SENESCYT.tecnico.pesoGrado) + accionAfirmativa,
+          format: 'unit',
+          unit: 'pts',
+          decimals: 1,
+        },
+        {
+          k: 'Tu nota de grado en escala sobre 10',
+          ref: 'Mínimo de aprobación del bachillerato: ' + NOTA_MINIMA_APROBACION,
+          v: gradoEn1000 / 100,
+          format: 'unit',
+          unit: '/ 10',
+          decimals: 2,
+        },
+        {
+          k: 'Cuánto sube tu nota cada 10 puntos más de examen',
+          ref: 'El examen pesa el ' + (pesos.pesoExamen * 100).toFixed(0) + '%: por eso rinde menos de lo que parece',
+          v: 10 * pesos.pesoExamen,
+          format: 'unit',
+          unit: 'pts',
+          decimals: 1,
+        },
+        { k: 'Costo de un semestre', ref: becaPct > 0 ? 'Arancel con beca del ' + becaPct.toFixed(0) + '% más matrícula' : 'Arancel más matrícula', v: costoSemestre },
+        { k: 'Costo de la carrera completa', ref: semestres + ' semestres al costo actual', v: costoCarrera, extra: id === 'privada' },
+        { k: 'Costo prorrateado por mes', ref: 'Total de la carrera repartido en ' + Math.round(meses) + ' meses', v: costoMensualizado },
+        { k: 'Lo que te ahorra la beca en toda la carrera', ref: becaPct > 0 ? 'Solo sobre el arancel: la matrícula se paga igual' : 'Sin beca cargada', v: ahorroBeca },
+        { k: 'Salarios básicos que cuesta la carrera', ref: 'Costo total dividido entre el SBU de ' + usd(SBU), v: SBU > 0 ? costoCarrera / SBU : 0, format: 'unit', unit: 'SBU', decimals: 1 },
+        { k: 'Útiles de la lista', ref: hijos + ' estudiante(s) · ' + tipoInst + ' · ' + nivel, v: utilesEst },
+        { k: 'Uniformes', ref: 'Promedio de temporada del régimen Sierra-Amazonía', v: uniformesEst },
+        { k: 'Mochila, lonchera y zapatos', ref: 'Promedio de temporada, orientativo', v: mochilaEst },
+        { k: 'Regreso a clases del hogar', ref: hijos + ' estudiante(s) · ' + usd(utilesTotal / hijos) + ' por estudiante', v: utilesTotal, extra: id === 'utiles' },
+      ];
+
+      let total, sub;
+      if (id === 'privada') {
+        total = usd(costoCarrera);
+        sub = semestres + ' semestres a ' + usd(costoSemestre) + ' cada uno = ' + usd(costoCarrera) +
+          ' (' + usd(costoMensualizado) + ' al mes prorrateado)' +
+          (becaPct > 0 ? ' · la beca del ' + becaPct.toFixed(0) + '% te ahorra ' + usd(ahorroBeca) : '') +
+          ' · tu nota de postulación es ' + Math.round(notaPostulacion) + '/1000';
+      } else if (id === 'utiles') {
+        total = usd(utilesTotal);
+        sub = hijos + ' estudiante(s) en institución ' + (tipoInst === 'particular' ? 'particular' : 'fiscal') +
+          ' · ' + usd(utilesTotal / hijos) + ' por estudiante · las clases del régimen Sierra-Amazonía arrancan escalonadas a comienzos de septiembre';
+      } else if (id === 'promedio') {
+        total = num(gradoEn1000 / 100, 2) + ' / 10';
+        sub = 'Tu nota de grado equivale a ' + num(gradoEn1000 / 100, 2) + ' sobre 10 · ' +
+          (gradoEn1000 / 100 >= NOTA_MINIMA_APROBACION ? 'está por encima del mínimo de aprobación de ' + NOTA_MINIMA_APROBACION : 'está por debajo del mínimo de aprobación de ' + NOTA_MINIMA_APROBACION) +
+          ' · llevada a la escala de 1000 aporta ' + Math.round(aporteGrado) + ' puntos a tu postulación';
+      } else {
+        total = Math.round(notaPostulacion) + ' / 1000';
+        sub = 'Examen ' + Math.round(examen) + ' al ' + (pesos.pesoExamen * 100).toFixed(0) + '% y nota de grado ' +
+          num(notaGrado, 2) + '/' + escala + ' al ' + (pesos.pesoGrado * 100).toFixed(0) + '%' +
+          (accionAfirmativa > 0 ? ' más ' + Math.round(accionAfirmativa) + ' de acción afirmativa' : '') +
+          ' · quedas en la ' + franja;
+      }
+
+      const chart = [
+        { label: 'Franja baja', value: 300, from: 400, to: 700, tone: 'bad' },
+        { label: 'Franja media', value: 150, from: 700, to: 850, tone: 'warn' },
+        { label: 'Franja alta', value: 100, from: 850, to: 950, tone: 'good' },
+        { label: 'Excelencia', value: 50, from: 950, to: 1000, tone: 'main' },
+      ];
+
+      return {
+        total: total,
+        sub: sub,
+        rows: rows,
+        chart: chart,
+        position: position,
+        positionLabel: positionLabel,
+      };
+    });
+  })();
+</script>

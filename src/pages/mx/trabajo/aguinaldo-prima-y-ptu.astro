@@ -1,0 +1,331 @@
+---
+/**
+ * Hub de decisión MX — "¿Cuánto me toca de aguinaldo, prima vacacional y PTU?".
+ * audience="MX" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, ISR_MENSUAL, LFT, EXENCIONES, ESPECIE, UMA } from '../../../lib/hubs/mx/aguinaldo-prima-y-ptu';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="MX"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ TARIFA: ISR_MENSUAL, LFT, EXENCIONES, ESPECIE, UMA }}>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+
+    function isrMensual(base) {
+      if (!(base > 0)) return 0;
+      for (const t of TARIFA) {
+        const hasta = t.hasta === null ? Infinity : t.hasta;
+        if (base >= t.desde && base <= hasta) return t.cuota + (base - t.desde) * t.tasa;
+      }
+      const last = TARIFA[TARIFA.length - 1];
+      return last.cuota + (base - last.desde) * last.tasa;
+    }
+
+    /**
+     * ISR de un ingreso extraordinario por el método de tasa efectiva (Art. 142 RLISR):
+     * la retención es el ISR del sueldo con el gravado menos el ISR del sueldo solo.
+     */
+    function isrExtraordinario(gravado, sueldoMensual) {
+      if (!(gravado > 0)) return { isr: 0, tasa: 0 };
+      const delta = isrMensual(sueldoMensual + gravado) - isrMensual(sueldoMensual);
+      return { isr: Math.max(0, delta), tasa: (Math.max(0, delta) / gravado) * 100 };
+    }
+
+    /** Días de vacaciones de ley por antigüedad cumplida (LFT Art. 76, reforma 2023). */
+    function diasVacacionesLey(anios) {
+      const a = Math.floor(anios);
+      if (a < 1) return LFT.vacacionesPorAnio[0];
+      if (a <= LFT.vacacionesPorAnio.length) return LFT.vacacionesPorAnio[a - 1];
+      return 20 + LFT.incrementoQuinquenal * Math.ceil((a - 5) / 5);
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'aguinaldo';
+      const sd = Math.max(0, v.salarioDiario || 0);
+      const sueldoMensual = sd * 30;
+      const anios = Math.max(0, Math.min(50, v.antiguedad || 0));
+      const diasAnio = Math.max(1, Math.min(365, v.diasAnio || 365));
+
+      // ─────────────────── Prima dominical y festivos ───────────────────
+      if (id === 'dominical') {
+        const domingos = Math.max(0, Math.min(31, v.domingos || 0));
+        const festivos = Math.max(0, Math.min(31, v.festivos || 0));
+        const primaDominical = domingos * sd * (LFT.primaDominicalPct / 100);
+        const extraFestivos = festivos * sd * LFT.festivoExtra;
+        const totalExtra = primaDominical + extraFestivos;
+        const exentoDom = Math.min(primaDominical, domingos * UMA.diaria * EXENCIONES.primaDominicalUmasPorDomingo);
+        const gravado = Math.max(0, totalExtra - exentoDom);
+        const r = isrExtraordinario(gravado, sueldoMensual);
+        const neto = totalExtra - r.isr;
+
+        return {
+          total: mxn(neto),
+          sub:
+            'Te deben ' + mxn(totalExtra) + ' extra en el período · ' +
+            (festivos > 0 ? 'cada festivo o descanso trabajado se paga al triple · ' : '') +
+            'quedan exentos ' + mxn(exentoDom) + ' de prima dominical',
+          rows: [
+            { k: 'Prima dominical', ref: domingos + ' domingos × 25% de ' + mxn(sd) + ' · Art. 71 LFT', v: primaDominical },
+            {
+              k: 'Festivos y descansos trabajados',
+              ref: festivos + ' días × salario doble adicional · Art. 73 y 75 LFT',
+              v: extraFestivos,
+            },
+            { k: 'Total extra del período', ref: 'Además de tu salario ordinario', v: totalExtra, extra: true },
+            {
+              k: 'Lo que cobras por cada festivo trabajado',
+              ref: 'Día normal + doble adicional',
+              v: sd * (1 + LFT.festivoExtra),
+            },
+            {
+              k: 'Prima dominical exenta de ISR',
+              ref: '1 UMA por domingo · Art. 93-XIV LISR',
+              v: exentoDom,
+            },
+            { k: 'Parte gravada', ref: 'Lo que rebasa la exención', v: gravado },
+            { k: 'ISR retenido', ref: 'Tasa efectiva ' + r.tasa.toFixed(2).replace('.', ',') + '% · Art. 142 RLISR', v: r.isr },
+            { k: 'Extra neto que te queda', ref: 'Total menos ISR', v: neto, extra: true },
+          ],
+          chart: [
+            { label: 'Prima dominical', value: Math.round(primaDominical), tone: 'main' },
+            { label: 'Festivos y descansos trabajados', value: Math.round(extraFestivos), tone: 'good' },
+            { label: 'ISR retenido', value: Math.round(r.isr), tone: 'warn' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      // ─────────────────── Vales y fondo de ahorro ───────────────────
+      if (id === 'especie') {
+        const valesMensual = Math.max(0, v.vales || 0);
+        const fondoPct = Math.max(0, Math.min(13, v.fondoPct || 0));
+        const salarioAnual = sueldoMensual * 12;
+        const valesAnual = valesMensual * 12;
+        const fondoAnual = salarioAnual * (fondoPct / 100);
+
+        const valesExento = Math.min(valesAnual, UMA.mensual * ESPECIE.valesTopeUmaMensual * 12);
+        const fondoTope = Math.min(salarioAnual * ESPECIE.fondoAhorroPctSalario, UMA.anual * ESPECIE.fondoAhorroTopeUmaAnual);
+        const fondoExento = Math.min(fondoAnual, fondoTope);
+        const totalEspecie = valesAnual + fondoAnual;
+        const exento = valesExento + fondoExento;
+        const gravado = Math.max(0, totalEspecie - exento);
+        const r = isrExtraordinario(gravado / 12, sueldoMensual);
+        const isrAnual = r.isr * 12;
+        const neto = totalEspecie - isrAnual;
+
+        return {
+          total: mxn(neto),
+          sub:
+            'Tus prestaciones en especie valen ' + mxn(totalEspecie) + ' al año · ' +
+            'equivalen a ' + (sueldoMensual > 0 ? (totalEspecie / sueldoMensual).toFixed(1).replace('.', ',') : '0') +
+            ' meses de sueldo · exento ' + mxn(exento),
+          rows: [
+            { k: 'Vales de despensa al año', ref: mxn(valesMensual) + ' × 12 meses', v: valesAnual },
+            { k: 'Aporte patronal al fondo de ahorro', ref: fondoPct + '% del salario anual', v: fondoAnual },
+            { k: 'Total de prestaciones en especie', ref: 'Valor anual del paquete', v: totalEspecie, extra: true },
+            { k: 'Vales exentos de ISR', ref: '1 UMA mensual · Art. 93-VIII LISR', v: valesExento },
+            {
+              k: 'Fondo de ahorro exento',
+              ref: 'Menor entre 13% del salario y 1,3 UMA anuales',
+              v: fondoExento,
+            },
+            { k: 'Parte gravada del paquete', ref: 'Lo que rebasa los topes', v: gravado },
+            { k: 'ISR anual estimado sobre el excedente', ref: 'Tasa efectiva · Art. 142 RLISR', v: isrAnual },
+            { k: 'Valor neto anual de las prestaciones', ref: 'Total menos ISR', v: neto, extra: true },
+            {
+              k: 'Cuánto suman a tu sueldo mensual',
+              ref: 'Prestación neta ÷ 12',
+              v: neto / 12,
+            },
+            {
+              k: 'Qué porcentaje de tu sueldo anual representan',
+              ref: 'Sobre ' + mxn(salarioAnual),
+              v: salarioAnual > 0 ? (totalEspecie / salarioAnual) * 100 : 0,
+              format: 'unit',
+              unit: '%',
+              decimals: 1,
+            },
+          ],
+          chart: [
+            { label: 'Vales de despensa', value: Math.round(valesAnual), tone: 'main' },
+            { label: 'Fondo de ahorro (aporte patronal)', value: Math.round(fondoAnual), tone: 'good' },
+            { label: 'ISR sobre el excedente', value: Math.round(isrAnual), tone: 'warn' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      // ─────────────────── Aguinaldo, prima vacacional y PTU ───────────────────
+      let bruto = 0;
+      let exento = 0;
+      const rows = [];
+      let etiqueta = '';
+
+      if (id === 'prima-vacacional') {
+        etiqueta = 'prima vacacional';
+        const diasVac = diasVacacionesLey(anios);
+        bruto = sd * diasVac * (LFT.primaVacacionalPct / 100);
+        exento = Math.min(bruto, UMA.diaria * EXENCIONES.primaVacacionalUmas);
+        rows.push({
+          k: 'Días de vacaciones que te tocan',
+          ref: 'Antigüedad de ' + Math.floor(anios) + ' años · Art. 76 LFT',
+          v: diasVac,
+          format: 'unit',
+          unit: 'días',
+        });
+        rows.push({ k: 'Salario de esos días de vacaciones', ref: diasVac + ' × ' + mxn(sd), v: sd * diasVac });
+        rows.push({
+          k: 'Prima vacacional bruta',
+          ref: LFT.primaVacacionalPct + '% sobre los días · Art. 80 LFT',
+          v: bruto,
+          extra: true,
+        });
+        rows.push({
+          k: 'Parte exenta de ISR',
+          ref: EXENCIONES.primaVacacionalUmas + ' UMA (' + mxn(UMA.diaria * EXENCIONES.primaVacacionalUmas) + ') · Art. 93 LISR',
+          v: exento,
+        });
+      } else if (id === 'ptu') {
+        etiqueta = 'PTU';
+        const utilidad = Math.max(0, v.utilidad || 0);
+        const trabajadores = Math.max(1, v.trabajadores || 1);
+        const bolsa = utilidad * LFT.ptuPorcentaje;
+        const ptuEstimada = ((bolsa / trabajadores) * diasAnio) / 365;
+        const tope = sd * LFT.ptuTopeDias;
+        bruto = Math.min(ptuEstimada, tope);
+        exento = Math.min(bruto, UMA.diaria * EXENCIONES.ptuUmas);
+        rows.push({ k: 'Bolsa a repartir por la empresa', ref: '10% de la renta gravable · Art. 117 LFT', v: bolsa });
+        rows.push({
+          k: 'Tu parte estimada antes del tope',
+          ref: 'Bolsa ÷ ' + trabajadores + ' × ' + diasAnio + '/365 días',
+          v: ptuEstimada,
+        });
+        rows.push({ k: 'Tope de tres meses de salario', ref: LFT.ptuTopeDias + ' días × ' + mxn(sd) + ' · Art. 127-VIII LFT', v: tope });
+        rows.push({
+          k: 'PTU que te corresponde',
+          ref: ptuEstimada > tope ? 'El tope te limita el reparto' : 'Por debajo del tope legal',
+          v: bruto,
+          extra: true,
+        });
+        rows.push({
+          k: 'Parte exenta de ISR',
+          ref: EXENCIONES.ptuUmas + ' UMA (' + mxn(UMA.diaria * EXENCIONES.ptuUmas) + ') · Art. 93 LISR',
+          v: exento,
+        });
+      } else {
+        etiqueta = 'aguinaldo';
+        const dias = Math.max(LFT.aguinaldoDias, Math.min(90, v.diasPrestacion || LFT.aguinaldoDias));
+        const completo = sd * dias;
+        bruto = (completo * diasAnio) / 365;
+        exento = Math.min(bruto, UMA.diaria * EXENCIONES.aguinaldoUmas);
+        rows.push({ k: 'Aguinaldo por el año completo', ref: dias + ' días × ' + mxn(sd) + ' · Art. 87 LFT', v: completo });
+        rows.push({
+          k: 'Aguinaldo proporcional',
+          ref: diasAnio + ' de 365 días trabajados',
+          v: bruto,
+          extra: true,
+        });
+        rows.push({
+          k: 'Parte exenta de ISR',
+          ref: EXENCIONES.aguinaldoUmas + ' UMA (' + mxn(UMA.diaria * EXENCIONES.aguinaldoUmas) + ') · Art. 93 LISR',
+          v: exento,
+        });
+        if (dias > LFT.aguinaldoDias) {
+          rows.push({
+            k: 'Cuánto te da tu empresa por encima del mínimo de ley',
+            ref: dias - LFT.aguinaldoDias + ' días extra',
+            v: ((sd * (dias - LFT.aguinaldoDias)) * diasAnio) / 365,
+          });
+        }
+      }
+
+      const gravado = Math.max(0, bruto - exento);
+      const r = isrExtraordinario(gravado, sueldoMensual);
+      const neto = bruto - r.isr;
+
+      rows.push({ k: 'Parte gravada', ref: 'Lo que rebasa la exención', v: gravado });
+      rows.push({
+        k: 'ISR retenido',
+        ref: 'Tasa efectiva sobre lo gravado · Art. 142 RLISR',
+        v: r.isr,
+      });
+      rows.push({ k: 'Neto que cobras', ref: 'Bruto menos ISR', v: neto, extra: true });
+      rows.push({
+        k: 'Tasa efectiva sobre el bruto',
+        ref: 'ISR ÷ ' + etiqueta,
+        v: bruto > 0 ? (r.isr / bruto) * 100 : 0,
+        format: 'unit',
+        unit: '%',
+        decimals: 2,
+      });
+      rows.push({
+        k: 'A cuántos días de salario equivale lo que cobras',
+        ref: 'Neto ÷ salario diario',
+        v: sd > 0 ? neto / sd : 0,
+        format: 'unit',
+        unit: 'días de salario',
+        decimals: 1,
+      });
+
+      const sub =
+        'De ' + mxn(bruto) + ' brutos de ' + etiqueta + ', ' + mxn(exento) + ' quedan exentos' +
+        (r.isr > 0
+          ? ' y el ISR se lleva ' + mxn(r.isr) + ' (tasa efectiva ' + (bruto > 0 ? ((r.isr / bruto) * 100).toFixed(2).replace('.', ',') : '0') + '%)'
+          : ' y no hay retención de ISR');
+
+      return {
+        total: mxn(neto),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Parte exenta que cobras completa', value: Math.round(exento), tone: 'good' },
+          { label: 'Parte gravada que te queda', value: Math.round(Math.max(0, gravado - r.isr)), tone: 'main' },
+          { label: 'ISR retenido', value: Math.round(r.isr), tone: 'warn' },
+        ].filter((s) => s.value > 0),
+      };
+    });
+  })();
+</script>

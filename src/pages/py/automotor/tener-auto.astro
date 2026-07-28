@@ -1,0 +1,229 @@
+---
+/**
+ * Hub de decisión PY — "¿Cuánto te cuesta el auto, de punta a punta?".
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  ARANCELES_IMPORTACION,
+  DESPACHO_PCT,
+  TRANSFERENCIA,
+  PATENTE,
+  COMBUSTIBLES,
+  IVA_GENERAL,
+  USD_PYG,
+} from '../../../lib/hubs/py/tener-auto';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PY"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    ARANCELES_IMPORTACION,
+    DESPACHO_PCT,
+    TRANSFERENCIA,
+    PATENTE,
+    COMBUSTIBLES,
+    IVA_GENERAL,
+    USD_PYG,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const gs = (n) => 'Gs. ' + Math.round(n || 0).toLocaleString('de-DE');
+
+    function arancelDe(id) {
+      const a = ARANCELES_IMPORTACION.find((x) => x.id === id);
+      return a ? a : ARANCELES_IMPORTACION[0];
+    }
+    function combustibleDe(id) {
+      const c = COMBUSTIBLES.find((x) => x.id === id);
+      return c ? c : COMBUSTIBLES[1];
+    }
+    /** Escala notarial: `hasta: null` = tramo sin techo. */
+    function tasaNotarial(valor) {
+      for (const t of TRANSFERENCIA.escalaNotarial) {
+        if (t.hasta === null || valor <= t.hasta) return t.tasa;
+      }
+      return TRANSFERENCIA.escalaNotarial[TRANSFERENCIA.escalaNotarial.length - 1].tasa;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'importar';
+      const cifUsd = Math.max(0, v.cif || 0);
+      const arancel = arancelDe(String(v.tipoArancel || 'auto'));
+      const valorVehiculo = Math.max(0, v.valorVehiculo || 0);
+      const valorFiscal = Math.max(0, v.valorFiscal || 0);
+      const anioFab = Math.max(1950, Math.min(PATENTE.anioReferencia, Math.round(v.anioFabricacion || PATENTE.anioReferencia)));
+      const kmBase = Math.max(0, v.km || 0);
+      const idaVuelta = String(v.idaVuelta || 'no') === 'si';
+      const rendimiento = Math.max(0.1, v.rendimiento || 1);
+      const combustible = combustibleDe(String(v.combustible || '93'));
+      const peajes = Math.max(0, v.peajes || 0);
+
+      // ── Importación: el IVA va sobre CIF + arancel, no sobre el CIF pelado ──
+      const cifGs = cifUsd * USD_PYG;
+      const arancelMonto = cifGs * arancel.tasa;
+      const ivaImportacion = (cifGs + arancelMonto) * IVA_GENERAL;
+      const despacho = cifGs * DESPACHO_PCT;
+      const costoImportacion = cifGs + arancelMonto + ivaImportacion + despacho;
+
+      // ── Transferencia ────────────────────────────────────────────────────
+      const rateNotarial = tasaNotarial(valorVehiculo);
+      const minimo = TRANSFERENCIA.minimoJornales * TRANSFERENCIA.jornalMinimo;
+      const honorario = Math.max(valorVehiculo * rateNotarial, minimo) * (1 + TRANSFERENCIA.iva);
+      const tasaJudicial = valorVehiculo * TRANSFERENCIA.tasaJudicial;
+      const certificados = TRANSFERENCIA.certificadoPolicia + TRANSFERENCIA.certificadoMunicipal;
+      const costoTransferencia = honorario + tasaJudicial + certificados;
+
+      // ── Patente ──────────────────────────────────────────────────────────
+      const antiguedad = Math.max(0, PATENTE.anioReferencia - anioFab);
+      const depPct = Math.min(PATENTE.depreciacionTope, PATENTE.depreciacionPorAnio * antiguedad);
+      const valorDepreciado = valorFiscal * (1 - depPct);
+      const patenteAnual = valorDepreciado * PATENTE.tasa;
+      const patenteProntoPago = patenteAnual * (1 - PATENTE.descuentoProntoPago);
+
+      // ── Viaje ────────────────────────────────────────────────────────────
+      const km = idaVuelta ? kmBase * 2 : kmBase;
+      const litros = km / rendimiento;
+      const costoCombustible = litros * combustible.precio;
+      const costoViaje = costoCombustible + peajes;
+      const costoPorKm = km > 0 ? costoViaje / km : 0;
+
+      const rows = [
+        { k: 'Valor CIF convertido a guaraníes', ref: 'US$ ' + cifUsd.toLocaleString('de-DE') + ' × ' + gs(USD_PYG), v: cifGs },
+        {
+          k: 'Arancel de importación',
+          ref: arancel.label + ' · ' + (arancel.tasa * 100).toFixed(0) + '% · referencial',
+          v: arancelMonto,
+        },
+        {
+          k: 'IVA de importación',
+          ref: '(CIF + arancel) × ' + (IVA_GENERAL * 100).toFixed(0) + '%',
+          v: ivaImportacion,
+        },
+        {
+          k: 'Gastos de despacho estimados',
+          ref: (DESPACHO_PCT * 100).toFixed(0) + '% del CIF · despachante y tasas',
+          v: despacho,
+        },
+        { k: 'Costo total de importar', ref: 'Puesto en Paraguay', v: costoImportacion, extra: true },
+        {
+          k: 'Honorario del escribano con IVA',
+          ref: (rateNotarial * 100).toLocaleString('de-DE') + '% + IVA · referencial',
+          v: honorario,
+        },
+        { k: 'Tasa de inscripción en el Registro', ref: (TRANSFERENCIA.tasaJudicial * 100).toLocaleString('de-DE') + '% · referencial', v: tasaJudicial },
+        { k: 'Certificados de policía y municipalidad', ref: 'Montos fijos referenciales', v: certificados },
+        { k: 'Costo total de la transferencia', ref: 'Poner el auto a tu nombre', v: costoTransferencia, extra: true },
+        {
+          k: 'Antigüedad del vehículo',
+          ref: 'Año ' + anioFab,
+          v: antiguedad,
+          format: 'unit',
+          unit: 'años',
+        },
+        {
+          k: 'Depreciación aplicada al valor fiscal',
+          ref: (PATENTE.depreciacionPorAnio * 100).toFixed(0) + '%/año · tope ' + (PATENTE.depreciacionTope * 100).toFixed(0) + '%',
+          v: depPct * 100,
+          format: 'unit',
+          unit: '%',
+        },
+        { k: 'Valor fiscal depreciado', ref: 'Base de la patente', v: valorDepreciado },
+        { k: 'Patente anual', ref: (PATENTE.tasa * 100).toLocaleString('de-DE') + '% · referencial', v: patenteAnual },
+        {
+          k: 'Patente con descuento por pronto pago',
+          ref: '−' + (PATENTE.descuentoProntoPago * 100).toFixed(0) + '% · según municipalidad',
+          v: patenteProntoPago,
+        },
+        {
+          k: 'Kilómetros del viaje',
+          ref: idaVuelta ? 'Ida y vuelta' : 'Sólo ida',
+          v: km,
+          format: 'unit',
+          unit: 'km',
+        },
+        {
+          k: 'Litros que vas a cargar',
+          ref: km + ' km ÷ ' + rendimiento + ' km/L',
+          v: litros,
+          format: 'unit',
+          unit: 'litros',
+          decimals: 1,
+        },
+        { k: 'Gasto de combustible del viaje', ref: combustible.label + ' · ' + gs(combustible.precio) + '/L', v: costoCombustible },
+        { k: 'Peajes', ref: 'Cargados por vos', v: peajes },
+        { k: 'Costo total del viaje', ref: 'Combustible + peajes', v: costoViaje, extra: true },
+        { k: 'Costo por kilómetro', ref: 'Total ÷ km', v: costoPorKm },
+      ];
+
+      const total =
+        id === 'transferir' ? costoTransferencia
+        : id === 'patente' ? patenteAnual
+        : id === 'usarlo' ? costoViaje
+        : costoImportacion;
+
+      const sub =
+        'Importar: ' + gs(costoImportacion) +
+        ' · transferir: ' + gs(costoTransferencia) +
+        ' · patente: ' + gs(patenteAnual) + '/año' +
+        ' · viaje: ' + gs(costoViaje) + ' (' + gs(costoPorKm) + '/km)';
+
+      return {
+        total: gs(total),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Tributos de importación', value: Math.round(arancelMonto + ivaImportacion), tone: 'warn' },
+          { label: 'Gastos de transferencia', value: Math.round(costoTransferencia), tone: 'exit' },
+          { label: 'Patente de un año', value: Math.round(patenteAnual), tone: 'prop' },
+          { label: 'Combustible y peajes del viaje', value: Math.round(costoViaje), tone: 'main' },
+        ],
+      };
+    });
+  })();
+</script>

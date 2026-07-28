@@ -1,0 +1,189 @@
+---
+/**
+ * Hub de decisión DO — "Lo que cobrás además del sueldo: regalía y bonificación".
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  REGALIA,
+  BONIFICACION,
+  DIVISOR_DIARIO,
+  TOPE_REGALIA,
+  SALARIO_MINIMO_REF,
+} from '../../../lib/hubs/do/regalia-y-bonificacion';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="DO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ REGALIA, BONIFICACION, DIVISOR_DIARIO, TOPE_REGALIA, SALARIO_MINIMO_REF }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const dop = (n) => 'RD$ ' + Math.round(n || 0).toLocaleString('de-DE');
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'completo';
+      const salario = Math.max(0, v.salario || 0);
+      const meses = Math.min(12, Math.max(0, v.meses || 0));
+      const dias = Math.min(30, Math.max(0, v.dias || 0));
+      const comisiones = Math.max(0, v.comisiones || 0);
+      const anios = Math.max(0, Math.floor(v.aniosAntiguedad || 0));
+      const utilidad = Math.max(0, v.utilidad || 0);
+      const empleados = Math.max(1, Math.floor(v.empleados || 1));
+
+      const diario = salario / DIVISOR_DIARIO;
+
+      // Regalía (Art. 219): salario ordinario devengado en el año ÷ 12.
+      const devengado = salario * meses + diario * dias + comisiones;
+      const regaliaBruta = devengado / REGALIA.divisor;
+      const topeRegaliaAplica = regaliaBruta > TOPE_REGALIA;
+      const regalia = topeRegaliaAplica ? TOPE_REGALIA : regaliaBruta;
+      const regaliaAnioCompleto = salario; // año completo con sueldo fijo = un salario
+
+      // Bonificación (Art. 223): tope en días de salario según antigüedad.
+      const topeDias = anios >= 3 ? BONIFICACION.topeDias3anios : BONIFICACION.topeDiasMenos3anios;
+      const topeBonificacion = diario * topeDias;
+      const pool = utilidad * BONIFICACION.porcentajeUtilidades;
+      const porCabeza = pool / empleados;
+      const bonificacion = utilidad > 0 ? Math.min(topeBonificacion, porCabeza) : topeBonificacion;
+      const limitadaPorTope = utilidad > 0 && porCabeza > topeBonificacion;
+
+      const total = regalia + bonificacion;
+      const sueldosExtra = salario > 0 ? total / salario : 0;
+
+      const rows = [
+        { k: 'Salario ordinario mensual', ref: 'Base de las dos cuentas', v: salario },
+        {
+          k: 'Salario diario',
+          ref: 'Mensual ÷ ' + String(DIVISOR_DIARIO).replace('.', ',') + ' · Regl. 258-93',
+          v: diario,
+          decimals: 2,
+        },
+        {
+          k: 'Período computado para la regalía',
+          ref: meses + ' mes(es)' + (dias > 0 ? ' y ' + dias + ' día(s)' : ''),
+          v: meses + dias / DIVISOR_DIARIO,
+          format: 'unit',
+          unit: 'meses',
+          decimals: 2,
+        },
+      ];
+
+      if (comisiones > 0) {
+        rows.push({ k: 'Comisiones ordinarias del año', ref: 'Forman parte del salario', v: comisiones });
+      }
+      rows.push({ k: 'Salario devengado en el año', ref: 'Base del Art. 219', v: devengado });
+      rows.push({ k: 'Regalía pascual antes del tope', ref: 'Devengado ÷ ' + REGALIA.divisor, v: regaliaBruta });
+      if (topeRegaliaAplica) {
+        rows.push({
+          k: 'Tope legal de la regalía',
+          ref: REGALIA.topeSalariosMinimos + ' salarios mínimos de ' + dop(SALARIO_MINIMO_REF),
+          v: TOPE_REGALIA,
+        });
+      }
+      rows.push({ k: 'Regalía pascual a cobrar', ref: 'Exenta de ISR y sin TSS · antes del 20-dic', v: regalia, extra: true });
+      rows.push({
+        k: 'Regalía si trabajaras el año entero',
+        ref: 'Referencia: un sueldo completo',
+        v: Math.min(regaliaAnioCompleto, TOPE_REGALIA),
+      });
+
+      rows.push({
+        k: 'Tope de bonificación por antigüedad',
+        ref: topeDias + ' días de salario · Art. 223 (' + (anios >= 3 ? '3 años o más' : 'menos de 3 años') + ')',
+        v: topeBonificacion,
+      });
+      if (utilidad > 0) {
+        rows.push({
+          k: 'Pool repartible de la empresa',
+          ref: Math.round(BONIFICACION.porcentajeUtilidades * 100) + '% de la utilidad neta',
+          v: pool,
+        });
+        rows.push({
+          k: 'Reparto estimado por trabajador',
+          ref: 'Pool ÷ ' + empleados + ' empleados (reparto parejo)',
+          v: porCabeza,
+        });
+      }
+      rows.push({
+        k: 'Bonificación estimada',
+        ref: utilidad > 0 ? (limitadaPorTope ? 'Limitada por el tope de ' + topeDias + ' días' : 'Menor que el tope') : 'Tope legal (sin dato de utilidad)',
+        v: bonificacion,
+        extra: true,
+      });
+      rows.push({ k: 'Total anual fuera del sueldo', ref: 'Regalía + bonificación', v: total, extra: true });
+      rows.push({
+        k: 'Equivale a',
+        ref: 'Total ÷ salario mensual',
+        v: sueldosExtra,
+        format: 'unit',
+        unit: 'sueldos extra',
+        decimals: 2,
+      });
+
+      let sub =
+        'Regalía de ' + dop(regalia) +
+        (topeRegaliaAplica ? ' (limitada por el tope de 5 salarios mínimos)' : meses >= 12 ? ' (un sueldo completo)' : ' proporcional') +
+        ' · bonificación con tope de ' + topeDias + ' días' +
+        ' · en total ' + sueldosExtra.toFixed(2).replace('.', ',') + ' sueldos extra al año';
+
+      if (id === 'bonificacion' && utilidad === 0) {
+        sub += ' · cargá la utilidad neta de la empresa para ver el pool real';
+      }
+
+      return {
+        total: dop(total),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Regalía pascual (diciembre)', value: Math.round(regalia), tone: 'main' },
+          { label: 'Bonificación (Art. 223)', value: Math.round(bonificacion), tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

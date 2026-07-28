@@ -1,0 +1,357 @@
+---
+/**
+ * Hub EN — "How long will it run, and what supply does it need?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ * La plata (impresión 3D) va en dólares con precios editables — la calc vieja traía
+ * defaults en pesos argentinos, ver el comentario del .ts.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  FILAMENT_USD_PER_KG,
+  USD_PER_KWH,
+  WEAR_RATE,
+  PSU_MARGIN,
+  Z_SAFE,
+  Z_PREMIUM,
+  SERVO_MIN_MS,
+  SERVO_NEUTRAL_MS,
+  SERVO_MAX_MS,
+} from '../../../lib/hubs/en/batteries-and-electronics';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ FILAMENT_USD_PER_KG, USD_PER_KWH, WEAR_RATE, PSU_MARGIN, Z_SAFE, Z_PREMIUM, SERVO_MIN_MS, SERVO_NEUTRAL_MS, SERVO_MAX_MS }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(x || 0).toLocaleString('en-US');
+    const usd = (x) =>
+      '$' + (x || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const fmtOhm = (o) => (o >= 1e6 ? (o / 1e6).toFixed(2) + ' MΩ' : o >= 1e3 ? (o / 1e3).toFixed(2) + ' kΩ' : o.toFixed(2) + ' Ω');
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'battery-ah';
+
+      if (id === 'battery-mah') {
+        const mah = Math.max(0, v.mah || 0);
+        const ma = Math.max(0.001, v.ma || 0.001);
+        const hours = mah / ma;
+        const realistic = hours * 0.85;
+        const rows = [
+          { k: 'Cell capacity', ref: 'Nameplate figure', v: mah, format: 'unit', unit: 'mAh' },
+          { k: 'Current the device draws', ref: 'Assumed constant', v: ma, format: 'unit', unit: 'mA', decimals: 1 },
+          { k: 'Ideal runtime', ref: 'mAh ÷ mA', v: hours, format: 'unit', unit: 'hours', decimals: 2, extra: true },
+          { k: 'Realistic runtime', ref: 'About 85% of ideal in practice', v: realistic, format: 'unit', unit: 'hours', decimals: 2, extra: true },
+          { k: 'That in days', ref: 'Realistic figure ÷ 24', v: realistic / 24, format: 'unit', unit: 'days', decimals: 2 },
+          { k: 'Energy stored at 3.7 V nominal', ref: 'Typical lithium-ion cell voltage', v: (mah * 3.7) / 1000, format: 'unit', unit: 'Wh', decimals: 2 },
+          { k: 'Runtime if the draw doubled', ref: 'Halves it, linearly', v: hours / 2, format: 'unit', unit: 'hours', decimals: 2 },
+          { k: 'Draw needed to last a full week', ref: '168 hours on this cell', v: mah / 168, format: 'unit', unit: 'mA', decimals: 2 },
+        ];
+        return {
+          total: realistic.toFixed(1) + ' hours',
+          sub:
+            hours.toFixed(1) + ' hours ideal, about ' + realistic.toFixed(1) + ' realistically · ' +
+            (realistic / 24).toFixed(1) + ' days · ' +
+            'a device that sleeps needs an average from its duty cycle, not a single current figure',
+          rows: rows,
+          chart: [
+            { label: 'Realistic runtime (hours)', value: Math.round(realistic * 10) / 10, tone: 'good' },
+            { label: 'Optimism in the ideal figure (hours)', value: Math.round((hours - realistic) * 10) / 10, tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'dc-supply') {
+        const volts = Math.max(0.1, v.supplyV || 0.1);
+        const load = Math.max(0, v.loadW || 0);
+        const margin = Math.max(1, v.margin || PSU_MARGIN);
+        const minAmps = load / volts;
+        const recWatts = load * margin;
+        const recAmps = recWatts / volts;
+        const rows = [
+          { k: 'Supply voltage', ref: 'Must match the device exactly', v: volts, format: 'unit', unit: 'V', decimals: 1 },
+          { k: 'Total load', ref: 'Sum of everything on the rail', v: load, format: 'unit', unit: 'W', decimals: 1 },
+          { k: 'Absolute minimum current', ref: 'Watts ÷ volts', v: minAmps, format: 'unit', unit: 'A', decimals: 2 },
+          { k: 'Safety margin applied', ref: 'Never run a supply at its maximum', v: (margin - 1) * 100, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Supply current to buy', ref: 'Minimum × margin', v: recAmps, format: 'unit', unit: 'A', decimals: 2, extra: true },
+          { k: 'Supply wattage to buy', ref: 'Load × margin', v: recWatts, format: 'unit', unit: 'W', decimals: 1, extra: true },
+          { k: 'Spare headroom the margin gives you', ref: 'Recommended minus load', v: recWatts - load, format: 'unit', unit: 'W', decimals: 1 },
+          { k: 'Load it would run at on that supply', ref: 'Comfortably below maximum', v: recWatts > 0 ? (load / recWatts) * 100 : 0, format: 'unit', unit: '%', decimals: 0 },
+        ];
+        return {
+          total: volts + ' V at ' + recAmps.toFixed(2) + ' A',
+          sub:
+            n0(recWatts) + ' W supply for a ' + n0(load) + ' W load · absolute minimum is ' + minAmps.toFixed(2) + ' A · ' +
+            'a higher current rating is harmless, a wrong voltage or polarity is not · watch inrush current on motors',
+          rows: rows,
+          chart: [
+            { label: 'Load (W)', value: Math.round(load * 10) / 10, tone: 'main' },
+            { label: 'Safety margin (W)', value: Math.round((recWatts - load) * 10) / 10, tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'speakers') {
+        const p = Math.max(0, v.ampW || 0);
+        const z = Math.max(0.1, v.speakerZ || 0.1);
+        const n = Math.max(1, Math.floor(v.speakerN || 1));
+        const series = String(v.wiring || 'parallel') === 'series';
+        const zTotal = series ? z * n : z / n;
+        const zOther = series ? z / n : z * n;
+        const wPer = p / n;
+        const verdict =
+          zTotal >= Z_SAFE ? 'safe for nearly any amplifier'
+          : zTotal >= Z_PREMIUM ? 'only amplifiers rated for low loads stay stable here'
+          : 'DANGEROUS — below 2 Ω most amplifiers go into protection or fail';
+        const tone = zTotal >= Z_SAFE ? 'good' : zTotal >= Z_PREMIUM ? 'warn' : 'bad';
+        const rows = [
+          { k: 'Impedance of each speaker', ref: 'As rated on the speaker', v: z, format: 'unit', unit: 'Ω', decimals: 1 },
+          { k: 'Speakers on the channel', ref: series ? 'Wired in series' : 'Wired in parallel', v: n, format: 'plain' },
+          { k: 'Total impedance the amplifier sees', ref: series ? 'Impedance × count' : 'Impedance ÷ count', v: zTotal, format: 'unit', unit: 'Ω', decimals: 2, extra: true },
+          { k: 'What the other configuration would give', ref: series ? 'In parallel instead' : 'In series instead', v: zOther, format: 'unit', unit: 'Ω', decimals: 2 },
+          { k: 'Power to each speaker', ref: 'Amplifier power ÷ speakers', v: wPer, format: 'unit', unit: 'W', decimals: 0, extra: true },
+          { k: 'Margin above the 4 Ω safe line', ref: zTotal >= Z_SAFE ? 'Comfortably above it' : 'BELOW it', v: zTotal - Z_SAFE, format: 'unit', unit: 'Ω', decimals: 2 },
+          { k: 'Speakers you could add before dropping under 4 Ω', ref: series ? 'Series raises impedance, so no limit here' : 'In parallel', v: series ? 99 : Math.max(0, Math.floor(z / Z_SAFE) - n), format: 'plain' },
+        ];
+        return {
+          total: zTotal.toFixed(2) + ' Ω total',
+          sub:
+            n + ' × ' + z + ' Ω in ' + (series ? 'series' : 'parallel') + ' — ' + verdict + ' · ' +
+            n0(wPer) + ' W per speaker · check the amplifier’s own minimum rated impedance before wiring',
+          rows: rows,
+          chart: [
+            { label: 'Total impedance (Ω)', value: Math.round(zTotal * 100) / 100, tone: tone === 'bad' ? 'bad' : 'main' },
+            { label: 'Margin over the 4 Ω safe line (Ω)', value: Math.round(Math.max(0, zTotal - Z_SAFE) * 100) / 100, tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'servo') {
+        const pulse = Math.max(0.5, Math.min(2.5, v.pulse || SERVO_NEUTRAL_MS));
+        const range = Math.max(1, v.servoRange || 180);
+        const angle = (pulse - SERVO_MIN_MS) * range;
+        const pct = (pulse - SERVO_MIN_MS) * 100;
+        const position =
+          pct <= 5 ? 'near the minimum end of travel'
+          : pct >= 95 ? 'near the maximum end of travel'
+          : Math.abs(pct - 50) <= 5 ? 'centred'
+          : pct < 50 ? 'in the lower half of its travel'
+          : 'in the upper half of its travel';
+        const rows = [
+          { k: 'Pulse width', ref: 'Sent every 20 ms at 50 Hz', v: pulse, format: 'unit', unit: 'ms', decimals: 2 },
+          { k: 'Resulting angle', ref: '(pulse − 1 ms) × rated travel', v: angle, format: 'unit', unit: '°', decimals: 1, extra: true },
+          { k: 'Position within its travel', ref: position, v: pct, format: 'unit', unit: '%', decimals: 0, extra: true },
+          { k: 'Pulse for one end of travel', ref: 'By the usual convention', v: SERVO_MIN_MS, format: 'unit', unit: 'ms', decimals: 2 },
+          { k: 'Pulse for centre', ref: 'Neutral position', v: SERVO_NEUTRAL_MS, format: 'unit', unit: 'ms', decimals: 2 },
+          { k: 'Pulse for the other end', ref: 'By the usual convention', v: SERVO_MAX_MS, format: 'unit', unit: 'ms', decimals: 2 },
+          { k: 'Degrees per microsecond of pulse', ref: 'Your practical resolution', v: range / 1000, format: 'unit', unit: '° per µs', decimals: 3 },
+          { k: 'Pulse change needed for a 10° move', ref: 'From wherever it is now', v: (10 / range) * 1000, format: 'unit', unit: 'µs', decimals: 1 },
+        ];
+        return {
+          total: angle.toFixed(1) + '°',
+          sub:
+            pulse + ' ms puts it ' + position + ', ' + Math.round(pct) + '% of a ' + range + '° range · ' +
+            '1 ms / 1.5 ms / 2 ms is a convention, not a standard — find your servo’s real limits before driving it to an extreme',
+          rows: rows,
+          chart: [
+            { label: 'Angle commanded (°)', value: Math.round(Math.max(0, angle)), tone: 'main' },
+            { label: 'Travel remaining (°)', value: Math.round(Math.max(0, range - angle)), tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'stepper') {
+        const angle = Math.max(0.01, v.stepAngle || 1.8);
+        const micro = Math.max(1, Number(v.microstep) || 1);
+        const fullSteps = 360 / angle;
+        const stepsRev = fullSteps * micro;
+        const stepsDeg = stepsRev / 360;
+        const rows = [
+          { k: 'Step angle', ref: 'From the motor datasheet', v: angle, format: 'unit', unit: '°', decimals: 2 },
+          { k: 'Full steps per revolution', ref: '360 ÷ step angle', v: fullSteps, format: 'unit', unit: 'steps', decimals: 0 },
+          { k: 'Microstepping factor', ref: '1/' + micro + ' step', v: micro, format: 'unit', unit: '×' },
+          { k: 'Steps per revolution', ref: 'Full steps × microstepping', v: stepsRev, format: 'unit', unit: 'steps', decimals: 0, extra: true },
+          { k: 'Steps per degree', ref: 'Steps per revolution ÷ 360', v: stepsDeg, format: 'unit', unit: 'steps per °', decimals: 2, extra: true },
+          { k: 'Smallest commandable movement', ref: 'One microstep', v: angle / micro, format: 'unit', unit: '°', decimals: 4, extra: true },
+          { k: 'Approximate holding torque of one microstep', ref: 'Fraction of a full step — smoothness, not accuracy', v: 100 / micro, format: 'unit', unit: '% of a full step', decimals: 1 },
+          { k: 'Step pulses for one full turn per second', ref: 'The rate your driver must sustain', v: stepsRev, format: 'unit', unit: 'pulses per second', decimals: 0 },
+        ];
+        return {
+          total: n0(stepsRev) + ' steps/rev',
+          sub:
+            angle + '° per step at 1/' + micro + ' microstepping · ' + stepsDeg.toFixed(1) + ' steps per degree · ' +
+            'microstepping buys smoothness and quiet, not real accuracy — an overloaded stepper skips steps silently',
+          rows: rows,
+          chart: [
+            { label: 'Full steps per revolution', value: Math.round(fullSteps), tone: 'main' },
+            { label: 'Extra microsteps gained', value: Math.round(stepsRev - fullSteps), tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'reactance') {
+        const f = Math.max(0.001, v.freq || 0.001);
+        const lH = Math.max(0, v.inductance || 0) * 1e-3;
+        const cF = Math.max(0, v.capacitance || 0) * 1e-6;
+        const xL = lH > 0 ? 2 * Math.PI * f * lH : 0;
+        const xC = cF > 0 ? 1 / (2 * Math.PI * f * cF) : 0;
+        const resonant = lH > 0 && cF > 0 ? 1 / (2 * Math.PI * Math.sqrt(lH * cF)) : 0;
+        const dominant =
+          lH > 0 && cF > 0
+            ? xL > xC
+              ? 'inductive — current lags the voltage'
+              : xC > xL
+                ? 'capacitive — current leads the voltage'
+                : 'at resonance — the two cancel and the impedance is purely resistive'
+            : lH > 0
+              ? 'inductive only — reactance rises with frequency'
+              : 'capacitive only — reactance falls with frequency';
+        const rows = [
+          { k: 'Frequency', ref: 'As entered', v: f, format: 'unit', unit: 'Hz', decimals: 1 },
+          { k: 'Inductive reactance XL', ref: lH > 0 ? '2πfL' : 'No inductor entered', v: xL, format: 'unit', unit: 'Ω', decimals: 2, extra: true },
+          { k: 'Capacitive reactance XC', ref: cF > 0 ? '1 ÷ (2πfC)' : 'No capacitor entered', v: xC, format: 'unit', unit: 'Ω', decimals: 2, extra: true },
+          { k: 'Net reactance', ref: 'XL minus XC', v: xL - xC, format: 'unit', unit: 'Ω', decimals: 2 },
+          { k: 'Ratio XL to XC', ref: '1.00 means resonance', v: xC > 0 ? xL / xC : 0, format: 'unit', unit: '×', decimals: 3 },
+          resonant > 0
+            ? { k: 'Resonant frequency', ref: '1 ÷ (2π√(LC)) — where they cancel', v: resonant, format: 'unit', unit: 'Hz', decimals: 1, extra: true }
+            : { k: 'Resonant frequency', ref: 'Needs both L and C to have a value', v: 0, format: 'plain' },
+          { k: 'XL at ten times this frequency', ref: 'Rises linearly with frequency', v: xL * 10, format: 'unit', unit: 'Ω', decimals: 2 },
+          { k: 'XC at ten times this frequency', ref: 'Falls inversely with frequency', v: xC / 10, format: 'unit', unit: 'Ω', decimals: 2 },
+        ];
+        return {
+          total: lH > 0 ? fmtOhm(xL) + ' XL' : fmtOhm(xC) + ' XC',
+          sub:
+            'At ' + n0(f) + ' Hz the circuit is ' + dominant +
+            (resonant > 0 ? ' · it resonates at ' + n0(resonant) + ' Hz, where current can rise far above component ratings' : '') +
+            ' · check the part’s self-resonant frequency on its datasheet',
+          rows: rows,
+          chart: [
+            { label: 'XL (Ω)', value: Math.round(xL * 100) / 100, tone: 'main' },
+            { label: 'XC (Ω)', value: Math.round(xC * 100) / 100, tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'print3d') {
+        const grams = Math.max(0, v.grams || 0);
+        const pricePerKg = Math.max(0, v.filamentPrice === 0 ? 0 : v.filamentPrice || FILAMENT_USD_PER_KG);
+        const hours = Math.max(0, v.printHours || 0);
+        const watts = Math.max(0, v.printerW || 0);
+        const pricePerKwh = Math.max(0, v.kwhPrice === 0 ? 0 : v.kwhPrice || USD_PER_KWH);
+        const marginPct = Math.max(0, v.marginPct || 0);
+        const material = (grams / 1000) * pricePerKg;
+        const electricity = hours * (watts / 1000) * pricePerKwh;
+        const wear = (material + electricity) * WEAR_RATE;
+        const total = material + electricity + wear;
+        const price = total * (1 + marginPct / 100);
+        const profit = price - total;
+        const matShare = total > 0 ? (material / total) * 100 : 0;
+        const rows = [
+          { k: 'Filament', ref: n0(grams) + ' g at ' + usd(pricePerKg) + ' per kg', v: material, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Electricity', ref: hours + ' h × ' + n0(watts) + ' W at ' + usd(pricePerKwh) + ' per kWh', v: electricity, format: 'unit', unit: 'USD', decimals: 3 },
+          { k: 'Machine wear', ref: '10% of material plus electricity', v: wear, format: 'unit', unit: 'USD', decimals: 3 },
+          { k: 'Total cost to run', ref: 'What the part costs you in consumables', v: total, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Selling price at a ' + n0(marginPct) + '% margin', ref: 'Cost × (1 + margin)', v: price, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Profit on the part', ref: 'Price minus cost', v: profit, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Filament share of the cost', ref: 'Where your pricing lever is', v: matShare, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Energy the print consumes', ref: 'Hours × watts ÷ 1000', v: (hours * watts) / 1000, format: 'unit', unit: 'kWh', decimals: 2 },
+          { k: 'Cost per hour of machine time', ref: 'A slow light part still ties up the printer', v: hours > 0 ? total / hours : 0, format: 'unit', unit: 'USD per hour', decimals: 3 },
+        ];
+        return {
+          total: usd(price),
+          sub:
+            usd(total) + ' to run — ' + usd(material) + ' of filament, ' + usd(electricity) + ' of electricity, ' +
+            usd(wear) + ' of wear · ' + n0(marginPct) + '% margin adds ' + usd(profit) + ' · ' +
+            'this excludes your labour, failed prints and post-processing, which usually cost more than the material',
+          rows: rows,
+          chart: [
+            { label: 'Filament (USD)', value: Math.round(material * 100) / 100, tone: 'main' },
+            { label: 'Electricity (USD)', value: Math.round(electricity * 1000) / 1000, tone: 'warn' },
+            { label: 'Machine wear (USD)', value: Math.round(wear * 1000) / 1000, tone: 'prop' },
+            { label: 'Margin (USD)', value: Math.round(profit * 100) / 100, tone: 'good' },
+          ],
+        };
+      }
+
+      // battery-ah
+      const ah = Math.max(0, v.ah || 0);
+      const volts = Math.max(0.1, v.volts || 0.1);
+      const load = Math.max(0.1, v.watts || 0.1);
+      const dod = Math.max(0.01, Math.min(1, (v.dod || 80) / 100));
+      const eff = Math.max(0.01, Math.min(1, (v.efficiency || 95) / 100));
+      const whNominal = ah * volts;
+      const whUsable = whNominal * dod * eff;
+      const hours = whUsable / load;
+      const lostPct = whNominal > 0 ? (1 - whUsable / whNominal) * 100 : 0;
+      const rows = [
+        { k: 'Nominal energy', ref: n0(ah) + ' Ah × ' + volts + ' V', v: whNominal, format: 'unit', unit: 'Wh', decimals: 0 },
+        { k: 'Depth of discharge allowed', ref: '50% for lead-acid, 80–90% for LiFePO4', v: dod * 100, format: 'unit', unit: '%', decimals: 0 },
+        { k: 'Conversion efficiency', ref: 'Inverter or converter losses', v: eff * 100, format: 'unit', unit: '%', decimals: 0 },
+        { k: 'Usable energy', ref: 'Nominal × depth of discharge × efficiency', v: whUsable, format: 'unit', unit: 'Wh', decimals: 0, extra: true },
+        { k: 'Energy you never get to use', ref: 'The gap between label and reality', v: whNominal - whUsable, format: 'unit', unit: 'Wh', decimals: 0 },
+        { k: 'Share of the label capacity lost', ref: 'Depth of discharge plus losses', v: lostPct, format: 'unit', unit: '%', decimals: 0 },
+        { k: 'Runtime at ' + n0(load) + ' W', ref: 'Usable energy ÷ load', v: hours, format: 'unit', unit: 'hours', decimals: 2, extra: true },
+        { k: 'Runtime if the load halved', ref: 'Doubles, on this simple model', v: (whUsable / load) * 2, format: 'unit', unit: 'hours', decimals: 2 },
+        { k: 'Battery needed to run a full day', ref: 'At this load and these losses', v: (load * 24) / (volts * dod * eff), format: 'unit', unit: 'Ah', decimals: 0 },
+      ];
+      return {
+        total: hours.toFixed(1) + ' hours',
+        sub:
+          'Only ' + n0(whUsable) + ' Wh of the ' + n0(whNominal) + ' Wh on the label is usable — ' +
+          Math.round(lostPct) + '% goes to depth of discharge and conversion losses · ' +
+          'compare batteries in watt-hours, never in amp-hours',
+        rows: rows,
+        chart: [
+          { label: 'Usable energy (Wh)', value: Math.round(whUsable), tone: 'good' },
+          { label: 'Reserved and lost (Wh)', value: Math.round(whNominal - whUsable), tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

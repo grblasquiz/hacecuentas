@@ -1,0 +1,210 @@
+---
+/**
+ * Hub de decisión ES — ayudas por renta. Reemplaza 4 calculadoras sueltas.
+ * Gráfico posicional (scale): el compute DEBE devolver position y positionLabel.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, IPREM, BONO_CULTURAL, IMV, BONO_SOCIAL } from '../../../lib/hubs/es/ayudas-por-renta';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/es' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="ES"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ IPREM: IPREM, BC: BONO_CULTURAL, IMV: IMV, BS: BONO_SOCIAL }}>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n) => Math.round(n || 0).toLocaleString('es-ES') + ' €';
+    const num = (n) => n.toFixed(2).replace('.', ',');
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'iprem';
+      const ingresos = Math.max(0, v.ingresos || 0);
+      const adultos = Math.max(1, Math.round(v.adultos || 1));
+      const menores = Math.max(0, Math.round(v.menores || 0));
+      const monoparental = String(v.monoparental || 'no') === 'si';
+      const especial = String(v.especial || 'no') === 'si';
+      const patrimonio = Math.max(0, v.patrimonio || 0);
+      const facturaLuz = Math.max(0, v.facturaLuz || 0);
+
+      const miembros = adultos + menores;
+      const vecesIprem12 = ingresos / IPREM.anual12;
+      const vecesIprem14 = ingresos / IPREM.anual14;
+
+      const rows = [
+        { k: 'Ingresos anuales de la unidad', ref: 'Antes de impuestos', v: ingresos },
+        { k: 'IPREM anual con 12 pagas', ref: 'Versión más estricta', v: IPREM.anual12 },
+        { k: 'IPREM anual con 14 pagas', ref: 'Versión más generosa', v: IPREM.anual14 },
+        {
+          k: 'Tus ingresos en veces el IPREM (12 pagas)',
+          ref: 'La vara de la mayoría de convocatorias',
+          v: vecesIprem12,
+          format: 'unit',
+          unit: 'veces',
+          decimals: 2,
+        },
+        {
+          k: 'Tus ingresos en veces el IPREM (14 pagas)',
+          ref: 'La otra versión que usan algunas ayudas',
+          v: vecesIprem14,
+          format: 'unit',
+          unit: 'veces',
+          decimals: 2,
+        },
+      ];
+
+      let principal = 0;
+      let sub = '';
+
+      if (id === 'imv') {
+        const adultosExtra = Math.min(adultos - 1, IMV.maxAdultosExtra);
+        let factor = 1 + adultosExtra * IMV.pctAdultoExtra;
+        if (menores > 0) factor += IMV.pctPrimerMenor + (menores - 1) * IMV.pctMenoresAdicionales;
+        if (monoparental) factor += IMV.pctMonoparental;
+        const garantizada = IMV.rentaReferenciaAnual * factor;
+        const limitePatrimonio = IMV.limitePatrimonioBase + Math.max(0, miembros - 1) * IMV.limitePatrimonioPorMiembro;
+        const superaPatrimonio = patrimonio > limitePatrimonio;
+        const ayudaAnual = superaPatrimonio ? 0 : Math.max(0, garantizada - ingresos);
+        principal = ayudaAnual / 12;
+
+        rows.push({ k: 'Renta garantizada de tu unidad', ref: adultos + ' adulto(s) y ' + menores + ' menor(es)' + (monoparental ? ' · monoparental' : ''), v: garantizada });
+        rows.push({ k: 'Límite de patrimonio', ref: 'Sin contar la vivienda habitual', v: limitePatrimonio });
+        rows.push({ k: 'Tu patrimonio declarado', ref: superaPatrimonio ? 'Supera el límite: sin derecho' : 'Dentro del límite', v: patrimonio });
+        rows.push({ k: 'IMV anual estimado', ref: 'Renta garantizada menos tus ingresos', v: ayudaAnual, extra: true });
+        rows.push({ k: 'IMV mensual estimado', ref: 'Anual ÷ 12', v: principal, extra: true });
+
+        sub = superaPatrimonio
+          ? 'Tu patrimonio de ' + eur(patrimonio) + ' supera el límite de ' + eur(limitePatrimonio) + ': el IMV se deniega aunque la renta sea baja'
+          : ayudaAnual > 0
+            ? 'Tu unidad tiene una renta garantizada de ' + eur(garantizada) + ' al año: el IMV completaría ' + eur(principal) + ' al mes'
+            : 'Con ' + eur(ingresos) + ' de ingresos ya superas la renta garantizada de ' + eur(garantizada) + ': no habría IMV';
+      } else if (id === 'bonosocial') {
+        const key = String(Math.min(miembros, 3));
+        const mult = especial ? BS.multiplicadorEspecial[key] : BS.multiplicadorGeneral[key];
+        const limite = IPREM.anual14 * mult;
+        const severo = ingresos <= limite * 0.5;
+        const tieneDerecho = ingresos <= limite;
+        const descuento = severo ? BS.descuentoVulnerableSevero : BS.descuentoVulnerable;
+        const ahorro = tieneDerecho ? facturaLuz * descuento : 0;
+        principal = ahorro;
+
+        rows.push({
+          k: 'Multiplicador del IPREM que te aplica',
+          ref: miembros + ' miembro(s)' + (especial ? ' · umbral mejorado' : ''),
+          v: mult,
+          format: 'unit',
+          unit: 'veces',
+          decimals: 1,
+        });
+        rows.push({ k: 'Umbral de renta del bono social', ref: 'IPREM de 14 pagas × multiplicador', v: limite });
+        rows.push({
+          k: 'Categoría estimada',
+          ref: tieneDerecho ? (severo ? 'Vulnerable severo' : 'Vulnerable') : 'Fuera de umbral',
+          v: tieneDerecho ? (severo ? 2 : 1) : 0,
+          format: 'plain',
+        });
+        rows.push({ k: 'Factura anual de la luz', ref: 'La que has indicado', v: facturaLuz });
+        rows.push({
+          k: 'Descuento estimado',
+          ref: Math.round(descuento * 100) + '% sobre el término de energía del PVPC',
+          v: ahorro,
+          extra: true,
+        });
+
+        sub = tieneDerecho
+          ? 'Con ' + eur(ingresos) + ' estás por debajo del umbral de ' + eur(limite) + ': te correspondería el bono social como ' + (severo ? 'vulnerable severo' : 'vulnerable') + ', unos ' + eur(ahorro) + ' al año'
+          : 'Con ' + eur(ingresos) + ' superas el umbral de ' + eur(limite) + ' de tu unidad: no entrarías en el bono social';
+      } else if (id === 'bonocultural') {
+        principal = BC.importe;
+        rows.push({ k: 'Importe del bono cultural', ref: 'Al cumplir 18 años en el ejercicio', v: BC.importe, extra: true });
+        rows.push({
+          k: 'Requisito de renta',
+          ref: 'No hay: sólo edad y residencia',
+          v: 0,
+          format: 'plain',
+        });
+        sub =
+          'El bono cultural son ' +
+          eur(BC.importe) +
+          ' sin requisito de renta, repartidos por categorías, con plazo del ' +
+          BC.plazoInicio +
+          ' al ' +
+          BC.plazoFin;
+      } else {
+        principal = ingresos;
+        rows.push({
+          k: 'Umbral típico de 1,5 veces',
+          ref: 'Ayudas más restrictivas',
+          v: IPREM.anual14 * 1.5,
+        });
+        rows.push({ k: 'Umbral típico de 2 veces', ref: 'Bono social con dos miembros', v: IPREM.anual14 * 2 });
+        rows.push({ k: 'Umbral típico de 3 veces', ref: 'Becas y ayudas al alquiler', v: IPREM.anual14 * 3 });
+        sub =
+          'Tus ingresos equivalen a ' +
+          num(vecesIprem14) +
+          ' veces el IPREM de 14 pagas (' +
+          num(vecesIprem12) +
+          ' con 12 pagas): ese es el número que te van a pedir en casi cualquier convocatoria';
+      }
+
+      const posicion = Math.max(0, Math.min(100, (vecesIprem14 / 5) * 100));
+
+      return {
+        total: eur(principal),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Hasta 1 IPREM', value: 1, from: 0, to: 20, tone: 'good' },
+          { label: '1 a 2 IPREM', value: 2, from: 20, to: 40, tone: 'warn' },
+          { label: '2 a 3 IPREM', value: 3, from: 40, to: 60, tone: 'prop' },
+          { label: 'Más de 3 IPREM', value: 5, from: 60, to: 100, tone: 'bad' },
+        ],
+        position: posicion,
+        positionLabel: num(vecesIprem14) + ' veces el IPREM',
+        format: 'unit',
+        unit: '€',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

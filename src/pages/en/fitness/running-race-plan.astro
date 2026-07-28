@@ -1,0 +1,296 @@
+---
+/**
+ * Hub EN — "How do I train for and pace this race?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  KM_PER_MILE,
+  RACE_KM,
+  PLAN_5K,
+  PLAN_10K,
+  WEEKLY_BUILD_RATE,
+  CAMERON_A,
+  CAMERON_B,
+  RECOVERY_DAYS_PER_KM,
+  RECOVERY_DAYS_PER_MILE,
+  FT_GAIN_PER_EQUIV_MILE,
+} from '../../../lib/hubs/en/running-race-plan';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    KM_PER_MILE,
+    RACE_KM,
+    PLAN_5K,
+    PLAN_10K,
+    WEEKLY_BUILD_RATE,
+    CAMERON_A,
+    CAMERON_B,
+    RECOVERY_DAYS_PER_KM,
+    RECOVERY_DAYS_PER_MILE,
+    FT_GAIN_PER_EQUIV_MILE,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(x || 0).toLocaleString('en-US');
+    /** Segundos → mm:ss. */
+    const mmss = (s) => {
+      const t = Math.max(0, Math.round(s || 0));
+      return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+    };
+    /** Segundos → h:mm:ss. */
+    const hms = (s) => {
+      const t = Math.max(0, Math.round(s || 0));
+      return Math.floor(t / 3600) + ':' + String(Math.floor((t % 3600) / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+    };
+    const RACE_LABEL = { '5k': '5K', '10k': '10K', half: 'half marathon', marathon: 'marathon' };
+    const LEVEL_LABEL = { beginner: 'beginner', intermediate: 'intermediate', advanced: 'advanced' };
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'pace';
+
+      if (id === 'plan') {
+        const race = String(v.race || 'marathon');
+        const level = PLAN_5K[String(v.level)] ? String(v.level) : 'beginner';
+        // Los planes portados cubren 5K y 10K; para half y marathon se usa el de 10K
+        // como base de volumen y se avisa en el subtítulo.
+        const isFive = race === '5k';
+        const p5 = PLAN_5K[level];
+        const p10 = PLAN_10K[level];
+        const weeks = isFive ? p5.weeks : p10.weeks;
+        const peakKm = isFive ? p5.peakKm : Math.round(p10.startKm * Math.pow(1 + p10.rate, p10.buildWeeks));
+        const startKm = isFive ? p5.peakKm / 2 : p10.startKm;
+        const peakMi = peakKm / KM_PER_MILE;
+        const startMi = startKm / KM_PER_MILE;
+        const rows = [
+          { k: 'Weeks of preparation', ref: LEVEL_LABEL[level] + ' ' + (isFive ? '5K' : '10K') + ' block', v: weeks, format: 'unit', unit: 'weeks', extra: true },
+          { k: 'Peak weekly mileage', ref: 'The top of the build, not week one', v: peakMi, format: 'unit', unit: 'mi', decimals: 1, extra: true },
+          { k: 'Peak weekly volume in kilometres', ref: '1 mi = 1.609344 km (exact)', v: peakKm, format: 'unit', unit: 'km' },
+          { k: 'Weekly mileage you start from', ref: 'Week one of the block', v: startMi, format: 'unit', unit: 'mi', decimals: 1 },
+          { k: 'Miles added between week one and the peak', ref: 'Spread over the build phase', v: Math.max(0, peakMi - startMi), format: 'unit', unit: 'mi', decimals: 1 },
+          { k: 'Running days per week', ref: isFive ? 'From the 5K plan' : 'Three to five, plus one long run', v: isFive ? p5.days : level === 'beginner' ? 4 : level === 'intermediate' ? 5 : 6, format: 'unit', unit: 'days' },
+          { k: 'Weekly build rate applied', ref: isFive ? 'Fixed volume table' : 'Compounded over the build weeks', v: isFive ? 10 : p10.rate * 100, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Taper length', ref: 'Volume down, intensity kept', v: weeks >= 10 ? 2 : 1, format: 'unit', unit: 'weeks' },
+        ];
+        return {
+          total: weeks + ' weeks',
+          sub:
+            'Peaking near ' + peakMi.toFixed(0) + ' miles (' + peakKm + ' km) a week from a ' + startMi.toFixed(0) +
+            '-mile base' + (isFive ? ', goal band ' + p5.goal : '') +
+            (race === 'half' || race === 'marathon'
+              ? ' · this block is sized for a 10K; a ' + RACE_LABEL[race] + ' needs the same build plus a dedicated long-run progression'
+              : '') +
+            ' · add one spare week for illness',
+          rows: rows,
+          chart: [
+            { label: 'Weeks of training', value: weeks, tone: 'main' },
+            { label: 'Starting mileage (mi/wk)', value: Math.round(startMi), tone: 'good' },
+            { label: 'Peak mileage (mi/wk)', value: Math.round(peakMi), tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'buildup') {
+        const now = Math.max(0, v.weekly || 0);
+        const next = now * (1 + WEEKLY_BUILD_RATE);
+        const four = now * Math.pow(1 + WEEKLY_BUILD_RATE, 4);
+        const rows = [
+          { k: 'Weekly mileage right now', ref: 'As entered', v: now, format: 'unit', unit: 'mi', decimals: 1 },
+          { k: 'Ceiling for next week', ref: '+10% on this week', v: next, format: 'unit', unit: 'mi', decimals: 1, extra: true },
+          { k: 'Miles you may add next week', ref: 'The increase itself', v: next - now, format: 'unit', unit: 'mi', decimals: 1 },
+          { k: 'Where four compounding weeks land you', ref: '×1.10 four times over', v: four, format: 'unit', unit: 'mi', decimals: 1, extra: true },
+          { k: 'The same four-week figure in kilometres', ref: '1 mi = 1.609344 km (exact)', v: four * KM_PER_MILE, format: 'unit', unit: 'km', decimals: 1 },
+          { k: 'A sensible cutback week after that', ref: '−25% for one week, then resume', v: four * 0.75, format: 'unit', unit: 'mi', decimals: 1 },
+          { k: 'Long run cap at that volume', ref: 'Roughly 30% of the week', v: four * 0.3, format: 'unit', unit: 'mi', decimals: 1 },
+        ];
+        return {
+          total: next.toFixed(1) + ' mi next week',
+          sub:
+            'That is ' + (next - now).toFixed(1) + ' miles added · four compounding weeks take you to ' + four.toFixed(0) +
+            ' miles · 10% is a ceiling, not a target, and every third or fourth week should drop 20–30%',
+          rows: rows,
+          chart: [
+            { label: 'This week (mi)', value: Math.round(now), tone: 'main' },
+            { label: 'Next week (mi)', value: Math.round(next), tone: 'good' },
+            { label: 'Four weeks out (mi)', value: Math.round(four), tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'predict') {
+        const t10 = Math.max(1, v.tenk || 1);
+        const exponent = CAMERON_A + CAMERON_B * Math.log(t10);
+        const tHalf = t10 * Math.pow(RACE_KM.half / RACE_KM['10k'], exponent);
+        const halfMi = RACE_KM.half / KM_PER_MILE;
+        const tenMi = RACE_KM['10k'] / KM_PER_MILE;
+        const paceHalfSec = (tHalf * 60) / halfMi;
+        const pace10Sec = (t10 * 60) / tenMi;
+        const rows = [
+          { k: 'Your 10K time', ref: mmss(t10 * 60) + ' — ' + mmss(pace10Sec) + ' /mi', v: t10, format: 'unit', unit: 'min', decimals: 1 },
+          { k: 'Cameron exponent for that time', ref: '1.07 + 0.0065 × ln(t)', v: exponent, format: 'plain', decimals: 4 },
+          { k: 'Projected half-marathon time', ref: hms(tHalf * 60), v: tHalf, format: 'unit', unit: 'min', decimals: 1, extra: true },
+          { k: 'Projected half pace', ref: mmss(paceHalfSec) + ' /mi', v: paceHalfSec / 60, format: 'unit', unit: 'min/mi', decimals: 2, extra: true },
+          { k: 'Projected half pace per kilometre', ref: mmss(paceHalfSec / KM_PER_MILE) + ' /km', v: paceHalfSec / KM_PER_MILE / 60, format: 'unit', unit: 'min/km', decimals: 2 },
+          { k: 'How much slower per mile than your 10K', ref: mmss(paceHalfSec - pace10Sec) + ' /mi slower', v: (paceHalfSec - pace10Sec) / 60, format: 'unit', unit: 'min/mi', decimals: 2 },
+          { k: 'Slowdown as a percentage', ref: 'Half pace against 10K pace', v: (paceHalfSec / pace10Sec - 1) * 100, format: 'unit', unit: '%', decimals: 1 },
+          { k: 'For comparison, a fixed-exponent Riegel projection', ref: 'Exponent 1.06 for everyone', v: t10 * Math.pow(RACE_KM.half / RACE_KM['10k'], 1.06), format: 'unit', unit: 'min', decimals: 1 },
+        ];
+        return {
+          total: hms(tHalf * 60),
+          sub:
+            mmss(paceHalfSec) + ' per mile (' + mmss(paceHalfSec / KM_PER_MILE) + ' per km) · about ' +
+            mmss(paceHalfSec - pace10Sec) + ' per mile slower than your 10K pace · valid only if the long runs are in the bank',
+          rows: rows,
+          chart: [
+            { label: '10K time (min)', value: Math.round(t10), tone: 'main' },
+            { label: 'Projected half (min)', value: Math.round(tHalf), tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'recover') {
+        const miles = Math.max(0, v.raced || 0);
+        const km = miles * KM_PER_MILE;
+        const days = Math.round(km * RECOVERY_DAYS_PER_KM);
+        const weeks = Math.ceil(days / 7);
+        const daysUs = Math.round(miles * RECOVERY_DAYS_PER_MILE);
+        const rows = [
+          { k: 'Distance you raced', ref: km.toFixed(1) + ' km', v: miles, format: 'unit', unit: 'mi', decimals: 2 },
+          { k: 'Easy days before hard training', ref: 'One day per 2 km raced', v: days, format: 'unit', unit: 'days', extra: true },
+          { k: 'That in weeks', ref: 'Rounded up', v: weeks, format: 'unit', unit: 'weeks', extra: true },
+          { k: 'The classic one-day-per-mile figure', ref: 'The older, more conservative rule', v: daysUs, format: 'unit', unit: 'days' },
+          { k: 'Gap between the two rules', ref: 'Treat the range as the window', v: Math.abs(daysUs - days), format: 'unit', unit: 'days' },
+          { k: 'Days of complete rest inside that window', ref: 'The rest is easy movement, not nothing', v: Math.min(3, Math.max(1, Math.round(days / 7))), format: 'unit', unit: 'days' },
+          { k: 'Earliest sensible date for the next hard race', ref: 'After the longer of the two windows', v: Math.max(days, daysUs), format: 'unit', unit: 'days' },
+        ];
+        return {
+          total: days + ' easy days',
+          sub:
+            'About ' + weeks + (weeks === 1 ? ' week' : ' weeks') + ' · the older one-day-per-mile rule says ' + daysUs +
+            ' days, so treat ' + Math.min(days, daysUs) + '–' + Math.max(days, daysUs) +
+            ' days as the window · easy means walking, jogging or cross-training, not sitting still',
+          rows: rows,
+          chart: [
+            { label: 'Easy days (per 2 km rule)', value: days, tone: 'good' },
+            { label: 'Easy days (per mile rule)', value: daysUs, tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'trail') {
+        const miles = Math.max(0.1, v.trailMi || 0.1);
+        const gain = Math.max(0, v.gainFt || 0);
+        const baseSec = Math.max(120, (v.baseMin || 0) * 60 + (v.baseSec || 0));
+        const addedMi = gain / FT_GAIN_PER_EQUIV_MILE;
+        const equivMi = miles + addedMi;
+        const totalSec = equivMi * baseSec;
+        const effSec = totalSec / miles;
+        const gainPerMile = gain / miles;
+        const rows = [
+          { k: 'Actual distance', ref: (miles * KM_PER_MILE).toFixed(1) + ' km', v: miles, format: 'unit', unit: 'mi', decimals: 2 },
+          { k: 'Total climb', ref: Math.round(gain * 0.3048) + ' m of ascent', v: gain, format: 'unit', unit: 'ft' },
+          { k: 'Flat miles the climb adds', ref: '528 ft of gain = 1 flat mile', v: addedMi, format: 'unit', unit: 'mi', decimals: 2, extra: true },
+          { k: 'Equivalent flat distance', ref: 'What the effort really costs', v: equivMi, format: 'unit', unit: 'mi', decimals: 2, extra: true },
+          { k: 'Estimated finish time', ref: hms(totalSec), v: totalSec / 60, format: 'unit', unit: 'min', decimals: 1, extra: true },
+          { k: 'Effective pace per actual mile', ref: mmss(effSec) + ' /mi', v: effSec / 60, format: 'unit', unit: 'min/mi', decimals: 2 },
+          { k: 'Your flat pace, for comparison', ref: mmss(baseSec) + ' /mi', v: baseSec / 60, format: 'unit', unit: 'min/mi', decimals: 2 },
+          { k: 'Climb per mile', ref: gainPerMile > 300 ? 'Steep — expect to hike the ups' : gainPerMile > 100 ? 'Hilly but runnable' : 'Essentially rolling', v: gainPerMile, format: 'unit', unit: 'ft/mi' },
+        ];
+        return {
+          total: hms(totalSec),
+          sub:
+            miles.toFixed(1) + ' real miles that run like ' + equivMi.toFixed(1) + ' flat ones · effective pace ' +
+            mmss(effSec) + ' per mile against a flat ' + mmss(baseSec) +
+            ' · Naismith credits nothing for the descent, so technical downhills make this optimistic',
+          rows: rows,
+          chart: [
+            { label: 'Actual miles', value: Math.round(miles * 10) / 10, tone: 'main' },
+            { label: 'Flat miles added by the climb', value: Math.round(addedMi * 10) / 10, tone: 'warn' },
+          ],
+        };
+      }
+
+      // pace
+      const race = RACE_KM[String(v.race || 'marathon')] ? String(v.race || 'marathon') : 'marathon';
+      const km = RACE_KM[race];
+      const miles = km / KM_PER_MILE;
+      const totalSec = Math.max(60, (v.goalH || 0) * 3600 + (v.goalM || 0) * 60);
+      const paceMi = totalSec / miles;
+      const paceKm = totalSec / km;
+      const halfSec = totalSec / 2;
+      // Split negativo suave: primera mitad 1% más lenta que la media.
+      const negFirst = halfSec * 1.01;
+      const rows = [
+        { k: 'Race distance', ref: km.toFixed(3) + ' km', v: miles, format: 'unit', unit: 'mi', decimals: 2 },
+        { k: 'Goal finish time', ref: hms(totalSec), v: totalSec / 60, format: 'unit', unit: 'min', decimals: 1 },
+        { k: 'Pace per mile', ref: mmss(paceMi) + ' /mi', v: paceMi / 60, format: 'unit', unit: 'min/mi', decimals: 2, extra: true },
+        { k: 'Pace per kilometre', ref: mmss(paceKm) + ' /km', v: paceKm / 60, format: 'unit', unit: 'min/km', decimals: 2, extra: true },
+        { k: 'Even halfway split', ref: hms(halfSec), v: halfSec / 60, format: 'unit', unit: 'min', decimals: 1, extra: true },
+        { k: 'Halfway split for a 1% negative split', ref: hms(negFirst) + ' out, faster coming home', v: negFirst / 60, format: 'unit', unit: 'min', decimals: 1 },
+        { k: 'Speed you are holding', ref: (3600 / paceKm).toFixed(2) + ' km/h', v: 3600 / paceMi, format: 'unit', unit: 'mph', decimals: 2 },
+        { k: 'What one extra minute of goal time buys you', ref: 'Per mile, across the race', v: 60 / miles, format: 'unit', unit: 's/mi', decimals: 1 },
+        { k: 'Cost of a 10-second-per-mile drift', ref: 'Added to your finish time', v: (10 * miles) / 60, format: 'unit', unit: 'min', decimals: 1 },
+      ];
+      return {
+        total: mmss(paceMi) + ' /mi',
+        sub:
+          mmss(paceKm) + ' per km for the ' + (RACE_LABEL[race] || race) + ' · pass halfway in ' + hms(halfSec) +
+          ' · that is ' + (3600 / paceMi).toFixed(2) + ' mph, and drifting 10 seconds a mile costs you ' +
+          ((10 * miles) / 60).toFixed(1) + ' minutes',
+        rows: rows,
+        chart: [
+          { label: 'First half (min)', value: Math.round(halfSec / 60), tone: 'main' },
+          { label: 'Second half (min)', value: Math.round(halfSec / 60), tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

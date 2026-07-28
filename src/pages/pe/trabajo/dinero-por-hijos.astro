@@ -1,0 +1,232 @@
+---
+/**
+ * Hub de decisión PE — "Tengo un hijo: ¿qué plata me corresponde?"
+ * Absorbe maternidad, paternidad, lactancia, asignación familiar y pensión de alimentos.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  RMV,
+  ASIGNACION_FAMILIAR,
+  LACTANCIA,
+  MATERNIDAD,
+  PATERNIDAD,
+  ALIMENTOS,
+} from '../../../lib/hubs/pe/dinero-por-hijos';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PE"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ RMV, ASIGNACION_FAMILIAR, LACTANCIA, MATERNIDAD, PATERNIDAD, ALIMENTOS }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const nf = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
+    const sol = (n) => 'S/ ' + nf.format(Math.round(n || 0));
+    const MONEY = { format: 'unit', unit: 'soles' };
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'madre';
+      const sueldo = Math.max(0, v.sueldo || 0);
+      const supuesto = String(v.supuesto || 'normal');
+      const p = PATERNIDAD[supuesto] || PATERNIDAD.normal;
+      const bebes = Math.max(1, Math.min(5, Math.round(v.bebes || 1)));
+      const rows = [];
+
+      // ---------- Madre: descanso por maternidad + subsidio por lactancia ----------
+      if (id === 'madre') {
+        const dias = MATERNIDAD.diasBase + (p.maternidadExtra ? MATERNIDAD.diasExtra : 0);
+        const prenatal = MATERNIDAD.diasPrenatal;
+        const postnatal = dias - prenatal;
+        // Base EsSalud: suma de las 12 últimas remuneraciones ÷ 360 = remuneración mensual ÷ 30.
+        const remDiaria = (sueldo * 12) / MATERNIDAD.divisor;
+        const subsidio = remDiaria * dias;
+        const lactancia = LACTANCIA * bebes;
+        const total = subsidio + lactancia;
+
+        rows.push({ k: 'Días de descanso por maternidad', ref: 'Ley 26644, art. 1 (mod. Ley 30367)', v: dias, format: 'unit', unit: 'días' });
+        rows.push({ k: 'Descanso prenatal', ref: 'Se puede diferir al postnatal', v: prenatal, format: 'unit', unit: 'días' });
+        rows.push({ k: 'Descanso postnatal', ref: p.maternidadExtra ? '49 + 30 por parto múltiple o hijo con discapacidad' : 'Desde el parto', v: postnatal, format: 'unit', unit: 'días' });
+        rows.push({ k: 'Remuneración diaria de referencia', ref: '12 remuneraciones ÷ ' + MATERNIDAD.divisor, v: remDiaria, decimals: 2 });
+        rows.push({ k: 'Subsidio por maternidad (lo paga EsSalud)', ref: sol(remDiaria) + ' × ' + dias + ' días', v: subsidio, extra: true });
+        rows.push({ k: 'Subsidio por lactancia', ref: sol(LACTANCIA) + ' × ' + bebes + (bebes > 1 ? ' hijos nacidos' : ' hijo nacido'), v: lactancia });
+        rows.push({ k: 'Total que cobras por el nacimiento', ref: 'Maternidad + lactancia', v: total, extra: true });
+        rows.push({ k: 'Equivale a', ref: 'Sueldos mensuales de licencia cubiertos', v: sueldo > 0 ? subsidio / sueldo : 0, format: 'unit', unit: 'sueldos', decimals: 1 });
+
+        return {
+          total: sol(total),
+          sub:
+            dias + ' días de descanso (' + prenatal + ' prenatal + ' + postnatal + ' postnatal) · EsSalud te paga ' +
+            sol(subsidio) + ' de subsidio y ' + sol(lactancia) + ' de lactancia',
+          rows: rows,
+          format: MONEY.format,
+          unit: MONEY.unit,
+          chart: [
+            { label: 'Subsidio prenatal (' + prenatal + ' días)', value: Math.round(remDiaria * prenatal), tone: 'main' },
+            { label: 'Subsidio postnatal (' + postnatal + ' días)', value: Math.round(remDiaria * postnatal), tone: 'good' },
+            { label: 'Subsidio por lactancia', value: Math.round(lactancia), tone: 'prop' },
+          ],
+        };
+      }
+
+      // ---------- Padre: licencia de paternidad con goce de haber ----------
+      if (id === 'padre') {
+        const dias = p.dias;
+        const remDiaria = sueldo / 30;
+        const valor = remDiaria * dias;
+        const habiles = Math.round((dias * 5) / 7);
+        const restoMes = Math.max(0, sueldo - valor);
+
+        rows.push({ k: 'Días de licencia de paternidad', ref: p.norma + ' · días calendario', v: dias, format: 'unit', unit: 'días' });
+        rows.push({ k: 'Supuesto aplicado', ref: p.etiqueta, v: dias, format: 'unit', unit: 'días' });
+        rows.push({ k: 'Remuneración diaria', ref: 'Sueldo ÷ 30', v: remDiaria, decimals: 2 });
+        rows.push({ k: 'Sueldo pagado durante la licencia', ref: 'Con goce de haber · lo paga el empleador', v: valor, extra: true });
+        rows.push({ k: 'Días hábiles de ausencia (aprox.)', ref: '5 de cada 7 días calendario', v: habiles, format: 'unit', unit: 'días' });
+        rows.push({ k: 'Días extra sobre el caso general', ref: 'Frente a los ' + PATERNIDAD.normal.dias + ' días de parto natural o cesárea', v: dias - PATERNIDAD.normal.dias, format: 'unit', unit: 'días' });
+
+        return {
+          total: sol(valor),
+          sub:
+            dias + ' días calendario consecutivos con goce de haber (' + p.etiqueta.toLowerCase() + ') · los paga la empresa, no EsSalud',
+          rows: rows,
+          format: MONEY.format,
+          unit: MONEY.unit,
+          chart: [
+            { label: 'Sueldo pagado durante la licencia', value: Math.round(valor), tone: 'main' },
+            { label: 'Resto del mes trabajado', value: Math.round(restoMes), tone: 'good' },
+          ],
+        };
+      }
+
+      // ---------- Asignación familiar mensual ----------
+      if (id === 'asignacion') {
+        const hijos = Math.max(0, Math.round(v.hijosMenores || 0));
+        const corresponde = hijos > 0;
+        const monto = corresponde ? ASIGNACION_FAMILIAR : 0;
+        const anual = monto * 12;
+        const conAsig = sueldo + monto;
+
+        rows.push({ k: 'Asignación familiar mensual', ref: '10% de la RMV (' + sol(RMV) + ') · Ley 25129', v: monto, extra: true });
+        rows.push({ k: 'Hijos menores declarados', ref: 'El monto NO se multiplica por hijo', v: hijos, format: 'plain' });
+        rows.push({ k: 'Sueldo con asignación incluida', ref: 'Base de gratificaciones, CTS y vacaciones', v: conAsig });
+        rows.push({ k: 'Total del año por este concepto', ref: '12 pagos mensuales', v: anual });
+        rows.push({ k: 'Peso sobre tu remuneración', ref: 'Asignación ÷ sueldo', v: sueldo > 0 ? (monto / sueldo) * 100 : 0, format: 'unit', unit: '%', decimals: 2 });
+
+        return {
+          total: sol(monto),
+          sub: corresponde
+            ? 'Monto fijo por mes, igual con 1 hijo que con ' + Math.max(2, hijos) + ' · ' + sol(anual) + ' al año · tu sueldo pasa a ' + sol(conAsig)
+            : 'Sin hijos menores a cargo no corresponde asignación familiar',
+          rows: rows,
+          format: MONEY.format,
+          unit: MONEY.unit,
+          chart: [
+            { label: 'Tu sueldo', value: Math.round(sueldo), tone: 'main' },
+            { label: 'Asignación familiar', value: Math.round(monto), tone: 'good' },
+          ],
+        };
+      }
+
+      // ---------- Pensión de alimentos ----------
+      const disponible = Math.max(0, v.ingresoAlimentos || 0);
+      const hijosA = Math.max(1, Math.round(v.hijosAlimentos || 1));
+      const rango = ALIMENTOS.rangos[Math.min(hijosA, 4)];
+      const acuerdo = Math.max(0, v.pctAcuerdo || 0);
+
+      const usaAcuerdo = acuerdo > 0;
+      const pct = usaAcuerdo
+        ? Math.min(acuerdo / 100, ALIMENTOS.topeLegal)
+        : (rango.min + rango.max) / 2;
+
+      const porPorcentaje = disponible * pct;
+      const piso = (RMV / 2) * hijosA;
+      const tope = disponible * ALIMENTOS.topeLegal;
+
+      let pension = Math.max(porPorcentaje, piso);
+      let aplicoPiso = piso > porPorcentaje;
+      let aplicoTope = false;
+      if (pension > tope) { pension = tope; aplicoTope = true; aplicoPiso = false; }
+
+      const efectivo = disponible > 0 ? pension / disponible : 0;
+      const queda = disponible - pension;
+
+      rows.push({ k: 'Ingreso disponible del obligado', ref: 'Sueldo menos AFP/ONP y renta de quinta', v: disponible });
+      rows.push({
+        k: usaAcuerdo ? 'Porcentaje pactado o dispuesto' : 'Rango orientativo de la práctica judicial',
+        ref: usaAcuerdo
+          ? 'Topeado en el 60% legal'
+          : (rango.min * 100).toFixed(0) + '% a ' + (rango.max * 100).toFixed(0) + '% para ' + hijosA + (hijosA > 1 ? ' hijos' : ' hijo') + ' · NO es una tasa legal',
+        v: pct * 100,
+        format: 'unit',
+        unit: '%',
+        decimals: 1,
+      });
+      rows.push({ k: 'Piso de referencia jurisprudencial', ref: 'Media RMV por hijo (' + sol(RMV / 2) + ' × ' + hijosA + ')', v: piso });
+      rows.push({ k: 'Tope legal de descuento por planilla', ref: '60% del ingreso libre · art. 648 inc. 6 CPC', v: tope });
+      rows.push({ k: 'Pensión mensual estimada', ref: aplicoTope ? 'Limitada por el tope del 60%' : aplicoPiso ? 'Elevada al piso de media RMV por hijo' : 'Punto medio del rango orientativo', v: pension, extra: true });
+      rows.push({ k: 'Por cada hijo', ref: 'Pensión ÷ ' + hijosA, v: hijosA > 0 ? pension / hijosA : 0 });
+      rows.push({ k: 'Le queda al obligado', ref: 'Ingreso disponible menos la pensión', v: queda });
+      rows.push({ k: 'Porcentaje efectivo del ingreso disponible', ref: 'Pensión ÷ ingreso disponible', v: efectivo * 100, format: 'unit', unit: '%', decimals: 1 });
+      rows.push({ k: 'Pensión anual', ref: '12 cuotas mensuales', v: pension * 12 });
+
+      return {
+        total: sol(pension),
+        sub:
+          'Estimación orientativa: ' + (efectivo * 100).toFixed(0) + '% del ingreso disponible' +
+          (aplicoTope ? ' (tope legal del 60%)' : aplicoPiso ? ' (piso de media RMV por hijo)' : '') +
+          ' · el monto definitivo lo fija el juez, no existe tabla oficial de porcentajes',
+        rows: rows,
+        format: MONEY.format,
+        unit: MONEY.unit,
+        chart: [
+          { label: 'Le queda al obligado', value: Math.round(queda), tone: 'main' },
+          { label: 'Pensión de alimentos', value: Math.round(pension), tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

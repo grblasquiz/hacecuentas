@@ -1,0 +1,243 @@
+---
+/**
+ * Hub EN — "What is this car worth now, and what does owning it cost me?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  DEPRECIATION,
+  MILEAGE_PENALTY,
+  COVERAGE_RATES,
+  BELT_INTERVALS_MI,
+  BELT_WARN_MI,
+} from '../../../lib/hubs/en/car-value-and-ownership';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ DEPRECIATION, MILEAGE_PENALTY, COVERAGE_RATES, BELT_INTERVALS_MI, BELT_WARN_MI }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) => '$' + Math.round(n || 0).toLocaleString('en-US');
+    const mi = (n) => Math.round(n || 0).toLocaleString('en-US');
+
+    /** Valor conservado tras `years` años, sin ajuste por kilometraje. */
+    function ageFactor(years) {
+      let f = 1;
+      for (let y = 1; y <= years; y++) {
+        if (y === 1) f *= DEPRECIATION.year1;
+        else if (y <= 4) f *= DEPRECIATION.years2to4;
+        else if (y <= 10) f *= DEPRECIATION.years5to10;
+        else f *= DEPRECIATION.years11plus;
+      }
+      return f;
+    }
+
+    function mileageFactor(miles) {
+      if (miles > MILEAGE_PENALTY.highMiles) return MILEAGE_PENALTY.highFactor;
+      if (miles > MILEAGE_PENALTY.midMiles) return MILEAGE_PENALTY.midFactor;
+      return 1;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'resale';
+      const price = Math.max(0, v.price || 0);
+      const years = Math.max(0, Math.round(v.years || 0));
+      const miles = Math.max(0, v.miles || 0);
+      const ahead = Math.max(1, Math.round(v.ahead || 1));
+      const coverage = String(v.coverage || 'full');
+      const beltKey = String(v.belt || 'generic');
+
+      if (id === 'insurance') {
+        const defaultRate = (COVERAGE_RATES[coverage] || COVERAGE_RATES.standard) * 100;
+        // El campo `rate` pisa el default de la cobertura sólo si el usuario puso algo > 0.
+        const ratePct = v.rate > 0 ? v.rate : defaultRate;
+        const value = price * ageFactor(years) * mileageFactor(miles);
+        const annual = value * (ratePct / 100);
+        const monthly = annual / 12;
+        const liability = value * COVERAGE_RATES.liability;
+        const full = value * COVERAGE_RATES.full;
+        const rows = [
+          { k: 'Value the car carries today', ref: 'Age curve plus mileage adjustment', v: value, format: 'unit', unit: 'USD' },
+          { k: 'Rate applied', ref: v.rate > 0 ? 'Your override' : 'Default for the coverage level', v: ratePct, format: 'unit', unit: '% of value/yr', decimals: 2 },
+          { k: 'Annual premium', ref: 'Value × rate', v: annual, format: 'unit', unit: 'USD' },
+          { k: 'Monthly premium', ref: 'Annual ÷ 12', v: monthly, format: 'unit', unit: 'USD', extra: true },
+          { k: 'Liability-only reference', ref: '1% of value/yr', v: liability, format: 'unit', unit: 'USD' },
+          { k: 'Full-coverage reference', ref: '4% of value/yr', v: full, format: 'unit', unit: 'USD' },
+          { k: 'Gap between liability-only and full coverage', ref: 'What the extra protection costs per year', v: Math.max(0, full - liability), format: 'unit', unit: 'USD' },
+        ];
+        return {
+          total: usd(monthly) + '/mo',
+          sub:
+            usd(annual) + ' a year on a car worth ' + usd(value) +
+            ' · US premiums are rated on the driver and the ZIP code, so treat this as a sanity check on real quotes',
+          rows: rows,
+          chart: [
+            { label: 'Value of the car', value: Math.round(value), tone: 'main' },
+            { label: 'Annual premium', value: Math.round(annual), tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'belt') {
+        const interval = BELT_INTERVALS_MI[beltKey];
+        if (!interval) {
+          return {
+            total: 'No scheduled change',
+            sub: 'A timing chain has no mileage interval — replace it only if it rattles at cold start or a code appears.',
+            rows: [
+              { k: 'Miles on the odometer', ref: 'As entered', v: miles, format: 'unit', unit: 'mi' },
+              { k: 'Scheduled belt replacement', ref: 'Chain drive — none', v: 0, format: 'unit', unit: 'mi' },
+            ],
+            chart: [
+              { label: 'Miles driven', value: Math.round(miles), tone: 'main' },
+              { label: 'Miles to the next belt service', value: 0, tone: 'good' },
+            ],
+          };
+        }
+        const next = Math.ceil(Math.max(1, miles) / interval) * interval;
+        const left = Math.max(0, next - miles);
+        const due = left <= BELT_WARN_MI;
+        const sinceLast = miles - (next - interval);
+        const rows = [
+          { k: 'Miles on the odometer', ref: 'As entered', v: miles, format: 'unit', unit: 'mi' },
+          { k: 'Replacement interval', ref: 'Selected spacing', v: interval, format: 'unit', unit: 'mi' },
+          { k: 'Miles since the last scheduled change', ref: 'Assuming it was done on schedule', v: sinceLast, format: 'unit', unit: 'mi' },
+          { k: 'Next replacement due at', ref: 'Odometer rounded up to the interval', v: next, format: 'unit', unit: 'mi', extra: true },
+          { k: 'Miles you have left', ref: due ? 'Inside the ' + mi(BELT_WARN_MI) + ' mi warning margin' : 'No rush yet', v: left, format: 'unit', unit: 'mi', extra: true },
+        ];
+        return {
+          total: mi(left) + ' mi left',
+          sub:
+            'Due at ' + mi(next) + ' mi · ' +
+            (due
+              ? 'you are inside the warning margin — book it now, a snapped belt on an interference engine wrecks the head'
+              : 'still fine, but do the water pump and tensioner at the same time when you get there') +
+            ' · belts also expire on time (7–10 years), not just miles',
+          rows: rows,
+          chart: [
+            { label: 'Miles used in this interval', value: Math.round(sinceLast), tone: due ? 'bad' : 'main' },
+            { label: 'Miles remaining', value: Math.round(left), tone: 'good' },
+          ],
+          position: interval > 0 ? Math.min(100, (sinceLast / interval) * 100) : 0,
+          positionLabel: Math.round((sinceLast / interval) * 100) + '% through the interval',
+        };
+      }
+
+      if (id === 'forecast') {
+        const now = price * ageFactor(years) * mileageFactor(miles);
+        const then = price * ageFactor(years + ahead) * mileageFactor(miles + ahead * 12000);
+        const lost = Math.max(0, now - then);
+        const rows = [
+          { k: 'Value today', ref: years + ' yr · ' + mi(miles) + ' mi', v: now, format: 'unit', unit: 'USD' },
+          { k: 'Projected value in ' + ahead + (ahead === 1 ? ' year' : ' years'), ref: 'Assuming 12,000 mi/yr', v: then, format: 'unit', unit: 'USD', extra: true },
+          { k: 'Value lost over the period', ref: 'Today minus projected', v: lost, format: 'unit', unit: 'USD', extra: true },
+          { k: 'Depreciation per year', ref: 'Lost ÷ years', v: lost / ahead, format: 'unit', unit: 'USD' },
+          { k: 'Depreciation per month', ref: 'The line nobody budgets for', v: lost / (ahead * 12), format: 'unit', unit: 'USD' },
+          { k: 'Share of today’s value that goes', ref: 'Lost ÷ value today', v: now > 0 ? (lost / now) * 100 : 0, format: 'unit', unit: '%', decimals: 1 },
+        ];
+        return {
+          total: usd(then),
+          sub:
+            'You lose ' + usd(lost) + ' over ' + ahead + (ahead === 1 ? ' year' : ' years') +
+            ' — about ' + usd(lost / (ahead * 12)) + ' a month, usually more than the fuel',
+          rows: rows,
+          chart: [
+            { label: 'Value still in the car at the end', value: Math.round(then), tone: 'main' },
+            { label: 'Value lost over the period', value: Math.round(lost), tone: 'warn' },
+          ],
+        };
+      }
+
+      // resale
+      const fAge = ageFactor(years);
+      const fMiles = mileageFactor(miles);
+      const value = price * fAge * fMiles;
+      const lost = Math.max(0, price - value);
+      const pct = price > 0 ? (lost / price) * 100 : 0;
+      const rows = [
+        { k: 'Price when new', ref: 'As entered', v: price, format: 'unit', unit: 'USD' },
+        { k: 'Value kept after ' + years + (years === 1 ? ' year' : ' years'), ref: 'Age curve only', v: fAge * 100, format: 'unit', unit: '%', decimals: 1 },
+        {
+          k: 'Mileage adjustment',
+          ref:
+            miles > MILEAGE_PENALTY.highMiles
+              ? 'Over ' + mi(MILEAGE_PENALTY.highMiles) + ' mi'
+              : miles > MILEAGE_PENALTY.midMiles
+                ? 'Over ' + mi(MILEAGE_PENALTY.midMiles) + ' mi'
+                : 'Under ' + mi(MILEAGE_PENALTY.midMiles) + ' mi — no penalty',
+          v: fMiles * 100,
+          format: 'unit',
+          unit: '% kept',
+          decimals: 0,
+        },
+        { k: 'Estimated value today', ref: 'Price × age curve × mileage', v: value, format: 'unit', unit: 'USD', extra: true },
+        { k: 'Dollars lost since new', ref: 'Price minus value', v: lost, format: 'unit', unit: 'USD', extra: true },
+        { k: 'Percentage lost since new', ref: 'Lost ÷ price', v: pct, format: 'unit', unit: '%', decimals: 1 },
+        { k: 'Average depreciation per year so far', ref: years > 0 ? 'Lost ÷ ' + years + ' yr' : 'Car is new', v: years > 0 ? lost / years : 0, format: 'unit', unit: 'USD' },
+      ];
+      return {
+        total: usd(value),
+        sub:
+          'Lost ' + usd(lost) + ' (' + pct.toFixed(0) + '%) since new · ' +
+          (miles > MILEAGE_PENALTY.highMiles
+            ? 'high mileage takes another 8% off'
+            : miles > MILEAGE_PENALTY.midMiles
+              ? 'mileage takes another 4% off'
+              : 'mileage is low enough not to bite yet') +
+          ' · cross-check against a live guide before you buy or sell',
+        rows: rows,
+        chart: [
+          { label: 'Value still in the car', value: Math.round(value), tone: 'main' },
+          { label: 'Value lost to depreciation', value: Math.round(lost), tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

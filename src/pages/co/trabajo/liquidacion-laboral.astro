@@ -1,0 +1,331 @@
+---
+/**
+ * Hub de decisión CO — "Me voy o me echan: ¿cuánto me tienen que liquidar?"
+ *
+ * El audience="CO" se pasa literal al Layout: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  SMLMV,
+  SMDLV,
+  AUXILIO,
+  TOPE_AUXILIO_SMLMV,
+  PRESTACIONES,
+  INDEMNIZACION,
+  UMBRAL_INDEMNIZACION_SMLMV,
+  MORA,
+  DOTACION,
+  DIAS_ANIO,
+} from '../../../lib/hubs/co/liquidacion-laboral';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    SMLMV,
+    SMDLV,
+    AUXILIO,
+    TOPE_AUXILIO_SMLMV,
+    PRESTACIONES,
+    INDEMNIZACION,
+    UMBRAL_INDEMNIZACION_SMLMV,
+    MORA,
+    DOTACION,
+    DIAS_ANIO,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const cop = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
+
+    function parseISO(s) {
+      const m = String(s || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!m) return null;
+      return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0);
+    }
+    function diasEntre(a, b) {
+      return Math.round((b.getTime() - a.getTime()) / 86400000);
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'renuncia';
+      const monto = Math.max(0, v.salario || 0);
+      const vacPendientes = Math.max(0, Math.round(v.vacaciones || 0));
+      const diasMora = Math.max(0, Math.round(v.mora || 0));
+
+      const fIng = parseISO(v.ingreso) || new Date(2023, 2, 1, 12);
+      let fSal = parseISO(v.salida) || new Date();
+      if (fSal < fIng) fSal = fIng;
+      const diasTrabajados = Math.max(0, diasEntre(fIng, fSal));
+      const prop = diasTrabajados / DIAS_ANIO;   // años trabajados, base 360
+      const anios = Math.floor(prop);
+      const mesesResto = Math.floor((prop - anios) * 12);
+
+      const rows = [];
+      let baseConAux;      // base de cesantías y prima (incluye auxilio si corresponde)
+      let baseSalarial;    // base de vacaciones e indemnización (sin auxilio)
+      let auxilioBase = 0;
+      let notaRama = '';
+
+      if (id === 'domestica') {
+        // El pago por día ya comprende salario + descanso dominical + auxilio proporcional.
+        const diasSemana = Math.min(6, Math.max(1, Math.round(v.diasSemana || 2)));
+        const diasMes = diasSemana * (52 / 12);
+        const auxDia = AUXILIO / 30;
+        const domDia = SMDLV / 6;                    // descanso dominical proporcional, art. 173 CST
+        const minimoDia = SMDLV + domDia + auxDia;
+        const valorDia = monto;
+        baseSalarial = Math.max(0, valorDia - auxDia) * diasMes;
+        auxilioBase = Math.min(valorDia, auxDia) * diasMes;
+        baseConAux = baseSalarial + auxilioBase;
+        notaRama =
+          valorDia + 0.5 >= minimoDia
+            ? diasSemana + ' días por semana, pago diario por encima del mínimo legal'
+            : diasSemana + ' días por semana, pago diario POR DEBAJO del mínimo legal de ' + cop(minimoDia);
+
+        rows.push({ k: 'Lo que te pagan por día', ref: diasSemana + ' días por semana', v: valorDia });
+        rows.push({
+          k: 'Mínimo legal por día',
+          ref: 'SMDLV + descanso dominical (1/6) + auxilio proporcional',
+          v: minimoDia,
+        });
+        rows.push({
+          k: 'Días que trabajás al mes',
+          ref: diasSemana + ' × 52 ÷ 12',
+          v: diasMes,
+          format: 'unit',
+          unit: 'días',
+          decimals: 1,
+        });
+        rows.push({ k: 'Salario mensualizado equivalente', ref: 'Parte salarial del pago diario', v: baseSalarial });
+        rows.push({ k: 'Auxilio de transporte mensualizado', ref: 'Parte no salarial del pago diario', v: auxilioBase });
+      } else {
+        baseSalarial = monto;
+        const corresponde = monto <= SMLMV * TOPE_AUXILIO_SMLMV;
+        auxilioBase = corresponde ? AUXILIO : 0;
+        baseConAux = baseSalarial + auxilioBase;
+        notaRama = corresponde
+          ? 'con auxilio de transporte incluido en la base de cesantías y prima'
+          : 'sin auxilio de transporte: el salario supera ' + TOPE_AUXILIO_SMLMV + ' SMLMV';
+        rows.push({ k: 'Salario mensual', ref: 'Base de la liquidación', v: baseSalarial });
+        rows.push({
+          k: corresponde ? 'Auxilio de transporte (entra en cesantías y prima)' : 'Auxilio de transporte (no corresponde)',
+          ref: corresponde ? 'Decreto 1470/2025' : 'Tope de ' + TOPE_AUXILIO_SMLMV + ' SMLMV (' + cop(SMLMV * TOPE_AUXILIO_SMLMV) + ')',
+          v: auxilioBase,
+        });
+      }
+
+      rows.push({
+        k: 'Tiempo trabajado',
+        ref: anios + ' año(s) y ' + mesesResto + ' mes(es)',
+        v: diasTrabajados,
+        format: 'unit',
+        unit: 'días',
+        decimals: 0,
+      });
+      rows.push({
+        k: 'Ese tiempo en años, base 360',
+        ref: 'Año laboral colombiano = ' + DIAS_ANIO + ' días',
+        v: prop,
+        format: 'unit',
+        unit: 'años',
+        decimals: 2,
+      });
+
+      // ── Prestaciones sociales ─────────────────────────────────────────────
+      const cesantias = baseConAux * prop;
+      // Fórmula legal: cesantías × días × 12% ÷ 360. El saldo también es proporcional.
+      const intereses = cesantias * PRESTACIONES.interesesCesantias * prop;
+      const prima = baseConAux * prop;
+      // 15 días hábiles por año sobre el salario, sin auxilio: salario × días ÷ 720.
+      const vacProporcionales = baseSalarial * (diasTrabajados / (DIAS_ANIO * 2));
+      const vacAcumuladas = (baseSalarial / 30) * vacPendientes;
+      const vacaciones = vacProporcionales + vacAcumuladas;
+
+      rows.push({ k: 'Cesantías', ref: '1 mes por año · art. 249 CST', v: cesantias });
+      rows.push({
+        k: 'Intereses de cesantías',
+        ref: PRESTACIONES.interesesCesantias * 100 + '% anual proporcional · Ley 52/1975',
+        v: intereses,
+      });
+      rows.push({ k: 'Prima de servicios', ref: '1 mes por año · art. 306 CST', v: prima });
+      rows.push({
+        k: 'Vacaciones causadas y no disfrutadas',
+        ref: PRESTACIONES.vacacionesDiasHabiles + ' días hábiles por año, sólo salario · art. 186 CST',
+        v: vacProporcionales,
+      });
+      if (vacAcumuladas > 0) {
+        rows.push({
+          k: 'Vacaciones pendientes de años anteriores',
+          ref: vacPendientes + ' días hábiles × salario ÷ 30',
+          v: vacAcumuladas,
+        });
+      }
+
+      // ── Indemnización ─────────────────────────────────────────────────────
+      const valorDiaSalario = baseSalarial / 30;
+      let indemnizacion = 0;
+      let refIndem = '';
+      let indemInformativa = 0;
+
+      function art64(anios_) {
+        const tabla =
+          baseSalarial < SMLMV * UMBRAL_INDEMNIZACION_SMLMV
+            ? INDEMNIZACION.menos10Smlmv
+            : INDEMNIZACION.desde10Smlmv;
+        // El primer año se paga COMPLETO aunque el tiempo trabajado sea menor.
+        const dias =
+          anios_ <= 1
+            ? tabla.diasPrimerAnio
+            : tabla.diasPrimerAnio + tabla.diasPorAnioAdicional * (anios_ - 1);
+        return { dias: dias, tabla: tabla };
+      }
+
+      if (id === 'despido-injusto') {
+        const r = art64(prop);
+        indemnizacion = r.dias * valorDiaSalario;
+        refIndem =
+          r.tabla.diasPrimerAnio + ' días el 1er año + ' + r.tabla.diasPorAnioAdicional + ' por año siguiente · art. 64 CST';
+        rows.push({
+          k: 'Días de salario de indemnización',
+          ref: baseSalarial < SMLMV * UMBRAL_INDEMNIZACION_SMLMV
+            ? 'Salario menor a ' + UMBRAL_INDEMNIZACION_SMLMV + ' SMLMV'
+            : 'Salario desde ' + UMBRAL_INDEMNIZACION_SMLMV + ' SMLMV',
+          v: r.dias,
+          format: 'unit',
+          unit: 'días',
+          decimals: 1,
+        });
+        rows.push({ k: 'Indemnización por despido sin justa causa', ref: refIndem, v: indemnizacion });
+      } else if (id === 'termino-fijo') {
+        const fFin = parseISO(v.finPactada);
+        const diasFaltantes = fFin && fSal < fFin ? diasEntre(fSal, fFin) : 0;
+        indemnizacion = diasFaltantes * valorDiaSalario;
+        refIndem = 'Salarios del tiempo faltante · art. 64 CST';
+        rows.push({
+          k: 'Días que faltaban hasta el vencimiento pactado',
+          ref: diasFaltantes > 0 ? 'Corte anticipado sin justa causa' : 'El contrato llegó a su fecha: no hay indemnización',
+          v: diasFaltantes,
+          format: 'unit',
+          unit: 'días',
+          decimals: 0,
+        });
+        rows.push({ k: 'Indemnización por el tiempo faltante', ref: refIndem, v: indemnizacion });
+      } else if (id === 'domestica') {
+        const r = art64(prop);
+        indemInformativa = r.dias * valorDiaSalario;
+        rows.push({
+          k: 'Si te despidieron sin justa causa, la indemnización sería (no sumada al total)',
+          ref: 'Art. 64 CST sobre el salario mensualizado',
+          v: indemInformativa,
+        });
+      }
+
+      const total = cesantias + intereses + prima + vacaciones + indemnizacion;
+
+      rows.push({ k: 'Total de la liquidación', ref: 'Prestaciones + indemnización', v: total, extra: true });
+
+      // ── Sanción moratoria del art. 65 CST ─────────────────────────────────
+      const superaMinimo = baseSalarial > SMLMV;
+      const diasComputados = superaMinimo ? Math.min(diasMora, MORA.topeDias) : diasMora;
+      const sancion = diasComputados * valorDiaSalario;
+      rows.push({
+        k: diasMora > 0 ? 'Sanción moratoria por el retraso en pagarte' : 'Sanción moratoria (no corre: te pagaron a tiempo)',
+        ref: superaMinimo
+          ? '1 día de salario por día, tope ' + MORA.topeMeses + ' meses · art. 65 CST'
+          : '1 día de salario por día, sin tope de ' + MORA.topeMeses + ' meses · art. 65 CST',
+        v: sancion,
+        extra: sancion > 0,
+      });
+      if (diasMora > MORA.topeDias && superaMinimo) {
+        rows.push({
+          k: 'Días de mora por encima del tope',
+          ref: 'A partir de ahí corren intereses moratorios, no días de salario',
+          v: diasMora - MORA.topeDias,
+          format: 'unit',
+          unit: 'días',
+          decimals: 0,
+        });
+      }
+
+      // ── Dotación ──────────────────────────────────────────────────────────
+      const derechoDotacion =
+        baseSalarial <= SMLMV * DOTACION.topeSmlmv && diasTrabajados > DOTACION.antiguedadMinimaMeses * 30;
+      rows.push({
+        k: derechoDotacion ? 'Entregas de dotación que te correspondían por año' : 'Dotación: no te corresponde',
+        ref: derechoDotacion
+          ? DOTACION.fechas.join(', ') + ' · arts. 230 y 232 CST'
+          : 'Sólo hasta ' + DOTACION.topeSmlmv + ' SMLMV y con más de ' + DOTACION.antiguedadMinimaMeses + ' meses',
+        v: derechoDotacion ? DOTACION.entregasPorAnio : 0,
+        format: 'unit',
+        unit: 'entregas',
+        decimals: 0,
+      });
+
+      const sub =
+        anios + ' año(s) y ' + mesesResto + ' mes(es) trabajados · ' + notaRama +
+        (indemnizacion > 0
+          ? ' · incluye ' + cop(indemnizacion) + ' de indemnización'
+          : id === 'renuncia'
+            ? ' · sin indemnización, porque renunciaste'
+            : ' · sin indemnización en este caso') +
+        (sancion > 0 ? ' · más ' + cop(sancion) + ' de sanción moratoria' : '');
+
+      const chart = [
+        { label: 'Cesantías', value: Math.round(cesantias), tone: 'main' },
+        { label: 'Intereses de cesantías', value: Math.round(intereses), tone: 'prop' },
+        { label: 'Prima de servicios', value: Math.round(prima), tone: 'good' },
+        { label: 'Vacaciones', value: Math.round(vacaciones), tone: 'exit' },
+        { label: 'Indemnización', value: Math.round(indemnizacion), tone: 'warn' },
+      ].filter(function (s) { return s.value > 0; });
+
+      return { total: cop(total), sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

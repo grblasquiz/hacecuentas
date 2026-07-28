@@ -1,0 +1,294 @@
+---
+/**
+ * Hub de decisión CO — "¿Cuánto impuesto viene metido en lo que estoy comprando?".
+ * audience="CO" literal al Layout: HubData sólo modela 'AR' | 'global' y el
+ * mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UVT,
+  IVA_GENERAL,
+  INC_RESTAURANTES,
+  IBUA,
+  TARIFA_LOTERIAS,
+  UMBRAL_PREMIO_UVT,
+  GMF,
+  MINIMIS,
+} from '../../../lib/hubs/co/impuestos-al-consumo';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    UVT,
+    IVA_GENERAL,
+    INC_RESTAURANTES,
+    IBUA,
+    TARIFA_LOTERIAS,
+    UMBRAL_PREMIO_UVT,
+    GMF,
+    MINIMIS,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const cop = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
+    const pct = (n, d) => n.toFixed(d === undefined ? 2 : d).replace('.', ',') + '%';
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'restaurante';
+      const valor = Math.max(0, v.valor || 0);
+
+      // ═══════════ Restaurante y bar: impoconsumo del art. 512-9 ET ═══════════
+      if (id === 'restaurante') {
+        const propina = Math.max(0, v.propina || 0);
+        const inc = valor * INC_RESTAURANTES;
+        const ivaAlterno = valor * IVA_GENERAL; // si el local opera bajo franquicia
+        const total = valor + inc + propina;
+        const peso = total > 0 ? (inc / total) * 100 : 0;
+
+        return {
+          total: cop(inc),
+          sub:
+            'Sobre un consumo de ' + cop(valor) + ' el impoconsumo es ' + cop(inc) +
+            ' · la cuenta total queda en ' + cop(total) +
+            ' · la propina de ' + cop(propina) + ' no paga impuesto',
+          rows: [
+            { k: 'Consumo: comida y bebidas', ref: 'Base gravable del impoconsumo', v: valor },
+            { k: 'Impoconsumo', ref: (INC_RESTAURANTES * 100).toFixed(0) + '% · art. 512-9 ET', v: Math.round(inc), extra: true },
+            { k: 'Propina voluntaria', ref: 'No hace parte de la base gravable', v: propina },
+            { k: 'Total de la cuenta', ref: 'Consumo + impoconsumo + propina', v: Math.round(total), extra: true },
+            { k: 'Si el local operara bajo franquicia', ref: 'Cobraría IVA del ' + (IVA_GENERAL * 100).toFixed(0) + '% en vez de impoconsumo', v: Math.round(ivaAlterno) },
+            { k: 'Diferencia entre los dos regímenes', ref: 'Cuánto más pagarías en una franquicia', v: Math.round(ivaAlterno - inc) },
+            { k: 'Peso del impuesto en lo que pagás', ref: 'Impoconsumo ÷ total de la cuenta', v: peso, format: 'unit', unit: '%', decimals: 2 },
+          ],
+          chart: [
+            { label: 'Comida y bebidas', value: Math.round(valor), tone: 'main' },
+            { label: 'Impoconsumo ' + (INC_RESTAURANTES * 100).toFixed(0) + '%', value: Math.round(inc), tone: 'warn' },
+            { label: 'Propina (sin impuesto)', value: Math.round(propina), tone: 'good' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      // ═══════════ Licores, cerveza y cigarrillos ═══════════
+      if (id === 'licores') {
+        const tarifa = Math.max(0, v.tarifaConsumo || 0) / 100;
+        const consumo = valor * tarifa;
+        const baseIva = valor + consumo;
+        const iva = baseIva * IVA_GENERAL;
+        const total = baseIva + iva;
+        const impuestos = consumo + iva;
+        const peso = total > 0 ? (impuestos / total) * 100 : 0;
+
+        return {
+          total: cop(impuestos),
+          sub:
+            'De los ' + cop(total) + ' que pagás, ' + cop(impuestos) + ' son impuestos (' + pct(peso) + ' del precio final)' +
+            ' · el impuesto al consumo entra en la base del IVA, así que se paga impuesto sobre impuesto',
+          rows: [
+            { k: 'Precio del producto antes de impuestos', ref: 'Base de la cuenta', v: valor },
+            { k: 'Impuesto al consumo departamental', ref: pct(tarifa * 100, 1) + ' · tarifa que cargaste', v: Math.round(consumo), extra: true },
+            { k: 'Base del IVA', ref: 'Precio + impuesto al consumo', v: Math.round(baseIva) },
+            { k: 'IVA', ref: (IVA_GENERAL * 100).toFixed(0) + '% sobre la base · art. 468 ET', v: Math.round(iva) },
+            { k: 'Precio final', ref: 'Lo que pagás en la góndola', v: Math.round(total), extra: true },
+            { k: 'Total de impuestos', ref: 'Consumo + IVA', v: Math.round(impuestos) },
+            { k: 'IVA que se cobra sobre el impuesto al consumo', ref: 'El efecto cascada, en pesos', v: Math.round(consumo * IVA_GENERAL) },
+            { k: 'Peso de los impuestos en el precio final', ref: 'Impuestos ÷ precio final', v: peso, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Tarifa de consumo que cargaste', ref: 'Editable: verificala con tu gobernación', v: tarifa * 100, format: 'unit', unit: '%', decimals: 1 },
+          ],
+          chart: [
+            { label: 'Precio del producto', value: Math.round(valor), tone: 'main' },
+            { label: 'Impuesto al consumo', value: Math.round(consumo), tone: 'bad' },
+            { label: 'IVA ' + (IVA_GENERAL * 100).toFixed(0) + '%', value: Math.round(iva), tone: 'warn' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      // ═══════════ Bebidas azucaradas: IBUA ═══════════
+      if (id === 'ibua') {
+        const ml = Math.max(0, v.ml || 0);
+        const azucar = Math.max(0, v.azucar || 0);
+        let tramo = IBUA[IBUA.length - 1];
+        for (const t of IBUA) {
+          const hasta = t.hastaG === null ? Infinity : t.hastaG;
+          if (azucar >= t.desdeG && azucar < hasta) { tramo = t; break; }
+        }
+        const ibua = (ml / 100) * tramo.tarifaPor100ml;
+        const baseIva = valor + ibua;
+        const iva = baseIva * IVA_GENERAL;
+        const total = baseIva + iva;
+        const azucarTotal = (ml / 100) * azucar;
+        const peso = total > 0 ? ((ibua + iva) / total) * 100 : 0;
+
+        const etiqueta = tramo.tarifaPor100ml === 0
+          ? 'menos de ' + IBUA[1].desdeG + ' g por 100 ml: no paga IBUA'
+          : (tramo.hastaG === null
+              ? IBUA[2].desdeG + ' g por 100 ml o más'
+              : 'entre ' + tramo.desdeG + ' y menos de ' + tramo.hastaG + ' g por 100 ml');
+
+        return {
+          total: cop(ibua),
+          sub:
+            'Con ' + azucar.toLocaleString('es-CO') + ' g de azúcar añadido por 100 ml (' + etiqueta + ')' +
+            ', un envase de ' + ml.toLocaleString('es-CO') + ' ml paga ' + cop(ibua) + ' de IBUA' +
+            ' · el precio final con IVA queda en ' + cop(total),
+          rows: [
+            { k: 'Precio de la bebida antes de impuestos', ref: 'Base de la cuenta', v: valor },
+            { k: 'Volumen del envase', ref: 'El IBUA se liquida por volumen', v: ml, format: 'unit', unit: 'ml' },
+            { k: 'Azúcar añadido por 100 ml', ref: etiqueta, v: azucar, format: 'unit', unit: 'g', decimals: 1 },
+            { k: 'Azúcar añadido total del envase', ref: 'Volumen × concentración', v: azucarTotal, format: 'unit', unit: 'g', decimals: 1 },
+            { k: 'Tarifa del escalón', ref: 'Resolución DIAN 000247 de 2025', v: tramo.tarifaPor100ml, format: 'unit', unit: 'pesos por 100 ml' },
+            { k: 'IBUA del envase', ref: 'Volumen ÷ 100 × tarifa · art. 513-1 ET', v: Math.round(ibua), extra: true },
+            { k: 'Base del IVA', ref: 'Precio + IBUA', v: Math.round(baseIva) },
+            { k: 'IVA', ref: (IVA_GENERAL * 100).toFixed(0) + '% sobre la base', v: Math.round(iva) },
+            { k: 'Precio final estimado', ref: 'Lo que ves en la góndola', v: Math.round(total), extra: true },
+            { k: 'Peso de los impuestos en el precio final', ref: '(IBUA + IVA) ÷ precio final', v: peso, format: 'unit', unit: '%', decimals: 2 },
+          ],
+          chart: [
+            { label: 'Precio de la bebida', value: Math.round(valor), tone: 'main' },
+            { label: 'IBUA', value: Math.round(ibua), tone: 'bad' },
+            { label: 'IVA ' + (IVA_GENERAL * 100).toFixed(0) + '%', value: Math.round(iva), tone: 'warn' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      // ═══════════ Compras internacionales ═══════════
+      if (id === 'importacion') {
+        const usd = Math.max(0, v.valorUsd || 0);
+        const trm = Math.max(0, v.trm || 0);
+        const arancelPct = Math.max(0, v.arancel || 0) / 100;
+        const conTlc = String(v.tlc || 'si') !== 'no';
+        const umbral = conTlc ? MINIMIS.conTlc : MINIMIS.sinTlc;
+
+        const valorCop = usd * trm;
+        const supera = usd > umbral;
+        const arancel = supera ? valorCop * arancelPct : 0;
+        const iva = supera ? (valorCop + arancel) * IVA_GENERAL : 0;
+        const gmf = valorCop * GMF.tasa;
+        const impuestos = arancel + iva;
+        const total = valorCop + impuestos + gmf;
+        const peso = total > 0 ? ((impuestos + gmf) / total) * 100 : 0;
+
+        return {
+          total: cop(impuestos + gmf),
+          sub:
+            (supera
+              ? 'Tu compra de USD ' + usd.toLocaleString('es-CO') + ' supera el de minimis de USD ' + umbral
+              : 'Tu compra de USD ' + usd.toLocaleString('es-CO') + ' entra debajo del de minimis de USD ' + umbral + ': no paga arancel ni IVA') +
+            ' · costo final estimado ' + cop(total) + ' sin contar el flete del courier',
+          rows: [
+            { k: 'Valor de la mercancía', ref: 'USD ' + usd.toLocaleString('es-CO') + ' × TRM ' + cop(trm), v: Math.round(valorCop) },
+            {
+              k: 'De minimis que te aplica',
+              ref: conTlc ? 'Origen con TLC vigente' : 'Origen sin TLC',
+              v: umbral,
+              format: 'unit',
+              unit: 'dólares',
+            },
+            { k: 'Arancel', ref: supera ? pct(arancelPct * 100, 1) + ' sobre el valor de la mercancía' : 'No aplica: estás debajo del de minimis', v: Math.round(arancel) },
+            { k: 'IVA de importación', ref: supera ? (IVA_GENERAL * 100).toFixed(0) + '% sobre valor + arancel' : 'No aplica', v: Math.round(iva) },
+            { k: 'Gravamen a los movimientos financieros', ref: (GMF.tasa * 1000).toFixed(0) + ' por mil al pagar desde tu cuenta', v: Math.round(gmf) },
+            { k: 'Total de tributos', ref: 'Arancel + IVA + 4×1000', v: Math.round(impuestos + gmf), extra: true },
+            { k: 'Costo final estimado', ref: 'Sin el flete ni el manejo del courier', v: Math.round(total), extra: true },
+            { k: 'Cuánto te falta o te sobra para el de minimis', ref: 'Diferencia contra el umbral', v: Math.abs(usd - umbral), format: 'unit', unit: 'dólares' },
+            { k: 'Peso de los tributos en el costo final', ref: 'Tributos ÷ costo final', v: peso, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Exención mensual del 4×1000 si marcás una cuenta', ref: GMF.exencionMensualUvt + ' UVT/mes · art. 879 ET', v: Math.round(GMF.exencionMensualUvt * UVT) },
+          ],
+          chart: [
+            { label: 'Valor de la mercancía', value: Math.round(valorCop), tone: 'main' },
+            { label: 'Arancel', value: Math.round(arancel), tone: 'bad' },
+            { label: 'IVA de importación', value: Math.round(iva), tone: 'warn' },
+            { label: 'Gravamen 4×1000', value: Math.round(gmf), tone: 'exit' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      // ═══════════ Premios de lotería, rifas y apuestas ═══════════
+      const umbralPremio = UMBRAL_PREMIO_UVT * UVT;
+      const supera = valor > umbralPremio;
+      const impuesto = supera ? valor * TARIFA_LOTERIAS : 0;
+      const neto = valor - impuesto;
+      const efectiva = valor > 0 ? (impuesto / valor) * 100 : 0;
+
+      return {
+        total: cop(impuesto),
+        sub: supera
+          ? 'De ' + cop(valor) + ' te retienen ' + cop(impuesto) + ' (' + (TARIFA_LOTERIAS * 100).toFixed(0) +
+            '% de ganancia ocasional) y cobrás ' + cop(neto) +
+            ' · esa retención es el impuesto: no hay un segundo cobro después'
+          : 'El premio de ' + cop(valor) + ' no supera las ' + UMBRAL_PREMIO_UVT + ' UVT (' + cop(umbralPremio) +
+            '): no hay retención y cobrás el total',
+        rows: [
+          { k: 'Valor del premio', ref: 'Ganancia ocasional · art. 304 ET', v: valor },
+          { k: 'Umbral de retención', ref: UMBRAL_PREMIO_UVT + ' UVT · art. 404-1 ET', v: Math.round(umbralPremio) },
+          {
+            k: 'Tarifa aplicada',
+            ref: supera ? 'Loterías, rifas y apuestas · art. 317 ET' : 'Debajo del umbral: no se retiene',
+            v: supera ? TARIFA_LOTERIAS * 100 : 0,
+            format: 'unit',
+            unit: '%',
+            decimals: 0,
+          },
+          { k: 'Retención de ganancia ocasional', ref: 'La practica el operador del juego', v: Math.round(impuesto), extra: true },
+          { k: 'Lo que cobrás en la mano', ref: 'Premio menos retención', v: Math.round(neto), extra: true },
+          { k: 'Impuesto adicional a pagar después', ref: 'La retención ya es el impuesto definitivo', v: 0 },
+          { k: 'Tasa efectiva sobre el premio', ref: 'Impuesto ÷ premio', v: efectiva, format: 'unit', unit: '%', decimals: 2 },
+          {
+            k: 'Cuánto pasaste el umbral de las ' + UMBRAL_PREMIO_UVT + ' UVT',
+            ref: 'Diferencia contra el piso de retención',
+            v: Math.abs(valor - umbralPremio),
+          },
+        ],
+        chart: [
+          { label: 'Lo que cobrás', value: Math.round(neto), tone: 'main' },
+          { label: 'Ganancia ocasional ' + (TARIFA_LOTERIAS * 100).toFixed(0) + '%', value: Math.round(impuesto), tone: 'warn' },
+        ].filter((s) => s.value > 0),
+      };
+    });
+  })();
+</script>

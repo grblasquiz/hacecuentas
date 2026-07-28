@@ -1,0 +1,279 @@
+---
+/**
+ * Hub de decisión CL — "¿Dónde conviene que tenga mi plata?"
+ * audience="CL" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UF,
+  UTM,
+  EXENCION,
+  PERFILES_EMERGENCIA,
+  DEPENDIENTES,
+  DERECHO_BOLSA_PCT,
+} from '../../../lib/hubs/cl/donde-invierto-mis-ahorros';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ UF, UTM, EXENCION, PERFILES: PERFILES_EMERGENCIA, DEPS: DEPENDIENTES, DERECHO_BOLSA_PCT }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+    const DIAS_ANIO = 365;
+
+    const EX_INTERESES = EXENCION.interesesUtm * UTM;
+    const EX_FM = EXENCION.fondosMutuosUtm * UTM;
+
+    // Global Complementario sobre el excedente de la exención (Art. 57 LIR).
+    const igcSobre = (ganancia, exencion, tasaPct) =>
+      Math.max(0, (ganancia - exencion)) * (tasaPct / 100);
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'emergencia';
+      const monto = Math.max(0, v.monto || 0);
+      const dias = Math.min(3650, Math.max(7, Math.round(Number(v.plazoDias) || 365)));
+      const tasa = Math.max(0, Math.min(30, Number(v.tasa) || 5));
+      const comisionPct = Math.max(0, Math.min(5, Number(v.comision) || 0));
+      const igcPct = Math.max(0, Math.min(40, Number(v.igc) || 0));
+      const gasto = Math.max(0, v.gastoMensual || 0);
+      const ahorroMensual = Math.max(0, v.ahorroMensual || 0);
+      const yaAhorrado = Math.max(0, v.yaAhorrado || 0);
+      const anios = Math.min(30, Math.max(1, Math.round(Number(v.anios) || 10)));
+      const precio = Math.min(150, Math.max(40, Number(v.precio) || 100));
+      const enUf = v.enUf !== 'no';
+      const mesesTenencia = Math.min(240, Math.max(1, Math.round(Number(v.meses) || 12)));
+      const custodiaAnual = Math.max(0, v.custodia || 0);
+
+      const rows = [];
+      let total, sub, chart;
+
+      if (id === 'emergencia') {
+        const perfil = PERFILES.find((p) => p.id === v.contrato) || PERFILES[0];
+        const dep = DEPS.find((d) => d.id === v.dependientes) || DEPS[0];
+        const mesesMin = perfil.meses;
+        const mesesOptimo = perfil.meses + dep.extra;
+        const objetivoMin = gasto * mesesMin;
+        const objetivoOptimo = gasto * mesesOptimo;
+        const falta = Math.max(0, objetivoOptimo - yaAhorrado);
+        const mesesParaLlegar = ahorroMensual > 0 ? Math.ceil(falta / ahorroMensual) : 0;
+        const avance = objetivoOptimo > 0 ? Math.min(100, (yaAhorrado / objetivoOptimo) * 100) : 0;
+
+        total = clp(objetivoOptimo);
+        sub =
+          'Con ' + clp(gasto) + ' de gastos esenciales al mes y tu situación (' + perfil.nombre.toLowerCase() + '), el colchón que te corresponde es de ' +
+          mesesOptimo + ' meses = ' + clp(objetivoOptimo) + ' · llevas ' + clp(yaAhorrado) + ' (' + avance.toFixed(0) + '%)' +
+          (falta > 0 ? (mesesParaLlegar > 0 ? ', te faltan ' + clp(falta) + ' y llegarías en ' + mesesParaLlegar + ' meses' : ', te faltan ' + clp(falta)) : ' — ya lo tienes completo');
+
+        rows.push({ k: 'Gastos esenciales del mes', ref: 'Base del cálculo', v: gasto });
+        rows.push({ k: 'Meses de piso por tu situación laboral', ref: perfil.nombre, v: mesesMin, format: 'unit', unit: 'meses' });
+        if (dep.extra > 0) rows.push({ k: 'Meses adicionales por carga familiar', ref: dep.nombre, v: dep.extra, format: 'unit', unit: 'meses' });
+        rows.push({ k: 'Objetivo mínimo', ref: mesesMin + ' meses de gastos', v: objetivoMin });
+        rows.push({ k: 'Objetivo holgado', ref: mesesOptimo + ' meses de gastos', v: objetivoOptimo, extra: true });
+        rows.push({ k: 'Lo que ya tienes guardado', ref: 'Disponible para emergencias', v: yaAhorrado });
+        rows.push({ k: 'Lo que te falta', ref: 'Objetivo holgado menos lo ahorrado', v: falta, extra: true });
+        rows.push({ k: 'Meses para completarlo', ref: 'Ahorrando ' + clp(ahorroMensual) + ' al mes', v: mesesParaLlegar, format: 'unit', unit: 'meses' });
+        rows.push({ k: 'Avance sobre el objetivo', ref: 'Cuánto llevas del colchón', v: avance, format: 'unit', unit: '%', decimals: 1 });
+        chart = [
+          { label: 'Ya ahorrado', value: Math.round(Math.min(yaAhorrado, objetivoOptimo)), tone: 'good' },
+          { label: 'Te falta', value: Math.round(falta), tone: 'warn' },
+        ];
+      } else if (id === 'deposito') {
+        const bruto = monto * (tasa / 100) * (dias / DIAS_ANIO);
+        const impuesto = igcSobre(bruto, EX_INTERESES, igcPct);
+        const neto = bruto - impuesto;
+        const netaAnual = monto > 0 ? (neto / monto) * (DIAS_ANIO / dias) * 100 : 0;
+
+        total = clp(neto);
+        sub =
+          'Tu depósito de ' + clp(monto) + ' a ' + dias + ' días genera ' + clp(bruto) + ' de interés bruto · ' +
+          (impuesto > 0
+            ? 'como supera la exención de ' + EXENCION.interesesUtm + ' UTM (' + clp(EX_INTERESES) + ' al año), el excedente paga ' + clp(impuesto) + ' de Global Complementario'
+            : 'no supera la exención de ' + EXENCION.interesesUtm + ' UTM (' + clp(EX_INTERESES) + ' al año), así que no pagas Global Complementario') +
+          ' · te quedan ' + clp(neto) + ', una tasa neta de ' + netaAnual.toFixed(2).replace('.', ',') + '% anual';
+
+        rows.push({ k: 'Capital depositado', ref: 'Lo que pones', v: monto });
+        rows.push({ k: 'Interés bruto del período', ref: tasa.toString().replace('.', ',') + '% anual × ' + dias + '/365 días', v: bruto });
+        rows.push({ k: 'Exención del Art. 57 LIR', ref: EXENCION.interesesUtm + ' UTM al año · UTM ' + clp(UTM), v: EX_INTERESES });
+        rows.push({ k: 'Interés que queda exento', ref: 'Hasta el tope de la exención', v: Math.min(bruto, EX_INTERESES) });
+        rows.push({ k: 'Global Complementario estimado', ref: 'Excedente × tu tasa marginal del ' + igcPct.toString().replace('.', ',') + '%', v: impuesto });
+        rows.push({ k: 'Interés neto', ref: 'Lo que efectivamente te queda', v: neto, extra: true });
+        rows.push({ k: 'Capital más interés al vencimiento', ref: 'Lo que retiras', v: monto + neto });
+        rows.push({ k: 'Tasa neta anualizada', ref: 'La comparable con otros instrumentos', v: netaAnual, format: 'unit', unit: '%', decimals: 2 });
+        chart = [
+          { label: 'Interés neto para ti', value: Math.round(neto), tone: 'main' },
+          { label: 'Global Complementario', value: Math.round(impuesto), tone: 'warn' },
+        ];
+      } else if (id === 'fondo-mutuo') {
+        const anosFrac = dias / DIAS_ANIO;
+        const bruta = monto * (Math.pow(1 + tasa / 100, anosFrac) - 1);
+        const comision = monto * (comisionPct / 100) * anosFrac;
+        const mayorValor = bruta - comision;
+        const impuesto = igcSobre(Math.max(0, mayorValor), EX_FM, igcPct);
+        const neta = mayorValor - impuesto;
+        const netaAnual = monto > 0 && anosFrac > 0 ? (Math.pow(1 + neta / monto, 1 / anosFrac) - 1) * 100 : 0;
+        // Alternativa: el mismo monto y plazo en un depósito a la misma tasa.
+        const dpBruto = monto * (tasa / 100) * anosFrac;
+        const dpNeto = dpBruto - igcSobre(dpBruto, EX_INTERESES, igcPct);
+
+        total = clp(neta);
+        sub =
+          'De ' + clp(bruta) + ' de rentabilidad bruta, la comisión se lleva ' + clp(comision) +
+          (impuesto > 0 ? ' y el Global Complementario ' + clp(impuesto) : ' y no pagas Global Complementario porque el mayor valor no supera las ' + EXENCION.fondosMutuosUtm + ' UTM (' + clp(EX_FM) + ')') +
+          ' · te quedan ' + clp(neta) + ' netos, un ' + netaAnual.toFixed(2).replace('.', ',') + '% anual efectivo';
+
+        rows.push({ k: 'Capital invertido', ref: 'Lo que aportas al fondo', v: monto });
+        rows.push({ k: 'Rentabilidad bruta del período', ref: tasa.toString().replace('.', ',') + '% anual compuesto por ' + dias + ' días', v: bruta });
+        rows.push({ k: 'Remuneración de la administradora', ref: comisionPct.toString().replace('.', ',') + '% anual sobre el patrimonio', v: comision });
+        rows.push({ k: 'Mayor valor del rescate', ref: 'Bruta menos comisión', v: mayorValor });
+        rows.push({ k: 'Exención del Art. 57 LIR para fondos mutuos', ref: EXENCION.fondosMutuosUtm + ' UTM al año · UTM ' + clp(UTM), v: EX_FM });
+        rows.push({ k: 'Global Complementario estimado', ref: 'Excedente × tu tasa marginal del ' + igcPct.toString().replace('.', ',') + '%', v: impuesto });
+        rows.push({ k: 'Ganancia neta del fondo', ref: 'Después de comisión e impuesto', v: neta, extra: true });
+        rows.push({ k: 'El mismo monto en un depósito a plazo', ref: 'A la misma tasa, para comparar', v: dpNeto });
+        rows.push({ k: neta >= dpNeto ? 'Ventaja del fondo sobre el depósito' : 'Ventaja del depósito sobre el fondo', ref: 'Diferencia neta', v: Math.abs(neta - dpNeto), extra: true });
+        rows.push({ k: 'Rentabilidad neta anualizada', ref: 'Efectiva, después de todo', v: netaAnual, format: 'unit', unit: '%', decimals: 2 });
+        chart = [
+          { label: 'Ganancia neta', value: Math.round(Math.max(0, neta)), tone: 'main' },
+          { label: 'Comisión de la administradora', value: Math.round(comision), tone: 'exit' },
+          { label: 'Global Complementario', value: Math.round(impuesto), tone: 'warn' },
+        ];
+      } else if (id === 'renta-fija') {
+        const nominal = monto;
+        const cuponSemestral = (nominal * (tasa / 100)) / 2;
+        const nCupones = anios * 2;
+        const cuponesTotales = cuponSemestral * nCupones;
+        const pagado = nominal * (precio / 100);
+        const gananciaCapital = nominal - pagado;
+        // Duración de Macaulay del bono, en años, calculada con la tasa de carátula.
+        const y = tasa / 100 / 2;
+        let sumaPond = 0;
+        let sumaVp = 0;
+        for (let t = 1; t <= nCupones; t++) {
+          const vp = cuponSemestral / Math.pow(1 + y, t);
+          sumaPond += (t / 2) * vp;
+          sumaVp += vp;
+        }
+        const vpRescate = nominal / Math.pow(1 + y, nCupones);
+        sumaPond += anios * vpRescate;
+        sumaVp += vpRescate;
+        const duracion = sumaVp > 0 ? sumaPond / sumaVp : anios;
+        const caida100pb = duracion / (1 + y) * 0.01 * 100; // % de caída de precio ante +100 pb
+        const totalRecibido = cuponesTotales + nominal;
+        const gananciaTotal = totalRecibido - pagado;
+        const enPesos = enUf ? UF : 1;
+
+        total = enUf ? Math.round(gananciaTotal).toLocaleString('es-CL') + ' UF' : clp(gananciaTotal);
+        sub =
+          'Comprando a ' + precio.toString().replace('.', ',') + '% del par pagas ' +
+          (enUf ? Math.round(pagado).toLocaleString('es-CL') + ' UF' : clp(pagado)) + ' y recibes ' + nCupones + ' cupones semestrales de ' +
+          (enUf ? cuponSemestral.toLocaleString('es-CL', { maximumFractionDigits: 2 }) + ' UF' : clp(cuponSemestral)) +
+          ' más el capital al vencimiento · duración de ' + duracion.toFixed(1).replace('.', ',') + ' años: si las tasas suben 100 puntos base el precio cae cerca de ' +
+          caida100pb.toFixed(1).replace('.', ',') + '%';
+
+        rows.push({ k: 'Valor nominal del bono', ref: enUf ? 'Expresado en UF' : 'Expresado en pesos', v: nominal, format: enUf ? 'unit' : 'ars', unit: 'UF' });
+        rows.push({ k: 'Lo que pagas por él', ref: precio.toString().replace('.', ',') + '% del par', v: pagado, format: enUf ? 'unit' : 'ars', unit: 'UF' });
+        rows.push({ k: 'Cupón semestral', ref: 'Tasa de carátula ' + tasa.toString().replace('.', ',') + '% anual ÷ 2', v: cuponSemestral, format: enUf ? 'unit' : 'ars', unit: 'UF', decimals: 2 });
+        rows.push({ k: 'Número de cupones hasta el vencimiento', ref: anios + ' años × 2 pagos al año', v: nCupones, format: 'plain' });
+        rows.push({ k: 'Cupones acumulados', ref: 'Suma de todos los pagos semestrales', v: cuponesTotales, format: enUf ? 'unit' : 'ars', unit: 'UF' });
+        rows.push({ k: gananciaCapital >= 0 ? 'Ganancia de capital al vencimiento' : 'Pérdida de capital al vencimiento', ref: 'Nominal menos precio pagado', v: Math.abs(gananciaCapital), format: enUf ? 'unit' : 'ars', unit: 'UF' });
+        rows.push({ k: 'Ganancia total del bono', ref: 'Cupones más capital menos lo pagado', v: gananciaTotal, format: enUf ? 'unit' : 'ars', unit: 'UF', extra: true });
+        if (enUf) {
+          rows.push({ k: 'Ganancia total en pesos de hoy', ref: 'UF de hoy ' + clp(UF) + ' · se reajusta con el IPC', v: gananciaTotal * enPesos, extra: true });
+          rows.push({ k: 'Cupón semestral en pesos de hoy', ref: 'A la UF vigente', v: cuponSemestral * enPesos });
+        }
+        rows.push({ k: 'Duración de Macaulay', ref: 'Sensibilidad del precio a las tasas', v: duracion, format: 'unit', unit: 'años', decimals: 1 });
+        rows.push({ k: 'Caída de precio si las tasas suben 100 pb', ref: 'Duración modificada', v: caida100pb, format: 'unit', unit: '%', decimals: 1 });
+        chart = [
+          { label: 'Capital que recuperas', value: Math.round(nominal), tone: 'main' },
+          { label: 'Cupones acumulados', value: Math.round(cuponesTotales), tone: 'good' },
+          { label: gananciaCapital >= 0 ? 'Ganancia de capital' : 'Pérdida de capital', value: Math.round(Math.abs(gananciaCapital)), tone: gananciaCapital >= 0 ? 'good' : 'bad' },
+        ];
+      } else {
+        // Acciones
+        const comisionCompra = monto * (comisionPct / 100);
+        const derechoCompra = monto * (DERECHO_BOLSA_PCT / 100);
+        const custodia = (custodiaAnual / 12) * mesesTenencia;
+        const valorFinal = monto * (1 + tasa / 100);
+        const comisionVenta = valorFinal * (comisionPct / 100);
+        const derechoVenta = valorFinal * (DERECHO_BOLSA_PCT / 100);
+        const costos = comisionCompra + derechoCompra + custodia + comisionVenta + derechoVenta;
+        const gananciaBruta = valorFinal - monto;
+        const gananciaNeta = gananciaBruta - costos;
+        const rentNetaPct = monto > 0 ? (gananciaNeta / monto) * 100 : 0;
+        const mordida = gananciaBruta > 0 ? (costos / gananciaBruta) * 100 : 0;
+
+        total = clp(gananciaNeta);
+        sub =
+          'Con una ganancia bruta esperada de ' + clp(gananciaBruta) + ', los costos de la operación se llevan ' + clp(costos) +
+          (gananciaBruta > 0 ? ' (' + mordida.toFixed(0) + '% de la ganancia)' : '') +
+          ' · te quedan ' + clp(gananciaNeta) + ', un ' + rentNetaPct.toFixed(2).replace('.', ',') + '% sobre lo invertido';
+
+        rows.push({ k: 'Monto de la compra', ref: 'Lo que inviertes', v: monto });
+        rows.push({ k: 'Comisión de la corredora en la compra', ref: comisionPct.toString().replace('.', ',') + '% del monto', v: comisionCompra });
+        rows.push({ k: 'Derecho de bolsa en la compra', ref: DERECHO_BOLSA_PCT.toString().replace('.', ',') + '% del monto transado', v: derechoCompra });
+        rows.push({ k: 'Custodia por ' + mesesTenencia + (mesesTenencia === 1 ? ' mes' : ' meses'), ref: 'Prorrateo del cargo anual', v: custodia });
+        rows.push({ k: 'Valor de la posición al vender', ref: 'Con la rentabilidad esperada del ' + tasa.toString().replace('.', ',') + '%', v: valorFinal });
+        rows.push({ k: 'Comisión de la corredora en la venta', ref: comisionPct.toString().replace('.', ',') + '% del monto vendido', v: comisionVenta });
+        rows.push({ k: 'Derecho de bolsa en la venta', ref: DERECHO_BOLSA_PCT.toString().replace('.', ',') + '% del monto transado', v: derechoVenta });
+        rows.push({ k: 'Costo total de la operación', ref: 'Compra más venta más custodia', v: costos, extra: true });
+        rows.push({ k: 'Ganancia bruta esperada', ref: 'Antes de costos', v: gananciaBruta });
+        rows.push({ k: 'Ganancia neta de costos', ref: 'Sin considerar el régimen del Art. 107 LIR', v: gananciaNeta, extra: true });
+        rows.push({ k: 'Cuánto de tu ganancia se llevan los costos', ref: 'Costos ÷ ganancia bruta', v: mordida, format: 'unit', unit: '%', decimals: 1 });
+        rows.push({ k: 'Rentabilidad neta sobre lo invertido', ref: 'Ganancia neta ÷ monto', v: rentNetaPct, format: 'unit', unit: '%', decimals: 2 });
+        chart = [
+          { label: 'Ganancia neta', value: Math.round(Math.max(0, gananciaNeta)), tone: 'main' },
+          { label: 'Comisiones de la corredora', value: Math.round(comisionCompra + comisionVenta), tone: 'exit' },
+          { label: 'Derecho de bolsa y custodia', value: Math.round(derechoCompra + derechoVenta + custodia), tone: 'warn' },
+        ];
+      }
+
+      return { total: total, sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

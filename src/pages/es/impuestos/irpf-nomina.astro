@@ -1,0 +1,267 @@
+---
+/**
+ * Hub de decisión ES — IRPF de la nómina. Reemplaza 8 calculadoras sueltas y el
+ * hub raíz /trabajo/sueldo-neto-espana (ver hub.replaces).
+ *
+ * OJO: HubData sólo admite audience 'AR' | 'global'. El audience="ES" se pasa
+ * literal al Layout para no perder el geo targeting del mercado.
+ *
+ * OJO 2: define:vars serializa a JSON, así que los Infinity de las escalas
+ * llegan como null. El compute los trata como "sin límite".
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  COTIZACION,
+  ESCALA_ESTATAL,
+  ESCALA_RETENCION,
+  ESCALAS_CCAA,
+  MINIMOS,
+} from '../../../lib/hubs/es/irpf-nomina';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/es' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="ES"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    COT: COTIZACION,
+    ESTATAL: ESCALA_ESTATAL,
+    RETENCION: ESCALA_RETENCION,
+    CCAA: ESCALAS_CCAA,
+    M: MINIMOS,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n) => Math.round(n || 0).toLocaleString('es-ES') + ' €';
+    const pct = (n) => n.toFixed(2).replace('.', ',') + '%';
+
+    /** Escala progresiva. `limite` viene como null cuando el módulo declaraba Infinity. */
+    function escala(base, tramos) {
+      if (!(base > 0)) return 0;
+      let cuota = 0;
+      let prev = 0;
+      for (const par of tramos) {
+        const limite = par[0] == null ? Infinity : par[0];
+        if (base > prev) {
+          cuota += (Math.min(base, limite) - prev) * par[1];
+          prev = limite;
+          if (base <= limite) break;
+        }
+      }
+      return cuota;
+    }
+
+    /** Cotización del trabajador: base máxima + MEI + cotización de solidaridad. */
+    function cotizacion(bruto) {
+      const topeAnual = COT.baseMaximaMensual * 12;
+      const ordinaria = Math.min(bruto, topeAnual);
+      let cuota = ordinaria * COT.tipoTrabajador;
+      let exceso = Math.max(0, bruto - topeAnual);
+      let prev = 0;
+      for (const par of COT.solidaridad) {
+        const hasta = par[0] == null ? Infinity : par[0];
+        const ancho = (hasta - prev) * topeAnual;
+        const parte = Math.min(exceso, ancho === Infinity ? exceso : ancho);
+        cuota += parte * par[1];
+        exceso -= parte;
+        prev = hasta;
+        if (exceso <= 0) break;
+      }
+      return cuota;
+    }
+
+    /** Reducción por rendimientos del trabajo (art. 20 Ley 35/2006). */
+    function reduccionTrabajo(rnt) {
+      if (rnt <= 0) return 0;
+      if (rnt <= 14852) return 7302;
+      if (rnt <= 17673.52) return Math.max(0, 7302 - 1.75 * (rnt - 14852));
+      if (rnt < 19747.5) return Math.max(0, 2364.34 - 1.14 * (rnt - 17673.52));
+      return 0;
+    }
+
+    function minimoDescendientes(hijos) {
+      let total = 0;
+      for (let i = 0; i < hijos; i++) total += M.descendientes[Math.min(i, 3)];
+      return total;
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'general';
+      const bruto = Math.max(0, v.bruto || 0);
+      const hijos = Math.max(0, Math.min(10, Math.round(v.hijos || 0)));
+      const edad = Math.max(16, Math.min(99, v.edad || 35));
+      const grado = String(v.discapacidad || '0');
+      const pagas = Number(v.pagas) === 12 ? 12 : 14;
+      const region = CCAA[String(v.ccaa || 'madrid')] || CCAA.madrid;
+
+      // ── Rendimiento neto del trabajo ──────────────────────────────
+      const ss = cotizacion(bruto);
+      const rnt = Math.max(0, bruto - ss);
+      const otrosGastos = Math.min(rnt, M.otrosGastos + (M.gastosDiscapacidad[grado] || 0));
+      const red20 = reduccionTrabajo(rnt);
+      const extraHijos = hijos > 2 ? 600 : 0;
+      const reduccionUnidad =
+        id === 'conyuge' ? M.reduccionConjunta : id === 'monoparental' ? M.reduccionMonoparental : 0;
+      const base = Math.max(0, rnt - otrosGastos - red20 - extraHijos - reduccionUnidad);
+
+      // ── Mínimo personal y familiar ────────────────────────────────
+      const minimo =
+        M.contribuyente +
+        (edad >= 65 ? M.mas65 : 0) +
+        (edad >= 75 ? M.mas75 : 0) +
+        minimoDescendientes(hijos) +
+        (M.discapacidad[grado] || 0);
+
+      // ── Cuota íntegra: escala sobre la base MENOS escala sobre el mínimo ──
+      // Método legal (arts. 63 y 74). NO se resta el mínimo de la base.
+      const estatal = region.foral ? 0 : Math.max(0, escala(base, ESTATAL) - escala(minimo, ESTATAL));
+      const autonomica = Math.max(0, escala(base, region.tramos) - escala(minimo, region.tramos));
+      const cuotaAnual = estatal + autonomica;
+
+      // ── Retención que aplica la empresa (algoritmo AEAT, escala de retención) ──
+      const situacion = id === 'monoparental' && hijos > 0 ? 'situacion1' : id === 'conyuge' ? 'situacion2' : 'situacion3';
+      const col = hijos <= 0 ? 0 : hijos === 1 ? 1 : 2;
+      const exento = M.limiteExento[situacion][col];
+      let cuotaRet = bruto <= exento ? 0 : Math.max(0, escala(base, RETENCION) - escala(minimo, RETENCION));
+      if (bruto <= 35200 && bruto > exento) {
+        cuotaRet = Math.min(cuotaRet, Math.max(0, (bruto - exento) * 0.43));
+      }
+      const tipoRetencion = bruto > 0 ? Math.trunc((cuotaRet / bruto) * 10000) / 100 : 0;
+      const retencionAnual = Math.round(bruto * tipoRetencion) / 100;
+
+      const neto = Math.max(0, bruto - ss - retencionAnual);
+      const efectivo = bruto > 0 ? (cuotaAnual / bruto) * 100 : 0;
+      const saldo = retencionAnual - cuotaAnual;
+
+      // Tipo marginal: el del último euro, sumando estatal + autonómica.
+      function marginal(tramos) {
+        let prev = 0;
+        for (const par of tramos) {
+          const limite = par[0] == null ? Infinity : par[0];
+          if (base <= limite) return par[1];
+          prev = limite;
+        }
+        return tramos[tramos.length - 1][1];
+      }
+      const tipoMarginal = ((region.foral ? 0 : marginal(ESTATAL)) + marginal(region.tramos)) * 100;
+
+      const rows = [
+        { k: 'Sueldo bruto anual', ref: 'Base del cálculo', v: bruto },
+        {
+          k: 'Cotización a la Seguridad Social (se resta)',
+          ref: '6,5% con base máxima de ' + eur(COT.baseMaximaMensual) + '/mes',
+          v: ss,
+        },
+        { k: 'Otros gastos deducibles (se restan)', ref: 'Art. 19.2.f', v: otrosGastos },
+        { k: 'Reducción por rendimientos del trabajo', ref: 'Art. 20', v: red20 },
+        { k: 'Base liquidable', ref: 'Rendimiento neto tras reducciones', v: base },
+        { k: 'Mínimo personal y familiar', ref: 'Se le aplica la escala aparte', v: minimo },
+      ];
+      if (!region.foral) rows.push({ k: 'Cuota estatal', ref: 'Escala común a toda España', v: estatal });
+      rows.push({
+        k: region.foral ? 'Cuota foral de ' + region.nombre : 'Cuota autonómica de ' + region.nombre,
+        ref: region.foral ? 'Escala única, sin tramo estatal' : 'Escala de la comunidad',
+        v: autonomica,
+      });
+      rows.push({ k: 'IRPF del año', ref: 'Lo que te toca pagar de verdad', v: cuotaAnual, extra: true });
+      rows.push({
+        k: 'Retención de la empresa',
+        ref: 'Tipo aplicado ' + pct(tipoRetencion),
+        v: retencionAnual,
+      });
+      rows.push({
+        k: saldo >= 0 ? 'En la Renta te sale a devolver' : 'En la Renta te sale a pagar',
+        ref: 'Retenido menos IRPF real',
+        v: Math.abs(saldo),
+      });
+      rows.push({ k: 'Neto anual', ref: 'Bruto menos cotización menos retención', v: neto, extra: true });
+      rows.push({ k: 'Neto por paga', ref: pagas + ' pagas al año', v: neto / pagas });
+      rows.push({ k: 'Tipo efectivo', ref: 'IRPF entre bruto', v: efectivo, format: 'unit', unit: '%', decimals: 2 });
+      rows.push({
+        k: 'Tipo marginal',
+        ref: 'Lo que tributa el siguiente euro',
+        v: tipoMarginal,
+        format: 'unit',
+        unit: '%',
+        decimals: 2,
+      });
+
+      const chart = [
+        { label: 'Neto en mano', value: Math.round(neto), tone: 'main' },
+        { label: 'IRPF retenido', value: Math.round(retencionAnual), tone: 'bad' },
+        { label: 'Seguridad Social', value: Math.round(ss), tone: 'prop' },
+      ].filter(function (s) {
+        return s.value > 0;
+      });
+
+      const sub =
+        region.nombre +
+        ' · te retienen el ' +
+        pct(tipoRetencion) +
+        ' (' +
+        eur(retencionAnual) +
+        ' al año) y tu IRPF real es ' +
+        eur(cuotaAnual) +
+        ', así que ' +
+        (saldo >= 0 ? 'la Renta te devuelve ' : 'la Renta te reclama ') +
+        eur(Math.abs(saldo)) +
+        ' · te quedan ' +
+        eur(neto / pagas) +
+        ' por paga';
+
+      return {
+        total: eur(neto),
+        sub: sub,
+        rows: rows,
+        chart: chart,
+        format: 'unit',
+        unit: '€',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

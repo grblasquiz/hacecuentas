@@ -1,0 +1,46 @@
+---
+/**
+ * Silo Garden · mercado inglés — índice de hubs de decisión.
+ * El listado sale del registry, no a mano.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import SiloIndex from '../../../components/hub/SiloIndex.astro';
+import { hubsOfSilo } from '../../../lib/hubs/registry';
+
+const HREF = '/en/garden';
+const SILO = 'Garden';
+const LEDE =
+  'Watering, feeding, spacing and timing — the numbers behind a vegetable garden, in gallons, square feet and USDA hardiness zones.';
+const hubs = hubsOfSilo(HREF);
+const CANONICAL = `https://hacecuentas.com${HREF}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: SILO,
+  description: LEDE,
+  url: CANONICAL,
+  hasPart: hubs.map((h) => ({
+    '@type': 'WebPage',
+    name: h.h1,
+    url: `https://hacecuentas.com/${h.slug}`,
+  })),
+};
+---
+
+<Layout
+  title="Garden Calculators — watering, fertilizer, spacing and planting dates | Hacé Cuentas"
+  description={LEDE}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+>
+  <Header />
+  <SiloIndex silo={SILO} href={HREF} lede={LEDE} hubs={hubs} />
+  <Footer />
+</Layout>

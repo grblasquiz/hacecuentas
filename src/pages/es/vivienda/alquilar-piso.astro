@@ -1,0 +1,232 @@
+---
+/**
+ * Hub de decisión ES — alquilar un piso. Reemplaza 5 calculadoras sueltas.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, LAU, IRNR, IVA_GARAJE, AMORTIZACION_PCT } from '../../../lib/hubs/es/alquilar-piso';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/es' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="ES"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ LAU: LAU, IRNR: IRNR, IVA: IVA_GARAJE, AMORT: AMORTIZACION_PCT }}>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n) => Math.round(n || 0).toLocaleString('es-ES') + ' €';
+    const pct = (n) => n.toFixed(2).replace('.', ',') + '%';
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'inquilino';
+      const renta = Math.max(0, v.renta || 0);
+      const precio = Math.max(1, v.precioCompra || 1);
+      const garantia = Math.max(0, Math.round(v.garantia || 0));
+      const gastos = Math.max(0, v.gastosAnuales || 0);
+      const vacio = Math.max(0, Math.min(12, Math.round(v.mesesVacio || 0)));
+      const reduccion = Math.max(0, Math.min(90, Number(v.reduccion) || 0)) / 100;
+      const marginal = Math.max(0, Math.min(50, v.tipoMarginal || 0)) / 100;
+      const residencia = String(v.residencia || 'espana');
+
+      const rows = [];
+      let principal = 0;
+      let sub = '';
+      let chart = [];
+
+      const mesesCobrados = 12 - vacio;
+      const ingresoAnual = renta * mesesCobrados;
+
+      if (id === 'inquilino') {
+        const fianza = renta * LAU.mesesFianzaVivienda;
+        const garantiaLegal = Math.min(garantia, LAU.maxMesesGarantiaAdicional) * renta;
+        const garantiaPedida = garantia * renta;
+        const exceso = Math.max(0, garantiaPedida - garantiaLegal);
+        const entrada = renta + fianza + garantiaLegal;
+        principal = entrada;
+
+        rows.push({ k: 'Primera mensualidad', ref: 'Por adelantado', v: renta });
+        rows.push({ k: 'Fianza legal', ref: 'Una mensualidad, obligatoria por la LAU', v: fianza });
+        rows.push({
+          k: 'Garantía adicional legal',
+          ref: 'Máximo ' + LAU.maxMesesGarantiaAdicional + ' mensualidades',
+          v: garantiaLegal,
+        });
+        rows.push({
+          k: 'Exceso ilegal que te estarían pidiendo',
+          ref: exceso > 0 ? 'Por encima del máximo de la LAU' : 'No hay exceso',
+          v: exceso,
+        });
+        rows.push({ k: 'Coste de entrada legal', ref: 'Lo máximo que te pueden pedir', v: entrada, extra: true });
+        rows.push({
+          k: 'Plazo de devolución de la fianza',
+          ref: 'Desde la entrega de llaves',
+          v: LAU.plazoDevolucionDias,
+          format: 'unit',
+          unit: 'días',
+        });
+        rows.push({ k: 'Lo que recuperas al irte', ref: 'Fianza y garantía, si no hay desperfectos', v: fianza + garantiaLegal });
+
+        chart = [
+          { label: 'Primera mensualidad', value: Math.round(renta), tone: 'bad' },
+          { label: 'Fianza', value: Math.round(fianza), tone: 'main' },
+          { label: 'Garantía adicional', value: Math.round(garantiaLegal), tone: 'prop' },
+        ];
+        sub =
+          'Entrar a un alquiler de ' +
+          eur(renta) +
+          ' al mes cuesta como máximo ' +
+          eur(entrada) +
+          ' de golpe' +
+          (exceso > 0 ? ' · te estarían pidiendo ' + eur(exceso) + ' por encima de lo que permite la ley' : '');
+      } else {
+        // Rentabilidad e impuestos del propietario.
+        const bruta = (renta * 12) / precio;
+        const netaAntesImpuestos = (ingresoAnual - gastos) / precio;
+        const rendimientoNeto = Math.max(0, ingresoAnual - gastos);
+
+        let impuesto = 0;
+        let refImpuesto = '';
+        if (id === 'noresidente') {
+          if (residencia === 'resto') {
+            impuesto = ingresoAnual * IRNR.resto;
+            refImpuesto = Math.round(IRNR.resto * 100) + '% sobre el ingreso bruto, sin deducir gastos';
+          } else {
+            impuesto = rendimientoNeto * IRNR.ue;
+            refImpuesto = Math.round(IRNR.ue * 100) + '% sobre el rendimiento neto, con gastos deducibles';
+          }
+        } else if (id === 'trastero') {
+          impuesto = rendimientoNeto * marginal;
+          refImpuesto = 'Sin reducción, al ' + pct(marginal * 100) + ' marginal';
+        } else {
+          const baseTrasReduccion = rendimientoNeto * (1 - reduccion);
+          impuesto = baseTrasReduccion * marginal;
+          refImpuesto = 'Reducción del ' + Math.round(reduccion * 100) + '% y marginal del ' + pct(marginal * 100);
+        }
+
+        const neto = ingresoAnual - gastos - impuesto;
+        const rentabilidadNeta = neto / precio;
+        principal = neto;
+
+        rows.push({ k: 'Alquiler mensual', ref: 'Lo que cobras', v: renta });
+        rows.push({
+          k: 'Meses cobrados al año',
+          ref: vacio + ' mes(es) de vacío previstos',
+          v: mesesCobrados,
+          format: 'unit',
+          unit: 'meses',
+        });
+        rows.push({ k: 'Ingreso anual', ref: 'Alquiler × meses cobrados', v: ingresoAnual });
+        rows.push({ k: 'Gastos anuales del piso', ref: 'IBI, comunidad, seguro y mantenimiento', v: gastos });
+        rows.push({ k: 'Rendimiento neto antes de impuestos', ref: 'Ingreso menos gastos', v: rendimientoNeto });
+        rows.push({ k: 'Impuesto sobre el alquiler', ref: refImpuesto, v: impuesto, extra: true });
+        if (id === 'trastero') {
+          rows.push({
+            k: 'IVA que tienes que repercutir',
+            ref: Math.round(IVA * 100) + '% · modelo 303',
+            v: ingresoAnual * IVA,
+          });
+        }
+        rows.push({ k: 'Te queda limpio al año', ref: 'Después de gastos e impuestos', v: neto, extra: true });
+        rows.push({
+          k: 'Rentabilidad bruta',
+          ref: 'Alquiler anual ÷ precio pagado',
+          v: bruta * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        rows.push({
+          k: 'Rentabilidad neta antes de impuestos',
+          ref: 'Descontando gastos y vacíos',
+          v: netaAntesImpuestos * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        rows.push({
+          k: 'Rentabilidad neta después de impuestos',
+          ref: 'La cifra que de verdad cuenta',
+          v: rentabilidadNeta * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+          extra: true,
+        });
+        rows.push({
+          k: 'Amortización deducible de referencia',
+          ref: Math.round(AMORT * 100) + '% del valor de construcción',
+          v: precio * 0.7 * AMORT,
+        });
+
+        chart = [
+          { label: 'Te queda limpio', value: Math.round(Math.max(0, neto)), tone: 'main' },
+          { label: 'Gastos del piso', value: Math.round(gastos), tone: 'prop' },
+          { label: 'Impuestos', value: Math.round(impuesto), tone: 'bad' },
+        ];
+        sub =
+          'Con ' +
+          eur(renta) +
+          ' al mes y ' +
+          vacio +
+          ' mes(es) de vacío, la rentabilidad bruta es del ' +
+          pct(bruta * 100) +
+          ' y la neta después de impuestos del ' +
+          pct(rentabilidadNeta * 100) +
+          ': ' +
+          eur(neto) +
+          ' limpios al año';
+      }
+
+      return {
+        total: eur(principal),
+        sub: sub,
+        rows: rows,
+        chart: chart.filter(function (s) {
+          return s.value > 0;
+        }),
+        format: 'unit',
+        unit: '€',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

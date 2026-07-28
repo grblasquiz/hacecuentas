@@ -1,0 +1,286 @@
+---
+/**
+ * Hub de decisión EN (mercado US) — "What size water heater, tank, pipe and pump do I need?".
+ * audience="US" y lang="en" literales al Layout; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  HOT_WATER_GPD,
+  DOE_FHR,
+  TANK_SIZES_GAL,
+  TANKLESS_GPM,
+  RESERVE_GPD_METRIC,
+  EPA_HOME_GPD,
+  RESERVE_SIZES_GAL,
+  PIPE_SIZES_IN,
+  PUMP_HP_CONSTANT,
+  PUMP_SIZES_HP,
+  DRAINS,
+} from '../../../lib/hubs/en/water-and-plumbing';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    HOT_WATER_GPD,
+    DOE_FHR,
+    TANK_SIZES_GAL,
+    TANKLESS_GPM,
+    RESERVE_GPD_METRIC,
+    EPA_HOME_GPD,
+    RESERVE_SIZES_GAL,
+    PIPE_SIZES_IN,
+    PUMP_HP_CONSTANT,
+    PUMP_SIZES_HP,
+    DRAINS,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(x).toLocaleString('en-US');
+    const n1 = (x) => (Math.round(x * 10) / 10).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const n2 = (x) => (Math.round(x * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    /** Factor de simultaneidad de la fórmula original (calefon-termotanque-litros-personas.ts). */
+    function simultaneity(p) {
+      if (p <= 2) return 1.0;
+      if (p <= 4) return 0.85;
+      if (p <= 6) return 0.75;
+      return 0.65;
+    }
+
+    /**
+     * Escalera de tamaños comerciales para el gráfico posicional: cada tramo
+     * es un peldaño y el marcador cae donde queda tu requerimiento.
+     */
+    function ladder(sizes, required, unit) {
+      const min = 0;
+      const max = sizes[sizes.length - 1];
+      const segs = [];
+      let prev = min;
+      const tones = ['good', 'main', 'prop', 'warn', 'bad'];
+      for (let i = 0; i < sizes.length; i++) {
+        segs.push({ label: 'Up to ' + n2(sizes[i]) + ' ' + unit, value: sizes[i] - prev, from: Math.round(prev * 100) / 100, to: sizes[i], tone: tones[i % tones.length] });
+        prev = sizes[i];
+      }
+      const pos = max > min ? Math.min(100, Math.max(0, ((required - min) / (max - min)) * 100)) : 0;
+      return { segs: segs, pos: pos };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'heater';
+      const people = Math.max(1, Math.round(v.people || 1));
+      const days = Math.max(0, v.reserve_days || 0);
+      const gpm = Math.max(0, v.flow_gpm || 0);
+      const vel = Math.max(0.5, v.velocity_fps || 5);
+      const head = Math.max(0, v.head_ft || 0);
+      const eff = Math.min(0.95, Math.max(0.2, (v.pump_eff || 60) / 100));
+
+      const usage = HOT_WATER_GPD.find((u) => u.id === String(v.usage)) || HOT_WATER_GPD[1];
+      const rows = [];
+      let total, sub, lad, unit, decimals;
+
+      if (id === 'heater') {
+        // Porte de calefon-termotanque-litros-personas.ts:
+        // demanda diaria = personas × L/persona; pico = demanda × coef simultaneidad.
+        const coef = simultaneity(people);
+        const dailyGal = people * usage.gal;
+        const peakGal = dailyGal * coef;
+        const doe = DOE_FHR.find((d) => people <= d.maxPeople) || DOE_FHR[DOE_FHR.length - 1];
+        const tankless = TANKLESS_GPM.find((t) => people <= t.maxPeople) || TANKLESS_GPM[TANKLESS_GPM.length - 1];
+        const isTankless = String(v.heater_type) === 'tankless';
+        const tankSize = TANK_SIZES_GAL.find((t) => t >= doe.tank) || TANK_SIZES_GAL[TANK_SIZES_GAL.length - 1];
+
+        rows.push({ k: 'People in the household', ref: usage.label, v: people, format: 'plain' });
+        rows.push({ k: 'Hot water per person per day', ref: usage.liters + ' L of 140 °F water', v: usage.gal, format: 'unit', unit: 'gal', decimals: 2 });
+        rows.push({ k: 'Daily hot water demand', ref: 'People × per-person use', v: dailyGal, format: 'unit', unit: 'gal', decimals: 1 });
+        rows.push({ k: 'Simultaneity factor', ref: 'Not everyone showers at the same minute', v: coef * 100, format: 'unit', unit: '%' });
+        rows.push({ k: 'Peak demand of pure hot water', ref: 'The ported metric method, at 140 °F', v: peakGal, format: 'unit', unit: 'gal', decimals: 1 });
+        rows.push({ k: 'DOE first hour rating for this household', ref: 'Mixed water at 120 °F', v: doe.fhr, format: 'unit', unit: 'gal', extra: true });
+        rows.push({ k: 'Gap between the two methods', ref: 'Pure 140 °F water versus mixed 120 °F delivery', v: Math.abs(doe.fhr - peakGal), format: 'unit', unit: 'gal', decimals: 1 });
+        if (isTankless) {
+          rows.push({ k: 'Tankless flow rate needed', ref: 'From the ported L/min recommendation', v: tankless.gpm, format: 'unit', unit: 'GPM', decimals: 1, extra: true });
+          rows.push({ k: 'Same flow in metric', ref: '1 GPM = 3.785 L/min', v: tankless.gpm * 3.785, format: 'unit', unit: 'L/min', decimals: 1 });
+          rows.push({ k: 'Burner output at a 70 °F rise', ref: 'GPM × ΔT × 500 BTU/h', v: tankless.gpm * 70 * 500, format: 'unit', unit: 'BTU/h' });
+          rows.push({ k: 'Same output in kW', ref: '3,412 BTU/h = 1 kW', v: (tankless.gpm * 70 * 500) / 3412, format: 'unit', unit: 'kW', decimals: 1 });
+          rows.push({ k: 'Simultaneous showers this supports', ref: 'At 2.2 GPM each', v: Math.floor(tankless.gpm / 2.2), format: 'plain' });
+          total = n1(tankless.gpm) + ' GPM';
+          sub = people + (people === 1 ? ' person' : ' people') + ' with ' + usage.label.split('—')[0].trim().toLowerCase() +
+            ' use needs a tankless unit rated about ' + n1(tankless.gpm) + ' GPM (' + n1(tankless.gpm * 3.785) +
+            ' L/min) · that is roughly ' + Math.floor(tankless.gpm / 2.2) + ' simultaneous showers, and the rating falls in winter';
+          lad = ladder([2, 3, 4, 5, 6, 8, 10], tankless.gpm, 'GPM');
+          unit = 'GPM'; decimals = 1;
+        } else {
+          rows.push({ k: 'Tank size to buy', ref: 'Nearest stocked capacity', v: tankSize, format: 'unit', unit: 'gal', extra: true });
+          rows.push({ k: 'Same capacity in liters', ref: '1 gal = 3.785 L', v: tankSize * 3.785, format: 'unit', unit: 'L' });
+          rows.push({ k: 'Weight of the full tank', ref: 'Water alone, at 8.34 lb per gallon', v: tankSize * 8.34, format: 'unit', unit: 'lb' });
+          rows.push({ k: 'Energy to reheat it from 55 to 140 °F', ref: 'Gallons × 8.34 × ΔT', v: tankSize * 8.34 * 85, format: 'unit', unit: 'BTU' });
+          rows.push({ k: 'Days of the household demand it holds', ref: 'Ignoring recovery', v: dailyGal > 0 ? tankSize / dailyGal : 0, format: 'unit', unit: 'days', decimals: 2 });
+          total = tankSize + ' gal';
+          sub = people + (people === 1 ? ' person' : ' people') + ' at ' + n1(usage.gal) + ' gal each need about ' + n1(peakGal) +
+            ' gal of peak hot water · DOE puts the first hour rating at ' + doe.fhr + ' gal, which is a ' + tankSize +
+            ' gal tank · compare first hour ratings, not capacities';
+          lad = ladder(TANK_SIZES_GAL, doe.fhr, 'gal');
+          unit = 'gal'; decimals = 0;
+        }
+      } else if (id === 'reserve') {
+        // Porte de tanque-agua-litros-personas.ts: L = personas × 200 × días.
+        const needed = people * RESERVE_GPD_METRIC * days;
+        const epaNeeded = people * EPA_HOME_GPD * days;
+        const size = RESERVE_SIZES_GAL.find((s) => s >= needed) || RESERVE_SIZES_GAL[RESERVE_SIZES_GAL.length - 1];
+
+        rows.push({ k: 'People in the household', ref: 'Everyone drawing from the tank', v: people, format: 'plain' });
+        rows.push({ k: 'Water per person per day', ref: '200 L, the metric sizing rule', v: RESERVE_GPD_METRIC, format: 'unit', unit: 'gal', decimals: 1 });
+        rows.push({ k: 'Days of reserve wanted', ref: 'How long you can ride out an outage', v: days, format: 'unit', unit: 'days', decimals: 1 });
+        rows.push({ k: 'Storage required', ref: 'People × daily use × days', v: needed, format: 'unit', unit: 'gal' });
+        rows.push({ k: 'Same requirement at the EPA US average', ref: '82 gal per person per day including outdoor use', v: epaNeeded, format: 'unit', unit: 'gal' });
+        rows.push({ k: 'How much the US average adds', ref: 'The metric rule runs low for a US home with a yard', v: Math.max(0, epaNeeded - needed), format: 'unit', unit: 'gal' });
+        rows.push({ k: 'Tank size to buy', ref: 'Nearest stocked poly tank', v: size, format: 'unit', unit: 'gal', extra: true });
+        rows.push({ k: 'Spare capacity in that tank', ref: 'Headroom over the requirement', v: Math.max(0, size - needed), format: 'unit', unit: 'gal' });
+        rows.push({ k: 'Same capacity in liters', ref: '1 gal = 3.785 L', v: size * 3.785, format: 'unit', unit: 'L' });
+        rows.push({ k: 'Weight of the tank when full', ref: '8.34 lb per gallon', v: size * 8.34, format: 'unit', unit: 'lb', extra: true });
+        rows.push({ k: 'That weight in short tons', ref: 'What the platform has to carry', v: (size * 8.34) / 2000, format: 'unit', unit: 'tons', decimals: 2 });
+
+        total = n0(size) + ' gal';
+        sub = people + (people === 1 ? ' person' : ' people') + ' × ' + n1(RESERVE_GPD_METRIC) + ' gal/day × ' + n1(days) +
+          (days === 1 ? ' day' : ' days') + ' = ' + n0(needed) + ' gal · buy the ' + n0(size) + ' gal tank · full, it weighs ' +
+          n0(size * 8.34) + ' lb (' + n1((size * 8.34) / 2000) + ' tons)';
+        lad = ladder(RESERVE_SIZES_GAL, needed, 'gal');
+        unit = 'gal'; decimals = 0;
+      } else if (id === 'pipe') {
+        // Porte de cano-agua-diametro-caudal.ts: A = Q/V, d = √(4A/π).
+        // Forma imperial equivalente: d(in) = √(0.4085 × gpm / v_fps).
+        const dIn = Math.sqrt((0.4085 * gpm) / vel);
+        const nominal = PIPE_SIZES_IN.find((s) => s >= dIn) || PIPE_SIZES_IN[PIPE_SIZES_IN.length - 1];
+        const areaNominal = (Math.PI * nominal * nominal) / 4;
+        const actualVel = areaNominal > 0 ? (gpm * 0.4085) / (nominal * nominal) : 0;
+
+        rows.push({ k: 'Design flow', ref: 'Peak demand through this run', v: gpm, format: 'unit', unit: 'GPM', decimals: 1 });
+        rows.push({ k: 'Same flow in metric', ref: '1 GPM = 0.0631 L/s', v: gpm * 0.0631, format: 'unit', unit: 'L/s', decimals: 2 });
+        rows.push({ k: 'Design velocity', ref: '5 ft/s is 1.52 m/s — the metric rule uses 1.5', v: vel, format: 'unit', unit: 'ft/s', decimals: 1 });
+        rows.push({ k: 'Bore required', ref: '√(0.4085 × GPM ÷ velocity)', v: dIn, format: 'unit', unit: 'in', decimals: 3 });
+        rows.push({ k: 'Same bore in millimetres', ref: '1 in = 25.4 mm', v: dIn * 25.4, format: 'unit', unit: 'mm', decimals: 1 });
+        rows.push({ k: 'Nominal pipe size to use', ref: 'Next size up — always round up', v: nominal, format: 'unit', unit: 'in', decimals: 2, extra: true });
+        rows.push({ k: 'Actual velocity at that size', ref: actualVel <= 8 ? 'Within the noise and erosion limit' : 'Too fast — go one size larger', v: actualVel, format: 'unit', unit: 'ft/s', decimals: 2 });
+        rows.push({ k: 'Cross-section of the nominal pipe', ref: 'Ignoring wall thickness', v: areaNominal, format: 'unit', unit: 'sq in', decimals: 3 });
+        rows.push({ k: 'Flow that size could carry at 8 ft/s', ref: 'The cold-water ceiling', v: (nominal * nominal * 8) / 0.4085, format: 'unit', unit: 'GPM', decimals: 1 });
+        rows.push({ k: 'Headroom over your design flow', ref: 'Before you hit the velocity limit', v: Math.max(0, (nominal * nominal * 8) / 0.4085 - gpm), format: 'unit', unit: 'GPM', decimals: 1 });
+        rows.push({ k: 'Water volume in 100 ft of that pipe', ref: 'What sits in the line between draws', v: (areaNominal * 1200) / 231, format: 'unit', unit: 'gal', decimals: 1 });
+
+        total = n2(nominal) + ' in';
+        sub = n1(gpm) + ' GPM at ' + n1(vel) + ' ft/s needs a ' + n2(dIn) + ' in bore (' + n1(dIn * 25.4) +
+          ' mm) · use ' + n2(nominal) + ' in nominal, which runs at ' + n2(actualVel) + ' ft/s · nominal size is not bore, so check the real inside diameter of your material';
+        lad = ladder(PIPE_SIZES_IN, dIn, 'in');
+        unit = 'in'; decimals = 2;
+      } else if (id === 'pump') {
+        // Porte de bombeo-cisterna-tanque-watts.ts: P = Q·ρ·g·H/η.
+        // Forma imperial equivalente: HP = gpm × head_ft / (3960 × η).
+        const whp = (gpm * head) / PUMP_HP_CONSTANT;
+        const bhp = eff > 0 ? whp / eff : 0;
+        const watts = bhp * 746;
+        const size = PUMP_SIZES_HP.find((s) => s >= bhp) || PUMP_SIZES_HP[PUMP_SIZES_HP.length - 1];
+        const psi = head / 2.31;
+
+        rows.push({ k: 'Flow to move', ref: 'At the duty point', v: gpm, format: 'unit', unit: 'GPM', decimals: 1 });
+        rows.push({ k: 'Total head', ref: 'Lift plus friction plus outlet pressure', v: head, format: 'unit', unit: 'ft', decimals: 1 });
+        rows.push({ k: 'Head expressed as pressure', ref: '2.31 ft of head = 1 psi', v: psi, format: 'unit', unit: 'psi', decimals: 1 });
+        rows.push({ k: 'Head in metres', ref: '1 m = 3.281 ft', v: head / 3.281, format: 'unit', unit: 'm', decimals: 1 });
+        rows.push({ k: 'Water horsepower', ref: 'GPM × head ÷ 3,960', v: whp, format: 'unit', unit: 'HP', decimals: 3 });
+        rows.push({ k: 'Pump efficiency assumed', ref: '60% is realistic for a small residential pump', v: eff * 100, format: 'unit', unit: '%' });
+        rows.push({ k: 'Shaft horsepower required', ref: 'Water HP ÷ efficiency', v: bhp, format: 'unit', unit: 'HP', decimals: 3 });
+        rows.push({ k: 'Same power in watts', ref: '1 HP = 746 W', v: watts, format: 'unit', unit: 'W' });
+        rows.push({ k: 'Motor size to buy', ref: 'Next stocked frame up', v: size, format: 'unit', unit: 'HP', decimals: 2, extra: true });
+        rows.push({ k: 'Headroom in that motor', ref: 'Over the calculated shaft power', v: Math.max(0, size - bhp), format: 'unit', unit: 'HP', decimals: 3 });
+        rows.push({ k: 'Current draw at 120 V, 0.85 power factor', ref: 'For the branch circuit', v: watts > 0 ? watts / (120 * 0.85) : 0, format: 'unit', unit: 'A', decimals: 2 });
+        rows.push({ k: 'Time to move 500 gallons', ref: 'At this flow rate', v: gpm > 0 ? 500 / gpm : 0, format: 'unit', unit: 'min', decimals: 1 });
+
+        total = n2(size) + ' HP';
+        sub = n1(gpm) + ' GPM against ' + n1(head) + ' ft of head (' + n1(psi) + ' psi) is ' + n2(whp) +
+          ' water HP · at ' + n0(eff * 100) + '% efficiency the shaft needs ' + n2(bhp) + ' HP (' + n0(watts) +
+          ' W) · buy the ' + n2(size) + ' HP motor';
+        lad = ladder(PUMP_SIZES_HP, bhp, 'HP');
+        unit = 'HP'; decimals = 2;
+      } else {
+        // Porte de rejilla-trampa-desague.ts, reexpresado con los mínimos del IPC.
+        const f = DRAINS.find((d) => d.id === String(v.fixture)) || DRAINS[2];
+        const slope = f.drain >= 3 ? 0.125 : 0.25;
+
+        rows.push({ k: 'Fixture', ref: f.label, v: f.dfu, format: 'unit', unit: 'drainage fixture units' });
+        rows.push({ k: 'Minimum trap size', ref: 'IPC Table 709.1', v: f.trap, format: 'unit', unit: 'in', decimals: 2, extra: true });
+        rows.push({ k: 'Minimum drain size', ref: 'IPC Chapter 7', v: f.drain, format: 'unit', unit: 'in', decimals: 2, extra: true });
+        rows.push({ k: 'Same trap size in millimetres', ref: '1 in = 25.4 mm', v: f.trap * 25.4, format: 'unit', unit: 'mm', decimals: 1 });
+        rows.push({ k: 'Metric source figure for this fixture', ref: 'What the original Argentine table specifies', v: f.metricMm, format: 'unit', unit: 'mm', decimals: 1 });
+        rows.push({ k: 'Difference against the IPC minimum', ref: f.metricMm > f.trap * 25.4 ? 'The metric figure is more conservative' : 'The IPC figure is larger', v: Math.abs(f.metricMm - f.trap * 25.4), format: 'unit', unit: 'mm', decimals: 1 });
+        rows.push({ k: 'Required slope on the horizontal drain', ref: f.drain >= 3 ? '1/8 in per foot for 3 in and larger' : '1/4 in per foot up to 2-1/2 in', v: slope, format: 'unit', unit: 'in per ft', decimals: 3 });
+        rows.push({ k: 'Fall over a 20 ft run', ref: 'At the required slope', v: slope * 20, format: 'unit', unit: 'in', decimals: 1 });
+        rows.push({ k: 'Cross-section of the drain', ref: 'Nominal bore', v: (Math.PI * f.drain * f.drain) / 4, format: 'unit', unit: 'sq in', decimals: 2 });
+        rows.push({ k: 'Fixture units this branch carries', ref: 'Sum them for a shared branch drain', v: f.dfu, format: 'plain' });
+        rows.push({ k: 'Trap seal depth required', ref: 'IPC: 2 to 4 in of water', v: 2, format: 'unit', unit: 'in' });
+
+        total = n2(f.drain) + ' in drain';
+        sub = f.label + ' takes a ' + n2(f.trap) + ' in trap and a ' + n2(f.drain) + ' in drain (' + f.dfu +
+          ' fixture unit' + (f.dfu === 1 ? '' : 's') + ') at ' + (slope === 0.25 ? '1/4' : '1/8') +
+          ' in per foot of fall · every trap needs a vent within the code distance or it siphons dry';
+        lad = ladder([1.25, 1.5, 2, 3, 4], f.drain, 'in');
+        unit = 'in'; decimals = 2;
+      }
+
+      return {
+        total: total,
+        sub: sub,
+        rows: rows,
+        format: 'unit',
+        unit: unit,
+        decimals: decimals,
+        chart: lad.segs,
+        position: lad.pos,
+        positionLabel: 'Your requirement lands at ' + total,
+      };
+    });
+  })();
+</script>

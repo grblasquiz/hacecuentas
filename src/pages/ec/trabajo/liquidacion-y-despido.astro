@@ -1,0 +1,219 @@
+---
+/**
+ * Hub de decisión EC — "Liquidación y despido: cuánto me tienen que pagar al salir".
+ * audience="EC" literal: HubData sólo modela 'AR' | 'global' y el mercado viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  SBU,
+  INDEM_MINIMA,
+  INDEM_TOPE,
+  BONIF_DESAHUCIO,
+  CESANTIA_TRABAJADOR,
+  CESANTIA_EMPLEADOR,
+  CESANTIA_MIN_APORTACIONES,
+  CESANTIA_DIAS_CESANTE,
+  TASA_PASIVA_BCE,
+  VACACIONES_BASE,
+  VACACIONES_ADICIONALES_MAX,
+} from '../../../lib/hubs/ec/liquidacion-y-despido';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="EC"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    SBU,
+    INDEM_MINIMA,
+    INDEM_TOPE,
+    BONIF_DESAHUCIO,
+    CESANTIA_TRABAJADOR,
+    CESANTIA_EMPLEADOR,
+    CESANTIA_MIN_APORTACIONES,
+    CESANTIA_DIAS_CESANTE,
+    TASA_PASIVA_BCE,
+    VACACIONES_BASE,
+    VACACIONES_ADICIONALES_MAX,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) =>
+      '$' + new Intl.NumberFormat('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.round((n || 0) * 100) / 100);
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'renuncia';
+      const sueldo = Math.max(0, v.sueldo || 0);
+      const anios = Math.max(0, Math.floor(v.anios === 0 ? 0 : v.anios || 0));
+      const mesesFraccion = Math.min(11, Math.max(0, v.mesesFraccion || 0));
+      const mesesPeriodo = Math.min(12, Math.max(0, v.mesesPeriodo === 0 ? 0 : v.mesesPeriodo || 0));
+      const diasVac = Math.max(0, v.diasVacaciones === 0 ? 0 : v.diasVacaciones || 0);
+      const aportaciones = Math.max(0, Math.floor(v.aportaciones || 0));
+
+      // Proporcionales: se pagan en toda salida.
+      const d13Prop = (sueldo * mesesPeriodo) / 12;
+      const d14Prop = (SBU * mesesPeriodo) / 12;
+      const valorDia = sueldo / 30;
+      const vacaciones = valorDia * diasVac;
+      const proporcionales = d13Prop + d14Prop + vacaciones;
+
+      // Art. 188: la fracción de año cuenta como año completo.
+      const aniosIndem = mesesFraccion > 0 ? anios + 1 : anios;
+      const remunIndem = aniosIndem <= INDEM_MINIMA ? INDEM_MINIMA : Math.min(INDEM_TOPE, aniosIndem);
+      const indemnizacionPlena = remunIndem * sueldo;
+      // Art. 185: 25% de la última remuneración por año de servicio.
+      const bonificacionPlena = BONIF_DESAHUCIO * sueldo * anios;
+
+      let indemnizacion = 0;
+      let bonificacion = 0;
+      if (id === 'despido') {
+        indemnizacion = indemnizacionPlena;
+        bonificacion = bonificacionPlena;
+      } else if (id === 'desahucio') {
+        bonificacion = bonificacionPlena;
+      }
+
+      const total = proporcionales + indemnizacion + bonificacion;
+
+      // Fondo de cesantía del IESS (3% a la cuenta individual + rendimiento estimado).
+      const aporteCesantiaMes = sueldo * (CESANTIA_TRABAJADOR + CESANTIA_EMPLEADOR);
+      const fondoCapital = aporteCesantiaMes * aportaciones;
+      const interesCesantia = (fondoCapital / 2) * TASA_PASIVA_BCE * (aportaciones / 12);
+      const fondoCesantia = fondoCapital + interesCesantia;
+      const cumpleAportaciones = aportaciones >= CESANTIA_MIN_APORTACIONES;
+
+      // Días de vacaciones que le corresponden por antigüedad (art. 69), como referencia.
+      const diasAdicionales = anios > 5 ? Math.min(VACACIONES_ADICIONALES_MAX, anios - 5) : 0;
+      const diasAnuales = VACACIONES_BASE + diasAdicionales;
+
+      const rows = [
+        { k: 'Décimo tercero proporcional', ref: 'Art. 111 · ' + mesesPeriodo + ' meses del período', v: d13Prop },
+        { k: 'Décimo cuarto proporcional', ref: 'Art. 113 · 1 SBU × ' + mesesPeriodo + '/12', v: d14Prop },
+        {
+          k: 'Vacaciones no gozadas',
+          ref: diasVac + ' días × ' + usd(valorDia) + ' (remuneración ÷ 30)',
+          v: vacaciones,
+        },
+        { k: 'Subtotal de proporcionales', ref: 'Se pagan en cualquier salida', v: proporcionales },
+        {
+          k: 'Indemnización por despido intempestivo',
+          ref:
+            id === 'despido'
+              ? 'Art. 188 · ' + remunIndem + ' remuneraciones'
+              : 'Art. 188 · no corresponde en esta salida',
+          v: indemnizacion,
+          extra: id === 'despido',
+        },
+        {
+          k: 'Bonificación por desahucio',
+          ref:
+            bonificacion > 0
+              ? 'Art. 185 · 25% × ' + anios + ' años'
+              : 'Art. 185 · no corresponde en esta salida',
+          v: bonificacion,
+          extra: id === 'desahucio',
+        },
+        { k: 'Total que te debe la empresa', ref: 'Acta de finiquito', v: total, extra: true },
+        {
+          k: 'Remuneraciones de indemnización si te despidieran hoy',
+          ref: 'Art. 188 · fracción de año = año completo',
+          v: remunIndem,
+          format: 'unit',
+          unit: 'remuneraciones',
+        },
+        {
+          k: 'Días de vacaciones que te corresponden por año',
+          ref: 'Art. 69 · 15 base' + (diasAdicionales > 0 ? ' + ' + diasAdicionales + ' por antigüedad' : ''),
+          v: diasAnuales,
+          format: 'unit',
+          unit: 'días',
+        },
+        {
+          k: 'Fondo de cesantía acumulado en el IESS',
+          ref: '3% × ' + aportaciones + ' aportaciones + rendimiento estimado',
+          v: fondoCesantia,
+        },
+        {
+          k: 'Aportaciones que te faltan para retirar la cesantía',
+          ref: cumpleAportaciones ? 'Ya cumples el mínimo de ' + CESANTIA_MIN_APORTACIONES : 'Mínimo ' + CESANTIA_MIN_APORTACIONES + ' aportaciones',
+          v: Math.max(0, CESANTIA_MIN_APORTACIONES - aportaciones),
+          format: 'unit',
+          unit: 'aportaciones',
+        },
+      ];
+
+      let sub;
+      if (id === 'despido') {
+        sub =
+          'Despido intempestivo con ' + aniosIndem + ' años computables · indemnización ' + usd(indemnizacion) +
+          ' (' + remunIndem + ' remuneraciones) + bonificación ' + usd(bonificacion) + ' + proporcionales ' + usd(proporcionales);
+      } else if (id === 'desahucio') {
+        sub =
+          'Desahucio · bonificación del 25% por año: ' + usd(bonificacion) + ' + proporcionales ' + usd(proporcionales) +
+          ' · sin indemnización del art. 188';
+      } else if (id === 'vistobueno') {
+        sub =
+          'Visto bueno concedido al empleador · solo proporcionales: ' + usd(proporcionales) +
+          ' · si el visto bueno lo pediste vos por falta del empleador, usa la rama de despido';
+      } else {
+        sub =
+          'Renuncia voluntaria · proporcionales ' + usd(proporcionales) + ' · sin indemnización · ' +
+          'aparte, tu fondo de cesantía en el IESS ronda ' + usd(fondoCesantia);
+      }
+
+      const chart = [
+        { label: 'Décimo tercero proporcional', value: d13Prop, tone: 'prop' },
+        { label: 'Décimo cuarto proporcional', value: d14Prop, tone: 'prop' },
+        { label: 'Vacaciones no gozadas', value: vacaciones, tone: 'good' },
+        { label: 'Indemnización (art. 188)', value: indemnizacion, tone: 'main' },
+        { label: 'Bonificación (art. 185)', value: bonificacion, tone: 'warn' },
+      ].filter((s) => s.value > 0);
+
+      return { total: usd(total), sub: sub, rows: rows, chart: chart, decimals: 2 };
+    });
+  })();
+</script>

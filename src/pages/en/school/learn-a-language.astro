@@ -1,0 +1,303 @@
+---
+/**
+ * Hub EN — "How long until I actually speak this language?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  CEFR_CUMULATIVE_HOURS,
+  CEFR_ORDER,
+  HOURS_TO_B2,
+  HARD_LANGUAGES,
+  VOCAB_THRESHOLDS,
+  LISTENING_PLAN,
+  WRITING_PLAN,
+  PROFESSION_LANGUAGES,
+  AGE_BANDS,
+} from '../../../lib/hubs/en/learn-a-language';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    CEFR_CUMULATIVE_HOURS,
+    CEFR_ORDER,
+    HOURS_TO_B2,
+    HARD_LANGUAGES,
+    VOCAB_THRESHOLDS,
+    LISTENING_PLAN,
+    WRITING_PLAN,
+    PROFESSION_LANGUAGES,
+    AGE_BANDS,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(x || 0).toLocaleString('en-US');
+    const pos = (x, def) => {
+      if (x === '' || x === null || x === undefined) return def;
+      const n = Number(x);
+      return Number.isFinite(n) && n > 0 ? n : def;
+    };
+    const TOP = CEFR_CUMULATIVE_HOURS.c2;
+    const nice = (s) => String(s || '').charAt(0).toUpperCase() + String(s || '').slice(1);
+
+    /**
+     * Escalera MCER como franjas del gráfico, en horas guiadas acumuladas.
+     * Es la misma escala Cambridge que usa la fórmula original.
+     */
+    function cefrLadder() {
+      const tones = ['bad', 'warn', 'main', 'exit', 'good', 'good'];
+      const out = [];
+      for (let i = 1; i < CEFR_ORDER.length; i++) {
+        const prev = CEFR_ORDER[i - 1];
+        const cur = CEFR_ORDER[i];
+        out.push({
+          label: cur.toUpperCase(),
+          value: 1,
+          tone: tones[i - 1],
+          from: CEFR_CUMULATIVE_HOURS[prev],
+          to: CEFR_CUMULATIVE_HOURS[cur],
+        });
+      }
+      return out;
+    }
+
+    /** Multiplicador de dificultad del idioma, relativo al inglés de la escala Cambridge. */
+    function difficulty(lang) {
+      const b2 = HOURS_TO_B2[lang] || HOURS_TO_B2.spanish;
+      return b2 / CEFR_CUMULATIVE_HOURS.b2;
+    }
+
+    function levelFromWords(words) {
+      let level = VOCAB_THRESHOLDS[0];
+      let next = null;
+      for (let i = 0; i < VOCAB_THRESHOLDS.length; i++) {
+        if (words >= VOCAB_THRESHOLDS[i].words) {
+          level = VOCAB_THRESHOLDS[i];
+          next = VOCAB_THRESHOLDS[i + 1] || null;
+        }
+      }
+      return { level: level.level, next: next };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'hours';
+      const lang = String(v.language || 'spanish');
+      const langLabel = lang === 'mandarin' ? 'Mandarin Chinese' : nice(lang);
+      const factor = difficulty(lang);
+      const level = String(v.level || 'zero');
+      const curHours = CEFR_CUMULATIVE_HOURS[level] !== undefined ? CEFR_CUMULATIVE_HOURS[level] : 0;
+
+      if (id === 'daily') {
+        const totalMin = pos(v.totalmin, 1);
+        const days = Math.max(1, Math.round(pos(v.days, 1)));
+        const perDay = totalMin / days;
+        const perWeek = perDay * 7;
+        const load =
+          perDay <= 20 ? 'a light load — sustainable even on busy days'
+          : perDay <= 60 ? 'demanding but realistic — split it into a morning and an evening session'
+          : 'very hard to sustain for weeks — push the date back, aim for an intermediate level first, or add practice that does not feel like studying';
+        const rows = [
+          { k: 'Total practice the goal needs', ref: 'As entered', v: totalMin, format: 'unit', unit: 'min' },
+          { k: 'The same in hours', ref: '60 minutes per hour', v: totalMin / 60, format: 'unit', unit: 'h', decimals: 1 },
+          { k: 'Days until the deadline', ref: 'As entered', v: days, format: 'unit', unit: 'days' },
+          { k: 'Minutes per day', ref: 'Total ÷ days left', v: perDay, format: 'unit', unit: 'min', decimals: 0, extra: true },
+          { k: 'Minutes per week', ref: 'Seven days at the same pace', v: perWeek, format: 'unit', unit: 'min', decimals: 0 },
+          { k: 'If you only practise five days a week', ref: 'Same total, fewer days', v: (totalMin / days) * 7 / 5, format: 'unit', unit: 'min', decimals: 0 },
+          { k: 'Two sessions a day would be', ref: 'Morning and evening', v: perDay / 2, format: 'unit', unit: 'min', decimals: 0 },
+        ];
+        return {
+          total: Math.round(perDay) + ' min a day',
+          sub: load + ' · app streak minutes build recognition faster than production, so they are not a one-for-one substitute for study hours',
+          rows: rows,
+          chart: cefrLadder(),
+          position: Math.min(100, (curHours / TOP) * 100),
+          positionLabel: 'Currently ' + level.toUpperCase() + ' · ' + Math.round(perDay) + ' min a day for ' + n0(days) + ' days',
+        };
+      }
+
+      if (id === 'vocab') {
+        const words = Math.max(0, Number(v.words) || 0);
+        const r = levelFromWords(words);
+        const toNext = r.next ? Math.max(0, r.next.words - words) : 0;
+        const hoursAtLevel = CEFR_CUMULATIVE_HOURS[r.level.toLowerCase()] || 0;
+        const rows = [
+          { k: 'Active words you can produce', ref: 'Words you can say, not just recognise', v: words, format: 'unit', unit: 'words', extra: true },
+          { k: 'CEFR level that corresponds to', ref: 'A2 1,500 · B1 2,500 · B2 4,000 · C1 8,000 · C2 10,000', v: hoursAtLevel, format: 'unit', unit: 'guided hours' },
+          { k: 'Words to the next threshold', ref: r.next ? 'Next level: ' + r.next.level : 'Top of the scale', v: toNext, format: 'unit', unit: 'words', extra: true },
+          { k: 'Estimated passive vocabulary', ref: 'Recognition is typically two to three times active', v: words * 2.5, format: 'unit', unit: 'words', decimals: 0 },
+          { k: 'New words a day to reach the next level in six months', ref: '180 days', v: toNext / 180, format: 'unit', unit: 'words', decimals: 1 },
+          { k: 'New words a day to reach it in one year', ref: '365 days', v: toNext / 365, format: 'unit', unit: 'words', decimals: 1 },
+        ];
+        return {
+          total: r.level,
+          sub: r.next
+            ? n0(words) + ' active words · ' + n0(toNext) + ' more reaches ' + r.next.level +
+              ' · vocabulary alone is not a level, grammar and unrehearsed speaking count for as much'
+            : n0(words) + ' active words — the top of the CEFR scale · at this point maintenance through real use matters more than adding words',
+          rows: rows,
+          chart: cefrLadder(),
+          position: Math.min(100, (hoursAtLevel / TOP) * 100),
+          positionLabel: n0(words) + ' active words — around ' + r.level,
+        };
+      }
+
+      if (id === 'routine') {
+        const target = String(v.target || 'b2');
+        const listen = LISTENING_PLAN[target] || LISTENING_PLAN.b1;
+        const write = WRITING_PLAN[target] || WRITING_PLAN.b1;
+        const sessions = write[0];
+        const wordsPer = write[1];
+        const weeklyWords = sessions * wordsPer;
+        const listenWeekMin = listen.minutes * 7;
+        const writeWeekMin = weeklyWords / 12; // ~12 palabras por minuto de escritura deliberada
+        const totalWeekH = (listenWeekMin + writeWeekMin) / 60;
+        const rows = [
+          { k: 'Daily listening', ref: listen.material, v: listen.minutes, format: 'unit', unit: 'min', extra: true },
+          { k: 'Listening per week', ref: 'Seven days', v: listenWeekMin, format: 'unit', unit: 'min' },
+          { k: 'Writing sessions per week', ref: 'Aiming at ' + target.toUpperCase(), v: sessions, format: 'plain', extra: true },
+          { k: 'Words per writing session', ref: 'Deliberate practice, corrected', v: wordsPer, format: 'unit', unit: 'words' },
+          { k: 'Words written per week', ref: sessions + ' × ' + wordsPer, format: 'unit', v: weeklyWords, unit: 'words', extra: true },
+          { k: 'Writing time per week', ref: 'At roughly 12 words a minute in a second language', v: writeWeekMin, format: 'unit', unit: 'min', decimals: 0 },
+          { k: 'Total routine per week', ref: 'Listening plus writing — speaking is on top of this', v: totalWeekH, format: 'unit', unit: 'h', decimals: 1 },
+          { k: 'Total routine per month', ref: 'About 4.3 weeks', v: totalWeekH * 4.345, format: 'unit', unit: 'h', decimals: 1 },
+        ];
+        return {
+          total: listen.minutes + ' min listening a day',
+          sub:
+            'Plus ' + sessions + ' writing sessions of ' + wordsPer + ' words (' + n0(weeklyWords) + ' words a week) for ' + target.toUpperCase() +
+            ' · listen to material you understand about 90% of, and get the writing corrected',
+          rows: rows,
+          chart: cefrLadder(),
+          position: Math.min(100, ((CEFR_CUMULATIVE_HOURS[target] || 0) / TOP) * 100),
+          positionLabel: 'Routine calibrated for ' + target.toUpperCase(),
+        };
+      }
+
+      if (id === 'career') {
+        const prof = String(v.profession || 'tech');
+        const langs = PROFESSION_LANGUAGES[prof] || PROFESSION_LANGUAGES.tech;
+        const beyondEnglish = langs.filter((l) => l !== 'English');
+        const age = Math.max(1, Math.round(pos(v.age, 30)));
+        const b2 = HOURS_TO_B2[lang] || HOURS_TO_B2.spanish;
+        const weekly = pos(v.weekly, 5);
+        const easiest = Math.min.apply(null, Object.keys(HOURS_TO_B2).map((k) => HOURS_TO_B2[k]));
+        const hardest = Math.max.apply(null, Object.keys(HOURS_TO_B2).map((k) => HOURS_TO_B2[k]));
+        const ageNote =
+          age < AGE_BANDS.earlyChildhood ? 'inside the window where exposure alone produces a native accent — steady contact beats formal lessons'
+          : age < AGE_BANDS.childhood ? 'a very good accent is still within reach, and immersion through play and media beats studying rules'
+          : age < AGE_BANDS.adolescence ? 'fast progress by combining explicit grammar with good pronunciation — motivation is the deciding variable'
+          : 'discipline and explicit grammar more than compensate; aim at fluency and comprehension rather than sounding native';
+        const rows = [
+          { k: 'Hours to B2 in ' + langLabel, ref: 'FSI difficulty scale for English speakers', v: b2, format: 'unit', unit: 'hours', extra: true },
+          { k: 'Years at ' + weekly + ' h a week', ref: 'Hours ÷ (weekly × 52)', v: b2 / (weekly * 52), format: 'unit', unit: 'years', decimals: 1, extra: true },
+          { k: 'How much harder than the easiest option', ref: 'Easiest group sits around ' + n0(easiest) + ' hours', v: b2 / easiest, format: 'unit', unit: '×', decimals: 2 },
+          { k: 'Hours for the hardest group', ref: 'Arabic, Mandarin, Japanese, Korean', v: hardest, format: 'unit', unit: 'hours' },
+          { k: 'Hours you would save picking the easiest option', ref: 'Versus your current choice', v: Math.max(0, b2 - easiest), format: 'unit', unit: 'hours' },
+          { k: 'Difficulty multiplier applied to the CEFR ladder', ref: 'Relative to the Cambridge English hours', v: factor, format: 'plain', decimals: 2 },
+        ];
+        return {
+          total: n0(b2) + ' hours to B2',
+          sub:
+            'Highest-leverage languages in ' + prof + ': ' + langs.join(', ') + ' — English is the baseline for this market, so ' +
+            beyondEnglish.join(' and ') + ' are the two that add · at ' + age + ', ' + ageNote,
+          rows: rows,
+          chart: cefrLadder(),
+          position: Math.min(100, (curHours / TOP) * 100),
+          positionLabel: 'Currently ' + level.toUpperCase() + ' in ' + langLabel + ' · B2 costs about ' + n0(b2) + ' hours in total',
+        };
+      }
+
+      // hours (default)
+      const idx = CEFR_ORDER.indexOf(level);
+      const weekly = pos(v.weekly, 5);
+      const nextLevel = CEFR_ORDER[idx + 1];
+      if (!nextLevel) {
+        return {
+          total: 'Already at C2',
+          sub: 'C2 is the top of the CEFR scale — from here the work is maintaining fluency through real use, not chasing another level.',
+          rows: [
+            { k: 'Cumulative guided hours at C2', ref: 'Cambridge English scale, adjusted for ' + langLabel, v: TOP * factor, format: 'unit', unit: 'hours', extra: true },
+          ],
+          chart: cefrLadder(),
+          position: 100,
+          positionLabel: 'C2 — top of the CEFR scale',
+        };
+      }
+      const stepHours = (CEFR_CUMULATIVE_HOURS[nextLevel] - curHours) * factor;
+      const toB2 = Math.max(0, (CEFR_CUMULATIVE_HOURS.b2 - curHours) * factor);
+      const toC1 = Math.max(0, (CEFR_CUMULATIVE_HOURS.c1 - curHours) * factor);
+      const weeks = Math.ceil(stepHours / weekly);
+      const hard = HARD_LANGUAGES.indexOf(lang) !== -1;
+      const rows = [
+        { k: 'Guided hours already behind you', ref: 'Cumulative to ' + level.toUpperCase() + ', adjusted for ' + langLabel, v: curHours * factor, format: 'unit', unit: 'hours' },
+        { k: 'Hours from ' + level.toUpperCase() + ' to ' + nextLevel.toUpperCase(), ref: 'The next step only', v: stepHours, format: 'unit', unit: 'hours', extra: true },
+        { k: 'Weeks at ' + weekly + ' h a week', ref: 'Hours ÷ weekly hours, rounded up', v: weeks, format: 'unit', unit: 'weeks', extra: true },
+        { k: 'The same in months', ref: '4.345 weeks per month', v: weeks / 4.345, format: 'unit', unit: 'months', decimals: 1 },
+        { k: 'The same in years', ref: '52 weeks per year', v: weeks / 52, format: 'unit', unit: 'years', decimals: 2 },
+        { k: 'Hours still standing between you and B2', ref: 'Where work and study in the language become realistic', v: toB2, format: 'unit', unit: 'hours', extra: true },
+        { k: 'Years to B2 at this pace', ref: 'At ' + weekly + ' h a week', v: toB2 / (weekly * 52), format: 'unit', unit: 'years', decimals: 1 },
+        { k: 'Hours still standing between you and C1', ref: 'Fluent and precise, including implicit meaning', v: toC1, format: 'unit', unit: 'hours' },
+        { k: 'Daily minutes that weekly load works out to', ref: 'Spread across seven days', v: (weekly * 60) / 7, format: 'unit', unit: 'min', decimals: 0 },
+      ];
+      return {
+        total: n0(stepHours) + ' hours to ' + nextLevel.toUpperCase(),
+        sub:
+          'About ' + n0(weeks) + ' weeks (' + (weeks / 4.345).toFixed(1) + ' months) at ' + weekly + ' h a week · ' +
+          (hard
+            ? langLabel + ' is in the hardest FSI group for English speakers — roughly four times the hours of Spanish or Portuguese, plus a writing system'
+            : 'the steps get longer as you climb, so the intermediate plateau is arithmetic rather than failure'),
+        rows: rows,
+        chart: cefrLadder(),
+        position: Math.min(100, (curHours / TOP) * 100),
+        positionLabel: level.toUpperCase() + ' in ' + langLabel + ' — next step ' + nextLevel.toUpperCase() + ' at ' + n0(stepHours) + ' hours',
+      };
+    });
+  })();
+</script>

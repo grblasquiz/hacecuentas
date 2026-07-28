@@ -1,0 +1,249 @@
+---
+/**
+ * Hub EN — "What PC do I need, and what power supply does it take?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  BUILD_TARGETS,
+  GPU_CPU_SHARE,
+  PSU_HEADROOM,
+  PSU_TIERS,
+  RAM_TIERS,
+  TEMP_MAX,
+  UPS_POWER_FACTOR,
+  UPS_WH_PER_VA,
+  UPS_PEUKERT,
+} from '../../../lib/hubs/en/pc-build-and-power';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    BUILD_TARGETS,
+    GPU_CPU_SHARE,
+    PSU_HEADROOM,
+    PSU_TIERS,
+    RAM_TIERS,
+    TEMP_MAX,
+    UPS_POWER_FACTOR,
+    UPS_WH_PER_VA,
+    UPS_PEUKERT,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(x || 0).toLocaleString('en-US');
+    const usd = (x) => '$' + Math.round(x || 0).toLocaleString('en-US');
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'build';
+
+      if (id === 'psu') {
+        const cpu = Math.max(0, v.cpuw || 0);
+        const gpu = Math.max(0, v.gpuw || 0);
+        const other = Math.max(0, v.otherw || 0);
+        const peak = cpu + gpu + other;
+        const minPsu = peak * PSU_HEADROOM;
+        let tier = null;
+        for (let k = 0; k < PSU_TIERS.length; k++) {
+          if (PSU_TIERS[k] >= minPsu) { tier = PSU_TIERS[k]; break; }
+        }
+        if (tier === null) tier = Math.ceil(minPsu / 100) * 100;
+        const loadPct = tier > 0 ? (peak / tier) * 100 : 0;
+        const rows = [
+          { k: 'CPU under load', ref: 'Package power, not marketing TDP', v: cpu, format: 'unit', unit: 'W' },
+          { k: 'GPU under load', ref: 'Total board power', v: gpu, format: 'unit', unit: 'W' },
+          { k: 'Everything else', ref: 'Drives, fans, RGB, peripherals', v: other, format: 'unit', unit: 'W' },
+          { k: 'Peak system draw', ref: 'The three added together', v: peak, format: 'unit', unit: 'W', extra: true },
+          { k: 'Minimum PSU with 30% headroom', ref: 'Peak × 1.30', v: minPsu, format: 'unit', unit: 'W' },
+          { k: 'PSU capacity to buy', ref: 'Next standard 80 PLUS tier', v: tier, format: 'unit', unit: 'W', extra: true },
+          { k: 'Load that PSU would run at', ref: 'Efficiency peaks near 50–70%', v: loadPct, format: 'unit', unit: '%', decimals: 1 },
+          { k: 'Headroom left over', ref: 'Capacity minus peak draw', v: Math.max(0, tier - peak), format: 'unit', unit: 'W' },
+        ];
+        return {
+          total: n0(tier) + ' W PSU',
+          sub:
+            n0(peak) + ' W peak draw · at least ' + n0(Math.ceil(minPsu)) + ' W with the 30% headroom rule · ' +
+            'it would sit at about ' + Math.round(loadPct) + '% load, right in the efficiency band',
+          rows: rows,
+          chart: [
+            { label: 'GPU (W)', value: Math.round(gpu), tone: 'main' },
+            { label: 'CPU (W)', value: Math.round(cpu), tone: 'warn' },
+            { label: 'Everything else (W)', value: Math.round(other), tone: 'good' },
+            { label: 'Unused headroom (W)', value: Math.round(Math.max(0, tier - peak)), tone: 'prop' },
+          ],
+        };
+      }
+
+      if (id === 'ram') {
+        const use = String(v.use || 'gaming');
+        const t = RAM_TIERS[use] || RAM_TIERS.gaming;
+        const min = t[0], rec = t[1], ideal = t[2];
+        const rows = [
+          { k: 'Bare minimum', ref: 'Below this the system swaps to disk', v: min, format: 'unit', unit: 'GB' },
+          { k: 'Recommended', ref: 'The price-to-performance sweet spot', v: rec, format: 'unit', unit: 'GB', extra: true },
+          { k: 'Ideal for heavy workloads', ref: 'Only worth it if you actually fill it', v: ideal, format: 'unit', unit: 'GB' },
+          { k: 'How much more than the minimum', ref: 'Recommended minus minimum', v: rec - min, format: 'unit', unit: 'GB' },
+          { k: 'Recommended as two matched sticks', ref: 'Dual channel roughly doubles bandwidth', v: rec / 2, format: 'unit', unit: 'GB each' },
+          { k: 'Times the minimum the ideal tier is', ref: 'Ideal ÷ minimum', v: min > 0 ? ideal / min : 0, format: 'unit', unit: '×', decimals: 1 },
+        ];
+        return {
+          total: rec + ' GB',
+          sub:
+            min + ' GB is the floor and ' + ideal + ' GB is overkill unless the workload genuinely fills it · ' +
+            'buy it as 2 × ' + (rec / 2) + ' GB so it runs in dual channel · check your board’s maximum first',
+          rows: rows,
+          chart: [
+            { label: 'Minimum (GB)', value: min, tone: 'warn' },
+            { label: 'Step up to recommended (GB)', value: rec - min, tone: 'good' },
+            { label: 'Step up to ideal (GB)', value: ideal - rec, tone: 'prop' },
+          ],
+        };
+      }
+
+      if (id === 'thermals') {
+        const part = String(v.part || 'cpu_intel');
+        const limit = TEMP_MAX[part] || 100;
+        const temp = Math.max(0, v.temp || 0);
+        const ambientF = v.ambient === 0 ? 0 : (v.ambient || 72);
+        const ambientC = ((ambientF - 32) * 5) / 9;
+        const headroom = limit - temp;
+        const delta = temp - ambientC;
+        let verdict, tone;
+        if (headroom > 25) { verdict = 'excellent — plenty of room to push it'; tone = 'good'; }
+        else if (headroom > 15) { verdict = 'good — enough room for a moderate overclock'; tone = 'good'; }
+        else if (headroom > 5) { verdict = 'tight — fix the cooling before overclocking'; tone = 'warn'; }
+        else { verdict = 'critical — it is at or near throttling, do not overclock'; tone = 'bad'; }
+        const rows = [
+          { k: 'Temperature under sustained load', ref: 'As entered', v: temp, format: 'unit', unit: '°C' },
+          { k: 'Throttling limit for this part', ref: 'Vendor-published maximum', v: limit, format: 'unit', unit: '°C' },
+          { k: 'Headroom before throttling', ref: 'Limit minus your temperature', v: headroom, format: 'unit', unit: '°C', extra: true },
+          { k: 'Room temperature', ref: n0(ambientF) + '°F converted', v: ambientC, format: 'unit', unit: '°C', decimals: 1 },
+          { k: 'Delta over ambient', ref: 'The number that judges your cooler', v: delta, format: 'unit', unit: '°C', decimals: 1, extra: true },
+          { k: 'Same load temperature in Fahrenheit', ref: '°C × 9/5 + 32', v: (temp * 9) / 5 + 32, format: 'unit', unit: '°F', decimals: 1 },
+          { k: 'What it would read in a room 10°F warmer', ref: 'Ambient rises, the delta does not', v: temp + 10 * (5 / 9), format: 'unit', unit: '°C', decimals: 1 },
+        ];
+        return {
+          total: Math.round(headroom) + '°C of headroom',
+          sub:
+            verdict + ' · ' + Math.round(delta) + '°C above your ' + Math.round(ambientC) + '°C room · ' +
+            'a delta over about 55°C points at the cooler, not the chip',
+          rows: rows,
+          chart: [
+            { label: 'Temperature under load (°C)', value: Math.round(temp), tone: tone === 'bad' ? 'bad' : 'main' },
+            { label: 'Headroom to the limit (°C)', value: Math.round(Math.max(0, headroom)), tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'ups') {
+        const va = Math.max(1, v.va || 1);
+        const w = Math.max(1, v.load || 1);
+        const wMax = va * UPS_POWER_FACTOR;
+        const util = (w / wMax) * 100;
+        const peukert = w < wMax ? Math.pow(wMax / w, UPS_PEUKERT) : 1;
+        const minutes = ((va * UPS_WH_PER_VA) / w) * 60 * peukert;
+        const overload = util > 100;
+        const halfMinutes = ((va * UPS_WH_PER_VA) / (w / 2)) * 60 * (w / 2 < wMax ? Math.pow(wMax / (w / 2), UPS_PEUKERT) : 1);
+        const rows = [
+          { k: 'UPS nameplate rating', ref: 'Apparent power', v: va, format: 'unit', unit: 'VA' },
+          { k: 'Usable real power', ref: 'About 60% of the VA rating', v: wMax, format: 'unit', unit: 'W', extra: true },
+          { k: 'What you have plugged in', ref: 'Your real draw', v: w, format: 'unit', unit: 'W' },
+          { k: 'How much of the UPS you are using', ref: overload ? 'OVERLOADED' : 'Within capacity', v: util, format: 'unit', unit: '%', decimals: 0, extra: true },
+          { k: 'Estimated backup time', ref: 'Battery energy ÷ load, adjusted for discharge rate', v: minutes, format: 'unit', unit: 'min', decimals: 1, extra: true },
+          { k: 'Backup time at half this load', ref: 'More than double — that is the Peukert effect', v: halfMinutes, format: 'unit', unit: 'min', decimals: 1 },
+          { k: 'Roughly what to expect near end of battery life', ref: 'Capacity fades to about half by year four', v: minutes / 2, format: 'unit', unit: 'min', decimals: 1 },
+        ];
+        return {
+          total: minutes.toFixed(1) + ' min',
+          sub:
+            (overload
+              ? 'OVERLOADED at ' + Math.round(util) + '% — the UPS may cut out without warning, reduce the load or buy a larger unit'
+              : 'Using ' + Math.round(util) + '% of its ' + n0(wMax) + ' W usable capacity') +
+            ' · enough for an orderly shutdown, not for continuing to work',
+          rows: rows,
+          chart: [
+            { label: 'Load you are drawing (W)', value: Math.round(w), tone: overload ? 'bad' : 'main' },
+            { label: 'Usable capacity left (W)', value: Math.round(Math.max(0, wMax - w)), tone: 'good' },
+          ],
+        };
+      }
+
+      // build
+      const key = String(v.target || '144_1080p');
+      const t = BUILD_TARGETS[key] || BUILD_TARGETS['144_1080p'];
+      const gpuCpu = t.usd * GPU_CPU_SHARE;
+      const rest = t.usd - gpuCpu;
+      const keys = Object.keys(BUILD_TARGETS).sort((a, b) => BUILD_TARGETS[a].usd - BUILD_TARGETS[b].usd);
+      const idx = keys.indexOf(key);
+      const nextKey = idx >= 0 && idx < keys.length - 1 ? keys[idx + 1] : null;
+      const rows = [
+        { k: 'Total build budget', ref: t.label, v: t.usd, format: 'unit', unit: 'USD', extra: true },
+        { k: 'GPU and CPU together', ref: 'About 65% of the total', v: gpuCpu, format: 'unit', unit: 'USD', extra: true },
+        { k: 'Board, RAM, storage, PSU, case, cooling', ref: 'The remaining 35%', v: rest, format: 'unit', unit: 'USD' },
+        { k: 'Roughly per month over a year', ref: 'If you are saving up for it', v: t.usd / 12, format: 'unit', unit: 'USD' },
+        nextKey
+          ? { k: 'Stepping up to ' + BUILD_TARGETS[nextKey].label + ' costs', ref: 'Difference to the next tier', v: BUILD_TARGETS[nextKey].usd - t.usd, format: 'unit', unit: 'USD' }
+          : { k: 'This is the top tier listed', ref: 'Nothing above it in this table', v: 0, format: 'plain' },
+        { k: 'Cheapest tier for comparison', ref: BUILD_TARGETS['60_1080p'].label, v: BUILD_TARGETS['60_1080p'].usd, format: 'unit', unit: 'USD' },
+      ];
+      return {
+        total: usd(t.usd),
+        sub:
+          t.label + ' · ' + t.gpu + ' with a ' + t.cpu + ' · ' +
+          'about ' + usd(gpuCpu) + ' of that is the GPU and CPU together, ' + usd(rest) + ' is everything else',
+        rows: rows,
+        chart: [
+          { label: 'GPU and CPU (USD)', value: Math.round(gpuCpu), tone: 'main' },
+          { label: 'Rest of the build (USD)', value: Math.round(rest), tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

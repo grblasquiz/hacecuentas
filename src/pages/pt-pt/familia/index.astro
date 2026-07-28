@@ -1,0 +1,45 @@
+---
+/**
+ * Silo Família · Portugal — índice dos hubs de decisão do mercado PT.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import SiloIndex from '../../../components/hub/SiloIndex.astro';
+import { hubsOfSilo } from '../../../lib/hubs/registry';
+
+const HREF = '/pt-pt/familia';
+const SILO = 'Família';
+const LEDE =
+  'Abono de família, pensão de alimentos, propinas e o orçamento do regresso às aulas: quanto custam os filhos em Portugal e que apoios da Segurança Social lhes pertencem.';
+const hubs = hubsOfSilo(HREF);
+const CANONICAL = `https://hacecuentas.com${HREF}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `${SILO} em Portugal`,
+  description: LEDE,
+  url: CANONICAL,
+  hasPart: hubs.map((h) => ({
+    '@type': 'WebPage',
+    name: h.h1,
+    url: `https://hacecuentas.com/${h.slug}`,
+  })),
+};
+---
+
+<Layout
+  title="Família em Portugal — abono, pensão de alimentos e escola | Hacé Cuentas"
+  description={LEDE}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PT"
+  lang="pt"
+>
+  <Header />
+  <SiloIndex silo={SILO} href={HREF} lede={LEDE} hubs={hubs} />
+  <Footer />
+</Layout>

@@ -1,0 +1,240 @@
+---
+/**
+ * Hub de decisión PY — "¿Cuánto cuesta de verdad tu casa propia?".
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  CHE_ROGA,
+  ARANCELES,
+  INMOBILIARIO,
+  COMISION,
+  ANDE,
+  SMVM,
+} from '../../../lib/hubs/py/casa-propia';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PY"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ CHE_ROGA, ARANCELES, INMOBILIARIO, COMISION, ANDE, SMVM }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const gs = (n) => 'Gs. ' + Math.round(n || 0).toLocaleString('de-DE');
+
+    /** Cuota de sistema francés. */
+    function cuotaFrancesa(capital, tasaAnual, meses) {
+      const r = tasaAnual / 12;
+      if (r === 0) return meses > 0 ? capital / meses : 0;
+      return (capital * r) / (1 - Math.pow(1 + r, -meses));
+    }
+
+    /** Escala notarial: `hasta: null` = tramo sin techo. */
+    function tasaNotarial(valor) {
+      for (const t of ARANCELES.escala) {
+        if (t.hasta === null || valor <= t.hasta) return t.tasa;
+      }
+      return ARANCELES.escala[ARANCELES.escala.length - 1].tasa;
+    }
+
+    /** ANDE Pliego 21: TODO el consumo va al precio de la faja del total del mes. */
+    function precioFaja(kwh) {
+      for (const f of ANDE.fajas) {
+        if (f.hasta === null || kwh <= f.hasta) return f.precio;
+      }
+      return ANDE.fajas[ANDE.fajas.length - 1].precio;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'credito';
+      const valor = Math.max(0, v.valor || 0);
+      const credito = Math.max(0, v.credito || 0);
+      const plazo = Math.min(CHE_ROGA.plazoMax, Math.max(1, Math.round(v.plazo || CHE_ROGA.plazoMax)));
+      const ingreso = Math.max(0, v.ingreso || 0);
+      const region = String(v.region || 'central') === 'interior' ? 'interior' : 'central';
+      const avaluo = Math.max(0, v.avaluo || 0);
+      const comisionPct = Math.max(0, v.comisionPct === undefined ? COMISION.ventaPctDefault : v.comisionPct);
+      const consumo = Math.max(0, v.consumo || 0);
+
+      // ── Crédito Che Róga Porã ────────────────────────────────────────────
+      const ingresoEnSM = SMVM > 0 ? ingreso / SMVM : 0;
+      const tasa = ingresoEnSM > CHE_ROGA.umbralSalarios ? CHE_ROGA.tasa6a9SM : CHE_ROGA.tasaHasta6SM;
+      const meses = plazo * 12;
+      const cuota = cuotaFrancesa(credito, tasa, meses);
+      const totalPagado = cuota * meses;
+      const intereses = totalPagado - credito;
+      const cuotaTope = ingreso * CHE_ROGA.cuotaMaxPct;
+      const montoMax = region === 'interior' ? CHE_ROGA.montoMaxInterior : CHE_ROGA.montoMaxCentral;
+      const entregaNecesaria = Math.max(0, valor - credito);
+
+      // ── Gastos de cierre ─────────────────────────────────────────────────
+      const rateNotarial = tasaNotarial(valor);
+      const minimo = ARANCELES.minimoJornales * ARANCELES.jornalMinimo;
+      const honorarioBase = Math.max(valor * rateNotarial, minimo);
+      const honorario = honorarioBase * (1 + ARANCELES.iva);
+      const inscripcion = valor * ARANCELES.inscripcion;
+      const municipal = valor * ARANCELES.municipal;
+      const comision = valor * (comisionPct / 100) * (1 + COMISION.iva);
+      const gastosCierre = honorario + inscripcion + municipal + comision;
+
+      // ── Costos recurrentes ───────────────────────────────────────────────
+      const impuestoAnual = avaluo * INMOBILIARIO.tasa;
+      const impuestoProntoPago = impuestoAnual * (1 - INMOBILIARIO.descuentoProntoPago);
+
+      const precio = precioFaja(consumo);
+      const energia = consumo * precio;
+      const ivaAnde = energia * ANDE.iva;
+      const facturaAnde = energia + ivaAnde;
+
+      const costoAnual = cuota * 12 + impuestoAnual + facturaAnde * 12;
+
+      const rows = [
+        { k: 'Valor del inmueble', ref: 'Precio de la operación', v: valor },
+        { k: 'Monto del crédito', ref: 'Máximo del programa: ' + gs(montoMax), v: credito },
+        { k: 'Entrega que tenés que poner vos', ref: 'Valor − crédito', v: entregaNecesaria },
+        {
+          k: 'Tasa que te corresponde',
+          ref: ingresoEnSM > CHE_ROGA.umbralSalarios
+            ? 'Más de ' + CHE_ROGA.umbralSalarios + ' salarios mínimos'
+            : 'Hasta ' + CHE_ROGA.umbralSalarios + ' salarios mínimos',
+          v: tasa * 100,
+          format: 'unit',
+          unit: '% anual',
+          decimals: 1,
+        },
+        { k: 'Cuota mensual del crédito', ref: plazo + ' años · ' + meses + ' cuotas', v: cuota, extra: true },
+        {
+          k: 'Cuota máxima que permite tu ingreso',
+          ref: (CHE_ROGA.cuotaMaxPct * 100).toFixed(0) + '% del ingreso familiar',
+          v: cuotaTope,
+        },
+        { k: 'Intereses totales del crédito', ref: 'Total pagado − capital', v: intereses },
+        { k: 'Total que vas a pagar por el crédito', ref: 'Cuota × ' + meses, v: totalPagado },
+        {
+          k: 'Honorario del escribano con IVA',
+          ref: (rateNotarial * 100).toLocaleString('de-DE') + '% + IVA · referencial',
+          v: honorario,
+        },
+        { k: 'Inscripción en Registros Públicos', ref: 'Referencial', v: inscripcion },
+        { k: 'Tasa municipal de transferencia', ref: 'Referencial', v: municipal },
+        {
+          k: 'Comisión inmobiliaria con IVA',
+          ref: comisionPct.toLocaleString('de-DE') + '% + IVA',
+          v: comision,
+        },
+        { k: 'Total de gastos al firmar', ref: 'Se pagan aparte del crédito', v: gastosCierre, extra: true },
+        {
+          k: 'Gastos de cierre sobre el valor',
+          ref: 'Cuánto suman en proporción',
+          v: valor > 0 ? (gastosCierre / valor) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        },
+        {
+          k: 'Impuesto inmobiliario anual',
+          ref: (INMOBILIARIO.tasa * 100).toFixed(0) + '% del avalúo fiscal',
+          v: impuestoAnual,
+        },
+        {
+          k: 'Impuesto con descuento por pronto pago',
+          ref: '−' + (INMOBILIARIO.descuentoProntoPago * 100).toFixed(0) + '% · según municipalidad',
+          v: impuestoProntoPago,
+        },
+        {
+          k: 'Precio del kWh de tu faja',
+          ref: 'Se aplica a TODO el consumo del mes',
+          v: precio,
+          decimals: 2,
+        },
+        { k: 'Factura mensual de la ANDE con IVA', ref: consumo + ' kWh · Pliego N° 21', v: facturaAnde },
+        { k: 'Costo total del primer año', ref: 'Cuotas + impuesto + luz', v: costoAnual },
+        {
+          k: 'Tu ingreso familiar en salarios mínimos',
+          ref: 'Tope del programa: ' + CHE_ROGA.ingresoMaxSalarios,
+          v: ingresoEnSM,
+          format: 'unit',
+          unit: 'SMVM',
+          decimals: 2,
+        },
+      ];
+
+      const avisos = [];
+      if (credito > montoMax) avisos.push('el crédito supera el máximo de ' + gs(montoMax));
+      if (ingresoEnSM > CHE_ROGA.ingresoMaxSalarios) avisos.push('tu ingreso supera el tope del programa');
+      if (ingreso > 0 && cuota > cuotaTope) avisos.push('la cuota pasa el ' + (CHE_ROGA.cuotaMaxPct * 100).toFixed(0) + '% de tu ingreso');
+
+      const total =
+        id === 'escritura' ? gastosCierre
+        : id === 'impuesto' ? impuestoAnual
+        : id === 'ande' ? facturaAnde
+        : cuota;
+
+      const sub =
+        (avisos.length
+          ? '⚠️ ' + avisos.join(' · ')
+          : (ingreso > 0
+              ? 'La cuota es el ' + (ingreso > 0 ? ((cuota / ingreso) * 100).toFixed(0) : '0') + '% de tu ingreso: entra en el tope'
+              : 'Cargá tu ingreso familiar para chequear el tope del ' + (CHE_ROGA.cuotaMaxPct * 100).toFixed(0) + '%')) +
+        ' · tasa ' + (tasa * 100).toLocaleString('de-DE') + '%' +
+        ' · gastos al firmar ' + gs(gastosCierre) +
+        ' · impuesto ' + gs(impuestoAnual) + '/año' +
+        ' · luz ' + gs(facturaAnde) + '/mes';
+
+      return {
+        total: gs(total),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Cuotas del crédito en un año', value: Math.round(cuota * 12), tone: 'main' },
+          { label: 'Impuesto inmobiliario anual', value: Math.round(impuestoAnual), tone: 'warn' },
+          { label: 'Luz de la ANDE en un año', value: Math.round(facturaAnde * 12), tone: 'prop' },
+        ],
+      };
+    });
+  })();
+</script>

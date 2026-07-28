@@ -1,0 +1,266 @@
+---
+/**
+ * Hub EN — "What will this event cost, and how do I fill the time?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  MEAL_RATES,
+  BAR_RATES,
+  STATE_TIP,
+  SERVICE_ADJ,
+  AUTO_GRAT_RATE,
+  AUTO_GRAT_THRESHOLD,
+  GEAR_SPLIT,
+} from '../../../lib/hubs/en/party-and-event-planning';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ MEAL_RATES, BAR_RATES, STATE_TIP, SERVICE_ADJ, AUTO_GRAT_RATE, AUTO_GRAT_THRESHOLD, GEAR_SPLIT }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) =>
+      '$' + (Math.round((n || 0) * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const usd0 = (n) => '$' + Math.round(n || 0).toLocaleString('en-US');
+    const hm = (mins) => {
+      const t = Math.max(0, mins || 0);
+      const h = Math.floor(t / 60);
+      const m = Math.round(t % 60);
+      return h > 0 ? h + ' h ' + m + ' min' : m + ' min';
+    };
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'catering';
+
+      if (id === 'tip') {
+        const bill = Math.max(0, v.bill || 0);
+        const party = Math.max(1, Math.round(v.party || 1));
+        const norm = STATE_TIP[String(v.state || 'OTHER')] ?? STATE_TIP.OTHER;
+        const adj = SERVICE_ADJ[String(v.service || 'average')] ?? 0;
+        const adjusted = norm + adj;
+        const autoGrat = party >= AUTO_GRAT_THRESHOLD;
+        const rate = Math.max(0, autoGrat && adjusted < AUTO_GRAT_RATE ? AUTO_GRAT_RATE : adjusted);
+        const tip = bill * rate;
+        const total = bill + tip;
+        const rows = [
+          { k: 'Bill before tip', ref: 'As entered', v: bill, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'State norm', ref: 'Prevailing rate where you are', v: norm * 100, format: 'unit', unit: '%' },
+          { k: 'Adjustment for the service', ref: adj >= 0 ? 'Added to the norm' : 'Taken off the norm', v: adj * 100, format: 'unit', unit: 'pts' },
+          {
+            k: autoGrat && adjusted < AUTO_GRAT_RATE ? 'Raised to the automatic-gratuity floor' : 'Rate applied',
+            ref: autoGrat ? 'Party of ' + party + ' — 18% floor applies at ' + AUTO_GRAT_THRESHOLD + '+' : 'No automatic gratuity below ' + AUTO_GRAT_THRESHOLD + ' people',
+            v: rate * 100,
+            format: 'unit',
+            unit: '%',
+            extra: true,
+          },
+          { k: 'Tip', ref: 'Bill × rate', v: tip, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Total to pay', ref: 'Bill plus tip', v: total, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Per person', ref: 'Split ' + party + ' ways', v: total / party, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'At 15% instead, for comparison', ref: 'The low end of the US range', v: bill * 0.15, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'At 20% instead, for comparison', ref: 'The high end of the US range', v: bill * 0.2, format: 'unit', unit: 'USD', decimals: 2 },
+        ];
+        return {
+          total: usd(tip),
+          sub:
+            Math.round(rate * 100) + '% on ' + usd(bill) + ' · total ' + usd(total) + ', ' + usd(total / party) + ' each · ' +
+            (autoGrat
+              ? 'check the bill first — parties of ' + AUTO_GRAT_THRESHOLD + '+ often have gratuity added already'
+              : 'tip on the pre-tax subtotal if you want to be precise'),
+          rows: rows,
+          chart: [
+            { label: 'Bill', value: Math.round(bill), tone: 'main' },
+            { label: 'Tip', value: Math.round(tip), tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'gear') {
+        const budget = Math.max(0, v.budget || 0);
+        const level = String(v.level || 'beginner');
+        const focus = String(v.focus || 'live');
+        const split = (GEAR_SPLIT[level] || GEAR_SPLIT.beginner)[focus] || GEAR_SPLIT.beginner.live;
+        const rows = [
+          { k: 'Instrument', ref: Math.round(split.instrument * 100) + '% of the budget', v: budget * split.instrument, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Amplification', ref: Math.round(split.amplification * 100) + '%', v: budget * split.amplification, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Accessories', ref: Math.round(split.accessories * 100) + '% — cables, stands, tuner, case', v: budget * split.accessories, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Recording', ref: Math.round(split.recording * 100) + '%', v: budget * split.recording, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Total budget', ref: 'As entered', v: budget, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'What the same budget puts into recording with a studio focus', ref: 'For comparison', v: budget * ((GEAR_SPLIT[level] || GEAR_SPLIT.beginner).studio.recording), format: 'unit', unit: 'USD', decimals: 2 },
+        ];
+        const biggest =
+          split.instrument >= split.amplification && split.instrument >= split.recording
+            ? 'the instrument'
+            : split.recording >= split.amplification
+              ? 'the recording chain'
+              : 'amplification';
+        return {
+          total: usd0(budget * split.instrument),
+          sub:
+            'Most of a ' + usd0(budget) + ' budget goes to ' + biggest + ' at this level and focus · ' +
+            'do not cut the accessories slice — cables, stands and a case are not optional · used gear beats new at the same price',
+          rows: rows,
+          chart: [
+            { label: 'Instrument', value: Math.round(budget * split.instrument), tone: 'main' },
+            { label: 'Amplification', value: Math.round(budget * split.amplification), tone: 'good' },
+            { label: 'Accessories', value: Math.round(budget * split.accessories), tone: 'warn' },
+            { label: 'Recording', value: Math.round(budget * split.recording), tone: 'prop' },
+          ],
+        };
+      }
+
+      if (id === 'karaoke') {
+        const session = Math.max(1, v.session || 1);
+        const songLen = Math.max(0.1, v.songlen || 0.1);
+        const gap = Math.max(0, v.gap || 0);
+        const singers = Math.max(1, Math.round(v.singers || 1));
+        const perSong = songLen + gap;
+        const totalSongs = Math.floor(session / perSong);
+        const perPerson = Math.floor(totalSongs / singers);
+        const wait = (singers - 1) * perSong;
+        const gapCost = totalSongs * gap;
+        const rows = [
+          { k: 'Session length', ref: 'As entered', v: session, format: 'unit', unit: 'min' },
+          { k: 'Time each song really takes', ref: songLen + ' min song + ' + gap + ' min changeover', v: perSong, format: 'unit', unit: 'min', decimals: 1 },
+          { k: 'Songs that fit', ref: 'Session ÷ time per song', v: totalSongs, format: 'plain', extra: true },
+          { k: 'Songs per person', ref: singers + ' singers', v: perPerson, format: 'plain', extra: true },
+          { k: 'Wait between your turns', ref: 'Everyone else goes once', v: wait, format: 'unit', unit: 'min' },
+          { k: 'Time lost to changeovers', ref: 'What queueing in advance would recover', v: gapCost, format: 'unit', unit: 'min' },
+          { k: 'Songs you would fit with no gap at all', ref: 'The best case', v: Math.floor(session / songLen), format: 'plain' },
+        ];
+        return {
+          total: totalSongs + ' songs',
+          sub:
+            perPerson + ' each for ' + singers + ' singers · about ' + Math.round(wait) + ' min between your turns · ' +
+            (perPerson < 2
+              ? 'under two songs each — extend the booking or split the group'
+              : 'build the queue in advance, the changeover is worth ' + Math.round(gapCost) + ' min of the night'),
+          rows: rows,
+          chart: [
+            { label: 'Time actually singing (min)', value: Math.round(totalSongs * songLen), tone: 'main' },
+            { label: 'Time lost to changeovers (min)', value: Math.round(gapCost), tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'playlist') {
+        const songs = Math.max(1, Math.round(v.songs || 1));
+        const songLen = Math.max(0.1, v.songlen || 0.1);
+        const gap = Math.max(0, v.gap || 0);
+        // La playlist encadena: el hueco sólo existe ENTRE canciones, no después de la última.
+        const totalMin = songs * songLen + (songs - 1) * gap;
+        const perHour = 60 / (songLen + gap);
+        const rows = [
+          { k: 'Songs', ref: 'As entered', v: songs, format: 'plain' },
+          { k: 'Average song length', ref: 'Pop sits near 3.5 min; rock and dance run longer', v: songLen, format: 'unit', unit: 'min', decimals: 2 },
+          { k: 'Total running time', ref: 'Gaps counted between tracks only', v: totalMin, format: 'unit', unit: 'min', extra: true },
+          { k: 'In hours', ref: 'Minutes ÷ 60', v: totalMin / 60, format: 'unit', unit: 'h', decimals: 2, extra: true },
+          { k: 'Songs per hour', ref: 'At this average length', v: perHour, format: 'plain', decimals: 0 },
+          { k: 'Songs needed for a 5-hour event', ref: 'Before the safety margin', v: perHour * 5, format: 'plain', decimals: 0 },
+          { k: 'With a 25% safety margin', ref: 'Running out is more noticeable than not finishing', v: perHour * 5 * 1.25, format: 'plain', decimals: 0 },
+        ];
+        return {
+          total: hm(totalMin),
+          sub:
+            songs + ' songs at ' + songLen.toFixed(1) + ' min · about ' + Math.round(perHour) + ' songs an hour · ' +
+            'build 25% more than you think you need, and download it — venue wifi is the usual failure point',
+          rows: rows,
+          chart: [
+            { label: 'Music (min)', value: Math.round(songs * songLen), tone: 'main' },
+            { label: 'Gaps between tracks (min)', value: Math.round((songs - 1) * gap), tone: 'good' },
+          ],
+        };
+      }
+
+      // catering
+      const guests = Math.max(0, Math.round(v.guests || 0));
+      const meal = String(v.meal || 'buffet');
+      const tier = String(v.tier || 'mid');
+      const barKey = String(v.bar || 'none');
+      const svc = Math.max(0, v.servicepct || 0) / 100;
+      const tax = Math.max(0, v.taxpct || 0) / 100;
+      const mealRate = (MEAL_RATES[meal] || MEAL_RATES.buffet)[tier] ?? MEAL_RATES.buffet.mid;
+      const barRate = BAR_RATES[barKey] ?? 0;
+      const food = guests * mealRate;
+      const bar = guests * barRate;
+      const subtotal = food + bar;
+      const svcAmt = subtotal * svc;
+      const taxAmt = subtotal * tax;
+      const total = subtotal + svcAmt + taxAmt;
+      const perHead = guests > 0 ? total / guests : 0;
+      const rows = [
+        { k: 'Food, per head', ref: meal.replace('_', ' ') + ' · ' + tier + ' tier', v: mealRate, format: 'unit', unit: 'USD', decimals: 2 },
+        { k: 'Bar, per head', ref: barKey === 'none' ? 'No bar' : barKey === 'open_bar' ? 'Open bar, 3 hours' : 'Beer and wine', v: barRate, format: 'unit', unit: 'USD', decimals: 2 },
+        { k: 'Food subtotal', ref: guests + ' guests', v: food, format: 'unit', unit: 'USD', decimals: 2 },
+        { k: 'Bar subtotal', ref: guests + ' guests', v: bar, format: 'unit', unit: 'USD', decimals: 2 },
+        { k: 'Service charge', ref: Math.round(svc * 100) + '% of the subtotal — usually the venue’s, not a tip', v: svcAmt, format: 'unit', unit: 'USD', decimals: 2 },
+        { k: 'Sales tax', ref: (tax * 100).toFixed(1) + '% of the subtotal', v: taxAmt, format: 'unit', unit: 'USD', decimals: 2 },
+        { k: 'Total', ref: 'All in', v: total, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+        { k: 'Real cost per head', ref: 'This is the number to compare quotes on', v: perHead, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+        { k: 'Markup over the quoted per-head price', ref: 'What the extras add', v: mealRate + barRate > 0 ? ((perHead / (mealRate + barRate)) - 1) * 100 : 0, format: 'unit', unit: '%', decimals: 1 },
+        { k: 'What ten fewer guests would save', ref: 'The guest list is the real lever', v: Math.min(guests, 10) * (mealRate + barRate) * (1 + svc + tax), format: 'unit', unit: 'USD', decimals: 2 },
+      ];
+      return {
+        total: usd0(total),
+        sub:
+          usd(perHead) + ' a head all in, against a quoted ' + usd(mealRate + barRate) + ' · ' +
+          'service charge and tax add ' + Math.round((svc + tax) * 100) + '% · ' +
+          'confirm whether the service charge reaches the staff before tipping on top',
+        rows: rows,
+        chart: [
+          { label: 'Food', value: Math.round(food), tone: 'main' },
+          { label: 'Bar', value: Math.round(bar), tone: 'prop' },
+          { label: 'Service charge', value: Math.round(svcAmt), tone: 'warn' },
+          { label: 'Sales tax', value: Math.round(taxAmt), tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>

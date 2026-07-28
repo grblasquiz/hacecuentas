@@ -1,0 +1,227 @@
+---
+/**
+ * Hub de decisión ES — hipoteca. Reemplaza 3 calculadoras sueltas.
+ * Sistema francés; el Euríbor es campo editable (no hay dato vivo en el repo).
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, COMISIONES } from '../../../lib/hubs/es/hipoteca';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/es' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="ES"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ COM: COMISIONES }}>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n) => Math.round(n || 0).toLocaleString('es-ES') + ' €';
+    const pct = (n) => n.toFixed(2).replace('.', ',') + '%';
+
+    /** Cuota del sistema francés. */
+    function cuota(capital, tipoAnual, meses) {
+      if (!(capital > 0) || meses <= 0) return 0;
+      const i = tipoAnual / 12;
+      if (i === 0) return capital / meses;
+      return (capital * i) / (1 - Math.pow(1 + i, -meses));
+    }
+
+    /** Meses necesarios para amortizar un capital con una cuota dada. */
+    function mesesParaCuota(capital, tipoAnual, cuotaMensual) {
+      const i = tipoAnual / 12;
+      if (!(capital > 0) || cuotaMensual <= 0) return 0;
+      if (i === 0) return capital / cuotaMensual;
+      if (cuotaMensual <= capital * i) return Infinity;
+      return -Math.log(1 - (capital * i) / cuotaMensual) / Math.log(1 + i);
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'variable';
+      const capital = Math.max(0, v.capital || 0);
+      const anios = Math.max(1, v.plazo || 1);
+      const meses = anios * 12;
+      const euribor = (v.euribor || 0) / 100;
+      const diferencial = Math.max(0, v.diferencial || 0) / 100;
+      const tipoFijo = Math.max(0, v.tipoFijo || 0) / 100;
+      const amortizacion = Math.max(0, Math.min(capital, v.amortizacion || 0));
+      const euriborAnterior = (v.euriborAnterior || 0) / 100;
+
+      const tipo = id === 'fija' ? tipoFijo : euribor + diferencial;
+      const cuotaActual = cuota(capital, tipo, meses);
+      const totalPagado = cuotaActual * meses;
+      const interesesTotales = Math.max(0, totalPagado - capital);
+
+      const rows = [
+        { k: 'Capital pendiente', ref: 'Lo que aún debes', v: capital },
+        {
+          k: 'Tipo aplicable',
+          ref: id === 'fija' ? 'Tipo fijo de tu escritura' : 'Euríbor ' + pct(euribor * 100) + ' + diferencial ' + pct(diferencial * 100),
+          v: tipo * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        },
+        { k: 'Plazo restante', ref: meses + ' mensualidades', v: anios, format: 'unit', unit: 'años' },
+        { k: 'Cuota mensual', ref: 'Sistema francés', v: cuotaActual, extra: true },
+        { k: 'Total que pagarás', ref: 'Cuota × mensualidades', v: totalPagado },
+        { k: 'Intereses de toda la vida del préstamo', ref: 'Total menos capital', v: interesesTotales, extra: true },
+      ];
+
+      let principal = cuotaActual;
+      let sub = '';
+
+      if (id === 'variable') {
+        const tipoAnterior = euriborAnterior + diferencial;
+        const cuotaAnterior = cuota(capital, tipoAnterior, meses);
+        rows.push({
+          k: 'Cuota con el Euríbor anterior',
+          ref: 'Tipo del ' + pct(tipoAnterior * 100),
+          v: cuotaAnterior,
+        });
+        rows.push({
+          k: cuotaActual >= cuotaAnterior ? 'Lo que sube tu cuota en la revisión' : 'Lo que baja tu cuota en la revisión',
+          ref: 'Diferencia mensual',
+          v: Math.abs(cuotaActual - cuotaAnterior),
+          extra: true,
+        });
+        rows.push({
+          k: 'Diferencia en un año',
+          ref: '12 mensualidades',
+          v: Math.abs(cuotaActual - cuotaAnterior) * 12,
+        });
+        sub =
+          'Con el Euríbor al ' +
+          pct(euribor * 100) +
+          ' y tu diferencial, la cuota queda en ' +
+          eur(cuotaActual) +
+          ' al mes: ' +
+          (cuotaActual >= cuotaAnterior ? 'sube ' : 'baja ') +
+          eur(Math.abs(cuotaActual - cuotaAnterior)) +
+          ' respecto a la revisión anterior';
+      } else if (id === 'fija') {
+        sub =
+          'Con un tipo fijo del ' +
+          pct(tipo * 100) +
+          ' pagarás ' +
+          eur(cuotaActual) +
+          ' al mes durante ' +
+          anios +
+          ' años, y ' +
+          eur(interesesTotales) +
+          ' de intereses en total';
+      } else {
+        const nuevoCapital = capital - amortizacion;
+        const comision = amortizacion * (id === 'amortizar_plazo' || id === 'amortizar_cuota' ? COM.variablePrimeros5Anios : 0);
+
+        // Opción A: reducir cuota (mismo plazo)
+        const cuotaReducida = cuota(nuevoCapital, tipo, meses);
+        const totalA = cuotaReducida * meses;
+        const interesesA = Math.max(0, totalA - nuevoCapital);
+
+        // Opción B: reducir plazo (misma cuota)
+        const mesesNuevos = mesesParaCuota(nuevoCapital, tipo, cuotaActual);
+        const totalB = cuotaActual * mesesNuevos;
+        const interesesB = Math.max(0, totalB - nuevoCapital);
+
+        const ahorroA = interesesTotales - interesesA;
+        const ahorroB = interesesTotales - interesesB;
+
+        rows.push({ k: 'Cantidad que amortizas', ref: 'Aportación extra', v: amortizacion });
+        rows.push({ k: 'Capital pendiente después', ref: 'Lo que quedaría por pagar', v: nuevoCapital });
+        rows.push({ k: 'Comisión máxima por amortizar', ref: 'Tope legal en variable, si aplica', v: comision });
+        rows.push({ k: 'Reduciendo cuota: nueva cuota', ref: 'Mismo plazo de ' + anios + ' años', v: cuotaReducida });
+        rows.push({ k: 'Reduciendo cuota: ahorro de intereses', ref: 'Frente a no amortizar', v: ahorroA });
+        rows.push({
+          k: 'Reduciendo plazo: nuevo plazo',
+          ref: 'Misma cuota de ' + eur(cuotaActual),
+          v: mesesNuevos / 12,
+          format: 'unit',
+          unit: 'años',
+          decimals: 1,
+        });
+        rows.push({
+          k: 'Reduciendo plazo: años que te quitas',
+          ref: 'Se acaba antes',
+          v: Math.max(0, anios - mesesNuevos / 12),
+          format: 'unit',
+          unit: 'años',
+          decimals: 1,
+        });
+        rows.push({ k: 'Reduciendo plazo: ahorro de intereses', ref: 'Frente a no amortizar', v: ahorroB, extra: true });
+        rows.push({
+          k: 'Ventaja de reducir plazo sobre reducir cuota',
+          ref: 'Diferencia de ahorro entre las dos opciones',
+          v: Math.max(0, ahorroB - ahorroA),
+          extra: true,
+        });
+
+        principal = id === 'amortizar_plazo' ? ahorroB : ahorroA;
+        sub =
+          'Amortizando ' +
+          eur(amortizacion) +
+          ': reduciendo cuota pagarías ' +
+          eur(cuotaReducida) +
+          ' al mes y ahorrarías ' +
+          eur(ahorroA) +
+          ' de intereses; reduciendo plazo terminarías ' +
+          (anios - mesesNuevos / 12).toFixed(1).replace('.', ',') +
+          ' años antes y ahorrarías ' +
+          eur(ahorroB);
+      }
+
+      return {
+        total: eur(principal),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Capital', value: Math.round(capital), tone: 'main' },
+          { label: 'Intereses', value: Math.round(interesesTotales), tone: 'bad' },
+        ].filter(function (s) {
+          return s.value > 0;
+        }),
+        format: 'unit',
+        unit: '€',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

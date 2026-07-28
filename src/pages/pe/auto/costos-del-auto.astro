@@ -1,0 +1,164 @@
+---
+/**
+ * Hub de decisión PE — "Cuánto cuesta tener el auto al día en el Perú".
+ * audience="PE" literal: HubData sólo modela 'AR' | 'global' y el mercado viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UIT,
+  ANIO,
+  IMPUESTO_VEHICULAR,
+  SOAT_RANGOS,
+  CITV_TARIFAS,
+  MULTA_CITV_UIT,
+} from '../../../lib/hubs/pe/costos-del-auto';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PE"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ UIT, ANIO, IV: IMPUESTO_VEHICULAR, SOAT: SOAT_RANGOS, CITV: CITV_TARIFAS, MULTA: MULTA_CITV_UIT }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const sol = (n) => 'S/ ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(Math.round(n || 0));
+    const sol2 = (n) => 'S/ ' + new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.round((n || 0) * 100) / 100);
+
+    /** Categoría de SOAT/CITV que corresponde a cada rama del hub. */
+    const CATEGORIA = { nuevo: 'auto', usado: 'auto', trabajo: 'taxi', moto: 'moto' };
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'nuevo';
+      const cat = CATEGORIA[id] || 'auto';
+      const valor = Math.max(0, v.valor || 0);
+      const anioInsc = Math.round(v.anioInscripcion || 0);
+      const antiguedad = Math.max(0, Math.round(v.antiguedad || 0));
+      const kmMes = Math.max(0, v.kmMes || 0);
+      const rendimiento = Math.max(1, v.rendimiento || 40);
+      const precioGalon = Math.max(0, v.precioGalon || 0);
+      const citvPorAnio = Math.max(0, Math.round(Number(v.citvPorAnio) || 0));
+      const provincia = String(v.region || 'lima') === 'provincia';
+
+      // --- SOAT: posición dentro del rango de mercado según antigüedad ---
+      const rango = SOAT[cat];
+      const factorAntiguedad = Math.min(antiguedad, 20) / 20;
+      const techo = rango.min + (rango.max - rango.min) * 0.6;
+      const ajusteRegion = provincia ? 0.9 : 1;
+      const soat = (rango.min + (techo - rango.min) * factorAntiguedad) * ajusteRegion;
+      const soatMin = rango.min * ajusteRegion;
+      const soatMax = rango.max * ajusteRegion;
+
+      // --- CITV ---
+      const tarifaCitv = CITV[cat];
+      const citvAnual = tarifaCitv.tipico * citvPorAnio;
+      const multaCitv = UIT * (cat === 'moto' ? MULTA.vehiculoMenorL5 : MULTA.general);
+
+      // --- Impuesto al patrimonio vehicular ---
+      // Se paga durante 3 ejercicios desde el AÑO SIGUIENTE al de la primera inscripción:
+      // afecto si 1 ≤ (año actual − año de inscripción) ≤ 3. Las motos no están gravadas.
+      const aniosDesde = anioInsc > 1990 ? ANIO - anioInsc : null;
+      const gravado = cat !== 'moto';
+      const afecto = gravado && aniosDesde !== null && aniosDesde >= 1 && aniosDesde <= IV.aniosAfecto;
+      const piso = UIT * IV.pisoUit;
+      const impuestoTeorico = valor * IV.tasa;
+      const impuesto = afecto ? Math.max(impuestoTeorico, piso) : 0;
+      const aplicaPiso = afecto && impuestoTeorico < piso;
+      const aniosRestantes = afecto ? Math.max(0, IV.aniosAfecto - aniosDesde + 1) : 0;
+
+      // --- Combustible ---
+      const kmAnio = kmMes * 12;
+      const galonesAnio = kmAnio / rendimiento;
+      const combustibleAnio = galonesAnio * precioGalon;
+
+      const totalAnual = soat + citvAnual + impuesto + combustibleAnio;
+      const totalMes = totalAnual / 12;
+      const costoPorKm = kmAnio > 0 ? totalAnual / kmAnio : 0;
+      const fijosAnuales = soat + citvAnual + impuesto;
+
+      const rows = [];
+      rows.push({ k: 'SOAT anual estimado', ref: rango.label + ' · rango de mercado ' + sol(soatMin) + '–' + sol(soatMax), v: soat, extra: true });
+      rows.push({ k: 'Revisión técnica vehicular del año', ref: citvPorAnio === 0 ? 'Este año no te toca inspección' : citvPorAnio + ' inspección(es) × ' + sol(tarifaCitv.tipico) + ' · ' + tarifaCitv.label, v: citvAnual });
+      rows.push({
+        k: 'Impuesto al patrimonio vehicular',
+        ref: !gravado
+          ? 'Las motos lineales no están dentro del hecho gravado'
+          : afecto
+            ? (aplicaPiso ? 'Se aplica el piso de 1,5% de la UIT' : '1% del valor · te quedan ' + aniosRestantes + ' ejercicio(s)')
+            : (aniosDesde !== null && aniosDesde <= 0
+                ? 'Recién inscrito: empieza a pagar el año siguiente'
+                : 'Superó los ' + IV.aniosAfecto + ' ejercicios: ya no está afecto'),
+        v: impuesto,
+      });
+      rows.push({ k: 'Total obligatorio del año', ref: 'SOAT + inspección + impuesto', v: fijosAnuales });
+      rows.push({ k: 'Galones de combustible al año', ref: kmAnio.toLocaleString('de-DE') + ' km ÷ ' + rendimiento + ' km/galón', v: galonesAnio, format: 'unit', unit: 'galones', decimals: 1 });
+      rows.push({ k: 'Combustible del año', ref: 'A ' + sol2(precioGalon) + ' el galón', v: combustibleAnio });
+      rows.push({ k: 'Costo total del año', ref: 'Todo lo obligatorio más el combustible', v: totalAnual, extra: true });
+      rows.push({ k: 'Lo mismo repartido por mes', ref: 'Costo anual ÷ 12', v: totalMes });
+      rows.push({ k: 'Costo por kilómetro recorrido', ref: 'Sin contar mantenimiento ni depreciación', v: costoPorKm, decimals: 2 });
+      rows.push({ k: 'Cuánto pesa el combustible en el total', ref: 'Casi siempre es el rubro más grande', v: totalAnual > 0 ? (combustibleAnio / totalAnual) * 100 : 0, format: 'unit', unit: '%', decimals: 0 });
+      rows.push({ k: 'Multa por circular sin inspección vigente', ref: cat === 'moto' ? 'Infracción específica de vehículos menores L5' : 'Infracción muy grave · 50 puntos e internamiento', v: multaCitv });
+      rows.push({ k: 'Cuántas inspecciones pagas con esa multa', ref: 'La razón por la que conviene no dejarla vencer', v: tarifaCitv.tipico > 0 ? multaCitv / tarifaCitv.tipico : 0, format: 'unit', unit: 'inspecciones', decimals: 0 });
+
+      const total = sol(totalAnual);
+      const sub =
+        'Tener este vehículo al día cuesta ' + sol(totalAnual) + ' al año, unos ' + sol(totalMes) + ' por mes · ' +
+        sol(fijosAnuales) + ' son obligaciones y ' + sol(combustibleAnio) + ' es combustible · ' +
+        (afecto
+          ? 'todavía pagas impuesto al patrimonio vehicular (' + aniosRestantes + ' ejercicio(s) por delante)'
+          : gravado ? 'ya no pagas impuesto al patrimonio vehicular' : 'las motos no pagan impuesto al patrimonio vehicular');
+
+      const chart = [
+        { label: 'Combustible', value: Math.round(combustibleAnio), tone: 'main' },
+        { label: 'SOAT', value: Math.round(soat), tone: 'prop' },
+        { label: 'Revisión técnica', value: Math.round(citvAnual), tone: 'warn' },
+        { label: 'Impuesto vehicular', value: Math.round(impuesto), tone: 'exit' },
+      ];
+
+      return { total: total, sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

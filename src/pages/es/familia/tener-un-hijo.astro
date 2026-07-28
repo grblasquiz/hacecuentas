@@ -1,0 +1,241 @@
+---
+/**
+ * Hub de decisión ES — tener un hijo. Reemplaza 6 calculadoras sueltas
+ * (la pensión de alimentos va absorbida sólo por URL, ver el .ts).
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  PERMISO,
+  DEDUCCIONES,
+  BECA_COMEDOR,
+  VUELTA_AL_COLE_POR_HIJO,
+  TABLA_CGPJ,
+} from '../../../lib/hubs/es/tener-un-hijo';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/es' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="ES"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    PERM: PERMISO,
+    DED: DEDUCCIONES,
+    BECA: BECA_COMEDOR,
+    COLE: VUELTA_AL_COLE_POR_HIJO,
+    CGPJ: TABLA_CGPJ,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n) => Math.round(n || 0).toLocaleString('es-ES') + ' €';
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'nacimiento';
+      const base = Math.max(0, v.base || 0);
+      const hijos = Math.max(0, Math.round(v.hijos || 0));
+      const mesesAlta = Math.max(0, Math.min(12, Math.round(v.mesesAlta || 0)));
+      const guarderia = Math.max(0, v.guarderia || 0);
+      const escolares = Math.max(0, Math.round(v.hijosEscolares || 0));
+      const renta = Math.max(0, v.rentaFamiliar || 0);
+      const umbral = Math.max(1, v.umbralComedor || 11000);
+      const multiple = Math.max(1, Math.round(v.multiple || 1));
+
+      const rows = [];
+      let gasto = 0;
+      let ayuda = 0;
+      let sub = '';
+
+      // ── Permiso por nacimiento ────────────────────────────────────
+      const semanas = PERM.semanasObligatorias + PERM.semanasOpcionales + (multiple - 1) * PERM.semanasExtraPorHijoAdicional;
+      const prestacionPermiso = base * (semanas / 4.345) * PERM.pctPrestacion;
+
+      // ── Deducciones ───────────────────────────────────────────────
+      const deduccionMaternidad = Math.min(hijos * mesesAlta * DED.maternidadMensualPorHijo, hijos * DED.maternidadTopeAnualPorHijo);
+      const incrementoGuarderia = Math.min(guarderia, hijos * DED.guarderiaTopeAnualPorHijo);
+
+      // ── Beca de comedor ───────────────────────────────────────────
+      const ratio = renta / umbral;
+      let pctBeca = 0;
+      for (const par of BECA.tramos) {
+        const limite = par[0] == null ? Infinity : par[0];
+        if (ratio <= limite) {
+          pctBeca = par[1];
+          break;
+        }
+      }
+      const costeComedor = escolares * BECA.costeAnualReferencia;
+      const importeBeca = costeComedor * pctBeca;
+      const vueltaAlCole = escolares * COLE;
+
+      if (id === 'nacimiento') {
+        rows.push({
+          k: 'Semanas de permiso por progenitor',
+          ref: PERM.semanasObligatorias + ' obligatorias + ' + PERM.semanasOpcionales + ' flexibles' + (multiple > 1 ? ' + parto múltiple' : ''),
+          v: semanas,
+          format: 'unit',
+          unit: 'semanas',
+        });
+        rows.push({ k: 'Base reguladora mensual', ref: 'Base de cotización del mes anterior', v: base });
+        rows.push({ k: 'Prestación de todo el permiso', ref: '100% de la base, exenta de IRPF', v: prestacionPermiso, extra: true });
+        rows.push({
+          k: 'Plazo para las semanas flexibles',
+          ref: 'Desde el nacimiento',
+          v: PERM.mesesParaDisfrutarFlexible,
+          format: 'unit',
+          unit: 'meses',
+        });
+        gasto = 0;
+        ayuda = prestacionPermiso;
+        sub =
+          'Te corresponden ' +
+          semanas +
+          ' semanas de permiso por progenitor, con una prestación total de ' +
+          eur(prestacionPermiso) +
+          ' al 100% de tu base y exenta de IRPF';
+      } else if (id === 'guarderia') {
+        gasto = guarderia;
+        ayuda = deduccionMaternidad + incrementoGuarderia;
+        rows.push({ k: 'Gasto anual de guardería', ref: 'Lo que pagas al centro', v: guarderia });
+        rows.push({
+          k: 'Deducción por maternidad',
+          ref: DED.maternidadMensualPorHijo + ' €/mes × ' + hijos + ' hijo(s) × ' + mesesAlta + ' meses',
+          v: deduccionMaternidad,
+        });
+        rows.push({
+          k: 'Incremento por gastos de custodia',
+          ref: 'Hasta ' + eur(DED.guarderiaTopeAnualPorHijo) + ' por hijo',
+          v: incrementoGuarderia,
+        });
+        rows.push({ k: 'Total que recuperas', ref: 'Deducción base más incremento', v: ayuda, extra: true });
+        rows.push({ k: 'Gasto neto del año', ref: 'Guardería menos deducciones', v: Math.max(0, gasto - ayuda), extra: true });
+        rows.push({
+          k: 'Porcentaje del gasto cubierto',
+          ref: 'Lo que te devuelve Hacienda',
+          v: gasto > 0 ? Math.min(100, (ayuda / gasto) * 100) : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        sub =
+          'De ' +
+          eur(guarderia) +
+          ' de guardería recuperas ' +
+          eur(ayuda) +
+          ' entre deducción por maternidad e incremento por custodia: el gasto neto queda en ' +
+          eur(Math.max(0, gasto - ayuda));
+      } else {
+        gasto = vueltaAlCole + costeComedor;
+        ayuda = importeBeca;
+        rows.push({ k: 'Vuelta al cole', ref: escolares + ' hijo(s) × material, libros y ropa', v: vueltaAlCole });
+        rows.push({ k: 'Comedor escolar del curso', ref: escolares + ' hijo(s), coste de referencia', v: costeComedor });
+        rows.push({ k: 'Renta familiar', ref: 'La que declaras', v: renta });
+        rows.push({ k: 'Umbral de tu comunidad', ref: 'Lo fija cada convocatoria', v: umbral });
+        rows.push({
+          k: 'Tramo de beca que te corresponde',
+          ref: 'Renta ÷ umbral = ' + ratio.toFixed(2).replace('.', ','),
+          v: pctBeca * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 0,
+        });
+        rows.push({ k: 'Beca de comedor estimada', ref: 'Sobre el coste del comedor', v: importeBeca, extra: true });
+        rows.push({ k: 'Gasto neto del curso', ref: 'Vuelta al cole y comedor menos beca', v: Math.max(0, gasto - ayuda), extra: true });
+        sub =
+          pctBeca > 0
+            ? 'Con una renta de ' +
+              eur(renta) +
+              ' frente al umbral de ' +
+              eur(umbral) +
+              ' entrarías en el tramo del ' +
+              Math.round(pctBeca * 100) +
+              '%: la beca cubriría ' +
+              eur(importeBeca) +
+              ' del comedor'
+            : 'Con una renta de ' +
+              eur(renta) +
+              ' superas el umbral de ' +
+              eur(umbral) +
+              ': no habría beca de comedor, y el curso te costaría ' +
+              eur(gasto);
+      }
+
+      // Pensión de alimentos: absorbida sólo por URL, resuelta con una fila.
+      const ingresoMensual = base;
+      let pctCgpj = CGPJ[CGPJ.length - 1].pct[0];
+      for (const tramo of CGPJ) {
+        const hasta = tramo.hasta == null ? Infinity : tramo.hasta;
+        if (ingresoMensual <= hasta) {
+          pctCgpj = tramo.pct[Math.min(Math.max(1, hijos + escolares) - 1, 3)];
+          break;
+        }
+      }
+      rows.push({
+        k: 'Pensión de alimentos orientativa',
+        ref: 'Tabla del CGPJ · ' + Math.round(pctCgpj * 100) + '% de los ingresos, si hubiera divorcio',
+        v: ingresoMensual * pctCgpj,
+      });
+
+      const chart = [
+        { label: 'Gasto del año', value: Math.round(gasto), tone: 'bad' },
+        { label: 'Ayudas y deducciones', value: Math.round(ayuda), tone: 'good' },
+      ].filter(function (s) {
+        return s.value > 0;
+      });
+
+      const total = id === 'nacimiento' ? ayuda : Math.max(0, gasto - ayuda);
+
+      return {
+        total: eur(total),
+        sub: sub,
+        rows: rows,
+        chart: chart,
+        format: 'unit',
+        unit: '€',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

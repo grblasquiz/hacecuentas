@@ -1,0 +1,259 @@
+---
+/**
+ * Hub de decisión ES — reforma, construcción y eficiencia. Reemplaza 5 calculadoras.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  REFORMA_M2,
+  REFORMA_EXTRAS,
+  CONSTRUCCION_M2,
+  CONSTRUCCION,
+  CEDULA,
+  AEROTERMIA,
+  SOLAR,
+} from '../../../lib/hubs/es/reforma-y-eficiencia';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/es' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="ES"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ RM: REFORMA_M2, RE: REFORMA_EXTRAS, CM: CONSTRUCCION_M2, C: CONSTRUCCION, CED: CEDULA, AERO: AEROTERMIA, SOL: SOLAR }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n) => Math.round(n || 0).toLocaleString('es-ES') + ' €';
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'reforma';
+      const metros = Math.max(1, v.metros || 1);
+      const nivel = String(v.nivel || 'media');
+      const conCocina = String(v.incluirCocina || 'si') === 'si';
+      const banos = Math.max(0, Math.round(v.banos || 0));
+      const gastoEnergia = Math.max(0, v.gastoEnergiaAnual || 0);
+      const kwp = Math.max(0, v.potenciaSolar || 0);
+      const horasSol = Math.max(0, v.horasSol || 0);
+      const autoconsumo = Math.max(0, Math.min(100, v.autoconsumoPct || 0)) / 100;
+
+      const rows = [];
+      let total = 0;
+      let sub = '';
+      let chart = [];
+
+      if (id === 'construir') {
+        const precioM2 = CM[nivel] || CM.media;
+        const ejecucion = metros * precioM2;
+        const honorarios = ejecucion * C.pctHonorarios;
+        const licencia = ejecucion * C.pctLicencia;
+        total = ejecucion + honorarios + licencia;
+
+        rows.push({ k: 'Superficie construida', ref: 'La que has indicado', v: metros, format: 'unit', unit: 'm²' });
+        rows.push({ k: 'Precio por metro cuadrado', ref: 'Calidad ' + nivel, v: precioM2 });
+        rows.push({ k: 'Coste de ejecución material', ref: 'Superficie × precio por m²', v: ejecucion, extra: true });
+        rows.push({ k: 'Materiales', ref: Math.round(C.pctMateriales * 100) + '% de la ejecución', v: ejecucion * C.pctMateriales });
+        rows.push({ k: 'Mano de obra', ref: Math.round((1 - C.pctMateriales) * 100) + '% de la ejecución', v: ejecucion * (1 - C.pctMateriales) });
+        rows.push({ k: 'Honorarios de arquitecto y aparejador', ref: Math.round(C.pctHonorarios * 100) + '% de la ejecución', v: honorarios });
+        rows.push({ k: 'Licencia y tasas municipales', ref: Math.round(C.pctLicencia * 100) + '% de la ejecución', v: licencia });
+        rows.push({ k: 'Total sin solar', ref: 'El terreno va aparte', v: total, extra: true });
+        rows.push({ k: 'Coste final por metro cuadrado', ref: 'Total ÷ superficie', v: total / metros });
+
+        chart = [
+          { label: 'Materiales', value: Math.round(ejecucion * C.pctMateriales), tone: 'main' },
+          { label: 'Mano de obra', value: Math.round(ejecucion * (1 - C.pctMateriales)), tone: 'prop' },
+          { label: 'Honorarios y licencia', value: Math.round(honorarios + licencia), tone: 'warn' },
+        ];
+        sub =
+          'Construir ' +
+          metros +
+          ' m² con calidad ' +
+          nivel +
+          ' sale por ' +
+          eur(total) +
+          ' (' +
+          eur(total / metros) +
+          ' el metro), sin contar el solar';
+      } else if (id === 'aerotermia') {
+        const kw = Math.ceil((metros / 100) * AERO.kwPor100m2);
+        const inversion = kw * AERO.costePorKw;
+        const ahorroAnual = gastoEnergia * AERO.ahorroFrenteGas;
+        const anios = ahorroAnual > 0 ? inversion / ahorroAnual : 0;
+        total = inversion;
+
+        rows.push({ k: 'Potencia necesaria estimada', ref: metros + ' m² · referencia por superficie', v: kw, format: 'unit', unit: 'kW' });
+        rows.push({ k: 'Coste de equipo e instalación', ref: eur(AERO.costePorKw) + ' por kW', v: inversion, extra: true });
+        rows.push({ k: 'Gasto energético actual', ref: 'Lo que pagas hoy al año', v: gastoEnergia });
+        rows.push({ k: 'Ahorro anual estimado', ref: 'Frente a caldera de gas', v: ahorroAnual, extra: true });
+        rows.push({
+          k: 'Años para recuperar la inversión',
+          ref: 'Inversión ÷ ahorro anual',
+          v: anios,
+          format: 'unit',
+          unit: 'años',
+          decimals: 1,
+          extra: true,
+        });
+        rows.push({ k: 'Ahorro acumulado en 15 años', ref: 'Sin contar subidas de precio', v: ahorroAnual * 15 });
+        rows.push({ k: 'Cédula de habitabilidad, si te la piden', ref: 'Honorarios técnicos más tasa', v: CED.honorariosTecnico + CED.tasaMedia });
+
+        chart = [
+          { label: 'Inversión', value: Math.round(inversion), tone: 'bad' },
+          { label: 'Ahorro en 15 años', value: Math.round(ahorroAnual * 15), tone: 'good' },
+        ];
+        sub =
+          'Instalar aerotermia costaría ' +
+          eur(inversion) +
+          ' y ahorraría en torno a ' +
+          eur(ahorroAnual) +
+          ' al año: se recuperaría en ' +
+          anios.toFixed(1).replace('.', ',') +
+          ' años';
+      } else if (id === 'solar') {
+        const inversion = kwp * SOL.costePorKwp;
+        const produccion = kwp * horasSol * SOL.diasAnio;
+        const ahorroAuto = produccion * autoconsumo * SOL.precioCompraKwh;
+        const ingresoExcedente = produccion * (1 - autoconsumo) * SOL.precioExcedenteKwh;
+        const ahorroAnual = ahorroAuto + ingresoExcedente;
+        const anios = ahorroAnual > 0 ? inversion / ahorroAnual : 0;
+        total = inversion;
+
+        rows.push({ k: 'Potencia instalada', ref: 'La que has indicado', v: kwp, format: 'unit', unit: 'kWp', decimals: 1 });
+        rows.push({ k: 'Coste de la instalación', ref: eur(SOL.costePorKwp) + ' por kWp', v: inversion, extra: true });
+        rows.push({
+          k: 'Producción anual estimada',
+          ref: horasSol.toFixed(1).replace('.', ',') + ' horas solares al día',
+          v: produccion,
+          format: 'unit',
+          unit: 'kWh',
+        });
+        rows.push({
+          k: 'Ahorro por autoconsumo',
+          ref: Math.round(autoconsumo * 100) + '% consumido en el momento, a ' + SOL.precioCompraKwh.toFixed(2).replace('.', ',') + ' €/kWh',
+          v: ahorroAuto,
+        });
+        rows.push({
+          k: 'Compensación de excedentes',
+          ref: 'A ' + SOL.precioExcedenteKwh.toFixed(2).replace('.', ',') + ' €/kWh, sin dejar la factura en negativo',
+          v: ingresoExcedente,
+        });
+        rows.push({ k: 'Ahorro anual total', ref: 'Autoconsumo más excedentes', v: ahorroAnual, extra: true });
+        rows.push({
+          k: 'Años para recuperar la inversión',
+          ref: 'Inversión ÷ ahorro anual',
+          v: anios,
+          format: 'unit',
+          unit: 'años',
+          decimals: 1,
+          extra: true,
+        });
+        rows.push({ k: 'Ahorro acumulado en 25 años', ref: 'Vida útil típica de los paneles', v: ahorroAnual * 25 });
+
+        chart = [
+          { label: 'Inversión', value: Math.round(inversion), tone: 'bad' },
+          { label: 'Ahorro por autoconsumo (25 años)', value: Math.round(ahorroAuto * 25), tone: 'main' },
+          { label: 'Excedentes (25 años)', value: Math.round(ingresoExcedente * 25), tone: 'good' },
+        ];
+        sub =
+          'Una instalación de ' +
+          kwp.toFixed(1).replace('.', ',') +
+          ' kWp costaría ' +
+          eur(inversion) +
+          ' y ahorraría ' +
+          eur(ahorroAnual) +
+          ' al año: se recuperaría en ' +
+          anios.toFixed(1).replace('.', ',') +
+          ' años';
+      } else {
+        const precioM2 = RM[nivel] || RM.media;
+        const obra = metros * precioM2;
+        const cocina = conCocina ? RE.cocina : 0;
+        const bano = banos * RE.bano;
+        const subtotal = obra + cocina + bano;
+        const imprevistos = subtotal * RE.imprevistosPct;
+        total = subtotal + imprevistos;
+
+        rows.push({ k: 'Superficie a reformar', ref: 'La que has indicado', v: metros, format: 'unit', unit: 'm²' });
+        rows.push({ k: 'Precio por metro cuadrado', ref: 'Nivel ' + nivel, v: precioM2 });
+        rows.push({ k: 'Obra general', ref: 'Superficie × precio por m²', v: obra, extra: true });
+        rows.push({ k: 'Cocina', ref: conCocina ? 'Reforma completa de cocina' : 'No incluida', v: cocina });
+        rows.push({ k: 'Baños', ref: banos + ' baño(s)', v: bano });
+        rows.push({ k: 'Imprevistos', ref: Math.round(RE.imprevistosPct * 100) + '% del presupuesto', v: imprevistos });
+        rows.push({ k: 'Presupuesto total', ref: 'Con imprevistos incluidos', v: total, extra: true });
+        rows.push({ k: 'IVA del 10% incluido en el precio', ref: 'Si la obra cumple los requisitos', v: total - total / 1.1 });
+        rows.push({ k: 'Cédula de habitabilidad, si te la piden', ref: 'Honorarios técnicos más tasa', v: CED.honorariosTecnico + CED.tasaMedia });
+        rows.push({ k: 'Coste final por metro cuadrado', ref: 'Total ÷ superficie', v: total / metros });
+
+        chart = [
+          { label: 'Obra general', value: Math.round(obra), tone: 'main' },
+          { label: 'Cocina', value: Math.round(cocina), tone: 'prop' },
+          { label: 'Baños', value: Math.round(bano), tone: 'warn' },
+          { label: 'Imprevistos', value: Math.round(imprevistos), tone: 'bad' },
+        ];
+        sub =
+          'Reformar ' +
+          metros +
+          ' m² con acabados de nivel ' +
+          nivel +
+          ' sale por ' +
+          eur(total) +
+          ' con imprevistos incluidos: ' +
+          eur(total / metros) +
+          ' el metro cuadrado';
+      }
+
+      return {
+        total: eur(total),
+        sub: sub,
+        rows: rows,
+        chart: chart.filter(function (s) {
+          return s.value > 0;
+        }),
+        format: 'unit',
+        unit: '€',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,188 @@
+---
+/**
+ * Hub EN — "What resolution do I actually need?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  MM_PER_INCH,
+  PPI_NEAR,
+  PPI_RETINA,
+  JPEG_ANCHORS,
+} from '../../../lib/hubs/en/screens-and-print-resolution';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ MM_PER_INCH, PPI_NEAR, PPI_RETINA, JPEG_ANCHORS }}>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(x || 0).toLocaleString('en-US');
+    /** Límite de agudeza visual normal: 1 arcominuto. 3438 = minutos de arco por radián. */
+    const ARCMIN_CONST = 3438;
+
+    const ratioAt = (q) => {
+      const a = JPEG_ANCHORS;
+      if (q <= a[0][0]) return a[0][1];
+      if (q >= a[a.length - 1][0]) return a[a.length - 1][1];
+      for (let k = 0; k < a.length - 1; k++) {
+        const q1 = a[k][0], r1 = a[k][1], q2 = a[k + 1][0], r2 = a[k + 1][1];
+        if (q >= q1 && q <= q2) return r1 + ((q - q1) / (q2 - q1)) * (r2 - r1);
+      }
+      return 15;
+    };
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'ppi';
+
+      if (id === 'print') {
+        const wIn = Math.max(0.01, v.printW || 0.01);
+        const hIn = Math.max(0.01, v.printH || 0.01);
+        const dpi = Math.max(1, Number(v.dpi) || 300);
+        const pxW = Math.round(wIn * dpi);
+        const pxH = Math.round(hIn * dpi);
+        const mpNeeded = (pxW * pxH) / 1e6;
+        const haveMp = Math.max(0, v.haveMp || 0);
+        // DPI real que alcanzaría tu imagen a este tamaño, conservando la relación de aspecto.
+        const scale = mpNeeded > 0 ? Math.sqrt(haveMp / mpNeeded) : 0;
+        const actualDpi = dpi * scale;
+        const rows = [
+          { k: 'Print size', ref: n0(wIn * MM_PER_INCH) + ' × ' + n0(hIn * MM_PER_INCH) + ' mm', v: wIn * hIn, format: 'unit', unit: 'square inches', decimals: 1 },
+          { k: 'Pixels needed across', ref: wIn + ' in × ' + dpi + ' DPI', v: pxW, format: 'plain', extra: true },
+          { k: 'Pixels needed down', ref: hIn + ' in × ' + dpi + ' DPI', v: pxH, format: 'plain', extra: true },
+          { k: 'Megapixels required', ref: 'Width × height ÷ 1,000,000', v: mpNeeded, format: 'unit', unit: 'MP', decimals: 2, extra: true },
+          haveMp > 0
+            ? { k: 'DPI your existing image would print at', ref: haveMp + ' MP at this size', v: actualDpi, format: 'unit', unit: 'DPI', decimals: 0, extra: true }
+            : { k: 'DPI check on an existing image', ref: 'Enter its megapixels above to compare', v: 0, format: 'plain' },
+          { k: 'Megapixels needed at 150 DPI instead', ref: 'The poster standard, viewed further away', v: (wIn * 150 * hIn * 150) / 1e6, format: 'unit', unit: 'MP', decimals: 2 },
+          { k: 'Uncompressed file size at 8-bit RGB', ref: '3 bytes per pixel', v: (pxW * pxH * 3) / (1024 * 1024), format: 'unit', unit: 'MB', decimals: 1 },
+        ];
+        return {
+          total: n0(pxW) + ' × ' + n0(pxH) + ' px',
+          sub:
+            mpNeeded.toFixed(1) + ' MP for a ' + wIn + '×' + hIn + ' inch print at ' + dpi + ' DPI · ' +
+            (haveMp > 0
+              ? 'your ' + haveMp + ' MP file would print at about ' + Math.round(actualDpi) + ' DPI at this size' +
+                (actualDpi >= dpi ? ' — enough' : ' — short of your target, print smaller or reshoot')
+              : '300 DPI is for prints held in the hand; posters need only about 150') ,
+          rows: rows,
+          chart: [
+            { label: 'Megapixels required', value: Math.round(mpNeeded * 100) / 100, tone: 'main' },
+            { label: 'Megapixels you have', value: Math.round(haveMp * 100) / 100, tone: haveMp >= mpNeeded ? 'good' : 'bad' },
+          ],
+        };
+      }
+
+      if (id === 'jpeg') {
+        const mp = Math.max(0.01, v.mp || 0.01);
+        let q = Math.max(1, Math.min(100, Math.round(v.quality || 85)));
+        const ratio = ratioAt(q);
+        const rawBytes = mp * 1e6 * 3;
+        const kb = rawBytes / ratio / 1024;
+        const kb85 = rawBytes / ratioAt(85) / 1024;
+        const sizeStr = kb >= 1024 ? (kb / 1024).toFixed(2) + ' MB' : Math.round(kb) + ' KB';
+        const verdict =
+          q >= 95 ? 'excessive for the web — the extra bytes buy nothing you can see on a screen'
+          : q < 70 ? 'low enough that blocking and halo artefacts will show, and JPEG damage is permanent'
+          : 'a good balance of weight and quality';
+        const rows = [
+          { k: 'Uncompressed size at 8-bit RGB', ref: mp + ' MP × 3 bytes per pixel', v: rawBytes / (1024 * 1024), format: 'unit', unit: 'MB', decimals: 1 },
+          { k: 'Compression ratio at quality ' + q, ref: 'Calibrated on natural photographs', v: ratio, format: 'unit', unit: ': 1', decimals: 1, extra: true },
+          { k: 'Estimated file size', ref: 'Uncompressed ÷ ratio', v: kb, format: 'unit', unit: 'KB', decimals: 0, extra: true },
+          { k: 'The same image at quality 85', ref: 'The usual web baseline', v: kb85, format: 'unit', unit: 'KB', decimals: 0 },
+          { k: 'Difference against that baseline', ref: kb > kb85 ? 'You are paying this much extra' : 'You are saving this much', v: Math.abs(kb - kb85), format: 'unit', unit: 'KB', decimals: 0 },
+          { k: 'Roughly what WebP would weigh', ref: 'About 30% lighter at matched quality', v: kb * 0.7, format: 'unit', unit: 'KB', decimals: 0 },
+          { k: 'Load time on a 10 Mbps mobile link', ref: '1.25 MB/s before overhead', v: kb / 1024 / 1.25, format: 'unit', unit: 'seconds', decimals: 2 },
+        ];
+        return {
+          total: sizeStr,
+          sub:
+            mp + ' MP at quality ' + q + ' — ' + verdict + ' · ' + ratio.toFixed(0) + ':1 compression · ' +
+            'content matters as much as the setting: a clear sky halves this, dense foliage exceeds it',
+          rows: rows,
+          chart: [
+            { label: 'Bytes kept (KB)', value: Math.round(kb), tone: 'main' },
+            { label: 'Bytes discarded by compression (KB)', value: Math.round(rawBytes / 1024 - kb), tone: 'good' },
+          ],
+        };
+      }
+
+      // ppi
+      const w = Math.max(1, v.pxWide || 1);
+      const h = Math.max(1, v.pxHigh || 1);
+      const diag = Math.max(0.1, v.diagonal || 0.1);
+      const pxDiag = Math.sqrt(w * w + h * h);
+      const ppi = pxDiag / diag;
+      const pixelMm = MM_PER_INCH / ppi;
+      const retinaDist = ARCMIN_CONST / ppi;
+      const verdict =
+        ppi >= PPI_RETINA ? 'Retina density — pixels are not resolvable at a normal handheld distance'
+        : ppi >= PPI_NEAR ? 'near Retina — sharp, though pixels may show up very close'
+        : 'low density — you will make out individual pixels from close range';
+      const rows = [
+        { k: 'Diagonal in pixels', ref: '√(width² + height²)', v: pxDiag, format: 'plain' },
+        { k: 'Pixel density', ref: 'Pixel diagonal ÷ inches', v: ppi, format: 'unit', unit: 'PPI', decimals: 1, extra: true },
+        { k: 'Size of one pixel', ref: '25.4 mm ÷ PPI (exact)', v: pixelMm, format: 'unit', unit: 'mm', decimals: 4 },
+        { k: 'Distance at which pixels disappear', ref: '1 arcminute acuity limit', v: retinaDist, format: 'unit', unit: 'in', decimals: 1, extra: true },
+        { k: 'Gap to the 300 PPI Retina threshold', ref: ppi >= PPI_RETINA ? 'Already past it' : 'Still short by this much', v: Math.abs(PPI_RETINA - ppi), format: 'unit', unit: 'PPI', decimals: 1 },
+        { k: 'Total pixels on the panel', ref: 'Width × height', v: (w * h) / 1e6, format: 'unit', unit: 'MP', decimals: 2 },
+        { k: 'Physical width of the screen', ref: 'Derived from the diagonal and aspect ratio', v: w / ppi, format: 'unit', unit: 'in', decimals: 1 },
+      ];
+      return {
+        total: ppi.toFixed(0) + ' PPI',
+        sub:
+          n0(w) + ' × ' + n0(h) + ' on a ' + diag + '-inch panel — ' + verdict + ' · ' +
+          'pixels stop being visible beyond about ' + retinaDist.toFixed(0) + ' inches · ' +
+          'density only means something against a viewing distance',
+        rows: rows,
+        chart: [
+          { label: 'Density you have (PPI)', value: Math.round(ppi), tone: ppi >= PPI_RETINA ? 'good' : 'main' },
+          { label: 'Gap to the 300 PPI threshold', value: Math.round(Math.max(0, PPI_RETINA - ppi)), tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

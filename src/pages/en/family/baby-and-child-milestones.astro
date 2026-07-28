@@ -1,0 +1,182 @@
+---
+/**
+ * Decision hub EN — "Is my child on track for their age?"
+ * Replaces 8 loose calculator URLs (see hub.replaces).
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, SLEEP, TEETH, SCREEN, RATIOS, TALKS, SHOE } from '../../../lib/hubs/en/baby-and-child-milestones';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ SLEEP, TEETH, SCREEN, RATIOS, TALKS, SHOE }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    function pick(list, months) {
+      for (const x of list) if (months <= x.maxMonths) return x;
+      return list[list.length - 1];
+    }
+
+    H.onCompute(function (v) {
+      const months = Math.max(0, Math.min(216, Math.round(v.months || 0)));
+      const years = months / 12;
+      const foot = Math.max(0, v.foot || 0);
+      const perYear = Math.max(0, v.allowancePerYear || 0);
+      const actual = Math.max(0, v.sleepActual || 0);
+
+      const sleep = pick(SLEEP, months);
+      const screen = pick(SCREEN, months);
+      const ratio = pick(RATIOS, months);
+      const mid = (sleep.min + sleep.max) / 2;
+
+      // Teeth: how many are typically in by this age (using the end of each window),
+      // and which set is next.
+      let teethIn = 0;
+      let next = null;
+      for (const t of TEETH) {
+        if (months >= t.to) teethIn = t.cumulative;
+        else if (!next) next = t;
+      }
+      let erupting = null;
+      for (const t of TEETH) if (months >= t.from && months < t.to) { erupting = t; break; }
+
+      // Next conversation that is due.
+      let talk = null;
+      for (const t of TALKS) if (months < t.months) { talk = t; break; }
+      let lastTalk = null;
+      for (const t of TALKS) if (months >= t.months) lastTalk = t;
+
+      const shoeSize = foot > 0 ? Math.max(0, foot * SHOE.slope - SHOE.offset) : 0;
+      const allowance = years >= 5 ? perYear * Math.floor(years) : 0;
+
+      const rows = [
+        { k: 'Age', ref: months + ' months', v: years, format: 'unit', unit: 'years', decimals: 1 },
+        { k: 'Sleep needed per 24 hours — lower end', ref: sleep.ref, v: sleep.min, format: 'unit', unit: 'hours', decimals: 0 },
+        { k: 'Sleep needed per 24 hours — upper end', ref: sleep.ref, v: sleep.max, format: 'unit', unit: 'hours', decimals: 0, extra: true },
+        { k: 'Naps typically still in the day', ref: 'Included in the total above', v: sleep.naps, format: 'plain' },
+      ];
+
+      if (actual > 0) {
+        const gap = mid - actual;
+        rows.push({
+          k: gap > 0 ? 'Hours short of the middle of the range' : 'Hours above the middle of the range',
+          ref: 'Midpoint for this age: ' + mid + ' h',
+          v: Math.abs(gap),
+          format: 'unit',
+          unit: 'hours',
+          decimals: 1,
+          extra: true,
+        });
+      }
+
+      rows.push({ k: 'Baby teeth typically in by now', ref: 'ADA eruption chart · 20 in the full set', v: teethIn, format: 'plain' });
+      rows.push({
+        k: erupting ? 'Coming in right now: ' + erupting.name : next ? 'Next set: ' + next.name : 'Full set of 20 complete',
+        ref: erupting
+          ? 'Window ' + erupting.from + '–' + erupting.to + ' months'
+          : next
+            ? 'Expected from ' + next.from + ' months'
+            : 'Usually done by 33 months',
+        v: erupting ? erupting.to - months : next ? next.from - months : 0,
+        format: 'unit',
+        unit: 'months to go',
+        decimals: 0,
+      });
+      rows.push({ k: 'Recommended screen time per day', ref: screen.ref, v: screen.minutes, format: 'unit', unit: 'minutes', decimals: 0 });
+      rows.push({ k: 'Children per adult in group care', ref: 'Caring for Our Children, 4th ed.', v: ratio.perAdult, format: 'plain' });
+      rows.push({ k: 'Maximum group size', ref: 'Caring for Our Children, 4th ed.', v: ratio.group, format: 'plain' });
+
+      if (shoeSize > 0) {
+        rows.push({ k: 'Approximate US children’s shoe size', ref: 'Foot length ' + foot.toFixed(1) + ' in, measured standing', v: shoeSize, format: 'unit', unit: 'US size', decimals: 1 });
+        rows.push({ k: 'Foot length to buy for, with growth room', ref: 'Add ' + SHOE.growthRoomInches + ' in', v: foot + SHOE.growthRoomInches, format: 'unit', unit: 'inches', decimals: 1 });
+      }
+
+      rows.push({
+        k: allowance > 0 ? 'Weekly allowance at the convention you set' : 'Allowance usually starts around age 5',
+        ref: '$' + perYear.toFixed(2) + ' per year of age per week — no official guidance',
+        v: allowance,
+        format: 'unit',
+        unit: 'USD per week',
+        decimals: 2,
+      });
+      if (allowance > 0) {
+        rows.push({ k: 'That allowance over a year', ref: '52 weeks', v: allowance * 52, format: 'unit', unit: 'USD', decimals: 0 });
+      }
+      rows.push({
+        k: talk ? 'Next conversation due: ' + talk.topic : 'All the listed conversations are due by now',
+        ref: talk ? 'Around ' + (talk.months / 12).toFixed(0) + ' years old' : lastTalk ? 'Last one: ' + lastTalk.topic : '—',
+        v: talk ? Math.max(0, talk.months - months) : 0,
+        format: 'unit',
+        unit: 'months away',
+        decimals: 0,
+      });
+
+      const stage =
+        months < 12 ? 'baby' : months < 36 ? 'toddler' : months < 72 ? 'preschooler' : months < 156 ? 'school age' : 'teenager';
+      const pos = Math.min(100, Math.max(0, (months / 216) * 100));
+
+      return {
+        total: sleep.min + '–' + sleep.max + ' hours',
+        sub:
+          'At ' + months + ' months your child is a ' + stage + ' · ' + teethIn + ' of 20 baby teeth typically in · ' +
+          (screen.minutes === 0 ? 'no screens beyond video chat' : screen.minutes + ' min of screen time a day') +
+          ' · 1 adult per ' + ratio.perAdult + ' children in group care' +
+          (actual > 0 ? ' · you reported ' + actual + ' h, midpoint is ' + mid + ' h' : ''),
+        rows: rows,
+        format: 'plain',
+        position: pos,
+        positionLabel: months + ' months — ' + stage,
+        chart: [
+          { label: 'Baby (0–12 m)', value: 12, from: 0, to: 12, tone: 'good' },
+          { label: 'Toddler (1–3 y)', value: 36, from: 12, to: 36, tone: 'prop' },
+          { label: 'Preschool (3–6 y)', value: 72, from: 36, to: 72, tone: 'main' },
+          { label: 'School age (6–13 y)', value: 156, from: 72, to: 156, tone: 'prop' },
+          { label: 'Teen (13–18 y)', value: 216, from: 156, to: 216, tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

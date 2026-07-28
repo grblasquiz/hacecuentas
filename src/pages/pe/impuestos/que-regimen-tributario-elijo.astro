@@ -1,0 +1,208 @@
+---
+/**
+ * Hub de decisión PE — "¿Qué régimen tributario me conviene?"
+ * Corre NRUS, RER, RMT y Régimen General con las mismas cifras y los compara,
+ * más el costo de constituir la empresa.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UIT,
+  IGV,
+  NRUS,
+  RER,
+  RMT,
+  GENERAL,
+  CONSTITUCION,
+} from '../../../lib/hubs/pe/que-regimen-tributario-elijo';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PE"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ UIT, IGV, NRUS, RER, RMT, GENERAL, CONSTITUCION }}>
+  (function () {
+    const H = window.HC_HUB;
+    const nf = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
+    const sol = (n) => 'S/ ' + nf.format(Math.round(n || 0));
+    const MONEY = { format: 'unit', unit: 'soles' };
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'nrus';
+      const ingresosMes = Math.max(0, v.ingresosMes || 0);
+      const comprasMes = Math.max(0, v.comprasMes || 0);
+      const margen = Math.min(1, Math.max(0, (v.margen || 0) / 100));
+      const trabajadores = Math.max(0, Math.round(v.trabajadores || 0));
+
+      const ingresosAnio = ingresosMes * 12;
+      const comprasAnio = comprasMes * 12;
+      const utilidadAnio = ingresosAnio * margen;
+
+      // IGV neto anual: débito de las ventas menos crédito de las compras.
+      // No aplica al NRUS, donde la cuota fija reemplaza al IGV.
+      const igvNetoAnio = Math.max(0, (ingresosAnio - comprasAnio) * IGV);
+
+      // ---- NRUS ----
+      const mayor = Math.max(ingresosMes, comprasMes);
+      const nrusCat = mayor <= NRUS.cat1.tope ? 1 : mayor <= NRUS.cat2.tope ? 2 : 0;
+      const nrusCuota = nrusCat === 1 ? NRUS.cat1.cuota : nrusCat === 2 ? NRUS.cat2.cuota : 0;
+      const nrusApto = nrusCat > 0 && ingresosAnio <= NRUS.topeAnual;
+      const nrusTotal = nrusApto ? nrusCuota * 12 : NaN;
+
+      // ---- RER ----
+      const rerApto =
+        ingresosAnio <= RER.topeIngresosAnual &&
+        comprasAnio <= RER.topeComprasAnual &&
+        trabajadores <= RER.maxTrabajadores;
+      const rerRenta = ingresosAnio * RER.tasa;
+      const rerTotal = rerApto ? rerRenta + igvNetoAnio : NaN;
+
+      // ---- RMT ----
+      const rmtApto = ingresosAnio <= RMT.limiteIngresosUit * UIT;
+      const tramoRmt = RMT.tramoUit * UIT;
+      const rmtT1 = Math.min(utilidadAnio, tramoRmt) * RMT.tasaTramo1;
+      const rmtT2 = Math.max(0, utilidadAnio - tramoRmt) * RMT.tasaTramo2;
+      const rmtRenta = rmtT1 + rmtT2;
+      const rmtTotal = rmtApto ? rmtRenta + igvNetoAnio : NaN;
+      const rmtTasaCuenta = ingresosAnio > RMT.topePagoCuentaUit * UIT ? RMT.pagoCuentaExceso : RMT.pagoCuenta;
+
+      // ---- Régimen General ----
+      const rgRenta = utilidadAnio * GENERAL.tasa;
+      const rgTotal = rgRenta + igvNetoAnio;
+
+      // ---- Ganador entre los regímenes a los que el negocio puede acogerse ----
+      const opciones = [
+        { id: 'nrus', nombre: 'Nuevo RUS', total: nrusTotal, apto: nrusApto },
+        { id: 'rer', nombre: 'Régimen Especial', total: rerTotal, apto: rerApto },
+        { id: 'rmt', nombre: 'Régimen MYPE', total: rmtTotal, apto: rmtApto },
+        { id: 'general', nombre: 'Régimen General', total: rgTotal, apto: true },
+      ];
+      const elegibles = opciones.filter((o) => o.apto && isFinite(o.total));
+      const mejor = elegibles.slice().sort((a, b) => a.total - b.total)[0] || opciones[3];
+      const elegido = opciones.find((o) => o.id === id) || opciones[3];
+
+      const rows = [];
+
+      // ---- Detalle del régimen elegido ----
+      if (id === 'nrus') {
+        rows.push({ k: 'Monto que define tu categoría', ref: 'El mayor entre ingresos y compras del mes', v: mayor });
+        rows.push({ k: nrusApto ? 'Categoría del Nuevo RUS' : 'Fuera del Nuevo RUS', ref: nrusApto ? 'Categoría ' + nrusCat : 'Supera ' + sol(NRUS.cat2.tope) + ' al mes o ' + sol(NRUS.topeAnual) + ' al año', v: nrusCat, format: 'plain' });
+        rows.push({ k: 'Cuota mensual', ref: nrusApto ? 'Reemplaza al IGV y al Impuesto a la Renta' : 'No aplica', v: nrusCuota });
+        rows.push({ k: 'Cuota anual', ref: '12 cuotas fijas', v: nrusApto ? nrusTotal : 0, extra: true });
+        rows.push({ k: 'IGV a pagar', ref: 'En el NRUS no hay IGV: la cuota lo reemplaza', v: 0 });
+      } else if (id === 'rer') {
+        rows.push({ k: 'Ingresos netos anuales', ref: 'Base del impuesto del RER', v: ingresosAnio });
+        rows.push({ k: 'Impuesto a la Renta del RER', ref: RER.tasa * 100 + '% de los ingresos netos · pago definitivo', v: rerRenta, extra: true });
+        rows.push({ k: 'IGV neto del año', ref: IGV * 100 + '% de ventas menos crédito de compras', v: igvNetoAnio });
+        rows.push({ k: 'Total anual a SUNAT', ref: 'Renta más IGV', v: rerRenta + igvNetoAnio, extra: true });
+        rows.push({ k: 'Margen hasta el tope de ingresos', ref: 'Tope de ' + sol(RER.topeIngresosAnual) + ' al año', v: Math.max(0, RER.topeIngresosAnual - ingresosAnio) });
+        rows.push({ k: 'Trabajadores declarados', ref: 'Máximo ' + RER.maxTrabajadores + ' por turno', v: trabajadores, format: 'plain' });
+        if (!rerApto) rows.push({ k: 'No cumples los requisitos del RER', ref: 'Revisá ingresos, compras y trabajadores', v: 0 });
+      } else if (id === 'rmt') {
+        rows.push({ k: 'Utilidad anual estimada', ref: (margen * 100).toFixed(0) + '% de margen sobre las ventas', v: utilidadAnio });
+        rows.push({ k: 'Impuesto del tramo del ' + RMT.tasaTramo1 * 100 + '%', ref: 'Primeras ' + RMT.tramoUit + ' UIT de renta neta (' + sol(tramoRmt) + ')', v: rmtT1 });
+        rows.push({ k: 'Impuesto del tramo del ' + (RMT.tasaTramo2 * 100).toString().replace('.', ',') + '%', ref: 'Exceso sobre ' + RMT.tramoUit + ' UIT', v: rmtT2 });
+        rows.push({ k: 'Impuesto a la Renta anual', ref: 'DL 1269 · escala del RMT', v: rmtRenta, extra: true });
+        rows.push({ k: 'Pago a cuenta mensual', ref: (rmtTasaCuenta * 100).toString().replace('.', ',') + '% de los ingresos del mes', v: ingresosMes * rmtTasaCuenta });
+        rows.push({ k: 'IGV neto del año', ref: IGV * 100 + '% de ventas menos crédito de compras', v: igvNetoAnio });
+        rows.push({ k: 'Total anual a SUNAT', ref: 'Renta más IGV', v: rmtRenta + igvNetoAnio, extra: true });
+        rows.push({ k: 'Ahorro del tramo reducido frente al General', ref: 'Beneficio propio del RMT', v: Math.max(0, rgRenta - rmtRenta) });
+      } else {
+        rows.push({ k: 'Utilidad anual estimada', ref: (margen * 100).toFixed(0) + '% de margen sobre las ventas', v: utilidadAnio });
+        rows.push({ k: 'Impuesto a la Renta anual', ref: (GENERAL.tasa * 100).toString().replace('.', ',') + '% sobre la renta neta · Art. 55 LIR', v: rgRenta, extra: true });
+        rows.push({ k: 'Pago a cuenta mensual', ref: (GENERAL.pagoCuentaMin * 100).toString().replace('.', ',') + '% o el coeficiente del año anterior, el mayor', v: ingresosMes * GENERAL.pagoCuentaMin });
+        rows.push({ k: 'IGV neto del año', ref: IGV * 100 + '% de ventas menos crédito de compras', v: igvNetoAnio });
+        rows.push({ k: 'Total anual a SUNAT', ref: 'Renta más IGV', v: rgTotal, extra: true });
+        rows.push({ k: 'Utilidad después del impuesto', ref: 'Lo que queda en la empresa', v: utilidadAnio - rgRenta });
+        rows.push({ k: 'Retención si distribuyes dividendos', ref: GENERAL.dividendos * 100 + '% sobre la utilidad distribuida', v: (utilidadAnio - rgRenta) * GENERAL.dividendos });
+      }
+
+      // ---- Comparación de los cuatro ----
+      for (const o of opciones) {
+        rows.push({
+          k: 'Total anual · ' + o.nombre,
+          ref: !o.apto ? 'No cumples los requisitos de este régimen' : o.id === mejor.id ? 'La opción más barata para tus cifras' : 'Renta más IGV neto',
+          v: isFinite(o.total) ? o.total : 0,
+          extra: o.id === mejor.id,
+        });
+      }
+
+      // ---- Costo de constituir la empresa ----
+      const capital = Math.max(0, v.capital || 0);
+      const digital = String(v.modalidad || 'notarial') === 'sacs';
+      const inscripcion = Math.ceil(capital / 1000) * CONSTITUCION.derechoPorMillarCapital;
+      const sunarp = CONSTITUCION.derechoCalificacion + inscripcion + CONSTITUCION.derechoNombramiento + CONSTITUCION.reservaNombre;
+      const honorarios = digital
+        ? CONSTITUCION.actoSacsDigital
+        : CONSTITUCION.minuta.prom + CONSTITUCION.escritura.prom;
+      const constitucion = sunarp + honorarios + CONSTITUCION.libros.prom;
+      const constMin = sunarp + (digital ? CONSTITUCION.actoSacsDigital : CONSTITUCION.minuta.min + CONSTITUCION.escritura.min) + CONSTITUCION.libros.min;
+      const constMax = sunarp + (digital ? CONSTITUCION.actoSacsDigital : CONSTITUCION.minuta.max + CONSTITUCION.escritura.max) + CONSTITUCION.libros.max;
+
+      rows.push({ k: 'Derechos registrales de Sunarp', ref: 'Calificación, inscripción por capital, nombramiento y reserva de nombre', v: sunarp, decimals: 2 });
+      rows.push({ k: digital ? 'Acto constitutivo digital' : 'Minuta y escritura pública', ref: digital ? 'SACS 100% digital · sin notaría' : 'Honorarios de mercado en Lima · referenciales', v: honorarios, decimals: 2 });
+      rows.push({ k: 'Costo de constituir la empresa (una sola vez)', ref: 'Rango de mercado ' + sol(constMin) + ' a ' + sol(constMax) + ' · el RUC es gratuito', v: constitucion, decimals: 2 });
+
+      const totalElegido = isFinite(elegido.total) ? elegido.total : rgTotal;
+
+      return {
+        total: sol(totalElegido),
+        sub:
+          (elegido.apto
+            ? 'Con tus cifras, ' + elegido.nombre + ' te cuesta ' + sol(totalElegido) + ' al año'
+            : 'Tu negocio no cumple los requisitos de ' + elegido.nombre) +
+          ' · la opción más barata a la que puedes acogerte es ' + mejor.nombre + ' con ' + sol(mejor.total) +
+          (mejor.id !== elegido.id && elegido.apto ? ' (ahorras ' + sol(totalElegido - mejor.total) + ')' : ''),
+        rows: rows,
+        format: MONEY.format,
+        unit: MONEY.unit,
+        chart: opciones.map((o) => ({
+          label: o.nombre + (o.apto ? '' : ' (no calificas)'),
+          value: o.apto && isFinite(o.total) ? Math.max(0, Math.round(o.total)) : 0,
+          tone: o.id === mejor.id ? 'good' : o.id === elegido.id ? 'main' : 'warn',
+        })),
+      };
+    });
+  })();
+</script>

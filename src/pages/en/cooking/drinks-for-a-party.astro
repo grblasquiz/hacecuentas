@@ -1,0 +1,200 @@
+---
+/**
+ * Hub de decisión EN (US) — "How much booze/soda do I buy?"
+ * Absorbe 3 calculadoras de bebidas para evento del mercado inglés.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, RATE, DPPH, MIX, UNITS, HIGH_BUFFER, MOVIE } from '../../../lib/hubs/en/drinks-for-a-party';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ RATE, DPPH, MIX, UNITS, HIGH_BUFFER, MOVIE }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const r0 = (x) => Math.round(x);
+    const r1 = (x) => Math.round(x * 10) / 10;
+    const d1 = (x) => (Math.round(x * 10) / 10).toFixed(1);
+    /** Dólares con formato en-US: el runtime formatea en es-AR, así que el total va a mano. */
+    const usd = (n) => '$' + Math.round(n || 0).toLocaleString('en-US');
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'wedding';
+
+      const guests = Math.max(0, Math.round(v.guests || 0));
+      const nonDrinkers = Math.max(0, Math.round(v.nonDrinkers || 0));
+      const hours = Math.max(1, Math.round(v.hours || 1));
+      const winePrice = Math.max(0, v.winePrice || 0);
+      const beerPrice = Math.max(0, v.beerPrice || 0);
+      const spiritsPrice = Math.max(0, v.spiritsPrice || 0);
+      const sodaPrice = Math.max(0, v.sodaPrice || 0);
+      const runtime = Math.max(1, v.runtimeMin || 120);
+
+      const rows = [];
+      let total = '';
+      let sub = '';
+      let chart = [];
+
+      if (id === 'movie') {
+        // Noche de película: sin alcohol. Todos los presentes cuentan.
+        const people = guests + nonDrinkers;
+        const m = MOVIE.intensity.normal;
+        const popcornL = people * (runtime / 120) * MOVIE.popcornLPer2h * m;
+        const drinkL = people * (runtime / 120) * MOVIE.drinkLPer2h * m;
+        const cans = Math.ceil(drinkL / MOVIE.lPerSodaCan);
+        const packs = Math.ceil(cans / UNITS.cansPerSodaPack);
+        const chipBags = Math.max(1, Math.ceil(people / 2));
+        // 1 L de pochoclo reventado sale de ~10 g de granos.
+        const kernelsG = popcornL * 10;
+        const sodaCost = packs * sodaPrice;
+
+        total = r1(popcornL) + ' L of popcorn';
+        sub =
+          people + ' people · ' + r0(runtime) + '-minute film · ' + d1(drinkL) + ' L of drinks (' +
+          packs + (packs === 1 ? ' 12-pack' : ' 12-packs') + ') · ' + chipBags +
+          (chipBags === 1 ? ' bag of chips' : ' bags of chips');
+
+        rows.push({ k: 'Popped popcorn to make', ref: '2 L per person per 2 hours of runtime', v: r1(popcornL), format: 'unit', unit: 'L', decimals: 1, extra: true });
+        rows.push({ k: 'Kernels that takes', ref: 'About 10 g of kernels per litre popped', v: r0(kernelsG), format: 'unit', unit: 'g' });
+        rows.push({ k: 'Drinks to have on hand', ref: '0.5 L per person per 2 hours', v: r1(drinkL), format: 'unit', unit: 'L', decimals: 1 });
+        rows.push({ k: '12 fl oz cans that is', ref: '355 mL each', v: cans, format: 'plain' });
+        rows.push({ k: '12-packs to buy', ref: 'Rounded up', v: packs, format: 'plain' });
+        rows.push({ k: 'Bags of chips or nachos', ref: 'One per two people', v: chipBags, format: 'plain' });
+        rows.push({ k: 'Individual sweets or chocolate bars', ref: 'One per person', v: people, format: 'plain' });
+        rows.push({ k: 'Second snack round at the midpoint', ref: 'Only for films over 150 minutes', v: runtime > 150 ? 1 : 0, format: 'plain' });
+        rows.push({ k: 'What the drinks cost you', ref: 'At your 12-pack price', v: r0(sodaCost), format: 'unit', unit: 'USD' });
+
+        chart = [
+          { label: 'Popcorn volume (L)', value: r1(popcornL), tone: 'main' },
+          { label: 'Drink volume (L)', value: r1(drinkL), tone: 'good' },
+        ];
+
+        return { total: total, sub: sub, rows: rows, chart: chart };
+      }
+
+      // --- Casos con alcohol: modelo de catering US con multiplicador de formato.
+      const mult = RATE.multiplier[id] != null ? RATE.multiplier[id] : 1;
+      const firstBlock = Math.min(hours, RATE.firstBlockHours);
+      const rest = Math.max(0, hours - RATE.firstBlockHours);
+      const rawDrinks = guests * RATE.first * firstBlock + guests * RATE.after * rest;
+      const drinks = Math.round(rawDrinks * mult);
+
+      // Modelo alternativo DPPH, como cota superior de contraste.
+      const dpphDrinks = Math.ceil(guests * (DPPH.firstHour + DPPH.perHour * (hours - 1)) * DPPH.buffer);
+
+      const share = id === 'casual' ? MIX.casual : MIX.alcohol;
+      const wineShare = share.wine;
+      const beerShare = share.beer;
+      const spiritShare = id === 'casual' ? 0 : MIX.alcohol.spirits;
+      const sodaShareOfBar = id === 'casual' ? MIX.casual.soda : 0;
+
+      const wineDrinks = drinks * wineShare;
+      const beerDrinks = drinks * beerShare;
+      const spiritDrinks = drinks * spiritShare;
+
+      const wineBottles = Math.ceil(wineDrinks / UNITS.glassesPerWineBottle);
+      const beers = Math.ceil(beerDrinks);
+      const sixPacks = Math.ceil(beers / UNITS.beersPerSixPack);
+      const cases = Math.ceil(beers / UNITS.beersPerCase);
+      const spiritLiters = spiritDrinks * UNITS.lPerSpiritDrink;
+      const spiritBottles = Math.ceil((spiritLiters * 1000) / UNITS.mlPerSpiritBottle);
+
+      // Bebidas sin alcohol: una por persona y por hora para todo el mundo, más
+      // la parte del bar que en un evento casual ya es gaseosa.
+      const softServings = Math.ceil((guests + nonDrinkers) * hours * 0.6 + drinks * sodaShareOfBar);
+      const sodaPacks = Math.ceil(softServings / UNITS.cansPerSodaPack);
+
+      const wineCost = wineBottles * winePrice;
+      const beerCost = sixPacks * beerPrice;
+      const spiritsCost = spiritBottles * spiritsPrice;
+      const sodaCost = sodaPacks * sodaPrice;
+      const costLow = wineCost + beerCost + spiritsCost + sodaCost;
+      const costHigh = costLow * HIGH_BUFFER;
+
+      const perGuest = guests > 0 ? drinks / guests : 0;
+
+      total = drinks + (drinks === 1 ? ' drink' : ' drinks');
+      sub =
+        guests + ' drinking-age guests over ' + hours + ' hours · ' + d1(perGuest) +
+        ' drinks each · ' + usd(costLow) + '–' + usd(costHigh) + ' at your prices, mixers and ice not included';
+
+      rows.push({ k: 'Alcoholic drinks to plan for', ref: '1/guest/hr for 2 hrs, then 0.5 · ×' + mult.toFixed(2) + ' format', v: drinks, format: 'plain', extra: true });
+      rows.push({ k: 'What the higher "2 then 1 per hour" model gives', ref: 'Upper bound, +15% buffer', v: dpphDrinks, format: 'plain' });
+      rows.push({ k: 'Drinks per guest across the whole event', ref: 'An average, not a per-person limit', v: r1(perGuest), format: 'unit', unit: 'drinks', decimals: 1 });
+      rows.push({ k: 'Glasses of wine', ref: r0(wineShare * 100) + '% of the bar · 5 fl oz pours', v: r0(wineDrinks), format: 'plain' });
+      rows.push({ k: 'Bottles of wine to buy', ref: '5 glasses per 750 mL bottle', v: wineBottles, format: 'plain', extra: true });
+      rows.push({ k: 'Beers', ref: r0(beerShare * 100) + '% of the bar · 12 fl oz each', v: beers, format: 'plain' });
+      rows.push({ k: 'Six-packs of beer', ref: cases + (cases === 1 ? ' case' : ' cases') + ' of 24', v: sixPacks, format: 'plain', extra: true });
+
+      if (spiritDrinks > 0) {
+        rows.push({ k: 'Spirit drinks', ref: r0(spiritShare * 100) + '% of the bar · 1.5 fl oz pours', v: r0(spiritDrinks), format: 'plain' });
+        rows.push({ k: 'Litres of spirits', ref: '44.4 mL per drink', v: r1(spiritLiters * 100) / 100, format: 'unit', unit: 'L', decimals: 2 });
+        rows.push({ k: '750 mL bottles of spirits', ref: 'About 17 drinks per bottle', v: spiritBottles, format: 'plain', extra: true });
+        rows.push({ k: 'Litres of mixer for those spirits', ref: '3 parts mixer to 1 part spirit', v: r1(spiritLiters * 3), format: 'unit', unit: 'L', decimals: 1 });
+      }
+
+      rows.push({ k: 'Soft drink and water servings', ref: 'Everyone present, drinkers included', v: softServings, format: 'plain' });
+      rows.push({ k: '12-packs of soda or mixer', ref: 'Twelve 12 fl oz cans each', v: sodaPacks, format: 'plain' });
+      rows.push({ k: 'Pounds of ice for the bar', ref: '1 lb per guest — double it if you chill bottles too', v: guests + nonDrinkers, format: 'unit', unit: 'lb' });
+      rows.push({ k: 'Pure alcohol this represents', ref: '14 g per standard drink (NIAAA)', v: r0((drinks * UNITS.gAlcoholPerStandardDrink) / 1000), format: 'unit', unit: 'kg' });
+      rows.push({ k: 'Wine spend', ref: wineBottles + ' bottles at your price', v: r0(wineCost), format: 'unit', unit: 'USD' });
+      rows.push({ k: 'Beer spend', ref: sixPacks + ' six-packs at your price', v: r0(beerCost), format: 'unit', unit: 'USD' });
+      rows.push({ k: 'Spirits spend', ref: spiritBottles + ' bottles at your price', v: r0(spiritsCost), format: 'unit', unit: 'USD' });
+      rows.push({ k: 'Soft drinks and mixers spend', ref: sodaPacks + ' packs at your price', v: r0(sodaCost), format: 'unit', unit: 'USD' });
+      rows.push({ k: 'Total, low estimate', ref: 'Alcohol and soft drinks only', v: r0(costLow), format: 'unit', unit: 'USD', extra: true });
+      rows.push({ k: 'Total with a 10% buffer', ref: 'Spillage, extra guests, heavier drinkers', v: r0(costHigh), format: 'unit', unit: 'USD', extra: true });
+
+      chart = [
+        { label: 'Wine', value: r0(wineCost), tone: 'main' },
+        { label: 'Beer', value: r0(beerCost), tone: 'good' },
+        { label: 'Spirits', value: r0(spiritsCost), tone: 'warn' },
+        { label: 'Soft drinks and mixers', value: r0(sodaCost), tone: 'bad' },
+      ];
+
+      return { total: total, sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

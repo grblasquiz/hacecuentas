@@ -1,0 +1,259 @@
+---
+/**
+ * Hub de decisión MX — presupuesto, bebida y comida para la fiesta.
+ * audience="MX" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, FIESTA_MX, BEBIDAS_MX, CARNE_MX } from '../../../lib/hubs/mx/organizar-una-fiesta';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="MX"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ F: FIESTA_MX, B: BEBIDAS_MX, K: CARNE_MX }}>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+    const num = (v, d) => {
+      if (v === '' || v === null || v === undefined) return d;
+      const n = Number(String(v).replace(/[^0-9.,-]/g, '').replace(/\.(?=\d{3}\b)/g, '').replace(',', '.'));
+      return Number.isFinite(n) ? n : d;
+    };
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'presupuesto';
+
+      // ── Rama 2: litros de bebida ────────────────────────────────────────
+      if (id === 'bebidas') {
+        const personas = Math.max(1, Math.round(num(v.invitados, 1)));
+        const horas = Math.max(1, num(v.duracionHoras, 5));
+        const tipo = String(v.tipoBebida || 'mixto');
+        const temporada = String(v.temporadaBebida || 'intermedia');
+
+        const ft = B.temporada[temporada] !== undefined ? B.temporada[temporada] : 1;
+        const horasEfectivas = horas <= 4 ? horas : 4 + (horas - 4) * 0.7;
+        const totalAlcohol = personas * B.alcoholPorPersonaHora * ft * horasEfectivas;
+        const totalNoAlc = personas * B.noAlcoholPorPersonaHora * ft * horasEfectivas;
+
+        const mez = B.mezcla[tipo] || B.mezcla.mixto;
+        const litrosCerveza = totalAlcohol * mez.cerveza;
+        const litrosVino = totalAlcohol * mez.vino;
+        const litrosDestilado = totalAlcohol * mez.destilado;
+
+        const botellasVino = Math.ceil(litrosVino / B.litrosBotellaVino);
+        const litrosRefresco =
+          tipo === 'sin_alcohol'
+            ? Math.ceil(totalAlcohol + totalNoAlc)
+            : Math.ceil(totalNoAlc + litrosDestilado * B.refrescoPorLitroDestilado);
+        const litrosTotales = Math.ceil(litrosCerveza + litrosVino + litrosDestilado + litrosRefresco);
+        const porCabeza = litrosTotales / personas;
+
+        const cervezaInt = Math.round(litrosCerveza);
+        const vinoInt = Math.round(litrosVino);
+        const destInt = Math.round(litrosDestilado);
+        const refrescoInt = Math.max(0, litrosTotales - cervezaInt - vinoInt - destInt);
+
+        const segs = [];
+        if (cervezaInt > 0) segs.push({ label: 'Cerveza', value: cervezaInt, tone: 'main' });
+        if (vinoInt > 0) segs.push({ label: 'Vino', value: vinoInt, tone: 'prop' });
+        if (destInt > 0) segs.push({ label: 'Destilados', value: destInt, tone: 'warn' });
+        if (refrescoInt > 0) segs.push({ label: 'Refresco y agua', value: refrescoInt, tone: 'good' });
+
+        return {
+          total: litrosTotales.toLocaleString('es-MX') + ' L',
+          sub:
+            'Para ' + personas + ' personas durante ' + horas + ' horas necesitas alrededor de ' + litrosTotales +
+            ' litros en total, unos ' + porCabeza.toFixed(1).replace('.', ',') + ' litros por cabeza. Compra un 10% de más: ' +
+            'la bebida cerrada que sobra se guarda, la que falta a mitad de fiesta no se consigue.',
+          rows: [
+            { k: 'Litros totales a comprar', v: litrosTotales, format: 'unit', unit: 'L', extra: true },
+            { k: 'Cerveza', v: Math.ceil(litrosCerveza), format: 'unit', unit: 'L' },
+            { k: 'Vino', v: Math.ceil(litrosVino), format: 'unit', unit: 'L' },
+            { k: 'Botellas de vino equivalentes', v: botellasVino, format: 'unit', unit: 'botellas' },
+            { k: 'Destilados', v: Math.ceil(litrosDestilado), format: 'unit', unit: 'L' },
+            { k: 'Refresco y agua', v: litrosRefresco, format: 'unit', unit: 'L' },
+            { k: 'Litros por persona', v: Math.round(porCabeza * 10) / 10, format: 'unit', unit: 'L', decimals: 1 },
+            { k: 'Horas efectivas de consumo', v: Math.round(horasEfectivas * 10) / 10, format: 'unit', unit: 'h', decimals: 1 },
+            { k: 'Hielo recomendado', ref: '≈1 kg por persona', v: personas, format: 'unit', unit: 'kg' },
+          ],
+          chart: segs.length ? segs : [{ label: 'Sin bebida', value: 1, tone: 'prop' }],
+          format: 'unit',
+          unit: 'L',
+        };
+      }
+
+      // ── Rama 3: kilos de carne ──────────────────────────────────────────
+      if (id === 'carne') {
+        const adultos = Math.max(1, Math.round(num(v.adultos, 1)));
+        const menores = Math.max(0, Math.round(num(v.menores, 0)));
+        const evento = String(v.tipoEvento || 'almuerzo');
+        const hayEntrada = String(v.hayEntrada || 'no') === 'si';
+        const conVisceras = String(v.incluirVisceras || 'si') !== 'no';
+
+        let gramosPorAdulto = K.gramosPorAdulto[evento] !== undefined ? K.gramosPorAdulto[evento] : K.gramosPorAdulto.almuerzo;
+        if (hayEntrada) gramosPorAdulto -= K.descuentoEntrada;
+
+        const bruto = (adultos * gramosPorAdulto + menores * K.gramosPorMenor) / 1000;
+        const kgCarne = Math.ceil(bruto * 2) / 2;
+        const kgVisceras = conVisceras ? Math.ceil(adultos * K.viscerasPorAdulto * 2) / 2 : 0;
+        const chorizos = conVisceras ? adultos * K.chorizosPorAdulto + Math.ceil(menores * K.chorizosPorMenor) : 0;
+        const morongas = conVisceras ? Math.ceil(adultos * K.morongasPorAdulto) : 0;
+        const totalPersonas = adultos + menores;
+        const kgParrilla = kgCarne + kgVisceras;
+
+        const segs = [{ label: 'Carne', value: kgCarne, tone: 'main' }];
+        if (kgVisceras > 0) segs.push({ label: 'Vísceras', value: kgVisceras, tone: 'prop' });
+
+        return {
+          total: kgParrilla.toFixed(1).replace('.', ',') + ' kg',
+          sub:
+            'Para ' + totalPersonas + ' comensales compra ' + kgCarne + ' kg de carne' +
+            (conVisceras ? ' más ' + kgVisceras + ' kg de vísceras, ' + chorizos + ' chorizos y ' + morongas + ' morongas' : '') +
+            '. Está calculado a ' + gramosPorAdulto + ' gramos por adulto' + (hayEntrada ? ', ya ajustado por la botana previa' : '') + '.',
+          rows: [
+            { k: 'Peso total a la parrilla', v: kgParrilla, format: 'unit', unit: 'kg', decimals: 1, extra: true },
+            { k: 'Carne', v: kgCarne, format: 'unit', unit: 'kg', decimals: 1 },
+            { k: 'Vísceras', v: kgVisceras, format: 'unit', unit: 'kg', decimals: 1 },
+            { k: 'Chorizos', v: chorizos, format: 'unit', unit: 'piezas' },
+            { k: 'Morongas', v: morongas, format: 'unit', unit: 'piezas' },
+            { k: 'Gramos de carne por adulto', v: gramosPorAdulto, format: 'unit', unit: 'g' },
+            { k: 'Gramos de carne por menor', v: K.gramosPorMenor, format: 'unit', unit: 'g' },
+            { k: 'Comensales', v: totalPersonas, format: 'plain' },
+          ],
+          chart: segs,
+          format: 'unit',
+          unit: 'kg',
+          decimals: 1,
+        };
+      }
+
+      // ── Rama 4: dividir la cuenta con propina ───────────────────────────
+      if (id === 'cuenta') {
+        const total = Math.max(0, num(v.totalCuenta, 0));
+        const pct = Math.max(0, num(v.propinaPct, 10));
+        const personas = Math.max(1, Math.floor(num(v.invitados, 1)));
+        const modo = String(v.redondeo || 'no');
+        const paso = modo === 'no' || modo === '' ? 0 : Math.max(0, Number(modo) || 0);
+
+        const propinaTotal = Math.round((total * pct) / 100);
+        const totalConPropina = total + propinaTotal;
+        const bruto = totalConPropina / personas;
+        const porPersona = paso > 0 ? Math.ceil(bruto / paso) * paso : Math.ceil(bruto);
+        const recaudado = porPersona * personas;
+        const sobrante = Math.max(0, recaudado - totalConPropina);
+        const propinaPorPersona = Math.round((propinaTotal + sobrante) / personas);
+        const pctReal = total > 0 ? Math.round(((propinaTotal + sobrante) / total) * 1000) / 10 : 0;
+
+        const segs = [
+          { label: 'Cuenta', value: Math.round(total), tone: 'main' },
+          { label: 'Propina', value: propinaTotal, tone: 'good' },
+        ];
+        if (sobrante > 0) segs.push({ label: 'Redondeo', value: sobrante, tone: 'prop' });
+
+        return {
+          total: mxn(porPersona),
+          sub:
+            'Entre ' + personas + (personas === 1 ? ' persona' : ' personas') + ', cada quien pone ' + mxn(porPersona) +
+            ' con el ' + pct + '% de propina ya incluido. La propina total es ' + mxn(propinaTotal + sobrante) +
+            (sobrante > 0 ? ', incluidos ' + mxn(sobrante) + ' del redondeo' : '') + '.',
+          rows: [
+            { k: 'Pone cada persona', v: porPersona, extra: true },
+            { k: 'Cuenta del restaurante', v: total },
+            { k: 'Propina al ' + pct + '%', v: propinaTotal },
+            { k: 'Excedente del redondeo', v: sobrante },
+            { k: 'Propina efectiva total', v: propinaTotal + sobrante },
+            { k: 'Porcentaje real de propina', v: pctReal, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Total a juntar en la mesa', v: recaudado },
+            { k: 'Propina por cabeza', v: propinaPorPersona },
+          ],
+          chart: segs,
+        };
+      }
+
+      // ── Rama 1 (default): presupuesto de la fiesta ──────────────────────
+      const invitados = Math.max(1, Math.min(200, Math.round(num(v.invitados, 10))));
+      const menu = String(v.menu || 'pozoleAntojitos');
+      const barra = String(v.barra || 'conCerveza');
+      const conDulces = String(v.incluyeDulces || 'si') === 'si';
+      const deco = String(v.decoracion || 'basica');
+
+      const comidaPP = F.comida[menu] !== undefined ? F.comida[menu] : F.comida.pozoleAntojitos;
+      const bebidasPP = F.bebidas[barra] !== undefined ? F.bebidas[barra] : F.bebidas.conCerveza;
+      const dulcesPP = conDulces ? F.dulcesPorPersona : 0;
+      const decoTotal = F.decoracion[deco] !== undefined ? F.decoracion[deco] : F.decoracion.basica;
+
+      const comidaTotal = comidaPP * invitados;
+      const bebidasTotal = bebidasPP * invitados;
+      const dulcesTotal = dulcesPP * invitados;
+      const total = comidaTotal + bebidasTotal + dulcesTotal + decoTotal;
+      const porInvitado = total / invitados;
+
+      const segs = [
+        { label: 'Comida', value: comidaTotal, tone: 'main' },
+        { label: 'Bebidas', value: bebidasTotal, tone: 'warn' },
+      ];
+      if (dulcesTotal > 0) segs.push({ label: 'Dulces típicos', value: dulcesTotal, tone: 'good' });
+      if (decoTotal > 0) segs.push({ label: 'Decoración', value: decoTotal, tone: 'prop' });
+
+      return {
+        total: mxn(total),
+        sub:
+          'Para ' + invitados + (invitados === 1 ? ' invitado' : ' invitados') + ' con ' + (F.menuLabel[menu] || menu) +
+          ', presupuesta ' + mxn(total) + ', o sea ' + mxn(porInvitado) + ' por persona. Las bebidas se llevan ' +
+          Math.round((bebidasTotal / total) * 100) + '% del total: es la palanca más rápida si necesitas recortar.',
+        rows: [
+          { k: 'Presupuesto total de la fiesta', v: total, extra: true },
+          { k: 'Costo por invitado', v: porInvitado },
+          { k: 'Comida', v: comidaTotal },
+          { k: 'Bebidas', v: bebidasTotal },
+          { k: 'Dulces típicos y postre', v: dulcesTotal },
+          { k: 'Decoración', ref: 'costo fijo por fiesta', v: decoTotal },
+          { k: 'Mismo evento con la barra más económica', v: F.comida[menu] * invitados + F.bebidas.sinAlcohol * invitados + dulcesTotal + decoTotal },
+          { k: 'Mismo evento con taquiza y tequila', v: F.comida.taquiza * invitados + F.bebidas.conTequila * invitados + dulcesTotal + decoTotal },
+        ],
+        chart: segs,
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,154 @@
+---
+/**
+ * Hub de decisión MX — costo de pasaporte, licencia de conducir y credencial del INE.
+ * audience="MX" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, PASAPORTE_MX } from '../../../lib/hubs/mx/costo-de-mis-documentos';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="MX"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ P: PASAPORTE_MX }}>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+
+    /** Derechos base del pasaporte por vigencia (SRE, Ley Federal de Derechos). */
+    function derechosPasaporte(anios) {
+      if (anios === 3) return P.anios3;
+      if (anios === 6) return P.anios6;
+      return P.anios10;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'pasaporte';
+
+      // ── Caso 2: licencia de conducir (tarifa estatal) ──────────────────
+      if (id === 'licencia') {
+        const base = Math.max(0, v.costoLicencia || 0);
+        const examen = Math.max(0, v.costoExamen || 0);
+        const extra = Math.max(0, v.costoExtra || 0);
+        const anios = Math.max(1, Math.floor(v.vigenciaLicencia || 1));
+        const total = base + examen + extra;
+
+        return {
+          total: mxn(total),
+          sub:
+            'Con ' + anios + ' año' + (anios > 1 ? 's' : '') + ' de vigencia son ' + mxn(total / anios) +
+            ' por año. Los importes los fija tu estado, no la federación.',
+          rows: [
+            { k: 'Derechos de la licencia', v: base },
+            { k: 'Examen médico o teórico', v: examen },
+            { k: 'Otros gastos del trámite', v: extra },
+            { k: 'Costo total', v: total, extra: true },
+            { k: 'Años de vigencia', v: anios, format: 'unit', unit: 'años' },
+            { k: 'Costo por año de vigencia', v: total / anios },
+          ],
+          chart: [
+            { label: 'Derechos', value: base, tone: 'main' },
+            { label: 'Examen', value: examen, tone: 'prop' },
+            { label: 'Otros gastos', value: extra, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── Caso 3: credencial del INE ─────────────────────────────────────
+      if (id === 'ine') {
+        const extra = Math.max(0, v.costoExtra || 0);
+        return {
+          total: mxn(0),
+          sub:
+            'El trámite del INE no tiene costo en ninguna de sus modalidades: alta, renovación, reposición y corrección de datos. ' +
+            (extra > 0 ? 'Lo único que cargaste son ' + mxn(extra) + ' de gastos indirectos.' : 'Si alguien te cobra por tramitarla o por conseguirte cita, es un fraude.'),
+          rows: [
+            { k: 'Costo del trámite del INE', v: 0, extra: true },
+            { k: 'Reposición por robo o extravío', v: 0 },
+            { k: 'Renovación por vencimiento', v: 0 },
+            { k: 'Gastos indirectos que cargaste', v: extra },
+          ],
+          chart: [
+            { label: 'Trámite del INE', value: 0, tone: 'good' },
+            { label: 'Gastos indirectos', value: extra, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── Caso 1: pasaporte ──────────────────────────────────────────────
+      const anios = Math.floor(Number(v.vigencia) || 10);
+      const base = derechosPasaporte(anios);
+      const conDescuento = String(v.descuento || 'no') === 'si';
+      const emergencia = String(v.emergencia || 'no') === 'si';
+
+      const descuento = conDescuento ? base * P.descuentoVulnerable : 0;
+      const subtotal = base - descuento;
+      const recargo = emergencia ? subtotal * P.recargoEmergencia : 0;
+      const total = subtotal + recargo;
+
+      return {
+        total: mxn(total),
+        sub:
+          'Pasaporte de ' + anios + ' años: ' + mxn(total / anios) + ' por año de vigencia.' +
+          (conDescuento ? ' Incluye el descuento acreditable ante la SRE.' : '') +
+          (emergencia ? ' Incluye el recargo del trámite de emergencia.' : ''),
+        rows: [
+          { k: 'Derechos del pasaporte de ' + anios + ' años', ref: 'Ley Federal de Derechos', v: base },
+          { k: 'Descuento aplicado', v: descuento },
+          { k: 'Recargo por trámite de emergencia', v: recargo },
+          { k: 'Total a pagar', v: total, extra: true },
+          { k: 'Costo por año de vigencia', v: total / anios },
+          { k: 'Costo por año del pasaporte de 3 años', v: P.anios3 / 3 },
+          { k: 'Costo por año del pasaporte de 6 años', v: P.anios6 / 6 },
+          { k: 'Costo por año del pasaporte de 10 años', v: P.anios10 / 10 },
+        ],
+        chart: [
+          { label: '3 años', value: P.anios3 / 3, tone: anios === 3 ? 'main' : 'prop' },
+          { label: '6 años', value: P.anios6 / 6, tone: anios === 6 ? 'main' : 'prop' },
+          { label: '10 años', value: P.anios10 / 10, tone: anios === 10 ? 'main' : 'prop' },
+        ],
+      };
+    });
+  })();
+</script>

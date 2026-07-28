@@ -1,0 +1,206 @@
+---
+/**
+ * Hub de decisión ES — nota de admisión y nota media. Reemplaza 2 calculadoras.
+ * Gráfico posicional: el compute devuelve position y positionLabel.
+ * Ninguna fila va en euros.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, ACCESO, MENCIONES } from '../../../lib/hubs/es/nota-de-admision';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/es' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="ES"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ A: ACCESO, M: MENCIONES }}>
+  (function () {
+    const H = window.HC_HUB;
+    const pts = (n) => (n || 0).toFixed(3).replace('.', ',');
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'admision';
+      const bach = Math.max(0, Math.min(10, v.bachillerato || 0));
+      const fase = Math.max(0, Math.min(10, v.faseObligatoria || 0));
+      const m1 = Math.max(0, Math.min(10, v.materia1 || 0));
+      const m2 = Math.max(0, Math.min(10, v.materia2 || 0));
+      const p1 = Number(v.peso1) || 0;
+      const p2 = Number(v.peso2) || 0;
+      const corte = Math.max(0, v.notaCorte || 0);
+      const sumaNC = Math.max(0, v.sumaNotaCreditos || 0);
+      const creditos = Math.max(1, v.creditos || 1);
+
+      const rows = [];
+      let principal = 0;
+      let posicion = 0;
+      let etiqueta = '';
+      let sub = '';
+
+      if (id === 'expediente') {
+        const media = sumaNC / creditos;
+        let mencion = M[M.length - 1];
+        for (const m of M) {
+          if (media >= m.desde) {
+            mencion = m;
+            break;
+          }
+        }
+        principal = media;
+        posicion = Math.max(0, Math.min(100, (media / 14) * 100));
+        etiqueta = pts(media) + ' sobre 10 · ' + mencion.nombre;
+
+        rows.push({ k: 'Suma de nota por créditos', ref: 'Σ (nota × créditos)', v: sumaNC, format: 'plain', decimals: 2 });
+        rows.push({ k: 'Créditos superados', ref: 'Total del expediente', v: creditos, format: 'unit', unit: 'créditos' });
+        rows.push({ k: 'Nota media del expediente', ref: 'Media ponderada por créditos', v: media, format: 'unit', unit: 'puntos', decimals: 3, extra: true });
+        rows.push({ k: 'Equivalencia en la escala 0 a 4', ref: mencion.nombre, v: mencion.escala4, format: 'unit', unit: 'puntos', decimals: 0 });
+        rows.push({
+          k: 'Puntos hasta el sobresaliente',
+          ref: media >= 9 ? 'Ya lo tienes' : 'Lo que te falta para llegar a 9',
+          v: Math.max(0, 9 - media),
+          format: 'unit',
+          unit: 'puntos',
+          decimals: 3,
+        });
+        sub =
+          'Tu media ponderada por créditos es ' +
+          pts(media) +
+          ' sobre 10 (' +
+          mencion.nombre.toLowerCase() +
+          '), equivalente a ' +
+          mencion.escala4 +
+          ' en la escala de 0 a 4 que piden muchas becas y másteres';
+      } else {
+        const acceso = bach * A.pesoBachillerato + fase * A.pesoFaseObligatoria;
+        const pond1 = m1 * p1;
+        const pond2 = m2 * p2;
+        const ponderacion = Math.min(pond1 + pond2, A.maxPuntosPonderacion);
+        const admision = Math.min(acceso + ponderacion, A.notaMaxima);
+        const apta = fase >= A.minimoFaseObligatoria && acceso >= A.minimoAcceso;
+        principal = admision;
+        posicion = Math.max(0, Math.min(100, (admision / A.notaMaxima) * 100));
+        etiqueta = pts(admision) + ' sobre 14';
+
+        rows.push({ k: 'Nota media de bachillerato', ref: 'Pesa el 60%', v: bach, format: 'unit', unit: 'puntos', decimals: 2 });
+        rows.push({ k: 'Fase obligatoria de la EvAU', ref: 'Pesa el 40%', v: fase, format: 'unit', unit: 'puntos', decimals: 2 });
+        rows.push({
+          k: 'Nota de acceso',
+          ref: '60% bachillerato + 40% fase obligatoria',
+          v: acceso,
+          format: 'unit',
+          unit: 'puntos',
+          decimals: 3,
+          extra: true,
+        });
+        rows.push({
+          k: 'Primera materia ponderada',
+          ref: pts(m1) + ' × ' + String(p1).replace('.', ','),
+          v: pond1,
+          format: 'unit',
+          unit: 'puntos',
+          decimals: 2,
+        });
+        rows.push({
+          k: 'Segunda materia ponderada',
+          ref: pts(m2) + ' × ' + String(p2).replace('.', ','),
+          v: pond2,
+          format: 'unit',
+          unit: 'puntos',
+          decimals: 2,
+        });
+        rows.push({
+          k: 'Puntos de ponderación',
+          ref: 'Máximo ' + A.maxPuntosPonderacion + ' puntos',
+          v: ponderacion,
+          format: 'unit',
+          unit: 'puntos',
+          decimals: 2,
+        });
+        rows.push({ k: 'Nota de admisión', ref: 'Sobre ' + A.notaMaxima, v: admision, format: 'unit', unit: 'puntos', decimals: 3, extra: true });
+        rows.push({ k: 'Nota de corte de tu grado', ref: 'Del último llamamiento', v: corte, format: 'unit', unit: 'puntos', decimals: 2 });
+        rows.push({
+          k: admision >= corte ? 'Margen sobre la nota de corte' : 'Puntos que te faltan',
+          ref: admision >= corte ? 'Entrarías con estos datos' : 'Con la corte del año anterior',
+          v: Math.abs(admision - corte),
+          format: 'unit',
+          unit: 'puntos',
+          decimals: 3,
+        });
+        rows.push({
+          k: '¿Superas la EvAU?',
+          ref: apta ? 'Sí: mínimo 4 en la fase y 5 de acceso' : 'No con estos datos',
+          v: apta ? 1 : 0,
+          format: 'plain',
+        });
+
+        sub = apta
+          ? 'Tu nota de admisión es ' +
+            pts(admision) +
+            ' sobre 14 · ' +
+            (admision >= corte
+              ? 'estarías ' + pts(admision - corte) + ' puntos por encima de la nota de corte'
+              : 'te faltarían ' + pts(corte - admision) + ' puntos para la nota de corte')
+          : 'Con estos datos no superarías la EvAU: hace falta un mínimo de ' +
+            A.minimoFaseObligatoria +
+            ' en la fase obligatoria y un ' +
+            A.minimoAcceso +
+            ' de nota de acceso';
+      }
+
+      return {
+        total: pts(principal) + ' puntos',
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Menos de 5', value: 5, from: 0, to: 36, tone: 'bad' },
+          { label: '5 a 9', value: 9, from: 36, to: 64, tone: 'warn' },
+          { label: '9 a 12', value: 12, from: 64, to: 86, tone: 'good' },
+          { label: '12 a 14', value: 14, from: 86, to: 100, tone: 'good' },
+        ],
+        position: posicion,
+        positionLabel: etiqueta,
+        format: 'unit',
+        unit: 'puntos',
+        decimals: 2,
+      };
+    });
+  })();
+</script>

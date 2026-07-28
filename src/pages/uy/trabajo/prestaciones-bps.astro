@@ -1,0 +1,244 @@
+---
+/**
+ * Hub de decisión UY — "Prestaciones del BPS": seguro de paro, subsidio por
+ * enfermedad, asignación familiar contributiva y devolución FONASA.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  BPC,
+  FONASA,
+  FONASA_DEVOLUCION,
+  PARO,
+  ENFERMEDAD,
+  AFAM,
+} from '../../../lib/hubs/uy/prestaciones-bps';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="UY"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ BPC, FONASA, CPE: FONASA_DEVOLUCION, PARO, ENFERMEDAD, AFAM }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const uyu = (n) => '$U ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(Math.round(n || 0));
+    const num = (n, d) => new Intl.NumberFormat('de-DE', { maximumFractionDigits: d === undefined ? 1 : d }).format(n);
+
+    function tasaFonasa(nominal, conConyuge, conHijos) {
+      const t = nominal <= FONASA.umbralBpc * BPC ? FONASA.hasta25 : FONASA.mas25;
+      if (conConyuge && conHijos) return t.conConyugeEHijos;
+      if (conConyuge) return t.conConyuge;
+      if (conHijos) return t.conHijos;
+      return t.soloTrabajador;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'paro';
+      const base = Math.max(0, v.base || 0);
+      const hijos = Math.max(0, Math.round(v.hijos || 0));
+      const conHijos = hijos > 0;
+      const conConyuge = String(v.conyuge || 'no') === 'si';
+      const dias = Math.max(0, Math.round(v.dias || 0));
+      const internacion = String(v.internacion || 'no') === 'si';
+
+      const rows = [];
+      let total = 0;
+      let sub = '';
+      let chart = [];
+
+      if (id === 'paro') {
+        const tope = PARO.topeBpc * BPC;
+        const piso = PARO.minimoBpc * BPC;
+        const complemento = conConyuge || conHijos ? 1 + PARO.complementoFamilia : 1;
+        const meses = PARO.porcentajes.map((p) => {
+          if (base <= 0) return 0;
+          return Math.max(Math.min(base * p * complemento, tope), piso);
+        });
+        const acumulado = meses.reduce((a, b) => a + b, 0);
+        total = meses[0];
+
+        rows.push({ k: 'Promedio nominal de los últimos 6 meses', ref: 'Base del subsidio', v: base });
+        meses.forEach((m, idx) => {
+          rows.push({
+            k: 'Mes ' + (idx + 1) + ' de seguro de paro',
+            ref: Math.round(PARO.porcentajes[idx] * 100) + '% del promedio' + (complemento > 1 ? ' + complemento familiar' : '') +
+              (base * PARO.porcentajes[idx] * complemento > tope ? ' · tope aplicado' : ''),
+            v: m,
+            extra: idx === 0,
+          });
+        });
+        rows.push({ k: 'Total de los 6 meses', ref: 'Suma del período completo', v: acumulado, extra: true });
+        rows.push({ k: 'Tope mensual del subsidio', ref: PARO.topeBpc + ' BPC', v: tope });
+        rows.push({ k: 'Piso mensual del subsidio', ref: num(PARO.minimoBpc, 2) + ' BPC', v: piso });
+        rows.push({
+          k: 'Lo que dejás de cobrar el primer mes respecto del sueldo',
+          ref: 'Promedio − subsidio del mes 1',
+          v: Math.max(0, base - meses[0]),
+        });
+
+        sub = 'Primer mes ' + uyu(meses[0]) + ' · sexto mes ' + uyu(meses[5]) +
+          ' · en 6 meses acumulás ' + uyu(acumulado) +
+          (complemento > 1 ? ' (incluye complemento por familia a cargo)' : '');
+        chart = meses.map((m, idx) => ({ label: 'Mes ' + (idx + 1), value: Math.round(m), tone: idx === 0 ? 'main' : 'prop' }));
+      } else if (id === 'enfermedad') {
+        const sinTope = base * ENFERMEDAD.porcentaje;
+        const mensual = Math.min(sinTope, ENFERMEDAD.topeMensual);
+        const diario = mensual / 30;
+        const carencia = internacion ? 0 : ENFERMEDAD.carenciaDias;
+        const diasPagos = Math.max(0, dias - carencia);
+        const periodo = diario * diasPagos;
+        total = periodo;
+
+        rows.push({ k: 'Promedio nominal de los últimos 180 días', ref: 'Base del subsidio', v: base });
+        rows.push({ k: 'Subsidio teórico', ref: Math.round(ENFERMEDAD.porcentaje * 100) + '% del promedio', v: sinTope });
+        rows.push({
+          k: 'Subsidio mensual reconocido',
+          ref: sinTope > ENFERMEDAD.topeMensual ? 'Limitado al tope BPS' : 'Sin tope aplicado',
+          v: mensual,
+        });
+        rows.push({ k: 'Subsidio por día', ref: 'Mensual ÷ 30', v: diario });
+        rows.push({
+          k: 'Días de certificado que se pagan',
+          ref: internacion ? 'Con internación: sin carencia' : 'Menos ' + ENFERMEDAD.carenciaDias + ' días de carencia',
+          v: diasPagos,
+          format: 'unit',
+          unit: 'días',
+        });
+        rows.push({ k: 'Total del período certificado', ref: 'Diario × días pagos', v: periodo, extra: true });
+        rows.push({
+          k: 'Días no cubiertos por la carencia',
+          ref: internacion ? 'Ninguno: hubo internación' : 'Corren por tu cuenta',
+          v: Math.min(dias, carencia),
+          format: 'unit',
+          unit: 'días',
+        });
+        rows.push({ k: 'Lo que dejás de cobrar en el mes', ref: 'Promedio − subsidio mensual', v: Math.max(0, base - mensual) });
+
+        sub = 'Subsidio de ' + uyu(mensual) + ' por mes (' + uyu(diario) + ' por día) · se pagan ' + diasPagos +
+          ' de los ' + dias + ' días certificados' + (sinTope > ENFERMEDAD.topeMensual ? ' · tope BPS aplicado' : '');
+        chart = [
+          { label: 'Subsidio del período', value: Math.round(periodo), tone: 'main' },
+          { label: 'Días de carencia sin cobrar', value: Math.round(diario * Math.min(dias, carencia)), tone: 'bad' },
+          { label: 'Diferencia contra tu sueldo', value: Math.round(Math.max(0, base - mensual)), tone: 'warn' },
+        ];
+      } else if (id === 'afam') {
+        const extra = Math.max(0, hijos - 2) * AFAM.extraPorHijoBpc * BPC;
+        const limite1 = AFAM.limite1 + extra;
+        const limite2 = AFAM.limite2 + extra;
+        let porHijo = 0;
+        let tramo = 'Sin derecho: el ingreso supera el segundo límite';
+        if (hijos > 0 && base <= limite1) { porHijo = AFAM.montoTramo1; tramo = 'Tramo 1: monto completo'; }
+        else if (hijos > 0 && base <= limite2) { porHijo = AFAM.montoTramo2; tramo = 'Tramo 2: medio monto'; }
+        total = porHijo * hijos;
+
+        rows.push({ k: 'Ingreso mensual del hogar', ref: 'Base para el tramo', v: base });
+        rows.push({ k: 'Hijos menores a cargo', ref: 'Cantidad declarada', v: hijos, format: 'plain' });
+        rows.push({ k: 'Primer límite de ingreso', ref: hijos > 2 ? 'Ajustado por ' + (hijos - 2) + ' hijo/s adicional/es' : 'Hogar de hasta 2 hijos', v: limite1 });
+        rows.push({ k: 'Segundo límite de ingreso', ref: 'Por encima no corresponde la prestación', v: limite2 });
+        rows.push({ k: 'Monto por hijo', ref: tramo, v: porHijo });
+        rows.push({ k: 'Total mensual de asignación familiar', ref: 'Monto por hijo × hijos', v: total, extra: true });
+        rows.push({ k: 'Total anual', ref: '12 meses', v: total * 12 });
+        rows.push({
+          k: 'Margen hasta perder el monto completo',
+          ref: 'Primer límite − ingreso del hogar',
+          v: Math.max(0, limite1 - base),
+        });
+
+        sub = porHijo > 0
+          ? tramo + ' · ' + uyu(porHijo) + ' por hijo · ' + uyu(total) + ' por mes'
+          : 'Con ' + uyu(base) + ' de ingreso del hogar superás el límite de ' + uyu(limite2) + ': no corresponde la asignación contributiva';
+        chart = [
+          { label: 'Asignación que cobrás', value: Math.round(total), tone: 'main' },
+          { label: 'Lo que cobrarías con monto completo', value: Math.round(AFAM.montoTramo1 * hijos), tone: 'good' },
+        ];
+      } else {
+        // Devolución FONASA
+        const t = tasaFonasa(base, conConyuge, conHijos);
+        const aportesAnuales = base * t * CPE.mesesAnio;
+        const beneficiarios = 1 + (conConyuge ? 1 : 0) + hijos;
+        const tope = CPE.cpeMensual * CPE.mesesAnio * CPE.factorTope * beneficiarios;
+        const devolucion = Math.max(0, aportesAnuales - tope);
+        total = devolucion;
+
+        rows.push({ k: 'Sueldo nominal mensual', ref: 'Base del aporte FONASA', v: base });
+        rows.push({
+          k: 'Tasa FONASA que se te aplica',
+          ref: (base > FONASA.umbralBpc * BPC ? 'Más de ' : 'Hasta ') + FONASA.umbralBpc + ' BPC' + (conConyuge ? ' · con cónyuge' : '') + (conHijos ? ' · con hijos' : ''),
+          v: t * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        rows.push({ k: 'Aportes FONASA del año', ref: 'Nominal × tasa × 12', v: aportesAnuales });
+        rows.push({
+          k: 'Beneficiarios que generan tope',
+          ref: 'Titular' + (conConyuge ? ' + cónyuge' : '') + (hijos > 0 ? ' + ' + hijos + ' hijo/s' : ''),
+          v: beneficiarios,
+          format: 'plain',
+        });
+        rows.push({ k: 'Costo Promedio Equivalente mensual', ref: 'Lo fija el Poder Ejecutivo por decreto', v: CPE.cpeMensual });
+        rows.push({ k: 'Tope anual de aportes de salud', ref: 'CPE × 12 × ' + CPE.factorTope.toLocaleString('de-DE') + ' × beneficiarios', v: tope });
+        rows.push({ k: 'Devolución FONASA estimada', ref: devolucion > 0 ? 'Excedente sobre el tope' : 'No superás el tope', v: devolucion, extra: true });
+        rows.push({
+          k: devolucion > 0 ? 'Cuánto pasaste el tope' : 'Cuánto te falta para llegar al tope',
+          ref: 'Aportes vs. tope anual',
+          v: Math.abs(aportesAnuales - tope),
+        });
+
+        sub = devolucion > 0
+          ? 'Te correspondería una devolución de ' + uyu(devolucion) + ' · aportaste ' + uyu(aportesAnuales) + ' contra un tope de ' + uyu(tope)
+          : 'No te corresponde devolución: aportaste ' + uyu(aportesAnuales) + ' y el tope de tu hogar es ' + uyu(tope);
+        chart = [
+          { label: 'Aportes que quedan dentro del tope', value: Math.round(Math.min(aportesAnuales, tope)), tone: 'main' },
+          { label: 'Excedente que se devuelve', value: Math.round(devolucion), tone: 'good' },
+        ];
+      }
+
+      return { total: uyu(total), sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

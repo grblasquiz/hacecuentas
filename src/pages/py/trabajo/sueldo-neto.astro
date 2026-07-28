@@ -1,0 +1,231 @@
+---
+/**
+ * Hub de decisión PY — "¿Cuánto cobrás en mano este mes?".
+ * El audience="PY" se pasa literal al Layout: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  SMVM,
+  JORNAL_MINIMO,
+  IPS,
+  DIVISORES,
+  RECARGOS,
+  BONIFICACION,
+  EMBARGO,
+} from '../../../lib/hubs/py/sueldo-neto';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PY"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ SMVM, JORNAL_MINIMO, IPS, DIVISORES, RECARGOS, BONIFICACION, EMBARGO }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const gs = (n) => 'Gs. ' + Math.round(n || 0).toLocaleString('de-DE');
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'mensualero';
+      const bruto = Math.max(0, v.bruto || 0);
+      const hijos = Math.max(0, Math.round(v.hijos || 0));
+      const hExtra = Math.max(0, v.horasExtra || 0);
+      const hExtraNoct = Math.max(0, v.horasExtraNoct || 0);
+      const hNoct = Math.max(0, v.horasNocturnas || 0);
+      const diasFeriado = Math.max(0, Math.round(v.diasFeriado || 0));
+      const diasFalta = Math.max(0, Math.round(v.diasFalta || 0));
+      const otros = Math.max(0, v.otros || 0);
+
+      // Divisores estándar de la liquidación paraguaya: 240 h/mes y 30 días/mes.
+      const valorHora = bruto / DIVISORES.horasMes;
+      const valorDia = bruto / DIVISORES.diasMes;
+
+      // Art. 234: recargos sobre la hora ordinaria.
+      const extraDiurna = hExtra * valorHora * (1 + RECARGOS.extraDiurna);
+      const extraNocturna = hExtraNoct * valorHora * (1 + RECARGOS.extraNocturna);
+      const recargoNoct = hNoct * valorHora * RECARGOS.nocturnoOrdinario;
+
+      // Mensualero: el feriado ya está en el sueldo → cobra el 100% adicional.
+      // Jornalero: cobra el día al 200%.
+      const feriado = id === 'jornalero'
+        ? diasFeriado * valorDia * (1 + RECARGOS.feriadoDomingo)
+        : diasFeriado * valorDia * RECARGOS.feriadoDomingo;
+
+      const descuentoFaltas = diasFalta * valorDia;
+
+      // Art. 261: 5% del SMVM por hijo, sólo si el bruto no supera 2 SMVM.
+      const bonif = bruto <= BONIFICACION.tope ? hijos * BONIFICACION.porHijo : 0;
+
+      // Base del aporte obrero: el bruto efectivamente devengado, ya sin las faltas.
+      const brutoDevengado = Math.max(0, bruto - descuentoFaltas);
+      const remunerativo = brutoDevengado + extraDiurna + extraNocturna + recargoNoct + feriado;
+      const aporteIps = remunerativo * IPS.obrero;
+      const aportePatronal = remunerativo * IPS.patronal;
+
+      const neto = Math.max(0, remunerativo - aporteIps + bonif - otros);
+
+      const pctEmbargo = id === 'embargado' ? EMBARGO.alimenticia : EMBARGO.otras;
+      const topeEmbargo = neto * pctEmbargo;
+
+      const rows = [
+        { k: 'Salario bruto del mes', ref: 'Antes de descuentos', v: bruto },
+        { k: 'Valor de tu hora ordinaria', ref: 'Bruto ÷ ' + DIVISORES.horasMes, v: valorHora },
+        { k: 'Valor de tu día', ref: 'Bruto ÷ ' + DIVISORES.diasMes, v: valorDia },
+      ];
+
+      if (diasFalta > 0) {
+        rows.push({
+          k: 'Descuento por ' + diasFalta + (diasFalta === 1 ? ' día no trabajado' : ' días no trabajados'),
+          ref: 'Falta sin goce de sueldo',
+          v: descuentoFaltas,
+        });
+      }
+      if (hExtra > 0) {
+        rows.push({
+          k: hExtra + ' hora(s) extra diurna(s)',
+          ref: '+' + (RECARGOS.extraDiurna * 100).toFixed(0) + '% · art. 234',
+          v: extraDiurna,
+        });
+      }
+      if (hExtraNoct > 0) {
+        rows.push({
+          k: hExtraNoct + ' hora(s) extra nocturna(s)',
+          ref: '+' + (RECARGOS.extraNocturna * 100).toFixed(0) + '% · art. 234',
+          v: extraNocturna,
+        });
+      }
+      if (hNoct > 0) {
+        rows.push({
+          k: 'Recargo nocturno por ' + hNoct + ' hora(s) ordinaria(s)',
+          ref: '+' + (RECARGOS.nocturnoOrdinario * 100).toFixed(0) + '% · art. 234',
+          v: recargoNoct,
+        });
+      }
+      if (diasFeriado > 0) {
+        rows.push({
+          k: diasFeriado + ' feriado(s) trabajado(s)',
+          ref: id === 'jornalero' ? 'Día al 200%' : '100% adicional sobre el sueldo',
+          v: feriado,
+        });
+      }
+
+      rows.push({ k: 'Total remunerativo del mes', ref: 'Base del aporte al IPS', v: remunerativo });
+      rows.push({
+        k: 'Aporte obrero al IPS (se descuenta)',
+        ref: (IPS.obrero * 100).toFixed(0) + '% · afiliación obligatoria',
+        v: aporteIps,
+      });
+      rows.push({
+        k: hijos > 0 && bonif > 0
+          ? 'Bonificación familiar por ' + hijos + (hijos === 1 ? ' hijo' : ' hijos')
+          : 'Bonificación familiar',
+        ref: bruto > BONIFICACION.tope
+          ? 'Sin derecho: supera ' + BONIFICACION.topeSalarios + ' salarios mínimos'
+          : gs(BONIFICACION.porHijo) + ' por hijo · art. 261',
+        v: bonif,
+      });
+      if (otros > 0) {
+        rows.push({ k: 'Otros descuentos', ref: 'Anticipos, cuotas, embargos', v: otros });
+      }
+      rows.push({ k: 'Neto a cobrar', ref: 'Lo que entra a tu cuenta', v: neto, extra: true });
+      rows.push({
+        k: 'Aporte patronal que paga tu empleador aparte',
+        ref: (IPS.patronal * 100).toLocaleString('de-DE') + '% · no sale de tu bolsillo',
+        v: aportePatronal,
+      });
+      rows.push({
+        k: 'Costo total del puesto para la empresa',
+        ref: 'Remunerativo + patronal',
+        v: remunerativo + aportePatronal,
+      });
+      rows.push({
+        k: 'Máximo embargable de tu neto',
+        ref: (pctEmbargo * 100).toFixed(0) + '% · art. 245 (aguinaldo inembargable)',
+        v: topeEmbargo,
+      });
+      rows.push({
+        k: 'Tu bruto medido en salarios mínimos',
+        ref: 'SMVM ' + gs(SMVM),
+        v: SMVM > 0 ? bruto / SMVM : 0,
+        format: 'unit',
+        unit: 'SMVM',
+        decimals: 2,
+      });
+      rows.push({
+        k: 'Equivalente en jornales mínimos',
+        ref: 'Jornal mínimo ' + gs(JORNAL_MINIMO),
+        v: JORNAL_MINIMO > 0 ? bruto / JORNAL_MINIMO : 0,
+        format: 'unit',
+        unit: 'jornales',
+        decimals: 1,
+      });
+
+      const recargos = extraDiurna + extraNocturna + recargoNoct + feriado;
+      const pctDescuento = remunerativo > 0 ? (aporteIps / remunerativo) * 100 : 0;
+
+      const sub =
+        (bruto < SMVM
+          ? 'Tu bruto está por debajo del salario mínimo de ' + gs(SMVM)
+          : 'Tu bruto equivale a ' + (bruto / SMVM).toFixed(2).replace('.', ',') + ' salarios mínimos') +
+        ' · IPS ' + gs(aporteIps) + ' (' + pctDescuento.toFixed(0) + '%)' +
+        (recargos > 0 ? ' · recargos ' + gs(recargos) : '') +
+        (bonif > 0 ? ' · bonificación ' + gs(bonif) : '') +
+        ' · te pueden embargar hasta ' + gs(topeEmbargo);
+
+      return {
+        total: gs(neto),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Neto que te llevás', value: Math.round(neto), tone: 'main' },
+          { label: 'Aporte obrero al IPS', value: Math.round(aporteIps), tone: 'warn' },
+          { label: 'Faltas y otros descuentos', value: Math.round(descuentoFaltas + otros), tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>

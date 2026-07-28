@@ -1,0 +1,283 @@
+---
+/**
+ * Hub de decisión CO — "¿Qué cuota voy a pagar y cuánto de eso es interés?"
+ *
+ * La conversión EA → mensual es (1+EA)^(1/12)−1 en TODAS las ramas.
+ * Cuatro de las fórmulas que este hub reemplaza dividían la EA entre 12.
+ *
+ * audience="CO" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  IBC_CONSUMO_EA_PCT,
+  USURA_EA_PCT,
+  INTERES_LEGAL_CIVIL_PCT,
+  NEQUI,
+  LIBRANZA_TOPE_PCT,
+} from '../../../lib/hubs/co/creditos-y-tarjetas';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    IBC: IBC_CONSUMO_EA_PCT,
+    USURA: USURA_EA_PCT,
+    LEGAL_CIVIL: INTERES_LEGAL_CIVIL_PCT,
+    NEQUI,
+    LIBRANZA_TOPE_PCT,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const cop = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
+
+    /** Conversión CORRECTA de efectiva anual a mensual. Nunca EA/12. */
+    function tem(eaPct) {
+      return Math.pow(1 + eaPct / 100, 1 / 12) - 1;
+    }
+
+    /** Cuota del sistema francés. */
+    function cuotaFrancesa(capital, i, n) {
+      if (capital <= 0 || n <= 0) return 0;
+      if (i <= 0) return capital / n;
+      const f = Math.pow(1 + i, n);
+      return (capital * i * f) / (f - 1);
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'tarjeta';
+      const monto = Math.max(0, v.monto || 0);
+      // 0 es legítimo en tasa, seguro, comisión y pago: nada de `|| default`.
+      const eaPct = Math.max(0, Number(v.tasa) || 0);
+      const meses = Math.max(1, Math.round(v.plazo || 1));
+      const seguro = Math.max(0, Number(v.seguro) || 0);
+      const comision = Math.max(0, Number(v.comision) || 0);
+      const pagoElegido = Math.max(0, Number(v.pago) || 0);
+      const ingreso = Math.max(0, Number(v.ingreso) || 0);
+
+      const i = tem(eaPct);
+      const temPct = i * 100;
+      // La división lineal, para mostrar de cuánto es el error.
+      const temMal = eaPct / 12;
+
+      const rows = [
+        { k: 'Capital del crédito', ref: 'Lo que te prestan', v: monto },
+        {
+          k: 'Tasa mensual equivalente',
+          ref: '(1 + ' + eaPct.toFixed(2).replace('.', ',') + '%)^(1/12) − 1',
+          v: temPct,
+          format: 'unit',
+          unit: '% mensual',
+          decimals: 3,
+        },
+        {
+          k: 'Lo que daría dividir la EA entre 12 (mal)',
+          ref: 'El error clásico: sobreestima la tasa mensual',
+          v: temMal,
+          format: 'unit',
+          unit: '% mensual',
+          decimals: 3,
+        },
+      ];
+
+      // ── Simulación ─────────────────────────────────────────────────────────
+      let cuotaCapitalInteres, mesesReales, interesesTotales, quedaSaldo = 0;
+      const cuotaTeorica = cuotaFrancesa(monto, i, meses);
+
+      const simularPagoFijo = pagoElegido > 0;
+      if (simularPagoFijo) {
+        // Pago fijo elegido por el usuario: ¿alcanza? ¿en cuánto tiempo?
+        let saldo = monto;
+        let acumInteres = 0;
+        let m = 0;
+        const TOPE = 600;
+        while (saldo > 1 && m < TOPE) {
+          const interesMes = saldo * i;
+          const abono = pagoElegido - interesMes;
+          if (abono <= 0) { m = TOPE; acumInteres += interesMes; break; }
+          acumInteres += interesMes;
+          saldo -= abono;
+          m++;
+        }
+        mesesReales = m;
+        interesesTotales = acumInteres;
+        quedaSaldo = Math.max(0, saldo);
+        cuotaCapitalInteres = pagoElegido;
+      } else {
+        mesesReales = meses;
+        cuotaCapitalInteres = cuotaTeorica;
+        interesesTotales = cuotaTeorica * meses - monto;
+      }
+
+      const cuotaTotal = cuotaCapitalInteres + seguro;
+      const segurosTotales = seguro * mesesReales;
+      const totalPagado = cuotaCapitalInteres * mesesReales + segurosTotales + comision;
+      const costoNoTasa = segurosTotales + comision;
+      const multiplicador = monto > 0 ? totalPagado / monto : 0;
+      const pctIngreso = ingreso > 0 ? (cuotaTotal / ingreso) * 100 : 0;
+
+      rows.push({
+        k: 'Cuota de capital e intereses',
+        ref: 'Sistema francés a ' + mesesReales + ' meses',
+        v: cuotaCapitalInteres,
+      });
+      if (seguro > 0) {
+        rows.push({ k: 'Seguro mensual (va por fuera de la tasa)', ref: 'Vida deudor, todo riesgo o cuota de manejo', v: seguro });
+      }
+      rows.push({ k: 'Cuota mensual TOTAL', ref: 'Lo que realmente sale de tu bolsillo cada mes', v: cuotaTotal, extra: true });
+
+      rows.push({ k: 'Intereses que vas a pagar', ref: 'Costo del dinero', v: interesesTotales });
+      if (costoNoTasa > 0) {
+        rows.push({ k: 'Seguros y comisiones del período', ref: 'Costo que la tasa NO muestra', v: costoNoTasa });
+      }
+      rows.push({ k: 'Total desembolsado hasta cancelar', ref: mesesReales + ' meses de cuotas', v: totalPagado, extra: true });
+      rows.push({
+        k: 'Por cada peso prestado terminás pagando',
+        ref: 'Total pagado ÷ capital',
+        v: multiplicador,
+        format: 'unit',
+        unit: 'veces',
+        decimals: 2,
+      });
+      rows.push({
+        k: 'Los intereses sobre el capital prestado',
+        ref: 'Cuánto de más pagás en porcentaje',
+        v: monto > 0 ? ((totalPagado - monto) / monto) * 100 : 0,
+        format: 'unit',
+        unit: '% de sobrecosto',
+        decimals: 1,
+      });
+
+      if (simularPagoFijo && quedaSaldo > 0) {
+        rows.push({
+          k: 'Saldo que AÚN deberías después de 50 años de pagos',
+          ref: 'Tu pago no alcanza a cubrir el interés del mes',
+          v: quedaSaldo,
+          extra: true,
+        });
+      }
+
+      // Comparación contra la cuota que se necesita para cancelar en el plazo.
+      if (simularPagoFijo) {
+        rows.push({
+          k: 'Cuota que necesitarías para cancelar en ' + meses + ' meses',
+          ref: 'La del sistema francés al plazo que pusiste',
+          v: cuotaTeorica,
+        });
+      }
+
+      // ── Techo legal ────────────────────────────────────────────────────────
+      const excedeUsura = eaPct > USURA;
+      rows.push({
+        k: excedeUsura ? 'Cuánto EXCEDE tu tasa el techo legal' : 'Margen que te queda hasta la tasa de usura',
+        ref: 'Usura ' + USURA.toFixed(2).replace('.', ',') + '% EA = 1,5 × interés bancario corriente',
+        v: Math.abs(eaPct - USURA),
+        format: 'unit',
+        unit: 'puntos EA',
+        decimals: 2,
+        extra: excedeUsura,
+      });
+      rows.push({
+        k: 'Interés de mora máximo que te pueden cobrar',
+        ref: 'Tope: la misma tasa de usura, sobre cuotas vencidas',
+        v: USURA,
+        format: 'unit',
+        unit: '% EA',
+        decimals: 2,
+      });
+
+      if (ingreso > 0) {
+        rows.push({
+          k: 'Qué parte de tu ingreso se va en la cuota',
+          ref: id === 'libranza' ? 'Tope legal de libranza: ' + LIBRANZA_TOPE_PCT + '%' : 'Referencia de prudencia: por debajo del 30%',
+          v: pctIngreso,
+          format: 'unit',
+          unit: '% del ingreso',
+          decimals: 1,
+        });
+      }
+
+      if (id === 'app') {
+        const eaSalvavidas = (Math.pow(1 + NEQUI.salvavidas.emPct / 100, 12) - 1) * 100;
+        rows.push({
+          k: 'A cuánto equivale el ' + NEQUI.salvavidas.emPct + '% mensual de un Salvavidas',
+          ref: '(1 + mensual)^12 − 1',
+          v: eaSalvavidas,
+          format: 'unit',
+          unit: '% EA',
+          decimals: 2,
+        });
+      }
+
+      // ── Resumen ────────────────────────────────────────────────────────────
+      let sub;
+      if (simularPagoFijo && quedaSaldo > 0) {
+        sub = 'Con ' + cop(pagoElegido) + ' al mes NUNCA cancelás esta deuda: el pago no cubre el interés. Necesitás al menos ' + cop(cuotaTeorica) + ' para saldarla en ' + meses + ' meses';
+      } else if (simularPagoFijo) {
+        sub = 'Con ' + cop(pagoElegido) + ' al mes tardás ' + mesesReales + ' meses (' + (mesesReales / 12).toFixed(1).replace('.', ',') + ' años) y pagás ' + cop(interesesTotales) + ' de intereses';
+      } else {
+        sub = 'Cuota total ' + cop(cuotaTotal) + ' durante ' + mesesReales + ' meses · pagás ' + cop(totalPagado) + ' por ' + cop(monto) + ' prestados';
+      }
+      sub += excedeUsura
+        ? ' · ⚠ tu tasa SUPERA la usura de ' + USURA.toFixed(2).replace('.', ',') + '% EA'
+        : ' · tasa mensual real ' + temPct.toFixed(3).replace('.', ',') + '%';
+      if (ingreso > 0) sub += ' · te come el ' + pctIngreso.toFixed(1).replace('.', ',') + '% del ingreso';
+
+      return {
+        total: cop(cuotaTotal),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Capital que te prestaron', value: Math.round(monto), tone: 'main' },
+          { label: 'Intereses', value: Math.max(0, Math.round(interesesTotales)), tone: 'bad' },
+          { label: 'Seguros y comisiones', value: Math.max(0, Math.round(costoNoTasa)), tone: 'warn' },
+        ].filter((s) => s.value > 0),
+      };
+    });
+  })();
+</script>

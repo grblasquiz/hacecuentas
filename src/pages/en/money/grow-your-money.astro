@@ -1,0 +1,220 @@
+---
+/**
+ * Decision hub EN — "How much will this money be worth, and how should I split it?"
+ * Replaces 22 loose calculator URLs (see hub.replaces).
+ *
+ * The growth engine mirrors src/lib/formulas/compound-interest-calculator.ts:
+ * balance = balance × (1 + r/n) + contributionPerPeriod, applied n times a year.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, FREQ, RULE, EMERGENCY_MONTHS } from '../../../lib/hubs/en/grow-your-money';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ FREQ, RULE, EM: EMERGENCY_MONTHS }}>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) => '$' + Math.round(n || 0).toLocaleString('en-US');
+
+    /**
+     * Same convention as the live compound-interest formula: interest first,
+     * then the period contribution (ordinary annuity).
+     */
+    function grow(principal, monthlyContribution, annualRatePct, years, n) {
+      const r = annualRatePct / 100;
+      const rPerPeriod = r / n;
+      const contribPerPeriod = monthlyContribution * (12 / n);
+      let balance = principal;
+      let contributed = principal;
+      for (let p = 0; p < n * years; p++) {
+        balance = balance * (1 + rPerPeriod) + contribPerPeriod;
+        contributed += contribPerPeriod;
+      }
+      return { balance: balance, contributed: contributed, interest: balance - contributed };
+    }
+
+    /** Textbook bond price and Macaulay/modified duration, annual coupons. */
+    function bond(face, couponPct, ytmPct, years) {
+      const c = (couponPct / 100) * face;
+      const y = ytmPct / 100;
+      const nPer = Math.max(1, Math.round(years));
+      let price = 0;
+      let weighted = 0;
+      for (let t = 1; t <= nPer; t++) {
+        const cf = t === nPer ? c + face : c;
+        const pv = cf / Math.pow(1 + y, t);
+        price += pv;
+        weighted += t * pv;
+      }
+      const macaulay = price > 0 ? weighted / price : 0;
+      return { price: price, macaulay: macaulay, modified: macaulay / (1 + y) };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'lump';
+      const principal = Math.max(0, v.principal || 0);
+      const contribution = Math.max(0, v.contribution || 0);
+      const rate = v.rate || 0;
+      const years = Math.max(1, Math.round(v.years || 1));
+      const n = FREQ[String(v.frequency)] || FREQ.monthly;
+      const inflation = Math.max(0, v.inflation || 0);
+      const fee = Math.max(0, v.fee || 0);
+
+      let total, sub, rows, chart;
+
+      if (id === 'lump' || id === 'monthly') {
+        const monthly = id === 'lump' ? 0 : contribution;
+        const gross = grow(principal, monthly, rate, years, n);
+        const net = grow(principal, monthly, rate - fee, years, n);
+        const feeCost = gross.balance - net.balance;
+        const realBalance = net.balance / Math.pow(1 + inflation / 100, years);
+        const realRate = ((1 + rate / 100) / (1 + inflation / 100) - 1) * 100;
+        const doubling = rate > 0 ? RULE.of72 / rate : 0;
+        const doublingExact = rate > 0 ? Math.log(2) / Math.log(1 + rate / 100) : 0;
+        const growthShare = net.balance > 0 ? (net.interest / net.balance) * 100 : 0;
+
+        rows = [
+          { k: 'Starting amount', ref: 'What you begin with', v: principal, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Total contributed over ' + years + ' years', ref: monthly > 0 ? usd(monthly) + ' a month' : 'No recurring contribution', v: net.contributed, format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'Ending balance before fees', ref: rate + '% compounded ' + String(v.frequency), v: gross.balance, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Ending balance after a ' + fee + '% annual fee', ref: 'The number you actually keep', v: net.balance, format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'What the fee cost you', ref: 'Fees compound against you the same way returns compound for you', v: feeCost, format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'Growth you never deposited', ref: 'Ending balance minus everything you put in', v: net.interest, format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'Share of the balance that is growth', ref: 'Over long horizons this passes 50%', v: growthShare, format: 'unit', unit: '%', decimals: 1 },
+          { k: 'Ending balance in today’s money', ref: 'Discounted at ' + inflation + '% inflation', v: realBalance, format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'Real return after inflation', ref: '(1 + nominal) ÷ (1 + inflation) − 1', v: realRate, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Years to double — Rule of 72', ref: '72 ÷ ' + rate, v: doubling, format: 'unit', unit: 'years', decimals: 1 },
+          { k: 'Years to double — exact', ref: 'ln 2 ÷ ln(1 + rate)', v: doublingExact, format: 'unit', unit: 'years', decimals: 1 },
+          { k: 'Simple return on what you put in', ref: 'ROI: gain ÷ cost', v: net.contributed > 0 ? (net.interest / net.contributed) * 100 : 0, format: 'unit', unit: '%', decimals: 1 },
+          { k: 'Present value of that ending balance', ref: 'NPV at the same discount rate as your return', v: net.balance / Math.pow(1 + rate / 100, years), format: 'unit', unit: 'USD', decimals: 0 },
+        ];
+        total = usd(net.balance);
+        sub =
+          usd(net.contributed) + ' in, ' + usd(net.interest) + ' of growth (' + growthShare.toFixed(0) + '% of the balance) · ' +
+          usd(realBalance) + ' in today’s money · doubles about every ' + doubling.toFixed(1) + ' years' +
+          (feeCost > 0 ? ' · the ' + fee + '% fee costs ' + usd(feeCost) : '');
+        chart = [
+          { label: 'Money you contributed', value: Math.round(net.contributed), tone: 'main' },
+          { label: 'Growth', value: Math.round(Math.max(0, net.interest)), tone: 'good' },
+          { label: 'Lost to fees', value: Math.round(feeCost), tone: 'warn' },
+        ];
+      } else if (id === 'cash') {
+        const expenses = Math.max(0, v.expenses || 0);
+        const saved = Math.max(0, v.savedNow || 0);
+        const assets = Math.max(0, v.assets || 0);
+        const debts = Math.max(0, v.debts || 0);
+        const covered = expenses > 0 ? saved / expenses : 0;
+        const target = EM.typical * expenses;
+        const gap = Math.max(0, target - saved);
+        const monthsToClose = contribution > 0 ? gap / contribution : 0;
+
+        rows = [
+          { k: 'Essential monthly expenses', ref: 'Rent, food, utilities, insurance, minimum payments', v: expenses, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Months your current cash covers', ref: 'Saved ÷ essential expenses', v: covered, format: 'unit', unit: 'months', decimals: 1, extra: true },
+          { k: 'Target if your income is stable', ref: EM.stable + ' months', v: EM.stable * expenses, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Target for most people', ref: EM.typical + ' months', v: target, format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'Target if your income is variable or self-employed', ref: EM.variable + ' months', v: EM.variable * expenses, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: gap > 0 ? 'Gap to the six-month target' : 'Amount above the six-month target', ref: 'At your current savings', v: gap > 0 ? gap : saved - target, format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'Months to close that gap', ref: 'At ' + usd(contribution) + ' saved a month', v: monthsToClose, format: 'unit', unit: 'months', decimals: 1 },
+          { k: 'Total assets', ref: 'Everything you own', v: assets, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Total liabilities', ref: 'Everything you owe', v: debts, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Net worth', ref: 'Assets minus liabilities', v: assets - debts, format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'Emergency fund as a share of net worth', ref: 'Sanity check on the whole picture', v: assets - debts !== 0 ? (saved / (assets - debts)) * 100 : 0, format: 'unit', unit: '%', decimals: 1 },
+        ];
+        total = covered.toFixed(1) + ' months';
+        sub =
+          usd(saved) + ' covers ' + covered.toFixed(1) + ' months of essentials · the six-month target is ' + usd(target) +
+          (gap > 0 ? ', leaving a ' + usd(gap) + ' gap — about ' + monthsToClose.toFixed(0) + ' months away' : ' — you are already there') +
+          ' · net worth ' + usd(assets - debts);
+        chart = [
+          { label: 'Covered', value: Math.round(Math.min(saved, target)), tone: 'good' },
+          { label: 'Still to save', value: Math.round(gap), tone: 'warn' },
+        ];
+      } else {
+        const assets = Math.max(0, v.assets || 0);
+        const stockPct = Math.max(0, Math.min(100, v.stockPct || 0));
+        const bondPct = Math.max(0, Math.min(100 - stockPct, v.bondPct || 0));
+        const otherPct = Math.max(0, 100 - stockPct - bondPct);
+        const riskPct = Math.max(0.01, v.riskPct || 1);
+        const stopPct = Math.max(0.01, v.stopPct || 1);
+        const vol = Math.max(0.01, v.volatility || 1);
+        const rf = Math.max(0, v.riskFree || 0);
+        const sharpe = (rate - rf) / vol;
+        const riskDollars = assets * (riskPct / 100);
+        const positionSize = riskDollars / (stopPct / 100);
+        const b = bond(1000, v.couponRate || 0, v.bondYield || 0, v.bondYears || 1);
+
+        rows = [
+          { k: 'Portfolio total', ref: 'Everything you are allocating', v: assets, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Stocks at ' + stockPct + '%', ref: 'US plus international in a three-fund split', v: assets * (stockPct / 100), format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'Bonds at ' + bondPct + '%', ref: 'The ballast', v: assets * (bondPct / 100), format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'Everything else at ' + otherPct + '%', ref: 'Cash, alternatives, crypto', v: assets * (otherPct / 100), format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Dollars you are risking on one position', ref: riskPct + '% of the portfolio', v: riskDollars, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Position size that risk implies', ref: 'Risk ÷ distance to the stop (' + stopPct + '%)', v: positionSize, format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'That position as a share of the portfolio', ref: 'Sanity check on concentration', v: assets > 0 ? (positionSize / assets) * 100 : 0, format: 'unit', unit: '%', decimals: 1 },
+          { k: 'Sharpe ratio', ref: '(' + rate + '% return − ' + rf + '% risk-free) ÷ ' + vol + '% volatility', v: sharpe, format: 'unit', unit: '', decimals: 2, extra: true },
+          { k: 'Excess return over the risk-free rate', ref: 'What the risk is actually buying you', v: rate - rf, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Bond price per $1,000 of face value', ref: (v.couponRate || 0) + '% coupon at a ' + (v.bondYield || 0) + '% yield', v: b.price, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Macaulay duration', ref: 'Weighted average time to get your money back', v: b.macaulay, format: 'unit', unit: 'years', decimals: 2 },
+          { k: 'Modified duration', ref: 'Approximate price move for a 1-point yield change', v: b.modified, format: 'unit', unit: '% per point', decimals: 2, extra: true },
+          { k: 'Price change if yields rise 1 point', ref: 'First-order estimate — ignores convexity', v: -b.price * (b.modified / 100), format: 'unit', unit: 'USD', decimals: 2 },
+        ];
+        total = usd(assets * (stockPct / 100));
+        sub =
+          stockPct + '/' + bondPct + '/' + otherPct + ' split · risking ' + usd(riskDollars) + ' means a ' +
+          usd(positionSize) + ' position at a ' + stopPct + '% stop · Sharpe ' + sharpe.toFixed(2) +
+          ' · bond modified duration ' + b.modified.toFixed(2);
+        chart = [
+          { label: 'Stocks', value: Math.round(assets * (stockPct / 100)), tone: 'main' },
+          { label: 'Bonds', value: Math.round(assets * (bondPct / 100)), tone: 'good' },
+          { label: 'Everything else', value: Math.round(assets * (otherPct / 100)), tone: 'prop' },
+        ];
+      }
+
+      return { total: total, sub: sub, rows: rows, chart: chart, format: 'unit', unit: 'USD', decimals: 0 };
+    });
+  })();
+</script>

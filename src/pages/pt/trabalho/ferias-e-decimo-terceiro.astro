@@ -1,0 +1,214 @@
+---
+/**
+ * Hub de decisão BR — "Férias e 13º: quanto eu recebo e quando cai?".
+ * As faixas do IRRF viajam com `ate: null` no lugar de Infinity.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  INSS,
+  IRRF,
+  DEP,
+  REDUTOR,
+  TETO_INSS,
+  ESTAGIO_RECESSO_DIAS,
+} from '../../../lib/hubs/pt/ferias-e-decimo-terceiro';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="BR"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header lang="pt" />
+  <DecisionHub data={hub} />
+  <Footer lang="pt" />
+</Layout>
+
+<script is:inline define:vars={{ INSS, IRRF, DEP, REDUTOR, TETO_INSS, RECESSO: ESTAGIO_RECESSO_DIAS }}>
+  (function () {
+    const H = window.HC_HUB;
+    const brl = (n) =>
+      'R$ ' + (Math.round((n || 0) * 100) / 100).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+
+    function calcINSS(base) {
+      const b = Math.min(Math.max(base, 0), TETO_INSS);
+      for (const f of INSS) {
+        if (b <= f.ate) return Math.round((b * f.aliquota - f.deduzir) * 100) / 100;
+      }
+      const u = INSS[INSS.length - 1];
+      return Math.round((TETO_INSS * u.aliquota - u.deduzir) * 100) / 100;
+    }
+    function irrfCheio(base) {
+      if (base <= 0) return 0;
+      for (const f of IRRF) {
+        if (f.ate === null || base <= f.ate) return Math.max(0, base * f.aliquota - f.deduzir);
+      }
+      return 0;
+    }
+    function calcIRRF(base) {
+      if (base <= REDUTOR.isencao) return 0;
+      const cheio = irrfCheio(base);
+      if (base >= REDUTOR.teto) return cheio;
+      return cheio * ((base - REDUTOR.isencao) / (REDUTOR.teto - REDUTOR.isencao));
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'ferias_integrais';
+      const salario = Math.max(0, v.salario || 0);
+      const diasFerias = Math.min(30, Math.max(0, Math.round(v.diasFerias || 0)));
+      const vendidos = Math.min(10, Math.max(0, Math.round(v.vendeDias || 0)));
+      const meses13 = Math.min(12, Math.max(0, Math.round(v.meses13 || 0)));
+      const deps = Math.max(0, Math.round(v.dependentes || 0));
+      const mesesEstagio = Math.max(0, Math.round(v.mesesEstagio || 0));
+      const diario = salario / 30;
+      const deducaoDeps = deps * DEP;
+
+      if (salario <= 0) {
+        return { total: brl(0), sub: 'Informe um salário bruto maior que zero.', rows: [], chart: [] };
+      }
+
+      // ── Estagiário: recesso proporcional, sem INSS/IRRF nem 13º ──
+      if (id === 'estagio') {
+        const dias = Math.min(RECESSO, Math.round((RECESSO / 12) * mesesEstagio));
+        const valor = diario * dias;
+        return {
+          total: brl(valor),
+          sub:
+            mesesEstagio + ' meses de estágio dão ' + dias + ' dias de recesso remunerado · sem 13º, FGTS ou verbas rescisórias',
+          rows: [
+            { k: 'Bolsa mensal informada', ref: 'Base do recesso', v: salario },
+            { k: 'Dias de recesso proporcionais', ref: RECESSO + ' dias a cada 12 meses · art. 13 Lei 11.788/2008', v: dias, format: 'unit', unit: 'dias' },
+            { k: 'Valor do recesso', ref: 'Bolsa ÷ 30 × dias', v: valor, extra: true },
+            { k: '13º salário', ref: 'Estágio não gera vínculo empregatício', v: 0 },
+            { k: 'FGTS depositado', ref: 'Estágio não gera vínculo empregatício', v: 0 },
+          ],
+          chart: [{ label: 'Recesso remunerado', value: Math.round(valor), tone: 'main' }],
+        };
+      }
+
+      // ── 13º salário ──
+      if (id === 'decimo') {
+        const decimo = (salario / 12) * meses13;
+        const primeira = decimo / 2;
+        const inss13 = calcINSS(decimo);
+        const base13 = Math.max(0, decimo - inss13 - deducaoDeps);
+        const irrf13 = Math.max(0, calcIRRF(base13));
+        const segunda = Math.max(0, decimo - primeira - inss13 - irrf13);
+        return {
+          total: brl(segunda),
+          sub:
+            '13º de ' + brl(decimo) + ' (' + meses13 + '/12 avos) · 1ª parcela de ' + brl(primeira) +
+            ' até 30/11 sem descontos · 2ª parcela de ' + brl(segunda) + ' até 20/12',
+          rows: [
+            { k: '13º salário integral', ref: meses13 + '/12 avos · Lei 4.090/1962', v: decimo },
+            { k: '1ª parcela (adiantamento)', ref: '50% do salário · até 30 de novembro, sem descontos', v: primeira },
+            { k: 'INSS sobre o 13º', ref: 'Calculado sobre o 13º integral, na 2ª parcela', v: inss13 },
+            { k: 'Dedução por dependentes', ref: brl(DEP) + ' cada', v: deducaoDeps },
+            { k: 'Base de cálculo do IRRF', ref: 'Tributação exclusiva na fonte', v: base13 },
+            { k: 'IRRF sobre o 13º', ref: irrf13 === 0 ? 'Isento pelo redutor' : 'Tabela mensal, em separado do salário', v: irrf13 },
+            { k: '2ª parcela líquida', ref: 'Até 20 de dezembro', v: segunda, extra: true },
+            { k: 'Total líquido do 13º no ano', ref: '1ª + 2ª parcela', v: primeira + segunda, extra: true },
+          ],
+          chart: [
+            { label: '1ª parcela (bruta)', value: Math.round(primeira), tone: 'main' },
+            { label: '2ª parcela líquida', value: Math.round(segunda), tone: 'good' },
+            { label: 'INSS', value: Math.round(inss13), tone: 'warn' },
+            { label: 'IRRF', value: Math.round(irrf13), tone: 'bad' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      // ── Férias (integrais, com abono ou fracionadas) ──
+      const diasGozados = id === 'abono' ? Math.max(0, diasFerias) : diasFerias;
+      const feriasGozadas = diario * diasGozados;
+      const tercoGozadas = feriasGozadas / 3;
+      const abono = id === 'abono' ? diario * vendidos : 0;
+      const tercoAbono = abono / 3;
+
+      // INSS e IRRF incidem só sobre as férias gozadas + terço; o abono é isento.
+      const baseInss = feriasGozadas + tercoGozadas;
+      const inss = calcINSS(baseInss);
+      const baseIrrf = Math.max(0, baseInss - inss - deducaoDeps);
+      const irrf = Math.max(0, calcIRRF(baseIrrf));
+      const liquido = baseInss - inss - irrf + abono + tercoAbono;
+
+      const rows = [
+        { k: 'Remuneração de ' + diasGozados + ' dias de férias', ref: 'Salário ÷ 30 × dias', v: feriasGozadas },
+        { k: '1/3 constitucional sobre as férias', ref: 'Art. 7º XVII da Constituição', v: tercoGozadas },
+      ];
+      if (abono > 0) {
+        rows.push({ k: 'Abono pecuniário (' + vendidos + ' dias vendidos)', ref: 'Até 1/3 do direito · art. 143 CLT', v: abono });
+        rows.push({ k: '1/3 sobre o abono pecuniário', ref: 'Isento de INSS e IRRF', v: tercoAbono });
+      }
+      rows.push({ k: 'Base tributável (férias gozadas + 1/3)', ref: 'O abono fica de fora', v: baseInss });
+      rows.push({ k: 'INSS (desconto)', ref: 'Progressivo · teto ' + brl(TETO_INSS), v: inss });
+      if (deducaoDeps > 0) rows.push({ k: 'Dedução por dependentes', ref: brl(DEP) + ' cada', v: deducaoDeps });
+      rows.push({ k: 'IRRF (desconto)', ref: irrf === 0 ? 'Isento pelo redutor' : 'Tabela mensal', v: irrf });
+      rows.push({ k: 'Líquido a receber', ref: 'Pago até 2 dias antes do início · art. 145 CLT', v: liquido, extra: true });
+      rows.push({
+        k: 'Dias de descanso efetivos',
+        ref: id === 'fracionadas' ? 'Um período precisa ter no mínimo 14 dias' : 'Dias fora do trabalho',
+        v: diasGozados,
+        format: 'unit',
+        unit: 'dias',
+      });
+
+      const sub =
+        diasGozados + ' dias de férias' +
+        (abono > 0 ? ' + ' + vendidos + ' dias vendidos (isentos de INSS e IRRF)' : '') +
+        ' · descontos de ' + brl(inss + irrf) +
+        ' · pagamento até 2 dias antes do início';
+
+      return {
+        total: brl(liquido),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Férias gozadas', value: Math.round(feriasGozadas), tone: 'main' },
+          { label: '1/3 constitucional', value: Math.round(tercoGozadas + tercoAbono), tone: 'good' },
+          { label: 'Abono pecuniário (isento)', value: Math.round(abono), tone: 'prop' },
+          { label: 'INSS', value: Math.round(inss), tone: 'warn' },
+          { label: 'IRRF', value: Math.round(irrf), tone: 'bad' },
+        ].filter((s) => s.value > 0),
+      };
+    });
+  })();
+</script>

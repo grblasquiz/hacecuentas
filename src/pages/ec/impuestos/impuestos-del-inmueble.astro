@@ -1,0 +1,305 @@
+---
+/**
+ * Hub de decisión EC — "Tengo, compro, vendo o heredo un inmueble: ¿qué impuestos pago?"
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  PREDIAL_MIN,
+  PREDIAL_MAX,
+  PREDIAL_AJUSTES,
+  ALCABALA_TARIFA,
+  ALCABALA_ADICIONAL,
+  ALCABALA_REVENTA,
+  PLUSVALIA_DEDUCCION_ANUAL,
+  PLUSVALIA_ANIOS_EXENCION,
+  HLD_TABLA,
+  HLD_FRACCION_BASICA,
+  HLD_PARENTESCO,
+} from '../../../lib/hubs/ec/impuestos-del-inmueble';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="EC"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    PREDIAL_MIN,
+    PREDIAL_MAX,
+    PREDIAL_AJUSTES,
+    ALCABALA_TARIFA,
+    ALCABALA_ADICIONAL,
+    ALCABALA_REVENTA,
+    DED_ANUAL: PLUSVALIA_DEDUCCION_ANUAL,
+    ANIOS_EXENCION: PLUSVALIA_ANIOS_EXENCION,
+    HLD_TABLA,
+    HLD_FRACCION_BASICA,
+    HLD_PARENTESCO,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) =>
+      '$' + new Intl.NumberFormat('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        .format(Math.round((n || 0) * 100) / 100);
+    const pct = (x) => String(Math.round(x * 10000) / 100).replace('.', ',') + '%';
+
+    /** Tabla progresiva de herencias, legados y donaciones. */
+    function impuestoHLD(base) {
+      const b = Math.max(0, base);
+      for (const t of HLD_TABLA) {
+        const techo = t.hasta === null ? Infinity : t.hasta;
+        if (b > t.desde && b <= techo) return { impuesto: t.base + (b - t.desde) * t.pct, pct: t.pct, desde: t.desde, hasta: t.hasta };
+      }
+      const u = HLD_TABLA[HLD_TABLA.length - 1];
+      return { impuesto: u.base + (b - u.desde) * u.pct, pct: u.pct, desde: u.desde, hasta: u.hasta };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'predial';
+      const avaluo = Math.max(0, v.avaluo || 0);
+      const valor = Math.max(0, v.valorOperacion || 0);
+      const compra = Math.max(0, v.precioCompra || 0);
+      const mejoras = Math.max(0, v.mejoras || 0);
+      const anios = Math.max(0, Math.floor(v.anios || 0));
+      const rows = [];
+
+      // ---------- Alcabala ----------
+      if (id === 'alcabala') {
+        const base = Math.max(valor, avaluo);
+        const bruta = base * ALCABALA_TARIFA;
+        const reb = ALCABALA_REVENTA.find((r) => r.id === v.reventa) || ALCABALA_REVENTA[0];
+        const rebaja = bruta * reb.pct;
+        const alcabala = bruta - rebaja;
+        const adicional = alcabala * ALCABALA_ADICIONAL;
+        const total = alcabala + adicional;
+
+        rows.push({ k: 'Valor pactado en la escritura', ref: 'Lo que figura en la compraventa', v: valor, decimals: 2 });
+        rows.push({ k: 'Avalúo catastral municipal', ref: 'El municipio compara los dos y toma el mayor', v: avaluo, decimals: 2 });
+        rows.push({ k: 'Base imponible', ref: avaluo > valor ? 'Manda el avalúo catastral · COOTAD art. 532' : 'Manda el valor de la escritura · COOTAD art. 532', v: base, decimals: 2 });
+        rows.push({ k: 'Alcabala municipal', ref: pct(ALCABALA_TARIFA) + ' de la base · COOTAD art. 535', v: bruta, decimals: 2 });
+        if (rebaja > 0) {
+          rows.push({ k: 'Rebaja por reventa (se resta)', ref: reb.label + ' · COOTAD art. 533', v: rebaja, decimals: 2 });
+        }
+        rows.push({ k: 'Adicional del consejo provincial', ref: pct(ALCABALA_ADICIONAL) + ' del impuesto municipal', v: adicional, decimals: 2 });
+        rows.push({ k: 'Total a pagar por el comprador', ref: 'Alcabala más adicional provincial', v: total, extra: true, decimals: 2 });
+        rows.push({
+          k: 'Cuánto representa sobre el precio',
+          ref: 'Total ÷ valor de la operación',
+          v: valor > 0 ? (total / valor) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+
+        return {
+          total: usd(total),
+          sub:
+            'Sobre una base de ' + usd(base) + (avaluo > valor ? ' (mandó el avalúo catastral)' : '') +
+            ', el comprador paga ' + usd(alcabala) + ' de alcabala más ' + usd(adicional) + ' del consejo provincial',
+          rows: rows,
+          decimals: 2,
+          chart: [
+            { label: 'Precio del inmueble', value: Math.round(base * 100) / 100, tone: 'main' },
+            { label: 'Alcabala municipal', value: Math.round(alcabala * 100) / 100, tone: 'warn' },
+            { label: 'Adicional provincial', value: Math.round(adicional * 100) / 100, tone: 'bad' },
+          ],
+        };
+      }
+
+      // ---------- Plusvalía ----------
+      if (id === 'plusvalia') {
+        const tasa = Math.max(0, v.tasaPlusvalia || 0) / 100;
+        const costo = compra + mejoras;
+        const utilidad = Math.max(0, valor - costo);
+        // COOTAD art. 557: la deducción del 5% corre por cada año a partir del SEGUNDO.
+        const aniosComputables = Math.min(Math.max(0, anios - 1), ANIOS_EXENCION);
+        const factor = Math.min(1, aniosComputables * DED_ANUAL);
+        const exento = anios >= ANIOS_EXENCION;
+        const deduccion = exento ? utilidad : utilidad * factor;
+        const gravada = Math.max(0, utilidad - deduccion);
+        const impuesto = gravada * tasa;
+        const neto = valor - impuesto;
+
+        rows.push({ k: 'Precio de venta', ref: 'Lo que recibes por el inmueble', v: valor, decimals: 2 });
+        rows.push({ k: 'Costo de adquisición', ref: 'Lo que pagaste al comprar', v: compra, decimals: 2 });
+        rows.push({ k: 'Mejoras y contribución de mejoras', ref: 'Se restan de la utilidad · COOTAD art. 557', v: mejoras, decimals: 2 });
+        rows.push({ k: 'Utilidad de la operación', ref: 'Venta menos costo y mejoras', v: utilidad, decimals: 2 });
+        rows.push({
+          k: 'Deducción por años de tenencia',
+          ref: exento
+            ? ANIOS_EXENCION + ' años o más: exento · COOTAD art. 559'
+            : pct(DED_ANUAL) + ' × ' + aniosComputables + (aniosComputables === 1 ? ' año computable' : ' años computables') + ' = ' + pct(factor),
+          v: deduccion,
+          decimals: 2,
+        });
+        rows.push({ k: 'Utilidad gravada', ref: 'Base del impuesto', v: gravada, decimals: 2 });
+        rows.push({ k: 'Impuesto a las utilidades y plusvalía', ref: pct(tasa) + ' sobre la utilidad gravada', v: impuesto, extra: true, decimals: 2 });
+        rows.push({ k: 'Te queda de la venta', ref: 'Precio menos impuesto', v: neto, decimals: 2 });
+        rows.push({
+          k: 'Cuánto se lleva el impuesto de tu ganancia',
+          ref: 'Impuesto ÷ utilidad',
+          v: utilidad > 0 ? (impuesto / utilidad) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+
+        return {
+          total: usd(impuesto),
+          sub: exento
+            ? 'Con ' + anios + ' años de tenencia la transferencia queda exenta: no pagas impuesto a la plusvalía'
+            : utilidad <= 0
+              ? 'La venta no supera el costo más las mejoras: sin utilidad no hay impuesto'
+              : 'Utilidad de ' + usd(utilidad) + ' · la tenencia deduce ' + pct(factor) + ' · quedan gravados ' + usd(gravada),
+          rows: rows,
+          decimals: 2,
+          chart: [
+            { label: 'Costo del inmueble', value: Math.round(costo * 100) / 100, tone: 'main' },
+            { label: 'Ganancia que te queda', value: Math.round(Math.max(0, utilidad - impuesto) * 100) / 100, tone: 'good' },
+            { label: 'Impuesto a la plusvalía', value: Math.round(impuesto * 100) / 100, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ---------- Herencias, legados y donaciones ----------
+      if (id === 'herencia') {
+        const p = HLD_PARENTESCO.find((x) => x.id === v.parentesco) || HLD_PARENTESCO[0];
+        const base = Math.max(0, valor - mejoras);
+        const t = impuestoHLD(base);
+        const tabla = Math.max(0, t.impuesto);
+        const rebaja = tabla * p.rebaja;
+        const impuesto = Math.max(0, tabla - rebaja);
+        const neto = valor - impuesto;
+
+        rows.push({ k: 'Valor de lo que recibes', ref: 'Avalúo comercial del bien, no el catastral', v: valor, decimals: 2 });
+        if (mejoras > 0) {
+          rows.push({ k: 'Deudas y gastos deducibles', ref: 'Se restan de la base imponible', v: mejoras, decimals: 2 });
+        }
+        rows.push({ k: 'Base imponible de tu porción', ref: 'El impuesto se calcula por beneficiario', v: base, decimals: 2 });
+        rows.push({ k: 'Fracción básica desgravada', ref: 'Por debajo de este monto no se paga nada', v: HLD_FRACCION_BASICA, decimals: 2 });
+        rows.push({
+          k: 'Tramo de la tabla en el que caes',
+          ref: t.hasta === null ? 'Desde ' + usd(t.desde) + ' en adelante' : 'De ' + usd(t.desde) + ' a ' + usd(t.hasta),
+          v: t.pct * 100,
+          format: 'unit',
+          unit: '% sobre el excedente',
+        });
+        rows.push({ k: 'Impuesto según la tabla del SRI', ref: 'Impuesto de la fracción básica más el % del excedente', v: tabla, decimals: 2 });
+        if (rebaja > 0) {
+          rows.push({ k: 'Rebaja por parentesco (se resta)', ref: p.label, v: rebaja, decimals: 2 });
+        }
+        rows.push({ k: 'Impuesto a pagar', ref: 'Tabla menos rebaja', v: impuesto, extra: true, decimals: 2 });
+        rows.push({ k: 'Lo que te queda neto', ref: 'Valor recibido menos impuesto', v: neto, decimals: 2 });
+        rows.push({
+          k: 'Tasa efectiva sobre lo que recibes',
+          ref: 'Impuesto ÷ valor recibido',
+          v: valor > 0 ? (impuesto / valor) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+
+        return {
+          total: usd(impuesto),
+          sub:
+            base <= HLD_FRACCION_BASICA
+              ? 'Tu porción no supera la fracción básica desgravada de ' + usd(HLD_FRACCION_BASICA) + ': no pagas impuesto'
+              : 'Base de ' + usd(base) + ' · tramo del ' + pct(t.pct) + ' sobre el excedente' + (rebaja > 0 ? ' · la rebaja por parentesco te ahorra ' + usd(rebaja) : '') + ' · te quedan ' + usd(neto),
+          rows: rows,
+          decimals: 2,
+          chart: [
+            { label: 'Lo que te queda', value: Math.round(neto * 100) / 100, tone: 'main' },
+            { label: 'Impuesto del SRI', value: Math.round(impuesto * 100) / 100, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ---------- Predial (caso por defecto) ----------
+      let tarifa = Number(v.tarifaPorMil);
+      if (!isFinite(tarifa) || tarifa <= 0) tarifa = 2;
+      tarifa = Math.min(PREDIAL_MAX, Math.max(PREDIAL_MIN, tarifa));
+      const aj = PREDIAL_AJUSTES.find((a) => a.id === v.momentoPago) || PREDIAL_AJUSTES[0];
+      const baseImp = avaluo * (tarifa / 1000);
+      const ajuste = baseImp * aj.pct;
+      const aPagar = baseImp + ajuste;
+      const mejorCaso = baseImp * (1 + PREDIAL_AJUSTES[0].pct);
+
+      rows.push({ k: 'Avalúo catastral del predio', ref: 'Base del impuesto, no el valor comercial', v: avaluo, decimals: 2 });
+      rows.push({ k: 'Tarifa aplicada', ref: 'Banda legal de ' + String(PREDIAL_MIN).replace('.', ',') + '‰ a ' + PREDIAL_MAX + '‰ · COOTAD art. 504', v: tarifa, format: 'unit', unit: 'por mil', decimals: 2 });
+      rows.push({ k: 'Impuesto base del año', ref: 'Avalúo × tarifa por mil', v: baseImp, decimals: 2 });
+      rows.push({
+        k: aj.pct > 0 ? 'Recargo por mora (se suma)' : 'Descuento por pronto pago (se resta)',
+        ref: aj.label + ' · COOTAD art. 512',
+        v: Math.abs(ajuste),
+        decimals: 2,
+      });
+      rows.push({ k: 'Predial a pagar', ref: aj.label, v: aPagar, extra: true, decimals: 2 });
+      rows.push({ k: 'Lo que pagarías en la primera quincena de enero', ref: 'Descuento máximo del 10%', v: mejorCaso, decimals: 2 });
+      rows.push({ k: 'Lo que te cuesta esperar', ref: 'Diferencia contra el pago en enero', v: Math.max(0, aPagar - mejorCaso), decimals: 2 });
+      rows.push({
+        k: 'Tasa efectiva sobre el avalúo',
+        ref: 'Impuesto a pagar ÷ avalúo',
+        v: avaluo > 0 ? (aPagar / avaluo) * 1000 : 0,
+        format: 'unit',
+        unit: 'por mil',
+        decimals: 2,
+      });
+
+      return {
+        total: usd(aPagar),
+        sub:
+          'Avalúo de ' + usd(avaluo) + ' con tarifa de ' + String(tarifa).replace('.', ',') + '‰ · ' + aj.label.toLowerCase() +
+          (aj.pct > 0 ? ' · el recargo suma ' + usd(Math.abs(ajuste)) : ' · el descuento te ahorra ' + usd(Math.abs(ajuste))),
+        rows: rows,
+        decimals: 2,
+        chart: [
+          { label: 'Predial a pagar', value: Math.round(aPagar * 100) / 100, tone: 'main' },
+          { label: aj.pct > 0 ? 'Recargo por mora' : 'Descuento por pronto pago', value: Math.round(Math.abs(ajuste) * 100) / 100, tone: aj.pct > 0 ? 'bad' : 'good' },
+        ],
+      };
+    });
+  })();
+</script>

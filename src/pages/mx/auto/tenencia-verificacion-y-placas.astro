@@ -1,0 +1,288 @@
+---
+/**
+ * Hub de decisión MX — tenencia y refrendo, verificación vehicular y placas.
+ * audience="MX" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, AUTO_MX } from '../../../lib/hubs/mx/tenencia-verificacion-y-placas';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="MX"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ A: AUTO_MX }}>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+    const ANIO_BASE = 2026;
+
+    /** Factor de depreciación por antigüedad (fórmula tenencia-vehicular-mexico-cdmx-edomex-2026). */
+    function factorAntiguedad(anios) {
+      if (anios >= 16) return 0.4;
+      if (anios >= 11) return 0.6;
+      if (anios >= 7) return 0.8;
+      if (anios >= 4) return 0.95;
+      return 1.0;
+    }
+
+    /** Tasa del tramo que corresponde al valor de factura. */
+    function tasaTramo(cfg, valor) {
+      for (let k = 0; k < cfg.tramos.length; k++) {
+        if (valor < cfg.tramos[k].hasta) return cfg.tramos[k].tasa;
+      }
+      return cfg.tramos[cfg.tramos.length - 1].tasa;
+    }
+
+    /** Bimestre asignado por terminación de placa y su mes de cierre. */
+    const BIMESTRE_POR_DIGITO = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 1, 8: 2, 9: 3, 0: 4 };
+    const BIMESTRE_NOMBRE = {
+      1: 'I (enero-febrero)',
+      2: 'II (marzo-abril)',
+      3: 'III (mayo-junio)',
+      4: 'IV (julio-agosto)',
+      5: 'V (septiembre-octubre)',
+      6: 'VI (noviembre-diciembre)',
+    };
+    const BIMESTRE_LIMITE = {
+      1: '28 de febrero',
+      2: '30 de abril',
+      3: '30 de junio',
+      4: '31 de agosto',
+      5: '31 de octubre',
+      6: '31 de diciembre',
+    };
+
+    function hologramaPorAnio(anio) {
+      if (anio <= 1995) return 'Holograma 0 — con restricción diaria en CDMX';
+      if (anio <= 2009) return 'Holograma 1 — sujeto al Hoy No Circula';
+      return 'Holograma 2 — normas recientes';
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'tenencia';
+      const estadoKey = String(v.estado || 'cdmx');
+      const cfg = A.estados[estadoKey] || A.estados.cdmx;
+      const esMoto = String(v.esMoto) === 'si';
+
+      // ── Caso 2: verificación vehicular ────────────────────────────────
+      if (id === 'verificacion') {
+        const digito = String(v.terminacion || '5');
+        const bim = BIMESTRE_POR_DIGITO[digito] || 1;
+        const mesCierre = bim * 2;
+        const mes = Math.min(12, Math.max(1, Number(v.mes) || 1));
+
+        let atraso = 0;
+        if (mes > mesCierre) atraso = Math.floor((mes - mesCierre) / 2) + 1;
+
+        const costoBase = A.uma * A.verificacionUmas;
+        const fuera = String(v.fueraCalendario) === 'si';
+        const multaExtemporanea = fuera ? A.uma * A.multaExtemporaneaUmas : 0;
+
+        let multaAtraso = atraso > 0 ? A.multaPorBimestre * atraso : 0;
+        if (estadoKey === 'edomex' && multaAtraso > 0) {
+          multaAtraso = Math.round(multaAtraso * A.factorMultaEdomex);
+        }
+
+        const total = costoBase + multaExtemporanea + multaAtraso;
+        const vigencia = A.vigenciaHolograma[String(v.holograma)] || 6;
+        const anioModelo = Math.round(Number(v.anioModelo) || ANIO_BASE);
+
+        return {
+          total: mxn(total),
+          sub:
+            'Te toca el bimestre ' +
+            (BIMESTRE_NOMBRE[bim] || 'I') +
+            ', con fecha límite el ' +
+            (BIMESTRE_LIMITE[bim] || '28 de febrero') +
+            '. Con holograma ' +
+            String(v.holograma) +
+            ' vuelves a verificar en ' +
+            vigencia +
+            ' meses. ' +
+            (atraso > 0
+              ? 'Llevas ' + atraso + ' bimestre(s) de atraso: además de la multa, arriesgas restricción adicional de circulación.'
+              : 'Estás dentro del calendario.') +
+            ' ' +
+            hologramaPorAnio(anioModelo) +
+            '.',
+          rows: [
+            { k: 'Costo del trámite', ref: '2,51 UMA diarias', v: costoBase, decimals: 2, extra: true },
+            { k: 'Multa por verificación extemporánea', ref: '20 UMA diarias', v: multaExtemporanea, decimals: 2 },
+            { k: 'Sanción estimada por bimestres de atraso', v: multaAtraso },
+            { k: 'Total a desembolsar', v: total, decimals: 2 },
+            { k: 'Bimestres de atraso', v: atraso, format: 'unit', unit: 'bimestres' },
+            { k: 'Vigencia del holograma', v: vigencia, format: 'unit', unit: 'meses' },
+            { k: 'UMA diaria usada en el cálculo', v: A.uma, decimals: 2 },
+          ],
+          chart: [
+            { label: 'Costo del trámite', value: costoBase, tone: 'main' },
+            { label: 'Multa extemporánea', value: multaExtemporanea, tone: 'warn' },
+            { label: 'Sanción por atraso', value: multaAtraso, tone: 'bad' },
+          ],
+        };
+      }
+
+      // ── Caso 3: placas, alta o cambio de propietario ──────────────────
+      if (id === 'placas') {
+        const tramiteKey = String(v.tramite || 'cambio-propietario');
+        const t = A.tramites[tramiteKey] || A.tramites['cambio-propietario'];
+        const valor = Math.max(0, v.valorFactura || 0);
+        const adeudos = Math.max(0, v.adeudos || 0);
+        const gestoria = Math.max(0, v.gestoria || 0);
+
+        const placas = cfg.placas * t.placas;
+        const tarjeta = cfg.tarjeta * t.tarjeta;
+        const derechosPorValor = valor > 0 ? valor * A.derechosPorValorPct : 0;
+        const derechos = cfg.derechos * t.derechos + derechosPorValor;
+        const tramite = placas + tarjeta + derechos;
+        const total = tramite + adeudos + gestoria;
+
+        return {
+          total: mxn(total),
+          sub:
+            'Estimación del trámite de ' +
+            t.label +
+            ' en ' +
+            cfg.label +
+            '. Solo el trámite suma ' +
+            mxn(tramite) +
+            (adeudos > 0 ? ', y los adeudos del vehículo agregan ' + mxn(adeudos) : '') +
+            '. Tiempo habitual de resolución: ' +
+            cfg.duracion +
+            '.',
+          rows: [
+            { k: 'Placas', v: placas },
+            { k: 'Tarjeta de circulación', v: tarjeta },
+            { k: 'Derechos vehiculares', v: derechos },
+            { k: 'Derechos extra por valor de factura', ref: '≈0,2 % del valor', v: derechosPorValor },
+            { k: 'Adeudos del vehículo: tenencias y multas', v: adeudos },
+            { k: 'Gestoría', v: gestoria },
+            { k: 'Total del trámite', v: total, extra: true },
+          ],
+          chart: [
+            { label: 'Placas', value: placas, tone: 'main' },
+            { label: 'Tarjeta de circulación', value: tarjeta, tone: 'prop' },
+            { label: 'Derechos vehiculares', value: derechos, tone: 'warn' },
+            { label: 'Adeudos', value: adeudos, tone: 'bad' },
+            { label: 'Gestoría', value: gestoria, tone: 'exit' },
+          ],
+        };
+      }
+
+      // ── Caso 1: tenencia y refrendo ───────────────────────────────────
+      const valor = Math.max(0, v.valorFactura || 0);
+      const anioModelo = Math.round(Number(v.anioModelo) || ANIO_BASE);
+      const antiguedad = Math.max(0, ANIO_BASE - anioModelo);
+      const fAnt = factorAntiguedad(antiguedad);
+      const fMoto = esMoto ? 0.5 : 1;
+
+      let federal = 0;
+      let estatal = 0;
+      let refrendo = 0;
+      let tasa = 0;
+      let subsidiado = false;
+
+      if (estadoKey === 'cdmx') {
+        if (valor < cfg.subsidioHasta) {
+          subsidiado = true;
+          tasa = 0;
+          refrendo = esMoto ? cfg.refrendoMoto : cfg.refrendo;
+        } else {
+          // CDMX sin subsidio: 1,6 % federal + 1,0 % estatal sobre el valor de factura.
+          tasa = 0.026;
+          federal = valor * 0.016 * fAnt * fMoto;
+          estatal = valor * 0.01 * fAnt * fMoto;
+          refrendo = esMoto ? cfg.refrendoMotoSinSubsidio : cfg.refrendoSinSubsidio;
+        }
+      } else {
+        tasa = tasaTramo(cfg, valor);
+        estatal = Math.max(cfg.piso, valor * tasa * fAnt * fMoto);
+        refrendo = esMoto ? cfg.refrendoMoto : cfg.refrendo;
+      }
+
+      federal = Math.ceil(federal);
+      estatal = Math.ceil(estatal);
+      refrendo = Math.ceil(refrendo);
+
+      const tenencia = federal + estatal;
+      const total = Math.max(0, tenencia + refrendo);
+
+      return {
+        total: mxn(total),
+        sub: subsidiado
+          ? 'Con un valor de factura por debajo del umbral de subsidio, la tenencia en ' +
+            cfg.label +
+            ' queda en cero: solo pagas el refrendo de ' +
+            mxn(refrendo) +
+            '. Ese es tu total anual.'
+          : 'Tenencia de ' +
+            mxn(tenencia) +
+            ' más ' +
+            mxn(refrendo) +
+            ' de refrendo en ' +
+            cfg.label +
+            '. Tasa aplicada: ' +
+            (Math.round(tasa * 10000) / 100).toFixed(2) +
+            ' %' +
+            (antiguedad >= 4
+              ? ', ya con el descuento por ' + antiguedad + ' años de antigüedad del modelo.'
+              : '.'),
+        rows: [
+          { k: 'Tenencia federal', v: federal },
+          { k: 'Tenencia estatal', v: estatal },
+          { k: 'Refrendo o control vehicular', v: refrendo },
+          { k: 'Total anual', v: total, extra: true },
+          { k: 'Tasa aplicada', v: Math.round(tasa * 10000) / 100, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Antigüedad del modelo', v: antiguedad, format: 'unit', unit: 'años' },
+          { k: 'Factor de antigüedad sobre la base', v: fAnt * 100, format: 'unit', unit: '%', decimals: 0 },
+        ],
+        chart: [
+          { label: 'Tenencia federal', value: federal, tone: 'warn' },
+          { label: 'Tenencia estatal', value: estatal, tone: 'main' },
+          { label: 'Refrendo', value: refrendo, tone: 'prop' },
+        ],
+      };
+    });
+  })();
+</script>

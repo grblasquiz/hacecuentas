@@ -1,0 +1,276 @@
+---
+/**
+ * Hub de decisión EN (mercado US) — "What size AC, heater and vent fan does this room need?".
+ * audience="US" y lang="en" literales al Layout; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  BTU_PER_SQFT,
+  BTU_PER_EXTRA_PERSON,
+  VOL_BTU_PER_CUFT,
+  PERSON_BTU_METRIC,
+  WATT_TO_BTU,
+  EXPOSURE,
+  INSULATION,
+  TOP_FLOOR_FACTOR,
+  AC_SIZES,
+  HEAT_BTU_PER_SQFT,
+  HEAT_BASE_HEIGHT_FT,
+  CLIMATE,
+  HEAT_ORIENTATION,
+  ASHRAE_BATH_CFM,
+  ASHRAE_KITCHEN_CFM,
+  IRAM_K_TO_R,
+} from '../../../lib/hubs/en/hvac-sizing';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    BTU_PER_SQFT,
+    BTU_PER_EXTRA_PERSON,
+    VOL_BTU_PER_CUFT,
+    PERSON_BTU_METRIC,
+    WATT_TO_BTU,
+    EXPOSURE,
+    INSULATION,
+    TOP_FLOOR_FACTOR,
+    AC_SIZES,
+    HEAT_BTU_PER_SQFT,
+    HEAT_BASE_HEIGHT_FT,
+    CLIMATE,
+    HEAT_ORIENTATION,
+    ASHRAE_BATH_CFM,
+    ASHRAE_KITCHEN_CFM,
+    IRAM_K_TO_R,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(x).toLocaleString('en-US');
+    const n1 = (x) => (Math.round(x * 10) / 10).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const n2 = (x) => (Math.round(x * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'cooling';
+      const len = Math.max(0, v.len_ft || 0);
+      const wid = Math.max(0, v.wid_ft || 0);
+      const hgt = Math.max(0, v.hgt_ft || 0);
+      const people = Math.max(0, Math.round(v.occupants || 0));
+      const watts = Math.max(0, v.appliance_w || 0);
+      const ach = Math.max(0, v.ach || 0);
+
+      const exp = EXPOSURE.find((e) => e.id === String(v.exposure)) || EXPOSURE[1];
+      const ins = INSULATION.find((e) => e.id === String(v.insulation)) || INSULATION[1];
+      const topFloor = String(v.top_floor) === 'yes';
+      const cz = CLIMATE.find((c) => c.id === String(v.climate)) || CLIMATE[2];
+
+      const floor = len * wid;
+      const volume = floor * hgt;
+      const rows = [];
+      let total, sub, chart;
+
+      if (id === 'cooling') {
+        // Titular: regla ENERGY STAR / AHAM (20 BTU/h por sq ft) + ajustes AHAM.
+        const base = floor * BTU_PER_SQFT;
+        const occ = Math.max(0, people - 2) * BTU_PER_EXTRA_PERSON;
+        const app = watts * WATT_TO_BTU;
+        const preFactor = base + occ + app;
+        const sunUplift = preFactor * (exp.factor - 1);
+        const insUplift = (preFactor + sunUplift) * (ins.cool - 1);
+        const roofUplift = topFloor ? (preFactor + sunUplift + insUplift) * (TOP_FLOOR_FACTOR - 1) : 0;
+        const btu = preFactor + sunUplift + insUplift + roofUplift;
+
+        // Método volumétrico argentino, portado tal cual, sólo para comparar.
+        const volBtu = (volume * VOL_BTU_PER_CUFT + people * PERSON_BTU_METRIC + watts * WATT_TO_BTU) *
+          exp.factor * ins.cool * (topFloor ? TOP_FLOOR_FACTOR : 1);
+
+        const size = AC_SIZES.find((s) => s >= btu) || AC_SIZES[AC_SIZES.length - 1];
+        const margin = btu > 0 ? ((size - btu) / btu) * 100 : 0;
+
+        rows.push({ k: 'Floor area', ref: n1(len) + ' ft × ' + n1(wid) + ' ft', v: floor, format: 'unit', unit: 'sq ft' });
+        rows.push({ k: 'Base cooling load', ref: '20 BTU/h per sq ft — ENERGY STAR sizing', v: base, format: 'unit', unit: 'BTU/h' });
+        rows.push({ k: 'Occupant load', ref: Math.max(0, people - 2) + ' people over two × 600 BTU/h', v: occ, format: 'unit', unit: 'BTU/h' });
+        rows.push({ k: 'Appliance and electronics load', ref: n0(watts) + ' W × 3.41', v: app, format: 'unit', unit: 'BTU/h' });
+        rows.push({ k: 'Sun exposure adjustment', ref: exp.label + ' (×' + n2(exp.factor) + ')', v: sunUplift, format: 'unit', unit: 'BTU/h' });
+        rows.push({ k: 'Insulation adjustment', ref: ins.label + ' (×' + n2(ins.cool) + ')', v: insUplift, format: 'unit', unit: 'BTU/h' });
+        rows.push({ k: 'Exposed roof adjustment', ref: topFloor ? 'Top floor, +18%' : 'Conditioned space above — no uplift', v: roofUplift, format: 'unit', unit: 'BTU/h' });
+        rows.push({ k: 'Calculated cooling load', ref: 'Sum of the above', v: btu, format: 'unit', unit: 'BTU/h', extra: true });
+        rows.push({ k: 'Cooling load in tons', ref: '12,000 BTU/h = 1 ton', v: btu / 12000, format: 'unit', unit: 'tons', decimals: 2 });
+        rows.push({ k: 'Cooling load in kW', ref: '3,412 BTU/h = 1 kW', v: btu / 3412, format: 'unit', unit: 'kW', decimals: 2 });
+        rows.push({ k: 'Nearest commercial size', ref: 'What is actually on the shelf', v: size, format: 'unit', unit: 'BTU/h', extra: true });
+        rows.push({ k: 'Margin over the calculated load', ref: margin > 30 ? 'Wide — check the next size down' : 'Reasonable headroom', v: margin, format: 'unit', unit: '%', decimals: 1 });
+        rows.push({ k: 'Volumetric method for comparison', ref: 'Metric rule: 50 kcal/h per m³ of room volume', v: volBtu, format: 'unit', unit: 'BTU/h' });
+        rows.push({ k: 'Gap between the two methods', ref: 'The volumetric rule runs high for US practice', v: Math.abs(volBtu - btu), format: 'unit', unit: 'BTU/h' });
+
+        total = n0(size) + ' BTU/h';
+        sub = n0(floor) + ' sq ft needs about ' + n0(btu) + ' BTU/h (' + n2(btu / 12000) + ' tons) · nearest unit is ' +
+          n0(size) + ' BTU/h, ' + n0(margin) + '% over · ' + exp.label.split('—')[0].trim().toLowerCase() +
+          ', ' + ins.label.split('—')[0].trim().toLowerCase() + (topFloor ? ', top floor' : '');
+        chart = [
+          { label: 'Envelope and floor area', value: Math.round(base), tone: 'main' },
+          { label: 'Occupants', value: Math.round(occ), tone: 'good' },
+          { label: 'Appliances and electronics', value: Math.round(app), tone: 'prop' },
+          { label: 'Sun, insulation and roof', value: Math.round(Math.max(0, sunUplift + insUplift + roofUplift)), tone: 'warn' },
+        ];
+      } else if (id === 'heating') {
+        // Porte de caldera-potencia-kw-ambiente-metros.ts: W = S × O × A × Z × 85,
+        // corregido por altura si supera 2.5 m. 85 W/m² = 26.95 BTU/h por sq ft.
+        const orientKey = String(v.exposure) === 'north' ? 'north' : String(v.exposure) === 'south' ? 'south' : 'east';
+        const O = HEAT_ORIENTATION[orientKey] || 1;
+        const base = floor * HEAT_BTU_PER_SQFT;
+        const afterOrient = base * O;
+        const afterIns = afterOrient * ins.heat;
+        const afterZone = afterIns * cz.factor;
+        const heightFactor = hgt > HEAT_BASE_HEIGHT_FT ? hgt / HEAT_BASE_HEIGHT_FT : 1;
+        const btu = afterZone * heightFactor;
+        const withMargin = btu * 1.2;
+        const perSqft = floor > 0 ? btu / floor : 0;
+
+        rows.push({ k: 'Floor area', ref: n1(len) + ' ft × ' + n1(wid) + ' ft', v: floor, format: 'unit', unit: 'sq ft' });
+        rows.push({ k: 'Base heating load', ref: '26.95 BTU/h per sq ft (85 W/m²)', v: base, format: 'unit', unit: 'BTU/h' });
+        rows.push({ k: 'Orientation adjustment', ref: orientKey === 'north' ? 'North-facing, ×1.12' : orientKey === 'south' ? 'South-facing, ×0.92' : 'East or west, ×1.00', v: afterOrient - base, format: 'unit', unit: 'BTU/h' });
+        rows.push({ k: 'Insulation adjustment', ref: ins.label + ' (×' + n2(ins.heat) + ')', v: afterIns - afterOrient, format: 'unit', unit: 'BTU/h' });
+        rows.push({ k: 'Climate zone adjustment', ref: cz.label + ' (×' + n2(cz.factor) + ')', v: afterZone - afterIns, format: 'unit', unit: 'BTU/h' });
+        rows.push({ k: 'Ceiling height adjustment', ref: hgt > HEAT_BASE_HEIGHT_FT ? n1(hgt) + ' ft over the 8.2 ft baseline' : 'At or below the 8.2 ft baseline', v: btu - afterZone, format: 'unit', unit: 'BTU/h' });
+        rows.push({ k: 'Calculated heating load', ref: 'Sum of the above', v: btu, format: 'unit', unit: 'BTU/h', extra: true });
+        rows.push({ k: 'Load per square foot', ref: 'Cross-check against local practice', v: perSqft, format: 'unit', unit: 'BTU/h per sq ft', decimals: 1 });
+        rows.push({ k: 'Output in kW', ref: '3,412 BTU/h = 1 kW', v: btu / 3412, format: 'unit', unit: 'kW', decimals: 2 });
+        rows.push({ k: 'Nameplate output with a 20% margin', ref: 'What to specify', v: withMargin, format: 'unit', unit: 'BTU/h', extra: true });
+        rows.push({ k: 'That margin in kW', ref: 'How boilers are usually rated outside the US', v: withMargin / 3412, format: 'unit', unit: 'kW', decimals: 2 });
+        rows.push({ k: 'Furnace input at 80% AFUE', ref: 'Rated input needed to deliver the output', v: withMargin / 0.8, format: 'unit', unit: 'BTU/h' });
+        rows.push({ k: 'Furnace input at 95% AFUE', ref: 'Condensing equipment', v: withMargin / 0.95, format: 'unit', unit: 'BTU/h' });
+        rows.push({ k: 'Room volume being heated', ref: n1(hgt) + ' ft ceiling', v: volume, format: 'unit', unit: 'cu ft' });
+
+        total = n0(withMargin) + ' BTU/h';
+        sub = n0(floor) + ' sq ft in ' + cz.label.split('—')[0].trim() + ' needs about ' + n0(btu) + ' BTU/h (' +
+          n2(btu / 3412) + ' kW), or ' + n1(perSqft) + ' BTU/h per sq ft · specify ' + n0(withMargin) + ' BTU/h (' +
+          n2(withMargin / 3412) + ' kW) with the 20% margin';
+        chart = [
+          { label: 'Base envelope load', value: Math.round(base), tone: 'main' },
+          { label: 'Climate zone uplift', value: Math.round(Math.abs(afterZone - afterIns)), tone: 'warn' },
+          { label: 'Orientation and insulation', value: Math.round(Math.abs(afterIns - base)), tone: 'prop' },
+          { label: 'Ceiling height uplift', value: Math.round(Math.max(0, btu - afterZone)), tone: 'good' },
+        ];
+      } else if (id === 'ventilation') {
+        // Porte de ventilacion-cfm-ambiente.ts: m³/h = V × N; CFM = m³/h × 0.588.
+        // En unidades imperiales la misma cuenta es CFM = cu ft × ACH / 60.
+        const cfm = (volume * ach) / 60;
+        const m3h = volume * ach * 0.0283168;
+        const required = floor <= 100 ? ASHRAE_BATH_CFM : ASHRAE_KITCHEN_CFM;
+        const governing = Math.max(cfm, required);
+        const withDuct = governing * 1.25;
+
+        rows.push({ k: 'Room volume', ref: n1(len) + ' × ' + n1(wid) + ' × ' + n1(hgt) + ' ft', v: volume, format: 'unit', unit: 'cu ft' });
+        rows.push({ k: 'Air changes per hour', ref: 'What you set', v: ach, format: 'unit', unit: 'per hour' });
+        rows.push({ k: 'Airflow from the volumetric rule', ref: 'Volume × ACH ÷ 60', v: cfm, format: 'unit', unit: 'CFM' });
+        rows.push({ k: 'Same airflow in metric', ref: '1 CFM = 1.699 m³/h', v: m3h, format: 'unit', unit: 'm³/h' });
+        rows.push({ k: 'ASHRAE 62.2 intermittent minimum', ref: floor <= 100 ? 'Bathroom: 50 CFM' : 'Kitchen: 100 CFM', v: required, format: 'unit', unit: 'CFM' });
+        rows.push({ k: 'Governing airflow', ref: cfm >= required ? 'The volumetric rule governs' : 'The ASHRAE minimum governs', v: governing, format: 'unit', unit: 'CFM', extra: true });
+        rows.push({ k: 'Fan rating to shop for', ref: '+25% for duct, elbows and grille losses', v: withDuct, format: 'unit', unit: 'CFM', extra: true });
+        rows.push({ k: 'Continuous-operation equivalent', ref: 'ASHRAE 62.2 continuous bathroom minimum is 20 CFM', v: 20, format: 'unit', unit: 'CFM' });
+        rows.push({ k: 'Minutes to change the air once', ref: 'At the governing airflow', v: governing > 0 ? volume / governing : 0, format: 'unit', unit: 'min', decimals: 1 });
+        rows.push({ k: 'Effective air changes at the shopping figure', ref: 'What you actually get', v: volume > 0 ? (withDuct * 60) / volume : 0, format: 'unit', unit: 'per hour', decimals: 1 });
+        rows.push({ k: 'Duct diameter for 900 ft/min velocity', ref: 'Rigid round duct, rule of thumb', v: governing > 0 ? Math.sqrt((4 * (governing / 900)) / Math.PI) * 12 : 0, format: 'unit', unit: 'in', decimals: 1 });
+
+        total = n0(withDuct) + ' CFM';
+        sub = n0(volume) + ' cu ft at ' + n0(ach) + ' air changes per hour = ' + n0(cfm) + ' CFM · ASHRAE 62.2 asks for at least ' +
+          n0(required) + ' CFM · shop for a fan rated around ' + n0(withDuct) + ' CFM to survive the duct losses';
+        chart = [
+          { label: 'Airflow from air changes per hour', value: Math.round(cfm), tone: 'main' },
+          { label: 'ASHRAE 62.2 minimum', value: Math.round(required), tone: 'good' },
+          { label: 'Duct and grille loss allowance', value: Math.round(Math.max(0, withDuct - governing)), tone: 'warn' },
+        ];
+      } else {
+        // Porte de aislacion-termica-k-minimo-zona.ts, reexpresado en R-value US:
+        // R = 1 / (K × 0.17611). El requisito que manda acá es el IECC 2021.
+        const iramK = cz.factor >= 1.12 ? 0.74 : cz.factor >= 1.04 ? 0.85 : cz.factor >= 0.95 ? 1.0 : 1.2;
+        const iramR = 1 / (iramK * IRAM_K_TO_R);
+        const wallArea = 2 * (len + wid) * hgt;
+        const wallU = cz.wallR > 0 ? 1 / cz.wallR : 0;
+        const iramU = iramK * IRAM_K_TO_R;
+        const deltaT = 40;
+        const lossCode = wallArea * wallU * deltaT;
+        const lossIram = wallArea * iramU * deltaT;
+
+        rows.push({ k: 'Climate zone', ref: cz.label, v: Number(cz.id.replace('z', '')), format: 'plain' });
+        rows.push({ k: 'Minimum wall R-value', ref: 'IECC 2021 Table R402.1.3, wood frame', v: cz.wallR, format: 'unit', unit: 'ft²·°F·h/BTU', extra: true });
+        rows.push({ k: 'Minimum ceiling R-value', ref: 'IECC 2021 Table R402.1.3', v: cz.ceilR, format: 'unit', unit: 'ft²·°F·h/BTU', extra: true });
+        rows.push({ k: 'Wall U-factor at that R-value', ref: 'U = 1 ÷ R', v: wallU, format: 'unit', unit: 'BTU/h·ft²·°F', decimals: 4 });
+        rows.push({ k: 'Same wall in metric U', ref: '1 BTU/h·ft²·°F = 5.678 W/m²K', v: wallU * 5.678, format: 'unit', unit: 'W/m²K', decimals: 3 });
+        rows.push({ k: 'Comparable IRAM 11605 maximum K', ref: 'Argentine standard for a similar zone', v: iramK, format: 'unit', unit: 'W/m²K', decimals: 2 });
+        rows.push({ k: 'That IRAM limit expressed as R-value', ref: 'R = 1 ÷ (K × 0.17611)', v: iramR, format: 'unit', unit: 'ft²·°F·h/BTU', decimals: 1 });
+        rows.push({ k: 'How much stricter the IECC is', ref: 'Ratio of the two R-values', v: iramR > 0 ? cz.wallR / iramR : 0, format: 'unit', unit: '×', decimals: 2 });
+        rows.push({ k: 'Wall area of this room', ref: 'Perimeter × ceiling height, gross', v: wallArea, format: 'unit', unit: 'sq ft' });
+        rows.push({ k: 'Heat loss at the IECC minimum', ref: '40 °F indoor-to-outdoor difference', v: lossCode, format: 'unit', unit: 'BTU/h' });
+        rows.push({ k: 'Heat loss at the IRAM limit', ref: 'Same wall, same conditions', v: lossIram, format: 'unit', unit: 'BTU/h' });
+        rows.push({ k: 'Extra heat lost by the weaker wall', ref: 'Every hour the heat is on', v: Math.max(0, lossIram - lossCode), format: 'unit', unit: 'BTU/h', extra: true });
+
+        total = 'R-' + cz.wallR + ' walls';
+        sub = cz.label + ' requires at least R-' + cz.wallR + ' in wood-frame walls and R-' + cz.ceilR +
+          ' in the ceiling · the comparable IRAM 11605 limit is only R-' + n1(iramR) +
+          ', so the IECC is about ' + n1(cz.wallR / iramR) + ' times stricter';
+        chart = [
+          { label: 'IECC 2021 required wall R-value', value: cz.wallR, tone: 'good' },
+          { label: 'IECC 2021 required ceiling R-value', value: cz.ceilR, tone: 'main' },
+          { label: 'Comparable IRAM 11605 wall limit', value: Math.round(iramR * 10) / 10, tone: 'bad' },
+        ];
+      }
+
+      return {
+        total: total,
+        sub: sub,
+        rows: rows,
+        format: 'unit',
+        unit: id === 'ventilation' ? 'CFM' : id === 'insulation' ? 'R' : 'BTU/h',
+        decimals: 0,
+        chart: chart,
+      };
+    });
+  })();
+</script>

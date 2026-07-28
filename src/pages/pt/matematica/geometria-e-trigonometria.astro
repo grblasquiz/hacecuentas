@@ -1,0 +1,244 @@
+---
+/**
+ * Hub de decisão BR — "Como calculo essa figura?".
+ * Hub de matemática: NENHUMA linha do resultado é dinheiro, então todas usam
+ * format 'plain' ou 'unit'. Sem isso o runtime imprimiria a área em pesos.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/pt/geometria-e-trigonometria';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="BR"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header lang="pt" />
+  <DecisionHub data={hub} />
+  <Footer lang="pt" />
+</Layout>
+
+<script is:inline>
+  (function () {
+    const H = window.HC_HUB;
+    const dec = (n, d) =>
+      (Math.round((n || 0) * Math.pow(10, d)) / Math.pow(10, d)).toLocaleString('pt-BR', {
+        minimumFractionDigits: d,
+        maximumFractionDigits: d,
+      });
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'triangulo';
+      const u = String(v.unidade || 'cm');
+      const u2 = u + '²';
+      const u3 = u + '³';
+
+      // ================= CASO: cone =================
+      if (id === 'cone') {
+        const r = Math.max(0, v.raio || 0);
+        const h = Math.max(0, v.altura || 0);
+        if (r <= 0 || h <= 0) {
+          return { total: '—', sub: 'Informe um raio e uma altura maiores que zero.', rows: [], chart: [], format: 'plain' };
+        }
+        const g = Math.sqrt(r * r + h * h);
+        const areaBase = Math.PI * r * r;
+        const volume = (areaBase * h) / 3;
+        const lateral = Math.PI * r * g;
+        const total = lateral + areaBase;
+        const cilindro = areaBase * h;
+        // Litros só faz sentido em cm (1 L = 1.000 cm³) e em m (1 m³ = 1.000 L).
+        const litros = u === 'cm' ? volume / 1000 : u === 'm' ? volume * 1000 : null;
+
+        const rows = [
+          { k: 'Área da base', ref: 'π × r² = π × ' + dec(r, 2) + '²', v: areaBase, format: 'unit', unit: u2, decimals: 4 },
+          { k: 'Volume do cone', ref: '(1/3) × π × r² × h', v: volume, format: 'unit', unit: u3, decimals: 4, extra: true },
+          { k: 'Volume do cilindro de mesma base e altura', ref: 'π × r² × h — o cone é 1/3 dele', v: cilindro, format: 'unit', unit: u3, decimals: 4 },
+          { k: 'Geratriz (lateral inclinada)', ref: '√(r² + h²) = √(' + dec(r * r, 2) + ' + ' + dec(h * h, 2) + ')', v: g, format: 'unit', unit: u, decimals: 4 },
+          { k: 'Área lateral', ref: 'π × r × geratriz', v: lateral, format: 'unit', unit: u2, decimals: 4 },
+          { k: 'Área total', ref: 'π × r × (r + geratriz)', v: total, format: 'unit', unit: u2, decimals: 4 },
+          { k: 'Ângulo do vértice com o eixo', ref: 'arco-tangente de r ÷ h', v: (Math.atan(r / h) * 180) / Math.PI, format: 'unit', unit: '°', decimals: 2 },
+        ];
+        if (litros !== null) {
+          rows.push({
+            k: 'Capacidade em litros',
+            ref: u === 'cm' ? 'volume em cm³ ÷ 1.000' : 'volume em m³ × 1.000',
+            v: litros,
+            format: 'unit',
+            unit: 'L',
+            decimals: 3,
+          });
+        }
+
+        return {
+          total: dec(volume, 2) + ' ' + u3,
+          sub:
+            'Cone de raio ' + dec(r, 2) + ' ' + u + ' e altura ' + dec(h, 2) + ' ' + u +
+            ': volume de ' + dec(volume, 2) + ' ' + u3 +
+            (litros !== null ? ' (' + dec(litros, 3) + ' L)' : '') +
+            ' · geratriz de ' + dec(g, 2) + ' ' + u + '.',
+          rows: rows,
+          format: 'plain',
+          decimals: 4,
+          chart: [
+            { label: 'Volume do cone (1/3)', value: Math.round(volume * 1000), tone: 'main' },
+            { label: 'Resto do cilindro (2/3)', value: Math.round((cilindro - volume) * 1000), tone: 'exit' },
+          ],
+        };
+      }
+
+      // ================= CASO: trigonometria =================
+      if (id === 'trigonometria') {
+        const ang = v.angulo || 0;
+        const emGraus = String(v.unidadeAngulo || 'graus') === 'graus';
+        const rad = emGraus ? (ang * Math.PI) / 180 : ang;
+        const graus = emGraus ? ang : (ang * 180) / Math.PI;
+        const hip = Math.max(0, v.hipotenusa || 0);
+        const sen = Math.sin(rad);
+        const cos = Math.cos(rad);
+        const cosZero = Math.abs(cos) < 1e-12;
+        const tg = cosZero ? null : Math.tan(rad);
+        const oposto = hip * sen;
+        const adjacente = hip * cos;
+
+        const rows = [
+          { k: 'Ângulo em graus', ref: emGraus ? 'Informado por você' : 'radianos × 180 ÷ π', v: graus, format: 'unit', unit: '°', decimals: 4 },
+          { k: 'Ângulo em radianos', ref: emGraus ? 'graus × π ÷ 180' : 'Informado por você', v: rad, format: 'plain', decimals: 6 },
+          { k: 'Seno', ref: 'cateto oposto ÷ hipotenusa', v: sen, format: 'plain', decimals: 6, extra: true },
+          { k: 'Cosseno', ref: 'cateto adjacente ÷ hipotenusa', v: cos, format: 'plain', decimals: 6, extra: true },
+          {
+            k: cosZero ? 'Tangente — não existe neste ângulo' : 'Tangente',
+            ref: cosZero ? 'o cosseno vale zero e a divisão é impossível' : 'seno ÷ cosseno',
+            v: cosZero ? 0 : tg,
+            format: 'plain',
+            decimals: 6,
+          },
+          { k: 'sen² + cos² (tem de dar 1)', ref: 'Identidade fundamental — verificação', v: sen * sen + cos * cos, format: 'plain', decimals: 6 },
+          { k: 'Cateto oposto', ref: 'hipotenusa × seno', v: oposto, format: 'unit', unit: u, decimals: 4 },
+          { k: 'Cateto adjacente', ref: 'hipotenusa × cosseno', v: adjacente, format: 'unit', unit: u, decimals: 4 },
+          { k: 'Área do triângulo retângulo', ref: 'catetos ÷ 2', v: Math.abs(oposto * adjacente) / 2, format: 'unit', unit: u2, decimals: 4 },
+          { k: 'Ângulo complementar', ref: '90° − ângulo', v: 90 - graus, format: 'unit', unit: '°', decimals: 4 },
+        ];
+        if (!cosZero) {
+          rows.push({ k: 'Secante (1 ÷ cosseno)', ref: 'Razão inversa do cosseno', v: 1 / cos, format: 'plain', decimals: 6 });
+        }
+        if (Math.abs(sen) > 1e-12) {
+          rows.push({ k: 'Cossecante (1 ÷ seno)', ref: 'Razão inversa do seno', v: 1 / sen, format: 'plain', decimals: 6 });
+        }
+
+        return {
+          total: dec(sen, 4),
+          sub:
+            'Em ' + dec(graus, 2) + '° (' + dec(rad, 4) + ' rad): seno ' + dec(sen, 4) +
+            ', cosseno ' + dec(cos, 4) + ', tangente ' + (cosZero ? 'indefinida' : dec(tg, 4)) + '.',
+          rows: rows,
+          format: 'plain',
+          decimals: 6,
+          chart: [
+            { label: 'Cateto oposto', value: Math.round(Math.abs(oposto) * 1000), tone: 'main' },
+            { label: 'Cateto adjacente', value: Math.round(Math.abs(adjacente) * 1000), tone: 'prop' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      // ================= CASO padrão: triângulo por Heron =================
+      const a = Math.max(0, v.a || 0);
+      const b = Math.max(0, v.b || 0);
+      const c = Math.max(0, v.c || 0);
+      if (a <= 0 || b <= 0 || c <= 0) {
+        return { total: '—', sub: 'Informe os três lados do triângulo.', rows: [], chart: [], format: 'plain' };
+      }
+      if (a + b <= c || a + c <= b || b + c <= a) {
+        return {
+          total: '—',
+          sub:
+            'Os lados ' + dec(a, 2) + ', ' + dec(b, 2) + ' e ' + dec(c, 2) +
+            ' não formam um triângulo: cada lado tem de ser menor que a soma dos outros dois.',
+          rows: [
+            { k: 'Lado a + lado b', ref: 'Precisa ser maior que c', v: a + b, format: 'unit', unit: u, decimals: 4 },
+            { k: 'Lado a + lado c', ref: 'Precisa ser maior que b', v: a + c, format: 'unit', unit: u, decimals: 4 },
+            { k: 'Lado b + lado c', ref: 'Precisa ser maior que a', v: b + c, format: 'unit', unit: u, decimals: 4 },
+          ],
+          chart: [],
+          format: 'plain',
+        };
+      }
+
+      const p = a + b + c;
+      const s = p / 2;
+      const area = Math.sqrt(s * (s - a) * (s - b) * (s - c));
+      const lados = [a, b, c].sort(function (x, y) { return x - y; });
+      const maior = lados[2];
+      const somaQuad = lados[0] * lados[0] + lados[1] * lados[1];
+      const quadMaior = maior * maior;
+      const tipo =
+        Math.abs(quadMaior - somaQuad) < 1e-9
+          ? 'retângulo'
+          : quadMaior < somaQuad
+          ? 'acutângulo'
+          : 'obtusângulo';
+      const rInscrita = area / s;
+      const rCircunscrita = (a * b * c) / (4 * area);
+
+      const rows = [
+        { k: 'Perímetro', ref: 'a + b + c', v: p, format: 'unit', unit: u, decimals: 4 },
+        { k: 'Semiperímetro (s)', ref: 'perímetro ÷ 2', v: s, format: 'unit', unit: u, decimals: 4 },
+        { k: 'Área pela fórmula de Heron', ref: '√(s × (s−a) × (s−b) × (s−c))', v: area, format: 'unit', unit: u2, decimals: 4, extra: true },
+        { k: 'Altura relativa ao lado a', ref: '2 × área ÷ a', v: (2 * area) / a, format: 'unit', unit: u, decimals: 4 },
+        { k: 'Altura relativa ao lado b', ref: '2 × área ÷ b', v: (2 * area) / b, format: 'unit', unit: u, decimals: 4 },
+        { k: 'Altura relativa ao lado c', ref: '2 × área ÷ c', v: (2 * area) / c, format: 'unit', unit: u, decimals: 4 },
+        { k: 'Raio da circunferência inscrita', ref: 'área ÷ semiperímetro', v: rInscrita, format: 'unit', unit: u, decimals: 4 },
+        { k: 'Raio da circunferência circunscrita', ref: '(a × b × c) ÷ (4 × área)', v: rCircunscrita, format: 'unit', unit: u, decimals: 4 },
+        { k: 'Quadrado do maior lado', ref: 'Comparado com a soma dos quadrados dos outros dois: ' + dec(somaQuad, 2), v: quadMaior, format: 'unit', unit: u2, decimals: 4 },
+      ];
+
+      return {
+        total: dec(area, 2) + ' ' + u2,
+        sub:
+          'Triângulo ' + tipo + ' de lados ' + dec(a, 2) + ', ' + dec(b, 2) + ' e ' + dec(c, 2) + ' ' + u +
+          ': semiperímetro ' + dec(s, 2) + ' e área ' + dec(area, 2) + ' ' + u2 + '.',
+        rows: rows,
+        format: 'plain',
+        decimals: 4,
+        chart: [
+          { label: 'Lado a no perímetro', value: Math.round(a * 1000), tone: 'main' },
+          { label: 'Lado b no perímetro', value: Math.round(b * 1000), tone: 'prop' },
+          { label: 'Lado c no perímetro', value: Math.round(c * 1000), tone: 'exit' },
+        ],
+      };
+    });
+  })();
+</script>

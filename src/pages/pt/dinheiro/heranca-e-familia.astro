@@ -1,0 +1,302 @@
+---
+/**
+ * Hub de decisão BR — "Herança, divórcio e pensão: quanto custa acertar isso?".
+ * Ruta bajo el prefijo /pt/, igual que las calculadoras que absorbe.
+ * audience="BR" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  ITCMD_TETO_SENADO,
+  UFESP,
+  ISENCAO_DOACAO_UFESP,
+  ISENCAO_HERANCA_UFESP,
+} from '../../../lib/hubs/pt/heranca-e-familia';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="BR"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header lang="pt" />
+  <DecisionHub data={hub} />
+  <Footer lang="pt" />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ ITCMD_TETO_SENADO, UFESP, ISENCAO_DOACAO_UFESP, ISENCAO_HERANCA_UFESP }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const brl = (n) =>
+      'R$ ' + (Math.round((n || 0) * 100) / 100).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    const num = (x, d) => {
+      const n = Number(x);
+      return isFinite(n) ? n : d;
+    };
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'inventario_extra';
+
+      const patrimonio = Math.max(0, num(v.patrimonio, 0));
+      const herdeiros = Math.max(1, Math.round(num(v.numHerdeiros, 1)));
+      const itcmdAliq = Math.max(0, num(v.itcmdAliquota, 4)) / 100;
+      const honPct = Math.max(0, num(v.honorariosPct, 6)) / 100;
+      const emolumentos = Math.max(0, num(v.emolumentos, 0));
+      const certidoes = Math.max(0, num(v.certidoes, 0));
+      const custasPct = Math.max(0, num(v.custasJudiciaisPct, 1)) / 100;
+      const regime = String(v.regimeBens || 'parcial');
+      const bensAnteriores = Math.max(0, num(v.bensAnteriores, 0));
+      const rendaLiquida = Math.max(0, num(v.rendaLiquida, 0));
+      const filhos = Math.max(1, Math.round(num(v.numFilhos, 1)));
+      const pensaoPct = Math.max(0, num(v.pensaoPct, 30)) / 100;
+
+      const limiteDoacao = ISENCAO_DOACAO_UFESP * UFESP;
+      const limiteHeranca = ISENCAO_HERANCA_UFESP * UFESP;
+
+      /* ── 1 e 2. Inventário extrajudicial e judicial ───────────────────── */
+      if (id === 'inventario_extra' || id === 'inventario_judicial') {
+        if (patrimonio <= 0) {
+          return { total: brl(0), sub: 'Informe o valor do patrimônio a inventariar.', rows: [], chart: [] };
+        }
+        const judicial = id === 'inventario_judicial';
+        const itcmd = patrimonio * itcmdAliq;
+        const honorarios = patrimonio * honPct;
+        const custas = judicial ? patrimonio * custasPct : 0;
+        const total = itcmd + honorarios + emolumentos + certidoes + custas;
+        const pct = (total / patrimonio) * 100;
+        const liquidoPorHerdeiro = (patrimonio - total) / herdeiros;
+
+        const rows = [
+          { k: 'Patrimônio a inventariar', ref: 'Valor de mercado dos bens', v: patrimonio },
+          {
+            k: 'ITCMD',
+            ref: (itcmdAliq * 100).toFixed(1) + '% — alíquota estadual editável (teto ' + Math.round(ITCMD_TETO_SENADO * 100) + '%, Res. 9/1992 do Senado)',
+            v: itcmd,
+            extra: true,
+          },
+          { k: 'Honorários advocatícios', ref: (honPct * 100).toFixed(1) + '% do espólio · obrigatório também no cartório (art. 610 §2º CPC)', v: honorarios },
+          {
+            k: judicial ? 'Custas judiciais e taxa judiciária' : 'Emolumentos da escritura pública',
+            ref: judicial
+              ? (custasPct * 100).toFixed(1) + '% do valor da causa · tabela estadual editável'
+              : 'Tabela da corregedoria estadual · estimativa editável',
+            v: judicial ? custas : emolumentos,
+          },
+        ];
+        if (judicial) {
+          rows.push({ k: 'Emolumentos de registro e averbações', ref: 'Registro do formal de partilha nas matrículas', v: emolumentos });
+        }
+        rows.push({ k: 'Certidões e registros', ref: 'Negativas federal, estadual, municipal e trabalhista', v: certidoes });
+        rows.push({ k: 'Custo total do inventário', ref: judicial ? 'Via judicial (art. 610 CPC, a contrario)' : 'Via extrajudicial (art. 610 CPC)', v: total, extra: true });
+        rows.push({
+          k: 'Custo sobre o patrimônio',
+          ref: 'Quanto do espólio some no processo',
+          v: pct,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        rows.push({ k: 'Líquido para cada herdeiro', ref: herdeiros + (herdeiros === 1 ? ' herdeiro' : ' herdeiros') + ', partilha igual', v: liquidoPorHerdeiro });
+        rows.push({ k: 'Limite de isenção do ITCMD-SP na herança', ref: ISENCAO_HERANCA_UFESP.toLocaleString('pt-BR') + ' UFESPs · confirme a hipótese na Sefaz', v: limiteHeranca });
+
+        return {
+          total: brl(total),
+          sub:
+            (judicial ? 'Inventário judicial' : 'Inventário extrajudicial') + ' de ' + brl(patrimonio) +
+            ': ' + brl(total) + ' de custo total (' + pct.toFixed(1) + '% do espólio), dos quais ' + brl(itcmd) +
+            ' são ITCMD — a parte que não se negocia. Sobram ' + brl(liquidoPorHerdeiro) + ' por herdeiro.',
+          rows: rows,
+          chart: [
+            { label: 'ITCMD', value: Math.round(itcmd), tone: 'bad' },
+            { label: 'Honorários', value: Math.round(honorarios), tone: 'warn' },
+            { label: judicial ? 'Custas judiciais' : 'Emolumentos', value: Math.round(judicial ? custas : emolumentos), tone: 'prop' },
+            { label: 'Certidões e registros', value: Math.round(certidoes + (judicial ? emolumentos : 0)), tone: 'main' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      /* ── 3. Doação em vida ────────────────────────────────────────────── */
+      if (id === 'doacao') {
+        if (patrimonio <= 0) {
+          return { total: brl(0), sub: 'Informe o valor do patrimônio a doar.', rows: [], chart: [] };
+        }
+        const porDonatario = patrimonio / herdeiros;
+        const isento = porDonatario <= limiteDoacao;
+        const itcmdPorDonatario = isento ? 0 : porDonatario * itcmdAliq;
+        const itcmdTotal = itcmdPorDonatario * herdeiros;
+        const total = itcmdTotal + emolumentos + certidoes;
+        const metadeDisponivel = patrimonio / 2;
+
+        const rows = [
+          { k: 'Patrimônio a doar', ref: 'Valor de mercado', v: patrimonio },
+          { k: 'Valor doado a cada donatário', ref: herdeiros + (herdeiros === 1 ? ' donatário' : ' donatários'), v: porDonatario },
+          {
+            k: 'Limite de isenção da doação em SP',
+            ref: ISENCAO_DOACAO_UFESP.toLocaleString('pt-BR') + ' UFESPs por ano e por par doador-donatário (UFESP ' + brl(UFESP) + ')',
+            v: limiteDoacao,
+          },
+          {
+            k: 'ITCMD por donatário',
+            ref: isento
+              ? 'Isento: dentro do limite anual'
+              : (itcmdAliq * 100).toFixed(1) + '% sobre o valor TOTAL, não só sobre o excedente',
+            v: itcmdPorDonatario,
+          },
+          { k: 'ITCMD total da operação', ref: 'Soma de todos os donatários', v: itcmdTotal, extra: true },
+          { k: 'Escritura de doação (emolumentos)', ref: 'Tabela estadual · estimativa editável', v: emolumentos },
+          { k: 'Registros e averbações nas matrículas', ref: 'Sem registro, o imóvel não muda de dono (art. 1.245 CC)', v: certidoes },
+          { k: 'Custo total de doar em vida', ref: 'ITCMD + cartório', v: total, extra: true },
+          {
+            k: 'Metade disponível (limite da doação)',
+            ref: 'Art. 549 CC: doação acima disso é inoficiosa havendo herdeiro necessário',
+            v: metadeDisponivel,
+          },
+        ];
+        return {
+          total: brl(total),
+          sub: isento
+            ? 'Cada donatário recebe ' + brl(porDonatario) + ', dentro do limite anual de isenção de ' + brl(limiteDoacao) +
+              ' em São Paulo: o ITCMD fica em zero e sobra só o cartório, ' + brl(total) + '.'
+            : 'Cada donatário recebe ' + brl(porDonatario) + ' e paga ' + brl(itcmdPorDonatario) +
+              ' de ITCMD — sobre o valor total, não sobre o excedente. Com cartório, a operação custa ' + brl(total) + '.',
+          rows: rows,
+          chart: [
+            { label: 'ITCMD', value: Math.round(itcmdTotal), tone: 'bad' },
+            { label: 'Emolumentos', value: Math.round(emolumentos), tone: 'warn' },
+            { label: 'Registros e certidões', value: Math.round(certidoes), tone: 'prop' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      /* ── 4. Divórcio e partilha ───────────────────────────────────────── */
+      if (id === 'divorcio') {
+        const anteriores = Math.min(bensAnteriores, patrimonio);
+        let partilhavel;
+        let refRegime;
+        if (regime === 'universal') {
+          partilhavel = patrimonio;
+          refRegime = 'Comunhão universal: divide-se praticamente tudo (art. 1.667 CC)';
+        } else if (regime === 'separacao') {
+          partilhavel = 0;
+          refRegime = 'Separação total: cada um fica com o que está no seu nome (art. 1.687 CC)';
+        } else if (regime === 'participacao') {
+          partilhavel = Math.max(0, patrimonio - anteriores);
+          refRegime = 'Participação final nos aquestos: divide-se o acumulado na união (art. 1.672 CC)';
+        } else {
+          partilhavel = Math.max(0, patrimonio - anteriores);
+          refRegime = 'Comunhão parcial: só o adquirido onerosamente na união (art. 1.658 e 1.659 CC)';
+        }
+        const meacao = partilhavel / 2;
+        const honorarios = patrimonio * honPct;
+        const custoFormalizar = honorarios + emolumentos + certidoes;
+
+        const rows = [
+          { k: 'Patrimônio total do casal', ref: 'Tudo que está em nome dos dois', v: patrimonio },
+          { k: 'Bens fora da partilha', ref: 'Anteriores à união, heranças e doações recebidas por um só', v: anteriores },
+          { k: 'Patrimônio partilhável', ref: refRegime, v: partilhavel, extra: true },
+          { k: 'Meação de cada cônjuge', ref: 'Metade do partilhável', v: meacao, extra: true },
+          { k: 'Honorários advocatícios', ref: (honPct * 100).toFixed(1) + '% do patrimônio · percentual negociado', v: honorarios },
+          { k: 'Escritura de divórcio consensual', ref: 'Só sem filho menor ou incapaz (art. 733 CPC)', v: emolumentos },
+          { k: 'Certidões, registros e averbações', ref: 'Averbação do divórcio e transferência das matrículas', v: certidoes },
+          { k: 'Custo total de formalizar', ref: 'Honorários + cartório', v: custoFormalizar, extra: true },
+          {
+            k: 'Custo sobre o patrimônio',
+            ref: 'Quanto a separação consome do total',
+            v: patrimonio > 0 ? (custoFormalizar / patrimonio) * 100 : 0,
+            format: 'unit',
+            unit: '%',
+            decimals: 1,
+          },
+        ];
+        return {
+          total: brl(meacao),
+          sub:
+            refRegime + '. Sobre ' + brl(patrimonio) + ' de patrimônio, ' + brl(partilhavel) +
+            ' entram na partilha e cada um leva ' + brl(meacao) + '. Formalizar custa ' + brl(custoFormalizar) + '.',
+          rows: rows,
+          chart: [
+            { label: 'Meação de cada um', value: Math.round(meacao), tone: 'main' },
+            { label: 'Fora da partilha', value: Math.round(patrimonio - partilhavel), tone: 'prop' },
+            { label: 'Custo de formalizar', value: Math.round(custoFormalizar), tone: 'bad' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      /* ── 5. Pensão alimentícia ────────────────────────────────────────── */
+      const pensaoTotal = rendaLiquida * pensaoPct;
+      const porFilho = pensaoTotal / filhos;
+      const sobra = Math.max(0, rendaLiquida - pensaoTotal);
+      const faixaMin = rendaLiquida * 0.2;
+      const faixaMax = rendaLiquida * 0.3;
+      const rowsPensao = [
+        { k: 'Renda líquida mensal do pagante', ref: 'Depois de INSS e IRRF', v: rendaLiquida },
+        {
+          k: 'Percentual aplicado',
+          ref: 'NÃO existe percentual legal · art. 1.694 §1º CC (necessidade × possibilidade)',
+          v: pensaoPct * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 0,
+        },
+        { k: 'Pensão mensal total', ref: 'Para o conjunto dos filhos', v: pensaoTotal, extra: true },
+        { k: 'Valor por filho', ref: filhos + (filhos === 1 ? ' filho' : ' filhos'), v: porFilho },
+        { k: 'Referência da prática forense — 20% da renda líquida', ref: 'Piso mais visto em acordos', v: faixaMin },
+        { k: 'Referência da prática forense — 30% da renda líquida', ref: 'Teto mais visto em acordos', v: faixaMax },
+        { k: 'Renda que sobra para o pagante', ref: 'Antes das despesas extraordinárias divididas à parte', v: sobra },
+        { k: 'Pensão no ano (12 meses)', ref: 'Sem contar 13º e férias, se o acordo os incluir', v: pensaoTotal * 12 },
+      ];
+      return {
+        total: brl(pensaoTotal),
+        sub:
+          'Sobre uma renda líquida de ' + brl(rendaLiquida) + ', ' + (pensaoPct * 100).toFixed(0) + '% dão ' +
+          brl(pensaoTotal) + '/mês (' + brl(porFilho) + ' por filho). Lembre: no Brasil não há percentual legal — ' +
+          'o juiz decide pelo binômio necessidade × possibilidade do art. 1.694 §1º do Código Civil.',
+        rows: rowsPensao,
+        chart: [
+          { label: 'Pensão alimentícia', value: Math.round(pensaoTotal), tone: 'warn' },
+          { label: 'Renda restante', value: Math.round(sobra), tone: 'main' },
+        ].filter((s) => s.value > 0),
+      };
+    });
+  })();
+</script>

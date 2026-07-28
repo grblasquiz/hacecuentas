@@ -1,0 +1,354 @@
+---
+/**
+ * Hub de decisão PT — "Aguenta a prestação e vale a pena amortizar?".
+ * A rota vive sob /pt-pt/, tal como as calculadoras que absorve.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, ESFORCO, COMISSAO_REEMBOLSO, AFORRO, RENDA } from '../../../lib/hubs/pt-pt/credito-habitacao';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt-pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PT"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ ESFORCO, COMISSAO_REEMBOLSO, AFORRO, RENDA }}>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n, d) =>
+      Number(n || 0).toLocaleString('de-DE', {
+        minimumFractionDigits: d || 0,
+        maximumFractionDigits: d || 0,
+      }) + ' €';
+
+    /** Prestação de um empréstimo francês. */
+    function pmt(capital, iMens, n) {
+      if (n <= 0) return capital;
+      if (iMens === 0) return capital / n;
+      return (capital * (iMens * Math.pow(1 + iMens, n))) / (Math.pow(1 + iMens, n) - 1);
+    }
+
+    /** Prémio de permanência dos Certificados de Aforro, em pontos percentuais. */
+    function premio(ano) {
+      for (const p of AFORRO.premios) if (ano <= p.ate) return p.premio;
+      return AFORRO.premios[AFORRO.premios.length - 1].premio;
+    }
+
+    /** Projeção dos Certificados de Aforro Série F: capitalização trimestral, ano a ano. */
+    function projetarAforro(montante, anos, taxaBase) {
+      const n = Math.min(15, Math.max(1, Math.round(anos)));
+      const base = Math.min(AFORRO.tetoBase, Math.max(0, taxaBase));
+      let saldo = montante;
+      for (let ano = 1; ano <= n; ano++) {
+        const taxaAno = (base + premio(ano)) / 100;
+        saldo = saldo * Math.pow(1 + taxaAno / 4, 4);
+      }
+      const jurosBrutos = Math.max(0, saldo - montante);
+      const irs = jurosBrutos * AFORRO.irsJuros;
+      return {
+        anos: n,
+        bruto: saldo,
+        jurosBrutos: jurosBrutos,
+        irs: irs,
+        liquido: montante + jurosBrutos - irs,
+        jurosLiquidos: jurosBrutos - irs,
+      };
+    }
+
+    /** Efeito de uma amortização antecipada, nas duas estratégias. */
+    function amortizacao(capital, tanPct, prazoAnos, valor, tipoTaxa, estrategia) {
+      const amort = Math.min(Math.max(0, valor), capital);
+      const iMens = Math.max(0, tanPct) / 100 / 12;
+      const n = Math.round(Math.max(1, prazoAnos) * 12);
+      const prestacaoAtual = pmt(capital, iMens, n);
+      const jurosAntes = prestacaoAtual * n - capital;
+      const novoCapital = capital - amort;
+
+      let jurosDepois, novaPrestacao, novoPrazoMeses;
+      if (estrategia === 'prestacao') {
+        novaPrestacao = pmt(novoCapital, iMens, n);
+        jurosDepois = novaPrestacao * n - novoCapital;
+        novoPrazoMeses = n;
+      } else {
+        if (iMens > 0 && prestacaoAtual > novoCapital * iMens) {
+          novoPrazoMeses = Math.ceil(
+            Math.log(prestacaoAtual / (prestacaoAtual - novoCapital * iMens)) / Math.log(1 + iMens)
+          );
+        } else {
+          novoPrazoMeses = Math.ceil(novoCapital / prestacaoAtual);
+        }
+        jurosDepois = prestacaoAtual * novoPrazoMeses - novoCapital;
+        novaPrestacao = prestacaoAtual;
+      }
+
+      const jurosPoupados = Math.max(0, jurosAntes - jurosDepois);
+      const perc = String(tipoTaxa) === 'fixa' ? COMISSAO_REEMBOLSO.fixa : COMISSAO_REEMBOLSO.variavel;
+      const comissao = amort * perc;
+      return {
+        amort: amort,
+        prestacaoAtual: prestacaoAtual,
+        novaPrestacao: novaPrestacao,
+        jurosAntes: jurosAntes,
+        jurosDepois: jurosDepois,
+        jurosPoupados: jurosPoupados,
+        comissao: comissao,
+        percComissao: perc,
+        liquida: jurosPoupados - comissao,
+        mesesReduzidos: n - novoPrazoMeses,
+        meses: n,
+      };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'pedir';
+      const rows = [];
+      let total = 0;
+      let sub = '';
+      let chart = [];
+
+      if (id === 'amortizar' || id === 'aforro') {
+        const capital = Math.max(0, v.capitalEmDivida || 0);
+        const a = amortizacao(
+          capital,
+          v.taxaAnual || 0,
+          v.prazoRestanteAnos || 1,
+          v.valorAmortizar || 0,
+          v.tipoTaxa,
+          String(v.estrategia || 'prazo')
+        );
+        const encurta = String(v.estrategia || 'prazo') !== 'prestacao';
+
+        if (id === 'amortizar') {
+          total = a.liquida;
+          rows.push({ k: 'Capital em dívida', ref: 'O que ainda deve ao banco', v: capital, format: 'unit', unit: '€' });
+          rows.push({ k: 'Prestação atual', ref: 'TAN de ' + (v.taxaAnual || 0).toString().replace('.', ',') + ' %', v: a.prestacaoAtual, format: 'unit', unit: '€' });
+          rows.push({ k: 'Valor que amortiza', ref: 'Entrega de capital', v: a.amort, format: 'unit', unit: '€' });
+          rows.push({ k: 'Juros que pagaria sem amortizar', ref: 'Até ao fim do prazo', v: a.jurosAntes, format: 'unit', unit: '€' });
+          rows.push({ k: 'Juros que vai pagar depois de amortizar', ref: encurta ? 'Prazo encurtado' : 'Prazo mantido', v: a.jurosDepois, format: 'unit', unit: '€' });
+          rows.push({ k: 'Juros poupados', ref: 'Diferença entre os dois cenários', v: a.jurosPoupados, format: 'unit', unit: '€' });
+          rows.push({
+            k: 'Comissão de reembolso antecipado',
+            ref: (a.percComissao * 100).toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' % · taxa ' + (String(v.tipoTaxa) === 'fixa' ? 'fixa' : 'variável'),
+            v: a.comissao,
+            format: 'unit',
+            unit: '€',
+          });
+          rows.push({ k: 'Poupança líquida da amortização', ref: 'Juros poupados − comissão', v: a.liquida, extra: true, format: 'unit', unit: '€' });
+          if (encurta) {
+            rows.push({ k: 'Meses que o crédito encurta', ref: 'De ' + a.meses + ' meses restantes', v: a.mesesReduzidos, format: 'unit', unit: 'meses' });
+            rows.push({ k: 'Anos que o crédito encurta', ref: 'Mantendo a prestação', v: a.mesesReduzidos / 12, format: 'unit', unit: 'anos', decimals: 1 });
+          } else {
+            rows.push({ k: 'Nova prestação', ref: 'Mantendo o prazo', v: a.novaPrestacao, format: 'unit', unit: '€' });
+            rows.push({ k: 'Alívio mensal no orçamento', ref: 'Prestação atual − nova', v: a.prestacaoAtual - a.novaPrestacao, format: 'unit', unit: '€' });
+          }
+          rows.push({
+            k: 'Retorno da amortização, por euro entregue',
+            ref: 'Poupança líquida ÷ valor amortizado',
+            v: a.amort > 0 ? (a.liquida / a.amort) * 100 : 0,
+            format: 'unit',
+            unit: '%',
+            decimals: 1,
+          });
+
+          sub =
+            'Poupa ' + eur(a.jurosPoupados) + ' de juros e paga ' + eur(a.comissao) + ' de comissão' +
+            (encurta
+              ? ' · o crédito encurta ' + a.mesesReduzidos + ' meses'
+              : ' · a prestação desce para ' + eur(a.novaPrestacao));
+          chart = [
+            { label: 'Juros que continua a pagar', value: Math.round(a.jurosDepois), tone: 'bad' },
+            { label: 'Juros que poupa', value: Math.round(a.jurosPoupados), tone: 'good' },
+            { label: 'Comissão do banco', value: Math.round(a.comissao), tone: 'warn' },
+          ];
+        } else {
+          // ── Amortizar vs Certificados de Aforro, com a mesma quantia e o mesmo horizonte ──
+          const p = projetarAforro(a.amort, v.prazoRestanteAnos || 1, v.taxaBaseAforro || 0);
+          const diferenca = a.liquida - p.jurosLiquidos;
+          total = Math.max(a.liquida, p.jurosLiquidos);
+          const acimaLimite = a.amort > AFORRO.limiteMaximo;
+
+          rows.push({ k: 'Dinheiro em causa', ref: 'A mesma quantia nas duas opções', v: a.amort, format: 'unit', unit: '€' });
+          rows.push({ k: 'Horizonte da comparação', ref: 'Máximo de 15 anos nos Certificados', v: p.anos, format: 'unit', unit: 'anos' });
+          rows.push({ k: 'Opção A · poupança líquida de amortizar', ref: 'Juros poupados − comissão', v: a.liquida, format: 'unit', unit: '€' });
+          rows.push({ k: 'Opção B · juros brutos dos Certificados', ref: 'Capitalização trimestral com prémio', v: p.jurosBrutos, format: 'unit', unit: '€' });
+          rows.push({
+            k: 'IRS sobre os juros dos Certificados',
+            ref: (AFORRO.irsJuros * 100).toLocaleString('de-DE') + ' % · rendimentos de capitais',
+            v: p.irs,
+            format: 'unit',
+            unit: '€',
+          });
+          rows.push({ k: 'Opção B · juros líquidos dos Certificados', ref: 'Depois de IRS', v: p.jurosLiquidos, format: 'unit', unit: '€' });
+          rows.push({
+            k: diferenca >= 0 ? 'Vantagem de amortizar' : 'Vantagem dos Certificados',
+            ref: 'Diferença entre as duas opções',
+            v: Math.abs(diferenca),
+            extra: true,
+            format: 'unit',
+            unit: '€',
+          });
+          rows.push({ k: 'Valor final se puser nos Certificados', ref: 'Capital + juros líquidos', v: p.liquido, format: 'unit', unit: '€' });
+          rows.push({
+            k: 'TAN do seu crédito',
+            ref: 'O retorno, sem risco e sem imposto, de amortizar',
+            v: v.taxaAnual || 0,
+            format: 'unit',
+            unit: '%',
+            decimals: 2,
+          });
+          rows.push({
+            k: 'Taxa base dos Certificados usada',
+            ref: 'Teto de ' + AFORRO.tetoBase.toLocaleString('de-DE') + ' %, prémio à parte',
+            v: Math.min(AFORRO.tetoBase, Math.max(0, v.taxaBaseAforro || 0)),
+            format: 'unit',
+            unit: '%',
+            decimals: 3,
+          });
+
+          sub =
+            (diferenca >= 0
+              ? 'Amortizar ganha por ' + eur(Math.abs(diferenca))
+              : 'Os Certificados ganham por ' + eur(Math.abs(diferenca))) +
+            ' em ' + p.anos + (p.anos === 1 ? ' ano' : ' anos') +
+            (acimaLimite ? ' · atenção: passa o limite de ' + eur(AFORRO.limiteMaximo) + ' por titular' : '');
+          chart = [
+            { label: 'Capital', value: Math.round(a.amort), tone: 'main' },
+            { label: 'Ganho de amortizar', value: Math.round(Math.max(0, a.liquida)), tone: 'good' },
+            { label: 'Ganho dos Certificados', value: Math.round(Math.max(0, p.jurosLiquidos)), tone: 'warn' },
+          ];
+        }
+      } else if (id === 'renda') {
+        // ── Atualização anual da renda pelo coeficiente do INE ──
+        const renda = Math.max(0, v.rendaAtual || 0);
+        let coef = Number(v.coeficiente);
+        if (!isFinite(coef) || coef <= 0) coef = RENDA.coeficientePadrao;
+        const nova = renda * coef;
+        const aumento = nova - renda;
+        total = nova;
+
+        rows.push({ k: 'Renda atual', ref: 'O que paga hoje', v: renda, format: 'unit', unit: '€' });
+        rows.push({ k: 'Coeficiente de atualização', ref: 'Apurado pelo INE', v: coef, format: 'plain', decimals: 4 });
+        rows.push({ k: 'Nova renda mensal', ref: 'Renda × coeficiente', v: nova, extra: true, format: 'unit', unit: '€' });
+        rows.push({ k: 'Aumento mensal', ref: 'Diferença', v: aumento, format: 'unit', unit: '€' });
+        rows.push({ k: 'Aumento ao fim de um ano', ref: '12 meses', v: aumento * 12, format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Subida em percentagem',
+          ref: 'Máximo que o senhorio pode aplicar',
+          v: (coef - 1) * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        rows.push({ k: 'Aviso mínimo do senhorio', ref: 'Por escrito, antes do mês da nova renda', v: RENDA.preAvisoDias, format: 'unit', unit: 'dias' });
+
+        sub =
+          'A renda sobe ' + eur(aumento) + ' por mês (' + ((coef - 1) * 100).toFixed(2).replace('.', ',') + ' %)' +
+          ' · o senhorio tem de avisar por escrito com ' + RENDA.preAvisoDias + ' dias de antecedência';
+        chart = [
+          { label: 'Renda atual', value: Math.round(renda), tone: 'main' },
+          { label: 'Aumento', value: Math.round(aumento), tone: 'warn' },
+        ];
+      } else {
+        // ── Taxa de esforço ──
+        const rendimento = Math.max(0, v.rendimentoLiquido || 0);
+        const prestacao = Math.max(0, v.prestacao || 0);
+        const outros = Math.max(0, v.outrosCreditos || 0);
+        const encargos = prestacao + outros;
+        const taxa = rendimento > 0 ? (encargos / rendimento) * 100 : 0;
+        total = taxa;
+
+        const margem35 = rendimento * (ESFORCO.confortavel / 100) - encargos;
+        const margem45 = rendimento * (ESFORCO.maximo / 100) - encargos;
+        const classificacao =
+          taxa <= ESFORCO.confortavel
+            ? 'confortável'
+            : taxa <= ESFORCO.maximo
+              ? 'no limite aceitável'
+              : 'elevada, com risco de recusa';
+
+        rows.push({ k: 'Rendimento líquido mensal do agregado', ref: 'Depois de IRS e Segurança Social', v: rendimento, format: 'unit', unit: '€' });
+        rows.push({ k: 'Prestação do crédito à habitação', ref: 'Mensal', v: prestacao, format: 'unit', unit: '€' });
+        rows.push({ k: 'Outras prestações de crédito', ref: 'Automóvel, pessoal, cartões', v: outros, format: 'unit', unit: '€' });
+        rows.push({ k: 'Encargos totais com crédito', ref: 'Soma de todas as prestações', v: encargos, format: 'unit', unit: '€' });
+        rows.push({ k: 'Taxa de esforço', ref: 'Encargos ÷ rendimento líquido', v: taxa, extra: true, format: 'unit', unit: '%', decimals: 1 });
+        rows.push({
+          k: margem35 >= 0 ? 'Margem que ainda tem até aos ' + ESFORCO.confortavel + ' %' : 'Quanto excede os ' + ESFORCO.confortavel + ' %',
+          ref: 'Referência de conforto',
+          v: Math.abs(margem35),
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({
+          k: margem45 >= 0 ? 'Margem que ainda tem até aos ' + ESFORCO.maximo + ' %' : 'Quanto excede os ' + ESFORCO.maximo + ' %',
+          ref: 'Limite prático da banca',
+          v: Math.abs(margem45),
+          format: 'unit',
+          unit: '€',
+        });
+        rows.push({ k: 'Fica-lhe por mês, depois das prestações', ref: 'Para tudo o resto', v: Math.max(0, rendimento - encargos), format: 'unit', unit: '€' });
+        rows.push({
+          k: 'Prestação máxima aos ' + ESFORCO.maximo + ' %',
+          ref: 'Já descontando os outros créditos',
+          v: Math.max(0, rendimento * (ESFORCO.maximo / 100) - outros),
+          format: 'unit',
+          unit: '€',
+        });
+
+        sub =
+          'Taxa de esforço ' + taxa.toFixed(1).replace('.', ',') + ' % — ' + classificacao +
+          ' · sobram-lhe ' + eur(Math.max(0, rendimento - encargos)) + ' por mês para tudo o resto';
+        chart = [
+          { label: 'Fica para viver', value: Math.round(Math.max(0, rendimento - encargos)), tone: 'good' },
+          { label: 'Prestação da casa', value: Math.round(prestacao), tone: 'warn' },
+          { label: 'Outros créditos', value: Math.round(outros), tone: 'bad' },
+        ];
+      }
+
+      return {
+        total: id === 'pedir' ? total.toFixed(1).replace('.', ',') + ' %' : eur(total),
+        sub: sub,
+        rows: rows,
+        chart: chart,
+      };
+    });
+  })();
+</script>

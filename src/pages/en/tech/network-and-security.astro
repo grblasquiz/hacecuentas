@@ -1,0 +1,330 @@
+---
+/**
+ * Hub EN — "Is my network (and my password) up to the job?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  FIBER_KM_PER_S,
+  PING_FACTOR,
+  CABLE_CATS,
+  CHARSET_SIZE,
+  GUESSES_PER_SECOND,
+  BCRYPT_MS_AT_10,
+  CWV,
+} from '../../../lib/hubs/en/network-and-security';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ FIBER_KM_PER_S, PING_FACTOR, CABLE_CATS, CHARSET_SIZE, GUESSES_PER_SECOND, BCRYPT_MS_AT_10, CWV }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(x || 0).toLocaleString('en-US');
+    const KM_PER_MILE = 1.609344;
+    const M_PER_FT = 0.3048;
+
+    const humanSeconds = (s) => {
+      if (s < 1) return (s * 1000).toFixed(1) + ' milliseconds';
+      if (s < 60) return s.toFixed(1) + ' seconds';
+      if (s < 3600) return (s / 60).toFixed(1) + ' minutes';
+      if (s < 86400) return (s / 3600).toFixed(1) + ' hours';
+      if (s < 86400 * 365) return (s / 86400).toFixed(1) + ' days';
+      const y = s / (86400 * 365);
+      if (y < 1e6) return n0(y) + ' years';
+      return y.toExponential(2) + ' years';
+    };
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'subnet';
+
+      if (id === 'subnet') {
+        const n = Math.max(0, Math.min(32, Math.floor(v.cidr === 0 ? 0 : v.cidr || 24)));
+        const hostBits = 32 - n;
+        const total = Math.pow(2, hostBits);
+        const usable = Math.max(0, total - 2);
+        const bits = [];
+        for (let k = 0; k < 32; k++) bits.push(k < n ? 1 : 0);
+        const octets = [0, 8, 16, 24]
+          .map((o) => parseInt(bits.slice(o, o + 8).join(''), 2))
+          .join('.');
+        const wildcard = [0, 8, 16, 24]
+          .map((o) => 255 - parseInt(bits.slice(o, o + 8).join(''), 2))
+          .join('.');
+        const of24 = n >= 24 ? Math.pow(2, n - 24) : 0;
+        const rows = [
+          { k: 'Prefix length', ref: 'Mask ' + octets + ' · wildcard ' + wildcard, v: n, format: 'unit', unit: 'network bits', extra: true },
+          { k: 'Host bits available', ref: '32 minus the prefix length', v: hostBits, format: 'unit', unit: 'bits' },
+          { k: 'Total addresses in the block', ref: '2 to the power of ' + hostBits, v: total, format: 'plain' },
+          { k: 'Usable host addresses', ref: 'Network and broadcast excluded', v: usable, format: 'plain', extra: true },
+          { k: 'Addresses you cannot assign', ref: 'All-zeros network, all-ones broadcast', v: Math.min(2, total), format: 'plain' },
+          { k: 'How many of these fit in a /24', ref: n >= 24 ? 'It divides a /24 into this many' : 'It is larger than a /24', v: of24, format: 'plain' },
+          { k: 'Usable hosts one prefix wider (/' + Math.max(0, n - 1) + ')', ref: 'Every bit you release doubles the space', v: Math.max(0, Math.pow(2, hostBits + 1) - 2), format: 'plain' },
+          { k: 'Usable hosts one prefix narrower (/' + Math.min(32, n + 1) + ')', ref: 'Every bit you take halves it', v: Math.max(0, Math.pow(2, Math.max(0, hostBits - 1)) - 2), format: 'plain' },
+        ];
+        return {
+          total: usable.toLocaleString('en-US') + ' usable hosts',
+          sub:
+            'Mask ' + octets + ' · wildcard ' + wildcard + ' · ' + hostBits + ' host bits · ' +
+            total.toLocaleString('en-US') + ' addresses total, two of which are reserved' +
+            (n === 31 ? ' · /31 is the RFC 3021 point-to-point exception and does carry two usable addresses' : '') +
+            (n === 32 ? ' · /32 is a single host route, not a subnet' : ''),
+          rows: rows,
+          chart: [
+            { label: 'Usable host addresses', value: usable, tone: 'good' },
+            { label: 'Reserved addresses', value: Math.min(2, total), tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'cable') {
+        const key = String(v.cable || 'cat6a');
+        const c = CABLE_CATS[key] || CABLE_CATS.cat6a;
+        const runFt = Math.max(0, v.runFt || 0);
+        const runM = runFt * M_PER_FT;
+        const maxFt = c.meters / M_PER_FT;
+        const usedPct = c.meters > 0 ? (runM / c.meters) * 100 : 0;
+        const ok = runM <= c.meters;
+        const rows = [
+          { k: 'Rated bandwidth', ref: 'What really separates the categories', v: c.mhz, format: 'unit', unit: 'MHz', extra: true },
+          { k: 'Maximum channel length', ref: 'Including patch cords at both ends', v: maxFt, format: 'unit', unit: 'ft', decimals: 0, extra: true },
+          { k: 'Same limit in metres', ref: 'The figure the standard is written in', v: c.meters, format: 'unit', unit: 'm' },
+          { k: 'Your run', ref: n0(runFt) + ' ft entered', v: runM, format: 'unit', unit: 'm', decimals: 1 },
+          { k: 'How much of the budget you are using', ref: ok ? 'Within the limit' : 'OVER the limit', v: usedPct, format: 'unit', unit: '%', decimals: 0, extra: true },
+          { k: 'Headroom left', ref: 'Maximum minus your run', v: Math.max(0, maxFt - runFt), format: 'unit', unit: 'ft', decimals: 0 },
+          { k: 'Permanent link allowance', ref: '90 m in wall, 10 m of patch cords', v: 90 / M_PER_FT, format: 'unit', unit: 'ft', decimals: 0 },
+        ];
+        return {
+          total: c.speed,
+          sub:
+            key.toUpperCase().replace('CAT', 'Cat ') + ' at ' + c.mhz + ' MHz · up to ' + n0(maxFt) + ' ft (' + c.meters + ' m) · ' +
+            (ok
+              ? 'your ' + n0(runFt) + ' ft run fits with ' + n0(maxFt - runFt) + ' ft to spare'
+              : 'your ' + n0(runFt) + ' ft run EXCEEDS the limit — put a switch in the middle or use fiber'),
+          rows: rows,
+          chart: [
+            { label: 'Your run (ft)', value: Math.round(runFt), tone: ok ? 'main' : 'bad' },
+            { label: 'Headroom left (ft)', value: Math.round(Math.max(0, maxFt - runFt)), tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'wifi') {
+        const band = String(v.band || '24');
+        const is24 = band === '24';
+        const rows = is24
+          ? [
+              { k: 'Non-overlapping channels', ref: '1, 6 and 11 — nothing else qualifies', v: 3, format: 'unit', unit: 'usable channels', extra: true },
+              { k: 'Channel width to set', ref: 'Wider makes it worse on this band', v: 20, format: 'unit', unit: 'MHz', extra: true },
+              { k: 'Total channels in the band', ref: 'Most of them overlap each other', v: 11, format: 'unit', unit: 'channels (US)' },
+              { k: 'Spacing between channel centres', ref: 'A channel needs 20 MHz, spacing gives 5', v: 5, format: 'unit', unit: 'MHz' },
+              { k: 'Channels of separation needed to avoid overlap', ref: 'Which is why it is 1, 6, 11', v: 5, format: 'unit', unit: 'channels apart' },
+              { k: 'DFS channels affected', ref: 'None on 2.4 GHz', v: 0, format: 'plain' },
+            ]
+          : [
+              { k: 'DFS-free channels available', ref: '36–48 and 149–165', v: 8, format: 'unit', unit: 'channels', extra: true },
+              { k: 'Channel width you can use', ref: 'There is room for it here', v: 80, format: 'unit', unit: 'MHz', extra: true },
+              { k: 'DFS channels to avoid if you get drops', ref: '52 through 144, shared with radar', v: 24, format: 'unit', unit: 'channels' },
+              { k: 'Spacing between 5 GHz channel numbers', ref: 'Non-overlapping by design', v: 4, format: 'unit', unit: 'channels apart' },
+              { k: 'Approximate range compared with 2.4 GHz', ref: 'Higher frequency, more wall loss', v: 60, format: 'unit', unit: '% of the range' },
+              { k: 'Approximate throughput compared with 2.4 GHz', ref: 'Wider channels, cleaner spectrum', v: 300, format: 'unit', unit: '% of the speed' },
+            ];
+        return {
+          total: is24 ? 'Channels 1, 6 or 11' : 'Channels 36–48 or 149–165',
+          sub: is24
+            ? 'Keep the width at 20 MHz and take whichever of the three is least congested where you actually are · longer range, but the whole neighbourhood is in this band'
+            : 'These are free of DFS, so no sudden radar-triggered drops · faster and cleaner than 2.4 GHz, at the cost of range through walls',
+          rows: rows,
+          chart: is24
+            ? [
+                { label: 'Non-overlapping channels', value: 3, tone: 'good' },
+                { label: 'Channels that overlap something', value: 8, tone: 'warn' },
+              ]
+            : [
+                { label: 'DFS-free channels', value: 8, tone: 'good' },
+                { label: 'DFS channels (radar risk)', value: 24, tone: 'warn' },
+              ],
+        };
+      }
+
+      if (id === 'ping') {
+        const miles = Math.max(1, v.distanceMi || 1);
+        const km = miles * KM_PER_MILE;
+        const theoretical = ((km * 2) / FIBER_KM_PER_S) * 1000;
+        const factor = km < 1000 ? PING_FACTOR.short : km < 5000 ? PING_FACTOR.medium : PING_FACTOR.long;
+        const expected = theoretical * factor;
+        const measured = Math.max(0, v.pingReal || 0);
+        const ratio = measured > 0 && theoretical > 0 ? measured / theoretical : 0;
+        let verdict;
+        if (measured <= 0) verdict = 'enter your measured ping above to compare against this floor';
+        else if (ratio < 2) verdict = 'excellent — very efficient routing for this distance';
+        else if (ratio < 3) verdict = 'normal — the overhead is what you would expect';
+        else if (ratio < 5) verdict = 'high — this looks like ISP routing rather than distance';
+        else verdict = 'excessive — check your local connection or your provider';
+        const rows = [
+          { k: 'Distance to the server', ref: n0(miles) + ' miles', v: km, format: 'unit', unit: 'km', decimals: 0 },
+          { k: 'Theoretical minimum round trip', ref: '2 × distance ÷ 200,000 km/s in fiber', v: theoretical, format: 'unit', unit: 'ms', decimals: 1, extra: true },
+          { k: 'Realistic expected ping', ref: '× ' + factor + ' for routing and switching', v: expected, format: 'unit', unit: 'ms', decimals: 0, extra: true },
+          { k: 'Overhead above the physics floor', ref: 'Expected minus theoretical', v: expected - theoretical, format: 'unit', unit: 'ms', decimals: 0 },
+          measured > 0
+            ? { k: 'Your measured ping', ref: (ratio).toFixed(1) + '× the theoretical floor', v: measured, format: 'unit', unit: 'ms', extra: true }
+            : { k: 'Your measured ping', ref: 'Not entered', v: 0, format: 'plain' },
+          { k: 'One-way latency floor', ref: 'Half the round trip', v: theoretical / 2, format: 'unit', unit: 'ms', decimals: 1 },
+          { k: 'Distance light covers in 1 ms of fiber', ref: 'One way', v: FIBER_KM_PER_S / 1000 / KM_PER_MILE, format: 'unit', unit: 'miles', decimals: 0 },
+        ];
+        return {
+          total: Math.round(expected) + ' ms expected',
+          sub:
+            theoretical.toFixed(1) + ' ms is the hard physics floor for ' + n0(miles) + ' miles · ' + verdict +
+            ' · jitter and packet loss matter more than the average for calls and games',
+          rows: rows,
+          chart: [
+            { label: 'Physics floor (ms)', value: Math.round(theoretical * 10) / 10, tone: 'main' },
+            { label: 'Routing overhead (ms)', value: Math.round(expected - theoretical), tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'cwv') {
+        const lcp = Math.max(0, v.lcp || 0);
+        const inp = Math.max(0, v.inp || 0);
+        const cls = Math.max(0, v.cls || 0);
+        const grade = (x, good, ok) => (x <= good ? 'Good' : x <= ok ? 'Needs improvement' : 'Poor');
+        const gLcp = grade(lcp, CWV.lcp[0], CWV.lcp[1]);
+        const gInp = grade(inp, CWV.fid[0], CWV.fid[1]);
+        const gInpModern = grade(inp, 200, 500);
+        const gCls = grade(cls, CWV.cls[0], CWV.cls[1]);
+        const passes = [gLcp, gInpModern, gCls].filter((x) => x === 'Good').length;
+        const rows = [
+          { k: 'Largest Contentful Paint — ' + gLcp, ref: 'Good ≤ 2,500 ms, poor > 4,000 ms', v: lcp, format: 'unit', unit: 'ms', extra: true },
+          { k: 'Distance from the LCP threshold', ref: lcp <= CWV.lcp[0] ? 'Under it' : 'Over it', v: Math.abs(lcp - CWV.lcp[0]), format: 'unit', unit: 'ms' },
+          { k: 'Interaction to Next Paint — ' + gInpModern, ref: 'Good ≤ 200 ms, poor > 500 ms (since March 2024)', v: inp, format: 'unit', unit: 'ms', extra: true },
+          { k: 'The same value judged as the retired FID', ref: 'Good ≤ 100 ms — ' + gInp, v: inp, format: 'unit', unit: 'ms' },
+          { k: 'Cumulative Layout Shift — ' + gCls, ref: 'Good ≤ 0.1, poor > 0.25', v: cls, format: 'plain', decimals: 3, extra: true },
+          { k: 'Metrics in the green', ref: 'Out of three', v: passes, format: 'unit', unit: 'of 3' },
+          { k: 'Percentile the thresholds are judged at', ref: 'Field data, not a lab run', v: 75, format: 'unit', unit: 'th percentile' },
+        ];
+        return {
+          total: passes + ' of 3 passing',
+          sub:
+            'LCP ' + gLcp.toLowerCase() + ' · INP ' + gInpModern.toLowerCase() + ' · CLS ' + gCls.toLowerCase() + ' · ' +
+            (passes === 3
+              ? 'all three in the green at the thresholds Search actually uses'
+              : 'fix the "poor" metrics first — they are the ones costing you') +
+            ' · judged at the 75th percentile of real users, not on a lab run',
+          rows: rows,
+          chart: [
+            { label: 'LCP (ms)', value: Math.round(lcp), tone: gLcp === 'Good' ? 'good' : gLcp === 'Poor' ? 'bad' : 'warn' },
+            { label: 'INP (ms)', value: Math.round(inp), tone: gInpModern === 'Good' ? 'good' : gInpModern === 'Poor' ? 'bad' : 'warn' },
+            { label: 'CLS × 1000', value: Math.round(cls * 1000), tone: gCls === 'Good' ? 'good' : gCls === 'Poor' ? 'bad' : 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'password') {
+        const len = Math.max(1, Math.floor(v.length || 1));
+        const set = String(v.charset || 'alnum');
+        const n = CHARSET_SIZE[set] || 26;
+        const combos = Math.pow(n, len);
+        const seconds = combos / GUESSES_PER_SECOND;
+        const oneMoreSeconds = (combos * n) / GUESSES_PER_SECOND;
+        const rows = [
+          { k: 'Size of the alphabet', ref: 'Possible values per character', v: n, format: 'unit', unit: 'characters' },
+          { k: 'Password length', ref: 'The strongest lever you have', v: len, format: 'unit', unit: 'characters' },
+          { k: 'Total combinations', ref: n + ' to the power of ' + len, v: combos, format: 'plain', extra: true },
+          { k: 'Guesses per second assumed', ref: 'Fast unsalted hash on consumer hardware', v: GUESSES_PER_SECOND, format: 'plain' },
+          { k: 'Time to exhaust the whole space', ref: 'Combinations ÷ guess rate', v: seconds, format: 'unit', unit: 'seconds', extra: true },
+          { k: 'The same figure in years', ref: 'Upper bound, not an average', v: seconds / (86400 * 365), format: 'unit', unit: 'years', decimals: 2 },
+          { k: 'Time if you add one more character', ref: '× ' + n + ' — that is why length wins', v: oneMoreSeconds / (86400 * 365), format: 'unit', unit: 'years', decimals: 2 },
+          { k: 'Average time to a hit', ref: 'Half the space, statistically', v: seconds / 2 / (86400 * 365), format: 'unit', unit: 'years', decimals: 2 },
+        ];
+        return {
+          total: humanSeconds(seconds),
+          sub:
+            combos.toExponential(2) + ' combinations at a billion guesses per second · ' +
+            'adding one character makes it ' + n + '× longer · ' +
+            'this assumes pure brute force — a dictionary word with substitutions falls in seconds regardless',
+          rows: rows,
+          chart: [
+            { label: 'Length (characters)', value: len, tone: 'main' },
+            { label: 'Alphabet size', value: n, tone: 'good' },
+          ],
+        };
+      }
+
+      // bcrypt
+      const cost = Math.max(4, Math.min(20, Math.floor(v.cost || 10)));
+      const ms = BCRYPT_MS_AT_10 * Math.pow(2, cost - 10);
+      const perSecond = 1000 / ms;
+      const nextMs = ms * 2;
+      const verdict = cost < 10 ? 'too low — raise it to at least 10' : cost > 14 ? 'very strong, but logins may feel slow under load' : 'a solid, current choice';
+      const rows = [
+        { k: 'Cost factor', ref: 'Rounds = 2 to this power', v: cost, format: 'plain' },
+        { k: 'Rounds of key expansion', ref: '2^' + cost, v: Math.pow(2, cost), format: 'plain' },
+        { k: 'Time to compute one hash', ref: 'On one modern CPU core', v: ms, format: 'unit', unit: 'ms', decimals: 1, extra: true },
+        { k: 'Logins one core sustains per second', ref: '1,000 ÷ hash time', v: perSecond, format: 'unit', unit: 'per second', decimals: 1, extra: true },
+        { k: 'Time at the next cost factor up', ref: 'Cost ' + (cost + 1) + ' — every step doubles', v: nextMs, format: 'unit', unit: 'ms', decimals: 1 },
+        { k: 'Slowdown versus the practical floor of cost 10', ref: 'How much harder you made the attacker work', v: Math.pow(2, cost - 10), format: 'unit', unit: '×', decimals: 2 },
+        { k: 'Hashes an attacker gets per second per core', ref: 'The same rate — that is the whole point', v: perSecond, format: 'unit', unit: 'per second', decimals: 1 },
+        { k: 'Time to try one million passwords against one hash', ref: 'Against a fast hash this is under a second', v: (ms * 1e6) / 1000 / 86400, format: 'unit', unit: 'days', decimals: 1 },
+      ];
+      return {
+        total: ms.toFixed(1) + ' ms per hash',
+        sub:
+          'Cost ' + cost + ' — ' + verdict + ' · about ' + perSecond.toFixed(1) + ' logins per second per core · ' +
+          'measure it on your own hardware against your latency budget, and re-hash on next successful login when you raise it',
+        rows: rows,
+        chart: [
+          { label: 'Milliseconds per hash at this cost', value: Math.round(ms * 10) / 10, tone: cost < 10 ? 'bad' : 'good' },
+          { label: 'Extra milliseconds at the next cost up', value: Math.round((nextMs - ms) * 10) / 10, tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

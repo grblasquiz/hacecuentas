@@ -1,0 +1,298 @@
+---
+/**
+ * Hub de decisión CO — "Impuesto predial y avalúo catastral".
+ * Ruta bajo el prefijo /co/, igual que las calculadoras que absorbe.
+ * audience="CO" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  SMLMV,
+  PREDIAL_BOGOTA,
+  TABLA_RESIDENCIAL_BOGOTA,
+  PREFERENCIAL_BOGOTA,
+  TARIFA_MEDELLIN_POR_MIL,
+  RATIO_CATASTRAL_COMERCIAL,
+} from '../../../lib/hubs/co/predial-y-avaluo';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    SMLMV,
+    DESCUENTO: PREDIAL_BOGOTA.descuentoProntoPago,
+    COMERCIAL: PREDIAL_BOGOTA.comercial,
+    TABLA: TABLA_RESIDENCIAL_BOGOTA,
+    PREF: PREFERENCIAL_BOGOTA,
+    MEDELLIN: TARIFA_MEDELLIN_POR_MIL,
+    RATIO: RATIO_CATASTRAL_COMERCIAL,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const cop = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
+    const mil = (n) => String(n).replace('.', ',');
+
+    /**
+     * Tarifa residencial de Bogotá por rango de avalúo. La tarifa del rango se
+     * aplica sobre TODO el avalúo: no es marginal (art. 1 Res. SDH-000194).
+     * `hasta: null` = último rango, sin techo.
+     */
+    function tarifaBogota(avaluo) {
+      for (const t of TABLA) {
+        if (t.hasta === null || avaluo <= t.hasta) return t.porMil;
+      }
+      return TABLA[TABLA.length - 1].porMil;
+    }
+
+    /** Tarifa preferencial de estratos 1-3 en Bogotá (Acuerdo 648 de 2016). */
+    function tarifaPreferencial(avaluo, estrato) {
+      const enSmlmv = avaluo / SMLMV;
+      if (estrato === '3') {
+        return enSmlmv <= PREF.topeSmlmv ? PREF.porMilEstrato3 : null;
+      }
+      if (enSmlmv < PREF.exclusionSmlmv) return 0;
+      if (enSmlmv <= PREF.umbral1PorMilSmlmv) return PREF.porMilBajo;
+      if (enSmlmv <= PREF.topeSmlmv) return PREF.porMilAlto;
+      return null; // pasa a la tabla general
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'bogota';
+      const estrato = String(v.estrato || '4');
+      const area = Math.max(0, v.area || 0);
+      const precioM2 = Math.max(0, v.precioM2 || 0);
+      const prontoPago = String(v.prontoPago || 'si') === 'si';
+      const valorizacion = Math.max(0, v.valorizacion || 0);
+      const cuotas = Math.max(1, Math.round(v.cuotas || 12));
+      const tarifaMunicipio = Math.max(0, v.tarifaMunicipio || 0);
+
+      const rows = [];
+
+      // Avalúo: el que cargó el usuario, o estimado desde el área y el precio comercial por m².
+      const avaluoCargado = Math.max(0, v.avaluo || 0);
+      const comercialEstimado = area * precioM2;
+      const estimado = avaluoCargado === 0;
+      const avaluo = estimado ? comercialEstimado * RATIO : avaluoCargado;
+
+      if (estimado) {
+        rows.push({ k: 'Valor comercial estimado', ref: area + ' m² × ' + cop(precioM2) + '/m²', v: comercialEstimado });
+        rows.push({
+          k: 'Avalúo catastral estimado',
+          ref: (RATIO * 100).toFixed(0) + '% del comercial · referencia, no dato oficial',
+          v: avaluo,
+        });
+      } else {
+        rows.push({ k: 'Avalúo catastral', ref: 'El de tu factura de predial', v: avaluo });
+        if (comercialEstimado > 0) {
+          rows.push({ k: 'Valor comercial de referencia', ref: area + ' m² × ' + cop(precioM2) + '/m²', v: comercialEstimado });
+        }
+      }
+
+      rows.push({
+        k: 'Avalúo medido en salarios mínimos',
+        ref: 'SMLMV ' + cop(SMLMV),
+        v: avaluo / SMLMV,
+        format: 'unit',
+        unit: 'SMLMV',
+        decimals: 1,
+      });
+
+      let porMil = 0;
+      let refTarifa = '';
+      let excluido = false;
+      let notaPreferencial = '';
+
+      if (id === 'valorizacion') {
+        porMil = 0;
+        refTarifa = 'No aplica en esta rama';
+      } else if (id === 'medellin') {
+        porMil = tarifaMunicipio;
+        refTarifa = '⚠️ Tarifa referencial que cargaste vos · Acuerdo municipal';
+      } else if (id === 'bogota-preferencial' && estrato !== 'comercial' && Number(estrato) <= 3) {
+        const p = tarifaPreferencial(avaluo, estrato);
+        if (p === null) {
+          porMil = tarifaBogota(avaluo);
+          refTarifa = 'Superaste las ' + PREF.topeSmlmv + ' SMLMV: se cae el beneficio y entra la tabla general';
+          notaPreferencial = 'perdiste la tarifa preferencial por avalúo';
+        } else if (p === 0) {
+          excluido = true;
+          porMil = 0;
+          refTarifa = 'Excluido: avalúo menor a ' + PREF.exclusionSmlmv + ' SMLMV (' + cop(PREF.exclusionSmlmv * SMLMV) + ')';
+        } else {
+          porMil = p;
+          refTarifa = 'Tarifa preferencial estratos 1-3 · Acuerdo 648 de 2016';
+        }
+      } else if (estrato === 'comercial') {
+        porMil = avaluo <= COMERCIAL.cortePesos ? COMERCIAL.tarifaPorMilHasta : COMERCIAL.tarifaPorMilDesde;
+        refTarifa = 'Uso comercial · corte en ' + cop(COMERCIAL.cortePesos);
+      } else {
+        porMil = tarifaBogota(avaluo);
+        refTarifa = 'Tabla residencial · Res. SDH-000194 · tarifa sobre todo el avalúo';
+      }
+
+      // El impuesto se aproxima al múltiplo de mil, como en la factura.
+      const impuestoPleno = Math.round((avaluo * porMil) / 1000 / 1000) * 1000;
+      const descuento = prontoPago && id !== 'valorizacion' ? Math.round(impuestoPleno * DESCUENTO) : 0;
+      const predial = impuestoPleno - descuento;
+
+      if (id !== 'valorizacion') {
+        rows.push({
+          k: 'Tarifa que te corresponde',
+          ref: refTarifa,
+          v: porMil,
+          format: 'unit',
+          unit: 'por mil',
+          decimals: 1,
+        });
+        rows.push({ k: 'Impuesto predial pleno del año', ref: 'Avalúo × tarifa por mil', v: impuestoPleno });
+        if (descuento > 0) {
+          rows.push({
+            k: 'Descuento por pronto pago',
+            ref: (DESCUENTO * 100).toFixed(0) + '% · sólo dentro de la fecha límite',
+            v: descuento,
+          });
+        } else if (!excluido) {
+          rows.push({
+            k: 'Descuento que estás dejando pasar',
+            ref: (DESCUENTO * 100).toFixed(0) + '% por pagar en la fecha de pronto pago',
+            v: Math.round(impuestoPleno * DESCUENTO),
+          });
+        }
+        rows.push({ k: 'Predial a pagar', ref: excluido ? 'Predio excluido del impuesto' : 'Después del descuento', v: predial, extra: true });
+        rows.push({
+          k: 'Predial equivalente por mes',
+          ref: 'Para presupuestarlo',
+          v: predial / 12,
+        });
+        if (avaluo > 0) {
+          rows.push({
+            k: 'Cuánto representa sobre tu avalúo',
+            ref: 'Tasa efectiva anual',
+            v: (predial / avaluo) * 100,
+            format: 'unit',
+            unit: '%',
+            decimals: 3,
+          });
+        }
+      }
+
+      // Contribución de valorización: contado con descuento vs cuotas con interés (sistema francés).
+      let valorizacionAPagar = 0;
+      let cuotaValorizacion = 0;
+      if (valorizacion > 0) {
+        const descContado = 0.05; // referencial: lo fija cada proyecto
+        const tasaMes = 0.01; // referencial: lo fija cada resolución de cobro
+        const contado = Math.round(valorizacion * (1 - descContado));
+        cuotaValorizacion =
+          tasaMes > 0
+            ? (valorizacion * tasaMes) / (1 - Math.pow(1 + tasaMes, -cuotas))
+            : valorizacion / cuotas;
+        const totalCuotas = cuotaValorizacion * cuotas;
+        valorizacionAPagar = id === 'valorizacion' ? contado : valorizacion;
+
+        rows.push({ k: 'Contribución de valorización asignada', ref: 'La de tu resolución de cobro', v: valorizacion });
+        rows.push({
+          k: 'Pagándola de contado',
+          ref: (descContado * 100).toFixed(0) + '% de descuento (referencial: usá el de tu resolución)',
+          v: contado,
+          extra: true,
+        });
+        rows.push({
+          k: 'Cuota mensual si la financiás',
+          ref: cuotas + ' cuotas al ' + (tasaMes * 100).toFixed(1).replace('.', ',') + '% mensual (referencial)',
+          v: cuotaValorizacion,
+        });
+        rows.push({ k: 'Total pagando en cuotas', ref: 'Capital más intereses', v: totalCuotas });
+        rows.push({
+          k: 'Lo que te cuesta financiar en vez de pagar de contado',
+          ref: 'Diferencia entre las dos vías',
+          v: totalCuotas - contado,
+          extra: true,
+        });
+      }
+
+      const totalAnio = (id === 'valorizacion' ? 0 : predial) + valorizacionAPagar;
+      if (valorizacion > 0 && id !== 'valorizacion') {
+        rows.push({ k: 'Total que te cuesta el predio este año', ref: 'Predial más valorización', v: totalAnio, extra: true });
+      }
+
+      let sub;
+      if (id === 'valorizacion') {
+        sub =
+          'La valorización te la asigna el municipio, no se calcula · pagarla de contado te ahorra ' +
+          cop(Math.max(0, cuotaValorizacion * cuotas - valorizacion * 0.95)) +
+          ' frente a financiarla en ' + cuotas + ' cuotas';
+      } else if (excluido) {
+        sub =
+          'Tu predio está EXCLUIDO del impuesto: avalúo por debajo de ' + PREF.exclusionSmlmv +
+          ' SMLMV en estrato ' + estrato + ' · si igual te llega factura, reclamá el beneficio';
+      } else {
+        sub =
+          'Tarifa del ' + mil(porMil) + ' por mil' +
+          (notaPreferencial ? ' — ' + notaPreferencial : '') +
+          (prontoPago ? ' · con el descuento del ' + (DESCUENTO * 100).toFixed(0) + '% ya aplicado' : ' · te estás perdiendo el ' + (DESCUENTO * 100).toFixed(0) + '% del pronto pago') +
+          (estimado ? ' · avalúo ESTIMADO desde los m², no es el oficial' : '');
+      }
+
+      const chart = [
+        { label: 'Predial que pagás', value: Math.round(id === 'valorizacion' ? 0 : predial), tone: 'main' },
+        { label: 'Descuento por pronto pago', value: Math.round(descuento), tone: 'good' },
+      ];
+      if (valorizacion > 0) {
+        chart.push({ label: 'Contribución de valorización', value: Math.round(valorizacionAPagar), tone: 'warn' });
+      }
+
+      return {
+        total: cop(id === 'valorizacion' ? valorizacionAPagar : predial),
+        sub: sub,
+        rows: rows,
+        chart: chart,
+      };
+    });
+  })();
+</script>

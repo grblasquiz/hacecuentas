@@ -1,0 +1,185 @@
+---
+/**
+ * Hub de decisión VE — "Qué me descuentan del sueldo y qué me devuelve el IVSS".
+ * El compute() replica las fórmulas vivas de sueldo neto, FAOV, reposo IVSS,
+ * paro forzoso y semanas cotizadas / pensión.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, DEDUCCIONES, REPOSO, PARO, PENSION } from '../../../lib/hubs/ve/ivss-y-deducciones';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="VE"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ D: DEDUCCIONES, REP: REPOSO, PAR: PARO, PEN: PENSION }}>
+  (function () {
+    const H = window.HC_HUB;
+    const bs = (n) =>
+      'Bs. ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(Math.round((n || 0) * 100) / 100);
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'neto';
+
+      const salario = Math.max(0, v.salarioMensual || 0);
+      const integral = Math.max(0, v.salarioIntegral || 0) || salario;
+      const salarioMinimo = Math.max(1, v.salarioMinimo || 1);
+      const diasReposo = Math.max(0, Math.round(v.diasReposo || 0));
+      const mesesParo = Math.min(PAR.maxMeses, Math.max(0, Math.round(v.mesesParo || 0)));
+      const edad = Math.max(0, Math.round(v.edad || 0));
+      const sexo = String(v.sexo || 'm') === 'f' ? 'f' : 'm';
+      const semanas = Math.max(0, Math.round(v.semanasCotizadas || 0));
+
+      // ── Retenciones obligatorias.
+      const topeSso = D.ssoTopeSalariosMinimos * salarioMinimo;
+      const baseSso = Math.min(salario, topeSso);
+      const sso = baseSso * D.sso;
+      const rpe = salario * D.rpe;
+      const faovTrabajador = integral * D.faovTrabajador;
+      const faovPatrono = integral * D.faovPatrono;
+      const totalRetenido = sso + rpe + faovTrabajador;
+      const neto = Math.max(0, salario - totalRetenido);
+      const pctRetenido = salario > 0 ? (totalRetenido / salario) * 100 : 0;
+
+      // ── Reposo médico: días 1-3 patrono al 100%, desde el 4 el IVSS 2/3.
+      const salarioDiario = salario / 30;
+      const diasPatrono100 = Math.min(diasReposo, REP.diasEmpleador100);
+      const maxDiasSubsidio = REP.maxSemanas * 7 - REP.diasEmpleador100;
+      const diasSubsidio = Math.min(Math.max(0, diasReposo - REP.diasEmpleador100), maxDiasSubsidio);
+      const pagoPatrono100 = diasPatrono100 * salarioDiario;
+      const subsidioIvss = diasSubsidio * salarioDiario * REP.porcentajeIvss;
+      const complementoPosible = diasSubsidio * salarioDiario * REP.porcentajePatronoComplemento;
+      const totalReposo = pagoPatrono100 + subsidioIvss;
+
+      // ── Paro forzoso: 60% del promedio cotizado, hasta 5 cuotas.
+      const paroMensual = salario * PAR.porcentaje;
+      const paroTotal = paroMensual * mesesParo;
+      const paroTope = paroMensual * PAR.maxMeses;
+      const cumpleSemanasParo = semanas >= PAR.cotizacionesMinSemanas;
+
+      // ── Pensión de vejez: 750 semanas + edad, ambos a la vez.
+      const edadRequerida = sexo === 'f' ? PEN.edadMujer : PEN.edadHombre;
+      const faltanAniosEdad = Math.max(0, edadRequerida - edad);
+      const faltanSemanas = Math.max(0, PEN.semanasRequeridas - semanas);
+      const aniosPorSemanas = faltanSemanas > 0 ? Math.ceil(faltanSemanas / 48) : 0;
+      const aniosFaltantes = Math.max(faltanAniosEdad, aniosPorSemanas);
+
+      const rows = [
+        { k: 'Salario bruto del mes', ref: 'Base de SSO y RPE', v: salario },
+        { k: 'SSO — Seguro Social Obligatorio', ref: D.sso * 100 + '% sobre ' + bs(baseSso) + ' (tope ' + D.ssoTopeSalariosMinimos + ' salarios mínimos)', v: sso },
+        { k: 'RPE — Régimen Prestacional de Empleo', ref: (D.rpe * 100).toLocaleString('es-VE') + '% sin tope · financia el paro forzoso', v: rpe },
+        { k: 'FAOV — tu retención', ref: D.faovTrabajador * 100 + '% del salario integral · BANAVIH', v: faovTrabajador },
+        { k: 'Total que te retienen', ref: pctRetenido.toFixed(2).replace('.', ',') + '% del bruto', v: totalRetenido },
+        { k: 'Sueldo neto en mano', ref: 'Bruto menos retenciones · sin ISLR', v: neto, extra: true },
+        { k: 'FAOV que aporta el patrono', ref: D.faovPatrono * 100 + '% · también va a tu cuenta', v: faovPatrono },
+        { k: 'Acumulás en BANAVIH por año', ref: D.faovTotal * 100 + '% del integral × 12', v: integral * D.faovTotal * 12 },
+      ];
+
+      if (diasReposo > 0) {
+        rows.push({ k: 'Reposo: días que paga el patrono al 100%', ref: 'Días 1 a ' + REP.diasEmpleador100, v: pagoPatrono100 });
+        rows.push({
+          k: 'Reposo: subsidio del IVSS por ' + diasSubsidio + ' días',
+          ref: (REP.porcentajeIvss * 100).toFixed(2).replace('.', ',') + '% desde el día ' + REP.desdeDia,
+          v: subsidioIvss,
+        });
+        rows.push({ k: 'Reposo: complemento del patrono si tu contrato lo prevé', ref: 'No obligatorio por ley', v: complementoPosible });
+        rows.push({ k: 'Reposo: total garantizado por ley', ref: diasReposo + ' días · sin complemento', v: totalReposo, extra: true });
+      }
+
+      if (mesesParo > 0) {
+        rows.push({ k: 'Paro forzoso: cuota mensual', ref: PAR.porcentaje * 100 + '% del salario cotizado', v: paroMensual });
+        rows.push({ k: 'Paro forzoso: total por ' + mesesParo + ' cuota(s)', ref: 'Tope legal ' + PAR.maxMeses + ' meses', v: paroTotal, extra: true });
+        rows.push({ k: 'Paro forzoso: tope si cobrás las ' + PAR.maxMeses + ' cuotas', ref: 'Máximo legal', v: paroTope });
+      }
+
+      rows.push({
+        k: 'Semanas que te faltan para la pensión',
+        ref: PEN.semanasRequeridas + ' semanas exigidas · tenés ' + semanas,
+        v: faltanSemanas,
+        format: 'unit',
+        unit: 'semanas',
+      });
+      rows.push({
+        k: 'Años que te faltan para la edad de pensión',
+        ref: edadRequerida + ' años exigidos',
+        v: faltanAniosEdad,
+        format: 'unit',
+        unit: 'años',
+      });
+      rows.push({
+        k: 'Años hasta poder pensionarte',
+        ref: 'Manda el requisito que falta más lejos',
+        v: aniosFaltantes,
+        format: 'unit',
+        unit: 'años',
+        extra: true,
+      });
+
+      let sub =
+        'Te retienen ' + pctRetenido.toFixed(2).replace('.', ',') + '% (' + bs(totalRetenido) + ') · ' +
+        (faltanSemanas > 0 || faltanAniosEdad > 0
+          ? 'pensión en ~' + aniosFaltantes + ' año(s)'
+          : 'ya cumplís edad y semanas para la pensión');
+      if (id === 'paro') {
+        sub +=
+          ' · ' + (cumpleSemanasParo ? 'cumplís' : 'NO cumplís') + ' las ' + PAR.cotizacionesMinSemanas +
+          ' semanas del paro forzoso';
+      }
+
+      const total =
+        id === 'reposo' && diasReposo > 0 ? totalReposo : id === 'paro' && mesesParo > 0 ? paroTotal : neto;
+
+      return {
+        total: bs(total),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Te queda en mano', value: Math.round(neto), tone: 'main' },
+          { label: 'SSO (salud, incapacidad y pensión)', value: Math.round(sso), tone: 'warn' },
+          { label: 'RPE (paro forzoso)', value: Math.round(rpe), tone: 'exit' },
+          { label: 'FAOV (ahorro tuyo en BANAVIH)', value: Math.round(faovTrabajador), tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

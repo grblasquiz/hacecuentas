@@ -1,0 +1,305 @@
+---
+/**
+ * Hub de decisão BR — "Quando posso me aposentar pelo INSS e quanto vou receber?".
+ * Ruta bajo el prefijo /pt/, igual que las calculadoras que absorbe.
+ * audience="BR" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  TETO,
+  PISO,
+  REGRA_IDADE,
+  REGRA_PONTOS,
+  REGRA_IDADE_PROGRESSIVA,
+  REGRA_PEDAGIO,
+  REGRA_ESPECIAL,
+  REGRA_PROFESSOR,
+  COEFICIENTE,
+  AUXILIO_DOENCA_PCT,
+} from '../../../lib/hubs/pt/aposentadoria-inss';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="BR"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header lang="pt" />
+  <DecisionHub data={hub} />
+  <Footer lang="pt" />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    TETO,
+    PISO,
+    REGRA_IDADE,
+    REGRA_PONTOS,
+    REGRA_IDADE_PROGRESSIVA,
+    REGRA_PEDAGIO,
+    REGRA_ESPECIAL,
+    REGRA_PROFESSOR,
+    COEFICIENTE,
+    AUXILIO_DOENCA_PCT,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const brl = (n) =>
+      'R$ ' + (Math.round((n || 0) * 100) / 100).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    const anos = (n) => {
+      const v = Math.round(n * 10) / 10;
+      return v.toLocaleString('pt-BR') + (v === 1 ? ' ano' : ' anos');
+    };
+
+    /** Piso constitucional (art. 201 §2º CF) e teto do INSS aplicados a todo benefício. */
+    function clampBeneficio(v) {
+      if (!(v > 0)) return 0;
+      return Math.min(Math.max(v, PISO), TETO);
+    }
+
+    /** EC 103/2019 art. 26 §2º e §5º: 60% + 2 p.p. por ano acima do limiar. */
+    function coeficiente(contrib, limiar) {
+      const extra = Math.max(0, contrib - limiar);
+      return Math.min(COEFICIENTE.maximo, COEFICIENTE.base + COEFICIENTE.porAno * extra);
+    }
+
+    /** Franjas fixas da barra: 60% a 100% da média. */
+    const BANDAS = [
+      { label: 'Piso — só o tempo mínimo', from: 60, to: 70, tone: 'bad' },
+      { label: 'Parcial', from: 70, to: 85, tone: 'warn' },
+      { label: 'Quase integral', from: 85, to: 99, tone: 'good' },
+      { label: 'Integral', from: 99, to: 100, tone: 'good' },
+    ];
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'idade';
+      const sexo = String(v.sexo || 'homem').toLowerCase() === 'mulher' ? 'mulher' : 'homem';
+      const idade = Math.max(0, Number(v.idade) || 0);
+      const contrib = Math.max(0, Number(v.anosContribuicao) || 0);
+      const media = Math.max(0, Number(v.mediaSalarial) || 0);
+      const ano = Math.max(2019, Math.round(Number(v.anoSimulacao) || 2026));
+      const contrib2019 = Math.max(0, Number(v.contribAte2019) || 0);
+      const fator = Math.max(0.01, Number(v.fatorPrevidenciario) || 0.8);
+      const catEsp = String(v.categoriaEspecial || '25');
+      const exposicao = Math.max(0, Number(v.anosExposicao) || 0);
+      const magisterio = Math.max(0, Number(v.anosMagisterio) || 0);
+      const media12 = Math.max(0, Number(v.media12) || 0);
+
+      // Limiar do coeficiente: 20 anos para o homem, 15 para a mulher (art. 26 §2º e §5º).
+      const limiarGeral = sexo === 'mulher' ? 15 : 20;
+      const mediaBase = Math.min(media, TETO);
+
+      const rows = [];
+      let coef = 0;          // percentual da média aplicado (0-100)
+      let valor = 0;
+      let cumpre = false;
+      let subReq = '';
+
+      if (id === 'idade') {
+        const R = REGRA_IDADE[sexo];
+        const faltaIdade = Math.max(0, R.idade - idade);
+        const faltaContrib = Math.max(0, R.contrib - contrib);
+        cumpre = faltaIdade === 0 && faltaContrib === 0;
+        coef = coeficiente(contrib, limiarGeral);
+        valor = clampBeneficio(mediaBase * (coef / 100));
+        rows.push({ k: 'Idade mínima exigida', ref: 'Art. 19 da EC 103/2019', v: R.idade, format: 'unit', unit: 'anos' });
+        rows.push({ k: 'Tempo mínimo de contribuição', ref: 'Art. 19 da EC 103/2019', v: R.contrib, format: 'unit', unit: 'anos' });
+        rows.push({ k: 'Falta de idade', ref: 'Diferença para a idade mínima', v: faltaIdade, format: 'unit', unit: 'anos' });
+        rows.push({ k: 'Falta de contribuição', ref: 'Diferença para o tempo mínimo', v: faltaContrib, format: 'unit', unit: 'anos' });
+        subReq = cumpre
+          ? 'Requisitos cumpridos pela regra permanente por idade.'
+          : 'Faltam ' + anos(faltaIdade) + ' de idade e ' + anos(faltaContrib) + ' de contribuição.';
+      } else if (id === 'pontos') {
+        const R = REGRA_PONTOS[sexo];
+        const exigidos = Math.min(R.teto, R.base2019 + Math.max(0, ano - 2019));
+        const pontos = idade + contrib;
+        const faltaPontos = Math.max(0, exigidos - pontos);
+        const faltaContrib = Math.max(0, R.contribMin - contrib);
+        cumpre = faltaPontos === 0 && faltaContrib === 0;
+        coef = coeficiente(contrib, limiarGeral);
+        valor = clampBeneficio(mediaBase * (coef / 100));
+        rows.push({ k: 'Pontos exigidos em ' + ano, ref: 'Art. 15 §1º da EC 103/2019 · teto de ' + R.teto, v: exigidos, format: 'plain' });
+        rows.push({ k: 'Seus pontos hoje', ref: idade + ' de idade + ' + contrib + ' de contribuição', v: pontos, format: 'plain' });
+        rows.push({ k: 'Pontos que faltam', ref: 'Cada ano trabalhado soma 2 pontos', v: faltaPontos, format: 'plain' });
+        rows.push({ k: 'Tempo mínimo de contribuição', ref: 'Art. 15 da EC 103/2019', v: R.contribMin, format: 'unit', unit: 'anos' });
+        rows.push({ k: 'Falta de contribuição', ref: 'Diferença para o tempo mínimo', v: faltaContrib, format: 'unit', unit: 'anos' });
+        subReq = cumpre
+          ? 'Você já soma os ' + exigidos + ' pontos exigidos em ' + ano + '.'
+          : 'Faltam ' + faltaPontos + ' pontos e ' + anos(faltaContrib) + ' de contribuição.';
+      } else if (id === 'idade_progressiva') {
+        const R = REGRA_IDADE_PROGRESSIVA[sexo];
+        const idadeMin = Math.min(R.teto, R.base2019 + Math.max(0, ano - 2019) * 0.5);
+        const faltaIdade = Math.max(0, idadeMin - idade);
+        const faltaContrib = Math.max(0, R.contribMin - contrib);
+        cumpre = faltaIdade === 0 && faltaContrib === 0;
+        coef = coeficiente(contrib, limiarGeral);
+        valor = clampBeneficio(mediaBase * (coef / 100));
+        rows.push({ k: 'Idade mínima em ' + ano, ref: 'Art. 16 da EC 103/2019 · +6 meses por ano', v: idadeMin, format: 'unit', unit: 'anos', decimals: 1 });
+        rows.push({ k: 'Tempo mínimo de contribuição', ref: 'Art. 16 da EC 103/2019', v: R.contribMin, format: 'unit', unit: 'anos' });
+        rows.push({ k: 'Falta de idade', ref: 'Diferença para a idade mínima do ano', v: faltaIdade, format: 'unit', unit: 'anos', decimals: 1 });
+        rows.push({ k: 'Falta de contribuição', ref: 'Diferença para o tempo mínimo', v: faltaContrib, format: 'unit', unit: 'anos' });
+        subReq = cumpre
+          ? 'Requisitos cumpridos: idade mínima de ' + idadeMin.toLocaleString('pt-BR') + ' anos em ' + ano + '.'
+          : 'Faltam ' + anos(faltaIdade) + ' de idade e ' + anos(faltaContrib) + ' de contribuição.';
+      } else if (id === 'pedagio50') {
+        const minimo = REGRA_PEDAGIO.p50[sexo];
+        const faltavaEm2019 = Math.max(0, minimo - contrib2019);
+        const elegivelRegra = contrib2019 > 0 && faltavaEm2019 < 2;
+        const exigido = minimo + faltavaEm2019 * REGRA_PEDAGIO.p50.pedagio;
+        const faltaContrib = Math.max(0, exigido - contrib);
+        cumpre = elegivelRegra && faltaContrib === 0;
+        // Art. 17 da EC 103/2019: 100% da média × fator previdenciário (sem coeficiente de 60%).
+        coef = Math.min(100, 100 * fator);
+        valor = clampBeneficio(mediaBase * fator);
+        rows.push({ k: 'Tempo que faltava em 13/11/2019', ref: 'Base do pedágio · mínimo de ' + minimo + ' anos', v: faltavaEm2019, format: 'unit', unit: 'anos', decimals: 1 });
+        rows.push({ k: 'Pedágio de 50%', ref: 'Art. 17 da EC 103/2019', v: faltavaEm2019 * 0.5, format: 'unit', unit: 'anos', decimals: 1 });
+        rows.push({ k: 'Tempo total exigido', ref: 'Tempo mínimo + pedágio', v: exigido, format: 'unit', unit: 'anos', decimals: 1 });
+        rows.push({ k: 'Falta de contribuição', ref: 'Diferença para o tempo total exigido', v: faltaContrib, format: 'unit', unit: 'anos', decimals: 1 });
+        rows.push({ k: 'Fator previdenciário informado', ref: 'Não é constante — confira no Meu INSS', v: fator, format: 'plain', decimals: 2 });
+        subReq = !elegivelRegra
+          ? 'Esta regra só alcança quem, em 13/11/2019, estava a menos de 2 anos do tempo mínimo.'
+          : cumpre
+          ? 'Pedágio cumprido: ' + anos(exigido) + ' de contribuição.'
+          : 'Faltam ' + anos(faltaContrib) + ' para fechar o pedágio.';
+      } else if (id === 'pedagio100') {
+        const R = REGRA_PEDAGIO.p100[sexo];
+        const faltavaEm2019 = Math.max(0, R.contrib - contrib2019);
+        const exigido = R.contrib + faltavaEm2019 * REGRA_PEDAGIO.p100.pedagio;
+        const faltaContrib = Math.max(0, exigido - contrib);
+        const faltaIdade = Math.max(0, R.idade - idade);
+        cumpre = faltaContrib === 0 && faltaIdade === 0;
+        // Art. 20 da EC 103/2019: 100% da média, sem coeficiente e sem fator.
+        coef = 100;
+        valor = clampBeneficio(mediaBase);
+        rows.push({ k: 'Idade mínima exigida', ref: 'Art. 20 da EC 103/2019', v: R.idade, format: 'unit', unit: 'anos' });
+        rows.push({ k: 'Tempo que faltava em 13/11/2019', ref: 'Base do pedágio · mínimo de ' + R.contrib + ' anos', v: faltavaEm2019, format: 'unit', unit: 'anos', decimals: 1 });
+        rows.push({ k: 'Pedágio de 100%', ref: 'O dobro do tempo que faltava', v: faltavaEm2019, format: 'unit', unit: 'anos', decimals: 1 });
+        rows.push({ k: 'Tempo total exigido', ref: 'Tempo mínimo + pedágio', v: exigido, format: 'unit', unit: 'anos', decimals: 1 });
+        rows.push({ k: 'Falta de idade', ref: 'Diferença para a idade mínima', v: faltaIdade, format: 'unit', unit: 'anos' });
+        rows.push({ k: 'Falta de contribuição', ref: 'Diferença para o tempo total exigido', v: faltaContrib, format: 'unit', unit: 'anos', decimals: 1 });
+        subReq = cumpre
+          ? 'Pedágio e idade mínima cumpridos — 100% da média, sem fator previdenciário.'
+          : 'Faltam ' + anos(faltaIdade) + ' de idade e ' + anos(faltaContrib) + ' de contribuição.';
+      } else if (id === 'especial') {
+        const R = REGRA_ESPECIAL[catEsp] || REGRA_ESPECIAL['25'];
+        const faltaIdade = Math.max(0, R.idade - idade);
+        const faltaExp = Math.max(0, R.tempo - exposicao);
+        cumpre = faltaIdade === 0 && faltaExp === 0;
+        // Art. 26 §2º: o limiar do coeficiente é 20 anos de CONTRIBUIÇÃO, não o tempo de exposição.
+        coef = coeficiente(contrib, 20);
+        valor = clampBeneficio(mediaBase * (coef / 100));
+        rows.push({ k: 'Tempo de exposição exigido', ref: R.desc, v: R.tempo, format: 'unit', unit: 'anos' });
+        rows.push({ k: 'Idade mínima exigida', ref: 'Art. 19 §1º I da EC 103/2019', v: R.idade, format: 'unit', unit: 'anos' });
+        rows.push({ k: 'Falta de idade', ref: 'Diferença para a idade mínima', v: faltaIdade, format: 'unit', unit: 'anos' });
+        rows.push({ k: 'Falta de exposição comprovada', ref: 'Comprovação por PPP e LTCAT', v: faltaExp, format: 'unit', unit: 'anos' });
+        subReq = cumpre
+          ? 'Requisitos da categoria de ' + R.tempo + ' anos cumpridos.'
+          : 'Faltam ' + anos(faltaIdade) + ' de idade e ' + anos(faltaExp) + ' de exposição comprovada.';
+      } else if (id === 'professor') {
+        const R = REGRA_PROFESSOR[sexo];
+        const faltaIdade = Math.max(0, R.idade - idade);
+        const faltaMag = Math.max(0, R.contrib - magisterio);
+        cumpre = faltaIdade === 0 && faltaMag === 0;
+        // Art. 26 §5º: para o professor o acréscimo de 2 p.p. conta a partir de 25 anos.
+        coef = coeficiente(contrib, R.contrib);
+        valor = clampBeneficio(mediaBase * (coef / 100));
+        rows.push({ k: 'Idade mínima exigida', ref: 'Art. 19 §1º III da EC 103/2019', v: R.idade, format: 'unit', unit: 'anos' });
+        rows.push({ k: 'Tempo exclusivo de magistério', ref: 'Educação infantil, fundamental ou médio', v: R.contrib, format: 'unit', unit: 'anos' });
+        rows.push({ k: 'Falta de idade', ref: 'Diferença para a idade mínima', v: faltaIdade, format: 'unit', unit: 'anos' });
+        rows.push({ k: 'Falta de magistério', ref: 'Diferença para os 25 anos exigidos', v: faltaMag, format: 'unit', unit: 'anos' });
+        subReq = cumpre
+          ? 'Requisitos do redutor de 5 anos cumpridos.'
+          : 'Faltam ' + anos(faltaIdade) + ' de idade e ' + anos(faltaMag) + ' de magistério.';
+      } else {
+        // auxílio por incapacidade temporária (art. 61 da Lei 8.213/1991)
+        const base = Math.min(mediaBase, media12 > 0 ? Math.min(media12, TETO) : mediaBase);
+        cumpre = contrib >= 1;
+        coef = AUXILIO_DOENCA_PCT * 100;
+        valor = clampBeneficio(base * AUXILIO_DOENCA_PCT);
+        rows.push({ k: 'Salário de benefício aplicado', ref: 'Média limitada ao teto e aos 12 últimos salários', v: base });
+        rows.push({ k: 'Percentual do benefício', ref: 'Art. 61 da Lei 8.213/1991', v: 91, format: 'unit', unit: '%' });
+        rows.push({ k: 'Dias pagos pela empresa', ref: 'Art. 60 §3º da Lei 8.213/1991', v: 15, format: 'unit', unit: 'dias' });
+        rows.push({ k: 'Carência exigida', ref: 'Dispensada em acidente e doenças graves', v: 12, format: 'unit', unit: 'contribuições' });
+        subReq = 'Benefício temporário: 91% do salário de benefício, do 16º dia de afastamento em diante.';
+      }
+
+      rows.push({ k: 'Média limitada ao teto do INSS', ref: 'Teto de ' + brl(TETO), v: mediaBase });
+      rows.push({
+        k: 'Coeficiente aplicado à média',
+        ref: id === 'pedagio100' ? '100% da média · art. 20 da EC 103/2019'
+          : id === 'pedagio50' ? '100% × fator previdenciário · art. 17'
+          : id === 'auxilio_doenca' ? 'Art. 61 da Lei 8.213/1991'
+          : '60% + 2 p.p. por ano acima do limiar · art. 26',
+        v: coef,
+        format: 'unit',
+        unit: '%',
+        decimals: 1,
+      });
+      rows.push({
+        k: id === 'auxilio_doenca' ? 'Auxílio mensal estimado' : 'Benefício mensal estimado',
+        ref: 'Piso de ' + brl(PISO) + ' · teto de ' + brl(TETO),
+        v: valor,
+        extra: true,
+      });
+      rows.push({ k: 'Valor no ano (13 pagamentos)', ref: 'Inclui o abono anual de dezembro', v: valor * 13 });
+
+      const posCoef = Math.min(100, Math.max(60, coef));
+      const position = ((posCoef - 60) / 40) * 100;
+
+      const sub =
+        subReq +
+        ' Coeficiente de ' + posCoef.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '% sobre a média de ' +
+        brl(mediaBase) + ' → ' + brl(valor) + ' por mês' +
+        (cumpre ? '.' : ' quando os requisitos estiverem cumpridos.');
+
+      return {
+        total: brl(valor),
+        sub: sub,
+        rows: rows,
+        chart: BANDAS,
+        position: position,
+        positionLabel: posCoef.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '% da média · ' + brl(valor) + '/mês',
+      };
+    });
+  })();
+</script>

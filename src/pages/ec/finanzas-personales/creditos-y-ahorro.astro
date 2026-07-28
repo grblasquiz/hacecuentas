@@ -1,0 +1,360 @@
+---
+/**
+ * Hub de decisión EC — "Créditos y ahorro: cuánto pagas de verdad".
+ * audience="EC" literal: HubData sólo modela 'AR' | 'global' y el mercado viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  SBU,
+  TASA_BIESS,
+  TOPE_QUIROGRAFARIO,
+  INGRESO_MAX_CREDICASA,
+  TEA_MAX_CONSUMO_BCE,
+  TEA_VEHICULAR_REF,
+  TEA_CONSUMO_REF,
+  TEA_PLAZO_FIJO_REF,
+  COSEDE_COBERTURA,
+  PLAZO_EXONERACION_DIAS,
+  RETENCION_RENDIMIENTOS,
+  TASAS_QUIROGRAFARIO,
+} from '../../../lib/hubs/ec/creditos-y-ahorro';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="EC"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    SBU,
+    TASA_BIESS,
+    TOPE_QUIROGRAFARIO,
+    INGRESO_MAX_CREDICASA,
+    TEA_MAX_CONSUMO_BCE,
+    TEA_VEHICULAR_REF,
+    TEA_CONSUMO_REF,
+    TEA_PLAZO_FIJO_REF,
+    COSEDE_COBERTURA,
+    PLAZO_EXONERACION_DIAS,
+    RETENCION_RENDIMIENTOS,
+    TASAS_QUIROGRAFARIO,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    // Ecuador está dolarizado: formato $1.234,56.
+    const usd = (n) =>
+      '$' + new Intl.NumberFormat('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        .format(Math.round((n || 0) * 100) / 100);
+    const pct = (n) => (n || 0).toFixed(2).replace('.', ',') + '%';
+
+    /** Tasa NOMINAL anual del quirografario del IESS según el plazo, en decimal. */
+    function tasaQuirografario(meses) {
+      for (const t of TASAS_QUIROGRAFARIO) if (meses <= t.hastaMeses) return t.tasa;
+      return TASAS_QUIROGRAFARIO[TASAS_QUIROGRAFARIO.length - 1].tasa;
+    }
+
+    /** Cuota del sistema francés (PMT de anualidad). */
+    function pmt(capital, i, n) {
+      if (n <= 0) return 0;
+      return i > 0 ? (capital * i) / (1 - Math.pow(1 + i, -n)) : capital / n;
+    }
+
+    /** Intereses totales del sistema alemán: capital fijo, interés sobre saldo decreciente. */
+    function interesesAleman(capital, i, n) {
+      if (n <= 0) return 0;
+      // Suma cerrada: i · M · (n+1) / 2
+      return i * capital * (n + 1) / 2;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'biess';
+
+      // Nota: se usa `Math.max(0, Number(x))` y NO `Number(x) || default`, para que un 0
+      // escrito a propósito por el usuario (entrada 0%, sin peajes) se respete.
+      const monto = Math.max(0, Number(v.monto) || 0);
+      const nMeses = Math.max(1, Math.round(Number(v.plazoMeses) || 1));
+      const sistema = String(v.sistema || 'frances') === 'aleman' ? 'aleman' : 'frances';
+      const ingreso = Math.max(0, Number(v.ingresoMensual) || 0);
+      const pagoTarjeta = Math.max(0, Number(v.pagoMensual) || 0);
+      const entradaPctRaw = Number(v.entradaPct);
+      const entradaPct = Number.isFinite(entradaPctRaw) ? Math.min(90, Math.max(0, entradaPctRaw)) : 20;
+
+      // Tasa: si el usuario la deja en blanco o en 0, se usa la de referencia de la rama.
+      const tasaRaw = Number(v.tasaAnual);
+      const tasaUser = Number.isFinite(tasaRaw) && tasaRaw > 0 ? tasaRaw : null;
+
+      let tasaAnual;          // % anual, tal como la publica la entidad
+      let convencion;         // 'nominal' | 'efectiva'
+      let etiquetaTasa;
+      if (id === 'biess') {
+        tasaAnual = tasaUser !== null ? tasaUser : TASA_BIESS;
+        convencion = 'nominal';
+        etiquetaTasa = 'BIESS · ' + pct(tasaAnual) + ' nominal anual';
+      } else if (id === 'quirografario') {
+        tasaAnual = tasaUser !== null ? tasaUser : tasaQuirografario(nMeses) * 100;
+        convencion = 'nominal';
+        etiquetaTasa = 'Quirografario IESS · ' + pct(tasaAnual) + ' nominal anual';
+      } else if (id === 'vehicular') {
+        tasaAnual = tasaUser !== null ? tasaUser : TEA_VEHICULAR_REF;
+        convencion = 'efectiva';
+        etiquetaTasa = 'Vehicular · ' + pct(tasaAnual) + ' efectiva anual';
+      } else if (id === 'tarjeta') {
+        tasaAnual = tasaUser !== null ? tasaUser : TEA_MAX_CONSUMO_BCE;
+        convencion = 'efectiva';
+        etiquetaTasa = 'Tarjeta · ' + pct(tasaAnual) + ' efectiva anual';
+      } else if (id === 'plazofijo') {
+        tasaAnual = tasaUser !== null ? tasaUser : TEA_PLAZO_FIJO_REF;
+        convencion = 'efectiva';
+        etiquetaTasa = 'Póliza · ' + pct(tasaAnual) + ' efectiva anual';
+      } else {
+        tasaAnual = tasaUser !== null ? tasaUser : TEA_CONSUMO_REF;
+        convencion = 'efectiva';
+        etiquetaTasa = 'Consumo · ' + pct(tasaAnual) + ' efectiva anual';
+      }
+
+      // Tasa mensual según la convención de la entidad. Dividir una TEA entre 12
+      // subestima la cuota; por eso las ramas efectivas usan la raíz doceava.
+      const iMes = convencion === 'nominal'
+        ? (tasaAnual / 100) / 12
+        : Math.pow(1 + tasaAnual / 100, 1 / 12) - 1;
+
+      const rows = [];
+      let total, sub, chart;
+
+      if (id === 'plazofijo') {
+        // ── Póliza a plazo fijo: capitalización efectiva sobre base 360 días ──
+        const dias = nMeses * 30;
+        const factor = Math.pow(1 + tasaAnual / 100, dias / 360);
+        const montoFinal = monto * factor;
+        const interesBruto = montoFinal - monto;
+        const exonerado = dias >= PLAZO_EXONERACION_DIAS;
+        const retencion = exonerado ? 0 : interesBruto * (RETENCION_RENDIMIENTOS / 100);
+        const interesNeto = interesBruto - retencion;
+        const recibido = monto + interesNeto;
+        const cubierto = Math.min(monto, COSEDE_COBERTURA);
+        const descubierto = Math.max(0, monto - COSEDE_COBERTURA);
+
+        rows.push({ k: 'Capital que depositas', ref: 'Lo que entregas a la entidad', v: monto });
+        rows.push({ k: 'Plazo del depósito', ref: 'Base 360 días · un mes = 30 días', v: dias, format: 'unit', unit: 'días' });
+        rows.push({ k: 'Interés bruto del período', ref: 'Capitalización efectiva sobre base 360', v: interesBruto });
+        rows.push({
+          k: 'Retención en la fuente',
+          ref: exonerado
+            ? 'Exonerado: plazo de ' + PLAZO_EXONERACION_DIAS + ' días o más (LRTI art. 9 num. 15.1)'
+            : RETENCION_RENDIMIENTOS + '% sobre el interés · plazo menor a ' + PLAZO_EXONERACION_DIAS + ' días',
+          v: retencion,
+        });
+        rows.push({ k: 'Interés neto que te queda', ref: 'Bruto menos retención', v: interesNeto, extra: true });
+        rows.push({ k: 'Total que recibes al vencimiento', ref: 'Capital más interés neto', v: recibido });
+        rows.push({
+          k: 'Rendimiento neto del período',
+          ref: 'Interés neto sobre el capital',
+          v: monto > 0 ? (interesNeto / monto) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        rows.push({ k: 'Capital cubierto por el COSEDE', ref: 'Tope ' + usd(COSEDE_COBERTURA) + ' por persona y entidad', v: cubierto });
+        rows.push({ k: 'Capital sin cobertura del COSEDE', ref: descubierto > 0 ? 'Conviene repartirlo en otra entidad' : 'Todo tu capital está cubierto', v: descubierto });
+
+        total = usd(recibido);
+        sub = 'Depositas ' + usd(monto) + ' por ' + dias + ' días al ' + pct(tasaAnual) +
+          ' efectivo · ganas ' + usd(interesNeto) + ' netos · ' +
+          (exonerado ? 'rendimiento exonerado, sin retención' : 'con retención del ' + RETENCION_RENDIMIENTOS + '% por plazo menor a ' + PLAZO_EXONERACION_DIAS + ' días');
+        chart = [
+          { label: 'Capital depositado', value: Math.round(monto), tone: 'main' },
+          { label: 'Interés neto ganado', value: Math.round(interesNeto), tone: 'good' },
+          { label: 'Retención en la fuente', value: Math.round(retencion), tone: 'exit' },
+        ];
+      } else if (id === 'tarjeta') {
+        // ── Tarjeta: amortización mes a mes con el pago fijo del usuario ──
+        const interesPrimerMes = monto * iMes;
+        const MAX = 1200;
+        let saldo = monto, meses = 0, intereses = 0;
+        const cubre = pagoTarjeta > interesPrimerMes;
+        if (cubre) {
+          while (saldo > 0.005 && meses < MAX) {
+            const int = saldo * iMes;
+            intereses += int;
+            saldo = saldo - (pagoTarjeta - int);
+            meses++;
+            if (saldo < 0) saldo = 0;
+          }
+        }
+        // Comparación con el pago mínimo típico: 5% del saldo, con piso de $10.
+        let sMin = monto, mMin = 0, iMin = 0;
+        while (sMin > 0.005 && mMin < MAX) {
+          const int = sMin * iMes;
+          const cuota = Math.max(sMin * 0.05, 10);
+          const pago = Math.min(cuota, sMin + int);
+          if (pago <= int) { mMin = MAX; break; }
+          iMin += int;
+          sMin = sMin - (pago - int);
+          mMin++;
+        }
+
+        rows.push({ k: 'Saldo que debes hoy', ref: 'Capital de la tarjeta', v: monto });
+        rows.push({ k: 'Interés del primer mes', ref: 'Tasa efectiva mensual ' + pct(iMes * 100), v: interesPrimerMes });
+        rows.push({ k: 'Lo que abonas cada mes', ref: cubre ? 'Cubre el interés y baja capital' : 'NO cubre ni el interés del mes', v: pagoTarjeta, extra: true });
+        rows.push({
+          k: 'Meses hasta terminar de pagar',
+          ref: cubre ? 'Pagando ese monto fijo todos los meses' : 'La deuda nunca se cancela con ese pago',
+          v: cubre ? meses : 0,
+          format: 'unit',
+          unit: 'meses',
+        });
+        rows.push({ k: 'Intereses que pagas en total', ref: cubre ? 'El precio de arrastrar la deuda' : 'Crece sin fin', v: cubre ? intereses : 0 });
+        rows.push({ k: 'Total desembolsado', ref: 'Capital más intereses', v: cubre ? monto + intereses : 0 });
+        rows.push({
+          k: 'Sobrecosto sobre lo que debías',
+          ref: 'Intereses sobre el saldo inicial',
+          v: cubre && monto > 0 ? (intereses / monto) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 0,
+        });
+        rows.push({
+          k: 'Si pagaras solo el mínimo: meses',
+          ref: 'Mínimo típico del 5% del saldo, piso de $10',
+          v: mMin >= MAX ? 0 : mMin,
+          format: 'unit',
+          unit: 'meses',
+        });
+        rows.push({ k: 'Si pagaras solo el mínimo: intereses', ref: 'La trampa más cara de la tarjeta', v: mMin >= MAX ? 0 : iMin });
+
+        total = cubre ? usd(intereses) : usd(0);
+        sub = cubre
+          ? 'Debes ' + usd(monto) + ' al ' + pct(tasaAnual) + ' efectivo · pagando ' + usd(pagoTarjeta) +
+            ' por mes tardas ' + meses + ' meses y pagas ' + usd(intereses) + ' de intereses' +
+            (mMin < MAX ? ' · con el mínimo serían ' + mMin + ' meses y ' + usd(iMin) : '')
+          : 'Tu pago de ' + usd(pagoTarjeta) + ' es menor al interés del primer mes (' + usd(interesPrimerMes) +
+            '): la deuda crece todos los meses en vez de bajar. Necesitas pagar más que eso para empezar a reducirla.';
+        chart = [
+          { label: 'Capital que debías', value: Math.round(monto), tone: 'main' },
+          { label: 'Intereses que pagas', value: Math.round(cubre ? intereses : interesPrimerMes * 12), tone: 'bad' },
+        ];
+      } else {
+        // ── Ramas de crédito: BIESS, quirografario, consumo y vehicular ──
+        const esVehicular = id === 'vehicular';
+        const entrada = esVehicular ? monto * (entradaPct / 100) : 0;
+        const capital = Math.max(0, monto - entrada);
+
+        const cuotaFrances = pmt(capital, iMes, nMeses);
+        const intFrances = cuotaFrances * nMeses - capital;
+        const amortCapital = capital / nMeses;
+        const primeraAleman = amortCapital + capital * iMes;
+        const intAleman = interesesAleman(capital, iMes, nMeses);
+
+        const esAleman = sistema === 'aleman';
+        const cuotaMostrada = esAleman ? primeraAleman : cuotaFrances;
+        const intereses = esAleman ? intAleman : intFrances;
+        const totalPagado = capital + intereses;
+        const desembolso = totalPagado + entrada;
+        const pesoIngreso = ingreso > 0 ? (cuotaMostrada / ingreso) * 100 : 0;
+
+        if (esVehicular) {
+          rows.push({ k: 'Precio del vehículo', ref: 'Lo que cuesta de lista', v: monto });
+          rows.push({ k: 'Entrada que pones', ref: entradaPct.toFixed(0) + '% del precio', v: entrada });
+        }
+        rows.push({ k: esVehicular ? 'Capital que financias' : 'Capital del crédito', ref: 'Sobre esto corren los intereses', v: capital });
+        rows.push({
+          k: esAleman ? 'Primera cuota (sistema alemán)' : 'Cuota mensual fija (sistema francés)',
+          ref: esAleman ? 'Baja mes a mes: amortizas ' + usd(amortCapital) + ' de capital fijo' : etiquetaTasa,
+          v: cuotaMostrada,
+          extra: true,
+        });
+        rows.push({
+          k: 'Tasa mensual aplicada',
+          ref: convencion === 'nominal' ? 'Nominal anual ÷ 12 (convención BIESS/IESS)' : '(1+TEA)^(1/12)−1 · no es la TEA ÷ 12',
+          v: iMes * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 3,
+        });
+        rows.push({ k: 'Intereses totales del crédito', ref: 'El precio del dinero prestado', v: intereses });
+        rows.push({ k: 'Total que devuelves', ref: 'Capital más intereses', v: totalPagado });
+        if (esVehicular) rows.push({ k: 'Lo que termina costando el auto', ref: 'Entrada más todas las cuotas', v: desembolso });
+        rows.push({
+          k: 'Cuánto encarece el crédito lo que compras',
+          ref: 'Intereses sobre el capital financiado',
+          v: capital > 0 ? (intereses / capital) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 0,
+        });
+        rows.push({
+          k: 'Peso de la cuota sobre tu ingreso',
+          ref: pesoIngreso > 40 ? 'Por encima del 40% que toman como límite las entidades' : 'Referencia prudente: hasta el 40%',
+          v: pesoIngreso,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        rows.push({
+          k: esAleman ? 'Intereses si eligieras el francés' : 'Intereses si eligieras el alemán',
+          ref: esAleman ? 'Cuota fija, más caro en total' : 'Cuota decreciente, más barato en total',
+          v: esAleman ? intFrances : intAleman,
+        });
+        if (id === 'quirografario' && monto > TOPE_QUIROGRAFARIO) {
+          rows.push({ k: 'Tope legal del quirografario', ref: '80 SBU · lo que pides lo supera', v: TOPE_QUIROGRAFARIO });
+        }
+
+        total = usd(cuotaMostrada);
+        sub = (esVehicular ? 'Financias ' + usd(capital) + ' tras una entrada de ' + usd(entrada) : 'Pides ' + usd(capital)) +
+          ' a ' + nMeses + ' meses · ' + etiquetaTasa +
+          ' · devuelves ' + usd(totalPagado) + ', o sea ' + usd(intereses) + ' de intereses' +
+          (ingreso > 0 ? ' · la cuota se lleva el ' + pesoIngreso.toFixed(0) + '% de tu ingreso' : '');
+        chart = [
+          { label: esVehicular ? 'Capital financiado' : 'Capital que recibes', value: Math.round(capital), tone: 'main' },
+          { label: 'Intereses que devuelves de más', value: Math.round(intereses), tone: 'exit' },
+        ];
+        if (esVehicular && entrada > 0) chart.push({ label: 'Entrada de tu bolsillo', value: Math.round(entrada), tone: 'prop' });
+      }
+
+      return { total: total, sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

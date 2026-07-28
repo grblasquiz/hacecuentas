@@ -1,0 +1,237 @@
+---
+/**
+ * Hub de decisión MX — ISR de arrendamiento (ciega vs reales, pago provisional) y predial.
+ * audience="MX" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, RENTA_MX } from '../../../lib/hubs/mx/rentar-mi-departamento';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="MX"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ R: RENTA_MX }}>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+
+    /** ISR mensual 2026 — tarifa del Art. 96 LISR (Anexo 8 RMF 2026). */
+    function isrMensual(base) {
+      if (!isFinite(base) || base <= 0) return 0;
+      const t = R.tarifaMensual;
+      for (let k = 0; k < t.length; k++) {
+        const limInf = t[k][0], limSup = t[k][1], cuota = t[k][2], tasa = t[k][3];
+        if (base >= limInf && base <= limSup) return cuota + (base - limInf) * tasa;
+      }
+      const u = t[t.length - 1];
+      return u[2] + (base - u[0]) * u[3];
+    }
+
+    /** Predial bimestral de la CDMX — Art. 130 CFCDMX, con la reducción del Art. 131. */
+    function predialCdmx(valorCatastral, esHabitacional) {
+      const t = R.predialCdmx;
+      let rango = t[t.length - 1];
+      for (let k = 0; k < t.length; k++) {
+        if (valorCatastral >= t[k][0] && valorCatastral <= t[k][1]) { rango = t[k]; break; }
+      }
+      const bruta = rango[2] + Math.max(0, valorCatastral - rango[0]) * rango[3];
+      let reduccion = 0;
+      if (esHabitacional) {
+        for (let k = 0; k < R.reduccionCdmx.length; k++) {
+          if (valorCatastral <= R.reduccionCdmx[k][0]) { reduccion = R.reduccionCdmx[k][1]; break; }
+        }
+      }
+      return { bruta: bruta, reduccion: reduccion, neta: bruta * (1 - reduccion) };
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'provisional';
+      const renta = Math.max(0, v.renta || 0);
+      const predialAnual = Math.max(0, v.predialAnual || 0);
+      const predialMensual = predialAnual / 12;
+      const gastosReales = Math.max(0, v.gastosReales || 0);
+      const esMoral = String(v.tipoInquilino || 'fisica') === 'moral';
+
+      // Deducciones del mes: el predial entra en las DOS opciones (Art. 115).
+      const dedCiega = renta * R.deduccionCiega + predialMensual;
+      const dedReal = gastosReales + predialMensual;
+      const isrCiega = isrMensual(Math.max(0, renta - dedCiega));
+      const isrReal = isrMensual(Math.max(0, renta - dedReal));
+
+      // ── Caso 3: predial ────────────────────────────────────────────────
+      if (id === 'predial') {
+        const valorCatastral = Math.max(0, v.valorCatastral || 0);
+        const esHabitacional = String(v.usoInmueble || 'habitacional') !== 'noHabitacional';
+        const enCdmx = String(v.municipio || 'cdmx') !== 'otro';
+
+        let bimestral, reduccion, bruto;
+        if (enCdmx) {
+          const p = predialCdmx(valorCatastral, esHabitacional);
+          bruto = p.bruta * R.bimestresPorAnio;
+          reduccion = p.reduccion;
+          bimestral = p.neta;
+        } else {
+          const tasa = Math.max(0, v.tasaPredialOtro || 0) / 100;
+          bruto = valorCatastral * tasa;
+          reduccion = 0;
+          bimestral = bruto / R.bimestresPorAnio;
+        }
+        const anual = bimestral * R.bimestresPorAnio;
+        const descuento = Math.min(50, Math.max(0, v.descuentoAnticipado || 0)) / 100;
+        const anualConDescuento = anual * (1 - descuento);
+
+        // El predial pagado es deducible del ISR de arrendamiento: cuánto te regresa.
+        const isrSinPredial = isrMensual(Math.max(0, renta - renta * R.deduccionCiega));
+        const isrConPredial = isrMensual(Math.max(0, renta - (renta * R.deduccionCiega + anualConDescuento / 12)));
+        const ahorroIsrAnual = Math.max(0, (isrSinPredial - isrConPredial) * 12);
+
+        return {
+          total: mxn(anualConDescuento),
+          sub:
+            (enCdmx
+              ? 'Predial anual de la Ciudad de México con la tarifa bimestral del Código Fiscal local'
+              : 'Predial anual estimado con la tasa que cargaste para tu municipio') +
+            ': ' + mxn(bimestral) + ' por bimestre. ' +
+            (reduccion > 0 ? 'Incluye la reducción por uso habitacional del ' + Math.round(reduccion * 100) + '%. ' : '') +
+            'Si rentas el inmueble, ese predial te ahorra unos ' + mxn(ahorroIsrAnual) + ' de ISR al año por ser deducible.',
+          rows: [
+            { k: 'Valor catastral', v: valorCatastral },
+            { k: 'Predial anual antes de reducciones', ref: enCdmx ? 'CFCDMX Art. 130' : 'ley de ingresos municipal', v: bruto },
+            { k: 'Reducción por uso habitacional', ref: 'CFCDMX Art. 131', v: reduccion * 100, format: 'unit', unit: '%' },
+            { k: 'Predial bimestral', v: bimestral },
+            { k: 'Predial anual', v: anual, extra: true },
+            { k: 'Descuento por pago anticipado aplicado', v: descuento * 100, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Predial anual a pagar', v: anualConDescuento },
+            { k: 'ISR de arrendamiento que te ahorra al año', v: ahorroIsrAnual },
+            { k: 'Costo neto del predial después del ahorro fiscal', v: Math.max(0, anualConDescuento - ahorroIsrAnual) },
+          ],
+          chart: [
+            { label: 'Predial que pagas', value: anualConDescuento, tone: 'warn' },
+            { label: 'Reducción habitacional', value: Math.max(0, bruto - anual), tone: 'good' },
+            { label: 'Descuento por anticipado', value: Math.max(0, anual - anualConDescuento), tone: 'prop' },
+          ],
+        };
+      }
+
+      // ── Caso 2: comparar ciega contra reales ───────────────────────────
+      if (id === 'comparar') {
+        const meses = Math.min(12, Math.max(1, Math.round(v.meses || 12)));
+        const convieneCiega = isrCiega <= isrReal;
+        const mejor = convieneCiega ? isrCiega : isrReal;
+        const peor = convieneCiega ? isrReal : isrCiega;
+        const ahorroPeriodo = (peor - mejor) * meses;
+        const pctGastos = renta > 0 ? (gastosReales / renta) * 100 : 0;
+
+        return {
+          total: mxn(mejor * meses),
+          sub:
+            (convieneCiega ? 'Te conviene la deducción ciega del 35%' : 'Te convienen las deducciones reales') +
+            ': ' + mxn(mejor * meses) + ' de ISR en ' + meses + (meses === 1 ? ' mes' : ' meses') +
+            ' contra ' + mxn(peor * meses) + ' con la otra opción. ' +
+            (ahorroPeriodo > 1
+              ? 'La diferencia es de ' + mxn(ahorroPeriodo) + ' en el período.'
+              : 'Con tus números las dos opciones pagan casi lo mismo, así que gana la ciega por simplicidad: no tenés que guardar comprobantes.'),
+          rows: [
+            { k: 'Renta cobrada en el período', v: renta * meses },
+            { k: 'Deducción ciega del período', ref: 'LISR Art. 115', v: dedCiega * meses },
+            { k: 'Deducciones reales del período', v: dedReal * meses },
+            { k: 'Tus gastos comprobables sobre la renta', v: pctGastos, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'ISR del período con deducción ciega', v: isrCiega * meses },
+            { k: 'ISR del período con deducciones reales', v: isrReal * meses },
+            { k: 'ISR con la mejor opción', v: mejor * meses, extra: true },
+            { k: 'Ahorro por elegir bien en el período', v: ahorroPeriodo },
+            { k: 'Ahorro proyectado a 12 meses', v: (peor - mejor) * 12 },
+            { k: 'Tasa efectiva sobre la renta', v: renta > 0 ? (mejor / renta) * 100 : 0, format: 'unit', unit: '%', decimals: 1 },
+          ],
+          chart: [
+            { label: 'ISR con deducción ciega', value: isrCiega * meses, tone: convieneCiega ? 'good' : 'warn' },
+            { label: 'ISR con deducciones reales', value: isrReal * meses, tone: convieneCiega ? 'warn' : 'good' },
+          ],
+        };
+      }
+
+      // ── Caso 1: pago provisional del mes ───────────────────────────────
+      const usaCiega = String(v.tipoDeduccion || 'ciega') !== 'reales';
+      const deduccion = usaCiega ? dedCiega : dedReal;
+      const base = Math.max(0, renta - deduccion);
+      const isrCausado = isrMensual(base);
+      const retencion = esMoral ? renta * R.retencionPersonaMoral : 0;
+      const aEnterar = Math.max(0, isrCausado - retencion);
+      const saldoAFavor = Math.max(0, retencion - isrCausado);
+      const topeTrimestral = R.salarioMinimoMensual * R.vecesSmTrimestral;
+      const puedeTrimestral = renta <= topeTrimestral;
+
+      return {
+        total: mxn(aEnterar),
+        sub:
+          'Pago provisional del mes con ' + (usaCiega ? 'la deducción ciega del 35% más predial' : 'tus deducciones reales más predial') +
+          '. ISR causado ' + mxn(isrCausado) +
+          (esMoral
+            ? ', menos ' + mxn(retencion) + ' que te retiene tu inquilino persona moral' +
+              (saldoAFavor > 0 ? ': la retención cubre todo y te queda un saldo a favor de ' + mxn(saldoAFavor) + ' acreditable en la anual.' : '.')
+            : '. Tu inquilino persona física no retiene nada.') +
+          ' ' + (puedeTrimestral
+            ? 'Podés optar por pagos trimestrales: tu ingreso no supera los ' + mxn(topeTrimestral) + ' mensuales.'
+            : 'Tu ingreso supera el umbral, así que el pago es mensual obligatorio.'),
+        rows: [
+          { k: 'Renta del mes', v: renta },
+          { k: 'Deducción aplicada', ref: 'LISR Art. 115', v: deduccion },
+          { k: 'Predial mensualizado incluido en la deducción', v: predialMensual },
+          { k: 'Base gravable del mes', v: base },
+          { k: 'ISR causado', ref: 'LISR Art. 96', v: isrCausado },
+          { k: 'Retención del inquilino persona moral', ref: 'LISR Art. 116', v: retencion },
+          { k: 'Pago provisional a enterar', v: aEnterar, extra: true },
+          { k: 'Saldo a favor del mes', v: saldoAFavor },
+          { k: 'Equivalente trimestral', v: aEnterar * 3 },
+          { k: 'Tasa efectiva sobre la renta', v: renta > 0 ? (aEnterar / renta) * 100 : 0, format: 'unit', unit: '%', decimals: 1 },
+        ],
+        chart: [
+          { label: 'Renta que conservas', value: Math.max(0, renta - isrCausado), tone: 'main' },
+          { label: 'Retención acreditada', value: Math.min(retencion, isrCausado), tone: 'prop' },
+          { label: 'ISR a enterar', value: aEnterar, tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

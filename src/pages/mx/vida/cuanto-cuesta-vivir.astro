@@ -1,0 +1,297 @@
+---
+/**
+ * Hub de decisión MX — cuánto cuesta vivir al mes y cuánta renta puedo pagar.
+ * audience="MX" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, COSTO_VIDA_MX, CANASTA_MX, RENTA_MERCADO_MX, SM_MENSUAL_MX } from '../../../lib/hubs/mx/cuanto-cuesta-vivir';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="MX"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ CV: COSTO_VIDA_MX, CB: CANASTA_MX, RM: RENTA_MERCADO_MX, SM: SM_MENSUAL_MX }}>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+    const num = (v, d) => {
+      if (v === '' || v === null || v === undefined) return d;
+      const n = Number(String(v).replace(/[^0-9.,-]/g, '').replace(/\.(?=\d{3}\b)/g, '').replace(',', '.'));
+      return Number.isFinite(n) ? n : d;
+    };
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'presupuesto';
+
+      // ── Rama 2: cuánta renta puedo pagar ────────────────────────────────
+      if (id === 'renta') {
+        const ingreso = Math.max(0, num(v.ingresoNeto, 0));
+        const regla = Math.min(60, Math.max(5, num(v.reglaPct, 30)));
+        const deudas = Math.max(0, num(v.otrasDeudas, 0));
+
+        const recomendada = ingreso * (regla / 100);
+        const conservadora = ingreso * 0.25;
+        const maxima = ingreso * 0.35;
+        const segun3x = ingreso / 3;
+        const disponible = ingreso - recomendada - deudas;
+        const realista = Math.min(recomendada, segun3x);
+
+        return {
+          total: mxn(realista),
+          sub:
+            'Con ' + mxn(ingreso) + ' netos, la regla del ' + regla + '% permite hasta ' + mxn(recomendada) +
+            ' y el requisito del arrendador de comprobar 3× la renta topa en ' + mxn(segun3x) +
+            '. Manda la más baja de las dos. Después de la renta y ' + mxn(deudas) + ' de otras deudas te quedan ' + mxn(disponible) + '.',
+          rows: [
+            { k: 'Renta realista (la menor de las dos reglas)', v: realista, extra: true },
+            { k: 'Renta recomendada (' + Math.round(regla) + '% del ingreso)', v: recomendada },
+            { k: 'Renta conservadora (25%)', v: conservadora },
+            { k: 'Renta máxima (35%)', v: maxima },
+            { k: 'Tope por el requisito de 3× la renta', ref: 'política habitual del arrendador', v: segun3x },
+            { k: 'Otras deudas mensuales', v: deudas },
+            { k: 'Te queda libre al mes', v: disponible },
+            { k: 'Depósito de garantía habitual', ref: '1,5 rentas', v: realista * RM.depositoRentas },
+          ],
+          chart: [
+            { label: 'Renta', value: Math.max(0, Math.round(recomendada)), tone: 'main' },
+            { label: 'Otras deudas', value: Math.round(deudas), tone: 'warn' },
+            { label: 'Te queda libre', value: Math.max(0, Math.round(disponible)), tone: 'good' },
+          ],
+        };
+      }
+
+      // ── Rama 3: renta de mercado por ciudad ─────────────────────────────
+      if (id === 'mercado') {
+        const ciudad = String(v.ciudadRenta || 'cdmx');
+        const rec = String(v.recamaras || '2');
+        const nivel = String(v.coloniaNivel || 'medio');
+        const conServicios = String(v.incluirServicios || 'si') === 'si';
+
+        const t = (RM.tablas[ciudad] || RM.tablas.cdmx)[rec] || RM.tablas.cdmx['1'];
+        const ajuste = RM.nivel[nivel] !== undefined ? RM.nivel[nivel] : 0;
+        const renta = Math.round((t.base * (1 + ajuste)) / 500) * 500;
+        const minimo = Math.round((t.minimo * (1 + (RM.nivelMin[nivel] || 0))) / 500) * 500;
+        const maximo = Math.round((t.maximo * (1 + (RM.nivelMax[nivel] || 0))) / 500) * 500;
+        const deposito = renta * RM.depositoRentas;
+        const servicios = RM.servicios[ciudad] !== undefined ? RM.servicios[ciudad] : 1000;
+        const totalMes = conServicios ? renta + servicios : renta;
+        const anual = renta * 12;
+        const ingresoNecesario = renta * 3;
+
+        return {
+          total: mxn(totalMes),
+          sub:
+            'Un departamento de ' + rec + ' recámara(s) en zona ' + nivel.replace('_', ' ') + ' ronda ' + mxn(renta) +
+            ' de renta, dentro de un rango de ' + mxn(minimo) + ' a ' + mxn(maximo) + '. ' +
+            (conServicios ? 'Sumando servicios el mes cuesta ' + mxn(totalMes) + '. ' : '') +
+            'Para pasar el filtro de 3× la renta necesitas comprobar ' + mxn(ingresoNecesario) + ' de ingreso.',
+          rows: [
+            { k: 'Costo total del mes', v: totalMes, extra: true },
+            { k: 'Renta promedio de la zona', v: renta },
+            { k: 'Piso del rango', v: minimo },
+            { k: 'Techo del rango', v: maximo },
+            { k: 'Servicios estimados (luz, agua, gas, internet)', v: servicios },
+            { k: 'Depósito de garantía', ref: '1,5 rentas', v: deposito },
+            { k: 'Renta anual', v: anual },
+            { k: 'Ingreso que suelen pedirte comprobar', ref: '3× la renta', v: ingresoNecesario },
+          ],
+          chart: [
+            { label: 'Renta', value: Math.round(renta), tone: 'main' },
+            { label: 'Servicios', value: conServicios ? Math.round(servicios) : 0, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── Rama 4: aumento permitido por INPC ──────────────────────────────
+      if (id === 'aumento') {
+        const renta = Math.max(0, num(v.rentaActual, 0));
+        const inpc = Math.max(0, num(v.inpcAnual, 0));
+        const propuesto = Math.max(0, num(v.incrementoPropuesto, 0));
+
+        const aumentoPermitido = renta * (inpc / 100);
+        const rentaMax = renta + aumentoPermitido;
+        const rentaPropuesta = renta * (1 + propuesto / 100);
+        const excede = propuesto > inpc + 1e-9;
+        const difMensual = rentaPropuesta - rentaMax;
+        const difAnual = difMensual * 12;
+
+        return {
+          total: mxn(rentaMax),
+          sub: excede
+            ? 'Con un INPC del ' + inpc + '%, tu renta solo debería subir hasta ' + mxn(rentaMax) +
+              '. El ' + propuesto + '% propuesto la lleva a ' + mxn(rentaPropuesta) + ': ' + mxn(difMensual) +
+              ' de más al mes y ' + mxn(difAnual) + ' al año. Tienes argumento para negociar.'
+            : 'El aumento del ' + propuesto + '% deja la renta en ' + mxn(rentaPropuesta) +
+              ', dentro del tope del INPC (' + mxn(rentaMax) + ' con ' + inpc + '%). Es un ajuste razonable frente a la inflación.',
+          rows: [
+            { k: 'Renta máxima permitida por el INPC', v: rentaMax, extra: true },
+            { k: 'Renta actual', v: renta },
+            { k: 'Aumento máximo en pesos', ref: 'INPC ' + inpc + '%', v: aumentoPermitido },
+            { k: 'Renta con el aumento propuesto', ref: propuesto + '%', v: rentaPropuesta },
+            { k: 'Exceso mensual sobre el tope', v: Math.max(0, difMensual) },
+            { k: 'Exceso anual sobre el tope', v: Math.max(0, difAnual) },
+          ],
+          chart: [
+            { label: 'Renta actual', value: Math.round(renta), tone: 'main' },
+            { label: 'Aumento por INPC', value: Math.round(aumentoPermitido), tone: 'good' },
+            { label: 'Exceso propuesto', value: Math.max(0, Math.round(difMensual)), tone: 'bad' },
+          ],
+        };
+      }
+
+      // ── Rama 5: despensa / canasta básica ───────────────────────────────
+      if (id === 'despensa') {
+        const adultos = Math.max(0, Math.round(num(v.adultos, 0)));
+        const ninos = Math.max(0, Math.round(num(v.ninos, 0)));
+        const perfil = String(v.perfilDespensa || 'equilibrado');
+        const region = String(v.region || 'centro');
+
+        const fPerfil = CB.perfil[perfil] !== undefined ? CB.perfil[perfil] : 1;
+        const fRegion = CB.region[region] !== undefined ? CB.region[region] : 1;
+        const base = adultos * CB.adultoBase + ninos * CB.ninoBase;
+        const mensual = Math.round(base * fPerfil * fRegion);
+        const personas = adultos + ninos;
+        const diario = personas > 0 ? Math.round(((mensual / 30) / personas) * 100) / 100 : 0;
+        // La fórmula original compara contra el salario mínimo mensual REDONDEADO.
+        const smRedondeado = Math.round(SM);
+        const pctSm = smRedondeado > 0 ? Math.round((mensual / smRedondeado) * 10000) / 100 : 0;
+
+        const aurrera = Math.round(mensual * CB.cadena.aurrera);
+        const soriana = Math.round(mensual * CB.cadena.soriana);
+        const chedraui = Math.round(mensual * CB.cadena.chedraui);
+
+        return {
+          total: mxn(mensual),
+          sub:
+            personas > 0
+              ? 'Alimentar a ' + personas + (personas === 1 ? ' persona' : ' personas') + ' con perfil ' + perfil +
+                ' cuesta ' + mxn(mensual) + ' al mes, o sea ' + mxn(diario) + ' por persona al día. Eso equivale al ' +
+                pctSm + '% de un salario mínimo mensual (' + mxn(smRedondeado) + ').'
+              : 'Pon al menos una persona para estimar la despensa.',
+          rows: [
+            { k: 'Despensa mensual del hogar', v: mensual, extra: true },
+            { k: 'Costo por persona al día', v: diario, decimals: 2 },
+            { k: 'Personas en el hogar', v: personas, format: 'plain' },
+            { k: 'Porcentaje de un salario mínimo mensual', v: pctSm, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Comprando en la cadena más económica', v: aurrera },
+            { k: 'Comprando en la cadena más cara', v: soriana },
+            { k: 'Cadena intermedia', v: chedraui },
+            { k: 'Ahorro anual si compras siempre en la más barata', v: (soriana - aurrera) * 12 },
+          ],
+          chart: [
+            { label: 'Adultos', value: Math.round(adultos * CB.adultoBase * fPerfil * fRegion), tone: 'main' },
+            { label: 'Niños', value: Math.round(ninos * CB.ninoBase * fPerfil * fRegion), tone: 'prop' },
+          ],
+        };
+      }
+
+      // ── Rama 1 (default): presupuesto mensual completo ───────────────────
+      const comp = String(v.composicion || 'soltero');
+      const ciudad = String(v.ciudad || 'cdmx');
+      const estilo = String(v.estiloVida || 'moderado');
+      const conAuto = String(v.incluirAuto || 'no') === 'si';
+      const conMayores = String(v.dependientesMayores || 'no') === 'si';
+
+      const fCiudad = CV.ciudad[ciudad] !== undefined ? CV.ciudad[ciudad] : 0.65;
+      const m = CV.composicion[comp] || CV.composicion.soltero;
+      const fEstilo = CV.estilo[estilo] !== undefined ? CV.estilo[estilo] : 1;
+      const B = CV.bases;
+
+      let vivienda = B.vivienda * m.viv * fEstilo;
+      let alimentacion = B.alimentacion * m.ali * fEstilo;
+      let transporte = B.transporte * m.tra * fEstilo;
+      let servicios = B.servicios * fEstilo;
+      let salud = B.salud * m.sal * fEstilo;
+      let educacion = B.educacion * m.edu * fEstilo;
+      let ocio = B.ocio * (comp === 'soltero' ? 1.0 : 0.8) * fEstilo;
+
+      vivienda *= fCiudad;
+      alimentacion *= fCiudad;
+      transporte *= fCiudad;
+      servicios *= fCiudad;
+      salud *= fCiudad;
+      educacion *= fCiudad;
+      ocio *= fCiudad;
+
+      if (conAuto) transporte += CV.autoMensual * fCiudad;
+      if (conMayores) salud += CV.mayoresMensual * fCiudad;
+
+      const total = vivienda + alimentacion + transporte + servicios + salud + educacion + ocio;
+      const ingresoRecomendado = total * CV.factorIngresoRecomendado;
+      const pctVivienda = total > 0 ? Math.round((vivienda / total) * 100) : 0;
+
+      const rows = [
+        { k: 'Gasto mensual total', v: Math.round(total), extra: true },
+        { k: 'Vivienda (renta + agua, luz y gas)', v: Math.round(vivienda) },
+        { k: 'Alimentación', v: Math.round(alimentacion) },
+        { k: 'Transporte' + (conAuto ? ' (incluye auto propio)' : ''), v: Math.round(transporte) },
+        { k: 'Servicios (telefonía, internet, seguros)', v: Math.round(servicios) },
+        { k: 'Salud' + (conMayores ? ' (incluye adultos mayores)' : ''), v: Math.round(salud) },
+        { k: 'Educación', v: Math.round(educacion) },
+        { k: 'Ocio', v: Math.round(ocio) },
+        { k: 'Ingreso recomendado para cubrirlo con ahorro', ref: '3× el gasto', v: Math.round(ingresoRecomendado) },
+        { k: 'Peso de la vivienda en el presupuesto', v: pctVivienda, format: 'unit', unit: '%' },
+      ];
+
+      const segs = [
+        { label: 'Vivienda', value: Math.round(vivienda), tone: 'main' },
+        { label: 'Alimentación', value: Math.round(alimentacion), tone: 'prop' },
+        { label: 'Transporte', value: Math.round(transporte), tone: 'warn' },
+        { label: 'Servicios', value: Math.round(servicios), tone: 'good' },
+        { label: 'Salud', value: Math.round(salud), tone: 'exit' },
+        { label: 'Educación', value: Math.round(educacion), tone: 'prop' },
+        { label: 'Ocio', value: Math.round(ocio), tone: 'good' },
+      ].filter((s) => s.value > 0);
+
+      return {
+        total: mxn(total),
+        sub:
+          'Vivir con este perfil cuesta unos ' + mxn(total) + ' al mes. La vivienda se lleva el ' + pctVivienda +
+          '% del presupuesto. Para cubrirlo con colchón y ahorro conviene un ingreso cercano a ' + mxn(ingresoRecomendado) + '.',
+        rows: rows,
+        chart: segs,
+      };
+    });
+  })();
+</script>

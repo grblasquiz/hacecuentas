@@ -259,3 +259,26 @@ export const IPVA_SC_ALIQUOTAS: Record<string, number> = {
   onibus: 1.0,
   locadora: 1.0,
 };
+
+/* ───────────── Bolsa Família (Lei 14.601/2023) ───────────── */
+// Vivían duplicadas en `bolsa-familia-valor.ts` y `auxilio-brasil.ts`, las dos
+// con un `VALOR_BASE = 600` fijo por familia. El programa NO paga por familia:
+// paga por integrante y sólo complementa hasta los R$ 600. Una familia de seis
+// sin niños cobra 6 × R$ 142 = R$ 852, y las calcs viejas mostraban R$ 600.
+// Fuentes:
+//  - Lei 14.601/2023, arts. 4º e 5º — https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2023/lei/l14601.htm
+//  - MDS — Bolsa Família — https://www.gov.br/mds/pt-br/acoes-e-programas/bolsa-familia
+/** Renda mensal per capita máxima para entrar no programa (art. 4º). É "até R$ 218", inclusive. */
+export const BOLSA_FAMILIA_LIMITE_PER_CAPITA = 218;
+/** Benefício de Renda de Cidadania: valor por integrante da família (art. 5º, I). */
+export const BOLSA_FAMILIA_POR_PESSOA = 142;
+/** Benefício Complementar: piso por família, quando a soma dos demais fica abaixo (art. 5º, II). */
+export const BOLSA_FAMILIA_PISO_FAMILIA = 600;
+/** Benefício Primeira Infância: por criança de 0 a 6 anos (art. 5º, III). */
+export const BOLSA_FAMILIA_PRIMEIRA_INFANCIA = 150;
+/** Benefício Variável Familiar: por integrante de 7 a 18 anos, gestante ou nutriz (art. 5º, IV). */
+export const BOLSA_FAMILIA_VARIAVEL_FAMILIAR = 50;
+/** Regra de Proteção: fração do benefício mantida por até 24 meses quando a renda sobe. */
+export const BOLSA_FAMILIA_REGRA_PROTECAO = 0.5;
+/** Teto da Regra de Proteção: meio salário mínimo de renda per capita. */
+export const BOLSA_FAMILIA_TETO_PROTECAO = SALARIO_MINIMO / 2;

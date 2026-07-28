@@ -1,0 +1,211 @@
+---
+/**
+ * Hub de decisión MX — Declaración anual: saldo a favor, tope de deducciones y colegiaturas.
+ * audience="MX" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, ANUAL_MX } from '../../../lib/hubs/mx/declaracion-anual';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="MX"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ A: ANUAL_MX }}>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+
+    /** Tarifa progresiva del Art. 152 LISR (Anexo 8 RMF 2026): cuota fija + % sobre el excedente. */
+    function isrAnual(base) {
+      if (!isFinite(base) || base <= 0) return 0;
+      for (let k = 0; k < A.tarifaAnual.length; k++) {
+        const f = A.tarifaAnual[k];
+        const limSup = f[1] === null ? Infinity : f[1];
+        if (base >= f[0] && base <= limSup) {
+          return Math.round((f[2] + (base - f[0]) * f[3]) * 100) / 100;
+        }
+      }
+      const last = A.tarifaAnual[A.tarifaAnual.length - 1];
+      return Math.round((last[2] + (base - last[0]) * last[3]) * 100) / 100;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'saldo';
+
+      const ingresos = Math.max(0, v.ingresosAnuales || 0);
+      const retenido = Math.max(0, v.isrRetenido || 0);
+      const medicos = Math.max(0, v.gastosMedicos || 0);
+      const hipoteca = Math.max(0, v.interesesHipoteca || 0);
+      const funerariosCap = Math.max(0, v.gastosFunerarios || 0);
+      const donativosCap = Math.max(0, v.donativos || 0);
+      const retiroCap = Math.max(0, v.aportacionesRetiro || 0);
+      const colePago = Math.max(0, v.colegiaturaPago || 0);
+      const coleAlumnos = Math.max(0, Math.floor(v.colegiaturaAlumnos || 0));
+
+      // ── Tope global Art. 151: el MENOR entre 5 UMA anuales y el 15% de los ingresos ──
+      const tope5Uma = A.topeUmas * A.umaAnual;
+      const tope15 = ingresos * A.topePct;
+      const topeGlobal = Math.min(tope5Uma, tope15);
+      const mandaUma = tope5Uma <= tope15;
+
+      // Sujetas al tope global (los funerarios llevan su propio tope de 1 UMA anual).
+      const funerarios = Math.min(funerariosCap, A.umaAnual);
+      const sujetasBrutas = medicos + hipoteca + funerarios;
+      const sujetasDeducibles = Math.min(sujetasBrutas, topeGlobal);
+
+      // Fuera del tope global, cada una con su límite propio.
+      const donativos = Math.min(donativosCap, A.donativosPct * ingresos);
+      const retiro = Math.min(retiroCap, Math.min(A.retiroPct * ingresos, tope5Uma));
+
+      // Colegiaturas: tope anual por alumno según el nivel (decreto de estímulo).
+      const topeNivel = A.colegiaturas[v.colegiaturaNivel] || A.colegiaturas.primaria;
+      const alumnos = coleAlumnos || (colePago > 0 ? 1 : 0);
+      const colegiaturas = Math.min(colePago, topeNivel * alumnos);
+      const coleRecorte = colePago - colegiaturas;
+
+      const fueraDelTope = donativos + retiro + colegiaturas;
+      const totalDeducible = sujetasDeducibles + fueraDelTope;
+      const recorteTotal =
+        (sujetasBrutas - sujetasDeducibles) +
+        (funerariosCap - funerarios) +
+        (donativosCap - donativos) +
+        (retiroCap - retiro) +
+        coleRecorte;
+
+      const base = Math.max(0, ingresos - totalDeducible);
+      const isr = isrAnual(base);
+      const isrSinDeducir = isrAnual(ingresos);
+      const ahorro = Math.max(0, isrSinDeducir - isr);
+
+      // ── Caso 2: cuánto puedo deducir de verdad ─────────────────────────
+      if (id === 'deducciones') {
+        return {
+          total: mxn(totalDeducible),
+          sub:
+            'Deducible total del ejercicio. Tu tope global es ' + mxn(topeGlobal) +
+            (mandaUma ? ' (manda el límite de 5 UMA anuales)' : ' (manda el 15% de tus ingresos)') +
+            (recorteTotal > 0 ? '. Se quedan fuera ' + mxn(recorteTotal) + ' por los topes.' : '. Nada se recorta: estás debajo del tope.'),
+          rows: [
+            { k: 'Tope global de deducciones', ref: 'LISR Art. 151', v: topeGlobal },
+            { k: 'Límite por 5 UMA anuales', v: tope5Uma },
+            { k: 'Límite por 15% de tus ingresos', v: tope15 },
+            { k: 'Sujetas al tope: médicos, hipoteca y funerarios', v: sujetasBrutas },
+            { k: 'De esas, deducibles tras el tope', v: sujetasDeducibles, extra: true },
+            { k: 'Donativos deducibles', ref: 'tope propio 7%', v: donativos },
+            { k: 'Aportaciones de retiro deducibles', ref: 'tope propio 10%', v: retiro },
+            { k: 'Colegiaturas deducibles', ref: 'decreto de estímulo', v: colegiaturas },
+            { k: 'Total deducible del ejercicio', v: totalDeducible, extra: true },
+            { k: 'Recortado por los topes', v: recorteTotal },
+            { k: 'Ahorro de ISR que te genera', v: ahorro },
+          ],
+          chart: [
+            { label: 'Deducible dentro del tope', value: sujetasDeducibles, tone: 'good' },
+            { label: 'Deducible fuera del tope', value: fueraDelTope, tone: 'main' },
+            { label: 'Recortado por topes', value: recorteTotal, tone: 'bad' },
+          ],
+        };
+      }
+
+      // ── Caso 3: colegiaturas ───────────────────────────────────────────
+      if (id === 'colegiaturas') {
+        const ahorroCole = Math.max(0, isrAnual(Math.max(0, ingresos)) - isrAnual(Math.max(0, ingresos - colegiaturas)));
+        return {
+          total: mxn(colegiaturas),
+          sub:
+            'Colegiaturas deducibles del ejercicio, con un tope de ' + mxn(topeNivel) + ' por alumno en ese nivel' +
+            (alumnos > 1 ? ' (' + alumnos + ' alumnos)' : '') + '. ' +
+            (coleRecorte > 0
+              ? mxn(coleRecorte) + ' exceden el tope y no se deducen.'
+              : 'Todo lo que pagaste entra dentro del tope.') +
+            ' Van aparte del tope global de deducciones personales.',
+          rows: [
+            { k: 'Colegiaturas pagadas en el año', v: colePago },
+            { k: 'Tope anual por alumno del nivel', ref: 'decreto de estímulo', v: topeNivel },
+            { k: 'Alumnos en ese nivel', v: alumnos, format: 'plain' },
+            { k: 'Tope total aplicable', v: topeNivel * alumnos },
+            { k: 'Colegiaturas deducibles', v: colegiaturas, extra: true },
+            { k: 'Excedente que no se deduce', v: coleRecorte },
+            { k: 'Ahorro de ISR estimado', ref: 'tarifa Art. 152', v: ahorroCole },
+          ],
+          chart: [
+            { label: 'Deducible', value: colegiaturas, tone: 'good' },
+            { label: 'Excede el tope', value: coleRecorte, tone: 'bad' },
+          ],
+        };
+      }
+
+      // ── Caso 1: saldo a favor o a cargo ────────────────────────────────
+      const saldo = retenido - isr;
+      const aFavor = Math.max(0, saldo);
+      const aCargo = Math.max(0, -saldo);
+      const tasaEfectiva = ingresos > 0 ? (isr / ingresos) * 100 : 0;
+
+      return {
+        total: aFavor > 0 ? mxn(aFavor) : mxn(aCargo),
+        sub:
+          aFavor > 0
+            ? 'Saldo a favor: te retuvieron más ISR del que te tocaba y puedes pedirlo en devolución.'
+            : aCargo > 0
+              ? 'Saldo a cargo: te retuvieron de menos y tienes que pagar la diferencia al presentar la anual.'
+              : 'Tus retenciones coinciden exactamente con el ISR del ejercicio: no pagas ni te devuelven.',
+        rows: [
+          { k: 'Ingresos acumulables del ejercicio', v: ingresos },
+          { k: 'Deducciones aplicadas', ref: 'LISR Art. 151', v: totalDeducible },
+          { k: 'Base gravable', v: base },
+          { k: 'ISR del ejercicio', ref: 'LISR Art. 152', v: isr, extra: true },
+          { k: 'ISR retenido durante el año', v: retenido },
+          { k: 'Saldo a favor', v: aFavor, extra: true },
+          { k: 'Saldo a cargo', v: aCargo },
+          { k: 'ISR que pagarías sin deducir nada', v: isrSinDeducir },
+          { k: 'Ahorro que te dieron las deducciones', v: ahorro },
+          { k: 'Tasa efectiva sobre tus ingresos', v: tasaEfectiva, format: 'unit', unit: '%', decimals: 1 },
+        ],
+        chart: [
+          { label: 'Base gravable', value: base, tone: 'main' },
+          { label: 'Deducciones aplicadas', value: totalDeducible, tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

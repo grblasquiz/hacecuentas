@@ -1,0 +1,267 @@
+---
+/**
+ * Hub de decisión UY — "Impuestos de la vivienda": compraventa (ITP + escribano),
+ * contribución inmobiliaria, primaria, patrimonio, IRPF de alquiler y de venta.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  COMPRAVENTA,
+  IRPF_VENTA,
+  PATRIMONIO,
+  CONTRIBUCION,
+  PRIMARIA,
+  ALQUILER,
+} from '../../../lib/hubs/uy/vivienda';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="UY"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ CV: COMPRAVENTA, VENTA: IRPF_VENTA, PAT: PATRIMONIO, CONTRIB: CONTRIBUCION, PRIM: PRIMARIA, ALQ: ALQUILER }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const uyu = (n) => '$U ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(Math.round(n || 0));
+    const num = (n, d) => new Intl.NumberFormat('de-DE', { maximumFractionDigits: d === undefined ? 2 : d }).format(n || 0);
+
+    /** Escala progresiva por franjas en pesos (contribución y primaria). */
+    function porFranjas(valor, franjas) {
+      if (valor <= 0) return 0;
+      let imp = 0, ant = 0;
+      for (const f of franjas) {
+        const hasta = f.hasta === null ? Infinity : f.hasta;
+        const enTramo = Math.min(valor, hasta) - ant;
+        if (enTramo <= 0) break;
+        imp += enTramo * f.tasa;
+        ant = hasta;
+        if (valor <= hasta) break;
+      }
+      return imp;
+    }
+
+    function contribucion(valor) {
+      if (valor > 0 && valor < CONTRIB.umbralReducida) return valor * CONTRIB.tasaReducida;
+      return porFranjas(valor, CONTRIB.franjas);
+    }
+
+    function primaria(valor) {
+      if (valor > 0 && valor < PRIM.minimoNoImponible) return 0;
+      return porFranjas(valor, PRIM.franjas);
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'comprar';
+      const precio = Math.max(0, v.precio || 0);
+      const catastral = Math.max(0, v.catastral || 0);
+      const alquiler = Math.max(0, v.alquiler || 0);
+      const gastosAdm = Math.max(0, v.gastosAdmitidos || 0);
+      const costo = Math.max(0, v.costo || 0);
+      const antes2007 = String(v.adquisicion || 'despues-2007') === 'antes-2007';
+      const patrimonio = Math.max(0, v.patrimonio || 0);
+      const esNucleo = String(v.declaracion || 'persona') === 'nucleo';
+
+      const baseItp = catastral > 0 ? catastral : precio;
+      const itpParte = baseItp * CV.itpPorParte;
+      const baseHonorario = Math.max(precio, baseItp);
+      const honorario = baseHonorario * CV.escribanoHonorario;
+      const caja = honorario * CV.cajaNotarialSobreHonorario;
+      const ivaHon = honorario * CV.ivaHonorario;
+      const escribano = honorario + caja + ivaHon;
+
+      const rows = [];
+      let total = 0;
+      let sub = '';
+      let chart = [];
+
+      if (id === 'comprar') {
+        total = itpParte + escribano;
+        rows.push({ k: 'Precio de la operación', ref: 'Lo acordado', v: precio });
+        rows.push({ k: 'Base del ITP', ref: catastral > 0 ? 'Valor real de catastro' : 'Sin catastral: se usa el precio', v: baseItp });
+        rows.push({ k: 'ITP del comprador', ref: num(CV.itpPorParte * 100, 0) + '% de su parte · DGI', v: itpParte });
+        rows.push({ k: 'Honorario del escribano', ref: num(CV.escribanoHonorario * 100, 0) + '% del mayor entre precio y catastral · arancel AEU', v: honorario });
+        rows.push({ k: 'Aporte a la Caja Notarial', ref: num(CV.cajaNotarialSobreHonorario * 100, 0) + '% del honorario', v: caja });
+        rows.push({ k: 'IVA sobre el honorario', ref: num(CV.ivaHonorario * 100, 0) + '%', v: ivaHon });
+        rows.push({ k: 'Costo notarial total', ref: 'Honorario + Caja + IVA', v: escribano });
+        rows.push({ k: 'Total que pone el comprador además del precio', ref: 'ITP + escribano', v: total, extra: true });
+        rows.push({
+          k: 'Peso sobre el precio',
+          ref: 'Gastos ÷ precio',
+          v: precio > 0 ? (total / precio) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        rows.push({ k: 'ITP que paga el vendedor por su parte', ref: 'No lo pagás vos', v: itpParte });
+        rows.push({ k: 'Total de la operación entre ambas partes', ref: 'ITP de los dos + escribano', v: itpParte * 2 + escribano });
+        rows.push({ k: 'Contribución inmobiliaria anual que vas a pagar', ref: 'Empieza el año siguiente · Intendencia', v: contribucion(baseItp) });
+        rows.push({ k: 'Impuesto de primaria anual que vas a pagar', ref: 'DGI · por padrón', v: primaria(baseItp) });
+
+        sub = 'Escriturar te cuesta ' + uyu(total) + ' además del precio (' + num(precio > 0 ? (total / precio) * 100 : 0) +
+          '% del precio) · el escribano es ' + uyu(escribano) + ' y el ITP ' + uyu(itpParte);
+        chart = [
+          { label: 'Honorario del escribano', value: Math.round(honorario), tone: 'main' },
+          { label: 'Caja Notarial e IVA', value: Math.round(caja + ivaHon), tone: 'prop' },
+          { label: 'ITP del comprador', value: Math.round(itpParte), tone: 'warn' },
+        ];
+      } else if (id === 'tener') {
+        const contrib = contribucion(catastral);
+        const prim = primaria(catastral);
+        const mni = esNucleo ? PAT.mniNucleoFamiliar : PAT.mniPersonaFisica;
+        const excedente = Math.max(0, patrimonio - mni);
+        const ip = excedente * PAT.tasaResidente;
+        total = contrib + prim + ip;
+
+        rows.push({ k: 'Valor real de catastro', ref: 'Base de los tributos del inmueble', v: catastral });
+        rows.push({ k: 'Contribución inmobiliaria anual', ref: catastral < CONTRIB.umbralReducida ? 'Tasa reducida del primer tramo · Intendencia' : 'Escala progresiva · Intendencia', v: contrib });
+        rows.push({ k: 'Cada cuota de la contribución', ref: CONTRIB.cuotas + ' cuotas en el año', v: contrib / CONTRIB.cuotas });
+        rows.push({ k: 'Impuesto de primaria anual', ref: catastral < PRIM.minimoNoImponible ? 'Exento: bajo el mínimo no imponible' : 'DGI · escala por padrón', v: prim });
+        rows.push({ k: 'Mínimo no imponible del impuesto al patrimonio', ref: esNucleo ? 'Núcleo familiar' : 'Persona física', v: mni });
+        rows.push({ k: 'Patrimonio neto declarado', ref: 'Activos gravados − deudas', v: patrimonio });
+        rows.push({ k: 'Excedente sobre el mínimo no imponible', ref: excedente > 0 ? 'Base del impuesto' : 'Exento', v: excedente });
+        rows.push({ k: 'Impuesto al patrimonio anual', ref: num(PAT.tasaResidente * 100, 2) + '% del excedente · residente', v: ip });
+        rows.push({ k: 'Total de tributos anuales del inmueble', ref: 'Contribución + primaria + patrimonio', v: total, extra: true });
+        rows.push({
+          k: 'Carga anual sobre el valor catastral',
+          ref: 'Total ÷ valor de catastro',
+          v: catastral > 0 ? (total / catastral) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 3,
+        });
+        rows.push({ k: 'Costo mensualizado de tener el inmueble', ref: 'Total anual ÷ 12', v: total / 12 });
+
+        sub = 'Pagás ' + uyu(total) + ' al año: contribución ' + uyu(contrib) + ', primaria ' +
+          (prim > 0 ? uyu(prim) : 'exento') + ' y patrimonio ' + (ip > 0 ? uyu(ip) : 'exento');
+        chart = [
+          { label: 'Contribución inmobiliaria', value: Math.round(contrib), tone: 'main' },
+          { label: 'Impuesto de primaria', value: Math.round(prim), tone: 'prop' },
+          { label: 'Impuesto al patrimonio', value: Math.round(ip), tone: 'warn' },
+        ];
+      } else if (id === 'alquilar') {
+        const anticipoMes = alquiler * ALQ.tasaAnticipo;
+        const anticipoAnio = anticipoMes * 12;
+        const brutoAnual = alquiler * 12;
+        const baseAnual = Math.max(0, brutoAnual - gastosAdm);
+        const irpfAnual = baseAnual * ALQ.tasaAnual;
+        const credito = Math.max(0, anticipoAnio - irpfAnual);
+        const aPagar = Math.max(0, irpfAnual - anticipoAnio);
+        total = irpfAnual;
+
+        rows.push({ k: 'Alquiler mensual bruto', ref: 'Lo que cobrás', v: alquiler });
+        rows.push({ k: 'Anticipo mensual de IRPF', ref: num(ALQ.tasaAnticipo * 100) + '% del bruto', v: anticipoMes });
+        rows.push({ k: 'Anticipos del año', ref: '12 meses', v: anticipoAnio });
+        rows.push({ k: 'Alquiler bruto anual', ref: '12 meses', v: brutoAnual });
+        rows.push({ k: 'Gastos admitidos del año', ref: 'Contribución, primaria, comisiones', v: gastosAdm });
+        rows.push({ k: 'Renta neta gravada', ref: 'Bruto anual − gastos admitidos', v: baseAnual });
+        rows.push({ k: 'IRPF anual del arrendamiento', ref: num(ALQ.tasaAnual * 100, 0) + '% de la renta neta', v: irpfAnual, extra: true });
+        rows.push({ k: credito > 0 ? 'Crédito a favor contra la DGI' : 'Saldo a pagar en la liquidación', ref: 'Anticipos vs. impuesto anual', v: credito > 0 ? credito : aPagar, extra: true });
+        rows.push({ k: 'Alquiler neto anual después del impuesto', ref: 'Bruto − gastos − IRPF', v: brutoAnual - gastosAdm - irpfAnual });
+        rows.push({
+          k: 'Tasa efectiva sobre el alquiler bruto',
+          ref: 'IRPF ÷ bruto anual',
+          v: brutoAnual > 0 ? (irpfAnual / brutoAnual) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        rows.push({ k: 'Lo que te ahorran los gastos admitidos', ref: 'Gastos × tasa anual', v: Math.min(gastosAdm, brutoAnual) * ALQ.tasaAnual });
+
+        sub = 'IRPF anual de ' + uyu(irpfAnual) + ' · anticipás ' + uyu(anticipoMes) + ' por mes · ' +
+          (credito > 0 ? 'te queda un crédito de ' + uyu(credito) : 'te falta pagar ' + uyu(aPagar) + ' en la liquidación');
+        chart = [
+          { label: 'Alquiler neto que te queda', value: Math.round(Math.max(0, brutoAnual - gastosAdm - irpfAnual)), tone: 'main' },
+          { label: 'Gastos del inmueble', value: Math.round(gastosAdm), tone: 'prop' },
+          { label: 'IRPF del arrendamiento', value: Math.round(irpfAnual), tone: 'bad' },
+        ];
+      } else {
+        // vender
+        const fictoRenta = precio * VENTA.fictoPorcentaje;
+        const fictoImp = fictoRenta * VENTA.tasa;
+        const realRenta = Math.max(0, precio - costo - itpParte);
+        const realImp = realRenta * VENTA.tasa;
+        const usaFicto = antes2007 && fictoImp <= realImp;
+        const irpfVenta = antes2007 ? Math.min(fictoImp, realImp) : realImp;
+        total = irpfVenta + itpParte;
+
+        rows.push({ k: 'Precio de venta', ref: 'Lo acordado', v: precio });
+        rows.push({ k: 'Costo de adquisición actualizado y mejoras', ref: 'Documentado', v: costo });
+        rows.push({ k: 'ITP del vendedor', ref: num(CV.itpPorParte * 100, 0) + '% sobre el valor catastral', v: itpParte });
+        rows.push({ k: 'Renta por el criterio ficto', ref: num(VENTA.fictoPorcentaje * 100, 0) + '% del precio', v: fictoRenta });
+        rows.push({ k: 'IRPF por el criterio ficto', ref: num(VENTA.tasa * 100, 0) + '% de esa renta = ' + num(VENTA.tasa * VENTA.fictoPorcentaje * 100, 1) + '% del precio', v: fictoImp });
+        rows.push({ k: 'Renta por el criterio real', ref: 'Precio − costo − mejoras − ITP de la compra', v: realRenta });
+        rows.push({ k: 'IRPF por el criterio real', ref: num(VENTA.tasa * 100, 0) + '% de la renta efectiva', v: realImp });
+        rows.push({
+          k: 'IRPF que se te retiene',
+          ref: antes2007 ? (usaFicto ? 'Ficto: te conviene' : 'Real: te conviene') : 'Real: obligatorio para compras posteriores a 2007',
+          v: irpfVenta,
+          extra: true,
+        });
+        rows.push({ k: 'Total de impuestos del vendedor', ref: 'IRPF + ITP', v: total, extra: true });
+        rows.push({ k: 'Te queda de la venta', ref: 'Precio − impuestos', v: precio - total });
+        rows.push({
+          k: 'Carga tributaria sobre el precio',
+          ref: 'Impuestos ÷ precio',
+          v: precio > 0 ? (total / precio) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        });
+        rows.push({ k: 'Diferencia entre los dos criterios', ref: antes2007 ? 'Lo que ahorrás eligiendo bien' : 'No podés elegir: sólo referencia', v: Math.abs(fictoImp - realImp) });
+
+        sub = (antes2007 ? 'Podés elegir criterio: se aplica el ' + (usaFicto ? 'ficto' : 'real') : 'Criterio real obligatorio') +
+          ' · IRPF ' + uyu(irpfVenta) + ' + ITP ' + uyu(itpParte) + ' · te quedan ' + uyu(precio - total);
+        chart = [
+          { label: 'Lo que te queda de la venta', value: Math.round(Math.max(0, precio - total)), tone: 'main' },
+          { label: 'IRPF por incremento patrimonial', value: Math.round(irpfVenta), tone: 'bad' },
+          { label: 'ITP del vendedor', value: Math.round(itpParte), tone: 'warn' },
+        ];
+      }
+
+      return { total: uyu(total), sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

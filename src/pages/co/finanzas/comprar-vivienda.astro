@@ -1,0 +1,346 @@
+---
+/**
+ * Hub de decisión CO — "¿Me alcanza para comprar y cuánto termino pagando?"
+ *
+ * El gráfico es posicional (scale): la cuota contra el tope legal del 30% del
+ * ingreso familiar (Ley 546/1999 art. 17), así que compute() devuelve position
+ * y positionLabel.
+ *
+ * audience="CO" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  SMLMV,
+  UVT,
+  CREDITO,
+  CIERRE,
+  TOPE_VIS_SMLMV,
+  TOPE_VIP_SMLMV,
+  CUOTA_INICIAL_NO_VIS_PCT,
+  CUOTA_INICIAL_VIS_PCT,
+  MI_CASA_YA,
+  DEDUCCION_INTERESES_UVT,
+} from '../../../lib/hubs/co/comprar-vivienda';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    SMLMV,
+    UVT,
+    CREDITO,
+    CIERRE,
+    TOPE_VIS_SMLMV,
+    TOPE_VIP_SMLMV,
+    CUOTA_INICIAL_NO_VIS_PCT,
+    CUOTA_INICIAL_VIS_PCT,
+    MCY: MI_CASA_YA,
+    DEDUCCION_INTERESES_UVT,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const cop = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
+
+    /** EA → mensual, conversión correcta. Nunca EA/12. */
+    function tem(eaPct) {
+      return Math.pow(1 + eaPct / 100, 1 / 12) - 1;
+    }
+
+    function cuotaFrancesa(capital, i, n) {
+      if (capital <= 0 || n <= 0) return 0;
+      if (i <= 0) return capital / n;
+      const f = Math.pow(1 + i, n);
+      return (capital * i * f) / (f - 1);
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'vis';
+      const precio = Math.max(0, v.precio || 0);
+      // 0 legítimo en inicial, tasa, ipc y abono: nada de `|| default`.
+      const inicialPct = Math.max(0, Math.min(100, Number(v.inicial) || 0));
+      const ingreso = Math.max(0, Number(v.ingreso) || 0);
+      const eaPct = Math.max(0, Number(v.tasa) || 0);
+      const anios = Math.max(1, Math.round(v.plazo || 20));
+      const uvr = Math.max(0.01, Number(v.uvr) || 400);
+      const ipcPct = Math.max(0, Number(v.ipc) || 0);
+      const abono = Math.max(0, Number(v.abono) || 0);
+
+      const meses = anios * 12;
+      const i = tem(eaPct);
+
+      // ── Subsidio Mi Casa Ya ────────────────────────────────────────────────
+      const ingresoSmlmv = SMLMV > 0 ? ingreso / SMLMV : 0;
+      let subsidio = 0;
+      let rangoTexto = 'no aplica: el hogar supera ' + MCY.rango2TopeSmlmv + ' SMLMV';
+      if (id === 'vis') {
+        if (ingresoSmlmv <= MCY.rango1TopeSmlmv) {
+          subsidio = MCY.rango1SubsidioSmlmv * SMLMV;
+          rangoTexto = 'hasta ' + MCY.rango1TopeSmlmv + ' SMLMV → ' + MCY.rango1SubsidioSmlmv + ' SMLMV de subsidio';
+        } else if (ingresoSmlmv <= MCY.rango2TopeSmlmv) {
+          subsidio = MCY.rango2SubsidioSmlmv * SMLMV;
+          rangoTexto = 'entre ' + MCY.rango1TopeSmlmv + ' y ' + MCY.rango2TopeSmlmv + ' SMLMV → ' + MCY.rango2SubsidioSmlmv + ' SMLMV de subsidio';
+        }
+      }
+
+      // Cuota inicial exigida y lo que efectivamente pone el comprador.
+      const inicialExigida = precio * (inicialPct / 100);
+      // El subsidio reduce lo que PONE el comprador, NO aumenta el crédito.
+      const inicialDeTuBolsillo = Math.max(0, inicialExigida - subsidio);
+      const capital = Math.max(0, precio - inicialExigida);
+
+      // ── Gastos de cierre (no financiables) ─────────────────────────────────
+      // Notariales al 50% (uso Bogotá) + registro + beneficencia, a cargo del comprador.
+      const notariaComprador = precio * CIERRE.derechosNotariales * 0.5;
+      const registro = precio * CIERRE.impuestoRegistroBogota;
+      const beneficencia = precio * CIERRE.beneficenciaBogota;
+      const cierreTotal = notariaComprador + registro + beneficencia;
+      const desembolsoDia1 = inicialDeTuBolsillo + cierreTotal;
+
+      // ── Cuota ──────────────────────────────────────────────────────────────
+      const cuota = cuotaFrancesa(capital, i, meses);
+      const topeCuota = ingreso * (CREDITO.cuotaMaxPctIngreso / 100);
+      const pctIngreso = ingreso > 0 ? (cuota / ingreso) * 100 : 0;
+      const pasaTope = cuota <= topeCuota;
+
+      // Monto máximo que te prestarían respetando el tope legal.
+      const maxCredito = i > 0 && meses > 0
+        ? topeCuota * ((Math.pow(1 + i, meses) - 1) / (i * Math.pow(1 + i, meses)))
+        : topeCuota * meses;
+      const maxVivienda = inicialPct < 100 ? maxCredito / (1 - inicialPct / 100) : maxCredito;
+
+      const totalSinAbono = cuota * meses;
+      const interesesSinAbono = totalSinAbono - capital;
+
+      // ── Abono a capital: reducir plazo manteniendo la cuota ────────────────
+      let mesesConAbono = meses;
+      let interesesConAbono = interesesSinAbono;
+      if (abono > 0 && capital > 0 && cuota > 0) {
+        let saldo = capital;
+        let acum = 0;
+        let m = 0;
+        while (saldo > 1 && m < meses) {
+          const interesMes = saldo * i;
+          const pago = cuota + abono;
+          const amort = pago - interesMes;
+          if (amort <= 0) { m = meses; break; }
+          acum += interesMes;
+          saldo -= amort;
+          m++;
+        }
+        mesesConAbono = m;
+        interesesConAbono = acum;
+      }
+
+      const rows = [
+        { k: 'Precio de la vivienda', ref: 'Valor de la negociación', v: precio },
+        {
+          k: 'Cuota inicial exigida',
+          ref: inicialPct + '% · mínimo ' + CUOTA_INICIAL_NO_VIS_PCT + '% no VIS y ' + CUOTA_INICIAL_VIS_PCT + '% VIS',
+          v: inicialExigida,
+        },
+      ];
+
+      if (id === 'vis') {
+        rows.push({
+          k: subsidio > 0 ? 'Subsidio Mi Casa Ya a la cuota inicial' : 'Subsidio Mi Casa Ya: no calificás',
+          ref: rangoTexto,
+          v: subsidio,
+        });
+        rows.push({
+          k: 'Tope de valor para que sea VIS',
+          ref: TOPE_VIS_SMLMV + ' SMLMV · VIP hasta ' + TOPE_VIP_SMLMV + ' SMLMV',
+          v: TOPE_VIS_SMLMV * SMLMV,
+        });
+      }
+
+      rows.push({ k: 'Cuota inicial que sale de TU bolsillo', ref: 'Exigida menos subsidio', v: inicialDeTuBolsillo });
+      rows.push({
+        k: 'Derechos notariales a tu cargo',
+        ref: (CIERRE.derechosNotariales * 100).toFixed(2).replace('.', ',') + '% de la escritura, al 50%',
+        v: notariaComprador,
+      });
+      rows.push({
+        k: 'Impuesto de registro',
+        ref: (CIERRE.impuestoRegistroBogota * 100).toFixed(2).replace('.', ',') + '% · varía por departamento',
+        v: registro,
+      });
+      rows.push({
+        k: 'Derechos de beneficencia',
+        ref: (CIERRE.beneficenciaBogota * 100).toFixed(2).replace('.', ',') + '% · referencia Bogotá',
+        v: beneficencia,
+      });
+      rows.push({
+        k: 'Retención en la fuente que paga el VENDEDOR',
+        ref: (CIERRE.retencionVendedorPN * 100).toFixed(0) + '% · arts. 398-401 ET (no es costo tuyo)',
+        v: precio * CIERRE.retencionVendedorPN,
+      });
+      rows.push({
+        k: 'PLATA QUE NECESITÁS EL DÍA DE LA FIRMA',
+        ref: 'Cuota inicial + gastos de cierre · nada de esto es financiable',
+        v: desembolsoDia1,
+        extra: true,
+      });
+
+      rows.push({ k: 'Monto del crédito', ref: 'Precio menos cuota inicial exigida', v: capital });
+      rows.push({
+        k: 'Tasa mensual equivalente',
+        ref: '(1 + ' + eaPct.toFixed(2).replace('.', ',') + '%)^(1/12) − 1',
+        v: i * 100,
+        format: 'unit',
+        unit: '% mensual',
+        decimals: 3,
+      });
+      rows.push({ k: 'Cuota mensual del crédito', ref: anios + ' años · sistema francés', v: cuota, extra: true });
+      rows.push({
+        k: 'Tope legal de la primera cuota',
+        ref: CREDITO.cuotaMaxPctIngreso + '% del ingreso familiar · Ley 546/1999 art. 17',
+        v: topeCuota,
+      });
+      rows.push({
+        k: pasaTope ? 'Margen que te sobra bajo el tope' : 'Cuánto te pasás del tope legal',
+        ref: pasaTope ? 'El banco puede aprobarte' : 'El banco NO puede aprobarte este monto',
+        v: Math.abs(topeCuota - cuota),
+        extra: !pasaTope,
+      });
+      rows.push({
+        k: 'Vivienda máxima que podés comprar con tu ingreso',
+        ref: 'Con esta tasa, este plazo y ' + inicialPct + '% de cuota inicial',
+        v: maxVivienda,
+      });
+
+      rows.push({ k: 'Intereses totales del crédito', ref: 'Sin abonos extra', v: interesesSinAbono });
+      rows.push({ k: 'Total pagado por la vivienda', ref: 'Cuota inicial + cuotas + gastos de cierre', v: inicialExigida + totalSinAbono + cierreTotal });
+
+      if (abono > 0) {
+        rows.push({
+          k: 'Con ' + cop(abono) + ' extra al mes, cancelás en',
+          ref: 'En vez de ' + meses + ' meses · abono con reducción de plazo',
+          v: mesesConAbono,
+          format: 'unit',
+          unit: 'meses',
+        });
+        rows.push({
+          k: 'Intereses que te ahorrás abonando',
+          ref: 'Reducir PLAZO ahorra más que reducir cuota',
+          v: Math.max(0, interesesSinAbono - interesesConAbono),
+          extra: true,
+        });
+      }
+
+      if (id === 'uvr') {
+        // En UVR el capital está denominado en UVR: la cuota en pesos crece con el IPC.
+        const capitalUvr = uvr > 0 ? capital / uvr : 0;
+        const cuotaUvr = uvr > 0 ? cuota / uvr : 0;
+        const cuotaFinalPesos = cuota * Math.pow(1 + ipcPct / 100, anios);
+        rows.push({
+          k: 'Tu crédito expresado en UVR',
+          ref: 'UVR de hoy: ' + cop(uvr) + ' · consultá el valor certificado del día',
+          v: capitalUvr,
+          format: 'unit',
+          unit: 'UVR',
+        });
+        rows.push({
+          k: 'Cuota en UVR (esta NO se mueve)',
+          ref: 'Lo que se mueve es su equivalente en pesos',
+          v: cuotaUvr,
+          format: 'unit',
+          unit: 'UVR',
+          decimals: 2,
+        });
+        rows.push({
+          k: 'A cuánto llegaría esa misma cuota en pesos al final',
+          ref: 'Con inflación del ' + ipcPct.toFixed(1).replace('.', ',') + '% anual durante ' + anios + ' años',
+          v: cuotaFinalPesos,
+          extra: true,
+        });
+        rows.push({
+          k: 'Cuánto más alta sería tu cuota al final',
+          ref: 'El riesgo real del UVR: tu sueldo tiene que seguir ese ritmo',
+          v: cuota > 0 ? (cuotaFinalPesos / cuota - 1) * 100 : 0,
+          format: 'unit',
+          unit: '% más que hoy',
+          decimals: 0,
+        });
+      }
+
+      rows.push({
+        k: 'Tope anual de intereses deducibles en renta',
+        ref: DEDUCCION_INTERESES_UVT.toLocaleString('es-CO') + ' UVT · art. 119 ET',
+        v: DEDUCCION_INTERESES_UVT * UVT,
+      });
+
+      // ── Gráfico posicional: cuota vs tope legal ────────────────────────────
+      const position = Math.max(0, Math.min(100, (pctIngreso / 60) * 100));
+      const positionLabel =
+        'Tu cuota es el ' + pctIngreso.toFixed(1).replace('.', ',') + '% del ingreso familiar' +
+        (pasaTope ? ' — dentro del tope legal' : ' — SUPERA el tope legal del ' + CREDITO.cuotaMaxPctIngreso + '%');
+
+      const sub =
+        (pasaTope
+          ? 'Pasás el tope legal: la cuota entra en el ' + CREDITO.cuotaMaxPctIngreso + '% del ingreso familiar'
+          : 'NO pasás el tope legal: el banco no puede aprobarte este monto') +
+        ' · necesitás ' + cop(desembolsoDia1) + ' el día de la firma' +
+        ' · con tu ingreso te alcanza hasta ' + cop(maxVivienda) +
+        ' · pagás ' + cop(interesesSinAbono) + ' de intereses en ' + anios + ' años';
+
+      return {
+        total: cop(cuota),
+        sub: sub,
+        rows: rows,
+        position: position,
+        positionLabel: positionLabel,
+        chart: [
+          { label: 'Holgado', value: 20, from: 0, to: 20, tone: 'good' },
+          { label: 'Al límite', value: 10, from: 20, to: 30, tone: 'warn' },
+          { label: 'Supera el tope legal', value: 30, from: 30, to: 60, tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>

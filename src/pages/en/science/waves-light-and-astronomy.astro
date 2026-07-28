@@ -1,0 +1,367 @@
+---
+/**
+ * Hub EN — "How far, how fast, how much energy?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  C_LIGHT,
+  H_PLANCK,
+  E_CHARGE,
+  M_PER_LY,
+  M_PER_PC,
+  LY_PER_PC,
+  G_N,
+  KG_PER_LB,
+  RICHTER_A,
+  RICHTER_B,
+  J_PER_KG_TNT,
+  CO2_ALPHA,
+  CLIMATE_LAMBDA,
+  GRAVITY_REL,
+} from '../../../lib/hubs/en/waves-light-and-astronomy';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    C_LIGHT,
+    H_PLANCK,
+    E_CHARGE,
+    M_PER_LY,
+    M_PER_PC,
+    LY_PER_PC,
+    G_N,
+    KG_PER_LB,
+    RICHTER_A,
+    RICHTER_B,
+    J_PER_KG_TNT,
+    CO2_ALPHA,
+    CLIMATE_LAMBDA,
+    GRAVITY_REL,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(Number(x) || 0).toLocaleString('en-US');
+    const n1 = (x) => Number(x || 0).toLocaleString('en-US', { maximumFractionDigits: 1 });
+    const n2 = (x) => Number(x || 0).toLocaleString('en-US', { maximumFractionDigits: 2 });
+    const KM_PER_MILE = 1.609344; // exact
+    const PROXIMA_LY = 4.2465;
+    /** Speed of sound in dry air: 331.3 × √(1 + T/273.15) m/s. */
+    const soundSpeed = (tC) => 331.3 * Math.sqrt(1 + tC / 273.15);
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'doppler';
+
+      if (id === 'photon') {
+        const val = Math.max(1e-12, v.photval || 1e-12);
+        const unit = String(v.photunit || 'nm');
+        let lambda; // metres
+        if (unit === 'nm') lambda = val * 1e-9;
+        else if (unit === 'um') lambda = val * 1e-6;
+        else if (unit === 'thz') lambda = C_LIGHT / (val * 1e12);
+        else lambda = (H_PLANCK * C_LIGHT) / (val * E_CHARGE);
+        const freq = C_LIGHT / lambda;
+        const E = (H_PLANCK * C_LIGHT) / lambda;
+        const eV = E / E_CHARGE;
+        const nm = lambda * 1e9;
+        const region =
+          nm >= 1e6 ? 'radio and microwave' :
+          nm > 700 ? 'infrared' :
+          nm >= 380 ? 'visible light' :
+          nm >= 10 ? 'ultraviolet' :
+          nm >= 0.01 ? 'X-rays' : 'gamma rays';
+        return {
+          total: n2(eV) + ' eV',
+          sub:
+            E.toExponential(3) + ' J per photon · ' + n1(nm) + ' nm · ' + n1(freq / 1e12) + ' THz · ' + region +
+            ' · ' + (eV >= 10 ? 'above the ~10 eV ionising threshold' : 'below the ~10 eV ionising threshold'),
+          rows: [
+            { k: 'Wavelength', ref: n2(nm / 1000) + ' µm', v: nm, format: 'unit', unit: 'nm', decimals: 3, extra: true },
+            { k: 'Frequency', ref: freq.toExponential(4) + ' Hz', v: freq / 1e12, format: 'unit', unit: 'THz', decimals: 3 },
+            { k: 'Photon energy in electronvolts', ref: 'E = hc/λ ÷ e, e exact since 2019', v: eV, format: 'unit', unit: 'eV', decimals: 4, extra: true },
+            { k: 'Photon energy, ×10⁻¹⁹ joules', ref: E.toExponential(4) + ' J', v: E * 1e19, format: 'unit', unit: '×10⁻¹⁹ J', decimals: 4 },
+            { k: 'Wavenumber', ref: 'The unit spectroscopists actually use', v: 1 / (lambda * 100), format: 'unit', unit: 'cm⁻¹', decimals: 1 },
+            { k: 'Energy per mole of these photons', ref: 'One einstein: E × Avogadro', v: (E * 6.02214076e23) / 1000, format: 'unit', unit: 'kJ/mol', decimals: 1 },
+            { k: 'Gap to the ~10 eV ionising threshold', ref: eV >= 10 ? 'Already past it' : 'Still below it', v: Math.abs(10 - eV), format: 'unit', unit: 'eV', decimals: 3 },
+          ],
+          chart: [
+            { label: 'Photon energy (eV)', value: Math.round(eV * 1000) / 1000, tone: eV >= 10 ? 'bad' : 'main' },
+            { label: 'Remaining to the 10 eV ionising line (eV)', value: Math.round(Math.max(0, 10 - eV) * 1000) / 1000, tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'parallax') {
+        const p = Math.max(1e-9, v.parallax || 1e-9);
+        const pc = 1 / p;
+        const ly = pc * LY_PER_PC;
+        const km = (pc * M_PER_PC) / 1000;
+        return {
+          total: n2(ly) + ' light-years',
+          sub:
+            n2(pc) + ' parsecs · ' + km.toExponential(3) + ' km (' + (km / KM_PER_MILE).toExponential(3) +
+            ' miles) · the light reaching you tonight left ' + n0(ly) + ' years ago · Proxima Centauri, for scale, is 4.25 light-years away',
+          rows: [
+            { k: 'Parallax angle', ref: n1(p * 1000) + ' milliarcseconds', v: p, format: 'unit', unit: 'arcsec', decimals: 6 },
+            { k: 'Distance in parsecs', ref: 'd = 1 ÷ p, the definition of the parsec', v: pc, format: 'unit', unit: 'pc', decimals: 3, extra: true },
+            { k: 'Distance in light-years', ref: '1 pc = 3.2615638 ly (IAU 2015, exact)', v: ly, format: 'unit', unit: 'ly', decimals: 3, extra: true },
+            { k: 'Distance, ×10¹² kilometres', ref: km.toExponential(4) + ' km', v: km / 1e12, format: 'unit', unit: '×10¹² km', decimals: 4 },
+            { k: 'Distance, ×10¹² miles', ref: '1 mile = 1.609344 km (exact)', v: km / KM_PER_MILE / 1e12, format: 'unit', unit: '×10¹² miles', decimals: 4 },
+            { k: 'Distance in astronomical units', ref: '206,265 AU per parsec', v: pc * 206264.806, format: 'unit', unit: 'AU' },
+            { k: 'How many times farther than Proxima Centauri', ref: 'Proxima is 4.2465 ly away', v: ly / PROXIMA_LY, format: 'plain', decimals: 2 },
+          ],
+          chart: [
+            { label: 'Your star (light-years)', value: Math.round(ly * 100) / 100, tone: 'main' },
+            { label: 'Proxima Centauri (light-years)', value: PROXIMA_LY, tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'redshift') {
+        const z = Number(v.zred || 0);
+        const cKms = C_LIGHT / 1000;
+        const relativistic = Math.abs(z) >= 0.1;
+        const vel = relativistic
+          ? cKms * ((Math.pow(1 + z, 2) - 1) / (Math.pow(1 + z, 2) + 1))
+          : z * cKms;
+        const frac = Math.abs(vel) / cKms;
+        const H0 = 70; // km/s per Mpc, a mid-range value between the two measurements
+        const mpc = vel / H0;
+        return {
+          total: n0(vel) + ' km/s',
+          sub:
+            n0(vel / KM_PER_MILE) + ' miles per second · ' + n2(frac * 100) + '% of the speed of light · computed with the ' +
+            (relativistic ? 'relativistic' : 'classical') + ' formula · roughly ' + n1(mpc) +
+            ' megaparsecs away if H₀ is 70 km/s/Mpc — a value still disputed by about 9%',
+          rows: [
+            { k: 'Redshift z', ref: 'Wavelength stretched by a factor of ' + n2(1 + z), v: z, format: 'plain', decimals: 4 },
+            { k: 'Formula applied', ref: relativistic ? 'z ≥ 0.1 — relativistic' : 'z < 0.1 — classical v = cz', v: relativistic ? 2 : 1, format: 'plain' },
+            { k: 'Recession velocity', ref: 'Positive means moving away', v: vel, format: 'unit', unit: 'km/s', extra: true },
+            { k: 'The same in miles per second', ref: '1 mile = 1.609344 km (exact)', v: vel / KM_PER_MILE, format: 'unit', unit: 'mi/s' },
+            { k: 'As a fraction of the speed of light', ref: 'c = 299,792.458 km/s (exact)', v: frac * 100, format: 'unit', unit: '%', decimals: 3, extra: true },
+            { k: 'Velocity the naive v = cz would give', ref: relativistic ? 'Overestimates badly at this z' : 'Same as the answer at this z', v: z * cKms, format: 'unit', unit: 'km/s' },
+            { k: 'Rough Hubble distance', ref: 'v ÷ H₀ with H₀ = 70 km/s/Mpc', v: mpc, format: 'unit', unit: 'Mpc', decimals: 2 },
+            { k: 'The same in millions of light-years', ref: '1 Mpc = 3.2616 million ly', v: mpc * LY_PER_PC, format: 'unit', unit: 'Mly', decimals: 2 },
+          ],
+          chart: [
+            { label: 'Recession speed (% of c)', value: Math.round(frac * 100 * 100) / 100, tone: 'main' },
+            { label: 'Remaining to the speed of light (%)', value: Math.round(Math.max(0, 100 - frac * 100) * 100) / 100, tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'planets') {
+        const lb = Math.max(0, v.bodyweight || 0);
+        const kg = lb * KG_PER_LB;
+        const w = (body) => lb * GRAVITY_REL[body];
+        const jumpEarth = 0.5; // metres, a realistic standing vertical jump
+        const rows = [
+          { k: 'Your mass — unchanged everywhere', ref: n1(lb) + ' lb on Earth', v: kg, format: 'unit', unit: 'kg', decimals: 1, extra: true },
+          { k: 'Mercury (0.377 g)', ref: '3.70 m/s² surface gravity', v: w('Mercury'), format: 'unit', unit: 'lb', decimals: 1 },
+          { k: 'Venus (0.905 g)', ref: '8.87 m/s² — closest to home', v: w('Venus'), format: 'unit', unit: 'lb', decimals: 1 },
+          { k: 'The Moon (0.165 g)', ref: '1.62 m/s² — one sixth of Earth', v: w('Moon'), format: 'unit', unit: 'lb', decimals: 1, extra: true },
+          { k: 'Mars (0.378 g)', ref: '3.71 m/s²', v: w('Mars'), format: 'unit', unit: 'lb', decimals: 1, extra: true },
+          { k: 'Jupiter (2.53 g)', ref: '24.79 m/s² at the 1 bar level — there is no surface', v: w('Jupiter'), format: 'unit', unit: 'lb', decimals: 1 },
+          { k: 'Saturn (1.065 g)', ref: '10.44 m/s² — barely more than Earth, despite the size', v: w('Saturn'), format: 'unit', unit: 'lb', decimals: 1 },
+          { k: 'Uranus (0.905 g)', ref: '8.87 m/s² — slightly less than Earth', v: w('Uranus'), format: 'unit', unit: 'lb', decimals: 1 },
+          { k: 'Neptune (1.137 g)', ref: '11.15 m/s² — slightly more than Earth', v: w('Neptune'), format: 'unit', unit: 'lb', decimals: 1 },
+          { k: 'Pluto (0.063 g)', ref: '0.62 m/s² — a dwarf planet, and it shows', v: w('Pluto'), format: 'unit', unit: 'lb', decimals: 1 },
+          { k: 'The Sun (27.9 g)', ref: '274 m/s² at the photosphere, hypothetically', v: w('Sun'), format: 'unit', unit: 'lb' },
+          { k: 'How high your Earth jump would go on the Moon', ref: 'A 0.5 m standing jump, scaled', v: jumpEarth / GRAVITY_REL.Moon, format: 'unit', unit: 'm', decimals: 2 },
+        ];
+        return {
+          total: n1(w('Mars')) + ' lb on Mars',
+          sub:
+            n1(w('Moon')) + ' lb on the Moon · ' + n1(w('Jupiter')) + ' lb at Jupiter’s cloud tops · your mass is ' +
+            n1(kg) + ' kg wherever you go — only the pull changes',
+          rows: rows,
+          chart: [
+            { label: 'On the Moon (lb)', value: Math.round(w('Moon')), tone: 'good' },
+            { label: 'On Mars (lb)', value: Math.round(w('Mars')), tone: 'main' },
+            { label: 'On Earth (lb)', value: Math.round(lb), tone: 'warn' },
+            { label: 'On Jupiter (lb)', value: Math.round(w('Jupiter')), tone: 'bad' },
+          ],
+        };
+      }
+
+      if (id === 'halflife') {
+        const hl = Math.max(1e-9, v.halflife || 1e-9);
+        const t = Math.max(0, v.elapsed || 0);
+        const lives = t / hl;
+        const pct = Math.pow(0.5, lives) * 100;
+        const to10 = hl * (Math.log(0.1) / Math.log(0.5));
+        const to1 = hl * (Math.log(0.01) / Math.log(0.5));
+        return {
+          total: n2(pct) + '% left',
+          sub:
+            n1(lives) + ' half-lives have passed · ' + n2(100 - pct) + '% has already decayed · it falls to 10% after ' +
+            n0(to10) + ' years and to 1% after ' + n0(to1) + ' — and never quite reaches zero',
+          rows: [
+            { k: 'Half-life', ref: 'As entered', v: hl, format: 'unit', unit: 'years', decimals: 2 },
+            { k: 'Time elapsed', ref: 'Same units as the half-life', v: t, format: 'unit', unit: 'years', decimals: 2 },
+            { k: 'Half-lives elapsed', ref: 't ÷ half-life', v: lives, format: 'plain', decimals: 3 },
+            { k: 'Fraction remaining', ref: '0.5 ^ (t ÷ half-life)', v: pct, format: 'unit', unit: '%', decimals: 3, extra: true },
+            { k: 'Fraction already decayed', ref: '100% minus what is left', v: 100 - pct, format: 'unit', unit: '%', decimals: 3, extra: true },
+            { k: 'Decay constant λ', ref: 'ln 2 ÷ half-life', v: Math.LN2 / hl, format: 'unit', unit: 'per year', decimals: 6 },
+            { k: 'Mean lifetime of an atom', ref: '1 ÷ λ — longer than the half-life', v: hl / Math.LN2, format: 'unit', unit: 'years', decimals: 1 },
+            { k: 'Time to fall to 10%', ref: '3.32 half-lives', v: to10, format: 'unit', unit: 'years', decimals: 1 },
+            { k: 'Time to fall to 1%', ref: '6.64 half-lives', v: to1, format: 'unit', unit: 'years', decimals: 1 },
+          ],
+          chart: [
+            { label: 'Still present (%)', value: Math.round(pct * 100) / 100, tone: 'good' },
+            { label: 'Already decayed (%)', value: Math.round((100 - pct) * 100) / 100, tone: 'bad' },
+          ],
+        };
+      }
+
+      if (id === 'richter') {
+        const m = Math.max(0, v.magnitude || 0);
+        const E = Math.pow(10, RICHTER_A + RICHTER_B * m);
+        const Eprev = Math.pow(10, RICHTER_A + RICHTER_B * Math.max(0, m - 1));
+        const tntTonnes = E / J_PER_KG_TNT / 1000;
+        const cat =
+          m < 4 ? 'minor — rarely felt, rarely damaging' :
+          m < 6 ? 'moderate — clearly felt, light damage' :
+          m < 7 ? 'strong — serious damage in populated areas' :
+          m < 8 ? 'major — severe damage over a wide area' : 'great — devastating';
+        const tntLabel = tntTonnes >= 1e6 ? n2(tntTonnes / 1e6) + ' megatonnes of TNT' : tntTonnes >= 1e3 ? n1(tntTonnes / 1e3) + ' kilotonnes of TNT' : n1(tntTonnes) + ' tonnes of TNT';
+        return {
+          total: 'M' + n1(m),
+          sub:
+            E.toExponential(3) + ' J released — about ' + tntLabel + ' · ' + cat +
+            ' · one whole point lower would release 31.6 times less',
+          rows: [
+            { k: 'Magnitude', ref: 'Moment magnitude in modern reporting', v: m, format: 'plain', decimals: 1 },
+            { k: 'Energy released, ×10¹² joules', ref: 'log₁₀E = 4.8 + 1.5 M (empirical)', v: E / 1e12, format: 'unit', unit: '×10¹² J', decimals: 3, extra: true },
+            { k: 'Equivalent tonnes of TNT', ref: '1 tonne TNT = 4.184 GJ by convention', v: tntTonnes, format: 'unit', unit: 't TNT', decimals: 1, extra: true },
+            { k: 'Equivalent kilotonnes', ref: 'Hiroshima was about 15 kt', v: tntTonnes / 1000, format: 'unit', unit: 'kt TNT', decimals: 2 },
+            { k: 'Energy of one magnitude point lower', ref: '31.6 times less', v: Eprev / 1e12, format: 'unit', unit: '×10¹² J', decimals: 3 },
+            { k: 'Energy ratio to one point lower', ref: '10^1.5 — the steepness of the scale', v: Eprev > 0 ? E / Eprev : 0, format: 'plain', decimals: 1 },
+            { k: 'Ground-motion ratio to one point lower', ref: 'Amplitude is only ten times', v: 10, format: 'plain' },
+            { k: 'Households a year this could power', ref: 'At 10,500 kWh per US home', v: E / 3.6e6 / 10500, format: 'plain' },
+          ],
+          chart: [
+            { label: 'Energy at M' + n1(m) + ' (×10¹² J)', value: Math.round((E / 1e12) * 100) / 100, tone: 'bad' },
+            { label: 'Energy at M' + n1(Math.max(0, m - 1)) + ' (×10¹² J)', value: Math.round((Eprev / 1e12) * 100) / 100, tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'co2') {
+        const c = Math.max(1, v.co2now || 1);
+        const c0 = Math.max(1, v.co2base || 1);
+        const dF = CO2_ALPHA * Math.log(c / c0);
+        const doubling = CO2_ALPHA * Math.LN2;
+        const warming = dF * CLIMATE_LAMBDA;
+        const pct = (c / c0 - 1) * 100;
+        return {
+          total: n2(dF) + ' W/m²',
+          sub:
+            n0(c) + ' ppm against a ' + n0(c0) + ' ppm baseline, up ' + n1(pct) + '% · that implies roughly ' +
+            n2(warming) + ' °C (' + n2(warming * 9 / 5) + ' °F) of eventual equilibrium warming from CO₂ alone · a full doubling would be ' +
+            n2(doubling) + ' W/m²',
+          rows: [
+            { k: 'CO₂ concentration', ref: 'Mauna Loa passed 420 ppm in this decade', v: c, format: 'unit', unit: 'ppm' },
+            { k: 'Baseline concentration', ref: 'Pre-industrial is about 278 ppm', v: c0, format: 'unit', unit: 'ppm' },
+            { k: 'Increase over the baseline', ref: 'In percent — but the effect is logarithmic', v: pct, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Radiative forcing', ref: 'ΔF = 5.35 ln(C/C₀), CO₂ only', v: dF, format: 'unit', unit: 'W/m²', decimals: 3, extra: true },
+            { k: 'Forcing of a full doubling', ref: '5.35 × ln 2 — the same for every doubling', v: doubling, format: 'unit', unit: 'W/m²', decimals: 3 },
+            { k: 'How far along the first doubling you are', ref: 'ΔF ÷ the doubling forcing', v: doubling > 0 ? (dF / doubling) * 100 : 0, format: 'unit', unit: '%', decimals: 1, extra: true },
+            { k: 'Implied equilibrium warming', ref: '~0.8 K per W/m² — the widest uncertainty here', v: warming, format: 'unit', unit: '°C', decimals: 2 },
+            { k: 'The same in Fahrenheit', ref: 'A temperature difference, so ×9/5 only', v: warming * 9 / 5, format: 'unit', unit: '°F', decimals: 2 },
+            { k: 'Concentration that would double the baseline', ref: 'Where the next 3.7 W/m² lands', v: c0 * 2, format: 'unit', unit: 'ppm' },
+          ],
+          chart: [
+            { label: 'Forcing reached so far (W/m²)', value: Math.round(dF * 100) / 100, tone: 'bad' },
+            { label: 'Remaining to a full doubling (W/m²)', value: Math.round(Math.max(0, doubling - dF) * 100) / 100, tone: 'good' },
+          ],
+        };
+      }
+
+      // doppler
+      const f0 = Math.max(1, v.freq || 1);
+      const vs = Math.max(0, v.vsource || 0);
+      const vo = Math.max(0, v.vobs || 0);
+      const tF = v.airtemp === undefined || v.airtemp === '' ? 68 : Number(v.airtemp);
+      const tC = (tF - 32) * 5 / 9;
+      const vSound = soundSpeed(tC);
+      const closing = String(v.ddir || 'closing') === 'closing';
+      const denom = closing ? vSound - vs : vSound + vs;
+      const supersonic = denom <= 0;
+      const fp = supersonic ? 0 : f0 * ((closing ? vSound + vo : vSound - vo) / denom);
+      const shift = fp - f0;
+      const semitones = fp > 0 ? 12 * Math.log2(fp / f0) : 0;
+      return {
+        total: supersonic ? 'Sonic boom' : n1(fp) + ' Hz',
+        sub: supersonic
+          ? 'The source is at or past the speed of sound (' + n1(vSound) + ' m/s at ' + n1(tF) +
+            ' °F), so the wavefronts pile up instead of shifting — this formula no longer applies'
+          : n1(shift) + ' Hz ' + (shift >= 0 ? 'higher' : 'lower') + ' than the ' + n0(f0) + ' Hz emitted, a ' +
+            n1(Math.abs((shift / f0) * 100)) + '% shift — about ' + n1(Math.abs(semitones)) +
+            ' semitones · sound travels at ' + n1(vSound) + ' m/s in ' + n1(tF) + ' °F air',
+        rows: [
+          { k: 'Emitted frequency', ref: 'What the source actually produces', v: f0, format: 'unit', unit: 'Hz' },
+          { k: 'Speed of sound at this temperature', ref: n1(vSound / 0.3048) + ' ft/s at ' + n1(tC) + ' °C', v: vSound, format: 'unit', unit: 'm/s', decimals: 1 },
+          { k: 'Source speed', ref: n1(vs / 0.44704) + ' mph', v: vs, format: 'unit', unit: 'm/s', decimals: 1 },
+          { k: 'Listener speed', ref: n1(vo / 0.44704) + ' mph', v: vo, format: 'unit', unit: 'm/s', decimals: 1 },
+          { k: 'Frequency you hear', ref: closing ? 'f (v + v_o) ÷ (v − v_s)' : 'f (v − v_o) ÷ (v + v_s)', v: fp, format: 'unit', unit: 'Hz', decimals: 1, extra: true },
+          { k: 'Shift', ref: shift >= 0 ? 'Higher pitch' : 'Lower pitch', v: shift, format: 'unit', unit: 'Hz', decimals: 1, extra: true },
+          { k: 'Shift as a percentage', ref: 'Of the emitted frequency', v: (shift / f0) * 100, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Musical interval', ref: '12 × log₂ of the ratio', v: semitones, format: 'unit', unit: 'semitones', decimals: 2 },
+          { k: 'What you would hear from the other side', ref: 'Not the mirror image — the medium breaks the symmetry', v: f0 * ((closing ? vSound - vo : vSound + vo) / (closing ? vSound + vs : Math.max(0.001, vSound - vs))), format: 'unit', unit: 'Hz', decimals: 1 },
+        ],
+        chart: [
+          { label: 'Emitted frequency (Hz)', value: Math.round(f0), tone: 'main' },
+          { label: (shift >= 0 ? 'Added' : 'Lost') + ' by the Doppler shift (Hz)', value: Math.round(Math.abs(shift)), tone: shift >= 0 ? 'warn' : 'good' },
+        ],
+      };
+    });
+  })();
+</script>

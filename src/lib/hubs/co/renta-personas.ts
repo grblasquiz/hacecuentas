@@ -334,6 +334,9 @@ export const hub: HubData = {
   ],
 
   replaces: [
+    // Vivía en el árbol AR (`/impuestos/renta-colombia`) pese a ser de mercado CO.
+    // Este hub lo reemplaza desde el prefijo que le corresponde.
+    '/impuestos/renta-colombia',
     '/co/calculadora-renta-personas-naturales-colombia-2026-anual',
     '/co/calculadora-tabla-impuesto-renta-personas-naturales-colombia-2026',
     '/co/calculadora-isr-anual-colombia-personas-naturales-cedulas',

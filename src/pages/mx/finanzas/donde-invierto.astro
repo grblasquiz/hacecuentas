@@ -1,0 +1,338 @@
+---
+/**
+ * Hub de decisión MX — dónde rinde más el dinero: Cetes, pagaré, cuenta de
+ * ahorro, comisiones bancarias, tandas y dólares.
+ * audience="MX" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, INVERSION_MX } from '../../../lib/hubs/mx/donde-invierto';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="MX"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ K: INVERSION_MX }}>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+    const pos = (n) => Math.max(0, Number(n) || 0);
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'cetes';
+
+      const monto = pos(v.monto);
+      const dias = Math.max(1, pos(v.plazoDias) || 91);
+      const tasaCete = pos(v.tasaCete);
+      const tasaPagare = pos(v.tasaPagare);
+      const inflacion = pos(v.inflacionAnual);
+
+      // ── Caso 1: Cetes ─────────────────────────────────────────────────
+      if (id === 'cetes') {
+        const bruto = monto * (tasaCete / 100) * (dias / K.diasAnioComercial);
+        const isr = bruto * K.retencionIsr * (dias / K.diasAnioNatural);
+        const neto = bruto - isr;
+        const vencimiento = monto + neto;
+        const tasaNeta = monto > 0 ? (neto / monto) * (K.diasAnioComercial / dias) * 100 : 0;
+        const inflacionPeriodo = monto * (inflacion / 100) * (dias / K.diasAnioNatural);
+        const realPeriodo = neto - inflacionPeriodo;
+
+        return {
+          total: mxn(neto),
+          sub:
+            'Rendimiento neto a ' + dias + ' días sobre ' + mxn(monto) + '. Al vencimiento recibes ' + mxn(vencimiento) +
+            ', con una tasa neta anualizada del ' + tasaNeta.toFixed(2) + '%. ' +
+            (realPeriodo >= 0
+              ? 'Le ganas a la inflación del periodo por ' + mxn(realPeriodo) + '.'
+              : 'Pierdes ' + mxn(-realPeriodo) + ' de poder de compra frente a la inflación del periodo.'),
+          rows: [
+            { k: 'Capital invertido', v: monto },
+            { k: 'Rendimiento bruto', ref: 'base 360 días', v: bruto, decimals: 2 },
+            { k: 'Retención de ISR', ref: 'LIF Art. 24', v: isr, decimals: 2 },
+            { k: 'Rendimiento neto', v: neto, decimals: 2, extra: true },
+            { k: 'Monto al vencimiento', v: vencimiento, decimals: 2 },
+            { k: 'Tasa neta anualizada', v: tasaNeta, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Inflación estimada del periodo', v: inflacionPeriodo, decimals: 2 },
+            { k: 'Ganancia real después de inflación', v: realPeriodo, decimals: 2 },
+          ],
+          chart: [
+            { label: 'Capital', value: monto, tone: 'main' },
+            { label: 'Rendimiento neto', value: Math.max(0, neto), tone: 'good' },
+            { label: 'Retención de ISR', value: isr, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── Caso 2: pagaré bancario vs Cete ───────────────────────────────
+      if (id === 'pagare') {
+        const brutoP = monto * (tasaPagare / 100) * (dias / K.diasAnioNatural);
+        const isrP = brutoP * K.retencionIsr;
+        const netoP = brutoP - isrP;
+        const finalP = monto + netoP;
+        const rendP = monto > 0 ? (netoP / monto) * (K.diasAnioNatural / dias) * 100 : 0;
+
+        const brutoC = monto * (tasaCete / 100) * (dias / K.diasAnioNatural);
+        const isrC = brutoC * K.retencionIsr;
+        const netoC = brutoC - isrC;
+        const finalC = monto + netoC;
+        const rendC = monto > 0 ? (netoC / monto) * (K.diasAnioNatural / dias) * 100 : 0;
+
+        const dif = finalP - finalC;
+        const ganaPagare = dif > 0;
+        const superaIpab = monto > K.coberturaIpabReferencia;
+
+        return {
+          total: mxn(Math.abs(dif)),
+          sub:
+            (ganaPagare ? 'El pagaré' : 'El Cete') + ' te deja ' + mxn(Math.abs(dif)) + ' más a los ' + dias +
+            ' días, rindiendo ' + (ganaPagare ? rendP : rendC).toFixed(2) + '% neto anualizado. ' +
+            (superaIpab
+              ? 'Ojo: tu monto supera la referencia de cobertura del seguro de depósitos, y el Cete no tiene ese tope.'
+              : 'Tu monto está dentro de la referencia de cobertura del seguro de depósitos.'),
+          rows: [
+            { k: 'Capital invertido', v: monto },
+            { k: 'Interés bruto del pagaré', v: brutoP, decimals: 2 },
+            { k: 'Interés neto del pagaré', v: netoP, decimals: 2 },
+            { k: 'Monto final con pagaré', v: finalP, decimals: 2 },
+            { k: 'Rendimiento neto anualizado del pagaré', v: rendP, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Interés bruto del Cete', v: brutoC, decimals: 2 },
+            { k: 'Interés neto del Cete', v: netoC, decimals: 2 },
+            { k: 'Monto final con Cete', v: finalC, decimals: 2 },
+            { k: 'Rendimiento neto anualizado del Cete', v: rendC, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Diferencia a favor de ' + (ganaPagare ? 'el pagaré' : 'el Cete'), v: Math.abs(dif), decimals: 2, extra: true },
+            { k: 'Retención de ISR de cada uno', ref: 'LIF Art. 24', v: (isrP + isrC) / 2, decimals: 2 },
+          ],
+          chart: [
+            { label: 'Interés neto del pagaré', value: Math.max(0, netoP), tone: ganaPagare ? 'good' : 'main' },
+            { label: 'Interés neto del Cete', value: Math.max(0, netoC), tone: ganaPagare ? 'main' : 'good' },
+          ],
+        };
+      }
+
+      // ── Caso 3: cuenta de ahorro o fintech ────────────────────────────
+      if (id === 'cuenta') {
+        const cuenta = K.cuentas.find((c) => c.id === v.tipoCuenta) || K.cuentas[0];
+        const tasa = cuenta.tasa;
+        const depositos = pos(v.depositosMensuales);
+
+        const brutoInicial = monto * (tasa / 100) * (dias / K.diasAnioNatural);
+        let brutoDepositos = 0;
+        const mesesEnteros = Math.floor(dias / 30);
+        for (let mes = 1; mes <= mesesEnteros; mes++) {
+          const diasRestantes = dias - (mes - 1) * 30;
+          brutoDepositos += depositos * (tasa / 100) * (diasRestantes / K.diasAnioNatural);
+        }
+        const bruto = brutoInicial + brutoDepositos;
+        const isr = bruto * K.retencionIsr;
+        const neto = bruto - isr;
+        const depositosTotales = depositos * mesesEnteros;
+        const saldoFinal = monto + depositosTotales + neto;
+        const base = monto + depositosTotales;
+        const rendEfectivo = base > 0 ? (neto / base) * (K.diasAnioNatural / dias) * 100 : 0;
+        const inflacionPeriodo = monto * (inflacion / 100) * (dias / K.diasAnioNatural);
+        const gananciaReal = neto - inflacionPeriodo;
+
+        return {
+          total: mxn(saldoFinal),
+          sub:
+            'Saldo final estimado en ' + cuenta.label + ' a ' + dias + ' días, con una tasa de referencia del ' +
+            tasa.toFixed(2) + '%. Ganas ' + mxn(neto) + ' netos. ' +
+            (gananciaReal >= 0
+              ? 'Le ganas a la inflación del periodo: tu dinero mantiene poder de compra.'
+              : 'No alcanzas a cubrir la inflación del periodo: en términos reales pierdes poder de compra.'),
+          rows: [
+            { k: 'Tasa de referencia de la cuenta', ref: cuenta.label, v: tasa, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Capital inicial', v: monto },
+            { k: 'Depósitos acumulados', v: depositosTotales },
+            { k: 'Interés bruto', v: bruto, decimals: 2 },
+            { k: 'Retención de ISR', ref: 'LIF Art. 24', v: isr, decimals: 2 },
+            { k: 'Interés neto', v: neto, decimals: 2 },
+            { k: 'Saldo final', v: saldoFinal, decimals: 2, extra: true },
+            { k: 'Rendimiento efectivo anualizado', v: rendEfectivo, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Inflación estimada del periodo', v: inflacionPeriodo, decimals: 2 },
+            { k: 'Ganancia real después de inflación', v: gananciaReal, decimals: 2 },
+          ],
+          chart: [
+            { label: 'Capital inicial', value: monto, tone: 'main' },
+            { label: 'Depósitos', value: depositosTotales, tone: 'prop' },
+            { label: 'Interés neto', value: Math.max(0, neto), tone: 'good' },
+          ],
+        };
+      }
+
+      // ── Caso 4: comisiones del banco ──────────────────────────────────
+      if (id === 'comisiones') {
+        const t = K.comisionesBanco[v.banco] || K.comisionesBanco.bbva;
+        const retiros = pos(v.retirosAtm);
+        const consultas = pos(v.consultasSaldo);
+
+        const exento = monto >= t.saldoExencion;
+        const manejo = exento ? 0 : t.manejo;
+        const costoRetiros = retiros * t.retiro;
+        const costoConsultas = consultas * t.consulta;
+        const totalMes = manejo + costoRetiros + costoConsultas;
+        const totalAnual = totalMes * 12;
+
+        const rendimientoAnual = monto * (tasaCete / 100);
+        const pctRendimiento = rendimientoAnual > 0 ? (totalAnual / rendimientoAnual) * 100 : 0;
+        const rendimientoNeto = rendimientoAnual - totalAnual;
+
+        return {
+          total: mxn(totalAnual),
+          sub:
+            'Comisiones al año en ' + t.label + ' con tu patrón de uso. ' +
+            (exento
+              ? 'Tu saldo promedio te exime de la comisión por manejo de cuenta. '
+              : t.manejo > 0
+                ? 'No alcanzas el saldo de exención, así que pagas la comisión por manejo de cuenta. '
+                : 'Esta institución no cobra comisión por manejo de cuenta. ') +
+            (rendimientoAnual > 0
+              ? 'Ese costo se lleva el ' + pctRendimiento.toFixed(1) + '% del rendimiento que generaría tu saldo a la tasa de referencia.'
+              : ''),
+          rows: [
+            { k: 'Comisión mensual por manejo de cuenta', v: manejo },
+            { k: 'Saldo que exime de la comisión', v: t.saldoExencion },
+            { k: 'Costo de retiros en cajero ajeno', v: costoRetiros },
+            { k: 'Costo de consultas de saldo', v: costoConsultas },
+            { k: 'Total de comisiones al mes', v: totalMes },
+            { k: 'Total de comisiones al año', v: totalAnual, extra: true },
+            { k: 'Rendimiento anual de tu saldo a la tasa de referencia', v: rendimientoAnual },
+            { k: 'Porcentaje del rendimiento que se llevan las comisiones', v: pctRendimiento, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Rendimiento que te queda después de comisiones', v: rendimientoNeto },
+          ],
+          chart: [
+            { label: 'Rendimiento que te queda', value: Math.max(0, rendimientoNeto), tone: 'good' },
+            { label: 'Manejo de cuenta', value: manejo * 12, tone: 'warn' },
+            { label: 'Retiros y consultas', value: (costoRetiros + costoConsultas) * 12, tone: 'bad' },
+          ],
+        };
+      }
+
+      // ── Caso 5: tanda ─────────────────────────────────────────────────
+      if (id === 'tanda') {
+        const n = Math.max(2, Math.round(pos(v.participantes) || 10));
+        const aporte = pos(v.aporte);
+        const periodo = K.periodosTanda[v.frecuencia] || K.periodosTanda.semanal;
+        const turno = Math.min(n, Math.max(1, Math.round(pos(v.turno) || 1)));
+
+        const bolsa = aporte * n;
+        const totalAportado = aporte * n;
+        const mesesCiclo = n / periodo.porMes;
+        const mesesHastaCobrar = turno / periodo.porMes;
+        const aportadoAntes = aporte * (turno - 1);
+        const adelanto = bolsa - aportadoAntes;
+        const mitad = (n + 1) / 2;
+        const rol = turno < mitad ? 'crédito sin intereses' : turno > mitad ? 'ahorro forzoso sin rendimiento' : 'posición neutra';
+
+        // Costo de oportunidad: lo mismo aportado a la tasa de referencia del Cete.
+        const rMensual = tasaCete / 100 / 12;
+        let valorConTasa = 0;
+        for (let k = 0; k < n; k++) {
+          const mesesRindiendo = mesesCiclo - k / periodo.porMes;
+          valorConTasa += aporte * Math.pow(1 + rMensual, Math.max(0, mesesRindiendo));
+        }
+        const costoOportunidad = Math.max(0, valorConTasa - totalAportado);
+
+        return {
+          total: mxn(bolsa),
+          sub:
+            'Bolsa que cobras en el turno ' + turno + ' de ' + n + ', a los ' + turno + ' ' +
+            (turno === 1 ? periodo.nombre : periodo.plural) + ' (' + mesesHastaCobrar.toFixed(1) +
+            ' meses). Tu turno te funciona como ' + rol + '. Aportando lo mismo a la tasa de referencia habrías ganado ' +
+            mxn(costoOportunidad) + ' que la tanda no te da.',
+          rows: [
+            { k: 'Participantes', v: n, format: 'unit', unit: 'personas' },
+            { k: 'Aporte por periodo', v: aporte },
+            { k: 'Bolsa que cobras', v: bolsa, extra: true },
+            { k: 'Periodos hasta tu turno', v: turno, format: 'unit', unit: periodo.plural },
+            { k: 'Meses hasta cobrar', v: mesesHastaCobrar, format: 'unit', unit: 'meses', decimals: 1 },
+            { k: 'Aportado antes de cobrar', v: aportadoAntes },
+            { k: 'Lo que te adelantan al cobrar', v: Math.max(0, adelanto) },
+            { k: 'Aporte total del ciclo', v: totalAportado },
+            { k: 'Duración del ciclo completo', v: mesesCiclo, format: 'unit', unit: 'meses', decimals: 1 },
+            { k: 'Rendimiento que dejas de ganar', ref: 'a la tasa del Cete que cargaste', v: costoOportunidad },
+          ],
+          chart: [
+            { label: 'Aportado antes de cobrar', value: aportadoAntes, tone: 'main' },
+            { label: 'Lo que te adelantan', value: Math.max(0, adelanto), tone: 'good' },
+            { label: 'Rendimiento que no ganas', value: costoOportunidad, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── Caso 6: ahorrar en dólares ────────────────────────────────────
+      const tc = Math.max(0.01, pos(v.tipoCambio) || 1);
+      const canal = v.canal || 'banco';
+      const spread = K.spreadCanal[canal] !== undefined ? K.spreadCanal[canal] : K.spreadCanal.banco;
+      const tipoAplicado = tc + spread;
+      const dolares = monto / tipoAplicado;
+      const dolaresFix = monto / tc;
+      const costoSpread = dolaresFix - dolares;
+      const costoPesos = costoSpread * tc;
+      const costoPct = dolaresFix > 0 ? (costoSpread / dolaresFix) * 100 : 0;
+
+      return {
+        total: mxn(costoPesos),
+        sub:
+          'Eso es lo que te cuesta el canal. Con ' + mxn(monto) + ' recibes ' + dolares.toFixed(2) +
+          ' dólares a un tipo de cambio efectivo de ' + tipoAplicado.toFixed(4) + ', en vez de los ' + dolaresFix.toFixed(2) +
+          ' que te daría el tipo de cambio de referencia: un ' + costoPct.toFixed(2) + '% del monto.',
+        rows: [
+          { k: 'Pesos que conviertes', v: monto },
+          { k: 'Tipo de cambio de referencia', v: tc, format: 'plain', decimals: 4 },
+          { k: 'Diferencial del canal', v: spread, format: 'plain', decimals: 2 },
+          { k: 'Tipo de cambio efectivo', v: tipoAplicado, format: 'plain', decimals: 4 },
+          { k: 'Dólares que recibes', v: dolares, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Dólares al tipo de cambio de referencia', v: dolaresFix, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Dólares que pierdes en el diferencial', v: costoSpread, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Costo del diferencial en pesos', v: costoPesos, extra: true },
+          { k: 'Costo como porcentaje del monto', v: costoPct, format: 'unit', unit: '%', decimals: 2 },
+        ],
+        chart: [
+          { label: 'Dólares que recibes', value: dolares, tone: 'main' },
+          { label: 'Dólares que se lleva el canal', value: costoSpread, tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

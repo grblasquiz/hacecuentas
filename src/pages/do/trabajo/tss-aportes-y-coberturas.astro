@@ -1,0 +1,238 @@
+---
+/**
+ * Hub de decisión DO — "La TSS: cuánto se aporta por vos y qué te devuelve".
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  TSS,
+  AFP,
+  DIVISOR_DIARIO,
+  INFOTEP_PATRONAL,
+  CESANTIA_DIAS_PROVISION,
+  SEMANAS_MATERNIDAD,
+} from '../../../lib/hubs/do/tss-aportes-y-coberturas';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="DO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    TSS,
+    AFP,
+    DIVISOR_DIARIO,
+    INFOTEP_PATRONAL,
+    CESANTIA_DIAS_PROVISION,
+    SEMANAS_MATERNIDAD,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const dop = (n) => 'RD$ ' + Math.round(n || 0).toLocaleString('de-DE');
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'trabajador';
+      const salario = Math.max(0, v.salario || 0);
+      const edad = Math.min(74, Math.max(16, v.edad || 35));
+      const saldoCci = Math.max(0, v.saldoCci || 0);
+      const rendimiento = Math.max(0, v.rendimiento || 0);
+      const aniosRetiro = Math.max(5, v.aniosRetiro || 20);
+
+      // Bases topeadas.
+      const baseAfp = Math.min(salario, TSS.topeAfp);
+      const baseSfs = Math.min(salario, TSS.topeSfs);
+      const baseSrl = Math.min(salario, TSS.topeSrl);
+
+      // Trabajador.
+      const afpEmp = baseAfp * TSS.afpEmpleado;
+      const sfsEmp = baseSfs * TSS.sfsEmpleado;
+      const descuentoTrabajador = afpEmp + sfsEmp;
+
+      // Empleador.
+      const afpPat = baseAfp * TSS.afpPatronal;
+      const sfsPat = baseSfs * TSS.sfsPatronal;
+      const srlPat = baseSrl * TSS.srlPatronal;
+      const infotep = salario * INFOTEP_PATRONAL;
+      const aportesPatronales = afpPat + sfsPat + srlPat;
+
+      // Provisiones mensuales de prestaciones que se devengan en el año.
+      const diario = salario / DIVISOR_DIARIO;
+      const provRegalia = salario / 12;
+      const provCesantia = (diario * CESANTIA_DIAS_PROVISION) / 12;
+
+      const costoEmpleador = salario + aportesPatronales + infotep + provRegalia + provCesantia;
+      const sobrecosto = salario > 0 ? ((costoEmpleador - salario) / salario) * 100 : 0;
+      const aporteTotalTss = descuentoTrabajador + aportesPatronales;
+
+      // Pensión: proyección del saldo de la CCI hasta los 60 años.
+      const meses = Math.max(0, (AFP.edadJubilacionVejez - edad) * 12);
+      const r = rendimiento / 100 / 12;
+      const aporteCci = baseAfp * AFP.aportePctCci;
+      const factor = Math.pow(1 + r, meses);
+      const fvSaldo = saldoCci * factor;
+      const fvAportes = r === 0 ? aporteCci * meses : aporteCci * ((factor - 1) / r);
+      const saldoFinal = fvSaldo + fvAportes;
+      const pensionMensual = aniosRetiro > 0 ? saldoFinal / (aniosRetiro * 12) : 0;
+      const tasaReemplazo = salario > 0 ? (pensionMensual / salario) * 100 : 0;
+
+      // Maternidad: base reguladora topeada × 3.
+      const subsidioMaternidad = baseSfs * 3;
+      const completaEmpleador = Math.max(0, (salario - baseSfs) * 3);
+
+      const rows = [
+        { k: 'Salario cotizable mensual', ref: 'Sin regalía: la regalía no cotiza', v: salario },
+        {
+          k: 'AFP del trabajador (se descuenta)',
+          ref: (TSS.afpEmpleado * 100).toFixed(2).replace('.', ',') + '% · tope ' + dop(TSS.topeAfp),
+          v: afpEmp,
+        },
+        {
+          k: 'SFS del trabajador (se descuenta)',
+          ref: (TSS.sfsEmpleado * 100).toFixed(2).replace('.', ',') + '% · tope ' + dop(TSS.topeSfs),
+          v: sfsEmp,
+        },
+        { k: 'Total que te descuentan', ref: '5,91% del salario cotizable', v: descuentoTrabajador, extra: true },
+        {
+          k: 'AFP patronal',
+          ref: (TSS.afpPatronal * 100).toFixed(2).replace('.', ',') + '% · lo paga la empresa',
+          v: afpPat,
+        },
+        {
+          k: 'SFS patronal',
+          ref: (TSS.sfsPatronal * 100).toFixed(2).replace('.', ',') + '% · lo paga la empresa',
+          v: sfsPat,
+        },
+        {
+          k: 'Seguro de Riesgos Laborales',
+          ref: (TSS.srlPatronal * 100).toFixed(2).replace('.', ',') + '% · tope ' + dop(TSS.topeSrl),
+          v: srlPat,
+        },
+        { k: 'INFOTEP', ref: '1% de la nómina · Ley 116-80, fuera de la TSS', v: infotep },
+        { k: 'Provisión mensual de regalía pascual', ref: 'Un doceavo del sueldo', v: provRegalia },
+        {
+          k: 'Provisión mensual de cesantía',
+          ref: CESANTIA_DIAS_PROVISION + ' días por año ÷ 12 · estimación',
+          v: provCesantia,
+        },
+        { k: 'Costo mensual total del empleado', ref: 'Bruto + cargas + provisiones', v: costoEmpleador, extra: true },
+        {
+          k: 'Sobrecosto sobre el salario bruto',
+          ref: 'Cuánto agrega la empresa por encima del sueldo',
+          v: sobrecosto,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        },
+        { k: 'Aporte mensual a tu cuenta de AFP (CCI)', ref: (AFP.aportePctCci * 100).toFixed(1).replace('.', ',') + '% del salario cotizable', v: aporteCci },
+        {
+          k: 'Años que te faltan para los ' + AFP.edadJubilacionVejez,
+          ref: 'Edad de pensión por vejez',
+          v: meses / 12,
+          format: 'unit',
+          unit: 'años',
+          decimals: 1,
+        },
+        { k: 'Saldo proyectado de tu CCI al jubilarte', ref: rendimiento.toString().replace('.', ',') + '% anual esperado', v: saldoFinal },
+        {
+          k: 'Pensión mensual estimada',
+          ref: 'Saldo ÷ ' + aniosRetiro + ' años de retiro',
+          v: pensionMensual,
+          extra: true,
+        },
+        {
+          k: 'Tasa de reemplazo sobre tu salario de hoy',
+          ref: 'Pensión ÷ salario actual',
+          v: tasaReemplazo,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        },
+        {
+          k: 'Subsidio de maternidad del SFS',
+          ref: 'Base reguladora × 3 · ' + SEMANAS_MATERNIDAD + ' semanas',
+          v: subsidioMaternidad,
+        },
+      ];
+
+      if (completaEmpleador > 0) {
+        rows.push({
+          k: 'Diferencia que debe completar el empleador',
+          ref: 'Tu salario supera el tope de SFS',
+          v: completaEmpleador,
+        });
+      }
+
+      let sub =
+        'Te descuentan ' + dop(descuentoTrabajador) + ' y la empresa pone ' + dop(costoEmpleador - salario) +
+        ' por encima de tu sueldo (' + sobrecosto.toFixed(1).replace('.', ',') + '%)' +
+        ' · a la TSS entran ' + dop(aporteTotalTss) + ' al mes por vos';
+
+      if (id === 'pension') {
+        sub = 'Pensión estimada de ' + dop(pensionMensual) + ' al mes (' + tasaReemplazo.toFixed(1).replace('.', ',') +
+          '% de tu salario de hoy) con un saldo proyectado de ' + dop(saldoFinal) +
+          ' · sólo el ' + (AFP.aportePctCci * 100).toFixed(1).replace('.', ',') + '% del salario llega a tu cuenta';
+      } else if (id === 'maternidad') {
+        sub = 'SISALRIL te paga ' + dop(subsidioMaternidad) + ' por las ' + SEMANAS_MATERNIDAD + ' semanas' +
+          (completaEmpleador > 0
+            ? ' y tu empleador debe completar ' + dop(completaEmpleador) + ' porque superás el tope de SFS'
+            : ' · lo paga el Seguro Familiar de Salud, no tu empleador');
+      }
+
+      return {
+        total: dop(costoEmpleador),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Salario bruto del trabajador', value: Math.round(salario), tone: 'main' },
+          { label: 'Aportes patronales a la TSS', value: Math.round(aportesPatronales), tone: 'prop' },
+          { label: 'INFOTEP', value: Math.round(infotep), tone: 'warn' },
+          { label: 'Provisión de regalía', value: Math.round(provRegalia), tone: 'good' },
+          { label: 'Provisión de cesantía', value: Math.round(provCesantia), tone: 'exit' },
+        ],
+      };
+    });
+  })();
+</script>

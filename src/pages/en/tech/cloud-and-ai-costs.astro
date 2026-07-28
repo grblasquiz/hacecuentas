@@ -1,0 +1,298 @@
+---
+/**
+ * Hub EN — "What will this cost me to run per month?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ * Toda la plata va en dólares: format 'unit' + unit 'USD', o prefijo $ formateado a mano.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  RESERVED_SAVING,
+  MJ_PLANS,
+  POOL_PER_CORE,
+  POOL_BOUNCER_THRESHOLD,
+  OPS_PER_SECOND,
+  COCOMO_A,
+  COCOMO_B,
+} from '../../../lib/hubs/en/cloud-and-ai-costs';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ RESERVED_SAVING, MJ_PLANS, POOL_PER_CORE, POOL_BOUNCER_THRESHOLD, OPS_PER_SECOND, COCOMO_A, COCOMO_B }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(x || 0).toLocaleString('en-US');
+    const usd = (x) =>
+      '$' + (x || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'server';
+
+      if (id === 'tokens') {
+        const inTok = Math.max(0, v.inTok || 0);
+        const outTok = Math.max(0, v.outTok || 0);
+        const calls = Math.max(0, v.calls || 0);
+        const pIn = Math.max(0, v.priceIn || 0);
+        const pOut = Math.max(0, v.priceOut || 0);
+        const costIn = (inTok * pIn) / 1e6;
+        const costOut = (outTok * pOut) / 1e6;
+        const perCall = costIn + costOut;
+        const perDay = perCall * calls;
+        const perMonth = perDay * 30;
+        const outShare = perCall > 0 ? (costOut / perCall) * 100 : 0;
+        const rows = [
+          { k: 'Input cost per call', ref: n0(inTok) + ' tokens at $' + pIn + ' per million', v: costIn, format: 'unit', unit: 'USD', decimals: 5 },
+          { k: 'Output cost per call', ref: n0(outTok) + ' tokens at $' + pOut + ' per million', v: costOut, format: 'unit', unit: 'USD', decimals: 5 },
+          { k: 'Total per call', ref: 'Input plus output', v: perCall, format: 'unit', unit: 'USD', decimals: 5, extra: true },
+          { k: 'Per day', ref: n0(calls) + ' calls', v: perDay, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Per month', ref: '30 days', v: perMonth, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Per year', ref: '365 days', v: perDay * 365, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Share of the bill driven by output tokens', ref: 'Where the savings are', v: outShare, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Monthly saving if responses were 30% shorter', ref: 'Usually the easiest optimisation', v: costOut * 0.3 * calls * 30, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Total tokens processed per month', ref: 'Input plus output', v: ((inTok + outTok) * calls * 30) / 1e6, format: 'unit', unit: 'million tokens', decimals: 1 },
+        ];
+        return {
+          total: usd(perMonth) + ' / month',
+          sub:
+            usd(perDay) + ' a day at ' + n0(calls) + ' calls · output tokens drive ' + Math.round(outShare) + '% of it · ' +
+            'prices are per MILLION tokens, the unit providers bill in — check caching and batch pricing before assuming this is fixed',
+          rows: rows,
+          chart: [
+            { label: 'Input tokens (USD/month)', value: Math.round(costIn * calls * 30 * 100) / 100, tone: 'main' },
+            { label: 'Output tokens (USD/month)', value: Math.round(costOut * calls * 30 * 100) / 100, tone: 'warn' },
+          ],
+        };
+      }
+
+      if (id === 'images') {
+        const key = String(v.plan || 'standard');
+        const p = MJ_PLANS[key] || MJ_PLANS.standard;
+        const keys = ['basic', 'standard', 'pro', 'mega'];
+        const idx = keys.indexOf(key);
+        const nextKey = idx >= 0 && idx < keys.length - 1 ? keys[idx + 1] : null;
+        const prevKey = idx > 0 ? keys[idx - 1] : null;
+        const rows = [
+          { k: 'Monthly price', ref: 'Billed monthly', v: p.usd, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Cost over a year', ref: 'Annual billing is usually cheaper', v: p.usd * 12, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Unlimited relax generation included', ref: p.relax ? 'Yes — no hard ceiling' : 'No — you are capped by fast hours', v: p.relax ? 1 : 0, format: 'plain' },
+          { k: 'Stealth mode included', ref: p.stealth ? 'Yes — generations stay private' : 'No — output is public', v: p.stealth ? 1 : 0, format: 'plain' },
+          nextKey
+            ? { k: 'Stepping up to the ' + nextKey + ' tier costs', ref: 'Extra per month', v: MJ_PLANS[nextKey].usd - p.usd, format: 'unit', unit: 'USD', decimals: 2 }
+            : { k: 'This is the top tier', ref: 'Nothing above it', v: 0, format: 'plain' },
+          prevKey
+            ? { k: 'Dropping to the ' + prevKey + ' tier saves', ref: 'Per month', v: p.usd - MJ_PLANS[prevKey].usd, format: 'unit', unit: 'USD', decimals: 2 }
+            : { k: 'This is the entry tier', ref: 'Nothing below it', v: 0, format: 'plain' },
+        ];
+        return {
+          total: usd(p.usd) + ' / month',
+          sub:
+            p.fast + ' · ' + (p.relax ? 'unlimited relax mode removes the hard ceiling' : 'no unlimited relax — you stop when the fast hours run out') +
+            ' · ' + usd(p.usd * 12) + ' a year · check the current pricing page and the commercial-use terms before committing',
+          rows: rows,
+          chart: [
+            { label: 'This plan (USD/month)', value: p.usd, tone: 'main' },
+            { label: 'Entry tier for comparison (USD/month)', value: MJ_PLANS.basic.usd, tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'pool') {
+        const cores = Math.max(1, Math.floor(v.cores || 1));
+        const wl = String(v.workload || 'medium');
+        const perCore = POOL_PER_CORE[wl] || 2;
+        const max = cores * perCore;
+        const min = Math.max(2, Math.floor(max / 4));
+        const instances = Math.max(1, Math.floor(v.instances || 1));
+        const totalConns = max * instances;
+        const needsBouncer = totalConns > POOL_BOUNCER_THRESHOLD;
+        const rows = [
+          { k: 'Database CPU cores', ref: 'As entered', v: cores, format: 'unit', unit: 'cores' },
+          { k: 'Connections per core for this workload', ref: wl + ' I/O intensity', v: perCore, format: 'unit', unit: 'per core' },
+          { k: 'Maximum pool size per instance', ref: 'Cores × connections per core', v: max, format: 'unit', unit: 'connections', extra: true },
+          { k: 'Minimum pool size per instance', ref: 'A quarter of the maximum', v: min, format: 'unit', unit: 'connections' },
+          { k: 'Application instances sharing the database', ref: 'This is what people forget', v: instances, format: 'plain' },
+          { k: 'Total connections at the database', ref: needsBouncer ? 'OVER the pooler threshold' : 'Within a sane range', v: totalConns, format: 'unit', unit: 'connections', extra: true },
+          { k: 'Approximate memory those connections consume', ref: 'Roughly 5 MB each on PostgreSQL', v: totalConns * 5, format: 'unit', unit: 'MB' },
+          { k: 'Headroom before the pooler threshold', ref: POOL_BOUNCER_THRESHOLD + ' connections', v: Math.max(0, POOL_BOUNCER_THRESHOLD - totalConns), format: 'unit', unit: 'connections' },
+        ];
+        return {
+          total: min + ' to ' + max + ' connections',
+          sub:
+            'Per application instance · across ' + instances + ' instance' + (instances === 1 ? '' : 's') +
+            ' that is ' + n0(totalConns) + ' connections at the database · ' +
+            (needsBouncer
+              ? 'past ' + POOL_BOUNCER_THRESHOLD + ' — put an external pooler in front rather than raising the server limit'
+              : 'start at the minimum and only raise it if you actually see waits for a connection'),
+          rows: rows,
+          chart: [
+            { label: 'Total connections requested', value: totalConns, tone: needsBouncer ? 'bad' : 'main' },
+            { label: 'Headroom to the pooler threshold', value: Math.max(0, POOL_BOUNCER_THRESHOLD - totalConns), tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'bigo') {
+        const n = Math.max(1, v.n || 1);
+        const t = String(v.complexity || 'n');
+        let ops;
+        if (t === '1') ops = 1;
+        else if (t === 'logn') ops = Math.log2(n);
+        else if (t === 'n') ops = n;
+        else if (t === 'nlogn') ops = n * Math.log2(n);
+        else if (t === 'n2') ops = n * n;
+        else ops = Math.pow(2, Math.min(n, 100));
+        const seconds = ops / OPS_PER_SECOND;
+        const linearSeconds = n / OPS_PER_SECOND;
+        const notation = { '1': 'O(1)', logn: 'O(log n)', n: 'O(n)', nlogn: 'O(n log n)', n2: 'O(n²)', '2n': 'O(2ⁿ)' }[t] || t;
+        const timeStr =
+          seconds < 1e-6 ? (seconds * 1e9).toFixed(1) + ' ns'
+          : seconds < 1e-3 ? (seconds * 1e6).toFixed(1) + ' µs'
+          : seconds < 1 ? (seconds * 1000).toFixed(1) + ' ms'
+          : seconds < 60 ? seconds.toFixed(2) + ' s'
+          : seconds < 3600 ? (seconds / 60).toFixed(1) + ' min'
+          : seconds < 86400 * 365 ? (seconds / 3600).toFixed(1) + ' h'
+          : (seconds / (86400 * 365)).toExponential(2) + ' years';
+        const verdict =
+          seconds < 1e-3 ? 'effectively instant'
+          : seconds < 1 ? 'fast'
+          : seconds < 60 ? 'slow but tolerable'
+          : 'not viable in practice at this scale';
+        const rows = [
+          { k: 'Input size', ref: 'n as entered', v: n, format: 'plain' },
+          { k: 'Operations for ' + notation, ref: 'Growth of this complexity class', v: ops, format: 'plain', extra: true },
+          { k: 'Estimated wall-clock time', ref: 'At a billion operations per second', v: seconds, format: 'unit', unit: 'seconds', decimals: 4, extra: true },
+          { k: 'What a single linear pass would take', ref: 'O(n) on the same data', v: linearSeconds, format: 'unit', unit: 'seconds', decimals: 6 },
+          { k: 'How many times slower than linear', ref: 'Operations ÷ n', v: n > 0 ? ops / n : 0, format: 'unit', unit: '×', decimals: 2 },
+          { k: 'Time if n were ten times larger', ref: 'Where the class really shows', v: (t === 'n2' ? ops * 100 : t === 'nlogn' ? ops * 10 * 1.3 : t === 'n' ? ops * 10 : ops) / OPS_PER_SECOND, format: 'unit', unit: 'seconds', decimals: 4 },
+          { k: 'Operations per second assumed', ref: 'A rough single-core figure', v: OPS_PER_SECOND, format: 'plain' },
+        ];
+        return {
+          total: timeStr,
+          sub:
+            notation + ' at n = ' + n0(n) + ' — ' + verdict + ' · ' + ops.toExponential(2) + ' operations · ' +
+            'use this to compare classes against each other, not to predict a real runtime — constant factors of 10 to 100 hide inside the notation',
+          rows: rows,
+          chart: [
+            { label: 'Operations for this class', value: Math.round(ops), tone: seconds < 1 ? 'good' : 'bad' },
+            { label: 'Operations for a linear pass', value: Math.round(n), tone: 'main' },
+          ],
+        };
+      }
+
+      if (id === 'effort') {
+        const loc = Math.max(0, v.loc || 0);
+        const kloc = loc / 1000;
+        const team = Math.max(1, Math.floor(v.teamSize || 1));
+        const monthlyCost = Math.max(0, v.costPerMonth || 0);
+        const pm = kloc > 0 ? COCOMO_A * Math.pow(kloc, COCOMO_B) : 0;
+        const calendar = pm / team;
+        const dollars = pm * monthlyCost;
+        const category =
+          kloc >= 1000 ? 'massive — kernel or browser scale'
+          : kloc >= 100 ? 'enterprise'
+          : kloc >= 10 ? 'a medium application'
+          : kloc >= 1 ? 'a small application'
+          : 'a script';
+        const rows = [
+          { k: 'Size of the codebase', ref: n0(loc) + ' lines', v: kloc, format: 'unit', unit: 'KLOC', decimals: 1 },
+          { k: 'Effort by basic COCOMO', ref: '2.4 × KLOC^1.05, organic mode', v: pm, format: 'unit', unit: 'person-months', decimals: 1, extra: true },
+          { k: 'Calendar time for ' + team + ' people', ref: 'Ignoring coordination overhead', v: calendar, format: 'unit', unit: 'months', decimals: 1, extra: true },
+          { k: 'That in calendar years', ref: 'Calendar months ÷ 12', v: calendar / 12, format: 'unit', unit: 'years', decimals: 1 },
+          { k: 'Rough cost at your loaded rate', ref: 'Person-months × ' + usd(monthlyCost), v: dollars, format: 'unit', unit: 'USD', decimals: 0, extra: true },
+          { k: 'Cost per thousand lines', ref: 'A crude but revealing figure', v: kloc > 0 ? dollars / kloc : 0, format: 'unit', unit: 'USD per KLOC', decimals: 0 },
+          { k: 'Effort if the project were twice the size', ref: 'The exponent above 1 is the point', v: COCOMO_A * Math.pow(kloc * 2, COCOMO_B), format: 'unit', unit: 'person-months', decimals: 1 },
+        ];
+        return {
+          total: n0(pm) + ' person-months',
+          sub:
+            kloc.toFixed(1) + ' KLOC — ' + category + ' · about ' + calendar.toFixed(1) + ' months with ' + team +
+            ' people, or roughly ' + usd(dollars) + ' of engineering time · ' +
+            'a scale indicator, never a productivity metric — line counts vary fivefold between languages',
+          rows: rows,
+          chart: [
+            { label: 'Person-months of effort', value: Math.round(pm), tone: 'main' },
+            { label: 'Calendar months with this team', value: Math.round(calendar), tone: 'good' },
+          ],
+        };
+      }
+
+      // server
+      const hourly = Math.max(0, v.hourly || 0);
+      const hoursDay = Math.max(0, v.hoursDay || 0);
+      const daysMonth = Math.max(0, v.daysMonth || 0);
+      const monthly = hourly * hoursDay * daysMonth;
+      const annual = monthly * 12;
+      const reserved = monthly * (1 - RESERVED_SAVING);
+      const alwaysOn = hourly * 24 * 30;
+      const businessHours = hourly * 10 * 22;
+      const rows = [
+        { k: 'Hourly rate', ref: 'On-demand price you entered', v: hourly, format: 'unit', unit: 'USD per hour', decimals: 4 },
+        { k: 'Hours billed per month', ref: n0(hoursDay) + ' h/day × ' + n0(daysMonth) + ' days', v: hoursDay * daysMonth, format: 'unit', unit: 'hours' },
+        { k: 'Monthly cost', ref: 'Rate × hours', v: monthly, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+        { k: 'Annual cost', ref: 'Monthly × 12', v: annual, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+        { k: 'With a reservation or savings plan', ref: 'About 60% off, but it is a commitment', v: reserved, format: 'unit', unit: 'USD per month', decimals: 2, extra: true },
+        { k: 'What the reservation would save per year', ref: 'Only commit to baseline capacity', v: (monthly - reserved) * 12, format: 'unit', unit: 'USD', decimals: 2 },
+        { k: 'Cost if it ran continuously', ref: '24 h × 30 days', v: alwaysOn, format: 'unit', unit: 'USD per month', decimals: 2 },
+        { k: 'Cost on a business-hours schedule', ref: '10 h × 22 weekdays', v: businessHours, format: 'unit', unit: 'USD per month', decimals: 2 },
+        { k: 'Waste avoided by scheduling it off', ref: 'Always-on minus business hours', v: alwaysOn - businessHours, format: 'unit', unit: 'USD per month', decimals: 2 },
+      ];
+      return {
+        total: usd(monthly) + ' / month',
+        sub:
+          usd(annual) + ' a year at ' + usd(hourly) + ' an hour · a reservation would bring it to about ' + usd(reserved) + ' a month · ' +
+          'this is compute only — storage, snapshots, load balancers and outbound data transfer are billed on top',
+        rows: rows,
+        chart: [
+          { label: 'Cost with a reservation (USD/month)', value: Math.round(reserved * 100) / 100, tone: 'main' },
+          { label: 'On-demand premium you are paying (USD/month)', value: Math.round((monthly - reserved) * 100) / 100, tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

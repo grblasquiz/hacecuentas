@@ -1,0 +1,47 @@
+---
+/**
+ * Money silo · United States — index of the English-market decision hubs.
+ * Exists so the breadcrumb of every /en/money/* hub resolves, and so link equity
+ * is shared between siblings. The listing comes from the registry, never by hand.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import SiloIndex from '../../../components/hub/SiloIndex.astro';
+import { hubsOfSilo } from '../../../lib/hubs/registry';
+
+const HREF = '/en/money';
+const SILO = 'Money';
+const LEDE =
+  'Paychecks, taxes, debt and your home loan, worked out with the current IRS brackets, the FICA wage base and the state rate that actually applies to you.';
+const hubs = hubsOfSilo(HREF);
+const CANONICAL = `https://hacecuentas.com${HREF}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `${SILO} — United States`,
+  description: LEDE,
+  url: CANONICAL,
+  hasPart: hubs.map((h) => ({
+    '@type': 'WebPage',
+    name: h.h1,
+    url: `https://hacecuentas.com/${h.slug}`,
+  })),
+};
+---
+
+<Layout
+  title={`Money calculators for the U.S. — taxes, paychecks, debt and home loans | Hacé Cuentas`}
+  description={LEDE}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+>
+  <Header />
+  <SiloIndex silo={SILO} href={HREF} lede={LEDE} hubs={hubs} />
+  <Footer />
+</Layout>

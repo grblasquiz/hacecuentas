@@ -1,0 +1,223 @@
+---
+/**
+ * Hub de decisión MX — impuestos de una persona moral: ISR, costo de cumplir y atrasos.
+ * audience="MX" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, EMPRESA_MX } from '../../../lib/hubs/mx/impuestos-de-mi-empresa';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="MX"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ E: EMPRESA_MX }}>
+  (function () {
+    const H = window.HC_HUB;
+    const mxn = (n) => '$' + Math.round(n || 0).toLocaleString('es-MX');
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'isr';
+
+      // ── Caso 2: qué cuesta facturar y cobrar ───────────────────────────
+      if (id === 'cumplir') {
+        const facturas = Math.max(0, Math.round(v.facturas || 0));
+        const clave = v.tarifaPac || 'bajo';
+        // El portal gratuito cubre 50 CFDI al mes; el excedente se timbra con PAC económico.
+        let tarifa = E.tarifaPac[clave] != null ? E.tarifaPac[clave] : E.tarifaPac.bajo;
+        let conCosto = facturas;
+        const excedentes = Math.max(0, facturas - E.cfdiGratisSat);
+        if (clave === 'sinPac') {
+          conCosto = excedentes;
+          tarifa = excedentes > 0 ? E.tarifaPac.bajo : 0;
+        }
+        const timbradoMes = conCosto * tarifa;
+        const timbradoAnual = timbradoMes * 12;
+
+        const ticket = Math.max(0, v.ticket || 0);
+        const operaciones = Math.max(0, Math.round(v.operaciones || 0));
+        const volumen = ticket * operaciones;
+        const p = E.pasarelas[v.pasarela];
+        const rate = p ? p.rate : Math.max(0, v.tasaPersonalizada || 0) / 100;
+        const fijo = p ? p.fijo : 0;
+        const comisionBase = volumen * rate + operaciones * fijo;
+        const ivaComision = comisionBase * E.iva;
+        const comisionTotal = comisionBase + ivaComision;
+        const neto = volumen - comisionTotal;
+
+        const costoMes = timbradoMes + comisionTotal;
+        const costoPct = volumen > 0 ? (costoMes / volumen) * 100 : 0;
+
+        return {
+          total: mxn(costoMes),
+          sub:
+            'Costo mensual de facturar y cobrar: ' + mxn(timbradoMes) + ' de timbrado y ' + mxn(comisionTotal) +
+            ' de comisión con IVA. Equivale al ' + costoPct.toFixed(2).replace('.', ',') + '% de tus ventas procesadas. ' +
+            'El IVA de la comisión es acreditable si tienes el CFDI del proveedor.',
+          rows: [
+            { k: 'CFDI que emites al mes', v: facturas, format: 'plain' },
+            { k: 'CFDI dentro del portal gratuito del SAT', v: Math.min(facturas, E.cfdiGratisSat), format: 'plain' },
+            { k: 'CFDI que se timbran con PAC', v: conCosto, format: 'plain' },
+            { k: 'Costo de timbrado al mes', v: timbradoMes },
+            { k: 'Costo de timbrado al año', v: timbradoAnual },
+            { k: 'Ventas procesadas por pasarela al mes', v: volumen },
+            { k: 'Comisión de la pasarela sin IVA', v: comisionBase },
+            { k: 'IVA de la comisión (acreditable)', ref: 'LIVA Art. 1', v: ivaComision },
+            { k: 'Comisión total con IVA', v: comisionTotal, extra: true },
+            { k: 'Dinero que llega a tu cuenta', v: neto },
+            { k: 'Costo total de cumplir al mes', v: costoMes },
+          ],
+          chart: [
+            { label: 'Timbrado de CFDI', value: timbradoMes, tone: 'prop' },
+            { label: 'Comisión de pasarela', value: comisionBase, tone: 'warn' },
+            { label: 'IVA de la comisión', value: ivaComision, tone: 'exit' },
+          ],
+        };
+      }
+
+      // ── Caso 3: pago fuera de plazo ────────────────────────────────────
+      if (id === 'atraso') {
+        const impuesto = Math.max(0, v.impuestoAtrasado || 0);
+        // El CFF cobra por mes o fracción → redondeo hacia arriba; tope de 60 meses.
+        const meses = Math.max(0, Math.ceil(v.mesesAtraso || 0));
+        const mesesTopados = Math.min(meses, E.maxMesesRecargos);
+
+        // Art. 17-A: si el factor resulta menor a 1 se aplica 1; se publica a 4 decimales.
+        let factor = Number(v.factorActualizacion);
+        if (!isFinite(factor) || factor < 1) factor = 1;
+        factor = Math.round(factor * 10000) / 10000;
+
+        const actualizado = impuesto * factor;
+        const actualizacion = actualizado - impuesto;
+
+        const tasa = v.tipoRecargo === 'prorroga' ? E.recargosProrrogaMensual : E.recargosMoraMensual;
+        const recargos = actualizado * tasa * mesesTopados;
+        const multa = Math.max(0, v.multaContabilidad || 0);
+        const total = actualizado + recargos + multa;
+        const recargoPorMes = actualizado * tasa;
+
+        return {
+          total: mxn(total),
+          sub:
+            'Un adeudo de ' + mxn(impuesto) + ' pagado ' + mesesTopados + (mesesTopados === 1 ? ' mes' : ' meses') +
+            ' tarde. Primero se actualiza por inflación y sobre ese monto corren los recargos: cada mes extra suma ' +
+            mxn(recargoPorMes) + '.' + (meses > E.maxMesesRecargos ? ' Los recargos topan a 60 meses, pero la actualización sigue corriendo.' : ''),
+          rows: [
+            { k: 'Impuesto original (histórico)', v: impuesto },
+            { k: 'Factor de actualización aplicado', ref: 'CFF Art. 17-A', v: factor, format: 'plain', decimals: 4 },
+            { k: 'Actualización por inflación', v: actualizacion },
+            { k: 'Impuesto actualizado', v: actualizado },
+            { k: 'Meses de atraso computados', v: mesesTopados, format: 'unit', unit: 'meses' },
+            { k: 'Tasa mensual de recargos', ref: 'LIF 2026 Arts. 8 y 11', v: tasa * 100, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Recargos acumulados', ref: 'CFF Art. 21', v: recargos },
+            { k: 'Multa de contabilidad estimada', ref: 'CFF Arts. 83-84', v: multa },
+            { k: 'Total a pagar al SAT', v: total, extra: true },
+            { k: 'Costo del atraso sobre el impuesto original', v: total - impuesto },
+          ],
+          chart: [
+            { label: 'Impuesto original', value: impuesto, tone: 'main' },
+            { label: 'Actualización', value: actualizacion, tone: 'prop' },
+            { label: 'Recargos', value: recargos, tone: 'warn' },
+            { label: 'Multa', value: multa, tone: 'bad' },
+          ],
+        };
+      }
+
+      // ── Caso 1: ISR anual, régimen general vs RESICO PM ────────────────
+      const ingresos = Math.max(0, v.ingresos || 0);
+      const deducciones = Math.max(0, v.deducciones || 0);
+      const ptu = Math.max(0, v.ptu || 0);
+
+      const utilidadFiscal = Math.max(0, ingresos - deducciones);
+      // La PTU deducible se limita por el reparto legal: 10% de la utilidad y 30% de los ingresos.
+      const ptuLimite = Math.min(utilidadFiscal * E.ptuLimiteUtilidad, ingresos * E.ptuLimiteIngresos);
+      const ptuDeducible = Math.min(ptu, ptuLimite);
+      const resultadoFiscal = Math.max(0, utilidadFiscal - ptuDeducible);
+
+      const isr = resultadoFiscal * E.tasaIsrPm;
+      const utilidadDespues = Math.max(0, resultadoFiscal - isr);
+      const cargaEfectiva = ingresos > 0 ? (isr / ingresos) * 100 : 0;
+
+      // Coeficiente de utilidad para el pago provisional mensual estimado.
+      const coeficiente = ingresos > 0 ? resultadoFiscal / ingresos : 0;
+      const provisional = (ingresos / 12) * coeficiente * E.tasaIsrPm;
+
+      // RESICO PM: misma tasa del 30%, base por flujo de efectivo (Arts. 206-215 LISR).
+      const isrResico = Math.max(0, ingresos - deducciones - ptu) * E.tasaIsrPm;
+      const diferencia = isrResico - isr;
+      const superaTope = ingresos > E.topeIngresosResicoPm;
+
+      return {
+        total: mxn(isr),
+        sub:
+          'ISR anual del régimen general sobre un resultado fiscal de ' + mxn(resultadoFiscal) + ' (carga efectiva del ' +
+          cargaEfectiva.toFixed(1).replace('.', ',') + '% de tus ingresos). ' +
+          (Math.abs(diferencia) < 1
+            ? 'Con estos números RESICO PM daría prácticamente lo mismo: la diferencia aparece cuando lo cobrado no coincide con lo facturado.'
+            : diferencia > 0
+              ? 'RESICO PM sobre el mismo flujo daría ' + mxn(isrResico) + ', es decir ' + mxn(diferencia) + ' más.'
+              : 'RESICO PM sobre el mismo flujo daría ' + mxn(isrResico) + ', es decir ' + mxn(-diferencia) + ' menos.') +
+          (superaTope ? ' Ojo: tus ingresos superan el tope de 35 millones para permanecer en RESICO PM.' : ''),
+        rows: [
+          { k: 'Ingresos acumulables', v: ingresos },
+          { k: 'Deducciones autorizadas', v: deducciones },
+          { k: 'Utilidad fiscal', v: utilidadFiscal },
+          { k: 'PTU pagada deducible', ref: 'LISR Art. 9', v: ptuDeducible },
+          { k: 'Resultado fiscal (base del ISR)', v: resultadoFiscal },
+          { k: 'ISR anual al 30%', ref: 'LISR Art. 9', v: isr, extra: true },
+          { k: 'Utilidad después de ISR', v: utilidadDespues },
+          { k: 'Carga efectiva sobre ingresos', v: cargaEfectiva, format: 'unit', unit: '%', decimals: 1 },
+          { k: 'Coeficiente de utilidad', v: coeficiente, format: 'plain', decimals: 4 },
+          { k: 'Pago provisional mensual estimado', v: provisional },
+          { k: 'ISR equivalente en RESICO PM', ref: 'LISR Arts. 206-215', v: isrResico },
+        ],
+        chart: [
+          { label: 'Deducciones autorizadas', value: deducciones, tone: 'main' },
+          { label: 'PTU deducible', value: ptuDeducible, tone: 'prop' },
+          { label: 'ISR (30%)', value: isr, tone: 'warn' },
+          { label: 'Utilidad después de ISR', value: utilidadDespues, tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

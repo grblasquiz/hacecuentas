@@ -1,0 +1,150 @@
+---
+/**
+ * Hub EN — "What can I plant this month, and when do I prune?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, USDA_ZONES, NORTH, SOUTH, ROSE_PRUNING } from '../../../lib/hubs/en/when-to-plant';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ USDA_ZONES, NORTH, SOUTH, ROSE_PRUNING }}>
+  (function () {
+    const H = window.HC_HUB;
+    const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'];
+    const toC = (f) => (f - 32) * (5 / 9);
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'zone';
+
+      if (id === 'sow') {
+        const north = String(v.hemisphere || 'north') === 'north';
+        const m = String(Math.min(12, Math.max(1, Math.round(v.month || 4))));
+        const table = north ? NORTH : SOUTH;
+        const nextM = String((Number(m) % 12) + 1);
+        const prevM = String(((Number(m) + 10) % 12) + 1);
+        // Mes de "pico" de siembra: abril en el norte, octubre en el sur.
+        const peak = north ? 4 : 10;
+        const distanceToPeak = Math.min(Math.abs(Number(m) - peak), 12 - Math.abs(Number(m) - peak));
+        const rows = [
+          { k: 'Month', ref: north ? 'Northern hemisphere' : 'Southern hemisphere', v: Number(m), format: 'plain' },
+          { k: 'Months from the peak sowing month', ref: north ? 'April in the north' : 'October in the south', v: distanceToPeak, format: 'unit', unit: 'months' },
+          { k: 'Start tomatoes indoors this many weeks before last frost', ref: 'The indoor and outdoor calendars differ', v: 7, format: 'unit', unit: 'weeks' },
+          { k: 'Transplant out this many weeks after last frost', ref: 'Once nights stay above 50 °F', v: 1.5, format: 'unit', unit: 'weeks', decimals: 1 },
+          { k: 'Extra days to allow for an autumn crop', ref: 'Growth slows as days shorten', v: 14, format: 'unit', unit: 'days' },
+        ];
+        return {
+          total: MONTHS[Number(m) - 1],
+          sub:
+            'Sow now: ' + table[m] + ' · next month: ' + table[nextM] + ' · last month was ' + table[prevM] +
+            ' · adjust everything by your own local frost dates, which move this by weeks',
+          rows: rows,
+          chart: [
+            { label: 'Months into the growing year', value: Number(m), tone: 'main' },
+            { label: 'Months remaining', value: 12 - Number(m), tone: 'good' },
+          ],
+          position: (Number(m) / 12) * 100,
+          positionLabel: MONTHS[Number(m) - 1] + ' — sow ' + table[m],
+        };
+      }
+
+      if (id === 'prune') {
+        const key = String(v.climate || 'temperate');
+        const p = ROSE_PRUNING[key] || ROSE_PRUNING.temperate;
+        const rows = [
+          { k: 'Climate band', ref: key === 'cold' ? 'Zones 3–5' : key === 'warm' ? 'Zones 9–11' : 'Zones 6–8', v: 0, format: 'plain' },
+          { k: 'Weeks of dormancy to wait through', ref: key === 'cold' ? 'Longest wait — late freezes kill new growth' : key === 'warm' ? 'Barely dormant at all' : 'Moderate', v: key === 'cold' ? 12 : key === 'warm' ? 4 : 8, format: 'unit', unit: 'weeks' },
+          { k: 'Repeat-flowering roses: prune hard now', ref: 'They bloom on new wood', v: 0, format: 'plain' },
+          { k: 'Once-blooming and rambler roses: do NOT prune now', ref: 'They bloom on last year’s wood — prune after flowering', v: 0, format: 'plain', extra: true },
+          { k: 'Dead, damaged and crossing canes', ref: 'Remove at any time of year', v: 0, format: 'plain' },
+        ];
+        return {
+          total: p.window,
+          sub: p.note + ' · in a cold climate the reliable signal is the forsythia coming into bloom, not a date',
+          rows: rows,
+          chart: [
+            { label: 'Weeks to wait before pruning', value: key === 'cold' ? 12 : key === 'warm' ? 4 : 8, tone: 'main' },
+            { label: 'Weeks of the year you can remove dead wood', value: 52, tone: 'good' },
+          ],
+        };
+      }
+
+      // zone
+      const f = Math.max(-60, Math.min(70, v.mintemp === undefined ? 5 : v.mintemp));
+      let z = USDA_ZONES[USDA_ZONES.length - 1];
+      for (const entry of USDA_ZONES) {
+        if (f < entry.maxF) { z = entry; break; }
+      }
+      const sub = f < z.minF + 5 ? 'a' : 'b';
+      const label = z.zone + sub;
+      const subMin = sub === 'a' ? z.minF : z.minF + 5;
+      const subMax = subMin + 5;
+      const rows = [
+        { k: 'Your average annual minimum', ref: toC(f).toFixed(1) + ' °C', v: f, format: 'unit', unit: '°F' },
+        { k: 'Zone band, lower bound', ref: toC(z.minF).toFixed(1) + ' °C', v: z.minF, format: 'unit', unit: '°F' },
+        { k: 'Zone band, upper bound', ref: toC(z.maxF).toFixed(1) + ' °C', v: z.maxF, format: 'unit', unit: '°F' },
+        { k: 'Sub-zone range', ref: label + ': ' + subMin + ' to ' + subMax + ' °F', v: subMax - subMin, format: 'unit', unit: '°F wide' },
+        { k: 'Buy perennials rated for at least', ref: 'One zone colder, so they survive a bad winter', v: Math.max(1, Number(z.zone) - 1), format: 'plain', extra: true },
+        { k: 'A microclimate can shift you by', ref: 'South wall, courtyard or frost pocket', v: 0.5, format: 'unit', unit: 'zones', decimals: 1 },
+      ];
+      return {
+        total: 'Zone ' + label,
+        sub:
+          'Average annual low of ' + Math.round(f) + ' °F (' + toC(f).toFixed(0) + ' °C) · band ' + subMin + ' to ' + subMax +
+          ' °F · zones describe winter cold only, not summer heat, humidity or season length',
+        rows: rows,
+        chart: [
+          { label: 'Zone number', value: Number(z.zone), tone: 'main' },
+          { label: 'Zones colder than you', value: Math.max(0, Number(z.zone) - 1), tone: 'warn' },
+          { label: 'Zones warmer than you', value: Math.max(0, 13 - Number(z.zone)), tone: 'good' },
+        ],
+        position: (Number(z.zone) / 13) * 100,
+        positionLabel: 'Zone ' + label + ' — ' + subMin + ' to ' + subMax + ' °F',
+      };
+    });
+  })();
+</script>

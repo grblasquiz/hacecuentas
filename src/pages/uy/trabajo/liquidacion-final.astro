@@ -1,0 +1,243 @@
+---
+/**
+ * Hub de decisión UY — "Liquidación final y partidas": aguinaldo, licencia,
+ * salario vacacional, indemnización por despido y liquidación completa.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  BPC,
+  LABORAL,
+  DESPIDO,
+  IRPF_FRANJAS,
+  IRPF_DEDUCCION,
+  FONASA,
+  MONTEPIO,
+  FRL,
+} from '../../../lib/hubs/uy/liquidacion-final';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="UY"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    BPC,
+    LABORAL,
+    DESPIDO,
+    FRANJAS: IRPF_FRANJAS,
+    DED: IRPF_DEDUCCION,
+    FONASA,
+    MONTEPIO,
+    FRL,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const uyu = (n) => '$U ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(Math.round(n || 0));
+    const num = (n, d) => new Intl.NumberFormat('de-DE', { maximumFractionDigits: d === undefined ? 1 : d }).format(n);
+
+    function porFranjas(base) {
+      if (base <= 0) return 0;
+      let imp = 0, antBpc = 0;
+      for (const f of FRANJAS) {
+        const limite = f.hastaBpc === null ? Infinity : f.hastaBpc * BPC;
+        const piso = antBpc * BPC;
+        const enTramo = Math.min(base, limite) - piso;
+        if (enTramo <= 0) { antBpc = f.hastaBpc === null ? Infinity : f.hastaBpc; continue; }
+        imp += enTramo * f.tasa;
+        antBpc = f.hastaBpc === null ? Infinity : f.hastaBpc;
+        if (base <= limite) break;
+      }
+      return imp;
+    }
+
+    function tasaFonasa(nominal) {
+      const t = nominal <= FONASA.umbralBpc * BPC ? FONASA.hasta25 : FONASA.mas25;
+      return t.soloTrabajador;
+    }
+
+    /** Aportes personales BPS sobre una partida. */
+    function aportes(nominal) {
+      return nominal * (MONTEPIO + tasaFonasa(nominal) + FRL);
+    }
+
+    /** IRPF de la partida = impuesto(sueldo + partida) − impuesto(sueldo), neto de crédito. */
+    function irpfMarginal(sueldo, partida) {
+      const irpfDe = (base) => {
+        const ap = aportes(base);
+        const tasaCred = base < DED.umbralBpc * BPC ? DED.tasaBaja : DED.tasaAlta;
+        return Math.max(0, porFranjas(base) - ap * tasaCred);
+      };
+      return Math.max(0, irpfDe(sueldo + partida) - irpfDe(sueldo));
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'despido';
+      const monto = Math.max(0, v.sueldo || 0);
+      const aniosRaw = Math.max(0, v.anios || 0);
+      const diasLic = Math.max(0, v.diasLicencia || 0);
+      const mesesSem = Math.min(6, Math.max(0, v.mesesSemestre === undefined ? 6 : v.mesesSemestre));
+      const jornadas = Math.max(0, Math.round(v.jornadas || 0));
+
+      const esJornalero = id === 'jornalero';
+      // Para el jornalero, el monto ingresado es el jornal: el mensual equivalente es jornal × 25.
+      const sueldoMensual = esJornalero ? monto * 25 : monto;
+
+      // ── Aguinaldo proporcional = lo percibido en el semestre ÷ 12 ──
+      const aguinaldo = (sueldoMensual * mesesSem) / LABORAL.aguinaldoDivisor;
+      const aguinaldoAportes = aportes(aguinaldo);
+      const aguinaldoIrpf = irpfMarginal(sueldoMensual, aguinaldo);
+      const aguinaldoNeto = aguinaldo - aguinaldoAportes - aguinaldoIrpf;
+
+      // ── Licencia no gozada: jornal de licencia = nominal ÷ 30 ──
+      const jornalLicencia = sueldoMensual / 30;
+      const licencia = jornalLicencia * diasLic;
+
+      // ── Salario vacacional = jornal LÍQUIDO (nominal − aportes BPS) ÷ 30 × días ──
+      const jornalLiquido = (sueldoMensual - aportes(sueldoMensual)) / 30;
+      const vacacional = jornalLiquido * diasLic;
+      const vacacionalIrpf = irpfMarginal(sueldoMensual, vacacional);
+
+      // ── Indemnización por despido ──
+      const aniosComputados = Math.max(1, Math.ceil(aniosRaw));
+      let indem = 0;
+      let indemRef = '';
+      let sinDerecho = false;
+      if (id === 'despido') {
+        const meses = Math.min(aniosComputados * DESPIDO.mensual.mesesPorAnio, DESPIDO.mensual.topeMeses);
+        indem = meses * sueldoMensual;
+        indemRef = num(meses, 0) + (meses === 1 ? ' mensualidad' : ' mensualidades') +
+          (aniosComputados > DESPIDO.mensual.topeMeses ? ' · tope aplicado' : '');
+      } else if (esJornalero) {
+        if (jornadas > 0 && jornadas < DESPIDO.jornalero.minimoJornadasParaDerecho) {
+          sinDerecho = true;
+          indemRef = 'Menos de ' + DESPIDO.jornalero.minimoJornadasParaDerecho + ' jornadas: sin derecho';
+        } else {
+          const plena = jornadas === 0 || jornadas >= 240;
+          const porAnio = plena ? DESPIDO.jornalero.jornalesPorAnio : (DESPIDO.jornalero.jornalesPorAnio * jornadas) / 240;
+          const jornalesFinal = Math.min(porAnio * aniosComputados, DESPIDO.jornalero.topeJornales);
+          indem = jornalesFinal * monto;
+          indemRef = num(jornalesFinal) + ' jornales × ' + uyu(monto) +
+            (porAnio * aniosComputados > DESPIDO.jornalero.topeJornales ? ' · tope aplicado' : '');
+        }
+      }
+
+      const incluyeEgreso = id !== 'partidas';
+      const total = incluyeEgreso
+        ? aguinaldo + licencia + vacacional + indem
+        : aguinaldo + licencia + vacacional;
+      const totalNeto = incluyeEgreso
+        ? aguinaldoNeto + licencia + (vacacional - vacacionalIrpf) + indem
+        : aguinaldoNeto + licencia + (vacacional - vacacionalIrpf);
+
+      // Días de licencia que le corresponderían por antigüedad (referencia).
+      const aniosEnteros = Math.floor(aniosRaw);
+      const diasExtra = aniosEnteros >= 5 ? Math.floor((aniosEnteros - 5) / 4) + 1 : 0;
+      const diasPorAntiguedad = LABORAL.licenciaDiasBase + diasExtra;
+
+      const rows = [
+        { k: esJornalero ? 'Jornal de referencia' : 'Sueldo mensual nominal', ref: esJornalero ? 'Equivale a ' + uyu(sueldoMensual) + ' mensuales' : 'Base del cálculo', v: monto },
+        { k: 'Aguinaldo proporcional', ref: num(mesesSem, 0) + '/12 del semestre percibido', v: aguinaldo },
+        { k: 'Aportes BPS sobre el aguinaldo (se descuentan)', ref: 'Montepío + FONASA + FRL', v: aguinaldoAportes },
+        { k: 'IRPF sobre el aguinaldo (se descuenta)', ref: 'Impuesto marginal del mes', v: aguinaldoIrpf },
+        { k: 'Licencia no gozada', ref: num(diasLic, 0) + ' días × jornal de licencia ' + uyu(jornalLicencia), v: licencia },
+        { k: 'Salario vacacional', ref: num(diasLic, 0) + ' días × jornal líquido ' + uyu(jornalLiquido), v: vacacional },
+        { k: 'IRPF sobre el salario vacacional (se descuenta)', ref: 'No aporta a BPS, pero tributa', v: vacacionalIrpf },
+      ];
+
+      if (incluyeEgreso) {
+        rows.push({
+          k: sinDerecho ? 'Indemnización por despido: sin derecho' : 'Indemnización por despido',
+          ref: id === 'renuncia' ? 'No corresponde: renuncia' : indemRef || '—',
+          v: indem,
+        });
+        rows.push({
+          k: 'Antigüedad computada',
+          ref: 'La fracción de año cuenta como año entero',
+          v: aniosComputados,
+          format: 'unit',
+          unit: 'años',
+        });
+      }
+
+      rows.push({
+        k: 'Días de licencia que generás por año',
+        ref: LABORAL.licenciaDiasBase + ' base' + (diasExtra > 0 ? ' + ' + diasExtra + ' por antigüedad' : ''),
+        v: diasPorAntiguedad,
+        format: 'unit',
+        unit: 'días',
+      });
+      rows.push({ k: 'Total bruto de la liquidación', ref: 'Suma de los rubros', v: total, extra: true });
+      rows.push({ k: 'Total que cobrás en mano', ref: 'Descontados aportes e IRPF de cada partida', v: totalNeto, extra: true });
+
+      const sub =
+        (id === 'renuncia'
+          ? 'Renuncia: sin indemnización por despido'
+          : id === 'partidas'
+            ? 'Partidas del año en curso, sin egreso'
+            : sinDerecho
+              ? 'Jornalero sin derecho a indemnización por las jornadas declaradas'
+              : 'Indemnización de ' + uyu(indem) + ' por ' + aniosComputados + (aniosComputados === 1 ? ' año' : ' años') + ' computados') +
+        ' · en mano ' + uyu(totalNeto) + ' · aguinaldo neto ' + uyu(aguinaldoNeto);
+
+      const chart = [
+        { label: 'Aguinaldo proporcional', value: Math.round(aguinaldo), tone: 'main' },
+        { label: 'Licencia no gozada', value: Math.round(licencia), tone: 'good' },
+        { label: 'Salario vacacional', value: Math.round(vacacional), tone: 'prop' },
+      ];
+      if (incluyeEgreso && indem > 0) {
+        chart.push({ label: 'Indemnización por despido', value: Math.round(indem), tone: 'exit' });
+      }
+
+      return {
+        total: uyu(total),
+        sub: sub,
+        rows: rows,
+        chart: chart,
+      };
+    });
+  })();
+</script>

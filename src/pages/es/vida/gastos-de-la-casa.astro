@@ -1,0 +1,162 @@
+---
+/**
+ * Hub de decisión ES — gastos de la casa. Reemplaza 7 calculadoras sueltas.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, IBI_TIPOS, BASURA_TARIFAS, LUZ, DIAS_VERANO, CESTA_MENSUAL } from '../../../lib/hubs/es/gastos-de-la-casa';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/es' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="ES"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ IBI: IBI_TIPOS, BASURA: BASURA_TARIFAS, LUZ: LUZ, DIAS: DIAS_VERANO, CESTA: CESTA_MENSUAL }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n) => Math.round(n || 0).toLocaleString('es-ES') + ' €';
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'impuestos';
+      const catastral = Math.max(0, v.valorCatastral || 0);
+      const key = String(v.municipio || 'madrid');
+      const muni = IBI[key] || IBI.madrid;
+      const tarifaBasura = BASURA[key] || BASURA.madrid;
+      const metros = Math.max(1, v.metros || 1);
+      const comunidad = Math.max(0, v.comunidad || 0);
+      const derrama = Math.max(0, v.derrama || 0);
+      const potencia = Math.max(0, v.potenciaAire || 0);
+      const horas = Math.max(0, Math.min(24, v.horasAire || 0));
+      const fibra = Math.max(0, v.fibraMovil || 0);
+      const personas = Math.max(1, Math.min(8, Math.round(v.personas || 1)));
+
+      const ibi = catastral * muni.tipo;
+      const basura = tarifaBasura[0] + metros * tarifaBasura[1];
+      const comunidadAnual = comunidad * 12 + derrama;
+      const kwhAire = potencia * horas * DIAS;
+      const costeAire = kwhAire * LUZ.precioTodoIncluidoRef;
+      const fibraAnual = fibra * 12;
+      const cesta = CESTA[String(personas)] || CESTA['2'];
+      const cestaAnual = cesta * 12;
+
+      const totalAnual = ibi + basura + comunidadAnual + costeAire + fibraAnual + cestaAnual;
+      const totalMensual = totalAnual / 12;
+
+      const rows = [
+        { k: 'IBI anual', ref: muni.nombre + ' · tipo del ' + (muni.tipo * 100).toFixed(3).replace('.', ',') + '%', v: ibi },
+        { k: 'Tasa de residuos anual', ref: 'Parte fija más ' + tarifaBasura[1].toFixed(2).replace('.', ',') + ' €/m²', v: basura },
+        { k: 'Comunidad de vecinos', ref: eur(comunidad) + ' al mes' + (derrama > 0 ? ' más derrama' : ''), v: comunidadAnual },
+        {
+          k: 'Consumo del aire acondicionado',
+          ref: potencia.toFixed(1).replace('.', ',') + ' kW × ' + horas + ' h × ' + DIAS + ' días',
+          v: kwhAire,
+          format: 'unit',
+          unit: 'kWh',
+        },
+        {
+          k: 'Coste del aire acondicionado',
+          ref: LUZ.precioTodoIncluidoRef.toFixed(2).replace('.', ',') + ' €/kWh con impuestos',
+          v: costeAire,
+        },
+        { k: 'Fibra y móvil', ref: eur(fibra) + ' al mes', v: fibraAnual },
+        { k: 'Cesta de la compra', ref: personas + ' persona(s) · ' + eur(cesta) + ' al mes', v: cestaAnual },
+        { k: 'Total anual de la casa', ref: 'Sin hipoteca ni alquiler', v: totalAnual, extra: true },
+        { k: 'Total mensual de la casa', ref: 'Lo que necesita tu casa cada mes', v: totalMensual, extra: true },
+        {
+          k: 'Peso de los impuestos municipales',
+          ref: 'IBI y basuras sobre el total',
+          v: totalAnual > 0 ? ((ibi + basura) / totalAnual) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        },
+        {
+          k: 'Peso de la cesta de la compra',
+          ref: 'Sobre el total de la casa',
+          v: totalAnual > 0 ? (cestaAnual / totalAnual) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        },
+        { k: 'Coste por metro cuadrado al año', ref: 'Total anual ÷ superficie', v: totalAnual / metros, decimals: 2 },
+      ];
+
+      const chart = [
+        { label: 'Cesta de la compra', value: Math.round(cestaAnual), tone: 'main' },
+        { label: 'Comunidad', value: Math.round(comunidadAnual), tone: 'prop' },
+        { label: 'Luz del aire', value: Math.round(costeAire), tone: 'warn' },
+        { label: 'Fibra y móvil', value: Math.round(fibraAnual), tone: 'good' },
+        { label: 'IBI y basuras', value: Math.round(ibi + basura), tone: 'bad' },
+      ].filter(function (s) {
+        return s.value > 0;
+      });
+
+      const foco =
+        id === 'impuestos'
+          ? 'IBI y basuras suman ' + eur(ibi + basura) + ' al año en ' + muni.nombre
+          : id === 'suministros'
+            ? 'el aire acondicionado y las telecomunicaciones suman ' + eur(costeAire + fibraAnual) + ' al año'
+            : id === 'comunidad'
+              ? 'la comunidad supone ' + eur(comunidadAnual) + ' al año'
+              : 'la compra se lleva ' + eur(cestaAnual) + ' al año';
+
+      return {
+        total: eur(totalMensual),
+        sub:
+          'Mantener la casa cuesta ' +
+          eur(totalMensual) +
+          ' al mes (' +
+          eur(totalAnual) +
+          ' al año) sin contar hipoteca ni alquiler · ' +
+          foco,
+        rows: rows,
+        chart: chart,
+        format: 'unit',
+        unit: '€',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

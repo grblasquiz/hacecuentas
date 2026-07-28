@@ -1,0 +1,241 @@
+---
+/**
+ * Hub de decisión CO — "¿Retiro, traslado o dejo quietas mis cesantías?"
+ * audience="CO" va literal al Layout: HubData sólo modela 'AR' | 'global' y el
+ * mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  SMLMV,
+  CESANTIAS_PCT,
+  INTERES_CESANTIAS,
+  RENTABILIDAD_FONDOS,
+  TRASLADO,
+  FNA_MULTIPLO_CREDITO,
+} from '../../../lib/hubs/co/que-hago-con-mis-cesantias';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    SMLMV,
+    CESANTIAS_PCT,
+    INTERES_CESANTIAS,
+    FONDOS: RENTABILIDAD_FONDOS,
+    TRASLADO,
+    FNA_MULTIPLO_CREDITO,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const cop = (n) => '$' + Math.round(n || 0).toLocaleString('es-CO');
+
+    const byId = (id) => FONDOS.find((f) => f.id === id) || FONDOS[0];
+    /** Rentabilidad neta anual en decimal: rendimiento publicado menos comisión. */
+    const neta = (f) => (f.rentabilidad - f.comision) / 100;
+    const capitalizar = (saldo, tasa, anios) => saldo * Math.pow(1 + tasa, anios);
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'quietas';
+
+      const salario = Math.max(0, v.salario || 0);
+      const meses = Math.min(12, Math.max(0, Math.round(v.meses || 0)));
+      const saldoPrevio = Math.max(0, v.saldo || 0);
+      const anios = Math.min(15, Math.max(1, Math.round(v.anios || 1)));
+
+      const fondoActual = byId(v.fondo);
+      const fondoDestino = byId(v.destino);
+      const tasaActual = neta(fondoActual);
+      const tasaDestino = neta(fondoDestino);
+
+      // Art. 249 CST: 1/12 del salario por cada mes causado.
+      const aporteAnio = salario * CESANTIAS_PCT * meses;
+      // Ley 52/1975: 12% anual sobre lo causado, proporcional al tiempo trabajado.
+      // Los paga el empleador DIRECTO al trabajador: no entran al fondo.
+      const intereses = aporteAnio * INTERES_CESANTIAS * (meses / 12);
+
+      // Saldo dentro del fondo justo después de la consignación del 14 de febrero.
+      const saldoFondo = saldoPrevio + aporteAnio;
+
+      const rows = [
+        { k: 'Salario mensual que sirve de base', ref: 'Salario + auxilio de transporte si aplica', v: salario },
+        {
+          k: 'Aporte del empleador por ' + meses + (meses === 1 ? ' mes' : ' meses'),
+          ref: '1/12 del salario por mes · art. 249 CST',
+          v: aporteAnio,
+        },
+        {
+          k: 'Intereses a las cesantías (van a tu cuenta, no al fondo)',
+          ref: (INTERES_CESANTIAS * 100).toFixed(0) + '% anual · Ley 52/1975',
+          v: intereses,
+        },
+        { k: 'Saldo en el fondo tras la consignación del 14 de febrero', ref: 'Saldo previo + aporte del año', v: saldoFondo },
+        {
+          k: 'Rentabilidad neta de ' + fondoActual.nombre,
+          ref: fondoActual.rentabilidad.toFixed(2).replace('.', ',') + '% menos comisión ' + fondoActual.comision.toFixed(2).replace('.', ',') + '%',
+          v: tasaActual * 100,
+          format: 'unit',
+          unit: '% anual',
+          decimals: 2,
+        },
+      ];
+
+      // ── Proyección de cada camino al final del horizonte ──
+      const quietas = capitalizar(saldoFondo, tasaActual, anios);
+
+      const costoTraslado = saldoFondo * TRASLADO.costoPct;
+      const trasladadas = capitalizar(saldoFondo - costoTraslado, tasaDestino, anios);
+
+      const retiroPedido = Math.max(0, v.retiro || 0);
+      const retiroVivienda = Math.min(retiroPedido, saldoFondo);
+      const retiroEducacion = Math.min(retiroPedido, saldoFondo);
+      const restoVivienda = capitalizar(saldoFondo - retiroVivienda, tasaActual, anios);
+      const restoEducacion = capitalizar(saldoFondo - retiroEducacion, tasaActual, anios);
+      // Misma vara para todos: lo que sacaste sigue siendo tuyo, pero deja de capitalizar.
+      const totalVivienda = restoVivienda + retiroVivienda;
+      const totalEducacion = restoEducacion + retiroEducacion;
+
+      let total, sub, extraRows;
+
+      if (id === 'traslado') {
+        const diferencia = trasladadas - quietas;
+        const mejor = diferencia > 0;
+        extraRows = [
+          {
+            k: 'Rentabilidad neta de ' + fondoDestino.nombre,
+            ref: fondoDestino.rentabilidad.toFixed(2).replace('.', ',') + '% menos comisión ' + fondoDestino.comision.toFixed(2).replace('.', ',') + '%',
+            v: tasaDestino * 100,
+            format: 'unit',
+            unit: '% anual',
+            decimals: 2,
+          },
+          {
+            k: 'Diferencia de rentabilidad neta a favor del destino',
+            ref: 'Destino menos actual',
+            v: (tasaDestino - tasaActual) * 100,
+            format: 'unit',
+            unit: 'puntos por año',
+            decimals: 2,
+          },
+          { k: 'Costo del tránsito (días fuera del mercado)', ref: TRASLADO.diasHabiles + ' días hábiles estimados', v: costoTraslado },
+          { k: 'Saldo en ' + fondoActual.nombre + ' dentro de ' + anios + ' años', ref: 'Si no te movés', v: quietas },
+          { k: 'Saldo en ' + fondoDestino.nombre + ' dentro de ' + anios + ' años', ref: 'Si te trasladás hoy', v: trasladadas, extra: true },
+          {
+            k: mejor ? 'Lo que ganás por trasladarte' : 'Lo que perderías por trasladarte',
+            ref: 'Neto del costo de tránsito',
+            v: Math.abs(diferencia),
+            extra: true,
+          },
+        ];
+        total = cop(trasladadas);
+        sub =
+          (fondoDestino.id === fondoActual.id
+            ? 'Elegiste el mismo fondo de origen y destino: cambiá el destino para ver la comparación'
+            : mejor
+              ? 'Trasladarte a ' + fondoDestino.nombre + ' te dejaría ' + cop(diferencia) + ' más en ' + anios + ' años'
+              : 'Quedarte en ' + fondoActual.nombre + ' te conviene: el traslado te costaría ' + cop(Math.abs(diferencia))) +
+          ' · sólo podés trasladarte una vez cada ' + TRASLADO.cadaCuantosAnios + ' años' +
+          (fondoDestino.id === 'fna' ? ' · el FNA rinde menos pero habilita crédito de vivienda (hasta ~' + FNA_MULTIPLO_CREDITO + '× tu saldo, según convocatoria)' : '');
+      } else if (id === 'vivienda' || id === 'educacion') {
+        const esVivienda = id === 'vivienda';
+        const retirado = esVivienda ? retiroVivienda : retiroEducacion;
+        const resto = esVivienda ? restoVivienda : restoEducacion;
+        const costoOportunidad = quietas - (resto + retirado);
+        const pctSaldo = saldoFondo > 0 ? (retirado / saldoFondo) * 100 : 0;
+        extraRows = [
+          { k: 'Retiro que se puede girar', ref: esVivienda ? 'Hasta el 100% del saldo con soporte' : 'Contra recibo de matrícula', v: retirado, extra: true },
+          {
+            k: 'Porcentaje del fondo que estás sacando',
+            ref: 'Sobre el saldo tras la consignación',
+            v: pctSaldo,
+            format: 'unit',
+            unit: '% del saldo',
+            decimals: 1,
+          },
+          { k: 'Saldo que queda en el fondo', ref: 'Sigue rindiendo', v: saldoFondo - retirado },
+          { k: 'Ese saldo dentro de ' + anios + ' años', ref: fondoActual.nombre + ' al ' + (tasaActual * 100).toFixed(2).replace('.', ',') + '% neto', v: resto },
+          { k: 'Rendimiento que dejás de ganar por retirar hoy', ref: 'Costo de oportunidad a ' + anios + ' años', v: costoOportunidad, extra: true },
+        ];
+        total = cop(resto + retirado);
+        sub =
+          'Sacás ' + cop(retirado) + ' hoy para ' + (esVivienda ? 'vivienda' : 'educación') +
+          ' y dejás de ganar ' + cop(costoOportunidad) + ' de rendimiento en ' + anios + ' años' +
+          (pctSaldo >= 99.5 ? ' · vaciás el fondo: quedás sin colchón si termina el contrato' : '') +
+          (retiroPedido > saldoFondo ? ' · pediste más de lo que tenés: el cálculo usa el saldo disponible' : '');
+      } else {
+        const rendimiento = quietas - saldoFondo;
+        extraRows = [
+          { k: 'Saldo dentro de ' + anios + ' años en ' + fondoActual.nombre, ref: (tasaActual * 100).toFixed(2).replace('.', ',') + '% neto anual', v: quietas, extra: true },
+          { k: 'Rendimiento acumulado del fondo', ref: 'Sobre el saldo, sin tocar nada', v: rendimiento },
+          {
+            k: 'Intereses del 12% que vas a cobrar en ' + anios + ' años',
+            ref: 'Si el salario se mantiene · a tu cuenta cada enero',
+            v: intereses * anios,
+          },
+          { k: 'Todo junto: fondo más intereses cobrados', ref: 'Lo que suma quedarte quieto', v: quietas + intereses * anios, extra: true },
+        ];
+        total = cop(quietas);
+        sub =
+          'Sin tocar nada el fondo llega a ' + cop(quietas) + ' en ' + anios + ' años, y aparte cobrás ' +
+          cop(intereses) + ' de intereses cada enero · consignación al fondo: 14 de febrero';
+      }
+
+      return {
+        total: total,
+        sub: sub,
+        rows: rows.concat(extraRows),
+        chart: [
+          { label: 'Las dejo quietas', value: Math.round(quietas), tone: id === 'quietas' ? 'main' : 'good' },
+          { label: 'Las traslado a ' + fondoDestino.nombre, value: Math.round(trasladadas), tone: id === 'traslado' ? 'main' : 'prop' },
+          { label: 'Retiro para vivienda', value: Math.round(totalVivienda), tone: id === 'vivienda' ? 'main' : 'warn' },
+          { label: 'Retiro para educación', value: Math.round(totalEducacion), tone: id === 'educacion' ? 'main' : 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

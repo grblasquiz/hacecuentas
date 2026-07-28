@@ -1,0 +1,276 @@
+---
+/**
+ * Hub de decisión EN (mercado US) — "How much concrete, steel and brick does this take?".
+ * audience="US" y lang="en" literales al Layout; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  CONCRETE_LB_PER_CUFT,
+  CEMENT_LB_PER_CUFT_CONCRETE,
+  PREMIX_80LB_YIELD_CUFT,
+  PREMIX_60LB_YIELD_CUFT,
+  BEAM_SPAN_DIVISOR,
+  SLAB_STEEL,
+  MASONRY,
+  MORTAR_CUFT_PER_1000,
+  MORTAR_LB_PER_CUFT,
+} from '../../../lib/hubs/en/concrete-and-structure';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    CONCRETE_LB_PER_CUFT,
+    CEMENT_LB_PER_CUFT_CONCRETE,
+    PREMIX_80LB_YIELD_CUFT,
+    PREMIX_60LB_YIELD_CUFT,
+    BEAM_SPAN_DIVISOR,
+    SLAB_STEEL,
+    MASONRY,
+    MORTAR_CUFT_PER_1000,
+    MORTAR_LB_PER_CUFT,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(x).toLocaleString('en-US');
+    const n1 = (x) => (Math.round(x * 10) / 10).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const n2 = (x) => (Math.round(x * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    /** Pasa pulgadas decimales a la fracción de obra más cercana (1/4"). */
+    function inFrac(x) {
+      const whole = Math.floor(x);
+      const q = Math.round((x - whole) * 4);
+      if (q === 0) return whole + ' in';
+      if (q === 4) return whole + 1 + ' in';
+      const num = q === 2 ? 1 : q;
+      const den = q === 2 ? 2 : 4;
+      return whole + '-' + num + '/' + den + ' in';
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'strip';
+      const span = Math.max(0, v.span_ft || 0);
+      const widIn = Math.max(0, v.wid_in || 0);
+      const depIn = Math.max(0, v.dep_in || 0);
+      const load = Math.max(0, v.load_lb || 0);
+      const soil = Math.max(1, v.soil_psf || 1);
+      const area = Math.max(0, v.area_sqft || 0);
+      const waste = Math.max(0, v.waste_pct || 0);
+      const wf = 1 + waste / 100;
+
+      const rows = [];
+      let total, sub;
+      let cementLb = 0, aggregateLb = 0, steelLb = 0, unitsLb = 0, mortarLb = 0;
+
+      /** Desglose común de un volumen de hormigón: volumen → yd³ → bolsas → peso. */
+      function concreteRows(cuft, label) {
+        const withWaste = cuft * wf;
+        const cuyd = withWaste / 27;
+        const bags80 = Math.ceil(withWaste / PREMIX_80LB_YIELD_CUFT);
+        const bags60 = Math.ceil(withWaste / PREMIX_60LB_YIELD_CUFT);
+        const weight = withWaste * CONCRETE_LB_PER_CUFT;
+        cementLb = withWaste * CEMENT_LB_PER_CUFT_CONCRETE;
+        aggregateLb = Math.max(0, weight - cementLb);
+        rows.push({ k: label, ref: 'Before waste', v: cuft, format: 'unit', unit: 'cu ft', decimals: 2 });
+        rows.push({ k: 'Volume including waste', ref: waste + '% for spillage and over-excavation', v: withWaste, format: 'unit', unit: 'cu ft', decimals: 2 });
+        rows.push({ k: 'Volume in cubic yards', ref: 'How ready-mix is ordered', v: cuyd, format: 'unit', unit: 'cu yd', decimals: 2 });
+        rows.push({ k: 'Ready-mix to order', ref: 'Rounded to the next quarter yard', v: Math.ceil(cuyd * 4) / 4, format: 'unit', unit: 'cu yd', decimals: 2, extra: true });
+        rows.push({ k: '80 lb bags of premix', ref: '0.60 cu ft each', v: bags80, format: 'plain' });
+        rows.push({ k: 'Or 60 lb bags', ref: '0.45 cu ft each', v: bags60, format: 'plain' });
+        rows.push({ k: 'Weight of the finished concrete', ref: '150 lb per cu ft', v: weight, format: 'unit', unit: 'lb' });
+        rows.push({ k: 'Weight in short tons', ref: '2,000 lb per ton', v: weight / 2000, format: 'unit', unit: 'tons', decimals: 2 });
+        rows.push({ k: 'Portland cement in the site mix', ref: '31.2 lb per cu ft — a rich hand-batched proportion', v: cementLb, format: 'unit', unit: 'lb' });
+        rows.push({ k: 'Volume in cubic meters', ref: '1 m³ = 35.31 cu ft', v: withWaste / 35.3147, format: 'unit', unit: 'm³', decimals: 2 });
+        return { withWaste: withWaste, cuyd: cuyd, bags80: bags80, weight: weight };
+      }
+
+      if (id === 'strip') {
+        // Porte de zapata-corrida-m3-hormigon.ts: V = L × A × h.
+        const cuft = span * (widIn / 12) * (depIn / 12);
+        rows.push({ k: 'Footing run', ref: 'Length along the wall', v: span, format: 'unit', unit: 'ft', decimals: 1 });
+        rows.push({ k: 'Footing width', ref: inFrac(widIn), v: widIn, format: 'unit', unit: 'in', decimals: 1 });
+        rows.push({ k: 'Footing depth', ref: inFrac(depIn), v: depIn, format: 'unit', unit: 'in', decimals: 1 });
+        const c = concreteRows(cuft, 'Concrete volume');
+        total = n2(Math.ceil(c.cuyd * 4) / 4) + ' cu yd';
+        sub = n1(span) + ' ft × ' + n1(widIn) + ' in × ' + n1(depIn) + ' in = ' + n2(c.withWaste) + ' cu ft with ' + waste +
+          '% waste · order ' + n2(Math.ceil(c.cuyd * 4) / 4) + ' cu yd of ready-mix, or ' + c.bags80 + ' bags of 80 lb premix · ' +
+          n1(c.weight / 2000) + ' tons of concrete';
+      } else if (id === 'spread') {
+        // Porte de zapata-aislada-columnas.ts: A = P / σ, lado = √A.
+        const areaReq = load / soil;
+        const sideExact = Math.sqrt(areaReq);
+        // Redondeo a obra: al múltiplo de 3 in superior.
+        const sideAdopted = Math.ceil(sideExact * 4) / 4;
+        const areaAdopted = sideAdopted * sideAdopted;
+        const pressure = areaAdopted > 0 ? load / areaAdopted : 0;
+        const cuft = areaAdopted * (depIn / 12);
+
+        rows.push({ k: 'Column service load', ref: 'Unfactored, at the top of the footing', v: load, format: 'unit', unit: 'lb' });
+        rows.push({ k: 'Allowable soil bearing pressure', ref: 'IBC Table 1806.2 presumptive', v: soil, format: 'unit', unit: 'psf' });
+        rows.push({ k: 'Bearing area required', ref: 'Load ÷ allowable pressure', v: areaReq, format: 'unit', unit: 'sq ft', decimals: 2 });
+        rows.push({ k: 'Exact square side', ref: 'Square root of the area', v: sideExact, format: 'unit', unit: 'ft', decimals: 2 });
+        rows.push({ k: 'Side adopted', ref: 'Rounded up to 3 in — ' + inFrac((sideAdopted % 1) * 12) + ' over ' + Math.floor(sideAdopted) + ' ft', v: sideAdopted, format: 'unit', unit: 'ft', decimals: 2, extra: true });
+        rows.push({ k: 'Bearing area provided', ref: n2(sideAdopted) + ' ft square', v: areaAdopted, format: 'unit', unit: 'sq ft', decimals: 2 });
+        rows.push({ k: 'Actual bearing pressure', ref: pressure <= soil ? 'Below the allowable — the safe direction' : 'Over the allowable — enlarge the footing', v: pressure, format: 'unit', unit: 'psf' });
+        rows.push({ k: 'Utilisation of the allowable pressure', ref: 'Actual ÷ allowable', v: soil > 0 ? (pressure / soil) * 100 : 0, format: 'unit', unit: '%', decimals: 1 });
+        const c = concreteRows(cuft, 'Concrete volume at ' + n1(depIn) + ' in thick');
+        rows.push({ k: 'Bearing area in square meters', ref: '1 m² = 10.764 sq ft', v: areaReq / 10.764, format: 'unit', unit: 'm²', decimals: 2 });
+
+        total = n2(sideAdopted) + ' ft square';
+        sub = n0(load) + ' lb on ' + n0(soil) + ' psf soil needs ' + n2(areaReq) + ' sq ft of bearing · adopt ' + n2(sideAdopted) +
+          ' × ' + n2(sideAdopted) + ' ft, which lands at ' + n0(pressure) + ' psf (' + n0((pressure / soil) * 100) + '% of allowable) · ' +
+          n2(c.cuyd) + ' cu yd of concrete at ' + n1(depIn) + ' in thick';
+      } else if (id === 'beam') {
+        // Porte de viga-hormigon-h-b-dimensiones.ts: h = luz/12, b = h/2.
+        // h_cm = luz_m × 100 / 12  ⇒  h_in = luz_ft (misma regla L/12).
+        const hIn = (span * 12) / BEAM_SPAN_DIVISOR;
+        const bIn = hIn / 2;
+        const hAdopted = Math.ceil(hIn);
+        const bAdopted = Math.ceil(bIn);
+        const cuft = span * (hAdopted / 12) * (bAdopted / 12);
+
+        rows.push({ k: 'Clear span', ref: 'Face to face of supports', v: span, format: 'unit', unit: 'ft', decimals: 1 });
+        rows.push({ k: 'Depth from the span-over-twelve rule', ref: 'Span in feet = depth in inches', v: hIn, format: 'unit', unit: 'in', decimals: 1 });
+        rows.push({ k: 'Width from the rule', ref: 'Half the depth', v: bIn, format: 'unit', unit: 'in', decimals: 1 });
+        rows.push({ k: 'Depth adopted', ref: 'Rounded up to a whole inch', v: hAdopted, format: 'unit', unit: 'in', extra: true });
+        rows.push({ k: 'Width adopted', ref: 'Rounded up to a whole inch', v: bAdopted, format: 'unit', unit: 'in', extra: true });
+        rows.push({ k: 'Span-to-depth ratio', ref: 'Lower is stiffer', v: hAdopted > 0 ? (span * 12) / hAdopted : 0, format: 'unit', unit: ': 1', decimals: 1 });
+        rows.push({ k: 'Beam section area', ref: 'Depth × width', v: hAdopted * bAdopted, format: 'unit', unit: 'sq in' });
+        const c = concreteRows(cuft, 'Concrete volume of the beam');
+        rows.push({ k: 'Same section in centimetres', ref: '1 in = 2.54 cm', v: hAdopted * 2.54, format: 'unit', unit: 'cm deep', decimals: 1 });
+        rows.push({ k: 'Formwork contact area', ref: 'Two sides plus the soffit', v: span * ((2 * hAdopted + bAdopted) / 12), format: 'unit', unit: 'sq ft', decimals: 1 });
+
+        total = hAdopted + ' × ' + bAdopted + ' in';
+        sub = 'A ' + n1(span) + ' ft clear span starts at roughly ' + hAdopted + ' in deep by ' + bAdopted +
+          ' in wide (span over twelve) · that is ' + n2(c.withWaste) + ' cu ft of concrete, ' + n2(c.cuyd) +
+          ' cu yd · a starting dimension for coordination, not a design';
+      } else if (id === 'slab') {
+        // Porte de acero-kg-m2-losa.ts: rango de kg/m² por tipo de losa.
+        const kind = String(v.slab_type || 'solid');
+        const entry = SLAB_STEEL.find((s) => s.id === kind) || SLAB_STEEL[1];
+        const lo = entry.lbSqft[0];
+        const hi = entry.lbSqft[1];
+        const mid = (lo + hi) / 2;
+        const steelLow = area * lo;
+        const steelHigh = area * hi;
+        const steelMid = area * mid;
+        const withLaps = steelMid * wf;
+        steelLb = withLaps;
+        const concCuft = area * (depIn / 12);
+        const concWeight = concCuft * CONCRETE_LB_PER_CUFT;
+        cementLb = concCuft * CEMENT_LB_PER_CUFT_CONCRETE;
+        aggregateLb = Math.max(0, concWeight - cementLb);
+
+        rows.push({ k: 'Slab area', ref: entry.label, v: area, format: 'unit', unit: 'sq ft' });
+        rows.push({ k: 'Reinforcement ratio, low end', ref: entry.kgM2[0] + ' kg/m²', v: lo, format: 'unit', unit: 'lb/sq ft', decimals: 2 });
+        rows.push({ k: 'Reinforcement ratio, high end', ref: entry.kgM2[1] + ' kg/m²', v: hi, format: 'unit', unit: 'lb/sq ft', decimals: 2 });
+        rows.push({ k: 'Steel at the low end', ref: 'Lightly loaded, short spans', v: steelLow, format: 'unit', unit: 'lb' });
+        rows.push({ k: 'Steel at the high end', ref: 'Heavier loads or longer spans', v: steelHigh, format: 'unit', unit: 'lb' });
+        rows.push({ k: 'Mid-range estimate', ref: 'What to price against', v: steelMid, format: 'unit', unit: 'lb' });
+        rows.push({ k: 'Order weight with laps and offcuts', ref: waste + '% added', v: withLaps, format: 'unit', unit: 'lb', extra: true });
+        rows.push({ k: 'Order weight in short tons', ref: '2,000 lb per ton', v: withLaps / 2000, format: 'unit', unit: 'tons', decimals: 2 });
+        rows.push({ k: 'Concrete in the slab', ref: n1(depIn) + ' in thick', v: concCuft / 27, format: 'unit', unit: 'cu yd', decimals: 2 });
+        rows.push({ k: 'Weight of the slab concrete', ref: '150 lb per cu ft', v: concWeight, format: 'unit', unit: 'lb' });
+        rows.push({ k: 'Steel as a share of slab weight', ref: 'Typical structural range is 1 to 3%', v: concWeight > 0 ? (withLaps / concWeight) * 100 : 0, format: 'unit', unit: '%', decimals: 2 });
+        rows.push({ k: 'Slab area in square meters', ref: '1 m² = 10.764 sq ft', v: area / 10.764, format: 'unit', unit: 'm²', decimals: 1 });
+
+        total = n0(withLaps) + ' lb';
+        sub = entry.label.toLowerCase() + ' of ' + n0(area) + ' sq ft at ' + n2(lo) + '–' + n2(hi) + ' lb/sq ft = ' +
+          n0(steelLow) + ' to ' + n0(steelHigh) + ' lb of steel · order about ' + n0(withLaps) + ' lb (' + n2(withLaps / 2000) +
+          ' tons) with ' + waste + '% for laps';
+      } else {
+        // Porte de cantidad-ladrillos-metro-cuadrado-pared.ts:
+        // base = ceil(m² × piezas/m²); con merma = ceil(base × (1 + merma/100)).
+        const kind = String(v.unit_type || 'modular');
+        const m = MASONRY.find((x) => x.id === kind) || MASONRY[0];
+        const base = Math.ceil(area * m.perSqft);
+        const withWaste = Math.ceil(base * wf);
+        const mortarCuft = (withWaste / 1000) * MORTAR_CUFT_PER_1000 * (kind === 'cmu' ? 3.5 : 1);
+        unitsLb = withWaste * m.lb;
+        mortarLb = mortarCuft * MORTAR_LB_PER_CUFT;
+        const faceWeight = area > 0 ? (base * m.lb + mortarCuft * MORTAR_LB_PER_CUFT) / area : 0;
+        const metricBase = Math.ceil(area * m.metricPerSqft);
+
+        rows.push({ k: 'Wall face area', ref: m.label, v: area, format: 'unit', unit: 'sq ft' });
+        rows.push({ k: 'Units per square foot', ref: 'Standard 3/8 in joints', v: m.perSqft, format: 'unit', unit: 'per sq ft', decimals: 3 });
+        rows.push({ k: 'Units before breakage', ref: 'Area × units per sq ft', v: base, format: 'plain' });
+        rows.push({ k: 'Breakage and cutting allowance', ref: waste + '% of the base count', v: withWaste - base, format: 'plain' });
+        rows.push({ k: 'Units to order', ref: 'Rounded up', v: withWaste, format: 'plain', extra: true });
+        rows.push({ k: 'Mortar', ref: '7 cu ft per 1,000 modular brick', v: mortarCuft, format: 'unit', unit: 'cu ft', decimals: 2 });
+        rows.push({ k: 'Weight of the masonry units', ref: n1(m.lb) + ' lb each', v: unitsLb, format: 'unit', unit: 'lb' });
+        rows.push({ k: 'Weight of the wall per square foot of face', ref: 'Units plus mortar', v: faceWeight, format: 'unit', unit: 'lb/sq ft', decimals: 1 });
+        rows.push({ k: 'Total wall weight the footing carries', ref: 'Before any finish or opening head', v: unitsLb + mortarLb, format: 'unit', unit: 'lb' });
+        rows.push({ k: 'Wall weight in short tons', ref: '2,000 lb per ton', v: (unitsLb + mortarLb) / 2000, format: 'unit', unit: 'tons', decimals: 2 });
+        rows.push({ k: 'Count from the metric source figure', ref: n1(m.metricPerSqft * 10.764) + ' units per m² converted', v: metricBase, format: 'plain' });
+        rows.push({ k: 'Wall area in square meters', ref: '1 m² = 10.764 sq ft', v: area / 10.764, format: 'unit', unit: 'm²', decimals: 1 });
+
+        total = n0(withWaste) + ' units';
+        sub = n0(area) + ' sq ft of ' + m.label.toLowerCase() + ' at ' + n2(m.perSqft) + ' per sq ft = ' + n0(base) +
+          ' units, ' + n0(withWaste) + ' with ' + waste + '% breakage · ' + n1(mortarCuft) + ' cu ft of mortar · the wall weighs ' +
+          n1(faceWeight) + ' lb per sq ft of face';
+      }
+
+      const chart = [];
+      if (cementLb > 0) chart.push({ label: 'Portland cement (lb)', value: Math.round(cementLb), tone: 'warn' });
+      if (aggregateLb > 0) chart.push({ label: 'Aggregate and water (lb)', value: Math.round(aggregateLb), tone: 'main' });
+      if (steelLb > 0) chart.push({ label: 'Reinforcing steel (lb)', value: Math.round(steelLb), tone: 'bad' });
+      if (unitsLb > 0) chart.push({ label: 'Masonry units (lb)', value: Math.round(unitsLb), tone: 'main' });
+      if (mortarLb > 0) chart.push({ label: 'Mortar (lb)', value: Math.round(mortarLb), tone: 'prop' });
+
+      return {
+        total: total,
+        sub: sub,
+        rows: rows,
+        format: 'unit',
+        unit: 'lb',
+        decimals: 0,
+        chart: chart,
+      };
+    });
+  })();
+</script>

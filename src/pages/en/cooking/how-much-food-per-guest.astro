@@ -1,0 +1,255 @@
+---
+/**
+ * Hub de decisión EN (US) — "How much food do I need for X guests?"
+ * Absorbe 9 calculadoras de porciones por invitado del mercado inglés.
+ *
+ * audience="US" y lang="en" van literales al Layout: HubData sólo modela
+ * 'AR' | 'global' y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  CONV,
+  MEAT,
+  BURGERS,
+  PIZZA,
+  EMPANADAS,
+  PASTA,
+  RICE,
+  SUSHI,
+  ICE,
+} from '../../../lib/hubs/en/how-much-food-per-guest';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ CONV, MEAT, BURGERS, PIZZA, EMPANADAS, PASTA, RICE, SUSHI, ICE }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    const lb = (g) => g / CONV.gPerLb;
+    const kg = (g) => g / 1000;
+    const n1 = (x) => (Math.round(x * 10) / 10).toFixed(1);
+    const n0 = (x) => String(Math.round(x));
+    /** "17.4 lb (7.9 kg)" — el punto decimal se arma a mano: el runtime formatea en es-AR. */
+    const both = (g) => n1(lb(g)) + ' lb (' + n1(kg(g)) + ' kg)';
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'bbq';
+
+      const adults = Math.max(0, Math.round(v.adults || 0));
+      const kids = Math.max(0, Math.round(v.kids || 0));
+      const guests = adults + kids;
+      const hours = Math.max(1, Math.round(v.hours || 1));
+
+      const appetite = String(v.appetite || 'normal');
+      const sides = String(v.sides || 'moderate');
+      const weather = String(v.weather || 'mild');
+
+      const af = ({ light: 0.8, normal: 1, hungry: 1.25 })[appetite] || 1;
+      const sf = ({ hearty: 0.8, moderate: 1, few: 1.2 })[sides] || 1;
+
+      // --- Hielo: común a todos los casos, se derrite igual sirvas lo que sirvas.
+      const iceRate = ICE.perGuestHourKg[weather] != null ? ICE.perGuestHourKg[weather] : 0.75;
+      const iceKg = (guests * hours * iceRate + guests * ICE.foodCoolerKgPerGuest) * ICE.meltBuffer;
+      const iceLb = iceKg * 1000 / CONV.gPerLb;
+      const iceBags = Math.ceil(iceLb / ICE.bagLb);
+
+      const rows = [];
+      let total = '';
+      let sub = '';
+      let chart = [];
+
+      if (id === 'bbq') {
+        const netBoneIn = (adults * MEAT.cookedAdultG.boneIn + kids * MEAT.cookedAdultG.boneIn * MEAT.childShare) * af * sf;
+        const netBoneless = (adults * MEAT.cookedAdultG.boneless + kids * MEAT.cookedAdultG.boneless * MEAT.childShare) * af * sf;
+        const netSaus = (adults * MEAT.cookedAdultG.sausage + kids * MEAT.cookedAdultG.sausage * MEAT.childShare) * af * sf;
+
+        const rawBoneless = netBoneless * MEAT.rawFactor.boneless;
+        const rawBoneIn = netBoneIn * MEAT.rawFactor.boneIn;
+        const rawSaus = netSaus * MEAT.rawFactor.sausage;
+        const buy = rawBoneless * MEAT.buffer;
+
+        const rate = BURGERS.rates[sides] || BURGERS.rates.moderate;
+        const burgers = Math.ceil((adults * rate[0] + kids * rate[1]) * BURGERS.buffer);
+        const groundG = burgers * BURGERS.pattyG;
+
+        total = both(buy);
+        sub =
+          guests + ' guests · ' + n1(lb(netBoneless)) + ' lb of boneless meat on the plate, ' +
+          n1(lb(rawBoneless)) + ' lb raw before the 10% buffer · or ' + burgers + ' burgers instead';
+
+        rows.push({ k: 'Finished boneless meat on the plate', ref: n0(netBoneless) + ' g cooked', v: lb(netBoneless), format: 'unit', unit: 'lb', decimals: 1 });
+        rows.push({ k: 'Boneless steak or skirt to buy raw', ref: '×1.28 cooking shrink · ' + n1(kg(rawBoneless)) + ' kg', v: lb(rawBoneless), format: 'unit', unit: 'lb', decimals: 1 });
+        rows.push({ k: 'Bone-in ribs or rack to buy raw instead', ref: '×1.45 bone + shrink · ' + n1(kg(rawBoneIn)) + ' kg', v: lb(rawBoneIn), format: 'unit', unit: 'lb', decimals: 1 });
+        rows.push({ k: 'Sausages or hot dogs to buy raw instead', ref: '×1.12 shrink · ' + n1(kg(rawSaus)) + ' kg', v: lb(rawSaus), format: 'unit', unit: 'lb', decimals: 1 });
+        rows.push({ k: 'Boneless meat to buy with the 10% buffer', ref: 'What to actually order · ' + n1(kg(buy)) + ' kg', v: lb(buy), format: 'unit', unit: 'lb', decimals: 1, extra: true });
+        rows.push({ k: 'Burgers if you serve those instead', ref: rate[0] + '/adult + ' + rate[1] + '/child, +15%', v: burgers, format: 'plain' });
+        rows.push({ k: 'Ground beef for those burgers', ref: '1/4 lb patties · ' + n1(kg(groundG)) + ' kg', v: lb(groundG), format: 'unit', unit: 'lb', decimals: 1 });
+
+        chart = [
+          { label: 'Adults eat', value: Math.round(adults * MEAT.cookedAdultG.boneless * af * sf * MEAT.rawFactor.boneless), tone: 'main' },
+          { label: 'Kids eat', value: Math.round(kids * MEAT.cookedAdultG.boneless * MEAT.childShare * af * sf * MEAT.rawFactor.boneless), tone: 'good' },
+          { label: 'Safety buffer', value: Math.round(buy - rawBoneless), tone: 'warn' },
+        ];
+      } else if (id === 'pizza') {
+        const sl = PIZZA.slices[sides] || PIZZA.slices.moderate;
+        const slices = adults * sl[0] + kids * sl[1];
+        const pies = guests > 0 ? Math.max(1, Math.ceil((slices * PIZZA.buffer) / PIZZA.slicesPerPie)) : 0;
+        const toppings = Math.max(3, Math.ceil(pies / 2));
+
+        const homePies = guests > 0 ? Math.ceil(guests / PIZZA.peoplePerPie) : 0;
+        const divisor = 1 + PIZZA.hydrationPct / 100 + PIZZA.saltPct + PIZZA.oilPct + PIZZA.yeastPct;
+        const flour = (PIZZA.doughBallG / divisor) * homePies;
+        const water = flour * (PIZZA.hydrationPct / 100);
+        const salt = flour * PIZZA.saltPct;
+        const oil = flour * PIZZA.oilPct;
+        const yeast = flour * PIZZA.yeastPct;
+
+        total = pies + (pies === 1 ? ' pizza' : ' pizzas');
+        sub =
+          slices + ' slices needed for ' + guests + ' guests · ' + PIZZA.slicesPerPie +
+          ' slices per 14-inch large · order at least ' + toppings + ' different toppings';
+
+        rows.push({ k: 'Slices your guests will eat', ref: sl[0] + '/adult + ' + sl[1] + '/child', v: slices, format: 'plain' });
+        rows.push({ k: '14-inch large pizzas to order', ref: '+10% margin, rounded up', v: pies, format: 'plain', extra: true });
+        rows.push({ k: 'Different toppings to order', ref: 'One per two pies, minimum three', v: toppings, format: 'plain' });
+        rows.push({ k: 'Homemade 12-inch pies instead', ref: 'Each feeds ' + PIZZA.peoplePerPie + ' people', v: homePies, format: 'plain' });
+        rows.push({ k: 'Flour for that dough', ref: '100% baker’s percentage', v: Math.round(flour), format: 'unit', unit: 'g' });
+        rows.push({ k: 'Water', ref: PIZZA.hydrationPct + '% hydration', v: Math.round(water), format: 'unit', unit: 'g' });
+        rows.push({ k: 'Salt', ref: '2% of flour', v: Math.round(salt * 10) / 10, format: 'unit', unit: 'g', decimals: 1 });
+        rows.push({ k: 'Olive oil', ref: '3% of flour', v: Math.round(oil * 10) / 10, format: 'unit', unit: 'g', decimals: 1 });
+        rows.push({ k: 'Instant dry yeast', ref: '1% of flour', v: Math.round(yeast * 10) / 10, format: 'unit', unit: 'g', decimals: 1 });
+
+        chart = [
+          { label: 'Slices for adults', value: adults * sl[0], tone: 'main' },
+          { label: 'Slices for kids', value: kids * sl[1], tone: 'good' },
+          { label: 'Spare slices you bought', value: Math.max(0, pies * PIZZA.slicesPerPie - slices), tone: 'warn' },
+        ];
+      } else if (id === 'empanadas') {
+        const r = EMPANADAS.rates[sides] || EMPANADAS.rates.moderate;
+        const base = adults * r[0] + kids * r[1];
+        const dozens = Math.ceil((base * EMPANADAS.buffer) / 12);
+        const units = dozens * 12;
+
+        total = units + ' empanadas';
+        sub = dozens + (dozens === 1 ? ' dozen' : ' dozens') + ' · ' + r[0] + ' per adult and ' + r[1] + ' per child, plus a 12% buffer';
+
+        rows.push({ k: 'Empanadas your guests will eat', ref: r[0] + '/adult + ' + r[1] + '/child', v: Math.round(base), format: 'plain' });
+        rows.push({ k: 'Empanadas to order', ref: '+12% buffer, rounded to whole dozens', v: units, format: 'plain', extra: true });
+        rows.push({ k: 'Dozens to order', ref: 'How they are actually sold', v: dozens, format: 'plain' });
+        rows.push({ k: 'Fillings to order', ref: 'At least one meat-free option', v: Math.max(2, Math.min(5, Math.ceil(dozens / 2))), format: 'plain' });
+        rows.push({ k: 'Spare empanadas the buffer buys you', ref: 'Late guests and second helpings', v: Math.max(0, units - Math.round(base)), format: 'plain' });
+
+        chart = [
+          { label: 'For adults', value: Math.round(adults * r[0]), tone: 'main' },
+          { label: 'For kids', value: Math.round(kids * r[1]), tone: 'good' },
+          { label: 'Buffer and dozen rounding', value: Math.max(0, units - Math.round(base)), tone: 'warn' },
+        ];
+      } else if (id === 'pasta') {
+        const gAdult = PASTA.adultG[appetite] != null ? PASTA.adultG[appetite] : PASTA.adultG.normal;
+        const dryG = adults * gAdult + kids * PASTA.childG;
+        const cookedG = dryG * PASTA.cookedFactor;
+        const kcal = dryG * PASTA.kcalPerG;
+        const boxes = dryG > 0 ? Math.ceil(dryG / CONV.gPerLb) : 0;
+
+        const riceG = guests * RICE.gPerPerson;
+        const riceCooked = riceG * RICE.cookedFactor;
+        const riceWater = riceG * RICE.waterMlPerG;
+
+        total = both(dryG);
+        sub =
+          gAdult + ' g per adult and ' + PASTA.childG + ' g per child, weighed dry · ' +
+          boxes + (boxes === 1 ? ' box' : ' boxes') + ' of 1 lb · or ' + n0(riceG) + ' g of raw rice as a side';
+
+        rows.push({ k: 'Dry pasta to weigh out', ref: n0(dryG) + ' g · ' + n1(dryG / CONV.gPerOz) + ' oz', v: lb(dryG), format: 'unit', unit: 'lb', decimals: 2 });
+        rows.push({ k: '1 lb boxes to buy', ref: 'Rounded up', v: boxes, format: 'plain', extra: true });
+        rows.push({ k: 'Cooked pasta that comes out of the pot', ref: '×2.3 water uptake · ' + n1(kg(cookedG)) + ' kg', v: lb(cookedG), format: 'unit', unit: 'lb', decimals: 2 });
+        rows.push({ k: 'Calories from the pasta alone', ref: '350 kcal per 100 g dry, sauce not included', v: Math.round(kcal), format: 'unit', unit: 'kcal' });
+        rows.push({ k: 'Raw rice instead, as a side dish', ref: RICE.gPerPerson + ' g per person · ' + n0(riceG) + ' g', v: lb(riceG), format: 'unit', unit: 'lb', decimals: 2 });
+        rows.push({ k: 'Cooked rice that yields', ref: '×3 expansion · ' + n1(kg(riceCooked)) + ' kg', v: lb(riceCooked), format: 'unit', unit: 'lb', decimals: 2 });
+        rows.push({ k: 'Water for the rice', ref: '2 mL per gram of raw rice', v: Math.round(riceWater / 1000 * 10) / 10, format: 'unit', unit: 'L', decimals: 1 });
+
+        chart = [
+          { label: 'Dry pasta for adults', value: adults * gAdult, tone: 'main' },
+          { label: 'Dry pasta for kids', value: kids * PASTA.childG, tone: 'good' },
+          { label: 'Left in the last box', value: Math.max(0, Math.round(boxes * CONV.gPerLb - dryG)), tone: 'warn' },
+        ];
+      } else {
+        const p = SUSHI.pieces[appetite] != null ? SUSHI.pieces[appetite] : SUSHI.pieces.normal;
+        const base = adults * p[0] + kids * p[1];
+        const pieces = Math.ceil((base * 110) / 100);
+        const rolls = Math.ceil(pieces / SUSHI.piecesPerRoll);
+
+        total = pieces + ' pieces';
+        sub =
+          rolls + (rolls === 1 ? ' roll' : ' rolls') + ' of ' + SUSHI.piecesPerRoll + ' · ' +
+          p[0] + ' pieces per adult and ' + p[1] + ' per child, plus a 10% buffer';
+
+        rows.push({ k: 'Pieces your guests will eat', ref: p[0] + '/adult + ' + p[1] + '/child', v: base, format: 'plain' });
+        rows.push({ k: 'Pieces to order', ref: '+10% buffer', v: pieces, format: 'plain' });
+        rows.push({ k: 'Rolls to order', ref: 'Sold whole, 8 pieces each', v: rolls, format: 'plain', extra: true });
+        rows.push({ k: 'Pieces you actually get in those rolls', ref: 'Rounding always works in your favor', v: rolls * SUSHI.piecesPerRoll, format: 'plain' });
+        rows.push({ k: 'Cooked or vegetarian rolls to include', ref: 'Roughly a third of the order', v: Math.max(1, Math.round(rolls / 3)), format: 'plain' });
+
+        chart = [
+          { label: 'Pieces for adults', value: adults * p[0], tone: 'main' },
+          { label: 'Pieces for kids', value: kids * p[1], tone: 'good' },
+          { label: 'Buffer and roll rounding', value: Math.max(0, rolls * SUSHI.piecesPerRoll - base), tone: 'warn' },
+        ];
+      }
+
+      // El hielo cierra todos los casos: es lo que más se olvida y lo único que
+      // se consume aunque nadie coma.
+      rows.push({ k: 'Ice to buy the morning of the party', ref: iceRate + ' kg/guest/hour + food cooler + 20% melt', v: Math.round(iceLb), format: 'unit', unit: 'lb' });
+      rows.push({ k: 'Standard 20 lb bags of ice', ref: n1(iceKg) + ' kg total', v: iceBags, format: 'plain' });
+
+      return { total: total, sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

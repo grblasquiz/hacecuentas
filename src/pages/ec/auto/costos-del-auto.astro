@@ -1,0 +1,202 @@
+---
+/**
+ * Hub de decisión EC — "Cuánto cuesta tener el auto al día en el Ecuador".
+ * audience="EC" literal: HubData sólo modela 'AR' | 'global' y el mercado viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  SBU,
+  COMBUSTIBLES,
+  IPVM_TABLA,
+  RODAJE_TABLA,
+  SPPAT_POR_TIPO,
+  COBERTURAS_SPPAT,
+  TASA_ANT,
+  RTV_BASE,
+  RTV_FACTOR_CIUDAD,
+  STICKER_RTV,
+  MULTAS_TRANSITO,
+  MULTA_NO_CALENDARIO,
+  RECARGO_MATRICULA_VENCIDA,
+  DEPRECIACION_ANUAL,
+  PISO_RESIDUAL,
+  ANIO_FISCAL,
+} from '../../../lib/hubs/ec/costos-del-auto';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="EC"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    SBU,
+    COMBUSTIBLES,
+    IPVM_TABLA,
+    RODAJE_TABLA,
+    SPPAT_POR_TIPO,
+    COBERTURAS_SPPAT,
+    TASA_ANT,
+    RTV_BASE,
+    RTV_FACTOR_CIUDAD,
+    STICKER_RTV,
+    MULTAS_TRANSITO,
+    MULTA_NO_CALENDARIO,
+    RECARGO_MATRICULA_VENCIDA,
+    DEPRECIACION_ANUAL,
+    PISO_RESIDUAL,
+    ANIO_FISCAL,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) =>
+      '$' + new Intl.NumberFormat('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        .format(Math.round((n || 0) * 100) / 100);
+
+    /** Avalúo del SRI: PVP depreciado 20% por año, con piso del 10% del PVP. */
+    function avaluoSRI(pvp, antiguedad) {
+      if (antiguedad <= 0) return Math.round(pvp * 100) / 100;
+      const dep = pvp * Math.pow(1 - DEPRECIACION_ANUAL, antiguedad);
+      return Math.round(Math.max(dep, pvp * PISO_RESIDUAL) * 100) / 100;
+    }
+
+    /** IPVM progresivo del SRI sobre el avalúo. */
+    function ipvm(avaluo) {
+      if (avaluo <= 0) return 0;
+      for (const t of IPVM_TABLA) {
+        const hasta = t.hasta === null ? Infinity : t.hasta;
+        if (avaluo > t.desde && avaluo <= hasta) return t.base + (avaluo - t.desde) * t.pct;
+      }
+      const u = IPVM_TABLA[IPVM_TABLA.length - 1];
+      return u.base + (avaluo - u.desde) * u.pct;
+    }
+
+    /** Impuesto al rodaje: tarifa fija del tramo del Art. 539 del COOTAD. */
+    function rodaje(avaluo) {
+      let tarifa = 0;
+      for (const t of RODAJE_TABLA) if (avaluo >= t.desde) tarifa = t.tarifa;
+      return tarifa;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'particular';
+      const tipo = id === 'moto' ? 'moto' : id === 'taxi' ? 'taxi' : 'liviano';
+
+      // `Math.max(0, Number(x) || 0)` mantiene el 0 legítimo (0 km al año, 0 años vencidos).
+      const pvp = Math.max(0, Number(v.pvp) || 0);
+      const anioModelo = Math.round(Number(v.anioModelo) || ANIO_FISCAL);
+      const ciudad = RTV_FACTOR_CIUDAD[String(v.ciudad || 'quito')] ? String(v.ciudad) : 'quito';
+      const kmAnio = Math.max(0, Number(v.kmAnio) || 0);
+      const kmGalon = Math.max(1, Number(v.kmPorGalon) || 1);
+      const combKey = COMBUSTIBLES.precios[String(v.combustible || 'extra')] ? String(v.combustible) : 'extra';
+      const comb = COMBUSTIBLES.precios[combKey];
+      const aniosVencida = Math.max(0, Math.floor(Number(v.aniosVencida) || 0));
+      const multaSel = MULTAS_TRANSITO.find((m) => m.id === String(v.multa || 'ninguna')) || MULTAS_TRANSITO[0];
+
+      const antiguedad = Math.max(0, ANIO_FISCAL - anioModelo);
+      const avaluo = avaluoSRI(pvp, antiguedad);
+
+      const impIPVM = ipvm(avaluo);
+      const impRodaje = rodaje(avaluo);
+      const sppat = SPPAT_POR_TIPO[tipo].valor;
+      const tasaANT = TASA_ANT[tipo];
+      const rtv = RTV_BASE[tipo] * RTV_FACTOR_CIUDAD[ciudad];
+      const sticker = STICKER_RTV;
+      const matricula = impIPVM + impRodaje + sppat + tasaANT + rtv + sticker;
+
+      const multa = multaSel.pct * SBU;
+      const recargo = aniosVencida * RECARGO_MATRICULA_VENCIDA;
+      const multasTotal = multa + recargo;
+
+      const galones = kmAnio / kmGalon;
+      const combustible = galones * comb.usdGalon;
+
+      const totalAnual = matricula + multasTotal + combustible;
+      const totalMes = totalAnual / 12;
+
+      const rows = [
+        { k: 'Avalúo del vehículo según el SRI', ref: antiguedad > 0 ? 'PVP depreciado ' + antiguedad + ' año(s) al 20%, con piso del 10%' : 'Vehículo del año: el avalúo es el PVP', v: avaluo },
+        { k: 'Impuesto a la propiedad del vehículo (IPVM)', ref: 'SRI · escala progresiva del 0,5% al 6% sobre el avalúo', v: impIPVM },
+        { k: 'Impuesto al rodaje municipal', ref: 'Art. 539 del COOTAD · tarifa fija por tramo de avalúo', v: impRodaje },
+        { k: 'Tasa SPPAT', ref: SPPAT_POR_TIPO[tipo].label + ' · ' + SPPAT_POR_TIPO[tipo].rango, v: sppat },
+        { k: 'Tasa de matriculación y servicios de la ANT', ref: 'Referencial según clase de vehículo', v: tasaANT },
+        { k: 'Revisión técnica vehicular', ref: 'Tarifa municipal · el rechequeo es gratuito dentro del plazo', v: rtv },
+        { k: 'Adhesivo de la revisión técnica', ref: 'Especie que se entrega al aprobar', v: sticker },
+        { k: 'Total de la matriculación del año', ref: 'Impuestos más tasas, sin multas', v: matricula, extra: true },
+        {
+          k: 'Multa de tránsito pendiente',
+          ref: multaSel.pct > 0
+            ? multaSel.label + ' · ' + Math.round(multaSel.pct * 100) + '% del SBU · −' + multaSel.puntos + ' puntos'
+            : 'Sin multas pendientes',
+          v: multa,
+        },
+        { k: 'Recargo por matrícula vencida', ref: aniosVencida > 0 ? aniosVencida + ' año(s) × ' + usd(RECARGO_MATRICULA_VENCIDA) : 'Estás al día', v: recargo },
+        { k: 'Galones de combustible al año', ref: kmAnio.toLocaleString('es-EC') + ' km ÷ ' + kmGalon + ' km por galón', v: galones, format: 'unit', unit: 'galones', decimals: 1 },
+        { k: 'Combustible del año', ref: comb.label + ' a ' + usd(comb.usdGalon) + ' el galón', v: combustible },
+        { k: 'Costo total del año', ref: 'Matrícula más multas más combustible', v: totalAnual, extra: true },
+        { k: 'Lo que deberías guardar cada mes', ref: 'Total anual ÷ 12', v: totalMes },
+        { k: 'Costo por kilómetro recorrido', ref: kmAnio > 0 ? 'Todo el costo anual repartido en los km del año' : 'Sin kilómetros no hay costo por km', v: kmAnio > 0 ? totalAnual / kmAnio : 0, decimals: 2 },
+        { k: 'Puntos de licencia que perderías', ref: 'La licencia arranca con 30 puntos', v: multaSel.puntos, format: 'unit', unit: 'puntos', decimals: 1 },
+        { k: 'Cobertura del SPPAT en gastos médicos', ref: 'Por víctima y por evento · igual para todo vehículo', v: COBERTURAS_SPPAT.gastosMedicos },
+      ];
+
+      const sub =
+        'Avalúo ' + usd(avaluo) + ' · matrícula ' + usd(matricula) +
+        (multasTotal > 0 ? ' · multas y recargos ' + usd(multasTotal) : ' · sin multas') +
+        (combustible > 0 ? ' · combustible ' + usd(combustible) : '') +
+        ' · te sale ' + usd(totalMes) + ' al mes';
+
+      const chart = [
+        { label: 'Impuestos (propiedad y rodaje)', value: Math.round(impIPVM + impRodaje), tone: 'exit' },
+        { label: 'Tasas (SPPAT, ANT y revisión)', value: Math.round(sppat + tasaANT + rtv + sticker), tone: 'prop' },
+        { label: 'Multas y recargos', value: Math.round(multasTotal), tone: 'bad' },
+        { label: 'Combustible del año', value: Math.round(combustible), tone: 'main' },
+      ];
+
+      return { total: usd(totalAnual), sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

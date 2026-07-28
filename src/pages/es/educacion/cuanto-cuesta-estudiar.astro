@@ -1,0 +1,229 @@
+---
+/**
+ * Hub de decisión ES — cuánto cuesta estudiar. Reemplaza 5 calculadoras sueltas.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  PRIVADA_ANUAL,
+  FP_TASAS,
+  MASTER_CREDITO,
+  UMBRALES_BECA,
+  INCREMENTO_UMBRAL,
+  BECA_CUANTIA,
+  ERASMUS_MENSUAL,
+} from '../../../lib/hubs/es/cuanto-cuesta-estudiar';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/es' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="ES"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    PRIV: PRIVADA_ANUAL,
+    FP: FP_TASAS,
+    MASTER: MASTER_CREDITO,
+    UMB: UMBRALES_BECA,
+    INC: INCREMENTO_UMBRAL,
+    BECA: BECA_CUANTIA,
+    ERASMUS: ERASMUS_MENSUAL,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const eur = (n) => Math.round(n || 0).toLocaleString('es-ES') + ' €';
+
+    function umbrales(miembros) {
+      const key = String(Math.min(Math.max(miembros, 1), 8));
+      const base = UMB[key];
+      const extra = Math.max(0, miembros - 8);
+      return {
+        u1: base.u1 + extra * INC.u1,
+        u2: base.u2 + extra * INC.u2,
+        u3: base.u3 + extra * INC.u3,
+      };
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'grado';
+      const creditos = Math.max(1, v.creditos || 240);
+      const precioCredito = Math.max(0, v.precioCredito || 0);
+      const centro = String(v.tipoCentro || 'publica');
+      const miembros = Math.max(1, Math.round(v.miembros || 1));
+      const renta = Math.max(0, v.rentaFamiliar || 0);
+      const grupo = String(v.grupoErasmus || 'grupo2');
+      const mesesErasmus = Math.max(0, Math.round(v.mesesErasmus || 0));
+      const costeVida = Math.max(0, v.costeVida || 0);
+
+      const anios = Math.max(1, creditos / 60);
+      const rows = [];
+      let matricula = 0;
+      let refMatricula = '';
+
+      if (id === 'fp') {
+        matricula = centro === 'publica' ? FP.gradoSuperiorAnual * 2 + FP.materialAnual * 2 : (PRIV[centro] || 0) * 2;
+        refMatricula = centro === 'publica' ? 'Tasas y material de dos cursos' : 'Centro privado, dos cursos';
+      } else if (id === 'master') {
+        const tarifa =
+          centro === 'publica' ? MASTER.oficial_publico : centro === 'privada_top' ? MASTER.oficial_privado : MASTER.titulo_propio;
+        matricula = creditos * tarifa;
+        refMatricula = creditos + ' créditos × ' + eur(tarifa) + ' el crédito';
+      } else if (centro === 'publica') {
+        matricula = creditos * precioCredito;
+        refMatricula = creditos + ' créditos × ' + eur(precioCredito) + ' el crédito';
+      } else {
+        matricula = (PRIV[centro] || 0) * anios;
+        refMatricula = eur(PRIV[centro] || 0) + ' por curso × ' + anios.toFixed(1).replace('.', ',') + ' cursos';
+      }
+
+      // ── Beca del Ministerio ───────────────────────────────────────
+      const u = umbrales(miembros);
+      let beca = 0;
+      let tramoBeca = 'Sin beca: superas el umbral 3';
+      if (renta <= u.u1) {
+        beca = BECA.completa * anios;
+        tramoBeca = 'Umbral 1: cuantías completas';
+      } else if (renta <= u.u2) {
+        beca = BECA.parcial * anios;
+        tramoBeca = 'Umbral 2: cuantías parciales';
+      } else if (renta <= u.u3) {
+        beca = matricula;
+        tramoBeca = 'Umbral 3: sólo beca de matrícula';
+      }
+
+      // ── Erasmus ───────────────────────────────────────────────────
+      const ayudaErasmus = (ERASMUS[grupo] || 0) * mesesErasmus;
+      const vidaErasmus = costeVida * mesesErasmus;
+
+      // ── Alojamiento y manutención del título completo ─────────────
+      const vidaTitulo = costeVida * 10 * anios;
+
+      rows.push({ k: 'Matrícula del título completo', ref: refMatricula, v: matricula, extra: true });
+      rows.push({
+        k: 'Duración estimada',
+        ref: creditos + ' créditos a 60 por curso',
+        v: anios,
+        format: 'unit',
+        unit: 'cursos',
+        decimals: 1,
+      });
+      rows.push({ k: 'Matrícula por curso', ref: 'Matrícula ÷ cursos', v: matricula / anios });
+
+      if (id === 'erasmus') {
+        rows.push({
+          k: 'Ayuda Erasmus mensual',
+          ref: 'Grupo ' + grupo.replace('grupo', '') + ' de coste de vida',
+          v: ERASMUS[grupo] || 0,
+        });
+        rows.push({ k: 'Ayuda Erasmus de toda la estancia', ref: mesesErasmus + ' meses', v: ayudaErasmus, extra: true });
+        rows.push({ k: 'Coste de vida de la estancia', ref: eur(costeVida) + ' al mes × ' + mesesErasmus, v: vidaErasmus });
+        rows.push({
+          k: 'Lo que tienes que poner tú',
+          ref: 'Coste de vida menos ayuda',
+          v: Math.max(0, vidaErasmus - ayudaErasmus),
+          extra: true,
+        });
+        rows.push({
+          k: 'Porcentaje de la estancia cubierto',
+          ref: 'Ayuda ÷ coste de vida',
+          v: vidaErasmus > 0 ? Math.min(100, (ayudaErasmus / vidaErasmus) * 100) : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+      }
+
+      rows.push({ k: 'Renta familiar', ref: miembros + ' miembros en la unidad', v: renta });
+      rows.push({ k: 'Umbral 1 de la beca', ref: 'Cuantías completas por debajo', v: u.u1 });
+      rows.push({ k: 'Umbral 2 de la beca', ref: 'Cuantías parciales', v: u.u2 });
+      rows.push({ k: 'Umbral 3 de la beca', ref: 'Sólo beca de matrícula', v: u.u3 });
+      rows.push({ k: 'Beca estimada del título completo', ref: tramoBeca, v: beca, extra: true });
+      rows.push({ k: 'Alojamiento y manutención', ref: eur(costeVida) + ' al mes × 10 meses × ' + anios.toFixed(1).replace('.', ',') + ' cursos', v: vidaTitulo });
+
+      const costeTotal = matricula + vidaTitulo;
+      const costeNeto = Math.max(0, costeTotal - beca);
+      rows.push({ k: 'Coste total con alojamiento', ref: 'Matrícula más vida', v: costeTotal });
+      rows.push({ k: 'Coste neto tras la beca', ref: 'Lo que sale de tu bolsillo', v: costeNeto, extra: true });
+
+      const chart = [
+        { label: 'Matrícula', value: Math.round(matricula), tone: 'main' },
+        { label: 'Alojamiento y manutención', value: Math.round(vidaTitulo), tone: 'prop' },
+        { label: 'Beca', value: Math.round(beca), tone: 'good' },
+      ].filter(function (s) {
+        return s.value > 0;
+      });
+
+      const sub =
+        id === 'erasmus'
+          ? 'La ayuda Erasmus te daría ' +
+            eur(ayudaErasmus) +
+            ' por ' +
+            mesesErasmus +
+            ' meses, frente a ' +
+            eur(vidaErasmus) +
+            ' de coste de vida: pondrías ' +
+            eur(Math.max(0, vidaErasmus - ayudaErasmus)) +
+            ' de tu bolsillo'
+          : 'La matrícula sale por ' +
+            eur(matricula) +
+            ' y el título completo con alojamiento por ' +
+            eur(costeTotal) +
+            ' · ' +
+            tramoBeca.toLowerCase() +
+            ', así que el coste neto queda en ' +
+            eur(costeNeto);
+
+      return {
+        total: eur(costeNeto),
+        sub: sub,
+        rows: rows,
+        chart: chart,
+        format: 'unit',
+        unit: '€',
+        decimals: 0,
+      };
+    });
+  })();
+</script>

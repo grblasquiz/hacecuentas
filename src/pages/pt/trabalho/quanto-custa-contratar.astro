@@ -1,0 +1,292 @@
+---
+/**
+ * Hub de decisão BR — "Quanto custa ter alguém trabalhando pra mim?".
+ * Ruta bajo el prefijo /pt/, igual que las calculadoras que absorbe.
+ * As faixas do INSS e do IRRF viajam pelo define:vars com `ate: null` no lugar
+ * de Infinity, que não sobrevive à serialização.
+ * audience="BR" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  MINIMO,
+  TETO_INSS,
+  FGTS_PCT,
+  INSS,
+  IRRF,
+  REDUTOR,
+  PATRONAL,
+  DOMESTICA,
+  SALARIO_FAMILIA,
+  MULTA_FGTS_PCT,
+} from '../../../lib/hubs/pt/quanto-custa-contratar';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="BR"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header lang="pt" />
+  <DecisionHub data={hub} />
+  <Footer lang="pt" />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ MINIMO, TETO_INSS, FGTS_PCT, INSS, IRRF, REDUTOR, PATRONAL, DOMESTICA, SALARIO_FAMILIA, MULTA_FGTS_PCT }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const brl = (n) =>
+      'R$ ' + (Math.round((n || 0) * 100) / 100).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+
+    /** INSS progressivo do segurado: alíquota da faixa − parcela a deduzir, limitado ao teto. */
+    function calcINSS(bruto) {
+      const base = Math.min(Math.max(bruto, 0), TETO_INSS);
+      for (const f of INSS) {
+        if (base <= f.ate) return Math.round((base * f.aliquota - f.deduzir) * 100) / 100;
+      }
+      return Math.round((TETO_INSS * 0.14 - 198.49) * 100) / 100;
+    }
+    function irrfTabelaCheia(base) {
+      if (base <= 0) return 0;
+      for (const f of IRRF) {
+        if (f.ate === null || base <= f.ate) return Math.max(0, base * f.aliquota - f.deduzir);
+      }
+      return 0;
+    }
+    /** IRRF 2026 com o redutor da reforma: zerado até a isenção, linear até o teto do redutor. */
+    function calcIRRF(base) {
+      if (base <= REDUTOR.isencao) return 0;
+      const cheio = irrfTabelaCheia(base);
+      if (base >= REDUTOR.teto) return cheio;
+      return cheio * ((base - REDUTOR.isencao) / (REDUTOR.teto - REDUTOR.isencao));
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'clt_geral';
+      let salario = Math.max(0, v.salario || 0);
+      const grau = String(v.grauRisco || '2');
+      const fap = Math.min(2, Math.max(0.5, Number(v.fap) || 1));
+      const pctTerceiros = Math.max(0, Number(v.terceiros) || 0) / 100;
+      const anexo = String(v.anexoSimples || 'iii').toLowerCase();
+      const filhos = Math.max(0, Math.round(Number(v.filhos) || 0));
+      const beneficios = Math.max(0, v.beneficios || 0);
+      const faturamento = Math.max(0, v.faturamentoPj || 0);
+      const aliqDas = Math.max(0, Number(v.aliquotaDas) || 0) / 100;
+      const contador = Math.max(0, v.contador || 0);
+
+      if (salario <= 0) {
+        return { total: brl(0), sub: 'Informe um salário bruto maior que zero.', rows: [], chart: [] };
+      }
+      // Piso legal: nenhum vínculo formal pode pagar menos que o salário mínimo nacional.
+      if (salario < MINIMO) salario = MINIMO;
+
+      const rows = [];
+      const chart = [];
+      let total = 0;
+      let sub = '';
+
+      // ── Salário-família: adiantado pela empresa e compensado na guia (não é custo). ──
+      const salarioFamilia = salario <= SALARIO_FAMILIA.teto ? filhos * SALARIO_FAMILIA.cota : 0;
+
+      if (id === 'pj') {
+        // Lado CLT (o que a pessoa recebe de verdade, somando benefícios).
+        const inssC = calcINSS(salario);
+        const irrfC = calcIRRF(salario - inssC);
+        const liquido = salario - inssC - irrfC;
+        const fgtsMes = salario * FGTS_PCT;
+        const multaProv = fgtsMes * MULTA_FGTS_PCT;
+        const decimo = salario / 12;
+        const tercoFerias = (salario / 3) / 12;
+        const cltTotal = liquido + fgtsMes + multaProv + decimo + tercoFerias + beneficios + salarioFamilia;
+
+        // Lado PJ.
+        const das = faturamento * aliqDas;
+        const proLabore = MINIMO;
+        const inssPro = proLabore * 0.11;
+        const irrfPro = calcIRRF(proLabore - inssPro);
+        const pjTotal = faturamento - das - contador - inssPro - irrfPro;
+
+        const dif = pjTotal - cltTotal;
+        total = pjTotal;
+
+        rows.push({ k: 'CLT — salário líquido', ref: 'Depois de INSS e IRRF', v: liquido });
+        rows.push({ k: 'CLT — INSS descontado', ref: 'Tabela progressiva 2026 · teto ' + brl(TETO_INSS), v: inssC });
+        rows.push({ k: 'CLT — IRRF descontado', ref: 'Tabela mensal + redutor 2026', v: irrfC });
+        rows.push({ k: 'CLT — FGTS do mês', ref: '8% · art. 15 da Lei 8.036/1990', v: fgtsMes });
+        rows.push({ k: 'CLT — provisão da multa de 40%', ref: '40% sobre o depósito do mês', v: multaProv });
+        rows.push({ k: 'CLT — 13º e 1/3 de férias provisionados', ref: '1/12 + 1/36 do salário', v: decimo + tercoFerias });
+        rows.push({ k: 'CLT — benefícios em dinheiro', ref: 'VT, VR, plano de saúde', v: beneficios });
+        if (salarioFamilia > 0) rows.push({ k: 'CLT — salário-família', ref: filhos + ' × ' + brl(SALARIO_FAMILIA.cota), v: salarioFamilia });
+        rows.push({ k: 'CLT — total mensal equivalente', ref: 'Líquido + benefícios + provisões', v: cltTotal, extra: true });
+        rows.push({ k: 'PJ — DAS do Simples', ref: (aliqDas * 100).toLocaleString('pt-BR') + '% sobre o faturamento', v: das });
+        rows.push({ k: 'PJ — contador', ref: 'Honorários mensais', v: contador });
+        rows.push({ k: 'PJ — INSS sobre o pró-labore', ref: '11% de ' + brl(proLabore) + ' · Lei 10.666/2003', v: inssPro });
+        rows.push({ k: 'PJ — IRRF sobre o pró-labore', ref: 'Tabela mensal + redutor 2026', v: irrfPro });
+        rows.push({ k: 'PJ — líquido no mês', ref: 'Faturamento menos tudo', v: pjTotal, extra: true });
+        rows.push({ k: 'Diferença mensal (PJ − CLT)', ref: dif >= 0 ? 'A favor do PJ' : 'A favor do CLT', v: dif, extra: true });
+        rows.push({ k: 'Diferença no ano', ref: '12 meses', v: dif * 12 });
+        rows.push({
+          k: 'Faturamento para empatar com o CLT',
+          ref: 'Mantendo a mesma alíquota e o mesmo contador',
+          v: aliqDas < 1 ? (cltTotal + contador + inssPro + irrfPro) / (1 - aliqDas) : 0,
+        });
+
+        chart.push({ label: 'Salário líquido', value: Math.round(liquido), tone: 'main' });
+        chart.push({ label: 'FGTS + multa', value: Math.round(fgtsMes + multaProv), tone: 'prop' });
+        chart.push({ label: '13º + 1/3 férias', value: Math.round(decimo + tercoFerias), tone: 'good' });
+        chart.push({ label: 'Benefícios', value: Math.round(beneficios + salarioFamilia), tone: 'exit' });
+
+        sub =
+          'CLT equivalente: ' + brl(cltTotal) + '/mês. PJ líquido: ' + brl(pjTotal) + '/mês. ' +
+          (dif >= 0
+            ? 'O PJ fica ' + brl(dif) + ' à frente por mês (' + brl(dif * 12) + ' no ano), mas sem FGTS, 13º, férias nem seguro-desemprego.'
+            : 'O CLT fica ' + brl(-dif) + ' à frente por mês (' + brl(-dif * 12) + ' no ano), já contando benefícios e provisões.');
+
+        return { total: brl(total), sub: sub, rows: rows, chart: chart };
+      }
+
+      if (id === 'domestico') {
+        const encargos = salario * DOMESTICA.total;
+        const custoMensal = salario + encargos;
+        const prov13 = (salario * (1 + DOMESTICA.total)) / 12;
+        const provFerias = (salario * (4 / 3) * (1 + DOMESTICA.total)) / 12;
+        const inssEmpregado = calcINSS(salario);
+        total = custoMensal + prov13 + provFerias;
+
+        rows.push({ k: 'Salário bruto', ref: 'Piso: salário mínimo de ' + brl(MINIMO), v: salario });
+        rows.push({ k: 'INSS patronal', ref: (DOMESTICA.inssPatronal * 100).toFixed(1) + '% · art. 34 I da LC 150/2015', v: salario * DOMESTICA.inssPatronal });
+        rows.push({ k: 'FGTS', ref: (DOMESTICA.fgts * 100).toFixed(1) + '% · art. 34 IV', v: salario * DOMESTICA.fgts });
+        rows.push({ k: 'FGTS compensatório', ref: (DOMESTICA.fgtsCompensatorio * 100).toFixed(1) + '% · antecipação da multa (art. 22)', v: salario * DOMESTICA.fgtsCompensatorio });
+        rows.push({ k: 'GILRAT (seguro de acidente)', ref: (DOMESTICA.gilrat * 100).toFixed(1) + '% · art. 34 III', v: salario * DOMESTICA.gilrat });
+        rows.push({ k: 'Total de encargos no DAE', ref: (DOMESTICA.total * 100).toFixed(0) + '% da remuneração', v: encargos, extra: true });
+        rows.push({ k: 'Provisão de 13º salário', ref: '1/12 do salário com encargos', v: prov13 });
+        rows.push({ k: 'Provisão de férias + 1/3', ref: '1,333 salário ÷ 12, com encargos', v: provFerias });
+        rows.push({ k: 'Custo mensal real', ref: 'Salário + encargos + provisões', v: total, extra: true });
+        rows.push({ k: 'Custo anual', ref: '12 meses', v: total * 12 });
+        rows.push({ k: 'INSS retido do empregado', ref: 'Dinheiro do trabalhador, não custo do patrão', v: inssEmpregado });
+        rows.push({ k: 'Líquido que a pessoa recebe', ref: 'Salário menos o INSS retido', v: salario - inssEmpregado });
+        rows.push({ k: 'Acréscimo sobre o salário', ref: 'Custo real ÷ salário', v: (total / salario - 1) * 100, format: 'unit', unit: '%', decimals: 1 });
+
+        chart.push({ label: 'Salário', value: Math.round(salario), tone: 'main' });
+        chart.push({ label: 'Encargos do DAE', value: Math.round(encargos), tone: 'warn' });
+        chart.push({ label: 'Provisão 13º', value: Math.round(prov13), tone: 'prop' });
+        chart.push({ label: 'Provisão férias', value: Math.round(provFerias), tone: 'good' });
+
+        sub =
+          'Salário de ' + brl(salario) + ' custa ' + brl(total) + ' por mês (' + brl(total * 12) + ' no ano) — ' +
+          ((total / salario - 1) * 100).toFixed(0) + '% acima do nominal. DAE vence no dia 7.';
+
+        return { total: brl(total), sub: sub, rows: rows, chart: chart };
+      }
+
+      // ── CLT: lucro real/presumido ou Simples ──────────────────────────────
+      const simples = id === 'clt_simples';
+      const anexoIV = anexo === 'iv';
+      const pagaCpp = !simples || anexoIV;
+
+      const ratAliq = (PATRONAL.ratOpcoes[grau] || 0.02) * fap;
+      const inssPatronal = pagaCpp ? salario * PATRONAL.inss : 0;
+      const rat = pagaCpp ? salario * ratAliq : 0;
+      const terceiros = pagaCpp && !simples ? salario * pctTerceiros : 0;
+      const fgts = salario * FGTS_PCT;
+      const multaProv = fgts * MULTA_FGTS_PCT;
+
+      const pctEncargos = (inssPatronal + rat + terceiros + fgts) / salario;
+      const prov13 = (salario * (1 + pctEncargos)) / 12;
+      const provFerias = (salario * (4 / 3) * (1 + pctEncargos)) / 12;
+
+      const custoDireto = salario + inssPatronal + rat + terceiros + fgts + multaProv;
+      total = custoDireto + prov13 + provFerias + beneficios;
+
+      const inssEmpregado = calcINSS(salario);
+      const irrfEmpregado = calcIRRF(salario - inssEmpregado);
+      const liquido = salario - inssEmpregado - irrfEmpregado + salarioFamilia;
+
+      rows.push({ k: 'Salário bruto', ref: 'Base de todos os encargos', v: salario });
+      if (pagaCpp) {
+        rows.push({ k: 'INSS patronal', ref: '20% sem teto · art. 22 I da Lei 8.212/1991', v: inssPatronal });
+        rows.push({ k: 'RAT × FAP', ref: 'Grau ' + grau + ' (' + (PATRONAL.ratOpcoes[grau] * 100).toFixed(0) + '%) × FAP ' + fap.toLocaleString('pt-BR'), v: rat });
+      } else {
+        rows.push({ k: 'INSS patronal', ref: 'Incluído no DAS — anexo ' + anexo.toUpperCase() + ' · art. 13 §3º da LC 123/2006', v: 0 });
+      }
+      if (terceiros > 0) {
+        rows.push({ k: 'Contribuição a terceiros', ref: (pctTerceiros * 100).toLocaleString('pt-BR') + '% · Sistema S, INCRA, SEBRAE', v: terceiros });
+      } else if (simples) {
+        rows.push({ k: 'Contribuição a terceiros', ref: 'Empresa do Simples é isenta (exceto anexo IV)', v: 0 });
+      }
+      rows.push({ k: 'FGTS do mês', ref: '8% · art. 15 da Lei 8.036/1990', v: fgts });
+      rows.push({ k: 'Provisão da multa de 40% do FGTS', ref: 'Reserva para dispensa sem justa causa', v: multaProv });
+      rows.push({ k: 'Provisão de 13º salário', ref: '1/12 do salário, com encargos', v: prov13 });
+      rows.push({ k: 'Provisão de férias + 1/3', ref: '1,333 salário ÷ 12, com encargos', v: provFerias });
+      if (beneficios > 0) rows.push({ k: 'Benefícios em dinheiro', ref: 'VT, VR, plano de saúde', v: beneficios });
+      rows.push({ k: 'Custo mensal real', ref: 'Tudo somado', v: total, extra: true });
+      rows.push({ k: 'Custo anual', ref: '12 meses', v: total * 12 });
+      rows.push({ k: 'Acréscimo sobre o salário', ref: 'Custo real ÷ salário', v: (total / salario - 1) * 100, format: 'unit', unit: '%', decimals: 1 });
+      rows.push({ k: 'Líquido que a pessoa recebe', ref: 'Salário menos INSS e IRRF' + (salarioFamilia > 0 ? ' mais salário-família' : ''), v: liquido });
+      if (filhos > 0) {
+        rows.push({
+          k: 'Salário-família',
+          ref: salarioFamilia > 0
+            ? filhos + ' × ' + brl(SALARIO_FAMILIA.cota) + ' · adiantado e compensado na guia'
+            : 'Salário acima do teto de ' + brl(SALARIO_FAMILIA.teto) + ' — sem direito',
+          v: salarioFamilia,
+        });
+      }
+
+      chart.push({ label: 'Salário', value: Math.round(salario), tone: 'main' });
+      chart.push({ label: 'INSS patronal + RAT + terceiros', value: Math.round(inssPatronal + rat + terceiros), tone: 'warn' });
+      chart.push({ label: 'FGTS + multa provisionada', value: Math.round(fgts + multaProv), tone: 'prop' });
+      chart.push({ label: '13º + férias provisionados', value: Math.round(prov13 + provFerias), tone: 'good' });
+      chart.push({ label: 'Benefícios', value: Math.round(beneficios), tone: 'exit' });
+
+      sub =
+        (simples
+          ? 'Empresa do Simples, anexo ' + anexo.toUpperCase() + (anexoIV ? ' (CPP fora do DAS)' : ' (CPP dentro do DAS)') + '. '
+          : 'Empresa do lucro real ou presumido. ') +
+        'Salário de ' + brl(salario) + ' custa ' + brl(total) + ' por mês, ' +
+        ((total / salario - 1) * 100).toFixed(0) + '% acima do nominal — ' + brl(total * 12) + ' no ano.';
+
+      return { total: brl(total), sub: sub, rows: rows, chart: chart.filter((s) => s.value > 0) };
+    });
+  })();
+</script>

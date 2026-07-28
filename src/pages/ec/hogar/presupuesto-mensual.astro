@@ -1,0 +1,233 @@
+---
+/**
+ * Hub de decisión EC — "Presupuesto mensual del hogar en el Ecuador".
+ * audience="EC" literal: HubData sólo modela 'AR' | 'global' y el mercado viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  SBU,
+  CANASTA,
+  COSTO_VIDA,
+  TARIFA_LUZ,
+  TARIFA_AGUA,
+  PESOS_RUBRO,
+  ESCALA_HOGAR,
+  ARRIENDO_PCT_LEGAL,
+} from '../../../lib/hubs/ec/presupuesto-mensual';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="EC"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ SBU, CANASTA, COSTO_VIDA, TARIFA_LUZ, TARIFA_AGUA, PESOS_RUBRO, ESCALA_HOGAR, ARRIENDO_PCT_LEGAL }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) =>
+      '$' + new Intl.NumberFormat('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        .format(Math.round((n || 0) * 100) / 100);
+
+    /** Cargo de energía por bloques crecientes. `hasta: null` = último tramo (Infinity). */
+    function energiaPorBloques(kwh) {
+      let restante = kwh, costo = 0, piso = 0;
+      for (const b of TARIFA_LUZ.bloques) {
+        if (restante <= 0) break;
+        const techo = b.hasta === null ? Infinity : b.hasta;
+        const enBloque = Math.min(restante, techo - piso);
+        costo += enBloque * b.usdKwh;
+        restante -= enBloque;
+        piso = techo;
+      }
+      return costo;
+    }
+
+    /** Costo del agua con bloques marginales progresivos. */
+    function costoAgua(m3, bloques) {
+      let restante = m3, total = 0, desde = 0;
+      for (const b of bloques) {
+        if (restante <= 0) break;
+        const techo = b.hasta === null ? Infinity : b.hasta;
+        const tramo = Math.min(restante, techo - desde);
+        total += tramo * b.precio;
+        restante -= tramo;
+        desde = techo;
+      }
+      return total;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'solo';
+      // La rama "comparar por ciudad" usa el hogar de referencia del INEC (4 personas).
+      const hogarKey = ESCALA_HOGAR[id] ? id : 'familia4';
+      const esc = ESCALA_HOGAR[hogarKey];
+
+      const ciudadKey = COSTO_VIDA.ciudades[String(v.ciudad || 'nacional')] ? String(v.ciudad) : 'nacional';
+      const ciudad = COSTO_VIDA.ciudades[ciudadKey];
+      const canasta = ciudad.canasta;
+
+      // Cero legítimo respetado: un arriendo en 0 (propietario) no se pisa con la estimación
+      // salvo que el campo esté vacío; por eso se distingue '' de 0 explícitamente.
+      const raw = (x) => (x === '' || x === null || x === undefined ? null : Number(x));
+      const arriendoRaw = raw(v.arriendo);
+      const ingreso = Math.max(0, Number(v.ingresoFamiliar) || 0);
+      const avaluo = Math.max(0, Number(v.avaluoInmueble) || 0);
+      const kwh = Math.max(0, Number(v.consumoKwh) || 0);
+      const region = String(v.region || 'sierra') === 'costa' ? 'costa' : 'sierra';
+      const m3 = Math.max(0, Number(v.consumoM3) || 0);
+      const empresaKey = TARIFA_AGUA[String(v.empresaAgua || 'epmaps')] ? String(v.empresaAgua) : 'epmaps';
+      const empresa = TARIFA_AGUA[empresaKey];
+
+      // ── Planilla de luz ──
+      const limiteDignidad = region === 'sierra' ? TARIFA_LUZ.limiteDignidadSierra : TARIFA_LUZ.limiteDignidadCosta;
+      const aplicaDignidad = kwh > 0 && kwh <= limiteDignidad;
+      const energia = aplicaDignidad ? kwh * TARIFA_LUZ.tarifaDignidad : energiaPorBloques(kwh);
+      const comercializacionLuz = aplicaDignidad ? 0 : (kwh > 0 ? TARIFA_LUZ.comercializacion : 0);
+      const planillaLuz = energia + comercializacionLuz;
+      const luzSinSubsidio = kwh > 0 ? energiaPorBloques(kwh) + TARIFA_LUZ.comercializacion : 0;
+      const ahorroDignidad = aplicaDignidad ? luzSinSubsidio - planillaLuz : 0;
+
+      // ── Planilla de agua ──
+      const agua = costoAgua(m3, empresa.bloques);
+      const alcantarillado = agua * empresa.alcantarilladoPct;
+      const planillaAgua = m3 > 0 ? agua + alcantarillado + empresa.cargoFijo : 0;
+
+      // ── Rubros del presupuesto ──
+      const estAlimentacion = canasta * PESOS_RUBRO.alimentacion * esc.alimentacion;
+      const estArriendo = canasta * PESOS_RUBRO.arriendo * esc.arriendo;
+      const estServicios = canasta * PESOS_RUBRO.servicios * esc.servicios;
+      const estTransporte = canasta * PESOS_RUBRO.transporte * esc.transporte;
+      const estOtros = canasta * PESOS_RUBRO.otros * esc.otros;
+
+      const arriendo = arriendoRaw !== null && Number.isFinite(arriendoRaw) && arriendoRaw > 0 ? arriendoRaw : estArriendo;
+      // Los servicios: si el usuario cargó luz y agua reales, se usan esas planillas más una
+      // estimación del resto (gas, internet, teléfono) como remanente del rubro.
+      const restoServicios = Math.max(0, estServicios - planillaLuz - planillaAgua);
+      const servicios = planillaLuz + planillaAgua + restoServicios;
+
+      const total = estAlimentacion + arriendo + servicios + estTransporte + estOtros;
+      const porPersona = total / esc.personas;
+      const brecha = ingreso - total;
+      const cubreCanasta = ingreso >= CANASTA.basicaFamiliar;
+      const cubreVital = ingreso >= CANASTA.vital;
+
+      // ── Tope legal del arriendo (Ley de Inquilinato, art. 17) ──
+      const topeArriendo = avaluo > 0 ? (avaluo * ARRIENDO_PCT_LEGAL) / 12 : 0;
+
+      const rows = [
+        { k: 'Alimentación', ref: 'Estimada con la composición de la canasta del INEC', v: estAlimentacion },
+        { k: 'Arriendo o vivienda', ref: arriendoRaw !== null && arriendoRaw > 0 ? 'Tu dato' : 'Estimado desde la canasta de ' + ciudad.label, v: arriendo },
+        { k: 'Planilla de luz del mes', ref: aplicaDignidad ? 'Tarifa Dignidad · $0,04 por kWh dentro de ' + limiteDignidad + ' kWh' : 'Residencial general por bloques más cargo fijo', v: planillaLuz },
+        { k: 'Planilla de agua del mes', ref: empresa.label + ' · ' + m3 + ' m³ por bloques', v: planillaAgua },
+        { k: 'Resto de servicios (gas, internet, teléfono)', ref: 'Remanente del rubro de servicios de la canasta', v: restoServicios },
+        { k: 'Transporte', ref: 'Estimado desde la canasta del INEC', v: estTransporte },
+        { k: 'Otros (salud, educación, ropa y ocio)', ref: 'Estimado desde la canasta del INEC', v: estOtros },
+        { k: 'Presupuesto mensual del hogar', ref: esc.label + ' · ' + esc.personas + ' persona(s) en ' + ciudad.label, v: total, extra: true },
+        { k: 'Gasto por persona', ref: 'Presupuesto total dividido entre los integrantes', v: porPersona },
+        { k: 'Presupuesto del año', ref: 'Doce meses al mismo nivel de gasto', v: total * 12 },
+        { k: 'Canasta básica familiar del INEC', ref: 'Hogar tipo de 4 personas · ' + CANASTA.mesReferencia, v: CANASTA.basicaFamiliar },
+        { k: 'Canasta vital del INEC', ref: 'Mínimo de subsistencia · 73 productos', v: CANASTA.vital },
+        {
+          k: brecha >= 0 ? 'Lo que te sobra al mes' : 'Lo que te falta al mes',
+          ref: brecha >= 0 ? 'Ingreso del hogar menos el presupuesto' : 'Tu ingreso no cubre el presupuesto estimado',
+          v: Math.abs(brecha),
+          extra: true,
+        },
+        {
+          k: 'Qué porcentaje de tu ingreso se lleva el hogar',
+          ref: ingreso > 0 ? 'Presupuesto sobre el ingreso del hogar' : 'Carga tu ingreso para verlo',
+          v: ingreso > 0 ? (total / ingreso) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        },
+        {
+          k: 'Peso del arriendo sobre el presupuesto',
+          ref: 'Referencia práctica: no pasar del 30%',
+          v: total > 0 ? (arriendo / total) * 100 : 0,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        },
+        {
+          k: 'Salarios básicos que necesita tu hogar',
+          ref: 'Presupuesto dividido entre el SBU de ' + usd(SBU),
+          v: total / SBU,
+          format: 'unit',
+          unit: 'SBU',
+          decimals: 1,
+        },
+        {
+          k: 'Arriendo máximo legal del inmueble',
+          ref: avaluo > 0 ? 'Doceava parte del 10% del avalúo · art. 17 Ley de Inquilinato' : 'Carga el avalúo municipal para calcularlo',
+          v: topeArriendo,
+        },
+        {
+          k: aplicaDignidad ? 'Lo que ahorras con la Tarifa Dignidad' : 'Lo que ahorrarías bajando a ' + limiteDignidad + ' kWh',
+          ref: aplicaDignidad ? 'Frente a la tarifa residencial general' : 'Entrando al subsidio de $0,04 por kWh',
+          v: aplicaDignidad ? ahorroDignidad : Math.max(0, planillaLuz - (limiteDignidad * TARIFA_LUZ.tarifaDignidad)),
+        },
+      ];
+
+      const sub =
+        esc.label + ' en ' + ciudad.label + ' · necesitas ' + usd(total) + ' al mes (' + usd(porPersona) + ' por persona)' +
+        (ingreso > 0
+          ? (brecha >= 0 ? ' · te sobran ' + usd(brecha) : ' · te faltan ' + usd(-brecha)) +
+            ' · tu ingreso ' + (cubreCanasta ? 'cubre la canasta básica' : cubreVital ? 'cubre la vital pero no la básica' : 'no llega ni a la canasta vital')
+          : '');
+
+      const chart = [
+        { label: 'Arriendo o vivienda', value: Math.round(arriendo), tone: 'main' },
+        { label: 'Alimentación', value: Math.round(estAlimentacion), tone: 'prop' },
+        { label: 'Servicios (luz, agua, gas, internet)', value: Math.round(servicios), tone: 'warn' },
+        { label: 'Transporte', value: Math.round(estTransporte), tone: 'good' },
+        { label: 'Otros (salud, educación, ropa y ocio)', value: Math.round(estOtros), tone: 'exit' },
+      ];
+
+      return { total: usd(total), sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

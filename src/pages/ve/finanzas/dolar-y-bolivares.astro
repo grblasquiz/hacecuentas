@@ -1,0 +1,185 @@
+---
+/**
+ * Hub de decisión VE — "Cuánto es esto en bolívares hoy (y al revés)".
+ * El compute() replica las fórmulas vivas de conversión Bs.↔USD, euros, USDT P2P,
+ * remesa Zelle, vuelto en Bs., brecha BCV/paralelo, Bs.→COP, sueldo en dólares,
+ * reconversión de bolívares viejos y actualización por INPC.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, RECONVERSIONES } from '../../../lib/hubs/ve/dolar-y-bolivares';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="VE"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ RECON: RECONVERSIONES }}>
+  (function () {
+    const H = window.HC_HUB;
+    const bs = (n) =>
+      'Bs. ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(Math.round((n || 0) * 100) / 100);
+    const usd = (n) =>
+      '$ ' + new Intl.NumberFormat('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.round((n || 0) * 100) / 100);
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'convertir';
+
+      const montoIn = Math.max(0, v.monto || 0);
+      const direccion = String(v.direccion || 'usd');
+      const bcv = Math.max(0, v.tasaBcv || 0);
+      const paralelo = Math.max(0, v.tasaParalelo || 0);
+      const comisionPct = Math.min(50, Math.max(0, v.comision || 0));
+      const eurUsd = Math.max(0, v.eurUsd || 0);
+      const usdCop = Math.max(0, v.usdCop || 0);
+      const inpc = Math.max(0, v.inpc || 0);
+      const monedaVieja = String(v.monedaVieja || 'digital');
+
+      // Reconversión: si el monto está en bolívares de otra época, se normaliza primero.
+      const recon = RECON.filter(function (r) { return r.id === monedaVieja; })[0] || RECON[3];
+      const esBolivares = direccion === 'bs';
+      const factorRecon = esBolivares ? recon.factorAActual : 1;
+      const monto = esBolivares ? montoIn / factorRecon : montoIn;
+
+      // Todo pasa por el dólar como puente.
+      let enUsd = 0;
+      if (direccion === 'usd' || direccion === 'usdt') enUsd = monto;
+      else if (direccion === 'eur') enUsd = monto * eurUsd;
+      else if (direccion === 'cop') enUsd = usdCop > 0 ? monto / usdCop : 0;
+      else if (direccion === 'bs') enUsd = paralelo > 0 ? monto / paralelo : 0;
+
+      const enBsBcv = enUsd * bcv;
+      const enBsParalelo = enUsd * paralelo;
+
+      // Brecha entre las dos tasas.
+      const brechaPct = bcv > 0 ? (paralelo / bcv - 1) * 100 : 0;
+      const difPorDolar = paralelo - bcv;
+      const diferenciaMonto = enBsParalelo - enBsBcv;
+
+      // Remesa: neto de comisión, a la tasa paralela (la que usan los cambistas).
+      const usdNeto = enUsd * (1 - comisionPct / 100);
+      const comisionUsd = enUsd - usdNeto;
+      const recibidoBs = usdNeto * paralelo;
+      const tasaEfectiva = enUsd > 0 ? recibidoBs / enUsd : paralelo * (1 - comisionPct / 100);
+
+      // Actualización por INPC del monto en bolívares actuales.
+      const montoBsActual = esBolivares ? monto : enBsParalelo;
+      const actualizado = montoBsActual * (1 + inpc / 100);
+
+      const rows = [];
+
+      if (esBolivares && factorRecon !== 1) {
+        rows.push({
+          k: 'Reconversión: factor aplicado',
+          ref: recon.nombre + ' → bolívar actual',
+          v: factorRecon,
+          format: 'plain',
+        });
+        rows.push({ k: 'Tu monto en bolívares actuales', ref: 'Tras dividir por el factor', v: monto, extra: true });
+      }
+
+      rows.push({
+        k: 'Equivalente en dólares',
+        ref: direccion === 'bs' ? 'A la tasa paralela' : 'Moneda puente',
+        v: enUsd,
+        format: 'unit',
+        unit: 'USD',
+        decimals: 2,
+      });
+      rows.push({ k: 'En bolívares a la tasa BCV', ref: bs(bcv) + ' por dólar · oficial', v: enBsBcv, extra: true });
+      rows.push({ k: 'En bolívares a la tasa paralela', ref: bs(paralelo) + ' por dólar · mercado libre', v: enBsParalelo, extra: true });
+      rows.push({ k: 'Diferencia entre cobrar a una tasa o a la otra', ref: 'Lo que te cuesta la brecha en este monto', v: diferenciaMonto });
+      rows.push({
+        k: 'Brecha entre paralelo y oficial',
+        ref: 'Paralelo ÷ BCV − 1',
+        v: brechaPct,
+        format: 'unit',
+        unit: '%',
+        decimals: 1,
+      });
+      rows.push({ k: 'Diferencia por cada dólar', ref: 'Paralelo menos oficial', v: difPorDolar });
+
+      if (comisionPct > 0) {
+        rows.push({
+          k: 'Comisión del cambista',
+          ref: comisionPct.toLocaleString('es-VE') + '% sobre el monto',
+          v: comisionUsd,
+          format: 'unit',
+          unit: 'USD',
+          decimals: 2,
+        });
+        rows.push({ k: 'Bolívares que recibe el destinatario', ref: 'Neto de comisión, a la tasa paralela', v: recibidoBs, extra: true });
+        rows.push({ k: 'Tasa efectiva por dólar enviado', ref: 'Con esta hay que comparar ofertas', v: tasaEfectiva });
+      }
+
+      if (eurUsd > 0) {
+        rows.push({ k: 'Equivalente en euros', ref: 'Paridad EUR/USD ' + eurUsd, v: eurUsd > 0 ? enUsd / eurUsd : 0, format: 'unit', unit: 'EUR', decimals: 2 });
+      }
+      if (usdCop > 0) {
+        rows.push({ k: 'Equivalente en pesos colombianos', ref: 'Dólar a ' + usdCop.toLocaleString('es-CO') + ' COP', v: enUsd * usdCop, format: 'unit', unit: 'COP', decimals: 0 });
+      }
+      if (inpc > 0) {
+        rows.push({ k: 'Monto actualizado por INPC', ref: 'Variación del ' + inpc.toLocaleString('es-VE') + '% del período', v: actualizado, extra: true });
+      }
+
+      const totalMostrado =
+        id === 'remesa' && comisionPct > 0 ? recibidoBs : direccion === 'bs' ? enUsd : enBsParalelo;
+      const totalStr = direccion === 'bs' && !(id === 'remesa' && comisionPct > 0) ? usd(enUsd) : bs(totalMostrado);
+
+      const sub =
+        'BCV ' + bs(bcv) + ' · paralelo ' + bs(paralelo) + ' · brecha ' + brechaPct.toFixed(1).replace('.', ',') + '%' +
+        (comisionPct > 0 ? ' · tasa efectiva ' + bs(tasaEfectiva) : '') +
+        (esBolivares && factorRecon !== 1 ? ' · monto normalizado desde ' + recon.nombre : '');
+
+      return {
+        total: totalStr,
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'A la tasa oficial del BCV', value: Math.round(enBsBcv), tone: 'warn' },
+          { label: 'A la tasa paralela', value: Math.round(enBsParalelo), tone: 'main' },
+          { label: 'Lo que recibís neto de comisión', value: Math.round(recibidoBs), tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,219 @@
+---
+/**
+ * Hub de decisión PY — "¿Cuánto vale tu plata en guaraníes?".
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  USD_PYG,
+  BRL_PYG,
+  ARS_PYG,
+  EUR_PYG,
+  IRP_CAPITAL,
+  IPC,
+  SMVM,
+} from '../../../lib/hubs/py/guaranies';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PY"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ USD_PYG, BRL_PYG, ARS_PYG, EUR_PYG, IRP_CAPITAL, IPC, SMVM }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const gs = (n) => 'Gs. ' + Math.round(n || 0).toLocaleString('de-DE');
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'cambiar';
+      const montoUsd = Math.max(0, v.montoUsd || 0);
+      const montoArs = Math.max(0, v.montoArs || 0);
+      const montoEur = Math.max(0, v.montoEur || 0);
+      const tcEur = v.tcEur > 0 ? v.tcEur : EUR_PYG;
+      const comision = Math.max(0, v.comision || 0);
+      const spread = Math.max(0, v.spread || 0);
+      const capital = Math.max(0, v.capital || 0);
+      const tasaAnual = Math.max(0, v.tasaAnual || 0);
+      const plazoDias = Math.max(0, v.plazoDias || 0);
+      const aplicaIrp = String(v.aplicaIrp || 'no') === 'si';
+      const montoViejo = Math.max(0, v.montoViejo || 0);
+      const inflacionPct = Math.max(0, v.inflacionPct === undefined ? IPC.interanual : v.inflacionPct);
+
+      // ── Cambio directo ───────────────────────────────────────────────────
+      const usdEnGs = montoUsd * USD_PYG;
+      const arsEnGs = montoArs * ARS_PYG;
+
+      // ── Remesa: el costo real es comisión + spread cambiario ─────────────
+      const baseEnviada = Math.max(0, montoEur - comision);
+      const tcAplicado = tcEur * (1 - spread / 100);
+      const recibido = baseEnviada * tcAplicado;
+      const idealPyg = montoEur * tcEur;
+      const costoComision = comision * tcEur;
+      const costoSpread = Math.max(0, idealPyg - recibido - costoComision);
+      const costoTotal = Math.max(0, idealPyg - recibido);
+      const costoPct = idealPyg > 0 ? (costoTotal / idealPyg) * 100 : 0;
+
+      // ── Plazo fijo: base 365, IRP 8% sólo sobre los intereses ────────────
+      const interesBruto = capital * (tasaAnual / 100) * (plazoDias / 365);
+      const irp = aplicaIrp ? interesBruto * IRP_CAPITAL : 0;
+      const gananciaNeta = interesBruto - irp;
+      const montoFinal = capital + gananciaNeta;
+      const tasaReal = tasaAnual - IPC.interanual;
+
+      // ── Inflación ────────────────────────────────────────────────────────
+      const factor = 1 + inflacionPct / 100;
+      const actualizado = montoViejo * factor;
+      const perdidaPct = (1 - 1 / factor) * 100;
+
+      const rows = [
+        {
+          k: 'Cotización de referencia del dólar',
+          ref: 'BCP · promedio interbancario',
+          v: USD_PYG,
+          decimals: 2,
+        },
+        { k: 'Tus dólares en guaraníes', ref: 'US$ ' + montoUsd.toLocaleString('de-DE'), v: usdEnGs },
+        {
+          k: 'Cotización del peso argentino',
+          ref: 'Por cada peso',
+          v: ARS_PYG,
+          decimals: 4,
+        },
+        { k: 'Tus pesos argentinos en guaraníes', ref: '$ ' + montoArs.toLocaleString('de-DE'), v: arsEnGs },
+        {
+          k: 'Cotización del real brasileño',
+          ref: 'Referencia de frontera',
+          v: BRL_PYG,
+          decimals: 2,
+        },
+        {
+          k: 'Guaraníes que te darían por la remesa sin costos',
+          ref: '€ ' + montoEur.toLocaleString('de-DE') + ' × cotización de referencia',
+          v: idealPyg,
+        },
+        { k: 'Se lleva la comisión del operador', ref: '€ ' + comision.toLocaleString('de-DE') + ' fijos', v: costoComision },
+        { k: 'Se lleva el spread cambiario', ref: spread.toLocaleString('de-DE') + '% peor que la referencia', v: costoSpread },
+        { k: 'Guaraníes que llegan de la remesa', ref: 'Lo que efectivamente cobrás', v: recibido, extra: true },
+        {
+          k: 'Costo total de enviar esa remesa',
+          ref: 'Comisión + spread',
+          v: costoPct,
+          format: 'unit',
+          unit: '% del envío',
+          decimals: 1,
+        },
+        { k: 'Capital del plazo fijo', ref: 'Lo que depositás', v: capital },
+        {
+          k: 'Interés bruto del período',
+          ref: tasaAnual.toLocaleString('de-DE') + '% anual × ' + plazoDias + ' días ÷ 365',
+          v: interesBruto,
+        },
+        {
+          k: 'Retención de IRP sobre los intereses',
+          ref: aplicaIrp
+            ? (IRP_CAPITAL * 100).toFixed(0) + '% · rentas del capital'
+            : 'No aplica: no estás incidido',
+          v: irp,
+        },
+        { k: 'Ganancia neta del plazo fijo', ref: 'Interés − IRP', v: gananciaNeta },
+        { k: 'Monto final a cobrar al vencimiento', ref: 'Capital + ganancia neta', v: montoFinal },
+        {
+          k: 'Tasa real contra la inflación',
+          ref: 'Tasa nominal − IPC interanual ' + IPC.interanual.toLocaleString('es', { maximumFractionDigits: 2 }) + '%',
+          v: tasaReal,
+          format: 'unit',
+          unit: '% anual',
+          decimals: 2,
+        },
+        { k: 'Monto original a actualizar', ref: 'Valor histórico', v: montoViejo },
+        {
+          k: 'Su equivalente de hoy',
+          ref: 'Inflación acumulada del ' + inflacionPct.toLocaleString('de-DE') + '%',
+          v: actualizado,
+        },
+        {
+          k: 'Poder de compra que perdió esa plata',
+          ref: 'Si la dejaste quieta todo el período',
+          v: perdidaPct,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        },
+        {
+          k: 'Tu capital medido en salarios mínimos',
+          ref: 'SMVM ' + gs(SMVM),
+          v: SMVM > 0 ? capital / SMVM : 0,
+          format: 'unit',
+          unit: 'SMVM',
+          decimals: 2,
+        },
+      ];
+
+      const total =
+        id === 'plazo-fijo' ? montoFinal
+        : id === 'inflacion' ? actualizado
+        : id === 'cambiar' ? usdEnGs
+        : recibido;
+
+      const sub =
+        'Dólar de referencia ' + gs(USD_PYG) +
+        ' · la remesa llega con un costo del ' + costoPct.toFixed(1).replace('.', ',') + '%' +
+        ' · el plazo fijo rinde ' + gs(gananciaNeta) + ' netos' +
+        ' · tasa real ' + tasaReal.toFixed(2).replace('.', ',') + '% contra la inflación';
+
+      return {
+        total: gs(total),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Guaraníes que llegan', value: Math.round(recibido), tone: 'main' },
+          { label: 'Comisión del operador', value: Math.round(costoComision), tone: 'warn' },
+          { label: 'Spread cambiario', value: Math.round(costoSpread), tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>

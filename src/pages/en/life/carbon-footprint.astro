@@ -1,0 +1,235 @@
+---
+/**
+ * Hub EN — "How big is this carbon footprint, and what would offset it?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  FLIGHT_KG_PER_MI,
+  STREAM_G_PER_HOUR,
+  PET_KG_PER_KG_YEAR,
+  EVENT_KG_PER_GUEST,
+  TREE_KG_PER_YEAR,
+  KG_PER_LB,
+  DECAY,
+} from '../../../lib/hubs/en/carbon-footprint';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    FLIGHT_KG_PER_MI,
+    STREAM_G_PER_HOUR,
+    PET_KG_PER_KG_YEAR,
+    EVENT_KG_PER_GUEST,
+    TREE_KG_PER_YEAR,
+    KG_PER_LB,
+    DECAY,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(x || 0).toLocaleString('en-US');
+    const trees = (kg) => Math.ceil((kg || 0) / TREE_KG_PER_YEAR);
+    /** 1 US short ton = 907,18474 kg (exacto: 2000 lb). */
+    const KG_PER_TON = 907.18474;
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'flight';
+
+      if (id === 'streaming') {
+        const hours = Math.max(0, v.hours || 0);
+        const q = String(v.quality || 'hd');
+        const gPerH = STREAM_G_PER_HOUR[q] || STREAM_G_PER_HOUR.hd;
+        const gDay = hours * gPerH;
+        const kgYear = (gDay * 365) / 1000;
+        const kgYearHd = ((hours * STREAM_G_PER_HOUR.hd) * 365) / 1000;
+        const saving = Math.max(0, kgYear - kgYearHd);
+        const rows = [
+          { k: 'Emission factor for this quality', ref: q.toUpperCase() + ' video', v: gPerH, format: 'unit', unit: 'g CO₂/h' },
+          { k: 'Per day', ref: hours + ' h/day', v: gDay, format: 'unit', unit: 'g CO₂' },
+          { k: 'Per month', ref: '30 days', v: (gDay * 30) / 1000, format: 'unit', unit: 'kg CO₂', decimals: 2 },
+          { k: 'Per year', ref: '365 days', v: kgYear, format: 'unit', unit: 'kg CO₂', decimals: 1, extra: true },
+          { k: 'Trees to offset a year of it', ref: TREE_KG_PER_YEAR + ' kg per tree per year', v: trees(kgYear), format: 'plain' },
+          { k: 'What dropping to HD would save per year', ref: q === 'uhd' ? 'Roughly half the data' : 'You are already at or below HD', v: saving, format: 'unit', unit: 'kg CO₂', decimals: 1 },
+          { k: 'Same footprint expressed as flight miles in economy', ref: 'For scale', v: kgYear / FLIGHT_KG_PER_MI.economy, format: 'unit', unit: 'mi' },
+        ];
+        return {
+          total: kgYear.toFixed(1) + ' kg CO₂/yr',
+          sub:
+            n0(gDay) + ' g a day at ' + q.toUpperCase() + ' · about ' + trees(kgYear) + ' tree' +
+            (trees(kgYear) === 1 ? '' : 's') +
+            ' · the screen you watch on matters more than the resolution setting',
+          rows: rows,
+          chart: [
+            { label: 'Your annual streaming CO₂ (kg)', value: Math.round(kgYear), tone: 'main' },
+            { label: 'What HD instead of 4K would save (kg)', value: Math.round(saving), tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'pet') {
+        const kind = String(v.pet || 'dog');
+        const lb = Math.max(1, v.petweight || 1);
+        const kgBody = lb * KG_PER_LB;
+        const factor = PET_KG_PER_KG_YEAR[kind] || PET_KG_PER_KG_YEAR.dog;
+        const kgYear = kgBody * factor;
+        const rows = [
+          { k: 'Body weight', ref: n0(lb) + ' lb', v: kgBody, format: 'unit', unit: 'kg', decimals: 1 },
+          { k: 'Emission factor', ref: kind === 'dog' ? 'Dog — higher food volume' : 'Cat', v: factor, format: 'unit', unit: 'kg CO₂/kg body/yr' },
+          { k: 'Annual footprint', ref: 'Body weight × factor', v: kgYear, format: 'unit', unit: 'kg CO₂', extra: true },
+          { k: 'In US tons', ref: '2,000 lb per ton', v: kgYear / KG_PER_TON, format: 'unit', unit: 'tons', decimals: 2 },
+          { k: 'Trees to offset a year', ref: TREE_KG_PER_YEAR + ' kg per tree per year', v: trees(kgYear), format: 'plain', extra: true },
+          { k: 'Over a 12-year lifespan', ref: 'Cumulative', v: kgYear * 12, format: 'unit', unit: 'kg CO₂' },
+          { k: 'Share of it that is the food', ref: 'Diet dominates every published estimate', v: 90, format: 'unit', unit: '% (approx.)' },
+        ];
+        return {
+          total: n0(kgYear) + ' kg CO₂/yr',
+          sub:
+            (kgYear / KG_PER_TON).toFixed(2) + ' US tons a year · about ' + trees(kgYear) + ' trees · ' +
+            'almost all of it is the meat in the food, so published estimates for pets vary by an order of magnitude',
+          rows: rows,
+          chart: [
+            { label: 'Food-related emissions (kg)', value: Math.round(kgYear * 0.9), tone: 'main' },
+            { label: 'Everything else — litter, toys, vet (kg)', value: Math.round(kgYear * 0.1), tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'event') {
+        const guests = Math.max(0, Math.round(v.guests || 0));
+        const kg = guests * EVENT_KG_PER_GUEST;
+        const rows = [
+          { k: 'Guests', ref: 'As entered', v: guests, format: 'plain' },
+          { k: 'Emission factor per guest', ref: 'Travel, catering and venue combined', v: EVENT_KG_PER_GUEST, format: 'unit', unit: 'kg CO₂' },
+          { k: 'Total footprint', ref: 'Guests × factor', v: kg, format: 'unit', unit: 'kg CO₂', extra: true },
+          { k: 'In US tons', ref: '2,000 lb per ton', v: kg / KG_PER_TON, format: 'unit', unit: 'tons', decimals: 1 },
+          { k: 'Trees to offset a year', ref: TREE_KG_PER_YEAR + ' kg per tree per year', v: trees(kg), format: 'plain', extra: true },
+          { k: 'What cutting 20 guests would save', ref: 'The list is the lever', v: Math.min(guests, 20) * EVENT_KG_PER_GUEST, format: 'unit', unit: 'kg CO₂' },
+          { k: 'Equivalent economy flight miles', ref: 'For scale', v: kg / FLIGHT_KG_PER_MI.economy, format: 'unit', unit: 'mi' },
+        ];
+        return {
+          total: n0(kg) + ' kg CO₂',
+          sub:
+            (kg / KG_PER_TON).toFixed(1) + ' US tons for ' + guests + ' guests · about ' + n0(trees(kg)) +
+            ' trees · guest travel usually outweighs catering, flowers and venue power put together',
+          rows: rows,
+          chart: [
+            { label: 'Guest travel (kg, typical share)', value: Math.round(kg * 0.6), tone: 'warn' },
+            { label: 'Catering (kg, typical share)', value: Math.round(kg * 0.25), tone: 'main' },
+            { label: 'Venue, decor and the rest (kg)', value: Math.round(kg * 0.15), tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'waste') {
+        const key = String(v.material || 'plastic');
+        const d = DECAY[key] || DECAY.plastic;
+        const lifetimes = d.years / 79;
+        const rows = [
+          { k: 'Material', ref: d.label, v: 0, format: 'plain' },
+          { k: 'Typical time to break down in the open', ref: d.time, v: d.years, format: 'unit', unit: 'years (midpoint)', decimals: d.years < 1 ? 2 : 0, extra: true },
+          { k: 'That is how many human lifetimes', ref: '79 years each', v: lifetimes, format: 'plain', decimals: lifetimes < 1 ? 3 : 1 },
+          {
+            k: 'Where it belongs',
+            ref: d.band === 'fast' ? 'Compost' : d.band === 'mid' ? 'Recycling, if your program takes it' : 'Recycle if possible — landfill otherwise',
+            v: 0,
+            format: 'plain',
+          },
+          { k: 'For comparison: fruit scraps', ref: DECAY.fruit.time, v: DECAY.fruit.years, format: 'unit', unit: 'years', decimals: 2 },
+          { k: 'For comparison: a plastic bottle', ref: DECAY.plastic.time, v: DECAY.plastic.years, format: 'unit', unit: 'years' },
+          { k: 'For comparison: glass', ref: DECAY.glass.time, v: DECAY.glass.years, format: 'unit', unit: 'years' },
+        ];
+        return {
+          total: d.time,
+          sub:
+            d.label + ' · ' +
+            (d.band === 'fast'
+              ? 'fast enough to compost'
+              : d.band === 'mid'
+                ? 'decades — recycle it rather than bin it'
+                : 'longer than a human lifetime, and in a sealed landfill longer still') +
+            ' · plastic fragments into microplastics rather than truly biodegrading',
+          rows: rows,
+          chart: [
+            { label: d.label + ' (years)', value: Math.round(d.years * 100) / 100, tone: d.band === 'fast' ? 'good' : 'bad' },
+            { label: 'A human lifetime (years)', value: 79, tone: 'main' },
+          ],
+        };
+      }
+
+      // flight
+      const miles = Math.max(0, v.miles || 0);
+      const cabin = String(v.cabin || 'economy');
+      const factor = FLIGHT_KG_PER_MI[cabin] || FLIGHT_KG_PER_MI.economy;
+      const kg = miles * factor;
+      const kgRound = kg * 2;
+      const rows = [
+        { k: 'Distance, one way', ref: 'As entered', v: miles, format: 'unit', unit: 'mi' },
+        { k: 'Emission factor', ref: cabin === 'business' ? 'Business — about 3× the floor space of economy' : 'Economy', v: factor, format: 'unit', unit: 'kg CO₂/mi', decimals: 3 },
+        { k: 'One-way footprint', ref: 'Distance × factor', v: kg, format: 'unit', unit: 'kg CO₂', extra: true },
+        { k: 'Round trip', ref: 'Twice the one-way figure', v: kgRound, format: 'unit', unit: 'kg CO₂', extra: true },
+        { k: 'Round trip in US tons', ref: '2,000 lb per ton', v: kgRound / KG_PER_TON, format: 'unit', unit: 'tons', decimals: 2 },
+        { k: 'Trees to offset the round trip', ref: TREE_KG_PER_YEAR + ' kg per tree per year', v: trees(kgRound), format: 'plain', extra: true },
+        { k: 'What the same trip in economy would be', ref: cabin === 'business' ? 'Three times less' : 'You are already in economy', v: miles * FLIGHT_KG_PER_MI.economy * 2, format: 'unit', unit: 'kg CO₂' },
+        { k: 'Including contrail warming, at a 1.9× multiplier', ref: 'CO₂-equivalent, not CO₂ — methodologies differ', v: kgRound * 1.9, format: 'unit', unit: 'kg CO₂e' },
+      ];
+      return {
+        total: n0(kg) + ' kg CO₂',
+        sub:
+          n0(kgRound) + ' kg round trip · about ' + n0(trees(kgRound)) + ' trees for a year · ' +
+          'counting contrails the climate effect is closer to ' + n0(kgRound * 1.9) + ' kg CO₂-equivalent',
+        rows: rows,
+        chart: [
+          { label: 'Outbound leg (kg)', value: Math.round(kg), tone: 'main' },
+          { label: 'Return leg (kg)', value: Math.round(kg), tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

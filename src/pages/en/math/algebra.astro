@@ -1,0 +1,426 @@
+---
+/**
+ * Hub de decisión EN — "How do I solve this equation?"
+ *
+ * audience="US" y lang="en" van literales: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/en/algebra';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline>
+  (function () {
+    const H = window.HC_HUB;
+
+    function n2(x, d) {
+      if (!isFinite(x)) return '∞';
+      return Number(x || 0).toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: d == null ? 4 : d,
+      });
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'quadratic';
+      const a = Number(v.a) || 0;
+      const b = Number(v.b) || 0;
+      const c = Number(v.c) || 0;
+      const d = Number(v.d) || 0;
+      const e = Number(v.e) || 0;
+      const f = Number(v.f) || 0;
+      const n = Math.max(1, Math.floor(Number(v.n) || 1));
+
+      // ── Quadratic ────────────────────────────────────────────────────────
+      if (id === 'quadratic') {
+        if (a === 0) {
+          if (b === 0) {
+            return {
+              total: c === 0 ? 'Any x' : 'No solution',
+              sub: 'With a = 0 and b = 0 the equation reduces to the constant ' + n2(c, 4) + ' = 0.',
+              rows: [{ k: 'Constant term c', ref: 'Nothing left to solve', v: c, format: 'plain', decimals: 4 }],
+              chart: [{ label: 'Degenerate equation', value: 1, tone: 'warn' }],
+              format: 'plain',
+              decimals: 4,
+            };
+          }
+          const xl = -c / b;
+          return {
+            total: 'x = ' + n2(xl, 4),
+            sub: 'With a = 0 this is a straight line, not a quadratic: its single root is x = ' + n2(xl, 4) + '.',
+            rows: [
+              { k: 'Coefficient b', ref: 'Slope of the line', v: b, format: 'plain', decimals: 4 },
+              { k: 'Coefficient c', ref: 'Intercept', v: c, format: 'plain', decimals: 4 },
+              { k: 'Root x = −c ÷ b', ref: 'Linear solution', v: xl, format: 'plain', decimals: 6, extra: true },
+            ],
+            chart: [
+              { label: '|b|, the slope term', value: Math.abs(b), tone: 'main' },
+              { label: '|c|, the constant term', value: Math.abs(c), tone: 'good' },
+            ],
+            format: 'plain',
+            decimals: 4,
+          };
+        }
+        const disc = b * b - 4 * a * c;
+        const vertexX = -b / (2 * a);
+        const vertexY = a * vertexX * vertexX + b * vertexX + c;
+        const rows = [
+          { k: 'Coefficient a (x² term)', ref: a > 0 ? 'Parabola opens upward' : 'Parabola opens downward', v: a, format: 'plain', decimals: 4 },
+          { k: 'Coefficient b (x term)', ref: 'Your input', v: b, format: 'plain', decimals: 4 },
+          { k: 'Coefficient c (constant)', ref: 'Where the curve meets the y-axis', v: c, format: 'plain', decimals: 4 },
+          { k: 'b²', ref: 'First half of the discriminant', v: b * b, format: 'plain', decimals: 4 },
+          { k: '4ac', ref: 'Second half of the discriminant', v: 4 * a * c, format: 'plain', decimals: 4 },
+          { k: 'Discriminant b² − 4ac', ref: disc > 0 ? 'Two distinct real roots' : disc === 0 ? 'One double root' : 'Complex conjugate roots', v: disc, format: 'plain', decimals: 4, extra: true },
+        ];
+        let total, sub, chart;
+        if (disc >= 0) {
+          const root = Math.sqrt(disc);
+          const x1 = (-b + root) / (2 * a);
+          const x2 = (-b - root) / (2 * a);
+          rows.push({ k: '√(b² − 4ac)', ref: 'The ± term', v: root, format: 'plain', decimals: 6 });
+          rows.push({ k: 'Root x₁', ref: '(−b + √D) ÷ 2a', v: x1, format: 'plain', decimals: 6, extra: true });
+          rows.push({ k: 'Root x₂', ref: '(−b − √D) ÷ 2a', v: x2, format: 'plain', decimals: 6, extra: true });
+          rows.push({ k: 'Sum of the roots', ref: 'Must equal −b ÷ a (Vieta)', v: x1 + x2, format: 'plain', decimals: 6 });
+          rows.push({ k: 'Product of the roots', ref: 'Must equal c ÷ a (Vieta)', v: x1 * x2, format: 'plain', decimals: 6 });
+          total = disc === 0 ? 'x = ' + n2(x1, 4) : 'x = ' + n2(x1, 4) + ' or ' + n2(x2, 4);
+          sub =
+            (disc === 0 ? 'One double root' : 'Two distinct real roots') +
+            ' · discriminant ' + n2(disc, 4) + ' · vertex at (' + n2(vertexX, 4) + ', ' + n2(vertexY, 4) + ')';
+        } else {
+          const re = -b / (2 * a);
+          const im = Math.sqrt(-disc) / (2 * a);
+          rows.push({ k: 'Real part of both roots', ref: '−b ÷ 2a', v: re, format: 'plain', decimals: 6, extra: true });
+          rows.push({ k: 'Imaginary part (±)', ref: '√(4ac − b²) ÷ 2a', v: Math.abs(im), format: 'plain', decimals: 6, extra: true });
+          total = 'x = ' + n2(re, 3) + ' ± ' + n2(Math.abs(im), 3) + 'i';
+          sub = 'No real roots: the parabola never reaches the x-axis · discriminant ' + n2(disc, 4) + ' · vertex at (' + n2(vertexX, 4) + ', ' + n2(vertexY, 4) + ')';
+        }
+        rows.push({ k: 'Axis of symmetry / vertex x', ref: '−b ÷ 2a', v: vertexX, format: 'plain', decimals: 6 });
+        rows.push({ k: 'Vertex y (minimum or maximum)', ref: 'Value at the vertex', v: vertexY, format: 'plain', decimals: 6 });
+        chart = [
+          { label: 'b² = ' + n2(b * b, 3), value: Math.abs(b * b), tone: 'main' },
+          { label: '|4ac| = ' + n2(Math.abs(4 * a * c), 3), value: Math.abs(4 * a * c), tone: 4 * a * c > 0 ? 'warn' : 'good' },
+        ];
+        return { total: total, sub: sub, rows: rows, chart: chart, format: 'plain', decimals: 4 };
+      }
+
+      // ── 2×2 linear system, Cramer's rule ─────────────────────────────────
+      if (id === 'system') {
+        const det = a * d - b * c;
+        const detX = e * d - b * f;
+        const detY = a * f - e * c;
+        if (Math.abs(det) < 1e-10) {
+          return {
+            total: 'No unique solution',
+            sub: 'The determinant ad − bc is zero, so the two lines are parallel or identical.',
+            rows: [
+              { k: 'ad', ref: 'First diagonal product', v: a * d, format: 'plain', decimals: 4 },
+              { k: 'bc', ref: 'Second diagonal product', v: b * c, format: 'plain', decimals: 4 },
+              { k: 'Determinant ad − bc', ref: 'Zero means singular', v: det, format: 'plain', decimals: 6, extra: true },
+            ],
+            chart: [
+              { label: '|ad|', value: Math.abs(a * d), tone: 'main' },
+              { label: '|bc|', value: Math.abs(b * c), tone: 'warn' },
+            ],
+            format: 'plain',
+            decimals: 4,
+          };
+        }
+        const x = detX / det;
+        const y = detY / det;
+        return {
+          total: 'x = ' + n2(x, 4) + ', y = ' + n2(y, 4),
+          sub:
+            'Unique solution · determinant ' + n2(det, 4) + ' · check: ' +
+            n2(a * x + b * y, 4) + ' should equal ' + n2(e, 4) + ' and ' + n2(c * x + d * y, 4) + ' should equal ' + n2(f, 4),
+          rows: [
+            { k: 'ad', ref: 'First diagonal product', v: a * d, format: 'plain', decimals: 4 },
+            { k: 'bc', ref: 'Second diagonal product', v: b * c, format: 'plain', decimals: 4 },
+            { k: 'Main determinant D = ad − bc', ref: 'Nonzero, so one solution exists', v: det, format: 'plain', decimals: 6 },
+            { k: 'Dx = ed − bf', ref: 'First column replaced', v: detX, format: 'plain', decimals: 6 },
+            { k: 'Dy = af − ec', ref: 'Second column replaced', v: detY, format: 'plain', decimals: 6 },
+            { k: 'x = Dx ÷ D', ref: 'Answer', v: x, format: 'plain', decimals: 6, extra: true },
+            { k: 'y = Dy ÷ D', ref: 'Answer', v: y, format: 'plain', decimals: 6, extra: true },
+            { k: 'Check: ax + by', ref: 'Should equal e = ' + n2(e, 4), v: a * x + b * y, format: 'plain', decimals: 6 },
+            { k: 'Check: cx + dy', ref: 'Should equal f = ' + n2(f, 4), v: c * x + d * y, format: 'plain', decimals: 6 },
+          ],
+          chart: [
+            { label: '|ad| = ' + n2(Math.abs(a * d), 3), value: Math.abs(a * d), tone: 'main' },
+            { label: '|bc| = ' + n2(Math.abs(b * c), 3), value: Math.abs(b * c), tone: 'good' },
+          ],
+          format: 'plain',
+          decimals: 4,
+        };
+      }
+
+      // ── 2×2 matrix: determinant and inverse ──────────────────────────────
+      if (id === 'matrix') {
+        const det = a * d - b * c;
+        const trace = a + d;
+        const rows = [
+          { k: 'Top row entries a, b', ref: n2(a, 4) + ' and ' + n2(b, 4), v: a, format: 'plain', decimals: 4 },
+          { k: 'Bottom row entries c, d', ref: n2(c, 4) + ' and ' + n2(d, 4), v: d, format: 'plain', decimals: 4 },
+          { k: 'ad', ref: 'Main diagonal product', v: a * d, format: 'plain', decimals: 4 },
+          { k: 'bc', ref: 'Anti-diagonal product', v: b * c, format: 'plain', decimals: 4 },
+          { k: 'Determinant ad − bc', ref: 'Area scale factor of the transformation', v: det, format: 'plain', decimals: 6, extra: true },
+          { k: 'Trace a + d', ref: 'Sum of the eigenvalues', v: trace, format: 'plain', decimals: 4 },
+        ];
+        const eigDisc = trace * trace - 4 * det;
+        if (eigDisc >= 0) {
+          rows.push({ k: 'Eigenvalue λ₁', ref: '(trace + √(trace² − 4·det)) ÷ 2', v: (trace + Math.sqrt(eigDisc)) / 2, format: 'plain', decimals: 6 });
+          rows.push({ k: 'Eigenvalue λ₂', ref: '(trace − √(trace² − 4·det)) ÷ 2', v: (trace - Math.sqrt(eigDisc)) / 2, format: 'plain', decimals: 6 });
+        }
+        if (Math.abs(det) < 1e-10) {
+          return {
+            total: 'Singular — no inverse',
+            sub: 'The determinant is zero: the rows are linearly dependent and the matrix collapses the plane onto a line.',
+            rows: rows,
+            chart: [
+              { label: '|ad|', value: Math.abs(a * d), tone: 'main' },
+              { label: '|bc|', value: Math.abs(b * c), tone: 'warn' },
+            ],
+            format: 'plain',
+            decimals: 4,
+          };
+        }
+        const k = 1 / det;
+        rows.push({ k: 'Inverse entry (1,1) = d ÷ det', ref: 'Adjugate ÷ determinant', v: d * k, format: 'plain', decimals: 6, extra: true });
+        rows.push({ k: 'Inverse entry (1,2) = −b ÷ det', ref: 'Adjugate ÷ determinant', v: -b * k, format: 'plain', decimals: 6, extra: true });
+        rows.push({ k: 'Inverse entry (2,1) = −c ÷ det', ref: 'Adjugate ÷ determinant', v: -c * k, format: 'plain', decimals: 6, extra: true });
+        rows.push({ k: 'Inverse entry (2,2) = a ÷ det', ref: 'Adjugate ÷ determinant', v: a * k, format: 'plain', decimals: 6, extra: true });
+        return {
+          total: 'det = ' + n2(det, 4),
+          sub:
+            'Invertible · inverse = [[' + n2(d * k, 4) + ', ' + n2(-b * k, 4) + '], [' + n2(-c * k, 4) + ', ' + n2(a * k, 4) + ']]' +
+            (det < 0 ? ' · the negative determinant means the transformation flips orientation' : ''),
+          rows: rows,
+          chart: [
+            { label: '|ad| = ' + n2(Math.abs(a * d), 3), value: Math.abs(a * d), tone: 'main' },
+            { label: '|bc| = ' + n2(Math.abs(b * c), 3), value: Math.abs(b * c), tone: 'good' },
+          ],
+          format: 'plain',
+          decimals: 4,
+        };
+      }
+
+      // ── Logarithm in any base ────────────────────────────────────────────
+      if (id === 'log') {
+        const x = e;
+        const base = d === 0 ? 10 : d;
+        if (x <= 0 || base <= 0 || base === 1) {
+          return {
+            total: 'Undefined',
+            sub: 'The domain is strict: x must be greater than 0, and the base must be positive and different from 1.',
+            rows: [
+              { k: 'x (box e)', ref: 'Must be > 0', v: x, format: 'plain', decimals: 4 },
+              { k: 'Base (box d)', ref: 'Must be > 0 and ≠ 1', v: base, format: 'plain', decimals: 4 },
+            ],
+            chart: [{ label: 'Outside the domain', value: 1, tone: 'warn' }],
+            format: 'plain',
+            decimals: 4,
+          };
+        }
+        const l = Math.log(x) / Math.log(base);
+        const whole = Math.floor(l);
+        const frac = l - whole;
+        return {
+          total: 'log' + '_' + n2(base, 4) + '(' + n2(x, 4) + ') = ' + n2(l, 4),
+          sub:
+            n2(base, 4) + ' raised to ' + n2(l, 4) + ' gives ' + n2(x, 4) +
+            ' · the base fits ' + whole + ' whole times, with ' + n2(frac * 100, 1) + '% of another left over',
+          rows: [
+            { k: 'x — the number', ref: 'Box e', v: x, format: 'plain', decimals: 6 },
+            { k: 'Base b', ref: 'Box d', v: base, format: 'plain', decimals: 6 },
+            { k: 'ln(x)', ref: 'Natural log of the number', v: Math.log(x), format: 'plain', decimals: 6 },
+            { k: 'ln(base)', ref: 'Natural log of the base', v: Math.log(base), format: 'plain', decimals: 6 },
+            { k: 'log_b(x) = ln(x) ÷ ln(b)', ref: 'Change of base formula', v: l, format: 'plain', decimals: 6, extra: true },
+            { k: 'Whole part', ref: 'Complete times the base fits', v: whole, format: 'plain', decimals: 0 },
+            { k: 'Fractional part', ref: 'The leftover exponent', v: frac, format: 'plain', decimals: 6 },
+            { k: 'Same number in base 10 (log₁₀)', ref: 'Roughly the digit count', v: Math.log10(x), format: 'plain', decimals: 6 },
+            { k: 'Same number in base 2 (log₂)', ref: 'Roughly the bit count', v: Math.log2(x), format: 'plain', decimals: 6 },
+            { k: 'Same number in base e (ln)', ref: 'Natural logarithm', v: Math.log(x), format: 'plain', decimals: 6 },
+          ],
+          chart: [
+            { label: 'Whole part of the exponent (' + whole + ')', value: Math.abs(whole), tone: 'main' },
+            { label: 'Fractional part (' + n2(frac, 3) + ')', value: Math.abs(frac), tone: 'good' },
+          ],
+          format: 'plain',
+          decimals: 4,
+        };
+      }
+
+      // ── Arithmetic sequence ──────────────────────────────────────────────
+      if (id === 'sequence') {
+        const a1 = a;
+        const diff = b;
+        const an = a1 + (n - 1) * diff;
+        const sn = (n * (a1 + an)) / 2;
+        const fromStart = n * a1;
+        const fromSteps = sn - fromStart;
+        return {
+          total: 'a' + n + ' = ' + n2(an, 4),
+          sub:
+            'Starting at ' + n2(a1, 4) + ' and ' + (diff > 0 ? 'adding ' : diff < 0 ? 'subtracting ' : 'adding ') + n2(Math.abs(diff), 4) +
+            ' each step, term ' + n + ' is ' + n2(an, 4) + ' and the first ' + n + ' terms add up to ' + n2(sn, 4),
+          rows: [
+            { k: 'First term a₁', ref: 'Coefficient a', v: a1, format: 'plain', decimals: 4 },
+            { k: 'Common difference d', ref: 'Coefficient b', v: diff, format: 'plain', decimals: 4 },
+            { k: 'Term number n', ref: 'Your input', v: n, format: 'plain', decimals: 0 },
+            { k: 'Steps applied (n − 1)', ref: 'The first term has had none', v: n - 1, format: 'plain', decimals: 0 },
+            { k: 'nth term aₙ = a₁ + (n−1)d', ref: 'Answer', v: an, format: 'plain', decimals: 6, extra: true },
+            { k: 'Sum Sₙ = n(a₁ + aₙ) ÷ 2', ref: 'Answer', v: sn, format: 'plain', decimals: 6, extra: true },
+            { k: 'Average term', ref: 'Sₙ ÷ n — exactly midway between a₁ and aₙ', v: sn / n, format: 'plain', decimals: 6 },
+            { k: 'Total if nothing had been added', ref: 'n × a₁', v: fromStart, format: 'plain', decimals: 6 },
+            { k: 'Total contributed by the increments', ref: 'd × n(n−1) ÷ 2', v: fromSteps, format: 'plain', decimals: 6 },
+          ],
+          chart: [
+            { label: 'The starting term repeated n times (' + n2(fromStart, 2) + ')', value: Math.abs(fromStart), tone: 'main' },
+            { label: 'What the increments added (' + n2(fromSteps, 2) + ')', value: Math.abs(fromSteps), tone: diff < 0 ? 'warn' : 'good' },
+          ],
+          format: 'plain',
+          decimals: 4,
+        };
+      }
+
+      // ── GCD and LCM ──────────────────────────────────────────────────────
+      if (id === 'gcd') {
+        let A = Math.abs(Math.floor(a));
+        let B = Math.abs(Math.floor(b));
+        if (A === 0 || B === 0) {
+          return {
+            total: 'Undefined',
+            sub: 'Both numbers have to be non-zero whole numbers for the GCD and LCM to be defined.',
+            rows: [
+              { k: 'First number', ref: 'Floored absolute value', v: A, format: 'plain', decimals: 0 },
+              { k: 'Second number', ref: 'Floored absolute value', v: B, format: 'plain', decimals: 0 },
+            ],
+            chart: [{ label: 'No valid pair', value: 1, tone: 'warn' }],
+            format: 'plain',
+            decimals: 0,
+          };
+        }
+        let x = A, y = B, steps = 0;
+        while (y) { const t = y; y = x % y; x = t; steps++; }
+        const g = x;
+        const lcm = (A * B) / g;
+        const a2 = A / g;
+        const b2 = B / g;
+        return {
+          total: 'GCD ' + g.toLocaleString('en-US') + ' · LCM ' + lcm.toLocaleString('en-US'),
+          sub:
+            (g === 1 ? A + ' and ' + B + ' are coprime — they share no prime factor' : A + ' and ' + B + ' share a factor of ' + g) +
+            ' · GCD × LCM = ' + (g * lcm).toLocaleString('en-US') + ', which equals a × b',
+          rows: [
+            { k: 'First number', ref: 'Floored absolute value', v: A, format: 'plain', decimals: 0 },
+            { k: 'Second number', ref: 'Floored absolute value', v: B, format: 'plain', decimals: 0 },
+            { k: 'Euclidean algorithm steps', ref: 'Divisions until the remainder is 0', v: steps, format: 'plain', decimals: 0 },
+            { k: 'Greatest common divisor', ref: 'Last non-zero remainder', v: g, format: 'plain', decimals: 0, extra: true },
+            { k: 'Least common multiple', ref: '|a × b| ÷ GCD', v: lcm, format: 'plain', decimals: 0, extra: true },
+            { k: 'Product a × b', ref: 'Always equals GCD × LCM', v: A * B, format: 'plain', decimals: 0 },
+            { k: 'First number reduced (a ÷ GCD)', ref: 'Numerator in lowest terms', v: a2, format: 'plain', decimals: 0 },
+            { k: 'Second number reduced (b ÷ GCD)', ref: 'Denominator in lowest terms', v: b2, format: 'plain', decimals: 0 },
+          ],
+          chart: [
+            { label: 'Shared factor (GCD = ' + g + ')', value: g, tone: 'main' },
+            { label: 'What is left of a (' + a2 + ')', value: a2, tone: 'good' },
+            { label: 'What is left of b (' + b2 + ')', value: b2, tone: 'prop' },
+          ],
+          format: 'plain',
+          decimals: 0,
+        };
+      }
+
+      // ── Indefinite integral of a polynomial ──────────────────────────────
+      const cs = String(v.coefs == null ? '' : v.coefs)
+        .split(/[,;\s]+/)
+        .filter((t) => t.length > 0)
+        .map(Number)
+        .filter((t) => isFinite(t));
+      if (cs.length === 0) {
+        return {
+          total: '—',
+          sub: 'Enter the polynomial coefficients, highest power first, separated by commas.',
+          rows: [{ k: 'Coefficients found', ref: 'Parsed', v: 0, format: 'plain', decimals: 0 }],
+          chart: [{ label: 'No polynomial', value: 1, tone: 'warn' }],
+          format: 'plain',
+          decimals: 0,
+        };
+      }
+      const deg = cs.length - 1;
+      const rows = [];
+      const chart = [];
+      const terms = [];
+      cs.forEach(function (coef, i) {
+        const power = deg - i;
+        const newPower = power + 1;
+        const newCoef = coef / newPower;
+        rows.push({
+          k: 'Term ' + n2(coef, 4) + 'x^' + power + ' → ' + n2(newCoef, 4) + 'x^' + newPower,
+          ref: 'Coefficient ÷ ' + newPower,
+          v: newCoef,
+          format: 'plain',
+          decimals: 6,
+        });
+        if (newCoef !== 0) {
+          terms.push((newCoef < 0 ? '− ' : terms.length ? '+ ' : '') + n2(Math.abs(newCoef), 4) + 'x^' + newPower);
+          chart.push({ label: '|coefficient| of x^' + newPower, value: Math.abs(newCoef), tone: chart.length === 0 ? 'main' : chart.length === 1 ? 'good' : 'prop' });
+        }
+      });
+      const expr = (terms.join(' ') || '0') + ' + C';
+      rows.push({ k: 'Degree of the original polynomial', ref: 'Highest power in', v: deg, format: 'plain', decimals: 0 });
+      rows.push({ k: 'Degree of the antiderivative', ref: 'One higher, always', v: deg + 1, format: 'plain', decimals: 0, extra: true });
+      return {
+        total: '∫ = ' + expr,
+        sub:
+          'Every exponent went up by one and each coefficient was divided by its new exponent · the + C stands for the whole family of parallel curves',
+        rows: rows,
+        chart: chart.length ? chart : [{ label: 'All coefficients are zero', value: 1, tone: 'warn' }],
+        format: 'plain',
+        decimals: 4,
+      };
+    });
+  })();
+</script>

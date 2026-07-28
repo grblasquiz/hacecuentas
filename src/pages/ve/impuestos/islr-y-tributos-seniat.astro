@@ -1,0 +1,248 @@
+---
+/**
+ * Hub de decisión VE — "Cuánto le debo al SENIAT".
+ * El compute() replica las fórmulas vivas de ISLR anual, retención de ISLR sobre
+ * sueldos, retención de IVA, IGTF, conversión U.T. ↔ Bs., INCES y sucesiones.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, TARIFA_1, ISLR, OTROS_TRIBUTOS, SUCESIONES } from '../../../lib/hubs/ve/islr-y-tributos-seniat';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="VE"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ TARIFA: TARIFA_1, I: ISLR, T: OTROS_TRIBUTOS, SUC: SUCESIONES }}>
+  (function () {
+    const H = window.HC_HUB;
+    const bs = (n) =>
+      'Bs. ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 }).format(Math.round((n || 0) * 100) / 100);
+
+    /**
+     * Tarifa N° 1 (Art. 50 Ley de ISLR): impuesto en U.T. = base × tasa − sustraendo.
+     * Devuelve además el tramo aplicado. Espejo del helper islrAnualVes.
+     */
+    function tarifa1(baseUt) {
+      for (const t of TARIFA) {
+        const hasta = t.hastaUt === null ? Infinity : t.hastaUt;
+        if (baseUt <= hasta) return { impuestoUt: baseUt * t.tasa - t.sustraendoUt, tramo: t };
+      }
+      const ult = TARIFA[TARIFA.length - 1];
+      return { impuestoUt: baseUt * ult.tasa - ult.sustraendoUt, tramo: ult };
+    }
+
+    /** ISLR anual en Bs. a partir del neto gravable en Bs., ya restadas las rebajas. */
+    function islrAnual(netoGravableBs, valorUt, cargas) {
+      const baseUt = netoGravableBs / valorUt;
+      if (baseUt <= 0) return { impuesto: 0, baseUt: 0, marginal: 0 };
+      const r = tarifa1(baseUt);
+      const rebajaUt = I.rebajaPersonalUt + cargas * I.rebajaCargaFamiliarUt;
+      const impuestoUt = Math.max(0, r.impuestoUt - rebajaUt);
+      return { impuesto: impuestoUt * valorUt, baseUt: baseUt, marginal: r.tramo.tasa * 100 };
+    }
+
+    /** Escala marginal por tramos del impuesto sucesoral (Art. 7). */
+    function sucesoralUt(baseUt, tramos) {
+      let restante = baseUt;
+      let previo = 0;
+      let impuesto = 0;
+      for (const t of tramos) {
+        if (restante <= 0) break;
+        const hasta = t.hastaUt === null ? Infinity : t.hastaUt;
+        const porcion = Math.min(restante, hasta - previo);
+        impuesto += porcion * t.tasa;
+        restante -= porcion;
+        previo = hasta;
+      }
+      return impuesto;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'islr';
+
+      const ut = Math.max(0.01, v.valorUt || 0.01);
+      const enriquecimiento = Math.max(0, v.enriquecimientoAnual || 0);
+      const salarioMensual = Math.max(0, v.salarioMensual || 0);
+      const cargas = Math.max(0, Math.round(v.cargas || 0));
+      const aplicaDesgravamen = String(v.desgravamen || 'si') !== 'no';
+      const baseIva = Math.max(0, v.baseIva || 0);
+      const alicuota = String(v.alicuotaIva || 'general') === 'reducida' ? T.ivaReducida : T.iva;
+      const pctIva = String(v.pctRetencionIva || '75') === '100' ? 100 : 75;
+      const pagoDivisas = Math.max(0, v.pagoDivisas || 0);
+      const sueldosTrim = Math.max(0, v.sueldosTrimestre || 0);
+      const liquido = Math.max(0, v.liquidoHereditario || 0);
+      const grupoKey = SUC[String(v.parentesco || 'grupo1')] ? String(v.parentesco) : 'grupo1';
+      const grupo = SUC[grupoKey];
+
+      // ── ISLR anual.
+      const desgravamenBs = aplicaDesgravamen ? I.desgravamenUnicoUt * ut : 0;
+      const netoGravable = Math.max(0, enriquecimiento - desgravamenBs);
+      const r = islrAnual(netoGravable, ut, cargas);
+      const islrBs = r.impuesto;
+      const efectiva = enriquecimiento > 0 ? (islrBs / enriquecimiento) * 100 : 0;
+      const rebajasBs = (I.rebajaPersonalUt + cargas * I.rebajaCargaFamiliarUt) * ut;
+
+      // ── Retención mensual sobre el sueldo (Decreto 1.808).
+      const proyeccionAnual = salarioMensual * 12;
+      const netoGravableSueldo = Math.max(0, proyeccionAnual - I.desgravamenUnicoUt * ut);
+      const islrSueldo = islrAnual(netoGravableSueldo, ut, cargas).impuesto;
+      const retencionMensual = islrSueldo / 12;
+      const pctRetencion = salarioMensual > 0 ? (retencionMensual / salarioMensual) * 100 : 0;
+
+      // ── IVA y su retención.
+      const iva = baseIva * alicuota;
+      const retencionIva = iva * (pctIva / 100);
+      const aPagarProveedor = baseIva + iva - retencionIva;
+
+      // ── IGTF.
+      const igtf = pagoDivisas * T.igtf;
+
+      // ── INCES.
+      const incesPatronal = sueldosTrim * T.incesPatronal;
+
+      // ── Sucesiones.
+      const baseUtSuc = liquido / ut;
+      const impSucBs = sucesoralUt(baseUtSuc, grupo.tramos) * ut;
+      const efectivaSuc = liquido > 0 ? (impSucBs / liquido) * 100 : 0;
+
+      const rows = [
+        { k: 'Valor de la Unidad Tributaria', ref: 'Providencia SNAT vigente', v: ut },
+        { k: 'Enriquecimiento neto anual', ref: 'Declarado', v: enriquecimiento },
+        {
+          k: aplicaDesgravamen ? 'Desgravamen único (se resta)' : 'Desgravamen único no aplicado',
+          ref: I.desgravamenUnicoUt + ' U.T.',
+          v: desgravamenBs,
+        },
+        { k: 'Neto gravable', ref: 'Base de la Tarifa N° 1', v: netoGravable },
+        {
+          k: 'Neto gravable en U.T.',
+          ref: 'Como lo lee la ley',
+          v: r.baseUt,
+          format: 'unit',
+          unit: 'U.T.',
+          decimals: 1,
+        },
+        {
+          k: 'Tramo marginal de la Tarifa N° 1',
+          ref: 'Art. 50 Ley de ISLR',
+          v: r.marginal,
+          format: 'unit',
+          unit: '%',
+        },
+        { k: 'Rebajas personales y por cargas', ref: I.rebajaPersonalUt + ' U.T. + ' + cargas + ' × ' + I.rebajaCargaFamiliarUt + ' U.T.', v: rebajasBs },
+        { k: 'ISLR anual a pagar', ref: 'Tarifa N° 1 menos rebajas', v: islrBs, extra: true },
+        {
+          k: 'Tasa efectiva sobre tu enriquecimiento',
+          ref: 'Impuesto ÷ enriquecimiento',
+          v: efectiva,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        },
+        { k: 'Retención mensual estimada sobre el sueldo', ref: 'Proyección anual ÷ 12 · Decreto 1.808', v: retencionMensual },
+        {
+          k: 'Porcentaje de retención sobre tu sueldo',
+          ref: 'Lo que declarás en el AR-I',
+          v: pctRetencion,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        },
+        { k: 'IVA de la factura', ref: (alicuota * 100).toLocaleString('es-VE') + '% sobre la base', v: iva },
+        { k: 'IVA que retenés como agente', ref: pctIva + '% del IVA · providencia SENIAT', v: retencionIva },
+        { k: 'A pagar al proveedor', ref: 'Factura menos la retención', v: aPagarProveedor },
+        { k: 'IGTF sobre el pago en divisas', ref: T.igtf * 100 + '% · calculado en USD', v: igtf, format: 'unit', unit: 'USD', decimals: 2 },
+      ];
+
+      if (sueldosTrim > 0) {
+        rows.push({ k: 'Aporte patronal INCES del trimestre', ref: T.incesPatronal * 100 + '% de los sueldos · Art. 14', v: incesPatronal });
+      }
+      if (liquido > 0) {
+        rows.push({
+          k: 'Cuota hereditaria en U.T.',
+          ref: grupo.label,
+          v: baseUtSuc,
+          format: 'unit',
+          unit: 'U.T.',
+          decimals: 1,
+        });
+        rows.push({ k: 'Impuesto sucesoral estimado', ref: 'Escala referencial del Art. 7', v: impSucBs, extra: true });
+        rows.push({
+          k: 'Tasa efectiva de la sucesión',
+          ref: 'Impuesto ÷ cuota líquida',
+          v: efectivaSuc,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        rows.push({ k: 'Neto que recibe el heredero', ref: 'Antes de desgravámenes y exenciones', v: liquido - impSucBs });
+      }
+
+      const total =
+        id === 'retencion' ? retencionMensual
+        : id === 'iva' ? retencionIva
+        : id === 'igtf' ? igtf
+        : id === 'sucesion' ? impSucBs
+        : islrBs;
+
+      const sub =
+        'U.T. ' + bs(ut) + ' · base ' + r.baseUt.toFixed(0) + ' U.T. (tramo del ' + r.marginal + '%) · tasa efectiva ' +
+        efectiva.toFixed(2).replace('.', ',') + '%' +
+        (id === 'retencion' ? ' · retención mensual ' + pctRetencion.toFixed(2).replace('.', ',') + '% del sueldo' : '');
+
+      // Solo el desgravamen sale de la BASE; las rebajas se restan del impuesto ya calculado.
+      const fuera = Math.round(Math.min(desgravamenBs, enriquecimiento));
+
+      return {
+        total: id === 'igtf' ? '$ ' + igtf.toFixed(2).replace('.', ',') : bs(total),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Fuera del impuesto (desgravamen y rebajas)', value: fuera, tone: 'good' },
+          { label: 'Renta gravada que te queda', value: Math.max(0, Math.round(netoGravable - islrBs)), tone: 'main' },
+          { label: 'ISLR liquidado', value: Math.round(islrBs), tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

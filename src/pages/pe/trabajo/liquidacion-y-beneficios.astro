@@ -1,0 +1,213 @@
+---
+/**
+ * Hub de decisión PE — "Me voy o me despiden: ¿cuánto me tienen que pagar?".
+ * audience="PE" literal: HubData sólo modela 'AR' | 'global' y el mercado viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  RMV,
+  ASIGNACION_FAMILIAR,
+  BONIF_GRATI,
+  BONIF_GRATI_EPS,
+  INDEM_POR_ANIO,
+  INDEM_TOPE_REM,
+  PERIODO_PRUEBA_MESES,
+} from '../../../lib/hubs/pe/liquidacion-y-beneficios';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PE"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    RMV,
+    ASIGNACION_FAMILIAR,
+    BONIF_GRATI,
+    BONIF_GRATI_EPS,
+    INDEM_POR_ANIO,
+    INDEM_TOPE_REM,
+    PERIODO_PRUEBA_MESES,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    // 'es-PE' en V8 emite formato tipo US; el formato legal peruano (Ley 23560) es
+    // punto para miles y coma para decimales, que es lo que da 'de-DE'.
+    const sol = (n) => 'S/ ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(Math.round(n || 0));
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'renuncia';
+
+      const sueldo = Math.max(0, v.sueldo || 0);
+      const conHijos = String(v.hijos || 'no') === 'si';
+      const conEps = String(v.eps || 'no') === 'si';
+      const anios = Math.max(0, Math.min(50, Math.round(v.anios || 0)));
+      const mesesExtra = Math.max(0, Math.min(11, Math.round(v.mesesExtra || 0)));
+      const mesesSem = Math.max(0, Math.min(6, Math.round(v.mesesSemestre || 0)));
+      const diasSem = Math.max(0, Math.min(29, Math.round(v.diasSemestre || 0)));
+      const diasVac = Math.max(0, Math.min(90, Math.round(v.diasVac || 0)));
+      const mesesFaltantes = Math.max(0, Math.min(60, Math.round(v.mesesFaltantes || 0)));
+
+      const asignacion = conHijos ? ASIGNACION_FAMILIAR : 0;
+      const rem = sueldo + asignacion;
+
+      // CTS: base = remuneración computable + 1/6 de la última gratificación (que es
+      // una remuneración computable). Un doceavo por mes y un treintavo de ese doceavo por día.
+      const baseCts = rem + rem / 6;
+      const cts = (baseCts / 12) * mesesSem + (baseCts / 360) * diasSem;
+
+      // Gratificación trunca: meses completos del semestre / 6, más la bonificación
+      // extraordinaria de la Ley 30334 (9% con EsSalud, 6,75% con EPS).
+      const tasaBonif = conEps ? BONIF_GRATI_EPS : BONIF_GRATI;
+      const grati = rem * (mesesSem / 6);
+      const bonif = grati * tasaBonif;
+
+      // Vacaciones truncas: los 30 días de descanso valen una remuneración,
+      // así que cada día pendiente vale un treintavo.
+      const vacaciones = (rem / 30) * diasVac;
+
+      // Indemnización según el motivo del cese.
+      const tope = rem * INDEM_TOPE_REM;
+      let indemBruta = 0;
+      let refIndem = 'No corresponde en este caso';
+      if (id === 'arbitrario') {
+        indemBruta = rem * INDEM_POR_ANIO * (anios + mesesExtra / 12);
+        refIndem = 'Art. 38 D.S. 003-97-TR · 1,5 rem. por año';
+      } else if (id === 'plazo') {
+        indemBruta = rem * INDEM_POR_ANIO * mesesFaltantes;
+        refIndem = 'Art. 76 D.S. 003-97-TR · 1,5 rem. por mes que falta';
+      }
+      const aplicaTope = indemBruta > tope;
+      const indemnizacion = aplicaTope ? tope : indemBruta;
+
+      const truncos = cts + grati + bonif + vacaciones;
+      const total = truncos + indemnizacion;
+
+      const antiguedadMeses = anios * 12 + mesesExtra;
+
+      const rows = [
+        { k: 'Remuneración computable del cálculo', ref: conHijos ? 'Sueldo + asignación familiar' : 'Sueldo mensual', v: rem },
+      ];
+      if (asignacion > 0) {
+        rows.push({ k: 'Asignación familiar incluida en la base', ref: '10% de la RMV · monto fijo', v: asignacion });
+      }
+      rows.push({ k: 'Base de cálculo de la CTS', ref: 'Remuneración + 1/6 de gratificación', v: baseCts });
+      rows.push({
+        k: 'CTS trunca del semestre',
+        ref: 'D.S. 001-97-TR · ' + mesesSem + ' meses' + (diasSem ? ' y ' + diasSem + ' días' : ''),
+        v: cts,
+      });
+      rows.push({ k: 'Gratificación trunca', ref: 'Ley 27735 · ' + mesesSem + '/6 del semestre', v: grati });
+      rows.push({
+        k: 'Bonificación extraordinaria sobre la gratificación',
+        ref: 'Ley 30334 · ' + (tasaBonif * 100).toFixed(2).replace('.', ',').replace(',00', '') + '%' + (conEps ? ' (EPS)' : ''),
+        v: bonif,
+      });
+      rows.push({ k: 'Vacaciones truncas', ref: diasVac + ' días × un treintavo de la remuneración', v: vacaciones });
+      rows.push({ k: 'Subtotal de beneficios truncos', ref: 'Se pagan renuncies o te despidan', v: truncos, extra: id === 'renuncia' || id === 'prueba' });
+      rows.push({
+        k: 'Indemnización',
+        ref: refIndem,
+        v: indemnizacion,
+        extra: indemnizacion > 0,
+      });
+      if (aplicaTope) {
+        rows.push({ k: 'Tope legal aplicado', ref: '12 remuneraciones · art. 38 y 76', v: tope });
+        rows.push({ k: 'Lo que perdiste por el tope', ref: 'Diferencia contra el cálculo sin límite', v: indemBruta - tope });
+      }
+      rows.push({ k: 'Total de la liquidación', ref: 'Truncos + indemnización', v: total, extra: true });
+      rows.push({
+        k: 'Antigüedad computada',
+        ref: 'Años y meses declarados',
+        v: antiguedadMeses,
+        format: 'unit',
+        unit: 'meses',
+      });
+      rows.push({
+        k: 'Cuántas remuneraciones te llevas',
+        ref: 'Total ÷ remuneración mensual',
+        v: rem > 0 ? total / rem : 0,
+        format: 'unit',
+        unit: 'remuneraciones',
+        decimals: 2,
+      });
+      rows.push({
+        k: 'Días de vacaciones que aún no vencen',
+        ref: 'Cada año completo genera 30 días',
+        v: Math.max(0, 30 - diasVac),
+        format: 'unit',
+        unit: 'días',
+      });
+
+      const enPrueba = id === 'prueba';
+      const sub = (function () {
+        if (id === 'arbitrario') {
+          return 'Beneficios truncos ' + sol(truncos) + ' + indemnización ' + sol(indemnizacion) +
+            (aplicaTope ? ' (topeada en 12 remuneraciones)' : ' por ' + anios + ' año(s) y ' + mesesExtra + ' mes(es)') +
+            ' · tienes 30 días hábiles para accionar';
+        }
+        if (id === 'plazo') {
+          return mesesFaltantes > 0
+            ? 'Truncos ' + sol(truncos) + ' + ' + sol(indemnizacion) + ' por los ' + mesesFaltantes + ' mes(es) que faltaban' + (aplicaTope ? ' (topeado en 12 remuneraciones)' : '')
+            : 'El contrato llegó a su vencimiento: cobras ' + sol(truncos) + ' de beneficios truncos, sin indemnización';
+        }
+        if (enPrueba) {
+          return 'En los primeros ' + PERIODO_PRUEBA_MESES + ' meses no hay indemnización: cobras ' + sol(truncos) + ' de beneficios truncos por el tiempo trabajado';
+        }
+        return 'Al renunciar cobras ' + sol(truncos) + ' de beneficios truncos · sin indemnización · el pago vence a las 48 horas del cese';
+      })();
+
+      const chart = [
+        { label: 'CTS trunca', value: Math.round(cts), tone: 'prop' },
+        { label: 'Gratificación trunca + bonificación', value: Math.round(grati + bonif), tone: 'good' },
+        { label: 'Vacaciones truncas', value: Math.round(vacaciones), tone: 'warn' },
+        { label: 'Indemnización', value: Math.round(indemnizacion), tone: 'main' },
+      ].filter(function (s) { return s.value > 0; });
+
+      return { total: sol(total), sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

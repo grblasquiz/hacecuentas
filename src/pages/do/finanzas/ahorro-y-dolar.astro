@@ -1,0 +1,208 @@
+---
+/**
+ * Hub de decisión DO — "¿Tu plata rinde o sólo aguanta la inflación?".
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub, RETENCION_INTERESES, FX, IPC } from '../../../lib/hubs/do/ahorro-y-dolar';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="DO"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ RET: RETENCION_INTERESES, FX, IPC }}>
+  (function () {
+    const H = window.HC_HUB;
+    const dop = (n) => 'RD$ ' + Math.round(n || 0).toLocaleString('de-DE');
+    const usd = (n) => 'US$ ' + Math.round(n || 0).toLocaleString('de-DE');
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'certificado';
+      const capital = Math.max(0, v.capital || 0);
+      const tasa = Math.max(0, v.tasaAnual || 0);
+      const meses = Math.max(1, v.plazoMeses || 1);
+      const inflacionAnual = Math.max(0, v.inflacion || 0);
+      const tasaDolar = Math.max(0.01, v.tasaDolar || FX.usdMid);
+      const aporte = Math.max(0, v.aporteSan || 0);
+      const participantes = Math.max(2, Math.floor(v.participantesSan || 2));
+      const turno = Math.min(participantes, Math.max(1, Math.floor(v.turnoSan || 1)));
+
+      const anios = meses / 12;
+
+      // Certificado financiero: interés simple sobre el plazo, retención del 10%.
+      const interesBruto = capital * (tasa / 100) * anios;
+      const retencion = interesBruto * RET;
+      const interesNeto = interesBruto - retencion;
+      const montoFinal = capital + interesNeto;
+      const tasaNetaAnual = tasa * (1 - RET);
+
+      // Inflación del período y valor real del monto final.
+      const inflacionPeriodo = Math.pow(1 + inflacionAnual / 100, anios) - 1;
+      const perdidaPoderCompra = capital * inflacionPeriodo;
+      const valorReal = montoFinal / (1 + inflacionPeriodo);
+      const gananciaReal = valorReal - capital;
+      const tasaRealAnual = ((1 + tasaNetaAnual / 100) / (1 + inflacionAnual / 100) - 1) * 100;
+
+      // Dólar: equivalencias con la cotización cargada.
+      const capitalUsd = capital / tasaDolar;
+      const finalUsd = montoFinal / tasaDolar;
+      const capitalEur = FX.eurMid > 0 ? capital / FX.eurMid : 0;
+
+      // San: bolsa, ciclo y rol según el turno.
+      const bolsa = aporte * participantes;
+      const aportadoAntes = aporte * (turno - 1);
+      const adelanto = bolsa - aportadoAntes;
+      const mitad = (participantes + 1) / 2;
+      const rolSan = turno < mitad ? 'préstamo sin interés' : turno > mitad ? 'ahorro forzoso' : 'neutro';
+
+      const rows = [
+        { k: 'Capital colocado', ref: 'Punto de partida', v: capital },
+        { k: 'Interés bruto del período', ref: tasa.toString().replace('.', ',') + '% anual por ' + meses + ' meses', v: interesBruto },
+        {
+          k: 'Retención de ISR sobre los intereses',
+          ref: Math.round(RET * 100) + '% · Norma 07-19, pago único y definitivo',
+          v: retencion,
+        },
+        { k: 'Interés neto que cobrás', ref: 'Bruto − retención', v: interesNeto },
+        { k: 'Monto final al vencimiento', ref: 'Capital + interés neto', v: montoFinal, extra: true },
+        {
+          k: 'Tasa neta anual',
+          ref: 'Nominal menos la retención',
+          v: tasaNetaAnual,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        },
+        {
+          k: 'Inflación acumulada del período',
+          ref: inflacionAnual.toString().replace('.', ',') + '% anual · IPC BCRD ' + IPC.periodo,
+          v: inflacionPeriodo * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        },
+        { k: 'Lo que la inflación se come del capital', ref: 'Si lo dejaras quieto en efectivo', v: perdidaPoderCompra },
+        { k: 'Valor real del monto final', ref: 'En pesos de hoy', v: valorReal },
+        { k: 'Ganancia real sobre el capital', ref: 'Lo que efectivamente subió tu poder de compra', v: gananciaReal, extra: true },
+        {
+          k: 'Tasa real anual',
+          ref: 'Neta ajustada por inflación',
+          v: tasaRealAnual,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        },
+        {
+          k: 'Tu capital en dólares hoy',
+          ref: 'A ' + tasaDolar.toLocaleString('de-DE') + ' RD$ por USD',
+          v: capitalUsd,
+          format: 'unit',
+          unit: 'USD',
+        },
+        {
+          k: 'El monto final en dólares, a la misma tasa',
+          ref: 'Si el peso no se moviera',
+          v: finalUsd,
+          format: 'unit',
+          unit: 'USD',
+        },
+        {
+          k: 'Tu capital en euros',
+          ref: 'Referencia ' + FX.eurMid.toLocaleString('de-DE') + ' RD$ por EUR al ' + FX.fecha,
+          v: capitalEur,
+          format: 'unit',
+          unit: 'EUR',
+        },
+        { k: 'Bolsa del san', ref: participantes + ' participantes × ' + dop(aporte), v: bolsa },
+        {
+          k: 'Lo que llevás aportado cuando cobrás',
+          ref: 'Turno ' + turno + ' de ' + participantes,
+          v: aportadoAntes,
+        },
+        {
+          k: 'Adelanto efectivo que te da el san',
+          ref: 'Bolsa − lo aportado hasta tu turno',
+          v: adelanto,
+        },
+      ];
+
+      let total = montoFinal;
+      let sub =
+        'Tasa neta ' + tasaNetaAnual.toFixed(2).replace('.', ',') + '% frente a una inflación de ' +
+        inflacionAnual.toString().replace('.', ',') + '%: ' +
+        (tasaRealAnual >= 0
+          ? 'ganás ' + tasaRealAnual.toFixed(2).replace('.', ',') + '% real al año'
+          : 'perdés ' + Math.abs(tasaRealAnual).toFixed(2).replace('.', ',') + '% real al año') +
+        ' · en pesos de hoy retirás ' + dop(valorReal);
+
+      if (id === 'san') {
+        total = bolsa;
+        sub = 'Bolsa de ' + dop(bolsa) + ' en el turno ' + turno + ' de ' + participantes +
+          ' · para vos el san funciona como ' + rolSan +
+          ' · el san no genera rendimiento: el certificado de arriba daría ' + dop(interesNeto) + ' netos sobre el mismo capital';
+      } else if (id === 'dolar') {
+        total = capital;
+        sub = 'Tu capital equivale a ' + usd(capitalUsd) + ' a ' + tasaDolar.toLocaleString('de-DE') +
+          ' RD$ por dólar · el billete guardado no genera interés, así que compite contra los ' +
+          dop(interesNeto) + ' netos del certificado';
+      } else if (id === 'inflacion') {
+        total = capital + perdidaPoderCompra;
+        sub = 'Para igualar hoy el poder de compra de ' + dop(capital) + ' necesitás ' +
+          dop(capital + perdidaPoderCompra) + ' · quien dejó el efectivo quieto perdió ' +
+          ((1 - 1 / (1 + inflacionPeriodo)) * 100).toFixed(2).replace('.', ',') + '% de poder adquisitivo';
+      }
+
+      return {
+        total: dop(total),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Capital', value: Math.round(capital), tone: 'main' },
+          { label: 'Interés neto', value: Math.max(0, Math.round(interesNeto)), tone: 'good' },
+          { label: 'Retención del 10%', value: Math.round(retencion), tone: 'warn' },
+          { label: 'Lo que se lleva la inflación', value: Math.round(perdidaPoderCompra), tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>

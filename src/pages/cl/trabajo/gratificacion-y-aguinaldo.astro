@@ -1,0 +1,317 @@
+---
+/**
+ * Hub de decisión CL — "¿Cuánta gratificación y aguinaldo me corresponden?"
+ * Ruta bajo el prefijo /cl/, igual que las calculadoras que absorbe.
+ * audience="CL" va literal al Layout: HubData sólo modela 'AR' | 'global'.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UF,
+  UTM,
+  IMM,
+  TASAS,
+  GRATIFICACION,
+  TOPE_GRATIFICACION_ANUAL,
+  AGUINALDOS,
+  TRAMOS_IUSC,
+} from '../../../lib/hubs/cl/gratificacion-y-aguinaldo';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="CL"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    UF,
+    UTM,
+    IMM,
+    TASAS,
+    GRAT: GRATIFICACION,
+    TOPE_ANUAL: TOPE_GRATIFICACION_ANUAL,
+    AG: AGUINALDOS,
+    TRAMOS: TRAMOS_IUSC,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const clp = (n) => '$' + Math.round(n || 0).toLocaleString('es-CL');
+    const num = (n, d) => n.toLocaleString('es-CL', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+
+    // Impuesto Único de Segunda Categoría — Art. 43 N°1 LIR (tramos mensuales en UTM).
+    function iusc(base) {
+      const baseUtm = UTM > 0 ? base / UTM : 0;
+      for (const t of TRAMOS) {
+        const hasta = t.hastaUtm === null ? Infinity : t.hastaUtm;
+        if (baseUtm <= hasta) {
+          return { impuesto: Math.max(0, base * t.factor - t.rebajaUtm * UTM), marginal: t.factor * 100 };
+        }
+      }
+      return { impuesto: 0, marginal: 0 };
+    }
+
+    // Líquido mensual de una remuneración imponible dada, con la comisión de AFP indicada.
+    function liquidoDe(bruto, comAfp) {
+      const tope = TASAS.topeAfpUf * UF;
+      const imponible = Math.min(Math.max(0, bruto), tope);
+      const cot = imponible * (TASAS.afp + comAfp + TASAS.salud + TASAS.cesantia);
+      const base = Math.max(0, bruto - cot);
+      return bruto - cot - iusc(base).impuesto;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'art50';
+      const sueldo = Math.max(0, v.sueldo || 0);
+      const meses = Math.max(1, Math.min(12, Math.round(v.meses || 12)));
+      const comAfp = Math.max(0, Math.min(3, v.comisionAfp != null ? v.comisionAfp : 1.27)) / 100;
+      const proporcion = meses / 12;
+
+      // ── Art. 50: 25% con tope de 4,75 IMM al año ────────────────────
+      if (id === 'art50') {
+        const sinTopeAnual = sueldo * GRAT.porcentajeArt50 * meses;
+        const topeProporcional = TOPE_ANUAL * proporcion;
+        const brutoAnual = Math.min(sinTopeAnual, topeProporcional);
+        const brutoMensual = meses > 0 ? brutoAnual / meses : 0;
+        const topeAplica = sinTopeAnual > topeProporcional;
+
+        // La gratificación es imponible y tributable: el neto sale de la diferencia
+        // entre el líquido del mes con gratificación y el líquido sin ella.
+        const netoMensual = liquidoDe(sueldo + brutoMensual, comAfp) - liquidoDe(sueldo, comAfp);
+        const netoAnual = netoMensual * meses;
+        const descuentos = brutoAnual - netoAnual;
+        const sueldoQueTopeaMensual = TOPE_ANUAL / 12 / GRAT.porcentajeArt50;
+
+        return {
+          total: clp(brutoAnual),
+          sub:
+            'Gratificación bruta del ejercicio · ' + clp(brutoMensual) + ' mensuales · ' +
+            (topeAplica
+              ? 'el tope de 4,75 ingresos mínimos te recorta ' + clp(sinTopeAnual - brutoAnual)
+              : 'todavía no te pega el tope de 4,75 ingresos mínimos') +
+            ' · neto estimado ' + clp(netoAnual),
+          rows: [
+            { k: 'Remuneración mensual imponible', ref: 'Base del 25%', v: sueldo },
+            { k: 'Meses trabajados en el ejercicio', ref: 'La gratificación es proporcional', v: meses, format: 'unit', unit: 'meses' },
+            { k: '25% de lo devengado, sin tope', ref: 'Art. 50 CT', v: sinTopeAnual },
+            { k: 'Tope legal aplicable', ref: '4,75 IMM al año × ' + num(proporcion * 100) + '% del ejercicio', v: topeProporcional },
+            { k: 'Gratificación bruta del ejercicio', ref: topeAplica ? 'Manda el tope' : 'Manda el 25%', v: brutoAnual, extra: true },
+            { k: 'Gratificación bruta mensual', ref: 'Como aparece en la liquidación', v: brutoMensual },
+            { k: 'Cotizaciones e Impuesto Único sobre la gratificación', ref: 'AFP, salud, cesantía y Art. 43 N°1 LIR', v: descuentos },
+            { k: 'Gratificación neta del ejercicio', ref: 'Lo que llega a tu bolsillo', v: netoAnual, extra: true },
+            { k: 'Sueldo desde el que empieza a pegarte el tope', ref: 'Remuneración mensual imponible', v: sueldoQueTopeaMensual },
+            { k: 'Ingreso mínimo vigente', ref: IMM.ley, v: IMM.general },
+          ],
+          chart: [
+            { label: 'Gratificación neta', value: Math.max(0, Math.round(netoAnual)), tone: 'main' },
+            { label: 'Cotizaciones e impuesto', value: Math.max(0, Math.round(descuentos)), tone: 'warn' },
+            { label: 'Recortado por el tope legal', value: Math.max(0, Math.round(sinTopeAnual - brutoAnual)), tone: 'bad' },
+          ],
+        };
+      }
+
+      // ── Art. 47: 30% de las utilidades, a prorrata ──────────────────
+      if (id === 'art47') {
+        const utilidades = Math.max(0, v.utilidades || 0);
+        const planilla = Math.max(0, v.planilla || 0);
+        const bolsa = utilidades * GRAT.porcentajeArt47;
+        const miDevengado = sueldo * meses;
+        const cuota = planilla > 0 ? miDevengado / planilla : 0;
+        const miParte = bolsa * cuota;
+
+        const art50 = Math.min(sueldo * GRAT.porcentajeArt50 * meses, TOPE_ANUAL * proporcion);
+        const diferencia = miParte - art50;
+        const netoMensual = liquidoDe(sueldo + (meses > 0 ? miParte / meses : 0), comAfp) - liquidoDe(sueldo, comAfp);
+        const neto = netoMensual * meses;
+
+        return {
+          total: clp(miParte),
+          sub:
+            'Tu parte del 30% de las utilidades · te toca el ' +
+            num(cuota * 100, 2) + '% de la bolsa de ' + clp(bolsa) + ' · ' +
+            (diferencia >= 0
+              ? 'son ' + clp(diferencia) + ' más que por el Art. 50'
+              : 'son ' + clp(-diferencia) + ' menos que por el Art. 50'),
+          rows: [
+            { k: 'Utilidad líquida anual de la empresa', ref: 'Determinada por el SII sobre el balance', v: utilidades },
+            { k: 'Bolsa a repartir', ref: '30% de la utilidad líquida · Art. 47 CT', v: bolsa },
+            { k: 'Lo que devengaste en el ejercicio', ref: num(meses) + ' meses × tu remuneración', v: miDevengado },
+            { k: 'Masa salarial anual de la empresa', ref: 'Divisor del prorrateo', v: planilla },
+            {
+              k: 'Tu cuota de la bolsa',
+              ref: 'Tu devengado ÷ masa salarial',
+              v: cuota * 100,
+              format: 'unit',
+              unit: '%',
+              decimals: 2,
+            },
+            { k: 'Tu gratificación por el Art. 47', ref: 'Bolsa × tu cuota · sin tope de 4,75 IMM', v: miParte, extra: true },
+            { k: 'Lo mismo por el Art. 50', ref: '25% con tope de 4,75 IMM', v: art50 },
+            {
+              k: diferencia >= 0 ? 'Cuánto más te da el Art. 47' : 'Cuánto menos te da el Art. 47',
+              ref: 'El empleador elige la modalidad',
+              v: Math.abs(diferencia),
+            },
+            { k: 'Neto estimado del Art. 47', ref: 'Después de cotizaciones e Impuesto Único', v: neto },
+          ],
+          chart: [
+            { label: 'Tu parte del 30%', value: Math.max(0, Math.round(miParte)), tone: 'main' },
+            { label: 'Parte del resto de los trabajadores', value: Math.max(0, Math.round(bolsa - miParte)), tone: 'prop' },
+          ],
+        };
+      }
+
+      // ── Aguinaldo ───────────────────────────────────────────────────
+      if (id === 'aguinaldo') {
+        const tipo = v.tipoAguinaldo || 'fp_publico';
+        const renta = Math.max(0, v.rentaLiquida || 0);
+        const cargas = Math.max(0, Math.round(v.cargas || 0));
+        let base = 0;
+        let porCargas = 0;
+        let refTxt = '';
+        let nombre = '';
+
+        if (tipo === 'fp_pensionado') {
+          base = AG.fiestasPatriasPensionado.base;
+          porCargas = AG.fiestasPatriasPensionado.porCarga * cargas;
+          refTxt = 'Ley de reajuste · pensionados IPS';
+          nombre = 'Fiestas Patrias (pensionado IPS)';
+        } else {
+          const tabla = tipo === 'navidad' ? AG.navidadPublico : AG.fiestasPatriasPublico;
+          base = renta <= AG.umbralRentaPublico ? tabla.bajo : tabla.alto;
+          refTxt = renta <= AG.umbralRentaPublico ? 'Tramo bajo el umbral' : 'Tramo sobre el umbral';
+          nombre = tipo === 'navidad' ? 'Navidad (sector público)' : 'Fiestas Patrias (sector público)';
+        }
+        const total = base + porCargas;
+        const enIMM = IMM.general > 0 ? total / IMM.general : 0;
+
+        return {
+          total: clp(total),
+          sub:
+            'Aguinaldo de ' + nombre +
+            (tipo === 'fp_pensionado'
+              ? ' · base ' + clp(base) + ' + ' + num(cargas) + (cargas === 1 ? ' carga' : ' cargas')
+              : ' · ' + refTxt.toLowerCase() + ' de ' + clp(AG.umbralRentaPublico)) +
+            (tipo === 'navidad' ? ' · monto referencial hasta la ley de reajuste de fin de año' : ''),
+          rows: [
+            { k: 'Monto base del aguinaldo', ref: refTxt, v: base },
+            ...(tipo === 'fp_pensionado'
+              ? [
+                  { k: 'Cargas familiares acreditadas', ref: 'Al 31 de agosto', v: cargas, format: 'plain' },
+                  { k: 'Adicional por cargas', ref: clp(AG.fiestasPatriasPensionado.porCarga) + ' por carga', v: porCargas },
+                ]
+              : [
+                  { k: 'Tu remuneración líquida', ref: 'Define el tramo', v: renta },
+                  { k: 'Umbral que separa los tramos', ref: 'Ley de reajuste del sector público', v: AG.umbralRentaPublico },
+                  { k: 'Monto del tramo bajo', ref: 'Si estás bajo el umbral', v: tipo === 'navidad' ? AG.navidadPublico.bajo : AG.fiestasPatriasPublico.bajo },
+                  { k: 'Monto del tramo alto', ref: 'Si superas el umbral', v: tipo === 'navidad' ? AG.navidadPublico.alto : AG.fiestasPatriasPublico.alto },
+                ]),
+            { k: 'Aguinaldo total a recibir', ref: 'No imponible ni tributable', v: total, extra: true },
+            {
+              k: 'Equivale a',
+              ref: 'Del ingreso mínimo de ' + clp(IMM.general),
+              v: enIMM * 100,
+              format: 'unit',
+              unit: '% del IMM',
+              decimals: 1,
+            },
+          ],
+          chart:
+            tipo === 'fp_pensionado'
+              ? [
+                  { label: 'Monto base', value: Math.round(base), tone: 'main' },
+                  { label: 'Adicional por cargas', value: Math.round(porCargas), tone: 'good' },
+                ]
+              : [
+                  { label: 'Tu aguinaldo', value: Math.round(total), tone: 'main' },
+                  {
+                    label: 'Diferencia con el otro tramo',
+                    value: Math.abs(
+                      (tipo === 'navidad' ? AG.navidadPublico.bajo : AG.fiestasPatriasPublico.bajo) -
+                        (tipo === 'navidad' ? AG.navidadPublico.alto : AG.fiestasPatriasPublico.alto)
+                    ),
+                    tone: 'prop',
+                  },
+                ],
+        };
+      }
+
+      // ── Reajuste del ingreso mínimo ─────────────────────────────────
+      const mesesRetro = Math.max(0, Math.min(6, Math.round(v.mesesRetro || 0)));
+      const alza = IMM.general - IMM.anterior;
+      const alzaPct = IMM.anterior > 0 ? (alza / IMM.anterior) * 100 : 0;
+      const bajoMinimo = sueldo < IMM.general;
+      const ajuste = bajoMinimo ? IMM.general - sueldo : 0;
+      const retroactivo = sueldo <= IMM.anterior ? alza * mesesRetro : ajuste * mesesRetro;
+      const nuevoTope = GRAT.topeImmAnual * IMM.general;
+      const topeAnterior = GRAT.topeImmAnual * IMM.anterior;
+
+      return {
+        total: clp(bajoMinimo ? ajuste + retroactivo : nuevoTope - topeAnterior),
+        sub: bajoMinimo
+          ? 'Tu sueldo tiene que subir ' + clp(ajuste) + ' para llegar al ingreso mínimo de ' + clp(IMM.general) +
+            (retroactivo > 0 ? ', más ' + clp(retroactivo) + ' de retroactivo' : '')
+          : 'Ya estás sobre el mínimo: lo que te cambia es el tope de la gratificación, que sube ' +
+            clp(nuevoTope - topeAnterior) + ' al año',
+        rows: [
+          { k: 'Ingreso mínimo anterior', ref: 'Vigente hasta el reajuste', v: IMM.anterior },
+          { k: 'Ingreso mínimo vigente', ref: IMM.ley + ' · desde el ' + IMM.vigenciaDesde, v: IMM.general, extra: true },
+          { k: 'Alza del ingreso mínimo', ref: 'En pesos', v: alza },
+          { k: 'Alza en porcentaje', ref: 'Sobre el valor anterior', v: alzaPct, format: 'unit', unit: '%', decimals: 1 },
+          { k: 'Tu sueldo base actual', ref: bajoMinimo ? 'Bajo el mínimo legal' : 'Sobre el mínimo legal', v: sueldo },
+          { k: bajoMinimo ? 'Ajuste que te deben hacer' : 'Margen sobre el mínimo', ref: 'Diferencia con el IMM vigente', v: bajoMinimo ? ajuste : sueldo - IMM.general },
+          { k: 'Retroactivo estimado', ref: num(mesesRetro) + ' meses pagados al valor anterior', v: retroactivo },
+          { k: 'Tope de la gratificación con el IMM anterior', ref: '4,75 IMM al año', v: topeAnterior },
+          { k: 'Tope de la gratificación con el IMM vigente', ref: '4,75 IMM al año · Art. 50 CT', v: nuevoTope },
+          { k: 'Ingreso mínimo para menores de 18 y mayores de 65', ref: IMM.ley, v: IMM.menores18Mayores65 },
+          { k: 'Ingreso mínimo para fines no remuneracionales', ref: 'Base de otros beneficios', v: IMM.noRemuneracional },
+        ],
+        chart: [
+          { label: 'Ingreso mínimo anterior', value: IMM.anterior, tone: 'prop' },
+          { label: 'Alza del reajuste', value: Math.max(0, alza), tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

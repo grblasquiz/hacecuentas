@@ -1,0 +1,306 @@
+---
+/**
+ * Hub de decisão BR — "Preciso declarar, quanto pago e quando cai a restituição?".
+ * A tabela anual do IRPF viaja pelo define:vars com `ate: null` no lugar de
+ * Infinity, que não sobrevive à serialização.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  IRPF_ANUAL,
+  DEDUCAO_DEPENDENTE_ANUAL,
+  REDUTOR_ANUAL,
+  SIMPLIFICADO_PERCENTUAL,
+  ACOES,
+  CRIPTO,
+  LOTES,
+} from '../../../lib/hubs/pt/imposto-de-renda';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Início', item: 'https://hacecuentas.com/pt' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="BR"
+  lang="pt"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header lang="pt" />
+  <DecisionHub data={hub} />
+  <Footer lang="pt" />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    IRPF_ANUAL,
+    DEP_ANUAL: DEDUCAO_DEPENDENTE_ANUAL,
+    REDUTOR_ANUAL,
+    SIMPL_PCT: SIMPLIFICADO_PERCENTUAL,
+    ACOES,
+    CRIPTO,
+    LOTES,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const brl = (n) =>
+      'R$ ' + (Math.round((n || 0) * 100) / 100).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    const pct = (n) => (n || 0).toFixed(2).replace('.', ',') + '%';
+
+    /** Tabela anual do IRPF: alíquota da faixa menos a parcela a deduzir. */
+    function irpfTabela(base) {
+      if (base <= 0) return 0;
+      for (const f of IRPF_ANUAL) {
+        if (f.ate === null || base <= f.ate) return Math.max(0, base * f.aliquota - f.deduzir);
+      }
+      return 0;
+    }
+    /** Redutor vigente: zera o imposto até a isenção e reduz de forma linear até o teto. */
+    function irpfComRedutor(base) {
+      if (base <= REDUTOR_ANUAL.isencao) return 0;
+      const cheio = irpfTabela(base);
+      if (base >= REDUTOR_ANUAL.teto) return cheio;
+      return cheio * ((base - REDUTOR_ANUAL.isencao) / (REDUTOR_ANUAL.teto - REDUTOR_ANUAL.isencao));
+    }
+    /** Alíquota marginal da faixa em que a base cai. */
+    function faixaMarginal(base) {
+      for (const f of IRPF_ANUAL) {
+        if (f.ate === null || base <= f.ate) return f.aliquota;
+      }
+      return 0;
+    }
+    /** Ganho de capital progressivo por parcela — art. 21 da Lei 8.981/1995. */
+    function ganhoCapitalProgressivo(ganho) {
+      let restante = ganho;
+      let piso = 0;
+      let imposto = 0;
+      for (const f of CRIPTO.faixas) {
+        const teto = f.ate === null ? Infinity : f.ate;
+        const parcela = Math.max(0, Math.min(restante, teto - piso));
+        imposto += parcela * f.aliquota;
+        restante -= parcela;
+        piso = teto;
+        if (restante <= 0) break;
+      }
+      return imposto;
+    }
+
+    H.onCompute(function (v) {
+      const situacao = String(v.situacao || 'assalariado');
+      const modalidade = String(v.modalidade || 'swing');
+      const renda = Math.max(0, v.rendimentoAnual || 0);
+      const irrfRetido = Math.max(0, v.irrfRetido || 0);
+      const inss = Math.max(0, v.inss || 0);
+      const deps = Math.max(0, Math.round(v.dependentes || 0));
+      const saude = Math.max(0, v.saude || 0);
+      const outras = Math.max(0, v.outrasDeducoes || 0);
+      const tetoSimpl = Math.max(0, v.tetoSimplificado || 0);
+      const selicMes = Math.max(0, v.selicMensal || 0) / 100;
+      const vendas = Math.max(0, v.vendasMes || 0);
+      const lucro = Math.max(0, v.lucroMes || 0);
+      const prejuizo = Math.max(0, v.prejuizoAcumulado || 0);
+
+      // ---------- Renda variável: ações ----------
+      if (situacao === 'acoes') {
+        const dayTrade = modalidade === 'daytrade';
+        const isento = !dayTrade && vendas <= ACOES.isencaoVendasMes;
+        const base = Math.max(0, lucro - prejuizo);
+        const prejuizoSobra = Math.max(0, prejuizo - lucro);
+        const aliq = dayTrade ? ACOES.aliquotaDayTrade : ACOES.aliquotaSwing;
+        const retidoFonte = vendas * (dayTrade ? ACOES.fonteDayTrade : ACOES.fonteSwing);
+        const imposto = isento ? 0 : base * aliq;
+        const darf = Math.max(0, imposto - retidoFonte);
+
+        const rows = [
+          { k: 'Valor vendido no mês', ref: dayTrade ? 'Day trade não tem isenção' : 'Isenção até ' + brl(ACOES.isencaoVendasMes), v: vendas },
+          { k: 'Lucro do mês', ref: 'Venda − custo − corretagem e emolumentos', v: lucro },
+          { k: 'Prejuízo compensado', ref: 'Só dentro da mesma modalidade', v: Math.min(prejuizo, lucro) },
+          { k: 'Base de cálculo', ref: isento ? 'Isenta pelo limite mensal' : 'Lucro após compensação', v: isento ? 0 : base, extra: true },
+          { k: 'Alíquota aplicada', ref: dayTrade ? 'Day trade · Lei 11.033/2004' : 'Swing trade · Lei 11.033/2004', v: aliq * 100, format: 'unit', unit: '%', decimals: 1 },
+          { k: 'Imposto apurado', ref: 'Base × alíquota', v: imposto },
+          { k: 'IRRF retido na fonte pela corretora', ref: dayTrade ? '1% sobre o ganho informado' : '0,005% sobre as vendas (dedo-duro)', v: retidoFonte },
+          { k: 'DARF ' + ACOES.darf + ' a pagar', ref: 'Último dia útil do mês seguinte · mínimo de R$ 10', v: darf, extra: true },
+          { k: 'Prejuízo que fica para os próximos meses', ref: 'Sem prazo de validade, se declarado todo ano', v: prejuizoSobra },
+        ];
+
+        return {
+          total: brl(darf),
+          sub: isento
+            ? 'Vendas de ' + brl(vendas) + ' dentro do limite de ' + brl(ACOES.isencaoVendasMes) +
+              ': lucro isento, mas ainda assim declarável em rendimentos isentos'
+            : 'Base de ' + brl(base) + ' a ' + pct(aliq * 100) + ' · DARF ' + ACOES.darf +
+              ' de ' + brl(darf) + ' até o último dia útil do mês seguinte',
+          rows: rows,
+          chart: [
+            { label: 'Lucro que fica com você', value: Math.round(Math.max(0, lucro - imposto)), tone: 'main' },
+            { label: 'Imposto', value: Math.round(imposto), tone: 'bad' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      // ---------- Renda variável: criptoativos ----------
+      if (situacao === 'cripto') {
+        const isento = vendas <= CRIPTO.isencaoVendasMes;
+        const ganho = Math.max(0, lucro);
+        const imposto = isento ? 0 : ganhoCapitalProgressivo(ganho);
+        const aliqMedia = ganho > 0 ? (imposto / ganho) * 100 : 0;
+
+        const rows = [
+          { k: 'Valor vendido no mês, somando todas as moedas', ref: 'Isenção até ' + brl(CRIPTO.isencaoVendasMes), v: vendas },
+          { k: 'Ganho de capital', ref: 'Venda − custo de aquisição', v: ganho, extra: true },
+          { k: 'Imposto devido', ref: isento ? 'Isento pelo limite mensal' : 'Faixas progressivas de 15% a 22,5% · Lei 8.981/1995', v: imposto, extra: true },
+          { k: 'Alíquota efetiva sobre o ganho', ref: 'Imposto ÷ ganho', v: aliqMedia, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'DARF ' + CRIPTO.darf, ref: 'Último dia útil do mês seguinte', v: imposto },
+          {
+            k: 'Declaração mensal de operações no e-CAC',
+            ref: vendas > CRIPTO.limiteDeclaracaoMensal
+              ? 'Obrigatória: volume acima de ' + brl(CRIPTO.limiteDeclaracaoMensal) + ' · IN RFB 1.888/2019'
+              : 'Dispensada neste volume',
+            v: 0,
+            format: 'plain',
+          },
+          {
+            k: 'Saldo em custódia que vai na ficha Bens e Direitos',
+            ref: 'A partir de ' + brl(CRIPTO.limiteBensEDireitos) + ' por tipo de ativo, mesmo sem venda',
+            v: CRIPTO.limiteBensEDireitos,
+          },
+        ];
+
+        return {
+          total: brl(imposto),
+          sub: isento
+            ? 'Vendas de ' + brl(vendas) + ' abaixo de ' + brl(CRIPTO.isencaoVendasMes) +
+              ': ganho isento — a posição continua tendo de ser declarada'
+            : 'Ganho de ' + brl(ganho) + ' tributado a ' + pct(aliqMedia) +
+              ' na média · DARF ' + CRIPTO.darf + ' até o último dia útil do mês seguinte',
+          rows: rows,
+          chart: [
+            { label: 'Ganho que fica com você', value: Math.round(Math.max(0, ganho - imposto)), tone: 'main' },
+            { label: 'Imposto', value: Math.round(imposto), tone: 'bad' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      // ---------- Ajuste anual: simplificada vs completa ----------
+      if (renda <= 0) {
+        return { total: brl(0), sub: 'Informe o rendimento tributável do ano.', rows: [], chart: [] };
+      }
+
+      const descontoSimpl = Math.min(renda * SIMPL_PCT, tetoSimpl);
+      const deducoesCompleta = inss + deps * DEP_ANUAL + saude + outras;
+      const usaCompleta = deducoesCompleta > descontoSimpl;
+      const deducao = usaCompleta ? deducoesCompleta : descontoSimpl;
+      const base = Math.max(0, renda - deducao);
+      const imposto = irpfComRedutor(base);
+      const saldo = imposto - irrfRetido; // positivo = a pagar; negativo = restituição
+      const restituicao = Math.max(0, -saldo);
+      const marginal = faixaMarginal(base);
+      const efetiva = renda > 0 ? (imposto / renda) * 100 : 0;
+
+      const rows = [
+        { k: 'Rendimento tributável do ano', ref: 'Todas as fontes pagadoras', v: renda },
+        { k: 'Desconto simplificado', ref: '20% da renda, limitado a ' + brl(tetoSimpl), v: descontoSimpl },
+        { k: 'Soma das deduções legais', ref: 'INSS + dependentes + saúde + demais', v: deducoesCompleta },
+        {
+          k: 'Modelo mais vantajoso',
+          ref: usaCompleta ? 'Completa: as deduções superam o desconto' : 'Simplificada: o desconto supera as deduções',
+          v: Math.abs(deducoesCompleta - descontoSimpl),
+          extra: true,
+        },
+        { k: 'Base de cálculo do imposto', ref: 'Rendimento − dedução escolhida', v: base },
+        {
+          k: 'Alíquota marginal da sua faixa',
+          ref: 'Tabela progressiva anual',
+          v: marginal * 100,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        },
+        { k: 'Imposto devido no ano', ref: imposto === 0 ? 'Isento pela faixa inicial e pelo redutor' : 'Tabela progressiva com parcela a deduzir', v: imposto, extra: true },
+        { k: 'IRRF já retido na fonte', ref: 'Informe de rendimentos', v: irrfRetido },
+        {
+          k: saldo >= 0 ? 'Imposto a pagar' : 'Restituição a receber',
+          ref: saldo >= 0 ? 'Pode ser parcelado em até 8 vezes, com juros Selic' : 'Corrigida pela Selic até o pagamento',
+          v: Math.abs(saldo),
+          extra: true,
+        },
+        {
+          k: 'Alíquota efetiva sobre a renda',
+          ref: 'Imposto devido ÷ rendimento tributável',
+          v: efetiva,
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+        },
+      ];
+
+      if (deps > 0) {
+        rows.push({ k: 'Dedução pelos ' + deps + (deps === 1 ? ' dependente' : ' dependentes') + ' no ano', ref: brl(DEP_ANUAL) + ' por dependente', v: deps * DEP_ANUAL });
+      }
+
+      // Correção da restituição por lote: Selic acumulada + 1% no mês do pagamento.
+      if (restituicao > 0 && selicMes > 0) {
+        LOTES.forEach(function (l, i) {
+          const taxa = l.meses * selicMes + 0.01;
+          rows.push({
+            k: 'Restituição corrigida se cair no ' + (i + 1) + 'º lote',
+            ref: l.meses === 0 ? '1% do mês do pagamento' : l.meses + ' meses de Selic + 1% do mês do pagamento',
+            v: restituicao * (1 + taxa),
+          });
+        });
+      }
+
+      const isentaPelaFaixa = Math.min(base, REDUTOR_ANUAL.isencao);
+
+      return {
+        total: brl(Math.abs(saldo)),
+        sub:
+          (saldo >= 0 ? 'Você tem ' + brl(saldo) + ' de imposto a pagar' : 'Você tem ' + brl(restituicao) + ' a receber de volta') +
+          ' · declaração ' + (usaCompleta ? 'completa' : 'simplificada') +
+          ' economiza ' + brl(Math.abs(deducoesCompleta - descontoSimpl) * marginal) +
+          ' · alíquota efetiva de ' + pct(efetiva),
+        rows: rows,
+        chart: [
+          { label: 'Renda que as deduções tiraram da conta', value: Math.round(deducao), tone: 'good' },
+          { label: 'Renda isenta pela faixa inicial', value: Math.round(isentaPelaFaixa), tone: 'main' },
+          { label: 'Renda que gerou imposto', value: Math.round(Math.max(0, base - isentaPelaFaixa)), tone: 'warn' },
+        ].filter((s) => s.value > 0),
+      };
+    });
+  })();
+</script>

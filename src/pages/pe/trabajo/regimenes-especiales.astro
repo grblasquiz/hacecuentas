@@ -1,0 +1,235 @@
+---
+/**
+ * Hub de decisión PE — "No estoy en el régimen general privado: ¿qué me corresponde?".
+ * audience="PE" literal: HubData sólo modela 'AR' | 'global' y el mercado viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  RMV,
+  BONIF_GRATI,
+  AGUINALDO_FP,
+  AGUINALDO_BASE_DIAS,
+  AGUINALDO_NAVIDAD_REFERENCIA,
+  CONSTRUCCION,
+  JORNADA_PRACTICAS,
+} from '../../../lib/hubs/pe/regimenes-especiales';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PE"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    RMV,
+    BONIF_GRATI,
+    AGUINALDO_FP,
+    AGUINALDO_BASE_DIAS,
+    AGUINALDO_NAVIDAD_REFERENCIA,
+    CONSTRUCCION,
+    JORNADA_PRACTICAS,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    // 'es-PE' en V8 emite formato tipo US; el formato legal peruano (Ley 23560) es
+    // punto para miles y coma para decimales, que es lo que da 'de-DE'.
+    const sol = (n) => 'S/ ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(Math.round(n || 0));
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'publico';
+
+      const sueldo = Math.max(0, v.sueldo || 0);
+      const regimen = String(v.regimen || 'dl276');
+      const meses = Math.max(0, Math.min(60, Math.round(v.meses || 0)));
+      const dias = Math.max(0, Math.min(29, Math.round(v.dias || 0)));
+      const categoria = ['operario', 'oficial', 'peon'].indexOf(String(v.categoria)) >= 0 ? String(v.categoria) : 'operario';
+      const diasSemana = Math.max(1, Math.min(6, Math.round(v.diasSemana || 6)));
+      const hijos = Math.max(0, Math.min(10, Math.round(v.hijos || 0)));
+      const tipoPractica = String(v.tipoPractica) === 'profesional' ? 'profesional' : 'preprofesional';
+
+      const rows = [];
+      let total = 0;
+      let sub = '';
+      let chart = [];
+
+      if (id === 'publico') {
+        const diasServicio = meses * 30 + dias;
+        const proporcion = Math.min(1, AGUINALDO_BASE_DIAS > 0 ? diasServicio / AGUINALDO_BASE_DIAS : 0);
+
+        if (regimen === 'cas') {
+          total = 0;
+          rows.push({ k: 'Aguinaldo que te corresponde', ref: 'Los CAS quedaron excluidos del decreto', v: 0, extra: true });
+          rows.push({ k: 'Aguinaldo de un servidor D.L. 276 comparable', ref: 'D.S. 128-2026-EF · lo que sí se pagó', v: AGUINALDO_FP });
+          rows.push({ k: 'Días de servicio computados', ref: 'Meses × 30 + días', v: diasServicio, format: 'unit', unit: 'días' });
+          sub = 'La Ley 32563 reemplazó tu aguinaldo por gratificaciones, pero quedaron sin presupuesto: verifica el último comunicado del MEF antes de reclamar';
+          chart = [{ label: 'Aguinaldo D.L. 276 (referencia)', value: AGUINALDO_FP, tone: 'warn' }];
+        } else if (regimen === 'dl728') {
+          const grati = sueldo;
+          const bonif = grati * BONIF_GRATI;
+          total = grati + bonif;
+          rows.push({ k: 'Gratificación de un sueldo completo', ref: 'Ley 27735 · régimen privado', v: grati, extra: true });
+          rows.push({ k: 'Bonificación extraordinaria', ref: 'Ley 30334 · ' + (BONIF_GRATI * 100).toFixed(0) + '%', v: bonif });
+          rows.push({ k: 'Total a cobrar', ref: 'Gratificación + bonificación', v: total, extra: true });
+          rows.push({ k: 'Cuánto más que el aguinaldo del sector público', ref: 'Diferencia contra ' + sol(AGUINALDO_FP), v: Math.max(0, total - AGUINALDO_FP) });
+          sub = 'Bajo D.L. 728 en una entidad pública cobras gratificación de un sueldo (' + sol(total) + ' con bonificación), no el aguinaldo de ' + sol(AGUINALDO_FP);
+          chart = [
+            { label: 'Gratificación', value: Math.round(grati), tone: 'main' },
+            { label: 'Bonificación 9%', value: Math.round(bonif), tone: 'good' },
+          ].filter(function (s) { return s.value > 0; });
+        } else {
+          const aguinaldoFp = AGUINALDO_FP * proporcion;
+          const aguinaldoNav = AGUINALDO_NAVIDAD_REFERENCIA * proporcion;
+          total = aguinaldoFp;
+          rows.push({ k: 'Aguinaldo de Fiestas Patrias', ref: proporcion >= 1 ? 'D.S. 128-2026-EF · completo' : 'Proporcional · ' + diasServicio + '/' + AGUINALDO_BASE_DIAS + ' días', v: aguinaldoFp, extra: true, decimals: 2 });
+          rows.push({ k: 'Aguinaldo de Navidad (referencia, no oficial)', ref: 'El MEF fija el monto por decreto hacia fin de año', v: aguinaldoNav, decimals: 2 });
+          rows.push({ k: 'Total estimado de aguinaldos del año', ref: 'Julio + diciembre (diciembre es referencia)', v: aguinaldoFp + aguinaldoNav, decimals: 2 });
+          rows.push({ k: 'Días de servicio computados', ref: 'Meses × 30 + días · base ' + AGUINALDO_BASE_DIAS, v: diasServicio, format: 'unit', unit: 'días' });
+          rows.push({ k: 'Proporción devengada', ref: 'Con 3 meses ya cobras el 100%', v: proporcion * 100, format: 'unit', unit: '%', decimals: 0 });
+          if (sueldo > 0) {
+            rows.push({ k: 'Lo que cobrarías si estuvieras en el régimen privado', ref: 'Un sueldo + bonificación del 9%', v: sueldo * (1 + BONIF_GRATI) });
+          }
+          sub = proporcion >= 1
+            ? 'Con ' + meses + ' mes(es) de servicio te corresponden los ' + sol(AGUINALDO_FP) + ' completos en la planilla de julio'
+            : 'Con ' + diasServicio + ' días de servicio el aguinaldo es proporcional: ' + sol(AGUINALDO_FP) + ' × ' + diasServicio + '/' + AGUINALDO_BASE_DIAS + ' = ' + sol(aguinaldoFp);
+          chart = [
+            { label: 'Aguinaldo de julio', value: Math.round(aguinaldoFp), tone: 'main' },
+            { label: 'Aguinaldo de diciembre (referencia)', value: Math.round(aguinaldoNav), tone: 'prop' },
+          ].filter(function (s) { return s.value > 0; });
+        }
+      } else if (id === 'construccion') {
+        const j = CONSTRUCCION.jornal[categoria];
+        const buc = j * CONSTRUCCION.bucPct[categoria];
+        const basicoSem = j * diasSemana;
+        const bucSem = buc * diasSemana;
+        const movSem = CONSTRUCCION.movilidadDia * diasSemana;
+        const dominical = j * (diasSemana / 6);
+        const escolaridadDia = (j * CONSTRUCCION.escolaridadJornalesAnio) / 360;
+        const escolaridadSem = escolaridadDia * diasSemana * hijos;
+        const semanal = basicoSem + bucSem + movSem + dominical + escolaridadSem;
+        const mensual = (semanal * 52) / 12;
+        total = semanal;
+
+        rows.push({ k: 'Jornal básico diario', ref: 'Convenio FTCCP-CAPECO · ' + categoria, v: j, decimals: 2 });
+        rows.push({ k: 'Jornal básico de la semana', ref: diasSemana + ' día(s) laborado(s)', v: basicoSem, decimals: 2 });
+        rows.push({ k: 'BUC de la semana', ref: (CONSTRUCCION.bucPct[categoria] * 100).toFixed(0) + '% del básico por día', v: bucSem, decimals: 2 });
+        rows.push({ k: 'Movilidad acumulada', ref: sol(CONSTRUCCION.movilidadDia) + ' por día laborado', v: movSem, decimals: 2 });
+        rows.push({ k: 'Dominical', ref: 'Un jornal básico por semana completa', v: dominical, decimals: 2 });
+        rows.push({ k: 'Asignación por escolaridad', ref: hijos ? CONSTRUCCION.escolaridadJornalesAnio + ' jornales/año × ' + hijos + ' hijo(s)' : 'Sin hijos declarados', v: escolaridadSem, decimals: 2 });
+        rows.push({ k: 'Total de la semana', ref: 'Todos los conceptos del convenio', v: semanal, extra: true, decimals: 2 });
+        rows.push({ k: 'Estimado mensual', ref: 'Semana × 52 ÷ 12 · sin horas extras', v: mensual, decimals: 2 });
+        rows.push({ k: 'Cuántas RMV representa el mes', ref: 'Estimado ÷ RMV ' + sol(RMV), v: RMV > 0 ? mensual / RMV : 0, format: 'unit', unit: 'RMV', decimals: 2 });
+
+        sub = 'Como ' + categoria + ', la semana de ' + diasSemana + ' día(s) suma ' + sol(semanal) + ' · unos ' + sol(mensual) + ' al mes, sin horas extras ni bonificaciones por altura o especialización';
+        chart = [
+          { label: 'Jornal básico', value: Math.round(basicoSem), tone: 'main' },
+          { label: 'BUC', value: Math.round(bucSem), tone: 'good' },
+          { label: 'Movilidad', value: Math.round(movSem), tone: 'prop' },
+          { label: 'Dominical', value: Math.round(dominical), tone: 'warn' },
+          { label: 'Escolaridad', value: Math.round(escolaridadSem), tone: 'exit' },
+        ].filter(function (s) { return s.value > 0; });
+      } else if (id === 'practicante') {
+        const jornadaMax = JORNADA_PRACTICAS[tipoPractica];
+        const horas = Math.max(1, Math.min(jornadaMax, v.horasSemana || jornadaMax));
+        const proporcion = horas / jornadaMax;
+        const subvencion = RMV * proporcion;
+        const periodos = Math.floor(meses / 6);
+        const adicional = periodos * (subvencion / 2);
+        const totalConvenio = subvencion * meses + adicional;
+        total = subvencion;
+
+        rows.push({ k: 'Subvención mensual mínima', ref: proporcion >= 1 ? 'Una RMV a jornada completa' : (proporcion * 100).toFixed(0) + '% de la RMV por ' + horas + ' h/sem', v: subvencion, extra: true, decimals: 2 });
+        rows.push({ k: 'Jornada máxima de tu modalidad', ref: 'Ley 28518 · ' + tipoPractica, v: jornadaMax, format: 'unit', unit: 'h/semana' });
+        rows.push({ k: 'Medias subvenciones adicionales', ref: periodos ? 'Una por cada 6 meses continuos (×' + periodos + ')' : 'Aún no llegas a 6 meses continuos', v: adicional, decimals: 2 });
+        rows.push({ k: 'Total del convenio completo', ref: meses + ' mes(es) + adicionales', v: totalConvenio, decimals: 2 });
+        rows.push({ k: 'Descuentos de AFP u ONP', ref: 'La subvención no es remuneración: no aporta', v: 0 });
+        rows.push({ k: 'Diferencia contra una RMV a jornada completa', ref: 'RMV ' + sol(RMV) + ' menos tu subvención', v: Math.max(0, RMV - subvencion), decimals: 2 });
+        rows.push({ k: 'Días de descanso subvencionado si llegas a 12 meses', ref: 'Ley 28518', v: 15, format: 'unit', unit: 'días' });
+
+        sub = 'Tu subvención mínima es ' + sol(subvencion) + ' al mes por ' + horas + ' h/semana' +
+          (periodos > 0 ? ' · sumás ' + periodos + ' media(s) subvención(es) extra: el convenio completo da ' + sol(totalConvenio) : ' · la media subvención extra llega recién a los 6 meses continuos');
+        chart = [
+          { label: 'Subvención del período', value: Math.round(subvencion * meses), tone: 'main' },
+          { label: 'Medias subvenciones adicionales', value: Math.round(adicional), tone: 'good' },
+        ].filter(function (s) { return s.value > 0; });
+      } else {
+        // Trabajo del hogar (Ley 31047): beneficios del régimen general, prorrateados.
+        const fraccionAnual = (meses + dias / 30) / 12;
+        const baseCts = sueldo + sueldo / 6;
+        const cts = baseCts * fraccionAnual;
+        // Dos gratificaciones al año (una por semestre), no una: la Ley 31047 equipara
+        // al régimen general, que paga Fiestas Patrias y Navidad completas.
+        const grati = sueldo * 2 * fraccionAnual;
+        const bonif = grati * BONIF_GRATI;
+        const vacaciones = sueldo * fraccionAnual;
+        total = cts + grati + bonif + vacaciones;
+
+        rows.push({ k: 'Base de cálculo de la CTS', ref: 'Remuneración + 1/6 de gratificación', v: baseCts });
+        rows.push({ k: 'CTS del período', ref: 'Una remuneración por año · Ley 31047', v: cts, extra: true });
+        rows.push({ k: 'Gratificaciones devengadas', ref: 'Dos por año (julio y diciembre), prorrateadas', v: grati, extra: true });
+        rows.push({ k: 'Bonificación extraordinaria', ref: 'Ley 30334 · ' + (BONIF_GRATI * 100).toFixed(0) + '%', v: bonif });
+        rows.push({ k: 'Vacaciones truncas', ref: '30 días por año completo, prorrateados', v: vacaciones });
+        rows.push({ k: 'Total a liquidar', ref: 'CTS + gratificaciones + bonificación + vacaciones', v: total, extra: true });
+        rows.push({ k: 'Período computado', ref: 'Meses y días declarados', v: meses + dias / 30, format: 'unit', unit: 'meses', decimals: 2 });
+        rows.push({
+          k: 'Lo que daba el viejo régimen de la Ley 27986',
+          ref: 'Media CTS y media gratificación · derogado',
+          v: baseCts * fraccionAnual * 0.5 + sueldo * fraccionAnual * 0.5 + vacaciones,
+        });
+
+        sub = meses + dias > 0
+          ? 'Por ' + meses + ' mes(es)' + (dias ? ' y ' + dias + ' días' : '') + ' con ' + sol(sueldo) + ' de remuneración, la liquidación suma ' + sol(total) + ' bajo la Ley 31047'
+          : 'Carga los meses trabajados para ver la liquidación del régimen del hogar';
+        chart = [
+          { label: 'CTS', value: Math.round(cts), tone: 'main' },
+          { label: 'Gratificaciones + bonificación', value: Math.round(grati + bonif), tone: 'good' },
+          { label: 'Vacaciones truncas', value: Math.round(vacaciones), tone: 'warn' },
+        ].filter(function (s) { return s.value > 0; });
+      }
+
+      return { total: sol(total), sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>

@@ -1,0 +1,247 @@
+---
+/**
+ * Hub EN — "How much weight, how many sets, how often?"
+ * audience="US" y lang="en" literales; el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  KG_PER_LB,
+  EPLEY_DIV,
+  BRZYCKI_NUM,
+  BRZYCKI_SUB,
+  LOMBARDI_EXP,
+  PCT_TABLE,
+  MEV,
+  MRV,
+  FREQUENCY,
+  RECOVERY_BASE_H,
+  INTENSITY_MULT,
+  AGE_MULT,
+  SLEEP_MULT,
+} from '../../../lib/hubs/en/strength-and-training-volume';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/en' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    KG_PER_LB,
+    EPLEY_DIV,
+    BRZYCKI_NUM,
+    BRZYCKI_SUB,
+    LOMBARDI_EXP,
+    PCT_TABLE,
+    MEV,
+    MRV,
+    FREQUENCY,
+    RECOVERY_BASE_H,
+    INTENSITY_MULT,
+    AGE_MULT,
+    SLEEP_MULT,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const n0 = (x) => Math.round(x || 0).toLocaleString('en-US');
+    const MUSCLE_LABEL = {
+      chest: 'chest', back: 'back', legs: 'legs', arms: 'arms',
+      shoulders: 'shoulders', biceps: 'biceps', triceps: 'triceps', abs: 'abs',
+    };
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'onerm';
+
+      if (id === 'volume') {
+        const muscle = MEV[String(v.muscle)] ? String(v.muscle) : 'chest';
+        const level = MEV[muscle][String(v.level)] ? String(v.level) : 'intermediate';
+        const mev = MEV[muscle][level];
+        const mrv = MRV[muscle][level];
+        const freq = FREQUENCY[level] || FREQUENCY.intermediate;
+        const sessions = freq.high;
+        const start = mev + 2;
+        const rows = [
+          { k: 'Minimum effective volume (MEV)', ref: 'Fewest weekly sets that still grow it', v: mev, format: 'unit', unit: 'sets/wk', extra: true },
+          { k: 'Maximum recoverable volume (MRV)', ref: 'The ceiling your recovery absorbs', v: mrv, format: 'unit', unit: 'sets/wk', extra: true },
+          { k: 'Width of the productive range', ref: 'MRV minus MEV', v: mrv - mev, format: 'unit', unit: 'sets/wk' },
+          { k: 'Where to start this block', ref: 'Two sets above MEV', v: start, format: 'unit', unit: 'sets/wk' },
+          { k: 'Sessions a week for your level', ref: freq.note, v: sessions, format: 'unit', unit: 'sessions' },
+          { k: 'Hard sets per session at that start point', ref: 'Volume split evenly across sessions', v: start / sessions, format: 'unit', unit: 'sets', decimals: 1 },
+          { k: 'Hard sets per session at your MRV', ref: 'Above 10 in one session, returns fall off', v: mrv / sessions, format: 'unit', unit: 'sets', decimals: 1 },
+          { k: 'Weeks of adding two sets before you hit the ceiling', ref: 'Deload before you get there, not after', v: Math.max(0, Math.floor((mrv - start) / 2)), format: 'unit', unit: 'weeks' },
+        ];
+        return {
+          total: mev + '–' + mrv + ' sets/wk',
+          sub:
+            'For ' + (MUSCLE_LABEL[muscle] || muscle) + ' at ' + String(v.level || level) + ' level · start around ' + start +
+            ' hard sets a week, split across ' + sessions + ' session' + (sessions === 1 ? '' : 's') +
+            ' · warm-ups and back-off sets do not count towards this total',
+          rows: rows,
+          chart: [
+            { label: 'MEV (sets/wk)', value: mev, tone: 'warn' },
+            { label: 'Room above MEV up to MRV', value: mrv - mev, tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'frequency') {
+        const level = FREQUENCY[String(v.level)] ? String(v.level) : 'intermediate';
+        const freq = FREQUENCY[level];
+        const muscle = MEV[String(v.muscle)] ? String(v.muscle) : 'chest';
+        const mev = MEV[muscle][level];
+        const mrv = MRV[muscle][level];
+        const mid = Math.round((mev + mrv) / 2);
+        const rows = [
+          { k: 'Sessions per muscle per week', ref: freq.note, v: freq.high, format: 'unit', unit: 'sessions', extra: true },
+          { k: 'Lower end of the frequency range', ref: 'Still productive if the week is tight', v: freq.low, format: 'unit', unit: 'sessions' },
+          { k: 'Mid-range weekly volume for this muscle', ref: 'Halfway between MEV and MRV', v: mid, format: 'unit', unit: 'sets/wk' },
+          { k: 'Hard sets per session at that frequency', ref: 'Volume ÷ sessions', v: mid / freq.high, format: 'unit', unit: 'sets', decimals: 1, extra: true },
+          { k: 'Same volume crammed into one session', ref: 'The last sets are done with degraded output', v: mid, format: 'unit', unit: 'sets' },
+          { k: 'Practical per-session cap', ref: 'Beyond this, returns fall off sharply', v: 10, format: 'unit', unit: 'sets' },
+          { k: 'Minimum hours between hard sessions for the same muscle', ref: 'Two clear days is safer for legs and back', v: 48, format: 'unit', unit: 'hours' },
+        ];
+        return {
+          total: freq.low === freq.high ? freq.high + '× per week' : freq.low + '–' + freq.high + '× per week',
+          sub:
+            'For a ' + level + ' lifter: ' + freq.note + ' · with ' + mid + ' weekly sets for ' + (MUSCLE_LABEL[muscle] || muscle) +
+            ' that is about ' + (mid / freq.high).toFixed(1) + ' hard sets per session · frequency matters because it lets you distribute volume, not because of the number itself',
+          rows: rows,
+          chart: [
+            { label: 'Sessions per week', value: freq.high, tone: 'main' },
+            { label: 'Hard sets per session', value: Math.round((mid / freq.high) * 10) / 10, tone: 'good' },
+          ],
+        };
+      }
+
+      if (id === 'recovery') {
+        const muscle = RECOVERY_BASE_H[String(v.recMuscle)] ? String(v.recMuscle) : 'legs';
+        const base = RECOVERY_BASE_H[muscle];
+        const intensity = INTENSITY_MULT[String(v.intensity)] ? String(v.intensity) : 'moderate';
+        const iMult = INTENSITY_MULT[intensity];
+        const age = Math.max(14, v.age || 30);
+        const sleep = Math.max(3, v.sleep || 7);
+        let aMult = 1;
+        for (let n = 0; n < AGE_MULT.length; n++) {
+          if (age > AGE_MULT[n].over) { aMult = AGE_MULT[n].mult; break; }
+        }
+        let sMult = 1;
+        for (let n = 0; n < SLEEP_MULT.length; n++) {
+          if (sleep < SLEEP_MULT[n].under) { sMult = SLEEP_MULT[n].mult; break; }
+        }
+        const hours = Math.round(base * iMult * aMult * sMult);
+        const days = Math.ceil(hours / 24);
+        const perWeek = Math.floor(7 / (days + 1));
+        const bestCase = Math.round(base * iMult);
+        const rows = [
+          { k: 'Base recovery for this muscle', ref: 'After a moderate session', v: base, format: 'unit', unit: 'hours' },
+          { k: 'Intensity multiplier applied', ref: intensity === 'high' ? 'Hard session: ×1.35' : intensity === 'low' ? 'Light session: ×0.70' : 'Moderate session: ×1.00', v: iMult, format: 'plain', decimals: 2 },
+          { k: 'Age multiplier applied', ref: aMult > 1 ? 'Recovery slows with age' : 'No adjustment under 36', v: aMult, format: 'plain', decimals: 2 },
+          { k: 'Sleep multiplier applied', ref: sMult > 1 ? 'Short sleep lengthens the window' : 'Seven hours or more: no penalty', v: sMult, format: 'plain', decimals: 2 },
+          { k: 'Recovery time', ref: 'Before training it hard again', v: hours, format: 'unit', unit: 'hours', extra: true },
+          { k: 'That in days', ref: 'Rounded up', v: days, format: 'unit', unit: 'days', extra: true },
+          { k: 'Times a week you can train it hard', ref: 'At most, at this recovery rate', v: perWeek, format: 'unit', unit: 'sessions' },
+          { k: 'Hours you would save on eight hours of sleep', ref: 'Age and intensity held constant', v: Math.max(0, hours - Math.round(base * iMult * aMult)), format: 'unit', unit: 'hours' },
+          { k: 'Best case for this muscle at your age', ref: 'Light session, no sleep penalty', v: bestCase, format: 'unit', unit: 'hours' },
+        ];
+        return {
+          total: hours + ' hours',
+          sub:
+            'About ' + days + (days === 1 ? ' day' : ' days') + ' before training ' + (MUSCLE_LABEL[muscle] || muscle) +
+            ' hard again — roughly ' + perWeek + '× a week' +
+            (sMult > 1 ? ' · your sleep is stretching this window; it is the largest input you actually control' : ' · soreness is a poor readiness signal, first-set performance is a better one'),
+          rows: rows,
+          chart: [
+            { label: 'Recovery hours', value: hours, tone: 'warn' },
+            { label: 'A 48-hour reference', value: 48, tone: 'main' },
+          ],
+        };
+      }
+
+      // onerm
+      const wLb = Math.max(1, v.weight || 1);
+      const reps = Math.min(15, Math.max(1, Math.round(v.reps || 1)));
+      const epley = wLb * (1 + reps / EPLEY_DIV);
+      const brzycki = (wLb * BRZYCKI_NUM) / (BRZYCKI_SUB - reps);
+      const lombardi = wLb * Math.pow(reps, LOMBARDI_EXP);
+      const avg = (epley + brzycki + lombardi) / 3;
+      const spread = Math.max(epley, brzycki, lombardi) - Math.min(epley, brzycki, lombardi);
+      const rows = [
+        { k: 'Epley estimate', ref: 'weight × (1 + reps ÷ 30)', v: epley, format: 'unit', unit: 'lb', decimals: 1 },
+        { k: 'Brzycki estimate', ref: 'weight × 36 ÷ (37 − reps)', v: brzycki, format: 'unit', unit: 'lb', decimals: 1 },
+        { k: 'Lombardi estimate', ref: 'weight × reps^0.10', v: lombardi, format: 'unit', unit: 'lb', decimals: 1 },
+        { k: 'Average of the three', ref: reps <= 6 ? 'Reliable at this rep count' : 'Treat as a reference — retest at 3–5 reps', v: avg, format: 'unit', unit: 'lb', decimals: 1, extra: true },
+        { k: 'Spread between the highest and lowest', ref: 'How much the formulas disagree', v: spread, format: 'unit', unit: 'lb', decimals: 1 },
+        { k: 'The same one-rep max in kilograms', ref: '1 lb = 0.45359237 kg (exact)', v: avg * KG_PER_LB, format: 'unit', unit: 'kg', decimals: 1 },
+      ];
+      for (let n = 0; n < PCT_TABLE.length; n++) {
+        const p = PCT_TABLE[n];
+        rows.push({
+          k: p.pct + '% of your max',
+          ref: 'About ' + p.reps + ' reps',
+          v: (avg * p.pct) / 100,
+          format: 'unit',
+          unit: 'lb',
+          decimals: 0,
+        });
+      }
+      return {
+        total: n0(avg) + ' lb',
+        sub:
+          Math.round(avg * KG_PER_LB) + ' kg · from ' + n0(wLb) + ' lb × ' + reps + ' reps · the three formulas span ' +
+          spread.toFixed(1) + ' lb' +
+          (reps <= 6
+            ? ', which is tight — this estimate is trustworthy'
+            : ', which is wide because the rep count is high — retest with a set of three to five'),
+        rows: rows,
+        chart: [
+          { label: 'Epley (lb)', value: Math.round(epley), tone: 'main' },
+          { label: 'Brzycki (lb)', value: Math.round(brzycki), tone: 'good' },
+          { label: 'Lombardi (lb)', value: Math.round(lombardi), tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

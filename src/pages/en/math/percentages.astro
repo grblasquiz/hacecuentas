@@ -1,0 +1,341 @@
+---
+/**
+ * Hub de decisión EN — "How do I work out this percentage?"
+ *
+ * audience="US" y lang="en" van literales: HubData sólo modela 'AR' | 'global'
+ * y el mercado real viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import { hub } from '../../../lib/hubs/en/percentages';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="US"
+  lang="en"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline>
+  (function () {
+    const H = window.HC_HUB;
+
+    /** en-US formatting: the hub runtime formats rows in es-AR, the headline is ours. */
+    function n2(x, d) {
+      const dec = d == null ? 2 : d;
+      return Number(x || 0).toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: dec,
+      });
+    }
+    function pctStr(x) {
+      return (x > 0 ? '+' : '') + n2(x, 2) + '%';
+    }
+    function gcd(x, y) {
+      x = Math.abs(Math.round(x));
+      y = Math.abs(Math.round(y));
+      while (y !== 0) { const t = y; y = x % y; x = t; }
+      return x;
+    }
+    /** Scales decimals up to whole numbers so the GCD is meaningful. */
+    function toIntegers(parts) {
+      let maxDec = 0;
+      for (const p of parts) {
+        const s = String(p);
+        const dot = s.indexOf('.');
+        if (dot !== -1) maxDec = Math.max(maxDec, s.length - dot - 1);
+      }
+      const mult = Math.pow(10, Math.min(maxDec, 6));
+      return parts.map((p) => Math.round(p * mult));
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'of';
+      const a = Number(v.a) || 0;
+      const b = Number(v.b) || 0;
+      const c = Number(v.c) || 0;
+      const pct = Number(v.pct) || 0;
+      const pct2 = Number(v.pct2) || 0;
+
+      const base = { format: 'plain', decimals: 2 };
+      const PCT = { format: 'unit', unit: '%', decimals: 2 };
+
+      // ── X% of a number ────────────────────────────────────────────────────
+      if (id === 'of') {
+        const part = (a * pct) / 100;
+        const rest = a - part;
+        return Object.assign({}, base, {
+          total: n2(part, 2),
+          sub: n2(pct, 2) + '% of ' + n2(a, 2) + ' is ' + n2(part, 2) + ' · the other ' + n2(100 - pct, 2) + '% is ' + n2(rest, 2),
+          rows: [
+            { k: 'The whole you started from (A)', ref: 'Your input', v: a, format: 'plain', decimals: 2 },
+            { k: 'Percentage you asked for', ref: 'Your input', v: pct, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'A × % ÷ 100 — the share', ref: 'Answer', v: part, format: 'plain', decimals: 2, extra: true },
+            { k: 'What is left of A', ref: n2(100 - pct, 2) + '% of A', v: rest, format: 'plain', decimals: 2 },
+            { k: '1% of A', ref: 'Scale this to any other percent', v: a / 100, format: 'plain', decimals: 4 },
+            { k: '10% of A', ref: 'Decimal point one place left', v: a / 10, format: 'plain', decimals: 3 },
+          ],
+          chart: [
+            { label: 'The ' + n2(pct, 2) + '% you asked for', value: Math.max(0, part), tone: 'main' },
+            { label: 'The rest of the whole', value: Math.max(0, rest), tone: 'good' },
+          ],
+        });
+      }
+
+      // ── What percent is A of B? ───────────────────────────────────────────
+      if (id === 'whatpct') {
+        if (b === 0) {
+          return Object.assign({}, base, {
+            total: 'Undefined',
+            sub: 'Number B is the whole you divide by, so it cannot be zero.',
+            rows: [
+              { k: 'Part (A)', ref: 'Your input', v: a, format: 'plain', decimals: 2 },
+              { k: 'Whole (B)', ref: 'Cannot be zero', v: b, format: 'plain', decimals: 2 },
+            ],
+            chart: [{ label: 'No valid whole to compare against', value: 1, tone: 'warn' }],
+          });
+        }
+        const p = (a / b) * 100;
+        const rest = b - a;
+        return Object.assign({}, base, {
+          total: n2(p, 2) + '%',
+          sub: n2(a, 2) + ' is ' + n2(p, 2) + '% of ' + n2(b, 2) + (a > b ? ' — larger than the whole' : ' · ' + n2(rest, 2) + ' of B is left over'),
+          rows: [
+            { k: 'Part (A)', ref: 'Your input', v: a, format: 'plain', decimals: 2 },
+            { k: 'Whole (B)', ref: 'Your input', v: b, format: 'plain', decimals: 2 },
+            { k: 'A ÷ B × 100 — the share as a percent', ref: 'Answer', v: p, format: 'unit', unit: '%', decimals: 2, extra: true },
+            { k: 'How much of B is left over', ref: 'B − A', v: rest, format: 'plain', decimals: 2 },
+            { k: 'That leftover as a percent of B', ref: '100% − answer', v: 100 - p, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'A as a decimal fraction of B', ref: 'A ÷ B', v: a / b, format: 'plain', decimals: 4 },
+          ],
+          chart: [
+            { label: 'A, as a share of B', value: Math.max(0, a), tone: 'main' },
+            { label: 'The rest of B', value: Math.max(0, rest), tone: 'good' },
+          ],
+        });
+      }
+
+      // ── Percent change between two values ─────────────────────────────────
+      if (id === 'change') {
+        if (a === 0) {
+          return Object.assign({}, base, {
+            total: 'Undefined',
+            sub: 'Percent change is undefined when the original value is 0 — the absolute difference is ' + n2(Math.abs(b), 2) + '.',
+            rows: [
+              { k: 'Original value (A)', ref: 'Cannot be zero', v: a, format: 'plain', decimals: 2 },
+              { k: 'New value (B)', ref: 'Your input', v: b, format: 'plain', decimals: 2 },
+              { k: 'Absolute difference', ref: '|B − A|', v: Math.abs(b - a), format: 'plain', decimals: 2, extra: true },
+            ],
+            chart: [{ label: 'Absolute difference', value: Math.abs(b - a) || 1, tone: 'warn' }],
+          });
+        }
+        const ch = ((b - a) / a) * 100;
+        const diff = b - a;
+        const dir = ch > 0 ? 'Increase' : ch < 0 ? 'Decrease' : 'No change';
+        return Object.assign({}, base, {
+          total: pctStr(ch),
+          sub: dir + ' of ' + n2(Math.abs(ch), 2) + '% · from ' + n2(a, 2) + ' to ' + n2(b, 2) + ' is an absolute move of ' + n2(Math.abs(diff), 2),
+          rows: [
+            { k: 'Original value (A)', ref: 'The denominator', v: a, format: 'plain', decimals: 2 },
+            { k: 'New value (B)', ref: 'Your input', v: b, format: 'plain', decimals: 2 },
+            { k: 'Absolute difference', ref: 'B − A', v: Math.abs(diff), format: 'plain', decimals: 2 },
+            { k: '(B − A) ÷ A × 100 — percent change', ref: dir, v: ch, format: 'unit', unit: '%', decimals: 2, extra: true },
+            { k: 'The reverse move, B back to A', ref: 'Measured against B', v: b !== 0 ? ((a - b) / b) * 100 : 0, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Multiplier applied to A', ref: 'B ÷ A', v: b / a, format: 'plain', decimals: 4 },
+          ],
+          chart: [
+            { label: 'The value you started from', value: Math.max(0, Math.min(a, b)), tone: 'main' },
+            { label: dir === 'Decrease' ? 'The amount removed' : 'The amount added', value: Math.abs(diff), tone: ch < 0 ? 'warn' : 'good' },
+          ],
+        });
+      }
+
+      // ── Apply one or two percent changes ──────────────────────────────────
+      if (id === 'apply') {
+        const first = a * (1 + pct / 100);
+        const final = first * (1 + pct2 / 100);
+        const effective = a !== 0 ? (final / a - 1) * 100 : 0;
+        const naive = pct + pct2;
+        return Object.assign({}, base, {
+          total: n2(final, 2),
+          sub:
+            n2(a, 2) + ' with ' + pctStr(pct) + (pct2 !== 0 ? ' then ' + pctStr(pct2) : '') +
+            ' ends at ' + n2(final, 2) + ' · effective change ' + pctStr(effective) +
+            (pct2 !== 0 ? ' (not ' + pctStr(naive) + ')' : ''),
+          rows: [
+            { k: 'Starting value (A)', ref: 'Your input', v: a, format: 'plain', decimals: 2 },
+            { k: 'First change', ref: 'A × (1 ' + (pct >= 0 ? '+ ' : '− ') + n2(Math.abs(pct), 2) + '/100)', v: pct, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Value after the first change', ref: 'Base for the second one', v: first, format: 'plain', decimals: 2 },
+            { k: 'Second change', ref: pct2 === 0 ? 'Not applied' : 'Applied to the new base', v: pct2, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Final value', ref: 'Answer', v: final, format: 'plain', decimals: 2, extra: true },
+            { k: 'Total amount added or removed', ref: '|final − A|', v: Math.abs(final - a), format: 'plain', decimals: 2 },
+            { k: 'Effective combined percentage', ref: 'What actually happened', v: effective, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Naive sum of the two percentages', ref: 'The wrong answer, for comparison', v: naive, format: 'unit', unit: '%', decimals: 2 },
+          ],
+          chart: [
+            { label: 'The value you kept', value: Math.max(0, Math.min(a, final)), tone: 'main' },
+            { label: effective < 0 ? 'The amount removed' : 'The amount added', value: Math.abs(final - a), tone: effective < 0 ? 'warn' : 'good' },
+          ],
+        });
+      }
+
+      // ── Reverse a percent change ──────────────────────────────────────────
+      if (id === 'reverse') {
+        const k = 1 + pct / 100;
+        if (k === 0) {
+          return Object.assign({}, base, {
+            total: 'Undefined',
+            sub: 'A change of −100% wipes the value out, so there is no original value to recover.',
+            rows: [
+              { k: 'Value after the change (A)', ref: 'Your input', v: a, format: 'plain', decimals: 2 },
+              { k: 'Change applied', ref: 'Cannot be −100%', v: pct, format: 'unit', unit: '%', decimals: 2 },
+            ],
+            chart: [{ label: 'No valid original value', value: 1, tone: 'warn' }],
+          });
+        }
+        const orig = a / k;
+        const moved = a - orig;
+        const wrong = a - (a * pct) / 100;
+        return Object.assign({}, base, {
+          total: n2(orig, 2),
+          sub:
+            'Before the ' + pctStr(pct) + ' change the value was ' + n2(orig, 2) +
+            ' · subtracting the percent from ' + n2(a, 2) + ' would have given ' + n2(wrong, 2) + ', which is wrong',
+          rows: [
+            { k: 'Value you can see now (A)', ref: 'After the change', v: a, format: 'plain', decimals: 2 },
+            { k: 'Change that was applied', ref: 'Your input', v: pct, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Divisor (1 + % ÷ 100)', ref: 'The factor to undo', v: k, format: 'plain', decimals: 4 },
+            { k: 'A ÷ (1 + % ÷ 100) — the original', ref: 'Answer', v: orig, format: 'plain', decimals: 2, extra: true },
+            { k: 'Amount that was added or removed', ref: '|A − original|', v: Math.abs(moved), format: 'plain', decimals: 2 },
+            { k: 'What you get if you subtract the percent instead', ref: 'The common mistake', v: wrong, format: 'plain', decimals: 2 },
+            { k: 'How far off that mistake would be', ref: 'Difference from the real original', v: Math.abs(wrong - orig), format: 'plain', decimals: 2 },
+          ],
+          chart: [
+            { label: 'The original value', value: Math.max(0, Math.abs(orig)), tone: 'main' },
+            { label: pct < 0 ? 'The amount that was taken off' : 'The amount that was added on', value: Math.abs(moved), tone: pct < 0 ? 'warn' : 'good' },
+          ],
+        });
+      }
+
+      // ── Simplify a ratio ──────────────────────────────────────────────────
+      if (id === 'ratio') {
+        const three = c > 0;
+        if (a <= 0 || b <= 0) {
+          return Object.assign({}, base, {
+            total: '—',
+            sub: 'Enter positive values for A and B to simplify a ratio.',
+            rows: [
+              { k: 'Part A', ref: 'Must be positive', v: a, format: 'plain', decimals: 2 },
+              { k: 'Part B', ref: 'Must be positive', v: b, format: 'plain', decimals: 2 },
+            ],
+            chart: [{ label: 'No valid ratio', value: 1, tone: 'warn' }],
+          });
+        }
+        const parts = three ? [a, b, c] : [a, b];
+        const ints = toIntegers(parts);
+        const div = three ? gcd(gcd(ints[0], ints[1]), ints[2]) : gcd(ints[0], ints[1]);
+        const s = ints.map((x) => x / div);
+        const total = parts.reduce((x, y) => x + y, 0);
+        const simplified = s.map((x) => n2(x, 4)).join(' : ');
+        const rows = [
+          { k: 'Part A', ref: n2((a / total) * 100, 1) + '% of the whole', v: a, format: 'plain', decimals: 2 },
+          { k: 'Part B', ref: n2((b / total) * 100, 1) + '% of the whole', v: b, format: 'plain', decimals: 2 },
+        ];
+        if (three) rows.push({ k: 'Part C', ref: n2((c / total) * 100, 1) + '% of the whole', v: c, format: 'plain', decimals: 2 });
+        rows.push({ k: 'Greatest common divisor used', ref: 'Euclidean algorithm', v: div, format: 'plain', decimals: 0 });
+        rows.push({ k: 'Total of all parts', ref: 'The whole', v: total, format: 'plain', decimals: 2 });
+        rows.push({ k: 'A ÷ B as a decimal', ref: 'Ratio in decimal form', v: a / b, format: 'plain', decimals: 4 });
+        rows.push({ k: 'Number of parts in the simplified whole', ref: 'Add the simplified terms', v: s.reduce((x, y) => x + y, 0), format: 'plain', decimals: 2, extra: true });
+
+        const chart = [
+          { label: 'Part A', value: a, tone: 'main' },
+          { label: 'Part B', value: b, tone: 'good' },
+        ];
+        if (three) chart.push({ label: 'Part C', value: c, tone: 'prop' });
+
+        return Object.assign({}, base, {
+          total: simplified,
+          sub:
+            'Simplified from ' + parts.map((x) => n2(x, 2)).join(' : ') + ' by dividing every part by ' + n2(div, 0) +
+            ' · shares ' + parts.map((x) => n2((x / total) * 100, 1) + '%').join(' / '),
+          rows: rows,
+          chart: chart,
+        });
+      }
+
+      // ── Rule of three ─────────────────────────────────────────────────────
+      if (a === 0) {
+        return Object.assign({}, base, {
+          total: 'Undefined',
+          sub: 'In a direct proportion A cannot be zero — you would be dividing by zero.',
+          rows: [
+            { k: 'Known quantity A', ref: 'Cannot be zero', v: a, format: 'plain', decimals: 2 },
+            { k: 'Its partner B', ref: 'Your input', v: b, format: 'plain', decimals: 2 },
+          ],
+          chart: [{ label: 'No valid proportion', value: 1, tone: 'warn' }],
+        });
+      }
+      const direct = (b * c) / a;
+      const inverse = c !== 0 ? (a * b) / c : 0;
+      return Object.assign({}, base, {
+        total: n2(direct, 4),
+        sub:
+          'If ' + n2(a, 2) + ' gives ' + n2(b, 2) + ', then ' + n2(c, 2) + ' gives ' + n2(direct, 4) +
+          ' · the unit rate is ' + n2(b / a, 4) + ' of B per unit of A' +
+          (c !== 0 ? ' · in an inverse proportion the answer would be ' + n2(inverse, 4) : ''),
+        rows: [
+          { k: 'Known quantity A', ref: 'Your input', v: a, format: 'plain', decimals: 2 },
+          { k: 'Its known partner B', ref: 'Your input', v: b, format: 'plain', decimals: 2 },
+          { k: 'New quantity C', ref: 'Your input', v: c, format: 'plain', decimals: 2 },
+          { k: 'Unit rate B ÷ A', ref: 'B for every single unit of A', v: b / a, format: 'plain', decimals: 4 },
+          { k: 'x = B × C ÷ A — direct proportion', ref: 'Answer', v: direct, format: 'plain', decimals: 4, extra: true },
+          { k: 'x = A × B ÷ C — inverse proportion', ref: 'For the "more means less" case', v: inverse, format: 'plain', decimals: 4 },
+          { k: 'The constant product A × B', ref: 'What stays fixed in an inverse proportion', v: a * b, format: 'plain', decimals: 2 },
+        ],
+        chart: [
+          { label: 'Known pair: A', value: Math.abs(a), tone: 'main' },
+          { label: 'Known pair: B', value: Math.abs(b), tone: 'good' },
+          { label: 'New pair: C', value: Math.abs(c), tone: 'prop' },
+          { label: 'New pair: x (the answer)', value: Math.abs(direct), tone: 'warn' },
+        ],
+      });
+    });
+  })();
+</script>

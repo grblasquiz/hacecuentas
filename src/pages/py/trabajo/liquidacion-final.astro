@@ -1,0 +1,212 @@
+---
+/**
+ * Hub de decisión PY — "Te vas del trabajo: ¿cuánto te tienen que pagar?".
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  PREAVISO,
+  VACACIONES,
+  INDEMNIZACION,
+  AGUINALDO_DIVISOR,
+  DIAS_MES,
+  SMVM,
+} from '../../../lib/hubs/py/liquidacion-final';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PY"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ PREAVISO, VACACIONES, INDEMNIZACION, AGUINALDO_DIVISOR, DIAS_MES, SMVM }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const gs = (n) => 'Gs. ' + Math.round(n || 0).toLocaleString('de-DE');
+
+    // Escalas por antigüedad: `hasta: null` = tramo sin techo.
+    function porTramo(tabla, anios) {
+      for (const t of tabla) {
+        if (t.hasta === null || anios <= t.hasta) return t.dias;
+      }
+      return tabla[tabla.length - 1].dias;
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'despido-injustificado';
+      const salario = Math.max(0, v.salario || 0);
+      const anios = Math.max(0, Math.round(v.anios || 0));
+      const meses = Math.max(0, Math.round(v.meses || 0));
+      const mesesAnio = Math.min(12, Math.max(0, v.mesesAnio || 0));
+      const diasVacPendientes = Math.max(0, v.diasVacPendientes || 0);
+      const preavisoOtorgado = String(v.preavisoOtorgado || 'no') === 'si';
+
+      const jornal = salario / DIAS_MES;
+      const antiguedad = anios + meses / 12;
+      const esDespido = id === 'despido-injustificado';
+      const esPrueba = id === 'periodo-prueba';
+
+      // Art. 91: la fracción MAYOR a 6 meses computa como año entero.
+      const aniosComputables = anios + (meses > 6 ? 1 : 0);
+      const estabilidad = antiguedad >= INDEMNIZACION.estabilidadAnios;
+
+      const indemBase = esDespido ? INDEMNIZACION.jornalesPorAnio * jornal * aniosComputables : 0;
+      const indemnizacion = estabilidad ? indemBase * 2 : indemBase;
+
+      const diasPreaviso = esDespido && !preavisoOtorgado && !esPrueba ? porTramo(PREAVISO, antiguedad) : 0;
+      const preaviso = jornal * diasPreaviso;
+
+      const aguinaldo = (salario * mesesAnio) / AGUINALDO_DIVISOR;
+
+      const diasVacAnuales = porTramo(VACACIONES, antiguedad);
+      const diasVacProporcionales = (diasVacAnuales * mesesAnio) / 12;
+      const diasVacTotales = diasVacProporcionales + diasVacPendientes;
+      const vacaciones = jornal * diasVacTotales;
+
+      const total = indemnizacion + preaviso + aguinaldo + vacaciones;
+
+      const rows = [
+        { k: 'Último salario mensual', ref: 'Base de toda la liquidación', v: salario },
+        { k: 'Tu jornal diario', ref: 'Salario ÷ ' + DIAS_MES, v: jornal },
+        {
+          k: 'Años computables para la indemnización',
+          ref: meses > 6 ? 'La fracción de ' + meses + ' meses suma un año (art. 91)' : 'La fracción no llega a 6 meses',
+          v: aniosComputables,
+          format: 'unit',
+          unit: 'años',
+        },
+      ];
+
+      if (esDespido) {
+        rows.push({
+          k: 'Indemnización por despido',
+          ref: INDEMNIZACION.jornalesPorAnio + ' jornales × ' + aniosComputables + (estabilidad ? ' × 2 por estabilidad' : '') + ' · arts. 91 y 94',
+          v: indemnizacion,
+        });
+      } else {
+        rows.push({
+          k: 'Indemnización por despido',
+          ref: esPrueba ? 'No corresponde en período de prueba' : 'No corresponde: la relación no terminó por despido',
+          v: 0,
+        });
+      }
+
+      rows.push({
+        k: 'Indemnización sustitutiva del preaviso',
+        ref: diasPreaviso > 0
+          ? diasPreaviso + ' días × jornal · art. 87'
+          : (preavisoOtorgado ? 'El preaviso fue otorgado' : 'No corresponde en este caso'),
+        v: preaviso,
+      });
+      rows.push({
+        k: 'Aguinaldo proporcional',
+        ref: mesesAnio + ' meses ÷ ' + AGUINALDO_DIVISOR + ' · art. 243',
+        v: aguinaldo,
+      });
+      rows.push({
+        k: 'Vacaciones proporcionales y no gozadas',
+        ref: diasVacTotales.toFixed(1).replace('.', ',') + ' días × jornal · art. 218',
+        v: vacaciones,
+      });
+      rows.push({ k: 'Total de la liquidación final', ref: 'Finiquito', v: total, extra: true });
+      rows.push({
+        k: 'Días de vacaciones que te corresponden por año',
+        ref: 'Tramo de ' + antiguedad.toFixed(1).replace('.', ',') + ' años · art. 218',
+        v: diasVacAnuales,
+        format: 'unit',
+        unit: 'días hábiles',
+      });
+      rows.push({
+        k: 'Días de preaviso de tu tramo',
+        ref: 'Escala del art. 87',
+        v: porTramo(PREAVISO, antiguedad),
+        format: 'unit',
+        unit: 'días',
+      });
+      rows.push({
+        k: 'Tu liquidación medida en sueldos',
+        ref: 'Total ÷ salario mensual',
+        v: salario > 0 ? total / salario : 0,
+        format: 'unit',
+        unit: 'sueldos',
+        decimals: 1,
+      });
+      rows.push({
+        k: estabilidad
+          ? 'Ya tenés estabilidad: la indemnización va doble'
+          : 'Años que te faltan para la estabilidad',
+        ref: 'Art. 94 · ' + INDEMNIZACION.estabilidadAnios + ' años',
+        v: estabilidad ? 0 : Math.max(0, INDEMNIZACION.estabilidadAnios - antiguedad),
+        format: 'unit',
+        unit: 'años',
+        decimals: 1,
+      });
+
+      const sub =
+        (esDespido
+          ? (estabilidad
+              ? 'Despido con estabilidad: indemnización doble'
+              : 'Despido injustificado: indemnización simple')
+          : (esPrueba
+              ? 'Período de prueba: sin indemnización ni preaviso'
+              : 'Sin indemnización ni preaviso a cargo del empleador')) +
+        ' · jornal ' + gs(jornal) +
+        ' · ' + aniosComputables + ' año(s) computable(s)' +
+        ' · equivale a ' + (salario > 0 ? (total / salario).toFixed(1).replace('.', ',') : '0') + ' sueldos';
+
+      return {
+        total: gs(total),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Indemnización', value: Math.round(indemnizacion), tone: 'main' },
+          { label: 'Preaviso', value: Math.round(preaviso), tone: 'exit' },
+          { label: 'Aguinaldo proporcional', value: Math.round(aguinaldo), tone: 'good' },
+          { label: 'Vacaciones', value: Math.round(vacaciones), tone: 'prop' },
+        ],
+      };
+    });
+  })();
+</script>

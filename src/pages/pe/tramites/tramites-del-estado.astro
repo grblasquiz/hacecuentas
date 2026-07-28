@@ -1,0 +1,227 @@
+---
+/**
+ * Hub de decisión PE — "Cuánto cuesta ese trámite o esa multa".
+ * audience="PE" literal: HubData sólo modela 'AR' | 'global' y el mercado viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  UIT,
+  PASAPORTE,
+  BREVETE,
+  ELECTORALES,
+  PAPELETA_TRAMOS,
+  DESCUENTO_PRONTO_PAGO,
+} from '../../../lib/hubs/pe/tramites-del-estado';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PE"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ UIT, PASAPORTE, BREVETE, ELECTORALES, TRAMOS: PAPELETA_TRAMOS, DESCUENTO: DESCUENTO_PRONTO_PAGO }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const sol2 = (n) => {
+      const r = Math.round((n || 0) * 100) / 100;
+      return 'S/ ' + new Intl.NumberFormat('de-DE', {
+        minimumFractionDigits: Number.isInteger(r) ? 0 : 2,
+        maximumFractionDigits: 2,
+      }).format(r);
+    };
+
+    const MULTA_DISTRITO = {
+      no_pobre: { monto: ELECTORALES.omisionSufragio.noPobre, pct: '2%', label: 'distrito no pobre' },
+      pobre_no_extremo: { monto: ELECTORALES.omisionSufragio.pobreNoExtremo, pct: '1%', label: 'distrito pobre no extremo' },
+      pobre_extremo: { monto: ELECTORALES.omisionSufragio.pobreExtremo, pct: '0,5%', label: 'distrito de pobreza extrema' },
+    };
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'pasaporte';
+      const rows = [];
+
+      if (id === 'pasaporte') {
+        const personas = Math.max(1, Math.round(v.personas || 1));
+        const edadKey = String(v.edadPasaporte || 'adulto');
+        const vigencia = PASAPORTE.vigenciaAnios[edadKey] || PASAPORTE.vigenciaAnios.adulto;
+        const total = PASAPORTE.tasa * personas;
+        const porAnio = vigencia > 0 ? PASAPORTE.tasa / vigencia : 0;
+
+        rows.push({ k: 'Tasa por pasaporte', ref: 'La misma a cualquier edad', v: PASAPORTE.tasa, decimals: 2, extra: true });
+        rows.push({ k: 'Pasaportes a tramitar', ref: 'Cada persona paga su propia tasa', v: personas, format: 'plain' });
+        rows.push({ k: 'Total a pagar', ref: personas + ' × ' + sol2(PASAPORTE.tasa), v: total, decimals: 2 });
+        rows.push({ k: 'Vigencia del pasaporte', ref: edadKey === 'adulto' ? 'Mayor de edad' : edadKey === 'de12a17' ? 'Entre 12 y 17 años' : 'Menor de 12 años', v: vigencia, format: 'unit', unit: 'años' });
+        rows.push({ k: 'Costo por año de vigencia', ref: 'Tasa ÷ años que dura', v: porAnio, decimals: 2 });
+        rows.push({ k: 'Lo mismo para un adulto', ref: PASAPORTE.vigenciaAnios.adulto + ' años de vigencia', v: PASAPORTE.tasa / PASAPORTE.vigenciaAnios.adulto, decimals: 2 });
+        rows.push({ k: 'Lo mismo para un menor de 12', ref: PASAPORTE.vigenciaAnios.menor12 + ' años de vigencia', v: PASAPORTE.tasa / PASAPORTE.vigenciaAnios.menor12, decimals: 2 });
+
+        return {
+          total: sol2(total),
+          sub:
+            personas + ' pasaporte(s) × ' + sol2(PASAPORTE.tasa) + ' = ' + sol2(total) +
+            ' · vigencia de ' + vigencia + ' años, es decir ' + sol2(porAnio) + ' por año de pasaporte' +
+            ' · paga la tasa antes de ir a la sede',
+          rows: rows,
+          chart: [
+            { label: 'Costo por año, adulto', value: Math.round((PASAPORTE.tasa / PASAPORTE.vigenciaAnios.adulto) * 100) / 100, tone: 'good' },
+            { label: 'Costo por año, 12 a 17', value: Math.round((PASAPORTE.tasa / PASAPORTE.vigenciaAnios.de12a17) * 100) / 100, tone: 'warn' },
+            { label: 'Costo por año, menor de 12', value: Math.round((PASAPORTE.tasa / PASAPORTE.vigenciaAnios.menor12) * 100) / 100, tone: 'exit' },
+          ],
+        };
+      }
+
+      if (id === 'brevete') {
+        // Un 0 en cualquiera de estos campos es un dato legítimo del usuario y se respeta.
+        const medico = Math.max(0, v.medico || 0);
+        const conocimientos = Math.max(0, v.conocimientos || 0);
+        const manejo = Math.max(0, v.manejo || 0);
+        const clases = Math.max(0, v.clases || 0);
+        const electronica = String(v.emision || 'fisica') === 'electronica';
+        const emision = electronica ? BREVETE.emisionElectronica : BREVETE.emisionFisica;
+
+        const tasasOficiales = conocimientos + manejo + emision;
+        const total = medico + tasasOficiales + clases;
+
+        rows.push({ k: 'Examen médico', ref: 'Centro médico autorizado · precio libre, cotiza antes', v: medico, decimals: 2, extra: true });
+        rows.push({ k: 'Evaluación de conocimientos', ref: 'Tasa de la evaluación teórica', v: conocimientos, decimals: 2 });
+        rows.push({ k: 'Evaluación de manejo', ref: 'Tasa de la evaluación práctica', v: manejo, decimals: 2 });
+        rows.push({ k: 'Emisión de la licencia', ref: electronica ? 'Formato electrónico' : 'Formato físico', v: emision, decimals: 2 });
+        rows.push({ k: 'Total de tasas oficiales', ref: 'Evaluaciones + emisión', v: tasasOficiales, decimals: 2 });
+        rows.push({ k: 'Clases de manejo', ref: clases > 0 ? 'Opcionales, precio de mercado' : 'No las incluiste', v: clases, decimals: 2 });
+        rows.push({ k: 'Costo total del brevete', ref: 'Médico + tasas + clases', v: total, decimals: 2, extra: true });
+        rows.push({ k: 'Qué parte se lleva el examen médico', ref: 'El único rubro con precio libre', v: total > 0 ? (medico / total) * 100 : 0, format: 'unit', unit: '%', decimals: 0 });
+        rows.push({ k: 'Diferencia entre emisión física y electrónica', ref: 'Lo que ahorras si la electrónica está disponible', v: BREVETE.emisionFisica - BREVETE.emisionElectronica, decimals: 2 });
+        rows.push({ k: 'Alternativa de pago único por las dos evaluaciones', ref: 'Centros autorizados · incluye dos oportunidades por evaluación', v: BREVETE.touringPagoUnico, decimals: 2 });
+
+        return {
+          total: sol2(total),
+          sub:
+            'Tu brevete cuesta unos ' + sol2(total) + ': ' + sol2(medico) + ' de examen médico, ' +
+            sol2(tasasOficiales) + ' de tasas oficiales' + (clases > 0 ? ' y ' + sol2(clases) + ' de clases' : '') +
+            ' · el médico se lleva el ' + (total > 0 ? Math.round((medico / total) * 100) : 0) + '% y es donde puedes ahorrar',
+          rows: rows,
+          chart: [
+            { label: 'Examen médico', value: Math.round(medico), tone: 'main' },
+            { label: 'Evaluación de conocimientos', value: Math.round(conocimientos), tone: 'prop' },
+            { label: 'Evaluación de manejo', value: Math.round(manejo), tone: 'warn' },
+            { label: 'Emisión de la licencia', value: Math.round(emision), tone: 'good' },
+            { label: 'Clases de manejo', value: Math.round(clases), tone: 'exit' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      if (id === 'papeleta') {
+        const key = String(v.papeleta || 'g24');
+        let tramo = TRAMOS[2];
+        for (const t of TRAMOS) if (t.id === key) tramo = t;
+        const dentroDePlazo = String(v.prontoPago || 'si') === 'si';
+
+        const monto = UIT * tramo.pct;
+        // Las infracciones muy graves no tienen descuento por pago voluntario.
+        const esMuyGrave = tramo.pct >= 0.5;
+        const aplicaDescuento = dentroDePlazo && !esMuyGrave;
+        const descuento = aplicaDescuento ? monto * DESCUENTO : 0;
+        const aPagar = monto - descuento;
+
+        rows.push({ k: 'Monto de la papeleta', ref: tramo.label + ' · ' + tramo.ejemplo, v: monto, decimals: 2, extra: true });
+        rows.push({ k: 'Porcentaje de la UIT que le corresponde', ref: 'La UIT vigente es ' + sol2(UIT), v: tramo.pct * 100, format: 'unit', unit: '%', decimals: 2 });
+        rows.push({ k: 'Descuento por pago voluntario', ref: esMuyGrave ? 'Las muy graves no tienen descuento' : (dentroDePlazo ? (DESCUENTO * 100).toFixed(0) + '% por pagar dentro del plazo' : 'El plazo ya venció'), v: descuento, decimals: 2 });
+        rows.push({ k: 'Lo que terminas pagando', ref: aplicaDescuento ? 'Con el descuento aplicado' : 'Monto completo', v: aPagar, decimals: 2, extra: true });
+        rows.push({ k: 'Puntos que suma a tu récord', ref: 'Acumular puntos puede suspender la licencia', v: tramo.puntos, format: 'plain' });
+        rows.push({ k: 'Lo que pierdes si dejas vencer el plazo', ref: esMuyGrave ? 'En esta infracción no hay nada que perder: no tiene descuento' : 'Diferencia entre pagar a tiempo y pagar después', v: esMuyGrave ? 0 : monto * DESCUENTO, decimals: 2 });
+        rows.push({ k: 'Cuánto sería la misma papeleta si fuera leve', ref: 'Falta leve · 4% de la UIT', v: UIT * 0.04, decimals: 2 });
+        rows.push({ k: 'Cuánto sería si fuera muy grave al 100%', ref: 'El techo de la tabla de infracciones', v: UIT, decimals: 2 });
+
+        return {
+          total: sol2(aPagar),
+          sub:
+            'La papeleta es ' + sol2(monto) + ' (' + tramo.label.toLowerCase() + ') y suma ' + tramo.puntos + ' puntos · ' +
+            (aplicaDescuento
+              ? 'pagando dentro del plazo pagas ' + sol2(aPagar) + ', te ahorras ' + sol2(descuento)
+              : esMuyGrave
+                ? 'las infracciones muy graves no tienen descuento por pago voluntario'
+                : 'el plazo de pago voluntario ya venció: se paga completa'),
+          rows: rows,
+          chart: [
+            { label: 'Lo que pagas', value: Math.round(aPagar), tone: 'main' },
+            { label: 'Descuento por pagar a tiempo', value: Math.round(descuento), tone: 'good' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      // --- Multa electoral ---
+      const d = MULTA_DISTRITO[String(v.distrito || 'no_pobre')] || MULTA_DISTRITO.no_pobre;
+      const elecciones = Math.max(1, Math.round(v.elecciones || 1));
+      const fueMesa = String(v.miembroMesa || 'no') === 'si';
+
+      const sufragio = d.monto * elecciones;
+      const mesa = fueMesa ? ELECTORALES.miembroMesaAusente : 0;
+      const totalMulta = sufragio + mesa;
+
+      rows.push({ k: 'Multa por elección', ref: d.label + ' · ' + d.pct + ' de la UIT', v: d.monto, decimals: 2 });
+      rows.push({ k: 'Elecciones en las que no votaste', ref: 'Cada acto electoral genera su propia multa', v: elecciones, format: 'plain' });
+      rows.push({ k: 'Total por omisión al sufragio', ref: sol2(d.monto) + ' × ' + elecciones, v: sufragio, decimals: 2 });
+      rows.push({ k: 'Multa por no asistir como miembro de mesa', ref: fueMesa ? '5% de la UIT · independiente de la anterior' : 'No te designaron o sí asististe', v: mesa, decimals: 2 });
+      rows.push({ k: 'Total a pagar', ref: 'Se paga en el Banco de la Nación o por la plataforma del Estado', v: totalMulta, decimals: 2, extra: true });
+      rows.push({ k: 'Lo mismo en un distrito de pobreza extrema', ref: '0,5% de la UIT por elección', v: ELECTORALES.omisionSufragio.pobreExtremo * elecciones + mesa, decimals: 2 });
+      rows.push({ k: 'Lo mismo en un distrito no pobre', ref: '2% de la UIT por elección', v: ELECTORALES.omisionSufragio.noPobre * elecciones + mesa, decimals: 2 });
+      rows.push({ k: 'Trámites bloqueados mientras no pagues', ref: 'DNI, pasaporte y firma ante notario', v: 3, format: 'plain' });
+
+      return {
+        total: sol2(totalMulta),
+        sub:
+          'Por no votar en ' + elecciones + ' elección(es) en un ' + d.label + ' (' + d.pct + ' de la UIT) debes ' +
+          sol2(sufragio) + (fueMesa ? ', más ' + sol2(mesa) + ' por no asistir como miembro de mesa' : '') +
+          ' · total ' + sol2(totalMulta) + ' · mientras no la pagues no puedes renovar el DNI ni sacar el pasaporte',
+        rows: rows,
+        chart: [
+          { label: 'Omisión al sufragio', value: Math.round(sufragio), tone: 'main' },
+          { label: 'Miembro de mesa ausente', value: Math.round(mesa), tone: 'bad' },
+        ].filter((s) => s.value > 0),
+      };
+    });
+  })();
+</script>

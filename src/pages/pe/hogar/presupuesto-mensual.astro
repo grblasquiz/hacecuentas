@@ -1,0 +1,218 @@
+---
+/**
+ * Hub de decisión PE — "Cuánto necesito por mes para vivir en el Perú".
+ * audience="PE" literal: HubData sólo modela 'AR' | 'global' y el mercado viaja en hub.locale.
+ */
+export const prerender = true;
+
+import Layout from '../../../layouts/Layout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import DecisionHub from '../../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  RMV,
+  IGV,
+  INEI,
+  FACTOR_MENOR,
+  FACTOR_NIVEL,
+  TRANSPORTE,
+  FACTOR_REGION,
+  LUZ_BT5B,
+  AGUA_BLOQUES,
+  AGUA_CARGO_FIJO,
+  AGUA_FACTOR_ALCANTARILLADO,
+  GAS,
+  BALON_GLP,
+  INTERNET,
+  RATIO_ALQUILER,
+  IPC_INTERANUAL,
+} from '../../../lib/hubs/pe/presupuesto-mensual';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience="PE"
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    RMV, IGV, INEI, FACTOR_MENOR, FACTOR_NIVEL, TRANSPORTE, FACTOR_REGION,
+    LUZ: LUZ_BT5B, AGUA_BLOQUES, AGUA_CARGO_FIJO, AGUA_ALC: AGUA_FACTOR_ALCANTARILLADO,
+    GAS, BALON_GLP, INTERNET, RATIO: RATIO_ALQUILER, IPC: IPC_INTERANUAL,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const sol = (n) => 'S/ ' + new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 }).format(Math.round(n || 0));
+    const pct = (n, d) => Number(n || 0).toFixed(d === undefined ? 1 : d).replace('.', ',') + '%';
+
+    /** Recibo de luz con la estructura BT5B residencial (precios de pliego, IGV incluido). */
+    function reciboLuz(kwh) {
+      if (kwh <= 0) return 0;
+      const cargoFijo = kwh <= LUZ.umbralKwh ? LUZ.cargoFijoBajo : LUZ.cargoFijoAlto;
+      let energia;
+      if (kwh <= 30) energia = kwh * LUZ.primerBloque;
+      else if (kwh <= LUZ.umbralKwh) energia = LUZ.fijo30 + (kwh - 30) * LUZ.exceso;
+      else energia = kwh * LUZ.plano; // tarifa única sobre TODO el consumo, no sólo el exceso
+      const alumbrado = Math.max(LUZ.alumbradoMinimo, kwh * LUZ.alumbradoPorKwh);
+      return cargoFijo + energia + alumbrado + LUZ.reposicion;
+    }
+
+    /** Agua potable por bloques marginales, categoría doméstica de Sedapal. */
+    function aguaPorBloques(m3) {
+      let costo = 0, anterior = 0;
+      for (const b of AGUA_BLOQUES) {
+        const limite = b.hasta === null ? Infinity : b.hasta;
+        const enBloque = Math.min(m3 - anterior, limite - anterior);
+        if (enBloque <= 0) break;
+        costo += enBloque * b.tarifa;
+        anterior = limite;
+        if (m3 <= limite) break;
+      }
+      return costo;
+    }
+
+    /** Recibo de agua completo: agua + alcantarillado + cargo fijo, todo con IGV. */
+    function reciboAgua(m3) {
+      if (m3 <= 0) return 0;
+      const agua = aguaPorBloques(m3);
+      const subtotal = agua + agua * AGUA_ALC + AGUA_CARGO_FIJO;
+      return subtotal * (1 + IGV);
+    }
+
+    /** Recibo de gas natural por red: cargo fijo + energía, más IGV. */
+    function reciboGas(m3) {
+      if (m3 <= 0) return 0;
+      const subtotal = GAS.cargoFijo + m3 * GAS.precioM3;
+      return subtotal * (1 + IGV);
+    }
+
+    H.onCompute(function (v, caso) {
+      const id = (caso && caso.id) || 'solo';
+      const adultos = Math.max(1, Math.round(v.adultos || 1));
+      const menores = Math.max(0, Math.round(v.menores || 0));
+      // Un alquiler en 0 es legítimo (vivienda propia): no se pisa con un default.
+      const alquiler = Math.max(0, v.alquiler || 0);
+      const ingreso = Math.max(0, v.ingreso || 0);
+      const kwh = Math.max(0, v.kwh || 0);
+      const m3agua = Math.max(0, v.m3agua || 0);
+      const m3gas = Math.max(0, v.m3gas || 0);
+      const nivelKey = String(v.nivel || 'medio');
+      const fNivel = FACTOR_NIVEL[nivelKey] !== undefined ? FACTOR_NIVEL[nivelKey] : FACTOR_NIVEL.medio;
+      const regionKey = String(v.region || 'lima');
+      const fReg = FACTOR_REGION[regionKey] !== undefined ? FACTOR_REGION[regionKey] : 1;
+
+      const personas = adultos + menores;
+
+      // --- Alimentación: ancla en la canasta alimentaria del INEI ---
+      const alimentacion = (adultos + menores * FACTOR_MENOR) * INEI.lineaPobrezaExtrema * fNivel;
+
+      // --- Transporte urbano ---
+      const transporte =
+        (adultos * TRANSPORTE.viajesAdulto * TRANSPORTE.pasaje +
+          menores * TRANSPORTE.viajesMenor * (TRANSPORTE.pasaje / 2)) * fNivel * fReg;
+
+      // --- Servicios ---
+      const luz = reciboLuz(kwh) * fReg;
+      const agua = reciboAgua(m3agua) * fReg;
+      // Sin red de gas natural, el hogar cocina con balones de GLP.
+      const balones = m3gas > 0 ? 0 : (personas >= 4 ? 2 : 1);
+      const gas = m3gas > 0 ? reciboGas(m3gas) : balones * BALON_GLP;
+      const internet = INTERNET;
+      const servicios = luz + agua + gas + internet;
+
+      const total = alquiler + alimentacion + transporte + servicios;
+      const porPersona = personas > 0 ? total / personas : 0;
+      const enRMV = RMV > 0 ? total / RMV : 0;
+
+      // --- Comparaciones ---
+      const saldo = ingreso - total;
+      const alquilerMaximo = ingreso * RATIO.recomendado;
+      const ratioAlquiler = ingreso > 0 ? (alquiler / ingreso) * 100 : 0;
+      const lineaPobrezaHogar = INEI.lineaPobreza * personas;
+      const lineaExtremaHogar = INEI.lineaPobrezaExtrema * personas;
+      const ingresoPerCapita = personas > 0 ? ingreso / personas : 0;
+      const totalConInflacion = total * (1 + IPC / 100);
+
+      let situacion;
+      if (ingresoPerCapita < INEI.lineaPobrezaExtrema) situacion = 'por debajo de la línea de pobreza extrema';
+      else if (ingresoPerCapita < INEI.lineaPobreza) situacion = 'por debajo de la línea de pobreza';
+      else situacion = 'por encima de la línea de pobreza';
+
+      const rows = [];
+      rows.push({ k: 'Vivienda', ref: alquiler > 0 ? 'Alquiler que cargaste' : 'Vivienda propia sin alquiler', v: alquiler });
+      rows.push({ k: 'Alimentación', ref: adultos + ' adulto(s) + ' + menores + ' menor(es) · nivel ' + nivelKey, v: alimentacion });
+      rows.push({ k: 'Transporte', ref: 'Pasaje urbano · ' + adultos + ' adulto(s) y ' + menores + ' escolar(es)', v: transporte });
+      rows.push({ k: 'Recibo de luz', ref: kwh + ' kWh · ' + (kwh > LUZ.umbralKwh ? 'tramo caro: tarifa única sobre todo el consumo' : 'tarifa social BT5B'), v: luz });
+      rows.push({ k: 'Recibo de agua', ref: m3agua + ' m³ · agua + alcantarillado + cargo fijo + IGV', v: agua });
+      rows.push({ k: m3gas > 0 ? 'Recibo de gas natural' : 'Gas en balones de GLP', ref: m3gas > 0 ? m3gas + ' m³ con IGV' : balones + ' balón(es) de 10 kg al mes', v: gas });
+      rows.push({ k: 'Internet del hogar', ref: 'Plan de referencia de mercado', v: internet });
+      rows.push({ k: 'Total de servicios', ref: 'Luz + agua + gas + internet', v: servicios });
+      rows.push({ k: 'Gasto mensual del hogar', ref: 'Vivienda + comida + transporte + servicios', v: total, extra: true });
+      rows.push({ k: 'Gasto por persona', ref: 'Total ÷ ' + personas + ' integrante(s)', v: porPersona });
+      rows.push({ k: 'Cuántas remuneraciones mínimas cubre', ref: 'Gasto del hogar ÷ RMV', v: enRMV, format: 'unit', unit: 'RMV', decimals: 1 });
+      rows.push({ k: saldo >= 0 ? 'Te sobra cada mes' : 'Te falta cada mes', ref: 'Ingreso menos gasto', v: Math.abs(saldo), extra: id !== 'canasta' });
+      rows.push({ k: 'Alquiler máximo recomendable', ref: 'Regla del ' + (RATIO.recomendado * 100).toFixed(0) + '% del ingreso neto', v: alquilerMaximo });
+      rows.push({ k: 'Qué parte de tu ingreso se lleva el alquiler', ref: ratioAlquiler > RATIO.tolerable * 100 ? 'Por encima del umbral manejable' : 'Dentro de lo razonable', v: ratioAlquiler, format: 'unit', unit: '%', decimals: 0 });
+      rows.push({ k: 'Línea de pobreza del hogar (INEI)', ref: sol(INEI.lineaPobreza) + ' per cápita × ' + personas, v: lineaPobrezaHogar, extra: id === 'canasta' });
+      rows.push({ k: 'Línea de pobreza extrema del hogar', ref: 'Solo canasta de alimentos · ' + sol(INEI.lineaPobrezaExtrema) + ' per cápita', v: lineaExtremaHogar });
+      rows.push({ k: 'Tu ingreso per cápita', ref: 'Queda ' + situacion, v: ingresoPerCapita });
+      rows.push({ k: 'El mismo presupuesto dentro de un año', ref: 'Si la inflación repite el ' + pct(IPC, 2) + ' interanual del IPC', v: totalConInflacion });
+
+      const esCanasta = id === 'canasta';
+      const totalTxt = esCanasta ? sol(lineaPobrezaHogar) : sol(total);
+      const sub = esCanasta
+        ? 'Un hogar de ' + personas + ' integrante(s) necesita ' + sol(lineaPobrezaHogar) +
+          ' al mes para superar la línea de pobreza y ' + sol(lineaExtremaHogar) + ' para no caer en pobreza extrema · ' +
+          'con ' + sol(ingreso) + ' de ingreso quedas ' + situacion
+        : 'Tu hogar gasta ' + sol(total) + ' al mes (' + sol(porPersona) + ' por persona) · ' +
+          (saldo >= 0 ? 'te sobran ' + sol(saldo) : 'te faltan ' + sol(Math.abs(saldo))) +
+          ' sobre un ingreso de ' + sol(ingreso) + ' · el alquiler se lleva el ' + pct(ratioAlquiler, 0) + ' del ingreso';
+
+      const chart = [
+        { label: 'Vivienda', value: Math.round(alquiler), tone: 'main' },
+        { label: 'Alimentación', value: Math.round(alimentacion), tone: 'good' },
+        { label: 'Transporte', value: Math.round(transporte), tone: 'prop' },
+        { label: 'Servicios', value: Math.round(servicios), tone: 'warn' },
+      ];
+
+      return { total: totalTxt, sub: sub, rows: rows, chart: chart };
+    });
+  })();
+</script>
