@@ -1267,8 +1267,22 @@ const decisionHubUrls: Url[] = (() => {
   if (!existsSync(dir)) return [];
   const silos = new Map<string, string>();
   const urls: Url[] = [];
-  for (const f of readdirSync(dir)) {
-    if (!f.endsWith('.ts') || f === 'types.ts' || f === 'registry.ts') continue;
+  // Dos niveles: los .ts de la raíz son AR/global y los de `<locale>/` son los
+  // hubs de cada mercado (co, mx, en…). El registry usa import.meta.glob, que
+  // acá no está disponible, así que caminamos el directorio a mano.
+  const files: string[] = [];
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    if (e.isDirectory()) {
+      for (const f of readdirSync(join(dir, e.name))) {
+        if (f.endsWith('.ts')) files.push(join(e.name, f));
+      }
+    } else if (e.name.endsWith('.ts')) {
+      files.push(e.name);
+    }
+  }
+  for (const f of files) {
+    const base = f.split('/').pop()!;
+    if (base === 'types.ts' || base === 'registry.ts') continue;
     const src = readFileSync(join(dir, f), 'utf8');
     const slug = src.match(/^\s*slug:\s*'([^']+)'/m)?.[1];
     if (!slug || !slug.includes('/')) continue;
