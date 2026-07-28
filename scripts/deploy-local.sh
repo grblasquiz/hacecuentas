@@ -410,7 +410,13 @@ HTML_COUNT=$(find dist/client -name '*.html' 2>/dev/null | wc -l | tr -d ' ')
 # Si volvés a podar en masa, recalculá este piso. Sirve para detectar un
 # prerender VACÍO (un build que no generó nada), no para congelar el tamaño del
 # sitio: ponelo bien por debajo del conteo real, no pegado.
-MIN_HTML=1000
+#
+# 28-07-2026, tercera vez en el día: 1000 volvió a frenar un build sano (959
+# HTMLs tras podar el cluster Mundial, 17 guías y las landings duplicadas). Va
+# a 600 — el sitio viene achicándose a propósito y el piso no puede ir detrás
+# corrigiéndose cada vez. Con 600, un prerender realmente roto (que genera
+# decenas, no cientos) sigue quedando atrapado.
+MIN_HTML=600
 if [ "$HTML_COUNT" -lt "$MIN_HTML" ]; then
   err "prerender ROTO: solo $HTML_COUNT HTMLs en dist/client (esperados ≥$MIN_HTML). NO deployo — el sitio en vivo queda intacto."
   exit 1
