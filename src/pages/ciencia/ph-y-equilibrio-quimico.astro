@@ -1,0 +1,407 @@
+---
+/**
+ * Hub de decisión — "¿Cuál es el pH y hasta dónde llega la reacción?"
+ * Reemplaza 7 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: 5 casos (pH / pOH / ácido débil / Kc / limitante).
+ * La página sólo aporta datos (src/lib/hubs/ph-y-equilibrio-quimico.ts) y compute().
+ * NADA acá es plata: cada fila declara su `format` propio.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, PKW, REFS } from '../../lib/hubs/ph-y-equilibrio-quimico';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+const BANDS = hub.chart.bands ?? [];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ PKW, REFS, BANDS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Nada de este hub es plata: todas las filas declaran su formato.
+    const PH = { format: 'plain', decimals: 3 };
+    const MOLAR = { format: 'unit', unit: 'mol/L', decimals: 10 };
+    const MOL = { format: 'unit', unit: 'mol', decimals: 5 };
+    const PCT = { format: 'unit', unit: '%', decimals: 3 };
+    const CEL = { format: 'unit', unit: '°C', decimals: 1 };
+    const PLAIN = { format: 'plain', decimals: 5 };
+    const ENTERO = { format: 'plain', decimals: 0 };
+
+    const row = (k, v, fmt, extra, ref) => Object.assign({ k: k, v: v, extra: !!extra, ref: ref }, fmt);
+
+    function fmt(n, d) {
+      if (!isFinite(n)) return '—';
+      if (d == null) {
+        const abs = Math.abs(n);
+        if (abs === 0) d = 0;
+        else if (abs < 0.0001) d = 8;
+        else if (abs < 1) d = 5;
+        else if (abs < 1000) d = 4;
+        else d = 2;
+      }
+      return Number(n).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: d });
+    }
+
+    /** Notación científica legible. */
+    function sci(n, d) {
+      if (!isFinite(n) || n === 0) return '0';
+      const e = Math.floor(Math.log10(Math.abs(n)));
+      const m = n / Math.pow(10, e);
+      return fmt(m, d == null ? 3 : d) + ' × 10^' + e;
+    }
+
+    /** pKw interpolado linealmente sobre la tabla del CRC. */
+    function pkwDe(tC) {
+      const t = Math.max(0, Math.min(100, Number(tC)));
+      if (!isFinite(t)) return 13.995;
+      for (let k = 0; k < PKW.length - 1; k++) {
+        const a = PKW[k], b = PKW[k + 1];
+        if (t >= a.t && t <= b.t) {
+          if (b.t === a.t) return a.pkw;
+          return a.pkw + ((t - a.t) / (b.t - a.t)) * (b.pkw - a.pkw);
+        }
+      }
+      return PKW[PKW.length - 1].pkw;
+    }
+
+    /** Posición 0-100 sobre la regla de pH 0-14. */
+    function posPh(ph) {
+      if (!isFinite(ph)) return 0;
+      return Math.max(0, Math.min(100, (ph / 14) * 100));
+    }
+
+    /** Franjas del gráfico: la escala de pH ya es logarítmica, van en crudo. */
+    function bandas() {
+      return BANDS.map(function (b) {
+        return {
+          label: b.label,
+          value: b.to - b.from,
+          tone: b.tone === 'good' ? 'good' : b.tone === 'bad' ? 'bad' : b.tone === 'warn' ? 'warn' : 'main',
+        };
+      });
+    }
+
+    /** Referencia de pH más cercana. */
+    function referencia(ph) {
+      if (!isFinite(ph)) return '';
+      let ref = REFS[0];
+      REFS.forEach(function (r) {
+        if (Math.abs(r.ph - ph) < Math.abs(ref.ph - ph)) ref = r;
+      });
+      const d = ph - ref.ph;
+      if (Math.abs(d) < 0.15) return 'prácticamente el pH de ' + ref.label;
+      return Math.abs(d) < 1.2
+        ? (d > 0 ? 'algo más alcalino que ' : 'algo más ácido que ') + ref.label
+        : (d > 0 ? 'bastante más alcalino que ' : 'bastante más ácido que ') + ref.label;
+    }
+
+    /** Clasificación relativa al punto neutro real de esa temperatura. */
+    function clasificar(ph, neutro) {
+      if (ph < neutro - 0.5) return 'ácida';
+      if (ph > neutro + 0.5) return 'básica (alcalina)';
+      return 'neutra';
+    }
+
+    /** Filas comunes del par pH/pOH: las tres primeras ramas las comparten. */
+    function filasIonicas(ph, pkw) {
+      const poh = pkw - ph;
+      const h = Math.pow(10, -ph);
+      const oh = Math.pow(10, -poh);
+      const neutro = pkw / 2;
+      return [
+        row('pH', ph, PH, true, 'pH = −log[H⁺]'),
+        row('pOH', poh, PH, true, 'pH + pOH = pKw'),
+        row('Concentración de H⁺', h, MOLAR, false, sci(h, 3) + ' mol/L'),
+        row('Concentración de OH⁻', oh, MOLAR, false, sci(oh, 3) + ' mol/L'),
+        row('pKw del agua a esa temperatura', pkw, PH, false, 'tabla CRC'),
+        row('Punto neutro real de la escala', neutro, PH, false, 'donde [H⁺] = [OH⁻]'),
+        row('Distancia al punto neutro', ph - neutro, PH),
+        row('Veces más ácida que el agua neutra', Math.pow(10, neutro - ph), { format: 'unit', unit: '×', decimals: 3 }),
+      ];
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'ph';
+      const tC = Number(v.temp);
+      const pkw = pkwDe(isFinite(tC) ? tC : 25);
+      const neutro = pkw / 2;
+
+      // ── Rama 1: pH desde [H⁺], o al revés ────────────────────────────────
+      if (id === 'ph') {
+        const modo = String(v.modoPh || 'concentracion');
+        let ph;
+        if (modo === 'ph') {
+          ph = Number(v.phDato);
+          if (!isFinite(ph)) {
+            return { total: '—', sub: 'Cargá un valor de pH válido.', rows: [], chart: [] };
+          }
+        } else {
+          const h = Number(v.concH) || 0;
+          if (!(h > 0)) {
+            return { total: '—', sub: 'La concentración de H⁺ tiene que ser mayor a cero.', rows: [], chart: [] };
+          }
+          ph = -Math.log10(h);
+        }
+        const clase = clasificar(ph, neutro);
+        const rows = filasIonicas(ph, pkw);
+        rows.push(row('Temperatura considerada', isFinite(tC) ? tC : 25, CEL));
+
+        const comp = referencia(ph);
+        return {
+          total: 'pH ' + fmt(ph, 2),
+          sub:
+            'La solución es ' + clase + ' · [H⁺] = ' + sci(Math.pow(10, -ph), 3) + ' mol/L · pOH ' +
+            fmt(pkw - ph, 2) + ' · a ' + fmt(isFinite(tC) ? tC : 25, 0) + ' °C el punto neutro está en pH ' +
+            fmt(neutro, 2) + (comp ? ' · es ' + comp : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'plain',
+          decimals: 2,
+          position: Number(posPh(ph).toFixed(1)),
+          positionLabel: 'pH ' + fmt(ph, 2) + ' — solución ' + clase,
+        };
+      }
+
+      // ── Rama 2: pOH desde [OH⁻] ──────────────────────────────────────────
+      if (id === 'poh') {
+        const oh = Number(v.concOH) || 0;
+        if (!(oh > 0)) {
+          return { total: '—', sub: 'La concentración de OH⁻ tiene que ser mayor a cero.', rows: [], chart: [] };
+        }
+        const poh = -Math.log10(oh);
+        const ph = pkw - poh;
+        const clase = clasificar(ph, neutro);
+        const rows = filasIonicas(ph, pkw);
+        rows.push(row('Temperatura considerada', isFinite(tC) ? tC : 25, CEL));
+        rows.push(row('Veces más alcalina que el agua neutra', Math.pow(10, ph - neutro), { format: 'unit', unit: '×', decimals: 3 }));
+
+        const comp = referencia(ph);
+        return {
+          total: 'pOH ' + fmt(poh, 2),
+          sub:
+            'Con [OH⁻] = ' + sci(oh, 3) + ' mol/L sale pOH ' + fmt(poh, 2) + ', así que el pH es ' + fmt(ph, 2) +
+            ' y la solución es ' + clase + ' · a ' + fmt(isFinite(tC) ? tC : 25, 0) + ' °C la suma pH + pOH da ' +
+            fmt(pkw, 3) + ', no 14 fijo' + (comp ? ' · es ' + comp : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'plain',
+          decimals: 2,
+          position: Number(posPh(ph).toFixed(1)),
+          positionLabel: 'pH ' + fmt(ph, 2) + ' (pOH ' + fmt(poh, 2) + ') — solución ' + clase,
+        };
+      }
+
+      // ── Rama 3: pH de un ácido débil ─────────────────────────────────────
+      if (id === 'debil') {
+        const ka = Number(v.ka) || 0;
+        const c = Number(v.concAcido) || 0;
+        if (!(ka > 0) || !(c > 0)) {
+          return { total: '—', sub: 'Hacen falta un Ka y una concentración inicial mayores a cero.', rows: [], chart: [] };
+        }
+        // Cuadrática exacta: x² + Ka·x − Ka·C = 0
+        const x = (-ka + Math.sqrt(ka * ka + 4 * ka * c)) / 2;
+        const ph = -Math.log10(x);
+        const pka = -Math.log10(ka);
+        const alfa = (x / c) * 100;
+        const aprox = Math.sqrt(ka * c);       // el atajo clásico
+        const phAprox = -Math.log10(aprox);
+        const phFuerte = -Math.log10(c);
+        const clase = clasificar(ph, neutro);
+
+        const rows = filasIonicas(ph, pkw);
+        rows.push(row('pKa del ácido', pka, PH, true, 'pKa = −log Ka'));
+        rows.push(row('Ka usado', ka, { format: 'plain', decimals: 12 }, false, sci(ka, 3)));
+        rows.push(row('Concentración inicial del ácido', c, { format: 'unit', unit: 'mol/L', decimals: 6 }));
+        rows.push(row('Porcentaje disociado', alfa, PCT, true, 'α = [H⁺] / C'));
+        rows.push(row('Ácido sin disociar que queda', c - x, { format: 'unit', unit: 'mol/L', decimals: 8 }));
+        rows.push(row('pH que daría el atajo √(Ka·C)', phAprox, PH, false, alfa < 5 ? 'válido acá (α < 5%)' : 'impreciso acá (α > 5%)'));
+        rows.push(row('Error del atajo', Math.abs(phAprox - ph), PH, false, 'unidades de pH'));
+        rows.push(row('pH que daría un ácido fuerte igual de concentrado', phFuerte, PH));
+        rows.push(row('Temperatura considerada', isFinite(tC) ? tC : 25, CEL));
+
+        const comp = referencia(ph);
+        return {
+          total: 'pH ' + fmt(ph, 2),
+          sub:
+            'Sólo el ' + fmt(alfa, 2) + '% del ácido cede su protón, así que el pH es ' + fmt(ph, 2) + ' en vez del ' +
+            fmt(phFuerte, 2) + ' que daría un ácido fuerte a la misma concentración (pKa ' + fmt(pka, 2) + ')' +
+            (alfa < 5
+              ? ' · la disociación es menor al 5%, así que el atajo √(Ka·C) también habría servido'
+              : ' · la disociación supera el 5%: el atajo √(Ka·C) sería impreciso, este resultado sale de la cuadrática completa') +
+            (comp ? ' · es ' + comp : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'plain',
+          decimals: 2,
+          position: Number(posPh(ph).toFixed(1)),
+          positionLabel: 'pH ' + fmt(ph, 2) + ' — ' + fmt(alfa, 2) + '% disociado, solución ' + clase,
+        };
+      }
+
+      // ── Rama 4: constante de equilibrio Kc ───────────────────────────────
+      if (id === 'kc') {
+        const prod = Number(v.prod) || 0;
+        const cp = Math.max(1, Number(v.coefProd) || 1);
+        const r1 = Number(v.reac1) || 0;
+        const c1 = Math.max(1, Number(v.coef1) || 1);
+        const r2 = Number(v.reac2) || 0;
+        const c2 = Math.max(1, Number(v.coef2) || 1);
+        if (!(prod > 0) || !(r1 > 0) || !(r2 > 0)) {
+          return {
+            total: '—',
+            sub: 'Las tres concentraciones de equilibrio tienen que ser mayores a cero.',
+            rows: [],
+            chart: [],
+          };
+        }
+        const num = Math.pow(prod, cp);
+        const den = Math.pow(r1, c1) * Math.pow(r2, c2);
+        const kc = num / den;
+        const deltaN = cp - (c1 + c2);
+        const lectura =
+          kc > 1000 ? 'muy desplazado a productos'
+            : kc < 0.001 ? 'muy desplazado a reactivos'
+            : kc > 1 ? 'desplazado hacia los productos'
+            : 'desplazado hacia los reactivos';
+
+        const rows = [
+          row('Constante de equilibrio Kc', kc, { format: 'plain', decimals: 8 }, true, '[prod]^c / ([A]^a·[B]^b)'),
+          row('Numerador: productos elevados a su coeficiente', num, PLAIN),
+          row('Denominador: reactivos elevados a sus coeficientes', den, PLAIN),
+          row('Δn (moles gaseosos de producto − de reactivo)', deltaN, ENTERO, false, deltaN === 0 ? 'Kp = Kc' : 'Kp = Kc × (RT)^' + deltaN),
+          row('Concentración de equilibrio del producto', prod, { format: 'unit', unit: 'mol/L', decimals: 6 }),
+          row('Concentración de equilibrio del reactivo 1', r1, { format: 'unit', unit: 'mol/L', decimals: 6 }),
+          row('Concentración de equilibrio del reactivo 2', r2, { format: 'unit', unit: 'mol/L', decimals: 6 }),
+          row('log Kc', Math.log10(kc), PH, false, 'para comparar órdenes de magnitud'),
+          row('Constante inversa (reacción al revés)', 1 / kc, { format: 'plain', decimals: 8 }),
+        ];
+
+        return {
+          total: 'Kc = ' + fmt(kc, 6),
+          sub:
+            'Con Kc = ' + fmt(kc, 6) + ' el equilibrio está ' + lectura + ' · Δn = ' + deltaN +
+            (deltaN === 0 ? ', así que Kp es igual a Kc' : ', así que Kp = Kc × (RT)^' + deltaN) +
+            ' · este número sólo cambia con la temperatura: agregar reactivo o un catalizador mueve las concentraciones, nunca Kc',
+          rows: rows,
+          chart: bandas(),
+          format: 'plain',
+          decimals: 2,
+          // Kc no es un pH: se ubica sobre la regla por su logaritmo, y se aclara.
+          position: Number(Math.max(0, Math.min(100, ((Math.log10(kc) + 7) / 14) * 100)).toFixed(1)),
+          positionLabel:
+            'Kc = ' + fmt(kc, 6) + ' (log Kc = ' + fmt(Math.log10(kc), 2) +
+            ') — la regla de abajo es de pH; acá sólo marca el orden de magnitud',
+        };
+      }
+
+      // ── Rama 5: reactivo limitante y rendimiento ─────────────────────────
+      const molA = Number(v.molA) || 0;
+      const cA = Math.max(1, Number(v.coefA) || 1);
+      const molB = Number(v.molB) || 0;
+      const cB = Math.max(1, Number(v.coefB) || 1);
+      const cP = Math.max(1, Number(v.coefP) || 1);
+      const real = Number(v.real) || 0;
+      if (!(molA > 0) || !(molB > 0)) {
+        return { total: '—', sub: 'Cargá los moles disponibles de los dos reactivos.', rows: [], chart: [] };
+      }
+      const qA = molA / cA;
+      const qB = molB / cB;
+      const xi = Math.min(qA, qB);
+      const aLimita = qA <= qB;
+      const exacto = Math.abs(qA - qB) < 1e-9;
+      const teorico = xi * cP;
+      const sobra = aLimita ? molB - xi * cB : molA - xi * cA;
+      const nombreLim = aLimita ? 'A' : 'B';
+      const nombreExc = aLimita ? 'B' : 'A';
+      const pct = real > 0 && teorico > 0 ? (real / teorico) * 100 : 0;
+
+      const rows = [
+        row('Rendimiento teórico de producto', teorico, MOL, true, 'ξ × coeficiente del producto'),
+        row('Avance de reacción ξ', xi, MOL, true, 'el menor de los dos cocientes'),
+        row('Cociente del reactivo A (mol / coeficiente)', qA, PLAIN, aLimita),
+        row('Cociente del reactivo B (mol / coeficiente)', qB, PLAIN, !aLimita),
+        row('Moles cargados de A', molA, MOL),
+        row('Moles cargados de B', molB, MOL),
+        row('Moles de ' + nombreExc + ' que sobran sin reaccionar', Math.max(0, sobra), MOL, false, exacto ? 'proporción exacta: no sobra nada' : ''),
+        row('Moles de ' + nombreLim + ' consumidos', aLimita ? molA : molB, MOL),
+      ];
+      if (real > 0) {
+        rows.push(row('Producto obtenido de verdad', real, MOL, true));
+        rows.push(row('Rendimiento porcentual', pct, PCT, true, 'real / teórico × 100'));
+        rows.push(row('Producto perdido en el proceso', Math.max(0, teorico - real), MOL));
+        rows.push(row('Rendimiento global de tres etapas iguales', Math.pow(pct / 100, 3) * 100, PCT, false, 'los rendimientos se multiplican'));
+      }
+
+      const juicio =
+        real <= 0 ? 'todavía no cargaste el producto obtenido, así que esto es sólo el máximo teórico'
+          : pct > 100 ? 'un rendimiento mayor al 100% es físicamente imposible: secá el producto a peso constante y verificá la pureza'
+          : pct >= 70 ? 'buen rendimiento'
+          : pct >= 50 ? 'rendimiento aceptable'
+          : 'rendimiento bajo, conviene revisar el procedimiento';
+
+      return {
+        total: real > 0 ? fmt(pct, 1) + '% de rendimiento' : fmt(teorico, 3) + ' mol teóricos',
+        sub:
+          (exacto
+            ? 'Los dos reactivos están en proporción estequiométrica exacta: no sobra nada'
+            : 'Limita el reactivo ' + nombreLim + ' (cociente ' + fmt(xi, 3) + ' contra ' + fmt(Math.max(qA, qB), 3) +
+              '), y sobran ' + fmt(Math.max(0, sobra), 3) + ' mol de ' + nombreExc) +
+          ' · el máximo teórico es ' + fmt(teorico, 3) + ' mol de producto' +
+          (real > 0 ? ' y obtuviste ' + fmt(real, 3) + ' mol, o sea ' + fmt(pct, 1) + '%' : '') +
+          ' · ' + juicio,
+        rows: rows,
+        chart: bandas(),
+        format: 'plain',
+        decimals: 3,
+        // El rendimiento se mapea sobre la regla como fracción del 100%.
+        position: Number(Math.max(0, Math.min(100, real > 0 ? pct : 0)).toFixed(1)),
+        positionLabel:
+          real > 0
+            ? fmt(pct, 1) + '% del máximo teórico — la regla de abajo es de pH; acá marca el porcentaje logrado'
+            : 'Sin producto obtenido cargado: sólo hay rendimiento teórico',
+      };
+    });
+  })();
+</script>

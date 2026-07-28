@@ -1,0 +1,236 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto sale mantener la pileta?"
+ * Reemplaza 4 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo cálculo dominante: sin `cases`, la respuesta fija va en hub.answer
+ * y forma / tipo / estación se eligen en selects.
+ * La página sólo aporta datos (src/lib/hubs/pileta.ts) y su compute().
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, FORMAS, TIPOS, ESTACIONES, CLORO, EVAP } from '../../lib/hubs/pileta';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ FORMAS, TIPOS, ESTACIONES, CL: CLORO, EV: EVAP }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Filas que NO son plata. El runtime hace Object.assign: sin `format`
+    // propio, la fila cae a pesos.
+    const L = { format: 'unit', unit: 'L', decimals: 0 };
+    const M3 = { format: 'unit', unit: 'm³', decimals: 2 };
+    const M2 = { format: 'unit', unit: 'm²', decimals: 1 };
+    const MT = { format: 'unit', unit: 'm', decimals: 2 };
+    const MM = { format: 'unit', unit: 'mm/día', decimals: 1 };
+    const GR = { format: 'unit', unit: 'g', decimals: 0 };
+    const KG = { format: 'unit', unit: 'kg', decimals: 2 };
+    const LT = { format: 'unit', unit: 'L', decimals: 2 };
+    const KWH = { format: 'unit', unit: 'kWh', decimals: 1 };
+    const HS = { format: 'unit', unit: 'h', decimals: 1 };
+    const PCT = { format: 'unit', unit: '%', decimals: 1 };
+
+    // H.num() es el PARSER de es-AR, no un formateador: para el `sub` va este.
+    const fmt = (n, d) =>
+      Number(n || 0).toLocaleString('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+    H.onCompute(function (v) {
+      const forma = FORMAS[String(v.forma || 'rectangular')] ? String(v.forma) : 'rectangular';
+      const tipo = TIPOS[String(v.tipo || 'hormigon')] ? String(v.tipo) : 'hormigon';
+      const est = ESTACIONES[String(v.estacion || 'verano')] ? String(v.estacion) : 'verano';
+      const sistema = CL.ACTIVO[String(v.sistema || 'granulado')] !== undefined ? String(v.sistema) : 'granulado';
+      const uso = CL.USO[String(v.uso || 'medio')] !== undefined ? String(v.uso) : 'medio';
+      const expo = CL.SOLAR[String(v.exposicion || 'mixta')] !== undefined ? String(v.exposicion) : 'mixta';
+
+      const F = FORMAS[forma];
+      const T = TIPOS[tipo];
+      const E = ESTACIONES[est];
+
+      const largo = Math.max(0, v.largoM || 0);
+      const ancho = Math.max(0, v.anchoM || 0);
+      const profMin = Math.max(0, v.profMinM || 0);
+      const profMax = Math.max(0, v.profMaxM || 0);
+
+      if (!largo || !ancho || !profMin || !profMax) {
+        return {
+          total: '$0',
+          sub: 'Completá largo, ancho y las dos profundidades de la pileta.',
+          rows: [],
+          chart: [],
+        };
+      }
+
+      // ── 1. Volumen (pileta-natacion-litros-m3) ──────────────────────────
+      // Factor de forma sobre el rectángulo que la contiene. La "ovalada"
+      // (estadio) no es un factor fijo: área = L·A − A²·(1 − π/4).
+      let factor = F.factor;
+      if (factor === null) {
+        const menor = Math.min(largo, ancho);
+        const area = largo * ancho - menor * menor * (1 - Math.PI / 4);
+        factor = area / (largo * ancho);
+      }
+      const profProm = (profMin + profMax) / 2;
+      const m3 = Number((largo * ancho * profProm * factor).toFixed(2));
+      const litros = Math.round(m3 * 1000);
+      const superficie = largo * ancho * factor;
+
+      // ── 2. Evaporación (evaporacion-piscina-litros-dia) ─────────────────
+      const temp = Math.min(50, Math.max(-10, v.temperatura === undefined ? 28 : v.temperatura));
+      const hum = Math.min(100, Math.max(1, v.humedad || 55));
+      const vientoKmh = Math.min(150, Math.max(0, v.viento === undefined ? 10 : v.viento));
+      const vms = vientoKmh / 3.6;
+      const es = 0.6108 * Math.exp((17.27 * temp) / (temp + 237.3));
+      const ea = es * (hum / 100);
+      let mmDia = (EV.A + EV.B * vms) * (es - ea);
+      if (mmDia < 0) mmDia = 0;
+      mmDia = mmDia * E.evap; // el cobertor de invernada corta la evaporación
+      const evapLitrosDia = mmDia * superficie;
+      const evapLitrosMes = evapLitrosDia * 30;
+
+      // ── 3. Retrolavado del filtro ───────────────────────────────────────
+      const retroLitrosMes = litros * (T.retrolavadoPct / 100) * CL.SEMANAS_MES;
+      const reposicionLitrosMes = evapLitrosMes + retroLitrosMes;
+      const reposicionM3 = reposicionLitrosMes / 1000;
+      const reposicionPct = litros > 0 ? (reposicionLitrosMes / litros) * 100 : 0;
+
+      // ── 4. Cloro y alguicida (piscina-cloro-mantenimiento-mensual) ──────
+      const precioCloro = Math.max(0, v.precioCloro || 0);
+      const precioAlguicida = Math.max(0, v.precioAlguicida || 0);
+      const dosisPpmDia = CL.DOSIS_BASE_PPM_DIA * CL.USO[uso] * CL.SOLAR[expo] * E.cloro;
+      const cloroActivoGrDia = (dosisPpmDia * litros) / 1000;
+
+      let cloroSemanaGr = 0;
+      let cloroMesKg = 0;
+      if (sistema !== 'sal') {
+        const productoDiaGr = cloroActivoGrDia / CL.ACTIVO[sistema];
+        cloroSemanaGr = productoDiaGr * 7;
+        cloroMesKg = (cloroSemanaGr * CL.SEMANAS_MES) / 1000;
+      }
+
+      let factorAlguicida = 1;
+      if (uso === 'alto' || expo === 'sol') factorAlguicida = 2;
+      if (uso === 'alto' && expo === 'sol') factorAlguicida = 2.5;
+      const alguicidaSemanaMl = (litros / 1000) * CL.ALGUICIDA_ML_1000L_SEMANA * factorAlguicida * E.alguicida;
+      const alguicidaMesLitros = (alguicidaSemanaMl * CL.SEMANAS_MES) / 1000;
+
+      const costoCloro = cloroMesKg * precioCloro * CL.PRECIO[sistema];
+      const costoAlguicida = alguicidaMesLitros * precioAlguicida;
+      const costoQuimicos = costoCloro + costoAlguicida;
+
+      // ── 5. Costos (calculadora-costo-mensual-pileta) ────────────────────
+      const precioAguaM3 = Math.max(0, v.precioAguaM3 === undefined ? 133 : v.precioAguaM3);
+      const costoAgua = reposicionM3 * precioAguaM3;
+
+      const watts = Math.max(0, v.potenciaBomba || 750);
+      const horasBase = Math.max(0, v.horasBombaDia === undefined ? 6 : v.horasBombaDia);
+      const horasDia = horasBase * E.bomba;
+      const kwhMes = (watts / 1000) * horasDia * 30;
+      const precioKwh = Math.max(0, v.precioKwh === undefined ? 220 : v.precioKwh);
+      const costoLuz = kwhMes * precioKwh;
+
+      const costoMant = Math.max(0, v.mantenimiento || 0) * T.mantFactor;
+
+      const costoTotal = costoAgua + costoQuimicos + costoLuz + costoMant;
+
+      // ── Filas ───────────────────────────────────────────────────────────
+      const rows = [];
+      rows.push(Object.assign({ k: 'Volumen de la pileta ' + F.label, v: m3, extra: true }, M3));
+      rows.push(Object.assign({ k: 'Lo mismo en litros', v: litros, extra: true }, L));
+      rows.push(Object.assign({ k: 'Superficie del espejo de agua', v: superficie }, M2));
+      rows.push(Object.assign({ k: 'Profundidad promedio', v: profProm }, MT));
+
+      rows.push(Object.assign({ k: 'Evaporación', ref: temp + ' °C, ' + hum + '% de humedad, viento ' + vientoKmh + ' km/h', v: mmDia }, MM));
+      rows.push(Object.assign({ k: 'Agua que se evapora por día', v: evapLitrosDia }, L));
+      rows.push(Object.assign({ k: 'Agua que se evapora por mes', v: evapLitrosMes }, L));
+      rows.push(Object.assign({ k: 'Agua que se va en los retrolavados', ref: T.label + ' · ' + String(T.retrolavadoPct).replace('.', ',') + '% por semana', v: retroLitrosMes }, L));
+      rows.push(Object.assign({ k: 'Agua a reponer en el mes', v: reposicionM3, extra: true }, M3));
+      rows.push(Object.assign({ k: 'Eso es, del volumen total', v: reposicionPct }, PCT));
+
+      if (sistema === 'sal') {
+        rows.push(Object.assign({ k: 'Cloro a comprar con clorador salino', v: 0 }, KG));
+      } else {
+        rows.push(Object.assign({ k: 'Dosis de cloro activo', v: dosisPpmDia, format: 'unit', unit: 'ppm/día', decimals: 2 }));
+        rows.push(Object.assign({ k: CL.LABEL[sistema] + ' por semana', v: cloroSemanaGr }, GR));
+        rows.push(Object.assign({ k: CL.LABEL[sistema] + ' por mes', v: cloroMesKg, extra: true }, KG));
+      }
+      rows.push(Object.assign({ k: 'Alguicida por mes', v: alguicidaMesLitros }, LT));
+
+      rows.push(Object.assign({ k: 'Horas de filtrado por día', ref: E.label, v: horasDia }, HS));
+      rows.push(Object.assign({ k: 'Consumo de la bomba en el mes', v: kwhMes, extra: true }, KWH));
+
+      rows.push({ k: 'Agua de reposición', ref: '$' + precioAguaM3 + ' por m³', v: costoAgua });
+      rows.push({ k: 'Cloro', v: costoCloro });
+      rows.push({ k: 'Alguicida', v: costoAlguicida });
+      rows.push({ k: 'Luz de la bomba', ref: '$' + precioKwh + ' por kWh', v: costoLuz });
+      rows.push({ k: 'Filtro y mantenimiento', ref: T.label, v: costoMant });
+      rows.push({ k: 'Costo mensual total', v: costoTotal, extra: true });
+      rows.push({ k: 'Costo por día', v: costoTotal / 30 });
+      rows.push({ k: 'Costo de la temporada (5 meses)', v: costoTotal * 5 });
+      rows.push({ k: 'Lo que sale llenarla de cero', ref: 'gasto por única vez', v: m3 * precioAguaM3, extra: true });
+
+      const pctBomba = costoTotal > 0 ? Math.round((costoLuz / costoTotal) * 100) : 0;
+      const sub =
+        fmt(m3, 2) + ' m³ (' + fmt(litros, 0) + ' litros) · ' +
+        fmt(reposicionM3, 1) + ' m³ de agua a reponer · ' +
+        (sistema === 'sal' ? 'clorador salino, sin compra de cloro' : fmt(cloroMesKg, 2) + ' kg de ' + CL.LABEL[sistema]) +
+        ' · ' + fmt(kwhMes, 0) + ' kWh de bomba (' + pctBomba + '% del total) · ' + E.label;
+
+      return {
+        total: H.ars(costoTotal),
+        sub: sub,
+        rows: rows,
+        chart: [
+          { label: 'Agua de reposición', value: costoAgua, tone: 'good' },
+          { label: 'Cloro y químicos', value: costoQuimicos, tone: 'main' },
+          { label: 'Luz de la bomba', value: costoLuz, tone: 'warn' },
+          { label: 'Filtro y mantenimiento', value: costoMant, tone: 'prop' },
+        ].filter(function (s) {
+          return s.value > 0;
+        }),
+      };
+    });
+  })();
+</script>

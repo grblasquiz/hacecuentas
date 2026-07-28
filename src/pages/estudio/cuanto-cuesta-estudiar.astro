@@ -1,0 +1,249 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto cuesta estudiar?"
+ * Reemplaza 7 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta compute(). Todo el chrome, el CSS y el runtime viven
+ * en DecisionHub.astro y no se tocan.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, CASE_MATH } from '../../lib/hubs/cuanto-cuesta-estudiar';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ MATH: CASE_MATH }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'carrera-completa';
+      const m = MATH[id] || { inflar: false, vida: false, extrasCuotas: 0 };
+
+      const cuota = Math.max(0, Number(v.cuota) || 0);
+      const meses = Math.min(12, Math.max(1, Number(v.meses) || 10));
+      const anios = Math.max(1, Number(v.anios) || 1);
+      const matricula = Math.max(0, Number(v.matricula) || 0);
+      const apuntes = Math.max(0, Number(v.apuntes) || 0);
+      const transporte = Math.max(0, Number(v.transporte) || 0);
+      const aumento = Math.max(0, Number(v.aumento) || 0);
+      const beca = Math.max(0, Number(v.beca) || 0);
+
+      const pct = { format: 'unit', unit: '%', decimals: 1 };
+      const num = { format: 'plain' };
+
+      // ---------------------------------------------------------------
+      // Rama 1 — la carrera completa, con el arancel proyectado año a año.
+      // Espejo de src/lib/formulas/costo-carrera-universitaria.ts, con los
+      // meses por año como campo en vez de 12 fijo.
+      // ---------------------------------------------------------------
+      if (id === 'carrera-completa') {
+        let totalCuotas = 0, cuotaAnio = cuota;
+        for (let a = 0; a < anios; a++) {
+          totalCuotas += cuotaAnio * meses;
+          cuotaAnio *= 1 + aumento / 100;
+        }
+        const totalMatriculas = matricula * anios;
+        const total = totalCuotas + totalMatriculas;
+        const cuotaFinal = cuota * Math.pow(1 + aumento / 100, anios - 1);
+
+        return {
+          total: H.ars(total),
+          sub:
+            anios + ' años · ' + meses + ' cuotas por año · arancel +' + aumento +
+            '% anual · promedio ' + H.ars(total / (anios * 12)) + ' por mes',
+          rows: [
+            { k: 'Cuotas de toda la carrera', ref: meses + ' por año, con aumento', v: totalCuotas },
+            { k: 'Matrículas de toda la carrera', ref: anios + ' matrículas', v: totalMatriculas },
+            { k: 'Costo promedio por año', v: total / anios, extra: true },
+            { k: 'Costo prorrateado por mes', v: total / (anios * 12) },
+            { k: 'Cuota del primer año', v: cuota },
+            { k: 'Cuota del último año', v: cuotaFinal, extra: true },
+            { k: 'Meses de cuota en total', v: meses * anios, format: 'unit', unit: 'cuotas' },
+            { k: 'Años de carrera', v: anios, format: 'unit', unit: 'años' },
+          ],
+          chart: [
+            { label: 'Cuotas', value: totalCuotas, tone: 'main' },
+            { label: 'Matrículas', value: totalMatriculas, tone: 'prop' },
+          ],
+        };
+      }
+
+      // ---------------------------------------------------------------
+      // Rama 2 — el costo total: arancel + vida académica.
+      // Espejo de src/lib/formulas/costo-carrera-total.ts (ahí la cuota iba
+      // 12 meses fijos; acá va por `meses`, y apuntes y transporte siguen
+      // corriendo los 12).
+      // ---------------------------------------------------------------
+      if (id === 'costo-total') {
+        const totalCuotas = cuota * meses * anios;
+        const totalMatriculas = matricula * anios;
+        const totalApuntes = apuntes * 12 * anios;
+        const totalTransporte = transporte * 12 * anios;
+        const total = totalCuotas + totalMatriculas + totalApuntes + totalTransporte;
+        const noArancel = totalApuntes + totalTransporte;
+        const pesoExtra = total > 0 ? (noArancel / total) * 100 : 0;
+
+        return {
+          total: H.ars(total),
+          sub:
+            anios + ' años · ' + H.ars(total / (anios * 12)) + ' por mes · lo que no es arancel pesa ' +
+            pesoExtra.toFixed(1) + '% del total',
+          rows: [
+            { k: 'Cuotas', ref: meses + ' por año', v: totalCuotas },
+            { k: 'Matrículas', ref: anios + ' matrículas', v: totalMatriculas },
+            { k: 'Apuntes, libros y materiales', ref: '12 meses por año', v: totalApuntes },
+            { k: 'Transporte', ref: '12 meses por año', v: totalTransporte },
+            { k: 'Costo por año', v: total / anios, extra: true },
+            { k: 'Costo por mes', v: total / (anios * 12), extra: true },
+            { k: 'Peso de lo que no es arancel', v: pesoExtra, format: pct.format, unit: pct.unit, decimals: pct.decimals },
+          ],
+          chart: [
+            { label: 'Cuotas', value: totalCuotas, tone: 'main' },
+            { label: 'Matrículas', value: totalMatriculas, tone: 'prop' },
+            { label: 'Apuntes y materiales', value: totalApuntes, tone: 'warn' },
+            { label: 'Transporte', value: totalTransporte, tone: 'exit' },
+          ],
+        };
+      }
+
+      // ---------------------------------------------------------------
+      // Rama 3 — una universidad puntual, arancel de hoy sin proyectar.
+      // Espejo exacto de src/lib/formulas/costo-universidad-privada-cuota.ts.
+      // ---------------------------------------------------------------
+      if (id === 'una-universidad') {
+        const costoAnual = cuota * meses + matricula;
+        const total = costoAnual * anios;
+        const totalCuotas = cuota * meses * anios;
+        const totalMatriculas = matricula * anios;
+
+        return {
+          total: H.ars(total),
+          sub:
+            H.ars(costoAnual) + ' por año académico · ' + meses + ' cuotas de ' + H.ars(cuota) +
+            ' + matrícula · prorrateado ' + H.ars(total / (anios * 12)) + ' por mes',
+          rows: [
+            { k: 'Costo del año académico', ref: 'cuotas + matrícula', v: costoAnual, extra: true },
+            { k: 'Cuotas de toda la carrera', v: totalCuotas },
+            { k: 'Matrículas de toda la carrera', v: totalMatriculas },
+            { k: 'Prorrateo mensual sobre 12 meses', v: total / (anios * 12) },
+            { k: 'Cuotas que vas a pagar', v: meses * anios, format: 'unit', unit: 'cuotas' },
+            { k: 'Años de carrera', v: anios, format: num.format },
+          ],
+          chart: [
+            { label: 'Cuotas', value: totalCuotas, tone: 'main' },
+            { label: 'Matrículas', value: totalMatriculas, tone: 'prop' },
+          ],
+        };
+      }
+
+      // ---------------------------------------------------------------
+      // Rama 4 — el año de colegio privado.
+      // Espejo de src/lib/formulas/ingreso-colegio-privado-cuota-anual-caba.ts:
+      // ahí el año era 10 cuotas + 1,5 cuotas de extras. Acá las cuotas del
+      // ciclo son campo y el 1,5 queda como supuesto de los extras.
+      // ---------------------------------------------------------------
+      if (id === 'colegio') {
+        const cuotasAnio = cuota * meses;
+        const extrasAnio = cuota * m.extrasCuotas;
+        const anual = cuotasAnio + extrasAnio;
+        const pesoExtras = anual > 0 ? (extrasAnio / anual) * 100 : 0;
+
+        return {
+          total: H.ars(anual),
+          sub:
+            meses + ' cuotas de ' + H.ars(cuota) + ' + extras del año · ' +
+            H.ars(anual / 12) + ' por mes si lo prorrateás en 12',
+          rows: [
+            { k: 'Cuotas del ciclo lectivo', ref: meses + ' cuotas', v: cuotasAnio },
+            { k: 'Extras del año', ref: 'matrícula, uniformes, cooperadora, libros', v: extrasAnio, extra: true },
+            { k: 'Total del año escolar', v: anual, extra: true },
+            { k: 'Prorrateado en 12 meses', v: anual / 12 },
+            { k: 'Peso de los extras', v: pesoExtras, format: pct.format, unit: pct.unit, decimals: pct.decimals },
+            { k: 'Cuotas del ciclo', v: meses, format: 'unit', unit: 'cuotas' },
+          ],
+          chart: [
+            { label: 'Cuotas', value: cuotasAnio, tone: 'main' },
+            { label: 'Extras del año', value: extrasAnio, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ---------------------------------------------------------------
+      // Rama 5 — cuánto cubre la beca.
+      // Espejo de src/lib/formulas/becas-porcentaje-cobertura.ts, con el costo
+      // mensual armado desde los campos en vez de pedirlo suelto.
+      // ---------------------------------------------------------------
+      const costoMensual = cuota + matricula / 12 + apuntes + transporte;
+      const mesesTotales = anios * 12;
+      const cobertura = costoMensual > 0 ? Math.min(100, (beca / costoMensual) * 100) : 0;
+      const bolsillo = Math.max(0, costoMensual - beca);
+      const cubierto = Math.min(beca, costoMensual);
+      const ahorro = cubierto * mesesTotales;
+      const coberturaArancel = cuota > 0 ? Math.min(100, (beca / cuota) * 100) : 0;
+
+      return {
+        total: H.ars(bolsillo),
+        sub:
+          'Ponés vos ' + H.ars(bolsillo) + ' por mes · la beca cubre ' + cobertura.toFixed(1) +
+          '% del costo total (' + coberturaArancel.toFixed(1) + '% del arancel) · ahorro ' + H.ars(ahorro) +
+          ' en ' + mesesTotales + ' meses',
+        rows: [
+          { k: 'Costo mensual completo', ref: 'cuota + matrícula prorrateada + materiales + transporte', v: costoMensual },
+          { k: 'Lo que cubre la beca', v: cubierto },
+          { k: 'Lo que ponés de tu bolsillo', v: bolsillo, extra: true },
+          { k: 'Cobertura sobre el costo total', v: cobertura, format: pct.format, unit: pct.unit, decimals: pct.decimals },
+          { k: 'Cobertura sobre el arancel solo', v: coberturaArancel, format: pct.format, unit: pct.unit, decimals: pct.decimals },
+          { k: 'Ahorro en toda la carrera', v: ahorro, extra: true },
+          { k: 'Meses de beca', v: mesesTotales, format: 'unit', unit: 'meses' },
+        ],
+        chart: [
+          { label: 'Cubierto por la beca', value: cubierto, tone: 'good' },
+          { label: 'Tu bolsillo', value: bolsillo, tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

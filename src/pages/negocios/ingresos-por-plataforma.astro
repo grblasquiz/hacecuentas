@@ -1,0 +1,388 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto me paga cada plataforma por mis views?"
+ * Reemplaza 13 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: 5 casos (video largo / cortos / en vivo / texto y
+ * display / requisitos para monetizar).
+ *
+ * OJO UNIDADES: este hub es casi todo DÓLARES. El runtime formatea en pesos por
+ * defecto y hace Object.assign, así que el resultado declara
+ * `format:'unit'`+`unit:'USD'` a nivel raíz y CADA fila que no sea dólares
+ * (porcentajes, cantidades, meses, y la equivalencia en pesos) declara el suyo.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  USD_ARS,
+  YT_CPM_NICHO,
+  YT_NICHO_LABEL,
+  YT_REV_SHARE,
+  YT_CPM_TIER,
+  YPP,
+  REELS_ORIGINAL,
+  REELS_RESUBIDO,
+  TIKTOK,
+  TWITCH,
+  ADSENSE_RPM_NICHO,
+  ADSENSE_MULT_PAIS,
+  X_RPM,
+  X_COSTO_MES,
+  MESES_ANIO,
+} from '../../lib/hubs/ingresos-por-plataforma';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    USD_ARS,
+    YT_CPM_NICHO,
+    YT_NICHO_LABEL,
+    YT_REV_SHARE,
+    YT_CPM_TIER,
+    YPP,
+    REELS_ORIGINAL,
+    REELS_RESUBIDO,
+    TIKTOK,
+    TWITCH,
+    ADSENSE_RPM_NICHO,
+    ADSENSE_MULT_PAIS,
+    X_RPM,
+    X_COSTO_MES,
+    MESES_ANIO,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const nf = (n, d) =>
+      Number(n || 0).toLocaleString('es-AR', {
+        minimumFractionDigits: d || 0,
+        maximumFractionDigits: d || 0,
+      });
+    const usd = (n, d) => 'US$ ' + nf(n, d === undefined ? 2 : d);
+    const num = (v, min) => Math.max(min === undefined ? 0 : min, Number(v) || 0);
+
+    /** Fila de equivalencia en pesos al dólar oficial. Única fila 'ars' de cada rama. */
+    function filaPesos(montoUsd) {
+      return {
+        k: 'Equivalente en pesos al dólar oficial',
+        ref: 'US$ 1 = ' + H.ars(USD_ARS) + ' · sólo referencia',
+        v: montoUsd * USD_ARS,
+        format: 'ars',
+      };
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'video';
+
+      // ── 1. Video largo: YouTube (nicho + país) y Facebook ──────────────────
+      if (id === 'video') {
+        const vistas = num(v.vistas);
+        const nicho = String(v.nicho || 'tech');
+        const cpmNicho = YT_CPM_NICHO[nicho] || YT_CPM_NICHO.tech;
+        const fill = Math.min(100, num(v.fill_rate)) / 100;
+
+        // Mezcla de países: Tier 3 es el resto. La fórmula vieja exigía que los
+        // tres sumaran 100 y tiraba error; acá se deriva el Tier 3 y no puede fallar.
+        let t1 = Math.min(100, num(v.pct_t1));
+        let t2 = Math.min(100 - t1, num(v.pct_t2));
+        const t3 = Math.max(0, 100 - t1 - t2);
+
+        const cpmPais = (t1 * YT_CPM_TIER.t1 + t2 * YT_CPM_TIER.t2 + t3 * YT_CPM_TIER.t3) / 100;
+        const rpmPais = cpmPais * YT_REV_SHARE;
+        // Factor geográfico = CPM ponderado sobre el CPM de Tier 1. Vale 1 con
+        // audiencia 100% Tier 1, que es el supuesto implícito del CPM por nicho.
+        const factorGeo = cpmPais / YT_CPM_TIER.t1;
+
+        const rpmNichoPuro = cpmNicho * YT_REV_SHARE * fill;
+        const rpmEfectivo = rpmNichoPuro * factorGeo;
+
+        const ytMes = (vistas / 1000) * rpmEfectivo;
+        const ytAnual = ytMes * MESES_ANIO;
+        const rpmFb = num(v.rpm_facebook);
+        const fbMes = (vistas / 1000) * rpmFb;
+        const total = ytMes + fbMes;
+
+        return {
+          format: 'unit',
+          unit: 'USD',
+          decimals: 2,
+          total: usd(total),
+          sub:
+            'RPM efectivo de ' + usd(rpmEfectivo) + ' por cada 1.000 vistas · nicho ' +
+            (YT_NICHO_LABEL[nicho] || nicho).toLowerCase() + ' (CPM ' + usd(cpmNicho, 0) + ') · ' +
+            'audiencia ' + nf(t1) + '/' + nf(t2) + '/' + nf(t3) + ' por tier · ' +
+            usd(ytAnual, 0) + ' al año sólo de YouTube',
+          rows: [
+            { k: 'CPM del nicho', ref: 'lo que paga el anunciante', v: cpmNicho, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Tu parte del reparto', ref: 'Programa de Socios', v: YT_REV_SHARE * 100, format: 'unit', unit: '%', decimals: 0 },
+            { k: 'Fill rate aplicado', ref: 'vistas con anuncio', v: fill * 100, format: 'unit', unit: '%', decimals: 0 },
+            { k: 'CPM ponderado por país', ref: 'Tier 1 ' + YT_CPM_TIER.t1 + ' / Tier 2 ' + YT_CPM_TIER.t2 + ' / Tier 3 ' + YT_CPM_TIER.t3, v: cpmPais, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'RPM si sólo mirás el país', ref: 'CPM ponderado × 55%', v: rpmPais, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Factor geográfico', ref: '1 = audiencia toda de Tier 1', v: factorGeo, format: 'unit', unit: 'veces', decimals: 2 },
+            { k: 'RPM efectivo por 1.000 vistas', ref: 'nicho × reparto × fill × país', v: rpmEfectivo, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+            { k: 'Ingreso mensual de YouTube', v: ytMes, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+            { k: 'Ingreso anual de YouTube', v: ytAnual, format: 'unit', unit: 'USD', decimals: 0 },
+            { k: 'Las mismas vistas en Facebook', ref: 'a tu RPM de ' + usd(rpmFb), v: fbMes, format: 'unit', unit: 'USD', decimals: 2 },
+            filaPesos(total),
+          ],
+          chart: [
+            { label: 'YouTube video largo', value: Math.max(0, ytMes), tone: 'main' },
+            { label: 'Facebook video', value: Math.max(0, fbMes), tone: 'good' },
+            { label: 'Se queda YouTube (45%)', value: Math.max(0, (vistas / 1000) * cpmNicho * fill * factorGeo * (1 - YT_REV_SHARE)), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── 2. Formatos cortos: Shorts y bonus de Reels ────────────────────────
+      if (id === 'cortos') {
+        const vistas = num(v.vistas_cortos);
+        const rpm = Math.max(0.01, Number(v.rpm_cortos) || 0.01);
+        const original = String(v.origen_cortos || 'original') === 'original';
+        const ajuste = original ? REELS_ORIGINAL : REELS_RESUBIDO;
+
+        const shorts = (vistas / 1000) * rpm;
+        const reelsBase = (vistas / 1000) * rpm;
+        const reels = reelsBase * ajuste;
+        const total = shorts + reels;
+        const vistasPara1000 = Math.ceil((1000 / rpm) * 1000);
+
+        const rows = [
+          { k: 'RPM de formatos cortos', ref: 'por cada 1.000 vistas', v: rpm, format: 'unit', unit: 'USD', decimals: 3 },
+          { k: 'Ingreso mensual de Shorts', v: shorts, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Bonus de Reels con las mismas vistas', ref: original ? 'contenido original, sin penalización' : 'contenido re-subido: cobra el 40%', v: reels, format: 'unit', unit: 'USD', decimals: 2 },
+        ];
+        if (!original) {
+          rows.push({ k: 'Lo que perdés por re-subir', ref: 'diferencia contra el original', v: reelsBase - reels, format: 'unit', unit: 'USD', decimals: 2 });
+        }
+        rows.push(
+          { k: 'Ingreso anual sumando los dos', v: total * MESES_ANIO, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Vistas necesarias para juntar US$ 1.000', ref: 'sólo con Shorts, a ese RPM', v: vistasPara1000, format: 'plain', decimals: 0 },
+          filaPesos(total),
+        );
+
+        return {
+          format: 'unit',
+          unit: 'USD',
+          decimals: 2,
+          total: usd(total),
+          sub:
+            nf(vistas) + ' vistas al mes a ' + usd(rpm, 3) + ' de RPM · para llegar a US$ 1.000 con Shorts necesitás ' +
+            nf(vistasPara1000) + ' vistas · ' + (original ? 'el Reel original cobra completo' : 'el Reel re-subido cobra el 40%'),
+          rows: rows,
+          chart: [
+            { label: 'Shorts de YouTube', value: Math.max(0, shorts), tone: 'main' },
+            { label: 'Bonus de Reels', value: Math.max(0, reels), tone: 'good' },
+            { label: 'Penalización por re-subido', value: Math.max(0, reelsBase - reels), tone: 'bad' },
+          ],
+        };
+      }
+
+      // ── 3. En vivo y propinas: TikTok y Twitch ─────────────────────────────
+      if (id === 'vivo') {
+        const diamantes = num(v.diamantes);
+        const comision = Math.min(100, num(v.comision_tiktok)) / 100;
+        const ttBruto = diamantes * TIKTOK.valorDiamante;
+        const ttNeto = ttBruto * (1 - comision);
+        const ttComision = ttBruto - ttNeto;
+
+        const bits = num(v.bits);
+        const donaciones = num(v.donaciones);
+        const subs = num(v.subs_neto);
+        const bitsUsd = bits * TWITCH.valorBit;
+        const donNetas = donaciones * TWITCH.netoDonacion;
+        const twBruto = bitsUsd + donaciones + subs;
+        const twNeto = bitsUsd + donNetas + subs;
+
+        const total = ttNeto + twNeto;
+        const comisionTotal = ttComision + (twBruto - twNeto);
+
+        return {
+          format: 'unit',
+          unit: 'USD',
+          decimals: 2,
+          total: usd(total),
+          sub:
+            'TikTok deja ' + usd(ttNeto) + ' y Twitch ' + usd(twNeto) + ' · ' +
+            (ttNeto >= TIKTOK.retiroMinimo ? 'ya podés retirar de TikTok' : 'te faltan ' + usd(TIKTOK.retiroMinimo - ttNeto) + ' para retirar de TikTok') + ' · ' +
+            (twNeto >= TWITCH.retiroMinimo ? 'ya cobrás de Twitch' : 'te faltan ' + usd(TWITCH.retiroMinimo - twNeto) + ' para cobrar de Twitch'),
+          rows: [
+            { k: 'Valor bruto de los diamantes', ref: nf(diamantes) + ' × US$ ' + TIKTOK.valorDiamante, v: ttBruto, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Comisión de TikTok y la tienda de apps', ref: nf(comision * 100) + '%', v: ttComision, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Neto de TikTok Live', v: ttNeto, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+            { k: 'Equivalente en regalos', ref: 'galaxias de ' + TIKTOK.diamantesGalaxia + ' diamantes', v: Math.floor(diamantes / TIKTOK.diamantesGalaxia), format: 'plain', decimals: 0 },
+            { k: 'Bits de Twitch', ref: nf(bits) + ' × US$ ' + TWITCH.valorBit, v: bitsUsd, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Donaciones directas netas', ref: 'menos ' + nf((1 - TWITCH.netoDonacion) * 100) + '% de pasarela', v: donNetas, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Suscripciones del canal', ref: 'lo que ya te liquida Twitch', v: subs, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Neto de Twitch', v: twNeto, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+            { k: 'Total que se quedaron las plataformas', v: comisionTotal, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Mínimo de retiro de cada plataforma', v: TIKTOK.retiroMinimo, format: 'unit', unit: 'USD', decimals: 0 },
+            filaPesos(total),
+          ],
+          chart: [
+            { label: 'TikTok neto', value: Math.max(0, ttNeto), tone: 'main' },
+            { label: 'Bits', value: Math.max(0, bitsUsd), tone: 'good' },
+            { label: 'Donaciones netas', value: Math.max(0, donNetas), tone: 'prop' },
+            { label: 'Suscripciones', value: Math.max(0, subs), tone: 'main' },
+            { label: 'Comisiones retenidas', value: Math.max(0, comisionTotal), tone: 'bad' },
+          ],
+        };
+      }
+
+      // ── 4. Texto y display: blog con AdSense y X ───────────────────────────
+      if (id === 'texto') {
+        const visitas = num(v.visitas_blog);
+        const nichoBlog = String(v.nicho_blog || 'Tecnología / SaaS');
+        const paisBlog = String(v.pais_blog || 'México / Argentina / Chile');
+        const rpmBase = ADSENSE_RPM_NICHO[nichoBlog] !== undefined ? ADSENSE_RPM_NICHO[nichoBlog] : 3;
+        const multPais = ADSENSE_MULT_PAIS[paisBlog] !== undefined ? ADSENSE_MULT_PAIS[paisBlog] : 0.5;
+        const rpmBlog = rpmBase * multPais;
+        const blogMes = (visitas / 1000) * rpmBlog;
+
+        const impresiones = num(v.impresiones_x);
+        const nichoX = String(v.nicho_x || 'Tech / SaaS');
+        const plus = String(v.plan_x || 'premium') === 'premium-plus';
+        const tabla = X_RPM[nichoX] || { premium: 1, premiumPlus: 2 };
+        const rpmX = plus ? tabla.premiumPlus : tabla.premium;
+        const costoMes = plus ? X_COSTO_MES.premiumPlus : X_COSTO_MES.premium;
+        const xMes = (impresiones / 1000000) * rpmX;
+        const xNetoMes = xMes - costoMes;
+
+        const total = blogMes + xNetoMes;
+
+        return {
+          format: 'unit',
+          unit: 'USD',
+          decimals: 2,
+          total: usd(total),
+          sub:
+            'El blog deja ' + usd(blogMes) + ' con un RPM de ' + usd(rpmBlog) + ' · X deja ' +
+            usd(xMes) + ' brutos y ' + usd(xNetoMes) + ' netos tras pagar ' + usd(costoMes, 0) + ' de suscripción' +
+            (xNetoMes < 0 ? ' · el programa de X hoy te da pérdida' : ''),
+          rows: [
+            { k: 'RPM base del nicho del blog', ref: nichoBlog, v: rpmBase, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Ajuste por país del tráfico', ref: paisBlog, v: multPais, format: 'unit', unit: 'veces', decimals: 2 },
+            { k: 'RPM efectivo del blog', ref: 'por cada 1.000 visitas', v: rpmBlog, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+            { k: 'Ingreso mensual del blog', v: blogMes, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+            { k: 'Ingreso anual del blog', v: blogMes * MESES_ANIO, format: 'unit', unit: 'USD', decimals: 0 },
+            { k: 'RPM de X por millón de impresiones', ref: nichoX + ' · ' + (plus ? 'Premium+' : 'Premium'), v: rpmX, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Ingreso bruto mensual de X', v: xMes, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Costo de la suscripción de X', ref: 'por mes', v: costoMes, format: 'unit', unit: 'USD', decimals: 0 },
+            { k: xNetoMes >= 0 ? 'Neto mensual de X' : 'Pérdida mensual en X', v: Math.abs(xNetoMes), format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Impresiones que X necesita para cubrir la suscripción', ref: 'punto de equilibrio', v: rpmX > 0 ? (costoMes / rpmX) * 1000000 : 0, format: 'plain', decimals: 0 },
+            filaPesos(total),
+          ],
+          chart: [
+            { label: 'Blog con AdSense', value: Math.max(0, blogMes), tone: 'main' },
+            { label: 'X (neto)', value: Math.max(0, xNetoMes), tone: 'good' },
+            { label: 'Suscripción de X', value: Math.max(0, costoMes), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── 5. Requisitos para empezar a cobrar ────────────────────────────────
+      const subsAct = num(v.subs_actuales);
+      const subsMes = Math.max(1, num(v.subs_mes, 1));
+      const horasAct = num(v.horas_actuales);
+      const horasMes = Math.max(1, num(v.horas_mes, 1));
+
+      const faltanSubs = Math.max(0, YPP.subs - subsAct);
+      const faltanHoras = Math.max(0, YPP.horas - horasAct);
+      const mesesSubs = faltanSubs > 0 ? Math.ceil(faltanSubs / subsMes) : 0;
+      const mesesHoras = faltanHoras > 0 ? Math.ceil(faltanHoras / horasMes) : 0;
+      const mesesTotal = Math.max(mesesSubs, mesesHoras);
+      const diasSubs = faltanSubs > 0 ? Math.ceil(faltanSubs / (subsMes / 30)) : 0;
+      const pctSubs = Math.min(100, (subsAct / YPP.subs) * 100);
+      const pctHoras = Math.min(100, (horasAct / YPP.horas) * 100);
+      const pctCamino = (pctSubs + pctHoras) / 2;
+      const cuello =
+        mesesTotal === 0
+          ? 'Ya cumplís los dos requisitos: podés postular al Programa de Socios'
+          : mesesSubs > mesesHoras
+            ? 'Te frenan los suscriptores'
+            : mesesHoras > mesesSubs
+              ? 'Te frenan las 4.000 horas'
+              : 'Los dos requisitos llegan a la par';
+
+      const viewers = num(v.viewers_twitch);
+      const horasTw = num(v.horas_twitch);
+      const diasTw = num(v.dias_twitch);
+      const faltaViewers = Math.max(0, TWITCH.partnerViewers - viewers);
+      const faltaHorasTw = Math.max(0, TWITCH.partnerHoras - horasTw);
+      const faltaDiasTw = Math.max(0, TWITCH.partnerDias - diasTw);
+      const partnerOk = faltaViewers === 0 && faltaHorasTw === 0 && faltaDiasTw === 0;
+
+      return {
+        format: 'unit',
+        unit: 'meses',
+        decimals: 0,
+        total: mesesTotal === 0 ? 'Ya podés' : nf(mesesTotal) + (mesesTotal === 1 ? ' mes' : ' meses'),
+        sub:
+          cuello + ' · llevás ' + nf(pctCamino, 1) + '% del camino al Programa de Socios · ' +
+          (partnerOk
+            ? 'y en Twitch ya cumplís los tres umbrales de Partner'
+            : 'en Twitch te faltan ' + nf(faltaViewers, 1) + ' espectadores de promedio'),
+        rows: [
+          { k: 'Suscriptores que te faltan', ref: 'meta: ' + nf(YPP.subs), v: faltanSubs, format: 'plain', decimals: 0 },
+          { k: 'Meses para llegar a los suscriptores', ref: 'a ' + nf(subsMes) + ' por mes', v: mesesSubs, format: 'unit', unit: 'meses', decimals: 0 },
+          { k: 'Días para llegar a los 1.000 suscriptores', ref: 'mismo ritmo, en días', v: diasSubs, format: 'unit', unit: 'días', decimals: 0 },
+          { k: 'Horas de reproducción que te faltan', ref: 'meta: ' + nf(YPP.horas) + ' en 12 meses', v: faltanHoras, format: 'plain', decimals: 0 },
+          { k: 'Meses para llegar a las horas', ref: 'a ' + nf(horasMes) + ' por mes', v: mesesHoras, format: 'unit', unit: 'meses', decimals: 0 },
+          { k: 'Meses para monetizar en YouTube', ref: 'manda el requisito más lento', v: mesesTotal, format: 'unit', unit: 'meses', decimals: 0, extra: true },
+          { k: 'Vía alternativa por Shorts', ref: 'vistas válidas en 90 días', v: YPP.vistasShorts, format: 'plain', decimals: 0 },
+          { k: 'Espectadores promedio que te faltan en Twitch', ref: 'umbral: ' + TWITCH.partnerViewers, v: faltaViewers, format: 'plain', decimals: 1, extra: true },
+          { k: 'Horas de stream que te faltan', ref: 'umbral: ' + TWITCH.partnerHoras + ' h en 30 días', v: faltaHorasTw, format: 'unit', unit: 'horas', decimals: 1 },
+          { k: 'Días de stream que te faltan', ref: 'umbral: ' + TWITCH.partnerDias + ' días distintos', v: faltaDiasTw, format: 'unit', unit: 'días', decimals: 0 },
+        ],
+        chart: [
+          { label: 'Camino recorrido', value: Math.max(0, pctCamino), tone: 'good' },
+          { label: 'Lo que falta', value: Math.max(0, 100 - pctCamino), tone: 'warn' },
+        ],
+      };
+    });
+  })();
+</script>

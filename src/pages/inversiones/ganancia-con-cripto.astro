@@ -1,0 +1,352 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto gané de verdad con mis cripto, después de comisiones?"
+ * Reemplaza 7 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/ganancia-con-cripto.ts) y su
+ * compute(). Todo el chrome, el CSS y el runtime viven en DecisionHub.astro.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, GAS_LIMITS, BLOQUES_POR_HALVING } from '../../lib/hubs/ganancia-con-cripto';
+import dolar from '../../data/live/dolar.json';
+
+/**
+ * Dólar cripto del día: es el tipo de cambio al que efectivamente se entra y se
+ * sale de stablecoins en el mercado local, así que es el que corresponde para
+ * pasar a pesos un resultado en dólares de una operación en cripto.
+ */
+const CRIPTO = Math.round(Number(dolar?.quotes?.cripto?.venta) || 0);
+const CRIPTO_FECHA = (dolar?.quotes?.cripto?.fechaActualizacion || '').slice(0, 10);
+
+/** Copia superficial: no mutamos el objeto del hub, sólo precargamos el campo. */
+const data = {
+  ...hub,
+  fields: hub.fields.map((f) => (f.id === 'dolar' ? { ...f, value: CRIPTO.toLocaleString('es-AR') } : f)),
+  stamps: hub.stamps.map((s) =>
+    s === 'Dólar cripto del día' ? `Dólar cripto $${CRIPTO.toLocaleString('es-AR')}${CRIPTO_FECHA ? ' · ' + CRIPTO_FECHA : ''}` : s,
+  ),
+};
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={data} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ GAS: GAS_LIMITS, HALVING_STEP: BLOQUES_POR_HALVING }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const usd = (n, d) =>
+      'US$' + (Math.round(n * Math.pow(10, d || 2)) / Math.pow(10, d || 2)).toLocaleString('es-AR', {
+        minimumFractionDigits: d === 0 ? 0 : 2,
+        maximumFractionDigits: d || 2,
+      });
+
+    H.onCompute(function (v, kase) {
+      const caso = kase?.id || 'compra-venta';
+
+      const pEnt = Number(v.precioEntrada) || 0;
+      const pSal = Number(v.precioSalida) || 0;
+      const cant = Number(v.cantidad) || 0;
+      const com = Math.max(0, Number(v.comision) || 0);
+      const montoUsd = Math.max(0, Number(v.montoUsd) || 0);
+      const comStable = Math.max(0, Number(v.comisionStable) || 0);
+      const spread = Math.max(0, Number(v.spread) || 0);
+      const tipoTx = String(v.tipoTx || 'erc20-transfer');
+      const gasLimitPropio = Math.max(0, Number(v.gasLimit) || 0);
+      const gwei = Math.max(0, Number(v.gasPriceGwei) || 0);
+      const precioEth = Math.max(0, Number(v.precioEth) || 0);
+      const apy = Math.max(0, Number(v.apyPool) || 0);
+      const meses = Math.max(1, Number(v.mesesPool) || 12);
+      const supply = Math.max(0, Number(v.supply) || 0);
+      const quemados = Math.max(0, Number(v.quemados) || 0);
+      const pToken = Math.max(0, Number(v.precioToken) || 0);
+      const mcapObj = Math.max(0, Number(v.marketCapObjetivo) || 0);
+      const bloque = Math.round(Number(v.bloqueActual) || 0);
+      const tBloque = Math.max(60, Number(v.tiempoBloque) || 600);
+      const tc = Math.max(0, Number(v.dolar) || 0);
+
+      const vacio = (msg) => ({ total: '—', sub: msg, rows: [], chart: [], format: 'plain', decimals: 2 });
+
+      // ------------------------------------------------ cambio de stablecoin
+      if (caso === 'stablecoin') {
+        if (!montoUsd) return vacio('Cargá el monto que querés pasar de una stablecoin a otra.');
+        const costoComision = montoUsd * (comStable / 100);
+        const costoSpread = montoUsd * (spread / 100);
+        const costoTotal = costoComision + costoSpread;
+        const recibis = montoUsd - costoTotal;
+        const costoPct = (costoTotal / montoUsd) * 100;
+        // Referencia: el piso competitivo del mercado ronda 0,1% de comisión + 0,02% de spread.
+        const referencia = montoUsd * 0.0012;
+        const escalaMax = Math.max(1.5, Math.ceil(costoPct * 10) / 10 + 0.3);
+        return {
+          total: usd(costoTotal),
+          sub:
+            'Costo total de pasar ' + usd(montoUsd, 0) + ' de una stablecoin a otra · te quedan ' + usd(recibis) +
+            ' del otro lado (' + costoPct.toFixed(3) + '% del monto)',
+          rows: [
+            { k: 'Comisión del exchange', ref: comStable + '% del monto', v: costoComision, format: 'plain', decimals: 2 },
+            { k: 'Costo del spread entre puntas', ref: spread + '% del monto', v: costoSpread, format: 'plain', decimals: 2 },
+            { k: 'Costo total del cambio', v: costoTotal, format: 'plain', decimals: 2, extra: true },
+            { k: 'Costo total sobre el monto', v: costoPct, format: 'unit', unit: '%', decimals: 3 },
+            { k: 'Lo que recibís del otro lado', v: recibis, format: 'plain', decimals: 2 },
+            { k: 'Lo mismo en un exchange del piso del mercado', ref: '0,10% + 0,02%', v: referencia, format: 'plain', decimals: 2 },
+            { k: 'Sobrecosto contra ese piso', v: Math.max(0, costoTotal - referencia), format: 'plain', decimals: 2 },
+            { k: 'Costo total en pesos', ref: 'al dólar cripto', v: costoTotal * tc, format: 'ars' },
+          ],
+          chart: [
+            { label: 'Barato', value: 0.15, tone: 'good', from: 0, to: 0.15 },
+            { label: 'Normal', value: 0.35, tone: 'warn', from: 0.15, to: 0.5 },
+            { label: 'Caro', value: escalaMax - 0.5, tone: 'bad', from: 0.5, to: escalaMax },
+          ],
+          format: 'plain',
+          decimals: 2,
+          position: Math.min(100, Math.max(0, (costoPct / escalaMax) * 100)),
+          positionLabel: 'Costo total ' + costoPct.toFixed(3) + '% del monto operado',
+        };
+      }
+
+      // ---------------------------------------------------------- gas fee ETH
+      if (caso === 'gas') {
+        const limit = tipoTx !== 'custom' && GAS[tipoTx] ? GAS[tipoTx] : gasLimitPropio;
+        if (!limit || !gwei || !precioEth) return vacio('Cargá el gas price en Gwei y el precio de ETH para ver el costo.');
+        // Espejo de costo-transaccion-gas-eth.ts: costo = gasLimit × Gwei / 1e9.
+        const costoEth = (limit * gwei) / 1e9;
+        const costoUsdVal = costoEth * precioEth;
+        const estado = gwei < 20 ? 'la red está barata' : gwei <= 50 ? 'el gas está en niveles normales' : 'la red está congestionada';
+        const escalaMax = Math.max(100, Math.ceil(gwei) + 20);
+        return {
+          total: usd(costoUsdVal),
+          sub:
+            'Costo de la transacción a ' + gwei + ' Gwei · ' + costoEth.toFixed(6) + ' ETH · ' + estado,
+          rows: [
+            { k: 'Gas limit de esta operación', ref: tipoTx === 'custom' ? 'el que cargaste' : 'valor típico', v: limit, format: 'plain' },
+            { k: 'Gas price', v: gwei, format: 'unit', unit: 'Gwei', decimals: 2 },
+            { k: 'Costo en ETH', ref: 'gas × Gwei ÷ 1.000.000.000', v: costoEth, format: 'plain', decimals: 6 },
+            { k: 'Costo en dólares', v: costoUsdVal, format: 'plain', decimals: 2, extra: true },
+            { k: 'Costo en pesos', ref: 'al dólar cripto', v: costoUsdVal * tc, format: 'ars' },
+            { k: 'Diez operaciones iguales', v: costoUsdVal * 10, format: 'plain', decimals: 2 },
+            { k: 'Costo si el gas se fuera a 100 Gwei', v: ((limit * 100) / 1e9) * precioEth, format: 'plain', decimals: 2 },
+          ],
+          chart: [
+            { label: 'Barata', value: 20, tone: 'good', from: 0, to: 20 },
+            { label: 'Normal', value: 30, tone: 'warn', from: 20, to: 50 },
+            { label: 'Congestionada', value: escalaMax - 50, tone: 'bad', from: 50, to: escalaMax },
+          ],
+          format: 'plain',
+          decimals: 2,
+          position: Math.min(100, Math.max(0, (gwei / escalaMax) * 100)),
+          positionLabel: gwei + ' Gwei — ' + estado,
+        };
+      }
+
+      // ------------------------------------------------- pérdida impermanente
+      if (caso === 'pool') {
+        if (!montoUsd || !pEnt || !pSal) return vacio('Cargá el capital del pool y el precio del token al entrar y hoy.');
+        // Espejo de impermanent-loss-defi.ts: IL = 2·√r / (1 + r) − 1.
+        const r = pSal / pEnt;
+        const il = ((2 * Math.sqrt(r)) / (1 + r) - 1) * 100;
+        const valorHold = (montoUsd / 2) * r + montoUsd / 2;
+        const valorPoolSinFees = valorHold * (1 + il / 100);
+        const fees = montoUsd * (apy / 100) * (meses / 12);
+        const valorPool = valorPoolSinFees + fees;
+        const ilUsd = valorHold - valorPoolSinFees;
+        const neto = valorPool - montoUsd;
+        const ilAbs = Math.abs(il);
+        const escalaMax = Math.max(25, Math.ceil(ilAbs) + 2);
+        const cubre = fees >= ilUsd;
+        return {
+          total: ilAbs.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%',
+          sub:
+            'Pérdida impermanente sobre un movimiento de ' + r.toFixed(2) + 'x · ' + usd(ilUsd) + ' menos que holdear · ' +
+            (cubre ? 'las comisiones del pool la cubren' : 'las comisiones del pool no alcanzan a cubrirla'),
+          rows: [
+            { k: 'Pérdida impermanente', ref: '2·√r ÷ (1 + r) − 1', v: il, format: 'unit', unit: '%', decimals: 2, extra: true },
+            { k: 'Pérdida impermanente en dólares', v: ilUsd, format: 'plain', decimals: 2 },
+            { k: 'Valor si hubieras holdeado', v: valorHold, format: 'plain', decimals: 2 },
+            { k: 'Valor en el pool sin comisiones', v: valorPoolSinFees, format: 'plain', decimals: 2 },
+            { k: 'Comisiones ganadas en ' + meses + ' meses', ref: apy + '% anual', v: fees, format: 'plain', decimals: 2 },
+            { k: 'Valor en el pool con comisiones', v: valorPool, format: 'plain', decimals: 2 },
+            { k: 'Resultado neto contra lo que aportaste', v: neto, format: 'plain', decimals: 2 },
+            { k: 'Variación del precio del token', ref: 'entrada vs hoy', v: (r - 1) * 100, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Resultado neto en pesos', ref: 'al dólar cripto', v: neto * tc, format: 'ars' },
+          ],
+          chart: [
+            { label: 'Mínima', value: 1, tone: 'good', from: 0, to: 1 },
+            { label: 'Moderada', value: 4, tone: 'warn', from: 1, to: 5 },
+            { label: 'Alta', value: 10, tone: 'warn', from: 5, to: 15 },
+            { label: 'Severa', value: escalaMax - 15, tone: 'bad', from: 15, to: escalaMax },
+          ],
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+          position: Math.min(100, Math.max(0, (ilAbs / escalaMax) * 100)),
+          positionLabel: 'Pérdida impermanente ' + ilAbs.toFixed(2) + '% del valor que tendrías holdeando',
+        };
+      }
+
+      // ------------------------------------------------------- market cap
+      if (caso === 'market-cap') {
+        const supplyEfectivo = supply - quemados;
+        if (supplyEfectivo <= 0 || !pToken || !mcapObj)
+          return vacio('Cargá el supply, el precio actual del token y el market cap objetivo.');
+        // Espejo de market-cap-vs-precio.ts.
+        const mcapActual = supplyEfectivo * pToken;
+        const precioObjetivo = mcapObj / supplyEfectivo;
+        const mult = precioObjetivo / pToken;
+        const variacion = (mult - 1) * 100;
+        const escalaMax = Math.max(10, Math.ceil(mult) + 1);
+        return {
+          total: usd(precioObjetivo, 6),
+          sub:
+            'Precio implícito con un market cap de ' + usd(mcapObj, 0) + ' · ' + mult.toFixed(2) + 'x desde ' + usd(pToken, 6) +
+            ' (' + (variacion >= 0 ? '+' : '') + variacion.toFixed(1) + '%)',
+          rows: [
+            { k: 'Precio implícito del token', ref: 'market cap objetivo ÷ supply', v: precioObjetivo, format: 'plain', decimals: 6, extra: true },
+            { k: 'Precio actual', v: pToken, format: 'plain', decimals: 6 },
+            { k: 'Múltiplo implícito', v: mult, format: 'unit', unit: 'x', decimals: 2 },
+            { k: 'Variación implícita', v: variacion, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Market cap actual', ref: 'supply efectivo × precio', v: mcapActual, format: 'plain' },
+            { k: 'Market cap objetivo', v: mcapObj, format: 'plain' },
+            { k: 'Demanda nueva que haría falta', v: Math.max(0, mcapObj - mcapActual), format: 'plain' },
+            { k: 'Supply efectivo', ref: 'circulante − quemados', v: supplyEfectivo, format: 'plain' },
+          ],
+          chart: [
+            { label: 'Por debajo de hoy', value: 1, tone: 'bad', from: 0, to: 1 },
+            { label: 'Hasta 3x', value: 2, tone: 'warn', from: 1, to: 3 },
+            { label: 'Más de 3x', value: escalaMax - 3, tone: 'good', from: 3, to: escalaMax },
+          ],
+          format: 'plain',
+          decimals: 6,
+          position: Math.min(100, Math.max(0, (mult / escalaMax) * 100)),
+          positionLabel: 'Múltiplo implícito ' + mult.toFixed(2) + 'x — es aritmética, no un pronóstico',
+        };
+      }
+
+      // ----------------------------------------------------------- halving
+      if (caso === 'halving') {
+        if (!bloque || bloque <= 0) return vacio('Cargá el número de bloque actual de la red de Bitcoin.');
+        // Espejo de halving-bitcoin-fecha.ts: halving cada 210.000 bloques.
+        const ocurridos = Math.floor(bloque / HALVING_STEP);
+        const recompensa = 50 / Math.pow(2, ocurridos);
+        const recompensaPost = recompensa / 2;
+        const proximo = (ocurridos + 1) * HALVING_STEP;
+        const restantes = proximo - bloque;
+        const segundos = restantes * tBloque;
+        const dias = Math.round(segundos / 86400);
+        const fecha = new Date(Date.now() + segundos * 1000);
+        const fechaTxt =
+          fecha.getFullYear() + '-' + String(fecha.getMonth() + 1).padStart(2, '0') + '-' + String(fecha.getDate()).padStart(2, '0');
+        const bloquesDia = 86400 / tBloque;
+        const avance = ((HALVING_STEP - restantes) / HALVING_STEP) * 100;
+        return {
+          total: String(dias),
+          sub:
+            'Días estimados hasta el halving #' + (ocurridos + 1) + ' · bloque ' + proximo.toLocaleString('es-AR') +
+            ' · fecha aproximada ' + fechaTxt,
+          rows: [
+            { k: 'Días estimados hasta el halving', v: dias, format: 'unit', unit: 'días', extra: true },
+            { k: 'Bloques que faltan', v: restantes, format: 'plain' },
+            { k: 'Bloque del próximo halving', v: proximo, format: 'plain' },
+            { k: 'Halvings ya ocurridos', v: ocurridos, format: 'plain' },
+            { k: 'Recompensa actual por bloque', v: recompensa, format: 'unit', unit: 'BTC', decimals: 4 },
+            { k: 'Recompensa después del corte', v: recompensaPost, format: 'unit', unit: 'BTC', decimals: 4 },
+            { k: 'Emisión diaria nueva hoy', v: bloquesDia * recompensa, format: 'unit', unit: 'BTC', decimals: 1 },
+            { k: 'Emisión diaria nueva después', v: bloquesDia * recompensaPost, format: 'unit', unit: 'BTC', decimals: 1 },
+            { k: 'Avance del ciclo actual', v: avance, format: 'unit', unit: '%', decimals: 1 },
+          ],
+          chart: [
+            { label: 'Primer tercio', value: 33, tone: 'good', from: 0, to: 33 },
+            { label: 'Segundo tercio', value: 34, tone: 'warn', from: 33, to: 67 },
+            { label: 'Tramo final', value: 33, tone: 'bad', from: 67, to: 100 },
+          ],
+          format: 'unit',
+          unit: 'días',
+          position: Math.min(100, Math.max(0, avance)),
+          positionLabel: 'Avance del ciclo ' + avance.toFixed(1) + '% · faltan ' + restantes.toLocaleString('es-AR') + ' bloques',
+        };
+      }
+
+      // ------------------------------------------- compré y vendí (default)
+      if (!pEnt || !pSal || !cant) return vacio('Cargá precio de compra, precio de venta y cantidad para ver el resultado.');
+      // Espejo de ganancia-crypto.ts: la comisión encarece la compra y achica la venta.
+      const invertido = pEnt * cant * (1 + com / 100);
+      const recibido = pSal * cant * (1 - com / 100);
+      const ganancia = recibido - invertido;
+      const gananciaPct = (ganancia / invertido) * 100;
+      const brutoPct = ((pSal - pEnt) / pEnt) * 100;
+      const comisionCompra = pEnt * cant * (com / 100);
+      const comisionVenta = pSal * cant * (com / 100);
+      const escalaMin = Math.min(-20, Math.floor(gananciaPct) - 5);
+      const escalaMax = Math.max(40, Math.ceil(gananciaPct) + 5);
+      const span = escalaMax - escalaMin;
+      return {
+        total: (ganancia >= 0 ? '+' : '−') + usd(Math.abs(ganancia)),
+        sub:
+          (ganancia >= 0 ? 'Ganancia neta' : 'Pérdida neta') + ' del ' + Math.abs(gananciaPct).toFixed(2) + '% sobre ' +
+          usd(invertido) + ' invertidos · las comisiones se llevaron ' + usd(comisionCompra + comisionVenta),
+        rows: [
+          { k: 'Monto invertido', ref: 'con comisión de compra', v: invertido, format: 'plain', decimals: 2 },
+          { k: 'Monto recibido', ref: 'con comisión de venta descontada', v: recibido, format: 'plain', decimals: 2 },
+          { k: 'Ganancia o pérdida neta', v: ganancia, format: 'plain', decimals: 2, extra: true },
+          { k: 'Rendimiento neto', ref: 'sobre lo invertido', v: gananciaPct, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Variación bruta del precio', ref: 'sin comisiones', v: brutoPct, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Comisión de compra', v: comisionCompra, format: 'plain', decimals: 2 },
+          { k: 'Comisión de venta', v: comisionVenta, format: 'plain', decimals: 2 },
+          { k: 'Comisiones totales', v: comisionCompra + comisionVenta, format: 'plain', decimals: 2 },
+          { k: 'Cuánto te comieron las comisiones', ref: 'sobre lo invertido', v: ((comisionCompra + comisionVenta) / invertido) * 100, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Resultado neto en pesos', ref: 'al dólar cripto', v: ganancia * tc, format: 'ars' },
+        ],
+        chart: [
+          { label: 'Pérdida', value: -escalaMin, tone: 'bad', from: escalaMin, to: 0 },
+          { label: 'Ganancia', value: escalaMax, tone: 'good', from: 0, to: escalaMax },
+        ],
+        format: 'plain',
+        decimals: 2,
+        position: Math.min(100, Math.max(0, ((gananciaPct - escalaMin) / span) * 100)),
+        positionLabel:
+          'Rendimiento neto ' + (gananciaPct >= 0 ? '+' : '') + gananciaPct.toFixed(2) + '% (bruto ' + (brutoPct >= 0 ? '+' : '') + brutoPct.toFixed(2) + '%)',
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,284 @@
+---
+/**
+ * Hub de decisión — "Cuánto levanto y cuánto descanso" (fuerza y gimnasio).
+ * Reemplaza 10 URLs de calculadora suelta (ver hub.replaces).
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  WILKS,
+  WILKS_NIVELES,
+  DESCANSO,
+  GRUPOS_GRANDES,
+  RECUPERACION_BASE,
+  FRECUENCIA,
+  ESCALERA,
+} from '../../lib/hubs/fuerza-y-gimnasio';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+// Infinity no sobrevive a JSON: lo mandamos como null y el runtime lo trata como tope abierto.
+const NIVELES = WILKS_NIVELES.map((n) => ({ label: n.label, hasta: Number.isFinite(n.hasta) ? n.hasta : null }));
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ WILKS, NIVELES, DESCANSO, GRUPOS_GRANDES, RECUPERACION_BASE, FRECUENCIA, ESCALERA }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    const r1 = (n) => Math.round(n * 10) / 10;
+
+    /** Coeficiente Wilks: 500 / polinomio de 5º grado. Espejo de calcWilksCoef(). */
+    function wilksCoef(peso, c) {
+      const x = peso;
+      const denom = c.a + c.b * x + c.c * x ** 2 + c.d * x ** 3 + c.e * x ** 4 + c.f * x ** 5;
+      return 500 / denom;
+    }
+
+    function nivelWilks(score) {
+      for (const n of NIVELES) {
+        if (n.hasta === null || score < n.hasta) return n.label;
+      }
+      return NIVELES[NIVELES.length - 1].label;
+    }
+
+    /** Segundos de descanso. Espejo de descansoSeries(). */
+    function descansoSeg(objetivo, intensidad, grupo) {
+      const base = DESCANSO.base[objetivo] != null ? DESCANSO.base[objetivo] : DESCANSO.base.hipertrofia;
+      const ajInt = DESCANSO.intensidad[intensidad] || 0;
+      const ajGrupo = GRUPOS_GRANDES.indexOf(grupo) >= 0 ? DESCANSO.grupoGrande : DESCANSO.grupoPequeno;
+      return Math.max(20, base + ajInt + ajGrupo);
+    }
+
+    function mmss(seg) {
+      const m = Math.floor(seg / 60);
+      const s = seg % 60;
+      return m > 0 ? m + ':' + String(s).padStart(2, '0') + ' min' : s + ' seg';
+    }
+
+    /** Horas de recuperación. Espejo de recuperacionMuscularHoras(). */
+    function recuperacionHoras(grupo, intensidad, edad, sueno) {
+      let horas = RECUPERACION_BASE[grupo] != null ? RECUPERACION_BASE[grupo] : 48;
+      if (intensidad === 'baja') horas *= 0.7;
+      else if (intensidad === 'alta') horas *= 1.35;
+      if (edad > 50) horas *= 1.4;
+      else if (edad > 40) horas *= 1.2;
+      else if (edad > 35) horas *= 1.1;
+      if (sueno < 6) horas *= 1.3;
+      else if (sueno < 7) horas *= 1.15;
+      return Math.round(horas);
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'rm';
+
+      // ── 1RM: promedio de Epley, Brzycki y Lombardi ────────────────────────
+      if (id === 'rm') {
+        const peso = Math.max(1, Number(v.peso) || 0);
+        const reps = Math.min(15, Math.max(1, Number(v.reps) || 1));
+
+        const epley = peso * (1 + reps / 30);
+        const brzycki = (peso * 36) / (37 - reps);
+        const lombardi = peso * Math.pow(reps, 0.1);
+        const promedio = (epley + brzycki + lombardi) / 3;
+        const confiable = reps <= 6;
+
+        const rows = [
+          { k: 'Epley — peso × (1 + reps/30)', ref: 'Epley 1985', v: r1(epley), format: 'unit', unit: 'kg', decimals: 1 },
+          { k: 'Brzycki — peso × 36 / (37 − reps)', ref: 'Brzycki 1993', v: r1(brzycki), format: 'unit', unit: 'kg', decimals: 1 },
+          { k: 'Lombardi — peso × reps^0,10', ref: 'Lombardi 1989', v: r1(lombardi), format: 'unit', unit: 'kg', decimals: 1 },
+          { k: '1RM estimado (promedio de las tres)', ref: 'Promedio', v: r1(promedio), format: 'unit', unit: 'kg', decimals: 1, extra: true },
+        ];
+        for (const e of ESCALERA) {
+          rows.push({
+            k: 'Carga al ' + e.pct + '% (≈' + e.reps + ' reps)',
+            ref: e.pct >= 85 ? 'Fuerza' : e.pct >= 70 ? 'Hipertrofia' : 'Resistencia',
+            v: Math.round((promedio * e.pct) / 100),
+            format: 'unit',
+            unit: 'kg',
+          });
+        }
+
+        return {
+          total: r1(promedio).toLocaleString('es-AR') + ' kg',
+          sub:
+            'Desde ' + peso + ' kg × ' + reps + ' reps · ' +
+            (confiable
+              ? 'estimación confiable: a 6 reps o menos las tres fórmulas coinciden'
+              : 'a ' + reps + ' reps las fórmulas se separan: retesteá con 3-5 reps'),
+          rows: rows,
+          format: 'unit',
+          unit: 'kg',
+          chart: ESCALERA.map(function (e) {
+            return {
+              label: e.pct + '% (' + e.reps + ' reps)',
+              value: Math.round((promedio * e.pct) / 100),
+              tone: e.pct >= 85 ? 'main' : e.pct >= 70 ? 'prop' : 'exit',
+            };
+          }),
+        };
+      }
+
+      // ── Wilks: fuerza relativa comparable entre categorías ────────────────
+      if (id === 'wilks') {
+        const pc = Math.min(250, Math.max(40, Number(v.pesoCorporal) || 80));
+        const total = Math.max(1, Number(v.total) || 0);
+        const sexo = v.sexo === 'femenino' ? 'femenino' : 'masculino';
+        const coef = wilksCoef(pc, WILKS[sexo]);
+        const score = total * coef;
+        const nivel = nivelWilks(score);
+
+        return {
+          total: r1(score).toLocaleString('es-AR'),
+          sub:
+            'Total ' + total + ' kg a ' + pc + ' kg de peso corporal (' + sexo + ') · coeficiente ' +
+            coef.toFixed(4) + ' · nivel ' + nivel,
+          rows: [
+            { k: 'Total levantado (squat + banca + peso muerto)', ref: 'Tu dato', v: total, format: 'unit', unit: 'kg' },
+            { k: 'Peso corporal', ref: 'Tu dato', v: pc, format: 'unit', unit: 'kg', decimals: 1 },
+            { k: 'Coeficiente Wilks', ref: 'Polinomio 5º grado', v: coef, format: 'plain', decimals: 4 },
+            { k: 'Score Wilks', ref: 'Total × coeficiente', v: r1(score), format: 'plain', decimals: 1, extra: true },
+          ],
+          format: 'plain',
+          decimals: 1,
+          chart: [
+            { label: 'Tu Wilks', value: Math.round(score), tone: 'main' },
+            { label: 'Intermedio (200)', value: 200, tone: 'prop' },
+            { label: 'Avanzado (300)', value: 300, tone: 'prop' },
+            { label: 'Élite (400)', value: 400, tone: 'good' },
+            { label: 'Mundial (450)', value: 450, tone: 'exit' },
+          ],
+        };
+      }
+
+      // ── Descanso entre series ─────────────────────────────────────────────
+      if (id === 'descanso') {
+        const objetivo = String(v.objetivo || 'hipertrofia');
+        const intensidad = String(v.intensidad || 'media');
+        const grupo = String(v.grupo || 'piernas');
+        const seg = descansoSeg(objetivo, intensidad, grupo);
+        const esGrande = GRUPOS_GRANDES.indexOf(grupo) >= 0;
+
+        return {
+          total: mmss(seg),
+          sub:
+            'Objetivo ' + objetivo + ' · intensidad ' + intensidad + ' · ' +
+            (esGrande ? 'grupo grande (+20 s)' : 'grupo chico (−10 s)') + ' · ' + seg + ' segundos',
+          rows: [
+            { k: 'Base del objetivo (' + objetivo + ')', ref: 'ACSM', v: DESCANSO.base[objetivo] || DESCANSO.base.hipertrofia, format: 'unit', unit: 'seg' },
+            { k: 'Ajuste por intensidad ' + intensidad, ref: 'Modificador', v: DESCANSO.intensidad[intensidad] || 0, format: 'unit', unit: 'seg' },
+            { k: 'Ajuste por tamaño del grupo muscular', ref: 'Modificador', v: esGrande ? DESCANSO.grupoGrande : DESCANSO.grupoPequeno, format: 'unit', unit: 'seg' },
+            { k: 'Descanso recomendado', ref: 'Suma (mínimo 20 s)', v: seg, format: 'unit', unit: 'seg', extra: true },
+          ],
+          format: 'unit',
+          unit: 'seg',
+          chart: [
+            { label: 'Fuerza máxima', value: descansoSeg('fuerza', intensidad, grupo), tone: objetivo === 'fuerza' ? 'main' : 'prop' },
+            { label: 'Hipertrofia', value: descansoSeg('hipertrofia', intensidad, grupo), tone: objetivo === 'hipertrofia' ? 'main' : 'prop' },
+            { label: 'Resistencia', value: descansoSeg('resistencia', intensidad, grupo), tone: objetivo === 'resistencia' ? 'main' : 'prop' },
+          ],
+        };
+      }
+
+      // ── Recuperación muscular ─────────────────────────────────────────────
+      if (id === 'recuperacion') {
+        const grupo = String(v.grupo || 'piernas');
+        const intensidad = String(v.intensidad || 'media');
+        const edad = Number(v.edad) || 30;
+        const sueno = Number(v.sueno) || 7;
+        const horas = recuperacionHoras(grupo, intensidad, edad, sueno);
+        const dias = Math.ceil(horas / 24);
+        const frec = Math.floor(7 / (dias + 1));
+
+        return {
+          total: horas.toLocaleString('es-AR') + ' horas',
+          sub:
+            'Unos ' + dias + (dias === 1 ? ' día' : ' días') + ' antes de volver a ' + grupo +
+            ' · como mucho ' + frec + 'x por semana' +
+            (sueno < 6 ? ' · dormir menos de 6 h estira la ventana un 30%' : ''),
+          rows: [
+            { k: 'Base del grupo (' + grupo + ')', ref: 'Horas base', v: RECUPERACION_BASE[grupo] || 48, format: 'unit', unit: 'h' },
+            { k: 'Factor intensidad ' + intensidad, ref: intensidad === 'alta' ? '×1,35' : intensidad === 'baja' ? '×0,70' : '×1,00', v: intensidad === 'alta' ? 1.35 : intensidad === 'baja' ? 0.7 : 1, format: 'plain', decimals: 2 },
+            { k: 'Factor edad (' + edad + ' años)', ref: edad > 50 ? '×1,40' : edad > 40 ? '×1,20' : edad > 35 ? '×1,10' : '×1,00', v: edad > 50 ? 1.4 : edad > 40 ? 1.2 : edad > 35 ? 1.1 : 1, format: 'plain', decimals: 2 },
+            { k: 'Factor sueño (' + sueno + ' h)', ref: sueno < 6 ? '×1,30' : sueno < 7 ? '×1,15' : '×1,00', v: sueno < 6 ? 1.3 : sueno < 7 ? 1.15 : 1, format: 'plain', decimals: 2 },
+            { k: 'Recuperación necesaria', ref: 'Base × factores', v: horas, format: 'unit', unit: 'h', extra: true },
+          ],
+          format: 'unit',
+          unit: 'h',
+          chart: Object.keys(RECUPERACION_BASE).map(function (g) {
+            return {
+              label: g.charAt(0).toUpperCase() + g.slice(1),
+              value: recuperacionHoras(g, intensidad, edad, sueno),
+              tone: g === grupo ? 'main' : 'prop',
+            };
+          }),
+        };
+      }
+
+      // ── Frecuencia semanal por grupo ──────────────────────────────────────
+      const nivel = String(v.nivel || 'intermedio');
+      const f = FRECUENCIA[nivel] || FRECUENCIA.intermedio;
+      return {
+        total: f.texto,
+        sub:
+          'Nivel ' + nivel + ' · repartí el volumen semanal entre sesiones en vez de concentrarlo en un solo día',
+        rows: [
+          { k: 'Principiante — full body', ref: '3 sesiones/semana', v: FRECUENCIA.principiante.valor, format: 'unit', unit: 'x/sem', decimals: 1 },
+          { k: 'Intermedio — 2 a 3 por grupo', ref: 'Estímulos semanales', v: FRECUENCIA.intermedio.valor, format: 'unit', unit: 'x/sem', decimals: 1 },
+          { k: 'Avanzado — 3 a 4 por grupo', ref: 'Estímulos semanales', v: FRECUENCIA.avanzado.valor, format: 'unit', unit: 'x/sem', decimals: 1 },
+          { k: 'Tu frecuencia recomendada', ref: 'Nivel ' + nivel, v: f.valor, format: 'unit', unit: 'x/sem', decimals: 1, extra: true },
+        ],
+        format: 'unit',
+        unit: 'x/sem',
+        decimals: 1,
+        chart: ['principiante', 'intermedio', 'avanzado'].map(function (n) {
+          return { label: n.charAt(0).toUpperCase() + n.slice(1), value: FRECUENCIA[n].valor, tone: n === nivel ? 'main' : 'prop' };
+        }),
+      };
+    });
+  })();
+</script>

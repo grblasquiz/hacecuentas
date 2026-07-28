@@ -1,0 +1,297 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto tengo que regar?"
+ * Reemplaza 4 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: cuatro ramas (planta, goteo, programador, jardín).
+ * Todas parten de la MISMA tabla de demanda base (PLANTAS / VEGETACION) para
+ * que el hub no se contradiga como se contradecían las calculadoras viejas.
+ *
+ * Casi nada de lo que sale acá es plata: cada fila declara `format` explícito,
+ * salvo el costo mensual del agua, que va en 'ars' a propósito.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub, PLANTAS, FACTOR_ETAPA, FACTOR_ESTACION, FACTOR_CLIMA, FACTOR_SUELO, VEGETACION, DIAS_MES,
+} from '../../lib/hubs/riego';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    PLANTAS, FACTOR_ETAPA, FACTOR_ESTACION, FACTOR_CLIMA, FACTOR_SUELO, VEGETACION, DIAS_MES,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    const n1 = (x, d) => Number(x || 0).toLocaleString('es-AR', {
+      minimumFractionDigits: d == null ? 0 : d,
+      maximumFractionDigits: d == null ? 0 : d,
+    });
+
+    function segs(lista) {
+      return lista.map((s) => ({ label: s[0], value: s[2] - s[1], from: s[1], to: s[2], tone: s[3] }));
+    }
+    function pos(lista, valor) {
+      const desde = lista[0][1];
+      const hasta = lista[lista.length - 1][2];
+      return Number(Math.min(100, Math.max(0, ((valor - desde) / (hasta - desde)) * 100)).toFixed(1));
+    }
+
+    const ESTACION_TXT = { verano: 'verano', media: 'primavera u otoño', invierno: 'invierno' };
+
+    /** Litros por planta y por día, ya ajustados por todos los factores. */
+    function demanda(v) {
+      const p = PLANTAS[v.planta] || PLANTAS.tomate;
+      const fEtapa = FACTOR_ETAPA[v.etapa] != null ? FACTOR_ETAPA[v.etapa] : 1;
+      const fEst = FACTOR_ESTACION[v.estacion] != null ? FACTOR_ESTACION[v.estacion] : 1;
+      const fClima = FACTOR_CLIMA[v.clima] != null ? FACTOR_CLIMA[v.clima] : 1;
+      const fSuelo = FACTOR_SUELO[v.suelo] != null ? FACTOR_SUELO[v.suelo] : 1;
+      const litros = p.litrosDia * fEtapa * fEst * fClima * fSuelo;
+      return { p: p, fEtapa: fEtapa, fEst: fEst, fClima: fClima, fSuelo: fSuelo, litros: litros };
+    }
+
+    // ---------- RAMA 1: litros por planta ----------
+    function calcPlanta(v) {
+      const d = demanda(v);
+      const cant = Math.max(1, Math.round(Number(v.cantidad) || 1));
+
+      const eje = [
+        ['Muy poco (suculentas)', 0, 0.3, 'good'],
+        ['Poco (hoja, aromáticas)', 0.3, 1, 'main'],
+        ['Medio (ornamental, fruto)', 1, 3, 'exit'],
+        ['Mucho (arbustos)', 3, 8, 'warn'],
+        ['Muchísimo (frutales)', 8, 20, 'bad'],
+      ];
+
+      const rows = [
+        { k: 'Litros por planta y por día', ref: d.p.nombre, v: d.litros, format: 'unit', unit: 'L', decimals: 2, extra: true },
+        { k: 'Litros por planta y por semana', ref: '7 días', v: d.litros * 7, format: 'unit', unit: 'L', decimals: 1 },
+        { k: 'Litros por día para tus ' + cant + ' plantas', ref: 'total del cantero', v: d.litros * cant, format: 'unit', unit: 'L', decimals: 1, extra: true },
+        { k: 'Litros por mes para todas', ref: DIAS_MES + ' días', v: d.litros * cant * DIAS_MES, format: 'unit', unit: 'L', decimals: 0 },
+        { k: 'Demanda base de la especie', ref: 'verano, plena producción', v: d.p.litrosDia, format: 'unit', unit: 'L/día', decimals: 2 },
+        { k: 'Factor por etapa', ref: String(v.etapa || 'plena'), v: d.fEtapa, format: 'plain', decimals: 2 },
+        { k: 'Factor por estación', ref: ESTACION_TXT[v.estacion] || 'verano', v: d.fEst, format: 'plain', decimals: 2 },
+        { k: 'Factor por clima', ref: String(v.clima || 'templado'), v: d.fClima, format: 'plain', decimals: 2 },
+        { k: 'Factor por suelo', ref: String(v.suelo || 'franco'), v: d.fSuelo, format: 'plain', decimals: 2 },
+      ];
+
+      return {
+        total: n1(d.litros, 2) + ' L/día',
+        sub:
+          d.p.nombre + ' en ' + (ESTACION_TXT[v.estacion] || 'verano') + ', clima ' + String(v.clima || 'templado') +
+          ' y suelo ' + String(v.suelo || 'franco') + ': ' + n1(d.litros, 2) + ' L por planta y por día (' +
+          n1(d.litros * 7, 1) + ' L por semana) · ' + cant + (cant === 1 ? ' planta' : ' plantas') + ' suman ' +
+          n1(d.litros * cant, 1) + ' L diarios · revisá igual la tierra antes de regar',
+        rows: rows,
+        chart: segs(eje),
+        format: 'unit',
+        unit: 'L',
+        decimals: 2,
+        position: pos(eje, d.litros),
+        positionLabel: n1(d.litros, 2) + ' L por planta y por día — ' + d.p.nombre,
+      };
+    }
+
+    // ---------- RAMA 2: goteo ----------
+    function calcGoteo(v) {
+      const d = demanda(v);
+      const cant = Math.max(1, Math.round(Number(v.cantidad) || 1));
+      const caudal = Math.max(0.1, Number(v.caudalGotero) || 2);
+      const goteros = d.p.goteros;
+
+      const caudalPlanta = caudal * goteros;
+      const minutos = (d.litros / caudalPlanta) * 60;
+
+      const eje = [
+        ['Riego corto', 0, 15, 'good'],
+        ['Riego medio', 15, 45, 'main'],
+        ['Riego largo', 45, 90, 'warn'],
+        ['Revisá el caudal', 90, 180, 'bad'],
+      ];
+
+      const rows = [
+        { k: 'Minutos de goteo por día', ref: d.p.nombre, v: minutos, format: 'unit', unit: 'min', decimals: 0, extra: true },
+        { k: 'Goteros por planta recomendados', ref: d.p.nombre, v: goteros, format: 'unit', unit: 'goteros', decimals: 0 },
+        { k: 'Caudal total por planta', ref: goteros + ' × ' + n1(caudal, 1) + ' L/h', v: caudalPlanta, format: 'unit', unit: 'L/h', decimals: 1 },
+        { k: 'Litros por planta y por día', ref: 'demanda a cubrir', v: d.litros, format: 'unit', unit: 'L', decimals: 2, extra: true },
+        { k: 'Litros por día de todo el sistema', ref: cant + ' plantas', v: d.litros * cant, format: 'unit', unit: 'L', decimals: 1 },
+        { k: 'Litros por mes de todo el sistema', ref: DIAS_MES + ' días', v: d.litros * cant * DIAS_MES, format: 'unit', unit: 'L', decimals: 0 },
+        { k: 'Goteros totales que necesitás', ref: cant + ' plantas', v: goteros * cant, format: 'unit', unit: 'goteros', decimals: 0 },
+        { k: 'Caudal total de la línea', ref: 'para dimensionar el sistema', v: caudalPlanta * cant, format: 'unit', unit: 'L/h', decimals: 1 },
+      ];
+
+      return {
+        total: Math.round(minutos) + ' min',
+        sub:
+          d.p.nombre + ' con ' + goteros + (goteros === 1 ? ' gotero' : ' goteros') + ' de ' + n1(caudal, 1) +
+          ' L/h: ' + Math.round(minutos) + ' minutos por día para entregar ' + n1(d.litros, 2) +
+          ' L · el sistema completo mueve ' + n1(caudalPlanta * cant, 1) + ' L/h · revisá goteros tapados',
+        rows: rows,
+        chart: segs(eje),
+        format: 'unit',
+        unit: 'min',
+        decimals: 0,
+        position: pos(eje, minutos),
+        positionLabel: Math.round(minutos) + ' minutos de goteo por día',
+      };
+    }
+
+    // ---------- RAMA 3: programador ----------
+    function calcProgramador(v) {
+      const zona = VEGETACION[v.vegetacion] || VEGETACION.cesped;
+      const fEst = FACTOR_ESTACION[v.estacion] != null ? FACTOR_ESTACION[v.estacion] : 1;
+      const fSuelo = FACTOR_SUELO[v.suelo] != null ? FACTOR_SUELO[v.suelo] : 1;
+
+      const minutos = zona.minutosCiclo * fEst * fSuelo;
+      const ciclos = Math.max(1, Math.round(zona.ciclosSemana * fEst));
+      const minSemana = minutos * ciclos;
+
+      const eje = [
+        ['Ciclo corto', 0, 15, 'good'],
+        ['Ciclo medio', 15, 30, 'main'],
+        ['Ciclo largo', 30, 50, 'warn'],
+        ['Partilo en dos', 50, 90, 'bad'],
+      ];
+
+      const rows = [
+        { k: 'Minutos por ciclo', ref: zona.nombre, v: minutos, format: 'unit', unit: 'min', decimals: 0, extra: true },
+        { k: 'Ciclos por semana', ref: ESTACION_TXT[v.estacion] || 'verano', v: ciclos, format: 'unit', unit: 'ciclos', decimals: 0, extra: true },
+        { k: 'Minutos de riego por semana', ref: 'minutos × ciclos', v: minSemana, format: 'unit', unit: 'min', decimals: 0 },
+        { k: 'Minutos por ciclo en verano', ref: 'referencia de la zona', v: zona.minutosCiclo, format: 'unit', unit: 'min', decimals: 0 },
+        { k: 'Factor por estación', ref: ESTACION_TXT[v.estacion] || 'verano', v: fEst, format: 'plain', decimals: 2 },
+        { k: 'Factor por suelo', ref: String(v.suelo || 'franco'), v: fSuelo, format: 'plain', decimals: 2 },
+        { k: 'Hora recomendada de arranque', ref: 'mínima evaporación', v: 7, format: 'unit', unit: 'h', decimals: 0 },
+      ];
+
+      const consejo = String(v.suelo) === 'arcilloso'
+        ? 'suelo arcilloso: partí el ciclo en dos con 30 minutos de pausa para que infiltre sin encharcar'
+        : String(v.suelo) === 'arenoso'
+          ? 'suelo arenoso: el agua drena rápido, conviene más frecuencia con menos minutos'
+          : 'suelo franco: controlá la humedad a 15 cm con un destornillador antes de ajustar';
+
+      return {
+        total: Math.round(minutos) + ' min',
+        sub:
+          zona.nombre + ' en ' + (ESTACION_TXT[v.estacion] || 'verano') + ': ' + Math.round(minutos) +
+          ' minutos por ciclo, ' + ciclos + (ciclos === 1 ? ' vez' : ' veces') + ' por semana (' +
+          Math.round(minSemana) + ' min semanales) · arrancá entre las 6 y las 9 de la mañana · ' + consejo,
+        rows: rows,
+        chart: segs(eje),
+        format: 'unit',
+        unit: 'min',
+        decimals: 0,
+        position: pos(eje, minutos),
+        positionLabel: Math.round(minutos) + ' min por ciclo · ' + ciclos + ' por semana',
+      };
+    }
+
+    // ---------- RAMA 4: consumo del jardín ----------
+    function calcJardin(v) {
+      const zona = VEGETACION[v.vegetacion] || VEGETACION.cesped;
+      const m2 = Math.max(1, Number(v.superficie) || 50);
+      const fEst = FACTOR_ESTACION[v.estacion] != null ? FACTOR_ESTACION[v.estacion] : 1;
+      const fClima = FACTOR_CLIMA[v.clima] != null ? FACTOR_CLIMA[v.clima] : 1;
+      const precio = Math.max(0, Number(v.precioM3) || 0);
+
+      const litrosDia = m2 * zona.litrosM2Dia * fEst * fClima;
+      const litrosMes = litrosDia * DIAS_MES;
+      const m3 = litrosMes / 1000;
+      const costo = m3 * precio;
+
+      const eje = [
+        ['Bajo', 0, 5, 'good'],
+        ['Medio', 5, 15, 'main'],
+        ['Alto', 15, 40, 'warn'],
+        ['Muy alto', 40, 100, 'bad'],
+      ];
+
+      const rows = [
+        { k: 'Metros cúbicos por mes', ref: 'así te factura el agua', v: m3, format: 'unit', unit: 'm³', decimals: 1, extra: true },
+        { k: 'Litros por día', ref: zona.nombre, v: litrosDia, format: 'unit', unit: 'L', decimals: 0, extra: true },
+        { k: 'Litros por mes', ref: DIAS_MES + ' días', v: litrosMes, format: 'unit', unit: 'L', decimals: 0 },
+        { k: 'Consumo por metro cuadrado', ref: zona.nombre + ', ajustado', v: litrosDia / m2, format: 'unit', unit: 'L/m² día', decimals: 2 },
+        { k: 'Superficie regada', ref: 'la que cargaste', v: m2, format: 'unit', unit: 'm²', decimals: 0 },
+        { k: 'Ahorro estimado con 5 cm de mulch', ref: '25% menos de evaporación', v: m3 * 0.25, format: 'unit', unit: 'm³', decimals: 1 },
+      ];
+      if (precio > 0) {
+        rows.push({ k: 'Costo mensual del agua de riego', ref: 'm³ × precio', v: costo, format: 'ars', decimals: 0, extra: true });
+        rows.push({ k: 'Costo anual estimado', ref: 'proyección a 12 meses', v: costo * 12, format: 'ars', decimals: 0 });
+        rows.push({ k: 'Lo que te ahorraría el mulch por mes', ref: '25% menos de riego', v: costo * 0.25, format: 'ars', decimals: 0 });
+      }
+
+      return {
+        total: n1(m3, 1) + ' m³/mes',
+        sub:
+          zona.nombre + ' de ' + Math.round(m2) + ' m² en ' + (ESTACION_TXT[v.estacion] || 'verano') + ': ' +
+          Math.round(litrosDia) + ' L por día, ' + n1(m3, 1) + ' m³ al mes' +
+          (precio > 0 ? ' · unos ' + H.ars(costo) + ' de agua por mes' : ' · cargá el precio del m³ para ver el costo') +
+          ' · 5 cm de mulch pueden recortar un 25%',
+        rows: rows,
+        chart: segs(eje),
+        format: 'unit',
+        unit: 'm³',
+        decimals: 1,
+        position: pos(eje, m3),
+        positionLabel: n1(m3, 1) + ' m³ al mes · ' + Math.round(litrosDia) + ' L por día',
+      };
+    }
+
+    const BRANCH = {
+      planta: calcPlanta,
+      goteo: calcGoteo,
+      programador: calcProgramador,
+      jardin: calcJardin,
+    };
+
+    H.onCompute(function (v, kase) {
+      const fn = BRANCH[(kase && kase.id) || 'planta'] || calcPlanta;
+      return fn(v);
+    });
+  })();
+</script>

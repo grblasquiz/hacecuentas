@@ -1,0 +1,428 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto tarda, cuán lejos llega y con cuánta fuerza?"
+ * Reemplaza 9 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: 5 casos (mru / caída / parabólico / fuerza / energía).
+ * La página sólo aporta datos (src/lib/hubs/movimiento-y-fuerzas.ts) y compute().
+ * NADA acá es plata: cada fila declara format 'unit' con su unidad propia.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, CONST, SCALE } from '../../lib/hubs/movimiento-y-fuerzas';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+const BANDS = hub.chart.bands ?? [];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ C: CONST, SCALE, BANDS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Nada de este hub es plata: todas las filas declaran su formato.
+    const M = { format: 'unit', unit: 'm', decimals: 3 };
+    const S = { format: 'unit', unit: 's', decimals: 4 };
+    const MS = { format: 'unit', unit: 'm/s', decimals: 3 };
+    const KMH = { format: 'unit', unit: 'km/h', decimals: 2 };
+    const NUD = { format: 'unit', unit: 'nudos', decimals: 2 };
+    const N = { format: 'unit', unit: 'N', decimals: 3 };
+    const KG = { format: 'unit', unit: 'kg', decimals: 3 };
+    const ACC = { format: 'unit', unit: 'm/s²', decimals: 4 };
+    const GS = { format: 'unit', unit: 'g', decimals: 4 };
+    const J = { format: 'unit', unit: 'J', decimals: 2 };
+    const KJ = { format: 'unit', unit: 'kJ', decimals: 4 };
+    const KCAL = { format: 'unit', unit: 'kcal', decimals: 4 };
+    const GRAD = { format: 'unit', unit: '°', decimals: 2 };
+    const PISOS = { format: 'unit', unit: 'pisos', decimals: 1 };
+    const LANG = { format: 'unit', unit: 'kg·m²/s', decimals: 4 };
+    const PLAIN = { format: 'plain', decimals: 4 };
+
+    const row = (k, v, fmt, extra, ref) => Object.assign({ k: k, v: v, extra: !!extra, ref: ref }, fmt);
+
+    function fmt(n, d) {
+      if (!isFinite(n)) return '—';
+      if (d == null) {
+        const abs = Math.abs(n);
+        if (abs === 0) d = 0;
+        else if (abs < 0.01) d = 6;
+        else if (abs < 1) d = 4;
+        else if (abs < 1000) d = 3;
+        else d = 1;
+      }
+      return Number(n).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: d });
+    }
+
+    /** Posición 0-100 sobre la regla logarítmica de velocidad. */
+    function posV(v) {
+      if (!(v > 0)) return 0;
+      const lo = Math.log10(SCALE.minV), hi = Math.log10(SCALE.maxV);
+      return Math.max(0, Math.min(100, ((Math.log10(v) - lo) / (hi - lo)) * 100));
+    }
+
+    /** Franjas del gráfico: DÉCADAS logarítmicas, no m/s crudos. */
+    function bandas() {
+      return BANDS.map(function (b) {
+        return {
+          label: b.label,
+          value: Math.log10(b.to) - Math.log10(b.from),
+          tone: b.tone === 'good' ? 'good' : b.tone === 'bad' ? 'bad' : b.tone === 'warn' ? 'warn' : 'main',
+        };
+      });
+    }
+
+    /** Referencia de velocidad más cercana, en escala logarítmica. */
+    function referencia(v) {
+      if (!(v > 0)) return '';
+      let ref = SCALE.refs[0];
+      SCALE.refs.forEach(function (r) {
+        if (Math.abs(Math.log10(r.v) - Math.log10(v)) < Math.abs(Math.log10(ref.v) - Math.log10(v))) ref = r;
+      });
+      const veces = v / ref.v;
+      if (Math.abs(veces - 1) < 0.06) return 'prácticamente la velocidad de ' + ref.label;
+      return veces >= 1
+        ? fmt(veces, 2) + ' veces la velocidad de ' + ref.label
+        : 'un ' + fmt(veces * 100, 0) + '% de la velocidad de ' + ref.label;
+    }
+
+    /** Filas de conversión de una velocidad, que todas las ramas comparten. */
+    function filasVelocidad(v, etiqueta, extra) {
+      return [
+        row(etiqueta, v, MS, !!extra),
+        row(etiqueta + ' en km/h', v * 3.6, KMH),
+        row(etiqueta + ' en nudos', v / C.NUDO, NUD),
+      ];
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'mru';
+      const g = Number(v.gravedad) > 0 ? Number(v.gravedad) : C.G0;
+      const masa = Number(v.masa) || 0;
+
+      // ── Rama 1: velocidad, distancia y tiempo ────────────────────────────
+      if (id === 'mru') {
+        const d = Number(v.distancia) || 0;
+        const vel = Number(v.velocidad) || 0;
+        const t = Number(v.tiempo) || 0;
+        let dist, tiempo, velocidad, despeje;
+        if (!(vel > 0) && d > 0 && t > 0) { dist = d; tiempo = t; velocidad = d / t; despeje = 'la velocidad'; }
+        else if (!(d > 0) && vel > 0 && t > 0) { velocidad = vel; tiempo = t; dist = vel * t; despeje = 'la distancia'; }
+        else if (!(t > 0) && d > 0 && vel > 0) { velocidad = vel; dist = d; tiempo = d / vel; despeje = 'el tiempo'; }
+        else if (d > 0 && vel > 0 && t > 0) { dist = d; velocidad = vel; tiempo = t; despeje = 'nada: los tres datos ya estaban'; }
+        else {
+          return {
+            total: '—',
+            sub: 'Hacen falta dos de los tres: distancia, velocidad y tiempo. Dejá en cero el que querés calcular.',
+            rows: [],
+            chart: [],
+          };
+        }
+        const horas = Math.floor(tiempo / 3600);
+        const minutos = Math.floor((tiempo % 3600) / 60);
+
+        const rows = filasVelocidad(velocidad, 'Velocidad', despeje === 'la velocidad');
+        rows.push(row('Distancia recorrida', dist, M, despeje === 'la distancia'));
+        rows.push(row('Distancia en kilómetros', dist / 1000, { format: 'unit', unit: 'km', decimals: 4 }));
+        rows.push(row('Tiempo', tiempo, S, despeje === 'el tiempo'));
+        rows.push(row('Tiempo en minutos', tiempo / 60, { format: 'unit', unit: 'min', decimals: 3 }));
+        if (horas >= 1) rows.push(row('Equivale a', horas, { format: 'unit', unit: 'h', decimals: 0 }, false, 'más ' + minutos + ' min'));
+        rows.push(row('Distancia que recorre en un segundo', velocidad, M));
+        rows.push(row('Tiempo que tarda en un kilómetro', velocidad > 0 ? 1000 / velocidad : 0, S, false, 'ritmo'));
+
+        const comp = referencia(velocidad);
+        return {
+          total: fmt(velocidad, 3) + ' m/s',
+          sub:
+            'Despejaste ' + despeje + ': ' + fmt(dist, 2) + ' m en ' + fmt(tiempo, 2) + ' s dan ' +
+            fmt(velocidad, 3) + ' m/s, o sea ' + fmt(velocidad * 3.6, 2) + ' km/h' + (comp ? ' · es ' + comp : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'década',
+          decimals: 2,
+          position: Number(posV(velocidad).toFixed(1)),
+          positionLabel: fmt(velocidad, 2) + ' m/s (' + fmt(velocidad * 3.6, 1) + ' km/h) — velocidad media del trayecto',
+        };
+      }
+
+      // ── Rama 2: caída libre ──────────────────────────────────────────────
+      if (id === 'caida') {
+        const h = Number(v.altura) || 0;
+        const tDato = Number(v.tiempoCaida) || 0;
+        let altura, tiempo, despeje;
+        if (h > 0) { altura = h; tiempo = Math.sqrt((2 * h) / g); despeje = 'el tiempo de caída'; }
+        else if (tDato > 0) { tiempo = tDato; altura = 0.5 * g * tDato * tDato; despeje = 'la altura recorrida'; }
+        else {
+          return { total: '—', sub: 'Cargá la altura de caída, o el tiempo transcurrido si querés el cálculo al revés.', rows: [], chart: [] };
+        }
+        const vImp = g * tiempo;
+        const rows = [
+          row('Tiempo de caída', tiempo, S, despeje === 'el tiempo de caída', 't = √(2h/g)'),
+          row('Altura de caída', altura, M, despeje === 'la altura recorrida', 'h = ½·g·t²'),
+        ];
+        filasVelocidad(vImp, 'Velocidad de impacto', true).forEach(function (r) { rows.push(r); });
+        rows.push(row('Altura en pisos de edificio', altura / 3, PISOS, false, '3 m por piso'));
+        rows.push(row('Gravedad usada', g, ACC, false, 'la estándar exacta es 9,80665'));
+        rows.push(row('Cuánto cae en el primer segundo', 0.5 * g, M));
+        rows.push(row('Cuánto cae en el último segundo', Math.max(0, altura - 0.5 * g * Math.pow(Math.max(0, tiempo - 1), 2)), M));
+        if (masa > 0) {
+          rows.push(row('Energía cinética al llegar', 0.5 * masa * vImp * vImp, J, true, 'Ec = ½mv²'));
+          rows.push(row('Esa energía en kilojoules', (0.5 * masa * vImp * vImp) / 1000, KJ));
+          rows.push(row('Peso del objeto', masa * g, N));
+        }
+
+        const comp = referencia(vImp);
+        return {
+          total: fmt(tiempo, 3) + ' s de caída',
+          sub:
+            'Desde ' + fmt(altura, 2) + ' m tarda ' + fmt(tiempo, 3) + ' s y llega al suelo a ' + fmt(vImp, 2) +
+            ' m/s (' + fmt(vImp * 3.6, 1) + ' km/h) · la masa no interviene: en el vacío una pluma y un martillo caen igual' +
+            (tiempo > 3 ? ' · ojo: con más de 3 s de caída la resistencia del aire ya hace que la velocidad real sea bastante menor' : '') +
+            (comp ? ' · esa velocidad es ' + comp : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'década',
+          decimals: 2,
+          position: Number(posV(vImp).toFixed(1)),
+          positionLabel: 'Impacto a ' + fmt(vImp, 1) + ' m/s (' + fmt(vImp * 3.6, 0) + ' km/h)',
+        };
+      }
+
+      // ── Rama 3: tiro parabólico ──────────────────────────────────────────
+      if (id === 'parabolico') {
+        const v0 = Number(v.v0) || 0;
+        const ang = Number(v.angulo);
+        if (!(v0 > 0) || !isFinite(ang) || ang < 0 || ang > 90) {
+          return { total: '—', sub: 'Cargá una velocidad de salida mayor a cero y un ángulo entre 0 y 90 grados.', rows: [], chart: [] };
+        }
+        const rad = (ang * Math.PI) / 180;
+        const vx = v0 * Math.cos(rad);
+        const vy = v0 * Math.sin(rad);
+        const tVuelo = (2 * vy) / g;
+        const alcance = (v0 * v0 * Math.sin(2 * rad)) / g;
+        const alturaMax = (v0 * v0 * Math.pow(Math.sin(rad), 2)) / (2 * g);
+        const alcance45 = (v0 * v0) / g;
+        const comple = 90 - ang;
+        const optimo = Math.abs(ang - 45) < 0.5;
+
+        const rows = [
+          row('Alcance horizontal', alcance, M, true, 'v₀²·sen(2θ)/g'),
+          row('Altura máxima', alturaMax, M, true, 'v₀²·sen²(θ)/(2g)'),
+          row('Tiempo total de vuelo', tVuelo, S),
+          row('Tiempo hasta el punto más alto', tVuelo / 2, S),
+          row('Componente horizontal de la velocidad', vx, MS, false, 'v₀·cos(θ)'),
+          row('Componente vertical de la velocidad', vy, MS, false, 'v₀·sen(θ)'),
+          row('Velocidad de salida', v0, MS),
+          row('Ángulo de lanzamiento', ang, GRAD),
+          row('Ángulo complementario (mismo alcance)', comple, GRAD, false, 'otra trayectoria, igual punto de caída'),
+          row('Alcance máximo posible a 45°', alcance45, M, false, optimo ? 'ya estás en el óptimo' : 'lo que ganarías tirando a 45°'),
+          row('Cuánto alcance dejás sobre la mesa', Math.max(0, alcance45 - alcance), M),
+          row('Gravedad usada', g, ACC),
+        ];
+        if (masa > 0) {
+          rows.push(row('Energía cinética de salida', 0.5 * masa * v0 * v0, J));
+          rows.push(row('Energía potencial en el punto más alto', masa * g * alturaMax, J));
+        }
+
+        const comp = referencia(v0);
+        return {
+          total: fmt(alcance, 2) + ' m de alcance',
+          sub:
+            'A ' + fmt(v0, 2) + ' m/s y ' + fmt(ang, 1) + '°: llega a ' + fmt(alcance, 2) + ' m, sube hasta ' +
+            fmt(alturaMax, 2) + ' m y está ' + fmt(tVuelo, 2) + ' s en el aire' +
+            (optimo
+              ? ' · a 45° el alcance es lo máximo que esta velocidad puede dar en terreno plano'
+              : ' · lanzar a ' + fmt(comple, 1) + '° caería exactamente en el mismo punto, y a 45° llegaría a ' + fmt(alcance45, 2) + ' m') +
+            (comp ? ' · la velocidad de salida es ' + comp : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'década',
+          decimals: 2,
+          position: Number(posV(v0).toFixed(1)),
+          positionLabel: 'Velocidad de salida ' + fmt(v0, 2) + ' m/s — alcance ' + fmt(alcance, 2) + ' m',
+        };
+      }
+
+      // ── Rama 4: fuerza, aceleración y rozamiento ─────────────────────────
+      if (id === 'fuerza') {
+        const f = Number(v.fuerza) || 0;
+        const a = Number(v.aceleracion) || 0;
+        let fuerza, m, acel, despeje;
+        if (!(f > 0) && masa > 0 && a > 0) { m = masa; acel = a; fuerza = m * a; despeje = 'la fuerza'; }
+        else if (!(masa > 0) && f > 0 && a > 0) { fuerza = f; acel = a; m = f / a; despeje = 'la masa'; }
+        else if (!(a > 0) && f > 0 && masa > 0) { fuerza = f; m = masa; acel = f / m; despeje = 'la aceleración'; }
+        else if (f > 0 && masa > 0 && a > 0) { fuerza = f; m = masa; acel = a; despeje = 'nada: los tres datos ya estaban'; }
+        else {
+          return {
+            total: '—',
+            sub: 'Hacen falta dos de los tres: fuerza, masa y aceleración. Dejá en cero el que querés calcular.',
+            rows: [],
+            chart: [],
+          };
+        }
+        const peso = m * g;
+        const mu = Number(v.mu) || 0;
+        const normalDato = Number(v.normal) || 0;
+        const normal = normalDato > 0 ? normalDato : peso;
+        const friccion = mu * normal;
+        const neta = fuerza - friccion;
+        const aNeta = m > 0 ? neta / m : 0;
+        const anguloDeslizamiento = mu > 0 ? (Math.atan(mu) * 180) / Math.PI : 0;
+
+        const rows = [
+          row('Fuerza aplicada', fuerza, N, despeje === 'la fuerza', 'F = m·a'),
+          row('Masa del cuerpo', m, KG, despeje === 'la masa'),
+          row('Aceleración', acel, ACC, despeje === 'la aceleración'),
+          row('Aceleración en "g"', acel / C.G0, GS, false, 'veces la gravedad terrestre'),
+          row('Peso del cuerpo', peso, N, false, 'P = m·g'),
+          row('Peso equivalente en kilogramos-fuerza', peso / C.G0, { format: 'unit', unit: 'kgf', decimals: 3 }),
+        ];
+        if (mu > 0) {
+          rows.push(row('Fuerza normal usada', normal, N, false, normalDato > 0 ? 'la que cargaste' : 'el peso, superficie horizontal'));
+          rows.push(row('Fuerza de rozamiento', friccion, N, true, 'f = μ·N'));
+          rows.push(row('Fuerza neta que queda para acelerar', neta, N, true));
+          rows.push(row('Aceleración real con rozamiento', aNeta, ACC));
+          rows.push(row('Coeficiente de rozamiento', mu, PLAIN));
+          rows.push(row('Ángulo en el que empieza a deslizar solo', anguloDeslizamiento, GRAD, false, 'tan(θ) = μ'));
+          rows.push(row('Fuerza mínima para arrancarlo', friccion, N));
+        }
+
+        return {
+          total: fmt(fuerza, 2) + ' N',
+          sub:
+            'Despejaste ' + despeje + ': ' + fmt(m, 3) + ' kg a ' + fmt(acel, 3) + ' m/s² necesitan ' +
+            fmt(fuerza, 2) + ' N (' + fmt(acel / C.G0, 2) + ' veces la gravedad)' +
+            (mu > 0
+              ? ' · el rozamiento se lleva ' + fmt(friccion, 2) + ' N, así que la fuerza neta es ' + fmt(neta, 2) +
+                ' N y la aceleración real ' + fmt(aNeta, 3) + ' m/s²'
+              : ' · cargá un coeficiente μ si querés sumar el rozamiento'),
+          rows: rows,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'década',
+          decimals: 2,
+          // Velocidad que alcanza en 1 segundo con esa aceleración: da una
+          // ubicación con sentido físico sobre la regla de velocidades.
+          position: Number(posV(Math.max(0.1, acel)).toFixed(1)),
+          positionLabel:
+            'Con ' + fmt(acel, 2) + ' m/s² alcanza ' + fmt(acel, 2) + ' m/s en el primer segundo (' +
+            fmt(acel * 3.6, 1) + ' km/h)',
+        };
+      }
+
+      // ── Rama 5: energía y momento angular ────────────────────────────────
+      const vel = Number(v.velEnergia) || 0;
+      const alt = Number(v.alturaEnergia) || 0;
+      const I = Number(v.inercia) || 0;
+      const w = Number(v.omega) || 0;
+      if (!(masa > 0) && !(I > 0)) {
+        return {
+          total: '—',
+          sub: 'Cargá una masa mayor a cero (o un momento de inercia, si sólo querés la parte rotacional).',
+          rows: [],
+          chart: [],
+        };
+      }
+      const ec = masa > 0 ? 0.5 * masa * vel * vel : 0;
+      const ep = masa > 0 ? masa * g * alt : 0;
+      const total = ec + ep;
+      const vCaida = Math.sqrt(2 * g * Math.abs(alt));
+      const vTotal = masa > 0 ? Math.sqrt((2 * total) / masa) : 0;
+      const L = I > 0 && w > 0 ? I * w : 0;
+      const eRot = I > 0 && w > 0 ? 0.5 * I * w * w : 0;
+
+      const rows = [];
+      if (masa > 0) {
+        rows.push(row('Energía cinética', ec, J, true, 'Ec = ½mv²'));
+        rows.push(row('Energía potencial gravitatoria', ep, J, true, 'Ep = m·g·h'));
+        rows.push(row('Energía mecánica total', total, J, true));
+        rows.push(row('Energía total en kilojoules', total / 1000, KJ));
+        rows.push(row('Energía total en kilocalorías', total / (C.CAL * 1000), KCAL, false, 'las "Calorías" de una etiqueta'));
+        rows.push(row('Velocidad si toda la energía fuera cinética', vTotal, MS));
+        rows.push(row('Velocidad de impacto cayendo desde esa altura', vCaida, MS, false, 'v = √(2gh)'));
+        rows.push(row('Esa velocidad en km/h', vCaida * 3.6, KMH));
+        rows.push(row('Altura equivalente a la energía cinética', masa * g > 0 ? ec / (masa * g) : 0, M, false, 'desde dónde habría que soltarlo'));
+        rows.push(row('Si la velocidad fuera el doble, la cinética sería', 4 * ec, J, false, 'crece con v²'));
+        rows.push(row('Masa considerada', masa, KG));
+        rows.push(row('Peso del cuerpo', masa * g, N));
+      }
+      if (I > 0 && w > 0) {
+        rows.push(row('Momento angular', L, LANG, true, 'L = I·ω'));
+        rows.push(row('Energía cinética de rotación', eRot, J, false, 'E = ½Iω²'));
+        rows.push(row('Momento de inercia', I, { format: 'unit', unit: 'kg·m²', decimals: 5 }));
+        rows.push(row('Velocidad angular', w, { format: 'unit', unit: 'rad/s', decimals: 4 }));
+        rows.push(row('Vueltas por minuto', (w * 60) / (2 * Math.PI), { format: 'unit', unit: 'RPM', decimals: 2 }));
+        rows.push(row('Si el momento de inercia bajara a la mitad, ω sería', 2 * w, { format: 'unit', unit: 'rad/s', decimals: 4 }, false, 'L se conserva'));
+      }
+
+      const vRef = vel > 0 ? vel : vCaida;
+      const comp = referencia(vRef);
+      return {
+        total: masa > 0 ? fmt(total, 1) + ' J' : fmt(L, 3) + ' kg·m²/s',
+        sub:
+          (masa > 0
+            ? fmt(masa, 2) + ' kg a ' + fmt(vel, 2) + ' m/s y a ' + fmt(alt, 2) + ' m tienen ' + fmt(ec, 1) +
+              ' J de cinética y ' + fmt(ep, 1) + ' J de potencial: ' + fmt(total, 1) + ' J en total (' +
+              fmt(total / (C.CAL * 1000), 3) + ' kcal) · soltado desde esa altura llegaría a ' + fmt(vCaida, 2) +
+              ' m/s, sin importar la masa'
+            : '') +
+          (L > 0
+            ? (masa > 0 ? ' · ' : '') + 'momento angular L = ' + fmt(L, 3) +
+              ' kg·m²/s: sin torque externo se conserva, así que si baja I sube ω'
+            : ''),
+        rows: rows,
+        chart: bandas(),
+        format: 'unit',
+        unit: 'década',
+        decimals: 2,
+        position: Number(posV(vRef).toFixed(1)),
+        positionLabel:
+          vel > 0
+            ? fmt(vel, 2) + ' m/s (' + fmt(vel * 3.6, 1) + ' km/h) — la velocidad con la que se calculó la cinética'
+            : 'Caería a ' + fmt(vCaida, 2) + ' m/s desde ' + fmt(alt, 2) + ' m' + (comp ? ' — ' + comp : ''),
+      };
+    });
+  })();
+</script>

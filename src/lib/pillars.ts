@@ -50,7 +50,7 @@ export const PILLARS: PillarDef[] = [
     // /trabajo/sueldo-vs-inflacion) absorbieron todas. hub-config degrada solo
     // cuando el slug no resuelve (primary queda undefined), así que apuntamos a
     // una calc viva del mismo mundo. Migrar el pilar a apuntar al hub.
-    mainCalc: 'calculadora-cuanto-alquiler-puedo-pagar-sueldo-argentina',
+    mainCalc: '',
     calcs: [],
     rooms: [
       'cuanto-aumento-pedir',
@@ -108,11 +108,8 @@ export const PILLARS: PillarDef[] = [
     icon: '💰',
     color: '#16a34a',
     domain: 'money',
-    mainCalc: 'calculadora-fondo-emergencia-meses',
-    calcs: [
-    'calculadora-fondo-emergencia-meses',
-    'calculadora-presupuesto-50-30-20',
-  ],
+    mainCalc: '',
+    calcs: [],
     rooms: [
       'puedo-pagar-este-prestamo',
       'cancelar-deuda-o-invertir',
@@ -144,10 +141,8 @@ export const PILLARS: PillarDef[] = [
     icon: '📊',
     color: '#7c3aed',
     domain: 'money',
-    mainCalc: 'calculadora-cuanto-cobro-por-hora-freelance',
-    calcs: [
-    'calculadora-cuanto-cobro-por-hora-freelance',
-  ],
+    mainCalc: '',
+    calcs: [],
     rooms: [
       'mi-negocio-es-rentable',
       'cuanto-cobrar-por-hora-freelance',

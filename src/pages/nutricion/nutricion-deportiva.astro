@@ -1,0 +1,222 @@
+---
+/**
+ * Hub de decisión — "Qué tomo antes, durante y después de entrenar".
+ * Reemplaza 4 URLs de calculadora suelta (ver hub.replaces).
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, CAFEINA, CAFEINA_TOPE, CAFE_MG, CREATINA, GELES, HIDRATACION } from '../../lib/hubs/nutricion-deportiva';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ CAFEINA, CAFEINA_TOPE, CAFE_MG, CREATINA, GELES, HIDRATACION }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    /** Dosis de cafeína con el tope EFSA aplicado. Espejo de cafeinaDosisRendimiento(). */
+    function cafeina(peso, tolerancia) {
+      const r = CAFEINA[tolerancia] || CAFEINA.media;
+      let min = peso * r.min;
+      let max = peso * r.max;
+      const capped = max > CAFEINA_TOPE;
+      if (capped) max = CAFEINA_TOPE;
+      if (min > max) min = max;
+      return { min: Math.round(min), max: Math.round(max), capped: capped };
+    }
+
+    function factorTemp(t) {
+      for (const f of HIDRATACION.temp) if (t < f.hasta) return f.factor;
+      return HIDRATACION.tempFactorMax;
+    }
+    function factorRitmo(r) {
+      for (const f of HIDRATACION.ritmo) if (r < f.menorA) return f.factor;
+      return HIDRATACION.ritmoFactorLento;
+    }
+    /** ml/h de sudoración. Espejo de hidratacionCorredor(). */
+    function tasaSudor(peso, temp, ritmo) {
+      return HIDRATACION.tasaBase * factorTemp(temp) * factorRitmo(ritmo) * (peso / HIDRATACION.pesoRef);
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'cafeina';
+      const peso = Math.max(30, Number(v.peso) || 75);
+
+      // ── Cafeína ───────────────────────────────────────────────────────────
+      if (id === 'cafeina') {
+        const tol = String(v.tolerancia || 'media');
+        const d = cafeina(peso, tol);
+
+        return {
+          total: d.min.toLocaleString('es-AR') + '-' + d.max.toLocaleString('es-AR') + ' mg',
+          sub:
+            'Para ' + peso + ' kg con tolerancia ' + tol + ' · equivale a ' +
+            (d.min / CAFE_MG).toFixed(1).replace('.', ',') + '-' + (d.max / CAFE_MG).toFixed(1).replace('.', ',') +
+            ' cafés de filtro · ' +
+            (d.capped
+              ? 'recortada al tope EFSA de 400 mg diarios'
+              : 'tomala 30 a 60 minutos antes del esfuerzo'),
+          rows: [
+            { k: 'Dosis mínima del rango', ref: CAFEINA[tol].min + ' mg/kg (ISSN)', v: d.min, format: 'unit', unit: 'mg' },
+            { k: 'Dosis máxima del rango', ref: d.capped ? 'Tope EFSA' : CAFEINA[tol].max + ' mg/kg (ISSN)', v: d.max, format: 'unit', unit: 'mg', extra: true },
+            { k: 'Equivalente en cafés de filtro (máximo)', ref: '95 mg por taza', v: d.max / CAFE_MG, format: 'plain', decimals: 1 },
+            { k: 'Tope diario seguro para adulto sano', ref: 'EFSA 2015', v: CAFEINA_TOPE, format: 'unit', unit: 'mg' },
+            { k: 'Margen hasta el tope diario', ref: 'Tope − tu dosis', v: Math.max(0, CAFEINA_TOPE - d.max), format: 'unit', unit: 'mg' },
+          ],
+          format: 'unit',
+          unit: 'mg',
+          chart: ['baja', 'media', 'alta']
+            .map(function (t) {
+              const x = cafeina(peso, t);
+              return { label: 'Tolerancia ' + t, value: x.max, tone: t === tol ? 'main' : 'prop' };
+            })
+            .concat([{ label: 'Tope EFSA', value: CAFEINA_TOPE, tone: 'exit' }]),
+        };
+      }
+
+      // ── Creatina ──────────────────────────────────────────────────────────
+      if (id === 'creatina') {
+        const protocolo = String(v.protocolo || 'carga');
+        const cargaDiaria = Math.round(peso * CREATINA.cargaPorKg * 10) / 10;
+        const porToma = Math.round((cargaDiaria / CREATINA.tomasCarga) * 10) / 10;
+        let mant = Math.round(peso * CREATINA.mantenimientoPorKg * 10) / 10;
+        if (mant < CREATINA.minMantenimiento) mant = CREATINA.minMantenimiento;
+        if (mant > CREATINA.maxMantenimiento) mant = CREATINA.maxMantenimiento;
+        const pote = Math.floor(CREATINA.potePorGramos / mant);
+        const conCarga = protocolo === 'carga';
+
+        return {
+          total: (conCarga ? cargaDiaria : mant).toLocaleString('es-AR') + ' g por día',
+          sub: conCarga
+            ? 'Carga de ' + CREATINA.diasCarga + ' días: ' + porToma + ' g × ' + CREATINA.tomasCarga +
+              ' tomas · después mantenimiento de ' + mant + ' g/día'
+            : 'Mantenimiento desde el día 1 · saturación completa en unos ' + CREATINA.diasSaturacionSinCarga + ' días',
+          rows: [
+            { k: 'Carga diaria (0,3 g/kg)', ref: 'ISSN · ' + CREATINA.diasCarga + ' días', v: cargaDiaria, format: 'unit', unit: 'g', decimals: 1, extra: conCarga },
+            { k: 'Cada toma de la carga', ref: 'Carga ÷ ' + CREATINA.tomasCarga, v: porToma, format: 'unit', unit: 'g', decimals: 1 },
+            { k: 'Mantenimiento diario (0,07 g/kg)', ref: 'Piso 3 g · techo 10 g', v: mant, format: 'unit', unit: 'g', decimals: 1, extra: !conCarga },
+            { k: 'Días hasta saturar', ref: conCarga ? 'Con carga' : 'Sin carga', v: conCarga ? CREATINA.diasCarga : CREATINA.diasSaturacionSinCarga, format: 'unit', unit: 'días' },
+            { k: 'Duración de un pote de 300 g', ref: 'En mantenimiento', v: pote, format: 'unit', unit: 'días' },
+          ],
+          format: 'unit',
+          unit: 'g',
+          decimals: 1,
+          chart: [
+            { label: 'Carga diaria', value: cargaDiaria, tone: conCarga ? 'main' : 'prop' },
+            { label: 'Por toma', value: porToma, tone: 'prop' },
+            { label: 'Mantenimiento', value: mant, tone: conCarga ? 'prop' : 'main' },
+          ],
+        };
+      }
+
+      // ── Geles energéticos ─────────────────────────────────────────────────
+      if (id === 'geles') {
+        const horas = Math.max(0.25, Number(v.horas) || 4);
+        const geles = horas < GELES.horasMinimas ? 0 : Math.ceil((horas * GELES.choPorHora) / GELES.choPorGel);
+        const cho = geles * GELES.choPorGel;
+
+        return {
+          total: geles + (geles === 1 ? ' gel' : ' geles'),
+          sub:
+            'Para ' + String(horas).replace('.', ',') + ' h de carrera · ' + cho + ' g de carbohidrato · ' +
+            (geles === 0
+              ? 'por debajo de 1 h 15 min el glucógeno propio alcanza'
+              : 'uno cada 25 a 30 minutos desde el minuto 40, siempre con agua'),
+          rows: [
+            { k: 'Duración de la carrera', ref: 'Tu dato', v: horas, format: 'unit', unit: 'h', decimals: 2 },
+            { k: 'Carbohidrato por hora', ref: 'ACSM', v: GELES.choPorHora, format: 'unit', unit: 'g/h' },
+            { k: 'Carbohidrato por gel estándar', ref: 'Formato habitual', v: GELES.choPorGel, format: 'unit', unit: 'g' },
+            { k: 'Geles a llevar', ref: 'Redondeo hacia arriba', v: geles, format: 'unit', unit: 'geles', extra: true },
+            { k: 'Carbohidrato total del plan', ref: 'Geles × 30 g', v: cho, format: 'unit', unit: 'g' },
+            { k: 'Agua a tomar con los geles', ref: '~175 ml por gel', v: geles * 175, format: 'unit', unit: 'ml' },
+          ],
+          format: 'unit',
+          unit: 'geles',
+          chart: [1, 2, 3, 4, 5, 6].map(function (h) {
+            const g = h < GELES.horasMinimas ? 0 : Math.ceil((h * GELES.choPorHora) / GELES.choPorGel);
+            return { label: h + ' h', value: g, tone: Math.abs(h - horas) < 0.5 ? 'main' : 'prop' };
+          }),
+        };
+      }
+
+      // ── Hidratación en carrera ────────────────────────────────────────────
+      const dist = Math.max(0.1, Number(v.distancia) || 42.2);
+      const ritmo = Math.max(2, Number(v.ritmo) || 5.5);
+      const temp = Number(v.temperatura);
+      const tempC = isNaN(temp) ? 22 : temp;
+
+      const tasa = tasaSudor(peso, tempC, ritmo);
+      const tiempoH = (dist * ritmo) / 60;
+      const aguaTotal = Math.round(tasa * tiempoH);
+      const porHora = Math.round(tasa);
+      const sodio = Math.round((aguaTotal / 1000) * HIDRATACION.sodioPorLitro);
+
+      return {
+        total: aguaTotal.toLocaleString('es-AR') + ' ml',
+        sub:
+          String(dist).replace('.', ',') + ' km a ' + String(ritmo).replace('.', ',') + ' min/km con ' + tempC + ' °C · ' +
+          porHora.toLocaleString('es-AR') + ' ml/h · ' + Math.floor(tiempoH) + 'h ' +
+          String(Math.round((tiempoH % 1) * 60)).padStart(2, '0') + 'min en carrera',
+        rows: [
+          { k: 'Tasa base de sudoración', ref: 'Corredor de 75 kg', v: HIDRATACION.tasaBase, format: 'unit', unit: 'ml/h' },
+          { k: 'Factor temperatura (' + tempC + ' °C)', ref: '×' + factorTemp(tempC).toFixed(2).replace('.', ','), v: factorTemp(tempC), format: 'plain', decimals: 2 },
+          { k: 'Factor ritmo (' + String(ritmo).replace('.', ',') + ' min/km)', ref: '×' + factorRitmo(ritmo).toFixed(2).replace('.', ','), v: factorRitmo(ritmo), format: 'plain', decimals: 2 },
+          { k: 'Factor peso corporal', ref: 'Peso ÷ 75 kg', v: peso / HIDRATACION.pesoRef, format: 'plain', decimals: 2 },
+          { k: 'Sudoración estimada', ref: 'Base × factores', v: porHora, format: 'unit', unit: 'ml/h' },
+          { k: 'Agua total para la distancia', ref: 'ml/h × horas', v: aguaTotal, format: 'unit', unit: 'ml', extra: true },
+          { k: 'Sodio a reponer', ref: '500 mg por litro de sudor', v: sodio, format: 'unit', unit: 'mg' },
+        ],
+        format: 'unit',
+        unit: 'ml',
+        chart: [10, 18, 24, 28, 33, 38].map(function (t) {
+          return {
+            label: t + ' °C',
+            value: Math.round(tasaSudor(peso, t, ritmo)),
+            tone: factorTemp(t) === factorTemp(tempC) ? 'main' : 'prop',
+          };
+        }),
+      };
+    });
+  })();
+</script>

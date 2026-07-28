@@ -1,0 +1,394 @@
+---
+/**
+ * Hub de decisión — "¿Cuántas horas de sueño y de pantalla deberíamos tener?"
+ * Reemplaza 5 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo ramificado: la rama activa llega como segundo argumento de
+ * compute() (el objeto HubCase que expone DecisionHub).
+ *
+ * OJO CON EL FORMATO: acá no hay pesos. Cada fila declara su propio `format`
+ * ('unit' con h, min, días, %, puntos, o 'plain'). Una fila sin `format` cae a
+ * pesos y la página miente.
+ *
+ * PSQI: screening orientativo, nunca diagnóstico. El copy no nombra patologías.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  SUENO_RANGOS,
+  SUENO_ESCALA_MAX,
+  PANTALLA_TRAMOS,
+  PSQI,
+  REDES,
+  FOCO,
+} from '../../lib/hubs/sueno-y-pantallas';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ SUENO_RANGOS, SUENO_ESCALA_MAX, PANTALLA_TRAMOS, PSQI, REDES, FOCO }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    const nf = (n, d) => Number(n || 0).toLocaleString('es-AR', {
+      minimumFractionDigits: d || 0, maximumFractionDigits: d || 0,
+    });
+    const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+
+    H.onCompute(function (v, caso) {
+      const rama = (caso && caso.id) || 'sueno-edad';
+
+      // ───────────────── HORAS DE SUEÑO SEGÚN LA EDAD ─────────────────
+      // Espejo de src/lib/formulas/sueno-ideal-edad.ts: misma tabla de tramos,
+      // primer tramo cuyo `max` alcanza la edad.
+      if (rama === 'sueno-edad') {
+        const edad = Math.max(0, Number(v.edad) || 0);
+        const duerme = Math.max(0, Number(v.horasDuerme) || 0);
+
+        let r = SUENO_RANGOS[SUENO_RANGOS.length - 1];
+        for (let k = 0; k < SUENO_RANGOS.length; k++) {
+          if (edad <= SUENO_RANGOS[k].max) { r = SUENO_RANGOS[k]; break; }
+        }
+
+        const faltaDia = Math.max(0, r.recMin - duerme);
+        const sobraDia = Math.max(0, duerme - r.recMax);
+        const dentro = faltaDia === 0 && sobraDia === 0;
+        const dentroAmplio = duerme >= r.rangoMin && duerme <= r.rangoMax;
+
+        const rows = [
+          { k: 'Piso del rango recomendado', ref: r.etapa, v: r.recMin, extra: true, format: 'unit', unit: 'h por día', decimals: 0 },
+          { k: 'Techo del rango recomendado', ref: r.etapa, v: r.recMax, format: 'unit', unit: 'h por día', decimals: 0 },
+          { k: 'Horas que dormís hoy', v: duerme, format: 'unit', unit: 'h por día', decimals: 1 },
+          { k: 'Horas que te faltan por día', ref: 'contra el piso del rango', v: Number(faltaDia.toFixed(1)), format: 'unit', unit: 'h', decimals: 1 },
+          { k: 'Horas que te faltan por semana', v: Number((faltaDia * 7).toFixed(1)), format: 'unit', unit: 'h', decimals: 1 },
+          { k: 'Horas por encima del techo', v: Number(sobraDia.toFixed(1)), format: 'unit', unit: 'h', decimals: 1 },
+          { k: 'Piso del rango todavía aceptable', v: r.rangoMin, format: 'unit', unit: 'h por día', decimals: 0 },
+          { k: 'Techo del rango todavía aceptable', v: r.rangoMax, format: 'unit', unit: 'h por día', decimals: 0 },
+          { k: 'Proporción del día durmiendo', v: Number(((duerme / 24) * 100).toFixed(0)), format: 'unit', unit: '%', decimals: 0 },
+        ];
+
+        const tope = SUENO_ESCALA_MAX;
+        const chart = [
+          { label: 'Menos de ' + r.rangoMin + ' h — insuficiente', value: r.rangoMin, from: 0, to: r.rangoMin, tone: 'bad' },
+          { label: r.rangoMin + ' a ' + r.recMin + ' h — corto pero tolerable', value: Math.max(0, r.recMin - r.rangoMin), from: r.rangoMin, to: r.recMin, tone: 'warn' },
+          { label: r.recMin + ' a ' + r.recMax + ' h — recomendado', value: r.recMax - r.recMin, from: r.recMin, to: r.recMax, tone: 'good' },
+          { label: r.recMax + ' a ' + r.rangoMax + ' h — largo pero tolerable', value: Math.max(0, r.rangoMax - r.recMax), from: r.recMax, to: r.rangoMax, tone: 'warn' },
+          { label: 'Más de ' + r.rangoMax + ' h — excesivo', value: Math.max(0, tope - r.rangoMax), from: r.rangoMax, to: tope, tone: 'bad' },
+        ];
+
+        const estado = dentro
+          ? 'estás dentro del rango recomendado'
+          : faltaDia > 0
+            ? (dentroAmplio ? 'dormís poco, aunque seguís dentro del rango tolerable' : 'dormís por debajo de lo aceptable para la etapa')
+            : (dentroAmplio ? 'dormís de más, aunque seguís dentro del rango tolerable' : 'dormís muy por encima de lo esperable para la etapa');
+
+        return {
+          total: r.recMin + ' a ' + r.recMax + ' h',
+          sub:
+            r.etapa + ': lo recomendado son ' + r.recMin + ' a ' + r.recMax + ' h por día (rango tolerable ' +
+            r.rangoMin + ' a ' + r.rangoMax + ' h). Con ' + nf(duerme, duerme % 1 ? 1 : 0) + ' h ' + estado +
+            (faltaDia > 0 ? ' · te faltan ' + nf(faltaDia, 1) + ' h por día, ' + nf(faltaDia * 7, 1) + ' por semana.' : '.') +
+            ' ' + r.tip,
+          rows: rows,
+          chart: chart,
+          format: 'unit',
+          unit: 'h por día',
+          decimals: 1,
+          position: clamp((duerme / tope) * 100, 0, 100),
+          positionLabel: nf(duerme, duerme % 1 ? 1 : 0) + ' h por día — ' + estado,
+        };
+      }
+
+      // ─────────────────── CALIDAD DE SUEÑO (PSQI, SCREENING) ───────────────────
+      // Espejo de src/lib/formulas/calidad-sueno-pittsburgh.ts, componentes 1 a 6.
+      if (rama === 'calidad') {
+        const latencia = Math.max(0, Number(v.latencia) || 0);
+        const duracion = Math.max(0, Number(v.horasDuerme) || 0);
+        const horasCama = Math.max(0, Number(v.horasCama) || 0);
+        const c1 = clamp(Number(v.calidadSubjetiva) || 0, 0, 3);
+        const c5 = clamp(Number(v.perturbaciones) || 0, 0, 3);
+        const c6 = clamp(Number(v.disfuncionDiurna) || 0, 0, 3);
+
+        if (!duracion || !horasCama) {
+          return { total: '—', sub: 'Ingresá tus horas de sueño y tus horas en la cama.', rows: [], chart: [] };
+        }
+
+        const c2 = latencia <= 15 ? 0 : latencia <= 30 ? 1 : latencia <= 60 ? 2 : 3;
+        const c3 = duracion >= 7 ? 0 : duracion >= 6 ? 1 : duracion >= 5 ? 2 : 3;
+        const eficiencia = Math.round((duracion / horasCama) * 100);
+        const c4 = eficiencia >= 85 ? 0 : eficiencia >= 75 ? 1 : eficiencia >= 65 ? 2 : 3;
+        const efClamp = Math.min(100, eficiencia);
+
+        const puntaje = Math.min(PSQI.MAX, c1 + c2 + c3 + c4 + c5 + c6);
+        const nivel = puntaje <= PSQI.CORTE_BUENA ? 'buena calidad de sueño'
+          : puntaje <= PSQI.CORTE_POBRE ? 'calidad de sueño pobre'
+          : 'mala calidad de sueño';
+
+        const rows = [
+          { k: 'Puntaje PSQI total', ref: 'sobre ' + PSQI.MAX + ' · corte en ' + PSQI.CORTE_BUENA, v: puntaje, extra: true, format: 'unit', unit: 'puntos', decimals: 0 },
+          { k: 'Componente 1 — calidad subjetiva', v: c1, format: 'unit', unit: 'puntos', decimals: 0 },
+          { k: 'Componente 2 — latencia para dormirte', ref: nf(latencia) + ' min', v: c2, format: 'unit', unit: 'puntos', decimals: 0 },
+          { k: 'Componente 3 — duración del sueño', ref: nf(duracion, duracion % 1 ? 1 : 0) + ' h', v: c3, format: 'unit', unit: 'puntos', decimals: 0 },
+          { k: 'Componente 4 — eficiencia de sueño', ref: efClamp + '%', v: c4, format: 'unit', unit: 'puntos', decimals: 0 },
+          { k: 'Componente 5 — perturbaciones nocturnas', v: c5, format: 'unit', unit: 'puntos', decimals: 0 },
+          { k: 'Componente 6 — disfunción diurna', v: c6, format: 'unit', unit: 'puntos', decimals: 0 },
+          { k: 'Eficiencia de sueño', ref: 'buena desde ' + PSQI.EFICIENCIA_BUENA + '%', v: efClamp, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Horas despierto en la cama', v: Number(Math.max(0, horasCama - duracion).toFixed(1)), format: 'unit', unit: 'h', decimals: 1 },
+        ];
+
+        const chart = [
+          { label: '0 a 5 — buena calidad', value: 5, from: 0, to: PSQI.CORTE_BUENA, tone: 'good' },
+          { label: '6 a 10 — calidad pobre', value: 5, from: PSQI.CORTE_BUENA, to: PSQI.CORTE_POBRE, tone: 'warn' },
+          { label: '11 a 21 — mala calidad', value: 11, from: PSQI.CORTE_POBRE, to: PSQI.MAX, tone: 'bad' },
+        ];
+
+        return {
+          total: puntaje + ' / ' + PSQI.MAX,
+          sub:
+            'PSQI ' + puntaje + ' sobre ' + PSQI.MAX + ' con una eficiencia del ' + efClamp + '%: ' + nivel + '. ' +
+            (puntaje <= PSQI.CORTE_BUENA
+              ? 'Sostené tus horarios.'
+              : puntaje <= PSQI.CORTE_POBRE
+                ? 'Ajustá horario fijo, pantalla fuera de la última hora y habitación oscura y fresca.'
+                : 'Con este puntaje conviene una consulta con un profesional del sueño.') +
+            ' Es un screening orientativo, no un diagnóstico.',
+          rows: rows,
+          chart: chart,
+          format: 'unit',
+          unit: 'puntos',
+          decimals: 0,
+          position: clamp((puntaje / PSQI.MAX) * 100, 0, 100),
+          positionLabel: 'PSQI ' + puntaje + ' sobre ' + PSQI.MAX + ' — ' + nivel,
+        };
+      }
+
+      // ───────────────── TIEMPO DE PANTALLA SEGÚN LA EDAD ─────────────────
+      // Espejo de src/lib/formulas/tiempo-pantalla-ideal-edad.ts.
+      if (rama === 'pantalla-edad') {
+        const edad = Math.max(0, Number(v.edad) || 0);
+        const actual = Math.max(0, Number(v.pantallaActual) || 0);
+
+        let t = PANTALLA_TRAMOS[PANTALLA_TRAMOS.length - 1];
+        for (let k = 0; k < PANTALLA_TRAMOS.length; k++) {
+          if (edad <= PANTALLA_TRAMOS[k].max) { t = PANTALLA_TRAMOS[k]; break; }
+        }
+
+        const maxHoras = t.maxHoras;
+        const exceso = Math.max(0, actual - maxHoras);
+        const margen = Math.max(0, maxHoras - actual);
+
+        const rows = [
+          { k: 'Máximo de pantalla de ocio recomendado', ref: t.grupo, v: maxHoras, extra: true, format: 'unit', unit: 'h por día', decimals: 0 },
+          { k: 'Pantalla de ocio que usa hoy', v: actual, format: 'unit', unit: 'h por día', decimals: 1 },
+          { k: 'Horas por encima del máximo', v: Number(exceso.toFixed(1)), format: 'unit', unit: 'h', decimals: 1 },
+          { k: 'Margen que queda hasta el máximo', v: Number(margen.toFixed(1)), format: 'unit', unit: 'h', decimals: 1 },
+          { k: 'Exceso acumulado por semana', v: Number((exceso * 7).toFixed(1)), format: 'unit', unit: 'h', decimals: 1 },
+          { k: 'Exceso acumulado por año', v: Math.round(exceso * 365), format: 'unit', unit: 'h', decimals: 0 },
+          { k: 'Uso respecto del máximo recomendado', v: maxHoras > 0 ? Number(((actual / maxHoras) * 100).toFixed(0)) : 0, format: 'unit', unit: '%', decimals: 0 },
+          { k: 'Minutos de pantalla por día', v: Math.round(actual * 60), format: 'unit', unit: 'min', decimals: 0 },
+        ];
+
+        // Escala: espejo del topEscala de la fórmula vieja, con un piso de 4 h
+        // para que la rama de bebés (máximo 0) tenga barra igual.
+        const tope = Math.max(maxHoras * 2 + 1, Math.ceil(actual) + 1, 4);
+        const chart = maxHoras > 0
+          ? [
+              { label: 'Hasta ' + maxHoras + ' h — recomendado', value: maxHoras, from: 0, to: maxHoras, tone: 'good' },
+              { label: maxHoras + ' a ' + maxHoras * 2 + ' h — exceso leve', value: maxHoras, from: maxHoras, to: maxHoras * 2, tone: 'warn' },
+              { label: 'Más de ' + maxHoras * 2 + ' h — exceso alto', value: Math.max(0, tope - maxHoras * 2), from: maxHoras * 2, to: tope, tone: 'bad' },
+            ]
+          : [
+              { label: '0 h — lo recomendado a esta edad', value: 0.5, from: 0, to: 0.5, tone: 'good' },
+              { label: 'Hasta 1 h — por encima de lo recomendado', value: 0.5, from: 0.5, to: 1, tone: 'warn' },
+              { label: 'Más de 1 h — muy por encima', value: Math.max(0, tope - 1), from: 1, to: tope, tone: 'bad' },
+            ];
+
+        const veredicto = maxHoras === 0
+          ? (actual > 0
+              ? 'a esta edad la recomendación es cero pantalla de ocio y hoy son ' + nf(actual, actual % 1 ? 1 : 0) + ' h por día'
+              : 'a esta edad la recomendación es cero pantalla de ocio y estás dentro')
+          : exceso > 0
+            ? 'está ' + nf(exceso, 1) + ' h por encima del máximo de ' + maxHoras + ' h' + (actual >= maxHoras * 2 ? ', más del doble de lo recomendado' : '')
+            : 'está dentro del máximo de ' + maxHoras + ' h, con ' + nf(margen, 1) + ' h de margen';
+
+        return {
+          total: maxHoras === 0 ? '0 h' : maxHoras + ' h por día',
+          sub:
+            t.grupo + ': ' + t.recomendado + '. Con ' + nf(actual, actual % 1 ? 1 : 0) + ' h por día ' + veredicto +
+            '. Recortar la hora previa a dormir es lo que más mejora el sueño.',
+          rows: rows,
+          chart: chart,
+          format: 'unit',
+          unit: 'h por día',
+          decimals: 1,
+          position: clamp((actual / tope) * 100, 0, 100),
+          positionLabel: nf(actual, actual % 1 ? 1 : 0) + ' h por día de pantalla — ' + t.grupo,
+        };
+      }
+
+      // ───────────────────── TIEMPO EN REDES SOCIALES ─────────────────────
+      // Espejo de src/lib/formulas/tiempo-en-redes-sociales.ts.
+      if (rama === 'redes') {
+        const ig = Math.max(0, Number(v.minIG) || 0);
+        const tiktok = Math.max(0, Number(v.minTikTok) || 0);
+        const twitter = Math.max(0, Number(v.minTwitter) || 0);
+        const youtube = Math.max(0, Number(v.minYouTube) || 0);
+        const whatsapp = Math.max(0, Number(v.minWhatsApp) || 0);
+        const totalMin = ig + tiktok + twitter + youtube + whatsapp;
+
+        if (totalMin <= 0) {
+          return { total: '—', sub: 'Ingresá los minutos diarios de al menos una app.', rows: [], chart: [] };
+        }
+
+        const horasDia = Math.round((totalMin / 60) * 100) / 100;
+        const horasAnio = Math.round(horasDia * 365 * 100) / 100;
+        const diasAnio = Math.round((horasAnio / 24) * 10) / 10;
+        const libros = Math.floor(horasAnio / REDES.HORAS_LIBRO);
+        const cursos = Math.floor(horasAnio / REDES.HORAS_CURSO);
+        const idiomaMeses = Math.round((horasAnio / REDES.HORAS_IDIOMA) * 12);
+
+        const apps = [
+          { label: 'Instagram', min: ig },
+          { label: 'TikTok', min: tiktok },
+          { label: 'Twitter/X', min: twitter },
+          { label: 'YouTube', min: youtube },
+          { label: 'WhatsApp', min: whatsapp },
+        ].filter((a) => a.min > 0).sort((a, b) => b.min - a.min);
+
+        const rows = [
+          { k: 'Minutos por día en total', v: Math.round(totalMin), extra: true, format: 'unit', unit: 'min', decimals: 0 },
+          { k: 'Horas por día', v: horasDia, format: 'unit', unit: 'h', decimals: 2 },
+          { k: 'Horas por año', v: Math.round(horasAnio), format: 'unit', unit: 'h', decimals: 0 },
+          { k: 'Días completos de 24 h al año', v: diasAnio, format: 'unit', unit: 'días', decimals: 1 },
+          { k: 'La app que más pesa', ref: apps[0].label, v: Math.round(apps[0].min), format: 'unit', unit: 'min por día', decimals: 0 },
+          { k: 'Libros que entrarían en ese tiempo', ref: '7 h por libro', v: libros, format: 'plain', decimals: 0 },
+          { k: 'Cursos online de 40 h', v: cursos, format: 'plain', decimals: 0 },
+          { k: 'Meses hacia un idioma nuevo', ref: '600 h de estudio', v: idiomaMeses, format: 'unit', unit: 'meses', decimals: 0 },
+          { k: 'Proporción de tu día despierto', ref: 'sobre 16 h despierto', v: Number(((horasDia / 16) * 100).toFixed(0)), format: 'unit', unit: '%', decimals: 0 },
+        ];
+
+        const tope = REDES.ESCALA_MAX;
+        const chart = [
+          { label: 'Hasta 2 h — uso controlado', value: 2, from: 0, to: 2, tone: 'good' },
+          { label: '2 a 4 h — en el promedio global', value: 2, from: 2, to: 4, tone: 'warn' },
+          { label: '4 a 6 h — uso alto', value: 2, from: 4, to: 6, tone: 'bad' },
+          { label: 'Más de 6 h — uso muy alto', value: 2, from: 6, to: tope, tone: 'bad' },
+        ];
+
+        const intensidad = horasDia < 2 ? 'uso controlado, por debajo del promedio global'
+          : horasDia <= 4 ? 'en el promedio global de uso'
+          : 'uso alto de pantalla social';
+
+        return {
+          total: nf(horasDia, 2) + ' h por día',
+          sub:
+            nf(horasDia, 2) + ' h por día son ' + nf(Math.round(horasAnio)) + ' h al año, unos ' + nf(diasAnio, 1) +
+            ' días completos de 24 h — ' + intensidad + '. En ese tiempo entrarían ' + libros + ' libros' +
+            (cursos > 0 ? ' o ' + cursos + ' cursos online' : '') + '. La app que más pesa es ' + apps[0].label + '.',
+          rows: rows,
+          chart: chart,
+          format: 'unit',
+          unit: 'h',
+          decimals: 2,
+          position: clamp((horasDia / tope) * 100, 0, 100),
+          positionLabel: nf(horasDia, 2) + ' h por día en redes — ' + intensidad,
+        };
+      }
+
+      // ─────────────────────── FOCO PROFUNDO (DEEP WORK) ───────────────────────
+      // Espejo de src/lib/formulas/deep-work-cal-newport-horas-maximo-diario.ts:
+      // promedio = horas por semana / días laborales, contra el techo de ~4 h.
+      const focoSemana = Math.max(0, Number(v.focoSemana) || 0);
+      const dias = Math.max(1, Number(v.diasLaborales) || 1);
+      const porDia = focoSemana / dias;
+
+      const sobreTecho = Math.max(0, porDia - FOCO.TECHO_DIARIO);
+      const margenFoco = Math.max(0, FOCO.TECHO_DIARIO - porDia);
+      const bloques = Math.floor((porDia * 60) / FOCO.BLOQUE_MIN);
+
+      const rowsFoco = [
+        { k: 'Foco profundo por día laboral', ref: nf(focoSemana, focoSemana % 1 ? 1 : 0) + ' h en ' + dias + ' días', v: Number(porDia.toFixed(2)), extra: true, format: 'unit', unit: 'h por día', decimals: 2 },
+        { k: 'Techo práctico diario', ref: 'heurística de Cal Newport', v: FOCO.TECHO_DIARIO, format: 'unit', unit: 'h por día', decimals: 0 },
+        { k: 'Horas por encima del techo', v: Number(sobreTecho.toFixed(2)), format: 'unit', unit: 'h', decimals: 2 },
+        { k: 'Margen hasta el techo', v: Number(margenFoco.toFixed(2)), format: 'unit', unit: 'h', decimals: 2 },
+        { k: 'Bloques de 90 minutos por día', v: bloques, format: 'plain', decimals: 0 },
+        { k: 'Total de foco por semana', v: Number(focoSemana.toFixed(1)), format: 'unit', unit: 'h', decimals: 1 },
+        { k: 'Techo semanal a 4 h por día', v: FOCO.TECHO_DIARIO * dias, format: 'unit', unit: 'h', decimals: 0 },
+        { k: 'Minutos de foco por día', v: Math.round(porDia * 60), format: 'unit', unit: 'min', decimals: 0 },
+      ];
+
+      const topeFoco = FOCO.ESCALA_MAX;
+      const chartFoco = [
+        { label: 'Hasta 2 h — arranque', value: 2, from: 0, to: 2, tone: 'warn' },
+        { label: '2 a 4 h — objetivo sostenible', value: 2, from: 2, to: FOCO.TECHO_DIARIO, tone: 'good' },
+        { label: 'Más de 4 h — poco sostenible', value: Math.max(0, topeFoco - FOCO.TECHO_DIARIO), from: FOCO.TECHO_DIARIO, to: topeFoco, tone: 'bad' },
+      ];
+
+      const lecturaFoco = porDia > FOCO.TECHO_DIARIO
+        ? 'está por encima del techo de unas 4 h que propone Newport: arriba de ahí suele haber multitasking disfrazado'
+        : porDia >= 2
+          ? 'es un objetivo sólido y sostenible, dentro del techo de unas 4 h'
+          : 'es un arranque razonable: el hábito se construye subiendo de a poco';
+
+      return {
+        total: nf(porDia, 2) + ' h por día',
+        sub:
+          nf(focoSemana, focoSemana % 1 ? 1 : 0) + ' h por semana en ' + dias + ' días laborales dan ' + nf(porDia, 2) +
+          ' h diarias de foco profundo (' + bloques + ' bloques de 90 min): ' + lecturaFoco +
+          '. El techo de 4 h es una heurística de un libro, no una constante fisiológica.',
+        rows: rowsFoco,
+        chart: chartFoco,
+        format: 'unit',
+        unit: 'h por día',
+        decimals: 2,
+        position: clamp((porDia / topeFoco) * 100, 0, 100),
+        positionLabel: nf(porDia, 2) + ' h diarias de foco — techo práctico ' + FOCO.TECHO_DIARIO + ' h',
+      };
+    });
+  })();
+</script>

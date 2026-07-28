@@ -1,0 +1,220 @@
+---
+/**
+ * Hub de decisión — "¿Qué maceta y cuánta tierra?"
+ * Reemplaza 3 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: tres ramas (maceta, tierra, mezcla). Las tres son
+ * composiciones de un volumen, así que el gráfico es un donut en todas.
+ *
+ * Nada de lo que sale acá es plata: cada fila declara `format` explícito.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, TIPOS, MARGEN_ASENTAMIENTO, PROPORCION_ALTO } from '../../lib/hubs/tierra-y-macetas';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ TIPOS, MARGEN_ASENTAMIENTO, PROPORCION_ALTO }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const n1 = (x, d) => Number(x || 0).toLocaleString('es-AR', {
+      minimumFractionDigits: d == null ? 0 : d,
+      maximumFractionDigits: d == null ? 0 : d,
+    });
+
+    /** Volumen en litros de la maceta que cargó el usuario. */
+    function volumenMaceta(v) {
+      const forma = String(v.forma || 'redonda');
+      const m1 = Math.max(1, Number(v.medida1) || 22);
+      const m2 = Math.max(1, Number(v.medida2) || m1);
+      const alto = Math.max(1, Number(v.alto) || 20);
+      let cm3;
+      if (forma === 'redonda') cm3 = Math.PI * Math.pow(m1 / 2, 2) * alto;
+      else if (forma === 'cuadrada') cm3 = m1 * m1 * alto;
+      else cm3 = m1 * m2 * alto;
+      return { litros: cm3 / 1000, forma: forma, m1: m1, m2: m2, alto: alto };
+    }
+
+    const FORMA_TXT = { redonda: 'redonda', cuadrada: 'cuadrada', rectangular: 'rectangular' };
+
+    // ---------- RAMA 1: qué maceta le va ----------
+    function calcMaceta(v) {
+      const t = TIPOS[v.tipoPlanta] || TIPOS.interior;
+      const raiz = Math.max(1, Number(v.diametroRaiz) || 12);
+      const diam = raiz * t.multMaceta;
+      const alto = diam * PROPORCION_ALTO;
+
+      // Volumen de la maceta recomendada y del cepellón que ya ocupa lugar.
+      const volMaceta = (Math.PI * Math.pow(diam / 2, 2) * alto) / 1000;
+      const volCepellon = (Math.PI * Math.pow(raiz / 2, 2) * (raiz * PROPORCION_ALTO)) / 1000;
+      const volNuevo = Math.max(0, volMaceta - volCepellon);
+      const margen = (diam - raiz) / 2;
+
+      const rows = [
+        { k: 'Diámetro de maceta recomendado', ref: t.nombre, v: diam, format: 'unit', unit: 'cm', decimals: 0, extra: true },
+        { k: 'Profundidad recomendada', ref: '70% del diámetro', v: alto, format: 'unit', unit: 'cm', decimals: 0 },
+        { k: 'Volumen de esa maceta', ref: 'aproximado', v: volMaceta, format: 'unit', unit: 'L', decimals: 1, extra: true },
+        { k: 'Sustrato nuevo que va alrededor', ref: 'maceta − cepellón', v: volNuevo, format: 'unit', unit: 'L', decimals: 1 },
+        { k: 'Volumen que ocupa el cepellón', ref: 'lo que ya tiene raíces', v: volCepellon, format: 'unit', unit: 'L', decimals: 1 },
+        { k: 'Margen de crecimiento a cada lado', ref: 'entre cepellón y pared', v: margen, format: 'unit', unit: 'cm', decimals: 1 },
+        { k: 'Multiplicador sobre el cepellón', ref: t.nombre, v: t.multMaceta, format: 'plain', decimals: 2 },
+        { k: 'Diámetro del cepellón actual', ref: 'lo que cargaste', v: raiz, format: 'unit', unit: 'cm', decimals: 0 },
+      ];
+
+      return {
+        total: Math.round(diam) + ' cm',
+        sub:
+          t.nombre + ' con cepellón de ' + raiz + ' cm: maceta de ' + Math.round(diam) + ' cm de diámetro y ~' +
+          Math.round(alto) + ' cm de profundidad (unos ' + n1(volMaceta, 1) + ' L) · deja ' + n1(margen, 1) +
+          ' cm de margen a cada lado · no saltes varios tamaños de una',
+        rows: rows,
+        chart: [
+          { label: 'Sustrato nuevo alrededor', value: Number(volNuevo.toFixed(2)), tone: 'main' },
+          { label: 'Cepellón que ya tenés', value: Number(volCepellon.toFixed(2)), tone: 'good' },
+        ],
+        format: 'unit',
+        unit: 'L',
+        decimals: 1,
+      };
+    }
+
+    // ---------- RAMA 2: cuánta tierra comprar ----------
+    function calcTierra(v) {
+      const m = volumenMaceta(v);
+      const cant = Math.max(1, Math.round(Number(v.cantidad) || 1));
+      const conMargen = m.litros * (1 + MARGEN_ASENTAMIENTO);
+      const total = conMargen * cant;
+      const bolsas20 = Math.ceil(total / 20);
+      const bolsas50 = Math.ceil(total / 50);
+      const margen = total - m.litros * cant;
+
+      const medidas = m.forma === 'rectangular'
+        ? m.m1 + '×' + m.m2 + '×' + m.alto + ' cm'
+        : m.m1 + ' cm × ' + m.alto + ' cm de alto';
+
+      const rows = [
+        { k: 'Sustrato total a comprar', ref: 'incluye 10% de margen', v: total, format: 'unit', unit: 'L', decimals: 1, extra: true },
+        { k: 'Bolsas de 20 litros', ref: 'redondeado hacia arriba', v: bolsas20, format: 'unit', unit: 'bolsas', decimals: 0, extra: true },
+        { k: 'Bolsas de 50 litros', ref: 'suele salir más barato por litro', v: bolsas50, format: 'unit', unit: 'bolsas', decimals: 0 },
+        { k: 'Volumen por maceta con margen', ref: 'lo que hay que tener listo', v: conMargen, format: 'unit', unit: 'L', decimals: 1 },
+        { k: 'Volumen geométrico por maceta', ref: 'sin margen', v: m.litros, format: 'unit', unit: 'L', decimals: 1 },
+        { k: 'Margen de asentamiento total', ref: '10% del volumen', v: margen, format: 'unit', unit: 'L', decimals: 1 },
+        { k: 'Cantidad de macetas', ref: 'las que cargaste', v: cant, format: 'unit', unit: 'macetas', decimals: 0 },
+      ];
+
+      return {
+        total: n1(total, 1) + ' L',
+        sub:
+          cant + (cant === 1 ? ' maceta ' : ' macetas ') + FORMA_TXT[m.forma] + 's de ' + medidas + ': ' +
+          n1(total, 1) + ' L de sustrato en total (con el 10% de margen), o sea ' + bolsas20 +
+          (bolsas20 === 1 ? ' bolsa' : ' bolsas') + ' de 20 L · no pongas piedras en el fondo, no mejoran el drenaje',
+        rows: rows,
+        chart: [
+          { label: 'Volumen de las macetas', value: Number((m.litros * cant).toFixed(2)), tone: 'main' },
+          { label: 'Margen de asentamiento', value: Number(margen.toFixed(2)), tone: 'warn' },
+        ],
+        format: 'unit',
+        unit: 'L',
+        decimals: 1,
+      };
+    }
+
+    // ---------- RAMA 3: la mezcla ----------
+    function calcMezcla(v) {
+      const t = TIPOS[v.tipoPlanta] || TIPOS.interior;
+      const m = volumenMaceta(v);
+      const cant = Math.max(1, Math.round(Number(v.cantidad) || 1));
+      const total = m.litros * (1 + MARGEN_ASENTAMIENTO) * cant;
+
+      const base = total * t.receta.base;
+      const compost = total * t.receta.compost;
+      const perlita = total * t.receta.perlita;
+      const extra = total * t.receta.extra;
+
+      const partes = [
+        { label: 'Sustrato base', value: base, tone: 'main' },
+        { label: 'Compost o humus', value: compost, tone: 'good' },
+        { label: 'Perlita', value: perlita, tone: 'prop' },
+        { label: t.nombreExtra, value: extra, tone: 'exit' },
+      ].filter((p) => p.value > 0.01);
+
+      const dominante = partes.reduce((a, b) => (b.value > a.value ? b : a), partes[0]);
+      const pctDom = (dominante.value / total) * 100;
+
+      const rows = partes.map((p, idx) => ({
+        k: p.label,
+        ref: Math.round((p.value / total) * 100) + '% de la mezcla',
+        v: p.value,
+        format: 'unit',
+        unit: 'L',
+        decimals: 1,
+        extra: idx === 0,
+      }));
+      rows.push({ k: 'Mezcla total', ref: 'para ' + cant + (cant === 1 ? ' maceta' : ' macetas'), v: total, format: 'unit', unit: 'L', decimals: 1, extra: true });
+      rows.push({ k: 'Baldes de 10 litros de mezcla', ref: 'para dosificar a ojo', v: total / 10, format: 'unit', unit: 'baldes', decimals: 1 });
+
+      return {
+        total: n1(total, 1) + ' L',
+        sub:
+          t.nombre + ': ' + t.descripcion + ' · para ' + n1(total, 1) + ' L de mezcla, lo que más manda es ' +
+          dominante.label.toLowerCase() + ' con ' + n1(dominante.value, 1) + ' L (' + Math.round(pctDom) +
+          '%) · mezclá todo en seco antes de humedecer',
+        rows: rows,
+        chart: partes.map((p) => ({ label: p.label, value: Number(p.value.toFixed(2)), tone: p.tone })),
+        format: 'unit',
+        unit: 'L',
+        decimals: 1,
+      };
+    }
+
+    const BRANCH = { maceta: calcMaceta, tierra: calcTierra, mezcla: calcMezcla };
+
+    H.onCompute(function (v, kase) {
+      const fn = BRANCH[(kase && kase.id) || 'maceta'] || calcMaceta;
+      return fn(v);
+    });
+  })();
+</script>

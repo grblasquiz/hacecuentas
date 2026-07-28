@@ -1,0 +1,246 @@
+---
+/**
+ * Hub de decisión — "¿Cuánta plata necesito para entrar a un alquiler?"
+ * Reemplaza 8 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/entrar-a-un-alquiler.ts) y su
+ * compute(). Todo el chrome, el CSS y el runtime viven en DecisionHub.astro.
+ *
+ * Las constantes NO se inventan: salen de las fórmulas reales de
+ * src/lib/formulas/ (comisión, caución, expensas por m², regla del 30%).
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  COMISION,
+  IVA,
+  CAUCION_TASA,
+  EXPENSAS_M2_MEDIO,
+  DEPOSITO_MESES,
+  DEPOSITO_MESES_LEY_VIEJA,
+} from '../../lib/hubs/entrar-a-un-alquiler';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const CONST = {
+  COMISION,
+  IVA,
+  CAUCION_TASA,
+  EXPENSAS_M2_MEDIO,
+  DEPOSITO_MESES,
+  DEPOSITO_MESES_LEY_VIEJA,
+};
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ K: CONST }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    H.onCompute(function (v, kase) {
+      const caso = (kase && kase.id) || 'deposito';
+
+      const m2 = Math.max(0, Number(v.m2) || 0);
+      // expensas-departamento-calcular-m2-categoria: base de categoría media,
+      // sin amenities. Sólo se usa cuando el usuario no cargó las expensas.
+      const expensas = (Number(v.expensas) || 0) > 0 ? Number(v.expensas) : m2 * K.EXPENSAS_M2_MEDIO;
+      const expEstimadas = (Number(v.expensas) || 0) <= 0;
+
+      const ingreso = Math.max(0, Number(v.ingreso) || 0);
+      // cuanto-alquiler-puedo-pagar-sueldo-argentina: la regla se acota 10-60.
+      const regla = Math.min(60, Math.max(10, Number(v.regla) || 30));
+      const jur = String(v.jurisdiccion || 'caba');
+      const plazo = Number(v.plazo) || 24;
+
+      const alquilerPedido = Math.max(0, Number(v.alquiler) || 0);
+      // Presupuesto de vivienda = ingreso × regla; el alquiler puro es lo que
+      // queda después de las expensas.
+      const presupuesto = ingreso * (regla / 100);
+      const alquilerMax = Math.max(0, presupuesto - expensas);
+
+      // En la rama "presupuesto" la entrada se calcula sobre lo que PODÉS pagar,
+      // no sobre lo que te piden.
+      const alq = caso === 'presupuesto' ? alquilerMax : alquilerPedido;
+
+      // comision-inmobiliaria-alquiler-caba-pba: pct del valor total del
+      // contrato + IVA; en CABA la absorbe el propietario (Ley 5.859).
+      const com = K.COMISION[jur] || K.COMISION.caba;
+      const comisionTotal = alq * plazo * com.pct * K.IVA;
+      const comisionInquilino = comisionTotal * (1 - com.propietario);
+
+      // seguro-caucion-alquiler-costo-mensual: prima única sobre un mes.
+      const tasaCaucion = K.CAUCION_TASA[String(plazo)] || 0.15;
+      const prima = alq * tasaCaucion;
+
+      const deposito = alq * K.DEPOSITO_MESES;
+
+      // Costo mensual de vivienda y sueldo mínimo (sueldo-necesario-alquiler).
+      const costoVivienda = alq + expensas;
+      const sueldoMinimo = regla > 0 ? costoVivienda / (regla / 100) : 0;
+      const pesoIngreso = ingreso > 0 ? (costoVivienda / ingreso) * 100 : 0;
+
+      const rows = [];
+      let chart = [];
+      let total = 0;
+      let sub = '';
+
+      if (caso === 'devolucion') {
+        rows.push({ k: 'Depósito a devolver (valor del último alquiler)', ref: '1 mes', v: deposito, extra: true });
+        rows.push({ k: 'Equivale a', v: K.DEPOSITO_MESES, format: 'unit', unit: 'mes de alquiler', decimals: 0 });
+        rows.push({
+          k: 'Si firmaste antes de la ley 27.551, el tope era',
+          v: alq * K.DEPOSITO_MESES_LEY_VIEJA,
+        });
+        rows.push({ k: 'Expensas del último mes, a tu cargo', ref: 'ordinarias', v: expensas });
+        rows.push({
+          k: 'Costo de vivienda que dejás de pagar por mes',
+          v: costoVivienda,
+        });
+        total = deposito;
+        sub =
+          'Te devuelven ' + H.ars(deposito) + ' al valor del último alquiler, menos daños comprobados. ' +
+          'El desgaste normal de uso no se descuenta.';
+        chart = [
+          { label: 'Depósito que vuelve', value: deposito, tone: 'good' },
+          { label: 'Expensas del último mes', value: expensas, tone: 'warn' },
+        ];
+      } else if (caso === 'quien-paga') {
+        rows.push({ k: 'Alquiler mensual — lo paga el inquilino', ref: 'Contrato', v: alq, extra: true });
+        rows.push({ k: 'Expensas ordinarias — las paga el inquilino', ref: 'Gastos corrientes', v: expensas });
+        rows.push({ k: 'ABL o inmobiliario — lo paga el propietario', ref: 'Impuesto al inmueble', v: 0 });
+        rows.push({ k: 'Expensas extraordinarias — las paga el propietario', ref: 'Obras mayores', v: 0 });
+        rows.push({
+          k: 'Peso del costo de vivienda sobre tu ingreso',
+          v: pesoIngreso,
+          format: 'unit',
+          unit: '%',
+          decimals: 1,
+        });
+        total = costoVivienda;
+        sub =
+          'Tu costo mensual real es ' + H.ars(costoVivienda) + ': alquiler más expensas ordinarias. ' +
+          'ABL y expensas extraordinarias quedan del lado del propietario.';
+        chart = [
+          { label: 'Alquiler', value: alq, tone: 'main' },
+          { label: 'Expensas ordinarias', value: expensas, tone: 'prop' },
+        ];
+      } else {
+        // Ramas de entrada: depósito y garantía / caución / presupuesto.
+        rows.push({ k: 'Primer mes de alquiler', ref: 'Adelantado', v: alq, extra: true });
+        rows.push({
+          k: 'Expensas del primer mes' + (expEstimadas ? ' (estimadas por m²)' : ''),
+          ref: 'Ordinarias',
+          v: expensas,
+        });
+
+        if (caso === 'caucion') {
+          rows.push({
+            k: 'Prima del seguro de caución (' + Math.round(tasaCaucion * 100) + '% de un mes)',
+            ref: plazo + ' meses',
+            v: prima,
+          });
+        } else {
+          rows.push({ k: 'Depósito en garantía', ref: '1 mes', v: deposito });
+        }
+
+        rows.push({
+          k: 'Comisión inmobiliaria a tu cargo',
+          ref: jur === 'caba' ? 'Ley 5.859: la paga el propietario' : '50% del total',
+          v: comisionInquilino,
+        });
+
+        total = rows.reduce(function (a, r) {
+          return a + (r.format ? 0 : r.v);
+        }, 0);
+
+        rows.push({ k: 'Sueldo neto mínimo para bancarlo', ref: 'Regla del ' + regla + '%', v: sueldoMinimo });
+        rows.push({
+          k: 'Entrada medida en meses de alquiler',
+          v: alq > 0 ? total / alq : 0,
+          format: 'unit',
+          unit: 'meses',
+          decimals: 1,
+        });
+        rows.push({
+          k: 'Comisión total del contrato (la pague quien la pague)',
+          ref: (com.pct * 100).toFixed(2) + '% + IVA',
+          v: comisionTotal,
+        });
+
+        chart = [
+          { label: 'Primer mes de alquiler', value: alq, tone: 'main' },
+          { label: 'Expensas del primer mes', value: expensas, tone: 'prop' },
+          {
+            label: caso === 'caucion' ? 'Prima de caución' : 'Depósito en garantía',
+            value: caso === 'caucion' ? prima : deposito,
+            tone: 'exit',
+          },
+          { label: 'Comisión a tu cargo', value: comisionInquilino, tone: 'warn' },
+        ];
+
+        if (caso === 'presupuesto') {
+          sub =
+            'Con ' + H.ars(ingreso) + ' netos podés pagar hasta ' + H.ars(alquilerMax) +
+            ' de alquiler más ' + H.ars(expensas) + ' de expensas (regla del ' + regla + '%). ' +
+            'Entrar a ese departamento cuesta ' + H.ars(total) + '.';
+        } else {
+          sub =
+            'Necesitás ' + H.ars(total) + ' para entrar y un sueldo neto de ' + H.ars(sueldoMinimo) +
+            ' para que el alquiler no pase del ' + regla + '% de tu ingreso' +
+            (jur === 'caba' ? ' · en CABA la comisión la paga el propietario' : ' · en provincia la comisión se reparte') +
+            '.';
+        }
+      }
+
+      return {
+        total: H.ars(total),
+        sub: sub,
+        rows: rows,
+        chart: chart.filter(function (s) {
+          return s.value > 0;
+        }),
+      };
+    });
+  })();
+</script>

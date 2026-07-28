@@ -1,0 +1,315 @@
+---
+/**
+ * Hub de decisión — "¿Me conviene un auto eléctrico (o GNC) en vez de nafta?"
+ * Reemplaza 7 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo ramificado: 4 ramas (eléctrico, GNC, seguir con nafta, huella de CO2).
+ * La página sólo aporta los datos (src/lib/hubs/electrico-vs-nafta.ts) y su compute().
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, PARAMS, FRANJAS_CO2 } from '../../lib/hubs/electrico-vs-nafta';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ P: PARAMS, FRANJAS: FRANJAS_CO2 }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Filas que NO son plata. El runtime hace Object.assign y copia `undefined`:
+    // sin `format` propio, la fila cae a pesos.
+    const L = { format: 'unit', unit: 'L', decimals: 0 };
+    const M3 = { format: 'unit', unit: 'm³', decimals: 0 };
+    const KWH = { format: 'unit', unit: 'kWh', decimals: 0 };
+    const KG = { format: 'unit', unit: 'kg CO2', decimals: 0 };
+    const TON = { format: 'unit', unit: 't CO2', decimals: 2 };
+    const GKM = { format: 'unit', unit: 'g CO2/km', decimals: 0 };
+    const ANIOS = { format: 'unit', unit: 'años', decimals: 1 };
+    const MESES = { format: 'unit', unit: 'meses', decimals: 1 };
+    const PCT = { format: 'unit', unit: '%', decimals: 0 };
+    const ARB = { format: 'unit', unit: 'árboles', decimals: 0 };
+    const KM = { format: 'unit', unit: 'km', decimals: 0 };
+    const ARS1 = { format: 'ars', decimals: 1 };
+    const ARS = { format: 'ars', decimals: 0 };
+
+    function franja(gkm) {
+      for (let i = 0; i < FRANJAS.length; i++) {
+        if (gkm < FRANJAS[i].max) return FRANJAS[i].nombre;
+      }
+      return FRANJAS[FRANJAS.length - 1].nombre;
+    }
+
+    H.onCompute(function (v, kase) {
+      const caso = (kase && kase.id) || 'electrico';
+
+      const km = Math.max(0, v.kmAnio || 0);
+      const cN = Math.max(0, v.consumoNafta || 0);
+      const pN = Math.max(0, v.precioNafta || 0);
+      const cE = Math.max(0, v.consumoEV || 0);
+      const pK = Math.max(0, v.precioKwh || 0);
+      const pG = Math.max(0, v.precioGnc || 0);
+      const precioE = Math.max(0, v.precioElectrico || 0);
+      const precioNa = Math.max(0, v.precioNaftaAuto || 0);
+      const equipo = Math.max(0, v.costoEquipoGnc || 0);
+      const tc = Math.max(1, v.tipoCambio || 1);
+      const esGasoil = String(v.combustible || 'nafta') === 'gasoil';
+      const nombreComb = esGasoil ? 'gasoil' : 'nafta';
+      const factorComb = esGasoil ? P.CO2_GASOIL : P.CO2_NAFTA;
+
+      if (!km || !cN || !pN) {
+        return {
+          total: '$0',
+          sub: 'Completá los kilómetros por año, el consumo y el precio del litro.',
+          rows: [],
+          chart: [],
+        };
+      }
+
+      // ── Consumos y gasto anual de las tres energías ──
+      const litros = (km * cN) / 100;
+      const cG = cN * P.FACTOR_GNC; // m³/100km — factor de comparar-nafta-vs-gnc-ahorro
+      const m3 = (km * cG) / 100;
+      const kwh = (km * cE) / 100;
+
+      const gastoNafta = litros * pN;
+      const gastoGnc = m3 * pG;
+      const gastoEV = kwh * pK;
+
+      // ── Emisiones ──
+      const co2Nafta = litros * factorComb; // kg/año
+      const co2Gnc = m3 * P.CO2_GNC;
+      const co2EV = kwh * P.CO2_KWH;
+      const gkmNafta = km > 0 ? (co2Nafta / km) * 1000 : 0;
+      const gkmGnc = km > 0 ? (co2Gnc / km) * 1000 : 0;
+      const gkmEV = km > 0 ? (co2EV / km) * 1000 : 0;
+
+      const rows = [];
+
+      // ───────────────────────── RAMA ELÉCTRICO ─────────────────────────
+      if (caso === 'electrico') {
+        const ahorro = gastoNafta - gastoEV;
+        const sobreprecio = precioE - precioNa;
+        const repago = ahorro > 0 && sobreprecio > 0 ? sobreprecio / ahorro : 0;
+
+        // TCO a 5 años, con las tasas de auto-electrico-vs-nafta-tco-5-anos-argentina.
+        const A = P.ANOS;
+        const depE = precioE * P.DEP_ELECTRICO;
+        const depN = precioNa * P.DEP_NAFTA;
+        const energiaE = gastoEV * A;
+        const energiaN = gastoNafta * A;
+        const mantE = P.MANT_ELECTRICO_USD * tc * A;
+        const mantN = P.MANT_NAFTA_USD * tc * A;
+        const patE = precioE * P.PATENTE_FACTOR_FISCAL * P.PATENTE_TASA * A;
+        const patN = precioNa * P.PATENTE_FACTOR_FISCAL * P.PATENTE_TASA * A;
+        const segE = precioE * P.SEGURO_FACTOR_VALOR * P.SEGURO_TASA * A;
+        const segN = precioNa * P.SEGURO_FACTOR_VALOR * P.SEGURO_TASA * A;
+        const tcoE = depE + energiaE + mantE + patE + segE;
+        const tcoN = depN + energiaN + mantN + patN + segN;
+        const difTco = tcoN - tcoE;
+
+        rows.push(Object.assign({ k: 'Litros de ' + nombreComb + ' al año', v: litros }, L));
+        rows.push(Object.assign({ k: 'kWh al año si lo hacés eléctrico', v: kwh }, KWH));
+        rows.push(Object.assign({ k: 'Gasto anual en ' + nombreComb, v: gastoNafta, extra: true }, ARS));
+        rows.push(Object.assign({ k: 'Gasto anual en electricidad', v: gastoEV, extra: true }, ARS));
+        rows.push(Object.assign({ k: 'Ahorro anual en energía', v: ahorro, extra: true }, ARS));
+        rows.push(Object.assign({ k: 'Ahorro acumulado en 5 años', v: ahorro * A }, ARS));
+        rows.push(Object.assign({ k: 'Costo por km con ' + nombreComb, v: gastoNafta / km }, ARS1));
+        rows.push(Object.assign({ k: 'Costo por km eléctrico', v: gastoEV / km }, ARS1));
+        rows.push(Object.assign({ k: 'Sobreprecio del eléctrico', v: Math.max(0, sobreprecio) }, ARS));
+        rows.push(Object.assign({ k: 'Años para repagar el sobreprecio', ref: 'sólo con energía', v: repago }, ANIOS));
+        rows.push(Object.assign({ k: 'Depreciación en 5 años · eléctrico', ref: '45%', v: depE }, ARS));
+        rows.push(Object.assign({ k: 'Depreciación en 5 años · ' + nombreComb, ref: '55%', v: depN }, ARS));
+        rows.push(Object.assign({ k: 'Mantenimiento 5 años · eléctrico', v: mantE }, ARS));
+        rows.push(Object.assign({ k: 'Mantenimiento 5 años · ' + nombreComb, v: mantN }, ARS));
+        rows.push(Object.assign({ k: 'Patente 5 años · eléctrico', v: patE }, ARS));
+        rows.push(Object.assign({ k: 'Patente 5 años · ' + nombreComb, v: patN }, ARS));
+        rows.push(Object.assign({ k: 'Seguro 5 años · eléctrico', v: segE }, ARS));
+        rows.push(Object.assign({ k: 'Seguro 5 años · ' + nombreComb, v: segN }, ARS));
+        rows.push(Object.assign({ k: 'Costo total de propiedad · eléctrico', ref: '5 años', v: tcoE, extra: true }, ARS));
+        rows.push(Object.assign({ k: 'Costo total de propiedad · ' + nombreComb, ref: '5 años', v: tcoN, extra: true }, ARS));
+        rows.push(Object.assign({ k: 'CO2 al año con ' + nombreComb, v: co2Nafta }, KG));
+        rows.push(Object.assign({ k: 'CO2 al año del eléctrico', ref: 'red eléctrica', v: co2EV }, KG));
+        rows.push(
+          Object.assign(
+            { k: 'Reducción de emisiones', v: co2Nafta > 0 ? (1 - co2EV / co2Nafta) * 100 : 0 },
+            PCT
+          )
+        );
+
+        const ganaTco = difTco > 0 ? 'el eléctrico' : 'el de ' + nombreComb;
+        return {
+          total: H.ars(ahorro),
+          sub:
+            'Ahorro anual en energía · ' +
+            (repago > 0
+              ? 'el sobreprecio de ' + H.ars(sobreprecio) + ' se repaga en ' + repago.toFixed(1).replace('.', ',') + ' años'
+              : sobreprecio <= 0
+                ? 'el eléctrico ya sale igual o menos que el nafta'
+                : 'con estos precios el eléctrico no ahorra energía') +
+            ' · a 5 años gana ' + ganaTco + ' por ' + H.ars(Math.abs(difTco)) + ' de costo total',
+          rows: rows,
+          chart: [
+            { label: 'Nafta / gasoil', value: gastoNafta, tone: 'bad' },
+            { label: 'Eléctrico', value: gastoEV, tone: 'good' },
+            { label: 'GNC', value: gastoGnc, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ─────────────────────────── RAMA GNC ───────────────────────────
+      if (caso === 'gnc') {
+        const ahorro = gastoNafta - gastoGnc;
+        const ahorroMes = ahorro / 12;
+        const meses = equipo > 0 && ahorroMes > 0 ? equipo / ahorroMes : 0;
+
+        rows.push(Object.assign({ k: 'Litros de ' + nombreComb + ' al año', v: litros }, L));
+        rows.push(Object.assign({ k: 'm³ de GNC al año', ref: '1,3 m³ por litro', v: m3 }, M3));
+        rows.push(Object.assign({ k: 'Gasto mensual con ' + nombreComb, v: gastoNafta / 12 }, ARS));
+        rows.push(Object.assign({ k: 'Gasto mensual con GNC', v: gastoGnc / 12 }, ARS));
+        rows.push(Object.assign({ k: 'Gasto anual con ' + nombreComb, v: gastoNafta, extra: true }, ARS));
+        rows.push(Object.assign({ k: 'Gasto anual con GNC', v: gastoGnc, extra: true }, ARS));
+        rows.push(Object.assign({ k: 'Ahorro mensual', v: ahorroMes }, ARS));
+        rows.push(Object.assign({ k: 'Ahorro anual', v: ahorro, extra: true }, ARS));
+        rows.push(Object.assign({ k: 'Ahorro sobre el gasto en combustible', v: gastoNafta > 0 ? (ahorro / gastoNafta) * 100 : 0 }, PCT));
+        rows.push(Object.assign({ k: 'Costo del equipo instalado', v: equipo }, ARS));
+        rows.push(Object.assign({ k: 'Meses para amortizar el equipo', v: meses }, MESES));
+        rows.push(Object.assign({ k: 'Kilómetros hasta amortizarlo', v: (km / 12) * meses }, KM));
+        rows.push(Object.assign({ k: 'Costo por km con ' + nombreComb, v: gastoNafta / km }, ARS1));
+        rows.push(Object.assign({ k: 'Costo por km con GNC', v: gastoGnc / km }, ARS1));
+        rows.push(Object.assign({ k: 'CO2 al año con ' + nombreComb, v: co2Nafta }, KG));
+        rows.push(Object.assign({ k: 'CO2 al año con GNC', v: co2Gnc }, KG));
+        rows.push(Object.assign({ k: 'Reducción de emisiones', v: co2Nafta > 0 ? (1 - co2Gnc / co2Nafta) * 100 : 0 }, PCT));
+
+        return {
+          total: H.ars(ahorro),
+          sub:
+            'Ahorro anual con GNC · ' +
+            (meses > 0
+              ? 'el equipo de ' + H.ars(equipo) + ' se amortiza en ' + meses.toFixed(1).replace('.', ',') + ' meses'
+              : ahorro <= 0
+                ? 'con estos precios el GNC no ahorra: revisá el precio del m³'
+                : 'cargá el costo del equipo para ver la amortización') +
+            ' · ' + H.ars(gastoGnc / km) + ' por km contra ' + H.ars(gastoNafta / km),
+          rows: rows,
+          chart: [
+            { label: 'Nafta / gasoil', value: gastoNafta, tone: 'bad' },
+            { label: 'GNC', value: gastoGnc, tone: 'good' },
+            { label: 'Eléctrico', value: gastoEV, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ──────────────────────── RAMA SEGUIR CON NAFTA ────────────────────────
+      if (caso === 'nafta') {
+        rows.push(Object.assign({ k: 'Litros de ' + nombreComb + ' al año', v: litros }, L));
+        rows.push(Object.assign({ k: 'Gasto mensual en combustible', v: gastoNafta / 12, extra: true }, ARS));
+        rows.push(Object.assign({ k: 'Gasto anual en combustible', v: gastoNafta, extra: true }, ARS));
+        rows.push(Object.assign({ k: 'Gasto en 5 años', v: gastoNafta * P.ANOS }, ARS));
+        rows.push(Object.assign({ k: 'Costo por km', v: gastoNafta / km }, ARS1));
+        rows.push(Object.assign({ k: 'Costo de cada 100 km', v: (gastoNafta / km) * 100 }, ARS));
+        rows.push(Object.assign({ k: 'Lo que gastarías con GNC', v: gastoGnc }, ARS));
+        rows.push(Object.assign({ k: 'Ahorro anual si pasaras a GNC', v: gastoNafta - gastoGnc, extra: true }, ARS));
+        rows.push(Object.assign({ k: 'Lo que gastarías con un eléctrico', v: gastoEV }, ARS));
+        rows.push(Object.assign({ k: 'Ahorro anual si pasaras a eléctrico', v: gastoNafta - gastoEV, extra: true }, ARS));
+        rows.push(Object.assign({ k: 'CO2 al año', v: co2Nafta }, KG));
+        rows.push(Object.assign({ k: 'Emisión por kilómetro', v: gkmNafta }, GKM));
+
+        return {
+          total: H.ars(gastoNafta),
+          sub:
+            'Gasto anual en ' + nombreComb + ' · ' + H.ars(gastoNafta / 12) + ' por mes · ' +
+            H.ars(gastoNafta / km) + ' por km · dejás sobre la mesa ' +
+            H.ars(Math.max(0, gastoNafta - gastoGnc)) + ' al año contra GNC y ' +
+            H.ars(Math.max(0, gastoNafta - gastoEV)) + ' contra un eléctrico',
+          rows: rows,
+          chart: [
+            { label: 'Nafta / gasoil', value: gastoNafta, tone: 'bad' },
+            { label: 'GNC', value: gastoGnc, tone: 'warn' },
+            { label: 'Eléctrico', value: gastoEV, tone: 'good' },
+          ],
+        };
+      }
+
+      // ────────────────────────── RAMA HUELLA DE CO2 ──────────────────────────
+      const ton = co2Nafta / 1000;
+      const arboles = co2Nafta / P.ARBOL_KG;
+      const nivel = franja(gkmNafta);
+
+      rows.push(Object.assign({ k: 'Litros de ' + nombreComb + ' al año', v: litros }, L));
+      rows.push(
+        Object.assign(
+          { k: 'Emisión por kilómetro', ref: factorComb.toFixed(2).replace('.', ',') + ' kg por litro', v: gkmNafta, extra: true },
+          GKM
+        )
+      );
+      rows.push(Object.assign({ k: 'CO2 al año', v: co2Nafta, extra: true }, KG));
+      rows.push(Object.assign({ k: 'CO2 al año en toneladas', v: ton }, TON));
+      rows.push(Object.assign({ k: 'Árboles para absorberlo en un año', ref: '22 kg por árbol', v: arboles }, ARB));
+      rows.push(Object.assign({ k: 'CO2 al año si usaras GNC', v: co2Gnc }, KG));
+      rows.push(Object.assign({ k: 'Emisión por km con GNC', v: gkmGnc }, GKM));
+      rows.push(Object.assign({ k: 'CO2 al año si fuera eléctrico', ref: 'red eléctrica', v: co2EV }, KG));
+      rows.push(Object.assign({ k: 'Emisión por km del eléctrico', v: gkmEV }, GKM));
+      rows.push(Object.assign({ k: 'Reducción pasando a GNC', v: co2Nafta > 0 ? (1 - co2Gnc / co2Nafta) * 100 : 0 }, PCT));
+      rows.push(Object.assign({ k: 'Reducción pasando a eléctrico', v: co2Nafta > 0 ? (1 - co2EV / co2Nafta) * 100 : 0 }, PCT));
+
+      return {
+        total: Math.round(co2Nafta).toLocaleString('es-AR') + ' kg',
+        sub:
+          Math.round(gkmNafta).toLocaleString('es-AR') + ' g CO2/km — ' + nivel.toLowerCase() +
+          ' · ' + ton.toFixed(2).replace('.', ',') + ' toneladas al año · harían falta ' +
+          Math.round(arboles).toLocaleString('es-AR') + ' árboles trabajando un año entero para absorberlo',
+        rows: rows,
+        format: 'unit',
+        unit: 'kg CO2',
+        decimals: 0,
+        chart: [
+          { label: 'Nafta / gasoil', value: co2Nafta, tone: 'bad' },
+          { label: 'GNC', value: co2Gnc, tone: 'warn' },
+          { label: 'Eléctrico', value: co2EV, tone: 'good' },
+        ],
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,341 @@
+---
+/**
+ * Hub de decisión — "¿Cómo trabajo con puntos, rectas y vectores en el plano?"
+ * Reemplaza 4 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Sigue el patrón de matematica/regla-de-tres.astro: la página sólo aporta los
+ * datos (src/lib/hubs/geometria-analitica.ts) y su compute(). El chrome, el CSS
+ * y el runtime viven en DecisionHub.astro y no se tocan.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub } from '../../lib/hubs/geometria-analitica';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline>
+  (function () {
+    const H = window.HC_HUB;
+
+    /**
+     * No hay plata en ninguna rama y el default de HubRow es 'ars'. Toda fila
+     * declara su formato: 'unit' para longitudes (u) y grados, 'plain' para
+     * coordenadas, pendientes, productos escalares y componentes.
+     */
+    const U = { format: 'unit', unit: 'u', decimals: 4 };
+    const GRA = { format: 'unit', unit: '°', decimals: 2 };
+    const PLAIN = { format: 'plain', decimals: 2 };
+    const PLAIN4 = { format: 'plain', decimals: 4 };
+
+    /**
+     * Redondeo anti ruido de punto flotante: si el número quedó a menos de
+     * 1e-10 de un entero, es ese entero. Sin esto, la distancia de (0,0) a
+     * (3,4) puede salir 4,999999999999999 y el ángulo entre dos vectores
+     * perpendiculares, 89,99999999999999.
+     */
+    const S = (n) => (isFinite(n) && Math.abs(n - Math.round(n)) < 1e-10 ? Math.round(n) : n);
+
+    const R2D = 180 / Math.PI;
+
+    /**
+     * Arma "y = mx + b" legible. Sin esto una recta horizontal se imprime
+     * "y = 0x + 5" y una que pasa por el origen, "y = -2x + 0".
+     */
+    const ecuacionYmxb = (m, b) => {
+      if (m === 0) return 'y = ' + fmt(b);
+      // El signo va con el menos tipográfico (−), no con el guión ASCII.
+      const mTxt = m === 1 ? '' : m === -1 ? '−' : fmt(m).replace(/^-/, '−');
+      const cuerpo = 'y = ' + mTxt + 'x';
+      if (b === 0) return cuerpo;
+      return cuerpo + (b < 0 ? ' − ' + fmt(Math.abs(b)) : ' + ' + fmt(b));
+    };
+
+    const fmt = (n) => {
+      if (!isFinite(n)) return '—';
+      const abs = Math.abs(n);
+      const dec = abs >= 1000 ? 0 : abs >= 1 ? 2 : 4;
+      return Number(n.toFixed(dec)).toLocaleString('es-AR', { maximumFractionDigits: dec });
+    };
+
+    const err = (msg, k, v) => ({
+      total: '—',
+      sub: msg,
+      rows: [{ k: k, v: v, ...PLAIN }],
+      chart: [],
+      format: 'plain',
+      decimals: 2,
+    });
+
+    H.onCompute(function (v, kase) {
+      const x1 = H.num(v.x1), y1 = H.num(v.y1), z1 = H.num(v.z1);
+      const x2 = H.num(v.x2), y2 = H.num(v.y2), z2 = H.num(v.z2);
+      const m = H.num(v.m);
+      const id = (kase && kase.id) || 'distancia';
+
+      const dx = S(x2 - x1), dy = S(y2 - y1), dz = S(z2 - z1);
+      const es3d = z1 !== 0 || z2 !== 0;
+      // Separador ';' y no ',': con coma decimal rioplatense "(2,5, 2,5)" es
+      // ilegible. "(2,5; 2,5)" se lee sin ambigüedad.
+      const pA = es3d ? '(' + fmt(x1) + '; ' + fmt(y1) + '; ' + fmt(z1) + ')' : '(' + fmt(x1) + '; ' + fmt(y1) + ')';
+      const pB = es3d ? '(' + fmt(x2) + '; ' + fmt(y2) + '; ' + fmt(z2) + ')' : '(' + fmt(x2) + '; ' + fmt(y2) + ')';
+
+      // ---- 1) DISTANCIA entre dos puntos ---------------------------------
+      // d = √(Δx² + Δy² [+ Δz²])
+      if (id === 'distancia') {
+        const suma = S(dx * dx + dy * dy + (es3d ? dz * dz : 0));
+        const d = S(Math.sqrt(suma));
+        if (d === 0) return err('Los dos puntos son el mismo: la distancia es 0 y no hay segmento.', 'Distancia', 0);
+        const rows = [
+          { k: 'Punto A — x₁', v: x1, ...PLAIN },
+          { k: 'Punto A — y₁', v: y1, ...PLAIN },
+          { k: 'Punto B — x₂', v: x2, ...PLAIN },
+          { k: 'Punto B — y₂', v: y2, ...PLAIN },
+        ];
+        if (es3d) {
+          rows.push({ k: 'Punto A — z₁', v: z1, ...PLAIN });
+          rows.push({ k: 'Punto B — z₂', v: z2, ...PLAIN });
+        }
+        rows.push({ k: 'Δx = x₂ − x₁', ref: 'paso 1: los deltas', v: dx, ...PLAIN });
+        rows.push({ k: 'Δy = y₂ − y₁', ref: 'paso 1', v: dy, ...PLAIN });
+        if (es3d) rows.push({ k: 'Δz = z₂ − z₁', ref: 'paso 1', v: dz, ...PLAIN });
+        rows.push({ k: 'Δx²', ref: 'paso 2: los cuadrados', v: S(dx * dx), ...PLAIN });
+        rows.push({ k: 'Δy²', ref: 'paso 2', v: S(dy * dy), ...PLAIN });
+        if (es3d) rows.push({ k: 'Δz²', ref: 'paso 2', v: S(dz * dz), ...PLAIN });
+        rows.push({ k: 'Suma bajo la raíz', ref: 'paso 3', v: suma, ...PLAIN });
+        rows.push({ k: 'Raíz cuadrada → distancia', ref: 'paso 4: el resultado', v: d, extra: true, ...U });
+        rows.push({ k: 'Verificación: distancia² (tiene que dar la suma del paso 3)', ref: 'chequeo', v: S(d * d), ...PLAIN4 });
+        return {
+          total: fmt(d) + ' u',
+          sub:
+            'Entre A ' + pA + ' y B ' + pB + ' hay ' + fmt(d) + ' unidades ' +
+            (es3d ? 'en el espacio' : 'en el plano') + ' · d = √(Δx² + Δy²' + (es3d ? ' + Δz²' : '') + ')',
+          rows: rows,
+          format: 'plain',
+          decimals: 4,
+          chart: [
+            { label: '|Δx| = ' + fmt(Math.abs(dx)), value: Math.abs(dx), tone: 'prop' },
+            { label: '|Δy| = ' + fmt(Math.abs(dy)), value: Math.abs(dy), tone: 'good' },
+            { label: 'Distancia = ' + fmt(d), value: Math.abs(d), tone: 'main' },
+          ],
+        };
+      }
+
+      // ---- 2) PUNTO MEDIO --------------------------------------------------
+      // M = ((x₁+x₂)/2, (y₁+y₂)/2 [, (z₁+z₂)/2])
+      if (id === 'punto-medio') {
+        const xm = S((x1 + x2) / 2), ym = S((y1 + y2) / 2), zm = S((z1 + z2) / 2);
+        const d = S(Math.sqrt(dx * dx + dy * dy + (es3d ? dz * dz : 0)));
+        const pM = es3d ? '(' + fmt(xm) + '; ' + fmt(ym) + '; ' + fmt(zm) + ')' : '(' + fmt(xm) + '; ' + fmt(ym) + ')';
+        const rows = [
+          { k: 'x₁ + x₂', ref: 'paso 1: sumar las abscisas', v: S(x1 + x2), ...PLAIN },
+          { k: 'Dividido 2 → x del punto medio', ref: 'paso 2', v: xm, extra: true, ...PLAIN4 },
+          { k: 'y₁ + y₂', ref: 'paso 1: sumar las ordenadas', v: S(y1 + y2), ...PLAIN },
+          { k: 'Dividido 2 → y del punto medio', ref: 'paso 2', v: ym, extra: true, ...PLAIN4 },
+        ];
+        if (es3d) {
+          rows.push({ k: 'z₁ + z₂', ref: 'paso 1: sumar las cotas', v: S(z1 + z2), ...PLAIN });
+          rows.push({ k: 'Dividido 2 → z del punto medio', ref: 'paso 2', v: zm, extra: true, ...PLAIN4 });
+        }
+        rows.push({ k: 'Distancia total A-B', ref: 'dato derivado', v: d, ...U });
+        rows.push({ k: 'Verificación: distancia de A al punto medio (tiene que ser la mitad)', ref: 'chequeo', v: S(d / 2), ...U });
+        if (dx !== 0) rows.push({ k: 'Pendiente del segmento (Δy ÷ Δx)', ref: 'dato derivado', v: S(dy / dx), ...PLAIN4 });
+        return {
+          total: pM,
+          sub:
+            'El punto medio entre A ' + pA + ' y B ' + pB + ' es ' + pM +
+            (dx === 0 ? ' · el segmento es vertical, la pendiente queda indefinida' : ' · pendiente ' + fmt(dy / dx)),
+          rows: rows,
+          format: 'plain',
+          decimals: 4,
+          chart: [
+            { label: 'x del punto medio = ' + fmt(xm), value: Math.abs(xm), tone: 'main' },
+            { label: 'y del punto medio = ' + fmt(ym), value: Math.abs(ym), tone: 'prop' },
+            { label: 'Distancia A-B = ' + fmt(d), value: Math.abs(d), tone: 'good' },
+          ],
+        };
+      }
+
+      // ---- 3) RECTA por dos puntos ------------------------------------------
+      // m = Δy/Δx · b = y₁ − m·x₁
+      if (id === 'recta-dos-puntos') {
+        if (dx === 0 && dy === 0) return err('Los dos puntos son el mismo: por un solo punto pasan infinitas rectas.', 'Δx', 0);
+        if (dx === 0) {
+          return {
+            total: 'x = ' + fmt(x1),
+            sub:
+              'Los dos puntos tienen la misma abscisa: la recta es VERTICAL. Su ecuación es x = ' + fmt(x1) +
+              ' y la pendiente queda indefinida (Δx = 0). No se puede escribir como y = mx + b.',
+            rows: [
+              { k: 'x₁ = x₂ — la abscisa común', ref: 'la recta vertical', v: x1, extra: true, ...PLAIN4 },
+              { k: 'Δx = x₂ − x₁', ref: 'el denominador de la pendiente', v: 0, ...PLAIN },
+              { k: 'Δy = y₂ − y₁', ref: 'el numerador', v: dy, ...PLAIN },
+              { k: 'Corta al eje X en', ref: 'el punto (x₁, 0)', v: x1, ...PLAIN4 },
+            ],
+            format: 'plain',
+            decimals: 4,
+            chart: [
+              { label: 'Δy = ' + fmt(dy), value: Math.abs(dy), tone: 'main' },
+              { label: 'Δx = 0 (vertical)', value: 0, tone: 'warn' },
+            ],
+          };
+        }
+        const pend = S(dy / dx);
+        const b = S(y1 - pend * x1);
+        const eq = ecuacionYmxb(pend, b);
+        const rows = [
+          { k: 'Δy = y₂ − y₁', ref: 'paso 1: el numerador', v: dy, ...PLAIN },
+          { k: 'Δx = x₂ − x₁', ref: 'paso 1: el denominador', v: dx, ...PLAIN },
+          { k: 'Pendiente m = Δy ÷ Δx', ref: 'paso 2', v: pend, extra: true, ...PLAIN4 },
+          { k: 'm × x₁', ref: 'paso 3', v: S(pend * x1), ...PLAIN4 },
+          { k: 'Ordenada al origen b = y₁ − m·x₁', ref: 'paso 4', v: b, extra: true, ...PLAIN4 },
+          { k: 'Corta al eje Y en y =', ref: 'el punto (0, b)', v: b, ...PLAIN4 },
+        ];
+        if (pend !== 0) rows.push({ k: 'Corta al eje X en x =', ref: 'el punto (−b/m, 0)', v: S(-b / pend), ...PLAIN4 });
+        rows.push({ k: 'Verificación: m·x₁ + b (tiene que dar y₁)', ref: 'chequeo', v: S(pend * x1 + b), ...PLAIN4 });
+        rows.push({ k: 'Ángulo de inclinación (en grados)', ref: 'arcotangente de m', v: S(Math.atan(pend) * R2D), ...GRA });
+        return {
+          total: eq,
+          sub:
+            'Por A ' + pA + ' y B ' + pB + ' pasa la recta ' + eq + ' · pendiente ' + fmt(pend) +
+            (pend > 0 ? ' (sube)' : pend < 0 ? ' (baja)' : ' (horizontal)'),
+          rows: rows,
+          format: 'plain',
+          decimals: 4,
+          chart: [
+            { label: '|Δx| = ' + fmt(Math.abs(dx)), value: Math.abs(dx), tone: 'prop' },
+            { label: '|Δy| = ' + fmt(Math.abs(dy)), value: Math.abs(dy), tone: 'good' },
+            { label: '|Pendiente| = ' + fmt(Math.abs(pend)), value: Math.abs(pend), tone: 'main' },
+          ],
+        };
+      }
+
+      // ---- 4) RECTA por punto y pendiente -------------------------------------
+      // y − y₁ = m(x − x₁)  →  b = y₁ − m·x₁
+      if (id === 'recta-punto-pendiente') {
+        const b = S(y1 - m * x1);
+        const eq = ecuacionYmxb(m, b);
+        const rows = [
+          { k: 'Punto — x₁', v: x1, ...PLAIN4 },
+          { k: 'Punto — y₁', v: y1, ...PLAIN4 },
+          { k: 'Pendiente m (campo m)', ref: 'el dato que te dan', v: m, ...PLAIN4 },
+          { k: 'm × x₁', ref: 'paso 1', v: S(m * x1), ...PLAIN4 },
+          { k: 'Ordenada al origen b = y₁ − m·x₁', ref: 'paso 2: el despeje', v: b, extra: true, ...PLAIN4 },
+          { k: 'Corta al eje Y en y =', ref: 'el punto (0, b)', v: b, ...PLAIN4 },
+        ];
+        if (m !== 0) rows.push({ k: 'Corta al eje X en x =', ref: 'el punto (−b/m, 0)', v: S(-b / m), ...PLAIN4 });
+        rows.push({ k: 'Verificación: m·x₁ + b (tiene que dar y₁)', ref: 'chequeo', v: S(m * x1 + b), ...PLAIN4 });
+        rows.push({ k: 'Ángulo de inclinación (en grados)', ref: 'arcotangente de m', v: S(Math.atan(m) * R2D), ...GRA });
+        rows.push({ k: 'Pendiente expresada en porcentaje', ref: 'm × 100 · como la señal de una ruta', v: S(m * 100), ...PLAIN });
+        return {
+          total: eq,
+          sub:
+            'Por el punto (' + fmt(x1) + ', ' + fmt(y1) + ') con pendiente ' + fmt(m) + ' pasa la recta ' + eq +
+            ' · forma punto-pendiente: y − ' + fmt(y1) + ' = ' + fmt(m) + '(x − ' + fmt(x1) + ')',
+          rows: rows,
+          format: 'plain',
+          decimals: 4,
+          chart: [
+            { label: '|Pendiente| = ' + fmt(Math.abs(m)), value: Math.abs(m), tone: 'main' },
+            { label: '|Ordenada al origen| = ' + fmt(Math.abs(b)), value: Math.abs(b), tone: 'prop' },
+          ],
+        };
+      }
+
+      // ---- 5) VECTORES ---------------------------------------------------------
+      // A = (x₁,y₁,z₁) · B = (x₂,y₂,z₂)
+      const dot = S(x1 * x2 + y1 * y2 + z1 * z2);
+      const modA = S(Math.sqrt(x1 * x1 + y1 * y1 + z1 * z1));
+      const modB = S(Math.sqrt(x2 * x2 + y2 * y2 + z2 * z2));
+      if (modA === 0 || modB === 0) {
+        return err('Alguno de los dos vectores es el vector nulo: no tiene dirección y el ángulo no está definido.', 'Módulo más chico', Math.min(modA, modB));
+      }
+      const cosT = Math.max(-1, Math.min(1, dot / (modA * modB)));
+      const theta = S(Math.acos(cosT) * R2D);
+      // Producto vectorial: en 3D es un vector; en 2D queda su única componente.
+      const cx = S(y1 * z2 - z1 * y2);
+      const cy = S(z1 * x2 - x1 * z2);
+      const cz = S(x1 * y2 - y1 * x2);
+      const modCruz = S(Math.sqrt(cx * cx + cy * cy + cz * cz));
+      const rows = [
+        { k: 'Vector A — componente x', v: x1, ...PLAIN4 },
+        { k: 'Vector A — componente y', v: y1, ...PLAIN4 },
+        { k: 'Vector B — componente x', v: x2, ...PLAIN4 },
+        { k: 'Vector B — componente y', v: y2, ...PLAIN4 },
+      ];
+      if (es3d) {
+        rows.push({ k: 'Vector A — componente z', v: z1, ...PLAIN4 });
+        rows.push({ k: 'Vector B — componente z', v: z2, ...PLAIN4 });
+      }
+      rows.push({ k: 'Módulo |A| = √(x² + y²' + (es3d ? ' + z²' : '') + ')', ref: 'paso 1: la longitud de A', v: modA, extra: true, ...U });
+      rows.push({ k: 'Módulo |B|', ref: 'paso 1: la longitud de B', v: modB, extra: true, ...U });
+      rows.push({ k: 'Producto escalar A · B = x₁x₂ + y₁y₂' + (es3d ? ' + z₁z₂' : ''), ref: 'paso 2: devuelve un número', v: dot, extra: true, ...PLAIN4 });
+      rows.push({ k: 'cos θ = (A · B) ÷ (|A| · |B|)', ref: 'paso 3', v: S(cosT), ...PLAIN4 });
+      rows.push({ k: 'Ángulo entre A y B (en grados)', ref: 'paso 4: arcocoseno', v: theta, extra: true, ...GRA });
+      rows.push({ k: 'Suma A + B — componente x', ref: 'componente a componente', v: S(x1 + x2), ...PLAIN4 });
+      rows.push({ k: 'Suma A + B — componente y', ref: 'componente a componente', v: S(y1 + y2), ...PLAIN4 });
+      if (es3d) rows.push({ k: 'Suma A + B — componente z', ref: 'componente a componente', v: S(z1 + z2), ...PLAIN4 });
+      rows.push({ k: 'Resta A − B — componente x', ref: 'el vector que va de B a A', v: S(x1 - x2), ...PLAIN4 });
+      rows.push({ k: 'Resta A − B — componente y', ref: 'el vector que va de B a A', v: S(y1 - y2), ...PLAIN4 });
+      rows.push({ k: 'Módulo del producto vectorial |A × B|', ref: 'el área del paralelogramo que forman', v: modCruz, ...PLAIN4 });
+      rows.push({ k: 'Versor de A — componente x', ref: 'A dividido su módulo: largo 1', v: S(x1 / modA), ...PLAIN4 });
+      rows.push({ k: 'Versor de A — componente y', ref: 'A dividido su módulo', v: S(y1 / modA), ...PLAIN4 });
+      return {
+        total: fmt(theta) + '°',
+        sub:
+          'A ' + pA + ' y B ' + pB + ': |A| = ' + fmt(modA) + ', |B| = ' + fmt(modB) + ', A · B = ' + fmt(dot) +
+          ' y forman ' + fmt(theta) + '°' +
+          (dot === 0 ? ' · el producto escalar da 0, así que son PERPENDICULARES' : ''),
+        rows: rows,
+        format: 'plain',
+        decimals: 4,
+        chart: [
+          { label: 'Módulo de A = ' + fmt(modA), value: Math.abs(modA), tone: 'prop' },
+          { label: 'Módulo de B = ' + fmt(modB), value: Math.abs(modB), tone: 'good' },
+          { label: 'Ángulo entre ellos = ' + fmt(theta) + '°', value: Math.abs(theta), tone: 'main' },
+        ],
+      };
+    });
+  })();
+</script>

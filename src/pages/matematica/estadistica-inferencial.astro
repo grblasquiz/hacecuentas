@@ -1,0 +1,335 @@
+---
+/**
+ * Hub de decisión — "¿Puedo confiar en lo que me dice esta muestra?"
+ * Reemplaza 4 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Sigue el patrón de matematica/regla-de-tres.astro: la página sólo aporta los
+ * datos (src/lib/hubs/estadistica-inferencial.ts) y su compute(). El chrome, el
+ * CSS y el runtime viven en DecisionHub.astro y no se tocan.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub } from '../../lib/hubs/estadistica-inferencial';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Nada de plata acá: el default de HubRow es 'ars', así que TODA fila
+    // declara formato explícito.
+    const PLAIN = { format: 'plain', decimals: 2 };
+    const PLAIN0 = { format: 'plain', decimals: 0 };
+    const PLAIN4 = { format: 'plain', decimals: 4 };
+    const PLAIN6 = { format: 'plain', decimals: 6 };
+    const PCT = { format: 'unit', unit: '%', decimals: 2 };
+    const CASOS = { format: 'unit', unit: 'casos', decimals: 0 };
+
+    const snap = (n) => {
+      if (!isFinite(n)) return n;
+      const r = Math.round(n);
+      if (Math.abs(n - r) < 1e-10) return r === 0 ? 0 : r;
+      return n;
+    };
+
+    const fmt = (n) => {
+      if (!isFinite(n)) return '—';
+      const v = snap(n);
+      const abs = Math.abs(v);
+      const dec = Number.isInteger(v) ? 0 : abs >= 1000 ? 2 : abs >= 1 ? 4 : 6;
+      return Number(v.toFixed(dec)).toLocaleString('es-AR', { maximumFractionDigits: dec });
+    };
+
+    const err = (msg, k, v) => ({
+      total: '—',
+      sub: msg,
+      rows: [{ k: k, v: v, ...PLAIN }],
+      chart: [],
+      format: 'plain',
+      decimals: 2,
+    });
+
+    const parseLista = (s) =>
+      String(s || '')
+        .split(/[,;\s]+/)
+        .map((t) => t.trim())
+        .filter((t) => t !== '')
+        .map(Number)
+        .filter((n) => !isNaN(n));
+
+    // Mismos z que la calculadora original.
+    const Z = { '90': 1.6449, '95': 1.96, '99': 2.5758 };
+
+    /**
+     * Valor crítico t de Student por expansión de Cornish-Fisher sobre z.
+     * Error < 1e-3 para gl ≥ 3; se usa sólo en la rama ic-t.
+     */
+    const tCrit = (z, gl) => {
+      const g1 = (Math.pow(z, 3) + z) / 4;
+      const g2 = (5 * Math.pow(z, 5) + 16 * Math.pow(z, 3) + 3 * z) / 96;
+      const g3 = (3 * Math.pow(z, 7) + 19 * Math.pow(z, 5) + 17 * Math.pow(z, 3) - 15 * z) / 384;
+      const g4 = (79 * Math.pow(z, 9) + 776 * Math.pow(z, 7) + 1482 * Math.pow(z, 5) - 1920 * Math.pow(z, 3) - 945 * z) / 92160;
+      return z + g1 / gl + g2 / (gl * gl) + g3 / (gl * gl * gl) + g4 / (gl * gl * gl * gl);
+    };
+
+    /** CDF normal estándar — Abramowitz & Stegun 26.2.17, igual que la calc vieja. */
+    const normalCDF = (z) => {
+      const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741, a4 = -1.453152027, a5 = 1.061405429;
+      const p = 0.3275911;
+      const x = Math.abs(z) / Math.sqrt(2);
+      const t = 1 / (1 + p * x);
+      const y = 1 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+      return 0.5 * (1 + (z < 0 ? -1 : 1) * y);
+    };
+
+    /** p-valor de χ² con 1 grado de libertad: P(χ² > x) = 2 × (1 − Φ(√x)). */
+    const chi2p1gl = (c) => 2 * (1 - normalCDF(Math.sqrt(Math.max(0, c))));
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'muestra';
+      const confKey = Z[String(v.confianza)] ? String(v.confianza) : '95';
+      const z = Z[confKey];
+
+      // ---- 1) Tamaño de muestra ----------------------------------------
+      // n₀ = z²·p·(1−p)/e² ;  corrección finita: n = n₀/(1+(n₀−1)/N)
+      if (id === 'muestra') {
+        const e = H.num(v.margen) / 100;
+        const p = H.num(v.proporcion) / 100;
+        const N = Math.max(0, H.num(v.poblacion));
+        if (!(e > 0) || e >= 1) return err('El margen de error tiene que estar entre 0,1% y 50%.', 'Margen cargado (%)', H.num(v.margen));
+        if (!(p > 0) || p >= 1) return err('La proporción esperada tiene que estar entre 1% y 99%.', 'Proporción cargada (%)', H.num(v.proporcion));
+        const n0 = Math.ceil((z * z * p * (1 - p)) / (e * e));
+        const nFinal = N > 0 ? Math.ceil(n0 / (1 + (n0 - 1) / N)) : n0;
+        const aEnviar = Math.ceil(nFinal / 0.6);
+        const rows = [
+          { k: 'Nivel de confianza', ref: 'valor crítico z = ' + fmt(z), v: Number(confKey), ...PCT },
+          { k: 'Margen de error deseado (e)', v: H.num(v.margen), ...PCT },
+          { k: 'Proporción esperada (p)', ref: '50% es el escenario más exigente', v: H.num(v.proporcion), ...PCT },
+          { k: 'z² ', ref: 'paso 1', v: snap(z * z), ...PLAIN4 },
+          { k: 'p × (1 − p) → la variabilidad máxima', ref: 'paso 2', v: snap(p * (1 - p)), ...PLAIN4 },
+          { k: 'e² ', ref: 'paso 3: acá se paga la precisión', v: snap(e * e), ...PLAIN6 },
+          { k: 'z² × p(1−p) ÷ e² → n₀', ref: 'paso 4: muestra sin corregir', v: n0, extra: true, ...CASOS },
+        ];
+        if (N > 0) {
+          rows.push({ k: 'Población total (N)', v: N, ...CASOS });
+          rows.push({ k: 'n₀ ÷ (1 + (n₀ − 1) ÷ N) → n corregido', ref: 'paso 5: población finita', v: nFinal, extra: true, ...CASOS });
+          rows.push({ k: 'La muestra sobre el total de la población', ref: 'para dimensionar', v: snap((nFinal / N) * 100), ...PCT });
+        }
+        rows.push({ k: 'Envíos necesarios con 60% de tasa de respuesta', ref: 'n ÷ 0,6', v: aEnviar, ...CASOS });
+        rows.push({ k: 'Muestra si bajaras el margen a la mitad', ref: 'la precisión se paga al cuadrado', v: Math.ceil((z * z * p * (1 - p)) / ((e / 2) * (e / 2))), ...CASOS });
+        return {
+          total: fmt(nFinal),
+          sub:
+            'Necesitás ' + fmt(nFinal) + ' respuestas válidas para un margen de ±' + fmt(H.num(v.margen)) +
+            '% al ' + confKey + '% de confianza' + (N > 0 && nFinal < n0 ? ' (la población finita bajó la muestra desde ' + fmt(n0) + ')' : '') +
+            '. Con una tasa de respuesta del 60%, contactá a ' + fmt(aEnviar) + ' personas.',
+          rows: rows,
+          format: 'plain',
+          decimals: 0,
+          chart: [
+            { label: 'Muestra necesaria', value: nFinal, tone: 'main' },
+            { label: 'Envíos al 60% de respuesta', value: aEnviar, tone: 'prop' },
+          ],
+        };
+      }
+
+      // ---- 2 y 3) Intervalo de confianza para la media -------------------
+      // IC = x̄ ± c · s/√n, con c = z (muestra grande) o t (muestra chica)
+      if (id === 'ic-z' || id === 'ic-t') {
+        const xbar = H.num(v.media);
+        const s = H.num(v.desvio);
+        const n = Math.floor(H.num(v.n));
+        if (!(s > 0)) return err('El desvío estándar tiene que ser mayor que 0.', 'Desvío cargado', s);
+        if (!(n >= 2)) return err('El tamaño de muestra tiene que ser al menos 2.', 'n cargado', n);
+        const usaT = id === 'ic-t';
+        const gl = n - 1;
+        const crit = usaT ? tCrit(z, gl) : z;
+        const se = s / Math.sqrt(n);
+        const me = crit * se;
+        const lo = xbar - me;
+        const hi = xbar + me;
+        const rows = [
+          { k: 'Media de la muestra (x̄)', v: xbar, ...PLAIN },
+          { k: 'Desvío estándar', ref: usaT ? 's, estimado de la muestra' : 'σ conocido o muestra grande', v: s, ...PLAIN },
+          { k: 'n — tamaño de la muestra', v: n, ...CASOS },
+          { k: '√n', ref: 'paso 1', v: snap(Math.sqrt(n)), ...PLAIN4 },
+          { k: 'Error estándar = desvío ÷ √n', ref: 'paso 2: cuánto varía el promedio muestral', v: snap(se), extra: true, ...PLAIN4 },
+        ];
+        if (usaT) {
+          rows.push({ k: 'Grados de libertad (n − 1)', v: gl, ...PLAIN0 });
+          rows.push({ k: 'Valor crítico t al ' + confKey + '%', ref: 'paso 3 · más ancho que z por tener pocos datos', v: snap(crit), extra: true, ...PLAIN4 });
+          rows.push({ k: 'El z equivalente, para comparar', ref: 'usarlo acá subestimaría el intervalo', v: z, ...PLAIN4 });
+          rows.push({ k: 'Cuánto más ancho queda el intervalo con t', ref: '(t ÷ z − 1) × 100', v: snap((crit / z - 1) * 100), ...PCT });
+        } else {
+          rows.push({ k: 'Valor crítico z al ' + confKey + '%', ref: 'paso 3', v: z, ...PLAIN4 });
+          if (n < 30) {
+            rows.push({ k: 'Aviso: con n < 30 y desvío estimado corresponde t', ref: 'cambiá de rama · t sería', v: snap(tCrit(z, gl)), ...PLAIN4 });
+          }
+        }
+        rows.push({ k: 'Margen de error = crítico × error estándar', ref: 'paso 4', v: snap(me), extra: true, ...PLAIN4 });
+        rows.push({ k: 'Límite inferior (x̄ − margen)', ref: 'paso 5', v: snap(lo), ...PLAIN4 });
+        rows.push({ k: 'Límite superior (x̄ + margen)', ref: 'paso 5', v: snap(hi), ...PLAIN4 });
+        rows.push({ k: 'Ancho total del intervalo', ref: '2 × margen', v: snap(2 * me), ...PLAIN4 });
+        rows.push({ k: 'Muestra que necesitarías para la mitad de margen', ref: 'la precisión crece con √n', v: n * 4, ...CASOS });
+        return {
+          total: '[' + fmt(lo) + ' ; ' + fmt(hi) + ']',
+          sub:
+            'Con ' + confKey + '% de confianza, la media de la población está entre ' + fmt(lo) + ' y ' + fmt(hi) +
+            ' · margen ±' + fmt(me) + ' usando ' + (usaT ? 't = ' + fmt(crit) + ' con ' + gl + ' grados de libertad' : 'z = ' + fmt(z)),
+          rows: rows,
+          format: 'plain',
+          decimals: 4,
+          chart: [
+            { label: 'Límite inferior', value: Math.abs(snap(lo)), tone: 'warn' },
+            { label: 'Media muestral', value: Math.abs(xbar), tone: 'main' },
+            { label: 'Límite superior', value: Math.abs(snap(hi)), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ---- 4) Correlación de Pearson -------------------------------------
+      if (id === 'pearson') {
+        const X = parseLista(v.datosX);
+        const Y = parseLista(v.datosY);
+        if (X.length !== Y.length) return err('X e Y tienen que tener la misma cantidad de datos: leí ' + X.length + ' y ' + Y.length + '.', 'Diferencia de longitud', Math.abs(X.length - Y.length));
+        if (X.length < 3) return err('Hacen falta al menos 3 pares de datos para calcular la correlación.', 'Pares leídos', X.length);
+        const nn = X.length;
+        const mx = X.reduce((a, b) => a + b, 0) / nn;
+        const my = Y.reduce((a, b) => a + b, 0) / nn;
+        let sxy = 0, sx2 = 0, sy2 = 0;
+        for (let k = 0; k < nn; k++) {
+          const dx = X[k] - mx;
+          const dy = Y[k] - my;
+          sxy += dx * dy;
+          sx2 += dx * dx;
+          sy2 += dy * dy;
+        }
+        if (sx2 === 0 || sy2 === 0) return err('Una de las dos variables no tiene variabilidad: todos sus valores son iguales.', 'Pares leídos', nn);
+        const r = snap(sxy / Math.sqrt(sx2 * sy2));
+        const r2 = snap(r * r);
+        const ar = Math.abs(r);
+        const dir = r >= 0 ? 'positiva' : 'negativa';
+        const fuerza = ar < 0.1 ? 'sin correlación lineal' : ar < 0.3 ? 'correlación ' + dir + ' débil' : ar < 0.5 ? 'correlación ' + dir + ' moderada-débil' : ar < 0.7 ? 'correlación ' + dir + ' moderada' : ar < 0.9 ? 'correlación ' + dir + ' fuerte' : 'correlación ' + dir + ' muy fuerte';
+        // Pendiente de la recta de regresión, que es la lectura práctica de r.
+        const pend = sxy / sx2;
+        return {
+          total: fmt(r),
+          sub:
+            'Con ' + nn + ' pares, r = ' + fmt(r) + ' → ' + fuerza + '. X explica el ' + fmt(r2 * 100) +
+            '% de la variabilidad de Y. Correlación no es causalidad: graficá los puntos antes de sacar conclusiones.',
+          rows: [
+            { k: 'n — pares de datos', v: nn, ...PLAIN0 },
+            { k: 'Media de X', ref: 'paso 1', v: snap(mx), ...PLAIN4 },
+            { k: 'Media de Y', ref: 'paso 1', v: snap(my), ...PLAIN4 },
+            { k: 'Σ (x − x̄)(y − ȳ) → covarianza sin dividir', ref: 'paso 2: el numerador', v: snap(sxy), ...PLAIN4 },
+            { k: 'Σ (x − x̄)²', ref: 'paso 3', v: snap(sx2), ...PLAIN4 },
+            { k: 'Σ (y − ȳ)²', ref: 'paso 3', v: snap(sy2), ...PLAIN4 },
+            { k: '√(Σ(x−x̄)² × Σ(y−ȳ)²) → el denominador', ref: 'paso 4', v: snap(Math.sqrt(sx2 * sy2)), ...PLAIN4 },
+            { k: 'Numerador ÷ denominador → r', ref: 'paso 5: entre −1 y 1', v: r, extra: true, ...PLAIN6 },
+            { k: 'R² = r² → variabilidad explicada', ref: 'la lectura práctica', v: snap(r2 * 100), extra: true, ...PCT },
+            { k: 'Pendiente de la recta de regresión', ref: 'cuánto cambia Y por cada unidad de X', v: snap(pend), ...PLAIN4 },
+          ],
+          format: 'plain',
+          decimals: 4,
+          chart: [
+            { label: 'Variabilidad explicada por X', value: Math.abs(snap(r2 * 100)), tone: 'main' },
+            { label: 'Variabilidad sin explicar', value: Math.abs(snap(100 - r2 * 100)), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ---- 5) Chi-cuadrado de independencia (2×2) ------------------------
+      const t = parseLista(v.tabla);
+      if (t.length < 4) return err('Cargá las cuatro celdas de la tabla 2×2 separadas por coma: a, b, c, d.', 'Celdas leídas', t.length);
+      const a = t[0], b = t[1], c = t[2], d = t[3];
+      if (a < 0 || b < 0 || c < 0 || d < 0) return err('Las frecuencias no pueden ser negativas.', 'Celdas cargadas', 4);
+      const tot = a + b + c + d;
+      if (!tot) return err('El total de la tabla no puede ser 0.', 'Total', 0);
+      const f1 = a + b, f2 = c + d, c1 = a + c, c2 = b + d;
+      const ea = (f1 * c1) / tot, eb = (f1 * c2) / tot, ec = (f2 * c1) / tot, ed = (f2 * c2) / tot;
+      const chi2 =
+        Math.pow(a - ea, 2) / ea + Math.pow(b - eb, 2) / eb + Math.pow(c - ec, 2) / ec + Math.pow(d - ed, 2) / ed;
+      const pVal = chi2p1gl(chi2);
+      const minEsp = Math.min(ea, eb, ec, ed);
+      const sig = pVal < 0.05;
+      const pTxt = pVal < 0.001 ? 'p < 0,001' : 'p = ' + fmt(pVal);
+      return {
+        total: fmt(chi2),
+        sub:
+          'χ² = ' + fmt(chi2) + ' con 1 grado de libertad (' + pTxt + '). ' +
+          (sig
+            ? 'Rechazás la independencia: las dos variables están asociadas.'
+            : 'No podés rechazar la independencia: no hay evidencia suficiente de asociación.') +
+          (minEsp < 5 ? ' Atención: alguna frecuencia esperada es menor a 5, usá el test exacto de Fisher.' : ''),
+        rows: [
+          { k: 'Observado a (fila 1, col 1)', v: a, ...CASOS },
+          { k: 'Observado b (fila 1, col 2)', v: b, ...CASOS },
+          { k: 'Observado c (fila 2, col 1)', v: c, ...CASOS },
+          { k: 'Observado d (fila 2, col 2)', v: d, ...CASOS },
+          { k: 'Total general', ref: 'paso 1', v: tot, ...CASOS },
+          { k: 'Esperado a = fila1 × col1 ÷ total', ref: 'paso 2: bajo independencia', v: snap(ea), ...PLAIN },
+          { k: 'Esperado b', ref: 'paso 2', v: snap(eb), ...PLAIN },
+          { k: 'Esperado c', ref: 'paso 2', v: snap(ec), ...PLAIN },
+          { k: 'Esperado d', ref: 'paso 2', v: snap(ed), ...PLAIN },
+          { k: 'Menor frecuencia esperada', ref: minEsp < 5 ? 'menor a 5: el test pierde validez' : 'mayor o igual a 5: el test es válido', v: snap(minEsp), ...PLAIN },
+          { k: 'Σ (observado − esperado)² ÷ esperado → χ²', ref: 'paso 3: el estadístico', v: snap(chi2), extra: true, ...PLAIN4 },
+          { k: 'Valor crítico al 95% con 1 gl', ref: 'si χ² lo supera, rechazás', v: 3.841, ...PLAIN4 },
+          { k: 'Valor p', ref: sig ? 'menor a 0,05: hay asociación' : 'mayor o igual a 0,05: no hay evidencia', v: snap(pVal), extra: true, ...PLAIN6 },
+          { k: 'Proporción de la fila 1', ref: 'a ÷ (a + b)', v: f1 ? snap((a / f1) * 100) : 0, ...PCT },
+          { k: 'Proporción de la fila 2', ref: 'c ÷ (c + d)', v: f2 ? snap((c / f2) * 100) : 0, ...PCT },
+        ],
+        format: 'plain',
+        decimals: 4,
+        chart: [
+          { label: 'a observado', value: a, tone: 'main' },
+          { label: 'a esperado', value: Math.abs(snap(ea)), tone: 'prop' },
+          { label: 'c observado', value: c, tone: 'main' },
+          { label: 'c esperado', value: Math.abs(snap(ec)), tone: 'prop' },
+        ],
+      };
+    });
+  })();
+</script>

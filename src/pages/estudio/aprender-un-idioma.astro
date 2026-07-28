@@ -1,0 +1,485 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto tardo en aprender un idioma?"
+ * Reemplaza 15 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Sigue el patrón de estudio/promedio.astro: la página sólo aporta los datos
+ * (src/lib/hubs/aprender-un-idioma.ts) y su compute(). El chrome, el CSS y el
+ * runtime viven en DecisionHub.astro y no se tocan.
+ *
+ * Las tablas (BASE_MCER, IDIOMAS, VOCAB) están duplicadas en el <script> porque
+ * el script es inline y no puede importar del módulo. Si tocás una, tocá las dos.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub } from '../../lib/hubs/aprender-un-idioma';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline>
+  (function () {
+    const H = window.HC_HUB;
+
+    /**
+     * Ninguna rama es plata y el default de HubRow es 'ars': TODA fila declara
+     * su formato.
+     */
+    const HORAS = { format: 'unit', unit: 'horas', decimals: 0 };
+    const HORAS1 = { format: 'unit', unit: 'horas', decimals: 1 };
+    const SEM = { format: 'unit', unit: 'semanas', decimals: 1 };
+    const MESES = { format: 'unit', unit: 'meses', decimals: 1 };
+    const ANOS = { format: 'unit', unit: 'años', decimals: 1 };
+    const PAL = { format: 'unit', unit: 'palabras', decimals: 0 };
+    const XP = { format: 'unit', unit: 'XP', decimals: 0 };
+    const DIAS = { format: 'unit', unit: 'días', decimals: 0 };
+    const PCT = { format: 'unit', unit: '%', decimals: 0 };
+    const LECC = { format: 'unit', unit: 'lecciones', decimals: 1 };
+    const NUM = { format: 'plain', decimals: 2 };
+    const CANT = { format: 'plain', decimals: 0 };
+
+    const SEMANAS_MES = 4.345;
+
+    const fmt = (n, d) => {
+      if (!isFinite(n)) return '—';
+      const dec = d == null ? 1 : d;
+      return Number(n.toFixed(dec)).toLocaleString('es-AR', { maximumFractionDigits: dec });
+    };
+    const clamp = (n) => Math.max(0, Math.min(100, isFinite(n) ? n : 0));
+    const pos = (val, min, max) => clamp(((val - min) / (max - min)) * 100);
+
+    /** Horas guiadas acumuladas por nivel MCER — base Cambridge English. */
+    const BASE_MCER = { cero: 0, a1: 100, a2: 200, b1: 375, b2: 550, c1: 750, c2: 1100 };
+    const ORDEN = ['cero', 'a1', 'a2', 'b1', 'b2', 'c1', 'c2'];
+    const NIV = { cero: 'cero', a1: 'A1', a2: 'A2', b1: 'B1', b2: 'B2', c1: 'C1', c2: 'C2' };
+
+    /** Multiplicador de distancia lingüística respecto del español (ver el .ts). */
+    const IDIOMAS = {
+      italiano: { nombre: 'italiano', mult: 0.85, cat: 'Cat I FSI — muy cercano' },
+      portugues: { nombre: 'portugués', mult: 0.85, cat: 'Cat I FSI — muy cercano' },
+      frances: { nombre: 'francés', mult: 0.85, cat: 'Cat I FSI — cercano' },
+      ingles: { nombre: 'inglés', mult: 1.0, cat: 'Cercano — base Cambridge' },
+      aleman: { nombre: 'alemán', mult: 1.3, cat: 'Cat II FSI — medio' },
+      neerlandes: { nombre: 'neerlandés', mult: 1.3, cat: 'Cat II FSI — medio' },
+      ruso: { nombre: 'ruso', mult: 1.6, cat: 'Cat III FSI — difícil' },
+      polaco: { nombre: 'polaco', mult: 1.6, cat: 'Cat III FSI — difícil' },
+      turco: { nombre: 'turco', mult: 1.6, cat: 'Cat III FSI — difícil' },
+      griego: { nombre: 'griego', mult: 1.6, cat: 'Cat III FSI — difícil' },
+      hebreo: { nombre: 'hebreo', mult: 1.6, cat: 'Cat III FSI — difícil' },
+      hindi: { nombre: 'hindi', mult: 1.6, cat: 'Cat III FSI — difícil' },
+      arabe: { nombre: 'árabe', mult: 2.9, cat: 'Cat IV FSI — muy difícil' },
+      chino: { nombre: 'chino mandarín', mult: 2.9, cat: 'Cat IV FSI — muy difícil' },
+      japones: { nombre: 'japonés', mult: 2.9, cat: 'Cat IV FSI — muy difícil' },
+      coreano: { nombre: 'coreano', mult: 2.9, cat: 'Cat IV FSI — muy difícil' },
+    };
+
+    /** [activas min, activas max, pasivas min, pasivas max] — Nation / Milton. */
+    const VOCAB = {
+      cero: [0, 0, 0, 0],
+      a1: [500, 800, 1000, 1500],
+      a2: [1000, 1500, 2000, 3000],
+      b1: [2000, 2500, 4000, 5000],
+      b2: [4000, 5000, 8000, 10000],
+      c1: [8000, 10000, 16000, 20000],
+      c2: [16000, 20000, 32000, 40000],
+    };
+
+    /** Ajuste de las horas guiadas según cómo estudiás. Referencia = clases. */
+    const CALIDAD = {
+      inmersion: { f: 0.7, txt: 'con inmersión o profesor particular' },
+      clases: { f: 1.0, txt: 'con clases y tarea' },
+      app: { f: 1.4, txt: 'estudiando solo con una app' },
+    };
+
+    /** Interferencia al estudiar dos idiomas en paralelo. */
+    const INTERF = {
+      distintos: { i: 0.08, txt: 'idiomas distintos entre sí' },
+      similares: { i: 0.2, txt: 'idiomas parecidos entre sí' },
+      'muy-similares': { i: 0.35, txt: 'idiomas muy parecidos entre sí' },
+    };
+
+    /** XP acumulado de referencia por nivel en Duolingo. */
+    const XP_META = { a1: 5000, a2: 15000, b1: 28000 };
+
+    const idi = (v) => IDIOMAS[v] || IDIOMAS.ingles;
+    /** Horas guiadas acumuladas del idioma hasta ese nivel. */
+    const horasNivel = (info, niv) => Math.round((BASE_MCER[niv] != null ? BASE_MCER[niv] : 0) * info.mult);
+    /** Ajuste de XP de Duolingo por idioma, derivado del multiplicador. */
+    const ajusteXp = (m) => (m <= 0.85 ? 0.95 : m <= 1.0 ? 1.0 : m <= 1.3 ? 1.1 : m <= 1.6 ? 1.2 : 1.3);
+
+    const err = (msg, k, v) => ({
+      total: '—', sub: msg,
+      rows: [{ k: k, v: v, ...CANT }],
+      chart: [], format: 'plain', decimals: 0, position: 0, positionLabel: msg,
+    });
+
+    /** Bandas de la escalera MCER del idioma, en horas acumuladas. */
+    function bandasEscalera(info) {
+      const out = [];
+      for (let j = 1; j < ORDEN.length; j++) {
+        const desde = horasNivel(info, ORDEN[j - 1]);
+        const hasta = horasNivel(info, ORDEN[j]);
+        out.push({
+          label: NIV[ORDEN[j]],
+          value: hasta - desde,
+          from: desde,
+          to: hasta,
+          tone: j <= 2 ? 'good' : j <= 4 ? 'main' : 'warn',
+        });
+      }
+      return out;
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'nivel';
+      const info = idi(v.idioma);
+      const nivelActual = BASE_MCER[v.nivelActual] != null ? v.nivelActual : 'cero';
+      const nivelMeta = BASE_MCER[v.nivelMeta] != null && v.nivelMeta !== 'cero' ? v.nivelMeta : 'b2';
+      const horasSemana = Math.max(0, Number(v.horasSemana) || 0);
+      const cal = CALIDAD[v.calidad] || CALIDAD.clases;
+
+      const hAct = horasNivel(info, nivelActual);
+      const hMeta = horasNivel(info, nivelMeta);
+      const hC2 = horasNivel(info, 'c2');
+      const brutas = Math.max(0, hMeta - hAct);
+      const efectivas = brutas * cal.f;
+
+      // ---- 1) Cuánto tardo en llegar a un nivel -------------------------
+      if (id === 'nivel') {
+        if (ORDEN.indexOf(nivelMeta) <= ORDEN.indexOf(nivelActual)) {
+          return err(
+            'Tu nivel meta (' + NIV[nivelMeta] + ') no está por encima de tu nivel actual (' + NIV[nivelActual] + '): no hay horas que sumar. Elegí un nivel más alto.',
+            'Horas que te faltan', 0
+          );
+        }
+        if (horasSemana <= 0) {
+          return err('Cargá cuántas horas por semana estudiás para poder estimar el plazo.', 'Horas por semana', 0);
+        }
+        const semanas = efectivas / horasSemana;
+        const meses = semanas / SEMANAS_MES;
+        const anos = meses / 12;
+        return {
+          total: fmt(meses, 1) + ' meses',
+          sub:
+            'De ' + NIV[nivelActual] + ' a ' + NIV[nivelMeta] + ' en ' + info.nombre + ': te faltan ' +
+            fmt(efectivas, 0) + ' h de estudio. A ' + fmt(horasSemana, 1) + ' h por semana ' + cal.txt +
+            ' son ' + fmt(semanas, 0) + ' semanas (' + fmt(meses, 1) + ' meses, ' + fmt(anos, 1) + ' años).',
+          rows: [
+            { k: 'Multiplicador de distancia del ' + info.nombre, ref: info.cat, v: info.mult, ...NUM },
+            { k: 'Horas acumuladas hasta ' + NIV[nivelActual], ref: 'tu punto de partida', v: hAct, ...HORAS },
+            { k: 'Horas acumuladas hasta ' + NIV[nivelMeta], ref: 'base Cambridge × multiplicador', v: hMeta, ...HORAS },
+            { k: 'Diferencia — horas guiadas que faltan', ref: 'paso 1', v: brutas, ...HORAS },
+            { k: 'Ajuste por cómo estudiás (×' + fmt(cal.f, 2) + ')', ref: cal.txt, v: efectivas, extra: true, ...HORAS },
+            { k: 'Semanas a ' + fmt(horasSemana, 1) + ' h/semana', ref: 'paso 2: horas ÷ horas semanales', v: semanas, ...SEM },
+            { k: 'Meses', ref: 'paso 3: semanas ÷ 4,345', v: meses, extra: true, ...MESES },
+            { k: 'Años', v: anos, ...ANOS },
+            { k: 'Horas totales hasta C2 en ' + info.nombre, ref: 'la escalera completa', v: hC2, ...HORAS },
+          ],
+          format: 'unit', unit: 'horas', decimals: 0,
+          chart: bandasEscalera(info),
+          position: pos(hMeta, 0, hC2),
+          positionLabel:
+            'Meta ' + NIV[nivelMeta] + ': ' + fmt(hMeta, 0) + ' h acumuladas · te faltan ' + fmt(efectivas, 0) + ' h ≈ ' + fmt(meses, 1) + ' meses',
+        };
+      }
+
+      // ---- 2) Qué tan difícil es este idioma ----------------------------
+      if (id === 'dificultad') {
+        const hB2 = horasNivel(info, 'b2');
+        const hC1 = horasNivel(info, 'c1');
+        const ing = horasNivel(IDIOMAS.ingles, 'c1');
+        const ita = horasNivel(IDIOMAS.italiano, 'c1');
+        const vsIng = hC1 / ing;
+        const vsIta = hC1 / ita;
+        return {
+          total: fmt(hC1, 0) + ' h a C1',
+          sub:
+            'El ' + info.nombre + ' está en la ' + info.cat + '. Llegar a B2 desde cero pide unas ' + fmt(hB2, 0) +
+            ' h y a C1 unas ' + fmt(hC1, 0) + ' h: ' + fmt(vsIng, 2) + '× lo que cuesta el inglés y ' +
+            fmt(vsIta, 2) + '× lo que cuesta el italiano.',
+          rows: [
+            { k: 'Multiplicador de distancia respecto del español', ref: info.cat, v: info.mult, extra: true, ...NUM },
+            { k: 'Horas acumuladas hasta A2', v: horasNivel(info, 'a2'), ...HORAS },
+            { k: 'Horas acumuladas hasta B1', v: horasNivel(info, 'b1'), ...HORAS },
+            { k: 'Horas acumuladas hasta B2', ref: 'el nivel que pide la mayoría de los trabajos', v: hB2, extra: true, ...HORAS },
+            { k: 'Horas acumuladas hasta C1', v: hC1, extra: true, ...HORAS },
+            { k: 'Horas acumuladas hasta C2', v: hC2, ...HORAS },
+            { k: 'Cuántas veces el inglés', ref: 'horas a C1 ÷ horas a C1 del inglés', v: vsIng, ...NUM },
+            { k: 'Cuántas veces el italiano', ref: 'el más rápido de la tabla', v: vsIta, ...NUM },
+            { k: 'Meses a C1 estudiando 8 h por semana', ref: 'referencia comparable entre idiomas', v: hC1 / 8 / SEMANAS_MES, ...MESES },
+          ],
+          format: 'unit', unit: 'horas', decimals: 0,
+          chart: [
+            { label: 'Cercano', value: 750, from: 0, to: 750, tone: 'good' },
+            { label: 'Medio', value: 250, from: 750, to: 1000, tone: 'main' },
+            { label: 'Difícil', value: 500, from: 1000, to: 1500, tone: 'warn' },
+            { label: 'Muy difícil', value: 900, from: 1500, to: 2400, tone: 'bad' },
+          ],
+          position: pos(hC1, 0, 2400),
+          positionLabel: info.nombre.charAt(0).toUpperCase() + info.nombre.slice(1) + ': ' + fmt(hC1, 0) + ' h hasta C1 — ' + info.cat,
+        };
+      }
+
+      // ---- 3) Vocabulario por nivel MCER --------------------------------
+      if (id === 'vocabulario') {
+        const met = VOCAB[nivelMeta] || VOCAB.b2;
+        const act = VOCAB[nivelActual] || VOCAB.cero;
+        const faltan = Math.max(0, met[1] - act[1]);
+        const diasA10 = faltan / 10;
+        const mesesA10 = diasA10 / 30.44;
+        return {
+          total: met[0].toLocaleString('es-AR') + '–' + met[1].toLocaleString('es-AR'),
+          sub:
+            'El nivel ' + NIV[nivelMeta] + ' pide entre ' + met[0].toLocaleString('es-AR') + ' y ' +
+            met[1].toLocaleString('es-AR') + ' palabras activas (y ' + met[2].toLocaleString('es-AR') + '–' +
+            met[3].toLocaleString('es-AR') + ' pasivas). Desde ' + NIV[nivelActual] + ' te faltan unas ' +
+            faltan.toLocaleString('es-AR') + ': a 10 palabras nuevas por día son ' + fmt(mesesA10, 1) + ' meses.',
+          rows: [
+            { k: 'Palabras activas — mínimo de ' + NIV[nivelMeta], ref: 'las que producís al hablar y escribir', v: met[0], ...PAL },
+            { k: 'Palabras activas — máximo de ' + NIV[nivelMeta], v: met[1], extra: true, ...PAL },
+            { k: 'Palabras pasivas — mínimo de ' + NIV[nivelMeta], ref: 'las que reconocés al leer y escuchar', v: met[2], ...PAL },
+            { k: 'Palabras pasivas — máximo de ' + NIV[nivelMeta], v: met[3], ...PAL },
+            { k: 'Vocabulario activo que ya tenés en ' + NIV[nivelActual], v: act[1], ...PAL },
+            { k: 'Palabras que te faltan sumar', ref: 'paso 1: meta − actual', v: faltan, extra: true, ...PAL },
+            { k: 'Días a 10 palabras nuevas por día', ref: 'paso 2', v: diasA10, ...DIAS },
+            { k: 'Meses a 10 palabras nuevas por día', v: mesesA10, extra: true, ...MESES },
+            { k: 'Proporción pasivo sobre activo', ref: 'se sostiene en todos los niveles', v: met[1] ? met[3] / met[1] : 0, ...NUM },
+          ],
+          format: 'unit', unit: 'palabras', decimals: 0,
+          chart: [
+            { label: 'A1-A2', value: 1500, from: 0, to: 1500, tone: 'good' },
+            { label: 'B1-B2', value: 3500, from: 1500, to: 5000, tone: 'main' },
+            { label: 'C1', value: 5000, from: 5000, to: 10000, tone: 'warn' },
+            { label: 'C2', value: 10000, from: 10000, to: 20000, tone: 'bad' },
+          ],
+          position: pos(met[1], 0, 20000),
+          positionLabel: NIV[nivelMeta] + ': hasta ' + met[1].toLocaleString('es-AR') + ' palabras activas',
+        };
+      }
+
+      // ---- 4) Duolingo ---------------------------------------------------
+      if (id === 'duolingo') {
+        const minutos = Math.max(0, Number(v.minutosApp) || 0);
+        if (minutos <= 0) return err('Cargá cuántos minutos de Duolingo hacés por día.', 'Minutos por día', 0);
+        const xpDia = minutos * 10;
+        const lecciones = xpDia / 15;
+        const capado = XP_META[nivelMeta] == null;
+        const metaXp = capado ? 'b1' : nivelMeta;
+        const aj = ajusteXp(info.mult);
+        const xpTot = Math.round(XP_META[metaXp] * aj);
+        const dias = xpTot / xpDia;
+        const mesesApp = dias / 30.44;
+        const horasApp = (minutos * dias) / 60;
+        const cobertura = hMeta ? (horasApp / hMeta) * 100 : 0;
+        const carga =
+          xpDia > 500 ? 'Muy intenso: es insostenible más de dos o tres meses.'
+            : xpDia > 200 ? 'Ritmo acelerado. Sumá variedad para no quemarte.'
+              : xpDia > 80 ? 'Ritmo normal de usuario activo.'
+                : 'Ritmo cómodo, fácil de sostener.';
+        return {
+          total: fmt(dias, 0) + ' días',
+          sub:
+            (capado
+              ? '⚠ Duolingo no llega a ' + NIV[nivelMeta] + ': el techo realista de la app es B1, así que la cuenta es hasta B1. '
+              : '') +
+            fmt(minutos, 0) + ' min/día son ' + fmt(xpDia, 0) + ' XP/día (' + fmt(lecciones, 1) +
+            ' lecciones). Juntar los ' + xpTot.toLocaleString('es-AR') + ' XP de ' + NIV[metaXp] + ' en ' +
+            info.nombre + ' te lleva ' + fmt(dias, 0) + ' días (' + fmt(mesesApp, 1) + ' meses). ' + carga,
+          rows: [
+            { k: 'XP por día', ref: 'minutos × 10 XP', v: xpDia, extra: true, ...XP },
+            { k: 'Lecciones diarias equivalentes', ref: '~15 XP por lección', v: lecciones, ...LECC },
+            { k: 'Ajuste de XP por idioma', ref: info.cat, v: aj, ...NUM },
+            { k: 'XP acumulado de referencia hasta ' + NIV[metaXp], v: xpTot, extra: true, ...XP },
+            { k: 'Días para juntarlo', ref: 'XP total ÷ XP por día', v: dias, ...DIAS },
+            { k: 'Meses', v: mesesApp, extra: true, ...MESES },
+            { k: 'Horas de app acumuladas en ese plazo', v: horasApp, ...HORAS1 },
+            { k: 'Horas guiadas que pide ' + NIV[metaXp] + ' en la escala MCER', v: horasNivel(info, metaXp), ...HORAS },
+            { k: 'Qué porción del nivel cubre la app sola', ref: 'horas de app ÷ horas guiadas del nivel meta', v: cobertura, ...PCT },
+          ],
+          format: 'unit', unit: 'XP', decimals: 0,
+          chart: [
+            { label: 'Cómodo', value: 80, from: 0, to: 80, tone: 'good' },
+            { label: 'Normal', value: 120, from: 80, to: 200, tone: 'main' },
+            { label: 'Acelerado', value: 300, from: 200, to: 500, tone: 'warn' },
+            { label: 'Muy intenso', value: 300, from: 500, to: 800, tone: 'bad' },
+          ],
+          position: pos(xpDia, 0, 800),
+          positionLabel: fmt(xpDia, 0) + ' XP/día — ' + fmt(minutos, 0) + ' min de app',
+        };
+      }
+
+      // ---- 5) Series y películas (inmersión pasiva) ----------------------
+      if (id === 'series') {
+        const horasVideo = Math.max(0, Number(v.horasVideo) || 0);
+        let factor = Number(v.factorVideo);
+        if (!isFinite(factor) || factor <= 0) factor = 0.4;
+        factor = Math.min(1, Math.max(0.1, factor));
+        const equivSem = horasVideo * factor;
+        const equivMes = equivSem * SEMANAS_MES;
+        const totalSem = horasSemana + equivSem;
+        const share = totalSem ? (equivSem / totalSem) * 100 : 0;
+        const mesesSolo = horasSemana > 0 ? efectivas / horasSemana / SEMANAS_MES : Infinity;
+        const mesesCon = totalSem > 0 ? efectivas / totalSem / SEMANAS_MES : Infinity;
+        const ahorro = isFinite(mesesSolo) && isFinite(mesesCon) ? mesesSolo - mesesCon : mesesCon;
+        const lectura =
+          share < 15 ? 'Aporte marginal: el video casi no mueve la aguja a este volumen.'
+            : share < 35 ? 'Complemento sano: suma sin desbalancear el estudio.'
+              : share < 60 ? 'El video es el motor de tu semana: cuidá que la práctica activa no desaparezca.'
+                : 'Desequilibrado: casi todo tu contacto con el idioma es pasivo, y así la producción no arranca.';
+        return {
+          total: fmt(equivSem, 1) + ' h/semana',
+          sub:
+            fmt(horasVideo, 1) + ' h de video por semana × factor ' + fmt(factor, 2) + ' rinden como ' +
+            fmt(equivSem, 1) + ' h de estudio activo (' + fmt(equivMes, 1) + ' h por mes). ' +
+            (isFinite(ahorro) ? 'Te acortan el camino a ' + NIV[nivelMeta] + ' en ' + fmt(ahorro, 1) + ' meses. ' : '') + lectura,
+          rows: [
+            { k: 'Horas de video por semana', v: horasVideo, ...HORAS1 },
+            { k: 'Factor de eficiencia del input pasivo', ref: 'referencia 0,3 a 0,5', v: factor, ...NUM },
+            { k: 'Equivalente en estudio activo por semana', ref: 'paso 1: video × factor', v: equivSem, extra: true, ...HORAS1 },
+            { k: 'Equivalente por mes', ref: '× 4,345 semanas', v: equivMes, extra: true, ...HORAS1 },
+            { k: 'Horas de video acumuladas por mes', v: horasVideo * SEMANAS_MES, ...HORAS1 },
+            { k: 'Tu estudio semanal total con el video adentro', v: totalSem, ...HORAS1 },
+            { k: 'Qué porción de tu semana aporta el video', v: share, extra: true, ...PCT },
+            { k: 'Meses hasta ' + NIV[nivelMeta] + ' sin contar el video', v: mesesSolo, ...MESES },
+            { k: 'Meses hasta ' + NIV[nivelMeta] + ' contando el video', v: mesesCon, extra: true, ...MESES },
+            { k: 'Meses que te ahorra el video', v: ahorro, ...MESES },
+          ],
+          format: 'unit', unit: 'horas', decimals: 1,
+          chart: [
+            { label: 'Marginal', value: 15, from: 0, to: 15, tone: 'warn' },
+            { label: 'Complemento', value: 20, from: 15, to: 35, tone: 'good' },
+            { label: 'Motor', value: 25, from: 35, to: 60, tone: 'main' },
+            { label: 'Desequilibrado', value: 40, from: 60, to: 100, tone: 'bad' },
+          ],
+          position: clamp(share),
+          positionLabel: 'El video aporta el ' + fmt(share, 0) + '% de tu estudio semanal',
+        };
+      }
+
+      // ---- 6) Dos idiomas a la vez ---------------------------------------
+      if (id === 'dos') {
+        if (horasSemana <= 0) return err('Cargá cuántas horas por semana podés estudiar en total.', 'Horas por semana', 0);
+        const inte = INTERF[v.similitud] || INTERF.distintos;
+        const horasDia = horasSemana / 7;
+        const brutasPorIdioma = horasSemana / 2;
+        const efectPorIdioma = brutasPorIdioma * (1 - inte.i);
+        const minDia = (efectPorIdioma * 60) / 7;
+        const mesesSolo = efectivas / horasSemana / SEMANAS_MES;
+        const mesesDoble = efectivas / efectPorIdioma / SEMANAS_MES;
+        const veredicto =
+          horasDia < 1 ? 'No viable: con menos de 1 h por día repartida en dos no avanzás en ninguno.'
+            : horasDia < 1.5 ? 'Poco viable: llevá uno a B1 antes de sumar el segundo.'
+              : horasDia < 3 ? 'Viable con limitaciones: separá franjas horarias y esperá avance lento.'
+                : 'Viable: dividí mañana y tarde y sostené la consistencia.';
+        return {
+          total: fmt(minDia, 0) + ' min/día',
+          sub:
+            'Con ' + fmt(horasSemana, 1) + ' h semanales repartidas entre dos ' + inte.txt + ', cada idioma recibe ' +
+            fmt(minDia, 0) + ' minutos efectivos por día: la interferencia se lleva el ' + fmt(inte.i * 100, 0) + '%. ' +
+            'Llegar a ' + NIV[nivelMeta] + ' en ' + info.nombre + ' pasa de ' + fmt(mesesSolo, 1) + ' a ' +
+            fmt(mesesDoble, 1) + ' meses. ' + veredicto,
+          rows: [
+            { k: 'Horas semanales totales', v: horasSemana, ...HORAS1 },
+            { k: 'Horas por día', v: horasDia, ...HORAS1 },
+            { k: 'Horas brutas por idioma', ref: 'paso 1: total ÷ 2', v: brutasPorIdioma, ...HORAS1 },
+            { k: 'Pérdida por interferencia', ref: inte.txt, v: inte.i * 100, ...PCT },
+            { k: 'Horas efectivas por idioma y semana', ref: 'paso 2: brutas × (1 − interferencia)', v: efectPorIdioma, extra: true, ...HORAS1 },
+            { k: 'Minutos efectivos por idioma y día', v: minDia, extra: true, ...NUM },
+            { k: 'Meses hasta ' + NIV[nivelMeta] + ' con un solo idioma', v: mesesSolo, ...MESES },
+            { k: 'Meses hasta ' + NIV[nivelMeta] + ' con los dos en paralelo', v: mesesDoble, extra: true, ...MESES },
+            { k: 'Meses de más que te cuesta el segundo idioma', v: mesesDoble - mesesSolo, ...MESES },
+          ],
+          format: 'unit', unit: 'horas', decimals: 1,
+          chart: [
+            { label: 'No viable', value: 1, from: 0, to: 1, tone: 'bad' },
+            { label: 'Poco viable', value: 0.5, from: 1, to: 1.5, tone: 'warn' },
+            { label: 'Con limitaciones', value: 1.5, from: 1.5, to: 3, tone: 'main' },
+            { label: 'Viable', value: 1, from: 3, to: 4, tone: 'good' },
+          ],
+          position: pos(horasDia, 0, 4),
+          positionLabel: fmt(horasDia, 1) + ' h por día en total para los dos idiomas',
+        };
+      }
+
+      // ---- 7) Bajar el acento ---------------------------------------------
+      const acento = Math.min(10, Math.max(1, Number(v.acentoNivel) || 5));
+      if (horasSemana <= 0) {
+        return err('Con 0 horas de práctica por semana no hay avance posible: la reducción de acento depende de la repetición.', 'Horas de práctica por semana', 0);
+      }
+      const semanasAc = (acento * 15) / horasSemana;
+      const mesesCrudo = semanasAc / 4.33;
+      const mesesAc = Math.max(2, mesesCrudo);
+      const horasPractica = acento * 15;
+      const tocoPiso = mesesCrudo < 2;
+      return {
+        total: fmt(mesesAc, 0) + ' meses',
+        sub:
+          'Con un acento ' + acento + '/10 y ' + fmt(horasSemana, 1) + ' h de práctica de pronunciación por semana, ' +
+          'la mejora se vuelve perceptible en unos ' + fmt(mesesAc, 0) + ' meses (' + fmt(horasPractica, 0) +
+          ' h de práctica focalizada). ' +
+          (tocoPiso
+            ? 'La cuenta daba menos, pero el piso son 2 meses: por debajo de eso ningún oyente nota el cambio.'
+            : 'El objetivo razonable es que te entiendan sin esfuerzo, no sonar nativo.'),
+        rows: [
+          { k: 'Nivel de acento declarado', ref: 'escala 1 a 10', v: acento, ...CANT },
+          { k: 'Horas de práctica focalizada necesarias', ref: 'paso 1: nivel × 15', v: horasPractica, extra: true, ...HORAS },
+          { k: 'Semanas a tu ritmo', ref: 'paso 2: horas ÷ horas por semana', v: semanasAc, ...SEM },
+          { k: 'Meses sin aplicar el piso', ref: 'semanas ÷ 4,33', v: mesesCrudo, ...MESES },
+          { k: 'Meses hasta una mejora perceptible', ref: 'piso de 2 meses', v: mesesAc, extra: true, ...MESES },
+          { k: 'Horas de práctica por semana', v: horasSemana, ...HORAS1 },
+          { k: 'Puntos de acento a bajar hasta 2/10', ref: 'meta razonable: inteligible', v: Math.max(0, acento - 2), ...CANT },
+        ],
+        format: 'unit', unit: 'meses', decimals: 1,
+        chart: [
+          { label: 'Casi nativo', value: 2, from: 1, to: 3, tone: 'good' },
+          { label: 'Leve', value: 2, from: 3, to: 5, tone: 'main' },
+          { label: 'Marcado', value: 2, from: 5, to: 7, tone: 'warn' },
+          { label: 'Muy marcado', value: 3, from: 7, to: 10, tone: 'bad' },
+        ],
+        position: pos(acento, 1, 10),
+        positionLabel: 'Acento ' + acento + '/10 — mejora perceptible en ' + fmt(mesesAc, 0) + ' meses',
+      };
+    });
+  })();
+</script>

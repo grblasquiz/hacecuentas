@@ -1,0 +1,226 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto es esto en otra unidad de tiempo?"
+ * Reemplaza 5 URLs de conversor suelto (ver hub.replaces).
+ *
+ * Sigue el patrón de matematica/regla-de-tres.astro: la página sólo aporta
+ * los datos (src/lib/hubs/conversor-de-tiempo.ts) y su compute(). El chrome,
+ * el CSS y el runtime viven en DecisionHub.astro y no se tocan.
+ *
+ * Los días por año NO se duplican acá: se serializan con define:vars desde
+ * DIAS_POR_ANO, que es el único lugar donde viven las cuatro convenciones.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, DIAS_POR_ANO } from '../../lib/hubs/conversor-de-tiempo';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ CONV: DIAS_POR_ANO }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    /**
+     * Acá NO hay plata en ninguna rama y el default de HubRow es 'ars', así
+     * que TODA fila declara su formato: 'unit' con la unidad que corresponda,
+     * o 'plain' cuando es un factor sin unidad propia.
+     */
+    const U = (unit, decimals) => ({ format: 'unit', unit: unit, decimals: decimals === undefined ? 2 : decimals });
+    /** "1 hora" / "2 horas": evita el "1 horas" en los textos del desglose. */
+    const plural = (n, sing, plu) => (Math.abs(n) === 1 ? sing : plu);
+
+    /** Redondea a entero lo que esté a menos de 1e-10 y normaliza el "-0". */
+    const snap = (v) => {
+      if (!isFinite(v)) return v;
+      const r = Math.round(v);
+      if (Math.abs(v - r) < 1e-10) v = r;
+      return v === 0 ? 0 : v;
+    };
+    const fmt = (n) => {
+      if (!isFinite(n)) return '—';
+      n = snap(n);
+      const abs = Math.abs(n);
+      const dec = abs >= 1000 ? 0 : abs >= 1 ? 2 : 4;
+      return Number(n.toFixed(dec)).toLocaleString('es-AR', { maximumFractionDigits: dec });
+    };
+
+    const ORDEN = ['gregoriano', 'comun', 'juliano', 'comercial'];
+
+    /**
+     * Las cinco conversiones. `exacta` marca las que no dependen de ninguna
+     * convención: la semana tiene 7 días, el día 24 horas y la hora 60
+     * minutos, por definición. `diasPorChica` sirve para expresar cualquier
+     * resultado en días y poder compararlo entre ramas.
+     */
+    const RAMAS = {
+      'anos-dias': { grande: 'años', sing: 'año', enteros: 'Años enteros', chica: 'días', sueltos: 'Días sueltos', exacta: false, diasPorChica: 1 },
+      'meses-semanas': { grande: 'meses', sing: 'mes', enteros: 'Meses enteros', chica: 'semanas', sueltos: 'Semanas sueltas', exacta: false, diasPorChica: 7 },
+      'semanas-dias': { grande: 'semanas', sing: 'semana', enteros: 'Semanas enteras', chica: 'días', sueltos: 'Días sueltos', exacta: true, factor: 7, diasPorChica: 1 },
+      'dias-horas': { grande: 'días', sing: 'día', enteros: 'Días enteros', chica: 'horas', sueltos: 'Horas sueltas', exacta: true, factor: 24, diasPorChica: 1 / 24 },
+      'horas-minutos': { grande: 'horas', sing: 'hora', enteros: 'Horas enteras', chica: 'minutos', sueltos: 'Minutos sueltos', exacta: true, factor: 60, diasPorChica: 1 / 1440 },
+    };
+
+    /** Factor chica-por-grande de una rama bajo una convención dada. */
+    const factorDe = (id, conv) => {
+      if (RAMAS[id].exacta) return RAMAS[id].factor;
+      const dias = CONV[conv].dias;
+      return id === 'anos-dias' ? dias : dias / 12 / 7; // semanas por mes
+    };
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id && RAMAS[kase.id]) ? kase.id : 'anos-dias';
+      const R = RAMAS[id];
+      const conv = CONV[v.convencion] ? v.convencion : 'gregoriano';
+      const ida = String(v.sentido || 'ida') !== 'vuelta';
+      const val = H.num(v.valor);
+      const factor = factorDe(id, conv);
+
+      const desde = ida ? R.grande : R.chica;
+      const hasta = ida ? R.chica : R.grande;
+      const res = ida ? val * factor : val / factor;
+
+      // El lapso expresado siempre en la unidad chica, para poder partirlo y
+      // para sacar las equivalencias sin repetir la cuenta en cada rama.
+      const enChica = ida ? res : val;
+      const enGrande = ida ? val : res;
+      const dias = enChica * R.diasPorChica;
+
+      const rows = [
+        { k: 'Lo que cargaste', ref: 'el dato de partida', v: snap(val), ...U(desde, 2) },
+        {
+          k: 'Factor de conversión: 1 ' + R.sing + ' = ' + fmt(factor) + ' ' + R.chica,
+          ref: R.exacta ? 'exacto por definición: no depende de ninguna convención' : CONV[conv].label + ' — ' + CONV[conv].nota,
+          v: snap(factor), ...U(R.chica + ' por ' + R.sing, R.exacta ? 0 : 6),
+        },
+        {
+          k: 'Resultado: ' + fmt(val) + ' ' + desde + ' → ' + hasta,
+          ref: ida ? 'se multiplica por el factor' : 'se divide por el factor',
+          v: snap(res), extra: true, ...U(hasta, 4),
+        },
+      ];
+
+      let chart;
+      if (!R.exacta) {
+        // La gracia del hub: ver cuánto cambia el mismo lapso con cada convención.
+        const alt = ORDEN.map((c) => {
+          const f = factorDe(id, c);
+          return { c: c, f: f, r: ida ? val * f : val / f };
+        });
+        alt.forEach((a) => {
+          rows.push({
+            k: 'Con ' + CONV[a.c].label,
+            ref: (a.c === conv ? 'la convención que elegiste — ' : '') + CONV[a.c].nota,
+            v: snap(a.r), extra: a.c === conv, ...U(hasta, 4),
+          });
+        });
+        const rs = alt.map((a) => a.r);
+        rows.push({
+          k: 'Diferencia entre la convención más larga y la más corta',
+          ref: 'esto es lo que te podés equivocar si elegís mal',
+          v: snap(Math.max.apply(null, rs) - Math.min.apply(null, rs)), ...U(hasta, 4),
+        });
+        if (id === 'meses-semanas') {
+          const bolsillo = ida ? val * 4 : val / 4;
+          rows.push({
+            k: 'Con la regla de bolsillo de "4 semanas = 1 mes"',
+            ref: 'la aproximación que casi todo el mundo usa, y por cuánto falla',
+            v: snap(bolsillo), ...U(hasta, 4),
+          });
+          rows.push({
+            k: 'Cuánto te desvía esa regla de bolsillo',
+            ref: 'sobre un año entero son más de 4 semanas de diferencia',
+            v: snap(Math.abs(bolsillo - res)), ...U(hasta, 4),
+          });
+        }
+        chart = alt.map((a) => ({
+          label: CONV[a.c].label.split(' (')[0].replace('Calendario ', '').replace('Año ', '') + ': ' + fmt(a.r),
+          value: Math.abs(a.r) || 0.0001,
+          tone: a.c === conv ? 'main' : 'prop',
+        }));
+      } else {
+        // Exactas: no hay convenciones que comparar, así que partimos el
+        // resultado en unidades enteras y el resto suelto (el "formato reloj").
+        const enteras = Math.floor(Math.abs(enGrande)) * (enGrande < 0 ? -1 : 1);
+        const enterasEnChica = enteras * factor;
+        const resto = enChica - enterasEnChica;
+        rows.push({
+          k: R.enteros + ' que entran',
+          ref: 'la parte entera del lapso',
+          v: snap(enteras), ...U(R.grande, 0),
+        });
+        rows.push({
+          k: R.sueltos + ' que sobran',
+          ref: 'el lapso en formato reloj: ' + fmt(enteras) + ' ' + plural(enteras, R.sing, R.grande) + ' y ' + fmt(resto) + ' ' + R.chica,
+          v: snap(resto), ...U(R.chica, 2),
+        });
+        chart = [
+          { label: fmt(enteras) + ' ' + plural(enteras, R.sing, R.grande) + ' = ' + fmt(enterasEnChica) + ' ' + R.chica, value: Math.abs(enterasEnChica) || 0.0001, tone: 'main' },
+          { label: 'Resto: ' + fmt(resto) + ' ' + R.chica, value: Math.abs(resto) || 0.0001, tone: 'prop' },
+        ];
+      }
+
+      // Equivalencias: el mismo lapso medido en las unidades de siempre.
+      rows.push({ k: 'El mismo lapso, en días', ref: R.exacta ? 'conversión exacta' : 'con la convención elegida', v: snap(dias), ...U('días', 2) });
+      rows.push({ k: 'El mismo lapso, en horas', ref: 'a 24 horas por día', v: snap(dias * 24), ...U('horas', 2) });
+      rows.push({ k: 'El mismo lapso, en semanas', ref: 'a 7 días por semana, siempre exacto', v: snap(dias / 7), ...U('semanas', 2) });
+      rows.push({
+        k: 'Verificación: convertir el resultado en sentido contrario',
+        ref: 'tiene que devolverte el valor original: ' + fmt(val) + ' ' + desde,
+        v: snap(ida ? res / factor : res * factor), ...U(desde, 4),
+      });
+
+      return {
+        total: fmt(res) + ' ' + hasta,
+        sub: fmt(val) + ' ' + desde + ' = ' + fmt(res) + ' ' + hasta +
+          (R.exacta
+            ? ' · factor exacto de ' + fmt(factor) + ', sin convenciones de por medio'
+            : ' · calculado con el ' + CONV[conv].label.toLowerCase()),
+        rows: rows,
+        format: 'unit', unit: hasta, decimals: 4,
+        chart: chart,
+      };
+    });
+  })();
+</script>

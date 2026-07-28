@@ -1,0 +1,253 @@
+---
+/**
+ * Hub de decisión — "¿Cuántos años vive mi conejo, tortuga o reptil?"
+ * Reemplaza 4 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo cálculo dominante: sin `cases`, la respuesta fija va en hub.answer.
+ * La página sólo aporta datos (src/lib/hubs/cuanto-vive.ts) y su compute().
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  ESPECIES,
+  FACTORES,
+  ETAPAS_CONEJO,
+  ETAPAS_CONEJO_GIGANTE,
+} from '../../lib/hubs/cuanto-vive';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ ESPECIES, FACTORES, ETAPAS_CONEJO, ETAPAS_CONEJO_GIGANTE }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Acá NO hay pesos: TODAS las filas declaran su formato.
+    const ANIOS = { format: 'unit', unit: 'años', decimals: 1 };
+    const ANIOS0 = { format: 'unit', unit: 'años', decimals: 0 };
+    const HUM = { format: 'unit', unit: 'años humanos', decimals: 0 };
+    const row = (k, v, fmt, extra, ref) => Object.assign({ k: k, v: v, extra: !!extra, ref: ref }, fmt);
+
+    const dec = (n, d) =>
+      Number(n || 0).toLocaleString('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+    /** Qué juego de factores aplica cada grupo (ver FACTORES en el .ts). */
+    function setDeFactores(grupo) {
+      return grupo === 'tortuga-terrestre' ? FACTORES['tortuga-terrestre'] : FACTORES.reptil;
+    }
+
+    /**
+     * Equivalencia en años humanos.
+     *  - Conejo (`edad-conejo.ts`): primer año = 21, después +factorAnual.
+     *  - Tortuga (`edad-humana-tortuga.ts`): los primeros años a ratioPrimeros
+     *    y de ahí en más a ratioAdulto.
+     *  - Reptiles: NO existe equivalencia publicada en ninguna fórmula del
+     *    repo y no se inventa: devuelve null y la fila no se muestra.
+     */
+    function aniosHumanos(E, edad) {
+      if (E.grupo === 'conejo') {
+        if (edad <= 1) return edad * 21;
+        return 21 + (edad - 1) * E.factorAnual;
+      }
+      if (E.grupo === 'tortuga-terrestre' || E.grupo === 'tortuga-acuatica') {
+        const p = E.primerosAnios;
+        if (edad <= p) return edad * E.ratioPrimeros;
+        return p * E.ratioPrimeros + (edad - p) * E.ratioAdulto;
+      }
+      return null;
+    }
+
+    /** Etapa de vida del conejo, calcada de `edad-conejo.ts`. */
+    function etapaConejo(especieId, edad) {
+      const tabla = especieId === 'conejo-gigante' ? ETAPAS_CONEJO_GIGANTE : ETAPAS_CONEJO;
+      for (let i = 0; i < tabla.length; i++) {
+        if (edad < tabla[i].hasta) return tabla[i].nombre;
+      }
+      return tabla[tabla.length - 1].nombre;
+    }
+
+    /**
+     * Cortes de etapa para tortugas y reptiles, como fracción de la esperanza.
+     * Los de tortuga vienen de `edad-humana-tortuga.ts` (cría hasta los 2 años,
+     * juvenil hasta la madurez sexual, y después 30% / 70% / 90% de la
+     * esperanza). En reptiles no hay edad de madurez publicada en la fórmula
+     * original: se usa el 15% de la esperanza como corte juvenil.
+     */
+    function cortesEtapa(E, expectativa) {
+      if (E.grupo === 'reptil') {
+        const cria = Math.max(0.5, expectativa * 0.05);
+        const madurez = Math.max(cria + 0.5, expectativa * 0.15);
+        return { cria: cria, madurez: madurez };
+      }
+      return { cria: 2, madurez: Math.max(2.5, E.madurez) };
+    }
+
+    function etapaNoConejo(E, edad, expectativa) {
+      const c = cortesEtapa(E, expectativa);
+      const pct = expectativa > 0 ? edad / expectativa : 0;
+      if (edad < c.cria) return 'Cría';
+      if (edad < c.madurez) return 'Juvenil';
+      if (pct < 0.3) return 'Adulto joven';
+      if (pct < 0.7) return 'Adulto';
+      if (pct < 0.9) return 'Adulto mayor';
+      return 'Anciano';
+    }
+
+    H.onCompute(function (v) {
+      const especieId = String(v.especie || 'tt-mediterranea');
+      const E = ESPECIES[especieId] || ESPECIES['tt-mediterranea'];
+      const edad = Math.max(0, Math.min(120, Number(v.edad) || 0));
+      const hab = String(v.habitat || 'aceptable');
+      const die = String(v.dieta || 'optima');
+
+      const F = setDeFactores(E.grupo);
+      const fHab = F.habitat[hab] != null ? F.habitat[hab] : F.habitat.aceptable;
+      const fDie = F.dieta[die] != null ? F.dieta[die] : F.dieta.optima;
+
+      // Esperanza con los cuidados cargados, y el techo con cuidados óptimos.
+      const expectativa = Math.round(E.base * fHab * fDie);
+      const optima = Math.round(E.base * F.habitat.optimo * F.dieta.optima);
+      const costoCuidados = Math.max(0, optima - expectativa);
+
+      // Rango típico: en tortugas terrestres el mínimo sigue a la expectativa
+      // (regla de `expectativa-vida-tortuga-terrestre.ts`); en el resto es el
+      // piso fijo de la especie.
+      const rangoMin =
+        E.grupo === 'tortuga-terrestre' ? Math.round(expectativa * 0.75) : E.baseMin;
+      const rangoMax = E.topeMax;
+
+      const restantes = Math.max(0, expectativa - edad);
+      const humana = aniosHumanos(E, edad);
+      const etapa =
+        E.grupo === 'conejo' ? etapaConejo(especieId, edad) : etapaNoConejo(E, edad, expectativa);
+
+      // ── Barra de etapas, estirada hasta donde llegue el animal ──
+      const fin = Math.max(expectativa, edad + 1, 1);
+      let cortes;
+      if (E.grupo === 'conejo') {
+        const tabla = especieId === 'conejo-gigante' ? ETAPAS_CONEJO_GIGANTE : ETAPAS_CONEJO;
+        cortes = [
+          { label: tabla[0].nombre, to: tabla[0].hasta },
+          { label: tabla[1].nombre, to: tabla[1].hasta },
+          { label: tabla[2].nombre, to: tabla[2].hasta },
+          { label: tabla[3].nombre, to: tabla[3].hasta },
+          { label: tabla[4].nombre, to: tabla[4].hasta },
+          { label: tabla[5].nombre, to: fin },
+        ];
+      } else {
+        const c = cortesEtapa(E, expectativa);
+        cortes = [
+          { label: 'Cría', to: c.cria },
+          { label: 'Juvenil', to: c.madurez },
+          { label: 'Adulto joven', to: expectativa * 0.3 },
+          { label: 'Adulto', to: expectativa * 0.7 },
+          { label: 'Adulto mayor', to: expectativa * 0.9 },
+          { label: 'Anciano', to: fin },
+        ];
+      }
+      const tonos = ['good', 'good', 'main', 'main', 'warn', 'bad'];
+      const bandas = [];
+      let desde = 0;
+      for (let i = 0; i < cortes.length; i++) {
+        const hasta = i === cortes.length - 1 ? fin : Math.min(cortes[i].to, fin);
+        if (hasta <= desde) continue;
+        bandas.push({
+          label: cortes[i].label,
+          from: Number(desde.toFixed(1)),
+          to: Number(hasta.toFixed(1)),
+          tone: tonos[i],
+        });
+        desde = hasta;
+      }
+
+      const pos = Math.max(0, Math.min(100, (edad / fin) * 100));
+
+      const rows = [
+        row('Edad actual', edad, ANIOS, false, etapa),
+        row('Esperanza de vida con estos cuidados', expectativa, ANIOS0, true, E.nombre),
+        // Ojo: con cuidados deficientes la esperanza estimada puede quedar POR
+        // DEBAJO de este piso. No es un bug: el piso es el de la especie bien
+        // cuidada, y ese hueco es exactamente lo que cuesta el mal manejo.
+        row('Piso del rango típico de la especie, bien cuidada', rangoMin, ANIOS0, false, 'referencia'),
+        row('Máximo documentado de la especie', rangoMax, ANIOS0, false, 'techo'),
+        row('Le quedarían por delante', restantes, ANIOS0, false, 'promedio'),
+        row('Esperanza con alojamiento y dieta óptimos', optima, ANIOS0, false, 'techo alcanzable'),
+        row('Lo que cuestan los cuidados actuales', costoCuidados, ANIOS0, costoCuidados > 0, 'años perdidos'),
+      ];
+      if (humana != null) {
+        rows.splice(1, 0, row('Equivalencia en años humanos', humana, HUM, true, E.grupo === 'conejo' ? 'edad-conejo' : 'ratio por especie'));
+      }
+      if (E.madurez != null && edad < E.madurez) {
+        rows.push(row('Hasta la madurez sexual', Math.max(0, E.madurez - edad), ANIOS0, false, 'estimado'));
+      }
+
+      const subPartes = [E.nombre, dec(edad, 1) + ' años', etapa];
+      subPartes.push('rango ' + rangoMin + '-' + rangoMax + ' años');
+      if (restantes > 0) subPartes.push('le quedarían unos ' + dec(restantes, 0) + ' años');
+      else subPartes.push('ya superó la esperanza estimada: cada año extra es un regalo');
+      if (costoCuidados > 0) subPartes.push('mejorando los cuidados sumaría ' + dec(costoCuidados, 0) + ' años');
+
+      return {
+        total: dec(expectativa, 0) + ' años',
+        sub: subPartes.join(' · '),
+        rows: rows,
+        chart: bandas,
+        // Default del resultado: años (acá no hay pesos).
+        format: 'unit',
+        unit: 'años',
+        decimals: 0,
+        position: Number(pos.toFixed(1)),
+        positionLabel:
+          dec(edad, 1) +
+          ' años · ' +
+          etapa +
+          ' · esperanza ' +
+          dec(expectativa, 0) +
+          ' años' +
+          (humana != null ? ' · equivale a ' + dec(humana, 0) + ' humanos' : ''),
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,494 @@
+---
+/**
+ * Hub de decisión — "¿Cómo organizo el estudio para el examen?"
+ * Reemplaza 9 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/plan-de-estudio.ts) y su
+ * compute(). El chrome, el CSS y el runtime viven en DecisionHub.astro y no se
+ * tocan.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub } from '../../lib/hubs/plan-de-estudio';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline>
+  (function () {
+    const H = window.HC_HUB;
+
+    /**
+     * Ninguna rama es plata y el default de HubRow es 'ars': TODA fila declara
+     * su formato. Nada de esto se imprime en pesos.
+     */
+    const CANT = { format: 'plain', decimals: 0 };
+    const DIAS = { format: 'unit', unit: 'días', decimals: 0 };
+    const HORAS = { format: 'unit', unit: 'h', decimals: 1 };
+    const HORAS0 = { format: 'unit', unit: 'h', decimals: 0 };
+    const MIN = { format: 'unit', unit: 'min', decimals: 0 };
+    const TARJ = { format: 'unit', unit: 'tarjetas', decimals: 0 };
+    const SESIONES = { format: 'unit', unit: 'sesiones', decimals: 0 };
+    const PCT = { format: 'unit', unit: '%', decimals: 0 };
+    const ANIOS = { format: 'unit', unit: 'años', decimals: 1 };
+
+    const fmt = (n, d) => {
+      if (!isFinite(n)) return '—';
+      const dec = d == null ? 0 : d;
+      return Number(n.toFixed(dec)).toLocaleString('es-AR', { maximumFractionDigits: dec });
+    };
+    const clamp = (n) => Math.max(0, Math.min(100, isFinite(n) ? n : 0));
+    const pos = (val, min, max) => clamp(((val - min) / (max - min)) * 100);
+    /**
+     * Número tolerante al formato rioplatense. El punto sólo se trata como
+     * separador de miles cuando la cadena tiene forma de miles ("1.500"); si no,
+     * es un decimal ("7.5") y se respeta. La coma siempre es decimal.
+     */
+    const num = (v, def) => {
+      let s = String(v == null ? '' : v).trim();
+      if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) s = s.replace(/\./g, '');
+      const n = Number(s.replace(',', '.'));
+      return isFinite(n) ? n : def;
+    };
+
+    const err = (msg, k, v) => ({
+      total: '—', sub: msg,
+      rows: [{ k: k, v: v, ...CANT }],
+      chart: [], format: 'plain', decimals: 0, position: 0, positionLabel: msg,
+    });
+
+    /** Minutos a "5 h 25 min", igual que la fórmula original de pomodoro. */
+    function hm(min) {
+      const m = Math.round(min);
+      const h = Math.floor(m / 60);
+      const r = m % 60;
+      return h && r ? h + ' h ' + r + ' min' : h ? h + ' h' : r + ' min';
+    }
+
+    // --- Curva del olvido: parámetros calibrados con Ebbinghaus (1885) -----
+    const EBB_A = 0.7284;
+    const EBB_B = 0.1276;
+    function retencion(horas, repasos) {
+      const a = EBB_A / Math.pow(2, repasos);
+      const raw = horas === 0 ? 1 : Math.exp(-a * Math.pow(horas, EBB_B));
+      return Math.min(100, Math.max(0, Math.round(raw * 100)));
+    }
+
+    // --- Calentamiento: heurística, no constante medida -------------------
+    const CAL_BASE = { memorizacion: 5, razonamiento: 15, escritura: 20, programacion: 20 };
+    const CAL_HORA = { memorizacion: 2, razonamiento: 5, escritura: 5, programacion: 8 };
+    const CAL_ARRANQUE = {
+      memorizacion: 'Revisá 5 flashcards fáciles',
+      razonamiento: 'Resolvé 2-3 problemas de nivel previo',
+      escritura: 'Releé lo escrito ayer y armá el outline',
+      programacion: 'Revisá el código de ayer y dejá el entorno listo',
+    };
+    const CAL_LABEL = {
+      memorizacion: 'memorización', razonamiento: 'razonamiento',
+      escritura: 'escritura', programacion: 'programación',
+    };
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'repaso';
+
+      // ---- 1) Calendario de repaso espaciado ---------------------------
+      if (id === 'repaso') {
+        const dias = Math.round(num(v.diasHastaExamen, 30));
+        const n = Math.max(2, Math.min(5, Math.round(num(v.cantidadRepasos, 4))));
+        if (!(dias >= 3)) return err('Necesitás al menos 3 días hasta el examen para que el espaciado tenga efecto.', 'Días hasta el examen', dias);
+
+        // Mismo reparto que la fórmula original: curvatura exponencial 1,5.
+        const ultimoDia = Math.max(dias - Math.max(3, Math.round(dias * 0.1)), Math.ceil(dias * 0.7));
+        const puntos = [1];
+        for (let k = 1; k < n; k++) {
+          puntos.push(Math.round(1 + (ultimoDia - 1) * Math.pow(k / (n - 1), 1.5)));
+        }
+        const diasAntes = dias - ultimoDia;
+
+        const rows = [{ k: 'Días hasta el examen', v: dias, ...DIAS }];
+        const chart = [];
+        let prev = 0;
+        const TONOS = ['main', 'good', 'warn', 'exit', 'prop'];
+        puntos.forEach(function (p, idx) {
+          const hueco = p - prev;
+          rows.push({
+            k: 'Repaso ' + (idx + 1) + ' — día ' + p,
+            ref: idx === 0 ? 'arranca el día siguiente al estudio' : 'a ' + fmt(p - puntos[idx - 1]) + ' día(s) del repaso anterior',
+            v: p, extra: idx === puntos.length - 1, ...DIAS,
+          });
+          chart.push({ label: 'Repaso ' + (idx + 1) + ' (día ' + p + ')', value: hueco, from: prev, to: p, tone: TONOS[idx % TONOS.length] });
+          prev = p;
+        });
+        if (dias > prev) chart.push({ label: 'Hasta el examen', value: dias - prev, from: prev, to: dias, tone: 'bad' });
+        rows.push({ k: 'El último repaso cae antes del examen', ref: 'dejá al menos una noche de sueño', v: diasAntes, extra: true, ...DIAS });
+        rows.push({ k: 'Primer hueco entre repasos', v: puntos[1] - puntos[0], ...DIAS });
+        rows.push({ k: 'Último hueco entre repasos', ref: 'los intervalos crecen: eso es repaso espaciado', v: puntos[n - 1] - puntos[n - 2], ...DIAS });
+
+        return {
+          total: n + ' repasos',
+          sub:
+            'Repasá los días ' + puntos.join(', ') + ' contando desde hoy. Los huecos crecen de ' +
+            fmt(puntos[1] - puntos[0]) + ' a ' + fmt(puntos[n - 1] - puntos[n - 2]) +
+            ' día(s) y el último repaso cae ' + fmt(diasAntes) + ' día(s) antes del examen.',
+          rows: rows,
+          format: 'plain', decimals: 0,
+          chart: chart,
+          position: pos(ultimoDia, 0, dias),
+          positionLabel: 'Último repaso el día ' + ultimoDia + ' de ' + dias,
+        };
+      }
+
+      // ---- 2) Curva del olvido ------------------------------------------
+      if (id === 'olvido') {
+        const horas = Math.max(0, num(v.horasDesdeEstudio, 24));
+        const repasos = Math.min(10, Math.max(0, Math.round(num(v.repasosHechos, 0))));
+        const ret = retencion(horas, repasos);
+        const olv = 100 - ret;
+        const conUnoMas = retencion(horas, Math.min(10, repasos + 1));
+
+        let proximo;
+        if (ret > 80) proximo = 'Podés esperar 1-3 días más antes de repasar.';
+        else if (ret > 60) proximo = 'Repasá en las próximas 24 h.';
+        else if (ret > 35) proximo = 'Repasá hoy mismo: estás en zona crítica.';
+        else proximo = 'Urge repasar: más tarde es casi reaprender desde cero.';
+
+        return {
+          total: fmt(ret) + '%',
+          sub:
+            'A las ' + fmt(horas) + ' h del estudio' + (repasos > 0 ? ' y con ' + repasos + ' repaso(s) hechos' : ' y sin repasos') +
+            ', retenés ~' + ret + '% y ya olvidaste ~' + olv + '%. ' + proximo,
+          rows: [
+            { k: 'Horas desde que estudiaste', v: horas, ...HORAS0 },
+            { k: 'Repasos ya hechos', v: repasos, ...CANT },
+            { k: 'Retención estimada', ref: 'R = e^(−a × t^b), a = 0,7284 · b = 0,1276', v: ret, extra: true, ...PCT },
+            { k: 'Ya olvidado', v: olv, ...PCT },
+            { k: 'Retención si sumás un repaso más', ref: 'cada repaso divide el decaimiento por 2', v: conUnoMas, extra: true, ...PCT },
+            { k: 'Cuánto te levanta ese repaso', v: conUnoMas - ret, ...PCT },
+            { k: 'Referencia: retención a las 24 h sin repasar', ref: 'dato empírico de Ebbinghaus 1885', v: retencion(24, 0), ...PCT },
+            { k: 'Referencia: retención a los 31 días sin repasar', v: retencion(744, 0), ...PCT },
+          ],
+          format: 'plain', decimals: 0,
+          chart: [
+            { label: 'Casi reaprender', value: 30, from: 0, to: 30, tone: 'bad' },
+            { label: 'Zona crítica', value: 30, from: 30, to: 60, tone: 'warn' },
+            { label: 'Repaso barato', value: 40, from: 60, to: 100, tone: 'good' },
+          ],
+          position: clamp(ret),
+          positionLabel: 'Retenés ' + ret + '% a las ' + fmt(horas) + ' h',
+        };
+      }
+
+      // ---- 3) Flashcards por día ----------------------------------------
+      if (id === 'flashcards') {
+        const min = num(v.minutosDia, 30);
+        const total = num(v.objetivo, 1500);
+        const meses = num(v.plazoMeses, 6);
+        if (min <= 0 || total <= 0 || meses <= 0) return err('Cargá objetivo, plazo y minutos por día mayores a cero.', 'Datos cargados', 0);
+
+        const dias = meses * 30.42;
+        const nuevasDia = Math.ceil(total / dias);
+        const repasosDia = nuevasDia * 10;
+        const tiempoReq = Math.round((repasosDia * 10) / 60);
+        const holgado = Math.round(min * 0.8);
+        const veredicto = tiempoReq > min
+          ? 'No entra: necesitás ' + tiempoReq + ' min y tenés ' + fmt(min) + '. Estirá el plazo o bajá la meta.'
+          : tiempoReq > holgado
+            ? 'Entra ajustado: casi al límite de tus ' + fmt(min) + ' min, sin margen para un día perdido.'
+            : 'Entra con margen dentro de tus ' + fmt(min) + ' min.';
+        const tope = Math.max(min + 1, tiempoReq + 1);
+
+        return {
+          total: fmt(tiempoReq) + ' min/día',
+          sub:
+            'Para cubrir ' + fmt(total) + ' tarjetas en ' + fmt(meses) + ' mes(es) hacen falta ' + nuevasDia +
+            ' nuevas por día, que generan ' + fmt(repasosDia) + ' repasos diarios. ' + veredicto,
+          rows: [
+            { k: 'Tarjetas objetivo', v: total, ...TARJ },
+            { k: 'Días de plazo', ref: 'meses × 30,42', v: dias, format: 'unit', unit: 'días', decimals: 1 },
+            { k: 'Tarjetas nuevas por día', ref: 'total ÷ días, redondeado hacia arriba', v: nuevasDia, extra: true, ...TARJ },
+            { k: 'Repasos diarios en régimen', ref: 'modelo: 10 repasos por tarjeta', v: repasosDia, ...TARJ },
+            { k: 'Minutos que te demanda por día', ref: 'repasos × 10 s', v: tiempoReq, extra: true, ...MIN },
+            { k: 'Minutos que tenés disponibles', v: min, ...MIN },
+            { k: 'Margen', ref: 'disponibles − requeridos', v: min - tiempoReq, ...MIN },
+          ],
+          format: 'plain', decimals: 0,
+          chart: [
+            { label: 'Con margen', value: holgado, from: 0, to: holgado, tone: 'good' },
+            { label: 'Ajustado', value: min - holgado, from: holgado, to: Math.round(min), tone: 'warn' },
+            { label: 'No entra', value: tope - min, from: Math.round(min), to: Math.round(tope), tone: 'bad' },
+          ],
+          position: pos(tiempoReq, 0, tope),
+          positionLabel: fmt(tiempoReq) + ' min/día necesarios sobre ' + fmt(min) + ' disponibles',
+        };
+      }
+
+      // ---- 4) Anki: cards por día para X palabras ------------------------
+      if (id === 'anki') {
+        const o = num(v.objetivo, 1500);
+        const m = num(v.plazoMeses, 6);
+        if (o <= 0 || m <= 0) return err('Cargá un objetivo y un plazo mayores a cero.', 'Datos cargados', 0);
+
+        const dias = m * 30;
+        const nuevas = o / dias;
+        const revPorNueva = 8;
+        const revDia = nuevas * revPorNueva;
+        const segundos = nuevas * 25 + revDia * 10;
+        const min = Math.round(segundos / 60);
+        const nota = nuevas <= 20
+          ? 'Ritmo cómodo y sostenible: los repasos no se te van a acumular.'
+          : nuevas <= 35
+            ? 'Ritmo exigente pero hacible si sos constante todos los días.'
+            : 'Son demasiadas cards nuevas por día: el backlog de repasos te va a explotar. Estirá el plazo o bajá el objetivo.';
+        const tope = Math.max(50, Math.ceil(nuevas) + 5);
+
+        return {
+          total: fmt(nuevas) + ' cards/día',
+          sub:
+            'Para llegar a ' + fmt(o) + ' palabras en ' + fmt(m) + ' mes(es): ' + fmt(nuevas) + ' cards nuevas por día y ~' +
+            fmt(revDia) + ' repasos diarios en régimen, unos ' + min + ' min. ' + nota,
+          rows: [
+            { k: 'Palabras o conceptos objetivo', v: o, ...CANT },
+            { k: 'Días de plazo', ref: 'meses × 30', v: dias, ...DIAS },
+            { k: 'Cards nuevas por día', ref: 'objetivo ÷ días', v: nuevas, format: 'unit', unit: 'cards', decimals: 1 },
+            { k: 'Repasos diarios en régimen', ref: 'modelo SM-2 / FSRS: ~8 repasos por card', v: revDia, format: 'unit', unit: 'cards', decimals: 0 },
+            { k: 'Tiempo de las cards nuevas', ref: '25 s cada una', v: (nuevas * 25) / 60, format: 'unit', unit: 'min', decimals: 1 },
+            { k: 'Tiempo de los repasos', ref: '10 s cada uno', v: (revDia * 10) / 60, format: 'unit', unit: 'min', decimals: 1 },
+            { k: 'Total diario', v: min, extra: true, ...MIN },
+            { k: 'Minutos que tenés disponibles', ref: 'para comparar', v: num(v.minutosDia, 30), ...MIN },
+          ],
+          format: 'plain', decimals: 0,
+          chart: [
+            { label: 'Cómodo', value: 20, from: 0, to: 20, tone: 'good' },
+            { label: 'Exigente', value: 15, from: 20, to: 35, tone: 'warn' },
+            { label: 'Backlog asegurado', value: tope - 35, from: 35, to: tope, tone: 'bad' },
+          ],
+          position: pos(nuevas, 0, tope),
+          positionLabel: fmt(nuevas, 1) + ' cards nuevas por día',
+        };
+      }
+
+      // ---- 5) Reparto de días entre parciales ---------------------------
+      if (id === 'parciales') {
+        const mats = [];
+        [['horas1', 'dias1'], ['horas2', 'dias2'], ['horas3', 'dias3']].forEach(function (par, idx) {
+          const h = num(v[par[0]], 0);
+          const d = num(v[par[1]], 0);
+          if (h > 0 && d > 0) mats.push({ i: idx + 1, horas: h, dias: d, hdpd: h / d });
+        });
+        if (!mats.length) return err('Cargá al menos una materia con horas y días mayores a cero.', 'Materias cargadas', 0);
+
+        const totalDiario = mats.reduce(function (s, m) { return s + m.hdpd; }, 0);
+        const totalHoras = mats.reduce(function (s, m) { return s + m.horas; }, 0);
+        const viab = totalDiario <= 4
+          ? 'Plan muy viable: ritmo cómodo, con margen para imprevistos.'
+          : totalDiario <= 6
+            ? 'Plan viable: exigente pero sostenible si cuidás los descansos.'
+            : totalDiario <= 8
+              ? 'Plan ajustado: sólo se sostiene con disciplina y buena organización.'
+              : 'Plan no viable a largo plazo: priorizá materias o estirá los días antes de quemarte.';
+        const tope = Math.max(10, Math.ceil(totalDiario) + 1);
+
+        const rows = [];
+        mats.forEach(function (m) {
+          rows.push({ k: 'Materia ' + m.i + ' — horas totales', v: m.horas, ...HORAS0 });
+          rows.push({ k: 'Materia ' + m.i + ' — días', v: m.dias, ...DIAS });
+          rows.push({ k: 'Materia ' + m.i + ' — carga diaria', ref: 'horas ÷ días', v: m.hdpd, ...HORAS });
+        });
+        rows.push({ k: 'Horas totales de estudio', v: totalHoras, ...HORAS0 });
+        rows.push({ k: 'Carga diaria total', ref: 'suma de las cargas que se solapan', v: totalDiario, extra: true, ...HORAS });
+        rows.push({ k: 'Con un 20% de colchón', ref: 'casi todo el mundo subestima las horas', v: totalDiario * 1.2, ...HORAS });
+
+        return {
+          total: fmt(totalDiario, 1) + ' h/día',
+          sub: fmt(totalHoras) + ' h repartidas en ' + mats.length + ' materia(s) dan ' + fmt(totalDiario, 1) + ' h/día. ' + viab,
+          rows: rows,
+          format: 'plain', decimals: 1,
+          chart: [
+            { label: 'Cómodo', value: 4, from: 0, to: 4, tone: 'good' },
+            { label: 'Exigente', value: 2, from: 4, to: 6, tone: 'main' },
+            { label: 'Ajustado', value: 2, from: 6, to: 8, tone: 'warn' },
+            { label: 'Inviable', value: tope - 8, from: 8, to: tope, tone: 'bad' },
+          ],
+          position: pos(totalDiario, 0, tope),
+          positionLabel: fmt(totalDiario, 1) + ' h/día de estudio efectivo',
+        };
+      }
+
+      // ---- 6) Pomodoro: bloques y descansos en tu día -------------------
+      if (id === 'pomodoro') {
+        const disponible = Math.round(num(v.horasDisponibles, 8) * 60);
+        const tBloque = Math.max(1, num(v.duracionBloque, 25));
+        const tCorto = Math.max(0, num(v.descansoCorto, 5));
+        const tLargo = Math.max(0, num(v.descansoLargo, 20));
+        const cada = Math.max(2, Math.round(num(v.cadaCuantos, 4)));
+        if (disponible <= 0) return err('Cargá las horas disponibles para la sesión.', 'Minutos disponibles', 0);
+
+        // Greedy: el descanso va ANTES de cada bloque salvo el primero, y es
+        // largo si el bloque previo cerró un grupo. Nunca hay descanso después
+        // del último bloque.
+        let bloques = 0, usado = 0, cortos = 0, largos = 0;
+        while (bloques < 5000) {
+          const descanso = bloques === 0 ? 0 : (bloques % cada === 0 ? tLargo : tCorto);
+          if (usado + descanso + tBloque > disponible) break;
+          usado += descanso + tBloque;
+          if (bloques > 0) { if (bloques % cada === 0) largos++; else cortos++; }
+          bloques++;
+        }
+        const foco = Math.round(bloques * tBloque);
+        const totalSes = Math.round(usado);
+        const libre = Math.max(0, Math.round(disponible - usado));
+        const efic = totalSes > 0 ? Math.round((foco / totalSes) * 100) : 0;
+        const ingenuo = Math.floor(disponible / (tBloque + tCorto));
+
+        if (!bloques) {
+          return err('Con ' + disponible + ' min no entra ni un bloque de ' + fmt(tBloque) + ' min. Acortá el bloque o conseguí más tiempo.', 'Minutos disponibles', disponible);
+        }
+
+        const topeFoco = Math.max(6, Math.ceil(foco / 60) + 1);
+        return {
+          total: bloques + ' pomodoros',
+          sub:
+            'En ' + hm(disponible) + ' entran ' + bloques + ' bloque(s) de ' + fmt(tBloque) + ' min = ' + hm(foco) +
+            ' de foco real (' + efic + '% de la sesión), con ' + cortos + ' descanso(s) corto(s)' +
+            (largos ? ' y ' + largos + ' largo(s)' : '') + '. La sesión completa dura ' + hm(totalSes) +
+            (libre > 0 ? ' y te sobran ' + libre + ' min' : '') + '.' +
+            (foco / 60 > 4.5 ? ' Ojo: son más de 4 h de foco de una sentada, conviene partirlo en dos sesiones.' : ''),
+          rows: [
+            { k: 'Minutos disponibles', v: disponible, ...MIN },
+            { k: 'Bloques de foco que entran', ref: fmt(tBloque) + ' min cada uno', v: bloques, extra: true, ...SESIONES },
+            { k: 'Descansos cortos', ref: fmt(tCorto) + ' min cada uno', v: cortos, ...SESIONES },
+            { k: 'Descansos largos', ref: fmt(tLargo) + ' min, uno cada ' + cada + ' bloques', v: largos, ...SESIONES },
+            { k: 'Foco real', ref: 'bloques × duración', v: foco, extra: true, ...MIN },
+            { k: 'Duración de la sesión completa', v: totalSes, ...MIN },
+            { k: 'Eficiencia de la sesión', ref: 'foco ÷ duración', v: efic, ...PCT },
+            { k: 'Minutos que te sobran', v: libre, ...MIN },
+            { k: 'Si NO descontaras los descansos largos', ref: 'la cuenta que infla el resultado', v: ingenuo, ...SESIONES },
+          ],
+          format: 'plain', decimals: 0,
+          chart: [
+            { label: 'Poco foco', value: 2, from: 0, to: 2, tone: 'warn' },
+            { label: 'Buen día', value: 2, from: 2, to: 4, tone: 'good' },
+            { label: 'De una sentada es demasiado', value: topeFoco - 4, from: 4, to: topeFoco, tone: 'bad' },
+          ],
+          position: pos(foco / 60, 0, topeFoco),
+          positionLabel: hm(foco) + ' de foco real en una sesión de ' + hm(totalSes),
+        };
+      }
+
+      // ---- 7) Calentamiento antes de arrancar ---------------------------
+      if (id === 'calentamiento') {
+        const tarea = String(v.tipoTarea || 'razonamiento');
+        const gap = Math.max(0, num(v.horasDesde, 3));
+        const base = CAL_BASE[tarea] != null ? CAL_BASE[tarea] : 15;
+        const ph = CAL_HORA[tarea] != null ? CAL_HORA[tarea] : 5;
+        const capped = Math.min(gap, 6);
+        const minCalc = Math.round(base + ph * capped);
+        const label = CAL_LABEL[tarea] || 'razonamiento';
+        const tope = Math.max(45, minCalc + 5);
+
+        return {
+          total: fmt(minCalc) + ' min',
+          sub:
+            'Tras ' + (gap >= 6 ? '6+ h' : fmt(gap) + ' h') + ' sin tocarlo, una tarea de ' + label + ' pide unos ' +
+            minCalc + ' min de rampa antes de entrar en foco. Arrancá con: ' + (CAL_ARRANQUE[tarea] || 'releer los apuntes anteriores') +
+            '. Es una heurística de referencia, no un dato medido.',
+          rows: [
+            { k: 'Base de la tarea (' + label + ')', ref: 'heurística, no constante medida', v: base, ...MIN },
+            { k: 'Minutos extra por hora sin estudiar', v: ph, ...MIN },
+            { k: 'Horas desde la última sesión', ref: 'se topea en 6 h', v: gap, ...HORAS },
+            { k: 'Horas que entran en la cuenta', v: capped, ...HORAS },
+            { k: 'Calentamiento sugerido', ref: 'base + extra × horas', v: minCalc, extra: true, ...MIN },
+            { k: 'Cuánto pesa sobre una sesión de 60 min', v: (minCalc / 60) * 100, ...PCT },
+          ],
+          format: 'plain', decimals: 0,
+          chart: [
+            { label: 'Arranque corto', value: 10, from: 0, to: 10, tone: 'good' },
+            { label: 'Rampa media', value: 10, from: 10, to: 20, tone: 'main' },
+            { label: 'Arranque largo', value: tope - 20, from: 20, to: tope, tone: 'warn' },
+          ],
+          position: pos(minCalc, 0, tope),
+          positionLabel: fmt(minCalc) + ' min de calentamiento sugeridos',
+        };
+      }
+
+      // ---- 8) Las 10.000 horas ------------------------------------------
+      const hSem = Math.max(0.1, num(v.horasSemana, 10));
+      const sem = Math.max(1, num(v.semanasAno, 50));
+      const acum = Math.max(0, num(v.horasAcumuladas, 0));
+      const anuales = hSem * sem;
+      const anosDesdeCero = 10000 / anuales;
+      const restantes = Math.max(0, 10000 - acum);
+      const anosRestantes = restantes / anuales;
+
+      return {
+        total: fmt(anosRestantes, 1) + ' años',
+        sub:
+          'A ' + fmt(hSem, 1) + ' h/semana × ' + fmt(sem) + ' semanas = ' + fmt(anuales) + ' h/año. ' +
+          (acum > 0
+            ? 'Llevás ' + fmt(acum) + ' h, te faltan ' + fmt(restantes) + ' h: ' + fmt(anosRestantes, 1) + ' años más. '
+            : 'Desde cero son ' + fmt(anosDesdeCero, 1) + ' años hasta las 10.000 horas. ') +
+          'Recordá que 10.000 no es un umbral validado: el metaanálisis de Macnamara y colegas (2014) muestra que la práctica deliberada explica ~12% de la varianza en el rendimiento.',
+        rows: [
+          { k: 'Horas de práctica por semana', v: hSem, ...HORAS },
+          { k: 'Semanas de práctica por año', v: sem, format: 'unit', unit: 'semanas', decimals: 0 },
+          { k: 'Horas al año', ref: 'semanales × semanas', v: anuales, extra: true, ...HORAS0 },
+          { k: 'Horas que ya llevás', v: acum, ...HORAS0 },
+          { k: 'Horas que te faltan para 10.000', v: restantes, ...HORAS0 },
+          { k: 'Años que te faltan a este ritmo', ref: 'restantes ÷ horas al año', v: anosRestantes, extra: true, ...ANIOS },
+          { k: 'Años desde cero', ref: '10.000 ÷ horas al año — la cuenta clásica', v: anosDesdeCero, ...ANIOS },
+          { k: 'Varianza del rendimiento que explica la práctica deliberada', ref: 'Macnamara et al. 2014, 88 estudios', v: 12, ...PCT },
+          { k: 'En educación, esa proporción baja a', ref: 'mismo metaanálisis', v: 4, ...PCT },
+        ],
+        format: 'plain', decimals: 1,
+        chart: [
+          { label: 'Primeras 2.500 h', value: 2500, from: 0, to: 2500, tone: 'main' },
+          { label: 'Hasta 5.000 h', value: 2500, from: 2500, to: 5000, tone: 'good' },
+          { label: 'Hasta 10.000 h', value: 5000, from: 5000, to: 10000, tone: 'warn' },
+        ],
+        position: pos(Math.min(acum, 10000), 0, 10000),
+        positionLabel: fmt(acum) + ' de 10.000 h acumuladas · faltan ' + fmt(anosRestantes, 1) + ' años a este ritmo',
+      };
+    });
+  })();
+</script>

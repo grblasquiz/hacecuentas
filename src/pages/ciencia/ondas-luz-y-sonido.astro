@@ -1,0 +1,463 @@
+---
+/**
+ * Hub de decisión — "¿Cómo se comporta esta onda?"
+ * Reemplaza 5 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: 5 casos (onda / sonido / doppler / lente / sismo).
+ * La página sólo aporta datos (src/lib/hubs/ondas-luz-y-sonido.ts) y compute().
+ * NADA acá es plata: cada fila declara su `format` propio.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, CONST, SCALE } from '../../lib/hubs/ondas-luz-y-sonido';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+const BANDS = hub.chart.bands ?? [];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ C: CONST, SCALE, BANDS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Nada de este hub es plata: todas las filas declaran su formato.
+    const HZ = { format: 'unit', unit: 'Hz', decimals: 3 };
+    const M = { format: 'unit', unit: 'm', decimals: 6 };
+    const CM = { format: 'unit', unit: 'cm', decimals: 3 };
+    const NM = { format: 'unit', unit: 'nm', decimals: 2 };
+    const S = { format: 'unit', unit: 's', decimals: 5 };
+    const MS = { format: 'unit', unit: 'm/s', decimals: 3 };
+    const KMH = { format: 'unit', unit: 'km/h', decimals: 1 };
+    const PCT = { format: 'unit', unit: '%', decimals: 3 };
+    const CEL = { format: 'unit', unit: '°C', decimals: 1 };
+    const J = { format: 'unit', unit: 'J', decimals: 0 };
+    const TON = { format: 'unit', unit: 't de TNT', decimals: 2 };
+    const DIOP = { format: 'unit', unit: 'dioptrías', decimals: 3 };
+    const VECES = { format: 'unit', unit: '×', decimals: 3 };
+    const SEMI = { format: 'unit', unit: 'semitonos', decimals: 3 };
+    const PLAIN = { format: 'plain', decimals: 4 };
+
+    const row = (k, v, fmt, extra, ref) => Object.assign({ k: k, v: v, extra: !!extra, ref: ref }, fmt);
+
+    function fmt(n, d) {
+      if (!isFinite(n)) return '—';
+      if (d == null) {
+        const abs = Math.abs(n);
+        if (abs === 0) d = 0;
+        else if (abs < 0.000001) d = 12;
+        else if (abs < 0.01) d = 7;
+        else if (abs < 1) d = 5;
+        else if (abs < 10000) d = 3;
+        else d = 0;
+      }
+      return Number(n).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: d });
+    }
+
+    function sci(n, d) {
+      if (!isFinite(n) || n === 0) return '0';
+      const e = Math.floor(Math.log10(Math.abs(n)));
+      const m = n / Math.pow(10, e);
+      return fmt(m, d == null ? 3 : d) + ' × 10^' + e;
+    }
+
+    /** Longitud de onda con la unidad que corresponda al orden de magnitud. */
+    function lambdaStr(l) {
+      if (!(l > 0)) return '—';
+      if (l < 1e-9) return fmt(l * 1e12, 2) + ' pm';
+      if (l < 1e-6) return fmt(l * 1e9, 2) + ' nm';
+      if (l < 1e-3) return fmt(l * 1e6, 2) + ' µm';
+      if (l < 1) return fmt(l * 100, 2) + ' cm';
+      if (l < 1000) return fmt(l, 4) + ' m';
+      return fmt(l / 1000, 3) + ' km';
+    }
+
+    /** Frecuencia con prefijo legible. */
+    function freqStr(f) {
+      if (!(f > 0)) return '—';
+      if (f >= 1e12) return fmt(f / 1e12, 4) + ' THz';
+      if (f >= 1e9) return fmt(f / 1e9, 4) + ' GHz';
+      if (f >= 1e6) return fmt(f / 1e6, 4) + ' MHz';
+      if (f >= 1e3) return fmt(f / 1e3, 4) + ' kHz';
+      return fmt(f, 3) + ' Hz';
+    }
+
+    /** Banda del espectro electromagnético (informativo). */
+    function banda(f) {
+      if (!(f > 0)) return '';
+      if (f < 20) return 'infrasonido';
+      if (f < 20000) return 'rango audible';
+      if (f < 3e6) return 'ultrasonido y radio AM';
+      if (f < 3e9) return 'radio FM, TV y celular';
+      if (f < 3e11) return 'microondas';
+      if (f < 4e14) return 'infrarrojo';
+      if (f < 7.9e14) return 'luz visible';
+      return 'ultravioleta o superior';
+    }
+
+    /** Posición 0-100 sobre la regla logarítmica de frecuencia. */
+    function posF(f) {
+      if (!(f > 0)) return 0;
+      const lo = Math.log10(SCALE.minHz), hi = Math.log10(SCALE.maxHz);
+      return Math.max(0, Math.min(100, ((Math.log10(f) - lo) / (hi - lo)) * 100));
+    }
+
+    /** Franjas del gráfico: DÉCADAS logarítmicas, no hertz crudos. */
+    function bandas() {
+      return BANDS.map(function (b) {
+        return {
+          label: b.label,
+          value: Math.log10(b.to) - Math.log10(b.from),
+          tone: b.tone === 'good' ? 'good' : b.tone === 'bad' ? 'bad' : b.tone === 'warn' ? 'warn' : 'main',
+        };
+      });
+    }
+
+    /** Referencia de frecuencia más cercana, en escala logarítmica. */
+    function referencia(f) {
+      if (!(f > 0)) return '';
+      let ref = SCALE.refs[0];
+      SCALE.refs.forEach(function (r) {
+        if (Math.abs(Math.log10(r.hz) - Math.log10(f)) < Math.abs(Math.log10(ref.hz) - Math.log10(f))) ref = r;
+      });
+      const veces = f / ref.hz;
+      if (Math.abs(veces - 1) < 0.06) return 'prácticamente la frecuencia de ' + ref.label;
+      return veces >= 1
+        ? fmt(veces, 2) + ' veces la frecuencia de ' + ref.label
+        : 'un ' + fmt(veces * 100, 1) + '% de la frecuencia de ' + ref.label;
+    }
+
+    /** Velocidad del sonido en aire: lineal en T, con corrección por humedad. */
+    function cSonido(tC, hum) {
+      const seco = C.C_SONIDO_0 + C.C_SONIDO_T * tC;
+      return seco + 0.004 * (Math.max(0, Math.min(100, hum)) / 100) * seco;
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'onda';
+
+      // ── Rama 1: v = λ·f ──────────────────────────────────────────────────
+      if (id === 'onda') {
+        const vel = Number(v.velOnda) || 0;
+        const l = Number(v.lambda) || 0;
+        const f = Number(v.frecuencia) || 0;
+        let velocidad, lambda, freq, despeje;
+        if (!(vel > 0) && l > 0 && f > 0) { lambda = l; freq = f; velocidad = l * f; despeje = 'la velocidad'; }
+        else if (!(l > 0) && vel > 0 && f > 0) { velocidad = vel; freq = f; lambda = vel / f; despeje = 'la longitud de onda'; }
+        else if (!(f > 0) && vel > 0 && l > 0) { velocidad = vel; lambda = l; freq = vel / l; despeje = 'la frecuencia'; }
+        else if (vel > 0 && l > 0 && f > 0) { velocidad = vel; lambda = l; freq = f; despeje = 'nada: los tres datos ya estaban, esto los verifica'; }
+        else {
+          return {
+            total: '—',
+            sub: 'Hacen falta dos de los tres: velocidad, longitud de onda y frecuencia. Dejá en cero el que querés calcular.',
+            rows: [],
+            chart: [],
+          };
+        }
+        const b = banda(freq);
+        const rows = [
+          row('Frecuencia', freq, HZ, despeje === 'la frecuencia', freqStr(freq)),
+          row('Longitud de onda', lambda, M, despeje === 'la longitud de onda', lambdaStr(lambda)),
+          row('Velocidad de propagación', velocidad, MS, despeje === 'la velocidad'),
+          row('Período de la onda', freq > 0 ? 1 / freq : 0, S, false, 'T = 1/f'),
+          row('Número de onda', lambda > 0 ? 1 / lambda : 0, { format: 'unit', unit: '1/m', decimals: 4 }),
+          row('Longitud de onda en nanómetros', lambda * 1e9, NM),
+          row('Longitud de onda en centímetros', lambda * 100, CM),
+          row('Velocidad en km/h', velocidad * 3.6, KMH),
+          row('Fracción de la velocidad de la luz', velocidad / C.C_LUZ, PLAIN, false, 'c = 299.792.458 m/s exactos'),
+          row('Si fuera electromagnética, λ en el vacío sería', freq > 0 ? C.C_LUZ / freq : 0, M, false, lambdaStr(freq > 0 ? C.C_LUZ / freq : 0)),
+        ];
+
+        const comp = referencia(freq);
+        return {
+          total: freqStr(freq),
+          sub:
+            'Despejaste ' + despeje + ': v = ' + fmt(velocidad, 2) + ' m/s, λ = ' + lambdaStr(lambda) + ', f = ' +
+            freqStr(freq) + (b ? ' · cae en la banda de ' + b : '') + (comp ? ' · es ' + comp : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'década',
+          decimals: 2,
+          position: Number(posF(freq).toFixed(1)),
+          positionLabel: freqStr(freq) + ' — ' + b,
+        };
+      }
+
+      // ── Rama 2: velocidad del sonido según la temperatura ────────────────
+      if (id === 'sonido') {
+        const t = Number(v.tempAire);
+        const hum = Number(v.humedad) || 0;
+        if (!isFinite(t) || t < -80 || t > 80) {
+          return { total: '—', sub: 'La temperatura tiene que estar entre −80 y 80 °C.', rows: [], chart: [] };
+        }
+        const c = cSonido(t, hum);
+        const cSeco = C.C_SONIDO_0 + C.C_SONIDO_T * t;
+        const dist = Number(v.distanciaEco) || 0;
+        const segPorKm = 1000 / c;
+        const f = Number(v.frecuencia) || 0;
+
+        const rows = [
+          row('Velocidad del sonido', c, MS, true, 'c ≈ 331,3 + 0,606·T'),
+          row('En kilómetros por hora', c * 3.6, KMH),
+          row('Velocidad en aire seco (sin la corrección de humedad)', cSeco, MS),
+          row('Cuánto suma la humedad', c - cSeco, MS, false, fmt(hum, 0) + '% de humedad relativa'),
+          row('Segundos que tarda en recorrer un kilómetro', segPorKm, S, true, 'el truco del trueno'),
+          row('Temperatura considerada', t, CEL),
+          row('Mach 1 a esta temperatura', c, MS, false, 'la referencia de la aviación'),
+        ];
+        if (dist > 0) {
+          rows.push(row('Tiempo hasta el obstáculo', dist / c, S));
+          rows.push(row('Tiempo del eco (ida y vuelta)', (2 * dist) / c, S, true));
+          rows.push(row('Distancia considerada', dist, M));
+        }
+        if (f > 0) {
+          rows.push(row('Longitud de onda de esa frecuencia en el aire', c / f, M, false, lambdaStr(c / f)));
+          rows.push(row('Frecuencia de referencia usada', f, HZ));
+        }
+
+        const fRef = f > 0 ? f : 440;
+        return {
+          total: fmt(c, 2) + ' m/s',
+          sub:
+            'A ' + fmt(t, 1) + ' °C y ' + fmt(hum, 0) + '% de humedad el sonido viaja a ' + fmt(c, 2) + ' m/s (' +
+            fmt(c * 3.6, 0) + ' km/h) · tarda ' + fmt(segPorKm, 2) + ' s por kilómetro, así que contando los segundos ' +
+            'entre el relámpago y el trueno y dividiendo por tres tenés la distancia en km' +
+            (dist > 0 ? ' · el eco de una pared a ' + fmt(dist, 0) + ' m vuelve en ' + fmt((2 * dist) / c, 2) + ' s' : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'década',
+          decimals: 2,
+          position: Number(posF(fRef).toFixed(1)),
+          positionLabel:
+            'La regla marca ' + freqStr(fRef) + ' (' + banda(fRef) + '): a ' + fmt(c, 1) +
+            ' m/s esa frecuencia tiene ' + lambdaStr(c / fRef) + ' de longitud de onda',
+        };
+      }
+
+      // ── Rama 3: efecto Doppler ───────────────────────────────────────────
+      if (id === 'doppler') {
+        const f0 = Number(v.f0) || 0;
+        const t = isFinite(Number(v.tempAire)) ? Number(v.tempAire) : 20;
+        const c = cSonido(t, Number(v.humedad) || 0);
+        const vs = Number(v.vFuente) || 0;
+        const vo = Number(v.vObservador) || 0;
+        const acerca = String(v.sentido || 'acercando') === 'acercando';
+        if (!(f0 > 0)) {
+          return { total: '—', sub: 'Cargá la frecuencia que emite la fuente.', rows: [], chart: [] };
+        }
+        if (vs >= c) {
+          return {
+            total: '—',
+            sub:
+              'La velocidad de la fuente (' + fmt(vs, 1) + ' m/s) alcanza o supera la del sonido (' + fmt(c, 1) +
+              ' m/s): ahí el denominador se anula, aparece el boom sónico y la fórmula clásica deja de valer.',
+            rows: [],
+            chart: [],
+          };
+        }
+        const fAcerca = (f0 * (c + vo)) / (c - vs);
+        const fAleja = (f0 * (c - vo)) / (c + vs);
+        const fp = acerca ? fAcerca : fAleja;
+        const delta = fp - f0;
+        const pct = (delta / f0) * 100;
+        const semitonos = 12 * Math.log2(fp / f0);
+        const saltoTotal = 12 * Math.log2(fAcerca / fAleja);
+
+        const rows = [
+          row('Frecuencia percibida', fp, HZ, true, acerca ? 'acercándose' : 'alejándose'),
+          row('Frecuencia que emite la fuente', f0, HZ),
+          row('Variación', delta, HZ, true, delta >= 0 ? 'más agudo' : 'más grave'),
+          row('Variación porcentual', pct, PCT),
+          row('Salto de tono', semitonos, SEMI, false, 'en semitonos musicales'),
+          row('Frecuencia mientras se acerca', fAcerca, HZ, acerca),
+          row('Frecuencia una vez que se alejó', fAleja, HZ, !acerca),
+          row('Salto total al pasar de largo', fAcerca - fAleja, HZ, true),
+          row('Ese salto en semitonos', saltoTotal, SEMI),
+          row('Velocidad del sonido usada', c, MS, false, 'a ' + fmt(t, 0) + ' °C'),
+          row('Velocidad de la fuente', vs, MS),
+          row('Velocidad de la fuente en km/h', vs * 3.6, KMH),
+          row('Velocidad del observador', vo, MS),
+          row('Longitud de onda percibida', fp > 0 ? c / fp : 0, M, false, lambdaStr(fp > 0 ? c / fp : 0)),
+        ];
+
+        const comp = referencia(fp);
+        return {
+          total: fmt(fp, 1) + ' Hz percibidos',
+          sub:
+            'La fuente emite ' + fmt(f0, 1) + ' Hz, pero ' + (acerca ? 'al acercarse las ondas se comprimen' : 'al alejarse las ondas se estiran') +
+            ' y el observador escucha ' + fmt(fp, 1) + ' Hz (' + (pct >= 0 ? '+' : '') + fmt(pct, 2) + '%, ' +
+            fmt(Math.abs(semitonos), 2) + ' semitonos más ' + (delta >= 0 ? 'agudo' : 'grave') +
+            ') · al pasar de largo el salto completo es de ' + fmt(fAcerca - fAleja, 1) + ' Hz' +
+            (comp ? ' · es ' + comp : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'década',
+          decimals: 2,
+          position: Number(posF(fp).toFixed(1)),
+          positionLabel: fmt(fp, 1) + ' Hz percibidos — ' + banda(fp),
+        };
+      }
+
+      // ── Rama 4: lentes delgadas ──────────────────────────────────────────
+      if (id === 'lente') {
+        const f = Number(v.focal) || 0;
+        const dO = Number(v.distObjeto) || 0;
+        const dI = Number(v.distImagen) || 0;
+        let foco, objeto, imagen, despeje;
+        if (!(f !== 0) && dO !== 0 && dI !== 0) {
+          objeto = dO; imagen = dI; foco = 1 / (1 / dO + 1 / dI); despeje = 'la distancia focal';
+        } else if (f !== 0 && !(dO !== 0) && dI !== 0) {
+          foco = f; imagen = dI;
+          const inv = 1 / f - 1 / dI;
+          if (inv === 0) return { total: '—', sub: 'Con esos datos el objeto quedaría en el infinito.', rows: [], chart: [] };
+          objeto = 1 / inv; despeje = 'la distancia al objeto';
+        } else if (f !== 0 && dO !== 0 && !(dI !== 0)) {
+          foco = f; objeto = dO;
+          const inv = 1 / f - 1 / dO;
+          if (inv === 0) return { total: '—', sub: 'El objeto está exactamente en el foco: la imagen se forma en el infinito.', rows: [], chart: [] };
+          imagen = 1 / inv; despeje = 'la distancia a la imagen';
+        } else if (f !== 0 && dO !== 0 && dI !== 0) {
+          foco = f; objeto = dO; imagen = dI; despeje = 'nada: los tres datos ya estaban';
+        } else {
+          return {
+            total: '—',
+            sub: 'Hacen falta dos de las tres distancias: focal, objeto e imagen. Dejá en cero la que querés calcular.',
+            rows: [],
+            chart: [],
+          };
+        }
+        const mag = -imagen / objeto;
+        const absM = Math.abs(mag);
+        const real = imagen > 0;
+        const convergente = foco > 0;
+        const dioptrias = foco !== 0 ? 100 / foco : 0; // foco en cm → dioptrías
+
+        const rows = [
+          row('Distancia focal', foco, CM, despeje === 'la distancia focal', '1/f = 1/do + 1/di'),
+          row('Distancia al objeto', objeto, CM, despeje === 'la distancia al objeto'),
+          row('Distancia a la imagen', imagen, CM, despeje === 'la distancia a la imagen'),
+          row('Magnificación', mag, PLAIN, true, mag < 0 ? 'negativa: imagen invertida' : 'positiva: imagen derecha'),
+          row('Tamaño relativo de la imagen', absM, VECES, false, absM > 1 ? 'aumentada' : absM < 1 ? 'reducida' : 'igual'),
+          row('Potencia de la lente', dioptrias, DIOP, false, 'como se rotula un anteojo'),
+          row('Distancia focal en metros', foco / 100, { format: 'unit', unit: 'm', decimals: 5 }),
+          row('Distancia objeto-imagen', Math.abs(objeto) + Math.abs(imagen), CM),
+          row('Relación objeto/foco', foco !== 0 ? objeto / foco : 0, VECES, false, 'menos de 1 = objeto dentro del foco'),
+          row('Superficie relativa de la imagen', absM * absM, VECES, false, 'la magnificación es lineal, no de área'),
+        ];
+
+        return {
+          total: real ? 'Imagen real a ' + fmt(imagen, 2) + ' cm' : 'Imagen virtual a ' + fmt(Math.abs(imagen), 2) + ' cm',
+          sub:
+            'Una lente ' + (convergente ? 'convergente (positiva)' : 'divergente (negativa)') + ' de f = ' + fmt(foco, 2) +
+            ' cm con el objeto a ' + fmt(objeto, 2) + ' cm forma una imagen ' +
+            (real ? 'real, proyectable sobre una pantalla' : 'virtual, sólo visible mirando a través de la lente') + ', ' +
+            (mag < 0 ? 'invertida' : 'derecha') + ' y ' +
+            (absM > 1 ? 'aumentada ' + fmt(absM, 2) + '×' : absM < 1 ? 'reducida a ' + fmt(absM, 2) + '×' : 'del mismo tamaño') +
+            ' · la lente tiene ' + fmt(dioptrias, 2) + ' dioptrías',
+          rows: rows,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'década',
+          decimals: 2,
+          // La luz visible verde marca la referencia: esta rama es óptica pero
+          // no produce una frecuencia propia, y se aclara para no confundir.
+          position: Number(posF(5.4e14).toFixed(1)),
+          positionLabel:
+            'La regla queda marcada en la luz visible (540 THz, el verde): la óptica trabaja en esa banda, pero este cálculo no depende de la frecuencia',
+        };
+      }
+
+      // ── Rama 5: energía de un sismo ──────────────────────────────────────
+      const mag = Number(v.magnitud);
+      const magComp = Number(v.magnitudComp);
+      if (!isFinite(mag) || mag <= 0) {
+        return { total: '—', sub: 'Cargá una magnitud mayor a cero.', rows: [], chart: [] };
+      }
+      const E = Math.pow(10, C.RICHTER_A + C.RICHTER_B * mag);
+      const tnt = E / C.TNT_KG / 1000; // toneladas
+      const Ecomp = isFinite(magComp) && magComp > 0 ? Math.pow(10, C.RICHTER_A + C.RICHTER_B * magComp) : 0;
+      const cat =
+        mag < 4 ? 'menor: casi no se siente ni causa daño'
+          : mag < 6 ? 'moderado: se siente claramente, daños leves'
+          : mag < 7 ? 'fuerte: daños serios en zonas pobladas'
+          : 'grande o devastador';
+      const hogares = E / C.HOGAR_ANUAL_J;
+
+      const rows = [
+        row('Energía liberada', E, J, true, sci(E, 3) + ' J'),
+        row('Equivalente en TNT', tnt, TON, true),
+        row('Magnitud considerada', mag, { format: 'plain', decimals: 1 }),
+        row('Energía de un sismo un punto mayor', Math.pow(10, C.RICHTER_A + C.RICHTER_B * (mag + 1)), J, false, '31,6 veces más'),
+        row('Energía de un sismo un punto menor', Math.pow(10, C.RICHTER_A + C.RICHTER_B * (mag - 1)), J),
+        row('Factor por cada punto de magnitud', Math.pow(10, C.RICHTER_B), VECES, false, '10^1,5 = 31,6'),
+      ];
+      if (Ecomp > 0) {
+        rows.push(row('Magnitud de comparación', magComp, { format: 'plain', decimals: 1 }));
+        rows.push(row('Energía del sismo de comparación', Ecomp, J));
+        rows.push(row('Cuántas veces más energía tiene el tuyo', E / Ecomp, VECES, true));
+      }
+      rows.push(row('Consumo eléctrico anual de cuántos hogares', hogares, { format: 'unit', unit: 'hogares', decimals: 0 }, false, '≈3.000 kWh cada uno'));
+      rows.push(row('Equivalente en kilotoneladas de TNT', tnt / 1000, { format: 'unit', unit: 'kt', decimals: 3 }));
+
+      return {
+        total: 'M' + fmt(mag, 1) + ': ' + sci(E, 2) + ' J',
+        sub:
+          'Un sismo de magnitud ' + fmt(mag, 1) + ' libera ' + sci(E, 2) + ' joules, equivalentes a ' +
+          fmt(tnt, 0) + ' toneladas de TNT · es un evento ' + cat +
+          (Ecomp > 0 ? ' · libera ' + fmt(E / Ecomp, 1) + ' veces la energía de un M' + fmt(magComp, 1) : '') +
+          ' · cada punto entero de magnitud son unas 32 veces más energía',
+        rows: rows,
+        chart: bandas(),
+        format: 'unit',
+        unit: 'década',
+        decimals: 2,
+        // Los sismos viven en el infrasonido: se marca ahí y se aclara.
+        position: Number(posF(5).toFixed(1)),
+        positionLabel:
+          'La regla queda marcada en el infrasonido (unos 5 Hz), que es la banda en la que vibra el suelo durante un sismo: la magnitud no es una frecuencia',
+      };
+    });
+  })();
+</script>

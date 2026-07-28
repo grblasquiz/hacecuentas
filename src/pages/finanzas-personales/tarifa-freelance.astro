@@ -1,0 +1,261 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto tengo que cobrar la hora para que me cierre?"
+ * Reemplaza 4 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Los números son espejo de las fórmulas reales:
+ *   src/lib/formulas/freelance-tarifa-hora.ts                        (rama pesos)
+ *   src/lib/formulas/upwork-freelancer-comision-neta-argentina.ts    (rama dolares)
+ *   src/lib/formulas/calculadora-cuanto-facturar-cubrir-gastos.ts    (rama facturacion)
+ *   src/lib/formulas/obra-social-monotributista-aporte-extra-familiar.ts (adherentes)
+ * y de la fuente única del monotributo: src/lib/data/monotributo-2026.ts
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, COMISIONES, CONVENCIONES } from '../../lib/hubs/tarifa-freelance';
+import { CATEGORIAS, TOPES, CUOTA_SERVICIOS, componentes, META } from '../../lib/data/monotributo-2026';
+import dolar from '../../data/live/dolar.json';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+/** Escala del monotributo servicios serializada para el runtime. */
+const MONOTRIBUTO = CATEGORIAS.map((c) => {
+  const comp = componentes(c, 'servicios');
+  return { cat: c, tope: TOPES[c], cuota: CUOTA_SERVICIOS[c], obraSocial: comp.obraSocial };
+});
+
+/**
+ * Tipo de cambio: para exportación de servicios liquidada por banco se usa el
+ * OFICIAL en su punta compradora. El CCL va como referencia de la brecha.
+ */
+const LIVE = {
+  oficialCompra: Number(dolar?.quotes?.oficial?.compra) || 0,
+  oficialVenta: Number(dolar?.quotes?.oficial?.venta) || 0,
+  ccl: Number(dolar?.quotes?.contadoconliqui?.compra) || 0,
+  comisiones: COMISIONES,
+  conv: CONVENCIONES,
+  monotributo: MONOTRIBUTO,
+  monotributoVigencia: META.vigencia,
+};
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ LIVE }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'pesos';
+
+      const ingresoDeseado = Math.max(0, v.ingresoDeseado || 0);
+      const costosFijos = Math.max(0, v.costosFijos || 0);
+      const impuestosMes = Math.max(0, v.impuestosMes || 0);
+      const horasSemanales = Math.max(1, v.horasSemanales || 1);
+      const semanasVacaciones = Math.min(20, Math.max(0, v.semanasVacaciones || 0));
+      const tarifaUsd = Math.max(0, v.tarifaUsd || 0);
+      const horasMes = Math.max(0, v.horasMes || 0);
+      const plataforma = String(v.plataforma || 'upwork');
+      const retencionesPct = Math.min(99, Math.max(0, v.retencionesPct || 0));
+      const margen = Math.max(0, v.margen || 0);
+      const adherentes = Math.max(0, Math.round(v.adherentes || 0));
+
+      const tc = LIVE.oficialCompra;
+
+      // ── 1. Cobro en pesos a clientes locales
+      if (id === 'pesos') {
+        // Espejo de freelance-tarifa-hora.ts
+        const necesario = ingresoDeseado + costosFijos + impuestosMes;
+        const semanasFacturables = 52 - semanasVacaciones;
+        const horasFacturablesMes = Math.round(((horasSemanales * semanasFacturables) / 12) * 10) / 10;
+        const tarifa = horasFacturablesMes > 0 ? necesario / horasFacturablesMes : 0;
+        const cargaExtra = costosFijos + impuestosMes;
+        const pctNeto = necesario > 0 ? (ingresoDeseado / necesario) * 100 : 0;
+
+        const rows = [
+          { k: 'Tarifa por hora', v: Math.round(tarifa), extra: true },
+          { k: 'Tenés que facturar por mes', v: Math.round(necesario) },
+          { k: 'Horas facturables al mes', v: horasFacturablesMes, format: 'unit', unit: 'horas', decimals: 1 },
+          { k: 'Semanas que facturás al año', v: semanasFacturables, format: 'unit', unit: 'semanas' },
+          { k: 'De eso, tu ingreso limpio', v: Math.round(ingresoDeseado) },
+          { k: 'De eso, costos fijos e impuestos', v: Math.round(cargaExtra) },
+          { k: 'Porcentaje de lo facturado que te queda', v: pctNeto, format: 'unit', unit: '%', decimals: 1 },
+          {
+            k: 'La misma tarifa en dólares',
+            ref: 'oficial comprador ' + H.ars(tc),
+            v: tc > 0 ? tarifa / tc : 0,
+            format: 'unit',
+            unit: 'USD/hora',
+            decimals: 1,
+          },
+        ];
+
+        return {
+          total: H.ars(tarifa),
+          sub:
+            'por hora, sobre ' + horasFacturablesMes.toFixed(1) + ' horas facturables al mes · facturás ' +
+            H.ars(necesario) + ' para llevarte ' + H.ars(ingresoDeseado),
+          rows: rows,
+          chart: [
+            { label: 'Tu ingreso limpio', value: Math.round(ingresoDeseado), tone: 'main' },
+            { label: 'Costos fijos', value: Math.round(costosFijos), tone: 'prop' },
+            { label: 'Impuestos', value: Math.round(impuestosMes), tone: 'exit' },
+          ],
+        };
+      }
+
+      // ── 2. Cobro en dólares por plataforma
+      if (id === 'dolares') {
+        const com = LIVE.comisiones[plataforma] || LIVE.comisiones.upwork;
+        const brutoUsd = tarifaUsd * horasMes;
+        const comisionUsd = brutoUsd * com.pct;
+        const trasComision = brutoUsd - comisionUsd;
+        const retencionUsd = trasComision * (retencionesPct / 100);
+        const netoUsd = trasComision - retencionUsd;
+        const netoArs = netoUsd * tc;
+        const netoArsCcl = netoUsd * LIVE.ccl;
+        const tarifaArsHora = horasMes > 0 ? netoArs / horasMes : 0;
+        const pctQueda = brutoUsd > 0 ? (netoUsd / brutoUsd) * 100 : 0;
+
+        const rows = [
+          { k: 'Te queda en pesos por mes', v: Math.round(netoArs), extra: true },
+          { k: 'Facturás por mes', v: brutoUsd, format: 'unit', unit: 'USD', decimals: 0 },
+          {
+            k: 'Comisión de ' + com.nombre,
+            ref: (com.pct * 100).toFixed(0) + '%',
+            v: comisionUsd,
+            format: 'unit',
+            unit: 'USD',
+            decimals: 0,
+          },
+          {
+            k: 'Retenciones e impuestos sobre el cobro',
+            ref: retencionesPct.toFixed(1) + '%',
+            v: retencionUsd,
+            format: 'unit',
+            unit: 'USD',
+            decimals: 0,
+          },
+          { k: 'Neto que te llega', v: netoUsd, format: 'unit', unit: 'USD', decimals: 0 },
+          { k: 'Tipo de cambio usado', ref: 'oficial comprador', v: tc },
+          { k: 'Lo mismo valuado al contado con liquidación', ref: H.ars(LIVE.ccl), v: Math.round(netoArsCcl) },
+          { k: 'Diferencia contra el contado con liquidación', v: Math.round(netoArsCcl - netoArs) },
+          { k: 'Tu tarifa real por hora en pesos', v: Math.round(tarifaArsHora) },
+          { k: 'Porcentaje del bruto que te queda', v: pctQueda, format: 'unit', unit: '%', decimals: 1 },
+        ];
+
+        return {
+          total: H.ars(netoArs),
+          sub:
+            'de USD ' + Math.round(brutoUsd).toLocaleString('es-AR') + ' facturados por ' + com.nombre +
+            ' te quedan USD ' + Math.round(netoUsd).toLocaleString('es-AR') +
+            ' · liquidados a ' + H.ars(tc),
+          rows: rows,
+          chart: [
+            { label: 'Neto para vos', value: Math.round(netoUsd), tone: 'main' },
+            { label: 'Comisión de ' + com.nombre, value: Math.round(comisionUsd), tone: 'exit' },
+            { label: 'Retenciones', value: Math.round(retencionUsd), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── 3. Cuánto facturar por mes para cubrir gastos + monotributo
+      // El monotributo depende de la facturación y la facturación del monotributo:
+      // se resuelve iterando hasta que la categoría deja de moverse.
+      const base = (ingresoDeseado + costosFijos) * (1 + margen / 100);
+      const esc = LIVE.monotributo;
+      let facturacion = base;
+      let fila = esc[esc.length - 1];
+      for (let k = 0; k < 12; k++) {
+        const anual = facturacion * 12;
+        let elegida = null;
+        for (let j = 0; j < esc.length; j++) {
+          if (anual <= esc[j].tope) { elegida = esc[j]; break; }
+        }
+        fila = elegida || esc[esc.length - 1];
+        const costoAdherentes = adherentes * fila.obraSocial;
+        const nueva = base + fila.cuota + costoAdherentes;
+        if (Math.abs(nueva - facturacion) < 1) { facturacion = nueva; break; }
+        facturacion = nueva;
+      }
+      const excedeK = facturacion * 12 > esc[esc.length - 1].tope;
+      const costoAdherentes = adherentes * fila.obraSocial;
+      const cargaFiscal = fila.cuota + costoAdherentes;
+      const anual = facturacion * 12;
+      const margenHastaTope = Math.max(0, fila.tope - anual);
+
+      const rows = [
+        { k: 'Tenés que facturar por mes', v: Math.round(facturacion), extra: true },
+        { k: 'Por día hábil', ref: LIVE.conv.diasHabilesMes + ' días', v: Math.round(facturacion / LIVE.conv.diasHabilesMes) },
+        { k: 'Por hora', ref: LIVE.conv.horasMes + ' horas', v: Math.round(facturacion / LIVE.conv.horasMes) },
+        { k: 'Lo que te llevás limpio', v: Math.round(ingresoDeseado) },
+        { k: 'Costos fijos', v: Math.round(costosFijos) },
+        { k: 'Margen sobre gastos', ref: margen.toFixed(0) + '%', v: Math.round(base - ingresoDeseado - costosFijos) },
+        { k: 'Cuota de monotributo', ref: 'categoría ' + fila.cat + ' · servicios', v: Math.round(fila.cuota) },
+        { k: 'De la cuota, componente de obra social', v: Math.round(fila.obraSocial) },
+        {
+          k: 'Adherentes en la obra social',
+          ref: adherentes + (adherentes === 1 ? ' adherente' : ' adherentes'),
+          v: Math.round(costoAdherentes),
+        },
+        { k: 'Facturación anual proyectada', v: Math.round(anual) },
+        { k: 'Tope anual de la categoría ' + fila.cat, v: Math.round(fila.tope) },
+        { k: 'Margen hasta el tope', v: Math.round(margenHastaTope) },
+        { k: 'Carga fiscal sobre lo facturado', v: facturacion > 0 ? (cargaFiscal / facturacion) * 100 : 0, format: 'unit', unit: '%', decimals: 1 },
+      ];
+
+      return {
+        total: H.ars(facturacion),
+        sub:
+          'por mes para llevarte ' + H.ars(ingresoDeseado) + ' · categoría ' + fila.cat +
+          ' (cuota ' + H.ars(fila.cuota) + ')' +
+          (excedeK ? ' · con esa facturación quedás fuera del monotributo: te corresponde el régimen general' : ''),
+        rows: rows,
+        chart: [
+          { label: 'Tu ingreso limpio', value: Math.round(ingresoDeseado), tone: 'main' },
+          { label: 'Costos fijos y margen', value: Math.round(base - ingresoDeseado), tone: 'prop' },
+          { label: 'Monotributo y obra social', value: Math.round(cargaFiscal), tone: 'exit' },
+        ],
+      };
+    });
+  })();
+</script>

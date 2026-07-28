@@ -1,0 +1,260 @@
+---
+/**
+ * Hub de decisión — "La receta no me da: ¿cómo la adapto?"
+ * Reemplaza 5 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: tres ramas (porciones, molde, reemplazo). Las tres
+ * terminan en el mismo número —el factor de conversión— así que comparten eje
+ * de gráfico.
+ *
+ * Nada de lo que sale acá es plata: cada fila declara `format` explícito.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub, REEMPLAZOS, SUSTITUTOS_HUEVO, EJE_MAX,
+} from '../../lib/hubs/adaptar-una-receta';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    REEMPLAZOS, SUSTITUTOS_HUEVO, EJE_MAX, BANDS: hub.chart.bands,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    const n1 = (x, d) => Number(x || 0).toLocaleString('es-AR', {
+      minimumFractionDigits: d == null ? 0 : d,
+      maximumFractionDigits: d == null ? 0 : d,
+    });
+
+    function segsEje() {
+      return BANDS.map((b) => ({
+        label: b.label, value: b.to - b.from, from: b.from, to: b.to,
+        tone: b.tone === 'neutral' ? 'main' : b.tone,
+      }));
+    }
+    const pos = (f) => Number(Math.min(100, Math.max(0, (f / EJE_MAX) * 100)).toFixed(1));
+
+    const lectura = (f) =>
+      f < 0.5 ? 'reducís a menos de la mitad'
+      : f < 0.9 ? 'reducís la receta'
+      : f <= 1.1 ? 'queda prácticamente igual'
+      : f <= 2 ? 'agrandás la receta'
+      : 'más que duplicás la receta';
+
+    // ---------- RAMA 1: escalar porciones ----------
+    function calcPorciones(v) {
+      const orig = Math.max(1, Number(v.porcOriginal) || 4);
+      const des = Math.max(1, Number(v.porcDeseadas) || 6);
+      const cant = Math.max(0, Number(v.cantidad) || 0);
+      const factor = des / orig;
+
+      const rows = [
+        { k: 'Factor de conversión', ref: des + ' ÷ ' + orig, v: factor, format: 'plain', decimals: 3, extra: true },
+        { k: 'Tu ingrediente convertido', ref: 'de ' + n1(cant, 1) + ' a', v: cant * factor, format: 'plain', decimals: 1, extra: true },
+        { k: 'Si la receta lleva 100 g de harina', ref: 'referencia', v: 100 * factor, format: 'unit', unit: 'g', decimals: 0 },
+        { k: 'Si lleva 250 ml de leche', ref: 'referencia', v: 250 * factor, format: 'unit', unit: 'ml', decimals: 0 },
+        { k: 'Si lleva 3 huevos', ref: 'redondealo a entero', v: 3 * factor, format: 'unit', unit: 'huevos', decimals: 1 },
+        { k: 'Sal y especias: empezá con', ref: '75% del factor', v: factor * 0.75, format: 'plain', decimals: 2 },
+        { k: 'Porciones de la receta', ref: 'original', v: orig, format: 'unit', unit: 'porciones', decimals: 0 },
+        { k: 'Porciones que buscás', ref: 'objetivo', v: des, format: 'unit', unit: 'porciones', decimals: 0 },
+      ];
+
+      const aviso =
+        factor > 3 ? ' · factor mayor a 3: revisá que el molde y la olla den, y cociná en tandas si hace falta'
+        : factor < 0.34 ? ' · factor muy chico: los huevos y la levadura pierden precisión, conviene pesar medio huevo batido'
+        : '';
+
+      return {
+        total: '×' + n1(factor, 2),
+        sub:
+          'De ' + orig + ' a ' + des + ' porciones: multiplicá cada ingrediente por ' + n1(factor, 2) +
+          ' · ' + lectura(factor) + ' · el tiempo de cocción NO se multiplica' + aviso,
+        rows: rows,
+        chart: segsEje(),
+        format: 'plain',
+        decimals: 2,
+        position: pos(factor),
+        positionLabel: 'Factor ×' + n1(factor, 2) + ' — ' + lectura(factor),
+      };
+    }
+
+    // ---------- RAMA 2: cambio de molde ----------
+    function calcMolde(v) {
+      const dR = Math.max(1, Number(v.diamReceta) || 20);
+      const forma = String(v.forma || 'redondo');
+      const m1 = Math.max(1, Number(v.medida1) || 24);
+      const m2 = Math.max(1, Number(v.medida2) || m1);
+
+      const areaReceta = Math.PI * Math.pow(dR / 2, 2);
+      const areaMolde =
+        forma === 'redondo' ? Math.PI * Math.pow(m1 / 2, 2)
+        : forma === 'cuadrado' ? m1 * m1
+        : m1 * m2;
+      const factor = areaMolde / areaReceta;
+      const diamEquiv = Math.sqrt((4 * areaMolde) / Math.PI);
+
+      const rows = [
+        { k: 'Factor de conversión', ref: 'cociente de áreas', v: factor, format: 'plain', decimals: 2, extra: true },
+        { k: 'Área del molde de la receta', ref: 'redondo de ' + dR + ' cm', v: areaReceta, format: 'unit', unit: 'cm²', decimals: 0 },
+        { k: 'Área de tu molde', ref: forma, v: areaMolde, format: 'unit', unit: 'cm²', decimals: 0, extra: true },
+        { k: 'Diámetro redondo equivalente al tuyo', ref: 'misma superficie', v: diamEquiv, format: 'unit', unit: 'cm', decimals: 1 },
+        { k: 'Si la receta lleva 200 g de harina', ref: 'referencia', v: 200 * factor, format: 'unit', unit: 'g', decimals: 0 },
+        { k: 'Tu ingrediente convertido', ref: 'de ' + n1(Number(v.cantidad) || 0, 1) + ' a', v: (Number(v.cantidad) || 0) * factor, format: 'plain', decimals: 1 },
+        { k: 'Diferencia de superficie', ref: 'contra el molde de la receta', v: (factor - 1) * 100, format: 'unit', unit: '%', decimals: 0 },
+      ];
+
+      const ajuste =
+        factor >= 1.5 ? 'bajá el horno 10-15 °C y sumá de 5 a 15 minutos'
+        : factor > 1.1 ? 'misma temperatura, revisá con palillo 5-10 minutos antes'
+        : factor >= 0.9 ? 'moldes prácticamente equivalentes: mismo horno y mismo tiempo'
+        : factor > 0.67 ? 'misma temperatura, el tiempo baja un poco'
+        : 'molde mucho más chico: si no escalás los ingredientes la masa queda alta, bajá 10 °C y sumá 10-20 minutos';
+
+      return {
+        total: '×' + n1(factor, 2),
+        sub:
+          'Molde ' + forma + ' de ' + (forma === 'rectangular' ? m1 + '×' + m2 : m1) + ' cm contra el redondo de ' +
+          dR + ' cm de la receta: factor ×' + n1(factor, 2) + ' (' + lectura(factor) + ') · equivale a un redondo de ' +
+          n1(diamEquiv, 1) + ' cm · ' + ajuste,
+        rows: rows,
+        chart: segsEje(),
+        format: 'plain',
+        decimals: 2,
+        position: pos(factor),
+        positionLabel: 'Factor ×' + n1(factor, 2) + ' — ' + lectura(factor),
+      };
+    }
+
+    // ---------- RAMA 3: reemplazo de ingrediente ----------
+    function calcReemplazo(v) {
+      const cant = Math.max(0, Number(v.cantidad) || 0);
+      const clave = String(v.ingrediente || 'huevo');
+
+      if (clave === 'huevo') {
+        // Los huevos se cuentan en unidades: la cantidad es el número de huevos.
+        const huevos = Math.max(1, Math.round(cant > 20 ? cant / 50 : cant) || 1);
+        const s = SUSTITUTOS_HUEVO[v.sustitutoHuevo] || SUSTITUTOS_HUEVO.linaza;
+
+        const rows = [
+          { k: s.nombre, ref: 'para ' + huevos + (huevos === 1 ? ' huevo' : ' huevos'), v: s.seco * huevos, format: 'unit', unit: s.unidadSeco, decimals: 1, extra: true },
+        ];
+        if (s.agua > 0) {
+          rows.push({ k: 'Agua tibia para hidratarlo', ref: 'se forma un gel', v: s.agua * huevos, format: 'unit', unit: 'ml', decimals: 0, extra: true });
+          rows.push({ k: 'Reposo antes de usar', ref: 'hasta que gelifique', v: s.reposoMin, format: 'unit', unit: 'min', decimals: 0 });
+        }
+        rows.push({ k: 'Por cada huevo', ref: s.nombre, v: s.seco, format: 'unit', unit: s.unidadSeco, decimals: 1 });
+        rows.push({ k: 'Huevos a reemplazar', ref: 'lo que pide la receta', v: huevos, format: 'unit', unit: 'huevos', decimals: 0 });
+        rows.push({ k: 'Peso aproximado de un huevo grande', ref: 'sin cáscara', v: 50, format: 'unit', unit: 'g', decimals: 0 });
+        // Factor contra el peso del huevo real (50 g), para el eje del gráfico.
+        const factor = (s.unidadSeco === 'ml' ? s.seco : s.seco + s.agua) / 50;
+
+        return {
+          total: n1(s.seco * huevos, 1) + ' ' + s.unidadSeco,
+          sub:
+            'Para ' + huevos + (huevos === 1 ? ' huevo' : ' huevos') + ' usá ' + n1(s.seco * huevos, 1) + ' ' +
+            s.unidadSeco + ' de ' + s.nombre.toLowerCase() +
+            (s.agua > 0 ? ' con ' + s.agua * huevos + ' ml de agua, reposando ' + s.reposoMin + ' min' : '') +
+            ' · mejor para ' + s.mejorPara,
+          rows: rows,
+          chart: segsEje(),
+          format: 'plain',
+          decimals: 1,
+          position: pos(factor),
+          positionLabel:
+            'El reemplazo pesa ×' + n1(factor, 2) + ' lo que pesaba el huevo (50 g sin cáscara)',
+        };
+      }
+
+      const r = REEMPLAZOS[clave] || REEMPLAZOS.manteca;
+      const principal = r.opciones[0];
+      const factor = principal.factor;
+
+      const rows = r.opciones.map((o, idx) => ({
+        k: o.nombre,
+        ref: o.nota,
+        v: cant * o.factor,
+        format: 'unit',
+        unit: o.unidad,
+        decimals: o.unidad === 'cditas' || o.unidad === 'claras' ? 1 : 0,
+        extra: idx === 0,
+      }));
+      rows.push({
+        k: 'Cantidad original de ' + r.nombre.toLowerCase(),
+        ref: 'lo que pide la receta',
+        v: cant,
+        format: 'unit',
+        unit: r.unidad,
+        decimals: 0,
+      });
+
+      return {
+        total: n1(cant * factor, 0) + ' ' + principal.unidad,
+        sub:
+          'Para ' + n1(cant, 0) + ' ' + r.unidad + ' de ' + r.nombre.toLowerCase() + ': usá ' +
+          n1(cant * factor, 0) + ' ' + principal.unidad + ' de ' + principal.nombre.toLowerCase() +
+          ' (factor ×' + n1(factor, 2) + ') · ' + r.nota,
+        rows: rows,
+        chart: segsEje(),
+        format: 'plain',
+        decimals: 0,
+        position: pos(factor),
+        positionLabel:
+          principal.nombre + ': ×' + n1(factor, 2) + ' de lo que pedía la receta',
+      };
+    }
+
+    const BRANCH = { porciones: calcPorciones, molde: calcMolde, reemplazo: calcReemplazo };
+
+    H.onCompute(function (v, kase) {
+      const fn = BRANCH[(kase && kase.id) || 'porciones'] || calcPorciones;
+      return fn(v);
+    });
+  })();
+</script>

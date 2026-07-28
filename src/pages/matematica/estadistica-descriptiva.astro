@@ -1,0 +1,319 @@
+---
+/**
+ * Hub de decisión — "¿Qué me dicen estos datos?"
+ * Reemplaza 5 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Sigue el patrón de matematica/regla-de-tres.astro: la página sólo aporta los
+ * datos (src/lib/hubs/estadistica-descriptiva.ts) y su compute(). El chrome, el
+ * CSS y el runtime viven en DecisionHub.astro y no se tocan.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub } from '../../lib/hubs/estadistica-descriptiva';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Nada de plata acá: el default de HubRow es 'ars', así que TODA fila
+    // declara formato explícito.
+    const PLAIN = { format: 'plain', decimals: 2 };
+    const PLAIN0 = { format: 'plain', decimals: 0 };
+    const PLAIN4 = { format: 'plain', decimals: 4 };
+    const PCT = { format: 'unit', unit: '%', decimals: 2 };
+
+    const snap = (n) => {
+      if (!isFinite(n)) return n;
+      const r = Math.round(n);
+      if (Math.abs(n - r) < 1e-10) return r === 0 ? 0 : r;
+      return n;
+    };
+
+    const fmt = (n) => {
+      if (!isFinite(n)) return '—';
+      const v = snap(n);
+      const abs = Math.abs(v);
+      const dec = Number.isInteger(v) ? 0 : abs >= 1000 ? 2 : abs >= 1 ? 3 : 5;
+      return Number(v.toFixed(dec)).toLocaleString('es-AR', { maximumFractionDigits: dec });
+    };
+
+    const err = (msg, k, v) => ({
+      total: '—',
+      sub: msg,
+      rows: [{ k: k, v: v, ...PLAIN }],
+      chart: [],
+      format: 'plain',
+      decimals: 2,
+    });
+
+    /** Misma tolerancia de separadores que la calculadora original. */
+    const parseLista = (s) =>
+      String(s || '')
+        .split(/[,;\s]+/)
+        .map((t) => t.trim())
+        .filter((t) => t !== '')
+        .map(Number)
+        .filter((n) => !isNaN(n));
+
+    /** Percentil por interpolación lineal de posiciones (mismo método que la calc vieja). */
+    const percentilPos = (sorted, p) => {
+      const n = sorted.length;
+      const rank = (p / 100) * (n - 1);
+      const lo = Math.floor(rank);
+      const hi = Math.ceil(rank);
+      const frac = rank - lo;
+      if (hi >= n) return sorted[n - 1];
+      return sorted[lo] + frac * (sorted[hi] - sorted[lo]);
+    };
+
+    /** CDF normal estándar — Abramowitz & Stegun 26.2.17, igual que la calc vieja. */
+    const normalCDF = (z) => {
+      if (z < -8) return 0;
+      if (z > 8) return 1;
+      const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741, a4 = -1.453152027, a5 = 1.061405429;
+      const p = 0.3275911;
+      const sign = z < 0 ? -1 : 1;
+      const x = Math.abs(z) / Math.sqrt(2);
+      const t = 1 / (1 + p * x);
+      const y = 1 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+      return 0.5 * (1 + sign * y);
+    };
+
+    const barrasDatos = (sorted, destacado) =>
+      sorted.slice(0, 14).map((d) => ({
+        label: fmt(d),
+        value: Math.abs(d),
+        tone: destacado !== null && d === destacado ? 'main' : 'prop',
+      }));
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'resumen';
+      const arr = parseLista(v.datos);
+      const sorted = arr.slice().sort((a, b) => a - b);
+      const n = sorted.length;
+      const valor = H.num(v.valor);
+      const mediaIn = H.num(v.media);
+      const desvioIn = H.num(v.desvio);
+
+      // ---- 1) Media, mediana, moda y rango -----------------------------
+      if (id === 'resumen') {
+        if (n === 0) return err('Cargá al menos un dato en la lista, separados por coma.', 'Datos leídos', 0);
+        const suma = sorted.reduce((a, b) => a + b, 0);
+        const media = suma / n;
+        const mediana = n % 2 ? sorted[(n - 1) / 2] : (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
+        const freq = {};
+        sorted.forEach((d) => { freq[d] = (freq[d] || 0) + 1; });
+        const maxf = Math.max.apply(null, Object.keys(freq).map((k) => freq[k]));
+        const modas = Object.keys(freq).filter((k) => freq[k] === maxf).map(Number);
+        const rango = sorted[n - 1] - sorted[0];
+        const dif = media - mediana;
+        const sesgo =
+          Math.abs(dif) < 1e-9
+            ? 'media y mediana coinciden: la distribución es simétrica'
+            : dif > 0
+            ? 'la media supera a la mediana: hay valores altos que la estiran (sesgo a la derecha)'
+            : 'la media queda por debajo de la mediana: valores bajos la arrastran (sesgo a la izquierda)';
+        return {
+          total: fmt(media),
+          sub:
+            'Sobre ' + n + ' datos: media ' + fmt(media) + ', mediana ' + fmt(mediana) +
+            ', rango ' + fmt(rango) + ' · ' + sesgo,
+          rows: [
+            { k: 'n — cantidad de datos', v: n, ...PLAIN0 },
+            { k: 'Suma de todos los datos', ref: 'paso 1', v: snap(suma), ...PLAIN },
+            { k: 'Suma ÷ n → media (promedio)', ref: 'paso 2', v: snap(media), extra: true, ...PLAIN },
+            { k: 'Mediana — el valor del medio', ref: n % 2 ? 'n impar: el central' : 'n par: promedio de los dos centrales', v: snap(mediana), extra: true, ...PLAIN },
+            { k: 'Moda — ' + (maxf > 1 ? modas.map(fmt).join(', ') : 'ningún valor se repite'), ref: 'aparece ' + maxf + ' vez/veces', v: maxf > 1 ? modas[0] : 0, ...PLAIN },
+            { k: 'Mínimo', v: sorted[0], ...PLAIN },
+            { k: 'Máximo', v: sorted[n - 1], ...PLAIN },
+            { k: 'Máximo − mínimo → rango', ref: 'la dispersión más simple', v: snap(rango), extra: true, ...PLAIN },
+            { k: 'Media − mediana', ref: 'el indicador de sesgo', v: snap(dif), ...PLAIN4 },
+          ],
+          format: 'plain',
+          decimals: 2,
+          chart: barrasDatos(sorted, null),
+        };
+      }
+
+      // ---- 2) Varianza y desvío estándar --------------------------------
+      if (id === 'dispersion') {
+        if (n === 0) return err('Cargá al menos un dato en la lista, separados por coma.', 'Datos leídos', 0);
+        const muestral = String(v.tipo) === 'mue';
+        const denom = muestral ? n - 1 : n;
+        if (denom <= 0) return err('Para el desvío muestral hacen falta al menos 2 datos (dividís por n − 1).', 'Datos leídos', n);
+        const media = sorted.reduce((a, b) => a + b, 0) / n;
+        const sc = sorted.reduce((a, b) => a + Math.pow(b - media, 2), 0);
+        const varianza = sc / denom;
+        const sigma = Math.sqrt(varianza);
+        const cv = Math.abs(media) > 1e-12 ? (sigma / Math.abs(media)) * 100 : 0;
+        const dentro1 = sorted.filter((d) => Math.abs(d - media) <= sigma).length;
+        return {
+          total: fmt(sigma),
+          sub:
+            (muestral ? 'Desvío muestral (s), dividiendo por n − 1 = ' : 'Desvío poblacional (σ), dividiendo por n = ') +
+            denom + ' · media ' + fmt(media) + ' · varianza ' + fmt(varianza),
+          rows: [
+            { k: 'n — cantidad de datos', v: n, ...PLAIN0 },
+            { k: 'Media del conjunto', ref: 'paso 1: el centro', v: snap(media), ...PLAIN },
+            { k: 'Suma de (dato − media)²', ref: 'paso 2: la suma de cuadrados', v: snap(sc), ...PLAIN4 },
+            { k: 'Divisor usado', ref: muestral ? 'muestra: n − 1 (corrección de Bessel)' : 'población: n', v: denom, ...PLAIN0 },
+            { k: 'Suma de cuadrados ÷ divisor → varianza', ref: 'paso 3 · en unidades²', v: snap(varianza), extra: true, ...PLAIN4 },
+            { k: 'Raíz de la varianza → desvío estándar', ref: 'paso 4 · en la unidad original', v: snap(sigma), extra: true, ...PLAIN4 },
+            { k: 'Coeficiente de variación', ref: 'desvío ÷ |media| × 100', v: snap(cv), ...PCT },
+            { k: 'Datos que caen dentro de ±1 desvío', ref: 'la regla empírica dice ~68%', v: dentro1, ...PLAIN0 },
+            { k: 'Ese mismo dato, en porcentaje', ref: 'comparalo con el 68%', v: snap((dentro1 / n) * 100), ...PCT },
+          ],
+          format: 'plain',
+          decimals: 4,
+          chart: barrasDatos(sorted, null),
+        };
+      }
+
+      // ---- 3) Coeficiente de variación ----------------------------------
+      if (id === 'cv') {
+        if (!mediaIn) return err('La media no puede ser 0: el coeficiente de variación quedaría indefinido.', 'Media cargada', mediaIn);
+        if (desvioIn < 0) return err('El desvío estándar no puede ser negativo.', 'Desvío cargado', desvioIn);
+        const cv = (desvioIn / Math.abs(mediaIn)) * 100;
+        const clasif = cv < 15 ? 'baja variabilidad (menos de 15%)' : cv < 30 ? 'variabilidad moderada (15-30%)' : 'alta variabilidad (más de 30%)';
+        return {
+          total: fmt(cv) + '%',
+          sub:
+            'CV = ' + fmt(desvioIn) + ' ÷ ' + fmt(Math.abs(mediaIn)) + ' × 100 = ' + fmt(cv) + '% → ' + clasif +
+            '. El desvío equivale al ' + fmt(cv) + '% del valor promedio.',
+          rows: [
+            { k: 'Desvío estándar (σ)', v: desvioIn, ...PLAIN },
+            { k: 'Media (μ), en valor absoluto', v: Math.abs(mediaIn), ...PLAIN },
+            { k: 'σ ÷ |μ|', ref: 'paso 1: la proporción', v: snap(desvioIn / Math.abs(mediaIn)), ...PLAIN4 },
+            { k: 'Por 100 → coeficiente de variación', ref: 'paso 2: en porcentaje', v: snap(cv), extra: true, ...PCT },
+            { k: 'Umbral de variabilidad baja', ref: 'convención de uso', v: 15, ...PCT },
+            { k: 'Umbral de variabilidad alta', ref: 'convención de uso', v: 30, ...PCT },
+          ],
+          format: 'plain',
+          decimals: 2,
+          chart: [
+            { label: 'Media', value: Math.abs(mediaIn), tone: 'prop' },
+            { label: 'Desvío', value: Math.abs(desvioIn), tone: 'main' },
+          ],
+        };
+      }
+
+      // ---- 4) Percentiles, cuartiles y outliers -------------------------
+      if (id === 'percentil') {
+        if (n < 2) return err('Se necesitan al menos 2 datos para calcular percentiles.', 'Datos leídos', n);
+        const menoresOIguales = sorted.filter((d) => d <= valor).length;
+        const percentil = (menoresOIguales / n) * 100;
+        const q1 = percentilPos(sorted, 25);
+        const q2 = percentilPos(sorted, 50);
+        const q3 = percentilPos(sorted, 75);
+        const iqr = q3 - q1;
+        const limInf = q1 - 1.5 * iqr;
+        const limSup = q3 + 1.5 * iqr;
+        const outliers = sorted.filter((d) => d < limInf || d > limSup);
+        const cuartil = valor <= q1 ? 'primer cuartil (0-25%)' : valor <= q2 ? 'segundo cuartil (25-50%)' : valor <= q3 ? 'tercer cuartil (50-75%)' : 'cuarto cuartil (75-100%)';
+        return {
+          total: fmt(percentil) + '%',
+          sub:
+            'El valor ' + fmt(valor) + ' es mayor o igual que el ' + fmt(percentil) + '% de tus ' + n +
+            ' datos: cae en el ' + cuartil + '.' + (outliers.length ? ' Hay ' + outliers.length + ' valor(es) atípico(s) en la lista.' : ''),
+          rows: [
+            { k: 'n — cantidad de datos', v: n, ...PLAIN0 },
+            { k: 'x — el valor que ubicás', v: valor, ...PLAIN },
+            { k: 'Datos menores o iguales a x', ref: 'paso 1: contar', v: menoresOIguales, ...PLAIN0 },
+            { k: 'Conteo ÷ n × 100 → percentil del dato', ref: 'paso 2', v: snap(percentil), extra: true, ...PCT },
+            { k: 'Q1 — primer cuartil', ref: 'deja abajo al 25%', v: snap(q1), ...PLAIN },
+            { k: 'Q2 — mediana', ref: 'deja abajo al 50%', v: snap(q2), ...PLAIN },
+            { k: 'Q3 — tercer cuartil', ref: 'deja abajo al 75%', v: snap(q3), ...PLAIN },
+            { k: 'IQR = Q3 − Q1', ref: 'dispersión del 50% central', v: snap(iqr), extra: true, ...PLAIN },
+            { k: 'Límite inferior de outliers (Q1 − 1,5 × IQR)', ref: 'regla de Tukey', v: snap(limInf), ...PLAIN },
+            { k: 'Límite superior de outliers (Q3 + 1,5 × IQR)', ref: 'regla de Tukey', v: snap(limSup), ...PLAIN },
+            { k: 'Valores atípicos detectados' + (outliers.length ? ': ' + outliers.map(fmt).join(', ') : ''), ref: 'fuera de los límites', v: outliers.length, ...PLAIN0 },
+          ],
+          format: 'plain',
+          decimals: 2,
+          chart: barrasDatos(sorted, valor),
+        };
+      }
+
+      // ---- 5) Z-score ----------------------------------------------------
+      if (!(desvioIn > 0)) return err('El desvío estándar tiene que ser mayor que 0.', 'Desvío cargado', desvioIn);
+      const z = (valor - mediaIn) / desvioIn;
+      const pct = normalCDF(z) * 100;
+      const az = Math.abs(z);
+      const interp =
+        az < 1
+          ? 'valor dentro del rango habitual (menos de 1 desvío, 68% central)'
+          : az < 2
+          ? 'valor poco usual (entre 1 y 2 desvíos)'
+          : az < 3
+          ? 'valor atípico (entre 2 y 3 desvíos, fuera del 95%)'
+          : 'valor muy raro (más de 3 desvíos, fuera del 99,7%)';
+      return {
+        total: fmt(z),
+        sub:
+          'z = (' + fmt(valor) + ' − ' + fmt(mediaIn) + ') ÷ ' + fmt(desvioIn) + ' = ' + fmt(z) +
+          ' · estás a ' + fmt(az) + ' desvíos ' + (z >= 0 ? 'por encima' : 'por debajo') +
+          ' de la media y superás al ' + fmt(pct) + '% de los casos si la distribución es normal · ' + interp,
+        rows: [
+          { k: 'x — tu valor', v: valor, ...PLAIN },
+          { k: 'Media (μ)', v: mediaIn, ...PLAIN },
+          { k: 'x − μ', ref: 'paso 1: la distancia cruda', v: snap(valor - mediaIn), ...PLAIN },
+          { k: 'Desvío estándar (σ)', v: desvioIn, ...PLAIN },
+          { k: '(x − μ) ÷ σ → z-score', ref: 'paso 2: la distancia en desvíos', v: snap(z), extra: true, ...PLAIN4 },
+          { k: 'Percentil según la normal', ref: 'sólo válido si la distribución es normal', v: snap(pct), ...PCT },
+          { k: 'Porcentaje de casos que te superan', ref: '100 − percentil', v: snap(100 - pct), ...PCT },
+          { k: 'Umbral de valor atípico', ref: '|z| = 2 deja afuera al 95% central', v: 2, ...PLAIN0 },
+        ],
+        format: 'plain',
+        decimals: 4,
+        chart: [
+          { label: 'Media', value: Math.abs(mediaIn), tone: 'prop' },
+          { label: 'Tu valor', value: Math.abs(valor), tone: az < 1 ? 'good' : az < 2 ? 'warn' : 'bad' },
+        ],
+      };
+    });
+  })();
+</script>

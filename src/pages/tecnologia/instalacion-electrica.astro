@@ -1,0 +1,454 @@
+---
+/**
+ * Hub de decisión — "¿Qué cable y qué térmica necesita este circuito?"
+ * Reemplaza 6 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: 5 casos (sección / caída / ohm / cos φ / trafo).
+ * La página sólo aporta datos (src/lib/hubs/instalacion-electrica.ts) y compute().
+ * NADA acá es plata: cada fila declara su `format` propio.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, MATERIALES, SECCIONES, TERMICAS, SCALE } from '../../lib/hubs/instalacion-electrica';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+const BANDS = hub.chart.bands ?? [];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ MATERIALES, SECCIONES, TERMICAS, SCALE, BANDS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Nada de este hub es plata: todas las filas declaran su formato.
+    const A = { format: 'unit', unit: 'A', decimals: 3 };
+    const V = { format: 'unit', unit: 'V', decimals: 3 };
+    const W = { format: 'unit', unit: 'W', decimals: 2 };
+    const KW = { format: 'unit', unit: 'kW', decimals: 3 };
+    const KVA = { format: 'unit', unit: 'kVA', decimals: 3 };
+    const KVAR = { format: 'unit', unit: 'kVAR', decimals: 3 };
+    const UF = { format: 'unit', unit: 'µF', decimals: 1 };
+    const OHM = { format: 'unit', unit: 'Ω', decimals: 4 };
+    const MM2 = { format: 'unit', unit: 'mm²', decimals: 2 };
+    const MTR = { format: 'unit', unit: 'm', decimals: 2 };
+    const PCT = { format: 'unit', unit: '%', decimals: 3 };
+    const CEL = { format: 'unit', unit: '°C', decimals: 0 };
+    const KWH = { format: 'unit', unit: 'kWh', decimals: 3 };
+    const ESP = { format: 'unit', unit: 'espiras', decimals: 0 };
+    const PLAIN = { format: 'plain', decimals: 4 };
+
+    const row = (k, v, fmt, extra, ref) => Object.assign({ k: k, v: v, extra: !!extra, ref: ref }, fmt);
+
+    function fmt(n, d) {
+      if (!isFinite(n)) return '—';
+      if (d == null) {
+        const abs = Math.abs(n);
+        if (abs === 0) d = 0;
+        else if (abs < 0.001) d = 7;
+        else if (abs < 1) d = 4;
+        else if (abs < 1000) d = 2;
+        else d = 0;
+      }
+      return Number(n).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: d });
+    }
+
+    /** Posición 0-100 sobre la regla logarítmica de corriente. */
+    function posA(a) {
+      if (!(a > 0)) return 0;
+      const lo = Math.log10(SCALE.minA), hi = Math.log10(SCALE.maxA);
+      return Math.max(0, Math.min(100, ((Math.log10(a) - lo) / (hi - lo)) * 100));
+    }
+
+    /** Franjas del gráfico: DÉCADAS logarítmicas, no amperes crudos. */
+    function bandas() {
+      return BANDS.map(function (b) {
+        return {
+          label: b.label,
+          value: Math.log10(b.to) - Math.log10(b.from),
+          tone: b.tone === 'good' ? 'good' : b.tone === 'bad' ? 'bad' : b.tone === 'warn' ? 'warn' : 'main',
+        };
+      });
+    }
+
+    /** Carga reconocible más cercana, en escala logarítmica. */
+    function referencia(a) {
+      if (!(a > 0)) return '';
+      let ref = SCALE.refs[0];
+      SCALE.refs.forEach(function (r) {
+        if (Math.abs(Math.log10(r.a) - Math.log10(a)) < Math.abs(Math.log10(ref.a) - Math.log10(a))) ref = r;
+      });
+      const veces = a / ref.a;
+      if (Math.abs(veces - 1) < 0.06) return 'prácticamente lo que consume ' + ref.label;
+      return veces >= 1
+        ? fmt(veces, 2) + ' veces lo que consume ' + ref.label
+        : 'un ' + fmt(veces * 100, 0) + '% de lo que consume ' + ref.label;
+    }
+
+    /** Resistividad corregida a la temperatura de servicio. */
+    function rhoDe(v) {
+      const m = MATERIALES[String(v.material)] || MATERIALES.cobre;
+      const t = Number(v.tempConductor);
+      const temp = isFinite(t) ? Math.max(20, Math.min(90, t)) : 70;
+      return { mat: m, temp: temp, rho: m.rho20 * (1 + m.alfa * (temp - 20)) };
+    }
+
+    /** Corriente de la carga: la explícita, o la que sale de P, V y cos φ. */
+    function corrienteDe(v) {
+      const dato = Number(v.corriente) || 0;
+      if (dato > 0) return dato;
+      const p = Number(v.potencia) || 0;
+      const u = Number(v.tension) || 0;
+      const cos = Math.max(0.1, Math.min(1, Number(v.cosfi) || 1));
+      if (!(p > 0) || !(u > 0)) return 0;
+      return String(v.sistema) === 'tri' ? p / (Math.sqrt(3) * u * cos) : p / (u * cos);
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'seccion';
+      const tri = String(v.sistema) === 'tri';
+      const u = Number(v.tension) || 220;
+
+      // ── Rama 1: sección de cable y térmica ───────────────────────────────
+      if (id === 'seccion') {
+        const I = corrienteDe(v);
+        if (!(I > 0)) {
+          return {
+            total: '—',
+            sub: 'Cargá la potencia y la tensión del circuito, o directamente la corriente.',
+            rows: [],
+            chart: [],
+          };
+        }
+        const margen = Math.max(1, Number(v.margen) || 1.25);
+        const Idis = I * margen;
+        let termica = TERMICAS[TERMICAS.length - 1];
+        for (let k = 0; k < TERMICAS.length; k++) {
+          if (TERMICAS[k] >= Idis) { termica = TERMICAS[k]; break; }
+        }
+        // La sección se elige para soportar la TÉRMICA, no la carga.
+        let sec = SECCIONES[SECCIONES.length - 1];
+        for (let k = 0; k < SECCIONES.length; k++) {
+          if (SECCIONES[k].amp >= termica) { sec = SECCIONES[k]; break; }
+        }
+        const uso = (I / sec.amp) * 100;
+        const potencia = Number(v.potencia) || (tri ? Math.sqrt(3) * u * I : u * I);
+
+        const rows = [
+          row('Sección de cable necesaria', sec.mm2, MM2, true, 'equivale a AWG ' + sec.awg),
+          row('Térmica que corresponde', termica, A, true, 'escalón normalizado IEC 60898'),
+          row('Corriente real del circuito', I, A, true, tri ? 'I = P/(√3·V·cos φ)' : 'I = P/(V·cos φ)'),
+          row('Corriente de diseño con margen', Idis, A, false, 'margen ×' + fmt(margen, 2)),
+          row('Capacidad de la sección elegida', sec.amp, A),
+          row('Uso del cable respecto de su límite', uso, PCT, false, uso > 90 ? 'está justo: mirá la sección siguiente' : 'margen cómodo'),
+          row('Amperes de holgura', Math.max(0, sec.amp - I), A),
+          row('Potencia del circuito', potencia, W),
+          row('Potencia en kilowatts', potencia / 1000, KW),
+          row('Tensión del circuito', u, V),
+          row('Sección inmediata superior, si querés margen', SECCIONES[Math.min(SECCIONES.length - 1, SECCIONES.indexOf(sec) + 1)].mm2, MM2),
+          row('Consumo si trabaja 4 horas por día, al mes', (potencia / 1000) * 4 * 30, KWH),
+        ];
+
+        const comp = referencia(I);
+        return {
+          total: sec.mm2 + ' mm² con térmica de ' + termica + ' A',
+          sub:
+            'El circuito consume ' + fmt(I, 2) + ' A (' + fmt(Idis, 2) + ' A con margen), así que la térmica es de ' +
+            termica + ' A y el cable, de ' + fmt(sec.mm2, 1) + ' mm² (AWG ' + sec.awg + '), que soporta ' + sec.amp +
+            ' A · el orden importa: la sección se elige para aguantar lo que la térmica deja pasar, no lo que consume el artefacto' +
+            (comp ? ' · es ' + comp : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'década',
+          decimals: 2,
+          position: Number(posA(I).toFixed(1)),
+          positionLabel: fmt(I, 2) + ' A — ' + fmt(sec.mm2, 1) + ' mm² con térmica de ' + termica + ' A',
+        };
+      }
+
+      // ── Rama 2: caída de tensión ─────────────────────────────────────────
+      if (id === 'caida') {
+        const I = corrienteDe(v);
+        const L = Number(v.longitud) || 0;
+        const S = Number(v.seccion) || 0;
+        if (!(I > 0) || !(L > 0) || !(S > 0)) {
+          return {
+            total: '—',
+            sub: 'Hacen falta la corriente (o potencia y tensión), la longitud del tramo y la sección del conductor.',
+            rows: [],
+            chart: [],
+          };
+        }
+        const r = rhoDe(v);
+        const factor = tri ? Math.sqrt(3) : 2;
+        const dv = (factor * r.rho * L * I) / S;
+        const dv20 = (factor * r.mat.rho20 * L * I) / S;
+        const pct = (dv / u) * 100;
+        const perdida = tri ? Math.sqrt(3) * dv * I : dv * I;
+        // Sección mínima para quedar dentro del 3%.
+        const sMin = (factor * r.rho * L * I) / (u * 0.03);
+        let secNorm = SECCIONES[SECCIONES.length - 1].mm2;
+        for (let k = 0; k < SECCIONES.length; k++) {
+          if (SECCIONES[k].mm2 >= sMin) { secNorm = SECCIONES[k].mm2; break; }
+        }
+        const veredicto = pct < 3 ? 'aceptable, por debajo del 3%' : pct < 5 ? 'alta: pasa el 3% ideal' : 'excesiva: supera el 5% límite';
+
+        const rows = [
+          row('Caída de tensión', dv, V, true, tri ? 'ΔV = √3·ρ·L·I/S' : 'ΔV = 2·ρ·L·I/S'),
+          row('Caída porcentual', pct, PCT, true, veredicto),
+          row('Tensión que llega al equipo', u - dv, V, true),
+          row('Caída calculada a 20 °C (la de tabla)', dv20, V, false, 'subestima la real'),
+          row('Cuánto suma trabajar a ' + fmt(r.temp, 0) + ' °C', dv - dv20, V),
+          row('Resistividad usada', r.rho, { format: 'unit', unit: 'Ω·mm²/m', decimals: 6 }, false, r.mat.nombre + ' a ' + fmt(r.temp, 0) + ' °C'),
+          row('Resistencia total del tramo', (factor * r.rho * L) / S, OHM, false, 'ida y vuelta incluidas'),
+          row('Potencia perdida como calor en el cable', perdida, W, true),
+          row('Sección mínima para quedar dentro del 3%', sMin, MM2),
+          row('Sección normalizada que corresponde', secNorm, MM2, true),
+          row('Longitud del tramo', L, MTR),
+          row('Sección cargada', S, MM2),
+          row('Corriente considerada', I, A),
+          row('Temperatura de servicio considerada', r.temp, CEL),
+        ];
+
+        const comp = referencia(I);
+        return {
+          total: fmt(dv, 2) + ' V (' + fmt(pct, 2) + '%)',
+          sub:
+            'Con ' + fmt(I, 2) + ' A por ' + fmt(L, 1) + ' m de ' + r.mat.nombre + ' de ' + fmt(S, 1) +
+            ' mm² en sistema ' + (tri ? 'trifásico' : 'monofásico') + ', la caída es de ' + fmt(dv, 2) + ' V, un ' +
+            fmt(pct, 2) + '%: ' + veredicto + ' · al equipo le llegan ' + fmt(u - dv, 1) + ' V' +
+            (pct >= 3 ? ' · para quedar dentro del 3% harían falta ' + fmt(secNorm, 1) + ' mm²' : '') +
+            (comp ? ' · la corriente es ' + comp : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'década',
+          decimals: 2,
+          position: Number(posA(I).toFixed(1)),
+          positionLabel: fmt(I, 2) + ' A por ' + fmt(L, 0) + ' m — caída del ' + fmt(pct, 2) + '%',
+        };
+      }
+
+      // ── Rama 3: ley de Ohm y potencia ────────────────────────────────────
+      if (id === 'ohm') {
+        const vo = Number(v.voltaje) || 0;
+        const io = Number(v.corrienteOhm) || 0;
+        const ro = Number(v.resistencia) || 0;
+        let volt, amp, res, despeje;
+        if (!(vo > 0) && io > 0 && ro > 0) { amp = io; res = ro; volt = io * ro; despeje = 'la tensión'; }
+        else if (!(io > 0) && vo > 0 && ro > 0) { volt = vo; res = ro; amp = vo / ro; despeje = 'la corriente'; }
+        else if (!(ro > 0) && vo > 0 && io > 0) { volt = vo; amp = io; res = vo / io; despeje = 'la resistencia'; }
+        else if (vo > 0 && io > 0 && ro > 0) { volt = vo; amp = io; res = ro; despeje = 'nada: los tres datos ya estaban'; }
+        else {
+          return {
+            total: '—',
+            sub: 'Hacen falta dos de los tres: tensión, corriente y resistencia. Dejá en cero el que querés calcular.',
+            rows: [],
+            chart: [],
+          };
+        }
+        const pot = volt * amp;
+        const horas = Number(v.horasDia) || 0;
+
+        const rows = [
+          row('Tensión', volt, V, despeje === 'la tensión', 'V = I·R'),
+          row('Corriente', amp, A, despeje === 'la corriente', 'I = V/R'),
+          row('Resistencia', res, OHM, despeje === 'la resistencia', 'R = V/I'),
+          row('Potencia disipada', pot, W, true, 'P = V·I'),
+          row('Potencia por I²·R', amp * amp * res, W, false, 'el mismo número por otro camino'),
+          row('Potencia por V²/R', res > 0 ? (volt * volt) / res : 0, W),
+          row('Corriente en miliamperes', amp * 1000, { format: 'unit', unit: 'mA', decimals: 2 }),
+          row('Potencia nominal mínima del componente', pot * 2, W, false, 'regla práctica: el doble de lo que disipa'),
+        ];
+        if (horas > 0) {
+          rows.push(row('Consumo diario', (pot / 1000) * horas, KWH, true));
+          rows.push(row('Consumo mensual', (pot / 1000) * horas * 30, KWH, true));
+          rows.push(row('Consumo anual', (pot / 1000) * horas * 365, KWH));
+          rows.push(row('Horas de uso por día', horas, { format: 'unit', unit: 'h', decimals: 1 }));
+        }
+
+        const comp = referencia(amp);
+        return {
+          total: fmt(pot, 3) + ' W disipados',
+          sub:
+            'Despejaste ' + despeje + ': con ' + fmt(volt, 3) + ' V y ' + fmt(amp, 4) + ' A sobre ' + fmt(res, 2) +
+            ' Ω, el componente disipa ' + fmt(pot, 3) + ' W · elegí uno de al menos ' + fmt(pot * 2, 2) +
+            ' W de potencia nominal para que no se caliente al límite' +
+            (horas > 0 ? ' · trabajando ' + fmt(horas, 1) + ' h por día consume ' + fmt((pot / 1000) * horas * 30, 2) + ' kWh al mes' : '') +
+            (comp ? ' · la corriente es ' + comp : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'década',
+          decimals: 2,
+          position: Number(posA(amp).toFixed(1)),
+          positionLabel: fmt(amp, 3) + ' A a ' + fmt(volt, 1) + ' V — ' + fmt(pot, 2) + ' W',
+        };
+      }
+
+      // ── Rama 4: corrección del factor de potencia ────────────────────────
+      if (id === 'cosfi') {
+        const p = Number(v.potencia) || 0;
+        const c1 = Math.max(0.1, Math.min(0.99, Number(v.cosfi1) || 0.75));
+        const c2 = Math.max(0.1, Math.min(1, Number(v.cosfi2) || 0.95));
+        const f = Number(v.frecuencia) || 50;
+        if (!(p > 0)) {
+          return { total: '—', sub: 'Cargá la potencia activa de la instalación en watts.', rows: [], chart: [] };
+        }
+        if (c1 >= c2) {
+          return {
+            total: '—',
+            sub:
+              'El factor de potencia objetivo (' + fmt(c2, 2) + ') tiene que ser MAYOR que el actual (' + fmt(c1, 2) +
+              '): los capacitores sólo pueden subirlo. Si querés bajarlo, lo que hay que hacer es sacar compensación, no agregarla.',
+            rows: [],
+            chart: [],
+          };
+        }
+        const tan1 = Math.tan(Math.acos(c1));
+        const tan2 = Math.tan(Math.acos(c2));
+        const qc = p * (tan1 - tan2);
+        const cFarad = qc / (2 * Math.PI * f * u * u);
+        const s1 = p / c1;
+        const s2 = p / c2;
+        const i1 = tri ? s1 / (Math.sqrt(3) * u) : s1 / u;
+        const i2 = tri ? s2 / (Math.sqrt(3) * u) : s2 / u;
+
+        const rows = [
+          row('Potencia reactiva a compensar', qc / 1000, KVAR, true, 'Qc = P·(tan φ₁ − tan φ₂)'),
+          row('Capacitor equivalente', cFarad * 1e6, UF, true, 'C = Qc / (2πf·V²)'),
+          row('Potencia aparente actual', s1 / 1000, KVA, true),
+          row('Potencia aparente corregida', s2 / 1000, KVA, true),
+          row('Capacidad liberada', (s1 - s2) / 1000, KVA),
+          row('Reducción de la carga aparente', ((s1 - s2) / s1) * 100, PCT),
+          row('Corriente de línea actual', i1, A, true),
+          row('Corriente de línea corregida', i2, A, true),
+          row('Amperes que dejan de circular', i1 - i2, A),
+          row('Potencia activa (la que hace trabajo)', p / 1000, KW, false, 'no cambia: el kWh sigue siendo el mismo'),
+          row('Reactiva actual', p * tan1 / 1000, KVAR),
+          row('Reactiva después de corregir', p * tan2 / 1000, KVAR),
+          row('Factor de potencia actual', c1, PLAIN),
+          row('Factor de potencia objetivo', c2, PLAIN),
+          row('Frecuencia de la red', f, { format: 'unit', unit: 'Hz', decimals: 0 }),
+        ];
+
+        const comp = referencia(i1);
+        return {
+          total: fmt(qc / 1000, 2) + ' kVAR (' + fmt(cFarad * 1e6, 0) + ' µF)',
+          sub:
+            'Sumar ' + fmt(qc / 1000, 2) + ' kVAR —un capacitor de ' + fmt(cFarad * 1e6, 0) + ' µF a ' + fmt(u, 0) +
+            ' V y ' + fmt(f, 0) + ' Hz— lleva el cos φ de ' + fmt(c1, 2) + ' a ' + fmt(c2, 2) + ', baja la carga aparente de ' +
+            fmt(s1 / 1000, 2) + ' a ' + fmt(s2 / 1000, 2) + ' kVA (' + fmt(((s1 - s2) / s1) * 100, 0) +
+            '% menos) y saca ' + fmt(i1 - i2, 1) + ' A de los conductores · ojo: el consumo en kWh no baja, lo que se evita son las penalizaciones' +
+            (comp ? ' · la corriente actual es ' + comp : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'década',
+          decimals: 2,
+          position: Number(posA(i1).toFixed(1)),
+          positionLabel: 'De ' + fmt(i1, 1) + ' A a ' + fmt(i2, 1) + ' A de línea corrigiendo el factor de potencia',
+        };
+      }
+
+      // ── Rama 5: transformador ────────────────────────────────────────────
+      const vp = Number(v.vPrimario) || 0;
+      const np = Number(v.espirasPrim) || 0;
+      const ns = Number(v.espirasSec) || 0;
+      if (!(vp > 0) || !(np > 0) || !(ns > 0)) {
+        return {
+          total: '—',
+          sub: 'Cargá la tensión del primario y las espiras de los dos bobinados, todas mayores a cero.',
+          rows: [],
+          chart: [],
+        };
+      }
+      const vs = vp * (ns / np);
+      const rel = np / ns;
+      const tipo = rel > 1 ? 'reductor (step-down)' : rel < 1 ? 'elevador (step-up)' : 'aislador 1:1';
+      const pot = Number(v.potencia) || 0;
+      const iSec = pot > 0 && vs > 0 ? pot / vs : 0;
+      const iPrim = pot > 0 && vp > 0 ? pot / vp : 0;
+
+      const rows = [
+        row('Tensión del secundario', vs, V, true, 'Vs = Vp × Ns/Np'),
+        row('Tensión del primario', vp, V),
+        row('Relación de transformación', rel, PLAIN, true, fmt(rel, 2) + ':1 — ' + tipo),
+        row('Espiras del primario', np, ESP),
+        row('Espiras del secundario', ns, ESP),
+        row('Volts por espira', np > 0 ? vp / np : 0, { format: 'unit', unit: 'V/espira', decimals: 5 }, false, 'el mismo valor en los dos bobinados'),
+      ];
+      if (pot > 0) {
+        rows.push(row('Potencia que maneja', pot, W, true));
+        rows.push(row('Corriente del secundario', iSec, A, true, 'la corriente va al revés que la tensión'));
+        rows.push(row('Corriente del primario', iPrim, A, true));
+        rows.push(row('Potencia aparente', pot / 1000, KVA));
+        rows.push(row('Potencia recomendada del transformador', pot / 0.8, W, false, 'cargarlo hasta el 80% de su nominal'));
+        rows.push(row('Pérdida estimada al 96% de rendimiento', pot * 0.04, W));
+      }
+
+      const iRef = iSec > 0 ? iSec : 1;
+      return {
+        total: fmt(vs, 2) + ' V en el secundario',
+        sub:
+          'Con ' + fmt(np, 0) + ' espiras en el primario y ' + fmt(ns, 0) + ' en el secundario, el transformador es ' +
+          tipo + ' y ' + (rel > 1 ? 'baja' : rel < 1 ? 'sube' : 'mantiene') + ' la tensión de ' + fmt(vp, 1) + ' V a ' +
+          fmt(vs, 2) + ' V, en relación ' + fmt(rel, 2) + ':1' +
+          (pot > 0
+            ? ' · con ' + fmt(pot, 0) + ' W circulan ' + fmt(iSec, 2) + ' A por el secundario y ' + fmt(iPrim, 2) +
+              ' A por el primario: la potencia se conserva'
+            : ' · cargá la potencia arriba si querés las corrientes de cada lado'),
+        rows: rows,
+        chart: bandas(),
+        format: 'unit',
+        unit: 'década',
+        decimals: 2,
+        position: Number(posA(iRef).toFixed(1)),
+        positionLabel:
+          pot > 0
+            ? fmt(iSec, 2) + ' A por el secundario a ' + fmt(vs, 1) + ' V'
+            : 'La regla de abajo es de corriente: cargá la potencia arriba para ubicar este transformador en ella',
+      };
+    });
+  })();
+</script>

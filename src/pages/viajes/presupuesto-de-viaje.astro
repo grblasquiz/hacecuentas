@@ -1,0 +1,330 @@
+---
+/**
+ * Hub de decisión — "¿Cuánta plata necesito para este viaje?".
+ * Reemplaza 11 URLs de calculadora suelta (ver hub.replaces).
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, CIUDADES, BARILOCHE, DIAS_IDEALES } from '../../lib/hubs/presupuesto-de-viaje';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ CIUDADES, BARILOCHE, DIAS_IDEALES }}>
+  (function () {
+    const H = window.HC_HUB;
+    const usd = (n) => 'USD ' + Math.round(n).toLocaleString('es-AR');
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'generico';
+      const dias = Math.max(1, Math.round(Number(v.dias) || 7));
+      const personas = Math.max(1, Math.round(Number(v.personas) || 1));
+      // Un viaje de N días tiene N−1 noches: el último día se hace el check-out.
+      const noches = Math.max(0, dias - 1);
+
+      // ── Río de Janeiro / Dubái: referencias en USD ────────────────────────
+      if (id === 'rio' || id === 'dubai') {
+        const c = CIUDADES[id];
+        const nivel = String(v.nivelHotel || 'medio');
+        const hotelNoche = c.hotel[nivel] != null ? c.hotel[nivel] : c.hotel.medio;
+        // Las referencias son por habitación doble: una habitación cada dos personas.
+        const habitaciones = Math.ceil(personas / 2);
+        const hotel = hotelNoche * habitaciones * noches;
+        const comida = c.comida * dias * personas;
+        const transporte = c.transporte * dias * personas;
+        const actividades = c.actividades * dias * personas;
+        const vueloUnit = Math.max(0, Number(v.vueloUsd) || 0);
+        const vuelo = vueloUnit * personas;
+        const total = hotel + comida + transporte + actividades + vuelo;
+        const perDiem = Math.round((total - vuelo) / (dias * personas));
+
+        const rows = [
+          { k: 'Hotel (' + habitaciones + (habitaciones === 1 ? ' habitación' : ' habitaciones') + ' × ' + noches + ' noches)', ref: usd(hotelNoche) + ' por noche', v: hotel, format: 'unit', unit: 'USD' },
+          { k: 'Comida', ref: usd(c.comida) + ' por persona y día', v: comida, format: 'unit', unit: 'USD' },
+          { k: 'Transporte local', ref: usd(c.transporte) + ' por persona y día', v: transporte, format: 'unit', unit: 'USD' },
+          { k: 'Actividades y entradas', ref: usd(c.actividades) + ' por persona y día', v: actividades, format: 'unit', unit: 'USD' },
+        ];
+        if (vuelo > 0) rows.push({ k: 'Vuelos', ref: usd(vueloUnit) + ' por persona', v: vuelo, format: 'unit', unit: 'USD' });
+        rows.push({ k: 'Total del viaje', ref: 'Suma de rubros', v: total, format: 'unit', unit: 'USD', extra: true });
+        rows.push({ k: 'Gasto en destino por persona y día', ref: 'Sin vuelos', v: perDiem, format: 'unit', unit: 'USD' });
+
+        return {
+          total: usd(total),
+          sub:
+            c.nombre + ' · ' + dias + ' días (' + noches + ' noches) para ' + personas +
+            (personas === 1 ? ' persona' : ' personas') + ' · hotel ' + nivel + ' · ' + usd(perDiem) +
+            ' por persona y día en destino',
+          rows: rows,
+          format: 'unit',
+          unit: 'USD',
+          chart: [
+            { label: 'Hotel', value: hotel, tone: 'main' },
+            { label: 'Comida', value: comida, tone: 'prop' },
+            { label: 'Actividades', value: actividades, tone: 'good' },
+            { label: 'Transporte', value: transporte, tone: 'exit' },
+          ].concat(vuelo > 0 ? [{ label: 'Vuelos', value: vuelo, tone: 'warn' }] : []),
+        };
+      }
+
+      // ── Bariloche en familia: referencias en ARS ──────────────────────────
+      if (id === 'bariloche') {
+        const temporada = String(v.temporada || 'alta');
+        const categoria = String(v.categoriaHotel || '3estrellas');
+        const tarifa = (BARILOCHE.hotelNoche[temporada] || BARILOCHE.hotelNoche.alta)[categoria] ||
+          BARILOCHE.hotelNoche.alta['3estrellas'];
+        const hospedaje = tarifa * dias;
+        const comidaUnit = BARILOCHE.comidaPorPersonaDia[temporada] || BARILOCHE.comidaPorPersonaDia.alta;
+        const comidas = comidaUnit * personas * dias;
+        const vuelos = Math.max(0, Number(v.vueloPorPersona) || 0) * personas;
+        const extraDiario = Math.max(0, Number(v.transporteDia) || 0);
+        const excursiones = BARILOCHE.excursionesPorPersona * personas + extraDiario * dias;
+        const total = hospedaje + comidas + vuelos + excursiones;
+
+        return {
+          total: H.ars(total),
+          sub:
+            'Bariloche, temporada ' + temporada + ' · ' + categoria.replace('estrellas', ' estrellas') + ' · ' +
+            dias + ' días para ' + personas + (personas === 1 ? ' persona' : ' personas') + ' · ' +
+            H.ars(total / personas) + ' por persona',
+          rows: [
+            { k: 'Hospedaje', ref: H.ars(tarifa) + ' por noche × ' + dias, v: hospedaje },
+            { k: 'Comidas', ref: H.ars(comidaUnit) + ' por persona y día', v: comidas },
+            { k: 'Excursiones y gastos extra', ref: H.ars(BARILOCHE.excursionesPorPersona) + ' por persona', v: excursiones },
+            { k: 'Vuelos', ref: 'Por persona × ' + personas, v: vuelos },
+            { k: 'Total del viaje', ref: 'Suma de rubros', v: total, extra: true },
+            { k: 'Costo por persona', ref: 'Total ÷ ' + personas, v: total / personas },
+          ],
+          chart: [
+            { label: 'Hospedaje', value: hospedaje, tone: 'main' },
+            { label: 'Comidas', value: comidas, tone: 'prop' },
+            { label: 'Excursiones', value: excursiones, tone: 'good' },
+            { label: 'Vuelos', value: vuelos, tone: 'exit' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      // ── Sólo el alojamiento ───────────────────────────────────────────────
+      if (id === 'alojamiento') {
+        const precio = Math.max(0, Number(v.alojamientoNoche) || 0);
+        const habitaciones = Math.max(1, Math.round(Number(v.habitaciones) || 1));
+        const total = noches * precio * habitaciones;
+
+        return {
+          total: H.ars(total),
+          sub:
+            noches + (noches === 1 ? ' noche' : ' noches') + ' × ' + habitaciones +
+            (habitaciones === 1 ? ' habitación' : ' habitaciones') + ' · ' + H.ars(precio) + ' por noche · ' +
+            H.ars(personas > 0 ? total / personas : 0) + ' por persona',
+          rows: [
+            { k: 'Noches (días − 1)', ref: dias + ' días de viaje', v: noches, format: 'unit', unit: 'noches' },
+            { k: 'Precio por noche', ref: 'Tu dato', v: precio },
+            { k: 'Habitaciones', ref: 'Tu dato', v: habitaciones, format: 'unit', unit: 'hab.' },
+            { k: 'Costo total del alojamiento', ref: 'Noches × precio × habitaciones', v: total, extra: true },
+            { k: 'Costo por persona', ref: 'Total ÷ ' + personas, v: total / personas },
+            { k: 'Costo promedio por noche', ref: 'Total ÷ noches', v: noches > 0 ? total / noches : 0 },
+          ],
+          chart: [
+            { label: 'Alojamiento', value: total, tone: 'main' },
+            { label: 'Por persona', value: total / personas, tone: 'prop' },
+          ],
+        };
+      }
+
+      // ── Alquiler del auto ─────────────────────────────────────────────────
+      if (id === 'auto') {
+        const precioDia = Math.max(0, Number(v.precioDiaAuto) || 0);
+        const seguroDia = Math.max(0, Number(v.seguroDiaAuto) || 0);
+        const combustible = Math.max(0, Number(v.combustibleAuto) || 0);
+        const alquiler = dias * precioDia;
+        const seguro = dias * seguroDia;
+        const total = alquiler + seguro + combustible;
+
+        return {
+          total: H.ars(total),
+          sub:
+            dias + (dias === 1 ? ' día' : ' días') + ' de alquiler · ' + H.ars(total / dias) + ' por día · ' +
+            H.ars(total / personas) + ' por persona · el seguro y la nafta suman ' +
+            (total > 0 ? Math.round(((seguro + combustible) / total) * 100) : 0) + '% del total',
+          rows: [
+            { k: 'Alquiler', ref: H.ars(precioDia) + ' por día × ' + dias, v: alquiler },
+            { k: 'Seguro', ref: H.ars(seguroDia) + ' por día × ' + dias, v: seguro },
+            { k: 'Combustible estimado', ref: 'Tu dato', v: combustible },
+            { k: 'Costo total del auto', ref: 'Suma', v: total, extra: true },
+            { k: 'Costo por día', ref: 'Total ÷ ' + dias, v: total / dias },
+            { k: 'Costo por persona', ref: 'Total ÷ ' + personas, v: total / personas },
+          ],
+          chart: [
+            { label: 'Alquiler', value: alquiler, tone: 'main' },
+            { label: 'Seguro', value: seguro, tone: 'prop' },
+            { label: 'Combustible', value: combustible, tone: 'exit' },
+          ].filter((s) => s.value > 0),
+        };
+      }
+
+      // ── Cuánto efectivo llevar ────────────────────────────────────────────
+      if (id === 'efectivo') {
+        const gastoDiario = Math.max(0, Number(v.gastoDiarioUsd) || 0);
+        const pct = Math.min(100, Math.max(0, Number(v.pctEfectivo) || 0));
+        const porPersona = gastoDiario * dias;
+        const efectivoPorPersona = (porPersona * pct) / 100;
+        const tarjetaPorPersona = porPersona - efectivoPorPersona;
+        const gastoTotal = porPersona * personas;
+        const efectivoTotal = efectivoPorPersona * personas;
+        const tarjetaTotal = tarjetaPorPersona * personas;
+
+        return {
+          total: usd(efectivoTotal),
+          sub:
+            dias + ' días × ' + usd(gastoDiario) + ' por persona · ' + pct + '% en efectivo · ' +
+            usd(tarjetaTotal) + ' para tarjeta' +
+            (pct > 50 ? ' · es mucha plata en mano: repartila entre el grupo y la caja de seguridad' : ''),
+          rows: [
+            { k: 'Gasto por persona', ref: dias + ' días × ' + usd(gastoDiario), v: porPersona, format: 'unit', unit: 'USD' },
+            { k: 'Gasto total del grupo', ref: 'Por persona × ' + personas, v: gastoTotal, format: 'unit', unit: 'USD' },
+            { k: 'Efectivo a llevar', ref: pct + '% del gasto', v: efectivoTotal, format: 'unit', unit: 'USD', extra: true },
+            { k: 'A pagar con tarjeta', ref: 100 - pct + '% del gasto', v: tarjetaTotal, format: 'unit', unit: 'USD' },
+            { k: 'Efectivo por persona', ref: 'Efectivo ÷ ' + personas, v: efectivoPorPersona, format: 'unit', unit: 'USD' },
+          ],
+          format: 'unit',
+          unit: 'USD',
+          chart: [
+            { label: 'Efectivo', value: Math.round(efectivoTotal), tone: 'main' },
+            { label: 'Tarjeta', value: Math.round(tarjetaTotal), tone: 'prop' },
+          ],
+        };
+      }
+
+      // ── Cuántos días conviene quedarse ────────────────────────────────────
+      if (id === 'dias') {
+        const destino = String(v.tipoDestino || 'ciudad-grande');
+        const ritmo = String(v.ritmo || 'moderado');
+        const d = DIAS_IDEALES[destino] || DIAS_IDEALES['ciudad-grande'];
+        const rango = d[ritmo] || d.moderado;
+        // El original suma un día por los traslados de ida y vuelta.
+        const extra = 1;
+        const min = rango[0] + extra;
+        const ideal = rango[1] + extra;
+        const max = rango[2] + extra;
+
+        return {
+          total: ideal + (ideal === 1 ? ' día' : ' días'),
+          sub:
+            d.nombre + ' con ritmo ' + ritmo + ' · rango de ' + min + ' a ' + max +
+            ' días, incluido un día de traslados · tu plan actual es de ' + dias +
+            (dias < min ? ' días: te quedás corto' : dias > max ? ' días: por encima del rango' : ' días: dentro del rango'),
+          rows: [
+            { k: 'Días mínimos', ref: d.nombre + ' · ritmo ' + ritmo, v: min, format: 'unit', unit: 'días' },
+            { k: 'Días ideales', ref: 'Recomendación', v: ideal, format: 'unit', unit: 'días', extra: true },
+            { k: 'Días máximos antes de rendir poco', ref: 'Techo del rango', v: max, format: 'unit', unit: 'días' },
+            { k: 'Día extra por traslados', ref: 'Ida y vuelta', v: extra, format: 'unit', unit: 'días' },
+            { k: 'Los días que tenés planeados', ref: 'Tu dato', v: dias, format: 'unit', unit: 'días' },
+          ],
+          format: 'unit',
+          unit: 'días',
+          chart: ['relajado', 'moderado', 'intenso'].map(function (r) {
+            return { label: 'Ritmo ' + r, value: d[r][1] + extra, tone: r === ritmo ? 'main' : 'prop' };
+          }),
+        };
+      }
+
+      // ── Presupuesto genérico, con tus números ─────────────────────────────
+      const alojNoche = Math.max(0, Number(v.alojamientoNoche) || 0);
+      const habitaciones = Math.max(1, Math.round(Number(v.habitaciones) || 1));
+      const comidaDia = Math.max(0, Number(v.comidaDia) || 0);
+      const transporteDia = Math.max(0, Number(v.transporteDia) || 0);
+      const actividadesDia = Math.max(0, Number(v.actividadesDia) || 0);
+      const extraFijo = Math.max(0, Number(v.extraFijo) || 0);
+
+      const alojamiento = alojNoche * noches * habitaciones;
+      const comida = comidaDia * dias * personas;
+      const transporte = transporteDia * dias;
+      const actividades = actividadesDia * dias * personas;
+      const total = alojamiento + comida + transporte + actividades + extraFijo;
+
+      const rubros = [
+        { label: 'Alojamiento', value: alojamiento },
+        { label: 'Comida', value: comida },
+        { label: 'Actividades', value: actividades },
+        { label: 'Transporte', value: transporte },
+        { label: 'Extras fijos', value: extraFijo },
+      ];
+      const mayor = rubros.reduce((a, b) => (b.value > a.value ? b : a), rubros[0]);
+      const pctMayor = total > 0 ? Math.round((mayor.value / total) * 100) : 0;
+
+      return {
+        total: H.ars(total),
+        sub:
+          dias + ' días (' + noches + ' noches) para ' + personas + (personas === 1 ? ' persona' : ' personas') + ' · ' +
+          H.ars(total / personas) + ' por persona · ' + H.ars(total / dias) + ' por día · el rubro más pesado es ' +
+          mayor.label.toLowerCase() + ', con el ' + pctMayor + '% del total',
+        rows: rubros
+          .map(function (r) {
+            const ref =
+              r.label === 'Alojamiento'
+                ? noches + ' noches × ' + habitaciones + ' hab.'
+                : r.label === 'Extras fijos'
+                  ? 'Pasajes, seguro y traslados'
+                  : r.label === 'Transporte'
+                    ? dias + ' días'
+                    : dias + ' días × ' + personas + ' pers.';
+            return { k: r.label, ref: ref, v: r.value };
+          })
+          .concat([
+            { k: 'Presupuesto total', ref: 'Suma de rubros', v: total, extra: true },
+            { k: 'Por persona', ref: 'Total ÷ ' + personas, v: total / personas },
+            { k: 'Por día', ref: 'Total ÷ ' + dias, v: total / dias },
+          ]),
+        chart: rubros
+          .filter((r) => r.value > 0)
+          .map(function (r) {
+            return {
+              label: r.label,
+              value: r.value,
+              tone: r.label === mayor.label ? 'main' : r.label === 'Extras fijos' ? 'exit' : 'prop',
+            };
+          }),
+      };
+    });
+  })();
+</script>

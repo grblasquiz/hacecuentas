@@ -1,0 +1,296 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto rinde y cuánto riesgo tiene lo que tengo?"
+ * Reemplaza 5 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * La página sólo aporta los datos (src/lib/hubs/riesgo-de-mi-cartera.ts) y su
+ * compute(). Todo el chrome, el CSS y el runtime viven en DecisionHub.astro.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, SHARPE_BANDS } from '../../lib/hubs/riesgo-de-mi-cartera';
+import tasas from '../../data/live/tasas.json';
+
+/** Tasa libre de riesgo por defecto: plazo fijo 30 días (TNA) del BCRA. Dato vivo. */
+const TASA_DEFECTO = Number(tasas?.plazo_fijo_30d?.valor) || 0;
+const TASA_FECHA = tasas?.plazo_fijo_30d?.fecha || '';
+
+/** Copia superficial: no mutamos el objeto del hub, sólo precargamos el campo. */
+const data = {
+  ...hub,
+  fields: hub.fields.map((f) => (f.id === 'tasaLibre' ? { ...f, value: TASA_DEFECTO } : f)),
+  stamps: hub.stamps.map((s) =>
+    s === 'Tasa libre de riesgo del BCRA'
+      ? `Tasa libre de riesgo ${TASA_DEFECTO}% (BCRA${TASA_FECHA ? ' · ' + TASA_FECHA : ''})`
+      : s,
+  ),
+};
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={data} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ BANDS: SHARPE_BANDS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    const num = (n, d) =>
+      n.toLocaleString('es-AR', { minimumFractionDigits: d === undefined ? 2 : d, maximumFractionDigits: d === undefined ? 2 : d });
+
+    H.onCompute(function (v, kase) {
+      const caso = kase?.id || 'sharpe';
+
+      const rend = Number(v.rendimiento) || 0;
+      const rf = Number(v.tasaLibre) || 0;
+      const vol = Number(v.volatilidad) || 0;
+      const w1 = Math.min(100, Math.max(0, Number(v.peso1) || 0)) / 100;
+      const r1 = Number(v.rendimiento1) || 0;
+      const s1 = Math.max(0, Number(v.volatilidad1) || 0);
+      const r2 = Number(v.rendimiento2) || 0;
+      const s2 = Math.max(0, Number(v.volatilidad2) || 0);
+      const corr = Math.min(1, Math.max(-1, Number(v.correlacion) || 0));
+      const pBono = Number(v.precioBono) || 0;
+      const vfBono = Number(v.valorFinalBono) || 0;
+      const cupon = Math.max(0, Number(v.cuponBono) || 0);
+      const anios = Math.max(0.1, Number(v.aniosBono) || 1);
+      const pAccion = Number(v.precioAccion) || 0;
+      const patrimonio = Number(v.patrimonio) || 0;
+      const acciones = Number(v.acciones) || 0;
+      const pbSector = Math.max(0.01, Number(v.pbSector) || 1.5);
+
+      const vacio = (msg) => ({ total: '—', sub: msg, rows: [], chart: [], format: 'plain', decimals: 2 });
+
+      // ------------------------------------------------------- correlación
+      if (caso === 'correlacion') {
+        if (!s1 && !s2) return vacio('Cargá la volatilidad de los dos activos para ver el efecto de diversificar.');
+        // Espejo de diversificacion-portafolio-correlacion.ts.
+        const w2 = 1 - w1;
+        const rendPort = w1 * r1 + w2 * r2;
+        const varianza = Math.pow(w1 * s1, 2) + Math.pow(w2 * s2, 2) + 2 * w1 * w2 * s1 * s2 * corr;
+        const riesgoPort = Math.sqrt(Math.max(0, varianza));
+        const riesgoSinDiv = w1 * s1 + w2 * s2;
+        const beneficio = riesgoSinDiv - riesgoPort;
+        const reduccionPct = riesgoSinDiv > 0 ? (beneficio / riesgoSinDiv) * 100 : 0;
+        const lectura =
+          corr >= 0.8
+            ? 'con una correlación tan alta casi no estás diversificando'
+            : corr >= 0.3
+              ? 'diversificación parcial: los activos se mueven bastante juntos'
+              : corr >= -0.2
+                ? 'buena diversificación: los activos se mueven con independencia'
+                : 'diversificación fuerte: se compensan entre sí';
+        return {
+          total: num(riesgoPort, 2) + '%',
+          sub:
+            'Riesgo de la cartera combinada · ' + num(riesgoSinDiv, 2) + '% si los activos se movieran igual · ' +
+            'la diversificación te ahorra ' + num(beneficio, 2) + ' puntos (' + reduccionPct.toFixed(0) + '%) · ' + lectura,
+          rows: [
+            { k: 'Riesgo de la cartera combinada', ref: 'desvío estándar del conjunto', v: riesgoPort, format: 'unit', unit: '%', decimals: 2, extra: true },
+            { k: 'Riesgo sin ningún beneficio de diversificar', ref: 'promedio ponderado', v: riesgoSinDiv, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Beneficio de diversificación', v: beneficio, format: 'unit', unit: 'puntos', decimals: 2 },
+            { k: 'Reducción del riesgo', v: reduccionPct, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Rendimiento esperado de la combinación', v: rendPort, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Peso del activo 1', v: w1 * 100, format: 'unit', unit: '%', decimals: 0 },
+            { k: 'Peso del activo 2', v: w2 * 100, format: 'unit', unit: '%', decimals: 0 },
+            { k: 'Correlación cargada', v: corr, format: 'plain', decimals: 2 },
+            { k: 'Sharpe de la combinación', ref: 'con la tasa libre de riesgo', v: riesgoPort > 0 ? (rendPort - rf) / riesgoPort : 0, format: 'plain', decimals: 2 },
+          ],
+          chart: [
+            { label: 'Se compensan', value: 0.8, tone: 'good', from: -1, to: -0.2 },
+            { label: 'Independientes', value: 0.5, tone: 'good', from: -0.2, to: 0.3 },
+            { label: 'Se mueven juntos', value: 0.5, tone: 'warn', from: 0.3, to: 0.8 },
+            { label: 'Casi lo mismo', value: 0.2, tone: 'bad', from: 0.8, to: 1 },
+          ],
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+          position: Math.min(100, Math.max(0, ((corr + 1) / 2) * 100)),
+          positionLabel: 'Correlación ' + corr.toFixed(2) + ' — ' + lectura,
+        };
+      }
+
+      // ------------------------------------------------------------- bono
+      if (caso === 'bono') {
+        if (!pBono) return vacio('Cargá el precio de compra del bono para ver el rendimiento.');
+        const cuponesTotales = cupon * anios;
+        const gananciaCapital = vfBono - pBono;
+        const currentYield = (cupon / pBono) * 100;
+        // Rendimiento total simple anualizado, igual que la calculadora de AL30/AL35/AL41.
+        const rendSimple = (((vfBono + cuponesTotales - pBono) / pBono) / anios) * 100;
+        const rendTotal = ((vfBono + cuponesTotales - pBono) / pBono) * 100;
+        // Anualizado compuesto sobre el capital, más la renta corriente del cupón.
+        const compuestoCapital = vfBono > 0 && pBono > 0 ? (Math.pow(vfBono / pBono, 1 / anios) - 1) * 100 : 0;
+        const rendCompuesto = compuestoCapital + currentYield;
+        const paridad = vfBono > 0 ? (pBono / vfBono) * 100 : 0;
+        const escalaMax = Math.max(30, Math.ceil(rendSimple) + 5);
+        const lectura =
+          rendSimple >= 15
+            ? 'rendimiento de riesgo alto: el precio ya descuenta probabilidad de incumplimiento'
+            : rendSimple >= 8
+              ? 'rendimiento de riesgo intermedio para deuda en dólares'
+              : 'rendimiento en línea con deuda de menor riesgo';
+        return {
+          total: num(rendSimple, 2) + '%',
+          sub:
+            'Rendimiento anual simple en dólares comprando a ' + num(pBono, 2) + ' por cada 100 de valor nominal · paridad ' +
+            paridad.toFixed(1) + '% · ' + lectura,
+          rows: [
+            { k: 'Rendimiento anual simple', ref: 'total ÷ años', v: rendSimple, format: 'unit', unit: '%', decimals: 2, extra: true },
+            { k: 'Rendimiento anualizado compuesto', ref: 'capital compuesto + cupón', v: rendCompuesto, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Rendimiento corriente', ref: 'cupón ÷ precio', v: currentYield, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Rendimiento total acumulado', ref: 'sin anualizar', v: rendTotal, format: 'unit', unit: '%', decimals: 2 },
+            { k: 'Paridad', ref: 'precio ÷ valor nominal', v: paridad, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Descuento sobre el nominal', v: Math.max(0, 100 - paridad), format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Cupones totales a cobrar', ref: 'por cada 100 de nominal, en dólares', v: cuponesTotales, format: 'plain', decimals: 2 },
+            { k: 'Ganancia de capital al vencimiento', ref: 'en dólares', v: gananciaCapital, format: 'plain', decimals: 2 },
+            { k: 'Total a cobrar', ref: 'cupones + capital, en dólares', v: cuponesTotales + vfBono, format: 'plain', decimals: 2 },
+          ],
+          chart: [
+            { label: 'Bajo riesgo', value: 8, tone: 'good', from: 0, to: 8 },
+            { label: 'Riesgo intermedio', value: 7, tone: 'warn', from: 8, to: 15 },
+            { label: 'Riesgo alto', value: escalaMax - 15, tone: 'bad', from: 15, to: escalaMax },
+          ],
+          format: 'unit',
+          unit: '%',
+          decimals: 2,
+          position: Math.min(100, Math.max(0, (rendSimple / escalaMax) * 100)),
+          positionLabel: 'Rendimiento ' + rendSimple.toFixed(2) + '% anual en dólares — ' + lectura,
+        };
+      }
+
+      // -------------------------------------------------------- price to book
+      if (caso === 'price-to-book') {
+        if (!pAccion || !acciones || !patrimonio) return vacio('Cargá precio, patrimonio neto y acciones en circulación.');
+        // Espejo de precio-valor-libro.ts.
+        const valorLibro = patrimonio / acciones;
+        const pb = valorLibro !== 0 ? pAccion / valorLibro : 0;
+        const precioJusto = valorLibro * pbSector;
+        const dif = precioJusto !== 0 ? ((pAccion - precioJusto) / precioJusto) * 100 : 0;
+        const b1 = 1;
+        const b2 = Math.max(pbSector * 0.8, b1 + 0.05);
+        const b3 = Math.max(pbSector * 1.3, b2 + 0.05);
+        const b4 = Math.max(b3 * 1.25, pb * 1.1, b3 + 0.05);
+        const lectura =
+          pb < 1
+            ? 'cotiza por debajo de su valor en libros'
+            : pb < b2
+              ? 'subvaluada respecto del sector'
+              : pb > b3
+                ? 'sobrevaluada respecto del sector'
+                : 'en el rango del sector';
+        return {
+          total: num(pb, 2),
+          sub:
+            'Price to book contra ' + num(pbSector, 2) + ' del sector · ' + lectura + ' · cotiza ' +
+            (dif >= 0 ? num(Math.abs(dif), 1) + '% por encima' : num(Math.abs(dif), 1) + '% por debajo') +
+            ' del precio implícito por el múltiplo del sector',
+          rows: [
+            { k: 'Price to book', ref: 'precio ÷ valor en libros', v: pb, format: 'plain', decimals: 2, extra: true },
+            { k: 'Price to book del sector', v: pbSector, format: 'plain', decimals: 2 },
+            { k: 'Valor en libros por acción', ref: 'patrimonio ÷ acciones', v: valorLibro, format: 'plain', decimals: 2 },
+            { k: 'Precio implícito al múltiplo del sector', v: precioJusto, format: 'plain', decimals: 2 },
+            { k: 'Diferencia contra ese precio', v: dif, format: 'unit', unit: '%', decimals: 1 },
+            { k: 'Patrimonio que te corresponde por acción', v: valorLibro, format: 'plain', decimals: 2 },
+            { k: 'Cuántas veces el patrimonio estás pagando', v: pb, format: 'unit', unit: 'veces', decimals: 2 },
+          ],
+          chart: [
+            { label: 'Bajo libro', value: b1, tone: 'bad', from: 0, to: Number(b1.toFixed(2)) },
+            { label: 'Subvaluada', value: b2 - b1, tone: 'good', from: Number(b1.toFixed(2)), to: Number(b2.toFixed(2)) },
+            { label: 'En rango', value: b3 - b2, tone: 'warn', from: Number(b2.toFixed(2)), to: Number(b3.toFixed(2)) },
+            { label: 'Sobrevaluada', value: b4 - b3, tone: 'bad', from: Number(b3.toFixed(2)), to: Number(b4.toFixed(2)) },
+          ],
+          format: 'plain',
+          decimals: 2,
+          position: Math.min(100, Math.max(0, (pb / b4) * 100)),
+          positionLabel: 'Price to book ' + pb.toFixed(2) + ' — ' + lectura,
+        };
+      }
+
+      // ------------------------------------------------- Sharpe (por defecto)
+      if (!vol) return vacio('Cargá la volatilidad del portafolio para ver el Sharpe ratio.');
+      // Espejo de sharpe-ratio-portafolio.ts: (rendimiento − tasa libre) ÷ desvío.
+      const exceso = rend - rf;
+      const sharpe = exceso / vol;
+      const lectura =
+        sharpe < 0
+          ? 'rendiste menos que la tasa libre de riesgo'
+          : sharpe < 0.5
+            ? 'bajo: poco retorno para la volatilidad que aguantás'
+            : sharpe < 1
+              ? 'normal: en la banda de la mayoría de las carteras'
+              : sharpe < 2
+                ? 'bueno: el retorno compensa bien la volatilidad'
+                : 'muy bueno: revisá los datos si te da tan alto';
+      const escalaMin = -1;
+      const escalaMax = Math.max(3, Math.ceil(sharpe) + 0.5);
+      const bandas = BANDS.map((b) => ({
+        label: b.label,
+        value: b.to - b.from,
+        tone: b.tone,
+        from: b.from,
+        to: b.to,
+      }));
+      if (escalaMax > 3) bandas.push({ label: 'Fuera de escala', value: escalaMax - 3, tone: 'warn', from: 3, to: escalaMax });
+      return {
+        total: num(sharpe, 2),
+        sub:
+          'Sharpe ratio con una tasa libre de riesgo de ' + num(rf, 2) + '% · exceso de retorno de ' + num(exceso, 2) +
+          ' puntos sobre ' + num(vol, 2) + '% de volatilidad · ' + lectura,
+        rows: [
+          { k: 'Sharpe ratio', ref: '(rendimiento − tasa libre) ÷ volatilidad', v: sharpe, format: 'plain', decimals: 2, extra: true },
+          { k: 'Exceso de retorno sobre la tasa libre', v: exceso, format: 'unit', unit: 'puntos', decimals: 2 },
+          { k: 'Rendimiento del portafolio', v: rend, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Tasa libre de riesgo', ref: 'plazo fijo 30 días del BCRA', v: rf, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Volatilidad del portafolio', ref: 'desvío estándar anualizado', v: vol, format: 'unit', unit: '%', decimals: 2 },
+          { k: 'Exceso de retorno por punto de volatilidad', v: sharpe, format: 'unit', unit: 'puntos', decimals: 2 },
+          { k: 'Cuánto de tu rendimiento es sólo la tasa libre', v: rend !== 0 ? (rf / rend) * 100 : 0, format: 'unit', unit: '%', decimals: 1 },
+        ],
+        chart: bandas,
+        format: 'plain',
+        decimals: 2,
+        position: Math.min(100, Math.max(0, ((sharpe - escalaMin) / (escalaMax - escalaMin)) * 100)),
+        positionLabel: 'Sharpe ' + sharpe.toFixed(2) + ' — ' + lectura,
+      };
+    });
+  })();
+</script>

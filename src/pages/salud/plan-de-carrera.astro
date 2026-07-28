@@ -1,0 +1,265 @@
+---
+/**
+ * Hub de decisión — "Me anoté a una carrera: ¿cuántas semanas necesito?".
+ * Reemplaza 6 URLs de calculadora suelta (ver hub.replaces).
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  PLANES,
+  SEMANAS_POR_EXPERIENCIA,
+  PICO_POR_META,
+  PICO_POR_META_DEFAULT,
+  DISTANCIAS,
+  RIEGEL_EXP,
+  TAPER,
+} from '../../lib/hubs/plan-de-carrera';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ PLANES, SEMANAS_POR_EXPERIENCIA, PICO_POR_META, PICO_POR_META_DEFAULT, DISTANCIAS, RIEGEL_EXP, TAPER }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    /** h:mm:ss / m:ss a partir de minutos decimales. Espejo de tiempoMetaMaraton(). */
+    function reloj(min) {
+      const h = Math.floor(min / 60);
+      const m = Math.floor(min % 60);
+      const s = Math.round((min % 1) * 60);
+      return h > 0
+        ? h + 'h ' + String(m).padStart(2, '0') + 'm ' + String(s).padStart(2, '0') + 's'
+        : m + 'm ' + String(s).padStart(2, '0') + 's';
+    }
+
+    function ritmo(minPorKm) {
+      const m = Math.floor(minPorKm);
+      const s = Math.round((minPorKm - m) * 60);
+      return s === 60 ? m + 1 + ':00 min/km' : m + ':' + String(s).padStart(2, '0') + ' min/km';
+    }
+
+    /**
+     * Progresión semanal de kilómetros. Espejo exacto del bucle de plan-maraton-semanas.ts:
+     * build lineal desde la primera semana hasta el pico, deload ×0,70 cada 4 semanas,
+     * y afloje final de 3 semanas al 70 / 55 / 40 % del pico.
+     */
+    function progresion(semanas, kmPico, kmPrimera) {
+      const taperSemanas = TAPER.length;
+      const build = semanas - taperSemanas;
+      const out = [];
+      for (let s = 1; s <= semanas; s++) {
+        if (s > build) {
+          const idx = s - build;
+          out.push(Math.round(kmPico * TAPER[Math.min(idx - 1, TAPER.length - 1)]));
+        } else {
+          const lineal = kmPrimera + ((kmPico - kmPrimera) * s) / build;
+          out.push(Math.round(s % 4 === 0 ? lineal * 0.7 : lineal));
+        }
+      }
+      return out;
+    }
+
+    function picoPorMeta(horas) {
+      for (const p of PICO_POR_META) if (horas <= p.hasta) return p.kmPico;
+      return PICO_POR_META_DEFAULT;
+    }
+
+    function filasPlan(semanas, kmPico, kmPrimera, serie) {
+      const longRun = Math.round(kmPico * 0.42);
+      const totalKm = serie.reduce((a, b) => a + b, 0);
+      return [
+        { k: 'Semanas de plan', ref: 'Nivel y distancia', v: semanas, format: 'unit', unit: 'semanas', extra: true },
+        { k: 'Primera semana', ref: 'Punto de partida', v: kmPrimera, format: 'unit', unit: 'km' },
+        { k: 'Pico de volumen semanal', ref: 'Semana más fuerte', v: kmPico, format: 'unit', unit: 'km' },
+        { k: 'Fondo largo máximo', ref: '≈42% del pico', v: longRun, format: 'unit', unit: 'km' },
+        { k: 'Semanas de afloje final', ref: '70 / 55 / 40 % del pico', v: TAPER.length, format: 'unit', unit: 'semanas' },
+        { k: 'Kilómetros totales del plan', ref: 'Suma de la progresión', v: totalKm, format: 'unit', unit: 'km' },
+      ];
+    }
+
+    function chartPlan(serie) {
+      const pico = Math.max.apply(null, serie);
+      return serie.map(function (km, idx) {
+        return {
+          label: 'S' + (idx + 1),
+          value: km,
+          tone: km === pico ? 'main' : idx >= serie.length - TAPER.length ? 'exit' : 'prop',
+        };
+      });
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || '5k';
+      const nivel = String(v.nivel || 'principiante');
+      const kmActuales = Math.max(0, Number(v.kmActuales) || 0);
+
+      // ── Planes fijos por distancia (5K / 21K / 42K) ───────────────────────
+      if (id === '5k' || id === '21k' || id === '42k') {
+        const plan = PLANES[id][nivel] || PLANES[id].principiante;
+        const kmPico = plan.kmPico;
+        const semanas = plan.semanas;
+        // Arranque: lo que ya corrés (+10%), con piso de 20 km como en el plan de maratón.
+        const kmPrimera = Math.min(kmPico, Math.round(Math.max(20, kmActuales * 1.1)));
+        const serie = progresion(semanas, kmPico, kmPrimera);
+        const etiqueta = id === '5k' ? '5K' : id === '21k' ? 'media maratón' : 'maratón';
+
+        const rows = filasPlan(semanas, kmPico, kmPrimera, serie);
+        if (plan.dias) rows.splice(1, 0, { k: 'Días de corrida por semana', ref: 'Nivel ' + nivel, v: plan.dias, format: 'unit', unit: 'días' });
+
+        return {
+          total: semanas + (semanas === 1 ? ' semana' : ' semanas'),
+          sub:
+            'Plan de ' + etiqueta + ' nivel ' + nivel + ' · pico de ' + kmPico + ' km/semana' +
+            (plan.meta ? ' · objetivo de tiempo ' + plan.meta : '') +
+            (kmActuales < kmPico * 0.3 ? ' · venís de poco volumen: construí base antes de arrancar' : ''),
+          rows: rows,
+          format: 'unit',
+          unit: 'km',
+          chart: chartPlan(serie),
+        };
+      }
+
+      // ── Maratón con tiempo objetivo ───────────────────────────────────────
+      if (id === 'meta') {
+        const meta = Math.min(8, Math.max(2, Number(v.metaHoras) || 4));
+        const kmPico = picoPorMeta(meta);
+        let semanas = SEMANAS_POR_EXPERIENCIA[nivel] || SEMANAS_POR_EXPERIENCIA.principiante;
+        if (kmActuales < kmPico * 0.3) semanas += 2;
+        const kmPrimera = Math.round(Math.max(20, kmActuales * 1.1));
+        const serie = progresion(semanas, kmPico, kmPrimera);
+
+        const baseFloja = kmActuales < 20;
+        const baseSolida = kmActuales > kmPico * 0.8;
+
+        return {
+          total: semanas + ' semanas',
+          sub:
+            'Maratón en ' + String(meta).replace('.', ',') + ' h · nivel ' + nivel + ' · pico de ' + kmPico + ' km/semana · ' +
+            (baseFloja
+              ? 'primero sumá 4 a 6 semanas de base hasta pasar los 20 km/semana'
+              : baseSolida
+                ? 'ya tenés base sólida: podés recortar 2 o 3 semanas'
+                : 'progresión del 10% semanal con descarga cada 4 semanas'),
+          rows: filasPlan(semanas, kmPico, kmPrimera, serie).concat([
+            { k: 'Ritmo objetivo de carrera', ref: String(meta).replace('.', ',') + ' h en 42,195 km', v: (meta * 60) / 42.195, format: 'unit', unit: 'min/km', decimals: 2 },
+          ]),
+          format: 'unit',
+          unit: 'km',
+          chart: chartPlan(serie),
+        };
+      }
+
+      // ── Predictor de tiempos (Riegel) ─────────────────────────────────────
+      if (id === 'predictor') {
+        const d1 = Math.max(0.1, Number(v.distRef) || 10);
+        const t1 = Math.max(0.1, Number(v.tiempoRefMin) || 52);
+        const d2 = Number(v.distMeta) || 21.1;
+
+        const proyeccion = (d) => t1 * Math.pow(d / d1, RIEGEL_EXP);
+        const t2 = proyeccion(d2);
+        const factor = d2 / d1;
+
+        return {
+          total: reloj(t2),
+          sub:
+            'Desde ' + String(d1).replace('.', ',') + ' km en ' + reloj(t1) + ' · ritmo proyectado ' + ritmo(t2 / d2) +
+            ' · ' + (t2 / 60 > 0 ? (d2 / (t2 / 60)).toFixed(1).replace('.', ',') : '0') + ' km/h' +
+            (factor >= 2 ? ' · proyección optimista: estás multiplicando la distancia por ' + factor.toFixed(1).replace('.', ',') : ''),
+          rows: DISTANCIAS.map(function (d) {
+            const t = proyeccion(d.value);
+            return {
+              k: d.label + ' — ' + reloj(t) + ' a ' + ritmo(t / d.value),
+              ref: d.value === d2 ? 'Tu proyección' : 'Riegel ^1,06',
+              v: Math.round(t),
+              format: 'unit',
+              unit: 'min',
+              extra: d.value === d2,
+            };
+          }),
+          format: 'unit',
+          unit: 'min',
+          chart: DISTANCIAS.map(function (d) {
+            return {
+              label: d.label,
+              value: Math.round(proyeccion(d.value)),
+              tone: d.value === d2 ? 'main' : 'prop',
+            };
+          }),
+        };
+      }
+
+      // ── Descanso post-carrera (regla del kilómetro) ───────────────────────
+      const km = Math.max(1, Number(v.kmCarrera) || 42.2);
+      const dias = Math.round(km / 2);
+      const semanas = Math.ceil(dias / 7);
+
+      return {
+        total: dias + (dias === 1 ? ' día suave' : ' días suaves'),
+        sub:
+          'Después de ' + String(km).replace('.', ',') + ' km · unas ' + semanas +
+          (semanas === 1 ? ' semana' : ' semanas') + ' sin intensidad ni carreras',
+        rows: [
+          { k: 'Kilómetros de la carrera', ref: 'Tu dato', v: km, format: 'unit', unit: 'km', decimals: 1 },
+          { k: 'Días suaves recomendados', ref: 'Distancia ÷ 2', v: dias, format: 'unit', unit: 'días', extra: true },
+          { k: 'Equivalente en semanas', ref: 'Días ÷ 7, redondeado', v: semanas, format: 'unit', unit: 'semanas' },
+          { k: 'Referencia: 10K', ref: 'Regla del kilómetro', v: Math.round(10 / 2), format: 'unit', unit: 'días' },
+          { k: 'Referencia: media maratón', ref: 'Regla del kilómetro', v: Math.round(21.1 / 2), format: 'unit', unit: 'días' },
+          { k: 'Referencia: maratón', ref: 'Regla del kilómetro', v: Math.round(42.195 / 2), format: 'unit', unit: 'días' },
+        ],
+        format: 'unit',
+        unit: 'días',
+        chart: [
+          { label: '10K', value: Math.round(10 / 2), tone: Math.abs(km - 10) < 0.5 ? 'main' : 'prop' },
+          { label: '21K', value: Math.round(21.1 / 2), tone: Math.abs(km - 21.1) < 0.5 ? 'main' : 'prop' },
+          { label: '42K', value: Math.round(42.195 / 2), tone: Math.abs(km - 42.195) < 1 ? 'main' : 'prop' },
+          { label: 'Tu carrera', value: dias, tone: 'exit' },
+        ],
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,470 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto se cobra la hora en mi oficio?"
+ * Reemplaza 9 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: 4 casos (profesión / seniority / mercado del cliente /
+ * por palabra). La página sólo aporta compute(); los datos viven en
+ * src/lib/hubs/tarifas-por-hora.ts.
+ *
+ * OJO MONEDA: tres de las cuatro ramas trabajan en DÓLARES y una en pesos. El
+ * runtime hace Object.assign sobre un default 'ars', así que toda fila que no
+ * sea peso argentino declara `format` propio ('unit' + unit, o 'plain').
+ *
+ * `EXP_TRAMOS` NO se pasa por define:vars: tiene un Infinity que se serializa
+ * como null. Los tramos de experiencia se resuelven en el script.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  BASE_OFICIO,
+  MERCADOS,
+  NIVEL_MULT,
+  PALABRA_NIVELES,
+  CONTENIDO_MULT,
+  DIRECCION_MULT,
+  ESPECIALIZACION_MULT,
+  BANDA,
+  BANDA_SIMETRICA,
+  HORAS_PROYECTO,
+  USD_ARS_LIQUIDACION,
+  USD_ARS_CCL,
+} from '../../lib/hubs/tarifas-por-hora';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    OFICIOS: BASE_OFICIO,
+    MKT: MERCADOS,
+    NIVELES: NIVEL_MULT,
+    PAL: PALABRA_NIVELES,
+    CONT: CONTENIDO_MULT,
+    DIR: DIRECCION_MULT,
+    ESP_MULT: ESPECIALIZACION_MULT,
+    BANDA,
+    BANDA_SIM: BANDA_SIMETRICA,
+    HORAS_PROYECTO,
+    USD_LIQ: USD_ARS_LIQUIDACION,
+    USD_CCL: USD_ARS_CCL,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const nf = (n, d) =>
+      Number(n || 0).toLocaleString('es-AR', {
+        minimumFractionDigits: d || 0,
+        maximumFractionDigits: d || 0,
+      });
+    const usd = (n, d) => 'USD ' + nf(n, d || 0);
+
+    /**
+     * Multiplicador por experiencia. Copia fiel del bloque `byExp` que
+     * comparten las cinco fórmulas costo-hora-*.ts.
+     */
+    function multExperiencia(anos) {
+      const a = Math.max(0, Number(anos) || 0);
+      if (a < 2) return 0.5;
+      if (a < 5) return 0.8;
+      if (a < 10) return 1.2;
+      return 1.7;
+    }
+    function labelExperiencia(anos) {
+      const a = Math.max(0, Number(anos) || 0);
+      if (a < 2) return 'menos de 2 años';
+      if (a < 5) return 'de 2 a 5 años';
+      if (a < 10) return 'de 5 a 10 años';
+      return '10 años o más';
+    }
+
+    /** Rate de mercado de un oficio: base × experiencia × mercado × especialización. */
+    function rateOficio(oficioKey, anos, mercadoKey, especializado) {
+      const base = (OFICIOS[oficioKey] || OFICIOS.desarrollador).base;
+      const mExp = multExperiencia(anos);
+      const mMkt = (MKT[mercadoKey] || { mult: 1 }).mult;
+      const mEsp = especializado === 'si' ? ESP_MULT : 1;
+      return base * mExp * mMkt * mEsp;
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'profesion';
+      const mercadoKey = String(v.mercado || 'latam');
+      const mkt = MKT[mercadoKey] || { mult: 1, label: mercadoKey };
+
+      // ── 1. Tarifa por profesión y experiencia ─────────────────────────────
+      if (id === 'profesion') {
+        const oficioKey = String(v.oficio || 'desarrollador');
+        const oficio = OFICIOS[oficioKey] || OFICIOS.desarrollador;
+        const anos = Math.max(0, Number(v.anos) || 0);
+        const esp = String(v.especializado || 'no');
+        const mExp = multExperiencia(anos);
+        const mEsp = esp === 'si' ? ESP_MULT : 1;
+
+        const rate = rateOficio(oficioKey, anos, mercadoKey, esp);
+        const rateR = Math.round(rate);
+        const rateMin = Math.round(rate * BANDA.min);
+        const rateMax = Math.round(rate * BANDA.max);
+        const proyecto = Math.round(rate * HORAS_PROYECTO);
+
+        return {
+          total: usd(rateR) + '/h',
+          sub:
+            oficio.label +
+            ' · ' +
+            labelExperiencia(anos) +
+            ' · cliente de ' +
+            mkt.label +
+            ' · banda negociable ' +
+            usd(rateMin) +
+            ' a ' +
+            usd(rateMax) +
+            ' · en pesos, ' +
+            H.ars(rateR * USD_LIQ) +
+            ' la hora',
+          format: 'unit',
+          unit: 'USD',
+          rows: [
+            { k: 'Rate base del oficio', ref: oficio.label, v: oficio.base, format: 'unit', unit: 'USD' },
+            {
+              k: 'Ajuste por experiencia',
+              ref: labelExperiencia(anos),
+              v: mExp,
+              format: 'unit',
+              unit: '×',
+              decimals: 2,
+            },
+            {
+              k: 'Ajuste por el mercado del cliente',
+              ref: mkt.label,
+              v: mkt.mult,
+              format: 'unit',
+              unit: '×',
+              decimals: 2,
+            },
+            {
+              k: 'Ajuste por especialización',
+              ref: esp === 'si' ? 'nicho definido' : 'perfil generalista',
+              v: mEsp,
+              format: 'unit',
+              unit: '×',
+              decimals: 2,
+            },
+            { k: 'Piso de la banda: no cobres menos', v: rateMin, format: 'unit', unit: 'USD' },
+            { k: 'Tarifa de referencia por hora', v: rateR, format: 'unit', unit: 'USD', extra: true },
+            { k: 'Techo de la banda', v: rateMax, format: 'unit', unit: 'USD' },
+            {
+              k: 'Precio de un proyecto tipo',
+              ref: HORAS_PROYECTO + ' horas',
+              v: proyecto,
+              format: 'unit',
+              unit: 'USD',
+            },
+            { k: 'La misma hora en pesos', ref: 'dólar oficial comprador', v: rateR * USD_LIQ, format: 'ars' },
+          ],
+          chart: Object.keys(OFICIOS).map(function (k) {
+            return {
+              label: OFICIOS[k].label,
+              value: Math.round(rateOficio(k, anos, mercadoKey, esp)),
+              tone: k === oficioKey ? 'main' : 'prop',
+            };
+          }),
+        };
+      }
+
+      // ── 2. Seniority e ingreso objetivo ───────────────────────────────────
+      if (id === 'nivel') {
+        const nivelKey = String(v.nivel || 'semi');
+        const nivel = NIVELES[nivelKey] || NIVELES.semi;
+        const objetivo = Math.max(0, Number(v.ingreso_anual) || 0);
+        const hs = Math.max(1, Number(v.horas_semana) || 1);
+        const sem = Math.max(1, Number(v.semanas_ano) || 1);
+        const over = Math.min(0.9, Math.max(0, (Number(v.overhead_pct) || 0) / 100));
+
+        const horasAnuales = hs * sem;
+        const bruto = objetivo / (1 - over);
+        const rateBase = bruto / horasAnuales;
+        const rate = rateBase * nivel.mult;
+        const rateR = Math.round(rate);
+        const rateMin = Math.round(rate * BANDA_SIM.min);
+        const rateMax = Math.round(rate * BANDA_SIM.max);
+
+        return {
+          total: H.ars(rateR),
+          sub:
+            'Nivel ' +
+            nivel.label.toLowerCase() +
+            ' · ' +
+            nf(horasAnuales) +
+            ' horas facturables al año · necesitás facturar ' +
+            H.ars(bruto) +
+            ' brutos · banda ' +
+            H.ars(rateMin) +
+            ' a ' +
+            H.ars(rateMax) +
+            ' · unos ' +
+            usd(USD_LIQ > 0 ? rateR / USD_LIQ : 0, 1) +
+            ' por hora',
+          rows: [
+            { k: 'Ingreso neto anual que buscás', v: objetivo },
+            {
+              k: 'Facturación bruta necesaria',
+              ref: 'overhead del ' + nf(over * 100) + '%',
+              v: bruto,
+            },
+            {
+              k: 'Horas facturables al año',
+              ref: nf(hs) + ' h por semana × ' + nf(sem) + ' semanas',
+              v: horasAnuales,
+              format: 'plain',
+            },
+            { k: 'Rate base antes del seniority', v: rateBase },
+            {
+              k: 'Multiplicador de tu nivel',
+              ref: nivel.label,
+              v: nivel.mult,
+              format: 'unit',
+              unit: '×',
+              decimals: 2,
+            },
+            { k: 'Piso de la banda', v: rateMin },
+            { k: 'Tarifa por hora de tu nivel', v: rateR, extra: true },
+            { k: 'Techo de la banda', v: rateMax },
+            {
+              k: 'La misma hora en dólares',
+              ref: 'dólar oficial comprador',
+              v: USD_LIQ > 0 ? rateR / USD_LIQ : 0,
+              format: 'unit',
+              unit: 'USD',
+              decimals: 1,
+            },
+          ],
+          chart: Object.keys(NIVELES).map(function (k) {
+            return {
+              label: NIVELES[k].label,
+              value: Math.round(rateBase * NIVELES[k].mult),
+              tone: k === nivelKey ? 'main' : 'prop',
+            };
+          }),
+        };
+      }
+
+      // ── 3. Mercado del cliente ────────────────────────────────────────────
+      if (id === 'mercado') {
+        const base = Math.max(0, Number(v.rate_base) || 0);
+        const rate = base * mkt.mult;
+        const rateR = Math.round(rate);
+        const rateMin = Math.round(rate * BANDA_SIM.min);
+        const rateMax = Math.round(rate * BANDA_SIM.max);
+        const delta = Math.round((mkt.mult - 1) * 100);
+        const enPesos = rateR * USD_LIQ;
+        const enPesosCcl = rateR * USD_CCL;
+
+        return {
+          total: usd(rateR) + '/h',
+          sub:
+            'Cliente de ' +
+            mkt.label +
+            ': ' +
+            (delta >= 0 ? 'un ' + delta + '% por encima' : 'un ' + Math.abs(delta) + '% por debajo') +
+            ' de tu rate base · banda ' +
+            usd(rateMin) +
+            ' a ' +
+            usd(rateMax) +
+            ' · liquidado, ' +
+            H.ars(enPesos) +
+            ' la hora',
+          format: 'unit',
+          unit: 'USD',
+          rows: [
+            { k: 'Tu rate base', v: base, format: 'unit', unit: 'USD' },
+            {
+              k: 'Multiplicador del mercado',
+              ref: mkt.label,
+              v: mkt.mult,
+              format: 'unit',
+              unit: '×',
+              decimals: 2,
+            },
+            { k: 'Piso de la banda en ese mercado', v: rateMin, format: 'unit', unit: 'USD' },
+            { k: 'Tarifa sugerida para ese mercado', v: rateR, format: 'unit', unit: 'USD', extra: true },
+            { k: 'Techo de la banda', v: rateMax, format: 'unit', unit: 'USD' },
+            {
+              k: 'Diferencia contra tu rate base',
+              ref: 'por hora',
+              v: rateR - base,
+              format: 'unit',
+              unit: 'USD',
+            },
+            { k: 'Lo que te queda por hora en pesos', ref: 'dólar oficial comprador', v: enPesos, format: 'ars' },
+            { k: 'La misma hora al contado con liquidación', ref: 'referencia de la brecha', v: enPesosCcl, format: 'ars' },
+            {
+              k: 'Costo de liquidar por la vía formal',
+              ref: 'brecha entre las dos cotizaciones',
+              v: Math.max(0, enPesosCcl - enPesos),
+              format: 'ars',
+            },
+          ],
+          chart: Object.keys(MKT).map(function (k) {
+            return {
+              label: MKT[k].label,
+              value: Math.round(base * MKT[k].mult),
+              tone: k === mercadoKey ? 'main' : 'prop',
+            };
+          }),
+        };
+      }
+
+      // ── 4. De tarifa por palabra a tarifa por hora ────────────────────────
+      const nivelPalKey = String(v.nivel_palabra || 'mid');
+      const nivelPal = PAL[nivelPalKey] || PAL.mid;
+      const contKey = String(v.contenido || 'general');
+      const cont = CONT[contKey] || CONT.general;
+      const dirKey = String(v.direccion || 'es_to_en');
+      const dirMult = dirKey === 'es_to_en' ? DIR.es_to_en : DIR.en_to_es;
+      const palabras = Math.max(0, Number(v.palabras) || 0);
+
+      const porPalabra = nivelPal.midpoint * cont.mult * dirMult;
+      const porPalabraMin = nivelPal.min * cont.mult * dirMult;
+      const porPalabraMax = nivelPal.max * cont.mult * dirMult;
+      const total = porPalabra * palabras;
+      const horas = palabras / nivelPal.speed;
+      const porHora = horas > 0 ? total / horas : 0;
+
+      /** Tarifa horaria efectiva de cada nivel, con el mismo contenido y dirección. */
+      function horaDeNivel(k) {
+        const n = PAL[k];
+        return Math.round(n.midpoint * cont.mult * dirMult * n.speed);
+      }
+
+      return {
+        total: usd(porHora, 0) + '/h',
+        sub:
+          nf(palabras) +
+          ' palabras a ' +
+          usd(porPalabra, 3) +
+          ' por palabra son ' +
+          usd(total, 0) +
+          ' por unas ' +
+          nf(horas, 1) +
+          ' horas de trabajo · ' +
+          (porHora >= 40
+            ? 'una tarifa horaria competitiva'
+            : porHora >= 20
+              ? 'una tarifa horaria del montón'
+              : 'una tarifa horaria baja: revisá el precio o la velocidad'),
+        format: 'unit',
+        unit: 'USD',
+        rows: [
+          { k: 'Palabras del texto de origen', v: palabras, format: 'plain' },
+          {
+            k: 'Tarifa por palabra de tu nivel',
+            ref: nivelPal.label + ' · punto medio de la banda',
+            v: nivelPal.midpoint,
+            format: 'unit',
+            unit: 'USD',
+            decimals: 3,
+          },
+          {
+            k: 'Recargo por tipo de contenido',
+            ref: cont.label,
+            v: cont.mult,
+            format: 'unit',
+            unit: '×',
+            decimals: 2,
+          },
+          {
+            k: 'Recargo por la dirección del par',
+            ref: dirKey === 'es_to_en' ? 'español → inglés' : 'inglés → español',
+            v: dirMult,
+            format: 'unit',
+            unit: '×',
+            decimals: 2,
+          },
+          {
+            k: 'Tarifa final por palabra',
+            ref: 'banda ' + usd(porPalabraMin, 3) + ' a ' + usd(porPalabraMax, 3),
+            v: porPalabra,
+            format: 'unit',
+            unit: 'USD',
+            decimals: 3,
+          },
+          { k: 'Total del trabajo', v: total, format: 'unit', unit: 'USD', decimals: 2 },
+          {
+            k: 'Horas estimadas',
+            ref: nf(nivelPal.speed) + ' palabras por hora',
+            v: horas,
+            format: 'unit',
+            unit: 'h',
+            decimals: 1,
+          },
+          {
+            k: 'Tarifa horaria efectiva',
+            ref: 'el número comparable con cualquier otro trabajo',
+            v: porHora,
+            format: 'unit',
+            unit: 'USD',
+            decimals: 2,
+            extra: true,
+          },
+          {
+            k: 'Esa hora en pesos',
+            ref: 'dólar oficial comprador',
+            v: porHora * USD_LIQ,
+            format: 'ars',
+          },
+        ],
+        chart: Object.keys(PAL).map(function (k) {
+          return {
+            label: PAL[k].label,
+            value: horaDeNivel(k),
+            tone: k === nivelPalKey ? 'main' : 'prop',
+          };
+        }),
+      };
+    });
+  })();
+</script>

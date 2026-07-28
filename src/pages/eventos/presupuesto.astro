@@ -1,0 +1,277 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto me va a salir la fiesta?"
+ * Reemplaza 5 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo: ramificado (5 ramas, `cases`).
+ * Hermano de /eventos/comida y /eventos/bebidas: aquéllas dicen CUÁNTO comprar,
+ * ésta dice CUÁNTO SALE. El casamiento va aparte, en /eventos/casamiento.
+ *
+ * Los números no están acá: se derivan de las cinco fórmulas reales dentro de
+ * src/lib/hubs/presupuesto-fiesta.ts, que además documenta el problema de fondo
+ * (tres calculadoras cotizaban en dólares, una en pesos bajos y una sin
+ * constantes) y con qué criterio se unificó todo a pesos.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  DOLAR,
+  COMIDA_PP,
+  BEBIDA_PP,
+  LUGAR_PP,
+  EXTRAS_PP,
+  CONFIG_REF,
+  BANDA_PP,
+  USD_PP,
+  RUBROS_QUINCE,
+  RUBROS_GRADUACION,
+  RUBROS_DESPEDIDA,
+  RUBRO_COMIDA,
+  RUBRO_LUGAR,
+  LOGISTICA_PP,
+  MARGEN_INVITADOS,
+  NIVEL_CORTES,
+  NIVEL_ETIQUETAS,
+} from '../../lib/hubs/presupuesto-fiesta';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    DOLAR,
+    COMIDA_PP,
+    BEBIDA_PP,
+    LUGAR_PP,
+    EXTRAS_PP,
+    CONFIG_REF,
+    BANDA_PP,
+    USD_PP,
+    RUBROS_QUINCE,
+    RUBROS_GRADUACION,
+    RUBROS_DESPEDIDA,
+    RUBRO_COMIDA,
+    RUBRO_LUGAR,
+    LOGISTICA_PP,
+    MARGEN_INVITADOS,
+    NIVEL_CORTES,
+    NIVEL_ETIQUETAS,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    // El desglose mezcla pesos con cantidades (mesas, vasos, hielo). El runtime
+    // hace Object.assign y la fila que no declara `format` cae a pesos, así que
+    // TODAS lo declaran, incluidas las de plata.
+    const U = (v, unit, decimals) => ({ v: v, format: 'unit', unit: unit, decimals: decimals || 0 });
+    const $ = (v) => ({ v: Math.round(v), format: 'ars' });
+
+    const n = (x, d) =>
+      Number(x || 0).toLocaleString('es-AR', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+    const plata = (x) => '$' + n(x);
+
+    /** Nivel de festejo según los cortes de la calculadora que los declara. */
+    function nivelFestejo(costoPorInvitado) {
+      if (costoPorInvitado < NIVEL_CORTES.diy) return NIVEL_ETIQUETAS[0];
+      if (costoPorInvitado < NIVEL_CORTES.medio) return NIVEL_ETIQUETAS[1];
+      if (costoPorInvitado < NIVEL_CORTES.premium) return NIVEL_ETIQUETAS[2];
+      return NIVEL_ETIQUETAS[3];
+    }
+
+    /** Tonos del gráfico, en orden de peso del rubro. */
+    const TONOS = ['main', 'exit', 'prop', 'good', 'warn', 'bad'];
+
+    H.onCompute(function (v, kase) {
+      const rama = (kase && kase.id) || 'cumple';
+
+      const invitados = Math.max(1, Math.round(v.invitados || 1));
+      // El colchón del 10% sale de la fórmula de cumpleaños y se aplica sólo a
+      // lo que se paga por cabeza: el salón y la torta no cambian si va uno más.
+      const invitadosPago = Math.ceil(invitados * (1 + MARGEN_INVITADOS));
+      const nivel = USD_PP.quince[v.nivel] ? v.nivel : 'estandar';
+      const salonReal = Math.max(0, v.salon || 0);
+      const cateringPP = Math.max(0, v.cateringPP || 0);
+      const torta = Math.max(0, v.torta || 0);
+      const decoAnimacion = Math.max(0, v.decoAnimacion || 0);
+      const souvenirPP = Math.max(0, v.souvenirPP || 0);
+      const regalos = Math.max(0, v.regalos || 0);
+
+      const rows = [];
+      const rubros = [];       // { label, monto, porCabeza }
+      const notas = [];
+
+      rows.push({
+        k: 'Invitados con el colchón de los que confirman tarde',
+        ref: invitados + ' + ' + Math.round(MARGEN_INVITADOS * 100) + '% · se aplica sólo a lo que se paga por cabeza',
+        ...U(invitadosPago, 'personas'),
+      });
+
+      if (rama === 'cumple') {
+        /* Proporciones de presupuesto-cumpleanos + banda en pesos de la
+           calculadora hermana. Los importes viejos NO se usan: sólo sus ratios. */
+        const comida = COMIDA_PP[v.comida] != null ? v.comida : 'pizza';
+        const bebida = BEBIDA_PP[v.bebida] != null ? v.bebida : 'cerveza';
+        const lugar = LUGAR_PP[v.lugar] != null ? v.lugar : 'casa';
+
+        const config = COMIDA_PP[comida] + BEBIDA_PP[bebida] + LUGAR_PP[lugar] + EXTRAS_PP;
+        const indice = config / CONFIG_REF;
+        const pp = BANDA_PP[nivel] * indice;
+
+        const ppComida = (pp * COMIDA_PP[comida]) / config;
+        const ppBebida = (pp * BEBIDA_PP[bebida]) / config;
+        const ppLugar = (pp * LUGAR_PP[lugar]) / config;
+        const ppExtras = (pp * EXTRAS_PP) / config;
+
+        if (cateringPP > 0) {
+          rubros.push({ label: 'Catering cotizado (comida y bebida)', monto: cateringPP * invitadosPago, porCabeza: true });
+          notas.push('catering real cargado por vos');
+        } else {
+          rubros.push({ label: 'Comida', monto: ppComida * invitadosPago, porCabeza: true });
+          rubros.push({ label: 'Bebida', monto: ppBebida * invitadosPago, porCabeza: true });
+        }
+        if (salonReal > 0) {
+          rubros.push({ label: 'Salón o lugar cotizado', monto: salonReal, porCabeza: false });
+          notas.push('salón real cargado por vos');
+        } else if (ppLugar > 0) {
+          rubros.push({ label: 'Lugar', monto: ppLugar * invitadosPago, porCabeza: true });
+        }
+        rubros.push({ label: 'Torta, decoración y música', monto: ppExtras * invitadosPago, porCabeza: true });
+
+        rows.push({
+          k: 'Costo por invitado de referencia',
+          ref: 'nivel ' + nivel + ' · índice de tu combinación ×' + n(indice, 2),
+          ...$(pp),
+          extra: true,
+        });
+      } else if (rama === 'medida') {
+        /* La fórmula original suma exactamente esto, sin estimar nada. */
+        if (salonReal > 0) rubros.push({ label: 'Salón', monto: salonReal, porCabeza: false });
+        if (cateringPP > 0) rubros.push({ label: 'Catering', monto: cateringPP * invitadosPago, porCabeza: true });
+        if (torta > 0) rubros.push({ label: 'Torta', monto: torta, porCabeza: false });
+        if (decoAnimacion > 0) rubros.push({ label: 'Decoración y animación', monto: decoAnimacion, porCabeza: false });
+        if (souvenirPP > 0) rubros.push({ label: 'Souvenirs', monto: souvenirPP * invitadosPago, porCabeza: true });
+        if (regalos > 0) rubros.push({ label: 'Regalos y sorpresas', monto: regalos, porCabeza: false });
+        if (!rubros.length) {
+          rows.push({ k: 'Todavía no cargaste ningún presupuesto', ref: 'poné al menos el salón o el catering por invitado', ...U(0, 'rubros') });
+        }
+      } else {
+        /* Ramas con escala en dólares por invitado: se pasan a pesos con el
+           oficial vivo y se reparten con los porcentajes de cada fórmula. */
+        const pp = USD_PP[rama][nivel] * DOLAR;
+        const mapa = rama === 'quince' ? RUBROS_QUINCE : rama === 'graduacion' ? RUBROS_GRADUACION : RUBROS_DESPEDIDA;
+        const total = pp * invitadosPago;
+
+        Object.keys(mapa).forEach(function (label) {
+          let monto = total * mapa[label];
+          if (cateringPP > 0 && label === RUBRO_COMIDA[rama]) {
+            monto = cateringPP * invitadosPago;
+            notas.push('catering real cargado por vos');
+          } else if (salonReal > 0 && label === RUBRO_LUGAR[rama]) {
+            monto = salonReal;
+            notas.push('salón real cargado por vos');
+          }
+          rubros.push({ label: label, monto: monto, porCabeza: true });
+        });
+        if (souvenirPP > 0) rubros.push({ label: 'Souvenirs', monto: souvenirPP * invitadosPago, porCabeza: true });
+
+        rows.push({
+          k: 'Costo por invitado de referencia',
+          ref: 'nivel ' + nivel + ' · US$' + n(USD_PP[rama][nivel]) + ' al oficial de $' + n(DOLAR),
+          ...$(pp),
+          extra: true,
+        });
+      }
+
+      const total = rubros.reduce(function (s, r) { return s + r.monto; }, 0);
+      const porInvitado = total / invitados;
+
+      // Rubros ordenados de mayor a menor: el desglose y el gráfico tienen que
+      // contestar "dónde se me va la plata", no listar por orden alfabético.
+      const orden = rubros.slice().sort(function (a, b) { return b.monto - a.monto; });
+      orden.forEach(function (r, i) {
+        rows.push({
+          k: r.label,
+          ref: (total ? Math.round((r.monto / total) * 100) : 0) + '% del total' + (r.porCabeza ? ' · por cabeza' : ' · monto fijo'),
+          ...$(r.monto),
+          extra: i < 2,
+        });
+      });
+
+      rows.push({ k: 'Costo por invitado real', ref: 'total dividido los ' + invitados + ' que invitaste — ' + nivelFestejo(porInvitado).toLowerCase(), ...$(porInvitado), extra: true });
+      rows.push({ k: 'Si sacás 10 invitados', ref: 'lo que se ahorra recortando la lista, sólo en rubros por cabeza', ...$(Math.min(10, invitados - 1) * rubros.reduce(function (s, r) { return s + (r.porCabeza ? r.monto / invitadosPago : 0); }, 0)) });
+
+      /* Logística en cantidades, de la fórmula de cumpleaños. */
+      rows.push({ k: 'Mesas', ref: 'una cada ' + LOGISTICA_PP.porMesa + ' personas', ...U(Math.ceil(invitadosPago / LOGISTICA_PP.porMesa), 'mesas') });
+      rows.push({ k: 'Sillas', ref: 'una por invitado, con el colchón adentro', ...U(invitadosPago, 'sillas') });
+      rows.push({ k: 'Vasos', ref: LOGISTICA_PP.vasos + ' por persona: se pierden y se cambian', ...U(Math.ceil(invitadosPago * LOGISTICA_PP.vasos), 'vasos') });
+      rows.push({ k: 'Platos', ref: n(LOGISTICA_PP.platos, 1) + ' por persona', ...U(Math.ceil(invitadosPago * LOGISTICA_PP.platos), 'platos') });
+      rows.push({ k: 'Servilletas', ref: LOGISTICA_PP.servilletas + ' por persona', ...U(Math.ceil(invitadosPago * LOGISTICA_PP.servilletas), 'u') });
+      rows.push({ k: 'Hielo', ref: n(LOGISTICA_PP.hieloKg, 1) + ' kg por persona', ...U(Math.max(2, Math.round(invitadosPago * LOGISTICA_PP.hieloKg)), 'kg') });
+
+      const chart = orden.map(function (r, i) {
+        return { label: r.label, value: Math.round(r.monto), tone: TONOS[i % TONOS.length] };
+      }).filter(function (s) { return s.value > 0; });
+
+      const etiquetaRama =
+        rama === 'cumple' ? 'cumpleaños' :
+        rama === 'quince' ? 'fiesta de 15' :
+        rama === 'graduacion' ? 'graduación' :
+        rama === 'despedida' ? 'despedida' : 'festejo';
+
+      return {
+        total: plata(Math.round(total)),
+        sub:
+          plata(Math.round(porInvitado)) + ' por invitado — ' + nivelFestejo(porInvitado).toLowerCase() +
+          ' · ' + etiquetaRama + ' de ' + invitados + ' invitados' +
+          (notas.length ? ' · ' + notas.join(' y ') : ''),
+        format: 'ars',
+        rows: rows,
+        chart: chart,
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,449 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto pesaría, cuánto tardaría, cuán lejos está?"
+ * Reemplaza 6 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: 5 casos (peso / escape / órbita / distancias / viaje).
+ * La página sólo aporta datos (src/lib/hubs/planetas-y-viaje-espacial.ts) y compute().
+ * NADA acá es plata: cada fila declara su `format` propio.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, CONST, CUERPOS, SCALE, HITOS_LY } from '../../lib/hubs/planetas-y-viaje-espacial';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+const BANDS = hub.chart.bands ?? [];
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ C: CONST, CUERPOS, SCALE, HITOS_LY, BANDS }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Nada de este hub es plata: todas las filas declaran su formato.
+    const KG = { format: 'unit', unit: 'kg', decimals: 2 };
+    const N = { format: 'unit', unit: 'N', decimals: 1 };
+    const ACC = { format: 'unit', unit: 'm/s²', decimals: 3 };
+    const GS = { format: 'unit', unit: '× la Tierra', decimals: 4 };
+    const MS = { format: 'unit', unit: 'm/s', decimals: 1 };
+    const KMS = { format: 'unit', unit: 'km/s', decimals: 4 };
+    const KMH = { format: 'unit', unit: 'km/h', decimals: 0 };
+    const KM = { format: 'unit', unit: 'km', decimals: 2 };
+    const M = { format: 'unit', unit: 'm', decimals: 1 };
+    const MIN = { format: 'unit', unit: 'min', decimals: 2 };
+    const HS = { format: 'unit', unit: 'h', decimals: 3 };
+    const DIAS = { format: 'unit', unit: 'días', decimals: 3 };
+    const ANIOS = { format: 'unit', unit: 'años', decimals: 1 };
+    const LY = { format: 'unit', unit: 'años luz', decimals: 6 };
+    const PC = { format: 'unit', unit: 'pc', decimals: 6 };
+    const UA = { format: 'unit', unit: 'UA', decimals: 4 };
+    const ARCSEC = { format: 'unit', unit: '″', decimals: 8 };
+    const VUELTAS = { format: 'unit', unit: 'vueltas/día', decimals: 3 };
+    const MJKG = { format: 'unit', unit: 'MJ/kg', decimals: 3 };
+    const PCT = { format: 'unit', unit: '%', decimals: 6 };
+    const VECES = { format: 'unit', unit: '×', decimals: 5 };
+
+    const row = (k, v, fmt, extra, ref) => Object.assign({ k: k, v: v, extra: !!extra, ref: ref }, fmt);
+
+    function fmt(n, d) {
+      if (!isFinite(n)) return '—';
+      if (d == null) {
+        const abs = Math.abs(n);
+        if (abs === 0) d = 0;
+        else if (abs < 0.0001) d = 9;
+        else if (abs < 1) d = 5;
+        else if (abs < 10000) d = 3;
+        else d = 0;
+      }
+      return Number(n).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: d });
+    }
+
+    function sci(n, d) {
+      if (!isFinite(n) || n === 0) return '0';
+      const e = Math.floor(Math.log10(Math.abs(n)));
+      const m = n / Math.pow(10, e);
+      return fmt(m, d == null ? 3 : d) + ' × 10^' + e;
+    }
+
+    /** Cuerpo elegido, o el personalizado con la masa y el radio cargados. */
+    function cuerpoDe(v) {
+      const k = String(v.cuerpo || 'tierra');
+      if (k !== 'personalizado' && CUERPOS[k]) return CUERPOS[k];
+      const masa = Number(v.masaCuerpo) || 0;
+      const radio = Number(v.radioCuerpo) || 0;
+      return {
+        nombre: 'el cuerpo que cargaste',
+        masa: masa,
+        radio: radio,
+        g: masa > 0 && radio > 0 ? (C.G * masa) / (radio * radio) : 0,
+        dia: 86164.0905,
+      };
+    }
+
+    /** Gravedad newtoniana pura GM/R², la que corresponde a escape y órbita. */
+    function gNewton(cuerpo) {
+      return cuerpo.masa > 0 && cuerpo.radio > 0 ? (C.G * cuerpo.masa) / (cuerpo.radio * cuerpo.radio) : 0;
+    }
+
+    /** Posición 0-100 sobre la regla logarítmica de gravedad. */
+    function posG(g) {
+      if (!(g > 0)) return 0;
+      const lo = Math.log10(SCALE.minG), hi = Math.log10(SCALE.maxG);
+      return Math.max(0, Math.min(100, ((Math.log10(g) - lo) / (hi - lo)) * 100));
+    }
+
+    /** Franjas del gráfico: DÉCADAS logarítmicas, no m/s² crudos. */
+    function bandas() {
+      return BANDS.map(function (b) {
+        return {
+          label: b.label,
+          value: Math.log10(b.to) - Math.log10(b.from),
+          tone: b.tone === 'good' ? 'good' : b.tone === 'bad' ? 'bad' : b.tone === 'warn' ? 'warn' : 'main',
+        };
+      });
+    }
+
+    /** Referencia de gravedad más cercana. */
+    function referencia(g) {
+      if (!(g > 0)) return '';
+      let ref = SCALE.refs[0];
+      SCALE.refs.forEach(function (r) {
+        if (Math.abs(Math.log10(r.g) - Math.log10(g)) < Math.abs(Math.log10(ref.g) - Math.log10(g))) ref = r;
+      });
+      const veces = g / ref.g;
+      if (Math.abs(veces - 1) < 0.04) return 'prácticamente la gravedad de ' + ref.label;
+      return veces >= 1
+        ? fmt(veces, 2) + ' veces la gravedad de ' + ref.label
+        : 'un ' + fmt(veces * 100, 0) + '% de la gravedad de ' + ref.label;
+    }
+
+    /** Hito astronómico más cercano a una distancia en años luz. */
+    function hito(ly) {
+      if (!(ly > 0)) return '';
+      let ref = HITOS_LY[0];
+      HITOS_LY.forEach(function (r) {
+        if (Math.abs(Math.log10(r.ly) - Math.log10(ly)) < Math.abs(Math.log10(ref.ly) - Math.log10(ly))) ref = r;
+      });
+      const veces = ly / ref.ly;
+      if (Math.abs(veces - 1) < 0.05) return 'prácticamente ' + ref.label;
+      return veces >= 1 ? fmt(veces, 2) + ' veces ' + ref.label : 'un ' + fmt(veces * 100, 1) + '% de ' + ref.label;
+    }
+
+    /** Duración legible a partir de años. */
+    function duracion(anios) {
+      if (!isFinite(anios) || anios <= 0) return '—';
+      if (anios < 1) return fmt(anios * 365.25, 1) + ' días';
+      if (anios < 1000) return fmt(anios, 1) + ' años';
+      if (anios < 1e6) return fmt(anios / 1000, 2) + ' mil años';
+      if (anios < 1e9) return fmt(anios / 1e6, 2) + ' millones de años';
+      return fmt(anios / 1e9, 2) + ' miles de millones de años';
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'peso';
+      const cuerpo = cuerpoDe(v);
+
+      // ── Rama 1: cuánto pesarías en otro planeta ──────────────────────────
+      if (id === 'peso') {
+        const masa = Number(v.pesoTierra) || 0;
+        if (!(masa > 0)) {
+          return { total: '—', sub: 'Cargá tu peso en la Tierra (que en rigor es tu masa) mayor a cero.', rows: [], chart: [] };
+        }
+        const gTierra = CUERPOS.tierra.g;
+        const orden = ['sol', 'jupiter', 'neptuno', 'saturno', 'tierra', 'venus', 'urano', 'marte', 'mercurio', 'luna', 'pluton'];
+        const rows = [];
+        orden.forEach(function (k) {
+          const c = CUERPOS[k];
+          rows.push(
+            row(
+              'Tu peso en ' + (k === 'luna' ? 'la Luna' : k === 'sol' ? 'el Sol' : k === 'tierra' ? 'la Tierra' : c.nombre),
+              masa * (c.g / gTierra),
+              KG,
+              k === String(v.cuerpo),
+              fmt(c.g, 2) + ' m/s² · ' + fmt(c.g / gTierra, 3) + '× la Tierra'
+            )
+          );
+        });
+        const elegido = cuerpo;
+        const rel = gTierra > 0 ? elegido.g / gTierra : 0;
+        rows.push(row('Tu masa (no cambia en ninguna parte)', masa, KG, true, 'la materia es la misma en todo el universo'));
+        rows.push(row('Tu peso en la Tierra, en newtons', masa * C.G0, N, false, 'P = m·g'));
+        rows.push(row('Tu peso en ' + elegido.nombre + ', en newtons', masa * elegido.g, N, true));
+        rows.push(row('Gravedad superficial de ' + elegido.nombre, elegido.g, ACC, true, 'NASA Planetary Fact Sheet'));
+        rows.push(row('Gravedad relativa a la Tierra', rel, GS));
+        // Un salto que en la Tierra levanta 50 cm escala con 1/g.
+        rows.push(row('Cuánto saltarías ahí con el mismo impulso', elegido.g > 0 ? (0.5 * gTierra) / elegido.g : 0, M, false, 'un salto de 50 cm terrestres'));
+
+        const comp = referencia(elegido.g);
+        return {
+          total: fmt(masa * rel, 2) + ' kg en ' + elegido.nombre,
+          sub:
+            'Con ' + fmt(masa, 1) + ' kg de masa, en ' + elegido.nombre + ' la balanza marcaría ' + fmt(masa * rel, 2) +
+            ' kg: la gravedad ahí es ' + fmt(elegido.g, 2) + ' m/s², o sea ' + fmt(rel, 3) +
+            ' veces la terrestre · tu masa sigue siendo la misma, lo que cambia es la fuerza con que el cuerpo tira de vos' +
+            (comp ? ' · es ' + comp : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'década',
+          decimals: 2,
+          position: Number(posG(elegido.g).toFixed(1)),
+          positionLabel: elegido.nombre + ': ' + fmt(elegido.g, 2) + ' m/s² (' + fmt(rel, 2) + '× la Tierra)',
+        };
+      }
+
+      // ── Rama 2: velocidad de escape ──────────────────────────────────────
+      if (id === 'escape') {
+        if (!(cuerpo.masa > 0) || !(cuerpo.radio > 0)) {
+          return { total: '—', sub: 'Elegí un cuerpo del selector, o cargá masa y radio mayores a cero.', rows: [], chart: [] };
+        }
+        const ve = Math.sqrt((2 * C.G * cuerpo.masa) / cuerpo.radio);
+        const gN = gNewton(cuerpo);
+        const veTierra = Math.sqrt((2 * C.G * CUERPOS.tierra.masa) / CUERPOS.tierra.radio);
+        const energia = 0.5 * ve * ve; // J por kg
+
+        const rows = [
+          row('Velocidad de escape', ve / 1000, KMS, true, 've = √(2GM/R)'),
+          row('En metros por segundo', ve, MS),
+          row('En kilómetros por hora', ve * 3.6, KMH),
+          row('Comparada con la de la Tierra', ve / veTierra, VECES, true, 'la Tierra son 11,19 km/s'),
+          row('Gravedad superficial newtoniana GM/R²', gN, ACC, false, 'sin descontar la rotación'),
+          row('Energía mínima por kilogramo para escapar', energia / 1e6, MJKG, true, '½v², sin contar la atmósfera'),
+          row('Velocidad orbital rasante (a ras de superficie)', Math.sqrt((C.G * cuerpo.masa) / cuerpo.radio) / 1000, KMS, false, 've / √2'),
+          row('Masa del cuerpo', cuerpo.masa, { format: 'unit', unit: 'kg', decimals: 0 }, false, sci(cuerpo.masa, 4) + ' kg'),
+          row('Radio del cuerpo', cuerpo.radio / 1000, KM),
+          row('Fracción de la velocidad de la luz', ve / C.C, PCT, false, 'c = 299.792.458 m/s'),
+        ];
+
+        const comp = referencia(gN);
+        return {
+          total: fmt(ve / 1000, 3) + ' km/s',
+          sub:
+            'Para escapar de ' + cuerpo.nombre + ' hacen falta ' + fmt(ve / 1000, 3) + ' km/s (' + fmt(ve * 3.6, 0) +
+            ' km/h), ' +
+            (ve >= veTierra
+              ? fmt(ve / veTierra, 2) + ' veces la velocidad de escape de la Tierra'
+              : 'un ' + fmt((ve / veTierra) * 100, 0) + '% de la de la Tierra') +
+            ' · la velocidad de escape no depende de la masa del objeto que escapa, sólo de la del cuerpo del que salís' +
+            (comp ? ' · su gravedad es ' + comp : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'década',
+          decimals: 2,
+          position: Number(posG(gN).toFixed(1)),
+          positionLabel: cuerpo.nombre + ': ' + fmt(gN, 2) + ' m/s² de gravedad, escape a ' + fmt(ve / 1000, 2) + ' km/s',
+        };
+      }
+
+      // ── Rama 3: velocidad orbital y período ──────────────────────────────
+      if (id === 'orbita') {
+        const alt = Number(v.altitudOrbita);
+        if (!(cuerpo.masa > 0) || !(cuerpo.radio > 0) || !isFinite(alt) || alt < 0) {
+          return {
+            total: '—',
+            sub: 'Elegí un cuerpo y cargá una altura sobre la superficie mayor o igual a cero.',
+            rows: [],
+            chart: [],
+          };
+        }
+        const r = cuerpo.radio + alt * 1000;
+        const vOrb = Math.sqrt((C.G * cuerpo.masa) / r);
+        const T = (2 * Math.PI * r) / vOrb;
+        const gAhi = (C.G * cuerpo.masa) / (r * r);
+        const gSup = gNewton(cuerpo);
+        // Radio de la órbita síncrona: T = día del cuerpo.
+        const rSinc = Math.cbrt((C.G * cuerpo.masa * cuerpo.dia * cuerpo.dia) / (4 * Math.PI * Math.PI));
+
+        const rows = [
+          row('Velocidad orbital', vOrb / 1000, KMS, true, 'v = √(GM/r)'),
+          row('En metros por segundo', vOrb, MS),
+          row('En kilómetros por hora', vOrb * 3.6, KMH),
+          row('Período orbital', T / 60, MIN, true, 'T = 2πr / v'),
+          row('Período en horas', T / 3600, HS),
+          row('Vueltas completas por día', 86400 / T, VUELTAS, true),
+          row('Radio orbital (desde el centro del cuerpo)', r / 1000, KM, false, 'radio del cuerpo + altura'),
+          row('Altura sobre la superficie', alt, KM),
+          row('Gravedad a esa altura', gAhi, ACC, true, 'todavía hay gravedad: lo que hay es caída libre'),
+          row('Porcentaje de la gravedad de superficie', gSup > 0 ? (gAhi / gSup) * 100 : 0, { format: 'unit', unit: '%', decimals: 2 }),
+          row('Radio de la órbita síncrona', rSinc / 1000, KM, false, 'donde el período iguala al día del cuerpo'),
+          row('Altura de la órbita síncrona', (rSinc - cuerpo.radio) / 1000, KM, false, 'la "geoestacionaria" de ' + cuerpo.nombre),
+        ];
+
+        const comp = referencia(gSup);
+        return {
+          total: fmt(vOrb / 1000, 3) + ' km/s',
+          sub:
+            'A ' + fmt(alt, 0) + ' km sobre ' + cuerpo.nombre + ', un satélite tiene que ir a ' + fmt(vOrb / 1000, 3) +
+            ' km/s y completa una vuelta cada ' + fmt(T / 60, 1) + ' minutos (' + fmt(86400 / T, 2) +
+            ' vueltas por día) · ahí arriba la gravedad todavía es el ' + fmt(gSup > 0 ? (gAhi / gSup) * 100 : 0, 1) +
+            '% de la de la superficie: los astronautas no flotan por falta de gravedad sino por caída libre permanente' +
+            (comp ? ' · ' + comp : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'década',
+          decimals: 2,
+          position: Number(posG(gAhi).toFixed(1)),
+          positionLabel: 'A ' + fmt(alt, 0) + ' km la gravedad es ' + fmt(gAhi, 3) + ' m/s², el ' + fmt(gSup > 0 ? (gAhi / gSup) * 100 : 0, 0) + '% de la de superficie',
+        };
+      }
+
+      // ── Rama 4: distancias estelares ─────────────────────────────────────
+      if (id === 'distancias') {
+        const modo = String(v.modoDistancia || 'anosluz');
+        const val = Number(v.distancia) || 0;
+        if (!(val > 0)) {
+          return { total: '—', sub: 'Cargá un valor mayor a cero.', rows: [], chart: [] };
+        }
+        let metros;
+        if (modo === 'anosluz') metros = val * C.LY_M;
+        else if (modo === 'parsec') metros = val * C.PC_M;
+        else if (modo === 'ua') metros = val * C.UA_M;
+        else metros = (1 / val) * C.PC_M; // paralaje en segundos de arco
+        const ly = metros / C.LY_M;
+        const pc = metros / C.PC_M;
+        const ua = metros / C.UA_M;
+        const paralaje = pc > 0 ? 1 / pc : 0;
+
+        const rows = [
+          row('Distancia en años luz', ly, LY, true, 'la luz tarda ' + duracion(ly) + ' en recorrerla'),
+          row('Distancia en parsecs', pc, PC, true, '1 pc = 3,2615638 años luz'),
+          row('Distancia en unidades astronómicas', ua, UA, false, '1 UA = 149.597.870.700 m exactos'),
+          row('Distancia en kilómetros', metros / 1000, { format: 'unit', unit: 'km', decimals: 0 }, false, sci(metros / 1000, 4) + ' km'),
+          row('Distancia en metros', metros, { format: 'unit', unit: 'm', decimals: 0 }, false, sci(metros, 4) + ' m'),
+          row('Paralaje que mostraría', paralaje, ARCSEC, modo === 'paralaje', 'd(pc) = 1 / paralaje'),
+          row('Hace cuántos años salió la luz que ves', ly, ANIOS, true),
+          row('Tiempo de viaje a la velocidad de la luz', ly, ANIOS),
+          row('Tiempo de viaje al 10% de la velocidad de la luz', ly * 10, ANIOS),
+          row('Tiempo de viaje a la velocidad de la Voyager 1 (17 km/s)', (metros / 17000) / C.ANIO_JULIANO_S, ANIOS),
+          row('Un año luz, en kilómetros', C.LY_M / 1000, { format: 'unit', unit: 'km', decimals: 1 }, false, 'valor exacto'),
+        ];
+
+        const h = hito(ly);
+        return {
+          total: fmt(ly, 4) + ' años luz',
+          sub:
+            fmt(ly, 4) + ' años luz = ' + fmt(pc, 4) + ' parsecs = ' + sci(metros / 1000, 3) +
+            ' km · la luz que estás viendo de ahí salió hace ' + duracion(ly) +
+            ' · el paralaje correspondiente es de ' + fmt(paralaje, 6) + ' segundos de arco' +
+            (h ? ' · es ' + h : ''),
+          rows: rows,
+          chart: bandas(),
+          format: 'unit',
+          unit: 'década',
+          decimals: 2,
+          // Esta rama no tiene una gravedad propia: se marca la de la Tierra
+          // como referencia y se aclara, en vez de inventar un número.
+          position: Number(posG(CUERPOS.tierra.g).toFixed(1)),
+          positionLabel:
+            'La regla de abajo es de gravedad y queda marcada en la Tierra: una distancia estelar no tiene gravedad asociada',
+        };
+      }
+
+      // ── Rama 5: viaje interestelar ───────────────────────────────────────
+      const dLy = Number(v.distanciaViaje) || 0;
+      const vKms = Number(v.velocidadViaje) || 0;
+      if (!(dLy > 0) || !(vKms > 0)) {
+        return { total: '—', sub: 'Cargá una distancia y una velocidad de crucero mayores a cero.', rows: [], chart: [] };
+      }
+      const cKms = C.C / 1000;
+      if (vKms >= cKms) {
+        return {
+          total: '—',
+          sub:
+            'La velocidad de crucero (' + fmt(vKms, 1) + ' km/s) alcanza o supera la de la luz (299.792,458 km/s). ' +
+            'Ningún objeto con masa puede llegar a c: la energía necesaria tiende a infinito al acercarse.',
+          rows: [],
+          chart: [],
+        };
+      }
+      const dM = dLy * C.LY_M;
+      const tSeg = dM / (vKms * 1000);
+      const anios = tSeg / C.ANIO_JULIANO_S;
+      const frac = vKms / cKms;
+      const gamma = 1 / Math.sqrt(1 - frac * frac);
+      const aniosNave = anios / gamma;
+      const comp =
+        anios < 100 ? 'podría ser viable dentro de una vida humana'
+          : anios < 1000 ? 'requeriría una nave generacional'
+          : anios < 100000 ? 'es más largo que toda la historia de la civilización'
+          : 'supera a la existencia entera del Homo sapiens, unos 300.000 años';
+
+      const rows = [
+        row('Tiempo de viaje visto desde la Tierra', anios, ANIOS, true, duracion(anios)),
+        row('Tiempo que pasaría para los tripulantes', aniosNave, ANIOS, true, 'con dilatación relativista'),
+        row('Diferencia por dilatación temporal', anios - aniosNave, ANIOS),
+        row('Factor de Lorentz γ', gamma, { format: 'plain', decimals: 8 }, false, '1 / √(1 − v²/c²)'),
+        row('Fracción de la velocidad de la luz', frac * 100, PCT, true),
+        row('Velocidad de crucero', vKms, KMS),
+        row('Velocidad en km/h', vKms * 3600, KMH),
+        row('Distancia al destino', dLy, LY),
+        row('Distancia en kilómetros', dM / 1000, { format: 'unit', unit: 'km', decimals: 0 }, false, sci(dM / 1000, 4) + ' km'),
+        row('Tiempo si viajaras a la velocidad de la luz', dLy, ANIOS, false, 'el mínimo físico posible'),
+        row('Cuántas generaciones humanas durarían el viaje', anios / 25, { format: 'unit', unit: 'generaciones', decimals: 1 }),
+        row('Cuántas veces más rápido habría que ir para hacerlo en 50 años', anios / 50, VECES),
+      ];
+
+      const h = hito(dLy);
+      return {
+        total: duracion(anios),
+        sub:
+          'Recorrer ' + fmt(dLy, 4) + ' años luz a ' + fmt(vKms, 1) + ' km/s (apenas el ' + fmt(frac * 100, 5) +
+          '% de la velocidad de la luz) llevaría ' + duracion(anios) + ' · ' + comp +
+          (gamma > 1.001
+            ? ' · para los tripulantes pasarían ' + duracion(aniosNave) + ' por la dilatación temporal'
+            : ' · a esta velocidad la dilatación temporal es despreciable') +
+          (h ? ' · el destino está a ' + h : ''),
+        rows: rows,
+        chart: bandas(),
+        format: 'unit',
+        unit: 'década',
+        decimals: 2,
+        position: Number(posG(CUERPOS.tierra.g).toFixed(1)),
+        positionLabel:
+          'La regla de abajo es de gravedad y queda marcada en la Tierra: un tiempo de viaje no tiene gravedad asociada',
+      };
+    });
+  })();
+</script>

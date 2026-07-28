@@ -1,0 +1,125 @@
+---
+/**
+ * Hub de decisión — "¿Cómo reparto mis macros?"
+ * Reemplaza 7 URLs de calculadora suelta (ver hub.replaces).
+ * Los datos viven en src/lib/hubs/macros.ts.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, MACRO_CASES, KCAL_POR_G } from '../../lib/hubs/macros';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ CASES: MACRO_CASES, KCAL: KCAL_POR_G }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'balanceado';
+      const m = CASES[id] || CASES.balanceado;
+
+      const mantenimiento = Math.max(0, Number(v.calorias) || 0);
+      const peso = Math.max(1, Number(v.peso) || 70);
+      const comidas = Math.min(8, Math.max(1, Math.round(Number(v.comidas) || 4)));
+
+      const objetivo = Math.round(mantenimiento * m.mult);
+
+      const kcalP = objetivo * m.p;
+      const kcalC = objetivo * m.c;
+      const kcalG = objetivo * m.g;
+
+      const gP = Math.round(kcalP / KCAL.p);
+      const gC = Math.round(kcalC / KCAL.c);
+      const gG = Math.round(kcalG / KCAL.g);
+
+      const gPorKg = gP / peso;
+      const ajuste = objetivo - mantenimiento;
+
+      const rows = [];
+      rows.push({ k: 'Proteína', ref: Math.round(m.p * 100) + '% de las calorías', v: gP, format: 'unit', unit: 'g', extra: true });
+      rows.push({ k: 'Carbohidratos', ref: Math.round(m.c * 100) + '% de las calorías', v: gC, format: 'unit', unit: 'g' });
+      rows.push({ k: 'Grasa', ref: Math.round(m.g * 100) + '% de las calorías', v: gG, format: 'unit', unit: 'g' });
+      rows.push({ k: 'Proteína por kilo de peso', ref: 'objetivo habitual 1,6-2,2', v: Math.round(gPorKg * 100) / 100, format: 'unit', unit: 'g/kg', decimals: 2 });
+      rows.push({ k: 'Proteína por comida', ref: comidas + ' comidas', v: Math.round(gP / comidas), format: 'unit', unit: 'g' });
+      if (ajuste !== 0) {
+        rows.push({
+          k: ajuste < 0 ? 'Déficit sobre tu mantenimiento' : 'Superávit sobre tu mantenimiento',
+          ref: (m.mult > 1 ? '+' : '−') + Math.abs(Math.round((m.mult - 1) * 100)) + '%',
+          v: Math.abs(ajuste), format: 'unit', unit: 'kcal', extra: true,
+        });
+      }
+      rows.push({ k: 'Calorías de la proteína', v: Math.round(kcalP), format: 'unit', unit: 'kcal' });
+      rows.push({ k: 'Calorías de los carbos', v: Math.round(kcalC), format: 'unit', unit: 'kcal' });
+      rows.push({ k: 'Calorías de la grasa', v: Math.round(kcalG), format: 'unit', unit: 'kcal' });
+      if (id === 'keto') {
+        rows.push({ k: 'Carbos netos máximos', ref: '5% de las calorías', v: gC, format: 'unit', unit: 'g' });
+      }
+      if (id === 'dash') {
+        rows.push({ k: 'Tope de sodio', ref: 'palanca real de DASH', v: 2300, format: 'unit', unit: 'mg', extra: true });
+      }
+
+      const sub =
+        Math.round(m.p * 100) + '% P / ' + Math.round(m.c * 100) + '% C / ' + Math.round(m.g * 100) + '% G · ' +
+        gP + ' g proteína (' + gPorKg.toFixed(2).replace('.', ',') + ' g/kg), ' + gC + ' g carbos, ' + gG + ' g grasa' +
+        (ajuste !== 0
+          ? ' · ' + (ajuste < 0 ? '−' : '+') + Math.abs(ajuste).toLocaleString('es-AR') + ' kcal sobre tu mantenimiento'
+          : '') +
+        (m.nota ? ' · ' + m.nota : '');
+
+      return {
+        total: objetivo.toLocaleString('es-AR') + ' kcal',
+        sub: sub,
+        rows: rows,
+        format: 'unit',
+        unit: 'g',
+        chart: [
+          { label: 'Proteína ' + gP + ' g', value: Math.round(kcalP), tone: 'main' },
+          { label: 'Carbohidratos ' + gC + ' g', value: Math.round(kcalC), tone: 'exit' },
+          { label: 'Grasa ' + gG + ' g', value: Math.round(kcalG), tone: 'prop' },
+        ],
+      };
+    });
+  })();
+</script>

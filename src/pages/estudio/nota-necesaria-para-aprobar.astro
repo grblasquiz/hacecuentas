@@ -1,0 +1,337 @@
+---
+/**
+ * Hub de decisión — "¿Qué nota necesito para aprobar?"
+ * Reemplaza 3 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Sigue el patrón de estudio/promedio.astro: la página sólo aporta los datos
+ * (src/lib/hubs/nota-necesaria-para-aprobar.ts) y su compute(). El chrome, el
+ * CSS y el runtime viven en DecisionHub.astro y no se tocan.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub } from '../../lib/hubs/nota-necesaria-para-aprobar';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline>
+  (function () {
+    const H = window.HC_HUB;
+
+    /**
+     * Ninguna rama es plata y el default de HubRow es 'ars': TODA fila declara
+     * su formato. Notas en 'plain' con 2 decimales; cantidades en 'plain' sin
+     * decimales; porcentajes y puntos acumulados en 'unit'.
+     */
+    const NOTA = { format: 'plain', decimals: 2 };
+    const CANT = { format: 'plain', decimals: 0 };
+    const PCT = { format: 'unit', unit: '%', decimals: 0 };
+    const PTS = { format: 'unit', unit: 'pts', decimals: 2 };
+
+    const fmt = (n, d) => {
+      if (!isFinite(n)) return '—';
+      const dec = d == null ? 2 : d;
+      return Number(n.toFixed(dec)).toLocaleString('es-AR', { maximumFractionDigits: dec });
+    };
+    const clamp = (n) => Math.max(0, Math.min(100, isFinite(n) ? n : 0));
+    /** Posición 0-100 de una nota dentro de la escala 0-10 del gráfico. */
+    const pos = (val) => clamp((val / 10) * 100);
+
+    /**
+     * Lista de números. Separadores: espacio y punto y coma. La coma queda
+     * reservada al decimal rioplatense ("6,5" → 6.5), igual que en la fórmula
+     * original de nota-necesaria-aprobar.
+     */
+    function lista(str) {
+      return String(str == null ? '' : str)
+        .split(/[;\s]+/)
+        .filter(function (s) { return s !== ''; })
+        .map(function (s) { return parseFloat(s.replace(',', '.')); })
+        .filter(function (n) { return !isNaN(n); });
+    }
+
+    const err = (msg, k, v) => ({
+      total: '—', sub: msg,
+      rows: [{ k: k, v: v, ...NOTA }],
+      chart: [], format: 'plain', decimals: 2, position: 0, positionLabel: msg,
+    });
+
+    /** Umbrales de la escala argentina 0-10, comunes a todas las ramas. */
+    const BANDAS = [
+      { label: 'Desaprobado', value: 4, from: 0, to: 4, tone: 'bad' },
+      { label: 'Aprobado', value: 2, from: 4, to: 6, tone: 'warn' },
+      { label: 'Regular cómodo', value: 1, from: 6, to: 7, tone: 'good' },
+      { label: 'Zona de promoción', value: 3, from: 7, to: 10, tone: 'main' },
+    ];
+
+    /** Lectura del número necesario: fuera de escala, regalado o exigible. */
+    function lectura(necesaria) {
+      if (necesaria > 10) return 'fuera de escala: no alcanza con lo que queda';
+      if (necesaria <= 0) return 'ya está asegurado: cualquier nota lo mantiene';
+      if (necesaria > 8) return 'muy exigente';
+      if (necesaria > 6) return 'exigente';
+      return 'alcanzable con margen';
+    }
+
+    /** Etiqueta y posición del marcador, clavado al tope si se va de escala. */
+    function marcador(necesaria, prefijo) {
+      const fuera = necesaria > 10;
+      const bajo = necesaria <= 0;
+      return {
+        position: fuera ? 100 : pos(Math.max(0, necesaria)),
+        positionLabel: fuera
+          ? prefijo + ' ' + fmt(necesaria) + ' — no entra en la escala 0 a 10'
+          : bajo
+            ? prefijo + ' 0 — el objetivo ya está asegurado'
+            : prefijo + ' ' + fmt(necesaria) + ' sobre 10 — ' + lectura(necesaria),
+      };
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'final';
+      const objetivo = Math.max(0, Math.min(10, Number(v.objetivo) || 0));
+
+      // ---- 1) Nota necesaria en el final -------------------------------
+      if (id === 'final') {
+        const cursada = Math.max(0, Math.min(10, Number(v.cursada) || 0));
+        const pf = Math.max(0, Math.min(100, Number(v.pesoFinal) || 0)) / 100;
+        const pc = 1 - pf;
+        if (pf <= 0) {
+          return err(
+            'Si el final pesa 0% la nota ya está cerrada por la cursada: no hay nada que despejar.',
+            'Peso del examen final', 0
+          );
+        }
+        const aporteCursada = cursada * pc;
+        const faltan = objetivo - aporteCursada;
+        const necesaria = faltan / pf;
+        // El piso propio del final: casi todos los regímenes exigen 4 en el examen.
+        const PISO_FINAL = 4;
+        const efectiva = Math.max(necesaria, PISO_FINAL);
+        const mandaElPiso = necesaria < PISO_FINAL;
+        const m = marcador(efectiva, 'Necesitás');
+        return {
+          total: necesaria > 10 ? 'No llegás' : fmt(efectiva),
+          sub:
+            necesaria > 10
+              ? 'Para cerrar en ' + fmt(objetivo, 1) + ' el final tendría que darte ' + fmt(necesaria) + ', y la escala termina en 10. Con este examen no alcanza.'
+              : (mandaElPiso
+                  ? 'Para el promedio te alcanzaría con ' + fmt(Math.max(0, necesaria)) + ', pero el final tiene nota mínima propia: necesitás ' + fmt(PISO_FINAL, 0) + '.'
+                  : 'Con ' + fmt(necesaria) + ' en el final cerrás la materia en ' + fmt(objetivo, 1) + '.') +
+            ' Reparto: ' + fmt(pc * 100, 0) + '% cursada y ' + fmt(pf * 100, 0) + '% final.',
+          rows: [
+            { k: 'Promedio de la cursada', v: cursada, ...NOTA },
+            { k: 'Peso de la cursada', ref: '100 − peso del final', v: pc * 100, ...PCT },
+            { k: 'Puntos que ya aporta la cursada', ref: 'paso 1: cursada × su peso', v: aporteCursada, ...PTS },
+            { k: 'Puntos que pide tu objetivo', ref: 'la nota de cierre que buscás', v: objetivo, ...PTS },
+            { k: 'Puntos que tiene que aportar el final', ref: 'paso 2: objetivo − aporte de la cursada', v: faltan, ...PTS },
+            { k: 'Peso del examen final', v: pf * 100, ...PCT },
+            { k: 'Nota necesaria en el final', ref: 'paso 3: el despeje ÷ peso del final', v: necesaria, extra: true, ...NOTA },
+            { k: 'Nota mínima propia del examen', ref: 'piso habitual del régimen', v: PISO_FINAL, ...NOTA },
+            { k: 'La que realmente tenés que sacar', ref: 'la mayor de las dos', v: efectiva, extra: true, ...NOTA },
+          ],
+          format: 'plain', decimals: 2,
+          chart: BANDAS,
+          position: m.position,
+          positionLabel: m.positionLabel,
+        };
+      }
+
+      // ---- 5) Techo alcanzable -----------------------------------------
+      if (id === 'techo') {
+        const notas = lista(v.notas);
+        const n = notas.length;
+        const total = Math.max(1, Math.round(Number(v.totalEval) || 0));
+        if (!n) return err('Cargá al menos una nota en "Notas que ya tenés".', 'Notas cargadas', 0);
+        if (n >= total) {
+          return err(
+            'Ya cargaste ' + n + ' nota(s) sobre un total de ' + total + ': no queda nada por rendir, así que no hay techo que calcular.',
+            'Evaluaciones pendientes', 0
+          );
+        }
+        const suma = notas.reduce(function (a, b) { return a + b; }, 0);
+        const pend = total - n;
+        const maximo = (suma + 10 * pend) / total;
+        const minimo = suma / total;
+        const actual = suma / n;
+        const vivos = [4, 6, 7, 8].filter(function (u) { return maximo >= u; });
+        return {
+          total: fmt(maximo),
+          sub:
+            'Sacando 10 en las ' + pend + ' evaluación(es) que faltan llegás como máximo a ' + fmt(maximo) + '. ' +
+            (vivos.length
+              ? 'Todavía tenés al alcance: ' + vivos.map(function (u) { return fmt(u, 0); }).join(', ') + '.'
+              : 'Ningún umbral habitual queda al alcance: la materia ya está definida por lo rendido.'),
+          rows: [
+            { k: 'Notas ya rendidas', v: n, ...CANT },
+            { k: 'Suma de lo que llevás', v: suma, ...PTS },
+            { k: 'Tu promedio hasta acá', ref: 'suma ÷ notas rendidas', v: actual, ...NOTA },
+            { k: 'Evaluaciones que faltan', ref: 'total − rendidas', v: pend, ...CANT },
+            { k: 'Promedio máximo alcanzable', ref: 'con 10 en todo lo que queda', v: maximo, extra: true, ...NOTA },
+            { k: 'Promedio mínimo posible', ref: 'con 0 en todo lo que queda', v: minimo, ...NOTA },
+            { k: '¿Llegás a aprobar (4)?', ref: maximo >= 4 ? 'sí' : 'no', v: 4, ...NOTA },
+            { k: '¿Llegás a promocionar (7)?', ref: maximo >= 7 ? 'sí' : 'no', v: 7, ...NOTA },
+          ],
+          format: 'plain', decimals: 2,
+          chart: BANDAS,
+          position: pos(maximo),
+          positionLabel: 'Techo ' + fmt(maximo) + ' sobre 10 — piso posible ' + fmt(minimo),
+        };
+      }
+
+      // ---- 4) Recuperatorio y condición --------------------------------
+      if (id === 'recuperatorio') {
+        const p1 = Math.max(0, Math.min(10, Number(v.parcial1) || 0));
+        const p2 = Math.max(0, Math.min(10, Number(v.parcial2) || 0));
+        const piso = Math.max(0, Math.min(10, Number(v.minPorParcial) || 0));
+        const promoMin = Math.max(0, Math.min(10, Number(v.promedioPromo) || 0));
+        const prom = (p1 + p2) / 2;
+        const pisoOk = p1 >= piso && p2 >= piso;
+        const ambosAprobados = p1 >= 4 && p2 >= 4;
+        const promoOk = prom >= promoMin;
+
+        let condicion, tono;
+        if (pisoOk && promoOk) { condicion = 'Promocionás: no rendís final'; tono = 'promo'; }
+        else if (ambosAprobados) { condicion = 'Quedás regular: rendís final'; tono = 'regular'; }
+        else { condicion = 'Quedás libre si no recuperás'; tono = 'libre'; }
+
+        // El recuperatorio conviene darlo sobre la nota más baja: es la que
+        // menos exige para levantar el promedio (la otra queda fija).
+        const bajaEsP1 = p1 <= p2;
+        const fija = bajaEsP1 ? p2 : p1;
+        const cual = bajaEsP1 ? 'primer' : 'segundo';
+        const paraPromo = promoMin * 2 - fija;
+        const paraAprobar = 4 * 2 - fija;
+        const necesariaPromo = Math.max(paraPromo, piso);
+        const necesariaAprobar = Math.max(paraAprobar, 4);
+        const promoPosible = necesariaPromo <= 10 && fija >= piso;
+        const m = marcador(promoPosible ? necesariaPromo : necesariaAprobar, 'Recuperatorio');
+
+        return {
+          total: fmt(prom),
+          sub:
+            condicion + '. Parciales ' + fmt(p1, 1) + ' y ' + fmt(p2, 1) + ' → promedio ' + fmt(prom) + '. ' +
+            (pisoOk && promoOk
+              ? 'Cumplís el piso de ' + fmt(piso, 1) + ' en las dos notas y el promedio de promoción de ' + fmt(promoMin, 1) + '.'
+              : promoPosible
+                ? 'Recuperando el ' + cual + ' parcial con ' + fmt(necesariaPromo) + ' llegás a la promoción.'
+                : 'La promoción ya no da: recuperando el ' + cual + ' parcial con ' + fmt(necesariaAprobar) + ' quedás regular.'),
+          rows: [
+            { k: 'Primer parcial', v: p1, ...NOTA },
+            { k: 'Segundo parcial', v: p2, ...NOTA },
+            { k: 'Promedio de parciales', ref: 'paso 1', v: prom, extra: true, ...NOTA },
+            { k: 'Piso por parcial que pide la promoción', ref: pisoOk ? 'lo cumplís' : 'no lo cumplís', v: piso, ...NOTA },
+            { k: 'Promedio mínimo de promoción', ref: promoOk ? 'lo cumplís' : 'no lo cumplís', v: promoMin, ...NOTA },
+            { k: 'Nota más baja — la que conviene recuperar', ref: cual + ' parcial', v: Math.min(p1, p2), ...NOTA },
+            { k: 'Nota en el recuperatorio para promocionar', ref: promoPosible ? 'reemplazando la más baja' : 'ya no es posible', v: promoPosible ? necesariaPromo : 0, extra: promoPosible, ...NOTA },
+            { k: 'Nota en el recuperatorio para quedar regular', ref: 'reemplazando la más baja', v: necesariaAprobar, extra: !promoPosible, ...NOTA },
+          ],
+          format: 'plain', decimals: 2,
+          chart: BANDAS,
+          position: m.position,
+          positionLabel:
+            tono === 'promo'
+              ? 'Promedio ' + fmt(prom) + ' — promocionás'
+              : m.positionLabel,
+        };
+      }
+
+      // ---- 2 y 3) Evaluaciones restantes y promoción --------------------
+      const esPromo = id === 'promocion';
+      const notas = lista(v.notas);
+      const n = notas.length;
+      const total = Math.max(1, Math.round(Number(v.totalEval) || 0));
+      if (!n) return err('Cargá al menos una nota en "Notas que ya tenés".', 'Notas cargadas', 0);
+      if (n >= total) {
+        return err(
+          'Cargaste ' + n + ' nota(s) sobre un total de ' + total + ': ya rendiste todo, no hay nota pendiente que despejar.',
+          'Evaluaciones pendientes', 0
+        );
+      }
+      const suma = notas.reduce(function (a, b) { return a + b; }, 0);
+      const pend = total - n;
+      const meta = esPromo ? Math.max(0, Math.min(10, Number(v.promedioPromo) || 0)) : objetivo;
+      const piso = Math.max(0, Math.min(10, Number(v.minPorParcial) || 0));
+      const puntosMeta = meta * total;
+      const faltan = puntosMeta - suma;
+      const porPromedio = faltan / pend;
+      // En la rama de promoción manda la mayor de las dos exigencias: el
+      // promedio y el piso que ninguna nota puede bajar.
+      const necesaria = esPromo ? Math.max(porPromedio, piso) : porPromedio;
+      const pisoRoto = esPromo && notas.some(function (x) { return x < piso; });
+      const m = marcador(necesaria, 'Necesitás');
+
+      const rows = [
+        { k: 'Notas ya rendidas', v: n, ...CANT },
+        { k: 'Suma de lo que llevás', ref: 'paso 1', v: suma, ...PTS },
+        { k: 'Tu promedio hasta acá', ref: 'suma ÷ notas rendidas', v: suma / n, ...NOTA },
+        { k: 'Total de evaluaciones de la materia', v: total, ...CANT },
+        { k: 'Puntos que pide la meta de ' + fmt(meta, 1), ref: 'paso 2: meta × total', v: puntosMeta, ...PTS },
+        { k: 'Puntos que te faltan juntar', ref: 'paso 3: pedidos − acumulados', v: faltan, ...PTS },
+        { k: 'Evaluaciones que faltan', v: pend, ...CANT },
+        { k: 'Nota necesaria por promedio', ref: 'paso 4: el despeje ÷ lo que falta', v: porPromedio, extra: !esPromo, ...NOTA },
+      ];
+      if (esPromo) {
+        rows.push({ k: 'Piso por instancia que pide la promoción', ref: 'ninguna nota puede bajarlo', v: piso, ...NOTA });
+        rows.push({ k: 'La que realmente tenés que sacar', ref: 'la mayor de las dos exigencias', v: necesaria, extra: true, ...NOTA });
+      }
+
+      return {
+        total: necesaria > 10 ? 'No llegás' : necesaria <= 0 ? 'Ya está' : fmt(necesaria),
+        sub:
+          necesaria > 10
+            ? 'Harían falta ' + fmt(necesaria) + ' en cada una de las ' + pend + ' evaluación(es) que quedan, y la escala termina en 10. Con lo que falta no alcanza para ' + fmt(meta, 1) + '.'
+            : necesaria <= 0
+              ? 'Ya tenés asegurado el ' + fmt(meta, 1) + ': con cualquier nota en ' + (pend === 1 ? 'la evaluación restante' : 'las ' + pend + ' restantes') + ' lo mantenés.'
+              : 'Necesitás ' + fmt(necesaria) + ' en ' + (pend === 1 ? 'la evaluación que falta' : 'cada una de las ' + pend + ' que faltan') + ' para llegar a ' + fmt(meta, 1) + ' (' + lectura(necesaria) + ').' +
+                (pisoRoto ? ' ⚠ Una de tus notas ya está por debajo del piso de ' + fmt(piso, 1) + ': la promoción está perdida aunque el promedio dé.' : ''),
+        rows: rows,
+        format: 'plain', decimals: 2,
+        chart: BANDAS,
+        position: m.position,
+        positionLabel: m.positionLabel,
+      };
+    });
+  })();
+</script>

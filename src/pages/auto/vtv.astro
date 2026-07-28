@@ -1,0 +1,203 @@
+---
+/**
+ * Hub de decisión — "¿Cuándo me toca la VTV y cuánto me sale?"
+ * Reemplaza 3 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo ramificado: la situación se elige en `cases` y cada rama define
+ * qué tabla de vigencia se aplica (provincial o nacional de ruta).
+ * La página sólo aporta los datos (src/lib/hubs/vtv.ts) y su compute().
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, CASE_MATH, TARIFA_BASE, MULT_TIPO } from '../../lib/hubs/vtv';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline define:vars={{ MATH: CASE_MATH, TARIFA: TARIFA_BASE, TIPOS: MULT_TIPO }}>
+  (function () {
+    const H = window.HC_HUB;
+
+    // Filas que NO son plata. El runtime hace Object.assign: sin `format`
+    // propio, la fila cae a pesos.
+    const ANIOS = { format: 'unit', unit: 'años', decimals: 0 };
+    const MESES = { format: 'unit', unit: 'meses', decimals: 0 };
+    const PCT = { format: 'unit', unit: '%', decimals: 0 };
+    const NUM = { format: 'plain', decimals: 1 };
+
+    const MES_NOMBRE = ['', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
+      'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+    H.onCompute(function (v, kase) {
+      const m = MATH[kase?.id] || { regimen: 'vtv' };
+      const prov = TARIFA[String(v.provincia || 'pba')] || TARIFA.otras;
+      const tipo = TIPOS[String(v.tipo || 'auto')] || TIPOS.auto;
+
+      const hoy = new Date();
+      const anioActual = hoy.getFullYear();
+      const mesActual = hoy.getMonth() + 1;
+
+      const anioPatent = Math.max(0, Number(v.anioPatentamiento) || 0);
+      const mesUltima = Math.min(12, Math.max(0, Number(v.mesUltima) || 0));
+      const anioUltima = Math.max(0, Number(v.anioUltima) || 0);
+
+      if (!anioPatent || anioPatent < 1990 || anioPatent > anioActual) {
+        return {
+          total: '$0',
+          sub: 'Ingresá un año de patentamiento válido (desde 1990 y no mayor al año en curso).',
+          rows: [],
+          chart: [],
+        };
+      }
+
+      const antiguedad = anioActual - anioPatent;
+
+      // ── Vigencia del certificado ──────────────────────────────────────────
+      // 'vtv'  → tabla provincial: exento <2 años · 12 meses hasta 7 · 6 desde 8.
+      // 'ruta' → tabla nacional:   36 meses hasta 4 años · 12 hasta 9 · 6 desde 10.
+      let vigencia, frecuencia;
+      if (m.regimen === 'ruta') {
+        if (antiguedad <= 4) { vigencia = 36; frecuencia = 'cada 3 años'; }
+        else if (antiguedad <= 9) { vigencia = 12; frecuencia = 'anual'; }
+        else { vigencia = 6; frecuencia = 'semestral'; }
+      } else {
+        if (antiguedad < 2) { vigencia = 0; frecuencia = 'exento (menos de 2 años)'; }
+        else if (antiguedad <= 7) { vigencia = 12; frecuencia = 'anual (cada 12 meses)'; }
+        else { vigencia = 6; frecuencia = 'semestral (cada 6 meses)'; }
+      }
+
+      // ── Costo ─────────────────────────────────────────────────────────────
+      const costo = prov.base * tipo.mult;
+      const exento = vigencia === 0;
+      const sinRegistro = !!m.sinRegistro || mesUltima === 0 || anioUltima === 0;
+
+      // ── Vencimiento y posición dentro de la vigencia ──────────────────────
+      let vencTexto = '';
+      let mesesTranscurridos = 0;
+      let mesesRestantes = 0;
+      let position = 0;
+      let positionLabel = '';
+      let estado = '';
+
+      if (exento) {
+        vencTexto = 'no requiere VTV todavía';
+        position = 0;
+        positionLabel = 'Exento: le faltan ' + Math.max(0, 2 - antiguedad) + ' año(s) para la primera revisión';
+        estado = 'Vehículo exento por antigüedad';
+      } else if (sinRegistro) {
+        vencTexto = 'sin certificado vigente';
+        mesesTranscurridos = vigencia;
+        mesesRestantes = 0;
+        position = 100;
+        positionLabel = 'Sin certificado vigente: hacela lo antes posible';
+        estado = 'Hay que hacer la revisión ya';
+      } else {
+        let mesVenc = mesUltima + vigencia;
+        let anioVenc = anioUltima;
+        while (mesVenc > 12) { mesVenc -= 12; anioVenc++; }
+        vencTexto = MES_NOMBRE[mesVenc] + ' de ' + anioVenc;
+
+        mesesTranscurridos = (anioActual - anioUltima) * 12 + (mesActual - mesUltima);
+        mesesRestantes = vigencia - mesesTranscurridos;
+        position = Math.min(100, Math.max(0, (mesesTranscurridos / vigencia) * 100));
+
+        if (mesesRestantes < 0) {
+          estado = 'Vencida hace ' + Math.abs(mesesRestantes) + ' mes(es)';
+          positionLabel = 'Vencida en ' + vencTexto + ' — renová urgente';
+        } else if (mesesRestantes === 0) {
+          estado = 'Vence este mes';
+          positionLabel = 'Vence este mes (' + vencTexto + ')';
+        } else if (mesesRestantes <= 2) {
+          estado = 'Vence en ' + mesesRestantes + ' mes(es)';
+          positionLabel = 'Vence en ' + vencTexto + ' — sacá turno ya';
+        } else {
+          estado = 'Al día: vence en ' + mesesRestantes + ' mes(es)';
+          positionLabel = 'Al día — vence en ' + vencTexto;
+        }
+      }
+
+      // ── Desglose ──────────────────────────────────────────────────────────
+      const rows = [];
+      rows.push(Object.assign({ k: 'Antigüedad del vehículo', ref: 'año de patentamiento ' + anioPatent, v: antiguedad }, ANIOS));
+      rows.push(Object.assign({ k: 'Vigencia del certificado', ref: frecuencia, v: vigencia, extra: true }, MESES));
+
+      if (!exento) {
+        if (!sinRegistro) {
+          rows.push(Object.assign({ k: 'Meses transcurridos desde la última revisión', v: Math.max(0, mesesTranscurridos) }, MESES));
+          rows.push(Object.assign({ k: 'Meses hasta el vencimiento', v: mesesRestantes }, MESES));
+          rows.push(Object.assign({ k: 'Vigencia ya consumida', v: Math.round(position) }, PCT));
+        }
+        rows.push(Object.assign({ k: 'Revisiones por año', v: 12 / vigencia }, NUM));
+      }
+
+      rows.push({ k: 'Tarifa base en ' + prov.nombre, v: prov.base });
+      if (tipo.mult !== 1) {
+        rows.push(Object.assign(
+          { k: 'Ajuste por categoría (' + tipo.nombre + ')', v: Math.round((tipo.mult - 1) * 100) },
+          PCT
+        ));
+      }
+      rows.push({ k: 'Costo de la revisión', ref: prov.nombre + ' · ' + tipo.nombre, v: costo, extra: true });
+      if (!exento) {
+        rows.push({ k: 'Costo anual de la revisión', ref: frecuencia, v: costo * (12 / vigencia), extra: true });
+      }
+
+      return {
+        total: exento ? '$0' : H.ars(costo),
+        sub:
+          tipo.nombre.charAt(0).toUpperCase() + tipo.nombre.slice(1) + ' de ' + antiguedad + ' año(s) en ' +
+          prov.nombre + ' · vigencia ' + frecuencia + ' · próximo vencimiento: ' + vencTexto + ' · ' + estado +
+          (exento ? '' : ' · costo anual estimado ' + H.ars(costo * (12 / vigencia))),
+        rows: rows,
+        chart: [
+          { label: 'Certificado holgado', value: 60, tone: 'good', from: 0, to: 60 },
+          { label: 'Conviene sacar turno', value: 25, tone: 'warn', from: 60, to: 85 },
+          { label: 'Vence o ya venció', value: 15, tone: 'bad', from: 85, to: 100 },
+        ],
+        position: position,
+        positionLabel: positionLabel,
+      };
+    });
+  })();
+</script>

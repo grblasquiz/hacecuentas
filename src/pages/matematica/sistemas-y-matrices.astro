@@ -1,0 +1,496 @@
+---
+/**
+ * Hub de decisión — "¿Cómo resuelvo este sistema de ecuaciones?"
+ * Reemplaza 5 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Sigue el patrón de matematica/regla-de-tres.astro: la página sólo aporta los
+ * datos (src/lib/hubs/sistemas-y-matrices.ts) y su compute(). El chrome, el CSS
+ * y el runtime viven en DecisionHub.astro y no se tocan.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub } from '../../lib/hubs/sistemas-y-matrices';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script is:inline>
+  (function () {
+    const H = window.HC_HUB;
+
+    /**
+     * No hay plata en ninguna rama y el default de HubRow es 'ars'. Toda fila
+     * declara su formato explícito.
+     */
+    const PLAIN = { format: 'plain', decimals: 2 };
+    const PLAIN4 = { format: 'plain', decimals: 4 };
+    const ENTERO = { format: 'plain', decimals: 0 };
+
+    /** Redondeo anti-artefacto del escalonamiento (y mata el −0). */
+    const R = (n) => {
+      if (!isFinite(n)) return n;
+      const r = Math.round(n);
+      return Math.abs(n - r) < 1e-10 ? (r === 0 ? 0 : r) : n;
+    };
+
+    const fmt = (n) => {
+      n = R(n);
+      if (!isFinite(n)) return '—';
+      return Number(n.toFixed(6)).toLocaleString('es-AR', { maximumFractionDigits: 6 });
+    };
+
+    const err = (msg, k, v) => ({
+      total: '—',
+      sub: msg,
+      rows: [{ k: k, v: v || 0, ...PLAIN }],
+      chart: [],
+      format: 'plain',
+      decimals: 2,
+    });
+
+    // Mismo parseo de matrices que src/lib/formulas/matematica-avanzada.ts:
+    // filas separadas por ; o salto de línea, valores por espacios o comas.
+    function parseMatrix(s) {
+      const m = String(s == null ? '' : s)
+        .trim()
+        .split(/\n|;/)
+        .map((r) => r.trim().split(/[ ,]+/).filter(Boolean).map(Number));
+      if (!m.length || m.some((r) => !r.length || r.length !== m[0].length || r.some((x) => !isFinite(x)))) return null;
+      return m;
+    }
+
+    function det3(a) {
+      return (
+        a[0][0] * (a[1][1] * a[2][2] - a[1][2] * a[2][1]) -
+        a[0][1] * (a[1][0] * a[2][2] - a[1][2] * a[2][0]) +
+        a[0][2] * (a[1][0] * a[2][1] - a[1][1] * a[2][0])
+      );
+    }
+
+    // Eliminación de Gauss-Jordan con pivoteo parcial (port del motor original).
+    function rref(input) {
+      const a = input.map((r) => r.slice());
+      const steps = [];
+      let row = 0;
+      for (let col = 0; col < a[0].length && row < a.length; col++) {
+        let p = row;
+        for (let i = row + 1; i < a.length; i++) if (Math.abs(a[i][col]) > Math.abs(a[p][col])) p = i;
+        if (Math.abs(a[p][col]) < 1e-10) continue;
+        if (p !== row) {
+          const tmp = a[p]; a[p] = a[row]; a[row] = tmp;
+          steps.push('F' + (row + 1) + ' ↔ F' + (p + 1));
+        }
+        const d = a[row][col];
+        a[row] = a[row].map((x) => x / d);
+        steps.push('F' + (row + 1) + ' ÷ ' + fmt(d));
+        for (let i = 0; i < a.length; i++) {
+          if (i !== row && Math.abs(a[i][col]) > 1e-10) {
+            const f = a[i][col];
+            a[i] = a[i].map((x, j) => x - f * a[row][j]);
+            steps.push('F' + (i + 1) + ' ← F' + (i + 1) + ' − (' + fmt(f) + ')F' + (row + 1));
+          }
+        }
+        row++;
+      }
+      return {
+        m: a.map((r) => r.map((x) => R(Number(x.toFixed(8))))),
+        steps: steps,
+        rank: a.filter((r) => r.some((x) => Math.abs(x) > 1e-9)).length,
+      };
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'cramer2';
+
+      // ---- 1) Sistema 2×2 por Cramer ------------------------------------
+      if (id === 'cramer2') {
+        const a = H.num(v.a), b = H.num(v.b), c = H.num(v.c);
+        const d = H.num(v.d), e = H.num(v.e), f = H.num(v.f);
+        const det = R(a * e - b * d);
+        const detX = R(c * e - b * f);
+        const detY = R(a * f - c * d);
+
+        const cabecera = [
+          { k: 'Ecuación 1: ' + fmt(a) + 'x + ' + fmt(b) + 'y = ' + fmt(c), ref: 'coeficiente a', v: a, ...PLAIN },
+          { k: 'Ecuación 2: ' + fmt(d) + 'x + ' + fmt(e) + 'y = ' + fmt(f), ref: 'coeficiente d', v: d, ...PLAIN },
+          { k: 'a · e', ref: 'paso 1: diagonal principal', v: R(a * e), ...PLAIN },
+          { k: 'b · d', ref: 'paso 1: diagonal secundaria', v: R(b * d), ...PLAIN },
+          { k: 'D = a·e − b·d → determinante del sistema', ref: 'paso 2', v: det, extra: true, ...PLAIN },
+        ];
+
+        if (det === 0) {
+          // Determinante 0: hay que distinguir incompatible de indeterminado.
+          const proporcional =
+            a !== 0 && d !== 0
+              ? Math.abs(c / a - f / d) < 1e-10 && Math.abs(b / a - e / d) < 1e-10
+              : Math.abs(a * f - c * d) < 1e-10 && Math.abs(b * f - c * e) < 1e-10;
+          return {
+            total: proporcional ? '∞ soluciones' : '∅ sin solución',
+            sub: proporcional
+              ? 'D = 0 y las dos ecuaciones son proporcionales: describen la MISMA recta. Sistema compatible indeterminado, con infinitas soluciones.'
+              : 'D = 0 y las ecuaciones no son proporcionales: las rectas son PARALELAS y no se cortan. Sistema incompatible, sin solución.',
+            rows: cabecera.concat([
+              { k: 'Dx = c·e − b·f', ref: 'no se puede dividir por D = 0', v: detX, ...PLAIN },
+              { k: 'Dy = a·f − c·d', ref: 'no se puede dividir por D = 0', v: detY, ...PLAIN },
+              {
+                k: proporcional ? 'Las ecuaciones son proporcionales → infinitas soluciones' : 'Las ecuaciones NO son proporcionales → ninguna solución',
+                ref: 'teorema de Rouché-Frobenius',
+                v: proporcional ? 1 : 0, extra: true, ...ENTERO,
+              },
+            ]),
+            format: 'plain',
+            decimals: 2,
+            chart: [
+              { label: 'D = 0 — sin solución única', value: 0.001, tone: 'bad' },
+              { label: 'Dx = ' + fmt(detX), value: Math.abs(detX) || 0.001, tone: 'prop' },
+              { label: 'Dy = ' + fmt(detY), value: Math.abs(detY) || 0.001, tone: 'prop' },
+            ],
+          };
+        }
+
+        const x = R(detX / det);
+        const y = R(detY / det);
+        return {
+          total: 'x = ' + fmt(x) + ' · y = ' + fmt(y),
+          sub:
+            'D = ' + fmt(det) + ' ≠ 0 → sistema compatible determinado: las dos rectas se cruzan en un único punto (' +
+            fmt(x) + ', ' + fmt(y) + ').',
+          rows: cabecera.concat([
+            { k: 'Dx = c·e − b·f', ref: 'paso 3: se reemplaza la columna de las x', v: detX, ...PLAIN },
+            { k: 'Dy = a·f − c·d', ref: 'paso 4: se reemplaza la columna de las y', v: detY, ...PLAIN },
+            { k: 'x = Dx ÷ D', ref: 'paso 5', v: x, extra: true, ...PLAIN4 },
+            { k: 'y = Dy ÷ D', ref: 'paso 5', v: y, extra: true, ...PLAIN4 },
+            { k: 'Verificación ecuación 1: a·x + b·y', ref: 'tiene que dar c = ' + fmt(c), v: R(a * x + b * y), ...PLAIN4 },
+            { k: 'Verificación ecuación 2: d·x + e·y', ref: 'tiene que dar f = ' + fmt(f), v: R(d * x + e * y), ...PLAIN4 },
+          ]),
+          format: 'plain',
+          decimals: 4,
+          chart: [
+            { label: 'D = ' + fmt(det), value: Math.abs(det) || 0.001, tone: 'main' },
+            { label: 'Dx = ' + fmt(detX), value: Math.abs(detX) || 0.001, tone: 'prop' },
+            { label: 'Dy = ' + fmt(detY), value: Math.abs(detY) || 0.001, tone: 'exit' },
+          ],
+        };
+      }
+
+      // ---- 2) Sistema 3×3 -----------------------------------------------
+      if (id === 'sistema3') {
+        const m = parseMatrix(v.sis);
+        if (!m) return err('Escribí la matriz con filas separadas por punto y coma y números separados por espacios.', 'Filas leídas', 0);
+        if (m.length !== 3 || m[0].length !== 4) {
+          return err('Hace falta una matriz AMPLIADA de 3 filas por 4 columnas: los tres coeficientes de cada ecuación más el término independiente.', 'Columnas leídas', m[0].length);
+        }
+        const coef = m.map((r) => r.slice(0, 3));
+        const det = R(det3(coef));
+        const rep = (col) => R(det3(m.map((r) => r.slice(0, 3).map((val, j) => (j === col ? r[3] : val)))));
+        const dx = rep(0), dy = rep(1), dz = rep(2);
+        const rr = rref(m);
+
+        if (det === 0) {
+          const incompatible = rr.m.some((r) => r.slice(0, 3).every((x) => x === 0) && r[3] !== 0);
+          return {
+            total: incompatible ? '∅ sin solución' : '∞ soluciones',
+            sub:
+              'D = 0: los tres planos no se cortan en un único punto, así que la regla de Cramer no aplica. ' +
+              (incompatible
+                ? 'Al escalonar aparece una fila del tipo "0 0 0 | k", que es imposible: el sistema es INCOMPATIBLE.'
+                : 'Al escalonar sobra al menos una fila de ceros: el sistema es COMPATIBLE INDETERMINADO y tiene infinitas soluciones.'),
+            rows: [
+              { k: 'D — determinante de la matriz de coeficientes', ref: 'regla de Sarrus', v: det, extra: true, ...PLAIN },
+              { k: 'Rango de la matriz ampliada', ref: 'filas no nulas tras escalonar', v: rr.rank, ...ENTERO },
+              { k: 'Cantidad de incógnitas', v: 3, ...ENTERO },
+              { k: incompatible ? 'Rango ampliada > rango coeficientes → incompatible' : 'Rango < incógnitas → infinitas soluciones', ref: 'Rouché-Frobenius', v: rr.rank, extra: true, ...ENTERO },
+              { k: 'Dx', ref: 'no se puede dividir por D = 0', v: dx, ...PLAIN },
+              { k: 'Dy', ref: 'no se puede dividir por D = 0', v: dy, ...PLAIN },
+              { k: 'Dz', ref: 'no se puede dividir por D = 0', v: dz, ...PLAIN },
+            ],
+            format: 'plain',
+            decimals: 2,
+            chart: [
+              { label: 'D = 0 — sin solución única', value: 0.001, tone: 'bad' },
+              { label: 'Rango de la ampliada', value: rr.rank, tone: 'prop' },
+              { label: 'Incógnitas', value: 3, tone: 'warn' },
+            ],
+          };
+        }
+
+        const x = R(dx / det), y = R(dy / det), z = R(dz / det);
+        return {
+          total: 'x=' + fmt(x) + ' y=' + fmt(y) + ' z=' + fmt(z),
+          sub:
+            'D = ' + fmt(det) + ' ≠ 0 → solución única: los tres planos se cortan en el punto (' +
+            fmt(x) + ', ' + fmt(y) + ', ' + fmt(z) + ').',
+          rows: [
+            { k: 'D — determinante de los coeficientes', ref: 'paso 1: regla de Sarrus', v: det, extra: true, ...PLAIN },
+            { k: 'Dx — columna de x reemplazada por los independientes', ref: 'paso 2', v: dx, ...PLAIN },
+            { k: 'Dy — columna de y reemplazada', ref: 'paso 3', v: dy, ...PLAIN },
+            { k: 'Dz — columna de z reemplazada', ref: 'paso 4', v: dz, ...PLAIN },
+            { k: 'x = Dx ÷ D', ref: 'paso 5', v: x, extra: true, ...PLAIN4 },
+            { k: 'y = Dy ÷ D', ref: 'paso 5', v: y, extra: true, ...PLAIN4 },
+            { k: 'z = Dz ÷ D', ref: 'paso 5', v: z, extra: true, ...PLAIN4 },
+            { k: 'Verificación ecuación 1', ref: 'tiene que dar ' + fmt(m[0][3]), v: R(m[0][0] * x + m[0][1] * y + m[0][2] * z), ...PLAIN4 },
+            { k: 'Verificación ecuación 2', ref: 'tiene que dar ' + fmt(m[1][3]), v: R(m[1][0] * x + m[1][1] * y + m[1][2] * z), ...PLAIN4 },
+            { k: 'Verificación ecuación 3', ref: 'tiene que dar ' + fmt(m[2][3]), v: R(m[2][0] * x + m[2][1] * y + m[2][2] * z), ...PLAIN4 },
+          ],
+          format: 'plain',
+          decimals: 4,
+          chart: [
+            { label: 'D = ' + fmt(det), value: Math.abs(det) || 0.001, tone: 'main' },
+            { label: 'Dx = ' + fmt(dx), value: Math.abs(dx) || 0.001, tone: 'prop' },
+            { label: 'Dy = ' + fmt(dy), value: Math.abs(dy) || 0.001, tone: 'exit' },
+            { label: 'Dz = ' + fmt(dz), value: Math.abs(dz) || 0.001, tone: 'good' },
+          ],
+        };
+      }
+
+      // ---- 3) Gauss-Jordan paso a paso -----------------------------------
+      if (id === 'gauss') {
+        const m = parseMatrix(v.sis);
+        if (!m) return err('Escribí la matriz con filas separadas por punto y coma y números separados por espacios.', 'Filas leídas', 0);
+        if (m.length < 2 || m.length > 4 || m[0].length < 2 || m[0].length > 5) {
+          return err('La matriz tiene que tener entre 2 y 4 filas y hasta 5 columnas.', 'Filas leídas', m.length);
+        }
+        const rr = rref(m);
+        const incognitas = m[0].length - 1;
+        const cuadrado = rr.m[0].length === rr.m.length + 1;
+        const incompatible = rr.m.some((r) => r.slice(0, incognitas).every((x) => x === 0) && r[incognitas] !== 0);
+        const rangoCoef = rr.m.filter((r) => r.slice(0, incognitas).some((x) => Math.abs(x) > 1e-9)).length;
+
+        const rows = [
+          { k: 'Filas de la matriz ampliada', v: m.length, ...ENTERO },
+          { k: 'Incógnitas (columnas menos la de independientes)', v: incognitas, ...ENTERO },
+          { k: 'Operaciones elementales aplicadas', ref: rr.steps.slice(0, 2).join(' · ') || 'ninguna', v: rr.steps.length, ...ENTERO },
+          { k: 'Rango de la matriz de coeficientes', ref: 'filas no nulas del bloque izquierdo', v: rangoCoef, ...ENTERO },
+          { k: 'Rango de la matriz ampliada', ref: 'filas no nulas totales', v: rr.rank, extra: true, ...ENTERO },
+        ];
+        rr.m.forEach((r, k) => {
+          rows.push({ k: 'Fila ' + (k + 1) + ' de la RREF: ' + r.map(fmt).join('  '), ref: 'forma escalonada reducida', v: R(r[r.length - 1]), ...PLAIN4 });
+        });
+
+        let total, sub;
+        if (incompatible) {
+          total = '∅ sin solución';
+          sub = 'Aparece una fila "0 … 0 | k" con k ≠ 0, que es imposible: el rango de la ampliada supera al de los coeficientes y el sistema es INCOMPATIBLE.';
+          rows.push({ k: 'Sistema incompatible: rango ampliada > rango coeficientes', ref: 'Rouché-Frobenius', v: rr.rank, extra: true, ...ENTERO });
+        } else if (rangoCoef < incognitas) {
+          total = '∞ soluciones';
+          sub =
+            'Rango ' + rangoCoef + ' menor que las ' + incognitas + ' incógnitas: quedan ' + (incognitas - rangoCoef) +
+            ' variable(s) libre(s), así que el sistema es COMPATIBLE INDETERMINADO y tiene infinitas soluciones.';
+          rows.push({ k: 'Variables libres (incógnitas − rango)', ref: 'cada una genera infinitas soluciones', v: incognitas - rangoCoef, extra: true, ...ENTERO });
+        } else {
+          const sol = rr.m.slice(0, incognitas).map((r) => R(r[r.length - 1]));
+          total = sol.map((s, k) => 'x' + (k + 1) + '=' + fmt(s)).join(' ');
+          sub =
+            'Rango ' + rangoCoef + ' igual a la cantidad de incógnitas: SOLUCIÓN ÚNICA. El bloque de coeficientes quedó convertido en la identidad, así que la última columna ES la solución.';
+          sol.forEach((s, k) => {
+            rows.push({ k: 'x' + (k + 1) + ' — despejada por la RREF', ref: 'última columna, fila ' + (k + 1), v: s, extra: true, ...PLAIN4 });
+          });
+          if (!cuadrado) {
+            rows.push({ k: 'Aviso: la matriz no es cuadrada ampliada', ref: 'interpretá la RREF según sus columnas', v: 0, ...ENTERO });
+          }
+        }
+
+        return {
+          total: total,
+          sub: sub,
+          rows: rows,
+          format: 'plain',
+          decimals: 4,
+          chart: [
+            { label: 'Rango de los coeficientes', value: rangoCoef || 0.001, tone: 'main' },
+            { label: 'Rango de la ampliada', value: rr.rank || 0.001, tone: rr.rank > rangoCoef ? 'bad' : 'good' },
+            { label: 'Incógnitas', value: incognitas, tone: 'prop' },
+            { label: 'Operaciones de fila', value: rr.steps.length || 0.001, tone: 'exit' },
+          ],
+        };
+      }
+
+      // ---- 4) Determinante e inversa 2×2 ---------------------------------
+      if (id === 'det2') {
+        const m = parseMatrix(v.m2);
+        if (!m || m.length !== 2 || m[0].length !== 2) {
+          return err('Hace falta una matriz de 2 filas por 2 columnas, con las filas separadas por punto y coma.', 'Filas leídas', m ? m.length : 0);
+        }
+        const a = m[0][0], b = m[0][1], c = m[1][0], d = m[1][1];
+        const det = R(a * d - b * c);
+
+        const cabecera = [
+          { k: 'a₁₁ (arriba izquierda)', v: a, ...PLAIN },
+          { k: 'a₁₂ (arriba derecha)', v: b, ...PLAIN },
+          { k: 'a₂₁ (abajo izquierda)', v: c, ...PLAIN },
+          { k: 'a₂₂ (abajo derecha)', v: d, ...PLAIN },
+          { k: 'a · d', ref: 'paso 1: diagonal principal', v: R(a * d), ...PLAIN },
+          { k: 'b · c', ref: 'paso 1: diagonal secundaria', v: R(b * c), ...PLAIN },
+          { k: 'D = a·d − b·c → determinante', ref: 'paso 2', v: det, extra: true, ...PLAIN },
+        ];
+
+        if (det === 0) {
+          return {
+            total: 'det = 0 · sin inversa',
+            sub:
+              'El determinante da 0: la matriz es SINGULAR y no tiene inversa. Sus filas son proporcionales entre sí, así que el sistema lineal asociado no tiene solución única.',
+            rows: cabecera.concat([
+              { k: 'La inversa no existe (habría que dividir por 0)', ref: 'matriz singular', v: 0, extra: true, ...ENTERO },
+            ]),
+            format: 'plain',
+            decimals: 2,
+            chart: [
+              { label: 'a·d = ' + fmt(a * d), value: Math.abs(a * d) || 0.001, tone: 'prop' },
+              { label: 'b·c = ' + fmt(b * c), value: Math.abs(b * c) || 0.001, tone: 'exit' },
+              { label: 'D = 0 — singular', value: 0.001, tone: 'bad' },
+            ],
+          };
+        }
+
+        const i11 = R(d / det), i12 = R(-b / det), i21 = R(-c / det), i22 = R(a / det);
+        return {
+          total: 'det = ' + fmt(det),
+          sub:
+            'D = ' + fmt(det) + ' ≠ 0: la matriz es invertible. La inversa es [[' + fmt(i11) + ', ' + fmt(i12) + '], [' +
+            fmt(i21) + ', ' + fmt(i22) + ']] — se intercambian a y d, se cambia el signo de b y c, y se divide todo por D.',
+          rows: cabecera.concat([
+            { k: 'Inversa — posición (1,1) = d ÷ D', ref: 'paso 3', v: i11, extra: true, ...PLAIN4 },
+            { k: 'Inversa — posición (1,2) = −b ÷ D', ref: 'paso 3: cambia de signo', v: i12, extra: true, ...PLAIN4 },
+            { k: 'Inversa — posición (2,1) = −c ÷ D', ref: 'paso 3: cambia de signo', v: i21, extra: true, ...PLAIN4 },
+            { k: 'Inversa — posición (2,2) = a ÷ D', ref: 'paso 3', v: i22, extra: true, ...PLAIN4 },
+            { k: 'Verificación: A × A⁻¹ posición (1,1)', ref: 'tiene que dar 1', v: R(a * i11 + b * i21), ...PLAIN4 },
+            { k: 'Verificación: A × A⁻¹ posición (1,2)', ref: 'tiene que dar 0', v: R(a * i12 + b * i22), ...PLAIN4 },
+            { k: 'Verificación: determinante de la inversa', ref: 'tiene que dar 1 ÷ D = ' + fmt(1 / det), v: R(i11 * i22 - i12 * i21), ...PLAIN4 },
+          ]),
+          format: 'plain',
+          decimals: 4,
+          chart: [
+            { label: 'a·d = ' + fmt(a * d), value: Math.abs(a * d) || 0.001, tone: 'prop' },
+            { label: 'b·c = ' + fmt(b * c), value: Math.abs(b * c) || 0.001, tone: 'exit' },
+            { label: 'D = ' + fmt(det), value: Math.abs(det), tone: 'main' },
+          ],
+        };
+      }
+
+      // ---- 5) Determinante e inversa 3×3 ---------------------------------
+      const m3 = parseMatrix(v.m3);
+      if (!m3 || m3.length !== 3 || m3[0].length !== 3) {
+        return err('Hace falta una matriz de 3 filas por 3 columnas exactas, sin columna de términos independientes.', 'Filas leídas', m3 ? m3.length : 0);
+      }
+      const det = R(det3(m3));
+      const menor = (r, c) => {
+        const f = [0, 1, 2].filter((i) => i !== r);
+        const g = [0, 1, 2].filter((j) => j !== c);
+        return m3[f[0]][g[0]] * m3[f[1]][g[1]] - m3[f[0]][g[1]] * m3[f[1]][g[0]];
+      };
+
+      const cabecera3 = [
+        { k: 'Menor de a₁₁ (a₂₂a₃₃ − a₂₃a₃₂)', ref: 'paso 1: cofactores', v: R(menor(0, 0)), ...PLAIN },
+        { k: 'Menor de a₁₂ (a₂₁a₃₃ − a₂₃a₃₁)', ref: 'paso 1: entra restando', v: R(menor(0, 1)), ...PLAIN },
+        { k: 'Menor de a₁₃ (a₂₁a₃₂ − a₂₂a₃₁)', ref: 'paso 1', v: R(menor(0, 2)), ...PLAIN },
+        { k: 'a₁₁ × su menor', ref: 'paso 2: suma', v: R(m3[0][0] * menor(0, 0)), ...PLAIN },
+        { k: 'a₁₂ × su menor', ref: 'paso 2: RESTA (signo alternado)', v: R(m3[0][1] * menor(0, 1)), ...PLAIN },
+        { k: 'a₁₃ × su menor', ref: 'paso 2: suma', v: R(m3[0][2] * menor(0, 2)), ...PLAIN },
+        { k: 'D = determinante 3×3', ref: 'paso 3: Sarrus / cofactores', v: det, extra: true, ...PLAIN },
+      ];
+
+      if (det === 0) {
+        return {
+          total: 'det = 0 · sin inversa',
+          sub:
+            'El determinante da 0: la matriz es SINGULAR. Sus filas son linealmente dependientes —una se puede escribir combinando las otras— así que aplasta el espacio en un plano o una recta y no tiene inversa.',
+          rows: cabecera3.concat([
+            { k: 'La inversa no existe (habría que dividir por 0)', ref: 'matriz singular', v: 0, extra: true, ...ENTERO },
+          ]),
+          format: 'plain',
+          decimals: 2,
+          chart: [
+            { label: 'a₁₁ × menor', value: Math.abs(m3[0][0] * menor(0, 0)) || 0.001, tone: 'prop' },
+            { label: 'a₁₂ × menor', value: Math.abs(m3[0][1] * menor(0, 1)) || 0.001, tone: 'exit' },
+            { label: 'a₁₃ × menor', value: Math.abs(m3[0][2] * menor(0, 2)) || 0.001, tone: 'good' },
+            { label: 'D = 0 — singular', value: 0.001, tone: 'bad' },
+          ],
+        };
+      }
+
+      // Inversa por escalonamiento de [A | I]: el bloque derecho queda A⁻¹.
+      const aug = m3.map((r, k) => r.concat([0, 1, 2].map((j) => (j === k ? 1 : 0))));
+      const inv = rref(aug).m.map((r) => r.slice(3));
+      const rows3 = cabecera3.slice();
+      inv.forEach((r, i) => {
+        r.forEach((x, j) => {
+          rows3.push({
+            k: 'Inversa — posición (' + (i + 1) + ',' + (j + 1) + ')',
+            ref: i === 0 && j === 0 ? 'bloque derecho de [A | I] escalonado' : undefined,
+            v: R(x), extra: i === j, ...PLAIN4,
+          });
+        });
+      });
+      rows3.push({
+        k: 'Verificación: A × A⁻¹ posición (1,1)',
+        ref: 'tiene que dar 1',
+        v: R(m3[0][0] * inv[0][0] + m3[0][1] * inv[1][0] + m3[0][2] * inv[2][0]),
+        ...PLAIN4,
+      });
+      rows3.push({
+        k: 'Verificación: A × A⁻¹ posición (1,2)',
+        ref: 'tiene que dar 0',
+        v: R(m3[0][0] * inv[0][1] + m3[0][1] * inv[1][1] + m3[0][2] * inv[2][1]),
+        ...PLAIN4,
+      });
+      rows3.push({ k: 'Verificación: determinante de la inversa', ref: 'tiene que dar 1 ÷ D = ' + fmt(1 / det), v: R(det3(inv)), ...PLAIN4 });
+
+      return {
+        total: 'det = ' + fmt(det),
+        sub:
+          'D = ' + fmt(det) + ' ≠ 0: la matriz es invertible. La inversa se obtuvo poniendo la identidad al lado y escalonando hasta que el bloque izquierdo quedó convertido en la identidad.',
+        rows: rows3,
+        format: 'plain',
+        decimals: 4,
+        chart: [
+          { label: 'a₁₁ × menor = ' + fmt(m3[0][0] * menor(0, 0)), value: Math.abs(m3[0][0] * menor(0, 0)) || 0.001, tone: 'prop' },
+          { label: 'a₁₂ × menor = ' + fmt(m3[0][1] * menor(0, 1)), value: Math.abs(m3[0][1] * menor(0, 1)) || 0.001, tone: 'exit' },
+          { label: 'a₁₃ × menor = ' + fmt(m3[0][2] * menor(0, 2)), value: Math.abs(m3[0][2] * menor(0, 2)) || 0.001, tone: 'good' },
+          { label: 'D = ' + fmt(det), value: Math.abs(det), tone: 'main' },
+        ],
+      };
+    });
+  })();
+</script>

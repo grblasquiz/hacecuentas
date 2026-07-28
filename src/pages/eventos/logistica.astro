@@ -1,0 +1,276 @@
+---
+/**
+ * Hub de decisión — "¿Cuántas mesas, sillas, meseros y cosas necesito para la fiesta?"
+ * Reemplaza 9 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo: ramificado (6 ramas, `cases`).
+ * Las ratios NO están acá: se derivan de las fórmulas reales del repo
+ * (sillas-mesas-invitados, meseros-necesarios-invitados, vajilla-alquiler-invitados,
+ * cotillon-cumple-personas, globos-decoracion-salon-metros, invitaciones-cumple-numero,
+ * regalos-invitado-souvenir, karaoke-canciones-por-hora, playlist-duracion-canciones)
+ * dentro de src/lib/hubs/logistica-evento.ts.
+ *
+ * La comida y la bebida viven en /eventos/comida y /eventos/bebidas: acá va todo
+ * lo que no se come ni se toma.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  RAMAS,
+  PERSONAS_POR_MESA,
+  MARGEN_SILLAS,
+  SILLA_REL,
+  PRECIO_MESA_REL,
+  INVITADOS_POR_MOZO,
+  INVITADOS_POR_BARTENDER,
+  MAITRE_DESDE,
+  MOZO_REL,
+  BARTENDER_REL,
+  MAITRE_REL,
+  VAJILLA_PP,
+  PIEZA_REL,
+  COTILLON_PP,
+  COTILLON_REL,
+  GLOBOS_POR_METRO,
+  PCT_GLOBOS_12,
+  GLOBO_REL,
+  INVITACIONES_PP,
+  INVITACION_REL,
+  ANTICIPACION_CHICA,
+  ANTICIPACION_GRANDE,
+  UMBRAL_ANTICIPACION,
+  SOUVENIR_PP,
+  CANCION_MIN,
+  TRANSICION_MIN,
+} from '../../lib/hubs/logistica-evento';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{
+    RAMAS,
+    PERSONAS_POR_MESA,
+    MARGEN_SILLAS,
+    SILLA_REL,
+    PRECIO_MESA_REL,
+    INVITADOS_POR_MOZO,
+    INVITADOS_POR_BARTENDER,
+    MAITRE_DESDE,
+    MOZO_REL,
+    BARTENDER_REL,
+    MAITRE_REL,
+    VAJILLA_PP,
+    PIEZA_REL,
+    COTILLON_PP,
+    COTILLON_REL,
+    GLOBOS_POR_METRO,
+    PCT_GLOBOS_12,
+    GLOBO_REL,
+    INVITACIONES_PP,
+    INVITACION_REL,
+    ANTICIPACION_CHICA,
+    ANTICIPACION_GRANDE,
+    UMBRAL_ANTICIPACION,
+    SOUVENIR_PP,
+    CANCION_MIN,
+    TRANSICION_MIN,
+  }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    // El desglose mezcla mesas, sillas, personas, piezas, globos, canciones,
+    // minutos y pesos: NINGUNA fila puede quedar sin `format`, porque el runtime
+    // hace Object.assign y la que no lo declara cae a pesos. Las de plata
+    // declaran 'ars' igual, para que se lea explícito.
+    const U = (v, unit, decimals) => ({ v: v, format: 'unit', unit: unit, decimals: decimals || 0 });
+
+    const n = (x, d) =>
+      Number(x || 0).toLocaleString('es-AR', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
+
+    H.onCompute(function (v, kase) {
+      const rama = (kase && kase.id) || 'adultos';
+      const R = RAMAS[rama] || RAMAS.adultos;
+
+      const invitados = Math.max(1, Math.round(v.invitados || 1));
+      const horas = Math.min(16, Math.max(1, v.horas || 1));
+      const metros = Math.max(0, v.metrosGlobos || 0);
+      const precioSilla = Math.max(0, v.precioSilla || 0);
+      const precioMozo = Math.max(0, v.precioMozo || 0);
+      const presoSouvenir = Math.max(0, v.presupuestoSouvenir || 0);
+
+      // Las fórmulas viejas cotizaban en una unidad interna fósil (silla = 3,
+      // mozo = 60). Se conserva la PROPORCIÓN y se reescala con los dos precios
+      // de hoy que carga el usuario.
+      const fCosas = SILLA_REL ? precioSilla / SILLA_REL : 0;
+      const fStaff = MOZO_REL ? precioMozo / MOZO_REL : 0;
+
+      // ── Mesas y sillas (sillas-mesas-invitados) ─────────────────────────
+      const porMesa = PERSONAS_POR_MESA[R.mesa] || PERSONAS_POR_MESA.redonda8;
+      const mesas = Math.ceil(invitados / porMesa);
+      const sillas = R.mesa === 'coctail' ? 0 : Math.ceil(invitados * MARGEN_SILLAS);
+      const costoMesas = mesas * (PRECIO_MESA_REL[R.mesa] || 0) * fCosas;
+      const costoSillas = sillas * SILLA_REL * fCosas;
+
+      // ── Personal (meseros-necesarios-invitados) ─────────────────────────
+      const ratioMozo = INVITADOS_POR_MOZO[R.servicio];
+      const meseros = ratioMozo > 0 ? Math.ceil(invitados / ratioMozo) : 0;
+      const bartenders = Math.max(1, Math.ceil(invitados / INVITADOS_POR_BARTENDER));
+      const maitre = invitados >= MAITRE_DESDE ? 1 : 0;
+      const costoPersonal =
+        (meseros * MOZO_REL + bartenders * BARTENDER_REL + maitre * MAITRE_REL) * fStaff;
+
+      // ── Vajilla (vajilla-alquiler-invitados) ────────────────────────────
+      const vp = VAJILLA_PP[R.comida] || VAJILLA_PP.completa;
+      const platos = Math.ceil(invitados * vp.platos);
+      const copas = Math.ceil(invitados * vp.copas);
+      const cubiertos = Math.ceil(invitados * vp.cubiertos);
+      const piezas = platos + copas + cubiertos;
+      const costoVajilla = piezas * PIEZA_REL * fCosas;
+
+      // ── Cotillón (cotillon-cumple-personas) ─────────────────────────────
+      const itemsPP = COTILLON_PP[R.cotillon] || COTILLON_PP.cumpleAdulto;
+      const cotillon = Math.ceil(invitados * itemsPP);
+      const costoCotillon = cotillon * (COTILLON_REL[R.cotillon] || 0) * fCosas;
+
+      // ── Globos (globos-decoracion-salon-metros) ─────────────────────────
+      const porMetro = GLOBOS_POR_METRO[R.globo] || GLOBOS_POR_METRO.arco;
+      const globos = metros > 0 ? Math.ceil(metros * porMetro) : 0;
+      const globos12 = Math.ceil(globos * PCT_GLOBOS_12);
+      const globos5 = globos - globos12;
+      const costoGlobos = globos * GLOBO_REL * fCosas;
+
+      // ── Invitaciones (invitaciones-cumple-numero) ───────────────────────
+      const invitaciones = Math.ceil(invitados * INVITACIONES_PP);
+      const anticipacion = invitados >= UMBRAL_ANTICIPACION ? ANTICIPACION_GRANDE : ANTICIPACION_CHICA;
+      const precioInvitRel = INVITACION_REL[R.invitacion] || 0;
+      const costoInvitaciones = Math.ceil(invitaciones * precioInvitRel) * fCosas;
+
+      // ── Souvenirs (regalos-invitado-souvenir) ───────────────────────────
+      const souvenirs = Math.ceil(invitados * (SOUVENIR_PP[R.souvenir] || SOUVENIR_PP.otro));
+      const costoSouvenirs = souvenirs * presoSouvenir;
+
+      // ── Música (playlist / karaoke) ─────────────────────────────────────
+      const minutos = horas * 60;
+      const canciones = Math.ceil(minutos / CANCION_MIN);
+      const porTurno = CANCION_MIN + TRANSICION_MIN;
+      const karaokeTotal = Math.floor(minutos / porTurno);
+      const karaokePP = Math.floor(karaokeTotal / invitados);
+      const karaokeEspera = Math.round((invitados - 1) * porTurno);
+
+      const costoTotal =
+        costoMesas + costoSillas + costoPersonal + costoVajilla + costoCotillon + costoGlobos +
+        costoInvitaciones + costoSouvenirs;
+
+      const rows = [];
+
+      rows.push({ k: 'Mesas', ref: porMesa + ' personas por mesa', ...U(mesas, 'mesas'), extra: true });
+      if (sillas > 0) {
+        rows.push({ k: 'Sillas', ref: 'invitados + ' + Math.round((MARGEN_SILLAS - 1) * 100) + '% de margen', ...U(sillas, 'sillas'), extra: true });
+      } else {
+        rows.push({ k: 'Sillas', ref: 'formato de pie: la fórmula no cuenta sillas', ...U(0, 'sillas') });
+      }
+      if (meseros > 0) {
+        rows.push({ k: 'Mozos', ref: '1 cada ' + ratioMozo + ' invitados', ...U(meseros, 'mozos'), extra: true });
+      } else {
+        rows.push({ k: 'Mozos', ref: 'barra libre y autoservicio: sin personal de sala', ...U(0, 'mozos') });
+      }
+      rows.push({ k: 'Bartenders', ref: '1 cada ' + INVITADOS_POR_BARTENDER + ' invitados', ...U(bartenders, 'bartenders'), extra: true });
+      rows.push({ k: 'Maître', ref: maitre ? 'desde ' + MAITRE_DESDE + ' invitados' : 'no hace falta con menos de ' + MAITRE_DESDE, ...U(maitre, 'maître') });
+      rows.push({ k: 'Platos', ref: n(vp.platos, 1) + ' por invitado, roturas incluidas', ...U(platos, 'platos') });
+      rows.push({ k: 'Copas y vasos', ref: n(vp.copas, 1) + ' por invitado', ...U(copas, 'copas') });
+      if (cubiertos > 0) rows.push({ k: 'Cubiertos', ref: n(vp.cubiertos, 1) + ' por invitado', ...U(cubiertos, 'cubiertos') });
+      rows.push({ k: 'Piezas de vajilla a alquilar', ref: 'platos + copas + cubiertos', ...U(piezas, 'piezas'), extra: true });
+      rows.push({ k: 'Ítems de cotillón', ref: n(itemsPP, 1) + ' por persona', ...U(cotillon, 'ítems'), extra: true });
+      if (globos > 0) {
+        rows.push({ k: 'Globos', ref: globos12 + ' de 12" y ' + globos5 + ' de 5" · ' + porMetro + ' por metro', ...U(globos, 'globos'), extra: true });
+      }
+      rows.push({ k: 'Invitaciones', ref: n(INVITACIONES_PP, 2) + ' por invitado · mandalas con ' + anticipacion + ' días', ...U(invitaciones, 'invitaciones'), extra: true });
+      if (souvenirs > 0) rows.push({ k: 'Souvenirs', ref: n(SOUVENIR_PP[R.souvenir] || SOUVENIR_PP.otro, 2) + ' por invitado', ...U(souvenirs, 'souvenirs'), extra: true });
+
+      if (R.karaoke) {
+        rows.push({ k: 'Canciones que entran en la sesión', ref: n(CANCION_MIN, 1) + ' min de tema + ' + n(TRANSICION_MIN, 1) + ' de transición', ...U(karaokeTotal, 'canciones'), extra: true });
+        rows.push({ k: 'Canciones por cantante', ref: karaokePP < 2 ? 'menos de 2: el grupo es grande para las horas' : 'reparto parejo entre los ' + invitados, ...U(karaokePP, 'canciones') });
+        rows.push({ k: 'Espera entre tus dos turnos', ref: 'con ' + invitados + ' cantantes en la ronda', ...U(karaokeEspera, 'min') });
+      } else {
+        rows.push({ k: 'Canciones para cubrir la fiesta', ref: n(60 / CANCION_MIN, 0) + ' por hora · temas de ' + n(CANCION_MIN, 1) + ' min', ...U(canciones, 'canciones'), extra: true });
+      }
+
+      rows.push({ k: 'Costo de mesas y sillas', ref: 'a $' + n(precioSilla) + ' la silla', v: costoMesas + costoSillas, format: 'ars' });
+      rows.push({ k: 'Costo del personal', ref: 'a $' + n(precioMozo) + ' el mozo por jornada', v: costoPersonal, format: 'ars' });
+      rows.push({ k: 'Costo de la vajilla', ref: n(piezas) + ' piezas alquiladas', v: costoVajilla, format: 'ars' });
+      rows.push({ k: 'Costo de cotillón y globos', ref: cotillon + ' ítems y ' + globos + ' globos', v: costoCotillon + costoGlobos, format: 'ars' });
+      rows.push({ k: 'Costo de las invitaciones', ref: precioInvitRel === 0 ? 'formato digital: $0' : 'formato ' + R.invitacion, v: costoInvitaciones, format: 'ars' });
+      rows.push({ k: 'Costo de los souvenirs', ref: 'a $' + n(presoSouvenir) + ' cada uno', v: costoSouvenirs, format: 'ars' });
+      rows.push({ k: 'Costo total de logística', ref: '$' + n(costoTotal / invitados) + ' por invitado', v: costoTotal, format: 'ars', extra: true });
+
+      const partes = [mesas + ' mesas'];
+      if (sillas) partes.push(sillas + ' sillas');
+      if (meseros) partes.push(meseros + ' mozos');
+      partes.push(bartenders + ' bartender' + (bartenders === 1 ? '' : 's'));
+      partes.push(piezas + ' piezas de vajilla');
+      if (globos) partes.push(globos + ' globos');
+      if (souvenirs) partes.push(souvenirs + ' souvenirs');
+
+      return {
+        total: '$' + n(costoTotal),
+        sub:
+          partes.join(' · ') + ' — para ' + invitados + ' invitados durante ' + n(horas, 1) + ' h',
+        format: 'ars',
+        rows: rows,
+        chart: [
+          { label: 'Mesas y sillas', value: Math.round(costoMesas + costoSillas), tone: 'main' },
+          { label: 'Personal', value: Math.round(costoPersonal), tone: 'exit' },
+          { label: 'Vajilla', value: Math.round(costoVajilla), tone: 'prop' },
+          { label: 'Cotillón y globos', value: Math.round(costoCotillon + costoGlobos), tone: 'warn' },
+          { label: 'Invitaciones', value: Math.round(costoInvitaciones), tone: 'good' },
+          { label: 'Souvenirs', value: Math.round(costoSouvenirs), tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>

@@ -1,0 +1,249 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto café le pongo?"
+ * Reemplaza 6 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: seis métodos de preparación sobre un eje común, la
+ * relación agua:café en peso. El espresso entra al mismo eje por su brew ratio
+ * (líquido en taza ÷ dosis), que es el mismo número conceptual.
+ *
+ * Nada de lo que sale acá es plata: cada fila declara `format` explícito.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import { hub, METODOS, INTENSIDAD, CUCHARADA_G, EJE_MAX } from '../../lib/hubs/cafe';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ METODOS, INTENSIDAD, CUCHARADA_G, EJE_MAX, BANDS: hub.chart.bands }}
+>
+  (function () {
+    const H = window.HC_HUB;
+
+    const n1 = (x, d) => Number(x || 0).toLocaleString('es-AR', {
+      minimumFractionDigits: d == null ? 0 : d,
+      maximumFractionDigits: d == null ? 0 : d,
+    });
+
+    /** Franjas del eje agua:café, iguales para todos los métodos. */
+    function segsEje() {
+      return BANDS.map((b) => ({
+        label: b.label,
+        value: b.to - b.from,
+        from: b.from,
+        to: b.to,
+        tone: b.tone === 'neutral' ? 'main' : b.tone,
+      }));
+    }
+
+    /** Posición 0-100 de una relación sobre el eje del gráfico. */
+    const pos = (ratio) => Number(Math.min(100, Math.max(0, (ratio / EJE_MAX) * 100)).toFixed(1));
+
+    const perfil = (r) =>
+      r < 3 ? 'concentrado tipo espresso'
+      : r < 8 ? 'concentrado'
+      : r < 13 ? 'intenso y con cuerpo'
+      : r < 17 ? 'equilibrado'
+      : 'suave y liviano';
+
+    // ---------- Métodos por inmersión / filtrado ----------
+    // café = agua ÷ relación. La relación se corrige por intensidad.
+    function calcInfusion(v, id) {
+      const m = METODOS[id];
+      const tazas = Math.max(1, Math.round(Number(v.tazas) || 1));
+      const mlTaza = m.mlTaza != null ? m.mlTaza : Math.max(30, Number(v.mlTaza) || 250);
+      const ratio = m.ratio * (INTENSIDAD[v.intensidad] || 1);
+
+      const agua = tazas * mlTaza;
+      const cafe = agua / ratio;
+      const cucharadas = cafe / CUCHARADA_G;
+      const porTaza = cafe / tazas;
+
+      const rows = [
+        { k: 'Café molido', ref: 'molienda ' + m.molienda, v: cafe, format: 'unit', unit: 'g', decimals: 1, extra: true },
+        { k: 'Agua', ref: tazas + ' × ' + mlTaza + ' ml', v: agua, format: 'unit', unit: 'ml', decimals: 0, extra: true },
+        { k: 'Café por taza', ref: 'para dosificar de a una', v: porTaza, format: 'unit', unit: 'g', decimals: 1 },
+        { k: 'Equivale a cucharadas soperas', ref: '5,3 g por cucharada', v: cucharadas, format: 'unit', unit: 'cdas', decimals: 1 },
+        { k: 'Relación agua:café aplicada', ref: 'partes de agua por 1 de café', v: ratio, format: 'plain', decimals: 1 },
+        { k: 'Temperatura del agua', ref: m.nombre, v: m.temp, format: 'unit', unit: '°C', decimals: 0 },
+        { k: 'Tiempo de contacto', ref: m.nombre, v: m.minutos, format: 'unit', unit: 'min', decimals: 1 },
+      ];
+
+      return {
+        total: n1(cafe, 1) + ' g',
+        sub:
+          m.nombre + ' · ' + tazas + (tazas === 1 ? ' taza de ' : ' tazas de ') + mlTaza + ' ml = ' + agua +
+          ' ml de agua · relación 1:' + n1(ratio, 1) + ' (' + perfil(ratio) + ') · molienda ' + m.molienda +
+          ' · agua a ' + m.temp + ' °C',
+        rows: rows,
+        chart: segsEje(),
+        format: 'unit',
+        unit: 'g',
+        decimals: 1,
+        position: pos(ratio),
+        positionLabel:
+          'Relación 1:' + n1(ratio, 1) + ' — ' + perfil(ratio) + ' · ' + n1(cafe, 1) + ' g de café para ' + agua + ' ml',
+      };
+    }
+
+    // ---------- Espresso ----------
+    // El eje es el brew ratio: líquido en taza ÷ dosis.
+    function calcEspresso(v) {
+      const dosis = Math.max(1, Number(v.dosis) || 18);
+      const rend = Math.max(1, Number(v.rendimiento) || 36);
+      const seg = Math.max(1, Number(v.segundos) || 28);
+      const tds = Math.max(0, Number(v.tds) || 0);
+
+      const ratio = rend / dosis;
+      // Extraction yield: TDS × masa de líquido ÷ masa de café seco (SCA).
+      const ey = tds > 0 ? (tds * rend) / dosis : 0;
+      const tipo =
+        ratio < 1.2 ? 'Ristretto intenso'
+        : ratio < 1.6 ? 'Ristretto'
+        : ratio < 2.3 ? 'Espresso normale'
+        : ratio < 3.2 ? 'Lungo'
+        : 'Muy largo, tipo americano';
+
+      const rows = [
+        { k: 'Dosis en el portafiltro', ref: 'café molido seco', v: dosis, format: 'unit', unit: 'g', decimals: 1, extra: true },
+        { k: 'Líquido en taza', ref: 'pesado, no a ojo', v: rend, format: 'unit', unit: 'g', decimals: 1, extra: true },
+        { k: 'Brew ratio', ref: tipo, v: ratio, format: 'plain', decimals: 2 },
+        { k: 'Tiempo de extracción', ref: 'ideal 20 a 35 s', v: seg, format: 'unit', unit: 's', decimals: 0 },
+        { k: 'Temperatura del grupo', ref: 'referencia', v: METODOS.espresso.temp, format: 'unit', unit: '°C', decimals: 0 },
+      ];
+      if (ey > 0) {
+        rows.push({ k: 'Extraction yield', ref: 'ventana SCA 18 a 22%', v: ey, format: 'unit', unit: '%', decimals: 1, extra: true });
+        rows.push({ k: 'TDS medido', ref: 'refractómetro', v: tds, format: 'unit', unit: '%', decimals: 2 });
+      }
+
+      const lecturaTiempo =
+        seg < 20 ? 'tiempo corto: molienda demasiado gruesa, la taza sale ácida'
+        : seg > 35 ? 'tiempo largo: molienda demasiado fina, aparece amargor'
+        : 'tiempo dentro del rango ideal de 20 a 35 s';
+      const lecturaEy =
+        ey === 0 ? 'sin TDS cargado no se puede estimar el extraction yield'
+        : ey < 18 ? 'sub-extraído: moler más fino o subir la dosis'
+        : ey > 22 ? 'sobre-extraído: moler más grueso o bajar la temperatura'
+        : 'extraction yield dentro de la ventana SCA';
+
+      return {
+        total: n1(dosis, 1) + ' g',
+        sub:
+          tipo + ' · ' + n1(dosis, 1) + ' g dentro y ' + n1(rend, 1) + ' g en taza = ratio 1:' + n1(ratio, 2) +
+          ' en ' + seg + ' s · ' + lecturaTiempo + ' · ' + lecturaEy,
+        rows: rows,
+        chart: segsEje(),
+        format: 'unit',
+        unit: 'g',
+        decimals: 1,
+        position: pos(ratio),
+        positionLabel: 'Brew ratio 1:' + n1(ratio, 2) + ' — ' + tipo + ' en ' + seg + ' s',
+      };
+    }
+
+    // ---------- Cold brew ----------
+    function calcColdBrew(v) {
+      const m = METODOS.coldbrew;
+      const tazas = Math.max(1, Math.round(Number(v.tazas) || 1));
+      const mlTaza = Math.max(30, Number(v.mlTaza) || 250);
+      const horas = Math.max(1, Number(v.horas) || 16);
+      const ratio = m.ratio * (INTENSIDAD[v.intensidad] || 1);
+
+      // El concentrado se prepara sobre el volumen final ya diluido 1:1.
+      const servidoTotal = tazas * mlTaza;
+      const agua = servidoTotal / 2;
+      const cafe = agua / ratio;
+
+      const perfilHoras =
+        horas < 12 ? 'Suave, poco cuerpo'
+        : horas < 14 ? 'Balanceado'
+        : horas <= 18 ? 'Ideal: dulce y complejo'
+        : horas <= 24 ? 'Intenso, más tánico'
+        : 'Sobre-extraído, empieza a amargar';
+
+      const rows = [
+        { k: 'Café molido', ref: 'molienda ' + m.molienda, v: cafe, format: 'unit', unit: 'g', decimals: 1, extra: true },
+        { k: 'Agua para el concentrado', ref: 'relación 1:' + n1(ratio, 1), v: agua, format: 'unit', unit: 'ml', decimals: 0, extra: true },
+        { k: 'Concentrado que obtenés', ref: 'antes de diluir', v: agua, format: 'unit', unit: 'ml', decimals: 0 },
+        { k: 'Servido final diluyendo 1:1', ref: tazas + ' × ' + mlTaza + ' ml', v: servidoTotal, format: 'unit', unit: 'ml', decimals: 0 },
+        { k: 'Horas de infusión', ref: perfilHoras, v: horas, format: 'unit', unit: 'h', decimals: 0 },
+        { k: 'Temperatura de la heladera', ref: 'infusión en frío', v: m.temp, format: 'unit', unit: '°C', decimals: 0 },
+        { k: 'Relación agua:café del concentrado', ref: 'partes de agua por 1 de café', v: ratio, format: 'plain', decimals: 1 },
+      ];
+
+      return {
+        total: n1(cafe, 1) + ' g',
+        sub:
+          'Concentrado 1:' + n1(ratio, 1) + ' · ' + n1(cafe, 1) + ' g de café en ' + Math.round(agua) +
+          ' ml de agua durante ' + horas + ' h · ' + perfilHoras.toLowerCase() +
+          ' · diluido 1:1 rinde ' + servidoTotal + ' ml (' + tazas + (tazas === 1 ? ' taza)' : ' tazas)'),
+        rows: rows,
+        chart: segsEje(),
+        format: 'unit',
+        unit: 'g',
+        decimals: 1,
+        position: pos(ratio),
+        positionLabel:
+          'Relación 1:' + n1(ratio, 1) + ' durante ' + horas + ' h — ' + perfilHoras.toLowerCase(),
+      };
+    }
+
+    const BRANCH = {
+      filtro: (v) => calcInfusion(v, 'filtro'),
+      prensa: (v) => calcInfusion(v, 'prensa'),
+      moka: (v) => calcInfusion(v, 'moka'),
+      goteo: (v) => calcInfusion(v, 'goteo'),
+      espresso: calcEspresso,
+      coldbrew: calcColdBrew,
+    };
+
+    H.onCompute(function (v, kase) {
+      const fn = BRANCH[(kase && kase.id) || 'filtro'] || BRANCH.filtro;
+      return fn(v);
+    });
+  })();
+</script>

@@ -1,0 +1,450 @@
+---
+/**
+ * Hub de decisión — "¿Cuánto deja vender mi propia obra?"
+ * Reemplaza 6 URLs de calculadora suelta (ver hub.replaces).
+ *
+ * Arquetipo RAMIFICADO: 4 casos (streaming / ebook / audiolibro / suscriptores).
+ * La página sólo aporta datos (src/lib/hubs/vender-mi-contenido.ts) y compute().
+ *
+ * OJO MONEDA: este negocio liquida en DÓLARES. El runtime formatea en pesos por
+ * defecto y hace Object.assign, así que TODA fila declara `format` propio:
+ * 'unit' + unit 'USD' para plata, 'plain' para cantidades. La única fila en
+ * pesos es la equivalencia informativa al dólar oficial.
+ */
+export const prerender = true;
+
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import DecisionHub from '../../components/hub/DecisionHub.astro';
+import {
+  hub,
+  USD_ARS,
+  RATES_STREAM,
+  RATE_FALLBACK,
+  KDP,
+  AUDIBLE,
+  FEE_PLATAFORMA,
+  STRIPE,
+  FACTOR_ANUAL,
+  MESES,
+} from '../../lib/hubs/vender-mi-contenido';
+
+const CANONICAL = `https://hacecuentas.com/${hub.slug}`;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: hub.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: 'https://hacecuentas.com/' },
+        { '@type': 'ListItem', position: 2, name: hub.silo, item: `https://hacecuentas.com${hub.siloHref}` },
+        { '@type': 'ListItem', position: 3, name: hub.h1, item: CANONICAL },
+      ],
+    },
+  ],
+};
+---
+
+<Layout
+  title={hub.title}
+  description={hub.description}
+  canonical={CANONICAL}
+  schema={schema}
+  audience={hub.audience}
+  lang="es"
+  ogType="article"
+  articleSection={hub.silo}
+>
+  <Header />
+  <DecisionHub data={hub} />
+  <Footer />
+</Layout>
+
+<script
+  is:inline
+  define:vars={{ USD_ARS, RATES: RATES_STREAM, RATE_FALLBACK, KDP, AUDIBLE, FEE_PLATAFORMA, STRIPE, FACTOR_ANUAL, MESES }}
+>
+  (function () {
+    const H = window.HC_HUB;
+    const num = (x) => Math.max(0, Number(x) || 0);
+    const nf = (n, d) =>
+      Number(n || 0).toLocaleString('es-AR', {
+        minimumFractionDigits: d || 0,
+        maximumFractionDigits: d || 0,
+      });
+    const usd = (n, d) => 'US$ ' + nf(n, d === undefined ? 2 : d);
+
+    /** Fila con la equivalencia en pesos al dólar oficial. Única fila en 'ars'. */
+    function filaPesos(montoUsd, etiqueta) {
+      return {
+        k: etiqueta,
+        ref: 'dólar oficial a $' + nf(USD_ARS, 0),
+        v: montoUsd * USD_ARS,
+        format: 'ars',
+      };
+    }
+
+    H.onCompute(function (v, kase) {
+      const id = (kase && kase.id) || 'streaming';
+      const meta = num(v.meta_mensual);
+
+      // ── 1. Música en streaming ───────────────────────────────────────────
+      // Espejo de spotify-royalties-streams.ts y apple-music-royalties-pagos.ts.
+      // Ambas fórmulas hacen lo mismo: streams × rate del tier, menos el % del
+      // distribuidor. Se unifica en base MENSUAL (Spotify la pedía anual).
+      if (id === 'streaming') {
+        const servicio = v.servicio === 'apple' ? 'apple' : 'spotify';
+        const tabla = RATES[servicio] || {};
+        const rate = tabla[v.tier] || RATE_FALLBACK[servicio];
+        const streams = num(v.streams_mes);
+        const comPct = Math.min(100, num(v.comision_dist));
+
+        const brutoMes = streams * rate;
+        const comisionMes = brutoMes * (comPct / 100);
+        const netoMes = brutoMes - comisionMes;
+        const netoPorStream = rate * (1 - comPct / 100);
+        const streamsPorDolar = netoPorStream > 0 ? 1 / netoPorStream : 0;
+        const streamsMeta = netoPorStream > 0 ? meta / netoPorStream : 0;
+
+        return {
+          format: 'unit',
+          unit: 'USD',
+          decimals: 2,
+          total: usd(netoMes),
+          sub:
+            nf(streams, 0) +
+            ' streams al mes a ' +
+            usd(rate, 4) +
+            ' · te quedan ' +
+            usd(netoMes * MESES) +
+            ' al año · hacen falta ' +
+            nf(streamsPorDolar, 0) +
+            ' reproducciones para juntar un dólar neto',
+          rows: [
+            {
+              k: 'Pago por reproducción',
+              ref: (servicio === 'apple' ? 'Apple Music' : 'Spotify') + ' · tier elegido',
+              v: rate,
+              format: 'unit',
+              unit: 'USD',
+              decimals: 4,
+            },
+            { k: 'Streams por mes', v: streams, format: 'plain' },
+            { k: 'Ingreso bruto mensual', v: brutoMes, format: 'unit', unit: 'USD', decimals: 2 },
+            {
+              k: 'Comisión del distribuidor',
+              ref: nf(comPct, 0) + '% del bruto',
+              v: comisionMes,
+              format: 'unit',
+              unit: 'USD',
+              decimals: 2,
+            },
+            { k: 'Neto mensual', v: netoMes, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+            { k: 'Neto anual', v: netoMes * MESES, format: 'unit', unit: 'USD', decimals: 2 },
+            {
+              k: 'Lo que te deja cada reproducción',
+              v: netoPorStream,
+              format: 'unit',
+              unit: 'USD',
+              decimals: 5,
+            },
+            {
+              k: 'Reproducciones para juntar un dólar',
+              v: streamsPorDolar,
+              format: 'plain',
+            },
+            {
+              k: 'Streams por mes para llegar a tu meta',
+              ref: 'meta de ' + usd(meta, 0) + ' netos',
+              v: streamsMeta,
+              format: 'plain',
+            },
+            filaPesos(netoMes, 'Neto mensual en pesos'),
+          ],
+          chart: [
+            { label: 'Neto para vos', value: netoMes, tone: 'good' },
+            { label: 'Comisión del distribuidor', value: comisionMes, tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── 2. Ebook en Kindle KDP ───────────────────────────────────────────
+      // Espejo de kindle-kdp-ingreso-ebook.ts.
+      if (id === 'libro') {
+        const precio = num(v.precio_ebook);
+        const mb = num(v.peso_archivo);
+        const ventas = num(v.ventas_ebook);
+
+        const es70 = precio >= KDP.precioMin70 && precio <= KDP.precioMax70;
+        const delivery = es70 ? mb * KDP.deliveryPorMB : 0;
+        const royalty = es70 ? (precio - delivery) * KDP.royaltyAlta : precio * KDP.royaltyBaja;
+        const amazon = precio - royalty - delivery;
+        const mensual = royalty * ventas;
+        const copiasMeta = royalty > 0 ? meta / royalty : 0;
+
+        // Contrafáctico: la misma copia en el otro tramo, para que se vea el salto.
+        const royaltyOtroTramo = es70
+          ? precio * KDP.royaltyBaja
+          : (precio - mb * KDP.deliveryPorMB) * KDP.royaltyAlta;
+
+        return {
+          format: 'unit',
+          unit: 'USD',
+          decimals: 2,
+          total: usd(mensual),
+          sub:
+            (es70 ? 'Tramo del 70%' : 'Tramo del 35% — el precio quedó fuera de la banda de 2,99 a 9,99') +
+            ' · te quedan ' +
+            usd(royalty) +
+            ' de cada copia de ' +
+            usd(precio) +
+            ' · ' +
+            usd(mensual * MESES) +
+            ' al año con ' +
+            nf(ventas, 0) +
+            ' copias por mes',
+          rows: [
+            { k: 'Precio de lista', v: precio, format: 'unit', unit: 'USD', decimals: 2 },
+            {
+              k: 'Porcentaje de regalía que te toca',
+              ref: es70 ? 'precio dentro de la banda del 70%' : 'precio fuera de la banda del 70%',
+              v: es70 ? KDP.royaltyAlta * 100 : KDP.royaltyBaja * 100,
+              format: 'unit',
+              unit: '%',
+              decimals: 0,
+            },
+            {
+              k: 'Delivery fee del archivo',
+              ref: es70 ? nf(mb, 1) + ' MB × US$ 0,15' : 'no aplica en el tramo del 35%',
+              v: delivery,
+              format: 'unit',
+              unit: 'USD',
+              decimals: 2,
+            },
+            { k: 'Tu regalía por copia', v: royalty, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+            {
+              k: 'Se queda Amazon por copia',
+              v: amazon,
+              format: 'unit',
+              unit: 'USD',
+              decimals: 2,
+            },
+            {
+              k: 'La misma copia en el otro tramo',
+              ref: es70 ? 'si el precio se fuera de la banda' : 'si entraras a la banda del 70%',
+              v: royaltyOtroTramo,
+              format: 'unit',
+              unit: 'USD',
+              decimals: 2,
+            },
+            { k: 'Ingreso mensual', v: mensual, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Ingreso anual', v: mensual * MESES, format: 'unit', unit: 'USD', decimals: 2 },
+            {
+              k: 'Copias por mes para llegar a tu meta',
+              ref: 'meta de ' + usd(meta, 0),
+              v: copiasMeta,
+              format: 'plain',
+            },
+            filaPesos(mensual, 'Ingreso mensual en pesos'),
+          ],
+          chart: [
+            { label: 'Tu regalía', value: Math.max(0, royalty), tone: 'good' },
+            { label: 'Comisión de Amazon', value: Math.max(0, amazon), tone: 'warn' },
+            { label: 'Delivery fee', value: Math.max(0, delivery), tone: 'prop' },
+          ],
+        };
+      }
+
+      // ── 3. Audiolibro ────────────────────────────────────────────────────
+      // Espejo de audible-ingreso-audiolibro.ts.
+      if (id === 'audiolibro') {
+        const precio = num(v.precio_audiolibro);
+        const ventas = num(v.ventas_audiolibro);
+        const exclusivo = v.exclusividad !== 'no-exclusivo';
+        const comparte = v.narrador === 'si';
+
+        const royPct = exclusivo ? AUDIBLE.royaltyExclusivo : AUDIBLE.royaltyNoExclusivo;
+        const royVenta = precio * royPct;
+        const parteAutorVenta = comparte ? royVenta * (1 - AUDIBLE.parteNarrador) : royVenta;
+        const parteNarradorVenta = royVenta - parteAutorVenta;
+        const brutoMes = royVenta * ventas;
+        const netoMes = parteAutorVenta * ventas;
+        const tiendaVenta = precio - royVenta;
+        const copiasMeta = parteAutorVenta > 0 ? meta / parteAutorVenta : 0;
+
+        return {
+          format: 'unit',
+          unit: 'USD',
+          decimals: 2,
+          total: usd(netoMes),
+          sub:
+            (exclusivo ? 'Exclusivo: 40% de regalía' : 'No exclusivo: 25% de regalía') +
+            (comparte ? ', repartido 50 y 50 con el narrador' : ', sin reparto con el narrador') +
+            ' · ' +
+            usd(parteAutorVenta) +
+            ' para vos de cada copia de ' +
+            usd(precio) +
+            ' · ' +
+            usd(netoMes * MESES) +
+            ' al año',
+          rows: [
+            { k: 'Precio del audiolibro', v: precio, format: 'unit', unit: 'USD', decimals: 2 },
+            {
+              k: 'Porcentaje de regalía',
+              ref: exclusivo ? 'distribución exclusiva' : 'distribución amplia',
+              v: royPct * 100,
+              format: 'unit',
+              unit: '%',
+              decimals: 0,
+            },
+            { k: 'Regalía total por venta', v: royVenta, format: 'unit', unit: 'USD', decimals: 2 },
+            {
+              k: 'Parte del narrador por venta',
+              ref: comparte ? 'royalty share 50 y 50' : 'no compartís regalías',
+              v: parteNarradorVenta,
+              format: 'unit',
+              unit: 'USD',
+              decimals: 2,
+            },
+            {
+              k: 'Lo que te queda por venta',
+              v: parteAutorVenta,
+              format: 'unit',
+              unit: 'USD',
+              decimals: 2,
+              extra: true,
+            },
+            { k: 'Se queda la tienda por venta', v: tiendaVenta, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Regalía bruta mensual', v: brutoMes, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Neto del autor por mes', v: netoMes, format: 'unit', unit: 'USD', decimals: 2 },
+            { k: 'Neto del autor por año', v: netoMes * MESES, format: 'unit', unit: 'USD', decimals: 2 },
+            {
+              k: 'Copias por mes para llegar a tu meta',
+              ref: 'meta de ' + usd(meta, 0),
+              v: copiasMeta,
+              format: 'plain',
+            },
+            filaPesos(netoMes, 'Neto mensual en pesos'),
+          ],
+          chart: [
+            { label: 'Tu parte (autor)', value: Math.max(0, parteAutorVenta), tone: 'good' },
+            { label: 'Narrador', value: Math.max(0, parteNarradorVenta), tone: 'prop' },
+            { label: 'Se queda la tienda', value: Math.max(0, tiendaVenta), tone: 'warn' },
+          ],
+        };
+      }
+
+      // ── 4. Suscriptores pagos ────────────────────────────────────────────
+      // Espejo de newsletter-ingreso-suscriptores-pago.ts (revenue-share por
+      // plataforma + % del procesador) y de substack-suscriptores-meta.ts
+      // (mezcla de planes anuales al 84% y cargo fijo de Stripe por cobro).
+      const plat = String(v.plataforma_subs || 'substack');
+      const feePlatPct = FEE_PLATAFORMA[plat] !== undefined ? FEE_PLATAFORMA[plat] : 0;
+      const subs = num(v.suscriptores);
+      const precioMes = num(v.precio_suscripcion);
+      const pctAnual = Math.min(100, num(v.pct_anual)) / 100;
+      const procPct = num(v.procesador_pct);
+
+      // Precio efectivo mensualizado: los del plan anual pagan con descuento.
+      const precioEfectivo = precioMes * (1 - pctAnual) + precioMes * FACTOR_ANUAL * pctAnual;
+      // Cargo fijo mensualizado: el mensual paga uno por mes; el anual, uno cada 12.
+      const fijoMensualizado =
+        STRIPE.fijoPorCobro * (1 - pctAnual) + (STRIPE.fijoPorCobro / MESES) * pctAnual;
+
+      const brutoMes = subs * precioEfectivo;
+      const feePlatMes = brutoMes * (feePlatPct / 100);
+      const feeProcPctMes = brutoMes * (procPct / 100);
+      const feeProcFijoMes = subs * fijoMensualizado;
+      const netoMes = brutoMes - feePlatMes - feeProcPctMes - feeProcFijoMes;
+      const netoPorSub = subs > 0 ? netoMes / subs : 0;
+      const retenido = brutoMes > 0 ? (netoMes / brutoMes) * 100 : 0;
+      const subsMeta = netoPorSub > 0 ? Math.ceil(meta / netoPorSub) : 0;
+
+      return {
+        format: 'unit',
+        unit: 'USD',
+        decimals: 2,
+        total: usd(netoMes),
+        sub:
+          nf(subs, 0) +
+          ' suscriptores pagos dejan ' +
+          usd(netoPorSub) +
+          ' netos cada uno · te quedás con el ' +
+          nf(retenido, 1) +
+          '% del bruto · para ' +
+          usd(meta, 0) +
+          ' netos por mes necesitás ' +
+          nf(subsMeta, 0) +
+          ' suscriptores',
+        rows: [
+          {
+            k: 'Precio efectivo mensualizado',
+            ref: nf(pctAnual * 100, 0) + '% en plan anual con 16% de descuento',
+            v: precioEfectivo,
+            format: 'unit',
+            unit: 'USD',
+            decimals: 2,
+          },
+          { k: 'Ingreso bruto mensual', v: brutoMes, format: 'unit', unit: 'USD', decimals: 2 },
+          {
+            k: 'Revenue-share de la plataforma',
+            ref: nf(feePlatPct, 0) + '% del bruto',
+            v: feePlatMes,
+            format: 'unit',
+            unit: 'USD',
+            decimals: 2,
+          },
+          {
+            k: 'Comisión porcentual del procesador',
+            ref: nf(procPct, 1) + '% de cada cobro',
+            v: feeProcPctMes,
+            format: 'unit',
+            unit: 'USD',
+            decimals: 2,
+          },
+          {
+            k: 'Cargo fijo por transacción',
+            ref: 'US$ 0,30 por cobro, prorrateado',
+            v: feeProcFijoMes,
+            format: 'unit',
+            unit: 'USD',
+            decimals: 2,
+          },
+          { k: 'Neto mensual', v: netoMes, format: 'unit', unit: 'USD', decimals: 2, extra: true },
+          { k: 'Neto anual', v: netoMes * MESES, format: 'unit', unit: 'USD', decimals: 2 },
+          { k: 'Neto por suscriptor', v: netoPorSub, format: 'unit', unit: 'USD', decimals: 2 },
+          {
+            k: 'Porcentaje del bruto que te queda',
+            v: retenido,
+            format: 'unit',
+            unit: '%',
+            decimals: 1,
+          },
+          {
+            k: 'Suscriptores para llegar a tu meta',
+            ref: 'meta de ' + usd(meta, 0) + ' netos por mes',
+            v: subsMeta,
+            format: 'plain',
+          },
+          filaPesos(netoMes, 'Neto mensual en pesos'),
+        ],
+        chart: [
+          { label: 'Neto para vos', value: Math.max(0, netoMes), tone: 'good' },
+          { label: 'Plataforma', value: Math.max(0, feePlatMes), tone: 'warn' },
+          { label: 'Procesador (%)', value: Math.max(0, feeProcPctMes), tone: 'prop' },
+          { label: 'Cargo fijo', value: Math.max(0, feeProcFijoMes), tone: 'bad' },
+        ],
+      };
+    });
+  })();
+</script>
