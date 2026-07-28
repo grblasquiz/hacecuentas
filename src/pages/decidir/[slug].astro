@@ -41,19 +41,12 @@ const lastReviewedLabel = new Date(dateModified).toLocaleDateString('es-AR', {
 // Baseline SSR: el bot ve un resultado de ejemplo sin ejecutar JS.
 const initialResult = room.compute(room.example);
 
-// hreflang: si la sala tiene versiones país (co/mx/cl/pe), declarar el
-// cluster simétrico completo (misma lista en todos los miembros). Sin
-// versiones país → undefined y el Layout cae en su fallback es-AR self.
+// hreflang: las salas de país (/co|mx|cl|pe/decidir/*) se absorbieron en los
+// hubs de decisión de cada mercado y hoy son 301, así que el cluster quedó
+// reducido a la sala AR. Declarar un alternate hacia un redirect es señal rota
+// y el gate de hreflang lo marca como error.
 const eq = equivalentsByEsSlug(room.slug);
-const hreflang = eq
-  ? buildHreflangCluster({
-      es: `decidir/${eq.es}`,
-      co: eq.co ? `decidir/${eq.co}` : undefined,
-      mx: eq.mx ? `decidir/${eq.mx}` : undefined,
-      cl: eq.cl ? `decidir/${eq.cl}` : undefined,
-      pe: eq.pe ? `decidir/${eq.pe}` : undefined,
-    })
-  : undefined;
+const hreflang = eq ? buildHreflangCluster({ es: `decidir/${eq.es}` }) : undefined;
 
 // Hub primario de la sala (breadcrumb + salas hermanas). Puede ser null si la
 // sala no pertenece a ningún hub (auto/familia/ahorro viven solo en /decidir).
