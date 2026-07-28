@@ -610,10 +610,10 @@ for (const decision of PRIORITY_DECISIONS) {
     lastmod: clampToToday(room.lastReviewed),
   });
 }
-// Top categorías (las más grandes) — estable salvo deploys del template de categoría
-for (const cat of ['finanzas', 'vida', 'salud', 'educacion', 'mascotas', 'matematica', 'cocina', 'deportes', 'tecnologia', 'viajes', 'construccion', 'marketing', 'negocios', 'ciencia', 'automotor', 'familia', 'idiomas', 'jardineria', 'electronica', 'entretenimiento']) {
-  priorityUrls.push(prio(`/categoria/${cat}`, '0.85', 'weekly'));
-}
+// Las /categoria/* se dieron de baja el 28-07-2026: se generaban desde las calcs
+// sueltas de AR y, consolidadas en hubs, quedaron vacías. Hoy son 301 al silo
+// equivalente, así que no van al sitemap — una URL que redirige no se envía a
+// indexar. Los silos de hubs ya entran por su propio bloque.
 // Top calcs estrella verificadas (slugs reales — chequear con dist/ si agregás)
 // Expanded 2026-05-11: agregadas 22 CTR-rewritten + 45 con Information Gain (datos live)
 // Bing crawlea sitemap-priority 3-5x más frecuente que sitemaps por categoría.
@@ -1262,6 +1262,7 @@ if (glosarioTerms.length > 0) {
 // lastmod = lastReviewed editorial, NO buildDate: deployar otra cosa no mueve
 // estas URLs (regla #1/#3 de CLAUDE.md, anti-churn del sitemap).
 // ---------------------------------------------------------------------------
+const LOCALE_DIRS = new Set(['cl','co','do','ec','en','es','mx','pe','pt','pt-pt','py','uy','ve']);
 const decisionHubUrls: Url[] = (() => {
   const dir = join(ROOT, 'src', 'lib', 'hubs');
   if (!existsSync(dir)) return [];
@@ -1283,7 +1284,15 @@ const decisionHubUrls: Url[] = (() => {
   for (const f of files) {
     const base = f.split('/').pop()!;
     if (base === 'types.ts' || base === 'registry.ts') continue;
-    const src = readFileSync(join(dir, f), 'utf8');
+    const raw = readFileSync(join(dir, f), 'utf8');
+    // Cortar desde `export const hub`: un hub puede declarar arriba constantes
+    // con su propio `slug:` (p. ej. la tabla de calcs que absorbe), y el regex
+    // se quedaba con el PRIMERO del archivo. `casamiento.ts` publicaba así
+    // /calculadora-costo-boda-argentina —una URL que hoy es 301— y su hub real
+    // /eventos/casamiento quedaba fuera del sitemap, invisible para Google.
+    const hubStart = raw.indexOf('export const hub');
+    if (hubStart < 0) continue;
+    const src = raw.slice(hubStart);
     const slug = src.match(/^\s*slug:\s*'([^']+)'/m)?.[1];
     if (!slug || !slug.includes('/')) continue;
     const reviewed = src.match(/^\s*lastReviewed:\s*'([^']+)'/m)?.[1];
@@ -1298,6 +1307,21 @@ const decisionHubUrls: Url[] = (() => {
   // Página de silo: lastmod = el hub más fresco que contiene.
   for (const [href, lastmod] of silos) {
     urls.push({ loc: `${site}${href}`, priority: '0.8', changefreq: 'weekly', lastmod });
+  }
+  // Home de cada mercado (/co, /mx, /en…). Entraban al sitemap por el bloque de
+  // calcs de país, que murió con la consolidación en hubs: quedaron fuera pese a
+  // ser 200 y ser el destino del breadcrumb de TODOS los hubs de su mercado.
+  // El lastmod es el del hub más fresco del mercado, no el buildDate, para no
+  // moverlas en cada deploy (regla #3 del proyecto).
+  const homes = new Map<string, string>();
+  for (const [href, lastmod] of silos) {
+    const cc = href.split('/')[1];
+    if (!cc || !LOCALE_DIRS.has(cc)) continue;
+    const prev = homes.get(cc);
+    if (!prev || lastmod > prev) homes.set(cc, lastmod);
+  }
+  for (const [cc, lastmod] of homes) {
+    urls.push({ loc: `${site}/${cc}`, priority: '0.85', changefreq: 'weekly', lastmod });
   }
   return urls;
 })();
@@ -1327,25 +1351,12 @@ if (DECISION_MANIFEST.length > 0) {
       lastmod: clampToToday(r.lastReviewed),
     })),
   ];
-  // Salas país (/co|mx|cl|pe/decidir/*) — mismo criterio anti-churn: lastmod
-  // editorial de cada sala; el índice país toma el máximo de sus salas.
-  const decidirCountries = [...new Set(DECISION_MANIFEST_LOCALES.map((r) => r.country))];
-  for (const cc of decidirCountries) {
-    const ccRooms = DECISION_MANIFEST_LOCALES.filter((r) => r.country === cc);
-    const ccLastmod = maxLastmod(
-      ccRooms.map((r) => ({ loc: '', priority: '', changefreq: '', lastmod: clampToToday(r.lastReviewed) })),
-      buildDate,
-    );
-    decidirUrls.push({ loc: `${site}/${cc}/decidir`, priority: '0.8', changefreq: 'weekly', lastmod: ccLastmod });
-    for (const r of ccRooms) {
-      decidirUrls.push({
-        loc: `${site}/${cc}/decidir/${r.slug}`,
-        priority: '0.8',
-        changefreq: 'monthly',
-        lastmod: clampToToday(r.lastReviewed),
-      });
-    }
-  }
+  // Las salas país (/co|mx|cl|pe/decidir/*) se dieron de baja el 28-07-2026: cada
+  // una respondía una pregunta que hoy responde un hub del mismo mercado, con más
+  // calculadoras adentro. Son 301 al hub equivalente, así que NO van al sitemap.
+  // El manifest (DECISION_MANIFEST_LOCALES) sigue existiendo porque alimenta el
+  // copy y los equivalentes de hreflang; no confundir "hay datos" con "hay página".
+  // Las salas de AR (/decidir/*) sí siguen vivas y entran arriba.
   sitemaps.push({ name: 'sitemap-decidir.xml', urls: decidirUrls });
 }
 
@@ -1372,53 +1383,14 @@ if (PRODUCTS.length > 0) {
   sitemaps.push({ name: 'sitemap-mi.xml', urls: miUrls });
 }
 
-// 8. Argentina provincial — lastmod del JSON de la calc
-const argUrls: Url[] = [];
-for (const calc of argCalcs as any[]) {
-  // Las páginas provinciales son vistas derivadas de una calculadora raíz.
-  // Si la raíz quedó noindex/restringida, ninguna variante provincial puede
-  // permanecer en sitemap. `calcBySlug` contiene sólo calcs distribuibles.
-  //
-  // Pero "raíz retirada" ≠ "raíz que nunca existió": hay familias provinciales
-  // sin calc raíz en src/content/calcs (ej. impuesto-inmobiliario). Ahí las 24
-  // páginas de provincia SÍ son 200 indexables y quedaban fuera de todo sitemap
-  // por este gate (audit 2026-07-24). Sólo las excluimos si la raíz existe pero
-  // no es distribuible, o si la propia URL está podada/410.
-  if (!calcBySlug.has(calc.calcSlug) && allCalcSlugs.has(calc.calcSlug)) continue;
-  // Buscar el archivo JSON en argentina/ que corresponda
-  const argFile = safeReadDir(ARGENTINA_DIR).find(f => {
-    if (f === 'provincias.json') return false;
-    try {
-      const c = JSON.parse(readFileSync(join(ARGENTINA_DIR, f), 'utf8'));
-      return c.calcSlug === calc.calcSlug;
-    } catch { return false; }
-  });
-  const fp = argFile ? join(ARGENTINA_DIR, argFile) : '';
-  const mtime = getLastMod(fp, buildDate);
-  for (const p of provincias) {
-    if (calc.provinceData && calc.provinceData[p.slug]) {
-      argUrls.push({
-        loc: `${site}/argentina/${p.slug}/${calc.calcSlug}`,
-        priority: '0.6',
-        changefreq: 'monthly',
-        lastmod: mtime,
-      });
-    }
-  }
-}
-// Hubs por provincia (/argentina/{provincia}) — páginas índice 200 que faltaban
-// en el sitemap (Google las marcaba "rastreada sin indexar" por no estar listadas).
-for (const p of provincias) {
-  argUrls.push({
-    loc: `${site}/argentina/${p.slug}`,
-    priority: '0.7',
-    changefreq: 'monthly',
-    lastmod: buildDate,
-  });
-}
-if (argUrls.length > 0) {
-  sitemaps.push({ name: 'sitemap-argentina.xml', urls: argUrls });
-}
+// 8. Argentina provincial — DADO DE BAJA el 28-07-2026.
+// Eran 5 calculadoras replicadas en 24 provincias (120 páginas + 24 índices):
+// el mismo cálculo con otra tabla provincial. Se absorbieron en los hubs que ya
+// cubrían cada tema (patente → /auto/patente, IIBB → /impuestos/ingresos-brutos,
+// m² → /construccion/costo-por-m2, sellos → /vivienda/gastos-de-escritura,
+// inmobiliario → /impuestos/bienes-personales) y hoy las 144 URLs son 301.
+// El contenido de src/content/argentina/ sigue en el repo por si se quiere
+// recuperar la tabla provincial dentro de un hub con selector de provincia.
 
 // 8b. Informes (/informes/<slug>) y verticales de partners (/partners/<vertical>).
 // Los hubs /informes y /partners ya estaban en core(), pero sus hijos —páginas 200

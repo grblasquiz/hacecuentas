@@ -182,7 +182,6 @@ export const GONE_410_URLS: ReadonlySet<string> = new Set<string>([
   "/calculadora-domotica-alexa-google-suscripcion-mensual",
   "/calculadora-duracion-modificada-bono-riesgo-tasa",
   "/calculadora-edad-conversar-temas-dificiles-hijo",
-  "/calculadora-edad-gestacional-corregida-prematuro",
   "/calculadora-edad-gestacional-perro-gato-camada-fecha-parto",
   "/calculadora-edad-optima-aprender-idioma-ninos-adultos",
   "/calculadora-edad-perro-gato-anos-humanos-tabla-2026-actualizada",
@@ -242,7 +241,6 @@ export const GONE_410_URLS: ReadonlySet<string> = new Set<string>([
   "/calculadora-horas-dormir-pareja-discusion-impacto",
   "/calculadora-horas-pareja-calidad-semanal-relacion",
   "/calculadora-horas-semanales-mantener-nivel-idioma",
-  "/calculadora-horas-sueno-necesarias-edad-adulto",
   "/calculadora-hot-sale-cuotas-sin-interes-vs-contado",
   "/calculadora-hotel-vs-airbnb-vs-hostel-noche-comparativa",
   "/calculadora-huella-carbono-ropa-armario-anual",
@@ -466,28 +464,12 @@ export const GONE_410_URLS: ReadonlySet<string> = new Set<string>([
   "/calculadora-youtube-ctr-thumbnail-promedio",
   "/calculadora-zapata-aislada-columnas",
   "/calculadora-zinc-diario-necesidad",
-  "/en/average-calculator",
   "/en/cat-vaccine-schedule",
-  "/en/compound-interest-calculator-long-term",
   "/monotributo-vs-categoria-optima",
   "/pt/vacinas-gato-triplice-leucemia-raiva",
 
   // ── Batch poda TIER 1 (2026-07-11): 58 URLs muertas en Google+Bing+GA4 +2 meses.
   // Fuente: reports/prune-candidates-2026-07-10.md filtrado (900 − 839 ya podadas − 3 mejoradas hoy).
-  "/calculadora-agua-riego-plantas-dia",
-  "/calculadora-asignacion-familiar-anses-2026-tramos-ingreso",
-  "/calculadora-cilindrada-motor-relacion-potencia",
-  "/calculadora-conversor-horas-a-minutos",
-  "/calculadora-esperanza-vida-gato-raza-indoor",
-  "/calculadora-indice-glucemico-carga-alimento-porcion",
-  "/calculadora-usdt-vs-usdc-comision-exchange",
-  "/calculadora-vo2max-predecir-carrera-cooper-12min",
-  "/en/arithmetic-progression-nth-term-sum",
-  "/en/aws-ec2-monthly-cost-calculator",
-  "/en/daily-dietary-fiber-intake-calculator",
-  "/en/ivf-due-date-calculator",
-  "/en/logarithm-base-any-number",
-  "/en/waist-to-hip-ratio-cardiovascular-health",
 
   // ── Poda 2026-07-17: 52 calcs de plata cuarentenadas el 7-14 con CERO tráfico
   // en 90d (GA4). Regla de Martin: 100% operativa o borrada. Las que tenían
