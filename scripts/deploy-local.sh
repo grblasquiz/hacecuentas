@@ -488,11 +488,12 @@ if [ "$SMOKE" = true ]; then
   # ambos casos la poda de calcs las convirtió en 301. Preferí siempre HUBS, que
   # son destino y no origen de redirect.
   #
-  # El embed es el único que obliga a apuntar a una calc suelta (prueba que
-  # Static Assets sirve /embed/*), y hoy sólo sobrevive una: inecuaciones, que se
-  # dejó viva a propósito porque el hub de ecuaciones únicamente porta la lineal.
-  # Si algún día se poda, hay que cambiar esta URL o sacar el embed del smoke.
-  for url in / /salud/peso-ideal-imc /trabajo/sueldo-bruto-y-neto /en/bmi-calculator /es /sitemap.xml /embed/calculadora-inecuaciones /dolar-hoy-mexico; do
+  # SIN URL DE EMBED (28-07-2026): `/embed/[slug].astro` genera sus rutas desde
+  # `src/content/calcs/*.json`, o sea sólo las calcs sueltas de AR — y ya no
+  # queda ninguna, así que /embed/* está VACÍO. El feature (plugin de WordPress,
+  # /embeber, oEmbed) no tiene nada que servir hasta que se le dé soporte a los
+  # hubs. Cuando eso pase, volvé a meter una URL de embed acá.
+  for url in / /salud/peso-ideal-imc /trabajo/sueldo-bruto-y-neto /en/bmi-calculator /es /sitemap.xml /matematica/ecuaciones-y-polinomios /dolar-hoy-mexico; do
     STATUS=$(curl -sS -o /dev/null -w "%{http_code}" -A "HC-LocalDeploy/1.0" "https://hacecuentas.com$url" || echo "ERR")
     if [ "$STATUS" = "200" ]; then
       echo "  ✓ $url"
