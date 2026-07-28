@@ -87,6 +87,17 @@ export const onRequest = defineMiddleware(async (context, next) => {
     if (target) {
       return Response.redirect(`https://hacecuentas.com${target}`, 301);
     }
+
+    // Los /embed/<slug> son iframes que viven en sitios de terceros: si podamos
+    // el calc, el iframe pasa a mostrar un 404 en la página de otro. Mandamos
+    // el embed al destino del calc para que el visitante aterrice en algo útil
+    // en vez de en un error dentro de un recuadro.
+    if (url.pathname.startsWith('/embed/')) {
+      const embedTarget = PRUNING_REDIRECTS['/' + url.pathname.slice('/embed/'.length)];
+      if (embedTarget) {
+        return Response.redirect(`https://hacecuentas.com${embedTarget}`, 301);
+      }
+    }
   }
 
   // ────── Cross-Origin isolation headers ──────

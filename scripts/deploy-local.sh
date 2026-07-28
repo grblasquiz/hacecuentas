@@ -474,9 +474,15 @@ if [ "$SMOKE" = true ]; then
   log "smoke test (pre-purge)..."
   sleep 5
   FAIL=0
-  # Cubre estático (calc/home/locale), embed (asset), ruta SSR (dolar-hoy → valida
+  # Cubre estático (hub/home/locale), embed (asset), ruta SSR (dolar-hoy → valida
   # que el worker sirve SSR) y sitemap. Un break del split-build cae acá → rollback.
-  for url in / /calculadora-imc /calculadora-aguinaldo-sac /en/bmi-calculator /es /sitemap.xml /embed/calculadora-imc /dolar-hoy-mexico; do
+  #
+  # OJO al elegir estas URLs: tienen que estar VIVAS y devolver 200. Antes esta
+  # lista apuntaba a /calculadora-imc, /calculadora-aguinaldo-sac y su embed;
+  # los hubs de decisión las absorbieron, así que pasaron a devolver 301 (y el
+  # embed 404) y el smoke disparó un auto-rollback de una versión que estaba
+  # sana. Si volvés a podar algo de acá, cambiá la URL por su hub.
+  for url in / /salud/peso-ideal-imc /trabajo/sueldo-bruto-y-neto /en/bmi-calculator /es /sitemap.xml /embed/calculadora-anos-luz-distancia-conversion /dolar-hoy-mexico; do
     STATUS=$(curl -sS -o /dev/null -w "%{http_code}" -A "HC-LocalDeploy/1.0" "https://hacecuentas.com$url" || echo "ERR")
     if [ "$STATUS" = "200" ]; then
       echo "  ✓ $url"
