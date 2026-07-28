@@ -1,0 +1,114 @@
+---
+interface Props { data: any; caseMath: Record<string,{factor:number;extra:number}> }
+const { data, caseMath } = Astro.props;
+---
+<main id="main" class="severance">
+  <section class="hero">
+    <div class="shell crumb"><a href="/trabajo">Trabajo</a><span>/</span>Indemnización por despido</div>
+    <div class="shell hero-grid">
+      <div class="intro">
+        <span class="eyebrow">Calculadora laboral</span>
+        <h1>Te despidieron.<br>Veamos si la cuenta está bien.</h1>
+        <p>Estimá cuánto te corresponde y entendé cada concepto de tu liquidación. Usamos la legislación laboral vigente.</p>
+        <div class="trust">
+          <span><svg viewBox="0 0 24 24"><path d="M7 11V8a5 5 0 0 1 10 0v3M5 11h14v10H5z"/></svg>Datos privados</span>
+          <span><svg viewBox="0 0 24 24"><path d="M5 20h14M7 17V7h10v10M10 7V4h4v3"/></svg>Ley vigente</span>
+          <span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Actualizado julio 2026</span>
+        </div>
+        <svg class="hero-art" viewBox="0 0 500 250" role="img" aria-label="Documento de liquidación revisado">
+          <defs><filter id="doc-shadow"><feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#183558" flood-opacity=".13"/></filter></defs>
+          <rect x="63" y="28" width="260" height="196" rx="16" fill="#fff" filter="url(#doc-shadow)"/>
+          <path d="M101 68h120M101 98h166M101 128h132M101 175h96" stroke="#c7d8ee" stroke-width="11" stroke-linecap="round"/>
+          <path d="m288 150 34 34 83-99" fill="none" stroke="#1c9a68" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <form class="calculator" id="severance-form">
+        <div class="calc-head"><h2>Estimá tu indemnización</h2><span>Resultado orientativo</span></div>
+        <fieldset><legend>¿Cuál es tu situación?</legend><div class="cases">
+          {data.cases.items.map((item:any, i:number)=><label class:list={{active:i===0}}><input type="radio" name="case" value={item.id} checked={i===0}><i><svg viewBox="0 0 18 18"><path d="m4 9 3 3 7-7"/></svg></i><strong>{item.label}</strong><small>{item.hint}</small></label>)}
+        </div></fieldset>
+        <div class="input-title">Tus datos principales</div>
+        <label class="field salary"><span>Mejor sueldo bruto del último año</span><div><b>$</b><input id="salary" inputmode="numeric" value="1.500.000"></div></label>
+        <div class="fields">
+          <label class="field"><span>Años de antigüedad</span><input id="years" type="number" min="0" value="7"></label>
+          <label class="field"><span>Meses extra</span><input id="months" type="number" min="0" max="11" value="5"></label>
+          <label class="field"><span>Día del despido</span><input id="day" type="number" min="1" max="31" value="15"></label>
+        </div>
+        <details class="cap"><summary>Agregar tope de convenio</summary><label class="field"><span>Tope Art. 245 · dejalo en 0 si no lo sabés</span><div><b>$</b><input id="cap" inputmode="numeric" value="0"></div></label><p>Si el tope recorta más del 33%, se aplica el piso del 67% del fallo Vizzoti.</p></details>
+        <section class="result" aria-live="polite">
+          <div class="result-head"><div><span>Estimación total bruta</span><strong id="total">$0</strong></div><b id="salary-count">0 sueldos + rubros</b></div>
+          <div class="result-summary"><span>Antigüedad<b id="seniority">$0</b></span><span>Preaviso<b id="notice">$0</b></span><span>Otros rubros<b id="others">$0</b></span></div>
+          <p id="result-detail"></p>
+          <div class="actions"><button type="submit">Actualizar cálculo</button><button type="button" class="share">Compartir</button></div>
+        </section>
+        <p class="fineprint"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"/><path d="M10 9v5M10 6v.2"/></svg>Estimación bruta y orientativa. El convenio, los topes y tu situación particular pueden modificarla.</p>
+      </form>
+    </div>
+  </section>
+
+  <section class="breakdown shell">
+    <header><span>Tu liquidación, concepto por concepto</span><h2>Entendé cómo se forma el total</h2><p>Podés comparar cada rubro con el recibo o la propuesta que te dieron.</p></header>
+    <div class="breakdown-grid">
+      <article class="card rows-card"><h3>Desglose estimado</h3><div class="rows" id="rows"></div><div class="row total-row"><div><i><svg viewBox="0 0 24 24"><path d="M6 4h12v16H6zM9 9h6M9 14h6"/></svg></i><span><b>Total estimado bruto</b><small>Antes de descuentos o retenciones</small></span></div><strong id="total-row">$0</strong></div></article>
+      <aside class="card legal"><div class="legal-top"><i><svg viewBox="0 0 32 32"><path d="M7 3h13l5 5v21H7zM20 3v6h5M11 15h10M11 20h10"/></svg></i><div><span>Regla principal</span><h3 id="legal-title">Antigüedad · Art. 245</h3></div></div><p id="legal-copy">Corresponde un sueldo por cada año trabajado o fracción mayor a tres meses.</p><div class="formula" id="formula">Base salarial × años computables</div><div class="warning"><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"/><path d="M10 5v6M10 14v.2"/></svg><span id="warning">El tope de convenio y el piso del fallo Vizzoti pueden cambiar la base.</span></div></aside>
+    </div>
+  </section>
+
+  <section class="next"><div class="shell"><header><span>Qué hacer ahora</span><h2>Tres pasos para revisar tu liquidación</h2><p>La calculadora orienta; estos documentos permiten validar el número real.</p></header><div class="steps">
+    <article><b>1</b><h3>Buscá tu mejor sueldo</h3><p>Revisá los últimos 12 recibos y tomá la mejor remuneración mensual, normal y habitual.</p><a href="#faq">Qué conceptos incluir</a></article>
+    <article><b>2</b><h3>Confirmá tu antigüedad</h3><p>Usá la fecha real de ingreso. Una fracción mayor a tres meses cuenta como un año adicional.</p><a href="#faq">Cómo contar los meses</a></article>
+    <article><b>3</b><h3>Compará rubro por rubro</h3><p>Antigüedad, preaviso, integración, aguinaldo y vacaciones deben figurar por separado.</p><a href="#breakdown">Ver el desglose</a></article>
+  </div></div></section>
+
+  <section class="timeline shell"><header><span>Plazos importantes</span><h2>Qué pasa después del despido</h2><p>Guardá telegramas, recibos y constancias: son la base para cualquier reclamo.</p></header><div class="timeline-row">
+    <article><i></i><h3>Notificación</h3><p>Recibís el telegrama o comunicación formal del despido.</p></article>
+    <article><i></i><h3>4 días hábiles</h3><p>Vence el plazo general para pagar la liquidación final.</p></article>
+    <article><i></i><h3>Revisión</h3><p>Comparás el recibo y consultás si hay diferencias o rubros omitidos.</p></article>
+  </div></section>
+
+  <section class="content shell" id="faq">
+    <article><span>Tu resultado, explicado</span><h2>Cada rubro tiene una regla distinta</h2><p>La indemnización por antigüedad es sólo una parte de la liquidación. También pueden corresponder preaviso, integración del mes, aguinaldo proporcional y vacaciones no gozadas. La situación concreta y el convenio aplicable pueden modificar la base.</p></article>
+    <section class="faq"><h2>Preguntas frecuentes</h2>{data.faq.map((f:any,i:number)=><details open={i===0}><summary>{f.q}<svg viewBox="0 0 20 20"><path d="m5 7 5 5 5-5"/></svg></summary><p>{f.a}</p></details>)}</section>
+    <section class="sources"><h2>Fuentes oficiales</h2>{data.sources.map((s:any)=><a href={s.url} target="_blank" rel="noopener"><span>{s.name}<small>{s.publisher}{s.date?` · ${s.date}`:''}</small></span><svg viewBox="0 0 20 20"><path d="M7 5h8v8M15 5 6 14"/></svg></a>)}</section>
+  </section>
+</main>
+
+<script is:inline define:vars={{ MATH: caseMath }}>
+(() => {
+  const $=id=>document.getElementById(id), form=$('severance-form'); if(!form)return;
+  const money=n=>'$'+Math.round(n||0).toLocaleString('es-AR');
+  const number=raw=>Number(String(raw||'').replace(/[^\d,-]/g,'').replace(/\./g,'').replace(',','.'))||0;
+  const cases={
+    'sin-causa':['Antigüedad · Art. 245','Corresponde un sueldo por cada año trabajado o fracción mayor a tres meses.'],
+    'fuerza-mayor':['Falta de trabajo · Art. 247','La antigüedad se reduce al 50%; preaviso y proporcionales se mantienen.'],
+    embarazo:['Estabilidad especial','Se suma una indemnización agravada de 13 sueldos.'],
+    enfermedad:['Licencia por enfermedad','Estar de licencia no elimina la indemnización laboral.'],
+    'art-permanente':['Incapacidad permanente','La prestación de la ART va por separado de la indemnización laboral.'],
+    'art-temporaria':['Incapacidad temporaria','Durante la ILT se aplica el ingreso base y la ART cubre desde el día 11.'],
+    preaviso:['Preaviso · Arts. 231 y 232','Se estima la indemnización sustitutiva por el plazo omitido.'],
+    accidente:['Resarcimiento civil','La vía civil es independiente y requiere evaluación profesional.']
+  };
+  function compute(){
+    const id=form.querySelector('input[name=case]:checked')?.value||'sin-causa',m=MATH[id]||{factor:1,extra:0},salary=number($('salary').value),years=Math.max(0,Number($('years').value||0)),months=Math.max(0,Math.min(11,Number($('months').value||0))),day=Math.max(1,Math.min(30,Number($('day').value||1))),cap=Math.max(0,number($('cap').value)),totalMonths=years*12+months,computable=years+(months>3?1:0),noticeMonths=totalMonths>60?2:1;
+    let base=salary,vizzoti=false;if(cap>0){const floor=salary*.67;if(cap<floor){base=floor;vizzoti=true}else base=cap}
+    const seniority=base*computable*m.factor,notice=salary*noticeMonths,sacNotice=notice/12,integration=salary/30*Math.max(0,30-day),sacIntegration=integration/12,sacProp=salary/2*3/6,vacDays=totalMonths<=60?14:totalMonths<=120?21:totalMonths<=240?28:35,vacation=salary/25*(vacDays/2),sacVacation=vacation/12,aggravated=salary*m.extra;
+    const rows=[];if(m.factor>0)rows.push(['Indemnización por antigüedad','Art. 245',seniority]);rows.push(['Preaviso',noticeMonths+' '+(noticeMonths===1?'mes':'meses'),notice],['SAC sobre preaviso','Art. 123',sacNotice],['Integración del mes','Art. 233',integration],['SAC sobre integración','Art. 123',sacIntegration],['Aguinaldo proporcional','Art. 121',sacProp],['Vacaciones no gozadas','Art. 156',vacation],['SAC sobre vacaciones','Art. 123',sacVacation]);if(aggravated>0)rows.push(['Indemnización agravada','13 sueldos',aggravated]);
+    const total=rows.reduce((a,r)=>a+r[2],0),other=total-seniority-notice;
+    $('total').textContent=money(total);$('total-row').textContent=money(total);$('seniority').textContent=money(seniority);$('notice').textContent=money(notice);$('others').textContent=money(other);$('salary-count').textContent=computable+' '+(computable===1?'sueldo':'sueldos')+' + rubros';
+    $('result-detail').textContent=computable+' años computables · mejor sueldo '+money(salary)+(cap>0?(vizzoti?' · base con piso Vizzoti '+money(base):' · base topeada '+money(base)):'')+(m.factor===.5?' · antigüedad al 50%':'');
+    const meta=cases[id];$('legal-title').textContent=meta[0];$('legal-copy').textContent=meta[1];$('formula').textContent=(m.factor===0?'Preaviso + SAC sobre preaviso':money(base)+' × '+computable+(m.factor===.5?' × 50%':'')+' = '+money(seniority));$('warning').textContent=id==='embarazo'?'La protección exige que el embarazo haya sido notificado de forma fehaciente.':'El tope de convenio y el piso del fallo Vizzoti pueden cambiar la base.';
+    $('rows').innerHTML=rows.map((r,i)=>`<div class="row"><div><i><svg viewBox="0 0 24 24"><path d="${i===0?'M5 20h14M7 17V7h10v10M10 7V4h4v3':'M4 6h16v14H4zM8 3v6M16 3v6'}"/></svg></i><span><b>${r[0]}</b><small>${r[1]}</small></span></div><strong>${money(r[2])}</strong></div>`).join('');
+    document.querySelectorAll('.cases label').forEach(l=>l.classList.toggle('active',l.querySelector('input').checked));
+  }
+  form.addEventListener('submit',e=>{e.preventDefault();compute()});form.addEventListener('input',compute);form.addEventListener('change',compute);
+  document.querySelector('.share').addEventListener('click',async()=>{const text='Mi indemnización estimada es '+$('total').textContent;try{if(navigator.share)await navigator.share({title:'Indemnización por despido',text,url:location.href});else await navigator.clipboard.writeText(text+' '+location.href)}catch{}});
+  compute();
+})();
+</script>
+
+<style>
+  .severance{--blue:#246ddc;--navy:#163253;--green:#19764e;--amber:#e79a22;color:#14233b;background:#fff}.shell{width:min(1120px,calc(100% - 40px));margin-inline:auto}.hero{position:relative;overflow:hidden;background:#f5f8fc;padding:34px 0 70px}.hero:after{content:"";position:absolute;width:520px;height:520px;border:95px solid #eaf1fb;border-radius:50%;right:-260px;top:-210px}.crumb{display:flex;gap:10px;color:#738398;font-size:13px;position:relative;z-index:1}.crumb a{color:var(--blue);font-weight:700;text-decoration:none}.hero-grid{display:grid;grid-template-columns:.87fr 1.13fr;gap:64px;position:relative;z-index:1;margin-top:36px}.eyebrow{display:flex;align-items:center;gap:9px;color:var(--blue);text-transform:uppercase;letter-spacing:.13em;font-size:12px;font-weight:800}.eyebrow:before{content:"";width:27px;height:2px;background:var(--blue)}.intro h1{font-size:53px;line-height:1.04;letter-spacing:-.055em;margin:20px 0}.intro>p{font-size:17px;line-height:1.65;color:#5c6c80}.trust{display:flex;gap:9px;margin-top:28px}.trust span{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #dce3ec;border-radius:9px;padding:9px 11px;font-size:10px;color:#596b80}.trust svg{width:17px;fill:none;stroke:var(--blue);stroke-width:1.7}.hero-art{width:92%;margin-top:32px}.calculator{background:#fff;border:1px solid #dce3ec;border-radius:18px;padding:28px 31px;box-shadow:0 20px 55px #18355817}.calc-head{display:flex;justify-content:space-between;align-items:start}.calc-head h2{font-size:24px;margin:0}.calc-head span{font-size:10px;color:#78899b}.calculator fieldset{border:0;padding:0;margin:22px 0 0}.calculator legend,.input-title{font-size:12px;font-weight:750;margin-bottom:9px}.cases{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.cases label{position:relative;min-height:68px;border:1px solid #dce3eb;border-radius:9px;padding:8px;display:flex;flex-direction:column;justify-content:center;cursor:pointer}.cases input{position:absolute;opacity:0}.cases strong{font-size:9px;line-height:1.25}.cases small{font-size:8px;line-height:1.3;color:#76879a;margin-top:4px}.cases label.active{grid-column:span 2;border:1.5px solid var(--blue);box-shadow:inset 0 0 0 1px var(--blue);background:#f4f8ff}.cases label.active strong{font-size:11px;color:var(--blue)}.cases label i{display:none}.cases label.active i{display:grid;place-items:center;width:19px;height:19px;border-radius:50%;background:var(--blue);margin-bottom:5px}.cases label i svg{width:13px;fill:none;stroke:#fff;stroke-width:2.2}.input-title{margin-top:20px}.field{display:block;border:1.5px solid #dce3eb;border-radius:10px;padding:9px 12px}.field span{display:block;font-size:9px;color:#74869a;margin-bottom:4px}.field div{display:flex;align-items:center;gap:7px}.field input{width:100%;border:0;outline:0;background:none;color:inherit;font:700 15px inherit}.field.salary input{font-size:19px}.fields{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:9px}.cap{font-size:10px;color:#65788d;margin:12px 0}.cap summary{cursor:pointer}.cap .field{margin-top:9px}.cap p{font-size:9px;line-height:1.4}.result{background:var(--navy);color:#fff;border-radius:13px;padding:19px 21px;margin-top:13px}.result-head{display:flex;justify-content:space-between;align-items:start}.result-head span{font-size:10px;color:#b9c9dc}.result-head strong{display:block;font-size:34px;letter-spacing:-.04em;margin-top:5px}.result-head>b{background:#e8f8f1;color:var(--green);border-radius:99px;padding:7px 9px;font-size:9px}.result-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;border-top:1px solid #35516f;margin-top:14px;padding-top:11px}.result-summary span{font-size:8px;color:#afc0d3}.result-summary b{display:block;color:#fff;font-size:11px;margin-top:3px}.result>p{font-size:9px;color:#b8c9da;line-height:1.4;min-height:25px}.actions{display:flex;gap:8px}.actions button{border:0;border-radius:8px;padding:11px 12px;font-weight:750;cursor:pointer}.actions button:first-child{flex:1;background:#397df0;color:#fff}.share{background:#fff;color:var(--navy)}.fineprint{display:flex;gap:6px;font-size:9px;color:#6e7f91;line-height:1.45}.fineprint svg{width:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6}.breakdown,.timeline,.content{padding-block:72px}.breakdown header,.next header,.timeline header{text-align:center;max-width:720px;margin:0 auto 39px}.breakdown header span,.next header span,.timeline header span,.content>article>span{color:var(--blue);font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.breakdown header h2,.next header h2,.timeline header h2{font-size:35px;letter-spacing:-.035em;margin:10px 0}.breakdown header p,.next header p,.timeline header p{color:#65768a;line-height:1.6}.breakdown-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:22px}.card{border:1px solid #dfe5ec;border-radius:16px;padding:27px;box-shadow:0 10px 28px #1835580b}.card h3{font-size:19px;margin:0}.rows{display:grid;gap:12px;margin-top:22px}.row{display:grid;grid-template-columns:1fr 130px;align-items:center}.row>div{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:center}.row i{width:28px;height:28px;border-radius:8px;background:#edf4ff;display:grid;place-items:center}.row svg{width:16px;fill:none;stroke:var(--blue);stroke-width:1.7}.row b{font-size:11px}.row small{display:block;font-size:8px;color:#78899c;margin-top:2px}.row>strong{text-align:right;font-size:13px}.total-row{border-top:1px solid #dfe5ec;padding-top:13px;margin-top:13px}.total-row>strong{font-size:19px;color:var(--green)}.legal{background:#fff9ee;border-color:#f0d8ad}.legal-top{display:flex;gap:12px;align-items:center}.legal-top>i{display:grid;place-items:center;width:44px;height:44px;border-radius:10px;background:#ffebc7}.legal-top svg{width:26px;fill:none;stroke:#cf8200;stroke-width:1.7}.legal-top span{display:inline-block;background:#fff0d4;color:#9c6200;border-radius:99px;padding:5px 8px;font-size:8px;font-weight:800}.legal-top h3{font-size:16px;margin-top:6px}.legal>p{font-size:11px;color:#5e6d7d;line-height:1.6}.formula{border:1px dashed #dfb76f;background:#fff;border-radius:9px;padding:14px;font-size:11px;line-height:1.5;font-weight:700}.warning{display:flex;gap:8px;font-size:9px;line-height:1.5;color:#85560b;margin-top:14px}.warning svg{width:17px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7}.next{background:#f7f9fc;padding:72px 0}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.steps article{background:#fff;border:1px solid #dfe5ec;border-radius:15px;padding:24px}.steps article>b{display:grid;place-items:center;width:35px;height:35px;border-radius:50%;background:var(--blue);color:#fff;font-size:13px}.steps h3{font-size:16px;margin:16px 0 8px}.steps p{font-size:11px;line-height:1.65;color:#65768a}.steps a{font-size:10px;color:var(--blue);font-weight:750;text-decoration:none}.timeline-row{display:grid;grid-template-columns:repeat(3,1fr);position:relative}.timeline-row:before{content:"";position:absolute;left:15%;right:15%;top:23px;height:2px;background:#dce4ee}.timeline-row article{text-align:center;position:relative;padding-inline:30px}.timeline-row i{display:block;width:48px;height:48px;border:7px solid #fff;background:var(--blue);box-shadow:0 0 0 2px var(--blue);border-radius:50%;margin:auto}.timeline-row article:nth-child(2) i{background:var(--amber);box-shadow:0 0 0 2px var(--amber)}.timeline-row article:nth-child(3) i{background:#1c9a68;box-shadow:0 0 0 2px #1c9a68}.timeline-row h3{font-size:14px;margin:17px 0 6px}.timeline-row p{font-size:10px;line-height:1.55;color:#6e8094}.content{display:grid;grid-template-columns:.85fr 1.15fr;gap:50px;border-top:1px solid #e1e6ed}.content>article h2{font-size:29px;letter-spacing:-.03em}.content>article p{line-height:1.75;color:#5d7085}.faq,.sources{grid-column:2}.faq h2,.sources h2{font-size:24px}.faq details{border-bottom:1px solid #dfe5ec}.faq summary{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:15px 0;font-weight:700;cursor:pointer}.faq summary svg{width:18px;fill:none;stroke:currentColor;stroke-width:1.7}.faq details[open] summary svg{transform:rotate(180deg)}.faq p{font-size:12px;line-height:1.7;color:#617489}.sources a{display:flex;justify-content:space-between;align-items:center;border:1px solid #dfe5ec;border-radius:10px;padding:13px 15px;margin:8px 0;color:inherit;text-decoration:none}.sources span,.sources small{display:block}.sources span{font-size:12px;font-weight:700}.sources small{font-size:9px;color:#718398;margin-top:4px}.sources svg{width:18px;fill:none;stroke:var(--blue);stroke-width:1.7}
+  @media(max-width:900px){.hero-grid{grid-template-columns:1fr}.intro{text-align:center}.eyebrow,.trust{justify-content:center}.hero-art{max-width:500px}.breakdown-grid,.content{grid-template-columns:1fr}.faq,.sources{grid-column:1}.steps{grid-template-columns:1fr}.intro>p{max-width:650px;margin-inline:auto}}
+  @media(max-width:560px){.shell{width:calc(100% - 24px)}.hero{padding-top:24px}.hero-grid{margin-top:24px;gap:27px}.intro h1{font-size:39px}.intro>p{font-size:15px}.trust{display:grid;grid-template-columns:repeat(3,1fr)}.trust span{font-size:8px;padding:7px 4px;justify-content:center}.hero-art{margin-top:12px}.calculator{padding:22px 16px}.calc-head h2{font-size:21px}.cases{grid-template-columns:repeat(2,1fr)}.cases label.active{grid-column:span 2}.fields{grid-template-columns:1fr}.result-head strong{font-size:30px}.result-head>b{font-size:8px}.breakdown,.timeline,.content,.next{padding-block:54px}.breakdown header h2,.next header h2,.timeline header h2{font-size:29px}.row{grid-template-columns:1fr 90px}.timeline-row{grid-template-columns:1fr;gap:29px}.timeline-row:before{display:none}.content{gap:22px}.actions{display:grid}.share{grid-column:1}.sources span{font-size:10px}}
+</style>
