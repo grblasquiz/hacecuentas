@@ -1700,6 +1700,27 @@ if (redirectSrcStripped > 0) {
   console.log(`Stripped ${redirectSrcStripped} URLs con 301/308 en _redirects (zombies JSON-vivo/URL-redirigida).`);
 }
 
+// Red de seguridad final: sacar del sitemap TODA URL que el worker sirva como
+// 301 o 410. El filtro de arriba sólo mira `public/_redirects`, pero la poda
+// vive en PRUNING_REDIRECTS (worker), y varias listas de este script son
+// hardcodeadas — así que cada vez que se podaba algo, el sitemap seguía
+// mandando a Google URLs que redirigen. Esto lo hace imposible por diseño:
+// una URL retirada no puede quedar publicada aunque alguien olvide borrarla
+// de su lista.
+let prunedStripped = 0;
+for (const s of sitemaps) {
+  const before = s.urls.length;
+  s.urls = s.urls.filter((u: any) => {
+    let path: string;
+    try { path = new URL(u.loc).pathname.replace(/\/$/, '') || '/'; } catch { return true; }
+    return !(PRUNING_REDIRECTS as Record<string, unknown>)[path] && !GONE_410_URLS.has(path);
+  });
+  prunedStripped += before - s.urls.length;
+}
+if (prunedStripped > 0) {
+  console.log(`Stripped ${prunedStripped} URLs podadas (301/410 del worker) que alguna lista seguía publicando.`);
+}
+
 let totalUrls = 0;
 // Si una categoría o un locale queda con cero URLs distribuibles, ya no entra
 // en `sitemaps`. Eliminamos el XML de builds anteriores para que Cloudflare no
