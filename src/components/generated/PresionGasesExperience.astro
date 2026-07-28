@@ -1,0 +1,203 @@
+---
+interface Props { data?: any }
+const { data } = Astro.props;
+---
+<div class="mockup-presion-gases" set:html={`
+    <div class="wrap">
+      <div class="hero">
+        <div>
+          <div class="crumb">Ciencia / Presión y gases</div>
+          <div class="eyebrow">Física clara, sin mezclar unidades</div>
+          <h1>Presión y gases, explicado con números.</h1>
+          <p class="lead">Convertí unidades, calculá qué pasa en la altura o bajo el agua y resolvé la ley de gases ideales paso a paso.</p>
+          <div class="chips"><span class="chip">✓ Conversión exacta</span><span class="chip">✓ Altitud y profundidad</span><span class="chip">✓ PV = nRT</span></div>
+        </div>
+        <div class="visual" aria-label="Ilustración de un gas comprimido">
+          <div class="float f1">↕ Volumen</div><div class="float f2">1 atm = 101.325 Pa</div>
+          <div class="chamber"><div class="stem"></div><div class="piston"></div><i class="particle p1"></i><i class="particle p2"></i><i class="particle p3"></i><i class="particle p4"></i><i class="particle p5"></i><i class="particle p6"></i></div>
+          <div class="gauge"><span>PRESIÓN</span></div>
+        </div>
+      </div>
+
+      <form class="calc-shell" id="calculator">
+        <div class="case-label">¿QUÉ QUERÉS CALCULAR?</div>
+        <div class="cases">
+          <button type="button" class="case active" data-mode="convert">Convertir presión</button>
+          <button type="button" class="case" data-mode="altitude">Presión en altura</button>
+          <button type="button" class="case" data-mode="hydro">Presión bajo el agua</button>
+          <button type="button" class="case" data-mode="ideal">Gas ideal</button>
+        </div>
+        <div class="calc-grid">
+          <div class="panel">
+            <h2 id="formTitle">Conversor de presión</h2>
+            <p class="hint" id="formHint">Ingresá un valor y elegí las unidades. Nosotros hacemos la equivalencia.</p>
+            <div class="mode-fields field-grid active" data-fields="convert">
+              <div class="field full"><label for="amount">Valor</label><input class="control" id="amount" type="number" value="1" min="0" step="any"></div>
+              <div class="field"><label for="fromUnit">De</label><select class="control" id="fromUnit"><option value="atm">Atmósfera (atm)</option><option value="bar">Bar</option><option value="kpa">Kilopascal (kPa)</option><option value="pa">Pascal (Pa)</option><option value="psi">PSI</option><option value="mmhg">mmHg</option></select></div>
+              <div class="field"><label for="toUnit">A</label><select class="control" id="toUnit"><option value="psi">PSI</option><option value="bar">Bar</option><option value="kpa">Kilopascal (kPa)</option><option value="pa">Pascal (Pa)</option><option value="atm">Atmósfera (atm)</option><option value="mmhg">mmHg</option></select></div>
+            </div>
+            <div class="mode-fields field-grid" data-fields="altitude">
+              <div class="field"><label for="altitude">Altitud</label><input class="control" id="altitude" type="number" value="2810" step="10"></div>
+              <div class="field"><label for="seaPressure">Presión al nivel del mar (hPa)</label><input class="control" id="seaPressure" type="number" value="1013.25" step=".01"></div>
+            </div>
+            <div class="mode-fields field-grid" data-fields="hydro">
+              <div class="field"><label for="depth">Profundidad (m)</label><input class="control" id="depth" type="number" value="10" min="0" step=".1"></div>
+              <div class="field"><label for="density">Densidad del líquido (kg/m³)</label><input class="control" id="density" type="number" value="1000" min="1"></div>
+              <div class="field full"><label for="gravity">Gravedad (m/s²)</label><input class="control" id="gravity" type="number" value="9.80665" step=".00001"></div>
+            </div>
+            <div class="mode-fields field-grid" data-fields="ideal">
+              <div class="field full"><label for="unknown">¿Qué querés calcular?</label><select class="control" id="unknown"><option value="volume">Volumen</option><option value="pressure">Presión</option><option value="moles">Cantidad de gas</option><option value="temperature">Temperatura</option></select></div>
+              <div class="field" data-ideal="pressure"><label for="gasPressure">Presión (atm)</label><input class="control" id="gasPressure" type="number" value="1" min=".0001" step=".01"></div>
+              <div class="field" data-ideal="volume"><label for="gasVolume">Volumen (L)</label><input class="control" id="gasVolume" type="number" value="22.414" min=".0001" step=".001"></div>
+              <div class="field" data-ideal="moles"><label for="gasMoles">Cantidad (mol)</label><input class="control" id="gasMoles" type="number" value="1" min=".0001" step=".01"></div>
+              <div class="field" data-ideal="temperature"><label for="gasTemperature">Temperatura (°C)</label><input class="control" id="gasTemperature" type="number" value="0" step=".1"></div>
+            </div>
+            <button class="update" id="updateButton" type="submit">Actualizar cálculo</button>
+          </div>
+          <div class="panel result">
+            <div class="result-kicker" id="resultKicker">EQUIVALENCIA</div>
+            <div class="result-value" id="resultValue">14,6959 psi</div>
+            <div class="result-label" id="resultLabel">para 1 atmósfera</div>
+            <div class="verdict" id="verdict">Misma presión, distinta unidad</div>
+            <div class="stats">
+              <div class="stat"><small id="stat1Label">En pascales</small><strong id="stat1Value">101.325 Pa</strong></div>
+              <div class="stat"><small id="stat2Label">En bar</small><strong id="stat2Value">1,01325 bar</strong></div>
+              <div class="stat"><small id="stat3Label">Referencia</small><strong id="stat3Value">Nivel del mar</strong></div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <section><div class="wrap">
+      <div class="section-head"><div class="eyebrow">Ponelo en contexto</div><h2 id="scaleTitle">¿Qué representa esa presión?</h2><p id="scaleDescription">La misma magnitud puede expresarse en atm, bar, PSI, pascales o milímetros de mercurio.</p></div>
+      <div class="scale-card">
+        <div class="scale-top"><div><h3 id="contextName">Atmósfera estándar</h3><p id="contextText">La presión promedio del aire al nivel del mar.</p></div><div class="scale-value" id="contextValue">101,3 kPa</div></div>
+        <div class="scale"><div class="marker" id="marker"></div></div><div class="ticks"><span>Vacío</span><span>Presión atmosférica</span><span>Neumático</span><span>Alta presión</span></div>
+      </div>
+    </div></section>
+
+    <section><div class="wrap two-col">
+      <div class="info"><div class="eyebrow">Cálculo transparente</div><h3 id="breakTitle">Cómo hicimos la conversión</h3><div class="rows" id="breakRows"></div></div>
+      <div class="info warning"><div class="icon">◉</div><h3>No confundas presión absoluta y manométrica</h3><p>La presión <b>absoluta</b> incluye la atmósfera. La <b>manométrica</b> es la diferencia respecto del ambiente: es la que suelen mostrar neumáticos, compresores y manómetros.</p><div class="rows"><div class="row"><span>Presión absoluta</span><strong>Patm + Pmanométrica</strong></div><div class="row"><span>A nivel del mar</span><strong>Patm ≈ 1,013 bar</strong></div></div></div>
+    </div></section>
+
+    <section><div class="wrap">
+      <div class="section-head"><div class="eyebrow">Referencias cotidianas</div><h2>Una escala para orientarte</h2></div>
+      <div class="refs">
+        <div class="ref"><div class="ref-icon">🌤️</div><b>1,013 bar</b><span>Aire al nivel del mar</span></div>
+        <div class="ref"><div class="ref-icon">🚲</div><b>2–4 bar</b><span>Neumático de bicicleta</span></div>
+        <div class="ref"><div class="ref-icon">🌊</div><b>+1 bar</b><span>Cada ~10 m bajo el agua</span></div>
+        <div class="ref"><div class="ref-icon">🍲</div><b>~2 bar abs.</b><span>Olla a presión doméstica</span></div>
+      </div>
+    </div></section>
+
+    <div class="dark"><div class="wrap dark-grid">
+      <div class="formula">PV = nRT<small>La ecuación que conecta presión, volumen, cantidad y temperatura.</small></div>
+      <div><div class="eyebrow" style="color:#62cfda">Ley de gases ideales</div><h2>Si cambia una variable, las demás responden.</h2><p>La fórmula funciona bien como aproximación para gases diluidos y condiciones moderadas. Usamos R = 0,082057 L·atm/(mol·K).</p><div class="laws"><div class="law"><span class="check">✓</span><span>La temperatura siempre entra en kelvin, no en grados Celsius.</span></div><div class="law"><span class="check">✓</span><span>Presión y volumen deben usar unidades compatibles con la constante R.</span></div><div class="law"><span class="check">✓</span><span>A presiones muy altas o temperaturas muy bajas, un gas real puede desviarse.</span></div></div></div>
+    </div></div>
+  `} />
+<script is:inline>
+(()=>{const root=document.currentScript.previousElementSibling?.matches('.mockup-presion-gases')?document.currentScript.previousElementSibling:document.querySelector('.mockup-presion-gases');
+
+    const $=id=>root.querySelector("#"+id);
+    const factors={pa:1,kpa:1000,bar:100000,atm:101325,psi:6894.757293168,mmhg:133.322387415};
+    const names={pa:"Pa",kpa:"kPa",bar:"bar",atm:"atm",psi:"psi",mmhg:"mmHg"};
+    const fmt=(n,d=2)=>Number(n).toLocaleString("es-AR",{maximumFractionDigits:d,minimumFractionDigits:d});
+    let mode="convert";
+    const config={
+      convert:["Conversor de presión","Ingresá un valor y elegí las unidades. Nosotros hacemos la equivalencia."],
+      altitude:["Presión atmosférica en altura","Estimamos cómo disminuye la presión a medida que subís."],
+      hydro:["Presión hidrostática","Calculá la presión que agrega una columna de líquido."],
+      ideal:["Calculadora de gas ideal","Elegí la incógnita y completá las otras tres variables."]
+    };
+    function setText(id,value){$(id).textContent=value}
+    function rows(items){$("breakRows").innerHTML=items.map(x=>`<div class="row"><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join("")}
+    function setResult(data){
+      Object.entries(data).forEach(([key,value])=>setText(key,value));
+      $("marker").style.left=data.marker||"45%";
+    }
+    function calculateConvert(){
+      const amount=Math.max(0,Number($("amount").value)||0),from=$("fromUnit").value,to=$("toUnit").value;
+      const pa=amount*factors[from],value=pa/factors[to];
+      setResult({resultKicker:"EQUIVALENCIA",resultValue:`${fmt(value,value<100?4:2)} ${names[to]}`,resultLabel:`para ${fmt(amount,2)} ${names[from]}`,verdict:"Misma presión, distinta unidad",stat1Label:"En pascales",stat1Value:`${fmt(pa,0)} Pa`,stat2Label:"En bar",stat2Value:`${fmt(pa/100000,5)} bar`,stat3Label:"Referencia",stat3Value:pa>250000?"Presión elevada":pa>80000?"Atmósfera terrestre":"Baja presión",contextName:"Atmósfera estándar",contextText:"La presión promedio del aire al nivel del mar.",contextValue:"101,3 kPa",marker:`${Math.min(94,Math.max(5,pa/4000))}%`});
+      setText("breakTitle","Cómo hicimos la conversión");rows([[`Valor original`,`${fmt(amount,2)} ${names[from]}`],["Factor base",`1 ${names[from]} = ${fmt(factors[from],3)} Pa`],["Resultado",`${fmt(value,value<100?4:2)} ${names[to]}`]]);
+    }
+    function calculateAltitude(){
+      const h=Number($("altitude").value)||0,p0=Math.max(1,Number($("seaPressure").value)||1013.25);
+      const base=Math.max(.0001,1-.0065*h/288.15),hpa=p0*Math.pow(base,5.25588),pct=hpa/p0*100;
+      setResult({resultKicker:"PRESIÓN ESTIMADA",resultValue:`${fmt(hpa,1)} hPa`,resultLabel:`a ${fmt(h,0)} metros de altitud`,verdict:`Queda el ${fmt(pct,0)}% de la presión del nivel del mar`,stat1Label:"En atmósferas",stat1Value:`${fmt(hpa/1013.25,3)} atm`,stat2Label:"Diferencia",stat2Value:`−${fmt(p0-hpa,1)} hPa`,stat3Label:"Caída relativa",stat3Value:`−${fmt(100-pct,1)}%`,contextName:`A ${fmt(h,0)} m de altura`,contextText:"El aire es menos denso y ejerce menos presión.",contextValue:`${fmt(hpa/10,1)} kPa`,marker:`${Math.min(90,Math.max(8,pct*.55))}%`});
+      setText("breakTitle","Cómo cambia con la altitud");rows([["Presión de referencia",`${fmt(p0,2)} hPa`],["Altitud ingresada",`${fmt(h,0)} m`],["Modelo usado","Atmósfera estándar"],["Presión estimada",`${fmt(hpa,1)} hPa`]]);
+    }
+    function calculateHydro(){
+      const depth=Math.max(0,Number($("depth").value)||0),rho=Math.max(1,Number($("density").value)||1000),g=Math.max(.01,Number($("gravity").value)||9.80665);
+      const gauge=rho*g*depth,absolute=gauge+101325;
+      setResult({resultKicker:"PRESIÓN HIDROSTÁTICA",resultValue:`${fmt(gauge/100000,3)} bar`,resultLabel:`adicionales a ${fmt(depth,1)} m de profundidad`,verdict:"Presión manométrica del líquido",stat1Label:"Presión absoluta",stat1Value:`${fmt(absolute/101325,3)} atm`,stat2Label:"En kilopascales",stat2Value:`${fmt(gauge/1000,1)} kPa`,stat3Label:"Fuerza por m²",stat3Value:`${fmt(gauge,0)} N`,contextName:`A ${fmt(depth,1)} m bajo el agua`,contextText:"La columna de líquido se suma a la presión atmosférica.",contextValue:`${fmt(absolute/100000,2)} bar abs.`,marker:`${Math.min(94,25+depth*3)}%`});
+      setText("breakTitle","Cómo calculamos la presión");rows([["Fórmula","ρ × g × profundidad"],["Densidad",`${fmt(rho,0)} kg/m³`],["Gravedad",`${fmt(g,5)} m/s²`],["Presión agregada",`${fmt(gauge,0)} Pa`]]);
+    }
+    function updateIdealVisibility(){
+      const unknown=$("unknown").value;
+      root.querySelectorAll("[data-ideal]").forEach(el=>el.style.display=el.dataset.ideal===unknown?"none":"block");
+    }
+    function calculateIdeal(){
+      updateIdealVisibility();
+      const unknown=$("unknown").value,R=.082057366,P=Math.max(.000001,Number($("gasPressure").value)||1),V=Math.max(.000001,Number($("gasVolume").value)||22.414),n=Math.max(.000001,Number($("gasMoles").value)||1),Tc=Number($("gasTemperature").value)||0,T=Tc+273.15;
+      let value,unit,label,equation;
+      if(unknown==="volume"){value=n*R*T/P;unit="L";label="volumen";equation="V = nRT / P"}
+      if(unknown==="pressure"){value=n*R*T/V;unit="atm";label="presión";equation="P = nRT / V"}
+      if(unknown==="moles"){value=P*V/(R*T);unit="mol";label="cantidad";equation="n = PV / RT"}
+      if(unknown==="temperature"){value=P*V/(n*R)-273.15;unit="°C";label="temperatura";equation="T = PV / nR"}
+      const participle=unknown==="volume"?"calculado":"calculada";
+      setResult({resultKicker:"GAS IDEAL",resultValue:`${fmt(value,3)} ${unit}`,resultLabel:`${label} ${participle} con PV = nRT`,verdict:"Resultado para comportamiento ideal",stat1Label:"Temperatura absoluta",stat1Value:`${fmt(T,2)} K`,stat2Label:"Constante R",stat2Value:"0,082057",stat3Label:"Ecuación despejada",stat3Value:equation,contextName:"Estado del gas",contextText:"Presión, volumen, cantidad y temperatura están conectados.",contextValue:`${fmt(P*V,2)} L·atm`,marker:`${Math.min(92,Math.max(10,35+P*12))}%`});
+      setText("breakTitle","Variables usadas");rows([["Presión",`${fmt(P,3)} atm`],["Volumen",`${fmt(V,3)} L`],["Cantidad",`${fmt(n,3)} mol`],["Temperatura",`${fmt(T,2)} K`]]);
+    }
+    function calculate(){if(mode==="convert")calculateConvert();if(mode==="altitude")calculateAltitude();if(mode==="hydro")calculateHydro();if(mode==="ideal")calculateIdeal()}
+    root.querySelectorAll(".case").forEach(btn=>btn.addEventListener("click",()=>{
+      mode=btn.dataset.mode;root.querySelectorAll(".case").forEach(x=>x.classList.toggle("active",x===btn));root.querySelectorAll(".mode-fields").forEach(x=>x.classList.toggle("active",x.dataset.fields===mode));
+      setText("formTitle",config[mode][0]);setText("formHint",config[mode][1]);calculate();
+    }));
+    root.querySelectorAll("input,select").forEach(el=>el.addEventListener("input",calculate));
+    function confirmUpdate(){calculate();const b=$("updateButton");b.textContent="✓ Cálculo actualizado";clearTimeout(window.updateTimer);window.updateTimer=setTimeout(()=>b.textContent="Actualizar cálculo",1200)}
+    $("calculator").addEventListener("submit",e=>{e.preventDefault();confirmUpdate()});
+    $("updateButton").addEventListener("click",e=>{e.preventDefault();confirmUpdate()});
+    calculate();
+  
+})();
+</script>
+<style is:global>
+
+    .mockup-presion-gases{--ink:#101a35;--muted:#647087;--blue:#2367e8;--cyan:#42c9d9;--paper:#f5f6f2;--card:#fff;--line:#dfe4ec;--mint:#e9f8f5;--orange:#ffb45b;--navy:#10254a}
+    .mockup-presion-gases *{box-sizing:border-box}.mockup-presion-gases{margin:0;background:var(--paper);color:var(--ink);font:16px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .mockup-presion-gases button,.mockup-presion-gases input,.mockup-presion-gases select{font:inherit}.mockup-presion-gases .wrap{width:min(1180px,calc(100% - 40px));margin:auto}
+    .mockup-presion-gases header{height:86px;border-bottom:1px solid #e2e5e8;display:flex;align-items:center;background:rgba(245,246,242,.94)}
+    .mockup-presion-gases nav{display:flex;align-items:center;gap:28px}.mockup-presion-gases .brand{font-weight:850;font-size:19px;display:flex;align-items:center;gap:11px}.mockup-presion-gases .logo{width:29px;height:38px;border-radius:6px;background:linear-gradient(160deg,#17365e,#4b789c);display:grid;place-items:center;color:white;font-size:14px}
+    .mockup-presion-gases .links{display:flex;gap:25px;color:#4f5b6d;font-size:14px;font-weight:700}.mockup-presion-gases .tools{margin-left:auto;display:flex;gap:9px}.mockup-presion-gases .tool{height:42px;border:1px solid #dce1e8;background:white;border-radius:11px;padding:0 14px;color:#536176;font-weight:700}
+    .mockup-presion-gases .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:50px;align-items:center;padding:64px 0 50px}.mockup-presion-gases .crumb{color:#3569c8;font-size:14px;margin-bottom:18px}.mockup-presion-gases .eyebrow{text-transform:uppercase;letter-spacing:.14em;font-weight:850;color:#2474bc;font-size:12px}
+    .mockup-presion-gases h1{font-size:clamp(42px,5vw,68px);line-height:1.01;letter-spacing:-.048em;margin:13px 0 20px;max-width:720px}.mockup-presion-gases .lead{font-size:19px;color:var(--muted);max-width:670px}.mockup-presion-gases .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}.mockup-presion-gases .chip{background:white;border:1px solid var(--line);padding:9px 13px;border-radius:999px;font-size:13px;font-weight:750}
+    .mockup-presion-gases .visual{height:330px;position:relative;display:grid;place-items:center}.mockup-presion-gases .chamber{width:270px;height:214px;border:5px solid #183b6b;border-radius:24px 24px 38px 38px;position:relative;background:linear-gradient(#edfaff,#cfeef6);overflow:hidden;box-shadow:0 24px 55px #163f7220}
+    .mockup-presion-gases .piston{position:absolute;left:21px;right:21px;top:27px;height:17px;border-radius:5px;background:#17385f;box-shadow:0 -25px 0 -4px #ffb45b}.mockup-presion-gases .stem{position:absolute;left:50%;top:-31px;width:14px;height:62px;background:#17385f;transform:translateX(-50%)}
+    .mockup-presion-gases .particle{position:absolute;width:12px;height:12px;background:#2871e5;border-radius:50%;box-shadow:0 0 0 5px #2871e51b}.mockup-presion-gases .p1{left:45px;top:90px}.mockup-presion-gases .p2{left:112px;top:75px}.mockup-presion-gases .p3{right:39px;top:104px}.mockup-presion-gases .p4{left:77px;bottom:35px}.mockup-presion-gases .p5{right:68px;bottom:42px}.mockup-presion-gases .p6{left:142px;bottom:76px}
+    .mockup-presion-gases .gauge{position:absolute;right:5px;bottom:10px;width:110px;height:110px;border-radius:50%;border:9px solid white;background:#17385f;box-shadow:0 12px 32px #0f274d38}.mockup-presion-gases .gauge:after{content:"";position:absolute;width:38px;height:5px;background:#ffb45b;left:50%;top:50%;transform-origin:left center;transform:rotate(-48deg);border-radius:3px}.mockup-presion-gases .gauge span{position:absolute;color:white;font-size:10px;font-weight:800;left:27px;bottom:17px}.mockup-presion-gases .float{position:absolute;background:white;border-radius:14px;padding:12px 15px;box-shadow:0 15px 35px #19375e18;font-weight:800;font-size:13px}.mockup-presion-gases .f1{left:0;top:50px}.mockup-presion-gases .f2{right:10px;top:8px;color:#276de0}
+    .mockup-presion-gases .calc-shell{background:white;border:1px solid var(--line);border-radius:28px;padding:28px;box-shadow:0 26px 70px #26354e13;margin-bottom:64px}.mockup-presion-gases .case-label{font-size:13px;font-weight:850;color:#58657a;margin-bottom:12px}.mockup-presion-gases .cases{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:26px}.mockup-presion-gases .case{border:1px solid var(--line);background:#f9fafb;border-radius:14px;padding:14px 10px;color:#47556b;font-weight:800;cursor:pointer}.mockup-presion-gases .case.active{border-color:#246be7;background:#edf4ff;color:#1d5fcf;box-shadow:inset 0 0 0 1px #246be7}
+    .mockup-presion-gases .calc-grid{display:grid;grid-template-columns:1.03fr .97fr;gap:24px}.mockup-presion-gases .panel{background:#fafbfc;border:1px solid #e4e7ec;border-radius:20px;padding:24px}.mockup-presion-gases .panel h2{font-size:22px;margin:0 0 5px}.mockup-presion-gases .hint{color:var(--muted);font-size:14px;margin:0 0 20px}.mockup-presion-gases .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}.mockup-presion-gases .field.full{grid-column:1/-1}.mockup-presion-gases .field label{display:block;font-size:13px;font-weight:800;margin:0 0 7px}.mockup-presion-gases .control{width:100%;height:50px;border:1px solid #ccd4df;background:white;border-radius:11px;padding:0 13px;color:var(--ink);font-weight:700;outline:none}.mockup-presion-gases .control:focus{border-color:#2b70e7;box-shadow:0 0 0 3px #2b70e718}.mockup-presion-gases .mode-fields{display:none}.mockup-presion-gases .mode-fields.active{display:grid}
+    .mockup-presion-gases .update{width:100%;height:53px;margin-top:20px;border:0;border-radius:12px;background:#1767e8;color:white;font-weight:850;cursor:pointer;box-shadow:0 10px 22px #1767e82d}.mockup-presion-gases .update:hover{background:#125acb}
+    .mockup-presion-gases .result{background:linear-gradient(145deg,#102b55,#0c1c39);border:0;color:white;position:relative;overflow:hidden}.mockup-presion-gases .result:after{content:"";position:absolute;width:210px;height:210px;border:42px solid #3fc4d528;border-radius:50%;right:-100px;bottom:-110px}.mockup-presion-gases .result-kicker{font-size:12px;text-transform:uppercase;letter-spacing:.13em;color:#9fdfea;font-weight:850}.mockup-presion-gases .result-value{font-size:42px;line-height:1.05;font-weight:900;letter-spacing:-.04em;margin:14px 0 3px}.mockup-presion-gases .result-label{color:#c5d4e8}.mockup-presion-gases .verdict{display:inline-flex;margin-top:17px;background:#1e4777;border:1px solid #3d6591;border-radius:999px;padding:8px 11px;font-size:12px;font-weight:800}.mockup-presion-gases .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:25px}.mockup-presion-gases .stat{background:#ffffff0c;border:1px solid #ffffff18;padding:12px;border-radius:12px}.mockup-presion-gases .stat small{display:block;color:#aebed2;font-size:10px;text-transform:uppercase;letter-spacing:.08em}.mockup-presion-gases .stat strong{font-size:15px;display:block;margin-top:5px}
+    .mockup-presion-gases section{padding:52px 0}.mockup-presion-gases .section-head{text-align:center;max-width:720px;margin:0 auto 30px}.mockup-presion-gases .section-head h2{font-size:38px;line-height:1.08;letter-spacing:-.035em;margin:8px 0 10px}.mockup-presion-gases .section-head p{color:var(--muted)}
+    .mockup-presion-gases .scale-card{background:white;border:1px solid var(--line);border-radius:24px;padding:28px}.mockup-presion-gases .scale-top{display:flex;justify-content:space-between;align-items:end;gap:20px}.mockup-presion-gases .scale-top h3{font-size:23px;margin:0}.mockup-presion-gases .scale-top p{color:var(--muted);margin:4px 0 0}.mockup-presion-gases .scale-value{font-weight:900;color:#2569d8}.mockup-presion-gases .scale{height:16px;background:linear-gradient(90deg,#60d6e1,#68bdea,#3976e2,#f1a95f);border-radius:999px;margin:32px 0 8px;position:relative}.mockup-presion-gases .marker{position:absolute;top:50%;left:45%;width:24px;height:24px;border:5px solid white;border-radius:50%;background:#102c55;transform:translate(-50%,-50%);box-shadow:0 3px 12px #102c5555}.mockup-presion-gases .ticks{display:flex;justify-content:space-between;color:#6a7587;font-size:12px;font-weight:700}
+    .mockup-presion-gases .two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px}.mockup-presion-gases .info{background:white;border:1px solid var(--line);border-radius:22px;padding:25px}.mockup-presion-gases .info h3{margin:0 0 17px;font-size:21px}.mockup-presion-gases .rows{display:grid;gap:13px}.mockup-presion-gases .row{display:flex;justify-content:space-between;gap:20px;padding-bottom:13px;border-bottom:1px solid #edf0f3}.mockup-presion-gases .row:last-child{border:0;padding:0}.mockup-presion-gases .row span{color:#667286}.mockup-presion-gases .row strong{text-align:right}.mockup-presion-gases .warning{background:#fff6e8;border:1px solid #f5d49f}.mockup-presion-gases .warning .icon{font-size:28px}.mockup-presion-gases .warning p{color:#715831}.mockup-presion-gases .refs{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.mockup-presion-gases .ref{background:white;border:1px solid var(--line);border-radius:18px;padding:19px}.mockup-presion-gases .ref b{font-size:22px;display:block;margin:11px 0 2px}.mockup-presion-gases .ref span{color:var(--muted);font-size:13px}.mockup-presion-gases .ref-icon{font-size:25px}
+    .mockup-presion-gases .dark{background:#0d1d38;color:white;margin-top:58px;padding:70px 0}.mockup-presion-gases .dark-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:55px;align-items:center}.mockup-presion-gases .formula{background:#132d54;border:1px solid #31517c;border-radius:24px;padding:33px;text-align:center;font-size:48px;font-weight:900;letter-spacing:.03em;box-shadow:0 22px 50px #0003}.mockup-presion-gases .formula small{display:block;font-size:13px;color:#a9bfdc;margin-top:15px;font-weight:600}.mockup-presion-gases .dark h2{font-size:40px;line-height:1.08;margin:10px 0}.mockup-presion-gases .dark p{color:#b8c5d6}.mockup-presion-gases .laws{display:grid;gap:10px;margin-top:22px}.mockup-presion-gases .law{display:flex;gap:11px;align-items:flex-start}.mockup-presion-gases .check{background:#1c9e8d;border-radius:50%;width:23px;height:23px;display:grid;place-items:center;flex:0 0 auto;font-size:13px}
+    .mockup-presion-gases footer{padding:35px 0;color:#718096;text-align:center;font-size:13px}
+    @media(max-width:850px){.mockup-presion-gases .links{display:none}.mockup-presion-gases .hero,.mockup-presion-gases .calc-grid,.mockup-presion-gases .dark-grid{grid-template-columns:1fr}.mockup-presion-gases .hero{padding-top:38px}.mockup-presion-gases .visual{height:285px}.mockup-presion-gases .cases{grid-template-columns:1fr 1fr}.mockup-presion-gases .two-col{grid-template-columns:1fr}.mockup-presion-gases .refs{grid-template-columns:1fr 1fr}.mockup-presion-gases .field-grid{grid-template-columns:1fr}.mockup-presion-gases .field.full{grid-column:auto}.mockup-presion-gases .stats{grid-template-columns:1fr}.mockup-presion-gases .scale-top{align-items:flex-start;flex-direction:column}}
+    @media(max-width:500px){.mockup-presion-gases .wrap{width:min(100% - 24px,1180px)}.mockup-presion-gases header{height:70px}.mockup-presion-gases .tools .tool:first-child{display:none}.mockup-presion-gases h1{font-size:42px}.mockup-presion-gases .cases,.mockup-presion-gases .refs{grid-template-columns:1fr}.mockup-presion-gases .calc-shell{padding:14px;border-radius:20px}.mockup-presion-gases .panel{padding:19px}.mockup-presion-gases .visual{transform:scale(.84);margin:-20px}.mockup-presion-gases .section-head h2,.mockup-presion-gases .dark h2{font-size:32px}}
+  
+.mockup-presion-gases { width:100%; overflow:hidden; }
+.mockup-presion-gases .top, .mockup-presion-gases header.top { display:none !important; }
+.mockup-presion-gases .foot { display:none !important; }
+.mockup-presion-gases .support-real { width:min(1160px,calc(100% - 40px)); margin:auto; padding:64px 0; }
+.mockup-presion-gases .support-real-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:30px; }
+.mockup-presion-gases .support-real details { border-bottom:1px solid #dfe6ed; padding:14px 0; }
+.mockup-presion-gases .support-real summary { cursor:pointer; font-weight:750; }
+.mockup-presion-gases .support-real p { color:#687a8f; line-height:1.65; }
+@media(max-width:800px){.mockup-presion-gases .support-real-grid{grid-template-columns:1fr}}
+</style>
+{data && <section class="mockup-presion-gases support-real"><div class="support-real-grid"><div><h2>Preguntas frecuentes</h2>{data.faq?.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><div><h2>Fuentes</h2>{data.sources?.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}</a>)}</div></div></section>}

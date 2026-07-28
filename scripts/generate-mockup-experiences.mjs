@@ -17,6 +17,29 @@ const entries = [
   ['hormigon-mockup.html', 'HormigonExperience', 'hormigon'],
   ['madera-mockup.html', 'MaderaExperience', 'madera'],
   ['dominicana-home-mockup.html', 'DominicanaHomeExperience', 'dominicana-home'],
+  ['master-oficial-titulo-propio-mockup.html', 'MasterOficialTituloPropioExperience', 'master-oficial-titulo-propio'],
+  ['monotributo-mockup.html', 'MonotributoExperience', 'monotributo'],
+  ['presion-gases-mockup.html', 'PresionGasesExperience', 'presion-gases'],
+  ['costo-empleado-mockup.html', 'CostoEmpleadoExperience', 'costo-empleado'],
+  ['pintura-mockup.html', 'PinturaExperience', 'pintura'],
+  ['pisos-mockup.html', 'PisosExperience', 'pisos'],
+  ['cuanto-falta-recibirme-mockup.html', 'CuantoFaltaRecibirmeExperience', 'cuanto-falta-recibirme'],
+  ['comida-evento-mockup.html', 'ComidaEventoExperience', 'comida-evento'],
+  ['dolar-mockup.html', 'DolarExperience', 'dolar'],
+  ['riesgo-cartera-mockup.html', 'RiesgoCarteraExperience', 'riesgo-cartera'],
+  ['calorias-alimentos-mockup.html', 'CaloriasAlimentosExperience', 'calorias-alimentos'],
+  ['instalacion-electrica-mockup.html', 'InstalacionElectricaExperience', 'instalacion-electrica'],
+  ['aeropuerto-mockup.html', 'AeropuertoExperience', 'aeropuerto'],
+  ['entrar-alquiler-mockup.html', 'EntrarAlquilerExperience', 'entrar-alquiler'],
+  ['costo-anual-auto-mockup.html', 'CostoAnualAutoExperience', 'costo-anual-auto'],
+  ['tramites-auto-mockup.html', 'TramitesAutoExperience', 'tramites-auto'],
+  ['ladrillos-mockup.html', 'LadrillosExperience', 'ladrillos'],
+  ['longitud-mockup.html', 'LongitudExperience', 'longitud'],
+  ['gastos-del-mes-mockup.html', 'GastosDelMesExperience', 'gastos-del-mes'],
+  ['edad-perro-mockup.html', 'EdadPerroExperience', 'edad-perro'],
+  ['baterias-mockup.html', 'BateriasExperience', 'baterias'],
+  ['equipaje-mockup.html', 'EquipajeExperience', 'equipaje'],
+  ['hora-mundial-mockup.html', 'HoraMundialExperience', 'hora-mundial'],
 ];
 
 const prefixCss = (css, scope) => {
@@ -78,12 +101,35 @@ const pages = [
   ['src/pages/co/trabajo/sueldo-neto.astro', 'SueldoNetoColombiaExperience', '../../../components/generated/SueldoNetoColombiaExperience.astro'],
   ['src/pages/construccion/hormigon.astro', 'HormigonExperience', '../../components/generated/HormigonExperience.astro'],
   ['src/pages/construccion/madera.astro', 'MaderaExperience', '../../components/generated/MaderaExperience.astro'],
+  ['src/pages/es/educacion/cuanto-cuesta-estudiar.astro', 'MasterOficialTituloPropioExperience', '../../../components/generated/MasterOficialTituloPropioExperience.astro'],
+  ['src/pages/impuestos/monotributo.astro', 'MonotributoExperience', '../../components/generated/MonotributoExperience.astro'],
+  ['src/pages/ciencia/presion-y-gases.astro', 'PresionGasesExperience', '../../components/generated/PresionGasesExperience.astro'],
+  ['src/pages/trabajo/costo-de-un-empleado.astro', 'CostoEmpleadoExperience', '../../components/generated/CostoEmpleadoExperience.astro'],
+  ['src/pages/construccion/pintura.astro', 'PinturaExperience', '../../components/generated/PinturaExperience.astro'],
+  ['src/pages/construccion/pisos.astro', 'PisosExperience', '../../components/generated/PisosExperience.astro'],
+  ['src/pages/estudio/cuanto-falta-para-recibirme.astro', 'CuantoFaltaRecibirmeExperience', '../../components/generated/CuantoFaltaRecibirmeExperience.astro'],
+  ['src/pages/eventos/comida.astro', 'ComidaEventoExperience', '../../components/generated/ComidaEventoExperience.astro'],
+  ['src/pages/finanzas-personales/dolar.astro', 'DolarExperience', '../../components/generated/DolarExperience.astro'],
+  ['src/pages/inversiones/riesgo-de-mi-cartera.astro', 'RiesgoCarteraExperience', '../../components/generated/RiesgoCarteraExperience.astro'],
+  ['src/pages/salud/calorias-de-los-alimentos.astro', 'CaloriasAlimentosExperience', '../../components/generated/CaloriasAlimentosExperience.astro'],
+  ['src/pages/tecnologia/instalacion-electrica.astro', 'InstalacionElectricaExperience', '../../components/generated/InstalacionElectricaExperience.astro'],
+  ['src/pages/viajes/aeropuerto.astro', 'AeropuertoExperience', '../../components/generated/AeropuertoExperience.astro'],
+  ['src/pages/alquiler/entrar-a-un-alquiler.astro', 'EntrarAlquilerExperience', '../../components/generated/EntrarAlquilerExperience.astro'],
+  ['src/pages/auto/costo-anual.astro', 'CostoAnualAutoExperience', '../../components/generated/CostoAnualAutoExperience.astro'],
+  ['src/pages/auto/tramites.astro', 'TramitesAutoExperience', '../../components/generated/TramitesAutoExperience.astro'],
+  ['src/pages/construccion/ladrillos.astro', 'LadrillosExperience', '../../components/generated/LadrillosExperience.astro'],
+  ['src/pages/conversores/longitud.astro', 'LongitudExperience', '../../components/generated/LongitudExperience.astro'],
+  ['src/pages/finanzas-personales/gastos-del-mes.astro', 'GastosDelMesExperience', '../../components/generated/GastosDelMesExperience.astro'],
+  ['src/pages/mascotas/edad-del-perro.astro', 'EdadPerroExperience', '../../components/generated/EdadPerroExperience.astro'],
+  ['src/pages/tecnologia/baterias.astro', 'BateriasExperience', '../../components/generated/BateriasExperience.astro'],
+  ['src/pages/viajes/equipaje.astro', 'EquipajeExperience', '../../components/generated/EquipajeExperience.astro'],
+  ['src/pages/viajes/hora-mundial.astro', 'HoraMundialExperience', '../../components/generated/HoraMundialExperience.astro'],
 ];
 
 for (const [page, component, importPath] of pages) {
   const fullPath = path.join('/Users/marrod/hacecuentas', page);
   let source = fs.readFileSync(fullPath, 'utf8');
   source = source.replace(/import DecisionHub from ['"][^'"]+['"];/, `import ${component} from '${importPath}';`);
-  source = source.replace(/<DecisionHub\s+data=\{hub\}\s*\/>/, `<${component} data={hub} />`);
+  source = source.replace(/<DecisionHub\s+data=\{([^}]+)\}\s*\/>/, `<${component} data={$1} />`);
   fs.writeFileSync(fullPath, source);
 }
