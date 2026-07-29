@@ -123,7 +123,6 @@ const entries = [
   ['mexico-home-mockup.html', 'MexicoHomeExperience', 'mexico-home'],
   ['credito-vivienda-mexico-mockup.html', 'CreditoViviendaMexicoExperience', 'credito-vivienda-mexico'],
   ['pension-imss-mexico-mockup.html', 'PensionImssMexicoExperience', 'pension-imss-mexico'],
-  ['tabla-escalas-ganancias-2026-mockup.html', 'TablaEscalasGananciasExperience', 'tabla-escalas-ganancias'],
   ['datos-ganancias-2026-mockup.html', 'DatosGananciasExperience', 'datos-ganancias'],
   ['sueldos-y-trabajo-mockup.html', 'TrabajoHomeExperience', 'trabajo-home'],
   ['buscar-mockup.html', 'BuscarExperience', 'buscar'],
