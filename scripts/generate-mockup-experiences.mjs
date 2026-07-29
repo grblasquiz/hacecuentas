@@ -105,6 +105,31 @@ const entries = [
   ['impuesto-renta-colombia-persona-natural-2026-mockup.html', 'ImpuestoRentaColombiaExperience', 'impuesto-renta-colombia'],
   ['validar-nit-colombia-mockup.html', 'ValidarNitColombiaExperience', 'validar-nit-colombia'],
   ['licencia-conducir-mexico-estado-mockup.html', 'LicenciaConducirMexicoExperience', 'licencia-conducir-mexico'],
+  ['topes-sipa-2026-mockup.html', 'TopesSipaExperience', 'topes-sipa'],
+  ['licencias-pension-alimenticia-ecuador-mockup.html', 'LicenciasPensionEcuadorExperience', 'licencias-pension-ecuador'],
+  ['salario-minimo-portugal-hora-mockup.html', 'SalarioMinimoPortugalHoraExperience', 'salario-minimo-portugal-hora'],
+  ['salario-liquido-portugal-mockup.html', 'SalarioLiquidoPortugalExperience', 'salario-liquido-portugal'],
+  ['frecuencia-cardiaca-mockup.html', 'FrecuenciaCardiacaExperience', 'frecuencia-cardiaca'],
+  ['salario-minimo-mexico-2027-blog-mockup.html', 'SalarioMinimoMexico2027Experience', 'salario-minimo-mexico-2027'],
+  ['predial-avaluo-colombia-mockup.html', 'PredialAvaluoColombiaExperience', 'predial-avaluo-colombia'],
+  ['presupuesto-hogar-colombia-mockup.html', 'PresupuestoHogarColombiaExperience', 'presupuesto-hogar-colombia'],
+  ['creditos-ahorro-ecuador-mockup.html', 'CreditosAhorroEcuadorExperience', 'creditos-ahorro-ecuador'],
+  ['iess-aportes-jubilacion-ecuador-mockup.html', 'IessAportesJubilacionEcuadorExperience', 'iess-aportes-jubilacion-ecuador'],
+  ['sueldo-neto-ecuador-mockup.html', 'SueldoNetoEcuadorExperience', 'sueldo-neto-ecuador'],
+  ['cuota-alimentaria-mockup.html', 'CuotaAlimentariaExperience', 'cuota-alimentaria'],
+  ['iibb-hub-mockup.html', 'IibbHubExperience', 'iibb-hub'],
+  ['retenciones-impuestos-mockup.html', 'RetencionesImpuestosExperience', 'retenciones-impuestos'],
+  ['regla-de-tres-mockup.html', 'ReglaTresExperience', 'regla-tres'],
+  ['mexico-home-mockup.html', 'MexicoHomeExperience', 'mexico-home'],
+  ['credito-vivienda-mexico-mockup.html', 'CreditoViviendaMexicoExperience', 'credito-vivienda-mexico'],
+  ['pension-imss-mexico-mockup.html', 'PensionImssMexicoExperience', 'pension-imss-mexico'],
+  ['tabla-escalas-ganancias-2026-mockup.html', 'TablaEscalasGananciasExperience', 'tabla-escalas-ganancias'],
+  ['datos-ganancias-2026-mockup.html', 'DatosGananciasExperience', 'datos-ganancias'],
+  ['sueldos-y-trabajo-mockup.html', 'TrabajoHomeExperience', 'trabajo-home'],
+  ['buscar-mockup.html', 'BuscarExperience', 'buscar'],
+  ['impuestos-empresa-chile-mockup.html', 'ImpuestosEmpresaChileExperience', 'impuestos-empresa-chile'],
+  ['iva-mockup.html', 'IvaExperience', 'iva'],
+  ['proteina-mockup.html', 'ProteinaExperience', 'proteina'],
 ];
 
 const prefixCss = (css, scope) => {
@@ -249,6 +274,23 @@ const pages = [
   ['src/pages/matematica/probabilidad.astro', 'ProbabilidadExperience', '../../components/generated/ProbabilidadExperience.astro'],
   ['src/pages/negocios/metricas-de-marketing.astro', 'MetricasMarketingExperience', '../../components/generated/MetricasMarketingExperience.astro'],
   ['src/pages/ve/trabajo/sueldo-y-recargos.astro', 'SueldoRecargosVenezuelaExperience', '../../../components/generated/SueldoRecargosVenezuelaExperience.astro'],
+  ['src/pages/ec/trabajo/licencias-y-pension-alimenticia.astro', 'LicenciasPensionEcuadorExperience', '../../../components/generated/LicenciasPensionEcuadorExperience.astro'],
+  ['src/pages/pt-pt/trabalho/salario-liquido.astro', 'SalarioLiquidoPortugalExperience', '../../../components/generated/SalarioLiquidoPortugalExperience.astro'],
+  ['src/pages/salud/frecuencia-cardiaca.astro', 'FrecuenciaCardiacaExperience', '../../components/generated/FrecuenciaCardiacaExperience.astro'],
+  ['src/pages/co/impuestos/predial-y-avaluo.astro', 'PredialAvaluoColombiaExperience', '../../../components/generated/PredialAvaluoColombiaExperience.astro'],
+  ['src/pages/co/vida/presupuesto-del-hogar.astro', 'PresupuestoHogarColombiaExperience', '../../../components/generated/PresupuestoHogarColombiaExperience.astro'],
+  ['src/pages/ec/finanzas-personales/creditos-y-ahorro.astro', 'CreditosAhorroEcuadorExperience', '../../../components/generated/CreditosAhorroEcuadorExperience.astro'],
+  ['src/pages/ec/trabajo/iess-aportes-y-jubilacion.astro', 'IessAportesJubilacionEcuadorExperience', '../../../components/generated/IessAportesJubilacionEcuadorExperience.astro'],
+  ['src/pages/ec/trabajo/sueldo-neto.astro', 'SueldoNetoEcuadorExperience', '../../../components/generated/SueldoNetoEcuadorExperience.astro'],
+  ['src/pages/familia/cuota-alimentaria.astro', 'CuotaAlimentariaExperience', '../../components/generated/CuotaAlimentariaExperience.astro'],
+  ['src/pages/impuestos/retenciones.astro', 'RetencionesImpuestosExperience', '../../components/generated/RetencionesImpuestosExperience.astro'],
+  ['src/pages/inversiones/interes-compuesto.astro', 'InteresCompuestoExperience', '../../components/generated/InteresCompuestoExperience.astro'],
+  ['src/pages/matematica/regla-de-tres.astro', 'ReglaTresExperience', '../../components/generated/ReglaTresExperience.astro'],
+  ['src/pages/mx/finanzas/credito-de-vivienda.astro', 'CreditoViviendaMexicoExperience', '../../../components/generated/CreditoViviendaMexicoExperience.astro'],
+  ['src/pages/mx/trabajo/mi-pension-imss.astro', 'PensionImssMexicoExperience', '../../../components/generated/PensionImssMexicoExperience.astro'],
+  ['src/pages/cl/impuestos/impuestos-de-mi-empresa.astro', 'ImpuestosEmpresaChileExperience', '../../../components/generated/ImpuestosEmpresaChileExperience.astro'],
+  ['src/pages/impuestos/iva.astro', 'IvaExperience', '../../components/generated/IvaExperience.astro'],
+  ['src/pages/salud/proteina.astro', 'ProteinaExperience', '../../components/generated/ProteinaExperience.astro'],
 ];
 
 for (const [page, component, importPath] of pages) {
@@ -264,6 +306,8 @@ const countryHomes = [
   ['src/pages/ve/index.astro', 'PillarHub', 'VenezuelaHomeExperience', '../../components/generated/VenezuelaHomeExperience.astro'],
   ['src/pages/pt/index.astro', 'PillarHub', 'BrasilHomeExperience', '../../components/generated/BrasilHomeExperience.astro'],
   ['src/pages/salud/index.astro', 'SiloIndex', 'SaludHomeExperience', '../../components/generated/SaludHomeExperience.astro'],
+  ['src/pages/mx/index.astro', 'MexicoHomeExperience', 'MexicoHomeExperience', '../../components/generated/MexicoHomeExperience.astro'],
+  ['src/pages/trabajo/index.astro', 'TrabajoHomeExperience', 'TrabajoHomeExperience', '../../components/generated/TrabajoHomeExperience.astro'],
 ];
 
 for (const [page, previous, component, importPath] of countryHomes) {
@@ -286,6 +330,12 @@ const standalonePages = [
   ['src/pages/calculadora-honorarios-abogado.astro', 'HonorariosAbogadoExperience', 'Calculadora de honorarios de abogado', 'Estimá honorarios legales según el tipo y monto del asunto.', 'AR', 'es', 'Servicios'],
   ['src/pages/calculadora-impuesto-renta-colombia-persona-natural-2026.astro', 'ImpuestoRentaColombiaExperience', 'Impuesto de renta Colombia persona natural 2026', 'Estimá el impuesto de renta para una persona natural en Colombia.', 'CO', 'es', 'Impuestos'],
   ['src/pages/mx/calculadora-costo-licencia-conducir-mexico-por-estado.astro', 'LicenciaConducirMexicoExperience', 'Costo de licencia de conducir en México por estado', 'Compará el costo y vigencia de la licencia de conducir por estado.', 'MX', 'es', 'Trámites'],
+  ['src/pages/datos-topes-sipa-2026.astro', 'TopesSipaExperience', 'Topes SIPA 2026', 'Consultá los topes mínimo y máximo de aportes jubilatorios del SIPA para 2026.', 'AR', 'es', 'Datos'],
+  ['src/pages/blog/salario-minimo-mexico-2027-que-se-espera.astro', 'SalarioMinimoMexico2027Experience', 'Salario mínimo México 2027: qué se espera', 'Escenarios y proyecciones para el salario mínimo de México en 2027.', 'MX', 'es', 'Trabajo'],
+  ['src/pages/iibb/index.astro', 'IibbHubExperience', 'Ingresos Brutos 2026', 'Calculá Ingresos Brutos según provincia, actividad y régimen.', 'AR', 'es', 'Impuestos'],
+  ['src/pages/tabla/tabla-escalas-ganancias-2026.astro', 'DatosGananciasExperience', 'Tabla de escalas de Ganancias 2026', 'Consultá los tramos, alícuotas y montos fijos del impuesto a las Ganancias 2026.', 'AR', 'es', 'Impuestos'],
+  ['src/pages/datos-ganancias-2026.astro', 'DatosGananciasExperience', 'Datos de Ganancias 2026', 'Consultá escalas, deducciones y parámetros vigentes de Ganancias 2026.', 'AR', 'es', 'Datos'],
+  ['src/pages/buscar.astro', 'BuscarExperience', 'Buscar calculadoras', 'Buscá calculadoras, guías y herramientas de Hacé Cuentas.', 'AR', 'es', 'Búsqueda'],
 ];
 
 for (const [page, component, title, description, audience, lang, section] of standalonePages) {

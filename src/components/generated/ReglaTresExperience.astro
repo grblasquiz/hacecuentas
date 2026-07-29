@@ -1,0 +1,154 @@
+---
+interface Props { data?: any }
+const { data } = Astro.props;
+---
+<div class="mockup-regla-tres" set:html={`
+    <section class="hero"><div class="shell"><div class="crumb">Matemática / Regla de tres</div><div class="hero-grid">
+      <div><div class="eyebrow">Calculadora con explicación</div><h1>La fórmula es fácil. Elegir la proporción correcta es lo importante.</h1><p>Completá los datos que conocés y te mostramos el resultado, el planteo y cada paso de la cuenta.</p></div>
+      <div class="visual"><div class="visual-title">Tres valores conocidos. Una incógnita.</div><div class="ratio-grid"><div class="ratio-col"><div class="ratio-cell">3 kg</div><div class="ratio-cell">5 kg</div></div><div class="arrow">→<br>→</div><div class="ratio-col"><div class="ratio-cell">$ 12</div><div class="ratio-cell unknown">X</div></div></div><div class="visual-note"><i>✓</i><span>Si una cantidad sube y la otra también, es directa.</span></div></div>
+    </div></div></section>
+
+    <section class="shell calculator" id="calculadora">
+      <div class="card">
+        <h2>¿Qué querés calcular?</h2><p class="helper">Elegí el tipo de problema. Los campos se adaptan al caso.</p>
+        <div class="case-grid" role="tablist">
+          <button class="case active" data-case="directa"><span>↗</span>Proporción directa</button>
+          <button class="case" data-case="inversa"><span>↕</span>Proporción inversa</button>
+          <button class="case" data-case="compuesta"><span>×</span>Regla compuesta</button>
+          <button class="case" data-case="escala-real"><span>□</span>Plano a realidad</button>
+          <button class="case" data-case="escala-plano"><span>▱</span>Realidad a plano</button>
+          <button class="case" data-case="interpolacion"><span>⋯</span>Interpolar un valor</button>
+        </div>
+        <div class="relation" id="relation"><strong>Es directa</strong> cuando las dos cantidades aumentan o disminuyen juntas.</div>
+        <div class="fields">
+          <div class="field" id="fieldA"><label id="labelA">Cantidad conocida</label><div class="input-wrap"><input id="a" inputmode="decimal" value="3"><span class="unit" id="unitA">kg</span></div></div>
+          <div class="field" id="fieldB"><label id="labelB">Valor correspondiente</label><div class="input-wrap"><input id="b" inputmode="decimal" value="12"><span class="unit" id="unitB">$</span></div></div>
+          <div class="field" id="fieldC"><label id="labelC">Nueva cantidad</label><div class="input-wrap"><input id="c" inputmode="decimal" value="5"><span class="unit" id="unitC">kg</span></div></div>
+          <div class="field hidden" id="fieldD"><label id="labelD">Personas nuevas</label><div class="input-wrap"><input id="d" inputmode="decimal" value="2"><span class="unit" id="unitD">personas</span></div></div>
+          <div class="field hidden" id="fieldE"><label id="labelE">Horas por día nuevas</label><div class="input-wrap"><input id="e" inputmode="decimal" value="8"><span class="unit" id="unitE">h/día</span></div></div>
+          <div class="field hidden" id="fieldX"><label id="labelX">Valor a buscar</label><div class="input-wrap"><input id="x" inputmode="decimal" value="4"><span class="unit" id="unitX">x</span></div></div>
+          <div class="field hidden" id="fieldScale"><label>Escala del plano: 1 en</label><div class="input-wrap"><input id="esc" inputmode="numeric" value="100"><span class="unit">realidad</span></div></div>
+        </div>
+        <div class="error" id="error"></div>
+        <div class="actions"><button class="primary" id="calculate">Calcular y ver los pasos</button><button class="secondary" id="reset">Restablecer</button></div>
+      </div>
+      <aside class="card result" aria-live="polite">
+        <div class="result-head"><div class="result-kicker">Resultado</div><div class="pill" id="pill">PROPORCIÓN DIRECTA</div></div>
+        <div class="answer" id="answer">20</div><div class="answer-label" id="answerLabel">valor proporcional</div>
+        <div class="steps">
+          <div class="step"><small>1. Planteo</small><div id="setup">3 kg corresponden a 12; 5 kg corresponden a X.</div></div>
+          <div class="step"><small>2. Fórmula</small><div id="formula">X = valor conocido × nueva cantidad ÷ cantidad conocida</div></div>
+          <div class="step"><small>3. Reemplazo y cuenta</small><div id="substitution">X = 12 × 5 ÷ 3 = 20</div></div>
+          <div class="step"><small>4. Comprobación</small><div id="check">5 es 1,67 veces 3; 20 también es 1,67 veces 12.</div></div>
+        </div>
+        <div class="warning" id="warning"></div>
+      </aside>
+    </section>
+
+    <section class="section white"><div class="shell"><div class="section-head"><h2>Primero detectá qué relación existe</h2><p>Una pregunta rápida evita usar la fórmula correcta en el problema equivocado.</p></div><div class="compare">
+      <article class="compare-card direct"><h3>Proporción directa</h3><p>Si una cantidad aumenta, la otra también aumenta en la misma proporción.</p><div class="mini-flow"><span class="up">Cantidad ↑</span><span>→</span><span class="up">Resultado ↑</span></div></article>
+      <article class="compare-card inverse"><h3>Proporción inversa</h3><p>Si una cantidad aumenta, la otra disminuye. Por ejemplo: más personas, menos días.</p><div class="mini-flow"><span class="up">Cantidad ↑</span><span>→</span><span class="down">Resultado ↓</span></div></article>
+    </div></div></section>
+
+    <section class="section"><div class="shell"><div class="section-head"><h2>Cómo resolver cualquier regla de tres</h2><p>El procedimiento importa más que memorizar productos cruzados.</p></div><div class="guide">
+      <article class="guide-card"><div class="num">1</div><h3>Ordená los datos</h3><p>Poné juntas las magnitudes equivalentes y conservá siempre las mismas unidades.</p></article>
+      <article class="guide-card"><div class="num">2</div><h3>Detectá la relación</h3><p>Preguntate qué pasa con una cantidad cuando la otra aumenta: ¿sube o baja?</p></article>
+      <article class="guide-card"><div class="num">3</div><h3>Calculá y comprobá</h3><p>Revisá si el resultado tiene sentido antes de darlo por válido.</p></article>
+    </div></div></section>
+
+    <section class="section white"><div class="shell"><div class="section-head"><h2>Preguntas frecuentes</h2></div><div class="faq">
+      <div class="faq-item open"><button class="faq-q">¿Cómo sé si es directa o inversa?<span>−</span></button><div class="faq-a">Si al aumentar una magnitud la otra también aumenta, es directa. Si al aumentar una la otra disminuye, es inversa.</div></div>
+      <div class="faq-item"><button class="faq-q">¿Los porcentajes son una regla de tres?<span>+</span></button><div class="faq-a">Sí. Un porcentaje puede plantearse como una proporción directa donde el total equivale al 100%.</div></div>
+      <div class="faq-item"><button class="faq-q">¿Qué diferencia hay con la regla compuesta?<span>+</span></button><div class="faq-a">La regla compuesta relaciona tres o más magnitudes, por ejemplo personas, días y horas de trabajo.</div></div>
+      <div class="faq-item"><button class="faq-q">¿Puedo usar decimales?<span>+</span></button><div class="faq-a">Sí. Podés escribirlos con coma o punto; la calculadora acepta ambos formatos.</div></div>
+    </div></div></section>
+  `} />
+<script is:inline>
+(()=>{const root=document.currentScript.previousElementSibling?.matches('.mockup-regla-tres')?document.currentScript.previousElementSibling:document.querySelector('.mockup-regla-tres');
+
+    const $=id=>root.querySelector("#"+id);
+    const configs={
+      directa:{relation:"<strong>Es directa</strong> cuando las dos cantidades aumentan o disminuyen juntas.",show:["A","B","C"],labels:{A:"Cantidad conocida",B:"Valor correspondiente",C:"Nueva cantidad"},units:{A:"kg",B:"$",C:"kg"},pill:"PROPORCIÓN DIRECTA"},
+      inversa:{relation:"<strong>Es inversa</strong> cuando una cantidad aumenta y la otra disminuye.",show:["A","B","C"],labels:{A:"Personas iniciales",B:"Días que tardan",C:"Personas nuevas"},units:{A:"personas",B:"días",C:"personas"},pill:"PROPORCIÓN INVERSA"},
+      compuesta:{relation:"<strong>Es compuesta</strong> porque intervienen personas, días y horas de trabajo.",show:["A","B","C","D","E"],labels:{A:"Personas iniciales",B:"Días iniciales",C:"Horas por día iniciales",D:"Personas nuevas",E:"Horas por día nuevas"},units:{A:"personas",B:"días",C:"h/día",D:"personas",E:"h/día"},pill:"REGLA COMPUESTA"},
+      "escala-real":{relation:"<strong>Del plano a la realidad:</strong> convertimos centímetros del dibujo a metros reales.",show:["B","Scale"],labels:{B:"Medida en el plano"},units:{B:"cm"},pill:"PLANO → REALIDAD"},
+      "escala-plano":{relation:"<strong>De la realidad al plano:</strong> convertimos metros reales a centímetros del dibujo.",show:["B","Scale"],labels:{B:"Medida real"},units:{B:"m"},pill:"REALIDAD → PLANO"},
+      interpolacion:{relation:"<strong>Interpolar</strong> es estimar un valor ubicado entre dos puntos conocidos.",show:["A","B","C","D","X"],labels:{A:"Primer valor de X",B:"Primer valor de Y",C:"Segundo valor de X",D:"Segundo valor de Y",X:"X que querés estimar"},units:{A:"x₀",B:"y₀",C:"x₁",D:"y₁",X:"x"},pill:"INTERPOLACIÓN LINEAL"}
+    };
+    let current="directa";
+    function num(id){return Number($(id).value.trim().replace(",","."))}
+    function fmt(n){return new Intl.NumberFormat("es-AR",{maximumFractionDigits:4}).format(n)}
+    function setCase(name){
+      current=name;root.querySelectorAll(".case").forEach(b=>b.classList.toggle("active",b.dataset.case===name));
+      const c=configs[name];$("relation").innerHTML=c.relation;
+      ["A","B","C","D","E","X","Scale"].forEach(k=>$("field"+k).classList.toggle("hidden",!c.show.includes(k)));
+      Object.entries(c.labels||{}).forEach(([k,v])=>$("label"+k).textContent=v);
+      Object.entries(c.units||{}).forEach(([k,v])=>$("unit"+k).textContent=v);
+      $("pill").textContent=c.pill;$("error").style.display="none";calculate();
+    }
+    function fail(message){$("error").textContent=message;$("error").style.display="block";$("answer").textContent="—";return false}
+    function calculate(){
+      $("error").style.display="none";$("warning").style.display="none";
+      const a=num("a"),b=num("b"),c=num("c"),d=num("d"),e=num("e"),x=num("x"),s=num("esc");
+      let r,setup,formula,sub,check,label="resultado";
+      const needed={directa:[a,b,c],inversa:[a,b,c],compuesta:[a,b,c,d,e],"escala-real":[b,s],"escala-plano":[b,s],interpolacion:[a,b,c,d,x]}[current];
+      if(needed.some(v=>!Number.isFinite(v)))return fail("Completá todos los campos con números válidos.");
+      if(current==="directa"){
+        if(a===0)return fail("La cantidad conocida no puede ser cero porque se usa como divisor.");
+        r=b*c/a;setup=`${fmt(a)} kg corresponden a ${fmt(b)}; ${fmt(c)} kg corresponden a X.`;formula="X = valor conocido × nueva cantidad ÷ cantidad conocida";sub=`X = ${fmt(b)} × ${fmt(c)} ÷ ${fmt(a)} = ${fmt(r)}`;const k=c/a;check=`${fmt(c)} es ${fmt(k)} veces ${fmt(a)}; ${fmt(r)} también es ${fmt(k)} veces ${fmt(b)}.`;label="valor proporcional";
+      }else if(current==="inversa"){
+        if(c===0)return fail("La cantidad nueva de personas no puede ser cero.");
+        r=a*b/c;setup=`${fmt(a)} personas tardan ${fmt(b)} días; ${fmt(c)} personas tardan X días.`;formula="X = personas iniciales × días iniciales ÷ personas nuevas";sub=`X = ${fmt(a)} × ${fmt(b)} ÷ ${fmt(c)} = ${fmt(r)} días`;check=`El trabajo total se conserva: ${fmt(a*b)} persona-días en ambos casos.`;label="días estimados";
+      }else if(current==="compuesta"){
+        if(d===0||e===0)return fail("Las personas y horas nuevas deben ser mayores que cero.");
+        r=a*b*c/(d*e);setup=`${fmt(a)} personas × ${fmt(b)} días × ${fmt(c)} h/día hacen el trabajo total.`;formula="Días nuevos = trabajo total ÷ (personas nuevas × horas nuevas)";sub=`X = (${fmt(a)} × ${fmt(b)} × ${fmt(c)}) ÷ (${fmt(d)} × ${fmt(e)}) = ${fmt(r)} días`;check=`Ambos escenarios equivalen a ${fmt(a*b*c)} horas-persona de trabajo.`;label="días necesarios";
+      }else if(current==="escala-real"){
+        if(s<=0)return fail("La escala debe ser mayor que cero.");
+        r=b*s/100;setup=`En una escala 1:${fmt(s)}, ${fmt(b)} cm del plano representan X metros.`;formula="Metros reales = cm del plano × escala ÷ 100";sub=`X = ${fmt(b)} × ${fmt(s)} ÷ 100 = ${fmt(r)} m`;check=`${fmt(r)} m equivalen a ${fmt(r*100)} cm; dividido ${fmt(s)} da ${fmt(b)} cm en el plano.`;label="metros reales";
+      }else if(current==="escala-plano"){
+        if(s<=0)return fail("La escala debe ser mayor que cero.");
+        r=b*100/s;setup=`En una escala 1:${fmt(s)}, ${fmt(b)} m reales ocupan X centímetros.`;formula="Cm en el plano = metros reales × 100 ÷ escala";sub=`X = ${fmt(b)} × 100 ÷ ${fmt(s)} = ${fmt(r)} cm`;check=`${fmt(b)} m son ${fmt(b*100)} cm; reducidos ${fmt(s)} veces dan ${fmt(r)} cm.`;label="centímetros en el plano";
+      }else{
+        if(c===a)return fail("Los dos valores de X deben ser diferentes para poder interpolar.");
+        const t=(x-a)/(c-a);r=b+t*(d-b);setup=`Entre los puntos (${fmt(a)}, ${fmt(b)}) y (${fmt(c)}, ${fmt(d)}), buscamos Y para X = ${fmt(x)}.`;formula="Y = y₀ + [(x − x₀) ÷ (x₁ − x₀)] × (y₁ − y₀)";sub=`Y = ${fmt(b)} + [(${fmt(x)} − ${fmt(a)}) ÷ (${fmt(c)} − ${fmt(a)})] × (${fmt(d)} − ${fmt(b)}) = ${fmt(r)}`;check=`X recorrió el ${fmt(t*100)}% del intervalo; Y avanzó esa misma proporción.`;label="valor interpolado";
+        if(x<Math.min(a,c)||x>Math.max(a,c)){$("warning").textContent="Este valor está fuera del intervalo conocido. El cálculo es una extrapolación y tiene más incertidumbre.";$("warning").style.display="block"}
+      }
+      $("answer").textContent=fmt(r);$("answerLabel").textContent=label;$("setup").textContent=setup;$("formula").textContent=formula;$("substitution").textContent=sub;$("check").textContent=check;
+    }
+    root.querySelectorAll(".case").forEach(b=>b.addEventListener("click",()=>setCase(b.dataset.case)));
+    $("calculate").addEventListener("click",calculate);
+    $("reset").addEventListener("click",()=>{Object.entries({a:3,b:12,c:5,d:2,e:8,x:4,esc:100}).forEach(([k,v])=>$(k).value=v);setCase("directa")});
+    root.querySelectorAll("input").forEach(i=>i.addEventListener("keydown",e=>{if(e.key==="Enter")calculate()}));
+    root.querySelectorAll(".faq-q").forEach(q=>q.addEventListener("click",()=>{const item=q.parentElement;item.classList.toggle("open");q.lastElementChild.textContent=item.classList.contains("open")?"−":"+"}));
+    calculate();
+  
+})();
+</script>
+<style is:global>
+
+    .mockup-regla-tres{--ink:#111a32;--muted:#657085;--blue:#2765d5;--navy:#132a4e;--mint:#43d3ac;--cream:#f7f7f2;--line:#dfe4ec;--white:#fff;--amber:#fff1c8}
+    .mockup-regla-tres *{box-sizing:border-box}.mockup-regla-tres{margin:0;background:var(--cream);color:var(--ink);font:16px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .mockup-regla-tres button,.mockup-regla-tres input{font:inherit}.mockup-regla-tres .shell{max-width:1180px;margin:auto;padding:0 24px}.mockup-regla-tres .site-header{height:82px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center}.mockup-regla-tres .header-row{width:100%;display:flex;align-items:center;justify-content:space-between}.mockup-regla-tres .brand{font-weight:850;font-size:20px}.mockup-regla-tres .nav{display:flex;gap:27px;color:#465269;font-size:14px;font-weight:650}.mockup-regla-tres .header-actions{display:flex;gap:10px}.mockup-regla-tres .icon-btn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 14px;color:#31415b}
+    .mockup-regla-tres .hero{padding:54px 0 30px}.mockup-regla-tres .crumb{color:var(--blue);font-size:14px;font-weight:700;margin-bottom:17px}.mockup-regla-tres .hero-grid{display:grid;grid-template-columns:1.05fr .75fr;gap:64px;align-items:center}.mockup-regla-tres .eyebrow{color:var(--blue);text-transform:uppercase;letter-spacing:.13em;font-size:12px;font-weight:850}.mockup-regla-tres .hero h1{font-size:54px;line-height:1.03;letter-spacing:-.045em;margin:12px 0 18px;max-width:720px}.mockup-regla-tres .hero p{font-size:19px;color:var(--muted);max-width:650px;margin:0}.mockup-regla-tres .visual{background:var(--navy);border-radius:30px;padding:30px;color:#fff;box-shadow:0 22px 50px #16315a20}.mockup-regla-tres .visual-title{font-size:13px;color:#bad0f3;text-align:center;margin-bottom:20px}.mockup-regla-tres .ratio-grid{display:grid;grid-template-columns:1fr 32px 1fr;gap:10px;align-items:center}.mockup-regla-tres .ratio-col{display:grid;gap:10px}.mockup-regla-tres .ratio-cell{background:#fff;color:var(--ink);padding:15px;border-radius:14px;text-align:center;font-weight:850}.mockup-regla-tres .ratio-cell.unknown{background:var(--mint);font-size:22px}.mockup-regla-tres .arrow{text-align:center;color:#9fbbe6;font-weight:900}.mockup-regla-tres .visual-note{display:flex;gap:9px;align-items:center;margin-top:18px;font-size:13px;color:#d9e7fb}.mockup-regla-tres .visual-note i{width:22px;height:22px;border-radius:50%;background:var(--mint);display:inline-grid;place-items:center;color:var(--navy);font-style:normal;font-weight:900}
+    .mockup-regla-tres .calculator{display:grid;grid-template-columns:1fr .84fr;gap:22px;margin:28px 0 70px}.mockup-regla-tres .card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:28px;box-shadow:0 12px 30px #132a4e0a}.mockup-regla-tres .card h2{margin:0 0 5px;font-size:25px;letter-spacing:-.02em}.mockup-regla-tres .helper{color:var(--muted);margin:0 0 23px}.mockup-regla-tres .case-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:27px}.mockup-regla-tres .case{border:1px solid var(--line);background:#fff;border-radius:14px;padding:12px 8px;text-align:center;color:#4b566a;font-size:13px;font-weight:750;cursor:pointer;min-height:66px}.mockup-regla-tres .case span{display:block;font-size:19px;color:#7b879c;margin-bottom:2px}.mockup-regla-tres .case.active{border:2px solid var(--blue);padding:11px 7px;background:#edf4ff;color:#154eaf}.mockup-regla-tres .case.active span{color:var(--blue)}.mockup-regla-tres .relation{background:#f0f5ff;border-radius:15px;padding:14px 16px;color:#40506a;margin-bottom:20px;font-size:14px}.mockup-regla-tres .relation strong{color:var(--ink)}
+    .mockup-regla-tres .fields{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}.mockup-regla-tres .field label{display:block;font-size:13px;font-weight:800;margin:0 0 7px}.mockup-regla-tres .input-wrap{display:flex;border:1px solid #ccd3de;border-radius:13px;background:#fff;overflow:hidden}.mockup-regla-tres .input-wrap:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px #2765d51b}.mockup-regla-tres .input-wrap input{width:100%;border:0;outline:0;padding:14px 13px;color:var(--ink);font-weight:750;min-width:0}.mockup-regla-tres .unit{padding:14px 12px;background:#f5f7fa;color:#657085;border-left:1px solid var(--line);font-size:13px;white-space:nowrap}.mockup-regla-tres .hidden{display:none}.mockup-regla-tres .actions{display:flex;gap:10px;margin-top:22px}.mockup-regla-tres .primary{flex:1;border:0;background:var(--blue);color:#fff;border-radius:14px;padding:15px 18px;font-weight:850;cursor:pointer}.mockup-regla-tres .primary:hover{background:#1b55bc}.mockup-regla-tres .secondary{border:1px solid var(--line);background:#fff;color:#435068;border-radius:14px;padding:15px 18px;font-weight:750;cursor:pointer}.mockup-regla-tres .error{display:none;background:#fff0ef;color:#a33a32;border-radius:12px;padding:11px 13px;margin-top:14px;font-size:14px}
+    .mockup-regla-tres .result{background:var(--navy);color:#fff;border:0;position:relative;overflow:hidden}.mockup-regla-tres .result:after{content:"";position:absolute;width:210px;height:210px;border-radius:50%;background:#28578b;right:-100px;top:-95px;opacity:.4}.mockup-regla-tres .result-head{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1}.mockup-regla-tres .result-kicker{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#bdd3f1;font-weight:800}.mockup-regla-tres .pill{background:#d9fff4;color:#11624e;border-radius:99px;padding:6px 10px;font-size:11px;font-weight:900}.mockup-regla-tres .answer{font-size:48px;line-height:1;margin:23px 0 8px;letter-spacing:-.04em;font-weight:900;position:relative;z-index:1}.mockup-regla-tres .answer-label{color:#c2d1e7;margin-bottom:24px;position:relative;z-index:1}.mockup-regla-tres .steps{display:grid;gap:11px;position:relative;z-index:1}.mockup-regla-tres .step{background:#ffffff0d;border:1px solid #ffffff1c;border-radius:15px;padding:13px 15px}.mockup-regla-tres .step small{display:block;color:#9fb9dd;text-transform:uppercase;letter-spacing:.08em;font-size:10px;font-weight:850;margin-bottom:4px}.mockup-regla-tres .step div{font-size:14px;font-weight:650;overflow-wrap:anywhere}.mockup-regla-tres .warning{display:none;background:var(--amber);color:#5f4911;border-radius:13px;padding:12px 14px;margin-top:13px;font-size:13px;position:relative;z-index:1}
+    .mockup-regla-tres .section{padding:68px 0}.mockup-regla-tres .section.white{background:#fff}.mockup-regla-tres .section-head{text-align:center;max-width:700px;margin:0 auto 38px}.mockup-regla-tres .section-head h2{font-size:38px;line-height:1.1;letter-spacing:-.035em;margin:0 0 12px}.mockup-regla-tres .section-head p{color:var(--muted);margin:0}.mockup-regla-tres .compare{display:grid;grid-template-columns:1fr 1fr;gap:20px}.mockup-regla-tres .compare-card{border:1px solid var(--line);border-radius:22px;padding:25px;background:#fff}.mockup-regla-tres .compare-card.direct{border-top:5px solid var(--blue)}.mockup-regla-tres .compare-card.inverse{border-top:5px solid #dc7f3a}.mockup-regla-tres .compare-card h3{font-size:22px;margin:0 0 7px}.mockup-regla-tres .compare-card p{color:var(--muted);margin:0 0 20px}.mockup-regla-tres .mini-flow{display:flex;align-items:center;justify-content:center;gap:16px;background:#f6f8fb;border-radius:16px;padding:18px;font-weight:850}.mockup-regla-tres .up{color:#1962ce}.mockup-regla-tres .down{color:#b55d22}.mockup-regla-tres .guide{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.mockup-regla-tres .guide-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:25px}.mockup-regla-tres .num{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:#eaf2ff;color:var(--blue);font-weight:900}.mockup-regla-tres .guide-card h3{margin:16px 0 7px}.mockup-regla-tres .guide-card p{color:var(--muted);margin:0}.mockup-regla-tres .faq{max-width:800px;margin:auto}.mockup-regla-tres .faq-item{border-bottom:1px solid var(--line)}.mockup-regla-tres .faq-q{width:100%;border:0;background:transparent;padding:20px 0;text-align:left;font-weight:850;color:var(--ink);display:flex;justify-content:space-between;cursor:pointer}.mockup-regla-tres .faq-a{display:none;color:var(--muted);padding:0 30px 20px 0}.mockup-regla-tres .faq-item.open .faq-a{display:block}.mockup-regla-tres .site-footer{background:#0f203b;color:#b9c9e1;padding:36px 0;margin-top:20px}.mockup-regla-tres .footer-row{display:flex;justify-content:space-between}.mockup-regla-tres .footer-row strong{color:#fff}
+    @media(max-width:850px){.mockup-regla-tres .nav{display:none}.mockup-regla-tres .hero-grid,.mockup-regla-tres .calculator{grid-template-columns:1fr}.mockup-regla-tres .hero h1{font-size:43px}.mockup-regla-tres .visual{max-width:560px}.mockup-regla-tres .guide{grid-template-columns:1fr}.mockup-regla-tres .calculator{margin-bottom:30px}.mockup-regla-tres .result{min-height:auto}}@media(max-width:560px){.mockup-regla-tres .shell{padding:0 17px}.mockup-regla-tres .site-header{height:68px}.mockup-regla-tres .hero{padding-top:34px}.mockup-regla-tres .hero h1{font-size:38px}.mockup-regla-tres .hero p{font-size:17px}.mockup-regla-tres .visual{padding:22px}.mockup-regla-tres .calculator .card{padding:20px}.mockup-regla-tres .case-grid{grid-template-columns:repeat(2,1fr)}.mockup-regla-tres .fields,.mockup-regla-tres .compare{grid-template-columns:1fr}.mockup-regla-tres .answer{font-size:40px}.mockup-regla-tres .actions{flex-direction:column}.mockup-regla-tres .header-actions .icon-btn:first-child{display:none}.mockup-regla-tres .section{padding:50px 0}.mockup-regla-tres .section-head h2{font-size:31px}}
+  
+.mockup-regla-tres { width:100%; overflow:hidden; }
+.mockup-regla-tres .top, .mockup-regla-tres header.top { display:none !important; }
+.mockup-regla-tres .foot { display:none !important; }
+.mockup-regla-tres .support-real { width:min(1160px,calc(100% - 40px)); margin:auto; padding:64px 0; }
+.mockup-regla-tres .support-real-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:30px; }
+.mockup-regla-tres .support-real details { border-bottom:1px solid #dfe6ed; padding:14px 0; }
+.mockup-regla-tres .support-real summary { cursor:pointer; font-weight:750; }
+.mockup-regla-tres .support-real p { color:#52657b; line-height:1.65; }
+/* Prevent the legacy site's global typography palette from overriding text
+   designed to inherit a light color inside dark mockup surfaces. */
+.mockup-regla-tres :where(h1,h2,h3,h4,h5,h6,p,span,strong,b,small,em,i,a,label,button,summary,li,th,td) { color:inherit; }
+.mockup-regla-tres input[type="number"] { -moz-appearance:textfield; appearance:textfield; }
+.mockup-regla-tres input[type="number"]::-webkit-inner-spin-button, .mockup-regla-tres input[type="number"]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+@media(max-width:800px){.mockup-regla-tres .support-real-grid{grid-template-columns:1fr}}
+</style>
+{data && <section class="mockup-regla-tres support-real"><div class="support-real-grid"><div><h2>Preguntas frecuentes</h2>{data.faq?.map((f:any,i:number)=><details open={i===0}><summary>{f.q}</summary><p set:html={f.a}/></details>)}</div><div><h2>Fuentes</h2>{data.sources?.map((s:any)=><a href={s.url} target="_blank" rel="nofollow noopener">{s.name}</a>)}</div></div></section>}
