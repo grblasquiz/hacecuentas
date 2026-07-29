@@ -6,6 +6,7 @@ import { ADSENSE_SERVING_ENABLED, isAdsenseExcludedPath } from '../lib/adsense';
 import { HC_ALLOWED_PARAMS } from '../lib/analytics';
 import { compactSeoTitle } from '../lib/seo-title';
 import { compactSeoDescription } from '../lib/seo-description';
+import { seoDescriptionFor } from '../lib/seo-description-overrides';
 import { isSelfCanonicalUrl } from '../lib/hreflang';
 
 // Self-hosted fonts (subset latin) — elimina render-blocking de Google Fonts.
@@ -100,13 +101,13 @@ const socialTitle = ogTitle || title;
 // <title> de más de 70 caracteres. Compactamos sólo la etiqueta de SERP: H1,
 // schema y títulos sociales conservan el texto completo.
 const seoTitle = compactSeoTitle(title);
-// La meta description se compacta al ancho que Google muestra (~160). og:/twitter:
-// siguen con el texto completo: esas plataformas cortan con sus propias reglas.
-const seoDescription = compactSeoDescription(description);
-
 const siteUrl = 'https://hacecuentas.com';
 // Cloudflare Pages sirve /foo.html en /foo — canonical sin .html para matchear sitemap
 const cleanPath = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/') || '/';
+// La meta description se compacta al ancho que Google muestra (~160). Las URLs
+// que el crawl 2026-07-28 detectó cortas tienen una mejora explícita por path.
+const effectiveDescription = seoDescriptionFor(cleanPath, description);
+const seoDescription = compactSeoDescription(effectiveDescription);
 // Defensa central para Auto Ads: estas pantallas no tienen contenido editorial
 // monetizable aunque una página olvide pasar noAds={true}.
 const effectiveNoAds = noAds || noindex || isAdsenseExcludedPath(cleanPath);
@@ -482,7 +483,7 @@ const globalSchema = {
     <meta property="og:type" content={ogType} />
     <meta property="og:url" content={fullCanonical} />
     <meta property="og:title" content={socialTitle} />
-    <meta property="og:description" content={description} />
+    <meta property="og:description" content={effectiveDescription} />
     <meta property="og:image" content={fullImage} />
     <meta property="og:image:width" content={String(imageWidth)} />
     <meta property="og:image:height" content={String(imageHeight)} />
@@ -527,7 +528,7 @@ const globalSchema = {
          (Bing es Microsoft + Twitter colab, signals fuertes para News + Discover) -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={socialTitle} />
-    <meta name="twitter:description" content={description} />
+    <meta name="twitter:description" content={effectiveDescription} />
     <meta name="twitter:image" content={fullImage} />
     <meta name="twitter:image:alt" content={title} />
     <meta name="twitter:image:width" content={String(imageWidth)} />

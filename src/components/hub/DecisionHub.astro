@@ -22,11 +22,54 @@
  */
 import '../../styles/hub.css';
 import type { HubData } from '../../lib/hubs/types';
+import { hubsOfSilo } from '../../lib/hubs/registry';
 
 export interface Props {
   data: HubData;
 }
 const { data } = Astro.props;
+const siblingHubs = hubsOfSilo(data.siloHref)
+  .filter((hub) => hub.slug !== data.slug)
+  .slice(0, 4);
+const RESOURCES_BY_SILO: Record<string, Array<{ href: string; label: string }>> = {
+  '/finanzas-personales': [
+    { href: '/alertas', label: 'Alertas de dólar, inflación y vencimientos' },
+    { href: '/cooperativa-de-datos', label: 'Datos abiertos que usa Hacé Cuentas' },
+    { href: '/tabla/tabla-amortizacion-prestamo', label: 'Tabla de amortización de préstamos' },
+  ],
+  '/trabajo': [
+    { href: '/que-sueldo-necesito', label: 'Calcular qué sueldo necesitás' },
+    { href: '/alertas', label: 'Alertas de sueldo y novedades laborales' },
+  ],
+  '/eventos': [
+    { href: '/calculadoras-evento', label: 'Todas las calculadoras para organizar un evento' },
+  ],
+  '/mx/impuestos': [
+    { href: '/mx/datos-uma-imss-2026', label: 'Valor UMA e indicadores IMSS 2026' },
+  ],
+  '/mx/trabajo': [
+    { href: '/mx/datos-uma-imss-2026', label: 'Valor UMA e indicadores IMSS 2026' },
+  ],
+  '/pe/auto': [
+    { href: '/pe/datos-soat-uit-peru-2026', label: 'Valores SOAT y UIT de Perú 2026' },
+  ],
+  '/pe/tramites': [
+    { href: '/pe/datos-soat-uit-peru-2026', label: 'Valores SOAT y UIT de Perú 2026' },
+  ],
+  '/pe/hogar': [
+    { href: '/pe/datos-soat-uit-peru-2026', label: 'Valores SOAT y UIT de Perú 2026' },
+  ],
+  '/pt/dinheiro': [
+    { href: '/pt/dados-ipca-brasil-historico', label: 'Série histórica do IPCA no Brasil' },
+  ],
+  '/salud': [
+    { href: '/tabla/tabla-calorias-alimentos', label: 'Tabla de calorías de alimentos' },
+  ],
+  '/conversores': [
+    { href: '/tabla/tabla-conversion-medidas', label: 'Tabla de conversión de medidas' },
+  ],
+};
+const resourceLinks = RESOURCES_BY_SILO[data.siloHref] ?? [];
 
 /*
  * Placeholder del panel antes del primer cálculo. Estaba hardcodeado en "$0",
@@ -313,8 +356,37 @@ const otherCases = cases.slice(1);
         </div>
       </div>
     </section>
+
+    {siblingHubs.length > 0 && (
+      <nav class="cluster-links" aria-label={`Más herramientas de ${data.silo}`}>
+        <p>Seguí resolviendo en {data.silo}</p>
+        <div>
+          {siblingHubs.map((hub) => (
+            <a href={`/${hub.slug}`}>{hub.h1}<span aria-hidden="true"> →</span></a>
+          ))}
+        </div>
+      </nav>
+    )}
+    {resourceLinks.length > 0 && (
+      <nav class="cluster-links" aria-label={`Datos y recursos de ${data.silo}`}>
+        <p>Datos y recursos para esta cuenta</p>
+        <div>
+          {resourceLinks.map((resource) => (
+            <a href={resource.href}>{resource.label}<span aria-hidden="true"> →</span></a>
+          ))}
+        </div>
+      </nav>
+    )}
   </div>
 </div>
+
+<style>
+  .hc-hub .cluster-links{margin:28px 0 0;padding:24px;border:1px solid var(--hc-rule);border-radius:18px;background:var(--hc-paper)}
+  .hc-hub .cluster-links p{margin:0 0 14px;font-weight:800}
+  .hc-hub .cluster-links div{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+  .hc-hub .cluster-links a{color:var(--hc-ink);font-weight:700;text-decoration:none;line-height:1.35}
+  .hc-hub .cluster-links a:hover{text-decoration:underline}
+</style>
 
 <script is:inline define:vars={{ PUNTO_DECIMAL, NUM_LOCALE, MONEDA, CASES: cases, HAS_CASES: !!data.cases }}>
   (function () {
