@@ -22,7 +22,11 @@ import { GONE_410_URLS } from './lib/gone-410';
  *    NOTA: para que esto funcione, la Worker Route debe estar configurada en
  *    `wrangler.jsonc` para capturar `www.hacecuentas.com/sitemap*` (sino el
  *    Edge de CF redirige antes que llegue al Worker).
+ *
+ * 2) **410 para sitemaps retirados** y **301 para paths malformados**
+ *    (`/%20/...`, `/algo/null`) — ver los bloques correspondientes abajo.
  */
+
 /** Sitemaps que el índice (`/sitemap.xml`) referencia hoy. El resto = 410. */
 const LIVE_SITEMAPS: ReadonlySet<string> = new Set([
   '/sitemap-priority.xml',
