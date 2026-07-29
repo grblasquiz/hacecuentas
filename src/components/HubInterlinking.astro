@@ -1,0 +1,154 @@
+---
+import currentTools from '../lib/current-tools-index.json';
+
+interface Props {
+  pageTitle?: string;
+  noindex?: boolean;
+}
+
+const { pageTitle = '', noindex = false } = Astro.props;
+const normalize = (value: string) => {
+  try {
+    const url = new URL(value, 'https://hacecuentas.com');
+    return url.pathname === '/' ? '/' : url.pathname.replace(/\.html$/, '').replace(/\/$/, '');
+  } catch {
+    return '';
+  }
+};
+const path = normalize(Astro.url.pathname);
+const tools = currentTools.map((tool) => ({
+  ...tool,
+  path: normalize(tool.url || `/${tool.slug}`),
+}));
+const current = tools.find((tool) => tool.path === path);
+const byPath = new Map(tools.map((tool) => [tool.path, tool]));
+
+const parentPath = current
+  ? current.path
+      .split('/')
+      .filter(Boolean)
+      .slice(0, -1)
+      .reduceRight<string | undefined>((found, _part, index, parts) => {
+        if (found) return found;
+        const candidate = `/${parts.slice(0, index + 1).join('/')}`;
+        return byPath.has(candidate) ? candidate : undefined;
+      }, undefined)
+  : undefined;
+
+const directChildren = current
+  ? tools
+      .filter((tool) => {
+        if (!tool.path.startsWith(`${current.path}/`)) return false;
+        return tool.path.slice(current.path.length + 1).split('/').length === 1;
+      })
+      .sort((a, b) => a.path.localeCompare(b.path))
+  : [];
+
+const cluster = current
+  ? tools
+      .filter((tool) => tool.locale === current.locale && tool.category === current.category)
+      .sort((a, b) => a.path.localeCompare(b.path))
+  : [];
+
+const ring: typeof tools = [];
+if (current && cluster.length > 1) {
+  const index = cluster.findIndex((tool) => tool.path === current.path);
+  for (const offset of [-1, 1, -2, 2, -3, 3]) {
+    const candidate = cluster[(index + offset + cluster.length) % cluster.length];
+    if (candidate && candidate.path !== current.path && !ring.some((tool) => tool.path === candidate.path)) {
+      ring.push(candidate);
+    }
+  }
+}
+const localeRing: typeof tools = [];
+if (current) {
+  const localeTools = tools
+    .filter((tool) => tool.locale === current.locale)
+    .sort((a, b) => a.path.localeCompare(b.path));
+  const index = localeTools.findIndex((tool) => tool.path === current.path);
+  for (const offset of [-1, 1]) {
+    const candidate = localeTools[(index + offset + localeTools.length) % localeTools.length];
+    if (candidate && candidate.path !== current.path && !localeRing.some((tool) => tool.path === candidate.path)) {
+      localeRing.push(candidate);
+    }
+  }
+}
+
+const stopwords = new Set(['para','como','cuanto','cuanta','calcular','calculadora','hace','cuentas','online','gratis','guia','tabla','2026','the','and','with','from','como','uma','das','dos']);
+const tokens = String(pageTitle)
+  .toLowerCase()
+  .normalize('NFD')
+  .replace(/\p{Diacritic}/gu, '')
+  .split(/[^a-z0-9]+/)
+  .filter((token) => token.length > 3 && !stopwords.has(token));
+const editorial = /^\/(?:guia|blog|tabla|historias)\//.test(path);
+const editorialRelated = !current && editorial
+  ? tools
+      .map((tool) => {
+        const haystack = `${tool.title} ${tool.h1} ${tool.description} ${tool.category}`.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+        return { tool, score: tokens.reduce((sum, token) => sum + (haystack.includes(token) ? 1 : 0), 0) };
+      })
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score || a.tool.path.localeCompare(b.tool.path))
+      .slice(0, 4)
+      .map((item) => item.tool)
+  : [];
+
+const selected: typeof tools = [];
+const add = (tool?: (typeof tools)[number]) => {
+  if (!tool || tool.path === path || selected.some((item) => item.path === tool.path)) return;
+  selected.push(tool);
+};
+if (current) {
+  add(parentPath ? byPath.get(parentPath) : undefined);
+  localeRing.forEach(add);
+  directChildren.slice(0, 3).forEach(add);
+  ring.forEach(add);
+} else {
+  editorialRelated.forEach(add);
+}
+const related = selected.slice(0, current ? 7 : 4);
+const lang = current?.locale?.startsWith('pt') ? 'pt' : current?.locale === 'en' ? 'en' : 'es';
+const heading = lang === 'pt'
+  ? 'Ferramentas relacionadas'
+  : lang === 'en'
+    ? 'Related tools'
+    : 'Herramientas relacionadas';
+---
+
+{!noindex && related.length > 0 && (
+  <nav class="hub-interlinking" aria-labelledby="hub-interlinking-title">
+    <div class="hub-interlinking__inner">
+      <p class="hub-interlinking__eyebrow">{current ? (lang === 'pt' ? 'Continue a explorar' : lang === 'en' ? 'Keep exploring' : 'Seguí explorando') : (lang === 'pt' ? 'Faça a conta' : lang === 'en' ? 'Run the numbers' : 'Hacé la cuenta')}</p>
+      <h2 id="hub-interlinking-title">{heading}</h2>
+      <ul>
+        {related.map((tool) => (
+          <li>
+            <a href={tool.path}>
+              <strong>{tool.h1 || tool.title}</strong>
+              <span>{tool.description}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <a class="hub-interlinking__all" href="/calculadoras">
+        {lang === 'pt' ? 'Ver todas as ferramentas →' : lang === 'en' ? 'Browse all tools →' : 'Ver todos los hubs →'}
+      </a>
+    </div>
+  </nav>
+)}
+
+<style>
+  .hub-interlinking{width:100%;margin:3rem 0 0;padding:2.5rem 1rem;background:#f5f7f4;border-top:1px solid #e1e6df}
+  .hub-interlinking__inner{width:min(1120px,100%);margin:auto}
+  .hub-interlinking__eyebrow{margin:0 0 .4rem;color:#3155b7;font-size:.75rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+  .hub-interlinking h2{margin:0 0 1.15rem;color:#172033;font-size:clamp(1.45rem,3vw,2rem);letter-spacing:-.035em}
+  .hub-interlinking ul{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem;margin:0;padding:0;list-style:none}
+  .hub-interlinking li{margin:0}
+  .hub-interlinking li a{display:block;height:100%;padding:1rem;border:1px solid #dfe5df;border-radius:14px;background:#fff;color:#172033;text-decoration:none}
+  .hub-interlinking li a:hover{border-color:#3155b7;transform:translateY(-1px)}
+  .hub-interlinking strong{display:block;margin-bottom:.35rem;font-size:.96rem;line-height:1.3}
+  .hub-interlinking li span{display:-webkit-box;overflow:hidden;color:#637083;font-size:.84rem;line-height:1.45;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+  .hub-interlinking__all{display:inline-block;margin-top:1rem;color:#3155b7;font-size:.9rem;font-weight:750;text-decoration:none}
+  @media(max-width:760px){.hub-interlinking ul{grid-template-columns:1fr}.hub-interlinking{padding:2rem 1rem}}
+</style>

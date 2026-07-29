@@ -5,10 +5,9 @@ import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { CATEGORY_COLORS, BRAND_DEFAULT } from '../lib/category-colors';
-import { TOTAL_DISPLAY } from '../lib/calc-counts';
 import { PILLARS } from '../lib/pillars';
-import { canDistributeCalc } from '../lib/content-policy';
 import PillarHub from '../components/PillarHub.astro';
+import currentTools from '../lib/current-tools-index.json';
 
 // Índice navegable de TODAS las calculadoras del catálogo raíz (las que se
 // sirven en /{slug}). Mismo glob que /buscar y /categoria — no incluye las
@@ -17,10 +16,12 @@ import PillarHub from '../components/PillarHub.astro';
 // Página LIVIANA: renderiza sólo una lista de links (<a href="/{slug}">), no
 // monta ninguna calculadora. El filtro de texto corre 100% en el cliente sobre
 // los nodos ya presentes en el DOM (no fetchea nada).
-const calcModules = import.meta.glob<any>('../content/calcs/*.json', { eager: true });
-const allCalcs = Object.values(calcModules)
-  .map((m: any) => m.default || m)
-  .filter((c: any) => c && c.slug && c.h1 && canDistributeCalc(c));
+const allCalcs = currentTools.map((tool) => ({
+  ...tool,
+  slug: tool.slug,
+  href: new URL(tool.url || `/${tool.slug}`, 'https://hacecuentas.com').pathname.replace(/\/$/, '') || '/',
+  icon: '🧮',
+}));
 
 // Label + icono + orden de categorías. Espeja el `categoryMeta` de index.astro;
 // el color sale de la fuente única CATEGORY_COLORS (category-colors.ts).
@@ -47,6 +48,22 @@ const CATEGORY_LABELS: Record<string, string> = {
   familia: 'Familia',
   idiomas: 'Idiomas',
   impuestos: 'Impuestos',
+  trabajo: 'Trabajo',
+  'finanzas-personales': 'Finanzas personales',
+  alquiler: 'Alquiler',
+  auto: 'Auto',
+  bebes: 'Bebés',
+  estudio: 'Estudio',
+  eventos: 'Eventos',
+  fechas: 'Fechas',
+  futbol: 'Fútbol',
+  inversiones: 'Inversiones',
+  jardin: 'Jardín',
+  jubilacion: 'Jubilación',
+  nutricion: 'Nutrición',
+  ocio: 'Ocio',
+  tramites: 'Trámites',
+  vivienda: 'Vivienda',
   hogar: 'Hogar',
   clima: 'Clima',
   juegos: 'Juegos',
@@ -106,7 +123,6 @@ const orderedCats = [
 // link a /categoria/<cat> (que pagina el resto server-side). El remanente se
 // carga POR INTERACCIÓN desde /search-index.json (client-side, invisible
 // para el crawler) al tocar "Mostrar todas" o al filtrar.
-const TOP_N = 12;
 const groups = orderedCats.map((cat) => {
   const sorted = byCat[cat].slice().sort((a, b) => (a.h1 || '').localeCompare(b.h1 || '', 'es'));
   return {
@@ -114,9 +130,10 @@ const groups = orderedCats.map((cat) => {
     label: CATEGORY_LABELS[cat] || cat,
     icon: CATEGORY_ICONS[cat] || '🧮',
     color: CATEGORY_COLORS[cat] || BRAND_DEFAULT,
-    calcs: sorted.slice(0, TOP_N),
+    calcs: sorted,
     total: sorted.length,
-    hiddenCount: Math.max(0, sorted.length - TOP_N),
+    hiddenCount: 0,
+    categoryHub: sorted.find((item) => item.locale === 'es' && item.slug === cat)?.href,
   };
 });
 
@@ -175,7 +192,7 @@ const hubConfig = {
   breadcrumb: [{ label: 'Inicio', href: '/' }, { label: 'Todas las calculadoras' }],
   eyebrow: '🧮 Directorio completo',
   titleLines: ['Calculadoras', 'en español'],
-  lead: `${TOTAL_DISPLAY} herramientas globales y específicas de Argentina, gratis, sin registro y con tus datos privados. Las versiones de otros países tienen sus propios directorios.`,
+  lead: `${totalCount} hubs vigentes de todos los países y categorías, gratis, sin registro y con tus datos privados.`,
   trust: ['Gratis y sin registro', 'Datos verificados 2026', 'Cálculo 100% privado'],
   quick: { tag: 'Acceso rápido', title: 'Las más usadas', desc: 'Arrancá por las calculadoras que más usa la gente en 2026.', cta: 'Ver populares →', href: '/populares', variant: 'cta' as const },
   needsKicker: 'Elegí por tema',
@@ -239,13 +256,13 @@ const hubConfig = {
       <section class="cat-block" id={`cat-${g.cat}`} data-cat-block={g.cat} style={`--cat: ${g.color}`}>
         <h2 class="cat-title">
           <span class="cat-title-icon" aria-hidden="true">{g.icon}</span>
-          <a href={`/categoria/${g.cat}`}>{g.label}</a>
+          <a href={g.categoryHub || `#cat-${g.cat}`}>{g.label}</a>
           <span class="cat-title-n">{g.total}</span>
         </h2>
         <ul class="calc-list">
           {g.calcs.map((c: any) => (
             <li class="calc-item" data-slug={c.slug} data-name={`${c.h1} ${c.slug}`.toLowerCase()}>
-              <a href={`/${c.slug}`}>
+              <a href={c.href}>
                 <span class="calc-item-icon" aria-hidden="true">{c.icon || '🧮'}</span>
                 <span class="calc-item-name">{c.h1}</span>
                 {c.audience === 'AR' && (
@@ -261,7 +278,7 @@ const hubConfig = {
               Mostrar las {g.hiddenCount} restantes
             </button>
           )}
-          <a href={`/categoria/${g.cat}`} class="cat-full">Ver la categoría completa →</a>
+          {g.categoryHub && <a href={g.categoryHub} class="cat-full">Entrar al hub principal →</a>}
         </div>
       </section>
     ))}
