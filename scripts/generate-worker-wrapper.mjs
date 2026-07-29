@@ -190,6 +190,24 @@ const EMBED_CSP = "default-src 'self'; script-src 'self' 'unsafe-inline' blob: h
 // no cubre respuestas SSR.
 const MAIN_CSP = ${JSON.stringify(mainCsp)};
 
+const LIVE_SITEMAPS = new Set([
+  '/sitemap-priority.xml', '/sitemap-core.xml', '/sitemap-blog.xml', '/sitemap-news.xml',
+  '/sitemap-tablas.xml', '/sitemap-hubs.xml', '/sitemap-iibb.xml', '/sitemap-fresh.xml',
+]);
+
+/** Saca %20, segmentos vacíos y segmentos 'null'/'undefined'. Devuelve el path tal cual si ya está sano. */
+function sanitizePath(pathname) {
+  let clean = pathname
+    .replace(/%20/gi, ' ')
+    .split('/')
+    .map((seg) => seg.trim())
+    .filter((seg, i, arr) => seg !== 'null' && seg !== 'undefined' && (seg !== '' || i === 0 || i === arr.length - 1))
+    .join('/')
+    .replace(/\\/{2,}/g, '/')
+    .replace(/\\/+$/, '');
+  return clean === '' ? '/' : clean;
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -204,6 +222,24 @@ export default {
       if (url.pathname.length > 1 && url.pathname.endsWith('/')) {
         const target = url.pathname.replace(/\\/+$/, '');
         return Response.redirect(\`https://hacecuentas.com\${target}\${url.search}\`, 308);
+      }
+
+      // 2b) Sitemaps retirados → 410. Tras la consolidación en hubs el índice
+      // quedó con 7; los viejos por país/categoría siguen registrados en
+      // GSC/Bing desde antes y los bots los piden igual, comiendo 404.
+      if (/^\\/sitemap-[a-z0-9-]+\\.xml$/.test(url.pathname) && !LIVE_SITEMAPS.has(url.pathname)) {
+        return new Response(SITEMAP_410_BODY, { status: 410, statusText: 'Gone', headers: SITEMAP_410_HEADERS });
+      }
+
+      // 2c) Paths malformados → 301 al path saneado. Dos formas vistas en los
+      // edge logs: '/%20/viajes/equipaje' (href con un espacio de más) y
+      // '/eventos/null' (slug interpolado como el string 'null'). Vienen de
+      // enlaces externos que ya no podemos editar. Va acá y no en el middleware
+      // de Astro porque para una ruta sin asset la request muere en el 404
+      // prerendered antes de llegar al middleware.
+      const cleaned = sanitizePath(url.pathname);
+      if (cleaned !== url.pathname) {
+        return Response.redirect(\`https://hacecuentas.com\${cleaned}\${url.search}\`, 301);
       }
 
       // 3) 410 Gone para zombies (chequear antes que pruning para que gane si hay overlap)
