@@ -1,0 +1,63 @@
+---
+/**
+ * Links de un hub hacia las notas del blog que lo profundizan.
+ *
+ * Vive aparte de DecisionHub porque 56 hubs tienen componente bespoke
+ * (src/components/generated/*) y no pasan por la plantilla común. Cualquiera de
+ * los dos caminos lo renderiza igual.
+ *
+ * Criterio de uso en types.ts (`HubData.relatedPosts`): sólo hacia posts que ya
+ * rinden solos en orgánico. El blog es mucho más débil que los hubs, así que
+ * esto reparte autoridad hacia abajo y se usa con cuentagotas.
+ */
+import type { HubData } from '../../lib/hubs/types';
+
+interface Props {
+  posts: HubData['relatedPosts'];
+}
+
+const { posts } = Astro.props;
+const items = (posts || []).slice(0, 2);
+---
+
+{items.length > 0 && (
+  <nav class="hub-posts" aria-label="Notas relacionadas">
+    <p>Para entrar en detalle</p>
+    <div>
+      {items.map((p) => (
+        <a href={p.href}>
+          <strong>{p.title}</strong>
+          <small>{p.note}</small>
+        </a>
+      ))}
+    </div>
+  </nav>
+)}
+
+<style>
+  /* Mismo chasis que .cluster-links de DecisionHub, con nota al pie para que se
+     lea como "profundizar" y no como otra herramienta más. */
+  .hub-posts {
+    margin: 28px 0 0;
+    padding: 24px;
+    border: 1px solid var(--hc-rule, #dbe3ed);
+    border-radius: 18px;
+    background: var(--hc-paper, #fff);
+  }
+  .hub-posts p { margin: 0 0 14px; font-weight: 800; }
+  .hub-posts div {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: 10px;
+  }
+  .hub-posts a { display: block; color: var(--hc-text, #14233a); text-decoration: none; line-height: 1.35; }
+  .hub-posts a:hover strong { text-decoration: underline; }
+  .hub-posts strong { display: block; font-weight: 700; }
+  .hub-posts small { display: block; margin-top: 3px; color: var(--hc-muted, #738196); font-size: .85rem; }
+</style>
+
+<style is:global>
+  /* En los hubs bespoke el bloque va suelto entre la experiencia y el footer:
+     sin este wrapper queda pegado a los bordes en mobile. */
+  .hub-posts-wrap { max-width: 1100px; margin: 0 auto; padding: 0 20px 40px; }
+</style>

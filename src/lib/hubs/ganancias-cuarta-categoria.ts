@@ -215,6 +215,14 @@ export const hub: HubData = {
     },
   ],
 
+  relatedPosts: [
+    {
+      href: '/blog/escala-ganancias-2026-argentina-tabla-completa-explicada',
+      title: 'La escala de Ganancias 2026, tramo por tramo',
+      note: 'La tabla completa con las alícuotas de cada tramo, explicada.',
+    },
+  ],
+
   replaces: [
     '/calculadora-impuesto-ganancias-sueldo',
     '/calculadora-ganancias-empleados-4ta-categoria-2026',

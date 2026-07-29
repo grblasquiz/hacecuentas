@@ -313,6 +313,19 @@ export const hub: HubData = {
     },
   ],
 
+  relatedPosts: [
+    {
+      href: '/blog/recategorizacion-monotributo-julio-2026-guia-completa',
+      title: 'Recategorización de julio 2026, paso a paso',
+      note: 'Cuándo toca, qué mirar y cómo hacerla sin errores.',
+    },
+    {
+      href: '/blog/guia-completa-monotributo-2026',
+      title: 'Guía completa del monotributo 2026',
+      note: 'Categorías, topes y obligaciones del año, en un solo lugar.',
+    },
+  ],
+
   replaces: [
     '/calculadora-monotributo-2026',
     '/calculadora-monotributo-categoria-2026-recategorizacion-julio',

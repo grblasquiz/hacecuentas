@@ -7,6 +7,7 @@ import Footer from '../../components/Footer.astro';
 import PreferredSourceCta from '../../components/PreferredSourceCta.astro';
 import { filterByIncremental } from '../../lib/incremental';
 import { getHistoriaForArticle } from '../../lib/historias-map';
+import { ALL_HUBS, allSilos } from '../../lib/hubs/registry';
 
 export async function getStaticPaths() {
   const posts = import.meta.glob<any>('../../content/blog/*.json', { eager: true });
@@ -54,9 +55,47 @@ for (const [mods, prefix] of calcSources) {
   }
 }
 
+// Los hubs de decisión absorbieron el catálogo que el blog citaba: las 177
+// referencias de `relatedCalcs` apuntaban a calcs podadas y `filter(Boolean)`
+// las descartaba en silencio → NINGÚN post renderizaba el bloque de
+// relacionadas ni el CTA del sidebar. Ahora una entrada que arranca con '/'
+// es una ruta directa (hub o calc de país) y se resuelve contra el registro
+// de hubs; las que no llevan '/' siguen siendo slugs de calc como antes.
+const hubByHref = new Map<string, any>(
+  ALL_HUBS.map((h) => [
+    h.slug.startsWith('/') ? h.slug : `/${h.slug}`,
+    { ...h, __href: h.slug.startsWith('/') ? h.slug : `/${h.slug}`, icon: '🧮' },
+  ]),
+);
+
+// Los índices de silo ('/trabajo', '/co/impuestos') también son destino válido:
+// los posts que quedaron con un solo hub relacionado enlazan además su silo
+// padre, que es la relación más honesta que hay sin inventar afinidades.
+for (const s of allSilos()) {
+  if (hubByHref.has(s.href)) continue;
+  hubByHref.set(s.href, {
+    __href: s.href,
+    icon: '🗂️',
+    h1: s.silo,
+    description: `Todas las calculadoras de ${s.silo.toLowerCase()} en un solo lugar.`,
+  });
+}
+
 const relatedCalcs = (post.relatedCalcs || [])
-  .map((s: string) => calcBySlug.get(s))
+  .map((s: string) => (s.startsWith('/') ? hubByHref.get(s) : calcBySlug.get(s)))
   .filter(Boolean);
+
+// Un relacionado que no resuelve es un link perdido, no un detalle cosmético:
+// así fue como se cayeron los 177 sin que nadie se enterara. El build falla.
+const unresolvedRelated = (post.relatedCalcs || []).filter(
+  (s: string) => !(s.startsWith('/') ? hubByHref.has(s) : calcBySlug.has(s)),
+);
+if (unresolvedRelated.length > 0) {
+  throw new Error(
+    `[blog/${post.slug}] relatedCalcs sin destino: ${unresolvedRelated.join(', ')}. ` +
+      `Apuntá al hub que absorbió esa calc (ruta con '/' inicial).`,
+  );
+}
 
 // Web Story asociada (reverso del campo `article` de src/content/historias/*).
 const historia = getHistoriaForArticle(`/blog/${post.slug}`);

@@ -140,6 +140,18 @@ export interface HubData {
   /** URLs viejas que este hub reemplaza (alimentan los 301). */
   replaces: string[];
 
+  /**
+   * Notas del blog que profundizan este hub. OPCIONAL y deliberadamente escaso:
+   * el blog es mucho más débil que los hubs (656 sesiones orgánicas en 19 meses
+   * contra ~310 por día de los hubs), así que linkear hacia allá reparte
+   * autoridad hacia abajo. Se usa sólo cuando el post aporta algo que el hub no
+   * puede dar —una tabla, una guía larga, un informe— y sólo hacia posts que ya
+   * rinden solos en orgánico. Si dudás, no lo pongas.
+   *
+   * El href va completo ('/blog/<slug>'). Máximo 2 por hub.
+   */
+  relatedPosts?: Array<{ href: string; title: string; note: string }>;
+
   lastReviewed: string;
   audience?: 'AR' | 'global';
 
