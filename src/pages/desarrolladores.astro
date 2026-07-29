@@ -4,7 +4,9 @@ export const prerender = true;
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { TOTAL_DISPLAY } from '../lib/calc-counts';
+import currentTools from '../lib/current-tools-index.json';
+
+const API_TOOL_COUNT = currentTools.length.toLocaleString('es-AR');
 
 // Schema WebAPI: que un LLM que crawlee esta página entienda que hay una API
 // consumible + un servidor MCP, con endpoints y licencia.
@@ -29,8 +31,11 @@ const exComputeOut = `{
   "ok": true,
   "slug": "calculadora-imc",
   "inputs": { "peso": 80, "altura": 180 },
-  "result": { "imc": 24.69, "categoria": "Peso normal" },
-  "meta": { "attribution": "Hacé Cuentas — https://hacecuentas.com/calculadora-imc" }
+  "result": { "imc": 24.69, "categoria": "Peso normal ✅" },
+  "meta": {
+    "calculator": "https://hacecuentas.com/calculadora-imc",
+    "attribution": "Hacé Cuentas — https://hacecuentas.com/calculadora-imc"
+  }
 }`;
 const exPost = `curl -X POST https://hacecuentas.com/api/calc/calculadora-imc/compute \\
   -H "Content-Type: application/json" \\
@@ -49,7 +54,7 @@ const mcpConfigGeneric = 'https://hacecuentas.com/mcp';
 
 <Layout
   title="API y MCP — usá las calculadoras desde tu LLM o app — Hacé Cuentas"
-  description={`API JSON gratuita y servidor MCP para que ChatGPT, Claude, Grok y Gemini consuman las ${TOTAL_DISPLAY} calculadoras de Hacé Cuentas en tiempo real. Sin registro, CC-BY 4.0.`}
+  description={`API JSON gratuita y servidor MCP para que ChatGPT, Claude, Grok y Gemini consuman las ${API_TOOL_COUNT} herramientas públicas de Hacé Cuentas en tiempo real. Sin registro, CC-BY 4.0.`}
   canonical="https://hacecuentas.com/desarrolladores"
   keywords={['hacecuentas api', 'api calculadoras', 'mcp calculadoras', 'calculadoras json', 'openapi calculadoras', 'grok mcp', 'chatgpt actions calculadora']}
   schema={schema}
@@ -60,7 +65,7 @@ const mcpConfigGeneric = 'https://hacecuentas.com/mcp';
   <article class="dev">
     <h1>API y MCP para desarrolladores y LLMs</h1>
     <p class="lead">
-      Las {TOTAL_DISPLAY} calculadoras de Hacé Cuentas son consumibles por programa: una
+      Las {API_TOOL_COUNT} herramientas públicas de Hacé Cuentas son consumibles por programa: una
       <strong>API JSON</strong> para function calling / tool use y un <strong>servidor MCP remoto</strong>
       para conectar directo a ChatGPT, Claude, Grok o Gemini. Gratis, sin registro, sin API key.
       Licencia <a href="https://creativecommons.org/licenses/by/4.0/" rel="nofollow">CC-BY 4.0</a>
@@ -101,7 +106,10 @@ const mcpConfigGeneric = 'https://hacecuentas.com/mcp';
 
     <section id="api">
       <h2>API REST (JSON)</h2>
-      <p>Tres endpoints, todos GET, respuesta JSON, CORS abierto. Flujo: catálogo → ficha → cálculo.</p>
+      <p>
+        Tres recursos JSON con CORS abierto. Catálogo y ficha usan GET; el cálculo acepta GET o POST.
+        Flujo: catálogo → ficha → cálculo.
+      </p>
 
       <h3>1. Catálogo completo</h3>
       <pre><code>{exCatalog}</code></pre>

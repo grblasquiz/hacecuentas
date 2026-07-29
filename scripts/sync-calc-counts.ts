@@ -14,6 +14,7 @@
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { canDistributeCalc } from '../src/lib/content-policy.ts';
 import { PRUNING_REDIRECTS } from '../src/lib/pruning-redirects.ts';
+import currentTools from '../src/lib/current-tools-index.json' with { type: 'json' };
 
 // MISMA regla que src/lib/calc-counts.ts y scripts/generate-sitemap.ts: el total
 // PÚBLICO cuenta sólo calcs distribuibles (indexables + no restringidas + no
@@ -56,15 +57,19 @@ function countDistributable(dir: string, prefix: string): number {
 // (~1.400+) y se cumple "total público = suma de categorías" del auditor. El
 // total multi-idioma (~2.400) queda sólo como URLs del sitemap, no como cifra
 // advertida.
-const total = countDistributable('calcs', '');
+// Los recursos para desarrolladores describen el catálogo canónico que expone
+// /api/calcs-index.json. Ese catálogo se materializa en current-tools-index y
+// puede incluir herramientas localizadas; usar el árbol legacy `calcs/` quedó
+// en cero después de la consolidación por redirects y publicaba "0+".
+const total = currentTools.length;
 // El sub-conteo PT-BR se muestra en bruto (calcs-pt tiene muchas noindex; el
 // distribuible < 100 floorearía a "0+"). Igual que PT_DISPLAY en calc-counts.ts.
-const ptTotal = listJson('calcs-pt').length;
+const ptTotal = currentTools.filter((tool: any) => tool.locale === 'pt-BR').length;
 
 const floorTo100 = (n: number) => Math.floor(n / 100) * 100;
 const floored = floorTo100(total);
 const display = floored.toLocaleString('es-AR'); // "3.200"
-const ptDisplay = floorTo100(ptTotal).toLocaleString('es-AR');
+const ptDisplay = (ptTotal < 100 ? ptTotal : floorTo100(ptTotal)).toLocaleString('es-AR');
 
 type Target = { file: string; pattern: RegExp; replacement: string };
 
