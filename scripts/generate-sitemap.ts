@@ -947,10 +947,6 @@ sitemaps.push({
     core('/recategorizacion-monotributo-julio-2026', '0.7', 'monthly'),
     core('/wizard/que-monotributo-me-conviene-2026', '0.7', 'monthly'),
     core('/calendarios',                         '0.7',  'monthly'),
-    core('/top',                                 '0.7',  'weekly'),
-    core('/top/anses-afip-argentina',            '0.65', 'weekly'),
-    core('/top/emprendedores-argentina',         '0.65', 'weekly'),
-    core('/top/freelancers-2026',                '0.65', 'weekly'),
     core('/informes',                            '0.6',  'monthly'),
     core('/desarrolladores',                     '0.6',  'monthly'),
     // E-E-A-T: la bio del autor sostiene el authorship de todo el sitio.
@@ -1607,12 +1603,12 @@ if (gone410Stripped > 0) {
 // Segmentos utilitarios: páginas de navegación/producto que no compiten por
 // ninguna query. Medición Bing 90d (CSV PageTraffic, 946 URLs con impresiones):
 // /decidir/, /comparar/, /partners/, /mi/, /informes/,
-// /fin-de-semana/ y /top/ dieron 0 impresiones en TODOS sus URLs. Siguen vivas y
+// /fin-de-semana/ dieron 0 impresiones en TODOS sus URLs. Siguen vivas y
 // linkeadas desde el sitio; sólo salen del sitemap para que el crawl y la señal
 // se concentren en lo que puede rankear.
 const UTILITY_PREFIXES = [
   '/decidir/', '/comparar/', '/partners/',
-  '/mi/', '/informes/', '/fin-de-semana/', '/top/',
+  '/mi/', '/informes/', '/fin-de-semana/',
 ];
 let utilityStripped = 0;
 for (const s of sitemaps) {

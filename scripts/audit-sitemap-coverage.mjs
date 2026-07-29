@@ -46,7 +46,7 @@ const ALLOWLIST = new Set([
 // Siguen vivas, linkeadas e indexables; sólo no las proponemos para crawl.
 const ALLOWED_PREFIXES = [
   '/decidir', '/comparar', '/partners',
-  '/mi', '/informes', '/fin-de-semana', '/top',
+  '/mi', '/informes', '/fin-de-semana',
 ];
 const isAllowedPrefix = (u) =>
   ALLOWED_PREFIXES.some((p) => u === p || u.startsWith(p + '/'));
